@@ -35,10 +35,11 @@
 #include <glib.h>
 
 #include "unity-shared/PanelStyle.h"
-#include "PanelIndicatorsView.h"
+#include "unity-shared/WindowManager.h"
+#include "unity-shared/UBusMessages.h"
 #include <UnityCore/Variant.h>
 
-#include "unity-shared/UBusMessages.h"
+#include "PanelIndicatorsView.h"
 
 #include "PanelView.h"
 
@@ -580,11 +581,11 @@ PanelView::UpdateBackground()
   }
   else
   {
-    WindowManager* wm = WindowManager::Default();
+    WindowManager& wm = WindowManager::Default();
     double opacity = _opacity;
 
-    if (_opacity_maximized_toggle && (wm->IsExpoActive() ||
-        (maximized_win != 0 && !wm->IsWindowObscured(maximized_win))))
+    if (_opacity_maximized_toggle && (wm.IsExpoActive() ||
+        (maximized_win != 0 && !wm.IsWindowObscured(maximized_win))))
     {
       opacity = 1.0f;
     }
@@ -812,21 +813,21 @@ void PanelView::SetOpacityMaximizedToggle(bool enabled)
   {
     if (enabled)
     {
-      auto win_manager = WindowManager::Default();
+      WindowManager& win_manager = WindowManager::Default();
       auto update_bg_lambda = [&](guint32) { ForceUpdateBackground(); };
       auto conn = &_maximized_opacity_toggle_connections;
 
-      conn->push_back(win_manager->window_minimized.connect(update_bg_lambda));
-      conn->push_back(win_manager->window_unminimized.connect(update_bg_lambda));
-      conn->push_back(win_manager->window_maximized.connect(update_bg_lambda));
-      conn->push_back(win_manager->window_restored.connect(update_bg_lambda));
-      conn->push_back(win_manager->window_mapped.connect(update_bg_lambda));
-      conn->push_back(win_manager->window_unmapped.connect(update_bg_lambda));
-      conn->push_back(win_manager->initiate_expo.connect(
+      conn->push_back(win_manager.window_minimized.connect(update_bg_lambda));
+      conn->push_back(win_manager.window_unminimized.connect(update_bg_lambda));
+      conn->push_back(win_manager.window_maximized.connect(update_bg_lambda));
+      conn->push_back(win_manager.window_restored.connect(update_bg_lambda));
+      conn->push_back(win_manager.window_mapped.connect(update_bg_lambda));
+      conn->push_back(win_manager.window_unmapped.connect(update_bg_lambda));
+      conn->push_back(win_manager.initiate_expo.connect(
         sigc::mem_fun(this, &PanelView::ForceUpdateBackground)));
-      conn->push_back(win_manager->terminate_expo.connect(
+      conn->push_back(win_manager.terminate_expo.connect(
         sigc::mem_fun(this, &PanelView::ForceUpdateBackground)));
-      conn->push_back(win_manager->compiz_screen_viewport_switch_ended.connect(
+      conn->push_back(win_manager.screen_viewport_switch_ended.connect(
         sigc::mem_fun(this, &PanelView::ForceUpdateBackground)));
     }
     else

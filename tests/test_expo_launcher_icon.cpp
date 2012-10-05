@@ -19,8 +19,8 @@
 
 #include <gmock/gmock.h>
 
-#include "ExpoLauncherIcon.h"
-#include "PluginAdapter.h"
+#include "launcher/ExpoLauncherIcon.h"
+#include "unity-shared/WindowManager.h"
 
 using namespace unity;
 using namespace unity::launcher;
@@ -34,15 +34,15 @@ struct TestExpoLauncherIcon : testing::Test
 
 TEST_F(TestExpoLauncherIcon, ActivateToggleExpo)
 {
-  auto plugin_adapter = PluginAdapter::Default();
+  WindowManager& wm = WindowManager::Default();
 
-  ASSERT_FALSE(plugin_adapter->IsExpoActive());
-
-  icon.Activate(ActionArg());
-  ASSERT_TRUE(plugin_adapter->IsExpoActive());
+  ASSERT_FALSE(wm.IsExpoActive());
 
   icon.Activate(ActionArg());
-  EXPECT_FALSE(plugin_adapter->IsExpoActive());
+  ASSERT_TRUE(wm.IsExpoActive());
+
+  icon.Activate(ActionArg());
+  EXPECT_FALSE(wm.IsExpoActive());
 }
 
 TEST_F(TestExpoLauncherIcon, Position)

@@ -150,9 +150,11 @@ public:
 
   void MountAndOnFinishOpenInFileManager()
   {
+    glib::Object<GMountOperation> mount_op(gtk_mount_operation_new(nullptr));
+
     g_volume_mount(volume_,
                    (GMountMountFlags) 0,
-                   nullptr,
+                   mount_op,
                    nullptr,
                    (GAsyncReadyCallback) &Impl::OnMountFinish,
                    this);

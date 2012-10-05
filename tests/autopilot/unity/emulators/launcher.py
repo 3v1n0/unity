@@ -20,7 +20,7 @@ from time import sleep
 
 from unity.emulators import UnityIntrospectionObject
 from unity.emulators.icons import (
-    BamfLauncherIcon,
+    ApplicationLauncherIcon,
     BFBLauncherIcon,
     ExpoLauncherIcon,
     SimpleLauncherIcon,
@@ -339,7 +339,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
     def drag_icon_to_position(self, icon, pos, target, drag_type=IconDragType.INSIDE):
         """Drag a launcher icon to a new position.
 
-        'icon' is the icon to move. It must be either a BamfLauncherIcon or an
+        'icon' is the icon to move. It must be either a ApplicationLauncherIcon or an
         ExpoLauncherIcon instance. Other values will result in a TypeError being
         raised.
 
@@ -364,9 +364,9 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         if asked.
 
         """
-        if not isinstance(icon, BamfLauncherIcon) \
+        if not isinstance(icon, ApplicationLauncherIcon) \
             and not isinstance(icon, ExpoLauncherIcon):
-            raise TypeError("Icon to move must be a BamfLauncherIcon or ExpoLauncherIcon, not %s"
+            raise TypeError("Icon to move must be a ApplicationLauncherIcon or ExpoLauncherIcon, not %s"
                 % type(icon).__name__)
 
         if pos not in (IconDragType.BEFORE, IconDragType.AFTER):
@@ -402,10 +402,10 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
     def lock_to_launcher(self, icon):
         """lock 'icon' to the launcher, if it's not already.
-        `icon` must be an instance of BamfLauncherIcon.
+        `icon` must be an instance of ApplicationLauncherIcon.
         """
-        if not isinstance(icon, BamfLauncherIcon):
-            raise TypeError("Can only lock instances of BamfLauncherIcon")
+        if not isinstance(icon, ApplicationLauncherIcon):
+            raise TypeError("Can only lock instances of ApplicationLauncherIcon")
         if icon.sticky:
             # Nothing to do.
             return
@@ -419,11 +419,11 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
     def unlock_from_launcher(self, icon):
         """lock 'icon' to the launcher, if it's not already.
 
-        `icon` must be an instance of BamfLauncherIcon.
+        `icon` must be an instance of ApplicationLauncherIcon.
 
         """
-        if not isinstance(icon, BamfLauncherIcon):
-            raise TypeError("Can only unlock instances of BamfLauncherIcon")
+        if not isinstance(icon, ApplicationLauncherIcon):
+            raise TypeError("Can only unlock instances of ApplicationLauncherIcon")
         if not icon.sticky:
             # nothing to do.
             return
@@ -468,9 +468,9 @@ class LauncherModel(UnityIntrospectionObject):
     def get_bamf_launcher_icons(self, visible_only=True):
         """Get a list of bamf launcher icons in this launcher."""
         if visible_only:
-            return self.get_children_by_type(BamfLauncherIcon, visible=True)
+            return self.get_children_by_type(ApplicationLauncherIcon, visible=True)
         else:
-            return self.get_children_by_type(BamfLauncherIcon)
+            return self.get_children_by_type(ApplicationLauncherIcon)
 
     def get_launcher_icons_for_monitor(self, monitor, visible_only=True):
         """Get a list of launcher icons for provided monitor."""

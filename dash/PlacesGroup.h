@@ -90,7 +90,6 @@ protected:
   long ComputeContentSize();
   void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw);
   void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw);
-  void PostDraw (nux::GraphicsEngine &graphics_engine, bool force_draw);
 
   // Key navigation
   virtual bool AcceptKeyNavFocus();

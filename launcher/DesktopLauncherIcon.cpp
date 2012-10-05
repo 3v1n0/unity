@@ -39,11 +39,10 @@ DesktopLauncherIcon::DesktopLauncherIcon()
   SetShortcut('d');
 }
 
-void
-DesktopLauncherIcon::ActivateLauncherIcon(ActionArg arg)
+void DesktopLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
-  WindowManager::Default()->ShowDesktop();
+  WindowManager::Default().ShowDesktop();
 }
 
 std::string DesktopLauncherIcon::GetName() const

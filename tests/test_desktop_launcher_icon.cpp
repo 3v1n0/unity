@@ -19,8 +19,8 @@
 
 #include <gmock/gmock.h>
 
-#include "PluginAdapter.h"
-#include "DesktopLauncherIcon.h"
+#include "unity-shared/WindowManager.h"
+#include "launcher/DesktopLauncherIcon.h"
 
 using namespace unity;
 using namespace unity::launcher;
@@ -50,15 +50,15 @@ TEST_F(TestDesktopLauncherIcon, Position)
 
 TEST_F(TestDesktopLauncherIcon, ActivateToggleShowDesktop)
 {
-  auto plugin_adapter = PluginAdapter::Default();
+  WindowManager& wm = WindowManager::Default();
 
-  ASSERT_FALSE(plugin_adapter->InShowDesktop());
-
-  icon.Activate(ActionArg());
-  ASSERT_TRUE(plugin_adapter->InShowDesktop());
+  ASSERT_FALSE(wm.InShowDesktop());
 
   icon.Activate(ActionArg());
-  EXPECT_FALSE(plugin_adapter->InShowDesktop());
+  ASSERT_TRUE(wm.InShowDesktop());
+
+  icon.Activate(ActionArg());
+  EXPECT_FALSE(wm.InShowDesktop());
 }
 
 TEST_F(TestDesktopLauncherIcon, ShowInSwitcher)

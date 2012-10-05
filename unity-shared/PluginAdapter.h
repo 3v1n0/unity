@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,16 +17,19 @@
  * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
-#ifndef PLUGINADAPTER_H
-#define PLUGINADAPTER_H
+#ifndef UNITYSHARED_PLUGINADAPTER_H
+#define UNITYSHARED_PLUGINADAPTER_H
 
 /* Compiz */
 #include <core/core.h>
 #include <core/atoms.h>
 
-#include <sigc++/sigc++.h>
+#include <NuxCore/Property.h>
 
-#include "WindowManager.h"
+#include "XWindowManager.h"
+
+namespace unity
+{
 
 typedef struct
 {
@@ -60,11 +63,12 @@ private:
 };
 
 
-class PluginAdapter : public sigc::trackable, public WindowManager
+class PluginAdapter : public sigc::trackable, public XWindowManager
 {
 public:
-  static PluginAdapter* Default();
-
+  // You shouldn't get the PluginAdapter if you really want a WindowManager.
+  // The PluginAdapter::Default should really only be called from within unityshell plugin.
+  static PluginAdapter& Default();
   static void Initialize(CompScreen* screen);
 
   nux::Property<bool> bias_active_to_viewport;
@@ -113,54 +117,56 @@ public:
   void NotifyResized(CompWindow* window, int x, int y, int w, int h);
   void NotifyStateChange(CompWindow* window, unsigned int state, unsigned int last_state);
   void NotifyCompizEvent(const char* plugin, const char* event, CompOption::Vector& option);
-  void NotifyNewDecorationState(guint32 xid);
+  void NotifyNewDecorationState(Window xid);
 
-  guint32 GetActiveWindow() const;
+  Window GetActiveWindow() const;
 
-  void Decorate(guint32 xid);
-  void Undecorate(guint32 xid);
+  void Decorate(Window xid) const;
+  void Undecorate(Window xid) const;
 
   // WindowManager implementation
-  bool IsWindowMaximized(guint xid) const;
-  bool IsWindowDecorated(guint xid);
-  bool IsWindowOnCurrentDesktop(guint xid) const;
-  bool IsWindowObscured(guint xid) const;
-  bool IsWindowMapped(guint xid) const;
-  bool IsWindowVisible(guint32 xid) const;
-  bool IsWindowOnTop(guint32 xid) const;
-  bool IsWindowClosable(guint32 xid) const;
-  bool IsWindowMinimizable(guint32 xid) const;
-  bool IsWindowMaximizable(guint32 xid) const;
+  bool IsWindowMaximized(Window window_id) const;
+  bool IsWindowDecorated(Window window_id) const;
+  bool IsWindowOnCurrentDesktop(Window window_id) const;
+  bool IsWindowObscured(Window window_id) const;
+  bool IsWindowMapped(Window window_id) const;
+  bool IsWindowVisible(Window window_id) const;
+  bool IsWindowOnTop(Window window_id) const;
+  bool IsWindowClosable(Window window_id) const;
+  bool IsWindowMinimizable(Window window_id) const;
+  bool IsWindowMaximizable(Window window_id) const;
 
-  void Restore(guint32 xid);
-  void RestoreAt(guint32 xid, int x, int y);
-  void Minimize(guint32 xid);
-  void Close(guint32 xid);
-  void Activate(guint32 xid);
-  void Raise(guint32 xid);
-  void Lower(guint32 xid);
+  void Restore(Window window_id);
+  void RestoreAt(Window window_id, int x, int y);
+  void Minimize(Window window_id);
+  void Close(Window window_id);
+  void Activate(Window window_id);
+  void Raise(Window window_id);
+  void Lower(Window window_id);
 
   void ShowDesktop();
   bool InShowDesktop() const;
 
   void SetWindowIconGeometry(Window window, nux::Geometry const& geo);
 
-  void FocusWindowGroup(std::vector<Window> windows, FocusVisibility, int monitor = -1, bool only_top_win = true);
-  bool ScaleWindowGroup(std::vector<Window> windows, int state, bool force);
+  void FocusWindowGroup(std::vector<Window> const& windows,
+                        FocusVisibility, int monitor = -1, bool only_top_win = true);
+  bool ScaleWindowGroup(std::vector<Window> const& windows,
+                        int state, bool force);
 
   bool IsScreenGrabbed() const;
   bool IsViewPortSwitchStarted() const;
 
-  unsigned long long GetWindowActiveNumber (guint32 xid) const;
+  unsigned long long GetWindowActiveNumber(Window window_id) const;
 
   bool MaximizeIfBigEnough(CompWindow* window) const;
 
-  int GetWindowMonitor(guint32 xid) const;
-  nux::Geometry GetWindowGeometry(guint32 xid) const;
-  nux::Geometry GetWindowSavedGeometry(guint32 xid) const;
+  int GetWindowMonitor(Window window_id) const;
+  nux::Geometry GetWindowGeometry(Window window_id) const;
+  nux::Geometry GetWindowSavedGeometry(Window window_id) const;
   nux::Geometry GetScreenGeometry() const;
-  nux::Geometry GetWorkAreaGeometry(guint32 xid = 0) const;
-  std::string GetWindowName(guint32 xid) const;
+  nux::Geometry GetWorkAreaGeometry(Window window_id = 0) const;
+  std::string GetWindowName(Window window_id) const;
 
   void CheckWindowIntersections(nux::Geometry const& region, bool &active, bool &any);
 
@@ -168,10 +174,10 @@ public:
 
   void SetCoverageAreaBeforeAutomaximize(float area);
 
-  bool saveInputFocus ();
-  bool restoreInputFocus ();
+  bool SaveInputFocus();
+  bool RestoreInputFocus();
 
-  void MoveResizeWindow(guint32 xid, nux::Geometry geometry);
+  void MoveResizeWindow(Window window_id, nux::Geometry geometry);
 
   Window GetTopWindowAbove(Window xid) const;
 
@@ -184,12 +190,12 @@ private:
   void InitiateScale(std::string const& match, int state = 0);
 
   bool CheckWindowIntersection(nux::Geometry const& region, CompWindow* window) const;
-  void SetMwmWindowHints(Window xid, MotifWmHints* new_hints);
+  void SetMwmWindowHints(Window xid, MotifWmHints* new_hints) const;
 
   Window GetTopMostValidWindowInViewport() const;
 
-  std::string GetTextProperty(guint32 xid, Atom atom) const;
-  std::string GetUtf8Property(guint32 xid, Atom atom) const;
+  std::string GetTextProperty(Window xid, Atom atom) const;
+  std::string GetUtf8Property(Window xid, Atom atom) const;
 
   CompScreen* m_Screen;
   MultiActionList m_ExpoActionList;
@@ -209,9 +215,9 @@ private:
   bool _in_show_desktop;
   CompWindow* _last_focused_window;
 
-  std::map<guint32, unsigned int> _window_decoration_state;
-
-  static PluginAdapter* _default;
+  std::map<Window, unsigned int> _window_decoration_state;
 };
+
+}
 
 #endif

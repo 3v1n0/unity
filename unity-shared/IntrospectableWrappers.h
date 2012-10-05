@@ -39,6 +39,9 @@ public:
   ResultWrapper(const dash::Result& result, nux::Geometry const& geo = nux::Geometry());
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
+
+  void UpdateGeometry(nux::Geometry const& geo);
+
 private:
   std::string uri_;
   std::string name_;

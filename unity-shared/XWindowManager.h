@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,26 +17,29 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include "WindowManager.h"
+#ifndef UNITYSHARED_XWINDOW_MANAGER_H
+#define UNITYSHARED_XWINDOW_MANAGER_H
+
+#include <Nux/Nux.h>
+#include <gdk/gdkx.h>
+#include <core/core.h>
+
+#include "unity-shared/WindowManager.h"
 
 namespace unity
 {
-namespace
+
+class XWindowManager : public WindowManager
 {
-WindowManagerPtr window_manager;
+public:
+  XWindowManager();
+
+  virtual void StartMove(Window window_id, int x, int y);
+
+private:
+  Atom move_resize_atom_;
+};
+
 }
 
-WindowManager& WindowManager::Default()
-{
-  if (!window_manager)
-    window_manager = create_window_manager();
-
-  return *window_manager;
-}
-
-std::string WindowManager::GetName() const
-{
-  return "WindowManager";
-}
-
-} // namespace unity
+#endif // WINDOW_MANAGER_H

@@ -168,6 +168,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/Timer.cpp
                  ${UNITY_SRC}/UnityshellPrivate.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/WindowManager.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/StandaloneWindowManager.cpp
                  ${UNITY_SRC}/UnityShowdesktopHandler.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
@@ -201,7 +202,7 @@ if (GTEST_SRC_DIR AND
 # Tests that require X
   add_executable(test-gtest
                  test_main.cpp
-                 test_bamf_launcher_icon.cpp
+                 test_application_launcher_icon.cpp
                  test_bfb_launcher_icon.cpp
                  test_dashview_impl.cpp
                  test_desktop_launcher_icon.cpp
@@ -266,7 +267,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/hud/HudPrivate.cpp
                  ${CMAKE_SOURCE_DIR}/hud/HudView.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/AbstractLauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/BamfLauncherIcon.cpp
+                 ${CMAKE_SOURCE_DIR}/launcher/ApplicationLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/BFBLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/CairoBaseWindow.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/DNDCollectionWindow.cpp
@@ -334,15 +335,14 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/IntrospectableWrappers.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/LineSeparator.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/JSONParser.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/KeyboardUtil.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/OverlayRenderer.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/PanelStyle.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/PlacesVScrollBar.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/PluginAdapterStandalone.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/PreviewStyle.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/RatingsButton.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/SearchBar.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/SearchBarSpinner.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/StandaloneWindowManager.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/StaticCairoText.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/TextureCache.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Timer.cpp
@@ -355,6 +355,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/UnityWindowView.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/UserThumbnailProvider.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/WindowManager.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/XKeyboardUtil.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/ubus-server.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unityshell/src/WindowMinimizeSpeedController.cpp
                 )
