@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <UnityCore/GLibDBusProxy.h>
 #include <UnityCore/GLibSource.h>
 #include <UnityCore/DBusIndicators.h>
 
@@ -48,7 +49,6 @@ public:
   GMainLoop* loop_;
   DBusIndicatorsTest* dbus_indicators;
   int nChecks;
-  GDBusConnection* session;
   glib::Source::UniquePtr timeout;
 };
 
@@ -101,45 +101,24 @@ TEST_F(TestDBusIndicators, TestSync)
   EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().back()->id(), "test_entry_id2");
 
   // Tell the service to trigger a resync and to send the entries in the reverse order
-  session = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
-  g_dbus_connection_set_exit_on_close(session, FALSE);
+  glib::DBusProxy dbus_proxy("com.canonical.Unity.Test",
+            "/com/canonical/Unity/Panel/Service",
+            "com.canonical.Unity.Panel.Service");
+  dbus_proxy.CallSync("TriggerResync1");
 
-  g_dbus_connection_call_sync(session,
-                              "com.canonical.Unity.Test",
-                              "/com/canonical/Unity/Panel/Service",
-                              "com.canonical.Unity.Panel.Service",
-                              "TriggerResync1",
-                              NULL, /* params */
-                              NULL, /* ret type */
-                              G_DBUS_CALL_FLAGS_NONE,
-                              -1,
-                              NULL,
-                              NULL);
   // wait for the Resync to come and go
-  auto timeout_check_2 = [] (gpointer data) -> gboolean
+  auto timeout_check_2 = [&] () -> bool
   {
-    TestDBusIndicators* self = static_cast<TestDBusIndicators*>(data);
-
-    GVariant *ret = g_dbus_connection_call_sync(self->session,
-                              "com.canonical.Unity.Test",
-                              "/com/canonical/Unity/Panel/Service",
-                              "com.canonical.Unity.Panel.Service",
-                              "TriggerResync1Sent",
-                              NULL, /* params */
-                              G_VARIANT_TYPE("(b)"), /* ret type */
-                              G_DBUS_CALL_FLAGS_NONE,
-                              -1,
-                              NULL,
-                              NULL);
-    self->nChecks++;
-    bool quit_loop = g_variant_get_boolean(g_variant_get_child_value(ret, 0)) || self->nChecks > 99;
+    GVariant *ret = dbus_proxy.CallSync("TriggerResync1Sent");
+    nChecks++;
+    bool quit_loop = (ret != nullptr && g_variant_get_boolean(g_variant_get_child_value(ret, 0))) || nChecks > 99;
     if (quit_loop)
-      g_main_loop_quit(self->loop_);
+      g_main_loop_quit(loop_);
     return !quit_loop;
   };
 
   nChecks = 0;
-  g_timeout_add(100, timeout_check_2, this);
+  timeout.reset(new glib::Timeout(100, timeout_check_2));
 
   g_main_loop_run(loop_);
 
