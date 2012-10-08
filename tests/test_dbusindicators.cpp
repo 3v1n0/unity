@@ -100,10 +100,10 @@ TEST_F(TestDBusIndicators, TestSync)
   EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().front()->id(), "test_entry_id");
   EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().back()->id(), "test_entry_id2");
 
-  // Tell the service to trigger a resync and to send the entries in the reverse order
   glib::DBusProxy dbus_proxy("com.canonical.Unity.Test",
             "/com/canonical/Unity/Panel/Service",
             "com.canonical.Unity.Panel.Service");
+  // Tell the service to trigger a resync and to send the entries in the reverse order
   dbus_proxy.CallSync("TriggerResync1");
 
   // wait for the Resync to come and go
