@@ -31,7 +31,7 @@ namespace launcher
 ExpoLauncherIcon::ExpoLauncherIcon()
   : SimpleLauncherIcon(IconType::EXPO)
 {
-  tooltip_text = _("Workspace Switcher");
+  tooltip_text = _("Workspaces");
   icon_name = "workspace-switcher";
   SetQuirk(Quirk::VISIBLE, false);
   SetQuirk(Quirk::RUNNING, false);
