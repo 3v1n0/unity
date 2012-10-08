@@ -338,7 +338,6 @@ GVariant *DBusProxy::Impl::CallSync(std::string const& method_name,
   return nullptr;
 }
 
-
 void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointer call_data)
 {
   glib::Error error;
