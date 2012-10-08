@@ -47,7 +47,6 @@
 #include "unity-shared/TimeUtil.h"
 #include "unity-shared/TextureCache.h"
 #include "unity-shared/IconLoader.h"
-#include "unity-shared/WindowManager.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UnitySettings.h"
@@ -180,14 +179,14 @@ Launcher::Launcher(nux::BaseWindow* parent,
   ql_manager.quicklist_opened.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
   ql_manager.quicklist_closed.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
 
-  WindowManager& plugin_adapter = *(WindowManager::Default());
-  plugin_adapter.window_mapped.connect(sigc::hide(sigc::mem_fun(this, &Launcher::DndTimeoutSetup)));
-  plugin_adapter.window_unmapped.connect(sigc::hide(sigc::mem_fun(this, &Launcher::DndTimeoutSetup)));
-  plugin_adapter.initiate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
-  plugin_adapter.initiate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
-  plugin_adapter.terminate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
-  plugin_adapter.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
-  plugin_adapter.compiz_screen_viewport_switch_ended.connect(sigc::mem_fun(this, &Launcher::EnsureAnimation));
+  WindowManager& wm = WindowManager::Default();
+  wm.window_mapped.connect(sigc::hide(sigc::mem_fun(this, &Launcher::DndTimeoutSetup)));
+  wm.window_unmapped.connect(sigc::hide(sigc::mem_fun(this, &Launcher::DndTimeoutSetup)));
+  wm.initiate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
+  wm.initiate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
+  wm.terminate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
+  wm.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
+  wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &Launcher::EnsureAnimation));
 
   display.changed.connect(sigc::mem_fun(this, &Launcher::OnDisplayChanged));
 
@@ -1403,8 +1402,9 @@ void Launcher::DndTimeoutSetup()
 
 void Launcher::OnPluginStateChanged()
 {
-  _hide_machine.SetQuirk(LauncherHideMachine::EXPO_ACTIVE, WindowManager::Default()->IsExpoActive());
-  _hide_machine.SetQuirk(LauncherHideMachine::SCALE_ACTIVE, WindowManager::Default()->IsScaleActive());
+  WindowManager& wm = WindowManager::Default();
+  _hide_machine.SetQuirk(LauncherHideMachine::EXPO_ACTIVE, wm.IsExpoActive());
+  _hide_machine.SetQuirk(LauncherHideMachine::SCALE_ACTIVE, wm.IsScaleActive());
 }
 
 LauncherHideMode Launcher::GetHideMode() const
@@ -1948,10 +1948,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   gPainter.PopBackground(push_count);
   GfxContext.PopClippingRectangle();
   GfxContext.PopClippingRectangle();
-}
-
-void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
 }
 
 long Launcher::PostLayoutManagement(long LayoutResult)

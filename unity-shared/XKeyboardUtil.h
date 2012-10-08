@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2011-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,29 +14,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ * Authored by: Jason Smith <jason.smith@canonical.com>
  */
 
-#include "WindowManager.h"
+#ifndef UNITYSHARED_XKEYBOARDUTIL_H
+#define UNITYSHARED_XKEYBOARDUTIL_H
+
+#include <X11/Xlib.h>
 
 namespace unity
 {
-namespace
+namespace keyboard
 {
-WindowManagerPtr window_manager;
+
+KeySym get_key_above_key_symbol(Display* display, KeySym key_symbol);
+
+
+}
 }
 
-WindowManager& WindowManager::Default()
-{
-  if (!window_manager)
-    window_manager = create_window_manager();
+#endif // UNITYSHARED_XKEYBOARDUTIL_H
 
-  return *window_manager;
-}
-
-std::string WindowManager::GetName() const
-{
-  return "WindowManager";
-}
-
-} // namespace unity

@@ -26,15 +26,13 @@
 #include <NuxCore/Math/MathInc.h>
 
 #include <sigc++/sigc++.h>
-
-#include <X11/Xlib.h>
-
 #include <libdbusmenu-glib/menuitem.h>
 
 #include "DndData.h"
 #include "unity-shared/Introspectable.h"
 #include "LauncherEntryRemote.h"
 #include "unity-shared/IconTextureSource.h"
+#include "unity-shared/WindowManager.h"
 
 namespace unity
 {

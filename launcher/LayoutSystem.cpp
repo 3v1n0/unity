@@ -18,11 +18,10 @@
  */
 
 #include "LayoutSystem.h"
-#include "unity-shared/WindowManager.h"
 
 namespace unity {
 namespace ui {
-	
+
 LayoutSystem::LayoutSystem()
 {
   spacing = 8;
@@ -33,23 +32,26 @@ LayoutSystem::~LayoutSystem()
 {
 }
 
-void LayoutSystem::LayoutWindows (LayoutWindowList windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
+void LayoutSystem::LayoutWindows(LayoutWindowList windows,
+                                 nux::Geometry const& max_bounds,
+                                 nux::Geometry& final_bounds)
 {
   unsigned int size = windows.size();
 
   if (size == 0)
     return;
-  
+
+  WindowManager& wm = WindowManager::Default();
   for (auto window : windows)
   {
-  	window->geo = WindowManager::Default ()->GetWindowGeometry (window->xid);
+  	window->geo = wm.GetWindowGeometry(window->xid);
     window->aspect_ratio = (float)window->geo.width / (float)window->geo.height;
   }
-  
-  LayoutGridWindows (windows, max_bounds, final_bounds);
+
+  LayoutGridWindows(windows, max_bounds, final_bounds);
 }
 
-nux::Size LayoutSystem::GridSizeForWindows (LayoutWindowList windows, nux::Geometry const& max_bounds)
+nux::Size LayoutSystem::GridSizeForWindows(LayoutWindowList windows, nux::Geometry const& max_bounds)
 {
   int count = (int)windows.size();
 
@@ -58,7 +60,7 @@ nux::Size LayoutSystem::GridSizeForWindows (LayoutWindowList windows, nux::Geome
 
   if (count == 2)
   {
-    float stacked_aspect = std::max (windows[0]->geo.width, windows[1]->geo.width) / (float)(windows[0]->geo.height + windows[1]->geo.height);  
+    float stacked_aspect = std::max (windows[0]->geo.width, windows[1]->geo.width) / (float)(windows[0]->geo.height + windows[1]->geo.height);
     float row_aspect = (float)(windows[0]->geo.width + windows[1]->geo.width) / std::max(windows[0]->geo.height, windows[1]->geo.height);
     float box_aspect = (float)max_bounds.width / max_bounds.height;
     if (abs(row_aspect - box_aspect) > abs(stacked_aspect - box_aspect))

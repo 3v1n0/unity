@@ -17,6 +17,19 @@ set (CMAKE_CXX_FLAGS "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissiv
 set (CMAKE_CXX_FLAGS_DEBUG "-g3")
 set (CMAKE_CXX_FLAGS_RELEASE "")
 
+option(
+  UNITY_ENABLE_X_ORG_SUPPORT
+  "Enable X.org support in unity"
+  ON
+)
+
+if(UNITY_ENABLE_X_ORG_SUPPORT)
+  add_definitions(-DUNITY_HAS_X_ORG_SUPPORT)
+  message("Unity is configured with support for X.org")
+else ()
+  message("Unity is configured with without X.org")
+endif()
+
 if (BUILD_GLES)
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNUX_OPENGLES_20 -DUSE_GLES")
     set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm -lpthread -ldl")

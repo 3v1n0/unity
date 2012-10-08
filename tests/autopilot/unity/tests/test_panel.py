@@ -13,6 +13,7 @@ from autopilot.emulators.bamf import BamfWindow
 from autopilot.matchers import Eventually
 import logging
 import os
+from testtools import skip
 from testtools.matchers import Equals,  GreaterThan, NotEquals
 from time import sleep
 
@@ -143,6 +144,7 @@ class PanelTitleTests(PanelTestsBase):
 
     scenarios = _make_monitor_scenarios()
 
+    @skip("Disabled due to Show Desktop Usage")
     def test_panel_title_on_empty_desktop(self):
         """With no windows shown, the panel must display the default title."""
         self.window_manager.enter_show_desktop()

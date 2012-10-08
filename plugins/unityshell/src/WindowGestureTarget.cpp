@@ -25,6 +25,7 @@
 #include <Nux/Nux.h> // otherwise unityshell.h inclusion will cause failures
 #include "unityshell.h"
 
+// To make the gesture tests pass, this has to be a local include.
 #include "PluginAdapter.h"
 
 using namespace nux;
@@ -67,7 +68,7 @@ GestureDeliveryRequest WindowGestureTarget::GestureEvent(const nux::GestureEvent
   switch (event.type)
   {
     case nux::EVENT_GESTURE_BEGIN:
-      PluginAdapter::Default()->ShowGrabHandles(window_, false);
+      PluginAdapter::Default().ShowGrabHandles(window_, false);
       break;
     case EVENT_GESTURE_UPDATE:
       if (event.GetGestureClasses() & PINCH_GESTURE)
@@ -91,7 +92,7 @@ GestureDeliveryRequest WindowGestureTarget::GestureEvent(const nux::GestureEvent
         EndWindowMove(event);
         started_window_move_ = false;
       }
-      PluginAdapter::Default()->ShowGrabHandles(window_, true);
+      PluginAdapter::Default().ShowGrabHandles(window_, true);
       break;
   };
 

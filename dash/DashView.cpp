@@ -370,14 +370,11 @@ void DashView::SetupViews()
 {
   dash::Style& style = dash::Style::Instance();
 
-  auto main_layout = new nux::HLayout;
-  main_layout->SetLeftAndRightPadding(style.GetVSeparatorSize(), 0);
-  main_layout->SetTopAndBottomPadding(style.GetHSeparatorSize(), 0);
-  SetLayout(main_layout);
-
   layout_ = new nux::VLayout();
+  layout_->SetLeftAndRightPadding(style.GetVSeparatorSize(), 0);
+  layout_->SetTopAndBottomPadding(style.GetHSeparatorSize(), 0);
+  SetLayout(layout_);
   layout_->SetRedirectRenderingToTexture(true);
-  main_layout->AddLayout(layout_);
 
   content_layout_ = new DashLayout(NUX_TRACKER_LOCATION);
   content_layout_->SetTopAndBottomPadding(style.GetDashViewTopPadding(), 0);
@@ -527,7 +524,13 @@ static float Interpolate2(float p, int start, int end1, int end2)
 
 void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
+  auto& style = dash::Style::Instance();
+
   renderer_.DrawInner(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry());
+  
+  nux::Geometry clip_geo = layout_->GetGeometry();
+  clip_geo.x += style.GetVSeparatorSize();
+  graphics_engine.PushClippingRectangle(clip_geo);
 
   bool display_ghost = false;
   bool preview_redraw = false;
@@ -780,6 +783,8 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
   {
     nux::GetPainter().PopBackgroundStack();
   }
+
+  graphics_engine.PopClippingRectangle();
 
   renderer_.DrawInnerCleanup(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry());
 }
@@ -1398,8 +1403,8 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
 
   if (direction == KEY_NAV_NONE)
   {
-    if (ui::KeyboardUtil::IsPrintableKeySymbol(x11_key_code) ||
-        ui::KeyboardUtil::IsMoveKeySymbol(x11_key_code))
+    if (keyboard::is_printable_key_symbol(x11_key_code) ||
+        keyboard::is_move_key_symbol(x11_key_code))
     {
       search_key = true;
     }

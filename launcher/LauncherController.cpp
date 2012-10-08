@@ -29,7 +29,7 @@
 #include <UnityCore/DesktopUtilities.h>
 
 #include "LauncherOptions.h"
-#include "BamfLauncherIcon.h"
+#include "ApplicationLauncherIcon.h"
 #include "DesktopLauncherIcon.h"
 #include "VolumeLauncherIcon.h"
 #include "FavoriteStore.h"
@@ -38,7 +38,6 @@
 #include "LauncherControllerPrivate.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "ExpoLauncherIcon.h"
-#include "unity-shared/WindowManager.h"
 #include "TrashLauncherIcon.h"
 #include "BFBLauncherIcon.h"
 #include "unity-shared/UScreen.h"
@@ -141,8 +140,8 @@ Controller::Impl::Impl(Controller* parent)
 
   uscreen->changed.connect(sigc::mem_fun(this, &Controller::Impl::OnScreenChanged));
 
-  WindowManager& plugin_adapter = *(WindowManager::Default());
-  plugin_adapter.window_focus_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnWindowFocusChanged));
+  WindowManager& wm = WindowManager::Default();
+  wm.window_focus_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnWindowFocusChanged));
 
   ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [&](GVariant * args) {
     if (reactivate_keynav)
@@ -383,7 +382,7 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
   {
     // Setting the icon position and adding it to the model, makes the launcher
     // to compute its center
-    RegisterIcon(result, GetLastIconPriority<BamfLauncherIcon>("", true));
+    RegisterIcon(result, GetLastIconPriority<ApplicationLauncherIcon>("", true));
 
     // This will ensure that the center of the new icon is set, so that
     // the animation could be done properly.
@@ -398,7 +397,7 @@ void Controller::Impl::SortAndUpdate()
 {
   unsigned shortcut = 1;
 
-  for (auto const& icon : model_->GetSublist<BamfLauncherIcon>())
+  for (auto const& icon : model_->GetSublist<ApplicationLauncherIcon>())
   {
     if (shortcut <= 10 && icon->IsVisible())
     {
@@ -424,7 +423,7 @@ void Controller::Impl::OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr const& 
   {
     case AbstractLauncherIcon::IconType::APPLICATION:
     {
-      BamfLauncherIcon* bamf_icon = dynamic_cast<BamfLauncherIcon*>(icon.GetPointer());
+      ApplicationLauncherIcon* bamf_icon = dynamic_cast<ApplicationLauncherIcon*>(icon.GetPointer());
 
       if (bamf_icon)
       {
@@ -458,7 +457,7 @@ void Controller::Impl::OnLauncherEntryRemoteAdded(LauncherEntryRemote::Ptr const
   if (entry->AppUri().empty())
     return;
 
-  auto const& apps_icons = model_->GetSublist<BamfLauncherIcon>();
+  auto const& apps_icons = model_->GetSublist<ApplicationLauncherIcon>();
   auto const& icon = std::find_if(apps_icons.begin(), apps_icons.end(),
     [&entry](AbstractLauncherIcon::Ptr const& i) { return (i->RemoteUri() == entry->AppUri()); });
 
@@ -541,7 +540,7 @@ void Controller::Impl::OnFavoriteStoreFavoriteRemoved(std::string const& entry)
 void Controller::Impl::ResetIconPriorities()
 {
   FavoriteList const& favs = FavoriteStore::Instance().GetFavorites();
-  auto const& apps_icons = model_->GetSublist<BamfLauncherIcon>();
+  auto const& apps_icons = model_->GetSublist<ApplicationLauncherIcon>();
   auto const& volumes_icons = model_->GetSublist<VolumeLauncherIcon>();
   bool running_apps_found = false;
   bool expo_icon_found = false;
@@ -745,8 +744,8 @@ void Controller::Impl::OnViewOpened(BamfMatcher* matcher, BamfView* view)
     return;
   }
 
-  AbstractLauncherIcon::Ptr icon(new BamfLauncherIcon(app));
-  RegisterIcon(icon, GetLastIconPriority<BamfLauncherIcon>(local::RUNNING_APPS_URI));
+  AbstractLauncherIcon::Ptr icon(new ApplicationLauncherIcon(app));
+  RegisterIcon(icon, GetLastIconPriority<ApplicationLauncherIcon>(local::RUNNING_APPS_URI));
 }
 
 void Controller::Impl::OnDeviceIconAdded(AbstractLauncherIcon::Ptr const& icon)
@@ -791,7 +790,7 @@ AbstractLauncherIcon::Ptr Controller::Impl::CreateFavoriteIcon(std::string const
       return result;
     }
 
-    result = AbstractLauncherIcon::Ptr(new BamfLauncherIcon(app));
+    result = AbstractLauncherIcon::Ptr(new ApplicationLauncherIcon(app));
   }
   else if (icon_uri.find(FavoriteStore::URI_PREFIX_DEVICE) == 0)
   {
@@ -880,7 +879,7 @@ void Controller::Impl::AddRunningApps()
     if (g_object_get_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen")))
       continue;
 
-    AbstractLauncherIcon::Ptr icon(new BamfLauncherIcon(app));
+    AbstractLauncherIcon::Ptr icon(new ApplicationLauncherIcon(app));
     RegisterIcon(icon, ++sort_priority_);
   }
 }
