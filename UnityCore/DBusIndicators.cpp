@@ -74,6 +74,7 @@ public:
 
   DBusIndicators* owner_;
 
+  bool connected_;
   glib::DBusProxy gproxy_;
   glib::Source::UniquePtr reconnect_timeout_;
   glib::Source::UniquePtr show_entry_idle_;
@@ -85,6 +86,7 @@ public:
 // Public Methods
 DBusIndicators::Impl::Impl(const std::string &dbus_name, DBusIndicators* owner)
   : owner_(owner)
+  , connected_(false)
   , gproxy_(dbus_name, SERVICE_PATH, SERVICE_IFACE,
             G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES)
 {
@@ -126,13 +128,13 @@ void DBusIndicators::Impl::CheckLocalService()
 
 void DBusIndicators::Impl::OnConnected()
 {
-  owner_->connected = true;
+  connected_ = true;
   RequestSyncAll();
 }
 
 void DBusIndicators::Impl::OnDisconnected()
 {
-  owner_->connected = false;
+  connected_ = false;
   for (auto indicator : owner_->GetIndicators())
   {
     owner_->RemoveIndicator(indicator->name());
@@ -408,11 +410,16 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
 }
 
 DBusIndicators::DBusIndicators(const std::string &dbus_name)
-  : connected(false), pimpl(new Impl(dbus_name, this))
+  : pimpl(new Impl(dbus_name, this))
 {}
 
 DBusIndicators::~DBusIndicators()
 {}
+
+bool DBusIndicators::IsConnected() const
+{
+  return pimpl->connected_;
+}
 
 void DBusIndicators::SyncGeometries(std::string const& name,
                                     EntryLocationMap const& locations)

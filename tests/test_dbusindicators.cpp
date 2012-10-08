@@ -35,7 +35,7 @@ TEST_F(TestDBusIndicators, TestConstruction)
   {
     TestDBusIndicators* self = static_cast<TestDBusIndicators*>(data);
     self->nChecks++;
-    bool quit_loop = self->dbus_indicators->connected || self->nChecks > 99;
+    bool quit_loop = self->dbus_indicators->IsConnected() || self->nChecks > 99;
     if (quit_loop)
       g_main_loop_quit(self->loop_);
     return !quit_loop;
@@ -46,7 +46,7 @@ TEST_F(TestDBusIndicators, TestConstruction)
 
   g_main_loop_run(loop_);
 
-  EXPECT_EQ(dbus_indicators->connected, true);
+  EXPECT_EQ(dbus_indicators->IsConnected(), true);
 }
 
 TEST_F(TestDBusIndicators, TestSync)

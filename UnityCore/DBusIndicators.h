@@ -22,8 +22,6 @@
 
 #include "Indicators.h"
 
-#include <NuxCore/Property.h>
-
 namespace unity
 {
 namespace indicator
@@ -39,7 +37,7 @@ public:
   DBusIndicators(const std::string &dbus_name = "com.canonical.Unity.Panel.Service");
   ~DBusIndicators();
 
-  nux::Property<bool> connected;
+  bool IsConnected() const;
 
   void SyncGeometries(std::string const& name,
                       EntryLocationMap const& locations);
