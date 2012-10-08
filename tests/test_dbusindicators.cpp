@@ -1,9 +1,11 @@
 #include <gtest/gtest.h>
 
+#include <UnityCore/GLibSource.h>
 #include <UnityCore/DBusIndicators.h>
 
 #include "test_utils.h"
 
+using namespace unity;
 using namespace unity::indicator;
 
 namespace
@@ -47,6 +49,7 @@ public:
   DBusIndicatorsTest* dbus_indicators;
   int nChecks;
   GDBusConnection* session;
+  glib::Source::UniquePtr timeout;
 };
 
 TEST_F(TestDBusIndicators, TestConstruction)
@@ -54,18 +57,17 @@ TEST_F(TestDBusIndicators, TestConstruction)
   SetUp();
 
   // wait until the dbus indicator has connected to the panel service
-  auto timeout_check = [] (gpointer data) -> gboolean
+  auto timeout_check = [&] () -> bool
   {
-    TestDBusIndicators* self = static_cast<TestDBusIndicators*>(data);
-    self->nChecks++;
-    bool quit_loop = self->dbus_indicators->IsConnected() || self->nChecks > 99;
+    nChecks++;
+    bool quit_loop = dbus_indicators->IsConnected() || nChecks > 99;
     if (quit_loop)
-      g_main_loop_quit(self->loop_);
+      g_main_loop_quit(loop_);
     return !quit_loop;
   };
 
   nChecks = 0;
-  g_timeout_add(100, timeout_check, this);
+  timeout.reset(new glib::Timeout(100, timeout_check));
 
   g_main_loop_run(loop_);
 
@@ -79,18 +81,17 @@ TEST_F(TestDBusIndicators, TestSync)
   SetUp();
 
   // wait until the dbus indicator gets any indicator from the panel service
-  auto timeout_check = [] (gpointer data) -> gboolean
+  auto timeout_check = [&] () -> bool
   {
-    TestDBusIndicators* self = static_cast<TestDBusIndicators*>(data);
-    self->nChecks++;
-    bool quit_loop = !self->dbus_indicators->GetIndicators().empty() || self->nChecks > 99;
+    nChecks++;
+    bool quit_loop = !dbus_indicators->GetIndicators().empty() || nChecks > 99;
     if (quit_loop)
-      g_main_loop_quit(self->loop_);
+      g_main_loop_quit(loop_);
     return !quit_loop;
   };
 
   nChecks = 0;
-  g_timeout_add(100, timeout_check, this);
+  timeout.reset(new glib::Timeout(100, timeout_check));
 
   g_main_loop_run(loop_);
 
