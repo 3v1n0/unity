@@ -33,6 +33,21 @@ public:
   {
     loop_ = g_main_loop_new(NULL, FALSE);
     dbus_indicators = new DBusIndicatorsTest ();
+
+    // wait until the dbus indicator has connected to the panel service
+    auto timeout_check = [&] () -> bool
+    {
+      nChecks++;
+      bool quit_loop = dbus_indicators->IsConnected() || nChecks > 99;
+      if (quit_loop)
+        g_main_loop_quit(loop_);
+      return !quit_loop;
+    };
+
+    nChecks = 0;
+    timeout.reset(new glib::Timeout(100, timeout_check));
+
+    g_main_loop_run(loop_);
   }
 
   void TearDown()
@@ -54,21 +69,6 @@ public:
 
 TEST_F(TestDBusIndicators, TestConstruction)
 {
-  // wait until the dbus indicator has connected to the panel service
-  auto timeout_check = [&] () -> bool
-  {
-    nChecks++;
-    bool quit_loop = dbus_indicators->IsConnected() || nChecks > 99;
-    if (quit_loop)
-      g_main_loop_quit(loop_);
-    return !quit_loop;
-  };
-
-  nChecks = 0;
-  timeout.reset(new glib::Timeout(100, timeout_check));
-
-  g_main_loop_run(loop_);
-
   EXPECT_EQ(dbus_indicators->IsConnected(), true);
 }
 
