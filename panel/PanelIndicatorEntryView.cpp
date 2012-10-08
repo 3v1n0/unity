@@ -98,9 +98,9 @@ void PanelIndicatorEntryView::OnActiveChanged(bool is_active)
 
 void PanelIndicatorEntryView::ShowMenu(int button)
 {
-  auto wm = WindowManager::Default();
+  WindowManager& wm = WindowManager::Default();
 
-  if (!wm->IsExpoActive() && !wm->IsScaleActive())
+  if (!wm.IsExpoActive() && !wm.IsScaleActive())
   {
     proxy_->ShowMenu(GetAbsoluteX(),
                      GetAbsoluteY() + panel::Style::Instance().panel_height,

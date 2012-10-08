@@ -36,9 +36,6 @@ const std::string LOCAL_DATA_DIR = BUILDDIR"/tests/data";
 TEST(TestDesktopUtilitiesDesktopID, TestEmptyValues)
 {
   std::vector<std::string> empty_list;
-
-  EXPECT_THAT(DesktopUtilities::GetDesktopID(empty_list, "/some/path/to.desktop"),
-              Eq("/some/path/to.desktop"));
   EXPECT_THAT(DesktopUtilities::GetDesktopID(empty_list, "/some/path/to.desktop"),
               Eq("/some/path/to.desktop"));
 
@@ -75,6 +72,21 @@ TEST(TestDesktopUtilitiesDesktopID, TestStripsPath)
               Eq("to.desktop"));
   EXPECT_THAT(DesktopUtilities::GetDesktopID(dirs, "/some/path/applications/to.desktop"),
               Eq("/some/path/applications/to.desktop"));
+}
+
+TEST(TestDesktopUtilitiesDesktopID, TestUnescapePath)
+{
+  std::vector<std::string> dirs;
+
+  dirs.push_back("/this/ path");
+  dirs.push_back("/that/path /");
+
+  EXPECT_THAT(DesktopUtilities::GetDesktopID(dirs, "/this/%20path/applications/to%20file.desktop"),
+              Eq("to file.desktop"));
+  EXPECT_THAT(DesktopUtilities::GetDesktopID(dirs, "/that/path%20/applications/to%20file.desktop"),
+              Eq("to file.desktop"));
+  EXPECT_THAT(DesktopUtilities::GetDesktopID(dirs, "/some/path/applications/to%20file.desktop"),
+              Eq("/some/path/applications/to file.desktop"));
 }
 
 TEST(TestDesktopUtilitiesDesktopID, TestSubdirectory)

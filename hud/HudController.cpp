@@ -75,9 +75,9 @@ Controller::Controller(std::function<AbstractView*(void)> const& function)
 
   launcher_width.changed.connect([&] (int new_width) { Relayout(); });
 
-  auto wm = WindowManager::Default();
-  wm->compiz_screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
-  wm->initiate_spread.connect(sigc::bind(sigc::mem_fun(this, &Controller::HideHud), true));
+  WindowManager& wm = WindowManager::Default();
+  wm.screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
+  wm.initiate_spread.connect(sigc::bind(sigc::mem_fun(this, &Controller::HideHud), true));
 
   hud_service_.queries_updated.connect(sigc::mem_fun(this, &Controller::OnQueriesFinished));
   timeline_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
@@ -106,11 +106,11 @@ void Controller::SetupWindow()
   /* FIXME - first time we load our windows there is a race that causes the
    * input window not to actually get input, this side steps that by causing
    * an input window show and hide before we really need it. */
-  auto wm = WindowManager::Default();
-  wm->saveInputFocus ();
+  WindowManager& wm = WindowManager::Default();
+  wm.SaveInputFocus();
   window_->EnableInputWindow(true, "Hud", true, false);
   window_->EnableInputWindow(false, "Hud", true, false);
-  wm->restoreInputFocus ();
+  wm.RestoreInputFocus();
 }
 
 void Controller::SetupHudView()
@@ -293,14 +293,14 @@ bool Controller::IsVisible()
 
 void Controller::ShowHud()
 {
-  WindowManager* adaptor = WindowManager::Default();
+  WindowManager& wm = WindowManager::Default();
   LOG_DEBUG(logger) << "Showing the hud";
   EnsureHud();
 
-  if (visible_ || adaptor->IsExpoActive() || adaptor->IsScaleActive())
+  if (visible_ || wm.IsExpoActive() || wm.IsScaleActive())
    return;
 
-  if (adaptor->IsScreenGrabbed())
+  if (wm.IsScreenGrabbed())
   {
     need_show_ = true;
     return;
@@ -344,8 +344,8 @@ void Controller::ShowHud()
       Window xid = bamf_window_get_xid(win);
 
       if (bamf_view_user_visible(view) && bamf_window_get_window_type(win) != BAMF_WINDOW_DOCK &&
-          WindowManager::Default()->IsWindowOnCurrentDesktop(xid) &&
-          WindowManager::Default()->IsWindowVisible(xid) &&
+          wm.IsWindowOnCurrentDesktop(xid) &&
+          wm.IsWindowVisible(xid) &&
           std::find(unity_xids.begin(), unity_xids.end(), xid) == unity_xids.end())
       {
         active_win = win;
@@ -416,7 +416,7 @@ void Controller::HideHud(bool restore)
 
   restore = true;
   if (restore)
-    WindowManager::Default ()->restoreInputFocus ();
+    WindowManager::Default().RestoreInputFocus();
 
   hud_service_.CloseQuery();
 
