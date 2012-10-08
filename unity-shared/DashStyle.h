@@ -20,6 +20,8 @@
 #ifndef DASH_STYLE_H
 #define DASH_STYLE_H
 
+#include "DashStyleInterface.h"
+
 #include <Nux/Nux.h>
 #include <Nux/View.h>
 #include <Nux/AbstractButton.h>
@@ -83,7 +85,7 @@ enum class Arrow {
 };
 
 
-class Style
+class Style : public StyleInterface
 {
 public:
   Style ();
