@@ -27,6 +27,7 @@
 
 #include <sigc++/sigc++.h>
 
+#include "unity-shared/DashStyleInterface.h"
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/StaticCairoText.h"
@@ -54,7 +55,7 @@ class PlacesGroup : public dash::AbstractPlacesGroup, public debug::Introspectab
   NUX_DECLARE_OBJECT_TYPE(PlacesGroup, dash::AbstractPlacesGroup);
 public:
 
-  PlacesGroup();
+  PlacesGroup(dash::StyleInterface& style);
 
   void SetIcon(std::string const& icon);
   void SetName(std::string const& name);
@@ -116,6 +117,8 @@ private:
   void RefreshLabel();
 
 private:
+  dash::StyleInterface& _style;
+
   nux::VLayout* _group_layout;
   nux::View* _header_view;
   nux::HLayout* _header_layout;
