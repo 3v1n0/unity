@@ -47,8 +47,8 @@ public:
 
   void TearDown()
   {
+    g_object_unref(session);
     delete dbus_indicators;
-    dbus_indicators = nullptr;
   }
 
   bool TriggerResync1Sent() const
