@@ -65,7 +65,7 @@ public:
                               NULL,
                               NULL);
     return g_variant_get_boolean(g_variant_get_child_value(ret, 0));
-  };
+  }
 
   GDBusConnection* session;
   DBusIndicatorsTest* dbus_indicators;
