@@ -13,6 +13,14 @@ using namespace unity::indicator;
 namespace
 {
 
+class DBusIndicatorsTest : public DBusIndicators
+{
+public:
+  DBusIndicatorsTest() : DBusIndicators("com.canonical.Unity.Test")
+  {
+  }
+};
+
 class TestDBusIndicators : public ::testing::Test
 {
 public:
@@ -28,7 +36,7 @@ public:
 TEST_F(TestDBusIndicators, TestConstruction)
 {
   loop_ = g_main_loop_new(NULL, FALSE);
-  dbus_indicators = new DBusIndicators ("com.canonical.Unity.Test");
+  dbus_indicators = new DBusIndicatorsTest ();
 
   // wait until the dbus indicator has connected to the panel service
   auto timeout_check = [] (gpointer data) -> gboolean
@@ -52,7 +60,7 @@ TEST_F(TestDBusIndicators, TestConstruction)
 TEST_F(TestDBusIndicators, TestSync)
 {
   loop_ = g_main_loop_new(NULL, FALSE);
-  dbus_indicators = new DBusIndicators ("com.canonical.Unity.Test");
+  dbus_indicators = new DBusIndicatorsTest ();
 
   // wait until the dbus indicator gets any indicator from the panel service
   auto timeout_check = [] (gpointer data) -> gboolean

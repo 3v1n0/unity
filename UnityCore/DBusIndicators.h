@@ -34,7 +34,7 @@ class DBusIndicators : public Indicators
 public:
   typedef std::shared_ptr<DBusIndicators> Ptr;
 
-  DBusIndicators(const std::string &dbus_name = "com.canonical.Unity.Panel.Service");
+  DBusIndicators();
   ~DBusIndicators();
 
   bool IsConnected() const;
@@ -50,6 +50,9 @@ public:
                                         unsigned int timestamp);
   virtual void OnShowAppMenu(unsigned int xid, int x, int y,
                              unsigned int timestamp);
+
+protected:
+  DBusIndicators(std::string const& dbus_name);
 
 private:
   class Impl;

@@ -409,6 +409,10 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
   cached_loc = locations;
 }
 
+DBusIndicators::DBusIndicators()
+  : pimpl(new Impl("com.canonical.Unity.Panel.Service", this))
+{}
+
 DBusIndicators::DBusIndicators(const std::string &dbus_name)
   : pimpl(new Impl(dbus_name, this))
 {}
