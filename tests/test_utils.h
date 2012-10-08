@@ -46,18 +46,18 @@ public:
     EXPECT_TRUE(success);
   }
 
-  static void WaitUntil(std::function<bool()> successFunction, unsigned int max_wait = 10)
+  static void WaitUntil(std::function<bool()> check_function, bool result = true, unsigned int max_wait = 10)
   {
     bool timeout_reached = false;
     guint32 timeout_id = ScheduleTimeout(&timeout_reached, max_wait * 1000);
 
-    while (!successFunction() && !timeout_reached)
+    while (!check_function() && !timeout_reached)
       g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
 
-    if (successFunction())
+    if (check_function())
       g_source_remove(timeout_id);
 
-    EXPECT_TRUE(successFunction());
+    EXPECT_EQ(check_function(), result);
   }
 
   static guint32 ScheduleTimeout(bool* timeout_reached, unsigned int timeout_duration = 10)

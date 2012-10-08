@@ -30,25 +30,20 @@ public:
 class TestDBusIndicators : public ::testing::Test
 {
 public:
-  TestDBusIndicators()
-  {
-  }
-
   void SetUp()
   {
     session = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
     g_dbus_connection_set_exit_on_close(session, FALSE);
 
-    dbus_indicators = new DBusIndicatorsTest ();
+    dbus_indicators.reset(new DBusIndicatorsTest ());
 
     // wait until the dbus indicator has connected to the panel service
-    Utils::WaitUntil(sigc::mem_fun(dbus_indicators, &DBusIndicatorsTest::IsConnected));
+    Utils::WaitUntil(sigc::mem_fun(*dbus_indicators, &DBusIndicatorsTest::IsConnected));
   }
 
   void TearDown()
   {
     g_object_unref(session);
-    delete dbus_indicators;
   }
 
   bool TriggerResync1Sent() const
@@ -73,7 +68,7 @@ public:
   }
 
   GDBusConnection* session;
-  DBusIndicatorsTest* dbus_indicators;
+  std::shared_ptr<DBusIndicatorsTest> dbus_indicators;
 };
 
 TEST_F(TestDBusIndicators, TestConstruction)
@@ -84,7 +79,7 @@ TEST_F(TestDBusIndicators, TestConstruction)
 TEST_F(TestDBusIndicators, TestSync)
 {
   // wait until the dbus indicator gets any indicator from the panel service
-  Utils::WaitUntil(sigc::mem_fun(dbus_indicators, &DBusIndicatorsTest::HasIndicators));
+  Utils::WaitUntil(sigc::mem_fun(*dbus_indicators, &DBusIndicatorsTest::HasIndicators));
 
   EXPECT_EQ(dbus_indicators->GetIndicators().size(), 1);
   EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().size(), 2);
