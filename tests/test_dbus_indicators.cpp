@@ -2,6 +2,7 @@
 
 #include <UnityCore/GLibDBusProxy.h>
 #include <UnityCore/GLibSource.h>
+#include <UnityCore/GLibWrapper.h>
 #include <UnityCore/DBusIndicators.h>
 
 #include "test_utils.h"
@@ -41,11 +42,6 @@ public:
     Utils::WaitUntil(sigc::mem_fun(*dbus_indicators, &DBusIndicatorsTest::IsConnected));
   }
 
-  void TearDown()
-  {
-    g_object_unref(session);
-  }
-
   bool TriggerResync1Sent() const
   {
     GVariant *ret = CallPanelMethod("TriggerResync1Sent");
@@ -67,7 +63,7 @@ public:
                                        NULL);
   }
 
-  GDBusConnection* session;
+  glib::Object<GDBusConnection> session;
   std::shared_ptr<DBusIndicatorsTest> dbus_indicators;
 };
 
