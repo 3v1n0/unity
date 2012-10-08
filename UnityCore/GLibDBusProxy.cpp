@@ -289,12 +289,12 @@ GVariant *DBusProxy::Impl::CallSync(std::string const& method_name,
   if (!proxy_)
   {
     bool timedout = false;
-    auto timeout_check = [&] () -> bool
+    auto timeout_cb = [&] () -> bool
     {
       timedout = true;
       return false;
     };
-    glib::Timeout timeout(timeout_msec < 0 ? 10000 : timeout_msec, timeout_check);
+    glib::Timeout timeout(timeout_msec < 0 ? 10000 : timeout_msec, timeout_cb);
 
     while (!proxy_ && !timedout)
     {
