@@ -54,8 +54,6 @@ public:
 
 TEST_F(TestDBusIndicators, TestConstruction)
 {
-  SetUp();
-
   // wait until the dbus indicator has connected to the panel service
   auto timeout_check = [&] () -> bool
   {
@@ -72,14 +70,10 @@ TEST_F(TestDBusIndicators, TestConstruction)
   g_main_loop_run(loop_);
 
   EXPECT_EQ(dbus_indicators->IsConnected(), true);
-
-  TearDown();
 }
 
 TEST_F(TestDBusIndicators, TestSync)
 {
-  SetUp();
-
   // wait until the dbus indicator gets any indicator from the panel service
   auto timeout_check = [&] () -> bool
   {
@@ -126,8 +120,6 @@ TEST_F(TestDBusIndicators, TestSync)
   EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().size(), 2);
   EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().front()->id(), "test_entry_id2");
   EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().back()->id(), "test_entry_id");
-
-  TearDown();
 }
 
 }
