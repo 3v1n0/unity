@@ -220,6 +220,7 @@ if (GTEST_SRC_DIR AND
                  test_launcher_icon.cpp
                  test_keyboard_util.cpp
                  test_panel_style.cpp
+                 test_places_group.cpp
                  test_previews_application.cpp
                  test_previews_generic.cpp
                  test_previews_movie.cpp
@@ -244,6 +245,10 @@ if (GTEST_SRC_DIR AND
                  gmockvolume.c
                  ${CMAKE_SOURCE_DIR}/dash/DashViewPrivate.cpp
                  ${CMAKE_SOURCE_DIR}/dash/ResultRenderer.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/PlacesGroup.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/ResultRenderer.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/ResultRendererHorizontalTile.cpp
+                 ${CMAKE_SOURCE_DIR}/dash/ResultRendererTile.cpp
                  ${CMAKE_SOURCE_DIR}/dash/ResultView.cpp
                  ${CMAKE_SOURCE_DIR}/dash/ResultViewGrid.cpp
                  ${CMAKE_SOURCE_DIR}/dash/previews/ActionButton.cpp
