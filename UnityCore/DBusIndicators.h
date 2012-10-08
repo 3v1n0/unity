@@ -37,8 +37,6 @@ public:
   DBusIndicators();
   ~DBusIndicators();
 
-  bool IsConnected() const;
-
   void SyncGeometries(std::string const& name,
                       EntryLocationMap const& locations);
 
@@ -53,6 +51,7 @@ public:
 
 protected:
   DBusIndicators(std::string const& dbus_name);
+  bool IsConnected() const;
 
 private:
   class Impl;

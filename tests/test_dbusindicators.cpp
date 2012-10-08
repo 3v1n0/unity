@@ -19,6 +19,8 @@ public:
   DBusIndicatorsTest() : DBusIndicators("com.canonical.Unity.Test")
   {
   }
+
+  using DBusIndicators::IsConnected;
 };
 
 class TestDBusIndicators : public ::testing::Test
@@ -28,7 +30,7 @@ public:
   {
   }
   GMainLoop* loop_;
-  DBusIndicators* dbus_indicators;
+  DBusIndicatorsTest* dbus_indicators;
   int nChecks;
   GDBusConnection* session;
 };
