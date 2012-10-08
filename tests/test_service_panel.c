@@ -232,7 +232,7 @@ bus_method (GDBusConnection *connection, const gchar *sender, const gchar *objec
   else if (g_strcmp0(method_name, "TriggerResync1") == 0) 
   {
     sync_return_mode = 1;
-    trigger_resync1_sent = TRUE;
+    trigger_resync1_sent = FALSE;
 
     g_dbus_method_invocation_return_value(invocation, NULL);
     GVariantBuilder ret_builder;
