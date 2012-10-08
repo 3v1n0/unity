@@ -1,13 +1,9 @@
 #include <gtest/gtest.h>
-// #include <glib-object.h>
 
-// #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/DBusIndicators.h>
 
 #include "test_utils.h"
 
-// using namespace std;
-// using namespace unity::dash;
 using namespace unity::indicator;
 
 namespace
