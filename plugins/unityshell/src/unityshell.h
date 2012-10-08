@@ -450,7 +450,7 @@ private:
   void DrawTexture(GLTexture::List const& textures, GLWindowPaintAttrib const&,
                    GLMatrix const&, unsigned mask, int x, int y, double aspect = 1.0f);
 
-  glow::Quads computeGlowQuads(GLTexture::List const& texture, int glow_size, double window_aspect = 1.0f);
+  glow::Quads computeGlowQuads(nux::Geometry const& geo, GLTexture::List const& texture, int glow_size);
   void paintGlow(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&,
                  glow::Quads const&, GLTexture::List const&, nux::Color const&, unsigned mask);
 
