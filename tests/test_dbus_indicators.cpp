@@ -53,18 +53,23 @@ public:
 
   bool TriggerResync1Sent() const
   {
-    GVariant *ret = g_dbus_connection_call_sync(session,
-                              "com.canonical.Unity.Test",
-                              "/com/canonical/Unity/Panel/Service",
-                              "com.canonical.Unity.Panel.Service",
-                              "TriggerResync1Sent",
-                              NULL, /* params */
-                              G_VARIANT_TYPE("(b)"), /* ret type */
-                              G_DBUS_CALL_FLAGS_NONE,
-                              -1,
-                              NULL,
-                              NULL);
+    GVariant *ret = CallPanelMethod("TriggerResync1Sent");
     return g_variant_get_boolean(g_variant_get_child_value(ret, 0));
+  }
+
+  GVariant* CallPanelMethod(std::string const& name) const
+  {
+    return g_dbus_connection_call_sync(session,
+                                       "com.canonical.Unity.Test",
+                                       "/com/canonical/Unity/Panel/Service",
+                                       "com.canonical.Unity.Panel.Service",
+                                       name.c_str(),
+                                       NULL,
+                                       NULL,
+                                       G_DBUS_CALL_FLAGS_NONE,
+                                       -1,
+                                       NULL,
+                                       NULL);
   }
 
   GDBusConnection* session;
@@ -87,17 +92,7 @@ TEST_F(TestDBusIndicators, TestSync)
   EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().back()->id(), "test_entry_id2");
 
   // Tell the service to trigger a resync and to send the entries in the reverse order
-  g_dbus_connection_call_sync(session,
-                              "com.canonical.Unity.Test",
-                              "/com/canonical/Unity/Panel/Service",
-                              "com.canonical.Unity.Panel.Service",
-                              "TriggerResync1",
-                              NULL, /* params */
-                              NULL, /* ret type */
-                              G_DBUS_CALL_FLAGS_NONE,
-                              -1,
-                              NULL,
-                              NULL);
+  CallPanelMethod("TriggerResync1");
 
   Utils::WaitUntil(sigc::mem_fun(this, &TestDBusIndicators::TriggerResync1Sent));
   // We know the resync has been sent, but it may have not been processed
