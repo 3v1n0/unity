@@ -196,7 +196,7 @@ if (GTEST_SRC_DIR AND
                  test_utils.h
                  test_ratings_filter.cpp
                  test_results.cpp
-                 test_dbusindicators.cpp
+                 test_dbus_indicators.cpp
                 )
   target_link_libraries(test-gtest-dbus gtest unity-shared ${LIBS})
   add_test(UnityGTestDBus test-gtest-dbus)
