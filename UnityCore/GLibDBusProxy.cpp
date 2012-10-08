@@ -66,11 +66,11 @@ public:
             GDBusCallFlags flags,
             int timeout_msec);
 
-  GVariant *CallSync(string const& method_name,
-                    GVariant* parameters,
-                    GCancellable* cancellable,
-                    GDBusCallFlags flags,
-                    int timeout_msec);
+  GVariant* CallSync(string const& method_name,
+                     GVariant* parameters,
+                     GCancellable* cancellable,
+                     GDBusCallFlags flags,
+                     int timeout_msec);
 
   void Connect(string const& signal_name, ReplyCallback callback);
   bool IsConnected();
@@ -394,7 +394,7 @@ void DBusProxy::Call(string const& method_name,
               timeout_msec);
 }
 
-GVariant *DBusProxy::CallSync(std::string const& method_name,
+GVariant* DBusProxy::CallSync(std::string const& method_name,
                               GVariant* parameters,
                               GCancellable *cancellable,
                               GDBusCallFlags flags,
