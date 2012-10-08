@@ -280,7 +280,7 @@ void DBusProxy::Impl::Call(string const& method_name,
   }
 }
 
-GVariant *DBusProxy::Impl::CallSync(std::string const& method_name,
+GVariant* DBusProxy::Impl::CallSync(std::string const& method_name,
                                     GVariant* parameters,
                                     GCancellable *cancellable,
                                     GDBusCallFlags flags,
