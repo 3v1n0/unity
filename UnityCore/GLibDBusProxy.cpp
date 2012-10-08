@@ -312,7 +312,11 @@ GVariant *DBusProxy::Impl::CallSync(std::string const& method_name,
                                            timeout_msec,
                                            cancellable != NULL ? cancellable : cancellable_,
                                            &error);
-    if (error)
+    if (!error)
+    {
+      return ret;
+    }
+    else
     {
       if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
       {
@@ -325,10 +329,7 @@ GVariant *DBusProxy::Impl::CallSync(std::string const& method_name,
           << object_path_
           << "\" failed: " << error;
       }
-
-      return nullptr;
     }
-    return ret;
   }
   else
   {
