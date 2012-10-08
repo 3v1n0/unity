@@ -370,7 +370,7 @@ void SearchBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
     // This is necessary when doing redirected rendering.
     // Clean the area below this view before drawing anything.
     graphics_engine.GetRenderStates().SetBlend(false);
-    graphics_engine.QRP_Color(base.x, base.y, last_width_, last_height_, nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+    graphics_engine.QRP_Color(geo.x, geo.y, geo.width, geo.height, nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
     graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
   }
 
@@ -390,17 +390,6 @@ void SearchBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 
     if (!highlight_layer_)
       highlight_layer_.reset(style.FocusOverlay(geo.width, geo.height));
-
-    if (RedirectedAncestor())
-    {
-      unsigned int alpha = 0, src = 0, dest = 0;
-      graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
-      // This is necessary when doing redirected rendering.
-      // Clean the area below this view before drawing anything.
-      graphics_engine.GetRenderStates().SetBlend(false);
-      graphics_engine.QRP_Color(geo.x, geo.y, geo.width, geo.height, nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
-      graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
-    }
 
     highlight_layer_->SetGeometry(geo);
     highlight_layer_->Renderlayer(graphics_engine);
