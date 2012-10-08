@@ -22,6 +22,7 @@
 
 #include "Indicators.h"
 
+
 namespace unity
 {
 namespace indicator
