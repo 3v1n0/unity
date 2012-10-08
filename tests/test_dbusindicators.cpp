@@ -25,6 +25,24 @@ public:
   TestDBusIndicators()
   {
   }
+
+  void SetUp()
+  {
+    loop_ = g_main_loop_new(NULL, FALSE);
+    dbus_indicators = new DBusIndicatorsTest ();
+  }
+
+  void TearDown()
+  {
+    delete dbus_indicators;
+    dbus_indicators = nullptr;
+    if (loop_ != nullptr)
+    {
+      g_main_loop_unref(loop_);
+      loop_ = nullptr;
+    }
+  }
+
   GMainLoop* loop_;
   DBusIndicatorsTest* dbus_indicators;
   int nChecks;
@@ -33,8 +51,7 @@ public:
 
 TEST_F(TestDBusIndicators, TestConstruction)
 {
-  loop_ = g_main_loop_new(NULL, FALSE);
-  dbus_indicators = new DBusIndicatorsTest ();
+  SetUp();
 
   // wait until the dbus indicator has connected to the panel service
   auto timeout_check = [] (gpointer data) -> gboolean
@@ -53,12 +70,13 @@ TEST_F(TestDBusIndicators, TestConstruction)
   g_main_loop_run(loop_);
 
   EXPECT_EQ(dbus_indicators->IsConnected(), true);
+
+  TearDown();
 }
 
 TEST_F(TestDBusIndicators, TestSync)
 {
-  loop_ = g_main_loop_new(NULL, FALSE);
-  dbus_indicators = new DBusIndicatorsTest ();
+  SetUp();
 
   // wait until the dbus indicator gets any indicator from the panel service
   auto timeout_check = [] (gpointer data) -> gboolean
@@ -128,6 +146,8 @@ TEST_F(TestDBusIndicators, TestSync)
   EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().size(), 2);
   EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().front()->id(), "test_entry_id2");
   EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().back()->id(), "test_entry_id");
+
+  TearDown();
 }
 
 }
