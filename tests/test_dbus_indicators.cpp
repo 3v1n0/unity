@@ -94,18 +94,37 @@ TEST_F(TestDBusIndicators, TestSync)
   EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().front()->id(), "test_entry_id");
   EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().back()->id(), "test_entry_id2");
 
-  glib::DBusProxy dbus_proxy("com.canonical.Unity.Test",
-            "/com/canonical/Unity/Panel/Service",
-            "com.canonical.Unity.Panel.Service");
   // Tell the service to trigger a resync and to send the entries in the reverse order
-  dbus_proxy.CallSync("TriggerResync1");
+  GDBusConnection* session = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
+  g_dbus_connection_set_exit_on_close(session, FALSE);
+  g_dbus_connection_call_sync(session,
+                              "com.canonical.Unity.Test",
+                              "/com/canonical/Unity/Panel/Service",
+                              "com.canonical.Unity.Panel.Service",
+                              "TriggerResync1",
+                              NULL, /* params */
+                              NULL, /* ret type */
+                              G_DBUS_CALL_FLAGS_NONE,
+                              -1,
+                              NULL,
+                              NULL);
 
   // wait for the Resync to come and go
   auto timeout_check_2 = [&] () -> bool
   {
-    GVariant *ret = dbus_proxy.CallSync("TriggerResync1Sent");
+    GVariant *ret = g_dbus_connection_call_sync(session,
+                              "com.canonical.Unity.Test",
+                              "/com/canonical/Unity/Panel/Service",
+                              "com.canonical.Unity.Panel.Service",
+                              "TriggerResync1Sent",
+                              NULL, /* params */
+                              G_VARIANT_TYPE("(b)"), /* ret type */
+                              G_DBUS_CALL_FLAGS_NONE,
+                              -1,
+                              NULL,
+                              NULL);
     nChecks++;
-    bool quit_loop = (ret != nullptr && g_variant_get_boolean(g_variant_get_child_value(ret, 0))) || nChecks > 99;
+    bool quit_loop = g_variant_get_boolean(g_variant_get_child_value(ret, 0)) || nChecks > 99;
     if (quit_loop)
       g_main_loop_quit(loop_);
     return !quit_loop;

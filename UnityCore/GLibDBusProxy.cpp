@@ -66,12 +66,6 @@ public:
             GDBusCallFlags flags,
             int timeout_msec);
 
-  GVariant* CallSync(string const& method_name,
-                     GVariant* parameters,
-                     GCancellable* cancellable,
-                     GDBusCallFlags flags,
-                     int timeout_msec);
-
   void Connect(string const& signal_name, ReplyCallback callback);
   bool IsConnected();
 
@@ -280,65 +274,6 @@ void DBusProxy::Impl::Call(string const& method_name,
   }
 }
 
-GVariant* DBusProxy::Impl::CallSync(std::string const& method_name,
-                                    GVariant* parameters,
-                                    GCancellable *cancellable,
-                                    GDBusCallFlags flags,
-                                    int timeout_msec)
-{
-  if (!proxy_)
-  {
-    bool timedout = false;
-    auto timeout_cb = [&] () -> bool
-    {
-      timedout = true;
-      return false;
-    };
-    glib::Timeout timeout(timeout_msec < 0 ? 10000 : timeout_msec, timeout_cb);
-
-    while (!proxy_ && !timedout)
-    {
-      g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
-    }
-  }
-
-  if (proxy_)
-  {
-    glib::Error error;
-    GVariant *ret = g_dbus_proxy_call_sync(proxy_,
-                                           method_name.c_str(),
-                                           parameters,
-                                           flags,
-                                           timeout_msec,
-                                           cancellable != NULL ? cancellable : cancellable_,
-                                           &error);
-    if (!error)
-    {
-      return ret;
-    }
-    else
-    {
-      if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
-      {
-        // silently ignore
-      }
-      else
-      {
-        LOG_WARNING(logger) << "Calling method \"" << method_name
-          << "\" on object path: \""
-          << object_path_
-          << "\" failed: " << error;
-      }
-    }
-  }
-  else
-  {
-    LOG_WARNING(logger) << "Cannot call method " << method_name
-                        << " proxy " << object_path_ << " does not exist";
-  }
-  return nullptr;
-}
-
 void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointer call_data)
 {
   glib::Error error;
@@ -392,15 +327,6 @@ void DBusProxy::Call(string const& method_name,
 {
   pimpl->Call(method_name, parameters, callback, cancellable, flags,
               timeout_msec);
-}
-
-GVariant* DBusProxy::CallSync(std::string const& method_name,
-                              GVariant* parameters,
-                              GCancellable *cancellable,
-                              GDBusCallFlags flags,
-                              int timeout_msec)
-{
-  return pimpl->CallSync(method_name, parameters, cancellable, flags, timeout_msec);
 }
 
 void DBusProxy::Connect(std::string const& signal_name, ReplyCallback callback)

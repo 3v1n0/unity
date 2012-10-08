@@ -53,12 +53,6 @@ public:
             GDBusCallFlags flags = G_DBUS_CALL_FLAGS_NONE,
             int timeout_msec = -1);
 
-  GVariant* CallSync(std::string const& method_name,
-                     GVariant* parameters = nullptr,
-                     GCancellable *cancellable = nullptr,
-                     GDBusCallFlags flags = G_DBUS_CALL_FLAGS_NONE,
-                     int timeout_msec = -1);
-
   void Connect(std::string const& signal_name, ReplyCallback callback);
   bool IsConnected();
 
