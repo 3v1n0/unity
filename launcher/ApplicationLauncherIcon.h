@@ -36,12 +36,12 @@ namespace launcher
 
 class Launcher;
 
-class BamfLauncherIcon : public SimpleLauncherIcon
+class ApplicationLauncherIcon : public SimpleLauncherIcon
 {
-  NUX_DECLARE_OBJECT_TYPE(BamfLauncherIcon, SimpleLauncherIcon);
+  NUX_DECLARE_OBJECT_TYPE(ApplicationLauncherIcon, SimpleLauncherIcon);
 public:
-  BamfLauncherIcon(BamfApplication* app);
-  virtual ~BamfLauncherIcon();
+  ApplicationLauncherIcon(BamfApplication* app);
+  virtual ~ApplicationLauncherIcon();
 
   virtual void ActivateLauncherIcon(ActionArg arg);
 

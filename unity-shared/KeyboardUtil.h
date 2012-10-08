@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,49 +14,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Jason Smith <jason.smith@canonical.com>
+ * Authored by: Tim Penhey <tim.penhey@canonical.com>
  */
 
-#ifndef KEYBOARDUTIL_H
-#define KEYBOARDUTIL_H
-
-#include <glib.h>
-
-#include <X11/keysym.h>
-#include <X11/XKBlib.h>
-#include <X11/extensions/XKBgeom.h>
+#ifndef UNITYSHARED_KEYBOARDUTIL_H
+#define UNITYSHARED_KEYBOARDUTIL_H
 
 namespace unity
 {
-namespace ui
+namespace keyboard
 {
 
-class KeyboardUtil
-{
-public:
-  KeyboardUtil(Display *display);
-  ~KeyboardUtil();
-
-  guint GetKeycodeAboveKeySymbol(KeySym key_symbol) const;
-
-  static bool IsPrintableKeySymbol(KeySym key_symbol);
-  static bool IsMoveKeySymbol(KeySym sym);
-
-private:
-  bool CompareOffsets (int current_x, int current_y, int best_x, int best_y) const;
-  guint ConvertKeyToKeycode (XkbKeyPtr key) const;
-
-  bool FindKeyInGeometry(XkbGeometryPtr geo, char *key_name, int& res_section, XkbBoundsRec& res_bounds) const;
-  bool FindKeyInSectionAboveBounds (XkbGeometryPtr geo, int section, XkbBoundsRec const& target_bounds, guint &keycode) const;
-
-  XkbBoundsRec GetAbsoluteKeyBounds (XkbKeyPtr key, XkbRowPtr row, XkbSectionPtr section, XkbGeometryPtr geo) const;
-
-  Display *display_;
-  XkbDescPtr keyboard_;
-};
+bool is_printable_key_symbol(unsigned long key_symbol);
+bool is_move_key_symbol(unsigned long key_symbol);
 
 }
 }
 
-#endif // KEYBOARDUTIL_H
+#endif // UNITYSHARED_KEYBOARDUTIL_H
 

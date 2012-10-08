@@ -29,6 +29,16 @@ using launcher::AbstractLauncherIcon;
 
 namespace switcher
 {
+namespace
+{
+bool compare_windows_by_active(Window first, Window second)
+{
+  WindowManager& wm = WindowManager::Default();
+  return wm.GetWindowActiveNumber(first) > wm.GetWindowActiveNumber(second);
+}
+
+}
+
 
 SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> icons)
   : _inner(icons)
@@ -127,36 +137,30 @@ SwitcherModel::LastSelection()
   return _inner.at(_last_index);
 }
 
-int
-SwitcherModel::LastSelectionIndex()
+int SwitcherModel::LastSelectionIndex()
 {
   return _last_index;
 }
 
-bool
-SwitcherModel::CompareWindowsByActive (guint32 first, guint32 second)
+bool WindowOnOtherViewport(Window xid)
 {
-  return WindowManager::Default ()->GetWindowActiveNumber (first) > WindowManager::Default ()->GetWindowActiveNumber (second);
+  return !WindowManager::Default().IsWindowOnCurrentDesktop(xid);
 }
 
-bool
-WindowOnOtherViewport(Window xid)
-{
-  return !WindowManager::Default()->IsWindowOnCurrentDesktop(xid);
-}
-
-std::vector<Window>
-SwitcherModel::DetailXids()
+std::vector<Window> SwitcherModel::DetailXids()
 {
   std::vector<Window> results;
   results = Selection()->Windows();
 
   if (only_detail_on_viewport)
   {
-    results.erase(std::remove_if(results.begin(), results.end(), WindowOnOtherViewport), results.end());
+    results.erase(std::remove_if(results.begin(),
+                                 results.end(),
+                                 WindowOnOtherViewport),
+                  results.end());
   }
 
-  std::sort (results.begin (), results.end (), &CompareWindowsByActive);
+  std::sort(results.begin(), results.end(), compare_windows_by_active);
 
   // swap so we focus the last focused window first
   if (Selection() == _last_active_icon && results.size () > 1)
@@ -165,8 +169,7 @@ SwitcherModel::DetailXids()
   return results;
 }
 
-Window
-SwitcherModel::DetailSelectionWindow ()
+Window SwitcherModel::DetailSelectionWindow()
 {
   if (!detail_selection || DetailXids ().empty())
     return 0;
@@ -177,8 +180,7 @@ SwitcherModel::DetailSelectionWindow ()
   return DetailXids()[detail_selection_index];
 }
 
-void
-SwitcherModel::Next()
+void SwitcherModel::Next()
 {
   _last_index = _index;
 
@@ -191,8 +193,7 @@ SwitcherModel::Next()
   selection_changed.emit(Selection());
 }
 
-void
-SwitcherModel::Prev()
+void SwitcherModel::Prev()
 {
   _last_index = _index;
 
@@ -206,8 +207,7 @@ SwitcherModel::Prev()
   selection_changed.emit(Selection());
 }
 
-void
-SwitcherModel::NextDetail ()
+void SwitcherModel::NextDetail ()
 {
   if (!detail_selection())
     return;
@@ -229,8 +229,7 @@ void SwitcherModel::PrevDetail ()
     detail_selection_index = DetailXids().size() - 1;
 }
 
-void
-SwitcherModel::Select(AbstractLauncherIcon::Ptr const& selection)
+void SwitcherModel::Select(AbstractLauncherIcon::Ptr const& selection)
 {
   int i = 0;
   for (iterator it = begin(), e = end(); it != e; ++it)

@@ -15,6 +15,7 @@ from autopilot.testcase import multiply_scenarios
 from os import remove, environ
 from os.path import exists
 from tempfile import mktemp
+from testtools import skip
 from testtools.matchers import (
     Equals,
     EndsWith,
@@ -136,6 +137,7 @@ class HudBehaviorTests(HudTestsBase):
         sleep(1)
         self.assertFalse(self.hud.visible)
 
+    @skip("Disabled due to Show Desktop Usage")
     def test_reveal_hud_with_no_apps(self):
         """Hud must show even with no visible applications.
 
@@ -340,6 +342,7 @@ class HudBehaviorTests(HudTestsBase):
 
         self.assertThat(file_contents, Equals('ABCD'))
 
+    @skip("Disabled due to Show Desktop Usage")
     def test_hud_closes_on_item_activated(self):
         """Activating a HUD item with the 'Enter' key MUST close the HUD."""
         # starting on a clean desktop because this way we are sure that our search
@@ -417,10 +420,10 @@ class HudBehaviorTests(HudTestsBase):
 
         (x,y,w,h) = self.hud.geometry
         (screen_x,screen_y,screen_w,screen_h) = self.screen_geo.get_monitor_geometry(current_monitor)
-        
+
         self.mouse.move(x + w + (screen_w-((screen_x-x)+w))/2, y + h + (screen_h-((screen_y-y)+h))/2)
         self.mouse.click()
-        
+
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
     def test_closes_then_focuses_window_on_mouse_down(self):
@@ -631,6 +634,7 @@ class HudVisualTests(HudTestsBase):
 
         self.assertThat(self.hud.icon.icon_name, Eventually(Equals(calc.icon)))
 
+    @skip("Disabled due to Show Desktop Usage")
     def test_hud_icon_shows_the_ubuntu_emblem_on_empty_desktop(self):
         """When in 'show desktop' mode the hud icon must be the BFB icon."""
         self.window_manager.enter_show_desktop()

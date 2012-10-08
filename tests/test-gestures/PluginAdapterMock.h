@@ -23,9 +23,10 @@
 
 #include <compiz_mock/core/core.h>
 
+
 class PluginAdapterMock {
 public:
-  static PluginAdapterMock *Default();
+  static PluginAdapterMock& Default();
 
   void ShowGrabHandles(CompWindowMock* window, bool use_timer);
 

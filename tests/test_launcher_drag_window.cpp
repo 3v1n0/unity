@@ -72,7 +72,7 @@ TEST_F(TestLauncherDragWindow, CancelsOnWindowMapped)
 {
   bool got_signal;
   drag_window.drag_cancel_request.connect([&got_signal] { got_signal = true; });
-  WindowManager::Default()->window_mapped.emit(0);
+  WindowManager::Default().window_mapped.emit(0);
 
   EXPECT_TRUE(got_signal);
   EXPECT_TRUE(drag_window.Cancelled());
@@ -82,7 +82,7 @@ TEST_F(TestLauncherDragWindow, CancelsOnWindowUnmapped)
 {
   bool got_signal;
   drag_window.drag_cancel_request.connect([&got_signal] { got_signal = true; });
-  WindowManager::Default()->window_unmapped.emit(0);
+  WindowManager::Default().window_unmapped.emit(0);
 
   EXPECT_TRUE(got_signal);
   EXPECT_TRUE(drag_window.Cancelled());

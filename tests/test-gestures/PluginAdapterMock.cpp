@@ -22,11 +22,11 @@
 
 PluginAdapterMock *PluginAdapterMock::_default = 0;
 
-PluginAdapterMock *PluginAdapterMock::Default() {
+PluginAdapterMock& PluginAdapterMock::Default() {
   if (!_default) {
     _default = new PluginAdapterMock;
   }
-  return _default;
+  return *_default;
 }
 
 void PluginAdapterMock::ShowGrabHandles(CompWindowMock* window, bool use_timer) {

@@ -79,6 +79,7 @@
                 <option name="show_launcher" type="key">
                     <_short>Key to show the launcher</_short>
                     <_long>Make the launcher appear with that key</_long>
+                    <tap_detection>false</tap_detection>
                     <default>&lt;Super&gt;</default>
                   </option>
                   <option name="keyboard_focus" type="key">

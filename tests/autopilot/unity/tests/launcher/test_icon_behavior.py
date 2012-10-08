@@ -15,7 +15,7 @@ import logging
 from testtools.matchers import Equals, NotEquals
 from time import sleep
 
-from unity.emulators.icons import BamfLauncherIcon, ExpoLauncherIcon
+from unity.emulators.icons import ApplicationLauncherIcon, ExpoLauncherIcon
 from unity.emulators.launcher import IconDragType
 from unity.tests.launcher import LauncherTestCase, _make_scenarios
 
@@ -233,7 +233,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
         # not exist, and we don't want to wait for 10 seconds, so we do this
         # the old fashioned way.
         refresh_fn = lambda: self.launcher.model.get_children_by_type(
-            BamfLauncherIcon, desktop_id="gcalctool.desktop")
+            ApplicationLauncherIcon, desktop_id="gcalctool.desktop")
         self.assertThat(refresh_fn, Eventually(Equals([])))
 
     def test_can_drag_icon_below_bfb(self):

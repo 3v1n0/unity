@@ -4,7 +4,6 @@
 #include <NuxCore/Logger.h>
 #include <Nux/Nux.h>
 
-#include "unity-shared/PluginAdapter.h"
 #include "unity-shared/WindowManager.h"
 
 int main(int argc, char** argv)
@@ -24,10 +23,7 @@ int main(int argc, char** argv)
   // but you can still change it if you're debugging ;)
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
 
-  // Setting the PluginAdapter to null, using the Standalone version at link time.
-  PluginAdapter::Initialize(NULL);
-  WindowManager::SetDefault(PluginAdapter::Default());
-
+  // StandaloneWindowManager brought in at link time.
   int ret = RUN_ALL_TESTS();
 
   return ret;
