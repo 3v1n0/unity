@@ -63,7 +63,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   , _opacity(1.0f)
   , _monitor(0)
   , _stored_dash_width(0)
-  , _launcher_width(0)
+  , _launcher_width(64)
 {
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
 
