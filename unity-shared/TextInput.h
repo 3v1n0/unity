@@ -76,7 +76,6 @@ private:
   bool set_input_string(std::string const& string);
   bool get_im_active() const;
   bool get_im_preedit() const;
-  bool show_filter_hint_;
 
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
@@ -96,6 +95,7 @@ private:
   int last_width_;
   int last_height_;
 
+  glib::SignalManager sig_manager_;
 };
 
 }
