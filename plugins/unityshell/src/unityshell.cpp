@@ -2459,7 +2459,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     }
   }
 
-  if (WindowManager::Default()->IsScaleActive() && ScaleScreen::get(screen)->getSelectedWindow() == window->id())
+  if (WindowManager::Default().IsScaleActive() && ScaleScreen::get(screen)->getSelectedWindow() == window->id())
   {
     nux::Geometry scaled_geo = GetScaledGeometry();
     int inside_glow = scale::decoration::RADIUS/4;
