@@ -350,6 +350,19 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
 
         self.assertProperty(char_win1, is_focused=True)
 
+    def test_detail_mode_selects_third_window(self):
+        """Pressing Alt+` twice must select the third last used window.
+        LP:1061229
+        """
+        char_win1, char_win2, char_win3 = self.start_applications("Character Map", "Character Map", "Character Map")
+        self.assertVisibleWindowStack([char_win3, char_win2, char_win1])
+
+        self.switcher.initiate(SwitcherMode.DETAIL)
+        self.switcher.next_detail()
+
+        self.switcher.select()
+        self.assertProperty(char_win1, is_focused=True)
+
 
 class SwitcherWorkspaceTests(SwitcherTestCase):
     """Test Switcher behavior with respect to multiple workspaces."""
