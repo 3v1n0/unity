@@ -48,7 +48,7 @@ const std::string SERVICE_IFACE("com.canonical.Unity.Panel.Service");
 class DBusIndicators::Impl
 {
 public:
-  Impl(DBusIndicators* owner);
+  Impl(std::string const& dbus_name, DBusIndicators* owner);
 
   void CheckLocalService();
   void RequestSyncAll();
@@ -84,9 +84,9 @@ public:
 
 
 // Public Methods
-DBusIndicators::Impl::Impl(DBusIndicators* owner)
+DBusIndicators::Impl::Impl(std::string const& dbus_name, DBusIndicators* owner)
   : owner_(owner)
-  , gproxy_(SERVICE_NAME, SERVICE_PATH, SERVICE_IFACE,
+  , gproxy_(dbus_name, SERVICE_PATH, SERVICE_IFACE,
             G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES)
 {
   gproxy_.Connect("ReSync", sigc::mem_fun(this, &DBusIndicators::Impl::OnReSync));
@@ -276,6 +276,8 @@ void DBusIndicators::Impl::Sync(GVariant* args)
     return;
 
   std::map<Indicator::Ptr, Indicator::Entries> indicators;
+  int wantedIndex = 0;
+  bool anyIndexDifferent = false;
 
   g_variant_get(args, "(a(ssssbbusbbi))", &iter);
   while (g_variant_iter_loop(iter, "(ssssbbusbbi)",
@@ -305,7 +307,18 @@ void DBusIndicators::Impl::Sync(GVariant* args)
     // Null entries (entry_id == "") are empty indicators.
     if (entry != "")
     {
-      Entry::Ptr e = indicator->GetEntry(entry_id);
+      Entry::Ptr e;
+      if (!anyIndexDifferent)
+      {
+        // Indicators can only add or remove entries, so if
+        // there is a index change we can't reuse the existing ones
+        // after that index
+        int existingEntryIndex = indicator->EntryIndex(entry_id);
+        if (wantedIndex == existingEntryIndex)
+          e = indicator->GetEntry(entry_id);
+        else
+          anyIndexDifferent = true;
+      }
 
       if (!e)
       {
@@ -321,6 +334,7 @@ void DBusIndicators::Impl::Sync(GVariant* args)
       }
 
       entries.push_back(e);
+      wantedIndex++;
     }
   }
   g_variant_iter_free(iter);
@@ -393,11 +407,20 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
 }
 
 DBusIndicators::DBusIndicators()
-  : pimpl(new Impl(this))
+  : pimpl(new Impl(SERVICE_NAME, this))
+{}
+
+DBusIndicators::DBusIndicators(std::string const& dbus_name)
+  : pimpl(new Impl(dbus_name, this))
 {}
 
 DBusIndicators::~DBusIndicators()
 {}
+
+bool DBusIndicators::IsConnected() const
+{
+  return pimpl->gproxy_.IsConnected();
+}
 
 void DBusIndicators::SyncGeometries(std::string const& name,
                                     EntryLocationMap const& locations)
