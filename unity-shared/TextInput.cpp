@@ -34,12 +34,11 @@
 namespace
 {
 const float kExpandDefaultIconOpacity = 1.0f;
-const int LIVE_SEARCH_TIMEOUT = 40;
 
 const int SPACE_BETWEEN_SPINNER_AND_TEXT = 5;
 const int SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT = 10;
 const int LEFT_INTERNAL_PADDING = 6;
-const int SEARCH_ENTRY_RIGHT_BORDER = 10;
+const int TEXT_INPUT_RIGHT_BORDER = 10;
 
 const int HIGHLIGHT_HEIGHT = 24;
 
@@ -110,21 +109,12 @@ TextInput::TextInput(NUX_FILE_LINE_DECL)
   Init();
 }
 
-TextInput::TextInput(bool show_filter_hint_, NUX_FILE_LINE_DECL)
-  : View(NUX_FILE_LINE_PARAM)
-  , input_hint("")
-  , last_width_(-1)
-  , last_height_(-1)
-{
-  Init();
-}
-
 void TextInput::Init()
 {
   bg_layer_.reset(new nux::ColorLayer(nux::Color(0xff595853), true));
 
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING, SEARCH_ENTRY_RIGHT_BORDER);
+  layout_->SetLeftAndRightPadding(LEFT_INTERNAL_PADDING, TEXT_INPUT_RIGHT_BORDER);
   layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT);
   SetLayout(layout_);
 
@@ -155,6 +145,8 @@ void TextInput::Init()
   layered_layout_->SetActiveLayerN(1);
   entry_layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
+  sig_manager_.Add<void, GtkSettings*, GParamSpec*>(gtk_settings_get_default(),
+    "notify::gtk-font-name", sigc::mem_fun(this, &TextInput::OnFontChanged));
   OnFontChanged(gtk_settings_get_default());
 
   input_string.SetGetterFunction(sigc::mem_fun(this, &TextInput::get_input_string));
@@ -258,7 +250,7 @@ void TextInput::UpdateBackground(bool force)
   geo.width = layered_layout_->GetAbsoluteX() +
               layered_layout_->GetAbsoluteWidth() -
               GetAbsoluteX() +
-              SEARCH_ENTRY_RIGHT_BORDER;
+              TEXT_INPUT_RIGHT_BORDER;
 
   LOG_DEBUG(logger) << "height: "
   << geo.height << " - "
