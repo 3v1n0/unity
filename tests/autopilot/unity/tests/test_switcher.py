@@ -361,7 +361,7 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
         self.switcher.next_detail()
 
         self.switcher.select()
-        self.assertProperty(char_win1, is_focused=True)
+        self.assertVisibleWindowStack([char_win1, char_win3, char_win2])
 
 
 class SwitcherWorkspaceTests(SwitcherTestCase):
