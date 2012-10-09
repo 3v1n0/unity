@@ -35,6 +35,7 @@ TEST(TestIndicator, Construction)
   EXPECT_EQ(indicator.name(), "indicator-test");
   EXPECT_FALSE(indicator.IsAppmenu());
   EXPECT_EQ(indicator.GetEntry("test-entry"), nullptr);
+  EXPECT_EQ(indicator.EntryIndex("test-entry"), -1);
   EXPECT_TRUE(indicator.GetEntries().empty());
 }
 
@@ -76,6 +77,7 @@ TEST(TestIndicator, Syncing)
   indicator.Sync(sync_data);
   EXPECT_EQ(indicator.GetEntries().size(), 3);
   EXPECT_EQ(indicator.GetEntry("test-entry-2"), entry2);
+  EXPECT_EQ(indicator.EntryIndex("test-entry-2"), 1);
   EXPECT_EQ(added.size(), 3);
   EXPECT_EQ(added.front()->id(), "test-entry-1");
   EXPECT_EQ(added.back()->id(), "test-entry-3");
@@ -91,6 +93,7 @@ TEST(TestIndicator, Syncing)
   indicator.Sync(sync_data);
   EXPECT_EQ(indicator.GetEntries().size(), 2);
   EXPECT_EQ(indicator.GetEntry("test-entry-2"), nullptr);
+  EXPECT_EQ(indicator.EntryIndex("test-entry-2"), -1);
   EXPECT_EQ(added.size(), 0);
   EXPECT_EQ(removed.size(), 1);
   EXPECT_EQ(removed.front(), entry2->id());
