@@ -50,6 +50,10 @@ public:
   virtual void OnShowAppMenu(unsigned int xid, int x, int y,
                              unsigned int timestamp);
 
+protected:
+  DBusIndicators(std::string const& dbus_name);
+  bool IsConnected() const;
+
 private:
   class Impl;
   std::unique_ptr<Impl> pimpl;
