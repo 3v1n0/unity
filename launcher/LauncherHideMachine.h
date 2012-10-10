@@ -62,7 +62,8 @@ public:
     MT_DRAG_OUT            = 1 << 13,
     REVEAL_PRESSURE_PASS   = 1 << 14,
     LAUNCHER_PULSE         = 1 << 15,
-    LOCK_HIDE              = 1 << 16
+    LOCK_HIDE              = 1 << 16,
+    SHORTCUT_KEYS_VISIBLE  = 1 << 17
   } HideQuirk;
 
   nux::Property<int> reveal_pressure;
