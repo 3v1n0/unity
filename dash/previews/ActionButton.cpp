@@ -199,7 +199,7 @@ void ActionButton::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::Butt
 
 void ActionButton::RedrawFocusOverlay(nux::Geometry const& geom, cairo_t* cr)
 {
-  Style::Instance().ButtonFocusOverlay(cr);
+  Style::Instance().ButtonFocusOverlay(cr, 0.20f);
 }
 
 long ActionButton::ComputeContentSize()
