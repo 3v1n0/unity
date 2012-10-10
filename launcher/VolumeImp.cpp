@@ -127,7 +127,7 @@ public:
     g_volume_eject_with_operation(volume_,
                                   (GMountUnmountFlags)0,
                                   mount_op,
-                                  nullptr,
+                                  cancellable_,
                                   (GAsyncReadyCallback)OnEjectReady,
                                   this);
   }
@@ -150,10 +150,12 @@ public:
 
   void MountAndOnFinishOpenInFileManager()
   {
+    glib::Object<GMountOperation> mount_op(gtk_mount_operation_new(nullptr));
+
     g_volume_mount(volume_,
                    (GMountMountFlags) 0,
-                   nullptr,
-                   nullptr,
+                   mount_op,
+                   cancellable_,
                    (GAsyncReadyCallback) &Impl::OnMountFinish,
                    this);
   }
@@ -193,7 +195,7 @@ public:
     g_drive_stop(drive,
                  (GMountUnmountFlags)0,
                  mount_op,
-                 nullptr, nullptr, nullptr);
+                 cancellable_, nullptr, nullptr);
   }
 
   void Unmount()
@@ -207,7 +209,7 @@ public:
     g_mount_unmount_with_operation(mount,
                                    (GMountUnmountFlags)0,
                                    op,
-                                   nullptr, nullptr, nullptr);
+                                   cancellable_, nullptr, nullptr);
   }
 
   VolumeImp* parent_;

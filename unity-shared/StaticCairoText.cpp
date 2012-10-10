@@ -32,10 +32,6 @@
 #include <pango/pango.h>
 #include <pango/pangocairo.h>
 
-#if defined(NUX_OS_LINUX)
-#include <X11/Xlib.h>
-#endif
-
 #include <UnityCore/GLibWrapper.h>
 
 #include "CairoTexture.h"
@@ -299,11 +295,6 @@ void StaticCairoText::Draw(GraphicsEngine& gfxContext, bool forceDraw)
 }
 
 void StaticCairoText::DrawContent(GraphicsEngine& gfxContext, bool forceDraw)
-{
-  // intentionally left empty
-}
-
-void StaticCairoText::PostDraw(GraphicsEngine& gfxContext, bool forceDraw)
 {
   // intentionally left empty
 }

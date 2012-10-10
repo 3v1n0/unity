@@ -25,28 +25,35 @@ namespace unity
 {
 namespace debug
 {
-  ResultWrapper::ResultWrapper(dash::Result const& result, nux::Geometry const& geo)
-  : uri_(result.uri),
+  
+ResultWrapper::ResultWrapper(dash::Result const& result, nux::Geometry const& geo)
+: uri_(result.uri),
   name_(result.name),
   icon_hint_(result.icon_hint),
   mime_type_(result.mimetype),
   geo_(geo)
-  {
-  }
+{
+}
 
-  std::string ResultWrapper::GetName() const
-  {
-    return "Result";
-  }
+std::string ResultWrapper::GetName() const
+{
+  return "Result";
+}
 
-  void ResultWrapper::AddProperties(GVariantBuilder* builder)
-  {
-    unity::variant::BuilderWrapper(builder)
-      .add("uri", uri_)
-      .add("name", name_)
-      .add("icon_hint", icon_hint_)
-      .add("mimetype", mime_type_)
-      .add(geo_);
-  }
+void ResultWrapper::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper(builder)
+    .add("uri", uri_)
+    .add("name", name_)
+    .add("icon_hint", icon_hint_)
+    .add("mimetype", mime_type_)
+    .add(geo_);
+}
+
+void ResultWrapper::UpdateGeometry(nux::Geometry const& geo)
+{
+  geo_ = geo;
+}
+
 }
 }

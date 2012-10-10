@@ -41,7 +41,7 @@ public:
     : icon_added(false)
   {}
 
-  void OnIconAdded(AbstractLauncherIcon::Ptr icon)
+  void OnIconAdded(AbstractLauncherIcon::Ptr const& icon)
   {
     icon_added = true;
   }

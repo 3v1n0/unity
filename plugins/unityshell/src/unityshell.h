@@ -64,6 +64,8 @@
 #include "HudController.h"
 #include "WindowMinimizeSpeedController.h"
 
+#include "unityshell_glow.h"
+
 namespace unity
 {
 
@@ -246,7 +248,7 @@ private:
   bool TopPanelBackgroundTextureNeedsUpdate() const;
   void UpdateTopPanelBackgroundTexture();
 
-  std::unique_ptr<nux::NuxTimerTickSource> tick_source_;
+  std::unique_ptr<na::TickSource> tick_source_;
   std::unique_ptr<na::AnimationController> animation_controller_;
 
   Settings dash_settings_;
@@ -331,6 +333,8 @@ private:
   bool scale_just_activated_;
   WindowMinimizeSpeedController minimize_speed_controller_;
 
+  long long big_tick_;
+
   debug::ScreenIntrospection screen_introspection_;
 
   UBusManager ubus_manager_;
@@ -404,6 +408,8 @@ protected:
 private:
   typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
           UnityMinimizedHandler;
+  struct PixmapTexture;
+  typedef std::shared_ptr<PixmapTexture> PixmapTexturePtr;
   struct CairoContext;
 
   void DoEnableFocus ();
@@ -442,7 +448,11 @@ private:
   void RenderDecoration(CairoContext const&, double aspect = 1.0f);
   void RenderText(CairoContext const&, int x, int y, int width, int height);
   void DrawTexture(GLTexture::List const& textures, GLWindowPaintAttrib const&,
-                   GLMatrix const&, unsigned mask, int x, int y, double scale = 1.0f);
+                   GLMatrix const&, unsigned mask, int x, int y, double aspect = 1.0f);
+
+  glow::Quads computeGlowQuads(nux::Geometry const& geo, GLTexture::List const& texture, int glow_size);
+  void paintGlow(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&,
+                 glow::Quads const&, GLTexture::List const&, nux::Color const&, unsigned mask);
 
   void BuildDecorationTexture();
   void CleanupCachedTextures();
@@ -458,8 +468,9 @@ private:
   static GLTexture::List close_normal_tex_;
   static GLTexture::List close_prelight_tex_;
   static GLTexture::List close_pressed_tex_;
-  GLTexture::List decoration_tex_;
-  GLTexture::List decoration_selected_tex_;
+  static GLTexture::List glow_texture_;
+  PixmapTexturePtr decoration_tex_;
+  PixmapTexturePtr decoration_selected_tex_;
   std::string decoration_title_;
   compiz::WindowInputRemoverLock::Weak input_remover_;
   panel::WindowState close_icon_state_;

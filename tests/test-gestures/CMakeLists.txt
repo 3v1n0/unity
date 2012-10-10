@@ -56,6 +56,10 @@ if (GTEST_SRC_DIR)
   # Clean-up includes and definitions made in ../CmakeLists.txt
   remove_definitions(${CFLAGS})
   set_directory_properties(PROPERTY INCLUDE_DIRECTORIES "")
+
+  include_directories (${CMAKE_SOURCE_DIR})
+  include_directories (${CMAKE_SOURCE_DIR}/unity-shared)
+
   # And make our own
   pkg_check_modules (TEST_GESTURES_DEPS REQUIRED QUIET "${UNITY_PLUGIN_DEPS}")
   set(TEST_GESTURES_CFLAGS

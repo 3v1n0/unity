@@ -74,7 +74,7 @@ bool Controller::CanShowSwitcher(const std::vector<AbstractLauncherIcon::Ptr>& r
 {
   bool empty = (show_desktop_disabled_ ? results.empty() : results.size() == 1);
 
-  return (!empty && !WindowManager::Default()->IsWallActive());
+  return (!empty && !WindowManager::Default().IsWallActive());
 }
 
 void Controller::Show(ShowMode show, SortMode sort, std::vector<AbstractLauncherIcon::Ptr> results)
@@ -133,7 +133,7 @@ bool Controller::OnDetailTimer()
   return false;
 }
 
-void Controller::OnModelSelectionChanged(AbstractLauncherIcon::Ptr icon)
+void Controller::OnModelSelectionChanged(AbstractLauncherIcon::Ptr const& icon)
 {
   if (detail_on_timeout)
   {
@@ -230,7 +230,7 @@ void Controller::Hide(bool accept_state)
 
   if (accept_state)
   {
-    AbstractLauncherIcon::Ptr selection = model_->Selection();
+    AbstractLauncherIcon::Ptr const& selection = model_->Selection();
     if (selection)
     {
       if (model_->detail_selection)
@@ -421,8 +421,8 @@ int Controller::StartIndex() const
   return (show_desktop_disabled_ ? 0 : 1);
 }
 
-bool Controller::CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr first,
-                                              AbstractLauncherIcon::Ptr second)
+bool Controller::CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr const& first,
+                                              AbstractLauncherIcon::Ptr const& second)
 {
   if (first->GetIconType() == second->GetIconType())
     return first->SwitcherPriority() > second->SwitcherPriority();
@@ -444,8 +444,8 @@ void Controller::SelectFirstItem()
   int first_icon_index = StartIndex();
   int second_icon_index = first_icon_index + 1;
 
-  AbstractLauncherIcon::Ptr first  = model_->at(first_icon_index);
-  AbstractLauncherIcon::Ptr second = model_->at(second_icon_index);
+  AbstractLauncherIcon::Ptr const& first  = model_->at(first_icon_index);
+  AbstractLauncherIcon::Ptr const& second = model_->at(second_icon_index);
 
   if (!first)
   {
@@ -462,9 +462,10 @@ void Controller::SelectFirstItem()
   unsigned int first_second = 0; // first icons second highest active
   unsigned int second_first = 0; // second icons first highest active
 
+  WindowManager& wm = WindowManager::Default();
   for (guint32 xid : first->Windows())
   {
-    unsigned int num = WindowManager::Default()->GetWindowActiveNumber(xid);
+    unsigned int num = wm.GetWindowActiveNumber(xid);
 
     if (num > first_highest)
     {
@@ -479,13 +480,13 @@ void Controller::SelectFirstItem()
 
   for (guint32 xid : second->Windows())
   {
-    second_first = MAX (WindowManager::Default()->GetWindowActiveNumber(xid), second_first);
+    second_first = std::max<unsigned long long>(wm.GetWindowActiveNumber(xid), second_first);
   }
 
   if (first_second > second_first)
-    model_->Select (first);
+    model_->Select(first);
   else
-    model_->Select (second);
+    model_->Select(second);
 }
 
 /* Introspection */

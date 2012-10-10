@@ -23,7 +23,6 @@
 #include <Nux/PaintLayer.h>
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
-#include <Nux/NuxTimerTickSource.h>
 
 #include <UnityCore/FilesystemLenses.h>
 #include <UnityCore/HomeLens.h>
@@ -93,7 +92,7 @@ private:
   void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
   virtual long PostLayoutManagement (long LayoutResult);
   nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
-  
+
   void BuildPreview(Preview::Ptr model);
   void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
   void OnBackgroundColorChanged(GVariant* args);
@@ -104,7 +103,7 @@ private:
   void OnSearchFinished(Lens::Hints const& hints);
   void OnGlobalSearchFinished(Lens::Hints const& hints);
   void OnAppsGlobalSearchFinished(Lens::Hints const& hints);
-  void OnUriActivated(std::string const& uri);
+  void OnUriActivated(ResultView::ActivateType type, std::string const& uri, GVariant* data, std::string const& unique_id);
   void OnUriActivatedReply(std::string const& uri, HandledType type, Lens::Hints const&);
   bool DoFallbackActivation(std::string const& uri);
   bool LaunchApp(std::string const& appname);
@@ -130,8 +129,7 @@ private:
   PreviewStateMachine preview_state_machine_;
   previews::PreviewContainer::Ptr preview_container_;
   bool preview_displaying_;
-  std::string stored_preview_unique_id_;
-  std::string stored_preview_uri_identifier_;
+  std::string stored_activated_unique_id_;
   dash::previews::Navigation preview_navigation_mode_;
 
   nux::VLayout* layout_;
@@ -165,8 +163,6 @@ private:
 
   float fade_out_value_;
   float fade_in_value_;
-  std::unique_ptr<nux::NuxTimerTickSource> tick_source_;
-  std::unique_ptr<na::AnimationController> animation_controller_;
   na::AnimateValue<float> animation_;
 
   void FadeOutCallBack(float const& fade_out_value);

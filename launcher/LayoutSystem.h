@@ -22,10 +22,9 @@
 
 #include <boost/shared_ptr.hpp>
 #include <sigc++/sigc++.h>
-
-#include <X11/Xlib.h>
-
 #include <Nux/Nux.h>
+
+#include "unity-shared/WindowManager.h"
 
 namespace unity {
 namespace ui {
@@ -36,7 +35,7 @@ public:
   typedef boost::shared_ptr<LayoutWindow> Ptr;
 
   LayoutWindow (Window xid);
-  
+
   Window xid;
 
   nux::Geometry geo;

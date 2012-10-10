@@ -175,14 +175,14 @@ class DashMultiKeyTests(DashSearchInputTests):
         self.dash.reveal_application_lens()
         self.keyboard.press_and_release('Multi_key')
         self.keyboard.type("^o")
-        self.assertSearchText("ô")
+        self.assertSearchText(u'\xf4')
 
     def test_multi_key_copyright(self):
         """Pressing the sequences 'Multi_key' + 'c' + 'o' must produce '©'."""
         self.dash.reveal_application_lens()
         self.keyboard.press_and_release('Multi_key')
         self.keyboard.type("oc")
-        self.assertSearchText("©")
+        self.assertSearchText(u'\xa9')
 
     def test_multi_key_delete(self):
         """Pressing 'Multi_key' must not get stuck looking for a sequence."""

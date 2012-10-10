@@ -45,6 +45,7 @@ struct _GMockVolume {
   char *uuid;
   char *label;
   GMount *mount;
+  gboolean last_mount_had_mount_op;
 };
 
 struct _GMockVolumeClass {
@@ -60,6 +61,8 @@ void          g_mock_volume_set_icon  (GMockVolume *volume, GIcon *icon);
 void          g_mock_volume_set_label  (GMockVolume *volume, const char *label);
 void          g_mock_volume_set_uuid  (GMockVolume *volume, const char *uuid);
 void          g_mock_volume_set_mount (GMockVolume *volume, GMount *mount);
+
+gboolean      g_mock_volume_last_mount_had_mount_operation (GMockVolume *volume);
 
 G_END_DECLS
 

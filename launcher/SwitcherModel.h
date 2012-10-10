@@ -80,10 +80,10 @@ public:
   void NextDetail();
   void PrevDetail();
 
-  void Select(launcher::AbstractLauncherIcon::Ptr selection);
+  void Select(launcher::AbstractLauncherIcon::Ptr const& selection);
   void Select(unsigned int index);
 
-  sigc::signal<void, launcher::AbstractLauncherIcon::Ptr> selection_changed;
+  sigc::signal<void, launcher::AbstractLauncherIcon::Ptr const&> selection_changed;
 
 protected:
   // Introspectable methods
@@ -91,9 +91,6 @@ protected:
   void AddProperties(GVariantBuilder* builder);
 
 private:
-
-  static bool CompareWindowsByActive (guint32 first, guint32 second);
-
   Base             _inner;
   unsigned int     _index;
   unsigned int     _last_index;
