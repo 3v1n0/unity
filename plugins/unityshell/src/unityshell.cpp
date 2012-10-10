@@ -1535,8 +1535,8 @@ void UnityScreen::handleEvent(XEvent* event)
         nux::Geometry const& dash_geo = dash_controller_->GetInputWindowGeometry();
 
         Window dash_xid = dash_controller_->window()->GetInputWindowId();
-        Window top_xid = wm->GetTopWindowAbove(dash_xid);
-        nux::Geometry const& on_top_geo = wm->GetWindowGeometry(top_xid);
+        Window top_xid = wm.GetTopWindowAbove(dash_xid);
+        nux::Geometry const& on_top_geo = wm.GetWindowGeometry(top_xid);
 
         if (!dash_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt) && !on_top_geo.IsInside(pt))
         {
@@ -1550,8 +1550,8 @@ void UnityScreen::handleEvent(XEvent* event)
         nux::Geometry const& hud_geo = hud_controller_->GetInputWindowGeometry();
 
         Window hud_xid = hud_controller_->window()->GetInputWindowId();
-        Window top_xid = wm->GetTopWindowAbove(hud_xid);
-        nux::Geometry const& on_top_geo = wm->GetWindowGeometry(top_xid);
+        Window top_xid = wm.GetTopWindowAbove(hud_xid);
+        nux::Geometry const& on_top_geo = wm.GetWindowGeometry(top_xid);
 
         if (!hud_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt) && !on_top_geo.IsInside(pt))
         {
