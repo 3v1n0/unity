@@ -176,10 +176,9 @@ void SocialPreviewContent::RedrawBubble(nux::Geometry const& geom, cairo_t* cr, 
   double y = 0.0;
 
   double width = MAX(0, cairo_image_surface_get_width(cairo_get_target(cr)));
-  double height = MAX(0, cairo_image_surface_get_height(cairo_get_target(cr)));
+  double height = MAX(0, cairo_image_surface_get_height(cairo_get_target(cr)) - TAIL_HEIGHT);
 
-  double tailPosition = x + width - TAIL_POS_FROM_RIGHT - TAIL_HEIGHT - line_width/2;
-
+  double tailPosition = x + width - TAIL_POS_FROM_RIGHT - TAIL_HEIGHT;
   if (width > 0 && height > 0)
   {
     DrawBubble(cr, line_width, radius, x, y, width, height, tailPosition, TAIL_HEIGHT);
@@ -224,14 +223,6 @@ void SocialPreviewContent::DrawBubble(cairo_t* cr,
     return;
 
   cairo_set_line_width(cr, line_width);
-
-
-  // recitfications for outer draw.
-  x += line_width/2;
-  y += line_width/2;
-  height -= line_width;
-  height -= tailWidth;
-  width -= line_width;
 
   bool odd = true;
   odd = line_width != double((int)line_width);
@@ -292,14 +283,14 @@ void SocialPreviewContent::DrawBubble(cairo_t* cr,
             180.0f * G_PI / 180.0f,
             270.0f * G_PI / 180.0f);
 
-  nux::Color color_stroke(1.0, 1.0, 1.0, 0.1);
-  cairo_set_source_rgba(cr, color_stroke.red, color_stroke.green, color_stroke.blue, color_stroke.alpha);
-  cairo_stroke_preserve(cr);
-
-  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
   nux::Color color_fill(1.0, 1.0, 1.0, 0.2);
   cairo_set_source_rgba(cr, color_fill.red, color_fill.green, color_fill.blue, color_fill.alpha);
-  cairo_fill(cr);
+  cairo_fill_preserve(cr);
+
+  cairo_set_operator(cr, CAIRO_OPERATOR_DEST_OUT);
+  nux::Color color_stroke(1.0, 1.0, 1.0, 0.5);
+  cairo_set_source_rgba(cr, color_stroke.red, color_stroke.green, color_stroke.blue, color_stroke.alpha);
+  cairo_stroke(cr);
 }
 
 void SocialPreviewContent::PreLayoutManagement()
