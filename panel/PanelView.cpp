@@ -35,10 +35,11 @@
 #include <glib.h>
 
 #include "unity-shared/PanelStyle.h"
-#include "PanelIndicatorsView.h"
+#include "unity-shared/WindowManager.h"
+#include "unity-shared/UBusMessages.h"
 #include <UnityCore/Variant.h>
 
-#include "unity-shared/UBusMessages.h"
+#include "PanelIndicatorsView.h"
 
 #include "PanelView.h"
 
@@ -63,7 +64,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   , _opacity(1.0f)
   , _monitor(0)
   , _stored_dash_width(0)
-  , _launcher_width(0)
+  , _launcher_width(64)
 {
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
 
@@ -71,10 +72,22 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
 
   nux::ROPConfig rop;
   rop.Blend = true;
-  rop.SrcBlend = GL_ZERO;
-  rop.DstBlend = GL_SRC_COLOR;
+  nux::Color darken_colour = nux::Color(0.9f, 0.9f, 0.9f, 1.0f);
+  
+  if (Settings::Instance().GetLowGfxMode() == false)
+  {
+    rop.SrcBlend = GL_ZERO;
+    rop.DstBlend = GL_SRC_COLOR;
+  }
+  //If we are in low gfx mode then change our darken_colour to our background colour.
+  else
+  {
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+    darken_colour = _bg_color;
+  }
 
-  _bg_darken_layer.reset(new nux::ColorLayer(nux::Color(0.9f, 0.9f, 0.9f, 1.0f), false, rop));
+  _bg_darken_layer.reset(new nux::ColorLayer(darken_colour, false, rop));
 
   _layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
   _layout->SetContentDistribution(nux::eStackLeft);
@@ -386,13 +399,13 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.PopClippingRectangle();
     }
 
-    if (_overlay_is_open)
+    if (_overlay_is_open && Settings::Instance().GetLowGfxMode() == false)
     {
       nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, _bg_darken_layer.get());
-    
+      
       GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       nux::TexCoordXForm refine_texxform;
-      
+  
       int refine_x_pos = geo.x + (_stored_dash_width - refine_gradient_midpoint);
 
       refine_x_pos += _launcher_width;
@@ -411,8 +424,8 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                           _bg_refine_single_column_tex->GetDeviceTexture(),
                           refine_texxform,
                           nux::color::White);
+      }
     }
-  }
 
   if (!_overlay_is_open || GfxContext.UsingGLSLCodePath() == false)
     nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, _bg_layer.get());
@@ -484,6 +497,12 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if (_overlay_is_open)
     {
+      if (Settings::Instance().GetLowGfxMode())
+      {
+	rop.Blend = false;
+	_bg_darken_layer.reset(new nux::ColorLayer(_bg_color, false, rop));
+      }
+      
       nux::GetPainter().PushLayer(GfxContext, geo, _bg_darken_layer.get());
       bgs++;
       
@@ -495,22 +514,25 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       refine_geo.x = refine_x_pos;
       refine_geo.width = _bg_refine_tex->GetWidth();
       refine_geo.height = _bg_refine_tex->GetHeight();
+      
+      if (Settings::Instance().GetLowGfxMode() == false)
+      {
+	nux::GetPainter().PushLayer(GfxContext, refine_geo, _bg_refine_layer.get());
+	bgs++;
 
-      nux::GetPainter().PushLayer(GfxContext, refine_geo, _bg_refine_layer.get());
-      bgs++;
-
-      refine_geo.x += refine_geo.width;
-      refine_geo.width = geo.width;
-      refine_geo.height = geo.height;
-      nux::GetPainter().PushLayer(GfxContext, refine_geo, _bg_refine_single_column_layer.get());
-      bgs++;
+	refine_geo.x += refine_geo.width;
+	refine_geo.width = geo.width;
+	refine_geo.height = geo.height;
+	nux::GetPainter().PushLayer(GfxContext, refine_geo, _bg_refine_single_column_layer.get());
+	bgs++;
+      }
     }
   }
 
   if (!_overlay_is_open || GfxContext.UsingGLSLCodePath() == false)
     gPainter.PushLayer(GfxContext, geo, _bg_layer.get());
 
-  if (_overlay_is_open)
+  if (_overlay_is_open && Settings::Instance().GetLowGfxMode() == false)
   {
     // apply the shine
     nux::TexCoordXForm texxform;
@@ -559,11 +581,11 @@ PanelView::UpdateBackground()
   }
   else
   {
-    WindowManager* wm = WindowManager::Default();
+    WindowManager& wm = WindowManager::Default();
     double opacity = _opacity;
 
-    if (_opacity_maximized_toggle && (wm->IsExpoActive() ||
-        (maximized_win != 0 && !wm->IsWindowObscured(maximized_win))))
+    if (_opacity_maximized_toggle && (wm.IsExpoActive() ||
+        (maximized_win != 0 && !wm.IsWindowObscured(maximized_win))))
     {
       opacity = 1.0f;
     }
@@ -791,21 +813,21 @@ void PanelView::SetOpacityMaximizedToggle(bool enabled)
   {
     if (enabled)
     {
-      auto win_manager = WindowManager::Default();
+      WindowManager& win_manager = WindowManager::Default();
       auto update_bg_lambda = [&](guint32) { ForceUpdateBackground(); };
       auto conn = &_maximized_opacity_toggle_connections;
 
-      conn->push_back(win_manager->window_minimized.connect(update_bg_lambda));
-      conn->push_back(win_manager->window_unminimized.connect(update_bg_lambda));
-      conn->push_back(win_manager->window_maximized.connect(update_bg_lambda));
-      conn->push_back(win_manager->window_restored.connect(update_bg_lambda));
-      conn->push_back(win_manager->window_mapped.connect(update_bg_lambda));
-      conn->push_back(win_manager->window_unmapped.connect(update_bg_lambda));
-      conn->push_back(win_manager->initiate_expo.connect(
+      conn->push_back(win_manager.window_minimized.connect(update_bg_lambda));
+      conn->push_back(win_manager.window_unminimized.connect(update_bg_lambda));
+      conn->push_back(win_manager.window_maximized.connect(update_bg_lambda));
+      conn->push_back(win_manager.window_restored.connect(update_bg_lambda));
+      conn->push_back(win_manager.window_mapped.connect(update_bg_lambda));
+      conn->push_back(win_manager.window_unmapped.connect(update_bg_lambda));
+      conn->push_back(win_manager.initiate_expo.connect(
         sigc::mem_fun(this, &PanelView::ForceUpdateBackground)));
-      conn->push_back(win_manager->terminate_expo.connect(
+      conn->push_back(win_manager.terminate_expo.connect(
         sigc::mem_fun(this, &PanelView::ForceUpdateBackground)));
-      conn->push_back(win_manager->compiz_screen_viewport_switch_ended.connect(
+      conn->push_back(win_manager.screen_viewport_switch_ended.connect(
         sigc::mem_fun(this, &PanelView::ForceUpdateBackground)));
     }
     else

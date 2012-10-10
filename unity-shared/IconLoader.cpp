@@ -212,15 +212,27 @@ private:
 
       if (icon.IsType(UNITY_PROTOCOL_TYPE_ANNOTATED_ICON))
       {
-        UnityProtocolAnnotatedIcon *anno;
-        anno = UNITY_PROTOCOL_ANNOTATED_ICON(icon.RawPtr());
+        glib::Object<UnityProtocolAnnotatedIcon> anno(glib::object_cast<UnityProtocolAnnotatedIcon>(icon));
         GIcon* base_icon = unity_protocol_annotated_icon_get_icon(anno);
         glib::String gicon_string(g_icon_to_string(base_icon));
 
+        // ensure that annotated icons aren't cached by the IconLoader
         no_cache = true;
-        auto helper_slot = sigc::bind(sigc::mem_fun(this, &IconLoaderTask::BaseIconLoaded), glib::object_cast<UnityProtocolAnnotatedIcon>(icon));
-        int base_icon_width = max_width > 0 ? max_width - RIBBON_PADDING * 2 : -1;
-        int base_icon_height = base_icon_width < 0 ? max_height - RIBBON_PADDING *2 : max_height;
+
+        auto helper_slot = sigc::bind(sigc::mem_fun(this, &IconLoaderTask::BaseIconLoaded), anno);
+        int base_icon_width, base_icon_height;
+        if (unity_protocol_annotated_icon_get_use_small_icon(anno))
+        {
+          // FIXME: although this pretends to be generic, we're just making
+          // sure that icons requested to have 96px will be 64
+          base_icon_width = max_width > 0 ? max_width * 2 / 3 : max_width;
+          base_icon_height = max_height > 0 ? max_height * 2 / 3 : max_height;
+        }
+        else
+        {
+          base_icon_width = max_width > 0 ? max_width - RIBBON_PADDING * 2 : -1;
+          base_icon_height = base_icon_width < 0 ? max_height - RIBBON_PADDING *2 : max_height;
+        }
         helper_handle = impl->LoadFromGIconString(gicon_string.Str(),
                                                   base_icon_width,
                                                   base_icon_height,
@@ -302,6 +314,7 @@ private:
       {
         const int SHADOW_BOTTOM_PADDING = 2;
         const int SHADOW_SIDE_PADDING = 1;
+        const int EMBLEM_PADDING = 2;
         int icon_w = gdk_pixbuf_get_width(result);
         int icon_h = gdk_pixbuf_get_height(result);
 
@@ -335,9 +348,16 @@ private:
         pango_layout_set_font_description(layout, desc.get());
         pango_layout_set_alignment(layout, PANGO_ALIGN_CENTER);
 
-        // magic constant for the text width based on the white curve
-        double max_text_width = has_emblem ?
-          pixbuf_width * 0.72 : pixbuf_width;
+        double belt_w = static_cast<double>(pixbuf_width - SHADOW_SIDE_PADDING * 2);
+        double belt_h = static_cast<double>(pixbuf_height - SHADOW_BOTTOM_PADDING);
+
+        double max_text_width = belt_w;
+        if (has_emblem)
+        {
+          const double CURVE_MID_X = 0.4 * (belt_h / 20.0 * 24.0);
+          const int category_pb_w = gdk_pixbuf_get_width(category_pixbuf);
+          max_text_width = belt_w - CURVE_MID_X - category_pb_w - EMBLEM_PADDING;
+        }
 
         pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
         pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
@@ -352,7 +372,7 @@ private:
                                            dpi == -1 ? 96.0f : dpi/(float) PANGO_SCALE);
         pango_layout_context_changed(layout);
 
-        // find proper font size (can we do this before the rotation?)
+        // find proper font size
         int text_width, text_height;
         pango_layout_get_pixel_size(layout, &text_width, nullptr);
         while (text_width > max_text_width && font_size > MIN_FONT_SIZE)
@@ -374,23 +394,23 @@ private:
         const double ORANGE_G = 0.28235;
         const double ORANGE_B = 0.07843;
 
-        double belt_w = static_cast<double>(pixbuf_width - SHADOW_SIDE_PADDING * 2);
-        double belt_h = static_cast<double>(pixbuf_height - SHADOW_BOTTOM_PADDING);
-
         // translate to make space for the shadow
         cairo_save(cr.get());
         cairo_translate(cr.get(), 1.0, 1.0);
 
         cairo_set_source_rgba(cr.get(), ORANGE_R, ORANGE_G, ORANGE_B, 1.0);
 
+        // base ribbon
         cairo_rectangle(cr.get(), 0.0, 0.0, belt_w, belt_h);
         cairo_fill_preserve(cr.get());
 
+        // hightlight on left edge
         std::shared_ptr<cairo_pattern_t> pattern(
             cairo_pattern_create_linear(0.0, 0.0, belt_w, 0.0),
             cairo_pattern_destroy);
         cairo_pattern_add_color_stop_rgba(pattern.get(), 0.0, 1.0, 1.0, 1.0, 0.235294);
         cairo_pattern_add_color_stop_rgba(pattern.get(), 0.02, 1.0, 1.0, 1.0, 0.0);
+        // and on right one
         if (!has_emblem)
         {
           cairo_pattern_add_color_stop_rgba(pattern.get(), 0.98, 1.0, 1.0, 1.0, 0.0);
@@ -403,27 +423,38 @@ private:
 
         if (has_emblem)
         {
-          // paint the curve
-          const double CURVE_START_XPOS = 0.631163; // 0.651163
-          const double CURVE_CP1_XPOS = CURVE_START_XPOS + 0.068023;
-          const double CURVE_CP2_XPOS = CURVE_START_XPOS + 0.07;
-          const double CURVE_CP3_XPOS = CURVE_START_XPOS + 0.102965;
-          const double CURVE_CP4_XPOS = CURVE_START_XPOS + 0.161511;
-          const double CURVE_CP5_XPOS = CURVE_START_XPOS + 0.197093;
-          const double CURVE_END_XPOS = CURVE_START_XPOS + 0.265779;
+          // size of the emblem
+          const int category_pb_w = gdk_pixbuf_get_width(category_pixbuf);
+          const int category_pb_h = gdk_pixbuf_get_height(category_pixbuf);
 
-          const double CURVE_START_X = CURVE_START_XPOS * belt_w;
+          // control and end points for the two bezier curves
+          const double CURVE_X_MULT = belt_h / 20.0 * 24.0;
+          const double CURVE_CP1_X = 0.25 * CURVE_X_MULT;
+          const double CURVE_CP2_X = 0.2521 * CURVE_X_MULT;
+          const double CURVE_CP3_X = 0.36875 * CURVE_X_MULT;
+          const double CURVE_CP4_X = 0.57875 * CURVE_X_MULT;
+          const double CURVE_CP5_X = 0.705417 * CURVE_X_MULT;
+          const double CURVE_CP6_X = 0.723333 * CURVE_X_MULT;
+          const double CURVE_CP7_X = 0.952375 * CURVE_X_MULT;
+
+          const double CURVE_Y1 = 0.9825;
+          const double CURVE_Y2 = 0.72725;
+          const double CURVE_Y3 = 0.27275;
+
+          const double CURVE_START_X = belt_w - category_pb_w - CURVE_CP5_X - EMBLEM_PADDING;
+          //const double CURVE_END_X = CURVE_START_X + CURVE_X_MULT;
 
           cairo_set_source_rgba(cr.get(), 1.0, 1.0, 1.0, 1.0);
 
-          cairo_move_to(cr.get(), CURVE_START_XPOS * belt_w, belt_h);
-          cairo_curve_to(cr.get(), CURVE_CP1_XPOS * belt_w, belt_h,
-                                   CURVE_CP2_XPOS * belt_w, 0.9825 * belt_h,
-                                   CURVE_CP3_XPOS * belt_w, 0.72725 * belt_h);
-          cairo_line_to(cr.get(), CURVE_CP4_XPOS * belt_w, 0.27275 * belt_h);
-          cairo_curve_to(cr.get(), CURVE_CP5_XPOS * belt_w, 0.0,
-                                   CURVE_CP5_XPOS * belt_w, 0.0,
-                                   CURVE_END_XPOS * belt_w, 0.0);
+          // paint the curved area
+          cairo_move_to(cr.get(), CURVE_START_X, belt_h);
+          cairo_curve_to(cr.get(), CURVE_START_X + CURVE_CP1_X, belt_h,
+                                   CURVE_START_X + CURVE_CP2_X, CURVE_Y1 * belt_h,
+                                   CURVE_START_X + CURVE_CP3_X, CURVE_Y2 * belt_h);
+          cairo_line_to(cr.get(), CURVE_START_X + CURVE_CP4_X, CURVE_Y3 * belt_h);
+          cairo_curve_to(cr.get(), CURVE_START_X + CURVE_CP5_X, 0.0,
+                                   CURVE_START_X + CURVE_CP6_X, 0.0,
+                                   CURVE_START_X + CURVE_CP7_X, 0.0);
           cairo_line_to(cr.get(), belt_w, 0.0);
           cairo_line_to(cr.get(), belt_w, belt_h);
           cairo_close_path(cr.get());
@@ -440,16 +471,13 @@ private:
           cairo_fill(cr.get());
 
           // paint the emblem
-          int category_pb_w = gdk_pixbuf_get_width(category_pixbuf);
-          int category_pb_h = gdk_pixbuf_get_height(category_pixbuf);
-          double category_pb_x = 
-            belt_w - category_pb_w > CURVE_CP4_XPOS * belt_w ?
-              CURVE_CP4_XPOS * belt_w + ((1 - CURVE_CP4_XPOS) * belt_w - category_pb_w) / 2 : CURVE_CP4_XPOS * belt_w;
+          double category_pb_x = belt_w - category_pb_w - EMBLEM_PADDING - 1;
           gdk_cairo_set_source_pixbuf(cr.get(), category_pixbuf,
                                       category_pb_x, (belt_h - category_pb_h) / 2);
           cairo_paint(cr.get());
         }
 
+        // paint the text
         cairo_set_source_rgba(cr.get(), 1.0, 1.0, 1.0, 1.0);
         cairo_move_to(cr.get(), 0.0, belt_h / 2);
         pango_layout_get_pixel_size(layout, nullptr, &text_height);
@@ -463,7 +491,7 @@ private:
 
         pattern.reset(cairo_pattern_create_linear(0.0, belt_h, 0.0, belt_h + SHADOW_BOTTOM_PADDING),
                       cairo_pattern_destroy);
-        cairo_pattern_add_color_stop_rgba(pattern.get(), 0.0, 0.0, 0.0, 0.0, 0.2);
+        cairo_pattern_add_color_stop_rgba(pattern.get(), 0.0, 0.0, 0.0, 0.0, 0.235294);
         cairo_pattern_add_color_stop_rgba(pattern.get(), 1.0, 0.0, 0.0, 0.0, 0.0);
 
         cairo_set_source(cr.get(), pattern.get());
@@ -472,13 +500,11 @@ private:
         cairo_fill(cr.get());
 
         cairo_set_source_rgba(cr.get(), 0.0, 0.0, 0.0, 0.1);
-        cairo_move_to(cr.get(), 0.0, 1.0);
-        cairo_line_to(cr.get(), 0.0, belt_h);
-        cairo_stroke(cr.get());
+        cairo_rectangle(cr.get(), 0.0, 1.0, 1.0, belt_h);
+        cairo_fill(cr.get());
 
-        cairo_move_to(cr.get(), belt_w, 1.0);
-        cairo_line_to(cr.get(), belt_w, belt_h);
-        cairo_stroke(cr.get());
+        cairo_rectangle(cr.get(), belt_w, 1.0, 1.0, belt_h);
+        cairo_fill(cr.get());
 
         // FIXME: going from image_surface to pixbuf, and then to texture :(
         glib::Object<GdkPixbuf> detail_pb(
@@ -504,7 +530,7 @@ private:
     }
 
     void BaseIconLoaded(std::string const& base_icon_string,
-                        int max_width, int max_height,
+                        int base_max_width, int base_max_height,
                         glib::Object<GdkPixbuf> const& base_pixbuf,
                         glib::Object<UnityProtocolAnnotatedIcon> const& anno_icon)
     {
@@ -515,16 +541,32 @@ private:
           "' size: " << gdk_pixbuf_get_width(base_pixbuf) << 'x' <<
                         gdk_pixbuf_get_height(base_pixbuf);
 
+        int result_width, result_height, dest_x, dest_y;
+        if (unity_protocol_annotated_icon_get_use_small_icon(anno_icon))
+        {
+          result_width = max_width > 0 ? max_width : MAX(max_height, gdk_pixbuf_get_width(base_pixbuf));
+          result_height = max_height > 0 ? max_height : MAX(max_width, gdk_pixbuf_get_height(base_pixbuf));
+
+          dest_x = (result_width - gdk_pixbuf_get_width(base_pixbuf)) / 2;
+          dest_y = (result_height - gdk_pixbuf_get_height(base_pixbuf)) / 2;
+        }
+        else
+        {
+          result_width = gdk_pixbuf_get_width(base_pixbuf) + RIBBON_PADDING * 2;
+          result_height = gdk_pixbuf_get_height(base_pixbuf);
+
+          dest_x = RIBBON_PADDING;
+          dest_y = 0;
+        }
         // we need extra space for the ribbon
-        result = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, 
-                                gdk_pixbuf_get_width(base_pixbuf) + RIBBON_PADDING * 2,
-                                gdk_pixbuf_get_height(base_pixbuf));
+        result = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8,
+                                result_width, result_height);
         gdk_pixbuf_fill(result, 0x0);
         gdk_pixbuf_copy_area(base_pixbuf, 0, 0,
                              gdk_pixbuf_get_width(base_pixbuf),
                              gdk_pixbuf_get_height(base_pixbuf),
                              result,
-                             RIBBON_PADDING, 0);
+                             dest_x, dest_y);
         // FIXME: can we composite the pixbuf in helper thread?
         UnityProtocolCategoryType category = unity_protocol_annotated_icon_get_category(anno_icon);
         auto helper_slot = sigc::bind(sigc::mem_fun(this, &IconLoaderTask::CategoryIconLoaded), anno_icon);
@@ -533,6 +575,10 @@ private:
         unsigned cat_size = max_font_height * 9 / 8;
         switch (category)
         {
+          case UNITY_PROTOCOL_CATEGORY_TYPE_NONE:
+            // rest of the processing is the CategoryIconLoaded, lets invoke it
+            helper_slot("", -1, cat_size, glib::Object<GdkPixbuf>());
+            break;
           case UNITY_PROTOCOL_CATEGORY_TYPE_APPLICATION:
             helper_handle =
               impl->LoadFromFilename(PKGDATADIR"/emblem_apps.svg", -1, cat_size, helper_slot);
@@ -574,9 +620,8 @@ private:
           case UNITY_PROTOCOL_CATEGORY_TYPE_TOOLS:
           case UNITY_PROTOCOL_CATEGORY_TYPE_CAR:
           default:
-            // rest of the processing is the CategoryIconLoaded, lets invoke it
-            glib::Object<GdkPixbuf> null_pixbuf;
-            helper_slot("", -1, cat_size, null_pixbuf);
+            helper_handle =
+              impl->LoadFromFilename(PKGDATADIR"/emblem_others.svg", -1, cat_size, helper_slot);
             break;
         }
       }

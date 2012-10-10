@@ -396,15 +396,15 @@ TEST(TestGLibIdle, OneShotRun)
   long long pre = 0;
   long long post = 0;
 
-  Idle idle(&OnSourceCallbackStop);
   pre = g_get_monotonic_time();
+  Idle idle(&OnSourceCallbackStop);
   idle.removed.connect([&] (unsigned int id) { post = g_get_monotonic_time(); });
 
   Utils::WaitForTimeoutMSec(100);
   EXPECT_FALSE(idle.IsRunning());
   EXPECT_TRUE(callback_called);
   EXPECT_EQ(callback_call_count, 1);
-  EXPECT_LT(pre, post);
+  EXPECT_LE(pre, post);
 }
 
 TEST(TestGLibIdle, MultipleShotsRun)

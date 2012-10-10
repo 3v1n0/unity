@@ -42,7 +42,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(SoftwareCenterLauncherIcon);
 SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
                                                        std::string const& aptdaemon_trans_id,
                                                        std::string const& icon_path)
-: BamfLauncherIcon(app),
+: ApplicationLauncherIcon(app),
   aptdaemon_trans_("org.debian.apt",
                    aptdaemon_trans_id,
                    "org.debian.apt.transaction",
@@ -108,7 +108,7 @@ void SoftwareCenterLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       needs_urgent_ = false;
     }
 
-    BamfLauncherIcon::ActivateLauncherIcon(arg);
+    ApplicationLauncherIcon::ActivateLauncherIcon(arg);
   }
   else
   {

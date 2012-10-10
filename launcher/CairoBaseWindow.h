@@ -39,6 +39,7 @@ protected:
   nux::ObjectPtr<nux::BaseTexture> texture_mask_;
   nux::ObjectPtr<nux::BaseTexture> texture_outline_;
 
+  bool use_blur_;
   bool _use_blurred_background;
   bool _compute_blur_bkg;
 

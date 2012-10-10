@@ -26,7 +26,6 @@
 #include <UnityCore/Variant.h>
 
 #include "SimpleLauncherIcon.h"
-#include "unity-shared/PluginAdapter.h"
 
 #include "unity-shared/ubus-server.h"
 #include "unity-shared/UBusMessages.h"

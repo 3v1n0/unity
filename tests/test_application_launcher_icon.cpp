@@ -25,7 +25,7 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/DesktopUtilities.h>
 
-#include "BamfLauncherIcon.h"
+#include "ApplicationLauncherIcon.h"
 #include "FavoriteStore.h"
 
 using namespace unity;
@@ -37,7 +37,7 @@ namespace
 const std::string USC_DESKTOP = BUILDDIR"/tests/data/applications/ubuntu-software-center.desktop";
 const std::string NO_ICON_DESKTOP = BUILDDIR"/tests/data/applications/no-icon.desktop";
 
-class TestBamfLauncherIcon : public testing::Test
+class TestApplicationLauncherIcon : public testing::Test
 {
 public:
   virtual void SetUp()
@@ -46,30 +46,30 @@ public:
     bamf_matcher = bamf_matcher_get_default();
 
     bamf_app = bamf_matcher_get_application_for_desktop_file(bamf_matcher, USC_DESKTOP.c_str(), TRUE);
-    usc_icon = new launcher::BamfLauncherIcon(bamf_app);
+    usc_icon = new launcher::ApplicationLauncherIcon(bamf_app);
     ASSERT_EQ(usc_icon->DesktopFile(), USC_DESKTOP);
 
     bamf_app = bamf_matcher_get_application_for_desktop_file(bamf_matcher, NO_ICON_DESKTOP.c_str(), TRUE);
-    empty_icon = new launcher::BamfLauncherIcon(bamf_app);
+    empty_icon = new launcher::ApplicationLauncherIcon(bamf_app);
     ASSERT_EQ(empty_icon->DesktopFile(), NO_ICON_DESKTOP);
 
     bamf_app = static_cast<BamfApplication*>(g_object_new(BAMF_TYPE_APPLICATION, nullptr));
-    empty_app = new launcher::BamfLauncherIcon(bamf_app);
+    empty_app = new launcher::ApplicationLauncherIcon(bamf_app);
     ASSERT_TRUE(empty_app->DesktopFile().empty());
   }
 
   glib::Object<BamfMatcher> bamf_matcher;
-  nux::ObjectPtr<launcher::BamfLauncherIcon> usc_icon;
-  nux::ObjectPtr<launcher::BamfLauncherIcon> empty_icon;
-  nux::ObjectPtr<launcher::BamfLauncherIcon> empty_app;
+  nux::ObjectPtr<launcher::ApplicationLauncherIcon> usc_icon;
+  nux::ObjectPtr<launcher::ApplicationLauncherIcon> empty_icon;
+  nux::ObjectPtr<launcher::ApplicationLauncherIcon> empty_app;
 };
 
-TEST_F(TestBamfLauncherIcon, Position)
+TEST_F(TestApplicationLauncherIcon, Position)
 {
   EXPECT_EQ(usc_icon->position(), AbstractLauncherIcon::Position::FLOATING);
 }
 
-TEST_F(TestBamfLauncherIcon, TestCustomBackgroundColor)
+TEST_F(TestApplicationLauncherIcon, TestCustomBackgroundColor)
 {
   nux::Color const& color = usc_icon->BackgroundColor();
 
@@ -79,14 +79,14 @@ TEST_F(TestBamfLauncherIcon, TestCustomBackgroundColor)
   EXPECT_EQ(color.alpha, 0xff / 255.0f);
 }
 
-TEST_F(TestBamfLauncherIcon, TestDefaultIcon)
+TEST_F(TestApplicationLauncherIcon, TestDefaultIcon)
 {
   EXPECT_EQ(usc_icon->icon_name.Get(), "softwarecenter");
   EXPECT_EQ(empty_icon->icon_name.Get(), "application-default-icon");
   EXPECT_EQ(empty_app->icon_name.Get(), "application-default-icon");
 }
 
-TEST_F(TestBamfLauncherIcon, Stick)
+TEST_F(TestApplicationLauncherIcon, Stick)
 {
   BamfView* bamf_app = BAMF_VIEW(bamf_matcher_get_application_for_desktop_file(bamf_matcher, USC_DESKTOP.c_str(), FALSE));
   ASSERT_FALSE(bamf_view_is_sticky(bamf_app));
@@ -105,7 +105,7 @@ TEST_F(TestBamfLauncherIcon, Stick)
   bamf_view_set_sticky(bamf_app, FALSE);
 }
 
-TEST_F(TestBamfLauncherIcon, StickAndSave)
+TEST_F(TestApplicationLauncherIcon, StickAndSave)
 {
   BamfView* bamf_app = BAMF_VIEW(bamf_matcher_get_application_for_desktop_file(bamf_matcher, USC_DESKTOP.c_str(), FALSE));
   ASSERT_FALSE(bamf_view_is_sticky(bamf_app));
@@ -121,7 +121,7 @@ TEST_F(TestBamfLauncherIcon, StickAndSave)
   bamf_view_set_sticky(bamf_app, FALSE);
 }
 
-TEST_F(TestBamfLauncherIcon, Unstick)
+TEST_F(TestApplicationLauncherIcon, Unstick)
 {
   BamfView* bamf_app = BAMF_VIEW(bamf_matcher_get_application_for_desktop_file(bamf_matcher, USC_DESKTOP.c_str(), FALSE));
   ASSERT_FALSE(bamf_view_is_sticky(bamf_app));
@@ -140,7 +140,7 @@ TEST_F(TestBamfLauncherIcon, Unstick)
   EXPECT_TRUE(forgot);
 }
 
-TEST_F(TestBamfLauncherIcon, RemoteUri)
+TEST_F(TestApplicationLauncherIcon, RemoteUri)
 {
   EXPECT_EQ(usc_icon->RemoteUri(), FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(USC_DESKTOP));
   EXPECT_TRUE(empty_app->RemoteUri().empty());

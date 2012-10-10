@@ -55,7 +55,7 @@ public:
   void ReorderBefore(AbstractLauncherIcon::Ptr const& icon, AbstractLauncherIcon::Ptr const& other, bool animate);
   void ReorderSmart(AbstractLauncherIcon::Ptr const& icon, AbstractLauncherIcon::Ptr const& other, bool animate);
 
-  AbstractLauncherIcon::Ptr Selection() const;
+  AbstractLauncherIcon::Ptr const& Selection() const;
   int SelectionIndex() const;
   void SetSelection(int selection);
   void SelectNext();

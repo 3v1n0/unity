@@ -36,12 +36,12 @@ namespace launcher
 
 class Launcher;
 
-class BamfLauncherIcon : public SimpleLauncherIcon
+class ApplicationLauncherIcon : public SimpleLauncherIcon
 {
-  NUX_DECLARE_OBJECT_TYPE(BamfLauncherIcon, SimpleLauncherIcon);
+  NUX_DECLARE_OBJECT_TYPE(ApplicationLauncherIcon, SimpleLauncherIcon);
 public:
-  BamfLauncherIcon(BamfApplication* app);
-  virtual ~BamfLauncherIcon();
+  ApplicationLauncherIcon(BamfApplication* app);
+  virtual ~ApplicationLauncherIcon();
 
   virtual void ActivateLauncherIcon(ActionArg arg);
 
@@ -106,7 +106,6 @@ private:
   void UpdateDesktopFile();
   void UpdateMenus();
   void UpdateDesktopQuickList();
-  void FillSupportedTypes();
 
   void OpenInstanceWithUris(std::set<std::string> uris);
   void Focus(ActionArg arg);
@@ -119,15 +118,13 @@ private:
   bool OwnsWindow(Window w) const;
 
   std::vector<Window> GetWindows(WindowFilterMask filter = 0, int monitor = -1);
-  const std::set<std::string>& GetSupportedTypes();
+  const std::set<std::string> GetSupportedTypes();
   std::string GetDesktopID();
 
   glib::Object<BamfApplication> _bamf_app;
-  bool _supported_types_filled;
 
   std::string _remote_uri;
   std::string _desktop_file;
-  std::set<std::string> _supported_types;
   std::map<std::string, glib::Object<DbusmenuClient>> _menu_clients;
   std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items;
   std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items_extra;

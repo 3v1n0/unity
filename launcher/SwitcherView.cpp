@@ -175,7 +175,7 @@ void SwitcherView::OnDetailSelectionChanged (bool detail)
   QueueDraw ();
 }
 
-void SwitcherView::OnSelectionChanged(AbstractLauncherIcon::Ptr selection)
+void SwitcherView::OnSelectionChanged(AbstractLauncherIcon::Ptr const& selection)
 {
   if (selection)
     text_view_->SetText(selection->tooltip_text());
@@ -188,7 +188,7 @@ SwitcherModel::Ptr SwitcherView::GetModel()
   return model_;
 }
 
-RenderArg SwitcherView::CreateBaseArgForIcon(AbstractLauncherIcon::Ptr icon)
+RenderArg SwitcherView::CreateBaseArgForIcon(AbstractLauncherIcon::Ptr const& icon)
 {
   RenderArg arg;
   arg.icon = icon.GetPointer();

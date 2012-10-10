@@ -42,6 +42,7 @@ namespace
 nux::logging::Logger logger("unity.dash.previews.coverart");
 
 const int ICON_SIZE = 256;
+const int IMAGE_TIMEOUT = 30;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(CoverArt);
@@ -88,17 +89,13 @@ void CoverArt::AddProperties(GVariantBuilder* builder)
 
 void CoverArt::SetImage(std::string const& image_hint)
 { 
-  spinner_timeout_.reset();
-  frame_timeout_.reset();
-  waiting_ = false;
+  StopWaiting();
 
   if (slot_handle_ > 0)
   {
     IconLoader::GetDefault().DisconnectHandle(slot_handle_);
     slot_handle_ = 0;
   }
-
-  GIcon* icon = g_icon_new_for_string(image_hint.c_str(), NULL);
 
   bool bLoadTexture = false;
   bLoadTexture |= g_strrstr(image_hint.c_str(), "://") != NULL;
@@ -115,10 +112,8 @@ void CoverArt::SetImage(std::string const& image_hint)
   }
   else if (!image_hint.empty())
   {
-    if (GetLayout())
-      GetLayout()->RemoveChildObject(overlay_text_);
-    
-    if (G_IS_ICON(icon))
+    glib::Object<GIcon> icon(g_icon_new_for_string(image_hint.c_str(), NULL));
+    if (icon.IsType(G_TYPE_ICON))
     {
       StartWaiting();
       slot_handle_ = IconLoader::GetDefault().LoadFromGIconString(image_hint, ICON_SIZE, ICON_SIZE, sigc::mem_fun(this, &CoverArt::IconLoaded));
@@ -133,9 +128,6 @@ void CoverArt::SetImage(std::string const& image_hint)
   {
     SetNoImageAvailable();
   }
-
-  if (icon != NULL)
-    g_object_unref(icon);
 }
 
 void CoverArt::GenerateImage(std::string const& uri)
@@ -159,12 +151,14 @@ void CoverArt::StartWaiting()
   if (waiting_)
     return;
 
+  if (GetLayout())
+    GetLayout()->RemoveChildObject(overlay_text_);
   waiting_ = true;
 
   rotate_matrix_.Rotate_z(0.0f);
   rotation_ = 0.0f;
 
-  spinner_timeout_.reset(new glib::TimeoutSeconds(5, [&]
+  spinner_timeout_.reset(new glib::TimeoutSeconds(IMAGE_TIMEOUT, [&]
   {
     StopWaiting();
 
@@ -221,11 +215,13 @@ void CoverArt::IconLoaded(std::string const& texid,
     pixbuf_height = (pixbuf_height) ? pixbuf_height: 1; // no zeros please
   }
 
+  if (GetLayout())
+    GetLayout()->RemoveChildObject(overlay_text_);
+
   if (pixbuf_width == pixbuf_height)
-  {
+  {    
     // quick path for square icons
     texture_screenshot_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
-    QueueDraw();
   }
   else
   {
@@ -273,8 +269,8 @@ void CoverArt::IconLoaded(std::string const& texid,
     cairo_paint(cr);
 
     texture_screenshot_.Adopt(texture_from_cairo_graphics(cairo_graphics));
-    QueueDraw();
   }
+  QueueDraw();
 }
 
 void CoverArt::TextureLoaded(std::string const& texid,
@@ -291,6 +287,10 @@ void CoverArt::TextureLoaded(std::string const& texid,
     SetNoImageAvailable();
     return;
   }
+
+  if (GetLayout())
+    GetLayout()->RemoveChildObject(overlay_text_);
+
   texture_screenshot_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
   QueueDraw();
 }
@@ -334,7 +334,7 @@ void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
   gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
   gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-  if (texture_screenshot_)
+  if (IsFullRedraw() && texture_screenshot_)
   {
     nux::Geometry imageDest = base;
     nux::TexCoordXForm texxform;
@@ -376,7 +376,7 @@ void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
                         texxform,
                         nux::color::White);
   }
-  else
+  else if (IsFullRedraw())
   {
     if (waiting_)
     {  
@@ -472,13 +472,7 @@ void CoverArt::OnThumbnailError(std::string const& error_hint)
   StopWaiting();
 
   texture_screenshot_.Release();
-  if (GetLayout())
-  {
-    GetLayout()->RemoveChildObject(overlay_text_);
-    GetLayout()->AddView(overlay_text_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0, nux::LayoutPosition(1));   
-    ComputeContentSize();
-  }
-  QueueDraw();
+  SetNoImageAvailable();
   notifier_.Release();
 }
 

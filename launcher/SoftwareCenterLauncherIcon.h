@@ -24,7 +24,7 @@
 #include <string>
 #include <UnityCore/GLibDBusProxy.h>
 #include <UnityCore/GLibSource.h>
-#include "BamfLauncherIcon.h"
+#include "ApplicationLauncherIcon.h"
 #include "LauncherDragWindow.h"
 
 namespace unity
@@ -33,9 +33,9 @@ namespace launcher
 {
 class Launcher;
 
-class SoftwareCenterLauncherIcon : public BamfLauncherIcon
+class SoftwareCenterLauncherIcon : public ApplicationLauncherIcon
 {
-  NUX_DECLARE_OBJECT_TYPE(SoftwareCenterLauncherIcon, BamfLauncherIcon);
+  NUX_DECLARE_OBJECT_TYPE(SoftwareCenterLauncherIcon, ApplicationLauncherIcon);
 public:
   typedef nux::ObjectPtr<SoftwareCenterLauncherIcon> Ptr;
 

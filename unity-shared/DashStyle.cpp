@@ -2375,7 +2375,7 @@ int Style::GetPlacesGroupTopSpace() const
 
 int Style::GetCategoryHeaderLeftPadding() const
 {
-  return 20;
+  return 19;
 }
 
 int Style::GetCategorySeparatorLeftPadding() const
