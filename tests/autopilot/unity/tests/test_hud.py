@@ -417,10 +417,10 @@ class HudBehaviorTests(HudTestsBase):
 
         (x,y,w,h) = self.hud.geometry
         (screen_x,screen_y,screen_w,screen_h) = self.screen_geo.get_monitor_geometry(current_monitor)
-        
+
         self.mouse.move(x + w + (screen_w-((screen_x-x)+w))/2, y + h + (screen_h-((screen_y-y)+h))/2)
         self.mouse.click()
-        
+
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
     def test_closes_then_focuses_window_on_mouse_down(self):

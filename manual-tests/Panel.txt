@@ -95,3 +95,19 @@ Expected Result:
   At no point during the actions should the panel (or launcher) blink or
   flicker out of existence.
 
+
+Panel shadow overdraw
+---------------------
+Setup:
+#. Install Google Chrome or Chromium.
+
+Actions:
+#. Maximize a Chrome window.
+#. Open several tabs so that the titles of some tabs are not fully visible
+   and fade out to the right.
+#. Hover the mouse over the very top part of some tabs so tooltips appear.
+
+Expected Result:
+  No part of the panel shadow should ever appear on top of the maximized
+  Chrome window.
+

@@ -363,6 +363,17 @@ void SearchBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 
   graphics_engine.PushClippingRectangle(base);
 
+  if (RedirectedAncestor())
+  {
+    unsigned int alpha = 0, src = 0, dest = 0;
+    graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
+    // This is necessary when doing redirected rendering.
+    // Clean the area below this view before drawing anything.
+    graphics_engine.GetRenderStates().SetBlend(false);
+    graphics_engine.QRP_Color(base.x, base.y, base.width, base.height, nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+    graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
+  }
+
   bg_layer_->SetGeometry(nux::Geometry(base.x, base.y, last_width_, last_height_));
   nux::GetPainter().RenderSinglePaintLayer(graphics_engine,
                                            bg_layer_->GetGeometry(),
@@ -380,38 +391,10 @@ void SearchBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
     if (!highlight_layer_)
       highlight_layer_.reset(style.FocusOverlay(geo.width, geo.height));
 
-    if (RedirectedAncestor())
-    {
-      unsigned int alpha = 0, src = 0, dest = 0;
-      graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
-      // This is necessary when doing redirected rendering.
-      // Clean the area below this view before drawing anything.
-      graphics_engine.GetRenderStates().SetBlend(false);
-      graphics_engine.QRP_Color(geo.x, geo.y, geo.width, geo.height, nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
-      graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
-    }
-
     highlight_layer_->SetGeometry(geo);
     highlight_layer_->Renderlayer(graphics_engine);
   }
-  else if (expander_view_ && expander_view_->IsVisible())
-  {
-    nux::Geometry geo(expander_view_->GetGeometry());
 
-    geo.y -= (HIGHLIGHT_HEIGHT- geo.height) / 2;
-    geo.height = HIGHLIGHT_HEIGHT;
-
-    if (RedirectedAncestor())
-    {
-      unsigned int alpha = 0, src = 0, dest = 0;
-      graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
-      // This is necessary when doing redirected rendering.
-      // Clean the area below this view before drawing anything.
-      graphics_engine.GetRenderStates().SetBlend(false);
-      graphics_engine.QRP_Color(geo.x, geo.y, geo.width, geo.height, nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
-      graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
-    }
-  }
   graphics_engine.PopClippingRectangle();
 }
 
