@@ -115,6 +115,21 @@ Entry::Ptr Indicator::GetEntry(std::string const& entry_id) const
   return Entry::Ptr();
 }
 
+int Indicator::EntryIndex(std::string const& entry_id) const
+{
+  int i = 0;
+  for (auto entry : entries_)
+  {
+    if (entry->id() == entry_id)
+    {
+      return i;
+    }
+    ++i;
+  }
+
+  return -1;
+}
+
 void Indicator::OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
                                 int x, int y, unsigned int button, unsigned int timestamp)
 {
