@@ -9,7 +9,6 @@
 from __future__ import absolute_import
 
 from time import sleep
-from testtools import skip
 
 from unity.tests import UnityTestCase
 
@@ -17,7 +16,6 @@ from unity.tests import UnityTestCase
 class ShowDesktopTests(UnityTestCase):
     """Test the 'Show Desktop' functionality."""
 
-    @skip("Disabled due to Show Desktop Usage")
     def setUp(self):
         super(ShowDesktopTests, self).setUp()
         self.set_unity_log_level("unity.plugin", "DEBUG")
@@ -31,7 +29,6 @@ class ShowDesktopTests(UnityTestCase):
         calc_win = self.start_app_window('Calculator', locale='C')
         return (char_win, calc_win)
 
-    @skip("Disabled due to Show Desktop Usage")
     def test_showdesktop_hides_apps(self):
         """Show Desktop keyboard shortcut must hide applications."""
         test_windows = self.launch_test_apps()
@@ -44,7 +41,6 @@ class ShowDesktopTests(UnityTestCase):
             self.assertProperty(win, is_valid=True)
             self.assertProperty(win, is_hidden=True)
 
-    @skip("Disabled due to Show Desktop Usage")
     def test_showdesktop_unhides_apps(self):
         """Show desktop shortcut must re-show all hidden apps."""
         test_windows = self.launch_test_apps()
@@ -64,7 +60,6 @@ class ShowDesktopTests(UnityTestCase):
             self.assertProperty(win, is_valid=True)
             self.assertProperty(win, is_hidden=False)
 
-    @skip("Disabled due to Show Desktop Usage")
     def test_unhide_single_app(self):
         """Un-hide a single app from launcher after hiding all apps."""
         charmap, calc = self.launch_test_apps()
@@ -93,7 +88,6 @@ class ShowDesktopTests(UnityTestCase):
         for win in (charmap, calc):
             self.assertProperty(win, is_hidden=False)
 
-    @skip("Disabled due to Show Desktop Usage")
     def test_showdesktop_switcher(self):
         """Show desktop item in switcher should hide all hidden apps."""
         test_windows = self.launch_test_apps()
