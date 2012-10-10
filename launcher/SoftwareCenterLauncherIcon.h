@@ -23,6 +23,7 @@
 
 #include <string>
 #include <UnityCore/GLibDBusProxy.h>
+#include <UnityCore/GLibSource.h>
 #include "ApplicationLauncherIcon.h"
 #include "LauncherDragWindow.h"
 
@@ -59,6 +60,7 @@ private:
   nux::ObjectPtr<nux::IOpenGLBaseTexture> icon_texture_;
   nux::ObjectPtr<LauncherDragWindow> drag_window_;
   nux::ObjectPtr<Launcher> launcher_;
+  glib::SourceManager sources_;
   bool finished_;
   bool needs_urgent_;
 
