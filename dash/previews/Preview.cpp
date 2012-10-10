@@ -280,7 +280,6 @@ nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList action
         actions_layout_h->AddView(button, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
     }
 
-
     actions_layout_v->AddLayout(actions_layout_h, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
   }
 
