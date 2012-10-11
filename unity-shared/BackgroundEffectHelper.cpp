@@ -188,7 +188,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
   graphics_engine->SetViewport(0, 0, larger_blur_geometry.width, larger_blur_geometry.height);
   graphics_engine->SetScissor(0, 0, larger_blur_geometry.width, larger_blur_geometry.height);
   // Disable nux scissoring
-  graphics_engine->GetRenderStates ().EnableScissor (false);
+  graphics_engine->GetRenderStates().EnableScissor(false);
 
   // The background texture is the same size as the monitor where we are rendering.
   nux::TexCoordXForm texxform__bg;
@@ -347,9 +347,11 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetRegion(nux::G
 
   nux::Geometry temp = geo;
   temp.OffsetPosition(-monitor_rect_.x, -monitor_rect_.y);
+
   blur_geometry_ =  nux::Geometry(0, 0, monitor_width, monitor_height).Intersect(temp);
 
   nux::GpuDevice* gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
+  
   if (blur_geometry_.IsNull() || !gpu_device->backup_texture0_.IsValid())
   {
     return nux::ObjectPtr<nux::IOpenGLBaseTexture>();
@@ -366,18 +368,16 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetRegion(nux::G
   graphics_engine->SetViewport(0, 0, blur_geometry_.width, blur_geometry_.height);
   graphics_engine->SetScissor(0, 0, blur_geometry_.width, blur_geometry_.height);
   // Disable nux scissoring
-  graphics_engine->GetRenderStates ().EnableScissor (false);
+  graphics_engine->GetRenderStates().EnableScissor(false);
 
   // The background texture is the same size as the monitor where we are rendering.
   nux::TexCoordXForm texxform__bg;
-  texxform__bg.flip_v_coord = false;
   texxform__bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
   texxform__bg.uoffset = ((float) blur_geometry_.x) / monitor_width;
-  texxform__bg.voffset = ((float) monitor_height - blur_geometry_.y - blur_geometry_.height) / monitor_height;
+  texxform__bg.voffset = ((float) blur_geometry_.y) / monitor_height;
 
   {
     nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture = gpu_device->backup_texture0_;
-    nux::ObjectPtr<nux::CachedBaseTexture> noise_device_texture = graphics_engine->CacheResource(noise_texture_);
 
     unsigned int offset = 0;
     int quad_width = blur_geometry_.width;
@@ -399,7 +399,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetRegion(nux::G
   {
     current_fbo->Activate(true);
     graphics_engine->Push2DWindow(current_fbo->GetWidth(), current_fbo->GetHeight());
-    graphics_engine->GetRenderStates ().EnableScissor (true);
+    graphics_engine->GetRenderStates().EnableScissor(true);
   }
   else
   {
