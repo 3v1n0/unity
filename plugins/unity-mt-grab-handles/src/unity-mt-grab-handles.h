@@ -188,7 +188,7 @@ private:
   std::list <unity::MT::GrabHandleGroup::Ptr> mGrabHandles;
   std::vector <unity::MT::TextureSize> mHandleTextures;
 
-  std::map <Window, const unity::MT::GrabHandle::Ptr> mInputHandles;
+  std::map <Window, const boost::weak_ptr <unity::MT::GrabHandle> > mInputHandles;
   CompWindowVector         		    mLastClientListStacking;
   Atom             			    mCompResizeWindowAtom;
 

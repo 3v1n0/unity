@@ -207,7 +207,8 @@ UnityMTGrabHandlesScreen::raiseHandle (const boost::shared_ptr <const unity::MT:
 {
   for (const auto &pair : mInputHandles)
   {
-    if (*pair.second == *h)
+    const unity::MT::GrabHandle::Ptr gh = pair.second.lock();
+    if (*gh == *h)
     {
       unsigned int mask = CWSibling | CWStackMode;
       XWindowChanges xwc;
@@ -322,10 +323,11 @@ UnityMTGrabHandlesScreen::handleEvent(XEvent* event)
 
       if (it != mInputHandles.end())
       {
-	if (it->second)
-          it->second->buttonPress (event->xbutton.x_root,
-                                   event->xbutton.y_root,
-                                   event->xbutton.button);
+        const unity::MT::GrabHandle::Ptr gh = it->second.lock();
+        if (gh)
+          gh->buttonPress (event->xbutton.x_root,
+                           event->xbutton.y_root,
+                           event->xbutton.button);
       }
 
       break;
@@ -346,8 +348,9 @@ UnityMTGrabHandlesScreen::handleEvent(XEvent* event)
 
       if (it != mInputHandles.end())
       {
-        if (it->second)
-          it->second->reposition (0, 0, unity::MT::PositionLock);
+        const unity::MT::GrabHandle::Ptr gh = it->second.lock();
+        if (gh)
+          gh->reposition (0, 0, unity::MT::PositionLock);
       }
 
       break;
@@ -633,7 +636,7 @@ UnityMTGrabHandlesWindow::restackHandles()
 void
 UnityMTGrabHandlesScreen::addHandleWindow(const unity::MT::GrabHandle::Ptr &h, Window w)
 {
-  mInputHandles.insert(std::pair <Window, const unity::MT::GrabHandle::Ptr> (w, h));
+  mInputHandles.insert(std::pair <Window, const boost::weak_ptr <unity::MT::GrabHandle> > (w, h));
 }
 
 void
