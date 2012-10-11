@@ -570,6 +570,10 @@ void UnityScreen::paintPanelShadow(const CompRegion& clip)
     return;
 
   CompOutput* output = _last_output;
+
+  if (fullscreenRegion.contains(*output))
+    return;
+
   float panel_h = static_cast<float>(panel_style_.panel_height);
 
   // You have no shadow texture. But how?
