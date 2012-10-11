@@ -66,8 +66,8 @@ protected:
                    double   y,
                    double   width,
                    double   height,
-                   double   tailPositionPercentage,
-                   double   tailWidthPercentage);
+                   double   tailPosition,
+                   double   tailWidth);
 
   virtual std::string GetName() const;
   virtual void AddProperties(GVariantBuilder* builder);

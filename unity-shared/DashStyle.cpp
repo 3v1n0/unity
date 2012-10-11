@@ -1760,7 +1760,7 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
   return true;
 }
 
-bool Style::ButtonFocusOverlay(cairo_t* cr)
+bool Style::ButtonFocusOverlay(cairo_t* cr, float alpha)
 {
   // sanity checks
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS)
@@ -1773,7 +1773,7 @@ bool Style::ButtonFocusOverlay(cairo_t* cr)
   double h = cairo_image_surface_get_height(cairo_get_target(cr));
 
   nux::Color color(nux::color::White);
-  color.alpha = 0.50f;
+  color.alpha = alpha;
   cairo_set_line_width(cr, pimpl->button_label_border_size_[nux::VISUAL_STATE_NORMAL]);
 
   RoundedRect(cr,
