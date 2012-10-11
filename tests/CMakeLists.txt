@@ -63,14 +63,12 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
 add_executable (test-unit
                 unit/TestMain.cpp
                 unit/TestPanelService.cpp
-                unit/TestUBus.cpp
                 unit/TestStaticCairoText.cpp
                 ${CMAKE_SOURCE_DIR}/launcher/CairoBaseWindow.cpp
                 ${CMAKE_SOURCE_DIR}/unity-shared/Introspectable.cpp
                 ${CMAKE_SOURCE_DIR}/unity-shared/StaticCairoText.cpp
                 ../services/panel-service.c
                 ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
-                ${CMAKE_SOURCE_DIR}/unity-shared/ubus-server.cpp
                 )
 target_link_libraries (test-unit unity-shared ${LIBS})
 add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
