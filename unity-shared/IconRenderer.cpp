@@ -377,7 +377,6 @@ void IconRenderer::UpdateIconSectionTransform(ui::IconTextureSource* icon, nux::
   v3.x =  geo.width  * (v3.x + 1.0f) / 2.0f - geo.width  / 2.0f + xx + ww / 2.0f;
   v3.y = -geo.height * (v3.y - 1.0f) / 2.0f - geo.height / 2.0f + yy + hh / 2.0f;
 
-  // Avoid this copy!
   std::vector<nux::Vector4>& vectors = icon->GetTransform(index, monitor);
   vectors[0] = v0;
   vectors[1] = v1;
