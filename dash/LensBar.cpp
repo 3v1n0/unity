@@ -133,7 +133,10 @@ void LensBar::SetupHomeLens()
 void LensBar::DoOpenLegalise()
 {
   glib::Error error;
-  g_app_info_launch_default_for_uri("file:///tmp/foo.html", NULL, &error);
+  std::string legal_file_path = "file://";
+  legal_file_path.append(PKGDATADIR);
+  legal_file_path.append("/searchingthedashlegalnotice.html");
+  g_app_info_launch_default_for_uri(legal_file_path.c_str(), NULL, &error);
   if (error)
   {
     LOG_ERROR(logger) << "Could not open legal uri: " << error.Message();
