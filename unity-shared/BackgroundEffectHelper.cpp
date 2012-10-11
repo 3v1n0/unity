@@ -29,8 +29,8 @@
 #undef FALSE
 #endif
 
-#include <X11/Xregion.h>
 #include <boost/utility.hpp>
+#include "UnitySettings.h"
 
 
 using namespace unity;
@@ -52,6 +52,11 @@ BackgroundEffectHelper::BackgroundEffectHelper()
   cache_dirty = true;
   enabled.changed.connect (sigc::mem_fun(this, &BackgroundEffectHelper::OnEnabledChanged));
   noise_texture_ = nux::CreateTextureFromFile(PKGDATADIR"/dash_noise.png");
+  
+  if (Settings::Instance().GetLowGfxMode())
+  {
+    blur_type(BLUR_NONE);
+  }
 
   Register(this);
 }

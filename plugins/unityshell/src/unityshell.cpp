@@ -36,7 +36,8 @@
 #include "QuicklistManager.h"
 #include "StartupNotifyService.h"
 #include "Timer.h"
-#include "KeyboardUtil.h"
+#include "XKeyboardUtil.h"
+#include "glow_texture.h"
 #include "unityshell.h"
 #include "BackgroundEffectHelper.h"
 #include "UnityGestureBroker.h"
@@ -75,7 +76,6 @@ namespace unity
 using namespace launcher;
 using launcher::AbstractLauncherIcon;
 using launcher::Launcher;
-using ui::KeyboardUtil;
 using ui::LayoutWindow;
 using ui::LayoutWindowList;
 using util::Timer;
@@ -105,6 +105,19 @@ const unsigned int SCROLL_UP_BUTTON = 7;
 
 const std::string RELAYOUT_TIMEOUT = "relayout-timeout";
 } // namespace local
+
+namespace scale
+{
+namespace decoration
+{
+const unsigned CLOSE_SIZE = 19;
+const unsigned ITEMS_PADDING = 5;
+const unsigned RADIUS = 8;
+const unsigned GLOW = 30;
+const nux::Color GLOW_COLOR(221, 72, 20);
+} // decoration namespace
+} // scale namespace
+
 } // anon namespace
 
 UnityScreen::UnityScreen(CompScreen* screen)
@@ -201,6 +214,18 @@ UnityScreen::UnityScreen(CompScreen* screen)
       failed = true;
     }
   }
+
+    //In case of software rendering then enable lowgfx mode.
+  std::string renderer = ANSI_TO_TCHAR(NUX_REINTERPRET_CAST(const char *, glGetString(GL_RENDERER)));
+
+  if (renderer.find("Software Rasterizer") != std::string::npos ||
+      renderer.find("Mesa X11") != std::string::npos ||
+      renderer.find("LLVM") != std::string::npos ||
+      renderer.find("on softpipe") != std::string::npos ||
+      (getenv("UNITY_LOW_GFX_MODE") != NULL && atoi(getenv("UNITY_LOW_GFX_MODE")) == 1))
+    {
+      Settings::Instance().SetLowGfxMode(true);
+    }
 #endif
 
   if (!failed)
@@ -217,8 +242,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      GLScreenInterface::setHandler(gScreen);
 
      PluginAdapter::Initialize(screen);
-     WindowManager::SetDefault(PluginAdapter::Default());
-     AddChild(PluginAdapter::Default());
+     AddChild(&WindowManager::Default());
 
      StartupNotifyService::Default()->SetSnDisplay(screen->snDisplay(), screen->screenNum());
 
@@ -398,9 +422,9 @@ UnityScreen::~UnityScreen()
 
 void UnityScreen::initAltTabNextWindow()
 {
-  KeyboardUtil key_util(screen->dpy());
-  guint above_tab_keycode = key_util.GetKeycodeAboveKeySymbol (XStringToKeysym("Tab"));
-  KeySym above_tab_keysym = XkbKeycodeToKeysym (screen->dpy(), above_tab_keycode, 0, 0);
+  Display* display = screen->dpy();
+  KeySym tab_keysym = XStringToKeysym("Tab");
+  KeySym above_tab_keysym = keyboard::get_key_above_key_symbol(display, tab_keysym);
 
   if (above_tab_keysym != NoSymbol)
   {
@@ -436,7 +460,7 @@ void UnityScreen::initAltTabNextWindow()
   }
   else
   {
-    printf ("Could not find key above tab!\n");
+    LOG_WARN(logger) << "Could not find key above tab!";
   }
 
 }
@@ -537,10 +561,13 @@ void UnityScreen::setPanelShadowMatrix(const GLMatrix& matrix)
 
 void UnityScreen::paintPanelShadow(const CompRegion& clip)
 {
+  if (panel_controller_->opacity() == 0.0f)
+    return;
+
   if (sources_.GetSource(local::RELAYOUT_TIMEOUT))
     return;
 
-  if (PluginAdapter::Default()->IsExpoActive())
+  if (WindowManager::Default().IsExpoActive())
     return;
 
   CompOutput* output = _last_output;
@@ -562,22 +589,6 @@ void UnityScreen::paintPanelShadow(const CompRegion& clip)
   if (redraw.isEmpty())
     return;
 
-  const CompRect& bounds(redraw.boundingRect());
-
-  // Sub-rectangle of the shadow needing redrawing:
-  float x1 = bounds.x1();
-  float y1 = bounds.y1();
-  float x2 = bounds.x2();
-  float y2 = bounds.y2();
-
-  // Texture coordinates of the above rectangle:
-  float tx1 = (x1 - shadowX) / shadowWidth;
-  float ty1 = (y1 - shadowY) / shadowHeight;
-  float tx2 = (x2 - shadowX) / shadowWidth;
-  float ty2 = (y2 - shadowY) / shadowHeight;
-
-  nuxPrologue();
-
   // compiz doesn't use the same method of tracking monitors as our toolkit
   // we need to make sure we properly associate with the right monitor
   int current_monitor = -1;
@@ -593,8 +604,14 @@ void UnityScreen::paintPanelShadow(const CompRegion& clip)
     i++;
   }
 
-  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == overlay_monitor_)
-      && panel_controller_->opacity() > 0.0f)
+  if (launcher_controller_->IsOverlayOpen() && current_monitor == overlay_monitor_)
+    return;
+
+  nuxPrologue();
+
+  const CompRect::vector& rects = redraw.rects();
+
+  for (auto const& r : rects)
   {
     foreach(GLTexture * tex, _shadow_texture)
     {
@@ -615,6 +632,18 @@ void UnityScreen::paintPanelShadow(const CompRegion& clip)
       colorData = { 0xFFFF, 0xFFFF, 0xFFFF,
                     (GLushort)(panel_controller_->opacity() * 0xFFFF)
                   };
+
+      // Sub-rectangle of the shadow needing redrawing:
+      float x1 = r.x1();
+      float y1 = r.y1();
+      float x2 = r.x2();
+      float y2 = r.y2();
+
+      // Texture coordinates of the above rectangle:
+      float tx1 = (x1 - shadowX) / shadowWidth;
+      float ty1 = (y1 - shadowY) / shadowHeight;
+      float tx2 = (x2 - shadowX) / shadowWidth;
+      float ty2 = (y2 - shadowY) / shadowHeight;
 
       vertexData = {
         x1, y1, 0,
@@ -666,7 +695,7 @@ void UnityScreen::OnPanelStyleChanged()
   // Reload the windows themed textures
   UnityWindow::CleanupSharedTextures();
 
-  if (WindowManager::Default()->IsScaleActive())
+  if (WindowManager::Default().IsScaleActive())
   {
     UnityWindow::SetupSharedTextures();
 
@@ -815,7 +844,7 @@ bool UnityScreen::forcePaintOnTop ()
 {
     return !allowWindowPaint ||
       ((switcher_controller_->Visible() ||
-        PluginAdapter::Default()->IsExpoActive())
+        WindowManager::Default().IsExpoActive())
        && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
 }
 
@@ -880,7 +909,7 @@ void UnityScreen::enterShowDesktopMode ()
       w->moveInputFocusTo();
   }
 
-  PluginAdapter::Default()->OnShowDesktop();
+  PluginAdapter::Default().OnShowDesktop();
 
   /* Disable the focus handler as we will report that
    * minimized windows can be focused which will
@@ -919,7 +948,7 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
       }
     }
 
-    PluginAdapter::Default()->OnLeaveDesktop();
+    PluginAdapter::Default().OnLeaveDesktop();
 
     screen->leaveShowDesktopMode (w);
   }
@@ -1462,16 +1491,16 @@ void UnityScreen::nuxDamageCompiz()
 void UnityScreen::handleEvent(XEvent* event)
 {
   bool skip_other_plugins = false;
-  auto wm = PluginAdapter::Default();
+  PluginAdapter& wm = PluginAdapter::Default();
 
   switch (event->type)
   {
     case FocusIn:
     case FocusOut:
       if (event->xfocus.mode == NotifyGrab)
-        wm->OnScreenGrabbed();
+        wm.OnScreenGrabbed();
       else if (event->xfocus.mode == NotifyUngrab)
-        wm->OnScreenUngrabbed();
+        wm.OnScreenUngrabbed();
 
       if (_key_nav_mode_requested)
       {
@@ -1486,7 +1515,7 @@ void UnityScreen::handleEvent(XEvent* event)
       _key_nav_mode_requested = false;
       break;
     case MotionNotify:
-      if (wm->IsScaleActive())
+      if (wm.IsScaleActive())
       {
         ScaleScreen* ss = ScaleScreen::get(screen);
         if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
@@ -1499,20 +1528,23 @@ void UnityScreen::handleEvent(XEvent* event)
         launcher_controller_->KeyNavTerminate(false);
         EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
       }
-      if (wm->IsScaleActive())
+      if (wm.IsScaleActive())
       {
         ScaleScreen* ss = ScaleScreen::get(screen);
         if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
 
-
       if (dash_controller_->IsVisible())
       {
         nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
-        nux::Geometry dash_geo = dash_controller_->GetInputWindowGeometry();
+        nux::Geometry const& dash_geo = dash_controller_->GetInputWindowGeometry();
 
-        if (!dash_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt))
+        Window dash_xid = dash_controller_->window()->GetInputWindowId();
+        Window top_xid = wm.GetTopWindowAbove(dash_xid);
+        nux::Geometry const& on_top_geo = wm.GetWindowGeometry(top_xid);
+
+        if (!dash_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt) && !on_top_geo.IsInside(pt))
         {
           dash_controller_->HideDash(false);
         }
@@ -1521,9 +1553,13 @@ void UnityScreen::handleEvent(XEvent* event)
       if (hud_controller_->IsVisible())
       {
         nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
-        nux::Geometry hud_geo = hud_controller_->GetInputWindowGeometry();
+        nux::Geometry const& hud_geo = hud_controller_->GetInputWindowGeometry();
 
-        if (!hud_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt))
+        Window hud_xid = hud_controller_->window()->GetInputWindowId();
+        Window top_xid = wm.GetTopWindowAbove(hud_xid);
+        nux::Geometry const& on_top_geo = wm.GetWindowGeometry(top_xid);
+
+        if (!hud_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt) && !on_top_geo.IsInside(pt))
         {
           hud_controller_->HideHud(false);
         }
@@ -1547,7 +1583,7 @@ void UnityScreen::handleEvent(XEvent* event)
           }
         }
       }
-      else if (wm->IsScaleActive())
+      else if (wm.IsScaleActive())
       {
         ScaleScreen* ss = ScaleScreen::get(screen);
         if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
@@ -1647,11 +1683,11 @@ void UnityScreen::handleEvent(XEvent* event)
     case PropertyNotify:
       if (event->xproperty.atom == Atoms::mwmHints)
       {
-        PluginAdapter::Default ()->NotifyNewDecorationState(event->xproperty.window);
+        PluginAdapter::Default().NotifyNewDecorationState(event->xproperty.window);
       }
       break;
     case MapRequest:
-      ShowdesktopHandler::AllowLeaveShowdesktopMode (event->xmaprequest.window);
+      ShowdesktopHandler::AllowLeaveShowdesktopMode(event->xmaprequest.window);
       break;
   }
 
@@ -1673,7 +1709,8 @@ void UnityScreen::handleCompizEvent(const char* plugin,
                                     const char* event,
                                     CompOption::Vector& option)
 {
-  PluginAdapter::Default()->NotifyCompizEvent(plugin, event, option);
+  PluginAdapter& adapter = PluginAdapter::Default();
+  adapter.NotifyCompizEvent(plugin, event, option);
   compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::handleCompizEvent (plugin, event, option);
 
   if (launcher_controller_->IsOverlayOpen() && g_strcmp0(event, "start_viewport_switch") == 0)
@@ -1681,7 +1718,7 @@ void UnityScreen::handleCompizEvent(const char* plugin,
     ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
 
-  if (PluginAdapter::Default()->IsScaleActive() && g_strcmp0(plugin, "scale") == 0 &&
+  if (adapter.IsScaleActive() && g_strcmp0(plugin, "scale") == 0 &&
       super_keypressed_)
   {
     scale_just_activated_ = true;
@@ -1736,9 +1773,11 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
 
   // hack...if the scale just wasn't activated AND the 'when' time is within time to start the
   // dash then assume was_tap is also true, since the ScalePlugin doesn't accept that state...
-  if (PluginAdapter::Default()->IsScaleActive() && !scale_just_activated_ && launcher_controller_->AboutToShowDash(true, when))
+  PluginAdapter& adapter = PluginAdapter::Default();
+  if (adapter.IsScaleActive() && !scale_just_activated_ &&
+      launcher_controller_->AboutToShowDash(true, when))
   {
-    PluginAdapter::Default()->TerminateScale();
+    adapter.TerminateScale();
     was_tap = true;
   }
   else if (scale_just_activated_)
@@ -1813,9 +1852,10 @@ void UnityScreen::SendExecuteCommand()
     hud_controller_->HideHud();
   }
 
-  if (PluginAdapter::Default()->IsScaleActive())
+  PluginAdapter& adapter = PluginAdapter::Default();
+  if (adapter.IsScaleActive())
   {
-    PluginAdapter::Default()->TerminateScale();
+    adapter.TerminateScale();
   }
 
   ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
@@ -1943,7 +1983,7 @@ bool UnityScreen::altTabForwardAllInitiate(CompAction* action,
                                         CompAction::State state,
                                         CompOption::Vector& options)
 {
-  if (WindowManager::Default()->IsWallActive())
+  if (WindowManager::Default().IsWallActive())
     return false;
   else if (switcher_controller_->Visible())
     switcher_controller_->Next();
@@ -2118,7 +2158,7 @@ void UnityScreen::RestoreWindow(GVariant* data)
   // Return input-focus to previously focused window (before key-nav-mode was
   // entered)
   if (preserve_focus)
-    PluginAdapter::Default ()->restoreInputFocus ();
+    PluginAdapter::Default().RestoreInputFocus ();
 }
 
 bool UnityScreen::SaveInputThenFocus(const guint xid)
@@ -2128,7 +2168,7 @@ bool UnityScreen::SaveInputThenFocus(const guint xid)
 
   // check if currently focused window isn't it self
   if (xid != screen->activeWindow())
-    PluginAdapter::Default()->saveInputFocus();
+    PluginAdapter::Default().SaveInputFocus();
 
   // set input-focus on window
   if (newFocusedWindow)
@@ -2228,57 +2268,66 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
 bool UnityScreen::initPluginActions()
 {
   CompPlugin* p = CompPlugin::find("expo");
-
+  PluginAdapter& adapter = PluginAdapter::Default();
   if (p)
   {
-    MultiActionList expoActions(0);
+    MultiActionList expoActions;
 
-    foreach(CompOption & option, p->vTable->getOptions())
+    for (CompOption& option : p->vTable->getOptions())
     {
-      if (option.name() == "expo_key" ||
-          option.name() == "expo_button" ||
-          option.name() == "expo_edge")
+      std::string const& option_name = option.name();
+
+      if (!expoActions.HasPrimary() &&
+          (option_name == "expo_key" ||
+           option_name == "expo_button" ||
+           option_name == "expo_edge"))
       {
         CompAction* action = &option.value().action();
-        expoActions.AddNewAction(action, false);
-        break;
+        expoActions.AddNewAction(option_name, action, true);
+      }
+      else if (option_name == "exit_button")
+      {
+        CompAction* action = &option.value().action();
+        expoActions.AddNewAction(option_name, action, false);
       }
     }
 
-    PluginAdapter::Default()->SetExpoAction(expoActions);
+    adapter.SetExpoAction(expoActions);
   }
 
   p = CompPlugin::find("scale");
 
   if (p)
   {
-    MultiActionList scaleActions(0);
+    MultiActionList scaleActions;
 
-    foreach(CompOption & option, p->vTable->getOptions())
+    for (CompOption& option : p->vTable->getOptions())
     {
-      if (option.name() == "initiate_all_key" ||
-          option.name() == "initiate_all_edge" ||
-          option.name() == "initiate_key" ||
-          option.name() == "initiate_button" ||
-          option.name() == "initiate_edge" ||
-          option.name() == "initiate_group_key" ||
-          option.name() == "initiate_group_button" ||
-          option.name() == "initiate_group_edge" ||
-          option.name() == "initiate_output_key" ||
-          option.name() == "initiate_output_button" ||
-          option.name() == "initiate_output_edge")
+      std::string const& option_name = option.name();
+
+      if (option_name == "initiate_all_key" ||
+          option_name == "initiate_all_edge" ||
+          option_name == "initiate_key" ||
+          option_name == "initiate_button" ||
+          option_name == "initiate_edge" ||
+          option_name == "initiate_group_key" ||
+          option_name == "initiate_group_button" ||
+          option_name == "initiate_group_edge" ||
+          option_name == "initiate_output_key" ||
+          option_name == "initiate_output_button" ||
+          option_name == "initiate_output_edge")
       {
         CompAction* action = &option.value().action();
-        scaleActions.AddNewAction(action, false);
+        scaleActions.AddNewAction(option_name, action, false);
       }
-      else if (option.name() == "initiate_all_button")
+      else if (option_name == "initiate_all_button")
       {
         CompAction* action = &option.value().action();
-        scaleActions.AddNewAction(action, true);
+        scaleActions.AddNewAction(option_name, action, true);
       }
     }
 
-    PluginAdapter::Default()->SetScaleAction(scaleActions);
+    adapter.SetScaleAction(scaleActions);
   }
 
   p = CompPlugin::find("unitymtgrabhandles");
@@ -2288,11 +2337,11 @@ bool UnityScreen::initPluginActions()
     foreach(CompOption & option, p->vTable->getOptions())
     {
       if (option.name() == "show_handles_key")
-        PluginAdapter::Default()->SetShowHandlesAction(&option.value().action());
+        adapter.SetShowHandlesAction(&option.value().action());
       else if (option.name() == "hide_handles_key")
-        PluginAdapter::Default()->SetHideHandlesAction(&option.value().action());
+        adapter.SetHideHandlesAction(&option.value().action());
       else if (option.name() == "toggle_handles_key")
-        PluginAdapter::Default()->SetToggleHandlesAction(&option.value().action());
+        adapter.SetToggleHandlesAction(&option.value().action());
     }
   }
 
@@ -2423,6 +2472,15 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     }
   }
 
+  if (WindowManager::Default().IsScaleActive() && ScaleScreen::get(screen)->getSelectedWindow() == window->id())
+  {
+    nux::Geometry scaled_geo = GetScaledGeometry();
+    int inside_glow = scale::decoration::RADIUS/4;
+    scaled_geo.Expand(-inside_glow, -inside_glow);
+    glow::Quads const& quads = computeGlowQuads(scaled_geo, glow_texture_, scale::decoration::GLOW);
+    paintGlow(matrix, attrib, region, quads, glow_texture_, scale::decoration::GLOW_COLOR, mask);
+  }
+
   return gWindow->glPaint(wAttrib, matrix, region, mask);
 }
 
@@ -2445,7 +2503,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   if (uScreen->doShellRepaint && !uScreen->paint_panel_ && window->type() == CompWindowTypeNormalMask)
   {
     guint32 id = window->id();
-    bool maximized = WindowManager::Default()->IsWindowMaximized(id);
+    bool maximized = WindowManager::Default().IsWindowMaximized(id);
     bool on_current = window->onCurrentDesktop();
     bool override_redirect = window->overrideRedirect();
     bool managed = window->managed();
@@ -2483,7 +2541,6 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   {
     uScreen->paintPanelShadow(region);
   }
-
 
   return ret;
 }
@@ -2586,7 +2643,7 @@ UnityWindow::minimized ()
 /* Called whenever a window is mapped, unmapped, minimized etc */
 void UnityWindow::windowNotify(CompWindowNotify n)
 {
-  PluginAdapter::Default()->Notify(window, n);
+  PluginAdapter::Default().Notify(window, n);
 
   switch (n)
   {
@@ -2687,7 +2744,7 @@ void UnityWindow::stateChangeNotify(unsigned int lastState)
      !(window->state () & CompWindowStateFullscreenMask))
     UnityScreen::get (screen)->fullscreen_windows_.remove(window);
 
-  PluginAdapter::Default()->NotifyStateChange(window, window->state(), lastState);
+  PluginAdapter::Default().NotifyStateChange(window, window->state(), lastState);
   window->stateChangeNotify(lastState);
 }
 
@@ -2707,13 +2764,13 @@ void UnityWindow::updateFrameRegion(CompRegion &region)
 
 void UnityWindow::moveNotify(int x, int y, bool immediate)
 {
-  PluginAdapter::Default()->NotifyMoved(window, x, y);
+  PluginAdapter::Default().NotifyMoved(window, x, y);
   window->moveNotify(x, y, immediate);
 }
 
 void UnityWindow::resizeNotify(int x, int y, int w, int h)
 {
-  PluginAdapter::Default()->NotifyResized(window, x, y, w, h);
+  PluginAdapter::Default().NotifyResized(window, x, y, w, h);
   window->resizeNotify(x, y, w, h);
 }
 
@@ -2771,7 +2828,7 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
 
 bool UnityWindow::place(CompPoint& pos)
 {
-  bool was_maximized = PluginAdapter::Default ()->MaximizeIfBigEnough(window);
+  bool was_maximized = PluginAdapter::Default().MaximizeIfBigEnough(window);
 
   if (!was_maximized)
   {
@@ -2913,12 +2970,12 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       BackgroundEffectHelper::blur_type = (unity::BlurType)optionGetDashBlurExperimental();
       break;
     case UnityshellOptions::AutomaximizeValue:
-      PluginAdapter::Default()->SetCoverageAreaBeforeAutomaximize(optionGetAutomaximizeValue() / 100.0f);
+      PluginAdapter::Default().SetCoverageAreaBeforeAutomaximize(optionGetAutomaximizeValue() / 100.0f);
       break;
     case UnityshellOptions::AltTabTimeout:
       switcher_controller_->detail_on_timeout = optionGetAltTabTimeout();
     case UnityshellOptions::AltTabBiasViewport:
-      PluginAdapter::Default()->bias_active_to_viewport = optionGetAltTabBiasViewport();
+      PluginAdapter::Default().bias_active_to_viewport = optionGetAltTabBiasViewport();
       break;
     case UnityshellOptions::DisableShowDesktop:
       switcher_controller_->SetShowDesktopDisabled(optionGetDisableShowDesktop());
@@ -3393,52 +3450,20 @@ void UnityScreen::InitGesturesSupport()
 GLTexture::List UnityWindow::close_normal_tex_;
 GLTexture::List UnityWindow::close_prelight_tex_;
 GLTexture::List UnityWindow::close_pressed_tex_;
+GLTexture::List UnityWindow::glow_texture_;
 
-namespace scale
+struct UnityWindow::PixmapTexture
 {
-namespace decoration
-{
-const unsigned CLOSE_SIZE = 19;
-const unsigned ITEMS_PADDING = 5;
-const unsigned RADIUS = 8;
-}
-}
-
-struct UnityWindow::CairoContext
-{
-  CairoContext(unsigned width, unsigned height)
+  PixmapTexture(unsigned width, unsigned height)
     : w_(width)
     , h_(height)
     , pixmap_(XCreatePixmap(screen->dpy(), screen->root(), w_, h_, 32))
     , texture_(GLTexture::bindPixmapToTexture(pixmap_, w_, h_, 32))
-    , surface_(nullptr)
-    , cr_(nullptr)
+  {}
+
+  ~PixmapTexture()
   {
-      Screen *xscreen = ScreenOfDisplay(screen->dpy(), screen->screenNum());
-      XRenderPictFormat* format = XRenderFindStandardFormat(screen->dpy(), PictStandardARGB32);
-
-      if (texture_.empty())
-        return;
-
-      surface_ = cairo_xlib_surface_create_with_xrender_format(screen->dpy(), pixmap_,
-                                                               xscreen, format,
-                                                               width, height);
-      cr_ = cairo_create(surface_);
-
-      // clear
-      cairo_save(cr_);
-      cairo_set_operator(cr_, CAIRO_OPERATOR_CLEAR);
-      cairo_paint(cr_);
-      cairo_restore(cr_);
-  }
-
-  ~CairoContext()
-  {
-    if (cr_)
-      cairo_destroy(cr_);
-
-    if (surface_)
-      cairo_surface_destroy(surface_);
+    texture_.clear();
 
     if (pixmap_)
       XFreePixmap(screen->dpy(), pixmap_);
@@ -3448,6 +3473,44 @@ struct UnityWindow::CairoContext
   unsigned h_;
   Pixmap pixmap_;
   GLTexture::List texture_;
+};
+
+struct UnityWindow::CairoContext
+{
+  CairoContext(unsigned width, unsigned height)
+    : w_(width)
+    , h_(height)
+    , pixmap_texture_(std::make_shared<PixmapTexture>(w_, h_))
+    , surface_(nullptr)
+    , cr_(nullptr)
+  {
+    Screen *xscreen = ScreenOfDisplay(screen->dpy(), screen->screenNum());
+    XRenderPictFormat* format = XRenderFindStandardFormat(screen->dpy(), PictStandardARGB32);
+    surface_ = cairo_xlib_surface_create_with_xrender_format(screen->dpy(),
+                                                             pixmap_texture_->pixmap_,
+                                                             xscreen, format,
+                                                             w_, h_);
+    cr_ = cairo_create(surface_);
+
+    // clear
+    cairo_save(cr_);
+    cairo_set_operator(cr_, CAIRO_OPERATOR_CLEAR);
+    cairo_paint(cr_);
+    cairo_restore(cr_);
+  }
+
+  ~CairoContext()
+  {
+    if (cr_)
+      cairo_destroy(cr_);
+
+    if (surface_)
+      cairo_surface_destroy(surface_);
+  }
+
+  unsigned w_;
+  unsigned h_;
+  PixmapTexturePtr pixmap_texture_;
   cairo_surface_t* surface_;
   cairo_t *cr_;
 };
@@ -3503,22 +3566,23 @@ UnityWindow::UnityWindow(CompWindow* window)
       }
     }
   }
-
-  WindowManager::Default()->initiate_spread.connect(sigc::mem_fun(this, &UnityWindow::OnInitiateSpread));
-  WindowManager::Default()->terminate_spread.connect(sigc::mem_fun(this, &UnityWindow::OnTerminateSpread));
+  WindowManager& wm = WindowManager::Default();
+  wm.initiate_spread.connect(sigc::mem_fun(this, &UnityWindow::OnInitiateSpread));
+  wm.terminate_spread.connect(sigc::mem_fun(this, &UnityWindow::OnTerminateSpread));
 }
+
 
 void UnityWindow::AddProperties(GVariantBuilder* builder)
 {
   Window xid = window->id();
   auto const& swins = ScaleScreen::get(screen)->getWindows();
   bool scaled = std::find(swins.begin(), swins.end(), ScaleWindow::get(window)) != swins.end();
-  auto wm = WindowManager::Default();
+  WindowManager& wm = WindowManager::Default();
 
   variant::BuilderWrapper(builder)
-    .add(scaled ? GetScaledGeometry() : wm->GetWindowGeometry(xid))
+    .add(scaled ? GetScaledGeometry() : wm.GetWindowGeometry(xid))
     .add("xid", xid)
-    .add("title", wm->GetWindowName(xid))
+    .add("title", wm.GetWindowName(xid))
     .add("scaled", scaled)
     .add("scaled_close_x", close_button_geo_.x)
     .add("scaled_close_y", close_button_geo_.y)
@@ -3532,8 +3596,12 @@ std::string UnityWindow::GetName() const
 }
 
 
-void UnityWindow::DrawTexture(GLTexture::List const& textures, GLWindowPaintAttrib const& attrib,
-                              GLMatrix const& transform, unsigned int mask, int x, int y, double scale)
+void UnityWindow::DrawTexture(GLTexture::List const& textures,
+                              GLWindowPaintAttrib const& attrib,
+                              GLMatrix const& transform,
+                              unsigned int mask,
+                              int x, int y,
+                              double scale)
 {
   for (auto const& texture : textures)
   {
@@ -3607,7 +3675,7 @@ void UnityWindow::RenderText(CairoContext const& context, int x, int y, int widt
   pango_cairo_context_set_resolution(pango_ctx, dpi / static_cast<float>(PANGO_SCALE));
   pango_layout_context_changed(layout);
 
-  decoration_title_ = WindowManager::Default()->GetWindowName(window->id());
+  decoration_title_ = WindowManager::Default().GetWindowName(window->id());
   pango_layout_set_height(layout, height);
   pango_layout_set_width(layout, -1); //avoid wrap lines
   pango_layout_set_auto_dir(layout, false);
@@ -3663,16 +3731,16 @@ void UnityWindow::RenderText(CairoContext const& context, int x, int y, int widt
 
 void UnityWindow::BuildDecorationTexture()
 {
-  if (!decoration_tex_.empty())
+  if (decoration_tex_)
     return;
 
   auto const& border_extents = window->border();
 
-  if (WindowManager::Default()->IsWindowDecorated(window->id()) && border_extents.top > 0)
+  if (WindowManager::Default().IsWindowDecorated(window->id()) && border_extents.top > 0)
   {
-    CairoContext context(window->borderRect().width(), border_extents.top);
+    CairoContext context(window->borderRect().width(), window->border().top);
     RenderDecoration(context);
-    decoration_tex_ = context.texture_;
+    decoration_tex_ = context.pixmap_texture_;
   }
 }
 
@@ -3681,10 +3749,10 @@ void UnityWindow::LoadCloseIcon(panel::WindowState state, GLTexture::List& textu
   if (!texture.empty())
     return;
 
+  CompString plugin("unityshell");
   auto& style = panel::Style::Instance();
   auto const& files = style.GetWindowButtonFileNames(panel::WindowButtonType::CLOSE, state);
 
-  CompString plugin("unityshell");
   for (std::string const& file : files)
   {
     CompString file_name = file;
@@ -3713,6 +3781,12 @@ void UnityWindow::SetupSharedTextures()
   LoadCloseIcon(panel::WindowState::NORMAL, close_normal_tex_);
   LoadCloseIcon(panel::WindowState::PRELIGHT, close_prelight_tex_);
   LoadCloseIcon(panel::WindowState::PRESSED, close_pressed_tex_);
+
+  if (glow_texture_.empty())
+  {
+    CompSize size(texture::GLOW_SIZE, texture::GLOW_SIZE);
+    glow_texture_ = GLTexture::imageDataToTexture(texture::GLOW, size, GL_RGBA, GL_UNSIGNED_BYTE);
+  }
 }
 
 void UnityWindow::CleanupSharedTextures()
@@ -3720,12 +3794,13 @@ void UnityWindow::CleanupSharedTextures()
   close_normal_tex_.clear();
   close_prelight_tex_.clear();
   close_pressed_tex_.clear();
+  glow_texture_.clear();
 }
 
 void UnityWindow::CleanupCachedTextures()
 {
-  decoration_tex_.clear();
-  decoration_selected_tex_.clear();
+  decoration_tex_.reset();
+  decoration_selected_tex_.reset();
   decoration_title_.clear();
 }
 
@@ -3734,7 +3809,7 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
                                        CompRegion const& region,
                                        unsigned int mask)
 {
-  ScaleWindow *scale_win = ScaleWindow::get(window);
+  ScaleWindow* scale_win = ScaleWindow::get(window);
   scale_win->scalePaintDecoration(attrib, transform, region, mask);
 
   if (!scale_win->hasSlot()) // animation not finished
@@ -3758,39 +3833,48 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   if (!highlighted)
   {
     BuildDecorationTexture();
-    DrawTexture(decoration_tex_, attrib, transform, mask, x, y, pos.scale);
+
+    if (decoration_tex_)
+      DrawTexture(decoration_tex_->texture_, attrib, transform, mask, x, y, pos.scale);
+
     close_button_geo_.Set(0, 0, 0, 0);
   }
   else
   {
     auto const& decoration_extents = window->border();
-    int width = scaled_geo.width;
-    int height = decoration_extents.top;
+    unsigned width = scaled_geo.width;
+    unsigned height = decoration_extents.top;
     bool redraw_decoration = true;
 
-    if (!decoration_selected_tex_.empty())
+    if (decoration_selected_tex_)
     {
-      GLTexture* texture = decoration_selected_tex_.front();
-
-      if (texture->width() == width && texture->height() == height)
+      if (decoration_selected_tex_->w_ == width && decoration_selected_tex_->h_ == height)
       {
-        if (decoration_title_ == WindowManager::Default()->GetWindowName(window->id()))
+        if (decoration_title_ == WindowManager::Default().GetWindowName(window->id()))
           redraw_decoration = false;
       }
     }
 
     if (redraw_decoration)
     {
-      CairoContext context(width, height);
-      RenderDecoration(context, pos.scale);
+      if (width != 0 && height != 0)
+      {
+        CairoContext context(width, height);
+        RenderDecoration(context, pos.scale);
 
-      // Draw window title
-      int text_x = scale::decoration::ITEMS_PADDING * 2 + scale::decoration::CLOSE_SIZE;
-      RenderText(context, text_x, 0.0, width - scale::decoration::ITEMS_PADDING, height);
-      decoration_selected_tex_ = context.texture_;
+        // Draw window title
+        int text_x = scale::decoration::ITEMS_PADDING * 2 + scale::decoration::CLOSE_SIZE;
+        RenderText(context, text_x, 0.0, width - scale::decoration::ITEMS_PADDING, height);
+        decoration_selected_tex_ = context.pixmap_texture_;
+      }
+      else
+      {
+        decoration_selected_tex_.reset();
+      }
     }
 
-    DrawTexture(decoration_selected_tex_, attrib, transform, mask, x, y);
+    if (decoration_selected_tex_)
+      DrawTexture(decoration_selected_tex_->texture_, attrib, transform, mask, x, y);
 
     x += scale::decoration::ITEMS_PADDING;
     y += (height - scale::decoration::CLOSE_SIZE) / 2.0f;
@@ -3817,7 +3901,7 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
 
 nux::Geometry UnityWindow::GetScaledGeometry()
 {
-  ScaleWindow *scale_win = ScaleWindow::get(window);
+  ScaleWindow* scale_win = ScaleWindow::get(window);
 
   ScalePosition const& pos = scale_win->getCurrentPosition();
   auto const& border_rect = window->borderRect();
@@ -3837,20 +3921,20 @@ void UnityWindow::OnInitiateSpread()
   middle_clicked_ = false;
   SetupSharedTextures();
 
-  WindowManager *wm = WindowManager::Default();
+  WindowManager& wm = WindowManager::Default();
   Window xid = window->id();
 
-  if (wm->IsWindowDecorated(xid))
-    wm->Decorate(xid);
+  if (wm.IsWindowDecorated(xid))
+    wm.Decorate(xid);
 }
 
 void UnityWindow::OnTerminateSpread()
 {
-  WindowManager *wm = WindowManager::Default();
+  WindowManager& wm = WindowManager::Default();
   Window xid = window->id();
 
-  if (wm->IsWindowDecorated(xid) && wm->IsWindowMaximized(xid))
-    wm->Undecorate(xid);
+  if (wm.IsWindowDecorated(xid) && wm.IsWindowMaximized(xid))
+    wm.Undecorate(xid);
 
   CleanupCachedTextures();
 }
@@ -3878,8 +3962,9 @@ UnityWindow::~UnityWindow()
   if (window->state () & CompWindowStateFullscreenMask)
     UnityScreen::get (screen)->fullscreen_windows_.remove(window);
 
-  PluginAdapter::Default ()->OnWindowClosed(window);
+  PluginAdapter::Default().OnWindowClosed(window);
 }
+
 
 /* vtable init */
 bool UnityPluginVTable::init()

@@ -40,9 +40,11 @@
 #include "QuicklistMenuItemRadio.h"
 
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/UnitySettings.h"
 
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/DashStyle.h"
 
 namespace unity
 {
@@ -70,9 +72,6 @@ QuicklistView::QuicklistView()
   , _current_item_index(-1)
 {
   SetGeometry(nux::Geometry(0, 0, 1, 1));
-
-  _use_blurred_background = true;
-  _compute_blur_bkg = true;
 
   _left_space = new nux::SpaceLayout(_padding +
                                      _anchor_width +
@@ -1218,8 +1217,18 @@ void QuicklistView::UpdateTexture()
   float   shadow_color[4]  = {0.0f, 0.0f, 0.0f, 1.00f};
   float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.40f};
   float   mask_color[4]    = {1.0f, 1.0f, 1.0f, 1.00f};
-//   float   anchor_width      = 10;
-//   float   anchor_height     = 18;
+  
+  if (Settings::Instance().GetLowGfxMode())
+  {
+    float alpha_value = 1.0f;
+    
+    tint_color[3] = alpha_value;
+    hl_color[3] = 0.2f;
+    dot_color[3] = 0.0f;
+    shadow_color[3] = alpha_value;
+    outline_color[3] = alpha_value;
+    mask_color[3] = alpha_value;
+  }
 
   ql_tint_dot_hl(cr_bg,
                  width,

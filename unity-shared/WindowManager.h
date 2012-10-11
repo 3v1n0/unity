@@ -1,5 +1,6 @@
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,16 +17,35 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef WINDOW_MANAGER_H
-#define WINDOW_MANAGER_H
+#ifndef UNITYSHARED_WINDOW_MANAGER_H
+#define UNITYSHARED_WINDOW_MANAGER_H
 
-#include <Nux/Nux.h>
-#include <gdk/gdkx.h>
-#include <core/core.h>
+#include <memory>
+#include <vector>
+#include <sigc++/sigc++.h>
+
+// To bring in nux::Geometry we first need the Rect header, then Utils.
+#include <NuxCore/Rect.h>
+#include <Nux/Utils.h>
+
+#ifdef UNITY_HAS_X_ORG_SUPPORT
+#include <X11/Xlib.h>
+#else
+typedef unsigned long Window;
+#endif
 
 #include "unity-shared/Introspectable.h"
 
-class WindowManager : public unity::debug::Introspectable
+namespace unity
+{
+class WindowManager;
+typedef std::shared_ptr<WindowManager> WindowManagerPtr;
+
+// This function is used by the static Default method on the WindowManager
+// class, and uses link time to make sure there is a function available.
+WindowManagerPtr create_window_manager();
+
+class WindowManager : public debug::Introspectable
 {
   // This is a glue interface that breaks the dependancy of Unity with Compiz
   // Basically it has a default implementation that does nothing useful, but
@@ -33,11 +53,7 @@ class WindowManager : public unity::debug::Introspectable
   // initialization so the things that require it get a usable implementation
 
 public:
-  WindowManager() :
-    m_MoveResizeAtom(XInternAtom(GDK_DISPLAY_XDISPLAY(gdk_display_get_default()),
-                                 "_NET_WM_MOVERESIZE", FALSE))
-  {
-  };
+  virtual ~WindowManager() {}
 
   enum class FocusVisibility
   {
@@ -46,62 +62,65 @@ public:
     ForceUnminimizeOnCurrentDesktop
   };
 
-  static WindowManager* Default();
-  static void           SetDefault(WindowManager* manager);
+  static WindowManager& Default();
 
-  virtual guint32 GetActiveWindow() const = 0;
+  virtual Window GetActiveWindow() const = 0;
 
-  virtual bool IsWindowMaximized(guint32 xid) const = 0;
-  virtual bool IsWindowDecorated(guint32 xid) = 0;
-  virtual bool IsWindowOnCurrentDesktop(guint32 xid) const = 0;
-  virtual bool IsWindowObscured(guint32 xid) const = 0;
-  virtual bool IsWindowMapped(guint32 xid) const = 0;
-  virtual bool IsWindowVisible(guint32 xid) const = 0;
-  virtual bool IsWindowOnTop(guint32 xid) const = 0;
-  virtual bool IsWindowClosable(guint32 xid) const = 0;
-  virtual bool IsWindowMinimizable(guint32 xid) const = 0;
-  virtual bool IsWindowMaximizable(guint32 xid) const = 0;
+  virtual bool IsWindowMaximized(Window window_id) const = 0;
+  virtual bool IsWindowDecorated(Window window_id) const = 0;
+  virtual bool IsWindowOnCurrentDesktop(Window window_id) const = 0;
+  virtual bool IsWindowObscured(Window window_id) const = 0;
+  virtual bool IsWindowMapped(Window window_id) const = 0;
+  virtual bool IsWindowVisible(Window window_id) const = 0;
+  virtual bool IsWindowOnTop(Window window_id) const = 0;
+  virtual bool IsWindowClosable(Window window_id) const = 0;
+  virtual bool IsWindowMinimizable(Window window_id) const = 0;
+  virtual bool IsWindowMaximizable(Window window_id) const = 0;
 
   virtual void ShowDesktop() = 0;
   virtual bool InShowDesktop() const = 0;
 
-  virtual void Restore(guint32 xid) = 0;
-  virtual void RestoreAt(guint32 xid, int x, int y) = 0;
-  virtual void Minimize(guint32 xid) = 0;
-  virtual void Close(guint32 xid) = 0;
+  virtual void Restore(Window window_id) = 0;
+  virtual void RestoreAt(Window window_id, int x, int y) = 0;
+  virtual void Minimize(Window window_id) = 0;
+  virtual void Close(Window window_id) = 0;
 
-  virtual void Activate(guint32 xid) = 0;
-  virtual void Raise(guint32 xid) = 0;
-  virtual void Lower(guint32 xid) = 0;
+  virtual void Activate(Window window_id) = 0;
+  virtual void Raise(Window window_id) = 0;
+  virtual void Lower(Window window_id) = 0;
 
   virtual void TerminateScale() = 0;
   virtual bool IsScaleActive() const = 0;
   virtual bool IsScaleActiveForGroup() const = 0;
 
   virtual void InitiateExpo() = 0;
+  virtual void TerminateExpo() = 0;
   virtual bool IsExpoActive() const = 0;
 
   virtual bool IsWallActive() const = 0;
 
-  virtual void FocusWindowGroup(std::vector<Window> windows, FocusVisibility, int monitor = -1, bool only_top_win = true) = 0;
-  virtual bool ScaleWindowGroup(std::vector<Window> windows, int state, bool force) = 0;
+  virtual void FocusWindowGroup(std::vector<Window> const& windows,
+                                FocusVisibility, int monitor = -1,
+                                bool only_top_win = true) = 0;
+  virtual bool ScaleWindowGroup(std::vector<Window> const& windows,
+                                int state, bool force) = 0;
 
-  virtual void Decorate(guint32 xid) {};
-  virtual void Undecorate(guint32 xid) {};
+  virtual void Decorate(Window window_id) const {};
+  virtual void Undecorate(Window window_id) const {};
 
   virtual bool IsScreenGrabbed() const = 0;
   virtual bool IsViewPortSwitchStarted() const = 0;
 
-  virtual void MoveResizeWindow(guint32 xid, nux::Geometry geometry) = 0;
-  void StartMove(guint32 xid, int, int);
+  virtual void MoveResizeWindow(Window window_id, nux::Geometry geometry) = 0;
+  virtual void StartMove(Window window_id, int x, int y) = 0;
 
-  virtual int GetWindowMonitor(guint32 xid) const = 0;
-  virtual nux::Geometry GetWindowGeometry(guint32 xid) const = 0;
-  virtual nux::Geometry GetWindowSavedGeometry(guint32 xid) const = 0;
+  virtual int GetWindowMonitor(Window window_id) const = 0;
+  virtual nux::Geometry GetWindowGeometry(Window window_id) const = 0;
+  virtual nux::Geometry GetWindowSavedGeometry(Window window_id) const = 0;
   virtual nux::Geometry GetScreenGeometry() const = 0;
-  virtual nux::Geometry GetWorkAreaGeometry(guint32 xid = 0) const = 0;
+  virtual nux::Geometry GetWorkAreaGeometry(Window window_id = 0) const = 0;
 
-  virtual unsigned long long GetWindowActiveNumber(guint32 xid) const = 0;
+  virtual unsigned long long GetWindowActiveNumber(Window window_id) const = 0;
 
   virtual void SetWindowIconGeometry(Window window, nux::Geometry const& geo) = 0;
 
@@ -109,27 +128,27 @@ public:
 
   virtual int WorkspaceCount() const = 0;
 
-  virtual bool saveInputFocus() = 0;
-  virtual bool restoreInputFocus() = 0;
+  virtual bool SaveInputFocus() = 0;
+  virtual bool RestoreInputFocus() = 0;
 
-  virtual std::string GetWindowName(guint32 xid) const = 0;
+  virtual std::string GetWindowName(Window window_id) const = 0;
 
   // Signals
-  sigc::signal<void, guint32> window_mapped;
-  sigc::signal<void, guint32> window_unmapped;
-  sigc::signal<void, guint32> window_maximized;
-  sigc::signal<void, guint32> window_restored;
-  sigc::signal<void, guint32> window_minimized;
-  sigc::signal<void, guint32> window_unminimized;
-  sigc::signal<void, guint32> window_shaded;
-  sigc::signal<void, guint32> window_unshaded;
-  sigc::signal<void, guint32> window_shown;
-  sigc::signal<void, guint32> window_hidden;
-  sigc::signal<void, guint32> window_resized;
-  sigc::signal<void, guint32> window_moved;
-  sigc::signal<void, guint32> window_focus_changed;
-  sigc::signal<void, guint32> window_decorated;
-  sigc::signal<void, guint32> window_undecorated;
+  sigc::signal<void, Window> window_mapped;
+  sigc::signal<void, Window> window_unmapped;
+  sigc::signal<void, Window> window_maximized;
+  sigc::signal<void, Window> window_restored;
+  sigc::signal<void, Window> window_minimized;
+  sigc::signal<void, Window> window_unminimized;
+  sigc::signal<void, Window> window_shaded;
+  sigc::signal<void, Window> window_unshaded;
+  sigc::signal<void, Window> window_shown;
+  sigc::signal<void, Window> window_hidden;
+  sigc::signal<void, Window> window_resized;
+  sigc::signal<void, Window> window_moved;
+  sigc::signal<void, Window> window_focus_changed;
+  sigc::signal<void, Window> window_decorated;
+  sigc::signal<void, Window> window_undecorated;
 
   sigc::signal<void> initiate_spread;
   sigc::signal<void> terminate_spread;
@@ -137,19 +156,17 @@ public:
   sigc::signal<void> initiate_expo;
   sigc::signal<void> terminate_expo;
 
-  sigc::signal<void> compiz_screen_grabbed;
-  sigc::signal<void> compiz_screen_ungrabbed;
-  sigc::signal<void> compiz_screen_viewport_switch_started;
-  sigc::signal<void> compiz_screen_viewport_switch_ended;
-
-  sigc::signal<void, const char*, const char*, CompOption::Vector&> compiz_event;
+  sigc::signal<void> screen_grabbed;
+  sigc::signal<void> screen_ungrabbed;
+  sigc::signal<void> screen_viewport_switch_started;
+  sigc::signal<void> screen_viewport_switch_ended;
 
 protected:
   std::string GetName() const;
   virtual void AddProperties(GVariantBuilder* builder) = 0;
 
-private:
-  Atom m_MoveResizeAtom;
 };
 
-#endif // WINDOW_MANAGER_H
+}
+
+#endif // UNITYSHARED_WINDOW_MANAGER_H

@@ -34,7 +34,6 @@ execute-command = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0
 dash-blur-experimental = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/dash_blur_experimental
 menus-discovery-duration = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/menus_discovery_duration
 alt-tab-prev-window = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/alt_tab_prev_window
-devices-option = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/devices_option
 reveal-trigger = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/reveal_trigger
 panel-first-menu = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/panel_first_menu
 icon-size = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/icon_size

@@ -63,9 +63,9 @@ static gboolean   unity_launcher_accessible_is_child_selected(AtkSelection* sele
                                                               gint i);
 
 /* private */
-static void on_selection_change_cb(AbstractLauncherIcon::Ptr selection, UnityLauncherAccessible* launcher_accessible);
-static void on_icon_added_cb(AbstractLauncherIcon::Ptr icon, UnityLauncherAccessible* self);
-static void on_icon_removed_cb(AbstractLauncherIcon::Ptr icon, UnityLauncherAccessible* self);
+static void on_selection_change_cb(AbstractLauncherIcon::Ptr const& selection, UnityLauncherAccessible* launcher_accessible);
+static void on_icon_added_cb(AbstractLauncherIcon::Ptr const& icon, UnityLauncherAccessible* self);
+static void on_icon_removed_cb(AbstractLauncherIcon::Ptr const& icon, UnityLauncherAccessible* self);
 static void on_order_change_cb(UnityLauncherAccessible* self);
 static void update_children_index(UnityLauncherAccessible* self);
 
@@ -287,7 +287,6 @@ unity_launcher_accessible_ref_selection(AtkSelection* selection,
                                         gint i)
 {
   Launcher* launcher = NULL;
-  AbstractLauncherIcon::Ptr selected_icon;
   nux::Object* nux_object = NULL;
   AtkObject* accessible_selected = NULL;
 
@@ -300,7 +299,7 @@ unity_launcher_accessible_ref_selection(AtkSelection* selection,
     return 0;
 
   launcher = dynamic_cast<Launcher*>(nux_object);
-  selected_icon = launcher->GetSelectedMenuIcon();
+  AbstractLauncherIcon::Ptr const& selected_icon = launcher->GetSelectedMenuIcon();
 
   if (selected_icon)
   {
@@ -315,7 +314,6 @@ static gint
 unity_launcher_accessible_get_selection_count(AtkSelection* selection)
 {
   Launcher* launcher = NULL;
-  AbstractLauncherIcon::Ptr selected_icon;
   nux::Object* nux_object = NULL;
 
   g_return_val_if_fail(UNITY_IS_LAUNCHER_ACCESSIBLE(selection), 0);
@@ -325,9 +323,8 @@ unity_launcher_accessible_get_selection_count(AtkSelection* selection)
     return 0;
 
   launcher = dynamic_cast<Launcher*>(nux_object);
-  selected_icon = launcher->GetSelectedMenuIcon();
 
-  if (!selected_icon)
+  if (!launcher->GetSelectedMenuIcon())
     return 0;
   else
     return 1;
@@ -338,9 +335,6 @@ unity_launcher_accessible_is_child_selected(AtkSelection* selection,
                                             gint i)
 {
   Launcher* launcher = NULL;
-  AbstractLauncherIcon::Ptr icon;
-  AbstractLauncherIcon::Ptr selected_icon;
-  LauncherModel::Ptr launcher_model;
   LauncherModel::iterator it;
   nux::Object* nux_object = NULL;
 
@@ -351,28 +345,27 @@ unity_launcher_accessible_is_child_selected(AtkSelection* selection,
     return 0;
 
   launcher = dynamic_cast<Launcher*>(nux_object);
-  launcher_model = launcher->GetModel();
+  LauncherModel::Ptr const& launcher_model = launcher->GetModel();
   it = launcher_model->begin();
   std::advance(it, i);
-  icon = *it;
 
-  selected_icon = launcher->GetSelectedMenuIcon();
+  AbstractLauncherIcon::Ptr const& selected_icon = launcher->GetSelectedMenuIcon();
 
-  if (selected_icon == icon)
+  if (selected_icon == *it)
     return TRUE;
   else
     return FALSE;
 }
 
 /* private */
-static void on_selection_change_cb(AbstractLauncherIcon::Ptr selection, UnityLauncherAccessible* launcher_accessible)
+static void on_selection_change_cb(AbstractLauncherIcon::Ptr const& selection, UnityLauncherAccessible* launcher_accessible)
 {
   g_signal_emit_by_name(ATK_OBJECT(launcher_accessible), "selection-changed");
 }
 
 
 static void
-on_icon_added_cb(AbstractLauncherIcon::Ptr icon,
+on_icon_added_cb(AbstractLauncherIcon::Ptr const& icon,
                  UnityLauncherAccessible* self)
 {
   AtkObject* icon_accessible = NULL;
@@ -397,7 +390,7 @@ on_icon_added_cb(AbstractLauncherIcon::Ptr icon,
 }
 
 static void
-on_icon_removed_cb(AbstractLauncherIcon::Ptr icon,
+on_icon_removed_cb(AbstractLauncherIcon::Ptr const& icon,
                    UnityLauncherAccessible* self)
 {
   AtkObject* icon_accessible = NULL;

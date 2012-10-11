@@ -43,7 +43,6 @@
 #include "QuicklistMenuItemRadio.h"
 
 #include "MultiMonitor.h"
-#include "unity-shared/WindowManager.h"
 
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
@@ -136,6 +135,9 @@ LauncherIcon::~LauncherIcon()
   if (on_order_changed_connection.connected())
     on_order_changed_connection.disconnect();
 
+  if (on_expo_terminated_connection.connected())
+    on_expo_terminated_connection.disconnect();
+
   if (_unity_theme)
   {
     _unity_theme = NULL;
@@ -217,8 +219,9 @@ LauncherIcon::Activate(ActionArg arg)
 {
   /* Launcher Icons that handle spread will adjust the spread state
    * accordingly, for all other icons we should terminate spread */
-  if (WindowManager::Default()->IsScaleActive() && !HandlesSpread ())
-    WindowManager::Default()->TerminateScale();
+  WindowManager& wm = WindowManager::Default();
+  if (wm.IsScaleActive() && !HandlesSpread ())
+    wm.TerminateScale();
 
   ActivateLauncherIcon(arg);
 
@@ -228,8 +231,9 @@ LauncherIcon::Activate(ActionArg arg)
 void
 LauncherIcon::OpenInstance(ActionArg arg)
 {
-  if (WindowManager::Default()->IsScaleActive())
-    WindowManager::Default()->TerminateScale();
+  WindowManager& wm = WindowManager::Default();
+  if (wm.IsScaleActive())
+    wm.TerminateScale();
 
   OpenInstanceLauncherIcon(arg);
 
@@ -609,16 +613,16 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
   int tip_x = geo.x + geo.width - 4 * geo.width / 48;
   int tip_y = _center[monitor].y;
 
-  auto win_manager = WindowManager::Default();
+  WindowManager& win_manager = WindowManager::Default();
 
-  if (win_manager->IsScaleActive())
-    win_manager->TerminateScale();
+  if (win_manager.IsScaleActive())
+    win_manager.TerminateScale();
 
   /* If the expo plugin is active, we need to wait it to be termated, before
    * shwing the icon quicklist. */
-  if (win_manager->IsExpoActive())
+  if (win_manager.IsExpoActive())
   {
-    on_expo_terminated_connection = win_manager->terminate_expo.connect([&, tip_x, tip_y]() {
+    on_expo_terminated_connection = win_manager.terminate_expo.connect([&, tip_x, tip_y]() {
         QuicklistManager::Default()->ShowQuicklist(_quicklist.GetPointer(), tip_x, tip_y);
         on_expo_terminated_connection.disconnect();
     });

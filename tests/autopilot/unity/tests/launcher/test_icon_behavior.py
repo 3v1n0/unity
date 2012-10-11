@@ -15,7 +15,7 @@ import logging
 from testtools.matchers import Equals, NotEquals
 from time import sleep
 
-from unity.emulators.icons import BamfLauncherIcon
+from unity.emulators.icons import ApplicationLauncherIcon, ExpoLauncherIcon
 from unity.emulators.launcher import IconDragType
 from unity.tests.launcher import LauncherTestCase, _make_scenarios
 
@@ -28,6 +28,25 @@ class LauncherIconsTests(LauncherTestCase):
     def setUp(self):
         super(LauncherIconsTests, self).setUp()
         self.set_unity_option('launcher_hide_mode', 0)
+
+    def ensure_expo_launcher_icon(self):
+        EXPO_URI = "'unity://expo-icon'"
+        old_fav = self.call_gsettings_cmd('get', 'com.canonical.Unity.Launcher', 'favorites')
+
+        if not EXPO_URI in old_fav:
+            if old_fav[:-2] == "[]":
+                new_fav = "["+EXPO_URI+"]"
+            else:
+                new_fav = old_fav[:-1]+", "+EXPO_URI+"]"
+
+            self.addCleanup(self.call_gsettings_cmd, 'set', 'com.canonical.Unity.Launcher', 'favorites', old_fav)
+            self.call_gsettings_cmd('set', 'com.canonical.Unity.Launcher', 'favorites', new_fav)
+
+        icon = self.launcher.model.get_children_by_type(ExpoLauncherIcon)[0]
+        self.assertThat(icon, NotEquals(None))
+        self.assertThat(icon.visible, Eventually(Equals(True)))
+
+        return icon
 
     def test_bfb_tooltip_disappear_when_dash_is_opened(self):
          """Tests that the bfb tooltip disappear when the dash is opened."""
@@ -155,7 +174,11 @@ class LauncherIconsTests(LauncherTestCase):
         and show the quicklist.
 
         """
+        if self.workspace.num_workspaces <= 1:
+            self.skipTest("This test requires enabled workspaces.")
+
         self.keybinding("expo/start")
+        self.assertThat(self.window_manager.expo_active, Eventually(Equals(True)))
         self.addCleanup(self.keybinding, "expo/cancel")
 
         bfb = self.launcher.model.get_bfb_icon()
@@ -163,13 +186,32 @@ class LauncherIconsTests(LauncherTestCase):
         self.mouse.click(button=3)
 
         self.assertThat(self.launcher_instance.quicklist_open, Eventually(Equals(True)))
+        self.assertThat(self.window_manager.expo_active, Eventually(Equals(False)))
 
-        monitor = self.screen_geo.get_primary_monitor()
-        self.panel = self.panels.get_panel_for_monitor(monitor)
+    def test_expo_launcher_icon_initiates_expo(self):
+        """Clicking on the expo launcher icon must start the expo."""
+        if self.workspace.num_workspaces <= 1:
+            self.skipTest("This test requires enabled workspaces.")
 
-        # When workspace switcher is opened the panel title is "Ubuntu Desktop" so we check
-        # to make sure that workspace switcher end.
-        self.assertThat(self.panels.get_active_panel().title, Eventually(NotEquals("Ubuntu Desktop")))
+        expo = self.ensure_expo_launcher_icon()
+        self.addCleanup(self.keybinding, "expo/cancel")
+        self.launcher_instance.click_launcher_icon(expo)
+
+        self.assertThat(self.window_manager.expo_active, Eventually(Equals(True)))
+
+    def test_expo_launcher_icon_terminates_expo(self):
+        """Clicking on the expo launcher icon when expo is active must close it."""
+        if self.workspace.num_workspaces <= 1:
+            self.skipTest("This test requires enabled workspaces.")
+
+        self.keybinding("expo/start")
+        self.assertThat(self.window_manager.expo_active, Eventually(Equals(True)))
+        self.addCleanup(self.keybinding, "expo/cancel")
+
+        expo = self.ensure_expo_launcher_icon()
+        self.launcher_instance.click_launcher_icon(expo)
+
+        self.assertThat(self.window_manager.expo_active, Eventually(Equals(False)))
 
 
 class LauncherDragIconsBehavior(LauncherTestCase):
@@ -181,13 +223,17 @@ class LauncherDragIconsBehavior(LauncherTestCase):
                                        ('outside', {'drag_type': IconDragType.OUTSIDE}),
                                    ])
 
+    def setUp(self):
+        super(LauncherDragIconsBehavior, self).setUp()
+        self.set_unity_option('launcher_hide_mode', 0)
+
     def ensure_calc_icon_not_in_launcher(self):
         """Wait until the launcher model updates and removes the calc icon."""
         # Normally we'd use get_icon(desktop_id="...") but we're expecting it to
         # not exist, and we don't want to wait for 10 seconds, so we do this
         # the old fashioned way.
         refresh_fn = lambda: self.launcher.model.get_children_by_type(
-            BamfLauncherIcon, desktop_id="gcalctool.desktop")
+            ApplicationLauncherIcon, desktop_id="gcalctool.desktop")
         self.assertThat(refresh_fn, Eventually(Equals([])))
 
     def test_can_drag_icon_below_bfb(self):
@@ -196,33 +242,40 @@ class LauncherDragIconsBehavior(LauncherTestCase):
         self.ensure_calc_icon_not_in_launcher()
         calc = self.start_app("Calculator")
         calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
+        bfb_icon = self.launcher.model.get_bfb_icon()
 
-        bfb_icon_position = 0
-        self.launcher_instance.drag_icon_to_position(calc_icon,
-                                                     bfb_icon_position,
-                                                     self.drag_type)
+        self.launcher_instance.drag_icon_to_position(
+            calc_icon,
+            IconDragType.AFTER,
+            bfb_icon,
+            self.drag_type)
         moved_icon = self.launcher.model.\
                      get_launcher_icons_for_monitor(self.launcher_monitor)[1]
         self.assertThat(moved_icon.id, Equals(calc_icon.id))
 
-    def test_can_drag_icon_above_window_switcher(self):
-        """Application icons must be dragable to above the workspace switcher icon."""
+    def test_can_drag_icon_below_window_switcher(self):
+        """Application icons must be dragable to below the workspace switcher icon."""
 
         self.ensure_calc_icon_not_in_launcher()
         calc = self.start_app("Calculator")
         calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
+        bfb_icon = self.launcher.model.get_bfb_icon()
+        trash_icon = self.launcher.model.get_trash_icon()
 
         # Move a known icon to the top as it needs to be more than 2 icon
         # spaces away for this test to actually do anything
-        bfb_icon_position = 0
-        self.launcher_instance.drag_icon_to_position(calc_icon,
-                                                     bfb_icon_position,
-                                                     self.drag_type)
+        self.launcher_instance.drag_icon_to_position(
+            calc_icon,
+            IconDragType.AFTER,
+            bfb_icon,
+            self.drag_type)
+
         sleep(1)
-        target_pos = -2
-        self.launcher_instance.drag_icon_to_position(calc_icon,
-                                                     target_pos,
-                                                     self.drag_type)
+        self.launcher_instance.drag_icon_to_position(
+            calc_icon,
+            IconDragType.BEFORE,
+            trash_icon,
+            self.drag_type)
 
         # Must be the last bamf icon - not necessarily the third-from-end icon.
         refresh_fn = lambda: self.launcher.model.get_launcher_icons()[-2].id

@@ -100,4 +100,37 @@ TEST(TestSwitcherModel, TestSelection)
   EXPECT_EQ(model->LastSelection(), third);
 }
 
+TEST(TestSwitcherModel, TestActiveDetailWindowSort)
+{
+  std::vector<AbstractLauncherIcon::Ptr> detail_icons;
+  AbstractLauncherIcon::Ptr detail(new MockLauncherIcon());
+  detail->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
+  detail_icons.push_back(detail);
+
+  // Set up a list with out an active icon, so we can assert
+  // the first detail icon == to the last xid of detailed list
+  std::vector<AbstractLauncherIcon::Ptr> icons;
+  AbstractLauncherIcon::Ptr normal(new MockLauncherIcon());
+  icons.push_back(normal);
+
+  SwitcherModel::Ptr model_detail_active(new SwitcherModel(detail_icons));
+  model_detail_active->detail_selection = true;
+
+  SwitcherModel::Ptr model_detail(new SwitcherModel(icons));
+  model_detail->detail_selection = true;
+
+  EXPECT_TRUE(model_detail_active->DetailXids().size() > 2);
+  EXPECT_TRUE(model_detail_active->DetailSelectionWindow() != model_detail->DetailSelectionWindow());
+
+  // Move to the last detailed window
+  for (unsigned int i = 0; i < model_detail_active->DetailXids().size() - 1; i++)
+    model_detail_active->NextDetail();
+
+  Window sorted, unsorted;
+  sorted = model_detail_active->DetailSelectionWindow();
+  unsorted = model_detail->DetailSelectionWindow();
+
+  EXPECT_EQ(sorted, unsorted);
+}
+
 }

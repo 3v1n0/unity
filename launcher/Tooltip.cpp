@@ -26,6 +26,7 @@
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
+#include <unity-shared/UnitySettings.h>
 
 #include "Tooltip.h"
 
@@ -49,9 +50,6 @@ Tooltip::Tooltip() :
   _labelText(TEXT("Unity")),
   _cairo_text_has_changed(true)
 {
-  _use_blurred_background = true;
-  _compute_blur_bkg = true;
-
   _hlayout = new nux::HLayout(TEXT(""), NUX_TRACKER_LOCATION);
   _vlayout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
 
@@ -460,6 +458,19 @@ void Tooltip::UpdateTexture()
   float   shadow_color[4]  = {0.0f, 0.0f, 0.0f, 1.00f};
   float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.15f};
   float   mask_color[4]    = {1.0f, 1.0f, 1.0f, 1.00f};
+  
+  if (use_blur_ == false)
+  {
+    //If low gfx is detected then disable transparency because we're not bluring using our blur anymore.
+    float alpha_value = 1.0f;
+  
+    tint_color[3] = alpha_value;
+    hl_color[3] = alpha_value;
+    dot_color[3] = alpha_value;
+    shadow_color[3] = alpha_value;
+    outline_color[3] = alpha_value;
+    mask_color[3] = alpha_value;
+  }
 
   tint_dot_hl(cr_bg,
               width,

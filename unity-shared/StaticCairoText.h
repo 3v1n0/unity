@@ -65,9 +65,6 @@ public:
   void DrawContent(GraphicsEngine& gfxContext,
                    bool             forceDraw);
 
-  void PostDraw(GraphicsEngine& gfxContext,
-                bool             forceDraw);
-
   // public API
   void SetText(std::string const& text, bool escape_text = false);
   void SetTextColor(Color const& textColor);

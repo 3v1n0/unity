@@ -72,6 +72,7 @@ bool LauncherModel::CompareIcons(AbstractLauncherIcon::Ptr const& first, Abstrac
 void LauncherModel::PopulatePart(iterator begin, iterator end)
 {
   AbstractLauncherIcon::Ptr prev_icon;
+
   for (auto it = begin; it != end; ++it)
   {
     auto const& icon = *it;
@@ -311,7 +312,7 @@ LauncherModel::Size() const
   return _inner.size();
 }
 
-AbstractLauncherIcon::Ptr LauncherModel::Selection () const
+AbstractLauncherIcon::Ptr const& LauncherModel::Selection() const
 {
   return _inner[selection_];
 }

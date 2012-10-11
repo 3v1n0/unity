@@ -22,6 +22,8 @@
 #include <boost/lexical_cast.hpp>
 
 #include <NuxCore/Logger.h>
+#include <Nux/HScrollBar.h>
+#include <Nux/VScrollBar.h>
 
 #include "unity-shared/DashStyle.h"
 #include "CoverflowResultView.h"
@@ -94,6 +96,14 @@ public:
   void SetUpArea(nux::Area* area)
   {
     up_area_ = area;
+  }
+
+  void RedrawScrollbars()
+  {
+    if (m_horizontal_scrollbar_enable)
+     _hscrollbar->QueueDraw();
+    if (m_vertical_scrollbar_enable)
+      _vscrollbar->QueueDraw();
   }
 
 protected:
@@ -298,7 +308,7 @@ void LensView::OnCategoryAdded(Category const& category)
     if (existing_group->GetCategoryIndex() == index) return;
   }
 
-  PlacesGroup* group = new PlacesGroup();
+  PlacesGroup* group = new PlacesGroup(dash::Style::Instance());
   AddChild(group);
   group->SetName(name);
   group->SetIcon(icon_hint);
@@ -344,18 +354,17 @@ void LensView::OnCategoryAdded(Category const& category)
   grid->expanded = false;
 
   group->SetRendererName(renderer_name.c_str());
-  grid->UriActivated.connect(sigc::bind([&] (std::string const& uri, ResultView::ActivateType type, std::string const& view_id) 
+  grid->UriActivated.connect(sigc::bind([&] (std::string const& uri, ResultView::ActivateType type, GVariant* data, std::string const& view_id) 
   {
+    uri_activated.emit(type, uri, data, view_id); 
     switch (type)
     {
       case ResultView::ActivateType::DIRECT:
       {
-        uri_activated.emit(uri); 
         lens_->Activate(uri);  
       } break;
       case ResultView::ActivateType::PREVIEW:
       {
-        uri_preview_activated.emit(uri, view_id);
         lens_->Preview(uri);
       } break;
       default: break;
@@ -398,8 +407,6 @@ void LensView::OnCategoryAdded(Category const& category)
   scroll_layout_->AddView(group, 0, nux::MinorDimensionPosition::eAbove,
                           nux::MinorDimensionSize::eFull, 100.0f,
                           (nux::LayoutPosition)index);
-  
-  group->SetMinimumWidth(GetGeometry().width);
 }
 
 void LensView::OnCategoryOrderChanged()
@@ -450,6 +457,13 @@ ResultViewGrid* LensView::GetGridForCategory(unsigned category_index)
   if (category_index >= categories_.size()) return nullptr;
   PlacesGroup* group = categories_.at(category_index);
   return static_cast<ResultViewGrid*>(group->GetChildView());
+}
+
+ResultView* LensView::GetResultViewForCategory(unsigned category_index)
+{
+  if (category_index >= categories_.size()) return nullptr;
+  PlacesGroup* group = categories_.at(category_index);
+  return static_cast<ResultView*>(group->GetChildView());
 }
 
 void LensView::OnResultAdded(Result const& result)
@@ -662,6 +676,16 @@ void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
   nux::Geometry const& geo = GetGeometry();
 
   gfx_context.PushClippingRectangle(geo);
+
+  if (RedirectedAncestor())
+  {
+    unsigned int alpha = 0, src = 0, dest = 0;
+    gfx_context.GetRenderStates().GetBlend(alpha, src, dest);
+    gfx_context.GetRenderStates().SetBlend(false);
+    gfx_context.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+    gfx_context.GetRenderStates().SetBlend(alpha, src, dest);
+  }
+
   nux::GetPainter().PaintBackground(gfx_context, geo);
   gfx_context.PopClippingRectangle();
 }
@@ -669,6 +693,22 @@ void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
 void LensView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
 {
   gfx_context.PushClippingRectangle(GetGeometry());
+
+  // This is necessary when doing redirected rendering.
+  // Clean the area below this view before drawing anything.
+  if (RedirectedAncestor() && !IsFullRedraw())
+  {
+    // scrollbars are drawn in Draw, not DrawContent, so we need to flag them to redraw.
+    scroll_view_->RedrawScrollbars();
+    fscroll_view_->RedrawScrollbars();
+
+    unsigned int alpha = 0, src = 0, dest = 0;
+    gfx_context.GetRenderStates().GetBlend(alpha, src, dest);
+    gfx_context.GetRenderStates().SetBlend(false);
+    gfx_context.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+    gfx_context.GetRenderStates().SetBlend(alpha, src, dest);
+  }
+
   layout_->ProcessDraw(gfx_context, force_draw);
   gfx_context.PopClippingRectangle();
 }
@@ -720,22 +760,22 @@ void LensView::ActivateFirst()
     for (unsigned int i = 0; i < category_order.size(); i++)
     {
       unsigned cat_index = category_order.at(i);
-      ResultViewGrid* grid = GetGridForCategory(cat_index);
-      if (grid == nullptr) continue;
-      auto it = grid->GetIteratorAtRow(0);
+      ResultView* result_view = GetResultViewForCategory(cat_index);
+      if (result_view == nullptr) continue;
+      auto it = result_view->GetIteratorAtRow(0);
       if (!it.IsLast())
       {
         Result result(*it);
-        uri_activated(result.uri);
-        lens_->Activate(result.uri);
+        result_view->Activate(result.uri, result_view->GetIndexForUri(result.uri), ResultView::ActivateType::DIRECT);
         return;
       }
     }
+
     // Fallback
     Result result = results->RowAtIndex(0);
     if (result.uri != "")
     {
-      uri_activated(result.uri);
+      uri_activated.emit(ResultView::ActivateType::DIRECT, result.uri, nullptr, "");
       lens_->Activate(result.uri);
     }
   }
