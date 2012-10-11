@@ -164,6 +164,7 @@ void U1PaymentPreview::OnActionActivated(ActionButton* button, std::string const
     Lens::Hints hints;
     hints[DATA_PASSWORD_KEY] = *password;
     preview_model_->PerformAction(id, hints);
+    return;
   }
   Preview::OnActionActivated(button, id);
 }
