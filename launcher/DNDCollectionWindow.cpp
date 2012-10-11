@@ -18,10 +18,11 @@
 */
 
 #include "DNDCollectionWindow.h"
+
 #include "unity-shared/WindowManager.h"
 
 namespace unity {
-  
+
 NUX_IMPLEMENT_OBJECT_TYPE(DNDCollectionWindow);
 
 DNDCollectionWindow::DNDCollectionWindow()
@@ -32,16 +33,17 @@ DNDCollectionWindow::DNDCollectionWindow()
   SetBackgroundColor(nux::Color(0x00000000));
   SetOpacity(0.0f);
   // ... and as big as the whole screen.
-  SetGeometry(WindowManager::Default()->GetScreenGeometry());
-  
+  WindowManager& wm = WindowManager::Default();
+  SetGeometry(wm.GetScreenGeometry());
+
   ShowWindow(true);
   PushToBack();
   // Hack to create the X Window as soon as possible.
   EnableInputWindow(true, "DNDCollectionWindow");
   EnableInputWindow(false, "DNDCollectionWindow");
   SetDndEnabled(false, true);
-  
-  WindowManager::Default()->window_moved.connect(sigc::mem_fun(this, &DNDCollectionWindow::OnWindowMoved));
+
+  wm.window_moved.connect(sigc::mem_fun(this, &DNDCollectionWindow::OnWindowMoved));
 }
 
 DNDCollectionWindow::~DNDCollectionWindow()
@@ -51,14 +53,14 @@ DNDCollectionWindow::~DNDCollectionWindow()
 }
 
 /**
- * EnableInputWindow doesn't show the window immediately. 
+ * EnableInputWindow doesn't show the window immediately.
  * Since nux::EnableInputWindow uses XMoveResizeWindow the best way to know if
  * the X Window is really on/off screen is receiving WindowManager::window_moved
  * signal. Please don't hate me!
- **/ 
-void DNDCollectionWindow::OnWindowMoved(guint32 xid)
+ **/
+void DNDCollectionWindow::OnWindowMoved(Window window_id)
 {
-  if (xid == GetInputWindowId() && display() != NULL)
+  if (window_id == GetInputWindowId() && display() != NULL)
   {
     // Create a fake mouse move because sometimes an extra one is required.
     XWarpPointer(display(), None, None, 0, 0, 0, 0, 0, 0);

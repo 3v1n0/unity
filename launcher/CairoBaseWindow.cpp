@@ -22,6 +22,7 @@
 #include <Nux/WindowCompositor.h>
 
 #include "unity-shared/CairoTexture.h"
+#include "unity-shared/UnitySettings.h"
 #include "CairoBaseWindow.h"
 
 namespace unity
@@ -40,8 +41,9 @@ namespace
 NUX_IMPLEMENT_OBJECT_TYPE(CairoBaseWindow);
 
 CairoBaseWindow::CairoBaseWindow() :
-  _use_blurred_background(false),
-  _compute_blur_bkg(false)
+  use_blur_(!Settings::Instance().GetLowGfxMode()),
+  _use_blurred_background(use_blur_),
+  _compute_blur_bkg(use_blur_)
 {
   SetWindowSizeMatchLayout(true);
 }
@@ -91,13 +93,14 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 
   gfxContext.PushClippingRectangle(base);
 
-  /* "Clear" out the background */
+  /*"Clear" out the background. Blending is disabled if blur is disabled. This might need to change, but for the moment both classes
+   * which are children of CairoBaseWindow don't have any alpha blending when not using the blurred texture.*/
   nux::ROPConfig rop;
-  rop.Blend = true;
+  rop.Blend = use_blur_;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-  nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
+  nux::ColorLayer layer(nux::Color(0x00000000), use_blur_, rop);
   nux::GetPainter().PushDrawLayer(gfxContext, base, &layer);
 
   nux::TexCoordXForm texxform_bg;
@@ -107,13 +110,13 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
   nux::TexCoordXForm texxform_mask;
   texxform_mask.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
   texxform_mask.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+  
+  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(true);
+  nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
   if (bg_blur_texture_.IsValid() && texture_mask_.IsValid())
   {
     nux::TexCoordXForm texxform_blur_bkg;
-
-    nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(true);
-    nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
     gfxContext.QRP_2TexMod(
       base.x,
@@ -130,9 +133,6 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 
   if (texture_bg_.IsValid() && texture_mask_.IsValid())
   {
-    nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(true);
-    nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-
     gfxContext.QRP_2TexMod(base.x,
                            base.y,
                            base.width,
@@ -150,9 +150,6 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
     nux::TexCoordXForm texxform;
     texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-    nux::GetWindowThread()->GetGraphicsDisplay().GetGraphicsEngine()->GetRenderStates().SetBlend(true);
-    nux::GetWindowThread()->GetGraphicsDisplay().GetGraphicsEngine()->GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
     
     gfxContext.QRP_1Tex(base.x,
                         base.y,

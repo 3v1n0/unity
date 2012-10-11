@@ -50,10 +50,8 @@ PreviewStateMachine::~PreviewStateMachine()
 void PreviewStateMachine::ActivatePreview(Preview::Ptr preview)
 {
   stored_preview_ = preview;
-  CheckPreviewRequirementsFulfilled();
-  left_results = -1;
-  right_results = -1;
   requires_activation_ = true;
+  CheckPreviewRequirementsFulfilled();
 }
 
 void PreviewStateMachine::Reset()
@@ -66,8 +64,7 @@ void PreviewStateMachine::Reset()
 
 void PreviewStateMachine::ClosePreview()
 {
-  stored_preview_ = nullptr;
-  preview_active = true;
+  Reset();
   SetSplitPosition(SplitPosition::CONTENT_AREA, -1); 
 }
 
@@ -88,7 +85,10 @@ void PreviewStateMachine::CheckPreviewRequirementsFulfilled()
     return;
 
   if (stored_preview_ == nullptr)
+  {
+    requires_activation_ = true;
     return;
+  }
 
   /* right now this is disabled as long as we aren't doing the fancy splitting animation
    * as we don't care about positions

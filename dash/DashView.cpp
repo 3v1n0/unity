@@ -160,6 +160,7 @@ void DashView::ClosePreview()
     animation_.Start();
   }
 
+  preview_navigation_mode_ = previews::Navigation::NONE;
   preview_displaying_ = false;
 
   // re-focus dash view component.
@@ -195,6 +196,39 @@ void DashView::FadeInCallBack(float const& fade_in_value)
     opening_row_y_ = -1;
   }
 }
+
+void DashView::OnUriActivated(ResultView::ActivateType type, std::string const& uri, GVariant* data, std::string const& unique_id) 
+{
+  last_activated_uri_ = uri;
+  stored_activated_unique_id_ = unique_id;
+
+  if (data)
+  {
+    // Update positioning information.
+    int position = -1;
+    int row_height = 0;
+    int results_to_the_left = 0;
+    int results_to_the_right = 0;
+    g_variant_get(data, "(iiii)", &position, &row_height, &results_to_the_left, &results_to_the_right);
+    preview_state_machine_.SetSplitPosition(SplitPosition::CONTENT_AREA, position);
+    preview_state_machine_.left_results = results_to_the_left;
+    preview_state_machine_.right_results = results_to_the_right;
+
+    if (opening_row_y_ == -1)
+    {
+      // Update only when opening the previews
+      opening_row_y_ = position;
+    }
+    opening_row_height_ = row_height;
+  }
+
+  // we want immediate preview reaction on first opening.
+  if (type == ResultView::ActivateType::PREVIEW && !preview_displaying_)
+  {
+    BuildPreview(Preview::Ptr(nullptr));
+  }
+}
+
 
 void DashView::BuildPreview(Preview::Ptr model)
 {
@@ -234,21 +268,19 @@ void DashView::BuildPreview(Preview::Ptr model)
  
     // connect to nav left/right signals to request nav left/right movement.
     preview_container_->navigate_left.connect([&] () {
-      preview_state_machine_.Reset();
       preview_navigation_mode_ = previews::Navigation::LEFT;
 
       // sends a message to all result views, sending the the uri of the current preview result
       // and the unique id of the result view that should be handling the results
-      ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", -1, stored_preview_uri_identifier_.c_str(), stored_preview_unique_id_.c_str()));
+      ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", -1, last_activated_uri_.c_str(), stored_activated_unique_id_.c_str()));
     });
 
     preview_container_->navigate_right.connect([&] () {
-      preview_state_machine_.Reset();
       preview_navigation_mode_ = previews::Navigation::RIGHT;
       
       // sends a message to all result views, sending the the uri of the current preview result
       // and the unique id of the result view that should be handling the results
-      ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", 1, stored_preview_uri_identifier_.c_str(), stored_preview_unique_id_.c_str()));
+      ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", 1, last_activated_uri_.c_str(), stored_activated_unique_id_.c_str()));
     });
 
     preview_container_->request_close.connect([&] () { ClosePreview(); });
@@ -367,11 +399,7 @@ void DashView::SetupViews()
   content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
 
   home_view_ = new LensView(home_lens_, nullptr);
-  home_view_->uri_preview_activated.connect([&] (std::string const& uri, std::string const& unique_id) 
-  {
-    stored_preview_unique_id_ = unique_id;
-    stored_preview_uri_identifier_ = uri;
-  });
+  home_view_->uri_activated.connect(sigc::mem_fun(this, &DashView::OnUriActivated));
 
   AddChild(home_view_);
   active_lens_view_ = home_view_;
@@ -388,26 +416,6 @@ void DashView::SetupUBusConnections()
 {
   ubus_manager_.RegisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
       sigc::mem_fun(this, &DashView::OnActivateRequest));
-
-  ubus_manager_.RegisterInterest(UBUS_DASH_PREVIEW_INFO_PAYLOAD, [&] (GVariant *data) 
-  {
-    int position = -1;
-    int row_height = 0;
-    int results_to_the_left = 0;
-    int results_to_the_right = 0;
-    g_variant_get(data, "(iiii)", &position, &row_height, &results_to_the_left, &results_to_the_right);
-    preview_state_machine_.SetSplitPosition(SplitPosition::CONTENT_AREA, position);
-    preview_state_machine_.left_results = results_to_the_left;
-    preview_state_machine_.right_results = results_to_the_right;
-
-    if (opening_row_y_ == -1)
-    {
-      // Update only when opening the previews
-      opening_row_y_ = position;
-    }
-    opening_row_height_ = row_height;
-
-  });
 }
 
 long DashView::PostLayoutManagement (long LayoutResult)
@@ -489,9 +497,40 @@ void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
   renderer_.DrawFull(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry(), true);
 }
 
+/**
+ * Parametrically interpolates a value in one of two consecutive closed intervals.
+ *
+ * @param[in] p
+ * @param[in] start The left (least) value of the closed interval.
+ * @param[in] end1  The right (greatest) value of the closed interval,
+ *                  if start <= end1
+ * @param[in] end2  The right (greatest) value of the closed interval,
+ *                  if start > end1
+ *
+ * @returns the linear interpolation at @p p of the interval [start, end] where end
+ * is @p end1 if start <= @p end1, otherwise end is @end2.
+ */
+static float Interpolate2(float p, int start, int end1, int end2)
+{
+  float result = end2;
+  if (start < end2)
+  {
+    int end = start > end1 ? end2 : end1;
+    result = start + p * (end - start);
+  }
+
+  return result;
+}
+
 void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
+  auto& style = dash::Style::Instance();
+
   renderer_.DrawInner(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry());
+  
+  nux::Geometry clip_geo = layout_->GetGeometry();
+  clip_geo.x += style.GetVSeparatorSize();
+  graphics_engine.PushClippingRectangle(clip_geo);
 
   bool display_ghost = false;
   bool preview_redraw = false;
@@ -641,7 +680,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
 
           graphics_engine.QRP_TexDesaturate(
             fade_out_value_ * layout_->GetX() + (1 - fade_out_value_) * final_x,
-            fade_out_value_ * (opening_row_y_ + opening_row_height_) + (1 - fade_out_value_) * final_y,
+            Interpolate2(1.0f - fade_out_value_, opening_row_y_ + opening_row_height_, final_y, layout_->GetHeight()),
             layout_->GetWidth() - filter_width,
             layout_->GetHeight() - opening_row_y_ - opening_row_height_,
             layout_copy_, texxform,
@@ -724,7 +763,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
 
           graphics_engine.QRP_TexDesaturate(
             (1.0f - fade_in_value_) * layout_->GetX() + (fade_in_value_) * final_x,
-            (1.0f - fade_in_value_) * (opening_row_y_ + opening_row_height_) + (fade_in_value_) * final_y,
+            Interpolate2(fade_in_value_, opening_row_y_ + opening_row_height_, final_y, layout_->GetHeight()),
             layout_->GetWidth() - filter_width,
             layout_->GetHeight() - opening_row_y_ - opening_row_height_,
             layout_copy_, texxform,
@@ -744,6 +783,8 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
   {
     nux::GetPainter().PopBackgroundStack();
   }
+
+  graphics_engine.PopClippingRectangle();
 
   renderer_.DrawInnerCleanup(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry());
 }
@@ -886,12 +927,6 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   AddChild(view);
   view->SetVisible(false);
   view->uri_activated.connect(sigc::mem_fun(this, &DashView::OnUriActivated));
-  view->uri_preview_activated.connect([&] (std::string const& uri, std::string const& unique_id) 
-  {
-    LOG_DEBUG(logger) << "got unique id from preview activation: " << unique_id;
-    stored_preview_unique_id_ = unique_id;
-    stored_preview_uri_identifier_ = uri;
-  });
 
   lenses_layout_->AddView(view, 1);
   lens_views_[lens->id] = view;
@@ -1009,11 +1044,6 @@ void DashView::OnAppsGlobalSearchFinished(Lens::Hints const& hints)
     if (activate_on_finish_)
       this->OnEntryActivated();
   }
-}
-
-void DashView::OnUriActivated(std::string const& uri)
-{
-  last_activated_uri_ = uri;
 }
 
 void DashView::OnUriActivatedReply(std::string const& uri, HandledType type, Lens::Hints const&)
@@ -1373,8 +1403,8 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
 
   if (direction == KEY_NAV_NONE)
   {
-    if (ui::KeyboardUtil::IsPrintableKeySymbol(x11_key_code) ||
-        ui::KeyboardUtil::IsMoveKeySymbol(x11_key_code))
+    if (keyboard::is_printable_key_symbol(x11_key_code) ||
+        keyboard::is_move_key_symbol(x11_key_code))
     {
       search_key = true;
     }

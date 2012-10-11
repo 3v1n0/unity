@@ -51,7 +51,6 @@ protected:
 
   virtual void PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {};
   virtual void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry clip) = 0;
-  virtual void PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {};
   virtual nux::Geometry GetBackgroundGeometry() = 0;
 
   // Introspectable methods

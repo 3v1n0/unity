@@ -20,6 +20,8 @@
 #ifndef DASH_STYLE_H
 #define DASH_STYLE_H
 
+#include "DashStyleInterface.h"
+
 #include <Nux/Nux.h>
 #include <Nux/View.h>
 #include <Nux/AbstractButton.h>
@@ -83,7 +85,7 @@ enum class Arrow {
 };
 
 
-class Style
+class Style : public StyleInterface
 {
 public:
   Style ();
@@ -104,7 +106,7 @@ public:
 
   virtual nux::AbstractPaintLayer* FocusOverlay(int width, int height);
 
-  virtual bool ButtonFocusOverlay(cairo_t* cr);
+  virtual bool ButtonFocusOverlay(cairo_t* cr, float alpha = 0.50f);
 
   virtual bool MultiRangeSegment(cairo_t*    cr,
                                  nux::ButtonVisualState  state,
@@ -245,6 +247,8 @@ public:
   int GetCategoryHeaderLeftPadding() const;
   int GetCategorySeparatorLeftPadding() const;
   int GetCategorySeparatorRightPadding() const;
+  
+  bool GetUseBlur() const;
 
 
   sigc::signal<void> changed;

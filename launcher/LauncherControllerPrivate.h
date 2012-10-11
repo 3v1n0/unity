@@ -62,13 +62,13 @@ public:
   int GetLastIconPriority(std::string const& favorite_uri = "", bool sticky = false);
   void AddFavoriteKeepingOldPosition(FavoriteList& icons, std::string const& icon_uri) const;
 
-  void OnIconRemoved(AbstractLauncherIcon::Ptr icon);
-  void OnDeviceIconAdded(AbstractLauncherIcon::Ptr icon);
+  void OnIconRemoved(AbstractLauncherIcon::Ptr const& icon);
+  void OnDeviceIconAdded(AbstractLauncherIcon::Ptr const& icon);
 
-  void OnLauncherAddRequest(std::string const& icon_uri, AbstractLauncherIcon::Ptr before);
+  void OnLauncherAddRequest(std::string const& icon_uri, AbstractLauncherIcon::Ptr const& before);
   void OnLauncherAddRequestSpecial(std::string const& path, std::string const& aptdaemon_trans_id,
                                    std::string const& icon_path, int icon_x, int icon_y, int icon_size);
-  void OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr icon);
+  void OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr const& icon);
 
   void OnLauncherEntryRemoteAdded(LauncherEntryRemote::Ptr const& entry);
   void OnLauncherEntryRemoteRemoved(LauncherEntryRemote::Ptr const& entry);
@@ -81,7 +81,7 @@ public:
 
   int MonitorWithMouse();
 
-  void RegisterIcon(AbstractLauncherIcon::Ptr icon, int priority = std::numeric_limits<int>::min());
+  void RegisterIcon(AbstractLauncherIcon::Ptr const& icon, int priority = std::numeric_limits<int>::min());
 
   AbstractLauncherIcon::Ptr CreateFavoriteIcon(std::string const& icon_uri);
   AbstractLauncherIcon::Ptr GetIconByUri(std::string const& icon_uri);

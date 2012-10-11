@@ -38,14 +38,19 @@ namespace previews
 namespace
 {
 nux::logging::Logger logger("unity.dash.previews.socialpreviewcontent");
+
+const int BUBBLE_WIDTH = 300;
+const int BUBBLE_HEIGHT = 250;
+const int TAIL_HEIGHT = 50;
+const int TAIL_POS_FROM_RIGHT = 60;
 }
 
 inline nux::Geometry GetBubbleGeometry(nux::Geometry const& geo)
 {
-  return nux::Geometry(geo.x + geo.width*0.1,
-                        geo.y + geo.height*0.1,
-                        geo.width - 2*(geo.width*0.1),
-                        geo.height - 2*(geo.height*0.1));
+  int width = MIN(BUBBLE_WIDTH, geo.width);
+  int height = MIN(BUBBLE_HEIGHT + TAIL_HEIGHT, geo.height);
+
+  return nux::Geometry(geo.x + (geo.width - width)/2, geo.y + (geo.height - height)/2, width, height);
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(SocialPreviewContent);
@@ -98,7 +103,7 @@ void SocialPreviewContent::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw
                       tex->GetHeight(),
                       tex,
                       texxform,
-                      nux::Color(0.2f, 0.2f, 0.2f, 0.2f));
+                      nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
 
   gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
 
@@ -145,10 +150,8 @@ void SocialPreviewContent::UpdateBaloonTexture()
 
   nux::Geometry geo_cr(GetBubbleGeometry(geo));
 
-  double tail_width = MAX(0, MIN(geo_cr.width - 2*15.0, MIN(geo_cr.width*0.125, geo_cr.height*0.125)));
-
   int max_width = geo_cr.width - 2*(geo_cr.width*0.1);
-  int max_height = geo_cr.height - 2*(geo_cr.height*0.1) - tail_width;
+  int max_height = (geo_cr.height - TAIL_HEIGHT) - 2*((geo_cr.height - TAIL_HEIGHT)*0.1);
 
   // this will update the texture with the actual size of the text.
   text_->SetMaximumHeight(max_height);
@@ -156,8 +159,8 @@ void SocialPreviewContent::UpdateBaloonTexture()
   nux::Geometry const& geo_text = text_->GetGeometry();
 
   // center text
-  text_->SetBaseX(geo.x + geo.width/2 - geo_text.width/2);
-  text_->SetBaseY(geo.y + geo.height/2 - geo_text.height/2 - tail_width/2);
+  text_->SetBaseX(geo_cr.x + geo_cr.width/2 - geo_text.width/2);
+  text_->SetBaseY(geo_cr.y + geo_cr.height/2 - geo_text.height/2 - TAIL_HEIGHT/2);
 
   if (geo_cr.width > 0 && geo_cr.height > 0)
   {
@@ -167,21 +170,18 @@ void SocialPreviewContent::UpdateBaloonTexture()
 
 void SocialPreviewContent::RedrawBubble(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  double blur = 4.0;
+  double line_width = 6.0;
+  double radius = 28.0;
+  double x = 0.0;
+  double y = 0.0;
 
-  double line_width = 1.0;
-  double radius = 20.0;
-  double tailWidthPercentage = 0.125;
-  double tailPositionPercentage = 0.7;
-  double x = 0.0 + blur;
-  double y = 0.0 + blur;
-  double width = cairo_image_surface_get_width(cairo_get_target(cr)) - 2*blur;
-  double height = cairo_image_surface_get_height(cairo_get_target(cr)) - 2*blur;
+  double width = MAX(0, cairo_image_surface_get_width(cairo_get_target(cr)));
+  double height = MAX(0, cairo_image_surface_get_height(cairo_get_target(cr)) - TAIL_HEIGHT);
 
+  double tailPosition = x + width - TAIL_POS_FROM_RIGHT - TAIL_HEIGHT;
   if (width > 0 && height > 0)
   {
-    DrawBubble(cr, line_width, radius, x, y, width, height, tailPositionPercentage, tailWidthPercentage);
-    dash::Style::Instance().Blur(cr, blur);
+    DrawBubble(cr, line_width, radius, x, y, width, height, tailPosition, TAIL_HEIGHT);
   }
 }
 
@@ -214,8 +214,8 @@ void SocialPreviewContent::DrawBubble(cairo_t* cr,
                    double   y,
                    double   width,
                    double   height,
-                   double   tailPositionPercentage,
-                   double   tailWidthPercentage)
+                   double   tailPosition,
+                   double   tailWidth)
 {
   // sanity check
   if (cairo_status(cr) != CAIRO_STATUS_SUCCESS &&
@@ -223,16 +223,6 @@ void SocialPreviewContent::DrawBubble(cairo_t* cr,
     return;
 
   cairo_set_line_width(cr, line_width);
-
-  double tailWidth = MAX(0, MIN(width - 2*radius, MIN(width*tailWidthPercentage, height*tailWidthPercentage)));
-  double tail_start_pos = x + tailPositionPercentage*width - tailWidth/2;
-
-  // recitfications for outer draw.
-  x += line_width/2;
-  y += line_width/2;
-  height -= line_width;
-  height -= tailWidth;
-  width -= line_width;
 
   bool odd = true;
   odd = line_width != double((int)line_width);
@@ -262,16 +252,16 @@ void SocialPreviewContent::DrawBubble(cairo_t* cr,
             0.0f * G_PI / 180.0f,
             90.0f * G_PI / 180.0f);
 
-  if (tailWidth > 0.0)
+  if (tailWidth > 0.0 && tailPosition > 0 && tailPosition <= (x + width - tailWidth - radius))
   {
     // tail-right, tail top
-    cairo_line_to(cr, _align(tail_start_pos + tailWidth, odd), _align(y + height, odd));
+    cairo_line_to(cr, _align(tailPosition + tailWidth, odd), _align(y + height, odd));
 
     // tail-right, tail bottom
-    cairo_line_to(cr, _align(tail_start_pos + tailWidth, odd), _align(y + height + tailWidth, odd));
+    cairo_line_to(cr, _align(tailPosition + tailWidth, odd), _align(y + height + tailWidth, odd));
 
     // tail-right, tail bottom
-    cairo_line_to(cr, _align(tail_start_pos, odd), _align(y + height, odd));
+    cairo_line_to(cr, _align(tailPosition, odd), _align(y + height, odd));
   }
 
   // bottom-left, right of the corner
@@ -293,14 +283,13 @@ void SocialPreviewContent::DrawBubble(cairo_t* cr,
             180.0f * G_PI / 180.0f,
             270.0f * G_PI / 180.0f);
 
+  nux::Color color_fill(1.0, 1.0, 1.0, 0.2);
+  cairo_set_source_rgba(cr, color_fill.red, color_fill.green, color_fill.blue, color_fill.alpha);
+  cairo_fill_preserve(cr);
 
-  nux::Color color(0.53, 1.0, 0.66, 0.5);
-  if (color.alpha != 0.0)
-  {
-    cairo_set_source_rgba(cr, color.red, color.green, color.blue, color.alpha);
-    cairo_fill_preserve(cr);
-  }
-  cairo_set_source_rgba(cr, color.red, color.green, color.blue, color.alpha);
+  cairo_set_operator(cr, CAIRO_OPERATOR_DEST_OUT);
+  nux::Color color_stroke(1.0, 1.0, 1.0, 0.5);
+  cairo_set_source_rgba(cr, color_stroke.red, color_stroke.green, color_stroke.blue, color_stroke.alpha);
   cairo_stroke(cr);
 }
 

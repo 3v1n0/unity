@@ -35,7 +35,6 @@ set (UNITY_SHARED_SOURCES
      DashStyle.cpp
      DefaultThumbnailProvider.cpp
      FontSettings.cpp
-     KeyboardUtil.cpp
      IMTextEntry.cpp
      IconLoader.cpp
      IconRenderer.cpp
@@ -64,6 +63,8 @@ set (UNITY_SHARED_SOURCES
      UnityWindowView.cpp
      UserThumbnailProvider.cpp
      WindowManager.cpp
+     XKeyboardUtil.cpp
+     XWindowManager.cpp
      ubus-server.cpp
 )
 
@@ -77,7 +78,7 @@ add_dependencies (unity-shared unity-core-${UNITY_API_VERSION})
 
 # compiz
 set (UNITY_SHARED_COMPIZ_SOURCES
-     PluginAdapterCompiz.cpp
+     PluginAdapter.cpp
      )
 add_library (unity-shared-compiz STATIC ${UNITY_SHARED_COMPIZ_SOURCES})
 target_link_libraries (unity-shared-compiz ${LIBS})
@@ -86,7 +87,7 @@ add_dependencies (unity-shared-compiz unity-shared)
 
 # standalone
 set (UNITY_SHARED_STANDALONE_SOURCES
-     PluginAdapterStandalone.cpp
+     StandaloneWindowManager.cpp
      )
 add_library (unity-shared-standalone STATIC ${UNITY_SHARED_STANDALONE_SOURCES})
 target_link_libraries (unity-shared-standalone ${LIBS})
