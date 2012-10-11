@@ -233,6 +233,7 @@ void DashView::OnUriActivated(ResultView::ActivateType type, std::string const& 
 
 void DashView::BuildPreview(Preview::Ptr model)
 {
+
   if (!preview_displaying_)
   {
     // Make a copy of this DashView backup texture.
@@ -955,6 +956,8 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
     const char *title = model->title.Get().c_str();
     if (strcmp(U1_PAYMENT_TITLE, title) == 0)
     {
+      preview_state_machine_.left_results.Set(0);
+      preview_state_machine_.right_results.Set(0);
       preview_navigation_mode_ = previews::Navigation::RIGHT;
     }
     preview_state_machine_.ActivatePreview(model); // this does not immediately display a preview - we now wait.
