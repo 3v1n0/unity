@@ -50,7 +50,7 @@ LensBar::LensBar()
   , info_previously_shown_(false)
 {
   glib::String cachedir(g_strdup(g_get_user_cache_dir())); 
-  legal_seen_file_path_ = cachedir.Str() + "/.unitydashlegalseen";
+  legal_seen_file_path_ = cachedir.Str() + "/unitydashlegalseen";
   info_previously_shown_ = (g_file_test(legal_seen_file_path_.c_str(), G_FILE_TEST_EXISTS)) ? true : false;
 
   SetupBackground();
@@ -70,8 +70,11 @@ void LensBar::SetupBackground()
 void LensBar::SetupLayout()
 {
   legal_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  legal_ = new nux::StaticCairoText(g_dgettext("credentials-control-center", "Legal notice"));
-  legal_->SetFont("Ubuntu 16px");
+  std::string legal_text("<span underline='single'>");
+  legal_text.append(g_dgettext("credentials-control-center", "Legal notice"));
+  legal_text.append("</span>");
+  legal_ = new nux::StaticCairoText(legal_text);
+  legal_->SetFont("Ubuntu 14px");
   legal_layout_->AddSpace(1, 1);
   legal_layout_->SetLeftAndRightPadding(0, 10);
   info_icon_ = new IconTexture(Style::Instance().GetInformationTexture(), 22, 22); 
