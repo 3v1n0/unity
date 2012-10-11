@@ -16,6 +16,7 @@ from autopilot.testcase import AutopilotTestCase
 from dbus import DBusException
 from logging import getLogger
 import os
+import sys
 from tempfile import mktemp
 try:
     import testapp
@@ -55,7 +56,11 @@ class UnityTestCase(AutopilotTestCase):
 
     def setUp(self):
         super(UnityTestCase, self).setUp()
-        ensure_unity_is_running()
+        try:
+            ensure_unity_is_running()
+        except RuntimeError:
+            log.error("Unity doesn't appear to be running, exiting.")
+            sys.exit(1)
 
         self._setUpUnityLogging()
         self._initial_workspace_num = self.workspace.current_workspace
