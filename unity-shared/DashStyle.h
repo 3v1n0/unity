@@ -203,7 +203,9 @@ public:
   nux::BaseTexture* GetStarDeselectedIcon();
   nux::BaseTexture* GetStarSelectedIcon();
   nux::BaseTexture* GetStarHighlightIcon();
-  
+ 
+  nux::BaseTexture* GetInformationTexture();
+
   nux::BaseTexture* GetRefineTextureCorner();
   nux::BaseTexture* GetRefineTextureDash();
   nux::BaseTexture* GetRefineNoRefineTextureDash();
