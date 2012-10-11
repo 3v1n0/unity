@@ -127,7 +127,7 @@ void TrashLauncherIcon::UpdateTrashIconCb(GObject* source,
 
   if (info)
   {
-    glib::Object<GIcon> icon(g_file_info_get_icon(info));
+    glib::Object<GIcon> icon(g_file_info_get_icon(info), glib::AddRef());
     glib::String icon_string(g_icon_to_string(icon));
 
     self->icon_name = icon_string.Str();
