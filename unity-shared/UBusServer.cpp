@@ -16,7 +16,6 @@
  * Authored by: Michal Hruby <michal.hruby@canonical.com>
  */
 
-#include <boost/lexical_cast.hpp>
 #include <NuxCore/Logger.h>
 
 #include "UBusServer.h"
@@ -33,10 +32,6 @@ UBusServer::UBusServer()
   : last_id_(0)
 {}
 
-UBusServer::~UBusServer()
-{
-}
-
 unsigned UBusServer::RegisterInterest(std::string const& interest_name,
                                       UBusCallback const& slot)
 {
@@ -52,14 +47,10 @@ unsigned UBusServer::RegisterInterest(std::string const& interest_name,
 
 void UBusServer::UnregisterInterest(unsigned connection_id)
 {
-  for (auto it = interests_.begin(); it != interests_.end(); ++it)
-  {
-    if ((*it).second->id == connection_id)
-    {
-      interests_.erase(it);
-      return;
-    }
-  }
+  auto it = std::find_if(interests_.begin(), interests_.end(),
+                         [&] (std::pair<std::string, UBusConnection::Ptr> const& p)
+                         { return p.second->id == connection_id; });
+  if (it != interests_.end()) interests_.erase(it);
 }
 
 void UBusServer::SendMessage(std::string const& message_name,
@@ -73,10 +64,10 @@ void UBusServer::SendMessageFull(std::string const& message_name,
                                   glib::Source::Priority prio)
 {
   // queue the message
-  msg_queue_.insert(std::pair<int, std::pair<std::string, glib::Variant>>(prio, std::pair<std::string, glib::Variant>(message_name, args)));
+  msg_queue_.insert(std::pair<int, std::pair<std::string, glib::Variant>>(prio, std::make_pair(message_name, args)));
 
   // start the source (if not already running)
-  auto src_nick = boost::lexical_cast<std::string>(static_cast<int>(prio));
+  auto src_nick = std::to_string(static_cast<int>(prio));
   auto src_ptr = source_manager_.GetSource(src_nick);
   if (!src_ptr)
   {

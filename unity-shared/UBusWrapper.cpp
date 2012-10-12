@@ -16,7 +16,6 @@
  * Authored by: Michal Hruby <michal.hruby@canonical.com>
  */
 
-#include <boost/lexical_cast.hpp>
 #include <NuxCore/Logger.h>
 
 #include "UBusWrapper.h"

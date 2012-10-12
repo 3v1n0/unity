@@ -21,9 +21,6 @@
 
 #include <memory>
 #include <string>
-#include <vector>
-#include <boost/utility.hpp>
-#include <map>
 #include <set>
 
 #include <UnityCore/Variant.h>

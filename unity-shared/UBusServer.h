@@ -21,8 +21,6 @@
 
 #include <memory>
 #include <string>
-#include <vector>
-#include <boost/utility.hpp>
 #include <map>
 
 #include <UnityCore/Variant.h>
@@ -37,7 +35,6 @@ class UBusServer : public boost::noncopyable
 {
 public:
   UBusServer();
-  ~UBusServer();
 
   unsigned RegisterInterest(std::string const& interest_name,
                             UBusCallback const& slot);
