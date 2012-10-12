@@ -93,7 +93,7 @@ bamf_mock_application_set_icon (BamfMockApplication * self, const gchar * icon)
   g_return_if_fail (BAMF_IS_MOCK_APPLICATION (self));
 
   g_free (self->priv->icon);
-  self->priv->name = g_strdup (icon);
+  self->priv->icon = g_strdup (icon);
 }
 
 void
@@ -104,7 +104,6 @@ bamf_mock_application_set_children (BamfMockApplication * self, GList * children
   g_list_free (self->priv->children);
   self->priv->children = g_list_copy (children);
 }
-
 
 static void
 bamf_mock_application_finalize (GObject *object)
