@@ -149,7 +149,7 @@ TEST_F(TestBamfLauncherIcon, RemoteUri)
   EXPECT_TRUE(mock_icon->RemoteUri().empty());
 }
 
-TEST_F(TestApplicationLauncherIcon, EmptyTooltipUpdatesOnRunning)
+TEST_F(TestBamfLauncherIcon, EmptyTooltipUpdatesOnRunning)
 {
   ASSERT_TRUE(mock_icon->tooltip_text().empty());
   bamf_mock_application_set_name (mock_app, "Got Name");
@@ -165,7 +165,7 @@ TEST_F(TestApplicationLauncherIcon, EmptyTooltipUpdatesOnRunning)
   EXPECT_EQ(mock_icon->tooltip_text(), "Got Name");
 }
 
-TEST_F(TestApplicationLauncherIcon, InvalidIconUpdatesOnRunning)
+TEST_F(TestBamfLauncherIcon, InvalidIconUpdatesOnRunning)
 {
   ASSERT_EQ(mock_icon->icon_name(), DEFAULT_EMPTY_ICON);
   bamf_mock_application_set_icon (mock_app, "icon-name");
