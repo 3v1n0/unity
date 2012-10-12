@@ -129,7 +129,7 @@ void BackgroundEffectHelper::DirtyCache ()
     owner()->QueueDraw();
 }
 
-nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nux::Geometry geo, bool force_update)
+nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nux::Geometry const& geo, bool force_update)
 {
   bool should_update = force_update || cache_dirty;
 
@@ -327,7 +327,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
   return blur_texture_;
 }
 
-nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetRegion(nux::Geometry geo, bool force_update)
+nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetRegion(nux::Geometry const& geo, bool force_update)
 {
   bool should_update = force_update || cache_dirty;
 

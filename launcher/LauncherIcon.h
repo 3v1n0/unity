@@ -82,7 +82,7 @@ public:
 
   bool OpenQuicklist(bool select_first_item = false, int monitor = -1);
 
-  void        SetCenter(nux::Point3 center, int parent_monitor, nux::Geometry parent_geo);
+  void SetCenter(nux::Point3 const& center, int parent_monitor, nux::Geometry const& parent_geo);
 
   nux::Point3 GetCenter(int monitor);
 
