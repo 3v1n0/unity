@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Michal Hruby <michal.hruby@canonical.com>
  */
 
 #ifndef UNITY_UBUS_SERVER_H
