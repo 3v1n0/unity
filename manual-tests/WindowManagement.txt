@@ -69,8 +69,8 @@ Recovery (in case of failure):
 #. Press Super+S twice to force a full screen redraw.
 
 
-Show Desktop
---------------------
+Show Desktop fades windows smoothly
+------------------------------------
 Tests visual regressions to the show desktop/restore windows behavior.
 
 Setup:
