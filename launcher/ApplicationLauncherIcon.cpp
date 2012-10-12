@@ -79,7 +79,7 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(BamfApplication* app)
   glib::SignalBase* sig;
 
   sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view, "child-added",
-                          [&] (BamfView*, BamfView*) {
+                          [this] (BamfView*, BamfView*) {
                             EnsureWindowState();
                             UpdateMenus();
                             UpdateIconGeometries(GetCenters());
@@ -87,7 +87,7 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(BamfApplication* app)
   _gsignals.Add(sig);
 
   sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view, "child-removed",
-                          [&] (BamfView*, BamfView*) { EnsureWindowState(); });
+                          [this] (BamfView*, BamfView*) { EnsureWindowState(); });
   _gsignals.Add(sig);
 
   sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view, "child-moved",
@@ -97,39 +97,53 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(BamfApplication* app)
   _gsignals.Add(sig);
 
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "urgent-changed",
-                          [&] (BamfView*, gboolean urgent) {
+                          [this] (BamfView*, gboolean urgent) {
                             SetQuirk(Quirk::URGENT, urgent);
                           });
   _gsignals.Add(sig);
 
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "active-changed",
-                          [&] (BamfView*, gboolean active) {
+                          [this] (BamfView*, gboolean active) {
                             SetQuirk(Quirk::ACTIVE, active);
                           });
   _gsignals.Add(sig);
 
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "running-changed",
-                          [&] (BamfView*, gboolean running) {
+                          [this] (BamfView* view, gboolean running) {
                             SetQuirk(Quirk::RUNNING, running);
 
                             if (running)
                             {
+                              _source_manager.Remove(ICON_REMOVE_TIMEOUT);
+
+                              /* It can happen that these values are not set
+                               * during initialization if the view is closed
+                               * very early, so we need to make sure that when
+                               * the view is re-opened */
+                              if (tooltip_text().empty())
+                                tooltip_text = BamfName();
+
+                              if (icon_name == DEFAULT_ICON)
+                              {
+                                glib::String icon(bamf_view_get_icon(view));
+                                icon_name = (icon ? icon.Str() : DEFAULT_ICON);
+                              }
+
                               EnsureWindowState();
                               UpdateIconGeometries(GetCenters());
-                              _source_manager.Remove(ICON_REMOVE_TIMEOUT);
                             }
                           });
   _gsignals.Add(sig);
 
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "user-visible-changed",
-                          [&] (BamfView*, gboolean visible) {
+                          [this] (BamfView*, gboolean visible) {
                             if (!IsSticky())
                               SetQuirk(Quirk::VISIBLE, visible);
                           });
   _gsignals.Add(sig);
 
   sig = new glib::Signal<void, BamfView*>(bamf_view, "closed",
-                          [&] (BamfView*) {
+                          [this] (BamfView*) {
                             if (!IsSticky())
                             {
                               SetQuirk(Quirk::VISIBLE, false);
