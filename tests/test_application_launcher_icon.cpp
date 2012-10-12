@@ -35,6 +35,7 @@ using namespace unity::launcher;
 namespace
 {
 
+const std::string DEFAULT_EMPTY_ICON = "application-default-icon";
 const std::string USC_DESKTOP = BUILDDIR"/tests/data/applications/ubuntu-software-center.desktop";
 const std::string NO_ICON_DESKTOP = BUILDDIR"/tests/data/applications/no-icon.desktop";
 
@@ -83,9 +84,9 @@ TEST_F(TestApplicationLauncherIcon, TestCustomBackgroundColor)
 
 TEST_F(TestApplicationLauncherIcon, TestDefaultIcon)
 {
-  EXPECT_EQ(usc_icon->icon_name.Get(), "softwarecenter");
-  EXPECT_EQ(empty_icon->icon_name.Get(), "application-default-icon");
-  EXPECT_EQ(mock_icon->icon_name.Get(), "application-default-icon");
+  EXPECT_EQ(usc_icon->icon_name(), "softwarecenter");
+  EXPECT_EQ(empty_icon->icon_name(), DEFAULT_EMPTY_ICON);
+  EXPECT_EQ(mock_icon->icon_name(), DEFAULT_EMPTY_ICON);
 }
 
 TEST_F(TestApplicationLauncherIcon, Stick)
@@ -146,6 +147,38 @@ TEST_F(TestApplicationLauncherIcon, RemoteUri)
 {
   EXPECT_EQ(usc_icon->RemoteUri(), FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(USC_DESKTOP));
   EXPECT_TRUE(mock_icon->RemoteUri().empty());
+}
+
+TEST_F(TestApplicationLauncherIcon, EmptyTooltipUpdatesOnRunning)
+{
+  ASSERT_TRUE(mock_icon->tooltip_text().empty());
+  bamf_mock_application_set_name (mock_app, "Got Name");
+
+  ASSERT_TRUE(mock_icon->tooltip_text().empty());
+
+  bamf_mock_application_set_running(mock_app, TRUE);
+  EXPECT_EQ(mock_icon->tooltip_text(), "Got Name");
+
+  bamf_mock_application_set_running(mock_app, FALSE);
+  bamf_mock_application_set_name (mock_app, "New Name");
+  bamf_mock_application_set_running(mock_app, TRUE);
+  EXPECT_EQ(mock_icon->tooltip_text(), "Got Name");
+}
+
+TEST_F(TestApplicationLauncherIcon, InvalidIconUpdatesOnRunning)
+{
+  ASSERT_EQ(mock_icon->icon_name(), DEFAULT_EMPTY_ICON);
+  bamf_mock_application_set_icon (mock_app, "icon-name");
+
+  ASSERT_EQ(mock_icon->icon_name(), DEFAULT_EMPTY_ICON);
+
+  bamf_mock_application_set_running(mock_app, TRUE);
+  EXPECT_EQ(mock_icon->icon_name(), "icon-name");
+
+  bamf_mock_application_set_running(mock_app, FALSE);
+  bamf_mock_application_set_icon (mock_app, "new-icon-name");
+  bamf_mock_application_set_running(mock_app, TRUE);
+  EXPECT_EQ(mock_icon->icon_name(), "icon-name");
 }
 
 }

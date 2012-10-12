@@ -118,8 +118,8 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(BamfApplication* app)
 
                               /* It can happen that these values are not set
                                * during initialization if the view is closed
-                               * very early, so we need to make sure that when
-                               * the view is re-opened */
+                               * very early, so we need to make sure that they
+                               * are updated as soon as the view is re-opened. */
                               if (tooltip_text().empty())
                                 tooltip_text = BamfName();
 
