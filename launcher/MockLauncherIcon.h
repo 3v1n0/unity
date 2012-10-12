@@ -130,11 +130,11 @@ public:
     return false;
   }
 
-  void SetCenter(nux::Point3 center, int monitor, nux::Geometry geo)
+  void SetCenter(nux::Point3 const& center, int monitor, nux::Geometry const& geo)
   {
-    center.x += geo.x;
-    center.y += geo.y;
     center_[monitor] = center;
+    center_[monitor].x += geo.x;
+    center_[monitor].y += geo.y;
   }
 
   nux::Point3 GetCenter(int monitor)
