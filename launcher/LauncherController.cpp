@@ -112,6 +112,8 @@ Controller::Impl::Impl(Controller* parent)
   , launcher_key_press_time_(0)
   , dbus_owner_(g_bus_own_name(G_BUS_TYPE_SESSION, DBUS_NAME.c_str(), G_BUS_NAME_OWNER_FLAGS_NONE,
                                OnBusAcquired, nullptr, nullptr, this, nullptr))
+  , gdbus_connection_(nullptr)
+  , reg_id_(0)
 {
   edge_barriers_.options = parent_->options();
 
@@ -163,6 +165,9 @@ Controller::Impl::~Impl()
     if (launcher_ptr)
       launcher_ptr->GetParent()->UnReference();
   }
+
+  if (gdbus_connection_ && reg_id_)
+    g_dbus_connection_unregister_object(gdbus_connection_, reg_id_);   
 
   g_bus_unown_name(dbus_owner_);
 }
@@ -1408,7 +1413,6 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
 void Controller::Impl::OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer user_data)
 {
   GDBusNodeInfo* introspection_data = g_dbus_node_info_new_for_xml(DBUS_INTROSPECTION.c_str(), nullptr);
-  unsigned int reg_id;
 
   if (!introspection_data)
   {
@@ -1416,11 +1420,14 @@ void Controller::Impl::OnBusAcquired(GDBusConnection* connection, const gchar* n
     return;
   }
 
-  reg_id = g_dbus_connection_register_object(connection, DBUS_PATH.c_str(),
-                                             introspection_data->interfaces[0],
-                                             &interface_vtable, user_data,
-                                             nullptr, nullptr);
-  if (!reg_id)
+  auto self = static_cast<Controller::Impl*>(user_data);
+
+  self->gdbus_connection_ = connection;
+  self->reg_id_ = g_dbus_connection_register_object(connection, DBUS_PATH.c_str(),
+                                                    introspection_data->interfaces[0],
+                                                    &interface_vtable, user_data,
+                                                    nullptr, nullptr);
+  if (!self->reg_id_)
   {
     LOG_WARNING(logger) << "Object registration failed. Won't get dynamic launcher addition.";
   }
