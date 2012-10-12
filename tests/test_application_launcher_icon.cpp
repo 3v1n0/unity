@@ -27,6 +27,7 @@
 
 #include "ApplicationLauncherIcon.h"
 #include "FavoriteStore.h"
+#include "bamf-mock-application.h"
 
 using namespace unity;
 using namespace unity::launcher;
@@ -53,15 +54,16 @@ public:
     empty_icon = new launcher::ApplicationLauncherIcon(bamf_app);
     ASSERT_EQ(empty_icon->DesktopFile(), NO_ICON_DESKTOP);
 
-    bamf_app = static_cast<BamfApplication*>(g_object_new(BAMF_TYPE_APPLICATION, nullptr));
-    empty_app = new launcher::ApplicationLauncherIcon(bamf_app);
-    ASSERT_TRUE(empty_app->DesktopFile().empty());
+    mock_app = bamf_mock_application_new();
+    mock_icon = new launcher::ApplicationLauncherIcon(glib::object_cast<BamfApplication>(mock_app));
+    ASSERT_TRUE(mock_icon->DesktopFile().empty());
   }
 
   glib::Object<BamfMatcher> bamf_matcher;
+  glib::Object<BamfMockApplication> mock_app;
   nux::ObjectPtr<launcher::ApplicationLauncherIcon> usc_icon;
   nux::ObjectPtr<launcher::ApplicationLauncherIcon> empty_icon;
-  nux::ObjectPtr<launcher::ApplicationLauncherIcon> empty_app;
+  nux::ObjectPtr<launcher::ApplicationLauncherIcon> mock_icon;
 };
 
 TEST_F(TestApplicationLauncherIcon, Position)
@@ -83,7 +85,7 @@ TEST_F(TestApplicationLauncherIcon, TestDefaultIcon)
 {
   EXPECT_EQ(usc_icon->icon_name.Get(), "softwarecenter");
   EXPECT_EQ(empty_icon->icon_name.Get(), "application-default-icon");
-  EXPECT_EQ(empty_app->icon_name.Get(), "application-default-icon");
+  EXPECT_EQ(mock_icon->icon_name.Get(), "application-default-icon");
 }
 
 TEST_F(TestApplicationLauncherIcon, Stick)
@@ -143,7 +145,7 @@ TEST_F(TestApplicationLauncherIcon, Unstick)
 TEST_F(TestApplicationLauncherIcon, RemoteUri)
 {
   EXPECT_EQ(usc_icon->RemoteUri(), FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(USC_DESKTOP));
-  EXPECT_TRUE(empty_app->RemoteUri().empty());
+  EXPECT_TRUE(mock_icon->RemoteUri().empty());
 }
 
 }
