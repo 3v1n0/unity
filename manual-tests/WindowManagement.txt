@@ -71,14 +71,14 @@ Recovery (in case of failure):
 
 Show Desktop
 --------------------
-Tests show desktop behavior.
+Tests visual regressions to the show desktop/restore windows behavior.
 
 Setup:
 
 Action:
 #. Open several windows.
 #. Press Super+D to show the desktop.
-#. Press Super+D again.
+#. Press Super+D again to restore the previous state.
 
 Expected Result:
-  All open windows should fade out and then fade back in smoothly.
+  All open windows must fade out and then fade back in smoothly, without any popping or pulsing effect.
