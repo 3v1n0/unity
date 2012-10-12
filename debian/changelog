@@ -1,11 +1,11 @@
-unity (6.8.0-0ubuntu2) UNRELEASED; urgency=low
+unity (6.8.0-0ubuntu2) quantal; urgency=low
 
   * Cherry-pick a fix for having legal information in the dash. This links
     to a legal html document. The string itself in the dash is picked from
     ubuntu-online-account gnome-control-center integration and so, already
     translated and part of langpacks for 12.10. (LP: #1065652)
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 11 Oct 2012 20:09:12 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 12 Oct 2012 11:47:31 +0200
 
 unity (6.8.0-0ubuntu1) quantal-proposed; urgency=low
 
