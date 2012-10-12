@@ -67,7 +67,7 @@ namespace ui
 #define LUMIN_GREEN "0.59"
 #define LUMIN_BLUE "0.11"
 
-nux::NString gPerspectiveCorrectShader = TEXT(
+std::string gPerspectiveCorrectShader = TEXT(
 "[Vertex Shader]                                    \n"
 VertexShaderHeader
 "uniform mat4 ViewProjectionMatrix;                 \n\
@@ -112,7 +112,7 @@ void main()                                         \n\
 }                                                   \n\
 ");
 
-nux::NString PerspectiveCorrectVtx = TEXT(
+std::string PerspectiveCorrectVtx = TEXT(
 "!!ARBvp1.0                                 \n\
 ATTRIB iPos         = vertex.position;      \n\
 ATTRIB iColor       = vertex.attrib[3];     \n\
@@ -129,7 +129,7 @@ MOV   oColor, iColor;                       \n\
 MOV   oTexCoord0, vertex.attrib[8];         \n\
 END");
 
-nux::NString PerspectiveCorrectTexFrg = TEXT(
+std::string PerspectiveCorrectTexFrg = TEXT(
 "!!ARBfp1.0                                                   \n\
 PARAM color0 = program.local[0];                              \n\
 PARAM factor = program.local[1];                              \n\
@@ -151,7 +151,7 @@ MUL result.color.rgb, temp, colorify_color;                   \n\
 MOV result.color.a, color;                                    \n\
 END");
 
-nux::NString PerspectiveCorrectTexRectFrg = TEXT(
+std::string PerspectiveCorrectTexRectFrg = TEXT(
 "!!ARBfp1.0                                                   \n\
 PARAM color0 = program.local[0];                              \n\
 PARAM factor = program.local[1];                              \n\
@@ -1161,24 +1161,24 @@ void setup_shaders()
   if (nux::GetWindowThread()->GetGraphicsEngine().UsingGLSLCodePath())
   {
     shader_program_uv_persp_correction = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateShaderProgram();
-    shader_program_uv_persp_correction->LoadIShader(gPerspectiveCorrectShader.GetTCharPtr());
+    shader_program_uv_persp_correction->LoadIShader(gPerspectiveCorrectShader.c_str());
     shader_program_uv_persp_correction->Link();
   }
   else
   {
     asm_shader = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateAsmShaderProgram();
-    asm_shader->LoadVertexShader(TCHAR_TO_ANSI(*PerspectiveCorrectVtx));
+    asm_shader->LoadVertexShader(TCHAR_TO_ANSI(PerspectiveCorrectVtx.c_str()));
 
     if ((nux::GetGraphicsDisplay()->GetGpuDevice()->SUPPORT_GL_ARB_TEXTURE_NON_POWER_OF_TWO() == false) &&
         (nux::GetGraphicsDisplay()->GetGpuDevice()->SUPPORT_GL_EXT_TEXTURE_RECTANGLE() ||
          nux::GetGraphicsDisplay()->GetGpuDevice()->SUPPORT_GL_ARB_TEXTURE_RECTANGLE()))
     {
       // No support for non power of two textures but support for rectangle textures
-      asm_shader->LoadPixelShader(TCHAR_TO_ANSI(*PerspectiveCorrectTexRectFrg));
+      asm_shader->LoadPixelShader(TCHAR_TO_ANSI(PerspectiveCorrectTexRectFrg.c_str()));
     }
     else
     {
-      asm_shader->LoadPixelShader(TCHAR_TO_ANSI(*PerspectiveCorrectTexFrg));
+      asm_shader->LoadPixelShader(TCHAR_TO_ANSI(PerspectiveCorrectTexFrg.c_str()));
     }
 
     asm_shader->Link();
