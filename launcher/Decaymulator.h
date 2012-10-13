@@ -20,7 +20,7 @@
 #ifndef UNITY_DECAYMULATOR_H
 #define UNITY_DECAYMULATOR_H
 
-#include <Nux/Nux.h>
+#include <NuxCore/Property.h>
 #include <UnityCore/GLibSource.h>
 
 namespace unity
