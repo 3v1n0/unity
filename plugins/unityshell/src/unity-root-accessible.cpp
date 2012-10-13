@@ -259,7 +259,7 @@ add_window(UnityRootAccessible* self,
     unity_a11y_get_accessible(window);
 
   /* FIXME: temporal */
-  atk_object_set_name (window_accessible, window->GetWindowName().GetTCharPtr());
+  atk_object_set_name (window_accessible, window->GetWindowName().c_str());
 
   if (g_slist_find(self->priv->window_list, window_accessible))
     return;
@@ -338,7 +338,7 @@ search_for_launcher_window(UnityRootAccessible* self)
     nux_object = nux_object_accessible_get_object(accessible);
     bwindow = dynamic_cast<nux::BaseWindow*>(nux_object);
 
-    if ((bwindow!= NULL) && (g_strcmp0(bwindow->GetWindowName().GetTCharPtr(), "LauncherWindow") == 0))
+    if ((bwindow!= NULL) && (g_strcmp0(bwindow->GetWindowName().c_str(), "LauncherWindow") == 0))
     {
       found = TRUE;
       break;

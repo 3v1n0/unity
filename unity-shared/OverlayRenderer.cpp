@@ -204,7 +204,7 @@ void OverlayRendererImpl::OnBackgroundColorChanged(GVariant* args)
 
 void OverlayRendererImpl::InitASMInverseTextureMaskShader()
 {
-  nux::NString AsmVtx = 
+  std::string AsmVtx = 
       "!!ARBvp1.0                                 \n\
       ATTRIB iPos         = vertex.position;      \n\
       ATTRIB iColor       = vertex.attrib[3];     \n\
@@ -221,7 +221,7 @@ void OverlayRendererImpl::InitASMInverseTextureMaskShader()
       MOV   oTexCoord0, vertex.attrib[8];             \n\
       END";
 
-  nux::NString AsmFrg = 
+  std::string AsmFrg = 
       "!!ARBfp1.0                                       \n\
       TEMP tex0;                                        \n\
       TEMP temp0;                                       \n\
@@ -230,7 +230,7 @@ void OverlayRendererImpl::InitASMInverseTextureMaskShader()
       SUB result.color, {1.0, 1.0, 1.0, 1.0}, temp0.aaaa;\n\
       END";
 
-  nux::NString AsmFrgRect = 
+  std::string AsmFrgRect = 
     "!!ARBfp1.0                                         \n\
     TEMP tex0;                                          \n\
     TEMP temp0;                                         \n\
@@ -240,13 +240,13 @@ void OverlayRendererImpl::InitASMInverseTextureMaskShader()
     END";
 
   inverse_texture_mask_asm_prog_ = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateAsmShaderProgram();
-  inverse_texture_mask_asm_prog_->LoadVertexShader(AsmVtx.GetTCharPtr());
-  inverse_texture_mask_asm_prog_->LoadPixelShader(AsmFrg.GetTCharPtr());
+  inverse_texture_mask_asm_prog_->LoadVertexShader(AsmVtx.c_str());
+  inverse_texture_mask_asm_prog_->LoadPixelShader(AsmFrg.c_str());
   inverse_texture_mask_asm_prog_->Link();
 
   inverse_texture_rect_mask_asm_prog_ = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateAsmShaderProgram();
-  inverse_texture_rect_mask_asm_prog_->LoadVertexShader(AsmVtx.GetTCharPtr());
-  inverse_texture_rect_mask_asm_prog_->LoadPixelShader(AsmFrgRect.GetTCharPtr());
+  inverse_texture_rect_mask_asm_prog_->LoadVertexShader(AsmVtx.c_str());
+  inverse_texture_rect_mask_asm_prog_->LoadPixelShader(AsmFrgRect.c_str());
   inverse_texture_rect_mask_asm_prog_->Link();
 }
 
@@ -325,8 +325,8 @@ void OverlayRendererImpl::InitSlInverseTextureMaskShader()
 {
   nux::ObjectPtr<nux::IOpenGLVertexShader> VS = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateVertexShader();
   nux::ObjectPtr<nux::IOpenGLPixelShader> PS = nux::GetGraphicsDisplay()->GetGpuDevice()->CreatePixelShader();
-  nux::NString VSString;
-  nux::NString PSString;
+  std::string VSString;
+  std::string PSString;
 
   VSString =  
              NUX_VERTEX_SHADER_HEADER
@@ -356,8 +356,8 @@ void OverlayRendererImpl::InitSlInverseTextureMaskShader()
 
   // Textured 2D Primitive Shader
   inverse_texture_mask_prog_ = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateShaderProgram();
-  VS->SetShaderCode(TCHAR_TO_ANSI(*VSString));
-  PS->SetShaderCode(TCHAR_TO_ANSI(*PSString), "#define SAMPLERTEX2D");
+  VS->SetShaderCode(TCHAR_TO_ANSI(VSString.c_str()));
+  PS->SetShaderCode(TCHAR_TO_ANSI(PSString.c_str()), "#define SAMPLERTEX2D");
 
   inverse_texture_mask_prog_->ClearShaderObjects();
   inverse_texture_mask_prog_->AddShaderObject(VS);
@@ -484,7 +484,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
     gfx_context.GetRenderStates().SetBlend(false);
 #ifndef NUX_OPENGLES_20
     if (gfx_context.UsingGLSLCodePath())
-      gfx_context.QRP_GLSL_ColorBlendOverTex (larger_content_geo.x, larger_content_geo.y,
+      gfx_context.QRP_GLSL_ColorLayerOverTexture(larger_content_geo.x, larger_content_geo.y,
                                            larger_content_geo.width, larger_content_geo.height,
                                            bg_blur_texture_, texxform_absolute_bg, nux::color::White,
                                            bg_color_, nux::LAYER_BLEND_MODE_OVERLAY);
@@ -494,7 +494,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
                             larger_content_geo.width, larger_content_geo.height,
                             bg_blur_texture_, texxform_absolute_bg, nux::color::White);
 #else
-      gfx_context.QRP_GLSL_ColorBlendOverTex (larger_content_geo.x, larger_content_geo.y,
+      gfx_context.QRP_GLSL_ColorLayerOverTexture(larger_content_geo.x, larger_content_geo.y,
                                       larger_content_geo.width, larger_content_geo.height,
                                       bg_blur_texture_, texxform_absolute_bg, nux::color::White,
                                       bg_color_, nux::LAYER_BLEND_MODE_OVERLAY);
