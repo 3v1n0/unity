@@ -102,16 +102,10 @@ TEST_P(MultipleQuirks, DoubleBool2Bool) {
   machine.SetQuirk(quirk2, final_value2);
 
   if ((initial_value1 || initial_value2) != (final_value1 || final_value2))
-  {
     Utils::WaitUntil(sig_received);
-    ASSERT_EQ(hover, final_value1 || final_value2);
-  }
-  else
-  {
-    Utils::WaitForTimeoutMSec(20);
-    ASSERT_FALSE(sig_received);
-  }
 
+  Utils::WaitForTimeoutMSec(20);
+  ASSERT_EQ(hover, final_value1 || final_value2);
 }
 
 INSTANTIATE_TEST_CASE_P(TestLauncherHoverMachine, MultipleQuirks,
