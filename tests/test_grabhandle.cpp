@@ -118,7 +118,7 @@ public:
 Texture::Ptr
 MockGrabHandleTextureFactory::create ()
 {
-  Texture::Ptr pt(static_cast<unity::MT::Texture*>(new MockGrabHandleTexture());
+  Texture::Ptr pt(static_cast<unity::MT::Texture*>(new MockGrabHandleTexture()));
   return pt;
 }
 
