@@ -37,8 +37,6 @@ namespace
 nux::logging::Logger logger("unity.launcher.hudlaunchericon");
 }
 
-UBusManager HudLauncherIcon::ubus_manager_;
-
 HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
  : SingleMonitorLauncherIcon(IconType::HUD, 0)
  , launcher_hide_mode_(hide_mode)

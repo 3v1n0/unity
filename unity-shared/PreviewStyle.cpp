@@ -229,7 +229,7 @@ int Style::GetActionButtonHeight() const
 
 int Style::GetActionButtonMaximumWidth() const
 {
-  return 190;
+  return 175;
 }
 
 int Style::GetSpaceBetweenActions() const
