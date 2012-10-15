@@ -57,14 +57,14 @@ TEST_P(HideModeNever, Bool2Bool) {
   machine.SetQuirk(quirk, initial_value);
 
   bool sig_received = false;
-  machine.should_hide_changed.connect([&sig_received] (bool value) {
+  machine.should_hide_changed.connect([&sig_received] (bool /*value*/) {
     sig_received = true;
   });
 
   machine.SetQuirk(quirk, final_value);
-  Utils::WaitForTimeoutMSec(20);
 
-  ASSERT_FALSE(sig_received);
+  auto check_function = [&sig_received]() { return sig_received; };
+  Utils::WaitUntil(check_function, false, 20/1000);
 }
 
 INSTANTIATE_TEST_CASE_P(TestLauncherHideMachine, HideModeNever,
