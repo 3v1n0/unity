@@ -168,7 +168,7 @@ ShowdesktopHandlerWindowInterface::PostPaintAction ShowdesktopHandler::Animate (
 
 void ShowdesktopHandler::PaintOpacity (unsigned short &opacity)
 {
-  if (progress_ == 1.0f || progress_ == 0.0f)
+  if (progress_ == 0.0f)
     opacity = std::numeric_limits <unsigned short>::max();
   else
     opacity *= (1.0f - progress_);

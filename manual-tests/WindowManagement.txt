@@ -68,3 +68,17 @@ Recovery (in case of failure):
 #. Tap F11 to leave full screen.
 #. Press Super+S twice to force a full screen redraw.
 
+
+Show Desktop fades windows smoothly
+------------------------------------
+Tests visual regressions to the show desktop/restore windows behavior.
+
+Setup:
+
+Action:
+#. Open several windows.
+#. Press Super+D to show the desktop.
+#. Press Super+D again to restore the previous state.
+
+Expected Result:
+  All open windows must fade out and then fade back in smoothly, without any popping or pulsing effect.
