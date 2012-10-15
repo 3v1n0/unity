@@ -244,6 +244,7 @@ if (GTEST_SRC_DIR AND
                  test_unity_settings.cpp
                  test_volume_imp.cpp
                  test_volume_launcher_icon.cpp
+                 bamf-mock-application.c
                  gmockmount.c
                  gmockvolume.c
                  ${CMAKE_SOURCE_DIR}/dash/DashViewPrivate.cpp

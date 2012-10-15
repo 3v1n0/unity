@@ -266,17 +266,12 @@ nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList action
 {
   previews::Style& style = dash::previews::Style::Instance();
 
-  nux::VLayout* actions_buffer_v = new nux::VLayout();
-  actions_buffer_v->AddSpace(0, 1);
   nux::VLayout* actions_layout_v = new nux::VLayout();
   actions_layout_v->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
-
   uint rows = actions.size() / 2 + ((actions.size() % 2 > 0) ? 1 : 0);
   uint action_iter = 0;
   for (uint i = 0; i < rows; i++)
   {
-    nux::HLayout* actions_buffer_h = new nux::HLayout();
-    actions_buffer_h->AddSpace(0, 1);
     nux::HLayout* actions_layout_h = new TabIteratorHLayout(tab_iterator_);
     actions_layout_h->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
  
@@ -292,25 +287,19 @@ nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList action
         button->activate.connect(sigc::mem_fun(this, &Preview::OnActionActivated));
         buttons.push_back(button);
 
-        actions_layout_h->AddView(button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
+        actions_layout_h->AddView(button, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
     }
-    actions_buffer_h->AddLayout(actions_layout_h, 0);
-    actions_layout_v->AddLayout(actions_buffer_h, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
+
+    actions_layout_v->AddLayout(actions_layout_h, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
   }
 
-  actions_buffer_v->AddLayout(actions_layout_v, 0);
-  return actions_buffer_v;
+  return actions_layout_v;
 }
 
 nux::Layout* Preview::BuildVerticalActionsLayout(dash::Preview::ActionPtrList actions, std::list<nux::AbstractButton*>& buttons)
 {
   previews::Style& style = dash::previews::Style::Instance();
 
-  nux::HLayout* actions_buffer_h = new nux::HLayout();
-  actions_buffer_h->AddSpace(0, 1);
-
-  nux::VLayout* actions_buffer_v = new nux::VLayout();
-  actions_buffer_v->AddSpace(0, 1);
   nux::VLayout* actions_layout_v = new TabIteratorVLayout(tab_iterator_);
   actions_layout_v->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
 
@@ -329,10 +318,8 @@ nux::Layout* Preview::BuildVerticalActionsLayout(dash::Preview::ActionPtrList ac
 
       actions_layout_v->AddView(button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
   }
-  actions_buffer_v->AddLayout(actions_layout_v, 0);
-  actions_buffer_h->AddLayout(actions_buffer_v, 0);
 
-  return actions_buffer_h;
+  return actions_layout_v;
 }
 
 void Preview::UpdateCoverArtImage(CoverArt* cover_art)
