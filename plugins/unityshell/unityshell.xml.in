@@ -41,7 +41,7 @@
         </deps>
         <options>
             <group>
-                <_short>Behaviour</_short>
+                <_short>General</_short>
                 <option name="show_hud" type="key">
                     <_short>Key to show the HUD</_short>
                     <_long>Make the HUD appear with this key</_long>
@@ -111,6 +111,7 @@
 		    <passive_grab>false</passive_grab>
 		    <internal/>
 		</option>
+
                 <option name="alt_tab_detail_start" type="key">
         <_short>Key to expose the windows in the switcher</_short>
         <_long>Display a preview of the selected window; grid if there is multiple windows of that application</_long>
@@ -118,28 +119,33 @@
         <passive_grab>false</passive_grab>
         <internal/>
                 </option>
-    <option name="alt_tab_detail_stop" type="key">
-        <_short>Key to collapse windows in the switcher</_short>
-        <_long>Return the previews to icons in the switcher</_long>
-        <default>&lt;Alt&gt;Up</default>
-        <passive_grab>false</passive_grab>
-        <internal/>
-    </option>
+
+        <option name="alt_tab_detail_stop" type="key">
+          <_short>Key to collapse windows in the switcher</_short>
+          <_long>Return the previews to icons in the switcher</_long>
+          <default>&lt;Alt&gt;Up</default>
+          <passive_grab>false</passive_grab>
+          <internal/>
+        </option>
+
         <option name="alt_tab_next_window" type="key">
-        <_short>Key to flip through windows in the switcher</_short>
-        <_long>Flip through all the windows present in the switcher</_long>
-            <passive_grab>false</passive_grab>
+          <_short>Key to flip through windows in the switcher</_short>
+          <_long>Flip through all the windows present in the switcher</_long>
+          <passive_grab>false</passive_grab>
         </option>
+
         <option name="alt_tab_prev_window" type="key">
-            <_short>Key to flip through windows in the switcher backwards</_short>
-            <_long>Flip through all the windows present in the switcher, in reverse order</_long>
-            <passive_grab>false</passive_grab>
+          <_short>Key to flip through windows in the switcher backwards</_short>
+          <_long>Flip through all the windows present in the switcher, in reverse order</_long>
+          <passive_grab>false</passive_grab>
         </option>
-    <option name="show_minimized_windows" type="bool">
-        <_short>Show minimized windows in switcher</_short>
-        <_long>Hack to enable minimized windows in switcher. Disable and report bugs if problems are caused</_long>
-        <default>true</default>
-    </option>
+
+        <option name="show_minimized_windows" type="bool">
+          <_short>Show minimized windows in switcher</_short>
+          <_long>Hack to enable minimized windows in switcher. Disable and report bugs if problems are caused</_long>
+          <default>true</default>
+        </option>
+
               </group>
               <group>
                 <_short>Launcher</_short>
@@ -194,11 +200,13 @@
                     <_long>Switch the applications using the launcher</_long>
                     <default>&lt;Super&gt;Tab</default>
                   </option>
+
                   <option name="launcher_switcher_prev" type="key">
                     <_short>Key to start the launcher application switcher in reverse</_short>
                     <_long>Switch the applications using the launcher, in reverse order</_long>
                     <default>&lt;Super&gt;&lt;Shift&gt;Tab</default>
                   </option>
+
                 <option name="background_color" type="color">
                     <_short>Background Color</_short>
                     <_long>Background color override used for testing purposes</_long>
@@ -209,6 +217,7 @@
                         <alpha>0x00</alpha>
                     </default>
                 </option>
+
                 <option name="backlight_mode" type="int">
                     <_short>Backlight Mode</_short>
                     <_long>Change how the icons are backlit</_long>
@@ -236,6 +245,7 @@
                         <_name>Backlight and Edge Illumination Toggles</_name>
                     </desc>
                 </option>
+
                 <option name="launch_animation" type="int">
                     <_short>Launch Animation</_short>
                     <_long>Animation played when a launcher icon is in the process of spawning a process</_long>
@@ -255,6 +265,7 @@
                         <_name>Blink</_name>
                     </desc>
                 </option>
+
                 <option name="urgent_animation" type="int">
                     <_short>Urgent Animation</_short>
                     <_long>Animation played when a launcher icon is in the urgent state</_long>
@@ -274,6 +285,7 @@
                         <_name>Wiggle</_name>
                     </desc>
                 </option>
+
                 <option type="float" name="panel_opacity">
                     <_short>Panel Opacity</_short>
                     <_long>The opacity of the Panel background.</_long>
@@ -282,11 +294,13 @@
                     <max>1.0</max>
                     <precision>0.01</precision>
                 </option>
+
                 <option type="bool" name="panel_opacity_maximized_toggle">
                   <_short>Panel Opacity for Maximized Windows Toggle.</_short>
                   <_long>When a window is maximized and visible in the current viewport, the panel opacity is disabled</_long>
                   <default>false</default>
                 </option>
+
                 <option type="float" name="launcher_opacity">
                     <_short>Launcher Opacity</_short>
                     <_long>The opacity of the Launcher background.</_long>
@@ -295,6 +309,7 @@
                     <max>1.0</max>
                     <precision>0.0001</precision>
                 </option>
+
                 <option name="icon_size" type="int">
                     <_short>Launcher icon size</_short>
                     <_long>The size of the launcher icons</_long>
@@ -303,6 +318,7 @@
                     <max>64</max>
                     <precision>1</precision>
                 </option>
+
                 <option name="edge_responsiveness" type="float">
                     <_short>Launcher Reveal Edge Responsiveness</_short>
                     <_long>A conglomerate setting that modifies the overall responsiveness of the launcher reveal</_long>
@@ -311,6 +327,7 @@
                     <max>8.0</max>
                     <precision>0.1</precision>
                 </option>
+
                 <option name="reveal_pressure" type="int">
                     <_short>Launcher Reveal Pressure</_short>
                     <_long>Amount of mouse pressure required to reveal launcher</_long>
@@ -319,6 +336,7 @@
                     <max>1000</max>
                     <precision>1</precision>
                 </option>
+
                 <option name="overcome_pressure" type="int">
                     <_short>Launcher Edge Stop Overcome Pressure</_short>
                     <_long>Amount of mouse pressure required to push into the next monitor</_long>
@@ -327,6 +345,7 @@
                     <max>1000</max>
                     <precision>1</precision>
                 </option>
+
                 <option name="decay_rate" type="int">
                     <_short>Pressure Decay Rate</_short>
                     <_long>The rate at which mouse pressure decays</_long>
@@ -335,6 +354,7 @@
                     <max>1000</max>
                     <precision>1</precision>
                 </option>
+
                 <option name="stop_velocity" type="int">
                     <_short>Edge Stop Velocity</_short>
                     <_long>The maximum velocity at which the mouse will still be stopped</_long>
@@ -343,6 +363,7 @@
                     <max>1000</max>
                     <precision>1</precision>
                 </option>
+
                 <option name="edge_passed_disabled_ms" type="int">
                     <_short>Duration of Sticky Edge Release after Break</_short>
                     <_long>Sticky edges deactivated for number of milliseconds after the user breaks the barrier</_long>
@@ -351,6 +372,7 @@
                     <max>5000</max>
                     <precision>1</precision>
                 </option>
+
                 <option name="autohide_animation" type="int">
                     <_short>Hide Animation</_short>
                     <_long>Animation played when the launcher is showing or hiding</_long>
@@ -398,6 +420,7 @@
                 </option>
 
               </group>
+
               <group>
                 <_short>Dash</_short>
                 <option name="dash_blur_experimental" type="int">
