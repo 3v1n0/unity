@@ -83,8 +83,8 @@
                 </option>
 
                 <option name="panel_opacity_maximized_toggle" type="bool">
-                    <_short>Panel Opacity for Maximized Windows Toggle.</_short>
-                    <_long>When a window is maximized and visible in the current viewport, the panel opacity is disabled</_long>
+                    <_short>Panel Opacity for Maximized Windows Toggle</_short>
+                    <_long>When a window is maximized and visible in the current viewport, the panel opacity is disabled.</_long>
                     <default>false</default>
                 </option>
 
@@ -224,7 +224,7 @@
 
                 <option name="autohide_animation" type="int">
                     <_short>Hide Animation</_short>
-                    <_long>Animation played when the launcher is showing or hiding</_long>
+                    <_long>Animation played when the launcher is showing or hiding.</_long>
                     <min>0</min>
                     <max>3</max>
                     <default>3</default>
@@ -502,7 +502,7 @@
                 </option>
 
                 <option name="disable_show_desktop" type="bool">
-                    <_short>Disable Show Desktop in the switcher.</_short>
+                    <_short>Disable Show Desktop in the switcher</_short>
                     <_long>Disables the Show Desktop icon in the switcher.</_long>
                     <default>false</default>
                 </option>
