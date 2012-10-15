@@ -18,7 +18,6 @@
  */
 
 #include <gmock/gmock.h>
-#include "test_uscreen_mock.h"
 
 #include "FavoriteStore.h"
 #include "LauncherController.h"
@@ -34,7 +33,9 @@
 #include "PanelStyle.h"
 #include "UnitySettings.h"
 #include "test_utils.h"
+#include "test_uscreen_mock.h"
 #include "test_mock_devices.h"
+#include "bamf-mock-application.h"
 
 using namespace unity::launcher;
 using namespace testing;
@@ -131,7 +132,7 @@ struct MockBamfLauncherIcon : public BamfLauncherIcon
   typedef bool Fake;
 
   MockBamfLauncherIcon(Fake = true, std::string const& remote_uri = "")
-    : BamfLauncherIcon(static_cast<BamfApplication*>(g_object_new(BAMF_TYPE_APPLICATION, nullptr)))
+    : BamfLauncherIcon(BAMF_APPLICATION(bamf_mock_application_new()))
     , remote_uri_(remote_uri)
   {
     InitMock();

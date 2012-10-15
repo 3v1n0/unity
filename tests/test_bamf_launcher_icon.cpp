@@ -27,6 +27,7 @@
 
 #include "BamfLauncherIcon.h"
 #include "FavoriteStore.h"
+#include "bamf-mock-application.h"
 
 using namespace unity;
 using namespace unity::launcher;
@@ -34,6 +35,7 @@ using namespace unity::launcher;
 namespace
 {
 
+const std::string DEFAULT_EMPTY_ICON = "application-default-icon";
 const std::string USC_DESKTOP = BUILDDIR"/tests/data/applications/ubuntu-software-center.desktop";
 const std::string NO_ICON_DESKTOP = BUILDDIR"/tests/data/applications/no-icon.desktop";
 
@@ -53,15 +55,16 @@ public:
     empty_icon = new launcher::BamfLauncherIcon(bamf_app);
     ASSERT_EQ(empty_icon->DesktopFile(), NO_ICON_DESKTOP);
 
-    bamf_app = static_cast<BamfApplication*>(g_object_new(BAMF_TYPE_APPLICATION, nullptr));
-    empty_app = new launcher::BamfLauncherIcon(bamf_app);
-    ASSERT_TRUE(empty_app->DesktopFile().empty());
+    mock_app = bamf_mock_application_new();
+    mock_icon = new launcher::BamfLauncherIcon(glib::object_cast<BamfApplication>(mock_app));
+    ASSERT_TRUE(mock_icon->DesktopFile().empty());
   }
 
   glib::Object<BamfMatcher> bamf_matcher;
+  glib::Object<BamfMockApplication> mock_app;
   nux::ObjectPtr<launcher::BamfLauncherIcon> usc_icon;
   nux::ObjectPtr<launcher::BamfLauncherIcon> empty_icon;
-  nux::ObjectPtr<launcher::BamfLauncherIcon> empty_app;
+  nux::ObjectPtr<launcher::BamfLauncherIcon> mock_icon;
 };
 
 TEST_F(TestBamfLauncherIcon, Position)
@@ -81,9 +84,9 @@ TEST_F(TestBamfLauncherIcon, TestCustomBackgroundColor)
 
 TEST_F(TestBamfLauncherIcon, TestDefaultIcon)
 {
-  EXPECT_EQ(usc_icon->icon_name.Get(), "softwarecenter");
-  EXPECT_EQ(empty_icon->icon_name.Get(), "application-default-icon");
-  EXPECT_EQ(empty_app->icon_name.Get(), "application-default-icon");
+  EXPECT_EQ(usc_icon->icon_name(), "softwarecenter");
+  EXPECT_EQ(empty_icon->icon_name(), DEFAULT_EMPTY_ICON);
+  EXPECT_EQ(mock_icon->icon_name(), DEFAULT_EMPTY_ICON);
 }
 
 TEST_F(TestBamfLauncherIcon, Stick)
@@ -143,7 +146,39 @@ TEST_F(TestBamfLauncherIcon, Unstick)
 TEST_F(TestBamfLauncherIcon, RemoteUri)
 {
   EXPECT_EQ(usc_icon->RemoteUri(), FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(USC_DESKTOP));
-  EXPECT_TRUE(empty_app->RemoteUri().empty());
+  EXPECT_TRUE(mock_icon->RemoteUri().empty());
+}
+
+TEST_F(TestBamfLauncherIcon, EmptyTooltipUpdatesOnRunning)
+{
+  ASSERT_TRUE(mock_icon->tooltip_text().empty());
+  bamf_mock_application_set_name (mock_app, "Got Name");
+
+  ASSERT_TRUE(mock_icon->tooltip_text().empty());
+
+  bamf_mock_application_set_running(mock_app, TRUE);
+  EXPECT_EQ(mock_icon->tooltip_text(), "Got Name");
+
+  bamf_mock_application_set_running(mock_app, FALSE);
+  bamf_mock_application_set_name (mock_app, "New Name");
+  bamf_mock_application_set_running(mock_app, TRUE);
+  EXPECT_EQ(mock_icon->tooltip_text(), "Got Name");
+}
+
+TEST_F(TestBamfLauncherIcon, InvalidIconUpdatesOnRunning)
+{
+  ASSERT_EQ(mock_icon->icon_name(), DEFAULT_EMPTY_ICON);
+  bamf_mock_application_set_icon (mock_app, "icon-name");
+
+  ASSERT_EQ(mock_icon->icon_name(), DEFAULT_EMPTY_ICON);
+
+  bamf_mock_application_set_running(mock_app, TRUE);
+  EXPECT_EQ(mock_icon->icon_name(), "icon-name");
+
+  bamf_mock_application_set_running(mock_app, FALSE);
+  bamf_mock_application_set_icon (mock_app, "new-icon-name");
+  bamf_mock_application_set_running(mock_app, TRUE);
+  EXPECT_EQ(mock_icon->icon_name(), "icon-name");
 }
 
 }
