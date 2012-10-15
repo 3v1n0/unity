@@ -39,64 +39,75 @@
                 <plugin>expo</plugin>
             </requirement>
         </deps>
+
         <options>
             <group>
                 <_short>General</_short>
-                <option name="show_hud" type="key">
-                    <_short>Key to show the HUD</_short>
-                    <_long>Make the HUD appear with this key</_long>
-                    <default>&lt;Alt&gt;</default>
-                  </option>
 
-                  <option name="execute_command" type="key">
+                    <option name="show_hud" type="key">
+                        <_short>Key to show the HUD</_short>
+                        <_long>Make the HUD appear with this key</_long>
+                        <default>&lt;Alt&gt;</default>
+                    </option>
+
+                    <option name="execute_command" type="key">
                         <_short>Key to execute a command</_short>
                         <_long>Key to open a folder or execute a command</_long>
                         <default>&lt;Alt&gt;F2</default>
-                  </option>
-                  <option name="panel_first_menu" type="key">
+                    </option>
+
+                    <option name="panel_first_menu" type="key">
                         <_short>Key to open the first panel menu</_short>
                         <_long>Open the first menu on the panel, allowing keyboard navigation thereafter.</_long>
                         <default>&lt;Alt&gt;F10</default>
-                  </option>
+                    </option>
 
-              </group>
-              <group>
+            </group>
+            <group>
                 <_short>Switcher</_short>
-                <option name="alt_tab_timeout" type="bool">
-                      <_short>Automatically grid windows on timer in switcher</_short>
-                      <_long>After a short time, spread multiple windows of the same application out into a grid</_long>
-                      <default>true</default>
-                </option>
-                <option name="alt_tab_bias_viewport" type="bool">
-                      <_short>Bias alt-tab to prefer windows on the current viewport</_short>
-                      <_long>Bias the switcher to windows which are placed on the current viewport</_long>
-                      <default>true</default>
-                </option>
+
+                    <option name="alt_tab_timeout" type="bool">
+                        <_short>Automatically grid windows on timer in switcher</_short>
+                        <_long>After a short time, spread multiple windows of the same application out into a grid</_long>
+                        <default>true</default>
+                    </option>
+
+                    <option name="alt_tab_bias_viewport" type="bool">
+                          <_short>Bias alt-tab to prefer windows on the current viewport</_short>
+                          <_long>Bias the switcher to windows which are placed on the current viewport</_long>
+                          <default>true</default>
+                    </option>
+
                 <option name="disable_show_desktop" type="bool">
                       <_short>Disable Show Desktop in the switcher</_short>
                       <_long>Disables the Show Desktop icon in the switcher</_long>
                       <default>false</default>
                 </option>
+
                 <option name="alt_tab_forward" type="key">
                      <_short>Key to start the switcher</_short>
                      <_long>Start switching between windows</_long>
                      <default>&lt;Alt&gt;Tab</default>
                 </option>
+
                 <option name="alt_tab_prev" type="key">
                       <_short>Key to start the switcher in reverse</_short>
                       <_long>Start switching between windows in reverse order</_long>
                       <default>&lt;Alt&gt;&lt;Shift&gt;Tab</default>
                 </option>
+
                 <option name="alt_tab_forward_all" type="key">
                      <_short>Key to start the switcher for all viewports</_short>
                      <_long>Start switching between windows on all viewports</_long>
                      <default>&lt;Control&gt;&lt;Alt&gt;Tab</default>
                 </option>
+
                 <option name="alt_tab_prev_all" type="key">
                       <_short>Key to start the switcher in reverse for all viewports</_short>
                       <_long>Start switching between windows on all viewports, in reverse order</_long>
                       <default>&lt;Control&gt;&lt;Alt&gt;&lt;Shift&gt;Tab</default>
                 </option>
+
 		<option name="alt_tab_right" type="key">
 		    <_short>Go right in the switcher</_short>
 		    <_long>Navigate one window right in the switcher</_long>
@@ -104,6 +115,7 @@
 		    <passive_grab>false</passive_grab>
 		    <internal/>
 		</option>
+
 		<option name="alt_tab_left" type="key">
 		    <_short>Go left in the switcher</_short>
 		    <_long>Navigate one window left in the switcher</_long>
