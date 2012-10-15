@@ -384,12 +384,19 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
     // to compute its center
     RegisterIcon(result, GetLastIconPriority<ApplicationLauncherIcon>("", true));
 
-    // This will ensure that the center of the new icon is set, so that
-    // the animation could be done properly.
-    sources_.AddIdle([this, icon_x, icon_y, result] {
-      result->Animate(CurrentLauncher(), icon_x, icon_y);
-      return false;
-    });
+    if (icon_x > 0 || icon_y > 0)
+    {
+      // This will ensure that the center of the new icon is set, so that
+      // the animation could be done properly.
+      sources_.AddIdle([this, icon_x, icon_y, result] {
+        result->Animate(CurrentLauncher(), icon_x, icon_y);
+        return false;
+      });
+    }
+    else
+    {
+      result->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true); 
+    }
   }
 }
 

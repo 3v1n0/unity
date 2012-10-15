@@ -556,6 +556,31 @@ Window PluginAdapter::GetTopMostValidWindowInViewport() const
   return 0;
 }
 
+Window PluginAdapter::GetTopWindowAbove(Window xid) const
+{
+  CompWindow* window;
+  CompPoint screen_vp = m_Screen->vp();
+
+  auto const& windows = m_Screen->windows();
+  for (auto it = windows.rbegin(); it != windows.rend(); ++it)
+  {
+    window = *it;
+    if (window->defaultViewport() == screen_vp &&
+        window->isViewable() && window->isMapped() &&
+        !window->minimized() && !window->inShowDesktopMode() &&
+        !(window->type() & CompWindowTypeDockMask) &&
+        !(window->type() & CompWindowTypeSplashMask))
+    {
+      return window->id();
+    }
+    else if (window->id() == xid)
+    {
+      return 0;
+    }
+  }
+  return 0;
+}
+
 bool PluginAdapter::IsWindowClosable(Window window_id) const
 {
   CompWindow* window = m_Screen->findWindow(window_id);

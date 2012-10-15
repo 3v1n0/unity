@@ -31,19 +31,18 @@ namespace indicator
 
 Indicator::Indicator(std::string const& name)
   : name_(name)
-{
-}
+{}
 
 Indicator::~Indicator()
 {
-  for (auto entry : entries_)
+  for (auto const& entry : entries_)
     on_entry_removed.emit(entry->id());
 
   entries_.clear();
 
-  for (auto it : entries_connections_)
+  for (auto& it : entries_connections_)
   {
-    for (auto conn : it.second)
+    for (auto& conn : it.second)
       conn.disconnect();
 
     it.second.clear();
@@ -66,15 +65,16 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
 
   if (!entries_.empty())
   {
-    for (auto entry : entries_)
+    for (auto const& entry : entries_)
     {
       if (std::find(new_entries.begin(), new_entries.end(), entry) == new_entries.end())
         to_rm.push_back(entry);
     }
   }
 
-  for (auto entry : to_rm) {
-    for (auto conn : entries_connections_[entry])
+  for (auto const& entry : to_rm)
+  {
+    for (auto& conn : entries_connections_[entry])
       conn.disconnect();
 
     entries_connections_[entry].clear();
@@ -83,7 +83,7 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
     entries_.remove(entry);
   }
 
-  for (auto new_entry : new_entries)
+  for (auto const& new_entry : new_entries)
   {
     if (GetEntry(new_entry->id()))
       continue;
@@ -108,11 +108,26 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
 
 Entry::Ptr Indicator::GetEntry(std::string const& entry_id) const
 {
-  for (auto entry : entries_)
+  for (auto const& entry : entries_)
     if (entry->id() == entry_id)
       return entry;
 
   return Entry::Ptr();
+}
+
+int Indicator::EntryIndex(std::string const& entry_id) const
+{
+  int i = 0;
+  for (auto const& entry : entries_)
+  {
+    if (entry->id() == entry_id)
+    {
+      return i;
+    }
+    ++i;
+  }
+
+  return -1;
 }
 
 void Indicator::OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
@@ -135,7 +150,7 @@ void Indicator::OnEntryScroll(std::string const& entry_id, int delta)
 std::ostream& operator<<(std::ostream& out, Indicator const& i)
 {
   out << "<Indicator " << i.name() << std::endl;
-  for (auto entry : i.entries_)
+  for (auto const& entry : i.entries_)
   {
     out << "\t" << entry << std::endl;
   }

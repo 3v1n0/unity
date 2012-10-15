@@ -1950,10 +1950,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
 }
 
-void Launcher::PostDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-}
-
 long Launcher::PostLayoutManagement(long LayoutResult)
 {
   View::PostLayoutManagement(LayoutResult);
@@ -2058,9 +2054,7 @@ void Launcher::EndIconDrag()
     {
       if (!_drag_window->Cancelled() && _model->IconIndex(_drag_icon) != _drag_icon_position)
       {
-        if (_drag_icon->GetIconType() == AbstractLauncherIcon::IconType::DEVICE)
-          _drag_icon->Stick(false);
-
+        _drag_icon->Stick(false);
         _model->Save();
       }
 
