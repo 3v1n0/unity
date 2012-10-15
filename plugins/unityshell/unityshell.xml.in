@@ -191,7 +191,7 @@
     </option>
               </group>
               <group>
-                <_short>Experimental</_short>
+                <_short>Launcher</_short>
                 <option name="background_color" type="color">
                     <_short>Background Color</_short>
                     <_long>Background color override used for testing purposes</_long>
@@ -368,6 +368,9 @@
                     </desc>
                 </option>
 
+              </group>
+              <group>
+                <_short>Dash</_short>
                 <option name="dash_blur_experimental" type="int">
                     <_short>Dash Blur</_short>
                     <_long>Type of blur in the Dash</_long>
