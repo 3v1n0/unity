@@ -46,11 +46,11 @@ public:
   nux::Property<nux::View*> owner;
   nux::Property<bool> enabled;
 
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> GetBlurRegion(nux::Geometry geo, bool force_update = false);
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> GetBlurRegion(nux::Geometry const& geo, bool force_update = false);
   // We could add more functions here to get different types of effects based on the background texture
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> GetPixelatedRegion(nux::Rect rect, int pixel_size, bool update);
+  // nux::ObjectPtr<nux::IOpenGLBaseTexture> GetPixelatedRegion(nux::Rect rect, int pixel_size, bool update);
 
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> GetRegion(nux::Geometry geo, bool force_update = false);
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> GetRegion(nux::Geometry const& geometry, bool force_update = false);
 
   void DirtyCache();
 

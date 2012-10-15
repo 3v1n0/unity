@@ -67,7 +67,7 @@ namespace ui
 #define LUMIN_GREEN "0.59"
 #define LUMIN_BLUE "0.11"
 
-nux::NString gPerspectiveCorrectShader = TEXT(
+std::string gPerspectiveCorrectShader = TEXT(
 "[Vertex Shader]                                    \n"
 VertexShaderHeader
 "uniform mat4 ViewProjectionMatrix;                 \n\
@@ -112,7 +112,7 @@ void main()                                         \n\
 }                                                   \n\
 ");
 
-nux::NString PerspectiveCorrectVtx = TEXT(
+std::string PerspectiveCorrectVtx = TEXT(
 "!!ARBvp1.0                                 \n\
 ATTRIB iPos         = vertex.position;      \n\
 ATTRIB iColor       = vertex.attrib[3];     \n\
@@ -129,7 +129,7 @@ MOV   oColor, iColor;                       \n\
 MOV   oTexCoord0, vertex.attrib[8];         \n\
 END");
 
-nux::NString PerspectiveCorrectTexFrg = TEXT(
+std::string PerspectiveCorrectTexFrg = TEXT(
 "!!ARBfp1.0                                                   \n\
 PARAM color0 = program.local[0];                              \n\
 PARAM factor = program.local[1];                              \n\
@@ -151,7 +151,7 @@ MUL result.color.rgb, temp, colorify_color;                   \n\
 MOV result.color.a, color;                                    \n\
 END");
 
-nux::NString PerspectiveCorrectTexRectFrg = TEXT(
+std::string PerspectiveCorrectTexRectFrg = TEXT(
 "!!ARBfp1.0                                                   \n\
 PARAM color0 = program.local[0];                              \n\
 PARAM factor = program.local[1];                              \n\
@@ -246,11 +246,11 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
 
   GetInverseScreenPerspectiveMatrix(ViewMatrix, ProjectionMatrix, geo.width, geo.height, 0.1f, 1000.0f, DEGTORAD(90));
 
-  nux::Matrix4 PremultMatrix = ProjectionMatrix * ViewMatrix;
+  nux::Matrix4 const& PremultMatrix = ProjectionMatrix * ViewMatrix;
 
   std::list<RenderArg>::iterator it;
   int i;
-  for (it = args.begin(), i = 0; it != args.end(); ++it, i++)
+  for (it = args.begin(), i = 0; it != args.end(); ++it, ++i)
   {
 
     IconTextureSource* launcher_icon = it->icon;
@@ -343,19 +343,19 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
   }
 }
 
-void IconRenderer::UpdateIconTransform(ui::IconTextureSource* icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
+void IconRenderer::UpdateIconTransform(ui::IconTextureSource* icon, nux::Matrix4 const& ViewProjectionMatrix, nux::Geometry const& geo,
                                        float x, float y, float w, float h, float z, ui::IconTextureSource::TransformIndex index)
 {
-  UpdateIconSectionTransform (icon, ViewProjectionMatrix, geo, x, y, w, h, z, x, y, w, h, index);
+  UpdateIconSectionTransform(icon, ViewProjectionMatrix, geo, x, y, w, h, z, x, y, w, h, index);
 }
 
-void IconRenderer::UpdateIconSectionTransform(ui::IconTextureSource* icon, nux::Matrix4 ViewProjectionMatrix, nux::Geometry const& geo,
+void IconRenderer::UpdateIconSectionTransform(ui::IconTextureSource* icon, nux::Matrix4 const& ViewProjectionMatrix, nux::Geometry const& geo,
                                               float x, float y, float w, float h, float z, float xx, float yy, float ww, float hh, ui::IconTextureSource::TransformIndex index)
 {
-  nux::Vector4 v0 = nux::Vector4(x,     y,     z, 1.0f);
-  nux::Vector4 v1 = nux::Vector4(x,     y + h, z, 1.0f);
-  nux::Vector4 v2 = nux::Vector4(x + w, y + h, z, 1.0f);
-  nux::Vector4 v3 = nux::Vector4(x + w, y,     z, 1.0f);
+  nux::Vector4 v0(x,     y,     z, 1.0f);
+  nux::Vector4 v1(x,     y + h, z, 1.0f);
+  nux::Vector4 v2(x + w, y + h, z, 1.0f);
+  nux::Vector4 v3(x + w, y,     z, 1.0f);
 
   v0 = ViewProjectionMatrix * v0;
   v1 = ViewProjectionMatrix * v1;
@@ -377,9 +377,7 @@ void IconRenderer::UpdateIconSectionTransform(ui::IconTextureSource* icon, nux::
   v3.x =  geo.width  * (v3.x + 1.0f) / 2.0f - geo.width  / 2.0f + xx + ww / 2.0f;
   v3.y = -geo.height * (v3.y - 1.0f) / 2.0f - geo.height / 2.0f + yy + hh / 2.0f;
 
-
   std::vector<nux::Vector4>& vectors = icon->GetTransform(index, monitor);
-
   vectors[0] = v0;
   vectors[1] = v1;
   vectors[2] = v2;
@@ -705,23 +703,27 @@ nux::BaseTexture* IconRenderer::RenderCharToTexture(const char label, int width,
 
 void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
                                  RenderArg const& arg,
-                                 nux::ObjectPtr<nux::IOpenGLBaseTexture> icon,
-                                 nux::Color bkg_color,
-                                 nux::Color colorify,
+                                 nux::ObjectPtr<nux::IOpenGLBaseTexture> const& icon,
+                                 nux::Color const& bkg_color,
+                                 nux::Color const& colorify,
                                  float alpha,
                                  bool force_filter,
-                                 std::vector<nux::Vector4>& xform_coords)
+                                 std::vector<nux::Vector4> const& xform_coords)
 {
   if (icon.IsNull())
     return;
 
-  if (nux::Abs(arg.x_rotation) < 0.01f &&
-      nux::Abs(arg.y_rotation) < 0.01f &&
-      nux::Abs(arg.z_rotation) < 0.01f &&
+  if (std::abs(arg.x_rotation) < 0.01f &&
+      std::abs(arg.y_rotation) < 0.01f &&
+      std::abs(arg.z_rotation) < 0.01f &&
       !force_filter)
+  {
     icon->SetFiltering(GL_NEAREST, GL_NEAREST);
+  }
   else
+  {
     icon->SetFiltering(GL_LINEAR, GL_LINEAR);
+  }
 
   nux::Vector4 const& v0 = xform_coords[0];
   nux::Vector4 const& v1 = xform_coords[1];
@@ -969,7 +971,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
 }
 
 void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
-                                           nux::ObjectPtr<nux::IOpenGLBaseTexture> texture,
+                                           nux::ObjectPtr<nux::IOpenGLBaseTexture> const& texture,
                                            float progress_fill,
                                            float bias)
 {
@@ -1161,24 +1163,24 @@ void setup_shaders()
   if (nux::GetWindowThread()->GetGraphicsEngine().UsingGLSLCodePath())
   {
     shader_program_uv_persp_correction = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateShaderProgram();
-    shader_program_uv_persp_correction->LoadIShader(gPerspectiveCorrectShader.GetTCharPtr());
+    shader_program_uv_persp_correction->LoadIShader(gPerspectiveCorrectShader.c_str());
     shader_program_uv_persp_correction->Link();
   }
   else
   {
     asm_shader = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateAsmShaderProgram();
-    asm_shader->LoadVertexShader(TCHAR_TO_ANSI(*PerspectiveCorrectVtx));
+    asm_shader->LoadVertexShader(TCHAR_TO_ANSI(PerspectiveCorrectVtx.c_str()));
 
     if ((nux::GetGraphicsDisplay()->GetGpuDevice()->SUPPORT_GL_ARB_TEXTURE_NON_POWER_OF_TWO() == false) &&
         (nux::GetGraphicsDisplay()->GetGpuDevice()->SUPPORT_GL_EXT_TEXTURE_RECTANGLE() ||
          nux::GetGraphicsDisplay()->GetGpuDevice()->SUPPORT_GL_ARB_TEXTURE_RECTANGLE()))
     {
       // No support for non power of two textures but support for rectangle textures
-      asm_shader->LoadPixelShader(TCHAR_TO_ANSI(*PerspectiveCorrectTexRectFrg));
+      asm_shader->LoadPixelShader(TCHAR_TO_ANSI(PerspectiveCorrectTexRectFrg.c_str()));
     }
     else
     {
-      asm_shader->LoadPixelShader(TCHAR_TO_ANSI(*PerspectiveCorrectTexFrg));
+      asm_shader->LoadPixelShader(TCHAR_TO_ANSI(PerspectiveCorrectTexFrg.c_str()));
     }
 
     asm_shader->Link();

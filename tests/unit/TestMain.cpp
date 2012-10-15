@@ -26,7 +26,6 @@
 #include "Nux/WindowThread.h"
 
 void TestPanelServiceCreateSuite();
-void TestUBusCreateSuite();
 void TestStaticCairoTextCreateSuite();
 
 nux::WindowThread*
@@ -71,7 +70,6 @@ main(int argc, char** argv)
   //Keep alphabetical please
   TestPanelServiceCreateSuite();
   TestStaticCairoTextCreateSuite();
-  TestUBusCreateSuite();
 
   nux::WindowThread* thread = createThread();
 

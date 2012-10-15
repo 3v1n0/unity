@@ -31,7 +31,7 @@
 #include <UnityCore/GLibWrapper.h>
 
 #include "unity-shared/StaticCairoText.h"
-#include "unity-shared/ubus-server.h"
+#include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 
 

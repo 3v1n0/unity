@@ -139,7 +139,7 @@ public:
 
   virtual bool OpenQuicklist(bool select_first_item = false, int monitor = -1) = 0;
 
-  virtual void        SetCenter(nux::Point3 center, int monitor, nux::Geometry parent_geo) = 0;
+  virtual void SetCenter(nux::Point3 const& center, int monitor, nux::Geometry const& parent_geo) = 0;
 
   virtual nux::Point3 GetCenter(int monitor) = 0;
 

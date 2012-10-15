@@ -44,7 +44,7 @@
 
 #include "MultiMonitor.h"
 
-#include "unity-shared/ubus-server.h"
+#include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
@@ -693,18 +693,20 @@ LauncherIcon::OnCenterStabilizeTimeout()
 }
 
 void
-LauncherIcon::SetCenter(nux::Point3 center, int monitor, nux::Geometry geo)
+LauncherIcon::SetCenter(nux::Point3 const& center, int monitor, nux::Geometry const& geo)
 {
-  center.x += geo.x;
-  center.y += geo.y;
-  _center[monitor] = center;
   _parent_geo[monitor] = geo;
+
+  nux::Point3& new_center = _center[monitor];
+  new_center.x = center.x + geo.x;
+  new_center.y = center.y + geo.y;
+  new_center.z = center.z;
 
   if (monitor == _last_monitor)
   {
     int tip_x, tip_y;
     tip_x = geo.x + geo.width - 4 * geo.width / 48;
-    tip_y = _center[monitor].y;
+    tip_y = new_center.y;
 
     if (_quicklist && _quicklist->IsVisible())
       QuicklistManager::Default()->ShowQuicklist(_quicklist.GetPointer(), tip_x, tip_y);
@@ -712,7 +714,7 @@ LauncherIcon::SetCenter(nux::Point3 center, int monitor, nux::Geometry geo)
       _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
   }
 
-  auto cb_func = sigc::mem_fun(this, &LauncherIcon::OnCenterStabilizeTimeout);
+  auto const& cb_func = sigc::mem_fun(this, &LauncherIcon::OnCenterStabilizeTimeout);
   _source_manager.AddTimeout(500, cb_func, CENTER_STABILIZE_TIMEOUT);
 }
 
@@ -865,8 +867,7 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
       Present(0.5f, 1500);
     }
 
-    UBusServer* ubus = ubus_server_get_default();
-    ubus_server_send_message(ubus, UBUS_LAUNCHER_ICON_URGENT_CHANGED, g_variant_new_boolean(value));
+    UBusManager::SendMessage(UBUS_LAUNCHER_ICON_URGENT_CHANGED, g_variant_new_boolean(value));
   }
 
   if (quirk == Quirk::VISIBLE)

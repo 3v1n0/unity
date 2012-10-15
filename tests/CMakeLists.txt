@@ -63,14 +63,12 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
 add_executable (test-unit
                 unit/TestMain.cpp
                 unit/TestPanelService.cpp
-                unit/TestUBus.cpp
                 unit/TestStaticCairoText.cpp
                 ${CMAKE_SOURCE_DIR}/launcher/CairoBaseWindow.cpp
                 ${CMAKE_SOURCE_DIR}/unity-shared/Introspectable.cpp
                 ${CMAKE_SOURCE_DIR}/unity-shared/StaticCairoText.cpp
                 ../services/panel-service.c
                 ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
-                ${CMAKE_SOURCE_DIR}/unity-shared/ubus-server.cpp
                 )
 target_link_libraries (test-unit unity-shared ${LIBS})
 add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
@@ -149,6 +147,7 @@ if (GTEST_SRC_DIR AND
                  test_shortcut_model.cpp
                  test_shortcut_private.cpp
                  test_showdesktop_handler.cpp
+                 test_ubus.cpp
                  test_unityshell_private.cpp
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/AbstractLauncherIcon.cpp
@@ -168,6 +167,8 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/Introspectable.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/TextureCache.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/Timer.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/UBusServer.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/UBusWrapper.cpp
                  ${UNITY_SRC}/UnityshellPrivate.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/WindowManager.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/StandaloneWindowManager.cpp
@@ -246,6 +247,7 @@ if (GTEST_SRC_DIR AND
                  test_unity_settings.cpp
                  test_volume_imp.cpp
                  test_volume_launcher_icon.cpp
+                 bamf-mock-application.c
                  gmockmount.c
                  gmockvolume.c
                  ${CMAKE_SOURCE_DIR}/dash/DashViewPrivate.cpp
@@ -358,6 +360,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/Timer.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/TextureThumbnailProvider.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/ThumbnailGenerator.cpp
+                 ${CMAKE_SOURCE_DIR}/unity-shared/UBusServer.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/UBusWrapper.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/UScreen.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/UnitySettings.cpp
@@ -366,7 +369,6 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/unity-shared/UserThumbnailProvider.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/WindowManager.cpp
                  ${CMAKE_SOURCE_DIR}/unity-shared/XKeyboardUtil.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/ubus-server.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unityshell/src/WindowMinimizeSpeedController.cpp
                 )
   target_link_libraries(test-gtest gtest gmock unity-shared ${LIBS})
