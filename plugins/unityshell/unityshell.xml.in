@@ -368,6 +368,28 @@
                     </desc>
                 </option>
 
+                <option name="num_launchers" type="int">
+                    <_short>Launcher Monitors</_short>
+                    <_long>Monitors on which launchers will be displayed</_long>
+                    <min>0</min>
+                    <max>1</max>
+                    <default>0</default>
+                    <desc>
+                        <value>0</value>
+                        <_name>All Desktops</_name>
+                    </desc>
+                    <desc>
+                        <value>1</value>
+                        <_name>Primary Desktop</_name>
+                    </desc>
+                </option>
+
+                <option name="launcher_capture_mouse" type="bool">
+                  <_short>Launcher Capture Mouse</_short>
+                  <_long>Determines if the launcher edges should capture the mouse</_long>
+                  <default>true</default>
+                </option>
+
               </group>
               <group>
                 <_short>Dash</_short>
@@ -445,27 +467,6 @@
                     <default>300</default>
                 </option>
 
-                <option name="num_launchers" type="int">
-                    <_short>Launcher Monitors</_short>
-                    <_long>Monitors on which launchers will be displayed</_long>
-                    <min>0</min>
-                    <max>1</max>
-                    <default>0</default>
-                    <desc>
-                        <value>0</value>
-                        <_name>All Desktops</_name>
-                    </desc>
-                    <desc>
-                        <value>1</value>
-                        <_name>Primary Desktop</_name>
-                    </desc>
-                </option>
-
-                <option name="launcher_capture_mouse" type="bool">
-                  <_short>Launcher Capture Mouse</_short>
-                  <_long>Determines if the launcher edges should capture the mouse</_long>
-                  <default>true</default>
-                </option>
             </group>
         </options>
     </plugin>
