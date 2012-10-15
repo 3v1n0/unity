@@ -242,7 +242,7 @@ void View::SetQueries(Hud::Queries queries)
     button->SetMaximumWidth(content_width);
     button->SetQuery(query);
 
-    button_views_->AddView(button.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
+    button_views_->AddView(button.GetPointer(), 0, nux::MINOR_POSITION_START);
 
     button->click.connect([&](nux::View* view) {
       query_activated.emit(dynamic_cast<HudButton*>(view)->GetQuery());
@@ -313,7 +313,7 @@ void View::ShowEmbeddedIcon(bool show)
 
   if (show_embedded_icon_)
   {
-    layout_->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_LEFT,
+    layout_->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_START,
                      nux::MINOR_SIZE_FULL, 100.0f, nux::LayoutPosition::NUX_LAYOUT_BEGIN);
     AddChild(icon_.GetPointer());
   }
@@ -367,7 +367,7 @@ void View::SetupViews()
     icon_ = new Icon();
     {
       AddChild(icon_.GetPointer());
-      layout_->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+      layout_->AddView(icon_.GetPointer(), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
     }
 
     // fill the content layout
@@ -384,12 +384,12 @@ void View::SetupViews()
       search_bar_->search_hint = _("Type your command");
       search_bar_->live_search_reached.connect(sigc::mem_fun(this, &View::OnSearchChanged));
       AddChild(search_bar_.GetPointer());
-      content_layout_->AddView(search_bar_.GetPointer(), 0, nux::MINOR_POSITION_LEFT);
+      content_layout_->AddView(search_bar_.GetPointer(), 0, nux::MINOR_POSITION_START);
 
       button_views_ = new nux::VLayout();
       button_views_->SetMaximumWidth(content_width);
 
-      content_layout_->AddLayout(button_views_.GetPointer(), 1, nux::MINOR_POSITION_LEFT);
+      content_layout_->AddLayout(button_views_.GetPointer(), 1, nux::MINOR_POSITION_START);
     }
 
     content_layout_->geometry_changed.connect([&](nux::Area*, nux::Geometry& geo)
@@ -403,7 +403,7 @@ void View::SetupViews()
     });
 
 
-    layout_->AddLayout(content_layout_.GetPointer(), 1, nux::MINOR_POSITION_TOP);
+    layout_->AddLayout(content_layout_.GetPointer(), 1, nux::MINOR_POSITION_START);
   }
 
   super_layout->AddLayout(layout_.GetPointer(), 0);

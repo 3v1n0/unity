@@ -148,7 +148,7 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   _group_layout->AddLayout(new nux::SpaceLayout(top_space, top_space, top_space, top_space), 0);
 
   _header_view = new HeaderView(NUX_TRACKER_LOCATION);
-  _group_layout->AddView(_header_view, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+  _group_layout->AddView(_header_view, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
   _header_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   _header_layout->SetLeftAndRightPadding(_style.GetCategoryHeaderLeftPadding(), 0);

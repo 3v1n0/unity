@@ -81,7 +81,7 @@ void FilterBar::AddFilter(Filter::Ptr const& filter)
   FilterExpanderLabel* filter_view = factory_.WidgetForFilter(filter);
   AddChild(filter_view);
   filter_map_[filter] = filter_view;
-  GetLayout()->AddView(filter_view, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+  GetLayout()->AddView(filter_view, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 }
 
 void FilterBar::RemoveFilter(Filter::Ptr const& filter)

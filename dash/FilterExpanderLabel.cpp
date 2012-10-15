@@ -117,7 +117,7 @@ void FilterExpanderLabel::SetContents(nux::Layout* contents)
   // Since the contents is initially unowned, we don't want to Adopt it, just assign.
   contents_ = contents;
 
-  layout_->AddLayout(contents_.GetPointer(), 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+  layout_->AddLayout(contents_.GetPointer(), 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
   QueueDraw();
 }
@@ -163,7 +163,7 @@ void FilterExpanderLabel::BuildLayout()
   expander_layout_->AddView(arrow_layout_, 0, nux::MINOR_POSITION_CENTER);
   top_bar_layout_->AddSpace(1, 1);
 
-  layout_->AddLayout(top_bar_layout_, 0, nux::MINOR_POSITION_LEFT);
+  layout_->AddLayout(top_bar_layout_, 0, nux::MINOR_POSITION_START);
   layout_->SetVerticalInternalMargin(0);
 
   SetLayout(layout_);
@@ -205,7 +205,7 @@ void FilterExpanderLabel::DoExpandChange(bool change)
 
   if (change and contents_ and !contents_->IsChildOf(layout_))
   {
-    layout_->AddLayout(contents_.GetPointer(), 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL, 100.0f, nux::LayoutPosition(1));
+    layout_->AddLayout(contents_.GetPointer(), 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL, 100.0f, nux::LayoutPosition(1));
   }
   else if (!change and contents_ and contents_->IsChildOf(layout_))
   {

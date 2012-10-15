@@ -90,7 +90,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   _bg_darken_layer.reset(new nux::ColorLayer(darken_colour, false, rop));
 
   _layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
-  _layout->SetContentDistribution(nux::eStackLeft);
+  _layout->SetContentDistribution(nux::MAJOR_POSITION_START);
 
   _menu_view = new PanelMenuView();
   AddPanelView(_menu_view, 1);
@@ -98,7 +98,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   SetCompositionLayout(_layout);
 
   _tray = new PanelTray();
-  _layout->AddView(_tray, 0, nux::eCenter, nux::eFull);
+  _layout->AddView(_tray, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   AddChild(_tray);
 
   _indicators = new PanelIndicatorsView();
@@ -313,7 +313,7 @@ void PanelView::OnOverlayShown(GVariant* data)
 void PanelView::AddPanelView(PanelIndicatorsView* child,
                              unsigned int stretchFactor)
 {
-  _layout->AddView(child, stretchFactor, nux::eCenter, nux::eFull);
+  _layout->AddView(child, stretchFactor, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   auto conn = child->on_indicator_updated.connect(sigc::mem_fun(this, &PanelView::OnIndicatorViewUpdated));
   _on_indicator_updated_connections.push_back(conn);
   AddChild(child);

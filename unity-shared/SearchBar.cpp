@@ -217,7 +217,7 @@ void SearchBar::Init()
     expander_view_ = new ExpanderView(NUX_TRACKER_LOCATION);
     expander_view_->SetVisible(false);
     expander_view_->SetLayout(filter_layout_);
-    layout_->AddView(expander_view_, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL);
+    layout_->AddView(expander_view_, 0, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FULL);
 
     int width = style.GetFilterBarWidth() +
                 style.GetFilterResultsHighlightLeftPadding() +

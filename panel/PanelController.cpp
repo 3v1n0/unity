@@ -253,7 +253,7 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
       view->SetMonitor(i);
 
       layout->AddView(view, 1);
-      layout->SetContentDistribution(nux::eStackLeft);
+      layout->SetContentDistribution(nux::MAJOR_POSITION_START);
       layout->SetVerticalExternalMargin(0);
       layout->SetHorizontalExternalMargin(0);
 

@@ -246,7 +246,7 @@ void SocialPreview::SetupViews()
         comments_hint_->SetLines(-1);
         comments_hint_->SetFont(style.info_hint_bold_font().c_str());
         comments_hint_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_RIGHT);
-        comments_layout->AddView(comments_hint_.GetPointer(), 0, nux::MINOR_POSITION_TOP);
+        comments_layout->AddView(comments_hint_.GetPointer(), 0, nux::MINOR_POSITION_START);
 
         comments_ = new SocialPreviewComments(preview_model_, NUX_TRACKER_LOCATION);
         AddChild(comments_.GetPointer());
@@ -261,9 +261,9 @@ void SocialPreview::SetupViews()
       actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
       ///////////////////
 
-    full_data_layout_->AddLayout(main_social_info, 0, nux::MINOR_POSITION_TOP);
-    full_data_layout_->AddView(social_info, 1, nux::MINOR_POSITION_TOP);
-    //full_data_layout_->AddView(comments_.GetPointer(), 1, nux::MINOR_POSITION_TOP);
+    full_data_layout_->AddLayout(main_social_info, 0, nux::MINOR_POSITION_START);
+    full_data_layout_->AddView(social_info, 1, nux::MINOR_POSITION_START);
+    //full_data_layout_->AddView(comments_.GetPointer(), 1, nux::MINOR_POSITION_START);
 
     full_data_layout_->AddLayout(actions_layout, 0);
     /////////////////////

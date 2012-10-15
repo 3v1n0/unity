@@ -72,7 +72,7 @@ void LensBar::SetupHomeLens()
   icon->SetVisible(true);
   icon->active = true;
   icons_.push_back(icon);
-  layout_->AddView(icon, 0, nux::eCenter, nux::MINOR_SIZE_FULL);
+  layout_->AddView(icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   AddChild(icon);
 
   icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); });
@@ -85,7 +85,7 @@ void LensBar::AddLens(Lens::Ptr& lens)
   icon->SetVisible(lens->visible);
   lens->visible.changed.connect([icon](bool visible) { icon->SetVisible(visible); } );
   icons_.push_back(icon);
-  layout_->AddView(icon, 0, nux::eCenter, nux::eFix);
+  layout_->AddView(icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
   AddChild(icon);
 
   icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); });

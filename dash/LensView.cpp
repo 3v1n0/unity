@@ -404,8 +404,8 @@ void LensView::OnCategoryAdded(Category const& category)
 
   /* We need the full range of method args so we can specify the offset
    * of the group into the layout */
-  scroll_layout_->AddView(group, 0, nux::MinorDimensionPosition::eAbove,
-                          nux::MinorDimensionSize::eFull, 100.0f,
+  scroll_layout_->AddView(group, 0, nux::MinorDimensionPosition::MINOR_POSITION_START,
+                          nux::MinorDimensionSize::MINOR_SIZE_FULL, 100.0f,
                           (nux::LayoutPosition)index);
 }
 

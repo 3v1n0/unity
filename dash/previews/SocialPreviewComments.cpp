@@ -145,7 +145,7 @@ void SocialPreviewComments::SetupViews()
       comment_name->SetFont(style.info_hint_bold_font());
       comment_name->SetLines(-1);
       comment_name->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
-      name_layout->AddView(comment_name.GetPointer(), 0, nux::MINOR_POSITION_TOP);
+      name_layout->AddView(comment_name.GetPointer(), 0, nux::MINOR_POSITION_START);
     }
 
     StaticCairoTextPtr comment_time;
@@ -155,7 +155,7 @@ void SocialPreviewComments::SetupViews()
       comment_time->SetFont(style.info_hint_font());
       comment_time->SetLines(-1);
       comment_time->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_RIGHT);
-      name_layout->AddView(comment_time.GetPointer(), 0, nux::MINOR_POSITION_TOP);
+      name_layout->AddView(comment_time.GetPointer(), 0, nux::MINOR_POSITION_START);
     }
 
 
@@ -167,7 +167,7 @@ void SocialPreviewComments::SetupViews()
     comment_value->SetFont(style.info_hint_font());
     comment_value->SetLines(-7);
     comment_value->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
-    comment_layout->AddView(comment_value.GetPointer(), 1, nux::MINOR_POSITION_TOP);
+    comment_layout->AddView(comment_value.GetPointer(), 1, nux::MINOR_POSITION_START);
 
     Comment comment_views(comment_name, comment_value);
     comments_.push_back(comment_views);
