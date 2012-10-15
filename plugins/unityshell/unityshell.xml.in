@@ -73,7 +73,7 @@
                     </default>
                 </option>
 
-                <option type="float" name="panel_opacity">
+                <option name="panel_opacity" type="float">
                     <_short>Panel Opacity</_short>
                     <_long>The opacity of the Panel background.</_long>
                     <default>1.0</default>
@@ -82,7 +82,7 @@
                     <precision>0.01</precision>
                 </option>
 
-                <option type="bool" name="panel_opacity_maximized_toggle">
+                <option name="panel_opacity_maximized_toggle" type="bool">
                     <_short>Panel Opacity for Maximized Windows Toggle.</_short>
                     <_long>When a window is maximized and visible in the current viewport, the panel opacity is disabled</_long>
                     <default>false</default>
@@ -297,7 +297,7 @@
                     </desc>
                 </option>
 
-                <option type="float" name="launcher_opacity">
+                <option name="launcher_opacity" type="float">
                     <_short>Launcher Opacity</_short>
                     <_long>The opacity of the Launcher background.</_long>
                     <default>0.6667</default>
