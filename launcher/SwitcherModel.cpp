@@ -158,9 +158,13 @@ SwitcherModel::DetailXids()
 
   std::sort (results.begin (), results.end (), &CompareWindowsByActive);
 
-  // swap so we focus the last focused window first
   if (Selection() == _last_active_icon && results.size () > 1)
-    std::swap (results[0], results[1]);
+  {
+    for (unsigned int i = 0; i < results.size()-1; i++)
+    {
+      std::swap (results[i], results[i+1]);
+    }
+  }
 
   return results;
 }
