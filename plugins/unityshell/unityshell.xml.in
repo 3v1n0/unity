@@ -135,20 +135,20 @@
                 </option>
 
                 <option name="keyboard_focus" type="key">
-                    <_short>Key to put keyboard-focus on launcher</_short>
+                    <_short>Key to put keyboard-focus on the launcher</_short>
                     <_long>Set the keyboard-focus on the launcher so it can be navigated with the cursor-keys.</_long>
                     <default>&lt;Alt&gt;F1</default>
                 </option>
 
                 <option name="launcher_switcher_forward" type="key">
                     <_short>Key to start the launcher application switcher</_short>
-                    <_long>Switch the applications using the launcher.</_long>
+                    <_long>Switch applications using the launcher.</_long>
                     <default>&lt;Super&gt;Tab</default>
                 </option>
 
                 <option name="launcher_switcher_prev" type="key">
                     <_short>Key to start the launcher application switcher in reverse</_short>
-                    <_long>Switch the applications using the launcher, in reverse order.</_long>
+                    <_long>Switch applications using the launcher, in reverse order.</_long>
                     <default>&lt;Super&gt;&lt;Shift&gt;Tab</default>
                 </option>
 
@@ -295,7 +295,7 @@
 
                 <option name="icon_size" type="int">
                     <_short>Launcher icon size</_short>
-                    <_long>The size of the icons n the launcher.</_long>
+                    <_long>The size of the icons in the launcher.</_long>
                     <default>48</default>
                     <min>32</min>
                     <max>64</max>
