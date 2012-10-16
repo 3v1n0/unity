@@ -676,18 +676,6 @@ void UnityScreen::paintPanelShadow(const CompRegion& clip)
   nuxEpilogue();
 }
 
-void
-UnityWindow::updateIconPos (int   &wx,
-                            int   &wy,
-                            int   x,
-                            int   y,
-                            float width,
-                            float height)
-{
-  wx = x + (last_bound.width - width) / 2;
-  wy = y + (last_bound.height - height) / 2;
-}
-
 void UnityScreen::OnPanelStyleChanged()
 {
   panel_texture_has_changed_ = true;
@@ -853,21 +841,18 @@ void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
   GLMatrix matrix;
   matrix.toScreenSpace (UnityScreen::get (screen)->_last_output, -DEFAULT_Z_CAMERA);
 
-  nux::Geometry geo = bounding;
-  last_bound = geo;
-
   GLWindowPaintAttrib attrib = gWindow->lastPaintAttrib ();
   attrib.opacity = (GLushort) (alpha * G_MAXUSHORT);
 
   paintThumb (attrib,
               matrix,
               0,
-              geo.x,
-              geo.y,
-              geo.width,
-              geo.height,
-              geo.width,
-              geo.height);
+              bounding.x,
+              bounding.y,
+              bounding.width,
+              bounding.height,
+              bounding.width,
+              bounding.height);
 }
 
 void UnityScreen::EnableCancelAction(CancelActionTarget target, bool enabled, int modifiers)
@@ -1232,42 +1217,6 @@ bool UnityWindow::handleEvent(XEvent *event)
   }
 
   return handled;
-}
-
-bool UnityScreen::shellCouldBeHidden(CompOutput const& output)
-{
-  std::vector<Window> const& nuxwins(nux::XInputWindow::NativeHandleList());
-
-  // Loop through windows from front to back
-  CompWindowList const& wins = screen->windows();
-  for ( CompWindowList::const_reverse_iterator r = wins.rbegin()
-      ; r != wins.rend()
-      ; ++r
-      )
-  {
-    CompWindow* w = *r;
-
-    /*
-     * The shell is hidden if there exists any window that fully covers
-     * the output and is in front of all Nux windows on that output.
-     */
-    if (w->isMapped() &&
-        !(w->state () & CompWindowStateHiddenMask) &&
-        w->geometry().contains(output))
-    {
-      return true;
-    }
-    else
-    {
-      for (Window n : nuxwins)
-      {
-        if (w->id() == n && output.intersects(w->geometry()))
-          return false;
-      }
-    }
-  }
-
-  return false;
 }
 
 /* called whenever we need to repaint parts of the screen */
