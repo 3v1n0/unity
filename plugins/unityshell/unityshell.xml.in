@@ -90,7 +90,7 @@
 
                 <option name="dash_blur_experimental" type="int">
                     <_short>Dash Blur</_short>
-                    <_long>Type of blur in the Dash</_long>
+                    <_long>Type of blur in the Dash.</_long>
                     <min>0</min>
                     <max>2</max>
                     <default>2</default>
