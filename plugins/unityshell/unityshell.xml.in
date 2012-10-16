@@ -62,17 +62,6 @@
                     <default>&lt;Alt&gt;F10</default>
                 </option>
 
-                <option name="background_color" type="color">
-                    <_short>Background Color</_short>
-                    <_long>Background color override for the dash, launcher and switcher.</_long>
-                    <default>
-                        <red>0x00</red>
-                        <green>0x00</green>
-                        <blue>0x00</blue>
-                        <alpha>0x00</alpha>
-                    </default>
-                </option>
-
                 <option name="panel_opacity" type="float">
                     <_short>Panel Opacity</_short>
                     <_long>The opacity of the Panel background.</_long>
@@ -88,10 +77,16 @@
                     <default>false</default>
                 </option>
 
-            </group>
-
-            <group>
-                <_short>Dash</_short>
+                <option name="background_color" type="color">
+                    <_short>Background Color</_short>
+                    <_long>Background color override for the dash, launcher and switcher.</_long>
+                    <default>
+                        <red>0x00</red>
+                        <green>0x00</green>
+                        <blue>0x00</blue>
+                        <alpha>0x00</alpha>
+                    </default>
+                </option>
 
                 <option name="dash_blur_experimental" type="int">
                     <_short>Dash Blur</_short>
@@ -125,46 +120,6 @@
                   <_short>Enable Shortcut Hints Overlay</_short>
                   <_long>Enable Shortcut Hints Overlay</_long>
                   <default>true</default>
-                </option>
-
-                <option name="menus_fadein" type="int">
-                    <_short>Menus Fade-in duration</_short>
-                    <_long>Duration (in milliseconds) of the menus fade-in animation, used when the mouse goes over the top-panel.</_long>
-                    <min>0</min>
-                    <max>1000</max>
-                    <default>100</default>
-                </option>
-
-                <option name="menus_fadeout" type="int">
-                    <_short>Menus fade-out duration</_short>
-                    <_long>Duration (in milliseconds) of the menus fade-out animation, used when the mouse goes over the top-panel.</_long>
-                    <min>0</min>
-                    <max>1000</max>
-                    <default>120</default>
-                </option>
-
-                <option name="menus_discovery_duration" type="int">
-                    <_short>Menus discovery duration</_short>
-                    <_long>How many seconds the menus should be shown when a new application has been launched.</_long>
-                    <min>0</min>
-                    <max>10</max>
-                    <default>2</default>
-                </option>
-
-                <option name="menus_discovery_fadein" type="int">
-                    <_short>Menus discovery fade-in duration</_short>
-                    <_long>Duration (in milliseconds) of the menus fade-in animation, used when the menus of a new launched application have been shown.</_long>
-                    <min>0</min>
-                    <max>1000</max>
-                    <default>200</default>
-                </option>
-
-                <option name="menus_discovery_fadeout" type="int">
-                    <_short>Menus discovery fade-out duration</_short>
-                    <_long>Duration (in milliseconds) of the menus fade-out animation, used when the menus of a new launched application have been shown.</_long>
-                    <min>0</min>
-                    <max>1000</max>
-                    <default>300</default>
                 </option>
 
             </group>
@@ -246,22 +201,6 @@
                     </desc>
                 </option>
 
-                <option name="num_launchers" type="int">
-                    <_short>Launcher Monitors</_short>
-                    <_long>Selects on which monitor the launcher is present.</_long>
-                    <min>0</min>
-                    <max>1</max>
-                    <default>0</default>
-                    <desc>
-                        <value>0</value>
-                        <_name>All Displays</_name>
-                    </desc>
-                    <desc>
-                        <value>1</value>
-                        <_name>Primary Display</_name>
-                    </desc>
-                </option>
-
                 <option name="reveal_trigger" type="int">
                     <_short>Reveal Trigger</_short>
                     <_long></_long>
@@ -275,6 +214,22 @@
                     <desc>
                         <value>1</value>
                         <_name>Top Left Corner</_name>
+                    </desc>
+                </option>
+
+                <option name="num_launchers" type="int">
+                    <_short>Launcher Monitors</_short>
+                    <_long>Selects on which monitor the launcher is present.</_long>
+                    <min>0</min>
+                    <max>1</max>
+                    <default>0</default>
+                    <desc>
+                        <value>0</value>
+                        <_name>All Displays</_name>
+                    </desc>
+                    <desc>
+                        <value>1</value>
+                        <_name>Primary Display</_name>
                     </desc>
                 </option>
 
@@ -417,6 +372,50 @@
 
             </group>
 
+            <group>
+                <_short>Menus</_short>
+
+                <option name="menus_fadein" type="int">
+                    <_short>Menus Fade-in duration</_short>
+                    <_long>Duration (in milliseconds) of the menus fade-in animation, used when the mouse goes over the top-panel.</_long>
+                    <min>0</min>
+                    <max>1000</max>
+                    <default>100</default>
+                </option>
+
+                <option name="menus_fadeout" type="int">
+                    <_short>Menus fade-out duration</_short>
+                    <_long>Duration (in milliseconds) of the menus fade-out animation, used when the mouse goes over the top-panel.</_long>
+                    <min>0</min>
+                    <max>1000</max>
+                    <default>120</default>
+                </option>
+
+                <option name="menus_discovery_duration" type="int">
+                    <_short>Menus discovery duration</_short>
+                    <_long>How many seconds the menus should be shown when a new application has been launched.</_long>
+                    <min>0</min>
+                    <max>10</max>
+                    <default>2</default>
+                </option>
+
+                <option name="menus_discovery_fadein" type="int">
+                    <_short>Menus discovery fade-in duration</_short>
+                    <_long>Duration (in milliseconds) of the menus fade-in animation, used when the menus of a new launched application have been shown.</_long>
+                    <min>0</min>
+                    <max>1000</max>
+                    <default>200</default>
+                </option>
+
+                <option name="menus_discovery_fadeout" type="int">
+                    <_short>Menus discovery fade-out duration</_short>
+                    <_long>Duration (in milliseconds) of the menus fade-out animation, used when the menus of a new launched application have been shown.</_long>
+                    <min>0</min>
+                    <max>1000</max>
+                    <default>300</default>
+                </option>
+
+            </group>
 
             <group>
                 <_short>Switcher</_short>
@@ -489,15 +488,21 @@
                     <passive_grab>false</passive_grab>
                 </option>
 
+                <option name="show_minimized_windows" type="bool">
+                    <_short>Show previews of windows in switcher</_short>
+                    <_long>Enables miniature windows in the switcher.</_long>
+                    <default>true</default>
+                </option>
+
                 <option name="alt_tab_timeout" type="bool">
-                    <_short>Automatically grid windows on timer in switcher</_short>
+                    <_short>Enable timed automatic to show previews in switcher</_short>
                     <_long>Spread multiple windows of the same application out into a grid automatically after a short time.</_long>
                     <default>true</default>
                 </option>
 
                 <option name="alt_tab_bias_viewport" type="bool">
                     <_short>Bias alt-tab to prefer windows on the current viewport</_short>
-                    <_long>Bias the switcher to windows which are placed on the current viewport.</_long>
+                    <_long>Bias the switcher to prefer windows which are placed on the current viewport.</_long>
                     <default>true</default>
                 </option>
 
@@ -505,12 +510,6 @@
                     <_short>Disable Show Desktop in the switcher</_short>
                     <_long>Disables the Show Desktop icon in the switcher.</_long>
                     <default>false</default>
-                </option>
-
-                <option name="show_minimized_windows" type="bool">
-                    <_short>Show minimized windows in switcher</_short>
-                    <_long>Enables minimized windows in the switcher.</_long>
-                    <default>true</default>
                 </option>
 
             </group>
