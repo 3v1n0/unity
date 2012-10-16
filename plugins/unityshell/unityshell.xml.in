@@ -118,7 +118,7 @@
 
                 <option name="shortcut_overlay" type="bool">
                   <_short>Enable Shortcut Hints Overlay</_short>
-                  <_long>Enable Shortcut Hints Overlay</_long>
+                  <_long>Enables possibility to display an overlay showing available mouse and keyboard shortcuts.</_long>
                   <default>true</default>
                 </option>
 
