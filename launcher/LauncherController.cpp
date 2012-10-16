@@ -150,6 +150,13 @@ Controller::Impl::Impl(Controller* parent)
       parent_->KeyNavGrab();
 
     model_->SetSelection(reactivate_index);
+    AbstractLauncherIcon::Ptr const& selected = model_->Selection();
+
+    if (selected)
+    {
+      ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
+                       g_variant_new_string(selected->tooltip_text().c_str()));
+    }
   });
 
   parent_->AddChild(model_.get());
