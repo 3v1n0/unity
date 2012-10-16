@@ -7,7 +7,7 @@
 #include <unity-mt-grab-handle-group.h>
 #include <unity-mt-grab-handle-impl-factory.h>
 #include <unity-mt-texture.h>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 unsigned int unity::MT::MaximizedHorzMask = (1 << 0);
 unsigned int unity::MT::MaximizedVertMask = (1 << 1);
@@ -95,7 +95,7 @@ public:
 class MockGrabHandleTexture : public unity::MT::Texture
 {
 public:
-  typedef boost::shared_ptr <MockGrabHandleTexture> Ptr;
+  typedef std::shared_ptr <MockGrabHandleTexture> Ptr;
   MockGrabHandleTexture () : unity::MT::Texture () {};
 };
 
@@ -112,13 +112,14 @@ class MockGrabHandleWindow : public unity::MT::GrabHandleWindow
 public:
   MockGrabHandleWindow () : GrabHandleWindow () {};
   MOCK_METHOD4 (requestMovement, void (int, int, unsigned int, unsigned int));
-  MOCK_METHOD1 (raiseGrabHandle, void (const boost::shared_ptr <const unity::MT::GrabHandle> &));
+  MOCK_METHOD1 (raiseGrabHandle, void (const std::shared_ptr <const unity::MT::GrabHandle> &));
 };
 
 Texture::Ptr
 MockGrabHandleTextureFactory::create ()
 {
-  return boost::shared_static_cast <Texture> (MockGrabHandleTexture::Ptr (new MockGrabHandleTexture ()));
+  Texture::Ptr pt(static_cast<unity::MT::Texture*>(new MockGrabHandleTexture()));
+  return pt;
 }
 
 GrabHandle::Impl *

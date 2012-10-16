@@ -142,7 +142,7 @@ void LensBar::DoOpenLegalise()
     LOG_ERROR(logger) << "Could not open legal uri: " << error.Message();
   }
 
-  g_creat(legal_seen_file_path_.c_str(), O_CREAT);
+  g_creat(legal_seen_file_path_.c_str(), S_IRWXU);
 
   ubus_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
 }

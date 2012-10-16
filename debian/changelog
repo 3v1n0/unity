@@ -1,3 +1,42 @@
+unity (6.10.0-0ubuntu1) UNRELEASED; urgency=low
+
+  * New upstream release.
+    - Gap between the dash gradient and the panel one (LP: #1062375)
+    - [regression] Dash closes if the onscreen keyboard is outside of 
+      Dash' geometry (LP: #1058705)
+    - Dash - Category expander arrow is in expanded mode no matter if 
+      category is actually expanded (LP: #1053047)
+    - Unity panel does not show the kate menus in the correct order
+      (LP: #1062283)
+    - compiz crashed with SIGSEGV in g_type_check_instance_is_a() from 
+      g_object_unref() from _g_file_attribute_value_clear() from ... from 
+      query_info_async_cb() [libgvfsdbus.so] (LP: #1061510)
+    - dash's music album previews: can't drag the scrollbar (LP: #1056995)
+    - Small chunks of the panel shadow appear individually (and very dark)
+      (LP: #1057528)
+    - compiz crashed with SIGSEGV on Unity "Unmount" (LP: #1055812)
+    - [regression] Dash - 'More suggestions' icons in App Lens are too 
+      large (LP: #1052513)
+    - BamfLauncherIcon: ensure the icon and name values when the running 
+      state changes (LP: #772986)
+    - Changes the swapping order of the detail mode. Now the currently 
+      active window gets moved to the end, instead of getting swapped 
+      with the last used window (LP: #1061229)
+    - Fixes GetRegion tex coord maths (LP: #1058391)
+    - Fixed fade-in behavior of Unity's showdesktop function (LP: #1063249)
+    - Added <feature>showdesktop</feature> to unityshell.xml.in, because 
+      the feature showdesktop is provided by unityshell. (LP: #1006429)
+      (LP: #1006434) (LP: #1063171)
+    - Make HudLauncherIcon::ubus_manager_ "un-static" (LP: #1048274)
+    - Fix reference counting problem which leads to memory leaks and a 
+      crash in MT grab handles (LP: #1046201)
+    - Ensure categories with non-personal results can show up before empty 
+      categories with personal results (LP: #1067327)
+    - adds a legal link to the dash, also a new resource, and fix 
+      backup error (LP: #1065652) (LP: #1066646)
+
+ -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Tue, 16 Oct 2012 19:35:02 +0300
+
 unity (6.8.0-0ubuntu2) quantal; urgency=low
 
   * Cherry-pick a fix for having legal information in the dash. This links

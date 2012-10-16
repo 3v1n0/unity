@@ -21,10 +21,8 @@
 
 #include <Nux/Nux.h>
 #include <glib.h>
+#include <memory>
 #include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/weak_ptr.hpp>
 
 #include "unity-mt-texture.h"
 #include "unity-mt-grab-handle-window.h"
@@ -79,17 +77,17 @@ static const std::map <int, unsigned int> handlesMask = {
 class GrabHandleGroup;
 
 class GrabHandle :
-  public boost::enable_shared_from_this <GrabHandle>,
+  public std::enable_shared_from_this <GrabHandle>,
   boost::noncopyable
 {
 public:
 
-  typedef boost::shared_ptr <GrabHandle> Ptr;
+  typedef std::shared_ptr <GrabHandle> Ptr;
 
   static GrabHandle::Ptr create (Texture::Ptr    texture,
                                  unsigned int    width,
                                  unsigned int    height,
-                                 const boost::shared_ptr <GrabHandleGroup> &owner,
+                                 const std::shared_ptr <GrabHandleGroup> &owner,
                                  unsigned int id);
   ~GrabHandle();
 
@@ -160,10 +158,10 @@ private:
   GrabHandle(Texture::Ptr    texture,
              unsigned int    width,
              unsigned int    height,
-             const boost::shared_ptr <GrabHandleGroup> &owner,
+             const std::shared_ptr <GrabHandleGroup> &owner,
              unsigned int id);
 
-  boost::weak_ptr <GrabHandleGroup>      mOwner;
+  std::weak_ptr <GrabHandleGroup>      mOwner;
   Texture::Ptr                           mTexture;
   unsigned int                           mId;
   nux::Geometry                          mRect;

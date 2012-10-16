@@ -210,9 +210,10 @@ void MusicPreview::SetupViews()
       }
       else // otherwise we add a grid layout.
       {
-        hint_actions_layout->AddSpace(0, 1);
         action_buttons_.clear();
         actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), action_buttons_);
+        if (action_buttons_.size() < 2)
+          hint_actions_layout->AddSpace(0, 1);
         actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
       }
         /////////////////////

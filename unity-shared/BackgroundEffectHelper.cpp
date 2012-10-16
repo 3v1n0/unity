@@ -373,7 +373,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetRegion(nux::G
   texxform__bg.flip_v_coord = false;
   texxform__bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
   texxform__bg.uoffset = ((float) blur_geometry_.x) / monitor_width;
-  texxform__bg.voffset = ((float) monitor_height - blur_geometry_.y - blur_geometry_.height) / monitor_height;
+  texxform__bg.voffset = ((float) blur_geometry_.y) / monitor_height;
 
   {
     nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture = gpu_device->backup_texture0_;

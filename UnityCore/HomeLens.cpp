@@ -307,13 +307,19 @@ public:
         b_has_personal_content = it->second->provides_personal_content();
       }
 
+      unsigned a_results = results_per_category_[cat_a];
+      unsigned b_results = results_per_category_[cat_b];
+
       // prioritize categories that have private content
       if (a_has_personal_content != b_has_personal_content)
       {
-        return a_has_personal_content ? true : false;
+        // personal content results are first unless there are 0 results
+        if (a_has_personal_content && a_results > 0) return true;
+        else if (b_has_personal_content) return !(b_results > 0);
+        return false;
       }
 
-      return results_per_category_[cat_a] > results_per_category_[cat_b];
+      return a_results > b_results;
     }
 
     private:

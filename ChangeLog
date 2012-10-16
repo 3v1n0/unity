@@ -1,3 +1,207 @@
+2012-10-16  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Cherry-picked gord's legal branch: adds a legal link to the dash, also a new resource. Fixes: https://bugs.launchpad.net/bugs/1065652, https://bugs.launchpad.net/bugs/1066646. Approved by Marco Trevisan (Treviño).
+
+2012-10-16  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Cherry-picked gord's legal branch: adds a legal link to the dash, also a new resource
+
+2012-10-16  Michal Hruby  <michal.mhr@gmail.com>
+
+	Ensure categories with non-personal results can show up before empty categories with personal results. Fixes: https://bugs.launchpad.net/bugs/1067327. Approved by Łukasz Zemczak.
+
+2012-10-16  Michal Hruby  <michal.mhr@gmail.com>
+
+	Move the declaration
+
+2012-10-16  Michal Hruby  <michal.mhr@gmail.com>
+
+	Ensure categories with non-personal results can show up before empty categories with personal results
+
+2012-10-16  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Fix reference counting problem which leads to memory leaks and a crash in MT grab handles.. Fixes: https://bugs.launchpad.net/bugs/1046201. Approved by Łukasz Zemczak.
+
+2012-10-13  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Fix mt-handle-grab memory/window leak caused by reference counting which caused a crash
+
+2012-10-16  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Make HudLauncherIcon::ubus_manager_ "un-static" (LP bug 1048274). Fixes: https://bugs.launchpad.net/bugs/1048274. Approved by Brandon Schaefer.
+
+2012-10-12  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Make HudLauncherIcon::ubus_manager_ "un-static" (LP bug 1048274)
+
+2012-10-16  MC Return  <mc.return@gmx.net>
+
+	Added <feature>showdesktop</feature> to unityshell.xml.in, because the feature showdesktop is provided by unityshell.
+	Now it will be impossible to enable the Compiz "Show Desktop" and "Fade to Desktop" plug-ins together with Unity, but they will work normally without Unity.
+	CCSM will show a dialogue to the user if he tries to enable showdesktop or fadetodesktop if Unity runs, explaining the situation and allowing the user to choose.. Fixes: https://bugs.launchpad.net/bugs/1006429, https://bugs.launchpad.net/bugs/1006434, https://bugs.launchpad.net/bugs/1063171. Approved by Marco Trevisan (Treviño).
+
+2012-10-15  MC Return  <mc.return@gmx.net>
+
+	Added <feature>showdesktop</feature> to unityshell.xml.in, because the feature showdesktop is provided by unityshell.
+	Now it will be impossible to enable the Compiz "Show Desktop" and "Fade to Desktop" plug-ins together with Unity, but they will work normally without Unity.
+	CCSM will show a dialogue to the user if he tries to enable showdesktop or fadetodesktop if Unity runs, explaining the situation and allowing the user to choose.
+
+2012-10-15  MC Return  <mc.return@gmx.net>
+
+	Fixed fade-in behavior of Unity's showdesktop function. The windows were popping back in, fading out a bit and then fading in. This fix makes them fade back in smoothly.
+	Also added a manual test.. Fixes: https://bugs.launchpad.net/bugs/1063249. Approved by Łukasz Zemczak.
+
+2012-10-15  MC Return  <mc.return@gmx.net>
+
+	Fixed fade-in behavior of Unity's showdesktop function. The windows were popping back in, fading out a bit and then fading in. This fix makes them fade back in smoothly.
+	Also added a manual test.
+
+2012-10-15  Nicolas d'Offay  <nicolas.doffay@canonical.com>
+
+	Fixes GetRegion tex coord maths.. Fixes: . Approved by Neil J. Patel.
+
+2012-10-12  Nicolas d'Offay  <nicolas.doffay@canonical.com>
+
+	Transparent dash dodgy texture coords math fixed for 6.0.
+
+2012-10-15  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Changes the swapping order of the detail mode. Now the currently active window gets moved to the end, instead of getting swapped with the last used window. (LP: #1061229). Fixes: https://bugs.launchpad.net/bugs/1061229. Approved by Brandon Schaefer.
+
+2012-10-12  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Changes the swapping order of the detail mode. Now the currently active window gets moved to the end, instead of getting swapped with the last used window. (LP: #1061229)
+
+2012-10-15  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	BamfLauncherIcon: ensure the icon and name values when the running state changes
+	
+	This avoids to get "?" icons. Fixes: https://bugs.launchpad.net/bugs/772986. Approved by Brandon Schaefer.
+
+2012-10-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	TestBamfLauncherIcon: fix tests incon names
+
+2012-10-12  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	ApplicationLauncherIcon: ensure the icon and name values when the running state changes
+	
+	This avoids to get "?" icons
+
+2012-10-11  Michal Hruby  <michal.mhr@gmail.com>
+
+	Cherrypick r2820 from trunk - Respect use-small-icon hint set on UnityProtocolAnnotatedIcon. Fixes: https://bugs.launchpad.net/bugs/1052513. Approved by Łukasz Zemczak.
+
+2012-10-11  Michal Hruby  <michal.mhr@gmail.com>
+
+	Cherrypick r2820 from trunk - Respect use-small-icon hint set on UnityProtocolAnnotatedIcon
+
+2012-10-11  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	VolumeImp: use GCancellable to perform glib async operations. Fixes: https://bugs.launchpad.net/bugs/1055812. Approved by Nick Dedekind.
+
+2012-10-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	VolumeImp: use GCancellable to perform glib async operations
+
+2012-10-09  Marco Trevisan (Treviño)  <mail@3v1n0.net>
+
+	Merging with lp:unity/6.0
+
+2012-10-11  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Draw the panel shadow only within the redraw region. Using a bounding box
+	allowed parts to get redrawn when they should not, appearing as small chunks
+	of extra-dark panel shadow.
+	(LP: #1057528). Fixes: https://bugs.launchpad.net/bugs/1057528. Approved by Łukasz Zemczak.
+
+2012-10-10  Daniel van Vugt  <daniel.van.vugt@canonical.com>
+
+	Draw the panel shadow only within the redraw region. Using a bounding box
+	allowed parts to get redrawn when they should not, appearing as small chunks
+	of extra-dark panel shadow.
+	(LP: #1057528)
+
+2012-10-11  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed dash preview scrolling. (LP: #1056995). Fixes: https://bugs.launchpad.net/bugs/1056995. Approved by Brandon Schaefer, Łukasz Zemczak.
+
+2012-10-10  Nick Dedekind  <nicholas.dedekind@gmail.com>
+
+	Fixed button size errors due to spacers.
+
+2012-10-10  Michal Hruby  <michal.mhr@gmail.com>
+
+	Backport r2821 from trunk - fix refcounting in TrashLauncherIcon. Fixes: https://bugs.launchpad.net/bugs/1061510. Approved by Łukasz Zemczak.
+
+2012-10-10  Michal Hruby  <michal.mhr@gmail.com>
+
+	Backport r2821 from trunk - fix refcounting in TrashLauncherIcon
+
+2012-10-09  Albert Astals  <albert.astals@canonical.com>
+
+	Do not reuse the menu entries if their order changes
+	
+	Since the indicators api only have "add" and "remove" signals, if we reuse an entry that is not in the correct order it will case the menus or whatever this indicator represents to be in the wrong order. Fixes: https://bugs.launchpad.net/bugs/1062283. Approved by Marco Trevisan (Treviño).
+
+2012-10-09  Albert Astals  <albert.astals@canonical.com>
+
+	Do not reuse the menu entries if their order changes
+	
+	Since the indicators api only have "add" and "remove" signals, if we reuse an entry that is not in the correct order it will case the menus or whatever this indicator represents to be in the wrong order
+
+2012-10-08  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Cherry-picked from lp:unity rev 2812:
+	Use expand icon by default.. Fixes: https://bugs.launchpad.net/bugs/1053047. Approved by Marco Trevisan (Treviño).
+
+2012-10-08  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Cherry-picked from lp:unity rev 2812:
+	Use expand icon by default.
+
+2012-10-08  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	On screen keyboard now work with the Dash, when it is outside the Dashs' geo.. Fixes: https://bugs.launchpad.net/bugs/1058705. Approved by Łukasz Zemczak.
+
+2012-10-05  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Backported OSK/Dash fix
+
+2012-10-08  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Fix gap between dash/panel gradient. (cherry-pick lp:unity rev 2809) (LP: #1062375). Fixes: https://bugs.launchpad.net/bugs/1062375. Approved by Łukasz Zemczak.
+
+2012-10-08  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Cherry-pick lp:unity rev 2809.
+
+2012-10-08  Didier Roche  <didier.roche@canonical.com>
+
+	Ok, no need for the changed strings after all, Seb reuploaded the template file with the additional string and launchpad kept the 12.04 string, so we can revert it to that one.
+	The incoming langpack export will then repick the previous 12.04 translation.
+	
+	The POTFILES.in addition from the previous merge is still needed for next upload to not remove the string from the template and so export. So only revert the string change here. Fixes: https://bugs.launchpad.net/bugs/1062921. Approved by Łukasz Zemczak.
+
+2012-10-08  Didier Roche  <didier.roche@canonical.com>
+
+	go back to Workspace Switcher
+
+2012-10-08  Didier Roche  <didier.roche@canonical.com>
+
+	Fix untranslated Workspace Switcher in the panel.
+	Got back to 12.04 string to not add any string break to Quantal.
+	
+	Similar to rev 1062921 (LP: #1062921). Fixes: https://bugs.launchpad.net/bugs/1062921. Approved by Łukasz Zemczak.
+
+2012-10-08  Didier Roche  <didier.roche@canonical.com>
+
+	fix untranslated Workspace Switcher in the panel. Got back to 12.04 string to not add any string break to Quantal. Similar to rev 1062921 (LP: #1062921)
+
+2012-10-04  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Release\ 6.8.0
+
 2012-10-04  Marco Trevisan (Treviño)  <mail@3v1n0.net>
 
 	UnityWindow: add PixmapTexture struct: never separate a binded texture to its pixmap

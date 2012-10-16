@@ -548,6 +548,9 @@ void UnityScreen::setPanelShadowMatrix(const GLMatrix& matrix)
 
 void UnityScreen::paintPanelShadow(const CompRegion& clip)
 {
+  if (panel_controller_->opacity() == 0.0f)
+    return;
+
   if (sources_.GetSource(local::RELAYOUT_TIMEOUT))
     return;
 
@@ -573,22 +576,6 @@ void UnityScreen::paintPanelShadow(const CompRegion& clip)
   if (redraw.isEmpty())
     return;
 
-  const CompRect& bounds(redraw.boundingRect());
-
-  // Sub-rectangle of the shadow needing redrawing:
-  float x1 = bounds.x1();
-  float y1 = bounds.y1();
-  float x2 = bounds.x2();
-  float y2 = bounds.y2();
-
-  // Texture coordinates of the above rectangle:
-  float tx1 = (x1 - shadowX) / shadowWidth;
-  float ty1 = (y1 - shadowY) / shadowHeight;
-  float tx2 = (x2 - shadowX) / shadowWidth;
-  float ty2 = (y2 - shadowY) / shadowHeight;
-
-  nuxPrologue();
-
   // compiz doesn't use the same method of tracking monitors as our toolkit
   // we need to make sure we properly associate with the right monitor
   int current_monitor = -1;
@@ -604,8 +591,14 @@ void UnityScreen::paintPanelShadow(const CompRegion& clip)
     i++;
   }
 
-  if (!(launcher_controller_->IsOverlayOpen() && current_monitor == overlay_monitor_)
-      && panel_controller_->opacity() > 0.0f)
+  if (launcher_controller_->IsOverlayOpen() && current_monitor == overlay_monitor_)
+    return;
+
+  nuxPrologue();
+
+  const CompRect::vector& rects = redraw.rects();
+
+  for (auto const& r : rects)
   {
     foreach(GLTexture * tex, _shadow_texture)
     {
@@ -626,6 +619,18 @@ void UnityScreen::paintPanelShadow(const CompRegion& clip)
       colorData = { 0xFFFF, 0xFFFF, 0xFFFF,
                     (GLushort)(panel_controller_->opacity() * 0xFFFF)
                   };
+
+      // Sub-rectangle of the shadow needing redrawing:
+      float x1 = r.x1();
+      float y1 = r.y1();
+      float x2 = r.x2();
+      float y2 = r.y2();
+
+      // Texture coordinates of the above rectangle:
+      float tx1 = (x1 - shadowX) / shadowWidth;
+      float ty1 = (y1 - shadowY) / shadowHeight;
+      float tx2 = (x2 - shadowX) / shadowWidth;
+      float ty2 = (y2 - shadowY) / shadowHeight;
 
       vertexData = {
         x1, y1, 0,
@@ -1503,9 +1508,13 @@ void UnityScreen::handleEvent(XEvent* event)
       if (dash_controller_->IsVisible())
       {
         nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
-        nux::Geometry dash_geo = dash_controller_->GetInputWindowGeometry();
+        nux::Geometry const& dash_geo = dash_controller_->GetInputWindowGeometry();
 
-        if (!dash_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt))
+        Window dash_xid = dash_controller_->window()->GetInputWindowId();
+        Window top_xid = wm->GetTopWindowAbove(dash_xid);
+        nux::Geometry const& on_top_geo = wm->GetWindowGeometry(top_xid);
+
+        if (!dash_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt) && !on_top_geo.IsInside(pt))
         {
           dash_controller_->HideDash(false);
         }
@@ -1514,9 +1523,13 @@ void UnityScreen::handleEvent(XEvent* event)
       if (hud_controller_->IsVisible())
       {
         nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
-        nux::Geometry hud_geo = hud_controller_->GetInputWindowGeometry();
+        nux::Geometry const& hud_geo = hud_controller_->GetInputWindowGeometry();
 
-        if (!hud_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt))
+        Window hud_xid = dash_controller_->window()->GetInputWindowId();
+        Window top_xid = wm->GetTopWindowAbove(hud_xid);
+        nux::Geometry const& on_top_geo = wm->GetWindowGeometry(top_xid);
+
+        if (!hud_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt) && !on_top_geo.IsInside(pt))
         {
           hud_controller_->HideHud(false);
         }
