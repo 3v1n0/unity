@@ -285,7 +285,8 @@ void Launcher::AddProperties(GVariantBuilder* builder)
   .add("hide-quirks", _hide_machine.DebugHideQuirks())
   .add("hover-quirks", _hover_machine.DebugHoverQuirks())
   .add("icon-size", _icon_size)
-  .add("shortcuts_shown", _shortcuts_shown);
+  .add("shortcuts_shown", _shortcuts_shown),
+  .add("tooltip-shown", _active_tooltip != nullptr);
 }
 
 void Launcher::SetMousePosition(int x, int y)

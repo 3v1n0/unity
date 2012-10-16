@@ -70,4 +70,6 @@ TEST_P(HideModeNever, Bool2Bool) {
 INSTANTIATE_TEST_CASE_P(TestLauncherHideMachine, HideModeNever,
     Combine(ValuesIn(QUIRKS), Bool(), Bool()));
 
+// TODO: write tests for HideModeAutohide.
+
 }
