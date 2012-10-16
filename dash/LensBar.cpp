@@ -16,11 +16,17 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
+#include <glib/gstdio.h>
+#include "LensBar.h"
 #include <NuxCore/Logger.h>
 #include "config.h"
+#include <Nux/HLayout.h>
+#include <Nux/LayeredLayout.h>
 
+#include "unity-shared/DashStyle.h"
+#include "unity-shared/StaticCairoText.h"
 #include "unity-shared/CairoTexture.h"
-#include "LensBar.h"
+#include "unity-shared/UBusMessages.h"
 
 namespace unity
 {
@@ -41,7 +47,12 @@ NUX_IMPLEMENT_OBJECT_TYPE(LensBar);
 
 LensBar::LensBar()
   : nux::View(NUX_TRACKER_LOCATION)
+  , info_previously_shown_(false)
 {
+  glib::String cachedir(g_strdup(g_get_user_cache_dir())); 
+  legal_seen_file_path_ = cachedir.Str() + "/unitydashlegalseen";
+  info_previously_shown_ = (g_file_test(legal_seen_file_path_.c_str(), G_FILE_TEST_EXISTS)) ? true : false;
+
   SetupBackground();
   SetupLayout();
   SetupHomeLens();
@@ -58,10 +69,50 @@ void LensBar::SetupBackground()
 
 void LensBar::SetupLayout()
 {
+  legal_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
+  std::string legal_text("<span underline='single'>");
+  legal_text.append(g_dgettext("credentials-control-center", "Legal notice"));
+  legal_text.append("</span>");
+  legal_ = new nux::StaticCairoText(legal_text);
+  legal_->SetFont("Ubuntu 14px");
+  legal_layout_->AddSpace(1, 1);
+  legal_layout_->SetLeftAndRightPadding(0, 10);
+  info_icon_ = new IconTexture(Style::Instance().GetInformationTexture(), 22, 22); 
+  legal_layout_->AddView(info_icon_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+  legal_layout_->AddView(legal_,  0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+  
+  info_icon_->SetVisible(info_previously_shown_);
+  legal_->SetVisible(!info_previously_shown_);
+  
+  info_icon_->mouse_click.connect([&] (int a, int b, unsigned long c, unsigned long d) 
+  {
+    DoOpenLegalise();
+  });
+
+  legal_->mouse_click.connect([&] (int a, int b, unsigned long c, unsigned long d) 
+  {
+    info_previously_shown_ = true;
+
+    info_icon_->SetVisible(info_previously_shown_);
+    legal_->SetVisible(!info_previously_shown_);
+
+    DoOpenLegalise();
+    QueueRelayout();
+    QueueDraw();
+  });
+
+
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout_->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
-  SetLayout(layout_);
+  
+  layered_layout_ = new nux::LayeredLayout();
+  layered_layout_->AddLayer(layout_);
+  layered_layout_->AddLayout(legal_layout_);
+  layered_layout_->SetPaintAll(true);
+  layered_layout_->SetInputMode(nux::LayeredLayout::InputMode::INPUT_MODE_COMPOSITE);
 
+  SetLayout(layered_layout_);
+  
   SetMinimumHeight(LENSBAR_HEIGHT);
   SetMaximumHeight(LENSBAR_HEIGHT);
 }
@@ -77,6 +128,23 @@ void LensBar::SetupHomeLens()
 
   icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); });
   icon->key_nav_focus_activate.connect([&, icon](nux::Area*){ SetActive(icon); });
+}
+
+void LensBar::DoOpenLegalise()
+{
+  glib::Error error;
+  std::string legal_file_path = "file://";
+  legal_file_path.append(PKGDATADIR);
+  legal_file_path.append("/searchingthedashlegalnotice.html");
+  g_app_info_launch_default_for_uri(legal_file_path.c_str(), NULL, &error);
+  if (error)
+  {
+    LOG_ERROR(logger) << "Could not open legal uri: " << error.Message();
+  }
+
+  g_creat(legal_seen_file_path_.c_str(), S_IRWXU);
+
+  ubus_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
 }
 
 void LensBar::AddLens(Lens::Ptr& lens)
@@ -112,7 +180,7 @@ void LensBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 
   bg_layer_->SetGeometry(base);
   nux::GetPainter().RenderSinglePaintLayer(graphics_engine, base, bg_layer_.get());
-
+ 
   graphics_engine.PopClippingRectangle();
 }
 
@@ -139,11 +207,11 @@ void LensBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   }
   else if (!IsFullRedraw())
   {
-    ++pushed_paint_layers;
+    pushed_paint_layers += 2;
     nux::GetPainter().PushLayer(graphics_engine, bg_layer_->GetGeometry(), bg_layer_.get());
   }
 
-  layout_->ProcessDraw(graphics_engine, true);
+  GetLayout()->ProcessDraw(graphics_engine, true);
 
   if (pushed_paint_layers)
     nux::GetPainter().PopBackground(pushed_paint_layers);
@@ -170,6 +238,27 @@ void LensBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   }
 
   graphics_engine.PopClippingRectangle();
+}
+
+nux::Area* LensBar::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
+{
+  //LayeredLayout is acting a little screwy, events are not passing past the first layout like instructed,
+  //so we manually override if the cursor is on the right hand side of the lensbar 
+  auto geo = GetAbsoluteGeometry();
+  int info_width = (info_previously_shown_) ? info_icon_->GetGeometry().width : legal_->GetGeometry().width;
+  
+  if (mouse_position.x - geo.x < geo.width - info_width - 10)
+  {
+    return nux::View::FindAreaUnderMouse(mouse_position, event_type);
+  }
+  else
+  {
+    if (info_previously_shown_)
+      return dynamic_cast<nux::Area*>(info_icon_);
+    else
+      return dynamic_cast<nux::Area*>(legal_);
+  }
+  
 }
 
 void LensBar::SetActive(LensBarIcon* activated)

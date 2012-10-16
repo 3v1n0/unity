@@ -170,3 +170,35 @@ Actions:
 Expected Result:
   The button A must not be highlighted.
   The button B must be highlighted.
+
+
+Preview Scrolling Drag
+------------------------------
+This tests that a preview with a scrollbar can be scrolled by dragging the scrollbar.
+
+Setup:
+#. Open dash.
+#. Open Music Lens.
+#. Open a preview for an album which has a scrollbar due to more tracks that can fit on screen.
+
+Actions:
+#. Scroll down the tracks by dragging the scrollbar.
+
+Expected Result:
+  The scroll view will scroll down the list of tracks.
+
+
+Preview Scrolling Mouse Wheel
+------------------------------
+This tests that a preview with a scrollbar can be scrolled by using the mouse wheel.
+
+Setup:
+#. Open dash.
+#. Open Music Lens.
+#. Open a preview for an album which has a scrollbar due to more tracks that can fit on screen.
+
+Actions:
+#. Scroll down the tracks by using the mouse wheel.
+
+Expected Result:
+  The scroll view will scroll down the list of tracks.

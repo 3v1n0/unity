@@ -212,15 +212,27 @@ private:
 
       if (icon.IsType(UNITY_PROTOCOL_TYPE_ANNOTATED_ICON))
       {
-        UnityProtocolAnnotatedIcon *anno;
-        anno = UNITY_PROTOCOL_ANNOTATED_ICON(icon.RawPtr());
+        glib::Object<UnityProtocolAnnotatedIcon> anno(glib::object_cast<UnityProtocolAnnotatedIcon>(icon));
         GIcon* base_icon = unity_protocol_annotated_icon_get_icon(anno);
         glib::String gicon_string(g_icon_to_string(base_icon));
 
+        // ensure that annotated icons aren't cached by the IconLoader
         no_cache = true;
-        auto helper_slot = sigc::bind(sigc::mem_fun(this, &IconLoaderTask::BaseIconLoaded), glib::object_cast<UnityProtocolAnnotatedIcon>(icon));
-        int base_icon_width = max_width > 0 ? max_width - RIBBON_PADDING * 2 : -1;
-        int base_icon_height = base_icon_width < 0 ? max_height - RIBBON_PADDING *2 : max_height;
+
+        auto helper_slot = sigc::bind(sigc::mem_fun(this, &IconLoaderTask::BaseIconLoaded), anno);
+        int base_icon_width, base_icon_height;
+        if (unity_protocol_annotated_icon_get_use_small_icon(anno))
+        {
+          // FIXME: although this pretends to be generic, we're just making
+          // sure that icons requested to have 96px will be 64
+          base_icon_width = max_width > 0 ? max_width * 2 / 3 : max_width;
+          base_icon_height = max_height > 0 ? max_height * 2 / 3 : max_height;
+        }
+        else
+        {
+          base_icon_width = max_width > 0 ? max_width - RIBBON_PADDING * 2 : -1;
+          base_icon_height = base_icon_width < 0 ? max_height - RIBBON_PADDING *2 : max_height;
+        }
         helper_handle = impl->LoadFromGIconString(gicon_string.Str(),
                                                   base_icon_width,
                                                   base_icon_height,
@@ -518,7 +530,7 @@ private:
     }
 
     void BaseIconLoaded(std::string const& base_icon_string,
-                        int max_width, int max_height,
+                        int base_max_width, int base_max_height,
                         glib::Object<GdkPixbuf> const& base_pixbuf,
                         glib::Object<UnityProtocolAnnotatedIcon> const& anno_icon)
     {
@@ -529,16 +541,32 @@ private:
           "' size: " << gdk_pixbuf_get_width(base_pixbuf) << 'x' <<
                         gdk_pixbuf_get_height(base_pixbuf);
 
+        int result_width, result_height, dest_x, dest_y;
+        if (unity_protocol_annotated_icon_get_use_small_icon(anno_icon))
+        {
+          result_width = max_width > 0 ? max_width : MAX(max_height, gdk_pixbuf_get_width(base_pixbuf));
+          result_height = max_height > 0 ? max_height : MAX(max_width, gdk_pixbuf_get_height(base_pixbuf));
+
+          dest_x = (result_width - gdk_pixbuf_get_width(base_pixbuf)) / 2;
+          dest_y = (result_height - gdk_pixbuf_get_height(base_pixbuf)) / 2;
+        }
+        else
+        {
+          result_width = gdk_pixbuf_get_width(base_pixbuf) + RIBBON_PADDING * 2;
+          result_height = gdk_pixbuf_get_height(base_pixbuf);
+
+          dest_x = RIBBON_PADDING;
+          dest_y = 0;
+        }
         // we need extra space for the ribbon
-        result = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, 
-                                gdk_pixbuf_get_width(base_pixbuf) + RIBBON_PADDING * 2,
-                                gdk_pixbuf_get_height(base_pixbuf));
+        result = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8,
+                                result_width, result_height);
         gdk_pixbuf_fill(result, 0x0);
         gdk_pixbuf_copy_area(base_pixbuf, 0, 0,
                              gdk_pixbuf_get_width(base_pixbuf),
                              gdk_pixbuf_get_height(base_pixbuf),
                              result,
-                             RIBBON_PADDING, 0);
+                             dest_x, dest_y);
         // FIXME: can we composite the pixbuf in helper thread?
         UnityProtocolCategoryType category = unity_protocol_annotated_icon_get_category(anno_icon);
         auto helper_slot = sigc::bind(sigc::mem_fun(this, &IconLoaderTask::CategoryIconLoaded), anno_icon);

@@ -22,9 +22,7 @@
 #include <Nux/Nux.h>
 #include <glib.h>
 #include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/weak_ptr.hpp>
+#include <memory>
 
 #include "unity-mt-grab-handle.h"
 #include "unity-mt-texture.h"
@@ -37,12 +35,12 @@ namespace MT
 extern unsigned int FADE_MSEC;
 
 class GrabHandleGroup :
-  public boost::enable_shared_from_this <GrabHandleGroup>,
+  public std::enable_shared_from_this <GrabHandleGroup>,
   boost::noncopyable
 {
 public:
 
-  typedef boost::shared_ptr <GrabHandleGroup> Ptr;
+  typedef std::shared_ptr <GrabHandleGroup> Ptr;
 
   static GrabHandleGroup::Ptr create (GrabHandleWindow *owner,
                                       std::vector<TextureSize> &textures);
@@ -59,7 +57,7 @@ public:
 
   void hide();
   void show(unsigned int handles = ~0);
-  void raiseHandle (const boost::shared_ptr <const unity::MT::GrabHandle> &);
+  void raiseHandle (const std::shared_ptr <const unity::MT::GrabHandle> &);
 
   std::vector <TextureLayout> layout(unsigned int handles);
 
