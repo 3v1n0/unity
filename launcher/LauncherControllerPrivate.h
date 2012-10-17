@@ -28,7 +28,9 @@
 #include "AbstractLauncherIcon.h"
 #include "DeviceLauncherSection.h"
 #include "DevicesSettingsImp.h"
+#ifdef UNITY_HAS_X_ORG_SUPPORT
 #include "EdgeBarrierController.h"
+#endif
 #include "LauncherController.h"
 #include "Launcher.h"
 #include "LauncherEntryRemote.h"
@@ -126,7 +128,11 @@ public:
   LauncherEntryRemoteModel remote_model_;
   AbstractLauncherIcon::Ptr expo_icon_;
   AbstractLauncherIcon::Ptr desktop_icon_;
+
+#ifdef UNITY_HAS_X_ORG_SUPPORT
   ui::EdgeBarrierController edge_barriers_;
+#endif
+
   LauncherList launchers;
 
   unsigned sort_priority_;
