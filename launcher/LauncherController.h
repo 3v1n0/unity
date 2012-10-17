@@ -77,7 +77,6 @@ public:
   void KeyNavNext();
   void KeyNavPrevious();
   bool KeyNavIsActive() const;
-  void OpenQuicklist();
 
   bool IsOverlayOpen() const;
 

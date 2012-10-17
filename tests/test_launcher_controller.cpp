@@ -1522,7 +1522,7 @@ TEST_F(TestLauncherController, UpdateSelectionChanged)
   ProcessMessages();
   ASSERT_EQ(last_selection_change, "Ubuntu One");
 
-  lc.OpenQuicklist();
+  lc.Impl()->OpenQuicklist();
   // This doesn't really close the quicklist but it's enough
   // to trick the launcher controller into beleiving the quicklist closed
   UBusManager::SendMessage(UBUS_QUICKLIST_END_KEY_NAV);
