@@ -205,6 +205,14 @@ struct TestLauncherController : public testing::Test
     lc.multiple_launchers = true;
   }
 
+  void ProcessUBusMessages()
+  {
+    bool expired = false;
+    glib::Idle idle([&] { expired = true; return false; },
+                    glib::Source::Priority::LOW);
+    Utils::WaitUntil(expired);
+  }
+
 protected:
   struct MockLauncherController : Controller
   {
@@ -1500,14 +1508,6 @@ TEST_F(TestLauncherController, UpdateNumWorkspacesEnable)
   EXPECT_TRUE(lc.Impl()->expo_icon_->IsVisible());
 }
 
-static void ProcessMessages()
-{
-  bool expired = false;
-  glib::Idle idle([&] { expired = true; return false; },
-                  glib::Source::Priority::LOW);
-  Utils::WaitUntil(expired);
-}
-
 TEST_F(TestLauncherController, UpdateSelectionChanged)
 {
   UBusManager manager;
@@ -1515,19 +1515,19 @@ TEST_F(TestLauncherController, UpdateSelectionChanged)
   manager.RegisterInterest(UBUS_LAUNCHER_SELECTION_CHANGED, [&] (GVariant *data) { last_selection_change = g_variant_get_string(data, 0); });
 
   lc.KeyNavGrab();
-  ProcessMessages();
-  ASSERT_EQ(last_selection_change, "Dash Home");
+  ProcessUBusMessages();
+  ASSERT_EQ(lc.Impl()->model_->Selection()->tooltip_text(), last_selection_change);
 
   lc.KeyNavNext();
-  ProcessMessages();
-  ASSERT_EQ(last_selection_change, "Ubuntu One");
+  ProcessUBusMessages();
+  ASSERT_EQ(lc.Impl()->model_->Selection()->tooltip_text(), last_selection_change);
 
   lc.Impl()->OpenQuicklist();
   // This doesn't really close the quicklist but it's enough
   // to trick the launcher controller into beleiving the quicklist closed
   UBusManager::SendMessage(UBUS_QUICKLIST_END_KEY_NAV);
-  ProcessMessages();
-  ASSERT_EQ(last_selection_change, "Ubuntu One");
+  ProcessUBusMessages();
+  ASSERT_EQ(lc.Impl()->model_->Selection()->tooltip_text(), last_selection_change);
 }
 
 }
