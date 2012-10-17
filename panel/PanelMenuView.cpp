@@ -820,9 +820,10 @@ void PanelMenuView::Refresh(bool force)
 
   if (!_switcher_showing && !_launcher_keynav)
   {
-    if (_panel_title != new_title)
+    glib::String escaped(g_markup_escape_text(new_title.c_str(), -1));
+    if (_panel_title != escaped.Str())
     {
-      _panel_title = new_title;
+      _panel_title = escaped.Str();
     }
     else if (!force && _last_geo == geo && _title_texture)
     {
@@ -843,10 +844,8 @@ void PanelMenuView::Refresh(bool force)
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
 
-  glib::String escaped(g_markup_escape_text(_panel_title.c_str(), -1));
-
   std::ostringstream bold_label;
-  bold_label << "<b>" << escaped.Str() << "</b>";
+  bold_label << "<b>" << _panel_title << "</b>";
 
   DrawTitle(cr, geo, bold_label.str());
 
