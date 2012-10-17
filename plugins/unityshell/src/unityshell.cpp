@@ -113,7 +113,7 @@ namespace decoration
 const unsigned CLOSE_SIZE = 19;
 const unsigned ITEMS_PADDING = 5;
 const unsigned RADIUS = 8;
-const unsigned GLOW = 30;
+const unsigned GLOW = 35;
 const nux::Color GLOW_COLOR(221, 72, 20);
 } // decoration namespace
 } // scale namespace
@@ -777,18 +777,21 @@ void UnityScreen::paintDisplay()
     }
   }
 
- if (switcher_controller_->Visible ())
+ if (switcher_controller_->Visible())
   {
-    LayoutWindowList targets = switcher_controller_->ExternalRenderTargets ();
+    LayoutWindowList const& targets = switcher_controller_->ExternalRenderTargets();
 
-    for (LayoutWindow::Ptr target : targets)
+    if (!targets.empty())
     {
-      CompWindow* window = screen->findWindow(target->xid);
-      if (window)
-      {
-        UnityWindow *unity_window = UnityWindow::get (window);
+      UnityWindow::SetupSharedTextures();
 
-        unity_window->paintThumbnail (target->result, target->alpha);
+      for (LayoutWindow::Ptr const& target : targets)
+      {
+        if (CompWindow* window = screen->findWindow(target->xid))
+        {
+          UnityWindow *unity_window = UnityWindow::get (window);
+          unity_window->paintThumbnail(target->result, target->alpha);
+        }
       }
     }
   }
@@ -850,28 +853,6 @@ bool UnityScreen::forcePaintOnTop ()
       ((switcher_controller_->Visible() ||
         WindowManager::Default().IsExpoActive())
        && !fullscreen_windows_.empty () && (!(screen->grabbed () && !screen->otherGrabExist (NULL))));
-}
-
-void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
-{
-  GLMatrix matrix;
-  matrix.toScreenSpace (UnityScreen::get (screen)->_last_output, -DEFAULT_Z_CAMERA);
-
-  nux::Geometry geo = bounding;
-  last_bound = geo;
-
-  GLWindowPaintAttrib attrib = gWindow->lastPaintAttrib ();
-  attrib.opacity = (GLushort) (alpha * G_MAXUSHORT);
-
-  paintThumb (attrib,
-              matrix,
-              0,
-              geo.x,
-              geo.y,
-              geo.width,
-              geo.height,
-              geo.width,
-              geo.height);
 }
 
 void UnityScreen::EnableCancelAction(CancelActionTarget target, bool enabled, int modifiers)
@@ -2478,11 +2459,8 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
 
   if (WindowManager::Default().IsScaleActive() && ScaleScreen::get(screen)->getSelectedWindow() == window->id())
   {
-    nux::Geometry scaled_geo = GetScaledGeometry();
-    int inside_glow = scale::decoration::RADIUS/4;
-    scaled_geo.Expand(-inside_glow, -inside_glow);
-    glow::Quads const& quads = computeGlowQuads(scaled_geo, glow_texture_, scale::decoration::GLOW);
-    paintGlow(matrix, attrib, region, quads, glow_texture_, scale::decoration::GLOW_COLOR, mask);
+    nux::Geometry const& scaled_geo = GetScaledGeometry();
+    paintInnerGlow(scaled_geo, matrix, attrib, mask);
   }
 
   return gWindow->glPaint(wAttrib, matrix, region, mask);
@@ -3941,6 +3919,35 @@ void UnityWindow::OnTerminateSpread()
     wm.Undecorate(xid);
 
   CleanupCachedTextures();
+}
+
+void UnityWindow::paintInnerGlow(nux::Geometry glow_geo, GLMatrix const& matrix, GLWindowPaintAttrib const& attrib, unsigned mask)
+{
+  // We paint the glow below the window edges to correctly glow the rounded corners
+  int inside_glow = scale::decoration::RADIUS/4;
+  glow_geo.Expand(-inside_glow, -inside_glow);
+  glow::Quads const& quads = computeGlowQuads(glow_geo, glow_texture_, scale::decoration::GLOW);
+  paintGlow(matrix, attrib, quads, glow_texture_, scale::decoration::GLOW_COLOR, mask);
+}
+
+void UnityWindow::paintThumbnail(nux::Geometry const& bounding, float alpha)
+{
+  GLMatrix matrix;
+  matrix.toScreenSpace(UnityScreen::get(screen)->_last_output, -DEFAULT_Z_CAMERA);
+  last_bound = bounding;
+
+  GLWindowPaintAttrib attrib = gWindow->lastPaintAttrib();
+  attrib.opacity = (GLushort) (alpha * G_MAXUSHORT);
+  unsigned mask = 0;
+
+  if (alpha >= 1.0f)
+  {
+    // The fully opaque window, is the selected one by contract.
+    paintInnerGlow(bounding, matrix, attrib, mask);
+  }
+
+  nux::Geometry const& g = bounding;
+  paintThumb(attrib, matrix, mask, g.x, g.y, g.width, g.height, g.width, g.height);
 }
 
 UnityWindow::~UnityWindow()

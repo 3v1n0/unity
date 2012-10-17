@@ -39,9 +39,8 @@ namespace unity
 
 void
 UnityWindow::paintGlow(GLMatrix const& transform, GLWindowPaintAttrib const& attrib,
-                       CompRegion const& paintRegion, glow::Quads const& glow_quads,
-                       GLTexture::List const& outline_texture, nux::Color const& color,
-                       unsigned mask)
+                       glow::Quads const& glow_quads, GLTexture::List const& outline_texture,
+                       nux::Color const& color, unsigned mask)
 {
   GLushort colorData[4];
   colorData[0] = color.red * 0xffff;
