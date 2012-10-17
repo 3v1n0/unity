@@ -117,6 +117,9 @@ protected:
 
 protected:
   nux::VLayout* full_data_layout_;
+  nux::Layout* header_layout_;
+  nux::Layout* form_layout_;
+  nux::Layout* actions_layout_;
 
   // content elements
   nux::ObjectPtr<CoverArt> image_;

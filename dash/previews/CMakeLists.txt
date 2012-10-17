@@ -73,8 +73,15 @@ add_dependencies (social_previews previews-lib)
 target_link_libraries (social_previews previews-lib unity-shared)
 
 # 
-# Music Standalone variant
+# Movie Standalone variant
 #
 add_executable (movie_previews StandaloneMoviePreview.cpp)
 add_dependencies (movie_previews previews-lib)
 target_link_libraries (movie_previews previews-lib unity-shared)
+
+# 
+# Payment Standalone variant
+#
+add_executable (payment_previews StandaloneU1PaymentPreview.cpp)
+add_dependencies (payment_previews previews-lib)
+target_link_libraries (payment_previews previews-lib unity-shared)

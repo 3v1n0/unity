@@ -508,13 +508,16 @@ void U1PaymentPreview::SetupViews()
   full_data_layout_->SetSpaceBetweenChildren(5);
   full_data_layout_->SetLeftAndRightPadding(10);
   full_data_layout_->SetTopAndBottomPadding(10);
-  full_data_layout_->AddLayout(GetHeader(style, preview_data_), 1);
+
+  header_layout_ = GetHeader(style, preview_data_);
+
+  full_data_layout_->AddLayout(header_layout_, 1);
   full_data_layout_->AddSpace(style.GetPaymentHeaderSpace(), 0); 
 
   header_ = new nux::StaticCairoText(
           GetDataForKey(preview_data_, DATA_HEADER_KEY), true,
           NUX_TRACKER_LOCATION);
-  header_->SetMaximumWidth(style.GetPaymentHeaderWidth());
+  //header_->SetMaximumWidth(style.GetPaymentHeaderWidth());
   header_->SetFont(style.payment_intro_font().c_str());
   header_->SetLineSpacing(10);
   header_->SetLines(-style.GetDescriptionLineCount());
@@ -523,9 +526,12 @@ void U1PaymentPreview::SetupViews()
   full_data_layout_->AddView(header_.GetPointer(), 1);
   full_data_layout_->AddSpace(style.GetPaymentFormSpace(), 1);
 
-  full_data_layout_->AddLayout(GetForm(style, preview_data_), 1);
+  form_layout_ = GetForm(style, preview_data_);
+  full_data_layout_->AddLayout(form_layout_, 1);
   full_data_layout_->AddSpace(style.GetPaymentFooterSpace(), 1);
-  full_data_layout_->AddLayout(GetActions(style, preview_data_), 0);
+
+  actions_layout_ = GetActions(style, preview_data_);
+  full_data_layout_->AddLayout(actions_layout_, 0);
 
   SetLayout(full_data_layout_);
 }
@@ -533,6 +539,18 @@ void U1PaymentPreview::SetupViews()
 
 void U1PaymentPreview::PreLayoutManagement()
 {
+  nux::Geometry geo = GetGeometry();
+  GetLayout()->SetGeometry(geo);
+
+  previews::Style& style = dash::previews::Style::Instance();
+
+  int width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
+
+  if(header_layout_) { header_layout_->SetMaximumWidth(width); }
+  if(header_) { header_->SetMaximumWidth(width); }
+  if(form_layout_) { form_layout_->SetMaximumWidth(width); }
+  if(actions_layout_) { actions_layout_->SetMaximumWidth(width); }
+
   Preview::PreLayoutManagement();
 }
 
