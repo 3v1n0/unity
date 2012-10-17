@@ -42,32 +42,28 @@ NUX_IMPLEMENT_OBJECT_TYPE(SwitcherView);
 
 SwitcherView::SwitcherView()
   : UnityWindowView()
+  , render_boxes(false)
+  , border_size(50)
+  , flat_spacing(10)
+  , icon_size(128)
+  , minimum_spacing(10)
+  , tile_size(150)
+  , vertical_size(tile_size + 80)
+  , text_size(15)
+  , animation_length(250)
+  , monitor(-1)
+  , spread_size(3.5f)
+  , icon_renderer_(std::make_shared<IconRenderer>())
+  , animation_draw_(false)
   , target_sizes_set_(false)
 {
-  icon_renderer_ = AbstractIconRenderer::Ptr(new IconRenderer());
   icon_renderer_->pip_style = OVER_TILE;
 
-  layout_system_ = LayoutSystem::Ptr (new LayoutSystem ());
-  border_size = 50;
-  flat_spacing = 10;
-  icon_size = 128;
-  minimum_spacing = 10;
-  tile_size = 150;
-  vertical_size = tile_size + 80;
-  text_size = 15;
-  animation_length = 250;
-  monitor = -1;
-  spread_size = 3.5f;
-  render_boxes = false;
-
-  animation_draw_ = false;
 
   save_time_.tv_sec = 0;
   save_time_.tv_nsec = 0;
 
   render_targets_.clear ();
-
-  rounding_texture_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_round_rect.png", -1, true));
 
   text_view_ = new nux::StaticCairoText("Testing");
   text_view_->SetMaximumWidth ((int) (tile_size * spread_size));
@@ -259,14 +255,14 @@ nux::Geometry SwitcherView::UpdateRenderTargets (nux::Point const& center, times
 
   for (Window window : xids)
   {
-    LayoutWindow::Ptr layout_window (new LayoutWindow (window));
+    auto layout_window = std::make_shared<LayoutWindow>(window);
 
-    if (window == model_->DetailSelectionWindow ())
+    if (window == model_->DetailSelectionWindow())
       layout_window->alpha = 1.0f * progress;
     else
       layout_window->alpha = 0.9f * progress;
 
-    render_targets_.push_back (layout_window);
+    render_targets_.push_back(layout_window);
   }
 
   nux::Geometry max_bounds;
@@ -279,14 +275,14 @@ nux::Geometry SwitcherView::UpdateRenderTargets (nux::Point const& center, times
   max_bounds.height = spread_size.height;
 
   nux::Geometry final_bounds;
-  layout_system_->LayoutWindows (render_targets_, max_bounds, final_bounds);
+  layout_system_.LayoutWindows(render_targets_, max_bounds, final_bounds);
 
   return final_bounds;
 }
 
 void SwitcherView::OffsetRenderTargets (int x, int y)
 {
-  for (LayoutWindow::Ptr target : render_targets_)
+  for (LayoutWindow::Ptr const& target : render_targets_)
   {
     target->result.x += x;
     target->result.y += y;
@@ -602,21 +598,6 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
     {
       nux::Geometry tmp (rit->render_center.x - 1, rit->render_center.y - 1, 2, 2);
       gPainter.Paint2DQuadColor(GfxContext, tmp, nux::color::Red);
-    }
-  }
-
-  // render orange box that will encirlce active item(s)
-  for (LayoutWindow::Ptr window : ExternalTargets())
-  {
-    nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
-    if (window->alpha >= 1.0f)
-    {
-      nux::Geometry orange_box = window->result;
-      orange_box.Expand(5, 5);
-      orange_box.x -= geo_absolute.x;
-      orange_box.y -= geo_absolute.y;
-
-      gPainter.PaintTextureShape(GfxContext, orange_box, rounding_texture_.GetPointer(), 6, 6, 6, 6, false);
     }
   }
 
