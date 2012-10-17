@@ -130,6 +130,10 @@ public:
     return false;
   }
 
+  void CloseQuicklist()
+  {
+  }
+
   void SetCenter(nux::Point3 center, int monitor, nux::Geometry geo)
   {
     center.x += geo.x;

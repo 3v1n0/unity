@@ -107,6 +107,8 @@ public:
                                const char* character,
                                unsigned short keyCount);
 
+  void OpenQuicklist();
+
   static void OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer user_data);
   static void OnDBusMethodCall(GDBusConnection* connection, const gchar* sender, const gchar* object_path,
                                const gchar* interface_name, const gchar* method_name,
