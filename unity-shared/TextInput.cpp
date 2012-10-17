@@ -178,7 +178,7 @@ void TextInput::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
 
 void TextInput::OnInputHintChanged()
 {
-  glib::String tmp((gchar*)input_hint().c_str());
+  glib::String tmp(g_markup_escape_text(input_hint().c_str(), -1));
   hint_->SetText(tmp);
 }
 
