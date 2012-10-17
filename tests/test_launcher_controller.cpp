@@ -380,6 +380,8 @@ TEST_F(TestLauncherController, SingleMonitorSwitchToMultimonitor)
   EXPECT_EQ(lc.launchers().size(), max_num_monitors);
 }
 
+#ifdef UNITY_HAS_X_ORG_SUPPORT
+
 TEST_F(TestLauncherController, MultiMonitorEdgeBarrierSubscriptions)
 {
   uscreen.SetupFakeMultiMonitor();
@@ -410,6 +412,8 @@ TEST_F(TestLauncherController, SingleMonitorEdgeBarrierSubscriptionsUpdates)
     }
   }
 }
+
+#endif
 
 TEST_F(TestLauncherController, OnlyUnstickIconOnFavoriteRemoval)
 {
