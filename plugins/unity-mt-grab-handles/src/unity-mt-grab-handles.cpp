@@ -35,7 +35,8 @@ unity::MT::X11TextureFactory::setActiveWrap (const GLTexture::List &t)
 unity::MT::Texture::Ptr
 unity::MT::X11TextureFactory::create ()
 {
-  return boost::shared_static_cast <unity::MT::Texture> (unity::MT::X11Texture::Ptr (new unity::MT::X11Texture (mWrap)));
+  unity::MT::Texture::Ptr tp(static_cast<unity::MT::Texture*> (new unity::MT::X11Texture(mWrap)));
+  return tp;
 }
 
 unity::MT::X11Texture::X11Texture (const GLTexture::List &t)
@@ -151,7 +152,7 @@ unity::MT::X11GrabHandleImpl::buttonPress (int x,
 }
 
 void
-UnityMTGrabHandlesWindow::raiseGrabHandle (const boost::shared_ptr <const unity::MT::GrabHandle> &h)
+UnityMTGrabHandlesWindow::raiseGrabHandle (const std::shared_ptr <const unity::MT::GrabHandle> &h)
 {
   UnityMTGrabHandlesScreen::get (screen)->raiseHandle (h, window->frame ());
 }
@@ -202,12 +203,13 @@ sortPointers(void *p1, void *p2)
 }
 
 void
-UnityMTGrabHandlesScreen::raiseHandle (const boost::shared_ptr <const unity::MT::GrabHandle> &h,
+UnityMTGrabHandlesScreen::raiseHandle (const std::shared_ptr <const unity::MT::GrabHandle> &h,
                                        Window                                                owner)
 {
   for (const auto &pair : mInputHandles)
   {
-    if (*pair.second == *h)
+    const unity::MT::GrabHandle::Ptr gh = pair.second.lock();
+    if (*gh == *h)
     {
       unsigned int mask = CWSibling | CWStackMode;
       XWindowChanges xwc;
@@ -322,10 +324,11 @@ UnityMTGrabHandlesScreen::handleEvent(XEvent* event)
 
       if (it != mInputHandles.end())
       {
-	if (it->second)
-          it->second->buttonPress (event->xbutton.x_root,
-                                   event->xbutton.y_root,
-                                   event->xbutton.button);
+        const unity::MT::GrabHandle::Ptr gh = it->second.lock();
+        if (gh)
+          gh->buttonPress (event->xbutton.x_root,
+                           event->xbutton.y_root,
+                           event->xbutton.button);
       }
 
       break;
@@ -346,8 +349,9 @@ UnityMTGrabHandlesScreen::handleEvent(XEvent* event)
 
       if (it != mInputHandles.end())
       {
-        if (it->second)
-          it->second->reposition (0, 0, unity::MT::PositionLock);
+        const unity::MT::GrabHandle::Ptr gh = it->second.lock();
+        if (gh)
+          gh->reposition (0, 0, unity::MT::PositionLock);
       }
 
       break;
@@ -457,7 +461,7 @@ UnityMTGrabHandlesWindow::glDraw(const GLMatrix&            transform,
        * region */
       CompRegion reg = CompRegion(layout.second.x, layout.second.y, layout.second.width, layout.second.height);
 
-      for(GLTexture * tex : boost::shared_static_cast <unity::MT::X11Texture> (layout.first)->get ())
+      for(GLTexture * tex : static_cast<unity::MT::X11Texture*>(layout.first.get())->get())
       {
         GLTexture::MatrixList matl;
         GLTexture::Matrix     mat = tex->matrix();
@@ -633,7 +637,7 @@ UnityMTGrabHandlesWindow::restackHandles()
 void
 UnityMTGrabHandlesScreen::addHandleWindow(const unity::MT::GrabHandle::Ptr &h, Window w)
 {
-  mInputHandles.insert(std::pair <Window, const unity::MT::GrabHandle::Ptr> (w, h));
+  mInputHandles.insert(std::make_pair(w, h));
 }
 
 void
@@ -774,7 +778,7 @@ UnityMTGrabHandlesScreen::UnityMTGrabHandlesScreen(CompScreen* s) :
     GLTexture::List t = GLTexture::readImageToTexture(fname, pname,
                                                       size);
 
-    (boost::shared_static_cast <unity::MT::X11TextureFactory> (unity::MT::Texture::Factory::Default ()))->setActiveWrap (t);
+    (static_cast<unity::MT::X11TextureFactory*>(unity::MT::Texture::Factory::Default().get())->setActiveWrap(t));
 
     mHandleTextures.at(i).first = unity::MT::Texture::Factory::Default ()->create ();
     mHandleTextures.at (i).second.width = size.width ();

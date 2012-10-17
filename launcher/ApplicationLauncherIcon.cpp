@@ -33,7 +33,6 @@
 #include "Launcher.h"
 #include "MultiMonitor.h"
 #include "unity-shared/UBusMessages.h"
-#include "unity-shared/ubus-server.h"
 
 #include <glib/gi18n-lib.h>
 #include <gio/gdesktopappinfo.h>

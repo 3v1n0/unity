@@ -130,10 +130,10 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
       finished_ = true;
       needs_urgent_ = true;
 
-      sources_.AddIdle([this]()
+      _source_manager.AddIdle([this]()
       {
         ShowTooltip();
-        sources_.AddTimeout(INSTALL_TIP_DURATION, [this]()
+        _source_manager.AddTimeout(INSTALL_TIP_DURATION, [this]()
         {
           HideTooltip();
           return false;

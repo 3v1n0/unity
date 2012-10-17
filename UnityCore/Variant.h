@@ -53,7 +53,9 @@ public:
 
   bool ASVToHints(HintsMap& hints) const;
 
+  void swap(Variant&);
   Variant& operator=(GVariant*);
+  Variant& operator=(Variant);
   operator GVariant*() const;
   operator bool() const;
 
