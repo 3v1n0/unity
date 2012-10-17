@@ -95,7 +95,6 @@ set (CORE_SOURCES
 # CFLAGS and LIBS
 #
 set (CFLAGS
-     ${MAINTAINER_CFLAGS}
      "-I${CMAKE_BINARY_DIR}"
      "-DGETTEXT_PACKAGE=\"unity\""
      "-DLENSES_DIR=\"${_lensesdir}\""
