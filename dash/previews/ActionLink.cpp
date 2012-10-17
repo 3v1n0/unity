@@ -86,9 +86,6 @@ void ActionLink::Init()
 
 void ActionLink::InitTheme()
 {
-  //nux::Geometry const& geo = GetGeometry();
-
-//  cr_normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionLink::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
   SetMinimumHeight(40);
 }
 
@@ -135,10 +132,6 @@ void ActionLink::BuildLayout(std::string const& label, std::string const& extra_
   ComputeContentSize();
   QueueDraw();
 }
-
-//void ActionLink::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
-//{
-//}
 
 long ActionLink::ComputeContentSize()
 {
