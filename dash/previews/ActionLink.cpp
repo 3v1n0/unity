@@ -29,8 +29,6 @@
 
 namespace
 {
-
-
 nux::logging::Logger logger("unity.dash.actionlink");
 }
 
@@ -46,7 +44,7 @@ ActionLink::ActionLink(std::string const& action_hint, std::string const& label,
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(true);
   Init();
-  BuildLayout(label, "");
+  BuildLayout(label);
 }
 
 ActionLink::~ActionLink()
@@ -92,7 +90,7 @@ void ActionLink::InitTheme()
   SetMinimumHeight(40);
 }
 
-void ActionLink::BuildLayout(std::string const& label, std::string const& extra_hint)
+void ActionLink::BuildLayout(std::string const& label)
 {
 
   if (label != label_)
