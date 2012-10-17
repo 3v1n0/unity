@@ -67,7 +67,6 @@ protected:
 
   void Init();
   void InitTheme();
-//  void RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
 
   void BuildLayout(std::string const& label, std::string const& extra_hint);
 
