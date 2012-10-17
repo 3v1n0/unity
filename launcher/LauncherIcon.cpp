@@ -23,10 +23,8 @@
 #include <Nux/VScrollBar.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
-#include <Nux/MenuPage.h>
 #include <Nux/WindowCompositor.h>
 #include <Nux/BaseWindow.h>
-#include <Nux/MenuPage.h>
 #include <NuxCore/Color.h>
 #include <NuxCore/Logger.h>
 
