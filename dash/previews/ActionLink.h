@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright 2011 Canonical Ltd.
+ * Copyright 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -16,7 +16,7 @@
  * License version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
+ * Authored by: Manuel de la Pena <manuel.delapena@canonical.com>
  *
  */
 
@@ -67,7 +67,7 @@ protected:
 
   void Init();
   void InitTheme();
-  void RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
+//  void RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
 
   void BuildLayout(std::string const& label, std::string const& extra_hint);
 
