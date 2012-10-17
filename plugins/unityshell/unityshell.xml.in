@@ -135,20 +135,20 @@
                 </option>
 
                 <option name="keyboard_focus" type="key">
-                    <_short>Key to put keyboard-focus on the Launcher</_short>
+                    <_short>Key to give keyboard-focus to the Launcher</_short>
                     <_long>Sets the keyboard-focus to the Launcher so it can be navigated with the cursor-keys.</_long>
                     <default>&lt;Alt&gt;F1</default>
                 </option>
 
                 <option name="launcher_switcher_forward" type="key">
                     <_short>Key to start the Launcher Application Switcher</_short>
-                    <_long>Cycles through icons present in the Launcher. Starts, or if already running switches to, the highlighted icon on release.</_long>
+                    <_long>Cycles through icons present in the Launcher. Starts, or if already running switches to the highlighted icon on release.</_long>
                     <default>&lt;Super&gt;Tab</default>
                 </option>
 
                 <option name="launcher_switcher_prev" type="key">
                     <_short>Key to start the Launcher Application Switcher in reverse</_short>
-                    <_long>Cycles through icons present in the Launcher, in reverse order. Starts, or if already running switches to, the highlighted icon on release.</_long>
+                    <_long>Cycles through icons present in the Launcher, in reverse order. Starts, or if already running switches to the highlighted icon on release.</_long>
                     <default>&lt;Super&gt;&lt;Shift&gt;Tab</default>
                 </option>
 
