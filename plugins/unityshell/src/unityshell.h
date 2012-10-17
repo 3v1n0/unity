@@ -359,6 +359,8 @@ public:
   CompWindow* window;
   GLWindow* gWindow;
 
+  nux::Geometry last_bound;
+
   void minimize();
   void unminimize();
   bool minimized();
@@ -374,6 +376,7 @@ public:
   /* basic window draw function */
   bool glDraw(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
+  void updateIconPos (int &wx, int &wy, int x, int y, float width, float height);
   void windowNotify(CompWindowNotify n);
   void moveNotify(int x, int y, bool immediate);
   void resizeNotify(int x, int y, int w, int h);

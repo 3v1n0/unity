@@ -676,6 +676,18 @@ void UnityScreen::paintPanelShadow(const CompRegion& clip)
   nuxEpilogue();
 }
 
+void
+UnityWindow::updateIconPos (int   &wx,
+                            int   &wy,
+                            int   x,
+                            int   y,
+                            float width,
+                            float height)
+{
+  wx = x + (last_bound.width - width) / 2;
+  wy = y + (last_bound.height - height) / 2;
+}
+
 void UnityScreen::OnPanelStyleChanged()
 {
   panel_texture_has_changed_ = true;
@@ -841,18 +853,21 @@ void UnityWindow::paintThumbnail (nux::Geometry const& bounding, float alpha)
   GLMatrix matrix;
   matrix.toScreenSpace (UnityScreen::get (screen)->_last_output, -DEFAULT_Z_CAMERA);
 
+  nux::Geometry geo = bounding;
+  last_bound = geo;
+
   GLWindowPaintAttrib attrib = gWindow->lastPaintAttrib ();
   attrib.opacity = (GLushort) (alpha * G_MAXUSHORT);
 
   paintThumb (attrib,
               matrix,
               0,
-              bounding.x,
-              bounding.y,
-              bounding.width,
-              bounding.height,
-              bounding.width,
-              bounding.height);
+              geo.x,
+              geo.y,
+              geo.width,
+              geo.height,
+              geo.width,
+              geo.height);
 }
 
 void UnityScreen::EnableCancelAction(CancelActionTarget target, bool enabled, int modifiers)
