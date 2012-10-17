@@ -235,7 +235,7 @@
 
                 <option name="launcher_capture_mouse" type="bool">
                     <_short>Launcher Capture Mouse</_short>
-                    <_long>Determines if launcher edges should capture the mousepointer.</_long>
+                    <_long>Determines if the Launcher's edges should capture the mousepointer.</_long>
                     <default>true</default>
                 </option>
 
@@ -286,7 +286,7 @@
 
                 <option name="edge_passed_disabled_ms" type="int">
                     <_short>Duration of Sticky Edge Release after Break</_short>
-                    <_long>The number of milliseconds Sticky Edges are deactivated for, after the barrier has been broken.</_long>
+                    <_long>The number of milliseconds Sticky Edges are deactivated for after the barrier has been broken.</_long>
                     <default>1000</default>
                     <min>0</min>
                     <max>5000</max>
@@ -445,7 +445,7 @@
                 </option>
 
                 <option name="alt_tab_right" type="key">
-                    <_short>Move to the right in the Switcher</_short>
+                    <_short>Key to move to the right in the Switcher</_short>
                     <_long>Navigates one window to the right in the Switcher.</_long>
                     <default>&lt;Alt&gt;Right</default>
                     <passive_grab>false</passive_grab>
@@ -453,7 +453,7 @@
                 </option>
 
                 <option name="alt_tab_left" type="key">
-                    <_short>Move to the left in the Switcher</_short>
+                    <_short>Key to move to the left in the Switcher</_short>
                     <_long>Navigates one window to the left in the Switcher.</_long>
                     <default>&lt;Alt&gt;Left</default>
                     <passive_grab>false</passive_grab>
