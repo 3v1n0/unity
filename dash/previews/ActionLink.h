@@ -77,7 +77,6 @@ protected:
 private:
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
 
-  NuxCairoPtr cr_active_;
   NuxCairoPtr cr_normal_;
 
   nux::Geometry cached_geometry_;
