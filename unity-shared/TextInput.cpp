@@ -35,7 +35,6 @@ namespace
 {
 const float kExpandDefaultIconOpacity = 1.0f;
 
-const int SPACE_BETWEEN_SPINNER_AND_TEXT = 5;
 const int SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT = 10;
 const int LEFT_INTERNAL_PADDING = 6;
 const int TEXT_INPUT_RIGHT_BORDER = 10;
