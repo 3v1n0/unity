@@ -68,7 +68,7 @@ protected:
   void Init();
   void InitTheme();
 
-  void BuildLayout(std::string const& label, std::string const& extra_hint);
+  void BuildLayout(std::string const& label);
 
   // From debug::Introspectable
   std::string GetName() const;
