@@ -87,7 +87,6 @@ private:
   std::unique_ptr<nux::AbstractPaintLayer> bg_layer_;
   std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;
   nux::HLayout* layout_;
-  nux::HLayout* entry_layout_;
   nux::LayeredLayout* layered_layout_;
   nux::StaticCairoText* hint_;
   IMTextEntry* pango_entry_;

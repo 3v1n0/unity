@@ -118,12 +118,6 @@ void TextInput::Init()
   layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_ENTRY_AND_HIGHLIGHT);
   SetLayout(layout_);
 
-  entry_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
-  entry_layout_->SetLeftAndRightPadding(0, 10);
-  layout_->AddLayout(entry_layout_);
-
-  entry_layout_->SetSpaceBetweenChildren(SPACE_BETWEEN_SPINNER_AND_TEXT);
-
   nux::HLayout* hint_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
   hint_ = new nux::StaticCairoText(" ");
@@ -143,7 +137,7 @@ void TextInput::Init()
   layered_layout_->AddLayer(pango_entry_);
   layered_layout_->SetPaintAll(true);
   layered_layout_->SetActiveLayerN(1);
-  entry_layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  layout_->AddView(layered_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   sig_manager_.Add<void, GtkSettings*, GParamSpec*>(gtk_settings_get_default(),
     "notify::gtk-font-name", sigc::mem_fun(this, &TextInput::OnFontChanged));
@@ -184,11 +178,8 @@ void TextInput::OnFontChanged(GtkSettings* settings, GParamSpec* pspec)
 
 void TextInput::OnInputHintChanged()
 {
-  gchar* tmp = g_markup_escape_text(input_hint().c_str(), -1);
-
+  glib::String tmp((gchar*)input_hint().c_str());
   hint_->SetText(tmp);
-
-  g_free(tmp);
 }
 
 void TextInput::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
