@@ -18,7 +18,7 @@
 
 #include "unity-mt-texture.h"
 
-boost::shared_ptr <unity::MT::Texture::Factory> unity::MT::Texture::Factory::mDefault;
+std::shared_ptr <unity::MT::Texture::Factory> unity::MT::Texture::Factory::mDefault;
 
 unity::MT::Texture::Factory::Factory ()
 {
@@ -34,7 +34,7 @@ unity::MT::Texture::Factory::SetDefault (Factory *f)
   mDefault.reset (f);
 }
 
-boost::shared_ptr <unity::MT::Texture::Factory>
+std::shared_ptr <unity::MT::Texture::Factory>
 unity::MT::Texture::Factory::Default ()
 {
   return mDefault;

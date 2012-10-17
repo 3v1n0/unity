@@ -31,7 +31,7 @@ Variant::Variant()
 Variant::Variant(GVariant* variant)
   : variant_(variant)
 {
-  g_variant_ref_sink(variant_);
+  if (variant) g_variant_ref_sink(variant_);
 }
 
 Variant::Variant(GVariant* variant, StealRef const& ref)
@@ -95,10 +95,22 @@ bool Variant::ASVToHints(HintsMap& hints) const
   return true;
 }
 
+void Variant::swap(Variant& other)
+{
+  std::swap(this->variant_, other.variant_);
+}
+
 Variant& Variant::operator=(GVariant* val)
 {
   if (variant_) g_variant_unref(variant_);
   variant_ = val ? g_variant_ref_sink(val) : val;
+
+  return *this;
+}
+
+Variant& Variant::operator=(Variant other)
+{
+  swap(other);
 
   return *this;
 }

@@ -55,7 +55,7 @@ void
 unity::MT::GrabHandle::raise () const
 {
   unity::MT::GrabHandleGroup::Ptr ghg = mOwner.lock ();
-  boost::shared_ptr <const unity::MT::GrabHandle> gh = shared_from_this ();
+  std::shared_ptr <const unity::MT::GrabHandle> gh = shared_from_this ();
   ghg->raiseHandle (gh);
 }
 
@@ -98,7 +98,7 @@ unity::MT::GrabHandle::layout()
 unity::MT::GrabHandle::GrabHandle(Texture::Ptr texture,
                                   unsigned int    width,
                                   unsigned int    height,
-                                  const boost::shared_ptr <GrabHandleGroup> &owner,
+                                  const std::shared_ptr <GrabHandleGroup> &owner,
 				  unsigned int    id) :
   mOwner(owner),
   mTexture (texture),
@@ -110,7 +110,7 @@ unity::MT::GrabHandle::GrabHandle(Texture::Ptr texture,
 
 unity::MT::GrabHandle::Ptr
 unity::MT::GrabHandle::create (Texture::Ptr texture, unsigned int width, unsigned int height,
-                               const boost::shared_ptr <GrabHandleGroup> &owner,
+                               const std::shared_ptr <GrabHandleGroup> &owner,
                                unsigned int id)
 {
   unity::MT::GrabHandle::Ptr p (new unity::MT::GrabHandle (texture, width, height, owner, id));

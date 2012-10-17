@@ -135,8 +135,10 @@ public:
   int reactivate_index;
   bool keynav_restore_window_;
   int launcher_key_press_time_;
-  unsigned dbus_owner_;
 
+  unsigned dbus_owner_;
+  GDBusConnection* gdbus_connection_;
+  unsigned reg_id_;
 
   glib::Signal<void, BamfMatcher*, BamfView*> view_opened_signal_;
   glib::SourceManager sources_;
