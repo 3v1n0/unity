@@ -42,7 +42,7 @@
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/UnitySettings.h"
 
-#include "unity-shared/ubus-server.h"
+#include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/DashStyle.h"
 
@@ -281,18 +281,14 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
     case NUX_KP_LEFT:
       Hide();
       // inform Launcher we switch back to Launcher key-nav
-      ubus_server_send_message(ubus_server_get_default(),
-                               UBUS_QUICKLIST_END_KEY_NAV,
-                               NULL);
+      UBusManager::SendMessage(UBUS_QUICKLIST_END_KEY_NAV);
       break;
 
       // esc (close quicklist, exit key-nav)
     case NUX_VK_ESCAPE:
       Hide();
       // inform UnityScreen we leave key-nav completely
-      ubus_server_send_message(ubus_server_get_default(),
-                               UBUS_LAUNCHER_END_KEY_NAV,
-                               NULL);
+      UBusManager::SendMessage(UBUS_LAUNCHER_END_KEY_NAV);
       break;
 
       // <SPACE>, <RETURN> (activate selected menu-item)

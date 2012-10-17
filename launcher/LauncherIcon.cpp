@@ -44,7 +44,7 @@
 
 #include "MultiMonitor.h"
 
-#include "unity-shared/ubus-server.h"
+#include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
@@ -867,8 +867,7 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
       Present(0.5f, 1500);
     }
 
-    UBusServer* ubus = ubus_server_get_default();
-    ubus_server_send_message(ubus, UBUS_LAUNCHER_ICON_URGENT_CHANGED, g_variant_new_boolean(value));
+    UBusManager::SendMessage(UBUS_LAUNCHER_ICON_URGENT_CHANGED, g_variant_new_boolean(value));
   }
 
   if (quirk == Quirk::VISIBLE)

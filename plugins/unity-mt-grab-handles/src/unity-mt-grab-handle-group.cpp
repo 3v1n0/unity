@@ -40,7 +40,7 @@ unity::MT::GrabHandleGroup::hide()
 }
 
 void
-unity::MT::GrabHandleGroup::raiseHandle(const boost::shared_ptr <const unity::MT::GrabHandle> &h)
+unity::MT::GrabHandleGroup::raiseHandle(const std::shared_ptr <const unity::MT::GrabHandle> &h)
 {
   mOwner->raiseGrabHandle (h);
 }

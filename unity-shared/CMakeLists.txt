@@ -57,6 +57,7 @@ set (UNITY_SHARED_SOURCES
      TextureThumbnailProvider.cpp
      ThumbnailGenerator.cpp
      Timer.cpp
+     UBusServer.cpp
      UBusWrapper.cpp
      UScreen.cpp
      UnitySettings.cpp
@@ -66,7 +67,6 @@ set (UNITY_SHARED_SOURCES
      WindowManager.cpp
      XKeyboardUtil.cpp
      XWindowManager.cpp
-     ubus-server.cpp
 )
 
 add_library (unity-shared STATIC ${UNITY_SHARED_SOURCES})
