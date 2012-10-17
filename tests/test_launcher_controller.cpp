@@ -1523,9 +1523,7 @@ TEST_F(TestLauncherController, UpdateSelectionChanged)
   ASSERT_EQ(lc.Impl()->model_->Selection()->tooltip_text(), last_selection_change);
 
   lc.Impl()->OpenQuicklist();
-  // This doesn't really close the quicklist but it's enough
-  // to trick the launcher controller into beleiving the quicklist closed
-  UBusManager::SendMessage(UBUS_QUICKLIST_END_KEY_NAV);
+  lc.Impl()->model_->Selection()->CloseQuicklist();
   ProcessUBusMessages();
   ASSERT_EQ(lc.Impl()->model_->Selection()->tooltip_text(), last_selection_change);
 }
