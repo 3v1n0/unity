@@ -2295,6 +2295,8 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
   EnsureAnimation();
 }
 
+#ifdef UNITY_HAS_X_ORG_SUPPORT
+
 bool Launcher::HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
 {
   nux::Geometry abs_geo = GetAbsoluteGeometry();
@@ -2335,6 +2337,8 @@ bool Launcher::HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierE
   _hide_machine.AddRevealPressure(event->velocity);
   return true;
 }
+
+#endif
 
 bool Launcher::IsInKeyNavMode() const
 {
