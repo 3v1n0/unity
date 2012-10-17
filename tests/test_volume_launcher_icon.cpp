@@ -236,7 +236,7 @@ TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_Success)
 {
   CreateIcon();
 
-  auto menuitem = GetMenuItemAtIndex(0);
+  auto menuitem = GetMenuItemAtIndex(4);
 
   ASSERT_STREQ(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Unlock from Launcher");
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
@@ -258,7 +258,7 @@ TEST_F(TestVolumeLauncherIcon, TestUnlockFromLauncherMenuItem_Failure)
 {
   CreateIcon();
 
-  auto menuitem = GetMenuItemAtIndex(0);
+  auto menuitem = GetMenuItemAtIndex(4);
 
   ASSERT_STREQ(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Unlock from Launcher");
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
@@ -276,9 +276,25 @@ TEST_F(TestVolumeLauncherIcon, TestOpenMenuItem)
 {
   CreateIcon();
 
-  auto menuitem = GetMenuItemAtIndex(1);
+  auto menuitem = GetMenuItemAtIndex(0);
 
   ASSERT_STREQ(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Open");
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
+
+  EXPECT_CALL(*volume_, MountAndOpenInFileManager())
+    .Times(1);
+
+  dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
+}
+
+TEST_F(TestVolumeLauncherIcon, TestNameMenuItem)
+{
+  CreateIcon();
+
+  auto menuitem = GetMenuItemAtIndex(2);
+
+  EXPECT_EQ(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "<b>" + volume_->GetName() + "</b>");
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
@@ -303,7 +319,7 @@ TEST_F(TestVolumeLauncherIcon, TestEjectMenuItem)
 
   CreateIcon();
 
-  auto menuitem = GetMenuItemAtIndex(2);
+  auto menuitem = GetMenuItemAtIndex(5);
 
   EXPECT_CALL(*volume_, EjectAndShowNotification())
     .Times(1);
@@ -330,7 +346,7 @@ TEST_F(TestVolumeLauncherIcon, TestSafelyRemoveMenuItem)
 
   CreateIcon();
 
-  auto menuitem = GetMenuItemAtIndex(2);
+  auto menuitem = GetMenuItemAtIndex(5);
 
   EXPECT_CALL(*volume_, StopDrive())
     .Times(1);
@@ -389,7 +405,7 @@ TEST_F(TestVolumeLauncherIcon, TestUnmountMenuItem)
 
   CreateIcon();
 
-  auto menuitem = GetMenuItemAtIndex(2);
+  auto menuitem = GetMenuItemAtIndex(5);
 
   EXPECT_CALL(*volume_, Unmount())
     .Times(1);

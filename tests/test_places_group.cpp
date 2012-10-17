@@ -35,7 +35,7 @@ class MockDashStyle : public dash::StyleInterface
 public:
   MockDashStyle()
   {
-    std::string full_path = PKGDATADIR "album_missing.png";
+    std::string full_path = PKGDATADIR "/album_missing.png";
     glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file_at_size(full_path.c_str(), 20, 20, nullptr));
     base_texture_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
   }
