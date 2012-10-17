@@ -23,29 +23,22 @@ namespace unity {
 namespace ui {
 
 LayoutSystem::LayoutSystem()
-{
-  spacing = 8;
-  max_row_height = 400;
-}
-
-LayoutSystem::~LayoutSystem()
-{
-}
+  : spacing(8)
+  , max_row_height(400)
+{}
 
 void LayoutSystem::LayoutWindows(LayoutWindowList windows,
                                  nux::Geometry const& max_bounds,
                                  nux::Geometry& final_bounds)
 {
-  unsigned int size = windows.size();
-
-  if (size == 0)
+  if (windows.empty())
     return;
 
   WindowManager& wm = WindowManager::Default();
   for (auto window : windows)
   {
   	window->geo = wm.GetWindowGeometry(window->xid);
-    window->aspect_ratio = (float)window->geo.width / (float)window->geo.height;
+    window->aspect_ratio = window->geo.width / static_cast<float>(window->geo.height);
   }
 
   LayoutGridWindows(windows, max_bounds, final_bounds);
@@ -53,10 +46,10 @@ void LayoutSystem::LayoutWindows(LayoutWindowList windows,
 
 nux::Size LayoutSystem::GridSizeForWindows(LayoutWindowList windows, nux::Geometry const& max_bounds)
 {
-  int count = (int)windows.size();
+  unsigned count = windows.size();
 
-  int width = 1;
-  int height = 1;
+  unsigned width = 1;
+  unsigned height = 1;
 
   if (count == 2)
   {
@@ -83,7 +76,7 @@ nux::Size LayoutSystem::GridSizeForWindows(LayoutWindowList windows, nux::Geomet
     }
   }
 
-  return nux::Size (width, height);
+  return nux::Size(width, height);
 }
 
 nux::Geometry LayoutSystem::CompressAndPadRow (LayoutWindowList const& windows, nux::Geometry const& max_bounds)
@@ -105,7 +98,7 @@ nux::Geometry LayoutSystem::CompressAndPadRow (LayoutWindowList const& windows, 
   int y2 = G_MININT;
 
   int offset = std::max (0, (max_bounds.width - total_width) / 2);
-  for (LayoutWindow::Ptr window : windows)
+  for (LayoutWindow::Ptr const& window : windows)
   {
     window->result.x += max_bounds.x + offset;
     window->result.y = max_bounds.y + (max_height - window->result.height) / 2;
@@ -138,7 +131,7 @@ nux::Geometry LayoutSystem::LayoutRow (LayoutWindowList const& row, nux::Geometr
 
   // precision of X,Y is relatively unimportant as the Compression stage will fix any issues, sizing
   // is however set at this point.
-  for (LayoutWindow::Ptr window : row)
+  for (LayoutWindow::Ptr const& window : row)
   {
     // we dont allow scaling up
     float final_scalar = std::min (1.0f, (unpadded_bounds.height / (float)window->geo.height) * global_scalar);
