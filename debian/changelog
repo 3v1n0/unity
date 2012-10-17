@@ -1,4 +1,4 @@
-unity (6.10.0-0ubuntu1) UNRELEASED; urgency=low
+unity (6.10.0-0ubuntu1) quantal-proposed; urgency=low
 
   * New upstream release.
     - Gap between the dash gradient and the panel one (LP: #1062375)
@@ -32,8 +32,7 @@ unity (6.10.0-0ubuntu1) UNRELEASED; urgency=low
       crash in MT grab handles (LP: #1046201)
     - Ensure categories with non-personal results can show up before empty 
       categories with personal results (LP: #1067327)
-    - adds a legal link to the dash, also a new resource, and fix 
-      backup error (LP: #1065652) (LP: #1066646)
+    - fix a backup error (LP: #1066646)
 
  -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Tue, 16 Oct 2012 19:35:02 +0300
 
