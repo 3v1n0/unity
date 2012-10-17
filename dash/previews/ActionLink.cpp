@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Canonical Ltd.
+ * Copyright 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -15,7 +15,7 @@
  * License version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
+ * Authored by: Manuel de la Pena <manuel.delapena@canonical.com>
  *
  */
 
@@ -86,9 +86,9 @@ void ActionLink::Init()
 
 void ActionLink::InitTheme()
 {
-  nux::Geometry const& geo = GetGeometry();
+  //nux::Geometry const& geo = GetGeometry();
 
-  cr_normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionLink::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
+//  cr_normal_.reset(new nux::CairoWrapper(geo, sigc::bind(sigc::mem_fun(this, &ActionLink::RedrawTheme), nux::ButtonVisualState::VISUAL_STATE_NORMAL)));
   SetMinimumHeight(40);
 }
 
@@ -136,10 +136,9 @@ void ActionLink::BuildLayout(std::string const& label, std::string const& extra_
   QueueDraw();
 }
 
-void ActionLink::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
-{
-//  Style::Instance().Button(cr, faked_state, "", -1, Alignment::CENTER, true);
-}
+//void ActionLink::RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
+//{
+//}
 
 long ActionLink::ComputeContentSize()
 {
