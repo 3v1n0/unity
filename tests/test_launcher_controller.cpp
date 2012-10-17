@@ -32,6 +32,7 @@
 #include "SoftwareCenterLauncherIcon.h"
 #include "PanelStyle.h"
 #include "UnitySettings.h"
+#include "UBusMessages.h"
 #include "test_utils.h"
 #include "test_uscreen_mock.h"
 #include "test_mock_devices.h"
@@ -1497,6 +1498,36 @@ TEST_F(TestLauncherController, UpdateNumWorkspacesEnable)
 
   lc.UpdateNumWorkspaces(2);
   EXPECT_TRUE(lc.Impl()->expo_icon_->IsVisible());
+}
+
+static void ProcessMessages()
+{
+  bool expired = false;
+  glib::Idle idle([&] { expired = true; return false; },
+                  glib::Source::Priority::LOW);
+  Utils::WaitUntil(expired);
+}
+
+TEST_F(TestLauncherController, UpdateSelectionChanged)
+{
+  UBusManager manager;
+  std::string last_selection_change;
+  manager.RegisterInterest(UBUS_LAUNCHER_SELECTION_CHANGED, [&] (GVariant *data) { last_selection_change = g_variant_get_string(data, 0); });
+
+  lc.KeyNavGrab();
+  ProcessMessages();
+  ASSERT_EQ(last_selection_change, "Dash Home");
+
+  lc.KeyNavNext();
+  ProcessMessages();
+  ASSERT_EQ(last_selection_change, "Ubuntu One");
+
+  lc.OpenQuicklist();
+  // This doesn't really close the quicklist but it's enough
+  // to trick the launcher controller into beleiving the quicklist closed
+  UBusManager::SendMessage(UBUS_QUICKLIST_END_KEY_NAV);
+  ProcessMessages();
+  ASSERT_EQ(last_selection_change, "Ubuntu One");
 }
 
 }

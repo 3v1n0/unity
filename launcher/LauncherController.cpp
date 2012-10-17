@@ -1313,6 +1313,17 @@ bool Controller::KeyNavIsActive() const
   return pimpl->launcher_keynav;
 }
 
+void Controller::OpenQuicklist()
+{
+  if (pimpl->model_->Selection()->OpenQuicklist(true, pimpl->keyboard_launcher_->monitor()))
+  {
+    pimpl->reactivate_keynav = true;
+    pimpl->reactivate_index = pimpl->model_->SelectionIndex();
+    KeyNavTerminate(false);
+  }
+}
+
+
 bool Controller::IsOverlayOpen() const
 {
   for (auto launcher_ptr : pimpl->launchers)
@@ -1388,12 +1399,7 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
     case NUX_VK_RIGHT:
     case NUX_KP_RIGHT:
     case XK_Menu:
-      if (model_->Selection()->OpenQuicklist(true, keyboard_launcher_->monitor()))
-      {
-        reactivate_keynav = true;
-        reactivate_index = model_->SelectionIndex();
-        parent_->KeyNavTerminate(false);
-      }
+      parent_->OpenQuicklist();
       break;
 
       // <SPACE> (open a new instance)
