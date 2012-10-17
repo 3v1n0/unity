@@ -25,7 +25,9 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/TimerProc.h>
 #include <NuxGraphics/GestureEvent.h>
-#include <NuxGraphics/IOpenGLAsmShader.h>
+#ifndef USE_GLES
+# include <NuxGraphics/IOpenGLAsmShader.h>
+#endif
 
 #include "PointerBarrier.h"
 #include "unity-shared/AbstractIconRenderer.h"
