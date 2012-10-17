@@ -108,6 +108,7 @@ private:
   Animator timeline_animator_;
   UBusManager ubus_manager_;
   unsigned int dbus_owner_;
+  unsigned place_entry_request_id_;
   glib::Object<GCancellable> dbus_connect_cancellable_;
   static GDBusInterfaceVTable interface_vtable;
 };

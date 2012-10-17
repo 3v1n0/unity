@@ -31,7 +31,7 @@
 #include <UnityCore/Variant.h>
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/Timer.h"
-#include "unity-shared/ubus-server.h"
+#include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 #include "ResultViewGrid.h"
 #include "math.h"

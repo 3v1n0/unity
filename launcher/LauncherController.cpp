@@ -112,6 +112,8 @@ Controller::Impl::Impl(Controller* parent)
   , launcher_key_press_time_(0)
   , dbus_owner_(g_bus_own_name(G_BUS_TYPE_SESSION, DBUS_NAME.c_str(), G_BUS_NAME_OWNER_FLAGS_NONE,
                                OnBusAcquired, nullptr, nullptr, this, nullptr))
+  , gdbus_connection_(nullptr)
+  , reg_id_(0)
 {
   edge_barriers_.options = parent_->options();
 
@@ -148,6 +150,13 @@ Controller::Impl::Impl(Controller* parent)
       parent_->KeyNavGrab();
 
     model_->SetSelection(reactivate_index);
+    AbstractLauncherIcon::Ptr const& selected = model_->Selection();
+
+    if (selected)
+    {
+      ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
+                       g_variant_new_string(selected->tooltip_text().c_str()));
+    }
   });
 
   parent_->AddChild(model_.get());
@@ -163,6 +172,9 @@ Controller::Impl::~Impl()
     if (launcher_ptr)
       launcher_ptr->GetParent()->UnReference();
   }
+
+  if (gdbus_connection_ && reg_id_)
+    g_dbus_connection_unregister_object(gdbus_connection_, reg_id_);   
 
   g_bus_unown_name(dbus_owner_);
 }
@@ -951,7 +963,8 @@ void Controller::Impl::SetupIcons()
 
 void Controller::Impl::SendHomeActivationRequest()
 {
-  ubus.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.lens", dash::NOT_HANDLED, ""));
+  ubus.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                   g_variant_new("(sus)", "home.lens", dash::NOT_HANDLED, ""));
 }
 
 Controller::Controller()
@@ -1375,12 +1388,7 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
     case NUX_VK_RIGHT:
     case NUX_KP_RIGHT:
     case XK_Menu:
-      if (model_->Selection()->OpenQuicklist(true, keyboard_launcher_->monitor()))
-      {
-        reactivate_keynav = true;
-        reactivate_index = model_->SelectionIndex();
-        parent_->KeyNavTerminate(false);
-      }
+      OpenQuicklist();
       break;
 
       // <SPACE> (open a new instance)
@@ -1405,10 +1413,19 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
   }
 }
 
+void Controller::Impl::OpenQuicklist()
+{
+  if (model_->Selection()->OpenQuicklist(true, keyboard_launcher_->monitor()))
+  {
+    reactivate_keynav = true;
+    reactivate_index = model_->SelectionIndex();
+    parent_->KeyNavTerminate(false);
+  }
+}
+
 void Controller::Impl::OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer user_data)
 {
   GDBusNodeInfo* introspection_data = g_dbus_node_info_new_for_xml(DBUS_INTROSPECTION.c_str(), nullptr);
-  unsigned int reg_id;
 
   if (!introspection_data)
   {
@@ -1416,11 +1433,14 @@ void Controller::Impl::OnBusAcquired(GDBusConnection* connection, const gchar* n
     return;
   }
 
-  reg_id = g_dbus_connection_register_object(connection, DBUS_PATH.c_str(),
-                                             introspection_data->interfaces[0],
-                                             &interface_vtable, user_data,
-                                             nullptr, nullptr);
-  if (!reg_id)
+  auto self = static_cast<Controller::Impl*>(user_data);
+
+  self->gdbus_connection_ = connection;
+  self->reg_id_ = g_dbus_connection_register_object(connection, DBUS_PATH.c_str(),
+                                                    introspection_data->interfaces[0],
+                                                    &interface_vtable, user_data,
+                                                    nullptr, nullptr);
+  if (!self->reg_id_)
   {
     LOG_WARNING(logger) << "Object registration failed. Won't get dynamic launcher addition.";
   }

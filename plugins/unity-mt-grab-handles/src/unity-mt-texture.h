@@ -21,7 +21,6 @@
 
 #include <Nux/Nux.h>
 #include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
 
 namespace unity
 {
@@ -31,7 +30,7 @@ class Texture
 {
   public:
 
-    typedef boost::shared_ptr <Texture> Ptr;
+    typedef std::shared_ptr <Texture> Ptr;
 
     virtual ~Texture ();
 
@@ -48,7 +47,7 @@ class Texture
       static void
       SetDefault (Factory *);
 
-      static boost::shared_ptr <Factory>
+      static std::shared_ptr <Factory>
       Default ();
 
     protected:
@@ -57,7 +56,7 @@ class Texture
 
     private:
 
-      static boost::shared_ptr <unity::MT::Texture::Factory> mDefault;
+      static std::shared_ptr <unity::MT::Texture::Factory> mDefault;
     };
 
   protected:
