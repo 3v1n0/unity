@@ -136,7 +136,7 @@
 
                 <option name="keyboard_focus" type="key">
                     <_short>Key to give keyboard-focus to the Launcher</_short>
-                    <_long>Sets the keyboard-focus to the Launcher so it can be navigated with the cursor-keys.</_long>
+                    <_long>Gives keyboard-focus to the Launcher so it can be navigated with the cursor-keys.</_long>
                     <default>&lt;Alt&gt;F1</default>
                 </option>
 
