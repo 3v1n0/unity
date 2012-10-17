@@ -86,6 +86,9 @@ void ActionLink::Init()
 
 void ActionLink::InitTheme()
 {
+  nux::Geometry const& geo = GetGeometry();
+  cr_normal_.reset(new nux::CairoWrapper(geo,
+              [](nux::Geometry const& geom, cairo_t* cr) {}));
   SetMinimumHeight(40);
 }
 
