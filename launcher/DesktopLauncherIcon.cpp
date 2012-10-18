@@ -20,6 +20,7 @@
 #include "DesktopLauncherIcon.h"
 #include "unity-shared/WindowManager.h"
 #include "FavoriteStore.h"
+#include "config.h"
 
 #include <glib/gi18n-lib.h>
 

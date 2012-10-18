@@ -20,6 +20,7 @@
 
 #include <math.h>
 
+#include "config.h"
 #include <glib/gi18n-lib.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>

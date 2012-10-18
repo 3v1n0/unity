@@ -18,6 +18,7 @@
  */
 
 #include <gdk/gdk.h>
+#include "config.h"
 #include <glib/gi18n-lib.h>
 #include <libnotify/notify.h>
 #include <sigc++/sigc++.h>

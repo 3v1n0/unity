@@ -32,13 +32,14 @@
 #include <Nux/VLayout.h>
 #include <Nux/GridHLayout.h>
 #include <Nux/Button.h>
+
+#include "config.h"
 #include <glib/gi18n-lib.h>
  
 #include "ApplicationPreview.h"
 #include "ActionButton.h"
 #include "PreviewInfoHintWidget.h"
 #include "PreviewRatingsWidget.h"
-
 
 namespace unity
 {

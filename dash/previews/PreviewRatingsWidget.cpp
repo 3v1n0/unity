@@ -23,6 +23,7 @@
 #include <Nux/Nux.h>
 #include <Nux/VLayout.h>
 #include <glib.h>
+#include "config.h"
 #include <glib/gi18n-lib.h>
 
 #include "unity-shared/RatingsButton.h"

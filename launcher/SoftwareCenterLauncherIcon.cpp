@@ -19,6 +19,7 @@
  */
 
 #include <NuxCore/Logger.h>
+#include "config.h"
 #include <glib/gi18n-lib.h>
 #include "SoftwareCenterLauncherIcon.h"
 #include "Launcher.h"

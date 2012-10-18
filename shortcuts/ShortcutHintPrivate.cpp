@@ -16,6 +16,7 @@
  * Authored by: Andrea Azzarone <azzaronea@gmail.com>
  */
 
+#include "config.h"
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
 
