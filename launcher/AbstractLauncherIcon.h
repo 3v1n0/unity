@@ -140,6 +140,7 @@ public:
   virtual void SetSortPriority(int priority) = 0;
 
   virtual bool OpenQuicklist(bool select_first_item = false, int monitor = -1) = 0;
+  virtual void CloseQuicklist() = 0;
 
   virtual void        SetCenter(nux::Point3 center, int monitor, nux::Geometry parent_geo) = 0;
 
