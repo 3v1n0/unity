@@ -112,8 +112,6 @@ public:
 
   void damageRegion(const CompRegion &region);
 
-  bool shellCouldBeHidden(CompOutput const& output);
-
   /* paint on top of all windows if we could not find a window
    * to paint underneath */
   bool glPaintOutput(const GLScreenPaintAttrib&,
@@ -303,6 +301,7 @@ private:
   bool    _key_nav_mode_requested;
   CompOutput* _last_output;
 
+  CompRegion panelShadowPainted;
   CompRegion nuxRegion;
   CompRegion fullscreenRegion;
   CompWindow* firstWindowAboveShell;

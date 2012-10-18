@@ -111,3 +111,17 @@ Expected Result:
   No part of the panel shadow should ever appear on top of the maximized
   Chrome window.
 
+
+Panel shadow fullscreen
+-----------------------
+Setup:
+#. Install Google Chrome or Chromium.
+
+Actions:
+#. Open Chrome and go full screen (F11)
+#. Trigger window scale: Shift+Alt+Up or Super+W (in Ubuntu)
+
+Expected Result:
+  The panel shadow should not be visible in scale mode, unless the panel
+  itself is also visible.
+

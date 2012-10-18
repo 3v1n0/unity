@@ -84,8 +84,10 @@ public:
   void InitASMInverseTextureMaskShader();
   void InitSlInverseTextureMaskShader();
 
+#ifndef NUX_OPENGLES_20
   nux::ObjectPtr<nux::IOpenGLAsmShaderProgram> inverse_texture_mask_asm_prog_;
   nux::ObjectPtr<nux::IOpenGLAsmShaderProgram> inverse_texture_rect_mask_asm_prog_;
+#endif
   nux::ObjectPtr<nux::IOpenGLShaderProgram> inverse_texture_mask_prog_;
 
   void RenderInverseMask_GLSL(nux::GraphicsEngine& gfx_context, int x, int y, int width, int height, nux::ObjectPtr<nux::IOpenGLBaseTexture> DeviceTexture, nux::TexCoordXForm &texxform0, const nux::Color &color0);
@@ -239,6 +241,7 @@ void OverlayRendererImpl::InitASMInverseTextureMaskShader()
     SUB result.color, {1.0, 1.0, 1.0, 1.0}, temp0.aaaa;  \n\
     END";
 
+#ifndef NUX_OPENGLES_20
   inverse_texture_mask_asm_prog_ = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateAsmShaderProgram();
   inverse_texture_mask_asm_prog_->LoadVertexShader(AsmVtx.c_str());
   inverse_texture_mask_asm_prog_->LoadPixelShader(AsmFrg.c_str());
@@ -248,6 +251,7 @@ void OverlayRendererImpl::InitASMInverseTextureMaskShader()
   inverse_texture_rect_mask_asm_prog_->LoadVertexShader(AsmVtx.c_str());
   inverse_texture_rect_mask_asm_prog_->LoadPixelShader(AsmFrgRect.c_str());
   inverse_texture_rect_mask_asm_prog_->Link();
+#endif
 }
 
 void OverlayRendererImpl::RenderInverseMask_ASM(nux::GraphicsEngine& gfx_context, int x, int y, int width, int height, nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture, nux::TexCoordXForm &texxform, const nux::Color &color)
