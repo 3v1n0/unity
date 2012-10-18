@@ -25,7 +25,6 @@ set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
 set (CFLAGS
      ${TEST_UNIT_DEPS_CFLAGS}
      ${TEST_UNIT_DEPS_CFLAGS_OTHER}
-     ${MAINTAINER_CFLAGS}
      "-g"
      "-DTESTDATADIR=\"${TESTDATADIR}\""
      "-DGETTEXT_PACKAGE=\"unity\""
@@ -239,6 +238,7 @@ if (GTEST_SRC_DIR AND
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
                  test_texture_cache.cpp
+                 test_text_input.cpp
                  test_thumbnail_generator.cpp
                  test_trash_launcher_icon.cpp
                  test_launcher_minimize_speed.cpp
