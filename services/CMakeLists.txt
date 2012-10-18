@@ -35,7 +35,6 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
 set(CFLAGS
     "${SERVICE_DEPS_CFLAGS}"
     ${SERVICE_DEPS_CFLAGS_OTHER}
-    ${MAINTAINER_CFLAGS}
     "-I${CMAKE_CURRENT_BINARY_DIR}"
     "-DGETTEXT_PACKAGE=\"unity\""
     "-DINDICATORDIR=\"${_indicatordir}\""
