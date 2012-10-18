@@ -61,19 +61,19 @@ private:
 
   void Init();
 
-  void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
-  void OnInputHintChanged();
+  virtual void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
+  virtual void OnInputHintChanged();
 
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  void OnMouseButtonDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void OnEndKeyFocus();
+  virtual void OnMouseButtonDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  virtual void OnEndKeyFocus();
 
   void UpdateBackground(bool force);
 
-  std::string get_input_string() const;
-  bool set_input_string(std::string const& string);
+  virtual std::string get_input_string() const;
+  virtual bool set_input_string(std::string const& string);
   bool get_im_active() const;
   bool get_im_preedit() const;
 
