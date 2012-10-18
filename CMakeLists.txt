@@ -136,11 +136,14 @@ if (BOOT_LOGGER)
     SET (BOOT_LOGGER_FLAG "-DENABLE_LOGGER")
 endif (BOOT_LOGGER)
 
-SET (MAINTAINER_CFLAGS "-Werror -Wall -Wcast-align -Wempty-body -Wformat-security -Winit-self -Warray-bounds")
-option (DISABLE_MAINTAINER_CFLAGS "Disable maintainer CFlags" OFF)
-if (DISABLE_MAINTAINER_CFLAGS)
-  SET (MAINTAINER_CFLAGS "")
-endif (DISABLE_MAINTAINER_CFLAGS)
+SET (MAINTAINER_CXXFLAGS "-Werror -Wall -Wcast-align -Wempty-body -Wformat-security -Winit-self -Warray-bounds")
+option (DISABLE_MAINTAINER_CXXFLAGS "Disable maintainer CXXFlags" OFF)
+if (DISABLE_MAINTAINER_CXXFLAGS)
+  SET (MAINTAINER_CXXFLAGS "")
+endif (DISABLE_MAINTAINER_CXXFLAGS)
+
+# Make sure these flags are used for every build.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MAINTAINER_CXXFLAGS}")
 
 #
 # Compiz Plugins
