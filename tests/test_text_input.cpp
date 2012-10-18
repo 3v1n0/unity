@@ -57,14 +57,17 @@ public:
 
 TEST(TestTextInput, set_input_string)
 {
+  MockTextInput text_input;
 }
 
 TEST(TestTextInput, OnInputHintChanged)
 {
+  MockTextInput text_input;
 }
 
 TEST(TestTextInput, OnMouseButtonDown)
 {
+  MockTextInput text_input;
 }
 
 TEST(TestTextInput, OnEndKeyFocus)
