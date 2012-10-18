@@ -115,7 +115,9 @@ Controller::Impl::Impl(Controller* parent)
   , gdbus_connection_(nullptr)
   , reg_id_(0)
 {
+#ifdef UNITY_HAS_X_ORG_SUPPORT
   edge_barriers_.options = parent_->options();
+#endif
 
   UScreen* uscreen = UScreen::GetDefault();
   EnsureLaunchers(uscreen->GetPrimaryMonitor(), uscreen->GetMonitors());
@@ -150,6 +152,13 @@ Controller::Impl::Impl(Controller* parent)
       parent_->KeyNavGrab();
 
     model_->SetSelection(reactivate_index);
+    AbstractLauncherIcon::Ptr const& selected = model_->Selection();
+
+    if (selected)
+    {
+      ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
+                       g_variant_new_string(selected->tooltip_text().c_str()));
+    }
   });
 
   parent_->AddChild(model_.get());
@@ -192,14 +201,18 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
 
     int monitor = (num_launchers == 1) ? primary : i;
 
+#ifdef UNITY_HAS_X_ORG_SUPPORT
     if (launchers[i]->monitor() != monitor)
     {
       edge_barriers_.Unsubscribe(launchers[i].GetPointer(), launchers[i]->monitor);
     }
+#endif
 
     launchers[i]->monitor(monitor);
     launchers[i]->Resize();
+#ifdef UNITY_HAS_X_ORG_SUPPORT
     edge_barriers_.Subscribe(launchers[i].GetPointer(), launchers[i]->monitor);
+#endif
   }
 
   for (unsigned int i = last_launcher; i < launchers_size; ++i)
@@ -209,7 +222,9 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
     {
       parent_->RemoveChild(launcher.GetPointer());
       launcher->GetParent()->UnReference();
+#ifdef UNITY_HAS_X_ORG_SUPPORT
       edge_barriers_.Unsubscribe(launcher.GetPointer(), launcher->monitor);
+#endif
     }
   }
 
@@ -1381,12 +1396,7 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
     case NUX_VK_RIGHT:
     case NUX_KP_RIGHT:
     case XK_Menu:
-      if (model_->Selection()->OpenQuicklist(true, keyboard_launcher_->monitor()))
-      {
-        reactivate_keynav = true;
-        reactivate_index = model_->SelectionIndex();
-        parent_->KeyNavTerminate(false);
-      }
+      OpenQuicklist();
       break;
 
       // <SPACE> (open a new instance)
@@ -1408,6 +1418,16 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
         parent_->KeyNavTerminate(false);
       }
       break;
+  }
+}
+
+void Controller::Impl::OpenQuicklist()
+{
+  if (model_->Selection()->OpenQuicklist(true, keyboard_launcher_->monitor()))
+  {
+    reactivate_keynav = true;
+    reactivate_index = model_->SelectionIndex();
+    parent_->KeyNavTerminate(false);
   }
 }
 

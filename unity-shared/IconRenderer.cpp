@@ -208,7 +208,9 @@ std::vector<nux::BaseTexture*> icon_shadow;
 std::vector<nux::BaseTexture*> icon_shine;
 nux::ObjectPtr<nux::IOpenGLBaseTexture> offscreen_progress_texture;
 nux::ObjectPtr<nux::IOpenGLShaderProgram> shader_program_uv_persp_correction;
+#ifndef USE_GLES
 nux::ObjectPtr<nux::IOpenGLAsmShaderProgram> asm_shader;
+#endif
 std::map<char, nux::BaseTexture*> label_map;
 
 void generate_textures();
@@ -867,7 +869,9 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
   }
   else
   {
+#ifndef USE_GLES
     local::asm_shader->End();
+#endif
   }
 }
 
@@ -1168,6 +1172,7 @@ void setup_shaders()
   }
   else
   {
+#ifndef USE_GLES
     asm_shader = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateAsmShaderProgram();
     asm_shader->LoadVertexShader(TCHAR_TO_ANSI(PerspectiveCorrectVtx.c_str()));
 
@@ -1184,6 +1189,7 @@ void setup_shaders()
     }
 
     asm_shader->Link();
+#endif
   }
 }
 

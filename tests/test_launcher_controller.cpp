@@ -32,6 +32,7 @@
 #include "SoftwareCenterLauncherIcon.h"
 #include "PanelStyle.h"
 #include "UnitySettings.h"
+#include "UBusMessages.h"
 #include "test_utils.h"
 #include "test_uscreen_mock.h"
 #include "test_mock_devices.h"
@@ -204,6 +205,14 @@ struct TestLauncherController : public testing::Test
     lc.multiple_launchers = true;
   }
 
+  void ProcessUBusMessages()
+  {
+    bool expired = false;
+    glib::Idle idle([&] { expired = true; return false; },
+                    glib::Source::Priority::LOW);
+    Utils::WaitUntil(expired);
+  }
+
 protected:
   struct MockLauncherController : Controller
   {
@@ -371,6 +380,8 @@ TEST_F(TestLauncherController, SingleMonitorSwitchToMultimonitor)
   EXPECT_EQ(lc.launchers().size(), max_num_monitors);
 }
 
+#ifdef UNITY_HAS_X_ORG_SUPPORT
+
 TEST_F(TestLauncherController, MultiMonitorEdgeBarrierSubscriptions)
 {
   uscreen.SetupFakeMultiMonitor();
@@ -401,6 +412,8 @@ TEST_F(TestLauncherController, SingleMonitorEdgeBarrierSubscriptionsUpdates)
     }
   }
 }
+
+#endif
 
 TEST_F(TestLauncherController, OnlyUnstickIconOnFavoriteRemoval)
 {
@@ -1497,6 +1510,26 @@ TEST_F(TestLauncherController, UpdateNumWorkspacesEnable)
 
   lc.UpdateNumWorkspaces(2);
   EXPECT_TRUE(lc.Impl()->expo_icon_->IsVisible());
+}
+
+TEST_F(TestLauncherController, UpdateSelectionChanged)
+{
+  UBusManager manager;
+  std::string last_selection_change;
+  manager.RegisterInterest(UBUS_LAUNCHER_SELECTION_CHANGED, [&] (GVariant *data) { last_selection_change = g_variant_get_string(data, 0); });
+
+  lc.KeyNavGrab();
+  ProcessUBusMessages();
+  ASSERT_EQ(lc.Impl()->model_->Selection()->tooltip_text(), last_selection_change);
+
+  lc.KeyNavNext();
+  ProcessUBusMessages();
+  ASSERT_EQ(lc.Impl()->model_->Selection()->tooltip_text(), last_selection_change);
+
+  lc.Impl()->OpenQuicklist();
+  lc.Impl()->model_->Selection()->CloseQuicklist();
+  ProcessUBusMessages();
+  ASSERT_EQ(lc.Impl()->model_->Selection()->tooltip_text(), last_selection_change);
 }
 
 }

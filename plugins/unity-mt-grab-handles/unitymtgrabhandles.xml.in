@@ -6,11 +6,7 @@
 	<deps>
 		<requirement>
 			<plugin>opengl</plugin>
-		</requirement>
-		<requirement>
 			<plugin>composite</plugin>
-		</requirement>
-		<requirement>
 			<plugin>imgpng</plugin>
 		</requirement>
 		<relation type="after">

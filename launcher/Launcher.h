@@ -25,15 +25,15 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/TimerProc.h>
 #include <NuxGraphics/GestureEvent.h>
-#include <NuxGraphics/IOpenGLAsmShader.h>
+#ifndef USE_GLES
+# include <NuxGraphics/IOpenGLAsmShader.h>
+#endif
 
-#include "PointerBarrier.h"
 #include "unity-shared/AbstractIconRenderer.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "DevicesSettings.h"
 #include "DNDCollectionWindow.h"
 #include "DndData.h"
-#include "EdgeBarrierController.h"
 #include "unity-shared/Introspectable.h"
 #include "LauncherModel.h"
 #include "LauncherOptions.h"
@@ -43,6 +43,11 @@
 #include "unity-shared/UBusWrapper.h"
 #include "SoftwareCenterLauncherIcon.h"
 
+#ifdef UNITY_HAS_X_ORG_SUPPORT
+# include "PointerBarrier.h"
+# include "EdgeBarrierController.h"
+#endif
+
 namespace unity
 {
 namespace launcher
@@ -51,7 +56,12 @@ extern const char window_title[];
 
 class AbstractLauncherIcon;
 
-class Launcher : public unity::debug::Introspectable, public nux::View, public ui::EdgeBarrierSubscriber
+class Launcher : public unity::debug::Introspectable,
+#ifdef UNITY_HAS_X_ORG_SUPPORT
+                 // TODO: abstract this into a more generic class.
+                 public ui::EdgeBarrierSubscriber,
+#endif
+                 public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(Launcher, nux::View);
 public:
@@ -187,7 +197,9 @@ private:
   void OnDragUpdate(const nux::GestureEvent &event);
   void OnDragFinish(const nux::GestureEvent &event);
 
+#ifdef UNITY_HAS_X_ORG_SUPPORT
   bool HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
+#endif
 
   void OnPluginStateChanged();
 
