@@ -27,7 +27,6 @@
 #include <Nux/CairoWrapper.h>
 #include <Nux/AbstractButton.h>
 #include "unity-shared/Introspectable.h"
-#include "unity-shared/LineSeparator.h"
 
 namespace nux
 {
@@ -66,7 +65,6 @@ protected:
   virtual void RecvClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
 
   void Init();
-  void InitTheme();
 
   void BuildLayout(std::string const& label);
 
@@ -77,15 +75,12 @@ protected:
 private:
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
 
-  NuxCairoPtr cr_normal_;
-
   nux::Geometry cached_geometry_;
 
   std::string action_hint_;
   std::string font_hint_;
 
   nux::ObjectPtr<nux::StaticCairoText> static_text_;
-  nux::ObjectPtr<HSeparator> underline;
 };
 
 } // namespace dash

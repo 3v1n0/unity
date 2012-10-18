@@ -68,7 +68,7 @@ void ActionLink::AddProperties(GVariantBuilder* builder)
 
 void ActionLink::Init()
 {
-  InitTheme();
+  SetMinimumHeight(40);
 
   key_nav_focus_change.connect([&] (nux::Area*, bool, nux::KeyNavDirection)
   {
@@ -80,14 +80,6 @@ void ActionLink::Init()
     if (GetInputEventSensitivity())
       activate.emit(this, action_hint_);
   });
-}
-
-void ActionLink::InitTheme()
-{
-  nux::Geometry const& geo = GetGeometry();
-  cr_normal_.reset(new nux::CairoWrapper(geo,
-              [](nux::Geometry const& geom, cairo_t* cr) {}));
-  SetMinimumHeight(40);
 }
 
 void ActionLink::BuildLayout(std::string const& label)
@@ -109,6 +101,7 @@ void ActionLink::BuildLayout(std::string const& label)
         static_text_->SetFont(font_hint_);
       static_text_->SetInputEventSensitivity(false);
       static_text_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
+      static_text_->SetUnderline(nux::StaticCairoText::NUX_UNDERLINE_SINGLE);
     }
   }
 
@@ -118,13 +111,6 @@ void ActionLink::BuildLayout(std::string const& label)
   if (static_text_)
   {
     layout->AddView(static_text_.GetPointer(),
-                    1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL,
-                    100.0f, nux::NUX_LAYOUT_END);
-    underline = new HSeparator();
-    underline->SetAlpha(0.0f, 0.50f);
-    nux::Size text_size = static_text_->GetTextExtents();
-    underline->SetMaximumWidth(text_size.width - 10);
-    layout->AddView(underline.GetPointer(),
                     1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL,
                     100.0f, nux::NUX_LAYOUT_END);
   }
@@ -142,8 +128,6 @@ long ActionLink::ComputeContentSize()
 
   if (cached_geometry_ != geo && geo.width > 0 && geo.height > 0)
   {
-    if (cr_normal_) cr_normal_->Invalidate(geo);
-
     cached_geometry_ = geo;
   }
 
@@ -173,22 +157,7 @@ void ActionLink::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                        geo.height,
                        col);
 
-  nux::BaseTexture* texture = cr_normal_->GetTexture();
-
-  GfxContext.QRP_1Tex(geo.x,
-                      geo.y,
-                      geo.width,
-                      geo.height,
-                      texture->GetDeviceTexture(),
-                      texxform,
-                      nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
-
   GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
-
-  if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
-    underline->SetAlpha(0.0f, 1.0f);
-  else 
-    underline->SetAlpha(0.0f, 0.50f);
 
   if (GetCompositionLayout())
   {

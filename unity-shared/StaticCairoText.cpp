@@ -54,6 +54,7 @@ struct StaticCairoText::Impl
   std::string GetEffectiveFont() const;
   Size GetTextExtents() const;
 
+  void SetAttributes(PangoLayout* layout);
   void DrawText(cairo_t* cr, int width, int height, int line_spacing, Color const& color);
 
   void UpdateTexture();
@@ -75,6 +76,7 @@ struct StaticCairoText::Impl
   EllipsizeState ellipsize_;
   AlignState align_;
   AlignState valign_;
+  UnderlineState underline_; 
 
   std::string font_;
 
@@ -97,6 +99,7 @@ StaticCairoText::Impl::Impl(StaticCairoText* parent, std::string const& text)
   , ellipsize_(NUX_ELLIPSIZE_END)
   , align_(NUX_ALIGN_LEFT)
   , valign_(NUX_ALIGN_TOP)
+  , underline_(NUX_UNDERLINE_NONE)
   , lines_(-2)  // should find out why -2...
     // the desired height of the layout in Pango units if positive, or desired
     // number of lines if negative.
@@ -375,6 +378,18 @@ void StaticCairoText::SetFont(std::string const& font)
   }
 }
 
+void StaticCairoText::SetUnderline(UnderlineState underline)
+{
+  if (pimpl->underline_ != underline)
+  {
+    pimpl->underline_ = underline;
+    pimpl->need_new_extent_cache_ = true;
+    Size s = GetTextExtents();
+    SetMinimumHeight(s.height);
+    NeedRedraw();
+  }
+}
+
 int StaticCairoText::GetLineCount() const
 {
   return pimpl->actual_lines_;
@@ -484,6 +499,37 @@ Size StaticCairoText::Impl::GetTextExtents() const
   return result;
 }
 
+void StaticCairoText::Impl::SetAttributes(PangoLayout *layout)
+{
+  PangoAttrList* attr_list  = NULL;
+  PangoAttribute* underline_attr = NULL;
+
+  attr_list = pango_layout_get_attributes(layout);
+  if(!attr_list)
+  {
+    attr_list = pango_attr_list_new();
+  }
+
+  PangoUnderline underline_type;
+
+  switch(underline_){
+    case(NUX_UNDERLINE_SINGLE):
+      underline_type = PANGO_UNDERLINE_SINGLE;
+      break;
+    case(NUX_UNDERLINE_DOUBLE):
+      underline_type = PANGO_UNDERLINE_DOUBLE;
+      break;
+    case(NUX_UNDERLINE_LOW):
+      underline_type = PANGO_UNDERLINE_LOW;
+      break;
+    default:
+      underline_type = PANGO_UNDERLINE_NONE;
+  }
+  underline_attr = pango_attr_underline_new(underline_type);
+  pango_attr_list_insert(attr_list, underline_attr);
+  pango_layout_set_attributes(layout, attr_list);
+}
+
 void StaticCairoText::Impl::DrawText(cairo_t* cr,
                                      int width,
                                      int height,
@@ -501,8 +547,9 @@ void StaticCairoText::Impl::DrawText(cairo_t* cr,
 
   cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
   layout = pango_cairo_create_layout(cr);
-  desc = pango_font_description_from_string(font.c_str());
 
+  
+  desc = pango_font_description_from_string(font.c_str());
   pango_layout_set_font_description(layout, desc);
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, GetPangoEllipsizeMode());
@@ -513,6 +560,9 @@ void StaticCairoText::Impl::DrawText(cairo_t* cr,
   pango_layout_set_spacing(layout, line_spacing * PANGO_SCALE);
 
   pango_layout_set_height(layout, lines_);
+
+  SetAttributes(layout);
+
   pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
   pango_cairo_context_set_font_options(pangoCtx,
                                        gdk_screen_get_font_options(screen));
