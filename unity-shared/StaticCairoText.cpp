@@ -315,6 +315,16 @@ void StaticCairoText::SetText(std::string const& text, bool escape_text)
   }
 }
 
+void StaticCairoText::SetTextAlpha(unsigned int alpha)
+{
+  if (pimpl->text_color_.alpha != alpha)
+  {
+    pimpl->text_color_.alpha = alpha;
+    pimpl->UpdateTexture();
+    QueueDraw();
+  }
+}
+
 void StaticCairoText::SetMaximumSize(int w, int h)
 {
   if (w != GetMaximumWidth())
@@ -323,7 +333,7 @@ void StaticCairoText::SetMaximumSize(int w, int h)
     View::SetMaximumSize(w, h);
     pimpl->UpdateTexture();
     return;
-  } 
+  }
 
   View::SetMaximumSize(w, h);
 }
