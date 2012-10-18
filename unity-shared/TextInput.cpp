@@ -51,51 +51,10 @@ const int PANGO_ENTRY_FONT_SIZE = 14;
 
 }
 
-namespace
+namespace unity
 {
 
 nux::logging::Logger logger("unity");
-
-class ExpanderView : public nux::View
-{
-public:
-  ExpanderView(NUX_FILE_LINE_DECL)
-   : nux::View(NUX_FILE_LINE_PARAM)
-  {
-    SetAcceptKeyNavFocusOnMouseDown(false);
-    SetAcceptKeyNavFocusOnMouseEnter(true);
-  }
-
-protected:
-  void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
-  {}
-
-  void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
-  {
-    if (GetLayout())
-      GetLayout()->ProcessDraw(graphics_engine, force_draw);
-  }
-
-  bool AcceptKeyNavFocus()
-  {
-    return true;
-  }
-
-  nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
-  {
-    bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
-
-    if (mouse_inside == false)
-      return nullptr;
-
-    return this;
-  }
-};
-
-}
-
-namespace unity
-{
 
 NUX_IMPLEMENT_OBJECT_TYPE(TextInput);
 
