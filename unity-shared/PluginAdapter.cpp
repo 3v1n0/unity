@@ -43,7 +43,6 @@ std::shared_ptr<PluginAdapter> global_instance;
 #define MWM_HINTS_FUNCTIONS     (1L << 0)
 #define MWM_HINTS_DECORATIONS   (1L << 1)
 #define MWM_HINTS_UNDECORATED_UNITY 0x80
-#define _XA_MOTIF_WM_HINTS    "_MOTIF_WM_HINTS"
 
 
 WindowManagerPtr create_window_manager()
@@ -147,13 +146,15 @@ void PluginAdapter::NotifyStateChange(CompWindow* window, unsigned int state, un
 
 void PluginAdapter::NotifyNewDecorationState(Window xid)
 {
-  bool wasTracked = (_window_decoration_state.find(xid) != _window_decoration_state.end());
+  auto deco_state_it = _window_decoration_state.find(xid);
+  bool wasTracked = (deco_state_it != _window_decoration_state.end());
   bool wasDecorated = false;
 
   if (wasTracked)
-    wasDecorated = _window_decoration_state[xid];
+    wasDecorated = deco_state_it->second;
 
   bool decorated = IsWindowDecorated(xid);
+  _window_decoration_state[xid] = decorated;
 
   if (decorated == wasDecorated)
     return;
@@ -436,11 +437,9 @@ bool PluginAdapter::IsWindowDecorated(Window window_id) const
   gulong bytes_after;
   bool ret = true;
 
-  Atom hints_atom = gdk_x11_get_xatom_by_name(_XA_MOTIF_WM_HINTS);
-
-  if (XGetWindowProperty(display, window_id, hints_atom, 0,
+  if (XGetWindowProperty(display, window_id, Atoms::mwmHints, 0,
                          sizeof(MotifWmHints) / sizeof(long), False,
-                         hints_atom, &type, &format, &nitems, &bytes_after,
+                         Atoms::mwmHints, &type, &format, &nitems, &bytes_after,
                          (guchar**)&hints) != Success)
     return false;
 
@@ -450,15 +449,11 @@ bool PluginAdapter::IsWindowDecorated(Window window_id) const
   /* Check for the presence of the high bit
    * if present, it means that we undecorated
    * this window, so don't mark it as undecorated */
-  if (type == hints_atom && format != 0 &&
-      hints->flags & MWM_HINTS_DECORATIONS)
+  if (type == Atoms::mwmHints && format != 0 && hints->flags & MWM_HINTS_DECORATIONS)
   {
     /* Must have both bits set */
     ret = (hints->decorations & (MwmDecorAll | MwmDecorTitle))  ||
           (hints->decorations & MWM_HINTS_UNDECORATED_UNITY);
-    // This is mildly evil and we should look for another solution.
-    PluginAdapter* non_const_this = const_cast<PluginAdapter*>(this);
-    non_const_this->_window_decoration_state[window_id] = ret;
   }
 
   XFree(hints);
@@ -983,7 +978,6 @@ int PluginAdapter::WorkspaceCount() const
 void PluginAdapter::SetMwmWindowHints(Window xid, MotifWmHints* new_hints) const
 {
   Display* display = m_Screen->dpy();
-  Atom hints_atom = None;
   MotifWmHints* data = NULL;
   MotifWmHints* hints = NULL;
   Atom type = None;
@@ -991,18 +985,16 @@ void PluginAdapter::SetMwmWindowHints(Window xid, MotifWmHints* new_hints) const
   gulong nitems;
   gulong bytes_after;
 
-  hints_atom = gdk_x11_get_xatom_by_name(_XA_MOTIF_WM_HINTS);
-
   if (XGetWindowProperty(display,
                          xid,
-                         hints_atom, 0, sizeof(MotifWmHints) / sizeof(long),
+                         Atoms::mwmHints, 0, sizeof(MotifWmHints) / sizeof(long),
                          False, AnyPropertyType, &type, &format, &nitems,
                          &bytes_after, (guchar**)&data) != Success)
   {
     return;
   }
 
-  if (type != hints_atom || !data)
+  if (type != Atoms::mwmHints || !data)
   {
     hints = new_hints;
   }
@@ -1022,9 +1014,7 @@ void PluginAdapter::SetMwmWindowHints(Window xid, MotifWmHints* new_hints) const
     }
   }
 
-  XChangeProperty(display,
-                  xid,
-                  hints_atom, hints_atom, 32, PropModeReplace,
+  XChangeProperty(display, xid, Atoms::mwmHints, Atoms::mwmHints, 32, PropModeReplace,
                   (guchar*)hints, sizeof(MotifWmHints) / sizeof(long));
 
   if (data)

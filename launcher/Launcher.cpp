@@ -1352,7 +1352,7 @@ int Launcher::GetMouseY() const
 
 bool Launcher::OnUpdateDragManagerTimeout()
 {
-  if (display() == 0)
+  if (!display())
     return false;
 
   if (!_selection_atom)
