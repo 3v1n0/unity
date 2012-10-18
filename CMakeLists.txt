@@ -107,6 +107,9 @@ configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 #
 # i18n
 #
+
+if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "^arm")
+
 find_package (Gettext REQUIRED)
 
 set (COMPIZ_I18N_DIR ${CMAKE_SOURCE_DIR}/po)
@@ -122,6 +125,8 @@ if (${GETTEXT_FOUND} STREQUAL "TRUE")
         GETTEXT_CREATE_TRANSLATIONS (${CMAKE_SOURCE_DIR}/po/${PROJECT_NAME}.pot
                 ALL ${_translations})
 endif (${GETTEXT_FOUND} STREQUAL "TRUE")
+
+endif() # arm builds
 
 #
 # Enable or disable boot logging
