@@ -75,6 +75,7 @@ public:
 
   // public API
   void SetText(std::string const& text, bool escape_text = false);
+  void SetTextAlpha(unsigned int alpha);
   void SetTextColor(Color const& textColor);
   void SetTextEllipsize(EllipsizeState state);
   void SetTextAlignment(AlignState state);

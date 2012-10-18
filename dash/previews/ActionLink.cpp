@@ -146,6 +146,11 @@ void ActionLink::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   // clear what is behind us
   unsigned int alpha = 0, src = 0, dest = 0;
+  if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
+    static_text_->SetTextAlpha(1);
+  else
+    static_text_->SetTextAlpha(4);
+
   GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
   GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
