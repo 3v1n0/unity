@@ -64,5 +64,4 @@ target_link_libraries (dash-lib previews-lib)
 # Standalone variant
 #
 add_executable (dash StandaloneDash.cpp)
-add_dependencies (dash dash-lib)
 target_link_libraries (dash dash-lib unity-shared)

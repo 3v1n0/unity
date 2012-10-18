@@ -44,5 +44,4 @@ add_dependencies (hud-lib unity-core-${UNITY_API_VERSION} unity-shared)
 # Standalone variant
 #
 add_executable (hud StandaloneHud.cpp)
-add_dependencies (hud hud-lib)
 target_link_libraries (hud hud-lib unity-shared)

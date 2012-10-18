@@ -48,5 +48,4 @@ add_dependencies (shortcuts-lib unity-core-${UNITY_API_VERSION} unity-shared)
 # Standalone variant
 #
 add_executable (shortcuts StandaloneShortcuts.cpp)
-add_dependencies (shortcuts shortcuts-lib)
 target_link_libraries (shortcuts shortcuts-lib unity-shared)

@@ -45,5 +45,4 @@ add_dependencies (panel-lib unity-core-${UNITY_API_VERSION} unity-shared)
 # Standalone variant
 #
 add_executable (panel StandalonePanel.cpp)
-add_dependencies (panel panel-lib)
 target_link_libraries (panel panel-lib unity-shared unity-shared-standalone)
