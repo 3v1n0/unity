@@ -778,9 +778,9 @@ std::tuple<int, int> ResultViewGrid::GetResultPosition(const unsigned int& index
    DND code
    --------
 */
-bool
-ResultViewGrid::DndSourceDragBegin()
+bool ResultViewGrid::DndSourceDragBegin()
 {
+#ifdef UNITY_HAS_X_ORG_SUPPORT
   unsigned num_results = GetNumResults();
   unsigned drag_index = GetIndexAtPosition(last_mouse_down_x_, last_mouse_down_y_);
 
@@ -804,10 +804,12 @@ ResultViewGrid::DndSourceDragBegin()
                      << current_drag_icon_name_;
 
   return true;
+#else
+  return false;
+#endif
 }
 
-GdkPixbuf *
-_icon_hint_get_drag_pixbuf (std::string icon_hint)
+GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint)
 {
   GdkPixbuf *pbuf;
   GtkIconTheme *theme;
@@ -912,8 +914,7 @@ ResultViewGrid::DndSourceGetDragTypes()
   return result;
 }
 
-const char*
-ResultViewGrid::DndSourceGetDataForType(const char* type, int* size, int* format)
+const char* ResultViewGrid::DndSourceGetDataForType(const char* type, int* size, int* format)
 {
   *format = 8;
 
@@ -929,9 +930,9 @@ ResultViewGrid::DndSourceGetDataForType(const char* type, int* size, int* format
   }
 }
 
-void
-ResultViewGrid::DndSourceDragFinished(nux::DndAction result)
+void ResultViewGrid::DndSourceDragFinished(nux::DndAction result)
 {
+#ifdef UNITY_HAS_X_ORG_SUPPORT
   UnReference();
   last_mouse_down_x_ = -1;
   last_mouse_down_y_ = -1;
@@ -950,6 +951,7 @@ ResultViewGrid::DndSourceDragFinished(nux::DndAction result)
     XWarpPointer(display, None, None, 0, 0, 0, 0, 0, 0);
     XSync(display, 0);
   }
+#endif
 }
 
 int
