@@ -436,7 +436,7 @@ bool PluginAdapter::IsWindowDecorated(Window window_id) const
   gulong bytes_after;
   bool ret = true;
 
-  Atom hints_atom = XInternAtom(display, _XA_MOTIF_WM_HINTS, false);
+  Atom hints_atom = gdk_x11_get_xatom_by_name(_XA_MOTIF_WM_HINTS);
 
   if (XGetWindowProperty(display, window_id, hints_atom, 0,
                          sizeof(MotifWmHints) / sizeof(long), False,
@@ -991,7 +991,7 @@ void PluginAdapter::SetMwmWindowHints(Window xid, MotifWmHints* new_hints) const
   gulong nitems;
   gulong bytes_after;
 
-  hints_atom = XInternAtom(display, _XA_MOTIF_WM_HINTS, false);
+  hints_atom = gdk_x11_get_xatom_by_name(_XA_MOTIF_WM_HINTS);
 
   if (XGetWindowProperty(display,
                          xid,
@@ -1267,11 +1267,12 @@ std::string PluginAdapter::GetWindowName(Window window_id) const
   std::string name;
   Atom visibleNameAtom;
 
-  visibleNameAtom = XInternAtom(m_Screen->dpy(), "_NET_WM_VISIBLE_NAME", 0);
+  visibleNameAtom = gdk_x11_get_xatom_by_name("_NET_WM_VISIBLE_NAME");
   name = GetUtf8Property(window_id, visibleNameAtom);
+
   if (name.empty())
   {
-    Atom wmNameAtom = XInternAtom(m_Screen->dpy(), "_NET_WM_NAME", 0);
+    Atom wmNameAtom = gdk_x11_get_xatom_by_name("_NET_WM_NAME");
     name = GetUtf8Property(window_id, wmNameAtom);
   }
 
@@ -1288,17 +1289,15 @@ std::string PluginAdapter::GetUtf8Property(Window window_id, Atom atom) const
   unsigned long nItems, bytesAfter;
   char          *val;
   std::string   retval;
-  Atom          utf8StringAtom;
 
-  utf8StringAtom = XInternAtom(m_Screen->dpy(), "UTF8_STRING", 0);
   result = XGetWindowProperty(m_Screen->dpy(), window_id, atom, 0L, 65536, False,
-                              utf8StringAtom, &type, &format, &nItems,
+                              Atoms::utf8String, &type, &format, &nItems,
                               &bytesAfter, reinterpret_cast<unsigned char **>(&val));
 
   if (result != Success)
     return retval;
 
-  if (type == utf8StringAtom && format == 8 && val && nItems > 0)
+  if (type == Atoms::utf8String && format == 8 && val && nItems > 0)
   {
     retval = std::string(val, nItems);
   }
