@@ -25,7 +25,6 @@
 #include <Nux/VScrollBar.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
-#include <Nux/MenuPage.h>
 #include <NuxCore/Logger.h>
 
 #include <NuxGraphics/NuxGraphics.h>
