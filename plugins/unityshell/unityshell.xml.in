@@ -4,7 +4,7 @@
         <_short>Ubuntu Unity Plugin</_short>
         <_long>Plugin to draw the Unity Shell</_long>
         <category>Desktop</category>
-        <feature>showdesktop</feature>
+        <feature>fadetodesktop</feature>
         <deps>
             <relation type="after">
                 <plugin>bailer</plugin>
