@@ -41,7 +41,6 @@ set (LAUNCHER_SOURCES
      DeviceNotificationDisplayImp.cpp
      DevicesSettingsImp.cpp
      DndData.cpp
-     EdgeBarrierController.cpp
      ExpoLauncherIcon.cpp
      FavoriteStore.cpp
      FavoriteStoreGSettings.cpp
@@ -59,7 +58,6 @@ set (LAUNCHER_SOURCES
      LauncherModel.cpp
      LauncherOptions.cpp
      MockLauncherIcon.cpp
-     PointerBarrier.cpp
      QuicklistManager.cpp
      QuicklistMenuItem.cpp
      QuicklistMenuItemCheckmark.cpp
@@ -77,6 +75,14 @@ set (LAUNCHER_SOURCES
      VolumeLauncherIcon.cpp
      VolumeMonitorWrapper.cpp
      )
+
+if(UNITY_ENABLE_X_ORG_SUPPORT)
+  set (LAUNCHER_SOURCES
+    EdgeBarrierController.cpp
+    PointerBarrier.cpp
+    ${LAUNCHER_SOURCES}
+    )
+endif()
 
 add_library (launcher-lib STATIC ${LAUNCHER_SOURCES})
 add_dependencies (launcher-lib unity-core-${UNITY_API_VERSION} unity-shared)
@@ -99,6 +105,8 @@ add_executable (launcher StandaloneLauncher.cpp)
 add_dependencies (launcher launcher-lib)
 target_link_libraries (launcher launcher-lib unity-shared unity-shared-standalone)
 
-add_executable (switcher StandaloneSwitcher.cpp)
-add_dependencies (switcher switcher-lib launcher-lib)
-target_link_libraries (switcher switcher-lib launcher-lib unity-shared unity-shared-standalone)
+if(UNITY_ENABLE_X_ORG_SUPPORT)
+  add_executable (switcher StandaloneSwitcher.cpp)
+  add_dependencies (switcher switcher-lib launcher-lib)
+  target_link_libraries (switcher switcher-lib launcher-lib unity-shared unity-shared-standalone)
+endif()

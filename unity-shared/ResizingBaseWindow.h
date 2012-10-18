@@ -35,8 +35,10 @@ public:
 
   void UpdateInputWindowGeometry()
   {
+#ifdef UNITY_HAS_X_ORG_SUPPORT
     if (m_input_window && m_input_window_enabled)
       m_input_window->SetGeometry(geo_func_(GetGeometry()));
+#endif
   }
 
   virtual void SetGeometry(const nux::Geometry &geo)
