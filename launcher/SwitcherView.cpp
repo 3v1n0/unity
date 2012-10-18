@@ -41,8 +41,7 @@ namespace switcher
 NUX_IMPLEMENT_OBJECT_TYPE(SwitcherView);
 
 SwitcherView::SwitcherView()
-  : UnityWindowView()
-  , render_boxes(false)
+  : render_boxes(false)
   , border_size(50)
   , flat_spacing(10)
   , icon_size(128)
@@ -54,19 +53,15 @@ SwitcherView::SwitcherView()
   , monitor(-1)
   , spread_size(3.5f)
   , icon_renderer_(std::make_shared<IconRenderer>())
+  , text_view_(new nux::StaticCairoText(""))
   , animation_draw_(false)
   , target_sizes_set_(false)
 {
   icon_renderer_->pip_style = OVER_TILE;
-
-
   save_time_.tv_sec = 0;
   save_time_.tv_nsec = 0;
 
-  render_targets_.clear ();
-
-  text_view_ = new nux::StaticCairoText("Testing");
-  text_view_->SetMaximumWidth ((int) (tile_size * spread_size));
+  text_view_->SetMaximumWidth(tile_size * spread_size);
   text_view_->SetLines(1);
   text_view_->SetTextColor(nux::color::White);
   text_view_->SetFont("Ubuntu Bold 10");
@@ -441,13 +436,12 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
 
     GetFlatIconPositions (n_flat_icons, size, selection, first_flat, last_flat, half_fold_left, half_fold_right);
 
-    SwitcherModel::iterator it;
     int i = 0;
     int y = base.y + base.height / 2;
     x += border_size;
-    for (it = model_->begin(); it != model_->end(); ++it)
+    for (auto const& icon : *model_)
     {
-      RenderArg arg = CreateBaseArgForIcon(*it);
+      RenderArg arg = CreateBaseArgForIcon(icon);
 
       float scalar = partial_overflow_scalar;
 
@@ -555,13 +549,13 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
   nux::Geometry base = GetGeometry();
 
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-  std::list<RenderArg>::iterator it;
-  for (it = last_args_.begin(); it != last_args_.end(); ++it)
+
+  for (auto const& arg : last_args_)
   {
-    if (model_->Selection() == it->icon)
+    if (model_->Selection() == arg.icon)
     {
       int view_width = text_view_->GetBaseWidth();
-      int start_x = it->render_center.x - view_width / 2;
+      int start_x = arg.render_center.x - view_width / 2;
 
       internal_clip.Expand (-10, -10);
       if (start_x < internal_clip.x)
@@ -571,12 +565,12 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
 
       text_view_->SetBaseX(start_x);
     }
-    if (it->y_rotation < 0)
-      icon_renderer_->RenderIcon(GfxContext, *it, base, base);
+
+    if (arg.y_rotation < 0)
+      icon_renderer_->RenderIcon(GfxContext, arg, base, base);
   }
 
-  std::list<RenderArg>::reverse_iterator rit;
-  for (rit = last_args_.rbegin(); rit != last_args_.rend(); ++rit)
+  for (auto rit = last_args_.rbegin(); rit != last_args_.rend(); ++rit)
   {
     if (rit->y_rotation >= 0)
       icon_renderer_->RenderIcon(GfxContext, *rit, base, base);
@@ -585,7 +579,7 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
   if (render_boxes)
   {
     float val = 0.1f;
-    for (LayoutWindow::Ptr layout : ExternalTargets())
+    for (LayoutWindow::Ptr const& layout : ExternalTargets())
     {
       gPainter.Paint2DQuadColor(GfxContext, layout->result, nux::Color(val, val, val ,val));
       val += 0.1f;
@@ -594,7 +588,7 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
         val = 0.1f;
     }
 
-    for (rit = last_args_.rbegin(); rit != last_args_.rend(); ++rit)
+    for (auto rit = last_args_.rbegin(); rit != last_args_.rend(); ++rit)
     {
       nux::Geometry tmp (rit->render_center.x - 1, rit->render_center.y - 1, 2, 2);
       gPainter.Paint2DQuadColor(GfxContext, tmp, nux::color::Red);
@@ -608,7 +602,7 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
 
   if (ms_since_change < animation_length && !redraw_idle_)
   {
-    redraw_idle_.reset(new glib::Idle([&] () {
+    redraw_idle_.reset(new glib::Idle([this] () {
       QueueDraw();
       animation_draw_ = true;
       redraw_idle_.reset();

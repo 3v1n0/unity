@@ -109,14 +109,14 @@ private:
 
   void SaveLast ();
 
+  SwitcherModel::Ptr model_;
   ui::LayoutSystem layout_system_;
   ui::AbstractIconRenderer::Ptr icon_renderer_;
-  SwitcherModel::Ptr model_;
+  nux::ObjectPtr<nux::StaticCairoText> text_view_;
 
   bool animation_draw_;
   bool target_sizes_set_;
 
-  nux::ObjectPtr<nux::StaticCairoText> text_view_;
 
   std::list<ui::RenderArg> last_args_;
   std::list<ui::RenderArg> saved_args_;
