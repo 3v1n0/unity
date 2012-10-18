@@ -23,10 +23,8 @@
 #include <Nux/VScrollBar.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
-#include <Nux/MenuPage.h>
 #include <Nux/WindowCompositor.h>
 #include <Nux/BaseWindow.h>
-#include <Nux/MenuPage.h>
 #include <NuxCore/Color.h>
 #include <NuxCore/Logger.h>
 
@@ -633,6 +631,11 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
   }
 
   return true;
+}
+
+void LauncherIcon::CloseQuicklist()
+{
+  _quicklist->HideAndEndQuicklistNav();
 }
 
 void LauncherIcon::RecvMouseDown(int button, int monitor, unsigned long key_flags)

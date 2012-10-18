@@ -22,6 +22,10 @@
 #include <NuxCore/Logger.h>
 #include "unity-shared/UBusMessages.h"
 
+#ifndef XA_STRING
+#define XA_STRING ((Atom) 31)
+#endif
+
 namespace
 {
   nux::logging::Logger logger("unity.BGHash");
