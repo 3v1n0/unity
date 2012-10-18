@@ -19,7 +19,7 @@ link_libraries (${LIBS})
 set (LIB_PATHS ${CACHED_UNITY_DEPS_LIBRARY_DIRS})
 link_directories (${CMAKE_BINARY_DIR}/UnityCore ${LIB_PATHS})
 
-include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
+include_directories (.. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR})
 
 #
 # Headers & Sources
