@@ -143,6 +143,7 @@ glow::Quads UnityWindow::computeGlowQuads(nux::Geometry const& geo, GLTexture::L
   CompRect *box;
   GLTexture::Matrix *quadMatrix;
 
+  glow_size = glow_size * texture::GLOW_SIZE / (texture::GLOW_SIZE - texture::GLOW_OFFSET);
   glow_offset = (glow_size * texture::GLOW_OFFSET / texture::GLOW_SIZE) + 1;
 
   /* Top left corner */

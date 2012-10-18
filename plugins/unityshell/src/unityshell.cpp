@@ -113,7 +113,7 @@ namespace decoration
 const unsigned CLOSE_SIZE = 19;
 const unsigned ITEMS_PADDING = 5;
 const unsigned RADIUS = 8;
-const unsigned GLOW = 35;
+const unsigned GLOW = 5;
 const nux::Color GLOW_COLOR(221, 72, 20);
 } // decoration namespace
 } // scale namespace
@@ -781,17 +781,12 @@ void UnityScreen::paintDisplay()
   {
     LayoutWindowList const& targets = switcher_controller_->ExternalRenderTargets();
 
-    if (!targets.empty())
+    for (LayoutWindow::Ptr const& target : targets)
     {
-      UnityWindow::SetupSharedTextures();
-
-      for (LayoutWindow::Ptr const& target : targets)
+      if (CompWindow* window = screen->findWindow(target->xid))
       {
-        if (CompWindow* window = screen->findWindow(target->xid))
-        {
-          UnityWindow *unity_window = UnityWindow::get (window);
-          unity_window->paintThumbnail(target->result, target->alpha);
-        }
+        UnityWindow *unity_window = UnityWindow::get (window);
+        unity_window->paintThumbnail(target->result, target->alpha);
       }
     }
   }
@@ -1892,6 +1887,7 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
       show_mode = switcher::ShowMode::CURRENT_VIEWPORT;
   }
 
+  UnityWindow::SetupSharedTextures();
   SetUpAndShowSwitcher(show_mode);
 
   return true;
@@ -3891,8 +3887,8 @@ nux::Geometry UnityWindow::GetScaledGeometry()
 
   const unsigned width = std::floor(border_rect.width() * pos.scale);
   const unsigned height = std::floor(border_rect.height() * pos.scale);
-  const int x = pos.x() + window->x() - std::floor(deco_ext.left * pos.scale);
-  const int y = pos.y() + window->y() - std::floor(deco_ext.top * pos.scale);
+  const int x = pos.x() + window->x() - std::round(deco_ext.left * pos.scale);
+  const int y = pos.y() + window->y() - std::round(deco_ext.top * pos.scale);
 
   return nux::Geometry(x, y, width, height);
 }
@@ -3923,10 +3919,21 @@ void UnityWindow::OnTerminateSpread()
 
 void UnityWindow::paintInnerGlow(nux::Geometry glow_geo, GLMatrix const& matrix, GLWindowPaintAttrib const& attrib, unsigned mask)
 {
-  // We paint the glow below the window edges to correctly glow the rounded corners
-  int inside_glow = scale::decoration::RADIUS/4;
-  glow_geo.Expand(-inside_glow, -inside_glow);
-  glow::Quads const& quads = computeGlowQuads(glow_geo, glow_texture_, scale::decoration::GLOW);
+  unsigned glow_size = scale::decoration::GLOW;
+
+  if (!glow_size)
+    return;
+
+  if (scale::decoration::RADIUS > 0)
+  {
+    // We paint the glow below the window edges to correctly
+    // render the rounded corners
+    glow_size += scale::decoration::RADIUS;
+    int inside_glow = scale::decoration::RADIUS / 4;
+    glow_geo.Expand(-inside_glow, -inside_glow);
+  }
+
+  glow::Quads const& quads = computeGlowQuads(glow_geo, glow_texture_, glow_size);
   paintGlow(matrix, attrib, quads, glow_texture_, scale::decoration::GLOW_COLOR, mask);
 }
 
