@@ -820,6 +820,9 @@ void PanelMenuView::Refresh(bool force)
 
   if (!_switcher_showing && !_launcher_keynav)
   {
+    // _panel_title needs to be only escaped when computed
+    // in this function, if it comes from OnLauncherSelectionChanged
+    // it is already escaped
     glib::String escaped(g_markup_escape_text(new_title.c_str(), -1));
     if (_panel_title != escaped.Str())
     {
