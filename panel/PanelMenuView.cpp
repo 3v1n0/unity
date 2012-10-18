@@ -844,10 +844,7 @@ void PanelMenuView::Refresh(bool force)
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
 
-  std::ostringstream bold_label;
-  bold_label << "<b>" << _panel_title << "</b>";
-
-  DrawTitle(cr, geo, bold_label.str());
+  DrawTitle(cr, geo, _panel_title);
 
   cairo_destroy(cr);
 
