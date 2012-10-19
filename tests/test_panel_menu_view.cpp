@@ -83,7 +83,7 @@ TEST_F(TestPanelMenuView, Escaping)
 
   StandaloneWindowManager *wm = dynamic_cast<StandaloneWindowManager *>(&WindowManager::Default());
   EXPECT_TRUE(wm != nullptr);
-  // Change the wm to trick the panel view to call GetActiveViewName
+  // Change the wm to trick PanelMenuView::RefreshTitle to call GetActiveViewName
   wm->SetScaleActive(true);
   wm->SetScaleActiveForGroup(true);
   panelMenuView.RefreshTitle();
