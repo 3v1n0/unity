@@ -35,13 +35,12 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
 set(CFLAGS
     "${SERVICE_DEPS_CFLAGS}"
     ${SERVICE_DEPS_CFLAGS_OTHER}
-    "-I${CMAKE_CURRENT_BINARY_DIR}"
-    "-DGETTEXT_PACKAGE=\"unity\""
     "-DINDICATORDIR=\"${_indicatordir}\""
     "-DINDICATORICONDIR=\"${_iconsdir}\""
     "-Werror -Wall"
     )
 add_definitions(${CFLAGS})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 set(LIBS ${SERVICE_DEPS_LIBRARIES})
 link_libraries(${LIBS})

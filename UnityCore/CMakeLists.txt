@@ -95,12 +95,11 @@ set (CORE_SOURCES
 # CFLAGS and LIBS
 #
 set (CFLAGS
-     "-I${CMAKE_BINARY_DIR}"
-     "-DGETTEXT_PACKAGE=\"unity\""
      "-DLENSES_DIR=\"${_lensesdir}\""
      )
 add_definitions (${CFLAGS})
 include_directories(${CORE_DEPS_INCLUDE_DIRS})
+include_directories(${CMAKE_BINARY_DIR})
 
 set (LIBS ${CORE_DEPS_LIBRARIES})
 
