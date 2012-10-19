@@ -260,10 +260,6 @@ TEST_F(TestPanelMenuView, Escaping)
   wm->SetScaleActiveForGroup(true);
   panelMenuView.RefreshTitle();
 
-  printf("AAAAA\n");
-  printf("%s\n", panelMenuView._panel_title.c_str());
-  printf("BBBBB\n");
-
   EXPECT_EQ(panelMenuView._panel_title, "&lt;&gt;&apos;");
 }
 
