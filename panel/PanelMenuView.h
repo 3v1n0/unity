@@ -61,7 +61,6 @@ public:
 protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
-  void RefreshTitle();
 
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -71,9 +70,9 @@ protected:
   virtual void OnEntryAdded(indicator::Entry::Ptr const& entry);
   virtual std::string GetActiveViewName(bool use_appname = false) const;
 
-  std::string _panel_title;
-
 private:
+  friend class TestPanelMenuView;
+
   void OnActiveChanged(PanelIndicatorEntryView* view, bool is_active);
   void OnViewOpened(BamfMatcher* matcher, BamfView* view);
   void OnViewClosed(BamfMatcher* matcher, BamfView* view);
@@ -104,6 +103,7 @@ private:
   void OnMaximizedGrabEnd(int x, int y);
 
   void FullRedraw();
+  std::string GetCurrentTitle() const;
   void Refresh(bool force = false);
   void DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label) const;
 
@@ -152,6 +152,7 @@ private:
   std::map<Window, bool> _decor_map;
   std::set<Window> _maximized_set;
   std::list<glib::Object<BamfApplication>> _new_apps;
+  std::string _panel_title;
   nux::Geometry _last_geo;
 
   bool _overlay_showing;

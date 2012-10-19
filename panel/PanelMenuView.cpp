@@ -785,7 +785,7 @@ void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::s
   gtk_style_context_restore(style_context);
 }
 
-void PanelMenuView::RefreshTitle()
+std::string PanelMenuView::GetCurrentTitle() const
 {
   if (!_switcher_showing && !_launcher_keynav)
   {
@@ -817,10 +817,11 @@ void PanelMenuView::RefreshTitle()
     // in this function, if it comes from OnLauncherSelectionChanged
     // it is already escaped
     glib::String escaped(g_markup_escape_text(new_title.c_str(), -1));
-    if (_panel_title != escaped.Str())
-    {
-      _panel_title = escaped.Str();
-    }
+    return escaped.Str();
+  }
+  else
+  {
+    return _panel_title;
   }
 }
 
@@ -833,13 +834,13 @@ void PanelMenuView::Refresh(bool force)
   if (geo.width > _monitor_geo.width)
     return;
 
-  const std::string prevTitle = _panel_title;
-  RefreshTitle();
-  if (prevTitle == _panel_title && !force && _last_geo == geo && _title_texture)
+  const std::string& new_title = GetCurrentTitle();
+  if (new_title == _panel_title && !force && _last_geo == geo && _title_texture)
   {
     // No need to redraw the title, let's save some CPU time!
     return;
   }
+  _panel_title = new_title;
 
   if (_panel_title.empty())
   {

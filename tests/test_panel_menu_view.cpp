@@ -33,10 +33,6 @@ namespace unity
 
 class MockPanelMenuView : public PanelMenuView
 {
-  public:
-    using PanelMenuView::_panel_title;
-    using PanelMenuView::RefreshTitle;
-
   protected:
     virtual std::string GetActiveViewName(bool use_appname) const
     {
@@ -58,8 +54,13 @@ struct TestPanelMenuView : public testing::Test
     Utils::WaitUntil(expired);
   }
 
-protected:
+  std::string panelTitle() const
+  {
+    const PanelMenuView *panel = &panelMenuView;
+    return panel->GetCurrentTitle();
+  }
 
+private:
   // The order is important, i.e. PanelMenuView needs
   // panel::Style that needs Settings
   Settings settings;
@@ -70,13 +71,15 @@ protected:
 TEST_F(TestPanelMenuView, Escaping)
 {
   static const char *escapedText = "Panel d&amp;Inici";
-  EXPECT_TRUE(panelMenuView._panel_title.empty());
+  EXPECT_TRUE(panelTitle().empty());
 
   UBusManager ubus;
   ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV, NULL);
   ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
                    g_variant_new_string(escapedText));
   ProcessUBusMessages();
+
+  EXPECT_EQ(panelTitle(), escapedText);
 
   ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV, NULL);
   ProcessUBusMessages();
@@ -86,9 +89,8 @@ TEST_F(TestPanelMenuView, Escaping)
   // Change the wm to trick PanelMenuView::RefreshTitle to call GetActiveViewName
   wm->SetScaleActive(true);
   wm->SetScaleActiveForGroup(true);
-  panelMenuView.RefreshTitle();
 
-  EXPECT_EQ(panelMenuView._panel_title, "&lt;&gt;&apos;");
+  EXPECT_EQ(panelTitle(), "&lt;&gt;&apos;");
 }
 
 }
