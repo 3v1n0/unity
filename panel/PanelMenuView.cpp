@@ -787,32 +787,32 @@ void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::s
 
 void PanelMenuView::RefreshTitle()
 {
-  WindowManager& wm = WindowManager::Default();
-  std::string new_title;
-
-  if (wm.IsScaleActive())
-  {
-    if (wm.IsScaleActiveForGroup())
-      new_title = GetActiveViewName(true);
-    else if (_we_control_active)
-      new_title = _desktop_name;
-  }
-  else if (wm.IsExpoActive())
-  {
-    new_title = _desktop_name;
-  }
-  else if (!_we_control_active)
-  {
-    new_title = "";
-  }
-  else if (!_switcher_showing && !_launcher_keynav)
-  {
-    new_title = GetActiveViewName();
-    _window_buttons->SetControlledWindow(_active_xid);
-  }
-
   if (!_switcher_showing && !_launcher_keynav)
   {
+    WindowManager& wm = WindowManager::Default();
+    std::string new_title;
+
+    if (wm.IsScaleActive())
+    {
+      if (wm.IsScaleActiveForGroup())
+        new_title = GetActiveViewName(true);
+      else if (_we_control_active)
+        new_title = _desktop_name;
+    }
+    else if (wm.IsExpoActive())
+    {
+      new_title = _desktop_name;
+    }
+    else if (!_we_control_active)
+    {
+      new_title = "";
+    }
+    else
+    {
+      new_title = GetActiveViewName();
+      _window_buttons->SetControlledWindow(_active_xid);
+    }
+
     // _panel_title needs to be only escaped when computed
     // in this function, if it comes from OnLauncherSelectionChanged
     // it is already escaped
