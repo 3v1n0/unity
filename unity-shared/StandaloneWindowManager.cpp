@@ -44,6 +44,8 @@ WindowManagerPtr create_window_manager()
 StandaloneWindowManager::StandaloneWindowManager()
   : expo_state_(false)
   , in_show_desktop_(false)
+  , scale_active_(false)
+  , scale_active_for_group_(false)
 {
 }
 
@@ -136,14 +138,24 @@ void StandaloneWindowManager::Lower(Window window_id)
 void StandaloneWindowManager::TerminateScale()
 {}
 
+void StandaloneWindowManager::SetScaleActive(bool scale_active)
+{
+  scale_active_ = scale_active;
+}
+
 bool StandaloneWindowManager::IsScaleActive() const
 {
-  return false;
+  return scale_active_;
+}
+
+void StandaloneWindowManager::SetScaleActiveForGroup(bool scale_active_for_group)
+{
+  scale_active_for_group_ = scale_active_for_group;
 }
 
 bool StandaloneWindowManager::IsScaleActiveForGroup() const
 {
-  return false;
+  return scale_active_for_group_;
 }
 
 void StandaloneWindowManager::InitiateExpo()

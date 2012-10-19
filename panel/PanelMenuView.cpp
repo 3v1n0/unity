@@ -785,15 +785,8 @@ void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::s
   gtk_style_context_restore(style_context);
 }
 
-void PanelMenuView::Refresh(bool force)
+void PanelMenuView::RefreshTitle()
 {
-  nux::Geometry const& geo = GetGeometry();
-
-  // We can get into a race that causes the geometry to be wrong as there hasn't been a
-  // layout cycle before the first callback. This is to protect from that.
-  if (geo.width > _monitor_geo.width)
-    return;
-
   WindowManager& wm = WindowManager::Default();
   std::string new_title;
 
@@ -828,11 +821,24 @@ void PanelMenuView::Refresh(bool force)
     {
       _panel_title = escaped.Str();
     }
-    else if (!force && _last_geo == geo && _title_texture)
-    {
-      // No need to redraw the title, let's save some CPU time!
-      return;
-    }
+  }
+}
+
+void PanelMenuView::Refresh(bool force)
+{
+  nux::Geometry const& geo = GetGeometry();
+
+  // We can get into a race that causes the geometry to be wrong as there hasn't been a
+  // layout cycle before the first callback. This is to protect from that.
+  if (geo.width > _monitor_geo.width)
+    return;
+
+  const std::string prevTitle = _panel_title;
+  RefreshTitle();
+  if (prevTitle == _panel_title && !force && _last_geo == geo && _title_texture)
+  {
+    // No need to redraw the title, let's save some CPU time!
+    return;
   }
 
   if (_panel_title.empty())

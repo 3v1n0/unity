@@ -223,6 +223,7 @@ if (GTEST_SRC_DIR AND
                  test_launcher_icon.cpp
                  test_keyboard_util.cpp
                  test_panel_style.cpp
+                 test_panel_menu_view.cpp
                  test_places_group.cpp
                  test_previews_application.cpp
                  test_previews_generic.cpp
@@ -325,6 +326,11 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/launcher/VolumeImp.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/VolumeLauncherIcon.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/VolumeMonitorWrapper.cpp
+                 ${CMAKE_SOURCE_DIR}/panel/PanelIndicatorEntryView.cpp
+                 ${CMAKE_SOURCE_DIR}/panel/PanelIndicatorsView.cpp
+                 ${CMAKE_SOURCE_DIR}/panel/PanelMenuView.cpp
+                 ${CMAKE_SOURCE_DIR}/panel/PanelTitlebarGrabAreaView.cpp
+                 ${CMAKE_SOURCE_DIR}/panel/WindowButtons.cpp
                  ${CMAKE_SOURCE_DIR}/shortcuts/ShortcutController.cpp
                  ${CMAKE_SOURCE_DIR}/shortcuts/ShortcutModel.cpp
                  #${CMAKE_SOURCE_DIR}/shortcuts/ShortcutHintPrivate.cpp

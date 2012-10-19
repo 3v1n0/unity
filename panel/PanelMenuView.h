@@ -61,6 +61,7 @@ public:
 protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
+  void RefreshTitle();
 
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -68,6 +69,9 @@ protected:
   virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position,
                                         nux::NuxEventType event_type);
   virtual void OnEntryAdded(indicator::Entry::Ptr const& entry);
+  virtual std::string GetActiveViewName(bool use_appname = false) const;
+
+  std::string _panel_title;
 
 private:
   void OnActiveChanged(PanelIndicatorEntryView* view, bool is_active);
@@ -109,8 +113,6 @@ private:
 
   BamfWindow* GetBamfWindowForXid(Window xid) const;
 
-  std::string GetActiveViewName(bool use_appname = false) const;
-
   void OnSwitcherShown(GVariant* data);
   void OnLauncherKeyNavStarted(GVariant* data);
   void OnLauncherKeyNavEnded(GVariant* data);
@@ -150,7 +152,6 @@ private:
   std::map<Window, bool> _decor_map;
   std::set<Window> _maximized_set;
   std::list<glib::Object<BamfApplication>> _new_apps;
-  std::string _panel_title;
   nux::Geometry _last_geo;
 
   bool _overlay_showing;
