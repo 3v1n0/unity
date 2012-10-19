@@ -70,7 +70,7 @@ protected:
 TEST_F(TestPanelMenuView, Escaping)
 {
   static const char *escapedText = "Panel d&amp;Inici";
-  EXPECT_EQ(panelMenuView._panel_title, "");
+  EXPECT_TRUE(panelMenuView._panel_title.empty());
 
   UBusManager ubus;
   ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV, NULL);
@@ -82,7 +82,7 @@ TEST_F(TestPanelMenuView, Escaping)
   ProcessUBusMessages();
 
   StandaloneWindowManager *wm = dynamic_cast<StandaloneWindowManager *>(&WindowManager::Default());
-  EXPECT_TRUE(wm != nullptr);
+  ASSERT_NE(wm, nullptr);
   // Change the wm to trick PanelMenuView::RefreshTitle to call GetActiveViewName
   wm->SetScaleActive(true);
   wm->SetScaleActiveForGroup(true);
