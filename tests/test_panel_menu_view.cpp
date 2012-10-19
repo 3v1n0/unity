@@ -23,7 +23,6 @@
 #include "PanelStyle.h"
 #include "UnitySettings.h"
 #include "UBusMessages.h"
-// #include "StandaloneWindowManager.h"
 #include "test_utils.h"
 
 using namespace testing;
