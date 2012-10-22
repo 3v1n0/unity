@@ -22,6 +22,7 @@ using namespace testing;
 
 #include "shortcuts/BaseWindowRaiser.h"
 #include "shortcuts/ShortcutController.h"
+#include "unity-shared/UnitySettings.h"
 using namespace unity;
 
 #include "test_utils.h"
@@ -45,6 +46,7 @@ public:
     , controller_(hints_, base_window_raiser_)
   {}
 
+  Settings unity_settings;
   std::list<shortcut::AbstractHint::Ptr> hints_;
   MockBaseWindowRaiser::Ptr base_window_raiser_;
   shortcut::Controller controller_;

@@ -144,8 +144,11 @@ public:
   {
     MenuItemsVector result;
 
-    AppendUnlockFromLauncherItem(result);
     AppendOpenItem(result);
+    AppendSeparatorItem(result);
+    AppendNameItem(result);
+    AppendSeparatorItem(result);
+    AppendUnlockFromLauncherItem(result);
     AppendEjectItem(result);
     AppendSafelyRemoveItem(result);
     AppendUnmountItem(result);
@@ -168,6 +171,32 @@ public:
         auto const& identifier = volume_->GetIdentifier();
         parent_->UnStick();
         devices_settings_->TryToBlacklist(identifier);
+    }));
+
+    menu.push_back(menu_item);
+  }
+
+  void AppendSeparatorItem(MenuItemsVector& menu)
+  {
+    glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_TYPE, DBUSMENU_CLIENT_TYPES_SEPARATOR);
+    menu.push_back(menu_item);
+  }
+
+  void AppendNameItem(MenuItemsVector& menu)
+  {
+    std::ostringstream bold_volume_name;
+    bold_volume_name << "<b>" << volume_->GetName() << "</b>";
+
+    glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
+
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, bold_volume_name.str().c_str());
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY, true);
+
+    gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
+        volume_->MountAndOpenInFileManager();
     }));
 
     menu.push_back(menu_item);
