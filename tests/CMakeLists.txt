@@ -25,7 +25,6 @@ set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
 set (CFLAGS
      ${TEST_UNIT_DEPS_CFLAGS}
      ${TEST_UNIT_DEPS_CFLAGS_OTHER}
-     ${MAINTAINER_CFLAGS}
      "-g"
      "-DTESTDATADIR=\"${TESTDATADIR}\""
      "-DGETTEXT_PACKAGE=\"unity\""
@@ -64,9 +63,6 @@ add_executable (test-unit
                 unit/TestMain.cpp
                 unit/TestPanelService.cpp
                 unit/TestStaticCairoText.cpp
-                ${CMAKE_SOURCE_DIR}/launcher/CairoBaseWindow.cpp
-                ${CMAKE_SOURCE_DIR}/unity-shared/Introspectable.cpp
-                ${CMAKE_SOURCE_DIR}/unity-shared/StaticCairoText.cpp
                 ../services/panel-service.c
                 ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
                 )
@@ -150,37 +146,17 @@ if (GTEST_SRC_DIR AND
                  test_ubus.cpp
                  test_unityshell_private.cpp
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/AbstractLauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/Animator.cpp
                  ${UNITY_SRC}/DebugDBusInterface.cpp
                  ${UNITY_SRC}/XPathQueryPart.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/FavoriteStore.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/FavoriteStoreGSettings.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/IconTextureSource.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/LauncherModel.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/LauncherEntryRemote.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/MockLauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/FavoriteStorePrivate.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/PointerBarrier.cpp
-                 ${CMAKE_SOURCE_DIR}/shortcuts/ShortcutModel.cpp
-                 ${CMAKE_SOURCE_DIR}/shortcuts/ShortcutHintPrivate.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/Introspectable.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/TextureCache.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/Timer.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/UBusServer.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/UBusWrapper.cpp
                  ${UNITY_SRC}/UnityshellPrivate.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/WindowManager.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/StandaloneWindowManager.cpp
                  ${UNITY_SRC}/UnityShowdesktopHandler.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-impl-factory.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-layout.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-texture.cpp
-                 ${CMAKE_SOURCE_DIR}/hud/HudPrivate.cpp
                  )
-  target_link_libraries(test-gtest-xless gtest unity-shared ${GMOCK_LIB} ${GMOCK_MAIN_LIB} ${LIBS})
+  target_link_libraries(test-gtest-xless gtest unity-shared ${GMOCK_LIB} ${GMOCK_MAIN_LIB} ${LIBS} launcher-lib shortcuts-lib hud-lib)
   add_test(UnityGTestXless test-gtest-xless)
   add_dependencies(test-gtest-xless unity-core-${UNITY_API_VERSION} gtest)
 
@@ -224,6 +200,7 @@ if (GTEST_SRC_DIR AND
                  test_launcher_icon.cpp
                  test_keyboard_util.cpp
                  test_panel_style.cpp
+                 test_panel_menu_view.cpp
                  test_places_group.cpp
                  test_previews_application.cpp
                  test_previews_generic.cpp
@@ -248,128 +225,9 @@ if (GTEST_SRC_DIR AND
                  bamf-mock-application.c
                  gmockmount.c
                  gmockvolume.c
-                 ${CMAKE_SOURCE_DIR}/dash/DashViewPrivate.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/ResultRenderer.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/PlacesGroup.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/ResultRenderer.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/ResultRendererHorizontalTile.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/ResultRendererTile.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/ResultView.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/ResultViewGrid.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/previews/ActionButton.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/previews/ApplicationPreview.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/previews/GenericPreview.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/previews/MoviePreview.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/previews/MusicPreview.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/previews/Preview.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/previews/PreviewInfoHintWidget.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/previews/PreviewRatingsWidget.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/previews/SocialPreview.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/previews/SocialPreviewContent.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/previews/SocialPreviewComments.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/previews/Tracks.cpp
-                 ${CMAKE_SOURCE_DIR}/dash/previews/Track.cpp
-                 ${CMAKE_SOURCE_DIR}/hud/HudAbstractView.cpp
-                 ${CMAKE_SOURCE_DIR}/hud/HudButton.cpp
-                 ${CMAKE_SOURCE_DIR}/hud/HudController.cpp
-                 ${CMAKE_SOURCE_DIR}/hud/HudIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/hud/HudIconTextureSource.cpp
-                 ${CMAKE_SOURCE_DIR}/hud/HudPrivate.cpp
-                 ${CMAKE_SOURCE_DIR}/hud/HudView.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/AbstractLauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/ApplicationLauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/BFBLauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/CairoBaseWindow.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/DNDCollectionWindow.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/Decaymulator.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/DesktopLauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/DeviceLauncherSection.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/DeviceNotificationDisplayImp.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/DevicesSettingsImp.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/DndData.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/EdgeBarrierController.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/ExpoLauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/FavoriteStore.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/FavoriteStoreGSettings.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/FavoriteStorePrivate.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/FileManagerOpenerImp.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/HudLauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/Launcher.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/LauncherController.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/LauncherDragWindow.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/LauncherEntryRemote.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/LauncherEntryRemoteModel.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/LauncherHideMachine.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/LauncherHoverMachine.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/LauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/LauncherModel.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/LauncherOptions.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/LayoutSystem.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/MockLauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/PointerBarrier.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/QuicklistManager.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/QuicklistMenuItem.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/QuicklistMenuItemCheckmark.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/QuicklistMenuItemLabel.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/QuicklistMenuItemRadio.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/QuicklistMenuItemSeparator.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/QuicklistView.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/SimpleLauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/SingleMonitorLauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/SoftwareCenterLauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/SpacerLauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/SwitcherController.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/SwitcherModel.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/SwitcherView.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/Tooltip.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/TrashLauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/VolumeImp.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/VolumeLauncherIcon.cpp
-                 ${CMAKE_SOURCE_DIR}/launcher/VolumeMonitorWrapper.cpp
-                 ${CMAKE_SOURCE_DIR}/shortcuts/ShortcutController.cpp
-                 ${CMAKE_SOURCE_DIR}/shortcuts/ShortcutModel.cpp
-                 #${CMAKE_SOURCE_DIR}/shortcuts/ShortcutHintPrivate.cpp
-                 ${CMAKE_SOURCE_DIR}/shortcuts/ShortcutView.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/AbstractSeparator.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/Animator.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/BackgroundEffectHelper.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/CoverArt.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/DashStyle.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/DefaultThumbnailProvider.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/IconLoader.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/IconRenderer.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/IconTexture.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/IconTextureSource.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/IMTextEntry.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/Introspectable.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/IntrospectableWrappers.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/LineSeparator.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/JSONParser.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/OverlayRenderer.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/PanelStyle.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/PlacesVScrollBar.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/PreviewStyle.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/RatingsButton.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/SearchBar.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/SearchBarSpinner.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/StandaloneWindowManager.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/StaticCairoText.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/TextureCache.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/Timer.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/TextureThumbnailProvider.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/ThumbnailGenerator.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/UBusServer.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/UBusWrapper.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/UScreen.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/UnitySettings.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/UnityWindowStyle.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/UnityWindowView.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/UserThumbnailProvider.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/WindowManager.cpp
-                 ${CMAKE_SOURCE_DIR}/unity-shared/XKeyboardUtil.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unityshell/src/WindowMinimizeSpeedController.cpp
                 )
-  target_link_libraries(test-gtest gtest gmock unity-shared ${LIBS})
+  target_link_libraries(test-gtest gtest gmock unity-shared ${LIBS} launcher-lib unity-shared-standalone shortcuts-lib previews-lib hud-lib switcher-lib dash-lib panel-lib)
   add_test(UnityGTest test-gtest)
   add_dependencies(test-gtest unity-core-${UNITY_API_VERSION} gtest gmock)
 

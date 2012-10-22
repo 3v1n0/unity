@@ -106,7 +106,11 @@ Launcher::Launcher(nux::BaseWindow* parent,
                    nux::ObjectPtr<DNDCollectionWindow> const& collection_window,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
+#ifdef UNITY_HAS_X_ORG_SUPPORT
   , display(nux::GetGraphicsDisplay()->GetX11Display())
+#else
+  , display(0)
+#endif
   , monitor(0)
   , _parent(parent)
   , _active_quicklist(nullptr)
@@ -187,7 +191,9 @@ Launcher::Launcher(nux::BaseWindow* parent,
   wm.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &Launcher::EnsureAnimation));
 
+#ifdef UNITY_HAS_X_ORG_SUPPORT
   display.changed.connect(sigc::mem_fun(this, &Launcher::OnDisplayChanged));
+#endif
 
   // 0 out timers to avoid wonky startups
   for (int i = 0; i < TIME_LAST; ++i)

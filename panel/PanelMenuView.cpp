@@ -785,6 +785,46 @@ void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::s
   gtk_style_context_restore(style_context);
 }
 
+std::string PanelMenuView::GetCurrentTitle() const
+{
+  if (!_switcher_showing && !_launcher_keynav)
+  {
+    WindowManager& wm = WindowManager::Default();
+    std::string new_title;
+
+    if (wm.IsScaleActive())
+    {
+      if (wm.IsScaleActiveForGroup())
+        new_title = GetActiveViewName(true);
+      else if (_we_control_active)
+        new_title = _desktop_name;
+    }
+    else if (wm.IsExpoActive())
+    {
+      new_title = _desktop_name;
+    }
+    else if (!_we_control_active)
+    {
+      new_title = "";
+    }
+    else
+    {
+      new_title = GetActiveViewName();
+      _window_buttons->SetControlledWindow(_active_xid);
+    }
+
+    // _panel_title needs to be only escaped when computed
+    // in this function, if it comes from OnLauncherSelectionChanged
+    // it is already escaped
+    glib::String escaped(g_markup_escape_text(new_title.c_str(), -1));
+    return escaped.Str();
+  }
+  else
+  {
+    return _panel_title;
+  }
+}
+
 void PanelMenuView::Refresh(bool force)
 {
   nux::Geometry const& geo = GetGeometry();
@@ -794,42 +834,13 @@ void PanelMenuView::Refresh(bool force)
   if (geo.width > _monitor_geo.width)
     return;
 
-  WindowManager& wm = WindowManager::Default();
-  std::string new_title;
-
-  if (wm.IsScaleActive())
+  const std::string& new_title = GetCurrentTitle();
+  if (new_title == _panel_title && !force && _last_geo == geo && _title_texture)
   {
-    if (wm.IsScaleActiveForGroup())
-      new_title = GetActiveViewName(true);
-    else if (_we_control_active)
-      new_title = _desktop_name;
+    // No need to redraw the title, let's save some CPU time!
+    return;
   }
-  else if (wm.IsExpoActive())
-  {
-    new_title = _desktop_name;
-  }
-  else if (!_we_control_active)
-  {
-    new_title = "";
-  }
-  else if (!_switcher_showing && !_launcher_keynav)
-  {
-    new_title = GetActiveViewName();
-    _window_buttons->SetControlledWindow(_active_xid);
-  }
-
-  if (!_switcher_showing && !_launcher_keynav)
-  {
-    if (_panel_title != new_title)
-    {
-      _panel_title = new_title;
-    }
-    else if (!force && _last_geo == geo && _title_texture)
-    {
-      // No need to redraw the title, let's save some CPU time!
-      return;
-    }
-  }
+  _panel_title = new_title;
 
   if (_panel_title.empty())
   {
@@ -843,12 +854,7 @@ void PanelMenuView::Refresh(bool force)
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
 
-  glib::String escaped(g_markup_escape_text(_panel_title.c_str(), -1));
-
-  std::ostringstream bold_label;
-  bold_label << "<b>" << escaped.Str() << "</b>";
-
-  DrawTitle(cr, geo, bold_label.str());
+  DrawTitle(cr, geo, _panel_title);
 
   cairo_destroy(cr);
 
