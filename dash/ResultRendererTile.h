@@ -25,15 +25,8 @@
 #ifndef RESULTRENDERERTILE_H
 #define RESULTRENDERERTILE_H
 
-#include <Nux/Nux.h>
-#include <NuxCore/Object.h>
-#include <NuxCore/ObjectPtr.h>
-#include <NuxCore/Property.h>
-#include <Nux/TextureArea.h>
-#include <NuxGraphics/CairoGraphics.h>
-#include "unity-shared/IconLoader.h"
-
 #include "ResultRenderer.h"
+#include "unity-shared/IconLoader.h"
 
 namespace unity
 {
@@ -50,8 +43,7 @@ namespace dash
 
     TextureContainer()
       : slot_handle(0)
-    {
-    }
+    {}
 
     ~TextureContainer()
     {
@@ -67,17 +59,14 @@ public:
   NUX_DECLARE_OBJECT_TYPE(ResultRendererTile, ResultRenderer);
 
   ResultRendererTile(NUX_FILE_LINE_PROTO);
-  ~ResultRendererTile();
 
   virtual void Render(nux::GraphicsEngine& GfxContext,
                       Result& row,
                       ResultRendererState state,
-                      nux::Geometry& geometry,
+                      nux::Geometry const& geometry,
                       int x_offset, int y_offset);
-  // this is just to start preloading images and text that the renderer might
-  // need - can be ignored
+
   virtual void Preload(Result& row);
-  // unload any previous grabbed images
   virtual void Unload(Result& row);
 
   int spacing;
@@ -102,4 +91,6 @@ private:
 
 }
 }
+
 #endif // RESULTRENDERERTILE_H
+

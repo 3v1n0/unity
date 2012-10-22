@@ -20,8 +20,6 @@
  *
  */
 
-
-
 #include "ResultRenderer.h"
 
 namespace unity
@@ -34,17 +32,12 @@ ResultRenderer::ResultRenderer(NUX_FILE_LINE_DECL)
   : InitiallyUnownedObject(NUX_FILE_LINE_PARAM)
   , width(50)
   , height(50)
-{
-}
-
-ResultRenderer::~ResultRenderer()
-{
-}
+{}
 
 void ResultRenderer::Render(nux::GraphicsEngine& GfxContext,
-                            Result& row,
-                            ResultRendererState state,
-                            nux::Geometry& geometry, int x_offset, int y_offset)
+                            Result& /*row*/,
+                            ResultRendererState /*state*/,
+                            nux::Geometry const& geometry, int /*x_offset*/, int /*y_offset*/)
 {
   nux::GetPainter().PushDrawSliceScaledTextureLayer(GfxContext, geometry, nux::eBUTTON_NORMAL, nux::color::White, nux::eAllCorners);
 }
@@ -59,6 +52,6 @@ void ResultRenderer::Unload(Result& row)
   // unload any resources
 }
 
+}
+}
 
-}
-}
