@@ -95,12 +95,18 @@ public:
 
   virtual std::string GetWindowName(Window window_id) const;
 
+  // Mock functions
+  void SetScaleActive(bool scale_active);
+  void SetScaleActiveForGroup(bool scale_active_for_group);
+
 protected:
   virtual void AddProperties(GVariantBuilder* builder);
 
 private:
   bool expo_state_;
   bool in_show_desktop_;
+  bool scale_active_;
+  bool scale_active_for_group_;
 };
 
 }
