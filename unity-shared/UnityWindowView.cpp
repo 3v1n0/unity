@@ -136,7 +136,7 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
   gPainter.PaintShapeCornerROP(GfxContext,
                                internal_clip,
                                nux::color::White,
-                               nux::eSHAPE_CORNER_ROUND5,
+                               nux::eSHAPE_CORNER_ROUND4,
                                nux::eCornerTopLeft | nux::eCornerTopRight |
                                nux::eCornerBottomLeft | nux::eCornerBottomRight,
                                true,
