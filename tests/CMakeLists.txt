@@ -142,14 +142,12 @@ if (GTEST_SRC_DIR AND
                  test_previews.cpp
                  test_shortcut_model.cpp
                  test_shortcut_private.cpp
-                 test_showdesktop_handler.cpp
                  test_ubus.cpp
                  test_unityshell_private.cpp
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  ${UNITY_SRC}/DebugDBusInterface.cpp
                  ${UNITY_SRC}/XPathQueryPart.cpp
                  ${UNITY_SRC}/UnityshellPrivate.cpp
-                 ${UNITY_SRC}/UnityShowdesktopHandler.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-impl-factory.cpp
@@ -214,6 +212,7 @@ if (UNITY_ENABLE_X_ORG_SUPPORT)
                  test_shortcut_controller.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_expo_launcher_icon.cpp
+                 test_showdesktop_handler.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
                  test_texture_cache.cpp
@@ -226,6 +225,7 @@ if (UNITY_ENABLE_X_ORG_SUPPORT)
                  bamf-mock-application.c
                  gmockmount.c
                  gmockvolume.c
+                 ${UNITY_SRC}/UnityShowdesktopHandler.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unityshell/src/WindowMinimizeSpeedController.cpp
                 )
   target_link_libraries(test-gtest gtest gmock unity-shared ${LIBS} launcher-lib unity-shared-standalone shortcuts-lib previews-lib hud-lib switcher-lib dash-lib panel-lib)
