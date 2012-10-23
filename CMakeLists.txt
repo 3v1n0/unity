@@ -23,6 +23,13 @@ option(
   ON
 )
 
+# This is due to bug lp:668799 - qemu-arm segfaults executing msgmerge
+option(
+  I18N_SUPPORT
+  "Enable I18N, do the .po file thing."
+  ON
+)
+
 if(UNITY_ENABLE_X_ORG_SUPPORT)
   add_definitions(-DUNITY_HAS_X_ORG_SUPPORT)
   add_definitions(-DUSE_X11)
@@ -119,12 +126,14 @@ add_custom_command (OUTPUT ${CMAKE_SOURCE_DIR}/po/unity.pot
 		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 		)
 
+if (I18N_SUPPORT)
 if (${GETTEXT_FOUND} STREQUAL "TRUE")
         set (HAVE_GETTEXT true)
         file (GLOB _translations ${CMAKE_SOURCE_DIR}/po/*.po)
         GETTEXT_CREATE_TRANSLATIONS (${CMAKE_SOURCE_DIR}/po/${PROJECT_NAME}.pot
                 ALL ${_translations})
 endif (${GETTEXT_FOUND} STREQUAL "TRUE")
+endif()
 
 #
 # Enable or disable boot logging
