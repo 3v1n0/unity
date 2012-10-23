@@ -25,9 +25,11 @@ option(
 
 if(UNITY_ENABLE_X_ORG_SUPPORT)
   add_definitions(-DUNITY_HAS_X_ORG_SUPPORT)
+  add_definitions(-DUSE_X11)
   message("Unity is configured with support for X.org")
 else ()
   message("Unity is configured with without X.org")
+  add_definitions(-DNO_X11)
 endif()
 
 if (BUILD_GLES)
