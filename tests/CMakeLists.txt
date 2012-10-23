@@ -179,6 +179,7 @@ if (GTEST_SRC_DIR AND
   add_test(UnityGTestDBus test-gtest-dbus)
   add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} test-gtest-service gtest)
 
+if (UNITY_ENABLE_X_ORG_SUPPORT)
 # Tests that require X
   add_executable(test-gtest
                  test_main.cpp
@@ -230,12 +231,14 @@ if (GTEST_SRC_DIR AND
   target_link_libraries(test-gtest gtest gmock unity-shared ${LIBS} launcher-lib unity-shared-standalone shortcuts-lib previews-lib hud-lib switcher-lib dash-lib panel-lib)
   add_test(UnityGTest test-gtest)
   add_dependencies(test-gtest unity-core-${UNITY_API_VERSION} gtest gmock)
-
+endif (UNITY_ENABLE_X_ORG_SUPPORT)
 endif (GTEST_SRC_DIR AND
        GMOCK_LIB AND
        GMOCK_MAIN_LIB)
 
-add_subdirectory (test-gestures)
+if(UNITY_ENABLE_X_ORG_SUPPORT)
+  add_subdirectory (test-gestures)
+endif()
 
 #
 # check target
@@ -243,10 +246,12 @@ add_subdirectory (test-gestures)
 set (TEST_RESULT_DIR ${CMAKE_BINARY_DIR}/tests)
 set (TEST_RESULT_XML ${TEST_RESULT_DIR}/test-results.xml)
 set (TEST_RESULT_HTML ${TEST_RESULT_DIR}/test-results.html)
-set (GTEST_TEST_COMMAND ./test-gtest)
+if (UNITY_ENABLE_X_ORG_SUPPORT)
+  set (GTEST_TEST_COMMAND ./test-gtest)
+  set (GTEST_TEST_COMMAND_GESTURES ./test-gestures/test-gestures)
+endif (UNITY_ENABLE_X_ORG_SUPPORT)
 set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless)
 set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --task ./test-gtest-service --task ./test-gtest-dbus)
-set (GTEST_TEST_COMMAND_GESTURES ./test-gestures/test-gestures)
 
 set (TEST_COMMAND
      gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit
@@ -263,10 +268,16 @@ set (TEST_COMMAND_HEADLESS
   && echo "Warning, DBus test cases are disabled!!")
 
 if (GTEST_SRC_DIR)
-  add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless test-gtest-dbus test-gestures)
-  add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus test-gestures)
+  if (UNITY_ENABLE_X_ORG_SUPPORT)
+    add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless test-gtest-dbus test-gestures)
+    add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus test-gestures)
+    add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)
+  else ()
+    add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest-xless test-gtest-dbus)
+    add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus)
+    add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest-xless)
+  endif ()
   add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
-  add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)
 else (GTEST_SRC_DIR)
   add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit)
 endif (GTEST_SRC_DIR)
