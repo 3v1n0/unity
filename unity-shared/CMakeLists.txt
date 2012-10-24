@@ -32,6 +32,7 @@ set (UNITY_SHARED_SOURCES
      CoverArt.cpp
      BackgroundEffectHelper.cpp
      DashStyle.cpp
+     DebugDBusInterface.cpp
      DefaultThumbnailProvider.cpp
      FontSettings.cpp
      IMTextEntry.cpp
@@ -64,6 +65,7 @@ set (UNITY_SHARED_SOURCES
      UnityWindowView.cpp
      UserThumbnailProvider.cpp
      WindowManager.cpp
+     XPathQueryPart.cpp
 )
 
 if(UNITY_ENABLE_X_ORG_SUPPORT)
