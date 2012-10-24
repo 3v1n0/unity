@@ -149,7 +149,7 @@ if (GTEST_SRC_DIR AND
        ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-texture.cpp
 )
 
-if(UNITY_ENABLE_X_ORG_SUPPORT)
+if (ENABLE_X_SUPPORT)
   set (GTEST_XLESS_SOURCES
     test_hud_private.cpp
     test_pointer_barrier.cpp
@@ -157,7 +157,7 @@ if(UNITY_ENABLE_X_ORG_SUPPORT)
     test_shortcut_private.cpp
     ${LAUNCHER_SOURCES}
     )
-endif()
+endif ()
 
   add_executable(test-gtest-xless ${GTEST_XLESS_SOURCES})
 
@@ -185,7 +185,7 @@ endif()
   add_test(UnityGTestDBus test-gtest-dbus)
   add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} test-gtest-service gtest)
 
-if (UNITY_ENABLE_X_ORG_SUPPORT)
+if (ENABLE_X_SUPPORT)
 # Tests that require X
   add_executable(test-gtest
                  test_main.cpp
@@ -239,12 +239,12 @@ if (UNITY_ENABLE_X_ORG_SUPPORT)
   target_link_libraries(test-gtest gtest gmock unity-shared ${LIBS} launcher-lib unity-shared-standalone shortcuts-lib previews-lib hud-lib switcher-lib dash-lib panel-lib)
   add_test(UnityGTest test-gtest)
   add_dependencies(test-gtest unity-core-${UNITY_API_VERSION} gtest gmock)
-endif (UNITY_ENABLE_X_ORG_SUPPORT)
+endif (ENABLE_X_SUPPORT)
 endif (GTEST_SRC_DIR AND
        GMOCK_LIB AND
        GMOCK_MAIN_LIB)
 
-if(UNITY_ENABLE_X_ORG_SUPPORT)
+if(ENABLE_X_SUPPORT)
   add_subdirectory (test-gestures)
 endif()
 
@@ -254,10 +254,10 @@ endif()
 set (TEST_RESULT_DIR ${CMAKE_BINARY_DIR}/tests)
 set (TEST_RESULT_XML ${TEST_RESULT_DIR}/test-results.xml)
 set (TEST_RESULT_HTML ${TEST_RESULT_DIR}/test-results.html)
-if (UNITY_ENABLE_X_ORG_SUPPORT)
+if (ENABLE_X_SUPPORT)
   set (GTEST_TEST_COMMAND ./test-gtest)
   set (GTEST_TEST_COMMAND_GESTURES ./test-gestures/test-gestures)
-endif (UNITY_ENABLE_X_ORG_SUPPORT)
+endif (ENABLE_X_SUPPORT)
 set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless)
 set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --task ./test-gtest-service --task ./test-gtest-dbus)
 
@@ -276,7 +276,7 @@ set (TEST_COMMAND_HEADLESS
   && echo "Warning, DBus test cases are disabled!!")
 
 if (GTEST_SRC_DIR)
-  if (UNITY_ENABLE_X_ORG_SUPPORT)
+  if (ENABLE_X_SUPPORT)
     add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless test-gtest-dbus test-gestures)
     add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus test-gestures)
     add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)

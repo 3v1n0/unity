@@ -18,7 +18,7 @@ set (CMAKE_CXX_FLAGS_DEBUG "-g3")
 set (CMAKE_CXX_FLAGS_RELEASE "")
 
 option(
-  UNITY_ENABLE_X_ORG_SUPPORT
+  ENABLE_X_SUPPORT
   "Enable X.org support in unity"
   ON
 )
@@ -30,20 +30,20 @@ option(
   ON
 )
 
-if(UNITY_ENABLE_X_ORG_SUPPORT)
-  add_definitions(-DUNITY_HAS_X_ORG_SUPPORT)
+if (ENABLE_X_SUPPORT)
   add_definitions(-DUSE_X11)
   message("Unity is configured with support for X.org")
 else ()
   message("Unity is configured with without X.org")
   add_definitions(-DNO_X11)
-endif()
+endif ()
 
 if (BUILD_GLES)
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNUX_OPENGLES_20 -DUSE_GLES")
-    set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm -lpthread -ldl")
+  add_definitions(-DNUX_OPENGLES_20)
+  add_definitions(-DUSE_GLES)
+  set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm -lpthread -ldl")
 else ()
-    set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm -lpthread -ldl -lGL -lGLU")
+  set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm -lpthread -ldl -lGL -lGLU")
 endif ()
 
 #
@@ -155,7 +155,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MAINTAINER_CXXFLAGS}")
 #
 # Compiz Plugins
 #
-if(UNITY_ENABLE_X_ORG_SUPPORT)
+if (ENABLE_X_SUPPORT)
   set (UNITY_PLUGIN_DEPS "compiz>=0.9.8.0;nux-3.0>=3.0.0;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;gmodule-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator3-0.4>=0.4.90;atk;atk-bridge-2.0;unity-misc>=0.4.0;dbus-glib-1;gtk+-3.0>=3.1;sigc++-2.0;json-glib-1.0;libnotify;xfixes;unity-protocol-private>=5.95.1;libgeis;xrender>=0.9;zeitgeist-1.0>=0.3.18")
 else ()
   set (UNITY_PLUGIN_DEPS "nux-3.0>=3.0.0;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;gmodule-2.0;dbusmenu-glib-0.4;libstartup-notification-1.0;gthread-2.0;indicator3-0.4>=0.4.90;atk;atk-bridge-2.0;unity-misc>=0.4.0;dbus-glib-1;gtk+-3.0>=3.1;sigc++-2.0;json-glib-1.0;libnotify;unity-protocol-private>=5.95.1;zeitgeist-1.0>=0.3.18")
@@ -170,7 +170,7 @@ pkg_check_modules (CACHED_UNITY_PRIVATE_DEPS REQUIRED ${UNITY_PROTOCOL_PRIVATE_D
 add_subdirectory(unity-shared)
 add_subdirectory(dash)
 add_subdirectory(launcher)
-if(UNITY_ENABLE_X_ORG_SUPPORT)
+if (ENABLE_X_SUPPORT)
   add_subdirectory(hud)
   add_subdirectory(panel)
   add_subdirectory(plugins/unityshell)
@@ -179,7 +179,7 @@ if(UNITY_ENABLE_X_ORG_SUPPORT)
   add_subdirectory(plugins/unity-mt-grab-handles)
   add_subdirectory(shortcuts)
   add_subdirectory(unity-standalone)
-endif()
+endif ()
 
 # subdirs
 add_subdirectory(doc)
