@@ -42,6 +42,7 @@ class MockPanelMenuView : public PanelMenuView
 class MockWindowManager : public WindowManager
 {
 public:
+  MockWindowManager() : _scale_active(false), _scale_active_group(false) {}
   guint32 GetActiveWindow() const { return 0; }
   unsigned long long GetWindowActiveNumber (guint32 xid) const { return 0; }
   bool IsScreenGrabbed() const { return false; }
@@ -113,8 +114,8 @@ public:
     any = false;
   }
 
-  bool _scale_active = false;
-  bool _scale_active_group = false;
+  bool _scale_active;
+  bool _scale_active_group;
 };
 
 struct TestPanelMenuView : public testing::Test
