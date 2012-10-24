@@ -22,22 +22,16 @@
 
 
 #include "ResultView.h"
+
+#include <Nux/Layout.h>
+#include <UnityCore/Variant.h>
+
 #include "unity-shared/IntrospectableWrappers.h"
-#include <UnityCore/Variant.h>
-#include <Nux/HLayout.h>
-#include <Nux/VLayout.h>
-#include <Nux/Button.h>
-#include <NuxCore/Logger.h>
-#include <UnityCore/Variant.h>
 
 namespace unity
 {
 namespace dash
 {
-namespace
-{
-nux::logging::Logger logger("unity.dash.results");
-}
 
 NUX_IMPLEMENT_OBJECT_TYPE(ResultView);
 

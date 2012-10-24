@@ -20,15 +20,9 @@
  *
  */
 
-
-#include <sstream>     // for ostringstream
 #include "ResultRendererTile.h"
 
-#include <boost/algorithm/string.hpp>
-
-#include <pango/pango.h>
 #include <pango/pangocairo.h>
-#include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
 #include <NuxCore/Logger.h>
@@ -36,10 +30,7 @@
 
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/DashStyle.h"
-#include "unity-shared/IconLoader.h"
-#include "unity-shared/IconTexture.h"
 #include "unity-shared/TextureCache.h"
-
 
 namespace
 {
@@ -84,14 +75,10 @@ ResultRendererTile::ResultRendererTile(NUX_FILE_LINE_DECL)
                                       sigc::mem_fun(this, &ResultRendererTile::DrawHighlight));
 }
 
-ResultRendererTile::~ResultRendererTile()
-{
-}
-
 void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
                                 Result& row,
                                 ResultRendererState state,
-                                nux::Geometry& geometry,
+                                nux::Geometry const& geometry,
                                 int x_offset, int y_offset)
 {
   TextureContainer* container = row.renderer<TextureContainer*>();

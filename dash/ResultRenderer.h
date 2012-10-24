@@ -26,10 +26,6 @@
 #define RESULTRENDERER_H
 
 #include <Nux/Nux.h>
-#include <NuxCore/InitiallyUnownedObject.h>
-#include <NuxCore/Property.h>
-#include <dee.h>
-
 #include <UnityCore/Result.h>
 
 namespace unity
@@ -52,11 +48,11 @@ public:
   };
 
   ResultRenderer(NUX_FILE_LINE_PROTO);
-  virtual ~ResultRenderer();
+
   virtual void Render(nux::GraphicsEngine& GfxContext,
                       Result& row,
                       ResultRendererState state,
-                      nux::Geometry& geometry,
+                      nux::Geometry const& geometry,
                       int x_offset, int y_offset);
 
   // this is just to start preloading images and text that the renderer might
@@ -66,8 +62,8 @@ public:
   // unload any previous grabbed images
   virtual void Unload(Result& row);
 
-  nux::Property<int> width;  // the width of the element,
-  nux::Property<int> height; // the height of the element
+  nux::Property<int> width;
+  nux::Property<int> height;
 
   sigc::signal<void> NeedsRedraw;
 };
