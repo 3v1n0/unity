@@ -28,7 +28,7 @@
 #include "AbstractLauncherIcon.h"
 #include "DeviceLauncherSection.h"
 #include "DevicesSettingsImp.h"
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
 #include "EdgeBarrierController.h"
 #endif
 #include "LauncherController.h"
@@ -129,7 +129,7 @@ public:
   AbstractLauncherIcon::Ptr expo_icon_;
   AbstractLauncherIcon::Ptr desktop_icon_;
 
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   ui::EdgeBarrierController edge_barriers_;
 #endif
 

@@ -106,7 +106,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
                    nux::ObjectPtr<DNDCollectionWindow> const& collection_window,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   , display(nux::GetGraphicsDisplay()->GetX11Display())
 #else
   , display(0)
@@ -191,7 +191,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   wm.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &Launcher::EnsureAnimation));
 
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   display.changed.connect(sigc::mem_fun(this, &Launcher::OnDisplayChanged));
 #endif
 
@@ -1356,7 +1356,7 @@ int Launcher::GetMouseY() const
 
 bool Launcher::OnUpdateDragManagerTimeout()
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   if (display() == 0)
     return false;
 
@@ -1398,7 +1398,7 @@ bool Launcher::OnUpdateDragManagerTimeout()
 
 void Launcher::DndTimeoutSetup()
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   if (sources_.GetSource(DND_CHECK_TIMEOUT))
     return;
 
@@ -2230,7 +2230,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 
   if (GetActionState() == ACTION_NONE)
   {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
     if (nux::Abs(_dnd_delta_y) >= nux::Abs(_dnd_delta_x))
     {
       _launcher_drag_delta += _dnd_delta_y;
@@ -2305,7 +2305,7 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
   EnsureAnimation();
 }
 
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
 
 bool Launcher::HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
 {
@@ -2573,7 +2573,7 @@ bool Launcher::DndIsSpecialRequest(std::string const& uri) const
 
 void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   _dnd_data.Reset();
 
   const std::string uri_list = "text/uri-list";
@@ -2620,7 +2620,7 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
 
 void Launcher::ProcessDndEnter()
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   SetStateMouseOverLauncher(true);
 
   _dnd_data.Reset();
@@ -2634,7 +2634,7 @@ void Launcher::ProcessDndEnter()
 
 void Launcher::DndReset()
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   _dnd_data.Reset();
 
   bool is_overlay_open = IsOverlayOpen();
@@ -2662,7 +2662,7 @@ void Launcher::DndReset()
 
 void Launcher::DndHoveredIconReset()
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   _drag_edge_touching = false;
   SetActionState(ACTION_NONE);
 
@@ -2682,7 +2682,7 @@ void Launcher::DndHoveredIconReset()
 
 void Launcher::ProcessDndLeave()
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   SetStateMouseOverLauncher(false);
 
   DndHoveredIconReset();
@@ -2691,7 +2691,7 @@ void Launcher::ProcessDndLeave()
 
 void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   if (!_data_checked)
   {
     const std::string uri_list = "text/uri-list";
@@ -2823,7 +2823,7 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 
 void Launcher::ProcessDndDrop(int x, int y)
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   if (_steal_drag)
   {
     for (auto const& uri : _dnd_data.Uris())
