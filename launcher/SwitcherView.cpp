@@ -261,8 +261,7 @@ nux::Geometry SwitcherView::UpdateRenderTargets (nux::Point const& center, times
   }
 
   nux::Geometry max_bounds;
-
-  nux::Geometry absolute = GetAbsoluteGeometry ();
+  nux::Geometry const& absolute = GetAbsoluteGeometry();
   nux::Size spread_size = SpreadSize();
   max_bounds.x = absolute.x + center.x - spread_size.width / 2;
   max_bounds.y = absolute.y + center.y - spread_size.height / 2;
@@ -624,7 +623,7 @@ int SwitcherView::IconIndexAt(int x, int y)
   // implementation is enough.
 
   int i = 0;
-  for (auto arg : last_args_)
+  for (auto const& arg : last_args_)
   {
     if (x < (arg.logical_center.x - half_size)
         || x > (arg.logical_center.x + half_size))
