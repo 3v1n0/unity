@@ -1,5 +1,6 @@
 unity (6.10.0-0ubuntu1) quantal-proposed; urgency=low
 
+  [ Timo Jyrinki ]
   * New upstream release.
     - Gap between the dash gradient and the panel one (LP: #1062375)
     - [regression] Dash closes if the onscreen keyboard is outside of 
@@ -33,6 +34,12 @@ unity (6.10.0-0ubuntu1) quantal-proposed; urgency=low
     - Ensure categories with non-personal results can show up before empty 
       categories with personal results (LP: #1067327)
     - fix a backup error (LP: #1066646)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Cherry-picked from upstream:
+    - Reverted the switch from boost to std which was part of the fix for
+      LP: #1046201. The crash is still fixed without this change, so it was
+      actually unneeded
 
  -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Tue, 16 Oct 2012 19:35:02 +0300
 
