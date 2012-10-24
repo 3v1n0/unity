@@ -1301,7 +1301,7 @@ bool ApplicationLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
 
 nux::DndAction ApplicationLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_data)
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   return ValidateUrisForLaunch(dnd_data).empty() ? nux::DNDACTION_NONE : nux::DNDACTION_COPY;
 #else
   return nux::DNDACTION_NONE;

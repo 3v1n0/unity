@@ -780,7 +780,7 @@ std::tuple<int, int> ResultViewGrid::GetResultPosition(const unsigned int& index
 */
 bool ResultViewGrid::DndSourceDragBegin()
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   unsigned num_results = GetNumResults();
   unsigned drag_index = GetIndexAtPosition(last_mouse_down_x_, last_mouse_down_y_);
 
@@ -932,7 +932,7 @@ const char* ResultViewGrid::DndSourceGetDataForType(const char* type, int* size,
 
 void ResultViewGrid::DndSourceDragFinished(nux::DndAction result)
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   UnReference();
   last_mouse_down_x_ = -1;
   last_mouse_down_y_ = -1;

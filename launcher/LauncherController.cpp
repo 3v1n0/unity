@@ -115,7 +115,7 @@ Controller::Impl::Impl(Controller* parent)
   , gdbus_connection_(nullptr)
   , reg_id_(0)
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   edge_barriers_.options = parent_->options();
 #endif
 
@@ -201,7 +201,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
 
     int monitor = (num_launchers == 1) ? primary : i;
 
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
     if (launchers[i]->monitor() != monitor)
     {
       edge_barriers_.Unsubscribe(launchers[i].GetPointer(), launchers[i]->monitor);
@@ -210,7 +210,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
 
     launchers[i]->monitor(monitor);
     launchers[i]->Resize();
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
     edge_barriers_.Subscribe(launchers[i].GetPointer(), launchers[i]->monitor);
 #endif
   }
@@ -222,7 +222,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
     {
       parent_->RemoveChild(launcher.GetPointer());
       launcher->GetParent()->UnReference();
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
       edge_barriers_.Unsubscribe(launcher.GetPointer(), launcher->monitor);
 #endif
     }
