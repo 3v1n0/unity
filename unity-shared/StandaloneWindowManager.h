@@ -79,6 +79,7 @@ public:
   virtual int GetWindowMonitor(Window window_id) const;
   virtual nux::Geometry GetWindowGeometry(Window window_id) const;
   virtual nux::Geometry GetWindowSavedGeometry(Window window_id) const;
+  virtual nux::Size GetWindowDecorationSize(Window window_id, Edge) const;
   virtual nux::Geometry GetScreenGeometry() const;
   virtual nux::Geometry GetWorkAreaGeometry(Window window_id) const;
 

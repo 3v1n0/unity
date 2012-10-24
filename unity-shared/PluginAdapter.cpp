@@ -34,6 +34,7 @@ nux::logging::Logger logger("unity.plugin");
 
 const int THRESHOLD_HEIGHT = 600;
 const int THRESHOLD_WIDTH = 1024;
+const char* _UNITY_FRAME_EXTENTS = "_UNITY_FRAME_EXTENTS";
 
 std::shared_ptr<PluginAdapter> global_instance;
 }
@@ -857,38 +858,52 @@ int PluginAdapter::GetWindowMonitor(Window window_id) const
 
 nux::Geometry PluginAdapter::GetWindowGeometry(Window window_id) const
 {
-  nux::Geometry geo;
-  CompWindow* window = m_Screen->findWindow(window_id);
-  if (window)
+  if (CompWindow* window = m_Screen->findWindow(window_id))
   {
-    geo.x = window->borderRect().x();
-    geo.y = window->borderRect().y();
-    geo.width = window->borderRect().width();
-    geo.height = window->borderRect().height();
+    auto const& b = window->borderRect();
+    return nux::Geometry(b.x(), b.y(), b.width(), b.height());
   }
-  return geo;
+
+  return nux::Geometry();
 }
 
 nux::Geometry PluginAdapter::GetWindowSavedGeometry(Window window_id) const
 {
-  nux::Geometry geo(0, 0, 1, 1);
-  CompWindow* window = m_Screen->findWindow(window_id);
-  if (window)
+  if (CompWindow* window = m_Screen->findWindow(window_id))
   {
     XWindowChanges &wc = window->saveWc();
-    geo.x = wc.x;
-    geo.y = wc.y;
-    geo.width = wc.width;
-    geo.height = wc.height;
+    return nux::Geometry(wc.x, wc.y, wc.width, wc.height);
   }
 
-  return geo;
+  return nux::Geometry(0, 0, 1, 1);
 }
 
 nux::Geometry PluginAdapter::GetScreenGeometry() const
 {
-  nux::Geometry geo(0, 0, m_Screen->width(), m_Screen->height());
-  return geo;
+  return nux::Geometry(0, 0, m_Screen->width(), m_Screen->height());
+}
+
+nux::Size PluginAdapter::GetWindowDecorationSize(Window window_id, WindowManager::Edge edge) const
+{
+  if (CompWindow* window = m_Screen->findWindow(window_id))
+  {
+    auto const& win_rect = window->borderRect();
+    auto const& extents = window->border();
+
+    switch (edge)
+    {
+      case Edge::LEFT:
+        return nux::Size(extents.left, win_rect.height());
+      case Edge::TOP:
+        return nux::Size(win_rect.width(), extents.top);
+      case Edge::RIGHT:
+        return nux::Size(extents.right, win_rect.height());
+      case Edge::BOTTOM:
+        return nux::Size(win_rect.width(), extents.bottom);
+    }
+  }
+
+  return nux::Size();
 }
 
 nux::Geometry PluginAdapter::GetWorkAreaGeometry(Window window_id) const

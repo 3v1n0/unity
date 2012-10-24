@@ -166,6 +166,7 @@ public:
   nux::Geometry GetWindowSavedGeometry(Window window_id) const;
   nux::Geometry GetScreenGeometry() const;
   nux::Geometry GetWorkAreaGeometry(Window window_id = 0) const;
+  nux::Size GetWindowDecorationSize(Window window_id, Edge) const;
   std::string GetWindowName(Window window_id) const;
 
   void CheckWindowIntersections(nux::Geometry const& region, bool &active, bool &any);

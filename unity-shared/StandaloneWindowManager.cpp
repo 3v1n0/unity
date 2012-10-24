@@ -223,6 +223,11 @@ nux::Geometry StandaloneWindowManager::GetWorkAreaGeometry(Window window_id) con
   return geo;
 }
 
+nux::Size GetWindowDecorationSize(Window window_id, WindowManager::Edge edge) const
+{
+  return nux::Size(0, 0)
+}
+
 unsigned long long StandaloneWindowManager::GetWindowActiveNumber(Window window_id) const
 {
   return 0;

@@ -62,6 +62,14 @@ public:
     ForceUnminimizeOnCurrentDesktop
   };
 
+  enum class Edge
+  {
+    LEFT,
+    TOP,
+    RIGHT,
+    BOTTOM
+  };
+
   static WindowManager& Default();
 
   virtual Window GetActiveWindow() const = 0;
@@ -117,6 +125,7 @@ public:
   virtual int GetWindowMonitor(Window window_id) const = 0;
   virtual nux::Geometry GetWindowGeometry(Window window_id) const = 0;
   virtual nux::Geometry GetWindowSavedGeometry(Window window_id) const = 0;
+  virtual nux::Size GetWindowDecorationSize(Window window_id, Edge) const = 0;
   virtual nux::Geometry GetScreenGeometry() const = 0;
   virtual nux::Geometry GetWorkAreaGeometry(Window window_id = 0) const = 0;
 
