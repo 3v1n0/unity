@@ -66,13 +66,6 @@ ResultRendererTile::ResultRendererTile(NUX_FILE_LINE_DECL)
   gchar* tmp1 = (gchar*)g_base64_decode("VU5JVFlfTkVLTw==", &tmp);
   neko = (g_getenv(tmp1));
   g_free (tmp1);
-
-  // pre-load the highlight texture
-  // try and get a texture from the texture cache
-  TextureCache& cache = TextureCache::GetDefault();
-  prelight_cache_ = cache.FindTexture("ResultRendererTile.PreLightTexture",
-                                      style.GetTileIconHightlightWidth(), style.GetTileIconHightlightHeight(),
-                                      sigc::mem_fun(this, &ResultRendererTile::DrawHighlight));
 }
 
 void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
