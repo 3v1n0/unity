@@ -19,9 +19,9 @@
 #include "unity-mt-grab-handle-impl-factory.h"
 #include "unity-mt-grab-handle.h"
 
-std::shared_ptr <unity::MT::GrabHandle::ImplFactory> unity::MT::GrabHandle::ImplFactory::mDefault;
+boost::shared_ptr <unity::MT::GrabHandle::ImplFactory> unity::MT::GrabHandle::ImplFactory::mDefault;
 
-std::shared_ptr <unity::MT::GrabHandle::ImplFactory>
+boost::shared_ptr <unity::MT::GrabHandle::ImplFactory>
 unity::MT::GrabHandle::ImplFactory::Default()
 {
   return mDefault;
