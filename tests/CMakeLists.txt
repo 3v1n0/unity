@@ -112,49 +112,57 @@ if (GTEST_SRC_DIR AND
 
 
 # The actual test executable (xless) - do not put anything that requires X in here
-  add_executable(test-gtest-xless
-                 test_main_xless.cpp
-                 test_animator.cpp
-                 test_launcher_model.cpp
-                 test_glib_object.cpp
-                 test_glib_object_utils.cpp
-                 test_glib_object_utils.h
-                 test_glib_signals.cpp
-                 test_glib_signals_utils.cpp
-                 test_glib_signals_utils.h
-                 test_glib_source.cpp
-                 test_glib_variant.cpp
-                 test_grabhandle.cpp
-                 test_desktop_utilities.cpp
-                 test_hud_private.cpp
-                 test_indicator.cpp
-                 test_indicator_appmenu.cpp
-                 test_indicator_entry.cpp
-                 test_indicators.cpp
-                 test_introspection.cpp
-                 test_favorite_store.cpp
-                 test_favorite_store_gsettings.cpp
-                 test_favorite_store_private.cpp
-                 test_home_lens.cpp
-                 test_launcher_entry_remote.cpp
-                 test_model_iterator.cpp
-                 test_pointer_barrier.cpp
-                 test_previews.cpp
-                 test_shortcut_model.cpp
-                 test_shortcut_private.cpp
-                 test_ubus.cpp
-                 test_unityshell_private.cpp
-                 ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
-                 ${UNITY_SRC}/DebugDBusInterface.cpp
-                 ${UNITY_SRC}/XPathQueryPart.cpp
-                 ${UNITY_SRC}/UnityshellPrivate.cpp
-                 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
-                 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
-                 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-impl-factory.cpp
-                 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-layout.cpp
-                 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-texture.cpp
-                 )
-  target_link_libraries(test-gtest-xless gtest unity-shared ${GMOCK_LIB} ${GMOCK_MAIN_LIB} ${LIBS} launcher-lib shortcuts-lib hud-lib)
+  set (GTEST_XLESS_SOURCES
+       test_main_xless.cpp
+       test_animator.cpp
+       test_launcher_model.cpp
+       test_glib_object.cpp
+       test_glib_object_utils.cpp
+       test_glib_object_utils.h
+       test_glib_signals.cpp
+       test_glib_signals_utils.cpp
+       test_glib_signals_utils.h
+       test_glib_source.cpp
+       test_glib_variant.cpp
+       test_grabhandle.cpp
+       test_desktop_utilities.cpp
+       test_indicator.cpp
+       test_indicator_appmenu.cpp
+       test_indicator_entry.cpp
+       test_indicators.cpp
+       test_introspection.cpp
+       test_favorite_store.cpp
+       test_favorite_store_gsettings.cpp
+       test_favorite_store_private.cpp
+       test_home_lens.cpp
+       test_launcher_entry_remote.cpp
+       test_model_iterator.cpp
+       test_previews.cpp
+       test_ubus.cpp
+       test_unityshell_private.cpp
+       ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
+       ${UNITY_SRC}/UnityshellPrivate.cpp
+       ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
+       ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
+       ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-impl-factory.cpp
+       ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-layout.cpp
+       ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-texture.cpp
+)
+
+if(UNITY_ENABLE_X_ORG_SUPPORT)
+  set (GTEST_XLESS_SOURCES
+    test_hud_private.cpp
+    test_pointer_barrier.cpp
+    test_shortcut_model.cpp
+    test_shortcut_private.cpp
+    ${LAUNCHER_SOURCES}
+    )
+endif()
+
+  add_executable(test-gtest-xless ${GTEST_XLESS_SOURCES})
+
+
+  target_link_libraries(test-gtest-xless gtest unity-shared ${GMOCK_LIB} ${GMOCK_MAIN_LIB} ${LIBS} launcher-lib)
   add_test(UnityGTestXless test-gtest-xless)
   add_dependencies(test-gtest-xless unity-core-${UNITY_API_VERSION} gtest)
 
