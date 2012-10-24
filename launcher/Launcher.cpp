@@ -235,8 +235,8 @@ void Launcher::OnDisplayChanged(Display* display)
   _collection_window->display = display;
 }
 
-void
-Launcher::OnDragStart(const nux::GestureEvent &event)
+#ifdef NUX_GESTURES_SUPPORT
+void Launcher::OnDragStart(const nux::GestureEvent &event)
 {
   _drag_gesture_ongoing = true;
   if (_hidden)
@@ -250,16 +250,14 @@ Launcher::OnDragStart(const nux::GestureEvent &event)
   }
 }
 
-void
-Launcher::OnDragUpdate(const nux::GestureEvent &event)
+void Launcher::OnDragUpdate(const nux::GestureEvent &event)
 {
   _drag_out_delta_x =
     CLAMP(_drag_out_delta_x + event.GetDelta().x, 0.0f, DRAG_OUT_PIXELS);
   EnsureAnimation();
 }
 
-void
-Launcher::OnDragFinish(const nux::GestureEvent &event)
+void Launcher::OnDragFinish(const nux::GestureEvent &event)
 {
   if (_drag_out_delta_x >= DRAG_OUT_PIXELS - 90.0f)
     _hide_machine.SetQuirk(LauncherHideMachine::MT_DRAG_OUT, true);
@@ -269,6 +267,7 @@ Launcher::OnDragFinish(const nux::GestureEvent &event)
   EnsureAnimation();
   _drag_gesture_ongoing = false;
 }
+#endif
 
 void Launcher::AddProperties(GVariantBuilder* builder)
 {
@@ -2523,6 +2522,7 @@ void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLaun
   RestoreSystemRenderTarget();
 }
 
+#ifdef NUX_GESTURES_SUPPORT
 nux::GestureDeliveryRequest Launcher::GestureEvent(const nux::GestureEvent &event)
 {
   switch(event.type)
@@ -2540,6 +2540,7 @@ nux::GestureDeliveryRequest Launcher::GestureEvent(const nux::GestureEvent &even
 
   return nux::GestureDeliveryRequest::NONE;
 }
+#endif
 
 void
 Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)

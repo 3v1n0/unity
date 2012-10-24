@@ -148,7 +148,10 @@ public:
 
   void RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr const& icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
 
+#ifdef NUX_GESTURES_SUPPORT
   virtual nux::GestureDeliveryRequest GestureEvent(const nux::GestureEvent &event);
+#endif
+
 protected:
   // Introspectable methods
   std::string GetName() const;
@@ -193,9 +196,11 @@ private:
   void OnOptionChanged();
   void UpdateOptions(Options::Ptr options);
 
+#ifdef NUX_GESTURES_SUPPORT
   void OnDragStart(const nux::GestureEvent &event);
   void OnDragUpdate(const nux::GestureEvent &event);
   void OnDragFinish(const nux::GestureEvent &event);
+#endif
 
 #ifdef UNITY_HAS_X_ORG_SUPPORT
   bool HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);

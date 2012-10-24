@@ -24,7 +24,6 @@
 #include <memory>
 #include <vector>
 #include <sigc++/sigc++.h>
-#include <core/core.h>
 
 #include <Nux/Nux.h>
 
