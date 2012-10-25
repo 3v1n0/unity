@@ -152,18 +152,24 @@ void PluginAdapter::NotifyNewDecorationState(Window xid)
   bool wasDecorated = false;
 
   if (wasTracked)
+  {
     wasDecorated = deco_state_it->second;
+    _window_decoration_state.erase(deco_state_it);
+  }
 
   bool decorated = HasWindowDecorations(xid);
-  _window_decoration_state[xid] = decorated;
 
   if (decorated == wasDecorated)
     return;
 
   if (decorated && (!wasDecorated || !wasTracked))
+  {
     window_decorated.emit(xid);
+  }
   else if (wasDecorated || !wasTracked)
+  {
     window_undecorated.emit(xid);
+  }
 }
 
 void PluginAdapter::Notify(CompWindow* window, CompWindowNotify notify)
@@ -465,11 +471,20 @@ unsigned long PluginAdapter::GetMwnDecorations(Window window_id) const
 
 bool PluginAdapter::HasWindowDecorations(Window window_id) const
 {
+  auto deco_state_it = _window_decoration_state.find(window_id);
+
+  if (deco_state_it != _window_decoration_state.end())
+    return deco_state_it->second;
+
   unsigned long decorations = GetMwnDecorations(window_id);
 
   /* Must have both bits set */
-  return (decorations & (MwmDecorAll | MwmDecorTitle)) ||
-         (decorations & MWM_HINTS_UNDECORATED_UNITY);
+  bool decorated = (decorations & (MwmDecorAll | MwmDecorTitle)) ||
+                   (decorations & MWM_HINTS_UNDECORATED_UNITY);
+
+  _window_decoration_state[window_id] = decorated;
+
+  return decorated;
 }
 
 bool PluginAdapter::IsWindowDecorated(Window window_id) const
@@ -813,12 +828,7 @@ bool PluginAdapter::ScaleWindowGroup(std::vector<Window> const& windows, int sta
 
 void PluginAdapter::SetWindowIconGeometry(Window window, nux::Geometry const& geo)
 {
-  long data[4];
-
-  data[0] = geo.x;
-  data[1] = geo.y;
-  data[2] = geo.width;
-  data[3] = geo.height;
+  long data[4] = {geo.x, geo.y, geo.width, geo.height};
 
   XChangeProperty(m_Screen->dpy(), window, Atoms::wmIconGeometry,
                   XA_CARDINAL, 32, PropModeReplace,

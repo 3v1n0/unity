@@ -218,7 +218,7 @@ private:
   bool _in_show_desktop;
   CompWindow* _last_focused_window;
 
-  std::map<Window, unsigned int> _window_decoration_state;
+  mutable std::map<Window, unsigned int> _window_decoration_state;
 };
 
 }
