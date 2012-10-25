@@ -1366,10 +1366,7 @@ std::string PluginAdapter::GetWindowName(Window window_id) const
   name = GetUtf8Property(window_id, visibleNameAtom);
 
   if (name.empty())
-  {
-    Atom wmNameAtom = gdk_x11_get_xatom_by_name("_NET_WM_NAME");
-    name = GetUtf8Property(window_id, wmNameAtom);
-  }
+    name = GetUtf8Property(window_id, Atoms::wmName);
 
   if (name.empty())
     name = GetTextProperty(window_id, XA_WM_NAME);
@@ -1379,25 +1376,25 @@ std::string PluginAdapter::GetWindowName(Window window_id) const
 
 std::string PluginAdapter::GetUtf8Property(Window window_id, Atom atom) const
 {
-  Atom          type;
-  int           result, format;
-  unsigned long nItems, bytesAfter;
-  char          *val;
-  std::string   retval;
+  Atom type;
+  int result, format;
+  unsigned long n_items, bytes_after;
+  char *val = nullptr;
+  std::string retval;
 
   result = XGetWindowProperty(m_Screen->dpy(), window_id, atom, 0L, 65536, False,
-                              Atoms::utf8String, &type, &format, &nItems,
-                              &bytesAfter, reinterpret_cast<unsigned char **>(&val));
+                              Atoms::utf8String, &type, &format, &n_items,
+                              &bytes_after, reinterpret_cast<unsigned char **>(&val));
 
   if (result != Success)
     return retval;
 
-  if (type == Atoms::utf8String && format == 8 && val && nItems > 0)
+  if (type == Atoms::utf8String && format == 8 && val && n_items > 0)
   {
-    retval = std::string(val, nItems);
+    retval = std::string(val, n_items);
   }
-  if (val)
-    XFree(val);
+
+  XFree(val);
 
   return retval;
 }
@@ -1406,8 +1403,8 @@ std::string PluginAdapter::GetTextProperty(Window window_id, Atom atom) const
 {
   XTextProperty text;
   std::string retval;
-
   text.nitems = 0;
+
   if (XGetTextProperty(m_Screen->dpy(), window_id, &text, atom))
   {
     if (text.value)
