@@ -1048,7 +1048,7 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
       // if we've just started tracking this window and it is maximized, let's
       // make sure it's undecorated just in case it slipped by us earlier
       // (I'm looking at you, Chromium!)
-      if (_is_maximized && wm.IsWindowDecorated(xid))
+      if (_is_maximized && wm.HasWindowDecorations(xid))
       {
         wm.Undecorate(xid);
         _maximized_set.insert(xid);
@@ -1179,7 +1179,7 @@ void PanelMenuView::OnWindowMaximized(guint xid)
 
   // update the state of the window in the _decor_map
   WindowManager& wm = WindowManager::Default();
-  _decor_map[xid] = wm.IsWindowDecorated(xid);
+  _decor_map[xid] = wm.HasWindowDecorations(xid);
 
   if (_decor_map[xid])
     wm.Undecorate(xid);
@@ -1653,7 +1653,7 @@ void PanelMenuView::SetMonitor(int monitor)
     {
       Window xid = bamf_window_get_xid(window);
 
-      _decor_map[xid] = wm.IsWindowDecorated(xid);
+      _decor_map[xid] = wm.HasWindowDecorations(xid);
 
       if (_decor_map[xid])
         wm.Undecorate(xid);
