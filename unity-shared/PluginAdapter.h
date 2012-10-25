@@ -135,6 +135,7 @@ public:
   bool IsWindowClosable(Window window_id) const;
   bool IsWindowMinimizable(Window window_id) const;
   bool IsWindowMaximizable(Window window_id) const;
+  bool HasWindowDecorations(Window window_id) const;
 
   void Restore(Window window_id);
   void RestoreAt(Window window_id, int x, int y);
@@ -192,6 +193,7 @@ private:
 
   bool CheckWindowIntersection(nux::Geometry const& region, CompWindow* window) const;
   void SetMwmWindowHints(Window xid, MotifWmHints* new_hints) const;
+  unsigned long GetMwnDecorations(Window xid) const;
 
   Window GetTopMostValidWindowInViewport() const;
 

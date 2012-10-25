@@ -42,6 +42,7 @@ public:
   virtual bool IsWindowClosable(Window window_id) const;
   virtual bool IsWindowMinimizable(Window window_id) const;
   virtual bool IsWindowMaximizable(Window window_id) const;
+  virtual bool HasWindowDecorations(Window window_id) const = 0;
 
   virtual void ShowDesktop();
   virtual bool InShowDesktop() const;

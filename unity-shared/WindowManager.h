@@ -62,11 +62,11 @@ public:
     ForceUnminimizeOnCurrentDesktop
   };
 
-  enum class Edge
+  enum class Edge : unsigned
   {
     LEFT,
-    TOP,
     RIGHT,
+    TOP,
     BOTTOM
   };
 
@@ -84,6 +84,7 @@ public:
   virtual bool IsWindowClosable(Window window_id) const = 0;
   virtual bool IsWindowMinimizable(Window window_id) const = 0;
   virtual bool IsWindowMaximizable(Window window_id) const = 0;
+  virtual bool HasWindowDecorations(Window window_id) const = 0;
 
   virtual void ShowDesktop() = 0;
   virtual bool InShowDesktop() const = 0;

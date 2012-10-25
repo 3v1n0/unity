@@ -102,6 +102,11 @@ bool StandaloneWindowManager::IsWindowMaximizable(Window window_id) const
   return false;
 }
 
+bool StandaloneWindowManager::HasWindowDecorations(WIndow window_id) const
+{
+  return false;
+}
+
 void StandaloneWindowManager::ShowDesktop()
 {
   in_show_desktop_ = !in_show_desktop_;
@@ -223,7 +228,7 @@ nux::Geometry StandaloneWindowManager::GetWorkAreaGeometry(Window window_id) con
   return geo;
 }
 
-nux::Size GetWindowDecorationSize(Window window_id, WindowManager::Edge edge) const
+nux::Size StandaloneWindowManager::GetWindowDecorationSize(Window window_id, WindowManager::Edge edge) const
 {
   return nux::Size(0, 0)
 }
