@@ -102,7 +102,7 @@ bool StandaloneWindowManager::IsWindowMaximizable(Window window_id) const
   return false;
 }
 
-bool StandaloneWindowManager::HasWindowDecorations(WIndow window_id) const
+bool StandaloneWindowManager::HasWindowDecorations(Window window_id) const
 {
   return false;
 }
@@ -230,7 +230,7 @@ nux::Geometry StandaloneWindowManager::GetWorkAreaGeometry(Window window_id) con
 
 nux::Size StandaloneWindowManager::GetWindowDecorationSize(Window window_id, WindowManager::Edge edge) const
 {
-  return nux::Size(0, 0)
+  return nux::Size(0, 0);
 }
 
 unsigned long long StandaloneWindowManager::GetWindowActiveNumber(Window window_id) const
