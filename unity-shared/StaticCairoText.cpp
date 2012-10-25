@@ -52,9 +52,19 @@ struct StaticCairoText::Impl
   PangoAlignment GetPangoAlignment() const;
 
   std::string GetEffectiveFont() const;
+
+  struct CacheTexture
+  {
+    int start_index = 0;
+    size_t length = std::string::npos;
+    int height = 0;
+
+    std::shared_ptr<CairoGraphics> cr;
+  };
+  typedef std::shared_ptr<CacheTexture> CacheTexturePtr;
   Size GetTextExtents() const;
 
-  void DrawText(cairo_t* cr, int width, int height, int line_spacing, Color const& color);
+  void DrawText(CacheTexturePtr cached_texture, int width, int height, int line_spacing, Color const& color);
 
   void UpdateTexture();
   void OnFontChanged();
@@ -68,6 +78,7 @@ struct StaticCairoText::Impl
   mutable Size cached_extent_;
   mutable Size cached_base_;
   mutable int baseline_;
+  mutable std::list<CacheTexturePtr> cache_textures_;
 
   std::string text_;
   Color text_color_;
@@ -78,7 +89,7 @@ struct StaticCairoText::Impl
 
   std::string font_;
 
-  BaseTexturePtr texture2D_;
+  std::list<BaseTexturePtr> textures2D_;
 
   Size pre_layout_size_;
 
@@ -214,7 +225,7 @@ void StaticCairoText::PreLayoutManagement()
   SetBaseSize(pimpl->cached_extent_.width,
               pimpl->cached_extent_.height);
 
-  if (pimpl->texture2D_.IsNull())
+  if (pimpl->textures2D_.empty())
   {
     pimpl->UpdateTexture();
   }
@@ -251,7 +262,7 @@ void StaticCairoText::Draw(GraphicsEngine& gfxContext, bool forceDraw)
 {
   Geometry const& base = GetGeometry();
 
-  if (pimpl->texture2D_.IsNull() ||
+  if (pimpl->textures2D_.empty() ||
       pimpl->cached_base_.width != base.width ||
       pimpl->cached_base_.height != base.height)
   {
@@ -281,13 +292,24 @@ void StaticCairoText::Draw(GraphicsEngine& gfxContext, bool forceDraw)
                        base.height,
                        col);
 
-  gfxContext.QRP_1Tex(base.x,
-                      base.y + ((base.height - pimpl->cached_extent_.height) / 2),
-                      base.width,
-                      base.height,
-                      pimpl->texture2D_->GetDeviceTexture(),
-                      texxform,
-                      pimpl->text_color_);
+  int current_y = base.y + ((base.height - pimpl->cached_extent_.height) / 2);
+
+  for (BaseTexturePtr tex : pimpl->textures2D_)
+  {
+    nux::ObjectPtr<nux::IOpenGLBaseTexture> text_tex = tex->GetDeviceTexture();
+    if (!text_tex)
+      break;
+
+    gfxContext.QRP_1Tex(base.x,
+                    current_y,
+                    text_tex->GetWidth(),
+                    text_tex->GetHeight(),
+                    text_tex,
+                    texxform,
+                    pimpl->text_color_);
+
+    current_y += text_tex->GetHeight();
+  }
 
   gfxContext.GetRenderStates().SetBlend(alpha, src, dest);
 
@@ -476,6 +498,34 @@ Size StaticCairoText::Impl::GetTextExtents() const
   baseline_ = pango_layout_get_baseline(layout) / PANGO_SCALE;
   need_new_extent_cache_ = false;
 
+  cache_textures_.clear();
+  PangoLayoutIter* iter = pango_layout_get_iter(layout);
+  std::shared_ptr<CacheTexture> current_tex(new CacheTexture());
+  const int max_height = GetGraphicsDisplay()->GetGpuDevice()->GetGpuInfo().GetMaxTextureSize();
+  do
+  {
+    PangoLayoutLine* line = pango_layout_iter_get_line_readonly(iter);
+    int y0 = 0, y1 = 0;
+    pango_layout_iter_get_line_yrange(iter, &y0, &y1);
+    y0 /= PANGO_SCALE;
+    y1 /= PANGO_SCALE;
+
+    if (current_tex->height + (y1-y0) > max_height)
+    {
+      current_tex->length = line->start_index - current_tex->start_index;
+      cache_textures_.push_back(current_tex);
+
+      current_tex.reset(new CacheTexture());
+      current_tex->start_index = line->start_index;
+      current_tex->height = 0;
+    }
+    current_tex->height += (y1-y0);
+  }
+  while(pango_layout_iter_next_line(iter));
+  cache_textures_.push_back(current_tex);
+
+  pango_layout_iter_free(iter);
+
   // clean up
   pango_font_description_free(desc);
   g_object_unref(layout);
@@ -484,12 +534,17 @@ Size StaticCairoText::Impl::GetTextExtents() const
   return result;
 }
 
-void StaticCairoText::Impl::DrawText(cairo_t* cr,
+void StaticCairoText::Impl::DrawText(CacheTexturePtr cached_texture,
                                      int width,
                                      int height,
                                      int line_spacing,
                                      Color const& color)
 {
+  if (!cached_texture)
+    return;
+  cached_texture->cr.reset(new CairoGraphics(CAIRO_FORMAT_ARGB32, width, height));
+  cairo_t* cr = cached_texture->cr->GetInternalContext();
+
   PangoLayout*          layout     = NULL;
   PangoFontDescription* desc       = NULL;
   PangoContext*         pangoCtx   = NULL;
@@ -503,11 +558,13 @@ void StaticCairoText::Impl::DrawText(cairo_t* cr,
   layout = pango_cairo_create_layout(cr);
   desc = pango_font_description_from_string(font.c_str());
 
+  std::string text = text_.substr(cached_texture->start_index, cached_texture->length);
+
   pango_layout_set_font_description(layout, desc);
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_ellipsize(layout, GetPangoEllipsizeMode());
   pango_layout_set_alignment(layout, GetPangoAlignment());
-  pango_layout_set_markup(layout, text_.c_str(), -1);
+  pango_layout_set_markup(layout, text.c_str(), -1);
   pango_layout_set_width(layout, width * PANGO_SCALE);
   pango_layout_set_height(layout, height * PANGO_SCALE);
   pango_layout_set_spacing(layout, line_spacing * PANGO_SCALE);
@@ -550,16 +607,18 @@ void StaticCairoText::Impl::UpdateTexture()
 {
   Size size = GetTextExtents();
   parent_->SetBaseSize(size.width, size.height);
-  // Now reget the internal geometry as it is clipped by the max size.
-  Geometry const& geo = parent_->GetGeometry();
+  nux::Geometry const& geo = parent_->GetGeometry();
 
-  CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32,
-                               geo.width, geo.height);
+  textures2D_.clear();
+  auto iter = cache_textures_.begin();
+  for (; iter != cache_textures_.end(); ++iter)
+  {
+    CacheTexturePtr const& cached_texture = *iter;
+    DrawText(cached_texture,
+             geo.width, cached_texture->height, line_spacing_, text_color_);
 
-  DrawText(cairo_graphics.GetInternalContext(),
-           geo.width, geo.height, line_spacing_, text_color_);
-
-  texture2D_ = texture_ptr_from_cairo_graphics(cairo_graphics);
+    textures2D_.push_back(texture_ptr_from_cairo_graphics(*cached_texture->cr));
+  }
 }
 
 void StaticCairoText::Impl::FontChanged(GObject* gobject,

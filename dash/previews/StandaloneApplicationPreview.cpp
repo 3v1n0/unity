@@ -156,8 +156,9 @@ void TestRunner::Init ()
   app_name << "Skype";
 
   const char* subtitle = "Version 3.2, Size 32 MB";
-  const char* description = "Skype is a proprietary voice-over-Internet Protocol service and software application originally created by Niklas Zennström and Janus Friis in 2003, and owned by Microsoft since 2011. \
-The service allows users to communicate with peers by voice, video, and instant messaging over the Internet. Phone calls may be placed to recipients on the traditional telephone networks. Calls to other users within the Skype service are free of charge, while calls to landline telephones and mobile phones are charged via a debit-based user account system.";
+  std::stringstream description;
+  for (int i = 0; i < 700; i++)
+    description << "Application description " << i << std::endl;
 
  // creates a generic preview object
   glib::Object<GIcon> iconHint1(g_icon_new_for_string("/usr/share/unity/5/lens-nav-music.svg", NULL));
@@ -179,7 +180,7 @@ The service allows users to communicate with peers by voice, video, and instant 
   unity_protocol_preview_set_image_source_uri(proto_obj, "file:///home/nick/Skype.png");
   unity_protocol_preview_set_title(proto_obj, app_name.str().c_str());
   unity_protocol_preview_set_subtitle(proto_obj, subtitle);
-  unity_protocol_preview_set_description(proto_obj, description);
+  unity_protocol_preview_set_description(proto_obj, description.str().c_str());
   unity_protocol_preview_add_action(proto_obj, "uninstall", "Uninstall", iconHint1, 0);
   unity_protocol_preview_add_action_with_hints(proto_obj, "launch", "Download", iconHint2, 0, action_hints1);
   unity_protocol_preview_add_info_hint(proto_obj, "time", "Total time", iconHint1, g_variant_new("s", "16 h 34miin 45sec"));
