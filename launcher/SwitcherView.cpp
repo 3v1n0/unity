@@ -246,16 +246,14 @@ nux::Geometry SwitcherView::UpdateRenderTargets (nux::Point const& center, times
   std::vector<Window> xids = model_->DetailXids ();
 
   int ms_since_change = TimeUtil::TimeDelta(&current, &save_time_);
-  float progress = MIN (1.0f, (float) ms_since_change / (float) animation_length());
+  float progress = std::min<float>(1.0f, ms_since_change / static_cast<float>(animation_length()));
 
   for (Window window : xids)
   {
     auto layout_window = std::make_shared<LayoutWindow>(window);
-
-    if (window == model_->DetailSelectionWindow())
-      layout_window->alpha = 1.0f * progress;
-    else
-      layout_window->alpha = 0.9f * progress;
+    bool selected = (window == model_->DetailSelectionWindow());
+    layout_window->selected = selected;
+    layout_window->alpha = (selected ? 1.0f : 0.9f) * progress;
 
     render_targets_.push_back(layout_window);
   }
@@ -374,7 +372,7 @@ void SwitcherView::GetFlatIconPositions (int n_flat_icons,
 std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo, int selection, timespec const& current)
 {
   std::list<RenderArg> results;
-  nux::Geometry base = GetGeometry();
+  nux::Geometry const& base = GetGeometry();
 
   render_targets_.clear ();
 
