@@ -199,6 +199,7 @@ private:
 
   std::string GetTextProperty(Window xid, Atom atom) const;
   std::string GetUtf8Property(Window xid, Atom atom) const;
+  std::vector<long> GetCardinalProperty(Window xid, Atom atom) const;
 
   CompScreen* m_Screen;
   MultiActionList m_ExpoActionList;

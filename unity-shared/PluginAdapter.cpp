@@ -489,7 +489,14 @@ bool PluginAdapter::HasWindowDecorations(Window window_id) const
 
 bool PluginAdapter::IsWindowDecorated(Window window_id) const
 {
-  return (GetMwnDecorations(window_id) & (MwmDecorAll | MwmDecorTitle));
+  bool decorated = GetMwnDecorations(window_id) & (MwmDecorAll | MwmDecorTitle);
+
+  if (decorated && GetCardinalProperty(window_id, Atoms::frameExtents).empty())
+  {
+    decorated = false;
+  }
+
+  return decorated;
 }
 
 bool PluginAdapter::IsWindowOnCurrentDesktop(Window window_id) const
@@ -935,35 +942,23 @@ nux::Size PluginAdapter::GetWindowDecorationSize(Window window_id, WindowManager
       }
       else
       {
-        Atom type;
-        int result, format;
-        unsigned long n_items, bytes_after;
-        long *val = nullptr;
-        Atom atom = gdk_x11_get_xatom_by_name(_UNITY_FRAME_EXTENTS);
+        Atom unity_extents = gdk_x11_get_xatom_by_name(_UNITY_FRAME_EXTENTS);
+        auto const& extents = GetCardinalProperty(window_id, unity_extents);
 
-        result = XGetWindowProperty(m_Screen->dpy(), window_id, atom, 0L, 65536, False,
-                                    XA_CARDINAL, &type, &format, &n_items, &bytes_after,
-                                    reinterpret_cast<unsigned char **>(&val));
-
-        if (result != Success)
-          return nux::Size();
-
-        if (type == XA_CARDINAL && format == 32 && val && n_items == 4)
+        if (extents.size() == 4)
         {
           switch (edge)
           {
             case Edge::LEFT:
-              return nux::Size(val[unsigned(Edge::LEFT)], win_rect.height());
+              return nux::Size(extents[unsigned(Edge::LEFT)], win_rect.height());
             case Edge::TOP:
-              return nux::Size(win_rect.width(), val[unsigned(Edge::TOP)]);
+              return nux::Size(win_rect.width(), extents[unsigned(Edge::TOP)]);
             case Edge::RIGHT:
-              return nux::Size(val[unsigned(Edge::RIGHT)], win_rect.height());
+              return nux::Size(extents[unsigned(Edge::RIGHT)], win_rect.height());
             case Edge::BOTTOM:
-              return nux::Size(win_rect.width(), val[unsigned(Edge::BOTTOM)]);
+              return nux::Size(win_rect.width(), extents[unsigned(Edge::BOTTOM)]);
           }
         }
-
-        XFree(val);
       }
     }
   }
@@ -1415,6 +1410,32 @@ std::string PluginAdapter::GetTextProperty(Window window_id, Atom atom) const
   }
 
   return retval;
+}
+
+std::vector<long> PluginAdapter::GetCardinalProperty(Window window_id, Atom atom) const
+{
+  Atom type;
+  int result, format;
+  unsigned long n_items, bytes_after;
+  long *buf = nullptr;
+
+  result = XGetWindowProperty(m_Screen->dpy(), window_id, atom, 0L, 65536, False,
+                              XA_CARDINAL, &type, &format, &n_items, &bytes_after,
+                              reinterpret_cast<unsigned char **>(&buf));
+
+  std::unique_ptr<long[], int(*)(void*)> buffer(buf, XFree);
+
+  if (result == Success && type == XA_CARDINAL && format == 32 && buffer && n_items > 0)
+  {
+    std::vector<long> values(n_items);
+
+    for (unsigned i = 0; i < n_items; ++i)
+      values[i] = buffer[i];
+
+    return values;
+  }
+
+  return std::vector<long>();
 }
 
 } // namespace unity
