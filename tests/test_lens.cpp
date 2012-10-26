@@ -86,7 +86,7 @@ public:
   {
     Results::Ptr results = lens_->results;
 
-    lens_->Search("Test Search String");
+    lens_->Search("Test Search String", nullptr);
     WaitForModel<Result>(results.get(), 5);
     
     Result result = results->RowAtIndex(0);
@@ -145,7 +145,7 @@ TEST_F(TestLens, TestSearch)
 {
   Results::Ptr results = lens_->results;
 
-  lens_->Search("Test Search String");
+  lens_->Search("Test Search String", nullptr);
   WaitForModel<Result>(results.get(), 5);
 
   for (unsigned int i = 0; i < 5; i++)
@@ -169,7 +169,7 @@ TEST_F(TestLens, TestGlobalSearch)
 {
   Results::Ptr results = lens_->global_results;
 
-  lens_->GlobalSearch("Test Global Search String");
+  lens_->GlobalSearch("Test Global Search String", nullptr);
   WaitForModel<Result>(results.get(), 10);
 
   for (unsigned int i = 0; i < 10; i++)

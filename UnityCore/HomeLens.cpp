@@ -865,19 +865,6 @@ void HomeLens::Impl::OnLensAdded (Lens::Ptr& lens)
   lenses_.push_back (lens);
   owner_->lens_added.emit(lens);
 
-  /* When we dispatch a search we inc the search count and when we finish
-   * one we decrease it. When we reach 0 we'll emit search_finished. */
-  lens->global_search_finished.connect([this, lens] (Hints const& hints) {
-      running_searches_--;
-
-      LensSearchFinished(lens);
-      if (running_searches_ <= 0)
-      {
-        owner_->search_finished.emit(Hints());
-        LOG_INFO(logger) << "Search finished";
-      }
-  });
-
   nux::ROProperty<glib::Object<DeeModel>>& results_prop = lens->global_results()->model;
   nux::ROProperty<glib::Object<DeeModel>>& categories_prop = lens->categories()->model;
   nux::ROProperty<glib::Object<DeeModel>>& filters_prop = lens->filters()->model;
@@ -1000,6 +987,8 @@ void HomeLens::Impl::LensSearchFinished(Lens::Ptr const& lens)
     cached_categories_order_ = order_vector;
     owner_->categories_reordered();
   }
+
+  owner_->lens_search_finished.emit(lens);
 }
 
 bool HomeLens::Impl::ResultsContainVisibleMatch(unsigned category)
@@ -1171,30 +1160,41 @@ Lens::Ptr HomeLens::GetLensAtIndex(std::size_t index) const
   return Lens::Ptr();
 }
 
-void HomeLens::GlobalSearch(std::string const& search_string)
+void HomeLens::GlobalSearch(std::string const& search_string, SearchFinishedCallback cb)
 {
   LOG_WARN(logger) << "Global search not enabled for HomeLens class."
                    << " Ignoring query '" << search_string << "'";
 }
 
-void HomeLens::Search(std::string const& search_string)
+void HomeLens::Search(std::string const& search_string, SearchFinishedCallback cb)
 {
   LOG_DEBUG(logger) << "Search '" << search_string << "'";
 
-  /* Reset running search counter */
-  pimpl->running_searches_ = 0;
   pimpl->last_search_string_ = search_string;
   pimpl->apps_lens_contains_visible_match = false;
+  auto running_searches = std::make_shared<int>();
 
   for (auto lens: pimpl->lenses_)
   {
     if (lens->search_in_global())
     {
+      (*running_searches.get())++;
+      auto closure = [this, lens, running_searches, cb] (Hints const&, glib::Error const&)
+      {
+        int remaining_searches = --(*running_searches.get());
+        pimpl->LensSearchFinished(lens);
+
+        if (remaining_searches <= 0)
+        {
+          cb(Hints(), glib::Error());
+          LOG_INFO(logger) << "Global search finished";
+        }
+      };
+
       LOG_INFO(logger) << " - Global search on '" << lens->id() << "' for '"
           << search_string << "'";
       lens->view_type = ViewType::HOME_VIEW;
-      lens->GlobalSearch(search_string);
-      pimpl->running_searches_++;
+      lens->GlobalSearch(search_string, closure);
     }
   }
 }

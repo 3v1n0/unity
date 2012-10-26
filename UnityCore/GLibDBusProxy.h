@@ -26,6 +26,8 @@
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
 
+#include "GLibWrapper.h"
+
 namespace unity
 {
 namespace glib
@@ -38,6 +40,7 @@ class DBusProxy : public sigc::trackable, boost::noncopyable
 public:
   typedef std::shared_ptr<DBusProxy> Ptr;
   typedef std::function<void(GVariant*)> ReplyCallback;
+  typedef std::function<void(GVariant*, Error const&)> CallFinishedCallback;
 
   DBusProxy(std::string const& name,
             std::string const& object_path,
@@ -52,6 +55,12 @@ public:
             GCancellable *cancellable = nullptr,
             GDBusCallFlags flags = G_DBUS_CALL_FLAGS_NONE,
             int timeout_msec = -1);
+  void CallBegin(std::string const& method_name,
+                 GVariant* parameters,
+                 CallFinishedCallback callback,
+                 GCancellable *cancellable = nullptr,
+                 GDBusCallFlags flags = G_DBUS_CALL_FLAGS_NONE,
+                 int timeout_msec = -1);
 
   void Connect(std::string const& signal_name, ReplyCallback callback);
   bool IsConnected();

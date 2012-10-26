@@ -10,6 +10,7 @@
 #include <sigc++/trackable.h>
 
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GLibSource.h>
 #include <UnityCore/Variant.h>
 #include <UnityCore/HomeLens.h>
 #include <UnityCore/Lens.h>
@@ -29,14 +30,6 @@ namespace
  */
 
 class StaticTestLens;
-
-typedef struct {
-  StaticTestLens* lens;
-  gchar*          search_string;
-} LensSearchClosure;
-
-static gboolean dispatch_global_search(gpointer userdata);
-
 
 /*
  * Mock Lens instance that does not use DBus. The default search does like this:
@@ -134,22 +127,27 @@ public:
     }
 
     g_free(row_buf);
-
-    global_search_finished.emit(Hints());
   }
 
-  void GlobalSearch(string const& search_string)
+  void GlobalSearch(string const& search_string, SearchFinishedCallback cb)
   {
     /* Dispatch search async, because that's what it'd normally do */
-    LensSearchClosure* closure = g_new0(LensSearchClosure, 1);
-    closure->lens = this;
-    closure->search_string = g_strdup(search_string.c_str());
-    g_idle_add(dispatch_global_search, closure);
+    source_manager_.Add(new glib::Idle([this, search_string, cb] ()
+    {
+      DoGlobalSearch(search_string);
+      cb(Lens::Hints(), glib::Error());
+      return false;
+    }));
   }
 
-  void Search(string const& search_string)
+  void Search(string const& search_string, SearchFinishedCallback cb)
   {
-
+    /* Dispatch search async, because that's what it'd normally do */
+    source_manager_.Add(new glib::Idle([search_string, cb] ()
+    {
+      cb(Lens::Hints(), glib::Error());
+      return false;
+    }));
   }
 
   void Activate(string const& uri)
@@ -181,19 +179,8 @@ private:
   string results_base_name_;
   int num_results_;
   bool provides_personal_results_;
+  glib::SourceManager source_manager_;
 };
-
-static gboolean dispatch_global_search(gpointer userdata)
-{
-  LensSearchClosure* closure = (LensSearchClosure*) userdata;
-
-  closure->lens->DoGlobalSearch(closure->search_string);
-
-  g_free(closure->search_string);
-  g_free(closure);
-
-  return FALSE;
-}
 
 /*
  * Mock Lenses class
@@ -408,10 +395,8 @@ TEST(TestHomeLens, TestOneSearch)
 
   home_lens_.AddLenses(lenses_);
 
-  home_lens_.Search("ape");
-
   bool finished = false;
-  home_lens_.search_finished.connect([&finished] (Lens::Hints const& hints)
+  home_lens_.Search("ape", [&finished] (Lens::Hints const&, glib::Error const&)
   {
     finished = true;
   });
@@ -473,10 +458,8 @@ TEST(TestHomeLens, TestOrderingAfterSearch)
     order_changed = true;
   });
 
-  home_lens_.Search("ape");
-
   bool finished = false;
-  home_lens_.search_finished.connect([&finished] (Lens::Hints const& hints)
+  home_lens_.Search("ape", [&finished] (Lens::Hints const&, glib::Error const&)
   {
     finished = true;
   });
@@ -523,10 +506,8 @@ TEST(TestHomeLens, TestOrderingWithExactAppsMatch)
     order_changed = true;
   });
 
-  home_lens_.Search("ape");
-
   bool finished = false;
-  home_lens_.search_finished.connect([&finished] (Lens::Hints const& hints)
+  home_lens_.Search("ape", [&finished] (Lens::Hints const&, glib::Error const&)
   {
     finished = true;
   });
@@ -570,10 +551,8 @@ TEST(TestHomeLens, TestOrderingWithoutExactAppsMatch)
     order_changed = true;
   });
 
-  home_lens_.Search("ape");
-
   bool finished = false;
-  home_lens_.search_finished.connect([&finished] (Lens::Hints const& hints)
+  home_lens_.Search("ape", [&finished] (Lens::Hints const&, glib::Error const&)
   {
     finished = true;
   });
@@ -623,10 +602,8 @@ TEST(TestHomeLens, TestOrderingByNumResults)
     order_changed = true;
   });
 
-  home_lens_.Search("ape");
-
   bool finished = false;
-  home_lens_.search_finished.connect([&finished] (Lens::Hints const& hints)
+  home_lens_.Search("ape", [&finished] (Lens::Hints const&, glib::Error const&)
   {
     finished = true;
   });
@@ -691,10 +668,8 @@ TEST(TestHomeLens, TestPersonalResultsFirst)
     order_changed = true;
   });
 
-  home_lens_.Search("ape");
-
   bool finished = false;
-  home_lens_.search_finished.connect([&finished] (Lens::Hints const& hints)
+  home_lens_.Search("ape", [&finished] (Lens::Hints const&, glib::Error const&)
   {
     finished = true;
   });
@@ -752,10 +727,8 @@ TEST(TestHomeLens, TestNonPersonalCategoriesBeforeEmpty)
     order_changed = true;
   });
 
-  home_lens_.Search("ape");
-
   bool finished = false;
-  home_lens_.search_finished.connect([&finished] (Lens::Hints const& hints)
+  home_lens_.Search("ape", [&finished] (Lens::Hints const&, glib::Error const&)
   {
     finished = true;
   });

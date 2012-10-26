@@ -57,6 +57,7 @@ class Lens : public sigc::trackable, boost::noncopyable
 public:
   typedef std::shared_ptr<Lens> Ptr;
   typedef std::map<std::string, unity::glib::Variant> Hints;
+  typedef std::function<void(Hints const&, glib::Error const&)> SearchFinishedCallback;
 
   Lens(std::string const& id,
        std::string const& dbus_name,
@@ -81,8 +82,8 @@ public:
 
   virtual ~Lens();
 
-  virtual void GlobalSearch(std::string const& search_string);
-  virtual void Search(std::string const& search_string);
+  virtual void GlobalSearch(std::string const& search_string, SearchFinishedCallback cb = nullptr);
+  virtual void Search(std::string const& search_string, SearchFinishedCallback cb = nullptr);
   virtual void Activate(std::string const& uri);
   virtual void Preview(std::string const& uri);
   virtual void ActivatePreviewAction(std::string const& action_id,
@@ -125,8 +126,8 @@ public:
   /* Emitted when any of the models' swarm name changes, but collates the name
    * changes into a single signal emission (when all are changed) */
   sigc::signal<void> models_changed;
-  sigc::signal<void, Hints const&> search_finished;
-  sigc::signal<void, Hints const&> global_search_finished;
+  //sigc::signal<void, Hints const&> search_finished;
+  //sigc::signal<void, Hints const&> global_search_finished;
   sigc::signal<void, std::string const&, HandledType, Hints const&> activated;
   sigc::signal<void, std::string const&, Preview::Ptr const&> preview_ready;
 

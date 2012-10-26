@@ -69,13 +69,16 @@ public:
   Lens::Ptr GetLens(std::string const& lens_id) const;
   Lens::Ptr GetLensAtIndex(std::size_t index) const;
 
-  void GlobalSearch(std::string const& search_string);
-  void Search(std::string const& search_string);
+  void GlobalSearch(std::string const& search_string, SearchFinishedCallback cb);
+  void Search(std::string const& search_string, SearchFinishedCallback cb);
   void Activate(std::string const& uri);
   void Preview(std::string const& uri);
 
   std::vector<unsigned> GetCategoriesOrder();
   glib::Object<DeeModel> GetFilterModelForCategory(unsigned category);
+
+  // emitted when global search for one lens finishes
+  sigc::signal<void, Lens::Ptr const&> lens_search_finished;
 
 private:
   class Impl;

@@ -70,7 +70,7 @@ public:
 
   sigc::signal<void, ResultView::ActivateType, std::string const&, GVariant*, std::string const&> uri_activated;
 
-  void PerformSearch(std::string const& search_query);
+  void PerformSearch(std::string const& search_query, Lens::SearchFinishedCallback cb);
   void CheckNoResults(Lens::Hints const& hints);
   void CheckCategoryExpansion();
   void HideResultsMessage();
