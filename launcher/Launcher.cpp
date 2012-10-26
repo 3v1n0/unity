@@ -642,15 +642,27 @@ float Launcher::IconUrgentWiggleValue(AbstractLauncherIcon::Ptr const& icon, str
 
 float Launcher::IconStartingBlinkValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
 {
+  if (icon->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING))
+    return 1.0f;
+
+  if (!icon->GetQuirk(AbstractLauncherIcon::Quirk::STARTING))
+    return 1.0f;
+
   struct timespec starting_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::STARTING);
   int starting_ms = unity::TimeUtil::TimeDelta(&current, &starting_time);
   double starting_progress = (double) CLAMP((float) starting_ms / (float)(ANIM_DURATION_LONG * STARTING_BLINK_LAMBDA), 0.0f, 1.0f);
   double val = IsBackLightModeToggles() ? 3.0f : 4.0f;
-  return 0.5f + (float)(std::cos(M_PI * val * starting_progress)) * 0.5f;
+  return 1.0f-(0.5f + (float)(std::cos(M_PI * val * starting_progress)) * 0.5f);
 }
 
 float Launcher::IconStartingPulseValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
 {
+  if (icon->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING))
+    return 1.0f;
+
+  if (!icon->GetQuirk(AbstractLauncherIcon::Quirk::STARTING))
+    return 1.0f;
+
   struct timespec starting_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::STARTING);
   int starting_ms = unity::TimeUtil::TimeDelta(&current, &starting_time);
   double starting_progress = (double) CLAMP((float) starting_ms / (float)(ANIM_DURATION_LONG * MAX_STARTING_BLINKS * STARTING_BLINK_LAMBDA * 2), 0.0f, 1.0f);
@@ -661,7 +673,7 @@ float Launcher::IconStartingPulseValue(AbstractLauncherIcon::Ptr const& icon, st
     icon->ResetQuirkTime(AbstractLauncherIcon::Quirk::STARTING);
   }
 
-  return 0.5f + (float)(std::cos(M_PI * (float)(MAX_STARTING_BLINKS * 2) * starting_progress)) * 0.5f;
+  return 1.0f-(0.5f + (float)(std::cos(M_PI * (float)(MAX_STARTING_BLINKS * 2) * starting_progress)) * 0.5f);
 }
 
 float Launcher::IconBackgroundIntensity(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
