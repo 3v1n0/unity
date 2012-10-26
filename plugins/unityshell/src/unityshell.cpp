@@ -1311,6 +1311,8 @@ void UnityScreen::preparePaint(int ms)
   didShellRepaint = false;
   panelShadowPainted = CompRegion();
   firstWindowAboveShell = NULL;
+
+  compizDamageNux(cScreen->currentDamage());
 }
 
 void UnityScreen::donePaint()
