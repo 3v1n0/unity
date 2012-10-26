@@ -92,6 +92,11 @@ bool StandaloneWindowManager::IsWindowClosable(Window window_id) const
   return false;
 }
 
+bool StandaloneWindowManager::IsWindowMinimized(Window window_id) const
+{
+  return false;
+}
+
 bool StandaloneWindowManager::IsWindowMinimizable(Window window_id) const
 {
   return false;

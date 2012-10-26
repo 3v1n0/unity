@@ -133,6 +133,7 @@ public:
   bool IsWindowVisible(Window window_id) const;
   bool IsWindowOnTop(Window window_id) const;
   bool IsWindowClosable(Window window_id) const;
+  bool IsWindowMinimized(Window window_id) const;
   bool IsWindowMinimizable(Window window_id) const;
   bool IsWindowMaximizable(Window window_id) const;
   bool HasWindowDecorations(Window window_id) const;

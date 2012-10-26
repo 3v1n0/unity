@@ -40,6 +40,7 @@ public:
   virtual bool IsWindowVisible(Window window_id) const;
   virtual bool IsWindowOnTop(Window window_id) const;
   virtual bool IsWindowClosable(Window window_id) const;
+  virtual bool IsWindowMinimized(Window window_id) const;
   virtual bool IsWindowMinimizable(Window window_id) const;
   virtual bool IsWindowMaximizable(Window window_id) const;
   virtual bool HasWindowDecorations(Window) const;

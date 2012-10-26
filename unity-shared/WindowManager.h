@@ -82,6 +82,7 @@ public:
   virtual bool IsWindowVisible(Window window_id) const = 0;
   virtual bool IsWindowOnTop(Window window_id) const = 0;
   virtual bool IsWindowClosable(Window window_id) const = 0;
+  virtual bool IsWindowMinimized(Window window_id) const = 0;
   virtual bool IsWindowMinimizable(Window window_id) const = 0;
   virtual bool IsWindowMaximizable(Window window_id) const = 0;
   virtual bool HasWindowDecorations(Window window_id) const = 0;

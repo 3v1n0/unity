@@ -624,6 +624,14 @@ bool PluginAdapter::IsWindowClosable(Window window_id) const
   return false;
 }
 
+bool PluginAdapter::IsWindowMinimized(Window window_id) const
+{
+  if (CompWindow* window = m_Screen->findWindow(window_id))
+    return window->minimized();
+
+  return false;
+}
+
 bool PluginAdapter::IsWindowMinimizable(Window window_id) const
 {
   CompWindow* window = m_Screen->findWindow(window_id);
