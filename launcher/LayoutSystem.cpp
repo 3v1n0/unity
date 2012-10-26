@@ -27,19 +27,10 @@ LayoutSystem::LayoutSystem()
   , max_row_height(400)
 {}
 
-void LayoutSystem::LayoutWindows(LayoutWindowList windows,
-                                 nux::Geometry const& max_bounds,
-                                 nux::Geometry& final_bounds)
+void LayoutSystem::LayoutWindows(LayoutWindowList windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
 {
   if (windows.empty())
     return;
-
-  WindowManager& wm = WindowManager::Default();
-  for (auto window : windows)
-  {
-  	window->geo = wm.GetWindowGeometry(window->xid);
-    window->aspect_ratio = window->geo.width / static_cast<float>(window->geo.height);
-  }
 
   LayoutGridWindows(windows, max_bounds, final_bounds);
 }
@@ -83,7 +74,7 @@ nux::Geometry LayoutSystem::CompressAndPadRow (LayoutWindowList const& windows, 
 {
   int total_width = 0;
   int max_height = 0;
-  for (LayoutWindow::Ptr window : windows)
+  for (LayoutWindow::Ptr const& window : windows)
   {
     window->result.x = total_width;
     total_width += spacing + window->result.width;
@@ -92,17 +83,17 @@ nux::Geometry LayoutSystem::CompressAndPadRow (LayoutWindowList const& windows, 
 
   total_width -= spacing;
 
-  int x1 = G_MAXINT;
-  int y1 = G_MAXINT;
-  int x2 = G_MININT;
-  int y2 = G_MININT;
+  int x1 = std::numeric_limits<int>::max();
+  int y1 = std::numeric_limits<int>::max();
+  int x2 = std::numeric_limits<int>::min();
+  int y2 = std::numeric_limits<int>::min();
 
   int offset = std::max (0, (max_bounds.width - total_width) / 2);
   for (LayoutWindow::Ptr const& window : windows)
   {
     window->result.x += max_bounds.x + offset;
     window->result.y = max_bounds.y + (max_height - window->result.height) / 2;
-    
+
     x1 = std::min (window->result.x, x1);
     y1 = std::min (window->result.y, y1);
     x2 = std::max (window->result.x + window->result.width, x2);
@@ -112,13 +103,13 @@ nux::Geometry LayoutSystem::CompressAndPadRow (LayoutWindowList const& windows, 
   return nux::Geometry (x1, y1, x2 - x1, y2 - y1);
 }
 
-nux::Geometry LayoutSystem::LayoutRow (LayoutWindowList const& row, nux::Geometry const& row_bounds)
+nux::Geometry LayoutSystem::LayoutRow(LayoutWindowList const& row, nux::Geometry const& row_bounds)
 {
   nux::Geometry unpadded_bounds = row_bounds;
   unpadded_bounds.width -= spacing * (row.size () - 1);
 
   int combined_width = 0;
-  for (LayoutWindow::Ptr window : row)
+  for (LayoutWindow::Ptr const& window : row)
   {
     float scalar = unpadded_bounds.height / (float)window->geo.height;
     combined_width += window->geo.width * scalar;
@@ -134,8 +125,8 @@ nux::Geometry LayoutSystem::LayoutRow (LayoutWindowList const& row, nux::Geometr
   for (LayoutWindow::Ptr const& window : row)
   {
     // we dont allow scaling up
-    float final_scalar = std::min (1.0f, (unpadded_bounds.height / (float)window->geo.height) * global_scalar);
-    
+    float final_scalar = std::min(1.0f, (unpadded_bounds.height / (float)window->geo.height) * global_scalar);
+
     window->result.x = x;
     window->result.y = y;
     window->result.width = window->geo.width * final_scalar;
@@ -154,7 +145,7 @@ std::vector<LayoutWindowList> LayoutSystem::GetRows (LayoutWindowList const& win
   int size = (int)windows.size();
 
   float total_aspect = 0;
-  for (LayoutWindow::Ptr window : windows)
+  for (LayoutWindow::Ptr const& window : windows)
   {
     total_aspect += window->aspect_ratio;
   }
@@ -229,31 +220,32 @@ std::vector<LayoutWindowList> LayoutSystem::GetRows (LayoutWindowList const& win
 
 void LayoutSystem::LayoutGridWindows (LayoutWindowList const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
 {
-  std::vector<LayoutWindowList> rows = GetRows(windows, max_bounds);
-  
+  std::vector<LayoutWindowList> const& rows = GetRows(windows, max_bounds);
+
   int height = rows.size();
   int non_spacing_height = max_bounds.height - ((height - 1) * spacing);
   int row_height = std::min (max_row_height(), non_spacing_height / height);
   int start_y = max_bounds.y;
   int low_y = 0;
 
-  for (LayoutWindowList row : rows)
+  for (LayoutWindowList const& row : rows)
   {
-    nux::Geometry row_max_bounds (max_bounds.x, start_y, max_bounds.width, row_height);
-    nux::Geometry row_final_bounds = LayoutRow (row, row_max_bounds);
+    nux::Geometry row_max_bounds(max_bounds.x, start_y, max_bounds.width, row_height);
+    nux::Geometry const& row_final_bounds = LayoutRow(row, row_max_bounds);
 
     low_y = row_final_bounds.y + row_final_bounds.height;
 
     start_y += row_final_bounds.height + spacing;
   }
 
-  int x1 = G_MAXINT;
-  int y1 = G_MAXINT;
-  int x2 = G_MININT;
-  int y2 = G_MININT;
+  int x1 = std::numeric_limits<int>::max();
+  int y1 = std::numeric_limits<int>::max();
+  int x2 = std::numeric_limits<int>::min();
+  int y2 = std::numeric_limits<int>::min();
 
   int offset = (max_bounds.height - (low_y - max_bounds.y)) / 2;
-  for (auto window : windows)
+
+  for (auto const& window : windows)
   {
     window->result.y += offset;
 
@@ -267,9 +259,22 @@ void LayoutSystem::LayoutGridWindows (LayoutWindowList const& windows, nux::Geom
 }
 
 LayoutWindow::LayoutWindow(Window xid)
- : xid (xid)
+ : xid(xid)
+ , geo(WindowManager::Default().GetWindowGeometry(xid))
+ , decoration_height(0)
+ , selected(false)
+ , aspect_ratio(geo.width / static_cast<float>(geo.height))
 {
+  auto& wm = WindowManager::Default();
 
+  if (wm.IsWindowMaximized(xid))
+  {
+    // Maximized windows are not decorated, so we define an extra decoration
+    // height to be used to correctly render the window with a fake decoration
+    auto const& deco_size = wm.GetWindowDecorationSize(xid, WindowManager::Edge::TOP);
+    decoration_height = deco_size.height;
+    geo.height += decoration_height;
+  }
 }
 
 }

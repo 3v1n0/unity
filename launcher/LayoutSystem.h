@@ -39,7 +39,9 @@ struct LayoutWindow
 
   nux::Geometry geo;
   nux::Geometry result;
+  unsigned decoration_height;
 
+  bool selected;
   float aspect_ratio;
   float alpha;
 };
