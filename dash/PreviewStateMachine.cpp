@@ -22,11 +22,8 @@ namespace unity
 {
 namespace dash
 {
+DECLARE_LOGGER(logger, "unity.dash.preview.statemachine");
 
-namespace
-{
-nux::logging::Logger logger("unity.dash.PreviewStateMachine");
-}
 PreviewStateMachine::PreviewStateMachine()
   : preview_active(false)
   , left_results(-1)

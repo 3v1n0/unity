@@ -38,10 +38,9 @@ const std::string DBUS_BUS_NAME = "com.canonical.Unity";
 
 namespace debug
 {
+DECLARE_LOGGER(logger, "unity.debug.interface");
 namespace
 {
-nux::logging::Logger logger("unity.debug.DebugDBusInterface");
-
 namespace local
 {
   std::ofstream output_file;
@@ -266,9 +265,10 @@ void LogMessage(std::string const& severity,
                 std::string const& message)
 {
   nux::logging::Level level = nux::logging::get_logging_level(severity);
-  if (logger.GetEffectiveLogLevel() <= level)
+  nux::logging::Logger const& log_ref = Unwrap(logger);
+  if (log_ref.GetEffectiveLogLevel() <= level)
   {
-   nux::logging::LogStream(level, logger.module(), __FILE__, __LINE__).stream()
+    nux::logging::LogStream(level, log_ref.module(), __FILE__, __LINE__).stream()
       << message;
   }
 }

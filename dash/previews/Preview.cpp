@@ -40,11 +40,7 @@ namespace dash
 {
 namespace previews
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.dash.previews.preview");
-}
+DECLARE_LOGGER(logger, "unity.dash.preview.view");
 
 previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
 {
@@ -53,7 +49,7 @@ previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
     LOG_WARN(logger) << "Unable to create Preview object";
     return previews::Preview::Ptr();
   }
- 
+
   if (model->renderer_name == "preview-generic")
   {
     return Preview::Ptr(new GenericPreview(model));

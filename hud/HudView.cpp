@@ -36,11 +36,9 @@ namespace unity
 {
 namespace hud
 {
+DECLARE_LOGGER(logger, "unity.hud.view");
 namespace
 {
-
-nux::logging::Logger logger("unity.hud.view");
-
 const int grow_anim_length = 90 * 1000;
 const int pause_before_grow_length = 32 * 1000;
 

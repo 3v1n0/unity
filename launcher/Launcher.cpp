@@ -63,14 +63,12 @@ using ui::Decaymulator;
 
 namespace launcher
 {
+DECLARE_LOGGER(logger, "unity.launcher");
 
-const char window_title[] = "unity-launcher";
+const char* window_title = "unity-launcher";
 
 namespace
 {
-
-nux::logging::Logger logger("unity.launcher");
-
 const int URGENT_BLINKS = 3;
 const int WIGGLE_CYCLES = 6;
 

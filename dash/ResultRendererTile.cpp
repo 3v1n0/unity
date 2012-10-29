@@ -39,10 +39,9 @@ namespace
 
 namespace unity
 {
+DECLARE_LOGGER(logger, "unity.dash.results");
 namespace
 {
-nux::logging::Logger logger("unity.dash.results");
-
 const int FONT_SIZE = 10;
 
 const float CORNER_HIGHTLIGHT_RADIUS = 2.0f;

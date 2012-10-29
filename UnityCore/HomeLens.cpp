@@ -38,12 +38,10 @@ namespace unity
 {
 namespace dash
 {
+DECLARE_LOGGER(logger, "unity.dash.lens.home");
 
 namespace
 {
-
-nux::logging::Logger logger("unity.dash.homelens");
-
 const gchar* const HOMELENS_PRIORITY = "unity-homelens-priority";
 const gchar* const HOMELENS_RESULTS_MODEL = "unity-homelens-results-model";
 

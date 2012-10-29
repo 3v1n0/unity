@@ -27,11 +27,6 @@ namespace unity
 namespace dash
 {
 
-namespace
-{
-nux::logging::Logger _model_inl_logger("unity.dash.model");
-}
-
 template<class RowAdaptor>
 Model<RowAdaptor>::Model()
   : model_type_(ModelType::REMOTE)
@@ -67,10 +62,12 @@ void Model<RowAdaptor>::Init ()
 template<class RowAdaptor>
 void Model<RowAdaptor>::OnSwarmNameChanged(std::string const& swarm_name)
 {
+  static nux::logging::Logger local_logger("unity.dash.model");
+
   typedef glib::Signal<void, DeeModel*, DeeModelIter*> RowSignalType;
   typedef glib::Signal<void, DeeModel*, guint64, guint64> TransactionSignalType;
 
-  LOG_DEBUG(_model_inl_logger) << "New swarm name: " << swarm_name;
+  LOG_DEBUG(local_logger) << "New swarm name: " << swarm_name;
 
   // Let the views clean up properly
   if (model_)
@@ -95,7 +92,7 @@ void Model<RowAdaptor>::OnSwarmNameChanged(std::string const& swarm_name)
                                                  sigc::mem_fun(this, &Model<RowAdaptor>::OnTransactionEnd)));
       break;
     default:
-      LOG_ERROR(_model_inl_logger) <<  "Unexpected ModelType " << model_type_;
+      LOG_ERROR(local_logger) <<  "Unexpected ModelType " << model_type_;
       break;
   }
 

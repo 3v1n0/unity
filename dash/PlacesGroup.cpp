@@ -34,12 +34,6 @@
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 
-
-namespace
-{
-nux::logging::Logger logger("unity.dash.placesgroup");
-}
-
 #include "ResultView.h"
 #include "ResultViewGrid.h"
 #include "ResultRendererTile.h"
@@ -48,6 +42,7 @@ nux::logging::Logger logger("unity.dash.placesgroup");
 #include "FilterBasicButton.h"
 
 
+DECLARE_LOGGER(logger, "unity.dash.placesgroup");
 namespace unity
 {
 namespace

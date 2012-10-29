@@ -52,7 +52,7 @@ namespace unity
 {
 namespace launcher
 {
-extern const char window_title[];
+extern const char* window_title;
 
 class AbstractLauncherIcon;
 

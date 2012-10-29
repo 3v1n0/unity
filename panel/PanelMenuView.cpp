@@ -35,10 +35,10 @@
 
 namespace unity
 {
+DECLARE_LOGGER(logger, "unity.panel.menu");
 
 namespace
 {
-  nux::logging::Logger logger("unity.panel.menu");
   const int MAIN_LEFT_PADDING = 4;
   const int TITLE_PADDING = 2;
   const int MENUBAR_PADDING = 4;

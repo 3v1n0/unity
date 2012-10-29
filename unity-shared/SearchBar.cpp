@@ -59,11 +59,9 @@ const std::string SHOW_FILTERS_LABEL_DEFAULT_FONT = "Ubuntu " + SHOW_FILTERS_LAB
 
 }
 
+DECLARE_LOGGER(logger, "unity.dash.searchbar");
 namespace
 {
-
-nux::logging::Logger logger("unity");
-
 class ExpanderView : public nux::View
 {
 public:

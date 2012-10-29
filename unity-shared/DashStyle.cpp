@@ -53,10 +53,9 @@ namespace unity
 {
 namespace dash
 {
+DECLARE_LOGGER(logger, "unity.dash.style");
 namespace
 {
-nux::logging::Logger logger("unity.dash");
-
 Style* style_instance = nullptr;
 
 const int STATES = 5;
