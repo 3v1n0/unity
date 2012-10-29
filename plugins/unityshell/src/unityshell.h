@@ -68,6 +68,7 @@
 
 namespace unity
 {
+class UnityWindow;
 
 /* base screen class */
 class UnityScreen :
@@ -329,6 +330,7 @@ private:
   bool panel_texture_has_changed_;
   bool paint_panel_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> panel_texture_;
+  std::set<UnityWindow*> fake_decorated_windows_;
 
   bool scale_just_activated_;
   WindowMinimizeSpeedController minimize_speed_controller_;
@@ -388,7 +390,7 @@ public:
   CompPoint tryNotIntersectUI(CompPoint& pos);
   nux::Geometry GetScaledGeometry();
 
-  void paintThumbnail(nux::Geometry const& bounding, float alpha);
+  void paintThumbnail(nux::Geometry const& bounding, float alpha, float scale_ratio, unsigned deco_height, bool selected);
 
   void enterShowDesktop();
   void leaveShowDesktop();
@@ -450,6 +452,7 @@ private:
   void DrawTexture(GLTexture::List const& textures, GLWindowPaintAttrib const&,
                    GLMatrix const&, unsigned mask, int x, int y, double aspect = 1.0f);
 
+  void paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAttrib const& attrib, GLMatrix const& transform, unsigned int mask, bool highlighted, double scale);
   void paintInnerGlow(nux::Geometry glow_geo, GLMatrix const&, GLWindowPaintAttrib const&, unsigned mask);
   glow::Quads computeGlowQuads(nux::Geometry const& geo, GLTexture::List const& texture, int glow_size);
   void paintGlow(GLMatrix const&, GLWindowPaintAttrib const&, glow::Quads const&,
