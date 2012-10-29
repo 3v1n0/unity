@@ -33,10 +33,10 @@ namespace unity
 {
 namespace launcher
 {
+DECLARE_LOGGER(logger, "unity.launcher.icon");
 namespace
 {
   const std::string ZEITGEIST_UNITY_ACTOR = "application://compiz.desktop";
-  nux::logging::Logger logger("unity.launcher.TrashLauncherIcon");
 }
 
 TrashLauncherIcon::TrashLauncherIcon()

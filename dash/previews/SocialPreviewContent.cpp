@@ -34,11 +34,10 @@ namespace dash
 {
 namespace previews
 {
+DECLARE_LOGGER(logger, "unity.dash.previews.social.content");
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.previews.socialpreviewcontent");
-
 const int BUBBLE_WIDTH = 300;
 const int BUBBLE_HEIGHT = 250;
 const int TAIL_HEIGHT = 50;

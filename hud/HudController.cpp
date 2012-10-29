@@ -34,11 +34,7 @@ namespace unity
 {
 namespace hud
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.hud.controller");
-}
+DECLARE_LOGGER(logger, "unity.hud.controller");
 
 Controller::Controller(std::function<AbstractView*(void)> const& function)
   : launcher_width(64)

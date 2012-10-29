@@ -29,10 +29,7 @@
 #include <UnityCore/Variant.h>
 #include <glib.h>
 
-namespace
-{
-nux::logging::Logger logger("unity.indicators");
-}
+DECLARE_LOGGER(logger, "unity.indicators");
 
 namespace unity
 {

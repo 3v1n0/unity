@@ -46,12 +46,7 @@ namespace dash
 {
 namespace previews
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.dash.previews.socialpreview");
-
-}
+DECLARE_LOGGER(logger, "unity.dash.preview.social");
 
 class DetailsScrollView : public nux::ScrollView
 {

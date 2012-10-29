@@ -30,11 +30,7 @@
 
 namespace unity
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.wm");
-}
+DECLARE_LOGGER(logger, "unity.wm");
 
 WindowManagerPtr create_window_manager()
 {

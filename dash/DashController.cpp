@@ -35,12 +35,12 @@ namespace unity
 {
 namespace dash
 {
+DECLARE_LOGGER(logger, "unity.dash.controller");
 
-const char window_title[] = "unity-dash";
+const char* window_title = "unity-dash";
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.controller");
 const unsigned int PRELOAD_TIMEOUT_LENGTH = 40;
 
 const std::string DBUS_PATH = "/com/canonical/Unity/Dash";

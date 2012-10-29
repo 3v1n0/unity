@@ -35,10 +35,10 @@
 
 namespace unity
 {
+DECLARE_LOGGER(logger, "unity.icontexture");
 namespace
 {
 const char* const DEFAULT_ICON = "text-x-preview";
-nux::logging::Logger logger("unity.icontexture");
 }
 
 using namespace unity;

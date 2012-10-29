@@ -25,10 +25,10 @@ namespace unity
 {
 namespace launcher
 {
+DECLARE_LOGGER(logger, "unity.launcher.hide");
 
 namespace
 {
-nux::logging::Logger logger("unity.launcher");
 const unsigned int HIDE_DELAY_TIMEOUT_LENGTH = 400;
 }
 

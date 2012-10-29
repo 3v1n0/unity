@@ -41,10 +41,9 @@ namespace unity
 {
 namespace dash
 {
+DECLARE_LOGGER(logger, "unity.dash.view");
 namespace
 {
-
-nux::logging::Logger logger("unity.dash.view");
 previews::Style preview_style;
 }
 

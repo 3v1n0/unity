@@ -54,10 +54,9 @@ public:
 
 };
 
+DECLARE_LOGGER(logger, "unity.dash.preview.music.track");
 namespace
 {
-nux::logging::Logger logger("unity.dash.previews.track");
-
 const int layout_spacing = 6;
 }
 

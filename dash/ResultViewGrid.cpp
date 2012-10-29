@@ -36,10 +36,7 @@
 #include "ResultViewGrid.h"
 #include "math.h"
 
-namespace
-{
-nux::logging::Logger logger("unity.dash.results");
-}
+DECLARE_LOGGER(logger, "unity.dash.results");
 
 namespace unity
 {

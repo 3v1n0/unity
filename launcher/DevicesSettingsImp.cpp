@@ -30,11 +30,9 @@ namespace unity
 {
 namespace launcher
 {
+DECLARE_LOGGER(logger, "unity.device.settings");
 namespace
 {
-
-nux::logging::Logger logger("unity.device.settings");
-
 const std::string SETTINGS_NAME = "com.canonical.Unity.Devices";
 const std::string KEY_NAME = "blacklist";
 

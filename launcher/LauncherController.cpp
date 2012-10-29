@@ -48,10 +48,9 @@ namespace unity
 {
 namespace launcher
 {
+DECLARE_LOGGER(logger, "unity.launcher.controller");
 namespace
 {
-nux::logging::Logger logger("unity.launcher");
-
 const std::string DBUS_NAME = "com.canonical.Unity.Launcher";
 const std::string DBUS_PATH = "/com/canonical/Unity/Launcher";
 const std::string DBUS_INTROSPECTION =

@@ -51,10 +51,10 @@ namespace unity
 {
 namespace launcher
 {
+DECLARE_LOGGER(logger, "unity.launcher.icon");
 
 namespace
 {
-nux::logging::Logger logger("unity.launcher");
 const std::string DEFAULT_ICON = "application-default-icon";
 const std::string MONO_TEST_ICON = "gnome-home";
 const std::string UNITY_THEME_NAME = "unity-icon-theme";

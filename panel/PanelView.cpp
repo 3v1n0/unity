@@ -43,9 +43,10 @@
 
 #include "PanelView.h"
 
+DECLARE_LOGGER(logger, "unity.panel.view");
+
 namespace
 {
-nux::logging::Logger logger("unity.panel.view");
 const int refine_gradient_midpoint = 959;
 }
 

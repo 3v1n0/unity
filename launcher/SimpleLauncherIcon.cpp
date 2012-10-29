@@ -34,11 +34,7 @@ namespace unity
 {
 namespace launcher
 {
-
-namespace
-{
-  nux::logging::Logger logger("unity.dash.CategoryViewGrid");
-}
+DECLARE_LOGGER(logger, "unity.launcher.icon");
 
 NUX_IMPLEMENT_OBJECT_TYPE(SimpleLauncherIcon);
 

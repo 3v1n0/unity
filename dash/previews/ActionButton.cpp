@@ -33,14 +33,13 @@ const int kMinButtonHeight = 34;
 const int kMinButtonWidth  = 48;
 
 const int icon_size  = 24;
-
-nux::logging::Logger logger("unity.dash.actionbutton");
 }
 
 namespace unity
 {
 namespace dash
 {
+DECLARE_LOGGER(logger, "unity.dash.preview.action");
 
 ActionButton::ActionButton(std::string const& action_hint, std::string const& label, std::string const& icon_hint, NUX_FILE_LINE_DECL)
   : nux::AbstractButton(NUX_FILE_LINE_PARAM)

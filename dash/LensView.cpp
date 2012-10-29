@@ -40,10 +40,9 @@ namespace unity
 {
 namespace dash
 {
+DECLARE_LOGGER(logger, "unity.dash.lensview");
 namespace
 {
-nux::logging::Logger logger("unity.dash.lensview");
-
 const int CARD_VIEW_GAP_VERT  = 24; // pixels
 const int CARD_VIEW_GAP_HORIZ = 25; // pixels
 }
