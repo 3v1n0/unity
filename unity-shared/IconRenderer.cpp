@@ -632,7 +632,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     char shortcut = (char) arg.shortcut_label;
 
     if (local::label_map.find(shortcut) == local::label_map.end())
-      local::label_map[shortcut] = RenderCharToTexture(shortcut, icon_size, icon_size);
+      local::label_map[shortcut] = RenderCharToTexture(shortcut, icon_size, icon_size, colorify);
 
     RenderElement(GfxContext,
                   arg,
@@ -645,7 +645,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   }
 }
 
-nux::BaseTexture* IconRenderer::RenderCharToTexture(const char label, int width, int height)
+nux::BaseTexture* IconRenderer::RenderCharToTexture(char label, int width, int height, nux::Color const& bg_color)
 {
   nux::BaseTexture*     texture  = NULL;
   nux::CairoGraphics*   cg       = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32,
@@ -670,7 +670,7 @@ nux::BaseTexture* IconRenderer::RenderCharToTexture(const char label, int width,
   cairo_scale(cr, 1.0f, 1.0f);
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
   cg->DrawRoundedRectangle(cr, 1.0f, label_x, label_y, label_r, label_w, label_h);
-  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.65f);
+  cairo_set_source_rgba(cr, bg_color.red, bg_color.blue, bg_color.green, 0.65f);
   cairo_fill(cr);
 
   layout = pango_cairo_create_layout(cr);
