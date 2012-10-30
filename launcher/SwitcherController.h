@@ -141,7 +141,7 @@ private:
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
 
-  launcher::AbstractLauncherIcon::Ptr last_selection_;
+  launcher::AbstractLauncherIcon::Ptr last_active_selection_;
 };
 
 }
