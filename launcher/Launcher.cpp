@@ -2516,6 +2516,19 @@ void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLaun
   drag_args.push_front(arg);
 
   SetOffscreenRenderTarget(texture);
+
+  unsigned int alpha = 0, src = 0, dest = 0;
+  GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
+  GfxContext.GetRenderStates().SetBlend(false);
+
+  GfxContext.QRP_Color(0,
+                      0,
+                      texture->GetWidth(),
+                      texture->GetHeight(),
+                      nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+
+  GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
+
   icon_renderer->PreprocessIcons(drag_args, nux::Geometry(0, 0, _icon_size, _icon_size));
   icon_renderer->RenderIcon(nux::GetWindowThread()->GetGraphicsEngine(), arg, nux::Geometry(0, 0, _icon_size, _icon_size), nux::Geometry(0, 0, _icon_size, _icon_size));
   RestoreSystemRenderTarget();
