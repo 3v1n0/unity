@@ -54,7 +54,6 @@ Controller::Controller(unsigned int load_timeout)
   ,  visible_(false)
   ,  show_desktop_disabled_(false)
   ,  bg_color_(0, 0, 0, 0.5)
-  ,  last_active_selection_(nullptr)
 {
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
