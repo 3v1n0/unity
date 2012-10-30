@@ -90,10 +90,9 @@ void SwitcherView::AddProperties(GVariantBuilder* builder)
   .add("text-size", text_size)
   .add("animation-length", animation_length)
   .add("spread-size", (float)spread_size)
-  .add("label", text_view_->GetText());
+  .add("label", text_view_->GetText())
+  .add("label_visible", text_view_->IsVisible());
 }
-
-
 
 LayoutWindowList SwitcherView::ExternalTargets ()
 {
@@ -111,15 +110,8 @@ void SwitcherView::SetModel(SwitcherModel::Ptr model)
   if (!model->Selection())
     return;
 
-  if (model->detail_selection)
-  {
-    Window detail_window = model->DetailSelectionWindow();
-    text_view_->SetText(model->Selection()->NameForWindow(detail_window));
-  }
-  else
-  {
+  if (!model->detail_selection)
     text_view_->SetText(model->Selection()->tooltip_text());
-  }
 }
 
 void SwitcherView::OnIconSizeChanged (int size)
@@ -140,37 +132,28 @@ void SwitcherView::SaveLast ()
   clock_gettime(CLOCK_MONOTONIC, &save_time_);
 }
 
-void SwitcherView::OnDetailSelectionIndexChanged (unsigned int index)
+void SwitcherView::OnDetailSelectionIndexChanged(unsigned int index)
 {
-  if (model_->detail_selection)
-  {
-    Window detail_window = model_->DetailSelectionWindow();
-    text_view_->SetText(model_->Selection()->NameForWindow(detail_window));
-  }
   QueueDraw ();
 }
 
-void SwitcherView::OnDetailSelectionChanged (bool detail)
+void SwitcherView::OnDetailSelectionChanged(bool detail)
 {
+  text_view_->SetVisible(!detail);
 
-  if (detail)
-  {
-    Window detail_window = model_->DetailSelectionWindow();
-    text_view_->SetText(model_->Selection()->NameForWindow(detail_window));
-  }
-  else
-  {
+  if (!detail)
     text_view_->SetText(model_->Selection()->tooltip_text());
-  }
-  SaveLast ();
-  QueueDraw ();
+
+  SaveLast();
+  QueueDraw();
 }
 
 void SwitcherView::OnSelectionChanged(AbstractLauncherIcon::Ptr const& selection)
 {
   if (selection)
     text_view_->SetText(selection->tooltip_text());
-  SaveLast ();
+
+  SaveLast();
   QueueDraw();
 }
 
@@ -260,7 +243,7 @@ nux::Geometry SwitcherView::UpdateRenderTargets (nux::Point const& center, times
 
   nux::Geometry max_bounds;
   nux::Geometry const& absolute = GetAbsoluteGeometry();
-  nux::Size spread_size = SpreadSize();
+  nux::Size const& spread_size = SpreadSize();
   max_bounds.x = absolute.x + center.x - spread_size.width / 2;
   max_bounds.y = absolute.y + center.y - spread_size.height / 2;
   max_bounds.width = spread_size.width;
@@ -283,14 +266,11 @@ void SwitcherView::OffsetRenderTargets (int x, int y)
 
 nux::Size SwitcherView::SpreadSize()
 {
-  nux::Geometry base = GetGeometry();
-  nux::Size result (base.width - border_size * 2, base.height - border_size * 2);
+  nux::Geometry const& base = GetGeometry();
+  nux::Size result(base.width - border_size * 2, base.height - border_size * 2);
 
   int width_padding = std::max(model_->Size() - 1, 0) * minimum_spacing + tile_size;
-  int height_padding = text_size;
-
   result.width -= width_padding;
-  result.height -= height_padding;
 
   return result;
 }
@@ -379,12 +359,13 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
   bool detail_selection = model_->detail_selection;
 
   background_geo.y = base.y + base.height / 2 - (vertical_size / 2);
-  background_geo.height = vertical_size + text_size;
+  background_geo.height = vertical_size;
 
+  if (text_view_->IsVisible())
+    background_geo.height += text_size;
 
   if (model_)
   {
-
     int size = model_->Size();
     int padded_tile_size = tile_size + flat_spacing * 2;
     int max_width = base.width - border_size * 2;
@@ -549,7 +530,7 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
 
   for (auto const& arg : last_args_)
   {
-    if (model_->Selection() == arg.icon)
+    if (text_view_->IsVisible() && model_->Selection() == arg.icon)
     {
       int view_width = text_view_->GetBaseWidth();
       int start_x = arg.render_center.x - view_width / 2;
@@ -592,8 +573,11 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
     }
   }
 
-  text_view_->SetBaseY(last_background_.y + last_background_.height - 45);
-  text_view_->Draw(GfxContext, force_draw);
+  if (text_view_->IsVisible())
+  {
+    text_view_->SetBaseY(last_background_.y + last_background_.height - 45);
+    text_view_->Draw(GfxContext, force_draw);
+  }
 
   int ms_since_change = TimeUtil::TimeDelta(&current_, &save_time_);
 
