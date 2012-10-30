@@ -1163,6 +1163,8 @@ void Launcher::ShowShortcuts(bool show)
 
 void Launcher::OnBGColorChanged(GVariant *data)
 {
+  ui::IconRenderer::DestroyShortcutTextures();
+
   double red = 0.0f, green = 0.0f, blue = 0.0f, alpha = 0.0f;
 
   g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
@@ -1607,6 +1609,8 @@ void Launcher::EnsureScrollTimer()
 
 void Launcher::SetIconSize(int tile_size, int icon_size)
 {
+  ui::IconRenderer::DestroyShortcutTextures();
+
   _icon_size = tile_size;
   _icon_image_size = icon_size;
   _icon_image_size_delta = tile_size - icon_size;

@@ -1055,6 +1055,13 @@ void IconRenderer::DestroyTextures()
   local::destroy_textures();
 }
 
+void IconRenderer::DestroyShortcutTextures()
+{
+  for (auto texture : local::label_map)
+    texture.second->UnReference();
+  local::label_map.clear();
+}
+
 void IconRenderer::GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& PerspectiveMatrix,
                                                      int ViewportWidth,
                                                      int ViewportHeight,
@@ -1293,9 +1300,7 @@ void destroy_textures()
   squircle_shadow->UnReference();
   squircle_shine->UnReference();
 
-  for (auto it = label_map.begin(), end = label_map.end(); it != end; ++it)
-    it->second->UnReference();
-  label_map.clear();
+  IconRenderer::DestroyShortcutTextures();
 
   textures_created = false;
 }
