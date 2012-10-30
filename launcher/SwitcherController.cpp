@@ -54,7 +54,7 @@ Controller::Controller(unsigned int load_timeout)
   ,  visible_(false)
   ,  show_desktop_disabled_(false)
   ,  bg_color_(0, 0, 0, 0.5)
-  ,  last_active_selection_(NULL)
+  ,  last_active_selection_(nullptr)
 {
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
@@ -96,7 +96,7 @@ void Controller::Show(ShowMode show, SortMode sort, std::vector<AbstractLauncher
   SelectFirstItem();
 
   // XXX: Workaround for a problem related to Alt+TAB which is needed since the
-  //   switcher is set as the active window
+  //   switcher is set as the active window (LP: #1071298)
   if (model_->Selection()->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
     last_active_selection_ = model_->Selection();
 
@@ -280,7 +280,7 @@ void Controller::Hide(bool accept_state)
 
   ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new("(bi)", false, monitor_));
 
-  last_active_selection_ = NULL;
+  last_active_selection_ = nullptr;
 
   view_.Release();
 }
