@@ -236,6 +236,9 @@ private:
   void OnSwitcherStart(GVariant* data);
   void OnSwitcherEnd(GVariant* data);
 
+  void OnInitiateSpread();
+  void OnTerminateSpread();
+
   void RestoreWindow(GVariant* data);
   bool SaveInputThenFocus(const guint xid);
 

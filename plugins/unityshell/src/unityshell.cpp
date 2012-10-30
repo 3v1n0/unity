@@ -405,6 +405,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
         sigc::mem_fun(this, &UnityScreen::OnMinimizeDurationChanged)
     );
 
+    WindowManager& wm = WindowManager::Default();
+    wm.initiate_spread.connect(sigc::mem_fun(this, &UnityScreen::OnInitiateSpread));
+    wm.terminate_spread.connect(sigc::mem_fun(this, &UnityScreen::OnTerminateSpread));
+
     AddChild(&screen_introspection_);
   }
 }
@@ -463,6 +467,22 @@ void UnityScreen::initAltTabNextWindow()
     LOG_WARN(logger) << "Could not find key above tab!";
   }
 
+}
+
+void UnityScreen::OnInitiateSpread()
+{
+  UnityWindow::SetupSharedTextures();
+
+  for (auto const& swin : ScaleScreen::get(screen)->getWindows())
+    UnityWindow::get(swin->window)->OnInitiateSpread();
+}
+
+void UnityScreen::OnTerminateSpread()
+{
+  for (auto const& swin : ScaleScreen::get(screen)->getWindows())
+    UnityWindow::get(swin->window)->OnTerminateSpread();
+
+  UnityWindow::CleanupSharedTextures();
 }
 
 void UnityScreen::EnsureSuperKeybindings()
@@ -3570,9 +3590,6 @@ UnityWindow::UnityWindow(CompWindow* window)
       }
     }
   }
-  WindowManager& wm = WindowManager::Default();
-  wm.initiate_spread.connect(sigc::mem_fun(this, &UnityWindow::OnInitiateSpread));
-  wm.terminate_spread.connect(sigc::mem_fun(this, &UnityWindow::OnTerminateSpread));
 }
 
 
@@ -3845,6 +3862,7 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
         int text_x = win::decoration::ITEMS_PADDING * 2 + win::decoration::CLOSE_SIZE;
         RenderText(context, text_x, 0.0, width - win::decoration::ITEMS_PADDING, height);
         decoration_selected_tex_ = context.pixmap_texture_;
+        uScreen->damageRegion(CompRegion(geo.x, geo.y, width, height));
       }
       else
       {
@@ -3855,9 +3873,6 @@ void UnityWindow::paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAtt
 
     if (decoration_selected_tex_)
       DrawTexture(decoration_selected_tex_->texture_, attrib, transform, mask, geo.x, geo.y);
-
-    if (redraw_decoration)
-      uScreen->damageRegion(CompRegion(geo.x, geo.y, width, height));
 
     int x = geo.x + win::decoration::ITEMS_PADDING;
     int y = geo.y + (height - win::decoration::CLOSE_SIZE) / 2.0f;
@@ -3928,7 +3943,6 @@ void UnityWindow::OnInitiateSpread()
 {
   close_icon_state_ = panel::WindowState::NORMAL;
   middle_clicked_ = false;
-  SetupSharedTextures();
 
   WindowManager& wm = WindowManager::Default();
   Window xid = window->id();
