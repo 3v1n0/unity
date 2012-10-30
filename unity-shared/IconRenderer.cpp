@@ -414,6 +414,8 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   nux::BaseTexture* shine = local::icon_shine[size];
   nux::BaseTexture* shadow = local::icon_shadow[size];
 
+  nux::Color shortcut_color = arg.colorify;
+
   bool force_filter = icon_size != background->GetWidth();
 
   if (backlight_intensity == 0.0f)
@@ -632,7 +634,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     char shortcut = (char) arg.shortcut_label;
 
     if (local::label_map.find(shortcut) == local::label_map.end())
-      local::label_map[shortcut] = RenderCharToTexture(shortcut, icon_size, icon_size, colorify);
+      local::label_map[shortcut] = RenderCharToTexture(shortcut, icon_size, icon_size, shortcut_color);
 
     RenderElement(GfxContext,
                   arg,
@@ -657,22 +659,25 @@ nux::BaseTexture* IconRenderer::RenderCharToTexture(char label, int width, int h
   GtkSettings*          settings = gtk_settings_get_default();  // not ref'ed
   gchar*                fontName = NULL;
 
-  double label_pos = double(icon_size / 3.0f);
-  double text_size = double(icon_size / 4.0f);
-  double label_x = label_pos;
-  double label_y = label_pos;
-  double label_w = label_pos;
-  double label_h = label_pos;
-  double label_r = 3.0f;
+  double label_size = icon_size * 0.44f;
+  double label_x = (icon_size - label_size) / 2;
+  double label_y = (icon_size - label_size) / 2;
+  double label_w = label_size;
+  double label_h = label_size;
+  double label_radius = 3.0f;
 
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
   cairo_scale(cr, 1.0f, 1.0f);
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-  cg->DrawRoundedRectangle(cr, 1.0f, label_x, label_y, label_r, label_w, label_h);
-  cairo_set_source_rgba(cr, bg_color.red, bg_color.blue, bg_color.green, 0.65f);
+  cg->DrawRoundedRectangle(cr, 1.0f, label_x, label_y, label_radius, label_w, label_h);
+  cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 0.75f);
+  cairo_fill(cr);
+  cg->DrawRoundedRectangle(cr, 1.0f, label_x, label_y, label_radius, label_w, label_h);
+  cairo_set_source_rgba(cr, bg_color.red, bg_color.green, bg_color.blue, 0.20f);
   cairo_fill(cr);
 
+  double text_size = label_size * 0.75; 
   layout = pango_cairo_create_layout(cr);
   g_object_get(settings, "gtk-font-name", &fontName, NULL);
   desc = pango_font_description_from_string(fontName);
