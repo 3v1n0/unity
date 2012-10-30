@@ -138,6 +138,8 @@ private:
   nux::Color bg_color_;
   DetailMode detail_mode_;
 
+  launcher::AbstractLauncherIcon::Ptr last_active_selection_;
+
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
 };

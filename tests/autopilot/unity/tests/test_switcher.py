@@ -246,6 +246,31 @@ class SwitcherWindowsManagementTests(SwitcherTestCase):
         self.assertProperty(calc_win, is_focused=True)
         self.assertVisibleWindowStack([calc_win, char_win1])
 
+    def test_switcher_rises_next_window_of_same_application(self):
+        """Tests if alt+tab invoked normally switches to the next application
+        window of the same type.
+
+        """
+        char_win1, char_win2 = self.start_applications("Character Map", "Character Map")
+        self.assertVisibleWindowStack([char_win2, char_win1])
+
+        self.keybinding("switcher/reveal_normal")
+        self.assertProperty(char_win1, is_focused=True)
+
+    def test_switcher_rises_other_application(self):
+        """Tests if alt+tab invoked normally switches correctly to the other
+        application window when the last focused application had 2 windows
+
+        """
+        char_win1, char_win2, calc_win = self.start_applications("Character Map", "Character Map", "Calculator")
+        self.assertVisibleWindowStack([calc_win, char_win2, char_win1])
+
+        self.keybinding("switcher/reveal_normal")
+        self.assertProperty(char_win2, is_focused=True)
+
+        self.keybinding("switcher/reveal_normal")
+        self.assertProperty(calc_win, is_focused=True)
+
 
 class SwitcherDetailsTests(SwitcherTestCase):
     """Test the details mode for the switcher."""
