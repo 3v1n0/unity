@@ -117,6 +117,11 @@ class UnityTestCase(AutopilotTestCase):
                 reasons.append("The test left the launcher in switcher mode.")
                 log.warning("Test left the launcher in switcher mode, exiting it...")
                 launcher.switcher_cancel()
+            if not self.well_behaved(launcher, quicklist_open=False):
+                well_behaved = False
+                reasons.append("The test left a quicklist open.")
+                log.warning("The test left a quicklist open.")
+                self.keyboard.press_and_release('Escape')
 
         if not well_behaved:
             self.fail("/n".join(reasons))
