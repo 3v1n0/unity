@@ -659,7 +659,8 @@ nux::BaseTexture* IconRenderer::RenderCharToTexture(char label, int width, int h
   GtkSettings*          settings = gtk_settings_get_default();  // not ref'ed
   gchar*                fontName = NULL;
 
-  double label_size = icon_size * 0.44f;
+  double label_ratio = 0.44f;
+  double label_size = icon_size * label_ratio;
   double label_x = (icon_size - label_size) / 2;
   double label_y = (icon_size - label_size) / 2;
   double label_w = label_size;
@@ -672,12 +673,12 @@ nux::BaseTexture* IconRenderer::RenderCharToTexture(char label, int width, int h
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
   cg->DrawRoundedRectangle(cr, 1.0f, label_x, label_y, label_radius, label_w, label_h);
   cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 0.75f);
-  cairo_fill(cr);
-  cg->DrawRoundedRectangle(cr, 1.0f, label_x, label_y, label_radius, label_w, label_h);
+  cairo_fill_preserve(cr);
   cairo_set_source_rgba(cr, bg_color.red, bg_color.green, bg_color.blue, 0.20f);
   cairo_fill(cr);
 
-  double text_size = label_size * 0.75; 
+  double text_ratio = 0.75;
+  double text_size = label_size * text_ratio; 
   layout = pango_cairo_create_layout(cr);
   g_object_get(settings, "gtk-font-name", &fontName, NULL);
   desc = pango_font_description_from_string(fontName);
