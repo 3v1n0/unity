@@ -15,15 +15,45 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Tim Penhey <tim.penhey@canonical.com>
+ *              Marco Trevisan (Treviño) <marco.trevisan@canonical.com>
  */
 
 #ifndef UNITYSHARED_STANDALONE_WINDOW_MANAGER_H
 #define UNITYSHARED_STANDALONE_WINDOW_MANAGER_H
 
 #include "unity-shared/WindowManager.h"
+#include <map>
 
 namespace unity
 {
+
+struct StandaloneWindow
+{
+  typedef std::shared_ptr<StandaloneWindow> Ptr;
+  StandaloneWindow(Window xid);
+
+private:
+  Window xid;
+
+public:
+  Window Xid() const { return xid; }
+  std::string name;
+  nux::Geometry geo;
+  nux::Size deco_sizes[4];
+  unsigned current_desktop;
+  unsigned monitor;
+  bool active;
+  bool mapped;
+  bool visible;
+  bool maximized;
+  bool minimized;
+  bool decorated;
+  bool has_decorations;
+  bool on_top;
+  bool closable;
+  bool minimizable;
+  bool maximizable;
+};
 
 class StandaloneWindowManager : public WindowManager
 {
@@ -101,6 +131,10 @@ public:
   // Mock functions
   void SetScaleActive(bool scale_active);
   void SetScaleActiveForGroup(bool scale_active_for_group);
+  void SetCurrentDesktop(unsigned desktop_id);
+
+  void AddStandaloneWindow(StandaloneWindow::Ptr const& window);
+  std::map<Window, StandaloneWindow::Ptr> GetStandaloneWindows() const;
 
 protected:
   virtual void AddProperties(GVariantBuilder* builder);
@@ -110,6 +144,8 @@ private:
   bool in_show_desktop_;
   bool scale_active_;
   bool scale_active_for_group_;
+  unsigned current_desktop_;
+  std::map<Window, StandaloneWindow::Ptr> standalone_windows_;
 };
 
 }
