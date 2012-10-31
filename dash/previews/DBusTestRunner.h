@@ -34,11 +34,7 @@ namespace dash
 {
 namespace previews
 {
-namespace
-{
-nux::logging::Logger logger("unity.dash.DBusTestRunner");
-}
-
+DECLARE_LOGGER(logger, "unity.dash.dbus.testrunner");
 
 class DBusTestRunner
 {

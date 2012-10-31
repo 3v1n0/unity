@@ -32,12 +32,7 @@ namespace unity
 {
 namespace dash
 {
-namespace
-{
-
-nux::logging::Logger logger("unity.dash.filterbar");
-
-}
+DECLARE_LOGGER(logger, "unity.dash.filter.bar");
 
 NUX_IMPLEMENT_OBJECT_TYPE(FilterBar);
 

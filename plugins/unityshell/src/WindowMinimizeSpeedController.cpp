@@ -24,11 +24,9 @@
 
 #include "WindowMinimizeSpeedController.h"
 
+DECLARE_LOGGER(logger, "unity.shell.compiz.minimizer");
 namespace
 {
-
-nux::logging::Logger logger ("unity.WindowMinimizeSpeedController");
-
 namespace local
 {
 const std::string UNITY_SCHEMA = "com.canonical.Unity";

@@ -35,12 +35,7 @@ namespace dash
 {
 namespace previews
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.dash.previews.previewnavigator");
-
-}
+DECLARE_LOGGER(logger, "unity.dash.preview.navigator");
 
 NUX_IMPLEMENT_OBJECT_TYPE(PreviewNavigator);
 

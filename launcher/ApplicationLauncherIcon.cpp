@@ -43,15 +43,14 @@ namespace unity
 {
 namespace launcher
 {
+DECLARE_LOGGER(logger, "unity.launcher.icon.application");
 namespace
 {
-nux::logging::Logger logger("unity.launcher");
-
-  // We use the "bamf-" prefix since the manager is protected, to avoid name clash
-  const std::string WINDOW_MOVE_TIMEOUT = "bamf-window-move";
-  const std::string ICON_REMOVE_TIMEOUT = "bamf-icon-remove";
-  //const std::string ICON_DND_OVER_TIMEOUT = "bamf-icon-dnd-over";
-  const std::string DEFAULT_ICON = "application-default-icon";
+// We use the "bamf-" prefix since the manager is protected, to avoid name clash
+const std::string WINDOW_MOVE_TIMEOUT = "bamf-window-move";
+const std::string ICON_REMOVE_TIMEOUT = "bamf-icon-remove";
+//const std::string ICON_DND_OVER_TIMEOUT = "bamf-icon-dnd-over";
+const std::string DEFAULT_ICON = "application-default-icon";
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(ApplicationLauncherIcon);
@@ -1301,7 +1300,11 @@ bool ApplicationLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
 
 nux::DndAction ApplicationLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_data)
 {
+#ifdef UNITY_HAS_X_ORG_SUPPORT
   return ValidateUrisForLaunch(dnd_data).empty() ? nux::DNDACTION_NONE : nux::DNDACTION_COPY;
+#else
+  return nux::DNDACTION_NONE;
+#endif
 }
 
 void ApplicationLauncherIcon::OnAcceptDrop(DndData const& dnd_data)

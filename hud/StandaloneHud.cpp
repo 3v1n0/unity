@@ -32,10 +32,7 @@
 #include "unity-shared/UnitySettings.h"
 #include <NuxCore/Logger.h>
 
-namespace
-{
-  nux::logging::Logger logger("unity.tests.Hud");
-}
+DECLARE_LOGGER(logger, "unity.tests.hud");
 
 class TestRunner
 {

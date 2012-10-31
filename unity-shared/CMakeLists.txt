@@ -5,7 +5,6 @@ find_package (PkgConfig)
 set (CFLAGS
      ${CACHED_UNITY_DEPS_CFLAGS}
      ${CACHED_UNITY_DEPS_CFLAGS_OTHER}
-     ${MAINTAINER_CFLAGS}
      "-DGETTEXT_PACKAGE=\"unity\""
      "-I${CMAKE_CURRENT_BINARY_DIR}"
      )
@@ -53,6 +52,7 @@ set (UNITY_SHARED_SOURCES
      SearchBarSpinner.cpp
      StaticCairoText.cpp
      TextureCache.cpp
+     TextInput.cpp
      TextureThumbnailProvider.cpp
      ThumbnailGenerator.cpp
      Timer.cpp
@@ -64,9 +64,20 @@ set (UNITY_SHARED_SOURCES
      UnityWindowView.cpp
      UserThumbnailProvider.cpp
      WindowManager.cpp
-     XKeyboardUtil.cpp
-     XWindowManager.cpp
 )
+
+if(UNITY_ENABLE_X_ORG_SUPPORT)
+  set (UNITY_SHARED_SOURCES
+    XKeyboardUtil.cpp
+    XWindowManager.cpp
+    ${UNITY_SHARED_SOURCES}
+    )
+else()
+  set (UNITY_SHARED_SOURCES
+    FakeKeyboardUtil.cpp
+    ${UNITY_SHARED_SOURCES}
+    )
+endif()
 
 add_library (unity-shared STATIC ${UNITY_SHARED_SOURCES})
 target_link_libraries (unity-shared ${LIBS})
@@ -76,14 +87,16 @@ add_dependencies (unity-shared unity-core-${UNITY_API_VERSION})
 # We also need to build compiz specific parts and standalone variants of those parts
 #
 
-# compiz
-set (UNITY_SHARED_COMPIZ_SOURCES
-     PluginAdapter.cpp
-     )
-add_library (unity-shared-compiz STATIC ${UNITY_SHARED_COMPIZ_SOURCES})
-target_link_libraries (unity-shared-compiz ${LIBS})
+if(UNITY_ENABLE_X_ORG_SUPPORT)
+  # compiz
+  set (UNITY_SHARED_COMPIZ_SOURCES
+    PluginAdapter.cpp
+    )
+  add_library (unity-shared-compiz STATIC ${UNITY_SHARED_COMPIZ_SOURCES})
+  target_link_libraries (unity-shared-compiz ${LIBS})
 
-add_dependencies (unity-shared-compiz unity-shared)
+  add_dependencies (unity-shared-compiz unity-shared)
+endif()
 
 # standalone
 set (UNITY_SHARED_STANDALONE_SOURCES

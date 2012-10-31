@@ -25,12 +25,6 @@
 #ifndef RESULTRENDERERHORIZONTALTILE_H
 #define RESULTRENDERERHORIZONTALTILE_H
 
-#include <Nux/Nux.h>
-#include <NuxCore/Object.h>
-#include <NuxCore/Property.h>
-#include <Nux/TextureArea.h>
-#include <NuxGraphics/CairoGraphics.h>
-
 #include "ResultRendererTile.h"
 
 namespace unity
@@ -45,12 +39,11 @@ public:
   NUX_DECLARE_OBJECT_TYPE(ResultRendererHorizontalTile, ResultRendererTile);
 
   ResultRendererHorizontalTile(NUX_FILE_LINE_PROTO);
-  ~ResultRendererHorizontalTile();
 
   virtual void Render(nux::GraphicsEngine& GfxContext,
                       Result& row,
                       ResultRendererState state,
-                      nux::Geometry& geometry,
+                      nux::Geometry const& geometry,
                       int x_offset, int y_offset);
 
 protected:

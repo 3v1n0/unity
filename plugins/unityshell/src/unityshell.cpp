@@ -80,11 +80,9 @@ using ui::LayoutWindow;
 using ui::LayoutWindowList;
 using util::Timer;
 
+DECLARE_LOGGER(logger, "unity.shell.compiz");
 namespace
 {
-
-nux::logging::Logger logger("unity.shell");
-
 UnityScreen* uScreen = 0;
 
 void reset_glib_logging();
@@ -609,9 +607,12 @@ void UnityScreen::paintPanelShadow(const CompRegion& clip)
 
   CompRegion redraw(clip);
   redraw &= shadowRect;
+  redraw -= panelShadowPainted;
 
   if (redraw.isEmpty())
     return;
+
+  panelShadowPainted |= redraw;
 
   // compiz doesn't use the same method of tracking monitors as our toolkit
   // we need to make sure we properly associate with the right monitor
@@ -1241,42 +1242,6 @@ bool UnityWindow::handleEvent(XEvent *event)
   return handled;
 }
 
-bool UnityScreen::shellCouldBeHidden(CompOutput const& output)
-{
-  std::vector<Window> const& nuxwins(nux::XInputWindow::NativeHandleList());
-
-  // Loop through windows from front to back
-  CompWindowList const& wins = screen->windows();
-  for ( CompWindowList::const_reverse_iterator r = wins.rbegin()
-      ; r != wins.rend()
-      ; ++r
-      )
-  {
-    CompWindow* w = *r;
-
-    /*
-     * The shell is hidden if there exists any window that fully covers
-     * the output and is in front of all Nux windows on that output.
-     */
-    if (w->isMapped() &&
-        !(w->state () & CompWindowStateHiddenMask) &&
-        w->geometry().contains(output))
-    {
-      return true;
-    }
-    else
-    {
-      for (Window n : nuxwins)
-      {
-        if (w->id() == n && output.intersects(w->geometry()))
-          return false;
-      }
-    }
-  }
-
-  return false;
-}
-
 /* called whenever we need to repaint parts of the screen */
 bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
                                 const GLMatrix& transform,
@@ -1331,7 +1296,7 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
 {
   allowWindowPaint = false;
   gScreen->glPaintTransformedOutput(attrib, transform, region, output, mask);
-
+  paintPanelShadow(region);
 }
 
 void UnityScreen::preparePaint(int ms)
@@ -1345,7 +1310,10 @@ void UnityScreen::preparePaint(int ms)
     wi->HandleAnimations (ms);
 
   didShellRepaint = false;
+  panelShadowPainted = CompRegion();
   firstWindowAboveShell = NULL;
+
+  compizDamageNux(cScreen->currentDamage());
 }
 
 void UnityScreen::donePaint()
@@ -2547,18 +2515,23 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     uScreen->paintDisplay();
   }
 
-  if (window->type() == CompWindowTypeDesktopMask)
+  bool screen_transformed = (mask & PAINT_WINDOW_ON_TRANSFORMED_SCREEN_MASK);
+
+  if (window->type() == CompWindowTypeDesktopMask && !screen_transformed)
     uScreen->setPanelShadowMatrix(matrix);
 
   Window active_window = screen->activeWindow();
-  if (window->id() == active_window && window->type() != CompWindowTypeDesktopMask)
+  if (!screen_transformed &&
+      window->id() == active_window &&
+      window->type() != CompWindowTypeDesktopMask)
   {
     uScreen->paintPanelShadow(region);
   }
 
   bool ret = gWindow->glDraw(matrix, attrib, region, mask);
 
-  if ((active_window == 0 || active_window == window->id()) &&
+  if (!screen_transformed &&
+      (active_window == 0 || active_window == window->id()) &&
       (window->type() == CompWindowTypeDesktopMask))
   {
     uScreen->paintPanelShadow(region);

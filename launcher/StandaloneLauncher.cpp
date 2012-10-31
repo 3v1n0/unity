@@ -19,16 +19,6 @@
  */
 
 #include "Nux/Nux.h"
-#include "Nux/Button.h"
-#include "Nux/VLayout.h"
-#include "Nux/HLayout.h"
-#include "Nux/WindowThread.h"
-#include "Nux/CheckBox.h"
-#include "Nux/SpinBox.h"
-#include "Nux/EditTextBox.h"
-#include "Nux/StaticText.h"
-#include "Nux/RangeValueInteger.h"
-#include "NuxGraphics/GraphicsEngine.h"
 #include <gtk/gtk.h>
 
 #include "unity-shared/BackgroundEffectHelper.h"

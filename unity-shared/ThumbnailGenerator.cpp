@@ -34,10 +34,10 @@
 
 namespace unity
 {
+DECLARE_LOGGER(logger, "unity.dash.thumbnail");
 
 namespace
 {
-  nux::logging::Logger logger("unity.thumbnailgenerator");
   ThumbnailGenerator* thumbnail_instance = nullptr;
 
   const unsigned int CLEANUP_DURATION = 60*1000;         // 1 minute

@@ -31,7 +31,7 @@
 #include <Nux/GridHLayout.h>
 #include <UnityCore/GenericPreview.h>
 #include <Nux/AbstractButton.h>
- 
+
 #include "GenericPreview.h"
 #include "PreviewInfoHintWidget.h"
 
@@ -41,12 +41,7 @@ namespace dash
 {
 namespace previews
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.dash.previews.genericpreview");
-
-}
+DECLARE_LOGGER(logger, "unity.dash.preview.generic");
 
 class DetailsScrollView : public nux::ScrollView
 {

@@ -37,9 +37,9 @@
 
 namespace unity
 {
+DECLARE_LOGGER(logger, "unity.iconloader");
 namespace
 {
-nux::logging::Logger logger("unity.iconloader");
 const int MIN_ICON_SIZE = 2;
 const int RIBBON_PADDING = 2;
 }

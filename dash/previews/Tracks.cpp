@@ -35,11 +35,7 @@ namespace dash
 {
 namespace previews
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.dash.previews.tracks");
-}
+DECLARE_LOGGER(logger, "unity.dash.preview.music.tracks");
 
 NUX_IMPLEMENT_OBJECT_TYPE(Tracks);
 
@@ -118,6 +114,7 @@ void Tracks::OnTrackAdded(dash::Track const& track_row)
   layout_->AddView(track_view.GetPointer(), 0);
 
   m_tracks[track_uri] = track_view;
+  ComputeContentSize();
 }
 
 void Tracks::OnTrackRemoved(dash::Track const& track_row)
@@ -130,6 +127,7 @@ void Tracks::OnTrackRemoved(dash::Track const& track_row)
 
   RemoveChild(pos->second.GetPointer());
   layout_->RemoveChildObject(pos->second.GetPointer());
+  ComputeContentSize();
 }
 
 } // namespace previews

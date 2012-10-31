@@ -36,11 +36,10 @@ namespace dash
 {
 namespace previews
 {
+DECLARE_LOGGER(logger, "unity.dash.preview.social.comments");
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.previews.socialpreviewcomments");
-
 const int layout_spacing = 12;
 }
 

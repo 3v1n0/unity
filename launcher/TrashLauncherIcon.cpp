@@ -33,10 +33,10 @@ namespace unity
 {
 namespace launcher
 {
+DECLARE_LOGGER(logger, "unity.launcher.icon");
 namespace
 {
   const std::string ZEITGEIST_UNITY_ACTOR = "application://compiz.desktop";
-  nux::logging::Logger logger("unity.launcher.TrashLauncherIcon");
 }
 
 TrashLauncherIcon::TrashLauncherIcon()
@@ -139,7 +139,11 @@ void TrashLauncherIcon::UpdateTrashIconCb(GObject* source,
 
 nux::DndAction TrashLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_data)
 {
+#ifdef UNITY_HAS_X_ORG_SUPPORT
   return nux::DNDACTION_MOVE;
+#else
+  return nux::DNDACTION_NONE;
+#endif
 }
 
 bool TrashLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)

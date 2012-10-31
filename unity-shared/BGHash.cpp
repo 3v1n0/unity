@@ -22,10 +22,11 @@
 #include <NuxCore/Logger.h>
 #include "unity-shared/UBusMessages.h"
 
-namespace
-{
-  nux::logging::Logger logger("unity.BGHash");
-}
+#ifndef XA_STRING
+#define XA_STRING ((Atom) 31)
+#endif
+
+DECLARE_LOGGER(logger, "unity.bghash");
 
 namespace unity
 {

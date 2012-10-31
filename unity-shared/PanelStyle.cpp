@@ -39,11 +39,10 @@ namespace unity
 {
 namespace panel
 {
+DECLARE_LOGGER(logger, "unity.panel.style");
 namespace
 {
 Style* style_instance = nullptr;
-
-nux::logging::Logger logger("unity.panel.style");
 
 const std::string SETTINGS_NAME("org.gnome.desktop.wm.preferences");
 const std::string PANEL_TITLE_FONT_KEY("titlebar-font");

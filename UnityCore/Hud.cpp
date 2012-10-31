@@ -33,10 +33,10 @@ namespace unity
 {
 namespace hud
 {
+DECLARE_LOGGER(logger, "unity.hud.impl");
 
 namespace
 {
-nux::logging::Logger logger("unity.hud.hud");
 const int request_number_of_results = 6;
 }
 

@@ -23,10 +23,8 @@
 #include <Nux/VScrollBar.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
-#include <Nux/MenuPage.h>
 #include <Nux/WindowCompositor.h>
 #include <Nux/BaseWindow.h>
-#include <Nux/MenuPage.h>
 #include <NuxCore/Color.h>
 #include <NuxCore/Logger.h>
 
@@ -53,10 +51,10 @@ namespace unity
 {
 namespace launcher
 {
+DECLARE_LOGGER(logger, "unity.launcher.icon");
 
 namespace
 {
-nux::logging::Logger logger("unity.launcher");
 const std::string DEFAULT_ICON = "application-default-icon";
 const std::string MONO_TEST_ICON = "gnome-home";
 const std::string UNITY_THEME_NAME = "unity-icon-theme";
@@ -633,6 +631,11 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
   }
 
   return true;
+}
+
+void LauncherIcon::CloseQuicklist()
+{
+  _quicklist->HideAndEndQuicklistNav();
 }
 
 void LauncherIcon::RecvMouseDown(int button, int monitor, unsigned long key_flags)

@@ -37,13 +37,11 @@ namespace unity
 {
 namespace dash
 {
+DECLARE_LOGGER(logger, "unity.dash.lens.filesystem");
 
 namespace
 {
-
-nux::logging::Logger logger("unity.dash.filesystemlenses");
 const char* GROUP = "Lens";
-
 }
 
 // Loads data from a Lens key-file in a usable form

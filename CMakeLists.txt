@@ -107,6 +107,7 @@ configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 #
 # i18n
 #
+
 find_package (Gettext REQUIRED)
 
 set (COMPIZ_I18N_DIR ${CMAKE_SOURCE_DIR}/po)
@@ -131,32 +132,43 @@ if (BOOT_LOGGER)
     SET (BOOT_LOGGER_FLAG "-DENABLE_LOGGER")
 endif (BOOT_LOGGER)
 
-SET (MAINTAINER_CFLAGS "-Werror -Wall -Wcast-align -Wempty-body -Wformat-security -Winit-self -Warray-bounds")
-option (DISABLE_MAINTAINER_CFLAGS "Disable maintainer CFlags" OFF)
-if (DISABLE_MAINTAINER_CFLAGS)
-  SET (MAINTAINER_CFLAGS "")
-endif (DISABLE_MAINTAINER_CFLAGS)
+SET (MAINTAINER_CXXFLAGS "-Werror -Wall -Wcast-align -Wempty-body -Wformat-security -Winit-self -Warray-bounds")
+option (DISABLE_MAINTAINER_CXXFLAGS "Disable maintainer CXXFlags" OFF)
+if (DISABLE_MAINTAINER_CXXFLAGS)
+  SET (MAINTAINER_CXXFLAGS "")
+endif (DISABLE_MAINTAINER_CXXFLAGS)
+
+# Make sure these flags are used for every build.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MAINTAINER_CXXFLAGS}")
 
 #
 # Compiz Plugins
 #
-set (UNITY_PLUGIN_DEPS "compiz>=0.9.8.0;nux-3.0>=3.0.0;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;gmodule-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator3-0.4>=0.4.90;atk;atk-bridge-2.0;unity-misc>=0.4.0;dbus-glib-1;gtk+-3.0>=3.1;sigc++-2.0;json-glib-1.0;libnotify;xfixes;unity-protocol-private>=5.95.1;libgeis;xrender>=0.9;zeitgeist-1.0>=0.3.18")
+if(UNITY_ENABLE_X_ORG_SUPPORT)
+  set (UNITY_PLUGIN_DEPS "compiz>=0.9.8.0;nux-3.0>=3.0.0;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;gmodule-2.0;dbusmenu-glib-0.4;x11;libstartup-notification-1.0;gthread-2.0;indicator3-0.4>=0.4.90;atk;atk-bridge-2.0;unity-misc>=0.4.0;dbus-glib-1;gtk+-3.0>=3.1;sigc++-2.0;json-glib-1.0;libnotify;xfixes;unity-protocol-private>=5.95.1;libgeis;xrender>=0.9;zeitgeist-1.0>=0.3.18")
+else ()
+  set (UNITY_PLUGIN_DEPS "nux-3.0>=3.0.0;libbamf3;dee-1.0;gio-2.0;gio-unix-2.0;gmodule-2.0;dbusmenu-glib-0.4;libstartup-notification-1.0;gthread-2.0;indicator3-0.4>=0.4.90;atk;atk-bridge-2.0;unity-misc>=0.4.0;dbus-glib-1;gtk+-3.0>=3.1;sigc++-2.0;json-glib-1.0;libnotify;xfixes;unity-protocol-private>=5.95.1;libgeis;xrender>=0.9;zeitgeist-1.0>=0.3.18")
+endif ()
+
 set (UNITY_PROTOCOL_PRIVATE_DEPS "unity-protocol-private>=5.95.1")
+
 
 find_package (PkgConfig)
 pkg_check_modules (CACHED_UNITY_DEPS REQUIRED ${UNITY_PLUGIN_DEPS})
 pkg_check_modules (CACHED_UNITY_PRIVATE_DEPS REQUIRED ${UNITY_PROTOCOL_PRIVATE_DEPS})
 add_subdirectory(unity-shared)
-add_subdirectory(panel)
 add_subdirectory(dash)
-add_subdirectory(hud)
 add_subdirectory(launcher)
 add_subdirectory(shortcuts)
-add_subdirectory(unity-standalone)
-add_subdirectory(plugins/unityshell)
-add_subdirectory(plugins/networkarearegion)
-add_subdirectory(plugins/unitydialog)
-add_subdirectory(plugins/unity-mt-grab-handles)
+if(UNITY_ENABLE_X_ORG_SUPPORT)
+  add_subdirectory(hud)
+  add_subdirectory(panel)
+  add_subdirectory(plugins/unityshell)
+  add_subdirectory(plugins/networkarearegion)
+  add_subdirectory(plugins/unitydialog)
+  add_subdirectory(plugins/unity-mt-grab-handles)
+  add_subdirectory(unity-standalone)
+endif()
 
 # subdirs
 add_subdirectory(doc)
@@ -214,6 +226,12 @@ message (STATUS "GSettings schemas will be installed into ${GSETTINGS_DIR}")
 install (FILES ${UNITY_SCHEMAS} DESTINATION ${GSETTINGS_DIR} OPTIONAL)
 install (CODE "message (STATUS \"Compiling GSettings schemas\")")
 install (CODE "execute_process (COMMAND ${_glib_comple_schemas} ${GSETTINGS_DIR})")
+
+# Resources
+install (FILES resources/dash-widgets.json DESTINATION ${CMAKE_INSTALL_PREFIX}/share/unity/themes)
+file (GLOB _datafiles "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
+install (FILES ${_datafiles} DESTINATION ${PKGDATADIR})
+
 
 # For testing
 configure_file (${CMAKE_SOURCE_DIR}/${UNITY_SCHEMAS} ${CMAKE_BINARY_DIR}/settings/${UNITY_SCHEMAS})

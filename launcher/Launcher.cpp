@@ -25,7 +25,6 @@
 #include <Nux/VScrollBar.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
-#include <Nux/MenuPage.h>
 #include <NuxCore/Logger.h>
 
 #include <NuxGraphics/NuxGraphics.h>
@@ -64,14 +63,12 @@ using ui::Decaymulator;
 
 namespace launcher
 {
+DECLARE_LOGGER(logger, "unity.launcher");
 
-const char window_title[] = "unity-launcher";
+const char* window_title = "unity-launcher";
 
 namespace
 {
-
-nux::logging::Logger logger("unity.launcher");
-
 const int URGENT_BLINKS = 3;
 const int WIGGLE_CYCLES = 6;
 
@@ -107,7 +104,11 @@ Launcher::Launcher(nux::BaseWindow* parent,
                    nux::ObjectPtr<DNDCollectionWindow> const& collection_window,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
+#ifdef UNITY_HAS_X_ORG_SUPPORT
   , display(nux::GetGraphicsDisplay()->GetX11Display())
+#else
+  , display(0)
+#endif
   , monitor(0)
   , _parent(parent)
   , _active_quicklist(nullptr)
@@ -188,7 +189,9 @@ Launcher::Launcher(nux::BaseWindow* parent,
   wm.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &Launcher::EnsureAnimation));
 
+#ifdef UNITY_HAS_X_ORG_SUPPORT
   display.changed.connect(sigc::mem_fun(this, &Launcher::OnDisplayChanged));
+#endif
 
   // 0 out timers to avoid wonky startups
   for (int i = 0; i < TIME_LAST; ++i)
@@ -1352,6 +1355,7 @@ int Launcher::GetMouseY() const
 
 bool Launcher::OnUpdateDragManagerTimeout()
 {
+#ifdef UNITY_HAS_X_ORG_SUPPORT
   if (!display())
     return false;
 
@@ -1387,17 +1391,19 @@ bool Launcher::OnUpdateDragManagerTimeout()
   DndReset();
   _hide_machine.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
   _hide_machine.SetQuirk(LauncherHideMachine::DND_PUSHED_OFF, false);
-
+#endif
   return false;
 }
 
 void Launcher::DndTimeoutSetup()
 {
+#ifdef UNITY_HAS_X_ORG_SUPPORT
   if (sources_.GetSource(DND_CHECK_TIMEOUT))
     return;
 
   auto cb_func = sigc::mem_fun(this, &Launcher::OnUpdateDragManagerTimeout);
   sources_.AddTimeout(200, cb_func, DND_CHECK_TIMEOUT);
+#endif
 }
 
 void Launcher::OnPluginStateChanged()
@@ -2223,6 +2229,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 
   if (GetActionState() == ACTION_NONE)
   {
+#ifdef UNITY_HAS_X_ORG_SUPPORT
     if (nux::Abs(_dnd_delta_y) >= nux::Abs(_dnd_delta_x))
     {
       _launcher_drag_delta += _dnd_delta_y;
@@ -2235,6 +2242,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
       sources_.Remove(START_DRAGICON_DURATION);
       StartIconDragRequest(x - _dnd_delta_x, y - _dnd_delta_y);
     }
+#endif
   }
   else if (GetActionState() == ACTION_DRAG_LAUNCHER)
   {
@@ -2296,6 +2304,8 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
   EnsureAnimation();
 }
 
+#ifdef UNITY_HAS_X_ORG_SUPPORT
+
 bool Launcher::HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
 {
   nux::Geometry abs_geo = GetAbsoluteGeometry();
@@ -2336,6 +2346,8 @@ bool Launcher::HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierE
   _hide_machine.AddRevealPressure(event->velocity);
   return true;
 }
+
+#endif
 
 bool Launcher::IsInKeyNavMode() const
 {
@@ -2504,6 +2516,19 @@ void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLaun
   drag_args.push_front(arg);
 
   SetOffscreenRenderTarget(texture);
+
+  unsigned int alpha = 0, src = 0, dest = 0;
+  GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
+  GfxContext.GetRenderStates().SetBlend(false);
+
+  GfxContext.QRP_Color(0,
+                      0,
+                      texture->GetWidth(),
+                      texture->GetHeight(),
+                      nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+
+  GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
+
   icon_renderer->PreprocessIcons(drag_args, nux::Geometry(0, 0, _icon_size, _icon_size));
   icon_renderer->RenderIcon(nux::GetWindowThread()->GetGraphicsEngine(), arg, nux::Geometry(0, 0, _icon_size, _icon_size), nux::Geometry(0, 0, _icon_size, _icon_size));
   RestoreSystemRenderTarget();
@@ -2558,6 +2583,7 @@ bool Launcher::DndIsSpecialRequest(std::string const& uri) const
 
 void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
 {
+#ifdef UNITY_HAS_X_ORG_SUPPORT
   _dnd_data.Reset();
 
   const std::string uri_list = "text/uri-list";
@@ -2599,10 +2625,12 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
       }
     }
   }
+#endif
 }
 
 void Launcher::ProcessDndEnter()
 {
+#ifdef UNITY_HAS_X_ORG_SUPPORT
   SetStateMouseOverLauncher(true);
 
   _dnd_data.Reset();
@@ -2611,10 +2639,12 @@ void Launcher::ProcessDndEnter()
   _data_checked = false;
   _drag_edge_touching = false;
   _dnd_hovered_icon = nullptr;
+#endif
 }
 
 void Launcher::DndReset()
 {
+#ifdef UNITY_HAS_X_ORG_SUPPORT
   _dnd_data.Reset();
 
   bool is_overlay_open = IsOverlayOpen();
@@ -2637,10 +2667,12 @@ void Launcher::DndReset()
   }
 
   DndHoveredIconReset();
+#endif
 }
 
 void Launcher::DndHoveredIconReset()
 {
+#ifdef UNITY_HAS_X_ORG_SUPPORT
   _drag_edge_touching = false;
   SetActionState(ACTION_NONE);
 
@@ -2655,17 +2687,21 @@ void Launcher::DndHoveredIconReset()
 
   _steal_drag = false;
   _dnd_hovered_icon = nullptr;
+#endif
 }
 
 void Launcher::ProcessDndLeave()
 {
+#ifdef UNITY_HAS_X_ORG_SUPPORT
   SetStateMouseOverLauncher(false);
 
   DndHoveredIconReset();
+#endif
 }
 
 void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 {
+#ifdef UNITY_HAS_X_ORG_SUPPORT
   if (!_data_checked)
   {
     const std::string uri_list = "text/uri-list";
@@ -2792,10 +2828,12 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     accept = false;
 
   SendDndStatus(accept, _drag_action, nux::Geometry(x, y, 1, 1));
+#endif
 }
 
 void Launcher::ProcessDndDrop(int x, int y)
 {
+#ifdef UNITY_HAS_X_ORG_SUPPORT
   if (_steal_drag)
   {
     for (auto const& uri : _dnd_data.Uris())
@@ -2819,6 +2857,7 @@ void Launcher::ProcessDndDrop(int x, int y)
 
   // reset our shiz
   DndReset();
+#endif
 }
 
 /*
