@@ -37,6 +37,7 @@ private:
 
 public:
   Window Xid() const { return xid; }
+
   std::string name;
   nux::Geometry geo;
   nux::Size deco_sizes[4];
@@ -78,14 +79,19 @@ public:
   virtual void ShowDesktop();
   virtual bool InShowDesktop() const;
 
+  virtual void Maximize(Window window_id);
   virtual void Restore(Window window_id);
   virtual void RestoreAt(Window window_id, int x, int y);
   virtual void Minimize(Window window_id);
+  virtual void UnMinimize(Window window_id);
   virtual void Close(Window window_id);
 
   virtual void Activate(Window window_id);
   virtual void Raise(Window window_id);
   virtual void Lower(Window window_id);
+
+  virtual void Decorate(Window window_id) const;
+  virtual void Undecorate(Window window_id) const;
 
   virtual void TerminateScale();
   virtual bool IsScaleActive() const;

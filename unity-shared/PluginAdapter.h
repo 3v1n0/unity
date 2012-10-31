@@ -138,9 +138,11 @@ public:
   bool IsWindowMaximizable(Window window_id) const;
   bool HasWindowDecorations(Window window_id) const;
 
+  void Maximize(Window window_id);
   void Restore(Window window_id);
   void RestoreAt(Window window_id, int x, int y);
   void Minimize(Window window_id);
+  void UnMinimize(Window window_id);
   void Close(Window window_id);
   void Activate(Window window_id);
   void Raise(Window window_id);

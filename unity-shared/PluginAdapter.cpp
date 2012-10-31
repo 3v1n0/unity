@@ -658,6 +658,12 @@ bool PluginAdapter::IsWindowMaximizable(Window window_id) const
   return false;
 }
 
+void PluginAdapter::Maximize(Window window_id)
+{
+  if (CompWindow* window = m_Screen->findWindow(window_id))
+    window->maximize(MAXIMIZE_STATE);
+}
+
 void PluginAdapter::Restore(Window window_id)
 {
   CompWindow* window = m_Screen->findWindow(window_id);
@@ -683,6 +689,13 @@ void PluginAdapter::Minimize(Window window_id)
   CompWindow* window = m_Screen->findWindow(window_id);
   if (window && (window->actions() & CompWindowActionMinimizeMask))
     window->minimize();
+}
+
+void PluginAdapter::UnMinimize(Window window_id)
+{
+  CompWindow* window = m_Screen->findWindow(window_id);
+  if (window && (window->actions() & CompWindowActionMinimizeMask))
+    window->unminimize();
 }
 
 void PluginAdapter::Close(Window window_id)

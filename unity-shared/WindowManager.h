@@ -90,9 +90,11 @@ public:
   virtual void ShowDesktop() = 0;
   virtual bool InShowDesktop() const = 0;
 
+  virtual void Maximize(Window window_id) = 0;
   virtual void Restore(Window window_id) = 0;
   virtual void RestoreAt(Window window_id, int x, int y) = 0;
   virtual void Minimize(Window window_id) = 0;
+  virtual void UnMinimize(Window window_id) = 0;
   virtual void Close(Window window_id) = 0;
 
   virtual void Activate(Window window_id) = 0;

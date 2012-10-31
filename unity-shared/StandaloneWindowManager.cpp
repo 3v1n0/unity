@@ -86,7 +86,7 @@ bool StandaloneWindowManager::IsWindowMaximized(Window window_id) const
 bool StandaloneWindowManager::IsWindowDecorated(Window window_id) const
 {
   auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
+  if (it != standalone_windows_.end() && it->second->has_decorations)
     return it->second->decorated;
 
   return false;
@@ -188,11 +188,42 @@ bool StandaloneWindowManager::InShowDesktop() const
   return in_show_desktop_;
 }
 
+void StandaloneWindowManager::Decorate(Window window_id) const
+{
+  auto it = standalone_windows_.find(window_id);
+  if (it != standalone_windows_.end())
+  {
+    it->second->decorated = it->second->has_decorations;
+  }
+}
+
+void StandaloneWindowManager::Undecorate(Window window_id) const
+{
+  auto it = standalone_windows_.find(window_id);
+  if (it != standalone_windows_.end())
+  {
+    it->second->decorated = false;
+  }
+}
+
+void StandaloneWindowManager::Maximize(Window window_id)
+{
+  auto it = standalone_windows_.find(window_id);
+  if (it != standalone_windows_.end())
+  {
+    it->second->maximized = true;
+    Undecorate(window_id);
+  }
+}
+
 void StandaloneWindowManager::Restore(Window window_id)
 {
   auto it = standalone_windows_.find(window_id);
   if (it != standalone_windows_.end())
+  {
     it->second->maximized = false;
+    Decorate(window_id);
+  }
 }
 
 void StandaloneWindowManager::RestoreAt(Window window_id, int x, int y)
@@ -200,9 +231,23 @@ void StandaloneWindowManager::RestoreAt(Window window_id, int x, int y)
   auto it = standalone_windows_.find(window_id);
   if (it != standalone_windows_.end())
   {
-    it->second->maximized = false;
+    Restore(window_id);
     it->second->geo.x = x;
     it->second->geo.y = y;
+  }
+}
+
+void StandaloneWindowManager::UnMinimize(Window window_id)
+{
+  auto it = standalone_windows_.find(window_id);
+  if (it != standalone_windows_.end())
+  {
+    it->second->minimized = false;
+
+    if (it->second->maximized)
+    {
+      Undecorate(window_id);
+    }
   }
 }
 
@@ -210,7 +255,14 @@ void StandaloneWindowManager::Minimize(Window window_id)
 {
   auto it = standalone_windows_.find(window_id);
   if (it != standalone_windows_.end())
-    it->second->maximized = false;
+  {
+    it->second->minimized = true;
+
+    if (it->second->maximized)
+    {
+      Decorate(window_id);
+    }
+  }
 }
 
 void StandaloneWindowManager::Close(Window window_id)
