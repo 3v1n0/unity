@@ -215,7 +215,7 @@ class UnityTestCase(AutopilotTestCase):
             reset_logging()
         except DBusException:
             pass
-        with open(self._unity_log_file_name) as unity_log:
+        with open(self._unity_log_file_name, encoding='utf-8') as unity_log:
             self.addDetail('unity-log', text_content(unity_log.read()))
         os.remove(self._unity_log_file_name)
         self._unity_log_file_name = ""
