@@ -45,6 +45,24 @@ TEST(TestLayoutWindow, InitializationNormalWindow)
   EXPECT_EQ(lwin.aspect_ratio, fake_window->geo.width / static_cast<float>(fake_window->geo.height));
 }
 
+TEST(TestLayoutWindow, InitializationMinimizedNormalWindow)
+{
+  const Window xid = 12345;
+
+  auto fake_window = std::make_shared<StandaloneWindow>(xid);
+  fake_window->geo = nux::Geometry(1, 2, 30, 40);
+  auto* wm = static_cast<StandaloneWindowManager*>(&WindowManager::Default());
+  wm->AddStandaloneWindow(fake_window);
+  wm->Minimize(xid);
+
+  LayoutWindow lwin(xid);
+  EXPECT_EQ(lwin.xid, xid);
+  EXPECT_EQ(lwin.geo, fake_window->geo);
+  EXPECT_EQ(lwin.decoration_height, 0);
+  EXPECT_EQ(lwin.selected, false);
+  EXPECT_EQ(lwin.aspect_ratio, fake_window->geo.width / static_cast<float>(fake_window->geo.height));
+}
+
 TEST(TestLayoutWindow, InitializationMaximizedWindow)
 {
   const Window xid = 12345;
@@ -53,9 +71,9 @@ TEST(TestLayoutWindow, InitializationMaximizedWindow)
   auto fake_window = std::make_shared<StandaloneWindow>(xid);
   fake_window->geo = nux::Geometry(1, 2, 30, 40);
   fake_window->deco_sizes[unsigned(WindowManager::Edge::TOP)] = nux::Size(fake_window->geo.width, top_deco);
-  fake_window->maximized = true;
   auto* wm = static_cast<StandaloneWindowManager*>(&WindowManager::Default());
   wm->AddStandaloneWindow(fake_window);
+  wm->Maximize(xid);
 
   nux::Geometry expected_geo(fake_window->geo);
   expected_geo.height += top_deco;
@@ -66,6 +84,27 @@ TEST(TestLayoutWindow, InitializationMaximizedWindow)
   EXPECT_EQ(lwin.decoration_height, top_deco);
   EXPECT_EQ(lwin.selected, false);
   EXPECT_EQ(lwin.aspect_ratio, expected_geo.width / static_cast<float>(expected_geo.height));
+}
+
+TEST(TestLayoutWindow, InitializationMinimizedMaximizedWindow)
+{
+  const Window xid = 12345;
+  const unsigned top_deco = 5;
+
+  auto fake_window = std::make_shared<StandaloneWindow>(xid);
+  fake_window->geo = nux::Geometry(1, 2, 30, 40);
+  fake_window->deco_sizes[unsigned(WindowManager::Edge::TOP)] = nux::Size(fake_window->geo.width, top_deco);
+  auto* wm = static_cast<StandaloneWindowManager*>(&WindowManager::Default());
+  wm->AddStandaloneWindow(fake_window);
+  wm->Maximize(xid);
+  wm->Minimize(xid);
+
+  LayoutWindow lwin(xid);
+  EXPECT_EQ(lwin.xid, xid);
+  EXPECT_EQ(lwin.geo, fake_window->geo);
+  EXPECT_EQ(lwin.decoration_height, 0);
+  EXPECT_EQ(lwin.selected, false);
+  EXPECT_EQ(lwin.aspect_ratio, fake_window->geo.width / static_cast<float>(fake_window->geo.height));
 }
 
 }

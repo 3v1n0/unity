@@ -267,7 +267,7 @@ LayoutWindow::LayoutWindow(Window xid)
 {
   auto& wm = WindowManager::Default();
 
-  if (wm.IsWindowMaximized(xid))
+  if (wm.IsWindowMaximized(xid) && !wm.IsWindowMinimized(xid))
   {
     // Maximized windows are not decorated, so we define an extra decoration
     // height to be used to correctly render the window with a fake decoration
