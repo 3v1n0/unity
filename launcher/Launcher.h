@@ -317,9 +317,6 @@ private:
 
   virtual long PostLayoutManagement(long LayoutResult);
 
-  void SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
-  void RestoreSystemRenderTarget();
-
   void OnDisplayChanged(Display* display);
   void OnDNDDataCollected(const std::list<char*>& mimes);
 
