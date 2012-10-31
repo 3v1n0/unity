@@ -17,18 +17,12 @@
  */
 
 #include "config.h"
-
 #include "SwitcherView.h"
 #include "unity-shared/IconRenderer.h"
-#include "LayoutSystem.h"
-
 #include "unity-shared/TimeUtil.h"
 
-#include <UnityCore/Variant.h>
-
-#include <NuxCore/Object.h>
 #include <Nux/Nux.h>
-#include <Nux/WindowCompositor.h>
+#include <UnityCore/Variant.h>
 
 namespace unity
 {

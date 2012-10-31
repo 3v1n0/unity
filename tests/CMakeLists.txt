@@ -156,7 +156,7 @@ if (GTEST_SRC_DIR AND
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-layout.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-texture.cpp
                  )
-  target_link_libraries(test-gtest-xless gtest unity-shared ${GMOCK_LIB} ${GMOCK_MAIN_LIB} ${LIBS} launcher-lib shortcuts-lib hud-lib)
+  target_link_libraries(test-gtest-xless gtest unity-shared unity-shared-standalone ${GMOCK_LIB} ${GMOCK_MAIN_LIB} ${LIBS} launcher-lib shortcuts-lib hud-lib)
   add_test(UnityGTestXless test-gtest-xless)
   add_dependencies(test-gtest-xless unity-core-${UNITY_API_VERSION} gtest)
 

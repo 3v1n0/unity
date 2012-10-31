@@ -23,7 +23,7 @@
 #include "SwitcherModel.h"
 #include "unity-shared/AbstractIconRenderer.h"
 #include "unity-shared/StaticCairoText.h"
-#include "LayoutSystem.h"
+#include "unity-shared/LayoutSystem.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UnityWindowView.h"
 

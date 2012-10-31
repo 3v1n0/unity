@@ -274,6 +274,7 @@ LayoutWindow::LayoutWindow(Window xid)
     auto const& deco_size = wm.GetWindowDecorationSize(xid, WindowManager::Edge::TOP);
     decoration_height = deco_size.height;
     geo.height += decoration_height;
+    aspect_ratio = geo.width / static_cast<float>(geo.height);
   }
 }
 
