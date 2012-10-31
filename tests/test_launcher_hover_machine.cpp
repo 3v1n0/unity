@@ -105,8 +105,8 @@ TEST_P(MultipleQuirks, DoubleBool2Bool) {
   if ((initial_value1 || initial_value2) != (final_value1 || final_value2))
     Utils::WaitUntil(sig_received);
 
-  Utils::WaitForTimeoutMSec(20);
-  ASSERT_EQ(hover, final_value1 || final_value2);
+  auto check_function = [&]() { return hover == (final_value1 || final_value2); };
+  Utils::WaitUntil(check_function, true, 20/1000);
 }
 
 INSTANTIATE_TEST_CASE_P(TestLauncherHoverMachine, MultipleQuirks,
