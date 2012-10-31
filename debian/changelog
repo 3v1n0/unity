@@ -1,3 +1,11 @@
+unity (6.10.0-0ubuntu2) quantal-proposed; urgency=low
+
+  * Cherry-picked from upstream:
+    - [SRU Regression] Launcher icon corruption while rearranging
+      (LP: #1071813)
+
+ -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Tue, 30 Oct 2012 18:00:00 +0100
+
 unity (6.10.0-0ubuntu1) quantal-proposed; urgency=low
 
   [ Timo Jyrinki ]
