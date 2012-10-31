@@ -288,7 +288,8 @@ void Launcher::AddProperties(GVariantBuilder* builder)
   .add("hide-quirks", _hide_machine.DebugHideQuirks())
   .add("hover-quirks", _hover_machine.DebugHoverQuirks())
   .add("icon-size", _icon_size)
-  .add("shortcuts_shown", _shortcuts_shown);
+  .add("shortcuts_shown", _shortcuts_shown)
+  .add("tooltip-shown", _active_tooltip != nullptr);
 }
 
 void Launcher::SetMousePosition(int x, int y)
@@ -1157,7 +1158,7 @@ void Launcher::ForceReveal(bool force_reveal)
 void Launcher::ShowShortcuts(bool show)
 {
   _shortcuts_shown = show;
-  _hover_machine.SetQuirk(LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE, show);
+  _hide_machine.SetQuirk(LauncherHideMachine::SHORTCUT_KEYS_VISIBLE, show);
   EnsureAnimation();
 }
 
@@ -1504,7 +1505,6 @@ Launcher::GetActionState() const
 
 void Launcher::SetHover(bool hovered)
 {
-
   if (hovered == _hovered)
     return;
 
@@ -1522,7 +1522,7 @@ void Launcher::SetHover(bool hovered)
 
   if (IsOverlayOpen() && !_hide_machine.GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE))
   {
-    if (hovered && !_hover_machine.GetQuirk(LauncherHoverMachine::SHORTCUT_KEYS_VISIBLE))
+    if (hovered && !_hide_machine.GetQuirk(LauncherHideMachine::SHORTCUT_KEYS_VISIBLE))
       SaturateIcons();
     else
       DesaturateIcons();

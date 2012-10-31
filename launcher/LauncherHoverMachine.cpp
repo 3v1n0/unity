@@ -33,11 +33,10 @@ LauncherHoverMachine::LauncherHoverMachine()
     LAUNCHER_HIDDEN        = 1 << 0, 1
     MOUSE_OVER_LAUNCHER    = 1 << 1, 2
     MOUSE_OVER_BFB         = 1 << 2, 4
-    SHORTCUT_KEYS_VISIBLE  = 1 << 3, 8
-    QUICKLIST_OPEN         = 1 << 4, 16
-    KEY_NAV_ACTIVE         = 1 << 5, 32
-    LAUNCHER_IN_ACTION     = 1 << 6, 64
-    PLACES_VISIBLE         = 1 << 7, 128
+    QUICKLIST_OPEN         = 1 << 3, 8
+    KEY_NAV_ACTIVE         = 1 << 4, 16
+    LAUNCHER_IN_ACTION     = 1 << 5, 32
+    PLACES_VISIBLE         = 1 << 6, 64
 */
 
 void
@@ -52,8 +51,7 @@ LauncherHoverMachine::EnsureHoverState()
   }
 
   if (GetQuirk((HoverQuirk)(MOUSE_OVER_LAUNCHER | MOUSE_OVER_BFB |
-                            SHORTCUT_KEYS_VISIBLE | KEY_NAV_ACTIVE |
-                            QUICKLIST_OPEN | LAUNCHER_IN_ACTION)))
+                            KEY_NAV_ACTIVE | QUICKLIST_OPEN | LAUNCHER_IN_ACTION)))
     should_hover = true;
   else
     should_hover = false;
