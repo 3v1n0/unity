@@ -29,12 +29,12 @@ namespace
 {
 StandaloneWindowManager* wm = nullptr;
 
-StandaloneWindow::Ptr AddFakeWindowToWM(Window xid)
+StandaloneWindow::Ptr AddFakeWindowToWM(Window xid, nux::Geometry const& geo = nux::Geometry(1, 2, 30, 40))
 {
   const unsigned top_deco = 5;
   auto fake_window = std::make_shared<StandaloneWindow>(xid);
-  fake_window->geo = nux::Geometry(1, 2, 30, 40);
-  fake_window->deco_sizes[unsigned(WindowManager::Edge::TOP)] = nux::Size(fake_window->geo.width, top_deco);
+  fake_window->geo = geo;
+  fake_window->deco_sizes[unsigned(WindowManager::Edge::TOP)] = nux::Size(geo.width, top_deco);
 
   if (!wm)
     wm = dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default());
@@ -102,6 +102,55 @@ TEST(TestLayoutWindow, InitializationMinimizedMaximizedWindow)
   EXPECT_EQ(lwin.decoration_height, 0);
   EXPECT_EQ(lwin.selected, false);
   EXPECT_EQ(lwin.aspect_ratio, fake_window->geo.width / static_cast<float>(fake_window->geo.height));
+}
+
+struct TestLayoutSystem : testing::Test
+{
+  TestLayoutSystem()
+  {
+    Window xid = 1;
+    AddFakeWindowToWM(xid, nux::Geometry(4, 5, 500, 600));
+    lwindows.push_back(std::make_shared<LayoutWindow>(xid));
+
+    xid = 2;
+    AddFakeWindowToWM(xid, nux::Geometry(10, 20, 800, 300));
+    lwindows.push_back(std::make_shared<LayoutWindow>(xid));
+  }
+
+  LayoutSystem ls;
+  LayoutWindow::List lwindows;
+};
+
+TEST_F(TestLayoutSystem, Initialization)
+{
+  EXPECT_EQ(ls.spacing, 8);
+  EXPECT_EQ(ls.max_row_height, 400);
+}
+
+TEST_F(TestLayoutSystem, LayoutWindows)
+{
+  nux::Geometry max_bounds(0, 0, 200, 100);
+  nux::Geometry final_bounds;
+  ls.LayoutWindows(lwindows, max_bounds, final_bounds);
+
+  nux::Geometry const& win_new_geo1 = lwindows.at(0)->result;
+  nux::Geometry const& win_new_geo2 = lwindows.at(1)->result;
+
+  EXPECT_EQ(max_bounds.Intersect(final_bounds), final_bounds);
+  EXPECT_NE(lwindows.at(0)->geo, win_new_geo1);
+  EXPECT_NE(lwindows.at(1)->geo, win_new_geo1);
+
+  // Computing the area occupied by the grouped windows
+  unsigned min_start_x = std::min(win_new_geo1.x, win_new_geo2.x);
+  unsigned min_start_y = std::min(win_new_geo1.y, win_new_geo2.y);
+  unsigned max_last_x = std::max(win_new_geo1.x + win_new_geo1.width,
+                                 win_new_geo2.x + win_new_geo2.width);
+  unsigned max_last_y = std::max(win_new_geo1.y + win_new_geo1.height,
+                                 win_new_geo2.y + win_new_geo2.height);
+
+  nux::Geometry windows_area(min_start_x, min_start_y, max_last_x - min_start_x, max_last_y - min_start_y);
+
+  EXPECT_EQ(final_bounds.Intersect(windows_area), windows_area);
 }
 
 }
