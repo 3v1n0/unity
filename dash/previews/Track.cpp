@@ -419,7 +419,8 @@ void Track::PreLayoutManagement()
   track_status_layout_->SetMinimumWidth(geo.height);
   track_status_layout_->SetMaximumWidth(geo.height);
 
-  title_->SetMaximumWidth(GetGeometry().width - geo.height - style.GetMusicDurationWidth() - layout_spacing*2);
+  const int max_width = std::max(GetGeometry().width - geo.height - style.GetMusicDurationWidth() - layout_spacing*2, 0);
+  title_->SetMaximumWidth(max_width);
 
   View::PreLayoutManagement();
 }
