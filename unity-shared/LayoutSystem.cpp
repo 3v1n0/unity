@@ -27,7 +27,7 @@ LayoutSystem::LayoutSystem()
   , max_row_height(400)
 {}
 
-void LayoutSystem::LayoutWindows(LayoutWindowList windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
+void LayoutSystem::LayoutWindows(LayoutWindow::List windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
 {
   if (windows.empty())
     return;
@@ -35,7 +35,7 @@ void LayoutSystem::LayoutWindows(LayoutWindowList windows, nux::Geometry const& 
   LayoutGridWindows(windows, max_bounds, final_bounds);
 }
 
-nux::Size LayoutSystem::GridSizeForWindows(LayoutWindowList windows, nux::Geometry const& max_bounds)
+nux::Size LayoutSystem::GridSizeForWindows(LayoutWindow::List windows, nux::Geometry const& max_bounds)
 {
   unsigned count = windows.size();
 
@@ -70,7 +70,7 @@ nux::Size LayoutSystem::GridSizeForWindows(LayoutWindowList windows, nux::Geomet
   return nux::Size(width, height);
 }
 
-nux::Geometry LayoutSystem::CompressAndPadRow (LayoutWindowList const& windows, nux::Geometry const& max_bounds)
+nux::Geometry LayoutSystem::CompressAndPadRow (LayoutWindow::List const& windows, nux::Geometry const& max_bounds)
 {
   int total_width = 0;
   int max_height = 0;
@@ -103,7 +103,7 @@ nux::Geometry LayoutSystem::CompressAndPadRow (LayoutWindowList const& windows, 
   return nux::Geometry (x1, y1, x2 - x1, y2 - y1);
 }
 
-nux::Geometry LayoutSystem::LayoutRow(LayoutWindowList const& row, nux::Geometry const& row_bounds)
+nux::Geometry LayoutSystem::LayoutRow(LayoutWindow::List const& row, nux::Geometry const& row_bounds)
 {
   nux::Geometry unpadded_bounds = row_bounds;
   unpadded_bounds.width -= spacing * (row.size () - 1);
@@ -138,9 +138,9 @@ nux::Geometry LayoutSystem::LayoutRow(LayoutWindowList const& row, nux::Geometry
   return CompressAndPadRow (row, row_bounds);
 }
 
-std::vector<LayoutWindowList> LayoutSystem::GetRows (LayoutWindowList const& windows, nux::Geometry const& max_bounds)
+std::vector<LayoutWindow::List> LayoutSystem::GetRows (LayoutWindow::List const& windows, nux::Geometry const& max_bounds)
 {
-  std::vector<LayoutWindowList> rows;
+  std::vector<LayoutWindow::List> rows;
 
   int size = (int)windows.size();
 
@@ -172,7 +172,7 @@ std::vector<LayoutWindowList> LayoutSystem::GetRows (LayoutWindowList const& win
 
     float row_aspect = 0.0f;
 
-    LayoutWindowList row_accum;
+    LayoutWindow::List row_accum;
     
     int i;
     for (i = 0; i < size; ++i)
@@ -218,9 +218,9 @@ std::vector<LayoutWindowList> LayoutSystem::GetRows (LayoutWindowList const& win
   return rows;
 }
 
-void LayoutSystem::LayoutGridWindows (LayoutWindowList const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
+void LayoutSystem::LayoutGridWindows (LayoutWindow::List const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
 {
-  std::vector<LayoutWindowList> const& rows = GetRows(windows, max_bounds);
+  std::vector<LayoutWindow::List> const& rows = GetRows(windows, max_bounds);
 
   int height = rows.size();
   int non_spacing_height = max_bounds.height - ((height - 1) * spacing);
@@ -228,7 +228,7 @@ void LayoutSystem::LayoutGridWindows (LayoutWindowList const& windows, nux::Geom
   int start_y = max_bounds.y;
   int low_y = 0;
 
-  for (LayoutWindowList const& row : rows)
+  for (LayoutWindow::List const& row : rows)
   {
     nux::Geometry row_max_bounds(max_bounds.x, start_y, max_bounds.width, row_height);
     nux::Geometry const& row_final_bounds = LayoutRow(row, row_max_bounds);

@@ -88,9 +88,9 @@ void SwitcherView::AddProperties(GVariantBuilder* builder)
   .add("label_visible", text_view_->IsVisible());
 }
 
-LayoutWindowList SwitcherView::ExternalTargets ()
+LayoutWindow::List SwitcherView::ExternalTargets ()
 {
-  LayoutWindowList result = render_targets_;
+  LayoutWindow::List result = render_targets_;
   return result;
 }
 
