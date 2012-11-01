@@ -90,8 +90,7 @@ void SwitcherView::AddProperties(GVariantBuilder* builder)
 
 LayoutWindow::List SwitcherView::ExternalTargets ()
 {
-  LayoutWindow::List result = render_targets_;
-  return result;
+  return render_targets_;
 }
 
 void SwitcherView::SetModel(SwitcherModel::Ptr model)
@@ -364,16 +363,15 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
     int padded_tile_size = tile_size + flat_spacing * 2;
     int max_width = base.width - border_size * 2;
 
-    nux::Geometry spread_bounds;
     int spread_padded_width = 0;
     if (detail_selection)
     {
-      spread_bounds = UpdateRenderTargets (nux::Point (0, 0), current);
+      nux::Geometry const& spread_bounds = UpdateRenderTargets(nux::Point(), current);
       // remove extra space consumed by spread
       spread_padded_width = spread_bounds.width + 100;
       max_width -= spread_padded_width - tile_size;
 
-      int expansion = MAX (0, spread_bounds.height - icon_size);
+      int expansion = std::max(0, spread_bounds.height - icon_size);
       background_geo.y -= expansion / 2;
       background_geo.height += expansion;
     }

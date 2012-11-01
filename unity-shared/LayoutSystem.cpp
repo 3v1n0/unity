@@ -27,7 +27,7 @@ LayoutSystem::LayoutSystem()
   , max_row_height(400)
 {}
 
-void LayoutSystem::LayoutWindows(LayoutWindow::List windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
+void LayoutSystem::LayoutWindows(LayoutWindow::List const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
 {
   if (windows.empty())
     return;
@@ -35,7 +35,7 @@ void LayoutSystem::LayoutWindows(LayoutWindow::List windows, nux::Geometry const
   LayoutGridWindows(windows, max_bounds, final_bounds);
 }
 
-nux::Size LayoutSystem::GridSizeForWindows(LayoutWindow::List windows, nux::Geometry const& max_bounds)
+nux::Size LayoutSystem::GridSizeForWindows(LayoutWindow::List const& windows, nux::Geometry const& max_bounds)
 {
   unsigned count = windows.size();
 
@@ -70,7 +70,7 @@ nux::Size LayoutSystem::GridSizeForWindows(LayoutWindow::List windows, nux::Geom
   return nux::Size(width, height);
 }
 
-nux::Geometry LayoutSystem::CompressAndPadRow (LayoutWindow::List const& windows, nux::Geometry const& max_bounds)
+nux::Geometry LayoutSystem::CompressAndPadRow(LayoutWindow::List const& windows, nux::Geometry const& max_bounds)
 {
   int total_width = 0;
   int max_height = 0;
@@ -138,7 +138,7 @@ nux::Geometry LayoutSystem::LayoutRow(LayoutWindow::List const& row, nux::Geomet
   return CompressAndPadRow (row, row_bounds);
 }
 
-std::vector<LayoutWindow::List> LayoutSystem::GetRows (LayoutWindow::List const& windows, nux::Geometry const& max_bounds)
+std::vector<LayoutWindow::List> LayoutSystem::GetRows(LayoutWindow::List const& windows, nux::Geometry const& max_bounds)
 {
   std::vector<LayoutWindow::List> rows;
 
@@ -157,7 +157,7 @@ std::vector<LayoutWindow::List> LayoutSystem::GetRows (LayoutWindow::List const&
   }
   else
   {
-    nux::Size grid_size = GridSizeForWindows (windows, max_bounds);
+    nux::Size const& grid_size = GridSizeForWindows(windows, max_bounds);
 
     int width = grid_size.width;
     int height = grid_size.height;
@@ -218,7 +218,7 @@ std::vector<LayoutWindow::List> LayoutSystem::GetRows (LayoutWindow::List const&
   return rows;
 }
 
-void LayoutSystem::LayoutGridWindows (LayoutWindow::List const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
+void LayoutSystem::LayoutGridWindows(LayoutWindow::List const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds)
 {
   std::vector<LayoutWindow::List> const& rows = GetRows(windows, max_bounds);
 

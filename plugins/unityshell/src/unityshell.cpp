@@ -77,7 +77,7 @@ using namespace launcher;
 using launcher::AbstractLauncherIcon;
 using launcher::Launcher;
 using ui::LayoutWindow;
-using ui::LayoutWindowList;
+using ui::LayoutWindow::List;
 using util::Timer;
 
 DECLARE_LOGGER(logger, "unity.shell.compiz");
@@ -800,7 +800,7 @@ void UnityScreen::paintDisplay()
 
   if (switcher_controller_->Visible())
   {
-    LayoutWindowList const& targets = switcher_controller_->ExternalRenderTargets();
+    LayoutWindow::List const& targets = switcher_controller_->ExternalRenderTargets();
 
     for (LayoutWindow::Ptr const& target : targets)
     {

@@ -55,7 +55,7 @@ public:
 
   LayoutSystem();
 
-  void LayoutWindows(LayoutWindow::List windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
+  void LayoutWindows(LayoutWindow::List const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
 
 protected:
   void LayoutGridWindows(LayoutWindow::List const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
@@ -65,7 +65,7 @@ protected:
 
   std::vector<LayoutWindow::List> GetRows(LayoutWindow::List const& windows, nux::Geometry const& max_bounds);
 
-  nux::Size GridSizeForWindows(LayoutWindow::List windows, nux::Geometry const& max_bounds);
+  nux::Size GridSizeForWindows(LayoutWindow::List const& windows, nux::Geometry const& max_bounds);
 
   nux::Geometry ScaleBoxIntoBox(nux::Geometry const& bounds, nux::Geometry const& box);
 };
