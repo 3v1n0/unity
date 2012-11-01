@@ -27,15 +27,27 @@ namespace ui
 {
 namespace
 {
+StandaloneWindowManager* wm = nullptr;
+
+StandaloneWindow::Ptr AddFakeWindowToWM(Window xid)
+{
+  const unsigned top_deco = 5;
+  auto fake_window = std::make_shared<StandaloneWindow>(xid);
+  fake_window->geo = nux::Geometry(1, 2, 30, 40);
+  fake_window->deco_sizes[unsigned(WindowManager::Edge::TOP)] = nux::Size(fake_window->geo.width, top_deco);
+
+  if (!wm)
+    wm = dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default());
+
+  wm->AddStandaloneWindow(fake_window);
+
+  return fake_window;
+}
 
 TEST(TestLayoutWindow, InitializationNormalWindow)
 {
-  const Window xid = 12345;
-
-  auto fake_window = std::make_shared<StandaloneWindow>(xid);
-  fake_window->geo = nux::Geometry(1, 2, 30, 40);
-  auto* wm = static_cast<StandaloneWindowManager*>(&WindowManager::Default());
-  wm->AddStandaloneWindow(fake_window);
+  const Window xid = g_random_int();
+  auto fake_window = AddFakeWindowToWM(xid);
 
   LayoutWindow lwin(xid);
   EXPECT_EQ(lwin.xid, xid);
@@ -47,12 +59,8 @@ TEST(TestLayoutWindow, InitializationNormalWindow)
 
 TEST(TestLayoutWindow, InitializationMinimizedNormalWindow)
 {
-  const Window xid = 12345;
-
-  auto fake_window = std::make_shared<StandaloneWindow>(xid);
-  fake_window->geo = nux::Geometry(1, 2, 30, 40);
-  auto* wm = static_cast<StandaloneWindowManager*>(&WindowManager::Default());
-  wm->AddStandaloneWindow(fake_window);
+  const Window xid = g_random_int();
+  auto fake_window = AddFakeWindowToWM(xid);
   wm->Minimize(xid);
 
   LayoutWindow lwin(xid);
@@ -65,17 +73,12 @@ TEST(TestLayoutWindow, InitializationMinimizedNormalWindow)
 
 TEST(TestLayoutWindow, InitializationMaximizedWindow)
 {
-  const Window xid = 12345;
-  const unsigned top_deco = 5;
-
-  auto fake_window = std::make_shared<StandaloneWindow>(xid);
-  fake_window->geo = nux::Geometry(1, 2, 30, 40);
-  fake_window->deco_sizes[unsigned(WindowManager::Edge::TOP)] = nux::Size(fake_window->geo.width, top_deco);
-  auto* wm = static_cast<StandaloneWindowManager*>(&WindowManager::Default());
-  wm->AddStandaloneWindow(fake_window);
+  const Window xid = g_random_int();
+  auto fake_window = AddFakeWindowToWM(xid);
   wm->Maximize(xid);
 
   nux::Geometry expected_geo(fake_window->geo);
+  unsigned top_deco = wm->GetWindowDecorationSize(xid, WindowManager::Edge::TOP).height;
   expected_geo.height += top_deco;
 
   LayoutWindow lwin(xid);
@@ -88,14 +91,8 @@ TEST(TestLayoutWindow, InitializationMaximizedWindow)
 
 TEST(TestLayoutWindow, InitializationMinimizedMaximizedWindow)
 {
-  const Window xid = 12345;
-  const unsigned top_deco = 5;
-
-  auto fake_window = std::make_shared<StandaloneWindow>(xid);
-  fake_window->geo = nux::Geometry(1, 2, 30, 40);
-  fake_window->deco_sizes[unsigned(WindowManager::Edge::TOP)] = nux::Size(fake_window->geo.width, top_deco);
-  auto* wm = static_cast<StandaloneWindowManager*>(&WindowManager::Default());
-  wm->AddStandaloneWindow(fake_window);
+  const Window xid = g_random_int();
+  auto fake_window = AddFakeWindowToWM(xid);
   wm->Maximize(xid);
   wm->Minimize(xid);
 
