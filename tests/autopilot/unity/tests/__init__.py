@@ -11,6 +11,7 @@
 from __future__ import absolute_import
 
 
+from codecs import open
 from autopilot.matchers import Eventually
 from autopilot.testcase import AutopilotTestCase
 from dbus import DBusException
