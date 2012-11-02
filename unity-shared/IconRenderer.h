@@ -46,9 +46,10 @@ public:
   void SetTargetSize(int tile_size, int image_size, int spacing);
 
   static void DestroyTextures();
+  static void DestroyShortcutTextures();
 
 protected:
-  nux::BaseTexture* RenderCharToTexture(const char label, int width, int height);
+  nux::BaseTexture* RenderCharToTexture(char label, int width, int height, nux::Color const& bg_color);
 
   void RenderElement(nux::GraphicsEngine& GfxContext,
                      RenderArg const& arg,
