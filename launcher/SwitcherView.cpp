@@ -103,6 +103,8 @@ void SwitcherView::SetModel(SwitcherModel::Ptr model)
   if (!model->Selection())
     return;
 
+  text_view_->SetVisible(!model->detail_selection);
+
   if (!model->detail_selection)
     text_view_->SetText(model->Selection()->tooltip_text());
 }

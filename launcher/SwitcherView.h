@@ -50,7 +50,7 @@ public:
 
   SwitcherView();
 
-  ui::LayoutWindow::List ExternalTargets ();
+  ui::LayoutWindow::List ExternalTargets();
 
   void SetModel(SwitcherModel::Ptr model);
   SwitcherModel::Ptr GetModel();
