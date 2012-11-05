@@ -72,6 +72,16 @@ class Switcher(KeybindingsHelper):
         return self.controller.model.selection_index
 
     @property
+    def label(self):
+        """The current switcher label"""
+        return self.controller.view.label
+
+    @property
+    def label_visible(self):
+        """The switcher label visibility"""
+        return self.controller.view.label_visible
+
+    @property
     def mode(self):
         """Returns the SwitcherMode that the switcher is currently in."""
         if not self.visible:
@@ -126,7 +136,7 @@ class Switcher(KeybindingsHelper):
         If no icon matches, a ValueError will be raised.
 
         """
-        if self.mode != SwitcherMode.NORMAL:
+        if self.mode == SwitcherMode.DETAIL:
             raise RuntimeError("Switcher must be initiated in normal mode before calling this method.")
 
         if direction not in (self.DIRECTION_BACKWARDS, self.DIRECTION_FORWARDS):
