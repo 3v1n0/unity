@@ -27,6 +27,14 @@ class Screen(UnityIntrospectionObject):
         """Return the available scaled windows, or None."""
         return self.get_children_by_type(Window, scaled=True)
 
+    def window(self, xid):
+        """Return the window with given xid."""
+        windows = self.get_children_by_type(Window, xid=xid)
+        if len(windows):
+            return windows[0]
+
+        return None
+
 
 class Window(UnityIntrospectionObject):
     """An individual window."""
