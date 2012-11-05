@@ -77,7 +77,6 @@ using namespace launcher;
 using launcher::AbstractLauncherIcon;
 using launcher::Launcher;
 using ui::LayoutWindow;
-using ui::LayoutWindow::List;
 using util::Timer;
 
 DECLARE_LOGGER(logger, "unity.shell.compiz");
@@ -3963,7 +3962,7 @@ void UnityWindow::paintThumbnail(nux::Geometry const& geo, float alpha, float sc
 
   GLWindowPaintAttrib attrib = gWindow->lastPaintAttrib();
   attrib.opacity = (alpha * G_MAXUSHORT);
-  unsigned mask = 0;
+  unsigned mask = gWindow->lastMask();
   nux::Geometry thumb_geo = geo;
 
   if (selected)
