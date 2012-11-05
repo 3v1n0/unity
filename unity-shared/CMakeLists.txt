@@ -34,6 +34,7 @@ set (UNITY_SHARED_SOURCES
      DashStyle.cpp
      DefaultThumbnailProvider.cpp
      FontSettings.cpp
+     GraphicsUtils.cpp
      IMTextEntry.cpp
      IconLoader.cpp
      IconRenderer.cpp

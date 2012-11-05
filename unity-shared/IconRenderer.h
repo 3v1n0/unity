@@ -85,10 +85,6 @@ protected:
                                          float FarClipPlane,
                                          float Fovy);
 
-  void SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
-
-  void RestoreSystemRenderTarget();
-
 private:
   int icon_size;
   int image_size;

@@ -26,6 +26,7 @@
 #include <NuxGraphics/GLTextureResourceManager.h>
 
 #include <NuxGraphics/CairoGraphics.h>
+#include "GraphicsUtils.h"
 
 #include <gtk/gtk.h>
 
@@ -1016,7 +1017,7 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   int progress_y = fill_y + (fill_height - progress_height) / 2;
   int half_size = (right_edge - left_edge) / 2;
 
-  SetOffscreenRenderTarget(texture);
+  unity::graphics::PushOffscreenRenderTarget(texture);
 
   // FIXME
   glClear(GL_COLOR_BUFFER_BIT);
@@ -1047,7 +1048,7 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
 
   GfxContext.PopClippingRectangle();
 
-  RestoreSystemRenderTarget();
+  unity::graphics::PopOffscreenRenderTarget();
 }
 
 void IconRenderer::DestroyTextures()
@@ -1146,29 +1147,6 @@ void IconRenderer::GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, n
 
   PerspectiveMatrix.Perspective(Fovy, AspectRatio, NearClipPlane, FarClipPlane);
 }
-
-void
-IconRenderer::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
-{
-  int width = texture->GetWidth();
-  int height = texture->GetHeight();
-
-  nux::GetGraphicsDisplay()->GetGpuDevice()->FormatFrameBufferObject(width, height, nux::BITFMT_R8G8B8A8);
-  nux::GetGraphicsDisplay()->GetGpuDevice()->SetColorRenderTargetSurface(0, texture->GetSurfaceLevel(0));
-  nux::GetGraphicsDisplay()->GetGpuDevice()->ActivateFrameBuffer();
-
-  nux::GetGraphicsDisplay()->GetGraphicsEngine()->SetContext(0, 0, width, height);
-  nux::GetGraphicsDisplay()->GetGraphicsEngine()->SetViewport(0, 0, width, height);
-  nux::GetGraphicsDisplay()->GetGraphicsEngine()->Push2DWindow(width, height);
-  nux::GetGraphicsDisplay()->GetGraphicsEngine()->EmptyClippingRegion();
-}
-
-void
-IconRenderer::RestoreSystemRenderTarget()
-{
-  nux::GetWindowCompositor().RestoreRenderingSurface();
-}
-
 
 // The local namespace is purely for namespacing the file local variables below.
 namespace local

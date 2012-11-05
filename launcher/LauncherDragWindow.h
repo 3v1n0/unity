@@ -36,7 +36,7 @@ class LauncherDragWindow : public nux::BaseWindow
 {
   NUX_DECLARE_OBJECT_TYPE(LauncherDragWindow, nux::BaseWindow);
 public:
-  LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> icon);
+  LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
   ~LauncherDragWindow();
 
   void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
@@ -62,9 +62,9 @@ private:
   void CancelDrag();
   
   float animation_speed_;
-  bool _cancelled;
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> _icon;
-  nux::Point2 _animation_target;
+  bool cancelled_;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> texture_;
+  nux::Point2 animation_target_;
   glib::Source::UniquePtr animation_timer_;
 };
 

@@ -49,6 +49,8 @@
 #include "unity-shared/UScreen.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UnitySettings.h"
+#include "unity-shared/GraphicsUtils.h"
+
 
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
@@ -114,7 +116,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _active_quicklist(nullptr)
   , _hovered(false)
   , _hidden(false)
-  , _render_drag_window(false)
   , _shortcuts_shown(false)
   , _data_checked(false)
   , _steal_drag(false)
@@ -151,8 +152,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
   _collection_window->collected.connect(sigc::mem_fun(this, &Launcher::OnDNDDataCollected));
-
-  _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8);
 
   bg_effect_helper_.owner = this;
   bg_effect_helper_.enabled = false;
@@ -1761,13 +1760,6 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
   RenderArgs(args, bkg_box, &launcher_alpha, geo_absolute);
   bkg_box.width -= RIGHT_LINE_WIDTH;
-
-  if (_drag_icon && _render_drag_window)
-  {
-    RenderIconToTexture(GfxContext, _drag_icon, _offscreen_drag_texture);
-    _render_drag_window = false;
-    ShowDragWindow();
-  }
   
   nux::Color clear_colour = nux::Color(0x00000000);
   
@@ -2034,10 +2026,10 @@ void Launcher::StartIconDrag(AbstractLauncherIcon::Ptr const& icon)
   _drag_icon_position = _model->IconIndex(icon);
 
   HideDragWindow();
-  _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(_icon_size, _icon_size, 1, nux::BITFMT_R8G8B8A8);
+  _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(GetWidth(), GetWidth(), 1, nux::BITFMT_R8G8B8A8);
   _drag_window = new LauncherDragWindow(_offscreen_drag_texture);
-
-  _render_drag_window = true;
+  RenderIconToTexture(nux::GetWindowThread()->GetGraphicsEngine(), _drag_icon, _offscreen_drag_texture);
+  ShowDragWindow();
 
   ubus_.SendMessage(UBUS_LAUNCHER_ICON_START_DND);
 }
@@ -2080,8 +2072,6 @@ void Launcher::EndIconDrag()
 
   if (MouseBeyondDragThreshold())
     TimeUtil::SetTimeStruct(&_times[TIME_DRAG_THRESHOLD], &_times[TIME_DRAG_THRESHOLD], ANIM_DURATION_SHORT);
-
-  _render_drag_window = false;
 
   _hide_machine.SetQuirk(LauncherHideMachine::INTERNAL_DND_ACTIVE, false);
   ubus_.SendMessage(UBUS_LAUNCHER_ICON_END_DND);
@@ -2507,7 +2497,7 @@ void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLaun
   clock_gettime(CLOCK_MONOTONIC, &current);
 
   SetupRenderArg(icon, current, arg);
-  arg.render_center = nux::Point3(roundf(_icon_size / 2.0f), roundf(_icon_size / 2.0f), 0.0f);
+  arg.render_center = nux::Point3(roundf(texture->GetWidth() / 2.0f), roundf(texture->GetHeight() / 2.0f), 0.0f);
   arg.logical_center = arg.render_center;
   arg.x_rotation = 0.0f;
   arg.running_arrow = false;
@@ -2519,7 +2509,7 @@ void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLaun
   std::list<RenderArg> drag_args;
   drag_args.push_front(arg);
 
-  SetOffscreenRenderTarget(texture);
+  graphics::PushOffscreenRenderTarget(texture);
 
   unsigned int alpha = 0, src = 0, dest = 0;
   GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
@@ -2533,9 +2523,11 @@ void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLaun
 
   GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
 
-  icon_renderer->PreprocessIcons(drag_args, nux::Geometry(0, 0, _icon_size, _icon_size));
-  icon_renderer->RenderIcon(nux::GetWindowThread()->GetGraphicsEngine(), arg, nux::Geometry(0, 0, _icon_size, _icon_size), nux::Geometry(0, 0, _icon_size, _icon_size));
-  RestoreSystemRenderTarget();
+  nux::Geometry geo(0, 0, texture->GetWidth(), texture->GetWidth());
+
+  icon_renderer->PreprocessIcons(drag_args, geo);
+  icon_renderer->RenderIcon(GfxContext, arg, geo, geo);
+  unity::graphics::PopOffscreenRenderTarget();
 }
 
 nux::GestureDeliveryRequest Launcher::GestureEvent(const nux::GestureEvent &event)
@@ -2554,30 +2546,6 @@ nux::GestureDeliveryRequest Launcher::GestureEvent(const nux::GestureEvent &even
   }
 
   return nux::GestureDeliveryRequest::NONE;
-}
-
-void
-Launcher::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
-{
-  int width = texture->GetWidth();
-  int height = texture->GetHeight();
-
-  auto graphics_display = nux::GetGraphicsDisplay();
-  auto gpu_device = graphics_display->GetGpuDevice();
-  gpu_device->FormatFrameBufferObject(width, height, nux::BITFMT_R8G8B8A8);
-  gpu_device->SetColorRenderTargetSurface(0, texture->GetSurfaceLevel(0));
-  gpu_device->ActivateFrameBuffer();
-
-  auto graphics_engine = graphics_display->GetGraphicsEngine();
-  graphics_engine->SetContext(0, 0, width, height);
-  graphics_engine->SetViewport(0, 0, width, height);
-  graphics_engine->Push2DWindow(width, height);
-  graphics_engine->EmptyClippingRegion();
-}
-
-void Launcher::RestoreSystemRenderTarget()
-{
-  nux::GetWindowCompositor().RestoreRenderingSurface();
 }
 
 bool Launcher::DndIsSpecialRequest(std::string const& uri) const
