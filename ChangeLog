@@ -1,3 +1,120 @@
+2012-11-05  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Cherry-picked rev 2872 from lp:unity:
+	Stop Unity UI elements from flickering. This could happen in some odd
+	cases where UnityScreen::damageRegion has not received the full damage
+	region for the frame, most likely due to the *SetEnabled() toggles.
+	So the fix is to tell Nux about the final, complete, set of damage just
+	before rendering. This ensures Nux is always told about everything it has
+	to redraw on every frame, rather than flickering.
+	(LP: #1070735). Fixes: https://bugs.launchpad.net/bugs/1070735. Approved by Daniel van Vugt.
+
+2012-11-01  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Cherry-picked rev 2872 from lp:unity:
+	Stop Unity UI elements from flickering. This could happen in some odd
+	cases where UnityScreen::damageRegion has not received the full damage
+	region for the frame, most likely due to the *SetEnabled() toggles.
+	So the fix is to tell Nux about the final, complete, set of damage just
+	before rendering. This ensures Nux is always told about everything it has
+	to redraw on every frame, rather than flickering.
+	(LP: #1070735)
+
+2012-10-31  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Cherry-picked rev 2871 from lp:unity:
+	Clear launcher drag icon texture before rendering to it (LP: #1071813). Fixes: https://bugs.launchpad.net/bugs/1071813. Approved by Daniel van Vugt, Nick Dedekind.
+
+2012-10-30  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Cherry-picked rev 2871 from lp:unity:
+	Clear launcher drag icon texture before rendering to it (LP: #1071813)
+
+2012-10-30  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Cherry-picked rev 2870 from lp:unity:
+	A workaround fix for Alt+TAB picking up wrong window when used on a application group. The check for Quirk::ACTIVE is not valid right now due to the fact we're making the switcher window active prior to display (this is done this way to fix some other bugs). So a workaround is to save the last active window prior to this action and use this during the checks. It fixes a very annoying bug.. Fixes: https://bugs.launchpad.net/bugs/1071298. Approved by Andrea Azzarone.
+
+2012-10-30  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
+
+	Cherry-picked rev 2870 from lp:unity:
+	A workaround fix for Alt+TAB picking up wrong window when used on a application group. The check for Quirk::ACTIVE is not valid right now due to the fact we're making the switcher window active prior to display (this is done this way to fix some other bugs). So a workaround is to save the last active window prior to this action and use this during the checks. It fixes a very annoying bug.
+
+2012-10-24  Albert Astals  <albert.astals@canonical.com>
+
+	Fix escaping of _panel_title
+	
+	It only has to be escpaed if comes from new_title
+	if coming from UBUS_LAUNCHER_SELECTION_CHANGED data it is already escaped
+	Fixes bug #1067357. Fixes: https://bugs.launchpad.net/bugs/1067357. Approved by Marco Trevisan (Treviño).
+
+2012-10-24  Albert Astals  <albert.astals@canonical.com>
+
+	Do not use non-static data member initializers, the merger compiler seems not to like it
+
+2012-10-19  Albert Astals  <albert.astals@canonical.com>
+
+	Remove comment
+
+2012-10-19  Albert Astals  <albert.astals@canonical.com>
+
+	Fix escaping of _panel_title
+	
+	It only has to be escpaed if comes from new_title
+	if coming from UBUS_LAUNCHER_SELECTION_CHANGED data it is already escaped
+	Fixes bug #1067357
+
+2012-10-17  Albert Astals  <albert.astals@canonical.com>
+
+	Fix escaping of _panel_title
+	
+	It only has to be escpaed if comes from new_title
+	if coming from UBUS_LAUNCHER_SELECTION_CHANGED data it is already escaped
+	Fixes bug #1067357
+
+2012-10-24  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	Fix reference counting problem which leads to memory leaks and a crash in MT grab handles.. Fixes: https://bugs.launchpad.net/bugs/1046201. Approved by Łukasz Zemczak.
+
+2012-10-24  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* revert the test_grab file as well
+
+2012-10-24  Brandon Schaefer  <brandon.schaefer@canonical.com>
+
+	* Revert the changes to std -> boost
+
+2012-10-18  Albert Astals  <albert.astals@canonical.com>
+
+	Update the UBUS_LAUNCHER_SELECTION_CHANGED on UBUS_QUICKLIST_END_KEY_NAV. Fixes: https://bugs.launchpad.net/bugs/1067358. Approved by Marco Trevisan (Treviño).
+
+2012-10-17  Albert Astals  <albert.astals@canonical.com>
+
+	Update the UBUS_LAUNCHER_SELECTION_CHANGED on UBUS_QUICKLIST_END_KEY_NAV
+
+2012-10-18  MC Return  <mc.return@gmx.net>
+
+	Unity actually provides the feature "fadetodesktop".
+	This change is needed to make unityshell just conflict with the Compiz "Fade to Desktop" (fadedesktop) plug-in, but work together with "Show Desktop" (showdesktop).
+	showdesktop only works if it is started after unityshell.. Fixes: https://bugs.launchpad.net/bugs/1067534. Approved by Marco Trevisan (Treviño).
+
+2012-10-17  MC Return  <mc.return@gmx.net>
+
+	Unity actually provides the feature "fadetodesktop".
+	This change is needed, because unityshell just collides with the Compiz "Fade to Desktop" (fadedesktop) plug-in, but works with "Show Desktop" (showdesktop) if showdesktop is started after unityshell.
+
+2012-10-18  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Unregister gdbus object in the dtor. Fix bug 1047760. Fixes: https://bugs.launchpad.net/bugs/1047760. Approved by Marco Trevisan (Treviño).
+
+2012-10-17  Andrea Azzarone  <azzaronea@gmail.com>
+
+	Unregister gdbus object in the dtor. Fix bug 1047760.
+
+2012-10-16  Timo Jyrinki  <timo.jyrinki@canonical.com>
+
+	Release\ 6.10.0
+
 2012-10-16  Łukasz 'sil2100' Zemczak  <lukasz.zemczak@canonical.com>
 
 	Cherry-picked gord's legal branch: adds a legal link to the dash, also a new resource. Fixes: https://bugs.launchpad.net/bugs/1065652, https://bugs.launchpad.net/bugs/1066646. Approved by Marco Trevisan (Treviño).
