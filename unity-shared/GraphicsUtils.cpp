@@ -53,10 +53,10 @@ void PushOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 
 void PopOffscreenRenderTarget()
 {
-  g_assert(rendering_stack.size() > 0);
+  g_assert(!rendering_stack.empty());
 
   rendering_stack.pop();
-  if (rendering_stack.size() > 0)
+  if (!rendering_stack.empty())
   {
     nux::ObjectPtr<nux::IOpenGLBaseTexture>& texture = rendering_stack.top();
     PushOffscreenRenderTarget_(texture);
