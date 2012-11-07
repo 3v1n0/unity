@@ -31,11 +31,7 @@ namespace unity
 {
 namespace launcher
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.launcher.hudlaunchericon");
-}
+DECLARE_LOGGER(logger, "unity.launcher.icon.hud");
 
 HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
  : SingleMonitorLauncherIcon(IconType::HUD, 0)

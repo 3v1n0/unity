@@ -52,7 +52,7 @@ namespace unity
 {
 namespace launcher
 {
-extern const char window_title[];
+extern const char* window_title;
 
 class AbstractLauncherIcon;
 
@@ -316,9 +316,6 @@ private:
   float GetAutohidePositionMax() const;
 
   virtual long PostLayoutManagement(long LayoutResult);
-
-  void SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
-  void RestoreSystemRenderTarget();
 
   void OnDisplayChanged(Display* display);
   void OnDNDDataCollected(const std::list<char*>& mimes);

@@ -26,11 +26,9 @@ namespace unity
 {
 namespace dash
 {
+DECLARE_LOGGER(logger, "unity.dash.lensbar");
 namespace
 {
-
-nux::logging::Logger logger("unity.dash.lensbar");
-
 // according to Q design the inner area of the lensbar should be 40px
 // (without any borders)
 const int LENSBAR_HEIGHT = 41;

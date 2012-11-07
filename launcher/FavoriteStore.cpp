@@ -26,9 +26,9 @@
 
 namespace unity
 {
+DECLARE_LOGGER(logger, "unity.favorite.store");
 namespace
 {
-nux::logging::Logger logger("unity.favorite.store");
 FavoriteStore* favoritestore_instance = nullptr;
 const std::string PREFIX_SEPARATOR = "://";
 }

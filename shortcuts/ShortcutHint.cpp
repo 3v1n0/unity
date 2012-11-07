@@ -24,14 +24,12 @@
 
 #include "ShortcutHintPrivate.h"
 
+DECLARE_LOGGER(logger, "unity.shortcut");
+
 namespace unity
 {
 namespace shortcut
 {
-namespace
-{
-  nux::logging::Logger logger("unity.shortcut");
-} // anonymouse namespace 
 
 // Ctor
 Hint::Hint(std::string const& category,

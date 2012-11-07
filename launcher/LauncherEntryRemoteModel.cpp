@@ -25,11 +25,7 @@
 
 namespace unity
 {
-
-namespace
-{
-nux::logging::Logger logger("launcher.entry.remote.model");
-}
+DECLARE_LOGGER(logger, "unity.launcher.entry.remote.model");
 
 /**
  * Helper class implementing the remote API to control the icons in the

@@ -32,13 +32,9 @@ namespace unity
 {
 namespace panel
 {
+DECLARE_LOGGER(logger, "unity.panel.controller");
 
-const char window_title[] = "unity-panel";
-
-namespace
-{
-nux::logging::Logger logger("unity.panel");
-}
+const char* window_title = "unity-panel";
 
 class Controller::Impl
 {

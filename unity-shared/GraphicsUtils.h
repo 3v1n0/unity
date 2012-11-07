@@ -14,36 +14,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Jason Smith <jason.smith@canonical.com>
+ * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef UNITY_DECAYMULATOR_H
-#define UNITY_DECAYMULATOR_H
+#ifndef UNITY_GRAPHICS_ADAPTER
+#define UNITY_GRAPHICS_ADAPTER
 
-#include <NuxCore/Property.h>
-#include <UnityCore/GLibSource.h>
+#include <Nux/Nux.h>
 
 namespace unity
 {
-namespace ui
+namespace graphics
 {
 
-class Decaymulator
-{
-public:
-  Decaymulator();
-
-  nux::Property<int> rate_of_decay;
-  nux::Property<int> value;
-
-private:
-  void OnValueChanged(int value);
-  bool OnDecayTimeout();
-
-  glib::Source::UniquePtr decay_timer_;
-};
+void PushOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
+void PopOffscreenRenderTarget();
 
 }
 }
 
-#endif
+#endif // UNITY_GRAPHICS_ADAPTER

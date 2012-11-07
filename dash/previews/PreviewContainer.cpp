@@ -37,6 +37,7 @@ namespace dash
 {
 namespace previews
 {
+DECLARE_LOGGER(logger, "unity.dash.preview.container");
 
 Navigation operator&(const Navigation lhs, const Navigation rhs)
 {
@@ -45,8 +46,6 @@ Navigation operator&(const Navigation lhs, const Navigation rhs)
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.previews.previewcontainer");
-
 const int ANIM_DURATION_LONG = 500;
 const int PREVIEW_SPINNER_WAIT = 300;
 
