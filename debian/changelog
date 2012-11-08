@@ -1,3 +1,19 @@
+unity (6.12.0-0ubuntu1) UNRELEASED; urgency=low
+
+  * New upstream release.
+    - Includes two already cherry-picked fixes in Ubuntu
+    - Unregister gdbus object in the dtor (LP: #1047760)
+    - "Show desktop" plug-in actually works with Unity when ensured that 
+      it is loaded after unityshell (LP: #1067534)
+    - Top panel "tooltip" got out of sync when navigating with the 
+      keyboard (LP: #1067358)
+    - Fix reference counting problem leading to memory leaks (LP: #1046201)
+    - Fix escaping of _panel_title (LP: #1067357)
+    - Fix ALT+Tab switches to incorrect window (LP: #1071298)
+    - Stop Unity UI elements from flickering in some cases (LP: #1070735)
+
+ -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Thu, 08 Nov 2012 11:10:13 +0200
+
 unity (6.10.0-0ubuntu2) quantal-proposed; urgency=low
 
   * Cherry-picked from upstream:

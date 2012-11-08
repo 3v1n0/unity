@@ -107,6 +107,8 @@ public:
                                const char* character,
                                unsigned short keyCount);
 
+  void OpenQuicklist();
+
   static void OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer user_data);
   static void OnDBusMethodCall(GDBusConnection* connection, const gchar* sender, const gchar* object_path,
                                const gchar* interface_name, const gchar* method_name,
@@ -135,8 +137,10 @@ public:
   int reactivate_index;
   bool keynav_restore_window_;
   int launcher_key_press_time_;
-  unsigned dbus_owner_;
 
+  unsigned dbus_owner_;
+  GDBusConnection* gdbus_connection_;
+  unsigned reg_id_;
 
   glib::Signal<void, BamfMatcher*, BamfView*> view_opened_signal_;
   glib::SourceManager sources_;

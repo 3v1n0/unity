@@ -279,11 +279,7 @@ QuicklistView::RecvKeyPressed(unsigned long    eventType,
       // left (close quicklist, go back to laucher key-nav)
     case NUX_VK_LEFT:
     case NUX_KP_LEFT:
-      Hide();
-      // inform Launcher we switch back to Launcher key-nav
-      ubus_server_send_message(ubus_server_get_default(),
-                               UBUS_QUICKLIST_END_KEY_NAV,
-                               NULL);
+      HideAndEndQuicklistNav();
       break;
 
       // esc (close quicklist, exit key-nav)
@@ -405,6 +401,15 @@ void QuicklistView::Hide()
       _current_item_index = -1;
     }
   }
+}
+
+void QuicklistView::HideAndEndQuicklistNav()
+{
+  Hide();
+  // inform Launcher we switch back to Launcher key-nav
+  ubus_server_send_message(ubus_server_get_default(),
+                            UBUS_QUICKLIST_END_KEY_NAV,
+                            NULL);
 }
 
 void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
