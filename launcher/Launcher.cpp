@@ -1958,7 +1958,7 @@ long Launcher::PostLayoutManagement(long LayoutResult)
 
   SetMousePosition(0, 0);
 
-  return nux::eCompliantHeight | nux::eCompliantWidth;
+  return nux::SIZE_EQUAL_HEIGHT | nux::SIZE_EQUAL_WIDTH;
 }
 
 void Launcher::OnDragWindowAnimCompleted()

@@ -200,18 +200,18 @@ long QuicklistMenuItem::PostLayoutManagement(long layoutResult)
   long result = 0;
 
   if (_pre_layout_width < w)
-    result |= nux::eLargerWidth;
+    result |= nux::SIZE_LARGER_WIDTH;
   else if (_pre_layout_width > w)
-    result |= nux::eSmallerWidth;
+    result |= nux::SIZE_SMALLER_WIDTH;
   else
-    result |= nux::eCompliantWidth;
+    result |= nux::SIZE_EQUAL_WIDTH;
 
   if (_pre_layout_height < h)
-    result |= nux::eLargerHeight;
+    result |= nux::SIZE_LARGER_HEIGHT;
   else if (_pre_layout_height > h)
-    result |= nux::eSmallerHeight;
+    result |= nux::SIZE_SMALLER_HEIGHT;
   else
-    result |= nux::eCompliantHeight;
+    result |= nux::SIZE_EQUAL_HEIGHT;
 
   return result;
 }
