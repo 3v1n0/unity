@@ -60,6 +60,7 @@ public:
 
   void Show();
   void Hide();
+  void HideAndEndQuicklistNav();
 
   int GetNumItems();
   QuicklistMenuItem* GetNthItems(int index);

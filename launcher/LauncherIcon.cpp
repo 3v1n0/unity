@@ -634,6 +634,11 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
   return true;
 }
 
+void LauncherIcon::CloseQuicklist()
+{
+  _quicklist->HideAndEndQuicklistNav();
+}
+
 void LauncherIcon::RecvMouseDown(int button, int monitor, unsigned long key_flags)
 {
   if (button == 3)
