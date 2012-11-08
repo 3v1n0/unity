@@ -84,7 +84,8 @@ ShowdesktopHandler::ShowdesktopHandler (ShowdesktopHandlerWindowInterface *wi, c
   lock_acquire_interface_ (lock_acquire_interface),
   remover_(),
   state_ (StateVisible),
-  progress_ (0.0f)
+  progress_ (0.0f),
+  was_hidden_ (false)
 {
 }
 
