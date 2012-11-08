@@ -1,0 +1,120 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR Canonical\ Ltd
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
+"POT-Creation-Date: 2011-08-23 20:58-0400\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Keep in launcher"
+msgstr ""
+
+msgid "Quit"
+msgstr ""
+
+msgid "Open"
+msgstr ""
+
+msgid "Eject"
+msgstr ""
+
+msgid "Eject parent drive"
+msgstr ""
+
+msgid "Safely remove"
+msgstr ""
+
+msgid "Safely remove parent drive"
+msgstr ""
+
+msgid "Unmount"
+msgstr ""
+
+msgid "The drive has been successfully ejected"
+msgstr ""
+
+msgid "Workspace Switcher"
+msgstr ""
+
+msgid "Search"
+msgstr ""
+
+msgid "Search across all places"
+msgstr ""
+
+msgid "See fewer results"
+msgstr ""
+
+msgid "Shortcuts"
+msgstr ""
+
+#. Media Apps
+msgid "Media Apps"
+msgstr ""
+
+#. Internet Apps
+msgid "Internet Apps"
+msgstr ""
+
+#. More Apps
+msgid "More Apps"
+msgstr ""
+
+#. Find Files
+msgid "Find Files"
+msgstr ""
+
+msgid "Browse the Web"
+msgstr ""
+
+#. Photos
+#. FIXME: Need to figure out the default
+msgid "View Photos"
+msgstr ""
+
+msgid "Check Email"
+msgstr ""
+
+msgid "Listen to Music"
+msgstr ""
+
+msgid "Drop To Add Application"
+msgstr ""
+
+msgid "Trash"
+msgstr ""
+
+msgid "Empty Trash..."
+msgstr ""
+
+msgid "Empty all items from Trash?"
+msgstr ""
+
+msgid "All items in the Trash will be permanently deleted."
+msgstr ""
+
+msgid "Empty Trash"
+msgstr ""
+
+msgid "Launcher & Menus"
+msgstr ""
+
+msgid "<b>Show the launcher when the pointer:</b>"
+msgstr ""
+
+msgid "Pushes the left edge of the screen"
+msgstr ""
+
+msgid "Touches the top left corner of the screen"
+msgstr ""
