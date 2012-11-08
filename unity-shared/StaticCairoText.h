@@ -99,6 +99,9 @@ protected:
   // Key navigation
   virtual bool AcceptKeyNavFocus();
 
+  std::vector<int> GetTextureStartIndices();
+  std::vector<int> GetTextureEndIndices();
+
 private:
   struct Impl;
   Impl* pimpl;

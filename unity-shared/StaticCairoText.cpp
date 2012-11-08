@@ -17,6 +17,7 @@
  * Authored by: Jay Taoko <jay.taoko@canonical.com>
  *              Mirco Müller <mirco.mueller@canonical.com>
  *              Tim Penhey <tim.penhey@canonical.com>
+ *              Nick Dedekind <nick.dedekind@canonical.com>
  */
 
 #include "StaticCairoText.h"
@@ -55,16 +56,17 @@ struct StaticCairoText::Impl
 
   struct CacheTexture
   {
+    typedef std::shared_ptr<CacheTexture> Ptr;
+
     int start_index = 0;
     size_t length = std::string::npos;
     int height = 0;
 
     std::shared_ptr<CairoGraphics> cr;
   };
-  typedef std::shared_ptr<CacheTexture> CacheTexturePtr;
   Size GetTextExtents() const;
 
-  void DrawText(CacheTexturePtr cached_texture, int width, int height, int line_spacing, Color const& color);
+  void DrawText(CacheTexture::Ptr cached_texture, int width, int height, int line_spacing, Color const& color);
 
   void UpdateTexture();
   void OnFontChanged();
@@ -78,7 +80,7 @@ struct StaticCairoText::Impl
   mutable Size cached_extent_;
   mutable Size cached_base_;
   mutable int baseline_;
-  mutable std::list<CacheTexturePtr> cache_textures_;
+  mutable std::list<CacheTexture::Ptr> cache_textures_;
 
   std::string text_;
   Color text_color_;
@@ -419,6 +421,37 @@ void StaticCairoText::GetTextExtents(int& width, int& height) const
   height = s.height;
 }
 
+std::vector<int> StaticCairoText::GetTextureStartIndices()
+{
+  pimpl->GetTextExtents();
+
+  std::vector<int> list;
+  auto iter = pimpl->cache_textures_.begin();
+  for (; iter != pimpl->cache_textures_.end(); ++iter)
+  {
+    Impl::CacheTexture::Ptr const& cached_texture = *iter;
+    list.push_back(cached_texture->start_index);
+  }
+  return list;
+}
+
+std::vector<int> StaticCairoText::GetTextureEndIndices()
+{
+  pimpl->GetTextExtents();
+
+  std::vector<int> list;
+  auto iter = pimpl->cache_textures_.begin();
+  for (; iter != pimpl->cache_textures_.end(); ++iter)
+  {
+    Impl::CacheTexture::Ptr const& cached_texture = *iter;
+    if (cached_texture->length == std::string::npos)
+      list.push_back(std::string::npos);
+    else
+      list.push_back(std::max<int>(0, cached_texture->start_index + cached_texture->length - 1));
+  }
+  return list;
+}
+
 std::string StaticCairoText::Impl::GetEffectiveFont() const
 {
   if (font_.empty())
@@ -500,7 +533,7 @@ Size StaticCairoText::Impl::GetTextExtents() const
 
   cache_textures_.clear();
   PangoLayoutIter* iter = pango_layout_get_iter(layout);
-  std::shared_ptr<CacheTexture> current_tex(new CacheTexture());
+  CacheTexture::Ptr current_tex(new CacheTexture());
   const int max_height = GetGraphicsDisplay()->GetGpuDevice()->GetGpuInfo().GetMaxTextureSize();
   do
   {
@@ -534,7 +567,7 @@ Size StaticCairoText::Impl::GetTextExtents() const
   return result;
 }
 
-void StaticCairoText::Impl::DrawText(CacheTexturePtr cached_texture,
+void StaticCairoText::Impl::DrawText(CacheTexture::Ptr cached_texture,
                                      int width,
                                      int height,
                                      int line_spacing,
@@ -613,7 +646,7 @@ void StaticCairoText::Impl::UpdateTexture()
   auto iter = cache_textures_.begin();
   for (; iter != cache_textures_.end(); ++iter)
   {
-    CacheTexturePtr const& cached_texture = *iter;
+    CacheTexture::Ptr const& cached_texture = *iter;
     DrawText(cached_texture,
              geo.width, cached_texture->height, line_spacing_, text_color_);
 
