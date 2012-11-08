@@ -14,12 +14,14 @@ from time import sleep
 
 from unity.tests import UnityTestCase
 
+import gettext
 
 class CommandLensSearchTests(UnityTestCase):
     """Test the command lense search bahavior."""
 
     def setUp(self):
         super(CommandLensSearchTests, self).setUp()
+        gettext.install("unity-lens-applications")
 
     def tearDown(self):
         self.dash.ensure_hidden()
@@ -34,7 +36,7 @@ class CommandLensSearchTests(UnityTestCase):
             self.keyboard.press_and_release("Delete")
 
         self.assertThat(self.dash.search_string, Eventually(Equals("")))
-        results_category = command_lens.get_category_by_name("Results")
+        results_category = command_lens.get_category_by_name(_("Results"))
         self.assertThat(results_category.is_visible, Eventually(Equals(False)))
 
     def test_results_category_appears(self):
@@ -44,7 +46,7 @@ class CommandLensSearchTests(UnityTestCase):
         # lots of apps start with 'a'...
         self.keyboard.type("a")
         self.assertThat(self.dash.search_string, Eventually(Equals("a")))
-        results_category = command_lens.get_category_by_name("Results")
+        results_category = command_lens.get_category_by_name(_("Results"))
         self.assertThat(results_category.is_visible, Eventually(Equals(True)))
 
     def test_result_category_actually_contains_results(self):
@@ -54,7 +56,7 @@ class CommandLensSearchTests(UnityTestCase):
         # lots of apps start with 'a'...
         self.keyboard.type("a")
         self.assertThat(self.dash.search_string, Eventually(Equals("a")))
-        results_category = command_lens.get_category_by_name("Results")
+        results_category = command_lens.get_category_by_name(_("Results"))
         results = results_category.get_results()
         self.assertTrue(results)
 
