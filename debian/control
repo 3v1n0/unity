@@ -43,6 +43,8 @@ Build-Depends: cmake,
                libxfixes-dev (>= 1:5.0-4ubuntu4),
                gcc-4.6,
                g++-4.6,
+               libgtest-dev,
+               google-mock,
 Standards-Version: 3.9.3
 Homepage: https://launchpad.net/unity
 # If you aren't a member of ~unity-team but need to upload packaging changes,
