@@ -24,11 +24,7 @@
 
 namespace unity
 {
-
-namespace
-{
-nux::logging::Logger logger("launcher.entry.remote");
-}
+DECLARE_LOGGER(logger, "unity.launcher.entry.remote");
 
 /**
  * Create a new LauncherEntryRemote parsed from the raw DBus wire format

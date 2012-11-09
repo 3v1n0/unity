@@ -182,6 +182,18 @@ set(
   "Path to Google test srcs"
 )
 
+# Commenting out the following block added in rev 2884 which is causing
+#   builds to break in launchpad.
+# This requires dependencies on libgtest-dev and google-mock which are not
+#   specified in the packaging.
+#set(
+#  GTEST_INCLUDE_DIR
+#  "/usr/include/gtest"
+#  CACHE
+#  PATH
+#  "Path to Google tests include"
+#)
+
 find_path(GTEST_INCLUDE_DIR gtest/gtest.h)
 if (GTEST_INCLUDE_DIR)
   #FIXME - hardcoded is bad!
@@ -226,6 +238,12 @@ message (STATUS "GSettings schemas will be installed into ${GSETTINGS_DIR}")
 install (FILES ${UNITY_SCHEMAS} DESTINATION ${GSETTINGS_DIR} OPTIONAL)
 install (CODE "message (STATUS \"Compiling GSettings schemas\")")
 install (CODE "execute_process (COMMAND ${_glib_comple_schemas} ${GSETTINGS_DIR})")
+
+# Resources
+install (FILES resources/dash-widgets.json DESTINATION ${CMAKE_INSTALL_PREFIX}/share/unity/themes)
+file (GLOB _datafiles "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
+install (FILES ${_datafiles} DESTINATION ${PKGDATADIR})
+
 
 # For testing
 configure_file (${CMAKE_SOURCE_DIR}/${UNITY_SCHEMAS} ${CMAKE_BINARY_DIR}/settings/${UNITY_SCHEMAS})

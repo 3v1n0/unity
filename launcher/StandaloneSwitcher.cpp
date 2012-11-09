@@ -130,7 +130,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   view->timeout_length = 0;
   view->SetWorkspace(nux::Geometry(0, 0, 900, 600), 0);
 
-  layout->SetContentDistribution(nux::eStackCenter);
+  layout->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
   layout->SetHorizontalExternalMargin (10);
   nux::GetWindowThread()->SetLayout(layout);
 
@@ -145,7 +145,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   nux::CheckBox* flipping_check = new nux::CheckBox(TEXT("Enable Automatic Flipping"), false, NUX_TRACKER_LOCATION);
   flipping_check->SetMaximumWidth(250);
   flipping_check->state_change.connect (sigc::ptr_fun (OnFlippingChanged));
-  layout->AddView(flipping_check, 1, nux::eRight, nux::eFull);
+  layout->AddView(flipping_check, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FULL);
 
 
   nux::HLayout* num_icons_layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
@@ -154,13 +154,13 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   num_icons_layout->SetHorizontalInternalMargin (10);
 
   nux::StaticText* num_icons_label = new nux::StaticText(TEXT("Num Icons:"), NUX_TRACKER_LOCATION);
-  num_icons_layout->AddView(num_icons_label, 1, nux::eLeft, nux::eFull);
+  num_icons_layout->AddView(num_icons_label, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
   nux::SpinBox * num_icons_spin = new nux::SpinBox (icons.size (), 1, 2, 100, NUX_TRACKER_LOCATION);
   num_icons_spin->sigValueChanged.connect (sigc::ptr_fun (OnNumIconsChanged));
-  num_icons_layout->AddView(num_icons_spin, 1, nux::eRight, nux::eFix);
+  num_icons_layout->AddView(num_icons_spin, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FIX);
 
-  layout->AddView(num_icons_layout, 1, nux::eRight, nux::eFull);
+  layout->AddView(num_icons_layout, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FULL);
 
 
 
@@ -170,13 +170,13 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   border_layout->SetHorizontalInternalMargin (10);
 
   nux::StaticText* border_label = new nux::StaticText(TEXT("Border Size:"), NUX_TRACKER_LOCATION);
-  border_layout->AddView(border_label, 1, nux::eLeft, nux::eFull);
+  border_layout->AddView(border_label, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
   nux::RangeValueInteger * border_size_range = new nux::RangeValueInteger (view->GetView ()->border_size, 0, 200, NUX_TRACKER_LOCATION);
   border_size_range->sigValueChanged.connect (sigc::ptr_fun (OnBorderSizeChanged));
-  border_layout->AddView(border_size_range, 1, nux::eRight, nux::eFix);
+  border_layout->AddView(border_size_range, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FIX);
 
-  layout->AddView(border_layout, 1, nux::eRight, nux::eFull);
+  layout->AddView(border_layout, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FULL);
 
 
 
@@ -186,13 +186,13 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   flat_spacing_layout->SetHorizontalInternalMargin (10);
 
   nux::StaticText* flat_spacing_label = new nux::StaticText(TEXT("Flat Spacing:"), NUX_TRACKER_LOCATION);
-  flat_spacing_layout->AddView(flat_spacing_label, 1, nux::eLeft, nux::eFull);
+  flat_spacing_layout->AddView(flat_spacing_label, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
   nux::RangeValueInteger * flat_spacing_size_range = new nux::RangeValueInteger (view->GetView ()->flat_spacing, 0, 200, NUX_TRACKER_LOCATION);
   flat_spacing_size_range->sigValueChanged.connect (sigc::ptr_fun (OnFlatSpacingSizeChanged));
-  flat_spacing_layout->AddView(flat_spacing_size_range, 1, nux::eRight, nux::eFix);
+  flat_spacing_layout->AddView(flat_spacing_size_range, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FIX);
 
-  layout->AddView(flat_spacing_layout, 1, nux::eRight, nux::eFull);
+  layout->AddView(flat_spacing_layout, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FULL);
   
 
   nux::HLayout* text_size_layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
@@ -201,13 +201,13 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   text_size_layout->SetHorizontalInternalMargin (10);
 
   nux::StaticText* text_size_label = new nux::StaticText(TEXT("Text Size:"), NUX_TRACKER_LOCATION);
-  text_size_layout->AddView(text_size_label, 1, nux::eLeft, nux::eFull);
+  text_size_layout->AddView(text_size_label, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
   nux::RangeValueInteger * text_size_size_range = new nux::RangeValueInteger (view->GetView ()->text_size, 0, 200, NUX_TRACKER_LOCATION);
   text_size_size_range->sigValueChanged.connect (sigc::ptr_fun (OnTextSizeChanged));
-  text_size_layout->AddView(text_size_size_range, 1, nux::eRight, nux::eFix);
+  text_size_layout->AddView(text_size_size_range, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FIX);
 
-  layout->AddView(text_size_layout, 1, nux::eRight, nux::eFull);
+  layout->AddView(text_size_layout, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FULL);
 
 
   nux::HLayout* icon_size_layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
@@ -216,13 +216,13 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   icon_size_layout->SetHorizontalInternalMargin (10);
 
   nux::StaticText* icon_size_label = new nux::StaticText(TEXT("Icon Size:"), NUX_TRACKER_LOCATION);
-  icon_size_layout->AddView(icon_size_label, 1, nux::eLeft, nux::eFull);
+  icon_size_layout->AddView(icon_size_label, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
   nux::RangeValueInteger * icon_size_size_range = new nux::RangeValueInteger (view->GetView ()->icon_size, 0, 200, NUX_TRACKER_LOCATION);
   icon_size_size_range->sigValueChanged.connect (sigc::ptr_fun (OnIconSizeChanged));
-  icon_size_layout->AddView(icon_size_size_range, 1, nux::eRight, nux::eFix);
+  icon_size_layout->AddView(icon_size_size_range, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FIX);
 
-  layout->AddView(icon_size_layout, 1, nux::eRight, nux::eFull);
+  layout->AddView(icon_size_layout, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FULL);
 
 
   nux::HLayout* tile_size_layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
@@ -231,13 +231,13 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   tile_size_layout->SetHorizontalInternalMargin (10);
 
   nux::StaticText* tile_size_label = new nux::StaticText(TEXT("Tile Size:"), NUX_TRACKER_LOCATION);
-  tile_size_layout->AddView(tile_size_label, 1, nux::eLeft, nux::eFull);
+  tile_size_layout->AddView(tile_size_label, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
   nux::RangeValueInteger * tile_size_size_range = new nux::RangeValueInteger (view->GetView ()->tile_size, 0, 200, NUX_TRACKER_LOCATION);
   tile_size_size_range->sigValueChanged.connect (sigc::ptr_fun (OnTileSizeChanged));
-  tile_size_layout->AddView(tile_size_size_range, 1, nux::eRight, nux::eFix);
+  tile_size_layout->AddView(tile_size_size_range, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FIX);
 
-  layout->AddView(tile_size_layout, 1, nux::eRight, nux::eFull);
+  layout->AddView(tile_size_layout, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FULL);
 
 
   nux::HLayout* animation_length_layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
@@ -246,13 +246,13 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   animation_length_layout->SetHorizontalInternalMargin (10);
 
   nux::StaticText* animation_length_label = new nux::StaticText(TEXT("Animation Length:"), NUX_TRACKER_LOCATION);
-  animation_length_layout->AddView(animation_length_label, 1, nux::eLeft, nux::eFull);
+  animation_length_layout->AddView(animation_length_label, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
   nux::RangeValueInteger * animation_length_size_range = new nux::RangeValueInteger (view->GetView ()->animation_length, 0, 2000, NUX_TRACKER_LOCATION);
   animation_length_size_range->sigValueChanged.connect (sigc::ptr_fun (OnAnimationLengthChanged));
-  animation_length_layout->AddView(animation_length_size_range, 1, nux::eRight, nux::eFix);
+  animation_length_layout->AddView(animation_length_size_range, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FIX);
 
-  layout->AddView(animation_length_layout, 1, nux::eRight, nux::eFull);
+  layout->AddView(animation_length_layout, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FULL);
 
 
   nux::HLayout* control_buttons_layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
@@ -262,20 +262,20 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 
   nux::Button* prev_button = new nux::Button ("Previous", NUX_TRACKER_LOCATION);
   prev_button->state_change.connect (sigc::ptr_fun (OnPreviousClicked));
-  control_buttons_layout->AddView(prev_button, 1, nux::eLeft, nux::eFull);
+  control_buttons_layout->AddView(prev_button, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
   nux::Button* next_button = new nux::Button ("Next", NUX_TRACKER_LOCATION);
   next_button->state_change.connect (sigc::ptr_fun (OnNextClicked));
-  control_buttons_layout->AddView(next_button, 1, nux::eRight, nux::eFull);
+  control_buttons_layout->AddView(next_button, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FULL);
 
   nux::Button* detail_button = new nux::Button ("Detail", NUX_TRACKER_LOCATION);
   detail_button->state_change.connect (sigc::ptr_fun (OnDetailClicked));
-  control_buttons_layout->AddView(detail_button, 1, nux::eRight, nux::eFull);
+  control_buttons_layout->AddView(detail_button, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FULL);
 
-  layout->AddView(control_buttons_layout, 1, nux::eRight, nux::eFull);
+  layout->AddView(control_buttons_layout, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FULL);
 
 
-  layout->SetContentDistribution(nux::eStackCenter);
+  layout->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
 
   nux::BaseTexture *background = nux::CreateTexture2DFromFile("/usr/share/backgrounds/Grey_day_by_Drew__.jpg", -1, true);
   nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = background->GetDeviceTexture();

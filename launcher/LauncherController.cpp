@@ -48,10 +48,9 @@ namespace unity
 {
 namespace launcher
 {
+DECLARE_LOGGER(logger, "unity.launcher.controller");
 namespace
 {
-nux::logging::Logger logger("unity.launcher");
-
 const std::string DBUS_NAME = "com.canonical.Unity.Launcher";
 const std::string DBUS_PATH = "/com/canonical/Unity/Launcher";
 const std::string DBUS_INTROSPECTION =
@@ -267,7 +266,7 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout->AddView(launcher, 1);
-  layout->SetContentDistribution(nux::eStackLeft);
+  layout->SetContentDistribution(nux::MAJOR_POSITION_START);
   layout->SetVerticalExternalMargin(0);
   layout->SetHorizontalExternalMargin(0);
 

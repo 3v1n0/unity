@@ -488,7 +488,6 @@ TEST_F(TestLauncher, IconStartingPulseValue)
   EXPECT_EQ(launcher_->IconStartingPulseValue(icon, current), 0.0);
 }
 
-
 TEST_F(TestLauncher, IconStartingBlinkValue)
 {  
   struct timespec current;

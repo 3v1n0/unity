@@ -28,10 +28,9 @@ namespace unity
 {
 namespace json
 {
+DECLARE_LOGGER(logger, "unity.json");
 namespace
 {
-nux::logging::Logger logger("unity.json");
-
 nux::Color ColorFromPango(const gchar* color_string)
 {
   static const float PANGO_MAX = 0xffff;

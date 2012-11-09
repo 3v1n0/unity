@@ -27,11 +27,9 @@
 
 namespace unity
 {
+DECLARE_LOGGER(logger, "unity.wm.compiz");
 namespace
 {
-
-nux::logging::Logger logger("unity.plugin");
-
 const int THRESHOLD_HEIGHT = 600;
 const int THRESHOLD_WIDTH = 1024;
 

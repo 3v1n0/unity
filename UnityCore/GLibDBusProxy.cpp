@@ -33,11 +33,11 @@ namespace unity
 {
 namespace glib
 {
+DECLARE_LOGGER(logger, "unity.glib.dbusproxy");
 
 namespace
 {
 const unsigned MAX_RECONNECTION_ATTEMPTS = 5;
-nux::logging::Logger logger("unity.glib.dbusproxy");
 }
 
 using std::string;

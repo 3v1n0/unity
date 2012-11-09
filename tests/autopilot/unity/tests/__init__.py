@@ -11,6 +11,7 @@
 from __future__ import absolute_import
 
 
+from codecs import open
 from autopilot.matchers import Eventually
 from autopilot.testcase import AutopilotTestCase
 from dbus import DBusException
@@ -117,6 +118,11 @@ class UnityTestCase(AutopilotTestCase):
                 reasons.append("The test left the launcher in switcher mode.")
                 log.warning("Test left the launcher in switcher mode, exiting it...")
                 launcher.switcher_cancel()
+            if not self.well_behaved(launcher, quicklist_open=False):
+                well_behaved = False
+                reasons.append("The test left a quicklist open.")
+                log.warning("The test left a quicklist open.")
+                self.keyboard.press_and_release('Escape')
 
         if not well_behaved:
             self.fail("/n".join(reasons))
@@ -210,7 +216,7 @@ class UnityTestCase(AutopilotTestCase):
             reset_logging()
         except DBusException:
             pass
-        with open(self._unity_log_file_name) as unity_log:
+        with open(self._unity_log_file_name, encoding='utf-8') as unity_log:
             self.addDetail('unity-log', text_content(unity_log.read()))
         os.remove(self._unity_log_file_name)
         self._unity_log_file_name = ""

@@ -35,10 +35,10 @@
 
 namespace unity
 {
+DECLARE_LOGGER(logger, "unity.panel.menu");
 
 namespace
 {
-  nux::logging::Logger logger("unity.panel.menu");
   const int MAIN_LEFT_PADDING = 4;
   const int TITLE_PADDING = 2;
   const int MENUBAR_PADDING = 4;
@@ -79,7 +79,7 @@ PanelMenuView::PanelMenuView()
     _fade_in_animator(_menus_fadein),
     _fade_out_animator(_menus_fadeout)
 {
-  layout_->SetContentDistribution(nux::eStackLeft);
+  layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
 
   BamfWindow* active_win = bamf_matcher_get_active_window(_matcher);
   if (BAMF_IS_WINDOW(active_win))

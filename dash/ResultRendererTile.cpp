@@ -39,10 +39,9 @@ namespace
 
 namespace unity
 {
+DECLARE_LOGGER(logger, "unity.dash.results");
 namespace
 {
-nux::logging::Logger logger("unity.dash.results");
-
 const int FONT_SIZE = 10;
 
 const float CORNER_HIGHTLIGHT_RADIUS = 2.0f;
@@ -66,13 +65,6 @@ ResultRendererTile::ResultRendererTile(NUX_FILE_LINE_DECL)
   gchar* tmp1 = (gchar*)g_base64_decode("VU5JVFlfTkVLTw==", &tmp);
   neko = (g_getenv(tmp1));
   g_free (tmp1);
-
-  // pre-load the highlight texture
-  // try and get a texture from the texture cache
-  TextureCache& cache = TextureCache::GetDefault();
-  prelight_cache_ = cache.FindTexture("ResultRendererTile.PreLightTexture",
-                                      style.GetTileIconHightlightWidth(), style.GetTileIconHightlightHeight(),
-                                      sigc::mem_fun(this, &ResultRendererTile::DrawHighlight));
 }
 
 void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
