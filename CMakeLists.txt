@@ -182,17 +182,13 @@ set(
   "Path to Google test srcs"
 )
 
-# Commenting out the following block added in rev 2884 which is causing
-#   builds to break in launchpad.
-# This requires dependencies on libgtest-dev and google-mock which are not
-#   specified in the packaging.
-#set(
-#  GTEST_INCLUDE_DIR
-#  "/usr/include/gtest"
-#  CACHE
-#  PATH
-#  "Path to Google tests include"
-#)
+set(
+  GTEST_INCLUDE_DIR
+  "/usr/include/gtest"
+  CACHE
+  PATH
+  "Path to Google tests include"
+)
 
 find_path(GTEST_INCLUDE_DIR gtest/gtest.h)
 if (GTEST_INCLUDE_DIR)
