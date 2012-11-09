@@ -1,7 +1,12 @@
 unity (6.10.0-0ubuntu3) UNRELEASED; urgency=low
 
+  [ Michael Terry ]
   * debian/control:
     - Update Vcs-Bzr
+
+  [ Didier Roche ]
+  * debian/control:
+    - adding libgtest-dev and google-mock build-dep now that there are in main
 
  -- Michael Terry <mterry@ubuntu.com>  Tue, 06 Nov 2012 10:52:43 -0500
 
