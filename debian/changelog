@@ -1,4 +1,4 @@
-unity (6.12.0-0ubuntu1) UNRELEASED; urgency=low
+unity (6.12.0-0ubuntu1) raring; urgency=low
 
   * New upstream release.
     - Includes two already cherry-picked fixes in Ubuntu
