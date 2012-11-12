@@ -350,6 +350,10 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
       ]
       )
 
+    def setUp(self):
+        super(SwitcherDetailsModeTests, self).setUp()
+        self.set_timeout_setting(False)
+
     def test_can_start_details_mode(self):
         """Must be able to switch to details mode using selected scenario keycode.
 

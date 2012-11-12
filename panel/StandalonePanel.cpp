@@ -37,8 +37,8 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 
   //view->SetMinMaxSize(1024, 24);
   view->SetPrimary(true);
-  layout->AddView(view, 1, nux::eCenter, nux::eFull);
-  layout->SetContentDistribution(nux::eStackCenter);
+  layout->AddView(view, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  layout->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
 
   nux::GetWindowThread()->SetLayout(layout);
 }

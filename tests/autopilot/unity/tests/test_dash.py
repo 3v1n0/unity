@@ -75,38 +75,6 @@ class DashRevealTests(DashTestCase):
         self.keyboard.press_and_release("Alt+F4")
         self.assertThat(self.dash.visible, Eventually(Equals(False)))
 
-    def test_dash_closes_on_spread(self):
-        """This test shows that when the spread is initiated, the dash closes."""
-        self.dash.ensure_visible()
-        self.addCleanup(self.keybinding, "spread/cancel")
-        self.keybinding("spread/start")
-        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
-        self.assertThat(self.dash.visible, Eventually(Equals(False)))
-
-    def test_dash_opens_when_in_spread(self):
-        """This test shows the dash opens when in spread mode."""
-        self.keybinding("spread/start")
-        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
-
-        self.dash.ensure_visible()
-        self.assertThat(self.dash.visible, Eventually(Equals(True)))
-
-    def test_command_lens_opens_when_in_spread(self):
-        """This test shows the command lens opens when in spread mode."""
-        self.keybinding("spread/start")
-        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
-
-        self.dash.reveal_command_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('commands.lens')))
-
-    def test_lens_opens_when_in_spread(self):
-        """This test shows that any lens opens when in spread mode."""
-        self.keybinding("spread/start")
-        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
-
-        self.dash.reveal_application_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('applications.lens')))
-
     def test_closes_mouse_down_outside(self):
         """Test that a mouse down outside of the dash closes the dash."""
 
@@ -139,6 +107,56 @@ class DashRevealTests(DashTestCase):
         self.mouse.click()
 
         self.assertProperty(char_win, is_active=True)
+
+class DashRevealWithSpreadTests(DashTestCase):
+    """Test the interaction of the Dash with the Spead/Scale
+
+    The Spread (or Scale) in Quantal is not activated if there is no active
+    apps. We use a place holder app so that it is activated as we require.
+
+    """
+    def setUp(self):
+        super(DashRevealWithSpreadTests, self).setUp()
+        self.start_placeholder_app()
+
+    def start_placeholder_app(self):
+        window_spec = {
+            "Title": "Placeholder application",
+        }
+        self.launch_test_window(window_spec)
+
+    def test_dash_closes_on_spread(self):
+        """This test shows that when the spread is initiated, the dash closes."""
+        self.dash.ensure_visible()
+        self.addCleanup(self.keybinding, "spread/cancel")
+        self.keybinding("spread/start")
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+        self.assertThat(self.dash.visible, Eventually(Equals(False)))
+
+    def test_dash_opens_when_in_spread(self):
+        """This test shows the dash opens when in spread mode."""
+        self.keybinding("spread/start")
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+
+        self.dash.ensure_visible()
+        self.assertThat(self.dash.visible, Eventually(Equals(True)))
+
+    def test_command_lens_opens_when_in_spread(self):
+        """This test shows the command lens opens when in spread mode."""
+        self.keybinding("spread/start")
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+
+        self.dash.reveal_command_lens()
+        self.assertThat(self.dash.active_lens, Eventually(Equals('commands.lens')))
+
+    def test_lens_opens_when_in_spread(self):
+        """This test shows that any lens opens when in spread mode."""
+        self.keybinding("spread/start")
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+
+        self.dash.reveal_application_lens()
+        self.assertThat(self.dash.active_lens, Eventually(Equals('applications.lens')))
+
 
 
 class DashSearchInputTests(DashTestCase):

@@ -524,7 +524,6 @@ TEST_F(TestLauncher, AddRequestSignal)
   EXPECT_TRUE(add_request);
 }
 
-
 }
 }
 

@@ -182,6 +182,14 @@ set(
   "Path to Google test srcs"
 )
 
+set(
+  GTEST_INCLUDE_DIR
+  "/usr/include/gtest"
+  CACHE
+  PATH
+  "Path to Google tests include"
+)
+
 find_path(GTEST_INCLUDE_DIR gtest/gtest.h)
 if (GTEST_INCLUDE_DIR)
   #FIXME - hardcoded is bad!
