@@ -70,7 +70,7 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(BamfApplication* app)
   tooltip_text = BamfName();
   icon_name = (icon ? icon.Str() : DEFAULT_ICON);
 
-  SetQuirk(Quirk::VISIBLE, bamf_view_user_visible(bamf_view));
+  SetQuirk(Quirk::VISIBLE, bamf_view_is_user_visible(bamf_view));
   SetQuirk(Quirk::ACTIVE, bamf_view_is_active(bamf_view));
   SetQuirk(Quirk::RUNNING, bamf_view_is_running(bamf_view));
 
@@ -245,7 +245,7 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   if (arg.source != ActionArg::SWITCHER)
   {
     auto bamf_view = glib::object_cast<BamfView>(_bamf_app);
-    user_visible = bamf_view_user_visible(bamf_view);
+    user_visible = bamf_view_is_user_visible(bamf_view);
 
     if (active)
     {
@@ -392,7 +392,7 @@ std::vector<Window> ApplicationLauncherIcon::GetWindows(WindowFilterMask filter,
 
     if ((monitor >= 0 && bamf_window_get_monitor(window) == monitor) || monitor < 0)
     {
-      if ((user_visible && bamf_view_user_visible(view)) || !user_visible)
+      if ((user_visible && bamf_view_is_user_visible(view)) || !user_visible)
       {
         guint32 xid = bamf_window_get_xid(window);
 
@@ -683,7 +683,7 @@ std::vector<Window> ApplicationLauncherIcon::GetFocusableWindows(ActionArg arg, 
 
     Window xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
     bool urgent = bamf_view_is_urgent(view);
-    bool user_visible = bamf_view_user_visible(view);
+    bool user_visible = bamf_view_is_user_visible(view);
 
     if (any_urgent)
     {
@@ -960,7 +960,7 @@ void ApplicationLauncherIcon::UnStick()
   BamfView* view = BAMF_VIEW(_bamf_app.RawPtr());
   bamf_view_set_sticky(view, false);
 
-  SetQuirk(Quirk::VISIBLE, bamf_view_user_visible(view));
+  SetQuirk(Quirk::VISIBLE, bamf_view_is_user_visible(view));
 
   if (bamf_view_is_closed(view))
     Remove();
