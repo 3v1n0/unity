@@ -605,7 +605,7 @@ void LensView::HideResultsMessage()
   }
 }
 
-void LensView::PerformSearch(std::string const& search_query, Lens::SearchFinishedCallback cb)
+void LensView::PerformSearch(std::string const& search_query, Lens::SearchFinishedCallback const& cb)
 {
   search_string_ = search_query;
   lens_->Search(search_query, cb);

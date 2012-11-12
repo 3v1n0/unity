@@ -69,8 +69,8 @@ public:
   Lens::Ptr GetLens(std::string const& lens_id) const;
   Lens::Ptr GetLensAtIndex(std::size_t index) const;
 
-  void GlobalSearch(std::string const& search_string, SearchFinishedCallback cb);
-  void Search(std::string const& search_string, SearchFinishedCallback cb);
+  void GlobalSearch(std::string const& search_string, SearchFinishedCallback const& cb);
+  void Search(std::string const& search_string, SearchFinishedCallback const& cb);
   void Activate(std::string const& uri);
   void Preview(std::string const& uri);
 

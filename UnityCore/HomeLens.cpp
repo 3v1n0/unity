@@ -1160,13 +1160,13 @@ Lens::Ptr HomeLens::GetLensAtIndex(std::size_t index) const
   return Lens::Ptr();
 }
 
-void HomeLens::GlobalSearch(std::string const& search_string, SearchFinishedCallback cb)
+void HomeLens::GlobalSearch(std::string const& search_string, SearchFinishedCallback const& cb)
 {
   LOG_WARN(logger) << "Global search not enabled for HomeLens class."
                    << " Ignoring query '" << search_string << "'";
 }
 
-void HomeLens::Search(std::string const& search_string, SearchFinishedCallback cb)
+void HomeLens::Search(std::string const& search_string, SearchFinishedCallback const& cb)
 {
   LOG_DEBUG(logger) << "Search '" << search_string << "'";
 

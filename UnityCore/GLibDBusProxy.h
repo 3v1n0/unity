@@ -51,13 +51,13 @@ public:
 
   void Call(std::string const& method_name,
             GVariant* parameters = nullptr,
-            ReplyCallback callback = nullptr,
+            ReplyCallback const& callback = nullptr,
             GCancellable *cancellable = nullptr,
             GDBusCallFlags flags = G_DBUS_CALL_FLAGS_NONE,
             int timeout_msec = -1);
   void CallBegin(std::string const& method_name,
                  GVariant* parameters,
-                 CallFinishedCallback callback,
+                 CallFinishedCallback const& callback,
                  GCancellable *cancellable = nullptr,
                  GDBusCallFlags flags = G_DBUS_CALL_FLAGS_NONE,
                  int timeout_msec = -1);

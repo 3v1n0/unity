@@ -61,16 +61,16 @@ public:
 
   void WaitForProxy(GCancellable* cancellable,
                     int timeout_msec,
-                    std::function<void(glib::Error const&)> callback);
+                    std::function<void(glib::Error const&)> const& callback);
   void CallNoError(string const& method_name,
                    GVariant* parameters,
-                   ReplyCallback callback,
+                   ReplyCallback const& callback,
                    GCancellable* cancellable,
                    GDBusCallFlags flags,
                    int timeout_msec);
   void Call(std::string const& method_name,
             GVariant* parameters,
-            CallFinishedCallback callback,
+            CallFinishedCallback const& callback,
             GCancellable *cancellable,
             GDBusCallFlags flags,
             int timeout_msec);
@@ -260,7 +260,7 @@ void DBusProxy::Impl::OnProxySignal(GDBusProxy* proxy,
 
 void DBusProxy::Impl::WaitForProxy(GCancellable* cancellable,
                                    int timeout_msec,
-                                   std::function<void(glib::Error const&)> callback)
+                                   std::function<void(glib::Error const&)> const& callback)
 {
   if (!proxy_)
   {
@@ -268,7 +268,7 @@ void DBusProxy::Impl::WaitForProxy(GCancellable* cancellable,
     auto canc = glib::Object<GCancellable>(cancellable, glib::AddRef());
 
     // add a timeout
-    auto timeout = glib::Source::Ptr(new glib::Timeout(timeout_msec < 0 ? 30000 : timeout_msec, [con, canc, callback] ()
+    auto timeout = std::make_shared<glib::Timeout>(timeout_msec < 0 ? 30000 : timeout_msec, [con, canc, callback] ()
     {
       if (!g_cancellable_is_cancelled(canc))
       {
@@ -280,11 +280,12 @@ void DBusProxy::Impl::WaitForProxy(GCancellable* cancellable,
       }
       con->disconnect();
       return false;
-    }));
+    });
     // wait for the signal
     *con = proxy_acquired.connect([con, canc, timeout, callback] ()
     {
       if (!g_cancellable_is_cancelled(canc)) callback(glib::Error());
+
       timeout->Remove();
       con->disconnect();
     });
@@ -297,7 +298,7 @@ void DBusProxy::Impl::WaitForProxy(GCancellable* cancellable,
 
 void DBusProxy::Impl::CallNoError(string const& method_name,
                                   GVariant* parameters,
-                                  ReplyCallback callback,
+                                  ReplyCallback const& callback,
                                   GCancellable* cancellable,
                                   GDBusCallFlags flags,
                                   int timeout_msec)
@@ -319,7 +320,7 @@ void DBusProxy::Impl::CallNoError(string const& method_name,
 
 void DBusProxy::Impl::Call(string const& method_name,
                            GVariant* parameters,
-                           CallFinishedCallback callback,
+                           CallFinishedCallback const& callback,
                            GCancellable* cancellable,
                            GDBusCallFlags flags,
                            int timeout_msec)
@@ -337,7 +338,9 @@ void DBusProxy::Impl::Call(string const& method_name,
                             << ": " << err;
       }
       else
+      {
         Call(method_name, sinked_parameters, callback, canc, flags, timeout_msec);
+      }
     });
     return;
   }
@@ -401,7 +404,7 @@ DBusProxy::~DBusProxy()
 
 void DBusProxy::Call(string const& method_name,
                      GVariant* parameters,
-                     ReplyCallback callback,
+                     ReplyCallback const& callback,
                      GCancellable* cancellable,
                      GDBusCallFlags flags,
                      int timeout_msec)
@@ -412,7 +415,7 @@ void DBusProxy::Call(string const& method_name,
 
 void DBusProxy::CallBegin(std::string const& method_name,
                           GVariant* parameters,
-                          CallFinishedCallback callback,
+                          CallFinishedCallback const& callback,
                           GCancellable *cancellable,
                           GDBusCallFlags flags,
                           int timeout_msec)

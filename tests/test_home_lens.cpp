@@ -129,7 +129,8 @@ public:
     g_free(row_buf);
   }
 
-  void GlobalSearch(string const& search_string, SearchFinishedCallback cb)
+  void GlobalSearch(string const& search_string,
+                    SearchFinishedCallback const& cb)
   {
     /* Dispatch search async, because that's what it'd normally do */
     source_manager_.Add(new glib::Idle([this, search_string, cb] ()
@@ -140,7 +141,7 @@ public:
     }));
   }
 
-  void Search(string const& search_string, SearchFinishedCallback cb)
+  void Search(string const& search_string, SearchFinishedCallback const& cb)
   {
     /* Dispatch search async, because that's what it'd normally do */
     source_manager_.Add(new glib::Idle([search_string, cb] ()

@@ -64,10 +64,11 @@ public:
 
   unsigned long long ExtractModelSeqnum(GVariant *parameters);
   void WaitForModelUpdate(glib::Variant const& response_variant,
-                          Results::Ptr model,
-                          std::function<void(Hints const&)> callback);
+                          Results::Ptr const& model,
+                          std::function<void(Hints const&)> const& callback);
   void SearchCallFinished(GVariant* response, glib::Error const& error,
-                          Results::Ptr model, SearchFinishedCallback cb);
+                          Results::Ptr const& model,
+                          SearchFinishedCallback const& cb);
 
   void OnChanged(GVariant* parameters);
   void UpdateProperties(bool search_in_global,
@@ -241,8 +242,8 @@ void Lens::Impl::OnProxyDisconnected()
 }
 
 void Lens::Impl::WaitForModelUpdate(glib::Variant const& response_variant,
-                                    Results::Ptr model,
-                                    std::function<void(Hints const&)> callback)
+                                    Results::Ptr const& model,
+                                    std::function<void(Hints const&)> const& callback)
 {
   // a bit of pointer craziness because using copy constructors screws us up
   auto con = std::make_shared<sigc::connection>();
@@ -422,7 +423,7 @@ void Lens::Impl::OnViewTypeChanged(ViewType view_type)
     proxy_->Call("SetViewType", g_variant_new("(u)", view_type));
 }
 
-void Lens::Impl::SearchCallFinished(GVariant* response, glib::Error const& error, Results::Ptr model, SearchFinishedCallback cb)
+void Lens::Impl::SearchCallFinished(GVariant* response, glib::Error const& error, Results::Ptr const& model, SearchFinishedCallback const& cb)
 {
   if (!error)
   {
@@ -859,12 +860,14 @@ Lens::~Lens()
   delete pimpl;
 }
 
-void Lens::GlobalSearch(std::string const& search_string, SearchFinishedCallback cb)
+void Lens::GlobalSearch(std::string const& search_string,
+                        SearchFinishedCallback const& cb)
 {
   pimpl->GlobalSearch(search_string, cb);
 }
 
-void Lens::Search(std::string const& search_string, SearchFinishedCallback cb)
+void Lens::Search(std::string const& search_string,
+                  SearchFinishedCallback const& cb)
 {
   pimpl->Search(search_string, cb);
 }
