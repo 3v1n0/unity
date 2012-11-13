@@ -161,6 +161,7 @@ void DashView::ClosePreview()
 
   preview_navigation_mode_ = previews::Navigation::NONE;
   preview_displaying_ = false;
+  active_lens_view_->SetVisible(true);
 
   // re-focus dash view component.
   nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
@@ -261,9 +262,10 @@ void DashView::BuildPreview(Preview::Ptr model)
     AddChild(preview_container_.GetPointer());
     preview_container_->SetParentObject(this);
     preview_container_->Preview(model, previews::Navigation::NONE); // no swipe left or right
-    
+
     preview_container_->SetGeometry(layout_->GetGeometry());
     preview_displaying_ = true;
+    active_lens_view_->SetVisible(false);
  
     // connect to nav left/right signals to request nav left/right movement.
     preview_container_->navigate_left.connect([&] () {
@@ -970,6 +972,8 @@ void DashView::OnLensBarActivated(std::string const& id)
     return;
   }
 
+  lens_views_[id]->SetVisible(true);
+  active_lens_view_->SetVisible(false);
   LensView* view = active_lens_view_ = lens_views_[id];
   view->JumpToTop();
 

@@ -209,6 +209,7 @@ if (GTEST_SRC_DIR AND
                  test_previews_movie.cpp
                  test_previews_music.cpp
                  test_previews_social.cpp
+                 test_overlay_scrollbar.cpp
                  test_quicklist_menu_item.cpp
                  test_quicklist_view.cpp
                  test_resultviewgrid.cpp
