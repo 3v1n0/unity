@@ -398,11 +398,11 @@ void Controller::PrevDetail()
   }
 }
 
-LayoutWindow::List Controller::ExternalRenderTargets()
+LayoutWindow::Vector Controller::ExternalRenderTargets()
 {
   if (!view_)
   {
-    LayoutWindow::List result;
+    LayoutWindow::Vector result;
     return result;
   }
   return view_->ExternalTargets();

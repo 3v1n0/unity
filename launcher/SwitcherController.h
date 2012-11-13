@@ -90,7 +90,7 @@ public:
 
   SwitcherView * GetView ();
 
-  ui::LayoutWindow::List ExternalRenderTargets ();
+  ui::LayoutWindow::Vector ExternalRenderTargets ();
 
   guint GetSwitcherInputWindowId() const;
 

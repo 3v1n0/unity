@@ -799,7 +799,7 @@ void UnityScreen::paintDisplay()
 
   if (switcher_controller_->Visible())
   {
-    LayoutWindow::List const& targets = switcher_controller_->ExternalRenderTargets();
+    LayoutWindow::Vector const& targets = switcher_controller_->ExternalRenderTargets();
 
     for (LayoutWindow::Ptr const& target : targets)
     {

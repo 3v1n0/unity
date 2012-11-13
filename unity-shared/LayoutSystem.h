@@ -32,7 +32,7 @@ namespace ui {
 struct LayoutWindow
 {
   typedef std::shared_ptr<LayoutWindow> Ptr;
-  typedef std::vector<LayoutWindow::Ptr> List;
+  typedef std::vector<LayoutWindow::Ptr> Vector;
 
   LayoutWindow(Window xid);
 
@@ -55,17 +55,17 @@ public:
 
   LayoutSystem();
 
-  void LayoutWindows(LayoutWindow::List const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
+  void LayoutWindows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
 
 protected:
-  void LayoutGridWindows(LayoutWindow::List const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
+  void LayoutGridWindows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
 
-  nux::Geometry LayoutRow(LayoutWindow::List const& row, nux::Geometry const& row_bounds);
-  nux::Geometry CompressAndPadRow(LayoutWindow::List const& windows, nux::Geometry const& max_bounds);
+  nux::Geometry LayoutRow(LayoutWindow::Vector const& row, nux::Geometry const& row_bounds);
+  nux::Geometry CompressAndPadRow(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds);
 
-  std::vector<LayoutWindow::List> GetRows(LayoutWindow::List const& windows, nux::Geometry const& max_bounds);
+  std::vector<LayoutWindow::Vector> GetRows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds);
 
-  nux::Size GridSizeForWindows(LayoutWindow::List const& windows, nux::Geometry const& max_bounds);
+  nux::Size GridSizeForWindows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds);
 
   nux::Geometry ScaleBoxIntoBox(nux::Geometry const& bounds, nux::Geometry const& box);
 };

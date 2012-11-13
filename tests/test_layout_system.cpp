@@ -118,7 +118,7 @@ struct TestLayoutSystem : testing::Test
   }
 
   LayoutSystem ls;
-  LayoutWindow::List lwindows;
+  LayoutWindow::Vector lwindows;
 };
 
 TEST_F(TestLayoutSystem, Initialization)

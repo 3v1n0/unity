@@ -50,7 +50,7 @@ public:
 
   SwitcherView();
 
-  ui::LayoutWindow::List ExternalTargets();
+  ui::LayoutWindow::Vector ExternalTargets();
 
   void SetModel(SwitcherModel::Ptr model);
   SwitcherModel::Ptr GetModel();
@@ -124,7 +124,7 @@ private:
   nux::Geometry last_background_;
   nux::Geometry saved_background_;
 
-  ui::LayoutWindow::List render_targets_;
+  ui::LayoutWindow::Vector render_targets_;
 
   timespec current_;
   timespec save_time_;
