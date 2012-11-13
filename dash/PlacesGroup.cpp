@@ -34,12 +34,6 @@
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 
-
-namespace
-{
-nux::logging::Logger logger("unity.dash.placesgroup");
-}
-
 #include "ResultView.h"
 #include "ResultViewGrid.h"
 #include "ResultRendererTile.h"
@@ -48,6 +42,7 @@ nux::logging::Logger logger("unity.dash.placesgroup");
 #include "FilterBasicButton.h"
 
 
+DECLARE_LOGGER(logger, "unity.dash.placesgroup");
 namespace unity
 {
 namespace
@@ -114,6 +109,7 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   : nux::View(NUX_TRACKER_LOCATION),
     _style(style),
     _child_view(nullptr),
+    _using_nofilters_background(true),
     _is_expanded(false),
     _n_visible_items_in_unexpand_mode(0),
     _n_total_items(0),
@@ -148,7 +144,7 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   _group_layout->AddLayout(new nux::SpaceLayout(top_space, top_space, top_space, top_space), 0);
 
   _header_view = new HeaderView(NUX_TRACKER_LOCATION);
-  _group_layout->AddView(_header_view, 0, nux::MINOR_POSITION_TOP, nux::MINOR_SIZE_FULL);
+  _group_layout->AddView(_header_view, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
   _header_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   _header_layout->SetLeftAndRightPadding(_style.GetCategoryHeaderLeftPadding(), 0);

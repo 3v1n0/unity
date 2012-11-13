@@ -51,11 +51,9 @@ const int PANGO_ENTRY_FONT_SIZE = 14;
 
 }
 
+DECLARE_LOGGER(logger, "unity.dash.textinput");
 namespace
 {
-
-nux::logging::Logger logger("unity");
-
 class ExpanderView : public nux::View
 {
 public:

@@ -23,9 +23,9 @@
 #include <NuxCore/Logger.h>
 #include <UnityCore/Variant.h>
 
+DECLARE_LOGGER(logger, "unity.panel.tray");
 namespace
 {
-nux::logging::Logger logger("unity.panel");
 const std::string SETTINGS_NAME = "com.canonical.Unity.Panel";
 const int PADDING = 3;
 }

@@ -35,14 +35,13 @@ namespace dash
 {
 namespace previews
 {
+DECLARE_LOGGER(logger, "unity.dash.previews.style");
 namespace
 {
 Style* style_instance = nullptr;
 
 const int preview_width = 770;
 const int preview_height = 380;
-
-nux::logging::Logger logger("unity.dash.previews.style");
 
 typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 

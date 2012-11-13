@@ -32,10 +32,7 @@
 #include "unity-shared/UnitySettings.h"
 #include <NuxCore/Logger.h>
 
-namespace
-{
-  nux::logging::Logger logger("unity.tests.Hud");
-}
+DECLARE_LOGGER(logger, "unity.tests.hud");
 
 class TestRunner
 {
@@ -69,7 +66,7 @@ void TestRunner::Init ()
 
   hud_view_ = new unity::hud::View();
 
-  layout->AddView (hud_view_, 1, nux::MINOR_POSITION_TOP);
+  layout->AddView (hud_view_, 1, nux::MINOR_POSITION_START);
   nux::GetWindowCompositor().SetKeyFocusArea(hud_view_->default_focus());
 
   nux::GetWindowThread()->SetLayout (layout);

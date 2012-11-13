@@ -12,6 +12,7 @@ from autopilot.matchers import Eventually
 from testtools.matchers import Equals, GreaterThan
 from time import sleep
 import urllib2
+import gettext
 
 from unity.tests import UnityTestCase
 
@@ -25,6 +26,7 @@ class ShoppingLensTests(UnityTestCase):
             urllib2.urlopen("http://www.google.com", timeout=2)
         except urllib2.URLError, e:
             self.skip("Skipping test, no internet connection")
+        gettext.install("unity-lens-shopping")
 
     def tearDown(self):
         self.dash.ensure_hidden()
@@ -35,7 +37,7 @@ class ShoppingLensTests(UnityTestCase):
         self.dash.ensure_visible()
         lens = self.dash.get_current_lens()
 
-        results_category = lens.get_category_by_name("More suggestions")
+        results_category = lens.get_category_by_name(_("More suggestions"))
         refresh_results_fn = lambda: len(results_category.get_results())
         self.assertThat(refresh_results_fn, Eventually(Equals(0)))
 
@@ -45,7 +47,7 @@ class ShoppingLensTests(UnityTestCase):
         lens = self.dash.get_current_lens()
 
         self.keyboard.type("playstation")
-        results_category = lens.get_category_by_name("More suggestions")
+        results_category = lens.get_category_by_name(_("More suggestions"))
 
         refresh_results_fn = lambda: len(results_category.get_results())
         self.assertThat(refresh_results_fn, Eventually(GreaterThan(1)))
@@ -56,7 +58,7 @@ class ShoppingLensTests(UnityTestCase):
         lens = self.dash.get_current_lens()
 
         self.keyboard.type("Text Editor")
-        results_category = lens.get_category_by_name("More suggestions")
+        results_category = lens.get_category_by_name(_("More suggestions"))
 
         refresh_results_fn = lambda: len(results_category.get_results())
         self.assertThat(refresh_results_fn, Eventually(GreaterThan(1)))
@@ -67,7 +69,7 @@ class ShoppingLensTests(UnityTestCase):
         lens = self.dash.get_current_lens()
 
         self.keyboard.type("megadeth")
-        results_category = lens.get_category_by_name("More suggestions")
+        results_category = lens.get_category_by_name(_("More suggestions"))
 
         refresh_results_fn = lambda: len(results_category.get_results())
         self.assertThat(refresh_results_fn, Eventually(GreaterThan(1)))
@@ -77,8 +79,8 @@ class ShoppingLensTests(UnityTestCase):
         self.dash.ensure_visible()
         lens = self.dash.get_current_lens()
 
-        self.keyboard.type("a")
-        results_category = lens.get_category_by_name("More suggestions")
+        self.keyboard.type("playstation")
+        results_category = lens.get_category_by_name(_("More suggestions"))
 
         refresh_results_fn = lambda: len(results_category.get_results())
         self.assertThat(refresh_results_fn, Eventually(GreaterThan(1)))
@@ -95,8 +97,8 @@ class ShoppingLensTests(UnityTestCase):
         self.dash.ensure_visible()
         lens = self.dash.get_current_lens()
 
-        self.keyboard.type("a")
-        results_category = lens.get_category_by_name("More suggestions")
+        self.keyboard.type("playstation")
+        results_category = lens.get_category_by_name(_("More suggestions"))
 
         refresh_results_fn = lambda: len(results_category.get_results())
         self.assertThat(refresh_results_fn, Eventually(GreaterThan(2)))

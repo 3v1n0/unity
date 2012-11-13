@@ -28,10 +28,10 @@
 #include "FilterMultiRangeWidget.h"
 #include "FilterRatingsWidget.h"
 
+DECLARE_LOGGER(logger, "unity.dash.filter.factory");
+
 namespace
 {
-  nux::logging::Logger logger("unity.dash.filterfactory");
-
   const std::string renderer_type_ratings = "filter-ratings";
   const std::string renderer_type_multirange = "filter-multirange";
   const std::string renderer_type_check_options = "filter-checkoption";

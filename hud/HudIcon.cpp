@@ -22,15 +22,11 @@
 #include "NuxCore/Logger.h"
 #include "config.h"
 
-namespace
-{
-nux::logging::Logger logger("unity.hud.icon");
-}
-
 namespace unity
 {
 namespace hud
 {
+DECLARE_LOGGER(logger, "unity.hud.icon");
 
 Icon::Icon()
   : IconTexture("", 0, true)

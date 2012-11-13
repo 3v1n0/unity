@@ -24,17 +24,10 @@
 
 #include <sstream>
 
-#include <pango/pango.h>
 #include <pango/pangocairo.h>
-#include <gdk/gdk.h>
 #include <gtk/gtk.h>
 
-#include <UnityCore/GLibWrapper.h>
-
 #include "unity-shared/CairoTexture.h"
-#include "unity-shared/DashStyle.h"
-#include "unity-shared/IconLoader.h"
-#include "unity-shared/IconTexture.h"
 #include "unity-shared/TextureCache.h"
 
 
@@ -42,27 +35,14 @@ namespace unity
 {
 namespace
 {
-//~ nux::logging::Logger logger("unity.dash.ResultRendererHorizontalTile");
 const int   CARD_VIEW_PADDING              = 4;   // pixels
 const int   CARD_VIEW_ICON_SIZE            = 64;  // pixels
 const int   CARD_VIEW_ICON_TEXT_GAP        = 10;  // pixels
-//const int   CARD_VIEW_GAP_VERT             = 24;  // pixels
-//const int   CARD_VIEW_GAP_HORIZ            = 25;  // pixels
 const int   CARD_VIEW_WIDTH                = 277; // pixels
 const int   CARD_VIEW_HEIGHT               = 74;  // pixels
 const int   CARD_VIEW_HIGHLIGHT_CORNER_RADIUS = 2; // pixels
-//const char  CARD_VIEW_ICON_OUTLINE_COLOR   = "#000000";
-//const float CARD_VIEW_ICON_OUTLINE_OPACITY = 1.0; //float
 const int   CARD_VIEW_ICON_OUTLINE_WIDTH   = 1;   // pixels
 const int CARD_VIEW_TEXT_LINE_SPACING    = 0; // points
-//const char  CARD_VIEW_TEXT_TITLE_COLOR     = "#ffffff";
-//const float CARD_VIEW_TEXT_TITLE_OPACITY   = 1.0; // float
-//const float CARD_VIEW_TEXT_TITLE_SIZE      = 13.0; // points
-//const char  CARD_VIEW_TEXT_TITLE_WEIGHT    = "bold";
-//const char  CARD_VIEW_TEXT_BODY_COLOR      = "#ffffff";
-//const float CARD_VIEW_TEXT_BODY_OPACITY    = 1.0; // float
-//const float CARD_VIEW_TEXT_BODY_SIZE       = 13.0; // points
-//const int   CARD_VIEW_TEXT_BODY_WEIGHT     = "regular";
 }
 
 namespace dash
@@ -89,15 +69,11 @@ ResultRendererHorizontalTile::ResultRendererHorizontalTile(NUX_FILE_LINE_DECL)
 
 }
 
-ResultRendererHorizontalTile::~ResultRendererHorizontalTile()
-{
-}
-
 void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
-                                Result& row,
-                                ResultRendererState state,
-                                nux::Geometry& geometry,
-                                int x_offset, int y_offset)
+                                          Result& row,
+                                          ResultRendererState state,
+                                          nux::Geometry const& geometry,
+                                          int x_offset, int y_offset)
 {
   TextureContainer* container = row.renderer<TextureContainer*>();
   if (container == nullptr)

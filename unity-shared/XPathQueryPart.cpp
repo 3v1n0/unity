@@ -31,10 +31,7 @@ namespace unity
 
 namespace debug
 {
-namespace
-{
-  nux::logging::Logger logger("unity.debug.DebugDBusInterface");
-}
+DECLARE_LOGGER(logger, "unity.debug.xpath");
 
 // Stores a part of an XPath query.
 XPathQueryPart::XPathQueryPart(std::string const& query_part)
