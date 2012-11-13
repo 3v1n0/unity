@@ -9,6 +9,9 @@ unity (6.10.0-0ubuntu3) UNRELEASED; urgency=low
     - adding libgtest-dev and google-mock build-dep now that there are in main
       (LP: #1076763)
 
+  [ bschaefer ]
+  * Ported to nux 4.0
+
  -- Michael Terry <mterry@ubuntu.com>  Tue, 06 Nov 2012 10:52:43 -0500
 
 unity (6.10.0-0ubuntu2) quantal-proposed; urgency=low
