@@ -147,22 +147,36 @@ if (GTEST_SRC_DIR AND
        ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-impl-factory.cpp
        ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-layout.cpp
        ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-texture.cpp
-)
+  )
 
-if (ENABLE_X_SUPPORT)
-  set (GTEST_XLESS_SOURCES
-    test_hud_private.cpp
-    test_pointer_barrier.cpp
-    test_shortcut_model.cpp
-    test_shortcut_private.cpp
-    ${LAUNCHER_SOURCES}
+  set (GTEST_XLESS_LIBS
+      gtest
+      unity-shared
+      launcher-lib
+      ${GMOCK_LIB}
+      ${GMOCK_MAIN_LIB}
+      ${LIBS}
+  )
+
+  if (ENABLE_X_SUPPORT)
+    set (GTEST_XLESS_SOURCES
+      test_hud_private.cpp
+      test_pointer_barrier.cpp
+      test_shortcut_model.cpp
+      test_shortcut_private.cpp
+      ${LAUNCHER_SOURCES}
+      )
+    set (GTEST_XLESS_LIBS
+      ${GTEST_XLESS_LIBS}
+      shortcuts-lib
+      hud-lib
     )
-endif ()
+  endif ()
 
   add_executable(test-gtest-xless ${GTEST_XLESS_SOURCES})
 
+  target_link_libraries(test-gtest-xless ${GTEST_XLESS_LIBS})
 
-  target_link_libraries(test-gtest-xless gtest unity-shared ${GMOCK_LIB} ${GMOCK_MAIN_LIB} ${LIBS} launcher-lib)
   add_test(UnityGTestXless test-gtest-xless)
   add_dependencies(test-gtest-xless unity-core-${UNITY_API_VERSION} gtest)
 
