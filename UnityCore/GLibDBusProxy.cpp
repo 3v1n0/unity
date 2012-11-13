@@ -325,10 +325,12 @@ void DBusProxy::Impl::Call(string const& method_name,
                            GDBusCallFlags flags,
                            int timeout_msec)
 {
+  GCancellable* target_canc = cancellable != NULL ? cancellable : cancellable_;
+
   if (!proxy_)
   {
     glib::Variant sinked_parameters(parameters);
-    glib::Object<GCancellable>canc(cancellable, glib::AddRef());
+    glib::Object<GCancellable>canc(target_canc, glib::AddRef());
     WaitForProxy(canc, timeout_msec, [this, method_name, sinked_parameters, callback, canc, flags, timeout_msec] (glib::Error const& err)
     {
       if (err)
@@ -354,7 +356,7 @@ void DBusProxy::Impl::Call(string const& method_name,
                     parameters,
                     flags,
                     timeout_msec,
-                    cancellable != NULL ? cancellable : cancellable_,
+                    target_canc,
                     DBusProxy::Impl::OnCallCallback,
                     data);
 }

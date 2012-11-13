@@ -28,6 +28,21 @@ public:
   glib::DBusProxy proxy;
 };
 
+class TestGDBusProxyInvalidService: public ::testing::Test
+{
+public:
+  TestGDBusProxyInvalidService()
+    : got_result_return(false)
+    , proxy("com.canonical.Unity.Test.NonExistant",
+            "/com/canonical/gdbus_wrapper",
+            "com.canonical.gdbus_wrapper")
+  {
+  }
+
+  bool got_result_return;
+  glib::DBusProxy proxy;
+};
+
 TEST_F(TestGDBusProxy, TestConstruction)
 {
   EXPECT_FALSE(proxy.IsConnected());
@@ -96,11 +111,63 @@ TEST_F(TestGDBusProxy, TestCancelling)
   glib::Object<GCancellable> cancellable(g_cancellable_new());
   // but this has to work eitherway
   proxy.Call("TestMethod", g_variant_new("(s)", "TestStringTestString"),
-               method_connection, cancellable);
+             method_connection, cancellable);
 
   // this could mostly cause the next test to fail
   g_cancellable_cancel(cancellable);
   EXPECT_FALSE(got_result_return);
+}
+
+TEST_F(TestGDBusProxy, TestAcquiring)
+{
+  const int NUM_REQUESTS = 10;
+  int completed = 0;
+  std::string call_return;
+  // method callback
+  auto method_connection = [&](GVariant* variant, glib::Error const& err)
+  {
+    if (variant != nullptr)
+    {
+      call_return = g_variant_get_string(g_variant_get_child_value(variant, 0), NULL);
+    }
+
+    if (++completed >= NUM_REQUESTS) got_result_return = true;
+  };
+
+  EXPECT_FALSE(proxy.IsConnected()); // we shouldn't be connected yet
+  for (int i = 0; i < NUM_REQUESTS; i++)
+  {
+    proxy.CallBegin("TestMethod", g_variant_new("(s)", "TestStringTestString"),
+                    method_connection, nullptr);
+    Utils::WaitForTimeoutMSec(150);
+  }
+  Utils::WaitUntil(got_result_return);
+}
+
+TEST_F(TestGDBusProxyInvalidService, TestTimeouting)
+{
+  std::string call_return;
+  // method callback
+  auto method_connection = [&](GVariant* variant, glib::Error const& err)
+  {
+    if (variant != nullptr)
+    {
+      call_return = g_variant_get_string(g_variant_get_child_value(variant, 0), NULL);
+    }
+
+    got_result_return = true;
+  };
+
+  EXPECT_FALSE(proxy.IsConnected()); // we shouldn't be connected yet
+
+  proxy.CallBegin("TestMethod", g_variant_new("(s)", "TestStringTestString"),
+                  method_connection, nullptr, (GDBusCallFlags) 0, 100);
+  // want to test timeout, if non-blocking sleep was used, the proxy would
+  // be acquired (with a dbus error)
+  g_usleep(110000);
+
+  Utils::WaitUntil(got_result_return);
+  EXPECT_EQ(call_return, "");
 }
 
 TEST_F(TestGDBusProxy, TestMethodCall)
@@ -120,7 +187,7 @@ TEST_F(TestGDBusProxy, TestMethodCall)
   EXPECT_FALSE(proxy.IsConnected()); // we shouldn't be connected yet
   // but this has to work eitherway
   proxy.Call("TestMethod", g_variant_new("(s)", "TestStringTestString"),
-               method_connection);
+             method_connection);
 
   Utils::WaitUntil(got_result_return);
  
