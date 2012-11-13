@@ -2791,9 +2791,8 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
   for (auto const& launcher : launchers)
   {
     nux::Geometry geo = launcher->GetAbsoluteGeometry();
-    auto const& launcher_hide_mode = launcher->options()->hide_mode;
 
-    if (launcher->Hidden() || launcher_hide_mode == LAUNCHER_HIDE_NEVER || launcher_hide_mode == LAUNCHER_HIDE_AUTOHIDE)
+    if (launcher->options()->hide_mode == LAUNCHER_HIDE_AUTOHIDE && launcher->Hidden())
       continue;
 
     if (geo.IsInside(result))
@@ -2805,7 +2804,7 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
     }
   }
 
-  for (nux::Geometry &geo : us->panel_controller_->GetGeometries ())
+  for (nux::Geometry const& geo : us->panel_controller_->GetGeometries())
   {
     if (geo.IsInside(result))
     {
