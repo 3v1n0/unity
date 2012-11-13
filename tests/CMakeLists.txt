@@ -204,6 +204,8 @@ if (ENABLE_X_SUPPORT)
                  test_im_text_entry.cpp
                  test_launcher_controller.cpp
                  test_launcher_drag_window.cpp
+                 test_launcher_hide_machine.cpp
+                 test_launcher_hover_machine.cpp
                  test_launcher_icon.cpp
                  test_keyboard_util.cpp
                  test_panel_style.cpp

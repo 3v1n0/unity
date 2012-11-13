@@ -35,11 +35,7 @@ namespace unity
 {
 namespace dash
 {
-
-namespace
-{
-  nux::logging::Logger logger("unity.dash.preview");
-}
+DECLARE_LOGGER(logger, "unity.dash.preview");
 
 Preview::Ptr Preview::PreviewForProtocolObject(glib::Object<GObject> const& proto_obj)
 {

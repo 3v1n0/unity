@@ -21,11 +21,7 @@
 
 namespace unity
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.screen");
-}
+DECLARE_LOGGER(logger, "unity.screen");
 
 UScreen* UScreen::default_screen_ = nullptr;
 

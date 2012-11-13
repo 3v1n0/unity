@@ -36,11 +36,10 @@ namespace dash
 {
 namespace previews
 {
+DECLARE_LOGGER(logger, "unity.dash.previews.coverart");
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.previews.coverart");
-
 const int ICON_SIZE = 256;
 const int IMAGE_TIMEOUT = 30;
 }

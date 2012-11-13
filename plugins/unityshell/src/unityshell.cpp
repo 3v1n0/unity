@@ -80,11 +80,9 @@ using ui::LayoutWindow;
 using ui::LayoutWindowList;
 using util::Timer;
 
+DECLARE_LOGGER(logger, "unity.shell.compiz");
 namespace
 {
-
-nux::logging::Logger logger("unity.shell");
-
 UnityScreen* uScreen = 0;
 
 void reset_glib_logging();
@@ -1311,6 +1309,8 @@ void UnityScreen::preparePaint(int ms)
   didShellRepaint = false;
   panelShadowPainted = CompRegion();
   firstWindowAboveShell = NULL;
+
+  compizDamageNux(cScreen->currentDamage());
 }
 
 void UnityScreen::donePaint()

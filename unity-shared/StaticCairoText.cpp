@@ -230,19 +230,19 @@ long StaticCairoText::PostLayoutManagement(long layoutResult)
 
   int old_width = pimpl->pre_layout_size_.width;
   if (old_width < geo.width)
-    result |= eLargerWidth;
+    result |= SIZE_LARGER_WIDTH;
   else if (old_width > geo.width)
-    result |= eSmallerWidth;
+    result |= SIZE_SMALLER_WIDTH;
   else
-    result |= eCompliantWidth;
+    result |= SIZE_EQUAL_WIDTH;
 
   int old_height = pimpl->pre_layout_size_.height;
   if (old_height < geo.height)
-    result |= eLargerHeight;
+    result |= SIZE_LARGER_HEIGHT;
   else if (old_height > geo.height)
-    result |= eSmallerHeight;
+    result |= SIZE_SMALLER_HEIGHT;
   else
-    result |= eCompliantHeight;
+    result |= SIZE_EQUAL_HEIGHT;
 
   return result;
 }

@@ -25,10 +25,7 @@
 #include <NuxCore/Logger.h>
 #include "unityshell.h"
 
-namespace
-{
-  nux::logging::Logger logger("unity.gestural_window_switcher");
-}
+DECLARE_LOGGER(logger, "unity.gesture.switcher");
 
 using namespace nux;
 using namespace unity;

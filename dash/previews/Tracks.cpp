@@ -35,11 +35,7 @@ namespace dash
 {
 namespace previews
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.dash.previews.tracks");
-}
+DECLARE_LOGGER(logger, "unity.dash.preview.music.tracks");
 
 NUX_IMPLEMENT_OBJECT_TYPE(Tracks);
 
