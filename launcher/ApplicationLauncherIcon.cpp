@@ -940,6 +940,13 @@ void ApplicationLauncherIcon::Quit()
   g_list_free(children);
 }
 
+void ApplicationLauncherIcon::AboutToRemove()
+{
+  UnStick();
+  Quit();
+}
+
+
 void ApplicationLauncherIcon::Stick(bool save)
 {
   if (IsSticky())

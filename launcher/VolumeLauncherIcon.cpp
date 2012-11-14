@@ -303,6 +303,14 @@ VolumeLauncherIcon::VolumeLauncherIcon(Volume::Ptr const& volume,
 VolumeLauncherIcon::~VolumeLauncherIcon()
 {}
 
+void VolumeLauncherIcon::AboutToRemove()
+{
+  if (CanEject())
+    EjectAndShowNotification();
+  else if (CanStop())
+    StopDrive();
+}
+
 bool VolumeLauncherIcon::CanEject() const
 {
   return pimpl_->CanEject();

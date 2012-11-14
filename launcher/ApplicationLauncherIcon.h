@@ -53,6 +53,8 @@ public:
   bool IsUrgent() const;
 
   virtual void Quit();
+  virtual void AboutToRemove();
+
   virtual void Stick(bool save = true);
   virtual void UnStick();
 
