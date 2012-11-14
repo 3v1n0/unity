@@ -25,11 +25,7 @@ namespace unity
 {
 namespace dash
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.dash.checkoptionfilter");
-}
+DECLARE_LOGGER(logger, "unity.dash.filter.checkoption");
 
 CheckOptionFilter::CheckOptionFilter(DeeModel* model, DeeModelIter* iter)
   : Filter(model, iter)

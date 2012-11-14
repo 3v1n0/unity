@@ -37,7 +37,6 @@ namespace dash
     typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
     BaseTexturePtr text;
     BaseTexturePtr icon;
-    BaseTexturePtr blurred_icon;
     BaseTexturePtr prelight;
     int slot_handle;
 

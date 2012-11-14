@@ -41,10 +41,9 @@ namespace unity
 {
 namespace dash
 {
+DECLARE_LOGGER(logger, "unity.dash.view");
 namespace
 {
-
-nux::logging::Logger logger("unity.dash.view");
 previews::Style preview_style;
 }
 
@@ -383,7 +382,7 @@ void DashView::SetupViews()
 
   content_layout_ = new DashLayout(NUX_TRACKER_LOCATION);
   content_layout_->SetTopAndBottomPadding(style.GetDashViewTopPadding(), 0);
-  layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+  layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
   search_bar_layout_ = new nux::HLayout();
   search_bar_layout_->SetLeftAndRightPadding(style.GetSearchBarLeftPadding(), 0);
@@ -401,7 +400,7 @@ void DashView::SetupViews()
   content_layout_->SetSpecialArea(search_bar_->show_filters());
 
   lenses_layout_ = new nux::VLayout();
-  content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
+  content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_START);
 
   home_view_ = new LensView(home_lens_, nullptr);
   home_view_->uri_activated.connect(sigc::mem_fun(this, &DashView::OnUriActivated));

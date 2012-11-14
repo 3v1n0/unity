@@ -22,11 +22,7 @@
 
 namespace unity
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.ubus");
-}
+DECLARE_LOGGER(logger, "unity.ubus");
 
 UBusServer::UBusServer()
   : last_id_(0)

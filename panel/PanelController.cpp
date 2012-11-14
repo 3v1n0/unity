@@ -32,13 +32,9 @@ namespace unity
 {
 namespace panel
 {
+DECLARE_LOGGER(logger, "unity.panel.controller");
 
-const char window_title[] = "unity-panel";
-
-namespace
-{
-nux::logging::Logger logger("unity.panel");
-}
+const char* window_title = "unity-panel";
 
 class Controller::Impl
 {
@@ -253,7 +249,7 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
       view->SetMonitor(i);
 
       layout->AddView(view, 1);
-      layout->SetContentDistribution(nux::eStackLeft);
+      layout->SetContentDistribution(nux::MAJOR_POSITION_START);
       layout->SetVerticalExternalMargin(0);
       layout->SetHorizontalExternalMargin(0);
 

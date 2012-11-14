@@ -669,6 +669,9 @@ class HudVisualTests(HudTestsBase):
         """
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
+        self.window_manager.enter_show_desktop()
+        self.addCleanup(self.window_manager.leave_show_desktop)
+
         self.workspace.switch_to(0)
         calc = self.start_app("Calculator")
         self.assertTrue(calc.is_active)

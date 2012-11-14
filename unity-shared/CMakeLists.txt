@@ -32,8 +32,10 @@ set (UNITY_SHARED_SOURCES
      CoverArt.cpp
      BackgroundEffectHelper.cpp
      DashStyle.cpp
+     DebugDBusInterface.cpp
      DefaultThumbnailProvider.cpp
      FontSettings.cpp
+     GraphicsUtils.cpp
      IMTextEntry.cpp
      IconLoader.cpp
      IconRenderer.cpp
@@ -64,9 +66,10 @@ set (UNITY_SHARED_SOURCES
      UnityWindowView.cpp
      UserThumbnailProvider.cpp
      WindowManager.cpp
+     XPathQueryPart.cpp
 )
 
-if(UNITY_ENABLE_X_ORG_SUPPORT)
+if(ENABLE_X_SUPPORT)
   set (UNITY_SHARED_SOURCES
     XKeyboardUtil.cpp
     XWindowManager.cpp
@@ -87,7 +90,7 @@ add_dependencies (unity-shared unity-core-${UNITY_API_VERSION})
 # We also need to build compiz specific parts and standalone variants of those parts
 #
 
-if(UNITY_ENABLE_X_ORG_SUPPORT)
+if (ENABLE_X_SUPPORT)
   # compiz
   set (UNITY_SHARED_COMPIZ_SOURCES
     PluginAdapter.cpp

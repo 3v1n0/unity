@@ -32,11 +32,10 @@ namespace unity
 {
 namespace dash
 {
+DECLARE_LOGGER(logger, "unity.dash.lens");
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.lens");
-
 const unsigned CATEGORY_COLUMN = 2;
 }
 
