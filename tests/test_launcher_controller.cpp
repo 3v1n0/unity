@@ -380,7 +380,7 @@ TEST_F(TestLauncherController, SingleMonitorSwitchToMultimonitor)
   EXPECT_EQ(lc.launchers().size(), max_num_monitors);
 }
 
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
 
 TEST_F(TestLauncherController, MultiMonitorEdgeBarrierSubscriptions)
 {
