@@ -4,6 +4,7 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 DEB_HOST_ARCH := $(shell dpkg-architecture -qDEB_HOST_ARCH)
+DEB_HOST_GNU_TYPE := $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 gles2_architectures := armel armhf
 
 DEB_VERSION := $(shell dpkg-parsechangelog | egrep '^Version:' | cut -f 2 -d ' ')
@@ -50,7 +51,7 @@ override_dh_shlibdeps:
 	dh_shlibdeps -l$(LIBUNITY_PRIVATE) -O--parallel
 
 override_dh_auto_test:
-	echo "not working right now"
+	make -C obj-$(DEB_HOST_GNU_TYPE) check-headless
 
 %:
 	dh $@ --with translations,quilt,python2,migrations --parallel
