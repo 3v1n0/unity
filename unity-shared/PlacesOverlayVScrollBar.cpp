@@ -18,7 +18,6 @@
  */
 
 #include <Nux/Nux.h>
-#include <NuxCore/EasingCurve.h>
 
 #include "PlacesOverlayVScrollBar.h"
 
@@ -51,7 +50,6 @@ PlacesOverlayVScrollBar::PlacesOverlayVScrollBar(NUX_FILE_LINE_DECL)
   OnVisibleChanged.connect([&] (nux::Area* area, bool visible) {
     _overlay_window->SetVisible(visible);
   });
-
 }
 
 PlacesOverlayVScrollBar::~PlacesOverlayVScrollBar()

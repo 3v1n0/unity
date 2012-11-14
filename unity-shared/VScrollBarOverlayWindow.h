@@ -17,6 +17,10 @@
  * Authored by: Brandon Schaefer <brandon.schaefer@canonical.com>
  */
 
+
+#ifndef VSCROLLBAR_OVERLAY_WINDOW_H
+#define VSCROLLBAR_OVERLAY_WINDOW_H
+
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 
@@ -89,3 +93,5 @@ private:
 
   ThumbAction current_action_;
 };
+
+#endif
