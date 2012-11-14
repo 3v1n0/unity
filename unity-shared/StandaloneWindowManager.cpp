@@ -72,7 +72,7 @@ bool StandaloneWindowManager::IsWindowObscured(Window window_id) const
 
 bool StandaloneWindowManager::IsWindowMapped(Window window_id) const
 {
-  return false;
+  return true;
 }
 
 bool StandaloneWindowManager::IsWindowVisible(Window window_id) const

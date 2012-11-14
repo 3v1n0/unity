@@ -74,19 +74,19 @@ WindowList BamfApplication::get_windows() const
   if (!bamf_app_)
     return result;
 
-  //WindowManager& wm = WindowManager::Default();
+  WindowManager& wm = WindowManager::Default();
   std::shared_ptr<GList> children(bamf_view_get_children(BAMF_VIEW(bamf_app_.RawPtr())), g_list_free);
   for (GList* l = children.get(); l; l = l->next)
   {
     if (!BAMF_IS_WINDOW(l->data))
       continue;
 
-    //auto window = static_cast<BamfWindow*>(l->data);
+    auto window = static_cast<BamfWindow*>(l->data);
     auto view = static_cast<BamfView*>(l->data);
 
-    //guint32 xid = bamf_window_get_xid(window);
+    guint32 xid = bamf_window_get_xid(window);
 
-    //if (wm.IsWindowMapped(xid))
+    if (wm.IsWindowMapped(xid))
     {
       result.push_back(ApplicationWindowPtr(new BamfApplicationWindow(view)));
     }
