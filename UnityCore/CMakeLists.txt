@@ -4,7 +4,7 @@ set(UNITY_CORE_DEPS
     gio-2.0
     dee-1.0
     sigc++-2.0
-    nux-core-3.0
+    nux-core-4.0
     gdk-pixbuf-2.0
     unity-protocol-private
 )
