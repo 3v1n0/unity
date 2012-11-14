@@ -48,7 +48,7 @@ public:
   void PageUpAction();
   void PageDownAction();
   
-  bool IsMouseInsideThumb(int x, int y) const;
+  bool IsMouseInsideThumb(int y) const;
   bool IsMouseBeingDragged() const;
 
   int GetThumbHeight() const;

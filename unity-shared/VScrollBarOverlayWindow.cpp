@@ -94,10 +94,10 @@ void VScrollBarOverlayWindow::UpdateMouseOffsetX()
     content_offset_x_ = 0;
 }
 
-bool VScrollBarOverlayWindow::IsMouseInsideThumb(int x, int y) const
+bool VScrollBarOverlayWindow::IsMouseInsideThumb(int y) const
 {
   const nux::Geometry thumb(0, mouse_offset_y_, THUMB_WIDTH, THUMB_HEIGHT);
-  if (thumb.IsPointInside(x,y))
+  if (thumb.IsPointInside(0,y))
     return true;
 
   return false;

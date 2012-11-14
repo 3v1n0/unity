@@ -63,8 +63,6 @@ private:
   void MouseDraggingOverlay(int y, int dy);
 
   bool IsMouseInTopHalfOfThumb(int y);
-  bool IsMouseInTrackRange(int y);
-
   void CheckIfThumbIsInsideSlider();
   
   void UpdateStepY();

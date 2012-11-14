@@ -28,8 +28,6 @@
 #include "unity-shared/UScreen.h"
 
 
-//using namespace unity;
-
 namespace
 {
 
@@ -137,6 +135,28 @@ TEST(TestOverlayScrollbar, TestOverlaySetsOffsetYOutOfBoundsUpper)
   EXPECT_EQ(m_overlay.GetOverlayWindow()->GetThumbOffsetY(), expected_offset);
 }
 
+TEST(TestOverlayScrollbar, TestOverlayMouseIsInsideThumb)
+{
+  MockOverlayScrollbarWindow m_overlay;
+  const nux::Geometry geo(0, 50, 50, 400);
 
+  m_overlay.GetOverlayWindow()->UpdateGeometry(geo);
+  EXPECT_TRUE(m_overlay.GetOverlayWindow()->IsMouseInsideThumb(0));
+}
+
+TEST(TestOverlayScrollbar, TestOverlayMouseIsInsideOnOffsetChange)
+{
+  MockOverlayScrollbarWindow m_overlay;
+  const nux::Geometry geo(0, 50, 50, 400);
+  const int offset_y = 50;
+  const int thumb_height = m_overlay.GetOverlayWindow()->GetThumbHeight();
+
+  m_overlay.GetOverlayWindow()->UpdateGeometry(geo);
+  m_overlay.GetOverlayWindow()->SetThumbOffsetY(offset_y);
+
+  EXPECT_FALSE(m_overlay.GetOverlayWindow()->IsMouseInsideThumb(offset_y - 1));
+  EXPECT_TRUE(m_overlay.GetOverlayWindow()->IsMouseInsideThumb(offset_y + thumb_height/2));
+  EXPECT_FALSE(m_overlay.GetOverlayWindow()->IsMouseInsideThumb(offset_y + thumb_height + 1));
+}
 
 }

@@ -181,7 +181,7 @@ void PlacesOverlayVScrollBar::MiddleMouseClick(int y)
 
 void PlacesOverlayVScrollBar::OnMouseDown(int x, int y, unsigned int button_flags, unsigned int key_flags)
 {
-  if (_overlay_window->IsMouseInsideThumb(x, y))
+  if (_overlay_window->IsMouseInsideThumb(y))
   {
     if (IsMouseInTopHalfOfThumb(y))
       _overlay_window->PageUpAction();
@@ -214,33 +214,18 @@ void PlacesOverlayVScrollBar::OnMouseUp(int x, int y, unsigned int button_flags,
 
 void PlacesOverlayVScrollBar::OnMouseMove(int x, int y, int dx, int dy, unsigned int button_flags, unsigned int key_flags)
 {
-  if (!_overlay_window->IsMouseInsideThumb(x,y))
+  if (!_overlay_window->IsMouseInsideThumb(y))
     AdjustThumbOffsetFromMouse();
 }
 
 void PlacesOverlayVScrollBar::OnMouseDrag(int x, int y, int dx, int dy, unsigned int button_flags, unsigned int key_flags)
 {
-  if (IsMouseInTrackRange(y))
-    MouseDraggingOverlay(y, dy);
-}
-
-bool PlacesOverlayVScrollBar::IsMouseInTrackRange(int y)
-{
-  const int thumbs_height = _overlay_window->GetThumbHeight();
-  const int thumbs_offset = _overlay_window->GetThumbOffsetY();
-
-  if ((y < 0 && _overlay_window->GetThumbOffsetY() <= 0) ||
-     (y > _track->GetBaseHeight() && thumbs_height + thumbs_offset >= _track->GetBaseHeight()))
-  {
-    return false;
-  }
-
-  return true;
+  MouseDraggingOverlay(y, dy);
 }
 
 void PlacesOverlayVScrollBar::MouseDraggingOverlay(int y, int dys)
 {
-  int dy = y - _overlay_window->GetThumbOffsetY() - _mouse_down_offset;
+  const int dy = y - _overlay_window->GetThumbOffsetY() - _mouse_down_offset;
   if (dy < 0)
     OnScrollUp.emit(stepY, abs(dy));
   else if (dy > 0)
