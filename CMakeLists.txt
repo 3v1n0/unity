@@ -172,7 +172,6 @@ if(ENABLE_X_SUPPORT)
       atk
       atk-bridge-2.0
       unity-misc>=0.4.0
-      dbus-glib-1
       gtk+-3.0>=3.1
       sigc++-2.0
       json-glib-1.0
@@ -198,7 +197,6 @@ else ()
       atk
       atk-bridge-2.0
       unity-misc>=0.4.0
-      dbus-glib-1
       gtk+-3.0>=3.1
       sigc++-2.0
       json-glib-1.0
