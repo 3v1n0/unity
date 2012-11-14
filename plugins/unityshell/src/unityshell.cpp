@@ -3975,6 +3975,10 @@ void UnityWindow::paintThumbnail(nux::Geometry const& geo, float alpha, float sc
   mask |= PAINT_WINDOW_BLEND_MASK;
   attrib.opacity = OPAQUE;
 
+  // The thumbnail is still animating, don't draw the decoration as selected
+  if (selected && alpha < 1.0f)
+    selected = false;
+
   paintFakeDecoration(geo, attrib, matrix, mask, selected, scale_ratio);
 }
 

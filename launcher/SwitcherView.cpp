@@ -219,9 +219,9 @@ nux::Geometry SwitcherView::InterpolateBackground (nux::Geometry const& start, n
   return result;
 }
 
-nux::Geometry SwitcherView::UpdateRenderTargets (nux::Point const& center, timespec const& current)
+nux::Geometry SwitcherView::UpdateRenderTargets(nux::Point const& center, timespec const& current)
 {
-  std::vector<Window> xids = model_->DetailXids ();
+  std::vector<Window> const& xids = model_->DetailXids();
 
   int ms_since_change = TimeUtil::TimeDelta(&current, &save_time_);
   float progress = std::min<float>(1.0f, ms_since_change / static_cast<float>(animation_length()));
@@ -246,6 +246,18 @@ nux::Geometry SwitcherView::UpdateRenderTargets (nux::Point const& center, times
 
   nux::Geometry final_bounds;
   layout_system_.LayoutWindows(render_targets_, max_bounds, final_bounds);
+
+  if (progress < 1.0f)
+  {
+    // Animate the windows thumbnail sizes to make them grow with the switcher
+    for (LayoutWindow::Ptr const& win : render_targets_)
+    {
+      auto old_geo = win->result;
+      win->result = old_geo * progress;
+      win->result.x += (old_geo.width - win->result.width) / 4;
+      win->result.y += (old_geo.height - win->result.height) / 4;
+    }
+  }
 
   return final_bounds;
 }
