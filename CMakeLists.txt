@@ -65,7 +65,7 @@ add_custom_target (pre-distcheck
        && bzr tag ${UNITY_VERSION}
        && echo "• Running Distcheck"
   )
-  
+
 add_custom_target (dist
   COMMAND bzr export --root=${ARCHIVE_NAME} ${CMAKE_BINARY_DIR}/${ARCHIVE_NAME}.tar.bz2
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -155,8 +155,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MAINTAINER_CXXFLAGS}")
 #
 # Compiz Plugins
 #
+set (UNITY_PROTOCOL_PRIVATE_DEPS "unity-protocol-private>=5.95.1")
+
 if(ENABLE_X_SUPPORT)
   set(UNITY_PLUGIN_DEPS
+      ${UNITY_PROTOCOL_PRIVATE_DEPS}
       compiz>=0.9.8.0
       nux-4.0>=4.0.0
       libbamf3
@@ -177,13 +180,13 @@ if(ENABLE_X_SUPPORT)
       json-glib-1.0
       libnotify
       xfixes
-      unity-protocol-private>=5.95.1
       libgeis
       xrender>=0.9
       zeitgeist-1.0>=0.3.18
   )
 else ()
   set(UNITY_PLUGIN_DEPS
+      ${UNITY_PROTOCOL_PRIVATE_DEPS}
       nux-4.0>=4.0.0
       libbamf3
       dee-1.0
@@ -202,15 +205,11 @@ else ()
       json-glib-1.0
       libnotify
       xfixes
-      unity-protocol-private>=5.95.1
       libgeis
       xrender>=0.9
       zeitgeist-1.0>=0.3.1
   )
 endif ()
-
-set (UNITY_PROTOCOL_PRIVATE_DEPS "unity-protocol-private>=5.95.1")
-
 
 find_package (PkgConfig)
 pkg_check_modules (CACHED_UNITY_DEPS REQUIRED ${UNITY_PLUGIN_DEPS})
