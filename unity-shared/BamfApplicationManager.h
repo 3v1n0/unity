@@ -20,21 +20,38 @@
 #ifndef UNITYSHARED_BAMF_APPLICATION_MANAGER_H
 #define UNITYSHARED_BAMF_APPLICATION_MANAGER_H
 
+#include <libbamf/libbamf.h>
+#include <UnityCore/GLibWrapper.h>
+
 #include "unity-shared/ApplicationManager.h"
+
 
 namespace unity
 {
 
-class BamfApplication
+class BamfApplicationWindow: public ApplicationWindow
 {
 public:
-  BamfApplication();
+  BamfApplicationWindow(BamfView* view);
+
+  virtual std::string title() const;
+private:
+  glib::Object<BamfView> bamf_view_;
+};
+
+class BamfApplication : public Application
+{
+public:
+  BamfApplication(BamfApplication* app);
   ~BamfApplication();
 
   virtual std::string icon() const;
   virtual std::string title() const;
 
+  virtual WindowList get_windows() const;
+
 private:
+  glib::Object<BamfApplication> bamf_app_;
 };
 
 class BamfApplicationManager : public ApplicationManager
@@ -44,7 +61,9 @@ public:
   ~BamfApplicationManager();
 
   virtual ApplicationPtr active_application() const;
+  virtual ApplicationList running_applications() const;
 private:
+  glib::Object<BamfMatcher> matcher_;
 
 };
 

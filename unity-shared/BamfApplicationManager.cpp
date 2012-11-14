@@ -21,6 +21,8 @@
 
 #include <NuxCore/Logger.h>
 
+#include "unity-shared/WindowManager.h"
+
 
 DECLARE_LOGGER(logger, "unity.appmanager.bamf");
 
@@ -34,7 +36,19 @@ ApplicationManagerPtr create_application_manager()
     return ApplicationManagerPtr(new BamfApplicationManager());
 }
 
-BamfApplication::BamfApplication()
+BamfApplicationWindow::BamfApplicationWindow(BamfView* view)
+  : bamf_view_(view, glib::AddRef())
+{
+}
+
+std::string BamfApplicationWindow::title() const
+{
+  return glib::String(bamf_view_get_name(bamf_view_)).Str();
+}
+
+
+BamfApplication::BamfApplication(BamfApplication* app)
+  : bamf_app_(app, glib::AddRef())
 {
 }
 
@@ -49,11 +63,42 @@ std::string BamfApplication::icon() const
 
 std::string BamfApplication::title() const
 {
-    return "TODO";
+  glib::String name(bamf_view_get_name(BAMF_VIEW(bamf_app_.RawPtr())));
+  return name.Str();
+}
+
+WindowList BamfApplication::get_windows() const
+{
+  WindowList result;
+
+  if (!bamf_app_)
+    return result;
+
+  //WindowManager& wm = WindowManager::Default();
+  std::shared_ptr<GList> children(bamf_view_get_children(BAMF_VIEW(bamf_app_.RawPtr())), g_list_free);
+  for (GList* l = children.get(); l; l = l->next)
+  {
+    if (!BAMF_IS_WINDOW(l->data))
+      continue;
+
+    //auto window = static_cast<BamfWindow*>(l->data);
+    auto view = static_cast<BamfView*>(l->data);
+
+    //guint32 xid = bamf_window_get_xid(window);
+
+    //if (wm.IsWindowMapped(xid))
+    {
+      result.push_back(ApplicationWindowPtr(new BamfApplicationWindow(view)));
+    }
+  }
+  return result;
 }
 
 
+
+
 BamfApplicationManager::BamfApplicationManager()
+ : matcher_(bamf_matcher_get_default())
 {
     LOG_TRACE(logger) << "Create BamfApplicationManager";
 }
@@ -67,5 +112,24 @@ ApplicationPtr BamfApplicationManager::active_application() const
     return ApplicationPtr();
 }
 
+ApplicationList BamfApplicationManager::running_applications() const
+{
+  ApplicationList result;
+  std::shared_ptr<GList> apps(bamf_matcher_get_applications(matcher_), g_list_free);
+
+  for (GList *l = apps.get(); l; l = l->next)
+  {
+    if (!BAMF_IS_APPLICATION(l->data))
+      continue;
+
+    BamfApplication* app = BAMF_APPLICATION(l->data);
+
+    if (g_object_get_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen")))
+      continue;
+
+    result.push_back(ApplicationPtr(new BamfApplication(app)));
+  }
+  return result;
+}
 
 } // namespace unity

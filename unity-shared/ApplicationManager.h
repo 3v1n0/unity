@@ -21,14 +21,28 @@
 #define UNITYSHARED_APPLICATION_MANAGER_H
 
 #include <memory>
+#include <vector>
 
 namespace unity
 {
 
 class Application;
 class ApplicationManager;
+class ApplicationWindow;
 typedef std::shared_ptr<Application> ApplicationPtr;
 typedef std::shared_ptr<ApplicationManager> ApplicationManagerPtr;
+typedef std::shared_ptr<ApplicationWindow> ApplicationWindowPtr;
+
+typedef std::vector<ApplicationPtr> ApplicationList;
+typedef std::vector<ApplicationWindowPtr> WindowList;
+
+class ApplicationWindow
+{
+public:
+  virtual ~ApplicationWindow() {}
+
+  virtual std::string title() const = 0;
+};
 
 class Application
 {
@@ -38,6 +52,7 @@ public:
   virtual std::string icon() const = 0;
   virtual std::string title() const = 0;
 
+  virtual WindowList get_windows() const = 0;
 };
 
 class ApplicationManager
@@ -48,6 +63,7 @@ public:
   static ApplicationManager& Default();
 
   virtual ApplicationPtr active_application() const = 0;
+  virtual ApplicationList running_applications() const = 0;
 };
 
 }

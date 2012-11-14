@@ -19,24 +19,31 @@
 
 #include <iostream>
 
+#include <NuxCore/Logger.h>
+#include <gtk/gtk.h>
+
 #include "unity-shared/ApplicationManager.h"
 
 
 
 using namespace unity;
 
-int main()
+int main(int argc, char* argv[])
 {
+  g_type_init();
+  gtk_init(&argc, &argv);
+  nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
+
   ApplicationManager& manager = ApplicationManager::Default();
 
-  ApplicationPtr active_app = manager.active_application();
+  for (auto app : manager.running_applications())
+  {
+    std::cout << "Application: " << app->title() << "\n";
 
-  if (active_app)
-  {
-    std::cout << "Active app: " << active_app->title() << "\n";
+    for (auto win : app->get_windows())
+    {
+      std::cout << "  Window: " << win->title() << "\n";
+    }
   }
-  else
-  {
-    std::cout << "No Active app\n";
-  }
+
 }
