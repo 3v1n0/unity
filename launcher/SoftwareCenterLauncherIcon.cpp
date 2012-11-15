@@ -109,6 +109,20 @@ void SoftwareCenterLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   }
 }
 
+string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
+{
+   // Fixup the _desktop_file because the one we get from software-center
+   // is not the final one, e.g. the s-c-agent does not send it and
+   // app-install-data points to the "wrong" one in /usr/share/app-install
+   //
+   // So:
+   // - get the pkgname
+   // - and search in /var/lib/apt/lists/$pkgname.list
+   //   for a desktop file that roughly matches what we want
+   
+
+}
+
 void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
 {
    glib::String exit_state;
@@ -122,6 +136,9 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
       SetProgress(0.0f);
       finished_ = true;
       needs_urgent_ = true;
+      // find and update to actual desktop file
+      _desktop_file = GetActualDesktopFileAfterInstall();
+      UpdateDesktopFile();
    }
    else
    {

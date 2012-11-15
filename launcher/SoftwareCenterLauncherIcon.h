@@ -50,6 +50,7 @@ protected:
   void ActivateLauncherIcon(ActionArg arg);
 
 private:
+  string GetActualDesktopFileAfterInstall();
   void OnPropertyChanged(GVariant* params);
   void OnFinished(GVariant *params);
   void OnDragAnimationFinished();
