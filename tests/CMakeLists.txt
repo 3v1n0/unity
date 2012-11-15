@@ -136,6 +136,7 @@ if (GTEST_SRC_DIR AND
        test_favorite_store_private.cpp
        test_home_lens.cpp
        test_launcher_entry_remote.cpp
+       test_layout_system.cpp
        test_model_iterator.cpp
        test_previews.cpp
        test_ubus.cpp
@@ -152,6 +153,7 @@ if (GTEST_SRC_DIR AND
   set (GTEST_XLESS_LIBS
       gtest
       unity-shared
+      unity-shared-standalone
       launcher-lib
       ${GMOCK_LIB}
       ${GMOCK_MAIN_LIB}

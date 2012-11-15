@@ -30,7 +30,7 @@ namespace unity
 {
 using launcher::AbstractLauncherIcon;
 using launcher::ActionArg;
-using ui::LayoutWindowList;
+using ui::LayoutWindow;
 
 namespace
 {
@@ -398,11 +398,11 @@ void Controller::PrevDetail()
   }
 }
 
-LayoutWindowList Controller::ExternalRenderTargets()
+LayoutWindow::Vector Controller::ExternalRenderTargets()
 {
   if (!view_)
   {
-    LayoutWindowList result;
+    LayoutWindow::Vector result;
     return result;
   }
   return view_->ExternalTargets();

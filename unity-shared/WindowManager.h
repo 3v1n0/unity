@@ -62,6 +62,14 @@ public:
     ForceUnminimizeOnCurrentDesktop
   };
 
+  enum class Edge : unsigned
+  {
+    LEFT,
+    RIGHT,
+    TOP,
+    BOTTOM
+  };
+
   static WindowManager& Default();
 
   virtual Window GetActiveWindow() const = 0;
@@ -74,15 +82,19 @@ public:
   virtual bool IsWindowVisible(Window window_id) const = 0;
   virtual bool IsWindowOnTop(Window window_id) const = 0;
   virtual bool IsWindowClosable(Window window_id) const = 0;
+  virtual bool IsWindowMinimized(Window window_id) const = 0;
   virtual bool IsWindowMinimizable(Window window_id) const = 0;
   virtual bool IsWindowMaximizable(Window window_id) const = 0;
+  virtual bool HasWindowDecorations(Window window_id) const = 0;
 
   virtual void ShowDesktop() = 0;
   virtual bool InShowDesktop() const = 0;
 
+  virtual void Maximize(Window window_id) = 0;
   virtual void Restore(Window window_id) = 0;
   virtual void RestoreAt(Window window_id, int x, int y) = 0;
   virtual void Minimize(Window window_id) = 0;
+  virtual void UnMinimize(Window window_id) = 0;
   virtual void Close(Window window_id) = 0;
 
   virtual void Activate(Window window_id) = 0;
@@ -117,6 +129,7 @@ public:
   virtual int GetWindowMonitor(Window window_id) const = 0;
   virtual nux::Geometry GetWindowGeometry(Window window_id) const = 0;
   virtual nux::Geometry GetWindowSavedGeometry(Window window_id) const = 0;
+  virtual nux::Size GetWindowDecorationSize(Window window_id, Edge) const = 0;
   virtual nux::Geometry GetScreenGeometry() const = 0;
   virtual nux::Geometry GetWorkAreaGeometry(Window window_id = 0) const = 0;
 
