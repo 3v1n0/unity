@@ -47,8 +47,8 @@ private:
     DOWN,
   };
 
-  void OnMouseNear(const nux::Point mouse_pos);
-  void OnMouseBeyond(const nux::Point mouse_pos);
+  void OnMouseNear(const nux::Point& mouse_pos);
+  void OnMouseBeyond(const nux::Point& mouse_pos);
   void AdjustThumbOffsetFromMouse();
 
   void OnMouseClick(int x, int y, unsigned int button_flags, unsigned int key_flags);

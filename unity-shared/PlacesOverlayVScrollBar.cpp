@@ -104,7 +104,7 @@ void PlacesOverlayVScrollBar::OnScroll(ScrollDir dir, int mouse_dy)
     OnScrollDown.emit(stepY, mouse_dy);
 }
 
-void PlacesOverlayVScrollBar::OnMouseNear(nux::Point mouse_pos)
+void PlacesOverlayVScrollBar::OnMouseNear(const nux::Point& mouse_pos)
 {
   if (IsVisible() && content_height_ > container_height_)
   {
@@ -113,7 +113,7 @@ void PlacesOverlayVScrollBar::OnMouseNear(nux::Point mouse_pos)
   }
 }
 
-void PlacesOverlayVScrollBar::OnMouseBeyond(nux::Point mouse_pos)
+void PlacesOverlayVScrollBar::OnMouseBeyond(const nux::Point& mouse_pos)
 {
   if (IsVisible() && content_height_ > container_height_)
     _overlay_window->MouseBeyond();
