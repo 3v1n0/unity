@@ -72,7 +72,6 @@ private:
   void StartAnimation(ScrollDir dir);
   void OnScroll(ScrollDir dir, int mouse_dy);
 
-private:
   nux::ObjectPtr<VScrollBarOverlayWindow> _overlay_window;
   std::unique_ptr<nux::InputAreaProximity> _area_prox;
 
