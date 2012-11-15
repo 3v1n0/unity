@@ -48,24 +48,21 @@ void XdndManagerImp::OnDndFinished()
   dnd_finished.emit();
 }
 
-// FIXME: Improve the code
 void XdndManagerImp::OnDndDataCollected(std::vector<std::string> const& mimes)
 {
   if (!IsAValidDnd(mimes))
     return;
 
-  // (FIXME) Cannot be runned in a test enviroment... Need to find a nice way to workaround it!
   auto& gp_display = nux::GetWindowThread()->GetGraphicsDisplay();
   char target[] = "text/uri-list";
   glib::String data(gp_display.GetDndData(target));
 
   auto uscreen = UScreen::GetDefault();
-  auto monitor = uscreen->GetMonitorWithMouse();
-  last_monitor_ = monitor;
+  last_monitor_ = uscreen->GetMonitorWithMouse();
 
   mouse_poller_timeout_.reset(new glib::Timeout(20, sigc::mem_fun(this, &XdndManagerImp::CheckMousePosition)));
 
-  dnd_started.emit(data.Str(), monitor);
+  dnd_started.emit(data.Str(), last_monitor_);
 }
 
 bool XdndManagerImp::IsAValidDnd(std::vector<std::string> const& mimes)
