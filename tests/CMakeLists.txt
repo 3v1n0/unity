@@ -160,6 +160,7 @@ if (GTEST_SRC_DIR AND
 
   if (ENABLE_X_SUPPORT)
     set (GTEST_XLESS_SOURCES
+      ${GTEST_XLESS_SOURCES}
       test_hud_private.cpp
       test_pointer_barrier.cpp
       test_shortcut_model.cpp
