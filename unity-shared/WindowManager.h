@@ -28,7 +28,7 @@
 #include <NuxCore/Rect.h>
 #include <Nux/Utils.h>
 
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
 #include <X11/Xlib.h>
 #else
 typedef unsigned long Window;

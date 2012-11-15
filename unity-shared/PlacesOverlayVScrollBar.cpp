@@ -237,10 +237,17 @@ void PlacesOverlayVScrollBar::OnMouseDrag(int x, int y, int dx, int dy, unsigned
 void PlacesOverlayVScrollBar::MouseDraggingOverlay(int y, int dys)
 {
   const int dy = y - _overlay_window->GetThumbOffsetY() - _mouse_down_offset;
-  if (dy < 0)
+  const int at_min = _overlay_window->GetThumbOffsetY() <= 0;
+  const int at_max = _overlay_window->GetThumbOffsetY() + _overlay_window->GetThumbHeight() >= _track->GetBaseHeight();
+
+  if (dy < 0 && !at_min)
+  {
     OnScrollUp.emit(stepY, abs(dy));
-  else if (dy > 0)
+  }
+  else if (dy > 0 && !at_max)
+  {
     OnScrollDown.emit(stepY, dy);
+  }
 
   _overlay_window->SetThumbOffsetY(y - _mouse_down_offset);
   CheckIfThumbIsInsideSlider();
