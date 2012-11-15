@@ -19,15 +19,16 @@
 
 #include "unity-shared/ApplicationManager.h"
 
+
 namespace unity
 {
 // This function is used by the static Default method on the ApplicationManager
 // class, and uses link time to make sure there is a function available.
-ApplicationManagerPtr create_application_manager();
+std::shared_ptr<ApplicationManager> create_application_manager();
 
 ApplicationManager& ApplicationManager::Default()
 {
-  static ApplicationManagerPtr instance(create_application_manager());
+  static std::shared_ptr<ApplicationManager> instance(create_application_manager());
   return *instance;
 }
 

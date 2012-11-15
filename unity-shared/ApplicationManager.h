@@ -23,6 +23,9 @@
 #include <memory>
 #include <vector>
 
+#include <NuxCore/Property.h>
+
+
 namespace unity
 {
 
@@ -30,11 +33,11 @@ class Application;
 class ApplicationManager;
 class ApplicationWindow;
 typedef std::shared_ptr<Application> ApplicationPtr;
-typedef std::shared_ptr<ApplicationManager> ApplicationManagerPtr;
 typedef std::shared_ptr<ApplicationWindow> ApplicationWindowPtr;
 
 typedef std::vector<ApplicationPtr> ApplicationList;
 typedef std::vector<ApplicationWindowPtr> WindowList;
+
 
 class ApplicationWindow
 {
@@ -43,6 +46,7 @@ public:
 
   virtual std::string title() const = 0;
 };
+
 
 class Application
 {
@@ -53,7 +57,11 @@ public:
   virtual std::string title() const = 0;
 
   virtual WindowList get_windows() const = 0;
+
+  // Considering using a property for the "unity-seen" quark
+  nux::Property<bool> seen;
 };
+
 
 class ApplicationManager
 {

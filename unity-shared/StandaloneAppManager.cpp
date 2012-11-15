@@ -45,5 +45,15 @@ int main(int argc, char* argv[])
       std::cout << "  Window: " << win->title() << "\n";
     }
   }
+  std::cout << "And a second time...\n";
+  for (auto app : manager.running_applications())
+  {
+    std::cout << "Application: " << app->title() << "\n";
+
+    for (auto win : app->get_windows())
+    {
+      std::cout << "  Window: " << win->title() << "\n";
+    }
+  }
 
 }

@@ -52,6 +52,7 @@ public:
 
 private:
   glib::Object<BamfApplication> bamf_app_;
+  glib::Object<BamfView> bamf_view_;
 };
 
 class BamfApplicationManager : public ApplicationManager

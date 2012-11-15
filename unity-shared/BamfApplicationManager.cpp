@@ -31,9 +31,9 @@ namespace unity
 {
 // This function is used by the static Default method on the ApplicationManager
 // class, and uses link time to make sure there is a function available.
-ApplicationManagerPtr create_application_manager()
+std::shared_ptr<ApplicationManager> create_application_manager()
 {
-    return ApplicationManagerPtr(new BamfApplicationManager());
+    return std::shared_ptr<ApplicationManager>(new BamfApplicationManager());
 }
 
 BamfApplicationWindow::BamfApplicationWindow(BamfView* view)
@@ -49,6 +49,7 @@ std::string BamfApplicationWindow::title() const
 
 BamfApplication::BamfApplication(BamfApplication* app)
   : bamf_app_(app, glib::AddRef())
+  , bamf_view_(glib::object_cast<BamfView>(bamf_app_))
 {
 }
 
@@ -58,12 +59,13 @@ BamfApplication::~BamfApplication()
 
 std::string BamfApplication::icon() const
 {
-    return "TODO";
+  glib::String view_icon(bamf_view_get_icon(bamf_view_));
+  return view_icon.Str();
 }
 
 std::string BamfApplication::title() const
 {
-  glib::String name(bamf_view_get_name(BAMF_VIEW(bamf_app_.RawPtr())));
+  glib::String name(bamf_view_get_name(bamf_view_));
   return name.Str();
 }
 
