@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -21,7 +21,6 @@
 #define PLACES_OVERLAY_VSCROLLBAR_H
 
 #include <Nux/Nux.h>
-#include <Nux/ProximityArea.h>
 #include <NuxCore/Animation.h>
 #include <memory>
 
@@ -35,6 +34,8 @@ namespace dash
 
 class PlacesOverlayVScrollBar: public PlacesVScrollBar
 {
+  class InputAreaProximity;
+
 public:
   PlacesOverlayVScrollBar(NUX_FILE_LINE_PROTO);
   ~PlacesOverlayVScrollBar();
@@ -46,8 +47,8 @@ private:
     DOWN,
   };
 
-  void OnMouseNear(nux::Point mouse_pos);
-  void OnMouseBeyond(nux::Point mouse_pos);
+  void OnMouseNear(const nux::Point mouse_pos);
+  void OnMouseBeyond(const nux::Point mouse_pos);
   void AdjustThumbOffsetFromMouse();
 
   void OnMouseClick(int x, int y, unsigned int button_flags, unsigned int key_flags);
@@ -73,7 +74,7 @@ private:
 
 private:
   nux::ObjectPtr<VScrollBarOverlayWindow> _overlay_window;
-  std::shared_ptr<nux::ProximityArea> _prox_area;
+  std::unique_ptr<nux::InputAreaProximity> _area_prox;
 
   nux::animation::AnimateValue<int> _animation;
   sigc::connection _tweening_connection;

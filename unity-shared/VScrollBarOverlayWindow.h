@@ -30,7 +30,7 @@
 class VScrollBarOverlayWindow : public nux::BaseWindow
 {
 public:
-  VScrollBarOverlayWindow(const nux::Geometry geo);
+  VScrollBarOverlayWindow(const nux::Geometry& geo);
   ~VScrollBarOverlayWindow();
 
   void UpdateGeometry(const nux::Geometry& geo);

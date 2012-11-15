@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -20,6 +20,12 @@
 #include <Nux/Nux.h>
 
 #include "PlacesOverlayVScrollBar.h"
+#include <Nux/InputAreaProximity.h>
+
+namespace
+{
+  const int PROXIMITY = 7;
+}
 
 namespace unity
 {
@@ -32,9 +38,9 @@ PlacesOverlayVScrollBar::PlacesOverlayVScrollBar(NUX_FILE_LINE_DECL)
 {
   _overlay_window = new VScrollBarOverlayWindow(_track->GetAbsoluteGeometry());
 
-  _prox_area = std::make_shared<nux::ProximityArea>(_overlay_window.GetPointer(), 7);
-  _prox_area->mouse_near.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseNear));
-  _prox_area->mouse_beyond.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseBeyond));
+  _area_prox.reset(new nux::InputAreaProximity(_overlay_window.GetPointer(), PROXIMITY));
+  _area_prox->mouse_near.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseNear));
+  _area_prox->mouse_beyond.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseBeyond));
 
   _overlay_window->mouse_down.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseDown));
   _overlay_window->mouse_up.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseUp));
@@ -100,7 +106,7 @@ void PlacesOverlayVScrollBar::OnScroll(ScrollDir dir, int mouse_dy)
 
 void PlacesOverlayVScrollBar::OnMouseNear(nux::Point mouse_pos)
 {
-  if (content_height_ > container_height_)
+  if (IsVisible() && content_height_ > container_height_)
   {
     _overlay_window->MouseNear();
     AdjustThumbOffsetFromMouse();
@@ -109,7 +115,7 @@ void PlacesOverlayVScrollBar::OnMouseNear(nux::Point mouse_pos)
 
 void PlacesOverlayVScrollBar::OnMouseBeyond(nux::Point mouse_pos)
 {
-  if (content_height_ > container_height_)
+  if (IsVisible() && content_height_ > container_height_)
     _overlay_window->MouseBeyond();
 }
 
@@ -175,8 +181,6 @@ void PlacesOverlayVScrollBar::MiddleMouseClick(int y)
     SetupAnimation(ScrollDir::UP, slider_thumb_diff);
   else
     SetupAnimation(ScrollDir::DOWN, slider_thumb_diff);
-
-  //FIXME LOOK into making sure slider_offset == thumb offset
 }
 
 void PlacesOverlayVScrollBar::OnMouseDown(int x, int y, unsigned int button_flags, unsigned int key_flags)
