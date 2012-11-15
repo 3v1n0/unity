@@ -917,7 +917,7 @@ class PreviewNavigateTests(DashTestCase):
         cover_art = self.preview_container.current_preview.cover_art
 
         tx = cover_art.x + (cover_art.width / 2)
-        ty = cover_art.y + (cover_art.height / 2)
+        ty = cover_art.y + (cover_art.height / 4)
         self.mouse.move(tx, ty)
         self.mouse.click(button=1)
 
@@ -928,7 +928,7 @@ class PreviewNavigateTests(DashTestCase):
         cover_art = self.preview_container.current_preview.cover_art
 
         tx = cover_art.x + (cover_art.width / 2)
-        ty = cover_art.y + (cover_art.height / 2)
+        ty = cover_art.y + (cover_art.height / 4)
         self.mouse.move(tx, ty)
         self.mouse.click(button=3)
 
