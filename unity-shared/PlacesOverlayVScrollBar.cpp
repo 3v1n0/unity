@@ -165,9 +165,16 @@ void PlacesOverlayVScrollBar::OnMouseClick(int x, int y, unsigned int button_fla
 void PlacesOverlayVScrollBar::LeftMouseClick(int y)
 {
   if (IsMouseInTopHalfOfThumb(y))
-    SetupAnimation(ScrollDir::UP, _slider->GetBaseHeight());
+  {
+    const int top = _slider->GetBaseY() - _track->GetBaseY();
+    SetupAnimation(ScrollDir::UP, std::min(_slider->GetBaseHeight(), top));
+  }
   else
-    SetupAnimation(ScrollDir::DOWN, _slider->GetBaseHeight());
+  {
+    const int bottom = (_track->GetBaseY() + _track->GetBaseHeight()) - 
+                       (_slider->GetBaseHeight() + _slider->GetBaseY());
+    SetupAnimation(ScrollDir::DOWN, std::min(_slider->GetBaseHeight(), bottom));
+  }
 }
 
 void PlacesOverlayVScrollBar::MiddleMouseClick(int y)
