@@ -1,4 +1,4 @@
-unity (6.10.0-0ubuntu3) UNRELEASED; urgency=low
+unity (6.12.0-0ubuntu2) UNRELEASED; urgency=low
 
   [ Michael Terry ]
   * debian/control:
@@ -13,6 +13,19 @@ unity (6.10.0-0ubuntu3) UNRELEASED; urgency=low
   * Ported to nux 4.0
 
  -- Michael Terry <mterry@ubuntu.com>  Tue, 06 Nov 2012 10:52:43 -0500
+
+unity (6.12.0-0ubuntu1) raring; urgency=low
+
+  * New upstream release.
+    - Includes two already cherry-picked fixes in Ubuntu
+    - Unregister gdbus object in the dtor (LP: #1047760)
+    - Top panel "tooltip" got out of sync when navigating with the 
+      keyboard (LP: #1067358)
+    - Fix escaping of _panel_title (LP: #1067357)
+    - Fix ALT+Tab switches to incorrect window (LP: #1071298)
+    - Stop Unity UI elements from flickering in some cases (LP: #1070735)
+
+ -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Thu, 08 Nov 2012 11:10:13 +0200
 
 unity (6.10.0-0ubuntu2) quantal-proposed; urgency=low
 
