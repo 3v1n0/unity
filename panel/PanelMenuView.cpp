@@ -1314,7 +1314,7 @@ Window PanelMenuView::GetTopWindow() const
       continue;
 
     Window xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
-    bool visible = bamf_view_user_visible(static_cast<BamfView*>(l->data));
+    bool visible = bamf_view_is_user_visible(static_cast<BamfView*>(l->data));
 
     if (visible && IsValidWindow(xid))
     {

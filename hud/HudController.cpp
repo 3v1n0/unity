@@ -339,7 +339,7 @@ void Controller::ShowHud()
       auto view = static_cast<BamfView*>(l->data);
       Window xid = bamf_window_get_xid(win);
 
-      if (bamf_view_user_visible(view) && bamf_window_get_window_type(win) != BAMF_WINDOW_DOCK &&
+      if (bamf_view_is_user_visible(view) && bamf_window_get_window_type(win) != BAMF_WINDOW_DOCK &&
           wm.IsWindowOnCurrentDesktop(xid) &&
           wm.IsWindowVisible(xid) &&
           std::find(unity_xids.begin(), unity_xids.end(), xid) == unity_xids.end())
