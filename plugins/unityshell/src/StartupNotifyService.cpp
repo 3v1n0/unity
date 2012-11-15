@@ -31,9 +31,9 @@ StartupNotifyService::Default()
   return _default;
 }
 
-StartupNotifyService::StartupNotifyService() :
-_sn_display (0),
-_sn_monitor (0)
+StartupNotifyService::StartupNotifyService()
+  : _sn_display (0)
+  , _sn_monitor (0)
 {
 }
 
