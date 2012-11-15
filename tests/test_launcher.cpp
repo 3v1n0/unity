@@ -186,7 +186,6 @@ TEST_F(TestLauncher, TestQuirksDuringDnd)
   EXPECT_CALL(*third, ShouldHighlightOnDrag(_))
       .WillRepeatedly(Return(false));
 
-
   launcher_->DndStarted("");
   Utils::WaitForTimeout(1);
 

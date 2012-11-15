@@ -2776,6 +2776,7 @@ int Launcher::GetDragDelta() const
 
 void Launcher::DndStarted(std::string const& data)
 {
+#ifdef USE_X11
   SetDndQuirk();
 
   _dnd_data.Fill(data.c_str());
@@ -2805,10 +2806,12 @@ void Launcher::DndStarted(std::string const& data)
       }
     }
   }
+#endif
 }
 
 void Launcher::DndFinished()
 {
+#ifdef USE_X11
   UnsetDndQuirk();
 
   _data_checked = false;
@@ -2817,17 +2820,22 @@ void Launcher::DndFinished()
     DesaturateIcons();
 
   DndReset();
+#endif
 }
 
 void Launcher::SetDndQuirk()
 {
+#ifdef USE_X11
   _hide_machine.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
+#endif
 }
 
 void Launcher::UnsetDndQuirk()
 {
+#ifdef USE_X11
   _hide_machine.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
   _hide_machine.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
+#endif
 }
 
 } // namespace launcher
