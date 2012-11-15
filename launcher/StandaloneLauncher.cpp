@@ -35,8 +35,8 @@ static launcher::Controller::Ptr controller;
 
 void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 {
-//  launcherWindow->SetGeometry (nux::Geometry(0, 0, 300, 800));
-  controller.reset(new launcher::Controller());
+  auto xdnd_manager = std::make_shared<XdndManager>();
+  controller.reset(new launcher::Controller(xdnd_manager));
 }
 
 int main(int argc, char** argv)

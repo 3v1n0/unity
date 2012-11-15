@@ -39,6 +39,7 @@
 #include "SoftwareCenterLauncherIcon.h"
 #include "unity-shared/UBusWrapper.h"
 #include "VolumeMonitorWrapper.h"
+#include "XdndManager.h"
 
 namespace unity
 {
@@ -48,7 +49,7 @@ namespace launcher
 class Controller::Impl
 {
 public:
-  Impl(Controller* parent);
+  Impl(Controller* parent, XdndManager::Ptr xdnd_manager);
   ~Impl();
 
   void UpdateNumWorkspaces(int workspaces);
@@ -124,6 +125,7 @@ public:
   glib::Object<BamfMatcher> matcher_;
   nux::ObjectPtr<Launcher> launcher_;
   nux::ObjectPtr<Launcher> keyboard_launcher_;
+  XdndManager::Ptr xdnd_manager_;
   DeviceLauncherSection  device_section_;
   LauncherEntryRemoteModel remote_model_;
   AbstractLauncherIcon::Ptr expo_icon_;
@@ -143,6 +145,7 @@ public:
   int reactivate_index;
   bool keynav_restore_window_;
   int launcher_key_press_time_;
+  int last_dnd_monitor_;
 
   unsigned dbus_owner_;
   GDBusConnection* gdbus_connection_;

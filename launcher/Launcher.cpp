@@ -91,7 +91,6 @@ const int START_DRAGICON_DURATION = 250;
 const int MOUSE_DEADZONE = 15;
 const float DRAG_OUT_PIXELS = 300.0f;
 
-const std::string DND_CHECK_TIMEOUT = "dnd-check-timeout";
 const std::string START_DRAGICON_TIMEOUT = "start-dragicon-timeout";
 const std::string SCROLL_TIMEOUT = "scroll-timeout";
 const std::string ANIMATION_IDLE = "animation-idle";
@@ -103,7 +102,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(Launcher);
 const int Launcher::Launcher::ANIM_DURATION_SHORT = 125;
 
 Launcher::Launcher(nux::BaseWindow* parent,
-                   nux::ObjectPtr<DNDCollectionWindow> const& collection_window,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
 #ifdef USE_X11
@@ -145,13 +143,10 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _drag_out_delta_x(0.0f)
   , _drag_gesture_ongoing(false)
   , _last_reveal_progress(0.0f)
-  , _collection_window(collection_window)
   , _selection_atom(0)
   , _background_color(nux::color::DimGray)
 {
   m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-
-  _collection_window->collected.connect(sigc::mem_fun(this, &Launcher::OnDNDDataCollected));
 
   bg_effect_helper_.owner = this;
   bg_effect_helper_.enabled = false;
@@ -180,17 +175,11 @@ Launcher::Launcher(nux::BaseWindow* parent,
   ql_manager.quicklist_closed.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
 
   WindowManager& wm = WindowManager::Default();
-  wm.window_mapped.connect(sigc::hide(sigc::mem_fun(this, &Launcher::DndTimeoutSetup)));
-  wm.window_unmapped.connect(sigc::hide(sigc::mem_fun(this, &Launcher::DndTimeoutSetup)));
   wm.initiate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   wm.initiate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   wm.terminate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   wm.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &Launcher::EnsureAnimation));
-
-#ifdef USE_X11
-  display.changed.connect(sigc::mem_fun(this, &Launcher::OnDisplayChanged));
-#endif
 
   // 0 out timers to avoid wonky startups
   for (int i = 0; i < TIME_LAST; ++i)
@@ -225,11 +214,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
 std::string Launcher::GetName() const
 {
   return "Launcher";
-}
-
-void Launcher::OnDisplayChanged(Display* display)
-{
-  _collection_window->display = display;
 }
 
 #ifdef NUX_GESTURES_SUPPORT
@@ -1364,59 +1348,6 @@ int Launcher::GetMouseX() const
 int Launcher::GetMouseY() const
 {
   return _mouse_position.y;
-}
-
-bool Launcher::OnUpdateDragManagerTimeout()
-{
-#ifdef USE_X11
-  if (display() == 0)
-    return false;
-
-  if (!_selection_atom)
-    _selection_atom = XInternAtom(display(), "XdndSelection", false);
-
-  Window drag_owner = XGetSelectionOwner(display(), _selection_atom);
-
-  // evil hack because Qt does not release the seelction owner on drag finished
-  Window root_r, child_r;
-  int root_x_r, root_y_r, win_x_r, win_y_r;
-  unsigned int mask;
-  XQueryPointer(display(), DefaultRootWindow(display()), &root_r, &child_r, &root_x_r, &root_y_r, &win_x_r, &win_y_r, &mask);
-
-  if (drag_owner && (mask & (Button1Mask | Button2Mask | Button3Mask)))
-  {
-    if (_data_checked == false)
-    {
-      _data_checked = true;
-      _collection_window->Collect();
-    }
-
-    return true;
-  }
-
-  _data_checked = false;
-  _collection_window->PushToBack();
-  _collection_window->EnableInputWindow(false, "DNDCollectionWindow");
-
-  if (IsOverlayOpen() && !_hovered)
-    DesaturateIcons();
-
-  DndReset();
-  _hide_machine.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
-  _hide_machine.SetQuirk(LauncherHideMachine::DND_PUSHED_OFF, false);
-#endif
-  return false;
-}
-
-void Launcher::DndTimeoutSetup()
-{
-#ifdef USE_X11
-  if (sources_.GetSource(DND_CHECK_TIMEOUT))
-    return;
-
-  auto cb_func = sigc::mem_fun(this, &Launcher::OnUpdateDragManagerTimeout);
-  sources_.AddTimeout(200, cb_func, DND_CHECK_TIMEOUT);
-#endif
 }
 
 void Launcher::OnPluginStateChanged()
@@ -2566,53 +2497,6 @@ bool Launcher::DndIsSpecialRequest(std::string const& uri) const
   return (boost::algorithm::ends_with(uri, ".desktop") || uri.find("device://") == 0);
 }
 
-void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
-{
-#ifdef USE_X11
-  _dnd_data.Reset();
-
-  const std::string uri_list = "text/uri-list";
-  auto& display = nux::GetWindowThread()->GetGraphicsDisplay();
-
-  for (auto const& mime : mimes)
-  {
-    if (mime != uri_list)
-      continue;
-
-    _dnd_data.Fill(display.GetDndData(const_cast<char*>(uri_list.c_str())));
-    break;
-  }
-
-  _hide_machine.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
-
-  auto const& uris = _dnd_data.Uris();
-  if (std::find_if(uris.begin(), uris.end(), [this] (std::string const& uri)
-                   {return DndIsSpecialRequest(uri);}) != uris.end())
-  {
-    _steal_drag = true;
-
-    if (IsOverlayOpen())
-      SaturateIcons();
-  }
-  else
-  {
-    for (auto const& it : *_model)
-    {
-      if (it->ShouldHighlightOnDrag(_dnd_data))
-      {
-        it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, false);
-        it->SetQuirk(AbstractLauncherIcon::Quirk::PRESENTED, true);
-      }
-      else
-      {
-        it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, true);
-        it->SetQuirk(AbstractLauncherIcon::Quirk::PRESENTED, false);
-      }
-    }
-  }
-#endif
-}
-
 void Launcher::ProcessDndEnter()
 {
 #ifdef USE_X11
@@ -2871,6 +2755,62 @@ bool Launcher::InspectKeyEvent(unsigned int eventType,
 int Launcher::GetDragDelta() const
 {
   return _launcher_drag_delta;
+}
+
+void Launcher::DndStarted(std::string const& data)
+{
+  SetDndQuirk();
+
+  _dnd_data.Fill(data.c_str());
+
+  auto const& uris = _dnd_data.Uris();
+  if (std::find_if(uris.begin(), uris.end(), [this] (std::string const& uri)
+                   {return DndIsSpecialRequest(uri);}) != uris.end())
+  {
+    _steal_drag = true;
+
+    if (IsOverlayOpen())
+      SaturateIcons();
+  }
+  else
+  {
+    for (auto const& it : *_model)
+    {
+      if (it->ShouldHighlightOnDrag(_dnd_data))
+      {
+        it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, false);
+        it->SetQuirk(AbstractLauncherIcon::Quirk::PRESENTED, true);
+      }
+      else
+      {
+        it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, true);
+        it->SetQuirk(AbstractLauncherIcon::Quirk::PRESENTED, false);
+      }
+    }
+  }
+}
+
+void Launcher::DndFinished()
+{
+  UnsetDndQuirk();
+
+  _data_checked = false;
+
+  if (IsOverlayOpen() && !_hovered)
+    DesaturateIcons();
+
+  DndReset();
+}
+
+void Launcher::SetDndQuirk()
+{
+  _hide_machine.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
+}
+
+void Launcher::UnsetDndQuirk()
+{
+  _hide_machine.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
+  _hide_machine.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
 }
 
 } // namespace launcher
