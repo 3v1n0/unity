@@ -50,7 +50,7 @@ protected:
   void ActivateLauncherIcon(ActionArg arg);
 
 private:
-  string GetActualDesktopFileAfterInstall();
+  std::string GetActualDesktopFileAfterInstall();
   void OnPropertyChanged(GVariant* params);
   void OnFinished(GVariant *params);
   void OnDragAnimationFinished();
@@ -64,6 +64,7 @@ private:
   bool needs_urgent_;
 
   std::string aptdaemon_trans_id_;
+  std::string sc_pkgname_;
 };
 
 }

@@ -19,6 +19,7 @@
  */
 
 #include <NuxCore/Logger.h>
+#include <glib.h>
 #include <glib/gi18n-lib.h>
 #include "SoftwareCenterLauncherIcon.h"
 #include "Launcher.h"
@@ -109,7 +110,7 @@ void SoftwareCenterLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   }
 }
 
-string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
+std::string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
 {
    // Fixup the _desktop_file because the one we get from software-center
    // is not the final one, e.g. the s-c-agent does not send it and
@@ -120,7 +121,7 @@ string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
    // - and search in /var/lib/apt/lists/$pkgname.list
    //   for a desktop file that roughly matches what we want
    
-
+   return "";
 }
 
 void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
@@ -151,12 +152,13 @@ void SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
 {
   gint32 progress;
   glib::String property_name;
+  GHashTable *metadata;
+  GVariant* property_value = nullptr;
 
   g_variant_get_child(params, 0, "s", &property_name);
 
   if (property_name.Str() == "Progress")
   {
-    GVariant* property_value = nullptr;
     g_variant_get_child(params, 1, "v", &property_value);
     g_variant_get(property_value, "i", &progress);
 
@@ -168,7 +170,24 @@ void SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
 
     SetProgress(progress/100.0f);
     g_variant_unref(property_value);
+  } 
+  else if (property_name.Str() == "MetaData")
+  {
+     std::cerr << "got metdata" << std::endl;
+
+    // try to get the sc_pkgname from the metadata
+    g_variant_get_child(params, 1, "v", &property_value);
+    g_variant_get(property_value, "a{ss}", &metadata);
+    const gchar *entry = (const gchar*)g_hash_table_lookup (metadata, "sc_pkgname");
+    if (entry)
+    {
+       std::cerr << "got sc_pkgname" << entry << std::endl;
+       sc_pkgname_ = std::string(entry);
+    }
+
+    g_variant_unref(property_value);
   }
+
 }
 
 std::string SoftwareCenterLauncherIcon::GetName() const
