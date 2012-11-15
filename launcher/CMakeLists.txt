@@ -33,7 +33,6 @@ set (LAUNCHER_SOURCES
      ApplicationLauncherIcon.cpp
      BFBLauncherIcon.cpp
      CairoBaseWindow.cpp
-     DNDCollectionWindow.cpp
      Decaymulator.cpp
      DesktopLauncherIcon.cpp
      DeviceLauncherSection.cpp
@@ -73,6 +72,10 @@ set (LAUNCHER_SOURCES
      VolumeImp.cpp
      VolumeLauncherIcon.cpp
      VolumeMonitorWrapper.cpp
+     XdndCollectionWindowImp.cpp
+     XdndManagerImp.cpp
+     XdndStartStopNotifier.cpp
+     XdndStartStopNotifierImp.cpp
      )
 
 if (ENABLE_X_SUPPORT)

@@ -34,7 +34,7 @@ set (CFLAGS
      )
 add_definitions (${CFLAGS})
 
-set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lcompiz_core -lm")
+set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lcompiz_core -lm -lXtst")
 link_libraries (${LIBS})
 
 set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS})
@@ -246,6 +246,8 @@ if (ENABLE_X_SUPPORT)
                  test_unity_settings.cpp
                  test_volume_imp.cpp
                  test_volume_launcher_icon.cpp
+                 test_xdnd_manager_imp.cpp
+                 test_xdnd_start_stop_notifier_imp.cpp
                  bamf-mock-application.c
                  gmockmount.c
                  gmockvolume.c
