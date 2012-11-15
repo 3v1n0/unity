@@ -251,6 +251,7 @@ private:
   float DragOutProgress(struct timespec const& current) const;
   float IconDesatValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
   float IconPresentProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
+  float IconUnfoldProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
   float IconUrgentProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
   float IconShimmerProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
   float IconUrgentPulseValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;

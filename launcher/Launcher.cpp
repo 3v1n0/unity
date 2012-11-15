@@ -383,6 +383,10 @@ bool Launcher::IconNeedsAnimation(AbstractLauncherIcon::Ptr const& icon, struct 
   if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
 
+  time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::UNFOLDED);
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
+    return true;
+
   time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::SHIMMER);
   if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION_LONG)
     return true;
@@ -531,6 +535,18 @@ float Launcher::IconPresentProgress(AbstractLauncherIcon::Ptr const& icon, struc
   float result = CLAMP((float) ms / (float) ANIM_DURATION, 0.0f, 1.0f);
 
   if (icon->GetQuirk(AbstractLauncherIcon::Quirk::PRESENTED))
+    return result;
+  else
+    return 1.0f - result;
+}
+
+float Launcher::IconUnfoldProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
+{
+  struct timespec icon_unfold_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::UNFOLDED);
+  int ms = unity::TimeUtil::TimeDelta(&current, &icon_unfold_time);
+  float result = CLAMP((float) ms / (float) ANIM_DURATION, 0.0f, 1.0f);
+
+  if (icon->GetQuirk(AbstractLauncherIcon::Quirk::UNFOLDED))
     return result;
   else
     return 1.0f - result;
@@ -903,13 +919,14 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr const& icon,
 
   // goes for 0.0f when fully unfolded, to 1.0f folded
   float folding_progress = CLAMP((center.y + _icon_size - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
-  float present_progress = IconPresentProgress(icon, current);
+  float unfold_progress = IconUnfoldProgress(icon, current);
 
-  folding_progress *= 1.0f - present_progress;
+  folding_progress *= 1.0f - unfold_progress;
 
   float half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - folding_progress);
   float icon_hide_offset = autohide_offset;
 
+  float present_progress = IconPresentProgress(icon, current);
   icon_hide_offset *= 1.0f - (present_progress * icon->PresentUrgency());
 
   // icon is crossing threshold, start folding
@@ -1001,8 +1018,8 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
     // magic constant must some day be explained, for now suffice to say this constant prevents the bottom from "marching";
     float magic_constant = 1.3f;
 
-    float present_progress = IconPresentProgress(*it, current);
-    folding_threshold -= CLAMP(sum - launcher_height, 0.0f, height * magic_constant) * (folding_constant + (1.0f - folding_constant) * present_progress);
+    float unfold_progress = IconUnfoldProgress(*it, current);
+    folding_threshold -= CLAMP(sum - launcher_height, 0.0f, height * magic_constant) * (folding_constant + (1.0f - folding_constant) * unfold_progress);
   }
 
   if (sum - _space_between_icons <= launcher_height)
@@ -2532,7 +2549,7 @@ void Launcher::DndReset()
       it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, is_overlay_open && !_hovered);
     }
 
-    it->SetQuirk(AbstractLauncherIcon::Quirk::PRESENTED, false);
+    it->SetQuirk(AbstractLauncherIcon::Quirk::UNFOLDED, false);
   }
 
   DndHoveredIconReset();
@@ -2779,12 +2796,12 @@ void Launcher::DndStarted(std::string const& data)
       if (it->ShouldHighlightOnDrag(_dnd_data))
       {
         it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, false);
-        it->SetQuirk(AbstractLauncherIcon::Quirk::PRESENTED, true);
+        it->SetQuirk(AbstractLauncherIcon::Quirk::UNFOLDED, true);
       }
       else
       {
         it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, true);
-        it->SetQuirk(AbstractLauncherIcon::Quirk::PRESENTED, false);
+        it->SetQuirk(AbstractLauncherIcon::Quirk::UNFOLDED, false);
       }
     }
   }
