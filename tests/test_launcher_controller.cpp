@@ -1554,26 +1554,6 @@ TEST_F(TestLauncherController, UpdateSelectionChanged)
   ASSERT_EQ(lc.Impl()->model_->Selection()->tooltip_text(), last_selection_change);
 }
 
-TEST_F(TestLauncherController, UpdateSelectionChanged)
-{
-  UBusManager manager;
-  std::string last_selection_change;
-  manager.RegisterInterest(UBUS_LAUNCHER_SELECTION_CHANGED, [&] (GVariant *data) { last_selection_change = g_variant_get_string(data, 0); });
-
-  lc.KeyNavGrab();
-  ProcessUBusMessages();
-  ASSERT_EQ(lc.Impl()->model_->Selection()->tooltip_text(), last_selection_change);
-
-  lc.KeyNavNext();
-  ProcessUBusMessages();
-  ASSERT_EQ(lc.Impl()->model_->Selection()->tooltip_text(), last_selection_change);
-
-  lc.Impl()->OpenQuicklist();
-  lc.Impl()->model_->Selection()->CloseQuicklist();
-  ProcessUBusMessages();
-  ASSERT_EQ(lc.Impl()->model_->Selection()->tooltip_text(), last_selection_change);
-}
-
 TEST_F(TestLauncherController, DragAndDrop_MultipleLaunchers)
 {
   lc.multiple_launchers = true;
