@@ -158,26 +158,23 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MAINTAINER_CXXFLAGS}")
 set(UNITY_PROTOCOL_PRIVATE_DEPS unity-protocol-private>=5.95.1)
 set(UNITY_PLUGIN_SHARED_DEPS
     ${UNITY_PROTOCOL_PRIVATE_DEPS}
-    nux-4.0>=4.0.0
-    libbamf3
+    atk
+    atk-bridge-2.0
+    dbusmenu-glib-0.4
     dee-1.0
     gio-2.0
     gio-unix-2.0
     gmodule-2.0
-    dbusmenu-glib-0.4
-    libstartup-notification-1.0
     gthread-2.0
-    indicator3-0.4>=0.4.90
-    atk
-    atk-bridge-2.0
-    unity-misc>=0.4.0
     gtk+-3.0>=3.1
-    sigc++-2.0
+    indicator3-0.4>=0.4.90
     json-glib-1.0
+    libbamf3
     libnotify
-    xfixes
-    libgeis
-    xrender>=0.9
+    libstartup-notification-1.0
+    nux-4.0>=4.0.0
+    sigc++-2.0
+    unity-misc>=0.4.0
     zeitgeist-1.0>=0.3.18
 )
 
@@ -187,7 +184,10 @@ if(ENABLE_X_SUPPORT)
   set(UNITY_PLUGIN_DEPS
       ${UNITY_PLUGIN_DEPS}
       compiz>=0.9.8.0
+      libgeis
       x11
+      xfixes
+      xrender>=0.9
   )
 endif ()
 
