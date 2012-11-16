@@ -57,10 +57,15 @@ struct StaticCairoText::Impl
   struct CacheTexture
   {
     typedef std::shared_ptr<CacheTexture> Ptr;
+    CacheTexture()
+    : start_index(0)
+    , length(std::string::npos)
+    , height(0)
+    {}
 
-    int start_index = 0;
-    size_t length = std::string::npos;
-    int height = 0;
+    int start_index;
+    size_t length;
+    int height;
 
     std::shared_ptr<CairoGraphics> cr;
   };
