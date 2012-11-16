@@ -17,18 +17,12 @@
  */
 
 #include "config.h"
-
 #include "SwitcherView.h"
 #include "unity-shared/IconRenderer.h"
-#include "LayoutSystem.h"
-
 #include "unity-shared/TimeUtil.h"
 
-#include <UnityCore/Variant.h>
-
-#include <NuxCore/Object.h>
 #include <Nux/Nux.h>
-#include <Nux/WindowCompositor.h>
+#include <UnityCore/Variant.h>
 
 namespace unity
 {
@@ -41,36 +35,27 @@ namespace switcher
 NUX_IMPLEMENT_OBJECT_TYPE(SwitcherView);
 
 SwitcherView::SwitcherView()
-  : UnityWindowView()
+  : render_boxes(false)
+  , border_size(50)
+  , flat_spacing(10)
+  , icon_size(128)
+  , minimum_spacing(10)
+  , tile_size(150)
+  , vertical_size(tile_size + 80)
+  , text_size(15)
+  , animation_length(250)
+  , monitor(-1)
+  , spread_size(3.5f)
+  , icon_renderer_(std::make_shared<IconRenderer>())
+  , text_view_(new nux::StaticCairoText(""))
+  , animation_draw_(false)
   , target_sizes_set_(false)
 {
-  icon_renderer_ = AbstractIconRenderer::Ptr(new IconRenderer());
   icon_renderer_->pip_style = OVER_TILE;
-
-  layout_system_ = LayoutSystem::Ptr (new LayoutSystem ());
-  border_size = 50;
-  flat_spacing = 10;
-  icon_size = 128;
-  minimum_spacing = 10;
-  tile_size = 150;
-  vertical_size = tile_size + 80;
-  text_size = 15;
-  animation_length = 250;
-  monitor = -1;
-  spread_size = 3.5f;
-  render_boxes = false;
-
-  animation_draw_ = false;
-
   save_time_.tv_sec = 0;
   save_time_.tv_nsec = 0;
 
-  render_targets_.clear ();
-
-  rounding_texture_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_round_rect.png", -1, true));
-
-  text_view_ = new nux::StaticCairoText("Testing");
-  text_view_->SetMaximumWidth ((int) (tile_size * spread_size));
+  text_view_->SetMaximumWidth(tile_size * spread_size);
   text_view_->SetLines(1);
   text_view_->SetTextColor(nux::color::White);
   text_view_->SetFont("Ubuntu Bold 10");
@@ -99,15 +84,13 @@ void SwitcherView::AddProperties(GVariantBuilder* builder)
   .add("text-size", text_size)
   .add("animation-length", animation_length)
   .add("spread-size", (float)spread_size)
-  .add("label", text_view_->GetText());
+  .add("label", text_view_->GetText())
+  .add("label_visible", text_view_->IsVisible());
 }
 
-
-
-LayoutWindowList SwitcherView::ExternalTargets ()
+LayoutWindow::Vector SwitcherView::ExternalTargets ()
 {
-  LayoutWindowList result = render_targets_;
-  return result;
+  return render_targets_;
 }
 
 void SwitcherView::SetModel(SwitcherModel::Ptr model)
@@ -120,15 +103,10 @@ void SwitcherView::SetModel(SwitcherModel::Ptr model)
   if (!model->Selection())
     return;
 
-  if (model->detail_selection)
-  {
-    Window detail_window = model->DetailSelectionWindow();
-    text_view_->SetText(model->Selection()->NameForWindow(detail_window));
-  }
-  else
-  {
+  text_view_->SetVisible(!model->detail_selection);
+
+  if (!model->detail_selection)
     text_view_->SetText(model->Selection()->tooltip_text());
-  }
 }
 
 void SwitcherView::OnIconSizeChanged (int size)
@@ -149,37 +127,28 @@ void SwitcherView::SaveLast ()
   clock_gettime(CLOCK_MONOTONIC, &save_time_);
 }
 
-void SwitcherView::OnDetailSelectionIndexChanged (unsigned int index)
+void SwitcherView::OnDetailSelectionIndexChanged(unsigned int index)
 {
-  if (model_->detail_selection)
-  {
-    Window detail_window = model_->DetailSelectionWindow();
-    text_view_->SetText(model_->Selection()->NameForWindow(detail_window));
-  }
   QueueDraw ();
 }
 
-void SwitcherView::OnDetailSelectionChanged (bool detail)
+void SwitcherView::OnDetailSelectionChanged(bool detail)
 {
+  text_view_->SetVisible(!detail);
 
-  if (detail)
-  {
-    Window detail_window = model_->DetailSelectionWindow();
-    text_view_->SetText(model_->Selection()->NameForWindow(detail_window));
-  }
-  else
-  {
+  if (!detail)
     text_view_->SetText(model_->Selection()->tooltip_text());
-  }
-  SaveLast ();
-  QueueDraw ();
+
+  SaveLast();
+  QueueDraw();
 }
 
 void SwitcherView::OnSelectionChanged(AbstractLauncherIcon::Ptr const& selection)
 {
   if (selection)
     text_view_->SetText(selection->tooltip_text());
-  SaveLast ();
+
+  SaveLast();
   QueueDraw();
 }
 
@@ -250,43 +219,52 @@ nux::Geometry SwitcherView::InterpolateBackground (nux::Geometry const& start, n
   return result;
 }
 
-nux::Geometry SwitcherView::UpdateRenderTargets (nux::Point const& center, timespec const& current)
+nux::Geometry SwitcherView::UpdateRenderTargets(nux::Point const& center, timespec const& current)
 {
-  std::vector<Window> xids = model_->DetailXids ();
+  std::vector<Window> const& xids = model_->DetailXids();
 
   int ms_since_change = TimeUtil::TimeDelta(&current, &save_time_);
-  float progress = MIN (1.0f, (float) ms_since_change / (float) animation_length());
+  float progress = std::min<float>(1.0f, ms_since_change / static_cast<float>(animation_length()));
 
   for (Window window : xids)
   {
-    LayoutWindow::Ptr layout_window (new LayoutWindow (window));
+    auto layout_window = std::make_shared<LayoutWindow>(window);
+    bool selected = (window == model_->DetailSelectionWindow());
+    layout_window->selected = selected;
+    layout_window->alpha = (selected ? 1.0f : 0.9f) * progress;
 
-    if (window == model_->DetailSelectionWindow ())
-      layout_window->alpha = 1.0f * progress;
-    else
-      layout_window->alpha = 0.9f * progress;
-
-    render_targets_.push_back (layout_window);
+    render_targets_.push_back(layout_window);
   }
 
   nux::Geometry max_bounds;
-
-  nux::Geometry absolute = GetAbsoluteGeometry ();
-  nux::Size spread_size = SpreadSize();
+  nux::Geometry const& absolute = GetAbsoluteGeometry();
+  nux::Size const& spread_size = SpreadSize();
   max_bounds.x = absolute.x + center.x - spread_size.width / 2;
   max_bounds.y = absolute.y + center.y - spread_size.height / 2;
   max_bounds.width = spread_size.width;
   max_bounds.height = spread_size.height;
 
   nux::Geometry final_bounds;
-  layout_system_->LayoutWindows (render_targets_, max_bounds, final_bounds);
+  layout_system_.LayoutWindows(render_targets_, max_bounds, final_bounds);
+
+  if (progress < 1.0f)
+  {
+    // Animate the windows thumbnail sizes to make them grow with the switcher
+    for (LayoutWindow::Ptr const& win : render_targets_)
+    {
+      auto old_geo = win->result;
+      win->result = old_geo * progress;
+      win->result.x += (old_geo.width - win->result.width) / 4;
+      win->result.y += (old_geo.height - win->result.height) / 4;
+    }
+  }
 
   return final_bounds;
 }
 
 void SwitcherView::OffsetRenderTargets (int x, int y)
 {
-  for (LayoutWindow::Ptr target : render_targets_)
+  for (LayoutWindow::Ptr const& target : render_targets_)
   {
     target->result.x += x;
     target->result.y += y;
@@ -295,14 +273,11 @@ void SwitcherView::OffsetRenderTargets (int x, int y)
 
 nux::Size SwitcherView::SpreadSize()
 {
-  nux::Geometry base = GetGeometry();
-  nux::Size result (base.width - border_size * 2, base.height - border_size * 2);
+  nux::Geometry const& base = GetGeometry();
+  nux::Size result(base.width - border_size * 2, base.height - border_size * 2);
 
   int width_padding = std::max(model_->Size() - 1, 0) * minimum_spacing + tile_size;
-  int height_padding = text_size;
-
   result.width -= width_padding;
-  result.height -= height_padding;
 
   return result;
 }
@@ -384,33 +359,33 @@ void SwitcherView::GetFlatIconPositions (int n_flat_icons,
 std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo, int selection, timespec const& current)
 {
   std::list<RenderArg> results;
-  nux::Geometry base = GetGeometry();
+  nux::Geometry const& base = GetGeometry();
 
   render_targets_.clear ();
 
   bool detail_selection = model_->detail_selection;
 
   background_geo.y = base.y + base.height / 2 - (vertical_size / 2);
-  background_geo.height = vertical_size + text_size;
+  background_geo.height = vertical_size;
 
+  if (text_view_->IsVisible())
+    background_geo.height += text_size;
 
   if (model_)
   {
-
     int size = model_->Size();
     int padded_tile_size = tile_size + flat_spacing * 2;
     int max_width = base.width - border_size * 2;
 
-    nux::Geometry spread_bounds;
     int spread_padded_width = 0;
     if (detail_selection)
     {
-      spread_bounds = UpdateRenderTargets (nux::Point (0, 0), current);
+      nux::Geometry const& spread_bounds = UpdateRenderTargets(nux::Point(), current);
       // remove extra space consumed by spread
       spread_padded_width = spread_bounds.width + 100;
       max_width -= spread_padded_width - tile_size;
 
-      int expansion = MAX (0, spread_bounds.height - icon_size);
+      int expansion = std::max(0, spread_bounds.height - icon_size);
       background_geo.y -= expansion / 2;
       background_geo.height += expansion;
     }
@@ -445,13 +420,12 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
 
     GetFlatIconPositions (n_flat_icons, size, selection, first_flat, last_flat, half_fold_left, half_fold_right);
 
-    SwitcherModel::iterator it;
     int i = 0;
     int y = base.y + base.height / 2;
     x += border_size;
-    for (it = model_->begin(); it != model_->end(); ++it)
+    for (auto const& icon : *model_)
     {
-      RenderArg arg = CreateBaseArgForIcon(*it);
+      RenderArg arg = CreateBaseArgForIcon(icon);
 
       float scalar = partial_overflow_scalar;
 
@@ -559,13 +533,13 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
   nux::Geometry base = GetGeometry();
 
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-  std::list<RenderArg>::iterator it;
-  for (it = last_args_.begin(); it != last_args_.end(); ++it)
+
+  for (auto const& arg : last_args_)
   {
-    if (model_->Selection() == it->icon)
+    if (text_view_->IsVisible() && model_->Selection() == arg.icon)
     {
       int view_width = text_view_->GetBaseWidth();
-      int start_x = it->render_center.x - view_width / 2;
+      int start_x = arg.render_center.x - view_width / 2;
 
       internal_clip.Expand (-10, -10);
       if (start_x < internal_clip.x)
@@ -575,12 +549,12 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
 
       text_view_->SetBaseX(start_x);
     }
-    if (it->y_rotation < 0)
-      icon_renderer_->RenderIcon(GfxContext, *it, base, base);
+
+    if (arg.y_rotation < 0)
+      icon_renderer_->RenderIcon(GfxContext, arg, base, base);
   }
 
-  std::list<RenderArg>::reverse_iterator rit;
-  for (rit = last_args_.rbegin(); rit != last_args_.rend(); ++rit)
+  for (auto rit = last_args_.rbegin(); rit != last_args_.rend(); ++rit)
   {
     if (rit->y_rotation >= 0)
       icon_renderer_->RenderIcon(GfxContext, *rit, base, base);
@@ -589,7 +563,7 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
   if (render_boxes)
   {
     float val = 0.1f;
-    for (LayoutWindow::Ptr layout : ExternalTargets())
+    for (LayoutWindow::Ptr const& layout : ExternalTargets())
     {
       gPainter.Paint2DQuadColor(GfxContext, layout->result, nux::Color(val, val, val ,val));
       val += 0.1f;
@@ -598,36 +572,24 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
         val = 0.1f;
     }
 
-    for (rit = last_args_.rbegin(); rit != last_args_.rend(); ++rit)
+    for (auto rit = last_args_.rbegin(); rit != last_args_.rend(); ++rit)
     {
       nux::Geometry tmp (rit->render_center.x - 1, rit->render_center.y - 1, 2, 2);
       gPainter.Paint2DQuadColor(GfxContext, tmp, nux::color::Red);
     }
   }
 
-  // render orange box that will encirlce active item(s)
-  for (LayoutWindow::Ptr window : ExternalTargets())
+  if (text_view_->IsVisible())
   {
-    nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
-    if (window->alpha >= 1.0f)
-    {
-      nux::Geometry orange_box = window->result;
-      orange_box.Expand(5, 5);
-      orange_box.x -= geo_absolute.x;
-      orange_box.y -= geo_absolute.y;
-
-      gPainter.PaintTextureShape(GfxContext, orange_box, rounding_texture_.GetPointer(), 6, 6, 6, 6, false);
-    }
+    text_view_->SetBaseY(last_background_.y + last_background_.height - 45);
+    text_view_->Draw(GfxContext, force_draw);
   }
-
-  text_view_->SetBaseY(last_background_.y + last_background_.height - 45);
-  text_view_->Draw(GfxContext, force_draw);
 
   int ms_since_change = TimeUtil::TimeDelta(&current_, &save_time_);
 
   if (ms_since_change < animation_length && !redraw_idle_)
   {
-    redraw_idle_.reset(new glib::Idle([&] () {
+    redraw_idle_.reset(new glib::Idle([this] () {
       QueueDraw();
       animation_draw_ = true;
       redraw_idle_.reset();
@@ -649,7 +611,7 @@ int SwitcherView::IconIndexAt(int x, int y)
   // implementation is enough.
 
   int i = 0;
-  for (auto arg : last_args_)
+  for (auto const& arg : last_args_)
   {
     if (x < (arg.logical_center.x - half_size)
         || x > (arg.logical_center.x + half_size))
