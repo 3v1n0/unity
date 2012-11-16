@@ -117,10 +117,32 @@ std::string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
    // app-install-data points to the "wrong" one in /usr/share/app-install
    //
    // So:
+   // - if there is a desktop file already and it startswith 
+   //   /usr/share/app-install/desktop, then transform to 
+   //   /usr/share/application
    // - get the pkgname
    // - and search in /var/lib/apt/lists/$pkgname.list
    //   for a desktop file that roughly matches what we want
    
+   // take /usr/share/app-install/desktop/foo:subdir__bar.desktop
+   // and tranform it
+   if (_desktop_file.find("/usr/share/app-install/desktop") == 0)
+   {
+      int pos = 0;
+      std::string filename = _desktop_file.substr(_desktop_file.rfind("/"),
+                                                  _desktop_file.length());
+      filename = _desktop_file.substr(filename.find(":"), filename.length());
+      if (filename.search("__") > 0)
+      {
+         pos = filename.search("__");
+         filename = filename.replace(pos, 2, "/");
+      }
+      filename = std::string("/usr/share/app-install/" + filename);
+   } else {
+
+   }
+
+
    return "";
 }
 

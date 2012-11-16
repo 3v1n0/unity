@@ -53,6 +53,11 @@ TEST_F(TestSoftwareCenterLauncherIcon, Construction)
   EXPECT_EQ(icon.tooltip_text(), bamf_view_get_name(glib::object_cast<BamfView>(usc)));
 }
 
+TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransform)
+{
+   EXPECT_EQ(icon.GetActualDesktopFileAfterInstall(), USC_DESKTOP);
+}
+
 TEST_F(TestSoftwareCenterLauncherIcon, Animate)
 {
   ASSERT_FALSE(icon.IsVisible());
