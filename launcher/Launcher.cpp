@@ -1369,7 +1369,7 @@ int Launcher::GetMouseY() const
 bool Launcher::OnUpdateDragManagerTimeout()
 {
 #ifdef USE_X11
-  if (display() == 0)
+  if (!display())
     return false;
 
   if (!_selection_atom)

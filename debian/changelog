@@ -25,6 +25,9 @@ unity (6.12.0-0ubuntu2) UNRELEASED; urgency=low
   [ bschaefer ]
   * Ported to nux 4.0
 
+  [ Ricardo Salveti de Araujo ]
+  * Doesn't need to depend on gcc 4.6 anymore (LP: #1044836)
+
  -- Michael Terry <mterry@ubuntu.com>  Tue, 06 Nov 2012 10:52:43 -0500
 
 unity (6.12.0-0ubuntu1) raring; urgency=low
