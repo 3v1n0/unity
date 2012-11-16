@@ -794,16 +794,14 @@ class PreviewNavigateTests(DashTestCase):
     def setUp(self):
         super(PreviewNavigateTests, self).setUp()
 
-        self.dash.reveal_application_lens()
+        lens = self.dash.reveal_application_lens()
         self.addCleanup(self.dash.ensure_hidden)
 
-        lens = self.dash.get_current_lens()
-
-        results_category = lens.get_category_by_name("Installed")
-        results = results_category.get_results()
+        results_category = lens.get_category_by_name("More suggestions")
         # wait for results (we need 4 results to perorm the multi-navigation tests)
-        refresh_fn = lambda: len(results)
+        refresh_fn = lambda: len(results_category.get_results())
         self.assertThat(refresh_fn, Eventually(GreaterThan(4)))
+        results = results_category.get_results()
 
         result = results[2] # 2 so we can navigate left
         result.preview()
