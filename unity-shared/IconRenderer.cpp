@@ -220,6 +220,9 @@ void destroy_textures();
 }
 
 IconRenderer::IconRenderer()
+  : icon_size(0)
+  , image_size(0)
+  , spacing(0)
 {
   pip_style = OUTSIDE_TILE;
 

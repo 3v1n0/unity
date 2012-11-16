@@ -403,8 +403,8 @@ void LensView::OnCategoryAdded(Category const& category)
 
   /* We need the full range of method args so we can specify the offset
    * of the group into the layout */
-  scroll_layout_->AddView(group, 0, nux::MinorDimensionPosition::eAbove,
-                          nux::MinorDimensionSize::eFull, 100.0f,
+  scroll_layout_->AddView(group, 0, nux::MinorDimensionPosition::MINOR_POSITION_START,
+                          nux::MinorDimensionSize::MINOR_SIZE_FULL, 100.0f,
                           (nux::LayoutPosition)index);
 }
 
@@ -604,10 +604,10 @@ void LensView::HideResultsMessage()
   }
 }
 
-void LensView::PerformSearch(std::string const& search_query)
+void LensView::PerformSearch(std::string const& search_query, Lens::SearchFinishedCallback const& cb)
 {
   search_string_ = search_query;
-  lens_->Search(search_query);
+  lens_->Search(search_query, cb);
 }
 
 std::string LensView::get_search_string() const
@@ -663,7 +663,7 @@ void LensView::OnViewTypeChanged(ViewType view_type)
   if (view_type != HIDDEN && initial_activation_)
   {
     /* We reset the lens for ourselves, in case this is a restart or something */
-    lens_->Search(search_string_);
+    lens_->Search(search_string_, [] (Lens::Hints const&, glib::Error const&) {});
     initial_activation_ = false;
   }
 

@@ -20,7 +20,7 @@
 #ifndef UNITYSHELL_LAYOUTSYSTEM_H
 #define UNITYSHELL_LAYOUTSYSTEM_H
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <sigc++/sigc++.h>
 #include <Nux/Nux.h>
 
@@ -29,48 +29,45 @@
 namespace unity {
 namespace ui {
 
-class LayoutWindow
+struct LayoutWindow
 {
-public:
-  typedef boost::shared_ptr<LayoutWindow> Ptr;
+  typedef std::shared_ptr<LayoutWindow> Ptr;
+  typedef std::vector<LayoutWindow::Ptr> Vector;
 
-  LayoutWindow (Window xid);
+  LayoutWindow(Window xid);
 
   Window xid;
 
   nux::Geometry geo;
   nux::Geometry result;
+  unsigned decoration_height;
 
+  bool selected;
   float aspect_ratio;
   float alpha;
 };
 
-typedef std::vector<LayoutWindow::Ptr> LayoutWindowList;
-
 class LayoutSystem
 {
 public:
-  typedef boost::shared_ptr<LayoutSystem> Ptr;
-
   nux::Property<int> spacing;
   nux::Property<int> max_row_height;
 
-  LayoutSystem ();
-  ~LayoutSystem ();
+  LayoutSystem();
 
-  void LayoutWindows (LayoutWindowList windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
+  void LayoutWindows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
 
 protected:
-  void LayoutGridWindows (LayoutWindowList const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
+  void LayoutGridWindows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
 
-  nux::Geometry LayoutRow (LayoutWindowList const& row, nux::Geometry const& row_bounds);
-  nux::Geometry CompressAndPadRow (LayoutWindowList const& windows, nux::Geometry const& max_bounds);
+  nux::Geometry LayoutRow(LayoutWindow::Vector const& row, nux::Geometry const& row_bounds);
+  nux::Geometry CompressAndPadRow(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds);
 
-  std::vector<LayoutWindowList> GetRows (LayoutWindowList const& windows, nux::Geometry const& max_bounds);
+  std::vector<LayoutWindow::Vector> GetRows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds);
 
-  nux::Size GridSizeForWindows (LayoutWindowList windows, nux::Geometry const& max_bounds);
+  nux::Size GridSizeForWindows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds);
 
-  nux::Geometry ScaleBoxIntoBox (nux::Geometry const& bounds, nux::Geometry const& box);
+  nux::Geometry ScaleBoxIntoBox(nux::Geometry const& bounds, nux::Geometry const& box);
 };
 
 }

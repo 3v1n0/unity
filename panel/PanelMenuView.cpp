@@ -79,7 +79,7 @@ PanelMenuView::PanelMenuView()
     _fade_in_animator(_menus_fadein),
     _fade_out_animator(_menus_fadeout)
 {
-  layout_->SetContentDistribution(nux::eStackLeft);
+  layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
 
   BamfWindow* active_win = bamf_matcher_get_active_window(_matcher);
   if (BAMF_IS_WINDOW(active_win))
@@ -743,13 +743,6 @@ void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::s
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
   gtk_style_context_save(style_context);
-
-  GtkWidgetPath* widget_path = gtk_widget_path_new();
-  gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
-  gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
-  gtk_widget_path_iter_set_name(widget_path, -1 , "UnityPanelWidget");
-
-  gtk_style_context_set_path(style_context, widget_path);
   gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
   gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
 
@@ -781,7 +774,6 @@ void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::s
 
   x += text_width;
 
-  gtk_widget_path_free(widget_path);
   gtk_style_context_restore(style_context);
 }
 
@@ -1054,7 +1046,7 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
       // if we've just started tracking this window and it is maximized, let's
       // make sure it's undecorated just in case it slipped by us earlier
       // (I'm looking at you, Chromium!)
-      if (_is_maximized && wm.IsWindowDecorated(xid))
+      if (_is_maximized && wm.HasWindowDecorations(xid))
       {
         wm.Undecorate(xid);
         _maximized_set.insert(xid);
@@ -1185,7 +1177,7 @@ void PanelMenuView::OnWindowMaximized(guint xid)
 
   // update the state of the window in the _decor_map
   WindowManager& wm = WindowManager::Default();
-  _decor_map[xid] = wm.IsWindowDecorated(xid);
+  _decor_map[xid] = wm.HasWindowDecorations(xid);
 
   if (_decor_map[xid])
     wm.Undecorate(xid);
@@ -1322,7 +1314,7 @@ Window PanelMenuView::GetTopWindow() const
       continue;
 
     Window xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
-    bool visible = bamf_view_user_visible(static_cast<BamfView*>(l->data));
+    bool visible = bamf_view_is_user_visible(static_cast<BamfView*>(l->data));
 
     if (visible && IsValidWindow(xid))
     {
@@ -1659,7 +1651,7 @@ void PanelMenuView::SetMonitor(int monitor)
     {
       Window xid = bamf_window_get_xid(window);
 
-      _decor_map[xid] = wm.IsWindowDecorated(xid);
+      _decor_map[xid] = wm.HasWindowDecorations(xid);
 
       if (_decor_map[xid])
         wm.Undecorate(xid);

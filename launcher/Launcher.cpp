@@ -106,7 +106,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
                    nux::ObjectPtr<DNDCollectionWindow> const& collection_window,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   , display(nux::GetGraphicsDisplay()->GetX11Display())
 #else
   , display(0)
@@ -188,7 +188,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   wm.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &Launcher::EnsureAnimation));
 
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   display.changed.connect(sigc::mem_fun(this, &Launcher::OnDisplayChanged));
 #endif
 
@@ -232,8 +232,8 @@ void Launcher::OnDisplayChanged(Display* display)
   _collection_window->display = display;
 }
 
-void
-Launcher::OnDragStart(const nux::GestureEvent &event)
+#ifdef NUX_GESTURES_SUPPORT
+void Launcher::OnDragStart(const nux::GestureEvent &event)
 {
   _drag_gesture_ongoing = true;
   if (_hidden)
@@ -247,16 +247,14 @@ Launcher::OnDragStart(const nux::GestureEvent &event)
   }
 }
 
-void
-Launcher::OnDragUpdate(const nux::GestureEvent &event)
+void Launcher::OnDragUpdate(const nux::GestureEvent &event)
 {
   _drag_out_delta_x =
     CLAMP(_drag_out_delta_x + event.GetDelta().x, 0.0f, DRAG_OUT_PIXELS);
   EnsureAnimation();
 }
 
-void
-Launcher::OnDragFinish(const nux::GestureEvent &event)
+void Launcher::OnDragFinish(const nux::GestureEvent &event)
 {
   if (_drag_out_delta_x >= DRAG_OUT_PIXELS - 90.0f)
     _hide_machine.SetQuirk(LauncherHideMachine::MT_DRAG_OUT, true);
@@ -266,6 +264,7 @@ Launcher::OnDragFinish(const nux::GestureEvent &event)
   EnsureAnimation();
   _drag_gesture_ongoing = false;
 }
+#endif
 
 void Launcher::AddProperties(GVariantBuilder* builder)
 {
@@ -640,15 +639,27 @@ float Launcher::IconUrgentWiggleValue(AbstractLauncherIcon::Ptr const& icon, str
 
 float Launcher::IconStartingBlinkValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
 {
+  if (icon->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING))
+    return 1.0f;
+
+  if (!icon->GetQuirk(AbstractLauncherIcon::Quirk::STARTING))
+    return 1.0f;
+
   struct timespec starting_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::STARTING);
   int starting_ms = unity::TimeUtil::TimeDelta(&current, &starting_time);
   double starting_progress = (double) CLAMP((float) starting_ms / (float)(ANIM_DURATION_LONG * STARTING_BLINK_LAMBDA), 0.0f, 1.0f);
   double val = IsBackLightModeToggles() ? 3.0f : 4.0f;
-  return 0.5f + (float)(std::cos(M_PI * val * starting_progress)) * 0.5f;
+  return 1.0f-(0.5f + (float)(std::cos(M_PI * val * starting_progress)) * 0.5f);
 }
 
 float Launcher::IconStartingPulseValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
 {
+  if (icon->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING))
+    return 1.0f;
+
+  if (!icon->GetQuirk(AbstractLauncherIcon::Quirk::STARTING))
+    return 1.0f;
+
   struct timespec starting_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::STARTING);
   int starting_ms = unity::TimeUtil::TimeDelta(&current, &starting_time);
   double starting_progress = (double) CLAMP((float) starting_ms / (float)(ANIM_DURATION_LONG * MAX_STARTING_BLINKS * STARTING_BLINK_LAMBDA * 2), 0.0f, 1.0f);
@@ -659,7 +670,7 @@ float Launcher::IconStartingPulseValue(AbstractLauncherIcon::Ptr const& icon, st
     icon->ResetQuirkTime(AbstractLauncherIcon::Quirk::STARTING);
   }
 
-  return 0.5f + (float)(std::cos(M_PI * (float)(MAX_STARTING_BLINKS * 2) * starting_progress)) * 0.5f;
+  return 1.0f-(0.5f + (float)(std::cos(M_PI * (float)(MAX_STARTING_BLINKS * 2) * starting_progress)) * 0.5f);
 }
 
 float Launcher::IconBackgroundIntensity(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
@@ -1357,8 +1368,8 @@ int Launcher::GetMouseY() const
 
 bool Launcher::OnUpdateDragManagerTimeout()
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
-  if (display() == 0)
+#ifdef USE_X11
+  if (!display())
     return false;
 
   if (!_selection_atom)
@@ -1399,7 +1410,7 @@ bool Launcher::OnUpdateDragManagerTimeout()
 
 void Launcher::DndTimeoutSetup()
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   if (sources_.GetSource(DND_CHECK_TIMEOUT))
     return;
 
@@ -1958,7 +1969,7 @@ long Launcher::PostLayoutManagement(long LayoutResult)
 
   SetMousePosition(0, 0);
 
-  return nux::eCompliantHeight | nux::eCompliantWidth;
+  return nux::SIZE_EQUAL_HEIGHT | nux::SIZE_EQUAL_WIDTH;
 }
 
 void Launcher::OnDragWindowAnimCompleted()
@@ -2223,7 +2234,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
 
   if (GetActionState() == ACTION_NONE)
   {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
     if (nux::Abs(_dnd_delta_y) >= nux::Abs(_dnd_delta_x))
     {
       _launcher_drag_delta += _dnd_delta_y;
@@ -2298,7 +2309,7 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
   EnsureAnimation();
 }
 
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
 
 bool Launcher::HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
 {
@@ -2530,6 +2541,7 @@ void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLaun
   unity::graphics::PopOffscreenRenderTarget();
 }
 
+#ifdef NUX_GESTURES_SUPPORT
 nux::GestureDeliveryRequest Launcher::GestureEvent(const nux::GestureEvent &event)
 {
   switch(event.type)
@@ -2547,6 +2559,7 @@ nux::GestureDeliveryRequest Launcher::GestureEvent(const nux::GestureEvent &even
 
   return nux::GestureDeliveryRequest::NONE;
 }
+#endif
 
 bool Launcher::DndIsSpecialRequest(std::string const& uri) const
 {
@@ -2555,7 +2568,7 @@ bool Launcher::DndIsSpecialRequest(std::string const& uri) const
 
 void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   _dnd_data.Reset();
 
   const std::string uri_list = "text/uri-list";
@@ -2602,7 +2615,7 @@ void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
 
 void Launcher::ProcessDndEnter()
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   SetStateMouseOverLauncher(true);
 
   _dnd_data.Reset();
@@ -2616,7 +2629,7 @@ void Launcher::ProcessDndEnter()
 
 void Launcher::DndReset()
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   _dnd_data.Reset();
 
   bool is_overlay_open = IsOverlayOpen();
@@ -2644,7 +2657,7 @@ void Launcher::DndReset()
 
 void Launcher::DndHoveredIconReset()
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   _drag_edge_touching = false;
   SetActionState(ACTION_NONE);
 
@@ -2664,7 +2677,7 @@ void Launcher::DndHoveredIconReset()
 
 void Launcher::ProcessDndLeave()
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   SetStateMouseOverLauncher(false);
 
   DndHoveredIconReset();
@@ -2673,7 +2686,7 @@ void Launcher::ProcessDndLeave()
 
 void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   if (!_data_checked)
   {
     const std::string uri_list = "text/uri-list";
@@ -2805,7 +2818,7 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 
 void Launcher::ProcessDndDrop(int x, int y)
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   if (_steal_drag)
   {
     for (auto const& uri : _dnd_data.Uris())

@@ -130,7 +130,7 @@ void Controller::SetupDashView()
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout->AddView(view_, 1);
-  layout->SetContentDistribution(nux::eStackLeft);
+  layout->SetContentDistribution(nux::MAJOR_POSITION_START);
   layout->SetVerticalExternalMargin(0);
   layout->SetHorizontalExternalMargin(0);
   window_->SetLayout(layout);
