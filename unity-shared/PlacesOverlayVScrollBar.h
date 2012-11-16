@@ -47,6 +47,9 @@ private:
     DOWN,
   };
 
+  void OnTrackGeometryChanged(nux::Area* area, nux::Geometry& geo);
+  void OnVisibilityChanged(nux::Area* area, bool visible);
+
   void OnMouseNear(nux::Point const& mouse_pos);
   void OnMouseBeyond(nux::Point const& mouse_pos);
   void AdjustThumbOffsetFromMouse();

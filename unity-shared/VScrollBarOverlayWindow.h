@@ -24,8 +24,6 @@
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 
-#include "unity-shared/UBusWrapper.h"
-
 
 class VScrollBarOverlayWindow : public nux::BaseWindow
 {
@@ -78,11 +76,7 @@ private:
 
   void UpdateTexture();
 
-  void OnOverlayHidden(GVariant* data);
-
-  unity::UBusManager _ubus_manager;
   nux::Geometry content_size_;
-
   nux::ObjectPtr<nux::BaseTexture> thumb_texture_;
 
   int content_offset_x_;

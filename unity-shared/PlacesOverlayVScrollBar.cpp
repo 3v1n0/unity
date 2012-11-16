@@ -48,21 +48,27 @@ PlacesOverlayVScrollBar::PlacesOverlayVScrollBar(NUX_FILE_LINE_DECL)
   _overlay_window->mouse_move.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseMove));
   _overlay_window->mouse_drag.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseDrag));
 
-  _track->geometry_changed.connect([&] (nux::Area* area, nux::Geometry& geo) {
-    UpdateStepY();
-    _overlay_window->UpdateGeometry(_track->GetAbsoluteGeometry());
-
-    if (_overlay_window->IsVisible() && content_height_ <= container_height_)
-      _overlay_window->ResetStates();
-  });
-
-  OnVisibleChanged.connect([&] (nux::Area* area, bool visible) {
-    _overlay_window->SetVisible(visible);
-  });
+  _track->geometry_changed.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnTrackGeometryChanged));
+  OnVisibleChanged.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnVisibilityChanged));
 }
 
 PlacesOverlayVScrollBar::~PlacesOverlayVScrollBar()
 {
+}
+
+void PlacesOverlayVScrollBar::OnTrackGeometryChanged(nux::Area* area, nux::Geometry& geo)
+{
+  UpdateStepY();
+  _overlay_window->UpdateGeometry(_track->GetAbsoluteGeometry());
+
+  if (_overlay_window->IsVisible() && content_height_ <= container_height_)
+    _overlay_window->ResetStates();
+}
+
+void PlacesOverlayVScrollBar::OnVisibilityChanged(nux::Area* area, bool visible)
+{
+  if (_overlay_window->IsVisible() && !visible)
+    _overlay_window->ResetStates();
 }
 
 void PlacesOverlayVScrollBar::SetupAnimation(ScrollDir dir, int stop)

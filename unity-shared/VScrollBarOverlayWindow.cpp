@@ -22,7 +22,6 @@
 
 #include "VScrollBarOverlayWindow.h"
 #include "UScreen.h"
-#include "UBusMessages.h"
 #include "DashStyle.h"
 #include "CairoTexture.h"
 
@@ -48,8 +47,6 @@ VScrollBarOverlayWindow::VScrollBarOverlayWindow(nux::Geometry const& geo)
   SetBackgroundColor(nux::color::Transparent);
 
   UpdateTexture();
-
-  _ubus_manager.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &VScrollBarOverlayWindow::OnOverlayHidden));
 }
 
 VScrollBarOverlayWindow::~VScrollBarOverlayWindow()
@@ -223,11 +220,6 @@ void VScrollBarOverlayWindow::ShouldHide()
       QueueDraw();
     }
   }
-}
-
-void VScrollBarOverlayWindow::OnOverlayHidden(GVariant* data)
-{
-  ResetStates();
 }
 
 void VScrollBarOverlayWindow::ResetStates()
