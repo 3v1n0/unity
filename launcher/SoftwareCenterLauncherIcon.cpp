@@ -181,6 +181,10 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
       // find and update to actual desktop file
       _desktop_file = GetActualDesktopFileAfterInstall();
       UpdateDesktopFile();
+      // mvo: we may need to check here if the desktop file
+      //      has a NoDisplay line or if its missing a Exec line
+      //      and if so call "UnStick()" - but I think s-c should
+      //      not call the dbus call for those
    }
    else
    {
