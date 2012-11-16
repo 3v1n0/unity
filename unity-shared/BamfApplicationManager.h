@@ -22,6 +22,7 @@
 
 #include <libbamf/libbamf.h>
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GLibSignal.h>
 
 #include "unity-shared/ApplicationManager.h"
 
@@ -36,13 +37,13 @@ public:
 
   virtual std::string title() const;
 private:
-  glib::Object<BamfView> bamf_view_;
+  glib::Object< ::BamfView> bamf_view_;
 };
 
 class BamfApplication : public Application
 {
 public:
-  BamfApplication(BamfApplication* app);
+  BamfApplication(::BamfApplication* app);
   ~BamfApplication();
 
   virtual std::string icon() const;
@@ -50,9 +51,19 @@ public:
 
   virtual WindowList get_windows() const;
 
+private: // Property getters and setters
+  bool GetSeen() const;
+  bool SetSeen(bool const& param);
+
+  bool GetSticky() const;
+  bool SetSticky(bool const& param);
+
+  bool GetVisible() const;
+
 private:
-  glib::Object<BamfApplication> bamf_app_;
-  glib::Object<BamfView> bamf_view_;
+  glib::Object< ::BamfApplication> bamf_app_;
+  glib::Object< ::BamfView> bamf_view_;
+  glib::SignalManager signals_;
 };
 
 class BamfApplicationManager : public ApplicationManager
@@ -62,9 +73,17 @@ public:
   ~BamfApplicationManager();
 
   virtual ApplicationPtr active_application() const;
+  virtual ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) const;
+
+
   virtual ApplicationList running_applications() const;
+
 private:
-  glib::Object<BamfMatcher> matcher_;
+  void OnViewOpened(BamfMatcher* matcher, BamfView* view);
+
+private:
+  glib::Object< ::BamfMatcher> matcher_;
+  glib::Signal<void, ::BamfMatcher*, ::BamfView*> view_opened_signal_;
 
 };
 

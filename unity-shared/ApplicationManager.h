@@ -23,6 +23,7 @@
 #include <memory>
 #include <vector>
 
+#include <sigc++/signal.h>
 #include <NuxCore/Property.h>
 
 
@@ -59,7 +60,10 @@ public:
   virtual WindowList get_windows() const = 0;
 
   // Considering using a property for the "unity-seen" quark
-  nux::Property<bool> seen;
+  nux::RWProperty<bool> seen;
+  nux::RWProperty<bool> sticky;
+
+  nux::ROProperty<bool> visible;
 };
 
 
@@ -71,7 +75,12 @@ public:
   static ApplicationManager& Default();
 
   virtual ApplicationPtr active_application() const = 0;
+
+  virtual ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) const = 0;
+
   virtual ApplicationList running_applications() const = 0;
+
+  sigc::signal<void, ApplicationPtr const&> application_started;
 };
 
 }

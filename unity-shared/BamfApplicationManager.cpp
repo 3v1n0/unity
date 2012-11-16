@@ -29,6 +29,11 @@ DECLARE_LOGGER(logger, "unity.appmanager.bamf");
 
 namespace unity
 {
+namespace
+{
+const char* UNSEEN_QUARK = "unity-unseen";
+}
+
 // This function is used by the static Default method on the ApplicationManager
 // class, and uses link time to make sure there is a function available.
 std::shared_ptr<ApplicationManager> create_application_manager()
@@ -47,10 +52,23 @@ std::string BamfApplicationWindow::title() const
 }
 
 
-BamfApplication::BamfApplication(BamfApplication* app)
+BamfApplication::BamfApplication(::BamfApplication* app)
   : bamf_app_(app, glib::AddRef())
   , bamf_view_(glib::object_cast<BamfView>(bamf_app_))
 {
+  // Hook up the property set/get functions
+  seen.SetGetterFunction(sigc::mem_fun(this, &BamfApplication::GetSeen));
+  seen.SetSetterFunction(sigc::mem_fun(this, &BamfApplication::SetSeen));
+  sticky.SetGetterFunction(sigc::mem_fun(this, &BamfApplication::GetSticky));
+  sticky.SetSetterFunction(sigc::mem_fun(this, &BamfApplication::SetSticky));
+  visible.SetGetterFunction(sigc::mem_fun(this, &BamfApplication::GetVisible));
+
+  glib::SignalBase* sig;
+  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "user-visible-changed",
+                          [this] (BamfView*, gboolean visible) {
+                            this->visible.changed.emit(visible);
+                          });
+  signals_.Add(sig);
 }
 
 BamfApplication::~BamfApplication()
@@ -96,13 +114,56 @@ WindowList BamfApplication::get_windows() const
   return result;
 }
 
+bool BamfApplication::GetSeen() const
+{
+  return g_object_get_qdata(G_OBJECT(bamf_app_.RawPtr()),
+                            g_quark_from_string(UNSEEN_QUARK));
+}
+
+bool BamfApplication::SetSeen(bool const& param)
+{
+  bool is_seen = GetSeen();
+  if (param == is_seen)
+    return false; // unchanged
+
+  void* data = param ? reinterpret_cast<void*>(1) : nullptr;
+  g_object_set_qdata(G_OBJECT(bamf_app_.RawPtr()),
+                     g_quark_from_string(UNSEEN_QUARK),
+                     data);
+  return true; // value updated
+
+}
+
+
+
+bool BamfApplication::GetSticky() const
+{
+  return bamf_view_is_sticky(bamf_view_);
+}
+
+bool BamfApplication::SetSticky(bool const& param)
+{
+  bool is_sticky = GetSticky();
+  if (param == is_sticky)
+    return false; // unchanged
+
+  bamf_view_set_sticky(bamf_view_, true);
+  return true; // value updated
+}
+
+bool BamfApplication::GetVisible() const
+{
+  return bamf_view_is_user_visible(bamf_view_);
+}
 
 
 
 BamfApplicationManager::BamfApplicationManager()
  : matcher_(bamf_matcher_get_default())
 {
-    LOG_TRACE(logger) << "Create BamfApplicationManager";
+  LOG_TRACE(logger) << "Create BamfApplicationManager";
+  view_opened_signal_.Connect(matcher_, "view-opened",
+                              sigc::mem_fun(this, &BamfApplicationManager::OnViewOpened));
 }
 
 BamfApplicationManager::~BamfApplicationManager()
@@ -114,6 +175,19 @@ ApplicationPtr BamfApplicationManager::active_application() const
     return ApplicationPtr();
 }
 
+ApplicationPtr BamfApplicationManager::GetApplicationForDesktopFile(std::string const& desktop_file) const
+{
+  ApplicationPtr result;
+  ::BamfApplication* app = bamf_matcher_get_application_for_desktop_file(
+    matcher_, desktop_file.c_str(), true);
+
+  if (app)
+    result.reset(new BamfApplication(app));
+
+  return result;
+}
+
+
 ApplicationList BamfApplicationManager::running_applications() const
 {
   ApplicationList result;
@@ -124,7 +198,7 @@ ApplicationList BamfApplicationManager::running_applications() const
     if (!BAMF_IS_APPLICATION(l->data))
       continue;
 
-    BamfApplication* app = BAMF_APPLICATION(l->data);
+    ::BamfApplication* app = static_cast< ::BamfApplication*>(l->data);
 
     if (g_object_get_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen")))
       continue;
@@ -132,6 +206,20 @@ ApplicationList BamfApplicationManager::running_applications() const
     result.push_back(ApplicationPtr(new BamfApplication(app)));
   }
   return result;
+}
+
+
+void BamfApplicationManager::OnViewOpened(BamfMatcher* matcher, BamfView* view)
+{
+  LOG_DEBUG_BLOCK(logger);
+  if (!BAMF_IS_APPLICATION(view))
+  {
+    LOG_DEBUG(logger) << "view is not an app";
+    return;
+  }
+
+  ::BamfApplication* app = reinterpret_cast< ::BamfApplication*>(view);
+  application_started.emit(ApplicationPtr(new BamfApplication(app)));
 }
 
 } // namespace unity
