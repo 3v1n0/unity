@@ -23,6 +23,7 @@
 #include <NuxCore/Logger.h>
 #include <glib.h>
 #include <gtk/gtk.h>
+#include <signal.h>
 
 #include "unity-shared/ApplicationManager.h"
 
@@ -31,6 +32,8 @@ using namespace std;
 using namespace unity;
 
 DECLARE_LOGGER(logger, "unity.appmanager.test");
+
+GMainLoop *loop;
 
 void dump_app(ApplicationPtr const& app, std::string const& prefix = "")
 {
@@ -48,7 +51,9 @@ void dump_app(ApplicationPtr const& app, std::string const& prefix = "")
 
     for (auto win : app->get_windows())
     {
-      std::cout << "  Window: " << win->title() << "\n";
+      std::cout << "  Window: " << win->title()
+                << ", window_id: " << win->window_id()
+                << endl;
     }
   }
   else
@@ -92,11 +97,64 @@ void connect_events(ApplicationPtr const& app)
   app->seen = true;
 }
 
+
+
+nux::logging::Level glog_level_to_nux(GLogLevelFlags log_level)
+{
+  // For some weird reason, ERROR is more critical than CRITICAL in gnome.
+  if (log_level & G_LOG_LEVEL_ERROR)
+    return nux::logging::Critical;
+  if (log_level & G_LOG_LEVEL_CRITICAL)
+    return nux::logging::Error;
+  if (log_level & G_LOG_LEVEL_WARNING)
+    return nux::logging::Warning;
+  if (log_level & G_LOG_LEVEL_MESSAGE ||
+      log_level & G_LOG_LEVEL_INFO)
+    return nux::logging::Info;
+  // default to debug.
+  return nux::logging::Debug;
+}
+
+void capture_g_log_calls(const gchar* log_domain,
+                         GLogLevelFlags log_level,
+                         const gchar* message,
+                         gpointer user_data)
+{
+  // If the environment variable is set, we capture the backtrace.
+  static bool glog_backtrace = ::getenv("UNITY_LOG_GLOG_BACKTRACE");
+  // If nothing else, all log messages from unity should be identified as such
+  std::string module("unity");
+  if (log_domain)
+  {
+    module += std::string(".") + log_domain;
+  }
+  nux::logging::Logger logger(module);
+  nux::logging::Level level = glog_level_to_nux(log_level);
+  if (level >= logger.GetEffectiveLogLevel())
+  {
+    std::string backtrace;
+    if (glog_backtrace && level >= nux::logging::Warning)
+    {
+      backtrace = "\n" + nux::logging::Backtrace();
+    }
+    nux::logging::LogStream(level, logger.module(), "<unknown>", 0).stream()
+      << message << backtrace;
+  }
+}
+
+
+void clean_exit(int sig)
+{
+  if (loop && g_main_loop_is_running(loop))
+    g_main_loop_quit(loop);
+}
+
 int main(int argc, char* argv[])
 {
   g_type_init();
   gtk_init(&argc, &argv);
   nux::logging::configure_logging(::getenv("UNITY_APP_LOG_SEVERITY"));
+  g_log_set_default_handler(capture_g_log_calls, NULL);
 
   ApplicationManager& manager = ApplicationManager::Default();
 
@@ -124,6 +182,8 @@ int main(int argc, char* argv[])
 
   shared_ptr<GMainLoop> main_loop(g_main_loop_new(nullptr, FALSE),
                                   g_main_loop_unref);
-  g_main_loop_run(main_loop.get());
+  loop = main_loop.get();
+  signal(SIGINT, clean_exit);
+  g_main_loop_run(loop);
   cout << "After main loop.\n";
 }

@@ -30,20 +30,46 @@
 namespace unity
 {
 
-class BamfApplicationWindow: public ApplicationWindow
+class BamfApplicationView: public ApplicationWindow
 {
 public:
-  BamfApplicationWindow(BamfView* view);
+  explicit BamfApplicationView(void* view);
 
   virtual std::string title() const;
-private:
+
+protected:
   glib::Object< ::BamfView> bamf_view_;
 };
+
+class BamfApplicationWindow: public BamfApplicationView
+{
+public:
+  explicit BamfApplicationWindow(::BamfWindow* window);
+
+  virtual Window window_id() const;
+  virtual int monitor() const;
+
+private:
+  glib::Object< ::BamfWindow> bamf_window_;
+};
+
+class BamfApplicationTab: public BamfApplicationView
+{
+public:
+  explicit BamfApplicationTab(::BamfTab* tab);
+
+  virtual Window window_id() const;
+  virtual int monitor() const;
+
+private:
+  glib::Object< ::BamfTab> bamf_tab_;
+};
+
 
 class BamfApplication : public Application
 {
 public:
-  BamfApplication(::BamfApplication* app);
+  explicit BamfApplication(::BamfApplication* app);
   ~BamfApplication();
 
   virtual std::string icon() const;

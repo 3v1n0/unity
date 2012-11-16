@@ -25,6 +25,7 @@
 
 #include <sigc++/signal.h>
 #include <NuxCore/Property.h>
+#include <unity-shared/WindowManager.h>
 
 
 namespace unity
@@ -46,6 +47,8 @@ public:
   virtual ~ApplicationWindow() {}
 
   virtual std::string title() const = 0;
+  virtual Window window_id() const = 0;
+  virtual int monitor() const = 0;
 };
 
 
