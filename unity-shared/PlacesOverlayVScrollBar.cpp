@@ -129,11 +129,11 @@ void PlacesOverlayVScrollBar::OnMouseBeyond(nux::Point const& mouse_pos)
 
 void PlacesOverlayVScrollBar::AdjustThumbOffsetFromMouse()
 {
-  const nux::Point& mouse = nux::GetWindowCompositor().GetMousePosition();
-  const int new_offset = mouse.y - _track->GetAbsoluteY() - _overlay_window->GetThumbHeight()/2;
+  nux::Point const& mouse = nux::GetWindowCompositor().GetMousePosition();
+  int const new_offset = mouse.y - _track->GetAbsoluteY() - _overlay_window->GetThumbHeight()/2;
 
-  const int slider_offset = _slider->GetBaseY() - _track->GetBaseY();
-  const bool thumb_above_slider = slider_offset < new_offset;
+  int const slider_offset = _slider->GetBaseY() - _track->GetBaseY();
+  bool const thumb_above_slider = slider_offset < new_offset;
 
   if (thumb_above_slider)
     _overlay_window->SetThumbOffsetY(new_offset - _overlay_window->GetThumbHeight()/4);
