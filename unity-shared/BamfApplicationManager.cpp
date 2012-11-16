@@ -62,11 +62,28 @@ BamfApplication::BamfApplication(::BamfApplication* app)
   sticky.SetGetterFunction(sigc::mem_fun(this, &BamfApplication::GetSticky));
   sticky.SetSetterFunction(sigc::mem_fun(this, &BamfApplication::SetSticky));
   visible.SetGetterFunction(sigc::mem_fun(this, &BamfApplication::GetVisible));
+  active.SetGetterFunction(sigc::mem_fun(this, &BamfApplication::GetActive));
+  running.SetGetterFunction(sigc::mem_fun(this, &BamfApplication::GetRunning));
 
   glib::SignalBase* sig;
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "user-visible-changed",
                           [this] (BamfView*, gboolean visible) {
                             this->visible.changed.emit(visible);
+                          });
+  signals_.Add(sig);
+  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "active-changed",
+                          [this] (BamfView*, gboolean active) {
+                            this->active.changed.emit(active);
+                          });
+  signals_.Add(sig);
+  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "running-changed",
+                          [this] (BamfView*, gboolean running) {
+                            this->running.changed.emit(running);
+                          });
+  signals_.Add(sig);
+  sig = new glib::Signal<void, BamfView*>(bamf_view_, "closed",
+                          [this] (BamfView*) {
+                            this->closed.emit();
                           });
   signals_.Add(sig);
 }
@@ -154,6 +171,16 @@ bool BamfApplication::SetSticky(bool const& param)
 bool BamfApplication::GetVisible() const
 {
   return bamf_view_is_user_visible(bamf_view_);
+}
+
+bool BamfApplication::GetActive() const
+{
+  return bamf_view_is_active(bamf_view_);
+}
+
+bool BamfApplication::GetRunning() const
+{
+  return bamf_view_is_running(bamf_view_);
 }
 
 

@@ -59,6 +59,8 @@ private: // Property getters and setters
   bool SetSticky(bool const& param);
 
   bool GetVisible() const;
+  bool GetActive() const;
+  bool GetRunning() const;
 
 private:
   glib::Object< ::BamfApplication> bamf_app_;

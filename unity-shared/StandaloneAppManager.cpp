@@ -18,6 +18,7 @@
  */
 
 #include <iostream>
+#include <vector>
 
 #include <NuxCore/Logger.h>
 #include <glib.h>
@@ -26,17 +27,21 @@
 #include "unity-shared/ApplicationManager.h"
 
 
-
 using namespace std;
 using namespace unity;
 
-void dump_app(ApplicationPtr const& app)
+DECLARE_LOGGER(logger, "unity.appmanager.test");
+
+void dump_app(ApplicationPtr const& app, std::string const& prefix = "")
 {
   if (app)
   {
-    cout << "Application: " << app->title()
-         << ", seen: " << app->seen()
-         << ", sticky: " << app->sticky()
+    cout << prefix << "Application: " << app->title()
+         << ", seen: " << (app->seen() ? "yes" : "no")
+         << ", sticky: " << (app->sticky() ? "yes" : "no")
+         << ", visible: " << (app->visible() ? "yes" : "no")
+         << ", active: " << (app->active() ? "yes" : "no")
+         << ", running: " << (app->running() ? "yes" : "no")
          << "\n  icon: \"" << app->icon() << "\""
          << endl;
 
@@ -51,6 +56,29 @@ void dump_app(ApplicationPtr const& app)
   }
 }
 
+void connect_events(ApplicationPtr const& app)
+{
+  if (app->seen())
+  {
+    LOG_INFO(logger) << "Already seen " << app->title() << ", skipping event connection.";
+    return;
+  }
+  std::string app_name = app->title();
+  app->visible.changed.connect([app_name](bool const& value) {
+    cout << app_name << " visibility changed: " << (value ? "yes" : "no") << endl;
+  });
+  app->running.changed.connect([app_name](bool const& value) {
+    cout << app_name << " running changed: " << (value ? "yes" : "no") << endl;
+  });
+  app->active.changed.connect([app_name](bool const& value) {
+    cout << app_name << " active changed: " << (value ? "yes" : "no") << endl;
+  });
+  app->closed.connect([app_name]() {
+    cout << app_name << " closed." << endl;
+  });
+  app->seen = true;
+}
+
 int main(int argc, char* argv[])
 {
   g_type_init();
@@ -59,14 +87,12 @@ int main(int argc, char* argv[])
 
   ApplicationManager& manager = ApplicationManager::Default();
 
-  for (auto app : manager.running_applications())
+  ApplicationList apps = manager.running_applications();
+
+  for (auto app : apps)
   {
     dump_app(app);
-  }
-  std::cout << "And a second time...\n";
-  for (auto app : manager.running_applications())
-  {
-    dump_app(app);
+    connect_events(app);
   }
 
   // Get some desktop files for checking
@@ -76,14 +102,12 @@ int main(int argc, char* argv[])
   ApplicationPtr gedit = manager.GetApplicationForDesktopFile(
     "/usr/share/applications/gedit.desktop");
   dump_app(gedit);
-  pgadmin->sticky = true;
-  pgadmin->seen = true;
-  dump_app(pgadmin);
-  pgadmin->visible.changed.connect([pgadmin](bool const& value) {
-    cout << pgadmin->title() << " visibility changed: " << value << endl;
-  });
   // dump new apps
-  manager.application_started.connect(&dump_app);
+  manager.application_started.connect([&apps](ApplicationPtr const& app) {
+    apps.push_back(app);
+    dump_app(app, "\nApp started: ");
+    connect_events(app);
+  });
 
   shared_ptr<GMainLoop> main_loop(g_main_loop_new(nullptr, FALSE),
                                   g_main_loop_unref);

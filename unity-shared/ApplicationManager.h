@@ -64,6 +64,10 @@ public:
   nux::RWProperty<bool> sticky;
 
   nux::ROProperty<bool> visible;
+  nux::ROProperty<bool> active;
+  nux::ROProperty<bool> running;
+
+  sigc::signal<void> closed;
 };
 
 
