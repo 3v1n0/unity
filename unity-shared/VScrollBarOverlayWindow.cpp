@@ -26,12 +26,15 @@
 #include "DashStyle.h"
 #include "CairoTexture.h"
 
-const int THUMB_WIDTH = 21;
-const int THUMB_HEIGHT = 68;
-const int THUMB_RADIUS = 3;
+namespace
+{
+  int const THUMB_WIDTH = 21;
+  int const THUMB_HEIGHT = 68;
+  int const THUMB_RADIUS = 3;
+}
 
 
-VScrollBarOverlayWindow::VScrollBarOverlayWindow(const nux::Geometry& geo)
+VScrollBarOverlayWindow::VScrollBarOverlayWindow(nux::Geometry const& geo)
   : nux::BaseWindow("")
   , content_size_(geo)
   , content_offset_x_(0)
@@ -51,11 +54,9 @@ VScrollBarOverlayWindow::VScrollBarOverlayWindow(const nux::Geometry& geo)
 
 VScrollBarOverlayWindow::~VScrollBarOverlayWindow()
 {
-  if(thumb_texture_)
-    thumb_texture_.Release();
 }
 
-void VScrollBarOverlayWindow::UpdateGeometry(const nux::Geometry& geo)
+void VScrollBarOverlayWindow::UpdateGeometry(nux::Geometry const& geo)
 {
   if (content_size_.x != geo.x ||
       content_size_.y != geo.y ||
@@ -70,11 +71,16 @@ void VScrollBarOverlayWindow::UpdateGeometry(const nux::Geometry& geo)
 
 void VScrollBarOverlayWindow::SetThumbOffsetY(int y)
 {
-  if (mouse_down_)
-    MouseDragging();
+  int const new_offset = GetValidOffsetYValue(y);
 
-  mouse_offset_y_ = GetValidOffsetYValue(y);
-  QueueDraw();
+  if (new_offset != mouse_offset_y_)
+  {
+    if (mouse_down_)
+      MouseDragging();
+
+    mouse_offset_y_ = GetValidOffsetYValue(y);
+    QueueDraw();
+  }
 }
 
 int VScrollBarOverlayWindow::GetValidOffsetYValue(int new_offset) const
@@ -90,7 +96,7 @@ int VScrollBarOverlayWindow::GetValidOffsetYValue(int new_offset) const
 void VScrollBarOverlayWindow::UpdateMouseOffsetX()
 {
   int monitor = unity::UScreen::GetDefault()->GetMonitorWithMouse();
-  const nux::Geometry& geo = unity::UScreen::GetDefault()->GetMonitorGeometry(monitor);
+  nux::Geometry const& geo = unity::UScreen::GetDefault()->GetMonitorGeometry(monitor);
 
   if (content_size_.x + THUMB_WIDTH > geo.width)
     content_offset_x_ = geo.width - (content_size_.x + THUMB_WIDTH) + 1;
@@ -100,7 +106,7 @@ void VScrollBarOverlayWindow::UpdateMouseOffsetX()
 
 bool VScrollBarOverlayWindow::IsMouseInsideThumb(int y) const
 {
-  const nux::Geometry thumb(0, mouse_offset_y_, THUMB_WIDTH, THUMB_HEIGHT);
+  nux::Geometry const thumb(0, mouse_offset_y_, THUMB_WIDTH, THUMB_HEIGHT);
   if (thumb.IsPointInside(0,y))
     return true;
 
@@ -237,9 +243,7 @@ void VScrollBarOverlayWindow::DrawContent(nux::GraphicsEngine& graphics_engine, 
   if (!thumb_texture_)
     return;
 
-  const nux::Color& color = nux::color::White;
   nux::Geometry base(0, mouse_offset_y_, THUMB_WIDTH, THUMB_HEIGHT);
-
   nux::TexCoordXForm texxform;
 
   graphics_engine.QRP_1Tex(base.x,
@@ -248,10 +252,10 @@ void VScrollBarOverlayWindow::DrawContent(nux::GraphicsEngine& graphics_engine, 
                       base.height,
                       thumb_texture_->GetDeviceTexture(),
                       texxform,
-                      color);
+                      nux::color::White);
 }
 
-nux::color::RedGreenBlue ProduceColorShade(const nux::color::RedGreenBlue& rgb, float shade)
+nux::color::RedGreenBlue ProduceColorShade(nux::color::RedGreenBlue const& rgb, float shade)
 {
   if (shade == 1.0f)
     return rgb;
@@ -275,12 +279,12 @@ nux::color::RedGreenBlue ProduceColorShade(const nux::color::RedGreenBlue& rgb, 
   return rgb_shade;
 }
 
-void PatternAddRGBStop(cairo_pattern_t* pat, const nux::color::RedGreenBlue& rgb, double stop, float alpha)
+void PatternAddRGBStop(cairo_pattern_t* pat, nux::color::RedGreenBlue const& rgb, double stop, float alpha)
 {
   cairo_pattern_add_color_stop_rgba (pat, stop, rgb.red, rgb.green, rgb.blue, alpha);
 }
 
-void SetSourceRGB(cairo_t* cr, const nux::color::RedGreenBlue& rgb, float alpha)
+void SetSourceRGB(cairo_t* cr, nux::color::RedGreenBlue const& rgb, float alpha)
 {
   cairo_set_source_rgba(cr, rgb.red, rgb.green, rgb.blue, alpha);
 }
@@ -301,10 +305,14 @@ void DrawGrip (cairo_t* cr, double x, double y, int nx, int ny)
   }
 }
 
-void DrawBothGrips(cairo_t* cr, const nux::color::RedGreenBlue& rgb, int width, int height)
+void DrawBothGrips(cairo_t* cr, nux::color::RedGreenBlue const& rgb, int width, int height)
 {
-  cairo_pattern_t* pat;
+  int const grip_width = 5;
+  int const grip_height = 6;
+  float const grip_y = 13.5;
+  float const offset = 6.5;
 
+  cairo_pattern_t* pat;
   pat = cairo_pattern_create_linear(0, 0, 0, height);
 
   PatternAddRGBStop(pat, rgb, 0.0, 0.0);
@@ -315,30 +323,32 @@ void DrawBothGrips(cairo_t* cr, const nux::color::RedGreenBlue& rgb, int width, 
   cairo_set_source(cr, pat);
   cairo_pattern_destroy(pat);
 
-  DrawGrip(cr, width/2 - 6.5, 13.5, 5, 6);
-  DrawGrip(cr, width/2 - 6.5, height/2 + 3.5, 5, 6);
+  DrawGrip(cr, width/2 - offset, grip_y, grip_width, grip_height);
+  DrawGrip(cr, width/2 - offset, height/2 + (grip_y - 10), grip_width, grip_height);
 
   cairo_fill(cr);
 }
 
-void DrawLineSeperator(cairo_t* cr, const nux::color::RedGreenBlue& top, 
-                       const nux::color::RedGreenBlue& bottom, int width, int height)
+void DrawLineSeperator(cairo_t* cr, nux::color::RedGreenBlue const& top,
+                       nux::color::RedGreenBlue const& bottom, int width, int height)
 {
+  int const offset = 1.5;
+
   // Top
-  cairo_move_to(cr, 1.5, height/2);
-  cairo_line_to(cr, width - 1.5, height/2);
+  cairo_move_to(cr, offset, height/2);
+  cairo_line_to(cr, width - offset, height/2);
   SetSourceRGB(cr, top, 0.36);
   cairo_stroke(cr);
 
   // Bottom
-  cairo_move_to(cr, 1.5, 1 + height/2);
-  cairo_line_to(cr, width - 1.5, 1 + height/2);
+  cairo_move_to(cr, offset, 1 + height/2);
+  cairo_line_to(cr, width - offset, 1 + height/2);
   SetSourceRGB(cr, bottom, 0.5);
   cairo_stroke(cr);
 }
 
 
-void DrawArrow (cairo_t* cr, const nux::color::RedGreenBlue& rgb, double x, double y, double width, double height)
+void DrawArrow (cairo_t* cr, nux::color::RedGreenBlue const& rgb, double x, double y, double width, double height)
 {
   cairo_save (cr);
 
@@ -357,22 +367,25 @@ void DrawArrow (cairo_t* cr, const nux::color::RedGreenBlue& rgb, double x, doub
   cairo_restore (cr);
 }
 
-void DrawBothArrows(cairo_t* cr, int width, int height)
+void DrawBothArrows(cairo_t* cr, nux::color::RedGreenBlue const& rgb, int width, int height)
 {
-  const nux::color::RedGreenBlue arrow_color(0.3f, 0.3f, 0.3f);
+  int const arrow_width = 5;
+  int const arrow_height = 3;
+  float const trans_height = 8.5;
+  float const offset_x = 0.5;
 
   // Top
   cairo_save(cr);
-  cairo_translate(cr, width/2 + 0.5, 8.5);
+  cairo_translate(cr, width/2 + offset_x, trans_height);
   cairo_rotate(cr, G_PI);
-  DrawArrow(cr, arrow_color, 0.5, 0, 5, 3);
+  DrawArrow(cr, rgb, offset_x, 0, arrow_width, arrow_height);
   cairo_restore(cr);
 
   // Bottom
   cairo_save(cr);
-  cairo_translate(cr, width/2 + 0.5, height - 8.5);
+  cairo_translate(cr, width/2 + offset_x, height - trans_height);
   cairo_rotate(cr, 0);
-  DrawArrow(cr, arrow_color, -0.5, 0, 5, 3);
+  DrawArrow(cr, rgb, -offset_x, 0, arrow_width, arrow_height);
   cairo_restore(cr);
 }
 
@@ -382,12 +395,24 @@ void VScrollBarOverlayWindow::UpdateTexture()
   int height = THUMB_HEIGHT;
   int radius = THUMB_RADIUS;
 
+  float const aspect = 1.0f;
+  float current_x = 0.0f;
+  float current_y = 0.0f;
+
   cairo_t*            cr            = NULL;
   cairo_pattern_t*    pat           = NULL;
 
-  const nux::color::RedGreenBlue bg(0.91f, 0.90f, 0.90f);
-  const nux::color::RedGreenBlue bg_selected(0.95f, 0.95f, 0.95f);
-  const nux::color::RedGreenBlue bg_active(0.55f, 0.55f, 0.55f);
+  nux::color::RedGreenBlue const& bg = nux::color::WhiteSmoke;
+  nux::color::RedGreenBlue const& bg_selected = nux::color::White;
+  nux::color::RedGreenBlue const& bg_active = nux::color::Gray;
+  nux::color::RedGreenBlue const& arrow_color = nux::color::DarkSlateGray;
+
+  nux::color::RedGreenBlue const& bg_arrow_up = ProduceColorShade(bg, 0.86);
+  nux::color::RedGreenBlue const& bg_arrow_down = ProduceColorShade(bg, 1.1);
+  nux::color::RedGreenBlue const& bg_shadow = ProduceColorShade(bg, 0.2);
+
+  nux::color::RedGreenBlue const& bg_dark_line = ProduceColorShade(bg, 0.4);
+  nux::color::RedGreenBlue const& bg_bright_line = ProduceColorShade(bg, 1.2);
 
   nux::CairoGraphics cairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
   cr = cairoGraphics.GetContext();
@@ -410,14 +435,11 @@ void VScrollBarOverlayWindow::UpdateTexture()
 
   // Draw backgound
   SetSourceRGB(cr, bg, 1.0);
-  cairoGraphics.DrawRoundedRectangle(cr, 1.0f, 0.0, 0.0, radius, width, height);
+  cairoGraphics.DrawRoundedRectangle(cr, aspect, current_x, current_y, radius, width, height);
   cairo_fill_preserve(cr);
 
   // Draw shaded background
   pat = cairo_pattern_create_linear(0, 0, 0, height);
-
-  const nux::color::RedGreenBlue& bg_arrow_up = ProduceColorShade(bg, 0.86);
-  const nux::color::RedGreenBlue& bg_arrow_down = ProduceColorShade(bg, 1.1);
 
   PatternAddRGBStop(pat, bg_arrow_up, 0.0, 0.8);
   PatternAddRGBStop(pat, bg_arrow_down, 1.0, 0.8);
@@ -453,7 +475,10 @@ void VScrollBarOverlayWindow::UpdateTexture()
 
   // Draw Outline
   cairo_set_line_width (cr, 2.0);
-  cairoGraphics.DrawRoundedRectangle(cr, 1.0f, 0.5, 0.5, radius - 1, width - 1, height - 1);
+
+  current_x += 0.5;
+  current_y += 0.5;
+  cairoGraphics.DrawRoundedRectangle(cr, aspect, current_x, current_y, radius - 1, width - 1, height - 1);
 
   if (inside_slider_)
     SetSourceRGB(cr, bg_selected, 1.0);
@@ -467,7 +492,6 @@ void VScrollBarOverlayWindow::UpdateTexture()
   // Draw shade outline
   pat = cairo_pattern_create_linear(0, 0, 0, height);
 
-  const nux::color::RedGreenBlue& bg_shadow = ProduceColorShade(bg, 0.2);
   PatternAddRGBStop(pat, bg_shadow, 0.5, 0.06);
 
   switch(current_action_)
@@ -495,20 +519,21 @@ void VScrollBarOverlayWindow::UpdateTexture()
   cairo_set_source(cr, pat);
   cairo_pattern_destroy(pat);
 
-  cairoGraphics.DrawRoundedRectangle(cr, 1.0f, 1.0, 1.0, radius, width- 2, height - 2);
+  current_x += 0.5;
+  current_y += 0.5;
+  cairoGraphics.DrawRoundedRectangle(cr, aspect, current_x, current_y, radius, width- 2, height - 2);
   cairo_stroke(cr);
 
-  const nux::color::RedGreenBlue& bg_dark_line = ProduceColorShade(bg, 0.4);
-  const nux::color::RedGreenBlue& bg_bright_line = ProduceColorShade(bg, 1.2);
-
-  cairoGraphics.DrawRoundedRectangle(cr, 1.0f, 2.0, 2.0, radius - 1, width - 4, height- 4);
+  current_x += 1.0;
+  current_y += 1.0;
+  cairoGraphics.DrawRoundedRectangle(cr, aspect, current_x, current_y, radius - 1, width - 4, height- 4);
   SetSourceRGB(cr, bg_bright_line, 0.6);
   cairo_stroke(cr);
 
   DrawBothGrips(cr, bg_dark_line, width, height);
   DrawLineSeperator(cr, bg_dark_line, bg_bright_line, width, height);
-  DrawBothArrows(cr, width, height);
-  
+  DrawBothArrows(cr, arrow_color, width, height);
+
   thumb_texture_.Adopt(unity::texture_from_cairo_graphics(cairoGraphics));
 
   cairo_destroy(cr);

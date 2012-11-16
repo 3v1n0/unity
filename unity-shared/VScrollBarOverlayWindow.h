@@ -30,10 +30,10 @@
 class VScrollBarOverlayWindow : public nux::BaseWindow
 {
 public:
-  VScrollBarOverlayWindow(const nux::Geometry& geo);
+  VScrollBarOverlayWindow(nux::Geometry const& geo);
   ~VScrollBarOverlayWindow();
 
-  void UpdateGeometry(const nux::Geometry& geo);
+  void UpdateGeometry(nux::Geometry const& geo);
   void SetThumbOffsetY(int y);
 
   void MouseDown();

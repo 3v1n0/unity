@@ -28,157 +28,143 @@
 #include "unity-shared/PlacesOverlayVScrollBar.h"
 #include "unity-shared/UScreen.h"
 
+using namespace testing;
 
 namespace
 {
 
-class MockOverlayScrollbarWindow
+class TestOverlayScrollbar : public Test
 {
 public:
-  MockOverlayScrollbarWindow()
+  TestOverlayScrollbar()
   {
     overlay_window_ = new VScrollBarOverlayWindow(nux::Geometry(0,0,100,100));
   }
 
-  ~MockOverlayScrollbarWindow()
+  ~TestOverlayScrollbar()
   {
     overlay_window_.Release();
   }
 
-  nux::ObjectPtr<VScrollBarOverlayWindow>& GetOverlayWindow()
+  int GetProxListSize() const
   {
-    return overlay_window_;
+    return nux::GetWindowThread()->GetWindowCompositor().GetProximityListSize();
   }
-private:
+
   nux::ObjectPtr<VScrollBarOverlayWindow> overlay_window_;
 };
 
-TEST(TestOverlayScrollbar, TestOverlayShows)
+TEST_F(TestOverlayScrollbar, TestOverlayShows)
 {
-  MockOverlayScrollbarWindow m_overlay;
-
-  m_overlay.GetOverlayWindow()->MouseNear();
-  EXPECT_TRUE(m_overlay.GetOverlayWindow()->IsVisible());
+  overlay_window_->MouseNear();
+  EXPECT_TRUE(overlay_window_->IsVisible());
 }
 
-TEST(TestOverlayScrollbar, TestOverlayHides)
+TEST_F(TestOverlayScrollbar, TestOverlayHides)
 {
-  MockOverlayScrollbarWindow m_overlay;
+  overlay_window_->MouseNear();
+  EXPECT_TRUE(overlay_window_->IsVisible());
 
-  m_overlay.GetOverlayWindow()->MouseNear();
-  EXPECT_TRUE(m_overlay.GetOverlayWindow()->IsVisible());
-
-  m_overlay.GetOverlayWindow()->MouseBeyond();
-  EXPECT_FALSE(m_overlay.GetOverlayWindow()->IsVisible());
+  overlay_window_->MouseBeyond();
+  EXPECT_FALSE(overlay_window_->IsVisible());
 }
 
-TEST(TestOverlayScrollbar, TestOverlayStaysOpenWhenMouseDown)
+TEST_F(TestOverlayScrollbar, TestOverlayStaysOpenWhenMouseDown)
 {
-  MockOverlayScrollbarWindow m_overlay;
+  overlay_window_->MouseNear();
+  overlay_window_->MouseDown();
 
-  m_overlay.GetOverlayWindow()->MouseNear();
-  m_overlay.GetOverlayWindow()->MouseDown();
-
-  m_overlay.GetOverlayWindow()->MouseBeyond();
-  EXPECT_TRUE(m_overlay.GetOverlayWindow()->IsVisible());
+  overlay_window_->MouseBeyond();
+  EXPECT_TRUE(overlay_window_->IsVisible());
 }
 
-TEST(TestOverlayScrollbar, TestOverlayMouseDrags)
+TEST_F(TestOverlayScrollbar, TestOverlayMouseDrags)
 {
-  MockOverlayScrollbarWindow m_overlay;
+  overlay_window_->MouseDown();
+  EXPECT_FALSE(overlay_window_->IsMouseBeingDragged());
 
-  m_overlay.GetOverlayWindow()->MouseDown();
-  EXPECT_FALSE(m_overlay.GetOverlayWindow()->IsMouseBeingDragged());
-
-  m_overlay.GetOverlayWindow()->SetThumbOffsetY(10);
-  EXPECT_TRUE(m_overlay.GetOverlayWindow()->IsMouseBeingDragged());
+  overlay_window_->SetThumbOffsetY(10);
+  EXPECT_TRUE(overlay_window_->IsMouseBeingDragged());
 }
 
-TEST(TestOverlayScrollbar, TestOverlayStopDraggingOnMouseUp)
+TEST_F(TestOverlayScrollbar, TestOverlayStopDraggingOnMouseUp)
 {
-  MockOverlayScrollbarWindow m_overlay;
-  m_overlay.GetOverlayWindow()->MouseDown();
-  EXPECT_FALSE(m_overlay.GetOverlayWindow()->IsMouseBeingDragged());
+  overlay_window_->MouseDown();
+  EXPECT_FALSE(overlay_window_->IsMouseBeingDragged());
 
-  m_overlay.GetOverlayWindow()->SetThumbOffsetY(10);
-  EXPECT_TRUE(m_overlay.GetOverlayWindow()->IsMouseBeingDragged());
+  overlay_window_->SetThumbOffsetY(10);
+  EXPECT_TRUE(overlay_window_->IsMouseBeingDragged());
 
-  m_overlay.GetOverlayWindow()->MouseUp();
-  EXPECT_FALSE(m_overlay.GetOverlayWindow()->IsMouseBeingDragged());
+  overlay_window_->MouseUp();
+  EXPECT_FALSE(overlay_window_->IsMouseBeingDragged());
 }
 
-TEST(TestOverlayScrollbar, TestOverlaySetsOffsetY)
+TEST_F(TestOverlayScrollbar, TestOverlaySetsOffsetY)
 {
-  MockOverlayScrollbarWindow m_overlay;
-  const int offset_y = 30;
+  int const offset_y = 30;
 
-  m_overlay.GetOverlayWindow()->SetThumbOffsetY(offset_y);
-  EXPECT_EQ(m_overlay.GetOverlayWindow()->GetThumbOffsetY(), offset_y);
+  overlay_window_->SetThumbOffsetY(offset_y);
+  EXPECT_EQ(overlay_window_->GetThumbOffsetY(), offset_y);
 }
 
-TEST(TestOverlayScrollbar, TestOverlaySetsOffsetYOutOfBoundsLower)
+TEST_F(TestOverlayScrollbar, TestOverlaySetsOffsetYOutOfBoundsLower)
 {
-  MockOverlayScrollbarWindow m_overlay;
-  const int offset_y = -40;
+  int const offset_y = -40;
 
-  m_overlay.GetOverlayWindow()->SetThumbOffsetY(offset_y);
-  EXPECT_EQ(m_overlay.GetOverlayWindow()->GetThumbOffsetY(), 0);
+  overlay_window_->SetThumbOffsetY(offset_y);
+  EXPECT_EQ(overlay_window_->GetThumbOffsetY(), 0);
 }
 
-TEST(TestOverlayScrollbar, TestOverlaySetsOffsetYOutOfBoundsUpper)
+TEST_F(TestOverlayScrollbar, TestOverlaySetsOffsetYOutOfBoundsUpper)
 {
-  MockOverlayScrollbarWindow m_overlay;
-  const int offset_y = 1000;
-  const int expected_offset = m_overlay.GetOverlayWindow()->GetBaseHeight() -
-                              m_overlay.GetOverlayWindow()->GetThumbHeight();
+  int const offset_y = 1000;
+  int const expected_offset = overlay_window_->GetBaseHeight() - overlay_window_->GetThumbHeight();
 
-  m_overlay.GetOverlayWindow()->SetThumbOffsetY(offset_y);
-  EXPECT_EQ(m_overlay.GetOverlayWindow()->GetThumbOffsetY(), expected_offset);
+  overlay_window_->SetThumbOffsetY(offset_y);
+  EXPECT_EQ(overlay_window_->GetThumbOffsetY(), expected_offset);
 }
 
-TEST(TestOverlayScrollbar, TestOverlayMouseIsInsideThumb)
+TEST_F(TestOverlayScrollbar, TestOverlayMouseIsInsideThumb)
 {
-  MockOverlayScrollbarWindow m_overlay;
-  const nux::Geometry geo(0, 50, 50, 400);
+  nux::Geometry const geo(0, 50, 50, 400);
 
-  m_overlay.GetOverlayWindow()->UpdateGeometry(geo);
-  EXPECT_TRUE(m_overlay.GetOverlayWindow()->IsMouseInsideThumb(0));
+  overlay_window_->UpdateGeometry(geo);
+  EXPECT_TRUE(overlay_window_->IsMouseInsideThumb(0));
 }
 
-TEST(TestOverlayScrollbar, TestOverlayMouseIsInsideOnOffsetChange)
+TEST_F(TestOverlayScrollbar, TestOverlayMouseIsInsideOnOffsetChange)
 {
-  MockOverlayScrollbarWindow m_overlay;
-  const nux::Geometry geo(0, 50, 50, 400);
-  const int offset_y = 50;
-  const int thumb_height = m_overlay.GetOverlayWindow()->GetThumbHeight();
+  nux::Geometry const geo(0, 50, 50, 400);
+  int const offset_y = 50;
+  int const thumb_height = overlay_window_->GetThumbHeight();
 
-  m_overlay.GetOverlayWindow()->UpdateGeometry(geo);
-  m_overlay.GetOverlayWindow()->SetThumbOffsetY(offset_y);
+  overlay_window_->UpdateGeometry(geo);
+  overlay_window_->SetThumbOffsetY(offset_y);
 
-  EXPECT_FALSE(m_overlay.GetOverlayWindow()->IsMouseInsideThumb(offset_y - 1));
-  EXPECT_TRUE(m_overlay.GetOverlayWindow()->IsMouseInsideThumb(offset_y + thumb_height/2));
-  EXPECT_FALSE(m_overlay.GetOverlayWindow()->IsMouseInsideThumb(offset_y + thumb_height + 1));
+  EXPECT_FALSE(overlay_window_->IsMouseInsideThumb(offset_y - 1));
+  EXPECT_TRUE(overlay_window_->IsMouseInsideThumb(offset_y + thumb_height/2));
+  EXPECT_FALSE(overlay_window_->IsMouseInsideThumb(offset_y + thumb_height + 1));
 }
 
-TEST(TestOverlayScrollbar, TestOverlayVScrollbarAddsToProxList)
+TEST_F(TestOverlayScrollbar, TestOverlayVScrollbarAddsToProxList)
 {
-  const int prox_size = nux::GetWindowThread()->GetWindowCompositor().GetProximityListSize();
+  int const prox_size = GetProxListSize();
 
   unity::dash::PlacesOverlayVScrollBar* p_overlay = new unity::dash::PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION);
-  EXPECT_EQ(nux::GetWindowThread()->GetWindowCompositor().GetProximityListSize(), prox_size+1);
+  EXPECT_EQ(GetProxListSize(), prox_size+1);
 
   delete p_overlay;
 }
 
-TEST(TestOverlayScrollbar, TestOverlayVScrollbarRemovesFromProxList)
+TEST_F(TestOverlayScrollbar, TestOverlayVScrollbarRemovesFromProxList)
 {
-  const int prox_size = nux::GetWindowThread()->GetWindowCompositor().GetProximityListSize();
+  int const prox_size = GetProxListSize();
 
   unity::dash::PlacesOverlayVScrollBar* p_overlay = new unity::dash::PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION);
-  EXPECT_EQ(nux::GetWindowThread()->GetWindowCompositor().GetProximityListSize(), prox_size+1);
+  EXPECT_EQ(GetProxListSize(), prox_size+1);
 
   delete p_overlay;
-  EXPECT_EQ(nux::GetWindowThread()->GetWindowCompositor().GetProximityListSize(), prox_size);
+  EXPECT_EQ(GetProxListSize(), prox_size);
 }
 
 }
