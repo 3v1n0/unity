@@ -51,6 +51,9 @@ PlacesOverlayVScrollBar::PlacesOverlayVScrollBar(NUX_FILE_LINE_DECL)
   _track->geometry_changed.connect([&] (nux::Area* area, nux::Geometry& geo) {
     UpdateStepY();
     _overlay_window->UpdateGeometry(_track->GetAbsoluteGeometry());
+
+    if (_overlay_window->IsVisible() && content_height_ <= container_height_)
+      _overlay_window->ResetStates();
   });
 
   OnVisibleChanged.connect([&] (nux::Area* area, bool visible) {

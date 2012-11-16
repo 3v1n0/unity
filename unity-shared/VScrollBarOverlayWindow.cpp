@@ -57,9 +57,15 @@ VScrollBarOverlayWindow::~VScrollBarOverlayWindow()
 
 void VScrollBarOverlayWindow::UpdateGeometry(const nux::Geometry& geo)
 {
-  content_size_ = geo;
-  UpdateMouseOffsetX();
-  Area::SetGeometry(content_size_.x + content_offset_x_, content_size_.y, THUMB_WIDTH, content_size_.height);
+  if (content_size_.x != geo.x ||
+      content_size_.y != geo.y ||
+      content_size_.height != geo.height)
+  {
+    content_size_ = geo;
+    UpdateMouseOffsetX();
+
+    Area::SetGeometry(content_size_.x + content_offset_x_, content_size_.y, THUMB_WIDTH, content_size_.height);
+  }
 }
 
 void VScrollBarOverlayWindow::SetThumbOffsetY(int y)

@@ -56,6 +56,8 @@ public:
 
   nux::Geometry GetThumbGeometry() const;
 
+  void ResetStates();
+
   virtual void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw);
 
 private:
@@ -74,7 +76,6 @@ private:
   void ShouldShow();
   void ShouldHide();
 
-  void ResetStates();
   void UpdateTexture();
 
   void OnOverlayHidden(GVariant* data);

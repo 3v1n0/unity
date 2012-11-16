@@ -25,6 +25,7 @@
 #include <NuxCore/ObjectPtr.h>
 
 #include "unity-shared/VScrollBarOverlayWindow.h"
+#include "unity-shared/PlacesOverlayVScrollBar.h"
 #include "unity-shared/UScreen.h"
 
 
@@ -157,6 +158,27 @@ TEST(TestOverlayScrollbar, TestOverlayMouseIsInsideOnOffsetChange)
   EXPECT_FALSE(m_overlay.GetOverlayWindow()->IsMouseInsideThumb(offset_y - 1));
   EXPECT_TRUE(m_overlay.GetOverlayWindow()->IsMouseInsideThumb(offset_y + thumb_height/2));
   EXPECT_FALSE(m_overlay.GetOverlayWindow()->IsMouseInsideThumb(offset_y + thumb_height + 1));
+}
+
+TEST(TestOverlayScrollbar, TestOverlayVScrollbarAddsToProxList)
+{
+  const int prox_size = nux::GetWindowThread()->GetWindowCompositor().GetProximityListSize();
+
+  unity::dash::PlacesOverlayVScrollBar* p_overlay = new unity::dash::PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION);
+  EXPECT_EQ(nux::GetWindowThread()->GetWindowCompositor().GetProximityListSize(), prox_size+1);
+
+  delete p_overlay;
+}
+
+TEST(TestOverlayScrollbar, TestOverlayVScrollbarRemovesFromProxList)
+{
+  const int prox_size = nux::GetWindowThread()->GetWindowCompositor().GetProximityListSize();
+
+  unity::dash::PlacesOverlayVScrollBar* p_overlay = new unity::dash::PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION);
+  EXPECT_EQ(nux::GetWindowThread()->GetWindowCompositor().GetProximityListSize(), prox_size+1);
+
+  delete p_overlay;
+  EXPECT_EQ(nux::GetWindowThread()->GetWindowCompositor().GetProximityListSize(), prox_size);
 }
 
 }
