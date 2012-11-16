@@ -69,6 +69,10 @@ public:
   nux::ROProperty<bool> urgent;
 
   sigc::signal<void> closed;
+
+  sigc::signal<void, ApplicationWindow const&> window_opened;
+  sigc::signal<void, ApplicationWindow const&> window_moved;
+  sigc::signal<void> window_closed;
 };
 
 

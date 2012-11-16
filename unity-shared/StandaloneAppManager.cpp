@@ -80,6 +80,15 @@ void connect_events(ApplicationPtr const& app)
   app->closed.connect([app_name]() {
     cout << app_name << " closed." << endl;
   });
+  app->window_opened.connect([app_name](ApplicationWindow const& window) {
+    cout << "** " << app_name << " window opened: " << window.title() << endl;
+  });
+  app->window_closed.connect([app_name]() {
+    cout << "** " << app_name << " window closed" << endl;
+  });
+  app->window_moved.connect([app_name](ApplicationWindow const& window) {
+    cout << "** " << app_name << " window moved: " << window.title() << endl;
+  });
   app->seen = true;
 }
 

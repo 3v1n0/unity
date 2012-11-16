@@ -92,6 +92,25 @@ BamfApplication::BamfApplication(::BamfApplication* app)
                             this->closed.emit();
                           });
   signals_.Add(sig);
+
+
+  sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view_, "child-added",
+                          [this] (BamfView*, BamfView* child) {
+                            this->window_opened.emit(BamfApplicationWindow(child));
+                          });
+  signals_.Add(sig);
+
+  sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view_, "child-removed",
+                          [this] (BamfView*, BamfView* child) {
+                            this->window_closed.emit();
+                          });
+  signals_.Add(sig);
+
+  sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view_, "child-moved",
+                          [this] (BamfView*, BamfView* child) {
+                            this->window_moved.emit(BamfApplicationWindow(child));
+                          });
+  signals_.Add(sig);
 }
 
 BamfApplication::~BamfApplication()
