@@ -690,7 +690,7 @@ class PreviewInvocationTests(DashTestCase):
         lens = self.dash.reveal_application_lens()
         self.addCleanup(self.dash.ensure_hidden)
 
-        category = lens.get_category_by_name("Installed")
+        category = lens.get_category_by_name("More suggestions")
         results = category.get_results()
         result = results[0]
         # result.preview handles finding xy co-ords and right mouse-click
