@@ -28,6 +28,7 @@ XdndManagerImp::XdndManagerImp(XdndStartStopNotifier::Ptr xdnd_start_stop_notifi
   : xdnd_start_stop_notifier_(xdnd_start_stop_notifier)
   , xdnd_collection_window_(xdnd_collection_window)
   , last_monitor_(-1)
+  , valid_dnd_in_progress_(false)
 {
   xdnd_start_stop_notifier_->started.connect(sigc::mem_fun(this, &XdndManagerImp::OnDndStarted));
   xdnd_start_stop_notifier_->finished.connect(sigc::mem_fun(this, &XdndManagerImp::OnDndFinished));
@@ -45,13 +46,18 @@ void XdndManagerImp::OnDndFinished()
   xdnd_collection_window_->Deactivate();
   mouse_poller_timeout_.reset();
 
-  dnd_finished.emit();
+  if (valid_dnd_in_progress_) {
+    valid_dnd_in_progress_ = false;
+    dnd_finished.emit();
+  }
 }
 
 void XdndManagerImp::OnDndDataCollected(std::vector<std::string> const& mimes)
 {
   if (!IsAValidDnd(mimes))
     return;
+
+  valid_dnd_in_progress_ = true;
 
   auto& gp_display = nux::GetWindowThread()->GetGraphicsDisplay();
   char target[] = "text/uri-list";
@@ -78,7 +84,7 @@ bool XdndManagerImp::CheckMousePosition()
   auto uscreen = UScreen::GetDefault();
   auto monitor = uscreen->GetMonitorWithMouse();
 
-  if (monitor != last_monitor_)
+  if (valid_dnd_in_progress_ && monitor != last_monitor_)
   {
     last_monitor_ = monitor;
     monitor_changed.emit(last_monitor_);

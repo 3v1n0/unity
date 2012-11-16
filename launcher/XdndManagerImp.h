@@ -44,6 +44,7 @@ private:
   XdndStartStopNotifier::Ptr xdnd_start_stop_notifier_;
   XdndCollectionWindow::Ptr xdnd_collection_window_;
   int last_monitor_;
+  bool valid_dnd_in_progress_;
 
   glib::Source::UniquePtr mouse_poller_timeout_;
 };
