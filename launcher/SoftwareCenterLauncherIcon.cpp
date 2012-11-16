@@ -61,6 +61,14 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launche
 {
   launcher_ = launcher;
 
+  // FIXME: this needs testing, if there is no useful coordinates 
+  //        then do not animate
+  if(start_x <= 0 && start_y <= 0)
+  {
+     SetQuirk(Quirk::VISIBLE, true);
+     return;
+  }
+
   icon_texture_ = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(
     launcher->GetIconSize(),
     launcher->GetIconSize(),
