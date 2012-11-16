@@ -123,27 +123,38 @@ std::string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
    // - get the pkgname
    // - and search in /var/lib/apt/lists/$pkgname.list
    //   for a desktop file that roughly matches what we want
-   
+   std::string filename;
+
    // take /usr/share/app-install/desktop/foo:subdir__bar.desktop
    // and tranform it
    if (_desktop_file.find("/usr/share/app-install/desktop") == 0)
    {
-      int pos = 0;
-      std::string filename = _desktop_file.substr(_desktop_file.rfind("/"),
+      filename = _desktop_file.substr(_desktop_file.rfind("/"),
                                                   _desktop_file.length());
       filename = _desktop_file.substr(filename.find(":"), filename.length());
-      if (filename.search("__") > 0)
+      if (filename.find("__") > 0)
       {
-         pos = filename.search("__");
+         int pos = filename.find("__");
          filename = filename.replace(pos, 2, "/");
       }
       filename = std::string("/usr/share/app-install/" + filename);
    } else {
-
+      // by convention the software-center-agent uses 
+      //  /usr/share/applications/$pkgname.desktop
+      //    or
+      //  /usr/share/applications/extras-$pkgname.desktop
+      if(!sc_pkgname_.empty())
+      {
+         filename = "/usr/share/app-install/" + sc_pkgname_ + ".desktop";
+         if (!g_file_test(filename.c_str(), G_FILE_TEST_EXISTS))
+            filename = "/usr/share/app-install/extras-" + sc_pkgname_ + ".desktop";
+         // FIXME: test if there is a file now and if not, search
+         //        /var/lib/dpkg/info/$pkgname.list for a desktop file
+      }
    }
 
 
-   return "";
+   return filename;
 }
 
 void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
