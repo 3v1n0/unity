@@ -64,6 +64,7 @@ BamfApplication::BamfApplication(::BamfApplication* app)
   visible.SetGetterFunction(sigc::mem_fun(this, &BamfApplication::GetVisible));
   active.SetGetterFunction(sigc::mem_fun(this, &BamfApplication::GetActive));
   running.SetGetterFunction(sigc::mem_fun(this, &BamfApplication::GetRunning));
+  urgent.SetGetterFunction(sigc::mem_fun(this, &BamfApplication::GetUrgent));
 
   glib::SignalBase* sig;
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "user-visible-changed",
@@ -79,6 +80,11 @@ BamfApplication::BamfApplication(::BamfApplication* app)
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "running-changed",
                           [this] (BamfView*, gboolean running) {
                             this->running.changed.emit(running);
+                          });
+  signals_.Add(sig);
+  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "urgent-changed",
+                          [this] (BamfView*, gboolean urgent) {
+                            this->urgent.changed.emit(urgent);
                           });
   signals_.Add(sig);
   sig = new glib::Signal<void, BamfView*>(bamf_view_, "closed",
@@ -183,6 +189,10 @@ bool BamfApplication::GetRunning() const
   return bamf_view_is_running(bamf_view_);
 }
 
+bool BamfApplication::GetUrgent() const
+{
+  return bamf_view_is_urgent(bamf_view_);
+}
 
 
 BamfApplicationManager::BamfApplicationManager()

@@ -42,6 +42,7 @@ void dump_app(ApplicationPtr const& app, std::string const& prefix = "")
          << ", visible: " << (app->visible() ? "yes" : "no")
          << ", active: " << (app->active() ? "yes" : "no")
          << ", running: " << (app->running() ? "yes" : "no")
+         << ", urgent: " << (app->urgent() ? "yes" : "no")
          << "\n  icon: \"" << app->icon() << "\""
          << endl;
 
@@ -72,6 +73,9 @@ void connect_events(ApplicationPtr const& app)
   });
   app->active.changed.connect([app_name](bool const& value) {
     cout << app_name << " active changed: " << (value ? "yes" : "no") << endl;
+  });
+  app->urgent.changed.connect([app_name](bool const& value) {
+    cout << app_name << " urgent changed: " << (value ? "yes" : "no") << endl;
   });
   app->closed.connect([app_name]() {
     cout << app_name << " closed." << endl;

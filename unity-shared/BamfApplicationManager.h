@@ -61,6 +61,7 @@ private: // Property getters and setters
   bool GetVisible() const;
   bool GetActive() const;
   bool GetRunning() const;
+  bool GetUrgent() const;
 
 private:
   glib::Object< ::BamfApplication> bamf_app_;
