@@ -52,9 +52,7 @@ PlacesOverlayVScrollBar::PlacesOverlayVScrollBar(NUX_FILE_LINE_DECL)
   OnVisibleChanged.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnVisibilityChanged));
 }
 
-PlacesOverlayVScrollBar::~PlacesOverlayVScrollBar()
-{
-}
+PlacesOverlayVScrollBar::~PlacesOverlayVScrollBar() {}
 
 void PlacesOverlayVScrollBar::OnTrackGeometryChanged(nux::Area* area, nux::Geometry& geo)
 {

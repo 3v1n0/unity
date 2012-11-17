@@ -29,7 +29,6 @@ class VScrollBarOverlayWindow : public nux::BaseWindow
 {
 public:
   VScrollBarOverlayWindow(nux::Geometry const& geo);
-  ~VScrollBarOverlayWindow();
 
   void UpdateGeometry(nux::Geometry const& geo);
   void SetThumbOffsetY(int y);

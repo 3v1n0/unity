@@ -49,10 +49,6 @@ VScrollBarOverlayWindow::VScrollBarOverlayWindow(nux::Geometry const& geo)
   UpdateTexture();
 }
 
-VScrollBarOverlayWindow::~VScrollBarOverlayWindow()
-{
-}
-
 void VScrollBarOverlayWindow::UpdateGeometry(nux::Geometry const& geo)
 {
   if (content_size_.x != geo.x ||
@@ -104,10 +100,7 @@ void VScrollBarOverlayWindow::UpdateMouseOffsetX()
 bool VScrollBarOverlayWindow::IsMouseInsideThumb(int y) const
 {
   nux::Geometry const thumb(0, mouse_offset_y_, THUMB_WIDTH, THUMB_HEIGHT);
-  if (thumb.IsPointInside(0,y))
-    return true;
-
-  return false;
+  return thumb.IsPointInside(0,y);
 }
 
 bool VScrollBarOverlayWindow::IsMouseBeingDragged() const
