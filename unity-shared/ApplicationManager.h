@@ -99,6 +99,9 @@ public:
   virtual ApplicationList running_applications() const = 0;
 
   sigc::signal<void, ApplicationPtr const&> application_started;
+
+  sigc::signal<void, ApplicationPtr const&> active_application_changed;
+  sigc::signal<void, ApplicationWindowPtr const&> active_window_changed;
 };
 
 }

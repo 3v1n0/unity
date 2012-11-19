@@ -136,8 +136,7 @@ private:
 
 private:
   glib::Object<BamfMatcher> matcher_;
-  glib::Signal<void, BamfMatcher*, BamfView*> view_opened_signal_;
-
+  glib::SignalManager signals_;
 };
 
 } // namespace bamf

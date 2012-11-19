@@ -149,8 +149,11 @@ void print_active_window(ApplicationManager& manager)
   if (win)
   {
     ApplicationPtr app = win->application();
-    cout << "\n\nActive App: " << app->title()
-         << "\nActive Window: " << win->title() << endl;
+    if (app)
+      cout << "\n\nActive App: " << app->title();
+    else
+      cout << "\n\nNo app for window:";
+    cout << "\nActive Window: " << win->title() << endl;
   }
   else
     cout << "\n\nNo active window: " << endl;
@@ -200,6 +203,15 @@ int main(int argc, char* argv[])
     apps.push_back(app);
     dump_app(app, "\nApp started: ");
     connect_events(app);
+  });
+  manager.active_application_changed.connect([](ApplicationPtr const& app) {
+    if (app)
+      cout << "Manager::active_application_changed: " << app->title() << endl;
+    else
+      cout << "Manager::active_application_changed to nothing\n";
+  });
+  manager.active_window_changed.connect([](ApplicationWindowPtr const& win) {
+    cout << "Manager::active_window_changed: " << win->title() << endl;
   });
 
   shared_ptr<GMainLoop> main_loop(g_main_loop_new(nullptr, FALSE),

@@ -324,8 +324,33 @@ Manager::Manager()
  : matcher_(bamf_matcher_get_default())
 {
   LOG_TRACE(logger) << "Create BAMF Application Manager";
-  view_opened_signal_.Connect(matcher_, "view-opened",
-                              sigc::mem_fun(this, &Manager::OnViewOpened));
+  glib::SignalBase* sig;
+  sig = new glib::Signal<void, BamfMatcher*, BamfView*>
+      (matcher_, "view-opened",
+       sigc::mem_fun(this, &Manager::OnViewOpened));
+  signals_.Add(sig);
+
+  sig = new glib::Signal<void, BamfMatcher*, BamfView*, BamfView*>
+      (matcher_, "active-window-changed",
+       [this](BamfMatcher*, BamfView* /* from */, BamfView* to) {
+          // Ownership is not passed on signals
+          glib::Object<BamfView> view(to, glib::AddRef());
+          ApplicationWindowPtr win = create_window(*this, view);
+          if (win)
+            this->active_window_changed.emit(win);
+        });
+  signals_.Add(sig);
+
+  sig = new glib::Signal<void, BamfMatcher*, BamfApplication*, BamfApplication*>
+      (matcher_, "active-application-changed",
+       [this](BamfMatcher*, BamfApplication* /* from */, BamfApplication* to) {
+          // Ownership is not passed on signals
+          glib::Object<BamfApplication> app(to, glib::AddRef());
+          ApplicationPtr active_app;
+          if (app) active_app.reset(new Application(*this, app));
+          this->active_application_changed.emit(active_app);
+       });
+  signals_.Add(sig);
 }
 
 Manager::~Manager()
