@@ -19,7 +19,7 @@ from unity.tests import UnityTestCase
 class DashTestCase(UnityTestCase):
     def setUp(self):
         super(DashTestCase, self).setUp()
-        self.set_unity_log_level("unity.shell", "DEBUG")
+        self.set_unity_log_level("unity.shell.compiz", "DEBUG")
         self.set_unity_log_level("unity.launcher", "DEBUG")
         self.dash.ensure_hidden()
         # On shutdown, ensure hidden too.  Also add a delay.  Cleanup is LIFO.

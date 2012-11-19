@@ -69,7 +69,7 @@ class UnityTestCase(AutopilotTestCase):
         #
         # Setting this here since the show desktop feature seems to be a bit
         # ropey. Once it's been proven to work reliably we can remove this line:
-        self.set_unity_log_level("unity.plugin", "DEBUG")
+        self.set_unity_log_level("unity.wm.compiz", "DEBUG")
 
     def check_test_behavior(self):
         """Fail the test if it did something naughty.
