@@ -169,17 +169,17 @@ void SocialPreviewContent::UpdateBaloonTexture()
 
 void SocialPreviewContent::RedrawBubble(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  double line_width = 6.0;
-  double radius = 28.0;
-  double x = 0.0;
-  double y = 0.0;
-
   double width = MAX(0, cairo_image_surface_get_width(cairo_get_target(cr)));
   double height = MAX(0, cairo_image_surface_get_height(cairo_get_target(cr)) - TAIL_HEIGHT);
 
-  double tailPosition = x + width - TAIL_POS_FROM_RIGHT - TAIL_HEIGHT;
+  double tailPosition = width - TAIL_POS_FROM_RIGHT - TAIL_HEIGHT;
   if (width > 0 && height > 0)
   {
+    double line_width = 6.0;
+    double radius = 28.0;
+    double x = 0.0;
+    double y = 0.0;
+
     DrawBubble(cr, line_width, radius, x, y, width, height, tailPosition, TAIL_HEIGHT);
   }
 }

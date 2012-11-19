@@ -4,17 +4,15 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 DEB_HOST_ARCH := $(shell dpkg-architecture -qDEB_HOST_ARCH)
+DEB_HOST_GNU_TYPE := $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 gles2_architectures := armel armhf
 
 DEB_VERSION := $(shell dpkg-parsechangelog | egrep '^Version:' | cut -f 2 -d ' ')
 
-export CC=gcc-4.6
-export CXX=g++-4.6
-
 CFLAGS=$(shell echo $$CFLAGS | sed -e 's/\-Wall//')
 
 CORE_ABIVERSION := $(shell sed -rn 's/^\#define[[:space:]]+CORE_ABIVERSION[[:space:]]+//p' /usr/include/compiz/core/abiversion.h )
-NUX_ABIVERSION := $(shell sed -rn 's/^\#define[[:space:]]+NUX_ABIVERSION[[:space:]]+//p' /usr/include/Nux-3.0/Nux/ABI.h )
+NUX_ABIVERSION := $(shell sed -rn 's/^\#define[[:space:]]+NUX_ABIVERSION[[:space:]]+//p' /usr/include/Nux-4.0/Nux/ABI.h )
 
 LIBUNITY_PRIVATE := $(shell pkg-config --libs-only-L unity-protocol-private | sed -e 's/-L\(.*\)/\1/' )
 
@@ -50,7 +48,7 @@ override_dh_shlibdeps:
 	dh_shlibdeps -l$(LIBUNITY_PRIVATE) -O--parallel
 
 override_dh_auto_test:
-	echo "not working right now"
+	make -C obj-$(DEB_HOST_GNU_TYPE) check-headless
 
 %:
 	dh $@ --with translations,quilt,python2,migrations --parallel

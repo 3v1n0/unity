@@ -45,6 +45,7 @@ set (UNITY_SHARED_SOURCES
      Introspectable.cpp
      IntrospectableWrappers.cpp
      JSONParser.cpp
+     LayoutSystem.cpp
      LineSeparator.cpp
      OverlayRenderer.cpp
      PanelStyle.cpp
