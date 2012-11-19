@@ -232,9 +232,13 @@ class LauncherDragIconsBehavior(LauncherTestCase):
         # Normally we'd use get_icon(desktop_id="...") but we're expecting it to
         # not exist, and we don't want to wait for 10 seconds, so we do this
         # the old fashioned way.
-        refresh_fn = lambda: self.launcher.model.get_children_by_type(
+        get_icon_fn = lambda: self.launcher.model.get_children_by_type(
             ApplicationLauncherIcon, desktop_id="gcalctool.desktop")
-        self.assertThat(refresh_fn, Eventually(Equals([])))
+        calc_icon = get_icon_fn()
+        if calc_icon:
+            self.launcher_instance.unlock_from_launcher(calc_icon)
+
+        self.assertThat(get_icon_fn, Eventually(Equals([])))
 
     def test_can_drag_icon_below_bfb(self):
         """Application icons must be draggable to below the BFB."""
