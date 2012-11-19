@@ -15,6 +15,7 @@ from time import sleep
 
 from unity.tests import UnityTestCase
 
+import gettext
 
 class DashTestCase(UnityTestCase):
     def setUp(self):
@@ -25,6 +26,7 @@ class DashTestCase(UnityTestCase):
         # On shutdown, ensure hidden too.  Also add a delay.  Cleanup is LIFO.
         self.addCleanup(self.dash.ensure_hidden)
         self.addCleanup(sleep, 1)
+        gettext.install("unity-lens-files")
 
 
 class DashRevealTests(DashTestCase):
@@ -665,7 +667,7 @@ class CategoryHeaderTests(DashTestCase):
         lens = self.dash.reveal_file_lens()
         self.addCleanup(self.dash.ensure_hidden)
 
-        category = lens.get_category_by_name("Folders")
+        category = lens.get_category_by_name(_("Folders"))
         is_expanded = category.is_expanded
 
         self.mouse.move(self.dash.view.x + self.dash.view.width / 2,
