@@ -93,6 +93,8 @@ protected:
 protected:
   void UpdateDesktopFile();
   std::string _desktop_file;
+  glib::Object<BamfApplication> _bamf_app;
+
 
 private:
   typedef unsigned long int WindowFilterMask;
@@ -123,8 +125,6 @@ private:
   std::vector<Window> GetWindows(WindowFilterMask filter = 0, int monitor = -1);
   const std::set<std::string> GetSupportedTypes();
   std::string GetDesktopID();
-
-  glib::Object<BamfApplication> _bamf_app;
 
   std::string _remote_uri;
   std::set<std::string> _supported_types;

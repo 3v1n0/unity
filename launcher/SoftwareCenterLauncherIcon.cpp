@@ -193,6 +193,24 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
       finished_ = true;
       needs_urgent_ = true;
 
+      // find and update to  the real desktop file
+      std::string new_desktop_path = GetActualDesktopFileAfterInstall();
+
+      // silently exchange the BAMF application
+      glib::Object<BamfMatcher> matcher_(bamf_matcher_get_default());
+      _bamf_app = bamf_matcher_get_application_for_desktop_file(matcher_, new_desktop_path.c_str(), true);
+      auto bamf_view = glib::object_cast<BamfView>(_bamf_app);
+      UpdateDesktopFile();
+
+      // make it permanent
+      Stick();
+
+      // mvo: we may need to check here if the desktop file
+      //      has a NoDisplay line or if its missing a Exec line
+      //      and if so call "UnStick()" - but I think s-c should
+      //      not call the dbus call for those
+
+
       _source_manager.AddIdle([this]()
       {
         ShowTooltip();
@@ -203,14 +221,6 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
         }, SOURCE_HIDE_TOOLTIP);
         return false;
       }, SOURCE_SHOW_TOOLTIP);
-
-      // find and update to actual desktop file
-      _desktop_file = GetActualDesktopFileAfterInstall();
-      UpdateDesktopFile();
-      // mvo: we may need to check here if the desktop file
-      //      has a NoDisplay line or if its missing a Exec line
-      //      and if so call "UnStick()" - but I think s-c should
-      //      not call the dbus call for those
    }
    else
    {
