@@ -62,7 +62,7 @@ bool StandaloneWindowManager::IsWindowDecorated(Window window_id) const
 
 bool StandaloneWindowManager::IsWindowOnCurrentDesktop(Window window_id) const
 {
-  return false;
+  return true;
 }
 
 bool StandaloneWindowManager::IsWindowObscured(Window window_id) const
@@ -77,7 +77,7 @@ bool StandaloneWindowManager::IsWindowMapped(Window window_id) const
 
 bool StandaloneWindowManager::IsWindowVisible(Window window_id) const
 {
-  return false;
+  return true;
 }
 
 bool StandaloneWindowManager::IsWindowOnTop(Window window_id) const

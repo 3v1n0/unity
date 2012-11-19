@@ -26,7 +26,7 @@
 #include <signal.h>
 
 #include "unity-shared/ApplicationManager.h"
-
+#include "UnityCore/GLibSource.h"
 
 using namespace std;
 using namespace unity;
@@ -142,6 +142,14 @@ void capture_g_log_calls(const gchar* log_domain,
   }
 }
 
+void print_active_window(ApplicationManager& manager)
+{
+  ApplicationWindowPtr win = manager.GetActiveWindow();
+  if (win)
+    cout << "\n\nActive Window: " << win->title() << endl;
+  else
+    cout << "\n\nNo active window: " << endl;
+}
 
 void clean_exit(int sig)
 {
@@ -163,8 +171,9 @@ int main(int argc, char* argv[])
   nux::logging::configure_logging(::getenv("UNITY_APP_LOG_SEVERITY"));
   g_log_set_default_handler(capture_g_log_calls, NULL);
 
-  std::shared_ptr<ApplicationManager> manager_ptr = create_application_manager();
-  ApplicationManager& manager = *manager_ptr;
+  //std::shared_ptr<ApplicationManager> manager_ptr = create_application_manager();
+  //ApplicationManager& manager = *manager_ptr;
+  ApplicationManager& manager = ApplicationManager::Default();
 
   ApplicationList apps = manager.running_applications();
 
@@ -192,6 +201,13 @@ int main(int argc, char* argv[])
                                   g_main_loop_unref);
   loop = main_loop.get();
   signal(SIGINT, clean_exit);
-  g_main_loop_run(loop);
+  {
+    glib::SourceManager source_manager;
+    source_manager.AddTimeoutSeconds(5, [&manager]() {
+      print_active_window(manager);
+      return true;
+    });
+    g_main_loop_run(loop);
+  }
   cout << "After main loop.\n";
 }

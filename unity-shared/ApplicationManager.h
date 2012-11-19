@@ -49,6 +49,8 @@ public:
   virtual std::string title() const = 0;
   virtual Window window_id() const = 0;
   virtual int monitor() const = 0;
+
+  virtual ApplicationPtr application() const = 0;
 };
 
 

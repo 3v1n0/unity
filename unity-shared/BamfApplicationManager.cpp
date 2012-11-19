@@ -29,89 +29,128 @@ DECLARE_LOGGER(logger, "unity.appmanager.bamf");
 
 namespace unity
 {
+// This function is used by the static Default method on the ApplicationManager
+// class, and uses link time to make sure there is a function available.
+std::shared_ptr<ApplicationManager> create_application_manager()
+{
+    return std::shared_ptr<ApplicationManager>(new bamf::Manager());
+}
+
+namespace bamf
+{
 namespace
 {
 const char* UNSEEN_QUARK = "unity-unseen";
 }
 
-// This function is used by the static Default method on the ApplicationManager
-// class, and uses link time to make sure there is a function available.
-std::shared_ptr<ApplicationManager> create_application_manager()
-{
-    return std::shared_ptr<ApplicationManager>(new BamfApplicationManager());
-}
 
 // Due to the way glib handles object inheritance, we need to cast between pointer types.
 // In order to make the up-call for the base class easy, we pass through a void* for the view.
-BamfApplicationView::BamfApplicationView(glib::Object< ::BamfView> const& view)
-  : bamf_view_(view)
+View::View(Manager const& manager, glib::Object<BamfView> const& view)
+  : manager_(manager)
+  , bamf_view_(view)
 {
 }
 
-std::string BamfApplicationView::title() const
+std::string View::title() const
 {
   return glib::String(bamf_view_get_name(bamf_view_)).Str();
 }
 
 
-BamfApplicationWindow::BamfApplicationWindow(glib::Object< ::BamfView> const& window)
-  : BamfApplicationView(window)
-  , bamf_window_(glib::object_cast< ::BamfWindow>(window))
+AppWindow::AppWindow(Manager const& manager, glib::Object<BamfView> const& window)
+  : View(manager, window)
+  , bamf_window_(glib::object_cast<BamfWindow>(window))
 {
 }
 
-Window BamfApplicationWindow::window_id() const
+std::string AppWindow::title() const
+{
+  return View::title();
+}
+
+Window AppWindow::window_id() const
 {
   return bamf_window_get_xid(bamf_window_);
 }
 
-int BamfApplicationWindow::monitor() const
+int AppWindow::monitor() const
 {
   return bamf_window_get_monitor(bamf_window_);
 }
 
+ApplicationPtr AppWindow::application() const
+{
+  //BamfApplication* active_app = bamf_matcher_get_application_for_window(matcher, active_win);
+ // TODO, we could find the real window for the window_id, and return the application for that.
+  return ApplicationPtr();
+}
 
-BamfApplicationTab::BamfApplicationTab(glib::Object< ::BamfView> const& tab)
-  : BamfApplicationView(tab)
-  , bamf_tab_(glib::object_cast< ::BamfTab>(tab))
+
+Tab::Tab(Manager const& manager, glib::Object<BamfView> const& tab)
+  : View(manager, tab)
+  , bamf_tab_(glib::object_cast<BamfTab>(tab))
 {}
 
-Window BamfApplicationTab::window_id() const
+std::string Tab::title() const
+{
+  return View::title();
+}
+
+Window Tab::window_id() const
 {
   return bamf_tab_get_xid(bamf_tab_);
 }
 
-int BamfApplicationTab::monitor() const
+int Tab::monitor() const
 {
   // TODO, we could find the real window for the window_id, and get the monitor for that.
   return -1;
 }
 
-// Being brutal with this function.
-ApplicationWindowPtr create_window(glib::Object< ::BamfView> const& view)
+ApplicationPtr Tab::application() const
 {
+  // TODO, we could find the real window for the window_id, and return the application for that.
+  return ApplicationPtr();
+}
+
+// Being brutal with this function.
+ApplicationWindowPtr create_window(Manager const& manager, glib::Object<BamfView> const& view)
+{ 
   ApplicationWindowPtr result;
   if (view.IsType(BAMF_TYPE_TAB))
-    result.reset(new BamfApplicationTab(view));
+    result.reset(new Tab(manager, view));
   else if (view.IsType(BAMF_TYPE_WINDOW))
-    result.reset(new BamfApplicationWindow(view));
+    result.reset(new AppWindow(manager, view));
   // We don't handle applications nor indicators here.
   return result;
 }
 
-BamfApplication::BamfApplication(glib::Object< ::BamfApplication> const& app)
-  : bamf_app_(app)
-  , bamf_view_(glib::object_cast<BamfView>(bamf_app_))
+Application::Application(Manager const& manager, glib::Object<BamfView> const& app)
+  : View(manager, app)
+  , bamf_app_(glib::object_cast<BamfApplication>(app))
+{
+  HookUpEvents();
+}
+
+Application::Application(Manager const& manager, glib::Object<BamfApplication> const& app)
+  : View(manager, glib::object_cast<BamfView>(app))
+  , bamf_app_(app)
+{
+  HookUpEvents();
+}
+
+void Application::HookUpEvents()
 {
   // Hook up the property set/get functions
-  seen.SetGetterFunction(sigc::mem_fun(this, &BamfApplication::GetSeen));
-  seen.SetSetterFunction(sigc::mem_fun(this, &BamfApplication::SetSeen));
-  sticky.SetGetterFunction(sigc::mem_fun(this, &BamfApplication::GetSticky));
-  sticky.SetSetterFunction(sigc::mem_fun(this, &BamfApplication::SetSticky));
-  visible.SetGetterFunction(sigc::mem_fun(this, &BamfApplication::GetVisible));
-  active.SetGetterFunction(sigc::mem_fun(this, &BamfApplication::GetActive));
-  running.SetGetterFunction(sigc::mem_fun(this, &BamfApplication::GetRunning));
-  urgent.SetGetterFunction(sigc::mem_fun(this, &BamfApplication::GetUrgent));
+  seen.SetGetterFunction(sigc::mem_fun(this, &Application::GetSeen));
+  seen.SetSetterFunction(sigc::mem_fun(this, &Application::SetSeen));
+  sticky.SetGetterFunction(sigc::mem_fun(this, &Application::GetSticky));
+  sticky.SetSetterFunction(sigc::mem_fun(this, &Application::SetSticky));
+  visible.SetGetterFunction(sigc::mem_fun(this, &Application::GetVisible));
+  active.SetGetterFunction(sigc::mem_fun(this, &Application::GetActive));
+  running.SetGetterFunction(sigc::mem_fun(this, &Application::GetRunning));
+  urgent.SetGetterFunction(sigc::mem_fun(this, &Application::GetUrgent));
 
   glib::SignalBase* sig;
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "user-visible-changed",
@@ -144,8 +183,8 @@ BamfApplication::BamfApplication(glib::Object< ::BamfApplication> const& app)
   sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view_, "child-added",
                           [this] (BamfView*, BamfView* child) {
                             // Ownership is not passed on signals
-                            glib::Object< ::BamfView> view(child, glib::AddRef());
-                            ApplicationWindowPtr win = create_window(view);
+                            glib::Object<BamfView> view(child, glib::AddRef());
+                            ApplicationWindowPtr win = create_window(this->manager_, view);
                             if (win)
                               this->window_opened.emit(*win);
                           });
@@ -160,32 +199,31 @@ BamfApplication::BamfApplication(glib::Object< ::BamfApplication> const& app)
   sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view_, "child-moved",
                           [this] (BamfView*, BamfView* child) {
                             // Ownership is not passed on signals
-                            glib::Object< ::BamfView> view(child, glib::AddRef());
-                            ApplicationWindowPtr win = create_window(view);
+                            glib::Object<BamfView> view(child, glib::AddRef());
+                            ApplicationWindowPtr win = create_window(this->manager_, view);
                             if (win)
                               this->window_moved.emit(*win);
                           });
   signals_.Add(sig);
 }
 
-BamfApplication::~BamfApplication()
+Application::~Application()
 {
-  LOG_DEBUG(logger) << "BamfApplication::~BamfApplication";
+  LOG_DEBUG(logger) << "Application::~Application";
 }
 
-std::string BamfApplication::icon() const
+std::string Application::title() const
+{
+  return View::title();
+}
+
+std::string Application::icon() const
 {
   glib::String view_icon(bamf_view_get_icon(bamf_view_));
   return view_icon.Str();
 }
 
-std::string BamfApplication::title() const
-{
-  glib::String name(bamf_view_get_name(bamf_view_));
-  return name.Str();
-}
-
-WindowList BamfApplication::get_windows() const
+WindowList Application::get_windows() const
 {
   WindowList result;
 
@@ -196,8 +234,8 @@ WindowList BamfApplication::get_windows() const
   std::shared_ptr<GList> children(bamf_view_get_children(bamf_view_), g_list_free);
   for (GList* l = children.get(); l; l = l->next)
   {
-    glib::Object< ::BamfView> view(BAMF_VIEW(l->data), glib::AddRef());
-    ApplicationWindowPtr window(create_window(view));
+    glib::Object<BamfView> view(BAMF_VIEW(l->data), glib::AddRef());
+    ApplicationWindowPtr window(create_window(manager_, view));
     if (!window)
       continue;
 
@@ -211,13 +249,13 @@ WindowList BamfApplication::get_windows() const
   return result;
 }
 
-bool BamfApplication::GetSeen() const
+bool Application::GetSeen() const
 {
   return g_object_get_qdata(G_OBJECT(bamf_app_.RawPtr()),
                             g_quark_from_string(UNSEEN_QUARK));
 }
 
-bool BamfApplication::SetSeen(bool const& param)
+bool Application::SetSeen(bool const& param)
 {
   bool is_seen = GetSeen();
   if (param == is_seen)
@@ -233,12 +271,12 @@ bool BamfApplication::SetSeen(bool const& param)
 
 
 
-bool BamfApplication::GetSticky() const
+bool Application::GetSticky() const
 {
   return bamf_view_is_sticky(bamf_view_);
 }
 
-bool BamfApplication::SetSticky(bool const& param)
+bool Application::SetSticky(bool const& param)
 {
   bool is_sticky = GetSticky();
   if (param == is_sticky)
@@ -248,67 +286,108 @@ bool BamfApplication::SetSticky(bool const& param)
   return true; // value updated
 }
 
-bool BamfApplication::GetVisible() const
+bool Application::GetVisible() const
 {
   return bamf_view_is_user_visible(bamf_view_);
 }
 
-bool BamfApplication::GetActive() const
+bool Application::GetActive() const
 {
   return bamf_view_is_active(bamf_view_);
+
 }
 
-bool BamfApplication::GetRunning() const
+bool Application::GetRunning() const
 {
   return bamf_view_is_running(bamf_view_);
 }
 
-bool BamfApplication::GetUrgent() const
+bool Application::GetUrgent() const
 {
   return bamf_view_is_urgent(bamf_view_);
 }
 
 
-BamfApplicationManager::BamfApplicationManager()
+Manager::Manager()
  : matcher_(bamf_matcher_get_default())
 {
-  LOG_TRACE(logger) << "Create BamfApplicationManager";
+  LOG_TRACE(logger) << "Create BAMF Application Manager";
   view_opened_signal_.Connect(matcher_, "view-opened",
-                              sigc::mem_fun(this, &BamfApplicationManager::OnViewOpened));
+                              sigc::mem_fun(this, &Manager::OnViewOpened));
 }
 
-BamfApplicationManager::~BamfApplicationManager()
+Manager::~Manager()
 {
-  LOG_DEBUG(logger) << "BamfApplicationManager::~BamfApplicationManager";
+  LOG_DEBUG(logger) << "Manager::~Manager";
 }
 
-ApplicationWindowPtr BamfApplicationManager::GetActiveWindow() const
+ApplicationWindowPtr Manager::GetActiveWindow() const
 {
-  // First attempt, don't check for shell windows.
-  glib::Object< ::BamfWindow> active_win(bamf_matcher_get_active_window(matcher_));
-  return ApplicationWindowPtr();
-}
+  ApplicationWindowPtr result;
+  // No transfer of ownership for bamf_matcher_get_active_window.
+  BamfWindow* active_win = bamf_matcher_get_active_window(matcher_);
 
+  // If the active window is a dock type, then we want the first visible, non-dock type.
+  if (active_win &&
+      bamf_window_get_window_type(active_win) == BAMF_WINDOW_DOCK)
+  {
+    LOG_DEBUG(logger) << "Is a dock, looking at the window stack.";
+    std::shared_ptr<GList> windows(bamf_matcher_get_window_stack_for_monitor(matcher_, -1), g_list_free);
+    WindowManager& wm = WindowManager::Default();
+    for (GList *l = windows.get(); l; l = l->next)
+    {
+      if (!BAMF_IS_WINDOW(l->data))
+      {
+        LOG_DEBUG(logger) << "Window stack returned something not a window, WTF?";
+        continue;
+      }
 
-ApplicationPtr BamfApplicationManager::active_application() const
-{
-    return ApplicationPtr();
-}
+      auto win = static_cast<BamfWindow*>(l->data);
+      auto view = static_cast<BamfView*>(l->data);
+      Window xid = bamf_window_get_xid(win);
 
-ApplicationPtr BamfApplicationManager::GetApplicationForDesktopFile(std::string const& desktop_file) const
-{
-  ApplicationPtr result;
-  glib::Object< ::BamfApplication> app(bamf_matcher_get_application_for_desktop_file(
-    matcher_, desktop_file.c_str(), true));
+      if (bamf_view_is_user_visible(view) &&
+          bamf_window_get_window_type(win) != BAMF_WINDOW_DOCK &&
+          wm.IsWindowOnCurrentDesktop(xid) &&
+          wm.IsWindowVisible(xid))
+      {
+        active_win = win;
+      }
+    }
+  }
 
-  if (app)
-    result.reset(new BamfApplication(app));
-
+  auto view = reinterpret_cast<BamfView*>(active_win);
+  if (active_win)
+    result.reset(new AppWindow(*this, glib::Object<BamfView>(view, glib::AddRef())));
   return result;
 }
 
 
-ApplicationList BamfApplicationManager::running_applications() const
+ApplicationPtr Manager::active_application() const
+{
+    return ApplicationPtr();
+}
+
+ApplicationPtr Manager::GetApplicationForDesktopFile(std::string const& desktop_file) const
+{
+  ApplicationPtr result;
+  glib::Object<BamfApplication> app(bamf_matcher_get_application_for_desktop_file(
+    matcher_, desktop_file.c_str(), true));
+
+  if (app)
+    result.reset(new Application(*this, app));
+
+  return result;
+}
+
+ApplicationPtr Manager::GetApplicationForWindow(BamfWindow* window) const
+{
+  // TODO: implement this
+  return ApplicationPtr();
+}
+
+
+ApplicationList Manager::running_applications() const
 {
   ApplicationList result;
   std::shared_ptr<GList> apps(bamf_matcher_get_applications(matcher_), g_list_free);
@@ -321,15 +400,15 @@ ApplicationList BamfApplicationManager::running_applications() const
       continue;
     }
 
-    glib::Object< ::BamfApplication> app(static_cast< ::BamfApplication*>(l->data));
+    glib::Object<BamfApplication> app(static_cast<BamfApplication*>(l->data));
 
-    result.push_back(ApplicationPtr(new BamfApplication(app)));
+    result.push_back(ApplicationPtr(new Application(*this, app)));
   }
   return result;
 }
 
 
-void BamfApplicationManager::OnViewOpened(BamfMatcher* matcher, BamfView* view)
+void Manager::OnViewOpened(BamfMatcher* matcher, BamfView* view)
 {
   LOG_DEBUG_BLOCK(logger);
   if (!BAMF_IS_APPLICATION(view))
@@ -338,8 +417,9 @@ void BamfApplicationManager::OnViewOpened(BamfMatcher* matcher, BamfView* view)
     return;
   }
 
-  glib::Object< ::BamfApplication> app(reinterpret_cast< ::BamfApplication*>(view), glib::AddRef());
-  application_started.emit(ApplicationPtr(new BamfApplication(app)));
+  glib::Object<BamfApplication> app(reinterpret_cast<BamfApplication*>(view), glib::AddRef());
+  application_started.emit(ApplicationPtr(new Application(*this, app)));
 }
 
+} // namespace bamf
 } // namespace unity

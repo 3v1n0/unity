@@ -29,55 +29,71 @@
 
 namespace unity
 {
-
-class BamfApplicationView: public ApplicationWindow
+namespace bamf
+{
+class Manager;
+class View
 {
 public:
-  explicit BamfApplicationView(glib::Object< ::BamfView> const& view);
+  View(Manager const& manager,
+       glib::Object<BamfView> const& view);
 
-  virtual std::string title() const;
+  std::string title() const;
 
 protected:
-  glib::Object< ::BamfView> bamf_view_;
+  Manager const& manager_;
+  glib::Object<BamfView> bamf_view_;
 };
 
-class BamfApplicationWindow: public BamfApplicationView
+// NOTE: Can't use Window as a type as there is a #define for Window to some integer value.
+class AppWindow: public ::unity::ApplicationWindow, public View
 {
 public:
-  explicit BamfApplicationWindow(glib::Object< ::BamfView> const& window);
+  AppWindow(Manager const& manager,
+            glib::Object<BamfView> const& window);
 
-  virtual Window window_id() const;
-  virtual int monitor() const;
-
-private:
-  glib::Object< ::BamfWindow> bamf_window_;
-};
-
-class BamfApplicationTab: public BamfApplicationView
-{
-public:
-  explicit BamfApplicationTab(glib::Object< ::BamfView> const& tab);
-
-  virtual Window window_id() const;
-  virtual int monitor() const;
-
-private:
-  glib::Object< ::BamfTab> bamf_tab_;
-};
-
-
-class BamfApplication : public Application
-{
-public:
-  explicit BamfApplication(glib::Object< ::BamfApplication> const& app);
-  ~BamfApplication();
-
-  virtual std::string icon() const;
   virtual std::string title() const;
+  virtual Window window_id() const;
+  virtual int monitor() const;
+  virtual ApplicationPtr application() const;
+
+private:
+  glib::Object<BamfWindow> bamf_window_;
+};
+
+class Tab: public ::unity::ApplicationWindow, public View
+{
+public:
+  Tab(Manager const& manager,
+      glib::Object<BamfView> const& tab);
+
+  virtual std::string title() const;
+  virtual Window window_id() const;
+  virtual int monitor() const;
+  virtual ApplicationPtr application() const;
+
+private:
+  glib::Object<BamfTab> bamf_tab_;
+};
+
+
+class Application : public ::unity::Application, public View
+{
+public:
+  Application(Manager const& manager,
+              glib::Object<BamfView> const& app);
+  Application(Manager const& manager,
+              glib::Object<BamfApplication> const& app);
+  ~Application();
+
+  virtual std::string title() const;
+  virtual std::string icon() const;
 
   virtual WindowList get_windows() const;
 
 private: // Property getters and setters
+  void HookUpEvents();
+
   bool GetSeen() const;
   bool SetSeen(bool const& param);
 
@@ -91,33 +107,35 @@ private: // Property getters and setters
 
 private:
   glib::Object< ::BamfApplication> bamf_app_;
-  glib::Object< ::BamfView> bamf_view_;
   glib::SignalManager signals_;
 };
 
-class BamfApplicationManager : public ApplicationManager
+class Manager : public ::unity::ApplicationManager
 {
 public:
-  BamfApplicationManager();
-  ~BamfApplicationManager();
+  Manager();
+  ~Manager();
 
   virtual ApplicationWindowPtr GetActiveWindow() const;
 
   virtual ApplicationPtr active_application() const;
   virtual ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) const;
 
-
   virtual ApplicationList running_applications() const;
+
+
+  virtual ApplicationPtr GetApplicationForWindow(BamfWindow* window) const;
 
 private:
   void OnViewOpened(BamfMatcher* matcher, BamfView* view);
 
 private:
-  glib::Object< ::BamfMatcher> matcher_;
-  glib::Signal<void, ::BamfMatcher*, ::BamfView*> view_opened_signal_;
+  glib::Object<BamfMatcher> matcher_;
+  glib::Signal<void, BamfMatcher*, BamfView*> view_opened_signal_;
 
 };
 
-}
+} // namespace bamf
+} // namespace unity
 
 #endif // UNITYSHARED_APPLICATION_MANAGER_H
