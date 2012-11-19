@@ -39,6 +39,7 @@ public:
        glib::Object<BamfView> const& view);
 
   std::string title() const;
+  std::string icon() const;
 
 protected:
   Manager const& manager_;
@@ -53,6 +54,8 @@ public:
             glib::Object<BamfView> const& window);
 
   virtual std::string title() const;
+  virtual std::string icon() const;
+
   virtual Window window_id() const;
   virtual int monitor() const;
   virtual ApplicationPtr application() const;
@@ -68,6 +71,8 @@ public:
       glib::Object<BamfView> const& tab);
 
   virtual std::string title() const;
+  virtual std::string icon() const;
+
   virtual Window window_id() const;
   virtual int monitor() const;
   virtual ApplicationPtr application() const;

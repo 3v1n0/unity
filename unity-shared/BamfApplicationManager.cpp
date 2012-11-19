@@ -57,6 +57,11 @@ std::string View::title() const
   return glib::String(bamf_view_get_name(bamf_view_)).Str();
 }
 
+std::string View::icon() const
+{
+  return glib::String(bamf_view_get_icon(bamf_view_)).Str();
+}
+
 
 AppWindow::AppWindow(Manager const& manager, glib::Object<BamfView> const& window)
   : View(manager, window)
@@ -67,6 +72,11 @@ AppWindow::AppWindow(Manager const& manager, glib::Object<BamfView> const& windo
 std::string AppWindow::title() const
 {
   return View::title();
+}
+
+std::string AppWindow::icon() const
+{
+  return View::icon();
 }
 
 Window AppWindow::window_id() const
@@ -93,6 +103,11 @@ Tab::Tab(Manager const& manager, glib::Object<BamfView> const& tab)
 std::string Tab::title() const
 {
   return View::title();
+}
+
+std::string Tab::icon() const
+{
+  return View::icon();
 }
 
 Window Tab::window_id() const
@@ -217,8 +232,7 @@ std::string Application::title() const
 
 std::string Application::icon() const
 {
-  glib::String view_icon(bamf_view_get_icon(bamf_view_));
-  return view_icon.Str();
+  return View::icon();
 }
 
 WindowList Application::get_windows() const
