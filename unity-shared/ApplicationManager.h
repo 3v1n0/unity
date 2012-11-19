@@ -52,6 +52,8 @@ public:
   virtual Window window_id() const = 0;
   virtual int monitor() const = 0;
 
+  // It is possible for this to be null, especially in situations where
+  // the application is starting up or shutting down.
   virtual ApplicationPtr application() const = 0;
 };
 
