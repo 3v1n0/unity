@@ -19,6 +19,7 @@
  */
 
 #include <NuxCore/Logger.h>
+#include <glib.h>
 #include <glib/gi18n-lib.h>
 #include "SoftwareCenterLauncherIcon.h"
 #include "Launcher.h"
@@ -51,6 +52,7 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
 , finished_(true)
 , needs_urgent_(false)
 , aptdaemon_trans_id_(aptdaemon_trans_id)
+, desktop_dir_("/usr/share/applications/")
 {
   SetQuirk(Quirk::VISIBLE, false);
   aptdaemon_trans_.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
@@ -66,6 +68,14 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
 void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launcher, int start_x, int start_y)
 {
   launcher_ = launcher;
+
+  // FIXME: this needs testing, if there is no useful coordinates 
+  //        then do not animate
+  if(start_x <= 0 && start_y <= 0)
+  {
+     SetQuirk(Quirk::VISIBLE, true);
+     return;
+  }
 
   icon_texture_ = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(
     launcher->GetWidth(),
@@ -116,6 +126,59 @@ void SoftwareCenterLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   }
 }
 
+std::string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
+{
+   // Fixup the _desktop_file because the one we get from software-center
+   // is not the final one, e.g. the s-c-agent does not send it and
+   // app-install-data points to the "wrong" one in /usr/share/app-install
+   //
+   // So:
+   // - if there is a desktop file already and it startswith 
+   //   /usr/share/app-install/desktop, then transform to 
+   //   /usr/share/application
+   // - get the pkgname
+   // - and search in /var/lib/apt/lists/$pkgname.list
+   //   for a desktop file that roughly matches what we want
+   std::string filename = _desktop_file;
+
+   // take /usr/share/app-install/desktop/foo:subdir__bar.desktop
+   // and tranform it
+   if (_desktop_file.find("/usr/share/app-install/desktop") == 0)
+   {
+      filename = _desktop_file.substr(_desktop_file.rfind("/") + 1,
+                                                  _desktop_file.length());
+      filename = filename.substr(filename.find(":") + 1, 
+                                 filename.length() - filename.find(":"));
+      if (filename.find("__") != std::string::npos)
+      {
+         int pos = filename.find("__");
+         filename = filename.replace(pos, 2, "/");
+      }
+      filename = std::string(desktop_dir_ + filename);
+      return filename;
+   } else {
+      // by convention the software-center-agent uses 
+      //   /usr/share/applications/extras-$pkgname.desktop
+      // or
+      //   /usr/share/applications/$pkgname.desktop
+      if(!sc_pkgname_.empty())
+      {
+         filename = desktop_dir_ + sc_pkgname_ + ".desktop";
+         if (g_file_test(filename.c_str(), G_FILE_TEST_EXISTS))
+            return filename;
+         // now try extras-$pkgname.desktop
+         filename = desktop_dir_ + "extras-" + sc_pkgname_ + ".desktop";
+         if (g_file_test(filename.c_str(), G_FILE_TEST_EXISTS))
+            return filename;
+
+         // FIXME: test if there is a file now and if not, search
+         //        /var/lib/dpkg/info/$pkgname.list for a desktop file
+      }
+   }
+
+   return _desktop_file;
+}
+
 void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
 {
    glib::String exit_state;
@@ -140,6 +203,14 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
         }, SOURCE_HIDE_TOOLTIP);
         return false;
       }, SOURCE_SHOW_TOOLTIP);
+
+      // find and update to actual desktop file
+      _desktop_file = GetActualDesktopFileAfterInstall();
+      UpdateDesktopFile();
+      // mvo: we may need to check here if the desktop file
+      //      has a NoDisplay line or if its missing a Exec line
+      //      and if so call "UnStick()" - but I think s-c should
+      //      not call the dbus call for those
    }
    else
    {
@@ -152,12 +223,13 @@ void SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
 {
   gint32 progress;
   glib::String property_name;
+  GHashTable *metadata;
+  GVariant* property_value = nullptr;
 
   g_variant_get_child(params, 0, "s", &property_name);
 
   if (property_name.Str() == "Progress")
   {
-    GVariant* property_value = nullptr;
     g_variant_get_child(params, 1, "v", &property_value);
     g_variant_get(property_value, "i", &progress);
 
@@ -169,7 +241,24 @@ void SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
 
     SetProgress(progress/100.0f);
     g_variant_unref(property_value);
+  } 
+  else if (property_name.Str() == "MetaData")
+  {
+     std::cerr << "got metdata" << std::endl;
+
+    // try to get the sc_pkgname from the metadata
+    g_variant_get_child(params, 1, "v", &property_value);
+    g_variant_get(property_value, "a{ss}", &metadata);
+    const gchar *entry = (const gchar*)g_hash_table_lookup (metadata, "sc_pkgname");
+    if (entry)
+    {
+       std::cerr << "got sc_pkgname" << entry << std::endl;
+       sc_pkgname_ = std::string(entry);
+    }
+
+    g_variant_unref(property_value);
   }
+
 }
 
 std::string SoftwareCenterLauncherIcon::GetName() const

@@ -90,6 +90,10 @@ protected:
   bool HandlesSpread() { return true; }
   std::string GetName() const;
 
+protected:
+  void UpdateDesktopFile();
+  std::string _desktop_file;
+
 private:
   typedef unsigned long int WindowFilterMask;
   enum WindowFilter
@@ -103,7 +107,6 @@ private:
   void EnsureWindowState();
   void EnsureMenuItemsReady();
   void UpdateBackgroundColor();
-  void UpdateDesktopFile();
   void UpdateMenus();
   void UpdateDesktopQuickList();
 
@@ -124,7 +127,7 @@ private:
   glib::Object<BamfApplication> _bamf_app;
 
   std::string _remote_uri;
-  std::string _desktop_file;
+  std::set<std::string> _supported_types;
   std::map<std::string, glib::Object<DbusmenuClient>> _menu_clients;
   std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items;
   std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items_extra;

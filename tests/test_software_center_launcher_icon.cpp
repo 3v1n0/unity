@@ -29,7 +29,9 @@
 using namespace unity;
 using namespace unity::launcher;
 
-namespace
+namespace unity
+{
+namespace launcher
 {
 const std::string USC_DESKTOP = BUILDDIR"/tests/data/applications/ubuntu-software-center.desktop";
 
@@ -53,6 +55,30 @@ TEST_F(TestSoftwareCenterLauncherIcon, Construction)
   EXPECT_EQ(icon.tooltip_text(), bamf_view_get_name(glib::object_cast<BamfView>(usc)));
 }
 
+TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformTrivial)
+{
+   // no transformation needed
+   EXPECT_EQ(icon.GetActualDesktopFileAfterInstall(), USC_DESKTOP);
+}
+
+TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformAppInstall)
+{
+   // ensure that tranformation from app-install data desktop files works
+   icon._desktop_file = "/usr/share/app-install/desktop/pkgname:kde4__afile.desktop";
+   EXPECT_EQ(icon.GetActualDesktopFileAfterInstall(), 
+             "/usr/share/applications/kde4/afile.desktop");
+}
+
+TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformSCAgent)
+{
+   // now simualte data coming from the sc-agent
+   icon._desktop_file = "scagent";
+   icon.sc_pkgname_ = "ubuntu-software-center";
+   icon.desktop_dir_ = BUILDDIR"/tests/data/applications/";
+   EXPECT_EQ(icon.GetActualDesktopFileAfterInstall(), 
+             BUILDDIR"/tests/data/applications/ubuntu-software-center.desktop");
+}
+
 TEST_F(TestSoftwareCenterLauncherIcon, Animate)
 {
   ASSERT_FALSE(icon.IsVisible());
@@ -69,6 +95,8 @@ TEST_F(TestSoftwareCenterLauncherIcon, Animate)
   Utils::WaitForTimeoutMSec(500);
 
   EXPECT_TRUE(icon.IsVisible());
+}
+
 }
 
 }
