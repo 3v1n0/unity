@@ -123,10 +123,9 @@ public:
 
   virtual ApplicationWindowPtr GetActiveWindow() const;
 
-  virtual ApplicationPtr active_application() const;
   virtual ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) const;
 
-  virtual ApplicationList running_applications() const;
+  virtual ApplicationList GetRunningApplications() const;
 
 
   virtual ApplicationPtr GetApplicationForWindow(glib::Object<BamfWindow> const& window) const;

@@ -183,7 +183,7 @@ int main(int argc, char* argv[])
   //ApplicationManager& manager = *manager_ptr;
   ApplicationManager& manager = ApplicationManager::Default();
 
-  ApplicationList apps = manager.running_applications();
+  ApplicationList apps = manager.GetRunningApplications();
 
   for (auto app : apps)
   {

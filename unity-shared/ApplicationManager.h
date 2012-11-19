@@ -94,11 +94,9 @@ public:
 
   virtual ApplicationWindowPtr GetActiveWindow() const = 0;
 
-  virtual ApplicationPtr active_application() const = 0;
-
   virtual ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) const = 0;
 
-  virtual ApplicationList running_applications() const = 0;
+  virtual ApplicationList GetRunningApplications() const = 0;
 
   sigc::signal<void, ApplicationPtr const&> application_started;
 

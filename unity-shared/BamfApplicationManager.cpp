@@ -400,11 +400,6 @@ ApplicationWindowPtr Manager::GetActiveWindow() const
 }
 
 
-ApplicationPtr Manager::active_application() const
-{
-    return ApplicationPtr();
-}
-
 ApplicationPtr Manager::GetApplicationForDesktopFile(std::string const& desktop_file) const
 {
   ApplicationPtr result;
@@ -427,7 +422,7 @@ ApplicationPtr Manager::GetApplicationForWindow(glib::Object<BamfWindow> const& 
   return result;
 }
 
-ApplicationList Manager::running_applications() const
+ApplicationList Manager::GetRunningApplications() const
 {
   ApplicationList result;
   std::shared_ptr<GList> apps(bamf_matcher_get_applications(matcher_), g_list_free);
