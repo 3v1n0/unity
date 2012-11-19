@@ -48,12 +48,12 @@ public:
 
   std::string GetName() const;
 
-   // public to make it testable
-  std::string GetActualDesktopFileAfterInstall();
-
 protected:
+  std::string GetActualDesktopFileAfterInstall();
   void ActivateLauncherIcon(ActionArg arg);
+  FRIEND_TEST(TestSoftwareCenterLauncherIcon, DesktopFileTransformTrivial);
   FRIEND_TEST(TestSoftwareCenterLauncherIcon, DesktopFileTransformAppInstall);
+  FRIEND_TEST(TestSoftwareCenterLauncherIcon, DesktopFileTransformSCAgent);
 
 private:
   void OnPropertyChanged(GVariant* params);
@@ -70,6 +70,8 @@ private:
 
   std::string aptdaemon_trans_id_;
   std::string sc_pkgname_;
+  // makes testing easier
+  std::string desktop_dir_;
 };
 
 }

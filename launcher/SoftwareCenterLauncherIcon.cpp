@@ -45,6 +45,7 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
 , finished_(true)
 , needs_urgent_(false)
 , aptdaemon_trans_id_(aptdaemon_trans_id)
+, desktop_dir_("/usr/share/applications/")
 {
   SetQuirk(Quirk::VISIBLE, false);
   aptdaemon_trans_.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
@@ -146,18 +147,23 @@ std::string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
          int pos = filename.find("__");
          filename = filename.replace(pos, 2, "/");
       }
-      filename = std::string("/usr/share/applications/" + filename);
+      filename = std::string(desktop_dir_ + filename);
       return filename;
    } else {
       // by convention the software-center-agent uses 
-      //  /usr/share/applications/$pkgname.desktop
-      //    or
-      //  /usr/share/applications/extras-$pkgname.desktop
+      //   /usr/share/applications/extras-$pkgname.desktop
+      // or
+      //   /usr/share/applications/$pkgname.desktop
       if(!sc_pkgname_.empty())
       {
-         filename = "/usr/share/app-install/" + sc_pkgname_ + ".desktop";
-         if (!g_file_test(filename.c_str(), G_FILE_TEST_EXISTS))
-            filename = "/usr/share/app-install/extras-" + sc_pkgname_ + ".desktop";
+         filename = desktop_dir_ + sc_pkgname_ + ".desktop";
+         if (g_file_test(filename.c_str(), G_FILE_TEST_EXISTS))
+            return filename;
+         // now try extras-$pkgname.desktop
+         filename = desktop_dir_ + "extras-" + sc_pkgname_ + ".desktop";
+         if (g_file_test(filename.c_str(), G_FILE_TEST_EXISTS))
+            return filename;
+
          // FIXME: test if there is a file now and if not, search
          //        /var/lib/dpkg/info/$pkgname.list for a desktop file
       }
