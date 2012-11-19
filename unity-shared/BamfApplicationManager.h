@@ -124,7 +124,7 @@ public:
   virtual ApplicationList running_applications() const;
 
 
-  virtual ApplicationPtr GetApplicationForWindow(BamfWindow* window) const;
+  virtual ApplicationPtr GetApplicationForWindow(glib::Object<BamfWindow> const& window) const;
 
 private:
   void OnViewOpened(BamfMatcher* matcher, BamfView* view);

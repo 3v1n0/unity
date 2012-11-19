@@ -53,6 +53,7 @@ void dump_app(ApplicationPtr const& app, std::string const& prefix = "")
     {
       std::cout << "  Window: " << win->title()
                 << ", window_id: " << win->window_id()
+                << ", monitor: " << win->monitor()
                 << endl;
     }
   }
@@ -146,7 +147,11 @@ void print_active_window(ApplicationManager& manager)
 {
   ApplicationWindowPtr win = manager.GetActiveWindow();
   if (win)
-    cout << "\n\nActive Window: " << win->title() << endl;
+  {
+    ApplicationPtr app = win->application();
+    cout << "\n\nActive App: " << app->title()
+         << "\nActive Window: " << win->title() << endl;
+  }
   else
     cout << "\n\nNo active window: " << endl;
 }

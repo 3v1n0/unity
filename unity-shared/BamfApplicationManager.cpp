@@ -81,9 +81,7 @@ int AppWindow::monitor() const
 
 ApplicationPtr AppWindow::application() const
 {
-  //BamfApplication* active_app = bamf_matcher_get_application_for_window(matcher, active_win);
- // TODO, we could find the real window for the window_id, and return the application for that.
-  return ApplicationPtr();
+  return manager_.GetApplicationForWindow(bamf_window_);
 }
 
 
@@ -116,7 +114,7 @@ ApplicationPtr Tab::application() const
 
 // Being brutal with this function.
 ApplicationWindowPtr create_window(Manager const& manager, glib::Object<BamfView> const& view)
-{ 
+{
   ApplicationWindowPtr result;
   if (view.IsType(BAMF_TYPE_TAB))
     result.reset(new Tab(manager, view));
@@ -380,12 +378,15 @@ ApplicationPtr Manager::GetApplicationForDesktopFile(std::string const& desktop_
   return result;
 }
 
-ApplicationPtr Manager::GetApplicationForWindow(BamfWindow* window) const
+ApplicationPtr Manager::GetApplicationForWindow(glib::Object<BamfWindow> const& window) const
 {
-  // TODO: implement this
-  return ApplicationPtr();
+  ApplicationPtr result;
+  glib::Object<BamfApplication> app(bamf_matcher_get_application_for_window(matcher_, window),
+                                    glib::AddRef());
+  if (app)
+    result.reset(new Application(*this, app));
+  return result;
 }
-
 
 ApplicationList Manager::running_applications() const
 {
