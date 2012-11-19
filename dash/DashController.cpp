@@ -83,7 +83,7 @@ Controller::Controller()
     {
       // Relayout here so the input window size updates.
       Relayout();
-      
+
       window_->PushToFront();
       window_->SetInputFocus();
       nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
@@ -443,7 +443,7 @@ void Controller::OnBusAcquired(GObject *obj, GAsyncResult *result, gpointer user
     {
       LOG_WARNING(logger) << "Object registration failed. Dash DBus interface not available.";
     }
-    
+
     g_dbus_node_info_unref(introspection_data);
   }
 }

@@ -223,7 +223,7 @@ debug::Introspectable::IntrospectableList ResultView::GetIntrospectableChildren(
 
   // clear children (no delete).
   RemoveAllChildren();
-  
+
   std::set<std::string> existing_results;
   // re-create list of children.
   int index = 0;
@@ -279,7 +279,7 @@ debug::ResultWrapper* ResultView::CreateResultWrapper(Result const& result, int 
 }
 
 void ResultView::UpdateResultWrapper(debug::ResultWrapper* wrapper, Result const& result, int index)
-{  
+{
 }
 
 }

@@ -126,7 +126,7 @@ void FilterRatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   for (int index = 0; index < num_stars; ++index)
   {
-	Style& style = Style::Instance();
+    Style& style = Style::Instance();
     nux::BaseTexture* texture = style.GetStarSelectedIcon();
     if (index < total_full_stars)
     {
