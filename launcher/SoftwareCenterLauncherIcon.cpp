@@ -137,15 +137,17 @@ std::string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
    // and tranform it
    if (_desktop_file.find("/usr/share/app-install/desktop") == 0)
    {
-      filename = _desktop_file.substr(_desktop_file.rfind("/"),
+      filename = _desktop_file.substr(_desktop_file.rfind("/") + 1,
                                                   _desktop_file.length());
-      filename = _desktop_file.substr(filename.find(":"), filename.length());
-      if (filename.find("__") > 0)
+      filename = filename.substr(filename.find(":") + 1, 
+                                 filename.length() - filename.find(":"));
+      if (filename.find("__") != std::string::npos)
       {
          int pos = filename.find("__");
          filename = filename.replace(pos, 2, "/");
       }
-      filename = std::string("/usr/share/app-install/" + filename);
+      filename = std::string("/usr/share/applications/" + filename);
+      return filename;
    } else {
       // by convention the software-center-agent uses 
       //  /usr/share/applications/$pkgname.desktop
@@ -161,7 +163,7 @@ std::string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
       }
    }
 
-   return filename;
+   return _desktop_file;
 }
 
 void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)

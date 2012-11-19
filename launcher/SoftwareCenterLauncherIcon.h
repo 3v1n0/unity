@@ -26,6 +26,8 @@
 #include "BamfLauncherIcon.h"
 #include "LauncherDragWindow.h"
 
+#include "gtest/gtest_prod.h"
+
 namespace unity
 {
 namespace launcher
@@ -51,6 +53,7 @@ public:
 
 protected:
   void ActivateLauncherIcon(ActionArg arg);
+  FRIEND_TEST(TestSoftwareCenterLauncherIcon, DesktopFileTransformAppInstall);
 
 private:
   void OnPropertyChanged(GVariant* params);
