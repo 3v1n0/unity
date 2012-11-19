@@ -22,13 +22,14 @@
 #include <Nux/HLayout.h>
 #include <UnityCore/Variant.h>
 
+#include "unity-shared/ApplicationManager.h"
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
 
 #include "config.h"
-#include <libbamf/libbamf.h>
+
 
 namespace unity
 {
@@ -313,52 +314,15 @@ void Controller::ShowHud()
   view_->ShowEmbeddedIcon(!IsLockedToLauncher(monitor_index_));
   view_->AboutToShow();
 
-  // We first want to grab the currently active window
-  glib::Object<BamfMatcher> matcher(bamf_matcher_get_default());
-  BamfWindow* active_win = bamf_matcher_get_active_window(matcher);
+  ApplicationManager& app_manager = ApplicationManager::Default();
+  ApplicationPtr active_application;
+  ApplicationWindowPtr active_window = app_manager.GetActiveWindow();
+  if (active_window)
+    active_application = active_window->application();
 
-  Window active_xid = bamf_window_get_xid(active_win);
-  std::vector<Window> const& unity_xids = nux::XInputWindow::NativeHandleList();
-
-  // If the active window is an unity window, we must get the top-most valid window
-  if (std::find(unity_xids.begin(), unity_xids.end(), active_xid) != unity_xids.end())
+  if (active_application)
   {
-    // Windows list stack for all the monitors
-    GList *windows = bamf_matcher_get_window_stack_for_monitor(matcher, -1);
-
-    // Reset values, in case we can't find a window ie. empty current desktop
-    active_xid = 0;
-    active_win = nullptr;
-
-    for (GList *l = windows; l; l = l->next)
-    {
-      if (!BAMF_IS_WINDOW(l->data))
-        continue;
-
-      auto win = static_cast<BamfWindow*>(l->data);
-      auto view = static_cast<BamfView*>(l->data);
-      Window xid = bamf_window_get_xid(win);
-
-      if (bamf_view_is_user_visible(view) && bamf_window_get_window_type(win) != BAMF_WINDOW_DOCK &&
-          wm.IsWindowOnCurrentDesktop(xid) &&
-          wm.IsWindowVisible(xid) &&
-          std::find(unity_xids.begin(), unity_xids.end(), xid) == unity_xids.end())
-      {
-        active_win = win;
-        active_xid = xid;
-      }
-    }
-
-    g_list_free(windows);
-  }
-
-  BamfApplication* active_app = bamf_matcher_get_application_for_window(matcher, active_win);
-
-  if (BAMF_IS_VIEW(active_app))
-  {
-    auto active_view = reinterpret_cast<BamfView*>(active_app);
-    glib::String view_icon(bamf_view_get_icon(active_view));
-    focused_app_icon_ = view_icon.Str();
+    focused_app_icon_ = active_application->icon();
   }
   else
   {
