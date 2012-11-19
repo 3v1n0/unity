@@ -46,11 +46,13 @@ public:
 
   std::string GetName() const;
 
+   // public to make it testable
+  std::string GetActualDesktopFileAfterInstall();
+
 protected:
   void ActivateLauncherIcon(ActionArg arg);
 
 private:
-  std::string GetActualDesktopFileAfterInstall();
   void OnPropertyChanged(GVariant* params);
   void OnFinished(GVariant *params);
   void OnDragAnimationFinished();

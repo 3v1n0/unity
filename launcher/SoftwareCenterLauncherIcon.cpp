@@ -131,7 +131,7 @@ std::string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
    // - get the pkgname
    // - and search in /var/lib/apt/lists/$pkgname.list
    //   for a desktop file that roughly matches what we want
-   std::string filename;
+   std::string filename = _desktop_file;
 
    // take /usr/share/app-install/desktop/foo:subdir__bar.desktop
    // and tranform it
@@ -160,7 +160,6 @@ std::string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
          //        /var/lib/dpkg/info/$pkgname.list for a desktop file
       }
    }
-
 
    return filename;
 }

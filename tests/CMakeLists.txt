@@ -149,7 +149,6 @@ if (GTEST_SRC_DIR AND
                  test_shortcut_model.cpp
                  test_shortcut_private.cpp
                  test_showdesktop_handler.cpp
-                 test_software_center_launcher_icon.cpp
                  test_unityshell_private.cpp
                  ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
                  ${CMAKE_SOURCE_DIR}/launcher/AbstractLauncherIcon.cpp
@@ -237,6 +236,7 @@ if (GTEST_SRC_DIR AND
                  test_shortcut_controller.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_expo_launcher_icon.cpp
+                 test_software_center_launcher_icon.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
                  test_texture_cache.cpp
