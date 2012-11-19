@@ -149,6 +149,13 @@ void clean_exit(int sig)
     g_main_loop_quit(loop);
 }
 
+namespace unity
+{
+// This function is used by the static Default method on the ApplicationManager
+// class, and uses link time to make sure there is a function available.
+std::shared_ptr<ApplicationManager> create_application_manager();
+}
+
 int main(int argc, char* argv[])
 {
   g_type_init();
@@ -156,7 +163,8 @@ int main(int argc, char* argv[])
   nux::logging::configure_logging(::getenv("UNITY_APP_LOG_SEVERITY"));
   g_log_set_default_handler(capture_g_log_calls, NULL);
 
-  ApplicationManager& manager = ApplicationManager::Default();
+  std::shared_ptr<ApplicationManager> manager_ptr = create_application_manager();
+  ApplicationManager& manager = *manager_ptr;
 
   ApplicationList apps = manager.running_applications();
 

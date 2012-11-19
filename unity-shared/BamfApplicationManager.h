@@ -33,7 +33,7 @@ namespace unity
 class BamfApplicationView: public ApplicationWindow
 {
 public:
-  explicit BamfApplicationView(void* view);
+  explicit BamfApplicationView(glib::Object< ::BamfView> const& view);
 
   virtual std::string title() const;
 
@@ -44,7 +44,7 @@ protected:
 class BamfApplicationWindow: public BamfApplicationView
 {
 public:
-  explicit BamfApplicationWindow(::BamfWindow* window);
+  explicit BamfApplicationWindow(glib::Object< ::BamfView> const& window);
 
   virtual Window window_id() const;
   virtual int monitor() const;
@@ -56,7 +56,7 @@ private:
 class BamfApplicationTab: public BamfApplicationView
 {
 public:
-  explicit BamfApplicationTab(::BamfTab* tab);
+  explicit BamfApplicationTab(glib::Object< ::BamfView> const& tab);
 
   virtual Window window_id() const;
   virtual int monitor() const;
@@ -69,7 +69,7 @@ private:
 class BamfApplication : public Application
 {
 public:
-  explicit BamfApplication(::BamfApplication* app);
+  explicit BamfApplication(glib::Object< ::BamfApplication> const& app);
   ~BamfApplication();
 
   virtual std::string icon() const;
@@ -100,6 +100,8 @@ class BamfApplicationManager : public ApplicationManager
 public:
   BamfApplicationManager();
   ~BamfApplicationManager();
+
+  virtual ApplicationWindowPtr GetActiveWindow() const;
 
   virtual ApplicationPtr active_application() const;
   virtual ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) const;

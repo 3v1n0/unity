@@ -43,8 +43,8 @@ std::shared_ptr<ApplicationManager> create_application_manager()
 
 // Due to the way glib handles object inheritance, we need to cast between pointer types.
 // In order to make the up-call for the base class easy, we pass through a void* for the view.
-BamfApplicationView::BamfApplicationView(void* view)
-  : bamf_view_(static_cast< ::BamfView*>(view), glib::AddRef())
+BamfApplicationView::BamfApplicationView(glib::Object< ::BamfView> const& view)
+  : bamf_view_(view)
 {
 }
 
@@ -54,9 +54,9 @@ std::string BamfApplicationView::title() const
 }
 
 
-BamfApplicationWindow::BamfApplicationWindow(::BamfWindow* window)
+BamfApplicationWindow::BamfApplicationWindow(glib::Object< ::BamfView> const& window)
   : BamfApplicationView(window)
-  , bamf_window_(window, glib::AddRef())
+  , bamf_window_(glib::object_cast< ::BamfWindow>(window))
 {
 }
 
@@ -71,9 +71,9 @@ int BamfApplicationWindow::monitor() const
 }
 
 
-BamfApplicationTab::BamfApplicationTab(::BamfTab* tab)
+BamfApplicationTab::BamfApplicationTab(glib::Object< ::BamfView> const& tab)
   : BamfApplicationView(tab)
-  , bamf_tab_(tab, glib::AddRef())
+  , bamf_tab_(glib::object_cast< ::BamfTab>(tab))
 {}
 
 Window BamfApplicationTab::window_id() const
@@ -88,19 +88,19 @@ int BamfApplicationTab::monitor() const
 }
 
 // Being brutal with this function.
-ApplicationWindowPtr create_window(BamfView* view)
+ApplicationWindowPtr create_window(glib::Object< ::BamfView> const& view)
 {
   ApplicationWindowPtr result;
-  if (BAMF_IS_TAB(view))
-    result.reset(new BamfApplicationTab(reinterpret_cast<BamfTab*>(view)));
-  else if (BAMF_IS_WINDOW(view))
-    result.reset(new BamfApplicationWindow(reinterpret_cast<BamfWindow*>(view)));
+  if (view.IsType(BAMF_TYPE_TAB))
+    result.reset(new BamfApplicationTab(view));
+  else if (view.IsType(BAMF_TYPE_WINDOW))
+    result.reset(new BamfApplicationWindow(view));
   // We don't handle applications nor indicators here.
   return result;
 }
 
-BamfApplication::BamfApplication(::BamfApplication* app)
-  : bamf_app_(app, glib::AddRef())
+BamfApplication::BamfApplication(glib::Object< ::BamfApplication> const& app)
+  : bamf_app_(app)
   , bamf_view_(glib::object_cast<BamfView>(bamf_app_))
 {
   // Hook up the property set/get functions
@@ -143,7 +143,9 @@ BamfApplication::BamfApplication(::BamfApplication* app)
 
   sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view_, "child-added",
                           [this] (BamfView*, BamfView* child) {
-                            ApplicationWindowPtr win = create_window(child);
+                            // Ownership is not passed on signals
+                            glib::Object< ::BamfView> view(child, glib::AddRef());
+                            ApplicationWindowPtr win = create_window(view);
                             if (win)
                               this->window_opened.emit(*win);
                           });
@@ -157,7 +159,9 @@ BamfApplication::BamfApplication(::BamfApplication* app)
 
   sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view_, "child-moved",
                           [this] (BamfView*, BamfView* child) {
-                            ApplicationWindowPtr win = create_window(child);
+                            // Ownership is not passed on signals
+                            glib::Object< ::BamfView> view(child, glib::AddRef());
+                            ApplicationWindowPtr win = create_window(view);
                             if (win)
                               this->window_moved.emit(*win);
                           });
@@ -166,6 +170,7 @@ BamfApplication::BamfApplication(::BamfApplication* app)
 
 BamfApplication::~BamfApplication()
 {
+  LOG_DEBUG(logger) << "BamfApplication::~BamfApplication";
 }
 
 std::string BamfApplication::icon() const
@@ -191,7 +196,8 @@ WindowList BamfApplication::get_windows() const
   std::shared_ptr<GList> children(bamf_view_get_children(bamf_view_), g_list_free);
   for (GList* l = children.get(); l; l = l->next)
   {
-    ApplicationWindowPtr window(create_window(BAMF_VIEW(l->data)));
+    glib::Object< ::BamfView> view(BAMF_VIEW(l->data), glib::AddRef());
+    ApplicationWindowPtr window(create_window(view));
     if (!window)
       continue;
 
@@ -273,7 +279,16 @@ BamfApplicationManager::BamfApplicationManager()
 
 BamfApplicationManager::~BamfApplicationManager()
 {
+  LOG_DEBUG(logger) << "BamfApplicationManager::~BamfApplicationManager";
 }
+
+ApplicationWindowPtr BamfApplicationManager::GetActiveWindow() const
+{
+  // First attempt, don't check for shell windows.
+  glib::Object< ::BamfWindow> active_win(bamf_matcher_get_active_window(matcher_));
+  return ApplicationWindowPtr();
+}
+
 
 ApplicationPtr BamfApplicationManager::active_application() const
 {
@@ -283,8 +298,8 @@ ApplicationPtr BamfApplicationManager::active_application() const
 ApplicationPtr BamfApplicationManager::GetApplicationForDesktopFile(std::string const& desktop_file) const
 {
   ApplicationPtr result;
-  ::BamfApplication* app = bamf_matcher_get_application_for_desktop_file(
-    matcher_, desktop_file.c_str(), true);
+  glib::Object< ::BamfApplication> app(bamf_matcher_get_application_for_desktop_file(
+    matcher_, desktop_file.c_str(), true));
 
   if (app)
     result.reset(new BamfApplication(app));
@@ -301,9 +316,12 @@ ApplicationList BamfApplicationManager::running_applications() const
   for (GList *l = apps.get(); l; l = l->next)
   {
     if (!BAMF_IS_APPLICATION(l->data))
+    {
+      LOG_INFO(logger) << "Running apps given something not an app.";
       continue;
+    }
 
-    ::BamfApplication* app = static_cast< ::BamfApplication*>(l->data);
+    glib::Object< ::BamfApplication> app(static_cast< ::BamfApplication*>(l->data));
 
     result.push_back(ApplicationPtr(new BamfApplication(app)));
   }
@@ -320,7 +338,7 @@ void BamfApplicationManager::OnViewOpened(BamfMatcher* matcher, BamfView* view)
     return;
   }
 
-  ::BamfApplication* app = reinterpret_cast< ::BamfApplication*>(view);
+  glib::Object< ::BamfApplication> app(reinterpret_cast< ::BamfApplication*>(view), glib::AddRef());
   application_started.emit(ApplicationPtr(new BamfApplication(app)));
 }
 

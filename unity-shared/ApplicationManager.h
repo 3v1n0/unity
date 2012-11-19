@@ -86,6 +86,8 @@ public:
 
   static ApplicationManager& Default();
 
+  virtual ApplicationWindowPtr GetActiveWindow() const = 0;
+
   virtual ApplicationPtr active_application() const = 0;
 
   virtual ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) const = 0;
