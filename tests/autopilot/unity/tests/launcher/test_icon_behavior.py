@@ -236,7 +236,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
             ApplicationLauncherIcon, desktop_id="gcalctool.desktop")
         calc_icon = get_icon_fn()
         if calc_icon:
-            self.launcher_instance.unlock_from_launcher(calc_icon)
+            self.launcher_instance.unlock_from_launcher(calc_icon[0])
 
         self.assertThat(get_icon_fn, Eventually(Equals([])))
 
