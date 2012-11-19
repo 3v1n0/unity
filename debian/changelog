@@ -3,6 +3,20 @@ unity (6.12.0-0ubuntu2) UNRELEASED; urgency=low
   [ Michael Terry ]
   * debian/control:
     - Update Vcs-Bzr
+  * Automatic snapshot from revision 2905 (bootstrap)
+    - Hide launcher tooltip once shortcut overlay appears (LP: #1035860)
+    - Update shortcut overlay design (LP: #1049601)
+    - Don't cut off shadow on launcher icon drag window (LP: #765715)
+    - Provide more immediate feedback when clickong on launcher (LP: #893140)
+    - Decorate spread windows in switcher (LP: #838222)
+    - Make sure to initialize a variable before it can be used (LP: #1073516)
+    - Fix FTBFS due to BAMF API change (LP: #1077937)
+    - Run gtest during build (LP: #133637)
+    - Make shopping lens test more robust (LP: #1077131)
+    - Fix some random autopilot test failures (LP: #1078448)
+    - Fix autopilot tests for details mode (LP: #1073892)
+    - Fix autopilot tests for indicator-session (LP: #1075350)
+    - Fix autopilot tests for non-English locales (LP: #1075898)
 
   [ Didier Roche ]
   * debian/control:
