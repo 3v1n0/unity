@@ -71,7 +71,7 @@ void VScrollBarOverlayWindow::SetThumbOffsetY(int y)
     if (mouse_down_)
       MouseDragging();
 
-    mouse_offset_y_ = GetValidOffsetYValue(y);
+    mouse_offset_y_ = new_offset;
     QueueDraw();
   }
 }
