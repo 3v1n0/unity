@@ -34,11 +34,7 @@ namespace unity
 {
 namespace launcher
 {
-
-namespace
-{
-  nux::logging::Logger logger("unity.dash.CategoryViewGrid");
-}
+DECLARE_LOGGER(logger, "unity.launcher.icon");
 
 NUX_IMPLEMENT_OBJECT_TYPE(SimpleLauncherIcon);
 
@@ -107,9 +103,9 @@ nux::BaseTexture* SimpleLauncherIcon::GetTextureForSize(int size)
     return 0;
 
   if (icon_string[0] == '/')
-    texture_map[size] = TextureFromPath(icon_string.c_str(), size);
+    texture_map[size] = TextureFromPath(icon_string, size);
   else
-    texture_map[size] = TextureFromGtkTheme(icon_string.c_str(), size);
+    texture_map[size] = TextureFromGtkTheme(icon_string, size);
   return texture_map[size];
 }
 

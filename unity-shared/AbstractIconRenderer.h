@@ -21,7 +21,6 @@
 #define ABSTRACTICONRENDERER_H
 
 #include <Nux/Nux.h>
-#include <boost/shared_ptr.hpp>
 
 #include "IconTextureSource.h"
 
@@ -102,7 +101,7 @@ public:
 class AbstractIconRenderer
 {
 public:
-  typedef boost::shared_ptr<AbstractIconRenderer> Ptr;
+  typedef std::shared_ptr<AbstractIconRenderer> Ptr;
 
   virtual ~AbstractIconRenderer() {}
 

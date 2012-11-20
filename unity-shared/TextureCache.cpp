@@ -25,10 +25,7 @@
 
 namespace unity
 {
-namespace
-{
-nux::logging::Logger logger("unity.internal.texturecache");
-}
+DECLARE_LOGGER(logger, "unity.internal.texturecache");
 
 TextureCache::TextureCache()
 {

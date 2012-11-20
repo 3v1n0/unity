@@ -25,11 +25,7 @@ namespace unity
 {
 namespace dash
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.dash.multirangefilter");
-}
+DECLARE_LOGGER(logger, "unity.dash.filter.multirange");
 
 MultiRangeFilter::MultiRangeFilter(DeeModel* model, DeeModelIter* iter)
   : Filter(model, iter)

@@ -359,7 +359,7 @@ WindowButtons::WindowButtons()
   };
 
   but = new WindowButton(panel::WindowButtonType::CLOSE);
-  AddView(but, 0, nux::eCenter, nux::eFix);
+  AddView(but, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
   AddChild(but);
   but->click.connect(sigc::mem_fun(this, &WindowButtons::OnCloseClicked));
   but->mouse_enter.connect(lambda_enter);
@@ -367,7 +367,7 @@ WindowButtons::WindowButtons()
   but->mouse_move.connect(lambda_moved);
 
   but = new WindowButton(panel::WindowButtonType::MINIMIZE);
-  AddView(but, 0, nux::eCenter, nux::eFix);
+  AddView(but, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
   AddChild(but);
   but->click.connect(sigc::mem_fun(this, &WindowButtons::OnMinimizeClicked));
   but->mouse_enter.connect(lambda_enter);
@@ -375,7 +375,7 @@ WindowButtons::WindowButtons()
   but->mouse_move.connect(lambda_moved);
 
   but = new WindowButton(panel::WindowButtonType::UNMAXIMIZE);
-  AddView(but, 0, nux::eCenter, nux::eFix);
+  AddView(but, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
   AddChild(but);
   but->click.connect(sigc::mem_fun(this, &WindowButtons::OnRestoreClicked));
   but->mouse_enter.connect(lambda_enter);
@@ -383,7 +383,7 @@ WindowButtons::WindowButtons()
   but->mouse_move.connect(lambda_moved);
 
   but = new WindowButton(panel::WindowButtonType::MAXIMIZE);
-  AddView(but, 0, nux::eCenter, nux::eFix);
+  AddView(but, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
   AddChild(but);
   but->click.connect(sigc::mem_fun(this, &WindowButtons::OnMaximizeClicked));
   but->mouse_enter.connect(lambda_enter);
@@ -391,7 +391,7 @@ WindowButtons::WindowButtons()
   but->mouse_move.connect(lambda_moved);
   but->SetVisible(false);
 
-  SetContentDistribution(nux::eStackLeft);
+  SetContentDistribution(nux::MAJOR_POSITION_START);
 
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &WindowButtons::OnOverlayShown));
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &WindowButtons::OnOverlayHidden));

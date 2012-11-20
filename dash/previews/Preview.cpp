@@ -42,11 +42,7 @@ namespace dash
 {
 namespace previews
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.dash.previews.preview");
-}
+DECLARE_LOGGER(logger, "unity.dash.preview.view");
 
 previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
 {
@@ -55,7 +51,7 @@ previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
     LOG_WARN(logger) << "Unable to create Preview object";
     return previews::Preview::Ptr();
   }
- 
+
   if (model->renderer_name == "preview-generic")
   {
     // HACK: Because we do not want to add a FFE by chaging libunity we are going
@@ -290,7 +286,7 @@ nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList action
         actions_layout_h->AddView(button, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
     }
 
-    actions_layout_v->AddLayout(actions_layout_h, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
+    actions_layout_v->AddLayout(actions_layout_h, 0, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
   }
 
   return actions_layout_v;

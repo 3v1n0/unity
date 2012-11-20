@@ -35,7 +35,7 @@ public:
 
   void UpdateInputWindowGeometry()
   {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
     if (m_input_window && m_input_window_enabled)
       m_input_window->SetGeometry(geo_func_(GetGeometry()));
 #endif
