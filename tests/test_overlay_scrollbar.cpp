@@ -50,11 +50,6 @@ public:
   nux::ObjectPtr<VScrollBarOverlayWindow> overlay_window_;
 };
 
-int const CONTENT_WIDTH = 200;
-int const CONTENT_HEIGHT = 2000;
-int const CONTAINER_WIDTH = 200;
-int const CONTAINER_HEIGHT = 200;
-
 class TestOverlayScrollBar : public Test
 {
 public:
@@ -63,47 +58,52 @@ public:
     public:
       MockScrollBar(NUX_FILE_LINE_DECL)
       : unity::dash::PlacesOverlayVScrollBar(NUX_FILE_LINE_PARAM)
+      , scroll_dy(0)
+      , scroll_up_signal_(false)
+      , scroll_down_signal_(false)
       {
+        SetGeometry(nux::Geometry(0,0,200,500));
+        SetContainerSize(0,0,200,200);
+        SetContentSize(0,0,200,2000);
+        ComputeContentSize();
+
         OnScrollUp.connect([&] (float step, int dy) {
-          printf("SCROLL UP %i\n", dy);
+          scroll_dy = dy;
+          scroll_up_signal_ = true;
         });
 
         OnScrollDown.connect([&] (float step, int dy) {
-          printf("SCROLL Down%i\n", dy);
+          scroll_dy = dy;
+          scroll_down_signal_ = true;
         });
-        auto geo = _track->GetGeometry();
-        //printf("%i %i %i %i\n", geo.x, geo.y, geo.width, geo.height);
       }
-      void test()
-      {
-        SetContentSize(0,0, CONTENT_WIDTH, CONTENT_HEIGHT);
-        SetContainerSize(0,0, CONTAINER_WIDTH, CONTAINER_HEIGHT);
-        printf("CONTENT: %i -- CONTAINER: %i\n", content_height_, container_height_);
-        auto m = _track->GetGeometry();
-        printf("S: %i %i %i %i\n", m.x, m.y, m.width, m.height);
 
-        int x = _track->GetBaseX();
+      void ScrollDown(int scroll_dy)
+      {
+        // Shows we are over the Overlay Thumb
+        int x = _track->GetBaseX() + _track->GetBaseWidth() + 5;
         int y = _track->GetBaseY();
 
-        int temp = _slider->GetBaseY();
+        MoveMouse(x,y);
+        MoveDown(x,y);
 
-        int i;
-        MoveMouse(x,y+40);
-        MoveDown(x,y+40);
-        for (i = 0; i < 50; i++)
-        {
-          MoveMouse(x,y+40+i);
-        }
-        MoveUp(x,y+i);
-        printf("%i %i\n", temp, _slider->GetBaseY());
-        //printf("%i %i\n", temp, _slider->GetBaseY());
-        //printf("%i %i\n");
-        /*
+        MoveMouse(x,y+scroll_dy);
+        MoveUp(x,y+scroll_dy);
+      }
 
-        MoveMouse(x,y+20);
-        printf("%i %i\n", temp, _slider->GetBaseY());
-        MoveUp(x,y+20);
-        */
+      void ScrollUp(int scroll_dy)
+      {
+        ScrollDown(scroll_dy);
+
+        // Shows we are over the Overlay Thumb
+        int x = _track->GetBaseX() + _track->GetBaseWidth() + 5;
+        int y = _track->GetBaseY();
+
+        MoveMouse(x,y+scroll_dy);
+        MoveDown(x,y+scroll_dy);
+
+        MoveMouse(x,y);
+        MoveUp(x,y);
       }
 
       void MoveDown(int x, int y)
@@ -112,7 +112,6 @@ public:
         event.type = nux::NUX_MOUSE_PRESSED;
         event.x = x;
         event.y = y;
-        event.mouse_state |= 0x00010000;
         nux::GetWindowCompositor().ProcessEvent(event);
       }
 
@@ -122,7 +121,6 @@ public:
         event.type = nux::NUX_MOUSE_RELEASED;
         event.x = x;
         event.y = y;
-        event.mouse_state |= 0x00010000;
         nux::GetWindowCompositor().ProcessEvent(event);
       }
 
@@ -137,38 +135,18 @@ public:
 
       using nux::VScrollBar::AtMinimum;
       using nux::VScrollBar::GetBaseHeight;
-  };
 
-  class MockScrollView : public nux::ScrollView
-  {
-    public:
-      MockScrollView(NUX_FILE_LINE_DECL)
-      : nux::ScrollView(NUX_FILE_LINE_PARAM)
-      {
-        scroll_bar_ = std::make_shared<MockScrollBar>(NUX_TRACKER_LOCATION);
-        SetVScrollBar(scroll_bar_.get());
-
-      }
-
-      std::shared_ptr<MockScrollBar> scroll_bar_;
+      int scroll_dy;
+      bool scroll_up_signal_;
+      bool scroll_down_signal_;
   };
 
   TestOverlayScrollBar()
   {
-     nux::VLayout* scroll_layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
-     scroll_layout_->SetGeometry(0,0,1000,1000);
-     scroll_view_ = std::make_shared<MockScrollView>(NUX_TRACKER_LOCATION);
-     scroll_view_->EnableVerticalScrollBar(true);
-     scroll_view_->EnableHorizontalScrollBar(false);
-     scroll_view_->SetLayout(scroll_layout_);
+     scroll_bar_ = std::make_shared<MockScrollBar>(NUX_TRACKER_LOCATION);
   }
 
-  int GetProxListSize() const
-  {
-    return nux::GetWindowThread()->GetWindowCompositor().GetProximityListSize();
-  }
-
-  std::shared_ptr<MockScrollView> scroll_view_;
+  std::shared_ptr<MockScrollBar> scroll_bar_;
 };
 
 TEST_F(TestOverlayWindow, TestOverlayShows)
@@ -263,28 +241,40 @@ TEST_F(TestOverlayWindow, TestOverlayMouseIsInsideOnOffsetChange)
   EXPECT_FALSE(overlay_window_->IsMouseInsideThumb(offset_y + thumb_height + 1));
 }
 
-TEST_F(TestOverlayScrollBar, TestOverlayVScrollbarAddsToProxList)
+TEST_F(TestOverlayScrollBar, TestScrollDownSignal)
 {
-  int const prox_size = GetProxListSize();
-
-  printf("%i..\n", scroll_view_->scroll_bar_->AtMinimum());
-  printf("SIZE: %i\n", scroll_view_->scroll_bar_->GetBaseHeight());
-  
-  scroll_view_->scroll_bar_->test();
-  EXPECT_EQ(GetProxListSize(), prox_size);
-
-  //delete p_overlay;
+  scroll_bar_->ScrollDown(10);
+  EXPECT_TRUE(scroll_bar_->scroll_down_signal_);
 }
 
-TEST_F(TestOverlayScrollBar, TestOverlayVScrollbarRemovesFromProxList)
+TEST_F(TestOverlayScrollBar, TestScrollUpSignal)
 {
-  int const prox_size = GetProxListSize();
+  scroll_bar_->ScrollUp(10);
+  EXPECT_TRUE(scroll_bar_->scroll_up_signal_);
+}
 
-  //unity::dash::PlacesOverlayVScrollBar* p_overlay = new unity::dash::PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION);
-  //EXPECT_EQ(GetProxListSize(), prox_size+1);
+TEST_F(TestOverlayScrollBar, TestScrollDownDeltaY)
+{
+  int scroll_down = 15;
+  scroll_bar_->ScrollDown(scroll_down);
+  EXPECT_EQ(scroll_bar_->scroll_dy, scroll_down);
+}
 
-  //delete p_overlay;
-  EXPECT_EQ(GetProxListSize(), prox_size);
+TEST_F(TestOverlayScrollBar, TestScrollUpDeltaY)
+{
+  int scroll_up = 7;
+  scroll_bar_->ScrollUp(scroll_up);
+  EXPECT_EQ(scroll_bar_->scroll_dy, scroll_up);
+}
+
+TEST_F(TestOverlayScrollBar, TestScrollsSlowlyDeltaY)
+{
+  int scroll_down = 10;
+  for (int i = 0; i < scroll_down; i++)
+  {
+    scroll_bar_->ScrollDown(1);
+    EXPECT_EQ(scroll_bar_->scroll_dy, 1);
+  }
 }
 
 }
