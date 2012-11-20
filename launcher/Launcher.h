@@ -43,7 +43,7 @@
 #include "unity-shared/UBusWrapper.h"
 #include "SoftwareCenterLauncherIcon.h"
 
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
 # include "PointerBarrier.h"
 # include "EdgeBarrierController.h"
 #endif
@@ -52,12 +52,12 @@ namespace unity
 {
 namespace launcher
 {
-extern const char window_title[];
+extern const char* window_title;
 
 class AbstractLauncherIcon;
 
 class Launcher : public unity::debug::Introspectable,
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
                  // TODO: abstract this into a more generic class.
                  public ui::EdgeBarrierSubscriber,
 #endif
@@ -148,7 +148,10 @@ public:
 
   void RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr const& icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
 
+#ifdef NUX_GESTURES_SUPPORT
   virtual nux::GestureDeliveryRequest GestureEvent(const nux::GestureEvent &event);
+#endif
+
 protected:
   // Introspectable methods
   std::string GetName() const;
@@ -193,11 +196,13 @@ private:
   void OnOptionChanged();
   void UpdateOptions(Options::Ptr options);
 
+#ifdef NUX_GESTURES_SUPPORT
   void OnDragStart(const nux::GestureEvent &event);
   void OnDragUpdate(const nux::GestureEvent &event);
   void OnDragFinish(const nux::GestureEvent &event);
+#endif
 
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   bool HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
 #endif
 
@@ -316,9 +321,6 @@ private:
   float GetAutohidePositionMax() const;
 
   virtual long PostLayoutManagement(long LayoutResult);
-
-  void SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
-  void RestoreSystemRenderTarget();
 
   void OnDisplayChanged(Display* display);
   void OnDNDDataCollected(const std::list<char*>& mimes);

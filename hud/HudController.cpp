@@ -34,11 +34,7 @@ namespace unity
 {
 namespace hud
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.hud.controller");
-}
+DECLARE_LOGGER(logger, "unity.hud.controller");
 
 Controller::Controller(std::function<AbstractView*(void)> const& function)
   : launcher_width(64)
@@ -119,7 +115,7 @@ void Controller::SetupHudView()
   view_ = view_function_();
 
   layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
-  layout_->AddView(view_, 1, nux::MINOR_POSITION_TOP);
+  layout_->AddView(view_, 1, nux::MINOR_POSITION_START);
   window_->SetLayout(layout_);
 
   window_->UpdateInputWindowGeometry();
@@ -343,7 +339,7 @@ void Controller::ShowHud()
       auto view = static_cast<BamfView*>(l->data);
       Window xid = bamf_window_get_xid(win);
 
-      if (bamf_view_user_visible(view) && bamf_window_get_window_type(win) != BAMF_WINDOW_DOCK &&
+      if (bamf_view_is_user_visible(view) && bamf_window_get_window_type(win) != BAMF_WINDOW_DOCK &&
           wm.IsWindowOnCurrentDesktop(xid) &&
           wm.IsWindowVisible(xid) &&
           std::find(unity_xids.begin(), unity_xids.end(), xid) == unity_xids.end())

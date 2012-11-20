@@ -90,7 +90,7 @@ public:
 
   SwitcherView * GetView ();
 
-  ui::LayoutWindowList ExternalRenderTargets ();
+  ui::LayoutWindow::Vector ExternalRenderTargets ();
 
   guint GetSwitcherInputWindowId() const;
 
@@ -137,6 +137,8 @@ private:
   bool show_desktop_disabled_;
   nux::Color bg_color_;
   DetailMode detail_mode_;
+
+  launcher::AbstractLauncherIcon::Ptr last_active_selection_;
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;

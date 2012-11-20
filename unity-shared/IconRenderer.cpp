@@ -26,6 +26,7 @@
 #include <NuxGraphics/GLTextureResourceManager.h>
 
 #include <NuxGraphics/CairoGraphics.h>
+#include "GraphicsUtils.h"
 
 #include <gtk/gtk.h>
 
@@ -219,6 +220,9 @@ void destroy_textures();
 }
 
 IconRenderer::IconRenderer()
+  : icon_size(0)
+  , image_size(0)
+  , spacing(0)
 {
   pip_style = OUTSIDE_TILE;
 
@@ -413,6 +417,8 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   nux::BaseTexture* glow = local::icon_glow[size];
   nux::BaseTexture* shine = local::icon_shine[size];
   nux::BaseTexture* shadow = local::icon_shadow[size];
+
+  nux::Color shortcut_color = arg.colorify;
 
   bool force_filter = icon_size != background->GetWidth();
 
@@ -632,7 +638,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     char shortcut = (char) arg.shortcut_label;
 
     if (local::label_map.find(shortcut) == local::label_map.end())
-      local::label_map[shortcut] = RenderCharToTexture(shortcut, icon_size, icon_size);
+      local::label_map[shortcut] = RenderCharToTexture(shortcut, icon_size, icon_size, shortcut_color);
 
     RenderElement(GfxContext,
                   arg,
@@ -645,7 +651,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   }
 }
 
-nux::BaseTexture* IconRenderer::RenderCharToTexture(const char label, int width, int height)
+nux::BaseTexture* IconRenderer::RenderCharToTexture(char label, int width, int height, nux::Color const& bg_color)
 {
   nux::BaseTexture*     texture  = NULL;
   nux::CairoGraphics*   cg       = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32,
@@ -657,22 +663,26 @@ nux::BaseTexture* IconRenderer::RenderCharToTexture(const char label, int width,
   GtkSettings*          settings = gtk_settings_get_default();  // not ref'ed
   gchar*                fontName = NULL;
 
-  double label_pos = double(icon_size / 3.0f);
-  double text_size = double(icon_size / 4.0f);
-  double label_x = label_pos;
-  double label_y = label_pos;
-  double label_w = label_pos;
-  double label_h = label_pos;
-  double label_r = 3.0f;
+  double label_ratio = 0.44f;
+  double label_size = icon_size * label_ratio;
+  double label_x = (icon_size - label_size) / 2;
+  double label_y = (icon_size - label_size) / 2;
+  double label_w = label_size;
+  double label_h = label_size;
+  double label_radius = 3.0f;
 
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
   cairo_scale(cr, 1.0f, 1.0f);
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-  cg->DrawRoundedRectangle(cr, 1.0f, label_x, label_y, label_r, label_w, label_h);
-  cairo_set_source_rgba(cr, 0.0f, 0.0f, 0.0f, 0.65f);
+  cg->DrawRoundedRectangle(cr, 1.0f, label_x, label_y, label_radius, label_w, label_h);
+  cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 0.75f);
+  cairo_fill_preserve(cr);
+  cairo_set_source_rgba(cr, bg_color.red, bg_color.green, bg_color.blue, 0.20f);
   cairo_fill(cr);
 
+  double text_ratio = 0.75;
+  double text_size = label_size * text_ratio; 
   layout = pango_cairo_create_layout(cr);
   g_object_get(settings, "gtk-font-name", &fontName, NULL);
   desc = pango_font_description_from_string(fontName);
@@ -1010,7 +1020,7 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   int progress_y = fill_y + (fill_height - progress_height) / 2;
   int half_size = (right_edge - left_edge) / 2;
 
-  SetOffscreenRenderTarget(texture);
+  unity::graphics::PushOffscreenRenderTarget(texture);
 
   // FIXME
   glClear(GL_COLOR_BUFFER_BIT);
@@ -1041,12 +1051,19 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
 
   GfxContext.PopClippingRectangle();
 
-  RestoreSystemRenderTarget();
+  unity::graphics::PopOffscreenRenderTarget();
 }
 
 void IconRenderer::DestroyTextures()
 {
   local::destroy_textures();
+}
+
+void IconRenderer::DestroyShortcutTextures()
+{
+  for (auto texture : local::label_map)
+    texture.second->UnReference();
+  local::label_map.clear();
 }
 
 void IconRenderer::GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& PerspectiveMatrix,
@@ -1133,29 +1150,6 @@ void IconRenderer::GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, n
 
   PerspectiveMatrix.Perspective(Fovy, AspectRatio, NearClipPlane, FarClipPlane);
 }
-
-void
-IconRenderer::SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
-{
-  int width = texture->GetWidth();
-  int height = texture->GetHeight();
-
-  nux::GetGraphicsDisplay()->GetGpuDevice()->FormatFrameBufferObject(width, height, nux::BITFMT_R8G8B8A8);
-  nux::GetGraphicsDisplay()->GetGpuDevice()->SetColorRenderTargetSurface(0, texture->GetSurfaceLevel(0));
-  nux::GetGraphicsDisplay()->GetGpuDevice()->ActivateFrameBuffer();
-
-  nux::GetGraphicsDisplay()->GetGraphicsEngine()->SetContext(0, 0, width, height);
-  nux::GetGraphicsDisplay()->GetGraphicsEngine()->SetViewport(0, 0, width, height);
-  nux::GetGraphicsDisplay()->GetGraphicsEngine()->Push2DWindow(width, height);
-  nux::GetGraphicsDisplay()->GetGraphicsEngine()->EmptyClippingRegion();
-}
-
-void
-IconRenderer::RestoreSystemRenderTarget()
-{
-  nux::GetWindowCompositor().RestoreRenderingSurface();
-}
-
 
 // The local namespace is purely for namespacing the file local variables below.
 namespace local
@@ -1287,9 +1281,7 @@ void destroy_textures()
   squircle_shadow->UnReference();
   squircle_shine->UnReference();
 
-  for (auto it = label_map.begin(), end = label_map.end(); it != end; ++it)
-    it->second->UnReference();
-  label_map.clear();
+  IconRenderer::DestroyShortcutTextures();
 
   textures_created = false;
 }

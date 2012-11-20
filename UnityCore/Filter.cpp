@@ -30,11 +30,7 @@ namespace unity
 {
 namespace dash
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.dash.filter");
-}
+DECLARE_LOGGER(logger, "unity.dash.filter");
 
 using unity::glib::Signal;
 

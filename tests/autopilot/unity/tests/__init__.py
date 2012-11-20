@@ -11,6 +11,7 @@
 from __future__ import absolute_import
 
 
+from codecs import open
 from autopilot.matchers import Eventually
 from autopilot.testcase import AutopilotTestCase
 from dbus import DBusException
@@ -18,6 +19,7 @@ from logging import getLogger
 import os
 import sys
 from tempfile import mktemp
+from time import sleep
 try:
     import testapp
     import json
@@ -68,7 +70,7 @@ class UnityTestCase(AutopilotTestCase):
         #
         # Setting this here since the show desktop feature seems to be a bit
         # ropey. Once it's been proven to work reliably we can remove this line:
-        self.set_unity_log_level("unity.plugin", "DEBUG")
+        self.set_unity_log_level("unity.wm.compiz", "DEBUG")
 
     def check_test_behavior(self):
         """Fail the test if it did something naughty.
@@ -105,7 +107,23 @@ class UnityTestCase(AutopilotTestCase):
             well_behaved = False
             reasons.append("The test left the system in show_desktop mode.")
             log.warning("Test left the system in show desktop mode, exiting it...")
-            self.window_manager.leave_show_desktop()
+            # It is not possible to leave show desktop mode if there are no
+            # app windows. So, just open a window and perform the show
+            # desktop action until the desired state is acheived, then close
+            # the window. The showdesktop_active state will persist.
+            #
+            # In the event that this doesn't work, wait_for will throw an
+            # exception.
+            win = self.start_app_window('Calculator', locale='C')
+            count = 1
+            while self.window_manager.showdesktop_active:
+                self.keybinding("window/show_desktop")
+                sleep(count)
+                count+=1
+                if count > 10:
+                    break
+            win.close()
+            self.window_manager.showdesktop_active.wait_for(False)
         for launcher in self.launcher.get_launchers():
             if not self.well_behaved(launcher, in_keynav_mode=False):
                 well_behaved = False
@@ -117,6 +135,11 @@ class UnityTestCase(AutopilotTestCase):
                 reasons.append("The test left the launcher in switcher mode.")
                 log.warning("Test left the launcher in switcher mode, exiting it...")
                 launcher.switcher_cancel()
+            if not self.well_behaved(launcher, quicklist_open=False):
+                well_behaved = False
+                reasons.append("The test left a quicklist open.")
+                log.warning("The test left a quicklist open.")
+                self.keyboard.press_and_release('Escape')
 
         if not well_behaved:
             self.fail("/n".join(reasons))
@@ -210,7 +233,7 @@ class UnityTestCase(AutopilotTestCase):
             reset_logging()
         except DBusException:
             pass
-        with open(self._unity_log_file_name) as unity_log:
+        with open(self._unity_log_file_name, encoding='utf-8') as unity_log:
             self.addDetail('unity-log', text_content(unity_log.read()))
         os.remove(self._unity_log_file_name)
         self._unity_log_file_name = ""

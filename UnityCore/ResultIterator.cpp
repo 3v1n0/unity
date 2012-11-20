@@ -23,11 +23,7 @@ namespace unity
 {
 namespace dash
 {
-
-namespace 
-{
-  nux::logging::Logger logger("unity.dash.resultiterator");
-}
+DECLARE_LOGGER(logger, "unity.dash.resultiterator");
 
 ResultIterator::ResultIterator(glib::Object<DeeModel> model)
   : model_(model)

@@ -360,8 +360,8 @@ class FilterExpanderLabel(UnityIntrospectionObject):
     def ensure_expanded(self):
         """Expand the filter expander label, if it's not already"""
         if not self.expanded:
-            tx = x + width / 2
-            ty = y + height / 2
+            tx = self.x + self.width / 2
+            ty = self.y + self.height / 2
             m = Mouse()
             m.move(tx, ty)
             m.click()
@@ -370,8 +370,8 @@ class FilterExpanderLabel(UnityIntrospectionObject):
     def ensure_collapsed(self):
         """Collapse the filter expander label, if it's not already"""
         if self.expanded:
-            tx = x + width / 2
-            ty = y + height / 2
+            tx = self.x + self.width / 2
+            ty = self.y + self.height / 2
             m = Mouse()
             m.move(tx, ty)
             m.click()

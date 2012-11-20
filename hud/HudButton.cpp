@@ -39,10 +39,9 @@
 #include "HudButton.h"
 #include "HudPrivate.h"
 
+DECLARE_LOGGER(logger, "unity.hud.button");
 namespace
 {
-nux::logging::Logger logger("unity.hud.HudButton");
-
 const int hlayout_left_padding = 46;
 const char* const button_font = "Ubuntu 13"; // 17px = 13
 }

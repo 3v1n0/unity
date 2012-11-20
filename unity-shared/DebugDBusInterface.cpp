@@ -24,7 +24,6 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/bind.hpp>
-#include <core/core.h>
 #include <NuxCore/Logger.h>
 #include <NuxCore/LoggingWriter.h>
 
@@ -38,10 +37,9 @@ const std::string DBUS_BUS_NAME = "com.canonical.Unity";
 
 namespace debug
 {
+DECLARE_LOGGER(logger, "unity.debug.interface");
 namespace
 {
-nux::logging::Logger logger("unity.debug.DebugDBusInterface");
-
 namespace local
 {
   std::ofstream output_file;
@@ -266,9 +264,10 @@ void LogMessage(std::string const& severity,
                 std::string const& message)
 {
   nux::logging::Level level = nux::logging::get_logging_level(severity);
-  if (logger.GetEffectiveLogLevel() <= level)
+  nux::logging::Logger const& log_ref = Unwrap(logger);
+  if (log_ref.GetEffectiveLogLevel() <= level)
   {
-   nux::logging::LogStream(level, logger.module(), __FILE__, __LINE__).stream()
+    nux::logging::LogStream(level, log_ref.module(), __FILE__, __LINE__).stream()
       << message;
   }
 }
@@ -303,7 +302,7 @@ std::list<Introspectable*> GetIntrospectableNodesFromQuery(std::string const& qu
                                         query_strings.end(),
                                         boost::bind( &std::string::empty, _1 ) ),
                       query_strings.end());
-    foreach(std::string part, query_strings)
+    for (auto part : query_strings)
     {
       query_parts.push_back(XPathQueryPart(part));
     }
@@ -343,7 +342,7 @@ std::list<Introspectable*> GetIntrospectableNodesFromQuery(std::string const& qu
         start_points.push_back(node);
       }
       // Add all children of current node to queue.
-      foreach(Introspectable* child, node->GetIntrospectableChildren())
+      for (Introspectable* child : node->GetIntrospectableChildren())
       {
         queue.push(child);
       }
@@ -355,7 +354,7 @@ std::list<Introspectable*> GetIntrospectableNodesFromQuery(std::string const& qu
   typedef std::pair<Introspectable*, std::list<XPathQueryPart>::iterator> node_match_pair;
 
   std::queue<node_match_pair> traverse_queue;
-  foreach(Introspectable *node, start_points)
+  for (Introspectable *node : start_points)
   {
     traverse_queue.push(node_match_pair(node, query_parts.begin()));
   }
@@ -377,7 +376,7 @@ std::list<Introspectable*> GetIntrospectableNodesFromQuery(std::string const& qu
     else
     {
       // push all children of current node to start of queue, advance search iterator, and loop again.
-      foreach (Introspectable *child, node->GetIntrospectableChildren())
+      for (Introspectable* child : node->GetIntrospectableChildren())
       {
         if (query_it->Matches(child))
         {
