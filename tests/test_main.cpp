@@ -4,8 +4,6 @@
 #include <NuxCore/Logger.h>
 #include <Nux/Nux.h>
 
-#include "unity-shared/WindowManager.h"
-
 int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);

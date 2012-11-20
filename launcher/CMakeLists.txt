@@ -91,7 +91,6 @@ set (SWITCHER_SOURCES
       SwitcherController.cpp
       SwitcherModel.cpp
       SwitcherView.cpp
-      LayoutSystem.cpp
     )
 
 add_library (switcher-lib STATIC ${SWITCHER_SOURCES})

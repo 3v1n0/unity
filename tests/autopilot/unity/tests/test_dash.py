@@ -15,16 +15,18 @@ from time import sleep
 
 from unity.tests import UnityTestCase
 
+import gettext
 
 class DashTestCase(UnityTestCase):
     def setUp(self):
         super(DashTestCase, self).setUp()
-        self.set_unity_log_level("unity.shell", "DEBUG")
+        self.set_unity_log_level("unity.shell.compiz", "DEBUG")
         self.set_unity_log_level("unity.launcher", "DEBUG")
         self.dash.ensure_hidden()
         # On shutdown, ensure hidden too.  Also add a delay.  Cleanup is LIFO.
         self.addCleanup(self.dash.ensure_hidden)
         self.addCleanup(sleep, 1)
+        gettext.install("unity-lens-files")
 
 
 class DashRevealTests(DashTestCase):
@@ -361,24 +363,27 @@ class DashKeyNavTests(DashTestCase):
         lens = self.dash.get_current_lens()
 
         filter_bar = lens.get_filterbar()
+        # Need to ensure the filter expander has focus, so if it's already
+        # expanded, we collapse it first:
+        filter_bar.ensure_collapsed()
         filter_bar.ensure_expanded()
 
         # Tab to fist filter expander
         self.keyboard.press_and_release('Tab')
-        self.assertThat(lambda: filter_bar.get_focused_filter(), Eventually(NotEquals(None)))
+        self.assertThat(filter_bar.get_focused_filter, Eventually(NotEquals(None)))
         old_focused_filter = filter_bar.get_focused_filter()
         old_focused_filter.ensure_expanded()
 
         # Tab to the next filter expander
         self.keyboard.press_and_release('Tab')
-        self.assertThat(lambda: filter_bar.get_focused_filter(), Eventually(NotEquals(None)))
+        self.assertThat(filter_bar.get_focused_filter, Eventually(NotEquals(None)))
         new_focused_filter = filter_bar.get_focused_filter()
         self.assertNotEqual(old_focused_filter, new_focused_filter)
         new_focused_filter.ensure_expanded()
 
         # Move the focus up.
         self.keyboard.press_and_release("Up")
-        self.assertThat(lambda: filter_bar.get_focused_filter(), Eventually(Equals(None)))
+        self.assertThat(filter_bar.get_focused_filter, Eventually(Equals(None)))
         self.assertThat(old_focused_filter.content_has_focus, Eventually(Equals(True)))
 
 
@@ -659,10 +664,10 @@ class CategoryHeaderTests(DashTestCase):
         """Clicking into a category highlight must expand/collapse
         the view.
         """
-        lens = self.dash.reveal_file_lens()
+        lens = self.dash.reveal_application_lens()
         self.addCleanup(self.dash.ensure_hidden)
 
-        category = lens.get_category_by_name("Folders")
+        category = lens.get_category_by_name(_("Installed"))
         is_expanded = category.is_expanded
 
         self.mouse.move(self.dash.view.x + self.dash.view.width / 2,
@@ -687,7 +692,7 @@ class PreviewInvocationTests(DashTestCase):
         lens = self.dash.reveal_application_lens()
         self.addCleanup(self.dash.ensure_hidden)
 
-        category = lens.get_category_by_name("Installed")
+        category = lens.get_category_by_name("More suggestions")
         results = category.get_results()
         result = results[0]
         # result.preview handles finding xy co-ords and right mouse-click
@@ -780,7 +785,7 @@ class PreviewInvocationTests(DashTestCase):
         lens = self.dash.reveal_application_lens()
         self.addCleanup(self.dash.ensure_hidden)
 
-        category = lens.get_category_by_name("Installed")
+        category = lens.get_category_by_name("More suggestions")
         results = category.get_results()
         result = results[0]
         # result.preview_key() handles finding xy co-ords and key press
@@ -794,16 +799,14 @@ class PreviewNavigateTests(DashTestCase):
     def setUp(self):
         super(PreviewNavigateTests, self).setUp()
 
-        self.dash.reveal_application_lens()
+        lens = self.dash.reveal_application_lens()
         self.addCleanup(self.dash.ensure_hidden)
 
-        lens = self.dash.get_current_lens()
-
-        results_category = lens.get_category_by_name("Installed")
-        results = results_category.get_results()
+        results_category = lens.get_category_by_name("More suggestions")
         # wait for results (we need 4 results to perorm the multi-navigation tests)
-        refresh_fn = lambda: len(results)
+        refresh_fn = lambda: len(results_category.get_results())
         self.assertThat(refresh_fn, Eventually(GreaterThan(4)))
+        results = results_category.get_results()
 
         result = results[2] # 2 so we can navigate left
         result.preview()
@@ -917,7 +920,7 @@ class PreviewNavigateTests(DashTestCase):
         cover_art = self.preview_container.current_preview.cover_art
 
         tx = cover_art.x + (cover_art.width / 2)
-        ty = cover_art.y + (cover_art.height / 2)
+        ty = cover_art.y + (cover_art.height / 4)
         self.mouse.move(tx, ty)
         self.mouse.click(button=1)
 
@@ -928,7 +931,7 @@ class PreviewNavigateTests(DashTestCase):
         cover_art = self.preview_container.current_preview.cover_art
 
         tx = cover_art.x + (cover_art.width / 2)
-        ty = cover_art.y + (cover_art.height / 2)
+        ty = cover_art.y + (cover_art.height / 4)
         self.mouse.move(tx, ty)
         self.mouse.click(button=3)
 
