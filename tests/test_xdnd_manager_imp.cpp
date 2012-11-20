@@ -52,7 +52,7 @@ public:
     , xdnd_manager(xdnd_start_stop_notifier_, xdnd_collection_window_)
   {}
 
-  void SetUp() /*override*/
+  void SetUp()
   {
     // Evil hack to avoid crashes.
     XEvent xevent;
@@ -69,7 +69,7 @@ public:
   unity::XdndManagerImp xdnd_manager;
 };
 
-TEST_F(TestXdndManager, SignalDndStarted)
+TEST_F(TestXdndManager, SignalDndStartedAndFinished)
 {
   std::vector<std::string> mimes;
   mimes.push_back("text/uri-list");
@@ -83,20 +83,24 @@ TEST_F(TestXdndManager, SignalDndStarted)
     .Times(1)
     .WillOnce(Invoke(emit_collected_signal));
 
-  //EXPECT_CALL(uscreen, GetMonitorWithMouse())
-    //.WillRepetdly(Return(1));
-
   bool dnd_started_emitted = false;
-  //int monitor_collected = 0;
   xdnd_manager.dnd_started.connect([&] (std::string const& /*data*/, int /*monitor*/) {
   	dnd_started_emitted = true;
-    //monitor_collected = monitor;
   });
 
   xdnd_start_stop_notifier_->started.emit();
-
   Utils::WaitUntil(dnd_started_emitted);
-  //EXPECT_EQ(monitor_collected, 1);
+
+  EXPECT_CALL(*xdnd_collection_window_, Deactivate())
+    .Times(1);
+
+  bool dnd_finished_emitted = false;
+  xdnd_manager.dnd_finished.connect([&] () {
+    dnd_finished_emitted = true;
+  });
+
+  xdnd_start_stop_notifier_->finished.emit();
+  Utils::WaitUntil(dnd_finished_emitted);
 }
 
 TEST_F(TestXdndManager, SignalDndStarted_InvalidMimes)
@@ -121,21 +125,6 @@ TEST_F(TestXdndManager, SignalDndStarted_InvalidMimes)
   xdnd_start_stop_notifier_->started.emit();
 
   EXPECT_FALSE(dnd_started_emitted);
-}
-
-TEST_F(TestXdndManager, SignalDndFinished)
-{
-  EXPECT_CALL(*xdnd_collection_window_, Deactivate())
-    .Times(1);
-
-  bool dnd_finished_emitted = false;
-  xdnd_manager.dnd_finished.connect([&] () {
-  	dnd_finished_emitted = true;
-  });
-
-  xdnd_start_stop_notifier_->finished.emit();
-
-  Utils::WaitUntil(dnd_finished_emitted);
 }
 
 }

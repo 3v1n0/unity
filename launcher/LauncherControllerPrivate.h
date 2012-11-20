@@ -49,7 +49,7 @@ namespace launcher
 class Controller::Impl
 {
 public:
-  Impl(Controller* parent, XdndManager::Ptr xdnd_manager);
+  Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager);
   ~Impl();
 
   void UpdateNumWorkspaces(int workspaces);
@@ -111,6 +111,10 @@ public:
                                unsigned short keyCount);
 
   void OpenQuicklist();
+
+  void OnDndStarted(std::string const& data, int monitor);
+  void OnDndFinished();
+  void OnDndMonitorChanged(int monitor);
 
   static void OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer user_data);
   static void OnDBusMethodCall(GDBusConnection* connection, const gchar* sender, const gchar* object_path,

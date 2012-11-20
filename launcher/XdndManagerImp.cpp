@@ -23,8 +23,8 @@
 
 namespace unity {
 
-XdndManagerImp::XdndManagerImp(XdndStartStopNotifier::Ptr xdnd_start_stop_notifier, 
-                               XdndCollectionWindow::Ptr xdnd_collection_window)
+XdndManagerImp::XdndManagerImp(XdndStartStopNotifier::Ptr const& xdnd_start_stop_notifier, 
+                               XdndCollectionWindow::Ptr const& xdnd_collection_window)
   : xdnd_start_stop_notifier_(xdnd_start_stop_notifier)
   , xdnd_collection_window_(xdnd_collection_window)
   , last_monitor_(-1)
@@ -46,7 +46,8 @@ void XdndManagerImp::OnDndFinished()
   xdnd_collection_window_->Deactivate();
   mouse_poller_timeout_.reset();
 
-  if (valid_dnd_in_progress_) {
+  if (valid_dnd_in_progress_)
+  {
     valid_dnd_in_progress_ = false;
     dnd_finished.emit();
   }

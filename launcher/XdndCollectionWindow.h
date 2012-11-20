@@ -33,7 +33,8 @@ namespace unity {
  * soon as dnd starts and not when the mouse pointer enter the x window.
  **/
 
-class XdndCollectionWindow : boost::noncopyable {
+class XdndCollectionWindow : boost::noncopyable
+{
 public:
   typedef std::shared_ptr<XdndCollectionWindow> Ptr;
 

@@ -18,6 +18,7 @@
 */
 
 #include "XdndCollectionWindowImp.h"
+#include "unity-shared/UScreen.h"
 #include "unity-shared/WindowManager.h"
 
 namespace unity {
@@ -34,8 +35,8 @@ public:
     SetBackgroundColor(nux::Color(0x00000000));
     SetOpacity(0.0f);
     // ... and as big as the whole screen.
-    WindowManager& wm = WindowManager::Default();
-    SetGeometry(wm.GetScreenGeometry());
+    auto uscreen = UScreen::GetDefault();
+    SetGeometry(uscreen->GetScreenGeometry());
 
     ShowWindow(true);
     PushToBack();
@@ -44,7 +45,14 @@ public:
     EnableInputWindow(false, "XdndCollectionWindowImp");
     SetDndEnabled(false, true);
 
-    wm.window_moved.connect(sigc::mem_fun(this, &PrivateWindow::OnWindowMoved));
+    uscreen->changed.connect(sigc::mem_fun(this, &PrivateWindow::OnScreenChanged));
+    WindowManager::Default().window_moved.connect(sigc::mem_fun(this, &PrivateWindow::OnWindowMoved));
+  }
+
+  void OnScreenChanged(int /*primary*/, std::vector<nux::Geometry>& /*monitors*/)
+  {
+    auto uscreen = UScreen::GetDefault();
+    SetGeometry(uscreen->GetScreenGeometry());
   }
 
   /**
@@ -55,14 +63,13 @@ public:
    **/
   void OnWindowMoved(Window window_id)
   {
-    auto display = nux::GetGraphicsDisplay()->GetX11Display();
+    if (G_LIKELY(window_id != GetInputWindowId()))
+      return;
 
-    if (window_id == GetInputWindowId() && display)
-    {
-      // Create a fake mouse move because sometimes an extra one is required.
-      XWarpPointer(display, None, None, 0, 0, 0, 0, 0, 0);
-      XFlush(display);
-    }
+    // Create a fake mouse move because sometimes an extra one is required.
+    auto display = nux::GetGraphicsDisplay()->GetX11Display();
+    XWarpPointer(display, None, None, 0, 0, 0, 0, 0, 0);
+    XFlush(display);
   }
 
   void ProcessDndMove(int x, int y, std::list<char*> mimes)

@@ -32,7 +32,7 @@ namespace unity {
 
 class XdndManagerImp : public XdndManager, public sigc::trackable {
 public:
-  XdndManagerImp(XdndStartStopNotifier::Ptr, XdndCollectionWindow::Ptr);
+  XdndManagerImp(XdndStartStopNotifier::Ptr const&, XdndCollectionWindow::Ptr const&);
 
 private:
   void OnDndStarted();

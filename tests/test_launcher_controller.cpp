@@ -221,7 +221,7 @@ struct TestLauncherController : public testing::Test
 protected:
   struct MockLauncherController : Controller
   {
-    MockLauncherController(XdndManager::Ptr xdnd_manager)
+    MockLauncherController(XdndManager::Ptr const& xdnd_manager)
       : Controller(xdnd_manager)
     {}
 

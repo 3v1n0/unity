@@ -32,8 +32,8 @@ class XdndCollectionWindowImp : public XdndCollectionWindow
 public:
   XdndCollectionWindowImp();
 
-  void Collect() /*override*/;
-  void Deactivate() /*override*/;
+  void Collect();
+  void Deactivate();
 
 private:
   nux::ObjectPtr<nux::BaseWindow> window_;

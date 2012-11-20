@@ -95,7 +95,7 @@ GDBusInterfaceVTable Controller::Impl::interface_vtable =
   { Controller::Impl::OnDBusMethodCall, NULL, NULL};
 
 
-Controller::Impl::Impl(Controller* parent, XdndManager::Ptr xdnd_manager)
+Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager)
   : parent_(parent)
   , model_(std::make_shared<LauncherModel>())
   , matcher_(bamf_matcher_get_default())
@@ -163,38 +163,9 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr xdnd_manager)
 
   parent_->AddChild(model_.get());
 
-  xdnd_manager_->dnd_started.connect([this](std::string const& data, int monitor) {
-    if (parent_->multiple_launchers)
-    {
-      last_dnd_monitor_ = monitor;
-      launchers[last_dnd_monitor_]->DndStarted(data);
-    }
-    else
-    {
-      launcher_->DndStarted(data);
-    }
-  });
-
-  xdnd_manager_->dnd_finished.connect([this]() {
-    if (parent_->multiple_launchers)
-    {
-      launchers[last_dnd_monitor_]->DndFinished();
-      last_dnd_monitor_ = -1;
-    }
-    else
-    {
-      launcher_->DndFinished();
-    }
-  });
-
-  xdnd_manager_->monitor_changed.connect([this](int monitor) {
-    if (parent_->multiple_launchers)
-    {
-      launchers[last_dnd_monitor_]->UnsetDndQuirk();
-      last_dnd_monitor_ = monitor;
-      launchers[last_dnd_monitor_]->SetDndQuirk();
-   }
-  });
+  xdnd_manager_->dnd_started.connect(sigc::mem_fun(this, &Impl::OnDndStarted));
+  xdnd_manager_->dnd_finished.connect(sigc::mem_fun(this, &Impl::OnDndFinished));
+  xdnd_manager_->monitor_changed.connect(sigc::mem_fun(this, &Impl::OnDndMonitorChanged));
 }
 
 Controller::Impl::~Impl()
@@ -287,6 +258,42 @@ void Controller::Impl::OnWindowFocusChanged(guint32 xid)
   {
     keynav_first_focus = true;
   }
+}
+
+void Controller::Impl::OnDndStarted(std::string const& data, int monitor)
+{
+  if (parent_->multiple_launchers)
+  {
+    last_dnd_monitor_ = monitor;
+    launchers[last_dnd_monitor_]->DndStarted(data);
+  }
+  else
+  {
+    launcher_->DndStarted(data);
+  }
+}
+
+void Controller::Impl::OnDndFinished()
+{
+  if (parent_->multiple_launchers)
+  {
+    launchers[last_dnd_monitor_]->DndFinished();
+    last_dnd_monitor_ = -1;
+  }
+  else
+  {
+    launcher_->DndFinished();
+  }
+}
+
+void Controller::Impl::OnDndMonitorChanged(int monitor)
+{
+  if (parent_->multiple_launchers)
+  {
+    launchers[last_dnd_monitor_]->UnsetDndQuirk();
+    last_dnd_monitor_ = monitor;
+    launchers[last_dnd_monitor_]->SetDndQuirk();
+ }
 }
 
 Launcher* Controller::Impl::CreateLauncher(int monitor)
@@ -1008,7 +1015,7 @@ void Controller::Impl::SendHomeActivationRequest()
                    g_variant_new("(sus)", "home.lens", dash::NOT_HANDLED, ""));
 }
 
-Controller::Controller(XdndManager::Ptr xdnd_manager)
+Controller::Controller(XdndManager::Ptr const& xdnd_manager)
  : options(Options::Ptr(new Options()))
  , multiple_launchers(true)
  , pimpl(new Impl(this, xdnd_manager))

@@ -48,7 +48,7 @@ public:
   nux::Property<Options::Ptr> options;
   nux::Property<bool> multiple_launchers;
 
-  Controller(XdndManager::Ptr xdnd_manager);
+  Controller(XdndManager::Ptr const& xdnd_manager);
   ~Controller();
 
   Launcher& launcher() const;
