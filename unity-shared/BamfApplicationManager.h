@@ -41,20 +41,40 @@ public:
   std::string title() const;
   std::string icon() const;
 
+  bool GetVisible() const;
+  bool GetActive() const;
+  bool GetRunning() const;
+  bool GetUrgent() const;
+
 protected:
   Manager const& manager_;
   glib::Object<BamfView> bamf_view_;
 };
 
+
+class WindowBase: public ::unity::ApplicationWindow, public View
+{
+protected:
+  WindowBase(Manager const& manager,
+             glib::Object<BamfView> const& window);
+
+public:
+  virtual std::string title() const;
+  virtual std::string icon() const;
+
+private: // Property getters and setters
+  void HookUpEvents();
+
+private:
+  glib::SignalManager signals_;
+};
+
 // NOTE: Can't use Window as a type as there is a #define for Window to some integer value.
-class AppWindow: public ::unity::ApplicationWindow, public View
+class AppWindow: public WindowBase
 {
 public:
   AppWindow(Manager const& manager,
             glib::Object<BamfView> const& window);
-
-  virtual std::string title() const;
-  virtual std::string icon() const;
 
   virtual Window window_id() const;
   virtual int monitor() const;
@@ -64,14 +84,11 @@ private:
   glib::Object<BamfWindow> bamf_window_;
 };
 
-class Tab: public ::unity::ApplicationWindow, public View
+class Tab: public WindowBase
 {
 public:
   Tab(Manager const& manager,
       glib::Object<BamfView> const& tab);
-
-  virtual std::string title() const;
-  virtual std::string icon() const;
 
   virtual Window window_id() const;
   virtual int monitor() const;
@@ -93,8 +110,10 @@ public:
 
   virtual std::string title() const;
   virtual std::string icon() const;
+  virtual std::string desktop_file() const;
+  virtual std::string type() const;
 
-  virtual WindowList get_windows() const;
+  virtual WindowList GetWindows() const;
 
 private: // Property getters and setters
   void HookUpEvents();
@@ -104,11 +123,6 @@ private: // Property getters and setters
 
   bool GetSticky() const;
   bool SetSticky(bool const& param);
-
-  bool GetVisible() const;
-  bool GetActive() const;
-  bool GetRunning() const;
-  bool GetUrgent() const;
 
 private:
   glib::Object< ::BamfApplication> bamf_app_;

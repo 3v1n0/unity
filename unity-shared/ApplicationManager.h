@@ -55,6 +55,10 @@ public:
   // It is possible for this to be null, especially in situations where
   // the application is starting up or shutting down.
   virtual ApplicationPtr application() const = 0;
+
+  nux::ROProperty<bool> visible;
+  nux::ROProperty<bool> active;
+  nux::ROProperty<bool> urgent;
 };
 
 
@@ -65,8 +69,10 @@ public:
 
   virtual std::string icon() const = 0;
   virtual std::string title() const = 0;
+  virtual std::string desktop_file() const = 0;
+  virtual std::string type() const = 0;
 
-  virtual WindowList get_windows() const = 0;
+  virtual WindowList GetWindows() const = 0;
 
   // Considering using a property for the "unity-seen" quark
   nux::RWProperty<bool> seen;

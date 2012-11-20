@@ -47,9 +47,11 @@ void dump_app(ApplicationPtr const& app, std::string const& prefix = "")
          << ", running: " << (app->running() ? "yes" : "no")
          << ", urgent: " << (app->urgent() ? "yes" : "no")
          << "\n  icon: \"" << app->icon() << "\""
+         << "\n  desktop file: \"" << app->desktop_file() << "\""
+         << "\n  type: \"" << app->type() << "\""
          << endl;
 
-    for (auto win : app->get_windows())
+    for (auto win : app->GetWindows())
     {
       std::cout << "  Window: " << win->title()
                 << ", window_id: " << win->window_id()

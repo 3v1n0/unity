@@ -62,22 +62,75 @@ std::string View::icon() const
   return glib::String(bamf_view_get_icon(bamf_view_)).Str();
 }
 
-
-AppWindow::AppWindow(Manager const& manager, glib::Object<BamfView> const& window)
-  : View(manager, window)
-  , bamf_window_(glib::object_cast<BamfWindow>(window))
+bool View::GetVisible() const
 {
+  return bamf_view_is_user_visible(bamf_view_);
 }
 
-std::string AppWindow::title() const
+bool View::GetActive() const
+{
+  return bamf_view_is_active(bamf_view_);
+
+}
+
+bool View::GetRunning() const
+{
+  return bamf_view_is_running(bamf_view_);
+}
+
+bool View::GetUrgent() const
+{
+  return bamf_view_is_urgent(bamf_view_);
+}
+
+
+WindowBase::WindowBase(Manager const& manager,
+                       glib::Object<BamfView> const& window)
+  : View(manager, window)
+{
+  HookUpEvents();
+}
+
+std::string WindowBase::title() const
 {
   return View::title();
 }
 
-std::string AppWindow::icon() const
+std::string WindowBase::icon() const
 {
   return View::icon();
 }
+
+void WindowBase::HookUpEvents()
+{
+  visible.SetGetterFunction(sigc::mem_fun(this, &View::GetVisible));
+  active.SetGetterFunction(sigc::mem_fun(this, &View::GetActive));
+  urgent.SetGetterFunction(sigc::mem_fun(this, &View::GetUrgent));
+
+  glib::SignalBase* sig;
+  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "user-visible-changed",
+                          [this] (BamfView*, gboolean visible) {
+                            this->visible.changed.emit(visible);
+                          });
+  signals_.Add(sig);
+  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "active-changed",
+                          [this] (BamfView*, gboolean active) {
+                            this->active.changed.emit(active);
+                          });
+  signals_.Add(sig);
+  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "urgent-changed",
+                          [this] (BamfView*, gboolean urgent) {
+                            this->urgent.changed.emit(urgent);
+                          });
+  signals_.Add(sig);
+}
+
+AppWindow::AppWindow(Manager const& manager, glib::Object<BamfView> const& window)
+  : WindowBase(manager, window)
+  , bamf_window_(glib::object_cast<BamfWindow>(window))
+{
+}
+
 
 Window AppWindow::window_id() const
 {
@@ -96,19 +149,9 @@ ApplicationPtr AppWindow::application() const
 
 
 Tab::Tab(Manager const& manager, glib::Object<BamfView> const& tab)
-  : View(manager, tab)
+  : WindowBase(manager, tab)
   , bamf_tab_(glib::object_cast<BamfTab>(tab))
 {}
-
-std::string Tab::title() const
-{
-  return View::title();
-}
-
-std::string Tab::icon() const
-{
-  return View::icon();
-}
 
 Window Tab::window_id() const
 {
@@ -160,10 +203,10 @@ void Application::HookUpEvents()
   seen.SetSetterFunction(sigc::mem_fun(this, &Application::SetSeen));
   sticky.SetGetterFunction(sigc::mem_fun(this, &Application::GetSticky));
   sticky.SetSetterFunction(sigc::mem_fun(this, &Application::SetSticky));
-  visible.SetGetterFunction(sigc::mem_fun(this, &Application::GetVisible));
-  active.SetGetterFunction(sigc::mem_fun(this, &Application::GetActive));
-  running.SetGetterFunction(sigc::mem_fun(this, &Application::GetRunning));
-  urgent.SetGetterFunction(sigc::mem_fun(this, &Application::GetUrgent));
+  visible.SetGetterFunction(sigc::mem_fun(this, &View::GetVisible));
+  active.SetGetterFunction(sigc::mem_fun(this, &View::GetActive));
+  running.SetGetterFunction(sigc::mem_fun(this, &View::GetRunning));
+  urgent.SetGetterFunction(sigc::mem_fun(this, &View::GetUrgent));
 
   glib::SignalBase* sig;
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "user-visible-changed",
@@ -235,7 +278,19 @@ std::string Application::icon() const
   return View::icon();
 }
 
-WindowList Application::get_windows() const
+std::string Application::desktop_file() const
+{
+  const gchar* file = bamf_application_get_desktop_file(bamf_app_);
+  return file ? file : "";
+}
+
+std::string Application::type() const
+{
+  const gchar* type = bamf_application_get_application_type(bamf_app_);
+  return type ? type : "";
+}
+
+WindowList Application::GetWindows() const
 {
   WindowList result;
 
@@ -296,27 +351,6 @@ bool Application::SetSticky(bool const& param)
 
   bamf_view_set_sticky(bamf_view_, true);
   return true; // value updated
-}
-
-bool Application::GetVisible() const
-{
-  return bamf_view_is_user_visible(bamf_view_);
-}
-
-bool Application::GetActive() const
-{
-  return bamf_view_is_active(bamf_view_);
-
-}
-
-bool Application::GetRunning() const
-{
-  return bamf_view_is_running(bamf_view_);
-}
-
-bool Application::GetUrgent() const
-{
-  return bamf_view_is_urgent(bamf_view_);
 }
 
 
