@@ -80,7 +80,7 @@ public:
 
     std::vector<std::string> data;
     for (auto mime : mimes)
-      data.push_back(mime);
+      if (mime) data.push_back(mime);
   
     parent_->collected.emit(data);
   }
