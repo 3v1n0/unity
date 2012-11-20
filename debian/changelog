@@ -22,6 +22,10 @@ unity (6.12.0-0ubuntu2) UNRELEASED; urgency=low
   * debian/control:
     - adding libgtest-dev and google-mock build-dep now that there are in main
       (LP: #1076763)
+    - add libunity-core -> unity-common dep (LP: #1079132)
+    - do not have unity-common dep on compiz-gnome: the migration code is only
+      ran if compiz-gnome is installed, but compiz-gnome is pulled by compiz
+      directly. We don't care if the migration code isn't executed.
 
   [ bschaefer ]
   * Ported to nux 4.0
