@@ -201,6 +201,7 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
       _bamf_app = bamf_matcher_get_application_for_desktop_file(matcher_, new_desktop_path.c_str(), true);
       auto bamf_view = glib::object_cast<BamfView>(_bamf_app);
       UpdateDesktopFile();
+      UpdateRemoteUri();
 
       // make it permanent
       Stick();

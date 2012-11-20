@@ -92,6 +92,7 @@ protected:
 
 protected:
   void UpdateDesktopFile();
+  void UpdateRemoteUri();
   std::string _desktop_file;
   glib::Object<BamfApplication> _bamf_app;
 
