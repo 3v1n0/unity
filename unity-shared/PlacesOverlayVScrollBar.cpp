@@ -320,7 +320,7 @@ void PlacesOverlayVScrollBar::Draw(nux::GraphicsEngine& graphics_engine, bool fo
     int offset_y = 0;
     if (_thumb_above_slider)
     {
-      offset_y = _overlay_window->GetThumbOffsetY() + _overlay_window->GetThumbHeight()  + _track->GetBaseY();
+      offset_y = _slider->GetBaseY() - _connector_height;
     }
     else
     {
