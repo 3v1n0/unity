@@ -33,6 +33,7 @@ set (PREVIEWS_SOURCES
      GenericPreview.cpp
      MusicPreview.cpp
      MoviePreview.cpp
+     PaymentPreview.cpp
      Preview.cpp
      PreviewContainer.cpp
      PreviewInfoHintWidget.cpp

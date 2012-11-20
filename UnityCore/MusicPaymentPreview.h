@@ -24,14 +24,14 @@
 
 #include <sigc++/trackable.h>
 
-#include "Preview.h"
+#include "PaymentPreview.h"
 
 namespace unity
 {
 namespace dash
 {
 
-class MusicPaymentPreview : public Preview
+class MusicPaymentPreview : public PaymentPreview
 {
 public:
   typedef std::shared_ptr<MusicPaymentPreview> Ptr;

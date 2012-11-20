@@ -48,6 +48,7 @@ set (CORE_HEADERS
      Model-inl.h
      ModelRowAdaptor.h
      ModelRowAdaptor-inl.h
+     PaymentPreview.h
      Preview.h
      RadioOptionFilter.h
      RatingsFilter.h
@@ -88,6 +89,7 @@ set (CORE_SOURCES
      MultiRangeFilter.cpp
      MusicPreview.cpp
      ModelRowAdaptor.cpp
+     PaymentPreview.cpp
      Preview.cpp
      RatingsFilter.cpp
      RadioOptionFilter.cpp

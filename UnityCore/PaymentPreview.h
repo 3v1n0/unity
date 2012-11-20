@@ -14,28 +14,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
- *              Michal Hruby <michal.hruby@canonical.com>
+ * Authored by: Manuel de la Pena <manuel.delapena@canonical.com>
  */
 
-#include <unity-protocol.h>
+#ifndef UNITY_PAYMENT_PREVIEW_PREVIEW_H
+#define UNITY_PAYMENT_PREVIEW_PREVIEW_H
 
-#include "MusicPaymentPreview.h"
+#include <memory>
+
+#include <sigc++/trackable.h>
+
+#include "Preview.h"
 
 namespace unity
 {
 namespace dash
 {
 
-MusicPaymentPreview::MusicPaymentPreview(unity::glib::Object<GObject> const& proto_obj)
-  : PaymentPreview(proto_obj)
+class PaymentPreview : public Preview
 {
+public:
+  typedef std::shared_ptr<PaymentPreview> Ptr;
+
+  PaymentPreview(unity::glib::Object<GObject> const& proto_obj);
+  ~PaymentPreview();
+};
+
+}
 }
 
-MusicPaymentPreview::~MusicPaymentPreview()
-{
-}
-
-
-}
-}
+#endif

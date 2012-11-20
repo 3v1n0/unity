@@ -16,14 +16,14 @@
  * License version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
+ * Authored by: Manuel de la Pena <manuel.delapena@canonical.com>
  *
  */
 
 #ifndef MUSIC_PAYMENT_PREVIEW_H
 #define MUSIC_PAYMENT_PREVIEW_H
 
-// kye used to find the correct infor hint
+// key used to find the correct info hint
 #define DATA_INFOHINT_ID "album_purchase_preview"
 
 // keys of the data preview
