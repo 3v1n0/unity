@@ -129,14 +129,17 @@ void SoftwareCenterLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 std::string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
 {
    // Fixup the _desktop_file because the one we get from software-center
-   // is not the final one, e.g. the s-c-agent does not send it and
+   // is not the final one, e.g. the s-c-agent does send a temp one and
    // app-install-data points to the "wrong" one in /usr/share/app-install
    //
    // So:
    // - if there is a desktop file already and it startswith 
    //   /usr/share/app-install/desktop, then transform to 
    //   /usr/share/application
-   // - get the pkgname
+   // - if there is a desktop file with prefix /tmp/software-center-agent:
+   //   transform to /usr/share/application
+   //   (its using "/tmp/software-center-agent:$random:$pkgname.desktop")
+   // maybe:
    // - and search in /var/lib/apt/lists/$pkgname.list
    //   for a desktop file that roughly matches what we want
    std::string filename = _desktop_file;
@@ -145,10 +148,8 @@ std::string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
    // and tranform it
    if (_desktop_file.find("/usr/share/app-install/desktop") == 0)
    {
-      filename = _desktop_file.substr(_desktop_file.rfind("/") + 1,
-                                                  _desktop_file.length());
-      filename = filename.substr(filename.find(":") + 1, 
-                                 filename.length() - filename.find(":"));
+      filename = filename.substr(filename.rfind(":") + 1, 
+                                 filename.length() - filename.rfind(":"));
       if (filename.find("__") != std::string::npos)
       {
          int pos = filename.find("__");
@@ -156,24 +157,25 @@ std::string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
       }
       filename = std::string(desktop_dir_ + filename);
       return filename;
-   } else {
+   } 
+   else if (_desktop_file.find("/tmp/software-center-agent:") == 0)
+   {
       // by convention the software-center-agent uses 
-      //   /usr/share/applications/extras-$pkgname.desktop
-      // or
       //   /usr/share/applications/$pkgname.desktop
-      if(!sc_pkgname_.empty())
-      {
-         filename = desktop_dir_ + sc_pkgname_ + ".desktop";
-         if (g_file_test(filename.c_str(), G_FILE_TEST_EXISTS))
-            return filename;
-         // now try extras-$pkgname.desktop
-         filename = desktop_dir_ + "extras-" + sc_pkgname_ + ".desktop";
-         if (g_file_test(filename.c_str(), G_FILE_TEST_EXISTS))
-            return filename;
+      // or
+      //   /usr/share/applications/extras-$pkgname.desktop
+      std::string desktopf = filename.substr(filename.rfind(":") + 1, 
+                                             filename.length() - filename.rfind(":"));
+      filename = desktop_dir_ + desktopf;
+      if (g_file_test(filename.c_str(), G_FILE_TEST_EXISTS))
+         return filename;
+      // now try extras-$pkgname.desktop
+      filename = desktop_dir_ + "extras-" + desktopf;
+      if (g_file_test(filename.c_str(), G_FILE_TEST_EXISTS))
+         return filename;
 
-         // FIXME: test if there is a file now and if not, search
-         //        /var/lib/dpkg/info/$pkgname.list for a desktop file
-      }
+      // FIXME: test if there is a file now and if not, search
+      //        /var/lib/dpkg/info/$pkgname.list for a desktop file
    }
 
    return _desktop_file;
@@ -199,18 +201,11 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
       // silently exchange the BAMF application
       glib::Object<BamfMatcher> matcher_(bamf_matcher_get_default());
       _bamf_app = bamf_matcher_get_application_for_desktop_file(matcher_, new_desktop_path.c_str(), true);
-      auto bamf_view = glib::object_cast<BamfView>(_bamf_app);
       UpdateDesktopFile();
       UpdateRemoteUri();
 
       // make it permanent
       Stick();
-
-      // mvo: we may need to check here if the desktop file
-      //      has a NoDisplay line or if its missing a Exec line
-      //      and if so call "UnStick()" - but I think s-c should
-      //      not call the dbus call for those
-
 
       _source_manager.AddIdle([this]()
       {
@@ -234,7 +229,6 @@ void SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
 {
   gint32 progress;
   glib::String property_name;
-  GHashTable *metadata;
   GVariant* property_value = nullptr;
 
   g_variant_get_child(params, 0, "s", &property_name);
@@ -253,23 +247,6 @@ void SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
     SetProgress(progress/100.0f);
     g_variant_unref(property_value);
   } 
-  else if (property_name.Str() == "MetaData")
-  {
-     std::cerr << "got metdata" << std::endl;
-
-    // try to get the sc_pkgname from the metadata
-    g_variant_get_child(params, 1, "v", &property_value);
-    g_variant_get(property_value, "a{ss}", &metadata);
-    const gchar *entry = (const gchar*)g_hash_table_lookup (metadata, "sc_pkgname");
-    if (entry)
-    {
-       std::cerr << "got sc_pkgname" << entry << std::endl;
-       sc_pkgname_ = std::string(entry);
-    }
-
-    g_variant_unref(property_value);
-  }
-
 }
 
 std::string SoftwareCenterLauncherIcon::GetName() const

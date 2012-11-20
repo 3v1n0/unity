@@ -72,8 +72,7 @@ TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformAppInstall)
 TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformSCAgent)
 {
    // now simualte data coming from the sc-agent
-   icon._desktop_file = "scagent";
-   icon.sc_pkgname_ = "ubuntu-software-center";
+   icon._desktop_file = "/tmp/software-center-agent:VP2W9M:ubuntu-software-center.desktop";
    icon.desktop_dir_ = BUILDDIR"/tests/data/applications/";
    EXPECT_EQ(icon.GetActualDesktopFileAfterInstall(), 
              BUILDDIR"/tests/data/applications/ubuntu-software-center.desktop");
