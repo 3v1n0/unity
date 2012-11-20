@@ -20,7 +20,7 @@
 #include <Nux/Nux.h>
 
 #include "PlacesOverlayVScrollBar.h"
-#include <Nux/InputAreaProximity.h>
+#include "CairoTexture.h"
 
 namespace
 {
@@ -36,11 +36,13 @@ namespace dash
 PlacesOverlayVScrollBar::PlacesOverlayVScrollBar(NUX_FILE_LINE_DECL)
   : PlacesVScrollBar(NUX_FILE_LINE_PARAM)
   , _overlay_window(new VScrollBarOverlayWindow(_track->GetAbsoluteGeometry()))
+  , _area_prox(_overlay_window.GetPointer(), PROXIMITY)
+  , _thumb_above_slider(false)
+  , _connector_height(0)
   , _mouse_down_offset(0)
 {
-  _area_prox.reset(new nux::InputAreaProximity(_overlay_window.GetPointer(), PROXIMITY));
-  _area_prox->mouse_near.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseNear));
-  _area_prox->mouse_beyond.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseBeyond));
+  _area_prox.mouse_near.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseNear));
+  _area_prox.mouse_beyond.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseBeyond));
 
   _overlay_window->mouse_down.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseDown));
   _overlay_window->mouse_up.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseUp));
@@ -52,21 +54,25 @@ PlacesOverlayVScrollBar::PlacesOverlayVScrollBar(NUX_FILE_LINE_DECL)
   OnVisibleChanged.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnVisibilityChanged));
 }
 
-PlacesOverlayVScrollBar::~PlacesOverlayVScrollBar() {}
-
 void PlacesOverlayVScrollBar::OnTrackGeometryChanged(nux::Area* area, nux::Geometry& geo)
 {
   UpdateStepY();
   _overlay_window->UpdateGeometry(_track->GetAbsoluteGeometry());
 
   if (_overlay_window->IsVisible() && content_height_ <= container_height_)
+  {
     _overlay_window->ResetStates();
+    ResetConnector();
+  }
 }
 
 void PlacesOverlayVScrollBar::OnVisibilityChanged(nux::Area* area, bool visible)
 {
   if (_overlay_window->IsVisible() && !visible)
+  {
     _overlay_window->ResetStates();
+    ResetConnector();
+  }
 }
 
 void PlacesOverlayVScrollBar::SetupAnimation(ScrollDir dir, int stop)
@@ -89,7 +95,6 @@ void PlacesOverlayVScrollBar::StartAnimation(ScrollDir dir)
 {
   _tweening_connection = _animation.updated.connect([this, dir] (int const& update) {
     static int delta_update = 0;
-
     OnScroll(dir, update - delta_update);
     delta_update = update;
 
@@ -122,23 +127,29 @@ void PlacesOverlayVScrollBar::OnMouseNear(nux::Point const& mouse_pos)
 void PlacesOverlayVScrollBar::OnMouseBeyond(nux::Point const& mouse_pos)
 {
   if (IsVisible() && content_height_ > container_height_)
+  {
     _overlay_window->MouseBeyond();
+    UpdateConnectorPosition();
+  }
 }
 
 void PlacesOverlayVScrollBar::AdjustThumbOffsetFromMouse()
 {
-  nux::Point const& mouse = nux::GetWindowCompositor().GetMousePosition();
-  int const new_offset = mouse.y - _track->GetAbsoluteY() - _overlay_window->GetThumbHeight()/2;
+  if (!_overlay_window->IsMouseBeingDragged())
+  {
+    nux::Point const& mouse = nux::GetWindowCompositor().GetMousePosition();
+    int const new_offset = mouse.y - _track->GetAbsoluteY() - _overlay_window->GetThumbHeight()/2;
 
-  int const slider_offset = _slider->GetBaseY() - _track->GetBaseY();
-  bool const thumb_above_slider = slider_offset < new_offset;
+    int const slider_offset = _slider->GetAbsoluteY() - _track->GetAbsoluteY();
+    bool const mouse_above_slider = slider_offset < new_offset;
 
-  if (thumb_above_slider)
-    _overlay_window->SetThumbOffsetY(new_offset - _overlay_window->GetThumbHeight()/4);
-  else
-    _overlay_window->SetThumbOffsetY(new_offset + _overlay_window->GetThumbHeight()/4);
+    if (mouse_above_slider)
+      _overlay_window->SetThumbOffsetY(new_offset - _overlay_window->GetThumbHeight()/4);
+    else
+      _overlay_window->SetThumbOffsetY(new_offset + _overlay_window->GetThumbHeight()/4);
 
-  CheckIfThumbIsInsideSlider();
+    CheckIfThumbIsInsideSlider();
+  }
 }
 
 void PlacesOverlayVScrollBar::CheckIfThumbIsInsideSlider()
@@ -148,9 +159,45 @@ void PlacesOverlayVScrollBar::CheckIfThumbIsInsideSlider()
   nux::Geometry const& intersection = (thumb_geo.Intersect(slider_geo));
 
   if (!intersection.IsNull())
+  {
+    ResetConnector();
     _overlay_window->ThumbInsideSlider();
+  }
   else
+  {
+    UpdateConnectorPosition();
     _overlay_window->ThumbOutsideSlider();
+  }
+}
+
+void PlacesOverlayVScrollBar::UpdateConnectorPosition()
+{
+  int const slider_y = _slider->GetBaseY() - _track->GetBaseY();
+  int const thumb_y = _overlay_window->GetThumbOffsetY();
+  int const thumb_height = _overlay_window->GetThumbHeight();
+
+  if (!_overlay_window->IsVisible())
+  {
+    ResetConnector();
+  }
+  else if (slider_y > thumb_y)
+  {
+    _thumb_above_slider = true;
+    _connector_height = slider_y - (thumb_y + thumb_height);
+  }
+  else
+  {
+    _thumb_above_slider = false;
+    _connector_height = thumb_y - (_slider->GetBaseY() + _slider->GetBaseHeight()) + _track->GetBaseY();
+  }
+
+  UpdateConnectorTexture();
+}
+
+void PlacesOverlayVScrollBar::ResetConnector()
+{
+  _connector_height = 0;
+  QueueDraw();
 }
 
 void PlacesOverlayVScrollBar::OnMouseClick(int x, int y, unsigned int button_flags, unsigned int key_flags)
@@ -177,7 +224,7 @@ void PlacesOverlayVScrollBar::LeftMouseClick(int y)
   }
   else
   {
-    int const bottom = (_track->GetBaseY() + _track->GetBaseHeight()) - 
+    int const bottom = (_track->GetBaseY() + _track->GetBaseHeight()) -
                        (_slider->GetBaseHeight() + _slider->GetBaseY());
     SetupAnimation(ScrollDir::DOWN, std::min(_slider->GetBaseHeight(), bottom));
   }
@@ -223,7 +270,10 @@ void PlacesOverlayVScrollBar::OnMouseUp(int x, int y, unsigned int button_flags,
   nux::Geometry const& geo = _overlay_window->GetAbsoluteGeometry();
 
   if (!geo.IsPointInside(x + geo.x, y + geo.y))
+  {
     _overlay_window->MouseUp();
+    UpdateConnectorPosition();
+  }
 }
 
 void PlacesOverlayVScrollBar::OnMouseMove(int x, int y, int dx, int dy, unsigned int button_flags, unsigned int key_flags)
@@ -259,6 +309,69 @@ void PlacesOverlayVScrollBar::MouseDraggingOverlay(int y, int dys)
 void PlacesOverlayVScrollBar::UpdateStepY()
 {
   stepY = (float) (content_height_ - container_height_) / (float) (_track->GetBaseHeight() - _slider->GetBaseHeight());
+}
+
+void PlacesOverlayVScrollBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
+{
+  PlacesVScrollBar::Draw(graphics_engine, force_draw);
+
+  if (_connector_height > 0 && _connector_texture.IsValid())
+  {
+    int offset_y = 0;
+    if (_thumb_above_slider)
+    {
+      offset_y = _overlay_window->GetThumbOffsetY() + _overlay_window->GetThumbHeight()  + _track->GetBaseY();
+    }
+    else
+    {
+      offset_y = _slider->GetBaseY() + _slider->GetBaseHeight();
+    }
+
+    nux::Geometry base(_track->GetBaseX(), offset_y - 4, GetBaseWidth(), _connector_height + 5);
+    nux::TexCoordXForm texxform;
+
+    graphics_engine.QRP_1Tex(base.x,
+                             base.y,
+                             base.width,
+                             base.height,
+                             _connector_texture->GetDeviceTexture(),
+                             texxform,
+                             nux::color::White);
+  }
+}
+
+void PlacesOverlayVScrollBar::UpdateConnectorTexture()
+{
+  if (_connector_height < 0)
+    return;
+
+  int width = 3;
+  int height = _connector_height;
+  float const radius = 1.5f;
+  float const aspect = 1.0f;
+
+  cairo_t* cr = NULL;
+
+  nux::color::RedGreenBlue const& connector_bg = nux::color::Gray;
+
+  nux::CairoGraphics cairoGraphics(CAIRO_FORMAT_ARGB32, width, height);
+  cr = cairoGraphics.GetContext();
+  cairo_save(cr);
+
+  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint(cr);
+
+  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+  cairo_save(cr);
+
+  cairo_set_source_rgba(cr, connector_bg.red, connector_bg.green, connector_bg.blue, 0.8);
+  cairoGraphics.DrawRoundedRectangle(cr, aspect, 0.0f, 0.0f, radius, width, height);
+  cairo_fill_preserve(cr);
+
+  _connector_texture.Adopt(texture_from_cairo_graphics(cairoGraphics));
+  cairo_destroy(cr);
+
+  QueueDraw();
 }
 
 } // namespace dash

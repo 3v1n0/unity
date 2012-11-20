@@ -223,7 +223,7 @@ void VScrollBarOverlayWindow::ResetStates()
   ShouldHide();
 }
 
-void VScrollBarOverlayWindow::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
+void VScrollBarOverlayWindow::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   if (!thumb_texture_)
     return;
@@ -232,12 +232,12 @@ void VScrollBarOverlayWindow::DrawContent(nux::GraphicsEngine& graphics_engine, 
   nux::TexCoordXForm texxform;
 
   graphics_engine.QRP_1Tex(base.x,
-                      base.y,
-                      base.width,
-                      base.height,
-                      thumb_texture_->GetDeviceTexture(),
-                      texxform,
-                      nux::color::White);
+                           base.y,
+                           base.width,
+                           base.height,
+                           thumb_texture_->GetDeviceTexture(),
+                           texxform,
+                           nux::color::White);
 }
 
 nux::color::RedGreenBlue ProduceColorShade(nux::color::RedGreenBlue const& rgb, float shade)
@@ -520,7 +520,6 @@ void VScrollBarOverlayWindow::UpdateTexture()
   DrawBothArrows(cr, arrow_color, width, height);
 
   thumb_texture_.Adopt(unity::texture_from_cairo_graphics(cairoGraphics));
-
   cairo_destroy(cr);
 
   QueueDraw();

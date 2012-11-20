@@ -55,7 +55,8 @@ public:
 
   void ResetStates();
 
-  virtual void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw);
+protected:
+  virtual void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw);
 
 private:
   enum class ThumbAction : unsigned int
@@ -77,7 +78,7 @@ private:
 
   nux::Geometry content_size_;
   nux::ObjectPtr<nux::BaseTexture> thumb_texture_;
-
+  
   int content_offset_x_;
   int mouse_offset_y_;
 

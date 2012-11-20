@@ -21,6 +21,7 @@
 #define PLACES_OVERLAY_VSCROLLBAR_H
 
 #include <Nux/Nux.h>
+#include <Nux/InputAreaProximity.h>
 #include <NuxCore/Animation.h>
 #include <memory>
 
@@ -34,11 +35,11 @@ namespace dash
 
 class PlacesOverlayVScrollBar: public PlacesVScrollBar
 {
-  class InputAreaProximity;
-
 public:
   PlacesOverlayVScrollBar(NUX_FILE_LINE_PROTO);
-  ~PlacesOverlayVScrollBar();
+
+protected:
+  void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw);
 
 private:
   enum class ScrollDir : unsigned int
@@ -62,12 +63,15 @@ private:
   void OnMouseUp(int x, int y, unsigned int button_flags, unsigned int key_flags);
 
   void OnMouseMove(int x, int y, int dx, int dy, unsigned int button_flags, unsigned int key_flags);
-  
+
   void OnMouseDrag(int x, int y, int dx, int dy, unsigned int button_flags, unsigned int key_flags);
   void MouseDraggingOverlay(int y, int dy);
 
   bool IsMouseInTopHalfOfThumb(int y);
   void CheckIfThumbIsInsideSlider();
+
+  void UpdateConnectorPosition();
+  void ResetConnector();
   
   void UpdateStepY();
 
@@ -75,12 +79,18 @@ private:
   void StartAnimation(ScrollDir dir);
   void OnScroll(ScrollDir dir, int mouse_dy);
 
+  void UpdateConnectorTexture();
+
   nux::ObjectPtr<VScrollBarOverlayWindow> _overlay_window;
-  std::unique_ptr<nux::InputAreaProximity> _area_prox;
+  nux::InputAreaProximity _area_prox;
 
   nux::animation::AnimateValue<int> _animation;
   sigc::connection _tweening_connection;
 
+  nux::ObjectPtr<nux::BaseTexture> _connector_texture;
+  
+  bool _thumb_above_slider;
+  int _connector_height;
   int _mouse_down_offset;
 };
 
