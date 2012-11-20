@@ -20,8 +20,8 @@
  *
  */
 
-#ifndef U1PAYMENTPREVIEW_H
-#define U1PAYMENTPREVIEW_H
+#ifndef MUSIC_PAYMENT_PREVIEW_H
+#define MUSIC_PAYMENT_PREVIEW_H
 
 // kye used to find the correct infor hint
 #define DATA_INFOHINT_ID "album_purchase_preview"
@@ -50,7 +50,7 @@
 #include <Nux/Nux.h>
 #include <Nux/AbstractButton.h>
 #include <UnityCore/Lens.h>
-#include <UnityCore/U1PaymentPreview.h>
+#include <UnityCore/MusicPaymentPreview.h>
 #include "ActionButton.h"
 #include "ActionLink.h"
 #include "Preview.h"
@@ -73,14 +73,14 @@ namespace previews
 class CoverArt;
 class PreviewInfoHintWidget;
 
-class U1PaymentPreview : public Preview
+class MusicPaymentPreview : public Preview
 {
 public:
-  typedef nux::ObjectPtr<U1PaymentPreview> Ptr;
-  NUX_DECLARE_OBJECT_TYPE(U1PaymentPreview, Preview);
+  typedef nux::ObjectPtr<MusicPaymentPreview> Ptr;
+  NUX_DECLARE_OBJECT_TYPE(MusicPaymentPreview, Preview);
 
-  U1PaymentPreview(dash::Preview::Ptr preview_model);
-  ~U1PaymentPreview();
+  MusicPaymentPreview(dash::Preview::Ptr preview_model);
+  ~MusicPaymentPreview();
 
   virtual nux::Area* FindKeyFocusArea(unsigned int key_symbol,
                                       unsigned long x11_key_code,
@@ -155,4 +155,4 @@ protected:
 }
 }
 
-#endif // U1PAYMENTPREVIEW_H
+#endif // MUSIC_PAYMENT_PREVIEW_H

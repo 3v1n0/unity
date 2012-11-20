@@ -29,10 +29,9 @@
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 #include <Nux/GridHLayout.h>
-#include <UnityCore/U1PaymentPreview.h>
 #include <Nux/AbstractButton.h>
 
-#include "U1PaymentPreview.h"
+#include "MusicPaymentPreview.h"
 #include "PreviewInfoHintWidget.h"
 
 #include "stdio.h"
@@ -47,7 +46,7 @@ namespace previews
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.previews.U1PaymentPreview");
+nux::logging::Logger logger("unity.dash.previews.MusicPaymentPreview");
 
 }
 
@@ -62,9 +61,9 @@ public:
 
 };
 
-NUX_IMPLEMENT_OBJECT_TYPE(U1PaymentPreview);
+NUX_IMPLEMENT_OBJECT_TYPE(MusicPaymentPreview);
 
-U1PaymentPreview::U1PaymentPreview(dash::Preview::Ptr preview_model)
+MusicPaymentPreview::MusicPaymentPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
 , full_data_layout_(nullptr)
 {
@@ -72,11 +71,11 @@ U1PaymentPreview::U1PaymentPreview(dash::Preview::Ptr preview_model)
   SetupViews();
 }
 
-U1PaymentPreview::~U1PaymentPreview()
+MusicPaymentPreview::~MusicPaymentPreview()
 {
 }
 
-nux::Area* U1PaymentPreview::FindKeyFocusArea(unsigned int key_symbol,
+nux::Area* MusicPaymentPreview::FindKeyFocusArea(unsigned int key_symbol,
                                     unsigned long x11_key_code,
                                     unsigned long special_keys_state)
 {
@@ -86,7 +85,7 @@ nux::Area* U1PaymentPreview::FindKeyFocusArea(unsigned int key_symbol,
   //        special_keys_state);
 }
 
-void U1PaymentPreview::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
+void MusicPaymentPreview::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
 
@@ -108,7 +107,7 @@ void U1PaymentPreview::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
   gfx_engine.PopClippingRectangle();
 }
 
-void U1PaymentPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
+void MusicPaymentPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
   gfx_engine.PushClippingRectangle(base);
@@ -131,12 +130,12 @@ void U1PaymentPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_d
   gfx_engine.PopClippingRectangle();
 }
 
-std::string U1PaymentPreview::GetName() const
+std::string MusicPaymentPreview::GetName() const
 {
-  return "U1PaymentPreview";
+  return "MusicPaymentPreview";
 }
 
-std::string U1PaymentPreview::GetDataForKey(GVariant *dict, std::string key)
+std::string MusicPaymentPreview::GetDataForKey(GVariant *dict, std::string key)
 {
   GVariant* data = NULL;
   data = g_variant_lookup_value(dict, key.c_str(), G_VARIANT_TYPE_ANY);
@@ -150,7 +149,7 @@ std::string U1PaymentPreview::GetDataForKey(GVariant *dict, std::string key)
   return std::string(string);
 }
 
-void U1PaymentPreview::OnActionActivated(ActionButton* button, std::string const& id)
+void MusicPaymentPreview::OnActionActivated(ActionButton* button, std::string const& id)
 {
   // Check the action id and send the password only when we
   // purchasing a song
@@ -169,13 +168,13 @@ void U1PaymentPreview::OnActionActivated(ActionButton* button, std::string const
   Preview::OnActionActivated(button, id);
 }
 
-void U1PaymentPreview::OnActionLinkActivated(ActionLink *link, std::string const& id)
+void MusicPaymentPreview::OnActionLinkActivated(ActionLink *link, std::string const& id)
 {
   if (preview_model_)
     preview_model_->PerformAction(id);
 }
 
-void U1PaymentPreview::LoadActions()
+void MusicPaymentPreview::LoadActions()
 {
   previews::Style& style = dash::previews::Style::Instance();
 
@@ -194,7 +193,7 @@ void U1PaymentPreview::LoadActions()
         link->SetMinimumWidth(178);
         link->SetMinimumHeight(34);
         link->activate.connect(sigc::mem_fun(this,
-                    &U1PaymentPreview::OnActionLinkActivated));
+                    &MusicPaymentPreview::OnActionLinkActivated));
 
         std::pair<std::string, nux::ObjectPtr<nux::AbstractButton>> data (action->id, link);
         sorted_buttons_.insert(data);
@@ -210,7 +209,7 @@ void U1PaymentPreview::LoadActions()
         button->SetMinimumWidth(178);
         button->SetMinimumHeight(34);
         button->activate.connect(sigc::mem_fun(this,
-                    &U1PaymentPreview::OnActionActivated));
+                    &MusicPaymentPreview::OnActionActivated));
 
         std::pair<std::string, nux::ObjectPtr<nux::AbstractButton>> data (action->id, button);
 
@@ -220,7 +219,7 @@ void U1PaymentPreview::LoadActions()
   }
 }
 
-nux::Layout* U1PaymentPreview::GetHeader(previews::Style& style, GVariant* data)
+nux::Layout* MusicPaymentPreview::GetHeader(previews::Style& style, GVariant* data)
 {
   nux::HLayout* header_data_layout = new nux::HLayout();
   header_data_layout->SetSpaceBetweenChildren(10);
@@ -239,7 +238,7 @@ nux::Layout* U1PaymentPreview::GetHeader(previews::Style& style, GVariant* data)
   return header_data_layout;
 }
 
-nux::Layout* U1PaymentPreview::GetTitle(previews::Style& style, GVariant* data)
+nux::Layout* MusicPaymentPreview::GetTitle(previews::Style& style, GVariant* data)
 {
   nux::VLayout* title_data_layout = new nux::VLayout();
   title_data_layout->SetMaximumHeight(76);
@@ -266,7 +265,7 @@ nux::Layout* U1PaymentPreview::GetTitle(previews::Style& style, GVariant* data)
   return title_data_layout;
 }
 
-nux::Layout* U1PaymentPreview::GetPrize(previews::Style& style, GVariant* data)
+nux::Layout* MusicPaymentPreview::GetPrize(previews::Style& style, GVariant* data)
 {
   nux::VLayout *prize_data_layout = new nux::VLayout();
   prize_data_layout->SetMaximumHeight(76);
@@ -298,7 +297,7 @@ nux::Layout* U1PaymentPreview::GetPrize(previews::Style& style, GVariant* data)
   return prize_data_layout;
 }
 
-nux::Layout* U1PaymentPreview::GetForm(previews::Style& style, GVariant* data)
+nux::Layout* MusicPaymentPreview::GetForm(previews::Style& style, GVariant* data)
 {
   nux::HLayout *form_layout = new nux::HLayout();
   form_layout->SetSpaceBetweenChildren(10);
@@ -310,7 +309,7 @@ nux::Layout* U1PaymentPreview::GetForm(previews::Style& style, GVariant* data)
   return form_layout;
 }
 
-nux::Layout* U1PaymentPreview::GetFormLabels(previews::Style& style, GVariant* data)
+nux::Layout* MusicPaymentPreview::GetFormLabels(previews::Style& style, GVariant* data)
 {
   nux::VLayout *labels_layout = new nux::VLayout();
   labels_layout->SetSpaceBetweenChildren(18);
@@ -340,7 +339,7 @@ nux::Layout* U1PaymentPreview::GetFormLabels(previews::Style& style, GVariant* d
   return labels_layout;
 }
 
-nux::Layout* U1PaymentPreview::GetFormFields(previews::Style& style, GVariant* data)
+nux::Layout* MusicPaymentPreview::GetFormFields(previews::Style& style, GVariant* data)
 {
   nux::VLayout *fields_layout = new nux::VLayout();
   fields_layout->SetSpaceBetweenChildren(18);
@@ -375,7 +374,7 @@ nux::Layout* U1PaymentPreview::GetFormFields(previews::Style& style, GVariant* d
   return fields_layout;
 }
 
-nux::Layout* U1PaymentPreview::GetFormActions(previews::Style& style, GVariant* data)
+nux::Layout* MusicPaymentPreview::GetFormActions(previews::Style& style, GVariant* data)
 {
   nux::VLayout *actions_layout = new nux::VLayout();
   actions_layout->SetSpaceBetweenChildren(16);
@@ -401,13 +400,13 @@ nux::Layout* U1PaymentPreview::GetFormActions(previews::Style& style, GVariant* 
   return actions_layout;
 }
 
-nux::Layout* U1PaymentPreview::GetEmail(previews::Style& style, GVariant* data)
+nux::Layout* MusicPaymentPreview::GetEmail(previews::Style& style, GVariant* data)
 {
   nux::HLayout *email_data_layout = new nux::HLayout();
   return email_data_layout;
 }
 
-nux::Layout* U1PaymentPreview::GetPayment(previews::Style& style, GVariant* data)
+nux::Layout* MusicPaymentPreview::GetPayment(previews::Style& style, GVariant* data)
 {
   nux::HLayout *payment_data_layout = new nux::HLayout();
   payment_data_layout->SetSpaceBetweenChildren(5);
@@ -420,7 +419,7 @@ nux::Layout* U1PaymentPreview::GetPayment(previews::Style& style, GVariant* data
   return payment_data_layout;
 }
 
-nux::Layout* U1PaymentPreview::GetPassword(previews::Style& style, GVariant* data)
+nux::Layout* MusicPaymentPreview::GetPassword(previews::Style& style, GVariant* data)
 {
   nux::HLayout *password_data_layout = new nux::HLayout();
   password_data_layout->SetSpaceBetweenChildren(5);
@@ -432,7 +431,7 @@ nux::Layout* U1PaymentPreview::GetPassword(previews::Style& style, GVariant* dat
   return password_data_layout;
 }
 
-nux::Layout* U1PaymentPreview::GetActions(previews::Style& style, GVariant* data)
+nux::Layout* MusicPaymentPreview::GetActions(previews::Style& style, GVariant* data)
 {
   nux::HLayout* actions_buffer_h = new nux::HLayout();
   actions_buffer_h->AddSpace(0, 1);
@@ -456,17 +455,17 @@ nux::Layout* U1PaymentPreview::GetActions(previews::Style& style, GVariant* data
   return buttons_data_layout;
 }
 
-void U1PaymentPreview::AddProperties(GVariantBuilder* builder)
+void MusicPaymentPreview::AddProperties(GVariantBuilder* builder)
 {
   Preview::AddProperties(builder);
 }
 
-void U1PaymentPreview::SetupBackground()
+void MusicPaymentPreview::SetupBackground()
 {
   details_bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
 }
 
-void U1PaymentPreview::SetupViews()
+void MusicPaymentPreview::SetupViews()
 {
   if (!preview_model_)
   {
@@ -537,7 +536,7 @@ void U1PaymentPreview::SetupViews()
 }
 
 
-void U1PaymentPreview::PreLayoutManagement()
+void MusicPaymentPreview::PreLayoutManagement()
 {
   nux::Geometry geo = GetGeometry();
   GetLayout()->SetGeometry(geo);

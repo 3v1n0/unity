@@ -29,7 +29,7 @@
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/RadioOptionFilter.h>
-#include <UnityCore/U1PaymentPreview.h>
+#include <UnityCore/MusicPaymentPreview.h>
 
 #include "FilterExpanderLabel.h"
 #include "unity-shared/DashStyle.h"
@@ -961,7 +961,7 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
     // an ActionResponse and therefore transition does not work, this hack allows
     // to set the navigation mode to ensure that we have a nice transition
     const char *title = model->title.Get().c_str();
-    if (strcmp(U1_PAYMENT_TITLE, title) == 0)
+    if (strcmp(MUSIC_PAYMENT_TITLE, title) == 0)
     {
       preview_state_machine_.left_results.Set(0);
       preview_state_machine_.right_results.Set(0);

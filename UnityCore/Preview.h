@@ -22,7 +22,7 @@
 #define UNITY_PREVIEW_H
 
 // Constant used to determine if we should show a u1 payment preview
-#define U1_PAYMENT_TITLE "U1-album-purchase-preview"
+#define MUSIC_PAYMENT_TITLE "U1-album-purchase-preview"
 
 #include <map>
 #include <memory>

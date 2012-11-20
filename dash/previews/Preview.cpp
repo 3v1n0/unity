@@ -26,11 +26,11 @@
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
-#include <UnityCore/U1PaymentPreview.h>
+#include <UnityCore/MusicPaymentPreview.h>
 #include "ActionButton.h"
 
 #include "GenericPreview.h"
-#include "U1PaymentPreview.h"
+#include "MusicPaymentPreview.h"
 #include "ApplicationPreview.h"
 #include "MusicPreview.h"
 #include "MoviePreview.h"
@@ -58,9 +58,9 @@ previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
     // do the following, create a generic preview, check its id and decide id we
     // are delaing with a payment preview or a real generic preview
     const char* preview_title = model->title.Get().c_str();
-    if (strcmp(U1_PAYMENT_TITLE, preview_title) == 0)
+    if (strcmp(MUSIC_PAYMENT_TITLE, preview_title) == 0)
     {
-        return Preview::Ptr(new U1PaymentPreview(model));
+        return Preview::Ptr(new MusicPaymentPreview(model));
     }
     return Preview::Ptr(new GenericPreview(model));
   }

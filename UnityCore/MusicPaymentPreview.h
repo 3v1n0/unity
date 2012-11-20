@@ -17,8 +17,8 @@
  * Authored by: Manuel de la Pena <manuel.delapena@canonical.com>
  */
 
-#ifndef UNITY_U1PAYMENT_PREVIEW_PREVIEW_H
-#define UNITY_U1PAYMENT_PREVIEW_PREVIEW_H
+#ifndef UNITY_MUSIC_PAYMENT_PREVIEW_PREVIEW_H
+#define UNITY_MUSIC_PAYMENT_PREVIEW_PREVIEW_H
 
 #include <memory>
 
@@ -31,13 +31,13 @@ namespace unity
 namespace dash
 {
 
-class U1PaymentPreview : public Preview
+class MusicPaymentPreview : public Preview
 {
 public:
-  typedef std::shared_ptr<U1PaymentPreview> Ptr;
+  typedef std::shared_ptr<MusicPaymentPreview> Ptr;
 
-  U1PaymentPreview(unity::glib::Object<GObject> const& proto_obj);
-  ~U1PaymentPreview();
+  MusicPaymentPreview(unity::glib::Object<GObject> const& proto_obj);
+  ~MusicPaymentPreview();
 };
 
 }

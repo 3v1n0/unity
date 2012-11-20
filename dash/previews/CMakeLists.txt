@@ -43,7 +43,7 @@ set (PREVIEWS_SOURCES
      SocialPreviewComments.cpp
      Track.cpp
      Tracks.cpp
-     U1PaymentPreview.cpp
+     MusicPaymentPreview.cpp
      )
 
 add_library (previews-lib STATIC ${PREVIEWS_SOURCES})
@@ -81,6 +81,6 @@ target_link_libraries (movie_previews previews-lib unity-shared)
 # 
 # Payment Standalone variant
 #
-add_executable (payment_previews StandaloneU1PaymentPreview.cpp)
+add_executable (payment_previews StandaloneMusicPaymentPreview.cpp)
 add_dependencies (payment_previews previews-lib)
 target_link_libraries (payment_previews previews-lib unity-shared)

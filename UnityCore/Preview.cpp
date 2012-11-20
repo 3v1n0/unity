@@ -30,7 +30,7 @@
 #include "MoviePreview.h"
 #include "SocialPreview.h"
 #include "SeriesPreview.h"
-#include "U1PaymentPreview.h"
+#include "MusicPaymentPreview.h"
 
 
 namespace unity
@@ -59,9 +59,9 @@ Preview::Ptr Preview::PreviewForProtocolObject(glib::Object<GObject> const& prot
     GenericPreview *preview = new GenericPreview(proto_obj);
     const char* preview_title = preview->title.Get().c_str();
 
-    if (strcmp(U1_PAYMENT_TITLE, preview_title) == 0)
+    if (strcmp(MUSIC_PAYMENT_TITLE, preview_title) == 0)
     {
-	return Preview::Ptr(new U1PaymentPreview(proto_obj));
+	return Preview::Ptr(new MusicPaymentPreview(proto_obj));
     }
     else
     {

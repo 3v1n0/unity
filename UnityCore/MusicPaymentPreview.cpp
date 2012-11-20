@@ -20,19 +20,19 @@
 
 #include <unity-protocol.h>
 
-#include "U1PaymentPreview.h"
+#include "MusicPaymentPreview.h"
 
 namespace unity
 {
 namespace dash
 {
 
-U1PaymentPreview::U1PaymentPreview(unity::glib::Object<GObject> const& proto_obj)
+MusicPaymentPreview::MusicPaymentPreview(unity::glib::Object<GObject> const& proto_obj)
   : Preview(proto_obj)
 {
 }
 
-U1PaymentPreview::~U1PaymentPreview()
+MusicPaymentPreview::~MusicPaymentPreview()
 {
 }
 
