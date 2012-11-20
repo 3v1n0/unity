@@ -28,10 +28,9 @@
 
 namespace unity
 {
+DECLARE_LOGGER(logger, "unity.settings");
 namespace
 {
-nux::logging::Logger logger("unity");
-
 Settings* settings_instance = nullptr;
 
 const std::string SETTINGS_NAME = "com.canonical.Unity";

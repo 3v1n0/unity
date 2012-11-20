@@ -133,12 +133,16 @@ public:
   bool IsWindowVisible(Window window_id) const;
   bool IsWindowOnTop(Window window_id) const;
   bool IsWindowClosable(Window window_id) const;
+  bool IsWindowMinimized(Window window_id) const;
   bool IsWindowMinimizable(Window window_id) const;
   bool IsWindowMaximizable(Window window_id) const;
+  bool HasWindowDecorations(Window window_id) const;
 
+  void Maximize(Window window_id);
   void Restore(Window window_id);
   void RestoreAt(Window window_id, int x, int y);
   void Minimize(Window window_id);
+  void UnMinimize(Window window_id);
   void Close(Window window_id);
   void Activate(Window window_id);
   void Raise(Window window_id);
@@ -166,6 +170,7 @@ public:
   nux::Geometry GetWindowSavedGeometry(Window window_id) const;
   nux::Geometry GetScreenGeometry() const;
   nux::Geometry GetWorkAreaGeometry(Window window_id = 0) const;
+  nux::Size GetWindowDecorationSize(Window window_id, Edge) const;
   std::string GetWindowName(Window window_id) const;
 
   void CheckWindowIntersections(nux::Geometry const& region, bool &active, bool &any);
@@ -191,11 +196,13 @@ private:
 
   bool CheckWindowIntersection(nux::Geometry const& region, CompWindow* window) const;
   void SetMwmWindowHints(Window xid, MotifWmHints* new_hints) const;
+  unsigned long GetMwnDecorations(Window xid) const;
 
   Window GetTopMostValidWindowInViewport() const;
 
   std::string GetTextProperty(Window xid, Atom atom) const;
   std::string GetUtf8Property(Window xid, Atom atom) const;
+  std::vector<long> GetCardinalProperty(Window xid, Atom atom) const;
 
   CompScreen* m_Screen;
   MultiActionList m_ExpoActionList;
@@ -215,7 +222,7 @@ private:
   bool _in_show_desktop;
   CompWindow* _last_focused_window;
 
-  std::map<Window, unsigned int> _window_decoration_state;
+  mutable std::map<Window, unsigned int> _window_decoration_state;
 };
 
 }

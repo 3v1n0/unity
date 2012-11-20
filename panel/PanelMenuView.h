@@ -68,8 +68,11 @@ protected:
   virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position,
                                         nux::NuxEventType event_type);
   virtual void OnEntryAdded(indicator::Entry::Ptr const& entry);
+  virtual std::string GetActiveViewName(bool use_appname = false) const;
 
 private:
+  friend class TestPanelMenuView;
+
   void OnActiveChanged(PanelIndicatorEntryView* view, bool is_active);
   void OnViewOpened(BamfMatcher* matcher, BamfView* view);
   void OnViewClosed(BamfMatcher* matcher, BamfView* view);
@@ -100,6 +103,7 @@ private:
   void OnMaximizedGrabEnd(int x, int y);
 
   void FullRedraw();
+  std::string GetCurrentTitle() const;
   void Refresh(bool force = false);
   void DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label) const;
 
@@ -108,8 +112,6 @@ private:
   void OnPanelViewMouseMove(int x, int y, int dx, int dy, unsigned long mouse_button_state, unsigned long special_keys_state);
 
   BamfWindow* GetBamfWindowForXid(Window xid) const;
-
-  std::string GetActiveViewName(bool use_appname = false) const;
 
   void OnSwitcherShown(GVariant* data);
   void OnLauncherKeyNavStarted(GVariant* data);

@@ -35,10 +35,9 @@ namespace dash
 {
 namespace previews
 {
+DECLARE_LOGGER(logger, "unity.dash.preview.infohintwidget");
 namespace
 {
-nux::logging::Logger logger("unity.dash.previews.previewinfohintwidget");
-
 const int layout_spacing = 12;
 }
 

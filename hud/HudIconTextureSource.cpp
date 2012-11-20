@@ -26,15 +26,11 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 
-namespace
-{
-  nux::logging::Logger logger("unity.hud.HudIconTextureSource");
-}
-
 namespace unity
 {
 namespace hud
 {
+DECLARE_LOGGER(logger, "unity.hud.icon.texturesource");
 
 HudIconTextureSource::HudIconTextureSource(nux::ObjectPtr<nux::BaseTexture> texture)
   : unity::ui::IconTextureSource()

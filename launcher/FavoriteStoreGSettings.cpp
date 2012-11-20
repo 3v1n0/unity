@@ -37,10 +37,10 @@ namespace unity
 {
 namespace internal
 {
+DECLARE_LOGGER(logger, "unity.favorite.store.gsettings");
 
 namespace
 {
-nux::logging::Logger logger("unity.favorite.store.gsettings");
 const std::string SETTINGS_NAME = "com.canonical.Unity.Launcher";
 const std::string SETTINGS_KEY = "favorites";
 }
