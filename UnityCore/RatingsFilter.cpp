@@ -25,11 +25,7 @@ namespace unity
 {
 namespace dash
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.dash.ratingsfilter");
-}
+DECLARE_LOGGER(logger, "unity.dash.filter.ratings");
 
 RatingsFilter::RatingsFilter(DeeModel* model, DeeModelIter* iter)
   : Filter(model, iter)

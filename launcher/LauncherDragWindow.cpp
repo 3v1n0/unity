@@ -35,17 +35,19 @@ namespace
 {
   const float QUICK_ANIMATION_SPEED = 0.3f;
   const float SLOW_ANIMATION_SPEED  = 0.05f;
+
+  const int ANIMATION_THRESHOLD = 5;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherDragWindow);
 
-LauncherDragWindow::LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> icon)
+LauncherDragWindow::LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
   : nux::BaseWindow("")
   , animation_speed_(QUICK_ANIMATION_SPEED)
-  , _cancelled(false)
-  , _icon(icon)
+  , cancelled_(false)
+  , texture_(texture)
 {
-  SetBaseSize(_icon->GetWidth(), _icon->GetHeight());
+  SetBaseSize(texture_->GetWidth(), texture_->GetHeight());
 
   key_down.connect([this] (unsigned long, unsigned long keysym, unsigned long, const char*, unsigned short) {
     if (keysym == NUX_VK_ESCAPE)
@@ -72,18 +74,18 @@ bool LauncherDragWindow::Animating() const
 
 bool LauncherDragWindow::Cancelled() const
 {
-  return _cancelled;
+  return cancelled_;
 }
 
 void LauncherDragWindow::CancelDrag()
 {
-  _cancelled = true;
+  cancelled_ = true;
   drag_cancel_request.emit();
 }
 
 void LauncherDragWindow::SetAnimationTarget(int x, int y)
 {
-  _animation_target = nux::Point2(x, y);
+  animation_target_ = nux::Point2(x, y);
 }
 
 void LauncherDragWindow::StartQuickAnimation()
@@ -113,16 +115,16 @@ bool LauncherDragWindow::OnAnimationTimeout()
 
   int half_size = geo.width / 2;
 
-  int target_x = static_cast<int>(_animation_target.x) - half_size;
-  int target_y = static_cast<int>(_animation_target.y) - half_size;
+  int target_x = static_cast<int>(animation_target_.x) - half_size;
+  int target_y = static_cast<int>(animation_target_.y) - half_size;
 
   int x_delta = static_cast<int>(static_cast<float>(target_x - geo.x) * animation_speed_);
-  if (std::abs(x_delta) < 5)
-    x_delta = (x_delta >= 0) ? std::min(5, target_x - geo.x) : std::max(-5, target_x - geo.x);
+  if (std::abs(x_delta) < ANIMATION_THRESHOLD)
+    x_delta = (x_delta >= 0) ? std::min(ANIMATION_THRESHOLD, target_x - geo.x) : std::max(-ANIMATION_THRESHOLD, target_x - geo.x);
 
   int y_delta = static_cast<int>(static_cast<float>(target_y - geo.y) * animation_speed_);
-  if (std::abs(y_delta) < 5)
-    y_delta = (y_delta >= 0) ? std::min(5, target_y - geo.y) : std::max(-5, target_y - geo.y);
+  if (std::abs(y_delta) < ANIMATION_THRESHOLD)
+    y_delta = (y_delta >= 0) ? std::min(ANIMATION_THRESHOLD, target_y - geo.y) : std::max(-ANIMATION_THRESHOLD, target_y - geo.y);
 
   SetBaseXY(geo.x + x_delta, geo.y + y_delta);
 
@@ -151,11 +153,11 @@ LauncherDragWindow::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
   nux::TexCoordXForm texxform;
   texxform.FlipVCoord(true);
 
-  GfxContext.QRP_1Tex(0,
-                      0,
-                      _icon->GetWidth(),
-                      _icon->GetHeight(),
-                      _icon,
+  GfxContext.QRP_1Tex(geo.x,
+                      geo.y,
+                      texture_->GetWidth(),
+                      texture_->GetHeight(),
+                      texture_,
                       texxform,
                       nux::color::White);
 

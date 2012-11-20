@@ -46,10 +46,7 @@
 using namespace unity;
 using namespace unity::dash;
 
-namespace
-{
-nux::logging::Logger logger("unity.dash.StandaloneMusicPreview");
-}
+DECLARE_LOGGER(logger, "unity.dash.preview.standalone");
 
 class DummyView : public nux::View
 {

@@ -33,10 +33,9 @@
 
 namespace unity
 {
+DECLARE_LOGGER(logger, "unity.overlayrenderer");
 namespace
 {
-nux::logging::Logger logger("unity.overlayrenderer");
-
 const int INNER_CORNER_RADIUS = 5;
 const int EXCESS_BORDER = 10;
 }
