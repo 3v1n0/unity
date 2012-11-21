@@ -49,24 +49,26 @@ class LauncherIconsTests(LauncherTestCase):
         return icon
 
     def test_bfb_tooltip_disappear_when_dash_is_opened(self):
-         """Tests that the bfb tooltip disappear when the dash is opened."""
-         bfb = self.launcher.model.get_bfb_icon()
-         self.mouse.move(bfb.center_x, bfb.center_y)
+        """Tests that the bfb tooltip disappear when the dash is opened."""
+        bfb = self.launcher.model.get_bfb_icon()
+        self.mouse.move(bfb.center_x, bfb.center_y)
 
-         self.dash.ensure_visible()
-         self.addCleanup(self.dash.ensure_hidden)
+        self.assertThat(bfb.get_tooltip().active, Eventually(Equals(True)))
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
 
-         self.assertThat(bfb.get_tooltip().active, Eventually(Equals(False)))
+        self.assertThat(bfb.get_tooltip().active, Eventually(Equals(False)))
 
     def test_bfb_tooltip_is_disabled_when_dash_is_open(self):
-         """Tests the that bfb tooltip is disabled when the dash is open."""
-         self.dash.ensure_visible()
-         self.addCleanup(self.dash.ensure_hidden)
+        """Tests the that bfb tooltip is disabled when the dash is open."""
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
 
-         bfb = self.launcher.model.get_bfb_icon()
-         self.mouse.move(bfb.center_x, bfb.center_y)
+        bfb = self.launcher.model.get_bfb_icon()
+        self.mouse.move(bfb.center_x, bfb.center_y)
 
-         self.assertThat(bfb.get_tooltip().active, Eventually(Equals(False)))
+        self.assertThat(bfb.get_tooltip, Eventually(NotEquals(None)))
+        self.assertThat(bfb.get_tooltip().active, Eventually(Equals(False)))
 
     def test_shift_click_opens_new_application_instance(self):
         """Shift+Clicking MUST open a new instance of an already-running application."""
