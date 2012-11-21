@@ -53,7 +53,7 @@
 #include <UnityCore/MusicPaymentPreview.h>
 #include "ActionButton.h"
 #include "ActionLink.h"
-#include "Preview.h"
+#include "PaymentPreview.h"
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/TextInput.h"
 
@@ -73,7 +73,7 @@ namespace previews
 class CoverArt;
 class PreviewInfoHintWidget;
 
-class MusicPaymentPreview : public Preview
+class MusicPaymentPreview : public PaymentPreview
 {
 public:
   typedef nux::ObjectPtr<MusicPaymentPreview> Ptr;
@@ -82,50 +82,37 @@ public:
   MusicPaymentPreview(dash::Preview::Ptr preview_model);
   ~MusicPaymentPreview();
 
-  virtual nux::Area* FindKeyFocusArea(unsigned int key_symbol,
-                                      unsigned long x11_key_code,
-                                      unsigned long special_keys_state);
+  nux::Area* FindKeyFocusArea(unsigned int key_symbol,
+                              unsigned long x11_key_code,
+                              unsigned long special_keys_state);
   // From debug::Introspectable
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  nux::Layout* GetTitle();
+  nux::Layout* GetPrize();
+  nux::Layout* GetBody();
+  nux::Layout* GetFormLabels();
+  nux::Layout* GetFormFields();
+  nux::Layout* GetFormActions();
+  nux::Layout* GetEmail();
+  nux::Layout* GetPayment();
+  nux::Layout* GetPassword();
+  nux::Layout* GetFooter();
 
 private:
   std::string GetDataForKey(GVariant *dict, std::string key);
   void LoadActions();
-  nux::Layout* GetHeader(previews::Style& style, GVariant* data);
-  nux::Layout* GetTitle(previews::Style& style, GVariant* data);
-  nux::Layout* GetPrize(previews::Style& style, GVariant* data );
-  nux::Layout* GetForm(previews::Style& style, GVariant* data);
-  nux::Layout* GetFormLabels(previews::Style& style, GVariant* data);
-  nux::Layout* GetFormFields(previews::Style& style, GVariant* data);
-  nux::Layout* GetFormActions(previews::Style& style, GVariant* data);
-  nux::Layout* GetEmail(previews::Style& style, GVariant* data);
-  nux::Layout* GetPayment(previews::Style& style, GVariant* data);
-  nux::Layout* GetPassword(previews::Style& style, GVariant* data);
-  nux::Layout* GetActions(previews::Style& style, GVariant* data);
 
 protected:
-  virtual void OnActionActivated(ActionButton* button, std::string const& id);
-  virtual void OnActionLinkActivated(ActionLink* link, std::string const& id);
+  void OnActionActivated(ActionButton* button, std::string const& id);
+  void OnActionLinkActivated(ActionLink* link, std::string const& id);
 
-  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void PreLayoutManagement();
-
-  void SetupBackground();
-  void SetupViews();
+  void PreLayoutManagement();
 
 protected:
-  nux::VLayout* full_data_layout_;
-  nux::Layout* header_layout_;
-  nux::Layout* form_layout_;
-  nux::Layout* actions_layout_;
-
   // content elements
   nux::ObjectPtr<CoverArt> image_;
   nux::ObjectPtr<nux::StaticCairoText> title_;
   nux::ObjectPtr<nux::StaticCairoText> subtitle_;
-  nux::ObjectPtr<nux::StaticCairoText> header_;
   nux::ObjectPtr<nux::StaticCairoText> email_label_;
   nux::ObjectPtr<nux::StaticCairoText> email_;
   nux::ObjectPtr<nux::StaticCairoText> payment_label_;

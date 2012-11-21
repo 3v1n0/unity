@@ -31,6 +31,7 @@
 #define PURCHASE_ALBUM_ACTION "purchase_album"
 
 #include <Nux/Nux.h>
+#include <Nux/HLayout.h>
 #include <Nux/AbstractButton.h>
 #include <UnityCore/Lens.h>
 #include <UnityCore/PaymentPreview.h>
@@ -60,14 +61,13 @@ class PaymentPreview : public Preview
 {
 public:
   typedef nux::ObjectPtr<PaymentPreview> Ptr;
-  NUX_DECLARE_OBJECT_TYPE(PaymentPreview, Preview);
 
   PaymentPreview(dash::Preview::Ptr preview_model);
   ~PaymentPreview();
 
   virtual nux::Area* FindKeyFocusArea(unsigned int key_symbol,
                                       unsigned long x11_key_code,
-                                      unsigned long special_keys_state);
+                                      unsigned long special_keys_state) = 0;
   // From debug::Introspectable
   std::string GetName() const;
 
@@ -79,43 +79,46 @@ public:
   // Create and connect an action button OnActioButtonActivated
   nux::ObjectPtr<ActionButton> CreateButton(dash::Preview::ActionPtr action);
 
+  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+
 private:
-  nux::Layout* GetHeader(previews::Style& style, GVariant* data);
+  nux::Layout* GetHeader();
 
 protected:
-
+  GVariant *data_;
   // Return the title layout (including layout data) to be added to the header
   // NULL is a possible return value.
-  virtual nux::Layout* GetTitle();
+  virtual nux::Layout* GetTitle() = 0;
 
   // Return the pize layout (including data) to be added to the header
   // NULL is a possible return value.
-  virtual nux::Layout* GetPrize();
+  virtual nux::Layout* GetPrize() = 0;
 
   // Return layout with the content to show. NULL is a possible return value.
-  virtual nux::Layout* GetBody();
+  virtual nux::Layout* GetBody() = 0;
 
   // Return layout with the content to show. NULL is a possible return value.
-  virtual nux::Layout* GetFooter();
+  virtual nux::Layout* GetFooter() = 0;
 
   // Executed when a link is clicked.
-  virtual void OnActionActivated(ActionButton* button, std::string const& id);
+  virtual void OnActionActivated(ActionButton* button, std::string const& id) = 0;
 
   // Executed when a button is clicked.
-  virtual void OnActionLinkActivated(ActionLink* link, std::string const& id);
+  virtual void OnActionLinkActivated(ActionLink* link, std::string const& id) = 0;
 
-  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void PreLayoutManagement();
+  virtual void PreLayoutManagement() = 0;
 
-  void SetupBackground();
+  virtual void LoadActions() = 0;
   void SetupViews();
+  void SetupBackground();
 
 protected:
   nux::VLayout* full_data_layout_;
   nux::Layout* header_layout_;
   nux::Layout* body_layout_;
   nux::Layout* footer_layout_;
+  nux::ObjectPtr<nux::StaticCairoText> header_;
 
   // content elements
   nux::ObjectPtr<CoverArt> image_;
