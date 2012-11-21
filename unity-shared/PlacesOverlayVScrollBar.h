@@ -75,9 +75,12 @@ private:
   
   void UpdateStepY();
 
-  void SetupAnimation(ScrollDir dir, int stop);
-  void StartAnimation(ScrollDir dir);
+  void SetupScrollAnimation(ScrollDir dir, int stop);
+  void StartScrollAnimation(ScrollDir dir);
   void OnScroll(ScrollDir dir, int mouse_dy);
+
+  void SetupConnectorAnimation();
+  void StartConnectorAnimation();
 
   void UpdateConnectorTexture();
 

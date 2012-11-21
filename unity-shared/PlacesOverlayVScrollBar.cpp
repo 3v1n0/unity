@@ -25,7 +25,8 @@
 namespace
 {
   int const PROXIMITY = 7;
-  int const ANIMATION_TIME = 400;
+  int const SCROLL_ANIMATION = 400;
+  int const MAX_CONNECTOR_ANIMATION = 200;
 }
 
 namespace unity
@@ -75,23 +76,23 @@ void PlacesOverlayVScrollBar::OnVisibilityChanged(nux::Area* area, bool visible)
   }
 }
 
-void PlacesOverlayVScrollBar::SetupAnimation(ScrollDir dir, int stop)
+void PlacesOverlayVScrollBar::SetupScrollAnimation(ScrollDir dir, int stop)
 {
   if (_animation.CurrentState() == nux::animation::Animation::State::Stopped)
   {
     _tweening_connection.disconnect();
 
-    _animation.SetDuration(ANIMATION_TIME);
+    _animation.SetDuration(SCROLL_ANIMATION);
     _animation.SetEasingCurve(nux::animation::EasingCurve(nux::animation::EasingCurve::Type::Linear));
 
     _animation.SetStartValue(0);
     _animation.SetFinishValue(stop);
 
-    StartAnimation(dir);
+    StartScrollAnimation(dir);
   }
 }
 
-void PlacesOverlayVScrollBar::StartAnimation(ScrollDir dir)
+void PlacesOverlayVScrollBar::StartScrollAnimation(ScrollDir dir)
 {
   _tweening_connection = _animation.updated.connect([this, dir] (int const& update) {
     static int delta_update = 0;
@@ -115,12 +116,42 @@ void PlacesOverlayVScrollBar::OnScroll(ScrollDir dir, int mouse_dy)
     OnScrollDown.emit(stepY, mouse_dy);
 }
 
+void PlacesOverlayVScrollBar::SetupConnectorAnimation()
+{
+  if (_animation.CurrentState() == nux::animation::Animation::State::Stopped)
+  {
+    _tweening_connection.disconnect();
+
+    _animation.SetDuration(std::min(_connector_height, MAX_CONNECTOR_ANIMATION));
+    _animation.SetEasingCurve(nux::animation::EasingCurve(nux::animation::EasingCurve::Type::Linear));
+
+    //_animation.SetStartValue(
+    _animation.SetStartValue(_connector_height);
+    _animation.SetFinishValue(0);
+
+    StartConnectorAnimation();
+  }
+}
+
+void PlacesOverlayVScrollBar::StartConnectorAnimation()
+{
+  _tweening_connection = _animation.updated.connect([this] (int const& update) {
+    _connector_height = update;
+    UpdateConnectorTexture();
+  });
+
+  _animation.Start();
+}
+
 void PlacesOverlayVScrollBar::OnMouseNear(nux::Point const& mouse_pos)
 {
   if (IsVisible() && content_height_ > container_height_)
   {
     _overlay_window->MouseNear();
     AdjustThumbOffsetFromMouse();
+
+    if (_animation.CurrentState() != nux::animation::Animation::State::Stopped)
+      _animation.Stop();
   }
 }
 
@@ -196,7 +227,7 @@ void PlacesOverlayVScrollBar::UpdateConnectorPosition()
 
 void PlacesOverlayVScrollBar::ResetConnector()
 {
-  _connector_height = 0;
+  SetupConnectorAnimation();
   QueueDraw();
 }
 
@@ -220,13 +251,13 @@ void PlacesOverlayVScrollBar::LeftMouseClick(int y)
   if (IsMouseInTopHalfOfThumb(y))
   {
     int const top = _slider->GetBaseY() - _track->GetBaseY();
-    SetupAnimation(ScrollDir::UP, std::min(_slider->GetBaseHeight(), top));
+    SetupScrollAnimation(ScrollDir::UP, std::min(_slider->GetBaseHeight(), top));
   }
   else
   {
     int const bottom = (_track->GetBaseY() + _track->GetBaseHeight()) -
                        (_slider->GetBaseHeight() + _slider->GetBaseY());
-    SetupAnimation(ScrollDir::DOWN, std::min(_slider->GetBaseHeight(), bottom));
+    SetupScrollAnimation(ScrollDir::DOWN, std::min(_slider->GetBaseHeight(), bottom));
   }
 }
 
@@ -238,9 +269,9 @@ void PlacesOverlayVScrollBar::MiddleMouseClick(int y)
   int const slider_thumb_diff = abs(_overlay_window->GetThumbOffsetY() - slider_offset);
 
   if (move_up)
-    SetupAnimation(ScrollDir::UP, slider_thumb_diff);
+    SetupScrollAnimation(ScrollDir::UP, slider_thumb_diff);
   else
-    SetupAnimation(ScrollDir::DOWN, slider_thumb_diff);
+    SetupScrollAnimation(ScrollDir::DOWN, slider_thumb_diff);
 }
 
 void PlacesOverlayVScrollBar::OnMouseDown(int x, int y, unsigned int button_flags, unsigned int key_flags)
