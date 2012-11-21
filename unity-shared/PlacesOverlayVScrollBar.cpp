@@ -125,7 +125,6 @@ void PlacesOverlayVScrollBar::SetupConnectorAnimation()
     _animation.SetDuration(std::min(_connector_height, MAX_CONNECTOR_ANIMATION));
     _animation.SetEasingCurve(nux::animation::EasingCurve(nux::animation::EasingCurve::Type::Linear));
 
-    //_animation.SetStartValue(
     _animation.SetStartValue(_connector_height);
     _animation.SetFinishValue(0);
 
