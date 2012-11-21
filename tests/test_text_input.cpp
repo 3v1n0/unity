@@ -19,54 +19,54 @@
  *
  */
 
-#include <gmock/gmock.h>
-#include "unity-shared/TextInput.h"
 
-using namespace testing;
-using namespace unity;
+#include <gtest/gtest.h>
+
+#include "unity-shared/TextInput.h"
+#include "test_utils.h"
+
 using namespace nux;
 
-class TestEvent : public nux::Event
+namespace unity
 {
-public:
-  TestEvent(nux::KeyModifier keymod, unsigned long keysym)
-  {
-    type = NUX_KEYDOWN;
-    key_modifiers = keymod;
-    x11_keysym = keysym;
-  }
 
-  TestEvent(unsigned long keysym)
-  {
-    type = NUX_KEYDOWN;
-    x11_keysym = keysym;
-  }
+class TestTextInput : public ::testing::Test
+{
+   protected:
+     TestTextInput()
+     {
+       entry = new TextInput();
+     }
+
+     TextInput* entry;
 };
 
-class MockTextInput : public TextInput
-{
-public:
-  MOCK_METHOD1(set_input_string, void(std::string const& string))
-  MOCK_METHOD2(OnFontChanged, void(GtkSettings* settings,
-              GParamSpec* pspec=NULL));
-  MOCK_METHOD0(OnInputHintChanged, void());
-  MOCK_METHOD4(OnMouseButtonDown, void(x, y, unsigned long button_flags,
-              unsigned long key_flags));
-  MOCK_METHOD0(OnEndKeyFocus, void());
-};
-
-TEST(TestTextInput, set_input_string)
+TEST_F(TestTextInput, HintCorrectInit)
 {
 }
 
-TEST(TestTextInput, OnInputHintChanged)
+TEST_F(TestTextInput, EntryCorrectInit)
 {
 }
 
-TEST(TestTextInput, OnMouseButtonDown)
+TEST_F(TestTextInput, InputStringCorrectSetter)
 {
 }
 
-TEST(TestTextInput, OnEndKeyFocus)
+TEST_F(TestTextInput, OnFontChanged)
 {
 }
+
+TEST_F(TestTextInput, OnInputHintChanged)
+{
+}
+
+TEST_F(TestTextInput, OnMouseButtonDown)
+{
+}
+
+TEST_F(TestTextInput, OnEndKeyFocus)
+{
+}
+
+} // unity
