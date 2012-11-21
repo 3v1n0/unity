@@ -15,6 +15,10 @@
  * <http://www.gnu.org/licenses/>
  *
  * Authored by: Marco Trevisan (Treviño) <marco.trevisan@canonical.com>
+ *              Michael Vogt <mvo@ubuntu.com>
+ *
+ * Run standalone with:
+ * cd build && make test-gtest && ./test-gtest --gtest_filter=TestSoftwareCenterLauncherIcon.*
  */
 
 #include <config.h>
@@ -76,6 +80,35 @@ TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformSCAgent)
    icon.desktop_dir_ = BUILDDIR"/tests/data/applications/";
    EXPECT_EQ(icon.GetActualDesktopFileAfterInstall(), 
              BUILDDIR"/tests/data/applications/ubuntu-software-center.desktop");
+}
+
+// simulate a OnFinished signal from a /usr/share/app-install location
+// and ensure that the remote uri is updated from temp location to
+// the real location
+TEST_F(TestSoftwareCenterLauncherIcon, OnFinished)
+{
+   // order is important here, GetRemoteUri() will call UpdateDesktopFile()
+   // which will get the value from _bamf_app so call it first before patching
+
+   // remote-uri will initially point to BUILDDIR
+   std::string initial_remote_uri = icon.GetRemoteUri();
+
+   // simulate desktop file from app-install-data
+   icon._desktop_file = "/usr/share/app-install/desktop/software-center:ubuntu-software-center.desktop";
+   icon.desktop_dir_ = "/usr/share/applications/";
+   
+   // now simulate that the install was successful
+   GVariant *params = g_variant_new("(s)", "exit-success");
+   icon.OnFinished(params);
+
+   // and verify that both the desktop file and the remote uri gets updated
+   EXPECT_EQ(icon._desktop_file, 
+             "/usr/share/applications/ubuntu-software-center.desktop");
+   EXPECT_EQ(icon.GetRemoteUri(), 
+             "application://ubuntu-software-center.desktop");
+   EXPECT_NE(initial_remote_uri, icon.GetRemoteUri());
+
+   g_variant_unref(params);
 }
 
 TEST_F(TestSoftwareCenterLauncherIcon, Animate)

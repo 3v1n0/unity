@@ -54,6 +54,7 @@ protected:
   FRIEND_TEST(TestSoftwareCenterLauncherIcon, DesktopFileTransformTrivial);
   FRIEND_TEST(TestSoftwareCenterLauncherIcon, DesktopFileTransformAppInstall);
   FRIEND_TEST(TestSoftwareCenterLauncherIcon, DesktopFileTransformSCAgent);
+  FRIEND_TEST(TestSoftwareCenterLauncherIcon, OnFinished);
 
 private:
   void OnPropertyChanged(GVariant* params);
