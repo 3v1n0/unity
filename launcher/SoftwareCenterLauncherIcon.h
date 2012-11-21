@@ -70,7 +70,6 @@ private:
   bool needs_urgent_;
 
   std::string aptdaemon_trans_id_;
-  std::string sc_pkgname_;
   // makes testing easier
   std::string desktop_dir_;
 };
