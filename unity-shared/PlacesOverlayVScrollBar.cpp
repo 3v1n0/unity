@@ -146,11 +146,11 @@ void PlacesOverlayVScrollBar::OnMouseNear(nux::Point const& mouse_pos)
 {
   if (IsVisible() && content_height_ > container_height_)
   {
-    _overlay_window->MouseNear();
-    AdjustThumbOffsetFromMouse();
-
     if (_animation.CurrentState() != nux::animation::Animation::State::Stopped)
       _animation.Stop();
+
+    _overlay_window->MouseNear();
+    AdjustThumbOffsetFromMouse();
   }
 }
 
@@ -168,15 +168,20 @@ void PlacesOverlayVScrollBar::AdjustThumbOffsetFromMouse()
   if (!_overlay_window->IsMouseBeingDragged())
   {
     nux::Point const& mouse = nux::GetWindowCompositor().GetMousePosition();
-    int const new_offset = mouse.y - _track->GetAbsoluteY() - _overlay_window->GetThumbHeight()/2;
 
-    int const slider_offset = _slider->GetAbsoluteY() - _track->GetAbsoluteY();
-    bool const mouse_above_slider = slider_offset < new_offset;
+    if (mouse.y > 0)
+    {
 
-    if (mouse_above_slider)
-      _overlay_window->SetThumbOffsetY(new_offset - _overlay_window->GetThumbHeight()/4);
-    else
-      _overlay_window->SetThumbOffsetY(new_offset + _overlay_window->GetThumbHeight()/4);
+      int const new_offset = mouse.y - _track->GetAbsoluteY() - _overlay_window->GetThumbHeight()/2;
+
+      int const slider_offset = _slider->GetAbsoluteY() - _track->GetAbsoluteY();
+      bool const mouse_above_slider = slider_offset < new_offset;
+
+      if (mouse_above_slider)
+        _overlay_window->SetThumbOffsetY(new_offset - _overlay_window->GetThumbHeight()/4);
+      else
+        _overlay_window->SetThumbOffsetY(new_offset + _overlay_window->GetThumbHeight()/4);
+    }
 
     CheckIfThumbIsInsideSlider();
   }
