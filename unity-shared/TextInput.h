@@ -20,14 +20,22 @@
 #ifndef TEXTINPUT_H
 #define TEXTINPUT_H
 
+#include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
-#include <NuxCore/Property.h>
+
+#include <Nux/Nux.h>
+#include <Nux/HLayout.h>
 #include <Nux/LayeredLayout.h>
 #include <Nux/VLayout.h>
 #include <Nux/TextEntry.h>
+#include <NuxCore/Logger.h>
+#include <NuxCore/Property.h>
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibSource.h>
+#include <UnityCore/Variant.h>
 
+#include "config.h"
+#include "CairoTexture.h"
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/IMTextEntry.h"
 #include "unity-shared/Introspectable.h"
@@ -61,6 +69,7 @@ public:
 
 private:
   // friend for testing
+  friend class TestTextInput;
   FRIEND_TEST(TestTextInput, HintCorrectInit);
   FRIEND_TEST(TestTextInput, EntryCorrectInit);
   FRIEND_TEST(TestTextInput, InputStringCorrectSetter);

@@ -17,19 +17,7 @@
  * Authored by: Manuel de la Pena <manuel.delapena@canonical.com>
  */
 
-#include "config.h"
-
-#include <Nux/Nux.h>
-#include <Nux/HLayout.h>
-#include <Nux/VLayout.h>
-#include <NuxCore/Logger.h>
-
-#include <UnityCore/Variant.h>
-
-#include <glib/gi18n-lib.h>
-
 #include "TextInput.h"
-#include "CairoTexture.h"
 
 namespace
 {

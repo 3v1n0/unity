@@ -19,16 +19,18 @@
  *
  */
 
-#include <gmock/gmock.h>
 
+#include <gtest/gtest.h>
+
+#include "unity-shared/TextInput.h"
 #include "test_utils.h"
 
-using namespace testing;
+using namespace nux;
 
 namespace unity
 {
 
-class TestTextInput : public Test
+class TestTextInput : public ::testing::Test
 {
 };
 
