@@ -62,6 +62,12 @@ std::string View::icon() const
   return glib::String(bamf_view_get_icon(bamf_view_)).Str();
 }
 
+std::string View::type() const
+{
+  const gchar* t = bamf_view_get_view_type(bamf_view_);
+  return (t ? t : "");
+}
+
 bool View::GetVisible() const
 {
   return bamf_view_is_user_visible(bamf_view_);
@@ -99,6 +105,11 @@ std::string WindowBase::title() const
 std::string WindowBase::icon() const
 {
   return View::icon();
+}
+
+std::string WindowBase::type() const
+{
+  return View::type();
 }
 
 void WindowBase::HookUpEvents()
@@ -175,9 +186,13 @@ ApplicationWindowPtr create_window(Manager const& manager, glib::Object<BamfView
 {
   ApplicationWindowPtr result;
   if (view.IsType(BAMF_TYPE_TAB))
+  {
     result.reset(new Tab(manager, view));
+  }
   else if (view.IsType(BAMF_TYPE_WINDOW))
+  {
     result.reset(new AppWindow(manager, view));
+  }
   // We don't handle applications nor indicators here.
   return result;
 }

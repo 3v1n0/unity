@@ -56,6 +56,7 @@ void dump_app(ApplicationPtr const& app, std::string const& prefix = "")
       std::cout << "  Window: " << win->title()
                 << ", window_id: " << win->window_id()
                 << ", monitor: " << win->monitor()
+                << ", type: " << win->type()
                 << endl;
     }
   }

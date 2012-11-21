@@ -48,6 +48,7 @@ public:
 
   virtual std::string title() const = 0;
   virtual std::string icon() const = 0;
+  virtual std::string type() const = 0; // 'window' or 'tab'
 
   virtual Window window_id() const = 0;
   virtual int monitor() const = 0;

@@ -40,6 +40,7 @@ public:
 
   std::string title() const;
   std::string icon() const;
+  std::string type() const;
 
   bool GetVisible() const;
   bool GetActive() const;
@@ -61,6 +62,8 @@ protected:
 public:
   virtual std::string title() const;
   virtual std::string icon() const;
+  virtual std::string type() const; // 'window' or 'tab'
+
 
 private: // Property getters and setters
   void HookUpEvents();
