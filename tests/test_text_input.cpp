@@ -32,6 +32,13 @@ namespace unity
 
 class TestTextInput : public ::testing::Test
 {
+   protected:
+     TestTextInput()
+     {
+       entry = new TextInput();
+     }
+
+     TextInput* entry;
 };
 
 TEST_F(TestTextInput, HintCorrectInit)
