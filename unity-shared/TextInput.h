@@ -32,6 +32,8 @@
 #include "unity-shared/IMTextEntry.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/StaticCairoText.h"
+#include "gtest/gtest_prod.h"
+
 
 namespace nux
 {
@@ -58,30 +60,48 @@ public:
   nux::ROProperty<bool> im_preedit;
 
 private:
+  // friend for testing
+  FRIEND_TEST(TestTextInput, HintCorrectInit);
+  FRIEND_TEST(TestTextInput, EntryCorrectInit);
+  FRIEND_TEST(TestTextInput, InputStringCorrectSetter);
+  FRIEND_TEST(TestTextInput, OnFontChanged);
+  FRIEND_TEST(TestTextInput, OnInputHintChanged);
+  FRIEND_TEST(TestTextInput, OnMouseButtonDown);
+  FRIEND_TEST(TestTextInput, OnEndKeyFocus);
 
   void Init();
 
   virtual void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
+
   virtual void OnInputHintChanged();
 
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  virtual void OnMouseButtonDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  virtual void OnMouseButtonDown(int x, int y, unsigned long button_flags,
+          unsigned long key_flags);
+
   virtual void OnEndKeyFocus();
 
   void UpdateBackground(bool force);
 
   virtual std::string get_input_string() const;
+
   virtual bool set_input_string(std::string const& string);
+
   bool get_im_active() const;
+
   bool get_im_preedit() const;
 
   std::string GetName() const;
+
   void AddProperties(GVariantBuilder* builder);
+
   bool AcceptKeyNavFocus();
 
 private:
+
   bool ShouldBeHighlighted();
 
   std::unique_ptr<nux::AbstractPaintLayer> bg_layer_;
@@ -95,6 +115,7 @@ private:
   int last_height_;
 
   glib::SignalManager sig_manager_;
+
 };
 
 }
