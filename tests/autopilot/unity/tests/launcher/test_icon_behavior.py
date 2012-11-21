@@ -67,8 +67,12 @@ class LauncherIconsTests(LauncherTestCase):
         bfb = self.launcher.model.get_bfb_icon()
         self.mouse.move(bfb.center_x, bfb.center_y)
 
-        self.assertThat(bfb.get_tooltip, Eventually(NotEquals(None)))
-        self.assertThat(bfb.get_tooltip().active, Eventually(Equals(False)))
+        # Tooltips are lazy-created  in Unity, so if the BFB tooltip has never
+        # been shown before, get_tooltip will return None. If that happens, then
+        # this test should pass.
+        tooltip = bfb.get_tooltip()
+        if tooltip is not None:
+            self.assertThat(tooltip.active, Eventually(Equals(False)))
 
     def test_shift_click_opens_new_application_instance(self):
         """Shift+Clicking MUST open a new instance of an already-running application."""
