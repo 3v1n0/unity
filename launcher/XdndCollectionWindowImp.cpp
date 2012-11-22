@@ -32,7 +32,7 @@ public:
     , parent_(parent)
   {
     // Make it invisible...
-    SetBackgroundColor(nux::Color(0x00000000));
+    SetBackgroundColor(nux::color::Transparent);
     SetOpacity(0.0f);
     // ... and as big as the whole screen.
     auto uscreen = UScreen::GetDefault();
