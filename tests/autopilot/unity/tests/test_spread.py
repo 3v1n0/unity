@@ -9,12 +9,10 @@
 from __future__ import absolute_import
 
 from autopilot.matchers import Eventually
-import logging
-from time import sleep
 from testtools.matchers import Equals, NotEquals
+from time import sleep
 
 from unity.tests import UnityTestCase
-from unity.emulators.screen import Screen
 
 
 class SpreadTests(UnityTestCase):
@@ -27,7 +25,7 @@ class SpreadTests(UnityTestCase):
 
         for i in range(num_windows):
             win = self.start_app_window(app_name)
-            if len(windows):
+            if windows:
                 self.assertThat(win.application, Equals(windows[-1].application))
 
             windows.append(win)
@@ -43,11 +41,10 @@ class SpreadTests(UnityTestCase):
         sleep(1)
         self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
 
-
     def initiate_spread_for_application(self, desktop_id):
         """Initiate the Spread for windows of the given app"""
         icon = self.launcher.model.get_icon(desktop_id=desktop_id)
-        self.assertThat(lambda: icon, Eventually(NotEquals(None)))
+        self.assertThat(icon, NotEquals(None))
         launcher = self.launcher.get_launcher_for_monitor(self.screen_geo.get_primary_monitor())
 
         self.addCleanup(self.keybinding, "spread/cancel")
@@ -63,7 +60,6 @@ class SpreadTests(UnityTestCase):
         """Assert that a window is not in the list of the open windows"""
         refresh_fn = lambda: xid in [w.x_id for w in self.bamf.get_open_windows()]
         self.assertThat(refresh_fn, Eventually(Equals(False)))
-
 
     def test_scale_application_windows(self):
         """Test if all the windows of an application are scaled when application spread is initiated"""
