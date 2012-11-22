@@ -38,7 +38,6 @@ class SpreadTests(UnityTestCase):
         """Initiate the Spread for all windows"""
         self.addCleanup(self.keybinding, "spread/cancel")
         self.keybinding("spread/start")
-        sleep(1)
         self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
 
     def initiate_spread_for_application(self, desktop_id):
