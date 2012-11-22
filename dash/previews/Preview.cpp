@@ -150,7 +150,7 @@ public:
             return *areas_.end();
         else
         {
-          it--; 
+          it--;
           if (it == areas_.begin())
             return *areas_.end();
           return *it;
@@ -164,7 +164,7 @@ public:
         }
         else
         {
-          it++; 
+          it++;
           if (it == areas_.end())
           {
             return *areas_.begin();
@@ -270,7 +270,7 @@ nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList action
   {
     nux::HLayout* actions_layout_h = new TabIteratorHLayout(tab_iterator_);
     actions_layout_h->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
- 
+
     for (uint j = 0; j < 2 && action_iter < actions.size(); j++, action_iter++)
     {
         dash::Preview::ActionPtr action = actions[action_iter];
@@ -322,7 +322,7 @@ void Preview::UpdateCoverArtImage(CoverArt* cover_art)
 {
   if (!preview_model_)
     return;
-  
+
   previews::Style& style = dash::previews::Style::Instance();
 
   std::string image_hint;
@@ -338,8 +338,8 @@ void Preview::UpdateCoverArtImage(CoverArt* cover_art)
   else
     cover_art->SetNoImageAvailable();
   cover_art->SetFont(style.no_preview_image_font());
-  
-  cover_art->mouse_click.connect([this] (int x, int y, unsigned long button_flags, unsigned long key_flags) 
+
+  cover_art->mouse_click.connect([this] (int x, int y, unsigned long button_flags, unsigned long key_flags)
   {
     if (nux::GetEventButton(button_flags) == nux::MOUSE_BUTTON1 || nux::GetEventButton(button_flags) == nux::MOUSE_BUTTON3)
     {

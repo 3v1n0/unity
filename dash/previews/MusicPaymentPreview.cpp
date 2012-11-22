@@ -220,23 +220,28 @@ nux::Layout* MusicPaymentPreview::GetPrize()
 
 nux::Layout* MusicPaymentPreview::GetBody()
 {
-  nux::HLayout *form_layout = new nux::HLayout();
-  form_layout->SetSpaceBetweenChildren(10);
-  form_layout->SetMinimumHeight(107);
-  form_layout->AddLayout(GetFormLabels(), 1, nux::MINOR_POSITION_END);
-  form_layout->AddLayout(GetFormFields(), 1, nux::MINOR_POSITION_END);
-  form_layout->AddLayout(GetFormActions(), 1, nux::MINOR_POSITION_END);
+  previews::Style& style = dash::previews::Style::Instance();
+  nux::VLayout *body_layout = new  nux::VLayout();
 
-  /*header_ = new nux::StaticCairoText(
+  intro_ = new nux::StaticCairoText(
           GetDataForKey(this->data_, DATA_HEADER_KEY), true,
           NUX_TRACKER_LOCATION);
-  //header_->SetMaximumWidth(style.GetPaymentHeaderWidth());
-  header_->SetFont(style.payment_intro_font().c_str());
-  header_->SetLineSpacing(10);
-  header_->SetLines(-style.GetDescriptionLineCount());
-  header_->SetMinimumHeight(50);*/
+  intro_->SetMaximumWidth(style.GetPaymentHeaderWidth());
+  intro_->SetFont(style.payment_intro_font().c_str());
+  intro_->SetLineSpacing(10);
+  intro_->SetLines(-style.GetDescriptionLineCount());
+  intro_->SetMinimumHeight(50);
 
-  return form_layout;
+  form_layout_ = new nux::HLayout();
+  form_layout_->SetSpaceBetweenChildren(10);
+  form_layout_->SetMinimumHeight(107);
+  form_layout_->AddLayout(GetFormLabels(), 1, nux::MINOR_POSITION_END);
+  form_layout_->AddLayout(GetFormFields(), 1, nux::MINOR_POSITION_END);
+  form_layout_->AddLayout(GetFormActions(), 1, nux::MINOR_POSITION_END);
+
+  body_layout->AddView(intro_.GetPointer(), 1);
+  body_layout->AddLayout(form_layout_.GetPointer());
+  return body_layout;
 }
 
 nux::Layout* MusicPaymentPreview::GetFormLabels()
@@ -398,12 +403,59 @@ void MusicPaymentPreview::PreLayoutManagement()
 
   int width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
 
+  /*
+   * Be aware when settings min/max sizes of Layouts.
+   * If you have a StaticCairoText View added to a Layout, and you set
+   * the max/min of the Layout, Nux will go into an infinite loop trying
+   * to calculate sizes.
+   * The workaround is to set manually the sizes of the StaticCairoText
+   * and the other layout children.
+   */
   if(full_data_layout_) { full_data_layout_->SetMaximumWidth(width); }
   if(header_layout_) { header_layout_->SetMaximumWidth(width); }
-  if(body_layout_) { body_layout_->SetMaximumWidth(width); }
+  if(intro_) { intro_->SetMaximumWidth(width); }
+  if(form_layout_) { form_layout_->SetMaximumWidth(width); }
   if(footer_layout_) { footer_layout_->SetMaximumWidth(width); }
 
   Preview::PreLayoutManagement();
+}
+
+void MusicPaymentPreview::SetupViews()
+{
+  if (!preview_model_)
+  {
+    LOG_ERROR(logger) << "Could not derive preview model from given parameter.";
+    return;
+  }
+
+  // HACK: All the information required by the preview is stored in an infor
+  // hint, lets loop through them and store them
+  dash::Preview::InfoHintPtrList hints = preview_model_->GetInfoHints();
+  dash::Preview::InfoHintPtr data_info_hint_ = NULL;
+  if (!hints.empty())
+  {
+    for (dash::Preview::InfoHintPtr info_hint : hints)
+    {
+       if (info_hint->id == DATA_INFOHINT_ID){
+         this->data_ = info_hint->value;
+       }
+    }
+    if (this->data_ == NULL)
+    {
+      LOG_ERROR(logger) << "The required data for the preview is missing.";
+      return;
+    }
+  }
+  else
+  {
+    LOG_ERROR(logger) << "The required data for the preview is missing.";
+    return;
+  }
+
+  // load the buttons so that they can be accessed in order
+  LoadActions();
+
+  PaymentPreview::SetupViews();
 }
 
 

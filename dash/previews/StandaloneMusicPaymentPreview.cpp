@@ -39,7 +39,7 @@
 #include "PreviewContainer.h"
 
 
-#define WIDTH 1100 
+#define WIDTH 1100
 #define HEIGHT 600
 
 using namespace unity;
@@ -70,7 +70,7 @@ public:
     layout->AddView(view, 1, nux::MINOR_POSITION_CENTER);
     SetLayout(layout);
   }
-  
+
   // Keyboard navigation
   bool AcceptKeyNavFocus()
   {
@@ -183,17 +183,17 @@ void TestRunner::Init ()
   g_variant_builder_add (builder, "{sv}", "purchase_hint", purchase_hint);
   g_variant_builder_add (builder, "{sv}", "purchase_prize", purchase_prize);
   g_variant_builder_add (builder, "{sv}", "purchase_type", purchase_type);
-  info_hints = g_variant_builder_end(builder); 
 
+  info_hints = g_variant_builder_end(builder);
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(
-			  unity_protocol_generic_preview_new()));
+              unity_protocol_generic_preview_new()));
 
-  // set the title of the genric preview so that the code generates a 
+  // set the title of the generic preview so that the code generates a
   // payment preview
   unity_protocol_preview_set_title(proto_obj, MUSIC_PAYMENT_TITLE);
   // set the info
   unity_protocol_preview_add_info_hint(proto_obj, "album_purchase_preview", "", NULL,
-		  info_hints);
+          info_hints);
   // set the diff actions
   unity_protocol_preview_add_action(proto_obj, "purchase_album", "Buy Now", NULL, 0);
   unity_protocol_preview_add_action(proto_obj, "cancel_purchase", "Cancel", NULL, 0);

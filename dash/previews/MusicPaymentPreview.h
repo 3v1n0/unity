@@ -109,8 +109,10 @@ protected:
   void PreLayoutManagement();
 
 protected:
+  virtual void SetupViews();
   // content elements
   nux::ObjectPtr<CoverArt> image_;
+  nux::ObjectPtr<nux::StaticCairoText> intro_;
   nux::ObjectPtr<nux::StaticCairoText> title_;
   nux::ObjectPtr<nux::StaticCairoText> subtitle_;
   nux::ObjectPtr<nux::StaticCairoText> email_label_;
@@ -124,6 +126,7 @@ protected:
   nux::ObjectPtr<nux::StaticCairoText> purchase_type_;
   nux::ObjectPtr<nux::StaticCairoText> change_payment_;
   nux::ObjectPtr<nux::StaticCairoText> forgotten_password_;
+  nux::ObjectPtr<nux::HLayout> form_layout_;
 
   // do we want to type?
   bool entry_selected_;

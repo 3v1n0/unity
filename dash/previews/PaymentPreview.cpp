@@ -165,40 +165,7 @@ void PaymentPreview::SetupBackground()
 
 void PaymentPreview::SetupViews()
 {
-  if (!preview_model_)
-  {
-    LOG_ERROR(logger) << "Could not derive preview model from given parameter.";
-    return;
-  }
-
-  // HACK: All the information required by the preview is stored in an infor
-  // hint, lets loop through them and store them
-  dash::Preview::InfoHintPtrList hints = preview_model_->GetInfoHints();
-  dash::Preview::InfoHintPtr data_info_hint_ = NULL;
-  if (!hints.empty())
-  {
-    /*for (dash::Preview::InfoHintPtr info_hint : hints)
-    {
-       if (info_hint->id == DATA_INFOHINT_ID){
-         this->data_ = info_hint->value;
-       }
-    }*/
-    if (this->data_ == NULL)
-    {
-      LOG_ERROR(logger) << "The required data for the preview is missing.";
-      return;
-    }
-  }
-  else
-  {
-    LOG_ERROR(logger) << "The required data for the preview is missing.";
-    return;
-  }
-
   previews::Style& style = dash::previews::Style::Instance();
-
-  // load the buttons so that they can be accessed in order
-  //LoadActions();
 
   full_data_layout_ = new nux::VLayout();
   full_data_layout_->SetSpaceBetweenChildren(5);
@@ -210,24 +177,12 @@ void PaymentPreview::SetupViews()
   full_data_layout_->AddLayout(header_layout_, 1);
   full_data_layout_->AddSpace(style.GetPaymentHeaderSpace(), 0);
 
-  /*header_ = new nux::StaticCairoText(
-          GetDataForKey(this->data_, DATA_HEADER_KEY), true,
-          NUX_TRACKER_LOCATION);
-  //header_->SetMaximumWidth(style.GetPaymentHeaderWidth());
-  header_->SetFont(style.payment_intro_font().c_str());
-  header_->SetLineSpacing(10);
-  header_->SetLines(-style.GetDescriptionLineCount());
-  header_->SetMinimumHeight(50);*/
-
-  full_data_layout_->AddView(header_.GetPointer(), 1);
-  full_data_layout_->AddSpace(style.GetPaymentFormSpace(), 1);
-
-  /*body_layout_ = GetBody();
+  body_layout_ = GetBody();
   full_data_layout_->AddLayout(body_layout_, 1);
   full_data_layout_->AddSpace(style.GetPaymentFooterSpace(), 1);
 
   footer_layout_ = GetFooter();
-  full_data_layout_->AddLayout(footer_layout_, 0);*/
+  full_data_layout_->AddLayout(footer_layout_, 0);
 
   SetLayout(full_data_layout_);
 }

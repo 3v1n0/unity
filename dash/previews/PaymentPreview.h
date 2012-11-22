@@ -110,15 +110,13 @@ protected:
   virtual void PreLayoutManagement() = 0;
 
   virtual void LoadActions() = 0;
-  void SetupViews();
-  void SetupBackground();
+  virtual void SetupViews();
+  virtual void SetupBackground();
 
-protected:
   nux::VLayout* full_data_layout_;
   nux::Layout* header_layout_;
   nux::Layout* body_layout_;
   nux::Layout* footer_layout_;
-  nux::ObjectPtr<nux::StaticCairoText> header_;
 
   // content elements
   nux::ObjectPtr<CoverArt> image_;

@@ -76,7 +76,7 @@ struct StaticCairoText::Impl
   EllipsizeState ellipsize_;
   AlignState align_;
   AlignState valign_;
-  UnderlineState underline_; 
+  UnderlineState underline_;
 
   std::string font_;
 
@@ -378,7 +378,7 @@ void StaticCairoText::SetTextColor(Color const& textColor)
 void StaticCairoText::SetFont(std::string const& font)
 {
   if (pimpl->font_ != font)
-  {  
+  {
     pimpl->font_ = font;
     pimpl->need_new_extent_cache_ = true;
     Size s = GetTextExtents();
@@ -558,7 +558,7 @@ void StaticCairoText::Impl::DrawText(cairo_t* cr,
   cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
   layout = pango_cairo_create_layout(cr);
 
-  
+
   desc = pango_font_description_from_string(font.c_str());
   pango_layout_set_font_description(layout, desc);
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);

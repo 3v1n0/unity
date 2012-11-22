@@ -61,7 +61,7 @@ Preview::Ptr Preview::PreviewForProtocolObject(glib::Object<GObject> const& prot
 
     if (strcmp(MUSIC_PAYMENT_TITLE, preview_title) == 0)
     {
-	return Preview::Ptr(new MusicPaymentPreview(proto_obj));
+      return Preview::Ptr(new MusicPaymentPreview(proto_obj));
     }
     else
     {
@@ -196,7 +196,7 @@ Preview::Impl::Impl(Preview* owner, glib::Object<GObject> const& proto_obj)
             static_cast<LayoutHint>(raw_action->layout_hint),
             raw_action->hints));
     }
-    
+
     int info_hints_len;
     auto info_hints = unity_protocol_preview_get_info_hints(raw_preview_, &info_hints_len);
     for (int i = 0; i < info_hints_len; i++)
