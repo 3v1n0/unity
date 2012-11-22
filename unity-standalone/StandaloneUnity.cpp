@@ -87,9 +87,9 @@ UnityStandalone::~UnityStandalone ()
 void UnityStandalone::Init ()
 {
   auto xdnd_manager = std::make_shared<XdndManager>();
-  launcher_controller.reset(new launcher::Controller(xdnd_manager));
-  panel_controller.reset(new panel::Controller());
-  dash_controller.reset(new dash::Controller());
+  launcher_controller = std::make_shared<launcher::Controller>(xdnd_manager);
+  panel_controller = std::make_shared<panel::Controller>();
+  dash_controller = std::make_shared<dash::Controller>();
 
   dash_controller->launcher_width = launcher_controller->launcher().GetAbsoluteWidth() - 1;
   panel_controller->launcher_width = launcher_controller->launcher().GetAbsoluteWidth() - 1;
@@ -121,8 +121,8 @@ UnityStandaloneTV::~UnityStandaloneTV() {};
 void UnityStandaloneTV::Init()
 {
   auto xdnd_manager = std::make_shared<XdndManager>();
-  launcher_controller.reset(new launcher::Controller(xdnd_manager));
-  dash_controller.reset(new dash::Controller());
+  launcher_controller = std::make_shared<launcher::Controller>(xdnd_manager);
+  dash_controller = std::make_shared<dash::Controller>();
   dash_controller->launcher_width = launcher_controller->launcher().GetAbsoluteWidth() - 1;
 
   UBusManager().SendMessage(UBUS_DASH_EXTERNAL_ACTIVATION, nullptr);

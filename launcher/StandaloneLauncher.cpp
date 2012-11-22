@@ -36,7 +36,7 @@ static launcher::Controller::Ptr controller;
 void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 {
   auto xdnd_manager = std::make_shared<XdndManager>();
-  controller.reset(new launcher::Controller(xdnd_manager));
+  controller = std::make_shared<launcher::Controller>(xdnd_manager);
 }
 
 int main(int argc, char** argv)
