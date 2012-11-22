@@ -783,6 +783,8 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr const& icon, struct time
   arg.progress_bias       = IconProgressBias(icon, current);
   arg.progress            = CLAMP(icon->GetProgress(), 0.0f, 1.0f);
   arg.draw_shortcut       = _shortcuts_shown && !_hide_machine.GetQuirk(LauncherHideMachine::PLACES_VISIBLE);
+  arg.system_item         = icon->GetIconType() == AbstractLauncherIcon::IconType::HOME    ||
+                            icon->GetIconType() == AbstractLauncherIcon::IconType::HUD;
   arg.colorify_background = icon->GetIconType() == AbstractLauncherIcon::IconType::HOME    ||
                             icon->GetIconType() == AbstractLauncherIcon::IconType::HUD     ||
                             icon->GetIconType() == AbstractLauncherIcon::IconType::TRASH   ||
