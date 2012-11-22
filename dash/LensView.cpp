@@ -59,7 +59,7 @@ public:
   {
     SetVScrollBar(scroll_bar);
 
-    OnVisibleChanged.connect([&] (nux::Area* area, bool visible) {
+    OnVisibleChanged.connect([&] (nux::Area* /*area*/, bool visible) {
       if (m_horizontal_scrollbar_enable)
         _hscrollbar->SetVisible(visible);
       if (m_vertical_scrollbar_enable)

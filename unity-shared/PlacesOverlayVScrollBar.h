@@ -70,31 +70,33 @@ private:
   bool IsMouseInTopHalfOfThumb(int y);
   void CheckIfThumbIsInsideSlider();
 
+  bool IsScrollBarVisible() const;
+
   void UpdateConnectorPosition();
   void ResetConnector();
   
   void UpdateStepY();
 
-  void SetupScrollAnimation(ScrollDir dir, int stop);
-  void StartScrollAnimation(ScrollDir dir);
+  void SetupAnimation(int start, int stop, int milliseconds);
+
+  void StartScrollAnimation(ScrollDir dir, int stop);
   void OnScroll(ScrollDir dir, int mouse_dy);
 
-  void SetupConnectorAnimation();
   void StartConnectorAnimation();
 
   void UpdateConnectorTexture();
 
-  nux::ObjectPtr<VScrollBarOverlayWindow> _overlay_window;
-  nux::InputAreaProximity _area_prox;
+  nux::ObjectPtr<VScrollBarOverlayWindow> overlay_window_;
+  nux::InputAreaProximity area_prox_;
 
-  nux::animation::AnimateValue<int> _animation;
-  sigc::connection _tweening_connection;
+  nux::animation::AnimateValue<int> animation_;
+  sigc::connection tweening_connection_;
 
-  nux::ObjectPtr<nux::BaseTexture> _connector_texture;
+  nux::ObjectPtr<nux::BaseTexture> connector_texture_;
   
-  bool _thumb_above_slider;
-  int _connector_height;
-  int _mouse_down_offset;
+  bool thumb_above_slider_;
+  int connector_height_;
+  int mouse_down_offset_;
 };
 
 } // namespace dash
