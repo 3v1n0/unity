@@ -33,32 +33,13 @@ namespace unity
 class TextInputMock : public TextInput
 {
     public:
-      // expose protected methods we want to test
-      void Init()
-      {
-        TextInput::Init();
-      }
+      using TextInput::Init;
+      using TextInput::OnInputHintChanged;
+      using TextInput::OnMouseButtonDown;
+      using TextInput::OnEndKeyFocus;
+      using TextInput::get_input_string;
 
-      void OnInputHintChanged()
-      {
-        TextInput::OnInputHintChanged();
-      }
 
-      void OnMouseButtonDown(int x, int y, unsigned long button_flags,
-          unsigned long key_flags)
-      {
-        TextInput::OnMouseButtonDown(x, y, button_flags, key_flags);
-      }
-
-      void OnEndKeyFocus()
-      {
-        TextInput::OnEndKeyFocus();
-      }
-
-      std::string get_input_string() const
-      {
-        return TextInput::get_input_string();
-      }
       nux::StaticCairoText* GetHint() const { return hint_; }
       IMTextEntry* GetPangoEntry() const { return pango_entry_; }
 };
@@ -74,7 +55,7 @@ class TestTextInput : public ::testing::Test
        pango_entry = entry->GetPangoEntry();
      }
 
-     TextInputMock* entry;
+     nux::ObjectPtr<TextInputMock> entry;
      nux::StaticCairoText* hint;
      IMTextEntry* pango_entry;
 };
