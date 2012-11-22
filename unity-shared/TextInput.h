@@ -80,24 +80,24 @@ private:
 
   void Init();
 
-  virtual void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
+  void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
 
-  virtual void OnInputHintChanged();
+  void OnInputHintChanged();
 
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
 
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
-  virtual void OnMouseButtonDown(int x, int y, unsigned long button_flags,
+  void OnMouseButtonDown(int x, int y, unsigned long button_flags,
           unsigned long key_flags);
 
-  virtual void OnEndKeyFocus();
+  void OnEndKeyFocus();
 
   void UpdateBackground(bool force);
 
-  virtual std::string get_input_string() const;
+  std::string get_input_string() const;
 
-  virtual bool set_input_string(std::string const& string);
+  bool set_input_string(std::string const& string);
 
   bool get_im_active() const;
 
