@@ -39,6 +39,24 @@ namespace launcher
 {
 const std::string USC_DESKTOP = BUILDDIR"/tests/data/applications/ubuntu-software-center.desktop";
 
+class MockSoftwareCenterLauncherIcon : public SoftwareCenterLauncherIcon
+{
+public:
+   MockSoftwareCenterLauncherIcon(BamfApplication* app,
+                                  std::string const& aptdaemon_trans_id,
+                                  std::string const& icon_path):
+      SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path)
+   {};
+
+   using SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall;
+   using SoftwareCenterLauncherIcon::_desktop_file;
+   using SoftwareCenterLauncherIcon::desktop_dir_;
+   using SoftwareCenterLauncherIcon::GetRemoteUri;
+   using SoftwareCenterLauncherIcon::OnFinished;
+
+};
+
+
 struct TestSoftwareCenterLauncherIcon : testing::Test
 {
   TestSoftwareCenterLauncherIcon()
@@ -49,7 +67,7 @@ struct TestSoftwareCenterLauncherIcon : testing::Test
 
   glib::Object<BamfMatcher> bamf_matcher;
   glib::Object<BamfApplication> usc;
-  SoftwareCenterLauncherIcon icon;
+  MockSoftwareCenterLauncherIcon icon;
 };
 
 TEST_F(TestSoftwareCenterLauncherIcon, Construction)

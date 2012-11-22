@@ -26,8 +26,6 @@
 #include "ApplicationLauncherIcon.h"
 #include "LauncherDragWindow.h"
 
-#include "gtest/gtest_prod.h"
-
 namespace unity
 {
 namespace launcher
@@ -51,14 +49,12 @@ public:
 protected:
   std::string GetActualDesktopFileAfterInstall();
   void ActivateLauncherIcon(ActionArg arg);
-  FRIEND_TEST(TestSoftwareCenterLauncherIcon, DesktopFileTransformTrivial);
-  FRIEND_TEST(TestSoftwareCenterLauncherIcon, DesktopFileTransformAppInstall);
-  FRIEND_TEST(TestSoftwareCenterLauncherIcon, DesktopFileTransformSCAgent);
-  FRIEND_TEST(TestSoftwareCenterLauncherIcon, OnFinished);
+  void OnFinished(GVariant *params);
+  // makes testing easier
+  std::string desktop_dir_;
 
 private:
   void OnPropertyChanged(GVariant* params);
-  void OnFinished(GVariant *params);
   void OnDragAnimationFinished();
 
   glib::DBusProxy aptdaemon_trans_;
@@ -68,10 +64,7 @@ private:
   nux::ObjectPtr<Launcher> launcher_;
   bool finished_;
   bool needs_urgent_;
-
   std::string aptdaemon_trans_id_;
-  // makes testing easier
-  std::string desktop_dir_;
 };
 
 }

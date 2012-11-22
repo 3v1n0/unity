@@ -43,8 +43,9 @@ NUX_IMPLEMENT_OBJECT_TYPE(SoftwareCenterLauncherIcon);
 SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
                                                        std::string const& aptdaemon_trans_id,
                                                        std::string const& icon_path)
-: ApplicationLauncherIcon(app),
-  aptdaemon_trans_("org.debian.apt",
+: ApplicationLauncherIcon(app)
+, desktop_dir_("/usr/share/applications/")
+, aptdaemon_trans_("org.debian.apt",
                    aptdaemon_trans_id,
                    "org.debian.apt.transaction",
                    G_BUS_TYPE_SYSTEM,
@@ -52,7 +53,6 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
 , finished_(true)
 , needs_urgent_(false)
 , aptdaemon_trans_id_(aptdaemon_trans_id)
-, desktop_dir_("/usr/share/applications/")
 {
   SetQuirk(Quirk::VISIBLE, false);
   aptdaemon_trans_.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
