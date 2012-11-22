@@ -63,7 +63,7 @@ TEST_F(TestXdndStartStopNotifierImp, SignalStarted)
   XTestFakeButtonEvent(display_, 1, False, CurrentTime);
 }
 
-TEST_F(TestXdndStartStopNotifierImp, SignalFinished)
+TEST_F(TestXdndStartStopNotifierImp, DISABLED_SignalFinished)
 {
   bool signal_received = false;
   xdnd_start_stop_notifier.finished.connect([&](){
@@ -84,7 +84,7 @@ TEST_F(TestXdndStartStopNotifierImp, SignalFinished)
   Utils::WaitUntil(signal_received);
 }
 
-TEST_F(TestXdndStartStopNotifierImp, SignalFinished_QT)
+TEST_F(TestXdndStartStopNotifierImp, DISABLED_SSignalFinished_QT)
 {
   bool signal_received = false;
   xdnd_start_stop_notifier.finished.connect([&](){
