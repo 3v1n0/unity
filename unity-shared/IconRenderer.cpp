@@ -68,7 +68,7 @@ namespace ui
 #define LUMIN_GREEN "0.59"
 #define LUMIN_BLUE "0.11"
 
-std::string gPerspectiveCorrectShader = TEXT(
+const std::string gPerspectiveCorrectShader = TEXT(
 "[Vertex Shader]                                    \n"
 VertexShaderHeader
 "uniform mat4 ViewProjectionMatrix;                 \n\
@@ -113,7 +113,7 @@ void main()                                         \n\
 }                                                   \n\
 ");
 
-std::string PerspectiveCorrectVtx = TEXT(
+const std::string PerspectiveCorrectVtx = TEXT(
 "!!ARBvp1.0                                 \n\
 ATTRIB iPos         = vertex.position;      \n\
 ATTRIB iColor       = vertex.attrib[3];     \n\
@@ -130,7 +130,7 @@ MOV   oColor, iColor;                       \n\
 MOV   oTexCoord0, vertex.attrib[8];         \n\
 END");
 
-std::string PerspectiveCorrectTexFrg = TEXT(
+const std::string PerspectiveCorrectTexFrg = TEXT(
 "!!ARBfp1.0                                                   \n\
 PARAM color0 = program.local[0];                              \n\
 PARAM factor = program.local[1];                              \n\
@@ -152,7 +152,7 @@ MUL result.color.rgb, temp, colorify_color;                   \n\
 MOV result.color.a, color;                                    \n\
 END");
 
-std::string PerspectiveCorrectTexRectFrg = TEXT(
+const std::string PerspectiveCorrectTexRectFrg = TEXT(
 "!!ARBfp1.0                                                   \n\
 PARAM color0 = program.local[0];                              \n\
 PARAM factor = program.local[1];                              \n\
@@ -194,12 +194,12 @@ nux::BaseTexture* arrow_rtl = 0;
 nux::BaseTexture* arrow_empty_ltr = 0;
 nux::BaseTexture* arrow_empty_rtl = 0;
 
-nux::BaseTexture* squircle_base = 0;
-nux::BaseTexture* squircle_base_selected = 0;
-nux::BaseTexture* squircle_edge = 0;
-nux::BaseTexture* squircle_glow = 0;
-nux::BaseTexture* squircle_shadow = 0;
-nux::BaseTexture* squircle_shine = 0;
+// nux::BaseTexture* squircle_base = 0;
+// nux::BaseTexture* squircle_base_selected = 0;
+// nux::BaseTexture* squircle_edge = 0;
+// nux::BaseTexture* squircle_glow = 0;
+// nux::BaseTexture* squircle_shadow = 0;
+// nux::BaseTexture* squircle_shine = 0;
 
 std::vector<nux::BaseTexture*> icon_background;
 std::vector<nux::BaseTexture*> icon_selected_background;
@@ -470,12 +470,6 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     // 0.9f is BACKLIGHT_STRENGTH in Launcher.cpp
     backlight_intensity = (arg.keyboard_nav_hl) ? 0.95f : 0.9f;
     glow_intensity = (arg.keyboard_nav_hl) ? 1.0f : 0.0f ;
-
-    background = local::squircle_base_selected;
-    edge = local::squircle_edge;
-    glow = local::squircle_glow;
-    shine = local::squircle_shine;
-    shadow = local::squircle_shadow;
   }
 
   // draw shadow
@@ -1224,12 +1218,12 @@ void generate_textures()
                     PKGDATADIR"/launcher_icon_shine_150.png",
                     PKGDATADIR"/launcher_icon_shine_54.png");
 
-  squircle_base = load_texture(PKGDATADIR"/squircle_base_54.png");
-  squircle_base_selected = load_texture(PKGDATADIR"/squircle_base_selected_54.png");
-  squircle_edge = load_texture(PKGDATADIR"/squircle_edge_54.png");
-  squircle_glow = load_texture(PKGDATADIR"/squircle_glow_62.png");
-  squircle_shadow = load_texture(PKGDATADIR"/squircle_shadow_62.png");
-  squircle_shine = load_texture(PKGDATADIR"/squircle_shine_54.png");
+  // squircle_base = load_texture(PKGDATADIR"/squircle_base_54.png");
+  // squircle_base_selected = load_texture(PKGDATADIR"/squircle_base_selected_54.png");
+  // squircle_edge = load_texture(PKGDATADIR"/squircle_edge_54.png");
+  // squircle_glow = load_texture(PKGDATADIR"/squircle_glow_62.png");
+  // squircle_shadow = load_texture(PKGDATADIR"/squircle_shadow_62.png");
+  // squircle_shine = load_texture(PKGDATADIR"/squircle_shine_54.png");
 
   pip_ltr = load_texture(PKGDATADIR"/launcher_pip_ltr.png");
   arrow_ltr = load_texture(PKGDATADIR"/launcher_arrow_ltr.png");
@@ -1274,12 +1268,12 @@ void destroy_textures()
   destroy_textures(icon_shadow);
   destroy_textures(icon_shine);
 
-  squircle_base->UnReference();
-  squircle_base_selected->UnReference();
-  squircle_edge->UnReference();
-  squircle_glow->UnReference();
-  squircle_shadow->UnReference();
-  squircle_shine->UnReference();
+  // squircle_base->UnReference();
+  // squircle_base_selected->UnReference();
+  // squircle_edge->UnReference();
+  // squircle_glow->UnReference();
+  // squircle_shadow->UnReference();
+  // squircle_shine->UnReference();
 
   IconRenderer::DestroyShortcutTextures();
 
