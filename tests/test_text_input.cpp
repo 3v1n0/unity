@@ -30,28 +30,63 @@ using namespace nux;
 namespace unity
 {
 
+class TextInputMock : public TextInput
+{
+    public:
+      // expose protected methods we want to test
+      void Init()
+      {
+        TextInput::Init();
+      }
+
+      void OnInputHintChanged()
+      {
+        TextInput::OnInputHintChanged();
+      }
+
+      void OnMouseButtonDown(int x, int y, unsigned long button_flags,
+          unsigned long key_flags)
+      {
+        TextInput::OnMouseButtonDown(x, y, button_flags, key_flags);
+      }
+
+      void OnEndKeyFocus()
+      {
+        TextInput::OnEndKeyFocus();
+      }
+
+      std::string get_input_string() const
+      {
+        return TextInput::get_input_string();
+      }
+      nux::StaticCairoText* GetHint() const { return hint_; }
+      IMTextEntry* GetPangoEntry() const { return pango_entry_; }
+};
+
 class TestTextInput : public ::testing::Test
 {
    protected:
      TestTextInput()
      {
-       entry = new TextInput();
+       entry = new TextInputMock();
        entry->Init();
+       hint = entry->GetHint();
+       pango_entry = entry->GetPangoEntry();
      }
 
-     TextInput* entry;
+     TextInputMock* entry;
+     nux::StaticCairoText* hint;
+     IMTextEntry* pango_entry;
 };
 
 TEST_F(TestTextInput, HintCorrectInit)
 {
-  nux::Color color = entry->hint_->GetTextColor();
+  nux::Color color = hint->GetTextColor();
 
   EXPECT_EQ(color.red, 1.0f);
   EXPECT_EQ(color.green, 1.0f);
   EXPECT_EQ(color.blue, 1.0f);
   EXPECT_EQ(color.alpha, 0.5f);
-
-  EXPECT_EQ(entry->hint_->GetFont(), "Ubuntu Italic 12px");
 }
 
 TEST_F(TestTextInput, InputStringCorrectSetter)
@@ -62,25 +97,39 @@ TEST_F(TestTextInput, InputStringCorrectSetter)
   EXPECT_EQ(entry->input_string.Get(), new_input);
 }
 
-TEST_F(TestTextInput, OnInputHintChanged)
+TEST_F(TestTextInput, HintClearedOnInputHintChanged)
 {
   // change the hint and assert that the internal value is correct
-  entry->hint_->SetText("foo");
+  hint->SetText("foo");
   entry->OnInputHintChanged();
-  EXPECT_EQ(entry->hint_->GetText(), "");
+  EXPECT_EQ(entry->get_input_string(), "");
 }
 
-TEST_F(TestTextInput, OnMouseButtonDown)
+TEST_F(TestTextInput, HintHideOnMouseButtonDown)
 {
-  entry->hint_->SetVisible(true);
-  entry->OnMouseButtonDown(0, 0, 0, 0);
-  ASSERT_FALSE(entry->hint_->IsVisible());
+  hint->SetVisible(true);
+  entry->OnMouseButtonDown(entry->GetBaseWidth()/2,
+    entry->GetBaseHeight()/2  , 0, 0);
+  ASSERT_FALSE(hint->IsVisible());
 }
 
-TEST_F(TestTextInput, OnEndKeyFocus)
+TEST_F(TestTextInput, HintVisibleOnEndKeyFocus)
 {
+  // set the text and ensure that later is cleared
+  pango_entry->SetText("user input");
   entry->OnEndKeyFocus();
-  EXPECT_EQ(entry->hint_->GetText(), " ");
+
+  ASSERT_FALSE(hint->IsVisible());
+
+}
+
+TEST_F(TestTextInput, HintHiddenOnEndKeyFocus)
+{
+
+  pango_entry->SetText("");
+  entry->OnEndKeyFocus();
+
+  ASSERT_TRUE(hint->IsVisible());
 }
 
 } // unity
