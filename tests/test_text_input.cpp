@@ -91,7 +91,7 @@ TEST_F(TestTextInput, HintHideOnMouseButtonDown)
   hint->SetVisible(true);
   entry->OnMouseButtonDown(entry->GetBaseWidth()/2,
     entry->GetBaseHeight()/2  , 0, 0);
-  ASSERT_FALSE(hint->IsVisible());
+  EXPECT_FALSE(hint->IsVisible());
 }
 
 TEST_F(TestTextInput, HintVisibleOnEndKeyFocus)
@@ -100,7 +100,7 @@ TEST_F(TestTextInput, HintVisibleOnEndKeyFocus)
   pango_entry->SetText("user input");
   entry->OnEndKeyFocus();
 
-  ASSERT_FALSE(hint->IsVisible());
+  EXPECT_FALSE(hint->IsVisible());
 
 }
 
@@ -110,7 +110,7 @@ TEST_F(TestTextInput, HintHiddenOnEndKeyFocus)
   pango_entry->SetText("");
   entry->OnEndKeyFocus();
 
-  ASSERT_TRUE(hint->IsVisible());
+  EXPECT_TRUE(hint->IsVisible());
 }
 
 } // unity
