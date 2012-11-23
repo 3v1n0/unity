@@ -33,6 +33,7 @@ Options::Options()
   , auto_hide_animation(FADE_AND_SLIDE)
   , backlight_mode(BACKLIGHT_NORMAL)
   , reveal_trigger(RevealTrigger::EDGE)
+  , background_color(nux::Color(95, 18, 45))
   , icon_size(48)
   , tile_size(54)
   , background_alpha(0.6667)
@@ -49,6 +50,7 @@ Options::Options()
   background_alpha.changed.connect       ([this] (float value)             { option_changed.emit(); });
   backlight_mode.changed.connect         ([this] (BacklightMode value)     { option_changed.emit(); });
   edge_decay_rate.changed.connect        ([this] (int value)               { option_changed.emit(); });
+  background_color.changed.connect       ([this] (nux::Color const& value) { option_changed.emit(); });
   edge_overcome_pressure.changed.connect ([this] (int value)               { option_changed.emit(); });
   edge_responsiveness.changed.connect    ([this] (float value)             { option_changed.emit(); });
   edge_reveal_pressure.changed.connect   ([this] (int value)               { option_changed.emit(); });
