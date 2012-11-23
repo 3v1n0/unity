@@ -70,20 +70,9 @@ public:
     return 0;
   }
 
-  std::vector<Window> Windows ()
+  WindowList Windows ()
   {
-    std::vector<Window> result;
-
-    result.push_back ((100 << 16) + 200);
-    result.push_back ((500 << 16) + 200);
-    result.push_back ((300 << 16) + 200);
-    result.push_back ((200 << 16) + 200);
-    result.push_back ((300 << 16) + 200);
-    result.push_back ((100 << 16) + 200);
-    result.push_back ((300 << 16) + 200);
-    result.push_back ((600 << 16) + 200);
-
-    return result;
+    return WindowList();
   }
 
   std::vector<Window> WindowsOnViewport ()
@@ -116,11 +105,6 @@ public:
     result.push_back ((600 << 16) + 200);
 
     return result;
-  }
-
-  std::string NameForWindow (Window window)
-  {
-    return std::string();
   }
 
   void SetSortPriority(int priority) { sort_priority_ = priority; }

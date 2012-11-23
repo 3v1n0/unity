@@ -233,7 +233,7 @@ LauncherIcon::OpenInstance(ActionArg arg)
   if (wm.IsScaleActive())
     wm.TerminateScale();
 
-  OpenInstanceLauncherIcon(arg);
+  OpenInstanceLauncherIcon();
 
   UpdateQuirkTime(Quirk::LAST_ACTION);
 }

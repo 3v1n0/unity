@@ -112,6 +112,23 @@ std::string WindowBase::type() const
   return View::type();
 }
 
+bool WindowBase::Focus() const
+{
+  Window xid = window_id();
+  if (xid)
+  {
+    std::vector<Window> windows = { xid };
+    // TODO: we should simplify the use case of focusing one window.
+    // Somewhat outside the scope of these changes however.
+    WindowManager::Default().FocusWindowGroup(
+      windows,
+      WindowManager::FocusVisibility::ForceUnminimizeInvisible,
+      monitor(),true);
+    return true;
+  }
+  return false;
+}
+
 void WindowBase::HookUpEvents()
 {
   visible.SetGetterFunction(sigc::mem_fun(this, &View::GetVisible));
@@ -158,6 +175,10 @@ ApplicationPtr AppWindow::application() const
   return manager_.GetApplicationForWindow(bamf_window_);
 }
 
+void AppWindow::Quit() const
+{
+  WindowManager::Default().Close(window_id());
+}
 
 Tab::Tab(Manager const& manager, glib::Object<BamfView> const& tab)
   : WindowBase(manager, tab)
@@ -179,6 +200,19 @@ ApplicationPtr Tab::application() const
 {
   // TODO, we could find the real window for the window_id, and return the application for that.
   return ApplicationPtr();
+}
+
+bool Tab::Focus() const
+{
+  // Raise the tab in the browser.
+  bamf_tab_raise(bamf_tab_);
+  // Then raise the browser window.
+  return WindowBase::Focus();
+}
+
+void Tab::Quit() const
+{
+  bamf_tab_close(bamf_tab_);
 }
 
 // Being brutal with this function.
@@ -330,6 +364,129 @@ WindowList Application::GetWindows() const
   }
   return result;
 }
+
+bool Application::OwnsWindow(Window window_id) const
+{
+  if (!window_id)
+    return false;
+
+  bool owns = false;
+  std::shared_ptr<GList> children(bamf_view_get_children(bamf_view_), g_list_free);
+  for (GList* l = children.get(); l && !owns; l = l->next)
+  {
+    owns = BAMF_IS_WINDOW(l->data) &&
+           bamf_window_get_xid(static_cast<BamfWindow*>(l->data)) == window_id;
+  }
+
+  return owns;
+}
+
+std::vector<std::string> Application::GetSupportedMimeTypes() const
+{
+  std::vector<std::string> result;
+  std::unique_ptr<gchar*[], void(*)(gchar**)> mimes(
+    bamf_application_get_supported_mime_types(bamf_app_), g_strfreev);
+
+  if (mimes)
+  {
+    for (int i = 0; mimes[i]; i++)
+    {
+      result.push_back(mimes[i]);
+    }
+  }
+  return result;
+}
+
+std::vector<ApplicationMenu> Application::GetRemoteMenus() const
+{
+  std::vector<ApplicationMenu> result;
+  std::shared_ptr<GList> children(bamf_view_get_children(bamf_view_), g_list_free);
+  for (GList* l = children.get(); l; l = l->next)
+  {
+    if (!BAMF_IS_INDICATOR(l->data))
+      continue;
+
+    auto indicator = static_cast<BamfIndicator*>(l->data);
+    const gchar* path = bamf_indicator_get_dbus_menu_path(indicator);
+    const gchar* address = bamf_indicator_get_remote_address(indicator);
+
+    // It is possible for path or address to be null on error condintions, or if
+    // the remote is not ready.
+    if (path && address)
+      result.push_back(ApplicationMenu(path, address));
+  }
+  return result;
+}
+
+ApplicationWindowPtr Application::GetFocusableWindow() const
+{
+  glib::Object<BamfView> view(bamf_application_get_focusable_child(bamf_app_),
+                              glib::AddRef());
+  return create_window(manager_, view);
+}
+
+void Application::Focus(bool show_only_visible, int monitor) const
+{
+  WindowManager& wm = WindowManager::Default();
+  std::vector<Window> urgent_windows;
+  std::vector<Window> visible_windows;
+  std::vector<Window> non_visible_windows;
+  bool any_visible = false;
+
+  for (auto& window : GetWindows())
+  {
+    Window window_id = window->window_id();
+    if (window->urgent())
+      urgent_windows.push_back(window_id);
+    else if (window->visible())
+      visible_windows.push_back(window_id);
+    else
+      non_visible_windows.push_back(window_id);
+
+    if (wm.IsWindowOnCurrentDesktop(window_id) &&
+        wm.IsWindowVisible(window_id))
+    {
+      any_visible = true;
+    }
+  }
+
+  // This logic seems overly convoluted, but copying the behaviour from
+  // the launcher icon for now.
+  auto visibility = WindowManager::FocusVisibility::OnlyVisible;
+  if (!show_only_visible)
+  {
+    visibility = any_visible
+       ? WindowManager::FocusVisibility::ForceUnminimizeInvisible
+       : WindowManager::FocusVisibility::ForceUnminimizeOnCurrentDesktop;
+  }
+  if (!urgent_windows.empty())
+  {
+    // Last param is whether to show only the top most window.  In the situation
+    // where we have urgent windows, we want to raise all the urgent windows on
+    // the current workspace, or the workspace of the top most urgent window.
+    wm.FocusWindowGroup(urgent_windows, visibility, monitor, false);
+  }
+  else if (!visible_windows.empty())
+  {
+    wm.FocusWindowGroup(visible_windows, visibility, monitor, true);
+  }
+  else
+  {
+    // Not sure what the use case is for this behaviour, but at this stage,
+    // copying behaviour from ApplicationLauncherIcon.
+    wm.FocusWindowGroup(non_visible_windows, visibility, monitor, true);
+  }
+}
+
+
+void Application::Quit() const
+{
+  for (auto& window : GetWindows())
+  {
+    window->Quit();
+  }
+}
+
 
 bool Application::GetSeen() const
 {

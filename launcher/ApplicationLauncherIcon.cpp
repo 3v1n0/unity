@@ -55,59 +55,39 @@ const std::string DEFAULT_ICON = "application-default-icon";
 
 NUX_IMPLEMENT_OBJECT_TYPE(ApplicationLauncherIcon);
 
-ApplicationLauncherIcon::ApplicationLauncherIcon(BamfApplication* app)
+ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   : SimpleLauncherIcon(IconType::APPLICATION)
-  , _bamf_app(app, glib::AddRef())
+  , app_(app)
   , use_custom_bg_color_(false)
   , bg_color_(nux::color::White)
 {
-  g_object_set_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen"),
-                     GUINT_TO_POINTER(1));
-  auto bamf_view = glib::object_cast<BamfView>(_bamf_app);
+  app->seen = true;
 
-  glib::String icon(bamf_view_get_icon(bamf_view));
+  tooltip_text = app->title();
+  std::string icon = app->icon();
+  icon_name = (icon.empty() ? DEFAULT_ICON : icon);
 
-  tooltip_text = BamfName();
-  icon_name = (icon ? icon.Str() : DEFAULT_ICON);
+  SetQuirk(Quirk::VISIBLE, app->visible());
+  SetQuirk(Quirk::ACTIVE, app->active());
+  SetQuirk(Quirk::RUNNING, app->running());
 
-  SetQuirk(Quirk::VISIBLE, bamf_view_is_user_visible(bamf_view));
-  SetQuirk(Quirk::ACTIVE, bamf_view_is_active(bamf_view));
-  SetQuirk(Quirk::RUNNING, bamf_view_is_running(bamf_view));
+  // Lambda functions should be fine here because when the application the icon
+  // is only ever removed when the application is closed.
+  app->window_opened.connect([this](ApplicationWindow const&) {
+                               EnsureWindowState();
+                               UpdateMenus();
+                               UpdateIconGeometries(GetCenters());
+                             });
+  app->window_closed.connect([this]() { EnsureWindowState(); });
+  app->window_moved.connect([this](ApplicationWindow const&) { EnsureWindowState(); });
 
-  glib::SignalBase* sig;
-
-  sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view, "child-added",
-                          [this] (BamfView*, BamfView*) {
-                            EnsureWindowState();
-                            UpdateMenus();
-                            UpdateIconGeometries(GetCenters());
-                          });
-  _gsignals.Add(sig);
-
-  sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view, "child-removed",
-                          [this] (BamfView*, BamfView*) { EnsureWindowState(); });
-  _gsignals.Add(sig);
-
-  sig = new glib::Signal<void, BamfView*, BamfView*>(bamf_view, "child-moved",
-                                                     [&] (BamfView *, BamfView *) {
-                                                       EnsureWindowState();
-                                                     });
-  _gsignals.Add(sig);
-
-  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "urgent-changed",
-                          [this] (BamfView*, gboolean urgent) {
+  app->urgent.changed.connect([this](bool const& urgent) {
                             SetQuirk(Quirk::URGENT, urgent);
                           });
-  _gsignals.Add(sig);
-
-  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "active-changed",
-                          [this] (BamfView*, gboolean active) {
+  app->active.changed.connect([this](bool const& active) {
                             SetQuirk(Quirk::ACTIVE, active);
                           });
-  _gsignals.Add(sig);
-
-  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "running-changed",
-                          [this] (BamfView* view, gboolean running) {
+  app->running.changed.connect([this](bool const& running) {
                             SetQuirk(Quirk::RUNNING, running);
 
                             if (running)
@@ -119,29 +99,24 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(BamfApplication* app)
                                * very early, so we need to make sure that they
                                * are updated as soon as the view is re-opened. */
                               if (tooltip_text().empty())
-                                tooltip_text = BamfName();
+                                tooltip_text = app_->title();
 
                               if (icon_name == DEFAULT_ICON)
                               {
-                                glib::String icon(bamf_view_get_icon(view));
-                                icon_name = (icon ? icon.Str() : DEFAULT_ICON);
+                                std::string icon = app_->icon();
+                                icon_name = (icon.empty() ? DEFAULT_ICON : icon);
                               }
 
                               EnsureWindowState();
                               UpdateIconGeometries(GetCenters());
                             }
                           });
-  _gsignals.Add(sig);
-
-  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view, "user-visible-changed",
-                          [this] (BamfView*, gboolean visible) {
+  app->visible.changed.connect([this](bool const& visible) {
                             if (!IsSticky())
                               SetQuirk(Quirk::VISIBLE, visible);
                           });
-  _gsignals.Add(sig);
 
-  sig = new glib::Signal<void, BamfView*>(bamf_view, "closed",
-                          [this] (BamfView*) {
+  app->closed.connect([this]() {
                             if (!IsSticky())
                             {
                               SetQuirk(Quirk::VISIBLE, false);
@@ -158,7 +133,6 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(BamfApplication* app)
                               }, ICON_REMOVE_TIMEOUT);
                             }
                           });
-  _gsignals.Add(sig);
 
   WindowManager& wm = WindowManager::Default();
   wm.window_minimized.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::OnWindowMinimized));
@@ -177,35 +151,30 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(BamfApplication* app)
 
 ApplicationLauncherIcon::~ApplicationLauncherIcon()
 {
-  if (_bamf_app.IsType(BAMF_TYPE_APPLICATION))
+  if (app_)
   {
-    bamf_view_set_sticky(BAMF_VIEW(_bamf_app.RawPtr()), FALSE);
-    g_object_set_qdata(G_OBJECT(_bamf_app.RawPtr()),
-                       g_quark_from_static_string("unity-seen"), nullptr);
+    app_->sticky = false;
+    app_->seen = false;
   }
 }
 
 void ApplicationLauncherIcon::Remove()
 {
   /* Removing the unity-seen flag to the wrapped bamf application, on remove
-   * request we make sure that if the bamf application is re-opened while
-   * the removal process is still ongoing, the application will be shown
-   * on the launcher. Disconnecting from signals and nullifying the _bamf_app
-   * we make sure that this icon won't be reused (no duplicated icon). */
-  _gsignals.Disconnect(_bamf_app);
-  g_object_set_qdata(G_OBJECT(_bamf_app.RawPtr()),
-                     g_quark_from_static_string("unity-seen"), nullptr);
-  _bamf_app = nullptr;
-
+   * request we make sure that if the application is re-opened while the
+   * removal process is still ongoing, the application will be shown on the
+   * launcher. Disconnecting from signals and nullifying the app we make sure
+   * that this icon won't be reused (no duplicated icon). */
+  app_->seen = false;
+  app_.reset(); // Have to be very careful here as we are breaking a class invariant (that we have an app)
   SimpleLauncherIcon::Remove();
 }
 
 bool ApplicationLauncherIcon::IsSticky() const
 {
-  if (!BAMF_IS_VIEW(_bamf_app.RawPtr()))
-    return false;
-  else
-    return bamf_view_is_sticky(BAMF_VIEW(_bamf_app.RawPtr()));
+  if (app_)
+    return app_->sticky();
+  return false;
 }
 
 bool ApplicationLauncherIcon::IsActive() const
@@ -227,25 +196,30 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
   WindowManager& wm = WindowManager::Default();
-  bool scaleWasActive = wm.IsScaleActive();
 
-  bool active = IsActive();
-  bool user_visible = IsRunning();
-
-  if (arg.target && OwnsWindow(arg.target))
+  // This is a little awkward as the target is only set from the switcher.
+  if (arg.target)
   {
+    // thumper: should we Raise too? should the WM raise?
     wm.Activate(arg.target);
     return;
   }
 
+  bool scaleWasActive = wm.IsScaleActive();
+  if (scaleWasActive)
+  {
+    wm.TerminateScale();
+  }
+
+  bool active = IsActive();
+  bool user_visible = IsRunning();
   /* We should check each child to see if there is
    * an unmapped (!= minimized) window around and
    * if so force "Focus" behaviour */
 
   if (arg.source != ActionArg::SWITCHER)
   {
-    auto bamf_view = glib::object_cast<BamfView>(_bamf_app);
-    user_visible = bamf_view_is_user_visible(bamf_view);
+    user_visible = app_->visible();
 
     if (active)
     {
@@ -254,21 +228,10 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       bool any_on_top = false;
       bool any_on_monitor = (arg.monitor < 0);
       int active_monitor = arg.monitor;
-      GList* children = bamf_view_get_children(bamf_view);
 
-      for (GList* l = children; l; l = l->next)
+      for (auto& window : app_->GetWindows())
       {
-        auto view = static_cast<BamfView*>(l->data);
-        auto win = static_cast<BamfWindow*>(l->data);
-        Window xid;
-
-        if (BAMF_IS_WINDOW(l->data))
-          xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
-        else if (BAMF_IS_TAB(l->data))
-          xid = bamf_tab_get_xid(static_cast<BamfTab*>(l->data));
-        else
-          continue;
-
+        Window xid = window->window_id();
 
         if (!any_visible && wm.IsWindowOnCurrentDesktop(xid))
         {
@@ -285,19 +248,17 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
           any_on_top = true;
         }
 
-        if (!any_on_monitor && bamf_window_get_monitor(win) == arg.monitor &&
+        if (!any_on_monitor && window->monitor() == arg.monitor &&
             wm.IsWindowMapped(xid) && wm.IsWindowVisible(xid))
         {
           any_on_monitor = true;
         }
 
-        if (bamf_view_is_active(view))
+        if (window->active())
         {
-          active_monitor = bamf_window_get_monitor(win);
+          active_monitor = window->monitor();
         }
       }
-
-      g_list_free(children);
 
       if (!any_visible || !any_mapped || !any_on_top)
         active = false;
@@ -320,13 +281,8 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     if (GetQuirk(Quirk::STARTING))
       return;
 
-    if (scaleWasActive)
-    {
-      wm.TerminateScale();
-    }
-
     SetQuirk(Quirk::STARTING, true);
-    OpenInstanceLauncherIcon(ActionArg());
+    OpenInstanceLauncherIcon();
   }
   else // app is running
   {
@@ -334,7 +290,6 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     {
       if (scaleWasActive) // #5 above
       {
-        wm.TerminateScale();
         Focus(arg);
       }
       else // #2 above
@@ -349,7 +304,6 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     {
       if (scaleWasActive) // #4 above
       {
-        wm.TerminateScale();
         Focus(arg);
         if (arg.source != ActionArg::SWITCHER)
           Spread(true, 0, false);
@@ -362,56 +316,39 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
   }
 }
 
-std::vector<Window> ApplicationLauncherIcon::GetWindows(WindowFilterMask filter, int monitor)
+WindowList ApplicationLauncherIcon::GetWindows(WindowFilterMask filter, int monitor)
 {
   WindowManager& wm = WindowManager::Default();
-  std::vector<Window> results;
-
-  if (!BAMF_IS_VIEW(_bamf_app.RawPtr()))
-  {
-    if (_bamf_app)
-    {
-      LOG_WARNING(logger) << "Not a view but not null.";
-    }
-    return results;
-  }
+  WindowList results;
 
   monitor = (filter & WindowFilter::ON_ALL_MONITORS) ? -1 : monitor;
   bool mapped = (filter & WindowFilter::MAPPED);
   bool user_visible = (filter & WindowFilter::USER_VISIBLE);
   bool current_desktop = (filter & WindowFilter::ON_CURRENT_DESKTOP);
 
-  GList* children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
-  for (GList* l = children; l; l = l->next)
+  for (auto& window : app_->GetWindows())
   {
-    if (!BAMF_IS_WINDOW(l->data))
-      continue;
-
-    auto window = static_cast<BamfWindow*>(l->data);
-    auto view = static_cast<BamfView*>(l->data);
-
-    if ((monitor >= 0 && bamf_window_get_monitor(window) == monitor) || monitor < 0)
+    if ((monitor >= 0 && window->monitor() == monitor) || monitor < 0)
     {
-      if ((user_visible && bamf_view_is_user_visible(view)) || !user_visible)
+      if ((user_visible && window->visible()) || !user_visible)
       {
-        guint32 xid = bamf_window_get_xid(window);
+        Window xid = window->window_id();
 
         if ((mapped && wm.IsWindowMapped(xid)) || !mapped)
         {
           if ((current_desktop && wm.IsWindowOnCurrentDesktop(xid)) || !current_desktop)
           {
-            results.push_back(xid);
+            results.push_back(window);
           }
         }
       }
     }
   }
 
-  g_list_free(children);
   return results;
 }
 
-std::vector<Window> ApplicationLauncherIcon::Windows()
+WindowList ApplicationLauncherIcon::Windows()
 {
   return GetWindows(WindowFilter::MAPPED|WindowFilter::ON_ALL_MONITORS);
 }
@@ -424,7 +361,12 @@ std::vector<Window> ApplicationLauncherIcon::WindowsOnViewport()
   filter |= WindowFilter::ON_CURRENT_DESKTOP;
   filter |= WindowFilter::ON_ALL_MONITORS;
 
-  return GetWindows(filter);
+  std::vector<Window> windows;
+  for (auto& window : GetWindows(filter))
+  {
+    windows.push_back(window->window_id());
+  }
+  return windows;
 }
 
 std::vector<Window> ApplicationLauncherIcon::WindowsForMonitor(int monitor)
@@ -434,35 +376,17 @@ std::vector<Window> ApplicationLauncherIcon::WindowsForMonitor(int monitor)
   filter |= WindowFilter::USER_VISIBLE;
   filter |= WindowFilter::ON_CURRENT_DESKTOP;
 
-  return GetWindows(filter, monitor);
-}
-
-std::string ApplicationLauncherIcon::NameForWindow(Window window)
-{
-  std::string result;
-  GList* children, *l;
-
-  children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
-  for (l = children; l; l = l->next)
+  std::vector<Window> windows;
+  for (auto& window : GetWindows(filter, monitor))
   {
-    if (!BAMF_IS_WINDOW(l->data))
-      continue;
-
-    if (bamf_window_get_xid(static_cast<BamfWindow*>(l->data)) == window)
-    {
-      auto view = static_cast<BamfView*>(l->data);
-      result = glib::String(bamf_view_get_name(view)).Str();
-      break;
-    }
+    windows.push_back(window->window_id());
   }
-
-  g_list_free(children);
-  return result;
+  return windows;
 }
 
 void ApplicationLauncherIcon::OnWindowMinimized(guint32 xid)
 {
-  if (!OwnsWindow(xid))
+  if (!app_->OwnsWindow(xid))
     return;
 
   Present(0.5f, 600);
@@ -471,7 +395,7 @@ void ApplicationLauncherIcon::OnWindowMinimized(guint32 xid)
 
 void ApplicationLauncherIcon::OnWindowMoved(guint32 moved_win)
 {
-  if (!OwnsWindow(moved_win))
+  if (!app_->OwnsWindow(moved_win))
     return;
 
   _source_manager.AddTimeout(250, [&] {
@@ -484,17 +408,9 @@ void ApplicationLauncherIcon::OnWindowMoved(guint32 moved_win)
 
 void ApplicationLauncherIcon::UpdateDesktopFile()
 {
-  if (!BAMF_IS_APPLICATION(_bamf_app.RawPtr()))
-  {
-    if (_bamf_app)
-    {
-      LOG_WARNING(logger) << "Not an app but not null.";
-    }
-    return;
-  }
-  const char* filename = bamf_application_get_desktop_file(_bamf_app);
+  std::string filename = app_->desktop_file();
 
-  if (filename != nullptr && filename[0] != '\0' && _desktop_file != filename)
+  if (!filename.empty() && _desktop_file != filename)
   {
     _desktop_file = filename;
 
@@ -534,12 +450,6 @@ std::string ApplicationLauncherIcon::DesktopFile()
   return _desktop_file;
 }
 
-std::string ApplicationLauncherIcon::BamfName() const
-{
-  glib::String name(bamf_view_get_name(BAMF_VIEW(_bamf_app.RawPtr())));
-  return name.Str();
-}
-
 void ApplicationLauncherIcon::AddProperties(GVariantBuilder* builder)
 {
   SimpleLauncherIcon::AddProperties(builder);
@@ -547,44 +457,18 @@ void ApplicationLauncherIcon::AddProperties(GVariantBuilder* builder)
   GVariantBuilder xids_builder;
   g_variant_builder_init(&xids_builder, G_VARIANT_TYPE ("au"));
 
-  for (auto xid : GetWindows())
-    g_variant_builder_add(&xids_builder, "u", xid);
+  for (auto& window : GetWindows())
+    g_variant_builder_add(&xids_builder, "u", window->window_id());
 
   variant::BuilderWrapper(builder)
     .add("desktop_file", DesktopFile())
     .add("desktop_id", GetDesktopID())
-    .add("application_id", GPOINTER_TO_UINT(_bamf_app.RawPtr()))
     .add("xids", g_variant_builder_end(&xids_builder))
     .add("sticky", IsSticky());
 }
 
-bool ApplicationLauncherIcon::OwnsWindow(Window xid) const
-{
-  GList* children, *l;
-  bool owns = false;
 
-  if (!xid || !_bamf_app)
-    return owns;
-
-  children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
-
-  for (l = children; l; l = l->next)
-  {
-    if (!BAMF_IS_WINDOW(l->data))
-      continue;
-
-    if (bamf_window_get_xid(static_cast<BamfWindow*>(l->data)) == xid)
-    {
-      owns = true;
-      break;
-    }
-  }
-
-  g_list_free(children);
-  return owns;
-}
-
-void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> uris)
+void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& uris)
 {
   glib::Error error;
   glib::Object<GDesktopAppInfo> desktopInfo(g_desktop_app_info_new_from_filename(DesktopFile().c_str()));
@@ -619,133 +503,47 @@ void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> uris)
   }
 
   if (error)
-    g_warning("%s\n", error.Message().c_str());
+  {
+    LOG_WARN(logger) << error;
+  }
 
   UpdateQuirkTime(Quirk::STARTING);
 }
 
-void ApplicationLauncherIcon::OpenInstanceLauncherIcon(ActionArg arg)
+void ApplicationLauncherIcon::OpenInstanceLauncherIcon()
 {
   std::set<std::string> empty;
   OpenInstanceWithUris(empty);
 }
 
-std::vector<Window> ApplicationLauncherIcon::GetFocusableWindows(ActionArg arg, bool &any_visible, bool &any_urgent)
-{
-  bool any_user_visible = false;
-  WindowManager& wm = WindowManager::Default();
-
-  std::vector<Window> windows;
-  GList* children;
-
-  BamfView *focusable_child = BAMF_VIEW(bamf_application_get_focusable_child(_bamf_app.RawPtr()));
-
-  if (focusable_child != NULL)
-  {
-    Window xid = 0;
-
-    if (BAMF_IS_WINDOW(focusable_child))
-    {
-      xid = bamf_window_get_xid(BAMF_WINDOW(focusable_child));
-    }
-    else if (BAMF_IS_TAB(focusable_child))
-    {
-      BamfTab *focusable_tab = BAMF_TAB(focusable_child);
-      xid = bamf_tab_get_xid(focusable_tab);
-      bamf_tab_raise(focusable_tab);
-    }
-
-    if (xid)
-    {
-      windows.push_back(xid);
-      return windows;
-    }
-  }
-  else
-  {
-    if (g_strcmp0(bamf_application_get_application_type(_bamf_app.RawPtr()), "webapp") == 0)
-    {
-      OpenInstanceLauncherIcon(arg);
-
-      return windows;
-    }
-  }
-
-  children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
-
-  /* get the list of windows */
-  for (GList* l = children; l; l = l->next)
-  {
-    if (!BAMF_IS_WINDOW(l->data))
-      continue;
-
-    auto view = static_cast<BamfView*>(l->data);
-
-    Window xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
-    bool urgent = bamf_view_is_urgent(view);
-    bool user_visible = bamf_view_is_user_visible(view);
-
-    if (any_urgent)
-    {
-      if (urgent)
-        windows.push_back(xid);
-    }
-    else if (any_user_visible && !urgent)
-    {
-      if (user_visible)
-        windows.push_back(xid);
-    }
-    else
-    {
-      if (urgent || user_visible)
-      {
-        windows.clear();
-        any_visible = false;
-        any_urgent = (any_urgent || urgent);
-        any_user_visible = (any_user_visible || user_visible);
-      }
-
-      windows.push_back(xid);
-    }
-
-    if (wm.IsWindowOnCurrentDesktop(xid) && wm.IsWindowVisible(xid))
-    {
-      any_visible = true;
-    }
-  }
-
-  g_list_free(children);
-
-  return windows;
-
-}
 
 void ApplicationLauncherIcon::Focus(ActionArg arg)
 {
-  bool any_visible = false, any_urgent = false;
-  std::vector<Window> windows = GetFocusableWindows(arg, any_visible, any_urgent);
-
-  auto visibility = WindowManager::FocusVisibility::OnlyVisible;
-
-  if (arg.source != ActionArg::SWITCHER)
+  ApplicationWindowPtr window = app_->GetFocusableWindow();
+  if (window)
   {
-    if (any_visible)
-    {
-      visibility = WindowManager::FocusVisibility::ForceUnminimizeInvisible;
-    }
-    else
-    {
-      visibility = WindowManager::FocusVisibility::ForceUnminimizeOnCurrentDesktop;
-    }
+    // If we have a window, try to focus it.
+    if (window->Focus())
+      return;
+  }
+  else if (app_->type() == "webapp")
+  {
+    // Webapps are again special.
+    OpenInstanceLauncherIcon();
+    return;
   }
 
-  bool only_top_win = !any_urgent;
-  WindowManager::Default().FocusWindowGroup(windows, visibility, arg.monitor, only_top_win);
+  bool show_only_visible = arg.source == ActionArg::SWITCHER;
+  app_->Focus(show_only_visible, arg.monitor);
 }
 
 bool ApplicationLauncherIcon::Spread(bool current_desktop, int state, bool force)
 {
-  auto windows = GetWindows(current_desktop ? WindowFilter::ON_CURRENT_DESKTOP : 0);
+  std::vector<Window> windows;
+  for (auto& window : GetWindows(current_desktop ? WindowFilter::ON_CURRENT_DESKTOP : 0))
+  {
+    windows.push_back(window->window_id());
+  }
   return WindowManager::Default().ScaleWindowGroup(windows, state, force);
 }
 
@@ -754,47 +552,24 @@ void ApplicationLauncherIcon::EnsureWindowState()
   std::vector<bool> monitors;
   monitors.resize(max_num_monitors);
 
-  if (BAMF_IS_VIEW(_bamf_app.RawPtr()))
+  for (auto& window: app_->GetWindows())
   {
-    GList* children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
-    for (GList* l = children; l; l = l->next)
+    int monitor = window->monitor();
+    Window window_id = window->window_id();
+
+    if (WindowManager::Default().IsWindowOnCurrentDesktop(window_id))
     {
-      Window xid;
-
-      if (BAMF_IS_TAB(l->data))
+      // If monitor is -1 (or negative), show on all monitors.
+      if (monitor < 0)
       {
-        /* BamfTab does not support the monitor interface...so a bit of a nasty hack here. */
-        xid = bamf_tab_get_xid (static_cast<BamfTab*>(l->data));
-
-        if (WindowManager::Default().IsWindowOnCurrentDesktop(xid) == false)
-          continue;
-
         for (int j = 0; j < max_num_monitors; j++)
           monitors[j] = true;
-
-        continue;
       }
-
-      if (!BAMF_IS_WINDOW(l->data))
-        continue;
-
-      auto window = static_cast<BamfWindow*>(l->data);
-      xid = bamf_window_get_xid(window);
-      int monitor = bamf_window_get_monitor(window);
-
-      if (monitor >= 0 && WindowManager::Default().IsWindowOnCurrentDesktop(xid))
+      else
         monitors[monitor] = true;
     }
+  }
 
-    g_list_free(children);
-  }
-  else
-  {
-    if (_bamf_app)
-    {
-      LOG_WARNING(logger) << "Not a view but not null.";
-    }
-  }
   for (int i = 0; i < max_num_monitors; i++)
     SetWindowVisibleOnMonitor(monitors[i], i);
 
@@ -873,27 +648,16 @@ void ApplicationLauncherIcon::UpdateBackgroundColor()
 
 void ApplicationLauncherIcon::UpdateMenus()
 {
-  GList* children, *l;
-
-  children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
-  for (l = children; l; l = l->next)
+  for (auto& app_menu : app_->GetRemoteMenus())
   {
-    if (!BAMF_IS_INDICATOR(l->data))
-      continue;
-
-    auto indicator = static_cast<BamfIndicator*>(l->data);
-    std::string path = bamf_indicator_get_dbus_menu_path(indicator);
-
     // we already have this
-    if (_menu_clients.find(path) != _menu_clients.end())
+    if (_menu_clients.find(app_menu.path) != _menu_clients.end())
       continue;
 
-    std::string address = bamf_indicator_get_remote_address(indicator);
-    glib::Object<DbusmenuClient> client(dbusmenu_client_new(address.c_str(), path.c_str()));
-    _menu_clients[path] = client;
+    glib::Object<DbusmenuClient> client(dbusmenu_client_new(app_menu.remote_address.c_str(),
+                                                            app_menu.path.c_str()));
+    _menu_clients[app_menu.path] = client;
   }
-
-  g_list_free(children);
 
   // add dynamic quicklist
   if (_menuclient_dynamic_quicklist && _menuclient_dynamic_quicklist.IsType(DBUSMENU_TYPE_CLIENT))
@@ -918,26 +682,7 @@ void ApplicationLauncherIcon::UpdateMenus()
 
 void ApplicationLauncherIcon::Quit()
 {
-  GList* children, *l;
-
-  children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
-
-  for (l = children; l; l = l->next)
-  {
-    if (BAMF_IS_TAB (l->data))
-    {
-      // As Unity can not close a tab inside the provider application, we have to ask Bamf to delegate for us.
-      bamf_tab_close (BAMF_TAB (l->data));
-      continue;
-    }
-    if (!BAMF_IS_WINDOW(l->data))
-      continue;
-
-    Window xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
-    WindowManager::Default().Close(xid);
-  }
-
-  g_list_free(children);
+  app_->Quit();
 }
 
 void ApplicationLauncherIcon::AboutToRemove()
@@ -952,8 +697,7 @@ void ApplicationLauncherIcon::Stick(bool save)
   if (IsSticky())
     return;
 
-  bamf_view_set_sticky(BAMF_VIEW(_bamf_app.RawPtr()), true);
-
+  app_->sticky = true;
   SimpleLauncherIcon::Stick(save);
 }
 
@@ -964,12 +708,8 @@ void ApplicationLauncherIcon::UnStick()
   if (!IsSticky())
     return;
 
-  BamfView* view = BAMF_VIEW(_bamf_app.RawPtr());
-  bamf_view_set_sticky(view, false);
-
-  SetQuirk(Quirk::VISIBLE, bamf_view_is_user_visible(view));
-
-  if (bamf_view_is_closed(view))
+  app_->sticky = false;
+  if (!app_->running())
     Remove();
 }
 
@@ -1110,7 +850,7 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
   }
   else
   {
-    glib::String app_name(g_markup_escape_text(BamfName().c_str(), -1));
+    glib::String app_name(g_markup_escape_text(app_->title().c_str(), -1));
     std::ostringstream bold_app_name;
     bold_app_name << "<b>" << app_name << "</b>";
 
@@ -1187,36 +927,25 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
 
 void ApplicationLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> center)
 {
-  if (!BAMF_IS_VIEW(_bamf_app.RawPtr()))
-  {
-    if (_bamf_app)
-    {
-      LOG_WARNING(logger) << "Not a view but not null.";
-    }
+  // We don't update icon locations for webapps
+  if (app_->type() == "webapp")
     return;
-  }
 
   nux::Geometry geo;
   geo.width = 48;
   geo.height = 48;
 
-  GList* children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
-
-  for (GList* l = children; l; l = l->next)
+  for (auto& window : app_->GetWindows())
   {
-    if (!BAMF_IS_WINDOW(l->data))
-      continue;
-
-    Window xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
-    int monitor = bamf_window_get_monitor(static_cast<BamfWindow*>(l->data));
+    Window xid = window->window_id();
+    int monitor = window->monitor();
     monitor = std::max<int>(0, std::min<int>(center.size() - 1, monitor));
 
+    // TODO: replace 24 with icon_size / 2;
     geo.x = center[monitor].x - 24;
     geo.y = center[monitor].y - 24;
     WindowManager::Default().SetWindowIconGeometry(xid, geo);
   }
-
-  g_list_free(children);
 }
 
 void ApplicationLauncherIcon::OnCenterStabilized(std::vector<nux::Point3> center)
@@ -1348,22 +1077,17 @@ bool ApplicationLauncherIcon::ShowInSwitcher(bool current)
 
 unsigned long long ApplicationLauncherIcon::SwitcherPriority()
 {
-  GList* children, *l;
   unsigned long long result = 0;
+  // Webapps always go at the back.
+  if (app_->type() == "webapp")
+    return result;
 
-  children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
-
-  /* get the list of windows */
-  for (l = children; l; l = l->next)
+  for (auto& window : app_->GetWindows())
   {
-    if (!BAMF_IS_WINDOW(l->data))
-      continue;
-
-    Window xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
+    Window xid = window->window_id();
     result = std::max(result, WindowManager::Default().GetWindowActiveNumber(xid));
   }
 
-  g_list_free(children);
   return result;
 }
 
@@ -1378,15 +1102,10 @@ nux::Color ApplicationLauncherIcon::BackgroundColor() const
 const std::set<std::string> ApplicationLauncherIcon::GetSupportedTypes()
 {
   std::set<std::string> supported_types;
-  std::unique_ptr<gchar*[], void(*)(gchar**)> mimes(bamf_application_get_supported_mime_types(_bamf_app),
-                                                   g_strfreev);
 
-  if (!mimes)
-    return supported_types;
-
-  for (int i = 0; mimes[i]; i++)
+  for (auto& type : app_->GetSupportedMimeTypes())
   {
-    unity::glib::String super_type(g_content_type_from_mime_type(mimes[i]));
+    unity::glib::String super_type(g_content_type_from_mime_type(type.c_str()));
     supported_types.insert(super_type.Str());
   }
 

@@ -56,10 +56,24 @@ public:
   // It is possible for this to be null, especially in situations where
   // the application is starting up or shutting down.
   virtual ApplicationPtr application() const = 0;
+  // Returns true if we made a best effort at focusing the window, or
+  // false if this was not possible for some reason (like a missing window_id).
+  virtual bool Focus() const = 0;
+  // Closes the window, or the browser tab if a webapp.
+  virtual void Quit() const = 0;
 
   nux::ROProperty<bool> visible;
   nux::ROProperty<bool> active;
   nux::ROProperty<bool> urgent;
+};
+
+// Used for dbus menus, and nicer than a std::pair of strings.
+struct ApplicationMenu
+{
+  ApplicationMenu(std::string const& path, std::string const& address)
+    : path(path), remote_address(address) {}
+  std::string path;
+  std::string remote_address;
 };
 
 
@@ -74,6 +88,15 @@ public:
   virtual std::string type() const = 0;
 
   virtual WindowList GetWindows() const = 0;
+  virtual bool OwnsWindow(Window window_id) const = 0;
+
+  virtual std::vector<std::string> GetSupportedMimeTypes() const = 0;
+  virtual std::vector<ApplicationMenu> GetRemoteMenus() const = 0;
+
+  virtual ApplicationWindowPtr GetFocusableWindow() const = 0;
+  virtual void Focus(bool show_on_visible, int monitor) const = 0;
+  // Calls quit on all the Windows for this application.
+  virtual void Quit() const = 0;
 
   // Considering using a property for the "unity-seen" quark
   nux::RWProperty<bool> seen;

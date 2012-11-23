@@ -64,6 +64,7 @@ public:
   virtual std::string icon() const;
   virtual std::string type() const; // 'window' or 'tab'
 
+  virtual bool Focus() const;
 
 private: // Property getters and setters
   void HookUpEvents();
@@ -82,6 +83,7 @@ public:
   virtual Window window_id() const;
   virtual int monitor() const;
   virtual ApplicationPtr application() const;
+  virtual void Quit() const;
 
 private:
   glib::Object<BamfWindow> bamf_window_;
@@ -96,6 +98,8 @@ public:
   virtual Window window_id() const;
   virtual int monitor() const;
   virtual ApplicationPtr application() const;
+  virtual bool Focus() const;
+  virtual void Quit() const;
 
 private:
   glib::Object<BamfTab> bamf_tab_;
@@ -117,6 +121,15 @@ public:
   virtual std::string type() const;
 
   virtual WindowList GetWindows() const;
+  virtual bool OwnsWindow(Window window_id) const;
+
+  virtual std::vector<std::string> GetSupportedMimeTypes() const;
+  virtual std::vector<ApplicationMenu> GetRemoteMenus() const;
+
+  virtual ApplicationWindowPtr GetFocusableWindow() const;
+  virtual void Focus(bool show_on_visible, int monitor) const;
+
+  virtual void Quit() const;
 
 private: // Property getters and setters
   void HookUpEvents();
