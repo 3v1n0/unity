@@ -64,14 +64,13 @@ private:
   {
     SetupBackground();
     controller.reset(new launcher::Controller());
-    UBusManager().SendMessage(UBUS_BACKGROUND_COLOR_CHANGED, g_variant_new ("(dddd)", 95/255.0f, 18/255.0f, 45/255.0f, 1.0f));
+    controller->launcher().GetParent()->EnableInputWindow(false);
 
     UScreen* uscreen = UScreen::GetDefault();
     std::vector<nux::Geometry> fake_monitor({nux::Geometry(0, 0, win_size.width, win_size.height)});
     uscreen->changed.emit(0, fake_monitor);
     uscreen->changed.clear();
     controller->launcher().Resize(nux::Point(), win_size.height);
-    controller->launcher().GetParent()->EnableInputWindow(false);
 
     wt->window_configuration.connect([this] (int x, int y, int w, int h) {
       controller->launcher().Resize(nux::Point(), h);
