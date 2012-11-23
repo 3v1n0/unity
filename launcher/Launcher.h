@@ -122,7 +122,7 @@ public:
   int GetMouseX() const;
   int GetMouseY() const;
 
-  void Resize();
+  void Resize(nux::Point const& offset, int height);
 
   int GetDragDelta() const;
   void SetHover(bool hovered);
@@ -192,6 +192,7 @@ private:
 
   void ConfigureBarrier();
 
+  void OnMonitorChanged(int monitor);
   void OnOptionsChanged(Options::Ptr options);
   void OnOptionChanged();
   void UpdateOptions(Options::Ptr options);

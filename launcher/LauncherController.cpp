@@ -200,15 +200,19 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
 
     int monitor = (num_launchers == 1) ? primary : i;
 
-#ifdef USE_X11
     if (launchers[i]->monitor() != monitor)
     {
-      edge_barriers_.Unsubscribe(launchers[i].GetPointer(), launchers[i]->monitor);
-    }
-#endif
+      launchers[i]->monitor(monitor);
 
-    launchers[i]->monitor(monitor);
-    launchers[i]->Resize();
+#ifdef USE_X11
+      edge_barriers_.Unsubscribe(launchers[i].GetPointer(), launchers[i]->monitor);
+#endif
+    }
+    else
+    {
+      launchers[i]->monitor.changed(monitor);
+    }
+
 #ifdef USE_X11
     edge_barriers_.Subscribe(launchers[i].GetPointer(), launchers[i]->monitor);
 #endif
@@ -260,7 +264,6 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
   nux::BaseWindow* launcher_window = new nux::BaseWindow(TEXT("LauncherWindow"));
 
   Launcher* launcher = new Launcher(launcher_window, nux::ObjectPtr<DNDCollectionWindow>(new DNDCollectionWindow));
-  launcher->monitor = monitor;
   launcher->options = parent_->options();
   launcher->SetModel(model_);
 

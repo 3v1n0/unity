@@ -219,6 +219,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect", 0, 0, cb);
 
   options.changed.connect(sigc::mem_fun(this, &Launcher::OnOptionsChanged));
+  monitor.changed.connect(sigc::mem_fun(this, &Launcher::OnMonitorChanged));
 }
 
 /* Introspection */
@@ -1444,6 +1445,16 @@ void Launcher::OnOptionChanged()
   UpdateOptions(options());
 }
 
+void Launcher::OnMonitorChanged(int new_monitor)
+{
+  UScreen* uscreen = UScreen::GetDefault();
+  auto monitor_geo = uscreen->GetMonitorGeometry(new_monitor);
+  unity::panel::Style &panel_style = panel::Style::Instance();
+
+  Resize(nux::Point(monitor_geo.x, monitor_geo.y + panel_style.panel_height),
+         monitor_geo.height - panel_style.panel_height);
+}
+
 void Launcher::UpdateOptions(Options::Ptr options)
 {
   SetIconSize(options->tile_size, options->icon_size);
@@ -1628,24 +1639,21 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
 
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 
-  Resize();
+  nux::Geometry const& parent_geo = _parent->GetGeometry();
+  Resize(nux::Point(parent_geo.x, parent_geo.y), parent_geo.height);
 }
 
 int Launcher::GetIconSize() const
 {
-    return _icon_size;
+  return _icon_size;
 }
 
-void Launcher::Resize()
+void Launcher::Resize(nux::Point const& offset, int height)
 {
-  UScreen* uscreen = UScreen::GetDefault();
-  auto geo = uscreen->GetMonitorGeometry(monitor());
-  unity::panel::Style &panel_style = panel::Style::Instance();
-  int width = _icon_size + ICON_PADDING*2 + RIGHT_LINE_WIDTH - 2;
-  nux::Geometry new_geometry(geo.x, geo.y + panel_style.panel_height, width, geo.height - panel_style.panel_height);
-  SetMaximumHeight(new_geometry.height);
-  _parent->SetGeometry(new_geometry);
-  SetGeometry(nux::Geometry(0, 0, new_geometry.width, new_geometry.height));
+  unsigned width = _icon_size + ICON_PADDING * 2 + RIGHT_LINE_WIDTH - 2;
+  _parent->SetGeometry(nux::Geometry(offset.x, offset.y, width, height));
+  SetGeometry(nux::Geometry(0, 0, width, height));
+  SetMaximumHeight(height);
 
   ConfigureBarrier();
 }
