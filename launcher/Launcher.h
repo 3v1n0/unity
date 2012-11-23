@@ -394,7 +394,6 @@ private:
 
   struct timespec  _times[TIME_LAST];
 
-  nux::Color _background_color;
   BaseTexturePtr launcher_sheen_;
   BaseTexturePtr launcher_pressure_effect_;
 

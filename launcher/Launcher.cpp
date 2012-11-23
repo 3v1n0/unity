@@ -147,7 +147,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _last_reveal_progress(0.0f)
   , _collection_window(collection_window)
   , _selection_atom(0)
-  , _background_color(nux::color::DimGray)
 {
   m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
@@ -201,7 +200,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   ubus_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &Launcher::OnOverlayShown));
   ubus_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &Launcher::OnOverlayHidden));
-  ubus_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Launcher::OnBGColorChanged));
   ubus_.RegisterInterest(UBUS_LAUNCHER_LOCK_HIDE, sigc::mem_fun(this, &Launcher::OnLockHideChanged));
 
   // request the latest colour from bghash
@@ -989,7 +987,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   struct timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
 
-  nux::Color colorify = FullySaturateColor(_background_color);
+  nux::Color const& colorify = FullySaturateColor(options()->background_color);
 
   float hover_progress = GetHoverProgress(current);
   float folded_z_distance = _folded_z_distance * (1.0f - hover_progress);
@@ -1171,17 +1169,6 @@ void Launcher::ShowShortcuts(bool show)
   _shortcuts_shown = show;
   _hide_machine.SetQuirk(LauncherHideMachine::SHORTCUT_KEYS_VISIBLE, show);
   EnsureAnimation();
-}
-
-void Launcher::OnBGColorChanged(GVariant *data)
-{
-  ui::IconRenderer::DestroyShortcutTextures();
-
-  double red = 0.0f, green = 0.0f, blue = 0.0f, alpha = 0.0f;
-
-  g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-  _background_color = nux::Color(red, green, blue, alpha);
-  QueueDraw();
 }
 
 void Launcher::OnLockHideChanged(GVariant *data)
@@ -1784,7 +1771,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   
   if (Settings::Instance().GetLowGfxMode())
   {
-    clear_colour = _background_color;
+    clear_colour = options()->background_color;
     clear_colour.alpha = 1.0f;
   }
 
@@ -1858,7 +1845,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 					    blur_texture,
 					    texxform_blur_bg,
 					    nux::color::White,
-					    _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
+					    options()->background_color, nux::LAYER_BLEND_MODE_OVERLAY,
 					    true, ROP);
 	else
 	  gPainter.PushDrawTextureLayer(GfxContext, base,
@@ -1872,7 +1859,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 					    blur_texture,
 					    texxform_blur_bg,
 					    nux::color::White,
-					    _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
+					    options()->background_color, nux::LAYER_BLEND_MODE_OVERLAY,
 					    true, ROP);
 #endif
 	GfxContext.PopClippingRectangle();
@@ -1891,7 +1878,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       // apply the bg colour
 #ifndef NUX_OPENGLES_20
       if (GfxContext.UsingGLSLCodePath() == false)
-	gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
+	gPainter.Paint2DQuadColor(GfxContext, bkg_box, options()->background_color);
 #endif
 
       // apply the shine
@@ -1911,7 +1898,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     else
     {
-      nux::Color color = _background_color;
+      nux::Color color = options()->background_color;
       color.alpha = options()->background_alpha;
       gPainter.Paint2DQuadColor(GfxContext, bkg_box, color);
     }
