@@ -78,6 +78,7 @@ private:
   void UpdateStepY();
 
   void SetupAnimation(int start, int stop, int milliseconds);
+  void StopAnimation();
 
   void StartScrollAnimation(ScrollDir dir, int stop);
   void OnScroll(ScrollDir dir, int mouse_dy);
@@ -97,6 +98,7 @@ private:
   bool thumb_above_slider_;
   int connector_height_;
   int mouse_down_offset_;
+  int delta_update_;
 };
 
 } // namespace dash
