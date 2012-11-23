@@ -23,6 +23,7 @@
 
 // Constant used to determine if we should show a u1 payment preview
 #define MUSIC_PAYMENT_TITLE "U1-album-purchase-preview"
+#define ERROR_PREVIEW_TITLE "Error-preview"
 
 #include <map>
 #include <memory>
@@ -97,7 +98,7 @@ public:
     unity::glib::Variant value;
 
     InfoHint() {};
-    InfoHint(const gchar* id_, const gchar* display_name_, 
+    InfoHint(const gchar* id_, const gchar* display_name_,
              const gchar* icon_hint_, GVariant* value_)
       : id(id_ != NULL ? id_ : "")
       , display_name(display_name_ != NULL ? display_name_ : "")

@@ -27,10 +27,12 @@
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 #include <UnityCore/MusicPaymentPreview.h>
+#include <UnityCore/ErrorPreview.h>
 #include "ActionButton.h"
 
 #include "GenericPreview.h"
 #include "MusicPaymentPreview.h"
+#include "ErrorPreview.h"
 #include "ApplicationPreview.h"
 #include "MusicPreview.h"
 #include "MoviePreview.h"
@@ -61,6 +63,10 @@ previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
     if (strcmp(MUSIC_PAYMENT_TITLE, preview_title) == 0)
     {
         return Preview::Ptr(new MusicPaymentPreview(model));
+    }
+    else if (strcmp(ERROR_PREVIEW_TITLE, preview_title) == 0)
+    {
+        return Preview::Ptr(new ErrorPreview(model));
     }
     return Preview::Ptr(new GenericPreview(model));
   }

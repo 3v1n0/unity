@@ -35,7 +35,7 @@ namespace previews
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.previews.MusicPaymentPreview");
+nux::logging::Logger logger("unity.dash.previews.PaymentPreview");
 
 }
 

@@ -45,43 +45,51 @@ set (PREVIEWS_SOURCES
      Track.cpp
      Tracks.cpp
      MusicPaymentPreview.cpp
+     ErrorPreview.cpp
      )
 
 add_library (previews-lib STATIC ${PREVIEWS_SOURCES})
 add_dependencies (previews-lib unity-core-${UNITY_API_VERSION} unity-shared)
 target_link_libraries (previews-lib unity-shared)
 
-# 
+#
 # Application Standalone variant
 #
 add_executable (app_previews StandaloneApplicationPreview.cpp)
 add_dependencies (app_previews previews-lib)
 target_link_libraries (app_previews previews-lib unity-shared)
 
-# 
+#
 # Music Standalone variant
 #
 add_executable (music_previews StandaloneMusicPreview.cpp)
 add_dependencies (music_previews previews-lib)
 target_link_libraries (music_previews previews-lib unity-shared)
 
-# 
+#
 # Social Standalone variant
 #
 add_executable (social_previews StandaloneSocialPreview.cpp)
 add_dependencies (social_previews previews-lib)
 target_link_libraries (social_previews previews-lib unity-shared)
 
-# 
+#
 # Movie Standalone variant
 #
 add_executable (movie_previews StandaloneMoviePreview.cpp)
 add_dependencies (movie_previews previews-lib)
 target_link_libraries (movie_previews previews-lib unity-shared)
 
-# 
+#
 # Payment Standalone variant
 #
 add_executable (payment_previews StandaloneMusicPaymentPreview.cpp)
+add_dependencies (payment_previews previews-lib)
+target_link_libraries (payment_previews previews-lib unity-shared)
+
+#
+# Error Standalone variant
+#
+add_executable (error_previews StandaloneErrorPreview.cpp)
 add_dependencies (payment_previews previews-lib)
 target_link_libraries (payment_previews previews-lib unity-shared)
