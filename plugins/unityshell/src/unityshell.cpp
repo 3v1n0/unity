@@ -1588,6 +1588,7 @@ void UnityScreen::handleEvent(XEvent* event)
         sources_.AddIdle([&] {
           shortcut_controller_->SetEnabled(false);
           shortcut_controller_->Hide();
+          LOG_DEBUG(logger) << "Hiding shortcut controller due to keypress event.";
           EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
 
           return false;
@@ -1736,6 +1737,7 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
 
     if (shortcut_controller_->Show())
     {
+      LOG_DEBUG(logger) << "Showing shortcut hint.";
       shortcut_controller_->SetAdjustment(launcher_width, panel_height);
       EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, true, action->key().modifiers());
     }
@@ -1794,6 +1796,7 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
 
   shortcut_controller_->SetEnabled(enable_shortcut_overlay_);
   shortcut_controller_->Hide();
+  LOG_DEBUG(logger) << "Hiding shortcut controller";
   EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
 
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));

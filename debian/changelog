@@ -1,13 +1,31 @@
-unity (6.12.0-0ubuntu2) UNRELEASED; urgency=low
+unity (6.12.0-0ubuntu5) UNRELEASED; urgency=low
 
   [ Michael Terry ]
   * debian/control:
     - Update Vcs-Bzr
+  * Automatic snapshot from revision 2905 (bootstrap)
+    - Hide launcher tooltip once shortcut overlay appears (LP: #1035860)
+    - Update shortcut overlay design (LP: #1049601)
+    - Don't cut off shadow on launcher icon drag window (LP: #765715)
+    - Provide more immediate feedback when clickong on launcher (LP: #893140)
+    - Decorate spread windows in switcher (LP: #838222)
+    - Make sure to initialize a variable before it can be used (LP: #1073516)
+    - Fix FTBFS due to BAMF API change (LP: #1077937)
+    - Run gtest during build (LP: #133637)
+    - Make shopping lens test more robust (LP: #1077131)
+    - Fix some random autopilot test failures (LP: #1078448)
+    - Fix autopilot tests for details mode (LP: #1073892)
+    - Fix autopilot tests for indicator-session (LP: #1075350)
+    - Fix autopilot tests for non-English locales (LP: #1075898)
 
   [ Didier Roche ]
   * debian/control:
     - adding libgtest-dev and google-mock build-dep now that there are in main
       (LP: #1076763)
+    - add libunity-core -> unity-common dep (LP: #1079132)
+    - do not have unity-common dep on compiz-gnome: the migration code is only
+      ran if compiz-gnome is installed, but compiz-gnome is pulled by compiz
+      directly. We don't care if the migration code isn't executed.
 
   [ bschaefer ]
   * Ported to nux 4.0
@@ -16,6 +34,26 @@ unity (6.12.0-0ubuntu2) UNRELEASED; urgency=low
   * Doesn't need to depend on gcc 4.6 anymore (LP: #1044836)
 
  -- Michael Terry <mterry@ubuntu.com>  Tue, 06 Nov 2012 10:52:43 -0500
+
+unity (6.12.0-0ubuntu4) raring; urgency=low
+
+  * Really fix cmake now
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 22 Nov 2012 14:51:43 +0100
+
+unity (6.12.0-0ubuntu3) raring; urgency=low
+
+  * Apply 2 upstream patches to fix FTBFS on raring:
+    - gettext cmake support change with new cmake
+    - include directly iostream needed for std::cout
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 22 Nov 2012 12:31:58 +0100
+
+unity (6.12.0-0ubuntu2) raring; urgency=low
+
+  * debian/control.in: Recommends gnome-control-center-unity
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Wed, 21 Nov 2012 19:22:30 +0100
 
 unity (6.12.0-0ubuntu1) raring; urgency=low
 

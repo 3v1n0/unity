@@ -124,8 +124,10 @@ class SwitcherTests(SwitcherTestCase):
 
         start = self.switcher.selection_index
         self.switcher.next_icon()
+        # Allow for wrap-around to first icon in switcher
+        next_index = (start + 1) % len(self.switcher.icons)
 
-        self.assertThat(self.switcher.selection_index, Eventually(Equals(start + 1)))
+        self.assertThat(self.switcher.selection_index, Eventually(Equals(next_index)))
 
     def test_switcher_move_prev(self):
         """Test that pressing the previous icon binding moves to the previous icon"""
@@ -146,8 +148,10 @@ class SwitcherTests(SwitcherTestCase):
 
         start = self.switcher.selection_index
         self.switcher.next_via_mouse()
+        # Allow for wrap-around to first icon in switcher
+        next_index = (start + 1) % len(self.switcher.icons)
 
-        self.assertThat(self.switcher.selection_index, Eventually(Equals(start + 1)))
+        self.assertThat(self.switcher.selection_index, Eventually(Equals(next_index)))
 
     def test_switcher_scroll_prev(self):
         """Test that scrolling the mouse wheel up moves to the previous icon"""
