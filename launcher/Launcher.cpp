@@ -1118,7 +1118,6 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   // function is not smooth it is continuous, which is more important for our visual representation (icons
   // wont start jumping around).  As a general rule ANY if () statements that modify center.y should be seen
   // as bugs.
-  int index = 1;
   for (it = _model->main_begin(); it != _model->main_end(); ++it)
   {
     RenderArg arg;
@@ -1127,7 +1126,6 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
                   autohide_offset, folded_z_distance, animation_neg_rads, current);
     arg.colorify = colorify;
     launcher_args.push_back(arg);
-    index++;
   }
 
   // compute maximum height of shelf
@@ -2313,7 +2311,13 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
 
 bool Launcher::HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
 {
-  nux::Geometry abs_geo = GetAbsoluteGeometry();
+  if (_hide_machine.GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE))
+  {
+    owner->ReleaseBarrier(event->event_id);
+    return true;
+  }
+
+  nux::Geometry const& abs_geo = GetAbsoluteGeometry();
 
   bool apply_to_reveal = false;
   if (_hidden && event->x >= abs_geo.x && event->x <= abs_geo.x + abs_geo.width)
