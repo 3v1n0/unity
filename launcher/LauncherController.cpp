@@ -119,6 +119,17 @@ Controller::Impl::Impl(Controller* parent)
   edge_barriers_.options = parent_->options();
 #endif
 
+  ubus.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, [this](GVariant * data) {
+    ui::IconRenderer::DestroyShortcutTextures();
+
+    double red = 0.0f, green = 0.0f, blue = 0.0f, alpha = 0.0f;
+    g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
+    parent_->options()->background_color = nux::Color(red, green, blue, alpha);
+  });
+
+  // request the latest color from bghash
+  ubus.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
+
   UScreen* uscreen = UScreen::GetDefault();
   EnsureLaunchers(uscreen->GetPrimaryMonitor(), uscreen->GetMonitors());
 
@@ -159,14 +170,6 @@ Controller::Impl::Impl(Controller* parent)
       ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
                        g_variant_new_string(selected->tooltip_text().c_str()));
     }
-  });
-
-  ubus.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, [this](GVariant * data) {
-    ui::IconRenderer::DestroyShortcutTextures();
-
-    double red = 0.0f, green = 0.0f, blue = 0.0f, alpha = 0.0f;
-    g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-    parent_->options()->background_color = nux::Color(red, green, blue, alpha);
   });
 
   parent_->AddChild(model_.get());
