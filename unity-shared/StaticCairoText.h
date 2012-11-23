@@ -51,6 +51,14 @@ public:
     NUX_ALIGN_BOTTOM = NUX_ALIGN_RIGHT
   };
 
+  enum UnderlineState
+  {
+    NUX_UNDERLINE_NONE,
+    NUX_UNDERLINE_SINGLE,
+    NUX_UNDERLINE_DOUBLE,
+    NUX_UNDERLINE_LOW
+  };
+
   StaticCairoText(std::string const& text, NUX_FILE_LINE_PROTO);
   StaticCairoText(std::string const& text, bool escape_text, NUX_FILE_LINE_PROTO);
   ~StaticCairoText();
@@ -67,11 +75,14 @@ public:
 
   // public API
   void SetText(std::string const& text, bool escape_text = false);
+  void SetTextAlpha(unsigned int alpha);
   void SetTextColor(Color const& textColor);
   void SetTextEllipsize(EllipsizeState state);
   void SetTextAlignment(AlignState state);
   void SetTextVerticalAlignment(AlignState state);
   void SetFont(std::string const& font);
+  std::string GetFont();
+  void SetUnderline(UnderlineState underline);
   void SetLines(int maximum_lines);
   void SetLineSpacing(float line_spacing);
 
