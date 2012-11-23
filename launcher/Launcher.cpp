@@ -147,6 +147,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _last_reveal_progress(0.0f)
   , _collection_window(collection_window)
   , _selection_atom(0)
+  , icon_renderer(std::make_shared<ui::IconRenderer>())
 {
   m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
@@ -202,10 +203,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
   ubus_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &Launcher::OnOverlayHidden));
   ubus_.RegisterInterest(UBUS_LAUNCHER_LOCK_HIDE, sigc::mem_fun(this, &Launcher::OnLockHideChanged));
 
-  // request the latest colour from bghash
-  ubus_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
-
-  icon_renderer = ui::AbstractIconRenderer::Ptr(new ui::IconRenderer());
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 
   TextureCache& cache = TextureCache::GetDefault();
