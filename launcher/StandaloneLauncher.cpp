@@ -27,17 +27,68 @@
 #include "Launcher.h"
 #include "unity-shared/IconRenderer.h"
 #include "unity-shared/PanelStyle.h"
+#include "unity-shared/UBusMessages.h"
 #include "unity-shared/UnitySettings.h"
+#include "unity-shared/UScreen.h"
 
 using namespace unity;
 
-static launcher::Controller::Ptr controller;
-
-void ThreadWidgetInit(nux::NThread* thread, void* InitData)
+namespace
 {
-//  launcherWindow->SetGeometry (nux::Geometry(0, 0, 300, 800));
-  controller.reset(new launcher::Controller());
+const nux::Size win_size(1024, 1000);
+const nux::Color bg_color(95/255.0f, 18/255.0f, 45/255.0f, 1.0f);
 }
+
+struct LauncherWindow
+{
+  LauncherWindow()
+    : wt(nux::CreateGUIThread("Unity Launcher", win_size.width, win_size.height, 0, &LauncherWindow::ThreadWidgetInit, this))
+  {}
+
+  void Show()
+  {
+    wt->Run(nullptr);
+  }
+
+private:
+  void SetupBackground()
+  {
+    nux::ObjectPtr<nux::BaseTexture> background_tex;
+    background_tex.Adopt(nux::CreateTextureFromFile("/usr/share/backgrounds/warty-final-ubuntu.png"));
+    nux::TexCoordXForm texxform;
+    auto tex_layer = std::make_shared<nux::TextureLayer>(background_tex->GetDeviceTexture(), texxform, nux::color::White);
+    wt->SetWindowBackgroundPaintLayer(tex_layer.get());
+  }
+
+  void Init()
+  {
+    SetupBackground();
+    controller.reset(new launcher::Controller());
+    UBusManager().SendMessage(UBUS_BACKGROUND_COLOR_CHANGED, g_variant_new ("(dddd)", 95/255.0f, 18/255.0f, 45/255.0f, 1.0f));
+
+    UScreen* uscreen = UScreen::GetDefault();
+    std::vector<nux::Geometry> fake_monitor({nux::Geometry(0, 0, win_size.width, win_size.height)});
+    uscreen->changed.emit(0, fake_monitor);
+    uscreen->changed.clear();
+    controller->launcher().Resize(nux::Point(), win_size.height);
+    controller->launcher().GetParent()->EnableInputWindow(false);
+
+    wt->window_configuration.connect([this] (int x, int y, int w, int h) {
+      controller->launcher().Resize(nux::Point(), h);
+    });
+  }
+
+  static void ThreadWidgetInit(nux::NThread* thread, void* self)
+  {
+    static_cast<LauncherWindow*>(self)->Init();
+  }
+
+  internal::FavoriteStoreGSettings favorite_store;
+  unity::Settings settings;
+  panel::Style panel_style;
+  std::shared_ptr<nux::WindowThread> wt;
+  launcher::Controller::Ptr controller;
+};
 
 int main(int argc, char** argv)
 {
@@ -45,18 +96,8 @@ int main(int argc, char** argv)
   gtk_init(&argc, &argv);
   nux::NuxInitialize(0);
 
-  unity::Settings settings;
-  panel::Style panel_style;
-  internal::FavoriteStoreGSettings favorite_store;
+  LauncherWindow lc;
+  lc.Show();
 
-  BackgroundEffectHelper::blur_type = BLUR_NONE;
-  nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Switcher"), 300, 800, 0, &ThreadWidgetInit, 0);
-
-  wt->Run(NULL);
-  // Make sure the controller is destroyed before the window thread.
-  controller.reset();
-  ::unity::ui::IconRenderer::DestroyTextures();
-
-  delete wt;
   return 0;
 }
