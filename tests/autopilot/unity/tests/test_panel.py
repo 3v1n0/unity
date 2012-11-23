@@ -19,6 +19,7 @@ from time import sleep
 from unity.emulators.panel import IndicatorEntry
 from unity.tests import UnityTestCase
 
+import gettext
 
 logger = logging.getLogger(__name__)
 
@@ -145,10 +146,12 @@ class PanelTitleTests(PanelTestsBase):
 
     def test_panel_title_on_empty_desktop(self):
         """With no windows shown, the panel must display the default title."""
+        gettext.install("unity", unicode=True)
         self.window_manager.enter_show_desktop()
         self.addCleanup(self.window_manager.leave_show_desktop)
 
         self.assertThat(self.panel.desktop_is_active, Eventually(Equals(True)))
+        self.assertThat(self.panel.title, Equals(_("Ubuntu Desktop")))
 
     def test_panel_title_with_restored_application(self):
         """Panel must display application name for a non-maximised application."""
