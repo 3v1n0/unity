@@ -61,7 +61,10 @@ class SpreadTests(UnityTestCase):
         self.assertThat(refresh_fn, Eventually(Equals(False)))
 
     def test_scale_application_windows(self):
-        """Test if all the windows of an application are scaled when application spread is initiated"""
+        """All the windows of an application must be scaled when application
+        spread is initiated
+
+        """
         [win1, win2] = self.start_test_application_windows("Calculator")
         self.initiate_spread_for_application(win1.application.desktop_file)
 
