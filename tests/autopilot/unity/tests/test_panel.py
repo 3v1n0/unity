@@ -147,6 +147,8 @@ class PanelTitleTests(PanelTestsBase):
     def test_panel_title_on_empty_desktop(self):
         """With no windows shown, the panel must display the default title."""
         gettext.install("unity", unicode=True)
+        # We need to start any application, otherwise we cannot leave show desktop mode
+        self.start_app_window('Calculator')
         self.window_manager.enter_show_desktop()
         self.addCleanup(self.window_manager.leave_show_desktop)
 
