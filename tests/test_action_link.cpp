@@ -21,7 +21,6 @@
 
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 #include <unity-shared/StaticCairoText.h>
 
@@ -47,8 +46,6 @@ class ActionLinkMock : public ActionLink
 
     nux::ObjectPtr<nux::StaticCairoText> GetText() { return static_text_; }
 
-    MOCK_METHOD0(GetVisualState, void()); 
-
     using ActionLink::GetLinkAlpha;
     using ActionLink::ComputeContentSize;
     using ActionLink::Draw;
@@ -71,34 +68,25 @@ class TestActionLink : public ::testing::Test
 TEST_F(TestActionLink, LinkAlphaOnPressed)
 {
    ButtonVisualState state = ButtonVisualState::VISUAL_STATE_PRESSED;
-   ::testing::DefaultValue<ButtonVisualState>::Set(state);
-   EXPECT_EQ(4, action_link->GetLinkAlpha());
+   EXPECT_EQ(4, action_link->GetLinkAlpha(state));
 }
 
 TEST_F(TestActionLink, LinkAlphaOnNormal)
 {
    ButtonVisualState state = ButtonVisualState::VISUAL_STATE_NORMAL;
-   ::testing::DefaultValue<ButtonVisualState>::Set(state);
-   EXPECT_EQ(4, action_link->GetLinkAlpha());
+   EXPECT_EQ(4, action_link->GetLinkAlpha(state));
 }
 
 TEST_F(TestActionLink, LinkAlphaOnPrelight)
 {
    ButtonVisualState state = ButtonVisualState::VISUAL_STATE_PRELIGHT;
-   ::testing::DefaultValue<ButtonVisualState>::Set(state);
-   EXPECT_EQ(4, action_link->GetLinkAlpha());
+   EXPECT_EQ(1, action_link->GetLinkAlpha(state));
 }
 
 TEST_F(TestActionLink, LinkAlphaOnDisabled)
 {
    ButtonVisualState state = ButtonVisualState::VISUAL_STATE_DISABLED;
-   ::testing::DefaultValue<ButtonVisualState>::Set(state);
-   EXPECT_EQ(4, action_link->GetLinkAlpha());
-}
-
-TEST_F(TestActionLink, ActionEmittedRecvClick)
-{
-  action_link->ComputeContentSize();
+   EXPECT_EQ(4, action_link->GetLinkAlpha(state));
 }
 
 }

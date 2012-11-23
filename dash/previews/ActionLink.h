@@ -44,7 +44,6 @@ class ActionLink : public nux::AbstractButton, public debug::Introspectable
 {
 public:
   ActionLink(std::string const& action_hint, std::string const& label, NUX_FILE_LINE_PROTO);
-  ~ActionLink();
 
   sigc::signal<void, ActionLink*, std::string const&> activate;
 
@@ -61,7 +60,7 @@ public:
 protected:
   nux::ObjectPtr<nux::StaticCairoText> static_text_;
 
-  int GetLinkAlpha();
+  int GetLinkAlpha(nux::ButtonVisualState state);
   long ComputeContentSize();
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {}

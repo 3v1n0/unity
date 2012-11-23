@@ -47,10 +47,6 @@ ActionLink::ActionLink(std::string const& action_hint, std::string const& label,
   BuildLayout(label);
 }
 
-ActionLink::~ActionLink()
-{
-}
-
 std::string ActionLink::GetName() const
 {
   return "ActionLink";
@@ -120,9 +116,9 @@ void ActionLink::BuildLayout(std::string const& label)
   QueueDraw();
 }
 
-int ActionLink::GetLinkAlpha()
+int ActionLink::GetLinkAlpha(nux::ButtonVisualState state)
 {
-  if (GetVisualState() == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
+  if (state == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
     return 1;
   else
     return 4;
@@ -155,7 +151,7 @@ void ActionLink::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   // clear what is behind us
   unsigned int alpha = 0, src = 0, dest = 0;
   // do set the alpha to indicate that the link is usuable
-  static_text_->SetTextAlpha(GetLinkAlpha());
+  static_text_->SetTextAlpha(GetLinkAlpha(GetVisualState()));
 
   GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
   GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
