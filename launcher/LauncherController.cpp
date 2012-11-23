@@ -40,6 +40,7 @@
 #include "ExpoLauncherIcon.h"
 #include "TrashLauncherIcon.h"
 #include "BFBLauncherIcon.h"
+#include "unity-shared/IconRenderer.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/TimeUtil.h"
@@ -146,7 +147,7 @@ Controller::Impl::Impl(Controller* parent)
   WindowManager& wm = WindowManager::Default();
   wm.window_focus_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnWindowFocusChanged));
 
-  ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [&](GVariant * args) {
+  ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [this](GVariant * args) {
     if (reactivate_keynav)
       parent_->KeyNavGrab();
 
@@ -158,6 +159,14 @@ Controller::Impl::Impl(Controller* parent)
       ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
                        g_variant_new_string(selected->tooltip_text().c_str()));
     }
+  });
+
+  ubus.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, [this](GVariant * data) {
+    ui::IconRenderer::DestroyShortcutTextures();
+
+    double red = 0.0f, green = 0.0f, blue = 0.0f, alpha = 0.0f;
+    g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
+    parent_->options()->background_color = nux::Color(red, green, blue, alpha);
   });
 
   parent_->AddChild(model_.get());
