@@ -415,7 +415,6 @@ UnityScreen::~UnityScreen()
   notify_uninit();
 
   unity_a11y_finalize();
-  ::unity::ui::IconRenderer::DestroyTextures();
   QuicklistManager::Destroy();
 
   reset_glib_logging();

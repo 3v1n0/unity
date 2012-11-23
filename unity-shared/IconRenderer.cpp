@@ -25,7 +25,9 @@
 #include <NuxGraphics/GpuDevice.h>
 #include <NuxGraphics/GLTextureResourceManager.h>
 
+#include <UnityCore/GLibWrapper.h>
 #include <NuxGraphics/CairoGraphics.h>
+#include "unity-shared/CairoTexture.h"
 #include "GraphicsUtils.h"
 
 #include <gtk/gtk.h>
@@ -38,6 +40,8 @@
 namespace unity
 {
 namespace ui
+{
+namespace
 {
 
 #ifdef USE_GLES
@@ -171,6 +175,7 @@ LRP temp, factor.x, color, desat;                             \n\
 MUL result.color.rgb, temp, colorify_color;                   \n\
 MOV result.color.a, color;                                    \n\
 END");
+} // anonymous namespace
 
 // The local namespace is purely for namespacing the file local variables below.
 namespace local
@@ -181,43 +186,65 @@ enum IconSize
 {
   SMALL = 0,
   BIG,
-  LAST,
+  SIZE,
 };
+} // anonymous namespace
+} // local namespace
 
-bool textures_created = false;
-nux::BaseTexture* progress_bar_trough = 0;
-nux::BaseTexture* progress_bar_fill = 0;
-nux::BaseTexture* pip_ltr = 0;
-nux::BaseTexture* pip_rtl = 0;
-nux::BaseTexture* arrow_ltr = 0;
-nux::BaseTexture* arrow_rtl = 0;
-nux::BaseTexture* arrow_empty_ltr = 0;
-nux::BaseTexture* arrow_empty_rtl = 0;
+std::unique_ptr<IconRenderer::TexturesPool> IconRenderer::textures_;
 
-// nux::BaseTexture* squircle_base = 0;
-// nux::BaseTexture* squircle_base_selected = 0;
-// nux::BaseTexture* squircle_edge = 0;
-// nux::BaseTexture* squircle_glow = 0;
-// nux::BaseTexture* squircle_shadow = 0;
-// nux::BaseTexture* squircle_shine = 0;
+struct IconRenderer::TexturesPool
+{
+  TexturesPool();
 
-std::vector<nux::BaseTexture*> icon_background;
-std::vector<nux::BaseTexture*> icon_selected_background;
-std::vector<nux::BaseTexture*> icon_edge;
-std::vector<nux::BaseTexture*> icon_glow;
-std::vector<nux::BaseTexture*> icon_shadow;
-std::vector<nux::BaseTexture*> icon_shine;
-nux::ObjectPtr<nux::IOpenGLBaseTexture> offscreen_progress_texture;
-nux::ObjectPtr<nux::IOpenGLShaderProgram> shader_program_uv_persp_correction;
+  nux::ObjectPtr<nux::BaseTexture> RenderLabelTexture(char label, int icon_size, nux::Color const& bg_color);
+
+  BaseTexturePtr progress_bar_trough;
+  BaseTexturePtr progress_bar_fill;
+  BaseTexturePtr pip_ltr;
+  // BaseTexturePtr pip_rtl;
+  BaseTexturePtr arrow_ltr;
+  BaseTexturePtr arrow_rtl;
+  BaseTexturePtr arrow_empty_ltr;
+  // BaseTexturePtr arrow_empty_rtl;
+
+  // BaseTexturePtr squircle_base;
+  // BaseTexturePtr squircle_base_selected;
+  // BaseTexturePtr squircle_edge;
+  // BaseTexturePtr squircle_glow;
+  // BaseTexturePtr squircle_shadow;
+  // BaseTexturePtr squircle_shine;
+
+  BaseTexturePtr icon_background[local::IconSize::SIZE];
+  BaseTexturePtr icon_selected_background[local::IconSize::SIZE];
+  BaseTexturePtr icon_edge[local::IconSize::SIZE];
+  BaseTexturePtr icon_glow[local::IconSize::SIZE];
+  BaseTexturePtr icon_shadow[local::IconSize::SIZE];
+  BaseTexturePtr icon_shine[local::IconSize::SIZE];
+
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> offscreen_progress_texture;
+  nux::ObjectPtr<nux::IOpenGLShaderProgram> shader_program_uv_persp_correction;
 #ifndef USE_GLES
-nux::ObjectPtr<nux::IOpenGLAsmShaderProgram> asm_shader;
+  nux::ObjectPtr<nux::IOpenGLAsmShaderProgram> asm_shader;
 #endif
-std::map<char, nux::BaseTexture*> label_map;
 
-void generate_textures();
-void destroy_textures();
-}
-}
+  std::map<char, BaseTexturePtr> labels;
+
+private:
+  inline void LoadTexture(BaseTexturePtr &texture_ptr, std::string const& filename)
+  {
+    texture_ptr.Adopt(nux::CreateTexture2DFromFile(filename.c_str(), -1, true));
+  }
+
+  inline void GenerateTextures(BaseTexturePtr (&texture)[local::IconSize::SIZE],
+                               std::string const& big_file, std::string const& small_file)
+  {
+    LoadTexture(texture[local::IconSize::SMALL], small_file);
+    LoadTexture(texture[local::IconSize::BIG], big_file);
+  }
+
+  void SetupShaders();
+};
 
 IconRenderer::IconRenderer()
   : icon_size(0)
@@ -226,13 +253,12 @@ IconRenderer::IconRenderer()
 {
   pip_style = OUTSIDE_TILE;
 
-  if (!local::textures_created)
-    local::generate_textures();
+  if (!textures_)
+    textures_.reset(new IconRenderer::TexturesPool());
 }
 
 IconRenderer::~IconRenderer()
-{
-}
+{}
 
 void IconRenderer::SetTargetSize(int tile_size, int image_size_, int spacing_)
 {
@@ -412,11 +438,11 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   float glow_intensity = arg.glow_intensity;
   float shadow_intensity = 0.6f;
 
-  nux::BaseTexture* background = local::icon_background[size];
-  nux::BaseTexture* edge = local::icon_edge[size];
-  nux::BaseTexture* glow = local::icon_glow[size];
-  nux::BaseTexture* shine = local::icon_shine[size];
-  nux::BaseTexture* shadow = local::icon_shadow[size];
+  BaseTexturePtr background = textures_->icon_background[size];
+  BaseTexturePtr const& edge = textures_->icon_edge[size];
+  BaseTexturePtr const& glow = textures_->icon_glow[size];
+  BaseTexturePtr const& shine = textures_->icon_shine[size];
+  BaseTexturePtr const& shadow = textures_->icon_shadow[size];
 
   nux::Color shortcut_color = arg.colorify;
 
@@ -445,7 +471,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     glow_intensity = 1.0f;
     shadow_intensity = 0.0f;
 
-    background = local::icon_selected_background[size];
+    background = textures_->icon_selected_background[size];
   }
   else
   {
@@ -477,8 +503,6 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   {
     nux::Color shadow_color = background_tile_colorify * 0.3f;
 
-    // FIXME it is using the same transformation of the glow,
-    // should have its own transformation.
     RenderElement(GfxContext,
                   arg,
                   shadow->GetDeviceTexture(),
@@ -575,7 +599,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
 
     RenderElement(GfxContext,
                   arg,
-                  local::icon_glow[size]->GetDeviceTexture(),
+                  textures_->icon_glow[size]->GetDeviceTexture(),
                   arg.icon->GlowColor(),
                   nux::color::White,
                   fade_out * arg.alpha,
@@ -588,17 +612,17 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   // draw progress bar
   if (arg.progress_bias > -1.0f && arg.progress_bias < 1.0f)
   {
-    if (local::offscreen_progress_texture->GetWidth() != icon_size ||
-        local::offscreen_progress_texture->GetHeight() != icon_size)
+    if (textures_->offscreen_progress_texture->GetWidth() != icon_size ||
+        textures_->offscreen_progress_texture->GetHeight() != icon_size)
     {
-      local::offscreen_progress_texture = nux::GetGraphicsDisplay()->GetGpuDevice()
+      textures_->offscreen_progress_texture = nux::GetGraphicsDisplay()->GetGpuDevice()
         ->CreateSystemCapableDeviceTexture(icon_size, icon_size, 1, nux::BITFMT_R8G8B8A8);
     }
-    RenderProgressToTexture(GfxContext, local::offscreen_progress_texture, arg.progress, arg.progress_bias);
+    RenderProgressToTexture(GfxContext, textures_->offscreen_progress_texture, arg.progress, arg.progress_bias);
 
     RenderElement(GfxContext,
                   arg,
-                  local::offscreen_progress_texture,
+                  textures_->offscreen_progress_texture,
                   nux::color::White,
                   nux::color::White,
                   arg.alpha,
@@ -631,12 +655,22 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   {
     char shortcut = (char) arg.shortcut_label;
 
-    if (local::label_map.find(shortcut) == local::label_map.end())
-      local::label_map[shortcut] = RenderCharToTexture(shortcut, icon_size, icon_size, shortcut_color);
+    BaseTexturePtr label;
+    auto label_it = textures_->labels.find(shortcut);
+
+    if (label_it != textures_->labels.end())
+    {
+      label = label_it->second;
+    }
+    else
+    {
+      label = textures_->RenderLabelTexture(shortcut, icon_size, shortcut_color);
+      textures_->labels[shortcut] = label;
+    }
 
     RenderElement(GfxContext,
                   arg,
-                  local::label_map[shortcut]->GetDeviceTexture(),
+                  label->GetDeviceTexture(),
                   nux::Color(0xFFFFFFFF),
                   nux::color::White,
                   arg.alpha,
@@ -645,43 +679,39 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   }
 }
 
-nux::BaseTexture* IconRenderer::RenderCharToTexture(char label, int width, int height, nux::Color const& bg_color)
+nux::ObjectPtr<nux::BaseTexture> IconRenderer::TexturesPool::RenderLabelTexture(char label, int icon_size, nux::Color const& bg_color)
 {
-  nux::BaseTexture*     texture  = NULL;
-  nux::CairoGraphics*   cg       = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32,
-                                                          width,
-                                                          height);
-  cairo_t*              cr       = cg->GetContext();
-  PangoLayout*          layout   = NULL;
-  PangoFontDescription* desc     = NULL;
-  GtkSettings*          settings = gtk_settings_get_default();  // not ref'ed
-  gchar*                fontName = NULL;
+  nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, icon_size, icon_size);
+  std::shared_ptr<cairo_t> cairo_context(cg.GetContext(), cairo_destroy);
+  cairo_t* cr = cairo_context.get();
+  glib::String font_name;
 
-  double label_ratio = 0.44f;
-  double label_size = icon_size * label_ratio;
-  double label_x = (icon_size - label_size) / 2;
-  double label_y = (icon_size - label_size) / 2;
-  double label_w = label_size;
-  double label_h = label_size;
-  double label_radius = 3.0f;
+  const double label_ratio = 0.44f;
+  const double label_size = icon_size * label_ratio;
+  const double label_x = (icon_size - label_size) / 2;
+  const double label_y = (icon_size - label_size) / 2;
+  const double label_w = label_size;
+  const double label_h = label_size;
+  const double label_radius = 3.0f;
 
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
   cairo_scale(cr, 1.0f, 1.0f);
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-  cg->DrawRoundedRectangle(cr, 1.0f, label_x, label_y, label_radius, label_w, label_h);
+  cg.DrawRoundedRectangle(cr, 1.0f, label_x, label_y, label_radius, label_w, label_h);
   cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 0.75f);
   cairo_fill_preserve(cr);
   cairo_set_source_rgba(cr, bg_color.red, bg_color.green, bg_color.blue, 0.20f);
   cairo_fill(cr);
 
-  double text_ratio = 0.75;
-  double text_size = label_size * text_ratio; 
-  layout = pango_cairo_create_layout(cr);
-  g_object_get(settings, "gtk-font-name", &fontName, NULL);
-  desc = pango_font_description_from_string(fontName);
-  pango_font_description_set_absolute_size(desc, text_size * PANGO_SCALE);
-  pango_layout_set_font_description(layout, desc);
+  const double text_ratio = 0.75;
+  double text_size = label_size * text_ratio;
+  glib::Object<PangoLayout> layout(pango_cairo_create_layout(cr));
+  g_object_get(gtk_settings_get_default(), "gtk-font-name", &font_name, NULL);
+  std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font_name),
+                                             pango_font_description_free);
+  pango_font_description_set_absolute_size(desc.get(), text_size * PANGO_SCALE);
+  pango_layout_set_font_description(layout, desc.get());
   pango_layout_set_text(layout, &label, 1);
 
   PangoRectangle logRect;
@@ -695,16 +725,7 @@ nux::BaseTexture* IconRenderer::RenderCharToTexture(char label, int width, int h
   cairo_move_to(cr, x, y);
   pango_cairo_show_layout(cr, layout);
 
-  nux::NBitmapData* bitmap = cg->GetBitmap();
-  texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-  texture->Update(bitmap);
-  delete bitmap;
-  delete cg;
-  g_object_unref(layout);
-  pango_font_description_free(desc);
-  g_free(fontName);
-
-  return texture;
+  return texture_ptr_from_cairo_graphics(cg);
 }
 
 void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
@@ -786,28 +807,28 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
 
   if (nux::GetWindowThread()->GetGraphicsEngine().UsingGLSLCodePath())
   {
-    local::shader_program_uv_persp_correction->Begin();
+    textures_->shader_program_uv_persp_correction->Begin();
 
-    int TextureObjectLocation   = local::shader_program_uv_persp_correction->GetUniformLocationARB("TextureObject0");
-    VertexLocation          = local::shader_program_uv_persp_correction->GetAttributeLocation("iVertex");
-    TextureCoord0Location   = local::shader_program_uv_persp_correction->GetAttributeLocation("iTexCoord0");
-    FragmentColor           = local::shader_program_uv_persp_correction->GetUniformLocationARB("color0");
-    ColorifyColor           = local::shader_program_uv_persp_correction->GetUniformLocationARB("colorify_color");
-    DesatFactor             = local::shader_program_uv_persp_correction->GetUniformLocationARB("desat_factor");
+    int TextureObjectLocation = textures_->shader_program_uv_persp_correction->GetUniformLocationARB("TextureObject0");
+    VertexLocation            = textures_->shader_program_uv_persp_correction->GetAttributeLocation("iVertex");
+    TextureCoord0Location     = textures_->shader_program_uv_persp_correction->GetAttributeLocation("iTexCoord0");
+    FragmentColor             = textures_->shader_program_uv_persp_correction->GetUniformLocationARB("color0");
+    ColorifyColor             = textures_->shader_program_uv_persp_correction->GetUniformLocationARB("colorify_color");
+    DesatFactor               = textures_->shader_program_uv_persp_correction->GetUniformLocationARB("desat_factor");
 
     if (TextureObjectLocation != -1)
       CHECKGL(glUniform1iARB(TextureObjectLocation, 0));
 
-    int VPMatrixLocation = local::shader_program_uv_persp_correction->GetUniformLocationARB("ViewProjectionMatrix");
+    int VPMatrixLocation = textures_->shader_program_uv_persp_correction->GetUniformLocationARB("ViewProjectionMatrix");
     if (VPMatrixLocation != -1)
     {
-      local::shader_program_uv_persp_correction->SetUniformLocMatrix4fv((GLint)VPMatrixLocation, 1, false, (GLfloat*) & (_stored_projection_matrix.m));
+      textures_->shader_program_uv_persp_correction->SetUniformLocMatrix4fv((GLint)VPMatrixLocation, 1, false, (GLfloat*) & (_stored_projection_matrix.m));
     }
   }
 #ifndef USE_GLES
   else
   {
-    local::asm_shader->Begin();
+    textures_->asm_shader->Begin();
 
     VertexLocation        = nux::VTXATTRIB_POSITION;
     TextureCoord0Location = nux::VTXATTRIB_TEXCOORD0;
@@ -869,12 +890,12 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
 
   if (nux::GetWindowThread()->GetGraphicsEngine().UsingGLSLCodePath())
   {
-    local::shader_program_uv_persp_correction->End();
+    textures_->shader_program_uv_persp_correction->End();
   }
   else
   {
 #ifndef USE_GLES
-    local::asm_shader->End();
+    textures_->asm_shader->End();
 #endif
   }
 }
@@ -917,7 +938,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
 
     color = color * alpha;
 
-    nux::BaseTexture* texture;
+    BaseTexturePtr texture;
 
     // markers are well outside screen bounds to start
     int markers [3] = {-100, -100, -100};
@@ -925,25 +946,25 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     if (!arg.running_on_viewport)
     {
       markers[0] = markerCenter;
-      texture = local::arrow_empty_ltr;
+      texture = textures_->arrow_empty_ltr;
     }
     else if (running == 1)
     {
       markers[0] = markerCenter;
-      texture = local::arrow_ltr;
+      texture = textures_->arrow_ltr;
     }
     else if (running == 2)
     {
       markers[0] = markerCenter - 2 * scale;
       markers[1] = markerCenter + 2 * scale;
-      texture = local::pip_ltr;
+      texture = textures_->pip_ltr;
     }
     else
     {
       markers[0] = markerCenter - 4 * scale;
       markers[1] = markerCenter;
       markers[2] = markerCenter + 4 * scale;
-      texture = local::pip_ltr;
+      texture = textures_->pip_ltr;
     }
 
 
@@ -952,7 +973,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
       int center = markers[i];
       if (center == -100)
         break;
-      
+
       GfxContext.QRP_1Tex(markerX,
                           center - ((texture->GetHeight() * scale) / 2) - 1,
                           (float) texture->GetWidth() * scale,
@@ -968,11 +989,11 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     nux::TexCoordXForm texxform;
 
     nux::Color color = nux::color::LightGrey * alpha;
-    GfxContext.QRP_1Tex((geo.x + geo.width) - local::arrow_rtl->GetWidth(),
-                        markerCenter - (local::arrow_rtl->GetHeight() / 2) - 1,
-                        (float) local::arrow_rtl->GetWidth(),
-                        (float) local::arrow_rtl->GetHeight(),
-                        local::arrow_rtl->GetDeviceTexture(),
+    GfxContext.QRP_1Tex((geo.x + geo.width) - textures_->arrow_rtl->GetWidth(),
+                        markerCenter - (textures_->arrow_rtl->GetHeight() / 2) - 1,
+                        (float) textures_->arrow_rtl->GetWidth(),
+                        (float) textures_->arrow_rtl->GetHeight(),
+                        textures_->arrow_rtl->GetDeviceTexture(),
                         texxform,
                         color);
   }
@@ -987,10 +1008,10 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   int height = texture->GetHeight();
 
   int progress_width =  icon_size;
-  int progress_height = local::progress_bar_trough->GetHeight();
+  int progress_height = textures_->progress_bar_trough->GetHeight();
 
   int fill_width = image_size - (icon_size - image_size);
-  int fill_height = local::progress_bar_fill->GetHeight();
+  int fill_height = textures_->progress_bar_fill->GetHeight();
 
   int fill_offset = (progress_width - fill_width) / 2;
 
@@ -1025,10 +1046,10 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   // left door
   GfxContext.PushClippingRectangle(nux::Geometry(left_edge, 0, half_size, height));
   GfxContext.QRP_1Tex(left_edge, progress_y, progress_width, progress_height,
-                      local::progress_bar_trough->GetDeviceTexture(), texxform,
+                      textures_->progress_bar_trough->GetDeviceTexture(), texxform,
                       nux::color::White);
   GfxContext.QRP_1Tex(left_edge + fill_offset, fill_y, fill_width, fill_height,
-                      local::progress_bar_fill->GetDeviceTexture(), texxform,
+                      textures_->progress_bar_fill->GetDeviceTexture(), texxform,
                       nux::color::White);
   GfxContext.PopClippingRectangle();
 
@@ -1036,11 +1057,11 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   GfxContext.PushClippingRectangle(nux::Geometry(left_edge + half_size, 0, half_size, height));
   GfxContext.QRP_1Tex(right_edge - progress_width, progress_y,
                       progress_width, progress_height,
-                      local::progress_bar_trough->GetDeviceTexture(), texxform,
+                      textures_->progress_bar_trough->GetDeviceTexture(), texxform,
                       nux::color::White);
   GfxContext.QRP_1Tex(right_edge - progress_width + fill_offset, fill_y,
                       fill_width, fill_height,
-                      local::progress_bar_fill->GetDeviceTexture(), texxform,
+                      textures_->progress_bar_fill->GetDeviceTexture(), texxform,
                       nux::color::White);
 
   GfxContext.PopClippingRectangle();
@@ -1048,16 +1069,9 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   unity::graphics::PopOffscreenRenderTarget();
 }
 
-void IconRenderer::DestroyTextures()
-{
-  local::destroy_textures();
-}
-
 void IconRenderer::DestroyShortcutTextures()
 {
-  for (auto texture : local::label_map)
-    texture.second->UnReference();
-  local::label_map.clear();
+  textures_->labels.clear();
 }
 
 void IconRenderer::GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& PerspectiveMatrix,
@@ -1145,12 +1159,55 @@ void IconRenderer::GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, n
   PerspectiveMatrix.Perspective(Fovy, AspectRatio, NearClipPlane, FarClipPlane);
 }
 
-// The local namespace is purely for namespacing the file local variables below.
-namespace local
+IconRenderer::TexturesPool::TexturesPool()
+  : offscreen_progress_texture(nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8))
 {
-namespace
-{
-void setup_shaders()
+  LoadTexture(progress_bar_trough, PKGDATADIR"/progress_bar_trough.png");
+  LoadTexture(progress_bar_fill, PKGDATADIR"/progress_bar_fill.png");
+  LoadTexture(pip_ltr, PKGDATADIR"/launcher_pip_ltr.png");
+  // LoadTexture(pip_rtl, PKGDATADIR"/launcher_pip_rtl.png");
+  LoadTexture(arrow_ltr, PKGDATADIR"/launcher_arrow_ltr.png");
+  LoadTexture(arrow_rtl, PKGDATADIR"/launcher_arrow_rtl.png");
+  LoadTexture(arrow_empty_ltr, PKGDATADIR"/launcher_arrow_outline_ltr.png");
+  // LoadTexture(arrow_empty_rtl, PKGDATADIR"/launcher_arrow_outline_rtl.png");
+
+  // LoadTexture(squircle_base, PKGDATADIR"/squircle_base_54.png");
+  // LoadTexture(squircle_base_selected, PKGDATADIR"/squircle_base_selected_54.png");
+  // LoadTexture(squircle_edge, PKGDATADIR"/squircle_edge_54.png");
+  // LoadTexture(squircle_glow, PKGDATADIR"/squircle_glow_62.png");
+  // LoadTexture(squircle_shadow, PKGDATADIR"/squircle_shadow_62.png");
+  // LoadTexture(squircle_shine, PKGDATADIR"/squircle_shine_54.png");
+
+  // BaseTexturePtr icon_background[local::IconSize::SIZE];
+  // BaseTexturePtr icon_selected_background[local::IconSize::SIZE];
+  // BaseTexturePtr icon_edge[local::IconSize::SIZE];
+  // BaseTexturePtr icon_glow[local::IconSize::SIZE];
+  // BaseTexturePtr icon_shadow[local::IconSize::SIZE];
+  // BaseTexturePtr icon_shine[local::IconSize::SIZE];
+
+  GenerateTextures(icon_background,
+                   PKGDATADIR"/launcher_icon_back_150.png",
+                   PKGDATADIR"/launcher_icon_back_54.png");
+  GenerateTextures(icon_selected_background,
+                   PKGDATADIR"/launcher_icon_selected_back_150.png",
+                   PKGDATADIR"/launcher_icon_back_54.png");
+  GenerateTextures(icon_edge,
+                   PKGDATADIR"/launcher_icon_edge_150.png",
+                   PKGDATADIR"/launcher_icon_edge_54.png");
+  GenerateTextures(icon_glow,
+                   PKGDATADIR"/launcher_icon_glow_200.png",
+                   PKGDATADIR"/launcher_icon_glow_62.png");
+  GenerateTextures(icon_shadow,
+                   PKGDATADIR"/launcher_icon_shadow_200.png",
+                   PKGDATADIR"/launcher_icon_shadow_62.png");
+  GenerateTextures(icon_shine,
+                   PKGDATADIR"/launcher_icon_shine_150.png",
+                   PKGDATADIR"/launcher_icon_shine_54.png");
+
+  SetupShaders();
+}
+
+void IconRenderer::TexturesPool::SetupShaders()
 {
   if (nux::GetWindowThread()->GetGraphicsEngine().UsingGLSLCodePath())
   {
@@ -1180,108 +1237,6 @@ void setup_shaders()
 #endif
   }
 }
-
-
-inline nux::BaseTexture* load_texture(const char* filename)
-{
-  return nux::CreateTexture2DFromFile(filename, -1, true);
-}
-
-void generate_textures(std::vector<nux::BaseTexture*>& icons, const char* big_file, const char* small_file)
-{
-  icons.resize(IconSize::LAST);
-  icons[IconSize::BIG] = load_texture(big_file);
-  icons[IconSize::SMALL] = load_texture(small_file);
-}
-
-void generate_textures()
-{
-  progress_bar_trough = load_texture(PKGDATADIR"/progress_bar_trough.png");
-  progress_bar_fill = load_texture(PKGDATADIR"/progress_bar_fill.png");
-
-  generate_textures(icon_background,
-                    PKGDATADIR"/launcher_icon_back_150.png",
-                    PKGDATADIR"/launcher_icon_back_54.png");
-  generate_textures(icon_selected_background,
-                    PKGDATADIR"/launcher_icon_selected_back_150.png",
-                    PKGDATADIR"/launcher_icon_back_54.png");
-  generate_textures(icon_edge,
-                    PKGDATADIR"/launcher_icon_edge_150.png",
-                    PKGDATADIR"/launcher_icon_edge_54.png");
-  generate_textures(icon_glow,
-                    PKGDATADIR"/launcher_icon_glow_200.png",
-                    PKGDATADIR"/launcher_icon_glow_62.png");
-  generate_textures(icon_shadow,
-                    PKGDATADIR"/launcher_icon_shadow_200.png",
-                    PKGDATADIR"/launcher_icon_shadow_62.png");
-  generate_textures(icon_shine,
-                    PKGDATADIR"/launcher_icon_shine_150.png",
-                    PKGDATADIR"/launcher_icon_shine_54.png");
-
-  // squircle_base = load_texture(PKGDATADIR"/squircle_base_54.png");
-  // squircle_base_selected = load_texture(PKGDATADIR"/squircle_base_selected_54.png");
-  // squircle_edge = load_texture(PKGDATADIR"/squircle_edge_54.png");
-  // squircle_glow = load_texture(PKGDATADIR"/squircle_glow_62.png");
-  // squircle_shadow = load_texture(PKGDATADIR"/squircle_shadow_62.png");
-  // squircle_shine = load_texture(PKGDATADIR"/squircle_shine_54.png");
-
-  pip_ltr = load_texture(PKGDATADIR"/launcher_pip_ltr.png");
-  arrow_ltr = load_texture(PKGDATADIR"/launcher_arrow_ltr.png");
-  arrow_empty_ltr = load_texture(PKGDATADIR"/launcher_arrow_outline_ltr.png");
-
-  pip_rtl = load_texture(PKGDATADIR"/launcher_pip_rtl.png");
-  arrow_rtl = load_texture(PKGDATADIR"/launcher_arrow_rtl.png");
-  arrow_empty_rtl = load_texture(PKGDATADIR"/launcher_arrow_outline_rtl.png");
-
-  offscreen_progress_texture = nux::GetGraphicsDisplay()->GetGpuDevice()
-    ->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8);
-
-  setup_shaders();
-  textures_created = true;
-}
-
-void destroy_textures(std::vector<nux::BaseTexture*>& icons)
-{
-  icons[SMALL]->UnReference();
-  icons[BIG]->UnReference();
-  icons.clear();
-}
-
-void destroy_textures()
-{
-  if (!textures_created)
-    return;
-
-  progress_bar_trough->UnReference();
-  progress_bar_fill->UnReference();
-  pip_ltr->UnReference();
-  pip_rtl->UnReference();
-  arrow_ltr->UnReference();
-  arrow_rtl->UnReference();
-  arrow_empty_ltr->UnReference();
-  arrow_empty_rtl->UnReference();
-
-  destroy_textures(icon_background);
-  destroy_textures(icon_selected_background);
-  destroy_textures(icon_edge);
-  destroy_textures(icon_glow);
-  destroy_textures(icon_shadow);
-  destroy_textures(icon_shine);
-
-  // squircle_base->UnReference();
-  // squircle_base_selected->UnReference();
-  // squircle_edge->UnReference();
-  // squircle_glow->UnReference();
-  // squircle_shadow->UnReference();
-  // squircle_shine->UnReference();
-
-  IconRenderer::DestroyShortcutTextures();
-
-  textures_created = false;
-}
-
-} // anon namespace
-} // namespace local
 
 } // namespace ui
 } // namespace unity
