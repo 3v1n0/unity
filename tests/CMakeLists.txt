@@ -114,7 +114,6 @@ if (GTEST_SRC_DIR AND
 # The actual test executable (xless) - do not put anything that requires X in here
   set (GTEST_XLESS_SOURCES
        test_main_xless.cpp
-       test_action_link.cpp
        test_animator.cpp
        test_launcher_model.cpp
        test_glib_object.cpp
@@ -207,6 +206,7 @@ if (ENABLE_X_SUPPORT)
 # Tests that require X
   add_executable(test-gtest
                  test_main.cpp
+                 test_action_link.cpp
                  test_application_launcher_icon.cpp
                  test_bfb_launcher_icon.cpp
                  test_dashview_impl.cpp
