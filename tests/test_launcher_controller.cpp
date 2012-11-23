@@ -1544,4 +1544,12 @@ TEST_F(TestLauncherController, UpdateSelectionChanged)
   ASSERT_EQ(lc.Impl()->model_->Selection()->tooltip_text(), last_selection_change);
 }
 
+TEST_F(TestLauncherController, UpdateLaunchersBackgroundColor)
+{
+  UBusManager().SendMessage(UBUS_BACKGROUND_COLOR_CHANGED,
+                            g_variant_new("(dddd)", 11/255.0f, 22/255.0f, 33/255.0f, 1.0f));
+
+  Utils::WaitUntil([this] { return lc.options()->background_color == nux::Color(11, 22, 33); });
+}
+
 }
