@@ -214,11 +214,10 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
 
     if (launchers[i]->monitor() != monitor)
     {
-      launchers[i]->monitor(monitor);
-
 #ifdef USE_X11
       edge_barriers_.Unsubscribe(launchers[i].GetPointer(), launchers[i]->monitor);
 #endif
+      launchers[i]->monitor = monitor;
     }
     else
     {
@@ -232,7 +231,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
 
   for (unsigned int i = last_launcher; i < launchers_size; ++i)
   {
-    auto launcher = launchers[i];
+    auto const& launcher = launchers[i];
     if (launcher)
     {
       parent_->RemoveChild(launcher.GetPointer());
