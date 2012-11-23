@@ -163,12 +163,12 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   lens_->connected.changed.connect([&](bool is_connected) { if (is_connected) initial_activation_ = true; });
   lens_->categories_reordered.connect(sigc::mem_fun(this, &LensView::OnCategoryOrderChanged));
   search_string.SetGetterFunction(sigc::mem_fun(this, &LensView::get_search_string));
-  filters_expanded.changed.connect([&](bool expanded) 
-  { 
-    fscroll_view_->SetVisible(expanded); 
-    QueueRelayout(); 
+  filters_expanded.changed.connect([&](bool expanded)
+  {
+    fscroll_view_->SetVisible(expanded);
+    QueueRelayout();
     OnColumnsChanged();
-    ubus_manager_.SendMessage(UBUS_REFINE_STATUS, 
+    ubus_manager_.SendMessage(UBUS_REFINE_STATUS,
                               g_variant_new(UBUS_REFINE_STATUS_FORMAT_STRING, expanded ? TRUE : FALSE));
   });
   view_type.changed.connect(sigc::mem_fun(this, &LensView::OnViewTypeChanged));
@@ -372,7 +372,7 @@ void LensView::OnCategoryAdded(Category const& category)
     {
       case ResultView::ActivateType::DIRECT:
       {
-        lens_->Activate(uri);  
+        lens_->Activate(uri);
       } break;
       case ResultView::ActivateType::PREVIEW:
       {
@@ -382,7 +382,7 @@ void LensView::OnCategoryAdded(Category const& category)
     };
 
   }, unique_id));
-  
+
 
   /* Set up filter model for this category */
   Results::Ptr results_model = lens_->results;

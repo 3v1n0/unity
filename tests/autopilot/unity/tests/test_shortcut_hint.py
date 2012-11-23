@@ -27,6 +27,7 @@ class BaseShortcutHintTests(UnityTestCase):
 
         self.shortcut_hint = self.get_shortcut_controller()
         self.set_unity_option('shortcut_overlay', True)
+        self.set_unity_log_level("unity.shell.compiz", "DEBUG")
         self.skip_if_monitor_too_small()
         sleep(1)
 
