@@ -24,7 +24,7 @@ using namespace testing;
 
 #include <Nux/Nux.h>
 #include <X11/Xlib.h>
-#include <X11/extensions/XTest.h>
+//#include <X11/extensions/XTest.h>
 
 #include "unity-shared/WindowManager.h"
 #include "test_utils.h"
@@ -47,7 +47,7 @@ struct TestXdndStartStopNotifierImp : public Test {
   unity::XdndStartStopNotifierImp xdnd_start_stop_notifier;
 };
 
-TEST_F(TestXdndStartStopNotifierImp, SignalStarted)
+TEST_F(TestXdndStartStopNotifierImp, DISABLED_SignalStarted)
 {
   bool signal_received = false;
   xdnd_start_stop_notifier.started.connect([&](){
@@ -55,7 +55,7 @@ TEST_F(TestXdndStartStopNotifierImp, SignalStarted)
   });
 
   XSetSelectionOwner(display_, selection_, owner_, CurrentTime);
-  XTestFakeButtonEvent(display_, 1, True, CurrentTime);
+  //XTestFakeButtonEvent(display_, 1, True, CurrentTime);
   auto& wm = unity::WindowManager::Default();
   wm.window_mapped.emit(0);
 
@@ -71,20 +71,20 @@ TEST_F(TestXdndStartStopNotifierImp, DISABLED_SignalFinished)
   });
 
   XSetSelectionOwner(display_, selection_, owner_, CurrentTime);
-  XTestFakeButtonEvent(display_, 1, True, CurrentTime);
+  //XTestFakeButtonEvent(display_, 1, True, CurrentTime);
   auto& wm = unity::WindowManager::Default();
   wm.window_mapped.emit(0);
 
   Utils::WaitForTimeoutMSec(500);
 
   XSetSelectionOwner(display_, selection_, None, CurrentTime);
-  XTestFakeButtonEvent(display_, 1, False, CurrentTime);
+  //XTestFakeButtonEvent(display_, 1, False, CurrentTime);
   wm.window_unmapped.emit(0);
 
   Utils::WaitUntil(signal_received);
 }
 
-TEST_F(TestXdndStartStopNotifierImp, DISABLED_SSignalFinished_QT)
+TEST_F(TestXdndStartStopNotifierImp, DISABLED_SignalFinished_QT)
 {
   bool signal_received = false;
   xdnd_start_stop_notifier.finished.connect([&](){
@@ -92,13 +92,13 @@ TEST_F(TestXdndStartStopNotifierImp, DISABLED_SSignalFinished_QT)
   });
 
   XSetSelectionOwner(display_, selection_, owner_, CurrentTime);
-  XTestFakeButtonEvent(display_, 1, True, CurrentTime);
+  //XTestFakeButtonEvent(display_, 1, True, CurrentTime);
   auto& wm = unity::WindowManager::Default();
   wm.window_mapped.emit(0);
 
   Utils::WaitForTimeoutMSec(500);
 
-  XTestFakeButtonEvent(display_, 1, False, CurrentTime);
+  //XTestFakeButtonEvent(display_, 1, False, CurrentTime);
   wm.window_unmapped.emit(0);
 
   Utils::WaitUntil(signal_received);
