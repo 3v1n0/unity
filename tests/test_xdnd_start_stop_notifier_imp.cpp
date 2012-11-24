@@ -60,7 +60,7 @@ TEST_F(TestXdndStartStopNotifierImp, DISABLED_SignalStarted)
   wm.window_mapped.emit(0);
 
   Utils::WaitUntil(signal_received);
-  XTestFakeButtonEvent(display_, 1, False, CurrentTime);
+  //XTestFakeButtonEvent(display_, 1, False, CurrentTime);
 }
 
 TEST_F(TestXdndStartStopNotifierImp, DISABLED_SignalFinished)
