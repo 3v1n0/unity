@@ -69,8 +69,8 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launche
   launcher_ = launcher;
 
   icon_texture_ = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(
-    launcher->GetIconSize(),
-    launcher->GetIconSize(),
+    launcher->GetWidth(),
+    launcher->GetWidth(),
     1,
     nux::BITFMT_R8G8B8A8);
 

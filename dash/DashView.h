@@ -100,9 +100,9 @@ private:
   void OnLiveSearchReached(std::string const& search_string);
   void OnLensAdded(Lens::Ptr& lens);
   void OnLensBarActivated(std::string const& id);
-  void OnSearchFinished(Lens::Hints const& hints);
-  void OnGlobalSearchFinished(Lens::Hints const& hints);
-  void OnAppsGlobalSearchFinished(Lens::Hints const& hints);
+  void OnSearchFinished(Lens::Hints const& hints, glib::Error const& error);
+  void OnGlobalSearchFinished(Lens::Hints const& hints, glib::Error const& error);
+  void OnAppsGlobalSearchFinished(Lens::Ptr const& lens);
   void OnUriActivated(ResultView::ActivateType type, std::string const& uri, GVariant* data, std::string const& unique_id);
   void OnUriActivatedReply(std::string const& uri, HandledType type, Lens::Hints const&);
   bool DoFallbackActivation(std::string const& uri);

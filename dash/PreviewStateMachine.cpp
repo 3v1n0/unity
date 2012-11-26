@@ -22,11 +22,8 @@ namespace unity
 {
 namespace dash
 {
+DECLARE_LOGGER(logger, "unity.dash.preview.statemachine");
 
-namespace
-{
-nux::logging::Logger logger("unity.dash.PreviewStateMachine");
-}
 PreviewStateMachine::PreviewStateMachine()
   : preview_active(false)
   , left_results(-1)
@@ -98,7 +95,7 @@ void PreviewStateMachine::CheckPreviewRequirementsFulfilled()
   if (GetSplitPosition(LENS_BAR) < 0) return;
   if (GetSplitPosition(SEARCH_BAR) < 0) return;
    */
- 
+
   if (left_results < 0 ||
       right_results < 0)
     return;

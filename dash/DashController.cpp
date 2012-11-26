@@ -35,12 +35,12 @@ namespace unity
 {
 namespace dash
 {
+DECLARE_LOGGER(logger, "unity.dash.controller");
 
-const char window_title[] = "unity-dash";
+const char* window_title = "unity-dash";
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.controller");
 const unsigned int PRELOAD_TIMEOUT_LENGTH = 40;
 
 const std::string DBUS_PATH = "/com/canonical/Unity/Dash";
@@ -83,7 +83,7 @@ Controller::Controller()
     {
       // Relayout here so the input window size updates.
       Relayout();
-      
+
       window_->PushToFront();
       window_->SetInputFocus();
       nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
@@ -130,7 +130,7 @@ void Controller::SetupDashView()
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout->AddView(view_, 1);
-  layout->SetContentDistribution(nux::eStackLeft);
+  layout->SetContentDistribution(nux::MAJOR_POSITION_START);
   layout->SetVerticalExternalMargin(0);
   layout->SetHorizontalExternalMargin(0);
   window_->SetLayout(layout);
@@ -443,7 +443,7 @@ void Controller::OnBusAcquired(GObject *obj, GAsyncResult *result, gpointer user
     {
       LOG_WARNING(logger) << "Object registration failed. Dash DBus interface not available.";
     }
-    
+
     g_dbus_node_info_unref(introspection_data);
   }
 }

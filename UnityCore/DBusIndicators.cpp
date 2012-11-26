@@ -32,11 +32,10 @@ namespace unity
 {
 namespace indicator
 {
+DECLARE_LOGGER(logger, "unity.indicator.dbus");
 
 namespace
 {
-nux::logging::Logger logger("unity.indicator.DBusIndicators");
-
 const std::string SERVICE_NAME("com.canonical.Unity.Panel.Service");
 const std::string SERVICE_PATH("/com/canonical/Unity/Panel/Service");
 const std::string SERVICE_IFACE("com.canonical.Unity.Panel.Service");

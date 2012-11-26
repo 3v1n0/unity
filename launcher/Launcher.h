@@ -32,7 +32,6 @@
 #include "unity-shared/AbstractIconRenderer.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "DevicesSettings.h"
-#include "DNDCollectionWindow.h"
 #include "DndData.h"
 #include "unity-shared/Introspectable.h"
 #include "LauncherModel.h"
@@ -43,7 +42,7 @@
 #include "unity-shared/UBusWrapper.h"
 #include "SoftwareCenterLauncherIcon.h"
 
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
 # include "PointerBarrier.h"
 # include "EdgeBarrierController.h"
 #endif
@@ -52,12 +51,12 @@ namespace unity
 {
 namespace launcher
 {
-extern const char window_title[];
+extern const char* window_title;
 
 class AbstractLauncherIcon;
 
 class Launcher : public unity::debug::Introspectable,
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
                  // TODO: abstract this into a more generic class.
                  public ui::EdgeBarrierSubscriber,
 #endif
@@ -66,7 +65,7 @@ class Launcher : public unity::debug::Introspectable,
   NUX_DECLARE_OBJECT_TYPE(Launcher, nux::View);
 public:
 
-  Launcher(nux::BaseWindow* parent, nux::ObjectPtr<DNDCollectionWindow> const& collection_window, NUX_FILE_LINE_PROTO);
+  Launcher(nux::BaseWindow* parent, NUX_FILE_LINE_PROTO);
 
   nux::Property<Display*> display;
   nux::Property<int> monitor;
@@ -127,6 +126,11 @@ public:
   int GetDragDelta() const;
   void SetHover(bool hovered);
 
+  void DndStarted(std::string const& mimes);
+  void DndFinished();
+  void SetDndQuirk();
+  void UnsetDndQuirk();
+
   sigc::signal<void, std::string const&, AbstractLauncherIcon::Ptr const&> add_request;
   sigc::signal<void, AbstractLauncherIcon::Ptr const&> remove_request;
   sigc::signal<void> selection_change;
@@ -148,7 +152,10 @@ public:
 
   void RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr const& icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
 
+#ifdef NUX_GESTURES_SUPPORT
   virtual nux::GestureDeliveryRequest GestureEvent(const nux::GestureEvent &event);
+#endif
+
 protected:
   // Introspectable methods
   std::string GetName() const;
@@ -193,11 +200,13 @@ private:
   void OnOptionChanged();
   void UpdateOptions(Options::Ptr options);
 
+#ifdef NUX_GESTURES_SUPPORT
   void OnDragStart(const nux::GestureEvent &event);
   void OnDragUpdate(const nux::GestureEvent &event);
   void OnDragFinish(const nux::GestureEvent &event);
+#endif
 
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   bool HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
 #endif
 
@@ -208,7 +217,6 @@ private:
   bool StrutHack();
   bool StartIconDragTimeout(int x, int y);
   bool OnScrollTimeout();
-  bool OnUpdateDragManagerTimeout();
 
   void SetMousePosition(int x, int y);
 
@@ -243,6 +251,7 @@ private:
   float DragOutProgress(struct timespec const& current) const;
   float IconDesatValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
   float IconPresentProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
+  float IconUnfoldProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
   float IconUrgentProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
   float IconShimmerProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
   float IconUrgentPulseValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
@@ -317,15 +326,8 @@ private:
 
   virtual long PostLayoutManagement(long LayoutResult);
 
-  void SetOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
-  void RestoreSystemRenderTarget();
-
-  void OnDisplayChanged(Display* display);
-  void OnDNDDataCollected(const std::list<char*>& mimes);
-
   void DndReset();
   void DndHoveredIconReset();
-  void DndTimeoutSetup();
   bool DndIsSpecialRequest(std::string const& uri) const;
 
   LauncherModel::Ptr _model;
@@ -381,7 +383,6 @@ private:
   nux::Point2 _mouse_position;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
   nux::ObjectPtr<LauncherDragWindow> _drag_window;
-  nux::ObjectPtr<unity::DNDCollectionWindow> _collection_window;
   LauncherHideMachine _hide_machine;
   LauncherHoverMachine _hover_machine;
 

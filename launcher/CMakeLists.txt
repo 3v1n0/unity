@@ -31,7 +31,6 @@ set (LAUNCHER_SOURCES
      ApplicationLauncherIcon.cpp
      BFBLauncherIcon.cpp
      CairoBaseWindow.cpp
-     DNDCollectionWindow.cpp
      Decaymulator.cpp
      DesktopLauncherIcon.cpp
      DeviceLauncherSection.cpp
@@ -71,15 +70,19 @@ set (LAUNCHER_SOURCES
      VolumeImp.cpp
      VolumeLauncherIcon.cpp
      VolumeMonitorWrapper.cpp
+     XdndCollectionWindowImp.cpp
+     XdndManagerImp.cpp
+     XdndStartStopNotifier.cpp
+     XdndStartStopNotifierImp.cpp
      )
 
-if(UNITY_ENABLE_X_ORG_SUPPORT)
+if (ENABLE_X_SUPPORT)
   set (LAUNCHER_SOURCES
     EdgeBarrierController.cpp
     PointerBarrier.cpp
     ${LAUNCHER_SOURCES}
     )
-endif()
+endif ()
 
 add_library (launcher-lib STATIC ${LAUNCHER_SOURCES})
 add_dependencies (launcher-lib unity-core-${UNITY_API_VERSION} unity-shared)
@@ -89,7 +92,6 @@ set (SWITCHER_SOURCES
       SwitcherController.cpp
       SwitcherModel.cpp
       SwitcherView.cpp
-      LayoutSystem.cpp
     )
 
 add_library (switcher-lib STATIC ${SWITCHER_SOURCES})
@@ -101,7 +103,7 @@ add_dependencies (switcher-lib unity-core-${UNITY_API_VERSION} unity-shared)
 add_executable (launcher StandaloneLauncher.cpp)
 target_link_libraries (launcher launcher-lib unity-shared unity-shared-standalone)
 
-if(UNITY_ENABLE_X_ORG_SUPPORT)
+if (ENABLE_X_SUPPORT)
   add_executable (switcher StandaloneSwitcher.cpp)
   target_link_libraries (switcher switcher-lib launcher-lib unity-shared unity-shared-standalone)
-endif()
+endif ()

@@ -589,7 +589,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
             maximized=True,
             move_to_monitor=True)
 
-        indicator = self.panel.indicators.get_indicator_by_name_hint("indicator-session-devices")
+        indicator = self.panel.indicators.get_indicator_by_name_hint("indicator-session")
         self.mouse_open_indicator(indicator)
         self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
 
@@ -1225,7 +1225,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         """Opening an indicator entry and then hovering others entries must open them."""
         text_win = self.open_new_application_window("Text Editor")
         panel = self.panels.get_panel_for_monitor(text_win.monitor)
-        indicator = panel.indicators.get_indicator_by_name_hint("indicator-session-devices")
+        indicator = panel.indicators.get_indicator_by_name_hint("indicator-session")
         self.mouse_open_indicator(indicator)
 
         for monitor in range(0, self.screen_geo.get_num_monitors()):

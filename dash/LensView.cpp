@@ -33,6 +33,7 @@
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/PlacesVScrollBar.h"
+#include "unity-shared/PlacesOverlayVScrollBar.h"
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
@@ -41,10 +42,9 @@ namespace unity
 {
 namespace dash
 {
+DECLARE_LOGGER(logger, "unity.dash.lensview");
 namespace
 {
-nux::logging::Logger logger("unity.dash.lensview");
-
 const int CARD_VIEW_GAP_VERT  = 24; // pixels
 const int CARD_VIEW_GAP_HORIZ = 25; // pixels
 }
@@ -59,6 +59,13 @@ public:
     , up_area_(nullptr)
   {
     SetVScrollBar(scroll_bar);
+
+    OnVisibleChanged.connect([&] (nux::Area* /*area*/, bool visible) {
+      if (m_horizontal_scrollbar_enable)
+        _hscrollbar->SetVisible(visible);
+      if (m_vertical_scrollbar_enable)
+        _vscrollbar->SetVisible(visible);
+    });
   }
 
   void ScrollToPosition(nux::Geometry const& position)
@@ -157,12 +164,12 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   lens_->connected.changed.connect([&](bool is_connected) { if (is_connected) initial_activation_ = true; });
   lens_->categories_reordered.connect(sigc::mem_fun(this, &LensView::OnCategoryOrderChanged));
   search_string.SetGetterFunction(sigc::mem_fun(this, &LensView::get_search_string));
-  filters_expanded.changed.connect([&](bool expanded) 
-  { 
-    fscroll_view_->SetVisible(expanded); 
-    QueueRelayout(); 
+  filters_expanded.changed.connect([&](bool expanded)
+  {
+    fscroll_view_->SetVisible(expanded);
+    QueueRelayout();
     OnColumnsChanged();
-    ubus_manager_.SendMessage(UBUS_REFINE_STATUS, 
+    ubus_manager_.SendMessage(UBUS_REFINE_STATUS,
                               g_variant_new(UBUS_REFINE_STATUS_FORMAT_STRING, expanded ? TRUE : FALSE));
   });
   view_type.changed.connect(sigc::mem_fun(this, &LensView::OnViewTypeChanged));
@@ -194,6 +201,10 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
     }
   });
 
+  OnVisibleChanged.connect([&] (nux::Area* area, bool visible) {
+    scroll_view_->SetVisible(visible);
+  });
+
 }
 
 void LensView::SetupViews(nux::Area* show_filters)
@@ -203,9 +214,9 @@ void LensView::SetupViews(nux::Area* show_filters)
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenLensAndFilters());
 
-  scroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
+  scroll_view_ = new LensScrollView(new PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION),
                                     NUX_TRACKER_LOCATION);
-  scroll_view_->EnableVerticalScrollBar(false);
+  scroll_view_->EnableVerticalScrollBar(true);
   scroll_view_->EnableHorizontalScrollBar(false);
   layout_->AddView(scroll_view_);
 
@@ -362,7 +373,7 @@ void LensView::OnCategoryAdded(Category const& category)
     {
       case ResultView::ActivateType::DIRECT:
       {
-        lens_->Activate(uri);  
+        lens_->Activate(uri);
       } break;
       case ResultView::ActivateType::PREVIEW:
       {
@@ -372,7 +383,7 @@ void LensView::OnCategoryAdded(Category const& category)
     };
 
   }, unique_id));
-  
+
 
   /* Set up filter model for this category */
   Results::Ptr results_model = lens_->results;
@@ -405,8 +416,8 @@ void LensView::OnCategoryAdded(Category const& category)
 
   /* We need the full range of method args so we can specify the offset
    * of the group into the layout */
-  scroll_layout_->AddView(group, 0, nux::MinorDimensionPosition::eAbove,
-                          nux::MinorDimensionSize::eFull, 100.0f,
+  scroll_layout_->AddView(group, 0, nux::MinorDimensionPosition::MINOR_POSITION_START,
+                          nux::MinorDimensionSize::MINOR_SIZE_FULL, 100.0f,
                           (nux::LayoutPosition)index);
 }
 
@@ -606,10 +617,10 @@ void LensView::HideResultsMessage()
   }
 }
 
-void LensView::PerformSearch(std::string const& search_query)
+void LensView::PerformSearch(std::string const& search_query, Lens::SearchFinishedCallback const& cb)
 {
   search_string_ = search_query;
-  lens_->Search(search_query);
+  lens_->Search(search_query, cb);
 }
 
 std::string LensView::get_search_string() const
@@ -665,7 +676,7 @@ void LensView::OnViewTypeChanged(ViewType view_type)
   if (view_type != HIDDEN && initial_activation_)
   {
     /* We reset the lens for ourselves, in case this is a restart or something */
-    lens_->Search(search_string_);
+    lens_->Search(search_string_, [] (Lens::Hints const&, glib::Error const&) {});
     initial_activation_ = false;
   }
 

@@ -26,7 +26,6 @@ using namespace testing;
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 
-#include "launcher/DNDCollectionWindow.h"
 #include "launcher/MockLauncherIcon.h"
 #include "launcher/Launcher.h"
 #include "unity-shared/PanelStyle.h"
@@ -63,8 +62,8 @@ public:
   class MockLauncher : public Launcher
   {
   public:
-    MockLauncher(nux::BaseWindow* parent, nux::ObjectPtr<DNDCollectionWindow> const& collection_window)
-      : Launcher(parent, collection_window)
+    MockLauncher(nux::BaseWindow* parent)
+      : Launcher(parent)
     {}
 
     AbstractLauncherIcon::Ptr MouseIconIntersection(int x, int y) const
@@ -80,65 +79,22 @@ public:
       return AbstractLauncherIcon::Ptr();
     }
 
-    float IconBackgroundIntensity(AbstractLauncherIcon::Ptr const& icon, timespec const& current) const
-    {
-      return Launcher::IconBackgroundIntensity(icon, current);
-    }
+    using Launcher::IconBackgroundIntensity;
+    using Launcher::StartIconDrag;
+    using Launcher::ShowDragWindow;
+    using Launcher::EndIconDrag;
+    using Launcher::UpdateDragWindowPosition;
+    using Launcher::HideDragWindow;
+    using Launcher::ResetMouseDragState;
+    using Launcher::DndIsSpecialRequest;
+    using Launcher::ProcessDndEnter;
+    using Launcher::ProcessDndLeave;
+    using Launcher::ProcessDndMove;
+    using Launcher::ProcessDndDrop;
+    using Launcher::_drag_icon_position;
 
-    void StartIconDrag(AbstractLauncherIcon::Ptr const& icon)
-    {
-      Launcher::StartIconDrag(icon);
-    }
-
-    void ShowDragWindow()
-    {
-      Launcher::ShowDragWindow();
-    }
-
-    void EndIconDrag()
-    {
-      Launcher::EndIconDrag();
-    }
-
-    void UpdateDragWindowPosition(int x, int y)
-    {
-      Launcher::UpdateDragWindowPosition(x, y);
-    }
-
-    void HideDragWindow()
-    {
-      Launcher::HideDragWindow();
-    }
-
-    void ResetMouseDragState()
-    {
-      Launcher::ResetMouseDragState();
-    }
-
-    bool DndIsSpecialRequest(std::string const& uri) const
-    {
-      return Launcher::DndIsSpecialRequest(uri);
-    }
-
-    int GetDragIconPosition() const
-    {
-      return _drag_icon_position;
-    }
-
-    void ProcessDndEnter()
-    {
-      Launcher::ProcessDndEnter();
-    }
-
-    void ProcessDndLeave()
-    {
-      Launcher::ProcessDndLeave();
-    }
-
-    void ProcessDndMove(int x, int y, std::list<char*> mimes)
-    {
-      Launcher::ProcessDndMove(x, y, mimes);
-    }
+    using Launcher::IconStartingBlinkValue;
+    using Launcher::IconStartingPulseValue;
 
     void FakeProcessDndMove(int x, int y, std::list<std::string> uris)
     {
@@ -158,19 +114,13 @@ public:
 
       _dnd_hovered_icon = MouseIconIntersection(x, y);
     }
-
-    void ProcessDndDrop(int x, int y)
-    {
-      Launcher::ProcessDndDrop(x, y);
-    }
   };
 
   TestLauncher()
     : parent_window_(new nux::BaseWindow("TestLauncherWindow"))
-    , dnd_collection_window_(new DNDCollectionWindow)
     , model_(new LauncherModel)
     , options_(new Options)
-    , launcher_(new MockLauncher(parent_window_, dnd_collection_window_))
+    , launcher_(new MockLauncher(parent_window_))
   {
     launcher_->options = options_;
     launcher_->SetModel(model_);
@@ -201,7 +151,6 @@ public:
 
   MockUScreen uscreen;
   nux::BaseWindow* parent_window_;
-  nux::ObjectPtr<DNDCollectionWindow> dnd_collection_window_;
   Settings settings;
   panel::Style panel_style;
   LauncherModel::Ptr model_;
@@ -237,9 +186,7 @@ TEST_F(TestLauncher, TestQuirksDuringDnd)
   EXPECT_CALL(*third, ShouldHighlightOnDrag(_))
       .WillRepeatedly(Return(false));
 
-  std::list<char*> uris;
-  dnd_collection_window_->collected.emit(uris);
-
+  launcher_->DndStarted("");
   Utils::WaitForTimeout(1);
 
   EXPECT_FALSE(first->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT));
@@ -354,7 +301,7 @@ TEST_F(TestLauncher, DragLauncherIconSavesIconOrderIfPositionHasChanged)
   // Start dragging icon2
   launcher_->StartIconDrag(icon2);
   launcher_->ShowDragWindow();
-  ASSERT_EQ(launcher_->GetDragIconPosition(), model_->IconIndex(icon2));
+  ASSERT_EQ(launcher_->_drag_icon_position, model_->IconIndex(icon2));
 
   // Moving icon2 at the end
   auto const& center3 = icon3->GetCenter(launcher_->monitor());
@@ -364,7 +311,7 @@ TEST_F(TestLauncher, DragLauncherIconSavesIconOrderIfPositionHasChanged)
   model_->saved.connect([&model_saved] { model_saved = true; });
   EXPECT_CALL(*icon2, Stick(false));
 
-  ASSERT_NE(launcher_->GetDragIconPosition(), model_->IconIndex(icon2));
+  ASSERT_NE(launcher_->_drag_icon_position, model_->IconIndex(icon2));
   launcher_->EndIconDrag();
 
   // The icon order should be reset
@@ -391,7 +338,7 @@ TEST_F(TestLauncher, DragLauncherIconSavesIconOrderIfPositionHasNotChanged)
   // Start dragging icon2
   launcher_->StartIconDrag(icon2);
   launcher_->ShowDragWindow();
-  ASSERT_EQ(launcher_->GetDragIconPosition(), model_->IconIndex(icon2));
+  ASSERT_EQ(launcher_->_drag_icon_position, model_->IconIndex(icon2));
 
   // Moving icon2 at the end
   auto center3 = icon3->GetCenter(launcher_->monitor());
@@ -408,7 +355,7 @@ TEST_F(TestLauncher, DragLauncherIconSavesIconOrderIfPositionHasNotChanged)
   bool model_saved = false;
   model_->saved.connect([&model_saved] { model_saved = true; });
 
-  ASSERT_EQ(launcher_->GetDragIconPosition(), model_->IconIndex(icon2));
+  ASSERT_EQ(launcher_->_drag_icon_position, model_->IconIndex(icon2));
   launcher_->EndIconDrag();
 
   // The icon order should be reset
@@ -524,6 +471,29 @@ TEST_F(TestLauncher, AddRequestSignal)
   EXPECT_TRUE(add_request);
 }
 
+TEST_F(TestLauncher, IconStartingPulseValue)
+{  
+  struct timespec current;
+  clock_gettime(CLOCK_MONOTONIC, &current);
+  MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon);
+
+  icon->SetQuirk(AbstractLauncherIcon::Quirk::STARTING, true);
+
+  // Pulse value should start at 0.
+  EXPECT_EQ(launcher_->IconStartingPulseValue(icon, current), 0.0);
+}
+
+TEST_F(TestLauncher, IconStartingBlinkValue)
+{  
+  struct timespec current;
+  clock_gettime(CLOCK_MONOTONIC, &current);
+  MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon);
+
+  icon->SetQuirk(AbstractLauncherIcon::Quirk::STARTING, true);
+
+  // Pulse value should start at 0.
+  EXPECT_EQ(launcher_->IconStartingBlinkValue(icon, current), 0.0);
+}
 
 }
 }

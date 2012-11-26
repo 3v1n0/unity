@@ -41,10 +41,9 @@ namespace unity
 {
 namespace dash
 {
+DECLARE_LOGGER(logger, "unity.dash.view");
 namespace
 {
-
-nux::logging::Logger logger("unity.dash.view");
 previews::Style preview_style;
 }
 
@@ -108,8 +107,13 @@ DashView::DashView()
   Relayout();
 
   home_lens_->AddLenses(lenses_);
-  home_lens_->search_finished.connect(sigc::mem_fun(this, &DashView::OnGlobalSearchFinished));
   lens_bar_->Activate("home.lens");
+
+  // we will special case when applications lens finishes global search
+  // because we want to be able to launch applications immediately
+  // without waiting for the search finished signal which will
+  // be delayed by all the lenses we're searching
+  home_lens_->lens_search_finished.connect(sigc::mem_fun(this, &DashView::OnAppsGlobalSearchFinished));
 
   // We are interested in the color of the desktop background.
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &DashView::OnBGColorChanged));
@@ -162,6 +166,7 @@ void DashView::ClosePreview()
 
   preview_navigation_mode_ = previews::Navigation::NONE;
   preview_displaying_ = false;
+  active_lens_view_->SetVisible(true);
 
   // re-focus dash view component.
   nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
@@ -262,10 +267,11 @@ void DashView::BuildPreview(Preview::Ptr model)
     AddChild(preview_container_.GetPointer());
     preview_container_->SetParentObject(this);
     preview_container_->Preview(model, previews::Navigation::NONE); // no swipe left or right
-    
+
     preview_container_->SetGeometry(layout_->GetGeometry());
     preview_displaying_ = true;
- 
+    active_lens_view_->SetVisible(false);
+
     // connect to nav left/right signals to request nav left/right movement.
     preview_container_->navigate_left.connect([&] () {
       preview_navigation_mode_ = previews::Navigation::LEFT;
@@ -277,7 +283,7 @@ void DashView::BuildPreview(Preview::Ptr model)
 
     preview_container_->navigate_right.connect([&] () {
       preview_navigation_mode_ = previews::Navigation::RIGHT;
-      
+
       // sends a message to all result views, sending the the uri of the current preview result
       // and the unique id of the result view that should be handling the results
       ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", 1, last_activated_uri_.c_str(), stored_activated_unique_id_.c_str()));
@@ -324,18 +330,19 @@ void DashView::AboutToShow()
     LOG_DEBUG(logger) << "Setting ViewType " << ViewType::LENS_VIEW
                                 << " on '" << home_lens_->id() << "'";
   }
-  else if (active_lens_view_)
+  else
   {
     // careful here, the lens_view's view_type doesn't get reset when the dash
     // hides, but lens' view_type does, so we need to update the lens directly
     active_lens_view_->lens()->view_type = ViewType::LENS_VIEW;
   }
+  active_lens_view_->SetVisible(true);
 
   // this will make sure the spinner animates if the search takes a while
   search_bar_->ForceSearchChanged();
 
   // if a preview is open, close it
-  if (preview_displaying_) 
+  if (preview_displaying_)
   {
     ClosePreview();
   }
@@ -359,8 +366,10 @@ void DashView::AboutToHide()
   LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HIDDEN
                             << " on '" << home_lens_->id() << "'";
 
+  active_lens_view_->SetVisible(false);
+
   // if a preview is open, close it
-  if (preview_displaying_) 
+  if (preview_displaying_)
   {
     ClosePreview();
   }
@@ -378,7 +387,7 @@ void DashView::SetupViews()
 
   content_layout_ = new DashLayout(NUX_TRACKER_LOCATION);
   content_layout_->SetTopAndBottomPadding(style.GetDashViewTopPadding(), 0);
-  layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+  layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
   search_bar_layout_ = new nux::HLayout();
   search_bar_layout_->SetLeftAndRightPadding(style.GetSearchBarLeftPadding(), 0);
@@ -396,7 +405,7 @@ void DashView::SetupViews()
   content_layout_->SetSpecialArea(search_bar_->show_filters());
 
   lenses_layout_ = new nux::VLayout();
-  content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_LEFT);
+  content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_START);
 
   home_view_ = new LensView(home_lens_, nullptr);
   home_view_->uri_activated.connect(sigc::mem_fun(this, &DashView::OnUriActivated));
@@ -527,7 +536,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
   auto& style = dash::Style::Instance();
 
   renderer_.DrawInner(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry());
-  
+
   nux::Geometry clip_geo = layout_->GetGeometry();
   clip_geo.x += style.GetVSeparatorSize();
   graphics_engine.PushClippingRectangle(clip_geo);
@@ -596,7 +605,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
   {
     layout_->ProcessDraw(graphics_engine, force_draw);
   }
-  
+
   // Animation effect rendering
   if (display_ghost || IsFullRedraw())
   {
@@ -605,7 +614,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
     unsigned int current_dest_blend_factor;
     graphics_engine.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
 
-    float ghost_opacity = 0.25f;    
+    float ghost_opacity = 0.25f;
     float tint_factor = 1.2f;
     float saturation_ref = 0.4f;
     nux::Color bg_color = background_color_;
@@ -639,7 +648,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
             nux::Color(fade_out_value_, fade_out_value_, fade_out_value_, fade_out_value_)
             );
           filter_width += active_lens_view_->filter_bar()->GetWidth();
-        }  
+        }
 
         float saturation = fade_out_value_ + (1.0f - fade_out_value_) * saturation_ref;
         float opacity = fade_out_value_ < ghost_opacity ? ghost_opacity : fade_out_value_;
@@ -894,6 +903,7 @@ void DashView::OnSearchChanged(std::string const& search_string)
   {
     search_in_progress_ = true;
     // it isn't guaranteed that we get a SearchFinished signal, so we need
+    //                                         FIXME: it is now actually!!
     // to make sure this isn't set even though we aren't doing any search
     // 250ms for the Search method call, rest for the actual search
     searching_timeout_.reset(new glib::Timeout(500, [&] () {
@@ -915,7 +925,8 @@ void DashView::OnLiveSearchReached(std::string const& search_string)
   LOG_DEBUG(logger) << "Live search reached: " << search_string;
   if (active_lens_view_)
   {
-    active_lens_view_->PerformSearch(search_string);
+    active_lens_view_->PerformSearch(search_string,
+        sigc::mem_fun(this, &DashView::OnSearchFinished));
   }
 }
 
@@ -933,7 +944,6 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   lens_views_[lens->id] = view;
 
   lens->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
-  lens->search_finished.connect(sigc::mem_fun(this, &DashView::OnSearchFinished));
   lens->connected.changed.connect([&] (bool value)
   {
     std::string const& search_string = search_bar_->search_string;
@@ -941,7 +951,8 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
         && !search_string.empty())
     {
       // force a (global!) search with the correct string
-      lens->GlobalSearch(search_bar_->search_string);
+      lens->GlobalSearch(search_bar_->search_string,
+        sigc::mem_fun(this, &DashView::OnSearchFinished));
     }
   });
 
@@ -951,16 +962,6 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
     LOG_DEBUG(logger) << "Got preview for: " << uri;
     preview_state_machine_.ActivatePreview(model); // this does not immediately display a preview - we now wait.
   });
-
-  // global search done is handled by the home lens, no need to connect to it
-  // BUT, we will special case global search finished coming from
-  // the applications lens, because we want to be able to launch applications
-  // immediately without waiting for the search finished signal which will
-  // be delayed by all the lenses we're searching
-  if (id == "applications.lens")
-  {
-    lens->global_search_finished.connect(sigc::mem_fun(this, &DashView::OnAppsGlobalSearchFinished));
-  }
 }
 
 void DashView::OnLensBarActivated(std::string const& id)
@@ -971,6 +972,8 @@ void DashView::OnLensBarActivated(std::string const& id)
     return;
   }
 
+  lens_views_[id]->SetVisible(true);
+  active_lens_view_->SetVisible(false);
   LensView* view = active_lens_view_ = lens_views_[id];
   view->JumpToTop();
 
@@ -1007,12 +1010,13 @@ void DashView::OnLensBarActivated(std::string const& id)
   QueueDraw();
 }
 
-void DashView::OnSearchFinished(Lens::Hints const& hints)
+void DashView::OnSearchFinished(Lens::Hints const& hints, glib::Error const& err)
 {
   hide_message_delay_.reset();
 
   if (active_lens_view_ == NULL) return;
 
+  // FIXME: bind the lens_view in PerformSearch
   active_lens_view_->CheckNoResults(hints);
   std::string const& search_string = search_bar_->search_string;
 
@@ -1025,15 +1029,15 @@ void DashView::OnSearchFinished(Lens::Hints const& hints)
   }
 }
 
-void DashView::OnGlobalSearchFinished(Lens::Hints const& hints)
+void DashView::OnGlobalSearchFinished(Lens::Hints const& hints, glib::Error const& error)
 {
   if (active_lens_view_ == home_view_)
-    OnSearchFinished(hints);
+    OnSearchFinished(hints, error);
 }
 
-void DashView::OnAppsGlobalSearchFinished(Lens::Hints const& hints)
+void DashView::OnAppsGlobalSearchFinished(Lens::Ptr const& lens)
 {
-  if (active_lens_view_ == home_view_)
+  if (active_lens_view_ == home_view_ && lens->id() == "applications.lens")
   {
     /* HACKITY HACK! We're resetting the state of search_in_progress when
      * doing searches in the home lens and we get results from apps lens.
@@ -1189,7 +1193,7 @@ bool DashView::InspectKeyEvent(unsigned int eventType,
       search_bar_->search_string = "";
     else
       ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
-    
+
     return true;
   }
   return false;
@@ -1442,7 +1446,7 @@ nux::Area* DashView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::N
 
 nux::Geometry const& DashView::GetContentGeometry() const
 {
-  return content_geo_;  
+  return content_geo_;
 }
 
 }

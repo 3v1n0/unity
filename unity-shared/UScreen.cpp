@@ -21,11 +21,7 @@
 
 namespace unity
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.screen");
-}
+DECLARE_LOGGER(logger, "unity.screen");
 
 UScreen* UScreen::default_screen_ = nullptr;
 
@@ -91,6 +87,13 @@ nux::Geometry& UScreen::GetMonitorGeometry(int monitor)
 std::vector<nux::Geometry>& UScreen::GetMonitors()
 {
   return monitors_;
+}
+
+nux::Geometry UScreen::GetScreenGeometry()
+{
+  int width = gdk_screen_get_width(screen_);
+  int height = gdk_screen_get_height(screen_);
+  return nux::Geometry(0, 0, width, height); 
 }
 
 void UScreen::Changed(GdkScreen* screen)

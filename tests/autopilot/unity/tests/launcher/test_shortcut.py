@@ -53,3 +53,9 @@ class LauncherShortcutTests(LauncherTestCase):
         self.addCleanup(self.launcher_instance.switcher_cancel)
         self.launcher_instance.switcher_prev()
         self.assertThat(self.launcher_instance.shortcuts_shown, Eventually(Equals(True)))
+
+    def test_tooltip_not_shown(self):
+        """Tooltip must not be shown after revealing the launcher with keyboard
+        and mouse is not on the launcher.
+        """
+        self.assertThat(self.launcher_instance.tooltip_shown, Eventually(Equals(False)))

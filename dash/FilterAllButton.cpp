@@ -39,7 +39,7 @@ FilterAllButton::FilterAllButton(NUX_FILE_LINE_DECL)
   SetInputEventSensitivity(false);
 
   state_change.connect(sigc::mem_fun(this, &FilterAllButton::OnStateChanged));
-  
+
   SetRedirectRenderingToTexture(true);
   //SetCopyPreviousFboTexture(false);
   SetClearBeforeDraw(true);

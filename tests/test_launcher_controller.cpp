@@ -200,6 +200,11 @@ namespace launcher
 {
 struct TestLauncherController : public testing::Test
 {
+  TestLauncherController()
+    : xdnd_manager_(std::make_shared<XdndManager>())
+    , lc(xdnd_manager_)
+  {}
+
   virtual void SetUp()
   {
     lc.multiple_launchers = true;
@@ -216,13 +221,17 @@ struct TestLauncherController : public testing::Test
 protected:
   struct MockLauncherController : Controller
   {
+    MockLauncherController(XdndManager::Ptr const& xdnd_manager)
+      : Controller(xdnd_manager)
+    {}
+
     Controller::Impl* Impl() const { return pimpl.get(); }
 
     AbstractLauncherIcon::Ptr GetIconByDesktop(std::string const& path) const
     {
       auto const& model = Impl()->model_;
       auto icon = std::find_if(model->begin(), model->end(),
-       [&path](AbstractLauncherIcon::Ptr const& i) { return ( i->DesktopFile() == path); });
+       [&path](AbstractLauncherIcon::Ptr const& i) { return (i->DesktopFile() == path); });
 
       if (icon != model->end())
         return *icon;
@@ -258,6 +267,7 @@ protected:
   Settings settings;
   panel::Style panel_style;
   MockFavoriteStore favorite_store;
+  XdndManager::Ptr xdnd_manager_;
   MockLauncherController lc;
 };
 }
@@ -287,13 +297,18 @@ TEST_F(TestLauncherController, Construction)
   for (auto const& fav_uri : favorite_store.GetFavorites())
   {
     auto model_icon_it = std::find_if(lc.Impl()->model_->begin(), lc.Impl()->model_->end(),
-    [&fav_uri](AbstractLauncherIcon::Ptr const& i) { return (i->RemoteUri() == fav_uri); });
-    auto const& icon_it = *model_icon_it;
+      [&fav_uri](AbstractLauncherIcon::Ptr const& i) { return (i->RemoteUri() == fav_uri); });
+    bool valid_iter = (model_icon_it != lc.Impl()->model_->end());
 
     if (fav_uri == places::APPS_URI || fav_uri == places::DEVICES_URI)
-      ASSERT_FALSE(icon_it.IsValid());
+    {
+      ASSERT_FALSE(valid_iter);
+    }
     else
-      ASSERT_TRUE(icon_it.IsValid());
+    {
+      ASSERT_TRUE(valid_iter);
+      ASSERT_TRUE(model_icon_it->IsValid());
+    }
   }
 }
 
@@ -380,7 +395,7 @@ TEST_F(TestLauncherController, SingleMonitorSwitchToMultimonitor)
   EXPECT_EQ(lc.launchers().size(), max_num_monitors);
 }
 
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
 
 TEST_F(TestLauncherController, MultiMonitorEdgeBarrierSubscriptions)
 {
@@ -711,8 +726,10 @@ TEST_F(TestLauncherController, AddRunningApps)
     if (!BAMF_IS_APPLICATION(l->data))
       continue;
 
-    BamfApplication* app = BAMF_APPLICATION(l->data);
+    if (bamf_view_is_sticky(BAMF_VIEW(l->data)))
+      continue;
 
+    BamfApplication* app = BAMF_APPLICATION(l->data);
     ASSERT_NE(g_object_get_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen")), nullptr);
 
     auto desktop = bamf_application_get_desktop_file(app);
@@ -755,9 +772,9 @@ TEST_F(TestLauncherController, SetupIcons)
                                 FavoriteStore::URI_PREFIX_APP + app::SW_CENTER,
                                 places::DEVICES_URI,
                                 FavoriteStore::URI_PREFIX_APP + app::UPDATE_MANAGER });
-  std::shared_ptr<GList> apps(bamf_matcher_get_applications(lc.Impl()->matcher_), g_list_free);
   lc.Impl()->SetupIcons();
   lc.DisconnectSignals();
+  std::shared_ptr<GList> apps(bamf_matcher_get_applications(lc.Impl()->matcher_), g_list_free);
 
   auto fav = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE);
   EXPECT_EQ(model->IconIndex(fav), icon_index);
@@ -771,10 +788,12 @@ TEST_F(TestLauncherController, SetupIcons)
   fav = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + app::UPDATE_MANAGER);
   EXPECT_EQ(model->IconIndex(fav), ++icon_index);
 
-
   for (GList *l = apps.get(); l; l = l->next)
   {
     if (!BAMF_IS_APPLICATION(l->data))
+      continue;
+
+    if (bamf_view_is_sticky(BAMF_VIEW(l->data)))
       continue;
 
     auto desktop = bamf_application_get_desktop_file(BAMF_APPLICATION(l->data));
@@ -784,9 +803,7 @@ TEST_F(TestLauncherController, SetupIcons)
     if (path.empty())
       continue;
 
-    auto const& icon = lc.GetIconByDesktop(path);
-
-    ASSERT_TRUE(icon.IsValid());
+    auto icon = lc.GetIconByDesktop(path);
     ASSERT_EQ(model->IconIndex(icon), icon_index);
   }
 
@@ -801,9 +818,9 @@ TEST_F(TestLauncherController, ResetIconPriorities)
 
   favorite_store.AddFavorite(places::APPS_URI, -1);
   favorite_store.AddFavorite(places::DEVICES_URI, -1);
-  std::shared_ptr<GList> apps(bamf_matcher_get_applications(lc.Impl()->matcher_), g_list_free);
   lc.Impl()->SetupIcons();
   lc.DisconnectSignals();
+  std::shared_ptr<GList> apps(bamf_matcher_get_applications(lc.Impl()->matcher_), g_list_free);
 
   favorite_store.SetFavorites({ places::DEVICES_URI,
                                 FavoriteStore::URI_PREFIX_APP + app::SW_CENTER,
@@ -823,6 +840,9 @@ TEST_F(TestLauncherController, ResetIconPriorities)
   for (GList *l = apps.get(); l; l = l->next)
   {
     if (!BAMF_IS_APPLICATION(l->data))
+      continue;
+
+    if (bamf_view_is_sticky(BAMF_VIEW(l->data)))
       continue;
 
     auto desktop = bamf_application_get_desktop_file(BAMF_APPLICATION(l->data));
@@ -1516,7 +1536,9 @@ TEST_F(TestLauncherController, UpdateSelectionChanged)
 {
   UBusManager manager;
   std::string last_selection_change;
-  manager.RegisterInterest(UBUS_LAUNCHER_SELECTION_CHANGED, [&] (GVariant *data) { last_selection_change = g_variant_get_string(data, 0); });
+  manager.RegisterInterest(UBUS_LAUNCHER_SELECTION_CHANGED, [&] (GVariant *data) {
+    last_selection_change = g_variant_get_string(data, 0);
+  });
 
   lc.KeyNavGrab();
   ProcessUBusMessages();
@@ -1530,6 +1552,52 @@ TEST_F(TestLauncherController, UpdateSelectionChanged)
   lc.Impl()->model_->Selection()->CloseQuicklist();
   ProcessUBusMessages();
   ASSERT_EQ(lc.Impl()->model_->Selection()->tooltip_text(), last_selection_change);
+}
+
+TEST_F(TestLauncherController, DragAndDrop_MultipleLaunchers)
+{
+  lc.multiple_launchers = true;
+  uscreen.SetupFakeMultiMonitor();
+  lc.options()->hide_mode = LAUNCHER_HIDE_AUTOHIDE;
+
+  auto check_fn = [this](int index) {
+    return lc.launchers()[index]->Hidden();
+  };
+
+  xdnd_manager_->dnd_started.emit("my_awesome_file", 0);
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    Utils::WaitUntil(std::bind(check_fn, i), i != 0);
+
+  xdnd_manager_->monitor_changed.emit(3);
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    Utils::WaitUntil(std::bind(check_fn, i), i != 3);
+
+  xdnd_manager_->dnd_finished.emit();
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    Utils::WaitUntil(std::bind(check_fn, i), true);
+}
+
+TEST_F(TestLauncherController, DragAndDrop_SingleLauncher)
+{
+  lc.multiple_launchers = false;
+  uscreen.SetupFakeMultiMonitor(2);
+  lc.options()->hide_mode = LAUNCHER_HIDE_AUTOHIDE;
+
+  auto check_fn = [this]() {
+    return lc.launcher().Hidden();
+  };
+
+  xdnd_manager_->dnd_started.emit("my_awesome_file", 0);
+  Utils::WaitUntil(check_fn, false);
+
+  xdnd_manager_->monitor_changed.emit(2);
+  Utils::WaitUntil(check_fn, false);
+
+  xdnd_manager_->dnd_finished.emit();
+  Utils::WaitUntil(check_fn, true);
 }
 
 }

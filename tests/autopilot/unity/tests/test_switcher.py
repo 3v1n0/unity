@@ -14,7 +14,7 @@ import logging
 from testtools.matchers import Equals, Contains, Not
 from time import sleep
 
-from unity.emulators.switcher import SwitcherMode
+from unity.emulators.switcher import Switcher, SwitcherMode
 from unity.tests import UnityTestCase
 
 logger = logging.getLogger(__name__)
@@ -75,7 +75,7 @@ class SwitcherTests(SwitcherTestCase):
     def tearDown(self):
         super(SwitcherTests, self).tearDown()
 
-    def test_witcher_starts_in_normal_mode(self):
+    def test_switcher_starts_in_normal_mode(self):
         """Switcher must start in normal (i.e.- not details) mode."""
         self.start_app("Character Map")
 
@@ -83,15 +83,38 @@ class SwitcherTests(SwitcherTestCase):
         self.addCleanup(self.switcher.terminate)
         self.assertProperty(self.switcher, mode=SwitcherMode.NORMAL)
 
-    def test_first_detail_mode_has_correct_label(self):
-        """Starting switcher in details mode must show the focused window title."""
-        window = self.start_app_window("Text Editor")
-        title = window.title
+    def test_label_matches_application_name(self):
+        """The switcher label must match the selected application name in normal mode."""
+        windows = self.start_applications()
+        self.switcher.initiate()
+        self.addCleanup(self.switcher.terminate)
 
+        for win in windows:
+            app_name = win.application.name
+            self.switcher.select_icon(Switcher.DIRECTION_FORWARDS, tooltip_text=app_name)
+            self.assertThat(self.switcher.label_visible, Eventually(Equals(True)))
+            self.assertThat(self.switcher.label, Eventually(Equals(app_name)))
+
+    def test_application_window_is_fake_decorated(self):
+        """When the switcher is in details mode must not show the focused window title."""
+        window = self.start_app_window("Text Editor")
+        self.switcher.initiate()
+        self.addCleanup(self.switcher.terminate)
+
+        self.switcher.select_icon(Switcher.DIRECTION_BACKWARDS, tooltip_text=window.application.name)
+
+        self.switcher.show_details()
+        self.assertThat(self.switcher.label_visible, Eventually(Equals(False)))
+        self.assertThat(self.screen.window(window.x_id).fake_decorated, Eventually(Equals(True)))
+
+    def test_application_window_is_fake_decorated_in_detail_mode(self):
+        """Starting switcher in details mode must not show the focused window title."""
+        window = self.start_app_window("Text Editor")
         self.switcher.initiate(SwitcherMode.DETAIL)
         self.addCleanup(self.switcher.terminate)
 
-        self.assertThat(self.switcher.controller.view.label, Eventually(Equals(title)))
+        self.assertThat(self.switcher.label_visible, Eventually(Equals(False)))
+        self.assertThat(self.screen.window(window.x_id).fake_decorated, Eventually(Equals(True)))
 
     def test_switcher_move_next(self):
         """Test that pressing the next icon binding moves to the next icon"""
@@ -101,8 +124,10 @@ class SwitcherTests(SwitcherTestCase):
 
         start = self.switcher.selection_index
         self.switcher.next_icon()
+        # Allow for wrap-around to first icon in switcher
+        next_index = (start + 1) % len(self.switcher.icons)
 
-        self.assertThat(self.switcher.selection_index, Eventually(Equals(start + 1)))
+        self.assertThat(self.switcher.selection_index, Eventually(Equals(next_index)))
 
     def test_switcher_move_prev(self):
         """Test that pressing the previous icon binding moves to the previous icon"""
@@ -123,8 +148,10 @@ class SwitcherTests(SwitcherTestCase):
 
         start = self.switcher.selection_index
         self.switcher.next_via_mouse()
+        # Allow for wrap-around to first icon in switcher
+        next_index = (start + 1) % len(self.switcher.icons)
 
-        self.assertThat(self.switcher.selection_index, Eventually(Equals(start + 1)))
+        self.assertThat(self.switcher.selection_index, Eventually(Equals(next_index)))
 
     def test_switcher_scroll_prev(self):
         """Test that scrolling the mouse wheel up moves to the previous icon"""
@@ -246,6 +273,31 @@ class SwitcherWindowsManagementTests(SwitcherTestCase):
         self.assertProperty(calc_win, is_focused=True)
         self.assertVisibleWindowStack([calc_win, char_win1])
 
+    def test_switcher_rises_next_window_of_same_application(self):
+        """Tests if alt+tab invoked normally switches to the next application
+        window of the same type.
+
+        """
+        char_win1, char_win2 = self.start_applications("Character Map", "Character Map")
+        self.assertVisibleWindowStack([char_win2, char_win1])
+
+        self.keybinding("switcher/reveal_normal")
+        self.assertProperty(char_win1, is_focused=True)
+
+    def test_switcher_rises_other_application(self):
+        """Tests if alt+tab invoked normally switches correctly to the other
+        application window when the last focused application had 2 windows
+
+        """
+        char_win1, char_win2, calc_win = self.start_applications("Character Map", "Character Map", "Calculator")
+        self.assertVisibleWindowStack([calc_win, char_win2, char_win1])
+
+        self.keybinding("switcher/reveal_normal")
+        self.assertProperty(char_win2, is_focused=True)
+
+        self.keybinding("switcher/reveal_normal")
+        self.assertProperty(calc_win, is_focused=True)
+
 
 class SwitcherDetailsTests(SwitcherTestCase):
     """Test the details mode for the switcher."""
@@ -301,6 +353,10 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
           ('initiate_with_down', {'initiate_keycode': 'Down'}),
       ]
       )
+
+    def setUp(self):
+        super(SwitcherDetailsModeTests, self).setUp()
+        self.set_timeout_setting(False)
 
     def test_can_start_details_mode(self):
         """Must be able to switch to details mode using selected scenario keycode.

@@ -36,10 +36,10 @@
 
 namespace unity
 {
+DECLARE_LOGGER(logger, "unity.panel.menu");
 
 namespace
 {
-  nux::logging::Logger logger("unity.panel.menu");
   const int MAIN_LEFT_PADDING = 4;
   const int TITLE_PADDING = 2;
   const int MENUBAR_PADDING = 4;
@@ -80,7 +80,7 @@ PanelMenuView::PanelMenuView()
     _fade_in_animator(_menus_fadein),
     _fade_out_animator(_menus_fadeout)
 {
-  layout_->SetContentDistribution(nux::eStackLeft);
+  layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
 
   BamfWindow* active_win = bamf_matcher_get_active_window(_matcher);
   if (BAMF_IS_WINDOW(active_win))
@@ -744,13 +744,6 @@ void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::s
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
   gtk_style_context_save(style_context);
-
-  GtkWidgetPath* widget_path = gtk_widget_path_new();
-  gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_BAR);
-  gtk_widget_path_append_type(widget_path, GTK_TYPE_MENU_ITEM);
-  gtk_widget_path_iter_set_name(widget_path, -1 , "UnityPanelWidget");
-
-  gtk_style_context_set_path(style_context, widget_path);
   gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUBAR);
   gtk_style_context_add_class(style_context, GTK_STYLE_CLASS_MENUITEM);
 
@@ -782,8 +775,47 @@ void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::s
 
   x += text_width;
 
-  gtk_widget_path_free(widget_path);
   gtk_style_context_restore(style_context);
+}
+
+std::string PanelMenuView::GetCurrentTitle() const
+{
+  if (!_switcher_showing && !_launcher_keynav)
+  {
+    WindowManager& wm = WindowManager::Default();
+    std::string new_title;
+
+    if (wm.IsScaleActive())
+    {
+      if (wm.IsScaleActiveForGroup())
+        new_title = GetActiveViewName(true);
+      else if (_we_control_active)
+        new_title = _desktop_name;
+    }
+    else if (wm.IsExpoActive())
+    {
+      new_title = _desktop_name;
+    }
+    else if (!_we_control_active)
+    {
+      new_title = "";
+    }
+    else
+    {
+      new_title = GetActiveViewName();
+      _window_buttons->SetControlledWindow(_active_xid);
+    }
+
+    // _panel_title needs to be only escaped when computed
+    // in this function, if it comes from OnLauncherSelectionChanged
+    // it is already escaped
+    glib::String escaped(g_markup_escape_text(new_title.c_str(), -1));
+    return escaped.Str();
+  }
+  else
+  {
+    return _panel_title;
+  }
 }
 
 void PanelMenuView::Refresh(bool force)
@@ -795,42 +827,13 @@ void PanelMenuView::Refresh(bool force)
   if (geo.width > _monitor_geo.width)
     return;
 
-  WindowManager& wm = WindowManager::Default();
-  std::string new_title;
-
-  if (wm.IsScaleActive())
+  const std::string& new_title = GetCurrentTitle();
+  if (new_title == _panel_title && !force && _last_geo == geo && _title_texture)
   {
-    if (wm.IsScaleActiveForGroup())
-      new_title = GetActiveViewName(true);
-    else if (_we_control_active)
-      new_title = _desktop_name;
+    // No need to redraw the title, let's save some CPU time!
+    return;
   }
-  else if (wm.IsExpoActive())
-  {
-    new_title = _desktop_name;
-  }
-  else if (!_we_control_active)
-  {
-    new_title = "";
-  }
-  else if (!_switcher_showing && !_launcher_keynav)
-  {
-    new_title = GetActiveViewName();
-    _window_buttons->SetControlledWindow(_active_xid);
-  }
-
-  if (!_switcher_showing && !_launcher_keynav)
-  {
-    if (_panel_title != new_title)
-    {
-      _panel_title = new_title;
-    }
-    else if (!force && _last_geo == geo && _title_texture)
-    {
-      // No need to redraw the title, let's save some CPU time!
-      return;
-    }
-  }
+  _panel_title = new_title;
 
   if (_panel_title.empty())
   {
@@ -844,12 +847,7 @@ void PanelMenuView::Refresh(bool force)
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
 
-  glib::String escaped(g_markup_escape_text(_panel_title.c_str(), -1));
-
-  std::ostringstream bold_label;
-  bold_label << "<b>" << escaped.Str() << "</b>";
-
-  DrawTitle(cr, geo, bold_label.str());
+  DrawTitle(cr, geo, _panel_title);
 
   cairo_destroy(cr);
 
@@ -1049,7 +1047,7 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
       // if we've just started tracking this window and it is maximized, let's
       // make sure it's undecorated just in case it slipped by us earlier
       // (I'm looking at you, Chromium!)
-      if (_is_maximized && wm.IsWindowDecorated(xid))
+      if (_is_maximized && wm.HasWindowDecorations(xid))
       {
         wm.Undecorate(xid);
         _maximized_set.insert(xid);
@@ -1180,7 +1178,7 @@ void PanelMenuView::OnWindowMaximized(guint xid)
 
   // update the state of the window in the _decor_map
   WindowManager& wm = WindowManager::Default();
-  _decor_map[xid] = wm.IsWindowDecorated(xid);
+  _decor_map[xid] = wm.HasWindowDecorations(xid);
 
   if (_decor_map[xid])
     wm.Undecorate(xid);
@@ -1317,7 +1315,7 @@ Window PanelMenuView::GetTopWindow() const
       continue;
 
     Window xid = bamf_window_get_xid(static_cast<BamfWindow*>(l->data));
-    bool visible = bamf_view_user_visible(static_cast<BamfView*>(l->data));
+    bool visible = bamf_view_is_user_visible(static_cast<BamfView*>(l->data));
 
     if (visible && IsValidWindow(xid))
     {
@@ -1654,7 +1652,7 @@ void PanelMenuView::SetMonitor(int monitor)
     {
       Window xid = bamf_window_get_xid(window);
 
-      _decor_map[xid] = wm.IsWindowDecorated(xid);
+      _decor_map[xid] = wm.HasWindowDecorations(xid);
 
       if (_decor_map[xid])
         wm.Undecorate(xid);

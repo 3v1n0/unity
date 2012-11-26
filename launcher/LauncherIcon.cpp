@@ -51,10 +51,10 @@ namespace unity
 {
 namespace launcher
 {
+DECLARE_LOGGER(logger, "unity.launcher.icon");
 
 namespace
 {
-nux::logging::Logger logger("unity.launcher");
 const std::string DEFAULT_ICON = "application-default-icon";
 const std::string MONO_TEST_ICON = "gnome-home";
 const std::string UNITY_THEME_NAME = "unity-icon-theme";
@@ -801,6 +801,7 @@ LauncherIcon::Present(float present_urgency, int length)
 
   _present_urgency = CLAMP(present_urgency, 0.0f, 1.0f);
   SetQuirk(Quirk::PRESENTED, true);
+  SetQuirk(Quirk::UNFOLDED, true);
 }
 
 void
@@ -811,6 +812,7 @@ LauncherIcon::Unpresent()
 
   _source_manager.Remove(PRESENT_TIMEOUT);
   SetQuirk(Quirk::PRESENTED, false);
+  SetQuirk(Quirk::UNFOLDED, false);
 }
 
 void

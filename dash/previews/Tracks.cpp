@@ -24,7 +24,7 @@
 #include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
 #include "unity-shared/IntrospectableWrappers.h"
-#include "unity-shared/PlacesVScrollBar.h"
+#include "unity-shared/PlacesOverlayVScrollBar.h"
 #include "unity-shared/PreviewStyle.h"
 #include <UnityCore/Track.h>
 #include <UnityCore/Variant.h>
@@ -35,11 +35,7 @@ namespace dash
 {
 namespace previews
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.dash.previews.tracks");
-}
+DECLARE_LOGGER(logger, "unity.dash.preview.music.tracks");
 
 NUX_IMPLEMENT_OBJECT_TYPE(Tracks);
 
@@ -80,7 +76,7 @@ void Tracks::AddProperties(GVariantBuilder* builder)
 
 void Tracks::SetupViews()
 {
-  SetVScrollBar(new dash::PlacesVScrollBar(NUX_TRACKER_LOCATION));
+  SetVScrollBar(new dash::PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION));
   EnableHorizontalScrollBar(false);
   layout_ = new nux::VLayout();
   layout_->SetPadding(0, previews::Style::Instance().GetDetailsRightMargin(), 0, 0);

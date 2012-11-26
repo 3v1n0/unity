@@ -36,10 +36,7 @@
 #include "ResultViewGrid.h"
 #include "math.h"
 
-namespace
-{
-nux::logging::Logger logger("unity.dash.results");
-}
+DECLARE_LOGGER(logger, "unity.dash.results");
 
 namespace unity
 {
@@ -109,7 +106,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
     gchar* uri = NULL;
     gchar* proposed_unique_id = NULL;
     g_variant_get(data, "(iss)", &nav_mode, &uri, &proposed_unique_id);
-   
+
     if (std::string(proposed_unique_id) != unique_id())
       return;
 
@@ -131,7 +128,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
         LOG_ERROR(logger) << "requested to activated a result that does not exist: " << current_index;
         return;
       }
-      
+
       // closed
       if (nav_mode == 0)
       {
@@ -509,7 +506,7 @@ void ResultViewGrid::OnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::K
       focused_uri_ = (*first_iter).uri;
       selected_index_ = 0;
     }
-    
+
     int items_per_row = GetItemsPerRow();
     unsigned num_results = GetNumResults();
 
@@ -522,7 +519,7 @@ void ResultViewGrid::OnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::K
       int total_rows = std::ceil(num_results / (double)items_per_row);
       selected_index_ = items_per_row * (total_rows-1);
     }
-    
+
     if (direction != nux::KEY_NAV_NONE)
     {
       std::tuple<int, int> focused_coord = GetResultPosition(selected_index_);
@@ -663,7 +660,7 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
           offset_x = 0;
           offset_y = 0;
         }
-        
+
         nux::Geometry render_geo(x_position, y_position, renderer_->width, renderer_->height);
         Result result(*GetIteratorAtRow(index));
         renderer_->Render(GfxContext, result, state, render_geo, offset_x, offset_y);
@@ -767,7 +764,7 @@ std::tuple<int, int> ResultViewGrid::GetResultPosition(const unsigned int& index
   int items_per_row = GetItemsPerRow();
   int column_size = renderer_->width + horizontal_spacing + extra_horizontal_spacing_;
   int row_size = renderer_->height + vertical_spacing;
-  
+
   int y = row_size * (index / items_per_row) + padding;
   int x = column_size * (index % items_per_row) + padding;
 
@@ -780,7 +777,7 @@ std::tuple<int, int> ResultViewGrid::GetResultPosition(const unsigned int& index
 */
 bool ResultViewGrid::DndSourceDragBegin()
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   unsigned num_results = GetNumResults();
   unsigned drag_index = GetIndexAtPosition(last_mouse_down_x_, last_mouse_down_y_);
 
@@ -932,7 +929,7 @@ const char* ResultViewGrid::DndSourceGetDataForType(const char* type, int* size,
 
 void ResultViewGrid::DndSourceDragFinished(nux::DndAction result)
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   UnReference();
   last_mouse_down_x_ = -1;
   last_mouse_down_y_ = -1;

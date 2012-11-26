@@ -79,12 +79,13 @@ ShowdesktopHandler::InhibitingXid()
   return inhibiting_xid;
 }
 
-ShowdesktopHandler::ShowdesktopHandler (ShowdesktopHandlerWindowInterface *wi, compiz::WindowInputRemoverLockAcquireInterface *lock_acquire_interface) :
-  showdesktop_handler_window_interface_ (wi),
-  lock_acquire_interface_ (lock_acquire_interface),
-  remover_(),
-  state_ (StateVisible),
-  progress_ (0.0f)
+ShowdesktopHandler::ShowdesktopHandler (ShowdesktopHandlerWindowInterface *wi, compiz::WindowInputRemoverLockAcquireInterface *lock_acquire_interface)
+  : showdesktop_handler_window_interface_(wi)
+  , lock_acquire_interface_(lock_acquire_interface)
+  , remover_()
+  , state_(StateVisible)
+  , progress_(0.0f)
+  , was_hidden_(false)
 {
 }
 
