@@ -41,6 +41,9 @@
 #include "unityshell.h"
 #include "BackgroundEffectHelper.h"
 #include "UnityGestureBroker.h"
+#include "launcher/XdndCollectionWindowImp.h"
+#include "launcher/XdndManagerImp.h"
+#include "launcher/XdndStartStopNotifierImp.h"
 
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
@@ -3096,7 +3099,12 @@ void UnityScreen::OnDashRealized ()
 void UnityScreen::initLauncher()
 {
   Timer timer;
-  launcher_controller_ = std::make_shared<launcher::Controller>();
+
+  auto xdnd_collection_window = std::make_shared<XdndCollectionWindowImp>();
+  auto xdnd_start_stop_notifier = std::make_shared<XdndStartStopNotifierImp>();
+  auto xdnd_manager = std::make_shared<XdndManagerImp>(xdnd_start_stop_notifier, xdnd_collection_window);
+
+  launcher_controller_ = std::make_shared<launcher::Controller>(xdnd_manager);
   AddChild(launcher_controller_.get());
 
   switcher_controller_ = std::make_shared<switcher::Controller>();
