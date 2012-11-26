@@ -30,6 +30,8 @@
 namespace
 {
 nux::logging::Logger logger("unity.dash.actionlink");
+const double LINK_NORMAL_ALPHA_VALUE = 4;
+const double LINK_HIGHLIGHTED_ALPHA_VALUE = 1;
 }
 
 namespace unity
@@ -119,9 +121,9 @@ void ActionLink::BuildLayout(std::string const& label)
 int ActionLink::GetLinkAlpha(nux::ButtonVisualState state)
 {
   if (state == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
-    return 1;
+    return LINK_HIGHLIGHTED_ALPHA_VALUE;
   else
-    return 4;
+    return LINK_NORMAL_ALPHA_VALUE;
 }
 
 long ActionLink::ComputeContentSize()
