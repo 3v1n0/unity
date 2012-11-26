@@ -260,16 +260,19 @@ void Application::HookUpEvents()
   glib::SignalBase* sig;
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "user-visible-changed",
                           [this] (BamfView*, gboolean visible) {
+                            LOG_DEBUG(logger) << "user-visible-changed " << visible;
                             this->visible.changed.emit(visible);
                           });
   signals_.Add(sig);
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "active-changed",
                           [this] (BamfView*, gboolean active) {
+                            LOG_DEBUG(logger) << "active-changed " << visible;
                             this->active.changed.emit(active);
                           });
   signals_.Add(sig);
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "running-changed",
                           [this] (BamfView*, gboolean running) {
+                            LOG_DEBUG(logger) << "running " << visible;
                             this->running.changed.emit(running);
                           });
   signals_.Add(sig);
@@ -335,8 +338,21 @@ std::string Application::desktop_file() const
 
 std::string Application::type() const
 {
-  const gchar* type = bamf_application_get_application_type(bamf_app_);
-  return type ? type : "";
+  // Can't determine the type of a non-running app.
+  std::string result = "unknown";
+  if (running())
+  {
+    const gchar* type = bamf_application_get_application_type(bamf_app_);
+    if (type) result = type;
+  }
+  return result;
+}
+
+std::string Application::repr() const
+{
+  std::ostringstream sout;
+  sout << "<bamf::Application " << bamf_app_.RawPtr() << " >";
+  return sout.str();
 }
 
 WindowList Application::GetWindows() const
@@ -610,7 +626,7 @@ ApplicationPtr Manager::GetApplicationForDesktopFile(std::string const& desktop_
 {
   ApplicationPtr result;
   glib::Object<BamfApplication> app(bamf_matcher_get_application_for_desktop_file(
-    matcher_, desktop_file.c_str(), true));
+    matcher_, desktop_file.c_str(), true), glib::AddRef());
 
   if (app)
     result.reset(new Application(*this, app));

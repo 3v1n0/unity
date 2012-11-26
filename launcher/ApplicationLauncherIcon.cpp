@@ -71,6 +71,13 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   SetQuirk(Quirk::ACTIVE, app->active());
   SetQuirk(Quirk::RUNNING, app->running());
 
+  LOG_INFO(logger) << "Created ApplicationLauncherIcon: "
+    << tooltip_text()
+    << ", icon: " << icon_name()
+    << ", visible: " << (app->visible() ? "yes" : "no")
+    << ", active: " << (app->active() ? "yes" : "no")
+    << ", running: " << (app->running() ? "yes" : "no");
+
   // Lambda functions should be fine here because when the application the icon
   // is only ever removed when the application is closed.
   app->window_opened.connect([this](ApplicationWindow const&) {
@@ -82,12 +89,15 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   app->window_moved.connect([this](ApplicationWindow const&) { EnsureWindowState(); });
 
   app->urgent.changed.connect([this](bool const& urgent) {
+                            LOG_INFO(logger) << tooltip_text() << " urgent now " << (urgent ? "true" : "false");
                             SetQuirk(Quirk::URGENT, urgent);
                           });
   app->active.changed.connect([this](bool const& active) {
+                            LOG_INFO(logger) << tooltip_text() << " active now " << (active ? "true" : "false");
                             SetQuirk(Quirk::ACTIVE, active);
                           });
   app->running.changed.connect([this](bool const& running) {
+                            LOG_INFO(logger) << tooltip_text() << " running now " << (running ? "true" : "false");
                             SetQuirk(Quirk::RUNNING, running);
 
                             if (running)

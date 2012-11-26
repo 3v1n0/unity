@@ -131,6 +131,8 @@ public:
 
   virtual void Quit() const;
 
+  virtual std::string repr() const;
+
 private: // Property getters and setters
   void HookUpEvents();
 
@@ -143,6 +145,7 @@ private: // Property getters and setters
 private:
   glib::Object< ::BamfApplication> bamf_app_;
   glib::SignalManager signals_;
+  std::string type_;
 };
 
 class Manager : public ::unity::ApplicationManager

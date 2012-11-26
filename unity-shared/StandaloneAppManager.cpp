@@ -46,6 +46,7 @@ void dump_app(ApplicationPtr const& app, std::string const& prefix = "")
          << ", active: " << (app->active() ? "yes" : "no")
          << ", running: " << (app->running() ? "yes" : "no")
          << ", urgent: " << (app->urgent() ? "yes" : "no")
+         << ", repr: " << app->repr()
          << "\n  icon: \"" << app->icon() << "\""
          << "\n  desktop file: \"" << app->desktop_file() << "\""
          << "\n  type: \"" << app->type() << "\""
@@ -70,7 +71,7 @@ void connect_events(ApplicationPtr const& app)
 {
   if (app->seen())
   {
-    LOG_INFO(logger) << "Already seen " << app->title() << ", skipping event connection.";
+    cout << "Already seen " << app->title() << ", skipping event connection.\n";
     return;
   }
   std::string app_name = app->title();
@@ -182,9 +183,15 @@ int main(int argc, char* argv[])
   nux::logging::configure_logging(::getenv("UNITY_APP_LOG_SEVERITY"));
   g_log_set_default_handler(capture_g_log_calls, NULL);
 
+  bool show_active = (argc > 1 && std::string(argv[1]) == "show-active");
   //std::shared_ptr<ApplicationManager> manager_ptr = create_application_manager();
   //ApplicationManager& manager = *manager_ptr;
   ApplicationManager& manager = ApplicationManager::Default();
+
+  ApplicationPtr terminal = manager.GetApplicationForDesktopFile(
+    "/usr/share/applications/gnome-terminal.desktop");
+  dump_app(terminal);
+  connect_events(terminal);
 
   ApplicationList apps = manager.GetRunningApplications();
 
@@ -193,6 +200,9 @@ int main(int argc, char* argv[])
     dump_app(app);
     connect_events(app);
   }
+
+  dump_app(manager.GetApplicationForDesktopFile(
+    "/usr/share/applications/gnome-terminal.desktop"));
 
   // Get some desktop files for checking
   ApplicationPtr pgadmin = manager.GetApplicationForDesktopFile(
@@ -223,10 +233,11 @@ int main(int argc, char* argv[])
   signal(SIGINT, clean_exit);
   {
     glib::SourceManager source_manager;
-    source_manager.AddTimeoutSeconds(5, [&manager]() {
-      print_active_window(manager);
-      return true;
-    });
+    if (show_active)
+      source_manager.AddTimeoutSeconds(5, [&manager]() {
+        print_active_window(manager);
+        return true;
+      });
     g_main_loop_run(loop);
   }
   cout << "After main loop.\n";

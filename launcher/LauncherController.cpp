@@ -847,7 +847,10 @@ void Controller::Impl::AddRunningApps()
 {
   for (auto& app : ApplicationManager::Default().GetRunningApplications())
   {
-    if (!app->seen)
+    LOG_INFO(logger) << "Adding running app: " << app->title()
+                     << ", seen already: "
+                     << (app->seen() ? "yes" : "no");
+    if (!app->seen())
     {
       AbstractLauncherIcon::Ptr icon(new ApplicationLauncherIcon(app));
       RegisterIcon(icon, ++sort_priority_);
@@ -871,33 +874,46 @@ void Controller::Impl::SetupIcons()
   FavoriteList const& favs = favorite_store.GetFavorites();
   bool running_apps_added = false;
   bool devices_added = false;
-
+  // this had better not make a real difference...
+  ApplicationManager::Default().GetRunningApplications();
   for (auto const& fav_uri : favs)
   {
     if (fav_uri == local::RUNNING_APPS_URI)
     {
+      LOG_INFO(logger) << "Adding running apps";
       AddRunningApps();
       running_apps_added = true;
       continue;
     }
     else if (fav_uri == local::DEVICES_URI)
     {
+      LOG_INFO(logger) << "Adding devices";
       AddDevices();
       devices_added = true;
       continue;
     }
 
+    LOG_INFO(logger) << "Adding favourite: " << fav_uri;
     RegisterIcon(CreateFavoriteIcon(fav_uri), ++sort_priority_);
   }
 
   if (!running_apps_added)
+  {
+    LOG_INFO(logger) << "Adding running apps";
     AddRunningApps();
+  }
 
   if (model_->IconIndex(expo_icon_) < 0)
+  {
+    LOG_INFO(logger) << "Adding expo icon";
     RegisterIcon(CreateFavoriteIcon(expo_icon_->RemoteUri()), ++sort_priority_);
+  }
 
   if (!devices_added)
+  {
+    LOG_INFO(logger) << "Adding devices";
     AddDevices();
+  }
 
   if (std::find(favs.begin(), favs.end(), expo_icon_->RemoteUri()) == favs.end())
     SaveIconsOrder();

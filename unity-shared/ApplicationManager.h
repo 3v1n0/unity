@@ -87,6 +87,9 @@ public:
   virtual std::string desktop_file() const = 0;
   virtual std::string type() const = 0;
 
+  // A string representation of the object.
+  virtual std::string repr() const = 0;
+
   virtual WindowList GetWindows() const = 0;
   virtual bool OwnsWindow(Window window_id) const = 0;
 
