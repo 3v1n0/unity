@@ -153,7 +153,7 @@ TEST(TestGLibTimeout, MultipleShotsRun)
   }
 
   EXPECT_TRUE(callback_called);
-  EXPECT_EQ(callback_call_count, 6);
+  EXPECT_GE(callback_call_count, 6);
 }
 
 TEST(TestGLibTimeout, OneShotRunWithEmptyCallback)
