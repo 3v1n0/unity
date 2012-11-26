@@ -50,8 +50,6 @@ protected:
   std::string GetActualDesktopFileAfterInstall();
   void ActivateLauncherIcon(ActionArg arg);
   void OnFinished(GVariant *params);
-  // makes testing easier
-  std::string desktop_dir_;
 
 private:
   void OnPropertyChanged(GVariant* params);

@@ -13,6 +13,9 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/bzr-handle-patch.d
                 ${CMAKE_BINARY_DIR}/tests/data/applications/bzr-handle-patch.desktop)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/no-icon.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/applications/no-icon.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/kde4/afile.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/applications/kde4/afile.desktop)
+
 #
 # Unit tests
 #

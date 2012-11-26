@@ -37,7 +37,8 @@ namespace unity
 {
 namespace launcher
 {
-const std::string USC_DESKTOP = BUILDDIR"/tests/data/applications/ubuntu-software-center.desktop";
+const std::string LOCAL_DATA_DIR = BUILDDIR"/tests/data";
+const std::string USC_DESKTOP = LOCAL_DATA_DIR+"/applications/ubuntu-software-center.desktop";
 
 class MockSoftwareCenterLauncherIcon : public SoftwareCenterLauncherIcon
 {
@@ -46,11 +47,10 @@ public:
                                   std::string const& aptdaemon_trans_id,
                                   std::string const& icon_path):
       SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path)
-   {};
+   {}
 
    using SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall;
    using SoftwareCenterLauncherIcon::_desktop_file;
-   using SoftwareCenterLauncherIcon::desktop_dir_;
    using SoftwareCenterLauncherIcon::GetRemoteUri;
    using SoftwareCenterLauncherIcon::OnFinished;
 
@@ -59,6 +59,7 @@ public:
 
 struct TestSoftwareCenterLauncherIcon : testing::Test
 {
+public:
   TestSoftwareCenterLauncherIcon()
     : bamf_matcher(bamf_matcher_get_default())
     , usc(bamf_matcher_get_application_for_desktop_file(bamf_matcher, USC_DESKTOP.c_str(), TRUE), glib::AddRef())
@@ -88,16 +89,14 @@ TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformAppInstall)
    // ensure that tranformation from app-install data desktop files works
    icon._desktop_file = "/usr/share/app-install/desktop/pkgname:kde4__afile.desktop";
    EXPECT_EQ(icon.GetActualDesktopFileAfterInstall(), 
-             "/usr/share/applications/kde4/afile.desktop");
+             BUILDDIR"/tests/data/applications/kde4/afile.desktop");
 }
 
 TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformSCAgent)
 {
    // now simualte data coming from the sc-agent
    icon._desktop_file = "/tmp/software-center-agent:VP2W9M:ubuntu-software-center.desktop";
-   icon.desktop_dir_ = BUILDDIR"/tests/data/applications/";
-   EXPECT_EQ(icon.GetActualDesktopFileAfterInstall(), 
-             BUILDDIR"/tests/data/applications/ubuntu-software-center.desktop");
+   EXPECT_EQ(icon.GetActualDesktopFileAfterInstall(), USC_DESKTOP);
 }
 
 // simulate a OnFinished signal from a /usr/share/app-install location
@@ -105,26 +104,18 @@ TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformSCAgent)
 // the real location
 TEST_F(TestSoftwareCenterLauncherIcon, OnFinished)
 {
-   // order is important here, GetRemoteUri() will call UpdateDesktopFile()
-   // which will get the value from _bamf_app so call it first before patching
-
-   // remote-uri will initially point to BUILDDIR
-   std::string initial_remote_uri = icon.GetRemoteUri();
 
    // simulate desktop file from app-install-data
    icon._desktop_file = "/usr/share/app-install/desktop/software-center:ubuntu-software-center.desktop";
-   icon.desktop_dir_ = "/usr/share/applications/";
    
    // now simulate that the install was successful
    GVariant *params = g_variant_new("(s)", "exit-success");
    icon.OnFinished(params);
 
    // and verify that both the desktop file and the remote uri gets updated
-   EXPECT_EQ(icon._desktop_file, 
-             "/usr/share/applications/ubuntu-software-center.desktop");
+   EXPECT_EQ(icon._desktop_file, USC_DESKTOP);
    EXPECT_EQ(icon.GetRemoteUri(), 
              "application://ubuntu-software-center.desktop");
-   EXPECT_NE(initial_remote_uri, icon.GetRemoteUri());
 
    g_variant_unref(params);
 }

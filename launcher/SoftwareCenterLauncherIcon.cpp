@@ -25,6 +25,7 @@
 #include "Launcher.h"
 #include "LauncherDragWindow.h"
 #include "LauncherModel.h"
+#include "DesktopUtilities.h"
 
 namespace unity
 {
@@ -44,7 +45,6 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
                                                        std::string const& aptdaemon_trans_id,
                                                        std::string const& icon_path)
 : ApplicationLauncherIcon(app)
-, desktop_dir_("/usr/share/applications/")
 , aptdaemon_trans_("org.debian.apt",
                    aptdaemon_trans_id,
                    "org.debian.apt.transaction",
@@ -150,12 +150,14 @@ std::string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
    {
       filename = filename.substr(filename.rfind(":") + 1, 
                                  filename.length() - filename.rfind(":"));
+      // the app-install-data package encodes subdirs in a funny way, once
+      // that is fixed, this code can be dropped
       if (filename.find("__") != std::string::npos)
       {
          int pos = filename.find("__");
-         filename = filename.replace(pos, 2, "/");
+         filename = filename.replace(pos, 2, "-");
       }
-      filename = std::string(desktop_dir_ + filename);
+      filename = DesktopUtilities::GetDesktopPathById(filename);
       return filename;
    } 
    else if (_desktop_file.find("/tmp/software-center-agent:") == 0)
@@ -166,12 +168,12 @@ std::string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
       //   /usr/share/applications/extras-$pkgname.desktop
       std::string desktopf = filename.substr(filename.rfind(":") + 1, 
                                              filename.length() - filename.rfind(":"));
-      filename = desktop_dir_ + desktopf;
-      if (g_file_test(filename.c_str(), G_FILE_TEST_EXISTS))
+      filename = DesktopUtilities::GetDesktopPathById(desktopf);
+      if (filename.size() > 0)
          return filename;
       // now try extras-$pkgname.desktop
-      filename = desktop_dir_ + "extras-" + desktopf;
-      if (g_file_test(filename.c_str(), G_FILE_TEST_EXISTS))
+      filename = DesktopUtilities::GetDesktopPathById(std::string("extras-") + desktopf);
+      if (filename.size() > 0)
          return filename;
 
       // FIXME: test if there is a file now and if not, search
