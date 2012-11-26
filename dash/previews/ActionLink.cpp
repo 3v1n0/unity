@@ -43,8 +43,6 @@ ActionLink::ActionLink(std::string const& action_hint, std::string const& label,
   : nux::AbstractButton(NUX_FILE_LINE_PARAM)
   , action_hint_(action_hint)
 {
-  SetAcceptKeyNavFocusOnMouseDown(false);
-  SetAcceptKeyNavFocusOnMouseEnter(true);
   Init();
   BuildLayout(label);
 }
@@ -66,7 +64,8 @@ void ActionLink::AddProperties(GVariantBuilder* builder)
 
 void ActionLink::Init()
 {
-  SetMinimumHeight(40);
+  SetAcceptKeyNavFocusOnMouseDown(false);
+  SetAcceptKeyNavFocusOnMouseEnter(true);
 
   key_nav_focus_change.connect([&] (nux::Area*, bool, nux::KeyNavDirection)
   {
@@ -126,20 +125,6 @@ int ActionLink::GetLinkAlpha(nux::ButtonVisualState state)
     return LINK_NORMAL_ALPHA_VALUE;
 }
 
-long ActionLink::ComputeContentSize()
-{
-  long ret = nux::View::ComputeContentSize();
-
-  nux::Geometry const& geo = GetGeometry();
-
-  if (cached_geometry_ != geo && geo.width > 0 && geo.height > 0)
-  {
-    cached_geometry_ = geo;
-  }
-
-  return ret;
-}
-
 void ActionLink::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
@@ -172,9 +157,8 @@ void ActionLink::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   {
     gPainter.PushPaintLayerStack();
     {
-      nux::Geometry clip_geo = geo;
 
-      GfxContext.PushClippingRectangle(clip_geo);
+      GfxContext.PushClippingRectangle(geo);
       gPainter.PushPaintLayerStack();
       GetCompositionLayout()->ProcessDraw(GfxContext, force_draw);
       gPainter.PopPaintLayerStack();
@@ -197,6 +181,16 @@ void ActionLink::SetFont(std::string const& font_hint)
     ComputeContentSize();
     QueueDraw();
   }
+}
+
+void ActionLink::SetTextAlignment(nux::StaticCairoText::AlignState aligment)
+{
+  static_text_->SetTextAlignment(aligment);
+}
+
+void ActionLink::SetUnderline(nux::StaticCairoText::UnderlineState underline)
+{
+  static_text_->SetUnderline(underline);
 }
 
 std::string ActionLink::GetLabel() const

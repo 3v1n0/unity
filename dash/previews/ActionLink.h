@@ -27,11 +27,8 @@
 #include <Nux/CairoWrapper.h>
 #include <Nux/AbstractButton.h>
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/StaticCairoText.h"
 
-namespace nux
-{
-class StaticCairoText;
-}
 
 namespace unity
 {
@@ -54,6 +51,9 @@ public:
 
   virtual bool AcceptKeyNavFocus() { return true; }
 
+  void SetTextAlignment(nux::StaticCairoText::AlignState aligment);
+  void SetUnderline(nux::StaticCairoText::UnderlineState underline);
+
   std::string GetLabel() const;
   std::string GetExtraText() const;
 
@@ -61,7 +61,6 @@ protected:
   nux::ObjectPtr<nux::StaticCairoText> static_text_;
 
   int GetLinkAlpha(nux::ButtonVisualState state);
-  long ComputeContentSize();
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {}
   void RecvClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -76,8 +75,6 @@ protected:
 
 private:
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
-
-  nux::Geometry cached_geometry_;
 
   std::string action_hint_;
   std::string font_hint_;
