@@ -40,8 +40,6 @@
 #include "unity-shared/IMTextEntry.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/StaticCairoText.h"
-#include "gtest/gtest_prod.h"
-
 
 namespace nux
 {
@@ -51,10 +49,10 @@ class LinearLayout;
 
 namespace unity
 {
-
 class TextInput : public unity::debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(TextInput, nux::View);
+
 public:
   typedef nux::ObjectPtr<TextInput> Ptr;
   TextInput(NUX_FILE_LINE_PROTO);
@@ -68,46 +66,35 @@ public:
   nux::ROProperty<bool> im_preedit;
 
 private:
-  // friend for testing
-  friend class TestTextInput;
-  FRIEND_TEST(TestTextInput, HintCorrectInit);
-  FRIEND_TEST(TestTextInput, EntryCorrectInit);
-  FRIEND_TEST(TestTextInput, InputStringCorrectSetter);
-  FRIEND_TEST(TestTextInput, OnFontChanged);
-  FRIEND_TEST(TestTextInput, OnInputHintChanged);
-  FRIEND_TEST(TestTextInput, OnMouseButtonDown);
-  FRIEND_TEST(TestTextInput, OnEndKeyFocus);
 
-  void Init();
-
-  virtual void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
-
-  virtual void OnInputHintChanged();
-
+  void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-
-  virtual void OnMouseButtonDown(int x, int y, unsigned long button_flags,
-          unsigned long key_flags);
-
-  virtual void OnEndKeyFocus();
-
   void UpdateBackground(bool force);
-
-  virtual std::string get_input_string() const;
-
-  virtual bool set_input_string(std::string const& string);
-
-  bool get_im_active() const;
-
-  bool get_im_preedit() const;
 
   std::string GetName() const;
 
   void AddProperties(GVariantBuilder* builder);
-
   bool AcceptKeyNavFocus();
+
+protected:
+
+  void Init();
+  void OnInputHintChanged();
+  void OnMouseButtonDown(int x, int y, unsigned long button_flags,
+          unsigned long key_flags);
+  void OnEndKeyFocus();
+
+  // getters & setters
+
+  std::string get_input_string() const;
+  bool set_input_string(std::string const& string);
+  bool get_im_active() const;
+  bool get_im_preedit() const;
+
+  // instance vars
+  nux::StaticCairoText* hint_;
+  IMTextEntry* pango_entry_;
 
 private:
 
@@ -117,8 +104,6 @@ private:
   std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;
   nux::HLayout* layout_;
   nux::LayeredLayout* layered_layout_;
-  nux::StaticCairoText* hint_;
-  IMTextEntry* pango_entry_;
 
   int last_width_;
   int last_height_;
