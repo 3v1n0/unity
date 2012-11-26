@@ -106,6 +106,7 @@ void MusicPaymentPreview::Impl::SetupGetters()
 
 MusicPaymentPreview::MusicPaymentPreview(unity::glib::Object<GObject> const& proto_obj)
   : PaymentPreview(proto_obj)
+  , pimpl(new Impl(this, proto_obj))
 {
 }
 
