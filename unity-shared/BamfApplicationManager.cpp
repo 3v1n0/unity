@@ -18,10 +18,10 @@
  */
 
 #include "unity-shared/BamfApplicationManager.h"
+#include "unity-shared/WindowManager.h"
 
 #include <NuxCore/Logger.h>
 
-#include "unity-shared/WindowManager.h"
 
 
 DECLARE_LOGGER(logger, "unity.appmanager.bamf");
@@ -94,7 +94,26 @@ WindowBase::WindowBase(Manager const& manager,
                        glib::Object<BamfView> const& window)
   : View(manager, window)
 {
-  HookUpEvents();
+  visible.SetGetterFunction(sigc::mem_fun(this, &View::GetVisible));
+  active.SetGetterFunction(sigc::mem_fun(this, &View::GetActive));
+  urgent.SetGetterFunction(sigc::mem_fun(this, &View::GetUrgent));
+
+  glib::SignalBase* sig;
+  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "user-visible-changed",
+                          [this] (BamfView*, gboolean visible) {
+                            this->visible.changed.emit(visible);
+                          });
+  signals_.Add(sig);
+  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "active-changed",
+                          [this] (BamfView*, gboolean active) {
+                            this->active.changed.emit(active);
+                          });
+  signals_.Add(sig);
+  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "urgent-changed",
+                          [this] (BamfView*, gboolean urgent) {
+                            this->urgent.changed.emit(urgent);
+                          });
+  signals_.Add(sig);
 }
 
 std::string WindowBase::title() const
@@ -129,29 +148,6 @@ bool WindowBase::Focus() const
   return false;
 }
 
-void WindowBase::HookUpEvents()
-{
-  visible.SetGetterFunction(sigc::mem_fun(this, &View::GetVisible));
-  active.SetGetterFunction(sigc::mem_fun(this, &View::GetActive));
-  urgent.SetGetterFunction(sigc::mem_fun(this, &View::GetUrgent));
-
-  glib::SignalBase* sig;
-  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "user-visible-changed",
-                          [this] (BamfView*, gboolean visible) {
-                            this->visible.changed.emit(visible);
-                          });
-  signals_.Add(sig);
-  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "active-changed",
-                          [this] (BamfView*, gboolean active) {
-                            this->active.changed.emit(active);
-                          });
-  signals_.Add(sig);
-  sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "urgent-changed",
-                          [this] (BamfView*, gboolean urgent) {
-                            this->urgent.changed.emit(urgent);
-                          });
-  signals_.Add(sig);
-}
 
 AppWindow::AppWindow(Manager const& manager, glib::Object<BamfView> const& window)
   : WindowBase(manager, window)
@@ -313,10 +309,6 @@ void Application::HookUpEvents()
                               this->window_moved.emit(*win);
                           });
   signals_.Add(sig);
-}
-
-Application::~Application()
-{
 }
 
 std::string Application::title() const
@@ -493,7 +485,6 @@ void Application::Focus(bool show_only_visible, int monitor) const
   }
 }
 
-
 void Application::Quit() const
 {
   for (auto& window : GetWindows())
@@ -501,7 +492,6 @@ void Application::Quit() const
     window->Quit();
   }
 }
-
 
 bool Application::GetSeen() const
 {
@@ -520,10 +510,7 @@ bool Application::SetSeen(bool const& param)
                      g_quark_from_string(UNSEEN_QUARK),
                      data);
   return true; // value updated
-
 }
-
-
 
 bool Application::GetSticky() const
 {
@@ -536,7 +523,7 @@ bool Application::SetSticky(bool const& param)
   if (param == is_sticky)
     return false; // unchanged
 
-  bamf_view_set_sticky(bamf_view_, true);
+  bamf_view_set_sticky(bamf_view_, param);
   return true; // value updated
 }
 
@@ -620,7 +607,6 @@ ApplicationWindowPtr Manager::GetActiveWindow() const
   return result;
 }
 
-
 ApplicationPtr Manager::GetApplicationForDesktopFile(std::string const& desktop_file) const
 {
   ApplicationPtr result;
@@ -657,7 +643,6 @@ ApplicationList Manager::GetRunningApplications() const
     }
 
     glib::Object<BamfApplication> app(static_cast<BamfApplication*>(l->data));
-
     result.push_back(ApplicationPtr(new Application(*this, app)));
   }
   return result;
