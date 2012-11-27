@@ -103,8 +103,6 @@ public:
 
   virtual std::vector<Window> WindowsForMonitor(int monitor) { return std::vector<Window> (); }
 
-  virtual std::string NameForWindow(Window window) { return std::string(); }
-
   const bool WindowVisibleOnMonitor(int monitor);
 
   const bool WindowVisibleOnViewport();
@@ -252,7 +250,7 @@ protected:
 
   virtual void ActivateLauncherIcon(ActionArg arg) {}
 
-  virtual void OpenInstanceLauncherIcon(ActionArg arg) {}
+  virtual void OpenInstanceLauncherIcon() {}
 
   virtual bool HandlesSpread () { return false; }
 
