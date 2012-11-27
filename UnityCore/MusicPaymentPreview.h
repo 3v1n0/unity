@@ -38,8 +38,20 @@ public:
 
   MusicPaymentPreview(unity::glib::Object<GObject> const& proto_obj);
   ~MusicPaymentPreview();
-};
 
+  // properties that contain the data
+  nux::RWProperty<std::string> title;
+  nux::RWProperty<std::string> subtitle;
+  nux::RWProperty<std::string> header;
+  nux::RWProperty<std::string> email;
+  nux::RWProperty<std::string> payment_method;
+  nux::RWProperty<std::string> purchase_prize;
+  nux::RWProperty<std::string> purchase_type;
+
+private:
+  class Impl;
+  std::unique_ptr<Impl> pimpl;
+};
 }
 }
 

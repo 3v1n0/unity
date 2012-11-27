@@ -168,6 +168,7 @@ void DashView::ClosePreview()
 
   preview_navigation_mode_ = previews::Navigation::NONE;
   preview_displaying_ = false;
+  active_lens_view_->SetVisible(true);
 
   // re-focus dash view component.
   nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
@@ -272,6 +273,7 @@ void DashView::BuildPreview(Preview::Ptr model)
 
     preview_container_->SetGeometry(layout_->GetGeometry());
     preview_displaying_ = true;
+    active_lens_view_->SetVisible(false);
 
     // connect to nav left/right signals to request nav left/right movement.
     preview_container_->navigate_left.connect([&] () {
@@ -331,12 +333,13 @@ void DashView::AboutToShow()
     LOG_DEBUG(logger) << "Setting ViewType " << ViewType::LENS_VIEW
                                 << " on '" << home_lens_->id() << "'";
   }
-  else if (active_lens_view_)
+  else
   {
     // careful here, the lens_view's view_type doesn't get reset when the dash
     // hides, but lens' view_type does, so we need to update the lens directly
     active_lens_view_->lens()->view_type = ViewType::LENS_VIEW;
   }
+  active_lens_view_->SetVisible(true);
 
   // this will make sure the spinner animates if the search takes a while
   search_bar_->ForceSearchChanged();
@@ -365,6 +368,8 @@ void DashView::AboutToHide()
   home_lens_->view_type = ViewType::HIDDEN;
   LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HIDDEN
                             << " on '" << home_lens_->id() << "'";
+
+  active_lens_view_->SetVisible(false);
 
   // if a preview is open, close it
   if (preview_displaying_)
@@ -980,6 +985,8 @@ void DashView::OnLensBarActivated(std::string const& id)
     return;
   }
 
+  lens_views_[id]->SetVisible(true);
+  active_lens_view_->SetVisible(false);
   LensView* view = active_lens_view_ = lens_views_[id];
   view->JumpToTop();
 

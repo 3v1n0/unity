@@ -222,6 +222,8 @@ class HudBehaviorTests(HudTestsBase):
 
     def test_hud_closes_on_spread(self):
         """This test shows that when the spread is initiated, the hud closes."""
+        # Need at least one application open for the spread to work.
+        self.start_app_window("Calculator")
         self.hud.ensure_visible()
         self.addCleanup(self.keybinding, "spread/cancel")
         self.keybinding("spread/start")

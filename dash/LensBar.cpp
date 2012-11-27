@@ -234,8 +234,8 @@ void LensBar::ActivatePrevious()
 
     if (activate_previous && icon->IsVisible())
     {
-	SetActive(icon);
-	return;
+      SetActive(icon);
+      return;
     }
     if (icon->active)
       activate_previous = true;

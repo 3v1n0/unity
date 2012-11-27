@@ -137,7 +137,7 @@ void FilterExpanderLabel::BuildLayout()
 
   expander_view_ = new ExpanderView(NUX_TRACKER_LOCATION);
   expander_view_->SetLayout(expander_layout_);
-  top_bar_layout_->AddView(expander_view_, 0);
+  top_bar_layout_->AddView(expander_view_, 1);
 
   cairo_label_ = new nux::StaticCairoText(label_.c_str(), NUX_TRACKER_LOCATION);
   cairo_label_->SetFont(FONT_EXPANDER_LABEL);
@@ -161,7 +161,6 @@ void FilterExpanderLabel::BuildLayout()
 
   expander_layout_->AddView(cairo_label_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   expander_layout_->AddView(arrow_layout_, 0, nux::MINOR_POSITION_CENTER);
-  top_bar_layout_->AddSpace(1, 1);
 
   layout_->AddLayout(top_bar_layout_, 0, nux::MINOR_POSITION_START);
   layout_->SetVerticalInternalMargin(0);

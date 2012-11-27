@@ -30,43 +30,87 @@ using namespace nux;
 namespace unity
 {
 
+class TextInputMock : public TextInput
+{
+    public:
+      using TextInput::Init;
+      using TextInput::OnInputHintChanged;
+      using TextInput::OnMouseButtonDown;
+      using TextInput::OnEndKeyFocus;
+      using TextInput::get_input_string;
+
+
+      nux::StaticCairoText* GetHint() const { return hint_; }
+      IMTextEntry* GetPangoEntry() const { return pango_entry_; }
+};
+
 class TestTextInput : public ::testing::Test
 {
    protected:
      TestTextInput()
      {
-       entry = new TextInput();
+       entry = new TextInputMock();
+       entry->Init();
+       hint = entry->GetHint();
+       pango_entry = entry->GetPangoEntry();
      }
 
-     TextInput* entry;
+     nux::ObjectPtr<TextInputMock> entry;
+     nux::StaticCairoText* hint;
+     IMTextEntry* pango_entry;
 };
 
 TEST_F(TestTextInput, HintCorrectInit)
 {
-}
+  nux::Color color = hint->GetTextColor();
 
-TEST_F(TestTextInput, EntryCorrectInit)
-{
+  EXPECT_EQ(color.red, 1.0f);
+  EXPECT_EQ(color.green, 1.0f);
+  EXPECT_EQ(color.blue, 1.0f);
+  EXPECT_EQ(color.alpha, 0.5f);
 }
 
 TEST_F(TestTextInput, InputStringCorrectSetter)
 {
+  // set the string and test that we do indeed set the internal va
+  std::string new_input = "foo";
+  entry->input_string.Set(new_input);
+  EXPECT_EQ(entry->input_string.Get(), new_input);
 }
 
-TEST_F(TestTextInput, OnFontChanged)
+TEST_F(TestTextInput, HintClearedOnInputHintChanged)
 {
+  // change the hint and assert that the internal value is correct
+  hint->SetText("foo");
+  entry->OnInputHintChanged();
+  EXPECT_EQ(entry->get_input_string(), "");
 }
 
-TEST_F(TestTextInput, OnInputHintChanged)
+TEST_F(TestTextInput, HintHideOnMouseButtonDown)
 {
+  hint->SetVisible(true);
+  entry->OnMouseButtonDown(entry->GetBaseWidth()/2,
+    entry->GetBaseHeight()/2  , 0, 0);
+  EXPECT_FALSE(hint->IsVisible());
 }
 
-TEST_F(TestTextInput, OnMouseButtonDown)
+TEST_F(TestTextInput, HintVisibleOnEndKeyFocus)
 {
+  // set the text and ensure that later is cleared
+  pango_entry->SetText("user input");
+  entry->OnEndKeyFocus();
+
+  EXPECT_FALSE(hint->IsVisible());
+
 }
 
-TEST_F(TestTextInput, OnEndKeyFocus)
+TEST_F(TestTextInput, HintHiddenOnEndKeyFocus)
 {
+
+  pango_entry->SetText("");
+  entry->OnEndKeyFocus();
+
+  EXPECT_TRUE(hint->IsVisible());
 }
 
 } // unity
