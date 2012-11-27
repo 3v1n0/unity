@@ -110,7 +110,7 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   : nux::View(NUX_TRACKER_LOCATION),
     _style(style),
     _child_view(nullptr),
-    _using_nofilters_background(true),
+    _using_filters_background(false),
     _is_expanded(false),
     _n_visible_items_in_unexpand_mode(0),
     _n_total_items(0),
@@ -207,40 +207,6 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
     else
       nux::GetWindowCompositor().SetKeyFocusArea(GetHeaderFocusableView(), direction);
   });
-
-  _ubus.RegisterInterest(UBUS_REFINE_STATUS, [this] (GVariant *data) 
-  {
-    gboolean status;
-    g_variant_get(data, UBUS_REFINE_STATUS_FORMAT_STRING, &status);
-
-    nux::ROPConfig rop;
-    rop.Blend = true;
-    rop.SrcBlend = GL_ONE;
-    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-
-    nux::TexCoordXForm texxform;
-    if (status && _using_nofilters_background)
-    {
-      _background_layer.reset(new nux::TextureLayer(_background->GetDeviceTexture(),
-                              texxform, 
-                              nux::color::White,
-                              false,
-                              rop));
-      _using_nofilters_background = false;
-    }
-    else if (!status && !_using_nofilters_background)
-    {
-      _background_layer.reset(new nux::TextureLayer(_background_nofilters->GetDeviceTexture(),
-                              texxform,
-                              nux::color::White,
-                              false,
-                              rop));
-
-      _using_nofilters_background = true;
-    }
-    QueueDraw();
-  });
-
 }
 
 void
@@ -484,20 +450,19 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
     _focus_layer->Renderlayer(graphics_engine);
   }
 
-  nux::Geometry bg_geo = GetGeometry();
-  int bg_width = 0;
-  if (_using_nofilters_background)
-    bg_width = _background_nofilters->GetWidth();
-  else
-    bg_width = _background->GetWidth();
+  if (_background_layer)
+  {
+    nux::Geometry bg_geo = GetGeometry();
+    int bg_width = _background_layer->GetDeviceTexture()->GetWidth();
 
-  bg_geo.x = std::max(bg_geo.width - bg_width,0);
+    bg_geo.x = std::max(bg_geo.width - bg_width,0);
 
-  bg_geo.width = std::min(bg_width, bg_geo.GetWidth()) + 1; // to render into a space left over by the scrollview
-  bg_geo.height = _background->GetHeight();
+    bg_geo.width = std::min(bg_width, bg_geo.GetWidth()) + 1; // to render into a space left over by the scrollview
+    bg_geo.height = _background->GetHeight();
 
-  _background_layer->SetGeometry(bg_geo);
-  _background_layer->Renderlayer(graphics_engine);
+    _background_layer->SetGeometry(bg_geo);
+    _background_layer->Renderlayer(graphics_engine);
+  }
 
   _group_layout->ProcessDraw(graphics_engine, true);
 
@@ -595,6 +560,36 @@ nux::View* PlacesGroup::GetHeaderFocusableView() const
 bool PlacesGroup::ShouldBeHighlighted() const
 {
   return HeaderHasKeyFocus();
+}
+
+void PlacesGroup::SetFiltersExpanded(bool filters_expanded)
+{
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+  nux::TexCoordXForm texxform;
+  if (filters_expanded && !_using_filters_background)
+  {
+    _background_layer.reset(new nux::TextureLayer(_background->GetDeviceTexture(),
+                            texxform, 
+                            nux::color::White,
+                            false,
+                            rop));
+    _using_filters_background = true;
+  }
+  else if (!filters_expanded && _using_filters_background)
+  {
+    _background_layer.reset(new nux::TextureLayer(_background_nofilters->GetDeviceTexture(),
+                            texxform,
+                            nux::color::White,
+                            false,
+                            rop));
+
+    _using_filters_background = false;
+  }
+  QueueDraw();
 }
 
 //

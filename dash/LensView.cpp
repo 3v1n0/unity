@@ -164,14 +164,7 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   lens_->connected.changed.connect([&](bool is_connected) { if (is_connected) initial_activation_ = true; });
   lens_->categories_reordered.connect(sigc::mem_fun(this, &LensView::OnCategoryOrderChanged));
   search_string.SetGetterFunction(sigc::mem_fun(this, &LensView::get_search_string));
-  filters_expanded.changed.connect([&](bool expanded)
-  {
-    fscroll_view_->SetVisible(expanded);
-    QueueRelayout();
-    OnColumnsChanged();
-    ubus_manager_.SendMessage(UBUS_REFINE_STATUS,
-                              g_variant_new(UBUS_REFINE_STATUS_FORMAT_STRING, expanded ? TRUE : FALSE));
-  });
+  filters_expanded.changed.connect(sigc::mem_fun(this, &LensView::OnLensFilterExpanded));
   view_type.changed.connect(sigc::mem_fun(this, &LensView::OnViewTypeChanged));
 
   ubus_manager_.RegisterInterest(UBUS_RESULT_VIEW_KEYNAV_CHANGED, [&] (GVariant* data) {
@@ -681,6 +674,21 @@ void LensView::OnViewTypeChanged(ViewType view_type)
   }
 
   lens_->view_type = view_type;
+}
+
+void LensView::OnLensFilterExpanded(bool expanded)
+{
+  if (fscroll_view_->IsVisible() != expanded)
+  {
+    fscroll_view_->SetVisible(expanded);
+    QueueRelayout();
+    OnColumnsChanged();
+  }
+
+  for (auto it = categories_.begin(); it != categories_.end(); ++it)
+  {
+    (*it)->SetFiltersExpanded(expanded);
+  }
 }
 
 void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)

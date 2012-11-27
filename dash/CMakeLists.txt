@@ -30,6 +30,7 @@ add_subdirectory(previews)
 set (DASH_SOURCES
      CoverflowResultView.cpp
      DashController.cpp
+     DashOverlayRenderer.cpp
      DashView.cpp
      DashViewPrivate.cpp
      FilterAllButton.cpp

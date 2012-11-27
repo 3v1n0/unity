@@ -999,6 +999,13 @@ void DashView::OnLensBarActivated(std::string const& id)
 
   bool expanded = view->filters_expanded;
   search_bar_->showing_filters = expanded;
+  renderer_.refine_open = expanded;
+
+  filter_open_connection.disconnect();
+  filter_open_connection = view->filters_expanded.changed.connect([&](bool expanded)
+  {
+    renderer_.refine_open = expanded;    
+  });
 
   nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
 

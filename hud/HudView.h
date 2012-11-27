@@ -28,8 +28,8 @@
 #include "HudIcon.h"
 #include "HudButton.h"
 #include "HudAbstractView.h"
+#include "HudOverlayRenderer.h"
 #include "unity-shared/SearchBar.h"
-#include "unity-shared/OverlayRenderer.h"
 #include "unity-shared/UBusWrapper.h"
 
 namespace unity
@@ -110,7 +110,7 @@ private:
 
   Hud::Queries queries_;
   nux::Geometry content_geo_;
-  OverlayRenderer renderer_;
+  HudOverlayRenderer renderer_;
   glib::Source::UniquePtr timeline_idle_;
   bool timeline_animating_;
 

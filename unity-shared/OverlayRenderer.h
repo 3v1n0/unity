@@ -70,21 +70,27 @@ public:
    * absolute_geo: your views GetAbsoluteGeometry()
    * geo: your views GetGeometry()
    */
-  void DrawFull(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geo, bool force_edges=false);
+  void DrawFull(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geo, bool force_edges=false);
   
   /*
    * Draws just the stack that is overlay behind the inner_geometry using push/pop layers, call in DrawContent() before drawing your content
    */
-  void DrawInner(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geo);
+  void DrawInner(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geo);
   
   /* 
    * Call after calling DrawInner and drawing your own content
    */
-  void DrawInnerCleanup(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geo);
+  void DrawInnerCleanup(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geo);
   
   sigc::signal<void> need_redraw;
 
+protected:
+  virtual void CustomDrawFull(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geo, int border);
+  virtual void CustomDrawInner(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geo, int border);
+  virtual void CustomDrawCleanup(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geo);
+
 private:
+  friend class OverlayRendererImpl;
   OverlayRendererImpl *pimpl_;
 };
 

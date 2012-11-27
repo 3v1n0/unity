@@ -92,6 +92,7 @@ private:
   void OnFilterAdded(Filter::Ptr filter);
   void OnFilterRemoved(Filter::Ptr filter);
   void OnViewTypeChanged(ViewType view_type);
+  void OnLensFilterExpanded(bool expanded);
   bool ReinitializeFilterModels();
   ResultViewGrid* GetGridForCategory(unsigned category_index);
   ResultView* GetResultViewForCategory(unsigned category_index);
