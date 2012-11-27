@@ -20,6 +20,7 @@
 #include "config.h"
 
 #include "unity-shared/CairoTexture.h"
+#include "unity-shared/GraphicsUtils.h"
 #include "LensBar.h"
 
 namespace unity
@@ -108,8 +109,14 @@ void LensBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 
   graphics_engine.PushClippingRectangle(base);
 
-  bg_layer_->SetGeometry(base);
-  nux::GetPainter().RenderSinglePaintLayer(graphics_engine, base, bg_layer_.get());
+  if (RedirectedAncestor())
+    graphics::ClearGeometry(base);
+
+  if (bg_layer_)
+  {
+    bg_layer_->SetGeometry(base);
+    bg_layer_->Renderlayer(graphics_engine);
+  }
 
   graphics_engine.PopClippingRectangle();
 }
@@ -121,30 +128,38 @@ void LensBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   graphics_engine.PushClippingRectangle(base);
 
   int pushed_paint_layers = 0;
-  if(RedirectedAncestor())
+  if (!IsFullRedraw())
   {
+    if (RedirectedAncestor())
     {
-      unsigned int alpha = 0, src = 0, dest = 0;
-      graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
-      // This is necessary when doing redirected rendering.
-      // Clean the area below this view before drawing anything.
-      graphics_engine.GetRenderStates().SetBlend(false);
-      graphics_engine.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
-      graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
+      for (auto icon: icons_)
+      {
+        if (icon->IsRedrawNeeded())
+          graphics::ClearGeometry(icon->GetGeometry());
+      }
     }
 
-    nux::GetPainter().RenderSinglePaintLayer(graphics_engine, bg_layer_->GetGeometry(), bg_layer_.get());
+    if (bg_layer_)
+    {
+      nux::GetPainter().PushLayer(graphics_engine, bg_layer_->GetGeometry(), bg_layer_.get());
+      pushed_paint_layers++;
+    }
   }
-  else if (!IsFullRedraw())
+  else
   {
-    ++pushed_paint_layers;
-    nux::GetPainter().PushLayer(graphics_engine, bg_layer_->GetGeometry(), bg_layer_.get());
+    nux::GetPainter().PushPaintLayerStack();    
   }
 
-  layout_->ProcessDraw(graphics_engine, true);
+  layout_->ProcessDraw(graphics_engine, force_draw);
 
-  if (pushed_paint_layers)
+  if (IsFullRedraw())
+  {
+    nux::GetPainter().PopPaintLayerStack();      
+  }
+  else if (pushed_paint_layers > 0)
+  {
     nux::GetPainter().PopBackground(pushed_paint_layers);
+  }
 
   for (auto icon: icons_)
   {
