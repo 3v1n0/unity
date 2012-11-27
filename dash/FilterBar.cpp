@@ -114,7 +114,6 @@ void FilterBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_dra
     }
   }
 
-
   GetLayout()->ProcessDraw(graphics_engine, force_draw);
   graphics_engine.PopClippingRectangle();
 }

@@ -713,7 +713,7 @@ void LensView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
         graphics::ClearGeometry(category->GetGeometry());  
     }
     if (filter_bar_ && filter_bar_->IsVisible() && filter_bar_->IsRedrawNeeded())
-        graphics::ClearGeometry(filter_bar_->GetGeometry());  
+      graphics::ClearGeometry(filter_bar_->GetGeometry());  
   }
 
   layout_->ProcessDraw(graphics_engine, force_draw);
