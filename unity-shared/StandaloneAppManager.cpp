@@ -190,6 +190,7 @@ int main(int argc, char* argv[])
 
   ApplicationPtr terminal = manager.GetApplicationForDesktopFile(
     "/usr/share/applications/gnome-terminal.desktop");
+  terminal->sticky = true; // this is needed to get the notifications...
   dump_app(terminal);
   connect_events(terminal);
 

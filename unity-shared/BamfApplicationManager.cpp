@@ -317,7 +317,6 @@ void Application::HookUpEvents()
 
 Application::~Application()
 {
-  LOG_DEBUG(logger) << "Application::~Application";
 }
 
 std::string Application::title() const

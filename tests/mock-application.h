@@ -63,6 +63,7 @@ public:
   virtual std::string title() const { return title_; }
   virtual std::string desktop_file() const { return desktop_file_; }
   virtual std::string type() const { return "mock"; }
+  virtual std::string repr() const { return "MockApplication"; }
 
   virtual unity::WindowList GetWindows() const { return unity::WindowList(); }
   virtual bool OwnsWindow(Window window_id) const { return false; }

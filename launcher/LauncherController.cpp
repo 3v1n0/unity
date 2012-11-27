@@ -764,14 +764,11 @@ AbstractLauncherIcon::Ptr Controller::Impl::CreateFavoriteIcon(std::string const
   {
     std::string const& desktop_path = DesktopUtilities::GetDesktopPathById(desktop_id);
     ApplicationPtr app = ApplicationManager::Default().GetApplicationForDesktopFile(desktop_path);
-    if (!app)
+    if (!app || app->seen())
       return result;
-    if (app->seen)
-    {
-      app->sticky = true;
-      return result;
-    }
 
+    // Sticky apps are those that are in the launcher when not running.
+    app->sticky = true;
     result = AbstractLauncherIcon::Ptr(new ApplicationLauncherIcon(app));
   }
   else if (icon_uri.find(FavoriteStore::URI_PREFIX_DEVICE) == 0)
