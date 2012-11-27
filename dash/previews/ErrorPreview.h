@@ -16,26 +16,32 @@
  * License version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Manuel de la Pena <manuel.delapena@canonical.com>
+ * Authored by: Diego Sarmentero <diego.sarmentero@canonical.com>
  *
  */
 
-#ifndef MUSIC_PAYMENT_PREVIEW_H
-#define MUSIC_PAYMENT_PREVIEW_H
+#ifndef ERROR_PREVIEW_H
+#define ERROR_PREVIEW_H
 
 // key used to find the correct info hint
 #define DATA_INFOHINT_ID "error_preview"
 
 // keys of the data preview
+#define DATA_TITLE_KEY "title"
+#define DATA_HEADER_KEY "header"
+#define DATA_SUBTITLE_KEY "subtitle"
+#define DATA_PURCHASE_HINT_KEY "purchase_hint"
+#define DATA_PURCHASE_PRIZE_KEY "purchase_price"
+#define DATA_PURCHASE_TYPE_KEY "purchase_type"
 #define DATA_MESSAGE_KEY "message"
 
 // ations ids
-#define OPEN_LINK_ACTION "change_payment_method"
+#define OPEN_U1_LINK_ACTION "open_u1_link"
 
 #include <Nux/Nux.h>
 #include <Nux/AbstractButton.h>
 #include <UnityCore/Lens.h>
-#include <UnityCore/MusicPaymentPreview.h>
+#include <UnityCore/ErrorPreview.h>
 #include "ActionButton.h"
 #include "ActionLink.h"
 #include "PaymentPreview.h"
@@ -94,17 +100,9 @@ protected:
   nux::ObjectPtr<nux::StaticCairoText> intro_;
   nux::ObjectPtr<nux::StaticCairoText> title_;
   nux::ObjectPtr<nux::StaticCairoText> subtitle_;
-  nux::ObjectPtr<nux::StaticCairoText> email_label_;
-  nux::ObjectPtr<nux::StaticCairoText> email_;
-  nux::ObjectPtr<nux::StaticCairoText> payment_label_;
-  nux::ObjectPtr<nux::StaticCairoText> payment_;
-  nux::ObjectPtr<nux::StaticCairoText> password_label_;
-  nux::ObjectPtr<TextInput> password_entry_;
   nux::ObjectPtr<nux::StaticCairoText> purchase_hint_;
   nux::ObjectPtr<nux::StaticCairoText> purchase_prize_;
   nux::ObjectPtr<nux::StaticCairoText> purchase_type_;
-  nux::ObjectPtr<nux::StaticCairoText> change_payment_;
-  nux::ObjectPtr<nux::StaticCairoText> forgotten_password_;
   nux::ObjectPtr<nux::HLayout> form_layout_;
 
   // do we want to type?
@@ -124,4 +122,4 @@ protected:
 }
 }
 
-#endif // MUSIC_PAYMENT_PREVIEW_H
+#endif // ERROR_PREVIEW_H
