@@ -19,7 +19,7 @@
  *
  */
 
-
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <unity-shared/StaticCairoText.h>
@@ -40,6 +40,10 @@ namespace dash
 class ActionLinkMock : public ActionLink
 {
   public:
+    MOCK_METHOD0(QueueDraw, void());
+    MOCK_METHOD0(ComputeContentSize, long());
+    MOCK_METHOD2(CalculateBar, void(nux::GraphicsEngine&, bool));
+
     ActionLinkMock(std::string const& action_hint, std::string const& label, NUX_FILE_LINE_PROTO)
       : ActionLink(action_hint, label){}
     ~ActionLinkMock(){}
@@ -47,23 +51,113 @@ class ActionLinkMock : public ActionLink
     nux::ObjectPtr<nux::StaticCairoText> GetText() { return static_text_; }
 
     using ActionLink::GetLinkAlpha;
-    using ActionLink::ComputeContentSize;
     using ActionLink::Draw;
     using ActionLink::DrawContent;
     using ActionLink::RecvClick;
     using ActionLink::GetName;
     using ActionLink::AddProperties;
+    using ActionLink::set_aligment;
+    using ActionLink::get_aligment;
+    using ActionLink::set_underline;
+    using ActionLink::get_underline;
+    using ActionLink::set_font_hint;
+    using ActionLink::get_font_hint;
+    using ActionLink::action_hint_;
+    using ActionLink::font_hint_;
+    using ActionLink::aligment_;
+    using ActionLink::underline_;
 };
 
 class TestActionLink : public ::testing::Test
 {
   protected:
     TestActionLink() : Test()
-    { 
+    {
       action_link = new ActionLinkMock("action_id", "display_name");
     }
     nux::ObjectPtr<ActionLinkMock> action_link;
 };
+
+TEST_F(TestActionLink, AligmentCorrectlySetDifferent)
+{
+  ActionLinkMock link("test", "test");
+
+  EXPECT_CALL(link, ComputeContentSize()).Times(1);
+  EXPECT_CALL(link, QueueDraw()).Times(1);
+
+  link.text_aligment.Set(nux::StaticCairoText::NUX_ALIGN_RIGHT);
+}
+
+TEST_F(TestActionLink, AligmentCorrectlySetSame)
+{
+  ActionLinkMock link("test", "test");
+
+  EXPECT_CALL(link, ComputeContentSize()).Times(0);
+  EXPECT_CALL(link, QueueDraw()).Times(0);
+
+  link.text_aligment.Set(link.text_aligment.Get());
+}
+
+TEST_F(TestActionLink, AligmentCorrectlyRetrieved)
+{
+  nux::StaticCairoText::AlignState aligment =
+    nux::StaticCairoText::NUX_ALIGN_RIGHT;
+  action_link->aligment_ = aligment;
+  EXPECT_EQ(aligment, action_link->text_aligment.Get());
+}
+
+TEST_F(TestActionLink, UnderlineCorrectlySetDifferent)
+{
+  ActionLinkMock link("test", "test");
+
+  EXPECT_CALL(link, ComputeContentSize()).Times(1);
+  EXPECT_CALL(link, QueueDraw()).Times(1);
+  link.underline_state.Set(nux::StaticCairoText::NUX_UNDERLINE_NONE);
+}
+
+TEST_F(TestActionLink, UnderlineCorrectlySetSame)
+{
+  ActionLinkMock link("test", "test");
+
+  EXPECT_CALL(link, ComputeContentSize()).Times(0);
+  EXPECT_CALL(link, QueueDraw()).Times(0);
+  link.underline_state.Set(link.underline_state.Get());
+}
+
+TEST_F(TestActionLink, UnderlineCorrectlyRetrieved)
+{
+  nux::StaticCairoText::UnderlineState underline =
+    nux::StaticCairoText::NUX_UNDERLINE_DOUBLE;
+  action_link->underline_ = underline;
+  EXPECT_EQ(underline, action_link->underline_state.Get());
+}
+
+TEST_F(TestActionLink, FontCorrectlySetDifferent)
+{
+  ActionLinkMock link("test", "test");
+  link.font_hint_ = "Ubuntu 10";
+
+  EXPECT_CALL(link, ComputeContentSize()).Times(1);
+  EXPECT_CALL(link, QueueDraw()).Times(1);
+  link.font_hint.Set("Ubuntu 11");
+}
+
+TEST_F(TestActionLink, FontCorrectlySetSame)
+{
+  ActionLinkMock link("test", "test");
+  link.font_hint_ = "Ubuntu 10";
+
+  EXPECT_CALL(link, ComputeContentSize()).Times(0);
+  EXPECT_CALL(link, QueueDraw()).Times(0);
+  link.font_hint.Set(link.font_hint.Get());
+}
+
+TEST_F(TestActionLink, FontCorrectlyRetrieved)
+{
+  std::string font_hint = "Ubuntu 11";
+  action_link->font_hint_ = font_hint;
+  EXPECT_EQ(font_hint, action_link->font_hint.Get());
+}
 
 TEST_F(TestActionLink, LinkAlphaOnPressed)
 {

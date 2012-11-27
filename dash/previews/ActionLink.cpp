@@ -42,6 +42,8 @@ namespace dash
 ActionLink::ActionLink(std::string const& action_hint, std::string const& label, NUX_FILE_LINE_DECL)
   : nux::AbstractButton(NUX_FILE_LINE_PARAM)
   , action_hint_(action_hint)
+  , aligment_(nux::StaticCairoText::NUX_ALIGN_CENTRE)
+  , underline_(nux::StaticCairoText::NUX_UNDERLINE_SINGLE)
 {
   Init();
   BuildLayout(label);
@@ -58,14 +60,26 @@ void ActionLink::AddProperties(GVariantBuilder* builder)
     .add(GetAbsoluteGeometry())
     .add("action", action_hint_)
     .add("label", label_)
-    .add("font-hint", font_hint_)
-    .add("active", active_);
+    .add("font-hint", font_hint)
+    .add("active", active_)
+    .add("text-aligment", text_aligment)
+    .add("underline-state", underline_state);
 }
 
 void ActionLink::Init()
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(true);
+
+  // set properties to ensure that we do redraw when one of them changes
+  text_aligment.SetSetterFunction(sigc::mem_fun(this, &ActionLink::set_aligment));
+  text_aligment.SetGetterFunction(sigc::mem_fun(this, &ActionLink::get_aligment));
+
+  underline_state.SetSetterFunction(sigc::mem_fun(this, &ActionLink::set_underline));
+  underline_state.SetGetterFunction(sigc::mem_fun(this, &ActionLink::get_underline));
+
+  font_hint.SetSetterFunction(sigc::mem_fun(this, &ActionLink::set_font_hint));
+  font_hint.SetGetterFunction(sigc::mem_fun(this, &ActionLink::get_font_hint));
 
   key_nav_focus_change.connect([&] (nux::Area*, bool, nux::KeyNavDirection)
   {
@@ -97,8 +111,8 @@ void ActionLink::BuildLayout(std::string const& label)
       if (!font_hint_.empty())
         static_text_->SetFont(font_hint_);
       static_text_->SetInputEventSensitivity(false);
-      static_text_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
-      static_text_->SetUnderline(nux::StaticCairoText::NUX_UNDERLINE_SINGLE);
+      static_text_->SetTextAlignment(aligment_);
+      static_text_->SetUnderline(underline_);
     }
   }
 
@@ -137,8 +151,12 @@ void ActionLink::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   // clear what is behind us
   unsigned int alpha = 0, src = 0, dest = 0;
-  // do set the alpha to indicate that the link is usuable
+
+  // set text properties according to settings
   static_text_->SetTextAlpha(GetLinkAlpha(GetVisualState()));
+  static_text_->SetFont(font_hint_);
+  static_text_->SetTextAlignment(aligment_);
+  static_text_->SetUnderline(underline_);
 
   GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
   GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -173,24 +191,52 @@ void ActionLink::RecvClick(int x, int y, unsigned long button_flags, unsigned lo
   activate.emit(this, action_hint_);
 }
 
-void ActionLink::SetFont(std::string const& font_hint)
+bool ActionLink::set_aligment(nux::StaticCairoText::AlignState aligment)
 {
-  if (static_text_)
+  if(aligment_ != aligment)
   {
-    static_text_->SetFont(font_hint);
+    aligment_ = aligment;
     ComputeContentSize();
     QueueDraw();
   }
+  return true;
 }
 
-void ActionLink::SetTextAlignment(nux::StaticCairoText::AlignState aligment)
+nux::StaticCairoText::AlignState ActionLink::get_aligment()
 {
-  static_text_->SetTextAlignment(aligment);
+  return aligment_;
 }
 
-void ActionLink::SetUnderline(nux::StaticCairoText::UnderlineState underline)
+bool ActionLink::set_underline(nux::StaticCairoText::UnderlineState underline)
 {
-  static_text_->SetUnderline(underline);
+  if(underline_ != underline)
+  {
+    underline_ = underline;
+    ComputeContentSize();
+    QueueDraw();
+  }
+  return true;
+}
+
+nux::StaticCairoText::UnderlineState ActionLink::get_underline()
+{
+  return underline_;
+}
+
+bool ActionLink::set_font_hint(std::string font_hint)
+{
+  if(font_hint_ != font_hint)
+  {
+    font_hint_ = font_hint;
+    ComputeContentSize();
+    QueueDraw();
+  }
+  return true;
+}
+
+std::string ActionLink::get_font_hint()
+{
+  return font_hint_;
 }
 
 std::string ActionLink::GetLabel() const

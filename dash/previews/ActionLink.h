@@ -44,15 +44,14 @@ public:
 
   sigc::signal<void, ActionLink*, std::string const&> activate;
 
-  void SetFont(std::string const& font_hint);
+  nux::RWProperty<nux::StaticCairoText::AlignState> text_aligment;
+  nux::RWProperty<nux::StaticCairoText::UnderlineState> underline_state;
+  nux::RWProperty<std::string> font_hint;
 
   void Activate() {}
   void Deactivate() {}
 
-  virtual bool AcceptKeyNavFocus() { return true; }
-
-  void SetTextAlignment(nux::StaticCairoText::AlignState aligment);
-  void SetUnderline(nux::StaticCairoText::UnderlineState underline);
+  virtual bool AcceptKeyNavFocus() const { return true; }
 
   std::string GetLabel() const;
   std::string GetExtraText() const;
@@ -61,6 +60,7 @@ protected:
   nux::ObjectPtr<nux::StaticCairoText> static_text_;
 
   int GetLinkAlpha(nux::ButtonVisualState state);
+
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {}
   void RecvClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -73,11 +73,24 @@ protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
-private:
-  typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
+  // this methods/vars could be private but are protected to make testing
+  //  easier
+  bool set_aligment(nux::StaticCairoText::AlignState aligment);
+  nux::StaticCairoText::AlignState get_aligment();
+
+  bool set_underline(nux::StaticCairoText::UnderlineState underline);
+  nux::StaticCairoText::UnderlineState get_underline();
+
+  bool set_font_hint(std::string font_hint);
+  std::string get_font_hint();
 
   std::string action_hint_;
   std::string font_hint_;
+  nux::StaticCairoText::AlignState aligment_;
+  nux::StaticCairoText::UnderlineState underline_;
+private:
+  typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
+
 
 };
 
