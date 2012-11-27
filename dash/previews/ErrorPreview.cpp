@@ -77,8 +77,9 @@ nux::Area* ErrorPreview::FindKeyFocusArea(unsigned int key_symbol,
                                     unsigned long x11_key_code,
                                     unsigned long special_keys_state)
 {
-  nux::ObjectPtr<TextInput> area = new TextInput();
-  return area;
+  nux::ObjectPtr<TextInput> area;
+  area = new TextInput();
+  return area->text_entry();
 }
 
 std::string ErrorPreview::GetName() const
@@ -117,7 +118,7 @@ void ErrorPreview::LoadActions()
   for (dash::Preview::ActionPtr action : preview_model_->GetActions())
   {
       const char *action_id = action->id.c_str();
-      if(strcmp(OPEN_LINK_ACTION, action_id) == 0)
+      if(strcmp(OPEN_U1_LINK_ACTION, action_id) == 0)
       {
         nux::ObjectPtr<ActionLink> link = this->CreateLink(action);
         link->activate.connect(sigc::mem_fun(this,
@@ -193,6 +194,7 @@ nux::Layout* ErrorPreview::GetPrize()
 
 nux::Layout* ErrorPreview::GetBody()
 {
+  previews::Style& style = dash::previews::Style::Instance();
   nux::VLayout *body_layout = new  nux::VLayout();
 
   intro_ = new nux::StaticCairoText(
@@ -203,7 +205,7 @@ nux::Layout* ErrorPreview::GetBody()
   intro_->SetLineSpacing(10);
   intro_->SetLines(-style.GetDescriptionLineCount());
   intro_->SetMinimumHeight(50);
-  body_layout->AddView(sorted_buttons_[OPEN_LINK_ACTION].GetPointer(),
+  body_layout->AddView(sorted_buttons_[OPEN_U1_LINK_ACTION].GetPointer(),
           0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
           nux::NUX_LAYOUT_END);
 
@@ -266,7 +268,7 @@ void ErrorPreview::SetupViews()
   {
     for (dash::Preview::InfoHintPtr info_hint : hints)
     {
-       if (info_hint->id == DATA_INFOHINT_ID){
+       if (info_hint->id == ERROR_INFOHINT_ID){
          this->data_ = info_hint->value;
        }
     }

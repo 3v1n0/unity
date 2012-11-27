@@ -31,7 +31,7 @@ ErrorPreview::ErrorPreview(unity::glib::Object<GObject> const& proto_obj)
 {
 }
 
-ErrorPreview::~MusicPaymentPreview()
+ErrorPreview::~ErrorPreview()
 {
 }
 

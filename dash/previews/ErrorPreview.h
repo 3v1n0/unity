@@ -24,7 +24,7 @@
 #define ERROR_PREVIEW_H
 
 // key used to find the correct info hint
-#define DATA_INFOHINT_ID "error_preview"
+#define ERROR_INFOHINT_ID "error_preview"
 
 // keys of the data preview
 #define DATA_TITLE_KEY "title"
