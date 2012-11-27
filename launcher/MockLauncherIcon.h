@@ -118,11 +118,6 @@ public:
     return result;
   }
 
-  std::string NameForWindow (Window window)
-  {
-    return std::string();
-  }
-
   void SetSortPriority(int priority) { sort_priority_ = priority; }
 
   bool OpenQuicklist(bool select_first_item = false, int monitor = -1)

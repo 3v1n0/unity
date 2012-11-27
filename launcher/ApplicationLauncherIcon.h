@@ -18,8 +18,8 @@
  *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
-#ifndef BAMFLAUNCHERICON_H
-#define BAMFLAUNCHERICON_H
+#ifndef APPLICATIONLAUNCHERICON_H
+#define APPLICATIONLAUNCHERICON_H
 
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
@@ -53,6 +53,8 @@ public:
   bool IsUrgent() const;
 
   virtual void Quit();
+  virtual void AboutToRemove();
+
   virtual void Stick(bool save = true);
   virtual void UnStick();
 
@@ -64,7 +66,6 @@ public:
   std::vector<Window> Windows();
   std::vector<Window> WindowsOnViewport();
   std::vector<Window> WindowsForMonitor(int monitor);
-  std::string NameForWindow(Window window);
 
 protected:
   void Remove();
@@ -75,7 +76,7 @@ protected:
   void OnDndEnter();
   void OnDndHovered();
   void OnDndLeave();
-  void OpenInstanceLauncherIcon(ActionArg arg);
+  void OpenInstanceLauncherIcon();
   void ToggleSticky();
 
   bool OnShouldHighlightOnDrag(DndData const& dnd_data);
