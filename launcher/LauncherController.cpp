@@ -19,6 +19,7 @@
  *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
+#include "config.h"
 #include <glib/gi18n-lib.h>
 #include <libbamf/libbamf.h>
 

@@ -35,6 +35,7 @@
 #include "unity-shared/PlacesVScrollBar.h"
 #include "unity-shared/PlacesOverlayVScrollBar.h"
 
+#include "config.h"
 #include <glib/gi18n-lib.h>
 
 namespace unity
