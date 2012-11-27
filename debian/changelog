@@ -1,4 +1,4 @@
-unity (6.12.0-0ubuntu2) UNRELEASED; urgency=low
+unity (6.12.0-0ubuntu5) UNRELEASED; urgency=low
 
   [ Michael Terry ]
   * debian/control:
@@ -22,6 +22,10 @@ unity (6.12.0-0ubuntu2) UNRELEASED; urgency=low
   * debian/control:
     - adding libgtest-dev and google-mock build-dep now that there are in main
       (LP: #1076763)
+    - add libunity-core -> unity-common dep (LP: #1079132)
+    - do not have unity-common dep on compiz-gnome: the migration code is only
+      ran if compiz-gnome is installed, but compiz-gnome is pulled by compiz
+      directly. We don't care if the migration code isn't executed.
 
   [ bschaefer ]
   * Ported to nux 4.0
@@ -30,6 +34,26 @@ unity (6.12.0-0ubuntu2) UNRELEASED; urgency=low
   * Doesn't need to depend on gcc 4.6 anymore (LP: #1044836)
 
  -- Michael Terry <mterry@ubuntu.com>  Tue, 06 Nov 2012 10:52:43 -0500
+
+unity (6.12.0-0ubuntu4) raring; urgency=low
+
+  * Really fix cmake now
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 22 Nov 2012 14:51:43 +0100
+
+unity (6.12.0-0ubuntu3) raring; urgency=low
+
+  * Apply 2 upstream patches to fix FTBFS on raring:
+    - gettext cmake support change with new cmake
+    - include directly iostream needed for std::cout
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 22 Nov 2012 12:31:58 +0100
+
+unity (6.12.0-0ubuntu2) raring; urgency=low
+
+  * debian/control.in: Recommends gnome-control-center-unity
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Wed, 21 Nov 2012 19:22:30 +0100
 
 unity (6.12.0-0ubuntu1) raring; urgency=low
 

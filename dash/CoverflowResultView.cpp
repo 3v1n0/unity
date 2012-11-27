@@ -84,11 +84,11 @@ CoverflowResultItem::CoverflowResultItem(Result& result, CoverflowResultView *pa
   std::string const& icon_hint = result.icon_hint;
   std::string icon_name = !icon_hint.empty() ? icon_hint : ". GThemedIcon text-x-preview";
   static const int element_size = style.GetTileHeight();
-  
+
   icon_texture_ = new IconTexture(icon_name.c_str(), element_size, true);
   icon_texture_->SinkReference();
   icon_texture_->LoadIcon();
-  
+
   icon_texture_->texture_updated.connect([&] (nux::BaseTexture *texture)
   {
     if (parent_)
@@ -168,7 +168,7 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
     glib::String proposed_unique_id;
 
     g_variant_get(data, "(iss)", &nav_mode, &uri, &proposed_unique_id);
-   
+
     if (proposed_unique_id.Str() != parent_->unique_id())
       return;
 
@@ -176,7 +176,7 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
     int current_index = GetIndexForUri(uri);
     if (nav_mode == -1) // left
     {
-      current_index--;  
+      current_index--;
     }
     else if (nav_mode == 1) // right
     {
@@ -187,7 +187,7 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
     {
       return;
     }
-    
+
     if (nav_mode)
     {
       std::string uri = GetUriForIndex(current_index);
@@ -198,7 +198,7 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
 
 CoverflowResultView::Impl::~Impl()
 {
-  
+
 }
 
 int CoverflowResultView::Impl::GetIndexForUri(std::string uri)
@@ -228,7 +228,7 @@ CoverflowResultView::CoverflowResultView(NUX_FILE_LINE_DECL)
 
 CoverflowResultView::~CoverflowResultView()
 {
-  
+
 }
 
 void CoverflowResultView::SetModelRenderer(ResultRenderer* renderer)
@@ -254,7 +254,7 @@ void CoverflowResultView::RemoveResult(Result& result)
       pimpl->coverflow_->model()->RemoveItem(item);
       break;
     }
-  }  
+  }
 }
 
 void CoverflowResultView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -280,7 +280,7 @@ void CoverflowResultView::DrawContent(nux::GraphicsEngine& GfxContext, bool forc
 
     GfxContext.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
   }
-  
+
   if (GetCompositionLayout())
   {
     nux::Geometry geo = GetCompositionLayout()->GetGeometry();

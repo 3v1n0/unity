@@ -52,7 +52,7 @@ public:
 
   int GetSelectedIndex();
   virtual unsigned GetIndexAtPosition(int x, int y);
-  
+
   virtual void Activate(std::string const& uri, int index, ActivateType type);
 
 protected:

@@ -221,12 +221,13 @@ nux::Layout* MusicPaymentPreview::GetPrize()
 nux::Layout* MusicPaymentPreview::GetBody()
 {
   previews::Style& style = dash::previews::Style::Instance();
+
   nux::VLayout *body_layout = new  nux::VLayout();
+  body_layout->SetSpaceBetweenChildren(40);
 
   intro_ = new nux::StaticCairoText(
           GetDataForKey(this->data_, DATA_HEADER_KEY), true,
           NUX_TRACKER_LOCATION);
-  intro_->SetMaximumWidth(style.GetPaymentHeaderWidth());
   intro_->SetFont(style.payment_intro_font().c_str());
   intro_->SetLineSpacing(10);
   intro_->SetLines(-style.GetDescriptionLineCount());
@@ -235,12 +236,16 @@ nux::Layout* MusicPaymentPreview::GetBody()
   form_layout_ = new nux::HLayout();
   form_layout_->SetSpaceBetweenChildren(10);
   form_layout_->SetMinimumHeight(107);
+  form_layout_->SetLeftAndRightPadding(20);
+  form_layout_->SetTopAndBottomPadding(20);
+
   form_layout_->AddLayout(GetFormLabels(), 1, nux::MINOR_POSITION_END);
   form_layout_->AddLayout(GetFormFields(), 1, nux::MINOR_POSITION_END);
   form_layout_->AddLayout(GetFormActions(), 1, nux::MINOR_POSITION_END);
 
   body_layout->AddView(intro_.GetPointer(), 1);
-  body_layout->AddLayout(form_layout_.GetPointer());
+  body_layout->AddLayout(form_layout_.GetPointer(), 1);
+
   return body_layout;
 }
 

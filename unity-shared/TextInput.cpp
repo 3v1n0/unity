@@ -42,7 +42,7 @@ const int PANGO_ENTRY_FONT_SIZE = 14;
 namespace unity
 {
 
-nux::logging::Logger logger("unity");
+nux::logging::Logger logger("unity.dash.textinput");
 
 NUX_IMPLEMENT_OBJECT_TYPE(TextInput);
 

@@ -142,7 +142,7 @@ private:
   unsigned _category_index;
   std::string _cached_name;
   nux::Geometry _cached_geometry;
-  
+
   std::string _renderer_name;
   bool _coverflow_enabled;
 
