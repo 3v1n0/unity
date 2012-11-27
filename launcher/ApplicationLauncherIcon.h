@@ -18,8 +18,8 @@
  *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
-#ifndef BAMFLAUNCHERICON_H
-#define BAMFLAUNCHERICON_H
+#ifndef APPLICATIONLAUNCHERICON_H
+#define APPLICATIONLAUNCHERICON_H
 
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>

@@ -526,7 +526,6 @@ void ApplicationLauncherIcon::OpenInstanceLauncherIcon()
   OpenInstanceWithUris(empty);
 }
 
-
 void ApplicationLauncherIcon::Focus(ActionArg arg)
 {
   ApplicationWindowPtr window = app_->GetFocusableWindow();
@@ -701,6 +700,12 @@ void ApplicationLauncherIcon::AboutToRemove()
   Quit();
 }
 
+
+void ApplicationLauncherIcon::AboutToRemove()
+{
+  UnStick();
+  Quit();
+}
 
 void ApplicationLauncherIcon::Stick(bool save)
 {
