@@ -46,6 +46,31 @@ else ()
   set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm -lpthread -ldl -lGL -lGLU")
 endif ()
 
+if (CMAKE_BUILD_TYPE MATCHES coverage)
+  set (COVERAGE_XML_FILE "${CMAKE_BINARY_DIR}/coverage.xml")
+  set (COVERAGE_XML_COMMAND_FILE "${CMAKE_BINARY_DIR}/coverage-xml.cmake")
+
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage" )
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage" )
+  set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} --coverage" )
+  set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage" )
+
+  find_program(GCOVR_EXECUTABLE gcovr HINTS ${GCOVR_ROOT} "${GCOVR_ROOT}/bin")
+  if (GCOVR_EXECUTABLE-NOTFOUND)
+      message(STATUS "Cannot enable coverage targets because gcovr was not found.")
+  else ()
+      message (STATUS "Enabling XML coverage report")
+      # gcovr cannot write directly to a file so the execution needs to
+      # be wrapped in a cmake file that generates the file output
+      file (WRITE ${COVERAGE_XML_COMMAND_FILE} "SET(ENV{LANG} en)\n")
+      file (APPEND ${COVERAGE_XML_COMMAND_FILE} "EXECUTE_PROCESS(COMMAND \"${GCOVR_EXECUTABLE}\" --exclude=tests.* --exclude=obj-.* -x -r \"${CMAKE_SOURCE_DIR}\" OUTPUT_FILE \"${COVERAGE_XML_FILE}\" WORKING_DIRECTORY \"${CMAKE_BINARY_DIR}\")\n")
+        
+      add_custom_command (OUTPUT ${COVERAGE_XML_FILE} COMMAND ${CMAKE_COMMAND} ARGS -P ${COVERAGE_XML_COMMAND_FILE} COMMENT "Generating coverage XML report" VERBATIM)
+      add_custom_target (coverage-xml DEPENDS ${COVERAGE_XML_FILE})
+  endif()
+endif (CMAKE_BUILD_TYPE MATCHES coverage)
+
+
 #
 # Niceties
 #
