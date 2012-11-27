@@ -260,19 +260,19 @@ void Application::HookUpEvents()
   glib::SignalBase* sig;
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "user-visible-changed",
                           [this] (BamfView*, gboolean visible) {
-                            LOG_DEBUG(logger) << "user-visible-changed " << visible;
+                            LOG_TRACE(logger) << "user-visible-changed " << visible;
                             this->visible.changed.emit(visible);
                           });
   signals_.Add(sig);
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "active-changed",
                           [this] (BamfView*, gboolean active) {
-                            LOG_DEBUG(logger) << "active-changed " << visible;
+                            LOG_TRACE(logger) << "active-changed " << visible;
                             this->active.changed.emit(active);
                           });
   signals_.Add(sig);
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "running-changed",
                           [this] (BamfView*, gboolean running) {
-                            LOG_DEBUG(logger) << "running " << visible;
+                            LOG_TRACE(logger) << "running " << visible;
                             this->running.changed.emit(running);
                           });
   signals_.Add(sig);
@@ -576,7 +576,7 @@ Manager::Manager()
 
 Manager::~Manager()
 {
-  LOG_DEBUG(logger) << "Manager::~Manager";
+  LOG_TRACE(logger) << "Manager::~Manager";
 }
 
 ApplicationWindowPtr Manager::GetActiveWindow() const
@@ -666,7 +666,7 @@ ApplicationList Manager::GetRunningApplications() const
 
 void Manager::OnViewOpened(BamfMatcher* matcher, BamfView* view)
 {
-  LOG_DEBUG_BLOCK(logger);
+  LOG_TRACE_BLOCK(logger);
   if (!BAMF_IS_APPLICATION(view))
   {
     LOG_DEBUG(logger) << "view is not an app";
