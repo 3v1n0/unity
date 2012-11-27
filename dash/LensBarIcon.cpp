@@ -49,7 +49,7 @@ LensBarIcon::LensBarIcon(std::string id_, std::string icon_hint)
   SetMaximumHeight(FOCUS_OVERLAY_HEIGHT);
 
   focus_layer_.reset(Style::Instance().FocusOverlay(FOCUS_OVERLAY_WIDTH, FOCUS_OVERLAY_HEIGHT));
-  
+
   SetOpacity(inactive_opacity_);
 
   SetAcceptKeyNavFocus(true);

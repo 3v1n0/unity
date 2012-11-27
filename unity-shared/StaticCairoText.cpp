@@ -375,6 +375,11 @@ void StaticCairoText::SetFont(std::string const& font)
   }
 }
 
+std::string StaticCairoText::GetFont()
+{
+  return pimpl->font_;
+}
+
 int StaticCairoText::GetLineCount() const
 {
   return pimpl->actual_lines_;

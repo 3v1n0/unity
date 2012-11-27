@@ -46,6 +46,7 @@ public:
   nux::Geometry&  GetMonitorGeometry(int monitor);
 
   std::vector<nux::Geometry>& GetMonitors();
+  nux::Geometry GetScreenGeometry();
 
   // <void, primary_monitor, monitors>
   sigc::signal<void, int, std::vector<nux::Geometry>&> changed;

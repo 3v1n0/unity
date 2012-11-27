@@ -91,7 +91,6 @@ const int START_DRAGICON_DURATION = 250;
 const int MOUSE_DEADZONE = 15;
 const float DRAG_OUT_PIXELS = 300.0f;
 
-const std::string DND_CHECK_TIMEOUT = "dnd-check-timeout";
 const std::string START_DRAGICON_TIMEOUT = "start-dragicon-timeout";
 const std::string SCROLL_TIMEOUT = "scroll-timeout";
 const std::string ANIMATION_IDLE = "animation-idle";
@@ -103,7 +102,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(Launcher);
 const int Launcher::Launcher::ANIM_DURATION_SHORT = 125;
 
 Launcher::Launcher(nux::BaseWindow* parent,
-                   nux::ObjectPtr<DNDCollectionWindow> const& collection_window,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
 #ifdef USE_X11
@@ -145,13 +143,10 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _drag_out_delta_x(0.0f)
   , _drag_gesture_ongoing(false)
   , _last_reveal_progress(0.0f)
-  , _collection_window(collection_window)
   , _selection_atom(0)
   , _background_color(nux::color::DimGray)
 {
   m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-
-  _collection_window->collected.connect(sigc::mem_fun(this, &Launcher::OnDNDDataCollected));
 
   bg_effect_helper_.owner = this;
   bg_effect_helper_.enabled = false;
@@ -180,17 +175,11 @@ Launcher::Launcher(nux::BaseWindow* parent,
   ql_manager.quicklist_closed.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
 
   WindowManager& wm = WindowManager::Default();
-  wm.window_mapped.connect(sigc::hide(sigc::mem_fun(this, &Launcher::DndTimeoutSetup)));
-  wm.window_unmapped.connect(sigc::hide(sigc::mem_fun(this, &Launcher::DndTimeoutSetup)));
   wm.initiate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   wm.initiate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   wm.terminate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   wm.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &Launcher::EnsureAnimation));
-
-#ifdef USE_X11
-  display.changed.connect(sigc::mem_fun(this, &Launcher::OnDisplayChanged));
-#endif
 
   // 0 out timers to avoid wonky startups
   for (int i = 0; i < TIME_LAST; ++i)
@@ -225,11 +214,6 @@ Launcher::Launcher(nux::BaseWindow* parent,
 std::string Launcher::GetName() const
 {
   return "Launcher";
-}
-
-void Launcher::OnDisplayChanged(Display* display)
-{
-  _collection_window->display = display;
 }
 
 #ifdef NUX_GESTURES_SUPPORT
@@ -399,6 +383,10 @@ bool Launcher::IconNeedsAnimation(AbstractLauncherIcon::Ptr const& icon, struct 
   if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
     return true;
 
+  time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::UNFOLDED);
+  if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION)
+    return true;
+
   time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::SHIMMER);
   if (unity::TimeUtil::TimeDelta(&current, &time) < ANIM_DURATION_LONG)
     return true;
@@ -547,6 +535,18 @@ float Launcher::IconPresentProgress(AbstractLauncherIcon::Ptr const& icon, struc
   float result = CLAMP((float) ms / (float) ANIM_DURATION, 0.0f, 1.0f);
 
   if (icon->GetQuirk(AbstractLauncherIcon::Quirk::PRESENTED))
+    return result;
+  else
+    return 1.0f - result;
+}
+
+float Launcher::IconUnfoldProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
+{
+  struct timespec icon_unfold_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::UNFOLDED);
+  int ms = unity::TimeUtil::TimeDelta(&current, &icon_unfold_time);
+  float result = CLAMP((float) ms / (float) ANIM_DURATION, 0.0f, 1.0f);
+
+  if (icon->GetQuirk(AbstractLauncherIcon::Quirk::UNFOLDED))
     return result;
   else
     return 1.0f - result;
@@ -919,13 +919,14 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr const& icon,
 
   // goes for 0.0f when fully unfolded, to 1.0f folded
   float folding_progress = CLAMP((center.y + _icon_size - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
-  float present_progress = IconPresentProgress(icon, current);
+  float unfold_progress = IconUnfoldProgress(icon, current);
 
-  folding_progress *= 1.0f - present_progress;
+  folding_progress *= 1.0f - unfold_progress;
 
   float half_size = (folded_size / 2.0f) + (_icon_size / 2.0f - folded_size / 2.0f) * (1.0f - folding_progress);
   float icon_hide_offset = autohide_offset;
 
+  float present_progress = IconPresentProgress(icon, current);
   icon_hide_offset *= 1.0f - (present_progress * icon->PresentUrgency());
 
   // icon is crossing threshold, start folding
@@ -1017,8 +1018,8 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
     // magic constant must some day be explained, for now suffice to say this constant prevents the bottom from "marching";
     float magic_constant = 1.3f;
 
-    float present_progress = IconPresentProgress(*it, current);
-    folding_threshold -= CLAMP(sum - launcher_height, 0.0f, height * magic_constant) * (folding_constant + (1.0f - folding_constant) * present_progress);
+    float unfold_progress = IconUnfoldProgress(*it, current);
+    folding_threshold -= CLAMP(sum - launcher_height, 0.0f, height * magic_constant) * (folding_constant + (1.0f - folding_constant) * unfold_progress);
   }
 
   if (sum - _space_between_icons <= launcher_height)
@@ -1118,7 +1119,6 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   // function is not smooth it is continuous, which is more important for our visual representation (icons
   // wont start jumping around).  As a general rule ANY if () statements that modify center.y should be seen
   // as bugs.
-  int index = 1;
   for (it = _model->main_begin(); it != _model->main_end(); ++it)
   {
     RenderArg arg;
@@ -1127,7 +1127,6 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
                   autohide_offset, folded_z_distance, animation_neg_rads, current);
     arg.colorify = colorify;
     launcher_args.push_back(arg);
-    index++;
   }
 
   // compute maximum height of shelf
@@ -1364,59 +1363,6 @@ int Launcher::GetMouseX() const
 int Launcher::GetMouseY() const
 {
   return _mouse_position.y;
-}
-
-bool Launcher::OnUpdateDragManagerTimeout()
-{
-#ifdef USE_X11
-  if (!display())
-    return false;
-
-  if (!_selection_atom)
-    _selection_atom = XInternAtom(display(), "XdndSelection", false);
-
-  Window drag_owner = XGetSelectionOwner(display(), _selection_atom);
-
-  // evil hack because Qt does not release the seelction owner on drag finished
-  Window root_r, child_r;
-  int root_x_r, root_y_r, win_x_r, win_y_r;
-  unsigned int mask;
-  XQueryPointer(display(), DefaultRootWindow(display()), &root_r, &child_r, &root_x_r, &root_y_r, &win_x_r, &win_y_r, &mask);
-
-  if (drag_owner && (mask & (Button1Mask | Button2Mask | Button3Mask)))
-  {
-    if (_data_checked == false)
-    {
-      _data_checked = true;
-      _collection_window->Collect();
-    }
-
-    return true;
-  }
-
-  _data_checked = false;
-  _collection_window->PushToBack();
-  _collection_window->EnableInputWindow(false, "DNDCollectionWindow");
-
-  if (IsOverlayOpen() && !_hovered)
-    DesaturateIcons();
-
-  DndReset();
-  _hide_machine.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
-  _hide_machine.SetQuirk(LauncherHideMachine::DND_PUSHED_OFF, false);
-#endif
-  return false;
-}
-
-void Launcher::DndTimeoutSetup()
-{
-#ifdef USE_X11
-  if (sources_.GetSource(DND_CHECK_TIMEOUT))
-    return;
-
-  auto cb_func = sigc::mem_fun(this, &Launcher::OnUpdateDragManagerTimeout);
-  sources_.AddTimeout(200, cb_func, DND_CHECK_TIMEOUT);
-#endif
 }
 
 void Launcher::OnPluginStateChanged()
@@ -2313,7 +2259,13 @@ void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long butto
 
 bool Launcher::HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
 {
-  nux::Geometry abs_geo = GetAbsoluteGeometry();
+  if (_hide_machine.GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE))
+  {
+    owner->ReleaseBarrier(event->event_id);
+    return true;
+  }
+
+  nux::Geometry const& abs_geo = GetAbsoluteGeometry();
 
   bool apply_to_reveal = false;
   if (_hidden && event->x >= abs_geo.x && event->x <= abs_geo.x + abs_geo.width)
@@ -2566,53 +2518,6 @@ bool Launcher::DndIsSpecialRequest(std::string const& uri) const
   return (boost::algorithm::ends_with(uri, ".desktop") || uri.find("device://") == 0);
 }
 
-void Launcher::OnDNDDataCollected(const std::list<char*>& mimes)
-{
-#ifdef USE_X11
-  _dnd_data.Reset();
-
-  const std::string uri_list = "text/uri-list";
-  auto& display = nux::GetWindowThread()->GetGraphicsDisplay();
-
-  for (auto const& mime : mimes)
-  {
-    if (mime != uri_list)
-      continue;
-
-    _dnd_data.Fill(display.GetDndData(const_cast<char*>(uri_list.c_str())));
-    break;
-  }
-
-  _hide_machine.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
-
-  auto const& uris = _dnd_data.Uris();
-  if (std::find_if(uris.begin(), uris.end(), [this] (std::string const& uri)
-                   {return DndIsSpecialRequest(uri);}) != uris.end())
-  {
-    _steal_drag = true;
-
-    if (IsOverlayOpen())
-      SaturateIcons();
-  }
-  else
-  {
-    for (auto const& it : *_model)
-    {
-      if (it->ShouldHighlightOnDrag(_dnd_data))
-      {
-        it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, false);
-        it->SetQuirk(AbstractLauncherIcon::Quirk::PRESENTED, true);
-      }
-      else
-      {
-        it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, true);
-        it->SetQuirk(AbstractLauncherIcon::Quirk::PRESENTED, false);
-      }
-    }
-  }
-#endif
-}
-
 void Launcher::ProcessDndEnter()
 {
 #ifdef USE_X11
@@ -2648,7 +2553,7 @@ void Launcher::DndReset()
       it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, is_overlay_open && !_hovered);
     }
 
-    it->SetQuirk(AbstractLauncherIcon::Quirk::PRESENTED, false);
+    it->SetQuirk(AbstractLauncherIcon::Quirk::UNFOLDED, false);
   }
 
   DndHoveredIconReset();
@@ -2730,7 +2635,7 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
 
   SetMousePosition(x - _parent->GetGeometry().x, y - _parent->GetGeometry().y);
 
-  if (!IsOverlayOpen() && _mouse_position.x == 0 && _mouse_position.y <= (_parent->GetGeometry().height - _icon_size - 2 * _space_between_icons) && !_drag_edge_touching)
+  if (monitor() == 0 && !IsOverlayOpen() && _mouse_position.x == 0 && _mouse_position.y <= (_parent->GetGeometry().height - _icon_size - 2 * _space_between_icons) && !_drag_edge_touching)
   {
     if (_dnd_hovered_icon)
         _dnd_hovered_icon->SendDndLeave();
@@ -2871,6 +2776,70 @@ bool Launcher::InspectKeyEvent(unsigned int eventType,
 int Launcher::GetDragDelta() const
 {
   return _launcher_drag_delta;
+}
+
+void Launcher::DndStarted(std::string const& data)
+{
+#ifdef USE_X11
+  SetDndQuirk();
+
+  _dnd_data.Fill(data.c_str());
+
+  auto const& uris = _dnd_data.Uris();
+  if (std::find_if(uris.begin(), uris.end(), [this] (std::string const& uri)
+                   {return DndIsSpecialRequest(uri);}) != uris.end())
+  {
+    _steal_drag = true;
+
+    if (IsOverlayOpen())
+      SaturateIcons();
+  }
+  else
+  {
+    for (auto const& it : *_model)
+    {
+      if (it->ShouldHighlightOnDrag(_dnd_data))
+      {
+        it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, false);
+        it->SetQuirk(AbstractLauncherIcon::Quirk::UNFOLDED, true);
+      }
+      else
+      {
+        it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, true);
+        it->SetQuirk(AbstractLauncherIcon::Quirk::UNFOLDED, false);
+      }
+    }
+  }
+#endif
+}
+
+void Launcher::DndFinished()
+{
+#ifdef USE_X11
+  UnsetDndQuirk();
+
+  _data_checked = false;
+
+  if (IsOverlayOpen() && !_hovered)
+    DesaturateIcons();
+
+  DndReset();
+#endif
+}
+
+void Launcher::SetDndQuirk()
+{
+#ifdef USE_X11
+  _hide_machine.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, true);
+#endif
+}
+
+void Launcher::UnsetDndQuirk()
+{
+#ifdef USE_X11
+  _hide_machine.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
+  _hide_machine.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
+#endif
 }
 
 } // namespace launcher

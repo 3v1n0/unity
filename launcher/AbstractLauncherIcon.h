@@ -105,6 +105,7 @@ public:
     RUNNING,
     URGENT,
     PRESENTED,
+    UNFOLDED,
     STARTING,
     SHIMMER,
     CENTER_SAVED,

@@ -202,6 +202,11 @@ namespace launcher
 {
 struct TestLauncherController : public testing::Test
 {
+  TestLauncherController()
+    : xdnd_manager_(std::make_shared<XdndManager>())
+    , lc(xdnd_manager_)
+  {}
+
   virtual void SetUp()
   {
     lc.multiple_launchers = true;
@@ -218,6 +223,10 @@ struct TestLauncherController : public testing::Test
 protected:
   struct MockLauncherController : Controller
   {
+    MockLauncherController(XdndManager::Ptr const& xdnd_manager)
+      : Controller(xdnd_manager)
+    {}
+
     Controller::Impl* Impl() const { return pimpl.get(); }
 
     AbstractLauncherIcon::Ptr GetIconByDesktop(std::string const& path) const
@@ -260,6 +269,7 @@ protected:
   Settings settings;
   panel::Style panel_style;
   MockFavoriteStore favorite_store;
+  XdndManager::Ptr xdnd_manager_;
   MockLauncherController lc;
 };
 }
@@ -1526,6 +1536,52 @@ TEST_F(TestLauncherController, UpdateSelectionChanged)
   lc.Impl()->model_->Selection()->CloseQuicklist();
   ProcessUBusMessages();
   ASSERT_EQ(lc.Impl()->model_->Selection()->tooltip_text(), last_selection_change);
+}
+
+TEST_F(TestLauncherController, DragAndDrop_MultipleLaunchers)
+{
+  lc.multiple_launchers = true;
+  uscreen.SetupFakeMultiMonitor();
+  lc.options()->hide_mode = LAUNCHER_HIDE_AUTOHIDE;
+
+  auto check_fn = [this](int index) {
+    return lc.launchers()[index]->Hidden();
+  };
+
+  xdnd_manager_->dnd_started.emit("my_awesome_file", 0);
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    Utils::WaitUntil(std::bind(check_fn, i), i != 0);
+
+  xdnd_manager_->monitor_changed.emit(3);
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    Utils::WaitUntil(std::bind(check_fn, i), i != 3);
+
+  xdnd_manager_->dnd_finished.emit();
+
+  for (int i = 0; i < max_num_monitors; ++i)
+    Utils::WaitUntil(std::bind(check_fn, i), true);
+}
+
+TEST_F(TestLauncherController, DragAndDrop_SingleLauncher)
+{
+  lc.multiple_launchers = false;
+  uscreen.SetupFakeMultiMonitor(2);
+  lc.options()->hide_mode = LAUNCHER_HIDE_AUTOHIDE;
+
+  auto check_fn = [this]() {
+    return lc.launcher().Hidden();
+  };
+
+  xdnd_manager_->dnd_started.emit("my_awesome_file", 0);
+  Utils::WaitUntil(check_fn, false);
+
+  xdnd_manager_->monitor_changed.emit(2);
+  Utils::WaitUntil(check_fn, false);
+
+  xdnd_manager_->dnd_finished.emit();
+  Utils::WaitUntil(check_fn, true);
 }
 
 }

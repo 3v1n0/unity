@@ -423,7 +423,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
         """
         if not isinstance(icon, ApplicationLauncherIcon):
-            raise TypeError("Can only unlock instances of ApplicationLauncherIcon")
+            raise TypeError("Can only unlock instances of ApplicationLauncherIcon, not %s" % type(icon).__name__)
         if not icon.sticky:
             # nothing to do.
             return

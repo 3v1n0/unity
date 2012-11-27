@@ -166,6 +166,7 @@ void DashView::ClosePreview()
 
   preview_navigation_mode_ = previews::Navigation::NONE;
   preview_displaying_ = false;
+  active_lens_view_->SetVisible(true);
 
   // re-focus dash view component.
   nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
@@ -266,10 +267,11 @@ void DashView::BuildPreview(Preview::Ptr model)
     AddChild(preview_container_.GetPointer());
     preview_container_->SetParentObject(this);
     preview_container_->Preview(model, previews::Navigation::NONE); // no swipe left or right
-    
+
     preview_container_->SetGeometry(layout_->GetGeometry());
     preview_displaying_ = true;
- 
+    active_lens_view_->SetVisible(false);
+
     // connect to nav left/right signals to request nav left/right movement.
     preview_container_->navigate_left.connect([&] () {
       preview_navigation_mode_ = previews::Navigation::LEFT;
@@ -281,7 +283,7 @@ void DashView::BuildPreview(Preview::Ptr model)
 
     preview_container_->navigate_right.connect([&] () {
       preview_navigation_mode_ = previews::Navigation::RIGHT;
-      
+
       // sends a message to all result views, sending the the uri of the current preview result
       // and the unique id of the result view that should be handling the results
       ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", 1, last_activated_uri_.c_str(), stored_activated_unique_id_.c_str()));
@@ -328,18 +330,19 @@ void DashView::AboutToShow()
     LOG_DEBUG(logger) << "Setting ViewType " << ViewType::LENS_VIEW
                                 << " on '" << home_lens_->id() << "'";
   }
-  else if (active_lens_view_)
+  else
   {
     // careful here, the lens_view's view_type doesn't get reset when the dash
     // hides, but lens' view_type does, so we need to update the lens directly
     active_lens_view_->lens()->view_type = ViewType::LENS_VIEW;
   }
+  active_lens_view_->SetVisible(true);
 
   // this will make sure the spinner animates if the search takes a while
   search_bar_->ForceSearchChanged();
 
   // if a preview is open, close it
-  if (preview_displaying_) 
+  if (preview_displaying_)
   {
     ClosePreview();
   }
@@ -363,8 +366,10 @@ void DashView::AboutToHide()
   LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HIDDEN
                             << " on '" << home_lens_->id() << "'";
 
+  active_lens_view_->SetVisible(false);
+
   // if a preview is open, close it
-  if (preview_displaying_) 
+  if (preview_displaying_)
   {
     ClosePreview();
   }
@@ -531,7 +536,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
   auto& style = dash::Style::Instance();
 
   renderer_.DrawInner(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry());
-  
+
   nux::Geometry clip_geo = layout_->GetGeometry();
   clip_geo.x += style.GetVSeparatorSize();
   graphics_engine.PushClippingRectangle(clip_geo);
@@ -600,7 +605,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
   {
     layout_->ProcessDraw(graphics_engine, force_draw);
   }
-  
+
   // Animation effect rendering
   if (display_ghost || IsFullRedraw())
   {
@@ -609,7 +614,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
     unsigned int current_dest_blend_factor;
     graphics_engine.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
 
-    float ghost_opacity = 0.25f;    
+    float ghost_opacity = 0.25f;
     float tint_factor = 1.2f;
     float saturation_ref = 0.4f;
     nux::Color bg_color = background_color_;
@@ -643,7 +648,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
             nux::Color(fade_out_value_, fade_out_value_, fade_out_value_, fade_out_value_)
             );
           filter_width += active_lens_view_->filter_bar()->GetWidth();
-        }  
+        }
 
         float saturation = fade_out_value_ + (1.0f - fade_out_value_) * saturation_ref;
         float opacity = fade_out_value_ < ghost_opacity ? ghost_opacity : fade_out_value_;
@@ -967,6 +972,8 @@ void DashView::OnLensBarActivated(std::string const& id)
     return;
   }
 
+  lens_views_[id]->SetVisible(true);
+  active_lens_view_->SetVisible(false);
   LensView* view = active_lens_view_ = lens_views_[id];
   view->JumpToTop();
 
@@ -1186,7 +1193,7 @@ bool DashView::InspectKeyEvent(unsigned int eventType,
       search_bar_->search_string = "";
     else
       ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
-    
+
     return true;
   }
   return false;
@@ -1439,7 +1446,7 @@ nux::Area* DashView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::N
 
 nux::Geometry const& DashView::GetContentGeometry() const
 {
-  return content_geo_;  
+  return content_geo_;
 }
 
 }

@@ -233,6 +233,7 @@ if (ENABLE_X_SUPPORT)
                  test_previews_movie.cpp
                  test_previews_music.cpp
                  test_previews_social.cpp
+                 test_overlay_scrollbar.cpp
                  test_quicklist_menu_item.cpp
                  test_quicklist_view.cpp
                  test_resultviewgrid.cpp
@@ -243,12 +244,15 @@ if (ENABLE_X_SUPPORT)
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
                  test_texture_cache.cpp
+                 test_text_input.cpp
                  test_thumbnail_generator.cpp
                  test_trash_launcher_icon.cpp
                  test_launcher_minimize_speed.cpp
                  test_unity_settings.cpp
                  test_volume_imp.cpp
                  test_volume_launcher_icon.cpp
+                 test_xdnd_manager_imp.cpp
+                 test_xdnd_start_stop_notifier_imp.cpp
                  bamf-mock-application.c
                  gmockmount.c
                  gmockvolume.c
