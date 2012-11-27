@@ -89,15 +89,15 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   app->window_moved.connect([this](ApplicationWindow const&) { EnsureWindowState(); });
 
   app->urgent.changed.connect([this](bool const& urgent) {
-                            LOG_INFO(logger) << tooltip_text() << " urgent now " << (urgent ? "true" : "false");
+                            LOG_DEBUG(logger) << tooltip_text() << " urgent now " << (urgent ? "true" : "false");
                             SetQuirk(Quirk::URGENT, urgent);
                           });
   app->active.changed.connect([this](bool const& active) {
-                            LOG_INFO(logger) << tooltip_text() << " active now " << (active ? "true" : "false");
+                            LOG_DEBUG(logger) << tooltip_text() << " active now " << (active ? "true" : "false");
                             SetQuirk(Quirk::ACTIVE, active);
                           });
   app->running.changed.connect([this](bool const& running) {
-                            LOG_INFO(logger) << tooltip_text() << " running now " << (running ? "true" : "false");
+                            LOG_DEBUG(logger) << tooltip_text() << " running now " << (running ? "true" : "false");
                             SetQuirk(Quirk::RUNNING, running);
 
                             if (running)
@@ -693,13 +693,6 @@ void ApplicationLauncherIcon::Quit()
 {
   app_->Quit();
 }
-
-void ApplicationLauncherIcon::AboutToRemove()
-{
-  UnStick();
-  Quit();
-}
-
 
 void ApplicationLauncherIcon::AboutToRemove()
 {
