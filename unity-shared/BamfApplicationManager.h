@@ -66,9 +66,6 @@ public:
 
   virtual bool Focus() const;
 
-private: // Property getters and setters
-  void HookUpEvents();
-
 private:
   glib::SignalManager signals_;
 };
@@ -113,7 +110,6 @@ public:
               glib::Object<BamfView> const& app);
   Application(Manager const& manager,
               glib::Object<BamfApplication> const& app);
-  ~Application();
 
   virtual std::string title() const;
   virtual std::string icon() const;
