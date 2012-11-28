@@ -108,7 +108,6 @@ private:
   nux::HLayout* _layout;
 
   nux::ObjectPtr <nux::BaseTexture> _bg_refine_tex;
-  nux::ObjectPtr <nux::BaseTexture> _bg_refine_no_refine_tex;
   
   std::unique_ptr<nux::AbstractPaintLayer> _bg_refine_layer;
   nux::ObjectPtr <nux::BaseTexture> _bg_refine_single_column_tex;
