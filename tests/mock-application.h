@@ -108,7 +108,7 @@ class MockApplicationManager
 public:
   virtual unity::ApplicationWindowPtr GetActiveWindow() const
   {
-      return ApplicationWindowPtr();
+      return unity::ApplicationWindowPtr();
   }
 
   unity::ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) const
