@@ -43,12 +43,12 @@ add_definitions(${CFLAGS})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 set(LIBS ${SERVICE_DEPS_LIBRARIES})
-link_libraries(${LIBS})
 
 set(LIB_PATHS ${SERVICE_DEPS_LIBRARY_DIRS})
 link_directories(${LIB_PATHS})
 
 add_executable(unity-panel-service ${PANEL_SOURCES})
+target_link_libraries(unity-panel-service ${LIBS})
 install(TARGETS unity-panel-service DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/unity/)
 
 configure_file(com.canonical.Unity.Panel.Service.service.cmake ${CMAKE_CURRENT_BINARY_DIR}/com.canonical.Unity.Panel.Service.service)
