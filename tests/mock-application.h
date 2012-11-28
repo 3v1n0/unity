@@ -108,6 +108,14 @@ public:
 class MockApplicationManager : public unity::ApplicationManager
 {
 public:
+  static void StartApp(std::string const& desktop_file)
+  {
+      // We know the application manager is a mock one so we can cast it.
+      auto self = dynamic_cast<MockApplicationManager&>(unity::ApplicationManager::Default());
+      auto app = self.GetApplicationForDesktopFile(desktop_file);
+      self.application_started.emit(app);
+  }
+
   virtual unity::ApplicationWindowPtr GetActiveWindow()
   {
       return unity::ApplicationWindowPtr();

@@ -46,7 +46,7 @@ namespace unity
 namespace launcher
 {
 
-class Controller::Impl
+class Controller::Impl : public sigc::trackable
 {
 public:
   Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager);

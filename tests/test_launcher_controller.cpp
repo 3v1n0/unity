@@ -1483,19 +1483,14 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedDeviceSection)
 
 TEST_F(TestLauncherController, OnViewOpened)
 {
-  // This test is too fragile, and should be rewritten with a controlled application manager.
+  auto const& app_icons = lc.Impl()->model_->GetSublist<ApplicationLauncherIcon>();
+  auto const& last_app = *(app_icons.rbegin());
 
-  // auto const& app_icons = lc.Impl()->model_->GetSublist<ApplicationLauncherIcon>();
-  // auto const& last_app = *(app_icons.rbegin());
+  testmocks::MockApplicationManager::StartApp(app::BZR_HANDLE_PATCH);
+  auto const& icon = lc.GetIconByDesktop(app::BZR_HANDLE_PATCH);
+  ASSERT_TRUE(icon.IsValid());
 
-  // auto app = bamf_matcher_get_application_for_desktop_file(lc.Impl()->matcher_, app::BZR_HANDLE_PATCH.c_str(), TRUE);
-  // g_signal_emit_by_name(lc.Impl()->matcher_, "view-opened", app);
-  // lc.DisconnectSignals();
-
-  // auto const& icon = lc.GetIconByDesktop(app::BZR_HANDLE_PATCH);
-  // ASSERT_TRUE(icon.IsValid());
-
-  // ASSERT_EQ(lc.Impl()->model_->IconIndex(icon), lc.Impl()->model_->IconIndex(last_app) + 1);
+  ASSERT_EQ(lc.Impl()->model_->IconIndex(icon), lc.Impl()->model_->IconIndex(last_app) + 1);
 }
 
 TEST_F(TestLauncherController, UpdateNumWorkspacesDisable)
