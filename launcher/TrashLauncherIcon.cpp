@@ -20,6 +20,7 @@
 
 #include "TrashLauncherIcon.h"
 
+#include "config.h"
 #include <glib/gi18n-lib.h>
 #include <Nux/WindowCompositor.h>
 #include <NuxCore/Logger.h>
