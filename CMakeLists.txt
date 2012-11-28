@@ -30,6 +30,10 @@ option(
   ON
 )
 
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l")
+  set (PIC_FLAGS "-fPIC")
+endif()
+
 if (ENABLE_X_SUPPORT)
   add_definitions(-DUSE_X11)
   message("Unity is configured with support for X.org")
