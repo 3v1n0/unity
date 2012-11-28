@@ -152,17 +152,6 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
     _bg_refine_tex.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
   }
 
-  //FIXME (gord) like 12 months later, still not async loading! 
-  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR "/refine_gradient_panel_no_refine.png", &error);
-  if (error)
-  {
-    LOG_WARN(logger) << "Unable to texture " << PKGDATADIR << "/refine_gradient_panel_no_refine.png";
-  }
-  else
-  {
-    _bg_refine_no_refine_tex.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
-  }
-
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
