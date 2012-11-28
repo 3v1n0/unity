@@ -56,8 +56,8 @@ if (CMAKE_BUILD_TYPE MATCHES coverage)
   set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage" )
 
   find_program(GCOVR_EXECUTABLE gcovr HINTS ${GCOVR_ROOT} "${GCOVR_ROOT}/bin")
-  if (GCOVR_EXECUTABLE-NOTFOUND)
-      message(STATUS "Cannot enable coverage targets because gcovr was not found.")
+  if (NOT GCOVR_EXECUTABLE)
+      message(FATAL_ERROR "Cannot enable coverage targets because gcovr was not found.")
   else ()
       message (STATUS "Enabling XML coverage report")
       # gcovr cannot write directly to a file so the execution needs to
