@@ -125,6 +125,12 @@ void OverlayRendererImpl::OnBackgroundColorChanged(GVariant* args)
   bg_layer_->SetColor(color);
   bg_color_ = color;
 
+  //When we are in low gfx mode then our darken layer will act as a background.
+  if (Settings::Instance().GetLowGfxMode())
+  {
+    bg_darken_layer_->SetColor(bg_color_);
+  }
+
   parent->need_redraw.emit();
 }
 
@@ -499,10 +505,6 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
                                geometry.y + content_geo.height + INNER_CORNER_RADIUS + corner_overlap,
                                line_color * 0.7f); // less opacity
 
-  if (Settings::Instance().GetLowGfxMode())
-  {
-    bg_darken_layer_->SetColor(bg_color_);
-  }
   //Draw the background
   bg_darken_layer_->SetGeometry(larger_content_geo);
   nux::GetPainter().RenderSinglePaintLayer(gfx_context, larger_content_geo, bg_darken_layer_);
