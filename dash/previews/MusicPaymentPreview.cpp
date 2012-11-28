@@ -90,20 +90,6 @@ std::string MusicPaymentPreview::GetName() const
   return "MusicPaymentPreview";
 }
 
-std::string MusicPaymentPreview::GetDataForKey(GVariant *dict, std::string key)
-{
-  GVariant* data = NULL;
-  data = g_variant_lookup_value(dict, key.c_str(), G_VARIANT_TYPE_ANY);
-  if (data == NULL)
-  {
-    return "Missing data";
-  }
-  gsize length;
-  const char *string = g_variant_get_string(data, &length);
-  LOG_DEBUG(logger) << "data for key '" << key << "': '" << string << "'";
-  return std::string(string);
-}
-
 void MusicPaymentPreview::OnActionActivated(ActionButton* button, std::string const& id)
 {
   // Check the action id and send the password only when we

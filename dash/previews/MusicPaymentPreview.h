@@ -87,7 +87,6 @@ public:
   nux::Layout* GetFooter();
 
 private:
-  std::string GetDataForKey(GVariant *dict, std::string key);
   void LoadActions();
 
 protected:
