@@ -152,11 +152,8 @@ void ActionLink::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   // clear what is behind us
   unsigned int alpha = 0, src = 0, dest = 0;
 
-  // set text properties according to settings
+  // set the alpha of the text according to its state
   static_text_->SetTextAlpha(GetLinkAlpha(GetVisualState()));
-  static_text_->SetFont(font_hint_);
-  static_text_->SetTextAlignment(aligment_);
-  static_text_->SetUnderline(underline_);
 
   GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
   GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -193,8 +190,9 @@ void ActionLink::RecvClick(int x, int y, unsigned long button_flags, unsigned lo
 
 bool ActionLink::set_aligment(nux::StaticCairoText::AlignState aligment)
 {
-  if(aligment_ != aligment)
+  if(static_text_ && aligment_ != aligment)
   {
+    static_text_->SetTextAlignment(aligment_);
     aligment_ = aligment;
     ComputeContentSize();
     QueueDraw();
@@ -209,8 +207,9 @@ nux::StaticCairoText::AlignState ActionLink::get_aligment()
 
 bool ActionLink::set_underline(nux::StaticCairoText::UnderlineState underline)
 {
-  if(underline_ != underline)
+  if(static_text_ && underline_ != underline)
   {
+    static_text_->SetUnderline(underline_);
     underline_ = underline;
     ComputeContentSize();
     QueueDraw();
@@ -225,8 +224,9 @@ nux::StaticCairoText::UnderlineState ActionLink::get_underline()
 
 bool ActionLink::set_font_hint(std::string font_hint)
 {
-  if(font_hint_ != font_hint)
+  if(static_text_ && font_hint_ != font_hint)
   {
+    static_text_->SetFont(font_hint_);
     font_hint_ = font_hint;
     ComputeContentSize();
     QueueDraw();
