@@ -18,6 +18,7 @@
  *              Andrea Azzarone <azzaronea@gmail.com>
  */
 
+#include "config.h"
 #include <glib/gi18n-lib.h>
 #include "unity-shared/UBusMessages.h"
 

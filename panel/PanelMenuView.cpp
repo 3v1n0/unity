@@ -31,6 +31,7 @@
 
 #include <UnityCore/Variant.h>
 
+#include "config.h"
 #include <glib/gi18n-lib.h>
 
 namespace unity

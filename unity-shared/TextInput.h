@@ -20,6 +20,8 @@
 #ifndef TEXTINPUT_H
 #define TEXTINPUT_H
 
+#include "config.h"
+
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
 
@@ -34,7 +36,6 @@
 #include <UnityCore/GLibSource.h>
 #include <UnityCore/Variant.h>
 
-#include "config.h"
 #include "CairoTexture.h"
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/IMTextEntry.h"

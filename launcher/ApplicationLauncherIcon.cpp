@@ -326,7 +326,7 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
     }
 
     SetQuirk(Quirk::STARTING, true);
-    OpenInstanceLauncherIcon(ActionArg());
+    OpenInstanceLauncherIcon();
   }
   else // app is running
   {
@@ -435,29 +435,6 @@ std::vector<Window> ApplicationLauncherIcon::WindowsForMonitor(int monitor)
   filter |= WindowFilter::ON_CURRENT_DESKTOP;
 
   return GetWindows(filter, monitor);
-}
-
-std::string ApplicationLauncherIcon::NameForWindow(Window window)
-{
-  std::string result;
-  GList* children, *l;
-
-  children = bamf_view_get_children(BAMF_VIEW(_bamf_app.RawPtr()));
-  for (l = children; l; l = l->next)
-  {
-    if (!BAMF_IS_WINDOW(l->data))
-      continue;
-
-    if (bamf_window_get_xid(static_cast<BamfWindow*>(l->data)) == window)
-    {
-      auto view = static_cast<BamfView*>(l->data);
-      result = glib::String(bamf_view_get_name(view)).Str();
-      break;
-    }
-  }
-
-  g_list_free(children);
-  return result;
 }
 
 void ApplicationLauncherIcon::OnWindowMinimized(guint32 xid)
@@ -624,7 +601,7 @@ void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> uris)
   UpdateQuirkTime(Quirk::STARTING);
 }
 
-void ApplicationLauncherIcon::OpenInstanceLauncherIcon(ActionArg arg)
+void ApplicationLauncherIcon::OpenInstanceLauncherIcon()
 {
   std::set<std::string> empty;
   OpenInstanceWithUris(empty);
@@ -665,7 +642,7 @@ std::vector<Window> ApplicationLauncherIcon::GetFocusableWindows(ActionArg arg, 
   {
     if (g_strcmp0(bamf_application_get_application_type(_bamf_app.RawPtr()), "webapp") == 0)
     {
-      OpenInstanceLauncherIcon(arg);
+      OpenInstanceLauncherIcon();
 
       return windows;
     }
@@ -938,6 +915,12 @@ void ApplicationLauncherIcon::Quit()
   }
 
   g_list_free(children);
+}
+
+void ApplicationLauncherIcon::AboutToRemove()
+{
+  UnStick();
+  Quit();
 }
 
 void ApplicationLauncherIcon::Stick(bool save)
