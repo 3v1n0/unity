@@ -10,5 +10,6 @@
 #cmakedefine TESTVALADIR "@TESTVALADIR@"
 #cmakedefine TESTDATADIR "@TESTDIRDIR@"
 #cmakedefine GETTEXT_PACKAGE "@GETTEXT_PACKAGE@"
+#cmakedefine LENSES_DIR "@LENSES_DIR@"
 
 #endif // CONFIG_H
