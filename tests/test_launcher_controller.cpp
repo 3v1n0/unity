@@ -537,9 +537,6 @@ TEST_F(TestLauncherController, CreateFavoriteInvalidDesktopFile)
   EXPECT_FALSE(fav.IsValid());
 }
 
-// thumper: 2012-11-28
-// This test needs to be rewritten, we have mock slicing in assignment here, and
-// GMOCK warnings emitted.
 TEST_F(TestLauncherController, CreateFavoriteDevice)
 {
   lc.Impl()->device_section_ = MockDeviceLauncherSection();
