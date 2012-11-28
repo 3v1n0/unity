@@ -131,37 +131,46 @@ TEST(TestGLibTimeout, OneShotRun)
 {
   callback_called = false;
   callback_call_count = 0;
+  bool removed_called = false;
 
   Timeout timeout(100, &OnSourceCallbackStop);
+  timeout.removed.connect([&] (unsigned int id) { removed_called = true; });
 
   Utils::WaitForTimeoutMSec(500);
   EXPECT_FALSE(timeout.IsRunning());
   EXPECT_TRUE(callback_called);
   EXPECT_EQ(callback_call_count, 1);
+  EXPECT_TRUE(removed_called);
 }
 
 TEST(TestGLibTimeout, MultipleShotsRun)
 {
   callback_called = false;
   callback_call_count = 0;
+  bool removed_called = false;
 
   {
   auto check_function = []() { return (callback_call_count < 6) ? false : true; };
   Timeout timeout(100, &OnSourceCallbackContinue);
-  Utils::WaitUntil(check_function);
+  timeout.removed.connect([&] (unsigned int id) { removed_called = true; });
+  Utils::WaitUntil(check_function, true, 1);
   EXPECT_TRUE(timeout.IsRunning());
   }
 
   EXPECT_TRUE(callback_called);
   EXPECT_GE(callback_call_count, 6);
+  EXPECT_TRUE(removed_called);
 }
 
 TEST(TestGLibTimeout, OneShotRunWithEmptyCallback)
 {
+  bool removed_called = false;
   Timeout timeout(100, Source::Callback());
+  timeout.removed.connect([&] (unsigned int id) { removed_called = true; });
 
   Utils::WaitForTimeoutMSec(500);
   EXPECT_FALSE(timeout.IsRunning());
+  EXPECT_TRUE(removed_called);
 }
 
 TEST(TestGLibTimeout, Removal)
