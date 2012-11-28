@@ -190,7 +190,8 @@ void TestRunner::Init ()
 
   // set the title of the generic preview so that the code generates a
   // payment preview
-  unity_protocol_preview_set_title(proto_obj, MUSIC_PAYMENT_TITLE);
+  // TODO: use the correct model
+  //  unity_protocol_preview_set_title(proto_obj, MUSIC_PAYMENT_TITLE);
   // set the info
   unity_protocol_preview_add_info_hint(proto_obj, "album_purchase_preview", "", NULL,
           info_hints);
