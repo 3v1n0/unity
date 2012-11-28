@@ -23,19 +23,10 @@
 #include <NuxCore/Logger.h>
 
 
-
 DECLARE_LOGGER(logger, "unity.appmanager.bamf");
-
 
 namespace unity
 {
-// This function is used by the static Default method on the ApplicationManager
-// class, and uses link time to make sure there is a function available.
-std::shared_ptr<ApplicationManager> create_application_manager()
-{
-    return std::shared_ptr<ApplicationManager>(new bamf::Manager());
-}
-
 namespace bamf
 {
 namespace

@@ -103,6 +103,25 @@ public:
   bool GetUrgent() const { return urgent_; }
 };
 
+class MockApplicationManager
+{
+public:
+  virtual unity::ApplicationWindowPtr GetActiveWindow() const
+  {
+      return ApplicationWindowPtr();
+  }
+
+  unity::ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) const
+  {
+      return std::make_shared<MockApplication>(desktop_file);
+  }
+
+  unity::ApplicationList GetRunningApplications() const
+  {
+      return unity::ApplicationList();
+  }
+};
+
 }
 
 #endif
