@@ -103,7 +103,7 @@ public:
   bool GetUrgent() const { return urgent_; }
 };
 
-class MockApplicationManager
+class MockApplicationManager : public unity::ApplicationManager
 {
 public:
   virtual unity::ApplicationWindowPtr GetActiveWindow() const

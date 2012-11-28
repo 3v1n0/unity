@@ -75,7 +75,6 @@ set (UNITY_SHARED_SOURCES
 
 if(ENABLE_X_SUPPORT)
   set (UNITY_SHARED_SOURCES
-    BamfApplicationManager.cpp
     XKeyboardUtil.cpp
     XWindowManager.cpp
     ${UNITY_SHARED_SOURCES}
@@ -107,6 +106,7 @@ if (ENABLE_X_SUPPORT)
 
   # bamf application manager
   set (UNITY_SHARED_BAMF_SOURCES
+    BamfApplicationManager.cpp
     BamfApplicationManagerFactory.cpp
     )
   add_library (unity-shared-bamf STATIC ${UNITY_SHARED_BAMF_SOURCES})

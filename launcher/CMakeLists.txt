@@ -99,15 +99,21 @@ set (SWITCHER_SOURCES
 add_library (switcher-lib STATIC ${SWITCHER_SOURCES})
 add_dependencies (switcher-lib unity-core-${UNITY_API_VERSION} unity-shared)
 
+set (LAUNCHER_LIBS
+    launcher-lib
+    unity-shared
+    unity-shared-bamf
+    unity-shared-standalone)
+
 #
 # Standalone variant
 #
 add_executable (launcher StandaloneLauncher.cpp)
 add_dependencies (launcher launcher-lib)
-target_link_libraries (launcher launcher-lib unity-shared unity-shared-standalone)
+target_link_libraries (launcher ${LAUNCHER_LIBS})
 
 if (ENABLE_X_SUPPORT)
   add_executable (switcher StandaloneSwitcher.cpp)
   add_dependencies (switcher switcher-lib launcher-lib)
-  target_link_libraries (switcher switcher-lib launcher-lib unity-shared unity-shared-standalone)
+  target_link_libraries (switcher switcher-lib ${LAUNCHER_LIBS})
 endif ()

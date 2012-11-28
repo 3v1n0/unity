@@ -19,6 +19,7 @@
 
 #include "unity-shared/ApplicationManager.h"
 
+#include "unity-shared/WindowManager.h"
 
 namespace unity
 {
@@ -30,6 +31,20 @@ ApplicationManager& ApplicationManager::Default()
 {
   static std::shared_ptr<ApplicationManager> instance(create_application_manager());
   return *instance;
+}
+
+
+namespace
+{
+// This method is needed to create an unresolved external for the
+// WindowManager::Default method.  This is because it is highly likely that
+// the application manager implementations need the window manager for some
+// things, and in fact the bamf one does.  In order to make the linker happy,
+// we need to make sure that we have this here.
+void dummy()
+{
+  WindowManager::Default();
+}
 }
 
 } // namespace unity
