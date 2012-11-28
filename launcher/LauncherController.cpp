@@ -912,8 +912,6 @@ void Controller::Impl::SetupIcons()
   FavoriteList const& favs = favorite_store.GetFavorites();
   bool running_apps_added = false;
   bool devices_added = false;
-  // this had better not make a real difference...
-  ApplicationManager::Default().GetRunningApplications();
   for (auto const& fav_uri : favs)
   {
     if (fav_uri == local::RUNNING_APPS_URI)

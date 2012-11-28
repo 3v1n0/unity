@@ -72,11 +72,12 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   SetQuirk(Quirk::RUNNING, app->running());
   // Make sure we set the LauncherIcon stick bit too...
   if (app->sticky())
-    SimpleLauncherIcon::Stick(true);
+    SimpleLauncherIcon::Stick(false); // don't emit the signal
 
   LOG_INFO(logger) << "Created ApplicationLauncherIcon: "
     << tooltip_text()
     << ", icon: " << icon_name()
+    << ", sticky: " << (app->sticky() ? "yes" : "no")
     << ", visible: " << (app->visible() ? "yes" : "no")
     << ", active: " << (app->active() ? "yes" : "no")
     << ", running: " << (app->running() ? "yes" : "no");
@@ -938,16 +939,16 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
 
 void ApplicationLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> center)
 {
-  // We don't update icon locations for webapps
-  if (app_->type() == "webapp")
-    return;
-
   nux::Geometry geo;
   geo.width = 48;
   geo.height = 48;
 
   for (auto& window : app_->GetWindows())
   {
+    // We don't deal with tabs.
+    if (window->type() == "tab")
+      continue;
+
     Window xid = window->window_id();
     int monitor = window->monitor();
     monitor = std::max<int>(0, std::min<int>(center.size() - 1, monitor));

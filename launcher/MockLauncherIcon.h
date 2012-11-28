@@ -32,6 +32,7 @@
 #include <sigc++/sigc++.h>
 
 #include <libdbusmenu-glib/menuitem.h>
+#include "unity-shared/ApplicationManager.h"
 
 #include "AbstractLauncherIcon.h"
 
@@ -39,6 +40,24 @@ namespace unity
 {
 namespace launcher
 {
+class MockApplicationWindow : public ApplicationWindow
+{
+public:
+  MockApplicationWindow(Window xid) : xid_(xid) {}
+
+  std::string title() const { return "MockApplicationWindow"; }
+  virtual std::string icon() const { return ""; }
+  virtual std::string type() const { return "mock"; }
+
+  virtual Window window_id() const { return xid_; }
+  virtual int monitor() const { return -1; }
+  virtual ApplicationPtr application() const { return ApplicationPtr(); }
+  virtual bool Focus() const { return false; }
+  virtual void Quit() const {}
+private:
+  Window xid_;
+};
+
 
 class MockLauncherIcon : public AbstractLauncherIcon
 {
@@ -58,7 +77,7 @@ public:
   }
 
   std::string GetName() const { return "MockLauncherIcon"; }
-  
+
   void AddProperties(GVariantBuilder* builder) {}
 
   void HideTooltip() {}
@@ -72,7 +91,18 @@ public:
 
   WindowList Windows ()
   {
-    return WindowList();
+    WindowList result;
+
+    result.push_back(std::make_shared<MockApplicationWindow>((100 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((500 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((300 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((200 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((300 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((100 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((300 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((600 << 16) + 200));
+
+    return result;
   }
 
   std::vector<Window> WindowsOnViewport ()
