@@ -531,7 +531,7 @@ TEST_F(TestLauncherController, CreateFavoriteDesktopFile)
 TEST_F(TestLauncherController, CreateFavoriteInvalidDesktopFile)
 {
   // This desktop file has already been added as favorite, so it is invalid
-  std::string desktop_file = *(favorite_store.GetFavorites().begin());
+  std::string desktop_file = app::UBUNTU_ONE;
   std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop_file;
   auto const& fav = lc.Impl()->CreateFavoriteIcon(icon_uri);
 

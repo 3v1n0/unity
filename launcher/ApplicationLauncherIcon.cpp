@@ -70,6 +70,9 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   SetQuirk(Quirk::VISIBLE, app->visible());
   SetQuirk(Quirk::ACTIVE, app->active());
   SetQuirk(Quirk::RUNNING, app->running());
+  // Make sure we set the LauncherIcon stick bit too...
+  if (app->sticky())
+    SimpleLauncherIcon::Stick(true);
 
   LOG_INFO(logger) << "Created ApplicationLauncherIcon: "
     << tooltip_text()

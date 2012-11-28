@@ -150,14 +150,14 @@ public:
   Manager();
   ~Manager();
 
-  virtual ApplicationWindowPtr GetActiveWindow() const;
+  virtual ApplicationWindowPtr GetActiveWindow();
 
-  virtual ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) const;
+  virtual ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file);
 
-  virtual ApplicationList GetRunningApplications() const;
+  virtual ApplicationList GetRunningApplications();
 
 
-  virtual ApplicationPtr GetApplicationForWindow(glib::Object<BamfWindow> const& window) const;
+  virtual ApplicationPtr GetApplicationForWindow(glib::Object<BamfWindow> const& window);
 
 private:
   void OnViewOpened(BamfMatcher* matcher, BamfView* view);

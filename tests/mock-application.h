@@ -19,7 +19,9 @@
 #ifndef TESTS_MOCK_APPLICATION_H
 #define TESTS_MOCK_APPLICATION_H
 
+#include <map>
 #include "unity-shared/ApplicationManager.h"
+
 
 namespace testmocks
 {
@@ -106,20 +108,33 @@ public:
 class MockApplicationManager : public unity::ApplicationManager
 {
 public:
-  virtual unity::ApplicationWindowPtr GetActiveWindow() const
+  virtual unity::ApplicationWindowPtr GetActiveWindow()
   {
       return unity::ApplicationWindowPtr();
   }
 
-  unity::ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) const
+  unity::ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file)
   {
-      return std::make_shared<MockApplication>(desktop_file);
+    AppMap::iterator iter = app_map_.find(desktop_file);
+    if (iter == app_map_.end())
+    {
+      unity::ApplicationPtr app(new MockApplication(desktop_file));
+      app_map_.insert(AppMap::value_type(desktop_file, app));
+      return app;
+    }
+    else
+    {
+      return iter->second;
+    }
   }
 
-  unity::ApplicationList GetRunningApplications() const
+  unity::ApplicationList GetRunningApplications()
   {
       return unity::ApplicationList();
   }
+private:
+  typedef std::map<std::string, unity::ApplicationPtr> AppMap;
+  AppMap app_map_;
 };
 
 }
