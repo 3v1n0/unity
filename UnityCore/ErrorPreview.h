@@ -38,6 +38,10 @@ public:
 
   ErrorPreview(unity::glib::Object<GObject> const& proto_obj);
   ~ErrorPreview();
+
+private:
+  class Impl;
+  std::unique_ptr<Impl> pimpl;
 };
 
 }

@@ -26,8 +26,23 @@ namespace unity
 namespace dash
 {
 
+class ErrorPreview::Impl
+{
+public:
+  Impl(ErrorPreview* owner, glib::Object<GObject> const& proto_obj);
+
+  // instance vars
+  ErrorPreview* owner_;
+};
+
+ErrorPreview::Impl::Impl(ErrorPreview* owner, glib::Object<GObject> const& proto_obj)
+  : owner_(owner)
+{
+}
+
 ErrorPreview::ErrorPreview(unity::glib::Object<GObject> const& proto_obj)
   : PaymentPreview(proto_obj)
+  , pimpl(new Impl(this, proto_obj))
 {
 }
 
