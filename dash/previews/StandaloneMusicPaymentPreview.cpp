@@ -154,47 +154,31 @@ void TestRunner::Init ()
   layout_->AddView(dummyView, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   nux::GetWindowThread()->SetLayout (layout_);
 
-  // create the generic preview model that will be used
-  GVariant *info_hints;
-  GVariantBuilder *builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}"));
-
-  GVariant *title = g_variant_new_string("This Modern Glitch");
-  GVariant *subtitle = g_variant_new_string("The Wombats");
-  GVariant *header = g_variant_new_string("Hi mandel, you purchased in the past from Ubuntu One, would you like to use the same payment details? Please review your order:");
-  GVariant *email_label = g_variant_new_string("Ubuntu One email:");
-  GVariant *email = g_variant_new_string("manuel@canonical.com");
-  GVariant *payment_label = g_variant_new_string("Payment method:");
-  GVariant *payment_method = g_variant_new_string("***** *** **** 246");
-  GVariant *password_label = g_variant_new_string("Ubuntu One password:");
-  GVariant *password_hint = g_variant_new_string("Password");
-  GVariant *purchase_hint = g_variant_new_string("Ubuntu One Best Offer");
-  GVariant *purchase_prize = g_variant_new_string("10 eur");
-  GVariant *purchase_type = g_variant_new_string("Digital CD");
-
-  g_variant_builder_add (builder, "{sv}", "title", title);
-  g_variant_builder_add (builder, "{sv}", "subtitle", subtitle);
-  g_variant_builder_add (builder, "{sv}", "header", header);
-  g_variant_builder_add (builder, "{sv}", "email_label", email_label);
-  g_variant_builder_add (builder, "{sv}", "email", email);
-  g_variant_builder_add (builder, "{sv}", "payment_label", payment_label);
-  g_variant_builder_add (builder, "{sv}", "payment_method", payment_method);
-  g_variant_builder_add (builder, "{sv}", "password_label", password_label);
-  g_variant_builder_add (builder, "{sv}", "password_hint", password_hint);
-  g_variant_builder_add (builder, "{sv}", "purchase_hint", purchase_hint);
-  g_variant_builder_add (builder, "{sv}", "purchase_prize", purchase_prize);
-  g_variant_builder_add (builder, "{sv}", "purchase_type", purchase_type);
-
-  info_hints = g_variant_builder_end(builder);
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(
-              unity_protocol_generic_preview_new()));
+              unity_protocol_music_payment_preview_new()));
 
-  // set the title of the generic preview so that the code generates a
-  // payment preview
-  // TODO: use the correct model
-  //  unity_protocol_preview_set_title(proto_obj, MUSIC_PAYMENT_TITLE);
-  // set the info
-  unity_protocol_preview_add_info_hint(proto_obj, "album_purchase_preview", "", NULL,
-          info_hints);
+  unity_protocol_music_payment_preview_set_title(
+          UNITY_PROTOCOL_MUSIC_PAYMENT_PREVIEW(proto_obj.RawPtr()),
+          "This Modern Glitch");
+  unity_protocol_music_payment_preview_set_subtitle(
+          UNITY_PROTOCOL_MUSIC_PAYMENT_PREVIEW(proto_obj.RawPtr()),
+          "The Wombats");
+  unity_protocol_music_payment_preview_set_header(
+          UNITY_PROTOCOL_MUSIC_PAYMENT_PREVIEW(proto_obj.RawPtr()),
+          "Hi mandel, you purchased in the past from Ubuntu One, would you like to use the same payment details? Please review your order:");
+  unity_protocol_music_payment_preview_set_email(
+          UNITY_PROTOCOL_MUSIC_PAYMENT_PREVIEW(proto_obj.RawPtr()),
+          "manuel@canonical.com");
+  unity_protocol_music_payment_preview_set_payment_method(
+          UNITY_PROTOCOL_MUSIC_PAYMENT_PREVIEW(proto_obj.RawPtr()),
+          "***** *** **** 246");
+  unity_protocol_music_payment_preview_set_purchase_prize(
+          UNITY_PROTOCOL_MUSIC_PAYMENT_PREVIEW(proto_obj.RawPtr()),
+          "10 eur");
+  unity_protocol_music_payment_preview_set_purchase_type(
+          UNITY_PROTOCOL_MUSIC_PAYMENT_PREVIEW(proto_obj.RawPtr()),
+          "Digital CD");
+
   // set the diff actions
   unity_protocol_preview_add_action(proto_obj, "purchase_album", "Buy Now", NULL, 0);
   unity_protocol_preview_add_action(proto_obj, "cancel_purchase", "Cancel", NULL, 0);
@@ -206,8 +190,6 @@ void TestRunner::Init ()
 
   dash::Preview::Ptr preview_model(dash::Preview::PreviewForVariant(v));
   container_->Preview(preview_model, previews::Navigation::LEFT);
-
-  g_variant_unref(info_hints);
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)

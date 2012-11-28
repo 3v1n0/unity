@@ -434,30 +434,6 @@ void MusicPaymentPreview::SetupViews()
     return;
   }
 
-  // HACK: All the information required by the preview is stored in an infor
-  // hint, lets loop through them and store them
-  dash::Preview::InfoHintPtrList hints = preview_model_->GetInfoHints();
-  dash::Preview::InfoHintPtr data_info_hint_ = NULL;
-  if (!hints.empty())
-  {
-    for (dash::Preview::InfoHintPtr info_hint : hints)
-    {
-       if (info_hint->id == DATA_INFOHINT_ID){
-         this->data_ = info_hint->value;
-       }
-    }
-    if (this->data_ == NULL)
-    {
-      LOG_ERROR(logger) << "The required data for the preview is missing.";
-      return;
-    }
-  }
-  else
-  {
-    LOG_ERROR(logger) << "The required data for the preview is missing.";
-    return;
-  }
-
   // load the buttons so that they can be accessed in order
   LoadActions();
 
