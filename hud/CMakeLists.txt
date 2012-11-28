@@ -31,7 +31,6 @@ set (HUD_SOURCES
      HudController.cpp
      HudIcon.cpp
      HudIconTextureSource.cpp
-     HudOverlayRenderer.cpp
      HudPrivate.cpp
      HudView.cpp
     ) 

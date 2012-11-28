@@ -35,7 +35,7 @@
 #include "LensBar.h"
 #include "LensView.h"
 #include "unity-shared/UBusWrapper.h"
-#include "DashOverlayRenderer.h"
+#include "unity-shared/OverlayRenderer.h"
 #include "UnityCore/Preview.h"
 #include "previews/PreviewContainer.h"
 #include "PreviewStateMachine.h"
@@ -144,7 +144,7 @@ private:
 
   // Drawing related
   nux::Geometry content_geo_;
-  DashOverlayRenderer renderer_;
+  OverlayRenderer renderer_;
 
   std::string last_activated_uri_;
   // we're passing this back to g_* functions, so we'll keep the g* type
@@ -175,8 +175,6 @@ private:
   sigc::connection fade_out_connection_;
 
   nux::Color background_color_;
-
-  sigc::connection filter_open_connection;
 };
 
 

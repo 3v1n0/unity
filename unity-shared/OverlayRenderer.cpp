@@ -48,6 +48,8 @@ public:
   ~OverlayRendererImpl();
 
   void Init();
+  void UpdateTextures();
+
   void OnBackgroundColorChanged(GVariant* args);
 
   void Draw(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geometry, bool force_draw);
@@ -62,6 +64,8 @@ public:
   nux::Geometry content_geo;
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_shine_texture_;
+
+  std::unique_ptr<nux::TextureLayer> bg_refine_gradient_;
 
   // temporary variable that stores the number of backgrounds we have rendered
   int bgs;
@@ -104,14 +108,33 @@ OverlayRendererImpl::~OverlayRendererImpl()
 
 void OverlayRendererImpl::Init()
 {  
+  UpdateTextures();
+
+  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
+                                 sigc::mem_fun(this, &OverlayRendererImpl::OnBackgroundColorChanged));
+
+  ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
+}
+
+void OverlayRendererImpl::OnBackgroundColorChanged(GVariant* args)
+{
+  gdouble red, green, blue, alpha;
+  g_variant_get (args, "(dddd)", &red, &green, &blue, &alpha);
+
+  nux::Color color = nux::Color(red, green, blue, alpha);
+  bg_layer_->SetColor(color);
+  bg_color_ = color;
+
+  parent->need_redraw.emit();
+}
+
+void OverlayRendererImpl::UpdateTextures()
+{  
   nux::ROPConfig rop;
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
   bg_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.9), true, rop);
-
-  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
-                                 sigc::mem_fun(this, &OverlayRendererImpl::OnBackgroundColorChanged));
 
   rop.Blend = true;
   rop.SrcBlend = GL_ZERO;
@@ -130,19 +153,20 @@ void OverlayRendererImpl::Init()
   bg_darken_layer_ = new nux::ColorLayer(darken_colour, false, rop);
   bg_shine_texture_ = unity::dash::Style::Instance().GetDashShine()->GetDeviceTexture();
 
-  ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
-}
-
-void OverlayRendererImpl::OnBackgroundColorChanged(GVariant* args)
-{
-  gdouble red, green, blue, alpha;
-  g_variant_get (args, "(dddd)", &red, &green, &blue, &alpha);
-
-  nux::Color color = nux::Color(red, green, blue, alpha);
-  bg_layer_->SetColor(color);
-  bg_color_ = color;
-
-  parent->need_redraw.emit();
+  nux::BaseTexture* bg_refine_tex = unity::dash::Style::Instance().GetRefineTextureDash();
+  if (bg_refine_tex)
+  {
+    rop.Blend = true;
+    rop.SrcBlend = GL_ONE;
+    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+    nux::TexCoordXForm texxform;
+    
+    bg_refine_gradient_.reset(new nux::TextureLayer(bg_refine_tex->GetDeviceTexture(), 
+                              texxform, 
+                              nux::color::White,
+                              false,
+                              rop));
+  }
 }
 
 void OverlayRendererImpl::InitASMInverseTextureMaskShader()
@@ -509,7 +533,21 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
       gfx_context.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     }
 
-    parent->CustomDrawFull(gfx_context, content_geo, absolute_geo, geometry, excess_border);
+    if (bg_refine_gradient_)
+    {
+      // We draw to the edge of largetr gradient so that we include the corner. A bit cheeky, but faster than draing another
+      // texture for the corner.
+      int gradien_width = std::min(bg_refine_gradient_->GetDeviceTexture()->GetWidth(), larger_content_geo.width);
+      int gradien_height = std::min(bg_refine_gradient_->GetDeviceTexture()->GetHeight(), larger_content_geo.height);
+
+      nux::Geometry geo_refine(larger_content_geo.x + larger_content_geo.width - gradien_width, 
+                               larger_content_geo.y,
+                               gradien_width, 
+                               gradien_height);
+
+      bg_refine_gradient_->SetGeometry(geo_refine);
+      bg_refine_gradient_->Renderlayer(gfx_context);
+    }
   }
 
   if (Settings::Instance().form_factor() != FormFactor::NETBOOK || force_edges)
@@ -867,7 +905,11 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
       bgs++;
     }
 
-    parent->CustomDrawInner(gfx_context, content_geo, absolute_geo, geometry, excess_border);
+    if (bg_refine_gradient_)
+    {
+      nux::GetPainter().PushLayer(gfx_context, bg_refine_gradient_->GetGeometry(), bg_refine_gradient_.get());
+      bgs++;
+    }
   }
 
   gfx_context.PopClippingRectangle();
@@ -879,8 +921,6 @@ void OverlayRendererImpl::DrawContentCleanup(nux::GraphicsEngine& gfx_context, n
 
   nux::GetPainter().PopBackground(bgs);
   bgs = 0;
-
-  parent->CustomDrawCleanup(gfx_context, content_geo, absolute_geo, geometry);
 }
 
 
@@ -944,18 +984,6 @@ void OverlayRenderer::DrawInnerCleanup(nux::GraphicsEngine& gfx_context, nux::Ge
   LOG_DEBUG(logger) << "OverlayRenderer::DrawInnerCleanup(): content_geo:  " << content_geo.width << "/" << content_geo.height;
   LOG_DEBUG(logger) << "OverlayRenderer::DrawInnerCleanup(): absolute_geo: " << absolute_geo.width << "/" << absolute_geo.height;
   LOG_DEBUG(logger) << "OverlayRenderer::DrawInnerCleanup(): geo:          " << geo.width << "/" << geo.height;
-}
-
-void OverlayRenderer::CustomDrawFull(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geo, int border)
-{
-}
-
-void OverlayRenderer::CustomDrawInner(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geo, int border)
-{
-}
-
-void OverlayRenderer::CustomDrawCleanup(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geo)
-{
 }
 
 }

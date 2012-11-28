@@ -84,11 +84,6 @@ public:
   
   sigc::signal<void> need_redraw;
 
-protected:
-  virtual void CustomDrawFull(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geo, int border);
-  virtual void CustomDrawInner(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geo, int border);
-  virtual void CustomDrawCleanup(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geo);
-
 private:
   friend class OverlayRendererImpl;
   OverlayRendererImpl *pimpl_;

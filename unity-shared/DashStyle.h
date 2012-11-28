@@ -206,7 +206,6 @@ public:
   
   nux::BaseTexture* GetRefineTextureCorner();
   nux::BaseTexture* GetRefineTextureDash();
-  nux::BaseTexture* GetRefineNoRefineTextureDash();
   
   // Returns the width of the separator between the dash and the launcher.
   int GetVSeparatorSize() const;
