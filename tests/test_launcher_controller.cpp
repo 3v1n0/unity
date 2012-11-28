@@ -33,6 +33,7 @@
 #include "PanelStyle.h"
 #include "UnitySettings.h"
 #include "UBusMessages.h"
+#include "logger_helper.h"
 #include "test_utils.h"
 #include "test_uscreen_mock.h"
 #include "test_mock_devices.h"
@@ -181,8 +182,8 @@ struct MockVolumeLauncherIcon : public VolumeLauncherIcon
   typedef nux::ObjectPtr<MockVolumeLauncherIcon> Ptr;
 
   MockVolumeLauncherIcon()
-    : VolumeLauncherIcon(Volume::Ptr(volume_ = new MockVolume()),
-                         std::make_shared<MockDevicesSettings>())
+    : VolumeLauncherIcon(Volume::Ptr(volume_ = new NiceMock<MockVolume>()),
+                         std::make_shared<NiceMock<MockDevicesSettings>>())
     , uuid_(std::to_string(g_random_int()))
   {
     ON_CALL(*volume_, GetIdentifier()).WillByDefault(Return(uuid_));
@@ -203,12 +204,14 @@ namespace launcher
 struct TestLauncherController : public testing::Test
 {
   TestLauncherController()
-    : xdnd_manager_(std::make_shared<XdndManager>())
+    : logger_output_(std::make_shared<helper::CaptureLogOutput>())
+    , xdnd_manager_(std::make_shared<XdndManager>())
     , lc(xdnd_manager_)
   {}
 
   virtual void SetUp()
   {
+    logger_output_->GetOutput(); // discard old output.
     lc.multiple_launchers = true;
   }
 
@@ -265,6 +268,7 @@ protected:
     }
   };
 
+  std::shared_ptr<helper::CaptureLogOutput> logger_output_;
   MockUScreen uscreen;
   Settings settings;
   panel::Style panel_style;
@@ -656,7 +660,7 @@ TEST_F(TestLauncherController, RegisterIconDevice)
 
 TEST_F(TestLauncherController, RegisteredIconSavesPosition)
 {
-  MockApplicationLauncherIcon::Ptr app_icon(new MockApplicationLauncherIcon(true, "normal-icon.desktop"));
+  MockApplicationLauncherIcon::Ptr app_icon(new NiceMock<MockApplicationLauncherIcon>(true, "normal-icon.desktop"));
   lc.Impl()->RegisterIcon(app_icon);
   ASSERT_FALSE(favorite_store.IsFavorite(app_icon->RemoteUri()));
 
@@ -1063,7 +1067,7 @@ TEST_F(TestLauncherController, LauncherAddRequestDeviceAdd)
 TEST_F(TestLauncherController, LauncherAddRequestDeviceStick)
 {
   auto const& model = lc.Impl()->model_;
-  MockVolumeLauncherIcon::Ptr device_icon(new MockVolumeLauncherIcon());
+  MockVolumeLauncherIcon::Ptr device_icon(new NiceMock<MockVolumeLauncherIcon>());
   lc.Impl()->RegisterIcon(device_icon, std::numeric_limits<int>::max());
 
   auto app_icons = model->GetSublist<ApplicationLauncherIcon>();
@@ -1087,7 +1091,7 @@ TEST_F(TestLauncherController, LauncherRemoveRequestApplicationUnStickAndQuit)
 
 TEST_F(TestLauncherController, LauncherRemoveRequestDeviceEjects)
 {
-  MockVolumeLauncherIcon::Ptr device_icon(new MockVolumeLauncherIcon());
+  MockVolumeLauncherIcon::Ptr device_icon(new NiceMock<MockVolumeLauncherIcon>());
 
   EXPECT_CALL(*(device_icon->volume_), CanBeEjected())
       .WillRepeatedly(Return(true));
@@ -1102,7 +1106,7 @@ TEST_F(TestLauncherController, LauncherRemoveRequestDeviceEjects)
 
 TEST_F(TestLauncherController, LauncherRemoveRequestDeviceStops)
 {
-  MockVolumeLauncherIcon::Ptr device_icon(new MockVolumeLauncherIcon());
+  MockVolumeLauncherIcon::Ptr device_icon(new NiceMock<MockVolumeLauncherIcon>());
 
   EXPECT_CALL(*(device_icon->volume_), CanBeEjected())
       .WillRepeatedly(Return(false));
@@ -1152,15 +1156,15 @@ TEST_F(TestLauncherController, SaveIconsOrder)
   lc.DisconnectSignals();
   int priority = 0;
 
-  MockApplicationLauncherIcon::Ptr sticky_app(new MockApplicationLauncherIcon(true, "sticky-app"));
+  MockApplicationLauncherIcon::Ptr sticky_app(new NiceMock<MockApplicationLauncherIcon>(true, "sticky-app"));
   sticky_app->Stick(false);
   lc.Impl()->RegisterIcon(sticky_app, ++priority);
 
-  MockApplicationLauncherIcon::Ptr invisible_app(new MockApplicationLauncherIcon(true, "invisible-app"));
+  MockApplicationLauncherIcon::Ptr invisible_app(new NiceMock<MockApplicationLauncherIcon>(true, "invisible-app"));
   invisible_app->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, false);
   lc.Impl()->RegisterIcon(invisible_app, ++priority);
 
-  MockVolumeLauncherIcon::Ptr sticky_device(new MockVolumeLauncherIcon());
+  MockVolumeLauncherIcon::Ptr sticky_device(new NiceMock<MockVolumeLauncherIcon>());
   sticky_device->Stick(false);
   lc.Impl()->RegisterIcon(sticky_device, ++priority);
 
@@ -1187,11 +1191,11 @@ TEST_F(TestLauncherController, SaveIconsOrderWithOnlyStickyIcons)
   lc.ClearModel();
   int priority = 0;
 
-  MockApplicationLauncherIcon::Ptr sticky_app(new MockApplicationLauncherIcon(true, "sticky-app"));
+  MockApplicationLauncherIcon::Ptr sticky_app(new NiceMock<MockApplicationLauncherIcon>(true, "sticky-app"));
   sticky_app->Stick(false);
   lc.Impl()->RegisterIcon(sticky_app, ++priority);
 
-  MockVolumeLauncherIcon::Ptr sticky_device(new MockVolumeLauncherIcon());
+  MockVolumeLauncherIcon::Ptr sticky_device(new NiceMock<MockVolumeLauncherIcon>());
   sticky_device->Stick(false);
   lc.Impl()->RegisterIcon(sticky_device, ++priority);
 
@@ -1216,11 +1220,11 @@ TEST_F(TestLauncherController, SaveIconsOrderTriesToKeepIconProvidersOrder)
                                FavoriteStore::URI_PREFIX_APP + "bar.desktop", places::APPS_URI,
                                FavoriteStore::URI_PREFIX_APP + "foobar.desktop"});
 
-  MockApplicationLauncherIcon::Ptr sticky_app(new MockApplicationLauncherIcon(true, "sticky-app"));
+  MockApplicationLauncherIcon::Ptr sticky_app(new NiceMock<MockApplicationLauncherIcon>(true, "sticky-app"));
   sticky_app->Stick(false);
   lc.Impl()->RegisterIcon(sticky_app, ++priority);
 
-  MockVolumeLauncherIcon::Ptr sticky_device(new MockVolumeLauncherIcon());
+  MockVolumeLauncherIcon::Ptr sticky_device(new NiceMock<MockVolumeLauncherIcon>());
   sticky_device->Stick(false);
   lc.Impl()->RegisterIcon(sticky_device, ++priority);
 
@@ -1241,11 +1245,11 @@ TEST_F(TestLauncherController, SaveIconsOrderTriesToKeepIconProvidersOrder2)
   lc.ClearModel();
   int priority = 0;
 
-  MockApplicationLauncherIcon::Ptr sticky_app(new MockApplicationLauncherIcon(true, "sticky-app"));
+  MockApplicationLauncherIcon::Ptr sticky_app(new NiceMock<MockApplicationLauncherIcon>(true, "sticky-app"));
   sticky_app->Stick(false);
   lc.Impl()->RegisterIcon(sticky_app, ++priority);
 
-  MockVolumeLauncherIcon::Ptr sticky_device(new MockVolumeLauncherIcon());
+  MockVolumeLauncherIcon::Ptr sticky_device(new NiceMock<MockVolumeLauncherIcon>());
   sticky_device->Stick(false);
   lc.Impl()->RegisterIcon(sticky_device, ++priority);
 
@@ -1416,7 +1420,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedDeviceSection)
 
 TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedApplication)
 {
-  MockApplicationLauncherIcon::Ptr app_icon(new MockApplicationLauncherIcon(true, "sticky-icon"));
+  MockApplicationLauncherIcon::Ptr app_icon(new NiceMock<MockApplicationLauncherIcon>(true, "sticky-icon"));
   lc.Impl()->RegisterIcon(app_icon);
   app_icon->Stick(false);
 
@@ -1538,7 +1542,10 @@ TEST_F(TestLauncherController, UpdateSelectionChanged)
   ASSERT_EQ(lc.Impl()->model_->Selection()->tooltip_text(), last_selection_change);
 }
 
-TEST_F(TestLauncherController, DragAndDrop_MultipleLaunchers)
+// thumper: 2012-11-28 disabling the drag and drop tests as they are taking over 20s
+// each, and that is not acceptable for unit tests.  These sound more like functional
+// tests.
+TEST_F(TestLauncherController, DISABLED_DragAndDrop_MultipleLaunchers)
 {
   lc.multiple_launchers = true;
   uscreen.SetupFakeMultiMonitor();
@@ -1564,7 +1571,7 @@ TEST_F(TestLauncherController, DragAndDrop_MultipleLaunchers)
     Utils::WaitUntil(std::bind(check_fn, i), true);
 }
 
-TEST_F(TestLauncherController, DragAndDrop_SingleLauncher)
+TEST_F(TestLauncherController, DISABLED_DragAndDrop_SingleLauncher)
 {
   lc.multiple_launchers = false;
   uscreen.SetupFakeMultiMonitor(2);

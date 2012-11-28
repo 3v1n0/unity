@@ -205,6 +205,7 @@ if (GTEST_SRC_DIR AND
 if (ENABLE_X_SUPPORT)
 # Tests that require X
   add_executable(test-gtest
+                 logger_helper.cpp
                  test_main.cpp
                  test_application_launcher_icon.cpp
                  test_bfb_launcher_icon.cpp
