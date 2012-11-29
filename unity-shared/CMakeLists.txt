@@ -25,6 +25,7 @@ include_directories (.. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR
 #
 set (UNITY_SHARED_SOURCES
      AbstractSeparator.cpp
+     ApplicationManager.cpp
      Animator.cpp
      BGHash.cpp
      CoverArt.cpp
@@ -72,6 +73,7 @@ set (UNITY_SHARED_SOURCES
 
 if(ENABLE_X_SUPPORT)
   set (UNITY_SHARED_SOURCES
+    BamfApplicationManager.cpp
     XKeyboardUtil.cpp
     XWindowManager.cpp
     ${UNITY_SHARED_SOURCES}
@@ -110,4 +112,7 @@ add_library (unity-shared-standalone STATIC ${UNITY_SHARED_STANDALONE_SOURCES})
 target_link_libraries (unity-shared-standalone ${LIBS})
 add_dependencies (unity-shared-standalone unity-shared)
 
+add_executable (app-manager StandaloneAppManager.cpp)
+add_dependencies (app-manager unity-shared)
+target_link_libraries (app-manager unity-shared unity-shared-standalone)
 
