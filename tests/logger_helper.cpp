@@ -20,6 +20,7 @@
 #include "logger_helper.h"
 
 #include <glib.h>
+#include <iostream>
 
 #include "NuxCore/Logger.h"
 #include "NuxCore/LoggingWriter.h"
