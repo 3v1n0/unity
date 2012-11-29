@@ -61,8 +61,7 @@ if (CMAKE_BUILD_TYPE MATCHES coverage)
       message (STATUS "Enabling XML coverage report")
       add_custom_target (coverage-xml 
           COMMAND  cd "${CMAKE_BINARY_DIR}" 
-                   && "${GCOVR_EXECUTABLE}" --exclude="tests.*" --exclude="obj-.*" -x -r "${CMAKE_SOURCE_DIR}" -o "${COVERAGE_XML_FILE}"
-          DEPENDS ${COVERAGE_XML_FILE})
+                   && "${GCOVR_EXECUTABLE}" --exclude="tests.*" --exclude="obj-.*" -x -r "${CMAKE_SOURCE_DIR}" -o "${COVERAGE_XML_FILE}")
   endif()
 endif (CMAKE_BUILD_TYPE MATCHES coverage)
 
