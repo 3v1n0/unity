@@ -34,8 +34,6 @@ ApplicationManager& ApplicationManager::Default()
 }
 
 
-namespace
-{
 // This method is needed to create an unresolved external for the
 // WindowManager::Default method.  This is because it is highly likely that
 // the application manager implementations need the window manager for some
@@ -44,7 +42,6 @@ namespace
 void dummy()
 {
   WindowManager::Default();
-}
 }
 
 } // namespace unity
