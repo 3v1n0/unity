@@ -37,8 +37,6 @@ public:
 
   // getters for the data properties
 
-  std::string get_title() const { return title_; };
-  std::string get_subtitle() const { return subtitle_; };
   std::string get_header() const { return header_; };
   std::string get_email() const { return email_; };
   std::string get_payment_method() const { return payment_method_; };
@@ -50,8 +48,6 @@ public:
   // instance vars
   MusicPaymentPreview* owner_;
 
-  std::string title_;
-  std::string subtitle_;
   std::string header_;
   std::string email_;
   std::string payment_method_;
@@ -66,10 +62,6 @@ MusicPaymentPreview::Impl::Impl(MusicPaymentPreview* owner, glib::Object<GObject
   const gchar* s;
   auto preview = glib::object_cast<UnityProtocolMusicPaymentPreview>(proto_obj);
 
-  s = unity_protocol_music_payment_preview_get_title(preview);
-  if (s) title_ = s;
-  s = unity_protocol_music_payment_preview_get_subtitle(preview);
-  if (s) subtitle_ = s;
   s = unity_protocol_music_payment_preview_get_header(preview);
   if (s) header_ = s;
   s = unity_protocol_music_payment_preview_get_email(preview);
@@ -88,10 +80,6 @@ MusicPaymentPreview::Impl::Impl(MusicPaymentPreview* owner, glib::Object<GObject
 
 void MusicPaymentPreview::Impl::SetupGetters()
 {
-  owner_->title.SetGetterFunction(
-            sigc::mem_fun(this, &MusicPaymentPreview::Impl::get_title));
-  owner_->subtitle.SetGetterFunction(
-            sigc::mem_fun(this, &MusicPaymentPreview::Impl::get_subtitle));
   owner_->header.SetGetterFunction(
             sigc::mem_fun(this, &MusicPaymentPreview::Impl::get_header));
   owner_->email.SetGetterFunction(

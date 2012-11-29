@@ -157,12 +157,10 @@ void TestRunner::Init ()
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(
               unity_protocol_music_payment_preview_new()));
 
-  unity_protocol_music_payment_preview_set_title(
-          UNITY_PROTOCOL_MUSIC_PAYMENT_PREVIEW(proto_obj.RawPtr()),
-          "This Modern Glitch");
-  unity_protocol_music_payment_preview_set_subtitle(
-          UNITY_PROTOCOL_MUSIC_PAYMENT_PREVIEW(proto_obj.RawPtr()),
-          "The Wombats");
+  unity_protocol_preview_set_title(
+          proto_obj.RawPtr(), "This Modern Glitch");
+  unity_protocol_preview_set_subtitle(
+          proto_obj.RawPtr(), "The Wombats");
   unity_protocol_music_payment_preview_set_header(
           UNITY_PROTOCOL_MUSIC_PAYMENT_PREVIEW(proto_obj.RawPtr()),
           "Hi mandel, you purchased in the past from Ubuntu One, would you like to use the same payment details? Please review your order:");
