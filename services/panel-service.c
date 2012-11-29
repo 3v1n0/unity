@@ -30,6 +30,7 @@
 #include <string.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
+#include <glib/gi18n-lib.h>
 
 #include <X11/extensions/XInput2.h>
 #include <X11/XKBlib.h>
@@ -1634,7 +1635,18 @@ static void
 menu_deactivated (GtkWidget *menu)
 {
   g_signal_handlers_disconnect_by_func (menu, menu_deactivated, NULL);
-  gtk_widget_destroy (menu);
+
+  if (g_object_is_floating (menu))
+    g_object_ref_sink (menu);
+
+  g_object_unref (menu);
+}
+
+static void
+activate_menuitem (GtkWidget *menuitem, IndicatorObjectEntry *entry)
+{
+  IndicatorObject *object = get_entry_parent_indicator (entry);
+  indicator_object_entry_activate (object, entry, CurrentTime);
 }
 
 static void
@@ -1678,17 +1690,17 @@ panel_service_show_entry_common (PanelService *self,
 
   if (entry != NULL)
     {
-      if (xid > 0)
-        {
-          indicator_object_entry_activate_window (object, entry, xid, CurrentTime);
-        }
-      else
-        {
-          indicator_object_entry_activate (object, entry, CurrentTime);
-        }
-
       if (GTK_IS_MENU (entry->menu))
         {
+          if (xid > 0)
+            {
+              indicator_object_entry_activate_window (object, entry, xid, CurrentTime);
+            }
+          else
+            {
+              indicator_object_entry_activate (object, entry, CurrentTime);
+            }
+
           priv->last_menu = entry->menu;
         }
       else
@@ -1697,10 +1709,17 @@ panel_service_show_entry_common (PanelService *self,
              rest of the code and to keep scrubbing fluidly, we'll create a
              stub menu for the duration of this scrub. */
           priv->last_menu = GTK_MENU (gtk_menu_new ());
+
+          GtkWidget *menu_item = gtk_menu_item_new_with_label (_("Activate"));
+          gtk_menu_shell_append (GTK_MENU_SHELL (priv->last_menu), menu_item);
+          gtk_widget_show (menu_item);
+
           g_signal_connect (priv->last_menu, "deactivate",
                             G_CALLBACK (menu_deactivated), NULL);
           g_signal_connect (priv->last_menu, "destroy",
                             G_CALLBACK (gtk_widget_destroyed), &priv->last_menu);
+          g_signal_connect (menu_item, "activate",
+                            G_CALLBACK (activate_menuitem), entry);
         }
 
       GtkWidget *top_widget = gtk_widget_get_toplevel (GTK_WIDGET (priv->last_menu));
