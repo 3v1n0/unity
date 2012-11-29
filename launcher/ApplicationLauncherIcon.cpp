@@ -177,10 +177,11 @@ void ApplicationLauncherIcon::Remove()
   /* Removing the unity-seen flag to the wrapped bamf application, on remove
    * request we make sure that if the application is re-opened while the
    * removal process is still ongoing, the application will be shown on the
-   * launcher. Disconnecting from signals and nullifying the app we make sure
-   * that this icon won't be reused (no duplicated icon). */
+   * launcher. Disconnecting from signals we make sure that this icon won't be
+   * reused (no duplicated icon). */
   app_->seen = false;
-  app_.reset(); // Have to be very careful here as we are breaking a class invariant (that we have an app)
+  // Disconnect all our callbacks.
+  notify_callbacks(); // This is from sigc++::trackable
   SimpleLauncherIcon::Remove();
 }
 
