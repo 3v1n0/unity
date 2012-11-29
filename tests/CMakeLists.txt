@@ -96,6 +96,7 @@ if (GTEST_SRC_DIR AND
 
 # The service that provides DBus services to test against
   add_executable(test-gtest-service
+                 mock-application.cpp
                  test_service_gdbus_wrapper.c
                  test_service_gdbus_wrapper.h
                  test_service_hud.c
@@ -205,6 +206,7 @@ if (GTEST_SRC_DIR AND
 if (ENABLE_X_SUPPORT)
 # Tests that require X
   add_executable(test-gtest
+                 mock-application.cpp
                  logger_helper.cpp
                  test_main.cpp
                  test_application_launcher_icon.cpp

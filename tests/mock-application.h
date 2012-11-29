@@ -19,7 +19,9 @@
 #ifndef TESTS_MOCK_APPLICATION_H
 #define TESTS_MOCK_APPLICATION_H
 
+#include <map>
 #include "unity-shared/ApplicationManager.h"
+
 
 namespace testmocks
 {
@@ -101,6 +103,46 @@ public:
   bool GetActive() const { return active_; }
   bool GetRunning() const { return running_; }
   bool GetUrgent() const { return urgent_; }
+};
+
+class MockApplicationManager : public unity::ApplicationManager
+{
+public:
+  static void StartApp(std::string const& desktop_file)
+  {
+      // We know the application manager is a mock one so we can cast it.
+      auto self = dynamic_cast<MockApplicationManager&>(unity::ApplicationManager::Default());
+      auto app = self.GetApplicationForDesktopFile(desktop_file);
+      self.application_started.emit(app);
+  }
+
+  virtual unity::ApplicationWindowPtr GetActiveWindow()
+  {
+      return unity::ApplicationWindowPtr();
+  }
+
+  unity::ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file)
+  {
+    AppMap::iterator iter = app_map_.find(desktop_file);
+    if (iter == app_map_.end())
+    {
+      unity::ApplicationPtr app(new MockApplication(desktop_file));
+      app_map_.insert(AppMap::value_type(desktop_file, app));
+      return app;
+    }
+    else
+    {
+      return iter->second;
+    }
+  }
+
+  unity::ApplicationList GetRunningApplications()
+  {
+      return unity::ApplicationList();
+  }
+private:
+  typedef std::map<std::string, unity::ApplicationPtr> AppMap;
+  AppMap app_map_;
 };
 
 }
