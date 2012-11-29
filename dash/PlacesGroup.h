@@ -45,7 +45,8 @@ class AbstractPaintLayer;
 
 namespace unity
 {
-
+namespace dash
+{
 
 class HSeparator;
 
@@ -152,8 +153,11 @@ private:
 
   glib::Source::UniquePtr _relayout_idle;
   UBusManager _ubus;
+
+  friend class TestLensView;
 };
 
+}
 }
 
 #endif

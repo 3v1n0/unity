@@ -46,6 +46,8 @@
 DECLARE_LOGGER(logger, "unity.dash.placesgroup");
 namespace unity
 {
+namespace dash
+{
 namespace
 {
 
@@ -577,7 +579,6 @@ void PlacesGroup::SetFiltersExpanded(bool filters_expanded)
                             nux::color::White,
                             false,
                             rop));
-    _using_filters_background = true;
   }
   else if (!filters_expanded && _using_filters_background)
   {
@@ -586,9 +587,10 @@ void PlacesGroup::SetFiltersExpanded(bool filters_expanded)
                             nux::color::White,
                             false,
                             rop));
-
-    _using_filters_background = false;
   }
+
+  _using_filters_background = filters_expanded;
+  printf("expanded %d\n", _using_filters_background);
   QueueDraw();
 }
 
@@ -629,4 +631,5 @@ void PlacesGroup::AddProperties(GVariantBuilder* builder)
   wrapper.add("name-label-baseline", _name->GetBaseline());
 }
 
+}
 } // namespace unity
