@@ -46,9 +46,6 @@ class AbstractPaintLayer;
 namespace unity
 {
 
-
-class HSeparator;
-
 class PlacesGroup : public nux::View, public debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(PlacesGroup, nux::View);
@@ -65,7 +62,7 @@ public:
   nux::StaticCairoText* GetExpandLabel();
 
   void SetChildView(dash::ResultView* view);
-  nux::View* GetChildView();
+  dash::ResultView* GetChildView();
 
   void SetChildLayout(nux::Layout* layout);
 
@@ -80,6 +77,11 @@ public:
   void SetExpanded(bool is_expanded);
   bool GetExpanded() const;
 
+  void PushExpanded();
+  void PopExpanded();
+
+  void SetResultsPreviewAnimationValue(float preview_animation);
+
   int  GetHeaderHeight() const;
   bool HeaderIsFocusable() const;
   nux::View* GetHeaderFocusableView() const;
@@ -89,6 +91,7 @@ public:
 
 protected:
   long ComputeContentSize();
+
   void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw);
   void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw);
 
@@ -123,7 +126,7 @@ private:
   nux::HLayout* _text_layout;
   nux::HLayout* _expand_label_layout;
   nux::HLayout* _expand_layout;
-  nux::View*  _child_view;
+  dash::ResultView*  _child_view;
   std::unique_ptr<nux::AbstractPaintLayer> _focus_layer;
 
   IconTexture*          _icon;
@@ -137,6 +140,7 @@ private:
   std::unique_ptr<nux::AbstractPaintLayer> _background_layer;
 
   bool  _is_expanded;
+  bool  _is_expanded_pushed;
   unsigned _n_visible_items_in_unexpand_mode;
   unsigned _n_total_items;
   unsigned _category_index;

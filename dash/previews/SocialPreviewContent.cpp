@@ -149,8 +149,8 @@ void SocialPreviewContent::UpdateBaloonTexture()
 
   nux::Geometry geo_cr(GetBubbleGeometry(geo));
 
-  int max_width = geo_cr.width - 2*(geo_cr.width*0.1);
-  int max_height = (geo_cr.height - TAIL_HEIGHT) - 2*((geo_cr.height - TAIL_HEIGHT)*0.1);
+  int max_width = MAX(0, geo_cr.width - 2*(geo_cr.width*0.1));
+  int max_height = MAX(0, (geo_cr.height - TAIL_HEIGHT) - 2*((geo_cr.height - TAIL_HEIGHT)*0.1));
 
   // this will update the texture with the actual size of the text.
   text_->SetMaximumHeight(max_height);

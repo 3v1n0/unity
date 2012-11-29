@@ -44,7 +44,9 @@ public:
                       Result& row,
                       ResultRendererState state,
                       nux::Geometry const& geometry,
-                      int x_offset, int y_offset);
+                      int x_offset, int y_offset,
+                      nux::Color const& color,
+                      float saturate);
 
 protected:
   virtual void LoadText(Result& row);

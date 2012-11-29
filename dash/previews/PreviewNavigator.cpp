@@ -51,8 +51,11 @@ PreviewNavigator::PreviewNavigator(Orientation direction, NUX_FILE_LINE_DECL)
 
 void PreviewNavigator::SetEnabled(bool enabled)
 {
-  texture_->SetEnableView(enabled);
-  texture_->SetVisible(enabled);
+  if (enabled != texture_->IsVisible())
+  {
+    texture_->SetVisible(enabled);
+    QueueRelayout();
+  }
 }
 
 std::string PreviewNavigator::GetName() const

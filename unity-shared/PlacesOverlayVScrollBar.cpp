@@ -54,6 +54,7 @@ PlacesOverlayVScrollBar::PlacesOverlayVScrollBar(NUX_FILE_LINE_DECL)
 
   _track->geometry_changed.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnTrackGeometryChanged));
   OnVisibleChanged.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnVisibilityChanged));
+  OnSensitiveChanged.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnSensitivityChanged));
 }
 
 void PlacesOverlayVScrollBar::OnTrackGeometryChanged(nux::Area* /*area*/, nux::Geometry& /*geo*/)
@@ -74,6 +75,15 @@ void PlacesOverlayVScrollBar::OnVisibilityChanged(nux::Area* /*area*/, bool visi
   {
     overlay_window_->ResetStates();
     ResetConnector();
+  }
+}
+
+void PlacesOverlayVScrollBar::OnSensitivityChanged(nux::Area* /*area*/, bool sensitive)
+{
+  if (!sensitive)
+  {
+    overlay_window_->ResetStates();
+    ResetConnector();    
   }
 }
 
@@ -144,7 +154,7 @@ bool PlacesOverlayVScrollBar::IsScrollBarVisible() const
 
 void PlacesOverlayVScrollBar::OnMouseNear(nux::Point const& mouse_pos)
 {
-  if (IsVisible() && IsScrollBarVisible())
+  if (IsSensitive() && IsVisible() && IsScrollBarVisible())
   {
     StopAnimation();
 

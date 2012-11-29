@@ -112,6 +112,7 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
     _child_view(nullptr),
     _using_nofilters_background(true),
     _is_expanded(false),
+    _is_expanded_pushed(false),
     _n_visible_items_in_unexpand_mode(0),
     _n_total_items(0),
     _category_index(0),
@@ -310,13 +311,11 @@ void
 PlacesGroup::SetChildView(dash::ResultView* view)
 {
   if (_child_view != NULL)
-    {
-      _group_layout->RemoveChildObject(_child_view);
-    }
+  {
+    _group_layout->RemoveChildObject(_child_view);
+  }
 
-  debug::Introspectable *i = dynamic_cast<debug::Introspectable*>(view);
-  if (i)
-    AddChild(i);
+  AddChild(view);
 
   _child_view = view;
 
@@ -336,7 +335,7 @@ PlacesGroup::SetChildView(dash::ResultView* view)
   QueueDraw();
 }
 
-nux::View*
+dash::ResultView*
 PlacesGroup::GetChildView()
 {
   return _child_view;
@@ -421,7 +420,6 @@ PlacesGroup::OnIdleRelayout()
 {
   if (GetChildView())
   {
-
     Refresh();
     QueueDraw();
     _group_layout->QueueDraw();
@@ -554,6 +552,18 @@ PlacesGroup::SetExpanded(bool is_expanded)
 }
 
 void
+PlacesGroup::PushExpanded()
+{
+  _is_expanded_pushed = GetExpanded();
+}
+
+void
+PlacesGroup::PopExpanded()
+{
+  SetExpanded(_is_expanded_pushed);
+}
+
+void
 PlacesGroup::RecvMouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   SetExpanded(!_is_expanded);
@@ -595,6 +605,12 @@ nux::View* PlacesGroup::GetHeaderFocusableView() const
 bool PlacesGroup::ShouldBeHighlighted() const
 {
   return HeaderHasKeyFocus();
+}
+
+void PlacesGroup::SetResultsPreviewAnimationValue(float preview_animation)
+{
+  if (_child_view)
+    _child_view->desaturation_progress = preview_animation;
 }
 
 //

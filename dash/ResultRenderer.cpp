@@ -37,7 +37,9 @@ ResultRenderer::ResultRenderer(NUX_FILE_LINE_DECL)
 void ResultRenderer::Render(nux::GraphicsEngine& GfxContext,
                             Result& /*row*/,
                             ResultRendererState /*state*/,
-                            nux::Geometry const& geometry, int /*x_offset*/, int /*y_offset*/)
+                            nux::Geometry const& geometry, int /*x_offset*/, int /*y_offset*/,
+                            nux::Color const& color,
+                            float saturate)
 {
   nux::GetPainter().PushDrawSliceScaledTextureLayer(GfxContext, geometry, nux::eBUTTON_NORMAL, nux::color::White, nux::eAllCorners);
 }

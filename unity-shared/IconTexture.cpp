@@ -181,6 +181,12 @@ void IconTexture::IconLoaded(std::string const& icon_name,
 
 void IconTexture::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  unsigned int current_alpha_blend;
+  unsigned int current_src_blend_factor;
+  unsigned int current_dest_blend_factor;
+  GfxContext.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+  GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
   nux::Geometry geo = GetGeometry();
 
   GfxContext.PushClippingRectangle(geo);
@@ -243,11 +249,11 @@ void IconTexture::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                           texxform,
                           col);
     }
-
-
   }
 
   GfxContext.PopClippingRectangle();
+
+  GfxContext.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
 }
 
 void IconTexture::GetTextureSize(int* width, int* height)

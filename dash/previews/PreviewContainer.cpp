@@ -23,10 +23,12 @@
 #include "PreviewContainer.h"
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
+#include <Nux/VLayout.h>
 
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/TimeUtil.h"
 #include "unity-shared/PreviewStyle.h"
+#include "unity-shared/GraphicsUtils.h"
 #include "PreviewNavigator.h"
 #include <boost/math/constants/constants.hpp>
 #include "config.h"
@@ -47,7 +49,7 @@ Navigation operator&(const Navigation lhs, const Navigation rhs)
 namespace
 {
 const int ANIM_DURATION_LONG = 500;
-const int PREVIEW_SPINNER_WAIT = 300;
+const int PREVIEW_SPINNER_WAIT = 2000;
 
 const std::string ANIMATION_IDLE = "animation-idle";
 }
@@ -73,7 +75,7 @@ public:
     });
     Style& style = previews::Style::Instance();
 
-    spin_= style.GetSearchSpinIcon(256);
+    spin_= style.GetSearchSpinIcon(32);
   }
 
   // From debug::Introspectable
@@ -272,7 +274,6 @@ public:
     if (swipe_.preview && swipe_.preview->IsVisible()) { swipe_.preview->ProcessDraw(gfx_engine, force_draw); }
     if (current_preview_ && current_preview_->IsVisible()) { current_preview_->ProcessDraw(gfx_engine, force_draw); }
 
-
     if (waiting_preview_)
     { 
       nux::Geometry const& base = GetGeometry(); 
@@ -297,11 +298,15 @@ public:
       int spin_offset_w = !(base.width % 2) ? 0 : 1;
       int spin_offset_h = !(base.height % 2) ? 0 : 1;
 
-      gfx_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(-spin_geo.x - (spin_geo.width + spin_offset_w) / 2.0f,
-                                                             -spin_geo.y - (spin_geo.height + spin_offset_h) / 2.0f, 0));
-      gfx_engine.PushModelViewMatrix(rotate_matrix_);
-      gfx_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(spin_geo.x + (spin_geo.width + spin_offset_w) / 2.0f,
-                                                             spin_geo.y + (spin_geo.height + spin_offset_h) / 2.0f, 0));
+      // we need to apply the rotation transformation first.
+      nux::Matrix4 matrix_texture;
+      matrix_texture = nux::Matrix4::TRANSLATE(-spin_geo.x - (spin_geo.width + spin_offset_w) / 2.0f,
+                                              -spin_geo.y - (spin_geo.height + spin_offset_h) / 2.0f, 0) * matrix_texture;
+      matrix_texture = rotate_matrix_ * matrix_texture;
+      matrix_texture = nux::Matrix4::TRANSLATE(spin_geo.x + (spin_geo.width + spin_offset_w) / 2.0f,
+                                               spin_geo.y + (spin_geo.height + spin_offset_h) / 2.0f, 0) * matrix_texture;
+
+      gfx_engine.SetModelViewMatrix(gfx_engine.GetModelViewMatrix() * matrix_texture);
 
       gfx_engine.QRP_1Tex(spin_geo.x,
                           spin_geo.y,
@@ -311,9 +316,8 @@ public:
                           texxform,
                           nux::color::White);
 
-      gfx_engine.PopModelViewMatrix();
-      gfx_engine.PopModelViewMatrix();
-      gfx_engine.PopModelViewMatrix();
+      // revert to model view matrix stack
+      gfx_engine.ApplyModelViewMatrix();
 
       gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
 
@@ -390,7 +394,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(PreviewContainer);
 
 PreviewContainer::PreviewContainer(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
-  , content_layout_(nullptr)
+  , preview_layout_(nullptr)
   , nav_disabled_(Navigation::NONE)
   , navigation_progress_speed_(0.0)
   , navigation_count_(0)
@@ -412,14 +416,14 @@ PreviewContainer::~PreviewContainer()
 
 void PreviewContainer::Preview(dash::Preview::Ptr preview_model, Navigation direction)
 {
-  previews::Preview::Ptr preview_view = previews::Preview::PreviewForModel(preview_model);
+  previews::Preview::Ptr preview_view = preview_model ? previews::Preview::PreviewForModel(preview_model) : previews::Preview::Ptr();
   
   if (preview_view)
   {
     preview_view->request_close.connect([this]() { request_close.emit(); });
   }
   
-  content_layout_->PushPreview(preview_view, direction);
+  preview_layout_->PushPreview(preview_view, direction);
 }
 
 void PreviewContainer::DisableNavButton(Navigation button)
@@ -452,92 +456,103 @@ void PreviewContainer::SetupViews()
 {
   previews::Style& style = previews::Style::Instance();
 
-  layout_ = new nux::HLayout();
-  layout_->SetSpaceBetweenChildren(6);
-  SetLayout(layout_);
-  layout_->AddSpace(0, 1);
+  nux::VLayout* layout = new nux::VLayout();
+  SetLayout(layout);
+  layout->AddLayout(new nux::SpaceLayout(0,0,style.GetPreviewTopPadding(),style.GetPreviewTopPadding()));
 
+  layout_content_ = new nux::HLayout();
+  layout_content_->SetSpaceBetweenChildren(6);
+  layout->AddLayout(layout_content_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+
+  layout_content_->AddSpace(0, 1);
   nav_left_ = new PreviewNavigator(Orientation::LEFT, NUX_TRACKER_LOCATION);
   AddChild(nav_left_);
   nav_left_->SetMinimumWidth(style.GetNavigatorWidth());
   nav_left_->SetMaximumWidth(style.GetNavigatorWidth());
   nav_left_->activated.connect([&]() { navigate_left.emit(); });
-  layout_->AddView(nav_left_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  layout_content_->AddView(nav_left_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
-  content_layout_ = new PreviewContent(this);
-  content_layout_->SetMinMaxSize(style.GetPreviewWidth(), style.GetPreviewHeight());
-  AddChild(content_layout_);
-  layout_->AddLayout(content_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  preview_layout_ = new PreviewContent(this);
+  preview_layout_->SetMinMaxSize(style.GetPreviewWidth(), style.GetPreviewHeight());
+  AddChild(preview_layout_);
+  layout_content_->AddLayout(preview_layout_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   nav_right_ = new PreviewNavigator(Orientation::RIGHT, NUX_TRACKER_LOCATION);
   AddChild(nav_right_);
   nav_right_->SetMinimumWidth(style.GetNavigatorWidth());
   nav_right_->SetMaximumWidth(style.GetNavigatorWidth());
   nav_right_->activated.connect([&]() { navigate_right.emit(); });
-  layout_->AddView(nav_right_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  layout_content_->AddView(nav_right_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+  layout_content_->AddSpace(0, 1);
 
-  layout_->AddSpace(0, 1);
+  layout->AddSpace(0, 1);
 
-  content_layout_->start_navigation.connect([&]()
+  preview_layout_->start_navigation.connect([&]()
   {
     // reset animation clock.
     if (navigation_count_ == 0)
       clock_gettime(CLOCK_MONOTONIC, &last_progress_time_);
   
-    float navigation_progress_remaining = CLAMP((1.0 - content_layout_->GetAnimationProgress()) + navigation_count_, 1.0f, 10.0f);
+    float navigation_progress_remaining = CLAMP((1.0 - preview_layout_->GetAnimationProgress()) + navigation_count_, 1.0f, 10.0f);
     navigation_count_++;
 
     navigation_progress_speed_ = navigation_progress_remaining / ANIM_DURATION_LONG;
     QueueAnimation();
   });
 
-  content_layout_->continue_navigation.connect([&]()
+  preview_layout_->continue_navigation.connect([&]()
   {
     QueueAnimation(); 
   });
 
-  content_layout_->end_navigation.connect([&]()
+  preview_layout_->end_navigation.connect([&]()
   {
     navigation_count_ = 0;
     navigation_progress_speed_ = 0;
   });
 
-  navigate_right.connect( [&]() { content_layout_->StartPreviewWait(); } );
-  navigate_left.connect( [&]() { content_layout_->StartPreviewWait(); } );
+  navigate_right.connect( [&]() { preview_layout_->StartPreviewWait(); } );
+  navigate_left.connect( [&]() { preview_layout_->StartPreviewWait(); } );
 }
 
 void PreviewContainer::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
-  nux::Geometry const& geo = GetGeometry();
-
-  gfx_engine.PushClippingRectangle(geo);
-  nux::GetPainter().PaintBackground(gfx_engine, geo);
-  gfx_engine.PopClippingRectangle();
 }
 
 void PreviewContainer::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
-  nux::Geometry base = GetGeometry();
+  nux::Geometry const& base = GetGeometry();
   gfx_engine.PushClippingRectangle(base);
 
+	bool redirect_to_texture = RedirectRenderingToTexture();
+
+    // This is necessary when doing redirected rendering. Clean the area below this view.
+  if (redirect_to_texture)
+	{
+		// This is necessary when doing redirected rendering.
+		// Clean the area below this view before drawing anything.
+		gfx_engine.GetRenderStates().SetBlend(false);
+		gfx_engine.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+	}
+  
     // rely on the compiz event loop to come back to us in a nice throttling
   if (AnimationInProgress())
   {
     if (!animation_timer_)
        animation_timer_.reset(new glib::Timeout(1000/60, sigc::mem_fun(this, &PreviewContainer::QueueAnimation)));
   }
-  else if (content_layout_ && content_layout_->IsAnimating())
+  else if (preview_layout_ && preview_layout_->IsAnimating())
   {
-    content_layout_->UpdateAnimationProgress(1.0f, 1.0f);
+    preview_layout_->UpdateAnimationProgress(1.0f, 1.0f);
   }
 
   // Paint using ProcessDraw2. ProcessDraw is overrided  by empty impl so we can control z order.
-  if (content_layout_)
+  if (preview_layout_)
   {
-    content_layout_->ProcessDraw2(gfx_engine, force_draw);
+    preview_layout_->ProcessDraw2(gfx_engine, force_draw || redirect_to_texture);
   }
   if (GetCompositionLayout())
-    GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
+    GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw || RedirectRenderingToTexture());
 
   gfx_engine.PopClippingRectangle();
 }
@@ -548,7 +563,7 @@ bool PreviewContainer::AnimationInProgress()
   struct timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
 
-  if (content_layout_ == nullptr)
+  if (preview_layout_ == nullptr)
     return false;
 
   // hover in animation
@@ -572,7 +587,7 @@ static float easeInOutQuart(float t)
 float PreviewContainer::GetSwipeAnimationProgress(struct timespec const& current) const
 {
   int time_delta = TimeUtil::TimeDelta(&current, &last_progress_time_);
-  float progress = content_layout_->GetAnimationProgress() + (navigation_progress_speed_ * time_delta);
+  float progress = preview_layout_->GetAnimationProgress() + (navigation_progress_speed_ * time_delta);
 
   return progress;
 }
@@ -584,7 +599,7 @@ bool PreviewContainer::QueueAnimation()
   timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
   float progress = GetSwipeAnimationProgress(current);
-  content_layout_->UpdateAnimationProgress(progress, easeInOutQuart(progress)); // ease in/out.
+  preview_layout_->UpdateAnimationProgress(progress, easeInOutQuart(progress)); // ease in/out.
   last_progress_time_ = current;
 
   QueueDraw();
@@ -631,7 +646,7 @@ nux::Area* PreviewContainer::FindKeyFocusArea(unsigned int key_symbol,
                                       unsigned long x11_key_code,
                                       unsigned long special_keys_state)
 {
-  nux::Area* area = content_layout_->FindKeyFocusArea(key_symbol, x11_key_code, special_keys_state);
+  nux::Area* area = preview_layout_->FindKeyFocusArea(key_symbol, x11_key_code, special_keys_state);
   if (area)
     return area;
 
@@ -641,7 +656,7 @@ nux::Area* PreviewContainer::FindKeyFocusArea(unsigned int key_symbol,
 nux::Area* PreviewContainer::KeyNavIteration(nux::KeyNavDirection direction)
 {
   using namespace nux;
-  nux::Area* area = content_layout_->KeyNavIteration(direction);
+  nux::Area* area = preview_layout_->KeyNavIteration(direction);
   if (area)
     return area;
 
@@ -670,6 +685,11 @@ void PreviewContainer::OnMouseDown(int x, int y, unsigned long button_flags, uns
   {
     request_close.emit();
   }
+}
+
+nux::Geometry PreviewContainer::GetLayoutGeometry() const
+{
+  return layout_content_->GetAbsoluteGeometry();  
 }
 
 

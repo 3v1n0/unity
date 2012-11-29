@@ -456,20 +456,18 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   nux::Geometry larger_content_geo = content_geo;
   larger_content_geo.OffsetSize(excess_border, excess_border);
 
-  nux::Geometry larger_geo(larger_content_geo);
-
   nux::Geometry larger_absolute_geo = absolute_geo;
   larger_absolute_geo.OffsetSize(excess_border, excess_border);
 
   nux::TexCoordXForm texxform_absolute_bg;
   texxform_absolute_bg.flip_v_coord = true;
   texxform_absolute_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-  texxform_absolute_bg.uoffset = ((float) larger_content_geo.x) / larger_absolute_geo.width;
-  texxform_absolute_bg.voffset = ((float) larger_content_geo.y) / larger_absolute_geo.height;
+  texxform_absolute_bg.uoffset = 0.0f;
+  texxform_absolute_bg.voffset = 0.0f;
   texxform_absolute_bg.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
 
   nux::Geometry blur_geo(larger_absolute_geo.x, larger_absolute_geo.y, larger_content_geo.width, larger_content_geo.height);
-  
+
   if (BackgroundEffectHelper::blur_type != BLUR_NONE)
   {
     bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
@@ -481,9 +479,6 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
 
   if (bg_blur_texture_.IsValid())
   {
-    nux::Geometry bg_clip = larger_geo;
-    gfx_context.PushClippingRectangle(bg_clip);
-
     gfx_context.GetRenderStates().SetBlend(false);
 #ifndef NUX_OPENGLES_20
     if (gfx_context.UsingGLSLCodePath())
@@ -503,9 +498,6 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
                                       bg_color_, nux::LAYER_BLEND_MODE_OVERLAY);
 
 #endif
-    gPainter.PopBackground();
-
-    gfx_context.PopClippingRectangle();
   }
   
   //Draw the left and top lines.
@@ -600,6 +592,9 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
 
   if (Settings::Instance().form_factor() != FormFactor::NETBOOK || force_edges)
   {
+    nux::Geometry geo_border(content_geo.x, content_geo.y, larger_absolute_geo.width - content_geo.x, larger_absolute_geo.height - content_geo.y);
+    gfx_context.PushClippingRectangle(geo_border);
+  
     // Paint the edges
     {
       gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
@@ -847,6 +842,8 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
 
       gfx_context.GetRenderStates().SetBlend(false);
     }
+    
+    gfx_context.PopClippingRectangle();
   }
 }
 
@@ -865,17 +862,18 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   nux::Geometry larger_absolute_geo = absolute_geo;
   larger_absolute_geo.OffsetSize(excess_border, excess_border);
   
-
   gfx_context.PushClippingRectangle(larger_geo);
 
+  unsigned int blend_alpha, blend_src, blend_dest = 0;
+  gfx_context.GetRenderStates().GetBlend(blend_alpha, blend_src, blend_dest);
   gfx_context.GetRenderStates().SetBlend(true);
   gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
   nux::TexCoordXForm texxform_absolute_bg;
   texxform_absolute_bg.flip_v_coord = true;
   texxform_absolute_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-  texxform_absolute_bg.uoffset = ((float) larger_content_geo.x) / absolute_geo.width;
-  texxform_absolute_bg.voffset = ((float) larger_content_geo.y) / absolute_geo.height;
+  texxform_absolute_bg.uoffset = 0.0f;
+  texxform_absolute_bg.voffset = 0.0f;
   texxform_absolute_bg.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
 
   nux::ROPConfig rop;
@@ -960,15 +958,14 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
     
   nux::GetPainter().PushLayer(gfx_context, refine_geo, bg_refine_gradient_.get());
   bgs++;
+
+  gfx_context.GetRenderStates().SetBlend(blend_alpha, blend_src, blend_dest);
+  gfx_context.PopClippingRectangle();
 }
 
 void OverlayRendererImpl::DrawContentCleanup(nux::GraphicsEngine& gfx_context, nux::Geometry content_geo, nux::Geometry absolute_geo, nux::Geometry geometry)
 {
   nux::GetPainter().PopBackground(bgs);
-
-  gfx_context.GetRenderStates().SetBlend(false);
-  gfx_context.PopClippingRectangle();
-
   bgs = 0;
 }
 

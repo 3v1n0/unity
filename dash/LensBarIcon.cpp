@@ -70,12 +70,6 @@ void LensBarIcon::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 
   graphics_engine.PushClippingRectangle(geo);
 
-  if (!texture())
-  {
-    graphics_engine.PopClippingRectangle();
-    return;
-  }
-
   if (HasKeyFocus() && focus_layer_)
   {
     nux::Geometry geo(GetGeometry());
@@ -85,22 +79,33 @@ void LensBarIcon::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
     layer->Renderlayer(graphics_engine);
   }
 
-  float opacity = active ? 1.0f : inactive_opacity_;
-  int width = 0, height = 0;
-  GetTextureSize(&width, &height);
+  if (texture())
+  {
+    unsigned int current_alpha_blend;
+    unsigned int current_src_blend_factor;
+    unsigned int current_dest_blend_factor;
+    graphics_engine.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+    graphics_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-  nux::Color col(1.0f * opacity, 1.0f * opacity, 1.0f * opacity, opacity);
-  nux::TexCoordXForm texxform;
-  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-  texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
+    float opacity = active ? 1.0f : inactive_opacity_;
+    int width = 0, height = 0;
+    GetTextureSize(&width, &height);
 
-  graphics_engine.QRP_1Tex(geo.x + ((geo.width - width) / 2),
-                       geo.y + ((geo.height - height) / 2),
-                       width,
-                       height,
-                       texture()->GetDeviceTexture(),
-                       texxform,
-                       col);
+    nux::Color col(1.0f * opacity, 1.0f * opacity, 1.0f * opacity, opacity);
+    nux::TexCoordXForm texxform;
+    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+    texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
+
+    graphics_engine.QRP_1Tex(geo.x + ((geo.width - width) / 2),
+                         geo.y + ((geo.height - height) / 2),
+                         width,
+                         height,
+                         texture()->GetDeviceTexture(),
+                         texxform,
+                         col);
+
+    graphics_engine.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+  }
 
   graphics_engine.PopClippingRectangle();
 }
