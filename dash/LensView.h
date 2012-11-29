@@ -59,6 +59,7 @@ public:
   nux::Area* fscroll_view() const;
 
   int GetNumRows();
+  void AboutToShow();
   void JumpToTop();
 
   virtual void ActivateFirst();

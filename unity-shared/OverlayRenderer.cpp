@@ -92,8 +92,7 @@ public:
 };
 
 OverlayRendererImpl::OverlayRendererImpl(OverlayRenderer *parent_)
-  : bg_color_(nux::Color(1.0,0.0,0.0, 1.0))
-  , visible(false)
+  : visible(false)
   , parent(parent_)
 {
   bg_effect_helper_.enabled = false;
@@ -914,14 +913,15 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
     }
   }
 
-  gfx_context.PopClippingRectangle();
 }
 
 void OverlayRendererImpl::DrawContentCleanup(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geometry)
 {
-  gfx_context.GetRenderStates().SetBlend(false);
-
   nux::GetPainter().PopBackground(bgs);
+
+  gfx_context.GetRenderStates().SetBlend(false);
+  gfx_context.PopClippingRectangle();
+
   bgs = 0;
 }
 

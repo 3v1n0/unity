@@ -765,6 +765,12 @@ int LensView::GetNumRows()
   return num_rows;
 }
 
+void LensView::AboutToShow()
+{
+  JumpToTop();
+  OnLensFilterExpanded(filters_expanded);
+}
+
 void LensView::JumpToTop()
 {
   scroll_view_->ScrollToPosition(nux::Geometry(0, 0, 0, 0));
