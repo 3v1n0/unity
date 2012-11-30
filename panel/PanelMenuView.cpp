@@ -827,13 +827,16 @@ void PanelMenuView::Refresh(bool force)
   if (geo.width > _monitor_geo.width)
     return;
 
-  const std::string& new_title = GetCurrentTitle();
-  if (new_title == _panel_title && !force && _last_geo == geo && _title_texture)
+  if (!_switcher_showing && !_launcher_keynav)
   {
-    // No need to redraw the title, let's save some CPU time!
-    return;
+    const std::string& new_title = GetCurrentTitle();
+    if (new_title == _panel_title && !force && _last_geo == geo && _title_texture)
+    {
+      // No need to redraw the title, let's save some CPU time!
+      return;
+    }
+    _panel_title = new_title;
   }
-  _panel_title = new_title;
 
   if (_panel_title.empty())
   {
