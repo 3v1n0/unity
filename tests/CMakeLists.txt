@@ -139,6 +139,7 @@ if (GTEST_SRC_DIR AND
        test_layout_system.cpp
        test_model_iterator.cpp
        test_previews.cpp
+       test_time_util.cpp
        test_ubus.cpp
        test_unityshell_private.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp

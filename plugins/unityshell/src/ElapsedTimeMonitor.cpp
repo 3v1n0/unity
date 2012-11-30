@@ -39,7 +39,7 @@ void ElapsedTimeMonitor::StopMonitor(GVariantBuilder* builder)
 {
   struct timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
-  int diff = TimeUtil::TimeDelta(&current, &_start);
+  int64 diff = TimeUtil::TimeDelta(&current, &_start);
 
   variant::BuilderWrapper(builder)
     .add("elapsed-time", diff);

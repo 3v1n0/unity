@@ -571,7 +571,7 @@ static float easeInOutQuart(float t)
 
 float PreviewContainer::GetSwipeAnimationProgress(struct timespec const& current) const
 {
-  int time_delta = TimeUtil::TimeDelta(&current, &last_progress_time_);
+  int64 time_delta = TimeUtil::TimeDelta(&current, &last_progress_time_);
   float progress = content_layout_->GetAnimationProgress() + (navigation_progress_speed_ * time_delta);
 
   return progress;

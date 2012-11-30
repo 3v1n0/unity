@@ -19,29 +19,34 @@
  */
 
 #include <time.h>
+#include <cstdint>
+
+typedef int64_t int64;
 
 namespace unity {
 
 class TimeUtil
 {
 public:
-  static int TimeDelta (struct timespec const* x, struct timespec const* y)
+  static int64 TimeDelta (struct timespec const* x, struct timespec const* y)
   {
-    return ((x->tv_sec - y->tv_sec) * 1000) + ((x->tv_nsec - y->tv_nsec) / 1000000);
+    int64 d_sec = ((x->tv_sec - y->tv_sec));
+    int64 d_nsec = ((x->tv_nsec - y->tv_nsec));
+    return (d_sec * 1000) + (d_nsec / 1000000);
   }
 
-  static void SetTimeStruct(struct timespec* timer, struct timespec* sister = 0, int sister_relation = 0)
+  static void SetTimeStruct(struct timespec* timer, struct timespec* sister = 0, int64 sister_relation = 0)
   {
     struct timespec current;
     clock_gettime(CLOCK_MONOTONIC, &current);
 
     if (sister)
     {
-      int diff = TimeDelta(&current, sister);
+      int64 diff = TimeDelta(&current, sister);
 
       if (diff < sister_relation)
       {
-        int remove = sister_relation - diff;
+        int64 remove = sister_relation - diff;
         SetTimeBack(&current, remove);
       }
     }
@@ -50,7 +55,7 @@ public:
     timer->tv_nsec = current.tv_nsec;
   }
 
-  static void SetTimeBack(struct timespec* timeref, int remove)
+  static void SetTimeBack(struct timespec* timeref, int64 remove)
   {
     timeref->tv_sec -= remove / 1000;
     remove = remove % 1000;
