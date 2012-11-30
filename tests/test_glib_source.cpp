@@ -328,7 +328,7 @@ TEST(TestGLibTimeoutSeconds, OneShotRun)
   EXPECT_FALSE(timeout.IsRunning());
   EXPECT_TRUE(callback_called);
   EXPECT_EQ(callback_call_count, 1);
-  int time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
+  DeltaTime time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
   EXPECT_GE(time_delta, 500);
   EXPECT_LT(time_delta, 2000);
 }
@@ -351,7 +351,7 @@ TEST(TestGLibTimeoutSeconds, MultipleShotsRun)
   EXPECT_TRUE(callback_called);
   EXPECT_GE(callback_call_count, 3);
   EXPECT_LE(callback_call_count, 4);
-  int time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
+  DeltaTime time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
   EXPECT_GE(time_delta, 3500);
   EXPECT_LT(time_delta, 5000);
 }
@@ -415,7 +415,7 @@ TEST(TestGLibIdle, MultipleShotsRun)
 
   EXPECT_TRUE(callback_called);
   EXPECT_GT(callback_call_count, 1);
-  int time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
+  DeltaTime time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
   EXPECT_GE(time_delta, 100);
   EXPECT_LT(time_delta, 200);
 }
