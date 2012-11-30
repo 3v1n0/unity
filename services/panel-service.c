@@ -1643,7 +1643,7 @@ menu_deactivated (GtkWidget *menu)
 }
 
 static void
-activate_menuitem (GtkWidget *menuitem, IndicatorObjectEntry *entry)
+menuitem_activated (GtkWidget *menuitem, IndicatorObjectEntry *entry)
 {
   IndicatorObject *object = get_entry_parent_indicator (entry);
   indicator_object_entry_activate (object, entry, CurrentTime);
@@ -1719,7 +1719,7 @@ panel_service_show_entry_common (PanelService *self,
           g_signal_connect (priv->last_menu, "destroy",
                             G_CALLBACK (gtk_widget_destroyed), &priv->last_menu);
           g_signal_connect (menu_item, "activate",
-                            G_CALLBACK (activate_menuitem), entry);
+                            G_CALLBACK (menuitem_activated), entry);
         }
 
       GtkWidget *top_widget = gtk_widget_get_toplevel (GTK_WIDGET (priv->last_menu));
