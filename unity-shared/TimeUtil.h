@@ -21,32 +21,32 @@
 #include <time.h>
 #include <cstdint>
 
-typedef int64_t int64;
+typedef int64_t DeltaTime;
 
 namespace unity {
 
 class TimeUtil
 {
 public:
-  static int64 TimeDelta (struct timespec const* x, struct timespec const* y)
+  static DeltaTime TimeDelta (struct timespec const* x, struct timespec const* y)
   {
-    int64 d_sec = ((x->tv_sec - y->tv_sec));
-    int64 d_nsec = ((x->tv_nsec - y->tv_nsec));
+    DeltaTime d_sec = ((x->tv_sec - y->tv_sec));
+    DeltaTime d_nsec = ((x->tv_nsec - y->tv_nsec));
     return (d_sec * 1000) + (d_nsec / 1000000);
   }
 
-  static void SetTimeStruct(struct timespec* timer, struct timespec* sister = 0, int64 sister_relation = 0)
+  static void SetTimeStruct(struct timespec* timer, struct timespec* sister = 0, DeltaTime sister_relation = 0)
   {
     struct timespec current;
     clock_gettime(CLOCK_MONOTONIC, &current);
 
     if (sister)
     {
-      int64 diff = TimeDelta(&current, sister);
+      DeltaTime diff = TimeDelta(&current, sister);
 
       if (diff < sister_relation)
       {
-        int64 remove = sister_relation - diff;
+        DeltaTime remove = sister_relation - diff;
         SetTimeBack(&current, remove);
       }
     }
@@ -55,7 +55,7 @@ public:
     timer->tv_nsec = current.tv_nsec;
   }
 
-  static void SetTimeBack(struct timespec* timeref, int64 remove)
+  static void SetTimeBack(struct timespec* timeref, DeltaTime remove)
   {
     timeref->tv_sec -= remove / 1000;
     remove = remove % 1000;
