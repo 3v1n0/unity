@@ -19,6 +19,7 @@
  *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
+#include "config.h"
 #include <glib/gi18n-lib.h>
 #include <libbamf/libbamf.h>
 
@@ -486,37 +487,7 @@ void Controller::Impl::OnIconRemoved(AbstractLauncherIcon::Ptr const& icon)
 
 void Controller::Impl::OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr const& icon)
 {
-  switch (icon->GetIconType())
-  {
-    case AbstractLauncherIcon::IconType::APPLICATION:
-    {
-      ApplicationLauncherIcon* bamf_icon = dynamic_cast<ApplicationLauncherIcon*>(icon.GetPointer());
-
-      if (bamf_icon)
-      {
-        bamf_icon->UnStick();
-        bamf_icon->Quit();
-      }
-
-      break;
-    }
-    case AbstractLauncherIcon::IconType::DEVICE:
-    {
-      auto device_icon = dynamic_cast<VolumeLauncherIcon*>(icon.GetPointer());
-
-      if (device_icon)
-      {
-        if (device_icon->CanEject())
-          device_icon->EjectAndShowNotification();
-        else if (device_icon->CanStop())
-          device_icon->StopDrive();
-      }
-
-      break;
-    }
-    default:
-      break;
-  }
+  icon->AboutToRemove();
 }
 
 void Controller::Impl::OnLauncherEntryRemoteAdded(LauncherEntryRemote::Ptr const& entry)
