@@ -837,14 +837,12 @@ on_entry_added (IndicatorObject      *object,
     {
       g_signal_connect (entry->label, "notify::label",
                         G_CALLBACK (on_entry_property_changed), object);
-
       g_signal_connect (entry->label, "notify::sensitive",
                         G_CALLBACK (on_entry_property_changed), object);
       g_signal_connect (entry->label, "show",
                         G_CALLBACK (on_entry_changed), object);
       g_signal_connect (entry->label, "hide",
                         G_CALLBACK (on_entry_changed), object);
-
     }
   if (GTK_IS_IMAGE (entry->image))
     {
@@ -860,14 +858,12 @@ on_entry_added (IndicatorObject      *object,
                         G_CALLBACK (on_entry_property_changed), object);
       g_signal_connect (entry->image, "notify::stock",
                         G_CALLBACK (on_entry_property_changed), object);
-
       g_signal_connect (entry->image, "notify::sensitive",
                         G_CALLBACK (on_entry_property_changed), object);
       g_signal_connect (entry->image, "show",
                         G_CALLBACK (on_entry_changed), object);
       g_signal_connect (entry->image, "hide",
                         G_CALLBACK (on_entry_changed), object);
-
     }
 
   notify_object (object);
