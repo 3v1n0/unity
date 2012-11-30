@@ -48,8 +48,8 @@ TEST(TestStaticCairoText, TextTextureSize)
   text->SetMaximumWidth(100);
 
   std::stringstream ss;
-  std::vector<int> starts;
-  std::vector<int> ends;
+  std::vector<unsigned> starts;
+  std::vector<unsigned> ends;
   while(starts.size() < 3)
   {
     for (int i = 0; i < 100; i++)

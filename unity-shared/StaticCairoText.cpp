@@ -63,9 +63,9 @@ struct StaticCairoText::Impl
     , height(0)
     {}
 
-    int start_index;
-    size_t length;
-    int height;
+    unsigned start_index;
+    unsigned length;
+    unsigned height;
 
     std::shared_ptr<CairoGraphics> cr;
   };
@@ -426,11 +426,11 @@ void StaticCairoText::GetTextExtents(int& width, int& height) const
   height = s.height;
 }
 
-std::vector<int> StaticCairoText::GetTextureStartIndices()
+std::vector<unsigned> StaticCairoText::GetTextureStartIndices()
 {
   pimpl->GetTextExtents();
 
-  std::vector<int> list;
+  std::vector<unsigned> list;
   auto iter = pimpl->cache_textures_.begin();
   for (; iter != pimpl->cache_textures_.end(); ++iter)
   {
@@ -440,19 +440,26 @@ std::vector<int> StaticCairoText::GetTextureStartIndices()
   return list;
 }
 
-std::vector<int> StaticCairoText::GetTextureEndIndices()
+std::vector<unsigned> StaticCairoText::GetTextureEndIndices()
 {
   pimpl->GetTextExtents();
 
-  std::vector<int> list;
+  std::vector<unsigned> list;
   auto iter = pimpl->cache_textures_.begin();
   for (; iter != pimpl->cache_textures_.end(); ++iter)
   {
     Impl::CacheTexture::Ptr const& cached_texture = *iter;
     if (cached_texture->length == std::string::npos)
+    {
       list.push_back(std::string::npos);
+    }
     else
-      list.push_back(std::max<int>(0, cached_texture->start_index + cached_texture->length - 1));
+    {
+      if (cached_texture->start_index > 0 || cached_texture->length > 0)
+        list.push_back(cached_texture->start_index + cached_texture->length - 1);
+      else
+        list.push_back(0);
+    }
   }
   return list;
 }
@@ -540,6 +547,9 @@ Size StaticCairoText::Impl::GetTextExtents() const
   PangoLayoutIter* iter = pango_layout_get_iter(layout);
   CacheTexture::Ptr current_tex(new CacheTexture());
   const int max_height = GetGraphicsDisplay()->GetGpuDevice()->GetGpuInfo().GetMaxTextureSize();
+  if (max_height < 0)
+    return nux::Size(0, 0);
+
   do
   {
     PangoLayoutLine* line = pango_layout_iter_get_line_readonly(iter);
@@ -548,19 +558,32 @@ Size StaticCairoText::Impl::GetTextExtents() const
     y0 /= PANGO_SCALE;
     y1 /= PANGO_SCALE;
 
-    if (current_tex->height + (y1-y0) > max_height)
+    if (line->start_index < 0 || y1 < y0)
     {
-      current_tex->length = line->start_index - current_tex->start_index;
+      current_tex.reset();
+      break;      
+    }
+    unsigned line_start_index = line->start_index;
+    unsigned height = y1-y0;
+
+    if (current_tex->height + height > (unsigned)max_height)
+    {
+      if (line_start_index > current_tex->start_index)
+        current_tex->length = line_start_index - current_tex->start_index;
+      else
+        current_tex->length = 0;
       cache_textures_.push_back(current_tex);
 
+      // new texture.
       current_tex.reset(new CacheTexture());
-      current_tex->start_index = line->start_index;
+      current_tex->start_index = line_start_index;
       current_tex->height = 0;
     }
-    current_tex->height += (y1-y0);
+    current_tex->height += height;
   }
   while(pango_layout_iter_next_line(iter));
-  cache_textures_.push_back(current_tex);
+  
+  if (current_tex) { cache_textures_.push_back(current_tex); }
 
   pango_layout_iter_free(iter);
 
