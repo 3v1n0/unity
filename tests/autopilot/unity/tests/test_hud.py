@@ -58,7 +58,7 @@ class HudTestsBase(UnityTestCase):
         return num_active
 
     # Unable to exit SDM without any active apps, need a placeholder.
-    # (this should be consolidated).
+    # See bug LP:1079460
     def start_placeholder_app(self):
         window_spec = {
             "Title": "Placeholder application",
