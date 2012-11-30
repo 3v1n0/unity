@@ -827,16 +827,13 @@ void PanelMenuView::Refresh(bool force)
   if (geo.width > _monitor_geo.width)
     return;
 
-  if (!_switcher_showing && !_launcher_keynav)
+  const std::string& new_title = GetCurrentTitle();
+  if (new_title == _panel_title && !force && _last_geo == geo && _title_texture)
   {
-    const std::string& new_title = GetCurrentTitle();
-    if (new_title == _panel_title && !force && _last_geo == geo && _title_texture)
-    {
-      // No need to redraw the title, let's save some CPU time!
-      return;
-    }
-    _panel_title = new_title;
+    // No need to redraw the title, let's save some CPU time!
+    return;
   }
+  _panel_title = new_title;
 
   if (_panel_title.empty())
   {
@@ -1579,7 +1576,7 @@ void PanelMenuView::OnLauncherSelectionChanged(GVariant* data)
   const gchar *title = g_variant_get_string(data, 0);
   _panel_title = (title ? title : "");
 
-  Refresh();
+  Refresh(true);
   QueueDraw();
 }
 
