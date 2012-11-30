@@ -57,6 +57,14 @@ class HudTestsBase(UnityTestCase):
                 num_active += 1
         return num_active
 
+    # Unable to exit SDM without any active apps, need a placeholder.
+    # (this should be consolidated).
+    def start_placeholder_app(self):
+        window_spec = {
+            "Title": "Placeholder application",
+        }
+        self.launch_test_window(window_spec)
+
 
 class HudBehaviorTests(HudTestsBase):
 
@@ -142,6 +150,7 @@ class HudBehaviorTests(HudTestsBase):
         This used to cause unity to crash (hence the lack of assertion in this test).
 
         """
+        self.start_placeholder_app()
         self.window_manager.enter_show_desktop()
         self.addCleanup(self.window_manager.leave_show_desktop)
 
@@ -346,6 +355,7 @@ class HudBehaviorTests(HudTestsBase):
         """Activating a HUD item with the 'Enter' key MUST close the HUD."""
         # starting on a clean desktop because this way we are sure that our search
         # string won't match any menu item from a focused application
+        self.start_placeholder_app()
         self.window_manager.enter_show_desktop()
         self.addCleanup(self.window_manager.leave_show_desktop)
 
@@ -635,6 +645,7 @@ class HudVisualTests(HudTestsBase):
 
     def test_hud_icon_shows_the_ubuntu_emblem_on_empty_desktop(self):
         """When in 'show desktop' mode the hud icon must be the BFB icon."""
+        self.start_placeholder_app()
         self.window_manager.enter_show_desktop()
         self.addCleanup(self.window_manager.leave_show_desktop)
         self.hud.ensure_visible()
@@ -669,6 +680,7 @@ class HudVisualTests(HudTestsBase):
         from the current desktop. As the Hud must go through the entire window
         stack to find the top most window.
         """
+        self.start_placeholder_app()
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
         self.window_manager.enter_show_desktop()
