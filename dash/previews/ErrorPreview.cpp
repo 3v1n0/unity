@@ -27,6 +27,7 @@
 #include "unity-shared/PlacesVScrollBar.h"
 #include <NuxCore/Logger.h>
 #include <Nux/VLayout.h>
+#include <Nux/HLayout.h>
 #include <Nux/GridHLayout.h>
 #include <Nux/AbstractButton.h>
 
@@ -195,7 +196,10 @@ nux::Layout* ErrorPreview::GetPrize()
 nux::Layout* ErrorPreview::GetBody()
 {
   previews::Style& style = dash::previews::Style::Instance();
-  nux::VLayout *body_layout = new  nux::VLayout();
+  nux::HLayout *body_layout = new  nux::HLayout();
+
+  lock_texture_ = new IconTexture(style.GetLockIcon(), style.GetPaymentLockWidth(),
+          style.GetPaymentLockHeight());
 
   intro_ = new nux::StaticCairoText(
           GetDataForKey(this->data_, DATA_HEADER_KEY), true,
@@ -216,6 +220,8 @@ nux::Layout* ErrorPreview::GetBody()
 //  form_layout_->AddLayout(GetFormFields(), 1, nux::MINOR_POSITION_END);
 //  form_layout_->AddLayout(GetFormActions(), 1, nux::MINOR_POSITION_END);
 
+  body_layout->AddView(lock_texture_, 0, nux::MINOR_POSITION_CENTER,
+          nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
   body_layout->AddView(intro_.GetPointer(), 1);
 //  body_layout->AddLayout(form_layout_.GetPointer());
   return body_layout;

@@ -91,5 +91,5 @@ target_link_libraries (payment_previews previews-lib unity-shared)
 # Error Standalone variant
 #
 add_executable (error_previews StandaloneErrorPreview.cpp)
-add_dependencies (payment_previews previews-lib)
-target_link_libraries (payment_previews previews-lib unity-shared)
+add_dependencies (error_previews previews-lib)
+target_link_libraries (error_previews previews-lib unity-shared)
