@@ -18,7 +18,7 @@
 *
 */
 
-
+#include <cinttypes>
 #include <gtest/gtest.h>
 #include <unity-shared/TimeUtil.h>
 
@@ -29,7 +29,7 @@ TEST(TestTimeUtil, Testin32BufferOverflow)
   struct timespec start, end;
   unity::TimeUtil::SetTimeStruct(&start, &end);
 
-  end.tv_sec = 20736000 - start.tv_sec;
+  end.tv_sec = start.tv_sec + INT32_MAX;
 
   EXPECT_GT(unity::TimeUtil::TimeDelta(&end, &start), 0);
 }
