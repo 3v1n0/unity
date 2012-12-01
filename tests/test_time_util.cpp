@@ -19,12 +19,10 @@
 */
 
 
-#include <limits>
 #include <gtest/gtest.h>
 #include <unity-shared/TimeUtil.h>
 
 using namespace testing;
-using namespace std;
 
 TEST(TestTimeUtil, Testin32BufferOverflow)
 {
