@@ -15,6 +15,7 @@
  * <http://www.gnu.org/licenses/>
  *
  * Authored by: Marco Trevisan (Treviño) <marco.trevisan@canonical.com>
+ *              Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
 #include <gmock/gmock.h>
