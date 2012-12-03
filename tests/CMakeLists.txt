@@ -210,6 +210,7 @@ if (ENABLE_X_SUPPORT)
                  mock-application.cpp
                  logger_helper.cpp
                  test_main.cpp
+                 test_action_link.cpp
                  test_application_launcher_icon.cpp
                  test_bfb_launcher_icon.cpp
                  test_dashview_impl.cpp
