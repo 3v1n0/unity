@@ -54,24 +54,15 @@ Preview::Ptr Preview::PreviewForProtocolObject(glib::Object<GObject> const& prot
 
   if (renderer_name == "preview-generic")
   {
-    // HACK: Because we do not want to add a FFE by chaging libunity we are going
-    // do the following, create a generic preview, check its id and decide id we
-    // are delaing with a payment preview or a real generic preview
-    GenericPreview *preview = new GenericPreview(proto_obj);
-    const char* preview_title = preview->title.Get().c_str();
-
-    if (strcmp(MUSIC_PAYMENT_TITLE, preview_title) == 0)
-    {
-      return Preview::Ptr(new MusicPaymentPreview(proto_obj));
-    }
-    else if (strcmp(ERROR_PREVIEW_TITLE, preview_title) == 0)
-    {
-      return Preview::Ptr(new ErrorPreview(proto_obj));
-    }
-    else
-    {
-        return Preview::Ptr(preview);
-    }
+    return Preview::Ptr(new GenericPreview(proto_obj));
+  }
+  else if (renderer_name == "preview-error")
+  {
+    return Preview::Ptr(new ErrorPreview(proto_obj));
+  }
+  else if (renderer_name == "preview-music-payment")
+  {
+    return Preview::Ptr(new MusicPaymentPreview(proto_obj));
   }
   else if (renderer_name == "preview-application")
   {

@@ -88,20 +88,6 @@ std::string ErrorPreview::GetName() const
   return "ErrorPreview";
 }
 
-std::string ErrorPreview::GetDataForKey(GVariant *dict, std::string key)
-{
-  GVariant* data = NULL;
-  data = g_variant_lookup_value(dict, key.c_str(), G_VARIANT_TYPE_ANY);
-  if (data == NULL)
-  {
-    return "Missing data";
-  }
-  gsize length;
-  const char *string = g_variant_get_string(data, &length);
-  LOG_DEBUG(logger) << "data for key '" << key << "': '" << string << "'";
-  return std::string(string);
-}
-
 void ErrorPreview::OnActionActivated(ActionButton* button, std::string const& id)
 {
 }
@@ -140,7 +126,7 @@ nux::Layout* ErrorPreview::GetTitle()
   title_data_layout->SetSpaceBetweenChildren(10);
 
   title_ = new nux::StaticCairoText(
-          GetDataForKey(this->data_, DATA_TITLE_KEY), true,
+          error_preview_model_->title.Get(), true,
           NUX_TRACKER_LOCATION);
 
   title_->SetFont(style.payment_title_font().c_str());
@@ -148,10 +134,8 @@ nux::Layout* ErrorPreview::GetTitle()
   title_->SetFont(style.title_font().c_str());
   title_data_layout->AddView(title_.GetPointer(), 1);
 
-  std::string subtitle_content = GetDataForKey(this->data_,
-          DATA_SUBTITLE_KEY);
   subtitle_ = new nux::StaticCairoText(
-          GetDataForKey(this->data_, DATA_SUBTITLE_KEY), true,
+          error_preview_model_->subtitle.Get(), true,
           NUX_TRACKER_LOCATION);
   subtitle_->SetLines(-1);
   subtitle_->SetFont(style.payment_subtitle_font().c_str());
@@ -168,7 +152,7 @@ nux::Layout* ErrorPreview::GetPrize()
   prize_data_layout->SetSpaceBetweenChildren(5);
 
   purchase_prize_ = new nux::StaticCairoText(
-          GetDataForKey(this->data_, DATA_PURCHASE_PRIZE_KEY), true,
+          error_preview_model_->purchase_prize.Get(), true,
           NUX_TRACKER_LOCATION);
   purchase_prize_->SetLines(-1);
   purchase_prize_->SetFont(style.payment_prize_title_font().c_str());
@@ -176,7 +160,7 @@ nux::Layout* ErrorPreview::GetPrize()
           nux::MINOR_POSITION_END);
 
   purchase_hint_ = new nux::StaticCairoText(
-          GetDataForKey(this->data_, DATA_PURCHASE_HINT_KEY),
+          _("Ubuntu One best offer"),
           true, NUX_TRACKER_LOCATION);
   purchase_hint_->SetLines(-1);
   purchase_hint_->SetFont(style.payment_prize_subtitle_font().c_str());
@@ -184,7 +168,7 @@ nux::Layout* ErrorPreview::GetPrize()
           nux::MINOR_POSITION_END);
 
   purchase_type_ = new nux::StaticCairoText(
-          GetDataForKey(this->data_, DATA_PURCHASE_TYPE_KEY), true,
+          error_preview_model_->purchase_type.Get(), true,
           NUX_TRACKER_LOCATION);
   purchase_type_->SetLines(-1);
   purchase_type_->SetFont(style.payment_prize_subtitle_font().c_str());
@@ -202,7 +186,7 @@ nux::Layout* ErrorPreview::GetBody()
           style.GetPaymentLockHeight());
 
   intro_ = new nux::StaticCairoText(
-          GetDataForKey(this->data_, DATA_HEADER_KEY), true,
+              "error_preview_model_->header.Get()", true,
           NUX_TRACKER_LOCATION);
   intro_->SetMaximumWidth(style.GetPaymentHeaderWidth());
   intro_->SetFont(style.payment_intro_font().c_str());
@@ -213,17 +197,9 @@ nux::Layout* ErrorPreview::GetBody()
           0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
           nux::NUX_LAYOUT_END);
 
-//  form_layout_ = new nux::HLayout();
-//  form_layout_->SetSpaceBetweenChildren(10);
-//  form_layout_->SetMinimumHeight(107);
-//  form_layout_->AddLayout(GetFormLabels(), 1, nux::MINOR_POSITION_END);
-//  form_layout_->AddLayout(GetFormFields(), 1, nux::MINOR_POSITION_END);
-//  form_layout_->AddLayout(GetFormActions(), 1, nux::MINOR_POSITION_END);
-
   body_layout->AddView(lock_texture_, 0, nux::MINOR_POSITION_CENTER,
           nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
   body_layout->AddView(intro_.GetPointer(), 1);
-//  body_layout->AddLayout(form_layout_.GetPointer());
   return body_layout;
 }
 
@@ -261,32 +237,10 @@ void ErrorPreview::PreLayoutManagement()
 
 void ErrorPreview::SetupViews()
 {
-  if (!preview_model_)
+  error_preview_model_ = dynamic_cast<dash::ErrorPreview*>(preview_model_.get());
+  if (!error_preview_model_)
   {
     LOG_ERROR(logger) << "Could not derive preview model from given parameter.";
-    return;
-  }
-
-  // HACK: All the information required by the preview is stored in an infor
-  // hint, lets loop through them and store them
-  dash::Preview::InfoHintPtrList hints = preview_model_->GetInfoHints();
-  if (!hints.empty())
-  {
-    for (dash::Preview::InfoHintPtr info_hint : hints)
-    {
-       if (info_hint->id == ERROR_INFOHINT_ID){
-         this->data_ = info_hint->value;
-       }
-    }
-    if (this->data_ == NULL)
-    {
-      LOG_ERROR(logger) << "The required data for the preview is missing.";
-      return;
-    }
-  }
-  else
-  {
-    LOG_ERROR(logger) << "The required data for the preview is missing.";
     return;
   }
 

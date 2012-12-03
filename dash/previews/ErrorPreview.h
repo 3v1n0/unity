@@ -27,12 +27,7 @@
 #define ERROR_INFOHINT_ID "error_preview"
 
 // keys of the data preview
-#define DATA_TITLE_KEY "title"
-#define DATA_HEADER_KEY "header"
-#define DATA_SUBTITLE_KEY "subtitle"
-#define DATA_PURCHASE_HINT_KEY "purchase_hint"
-#define DATA_PURCHASE_PRIZE_KEY "purchase_price"
-#define DATA_PURCHASE_TYPE_KEY "purchase_type"
+// Necessary??
 #define DATA_MESSAGE_KEY "message"
 
 // ations ids
@@ -84,7 +79,6 @@ public:
   nux::Layout* GetFooter();
 
 private:
-  std::string GetDataForKey(GVariant *dict, std::string key);
   void LoadActions();
 
 protected:
@@ -105,6 +99,7 @@ protected:
   nux::ObjectPtr<nux::StaticCairoText> purchase_type_;
   nux::ObjectPtr<nux::HLayout> form_layout_;
 
+  dash::ErrorPreview* error_preview_model_;
   // do we want to type?
   bool entry_selected_;
 

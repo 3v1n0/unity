@@ -14,7 +14,7 @@
  * version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Diego Sarmentero <diego.sarmentero@canonical.com>
+ * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  *
  */
 #include <gtk/gtk.h>
@@ -154,36 +154,25 @@ void TestRunner::Init ()
   layout_->AddView(dummyView, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   nux::GetWindowThread()->SetLayout (layout_);
 
-  // create the generic preview model that will be used
-  GVariant *info_hints;
-  GVariantBuilder *builder = g_variant_builder_new (G_VARIANT_TYPE ("a{sv}"));
-
-  GVariant *title = g_variant_new_string("This Modern Glitch");
-  GVariant *subtitle = g_variant_new_string("The Wombats");
-  GVariant *header = g_variant_new_string("Hi mandel, you purchased in the past from Ubuntu One, would you like to use the same payment details? Please review your order:");
-  GVariant *purchase_hint = g_variant_new_string("Ubuntu One Best Offer");
-  GVariant *purchase_prize = g_variant_new_string("10 eur");
-  GVariant *purchase_type = g_variant_new_string("Digital CD");
-  GVariant *message = g_variant_new_string("It seems you haven't set your Ubuntu One prefered payment method yet, to add payment method please visit:");
-
-  g_variant_builder_add (builder, "{sv}", "message", message);
-  g_variant_builder_add (builder, "{sv}", "title", title);
-  g_variant_builder_add (builder, "{sv}", "subtitle", subtitle);
-  g_variant_builder_add (builder, "{sv}", "header", header);
-  g_variant_builder_add (builder, "{sv}", "purchase_hint", purchase_hint);
-  g_variant_builder_add (builder, "{sv}", "purchase_prize", purchase_prize);
-  g_variant_builder_add (builder, "{sv}", "purchase_type", purchase_type);
-
-  info_hints = g_variant_builder_end(builder);
   glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(
-              unity_protocol_generic_preview_new()));
+              unity_protocol_error_preview_new()));
 
-  // set the title of the generic preview so that the code generates a
-  // payment preview
-  unity_protocol_preview_set_title(proto_obj, ERROR_PREVIEW_TITLE);
-  // set the info
-  unity_protocol_preview_add_info_hint(proto_obj, "error_preview", "", NULL,
-          info_hints);
+  unity_protocol_error_preview_set_title(
+          UNITY_PROTOCOL_ERROR_PREVIEW(proto_obj.RawPtr()),
+          "This Modern Glitch");
+  unity_protocol_error_preview_set_subtitle(
+          UNITY_PROTOCOL_ERROR_PREVIEW(proto_obj.RawPtr()),
+          "The Wombats");
+  unity_protocol_error_preview_set_header(
+          UNITY_PROTOCOL_ERROR_PREVIEW(proto_obj.RawPtr()),
+          "Hi gatox, you purchased in the past from Ubuntu One, would you like to use the same payment details? Please review your order:");
+  unity_protocol_error_preview_set_purchase_prize(
+          UNITY_PROTOCOL_ERROR_PREVIEW(proto_obj.RawPtr()),
+          "10 eur");
+  unity_protocol_error_preview_set_purchase_type(
+          UNITY_PROTOCOL_ERROR_PREVIEW(proto_obj.RawPtr()),
+          "Digital CD");
+
   // set the diff actions
   unity_protocol_preview_add_action(proto_obj, "open_u1_link", "http://ubuntuone.com", NULL, 0);
 
@@ -192,8 +181,6 @@ void TestRunner::Init ()
 
   dash::Preview::Ptr preview_model(dash::Preview::PreviewForVariant(v));
   container_->Preview(preview_model, previews::Navigation::LEFT);
-
-  g_variant_unref(info_hints);
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)

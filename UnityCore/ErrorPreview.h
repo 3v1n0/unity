@@ -39,6 +39,13 @@ public:
   ErrorPreview(unity::glib::Object<GObject> const& proto_obj);
   ~ErrorPreview();
 
+  // properties that contain the data
+  nux::RWProperty<std::string> title;
+  nux::RWProperty<std::string> subtitle;
+  nux::RWProperty<std::string> header;
+  nux::RWProperty<std::string> purchase_prize;
+  nux::RWProperty<std::string> purchase_type;
+
 private:
   class Impl;
   std::unique_ptr<Impl> pimpl;

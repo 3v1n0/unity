@@ -54,6 +54,11 @@ public:
   MOCK_METHOD1(Stick, void(bool));
 };
 
+struct MockPointerBarrierWrapper : ui::PointerBarrierWrapper
+{
+  MOCK_METHOD1(ReleaseBarrier, void(int event_id));
+};
+
 }
 
 class TestLauncher : public Test
@@ -113,6 +118,11 @@ public:
       }
 
       _dnd_hovered_icon = MouseIconIntersection(x, y);
+    }
+
+    bool HandleBarrierEvent(ui::PointerBarrierWrapper* barrier, ui::BarrierEvent::Ptr event)
+    {
+      return Launcher::HandleBarrierEvent(barrier, event);
     }
   };
 
@@ -435,6 +445,17 @@ TEST_F(TestLauncher, DragLauncherIconHidesOutsideLauncherEmitsMouseEnter)
   TestWindowCompositor::SetMousePosition(abs_geo.x - 1, abs_geo.y - 2);
   launcher_->HideDragWindow();
   EXPECT_FALSE(mouse_entered);
+}
+
+TEST_F(TestLauncher, EdgeResistDuringDnd)
+{
+  auto barrier = std::make_shared<MockPointerBarrierWrapper>();
+  auto event = std::make_shared<ui::BarrierEvent>(0, 0, 0, 100);
+
+  launcher_->DndStarted("");
+
+  EXPECT_CALL(*barrier, ReleaseBarrier(100));
+  EXPECT_TRUE(launcher_->HandleBarrierEvent(barrier.get(), event));
 }
 
 TEST_F(TestLauncher, DndIsSpecialRequest)

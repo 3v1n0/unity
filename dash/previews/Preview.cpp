@@ -56,19 +56,15 @@ previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
 
   if (model->renderer_name == "preview-generic")
   {
-    // HACK: Because we do not want to add a FFE by chaging libunity we are going
-    // do the following, create a generic preview, check its id and decide id we
-    // are delaing with a payment preview or a real generic preview
-    const char* preview_title = model->title.Get().c_str();
-    if (strcmp(MUSIC_PAYMENT_TITLE, preview_title) == 0)
-    {
-        return Preview::Ptr(new MusicPaymentPreview(model));
-    }
-    else if (strcmp(ERROR_PREVIEW_TITLE, preview_title) == 0)
-    {
-        return Preview::Ptr(new ErrorPreview(model));
-    }
     return Preview::Ptr(new GenericPreview(model));
+  }
+  else if (model->renderer_name == "preview-error")
+  {
+    return Preview::Ptr(new ErrorPreview(model));
+  }
+  else if (model->renderer_name == "preview-music-payment")
+  {
+    return Preview::Ptr(new MusicPaymentPreview(model));
   }
   else if (model->renderer_name == "preview-application")
   {

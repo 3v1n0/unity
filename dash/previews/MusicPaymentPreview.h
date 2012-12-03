@@ -27,18 +27,6 @@
 #define DATA_INFOHINT_ID "album_purchase_preview"
 
 // keys of the data preview
-#define DATA_TITLE_KEY "title"
-#define DATA_SUBTITLE_KEY "subtitle"
-#define DATA_HEADER_KEY "header"
-#define DATA_EMAIL_LABEL_KEY "email_label"
-#define DATA_EMAIL_KEY "email"
-#define DATA_PAYMENT_LABEL_KEY "payment_label"
-#define DATA_PAYMENT_METHOD_KEY "payment_method"
-#define DATA_PASSWORD_LABEL_KEY "password_label"
-#define DATA_PASSWORD_HINT_KEY "password_hint"
-#define DATA_PURCHASE_HINT_KEY "purchase_hint"
-#define DATA_PURCHASE_PRIZE_KEY "purchase_price"
-#define DATA_PURCHASE_TYPE_KEY "purchase_type"
 #define DATA_PASSWORD_KEY "password"
 
 // ations ids
@@ -99,7 +87,6 @@ public:
   nux::Layout* GetFooter();
 
 private:
-  std::string GetDataForKey(GVariant *dict, std::string key);
   void LoadActions();
 
 protected:
@@ -128,6 +115,7 @@ protected:
   nux::ObjectPtr<nux::StaticCairoText> forgotten_password_;
   nux::ObjectPtr<nux::HLayout> form_layout_;
 
+  dash::MusicPaymentPreview* music_preview_model_;
   // do we want to type?
   bool entry_selected_;
 
