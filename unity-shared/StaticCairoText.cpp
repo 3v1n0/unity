@@ -59,7 +59,7 @@ struct StaticCairoText::Impl
     typedef std::shared_ptr<CacheTexture> Ptr;
     CacheTexture()
     : start_index(0)
-    , length(std::string::npos)
+    , length((unsigned)std::string::npos)
     , height(0)
     {}
 
@@ -449,14 +449,14 @@ std::vector<unsigned> StaticCairoText::GetTextureEndIndices()
   for (; iter != pimpl->cache_textures_.end(); ++iter)
   {
     Impl::CacheTexture::Ptr const& cached_texture = *iter;
-    if (cached_texture->length == std::string::npos)
+    if (cached_texture->length == (unsigned)std::string::npos)
     {
       list.push_back(std::string::npos);
     }
     else
     {
       if (cached_texture->start_index > 0 || cached_texture->length > 0)
-        list.push_back(cached_texture->start_index + cached_texture->length - 1);
+        list.push_back((unsigned)(cached_texture->start_index + cached_texture->length - 1));
       else
         list.push_back(0);
     }
