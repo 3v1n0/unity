@@ -3071,7 +3071,13 @@ bool UnityScreen::setOptionForPlugin(const char* plugin, const char* name,
     if (strcmp(plugin, "core") == 0)
     {
       if (strcmp(name, "hsize") == 0 || strcmp(name, "vsize") == 0)
+      {
+        // TODO (andy): use viewport_layout_changed in launcher::Controller
         launcher_controller_->UpdateNumWorkspaces(screen->vpSize().width() * screen->vpSize().height());
+
+        WindowManager& wm = WindowManager::Default();
+        wm.viewport_layout_changed.emit(screen->vpSize().width(), screen->vpSize().height());
+      }
     }
   }
   return status;

@@ -1084,6 +1084,22 @@ int PluginAdapter::WorkspaceCount() const
   return m_Screen->vpSize().width() * m_Screen->vpSize().height();
 }
 
+nux::Point PluginAdapter::GetCurrentViewport() const
+{
+  CompPoint const& vp = m_Screen->vp();
+  return nux::Point(vp.x(), vp.y());
+}
+
+int PluginAdapter::GetViewportHSize() const
+{
+  return m_Screen->vpSize().width();
+}
+
+int PluginAdapter::GetViewportVSize() const
+{
+  return m_Screen->vpSize().height();
+}
+
 void PluginAdapter::SetMwmWindowHints(Window xid, MotifWmHints* new_hints) const
 {
   Display* display = m_Screen->dpy();
