@@ -72,7 +72,6 @@ add_subdirectory (test-input-remover)
 add_subdirectory (test-minimize-window-handler)
 add_subdirectory (test-get-transients)
 
-
 #
 # GTest tests
 #
@@ -94,13 +93,6 @@ find_path(GTEST_SRC_DIR gtest.cc PATHS /usr/src/gtest/src)
 if (GTEST_SRC_DIR AND
     GMOCK_LIB AND
     GMOCK_MAIN_LIB)
-
-  # MockWindowManager
-  add_library (unity_mock_window_manager STATIC
-               MockWindowManager.cpp)
-  target_link_libraries (unity_mock_window_manager
-                         ${GMOCK_LIB}
-                         ${GMOCK_MAIN_LIB})
 
 # The service that provides DBus services to test against
   add_executable(test-gtest-service
