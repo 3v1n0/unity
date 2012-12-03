@@ -25,9 +25,8 @@
 using namespace unity;
 using namespace unity::launcher;
 
-namespace {
-
-
+namespace
+{
 
 struct TestExpoLauncherIcon : testing::Test
 {
