@@ -150,7 +150,7 @@ TEST(TestGLibTimeout, MultipleShotsRun)
   bool removed_called = false;
 
   {
-  auto check_function = []() { return (callback_call_count < 6) ? false : true; };
+  auto check_function = []() { return (callback_call_count > 1) ? true : false; };
   Timeout timeout(100, &OnSourceCallbackContinue);
   timeout.removed.connect([&] (unsigned int id) { removed_called = true; });
   Utils::WaitUntil(check_function, true, 1);
@@ -158,7 +158,7 @@ TEST(TestGLibTimeout, MultipleShotsRun)
   }
 
   EXPECT_TRUE(callback_called);
-  EXPECT_GE(callback_call_count, 6);
+  EXPECT_GT(callback_call_count, 1);
   EXPECT_TRUE(removed_called);
 }
 
@@ -328,7 +328,7 @@ TEST(TestGLibTimeoutSeconds, OneShotRun)
   EXPECT_FALSE(timeout.IsRunning());
   EXPECT_TRUE(callback_called);
   EXPECT_EQ(callback_call_count, 1);
-  int time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
+  DeltaTime time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
   EXPECT_GE(time_delta, 500);
   EXPECT_LT(time_delta, 2000);
 }
@@ -351,7 +351,7 @@ TEST(TestGLibTimeoutSeconds, MultipleShotsRun)
   EXPECT_TRUE(callback_called);
   EXPECT_GE(callback_call_count, 3);
   EXPECT_LE(callback_call_count, 4);
-  int time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
+  DeltaTime time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
   EXPECT_GE(time_delta, 3500);
   EXPECT_LT(time_delta, 5000);
 }
@@ -415,7 +415,7 @@ TEST(TestGLibIdle, MultipleShotsRun)
 
   EXPECT_TRUE(callback_called);
   EXPECT_GT(callback_call_count, 1);
-  int time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
+  DeltaTime time_delta = unity::TimeUtil::TimeDelta(&post, &pre);
   EXPECT_GE(time_delta, 100);
   EXPECT_LT(time_delta, 200);
 }
