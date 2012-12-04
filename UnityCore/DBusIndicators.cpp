@@ -296,8 +296,8 @@ void DBusIndicators::Impl::Sync(GVariant* args)
 
     Indicator::Entries& entries = indicators[indicator];
 
-    // Null entries (entry_id == "") are empty indicators.
-    if (entry != "")
+    // Empty entries are empty indicators.
+    if (!entry.empty())
     {
       Entry::Ptr e;
       if (!any_different_idx)
