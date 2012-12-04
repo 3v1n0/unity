@@ -19,10 +19,7 @@
  *              Marco Trevisan (Treviño) <mail@3v1n0.net>
  */
 
-#if HAVE_CONFIG_H
-#include <config.h>
-#endif
-
+#include "config.h"
 #include "panel-marshal.h"
 #include "panel-service.h"
 

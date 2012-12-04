@@ -1,12 +1,20 @@
 #
 # Panel Service
 #
+
+set(UNITY_PANEL_SERVICE_DEPS
+    atk
+    atk-bridge-2.0
+    gio-2.0
+    gobject-2.0
+    gthread-2.0
+    gtk+-3.0>=3.3
+    indicator3-0.4>=0.4.90
+    x11
+)
+
 find_package(PkgConfig)
-
-pkg_check_modules(SERVICE_DEPS REQUIRED gtk+-3.0>=3.3 gobject-2.0 gio-2.0 gthread-2.0 indicator3-0.4>=0.4.90 x11 atk-bridge-2.0)
-
-execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator3-0.4 --variable indicatordir OUTPUT_VARIABLE _indicatordir OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator3-0.4 --variable iconsdir OUTPUT_VARIABLE _iconsdir OUTPUT_STRIP_TRAILING_WHITESPACE)
+pkg_check_modules(SERVICE_DEPS REQUIRED ${UNITY_PANEL_SERVICE_DEPS})
 
 set(PANEL_SOURCES
     panel-a11y.c
@@ -33,15 +41,12 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
   COMMENT "Generating marshallers")
 
 set(CFLAGS
-    "${SERVICE_DEPS_CFLAGS}"
+    ${SERVICE_DEPS_CFLAGS}
     ${SERVICE_DEPS_CFLAGS_OTHER}
-    "-I${CMAKE_CURRENT_BINARY_DIR}"
-    "-DGETTEXT_PACKAGE=\"unity\""
-    "-DINDICATORDIR=\"${_indicatordir}\""
-    "-DINDICATORICONDIR=\"${_iconsdir}\""
     "-Werror -Wall"
     )
 add_definitions(${CFLAGS})
+include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR})
 
 set(LIBS ${SERVICE_DEPS_LIBRARIES})
 link_libraries(${LIBS})
