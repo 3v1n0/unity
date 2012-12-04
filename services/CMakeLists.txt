@@ -5,7 +5,7 @@
 set(UNITY_PANEL_SERVICE_DEPS
     atk
     atk-bridge-2.0
-    gio-2.0
+    gio-2.0>=2.30.0
     gobject-2.0
     gthread-2.0
     gtk+-3.0>=3.3
@@ -24,21 +24,12 @@ set(PANEL_SOURCES
     panel-indicator-entry-accessible.c
     panel-indicator-entry-accessible.h
     panel-main.c
-    ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
     panel-root-accessible.c
     panel-root-accessible.h
     panel-service.c
     panel-service.h
     panel-util-accessible.c
     panel-util-accessible.h)
-
-find_program(GLIB_GENMARSHAL glib-genmarshal)
-add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
-  COMMAND ${GLIB_GENMARSHAL} ARGS panel-marshal.list --body --prefix=panel_marshal > ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
-  COMMAND ${GLIB_GENMARSHAL} ARGS panel-marshal.list --header --prefix=panel_marshal > ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.h
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  DEPENDS panel-marshal.list
-  COMMENT "Generating marshallers")
 
 set(CFLAGS
     ${SERVICE_DEPS_CFLAGS}

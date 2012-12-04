@@ -184,7 +184,7 @@ set(UNITY_PLUGIN_SHARED_DEPS
     atk-bridge-2.0
     dbusmenu-glib-0.4
     dee-1.0
-    gio-2.0
+    gio-2.0>=2.30.0
     gio-unix-2.0
     gmodule-2.0
     gthread-2.0
