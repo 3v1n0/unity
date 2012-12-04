@@ -146,7 +146,7 @@ std::string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
 
    // take /usr/share/app-install/desktop/foo:subdir__bar.desktop
    // and tranform it
-   if (_desktop_file.find("/usr/share/app-install/desktop") == 0)
+   if (_desktop_file.find("/share/app-install/desktop/") != std::string::npos)
    {
       filename = filename.substr(filename.rfind(":") + 1, 
                                  filename.length() - filename.rfind(":"));
