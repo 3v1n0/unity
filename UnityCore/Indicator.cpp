@@ -130,16 +130,15 @@ int Indicator::EntryIndex(std::string const& entry_id) const
   return -1;
 }
 
-void Indicator::OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
-                                int x, int y, unsigned int button, unsigned int timestamp)
+void Indicator::OnEntryShowMenu(std::string const& entry_id, unsigned xid,
+                                int x, int y, unsigned button)
 {
-  on_show_menu.emit(entry_id, xid, x, y, button, timestamp);
+  on_show_menu.emit(entry_id, xid, x, y, button);
 }
 
-void Indicator::OnEntrySecondaryActivate(std::string const& entry_id,
-                                         unsigned int timestamp)
+void Indicator::OnEntrySecondaryActivate(std::string const& entry_id)
 {
-  on_secondary_activate.emit(entry_id, timestamp);
+  on_secondary_activate.emit(entry_id);
 }
 
 void Indicator::OnEntryScroll(std::string const& entry_id, int delta)

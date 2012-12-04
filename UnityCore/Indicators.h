@@ -59,20 +59,17 @@ public:
    * internal
    */
   virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
-                               int x, int y, unsigned int button,
-                               unsigned int timestamp) = 0;
+                               int x, int y, unsigned int button) = 0;
 
   /**
    * internal
    */
-  virtual void OnEntrySecondaryActivate(std::string const& entry_id,
-                                        unsigned int timestamp) = 0;
+  virtual void OnEntrySecondaryActivate(std::string const& entry_id) = 0;
 
   /**
    * internal
    */
-  virtual void OnShowAppMenu(unsigned int xid, int x, int y,
-                             unsigned int timestamp) = 0;
+  virtual void OnShowAppMenu(unsigned int xid, int x, int y) = 0;
 
   // Signals
   sigc::signal<void, Indicator::Ptr const&> on_object_added;
@@ -104,18 +101,16 @@ public:
    * @param x coordinate
    * @param y coordinate
    * @param button pressed button
-   * @param timestamp current time
    */
-  sigc::signal<void, std::string const&, unsigned int, int, int, unsigned int, unsigned int> on_entry_show_menu;
+  sigc::signal<void, std::string const&, unsigned, int, int, unsigned> on_entry_show_menu;
 
   /**
    * The service is about to show an appmenu.
    * @param xid window xid
    * @param x coordinate
    * @param y coordinate
-   * @param timestamp current time
    */
-  sigc::signal<void, unsigned int, int, int, unsigned int> on_show_appmenu;
+  sigc::signal<void, unsigned, int, int> on_show_appmenu;
 
 protected:
   Indicator::Ptr GetIndicator(std::string const& name);
