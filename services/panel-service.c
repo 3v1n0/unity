@@ -34,7 +34,6 @@
 #include <X11/extensions/XInput2.h>
 #include <X11/XKBlib.h>
 
-#include "config.h"
 #include "panel-marshal.h"
 
 G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
