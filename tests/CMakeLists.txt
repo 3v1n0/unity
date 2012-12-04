@@ -246,6 +246,7 @@ if (ENABLE_X_SUPPORT)
                  test_single_monitor_launcher_icon.cpp
                  test_expo_launcher_icon.cpp
                  test_showdesktop_handler.cpp
+								 test_static_cairo_text.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
                  test_texture_cache.cpp
