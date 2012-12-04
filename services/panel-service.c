@@ -1782,7 +1782,6 @@ void
 panel_service_show_app_menu (PanelService *self, guint32 xid, gint32 x, gint32 y)
 {
   IndicatorObject      *object;
-  IndicatorObjectEntry *entry;
   GList                *entries;
 
   g_return_if_fail (PANEL_IS_SERVICE (self));
@@ -1794,6 +1793,7 @@ panel_service_show_app_menu (PanelService *self, guint32 xid, gint32 x, gint32 y
 
   if (entries)
     {
+      IndicatorObjectEntry *entry;
       entry = entries->data;
       g_list_free (entries);
 
