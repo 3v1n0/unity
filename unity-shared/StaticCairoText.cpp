@@ -481,7 +481,7 @@ std::vector<unsigned> StaticCairoText::GetTextureEndIndices()
     Impl::CacheTexture::Ptr const& cached_texture = *iter;
     if (cached_texture->length == (unsigned)std::string::npos)
     {
-      list.push_back(std::string::npos);
+      list.push_back((unsigned)std::string::npos);
     }
     else
     {
