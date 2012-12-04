@@ -39,16 +39,17 @@
 #include "SoftwareCenterLauncherIcon.h"
 #include "unity-shared/UBusWrapper.h"
 #include "VolumeMonitorWrapper.h"
+#include "XdndManager.h"
 
 namespace unity
 {
 namespace launcher
 {
 
-class Controller::Impl
+class Controller::Impl : public sigc::trackable
 {
 public:
-  Impl(Controller* parent);
+  Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager);
   ~Impl();
 
   void UpdateNumWorkspaces(int workspaces);
@@ -99,7 +100,7 @@ public:
 
   void OnWindowFocusChanged (guint32 xid);
 
-  void OnViewOpened(BamfMatcher* matcher, BamfView* view);
+  void OnApplicationStarted(ApplicationPtr const& app);
 
   void ReceiveMouseDownOutsideArea(int x, int y, unsigned long button_flags, unsigned long key_flags);
 
@@ -111,6 +112,10 @@ public:
 
   void OpenQuicklist();
 
+  void OnDndStarted(std::string const& data, int monitor);
+  void OnDndFinished();
+  void OnDndMonitorChanged(int monitor);
+
   static void OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer user_data);
   static void OnDBusMethodCall(GDBusConnection* connection, const gchar* sender, const gchar* object_path,
                                const gchar* interface_name, const gchar* method_name,
@@ -121,9 +126,9 @@ public:
 
   Controller* parent_;
   LauncherModel::Ptr model_;
-  glib::Object<BamfMatcher> matcher_;
   nux::ObjectPtr<Launcher> launcher_;
   nux::ObjectPtr<Launcher> keyboard_launcher_;
+  XdndManager::Ptr xdnd_manager_;
   DeviceLauncherSection  device_section_;
   LauncherEntryRemoteModel remote_model_;
   AbstractLauncherIcon::Ptr expo_icon_;
@@ -143,12 +148,12 @@ public:
   int reactivate_index;
   bool keynav_restore_window_;
   int launcher_key_press_time_;
+  int last_dnd_monitor_;
 
   unsigned dbus_owner_;
   GDBusConnection* gdbus_connection_;
   unsigned reg_id_;
 
-  glib::Signal<void, BamfMatcher*, BamfView*> view_opened_signal_;
   glib::SourceManager sources_;
   UBusManager ubus;
 

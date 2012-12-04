@@ -91,8 +91,8 @@ void VScrollBarOverlayWindow::UpdateMouseOffsetX()
   int monitor = unity::UScreen::GetDefault()->GetMonitorWithMouse();
   nux::Geometry const& geo = unity::UScreen::GetDefault()->GetMonitorGeometry(monitor);
 
-  if (content_size_.x + THUMB_WIDTH > geo.width)
-    content_offset_x_ = geo.width - (content_size_.x + THUMB_WIDTH) + 1;
+  if (content_size_.x + THUMB_WIDTH > geo.x + geo.width)
+    content_offset_x_ = geo.x + geo.width - (content_size_.x + THUMB_WIDTH);
   else
     content_offset_x_ = 0;
 }

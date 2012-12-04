@@ -233,7 +233,7 @@ LauncherIcon::OpenInstance(ActionArg arg)
   if (wm.IsScaleActive())
     wm.TerminateScale();
 
-  OpenInstanceLauncherIcon(arg);
+  OpenInstanceLauncherIcon();
 
   UpdateQuirkTime(Quirk::LAST_ACTION);
 }
@@ -360,7 +360,7 @@ nux::BaseTexture* LauncherIcon::TextureFromGtkTheme(std::string icon_name, int s
 
   // FIXME: we need to create some kind of -unity postfix to see if we are looking to the unity-icon-theme
   // for dedicated unity icons, then remove the postfix and degrade to other icon themes if not found
-  if (icon_name == "workspace-switcher" && IsMonoDefaultTheme())
+  if (icon_name.find("workspace-switcher") == 0)
     result = TextureFromSpecificGtkTheme(GetUnityTheme(), icon_name, size, update_glow_colors);
 
   if (!result)
@@ -801,6 +801,7 @@ LauncherIcon::Present(float present_urgency, int length)
 
   _present_urgency = CLAMP(present_urgency, 0.0f, 1.0f);
   SetQuirk(Quirk::PRESENTED, true);
+  SetQuirk(Quirk::UNFOLDED, true);
 }
 
 void
@@ -811,6 +812,7 @@ LauncherIcon::Unpresent()
 
   _source_manager.Remove(PRESENT_TIMEOUT);
   SetQuirk(Quirk::PRESENTED, false);
+  SetQuirk(Quirk::UNFOLDED, false);
 }
 
 void

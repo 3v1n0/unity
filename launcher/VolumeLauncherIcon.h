@@ -39,6 +39,8 @@ public:
                      DevicesSettings::Ptr const& devices_settings);
   virtual ~VolumeLauncherIcon();
 
+  virtual void AboutToRemove();
+
   bool CanEject() const; // TODO: rename to public virtual bool IsTrashable();
   void EjectAndShowNotification(); // TODO: rename to private virtual void DoDropToTrash();
   bool CanStop() const;

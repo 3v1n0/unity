@@ -23,6 +23,8 @@
 #ifndef TEST_MOCK_DEVICES_H
 #define TEST_MOCK_DEVICES_H
 
+#include <gmock/gmock.h>
+
 #include "DeviceLauncherSection.h"
 #include "AbstractVolumeMonitorWrapper.h"
 #include "Volume.h"
@@ -63,8 +65,8 @@ struct MockDevicesSettings : DevicesSettings
 struct MockDeviceLauncherSection : DeviceLauncherSection
 {
   MockDeviceLauncherSection(unsigned size = 2)
-    : DeviceLauncherSection(MockVolumeMonitorWrapper::Ptr(new MockVolumeMonitorWrapper(size)),
-                            DevicesSettings::Ptr(new MockDevicesSettings))
+    : DeviceLauncherSection(MockVolumeMonitorWrapper::Ptr(new testing::NiceMock<MockVolumeMonitorWrapper>(size)),
+                            DevicesSettings::Ptr(new testing::NiceMock<MockDevicesSettings>))
   {}
 };
 

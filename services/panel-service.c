@@ -457,7 +457,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
                 }
               else if (entry == priv->pressed_entry)
                 {
-                  panel_service_secondary_activate_entry (self, entry_id, time(NULL));
+                  panel_service_secondary_activate_entry (self, entry_id);
                 }
 
               ret = GDK_FILTER_REMOVE;
@@ -1649,8 +1649,7 @@ panel_service_show_entry_common (PanelService *self,
                                  guint32       xid,
                                  gint32        x,
                                  gint32        y,
-                                 guint32       button,
-                                 guint32       timestamp)
+                                 guint32       button)
 {
   PanelServicePrivate *priv;
   GtkWidget           *last_menu;
@@ -1778,8 +1777,7 @@ panel_service_show_entry (PanelService *self,
                           guint32       xid,
                           gint32        x,
                           gint32        y,
-                          guint32       button,
-                          guint32       timestamp)
+                          guint32       button)
 {
   IndicatorObject      *object;
   IndicatorObjectEntry *entry;
@@ -1789,15 +1787,11 @@ panel_service_show_entry (PanelService *self,
   entry = get_indicator_entry_by_id (self, entry_id);
   object = get_entry_parent_indicator (entry);
 
-  panel_service_show_entry_common (self, object, entry, xid, x, y, button, timestamp);
+  panel_service_show_entry_common (self, object, entry, xid, x, y, button);
 }
 
 void
-panel_service_show_app_menu (PanelService *self,
-                             guint32       xid,
-                             gint32        x,
-                             gint32        y,
-                             guint32       timestamp)
+panel_service_show_app_menu (PanelService *self, guint32 xid, gint32 x, gint32 y)
 {
   IndicatorObject      *object;
   IndicatorObjectEntry *entry;
@@ -1815,14 +1809,12 @@ panel_service_show_app_menu (PanelService *self,
       entry = entries->data;
       g_list_free (entries);
 
-      panel_service_show_entry_common (self, object, entry, xid, x, y, 1, timestamp);
+      panel_service_show_entry_common (self, object, entry, xid, x, y, 1);
     }
 }
 
 void
-panel_service_secondary_activate_entry (PanelService *self,
-                                        const gchar  *entry_id,
-                                        guint32       timestamp)
+panel_service_secondary_activate_entry (PanelService *self, const gchar *entry_id)
 {
   IndicatorObject      *object;
   IndicatorObjectEntry *entry;
@@ -1832,7 +1824,7 @@ panel_service_secondary_activate_entry (PanelService *self,
 
   object = get_entry_parent_indicator (entry);
   g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_SECONDARY_ACTIVATE, entry,
-                        timestamp);
+                        CurrentTime);
 }
 
 void

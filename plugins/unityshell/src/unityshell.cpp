@@ -41,6 +41,9 @@
 #include "unityshell.h"
 #include "BackgroundEffectHelper.h"
 #include "UnityGestureBroker.h"
+#include "launcher/XdndCollectionWindowImp.h"
+#include "launcher/XdndManagerImp.h"
+#include "launcher/XdndStartStopNotifierImp.h"
 
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
@@ -1588,6 +1591,7 @@ void UnityScreen::handleEvent(XEvent* event)
         sources_.AddIdle([&] {
           shortcut_controller_->SetEnabled(false);
           shortcut_controller_->Hide();
+          LOG_DEBUG(logger) << "Hiding shortcut controller due to keypress event.";
           EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
 
           return false;
@@ -1736,6 +1740,7 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
 
     if (shortcut_controller_->Show())
     {
+      LOG_DEBUG(logger) << "Showing shortcut hint.";
       shortcut_controller_->SetAdjustment(launcher_width, panel_height);
       EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, true, action->key().modifiers());
     }
@@ -1794,6 +1799,7 @@ bool UnityScreen::showLauncherKeyTerminate(CompAction* action,
 
   shortcut_controller_->SetEnabled(enable_shortcut_overlay_);
   shortcut_controller_->Hide();
+  LOG_DEBUG(logger) << "Hiding shortcut controller";
   EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, false);
 
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
@@ -1847,8 +1853,11 @@ void UnityScreen::SendExecuteCommand()
     adapter.TerminateScale();
   }
 
+  ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL, glib::Source::Priority::HIGH);
+
   ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                            g_variant_new("(sus)", "commands.lens", 0, ""));
+                            g_variant_new("(sus)", "commands.lens", 0, ""),
+                            glib::Source::Priority::LOW);
 }
 
 bool UnityScreen::executeCommand(CompAction* action,
@@ -3062,7 +3071,10 @@ bool UnityScreen::setOptionForPlugin(const char* plugin, const char* name,
     if (strcmp(plugin, "core") == 0)
     {
       if (strcmp(name, "hsize") == 0 || strcmp(name, "vsize") == 0)
-        launcher_controller_->UpdateNumWorkspaces(screen->vpSize().width() * screen->vpSize().height());
+      {
+        WindowManager& wm = WindowManager::Default();
+        wm.viewport_layout_changed.emit(screen->vpSize().width(), screen->vpSize().height());
+      }
     }
   }
   return status;
@@ -3093,7 +3105,12 @@ void UnityScreen::OnDashRealized ()
 void UnityScreen::initLauncher()
 {
   Timer timer;
-  launcher_controller_ = std::make_shared<launcher::Controller>();
+
+  auto xdnd_collection_window = std::make_shared<XdndCollectionWindowImp>();
+  auto xdnd_start_stop_notifier = std::make_shared<XdndStartStopNotifierImp>();
+  auto xdnd_manager = std::make_shared<XdndManagerImp>(xdnd_start_stop_notifier, xdnd_collection_window);
+
+  launcher_controller_ = std::make_shared<launcher::Controller>(xdnd_manager);
   AddChild(launcher_controller_.get());
 
   switcher_controller_ = std::make_shared<switcher::Controller>();
