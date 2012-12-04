@@ -46,6 +46,25 @@ else ()
   set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm -lpthread -ldl -lGL -lGLU")
 endif ()
 
+if (CMAKE_BUILD_TYPE MATCHES coverage)
+  set (COVERAGE_XML_FILE "${CMAKE_BINARY_DIR}/coverage.xml")
+
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage" )
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage" )
+  set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} --coverage" )
+  set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage" )
+
+  find_program(GCOVR_EXECUTABLE gcovr HINTS ${GCOVR_ROOT} "${GCOVR_ROOT}/bin")
+  if (NOT GCOVR_EXECUTABLE)
+      message(FATAL_ERROR "Cannot enable coverage targets because gcovr was not found.")
+  else ()
+      message (STATUS "Enabling XML coverage report")
+      add_custom_target (coverage-xml 
+          COMMAND  "${GCOVR_EXECUTABLE}" --exclude="tests.*" --exclude="obj-.*" -x -r "${CMAKE_SOURCE_DIR}" -o "${COVERAGE_XML_FILE}")
+  endif()
+endif (CMAKE_BUILD_TYPE MATCHES coverage)
+
+
 #
 # Niceties
 #
@@ -127,12 +146,12 @@ add_custom_command (OUTPUT ${CMAKE_SOURCE_DIR}/po/unity.pot
 		)
 
 if (I18N_SUPPORT)
-if (${GETTEXT_FOUND} STREQUAL "TRUE")
+if (GETTEXT_FOUND)
         set (HAVE_GETTEXT true)
         file (GLOB _translations ${CMAKE_SOURCE_DIR}/po/*.po)
         GETTEXT_CREATE_TRANSLATIONS (${CMAKE_SOURCE_DIR}/po/${PROJECT_NAME}.pot
                 ALL ${_translations})
-endif (${GETTEXT_FOUND} STREQUAL "TRUE")
+endif (GETTEXT_FOUND)
 endif()
 
 #

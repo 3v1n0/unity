@@ -26,7 +26,6 @@ using namespace testing;
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 
-#include "launcher/DNDCollectionWindow.h"
 #include "launcher/MockLauncherIcon.h"
 #include "launcher/Launcher.h"
 #include "unity-shared/PanelStyle.h"
@@ -55,6 +54,11 @@ public:
   MOCK_METHOD1(Stick, void(bool));
 };
 
+struct MockPointerBarrierWrapper : ui::PointerBarrierWrapper
+{
+  MOCK_METHOD1(ReleaseBarrier, void(int event_id));
+};
+
 }
 
 class TestLauncher : public Test
@@ -63,8 +67,8 @@ public:
   class MockLauncher : public Launcher
   {
   public:
-    MockLauncher(nux::BaseWindow* parent, nux::ObjectPtr<DNDCollectionWindow> const& collection_window)
-      : Launcher(parent, collection_window)
+    MockLauncher(nux::BaseWindow* parent)
+      : Launcher(parent)
     {}
 
     AbstractLauncherIcon::Ptr MouseIconIntersection(int x, int y) const
@@ -115,14 +119,18 @@ public:
 
       _dnd_hovered_icon = MouseIconIntersection(x, y);
     }
+
+    bool HandleBarrierEvent(ui::PointerBarrierWrapper* barrier, ui::BarrierEvent::Ptr event)
+    {
+      return Launcher::HandleBarrierEvent(barrier, event);
+    }
   };
 
   TestLauncher()
     : parent_window_(new nux::BaseWindow("TestLauncherWindow"))
-    , dnd_collection_window_(new DNDCollectionWindow)
     , model_(new LauncherModel)
     , options_(new Options)
-    , launcher_(new MockLauncher(parent_window_, dnd_collection_window_))
+    , launcher_(new MockLauncher(parent_window_))
   {
     launcher_->options = options_;
     launcher_->SetModel(model_);
@@ -153,7 +161,6 @@ public:
 
   MockUScreen uscreen;
   nux::BaseWindow* parent_window_;
-  nux::ObjectPtr<DNDCollectionWindow> dnd_collection_window_;
   Settings settings;
   panel::Style panel_style;
   LauncherModel::Ptr model_;
@@ -189,9 +196,7 @@ TEST_F(TestLauncher, TestQuirksDuringDnd)
   EXPECT_CALL(*third, ShouldHighlightOnDrag(_))
       .WillRepeatedly(Return(false));
 
-  std::list<char*> uris;
-  dnd_collection_window_->collected.emit(uris);
-
+  launcher_->DndStarted("");
   Utils::WaitForTimeout(1);
 
   EXPECT_FALSE(first->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT));
@@ -440,6 +445,17 @@ TEST_F(TestLauncher, DragLauncherIconHidesOutsideLauncherEmitsMouseEnter)
   TestWindowCompositor::SetMousePosition(abs_geo.x - 1, abs_geo.y - 2);
   launcher_->HideDragWindow();
   EXPECT_FALSE(mouse_entered);
+}
+
+TEST_F(TestLauncher, EdgeResistDuringDnd)
+{
+  auto barrier = std::make_shared<MockPointerBarrierWrapper>();
+  auto event = std::make_shared<ui::BarrierEvent>(0, 0, 0, 100);
+
+  launcher_->DndStarted("");
+
+  EXPECT_CALL(*barrier, ReleaseBarrier(100));
+  EXPECT_TRUE(launcher_->HandleBarrierEvent(barrier.get(), event));
 }
 
 TEST_F(TestLauncher, DndIsSpecialRequest)

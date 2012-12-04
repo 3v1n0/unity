@@ -24,7 +24,7 @@
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
 #include "unity-shared/StaticCairoText.h"
-#include "unity-shared/PlacesVScrollBar.h"
+#include "unity-shared/PlacesOverlayVScrollBar.h"
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
@@ -49,7 +49,7 @@ public:
   DetailsScrollView(NUX_FILE_LINE_PROTO)
   : ScrollView(NUX_FILE_LINE_PARAM)
   {
-    SetVScrollBar(new dash::PlacesVScrollBar(NUX_TRACKER_LOCATION));
+    SetVScrollBar(new dash::PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION));
   }
 
 };

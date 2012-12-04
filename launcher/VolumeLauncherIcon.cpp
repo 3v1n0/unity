@@ -19,6 +19,7 @@
  */
 
 
+#include "config.h"
 #include <glib/gi18n-lib.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibSignal.h>
@@ -302,6 +303,14 @@ VolumeLauncherIcon::VolumeLauncherIcon(Volume::Ptr const& volume,
 
 VolumeLauncherIcon::~VolumeLauncherIcon()
 {}
+
+void VolumeLauncherIcon::AboutToRemove()
+{
+  if (CanEject())
+    EjectAndShowNotification();
+  else if (CanStop())
+    StopDrive();
+}
 
 bool VolumeLauncherIcon::CanEject() const
 {

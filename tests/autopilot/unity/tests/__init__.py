@@ -19,6 +19,7 @@ from logging import getLogger
 import os
 import sys
 from tempfile import mktemp
+from time import sleep
 try:
     import testapp
     import json
@@ -69,7 +70,7 @@ class UnityTestCase(AutopilotTestCase):
         #
         # Setting this here since the show desktop feature seems to be a bit
         # ropey. Once it's been proven to work reliably we can remove this line:
-        self.set_unity_log_level("unity.plugin", "DEBUG")
+        self.set_unity_log_level("unity.wm.compiz", "DEBUG")
 
     def check_test_behavior(self):
         """Fail the test if it did something naughty.
@@ -106,7 +107,23 @@ class UnityTestCase(AutopilotTestCase):
             well_behaved = False
             reasons.append("The test left the system in show_desktop mode.")
             log.warning("Test left the system in show desktop mode, exiting it...")
-            self.window_manager.leave_show_desktop()
+            # It is not possible to leave show desktop mode if there are no
+            # app windows. So, just open a window and perform the show
+            # desktop action until the desired state is acheived, then close
+            # the window. The showdesktop_active state will persist.
+            #
+            # In the event that this doesn't work, wait_for will throw an
+            # exception.
+            win = self.start_app_window('Calculator', locale='C')
+            count = 1
+            while self.window_manager.showdesktop_active:
+                self.keybinding("window/show_desktop")
+                sleep(count)
+                count+=1
+                if count > 10:
+                    break
+            win.close()
+            self.window_manager.showdesktop_active.wait_for(False)
         for launcher in self.launcher.get_launchers():
             if not self.well_behaved(launcher, in_keynav_mode=False):
                 well_behaved = False

@@ -31,6 +31,7 @@
 
 #include <UnityCore/Variant.h>
 
+#include "config.h"
 #include <glib/gi18n-lib.h>
 
 namespace unity
@@ -1575,7 +1576,7 @@ void PanelMenuView::OnLauncherSelectionChanged(GVariant* data)
   const gchar *title = g_variant_get_string(data, 0);
   _panel_title = (title ? title : "");
 
-  Refresh();
+  Refresh(true);
   QueueDraw();
 }
 

@@ -150,7 +150,10 @@ bool WindowOnOtherViewport(Window xid)
 std::vector<Window> SwitcherModel::DetailXids()
 {
   std::vector<Window> results;
-  results = Selection()->Windows();
+  for (auto& window : Selection()->Windows())
+  {
+    results.push_back(window->window_id());
+  }
 
   if (only_detail_on_viewport)
   {

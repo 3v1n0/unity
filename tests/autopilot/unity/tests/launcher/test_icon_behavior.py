@@ -49,24 +49,30 @@ class LauncherIconsTests(LauncherTestCase):
         return icon
 
     def test_bfb_tooltip_disappear_when_dash_is_opened(self):
-         """Tests that the bfb tooltip disappear when the dash is opened."""
-         bfb = self.launcher.model.get_bfb_icon()
-         self.mouse.move(bfb.center_x, bfb.center_y)
+        """Tests that the bfb tooltip disappear when the dash is opened."""
+        bfb = self.launcher.model.get_bfb_icon()
+        self.mouse.move(bfb.center_x, bfb.center_y)
 
-         self.dash.ensure_visible()
-         self.addCleanup(self.dash.ensure_hidden)
+        self.assertThat(bfb.get_tooltip().active, Eventually(Equals(True)))
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
 
-         self.assertThat(bfb.get_tooltip().active, Eventually(Equals(False)))
+        self.assertThat(bfb.get_tooltip().active, Eventually(Equals(False)))
 
     def test_bfb_tooltip_is_disabled_when_dash_is_open(self):
-         """Tests the that bfb tooltip is disabled when the dash is open."""
-         self.dash.ensure_visible()
-         self.addCleanup(self.dash.ensure_hidden)
+        """Tests the that bfb tooltip is disabled when the dash is open."""
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
 
-         bfb = self.launcher.model.get_bfb_icon()
-         self.mouse.move(bfb.center_x, bfb.center_y)
+        bfb = self.launcher.model.get_bfb_icon()
+        self.mouse.move(bfb.center_x, bfb.center_y)
 
-         self.assertThat(bfb.get_tooltip().active, Eventually(Equals(False)))
+        # Tooltips are lazy-created  in Unity, so if the BFB tooltip has never
+        # been shown before, get_tooltip will return None. If that happens, then
+        # this test should pass.
+        tooltip = bfb.get_tooltip()
+        if tooltip is not None:
+            self.assertThat(tooltip.active, Eventually(Equals(False)))
 
     def test_shift_click_opens_new_application_instance(self):
         """Shift+Clicking MUST open a new instance of an already-running application."""
@@ -232,9 +238,13 @@ class LauncherDragIconsBehavior(LauncherTestCase):
         # Normally we'd use get_icon(desktop_id="...") but we're expecting it to
         # not exist, and we don't want to wait for 10 seconds, so we do this
         # the old fashioned way.
-        refresh_fn = lambda: self.launcher.model.get_children_by_type(
+        get_icon_fn = lambda: self.launcher.model.get_children_by_type(
             ApplicationLauncherIcon, desktop_id="gcalctool.desktop")
-        self.assertThat(refresh_fn, Eventually(Equals([])))
+        calc_icon = get_icon_fn()
+        if calc_icon:
+            self.launcher_instance.unlock_from_launcher(calc_icon[0])
+
+        self.assertThat(get_icon_fn, Eventually(Equals([])))
 
     def test_can_drag_icon_below_bfb(self):
         """Application icons must be draggable to below the BFB."""

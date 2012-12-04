@@ -704,7 +704,7 @@ void PanelView::OnEntryActivateRequest(std::string const& entry_id)
 
 bool PanelView::TrackMenuPointer()
 {
-  auto mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
+  nux::Point const& mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
   if (_tracked_pointer_pos != mouse)
   {
     OnMenuPointerMoved(mouse.x, mouse.y);
@@ -742,9 +742,8 @@ void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& g
   _ubus_manager.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
 }
 
-void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
-                                int x, int y, unsigned int button,
-                                unsigned int timestamp)
+void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned xid,
+                                int x, int y, unsigned button)
 {
   Display* d = nux::GetGraphicsDisplay()->GetX11Display();
   XUngrabPointer(d, CurrentTime);
