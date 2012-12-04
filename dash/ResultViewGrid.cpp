@@ -707,7 +707,7 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
   unsigned num_results = GetNumResults();
   unsigned index = GetIndexAtPosition(x, y);
   mouse_over_index_ = index;
-  if (index >= 0 && index < num_results)
+  if (index < num_results)
   {
     // we got a click on a button so activate it
     ResultIterator it(GetIteratorAtRow(index));
