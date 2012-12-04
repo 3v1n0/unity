@@ -2727,11 +2727,11 @@ void UnityWindow::windowNotify(CompWindowNotify n)
   if (n == CompWindowNotifyFocusChange)
   {
     UnityScreen* us = UnityScreen::get(screen);
-    CompWindow *lw;
 
     // can't rely on launcher->IsOverlayVisible on focus change (because ubus is async close on focus change.)
     if (us && (us->dash_controller_->IsVisible() || us->hud_controller_->IsVisible()))
     {
+      CompWindow *lw;
       lw = screen->findWindow(us->launcher_controller_->LauncherWindowId(0));
       lw->moveInputFocusTo();
     }
