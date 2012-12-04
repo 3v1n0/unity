@@ -1350,7 +1350,6 @@ panel_service_sync_geometry (PanelService *self,
                              gint width,
                              gint height)
 {
-  IndicatorObject      *object;
   IndicatorObjectEntry *entry;
   gboolean valid_entry = TRUE;
   PanelServicePrivate  *priv = self->priv;
@@ -1440,6 +1439,7 @@ panel_service_sync_geometry (PanelService *self,
 
       if (valid_entry)
         {
+	  IndicatorObject *object;
           object = get_entry_parent_indicator (entry);
           g_signal_emit (self, _service_signals[GEOMETRIES_CHANGED], 0, object, entry, x, y, width, height);
         }
