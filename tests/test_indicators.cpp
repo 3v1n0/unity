@@ -45,7 +45,6 @@ struct TargetData
     y = 0;
     xid = 0;
     button = 0;
-    timestamp = 0;
   }
 
   std::string entry;
@@ -55,7 +54,6 @@ struct TargetData
   int y;
   unsigned int xid;
   unsigned int button;
-  unsigned int timestamp;
 };
 
 class MockIndicators : public Indicators
@@ -72,35 +70,29 @@ public:
   }
 
   virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
-                               int x, int y, unsigned int button,
-                               unsigned int timestamp)
+                               int x, int y, unsigned int button)
   {
-    on_entry_show_menu.emit(entry_id, xid, x, y, button, timestamp);
+    on_entry_show_menu.emit(entry_id, xid, x, y, button);
 
     target.entry = entry_id;
     target.xid = xid;
     target.x = x;
     target.y = y;
     target.button = button;
-    target.timestamp = timestamp;
   }
 
-  virtual void OnEntrySecondaryActivate(std::string const& entry_id,
-                                        unsigned int timestamp)
+  virtual void OnEntrySecondaryActivate(std::string const& entry_id)
   {
     target.entry = entry_id;
-    target.timestamp = timestamp;
   }
 
-  virtual void OnShowAppMenu(unsigned int xid, int x, int y,
-                             unsigned int timestamp)
+  virtual void OnShowAppMenu(unsigned int xid, int x, int y)
   {
-    on_show_appmenu.emit(xid, x, y, timestamp);
+    on_show_appmenu.emit(xid, x, y);
 
     target.xid = xid;
     target.x = x;
     target.y = y;
-    target.timestamp = timestamp;
   }
 
   // Redirecting protected methods
@@ -470,49 +462,44 @@ TEST(TestIndicators, EntryShowMenu)
   TargetData show_menu_data;
   sigc::connection on_entry_show_menu_conn =
   indicators.on_entry_show_menu.connect([&] (std::string const& e, unsigned int w,
-                                             int x, int y, unsigned int b, unsigned int t) {
+                                             int x, int y, unsigned int b) {
     show_menu_data.entry = e;
     show_menu_data.xid = w;
     show_menu_data.x = x;
     show_menu_data.y = y;
     show_menu_data.button = b;
-    show_menu_data.timestamp = t;
   });
 
-  entry13->ShowMenu(465789, 35, 53, 2, 1331773412);
+  entry13->ShowMenu(465789, 35, 53, 2);
 
   EXPECT_EQ(indicators.target.entry, entry13->id());
   EXPECT_EQ(indicators.target.xid, 465789);
   EXPECT_EQ(indicators.target.x, 35);
   EXPECT_EQ(indicators.target.y, 53);
   EXPECT_EQ(indicators.target.button, 2);
-  EXPECT_EQ(indicators.target.timestamp, 1331773412);
 
   EXPECT_EQ(show_menu_data.entry, entry13->id());
   EXPECT_EQ(show_menu_data.xid, 465789);
   EXPECT_EQ(show_menu_data.x, 35);
   EXPECT_EQ(show_menu_data.y, 53);
   EXPECT_EQ(show_menu_data.button, 2);
-  EXPECT_EQ(show_menu_data.timestamp, 1331773412);
 
   show_menu_data.Reset();
   indicators.target.Reset();
 
-  entry13->ShowMenu(55, 68, 3, 1331773883);
+  entry13->ShowMenu(55, 68, 3);
 
   EXPECT_EQ(indicators.target.entry, entry13->id());
   EXPECT_EQ(indicators.target.xid, 0);
   EXPECT_EQ(indicators.target.x, 55);
   EXPECT_EQ(indicators.target.y, 68);
   EXPECT_EQ(indicators.target.button, 3);
-  EXPECT_EQ(indicators.target.timestamp, 1331773883);
 
   EXPECT_EQ(show_menu_data.entry, entry13->id());
   EXPECT_EQ(show_menu_data.xid, 0);
   EXPECT_EQ(show_menu_data.x, 55);
   EXPECT_EQ(show_menu_data.y, 68);
   EXPECT_EQ(show_menu_data.button, 3);
-  EXPECT_EQ(show_menu_data.timestamp, 1331773883);
 
   on_entry_show_menu_conn.disconnect();
 }
@@ -532,9 +519,8 @@ TEST(TestIndicators, EntryScroll)
   EXPECT_EQ(indicators.target.entry, entry11->id());
   EXPECT_EQ(indicators.target.delta, 80);
 
-  entry11->SecondaryActivate(1331774167);
+  entry11->SecondaryActivate();
   EXPECT_EQ(indicators.target.entry, entry11->id());
-  EXPECT_EQ(indicators.target.timestamp, 1331774167);
 }
 
 TEST(TestIndicators, EntrySecondaryActivate)
@@ -548,9 +534,8 @@ TEST(TestIndicators, EntrySecondaryActivate)
   Entry::Ptr entry22(indicators.GetIndicator("indicator-test-2")->GetEntry("indicator-test-2|entry-1"));
   ASSERT_THAT(entry22, NotNull());
 
-  entry22->SecondaryActivate(1331774167);
+  entry22->SecondaryActivate();
   EXPECT_EQ(indicators.target.entry, entry22->id());
-  EXPECT_EQ(indicators.target.timestamp, 1331774167);
 }
 
 TEST(TestIndicators, ShowAppMenu)
@@ -572,14 +557,13 @@ TEST(TestIndicators, ShowAppMenu)
 
     indicators.target.Reset();
 
-    appmenu_indicator->ShowAppmenu(4356789, 54, 13, 1331774961);
+    appmenu_indicator->ShowAppmenu(4356789, 54, 13);
 
     EXPECT_TRUE(indicators.target.entry.empty());
     EXPECT_EQ(indicators.target.xid, 4356789);
     EXPECT_EQ(indicators.target.x, 54);
     EXPECT_EQ(indicators.target.y, 13);
     EXPECT_EQ(indicators.target.button, 0);
-    EXPECT_EQ(indicators.target.timestamp, 1331774961);
   }
 }
 

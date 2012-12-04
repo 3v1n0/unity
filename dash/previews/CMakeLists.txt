@@ -23,6 +23,7 @@ include_directories (.. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR
 #
 set (PREVIEWS_SOURCES
      ActionButton.cpp
+     ActionLink.cpp
      ApplicationPreview.cpp
      GenericPreview.cpp
      MusicPreview.cpp

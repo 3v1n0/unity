@@ -23,6 +23,7 @@ include_directories (.. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR
 #
 set (UNITY_SHARED_SOURCES
      AbstractSeparator.cpp
+     ApplicationManager.cpp
      Animator.cpp
      BGHash.cpp
      CoverArt.cpp
@@ -98,6 +99,15 @@ if (ENABLE_X_SUPPORT)
   target_link_libraries (unity-shared-compiz ${LIBS})
 
   add_dependencies (unity-shared-compiz unity-shared)
+
+  # bamf application manager
+  set (UNITY_SHARED_BAMF_SOURCES
+    BamfApplicationManager.cpp
+    BamfApplicationManagerFactory.cpp
+    )
+  add_library (unity-shared-bamf STATIC ${UNITY_SHARED_BAMF_SOURCES})
+  target_link_libraries (unity-shared-bamf ${LIBS})
+  add_dependencies (unity-shared-bamf unity-shared)
 endif()
 
 # standalone
@@ -108,4 +118,7 @@ add_library (unity-shared-standalone STATIC ${UNITY_SHARED_STANDALONE_SOURCES})
 target_link_libraries (unity-shared-standalone ${LIBS})
 add_dependencies (unity-shared-standalone unity-shared)
 
+add_executable (app-manager StandaloneAppManager.cpp)
+add_dependencies (app-manager  unity-shared unity-shared-bamf unity-shared-standalone)
+target_link_libraries (app-manager  unity-shared unity-shared-bamf  unity-shared-standalone)
 

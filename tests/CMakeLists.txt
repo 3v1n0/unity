@@ -95,6 +95,7 @@ if (GTEST_SRC_DIR AND
 
 # The service that provides DBus services to test against
   add_executable(test-gtest-service
+                 mock-application.cpp
                  test_service_gdbus_wrapper.c
                  test_service_gdbus_wrapper.h
                  test_service_hud.c
@@ -113,7 +114,7 @@ if (GTEST_SRC_DIR AND
 # The actual test executable (xless) - do not put anything that requires X in here
   set (GTEST_XLESS_SOURCES
        test_main_xless.cpp
-       test_animator.cpp
+       #test_animator.cpp # XXX: disabled, to be removed completely soon
        test_launcher_model.cpp
        test_glib_object.cpp
        test_glib_object_utils.cpp
@@ -138,6 +139,7 @@ if (GTEST_SRC_DIR AND
        test_layout_system.cpp
        test_model_iterator.cpp
        test_previews.cpp
+       test_time_util.cpp
        test_ubus.cpp
        test_unityshell_private.cpp
        ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
@@ -204,7 +206,10 @@ if (GTEST_SRC_DIR AND
 if (ENABLE_X_SUPPORT)
 # Tests that require X
   add_executable(test-gtest
+                 mock-application.cpp
+                 logger_helper.cpp
                  test_main.cpp
+                 test_action_link.cpp
                  test_application_launcher_icon.cpp
                  test_bfb_launcher_icon.cpp
                  test_dashview_impl.cpp
@@ -240,6 +245,7 @@ if (ENABLE_X_SUPPORT)
                  test_single_monitor_launcher_icon.cpp
                  test_expo_launcher_icon.cpp
                  test_showdesktop_handler.cpp
+								 test_static_cairo_text.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
                  test_texture_cache.cpp

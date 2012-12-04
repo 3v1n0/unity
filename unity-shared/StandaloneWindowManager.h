@@ -129,6 +129,10 @@ public:
 
   virtual int WorkspaceCount() const;
 
+  nux::Point GetCurrentViewport() const override;
+  int GetViewportHSize() const override;
+  int GetViewportVSize() const override;
+
   virtual bool SaveInputFocus();
   virtual bool RestoreInputFocus();
 
@@ -142,6 +146,8 @@ public:
   void AddStandaloneWindow(StandaloneWindow::Ptr const& window);
   std::map<Window, StandaloneWindow::Ptr> GetStandaloneWindows() const;
 
+  void SetCurrentViewport(nux::Point const& vp);
+
 protected:
   virtual void AddProperties(GVariantBuilder* builder);
 
@@ -152,6 +158,7 @@ private:
   bool scale_active_for_group_;
   unsigned current_desktop_;
   std::map<Window, StandaloneWindow::Ptr> standalone_windows_;
+  nux::Point current_vp_;
 };
 
 }
