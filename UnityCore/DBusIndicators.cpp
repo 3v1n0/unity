@@ -65,12 +65,9 @@ public:
 
   virtual void OnEntryScroll(std::string const& entry_id, int delta);
   virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
-                               int x, int y, unsigned int button,
-                               unsigned int timestamp);
-  virtual void OnEntrySecondaryActivate(std::string const& entry_id,
-                                        unsigned int timestamp);
-  virtual void OnShowAppMenu(unsigned int xid, int x, int y,
-                             unsigned int timestamp);
+                               int x, int y, unsigned int button);
+  virtual void OnEntrySecondaryActivate(std::string const& entry_id);
+  virtual void OnShowAppMenu(unsigned int xid, int x, int y);
 
   DBusIndicators* owner_;
 
@@ -189,7 +186,7 @@ void DBusIndicators::Impl::OnEntryActivatedRequest(GVariant* parameters)
 void DBusIndicators::Impl::OnEntryShowNowChanged(GVariant* parameters)
 {
   glib::String entry_name;
-  gboolean  show_now;
+  gboolean show_now;
   g_variant_get(parameters, "(sb)", &entry_name, &show_now);
 
   if (entry_name)
@@ -211,43 +208,40 @@ void DBusIndicators::Impl::RequestSyncIndicator(std::string const& name)
 
 void DBusIndicators::Impl::OnEntryShowMenu(std::string const& entry_id,
                                            unsigned int xid, int x, int y,
-                                           unsigned int button,
-                                           unsigned int timestamp)
+                                           unsigned int button)
 {
-  owner_->on_entry_show_menu.emit(entry_id, xid, x, y, button, timestamp);
+  owner_->on_entry_show_menu.emit(entry_id, xid, x, y, button);
 
   // We have to do this because on certain systems X won't have time to
   // respond to our request for XUngrabPointer and this will cause the
   // menu not to show
 
   show_entry_idle_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
-  show_entry_idle_->Run([&, entry_id, xid, x, y, button, timestamp] {
-    gproxy_.Call("ShowEntry", g_variant_new("(suiiuu)", entry_id.c_str(), xid,
-                                                        x, y, button, timestamp));
+  show_entry_idle_->Run([&, entry_id, xid, x, y, button] {
+    gproxy_.Call("ShowEntry", g_variant_new("(suiiu)", entry_id.c_str(), xid,
+                                                       x, y, button));
     return false;
   });
 }
 
-void DBusIndicators::Impl::OnShowAppMenu(unsigned int xid, int x, int y,
-                                         unsigned int timestamp)
+void DBusIndicators::Impl::OnShowAppMenu(unsigned int xid, int x, int y)
 {
-  owner_->on_show_appmenu.emit(xid, x, y, timestamp);
+  owner_->on_show_appmenu.emit(xid, x, y);
 
   // We have to do this because on certain systems X won't have time to
   // respond to our request for XUngrabPointer and this will cause the
   // menu not to show
 
   show_entry_idle_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
-  show_entry_idle_->Run([&, xid, x, y, timestamp] {
-    gproxy_.Call("ShowEntry", g_variant_new("(uiiu)", xid, x, y, timestamp));
+  show_entry_idle_->Run([&, xid, x, y] {
+    gproxy_.Call("ShowEntry", g_variant_new("(uii)", xid, x, y));
     return false;
   });
 }
 
-void DBusIndicators::Impl::OnEntrySecondaryActivate(std::string const& entry_id,
-                                                    unsigned int timestamp)
+void DBusIndicators::Impl::OnEntrySecondaryActivate(std::string const& entry_id)
 {
-  gproxy_.Call("SecondaryActivateEntry", g_variant_new("(su)", entry_id.c_str(), timestamp));
+  gproxy_.Call("SecondaryActivateEntry", g_variant_new("(s)", entry_id.c_str()));
 }
 
 void DBusIndicators::Impl::OnEntryScroll(std::string const& entry_id, int delta)
@@ -257,6 +251,9 @@ void DBusIndicators::Impl::OnEntryScroll(std::string const& entry_id, int delta)
 
 void DBusIndicators::Impl::Sync(GVariant* args)
 {
+  if (!args)
+    return;
+
   GVariantIter* iter            = nullptr;
   gchar*        name_hint       = nullptr;
   gchar*        indicator_id    = nullptr;
@@ -270,13 +267,9 @@ void DBusIndicators::Impl::Sync(GVariant* args)
   gboolean      image_visible   = false;
   gint32        priority        = -1;
 
-  // sanity check
-  if (!args)
-    return;
-
   std::map<Indicator::Ptr, Indicator::Entries> indicators;
-  int wantedIndex = 0;
-  bool anyIndexDifferent = false;
+  int wanted_idx = 0;
+  bool any_different_idx = false;
 
   g_variant_get(args, "(a(ssssbbusbbi))", &iter);
   while (g_variant_iter_loop(iter, "(ssssbbusbbi)",
@@ -292,8 +285,8 @@ void DBusIndicators::Impl::Sync(GVariant* args)
                              &image_visible,
                              &priority))
   {
-    std::string entry(entry_id);
-    std::string indicator_name(indicator_id);
+    std::string entry(G_LIKELY(entry_id) ? entry_id : "");
+    std::string indicator_name(G_LIKELY(indicator_id) ? indicator_id : "");
 
     Indicator::Ptr indicator = owner_->GetIndicator(indicator_name);
     if (!indicator)
@@ -307,16 +300,19 @@ void DBusIndicators::Impl::Sync(GVariant* args)
     if (entry != "")
     {
       Entry::Ptr e;
-      if (!anyIndexDifferent)
+      if (!any_different_idx)
       {
         // Indicators can only add or remove entries, so if
         // there is a index change we can't reuse the existing ones
         // after that index
-        int existingEntryIndex = indicator->EntryIndex(entry_id);
-        if (wantedIndex == existingEntryIndex)
+        if (indicator->EntryIndex(entry_id) == wanted_idx)
+        {
           e = indicator->GetEntry(entry_id);
+        }
         else
-          anyIndexDifferent = true;
+        {
+          any_different_idx = true;
+        }
       }
 
       if (!e)
@@ -333,7 +329,7 @@ void DBusIndicators::Impl::Sync(GVariant* args)
       }
 
       entries.push_back(e);
-      wantedIndex++;
+      ++wanted_idx;
     }
   }
   g_variant_iter_free(iter);
@@ -350,45 +346,39 @@ void DBusIndicators::Impl::Sync(GVariant* args)
 void DBusIndicators::Impl::SyncGeometries(std::string const& name,
                                           EntryLocationMap const& locations)
 {
-  if (!gproxy_.IsConnected())
+  if (!gproxy_.IsConnected() || G_UNLIKELY(name.empty()))
     return;
 
-  GVariantBuilder b;
   bool found_changed_locations = false;
-  g_variant_builder_init(&b, G_VARIANT_TYPE("(a(ssiiii))"));
-  g_variant_builder_open(&b, G_VARIANT_TYPE("a(ssiiii)"));
-  EntryLocationMap& cached_loc = cached_locations_[name];
+  EntryLocationMap& cached_locations = cached_locations_[name];
+
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("(sa(siiii))"));
+  g_variant_builder_add(&b, "s", name.c_str());
+
+  g_variant_builder_open(&b, G_VARIANT_TYPE("a(siiii)"));
 
   // Only send to panel service the geometries of items that have changed
-  for (auto i = locations.begin(), end = locations.end(); i != end; ++i)
+  for (auto const& location : locations)
   {
-    auto rect = i->second;
+    auto const& id = location.first;
+    auto const& rect = location.second;
 
-    if (cached_loc[i->first] != rect)
+    if (cached_locations[id] != rect)
     {
-      g_variant_builder_add(&b, "(ssiiii)",
-                            name.c_str(),
-                            i->first.c_str(),
-                            rect.x,
-                            rect.y,
-                            rect.width,
-                            rect.height);
+      g_variant_builder_add(&b, "(siiii)", id.c_str(), rect.x, rect.y, rect.width, rect.height);
       found_changed_locations = true;
     }
   }
 
   // Inform panel service of the entries that have been removed sending invalid values
-  for (auto i = cached_loc.begin(), end = cached_loc.end(); i != end; ++i)
+  for (auto const& location : cached_locations)
   {
-    if (locations.find(i->first) == locations.end())
+    auto const& id = location.first;
+
+    if (locations.find(id) == locations.end())
     {
-      g_variant_builder_add(&b, "(ssiiii)",
-                            name.c_str(),
-                            i->first.c_str(),
-                            0,
-                            0,
-                            -1,
-                            -1);
+      g_variant_builder_add(&b, "(siiii)", id.c_str(), 0, 0, -1, -1);
       found_changed_locations = true;
     }
   }
@@ -402,7 +392,7 @@ void DBusIndicators::Impl::SyncGeometries(std::string const& name,
   g_variant_builder_close(&b);
 
   gproxy_.Call("SyncGeometries", g_variant_builder_end(&b));
-  cached_loc = locations;
+  cached_locations = locations;
 }
 
 DBusIndicators::DBusIndicators()
@@ -434,21 +424,19 @@ void DBusIndicators::OnEntryScroll(std::string const& entry_id, int delta)
 
 void DBusIndicators::OnEntryShowMenu(std::string const& entry_id,
                                      unsigned int xid, int x, int y,
-                                     unsigned int button, unsigned int timestamp)
+                                     unsigned int button)
 {
-  pimpl->OnEntryShowMenu(entry_id, xid, x, y, button, timestamp);
+  pimpl->OnEntryShowMenu(entry_id, xid, x, y, button);
 }
 
-void DBusIndicators::OnEntrySecondaryActivate(std::string const& entry_id,
-                                              unsigned int timestamp)
+void DBusIndicators::OnEntrySecondaryActivate(std::string const& entry_id)
 {
-  pimpl->OnEntrySecondaryActivate(entry_id, timestamp);
+  pimpl->OnEntrySecondaryActivate(entry_id);
 }
 
-void DBusIndicators::OnShowAppMenu(unsigned int xid, int x, int y,
-                                   unsigned int timestamp)
+void DBusIndicators::OnShowAppMenu(unsigned int xid, int x, int y)
 {
-  pimpl->OnShowAppMenu(xid, x, y, timestamp);
+  pimpl->OnShowAppMenu(xid, x, y);
 }
 
 } // namespace indicator
