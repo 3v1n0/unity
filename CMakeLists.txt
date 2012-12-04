@@ -189,6 +189,7 @@ set(UNITY_PLUGIN_SHARED_DEPS
     gmodule-2.0
     gthread-2.0
     gtk+-3.0>=3.1
+    indicator3-0.4>=0.4.90
     json-glib-1.0
     libbamf3
     libnotify
