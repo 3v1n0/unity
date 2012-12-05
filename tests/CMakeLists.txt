@@ -49,20 +49,12 @@ include_directories (${CMAKE_SOURCE_DIR}/unity-shared)
 # We can't have convenience libs so we need to rebuild with what we need
 # Please keep actual test files alphabetically at top and then files
 # from ../${UNITY_SRC} or ../../services in alphabetically after that
-find_program(GLIB_GENMARSHAL glib-genmarshal)
-add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
-  COMMAND ${GLIB_GENMARSHAL} ARGS ../services/panel-marshal.list --body --prefix=panel_marshal > ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
-  COMMAND ${GLIB_GENMARSHAL} ARGS ../services/panel-marshal.list --header --prefix=panel_marshal > ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.h
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  DEPENDS ../services/panel-marshal.list
-  COMMENT "Generating marshallers for panel-service")
 
 add_executable (test-unit
                 unit/TestMain.cpp
                 unit/TestPanelService.cpp
                 unit/TestStaticCairoText.cpp
                 ../services/panel-service.c
-                ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
                 )
 target_link_libraries (test-unit unity-shared ${LIBS})
 add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
@@ -74,14 +66,6 @@ add_subdirectory (test-get-transients)
 #
 # GTest tests
 #
-find_program(GLIB_GENMARSHAL glib-genmarshal)
-add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
-  COMMAND ${GLIB_GENMARSHAL} ARGS test_glib_signals_utils_marshal.list --body --prefix=test_signals > ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
-  COMMAND ${GLIB_GENMARSHAL} ARGS test_glib_signals_utils_marshal.list --header --prefix=test_signals > ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.h
-  COMMAND sed ARGS -i "s/glib-object/test_glib_signals_utils_marshal/" ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  DEPENDS test_glib_signals_utils_marshal.list
-  COMMENT "Generating marshallers")
 
 enable_testing()
 # :(
@@ -149,7 +133,6 @@ if (GTEST_SRC_DIR AND
        test_time_util.cpp
        test_ubus.cpp
        test_unityshell_private.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
        ${UNITY_SRC}/UnityshellPrivate.cpp
        ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
        ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp

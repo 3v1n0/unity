@@ -20,7 +20,6 @@
  */
 
 #include "config.h"
-#include "panel-marshal.h"
 #include "panel-service.h"
 
 #include <stdlib.h>
@@ -31,8 +30,6 @@
 
 #include <X11/extensions/XInput2.h>
 #include <X11/XKBlib.h>
-
-#include "panel-marshal.h"
 
 G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 
@@ -219,8 +216,7 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
                   0,
-                  NULL, NULL,
-                  panel_marshal_VOID__STRING_INT_INT_UINT_UINT,
+                  NULL, NULL, NULL,
                   G_TYPE_NONE, 5, G_TYPE_STRING, G_TYPE_INT, G_TYPE_INT,
                   G_TYPE_UINT, G_TYPE_UINT);
 
@@ -229,8 +225,7 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
                   0,
-                  NULL, NULL,
-                  g_cclosure_marshal_VOID__STRING,
+                  NULL, NULL, NULL,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
 
  _service_signals[ENTRY_ACTIVATE_REQUEST] =
@@ -238,8 +233,7 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
                   0,
-                  NULL, NULL,
-                  g_cclosure_marshal_VOID__STRING,
+                  NULL, NULL, NULL,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
 
  _service_signals[GEOMETRIES_CHANGED] =
@@ -247,8 +241,7 @@ panel_service_class_init (PanelServiceClass *klass)
       G_OBJECT_CLASS_TYPE (obj_class),
       G_SIGNAL_RUN_LAST,
       0,
-      NULL, NULL,
-      panel_marshal_VOID__OBJECT_POINTER_INT_INT_INT_INT,
+      NULL, NULL, NULL,
       G_TYPE_NONE, 6,
       G_TYPE_OBJECT, G_TYPE_POINTER,
       G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
@@ -258,8 +251,7 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
                   0,
-                  NULL, NULL,
-                  panel_marshal_VOID__STRING_BOOLEAN,
+                  NULL, NULL, NULL,
                   G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_BOOLEAN);
 
   _service_signals[INDICATORS_CLEARED] =
@@ -267,8 +259,7 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
                   0,
-                  NULL, NULL,
-                  g_cclosure_marshal_VOID__VOID,
+                  NULL, NULL, NULL,
                   G_TYPE_NONE, 0);
 
 
