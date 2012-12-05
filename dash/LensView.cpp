@@ -33,7 +33,9 @@
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/PlacesVScrollBar.h"
+#include "unity-shared/PlacesOverlayVScrollBar.h"
 
+#include "config.h"
 #include <glib/gi18n-lib.h>
 
 namespace unity
@@ -57,6 +59,13 @@ public:
     , up_area_(nullptr)
   {
     SetVScrollBar(scroll_bar);
+
+    OnVisibleChanged.connect([&] (nux::Area* /*area*/, bool visible) {
+      if (m_horizontal_scrollbar_enable)
+        _hscrollbar->SetVisible(visible);
+      if (m_vertical_scrollbar_enable)
+        _vscrollbar->SetVisible(visible);
+    });
   }
 
   void ScrollToPosition(nux::Geometry const& position)
@@ -192,6 +201,10 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
     }
   });
 
+  OnVisibleChanged.connect([&] (nux::Area* area, bool visible) {
+    scroll_view_->SetVisible(visible);
+  });
+
 }
 
 void LensView::SetupViews(nux::Area* show_filters)
@@ -201,9 +214,9 @@ void LensView::SetupViews(nux::Area* show_filters)
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenLensAndFilters());
 
-  scroll_view_ = new LensScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION),
+  scroll_view_ = new LensScrollView(new PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION),
                                     NUX_TRACKER_LOCATION);
-  scroll_view_->EnableVerticalScrollBar(false);
+  scroll_view_->EnableVerticalScrollBar(true);
   scroll_view_->EnableHorizontalScrollBar(false);
   layout_->AddView(scroll_view_);
 

@@ -98,7 +98,7 @@ bool StandaloneWindowManager::IsWindowOnCurrentDesktop(Window window_id) const
   if (it != standalone_windows_.end())
     return (it->second->current_desktop == current_desktop_);
 
-  return false;
+  return true;
 }
 
 bool StandaloneWindowManager::IsWindowObscured(Window window_id) const
@@ -112,7 +112,7 @@ bool StandaloneWindowManager::IsWindowMapped(Window window_id) const
   if (it != standalone_windows_.end())
     return it->second->mapped;
 
-  return false;
+  return true;
 }
 
 bool StandaloneWindowManager::IsWindowVisible(Window window_id) const
@@ -121,7 +121,7 @@ bool StandaloneWindowManager::IsWindowVisible(Window window_id) const
   if (it != standalone_windows_.end())
     return it->second->visible;
 
-  return false;
+  return true;
 }
 
 bool StandaloneWindowManager::IsWindowOnTop(Window window_id) const

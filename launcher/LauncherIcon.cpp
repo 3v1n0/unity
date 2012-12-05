@@ -233,7 +233,7 @@ LauncherIcon::OpenInstance(ActionArg arg)
   if (wm.IsScaleActive())
     wm.TerminateScale();
 
-  OpenInstanceLauncherIcon(arg);
+  OpenInstanceLauncherIcon();
 
   UpdateQuirkTime(Quirk::LAST_ACTION);
 }
@@ -801,6 +801,7 @@ LauncherIcon::Present(float present_urgency, int length)
 
   _present_urgency = CLAMP(present_urgency, 0.0f, 1.0f);
   SetQuirk(Quirk::PRESENTED, true);
+  SetQuirk(Quirk::UNFOLDED, true);
 }
 
 void
@@ -811,6 +812,7 @@ LauncherIcon::Unpresent()
 
   _source_manager.Remove(PRESENT_TIMEOUT);
   SetQuirk(Quirk::PRESENTED, false);
+  SetQuirk(Quirk::UNFOLDED, false);
 }
 
 void

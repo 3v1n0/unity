@@ -16,7 +16,10 @@
  *
  * Authored by: Bilal Akhtar <bilalakhtar@ubuntu.com>
  *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
+ *              Michael Vogt <mvo@ubuntu.com>
  */
+
+#include "config.h"
 
 #include <NuxCore/Logger.h>
 #include <glib.h>
@@ -41,18 +44,19 @@ const int INSTALL_TIP_DURATION = 1500;
 
 NUX_IMPLEMENT_OBJECT_TYPE(SoftwareCenterLauncherIcon);
 
-SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(BamfApplication* app,
+SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(ApplicationPtr const& app,
                                                        std::string const& aptdaemon_trans_id,
                                                        std::string const& icon_path)
-: ApplicationLauncherIcon(app)
-, aptdaemon_trans_("org.debian.apt",
-                   aptdaemon_trans_id,
-                   "org.debian.apt.transaction",
-                   G_BUS_TYPE_SYSTEM,
-                   G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START)
-, finished_(true)
-, needs_urgent_(false)
-, aptdaemon_trans_id_(aptdaemon_trans_id)
+  : ApplicationLauncherIcon(app)
+  , aptdaemon_trans_("org.debian.apt",
+                     aptdaemon_trans_id,
+                     "org.debian.apt.transaction",
+                     G_BUS_TYPE_SYSTEM,
+                     G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START)
+  , finished_(true)
+  , needs_urgent_(false)
+  , aptdaemon_trans_id_(aptdaemon_trans_id)
+  , app_title_(app->title())
 {
   SetQuirk(Quirk::VISIBLE, false);
   aptdaemon_trans_.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
@@ -190,7 +194,7 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
 
    if (exit_state.Str() == "exit-success")
    {
-      tooltip_text = BamfName();
+      tooltip_text = app_title_;
       SetQuirk(Quirk::PROGRESS, false);
       SetQuirk(Quirk::URGENT, true);
       SetProgress(0.0f);
@@ -200,9 +204,9 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
       // find and update to  the real desktop file
       std::string new_desktop_path = GetActualDesktopFileAfterInstall();
 
-      // silently exchange the BAMF application
-      glib::Object<BamfMatcher> matcher_(bamf_matcher_get_default());
-      _bamf_app = bamf_matcher_get_application_for_desktop_file(matcher_, new_desktop_path.c_str(), true);
+      // exchange the temp Application with the real one
+      app_ = ApplicationManager::Default().GetApplicationForDesktopFile(new_desktop_path);
+
       UpdateDesktopFile();
       UpdateRemoteUri();
 

@@ -38,7 +38,7 @@ class SoftwareCenterLauncherIcon : public ApplicationLauncherIcon
 public:
   typedef nux::ObjectPtr<SoftwareCenterLauncherIcon> Ptr;
 
-  SoftwareCenterLauncherIcon(BamfApplication* app,
+  SoftwareCenterLauncherIcon(ApplicationPtr const& app,
                              std::string const& aptdaemon_trans_id,
                              std::string const& icon_path);
 
@@ -63,6 +63,7 @@ private:
   bool finished_;
   bool needs_urgent_;
   std::string aptdaemon_trans_id_;
+  std::string app_title_;
 };
 
 }

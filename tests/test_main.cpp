@@ -5,6 +5,8 @@
 #include <Nux/Nux.h>
 #include <config.h>
 
+#include "logger_helper.h"
+
 int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
@@ -26,8 +28,7 @@ int main(int argc, char** argv)
   // Slightly higher as we're more likely to test things we know will fail
   nux::logging::configure_logging("<root>=error");
 
-  // but you can still change it if you're debugging ;)
-  nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
+  unity::helper::configure_logging("UNITY_TEST_LOG_SEVERITY");
 
   // StandaloneWindowManager brought in at link time.
   int ret = RUN_ALL_TESTS();

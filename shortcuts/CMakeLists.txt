@@ -5,8 +5,6 @@ find_package (PkgConfig)
 set (CFLAGS
      ${CACHED_UNITY_DEPS_CFLAGS}
      ${CACHED_UNITY_DEPS_CFLAGS_OTHER}
-     "-DGETTEXT_PACKAGE=\"unity\""
-     "-I${CMAKE_CURRENT_BINARY_DIR}"
      )
 
 if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l")
@@ -22,7 +20,7 @@ link_libraries (${LIBS})
 set (LIB_PATHS ${CACHED_UNITY_DEPS_LIBRARY_DIRS})
 link_directories (${CMAKE_BINARY_DIR}/UnityCore ${LIB_PATHS})
 
-include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
+include_directories (.. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR})
 
 #
 # Headers & Sources
@@ -48,5 +46,4 @@ add_dependencies (shortcuts-lib unity-core-${UNITY_API_VERSION} unity-shared)
 # Standalone variant
 #
 add_executable (shortcuts StandaloneShortcuts.cpp)
-add_dependencies (shortcuts shortcuts-lib)
 target_link_libraries (shortcuts shortcuts-lib unity-shared)
