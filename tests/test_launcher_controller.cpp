@@ -37,8 +37,10 @@
 #include "test_utils.h"
 #include "test_uscreen_mock.h"
 #include "test_mock_devices.h"
-#include "bamf-mock-application.h"
+#include "mock-application.h"
 
+
+using namespace testmocks;
 using namespace unity::launcher;
 using namespace testing;
 
@@ -134,21 +136,21 @@ struct MockApplicationLauncherIcon : public ApplicationLauncherIcon
   typedef bool Fake;
 
   MockApplicationLauncherIcon(Fake = true, std::string const& remote_uri = "")
-    : ApplicationLauncherIcon(BAMF_APPLICATION(bamf_mock_application_new()))
+    : ApplicationLauncherIcon(std::make_shared<MockApplication>(""))
     , remote_uri_(remote_uri)
   {
     InitMock();
     SetQuirk(Quirk::VISIBLE, true);
   }
 
-  explicit MockApplicationLauncherIcon(BamfApplication* app)
+  explicit MockApplicationLauncherIcon(ApplicationPtr const& app)
     : ApplicationLauncherIcon(app)
   {
     InitMock();
   }
 
   MockApplicationLauncherIcon(std::string const& desktop_file)
-    : ApplicationLauncherIcon(bamf_matcher_get_application_for_desktop_file(bamf_matcher_get_default(), desktop_file.c_str(), TRUE))
+    : ApplicationLauncherIcon(std::make_shared<MockApplication>(desktop_file))
   {
     InitMock();
   }
@@ -258,7 +260,7 @@ protected:
 
     void DisconnectSignals()
     {
-      Impl()->view_opened_signal_.Disconnect();
+      // Impl()->view_opened_signal_.Disconnect();
       Impl()->device_section_.icon_added.clear();
       Impl()->model_->icon_removed.clear();
       Impl()->model_->saved.clear();
@@ -283,7 +285,6 @@ TEST_F(TestLauncherController, Construction)
   ASSERT_EQ(lc.launchers().size(), 1);
   EXPECT_EQ(lc.launcher().monitor(), 0);
   ASSERT_EQ(lc.Impl()->parent_, &lc);
-  ASSERT_TRUE(lc.Impl()->matcher_.IsType(BAMF_TYPE_MATCHER));
   ASSERT_NE(lc.Impl()->model_, nullptr);
   EXPECT_EQ(lc.Impl()->expo_icon_->GetIconType(), AbstractLauncherIcon::IconType::EXPO);
   EXPECT_EQ(lc.Impl()->desktop_icon_->GetIconType(), AbstractLauncherIcon::IconType::DESKTOP);
@@ -530,7 +531,7 @@ TEST_F(TestLauncherController, CreateFavoriteDesktopFile)
 TEST_F(TestLauncherController, CreateFavoriteInvalidDesktopFile)
 {
   // This desktop file has already been added as favorite, so it is invalid
-  std::string desktop_file = *(favorite_store.GetFavorites().begin());
+  std::string desktop_file = app::UBUNTU_ONE;
   std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop_file;
   auto const& fav = lc.Impl()->CreateFavoriteIcon(icon_uri);
 
@@ -723,22 +724,15 @@ TEST_F(TestLauncherController, AddRunningApps)
   lc.DisconnectSignals();
   lc.Impl()->AddRunningApps();
 
-  std::shared_ptr<GList> apps(bamf_matcher_get_applications(lc.Impl()->matcher_), g_list_free);
-
-  for (GList *l = apps.get(); l; l = l->next)
+  // This test should be rewritten to not use the default application manager.
+  for (auto& app : ApplicationManager::Default().GetRunningApplications())
   {
-    if (!BAMF_IS_APPLICATION(l->data))
+    if (app->sticky())
       continue;
 
-    if (bamf_view_is_sticky(BAMF_VIEW(l->data)))
-      continue;
+    ASSERT_TRUE(app->seen());
 
-    BamfApplication* app = BAMF_APPLICATION(l->data);
-    ASSERT_NE(g_object_get_qdata(G_OBJECT(app), g_quark_from_static_string("unity-seen")), nullptr);
-
-    auto desktop = bamf_application_get_desktop_file(app);
-    std::string path(desktop ? desktop : "");
-
+    auto path = app->desktop_file();
     if (path.empty())
       continue;
 
@@ -778,7 +772,6 @@ TEST_F(TestLauncherController, SetupIcons)
                                 FavoriteStore::URI_PREFIX_APP + app::UPDATE_MANAGER });
   lc.Impl()->SetupIcons();
   lc.DisconnectSignals();
-  std::shared_ptr<GList> apps(bamf_matcher_get_applications(lc.Impl()->matcher_), g_list_free);
 
   auto fav = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE);
   EXPECT_EQ(model->IconIndex(fav), icon_index);
@@ -792,23 +785,19 @@ TEST_F(TestLauncherController, SetupIcons)
   fav = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + app::UPDATE_MANAGER);
   EXPECT_EQ(model->IconIndex(fav), ++icon_index);
 
-  for (GList *l = apps.get(); l; l = l->next)
+  for (auto& app : ApplicationManager::Default().GetRunningApplications())
   {
-    if (!BAMF_IS_APPLICATION(l->data))
+    if (app->sticky())
       continue;
 
-    if (bamf_view_is_sticky(BAMF_VIEW(l->data)))
-      continue;
+    ASSERT_TRUE(app->seen());
 
-    auto desktop = bamf_application_get_desktop_file(BAMF_APPLICATION(l->data));
-    std::string path(desktop ? desktop : "");
-    ++icon_index;
-
+    auto path = app->desktop_file();
     if (path.empty())
       continue;
 
     auto icon = lc.GetIconByDesktop(path);
-    ASSERT_EQ(model->IconIndex(icon), icon_index);
+    ASSERT_EQ(model->IconIndex(icon), ++icon_index);
   }
 
   ASSERT_EQ(model->IconIndex(lc.Impl()->expo_icon_), ++icon_index);
@@ -824,7 +813,6 @@ TEST_F(TestLauncherController, ResetIconPriorities)
   favorite_store.AddFavorite(places::DEVICES_URI, -1);
   lc.Impl()->SetupIcons();
   lc.DisconnectSignals();
-  std::shared_ptr<GList> apps(bamf_matcher_get_applications(lc.Impl()->matcher_), g_list_free);
 
   favorite_store.SetFavorites({ places::DEVICES_URI,
                                 FavoriteStore::URI_PREFIX_APP + app::SW_CENTER,
@@ -841,25 +829,19 @@ TEST_F(TestLauncherController, ResetIconPriorities)
   auto fav = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + app::SW_CENTER);
   EXPECT_EQ(model->IconIndex(fav), ++icon_index);
 
-  for (GList *l = apps.get(); l; l = l->next)
+  for (auto& app : ApplicationManager::Default().GetRunningApplications())
   {
-    if (!BAMF_IS_APPLICATION(l->data))
+    if (app->sticky())
       continue;
 
-    if (bamf_view_is_sticky(BAMF_VIEW(l->data)))
-      continue;
+    ASSERT_TRUE(app->seen());
 
-    auto desktop = bamf_application_get_desktop_file(BAMF_APPLICATION(l->data));
-    std::string path(desktop ? desktop : "");
-    ++icon_index;
-
+    auto path = app->desktop_file();
     if (path.empty())
       continue;
 
-    auto const& icon = lc.GetIconByDesktop(path);
-
-    ASSERT_TRUE(icon.IsValid());
-    ASSERT_EQ(model->IconIndex(icon), icon_index);
+    auto icon = lc.GetIconByDesktop(path);
+    ASSERT_EQ(model->IconIndex(icon), ++icon_index);
   }
 
   fav = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE);
@@ -1504,10 +1486,7 @@ TEST_F(TestLauncherController, OnViewOpened)
   auto const& app_icons = lc.Impl()->model_->GetSublist<ApplicationLauncherIcon>();
   auto const& last_app = *(app_icons.rbegin());
 
-  auto app = bamf_matcher_get_application_for_desktop_file(lc.Impl()->matcher_, app::BZR_HANDLE_PATCH.c_str(), TRUE);
-  g_signal_emit_by_name(lc.Impl()->matcher_, "view-opened", app);
-  lc.DisconnectSignals();
-
+  testmocks::MockApplicationManager::StartApp(app::BZR_HANDLE_PATCH);
   auto const& icon = lc.GetIconByDesktop(app::BZR_HANDLE_PATCH);
   ASSERT_TRUE(icon.IsValid());
 

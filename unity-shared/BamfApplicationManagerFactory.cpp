@@ -14,32 +14,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
+ * Authored by: Tim Penhey <tim.penhey@canonical.com>
  */
 
-#ifndef UNITY_APPMENU_INDICATOR_H
-#define UNITY_APPMENU_INDICATOR_H
-
-#include "Indicator.h"
+#include "unity-shared/BamfApplicationManager.h"
 
 namespace unity
 {
-namespace indicator
+// This function is used by the static Default method on the ApplicationManager
+// class, and uses link time to make sure there is a function available.
+std::shared_ptr<ApplicationManager> create_application_manager()
 {
-
-class AppmenuIndicator : public Indicator
-{
-public:
-  AppmenuIndicator(std::string const& name);
-
-  virtual bool IsAppmenu() const { return true; }
-
-  void ShowAppmenu(unsigned xid, int x, int y) const;
-
-  sigc::signal<void, unsigned, int, int> on_show_appmenu;
-};
-
-}
+    return std::shared_ptr<ApplicationManager>(new bamf::Manager());
 }
 
-#endif // UNITY_APPMENU_INDICATOR_H
+}

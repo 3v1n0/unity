@@ -438,6 +438,21 @@ int StandaloneWindowManager::WorkspaceCount() const
   return 4;
 }
 
+nux::Point StandaloneWindowManager::GetCurrentViewport() const
+{
+  return current_vp_;
+}
+
+ int StandaloneWindowManager::GetViewportHSize() const
+{
+  return 2;
+}
+
+int StandaloneWindowManager::GetViewportVSize() const
+{
+  return 2;
+}
+
 bool StandaloneWindowManager::SaveInputFocus()
 {
   return false;
@@ -480,6 +495,10 @@ std::map<Window, StandaloneWindow::Ptr> StandaloneWindowManager::GetStandaloneWi
   return standalone_windows_;
 }
 
+void StandaloneWindowManager::SetCurrentViewport(nux::Point const& vp)
+{
+  current_vp_ = vp;
+}
 
 void StandaloneWindowManager::AddProperties(GVariantBuilder* builder)
 {

@@ -27,14 +27,15 @@
 
 #include "ApplicationLauncherIcon.h"
 #include "FavoriteStore.h"
-#include "bamf-mock-application.h"
+#include "mock-application.h"
+
 
 using namespace unity;
+using namespace testmocks;
 using namespace unity::launcher;
 
 namespace
 {
-
 const std::string DEFAULT_EMPTY_ICON = "application-default-icon";
 const std::string USC_DESKTOP = BUILDDIR"/tests/data/applications/ubuntu-software-center.desktop";
 const std::string NO_ICON_DESKTOP = BUILDDIR"/tests/data/applications/no-icon.desktop";
@@ -44,24 +45,22 @@ class TestApplicationLauncherIcon : public testing::Test
 public:
   virtual void SetUp()
   {
-    BamfApplication* bamf_app;
-    bamf_matcher = bamf_matcher_get_default();
-
-    bamf_app = bamf_matcher_get_application_for_desktop_file(bamf_matcher, USC_DESKTOP.c_str(), TRUE);
-    usc_icon = new launcher::ApplicationLauncherIcon(bamf_app);
+    usc_app.reset(new MockApplication(USC_DESKTOP, "softwarecenter"));
+    usc_icon = new launcher::ApplicationLauncherIcon(usc_app);
     ASSERT_EQ(usc_icon->DesktopFile(), USC_DESKTOP);
 
-    bamf_app = bamf_matcher_get_application_for_desktop_file(bamf_matcher, NO_ICON_DESKTOP.c_str(), TRUE);
-    empty_icon = new launcher::ApplicationLauncherIcon(bamf_app);
+    empty_app.reset(new MockApplication(NO_ICON_DESKTOP));
+    empty_icon = new launcher::ApplicationLauncherIcon(empty_app);
     ASSERT_EQ(empty_icon->DesktopFile(), NO_ICON_DESKTOP);
 
-    mock_app = bamf_mock_application_new();
-    mock_icon = new launcher::ApplicationLauncherIcon(glib::object_cast<BamfApplication>(mock_app));
+    mock_app.reset(new MockApplication(""));
+    mock_icon = new launcher::ApplicationLauncherIcon(mock_app);
     ASSERT_TRUE(mock_icon->DesktopFile().empty());
   }
 
-  glib::Object<BamfMatcher> bamf_matcher;
-  glib::Object<BamfMockApplication> mock_app;
+  std::shared_ptr<MockApplication> usc_app;
+  std::shared_ptr<MockApplication> empty_app;
+  std::shared_ptr<MockApplication> mock_app;
   nux::ObjectPtr<launcher::ApplicationLauncherIcon> usc_icon;
   nux::ObjectPtr<launcher::ApplicationLauncherIcon> empty_icon;
   nux::ObjectPtr<launcher::ApplicationLauncherIcon> mock_icon;
@@ -91,53 +90,39 @@ TEST_F(TestApplicationLauncherIcon, TestDefaultIcon)
 
 TEST_F(TestApplicationLauncherIcon, Stick)
 {
-  BamfView* bamf_app = BAMF_VIEW(bamf_matcher_get_application_for_desktop_file(bamf_matcher, USC_DESKTOP.c_str(), FALSE));
-  ASSERT_FALSE(bamf_view_is_sticky(bamf_app));
-
   bool saved = false;
   usc_icon->position_saved.connect([&saved] {saved = true;});
 
   usc_icon->Stick(false);
-  EXPECT_TRUE(bamf_view_is_sticky(bamf_app));
+  EXPECT_TRUE(usc_app->sticky());
   EXPECT_TRUE(usc_icon->IsSticky());
   EXPECT_TRUE(usc_icon->IsVisible());
   EXPECT_FALSE(saved);
 
   usc_icon->Stick(true);
   EXPECT_FALSE(saved);
-  bamf_view_set_sticky(bamf_app, FALSE);
 }
 
 TEST_F(TestApplicationLauncherIcon, StickAndSave)
 {
-  BamfView* bamf_app = BAMF_VIEW(bamf_matcher_get_application_for_desktop_file(bamf_matcher, USC_DESKTOP.c_str(), FALSE));
-  ASSERT_FALSE(bamf_view_is_sticky(bamf_app));
-
   bool saved = false;
   usc_icon->position_saved.connect([&saved] {saved = true;});
 
   usc_icon->Stick(true);
-  EXPECT_TRUE(bamf_view_is_sticky(bamf_app));
+  EXPECT_TRUE(usc_app->sticky());
   EXPECT_TRUE(usc_icon->IsSticky());
   EXPECT_TRUE(usc_icon->IsVisible());
   EXPECT_TRUE(saved);
-  bamf_view_set_sticky(bamf_app, FALSE);
 }
 
 TEST_F(TestApplicationLauncherIcon, Unstick)
 {
-  BamfView* bamf_app = BAMF_VIEW(bamf_matcher_get_application_for_desktop_file(bamf_matcher, USC_DESKTOP.c_str(), FALSE));
-  ASSERT_FALSE(bamf_view_is_sticky(bamf_app));
-
   bool forgot = false;
   usc_icon->position_forgot.connect([&forgot] {forgot = true;});
 
   usc_icon->Stick(false);
-  ASSERT_TRUE(bamf_view_is_sticky(bamf_app));
-  ASSERT_TRUE(usc_icon->IsSticky());
-
   usc_icon->UnStick();
-  EXPECT_FALSE(bamf_view_is_sticky(bamf_app));
+  EXPECT_FALSE(usc_app->sticky());
   EXPECT_FALSE(usc_icon->IsSticky());
   EXPECT_FALSE(usc_icon->IsVisible());
   EXPECT_TRUE(forgot);
@@ -152,32 +137,31 @@ TEST_F(TestApplicationLauncherIcon, RemoteUri)
 TEST_F(TestApplicationLauncherIcon, EmptyTooltipUpdatesOnRunning)
 {
   ASSERT_TRUE(mock_icon->tooltip_text().empty());
-  bamf_mock_application_set_name (mock_app, "Got Name");
-
+  mock_app->title_ = "Got Name";
   ASSERT_TRUE(mock_icon->tooltip_text().empty());
 
-  bamf_mock_application_set_running(mock_app, TRUE);
+  mock_app->SetRunState(true);
   EXPECT_EQ(mock_icon->tooltip_text(), "Got Name");
 
-  bamf_mock_application_set_running(mock_app, FALSE);
-  bamf_mock_application_set_name (mock_app, "New Name");
-  bamf_mock_application_set_running(mock_app, TRUE);
+  mock_app->SetRunState(false);
+  mock_app->title_ = "New Name";
+  mock_app->SetRunState(true);
   EXPECT_EQ(mock_icon->tooltip_text(), "Got Name");
 }
 
 TEST_F(TestApplicationLauncherIcon, InvalidIconUpdatesOnRunning)
 {
   ASSERT_EQ(mock_icon->icon_name(), DEFAULT_EMPTY_ICON);
-  bamf_mock_application_set_icon (mock_app, "icon-name");
+  mock_app->icon_ = "icon-name";
 
   ASSERT_EQ(mock_icon->icon_name(), DEFAULT_EMPTY_ICON);
 
-  bamf_mock_application_set_running(mock_app, TRUE);
+  mock_app->SetRunState(true);
   EXPECT_EQ(mock_icon->icon_name(), "icon-name");
 
-  bamf_mock_application_set_running(mock_app, FALSE);
-  bamf_mock_application_set_icon (mock_app, "new-icon-name");
-  bamf_mock_application_set_running(mock_app, TRUE);
+  mock_app->SetRunState(false);
+  mock_app->icon_ = "new-icon-name";
+  mock_app->SetRunState(true);
   EXPECT_EQ(mock_icon->icon_name(), "icon-name");
 }
 

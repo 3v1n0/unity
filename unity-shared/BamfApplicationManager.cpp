@@ -23,19 +23,10 @@
 #include <NuxCore/Logger.h>
 
 
-
 DECLARE_LOGGER(logger, "unity.appmanager.bamf");
-
 
 namespace unity
 {
-// This function is used by the static Default method on the ApplicationManager
-// class, and uses link time to make sure there is a function available.
-std::shared_ptr<ApplicationManager> create_application_manager()
-{
-    return std::shared_ptr<ApplicationManager>(new bamf::Manager());
-}
-
 namespace bamf
 {
 namespace
@@ -168,7 +159,10 @@ int AppWindow::monitor() const
 
 ApplicationPtr AppWindow::application() const
 {
-  return manager_.GetApplicationForWindow(bamf_window_);
+  // Moderately evil, but better than changing the method to non-const.
+  // We know that the manager will always be able to be non-const.
+  Manager& m = const_cast<Manager&>(manager_);
+  return m.GetApplicationForWindow(bamf_window_);
 }
 
 void AppWindow::Quit() const
@@ -566,7 +560,7 @@ Manager::~Manager()
   LOG_TRACE(logger) << "Manager::~Manager";
 }
 
-ApplicationWindowPtr Manager::GetActiveWindow() const
+ApplicationWindowPtr Manager::GetActiveWindow()
 {
   ApplicationWindowPtr result;
   // No transfer of ownership for bamf_matcher_get_active_window.
@@ -607,7 +601,7 @@ ApplicationWindowPtr Manager::GetActiveWindow() const
   return result;
 }
 
-ApplicationPtr Manager::GetApplicationForDesktopFile(std::string const& desktop_file) const
+ApplicationPtr Manager::GetApplicationForDesktopFile(std::string const& desktop_file)
 {
   ApplicationPtr result;
   glib::Object<BamfApplication> app(bamf_matcher_get_application_for_desktop_file(
@@ -619,7 +613,7 @@ ApplicationPtr Manager::GetApplicationForDesktopFile(std::string const& desktop_
   return result;
 }
 
-ApplicationPtr Manager::GetApplicationForWindow(glib::Object<BamfWindow> const& window) const
+ApplicationPtr Manager::GetApplicationForWindow(glib::Object<BamfWindow> const& window)
 {
   ApplicationPtr result;
   glib::Object<BamfApplication> app(bamf_matcher_get_application_for_window(matcher_, window),
@@ -629,7 +623,7 @@ ApplicationPtr Manager::GetApplicationForWindow(glib::Object<BamfWindow> const& 
   return result;
 }
 
-ApplicationList Manager::GetRunningApplications() const
+ApplicationList Manager::GetRunningApplications()
 {
   ApplicationList result;
   std::shared_ptr<GList> apps(bamf_matcher_get_applications(matcher_), g_list_free);
@@ -642,8 +636,10 @@ ApplicationList Manager::GetRunningApplications() const
       continue;
     }
 
-    glib::Object<BamfApplication> app(static_cast<BamfApplication*>(l->data));
-    result.push_back(ApplicationPtr(new Application(*this, app)));
+    glib::Object<BamfApplication> bamf_app(static_cast<BamfApplication*>(l->data));
+    ApplicationPtr app(new Application(*this, bamf_app));
+    result.push_back(app);
+    LOG_DEBUG(logger) << "Running app: " << app->title();
   }
   return result;
 }

@@ -9,8 +9,7 @@
 
 from __future__ import absolute_import
 
-from autopilot.emulators.dbus_handler import session_bus
-from dbus import Interface
+from dbus import Interface, SessionBus
 
 # acquire the debugging dbus object
 UNITY_BUS_NAME = 'com.canonical.Unity'
@@ -19,7 +18,7 @@ LOGGING_IFACE = 'com.canonical.Unity.Debug.Logging'
 
 
 def get_dbus_proxy_object():
-    return session_bus.get_object(UNITY_BUS_NAME, DEBUG_PATH)
+    return SessionBus().get_object(UNITY_BUS_NAME, DEBUG_PATH)
 
 
 def get_dbus_logging_interface():

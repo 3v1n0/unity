@@ -46,7 +46,7 @@ namespace unity
 namespace launcher
 {
 
-class Controller::Impl
+class Controller::Impl : public sigc::trackable
 {
 public:
   Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager);
@@ -100,7 +100,7 @@ public:
 
   void OnWindowFocusChanged (guint32 xid);
 
-  void OnViewOpened(BamfMatcher* matcher, BamfView* view);
+  void OnApplicationStarted(ApplicationPtr const& app);
 
   void ReceiveMouseDownOutsideArea(int x, int y, unsigned long button_flags, unsigned long key_flags);
 
@@ -126,7 +126,6 @@ public:
 
   Controller* parent_;
   LauncherModel::Ptr model_;
-  glib::Object<BamfMatcher> matcher_;
   nux::ObjectPtr<Launcher> launcher_;
   nux::ObjectPtr<Launcher> keyboard_launcher_;
   XdndManager::Ptr xdnd_manager_;
@@ -155,7 +154,6 @@ public:
   GDBusConnection* gdbus_connection_;
   unsigned reg_id_;
 
-  glib::Signal<void, BamfMatcher*, BamfView*> view_opened_signal_;
   glib::SourceManager sources_;
   UBusManager ubus;
 

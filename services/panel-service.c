@@ -19,22 +19,17 @@
  *              Marco Trevisan (Treviño) <mail@3v1n0.net>
  */
 
-#if HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include "panel-marshal.h"
+#include "config.h"
 #include "panel-service.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
+#include <glib/gi18n-lib.h>
 
 #include <X11/extensions/XInput2.h>
 #include <X11/XKBlib.h>
-
-#include "panel-marshal.h"
 
 G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 
@@ -221,8 +216,7 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
                   0,
-                  NULL, NULL,
-                  panel_marshal_VOID__STRING_INT_INT_UINT_UINT,
+                  NULL, NULL, NULL,
                   G_TYPE_NONE, 5, G_TYPE_STRING, G_TYPE_INT, G_TYPE_INT,
                   G_TYPE_UINT, G_TYPE_UINT);
 
@@ -231,8 +225,7 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
                   0,
-                  NULL, NULL,
-                  g_cclosure_marshal_VOID__STRING,
+                  NULL, NULL, NULL,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
 
  _service_signals[ENTRY_ACTIVATE_REQUEST] =
@@ -240,8 +233,7 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
                   0,
-                  NULL, NULL,
-                  g_cclosure_marshal_VOID__STRING,
+                  NULL, NULL, NULL,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
 
  _service_signals[GEOMETRIES_CHANGED] =
@@ -249,8 +241,7 @@ panel_service_class_init (PanelServiceClass *klass)
       G_OBJECT_CLASS_TYPE (obj_class),
       G_SIGNAL_RUN_LAST,
       0,
-      NULL, NULL,
-      panel_marshal_VOID__OBJECT_POINTER_INT_INT_INT_INT,
+      NULL, NULL, NULL,
       G_TYPE_NONE, 6,
       G_TYPE_OBJECT, G_TYPE_POINTER,
       G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
@@ -260,8 +251,7 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
                   0,
-                  NULL, NULL,
-                  panel_marshal_VOID__STRING_BOOLEAN,
+                  NULL, NULL, NULL,
                   G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_BOOLEAN);
 
   _service_signals[INDICATORS_CLEARED] =
@@ -269,8 +259,7 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
                   0,
-                  NULL, NULL,
-                  g_cclosure_marshal_VOID__VOID,
+                  NULL, NULL, NULL,
                   G_TYPE_NONE, 0);
 
 
@@ -459,7 +448,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
                 }
               else if (entry == priv->pressed_entry)
                 {
-                  panel_service_secondary_activate_entry (self, entry_id, time(NULL));
+                  panel_service_secondary_activate_entry (self, entry_id);
                 }
 
               ret = GDK_FILTER_REMOVE;
@@ -836,14 +825,12 @@ on_entry_added (IndicatorObject      *object,
     {
       g_signal_connect (entry->label, "notify::label",
                         G_CALLBACK (on_entry_property_changed), object);
-
       g_signal_connect (entry->label, "notify::sensitive",
                         G_CALLBACK (on_entry_property_changed), object);
       g_signal_connect (entry->label, "show",
                         G_CALLBACK (on_entry_changed), object);
       g_signal_connect (entry->label, "hide",
                         G_CALLBACK (on_entry_changed), object);
-
     }
   if (GTK_IS_IMAGE (entry->image))
     {
@@ -859,14 +846,12 @@ on_entry_added (IndicatorObject      *object,
                         G_CALLBACK (on_entry_property_changed), object);
       g_signal_connect (entry->image, "notify::stock",
                         G_CALLBACK (on_entry_property_changed), object);
-
       g_signal_connect (entry->image, "notify::sensitive",
                         G_CALLBACK (on_entry_property_changed), object);
       g_signal_connect (entry->image, "show",
                         G_CALLBACK (on_entry_changed), object);
       g_signal_connect (entry->image, "hide",
                         G_CALLBACK (on_entry_changed), object);
-
     }
 
   notify_object (object);
@@ -1634,7 +1619,18 @@ static void
 menu_deactivated (GtkWidget *menu)
 {
   g_signal_handlers_disconnect_by_func (menu, menu_deactivated, NULL);
-  gtk_widget_destroy (menu);
+
+  if (g_object_is_floating (menu))
+    g_object_ref_sink (menu);
+
+  g_object_unref (menu);
+}
+
+static void
+menuitem_activated (GtkWidget *menuitem, IndicatorObjectEntry *entry)
+{
+  IndicatorObject *object = get_entry_parent_indicator (entry);
+  indicator_object_entry_activate (object, entry, CurrentTime);
 }
 
 static void
@@ -1644,8 +1640,7 @@ panel_service_show_entry_common (PanelService *self,
                                  guint32       xid,
                                  gint32        x,
                                  gint32        y,
-                                 guint32       button,
-                                 guint32       timestamp)
+                                 guint32       button)
 {
   PanelServicePrivate *priv;
   GtkWidget           *last_menu;
@@ -1678,17 +1673,17 @@ panel_service_show_entry_common (PanelService *self,
 
   if (entry != NULL)
     {
-      if (xid > 0)
-        {
-          indicator_object_entry_activate_window (object, entry, xid, CurrentTime);
-        }
-      else
-        {
-          indicator_object_entry_activate (object, entry, CurrentTime);
-        }
-
       if (GTK_IS_MENU (entry->menu))
         {
+          if (xid > 0)
+            {
+              indicator_object_entry_activate_window (object, entry, xid, CurrentTime);
+            }
+          else
+            {
+              indicator_object_entry_activate (object, entry, CurrentTime);
+            }
+
           priv->last_menu = entry->menu;
         }
       else
@@ -1697,10 +1692,17 @@ panel_service_show_entry_common (PanelService *self,
              rest of the code and to keep scrubbing fluidly, we'll create a
              stub menu for the duration of this scrub. */
           priv->last_menu = GTK_MENU (gtk_menu_new ());
+
+          GtkWidget *menu_item = gtk_menu_item_new_with_label (_("Activate"));
+          gtk_menu_shell_append (GTK_MENU_SHELL (priv->last_menu), menu_item);
+          gtk_widget_show (menu_item);
+
           g_signal_connect (priv->last_menu, "deactivate",
                             G_CALLBACK (menu_deactivated), NULL);
           g_signal_connect (priv->last_menu, "destroy",
                             G_CALLBACK (gtk_widget_destroyed), &priv->last_menu);
+          g_signal_connect (menu_item, "activate",
+                            G_CALLBACK (menuitem_activated), entry);
         }
 
       GtkWidget *top_widget = gtk_widget_get_toplevel (GTK_WIDGET (priv->last_menu));
@@ -1766,8 +1768,7 @@ panel_service_show_entry (PanelService *self,
                           guint32       xid,
                           gint32        x,
                           gint32        y,
-                          guint32       button,
-                          guint32       timestamp)
+                          guint32       button)
 {
   IndicatorObject      *object;
   IndicatorObjectEntry *entry;
@@ -1777,15 +1778,11 @@ panel_service_show_entry (PanelService *self,
   entry = get_indicator_entry_by_id (self, entry_id);
   object = get_entry_parent_indicator (entry);
 
-  panel_service_show_entry_common (self, object, entry, xid, x, y, button, timestamp);
+  panel_service_show_entry_common (self, object, entry, xid, x, y, button);
 }
 
 void
-panel_service_show_app_menu (PanelService *self,
-                             guint32       xid,
-                             gint32        x,
-                             gint32        y,
-                             guint32       timestamp)
+panel_service_show_app_menu (PanelService *self, guint32 xid, gint32 x, gint32 y)
 {
   IndicatorObject      *object;
   IndicatorObjectEntry *entry;
@@ -1803,14 +1800,12 @@ panel_service_show_app_menu (PanelService *self,
       entry = entries->data;
       g_list_free (entries);
 
-      panel_service_show_entry_common (self, object, entry, xid, x, y, 1, timestamp);
+      panel_service_show_entry_common (self, object, entry, xid, x, y, 1);
     }
 }
 
 void
-panel_service_secondary_activate_entry (PanelService *self,
-                                        const gchar  *entry_id,
-                                        guint32       timestamp)
+panel_service_secondary_activate_entry (PanelService *self, const gchar *entry_id)
 {
   IndicatorObject      *object;
   IndicatorObjectEntry *entry;
@@ -1820,7 +1815,7 @@ panel_service_secondary_activate_entry (PanelService *self,
 
   object = get_entry_parent_indicator (entry);
   g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_SECONDARY_ACTIVATE, entry,
-                        timestamp);
+                        CurrentTime);
 }
 
 void

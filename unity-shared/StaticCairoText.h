@@ -81,6 +81,7 @@ public:
   void SetTextAlignment(AlignState state);
   void SetTextVerticalAlignment(AlignState state);
   void SetFont(std::string const& font);
+  std::string GetFont();
   void SetUnderline(UnderlineState underline);
   void SetLines(int maximum_lines);
   void SetLineSpacing(float line_spacing);
@@ -108,6 +109,9 @@ public:
 protected:
   // Key navigation
   virtual bool AcceptKeyNavFocus();
+
+  std::vector<unsigned> GetTextureStartIndices();
+  std::vector<unsigned> GetTextureEndIndices();
 
 private:
   struct Impl;
