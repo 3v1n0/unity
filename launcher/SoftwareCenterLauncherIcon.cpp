@@ -211,7 +211,7 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
       UpdateRemoteUri();
 
       // make it permanent
-      Stick();
+      Stick(true);
 
       _source_manager.AddIdle([this]()
       {

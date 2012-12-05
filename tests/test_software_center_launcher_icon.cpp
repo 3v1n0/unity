@@ -40,6 +40,7 @@ namespace launcher
 const std::string LOCAL_DATA_DIR = BUILDDIR"/tests/data";
 const std::string USC_DESKTOP = LOCAL_DATA_DIR+"/applications/ubuntu-software-center.desktop";
 
+#if 0 // PORTME!
 class MockSoftwareCenterLauncherIcon : public SoftwareCenterLauncherIcon
 {
 public:
@@ -137,6 +138,7 @@ TEST_F(TestSoftwareCenterLauncherIcon, Animate)
 
   EXPECT_TRUE(icon.IsVisible());
 }
+#endif
 
 }
 
