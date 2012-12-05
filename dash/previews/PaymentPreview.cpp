@@ -90,7 +90,7 @@ nux::ObjectPtr<ActionLink> PaymentPreview::CreateLink(dash::Preview::ActionPtr a
   nux::ObjectPtr<ActionLink> link;
   link = new ActionLink(action->id,
          action->display_name, NUX_TRACKER_LOCATION);
-  link->SetFont(style.payment_form_labels_font().c_str());
+  link->font_hint.Set(style.payment_form_labels_font().c_str());
   link->SetMinimumWidth(178);
   link->SetMinimumHeight(34);
   return link;
