@@ -145,6 +145,7 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager)
 
   WindowManager& wm = WindowManager::Default();
   wm.window_focus_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnWindowFocusChanged));
+  wm.viewport_layout_changed.connect(sigc::group(sigc::mem_fun(this, &Controller::Impl::UpdateNumWorkspaces), sigc::_1 * sigc::_2));
 
   ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [&](GVariant * args) {
     if (reactivate_keynav)

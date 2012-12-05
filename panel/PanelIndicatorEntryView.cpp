@@ -30,7 +30,6 @@
 #include <glib.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gtk/gtk.h>
-#include <time.h>
 #include <boost/algorithm/string.hpp>
 
 #include "unity-shared/CairoTexture.h"
@@ -102,10 +101,8 @@ void PanelIndicatorEntryView::ShowMenu(int button)
 
   if (!wm.IsExpoActive() && !wm.IsScaleActive())
   {
-    proxy_->ShowMenu(GetAbsoluteX(),
-                     GetAbsoluteY() + panel::Style::Instance().panel_height,
-                     button,
-                     time(nullptr));
+    auto const& abs_geo = GetAbsoluteGeometry();
+    proxy_->ShowMenu(abs_geo.x, abs_geo.y + panel::Style::Instance().panel_height, button);
   }
 }
 
@@ -144,7 +141,7 @@ void PanelIndicatorEntryView::OnMouseUp(int x, int y, long button_flags, long ke
       button == 2 && type_ == INDICATOR)
   {
     if (geo.IsPointInside(px, py))
-      proxy_->SecondaryActivate(time(nullptr));
+      proxy_->SecondaryActivate();
 
     SetOpacity(1.0f);
   }

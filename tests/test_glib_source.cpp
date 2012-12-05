@@ -150,7 +150,7 @@ TEST(TestGLibTimeout, MultipleShotsRun)
   bool removed_called = false;
 
   {
-  auto check_function = []() { return (callback_call_count < 6) ? false : true; };
+  auto check_function = []() { return (callback_call_count > 1) ? true : false; };
   Timeout timeout(100, &OnSourceCallbackContinue);
   timeout.removed.connect([&] (unsigned int id) { removed_called = true; });
   Utils::WaitUntil(check_function, true, 1);
@@ -158,7 +158,7 @@ TEST(TestGLibTimeout, MultipleShotsRun)
   }
 
   EXPECT_TRUE(callback_called);
-  EXPECT_GE(callback_call_count, 6);
+  EXPECT_GT(callback_call_count, 1);
   EXPECT_TRUE(removed_called);
 }
 

@@ -72,6 +72,7 @@ add_subdirectory (test-input-remover)
 add_subdirectory (test-minimize-window-handler)
 add_subdirectory (test-get-transients)
 
+
 #
 # GTest tests
 #
@@ -94,6 +95,13 @@ if (GTEST_SRC_DIR AND
     GMOCK_LIB AND
     GMOCK_MAIN_LIB)
 
+  # MockWindowManager
+  add_library (unity_mock_window_manager STATIC
+               MockWindowManager.cpp)
+  target_link_libraries (unity_mock_window_manager
+                         ${GMOCK_LIB}
+                         ${GMOCK_MAIN_LIB})
+
 # The service that provides DBus services to test against
   add_executable(test-gtest-service
                  mock-application.cpp
@@ -115,8 +123,12 @@ if (GTEST_SRC_DIR AND
 # The actual test executable (xless) - do not put anything that requires X in here
   set (GTEST_XLESS_SOURCES
        test_main_xless.cpp
+<<<<<<< TREE
        test_abstract_interface_generator.cpp
        test_animator.cpp
+=======
+       #test_animator.cpp # XXX: disabled, to be removed completely soon
+>>>>>>> MERGE-SOURCE
        test_launcher_model.cpp
        test_glib_object.cpp
        test_glib_object_utils.cpp
@@ -211,6 +223,7 @@ if (ENABLE_X_SUPPORT)
                  mock-application.cpp
                  logger_helper.cpp
                  test_main.cpp
+                 test_action_link.cpp
                  test_application_launcher_icon.cpp
                  test_bfb_launcher_icon.cpp
                  test_dashview_impl.cpp
@@ -246,6 +259,7 @@ if (ENABLE_X_SUPPORT)
                  test_single_monitor_launcher_icon.cpp
                  test_expo_launcher_icon.cpp
                  test_showdesktop_handler.cpp
+								 test_static_cairo_text.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
                  test_texture_cache.cpp
