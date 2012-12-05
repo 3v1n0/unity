@@ -1335,7 +1335,7 @@ panel_service_sync_geometry (PanelService *self,
                              gint width,
                              gint height)
 {
-  IndicatorObject      *object;
+  IndicatorObject *object;
   IndicatorObjectEntry *entry;
   gboolean valid_entry = TRUE;
   PanelServicePrivate  *priv = self->priv;
