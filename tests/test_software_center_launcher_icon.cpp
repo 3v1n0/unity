@@ -76,8 +76,6 @@ TEST_F(TestSoftwareCenterLauncherIcon, Construction)
   EXPECT_EQ(icon.tooltip_text(), usc->title());
 }
 
-#if 0 // PORTME!
-
 TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformTrivial)
 {
    // no transformation needed
@@ -120,6 +118,7 @@ TEST_F(TestSoftwareCenterLauncherIcon, OnFinished)
    g_variant_unref(params);
 }
 
+#if 0
 TEST_F(TestSoftwareCenterLauncherIcon, Animate)
 {
   ASSERT_FALSE(icon.IsVisible());
