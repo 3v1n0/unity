@@ -1,5 +1,4 @@
 #include "test_glib_signals_utils.h"
-#include "test_glib_signals_utils_marshal.h"
 
 enum
 {
@@ -30,8 +29,7 @@ test_signals_class_init(TestSignalsClass* klass)
                  G_OBJECT_CLASS_TYPE(obj_class),
                  G_SIGNAL_RUN_LAST,
                  0,
-                 NULL, NULL,
-                 g_cclosure_marshal_VOID__VOID,
+                 NULL, NULL, NULL,
                  G_TYPE_NONE, 0);
 
   _service_signals[SIGNAL_1] =
@@ -39,8 +37,7 @@ test_signals_class_init(TestSignalsClass* klass)
                  G_OBJECT_CLASS_TYPE(obj_class),
                  G_SIGNAL_RUN_LAST,
                  0,
-                 NULL, NULL,
-                 g_cclosure_marshal_VOID__STRING,
+                 NULL, NULL, NULL,
                  G_TYPE_NONE, 1, G_TYPE_STRING);
 
   _service_signals[SIGNAL_2] =
@@ -48,8 +45,7 @@ test_signals_class_init(TestSignalsClass* klass)
                  G_OBJECT_CLASS_TYPE(obj_class),
                  G_SIGNAL_RUN_LAST,
                  0,
-                 NULL, NULL,
-                 test_signals_VOID__STRING_INT,
+                 NULL, NULL, NULL,
                  G_TYPE_NONE, 2,
                  G_TYPE_STRING, G_TYPE_INT);
 
@@ -58,8 +54,7 @@ test_signals_class_init(TestSignalsClass* klass)
                  G_OBJECT_CLASS_TYPE(obj_class),
                  G_SIGNAL_RUN_LAST,
                  0,
-                 NULL, NULL,
-                 test_signals_VOID__STRING_INT_FLOAT,
+                 NULL, NULL, NULL,
                  G_TYPE_NONE, 3,
                  G_TYPE_STRING, G_TYPE_INT, G_TYPE_FLOAT);
 
@@ -68,8 +63,7 @@ test_signals_class_init(TestSignalsClass* klass)
                  G_OBJECT_CLASS_TYPE(obj_class),
                  G_SIGNAL_RUN_LAST,
                  0,
-                 NULL, NULL,
-                 test_signals_VOID__STRING_INT_FLOAT_DOUBLE,
+                 NULL, NULL, NULL,
                  G_TYPE_NONE, 4,
                  G_TYPE_STRING, G_TYPE_INT, G_TYPE_FLOAT, G_TYPE_DOUBLE);
 
@@ -78,8 +72,7 @@ test_signals_class_init(TestSignalsClass* klass)
                  G_OBJECT_CLASS_TYPE(obj_class),
                  G_SIGNAL_RUN_LAST,
                  0,
-                 NULL, NULL,
-                 test_signals_VOID__STRING_INT_FLOAT_DOUBLE_BOOLEAN,
+                 NULL, NULL, NULL,
                  G_TYPE_NONE, 5,
                  G_TYPE_STRING, G_TYPE_INT, G_TYPE_FLOAT,
                  G_TYPE_DOUBLE, G_TYPE_BOOLEAN);
@@ -89,8 +82,7 @@ test_signals_class_init(TestSignalsClass* klass)
                  G_OBJECT_CLASS_TYPE(obj_class),
                  G_SIGNAL_RUN_LAST,
                  0,
-                 NULL, NULL,
-                 test_signals_BOOLEAN__STRING_INT_FLOAT_DOUBLE_BOOLEAN_CHAR,
+                 NULL, NULL, NULL,
                  G_TYPE_BOOLEAN, 6,
                  G_TYPE_STRING, G_TYPE_INT, G_TYPE_FLOAT,
                  G_TYPE_DOUBLE, G_TYPE_BOOLEAN, G_TYPE_CHAR);

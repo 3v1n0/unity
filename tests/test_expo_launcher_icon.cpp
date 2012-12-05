@@ -15,34 +15,39 @@
  * <http://www.gnu.org/licenses/>
  *
  * Authored by: Marco Trevisan (Treviño) <marco.trevisan@canonical.com>
+ *              Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
 #include <gmock/gmock.h>
 
 #include "launcher/ExpoLauncherIcon.h"
-#include "unity-shared/WindowManager.h"
+#include "unity-shared/StandaloneWindowManager.h"
 
 using namespace unity;
 using namespace unity::launcher;
 
 namespace
 {
+
 struct TestExpoLauncherIcon : testing::Test
 {
+  TestExpoLauncherIcon()
+    : wm(dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default()))
+  {}
+
   ExpoLauncherIcon icon;
+  StandaloneWindowManager* wm;
 };
 
 TEST_F(TestExpoLauncherIcon, ActivateToggleExpo)
 {
-  WindowManager& wm = WindowManager::Default();
-
-  ASSERT_FALSE(wm.IsExpoActive());
+  ASSERT_FALSE(wm->IsExpoActive());
 
   icon.Activate(ActionArg());
-  ASSERT_TRUE(wm.IsExpoActive());
+  ASSERT_TRUE(wm->IsExpoActive());
 
   icon.Activate(ActionArg());
-  EXPECT_FALSE(wm.IsExpoActive());
+  EXPECT_FALSE(wm->IsExpoActive());
 }
 
 TEST_F(TestExpoLauncherIcon, Position)
@@ -53,6 +58,62 @@ TEST_F(TestExpoLauncherIcon, Position)
 TEST_F(TestExpoLauncherIcon, RemoteUri)
 {
   EXPECT_EQ(icon.RemoteUri(), "unity://expo-icon");
+}
+
+TEST_F(TestExpoLauncherIcon, Icon2x2Layout)
+{
+  EXPECT_EQ(icon.icon_name, "workspace-switcher-top-left");
+
+  wm->SetCurrentViewport(nux::Point(1, 0));
+  wm->screen_viewport_switch_ended.emit();
+  EXPECT_EQ(icon.icon_name, "workspace-switcher-right-top");
+
+  wm->SetCurrentViewport(nux::Point(0, 1));
+  wm->screen_viewport_switch_ended.emit();
+  EXPECT_EQ(icon.icon_name, "workspace-switcher-left-bottom");
+  
+  wm->SetCurrentViewport(nux::Point(1, 1));
+  wm->screen_viewport_switch_ended.emit();
+  EXPECT_EQ(icon.icon_name, "workspace-switcher-right-bottom");
+
+  wm->SetCurrentViewport(nux::Point(0, 0));
+  wm->screen_viewport_switch_ended.emit();
+  EXPECT_EQ(icon.icon_name, "workspace-switcher-top-left"); 
+}
+
+TEST_F(TestExpoLauncherIcon, Icon2x2Layout_Expo)
+{
+  EXPECT_EQ(icon.icon_name, "workspace-switcher-top-left");
+
+  wm->SetCurrentViewport(nux::Point(1, 0));
+  wm->terminate_expo.emit();
+  EXPECT_EQ(icon.icon_name, "workspace-switcher-right-top");
+
+  wm->SetCurrentViewport(nux::Point(0, 1));
+  wm->terminate_expo.emit();
+  EXPECT_EQ(icon.icon_name, "workspace-switcher-left-bottom");
+  
+  wm->SetCurrentViewport(nux::Point(1, 1));
+  wm->terminate_expo.emit();
+  EXPECT_EQ(icon.icon_name, "workspace-switcher-right-bottom");
+
+  wm->SetCurrentViewport(nux::Point(0, 0));
+  wm->terminate_expo.emit();
+  EXPECT_EQ(icon.icon_name, "workspace-switcher-top-left"); 
+}
+
+TEST_F(TestExpoLauncherIcon, IconNot2x2Layout)
+{
+  wm->SetCurrentViewport(nux::Point(1, 0));
+  wm->screen_viewport_switch_ended.emit();
+  EXPECT_EQ(icon.icon_name, "workspace-switcher-right-top");
+
+  wm->viewport_layout_changed.emit(5, 2);
+  EXPECT_EQ(icon.icon_name, "workspace-switcher-top-left");
+
+  wm->SetCurrentViewport(nux::Point(1, 1));
+  wm->screen_viewport_switch_ended.emit();
+  EXPECT_EQ(icon.icon_name, "workspace-switcher-top-left");
 }
 
 }

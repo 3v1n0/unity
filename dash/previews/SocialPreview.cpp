@@ -32,6 +32,8 @@
 #include <Nux/VLayout.h>
 #include <Nux/GridHLayout.h>
 #include <Nux/Button.h>
+
+#include "config.h"
 #include <glib/gi18n-lib.h>
  
 #include "SocialPreview.h"

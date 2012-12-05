@@ -223,7 +223,7 @@ nux::Geometry SwitcherView::UpdateRenderTargets(nux::Point const& center, timesp
 {
   std::vector<Window> const& xids = model_->DetailXids();
 
-  int ms_since_change = TimeUtil::TimeDelta(&current, &save_time_);
+  DeltaTime ms_since_change = TimeUtil::TimeDelta(&current, &save_time_);
   float progress = std::min<float>(1.0f, ms_since_change / static_cast<float>(animation_length()));
 
   for (Window window : xids)
@@ -485,7 +485,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
       ++i;
     }
 
-    int ms_since_change = TimeUtil::TimeDelta(&current, &save_time_);
+    DeltaTime ms_since_change = TimeUtil::TimeDelta(&current, &save_time_);
     if (saved_args_.size () == results.size () && ms_since_change < animation_length)
     {
       float progress = (float) ms_since_change / (float) animation_length();
@@ -585,7 +585,7 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
     text_view_->Draw(GfxContext, force_draw);
   }
 
-  int ms_since_change = TimeUtil::TimeDelta(&current_, &save_time_);
+  DeltaTime ms_since_change = TimeUtil::TimeDelta(&current_, &save_time_);
 
   if (ms_since_change < animation_length && !redraw_idle_)
   {
