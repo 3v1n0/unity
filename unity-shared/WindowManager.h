@@ -141,6 +141,10 @@ public:
 
   virtual int WorkspaceCount() const = 0;
 
+  virtual nux::Point GetCurrentViewport() const = 0;
+  virtual int GetViewportHSize() const = 0;
+  virtual int GetViewportVSize() const = 0;
+
   virtual bool SaveInputFocus() = 0;
   virtual bool RestoreInputFocus() = 0;
 
@@ -173,6 +177,7 @@ public:
   sigc::signal<void> screen_ungrabbed;
   sigc::signal<void> screen_viewport_switch_started;
   sigc::signal<void> screen_viewport_switch_ended;
+  sigc::signal<void, int, int> viewport_layout_changed;
 
 protected:
   std::string GetName() const;

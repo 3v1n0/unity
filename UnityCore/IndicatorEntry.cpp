@@ -205,19 +205,19 @@ void Entry::set_show_now(bool show_now)
   updated.emit();
 }
 
-void Entry::ShowMenu(int x, int y, unsigned int button, unsigned int timestamp)
+void Entry::ShowMenu(int x, int y, unsigned button)
 {
-  ShowMenu(0, x, y, button, timestamp);
+  ShowMenu(0, x, y, button);
 }
 
-void Entry::ShowMenu(unsigned int xid, int x, int y, unsigned int button, unsigned int timestamp)
+void Entry::ShowMenu(unsigned int xid, int x, int y, unsigned button)
 {
-  on_show_menu.emit(id_, xid, x, y, button, timestamp);
+  on_show_menu.emit(id_, xid, x, y, button);
 }
 
-void Entry::SecondaryActivate(unsigned int timestamp)
+void Entry::SecondaryActivate()
 {
-  on_secondary_activate.emit(id_, timestamp);
+  on_secondary_activate.emit(id_);
 }
 
 void Entry::Scroll(int delta)

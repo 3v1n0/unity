@@ -130,6 +130,10 @@ set (LOCALE_DIR "${DATADIR}/locale")
 set (VERSION "${UNITY_VERSION}")
 set (BUILDDIR "${CMAKE_BINARY_DIR}")
 
+find_package (PkgConfig)
+execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator3-0.4 --variable indicatordir OUTPUT_VARIABLE INDICATORDIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator3-0.4 --variable iconsdir OUTPUT_VARIABLE INDICATORICONDIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+
 configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 
 #
@@ -181,7 +185,7 @@ set(UNITY_PLUGIN_SHARED_DEPS
     atk-bridge-2.0
     dbusmenu-glib-0.4
     dee-1.0
-    gio-2.0
+    gio-2.0>=2.30.0
     gio-unix-2.0
     gmodule-2.0
     gthread-2.0
@@ -210,7 +214,6 @@ if(ENABLE_X_SUPPORT)
   )
 endif ()
 
-find_package (PkgConfig)
 pkg_check_modules (CACHED_UNITY_DEPS REQUIRED ${UNITY_PLUGIN_DEPS})
 pkg_check_modules (CACHED_UNITY_PRIVATE_DEPS REQUIRED ${UNITY_PROTOCOL_PRIVATE_DEPS})
 add_subdirectory(unity-shared)

@@ -14,8 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
- *              Ken VanDine <ken.vandine@canonical.com>
+ * Authored by: Ken VanDine <ken.vandine@canonical.com>
  */
 
 #include <list>

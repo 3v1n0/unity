@@ -14,32 +14,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
+ * Authored by: Sam Spilsbury <smspillaz@gmail.com>
  */
-
-#ifndef UNITY_APPMENU_INDICATOR_H
-#define UNITY_APPMENU_INDICATOR_H
-
-#include "Indicator.h"
+#include <MockWindowManager.h>
 
 namespace unity
 {
-namespace indicator
+
+MockWindowManager::MockWindowManager()
 {
-
-class AppmenuIndicator : public Indicator
-{
-public:
-  AppmenuIndicator(std::string const& name);
-
-  virtual bool IsAppmenu() const { return true; }
-
-  void ShowAppmenu(unsigned xid, int x, int y) const;
-
-  sigc::signal<void, unsigned, int, int> on_show_appmenu;
-};
-
-}
 }
 
-#endif // UNITY_APPMENU_INDICATOR_H
+MockWindowManager::~MockWindowManager()
+{
+}
+}
