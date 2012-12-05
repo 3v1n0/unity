@@ -24,6 +24,7 @@
 #include <config.h>
 #include <gmock/gmock.h>
 
+#include "ApplicationManager.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "Launcher.h"
 #include "PanelStyle.h"
@@ -40,14 +41,13 @@ namespace launcher
 const std::string LOCAL_DATA_DIR = BUILDDIR"/tests/data";
 const std::string USC_DESKTOP = LOCAL_DATA_DIR+"/applications/ubuntu-software-center.desktop";
 
-#if 0 // PORTME!
 class MockSoftwareCenterLauncherIcon : public SoftwareCenterLauncherIcon
 {
 public:
-   MockSoftwareCenterLauncherIcon(BamfApplication* app,
+   MockSoftwareCenterLauncherIcon(ApplicationPtr const& app,
                                   std::string const& aptdaemon_trans_id,
-                                  std::string const& icon_path):
-      SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path)
+                                  std::string const& icon_path)
+      : SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path)
    {}
 
    using SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall;
@@ -57,18 +57,15 @@ public:
 
 };
 
-
 struct TestSoftwareCenterLauncherIcon : testing::Test
 {
 public:
   TestSoftwareCenterLauncherIcon()
-    : bamf_matcher(bamf_matcher_get_default())
-    , usc(bamf_matcher_get_application_for_desktop_file(bamf_matcher, USC_DESKTOP.c_str(), TRUE), glib::AddRef())
-    , icon(usc, "", "")
+     : usc(ApplicationManager::Default().GetApplicationForDesktopFile(USC_DESKTOP))
+     , icon(usc, "", "")
   {}
 
-  glib::Object<BamfMatcher> bamf_matcher;
-  glib::Object<BamfApplication> usc;
+  ApplicationPtr usc;
   MockSoftwareCenterLauncherIcon icon;
 };
 
@@ -76,8 +73,10 @@ TEST_F(TestSoftwareCenterLauncherIcon, Construction)
 {
   EXPECT_FALSE(icon.IsVisible());
   EXPECT_EQ(icon.position(), AbstractLauncherIcon::Position::FLOATING);
-  EXPECT_EQ(icon.tooltip_text(), bamf_view_get_name(glib::object_cast<BamfView>(usc)));
+  EXPECT_EQ(icon.tooltip_text(), usc->title());
 }
+
+#if 0 // PORTME!
 
 TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformTrivial)
 {
