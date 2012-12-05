@@ -79,6 +79,7 @@ TEST_F(TestPanelStyle, TestChangedSignal)
   ASSERT_EQ(panel_style_instance->GetFontDescription(panel::PanelItem::TITLE), "Ubuntu Italic 11");  
 
   g_settings_set_string(gsettings, "titlebar-font", old_font);
+  g_free (old_font);
 }
 
 }
