@@ -64,7 +64,7 @@ public:
   void set_renderer(T renderer);
 
   template<typename T>
-  T renderer();
+  T renderer() const;
 
 protected:
   DeeModel* model_;

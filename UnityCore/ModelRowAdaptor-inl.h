@@ -32,7 +32,7 @@ void RowAdaptorBase::set_renderer(T renderer)
 }
 
 template<typename T>
-T RowAdaptorBase::renderer()
+T RowAdaptorBase::renderer() const
 {
   return static_cast<T>(dee_model_get_tag(model_, iter_, tag_));
 }

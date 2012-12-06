@@ -181,7 +181,7 @@ void ResultRendererTile::Unload(Result& row)
   row.set_renderer<TextureContainer*>(nullptr);
 }
 
-nux::NBitmapData* ResultRendererTile::GetDndImage(Result& row) const
+nux::NBitmapData* ResultRendererTile::GetDndImage(Result const& row) const
 {
   TextureContainer* container = row.renderer<TextureContainer*>();
   nux::NBitmapData* bitmap = nullptr;

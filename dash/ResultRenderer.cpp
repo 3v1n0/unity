@@ -141,7 +141,7 @@ void ResultRenderer::Unload(Result& row)
   // unload any resources
 }
 
-nux::NBitmapData* ResultRenderer::GetDndImage(Result& row) const
+nux::NBitmapData* ResultRenderer::GetDndImage(Result const& row) const
 {
   nux::GdkGraphics graphics(_icon_hint_get_drag_pixbuf(row.icon_hint, 64));
   return graphics.GetBitmap();

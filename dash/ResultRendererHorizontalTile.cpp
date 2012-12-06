@@ -298,7 +298,7 @@ void ResultRendererHorizontalTile::LoadText(Result& row)
     container->text = texture_ptr_from_cairo_graphics(_cairoGraphics);
 }
 
-nux::NBitmapData* ResultRendererHorizontalTile::GetDndImage(Result& row) const
+nux::NBitmapData* ResultRendererHorizontalTile::GetDndImage(Result const& row) const
 {
   TextureContainer* container = row.renderer<TextureContainer*>();
   nux::NBitmapData* bitmap = nullptr;

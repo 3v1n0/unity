@@ -806,6 +806,9 @@ bool ResultViewGrid::DndSourceDragBegin()
 nux::NBitmapData*
 ResultViewGrid::DndSourceGetDragImage()
 {
+  if (drag_index_ >= GetNumResults())
+    return nullptr;
+
   Result result(*GetIteratorAtRow(drag_index_));
   return renderer_->GetDndImage(result);
 }

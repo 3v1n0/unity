@@ -70,7 +70,7 @@ public:
   virtual void Preload(Result& row);
   virtual void Unload(Result& row);
   
-  virtual nux::NBitmapData* GetDndImage(Result& row) const;
+  virtual nux::NBitmapData* GetDndImage(Result const& row) const;
 
   int spacing;
   int padding;
