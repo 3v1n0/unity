@@ -118,7 +118,6 @@ TEST_F(TestSoftwareCenterLauncherIcon, OnFinished)
    g_variant_unref(params);
 }
 
-#if 0
 TEST_F(TestSoftwareCenterLauncherIcon, Animate)
 {
   ASSERT_FALSE(icon.IsVisible());
@@ -126,8 +125,7 @@ TEST_F(TestSoftwareCenterLauncherIcon, Animate)
   Settings settings;
   panel::Style panel;
   nux::ObjectPtr<nux::BaseWindow> win(new nux::BaseWindow(""));
-  nux::ObjectPtr<DNDCollectionWindow> cwin(new DNDCollectionWindow);
-  nux::ObjectPtr<Launcher> launcher(new Launcher(win.GetPointer(), cwin));
+  nux::ObjectPtr<Launcher> launcher(new Launcher(win.GetPointer()));
   launcher->options = Options::Ptr(new Options);
   launcher->SetModel(LauncherModel::Ptr(new LauncherModel));
 
@@ -136,7 +134,6 @@ TEST_F(TestSoftwareCenterLauncherIcon, Animate)
 
   EXPECT_TRUE(icon.IsVisible());
 }
-#endif
 
 }
 
