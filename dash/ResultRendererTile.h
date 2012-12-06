@@ -38,6 +38,8 @@ namespace dash
     BaseTexturePtr text;
     BaseTexturePtr icon;
     BaseTexturePtr prelight;
+    glib::Object<GdkPixbuf> drag_icon;
+
     int slot_handle;
 
     TextureContainer()
@@ -67,6 +69,8 @@ public:
 
   virtual void Preload(Result& row);
   virtual void Unload(Result& row);
+  
+  virtual nux::NBitmapData* GetDndImage(Result& row) const;
 
   int spacing;
   int padding;

@@ -62,6 +62,9 @@ public:
   // unload any previous grabbed images
   virtual void Unload(Result& row);
 
+  // get a image to drag
+  virtual nux::NBitmapData* GetDndImage(Result& row) const;
+
   nux::Property<int> width;
   nux::Property<int> height;
 
