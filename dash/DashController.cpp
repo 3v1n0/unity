@@ -299,6 +299,19 @@ void Controller::ShowDash()
 
   view_->AboutToShow();
 
+  FocusWindow();
+
+  need_show_ = false;
+  visible_ = true;
+
+  StartShowHideTimeline();
+
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_);
+  ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
+}
+
+void Controller::FocusWindow()
+{
   window_->ShowWindow(true);
   window_->PushToFront();
   if (!Settings::Instance().is_standalone) // in standalone mode, we do not need an input window. we are one.
@@ -312,14 +325,6 @@ void Controller::ShowDash()
   window_->QueueDraw();
 
   nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
-
-  need_show_ = false;
-  visible_ = true;
-
-  StartShowHideTimeline();
-
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_);
-  ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
 }
 
 void Controller::HideDash(bool restore)
@@ -408,6 +413,15 @@ void Controller::AddProperties(GVariantBuilder* builder)
   variant::BuilderWrapper(builder).add("visible", visible_)
                                   .add("ideal_monitor", GetIdealMonitor())
                                   .add("monitor", monitor_);
+}
+
+void Controller::ReFocusKeyInput()
+{
+  if (visible_)
+  {
+    window_->PushToFront();
+    window_->SetInputFocus();
+  }
 }
 
 bool Controller::IsVisible() const

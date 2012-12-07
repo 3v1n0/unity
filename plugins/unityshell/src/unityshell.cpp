@@ -2728,12 +2728,17 @@ void UnityWindow::windowNotify(CompWindowNotify n)
   {
     UnityScreen* us = UnityScreen::get(screen);
 
-    // can't rely on launcher->IsOverlayVisible on focus change (because ubus is async close on focus change.)
-    if (us && (us->dash_controller_->IsVisible() || us->hud_controller_->IsVisible()))
+    // If focus gets moved to an externall program while the Dash/Hud is open, refocus key input.
+    if (us)
     {
-      CompWindow *lw;
-      lw = screen->findWindow(us->launcher_controller_->LauncherWindowId(0));
-      lw->moveInputFocusTo();
+      if (us->dash_controller_->IsVisible())
+      {
+        us->dash_controller_->ReFocusKeyInput();
+      }
+      else if (us->hud_controller_->IsVisible())
+      {
+        us->hud_controller_->ReFocusKeyInput();
+      }
     }
   }
 }
