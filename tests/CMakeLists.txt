@@ -210,6 +210,7 @@ if (ENABLE_X_SUPPORT)
                  test_bfb_launcher_icon.cpp
                  test_dashview_impl.cpp
                  test_desktop_launcher_icon.cpp
+		 test_error_preview.cpp
                  test_edge_barrier_controller.cpp
                  test_launcher.cpp
                  test_device_launcher_section.cpp

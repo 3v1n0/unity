@@ -87,7 +87,6 @@ protected:
 
   void PreLayoutManagement();
 
-protected:
   virtual void SetupViews();
   // content elements
   nux::ObjectPtr<CoverArt> image_;
