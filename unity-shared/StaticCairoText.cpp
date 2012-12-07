@@ -228,7 +228,7 @@ void StaticCairoText::SetLineSpacing(float line_spacing)
 
 void StaticCairoText::PreLayoutManagement()
 {
-  Geometry geo = GetGeometry();
+  Geometry const& geo = GetGeometry();
 
   // only update the size if an only if and only if the width and height of
   // the geo are diff
