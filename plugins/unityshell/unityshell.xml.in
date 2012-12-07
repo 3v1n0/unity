@@ -116,14 +116,6 @@
                     <default>75</default>
                 </option>
 
-                <option name="dash_tap_duration" type="int">
-                    <_short>Dash tap duration</_short>
-                    <_long>The millseconds for which pressing Super will count as a tap.</_long>
-                    <min>1</min>
-                    <max>350</max>
-                    <default>130</default>
-                </option>
-
                 <option name="shortcut_overlay" type="bool">
                   <_short>Enable Shortcut Hints Overlay</_short>
                   <_long>Enables possibility to display an overlay showing available mouse and keyboard shortcuts.</_long>
@@ -158,6 +150,14 @@
                     <_short>Key to start the Launcher Application Switcher in reverse</_short>
                     <_long>Cycles through icons present in the Launcher, in reverse order. Activates the highlighted icon on release.</_long>
                     <default>&lt;Super&gt;&lt;Shift&gt;Tab</default>
+                </option>
+
+                <option name="dash_tap_duration" type="int">
+                    <_short>Dash tap duration</_short>
+                    <_long>Duration (in millseconds) that will count as a tap for opening the Dash.</_long>
+                    <min>1</min>
+                    <max>1000</max>
+                    <default>130</default>
                 </option>
 
                 <option name="launcher_opacity" type="float">
