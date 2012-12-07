@@ -232,6 +232,8 @@ void StaticCairoText::PreLayoutManagement()
 
   // only update the size if an only if and only if the width and height of
   // the geo are diff
+  // FIXME: nux should be smart enough to not need this, we should get that
+  // fixed.
   if(pimpl->pre_layout_size_.width != geo.width
     || pimpl->pre_layout_size_.height != geo.height)
   {
