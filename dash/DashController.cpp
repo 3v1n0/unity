@@ -58,9 +58,10 @@ const std::string DBUS_INTROSPECTION =\
 GDBusInterfaceVTable Controller::interface_vtable =
   { Controller::OnDBusMethodCall, NULL, NULL};
 
-Controller::Controller()
+Controller::Controller(Controller::WindowCreator const& create_window)
   : launcher_width(64)
   , use_primary(false)
+  , create_window_(create_window)
   , monitor_(0)
   , visible_(false)
   , need_show_(false)
@@ -73,6 +74,19 @@ Controller::Controller()
 
   ensure_timeout_.Run([&]() { EnsureDash(); return false; });
   timeline_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
+
+  // As a default. the create_window_ function should just create a base window.
+  if (create_window_ == nullptr)
+  {
+    create_window_ = [&]() {
+      return new ResizingBaseWindow(dash::window_title,
+                                    [this](nux::Geometry const& geo) {
+                                      if (view_)
+                                        return GetInputWindowGeometry();
+                                      return geo;
+                                    });
+    };
+  }
 
   SetupWindow();
   UScreen::GetDefault()->changed.connect([&] (int, std::vector<nux::Geometry>&) { Relayout(true); });
@@ -103,12 +117,7 @@ Controller::~Controller()
 
 void Controller::SetupWindow()
 {
-  window_ = new ResizingBaseWindow(dash::window_title, [this](nux::Geometry const& geo)
-  {
-    if (view_)
-      return GetInputWindowGeometry();
-    return geo;
-  });
+  window_ = create_window_();
   window_->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
   window_->SetConfigureNotifyCallback(&Controller::OnWindowConfigure, this);
   window_->ShowWindow(false);

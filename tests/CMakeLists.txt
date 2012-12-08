@@ -203,6 +203,7 @@ if (ENABLE_X_SUPPORT)
                  test_application_launcher_icon.cpp
                  test_bfb_launcher_icon.cpp
                  test_dashview_impl.cpp
+                 test_dash_controller.cpp
                  test_desktop_launcher_icon.cpp
                  test_edge_barrier_controller.cpp
                  test_launcher.cpp
