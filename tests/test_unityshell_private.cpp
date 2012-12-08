@@ -51,7 +51,7 @@ TEST(DeltaRestrainment, RestrainOutWidth)
   int x = 1;
   int y = 0;
 
-  util::restrainDelta (x, y, Rectangle, PointBR);
+  util::restrainDelta(x, y, Rectangle, PointBR);
 
   EXPECT_EQ (x, 0);
   EXPECT_EQ (y, 0);
@@ -62,7 +62,7 @@ TEST(DeltaRestrainment, RestrainOutHeight)
   int x = 0;
   int y = 1;
 
-  util::restrainDelta (x, y, Rectangle, PointBR);
+  util::restrainDelta(x, y, Rectangle, PointBR);
 
   EXPECT_EQ (x, 0);
   EXPECT_EQ (y, 0);
@@ -73,7 +73,7 @@ TEST(DeltaRestrainment, RestrainOutX)
   int x = -1;
   int y = 0;
 
-  util::restrainDelta (x, y, Rectangle, PointTL);
+  util::restrainDelta(x, y, Rectangle, PointTL);
 
   EXPECT_EQ (x, 0);
   EXPECT_EQ (y, 0);
@@ -84,51 +84,7 @@ TEST(DeltaRestrainment, RestrainOutY)
   int x = 0;
   int y = -1;
 
-  util::restrainDelta (x, y, Rectangle, PointTL);
-
-  EXPECT_EQ (x, 0);
-  EXPECT_EQ (y, 0);
-}
-
-TEST(ApplyDelta, ApplyPosX)
-{
-  int x = 0;
-  int y = 0;
-
-  util::applyDelta (1, 0, x, y);
-
-  EXPECT_EQ (x, 1);
-  EXPECT_EQ (y, 0);
-}
-
-TEST(ApplyDelta, ApplyPosY)
-{
-  int x = 0;
-  int y = 0;
-
-  util::applyDelta (0, 1, x, y);
-
-  EXPECT_EQ (x, 0);
-  EXPECT_EQ (y, 1);
-}
-
-TEST(ApplyDelta, ApplyNegX)
-{
-  int x = 1;
-  int y = 0;
-
-  util::applyDelta (-1, 0, x, y);
-
-  EXPECT_EQ (x, 0);
-  EXPECT_EQ (y, 0);
-}
-
-TEST(ApplyDelta, ApplyNegY)
-{
-  int x = 0;
-  int y = 1;
-
-  util::applyDelta (0, -1, x, y);
+  util::restrainDelta(x, y, Rectangle, PointTL);
 
   EXPECT_EQ (x, 0);
   EXPECT_EQ (y, 0);

@@ -23,26 +23,17 @@
 #include "DeltaRestrainment-Inl.h"
 
 void
-unity::util::restrainDelta (int                 &dx,
-                            int                 &dy,
-                            const nux::Geometry &rect,
-                            const nux::Point    &currentPoint)
+unity::util::restrainDelta(int                 &dx,
+			   int                 &dy,
+			   nux::Geometry const &rect,
+			   nux::Point    const &currentPoint)
 {
-  int restrain_x = std::min (0, (rect.x + rect.width) - (currentPoint.x + dx));
-  int restrain_y = std::min (0, (rect.y + rect.height) - (currentPoint.y + dy));
+  int restrain_x = std::min(0, (rect.x + rect.width) - (currentPoint.x + dx));
+  int restrain_y = std::min(0, (rect.y + rect.height) - (currentPoint.y + dy));
 
-  restrain_x += rect.x - std::min (rect.x, currentPoint.x + dx);
-  restrain_y += rect.y - std::min (rect.y, currentPoint.y + dy);
+  restrain_x += rect.x - std::min(rect.x, currentPoint.x + dx);
+  restrain_y += rect.y - std::min(rect.y, currentPoint.y + dy);
 
   dx += restrain_x;
   dy += restrain_y;
-}
-
-void unity::util::applyDelta (int dx,
-			      int dy,
-			      int &x,
-			      int &y)
-{
-  x += dx;
-  y += dy;
 }
