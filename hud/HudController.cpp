@@ -37,7 +37,8 @@ namespace hud
 {
 DECLARE_LOGGER(logger, "unity.hud.controller");
 
-Controller::Controller(std::function<AbstractView*(void)> const& function)
+Controller::Controller(Controller::ViewCreator const& create_view,
+                       Controller::WindowCreator const& create_window)
   : launcher_width(64)
   , launcher_locked_out(false)
   , multiple_launchers(true)
@@ -47,9 +48,32 @@ Controller::Controller(std::function<AbstractView*(void)> const& function)
   , timeline_animator_(90)
   , view_(nullptr)
   , monitor_index_(0)
-  , view_function_(function)
+  , create_view_(create_view)
+  , create_window_(create_window)
 {
   LOG_DEBUG(logger) << "hud startup";
+
+  // As a default, the create_view_ function should just create a view.
+  if (create_view == nullptr)
+  {
+    create_view_ = []() {
+      return new View;
+    };
+  }
+
+  // As a default. the create_window_ function should just create a base window.
+  if (create_window_ == nullptr)
+  {
+    create_window_ = [&]() {
+      return new ResizingBaseWindow("Hud",
+                                    [this](nux::Geometry const& geo) {
+                                      if (view_)
+                                        return GetInputWindowGeometry();
+                                      return geo;
+                                    });
+    };
+  }
+
   SetupWindow();
   UScreen::GetDefault()->changed.connect([&] (int, std::vector<nux::Geometry>&) { Relayout(true); });
 
@@ -87,12 +111,7 @@ void Controller::SetupWindow()
   // Since BaseWindow is a View it is initially unowned.  This means that the first
   // reference that is taken grabs ownership of the pointer.  Since the smart pointer
   // references it, it becomes the owner, so no need to adopt the pointer here.
-  window_ = new ResizingBaseWindow("Hud", [this](nux::Geometry const& geo)
-  {
-    if (view_)
-      return GetInputWindowGeometry();
-    return geo;
-  });
+  window_ = create_window_();
   window_->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
   window_->SetConfigureNotifyCallback(&Controller::OnWindowConfigure, this);
   window_->ShowWindow(false);
@@ -113,7 +132,7 @@ void Controller::SetupWindow()
 void Controller::SetupHudView()
 {
   LOG_DEBUG(logger) << "SetupHudView called";
-  view_ = view_function_();
+  view_ = create_view_();
 
   layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   layout_->AddView(view_, 1, nux::MINOR_POSITION_START);
@@ -295,7 +314,7 @@ void Controller::ShowHud()
   EnsureHud();
 
   if (visible_ || wm.IsExpoActive() || wm.IsScaleActive())
-   return;
+    return;
 
   if (wm.IsScreenGrabbed())
   {

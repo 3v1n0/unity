@@ -23,6 +23,7 @@
 using namespace testing;
 
 #include "HudController.h"
+#include "mock-base-window.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UnitySettings.h"
@@ -54,37 +55,65 @@ public:
   {
     return nux::Geometry();
   }
-
-
 };
+
 
 class TestHudController : public Test
 {
 public:
+  TestHudController()
+  : view_(new NiceMock<MockHudView>)
+  , base_window_(new testmocks::MockBaseWindow([](nux::Geometry const& geo)
+                                               { return geo; }))
+  { }
+
   virtual void SetUp()
   {
-    view = new MockHudView;
-    controller.reset(new hud::Controller([this]{ return view.GetPointer(); }));
+    // Set expectations for creating the controller
+    EXPECT_CALL(*base_window_, SetOpacity(0.0f))
+      .WillOnce(Invoke(base_window_.GetPointer(),
+                       &testmocks::MockBaseWindow::RealSetOpacity));
+
+    controller_.reset(new hud::Controller([&](){ return view_.GetPointer(); },
+                                          [&](){ return base_window_.GetPointer();}));
+    Mock::VerifyAndClearExpectations(view_.GetPointer());
+    Mock::VerifyAndClearExpectations(base_window_.GetPointer());
   }
 
-  Settings unity_settings;
-  dash::Style dash_style;
-  panel::Style panel_style;
+protected:
+  hud::Controller::Ptr controller_;
+  MockHudView::Ptr view_;
+  testmocks::MockBaseWindow::Ptr base_window_;
 
-  hud::Controller::Ptr controller;
-  MockHudView::Ptr view;
+  // required to create hidden secret global variables
+  Settings unity_settings_;
+  dash::Style dash_style_;
+  panel::Style panel_style_;
 };
 
-TEST_F(TestHudController, TestHideHud)
+
+TEST_F(TestHudController, TestShowAndHideHud)
 {
-  controller->ShowHud();
-  Utils::WaitForTimeout(1);
+  // Set expectations for showing the HUD
+  EXPECT_CALL(*view_, AboutToShow()).Times(1);
+  EXPECT_CALL(*view_, ResetToDefault()).Times(1);
+  EXPECT_CALL(*base_window_, SetOpacity(_))
+      .WillRepeatedly(Invoke(base_window_.GetPointer(),
+                             &testmocks::MockBaseWindow::RealSetOpacity));
+  EXPECT_CALL(*base_window_, SetOpacity(Eq(1.0f))).Times(1);
 
-  EXPECT_CALL(*view, ResetToDefault())
-    .Times(1);
+  controller_->ShowHud();
+  Utils::WaitForTimeout(2);
+  Mock::VerifyAndClearExpectations(view_.GetPointer());
+  Mock::VerifyAndClearExpectations(base_window_.GetPointer());
 
-  controller->HideHud();
-  // view->ResetToDefault should be called at the end of the fade out effect. So wait for it.
+  // Set expectations for hiding the HUD
+  EXPECT_CALL(*view_, AboutToHide()).Times(1);
+  EXPECT_CALL(*view_, ResetToDefault()).Times(1);
+  EXPECT_CALL(*base_window_, SetOpacity(_)).Times(AnyNumber());
+  EXPECT_CALL(*base_window_, SetOpacity(Eq(0.0f))).Times(1);
+
+  controller_->HideHud();
   Utils::WaitForTimeout(2);
 }
 
