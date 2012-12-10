@@ -57,7 +57,7 @@ Controller::Controller(Controller::ViewCreator const& create_view,
   if (create_view == nullptr)
   {
     create_view_ = []() {
-      return new View;
+      return new hud::View;
     };
   }
 
