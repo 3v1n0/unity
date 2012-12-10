@@ -22,13 +22,12 @@
 
 COMPIZ_PLUGIN_20090315(unitydialog, UnityDialogPluginVTable);
 
-class UnityDialogExp :
-  public CompMatch::Expression
+class UnityDialogExp : public CompMatch::Expression
 {
 public:
   UnityDialogExp(const CompString& str);
 
-  bool evaluate(CompWindow* w);
+  bool evaluate(CompWindow const* w) const;
 
   bool value;
 };
@@ -40,9 +39,9 @@ UnityDialogExp::UnityDialogExp(const CompString& str) :
 }
 
 bool
-UnityDialogExp::evaluate(CompWindow* w)
+UnityDialogExp::evaluate(CompWindow const* w) const
 {
-  UnityDialogWindow* udw = UnityDialogWindow::get(w);
+  UnityDialogWindow const* udw = UnityDialogWindow::get(w);
 
   return ((value && udw->transientParent()) || (!value && !udw->transientParent()));
 }
@@ -1239,7 +1238,7 @@ UnityDialogWindow::moveParentToRect(CompWindow*      requestor,
 }
 
 CompWindow*
-UnityDialogWindow::transientParent()
+UnityDialogWindow::transientParent() const
 {
   if (window->transientFor() &&
       window->state() & CompWindowStateModalMask &&

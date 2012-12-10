@@ -162,7 +162,7 @@ class UnityDialogScreen :
 {
 public:
 
-  UnityDialogScreen(CompScreen*);
+  UnityDialogScreen(CompScreen* const);
   ~UnityDialogScreen();
 
   void
@@ -321,7 +321,7 @@ public:
 
   void      setMaxConstrainingAreas();
 
-  CompWindow* transientParent();
+  CompWindow* transientParent() const;
 
   void adjustIPW();
 
