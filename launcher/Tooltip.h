@@ -52,11 +52,17 @@ public:
 
   virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
 
-private:
+protected:
+  // protected to simplify testing
+  nux::ObjectPtr<nux::StaticCairoText> _tooltip_text;
+
+  std::string           _labelText;
+
   void RecvCairoTextChanged(nux::StaticCairoText* cairo_text);
 
   void PreLayoutManagement();
 
+private:
   long PostLayoutManagement(long layoutResult);
 
   void PositionChildLayout(float offsetX,
@@ -69,9 +75,6 @@ private:
 
   int                   _anchorX;
   int                   _anchorY;
-  std::string           _labelText;
-
-  nux::ObjectPtr<nux::StaticCairoText> _tooltip_text;
 
   nux::HLayout* _hlayout;
   nux::VLayout* _vlayout;

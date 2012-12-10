@@ -45,9 +45,9 @@ namespace
 
 NUX_IMPLEMENT_OBJECT_TYPE(Tooltip);
 Tooltip::Tooltip() :
+  _labelText(TEXT("Unity")),
   _anchorX(0),
   _anchorY(0),
-  _labelText(TEXT("Unity")),
   _cairo_text_has_changed(true)
 {
   _hlayout = new nux::HLayout(TEXT(""), NUX_TRACKER_LOCATION);
@@ -129,6 +129,7 @@ void Tooltip::PreLayoutManagement()
   }
 
   _tooltip_text->SetMinimumWidth(text_min_width);
+  _tooltip_text->SetMinimumHeight(text_height);
 
   if (text_height < ANCHOR_HEIGHT)
   {
