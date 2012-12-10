@@ -71,11 +71,10 @@ class TestTooltip : public ::testing::Test
 protected:
   TestTooltip() : Test()
   {
-    settings = new Settings();
+    Settings settings;
     tooltip = new TooltipMock();
   }
 
-  Settings* settings;
   nux::ObjectPtr<TooltipMock> tooltip;
 }; // TestTooltip
 
