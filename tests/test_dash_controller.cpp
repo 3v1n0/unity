@@ -62,22 +62,37 @@ protected:
 
 TEST_F(TestDashController, TestShowAndHideDash)
 {
+  // Verify initial conditions
+  EXPECT_EQ(base_window_->GetOpacity(), 0.0);
+
   // Set expectations for showing the Dash
-  EXPECT_CALL(*base_window_, SetOpacity(_)).Times(AnyNumber());
-  EXPECT_CALL(*base_window_, SetOpacity(Eq(1.0f)))
-      .WillOnce(Invoke(base_window_.GetPointer(),
-                       &testmocks::MockBaseWindow::RealSetOpacity));
+  {
+    InSequence showing;
+    EXPECT_CALL(*base_window_, SetOpacity(_)).Times(AtLeast(1));
+    EXPECT_CALL(*base_window_, SetOpacity(Eq(1.0f)))
+        .WillOnce(Invoke(base_window_.GetPointer(),
+                         &testmocks::MockBaseWindow::RealSetOpacity));
+  }
 
   controller_->ShowDash();
   Utils::WaitForTimeout(1);
   Mock::VerifyAndClearExpectations(base_window_.GetPointer());
+  EXPECT_EQ(base_window_->GetOpacity(), 1.0);
 
   // Set expectations for hiding the Dash
-  EXPECT_CALL(*base_window_, SetOpacity(_)).Times(AnyNumber());
-  EXPECT_CALL(*base_window_, SetOpacity(Eq(0.0f))).Times(1);
+  {
+    InSequence hiding;
+    EXPECT_CALL(*base_window_, SetOpacity(_)).Times(AtLeast(1));
+    EXPECT_CALL(*base_window_, SetOpacity(Eq(0.0f)))
+        .WillOnce(Invoke(base_window_.GetPointer(),
+                         &testmocks::MockBaseWindow::RealSetOpacity));
+  }
 
   controller_->HideDash();
   Utils::WaitForTimeout(1);
+
+  // Verify final conditions
+  EXPECT_EQ(base_window_->GetOpacity(), 0.0);
 }
 
 }

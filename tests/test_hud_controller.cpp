@@ -94,27 +94,40 @@ protected:
 
 TEST_F(TestHudController, TestShowAndHideHud)
 {
+  // Verify initial conditions
+  EXPECT_EQ(base_window_->GetOpacity(), 0.0);
+
   // Set expectations for showing the HUD
   EXPECT_CALL(*view_, AboutToShow()).Times(1);
   EXPECT_CALL(*view_, ResetToDefault()).Times(1);
-  EXPECT_CALL(*base_window_, SetOpacity(_))
-      .WillRepeatedly(Invoke(base_window_.GetPointer(),
-                             &testmocks::MockBaseWindow::RealSetOpacity));
-  EXPECT_CALL(*base_window_, SetOpacity(Eq(1.0f))).Times(1);
+  {
+    InSequence showing;
+    EXPECT_CALL(*base_window_, SetOpacity(_)).Times(AtLeast(1));
+    EXPECT_CALL(*base_window_, SetOpacity(Eq(1.0f)))
+        .WillOnce(Invoke(base_window_.GetPointer(),
+                         &testmocks::MockBaseWindow::RealSetOpacity));
+  }
 
   controller_->ShowHud();
   Utils::WaitForTimeout(2);
   Mock::VerifyAndClearExpectations(view_.GetPointer());
   Mock::VerifyAndClearExpectations(base_window_.GetPointer());
+  EXPECT_EQ(base_window_->GetOpacity(), 1.0);
 
   // Set expectations for hiding the HUD
   EXPECT_CALL(*view_, AboutToHide()).Times(1);
   EXPECT_CALL(*view_, ResetToDefault()).Times(1);
-  EXPECT_CALL(*base_window_, SetOpacity(_)).Times(AnyNumber());
-  EXPECT_CALL(*base_window_, SetOpacity(Eq(0.0f))).Times(1);
+  {
+    InSequence hiding;
+    EXPECT_CALL(*base_window_, SetOpacity(_)).Times(AtLeast(1));
+    EXPECT_CALL(*base_window_, SetOpacity(Eq(0.0f)))
+        .WillOnce(Invoke(base_window_.GetPointer(),
+                         &testmocks::MockBaseWindow::RealSetOpacity));
+  }
 
   controller_->HideHud();
   Utils::WaitForTimeout(2);
+  EXPECT_EQ(base_window_->GetOpacity(), 0.0);
 }
 
 }
