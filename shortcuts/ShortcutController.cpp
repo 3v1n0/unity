@@ -39,6 +39,7 @@ Controller::Controller(std::list<AbstractHint::Ptr> const& hints,
   , visible_(false)
   , enabled_(true)
   , bg_color_(0.0, 0.0, 0.0, 0.5)
+  , fade_animator_(FADE_DURATION)
 {
   model_->Fill();
 
@@ -59,7 +60,6 @@ Controller::Controller(std::list<AbstractHint::Ptr> const& hints,
 
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
-  fade_animator_.SetDuration(FADE_DURATION);
   fade_animator_.updated.connect([this] (double opacity) {
     view_window_->SetOpacity(opacity);
   });
