@@ -44,10 +44,12 @@ public:
 class TooltipMock : public Tooltip
 {
 public:
+
   TooltipMock() : Tooltip()
   {
     // change the text and reconnect it as it should
-    _tooltip_text = new MockStaticCairoText(_labelText);
+    std::string old_text = _tooltip_text->GetText();
+    _tooltip_text = new MockStaticCairoText(old_text);
     _tooltip_text->SetTextAlignment(
       nux::StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
     _tooltip_text->SetTextVerticalAlignment(
@@ -93,6 +95,15 @@ TEST_F(TestTooltip, StaticCairoTextCorrectSize)
   EXPECT_CALL(*text, SetMinimumHeight(testing::Ge(text_height)));
 
   tooltip->PreLayoutManagement();
+}
+
+TEST_F(TestTooltip, TestSetTooltipText)
+{
+  std::string new_tip = "My tooltip";
+  EXPECT_NE(new_tip, tooltip->_tooltip_text->GetText());
+
+  tooltip->text.Set(new_tip);
+  EXPECT_EQ(new_tip, tooltip->_tooltip_text->GetText());
 }
 
 } // unity

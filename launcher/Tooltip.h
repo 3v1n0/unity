@@ -39,10 +39,10 @@ class Tooltip : public CairoBaseWindow, public debug::Introspectable
 public:
   Tooltip();
 
+  nux::RWProperty<std::string> text;
+
   void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
   void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
-
-  void SetText(std::string const& text);
 
   void ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y);
 
@@ -55,8 +55,6 @@ public:
 protected:
   // protected to simplify testing
   nux::ObjectPtr<nux::StaticCairoText> _tooltip_text;
-
-  std::string           _labelText;
 
   void RecvCairoTextChanged(nux::StaticCairoText* cairo_text);
 
