@@ -26,11 +26,11 @@
 #include <UnityCore/Hud.h>
 #include <UnityCore/GLibSignal.h>
 
+#include <NuxCore/Animation.h>
 #include <NuxCore/Property.h>
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/Nux.h>
 
-#include "unity-shared/Animator.h"
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/ResizingBaseWindow.h"
 #include "HudView.h"
@@ -103,13 +103,9 @@ private:
 
 private:
   nux::ObjectPtr<ResizingBaseWindow> window_;
-  UBusManager ubus;
-  glib::SignalManager sig_manager_;
   Hud hud_service_;
   bool visible_;
   bool need_show_;
-
-  Animator timeline_animator_;
 
   AbstractView* view_;
   std::string focused_app_icon_;
@@ -119,6 +115,10 @@ private:
 
   ViewCreator create_view_;
   WindowCreator create_window_;
+
+  UBusManager ubus;
+  glib::SignalManager sig_manager_;
+  nux::animation::AnimateValue<double> timeline_animator_;
 };
 
 } // namespace hud
