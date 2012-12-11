@@ -60,7 +60,6 @@ set (CORE_HEADERS
      Track.h
      Tracks.h
      Variant.h
-     MusicPaymentPreview.h
     )
 
 set (CORE_SOURCES
@@ -101,7 +100,6 @@ set (CORE_SOURCES
      Track.cpp
      Tracks.cpp
      Variant.cpp
-     MusicPaymentPreview.cpp
     )
 
 #

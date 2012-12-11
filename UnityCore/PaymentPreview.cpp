@@ -27,8 +27,74 @@ namespace unity
 namespace dash
 {
 
+class PaymentPreview::Impl
+{
+
+public:
+  Impl(PaymentPreview* owner, glib::Object<GObject> const& proto_obj);
+
+  void SetupGetters();
+
+  // getters for the data properties
+
+  std::string get_header() const { return header_; };
+  std::string get_email() const { return email_; };
+  std::string get_payment_method() const { return payment_method_; };
+  std::string get_purchase_prize() const { return purchase_prize_; };
+  std::string get_purchase_type() const { return purchase_type_; };
+
+  // getters for the lables
+
+  // instance vars
+  PaymentPreview* owner_;
+
+  std::string header_;
+  std::string email_;
+  std::string payment_method_;
+  std::string purchase_prize_;
+  std::string purchase_type_;
+
+};
+
+PaymentPreview::Impl::Impl(PaymentPreview* owner, glib::Object<GObject> const& proto_obj)
+  : owner_(owner)
+{
+  const gchar* s;
+  auto preview = glib::object_cast<UnityProtocolPaymentPreview>(proto_obj);
+
+  s = unity_protocol_payment_preview_get_header(preview);
+  if (s) header_ = s;
+  s = unity_protocol_payment_preview_get_email(preview);
+  if (s) email_ = s;
+  s = unity_protocol_payment_preview_get_email(preview);
+  if (s) email_ = s;
+  s = unity_protocol_payment_preview_get_payment_method(preview);
+  if (s) payment_method_ = s;
+  s = unity_protocol_payment_preview_get_purchase_prize(preview);
+  if (s) purchase_prize_ = s;
+  s = unity_protocol_payment_preview_get_purchase_type(preview);
+  if (s) purchase_type_ = s;
+
+  SetupGetters();
+}
+
+void PaymentPreview::Impl::SetupGetters()
+{
+  owner_->header.SetGetterFunction(
+            sigc::mem_fun(this, &PaymentPreview::Impl::get_header));
+  owner_->email.SetGetterFunction(
+            sigc::mem_fun(this, &PaymentPreview::Impl::get_email));
+  owner_->payment_method.SetGetterFunction(
+            sigc::mem_fun(this, &PaymentPreview::Impl::get_payment_method));
+  owner_->purchase_prize.SetGetterFunction(
+            sigc::mem_fun(this, &PaymentPreview::Impl::get_purchase_prize));
+  owner_->purchase_type.SetGetterFunction(
+            sigc::mem_fun(this, &PaymentPreview::Impl::get_purchase_type));
+}
+
 PaymentPreview::PaymentPreview(unity::glib::Object<GObject> const& proto_obj)
   : Preview(proto_obj)
+  , pimpl(new Impl(this, proto_obj))
 {
 }
 
