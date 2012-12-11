@@ -147,7 +147,6 @@ void MusicPaymentPreview::LoadActions()
 
 nux::Layout* MusicPaymentPreview::GetTitle()
 {
-  printf("Getting title!!\n");
   previews::Style& style = dash::previews::Style::Instance();
   nux::VLayout* title_data_layout = new nux::VLayout();
   title_data_layout->SetMaximumHeight(76);
@@ -207,7 +206,6 @@ nux::Layout* MusicPaymentPreview::GetPrize()
 
 nux::Layout* MusicPaymentPreview::GetBody()
 {
-  printf("GetBody\n");
   previews::Style& style = dash::previews::Style::Instance();
 
   nux::VLayout *body_layout = new  nux::VLayout();
@@ -408,7 +406,6 @@ void MusicPaymentPreview::PreLayoutManagement()
 void MusicPaymentPreview::SetupViews()
 {
   payment_preview_model_ = dynamic_cast<dash::PaymentPreview*>(preview_model_.get());
-  printf("Setting up views!!!\n");
   if (!payment_preview_model_)
   {
     LOG_ERROR(logger) << "Could not derive preview model from given parameter.";
