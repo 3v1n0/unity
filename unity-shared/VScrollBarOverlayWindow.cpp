@@ -25,6 +25,9 @@
 #include "DashStyle.h"
 #include "CairoTexture.h"
 
+namespace unity
+{
+
 namespace
 {
   int const THUMB_WIDTH = 21;
@@ -551,3 +554,5 @@ void VScrollBarOverlayWindow::UpdateTexture()
 
   QueueDraw();
 }
+
+} // namespace unity

@@ -24,6 +24,8 @@
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 
+namespace unity
+{
 
 class VScrollBarOverlayWindow : public nux::BaseWindow
 {
@@ -102,4 +104,6 @@ private:
   ThumbAction current_action_;
 };
 
-#endif
+} // namespace unity
+
+#endif // VSCROLLBAR_OVERLAY_WINDOW_H
