@@ -71,13 +71,16 @@ Tooltip::Tooltip() :
   // getter and setter for the property
   text.SetSetterFunction([this](std::string newText)
     {
-      this->_tooltip_text->SetText(newText);
+      if(_tooltip_text->GetText() == newText)
+        return false;
+
+      _tooltip_text->SetText(newText);
       return true;
     }
   );
   text.SetGetterFunction([this]()
     {
-      return  this->_tooltip_text->GetText();
+      return _tooltip_text->GetText();
     }
   );
 
