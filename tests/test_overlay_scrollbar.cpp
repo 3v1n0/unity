@@ -78,16 +78,36 @@ class MockScrollBar : public unity::dash::PlacesOverlayVScrollBar
       });
     }
 
+    // ScrollDown/Up moves the mouse over the overlay scroll bar, then
+    // moves it down/up by scroll_dy
     void ScrollDown(int scroll_dy)
     {
       UpdateStepY();
-      OnScrollDown.emit(stepY, scroll_dy);
+
+      auto geo = overlay_window_->GetThumbGeometry();
+      int x = geo.x;
+      int y = geo.y;
+
+      MoveMouse(x, y);
+      MoveDown(x, y);
+
+      MoveMouse(x, y+scroll_dy);
+      MoveUp(x, y+scroll_dy);
     }
 
     void ScrollUp(int scroll_dy)
     {
       UpdateStepY();
-      OnScrollUp.emit(stepY, scroll_dy);
+
+      auto geo = overlay_window_->GetThumbGeometry();
+      int x = geo.x;
+      int y = geo.y;
+
+      MoveMouse(x, y);
+      MoveDown(x, y);
+
+      MoveMouse(x, y-scroll_dy);
+      MoveUp(x, y-scroll_dy);
     }
 
     void MoveDown(int x, int y)
@@ -327,7 +347,7 @@ TEST_F(TestOverlayVScrollBar, TestScrollDownDeltaY)
 TEST_F(TestOverlayVScrollBar, TestScrollUpDeltaY)
 {
   int scroll_up = 7;
-  scroll_view_->scroll_bar_->ScrollDown(scroll_up);
+  scroll_view_->scroll_bar_->ScrollDown(scroll_up+1);
   scroll_view_->scroll_bar_->ScrollUp(scroll_up);
   EXPECT_EQ(scroll_view_->scroll_bar_->scroll_dy_, scroll_up);
 }
@@ -344,7 +364,7 @@ TEST_F(TestOverlayVScrollBar, TestScrollDownBaseYMoves)
 TEST_F(TestOverlayVScrollBar, TestScrollUpBaseYMoves)
 {
   int scroll_up = 10;
-  scroll_view_->scroll_bar_->ScrollDown(scroll_up);
+  scroll_view_->scroll_bar_->ScrollDown(scroll_up+1);
 
   int slider_y = scroll_view_->scroll_bar_->_slider->GetBaseY();
   scroll_view_->scroll_bar_->ScrollUp(scroll_up);
