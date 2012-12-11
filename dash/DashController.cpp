@@ -66,14 +66,14 @@ Controller::Controller(Controller::WindowCreator const& create_window)
   , visible_(false)
   , need_show_(false)
   , view_(nullptr)
+  , dbus_connect_cancellable_(g_cancellable_new())
   , ensure_timeout_(PRELOAD_TIMEOUT_LENGTH)
   , timeline_animator_(90)
-  , dbus_connect_cancellable_(g_cancellable_new())
 {
   RegisterUBusInterests();
 
   ensure_timeout_.Run([&]() { EnsureDash(); return false; });
-  timeline_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
+  timeline_animator_.updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
 
   // As a default. the create_window_ function should just create a base window.
   if (create_window_ == nullptr)
@@ -361,16 +361,24 @@ void Controller::StartShowHideTimeline()
 {
   EnsureDash();
 
-  double current_opacity = window_->GetOpacity();
-  timeline_animator_.Stop();
-  timeline_animator_.Start(visible_ ? current_opacity : 1.0f - current_opacity);
+  if (timeline_animator_.CurrentState() == nux::animation::Animation::State::Running)
+  {
+    timeline_animator_.Reverse();
+  }
+  else
+  {
+    if (visible_)
+      timeline_animator_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
+    else
+      timeline_animator_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
+  }
 }
 
-void Controller::OnViewShowHideFrame(double progress)
+void Controller::OnViewShowHideFrame(double opacity)
 {
-  window_->SetOpacity(visible_ ? progress : 1.0f - progress);
+  window_->SetOpacity(opacity);
 
-  if (progress == 1.0f && !visible_)
+  if (opacity == 0.0f && !visible_)
   {
     window_->ShowWindow(false);
   }
