@@ -229,12 +229,16 @@ void StaticCairoText::SetLineSpacing(float line_spacing)
 void StaticCairoText::PreLayoutManagement()
 {
   Geometry geo = GetGeometry();
-  pimpl->pre_layout_size_.width = geo.width;
-  pimpl->pre_layout_size_.height = geo.height;
 
-  SetBaseSize(pimpl->cached_extent_.width,
-              pimpl->cached_extent_.height);
+  if(pimpl->pre_layout_size_.width != geo.width
+    || pimpl->pre_layout_size_.height != geo.height)
+  {
+    pimpl->pre_layout_size_.width = geo.width;
+    pimpl->pre_layout_size_.height = geo.height;
 
+    SetBaseSize(pimpl->cached_extent_.width,
+                pimpl->cached_extent_.height);
+  }
   if (pimpl->textures2D_.empty())
   {
     pimpl->UpdateTexture();
