@@ -147,6 +147,7 @@ void MusicPaymentPreview::LoadActions()
 
 nux::Layout* MusicPaymentPreview::GetTitle()
 {
+  printf("Getting title!!\n");
   previews::Style& style = dash::previews::Style::Instance();
   nux::VLayout* title_data_layout = new nux::VLayout();
   title_data_layout->SetMaximumHeight(76);
@@ -206,6 +207,7 @@ nux::Layout* MusicPaymentPreview::GetPrize()
 
 nux::Layout* MusicPaymentPreview::GetBody()
 {
+  printf("GetBody\n");
   previews::Style& style = dash::previews::Style::Instance();
 
   nux::VLayout *body_layout = new  nux::VLayout();
@@ -394,14 +396,6 @@ void MusicPaymentPreview::PreLayoutManagement()
 
   int width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
 
-  /*
-   * Be aware when settings min/max sizes of Layouts.
-   * If you have a StaticCairoText View added to a Layout, and you set
-   * the max/min of the Layout, Nux will go into an infinite loop trying
-   * to calculate sizes.
-   * The workaround is to set manually the sizes of the StaticCairoText
-   * and the other layout children.
-   */
   if(full_data_layout_) { full_data_layout_->SetMaximumWidth(width); }
   if(header_layout_) { header_layout_->SetMaximumWidth(width); }
   if(intro_) { intro_->SetMaximumWidth(width); }
@@ -414,6 +408,7 @@ void MusicPaymentPreview::PreLayoutManagement()
 void MusicPaymentPreview::SetupViews()
 {
   payment_preview_model_ = dynamic_cast<dash::PaymentPreview*>(preview_model_.get());
+  printf("Setting up views!!!\n");
   if (!payment_preview_model_)
   {
     LOG_ERROR(logger) << "Could not derive preview model from given parameter.";
