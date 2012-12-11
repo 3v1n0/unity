@@ -153,7 +153,7 @@ nux::Layout* MusicPaymentPreview::GetTitle()
   title_data_layout->SetSpaceBetweenChildren(10);
 
   title_ = new nux::StaticCairoText(
-          music_preview_model_->title.Get(), true,
+          preview_model_->title.Get(), true,
           NUX_TRACKER_LOCATION);
 
   title_->SetFont(style.payment_title_font().c_str());
@@ -162,7 +162,7 @@ nux::Layout* MusicPaymentPreview::GetTitle()
   title_data_layout->AddView(title_.GetPointer(), 1);
 
   subtitle_ = new nux::StaticCairoText(
-          music_preview_model_->subtitle.Get(), true,
+          preview_model_->subtitle.Get(), true,
           NUX_TRACKER_LOCATION);
   subtitle_->SetLines(-1);
   subtitle_->SetFont(style.payment_subtitle_font().c_str());
@@ -179,7 +179,7 @@ nux::Layout* MusicPaymentPreview::GetPrize()
   prize_data_layout->SetSpaceBetweenChildren(5);
 
   purchase_prize_ = new nux::StaticCairoText(
-          music_preview_model_->purchase_prize.Get(), true,
+          payment_preview_model_->purchase_prize.Get(), true,
           NUX_TRACKER_LOCATION);
   purchase_prize_->SetLines(-1);
   purchase_prize_->SetFont(style.payment_prize_title_font().c_str());
@@ -195,7 +195,7 @@ nux::Layout* MusicPaymentPreview::GetPrize()
           nux::MINOR_POSITION_END);
 
   purchase_type_ = new nux::StaticCairoText(
-          music_preview_model_->purchase_type.Get(), true,
+          payment_preview_model_->purchase_type.Get(), true,
           NUX_TRACKER_LOCATION);
   purchase_type_->SetLines(-1);
   purchase_type_->SetFont(style.payment_prize_subtitle_font().c_str());
@@ -212,7 +212,7 @@ nux::Layout* MusicPaymentPreview::GetBody()
   body_layout->SetSpaceBetweenChildren(40);
 
   intro_ = new nux::StaticCairoText(
-          music_preview_model_->header.Get(), true,
+          payment_preview_model_->header.Get(), true,
           NUX_TRACKER_LOCATION);
   intro_->SetFont(style.payment_intro_font().c_str());
   intro_->SetLineSpacing(10);
@@ -272,7 +272,7 @@ nux::Layout* MusicPaymentPreview::GetFormFields()
   nux::VLayout *fields_layout = new nux::VLayout();
   fields_layout->SetSpaceBetweenChildren(18);
   email_ = new nux::StaticCairoText(
-          music_preview_model_->email.Get(), true,
+          payment_preview_model_->email.Get(), true,
           NUX_TRACKER_LOCATION);
   email_->SetLines(-1);
   email_->SetFont(style.payment_form_data_font().c_str());
@@ -280,7 +280,7 @@ nux::Layout* MusicPaymentPreview::GetFormFields()
                   nux::MINOR_POSITION_START);
 
   payment_ = new nux::StaticCairoText(
-          music_preview_model_->payment_method.Get(), true,
+          payment_preview_model_->payment_method.Get(), true,
           NUX_TRACKER_LOCATION);
   payment_->SetLines(-1);
   payment_->SetFont(style.payment_form_data_font().c_str());
@@ -413,8 +413,8 @@ void MusicPaymentPreview::PreLayoutManagement()
 
 void MusicPaymentPreview::SetupViews()
 {
-  music_preview_model_ = dynamic_cast<dash::MusicPaymentPreview*>(preview_model_.get());
-  if (!music_preview_model_)
+  payment_preview_model_ = dynamic_cast<dash::PaymentPreview*>(preview_model_.get());
+  if (!payment_preview_model_)
   {
     LOG_ERROR(logger) << "Could not derive preview model from given parameter.";
     return;

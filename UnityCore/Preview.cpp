@@ -28,9 +28,9 @@
 #include "GenericPreview.h"
 #include "MusicPreview.h"
 #include "MoviePreview.h"
+#include "PaymentPreview.h"
 #include "SocialPreview.h"
 #include "SeriesPreview.h"
-#include "MusicPaymentPreview.h"
 
 
 namespace unity
@@ -55,9 +55,9 @@ Preview::Ptr Preview::PreviewForProtocolObject(glib::Object<GObject> const& prot
   {
     return Preview::Ptr(new GenericPreview(proto_obj));
   }
-  else if (renderer_name == "preview-music-payment")
+  else if (renderer_name == "preview-payment")
   {
-    return Preview::Ptr(new MusicPaymentPreview(proto_obj));
+    return Preview::Ptr(new PaymentPreview(proto_obj));
   }
   else if (renderer_name == "preview-application")
   {

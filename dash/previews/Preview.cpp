@@ -26,14 +26,14 @@
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
-#include <UnityCore/MusicPaymentPreview.h>
+#include <UnityCore/PaymentPreview.h>
 #include "ActionButton.h"
 
 #include "GenericPreview.h"
-#include "MusicPaymentPreview.h"
 #include "ApplicationPreview.h"
 #include "MusicPreview.h"
 #include "MoviePreview.h"
+#include "MusicPaymentPreview.h"
 #include "SocialPreview.h"
 
 namespace unity
@@ -56,7 +56,7 @@ previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
   {
     return Preview::Ptr(new GenericPreview(model));
   }
-  else if (model->renderer_name == "preview-music-payment")
+  else if (model->renderer_name == "preview-payment")
   {
     return Preview::Ptr(new MusicPaymentPreview(model));
   }

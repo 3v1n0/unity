@@ -38,7 +38,7 @@
 #include <Nux/Nux.h>
 #include <Nux/AbstractButton.h>
 #include <UnityCore/Lens.h>
-#include <UnityCore/MusicPaymentPreview.h>
+#include <UnityCore/PaymentPreview.h>
 #include "ActionButton.h"
 #include "ActionLink.h"
 #include "PaymentPreview.h"
@@ -115,7 +115,7 @@ protected:
   nux::ObjectPtr<nux::StaticCairoText> forgotten_password_;
   nux::ObjectPtr<nux::HLayout> form_layout_;
 
-  dash::MusicPaymentPreview* music_preview_model_;
+  dash::PaymentPreview* payment_preview_model_;
   // do we want to type?
   bool entry_selected_;
 

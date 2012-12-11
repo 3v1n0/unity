@@ -30,7 +30,6 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/RadioOptionFilter.h>
 #include <UnityCore/PaymentPreview.h>
-#include <UnityCore/MusicPaymentPreview.h>
 
 #include "FilterExpanderLabel.h"
 #include "unity-shared/DashStyle.h"
