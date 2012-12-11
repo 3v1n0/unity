@@ -162,7 +162,7 @@ class UnityDialogScreen :
 {
 public:
 
-  UnityDialogScreen(CompScreen* const);
+  UnityDialogScreen(CompScreen*);
   ~UnityDialogScreen();
 
   void
