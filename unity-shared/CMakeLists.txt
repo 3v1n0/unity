@@ -51,6 +51,7 @@ set (UNITY_SHARED_SOURCES
      PlacesOverlayVScrollBar.cpp
      PreviewStyle.cpp
      RatingsButton.cpp
+     ResizingBaseWindow.cpp
      SearchBar.cpp
      SearchBarSpinner.cpp
      StaticCairoText.cpp
