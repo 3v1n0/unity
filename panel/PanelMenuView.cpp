@@ -699,7 +699,6 @@ void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::s
 {
   using namespace panel;
   cairo_t* cr;
-  cairo_pattern_t* linpat;
   int x = MAIN_LEFT_PADDING + TITLE_PADDING + geo.x;
   int y = geo.y;
 
@@ -753,6 +752,7 @@ void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::s
 
   if (text_width > text_space)
   {
+    cairo_pattern_t* linpat;
     int out_pixels = text_width - text_space;
     const int fading_pixels = 35;
     int fading_width = out_pixels < fading_pixels ? out_pixels : fading_pixels;

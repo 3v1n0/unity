@@ -228,21 +228,12 @@ void StaticCairoText::SetLineSpacing(float line_spacing)
 
 void StaticCairoText::PreLayoutManagement()
 {
-  Geometry const& geo = GetGeometry();
+  Geometry geo = GetGeometry();
+  pimpl->pre_layout_size_.width = geo.width;
+  pimpl->pre_layout_size_.height = geo.height;
 
-  // only update the size if an only if and only if the width and height of
-  // the geo are diff
-  // FIXME: nux should be smart enough to not need this, we should get that
-  // fixed.
-  if(pimpl->pre_layout_size_.width != geo.width
-    || pimpl->pre_layout_size_.height != geo.height)
-  {
-    pimpl->pre_layout_size_.width = geo.width;
-    pimpl->pre_layout_size_.height = geo.height;
-
-    SetBaseSize(pimpl->cached_extent_.width,
-                pimpl->cached_extent_.height);
-  }
+  SetBaseSize(pimpl->cached_extent_.width,
+              pimpl->cached_extent_.height);
 
   if (pimpl->textures2D_.empty())
   {

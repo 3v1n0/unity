@@ -48,14 +48,22 @@ Result& Result::operator=(Result const& other)
 
 void Result::SetupGetters()
 {
-  uri.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 0));
-  icon_hint.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 1));
-  category_index.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetUIntAt), 2));
-  mimetype.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 3));
-  name.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 4));
-  comment.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 5));
-  dnd_uri.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 6));
+  uri.SetGetterFunction(sigc::mem_fun(this, &Result::GetURI));
+  icon_hint.SetGetterFunction(sigc::mem_fun(this, &Result::GetIconHint));
+  category_index.SetGetterFunction(sigc::mem_fun(this, &Result::GetCategoryIndex));
+  mimetype.SetGetterFunction(sigc::mem_fun(this, &Result::GetMimeType));
+  name.SetGetterFunction(sigc::mem_fun(this, &Result::GetName));
+  comment.SetGetterFunction(sigc::mem_fun(this, &Result::GetComment));
+  dnd_uri.SetGetterFunction(sigc::mem_fun(this, &Result::GetDndURI));
 }
+
+std::string Result::GetURI() const { return GetStringAt(0); }
+std::string Result::GetIconHint() const { return GetStringAt(1); }
+std::size_t Result::GetCategoryIndex() const { return GetUIntAt(2); }
+std::string Result::GetMimeType() const { return GetStringAt(3); }
+std::string Result::GetName() const { return GetStringAt(4); }
+std::string Result::GetComment() const { return GetStringAt(5); }
+std::string Result::GetDndURI() const { return GetStringAt(6); }
 
 }
 }

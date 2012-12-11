@@ -75,7 +75,6 @@ namespace local
 {
 namespace
 {
-  const int super_tap_duration = 250;
   const int launcher_minimum_show_duration = 1250;
   const int shortcuts_show_delay = 750;
   const int ignore_repeat_shortcut_duration = 250;
@@ -109,6 +108,8 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager)
   , reactivate_keynav(false)
   , keynav_restore_window_(true)
   , launcher_key_press_time_(0)
+  , last_dnd_monitor_(-1)
+  , super_tap_duration_(0)
   , dbus_owner_(g_bus_own_name(G_BUS_TYPE_SESSION, DBUS_NAME.c_str(), G_BUS_NAME_OWNER_FLAGS_NONE,
                                OnBusAcquired, nullptr, nullptr, this, nullptr))
   , gdbus_connection_(nullptr)
@@ -1089,7 +1090,7 @@ void Controller::HandleLauncherKeyPress(int when)
 
     return false;
   };
-  pimpl->sources_.AddTimeout(local::super_tap_duration, show_launcher, local::KEYPRESS_TIMEOUT);
+  pimpl->sources_.AddTimeout(pimpl->super_tap_duration_, show_launcher, local::KEYPRESS_TIMEOUT);
 
   auto show_shortcuts = [&]()
   {
@@ -1109,7 +1110,7 @@ void Controller::HandleLauncherKeyPress(int when)
 
 bool Controller::AboutToShowDash(int was_tap, int when) const
 {
-  if ((when - pimpl->launcher_key_press_time_) < local::super_tap_duration && was_tap)
+  if ((when - pimpl->launcher_key_press_time_) < pimpl->super_tap_duration_ && was_tap)
     return true;
   return false;
 }
@@ -1117,7 +1118,7 @@ bool Controller::AboutToShowDash(int was_tap, int when) const
 void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
 {
   int tap_duration = when - pimpl->launcher_key_press_time_;
-  if (tap_duration < local::super_tap_duration && was_tap)
+  if (tap_duration < pimpl->super_tap_duration_ && was_tap)
   {
     LOG_DEBUG(logger) << "Quick tap, sending activation request.";
     pimpl->SendHomeActivationRequest();
@@ -1328,6 +1329,11 @@ bool Controller::IsOverlayOpen() const
       return true;
   }
   return false;
+}
+
+void Controller::UpdateSuperTapDuration(int const super_tap_duration)
+{
+  pimpl->super_tap_duration_ = super_tap_duration;
 }
 
 std::string

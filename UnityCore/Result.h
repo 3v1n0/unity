@@ -51,6 +51,15 @@ public:
   nux::ROProperty<std::string> comment;
   nux::ROProperty<std::string> dnd_uri;
 
+protected:
+  virtual std::string GetURI() const;
+  virtual std::string GetIconHint() const;
+  virtual std::size_t GetCategoryIndex() const;
+  virtual std::string GetMimeType() const;
+  virtual std::string GetName() const;
+  virtual std::string GetComment() const;
+  virtual std::string GetDndURI() const;
+
 private:
   void SetupGetters();
 };

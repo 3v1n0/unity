@@ -33,29 +33,17 @@ namespace
 class MockStaticCairoText : public nux::StaticCairoText
 {
 public:
-  MOCK_METHOD2(SetBaseSize, void(int, int));
-
   MockStaticCairoText():StaticCairoText("") {}
 
   using StaticCairoText::GetTextureStartIndices;
   using StaticCairoText::GetTextureEndIndices;
-  using StaticCairoText::PreLayoutManagement;
 };
 
-class TestStaticCairoText : public ::testing::Test
+TEST(TestStaticCairoText, TextTextureSize)
 {
-  protected:
-    TestStaticCairoText() : Test()
-    {
-      text = new MockStaticCairoText();
-    }
-    nux::ObjectPtr<MockStaticCairoText> text;
-};
-
-TEST_F(TestStaticCairoText, TextTextureSize)
-{
-  EXPECT_CALL(*text.GetPointer(), SetBaseSize(_, _)).Times(AnyNumber());
   // Test multi-texture stitching support.
+
+  nux::ObjectPtr<MockStaticCairoText> text(new MockStaticCairoText());
   text->SetLines(-2000);
   text->SetMaximumWidth(100);
 
@@ -80,19 +68,6 @@ TEST_F(TestStaticCairoText, TextTextureSize)
       }
     }
   }
-}
-
-TEST_F(TestStaticCairoText, TextPreLayoutManagementMultipleCalls)
-{
-  EXPECT_CALL(*text.GetPointer(), SetBaseSize(_, _)).Times(2);
-
-  text->PreLayoutManagement();
-
-  // the first prelayout methods should have called set base size and therefore
-  // we should not call it again
-  EXPECT_CALL(*text.GetPointer(), SetBaseSize(_, _)).Times(0);
-
-  text->PreLayoutManagement();
 }
 
 }
