@@ -56,6 +56,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , last_lazy_loaded_result_(0)
   , last_mouse_down_x_(-1)
   , last_mouse_down_y_(-1)
+  , drag_index_(~0)
   , recorded_dash_width_(-1)
   , recorded_dash_height_(-1)
   , mouse_last_x_(-1)
@@ -778,27 +779,23 @@ std::tuple<int, int> ResultViewGrid::GetResultPosition(const unsigned int& index
 bool ResultViewGrid::DndSourceDragBegin()
 {
 #ifdef USE_X11
-  unsigned num_results = GetNumResults();
-  unsigned drag_index = GetIndexAtPosition(last_mouse_down_x_, last_mouse_down_y_);
+  drag_index_ = GetIndexAtPosition(last_mouse_down_x_, last_mouse_down_y_);
 
-  if (drag_index >= num_results)
+  if (drag_index_ >= GetNumResults())
     return false;
 
   Reference();
 
-  ResultIterator iter(GetIteratorAtRow(drag_index));
+  ResultIterator iter(GetIteratorAtRow(drag_index_));
   Result drag_result = *iter;
 
   current_drag_uri_ = drag_result.dnd_uri;
   if (current_drag_uri_ == "")
     current_drag_uri_ = drag_result.uri().substr(drag_result.uri().find(":") + 1);
 
-  current_drag_icon_name_ = drag_result.icon_hint;
-
   LOG_DEBUG (logger) << "Dnd begin at " <<
                      last_mouse_down_x_ << ", " << last_mouse_down_y_ << " - using; "
-                     << current_drag_uri_ << " - "
-                     << current_drag_icon_name_;
+                     << current_drag_uri_;
 
   return true;
 #else
@@ -806,101 +803,14 @@ bool ResultViewGrid::DndSourceDragBegin()
 #endif
 }
 
-GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint)
-{
-  GdkPixbuf *pbuf;
-  GtkIconTheme *theme;
-  GtkIconInfo *info;
-  GError *error = NULL;
-  GIcon *icon;
-  int size = 64;
-  if (icon_hint.empty())
-    icon_hint = "application-default-icon";
-  if (g_str_has_prefix(icon_hint.c_str(), "/"))
-  {
-    pbuf = gdk_pixbuf_new_from_file_at_scale (icon_hint.c_str(),
-                                              size, size, FALSE, &error);
-    if (error != NULL || !pbuf || !GDK_IS_PIXBUF (pbuf))
-    {
-      icon_hint = "application-default-icon";
-      g_error_free (error);
-      error = NULL;
-    }
-    else
-      return pbuf;
-  }
-  theme = gtk_icon_theme_get_default();
-  icon = g_icon_new_for_string(icon_hint.c_str(), NULL);
-
-  if (G_IS_ICON(icon))
-  {
-     if (UNITY_PROTOCOL_IS_ANNOTATED_ICON(icon))
-     {
-        UnityProtocolAnnotatedIcon *anno;
-        anno = UNITY_PROTOCOL_ANNOTATED_ICON(icon);
-
-        GIcon *base_icon = unity_protocol_annotated_icon_get_icon(anno);
-        info = gtk_icon_theme_lookup_by_gicon(theme, base_icon, size, (GtkIconLookupFlags)0);
-     }
-     else
-     {
-       info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
-     }
-     g_object_unref(icon);
-  }
-  else
-  {
-     info = gtk_icon_theme_lookup_icon(theme,
-                                        icon_hint.c_str(),
-                                        size,
-                                        (GtkIconLookupFlags) 0);
-  }
-
-  if (!info)
-  {
-      info = gtk_icon_theme_lookup_icon(theme,
-                                        "application-default-icon",
-                                        size,
-                                        (GtkIconLookupFlags) 0);
-  }
-
-  if (gtk_icon_info_get_filename(info) == NULL)
-  {
-      gtk_icon_info_free(info);
-      info = gtk_icon_theme_lookup_icon(theme,
-                                        "application-default-icon",
-                                        size,
-                                        (GtkIconLookupFlags) 0);
-  }
-
-  pbuf = gtk_icon_info_load_icon(info, &error);
-
-  if (error != NULL)
-  {
-    LOG_WARN (logger) << "could not find a pixbuf for " << icon_hint;
-    g_error_free (error);
-    pbuf = NULL;
-  }
-
-  gtk_icon_info_free(info);
-  return pbuf;
-}
-
 nux::NBitmapData*
 ResultViewGrid::DndSourceGetDragImage()
 {
-  nux::NBitmapData* result = 0;
-  GdkPixbuf* pbuf;
-  pbuf = _icon_hint_get_drag_pixbuf (current_drag_icon_name_);
+  if (drag_index_ >= GetNumResults())
+    return nullptr;
 
-  if (pbuf && GDK_IS_PIXBUF(pbuf))
-  {
-    // we don't free the pbuf as GdkGraphics will do it for us will do it for us
-    nux::GdkGraphics graphics(pbuf);
-    result = graphics.GetBitmap();
-  }
-
-  return result;
+  Result result(*GetIteratorAtRow(drag_index_));
+  return renderer_->GetDndImage(result);
 }
 
 std::list<const char*>
@@ -934,7 +844,7 @@ void ResultViewGrid::DndSourceDragFinished(nux::DndAction result)
   last_mouse_down_x_ = -1;
   last_mouse_down_y_ = -1;
   current_drag_uri_.clear();
-  current_drag_icon_name_.clear();
+  drag_index_ = ~0;
 
   // We need this because the drag can start in a ResultViewGrid and can
   // end in another ResultViewGrid
