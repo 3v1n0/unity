@@ -47,7 +47,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(Tooltip);
 Tooltip::Tooltip() :
   _anchorX(0),
   _anchorY(0),
-  _labelText(TEXT("Unity")),
   _cairo_text_has_changed(true)
 {
   _hlayout = new nux::HLayout(TEXT(""), NUX_TRACKER_LOCATION);
@@ -61,13 +60,29 @@ Tooltip::Tooltip() :
 
   _vlayout->AddLayout(_top_space, 0);
 
-  _tooltip_text = new nux::StaticCairoText(_labelText, NUX_TRACKER_LOCATION);
+  _tooltip_text = new nux::StaticCairoText(TEXT("Unity"), NUX_TRACKER_LOCATION);
   _tooltip_text->SetTextAlignment(nux::StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
   _tooltip_text->SetTextVerticalAlignment(nux::StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
   _tooltip_text->SetMinimumWidth(MINIMUM_TEXT_WIDTH);
 
   _tooltip_text->sigTextChanged.connect(sigc::mem_fun(this, &Tooltip::RecvCairoTextChanged));
   _tooltip_text->sigFontChanged.connect(sigc::mem_fun(this, &Tooltip::RecvCairoTextChanged));
+
+  // getter and setter for the property
+  text.SetSetterFunction([this](std::string newText)
+    {
+      if(_tooltip_text->GetText() == newText)
+        return false;
+
+      _tooltip_text->SetText(newText);
+      return true;
+    }
+  );
+  text.SetGetterFunction([this]()
+    {
+      return _tooltip_text->GetText();
+    }
+  );
 
   _vlayout->AddView(_tooltip_text.GetPointer(), 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
@@ -129,6 +144,7 @@ void Tooltip::PreLayoutManagement()
   }
 
   _tooltip_text->SetMinimumWidth(text_min_width);
+  _tooltip_text->SetMinimumHeight(text_height);
 
   if (text_height < ANCHOR_HEIGHT)
   {
@@ -539,17 +555,6 @@ void Tooltip::NotifyConfigurationChange(int width,
 {
 }
 
-void Tooltip::SetText(std::string const& text)
-{
-  if (_labelText == text)
-    return;
-
-  _labelText = text;
-  _tooltip_text->SetText(_labelText);
-
-  QueueRelayout();
-}
-
 // Introspection
 
 std::string Tooltip::GetName() const
@@ -560,7 +565,7 @@ std::string Tooltip::GetName() const
 void Tooltip::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
-    .add("text", _labelText)
+    .add("text", text)
     .add("x", GetBaseX())
     .add("y", GetBaseY())
     .add("width", GetBaseWidth())
