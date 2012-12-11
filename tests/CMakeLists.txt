@@ -203,6 +203,7 @@ if (ENABLE_X_SUPPORT)
                  test_application_launcher_icon.cpp
                  test_bfb_launcher_icon.cpp
                  test_dashview_impl.cpp
+                 test_dash_controller.cpp
                  test_desktop_launcher_icon.cpp
                  test_edge_barrier_controller.cpp
                  test_launcher.cpp
@@ -218,6 +219,7 @@ if (ENABLE_X_SUPPORT)
                  test_launcher_hide_machine.cpp
                  test_launcher_hover_machine.cpp
                  test_launcher_icon.cpp
+                 test_launcher_tooltip.cpp
                  test_keyboard_util.cpp
                  test_panel_style.cpp
                  test_panel_menu_view.cpp
@@ -230,6 +232,7 @@ if (ENABLE_X_SUPPORT)
                  test_overlay_scrollbar.cpp
                  test_quicklist_menu_item.cpp
                  test_quicklist_view.cpp
+                 test_result_renderer.cpp
                  test_resultviewgrid.cpp
                  test_shortcut_controller.cpp
                  test_single_monitor_launcher_icon.cpp

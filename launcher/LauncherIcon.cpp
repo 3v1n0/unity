@@ -147,7 +147,7 @@ void LauncherIcon::LoadTooltip()
   _tooltip = new Tooltip();
   AddChild(_tooltip.GetPointer());
 
-  _tooltip->SetText(tooltip_text());
+  _tooltip->text = tooltip_text();
 }
 
 void LauncherIcon::LoadQuicklist()
@@ -475,7 +475,7 @@ bool LauncherIcon::SetTooltipText(std::string& target, std::string const& value)
   {
     target = escaped;
     if (_tooltip)
-      _tooltip->SetText(target);
+      _tooltip->text = target;
     result = true;
   }
 
@@ -520,7 +520,7 @@ LauncherIcon::ShowTooltip()
 
   if (!_tooltip)
     LoadTooltip();
-  _tooltip->SetText(tooltip_text());
+  _tooltip->text = tooltip_text();
   _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
   _tooltip->ShowWindow(!tooltip_text().empty());
   tooltip_visible.emit(_tooltip);
