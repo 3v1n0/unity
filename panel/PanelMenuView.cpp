@@ -28,7 +28,6 @@
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/WindowManager.h"
-#include <Nux/InputAreaProximity.h>
 
 #include <UnityCore/Variant.h>
 
