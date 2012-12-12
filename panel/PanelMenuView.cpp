@@ -28,11 +28,14 @@
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/WindowManager.h"
+#include <Nux/InputAreaProximity.h>
 
 #include <UnityCore/Variant.h>
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
+
+namespace na = nux::animation;
 
 namespace unity
 {
@@ -76,9 +79,7 @@ PanelMenuView::PanelMenuView()
     _menus_fadeout(DEFAULT_MENUS_FADEOUT),
     _menus_discovery(DEFAULT_MENUS_DISCOVERY),
     _menus_discovery_fadein(DEFAULT_DISCOVERY_FADEIN),
-    _menus_discovery_fadeout(DEFAULT_DISCOVERY_FADEOUT),
-    _fade_in_animator(_menus_fadein),
-    _fade_out_animator(_menus_fadeout)
+    _menus_discovery_fadeout(DEFAULT_DISCOVERY_FADEOUT)
 {
   layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
 
@@ -160,10 +161,7 @@ PanelMenuView::PanelMenuView()
   _ubus_manager.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWITCHER, sigc::mem_fun(this, &PanelMenuView::OnLauncherKeyNavEnded));
   _ubus_manager.RegisterInterest(UBUS_LAUNCHER_SELECTION_CHANGED, sigc::mem_fun(this, &PanelMenuView::OnLauncherSelectionChanged));
 
-  _fade_in_animator.animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeInChanged));
-  _fade_in_animator.animation_ended.connect(sigc::mem_fun(this, &PanelMenuView::FullRedraw));
-  _fade_out_animator.animation_updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeOutChanged));
-  _fade_out_animator.animation_ended.connect(sigc::mem_fun(this, &PanelMenuView::FullRedraw));
+  _opacity_animator.updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeAnimatorUpdated));
 
   SetOpacity(0.0f);
   _window_buttons->SetOpacity(0.0f);
@@ -206,16 +204,10 @@ void PanelMenuView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
                                        int discovery_fadein, int discovery_fadeout)
 {
   if (fadein > -1)
-  {
     _menus_fadein = fadein;
-    _fade_in_animator.SetDuration(_menus_fadein);
-  }
 
   if (fadeout > -1)
-  {
     _menus_fadeout = fadeout;
-    _fade_out_animator.SetDuration(_menus_fadeout);
-  }
 
   if (discovery > -1)
     _menus_discovery = discovery;
@@ -293,28 +285,52 @@ void PanelMenuView::PreLayoutManagement()
   SetMaximumEntriesWidth(geo.width - _window_buttons->GetContentWidth());
 }
 
-void PanelMenuView::OnFadeInChanged(double opacity)
+void PanelMenuView::StartFadeIn(int duration)
 {
-  if (DrawMenus() && GetOpacity() != 1.0f)
-    SetOpacity(opacity);
+  if (_opacity_animator.CurrentState() == na::Animation::State::Running)
+  {
+    if (_opacity_animator.GetFinishValue() != 1.0f)
+      _opacity_animator.Reverse();
 
-  if (DrawWindowButtons() && _window_buttons->GetOpacity() != 1.0f)
-    _window_buttons->SetOpacity(opacity);
+    return;
+  }
 
-  QueueDraw();
+  _opacity_animator.SetDuration(duration >= 0 ? duration : _menus_fadein);
+  _opacity_animator.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
 }
 
-void PanelMenuView::OnFadeOutChanged(double progress)
+void PanelMenuView::StartFadeOut(int duration)
 {
-  double opacity = CLAMP(1.0f - progress, 0.0f, 1.0f);
+  if (_opacity_animator.CurrentState() == na::Animation::State::Running)
+  {
+    if (_opacity_animator.GetFinishValue() != 0.0f)
+      _opacity_animator.Reverse();
 
-  if (!DrawMenus() && GetOpacity() != 0.0f)
-    SetOpacity(opacity);
+    return;
+  }
 
-  if (!DrawWindowButtons() && _window_buttons->GetOpacity() != 0.0f)
-    _window_buttons->SetOpacity(opacity);
+  _opacity_animator.SetDuration(duration >= 0 ? duration : _menus_fadeout);
+  _opacity_animator.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
+}
 
-  QueueDraw();
+void PanelMenuView::OnFadeAnimatorUpdated(double opacity)
+{
+  if (_opacity_animator.GetFinishValue() == 1.0f) /* Fading in... */
+  {
+    if (DrawMenus() && GetOpacity() != 1.0f)
+      SetOpacity(opacity);
+
+    if (DrawWindowButtons() && _window_buttons->GetOpacity() != 1.0f)
+      _window_buttons->SetOpacity(opacity);
+  }
+  else if (_opacity_animator.GetFinishValue() == 0.0f) /* Fading out... */
+  {
+    if (!DrawMenus() && GetOpacity() != 0.0f)
+      SetOpacity(opacity);
+
+    if (!DrawWindowButtons() && _window_buttons->GetOpacity() != 0.0f)
+      _window_buttons->SetOpacity(opacity);
+  }
 }
 
 bool PanelMenuView::DrawMenus() const
@@ -565,43 +581,34 @@ void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
 
   if (draw_menus)
   {
-    for (auto entry : entries_)
+    for (auto const& entry : entries_)
       entry.second->SetDisabled(false);
 
     layout_->ProcessDraw(GfxContext, true);
 
-    _fade_out_animator.Stop();
-
     if (_new_application && !_is_inside)
     {
-      _fade_in_animator.Start(_menus_discovery_fadein, GetOpacity());
+      if (GetOpacity() != 1.0f)
+        StartFadeIn(_menus_discovery_fadein);
     }
     else
     {
-      _fade_in_animator.Start(GetOpacity());
+      if (GetOpacity() != 1.0f)
+        StartFadeIn();
+
       _new_app_menu_shown = false;
     }
   }
-  else
+  else /* if (!draw_menus) */
   {
-    for (auto entry : entries_)
+    if (GetOpacity() != 0.0f && !_overlay_showing)
+    {
+      layout_->ProcessDraw(GfxContext, true);
+      StartFadeOut(_new_app_menu_shown ? _menus_discovery_fadeout : -1);
+    }
+
+    for (auto const& entry : entries_)
       entry.second->SetDisabled(true);
-  }
-
-  if (GetOpacity() != 0.0f && !draw_menus && !_overlay_showing)
-  {
-    layout_->ProcessDraw(GfxContext, true);
-
-    _fade_in_animator.Stop();
-
-    if (!_new_app_menu_shown)
-    {
-      _fade_out_animator.Start(1.0f - GetOpacity());
-    }
-    else
-    {
-      _fade_out_animator.Start(_menus_discovery_fadeout, 1.0f - GetOpacity());
-    }
   }
 
   if (draw_buttons)
@@ -609,21 +616,16 @@ void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
     _window_buttons->ProcessDraw(GfxContext, true);
 
     if (_window_buttons->GetOpacity() != 1.0f)
-    {
-      _fade_out_animator.Stop();
-      _fade_in_animator.Start(_window_buttons->GetOpacity());
-    }
+      StartFadeIn();
   }
-
-  if (_window_buttons->GetOpacity() != 0.0f && !draw_buttons)
+  else if (/*!draw_buttons &&*/ _window_buttons->GetOpacity() != 0.0f)
   {
     _window_buttons->ProcessDraw(GfxContext, true);
-    _fade_in_animator.Stop();
 
     /* If we try to hide only the buttons, then use a faster fadeout */
-    if (!_fade_out_animator.IsRunning())
+    if (_opacity_animator.CurrentState() != na::Animation::Running)
     {
-      _fade_out_animator.Start(_menus_fadeout/3, 1.0f - _window_buttons->GetOpacity());
+      StartFadeOut(_menus_fadeout/3);
     }
   }
 
