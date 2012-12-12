@@ -404,7 +404,7 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     GfxContext.GetRenderStates().GetBlend(blend_alpha, blend_src, blend_dest);
 
-    for (auto entry : entries_)
+    for (auto const& entry : entries_)
     {
       if (entry.second->IsVisible())
       {
@@ -1585,7 +1585,7 @@ bool PanelMenuView::UpdateShowNowWithDelay()
 {
   bool active = false;
 
-  for (auto entry : entries_)
+  for (auto const& entry : entries_)
   {
     if (entry.second->GetShowNow())
     {
