@@ -234,3 +234,8 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.assertThat(self.dash.visible, Eventually(Equals(True)))
         self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
 
+    def test_launcher_keynav_changes_panel(self):
+      """The panel title must change when in key nav mode."""
+
+      self.start_keynav_with_cleanup_cancel()
+      self.assertThat(self.panels.get_active_panel().title, Eventually(Equals("Dash Home")))

@@ -27,6 +27,7 @@
 #include "BaseWindowRaiserImp.h"
 #include "MockShortcutHint.h"
 #include "ShortcutController.h"
+#include "unity-shared/UnitySettings.h"
 
 using namespace unity;
 
@@ -241,6 +242,7 @@ int main(int argc, char** argv)
   gtk_init(&argc, &argv);
 
   nux::NuxInitialize(0);
+  unity::Settings settings;
 
   BackgroundEffectHelper::blur_type = BLUR_NONE;
   nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Shortcut Hint Overlay"), 1200, 720, 0, &ThreadWidgetInit, 0);

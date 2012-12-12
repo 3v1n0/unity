@@ -97,7 +97,7 @@ public:
 
   int SortPriority();
 
-  virtual std::vector<Window> Windows() { return std::vector<Window> (); }
+  virtual WindowList Windows() { return WindowList(); }
 
   virtual std::vector<Window> WindowsOnViewport() { return std::vector<Window> (); }
 
