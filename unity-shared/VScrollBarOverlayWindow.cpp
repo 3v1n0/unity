@@ -25,6 +25,9 @@
 #include "DashStyle.h"
 #include "CairoTexture.h"
 
+namespace unity
+{
+
 namespace
 {
   int const THUMB_WIDTH = 21;
@@ -38,9 +41,7 @@ VScrollBarOverlayWindow::VScrollBarOverlayWindow(nux::Geometry const& geo)
   , content_size_(geo)
   , content_offset_x_(0)
   , mouse_offset_y_(0)
-  , mouse_down_(false)
-  , mouse_near_(false)
-  , inside_slider_(false)
+  , current_state_(ThumbState::NONE)
   , current_action_(ThumbAction::NONE)
 {
   Area::SetGeometry(content_size_.x, content_size_.y, THUMB_WIDTH, content_size_.height);
@@ -68,7 +69,7 @@ void VScrollBarOverlayWindow::SetThumbOffsetY(int y)
 
   if (new_offset != mouse_offset_y_)
   {
-    if (mouse_down_)
+    if (HasState(ThumbState::MOUSE_DOWN))
       MouseDragging();
 
     mouse_offset_y_ = new_offset;
@@ -127,13 +128,13 @@ nux::Geometry VScrollBarOverlayWindow::GetThumbGeometry() const
 
 void VScrollBarOverlayWindow::MouseDown()
 {
-  mouse_down_ = true;
+  AddState(ThumbState::MOUSE_DOWN);
   UpdateTexture();
 }
 
 void VScrollBarOverlayWindow::MouseUp()
 {
-  mouse_down_ = false;
+  RemoveState(ThumbState::MOUSE_DOWN);
   current_action_ = ThumbAction::NONE;
   UpdateTexture();
   ShouldHide();
@@ -141,30 +142,42 @@ void VScrollBarOverlayWindow::MouseUp()
 
 void VScrollBarOverlayWindow::MouseNear()
 {
-  mouse_near_ = true;
+  AddState(ThumbState::MOUSE_NEAR);
   ShouldShow();
 }
 
 void VScrollBarOverlayWindow::MouseBeyond()
 {
-  mouse_near_ = false;
+  RemoveState(ThumbState::MOUSE_NEAR);
+  ShouldHide();
+}
+
+void VScrollBarOverlayWindow::MouseEnter()
+{
+  AddState(ThumbState::MOUSE_INSIDE);
+  ShouldShow();
+}
+
+void VScrollBarOverlayWindow::MouseLeave()
+{
+  RemoveState(ThumbState::MOUSE_INSIDE);
   ShouldHide();
 }
 
 void VScrollBarOverlayWindow::ThumbInsideSlider()
 {
-  if (!inside_slider_)
+  if (!HasState(ThumbState::INSIDE_SLIDER))
   {
-    inside_slider_ = true;
+    AddState(ThumbState::INSIDE_SLIDER);
     UpdateTexture();
   }
 }
 
 void VScrollBarOverlayWindow::ThumbOutsideSlider()
 {
-  if (inside_slider_)
+  if (HasState(ThumbState::INSIDE_SLIDER))
   {
-    inside_slider_ = false;
+    RemoveState(ThumbState::INSIDE_SLIDER);
     UpdateTexture();
   }
 }
@@ -194,7 +207,8 @@ void VScrollBarOverlayWindow::ShouldShow()
 {
   if (!IsVisible())
   {
-    if (mouse_down_ || mouse_near_)
+    if (HasState(ThumbState::MOUSE_DOWN) ||
+        HasState(ThumbState::MOUSE_NEAR))
     {
       ShowWindow(true);
       PushToFront();
@@ -207,7 +221,9 @@ void VScrollBarOverlayWindow::ShouldHide()
 {
   if (IsVisible())
   {
-    if (!mouse_down_ && !mouse_near_)
+    if (!(HasState(ThumbState::MOUSE_DOWN)) &&
+        !(HasState(ThumbState::MOUSE_NEAR)) &&
+        !(HasState(ThumbState::MOUSE_INSIDE)))
     {
       ShowWindow(false);
       QueueDraw();
@@ -217,10 +233,24 @@ void VScrollBarOverlayWindow::ShouldHide()
 
 void VScrollBarOverlayWindow::ResetStates()
 {
-  mouse_down_ = false;
-  mouse_near_ = false;
+  current_state_ = ThumbState::NONE;
   current_action_ = ThumbAction::NONE;
   ShouldHide();
+}
+
+void VScrollBarOverlayWindow::AddState(ThumbState const& state)
+{
+  current_state_ |= state;
+}
+
+void VScrollBarOverlayWindow::RemoveState(ThumbState const& state)
+{
+  current_state_ &= ~(state);
+}
+
+bool VScrollBarOverlayWindow::HasState(ThumbState const& state) const
+{
+  return (current_state_ & state);
 }
 
 void VScrollBarOverlayWindow::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
@@ -465,7 +495,7 @@ void VScrollBarOverlayWindow::UpdateTexture()
   current_y += 0.5;
   cairoGraphics.DrawRoundedRectangle(cr, aspect, current_x, current_y, radius - 1, width - 1, height - 1);
 
-  if (inside_slider_)
+  if (HasState(ThumbState::INSIDE_SLIDER))
     SetSourceRGB(cr, bg_selected, 1.0);
   else
     SetSourceRGB(cr, bg_active, 0.9);
@@ -524,3 +554,5 @@ void VScrollBarOverlayWindow::UpdateTexture()
 
   QueueDraw();
 }
+
+} // namespace unity
