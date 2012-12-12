@@ -112,8 +112,7 @@ public:
   {
     std::list<AbstractLauncherIcon::Ptr> result;
 
-    iterator it;
-    for (it = begin(); it != end(); it++)
+    for (iterator it = begin(), e = end(); it != e; ++it)
     {
       T* var = dynamic_cast<T*>((*it).GetPointer());
 

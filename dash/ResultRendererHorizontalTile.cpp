@@ -29,6 +29,7 @@
 
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/TextureCache.h"
+#include <NuxGraphics/GdkGraphics.h>
 
 
 namespace unity
@@ -42,7 +43,7 @@ const int   CARD_VIEW_WIDTH                = 277; // pixels
 const int   CARD_VIEW_HEIGHT               = 74;  // pixels
 const int   CARD_VIEW_HIGHLIGHT_CORNER_RADIUS = 2; // pixels
 const int   CARD_VIEW_ICON_OUTLINE_WIDTH   = 1;   // pixels
-const int CARD_VIEW_TEXT_LINE_SPACING    = 0; // points
+const int   CARD_VIEW_TEXT_LINE_SPACING    = 0; // points
 }
 
 namespace dash
@@ -295,6 +296,25 @@ void ResultRendererHorizontalTile::LoadText(Result& row)
   TextureContainer *container = row.renderer<TextureContainer*>();
   if (container)
     container->text = texture_ptr_from_cairo_graphics(_cairoGraphics);
+}
+
+nux::NBitmapData* ResultRendererHorizontalTile::GetDndImage(Result const& row) const
+{
+  TextureContainer* container = row.renderer<TextureContainer*>();
+  nux::NBitmapData* bitmap = nullptr;
+
+  if (container && container->drag_icon && container->drag_icon.IsType(GDK_TYPE_PIXBUF))
+  {
+    int width = gdk_pixbuf_get_width(container->drag_icon);
+    int height = gdk_pixbuf_get_height(container->drag_icon);
+
+    if (width != CARD_VIEW_ICON_SIZE || height != CARD_VIEW_ICON_SIZE)
+    {
+      nux::GdkGraphics graphics(gdk_pixbuf_scale_simple(container->drag_icon, CARD_VIEW_ICON_SIZE, CARD_VIEW_ICON_SIZE, GDK_INTERP_BILINEAR));
+      bitmap = graphics.GetBitmap();
+    }
+  }
+  return bitmap ? bitmap : ResultRendererTile::GetDndImage(row);
 }
 
 

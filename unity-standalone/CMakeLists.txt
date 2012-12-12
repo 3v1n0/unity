@@ -35,4 +35,5 @@ target_link_libraries (unity-standalone
                        launcher-lib
                        panel-lib
                        unity-shared
+                       unity-shared-bamf
                        unity-shared-standalone)

@@ -23,10 +23,10 @@
 #include "ResultRendererTile.h"
 
 #include <pango/pangocairo.h>
-#include <gtk/gtk.h>
 
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
+#include <NuxGraphics/GdkGraphics.h>
 
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/DashStyle.h"
@@ -34,7 +34,8 @@
 
 namespace
 {
-  bool neko;
+bool neko;
+#define DEFAULT_GICON ". GThemedIcon text-x-preview"
 }
 
 namespace unity
@@ -180,11 +181,24 @@ void ResultRendererTile::Unload(Result& row)
   row.set_renderer<TextureContainer*>(nullptr);
 }
 
+nux::NBitmapData* ResultRendererTile::GetDndImage(Result const& row) const
+{
+  TextureContainer* container = row.renderer<TextureContainer*>();
+  nux::NBitmapData* bitmap = nullptr;
+
+  if (container && container->drag_icon && container->drag_icon.IsType(GDK_TYPE_PIXBUF))
+  {
+    // Need to ref the drag icon because GdkGraphics will unref it.
+    nux::GdkGraphics graphics(GDK_PIXBUF(g_object_ref(container->drag_icon)));
+    bitmap = graphics.GetBitmap();
+  }
+  return bitmap ? bitmap : ResultRenderer::GetDndImage(row);
+}
+
 void ResultRendererTile::LoadIcon(Result& row)
 {
   Style& style = Style::Instance();
   std::string icon_hint(row.icon_hint);
-#define DEFAULT_GICON ". GThemedIcon text-x-preview"
   std::string icon_name;
   if (G_UNLIKELY(neko))
   {
@@ -289,9 +303,7 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
 
     return texture_from_cairo_graphics(cairo_graphics);
   }
-
 }
-
 
 void ResultRendererTile::IconLoaded(std::string const& texid,
                                     int max_width,
@@ -314,6 +326,7 @@ void ResultRendererTile::IconLoaded(std::string const& texid,
 
     container->icon = texture;
     container->prelight = texture_prelight;
+    container->drag_icon = pixbuf;
 
     NeedsRedraw.emit();
 

@@ -81,6 +81,8 @@ public:
 
   bool IsOverlayOpen() const;
 
+  void UpdateSuperTapDuration(int const super_tap_duration);
+
 protected:
   // Introspectable methods
   std::string GetName() const;
