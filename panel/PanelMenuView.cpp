@@ -339,7 +339,7 @@ bool PanelMenuView::DrawMenus() const
   bool screen_grabbed = (wm.IsExpoActive() || wm.IsScaleActive());
 
   if (_we_control_active && !_overlay_showing && !screen_grabbed &&
-      !_switcher_showing && !_launcher_keynav)
+      !_switcher_showing && !_launcher_keynav && !entries_.empty())
   {
     if (_is_inside || _last_active_view || _show_now_activated || _new_application)
     {
