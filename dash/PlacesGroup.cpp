@@ -590,7 +590,6 @@ void PlacesGroup::SetFiltersExpanded(bool filters_expanded)
   }
 
   _using_filters_background = filters_expanded;
-  printf("expanded %d\n", _using_filters_background);
   QueueDraw();
 }
 

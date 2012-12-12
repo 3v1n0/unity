@@ -159,7 +159,11 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   view_type.changed.connect(sigc::mem_fun(this, &LensView::OnViewTypeChanged));
   if (lens_)
   {
-    lens_->connected.changed.connect([&](bool is_connected) { if (is_connected) initial_activation_ = true; });
+    lens_->connected.changed.connect([&](bool is_connected)
+    {
+      if (is_connected)
+        initial_activation_ = true;
+    });
     lens_->categories_reordered.connect(sigc::mem_fun(this, &LensView::OnCategoryOrderChanged));
   }
 
@@ -302,7 +306,7 @@ void LensView::OnCategoryAdded(Category const& category)
   std::string name = category.name;
   std::string icon_hint = category.icon_hint;
   std::string renderer_name = category.renderer_name;
-  unsigned index = category.index == unsigned(-1) ? categories_.size() : category.index;
+  unsigned index = (category.index == unsigned(-1)) ? categories_.size() : category.index;
   bool reset_filter_models = false;
 
   LOG_DEBUG(logger) << "Category added: " << name
