@@ -46,6 +46,8 @@ public:
                       nux::Geometry const& geometry,
                       int x_offset, int y_offset);
 
+  virtual nux::NBitmapData* GetDndImage(Result const& row) const;
+
 protected:
   virtual void LoadText(Result& row);
 

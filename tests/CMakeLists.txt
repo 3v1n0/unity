@@ -13,6 +13,9 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/bzr-handle-patch.d
                 ${CMAKE_BINARY_DIR}/tests/data/applications/bzr-handle-patch.desktop)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/no-icon.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/applications/no-icon.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/kde4/afile.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/applications/kde4/afile.desktop)
+
 #
 # Unit tests
 #
@@ -28,8 +31,6 @@ set (CFLAGS
      "-g"
      "-DTESTDATADIR=\"${TESTDATADIR}\""
      "-DGETTEXT_PACKAGE=\"unity\""
-     "-DINDICATORDIR=\"${CMAKE_BINARY_DIR}/tests\""
-     "-DINDICATORICONDIR=\"${CMAKE_BINARY_DIR}/tests\""
      "-I${CMAKE_CURRENT_BINARY_DIR}"
      )
 add_definitions (${CFLAGS})
@@ -51,20 +52,12 @@ include_directories (${CMAKE_SOURCE_DIR}/unity-shared)
 # We can't have convenience libs so we need to rebuild with what we need
 # Please keep actual test files alphabetically at top and then files
 # from ../${UNITY_SRC} or ../../services in alphabetically after that
-find_program(GLIB_GENMARSHAL glib-genmarshal)
-add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
-  COMMAND ${GLIB_GENMARSHAL} ARGS ../services/panel-marshal.list --body --prefix=panel_marshal > ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
-  COMMAND ${GLIB_GENMARSHAL} ARGS ../services/panel-marshal.list --header --prefix=panel_marshal > ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.h
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  DEPENDS ../services/panel-marshal.list
-  COMMENT "Generating marshallers for panel-service")
 
 add_executable (test-unit
                 unit/TestMain.cpp
                 unit/TestPanelService.cpp
                 unit/TestStaticCairoText.cpp
                 ../services/panel-service.c
-                ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
                 )
 target_link_libraries (test-unit unity-shared ${LIBS})
 add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
@@ -72,17 +65,10 @@ add_subdirectory (test-input-remover)
 add_subdirectory (test-minimize-window-handler)
 add_subdirectory (test-get-transients)
 
+
 #
 # GTest tests
 #
-find_program(GLIB_GENMARSHAL glib-genmarshal)
-add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
-  COMMAND ${GLIB_GENMARSHAL} ARGS test_glib_signals_utils_marshal.list --body --prefix=test_signals > ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
-  COMMAND ${GLIB_GENMARSHAL} ARGS test_glib_signals_utils_marshal.list --header --prefix=test_signals > ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.h
-  COMMAND sed ARGS -i "s/glib-object/test_glib_signals_utils_marshal/" ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  DEPENDS test_glib_signals_utils_marshal.list
-  COMMENT "Generating marshallers")
 
 enable_testing()
 # :(
@@ -94,8 +80,16 @@ if (GTEST_SRC_DIR AND
     GMOCK_LIB AND
     GMOCK_MAIN_LIB)
 
+  # MockWindowManager
+  add_library (unity_mock_window_manager STATIC
+               MockWindowManager.cpp)
+  target_link_libraries (unity_mock_window_manager
+                         ${GMOCK_LIB}
+                         ${GMOCK_MAIN_LIB})
+
 # The service that provides DBus services to test against
   add_executable(test-gtest-service
+                 mock-application.cpp
                  test_service_gdbus_wrapper.c
                  test_service_gdbus_wrapper.h
                  test_service_hud.c
@@ -114,7 +108,7 @@ if (GTEST_SRC_DIR AND
 # The actual test executable (xless) - do not put anything that requires X in here
   set (GTEST_XLESS_SOURCES
        test_main_xless.cpp
-       test_animator.cpp
+       #test_animator.cpp # XXX: disabled, to be removed completely soon
        test_launcher_model.cpp
        test_glib_object.cpp
        test_glib_object_utils.cpp
@@ -139,9 +133,9 @@ if (GTEST_SRC_DIR AND
        test_layout_system.cpp
        test_model_iterator.cpp
        test_previews.cpp
+       test_time_util.cpp
        test_ubus.cpp
        test_unityshell_private.cpp
-       ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
        ${UNITY_SRC}/UnityshellPrivate.cpp
        ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
        ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
@@ -205,10 +199,14 @@ if (GTEST_SRC_DIR AND
 if (ENABLE_X_SUPPORT)
 # Tests that require X
   add_executable(test-gtest
+                 mock-application.cpp
+                 logger_helper.cpp
                  test_main.cpp
+                 test_action_link.cpp
                  test_application_launcher_icon.cpp
                  test_bfb_launcher_icon.cpp
                  test_dashview_impl.cpp
+                 test_dash_controller.cpp
                  test_desktop_launcher_icon.cpp
                  test_edge_barrier_controller.cpp
                  test_launcher.cpp
@@ -224,6 +222,7 @@ if (ENABLE_X_SUPPORT)
                  test_launcher_hide_machine.cpp
                  test_launcher_hover_machine.cpp
                  test_launcher_icon.cpp
+                 test_launcher_tooltip.cpp
                  test_keyboard_util.cpp
                  test_panel_style.cpp
                  test_panel_menu_view.cpp
@@ -236,11 +235,14 @@ if (ENABLE_X_SUPPORT)
                  test_overlay_scrollbar.cpp
                  test_quicklist_menu_item.cpp
                  test_quicklist_view.cpp
+                 test_result_renderer.cpp
                  test_resultviewgrid.cpp
                  test_shortcut_controller.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_expo_launcher_icon.cpp
                  test_showdesktop_handler.cpp
+                 test_software_center_launcher_icon.cpp
+                 test_static_cairo_text.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
                  test_texture_cache.cpp

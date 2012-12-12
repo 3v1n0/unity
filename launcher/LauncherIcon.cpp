@@ -147,7 +147,7 @@ void LauncherIcon::LoadTooltip()
   _tooltip = new Tooltip();
   AddChild(_tooltip.GetPointer());
 
-  _tooltip->SetText(tooltip_text());
+  _tooltip->text = tooltip_text();
 }
 
 void LauncherIcon::LoadQuicklist()
@@ -360,7 +360,7 @@ nux::BaseTexture* LauncherIcon::TextureFromGtkTheme(std::string icon_name, int s
 
   // FIXME: we need to create some kind of -unity postfix to see if we are looking to the unity-icon-theme
   // for dedicated unity icons, then remove the postfix and degrade to other icon themes if not found
-  if (icon_name == "workspace-switcher" && IsMonoDefaultTheme())
+  if (icon_name.find("workspace-switcher") == 0)
     result = TextureFromSpecificGtkTheme(GetUnityTheme(), icon_name, size, update_glow_colors);
 
   if (!result)
@@ -475,7 +475,7 @@ bool LauncherIcon::SetTooltipText(std::string& target, std::string const& value)
   {
     target = escaped;
     if (_tooltip)
-      _tooltip->SetText(target);
+      _tooltip->text = target;
     result = true;
   }
 
@@ -520,7 +520,7 @@ LauncherIcon::ShowTooltip()
 
   if (!_tooltip)
     LoadTooltip();
-  _tooltip->SetText(tooltip_text());
+  _tooltip->text = tooltip_text();
   _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
   _tooltip->ShowWindow(!tooltip_text().empty());
   tooltip_visible.emit(_tooltip);
@@ -1193,13 +1193,15 @@ void LauncherIcon::EmitRemove()
 
 void LauncherIcon::Stick(bool save)
 {
+  // allow save() even for already "_sticky" icons that may have been
+  // made _sticky without "save" (like SoftwareCenterApplications)
+  if (save)
+    position_saved.emit();
+
   if (_sticky)
     return;
 
   _sticky = true;
-
-  if (save)
-    position_saved.emit();
 
   SetQuirk(Quirk::VISIBLE, true);
 }

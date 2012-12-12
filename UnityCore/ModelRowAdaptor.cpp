@@ -36,6 +36,10 @@ RowAdaptorBase::RowAdaptorBase(RowAdaptorBase const& other)
   tag_ = other.tag_;
 }
 
+RowAdaptorBase::~RowAdaptorBase()
+{
+}
+
 RowAdaptorBase& RowAdaptorBase::operator=(RowAdaptorBase const& other)
 {
   model_ = other.model_;
@@ -89,6 +93,16 @@ float RowAdaptorBase::GetFloatAt(int position) const
   if (!model_ || !iter_)
     return 0.0;
   return static_cast<float>(dee_model_get_double(model_, iter_, position));
+}
+
+void RowAdaptorBase::set_model_tag(gpointer value)
+{
+  dee_model_set_tag(model_, iter_, tag_, value);
+}
+
+gpointer RowAdaptorBase::get_model_tag() const
+{
+  return dee_model_get_tag(model_, iter_, tag_);
 }
 
 }

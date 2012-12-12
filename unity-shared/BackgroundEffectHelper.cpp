@@ -40,8 +40,8 @@ std::list<BackgroundEffectHelper*> BackgroundEffectHelper::registered_list_;
 nux::Geometry BackgroundEffectHelper::monitor_rect_;
 
 nux::Property<BlurType> BackgroundEffectHelper::blur_type (BLUR_ACTIVE);
-nux::Property<float> BackgroundEffectHelper::sigma_high (3.0f);
-nux::Property<float> BackgroundEffectHelper::sigma_med (2.0f);
+nux::Property<float> BackgroundEffectHelper::sigma_high (5.0f);
+nux::Property<float> BackgroundEffectHelper::sigma_med (3.0f);
 nux::Property<float> BackgroundEffectHelper::sigma_low (1.0f);
 nux::Property<bool> BackgroundEffectHelper::updates_enabled (true);
 nux::Property<bool> BackgroundEffectHelper::detecting_occlusions (false);
