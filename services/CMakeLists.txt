@@ -14,8 +14,7 @@ set(UNITY_PANEL_SERVICE_DEPS
 )
 
 find_package(PkgConfig)
-
-pkg_check_modules(SERVICE_DEPS REQUIRED gtk+-3.0>=3.3 gobject-2.0 gio-2.0 gthread-2.0 indicator3-0.4>=0.4.90 x11 atk-bridge-2.0)
+pkg_check_modules(SERVICE_DEPS REQUIRED ${UNITY_PANEL_SERVICE_DEPS})
 
 set(PANEL_SOURCES
     panel-a11y.c
