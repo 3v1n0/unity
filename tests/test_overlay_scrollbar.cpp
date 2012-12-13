@@ -201,11 +201,11 @@ public:
   MockScrollView(NUX_FILE_LINE_DECL)
   : nux::ScrollView(NUX_FILE_LINE_PARAM)
   {
-    scroll_bar_ = std::make_shared<MockScrollBar>(NUX_TRACKER_LOCATION);
-    SetVScrollBar(scroll_bar_.get());
+    scroll_bar_ = new MockScrollBar(NUX_TRACKER_LOCATION);
+    SetVScrollBar(scroll_bar_.GetPointer());
   }
 
-  std::shared_ptr<MockScrollBar> scroll_bar_;
+  nux::ObjectPtr<MockScrollBar> scroll_bar_;
 };
 
 class TestOverlayVScrollBar : public Test
@@ -217,7 +217,7 @@ public:
     scroll_layout_->SetGeometry(0,0,1000,5000);
     scroll_layout_->SetScaleFactor(0);
 
-    scroll_view_ = std::make_shared<MockScrollView>(NUX_TRACKER_LOCATION);
+    scroll_view_ = new MockScrollView(NUX_TRACKER_LOCATION);
     scroll_view_->EnableVerticalScrollBar(true);
     scroll_view_->EnableHorizontalScrollBar(false);
     scroll_view_->SetLayout(scroll_layout_);
@@ -226,7 +226,7 @@ public:
     scroll_view_->scroll_bar_->SetContainerSize(0, 0, 202, 400);
   }
 
-  std::shared_ptr<MockScrollView> scroll_view_;
+  nux::ObjectPtr<MockScrollView> scroll_view_;
 };
 
 TEST_F(TestOverlayWindow, TestOverlayShows)
@@ -420,3 +420,4 @@ TEST_F(TestOverlayVScrollBar, TestConnectorResetsDuringScrollAnimation)
 }
 
 }
+
