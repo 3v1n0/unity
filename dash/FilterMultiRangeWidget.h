@@ -52,6 +52,8 @@ public:
 protected:
   void InitTheme();
 
+  void ClearRedirectedRenderChildArea();
+
 private:
   void OnAllActivated(nux::View* view);
   void OnOptionAdded(dash::FilterOption::Ptr const& new_filter);

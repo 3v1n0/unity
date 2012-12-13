@@ -69,6 +69,24 @@ PlacesVScrollBar::PostLayoutManagement(long LayoutResult)
 void
 PlacesVScrollBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
+  if(!RedirectedAncestor())
+  {  
+    DrawScrollbar(graphics_engine);
+  }
+}
+
+void
+PlacesVScrollBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
+{
+  if(RedirectedAncestor())
+  {   
+    DrawScrollbar(graphics_engine); 
+  }
+}
+
+void
+PlacesVScrollBar::DrawScrollbar(nux::GraphicsEngine& graphics_engine)
+{
   nux::Color color = nux::color::White;
   nux::Geometry const& base  = GetGeometry();
   nux::TexCoordXForm texxform;
@@ -76,14 +94,6 @@ PlacesVScrollBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
   graphics_engine.PushClippingRectangle(base);
   unsigned int alpha = 0, src = 0, dest = 0;
   graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
-
-  if(RedirectedAncestor())
-  {
-    // This is necessary when doing redirected rendering.
-    // Clean the area below this view before drawing anything.
-    graphics_engine.GetRenderStates().SetBlend(false);
-    graphics_engine.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
-  }
 
   // check if textures have been computed... if they haven't, exit function
   if (!_slider_texture)
