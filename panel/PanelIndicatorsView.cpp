@@ -51,7 +51,7 @@ PanelIndicatorsView::PanelIndicatorsView()
 
 PanelIndicatorsView::~PanelIndicatorsView()
 {
-  for (auto ind : indicators_connections_)
+  for (auto const& ind : indicators_connections_)
   {
     for (auto conn : ind.second)
       conn.disconnect();
@@ -81,13 +81,13 @@ PanelIndicatorsView::RemoveIndicator(Indicator::Ptr const& indicator)
   auto connections = indicators_connections_.find(indicator);
 
   if (connections != indicators_connections_.end()) {
-    for (auto conn : connections->second)
+    for (auto& conn : connections->second)
       conn.disconnect();
 
     indicators_connections_.erase(indicator);
   }
 
-  for (auto entry : indicator->GetEntries())
+  for (auto const& entry : indicator->GetEntries())
     OnEntryRemoved(entry->id());
 
   for (auto i = indicators_.begin(); i != indicators_.end(); i++)
@@ -205,7 +205,7 @@ PanelIndicatorsView::ActivateEntryAt(int x, int y, int button)
   // which causes visible lag in many cases.
   //
 
-  for (auto entry : entries_)
+  for (auto const& entry : entries_)
   {
     PanelIndicatorEntryView* view = entry.second;
 
@@ -227,7 +227,7 @@ PanelIndicatorsView::ActivateEntryAt(int x, int y, int button)
 
   if (target && !found_old_active)
   {
-    for (auto entry : entries_)
+    for (auto const& entry : entries_)
     {
       PanelIndicatorEntryView* view = entry.second;
 
@@ -372,7 +372,7 @@ PanelIndicatorsView::SetOpacity(double opacity)
 {
   opacity = CLAMP(opacity, 0.0f, 1.0f);
 
-  for (auto entry: entries_)
+  for (auto const& entry : entries_)
     entry.second->SetOpacity(opacity);
 
   if (opacity_ != opacity)

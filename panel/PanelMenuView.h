@@ -21,6 +21,7 @@
 #ifndef PANEL_MENU_VIEW_H
 #define PANEL_MENU_VIEW_H
 
+#include <NuxCore/Animation.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
 #include <libbamf/libbamf.h>
@@ -29,7 +30,6 @@
 #include "unity-shared/StaticCairoText.h"
 #include "WindowButtons.h"
 #include "PanelTitlebarGrabAreaView.h"
-#include "unity-shared/Animator.h"
 #include "unity-shared/UBusWrapper.h"
 
 namespace unity
@@ -131,8 +131,9 @@ private:
   bool DrawMenus() const;
   bool DrawWindowButtons() const;
 
-  void OnFadeInChanged(double);
-  void OnFadeOutChanged(double);
+  void StartFadeIn(int duration = -1);
+  void StartFadeOut(int duration = -1);
+  void OnFadeAnimatorUpdated(double opacity);
 
   glib::Object<BamfMatcher> _matcher;
 
@@ -183,8 +184,7 @@ private:
   UBusManager _ubus_manager;
   glib::SourceManager _sources;
 
-  Animator _fade_in_animator;
-  Animator _fade_out_animator;
+  nux::animation::AnimateValue<double> _opacity_animator;
 };
 
 }
