@@ -42,10 +42,6 @@ class MockPanelMenuView : public PanelMenuView
 
 struct TestPanelMenuView : public testing::Test
 {
-  virtual void SetUp()
-  {
-  }
-
   void ProcessUBusMessages()
   {
     bool expired = false;
