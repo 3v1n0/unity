@@ -302,6 +302,15 @@ void Controller::ShowHideHud()
   visible_ ? HideHud(true) : ShowHud();
 }
 
+void Controller::ReFocusKeyInput()
+{
+  if (visible_)
+  {
+    window_->PushToFront();
+    window_->SetInputFocus();
+  }
+}
+
 bool Controller::IsVisible()
 {
   return visible_;
@@ -351,14 +360,7 @@ void Controller::ShowHud()
   LOG_DEBUG(logger) << "Taking application icon: " << focused_app_icon_;
   SetIcon(focused_app_icon_);
 
-  window_->ShowWindow(true);
-  window_->PushToFront();
-  window_->EnableInputWindow(true, "Hud", true, false);
-  window_->UpdateInputWindowGeometry();
-  window_->SetInputFocus();
-  window_->CaptureMouseDownAnyWhereElse(true);
-  view_->CaptureMouseDownAnyWhereElse(true);
-  window_->QueueDraw();
+  FocusWindow();
 
   view_->ResetToDefault();
   need_show_ = true;
@@ -374,6 +376,16 @@ void Controller::ShowHud()
 
   nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
   window_->SetEnterFocusInputArea(view_->default_focus());
+}
+
+void Controller::FocusWindow()
+{
+  window_->ShowWindow(true);
+  window_->PushToFront();
+  window_->EnableInputWindow(true, "Hud", true, false);
+  window_->UpdateInputWindowGeometry();
+  window_->SetInputFocus();
+  window_->QueueDraw();
 }
 
 void Controller::HideHud(bool restore)
