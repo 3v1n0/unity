@@ -213,7 +213,7 @@ set(UNITY_PLUGIN_DEPS ${UNITY_PLUGIN_SHARED_DEPS})
 if(ENABLE_X_SUPPORT)
   set(UNITY_PLUGIN_DEPS
       ${UNITY_PLUGIN_DEPS}
-      compiz>=0.9.8.0
+      compiz>=0.9.9
       libgeis
       x11
       xfixes

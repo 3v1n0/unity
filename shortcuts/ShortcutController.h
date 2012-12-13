@@ -25,13 +25,13 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/HLayout.h>
 #include <NuxCore/Color.h>
+#include <NuxCore/Animation.h>
 #include <UnityCore/Variant.h>
 #include <UnityCore/GLibSource.h>
 
 #include "BaseWindowRaiser.h"
 #include "ShortcutModel.h"
 #include "ShortcutView.h"
-#include "unity-shared/Animator.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/UBusWrapper.h"
 
@@ -66,10 +66,6 @@ private:
   void ConstructView();
   void EnsureView();
   void OnBackgroundUpdate(GVariant* data);
-  void OnFadeInUpdated(double opacity);
-  void OnFadeInEnded();
-  void OnFadeOutUpdated(double opacity);
-  void OnFadeOutEnded();
   bool OnShowTimer();
 
   View::Ptr view_;
@@ -84,8 +80,7 @@ private:
   bool enabled_;
   nux::Color bg_color_;
 
-  Animator fade_in_animator_;
-  Animator fade_out_animator_;
+  nux::animation::AnimateValue<double> fade_animator_;
 
   glib::Source::UniquePtr show_timer_;
   UBusManager ubus_manager_;

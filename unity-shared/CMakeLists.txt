@@ -24,7 +24,6 @@ include_directories (.. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR
 set (UNITY_SHARED_SOURCES
      AbstractSeparator.cpp
      ApplicationManager.cpp
-     Animator.cpp
      BGHash.cpp
      CoverArt.cpp
      BackgroundEffectHelper.cpp
@@ -49,6 +48,7 @@ set (UNITY_SHARED_SOURCES
      PlacesOverlayVScrollBar.cpp
      PreviewStyle.cpp
      RatingsButton.cpp
+     ResizingBaseWindow.cpp
      SearchBar.cpp
      SearchBarSpinner.cpp
      StaticCairoText.cpp

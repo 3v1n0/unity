@@ -152,6 +152,14 @@
                     <default>&lt;Super&gt;&lt;Shift&gt;Tab</default>
                 </option>
 
+                <option name="dash_tap_duration" type="int">
+                    <_short>Dash tap duration</_short>
+                    <_long>Duration (in millseconds) that will count as a tap for opening the Dash.</_long>
+                    <min>1</min>
+                    <max>1000</max>
+                    <default>130</default>
+                </option>
+
                 <option name="launcher_opacity" type="float">
                     <_short>Launcher Opacity</_short>
                     <_long>The opacity of the Launcher background.</_long>

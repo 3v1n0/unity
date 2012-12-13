@@ -106,7 +106,7 @@ private:
   int last_mouse_down_x_;
   int last_mouse_down_y_;
   std::string current_drag_uri_;
-  std::string current_drag_icon_name_;
+  unsigned drag_index_;
 
   int recorded_dash_width_;
   int recorded_dash_height_;

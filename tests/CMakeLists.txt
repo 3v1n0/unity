@@ -13,6 +13,9 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/bzr-handle-patch.d
                 ${CMAKE_BINARY_DIR}/tests/data/applications/bzr-handle-patch.desktop)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/no-icon.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/applications/no-icon.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/kde4/afile.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/applications/kde4/afile.desktop)
+
 #
 # Unit tests
 #
@@ -104,7 +107,6 @@ if (GTEST_SRC_DIR AND
 # The actual test executable (xless) - do not put anything that requires X in here
   set (GTEST_XLESS_SOURCES
        test_main_xless.cpp
-       #test_animator.cpp # XXX: disabled, to be removed completely soon
        test_launcher_model.cpp
        test_glib_object.cpp
        test_glib_object_utils.cpp
@@ -202,6 +204,7 @@ if (ENABLE_X_SUPPORT)
                  test_application_launcher_icon.cpp
                  test_bfb_launcher_icon.cpp
                  test_dashview_impl.cpp
+                 test_dash_controller.cpp
                  test_desktop_launcher_icon.cpp
                  test_edge_barrier_controller.cpp
                  test_launcher.cpp
@@ -217,6 +220,7 @@ if (ENABLE_X_SUPPORT)
                  test_launcher_hide_machine.cpp
                  test_launcher_hover_machine.cpp
                  test_launcher_icon.cpp
+                 test_launcher_tooltip.cpp
                  test_keyboard_util.cpp
                  test_panel_style.cpp
                  test_panel_menu_view.cpp
@@ -229,12 +233,14 @@ if (ENABLE_X_SUPPORT)
                  test_overlay_scrollbar.cpp
                  test_quicklist_menu_item.cpp
                  test_quicklist_view.cpp
+                 test_result_renderer.cpp
                  test_resultviewgrid.cpp
                  test_shortcut_controller.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_expo_launcher_icon.cpp
                  test_showdesktop_handler.cpp
-								 test_static_cairo_text.cpp
+                 test_software_center_launcher_icon.cpp
+                 test_static_cairo_text.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
                  test_texture_cache.cpp

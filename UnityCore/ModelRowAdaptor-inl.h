@@ -28,13 +28,13 @@ namespace dash
 template<typename T>
 void RowAdaptorBase::set_renderer(T renderer)
 {
-  dee_model_set_tag(model_, iter_, tag_, renderer);
+  set_model_tag(renderer);
 }
 
 template<typename T>
-T RowAdaptorBase::renderer()
+T RowAdaptorBase::renderer() const
 {
-  return static_cast<T>(dee_model_get_tag(model_, iter_, tag_));
+  return static_cast<T>(get_model_tag());
 }
 
 }
