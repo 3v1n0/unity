@@ -86,7 +86,6 @@ private:
   void OnExternalHideDash(GVariant* variant);
   void OnActivateRequest(GVariant* variant);
 
-  void ShowDash();
   void FocusWindow();
 
   void StartShowHideTimeline();
