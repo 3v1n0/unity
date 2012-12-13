@@ -350,7 +350,7 @@ bool PanelIndicatorsView::SetOpacity(double& target, double const& new_value)
   if (opacity != target)
   {
     target = opacity;
-    NeedRedraw();
+    QueueDraw();
 
     return true;
   }

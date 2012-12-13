@@ -204,23 +204,24 @@ if (ENABLE_X_SUPPORT)
                  test_dashview_impl.cpp
                  test_dash_controller.cpp
                  test_desktop_launcher_icon.cpp
-                 test_edge_barrier_controller.cpp
-                 test_launcher.cpp
                  test_device_launcher_section.cpp
+                 test_edge_barrier_controller.cpp
                  test_hud_button.cpp
                  test_hud_controller.cpp
                  test_hud_launcher_icon.cpp
                  test_hud_view.cpp
                  test_icon_loader.cpp
                  test_im_text_entry.cpp
+                 test_launcher.cpp
                  test_launcher_controller.cpp
                  test_launcher_drag_window.cpp
                  test_launcher_hide_machine.cpp
                  test_launcher_hover_machine.cpp
                  test_launcher_icon.cpp
                  test_keyboard_util.cpp
-                 test_panel_style.cpp
+                 test_panel_indicators_view.cpp
                  test_panel_menu_view.cpp
+                 test_panel_style.cpp
                  test_places_group.cpp
                  test_previews_application.cpp
                  test_previews_generic.cpp
