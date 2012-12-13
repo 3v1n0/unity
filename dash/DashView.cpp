@@ -562,14 +562,14 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
       graphics_engine.PopClippingRectangle();
     }
 
-    if (preview_displaying_ && (IsFullRedraw() || force_draw || preview_redraw) && layout_->RedirectRenderingToTexture())
+    if (preview_displaying_ && (force_draw || preview_redraw) && layout_->RedirectRenderingToTexture())
     {
       display_ghost = true;
       nux::Geometry layout_geo = layout_->GetGeometry();
       graphics_engine.PushClippingRectangle(layout_geo);
       nux::GetPainter().PaintBackground(graphics_engine, layout_geo);
       graphics_engine.PopClippingRectangle();
-    }    
+    }
   }
 
   if (preview_displaying_)
