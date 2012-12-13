@@ -44,8 +44,11 @@ class Controller : public unity::debug::Introspectable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;
+  typedef std::function<AbstractView*()> ViewCreator;
+  typedef std::function<ResizingBaseWindow*()> WindowCreator;
 
-  Controller(std::function<AbstractView*(void)> const& function = []() { return new View; });
+  Controller(ViewCreator const& create_view = nullptr,
+             WindowCreator const& create_window = nullptr);
 
   nux::BaseWindow* window() const;
 
@@ -117,7 +120,8 @@ private:
   uint monitor_index_;
   std::string last_search_;
 
-  std::function<AbstractView*(void)> view_function_;
+  ViewCreator create_view_;
+  WindowCreator create_window_;
 };
 
 } // namespace hud

@@ -43,8 +43,9 @@ class Controller : public unity::debug::Introspectable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;
+  typedef std::function<ResizingBaseWindow*()> WindowCreator;
 
-  Controller();
+  Controller(WindowCreator const& create_window = nullptr);
   ~Controller();
 
   nux::BaseWindow* window() const;
@@ -58,6 +59,7 @@ public:
   sigc::signal<void> on_realize;
 
   void HideDash(bool restore_focus = true);
+  void ShowDash();
 
   void ReFocusKeyInput();
 
@@ -99,6 +101,7 @@ private:
   static void OnWindowConfigure(int width, int height, nux::Geometry& geo, void* data);
 
 private:
+  WindowCreator create_window_;
   nux::ObjectPtr<ResizingBaseWindow> window_;
   int monitor_;
 

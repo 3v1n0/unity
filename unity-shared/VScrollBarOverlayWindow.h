@@ -24,6 +24,8 @@
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 
+namespace unity
+{
 
 class VScrollBarOverlayWindow : public nux::BaseWindow
 {
@@ -38,6 +40,9 @@ public:
 
   void MouseNear();
   void MouseBeyond();
+
+  void MouseEnter();
+  void MouseLeave();
 
   void ThumbInsideSlider();
   void ThumbOutsideSlider();
@@ -67,6 +72,15 @@ private:
     PAGE_DOWN
   };
 
+  enum ThumbState
+  {
+    NONE          = 1 << 0,
+    MOUSE_DOWN    = 1 << 1,
+    MOUSE_NEAR    = 1 << 2,
+    MOUSE_INSIDE  = 1 << 3,
+    INSIDE_SLIDER = 1 << 4
+  };
+
   void MouseDragging();
   void UpdateMouseOffsetX();
   int GetValidOffsetYValue(int y) const;
@@ -82,11 +96,14 @@ private:
   int content_offset_x_;
   int mouse_offset_y_;
 
-  bool mouse_down_;
-  bool mouse_near_;
-  bool inside_slider_;
-
+  void AddState(ThumbState const& state);
+  void RemoveState(ThumbState const& state);
+  bool HasState(ThumbState const& state) const;
+  
+  unsigned int current_state_;
   ThumbAction current_action_;
 };
 
-#endif
+} // namespace unity
+
+#endif // VSCROLLBAR_OVERLAY_WINDOW_H
