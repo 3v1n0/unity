@@ -248,6 +248,7 @@ if (ENABLE_X_SUPPORT)
                  test_unity_settings.cpp
                  test_volume_imp.cpp
                  test_volume_launcher_icon.cpp
+                 test_window_buttons.cpp
                  test_xdnd_manager_imp.cpp
                  test_xdnd_start_stop_notifier_imp.cpp
                  bamf-mock-application.c
