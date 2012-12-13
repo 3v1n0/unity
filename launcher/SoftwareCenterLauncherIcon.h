@@ -38,7 +38,7 @@ class SoftwareCenterLauncherIcon : public ApplicationLauncherIcon
 public:
   typedef nux::ObjectPtr<SoftwareCenterLauncherIcon> Ptr;
 
-  SoftwareCenterLauncherIcon(BamfApplication* app,
+  SoftwareCenterLauncherIcon(ApplicationPtr const& app,
                              std::string const& aptdaemon_trans_id,
                              std::string const& icon_path);
 
@@ -47,11 +47,12 @@ public:
   std::string GetName() const;
 
 protected:
+  std::string GetActualDesktopFileAfterInstall();
   void ActivateLauncherIcon(ActionArg arg);
+  void OnFinished(GVariant *params);
 
 private:
   void OnPropertyChanged(GVariant* params);
-  void OnFinished(GVariant *params);
   void OnDragAnimationFinished();
 
   glib::DBusProxy aptdaemon_trans_;
@@ -61,8 +62,8 @@ private:
   nux::ObjectPtr<Launcher> launcher_;
   bool finished_;
   bool needs_urgent_;
-
   std::string aptdaemon_trans_id_;
+  std::string app_title_;
 };
 
 }

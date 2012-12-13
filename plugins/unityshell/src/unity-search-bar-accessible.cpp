@@ -107,7 +107,6 @@ on_search_hint_change_cb(std::string const& s, UnitySearchBarAccessible* self)
 {
   SearchBar* search_bar = NULL;
   nux::TextEntry* text_entry = NULL;
-  AtkObject* text_entry_accessible = NULL;
   nux::Object* nux_object = NULL;
 
   g_return_if_fail(UNITY_IS_SEARCH_BAR_ACCESSIBLE(self));
@@ -122,6 +121,7 @@ on_search_hint_change_cb(std::string const& s, UnitySearchBarAccessible* self)
 
   if (text_entry != NULL)
   {
+    AtkObject* text_entry_accessible = NULL;
     text_entry_accessible = unity_a11y_get_accessible(text_entry);
     atk_object_set_name(text_entry_accessible, s.c_str());
   }

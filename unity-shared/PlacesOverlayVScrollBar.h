@@ -52,6 +52,9 @@ private:
   void OnVisibilityChanged(nux::Area* area, bool visible);
   void OnSensitivityChanged(nux::Area* area, bool sensitive);
 
+  void OnMouseEnter(int x, int y, unsigned int button_flags, unsigned int key_flags);
+  void OnMouseLeave(int x, int y, unsigned int button_flags, unsigned int key_flags);
+
   void OnMouseNear(nux::Point const& mouse_pos);
   void OnMouseBeyond(nux::Point const& mouse_pos);
   void AdjustThumbOffsetFromMouse();
@@ -79,7 +82,6 @@ private:
   void UpdateStepY();
 
   void SetupAnimation(int start, int stop, int milliseconds);
-  void StopAnimation();
 
   void StartScrollAnimation(ScrollDir dir, int stop);
   void OnScroll(ScrollDir dir, int mouse_dy);
@@ -100,6 +102,8 @@ private:
   int connector_height_;
   int mouse_down_offset_;
   int delta_update_;
+
+  friend class MockScrollBar;
 };
 
 } // namespace dash

@@ -48,6 +48,8 @@ public:
                       nux::Color const& color,
                       float saturate);
 
+  virtual nux::NBitmapData* GetDndImage(Result const& row) const;
+
 protected:
   virtual void LoadText(Result& row);
 

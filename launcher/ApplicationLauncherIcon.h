@@ -24,7 +24,6 @@
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
 
-#include <libbamf/libbamf.h>
 #include <libindicator/indicator-desktop-shortcuts.h>
 
 #include "SimpleLauncherIcon.h"
@@ -40,7 +39,7 @@ class ApplicationLauncherIcon : public SimpleLauncherIcon
 {
   NUX_DECLARE_OBJECT_TYPE(ApplicationLauncherIcon, SimpleLauncherIcon);
 public:
-  ApplicationLauncherIcon(BamfApplication* app);
+  ApplicationLauncherIcon(ApplicationPtr const& app);
   virtual ~ApplicationLauncherIcon();
 
   virtual void ActivateLauncherIcon(ActionArg arg);
@@ -63,7 +62,7 @@ public:
 
   virtual nux::Color BackgroundColor() const;
 
-  std::vector<Window> Windows();
+  WindowList Windows();
   std::vector<Window> WindowsOnViewport();
   std::vector<Window> WindowsForMonitor(int monitor);
 
@@ -86,10 +85,15 @@ protected:
   std::set<std::string> ValidateUrisForLaunch(DndData const& dnd_data);
 
   std::string GetRemoteUri();
-  std::string BamfName() const;
 
   bool HandlesSpread() { return true; }
   std::string GetName() const;
+
+protected:
+  void UpdateDesktopFile();
+  void UpdateRemoteUri();
+  std::string _desktop_file;
+  ApplicationPtr app_;
 
 private:
   typedef unsigned long int WindowFilterMask;
@@ -104,28 +108,22 @@ private:
   void EnsureWindowState();
   void EnsureMenuItemsReady();
   void UpdateBackgroundColor();
-  void UpdateDesktopFile();
   void UpdateMenus();
   void UpdateDesktopQuickList();
 
-  void OpenInstanceWithUris(std::set<std::string> uris);
+  void OpenInstanceWithUris(std::set<std::string> const& uris);
   void Focus(ActionArg arg);
-  std::vector<Window> GetFocusableWindows(ActionArg arg, bool &any_visible, bool &any_urgent);
   bool Spread(bool current_desktop, int state, bool force);
 
   void OnWindowMinimized(guint32 xid);
   void OnWindowMoved(guint32 xid);
 
-  bool OwnsWindow(Window w) const;
-
-  std::vector<Window> GetWindows(WindowFilterMask filter = 0, int monitor = -1);
+  WindowList GetWindows(WindowFilterMask filter = 0, int monitor = -1);
   const std::set<std::string> GetSupportedTypes();
   std::string GetDesktopID();
 
-  glib::Object<BamfApplication> _bamf_app;
-
   std::string _remote_uri;
-  std::string _desktop_file;
+  std::set<std::string> _supported_types;
   std::map<std::string, glib::Object<DbusmenuClient>> _menu_clients;
   std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items;
   std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items_extra;

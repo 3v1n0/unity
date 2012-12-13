@@ -20,6 +20,8 @@
 
 #include "unity-shared/UBusMessages.h"
 
+namespace na = nux::animation;
+
 namespace unity
 {
 namespace shortcut
@@ -37,8 +39,7 @@ Controller::Controller(std::list<AbstractHint::Ptr> const& hints,
   , visible_(false)
   , enabled_(true)
   , bg_color_(0.0, 0.0, 0.0, 0.5)
-  , fade_in_animator_(FADE_DURATION)
-  , fade_out_animator_(FADE_DURATION)
+  , fade_animator_(FADE_DURATION)
 {
   model_->Fill();
 
@@ -59,31 +60,9 @@ Controller::Controller(std::list<AbstractHint::Ptr> const& hints,
 
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
-  fade_in_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnFadeInUpdated));
-  fade_in_animator_.animation_ended.connect(sigc::mem_fun(this, &Controller::OnFadeInEnded));
-  fade_out_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnFadeOutUpdated));
-  fade_out_animator_.animation_ended.connect(sigc::mem_fun(this, &Controller::OnFadeOutEnded));
-}
-
-void Controller::OnFadeInUpdated(double opacity)
-{
-  view_window_->SetOpacity(opacity);
-}
-
-void Controller::OnFadeInEnded()
-{
-  view_window_->SetOpacity(1.0);
-}
-
-void Controller::OnFadeOutUpdated(double progress)
-{
-  double opacity = CLAMP(1.0f - progress, 0.0f, 1.0f);
-  view_window_->SetOpacity(opacity);
-}
-
-void Controller::OnFadeOutEnded()
-{
-  view_window_->SetOpacity(0.0);
+  fade_animator_.updated.connect([this] (double opacity) {
+    view_window_->SetOpacity(opacity);
+  });
 }
 
 void Controller::OnBackgroundUpdate(GVariant* data)
@@ -127,8 +106,16 @@ bool Controller::OnShowTimer()
   if (visible_)
   {
     view_->SetupBackground(true);
-    fade_out_animator_.Stop();
-    fade_in_animator_.Start(view_window_->GetOpacity());
+
+    if (fade_animator_.CurrentState() == na::Animation::State::Running)
+    {
+      if (fade_animator_.GetFinishValue() == 0.0f)
+        fade_animator_.Reverse();
+    }
+    else
+    {
+      fade_animator_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
+    }
   }
 
   return false;
@@ -184,8 +171,16 @@ void Controller::Hide()
   if (view_window_)
   {
     view_->SetupBackground(false);
-    fade_in_animator_.Stop();
-    fade_out_animator_.Start(1.0 - view_window_->GetOpacity());
+
+    if (fade_animator_.CurrentState() == na::Animation::State::Running)
+    {
+      if (fade_animator_.GetFinishValue() == 1.0f)
+        fade_animator_.Reverse();
+    }
+    else
+    {
+      fade_animator_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
+    }
   }
 }
 
@@ -214,11 +209,13 @@ std::string Controller::GetName() const
 
 void Controller::AddProperties(GVariantBuilder* builder)
 {
+  bool animating = (fade_animator_.CurrentState() == na::Animation::State::Running);
+
   unity::variant::BuilderWrapper(builder)
   .add("timeout_duration", SUPER_TAP_DURATION + FADE_DURATION)
   .add("enabled", IsEnabled())
-  .add("about_to_show", (Visible() && !fade_out_animator_.IsRunning() && view_window_ && view_window_->GetOpacity() != 1.0f))
-  .add("about_to_hide", (Visible() && !fade_in_animator_.IsRunning() && view_window_ && view_window_->GetOpacity() != 1.0f))
+  .add("about_to_show", (Visible() && animating && fade_animator_.GetFinishValue() == 1.0f))
+  .add("about_to_hide", (Visible() && animating && fade_animator_.GetFinishValue() == 0.0f))
   .add("visible", (Visible() && view_window_ && view_window_->GetOpacity() == 1.0f));
 }
 
