@@ -366,8 +366,6 @@ void Controller::FocusWindow()
   window_->EnableInputWindow(true, "Hud", true, false);
   window_->UpdateInputWindowGeometry();
   window_->SetInputFocus();
-  window_->CaptureMouseDownAnyWhereElse(true);
-  view_->CaptureMouseDownAnyWhereElse(true);
   window_->QueueDraw();
 }
 

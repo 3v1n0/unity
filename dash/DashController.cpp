@@ -321,7 +321,6 @@ void Controller::FocusWindow()
     window_->UpdateInputWindowGeometry();
   }
   window_->SetInputFocus();
-  window_->CaptureMouseDownAnyWhereElse(true);
   window_->QueueDraw();
 
   nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());

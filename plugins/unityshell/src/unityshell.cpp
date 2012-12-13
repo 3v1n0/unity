@@ -2728,7 +2728,7 @@ void UnityWindow::windowNotify(CompWindowNotify n)
   {
     UnityScreen* us = UnityScreen::get(screen);
 
-    // If focus gets moved to an externall program while the Dash/Hud is open, refocus key input.
+    // If focus gets moved to an external program while the Dash/Hud is open, refocus key input.
     if (us)
     {
       if (us->dash_controller_->IsVisible())
