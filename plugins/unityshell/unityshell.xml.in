@@ -305,7 +305,7 @@
                     <_short>Launcher Icon Size</_short>
                     <_long>The size of the icons in the Launcher.</_long>
                     <default>48</default>
-                    <min>32</min>
+                    <min>8</min>
                     <max>64</max>
                     <precision>1</precision>
                 </option>
