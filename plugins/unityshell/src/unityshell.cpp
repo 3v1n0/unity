@@ -2639,7 +2639,7 @@ UnityWindow::focus ()
 }
 
 bool
-UnityWindow::minimized ()
+UnityWindow::minimized () const
 {
   return mMinimizeHandler.get () != nullptr;
 }
