@@ -30,6 +30,8 @@ namespace unity
 namespace dash
 {
 
+NUX_IMPLEMENT_OBJECT_TYPE(FilterMultiRangeButton);
+
 FilterMultiRangeButton::FilterMultiRangeButton(std::string const& label, NUX_FILE_LINE_DECL)
   : nux::ToggleButton(label, NUX_FILE_LINE_PARAM)
   , has_arrow_(MultiRangeArrow::NONE)
@@ -53,8 +55,9 @@ FilterMultiRangeButton::~FilterMultiRangeButton()
 void FilterMultiRangeButton::Init()
 {
   InitTheme();
+  // Controlled by parent widget
   SetAcceptKeyNavFocusOnMouseDown(false);
-  SetAcceptKeyNavFocusOnMouseEnter(true);
+  SetAcceptKeyNavFocusOnMouseEnter(false);
 
   state_change.connect(sigc::mem_fun(this, &FilterMultiRangeButton::OnActivated));
   key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection) { QueueDraw(); });

@@ -88,64 +88,33 @@ void MultiRangeFilter::OptionChanged(bool is_active, std::string const& id)
     return;
 
   int position = PositionOfId(id);
+  if (position < 0)
+    return;
 
-  if (is_active)
-  {
-    if (left_pos_ == -1 && right_pos_ == -1)
-    {
-      left_pos_ = position;
-      right_pos_ = position;
-    }
-    else if (left_pos_ > position)
-    {
-      left_pos_ = position;
-    }
-    else if (right_pos_ < position)
-    {
-      right_pos_ = position;
-    }
-  }
-  else
-  {
-    // Reset if the one and only block is deactivated
-    if (position == right_pos_ && position == left_pos_)
-    {
-      left_pos_ = -1;
-      right_pos_ = -1;
-    }
-    // If the deactivated block is on either end, remove it
-    else if (position == right_pos_)
-    {
-      right_pos_ = position - 1;
-    }
-    else if (position == left_pos_)
-    {
-      left_pos_ = position + 1;
-    }
-    // It's in the middle of the range, see which side to shorten
-    else if (position < (left_pos_ + ((right_pos_ - left_pos_)/2.0f)))
-    {
-      left_pos_ = position;
-    }
-    else
-    {
-      right_pos_ = position;
-    }
-  }
+  bool activate = is_active;
+  int position_above = position+1;
+  int position_below = position-1;
+  int filter_option_size = options_.size();
 
   ignore_changes_ = true;
-  int i = 0;
-  for(auto option: options_)
-  {
-    if (i < left_pos_)
-      option->active = false;
-    else if (i <= right_pos_)
-      option->active = true;
-    else
-      option->active = false;
 
-    i++;
+  while(position_below >= 0)
+  {
+    FilterOption::Ptr const& filter_option = options_[position_below--];
+
+    activate &= filter_option->active && activate;
+    filter_option->active = activate;
   }
+
+  activate = is_active;
+  while(position_above < filter_option_size)
+  {
+    FilterOption::Ptr const& filter_option = options_[position_above++];
+
+    activate &= filter_option->active && activate;
+    filter_option->active = activate;
+  }
+
   ignore_changes_ = false;
 
   UpdateState();

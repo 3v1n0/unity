@@ -26,6 +26,8 @@ namespace unity
 namespace dash
 {
 
+NUX_IMPLEMENT_OBJECT_TYPE(FilterGenreButton);
+
 FilterGenreButton::FilterGenreButton(std::string const& label, NUX_FILE_LINE_DECL)
   : FilterBasicButton(label, NUX_FILE_LINE_PARAM)
 {

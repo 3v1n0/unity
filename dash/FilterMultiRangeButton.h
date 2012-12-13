@@ -52,6 +52,7 @@ enum class MultiRangeArrow : unsigned int
 
 class FilterMultiRangeButton : public nux::ToggleButton
 {
+  NUX_DECLARE_OBJECT_TYPE(FilterMultiRangeButton, nux::ToggleButton);
 public:
   FilterMultiRangeButton (std::string const& label, NUX_FILE_LINE_PROTO);
   FilterMultiRangeButton (NUX_FILE_LINE_PROTO);

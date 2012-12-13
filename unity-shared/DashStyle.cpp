@@ -989,7 +989,7 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
     // top-right
     cairo_line_to(cr, _align(x + width, odd), _align(y, odd));
 
-    if (arrow == Arrow::RIGHT && state == nux::VISUAL_STATE_PRESSED)
+    if ((arrow == Arrow::RIGHT || arrow == Arrow::BOTH) && state == nux::VISUAL_STATE_PRESSED)
 		{
       cairo_line_to(cr, _align(x + width, odd),           _align(y + height / 2.0 - arrow_h, odd));
       cairo_line_to(cr, _align(x + width - arrow_w, odd), _align(y + height / 2.0, odd));
@@ -1083,7 +1083,7 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
     // bottom-left
     cairo_line_to(cr, _align(x, odd), _align(y + height, odd));
 
-    if (arrow == Arrow::LEFT && state == nux::VISUAL_STATE_PRESSED)
+    if ((arrow == Arrow::LEFT || arrow == Arrow::BOTH) && state == nux::VISUAL_STATE_PRESSED)
 		{
       cairo_line_to(cr, _align(x, odd),           _align(y + height / 2.0 + arrow_h, odd));
       cairo_line_to(cr, _align(x + arrow_w, odd), _align(y + height / 2.0, odd));

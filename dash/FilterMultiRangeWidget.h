@@ -42,6 +42,7 @@ class FilterMultiRangeButton;
 class FilterMultiRange : public FilterExpanderLabel
 {
   NUX_DECLARE_OBJECT_TYPE(FilterMultiRange, FilterExpanderLabel);
+  typedef nux::ObjectPtr<FilterMultiRangeButton> FilterMultiRangeButtonPtr;
 public:
   FilterMultiRange(NUX_FILE_LINE_PROTO);
   virtual ~FilterMultiRange();
@@ -52,17 +53,31 @@ public:
 protected:
   void InitTheme();
 
+  nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
+
+  void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+
 private:
   void OnAllActivated(nux::View* view);
   void OnOptionAdded(dash::FilterOption::Ptr const& new_filter);
   void OnOptionRemoved(dash::FilterOption::Ptr const& removed_filter);
   void OnActiveChanged(bool value);
 
+  void UpdateMouseFocus(nux::Point const& abs_cursor_position);
+  void Click(FilterMultiRangeButtonPtr const& button);
+
   nux::HLayout* layout_;
   FilterAllButton* all_button_;
 
-  std::vector<FilterMultiRangeButton*> buttons_;
+  std::vector<FilterMultiRangeButtonPtr> buttons_;
   MultiRangeFilter::Ptr filter_;
+
+  FilterMultiRangeButtonPtr mouse_down_button_;
+  bool dragging_;
 };
 
 } // unityshell dash
