@@ -233,10 +233,10 @@ void ResultView::RenderResultTexture(ResultViewTexture::Ptr const& result_textur
                                                                                                          GetWidth(),
                                                                                                          1,
                                                                                                          nux::BITFMT_R8G8B8A8);
-  }
 
-  if (!result_texture->texture.IsValid())
-    return;
+    if (!result_texture->texture.IsValid())
+      return;
+  }
 
   nux::GetPainter().PushBackgroundStack();
 

@@ -2362,6 +2362,11 @@ int Style::GetScrollbarWidth() const
   return 3;
 }
 
+int Style::GetCategoryIconSize() const
+{
+  return 22;
+}
+
 int Style::GetCategoryHighlightHeight() const
 {
   return 24;
@@ -2370,6 +2375,16 @@ int Style::GetCategoryHighlightHeight() const
 int Style::GetPlacesGroupTopSpace() const
 {
   return 7;
+}
+
+int Style::GetPlacesGroupResultTopPadding() const
+{
+  return 2;
+}
+
+int Style::GetPlacesGroupResultLeftPadding() const
+{
+  return 25;
 }
 
 int Style::GetCategoryHeaderLeftPadding() const

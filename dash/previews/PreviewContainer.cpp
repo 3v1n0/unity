@@ -524,16 +524,16 @@ void PreviewContainer::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_d
   nux::Geometry const& base = GetGeometry();
   gfx_engine.PushClippingRectangle(base);
 
-	bool redirect_to_texture = RedirectRenderingToTexture();
+  bool redirect_to_texture = RedirectRenderingToTexture();
 
     // This is necessary when doing redirected rendering. Clean the area below this view.
   if (redirect_to_texture)
-	{
-		// This is necessary when doing redirected rendering.
-		// Clean the area below this view before drawing anything.
-		gfx_engine.GetRenderStates().SetBlend(false);
-		gfx_engine.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
-	}
+  {
+    // This is necessary when doing redirected rendering.
+    // Clean the area below this view before drawing anything.
+    gfx_engine.GetRenderStates().SetBlend(false);
+    gfx_engine.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+  }
   
     // rely on the compiz event loop to come back to us in a nice throttling
   if (AnimationInProgress())

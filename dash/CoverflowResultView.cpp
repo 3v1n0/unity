@@ -313,7 +313,7 @@ void CoverflowResultView::Activate(std::string const& uri, int index, ResultView
 
   int left_results = index;
   int right_results = num_results ? (num_results - index) - 1 : 0;
-  int row_y = GetAbsoluteGeometry().y;
+  int row_y = GetAbsoluteY();
   int column_x = -1;
   int row_height = renderer_->height;
   int column_width = GetWidth();

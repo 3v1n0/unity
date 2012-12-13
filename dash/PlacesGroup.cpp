@@ -52,7 +52,6 @@ namespace
 const nux::Color kExpandDefaultTextColor(1.0f, 1.0f, 1.0f, 0.5f);
 const float kExpandDefaultIconOpacity = 0.5f;
 
-const int kCategoryIconSize = 22;
 // Category  highlight
 const int kHighlightHeight = 24;
 const int kHighlightRightPadding = 10 - 3; // -3 because the scrollbar is not a real overlay scrollbar!
@@ -109,6 +108,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(PlacesGroup);
 PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   : nux::View(NUX_TRACKER_LOCATION),
     _style(style),
+    _child_layout(nullptr),
     _child_view(nullptr),
     _using_nofilters_background(true),
     _is_expanded(false),
@@ -141,8 +141,7 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
 
   _group_layout = new nux::VLayout("", NUX_TRACKER_LOCATION);
 
-  // -2 because the icons have an useless border.
-  int top_space = style.GetPlacesGroupTopSpace() - 2;
+  int top_space = style.GetPlacesGroupTopSpace();
   _group_layout->AddLayout(new nux::SpaceLayout(top_space, top_space, top_space, top_space), 0);
 
   _header_view = new HeaderView(NUX_TRACKER_LOCATION);
@@ -153,8 +152,8 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   _header_layout->SetSpaceBetweenChildren(10);
   _header_view->SetLayout(_header_layout);
 
-  _icon = new IconTexture("", kCategoryIconSize);
-  _icon->SetMinMaxSize(kCategoryIconSize, kCategoryIconSize);
+  _icon = new IconTexture("", _style.GetCategoryIconSize());
+  _icon->SetMinMaxSize(_style.GetCategoryIconSize(), _style.GetCategoryIconSize());
   _header_layout->AddView(_icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
   _text_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -304,27 +303,30 @@ PlacesGroup::GetExpandLabel()
 void
 PlacesGroup::SetIcon(std::string const& path_to_emblem)
 {
-  _icon->SetByIconName(path_to_emblem, kCategoryIconSize);
+  _icon->SetByIconName(path_to_emblem, _style.GetCategoryIconSize());
 }
 
 void
 PlacesGroup::SetChildView(dash::ResultView* view)
 {
-  if (_child_view != NULL)
+  if (_child_view)
   {
-    _group_layout->RemoveChildObject(_child_view);
+    RemoveChild(_child_view);
   }
-
+  if (_child_layout != NULL)
+  {
+    _group_layout->RemoveChildObject(_child_layout);
+  }
   AddChild(view);
 
   _child_view = view;
 
-  nux::VLayout* layout = new nux::VLayout();
-  layout->AddView(_child_view, 0);
+  _child_layout = new nux::VLayout();
+  _child_layout->AddView(_child_view, 0);
 
-  layout->SetLeftAndRightPadding(25, 0);
-  _group_layout->AddLayout(new nux::SpaceLayout(2,2,2,2), 0); // top padding
-  _group_layout->AddLayout(layout, 1);
+  _child_layout->SetTopAndBottomPadding(_style.GetPlacesGroupResultTopPadding(),0);
+  _child_layout->SetLeftAndRightPadding(_style.GetPlacesGroupResultLeftPadding(), 0);
+  _group_layout->AddLayout(_child_layout, 1);
 
   view->results_per_row.changed.connect([&] (int results_per_row)
   {

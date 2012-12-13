@@ -149,8 +149,8 @@ void SocialPreviewContent::UpdateBaloonTexture()
 
   nux::Geometry geo_cr(GetBubbleGeometry(geo));
 
-  int max_width = MAX(0, geo_cr.width - 2*(geo_cr.width*0.1));
-  int max_height = MAX(0, (geo_cr.height - TAIL_HEIGHT) - 2*((geo_cr.height - TAIL_HEIGHT)*0.1));
+  int max_width = std::max(0, (int)(geo_cr.width - 2*(geo_cr.width*0.1)));
+  int max_height = std::max(0, (int)((geo_cr.height - TAIL_HEIGHT) - 2*((geo_cr.height - TAIL_HEIGHT)*0.1)));
 
   // this will update the texture with the actual size of the text.
   text_->SetMaximumHeight(max_height);
@@ -169,8 +169,8 @@ void SocialPreviewContent::UpdateBaloonTexture()
 
 void SocialPreviewContent::RedrawBubble(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  double width = MAX(0, cairo_image_surface_get_width(cairo_get_target(cr)));
-  double height = MAX(0, cairo_image_surface_get_height(cairo_get_target(cr)) - TAIL_HEIGHT);
+  double width = std::max(0, cairo_image_surface_get_width(cairo_get_target(cr)));
+  double height = std::max(0, cairo_image_surface_get_height(cairo_get_target(cr)) - TAIL_HEIGHT);
 
   double tailPosition = width - TAIL_POS_FROM_RIGHT - TAIL_HEIGHT;
   if (width > 0 && height > 0)

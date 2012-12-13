@@ -126,6 +126,7 @@ private:
   nux::HLayout* _text_layout;
   nux::HLayout* _expand_label_layout;
   nux::HLayout* _expand_layout;
+  nux::VLayout*  _child_layout;
   dash::ResultView*  _child_view;
   std::unique_ptr<nux::AbstractPaintLayer> _focus_layer;
 

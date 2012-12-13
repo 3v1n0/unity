@@ -183,8 +183,9 @@ void ResultViewGrid::Activate(std::string const& uri, int index, ResultView::Act
   int right_results = num_results ? (num_results - index) - 1 : 0;
   //FIXME - just uses y right now, needs to use the absolute position of the bottom of the result 
   // (jay) Here is the fix: Compute the y position of the row where the item is located.
-  int row_y = padding + GetAbsoluteGeometry().y;
-  int column_x = padding + GetAbsoluteGeometry().x;
+  nux::Geometry abs_geo = GetAbsoluteGeometry();
+  int row_y = padding + abs_geo.y;
+  int column_x = padding + abs_geo.x;
   int row_height = renderer_->height + vertical_spacing;
   int column_width = renderer_->width + horizontal_spacing;
 
@@ -679,32 +680,32 @@ void ResultViewGrid::DrawRow(nux::GraphicsEngine& GfxContext, ResultListBounds c
 
       ResultRenderer::ResultRendererState state = ResultRenderer::RESULT_RENDERER_NORMAL;
       
-			if (enable_texture_render() == false)
+      if (enable_texture_render() == false)
       {
-				if (index == selected_index_)
-		    {
-		      state = ResultRenderer::RESULT_RENDERER_SELECTED;
-		    }
-			}
+        if (index == selected_index_)
+        {
+          state = ResultRenderer::RESULT_RENDERER_SELECTED;
+        }
+      }
       else if (index == active_index_)
       {
         state = ResultRenderer::RESULT_RENDERER_SELECTED;
       }
 
       int half_width = recorded_dash_width_ / 2;
-      int half_height = recorded_dash_height_;
+      int half_height = recorded_dash_height_ / 2;
 
       int offset_x, offset_y;
 
       /* Guard against divide-by-zero. SIGFPEs are not mythological
        * contrary to popular belief */
       if (half_width >= 10)
-        offset_x = MAX(MIN((x_position - half_width) / (half_width / 10), 5), -5);
+        offset_x = std::max(std::min((x_position - half_width) / (half_width / 10), 5), -5);
       else
         offset_x = 0;
 
       if (half_height >= 10)
-        offset_y = MAX(MIN(((y_position + absolute_position.y) - half_height) / (half_height / 10), 5), -5);
+        offset_y = std::max(std::min(((y_position + absolute_position.y) - half_height) / (half_height / 10), 5), -5);
       else
         offset_y = 0;
 
@@ -1097,10 +1098,9 @@ void ResultViewGrid::RenderResultTexture(ResultViewTexture::Ptr const& result_te
                                                                                                          row_height,
                                                                                                          1,
                                                                                                          nux::BITFMT_R8G8B8A8);
+    if (!result_texture->texture.IsValid())
+      return;
   }
-
-  if (!result_texture->texture.IsValid())
-    return;
 
   ResultListBounds visible_bounds(0, GetNumResults()-1);
 

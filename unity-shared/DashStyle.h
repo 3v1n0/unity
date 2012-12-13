@@ -242,8 +242,11 @@ public:
   int GetScrollbarWidth() const;
 
   // Places Group
+  int GetCategoryIconSize() const;
   int GetCategoryHighlightHeight() const;
   int GetPlacesGroupTopSpace() const;
+  int GetPlacesGroupResultTopPadding() const;
+  int GetPlacesGroupResultLeftPadding() const;  
   int GetCategoryHeaderLeftPadding() const;
   int GetCategorySeparatorLeftPadding() const;
   int GetCategorySeparatorRightPadding() const;

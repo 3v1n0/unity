@@ -43,8 +43,11 @@ public:
   virtual nux::BaseTexture* GetGroupUnexpandIcon() = 0;
   virtual nux::BaseTexture* GetGroupExpandIcon() = 0;
 
+  virtual int GetCategoryIconSize() const = 0;
   virtual int GetCategoryHeaderLeftPadding() const = 0;
   virtual int GetPlacesGroupTopSpace() const = 0;
+  virtual int GetPlacesGroupResultTopPadding() const = 0;
+  virtual int GetPlacesGroupResultLeftPadding() const = 0;  
 };
 
 }

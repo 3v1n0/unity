@@ -49,6 +49,13 @@ namespace
 previews::Style preview_style;
 
 const int PREVIEW_ANIMATION_LENGTH = 250;
+
+const int DASH_TILE_HORIZONTAL_COUNT = 6;
+const int DASH_DEFAULT_CATEGORY_COUNT = 3;
+const int DASH_RESULT_RIGHT_PAD = 35;
+const int GROUP_HEADING_HEIGHT = 24;
+
+const int PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET = 10;
 }
 
 // This is so we can access some protected members in nux::VLayout and
@@ -606,38 +613,33 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
   int width = 0, height = 0;
   int tile_width = style.GetTileWidth();
   int tile_height = style.GetTileHeight();
+  int category_height = (style.GetPlacesGroupTopSpace() + style.GetCategoryIconSize()  + style.GetPlacesGroupResultTopPadding() + tile_height);
   int half = for_geo.width / 2;
 
   // if default dash size is bigger than half a screens worth of items, go for that.
-  while ((width += tile_width) + (19 * 2) < half)
+  while ((width += tile_width) < half)
     ;
 
-  width = std::max(width, tile_width * 6);
+  width = std::max(width, tile_width * DASH_TILE_HORIZONTAL_COUNT);
+  width += style.GetVSeparatorSize();
+  width += style.GetPlacesGroupResultLeftPadding() + DASH_RESULT_RIGHT_PAD;
 
-  width += 20 + 40; // add the left padding and the group plugin padding
 
-  height = search_bar_->GetGeometry().height;
-  height += tile_height * 3;
-  height += (style.GetPlacesGroupTopSpace() - 2 + 24 + 2) * 3; // adding three group headers
-  height += 1*2; // hseparator height
+  height = style.GetHSeparatorSize();
   height += style.GetDashViewTopPadding();
+  height += search_bar_->GetGeometry().height;
+  height += category_height * DASH_DEFAULT_CATEGORY_COUNT; // adding three categories
   height += lens_bar_->GetGeometry().height;
 
-  if (for_geo.width > 800 && for_geo.height > 550)
-  {
-    width = std::min(width, for_geo.width-66);
-    height = std::min(height, for_geo.height-24);
-  }
+  // width/height shouldn't be bigger than the geo available.
+  width = std::min(width, for_geo.width); // launcher width is taken into account in for_geo.
+  height = std::min(height, for_geo.height - panel_style.panel_height); // panel height is not taken into account in for_geo.
 
   if (style.always_maximised)
   {
-    if (for_geo.width >= width && for_geo.height - panel_style.panel_height > height)
-    {
-      width = std::max(0, for_geo.width);
-      height = std::max(0, for_geo.height - panel_style.panel_height);
-    }
+    width = std::max(0, for_geo.width);
+    height = std::max(0, for_geo.height - panel_style.panel_height);
   }
-
   return nux::Geometry(0, panel_style.panel_height, width, height);
 }
 
@@ -739,7 +741,7 @@ void DashView::DrawDashSplit(nux::GraphicsEngine& graphics_engine, nux::Geometry
     texxform.voffset = (lens_bar_->GetY() - content_view_->GetY())/(float)content_view_->GetHeight();
 
     int start_y = lens_bar_->GetY();
-    int final_y = geo_layout.y + geo_layout.height + 10;
+    int final_y = geo_layout.y + geo_layout.height + PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET;
 
     int lens_y = (1.0f - animate_split_value_) * start_y + (animate_split_value_ * final_y);
 
@@ -763,7 +765,7 @@ void DashView::DrawDashSplit(nux::GraphicsEngine& graphics_engine, nux::Geometry
       texxform.voffset = (search_bar_->GetY() - content_view_->GetY())/(float)content_view_->GetHeight();
 
       start_y = search_bar_->GetY();
-      final_y = geo_layout.y - search_bar_->GetHeight() - 10;
+      final_y = geo_layout.y - search_bar_->GetHeight() - PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET;
 
       graphics_engine.QRP_1Tex
       (
@@ -781,7 +783,7 @@ void DashView::DrawDashSplit(nux::GraphicsEngine& graphics_engine, nux::Geometry
       texxform.voffset = (search_bar_->GetY() - content_view_->GetY())/(float)content_view_->GetHeight();
 
       int start_x = active_lens_view_->filter_bar()->GetX();
-      int final_x = content_view_->GetX() + content_view_->GetWidth() + 10;
+      int final_x = content_view_->GetX() + content_view_->GetWidth() + PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET;
 
       int filter_x = (1.0f - animate_split_value_) * start_x + (animate_split_value_ * final_x);
 
@@ -805,7 +807,7 @@ void DashView::DrawDashSplit(nux::GraphicsEngine& graphics_engine, nux::Geometry
       texxform.voffset = (search_bar_->GetY() - content_view_->GetY())/(float)content_view_->GetHeight();
 
       int start_y = search_bar_->GetY();
-      int final_y = geo_layout.y - search_bar_->GetHeight() - 10;
+      int final_y = geo_layout.y - search_bar_->GetHeight() - PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET;
 
       graphics_engine.QRP_1Tex
       (
@@ -958,7 +960,7 @@ void DashView::DrawPreviewResultTextures(nux::GraphicsEngine& graphics_engine, b
         geo_tex_top.height,
         result_texture->texture,
         texxform,
-        nux::Color(1.0, 1.0, 1.0, 1.0)
+        nux::Color(1.0f, 1.0f, 1.0f, 1.0f)
       );
     }
   }
@@ -999,7 +1001,7 @@ void DashView::DrawPreviewResultTextures(nux::GraphicsEngine& graphics_engine, b
         geo_tex_top.height,
         result_texture->texture,
         texxform,
-        nux::Color(1.0, 1.0, 1.0, 1.0)
+        nux::Color(1.0f, 1.0f, 1.0f, 1.0f)
       );
     }
   }
@@ -1009,15 +1011,15 @@ void DashView::DrawPreviewResultTextures(nux::GraphicsEngine& graphics_engine, b
 
 void DashView::DrawPreview(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  if (animate_preview_value_ > 0)
+  if (animate_preview_value_ > 0.0f)
   {
-    bool animating = (animate_split_value_ != 1.0) || (animate_preview_value_ > 0.0 && animate_preview_value_ < 1.0);
-    bool preview_force_draw = force_draw || animating ? true : IsFullRedraw();
+    bool animating = animate_split_value_ != 1.0f || animate_preview_value_ < 1.0f;
+    bool preview_force_draw = force_draw || animating || IsFullRedraw();
 
     if (preview_force_draw)
       nux::GetPainter().PushBackgroundStack();
 
-    if (animate_preview_value_ < 1.0 && preview_container_->RedirectRenderingToTexture())
+    if (animate_preview_value_ < 1.0f && preview_container_->RedirectRenderingToTexture())
     {
       preview_container_->SetPresentRedirectedView(false);
       preview_container_->ProcessDraw(graphics_engine, preview_force_draw);
