@@ -42,10 +42,9 @@ public:
 
   panel::WindowButtonType GetType() const;
   void SetVisualState(nux::ButtonVisualState new_state);
-  void SetOverlayOpen(bool open);
-  bool IsOverlayOpen();
-  void SetEnabled(bool enabled);
-  bool IsEnabled();
+
+  nux::RWProperty<bool> enabled;
+  nux::Property<bool> overlay_mode;
 
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -55,6 +54,7 @@ protected:
 private:
   void UpdateSize();
   void LoadImages();
+  bool EnabledSetter(bool enabled);
   static nux::BaseTexture* GetDashWindowButton(panel::WindowButtonType type, panel::WindowState state);
 
   inline WindowButtons* Parent() const
@@ -64,7 +64,6 @@ private:
 
 private:
   panel::WindowButtonType _type;
-  bool _overlay_is_open;
 
   nux::ObjectPtr<nux::BaseTexture> _normal_tex;
   nux::ObjectPtr<nux::BaseTexture> _prelight_tex;

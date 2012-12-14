@@ -69,7 +69,6 @@ private:
   bool OpacitySetter(double& target, double const& new_value);
 
   std::string active_overlay_;
-
   UBusManager ubus_manager_;
 };
 }

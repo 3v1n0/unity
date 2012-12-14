@@ -38,9 +38,12 @@ namespace internal
 {
 WindowButton::WindowButton(panel::WindowButtonType type)
   : nux::Button("", NUX_TRACKER_LOCATION)
+  , enabled(sigc::mem_fun(this, &WindowButton::IsViewEnabled),
+            sigc::mem_fun(this, &WindowButton::EnabledSetter))
+  , overlay_mode(false)
   , _type(type)
-  , _overlay_is_open(false)
 {
+  overlay_mode.changed.connect([this] (bool) { UpdateSize(); QueueDraw(); });
   SetAcceptKeyNavFocusOnMouseDown(false);
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
   LoadImages();
@@ -62,9 +65,9 @@ void WindowButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(geo);
 
-  if (_overlay_is_open)
+  if (overlay_mode())
   {
-    if (!IsEnabled())
+    if (!enabled())
     {
       tex = _disabled_dash_tex.GetPointer();
     }
@@ -83,7 +86,7 @@ void WindowButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       }
     }
   }
-  else if (!IsEnabled())
+  else if (!enabled())
   {
     tex = _disabled_tex.GetPointer();
   }
@@ -131,7 +134,7 @@ void WindowButton::UpdateSize()
 {
   int panel_height = panel::Style::Instance().panel_height;
   nux::BaseTexture* tex;
-  tex = (_overlay_is_open) ? _normal_dash_tex.GetPointer() : _normal_tex.GetPointer();
+  tex = (overlay_mode()) ? _normal_dash_tex.GetPointer() : _normal_tex.GetPointer();
   int width = 0;
   int height = 0;
 
@@ -183,39 +186,19 @@ nux::BaseTexture* WindowButton::GetDashWindowButton(panel::WindowButtonType type
   return texture;
 }
 
-void WindowButton::SetOverlayOpen(bool open)
-{
-  if (_overlay_is_open == open)
-    return;
-
-  _overlay_is_open = open;
-
-  UpdateSize();
-  QueueDraw();
-}
-
-bool WindowButton::IsOverlayOpen()
-{
-  return _overlay_is_open;
-}
-
 panel::WindowButtonType WindowButton::GetType() const
 {
   return _type;
 }
 
-void WindowButton::SetEnabled(bool enabled)
+bool WindowButton::EnabledSetter(bool new_value)
 {
-  if (enabled == IsEnabled())
-    return;
+  if (enabled() == new_value)
+    return false;
 
-  SetEnableView(enabled);
+  SetEnableView(new_value);
   QueueDraw();
-}
-
-bool WindowButton::IsEnabled()
-{
-  return IsViewEnabled();
+  return true;
 }
 
 std::string WindowButton::GetName() const
@@ -260,11 +243,11 @@ void WindowButton::AddProperties(GVariantBuilder* builder)
                                   .add("type", type_name)
                                   .add("visible", IsVisible() && Parent()->opacity() != 0.0f)
                                   .add("sensitive", Parent()->GetInputEventSensitivity())
-                                  .add("enabled", IsEnabled())
+                                  .add("enabled", enabled())
                                   .add("visual_state", state_name)
                                   .add("opacity", Parent()->opacity())
                                   .add("focused", Parent()->focused())
-                                  .add("overlay_mode", _overlay_is_open);
+                                  .add("overlay_mode", overlay_mode());
 }
 } // Internal Namespace
 
@@ -373,10 +356,10 @@ void WindowButtons::OnCloseClicked(nux::Button *button)
 {
   auto win_button = dynamic_cast<internal::WindowButton*>(button);
 
-  if (!win_button || !win_button->IsEnabled())
+  if (!win_button || !win_button->enabled())
     return;
 
-  if (win_button->IsOverlayOpen())
+  if (win_button->overlay_mode())
   {
     ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
@@ -392,10 +375,10 @@ void WindowButtons::OnMinimizeClicked(nux::Button *button)
 {
   auto win_button = dynamic_cast<internal::WindowButton*>(button);
 
-  if (!win_button || !win_button->IsEnabled())
+  if (!win_button || !win_button->enabled())
     return;
 
-  if (!win_button->IsOverlayOpen())
+  if (!win_button->overlay_mode())
     WindowManager::Default().Minimize(controlled_window());
 
   minimize_clicked.emit();
@@ -405,10 +388,10 @@ void WindowButtons::OnRestoreClicked(nux::Button *button)
 {
   auto win_button = dynamic_cast<internal::WindowButton*>(button);
 
-  if (!win_button || !win_button->IsEnabled())
+  if (!win_button || !win_button->enabled())
     return;
 
-  if (win_button->IsOverlayOpen())
+  if (win_button->overlay_mode())
   {
     Settings::Instance().form_factor = FormFactor::DESKTOP;
   }
@@ -429,10 +412,10 @@ void WindowButtons::OnMaximizeClicked(nux::Button *button)
 {
   auto win_button = dynamic_cast<internal::WindowButton*>(button);
 
-  if (!win_button || !win_button->IsEnabled())
+  if (!win_button || !win_button->enabled())
     return;
 
-  if (win_button->IsOverlayOpen())
+  if (win_button->overlay_mode())
   {
     Settings::Instance().form_factor = FormFactor::NETBOOK;
   }
@@ -457,7 +440,7 @@ void WindowButtons::OnOverlayShown(GVariant* data)
       auto button = dynamic_cast<internal::WindowButton*>(area);
 
       if (button)
-        button->SetEnabled(false);
+        button->enabled = false;
     }
 
     return;
@@ -472,7 +455,7 @@ void WindowButtons::OnOverlayShown(GVariant* data)
     if (button)
     {
       if (button->GetType() == panel::WindowButtonType::CLOSE)
-        button->SetEnabled(true);
+        button->enabled = true;
 
       if (button->GetType() == panel::WindowButtonType::UNMAXIMIZE)
         restore_button = button;
@@ -481,9 +464,9 @@ void WindowButtons::OnOverlayShown(GVariant* data)
         maximize_button = button;
 
       if (button->GetType() == panel::WindowButtonType::MINIMIZE)
-        button->SetEnabled(false);
+        button->enabled = false;
 
-      button->SetOverlayOpen(true);
+      button->overlay_mode = true;
     }
   }
 
@@ -492,8 +475,8 @@ void WindowButtons::OnOverlayShown(GVariant* data)
     Settings &dash_settings = Settings::Instance();
     bool maximizable = (dash_settings.form_factor() == FormFactor::DESKTOP);
 
-    restore_button->SetEnabled(can_maximise);
-    maximize_button->SetEnabled(can_maximise);
+    restore_button->enabled = can_maximise;
+    maximize_button->enabled = can_maximise;
 
     if (maximizable != maximize_button->IsVisible())
     {
@@ -528,7 +511,7 @@ void WindowButtons::OnOverlayHidden(GVariant* data)
       auto button = dynamic_cast<internal::WindowButton*>(area);
 
       if (button)
-        button->SetEnabled(true);
+        button->enabled = true;
     }
   }
 
@@ -547,16 +530,10 @@ void WindowButtons::OnOverlayHidden(GVariant* data)
       if (controlled_window())
       {
         if (button->GetType() == panel::WindowButtonType::CLOSE)
-        {
-          bool closable = wm.IsWindowClosable(controlled_window());
-          button->SetEnabled(closable);
-        }
+          button->enabled = wm.IsWindowClosable(controlled_window());
 
         if (button->GetType() == panel::WindowButtonType::MINIMIZE)
-        {
-          bool minimizable = wm.IsWindowMinimizable(controlled_window());
-          button->SetEnabled(minimizable);
-        }
+          button->enabled = wm.IsWindowMinimizable(controlled_window());
       }
 
       if (button->GetType() == panel::WindowButtonType::UNMAXIMIZE)
@@ -565,14 +542,14 @@ void WindowButtons::OnOverlayHidden(GVariant* data)
       if (button->GetType() == panel::WindowButtonType::MAXIMIZE)
         maximize_button = button;
 
-      button->SetOverlayOpen(false);
+      button->overlay_mode = false;
     }
   }
 
   if (restore_button && maximize_button)
   {
-    restore_button->SetEnabled(true);
-    maximize_button->SetEnabled(true);
+    restore_button->enabled = true;
+    maximize_button->enabled = true;
 
     if (!restore_button->IsVisible())
     {
@@ -597,7 +574,7 @@ void WindowButtons::OnDashSettingsUpdated(FormFactor form_factor)
 
     if (button)
     {
-      if (!button->IsOverlayOpen())
+      if (!button->overlay_mode())
         break;
 
       if (button->GetType() == panel::WindowButtonType::UNMAXIMIZE)
@@ -611,7 +588,7 @@ void WindowButtons::OnDashSettingsUpdated(FormFactor form_factor)
     }
   }
 
-  if (restore_button && restore_button->IsOverlayOpen() && maximize_button)
+  if (restore_button && restore_button->overlay_mode() && maximize_button)
   {
     bool maximizable = (form_factor == FormFactor::DESKTOP);
 
@@ -659,16 +636,10 @@ void WindowButtons::OnControlledWindowChanged(Window xid)
         continue;
 
       if (button->GetType() == panel::WindowButtonType::CLOSE)
-      {
-        bool closable = wm.IsWindowClosable(xid);
-        button->SetEnabled(closable);
-      }
+        button->enabled = wm.IsWindowClosable(xid);
 
       if (button->GetType() == panel::WindowButtonType::MINIMIZE)
-      {
-        bool minimizable = wm.IsWindowMinimizable(xid);
-        button->SetEnabled(minimizable);
-      }
+        button->enabled = wm.IsWindowMinimizable(xid);
     }
   }
 }
