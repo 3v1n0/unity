@@ -21,9 +21,11 @@
 #include <gmock/gmock.h>
 
 #include <Nux/Nux.h>
-#include "WindowButtons.h"
 #include "PanelStyle.h"
+#include "StandaloneWindowManager.h"
 #include "UnitySettings.h"
+#include "WindowButtons.h"
+#include "WindowButtonPriv.h"
 
 namespace unity
 {
@@ -37,6 +39,31 @@ struct MockWindowButtons : WindowButtons
 
 struct TestWindowButtons : public testing::Test
 {
+  TestWindowButtons()
+    : wm(dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default()))
+  {}
+
+  StandaloneWindow::Ptr AddFakeWindowToWM(Window xid)
+  {
+    auto fake_window = std::make_shared<StandaloneWindow>(xid);
+    wm->AddStandaloneWindow(fake_window);
+
+    return fake_window;
+  }
+
+  internal::WindowButton* GetWindowButtonByType(panel::WindowButtonType type)
+  {
+    for (auto* area : wbuttons.GetChildren())
+    {
+      auto button = dynamic_cast<internal::WindowButton*>(area);
+
+      if (button && button->GetType() == type)
+        return button;
+    }
+
+    return nullptr;
+  }
+
   Settings settings;
   panel::Style panel_style;
   testing::NiceMock<MockWindowButtons> wbuttons;
@@ -49,6 +76,11 @@ TEST_F(TestWindowButtons, Construction)
   EXPECT_EQ(wbuttons.controlled_window(), 0);
   EXPECT_EQ(wbuttons.opacity(), 1.0f);
   EXPECT_EQ(wbuttons.focused(), true);
+
+  ASSERT_NE(GetWindowButtonByType(panel::WindowButtonType::CLOSE), nullptr);
+  ASSERT_NE(GetWindowButtonByType(panel::WindowButtonType::MINIMIZE), nullptr);
+  ASSERT_NE(GetWindowButtonByType(panel::WindowButtonType::MAXIMIZE), nullptr);
+  ASSERT_NE(GetWindowButtonByType(panel::WindowButtonType::UNMAXIMIZE), nullptr);
 }
 
 TEST_F(TestWindowButtons, OpacitySet)
