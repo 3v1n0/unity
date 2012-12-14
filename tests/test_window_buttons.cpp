@@ -21,23 +21,49 @@
 #include <gmock/gmock.h>
 
 #include <Nux/Nux.h>
-#include "WindowButtons.h"
 #include "PanelStyle.h"
-#include "UnitySettings.h"
 #include "StandaloneWindowManager.h"
+#include "UnitySettings.h"
+#include "WindowButtons.h"
+#include "WindowButtonPriv.h"
 
 namespace unity
 {
 namespace
 {
 
-struct MockWindowButtons : WindowButtons
-{
-  MOCK_METHOD0(QueueDraw, void());
-};
-
 struct TestWindowButtons : public testing::Test
 {
+  TestWindowButtons()
+    : wm(dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default()))
+  {}
+
+  StandaloneWindow::Ptr AddFakeWindowToWM(Window xid)
+  {
+    auto fake_window = std::make_shared<StandaloneWindow>(xid);
+    wm->AddStandaloneWindow(fake_window);
+
+    return fake_window;
+  }
+
+  internal::WindowButton* GetWindowButtonByType(panel::WindowButtonType type)
+  {
+    for (auto* area : wbuttons.GetChildren())
+    {
+      auto button = dynamic_cast<internal::WindowButton*>(area);
+
+      if (button && button->GetType() == type)
+        return button;
+    }
+
+    return nullptr;
+  }
+
+  struct MockWindowButtons : WindowButtons
+  {
+    MOCK_METHOD0(QueueDraw, void());
+  };
+
   Settings settings;
   panel::Style panel_style;
   testing::NiceMock<MockWindowButtons> wbuttons;
@@ -50,6 +76,16 @@ TEST_F(TestWindowButtons, Construction)
   EXPECT_EQ(wbuttons.controlled_window(), 0);
   EXPECT_EQ(wbuttons.opacity(), 1.0f);
   EXPECT_EQ(wbuttons.focused(), true);
+
+  ASSERT_NE(GetWindowButtonByType(panel::WindowButtonType::CLOSE), nullptr);
+  ASSERT_NE(GetWindowButtonByType(panel::WindowButtonType::MINIMIZE), nullptr);
+  ASSERT_NE(GetWindowButtonByType(panel::WindowButtonType::MAXIMIZE), nullptr);
+  ASSERT_NE(GetWindowButtonByType(panel::WindowButtonType::UNMAXIMIZE), nullptr);
+
+  ASSERT_EQ(GetWindowButtonByType(panel::WindowButtonType::CLOSE)->GetParentObject(), &wbuttons);
+  ASSERT_EQ(GetWindowButtonByType(panel::WindowButtonType::MINIMIZE)->GetParentObject(), &wbuttons);
+  ASSERT_EQ(GetWindowButtonByType(panel::WindowButtonType::MAXIMIZE)->GetParentObject(), &wbuttons);
+  ASSERT_EQ(GetWindowButtonByType(panel::WindowButtonType::UNMAXIMIZE)->GetParentObject(), &wbuttons);
 }
 
 TEST_F(TestWindowButtons, OpacitySet)
@@ -83,6 +119,86 @@ TEST_F(TestWindowButtons, ChangingFocusedQueuesDraw)
 
   EXPECT_CALL(wbuttons, QueueDraw()).Times(1);
   wbuttons.focused = true;
+}
+
+TEST_F(TestWindowButtons, ChangingControlledWindowUpdatesCloseButton)
+{
+  Window xid = 12345;
+  auto fake_win = AddFakeWindowToWM(xid);
+  ASSERT_TRUE(fake_win->closable);
+  wbuttons.controlled_window = xid;
+  EXPECT_TRUE(GetWindowButtonByType(panel::WindowButtonType::CLOSE)->enabled());
+
+  xid = 54321;
+  fake_win = AddFakeWindowToWM(xid);
+  fake_win->closable = false;
+  wbuttons.controlled_window = xid;
+  EXPECT_FALSE(GetWindowButtonByType(panel::WindowButtonType::CLOSE)->enabled());
+}
+
+TEST_F(TestWindowButtons, ChangingControlledWindowUpdatesMinimizeButton)
+{
+  Window xid = 12345;
+  auto fake_win = AddFakeWindowToWM(xid);
+  ASSERT_TRUE(fake_win->minimizable);
+  wbuttons.controlled_window = xid;
+  EXPECT_TRUE(GetWindowButtonByType(panel::WindowButtonType::MINIMIZE)->enabled());
+
+  xid = 54321;
+  fake_win = AddFakeWindowToWM(xid);
+  fake_win->minimizable = false;
+  wbuttons.controlled_window = xid;
+  EXPECT_FALSE(GetWindowButtonByType(panel::WindowButtonType::MINIMIZE)->enabled());
+}
+
+
+struct TestWindowButton : public testing::Test
+{
+  TestWindowButton()
+    : button(panel::WindowButtonType::CLOSE)
+  {}
+
+  struct MockWindowButton : internal::WindowButton
+  {
+    MockWindowButton(panel::WindowButtonType type)
+      : internal::WindowButton(type)
+    {}
+
+    MOCK_METHOD0(QueueDraw, void());
+  };
+
+  Settings settings;
+  panel::Style panel_style;
+  testing::NiceMock<MockWindowButton> button;
+};
+
+TEST_F(TestWindowButton, Construction)
+{
+  EXPECT_EQ(button.GetType(), panel::WindowButtonType::CLOSE);
+  EXPECT_TRUE(button.enabled());
+  EXPECT_FALSE(button.overlay_mode());
+}
+
+TEST_F(TestWindowButton, ChangingOverlayModeQueueDraws)
+{
+  EXPECT_CALL(button, QueueDraw()).Times(1);
+  button.overlay_mode = true;
+}
+
+TEST_F(TestWindowButton, EnableProperty)
+{
+  ASSERT_TRUE(button.enabled());
+  EXPECT_EQ(button.enabled(), button.IsViewEnabled());
+
+  EXPECT_CALL(button, QueueDraw()).Times(1);
+  button.enabled = false;
+  ASSERT_FALSE(button.enabled());
+  EXPECT_EQ(button.enabled(), button.IsViewEnabled());
+
+  EXPECT_CALL(button, QueueDraw()).Times(0);
+  button.enabled = false;
+  ASSERT_FALSE(button.enabled());
+  EXPECT_EQ(button.enabled(), button.IsViewEnabled());
 }
 }
 }

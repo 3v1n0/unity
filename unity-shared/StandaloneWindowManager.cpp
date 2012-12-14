@@ -48,8 +48,8 @@ StandaloneWindow::StandaloneWindow(Window xid)
   , has_decorations(true)
   , on_top(false)
   , closable(true)
-  , minimizable(false)
-  , maximizable(false)
+  , minimizable(true)
+  , maximizable(true)
 {}
 
 WindowManagerPtr create_window_manager()

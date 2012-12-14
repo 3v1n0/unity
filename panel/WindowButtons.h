@@ -24,8 +24,8 @@
 #include <Nux/HLayout.h>
 #include <Nux/Button.h>
 
-#include "unity-shared/UBusWrapper.h"
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UnitySettings.h"
 
 namespace unity
@@ -69,8 +69,8 @@ private:
   bool OpacitySetter(double& target, double new_value);
 
   std::string active_overlay_;
-
   UBusManager ubus_manager_;
 };
 }
+
 #endif
