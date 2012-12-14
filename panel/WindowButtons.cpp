@@ -41,7 +41,7 @@ WindowButton::WindowButton(panel::WindowButtonType type)
   , enabled(sigc::mem_fun(this, &WindowButton::IsViewEnabled),
             sigc::mem_fun(this, &WindowButton::EnabledSetter))
   , overlay_mode(false)
-  , _type(type)
+  , type_(type)
 {
   overlay_mode.changed.connect([this] (bool) { UpdateSize(); QueueDraw(); });
   SetAcceptKeyNavFocusOnMouseDown(false);
@@ -69,39 +69,39 @@ void WindowButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   {
     if (!enabled())
     {
-      tex = _disabled_dash_tex.GetPointer();
+      tex = disabled_dash_tex_.GetPointer();
     }
     else
     {
       switch (visual_state_)
       {
         case nux::VISUAL_STATE_PRESSED:
-          tex = _pressed_dash_tex.GetPointer();
+          tex = pressed_dash_tex_.GetPointer();
           break;
         case nux::VISUAL_STATE_PRELIGHT:
-          tex = _prelight_dash_tex.GetPointer();
+          tex = prelight_dash_tex_.GetPointer();
           break;
         default:
-          tex = _normal_dash_tex.GetPointer();
+          tex = normal_dash_tex_.GetPointer();
       }
     }
   }
   else if (!enabled())
   {
-    tex = _disabled_tex.GetPointer();
+    tex = disabled_tex_.GetPointer();
   }
   else if (!Parent()->focused())
   {
     switch (visual_state_)
     {
       case nux::VISUAL_STATE_PRESSED:
-        tex = _unfocused_pressed_tex.GetPointer();
+        tex = unfocused_pressed_tex_.GetPointer();
         break;
       case nux::VISUAL_STATE_PRELIGHT:
-        tex = _unfocused_prelight_tex.GetPointer();
+        tex = unfocused_prelight_tex_.GetPointer();
         break;
       default:
-        tex = _unfocused_tex.GetPointer();
+        tex = unfocused_tex_.GetPointer();
     }
   }
   else
@@ -109,13 +109,13 @@ void WindowButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     switch (visual_state_)
     {
       case nux::VISUAL_STATE_PRESSED:
-        tex = _pressed_tex.GetPointer();
+        tex = pressed_tex_.GetPointer();
         break;
       case nux::VISUAL_STATE_PRELIGHT:
-        tex = _prelight_tex.GetPointer();
+        tex = prelight_tex_.GetPointer();
         break;
       default:
-        tex = _normal_tex.GetPointer();
+        tex = normal_tex_.GetPointer();
     }
   }
 
@@ -134,7 +134,7 @@ void WindowButton::UpdateSize()
 {
   int panel_height = panel::Style::Instance().panel_height;
   nux::BaseTexture* tex;
-  tex = (overlay_mode()) ? _normal_dash_tex.GetPointer() : _normal_tex.GetPointer();
+  tex = (overlay_mode()) ? normal_dash_tex_.GetPointer() : normal_tex_.GetPointer();
   int width = 0;
   int height = 0;
 
@@ -151,17 +151,17 @@ void WindowButton::LoadImages()
 {
   panel::Style& style = panel::Style::Instance();
 
-  _normal_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::NORMAL));
-  _prelight_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::PRELIGHT));
-  _pressed_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::PRESSED));
-  _unfocused_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::UNFOCUSED));
-  _disabled_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::DISABLED));
-  _unfocused_prelight_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::UNFOCUSED_PRELIGHT));
-  _unfocused_pressed_tex.Adopt(style.GetWindowButton(_type, panel::WindowState::UNFOCUSED_PRESSED));
-  _normal_dash_tex.Adopt(GetDashWindowButton(_type, panel::WindowState::NORMAL));
-  _prelight_dash_tex.Adopt(GetDashWindowButton(_type, panel::WindowState::PRELIGHT));
-  _pressed_dash_tex.Adopt(GetDashWindowButton(_type, panel::WindowState::PRESSED));
-  _disabled_dash_tex.Adopt(GetDashWindowButton(_type, panel::WindowState::DISABLED));
+  normal_tex_.Adopt(style.GetWindowButton(type_, panel::WindowState::NORMAL));
+  prelight_tex_.Adopt(style.GetWindowButton(type_, panel::WindowState::PRELIGHT));
+  pressed_tex_.Adopt(style.GetWindowButton(type_, panel::WindowState::PRESSED));
+  unfocused_tex_.Adopt(style.GetWindowButton(type_, panel::WindowState::UNFOCUSED));
+  disabled_tex_.Adopt(style.GetWindowButton(type_, panel::WindowState::DISABLED));
+  unfocused_prelight_tex_.Adopt(style.GetWindowButton(type_, panel::WindowState::UNFOCUSED_PRELIGHT));
+  unfocused_pressed_tex_.Adopt(style.GetWindowButton(type_, panel::WindowState::UNFOCUSED_PRESSED));
+  normal_dash_tex_.Adopt(GetDashWindowButton(type_, panel::WindowState::NORMAL));
+  prelight_dash_tex_.Adopt(GetDashWindowButton(type_, panel::WindowState::PRELIGHT));
+  pressed_dash_tex_.Adopt(GetDashWindowButton(type_, panel::WindowState::PRESSED));
+  disabled_dash_tex_.Adopt(GetDashWindowButton(type_, panel::WindowState::DISABLED));
 
   UpdateSize();
   QueueDraw();
@@ -171,7 +171,7 @@ nux::BaseTexture* WindowButton::GetDashWindowButton(panel::WindowButtonType type
 {
   nux::BaseTexture* texture = nullptr;
   const char* names[] = { "close_dash", "minimize_dash", "unmaximize_dash", "maximize_dash" };
-  const char* states[] = { "", "_prelight", "_pressed", "_disabled" };
+  const char* states[] = { "", "prelight_", "pressed_", "disabled_" };
 
   std::ostringstream subpath;
   subpath << names[static_cast<int>(type)]
@@ -188,7 +188,7 @@ nux::BaseTexture* WindowButton::GetDashWindowButton(panel::WindowButtonType type
 
 panel::WindowButtonType WindowButton::GetType() const
 {
-  return _type;
+  return type_;
 }
 
 bool WindowButton::EnabledSetter(bool new_value)
@@ -211,7 +211,7 @@ void WindowButton::AddProperties(GVariantBuilder* builder)
   std::string type_name;
   std::string state_name;
 
-  switch (_type)
+  switch (type_)
   {
     case panel::WindowButtonType::CLOSE:
       type_name = "Close";

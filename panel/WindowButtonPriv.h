@@ -63,19 +63,19 @@ private:
   }
 
 private:
-  panel::WindowButtonType _type;
+  panel::WindowButtonType type_;
 
-  nux::ObjectPtr<nux::BaseTexture> _normal_tex;
-  nux::ObjectPtr<nux::BaseTexture> _prelight_tex;
-  nux::ObjectPtr<nux::BaseTexture> _pressed_tex;
-  nux::ObjectPtr<nux::BaseTexture> _unfocused_tex;
-  nux::ObjectPtr<nux::BaseTexture> _unfocused_prelight_tex;
-  nux::ObjectPtr<nux::BaseTexture> _unfocused_pressed_tex;
-  nux::ObjectPtr<nux::BaseTexture> _disabled_tex;
-  nux::ObjectPtr<nux::BaseTexture> _normal_dash_tex;
-  nux::ObjectPtr<nux::BaseTexture> _prelight_dash_tex;
-  nux::ObjectPtr<nux::BaseTexture> _pressed_dash_tex;
-  nux::ObjectPtr<nux::BaseTexture> _disabled_dash_tex;
+  nux::ObjectPtr<nux::BaseTexture> normal_tex_;
+  nux::ObjectPtr<nux::BaseTexture> prelight_tex_;
+  nux::ObjectPtr<nux::BaseTexture> pressed_tex_;
+  nux::ObjectPtr<nux::BaseTexture> unfocused_tex_;
+  nux::ObjectPtr<nux::BaseTexture> unfocused_prelight_tex_;
+  nux::ObjectPtr<nux::BaseTexture> unfocused_pressed_tex_;
+  nux::ObjectPtr<nux::BaseTexture> disabled_tex_;
+  nux::ObjectPtr<nux::BaseTexture> normal_dash_tex_;
+  nux::ObjectPtr<nux::BaseTexture> prelight_dash_tex_;
+  nux::ObjectPtr<nux::BaseTexture> pressed_dash_tex_;
+  nux::ObjectPtr<nux::BaseTexture> disabled_dash_tex_;
 };
 
 } // internal namespace
