@@ -21,6 +21,7 @@
 #include "config.h"
 
 #include <Nux/Nux.h>
+#include <array>
 
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
@@ -170,14 +171,12 @@ void WindowButton::LoadImages()
 nux::ObjectPtr<nux::BaseTexture> WindowButton::GetDashWindowButton(panel::WindowButtonType type, panel::WindowState state)
 {
   nux::ObjectPtr<nux::BaseTexture> texture;
-  const char* names[] = { "close_dash", "minimize_dash", "unmaximize_dash", "maximize_dash" };
-  const char* states[] = { "", "prelight_", "pressed_", "disabled_" };
+  static const std::array<std::string, 4> names = {{ "close_dash", "minimize_dash", "unmaximize_dash", "maximize_dash" }};
+  static const std::array<std::string, 4> states = {{ "", "_prelight", "_pressed", "_disabled" }};
 
-  std::ostringstream subpath;
-  subpath << names[static_cast<int>(type)]
-          << states[static_cast<int>(state)] << ".png";
+  std::string subpath = names[static_cast<int>(type)] + states[static_cast<int>(state)] + ".png";
 
-  glib::String filename(g_build_filename(PKGDATADIR, subpath.str().c_str(), NULL));
+  glib::String filename(g_build_filename(PKGDATADIR, subpath.c_str(), NULL));
   texture.Adopt(nux::CreateTexture2DFromFile(filename, -1, true));
 
   if (!texture)
