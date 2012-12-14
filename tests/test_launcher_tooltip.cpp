@@ -100,7 +100,7 @@ TEST_F(TestTooltip, StaticCairoTextCorrectSize)
 TEST_F(TestTooltip, TestSetTooltipText)
 {
   std::string new_tip = "My tooltip";
-  EXPECT_NE(new_tip, tooltip->_tooltip_text->GetText());
+  EXPECT_EQ("", tooltip->_tooltip_text->GetText());
 
   tooltip->text.Set(new_tip);
   EXPECT_EQ(new_tip, tooltip->_tooltip_text->GetText());

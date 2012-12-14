@@ -60,7 +60,7 @@ Tooltip::Tooltip() :
 
   _vlayout->AddLayout(_top_space, 0);
 
-  _tooltip_text = new nux::StaticCairoText(TEXT("Unity"), NUX_TRACKER_LOCATION);
+  _tooltip_text = new nux::StaticCairoText(TEXT(""), NUX_TRACKER_LOCATION);
   _tooltip_text->SetTextAlignment(nux::StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
   _tooltip_text->SetTextVerticalAlignment(nux::StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
   _tooltip_text->SetMinimumWidth(MINIMUM_TEXT_WIDTH);

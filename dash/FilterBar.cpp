@@ -24,6 +24,7 @@
 #include <NuxCore/Logger.h>
 
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/GraphicsUtils.h"
 #include "FilterBar.h"
 #include "FilterExpanderLabel.h"
 #include "FilterFactory.h"
@@ -102,6 +103,17 @@ void FilterBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 void FilterBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   graphics_engine.PushClippingRectangle(GetGeometry());
+
+  if (!IsFullRedraw() && RedirectedAncestor())
+  {
+    for (auto iter: filter_map_)
+    {
+      FilterExpanderLabel* filter_view = iter.second;
+      if (filter_view && filter_view->IsVisible() && filter_view->IsRedrawNeeded())
+        graphics::ClearGeometry(filter_view->GetGeometry());  
+    }
+  }
+
   GetLayout()->ProcessDraw(graphics_engine, force_draw);
   graphics_engine.PopClippingRectangle();
 }
