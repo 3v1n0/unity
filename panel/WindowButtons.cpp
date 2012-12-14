@@ -171,7 +171,7 @@ nux::BaseTexture* WindowButton::GetDashWindowButton(panel::WindowButtonType type
 {
   nux::BaseTexture* texture = nullptr;
   const char* names[] = { "close_dash", "minimize_dash", "unmaximize_dash", "maximize_dash" };
-  const char* states[] = { "", "prelight_", "pressed_", "disabled_" };
+  const char* states[] = { "", "_prelight", "_pressed", "_disabled" };
 
   std::ostringstream subpath;
   subpath << names[static_cast<int>(type)]
