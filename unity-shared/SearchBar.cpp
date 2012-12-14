@@ -157,7 +157,7 @@ void SearchBar::Init()
 
   nux::HLayout* hint_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  hint_ = new nux::StaticCairoText(" ");
+  hint_ = new StaticCairoText(" ");
   hint_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
   hint_->SetFont(HINT_LABEL_DEFAULT_FONT.c_str());
   hint_layout->AddView(hint_,  0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
@@ -181,11 +181,11 @@ void SearchBar::Init()
   if (show_filter_hint_)
   {
     std::string filter_str(_("Filter results"));
-    show_filters_ = new nux::StaticCairoText(filter_str);
+    show_filters_ = new StaticCairoText(filter_str);
     show_filters_->SetVisible(false);
     show_filters_->SetFont(SHOW_FILTERS_LABEL_DEFAULT_FONT.c_str());
     show_filters_->SetTextColor(nux::color::White);
-    show_filters_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_RIGHT);
+    show_filters_->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
     show_filters_->SetLines(1);
 
     nux::BaseTexture* arrow;

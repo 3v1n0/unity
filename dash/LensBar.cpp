@@ -71,7 +71,7 @@ void LensBar::SetupLayout()
   std::string legal_text("<span underline='single'>");
   legal_text.append(g_dgettext("credentials-control-center", "Legal notice"));
   legal_text.append("</span>");
-  legal_ = new nux::StaticCairoText(legal_text);
+  legal_ = new StaticCairoText(legal_text);
   legal_->SetFont("Ubuntu 14px");
   legal_layout_->AddSpace(1, 1);
   legal_layout_->SetLeftAndRightPadding(0, 10);

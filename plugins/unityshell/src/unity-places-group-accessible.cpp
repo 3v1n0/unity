@@ -104,8 +104,8 @@ ensure_proper_name(UnityPlacesGroupAccessible* self)
 {
   unity::PlacesGroup* group = NULL;
   nux::Object* nux_object = NULL;
-  nux::StaticCairoText* label = NULL;
-  nux::StaticCairoText* expand_label = NULL;
+  unity::StaticCairoText* label = NULL;
+  unity::StaticCairoText* expand_label = NULL;
   AtkObject* label_accessible = NULL;
   AtkObject* expand_label_accessible = NULL;
 
@@ -133,7 +133,7 @@ ensure_proper_name(UnityPlacesGroupAccessible* self)
 
 
 static void
-on_label_text_change_cb(nux::StaticCairoText* label, UnityPlacesGroupAccessible* self)
+on_label_text_change_cb(unity::StaticCairoText* label, UnityPlacesGroupAccessible* self)
 {
   ensure_proper_name(self);
 }
@@ -144,7 +144,7 @@ unity_places_group_accessible_initialize(AtkObject* accessible,
 {
   unity::PlacesGroup* group = NULL;
   nux::Object* nux_object = NULL;
-  nux::StaticCairoText* label = NULL;
+  unity::StaticCairoText* label = NULL;
 
   ATK_OBJECT_CLASS(unity_places_group_accessible_parent_class)->initialize(accessible, data);
 

@@ -63,7 +63,7 @@ protected:
 
 private:
   RatingsButton* ratings_;
-  nux::StaticCairoText* reviews_;
+  StaticCairoText* reviews_;
 };
 
 } // namespace previews

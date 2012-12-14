@@ -42,8 +42,8 @@ namespace dash
 ActionLink::ActionLink(std::string const& action_hint, std::string const& label, NUX_FILE_LINE_DECL)
   : nux::AbstractButton(NUX_FILE_LINE_PARAM)
   , action_hint_(action_hint)
-  , aligment_(nux::StaticCairoText::NUX_ALIGN_CENTRE)
-  , underline_(nux::StaticCairoText::NUX_UNDERLINE_SINGLE)
+  , aligment_(StaticCairoText::NUX_ALIGN_CENTRE)
+  , underline_(StaticCairoText::NUX_UNDERLINE_SINGLE)
 {
   Init();
   BuildLayout(label);
@@ -107,7 +107,7 @@ void ActionLink::BuildLayout(std::string const& label)
 
     if (!label_.empty())
     {
-      static_text_ = new nux::StaticCairoText(label_, true, NUX_TRACKER_LOCATION);
+      static_text_ = new StaticCairoText(label_, true, NUX_TRACKER_LOCATION);
       if (!font_hint_.empty())
         static_text_->SetFont(font_hint_);
       static_text_->SetInputEventSensitivity(false);
@@ -188,7 +188,7 @@ void ActionLink::RecvClick(int x, int y, unsigned long button_flags, unsigned lo
   activate.emit(this, action_hint_);
 }
 
-bool ActionLink::set_aligment(nux::StaticCairoText::AlignState aligment)
+bool ActionLink::set_aligment(StaticCairoText::AlignState aligment)
 {
   if(static_text_ && aligment_ != aligment)
   {
@@ -200,12 +200,12 @@ bool ActionLink::set_aligment(nux::StaticCairoText::AlignState aligment)
   return true;
 }
 
-nux::StaticCairoText::AlignState ActionLink::get_aligment()
+StaticCairoText::AlignState ActionLink::get_aligment()
 {
   return aligment_;
 }
 
-bool ActionLink::set_underline(nux::StaticCairoText::UnderlineState underline)
+bool ActionLink::set_underline(StaticCairoText::UnderlineState underline)
 {
   if(static_text_ && underline_ != underline)
   {
@@ -217,7 +217,7 @@ bool ActionLink::set_underline(nux::StaticCairoText::UnderlineState underline)
   return true;
 }
 
-nux::StaticCairoText::UnderlineState ActionLink::get_underline()
+StaticCairoText::UnderlineState ActionLink::get_underline()
 {
   return underline_;
 }
