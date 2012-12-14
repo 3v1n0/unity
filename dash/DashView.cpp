@@ -79,7 +79,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(DashView);
 
 DashView::DashView()
   : nux::View(NUX_TRACKER_LOCATION)
-  , home_lens_(new HomeLens(_("Home"), _("Home screen"), _("Search")))
+  , home_lens_(new HomeLens(_("Home"), _("Home screen"), _("Search your computer and online sources")))
   , preview_container_(nullptr)
   , preview_displaying_(false)
   , preview_navigation_mode_(previews::Navigation::NONE)
