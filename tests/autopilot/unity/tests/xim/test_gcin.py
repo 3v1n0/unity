@@ -19,7 +19,6 @@ from unity.tests import UnityTestCase
 class GcinTestCase(UnityTestCase):
     """Tests the Input Method gcin."""
 
-    @skip("Currenlty no XIM support in Nux")
     def setUp(self):
         super(GcinTestCase, self).setUp()
 
@@ -44,17 +43,14 @@ class GcinTestHangul(GcinTestCase):
             ('national script', {'input': 'gug mun ', 'result': u'\uad6d\ubb38'}),
         ]
 
-    @skip("Currenlty no XIM support in Nux")
     def setUp(self):
         super(GcinTestHangul, self).setUp()
 
-    @skip("Currenlty no XIM support in Nux")
     def enter_hangul_mode(self):
         """Ctrl+Space turns gcin on, Ctrl+Alt+/ turns hangul on."""
         self.keyboard.press_and_release("Ctrl+Space")
         self.keyboard.press_and_release("Ctrl+Alt+/")
 
-    @skip("Currenlty no XIM support in Nux")
     def test_dash_input(self):
         """Entering an input string through gcin will result in a Korean string result in the dash."""
 
@@ -65,7 +61,6 @@ class GcinTestHangul(GcinTestCase):
         self.keyboard.type(self.input)
         self.assertThat(self.dash.search_string, Eventually(Equals(self.result)))
 
-    @skip("Currenlty no XIM support in Nux")
     def test_hud_input(self):
         """Entering an input string through gcin will result in a Korean string result in the hud."""
 

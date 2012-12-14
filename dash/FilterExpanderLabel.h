@@ -71,6 +71,8 @@ protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
+  virtual void ClearRedirectedRenderChildArea() = 0;
+
   // Introspection
   virtual std::string GetName() const;
   virtual void AddProperties(GVariantBuilder* builder);
@@ -94,7 +96,7 @@ private:
   IconTexture* expand_icon_;
 
   nux::ObjectPtr<nux::Layout> contents_;
-  std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;
+  std::unique_ptr<nux::AbstractPaintLayer> focus_layer_;
 };
 
 } // namespace dash
