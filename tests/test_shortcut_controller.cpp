@@ -84,14 +84,22 @@ TEST_F (TestShortcutController, WindowIsRaisedOnShow)
   Utils::WaitForTimeout(1);
 }
 
+
 TEST_F (TestShortcutController, Hide)
 {
-  EXPECT_CALL(controller_, SetOpacity(1.0))
-    .Times(0);
+  {
+    InSequence sequence;
+    EXPECT_CALL(controller_, SetOpacity(0.0))
+      .Times(1);
+    EXPECT_CALL(controller_, SetOpacity(_))
+      .Times(0);
+  }
 
   controller_.Show();
+
   controller_.Hide();
   tick_source_.tick(1000);
 }
+
 
 }
