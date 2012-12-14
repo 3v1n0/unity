@@ -47,6 +47,7 @@ public:
 
   Controller(std::list<AbstractHint::Ptr> const& hints,
              BaseWindowRaiser::Ptr const& raiser);
+  virtual ~Controller();
 
   bool Show();
   void Hide();
@@ -56,6 +57,7 @@ public:
 
   void SetAdjustment(int x, int y);
   void SetEnabled(bool enabled);
+  virtual void SetOpacity(double value);
 
 protected:
   // Introspectable
