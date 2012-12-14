@@ -61,7 +61,7 @@ void WindowButton::SetVisualState(nux::ButtonVisualState new_state)
 void WindowButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
-  nux::BaseTexture* tex;
+  nux::BaseTexture* tex = nullptr;
 
   GfxContext.PushClippingRectangle(geo);
 
