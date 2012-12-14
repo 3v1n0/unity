@@ -260,8 +260,7 @@ nux::Layout* MusicPaymentPreview::GetFormLabels()
   password_label_->SetLines(-1);
   password_label_->SetFont(style.payment_form_labels_font().c_str());
   password_label_->SetMinimumHeight(40);
-  labels_layout->AddView(password_label_.GetPointer(),
-          1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_END);
+  labels_layout->AddView(password_label_.GetPointer(), 1, nux::MINOR_POSITION_END);
 
   return labels_layout;
 }
