@@ -115,5 +115,35 @@ TEST_F(TestWindowButtons, ChangingFocusedQueuesDraw)
   EXPECT_CALL(wbuttons, QueueDraw()).Times(1);
   wbuttons.focused = true;
 }
+
+TEST_F(TestWindowButtons, ChangingControlledWindowUpdatesCloseButton)
+{
+  Window xid = 12345;
+  auto fake_win = AddFakeWindowToWM(xid);
+  ASSERT_TRUE(fake_win->closable);
+  wbuttons.controlled_window = xid;
+  EXPECT_TRUE(GetWindowButtonByType(panel::WindowButtonType::CLOSE)->IsEnabled());
+
+  xid = 54321;
+  fake_win = AddFakeWindowToWM(xid);
+  fake_win->closable = false;
+  wbuttons.controlled_window = xid;
+  EXPECT_FALSE(GetWindowButtonByType(panel::WindowButtonType::CLOSE)->IsEnabled());
+}
+
+TEST_F(TestWindowButtons, ChangingControlledWindowUpdatesMinimizeButton)
+{
+  Window xid = 12345;
+  auto fake_win = AddFakeWindowToWM(xid);
+  ASSERT_TRUE(fake_win->minimizable);
+  wbuttons.controlled_window = xid;
+  EXPECT_TRUE(GetWindowButtonByType(panel::WindowButtonType::MINIMIZE)->IsEnabled());
+
+  xid = 54321;
+  fake_win = AddFakeWindowToWM(xid);
+  fake_win->minimizable = false;
+  wbuttons.controlled_window = xid;
+  EXPECT_FALSE(GetWindowButtonByType(panel::WindowButtonType::MINIMIZE)->IsEnabled());
+}
 }
 }
