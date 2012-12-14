@@ -98,21 +98,42 @@ void MultiRangeFilter::OptionChanged(bool is_active, std::string const& id)
 
   ignore_changes_ = true;
 
-  while(position_below >= 0)
+  // when activating a option, need to make sure we only have continuous ajacent options enabled relative to the enabled option.
+  if (is_active)
   {
-    FilterOption::Ptr const& filter_option = options_[position_below--];
+    while(position_below >= 0)
+    {
+      FilterOption::Ptr const& filter_option = options_[position_below--];
 
-    activate &= filter_option->active && activate;
-    filter_option->active = activate;
+      activate &= filter_option->active;
+      filter_option->active = activate;
+    }
+
+    activate = is_active;
+    while(position_above < filter_option_size)
+    {
+      FilterOption::Ptr const& filter_option = options_[position_above++];
+
+      activate &= filter_option->active;
+      filter_option->active = activate;
+    }
   }
-
-  activate = is_active;
-  while(position_above < filter_option_size)
+  else
   {
-    FilterOption::Ptr const& filter_option = options_[position_above++];
-
-    activate &= filter_option->active && activate;
-    filter_option->active = activate;
+    // otherwise just ensure there is a single continuous option range
+    bool active_found = false, inactive_found = false;
+    for (FilterOption::Ptr option : options_)
+    {
+      if (inactive_found)
+        option->active = false;
+      else
+      {
+        if (option->active)
+          active_found = true;
+        else if (active_found)
+          inactive_found = true;
+      }
+    }
   }
 
   ignore_changes_ = false;

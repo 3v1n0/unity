@@ -98,10 +98,11 @@ void FilterMultiRange::OnActiveChanged(bool value)
   for (auto button : buttons_)
   {
     FilterOption::Ptr filter = button->GetFilter();
-    bool tmp_active = filter->active;
-    button->SetActive(tmp_active);
     if (filter != nullptr)
     {
+      bool tmp_active = filter->active;
+      button->SetActive(tmp_active);
+      
       if (filter->active)
       {
         if (index < start)
@@ -199,6 +200,10 @@ void FilterMultiRange::RecvMouseLeave(int x, int y, unsigned long button_flags, 
 
 void FilterMultiRange::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
+  mouse_down_button_.Release();
+  mouse_down_left_active_button_.Release();
+  mouse_down_right_active_button_.Release();
+
   dragging_ = false;
   nux::Geometry geo = GetAbsoluteGeometry();
   nux::Point abs_cursor(geo.x + x, geo.y + y);
@@ -207,6 +212,19 @@ void FilterMultiRange::RecvMouseDown(int x, int y, unsigned long button_flags, u
     return;
 
   mouse_down_button_ = static_cast<FilterMultiRangeButton*>(area);
+
+  // Cache the left/right selected buttons.
+  FilterMultiRangeButtonPtr last_selected_button;
+  for (FilterMultiRangeButtonPtr button : buttons_)
+  {
+    if (button->Active())
+    {
+      if (!mouse_down_left_active_button_.IsValid())
+        mouse_down_left_active_button_ = button;
+      last_selected_button = button;
+    }
+  }
+  mouse_down_right_active_button_ = last_selected_button;
 }
 
 void FilterMultiRange::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -236,6 +254,13 @@ void FilterMultiRange::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long
   if (!mouse_down_button_)
     return;
 
+  if (mouse_down_button_ != mouse_down_left_active_button_ && mouse_down_button_ != mouse_down_right_active_button_)
+  {
+    mouse_down_left_active_button_ = mouse_down_button_;
+    mouse_down_right_active_button_ = mouse_down_button_;
+  }
+
+
   nux::Geometry geo = GetAbsoluteGeometry();
   nux::Point abs_cursor(geo.x + x, geo.y + y);
   UpdateMouseFocus(abs_cursor);
@@ -250,18 +275,55 @@ void FilterMultiRange::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long
     return;
   dragging_ = true;
 
-  nux::Geometry const& mouse_down_button_geometry = mouse_down_button_->GetAbsoluteGeometry();
+  nux::Geometry mouse_down_button_geometry = mouse_down_button_->GetAbsoluteGeometry();
 
-  for (FilterMultiRangeButtonPtr button : buttons_)
+  nux::Geometry left_active_button_geometry = mouse_down_left_active_button_->GetAbsoluteGeometry();
+  nux::Geometry right_active_button_geometry = mouse_down_right_active_button_->GetAbsoluteGeometry();
+
+  int p = 0;
+  std::stringstream ss;
+
+  auto end = buttons_.end();
+  int found_buttons = 0;
+  for (auto iter = buttons_.begin(); iter != end; ++iter)
   {
-    nux::Geometry const& button_geometry = button->GetAbsoluteGeometry();
-    if (button_geometry.x <= mouse_down_button_geometry.x && button_geometry.x+button_geometry.width >= abs_cursor.x)
+    FilterMultiRangeButtonPtr button = *iter;
+    bool activate = false;
+
+    // if we've dragged the left button, we want to activate everything between the "drag over button" and the "right button"
+    if (mouse_down_button_ == mouse_down_left_active_button_ &&
+        button == mouse_down_right_active_button_)
+    {
+      found_buttons++;
+      activate = true;
+    }
+    // if we've dragged the right button, we want to activate everything between the "left button" and the "drag over button"
+    else if (mouse_down_button_ == mouse_down_right_active_button_ &&
+        button == mouse_down_left_active_button_)
+    {
+      found_buttons++;
+      activate = true;
+    }
+
+    if (button == drag_over_button)
+    {
+      found_buttons++;
+      activate = true;
+    }
+
+    if (activate || (found_buttons > 0 && found_buttons < 2))
+    {
+      ss << p << ", ";
       button->Activate();
-    else if (button_geometry.x >= mouse_down_button_geometry.x && button_geometry.x <= abs_cursor.x)
-      button->Activate();
+    }
     else
+    {
       button->Deactivate();
+    }
+    p++;
   }
+
+  printf("Active: %s\n", ss.str().c_str());
 }
 
 void FilterMultiRange::UpdateMouseFocus(nux::Point const& abs_cursor_position)

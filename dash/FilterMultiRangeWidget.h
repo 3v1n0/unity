@@ -77,7 +77,11 @@ private:
   MultiRangeFilter::Ptr filter_;
 
   FilterMultiRangeButtonPtr mouse_down_button_;
+  FilterMultiRangeButtonPtr mouse_down_left_active_button_;
+  FilterMultiRangeButtonPtr mouse_down_right_active_button_;
   bool dragging_;
+
+
 };
 
 } // unityshell dash
