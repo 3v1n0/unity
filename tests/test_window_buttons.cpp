@@ -81,6 +81,11 @@ TEST_F(TestWindowButtons, Construction)
   ASSERT_NE(GetWindowButtonByType(panel::WindowButtonType::MINIMIZE), nullptr);
   ASSERT_NE(GetWindowButtonByType(panel::WindowButtonType::MAXIMIZE), nullptr);
   ASSERT_NE(GetWindowButtonByType(panel::WindowButtonType::UNMAXIMIZE), nullptr);
+
+  ASSERT_EQ(GetWindowButtonByType(panel::WindowButtonType::CLOSE)->GetParentObject(), &wbuttons);
+  ASSERT_EQ(GetWindowButtonByType(panel::WindowButtonType::MINIMIZE)->GetParentObject(), &wbuttons);
+  ASSERT_EQ(GetWindowButtonByType(panel::WindowButtonType::MAXIMIZE)->GetParentObject(), &wbuttons);
+  ASSERT_EQ(GetWindowButtonByType(panel::WindowButtonType::UNMAXIMIZE)->GetParentObject(), &wbuttons);
 }
 
 TEST_F(TestWindowButtons, OpacitySet)
