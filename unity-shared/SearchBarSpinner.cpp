@@ -60,6 +60,12 @@ SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   texxform.min_filter = nux::TEXFILTER_LINEAR;
   texxform.mag_filter = nux::TEXFILTER_LINEAR;
 
+  unsigned int current_alpha_blend;
+  unsigned int current_src_blend_factor;
+  unsigned int current_dest_blend_factor;
+  GfxContext.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+  GfxContext.GetRenderStates().SetBlend(true,  GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
   if (_state == STATE_READY)
   {
     GfxContext.QRP_1Tex(geo.x + ((geo.width - _magnify->GetWidth()) / 2),
@@ -119,6 +125,8 @@ SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                         nux::color::White);
   }
   GfxContext.PopClippingRectangle();
+
+  GfxContext.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
 
   if (_state == STATE_SEARCHING && !_frame_timeout)
   {

@@ -23,6 +23,8 @@
 #include "unity-shared/UnitySettings.h"
 #include "test_utils.h"
 
+#include <NuxCore/AnimationController.h>
+
 using namespace unity;
 using namespace testing;
 
@@ -34,8 +36,9 @@ class TestDashController : public Test
 {
 public:
   TestDashController()
-  : base_window_(new testmocks::MockBaseWindow([](nux::Geometry const& geo)
-                                               { return geo; }))
+    : animation_controller(tick_source)
+    , base_window_(new testmocks::MockBaseWindow([](nux::Geometry const& geo)
+                                                 { return geo; }))
   { }
 
   virtual void SetUp()
@@ -50,6 +53,9 @@ public:
   }
 
 protected:
+  nux::animation::TickSource tick_source;
+  nux::animation::AnimationController animation_controller;
+
   dash::Controller::Ptr controller_;
   testmocks::MockBaseWindow::Ptr base_window_;
 
@@ -75,7 +81,7 @@ TEST_F(TestDashController, TestShowAndHideDash)
   }
 
   controller_->ShowDash();
-  Utils::WaitForTimeout(1);
+  tick_source.tick.emit(1000*1000);
   Mock::VerifyAndClearExpectations(base_window_.GetPointer());
   EXPECT_EQ(base_window_->GetOpacity(), 1.0);
 
@@ -89,10 +95,11 @@ TEST_F(TestDashController, TestShowAndHideDash)
   }
 
   controller_->HideDash();
-  Utils::WaitForTimeout(1);
+  tick_source.tick.emit(2000*1000);
 
   // Verify final conditions
   EXPECT_EQ(base_window_->GetOpacity(), 0.0);
 }
 
 }
+

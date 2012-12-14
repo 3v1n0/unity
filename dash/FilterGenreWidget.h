@@ -54,6 +54,8 @@ public:
 protected:
   void InitTheme();
 
+  void ClearRedirectedRenderChildArea();
+
 private:
   void OnOptionAdded(FilterOption::Ptr const& new_filter);
   void OnOptionRemoved(FilterOption::Ptr const& removed_filter);

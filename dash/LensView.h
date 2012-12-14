@@ -43,6 +43,7 @@ namespace dash
 {
 
 class LensScrollView;
+
 class LensView : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(LensView, nux::View);

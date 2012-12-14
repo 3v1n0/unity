@@ -41,6 +41,7 @@
 namespace nux
 {
 class AbstractPaintLayer;
+class TextureLayer;
 }
 
 namespace unity
@@ -157,7 +158,7 @@ private:
   friend class TestLensView;
 };
 
-}
-}
+} // namespace dash
+} // namespace unity
 
 #endif

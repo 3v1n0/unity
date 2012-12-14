@@ -45,11 +45,11 @@ Controller::Controller(Controller::ViewCreator const& create_view,
   , hud_service_("com.canonical.hud", "/com/canonical/hud")
   , visible_(false)
   , need_show_(false)
-  , timeline_animator_(90)
   , view_(nullptr)
   , monitor_index_(0)
   , create_view_(create_view)
   , create_window_(create_window)
+  , timeline_animator_(90)
 {
   LOG_DEBUG(logger) << "hud startup";
 
@@ -101,7 +101,7 @@ Controller::Controller(Controller::ViewCreator const& create_view,
   wm.initiate_spread.connect(sigc::bind(sigc::mem_fun(this, &Controller::HideHud), true));
 
   hud_service_.queries_updated.connect(sigc::mem_fun(this, &Controller::OnQueriesFinished));
-  timeline_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
+  timeline_animator_.updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
 
   EnsureHud();
 }
@@ -302,6 +302,15 @@ void Controller::ShowHideHud()
   visible_ ? HideHud(true) : ShowHud();
 }
 
+void Controller::ReFocusKeyInput()
+{
+  if (visible_)
+  {
+    window_->PushToFront();
+    window_->SetInputFocus();
+  }
+}
+
 bool Controller::IsVisible()
 {
   return visible_;
@@ -351,14 +360,7 @@ void Controller::ShowHud()
   LOG_DEBUG(logger) << "Taking application icon: " << focused_app_icon_;
   SetIcon(focused_app_icon_);
 
-  window_->ShowWindow(true);
-  window_->PushToFront();
-  window_->EnableInputWindow(true, "Hud", true, false);
-  window_->UpdateInputWindowGeometry();
-  window_->SetInputFocus();
-  window_->CaptureMouseDownAnyWhereElse(true);
-  view_->CaptureMouseDownAnyWhereElse(true);
-  window_->QueueDraw();
+  FocusWindow();
 
   view_->ResetToDefault();
   need_show_ = true;
@@ -374,6 +376,16 @@ void Controller::ShowHud()
 
   nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
   window_->SetEnterFocusInputArea(view_->default_focus());
+}
+
+void Controller::FocusWindow()
+{
+  window_->ShowWindow(true);
+  window_->PushToFront();
+  window_->EnableInputWindow(true, "Hud", true, false);
+  window_->UpdateInputWindowGeometry();
+  window_->SetInputFocus();
+  window_->QueueDraw();
 }
 
 void Controller::HideHud(bool restore)
@@ -411,27 +423,31 @@ void Controller::StartShowHideTimeline()
 {
   EnsureHud();
 
-  double current_opacity = window_->GetOpacity();
-  timeline_animator_.Stop();
-  timeline_animator_.Start(visible_ ? current_opacity : 1.0f - current_opacity);
+  if (timeline_animator_.CurrentState() == nux::animation::Animation::State::Running)
+  {
+    timeline_animator_.Reverse();
+  }
+  else
+  {
+    if (visible_)
+      timeline_animator_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
+    else
+      timeline_animator_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
+  }
 }
 
-void Controller::OnViewShowHideFrame(double progress)
+void Controller::OnViewShowHideFrame(double opacity)
 {
-  window_->SetOpacity(visible_ ? progress : 1.0f - progress);
+  window_->SetOpacity(opacity);
 
-  if (progress == 1.0f)
+  if (opacity == 0.0f && !visible_)
   {
-    if (!visible_)
-    {
-      window_->ShowWindow(false);
-      view_->ResetToDefault();
-    }
-    else
-    {
-      // ensure the text entry is focused
-      nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
-    }
+    window_->ShowWindow(false);
+  }
+  else if (opacity == 1.0f && visible_)
+  {
+    // ensure the text entry is focused
+    nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
   }
 }
 

@@ -973,16 +973,21 @@ std::string ApplicationLauncherIcon::GetDesktopID()
   return DesktopUtilities::GetDesktopID(desktop_file);
 }
 
-std::string ApplicationLauncherIcon::GetRemoteUri()
+void ApplicationLauncherIcon::UpdateRemoteUri()
 {
-  if (_remote_uri.empty())
-  {
     std::string const& desktop_id = GetDesktopID();
 
     if (!desktop_id.empty())
     {
       _remote_uri = FavoriteStore::URI_PREFIX_APP + desktop_id;
     }
+}
+
+std::string ApplicationLauncherIcon::GetRemoteUri()
+{
+  if (_remote_uri.empty())
+  {
+     UpdateRemoteUri();
   }
 
   return _remote_uri;
