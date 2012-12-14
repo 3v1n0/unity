@@ -66,7 +66,7 @@ private:
   void OnOverlayHidden(GVariant* data);
   void OnDashSettingsUpdated(FormFactor form_factor);
   void OnControlledWindowChanged(Window xid);
-  bool OpacitySetter(double& target, double const& new_value);
+  bool OpacitySetter(double& target, double new_value);
 
   std::string active_overlay_;
 

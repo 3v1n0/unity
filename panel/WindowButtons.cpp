@@ -665,7 +665,7 @@ void WindowButtons::OnDashSettingsUpdated(FormFactor form_factor)
   }
 }
 
-bool WindowButtons::OpacitySetter(double& target, double const& new_value)
+bool WindowButtons::OpacitySetter(double& target, double new_value)
 {
   double opacity = CLAMP(new_value, 0.0f, 1.0f);
 
