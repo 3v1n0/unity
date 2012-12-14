@@ -165,10 +165,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
   bg_refine_layer_.reset(new nux::TextureLayer(bg_refine_tex_->GetDeviceTexture(),
-                         nux::TexCoordXForm(),
-                         nux::color::White,
-                         false,
-                         rop));
+                         nux::TexCoordXForm(), nux::color::White, false, rop));
 
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;

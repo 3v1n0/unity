@@ -111,23 +111,22 @@ private:
   std::unique_ptr<nux::AbstractPaintLayer> bg_refine_layer_;
   nux::ObjectPtr<nux::BaseTexture> bg_refine_single_column_tex_;
   std::unique_ptr<nux::AbstractPaintLayer> bg_refine_single_column_layer_;
+
   nux::Geometry last_geo_;
-
-  nux::Color  bg_color_;
-  bool        is_dirty_;
-  bool        opacity_maximized_toggle_;
-  bool        needs_geo_sync_;
-  bool        is_primary_;
-  bool        overlay_is_open_;
-  float       opacity_;
-  int         monitor_;
-  int         stored_dash_width_;
-  int         launcher_width_;
-  bool        refine_is_open_;
-
+  nux::Color bg_color_;
   std::string active_overlay_;
-
   nux::Point  tracked_pointer_pos_;
+
+  bool is_dirty_;
+  bool opacity_maximized_toggle_;
+  bool needs_geo_sync_;
+  bool is_primary_;
+  bool overlay_is_open_;
+  float opacity_;
+  int monitor_;
+  int stored_dash_width_;
+  int launcher_width_;
+  bool refine_is_open_;
 
   std::vector<sigc::connection> on_indicator_updated_connections_;
   std::vector<sigc::connection> maximized_opacity_toggle_connections_;
