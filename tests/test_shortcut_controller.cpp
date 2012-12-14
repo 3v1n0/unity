@@ -27,15 +27,31 @@ using namespace unity;
 
 #include "test_utils.h"
 
+#include <NuxCore/AnimationController.h>
+
 namespace
 {
 
-class MockBaseWindowRaiser : public shortcut::BaseWindowRaiser
+struct MockBaseWindowRaiser : public shortcut::BaseWindowRaiser
 {
-public:
   typedef std::shared_ptr<MockBaseWindowRaiser> Ptr;
 
   MOCK_METHOD1 (Raise, void(nux::ObjectPtr<nux::BaseWindow> window));
+};
+
+struct MockShortcutController : public shortcut::Controller
+{
+  MockShortcutController(std::list<shortcut::AbstractHint::Ptr> const& hints,
+                         shortcut::BaseWindowRaiser::Ptr const& base_window_raiser)
+    : Controller(hints, base_window_raiser)
+  {}
+
+  MOCK_METHOD1(SetOpacity, void(double));
+
+  void RealSetOpacity(double value)
+  {
+    Controller::SetOpacity(value);
+  }
 };
 
 class TestShortcutController : public Test
@@ -44,12 +60,19 @@ public:
   TestShortcutController()
     : base_window_raiser_(std::make_shared<MockBaseWindowRaiser>())
     , controller_(hints_, base_window_raiser_)
-  {}
+    , animation_controller_(tick_source_)
+  {
+    ON_CALL(controller_, SetOpacity(_))
+      .WillByDefault(Invoke(&controller_, &MockShortcutController::RealSetOpacity));
+  }
 
   Settings unity_settings;
   std::list<shortcut::AbstractHint::Ptr> hints_;
   MockBaseWindowRaiser::Ptr base_window_raiser_;
-  shortcut::Controller controller_;
+  MockShortcutController controller_;
+
+  nux::animation::TickSource tick_source_;
+  nux::animation::AnimationController animation_controller_;
 };
 
 TEST_F (TestShortcutController, WindowIsRaisedOnShow)
@@ -59,6 +82,16 @@ TEST_F (TestShortcutController, WindowIsRaisedOnShow)
 
   controller_.Show();
   Utils::WaitForTimeout(1);
+}
+
+TEST_F (TestShortcutController, Hide)
+{
+  EXPECT_CALL(controller_, SetOpacity(1.0))
+    .Times(0);
+
+  controller_.Show();
+  controller_.Hide();
+  tick_source_.tick(1000);
 }
 
 }
