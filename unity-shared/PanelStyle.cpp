@@ -21,6 +21,7 @@
 #include "config.h"
 
 #include <math.h>
+#include <array>
 #include <gtk/gtk.h>
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -192,19 +193,17 @@ BaseTexturePtr Style::GetBackground(int width, int height, float opacity)
 std::vector<std::string> Style::GetWindowButtonFileNames(WindowButtonType type, WindowState state)
 {
   std::vector<std::string> files;
-  std::string names[] = { "close", "minimize", "unmaximize", "maximize" };
-  std::string states[] = { "", "_focused_prelight", "_focused_pressed", "_unfocused",
-                           "_unfocused", "_unfocused_prelight", "_unfocused_pressed"};
+  static const std::array<std::string, 4> names = {{ "close", "minimize", "unmaximize", "maximize" }};
+  static const std::array<std::string, 7> states = {{ "", "_focused_prelight", "_focused_pressed", "_unfocused",
+                                                      "_unfocused", "_unfocused_prelight", "_unfocused_pressed" }};
 
-  std::ostringstream subpath;
-  subpath << "unity/" << names[static_cast<int>(type)]
-          << states[static_cast<int>(state)] << ".png";
+  std::string subpath = "unity/" + names[static_cast<int>(type)] + states[static_cast<int>(state)] + ".png";
 
   // Look in home directory
   const char* home_dir = g_get_home_dir();
   if (home_dir)
   {
-    glib::String filename(g_build_filename(home_dir, ".themes", _theme_name.c_str(), subpath.str().c_str(), NULL));
+    glib::String filename(g_build_filename(home_dir, ".themes", _theme_name.c_str(), subpath.c_str(), NULL));
 
     if (g_file_test(filename.Value(), G_FILE_TEST_EXISTS))
       files.push_back (filename.Value());
@@ -214,7 +213,7 @@ std::vector<std::string> Style::GetWindowButtonFileNames(WindowButtonType type, 
   if (!var)
     var = "/usr";
 
-  glib::String filename(g_build_filename(var, "share", "themes", _theme_name.c_str(), subpath.str().c_str(), NULL));
+  glib::String filename(g_build_filename(var, "share", "themes", _theme_name.c_str(), subpath.c_str(), NULL));
   if (g_file_test(filename.Value(), G_FILE_TEST_EXISTS))
     files.push_back (filename.Value());
 
