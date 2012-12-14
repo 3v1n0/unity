@@ -221,6 +221,7 @@ if (ENABLE_X_SUPPORT)
                  test_launcher_hide_machine.cpp
                  test_launcher_hover_machine.cpp
                  test_launcher_icon.cpp
+                 test_lensview.cpp
                  test_launcher_tooltip.cpp
                  test_keyboard_util.cpp
                  test_panel_style.cpp

@@ -192,7 +192,7 @@ search_for_label(UnityRvgridAccessible* self)
 {
   AtkObject* label_accessible = NULL;
   nux::Object* nux_object = NULL;
-  unity::PlacesGroup* group = NULL;
+  unity::dash::PlacesGroup* group = NULL;
   AtkObject* iter = NULL;
   nux::StaticCairoText* label = NULL;
 
@@ -207,7 +207,7 @@ search_for_label(UnityRvgridAccessible* self)
     return;
 
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(iter));
-  group = dynamic_cast<unity::PlacesGroup*>(nux_object);
+  group = dynamic_cast<unity::dash::PlacesGroup*>(nux_object);
 
   if (group == NULL)
     return;

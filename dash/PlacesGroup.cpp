@@ -47,6 +47,8 @@
 DECLARE_LOGGER(logger, "unity.dash.placesgroup");
 namespace unity
 {
+namespace dash
+{
 namespace
 {
 
@@ -115,7 +117,7 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   : nux::View(NUX_TRACKER_LOCATION),
     _style(style),
     _child_view(nullptr),
-    _using_nofilters_background(true),
+    _using_filters_background(false),
     _is_expanded(false),
     _n_visible_items_in_unexpand_mode(0),
     _n_total_items(0),
@@ -212,40 +214,6 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
     else
       nux::GetWindowCompositor().SetKeyFocusArea(GetHeaderFocusableView(), direction);
   });
-
-  _ubus.RegisterInterest(UBUS_REFINE_STATUS, [this] (GVariant *data) 
-  {
-    gboolean status;
-    g_variant_get(data, UBUS_REFINE_STATUS_FORMAT_STRING, &status);
-
-    nux::ROPConfig rop;
-    rop.Blend = true;
-    rop.SrcBlend = GL_ONE;
-    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-
-    nux::TexCoordXForm texxform;
-    if (status && _using_nofilters_background)
-    {
-      _background_layer.reset(new nux::TextureLayer(_background->GetDeviceTexture(),
-                              texxform, 
-                              nux::color::White,
-                              false,
-                              rop));
-      _using_nofilters_background = false;
-    }
-    else if (!status && !_using_nofilters_background)
-    {
-      _background_layer.reset(new nux::TextureLayer(_background_nofilters->GetDeviceTexture(),
-                              texxform,
-                              nux::color::White,
-                              false,
-                              rop));
-
-      _using_nofilters_background = true;
-    }
-    QueueDraw();
-  });
-
 }
 
 void
@@ -631,6 +599,35 @@ bool PlacesGroup::ShouldBeHighlighted() const
   return HeaderHasKeyFocus();
 }
 
+void PlacesGroup::SetFiltersExpanded(bool filters_expanded)
+{
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+  nux::TexCoordXForm texxform;
+  if (filters_expanded && !_using_filters_background)
+  {
+    _background_layer.reset(new nux::TextureLayer(_background->GetDeviceTexture(),
+                            texxform, 
+                            nux::color::White,
+                            false,
+                            rop));
+  }
+  else if (!filters_expanded && _using_filters_background)
+  {
+    _background_layer.reset(new nux::TextureLayer(_background_nofilters->GetDeviceTexture(),
+                            texxform,
+                            nux::color::White,
+                            false,
+                            rop));
+  }
+
+  _using_filters_background = filters_expanded;
+  QueueDraw();
+}
+
 //
 // Key navigation
 //
@@ -668,4 +665,5 @@ void PlacesGroup::AddProperties(GVariantBuilder* builder)
   wrapper.add("name-label-baseline", _name->GetBaseline());
 }
 
+} // namespace dash
 } // namespace unity

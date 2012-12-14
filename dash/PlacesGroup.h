@@ -41,11 +41,13 @@
 namespace nux
 {
 class AbstractPaintLayer;
+class TextureLayer;
 }
 
 namespace unity
 {
-
+namespace dash
+{
 
 class HSeparator;
 
@@ -83,6 +85,8 @@ public:
   int  GetHeaderHeight() const;
   bool HeaderIsFocusable() const;
   nux::View* GetHeaderFocusableView() const;
+
+  void SetFiltersExpanded(bool filters_expanded);
 
   sigc::signal<void, PlacesGroup*> expanded;
   sigc::signal<void, std::string const&> UriActivated;
@@ -133,7 +137,7 @@ private:
 
   nux::BaseTexture* _background;
   nux::BaseTexture* _background_nofilters;
-  bool              _using_nofilters_background;
+  bool              _using_filters_background;
   std::unique_ptr<nux::TextureLayer> _background_layer;
 
   bool  _is_expanded;
@@ -150,8 +154,11 @@ private:
 
   glib::Source::UniquePtr _relayout_idle;
   UBusManager _ubus;
+
+  friend class TestLensView;
 };
 
-}
+} // namespace dash
+} // namespace unity
 
 #endif
