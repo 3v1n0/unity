@@ -135,22 +135,15 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-    nux::TexCoordXForm texxform;
     if (_refine_is_open)
     {
       _bg_refine_layer.reset(new nux::TextureLayer(_bg_refine_tex->GetDeviceTexture(),
-                             texxform,
-                             nux::color::White,
-                             false,
-                             rop));
+                             nux::TexCoordXForm(), nux::color::White, false, rop));
     }
     else
     {
       _bg_refine_layer.reset(new nux::TextureLayer(_bg_refine_no_refine_tex->GetDeviceTexture(),
-                             texxform,
-                             nux::color::White,
-                             false,
-                             rop));
+                             nux::TexCoordXForm(), nux::color::White, false, rop));
 
     }
     QueueDraw();
@@ -162,71 +155,27 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   _bg_effect_helper.owner = this;
 
   //FIXME (gord)- replace with async loading
-  glib::Object<GdkPixbuf> pixbuf;
-  glib::Error error;
-  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR "/dash_sheen.png", &error);
-  if (error)
-  {
-    LOG_WARN(logger) << "Unable to texture " << PKGDATADIR << "/dash_sheen.png" << ": " << error;
-  }
-  else
-  {
-    _panel_sheen.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
-  }
-
-  //FIXME (gord) like 12 months later, still not async loading!
-  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR "/refine_gradient_panel.png", &error);
-  if (error)
-  {
-    LOG_WARN(logger) << "Unable to texture " << PKGDATADIR << "/refine_gradient_panel.png";
-  }
-  else
-  {
-    _bg_refine_tex.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
-  }
-
-  //FIXME (gord) like 12 months later, still not async loading!
-  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR "/refine_gradient_panel_no_refine.png", &error);
-  if (error)
-  {
-    LOG_WARN(logger) << "Unable to texture " << PKGDATADIR << "/refine_gradient_panel_no_refine.png";
-  }
-  else
-  {
-    _bg_refine_no_refine_tex.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
-  }
+  _panel_sheen.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dash_sheen.png", -1, true));
+  _bg_refine_tex.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/refine_gradient_panel.png", -1, true));
+  _bg_refine_no_refine_tex.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/refine_gradient_panel_no_refine.png", -1, true));
+  _bg_refine_single_column_tex.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/refine_gradient_panel_single_column.png", -1, true));
 
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-  nux::TexCoordXForm texxform;
   _bg_refine_layer.reset(new nux::TextureLayer(_bg_refine_tex->GetDeviceTexture(),
-                         texxform,
+                         nux::TexCoordXForm(),
                          nux::color::White,
                          false,
                          rop));
-
-  //FIXME (gord) like 12 months later, still not async loading!
-  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR "/refine_gradient_panel_single_column.png", &error);
-  if (error)
-  {
-    LOG_WARN(logger) << "Unable to texture " << PKGDATADIR << "/refine_gradient_panel_single_column.png";
-  }
-  else
-  {
-    _bg_refine_single_column_tex.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
-  }
 
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
   _bg_refine_single_column_layer.reset(new nux::TextureLayer(_bg_refine_single_column_tex->GetDeviceTexture(),
-                         texxform,
-                         nux::color::White,
-                         false,
-                         rop));
+                                       nux::TexCoordXForm(), nux::color::White, false, rop));
 
 }
 
