@@ -38,17 +38,10 @@ class WindowButtons : public nux::HLayout, public debug::Introspectable
 public:
   WindowButtons();
 
-  void SetOpacity(double opacity);
-  double GetOpacity();
-
-  void SetFocusedState(bool focused);
-  bool GetFocusedState();
-
-  void SetControlledWindow(Window xid);
-  Window GetControlledWindow();
-
-  void SetMonitor(int monitor);
-  int GetMonitor();
+  nux::Property<int> monitor;
+  nux::Property<Window> controlled_window;
+  nux::Property<double> opacity;
+  nux::Property<bool> focused;
 
   virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_pos, nux::NuxEventType event_type);
 
@@ -72,11 +65,9 @@ private:
   void OnOverlayShown(GVariant* data);
   void OnOverlayHidden(GVariant* data);
   void OnDashSettingsUpdated(FormFactor form_factor);
+  void OnControlledWindowChanged(Window xid);
+  bool OpacitySetter(double& target, double new_value);
 
-  int monitor_;
-  double opacity_;
-  bool focused_;
-  Window window_xid_;
   std::string active_overlay_;
 
   UBusManager ubus_manager_;

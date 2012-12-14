@@ -42,13 +42,16 @@ public:
   WindowButton(panel::WindowButtonType type)
     : nux::Button("", NUX_TRACKER_LOCATION)
     , _type(type)
-    , _focused(true)
     , _overlay_is_open(false)
-    , _opacity(1.0f)
   {
     SetAcceptKeyNavFocusOnMouseDown(false);
     panel::Style::Instance().changed.connect(sigc::mem_fun(this, &WindowButton::LoadImages));
     LoadImages();
+  }
+
+  inline WindowButtons* Parent() const
+  {
+    return static_cast<WindowButtons*>(GetParentObject());
   }
 
   void SetVisualState(nux::ButtonVisualState new_state)
@@ -93,7 +96,7 @@ public:
     {
       tex = _disabled_tex.GetPointer();
     }
-    else if (!_focused)
+    else if (!Parent()->focused())
     {
       switch (visual_state_)
       {
@@ -126,7 +129,7 @@ public:
     {
       GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
                           tex->GetDeviceTexture(), texxform,
-                          nux::color::White * _opacity);
+                          nux::color::White * Parent()->opacity());
     }
 
     GfxContext.PopClippingRectangle();
@@ -167,31 +170,6 @@ public:
 
     UpdateSize();
     QueueDraw();
-  }
-
-  void SetOpacity(double opacity)
-  {
-    if (_opacity != opacity)
-    {
-      _opacity = opacity;
-      SetInputEventSensitivity(_opacity != 0.0f);
-
-      QueueDraw();
-    }
-  }
-
-  double GetOpacity() const
-  {
-    return _opacity;
-  }
-
-  void SetFocusedState(bool focused)
-  {
-    if (_focused != focused)
-    {
-      _focused = focused;
-      QueueDraw();
-    }
   }
 
   void SetOverlayOpen(bool open)
@@ -279,21 +257,19 @@ protected:
 
     variant::BuilderWrapper(builder).add(GetAbsoluteGeometry())
                                     .add("type", type_name)
-                                    .add("visible", IsVisible() && _opacity != 0.0f)
-                                    .add("sensitive", GetInputEventSensitivity())
+                                    .add("visible", IsVisible() && Parent()->opacity() != 0.0f)
+                                    .add("sensitive", Parent()->GetInputEventSensitivity())
                                     .add("enabled", IsEnabled())
                                     .add("visual_state", state_name)
-                                    .add("opacity", _opacity)
-                                    .add("focused", _focused)
+                                    .add("opacity", Parent()->opacity())
+                                    .add("focused", Parent()->focused())
                                     .add("overlay_mode", _overlay_is_open);
   }
 
 
 private:
   panel::WindowButtonType _type;
-  bool _focused;
   bool _overlay_is_open;
-  double _opacity;
 
   nux::ObjectPtr<nux::BaseTexture> _normal_tex;
   nux::ObjectPtr<nux::BaseTexture> _prelight_tex;
@@ -319,12 +295,7 @@ private:
             << states[static_cast<int>(state)] << ".png";
 
     glib::String filename(g_build_filename(PKGDATADIR, subpath.str().c_str(), NULL));
-
-    glib::Error error;
-    glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file(filename, &error));
-
-    if (pixbuf && !error)
-      texture = nux::CreateTexture2DFromPixbuf(pixbuf, true);
+    texture = nux::CreateTexture2DFromFile(filename, -1, true);
 
     if (!texture)
       texture = panel::Style::Instance().GetFallbackWindowButton(type, state);
@@ -336,12 +307,13 @@ private:
 
 WindowButtons::WindowButtons()
   : HLayout("", NUX_TRACKER_LOCATION)
-  , monitor_(0)
-  , opacity_(1.0f)
-  , focused_(true)
-  , window_xid_(0)
+  , monitor(0)
+  , controlled_window(0)
+  , opacity(1.0f, sigc::mem_fun(this, &WindowButtons::OpacitySetter))
+  , focused(true)
 {
-  WindowButton* but;
+  controlled_window.changed.connect(sigc::mem_fun(this, &WindowButtons::OnControlledWindowChanged));
+  focused.changed.connect(sigc::hide(sigc::mem_fun(this, &WindowButtons::QueueDraw)));
 
   auto lambda_enter = [&](int x, int y, unsigned long button_flags, unsigned long key_flags)
   {
@@ -358,7 +330,7 @@ WindowButtons::WindowButtons()
     mouse_move.emit(x, y, dx, dy, button_flags, key_flags);
   };
 
-  but = new WindowButton(panel::WindowButtonType::CLOSE);
+  WindowButton* but = new WindowButton(panel::WindowButtonType::CLOSE);
   AddView(but, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
   AddChild(but);
   but->click.connect(sigc::mem_fun(this, &WindowButtons::OnCloseClicked));
@@ -400,13 +372,16 @@ WindowButtons::WindowButtons()
 
 nux::Area* WindowButtons::FindAreaUnderMouse(const nux::Point& mouse, nux::NuxEventType event_type)
 {
+  if (!GetInputEventSensitivity())
+    return nullptr;
+
   /* The first button should be clickable on the left space too, to
    * make Fitts happy. All also on their top side. See bug #839690 */
   bool first_found = false;
 
   for (auto area : GetChildren())
   {
-    if (area->IsVisible() && area->GetInputEventSensitivity())
+    if (area->IsVisible())
     {
       nux::Geometry const& geo = area->GetAbsoluteGeometry();
 
@@ -442,7 +417,7 @@ void WindowButtons::OnCloseClicked(nux::Button *button)
   }
   else
   {
-    WindowManager::Default().Close(window_xid_);
+    WindowManager::Default().Close(controlled_window());
   }
 
   close_clicked.emit();
@@ -456,7 +431,7 @@ void WindowButtons::OnMinimizeClicked(nux::Button *button)
     return;
 
   if (!win_button->IsOverlayOpen())
-    WindowManager::Default().Minimize(window_xid_);
+    WindowManager::Default().Minimize(controlled_window());
 
   minimize_clicked.emit();
 }
@@ -475,7 +450,7 @@ void WindowButtons::OnRestoreClicked(nux::Button *button)
   else
   {
     WindowManager& wm = WindowManager::Default();
-    Window to_restore = window_xid_;
+    Window to_restore = controlled_window();
 
     wm.Raise(to_restore);
     wm.Activate(to_restore);
@@ -510,7 +485,7 @@ void WindowButtons::OnOverlayShown(GVariant* data)
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
-  if (overlay_monitor != monitor_)
+  if (overlay_monitor != monitor())
   {
     for (auto area : GetChildren())
     {
@@ -581,7 +556,7 @@ void WindowButtons::OnOverlayHidden(GVariant* data)
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
-  if (overlay_monitor != monitor_)
+  if (overlay_monitor != monitor())
   {
     for (auto area : GetChildren())
     {
@@ -604,17 +579,17 @@ void WindowButtons::OnOverlayHidden(GVariant* data)
 
     if (button)
     {
-      if (window_xid_)
+      if (controlled_window())
       {
         if (button->GetType() == panel::WindowButtonType::CLOSE)
         {
-          bool closable = wm.IsWindowClosable(window_xid_);
+          bool closable = wm.IsWindowClosable(controlled_window());
           button->SetEnabled(closable);
         }
 
         if (button->GetType() == panel::WindowButtonType::MINIMIZE)
         {
-          bool minimizable = wm.IsWindowMinimizable(window_xid_);
+          bool minimizable = wm.IsWindowMinimizable(controlled_window());
           button->SetEnabled(minimizable);
         }
       }
@@ -690,98 +665,47 @@ void WindowButtons::OnDashSettingsUpdated(FormFactor form_factor)
   }
 }
 
-void WindowButtons::SetOpacity(double opacity)
+bool WindowButtons::OpacitySetter(double& target, double new_value)
 {
-  opacity = CLAMP(opacity, 0.0f, 1.0f);
+  double opacity = CLAMP(new_value, 0.0f, 1.0f);
 
-  for (auto area : GetChildren())
+  if (opacity != target)
   {
-    auto button = dynamic_cast<WindowButton*>(area);
-
-    if (button)
-      button->SetOpacity(opacity);
-  }
-
-  if (opacity_ != opacity)
-  {
-    opacity_ = opacity;
-    SetInputEventSensitivity(opacity_ != 0.0f);
+    target = opacity;
+    SetInputEventSensitivity(opacity != 0.0f);
     QueueDraw();
-  }
-}
 
-double WindowButtons::GetOpacity()
-{
-  return opacity_;
-}
-
-void WindowButtons::SetFocusedState(bool focused)
-{
-  for (auto area : GetChildren())
-  {
-    auto button = dynamic_cast<WindowButton*>(area);
-
-    if (button)
-      button->SetFocusedState(focused);
+    return true;
   }
 
-  if (focused_ != focused)
-  {
-    focused_ = focused;
-    QueueDraw();
-  }
+  return false;
 }
 
-bool WindowButtons::GetFocusedState()
+void WindowButtons::OnControlledWindowChanged(Window xid)
 {
-  return focused_;
-}
-
-void WindowButtons::SetControlledWindow(Window xid)
-{
-  if (xid != window_xid_)
+  if (xid && active_overlay_.empty())
   {
-    window_xid_ = xid;
-
-    if (window_xid_ && active_overlay_.empty())
+    WindowManager& wm = WindowManager::Default();
+    for (auto area : GetChildren())
     {
-      WindowManager& wm = WindowManager::Default();
-      for (auto area : GetChildren())
+      auto button = dynamic_cast<WindowButton*>(area);
+
+      if (!button)
+        continue;
+
+      if (button->GetType() == panel::WindowButtonType::CLOSE)
       {
-        auto button = dynamic_cast<WindowButton*>(area);
+        bool closable = wm.IsWindowClosable(xid);
+        button->SetEnabled(closable);
+      }
 
-        if (!button)
-          continue;
-
-        if (button->GetType() == panel::WindowButtonType::CLOSE)
-        {
-          bool closable = wm.IsWindowClosable(xid);
-          button->SetEnabled(closable);
-        }
-
-        if (button->GetType() == panel::WindowButtonType::MINIMIZE)
-        {
-          bool minimizable = wm.IsWindowMinimizable(xid);
-          button->SetEnabled(minimizable);
-        }
+      if (button->GetType() == panel::WindowButtonType::MINIMIZE)
+      {
+        bool minimizable = wm.IsWindowMinimizable(xid);
+        button->SetEnabled(minimizable);
       }
     }
   }
-}
-
-Window WindowButtons::GetControlledWindow()
-{
-  return window_xid_;
-}
-
-void WindowButtons::SetMonitor(int monitor)
-{
-  monitor_ = monitor;
-}
-
-int WindowButtons::GetMonitor()
-{
-  return monitor_;
 }
 
 std::string WindowButtons::GetName() const
@@ -792,12 +716,12 @@ std::string WindowButtons::GetName() const
 void WindowButtons::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder).add(GetAbsoluteGeometry())
-                                  .add("monitor", monitor_)
-                                  .add("opacity", opacity_)
-                                  .add("visible", opacity_ != 0.0f)
+                                  .add("monitor", monitor())
+                                  .add("opacity", opacity())
+                                  .add("visible", opacity() != 0.0f)
                                   .add("sensitive", GetInputEventSensitivity())
-                                  .add("focused", focused_)
-                                  .add("controlled_window", window_xid_);
+                                  .add("focused", focused())
+                                  .add("controlled_window", controlled_window());
 }
 
 } // unity namespace

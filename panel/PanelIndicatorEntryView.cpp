@@ -460,7 +460,7 @@ void PanelIndicatorEntryView::Refresh()
     pango_font_description_set_weight(desc, PANGO_WEIGHT_NORMAL);
 
     nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, 1, 1);
-    cr = cairo_graphics.GetContext();
+    cr = cairo_graphics.GetInternalContext();
 
     layout = pango_cairo_create_layout(cr);
     if (attrs)
@@ -487,7 +487,6 @@ void PanelIndicatorEntryView::Refresh()
     width += text_width;
 
     pango_font_description_free(desc);
-    cairo_destroy(cr);
   }
 
   if (width)
@@ -497,7 +496,7 @@ void PanelIndicatorEntryView::Refresh()
   SetMinimumWidth(width);
 
   nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, width, height);
-  cr = cg.GetContext();
+  cr = cg.GetInternalContext();
   cairo_set_line_width(cr, 1);
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
@@ -507,7 +506,6 @@ void PanelIndicatorEntryView::Refresh()
 
   entry_texture_ = texture_ptr_from_cairo_graphics(cg);
   SetTexture(entry_texture_.GetPointer());
-  cairo_destroy(cr);
 
   SetVisible(true);
   refreshed.emit(this);
