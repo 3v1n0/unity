@@ -32,11 +32,6 @@ namespace unity
 namespace
 {
 
-struct MockWindowButtons : WindowButtons
-{
-  MOCK_METHOD0(QueueDraw, void());
-};
-
 struct TestWindowButtons : public testing::Test
 {
   TestWindowButtons()
@@ -63,6 +58,11 @@ struct TestWindowButtons : public testing::Test
 
     return nullptr;
   }
+
+  struct MockWindowButtons : WindowButtons
+  {
+    MOCK_METHOD0(QueueDraw, void());
+  };
 
   Settings settings;
   panel::Style panel_style;
@@ -127,13 +127,13 @@ TEST_F(TestWindowButtons, ChangingControlledWindowUpdatesCloseButton)
   auto fake_win = AddFakeWindowToWM(xid);
   ASSERT_TRUE(fake_win->closable);
   wbuttons.controlled_window = xid;
-  EXPECT_TRUE(GetWindowButtonByType(panel::WindowButtonType::CLOSE)->IsEnabled());
+  EXPECT_TRUE(GetWindowButtonByType(panel::WindowButtonType::CLOSE)->enabled());
 
   xid = 54321;
   fake_win = AddFakeWindowToWM(xid);
   fake_win->closable = false;
   wbuttons.controlled_window = xid;
-  EXPECT_FALSE(GetWindowButtonByType(panel::WindowButtonType::CLOSE)->IsEnabled());
+  EXPECT_FALSE(GetWindowButtonByType(panel::WindowButtonType::CLOSE)->enabled());
 }
 
 TEST_F(TestWindowButtons, ChangingControlledWindowUpdatesMinimizeButton)
@@ -142,13 +142,63 @@ TEST_F(TestWindowButtons, ChangingControlledWindowUpdatesMinimizeButton)
   auto fake_win = AddFakeWindowToWM(xid);
   ASSERT_TRUE(fake_win->minimizable);
   wbuttons.controlled_window = xid;
-  EXPECT_TRUE(GetWindowButtonByType(panel::WindowButtonType::MINIMIZE)->IsEnabled());
+  EXPECT_TRUE(GetWindowButtonByType(panel::WindowButtonType::MINIMIZE)->enabled());
 
   xid = 54321;
   fake_win = AddFakeWindowToWM(xid);
   fake_win->minimizable = false;
   wbuttons.controlled_window = xid;
-  EXPECT_FALSE(GetWindowButtonByType(panel::WindowButtonType::MINIMIZE)->IsEnabled());
+  EXPECT_FALSE(GetWindowButtonByType(panel::WindowButtonType::MINIMIZE)->enabled());
+}
+
+
+struct TestWindowButton : public testing::Test
+{
+  TestWindowButton()
+    : button(panel::WindowButtonType::CLOSE)
+  {}
+
+  struct MockWindowButton : internal::WindowButton
+  {
+    MockWindowButton(panel::WindowButtonType type)
+      : internal::WindowButton(type)
+    {}
+
+    MOCK_METHOD0(QueueDraw, void());
+  };
+
+  Settings settings;
+  panel::Style panel_style;
+  testing::NiceMock<MockWindowButton> button;
+};
+
+TEST_F(TestWindowButton, Construction)
+{
+  EXPECT_EQ(button.GetType(), panel::WindowButtonType::CLOSE);
+  EXPECT_TRUE(button.enabled());
+  EXPECT_FALSE(button.overlay_mode());
+}
+
+TEST_F(TestWindowButton, ChangingOverlayModeQueueDraws)
+{
+  EXPECT_CALL(button, QueueDraw()).Times(1);
+  button.overlay_mode = true;
+}
+
+TEST_F(TestWindowButton, EnableProperty)
+{
+  ASSERT_TRUE(button.enabled());
+  EXPECT_EQ(button.enabled(), button.IsViewEnabled());
+
+  EXPECT_CALL(button, QueueDraw()).Times(1);
+  button.enabled = false;
+  ASSERT_FALSE(button.enabled());
+  EXPECT_EQ(button.enabled(), button.IsViewEnabled());
+
+  EXPECT_CALL(button, QueueDraw()).Times(0);
+  button.enabled = false;
+  ASSERT_FALSE(button.enabled());
+  EXPECT_EQ(button.enabled(), button.IsViewEnabled());
 }
 }
 }
