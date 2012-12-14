@@ -68,11 +68,13 @@ public:
 
   static Style& Instance();
 
+  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
+
   GtkStyleContext* GetStyleContext();
-  nux::NBitmapData* GetBackground(int width, int height, float opacity);
-  nux::BaseTexture* GetWindowButton(WindowButtonType type, WindowState state);
+  BaseTexturePtr GetBackground(int width, int height, float opacity);
+  BaseTexturePtr GetWindowButton(WindowButtonType type, WindowState state);
+  BaseTexturePtr GetFallbackWindowButton(WindowButtonType type, WindowState state);
   std::vector<std::string> GetWindowButtonFileNames(WindowButtonType type, WindowState state);
-  nux::BaseTexture* GetFallbackWindowButton(WindowButtonType type, WindowState state);
   glib::Object<GdkPixbuf> GetHomeButton();
   std::string GetFontDescription(PanelItem item);
   int GetTextDPI();

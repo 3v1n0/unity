@@ -151,25 +151,25 @@ void WindowButton::LoadImages()
 {
   panel::Style& style = panel::Style::Instance();
 
-  normal_tex_.Adopt(style.GetWindowButton(type_, panel::WindowState::NORMAL));
-  prelight_tex_.Adopt(style.GetWindowButton(type_, panel::WindowState::PRELIGHT));
-  pressed_tex_.Adopt(style.GetWindowButton(type_, panel::WindowState::PRESSED));
-  unfocused_tex_.Adopt(style.GetWindowButton(type_, panel::WindowState::UNFOCUSED));
-  disabled_tex_.Adopt(style.GetWindowButton(type_, panel::WindowState::DISABLED));
-  unfocused_prelight_tex_.Adopt(style.GetWindowButton(type_, panel::WindowState::UNFOCUSED_PRELIGHT));
-  unfocused_pressed_tex_.Adopt(style.GetWindowButton(type_, panel::WindowState::UNFOCUSED_PRESSED));
-  normal_dash_tex_.Adopt(GetDashWindowButton(type_, panel::WindowState::NORMAL));
-  prelight_dash_tex_.Adopt(GetDashWindowButton(type_, panel::WindowState::PRELIGHT));
-  pressed_dash_tex_.Adopt(GetDashWindowButton(type_, panel::WindowState::PRESSED));
-  disabled_dash_tex_.Adopt(GetDashWindowButton(type_, panel::WindowState::DISABLED));
+  normal_tex_ = style.GetWindowButton(type_, panel::WindowState::NORMAL);
+  prelight_tex_ = style.GetWindowButton(type_, panel::WindowState::PRELIGHT);
+  pressed_tex_ = style.GetWindowButton(type_, panel::WindowState::PRESSED);
+  unfocused_tex_ = style.GetWindowButton(type_, panel::WindowState::UNFOCUSED);
+  disabled_tex_ = style.GetWindowButton(type_, panel::WindowState::DISABLED);
+  unfocused_prelight_tex_ = style.GetWindowButton(type_, panel::WindowState::UNFOCUSED_PRELIGHT);
+  unfocused_pressed_tex_ = style.GetWindowButton(type_, panel::WindowState::UNFOCUSED_PRESSED);
+  normal_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::NORMAL);
+  prelight_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::PRELIGHT);
+  pressed_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::PRESSED);
+  disabled_dash_tex_ = GetDashWindowButton(type_, panel::WindowState::DISABLED);
 
   UpdateSize();
   QueueDraw();
 }
 
-nux::BaseTexture* WindowButton::GetDashWindowButton(panel::WindowButtonType type, panel::WindowState state)
+nux::ObjectPtr<nux::BaseTexture> WindowButton::GetDashWindowButton(panel::WindowButtonType type, panel::WindowState state)
 {
-  nux::BaseTexture* texture = nullptr;
+  nux::ObjectPtr<nux::BaseTexture> texture;
   const char* names[] = { "close_dash", "minimize_dash", "unmaximize_dash", "maximize_dash" };
   const char* states[] = { "", "prelight_", "pressed_", "disabled_" };
 
@@ -178,7 +178,7 @@ nux::BaseTexture* WindowButton::GetDashWindowButton(panel::WindowButtonType type
           << states[static_cast<int>(state)] << ".png";
 
   glib::String filename(g_build_filename(PKGDATADIR, subpath.str().c_str(), NULL));
-  texture = nux::CreateTexture2DFromFile(filename, -1, true);
+  texture.Adopt(nux::CreateTexture2DFromFile(filename, -1, true));
 
   if (!texture)
     texture = panel::Style::Instance().GetFallbackWindowButton(type, state);

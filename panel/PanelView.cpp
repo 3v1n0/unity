@@ -74,7 +74,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   nux::ROPConfig rop;
   rop.Blend = true;
   nux::Color darken_colour = nux::Color(0.9f, 0.9f, 0.9f, 1.0f);
-  
+
   if (Settings::Instance().GetLowGfxMode() == false)
   {
     rop.SrcBlend = GL_ZERO;
@@ -122,14 +122,14 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
     _stored_dash_width = width;
     QueueDraw();
   });
-  
-  _ubus_manager.RegisterInterest(UBUS_REFINE_STATUS, [this] (GVariant *data) 
+
+  _ubus_manager.RegisterInterest(UBUS_REFINE_STATUS, [this] (GVariant *data)
   {
     gboolean status;
     g_variant_get(data, UBUS_REFINE_STATUS_FORMAT_STRING, &status);
 
     _refine_is_open = status;
-  
+
     nux::ROPConfig rop;
     rop.Blend = true;
     rop.SrcBlend = GL_ONE;
@@ -138,24 +138,24 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
     nux::TexCoordXForm texxform;
     if (_refine_is_open)
     {
-      _bg_refine_layer.reset(new nux::TextureLayer(_bg_refine_tex->GetDeviceTexture(), 
-                             texxform, 
+      _bg_refine_layer.reset(new nux::TextureLayer(_bg_refine_tex->GetDeviceTexture(),
+                             texxform,
                              nux::color::White,
                              false,
                              rop));
     }
     else
     {
-      _bg_refine_layer.reset(new nux::TextureLayer(_bg_refine_no_refine_tex->GetDeviceTexture(), 
-                             texxform, 
+      _bg_refine_layer.reset(new nux::TextureLayer(_bg_refine_no_refine_tex->GetDeviceTexture(),
+                             texxform,
                              nux::color::White,
                              false,
                              rop));
-      
+
     }
     QueueDraw();
   });
-  
+
   // request the latest colour from bghash
   _ubus_manager.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
@@ -174,7 +174,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
     _panel_sheen.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
   }
 
-  //FIXME (gord) like 12 months later, still not async loading! 
+  //FIXME (gord) like 12 months later, still not async loading!
   pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR "/refine_gradient_panel.png", &error);
   if (error)
   {
@@ -185,7 +185,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
     _bg_refine_tex.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
   }
 
-  //FIXME (gord) like 12 months later, still not async loading! 
+  //FIXME (gord) like 12 months later, still not async loading!
   pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR "/refine_gradient_panel_no_refine.png", &error);
   if (error)
   {
@@ -201,13 +201,13 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
   nux::TexCoordXForm texxform;
-  _bg_refine_layer.reset(new nux::TextureLayer(_bg_refine_tex->GetDeviceTexture(), 
-                         texxform, 
+  _bg_refine_layer.reset(new nux::TextureLayer(_bg_refine_tex->GetDeviceTexture(),
+                         texxform,
                          nux::color::White,
                          false,
                          rop));
 
-  //FIXME (gord) like 12 months later, still not async loading! 
+  //FIXME (gord) like 12 months later, still not async loading!
   pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR "/refine_gradient_panel_single_column.png", &error);
   if (error)
   {
@@ -222,8 +222,8 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-  _bg_refine_single_column_layer.reset(new nux::TextureLayer(_bg_refine_single_column_tex->GetDeviceTexture(), 
-                         texxform, 
+  _bg_refine_single_column_layer.reset(new nux::TextureLayer(_bg_refine_single_column_tex->GetDeviceTexture(),
+                         texxform,
                          nux::color::White,
                          false,
                          rop));
@@ -403,21 +403,21 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     if (_overlay_is_open && Settings::Instance().GetLowGfxMode() == false)
     {
       nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, _bg_darken_layer.get());
-      
+
       GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       nux::TexCoordXForm refine_texxform;
-  
+
       int refine_x_pos = geo.x + (_stored_dash_width - refine_gradient_midpoint);
 
       refine_x_pos += _launcher_width;
-      GfxContext.QRP_1Tex(refine_x_pos, 
+      GfxContext.QRP_1Tex(refine_x_pos,
                           geo.y,
-                          _bg_refine_tex->GetWidth(), 
+                          _bg_refine_tex->GetWidth(),
                           _bg_refine_tex->GetHeight(),
                           _bg_refine_tex->GetDeviceTexture(),
                           refine_texxform,
                           nux::color::White);
-      
+
       GfxContext.QRP_1Tex(refine_x_pos + _bg_refine_tex->GetWidth(),
                           geo.y,
                           geo.width,
@@ -500,32 +500,32 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     {
       if (Settings::Instance().GetLowGfxMode())
       {
-	rop.Blend = false;
-	_bg_darken_layer.reset(new nux::ColorLayer(_bg_color, false, rop));
+        rop.Blend = false;
+        _bg_darken_layer.reset(new nux::ColorLayer(_bg_color, false, rop));
       }
-      
+
       nux::GetPainter().PushLayer(GfxContext, geo, _bg_darken_layer.get());
       bgs++;
-      
+
       nux::Geometry refine_geo = geo;
-      
+
       int refine_x_pos = geo.x + (_stored_dash_width - refine_gradient_midpoint);
       refine_x_pos += _launcher_width;
-      
+
       refine_geo.x = refine_x_pos;
       refine_geo.width = _bg_refine_tex->GetWidth();
       refine_geo.height = _bg_refine_tex->GetHeight();
-      
+
       if (Settings::Instance().GetLowGfxMode() == false)
       {
-	nux::GetPainter().PushLayer(GfxContext, refine_geo, _bg_refine_layer.get());
-	bgs++;
+        nux::GetPainter().PushLayer(GfxContext, refine_geo, _bg_refine_layer.get());
+        bgs++;
 
-	refine_geo.x += refine_geo.width;
-	refine_geo.width = geo.width;
-	refine_geo.height = geo.height;
-	nux::GetPainter().PushLayer(GfxContext, refine_geo, _bg_refine_single_column_layer.get());
-	bgs++;
+        refine_geo.x += refine_geo.width;
+        refine_geo.width = geo.width;
+        refine_geo.height = geo.height;
+        nux::GetPainter().PushLayer(GfxContext, refine_geo, _bg_refine_single_column_layer.get());
+        bgs++;
       }
     }
   }
@@ -570,52 +570,36 @@ PanelView::UpdateBackground()
   _last_geo = geo;
   _is_dirty = false;
 
-  guint32 maximized_win = _menu_view->GetMaximizedWindow();
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
   if (_overlay_is_open)
   {
-    nux::ROPConfig rop;
-    rop.Blend = true;
-    rop.SrcBlend = GL_ONE;
-    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-    _bg_layer.reset(new nux::ColorLayer (_bg_color, true, rop));
+    _bg_layer.reset(new nux::ColorLayer(_bg_color, true, rop));
   }
   else
   {
-    WindowManager& wm = WindowManager::Default();
     double opacity = _opacity;
 
-    if (_opacity_maximized_toggle && (wm.IsExpoActive() ||
-        (maximized_win != 0 && !wm.IsWindowObscured(maximized_win))))
+    if (_opacity_maximized_toggle)
     {
-      opacity = 1.0f;
+      WindowManager& wm = WindowManager::Default();
+      Window maximized_win = _menu_view->GetMaximizedWindow();
+
+      if (wm.IsExpoActive() || (maximized_win != 0 && !wm.IsWindowObscured(maximized_win)))
+        opacity = 1.0f;
     }
 
-    nux::NBitmapData* bitmap = panel::Style::Instance().GetBackground(geo.width, geo.height, opacity);
-    nux::BaseTexture* texture2D = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
-
-    texture2D->Update(bitmap);
-    delete bitmap;
-
+    auto tex = panel::Style::Instance().GetBackground(geo.width, geo.height, opacity);
     nux::TexCoordXForm texxform;
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
 
-    nux::ROPConfig rop;
-    rop.Blend = true;
-    rop.SrcBlend = GL_ONE;
-    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-    nux::Color col = nux::color::White;
-
-    _bg_layer.reset(new nux::TextureLayer(texture2D->GetDeviceTexture(),
-                                      texxform,
-                                      col,
-                                      true,
-                                      rop));
-    texture2D->UnReference();
+    _bg_layer.reset(new nux::TextureLayer(tex->GetDeviceTexture(), texxform,
+                                          nux::color::White, true, rop));
   }
-
-  NeedRedraw();
 }
 
 void PanelView::ForceUpdateBackground()
