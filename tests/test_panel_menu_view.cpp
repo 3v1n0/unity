@@ -44,7 +44,7 @@ struct TestPanelMenuView : public testing::Test
   struct MockPanelMenuView : public PanelMenuView
   {
     MOCK_METHOD0(QueueDraw, void());
-    virtual std::string GetActiveViewName(bool) const { return "<>'"; }
+    MOCK_CONST_METHOD1(GetActiveViewName, std::string(bool));
 
     using PanelMenuView::window_buttons_;
     using PanelMenuView::GetCurrentTitle;
@@ -60,6 +60,7 @@ protected:
 
 TEST_F(TestPanelMenuView, Escaping)
 {
+  ON_CALL(menu_view, GetActiveViewName(testing::_)).WillByDefault(Return("<>'"));
   static const char *escapedText = "Panel d&amp;Inici";
   EXPECT_TRUE(menu_view.GetCurrentTitle().empty());
 
