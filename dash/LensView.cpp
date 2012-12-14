@@ -381,9 +381,9 @@ void LensView::OnCategoryAdded(Category const& category)
     grid->expanded = false;
 
     group->SetRendererName(renderer_name.c_str());
-    grid->UriActivated.connect(sigc::bind([&] (std::string const& uri, ResultView::ActivateType type, GVariant* data, std::string const& view_id) 
+    grid->UriActivated.connect([this, unique_id] (std::string const& uri, ResultView::ActivateType type, GVariant* data) 
     {
-      uri_activated.emit(type, uri, data, view_id); 
+      uri_activated.emit(type, uri, data, unique_id); 
       switch (type)
       {
         case ResultView::ActivateType::DIRECT:
@@ -396,8 +396,7 @@ void LensView::OnCategoryAdded(Category const& category)
         } break;
         default: break;
       };
-
-    }, unique_id));
+    });
 
 
     /* Set up filter model for this category */
