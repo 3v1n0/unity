@@ -148,13 +148,6 @@ private:
 
 NUX_IMPLEMENT_OBJECT_TYPE(LensView);
 
-LensView::LensView()
-  : nux::View(NUX_TRACKER_LOCATION)
-  , filters_expanded(false)
-  , can_refine_search(false)
-  , no_results_active_(false)
-{}
-
 LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   : nux::View(NUX_TRACKER_LOCATION)
   , filters_expanded(false)
@@ -172,18 +165,18 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
 
   dash::Style::Instance().columns_changed.connect(sigc::mem_fun(this, &LensView::OnColumnsChanged));
 
-  lens_->connected.changed.connect([&](bool is_connected) { if (is_connected) initial_activation_ = true; });
-  lens_->categories_reordered.connect(sigc::mem_fun(this, &LensView::OnCategoryOrderChanged));
   search_string.SetGetterFunction(sigc::mem_fun(this, &LensView::get_search_string));
-  filters_expanded.changed.connect([&](bool expanded)
-  {
-    fscroll_view_->SetVisible(expanded);
-    QueueRelayout();
-    OnColumnsChanged();
-    ubus_manager_.SendMessage(UBUS_REFINE_STATUS,
-                              g_variant_new(UBUS_REFINE_STATUS_FORMAT_STRING, expanded ? TRUE : FALSE));
-  });
+  filters_expanded.changed.connect(sigc::mem_fun(this, &LensView::OnLensFilterExpanded));
   view_type.changed.connect(sigc::mem_fun(this, &LensView::OnViewTypeChanged));
+  if (lens_)
+  {
+    lens_->connected.changed.connect([&](bool is_connected)
+    {
+      if (is_connected)
+        initial_activation_ = true;
+    });
+    lens_->categories_reordered.connect(sigc::mem_fun(this, &LensView::OnCategoryOrderChanged));
+  }
 
   ubus_manager_.RegisterInterest(UBUS_RESULT_VIEW_KEYNAV_CHANGED, [&] (GVariant* data) {
     // we get this signal when a result view keynav changes,
@@ -240,7 +233,7 @@ void LensView::SetupViews(nux::Area* show_filters)
   scroll_view_->SetLayout(scroll_layout_);
   scroll_view_->SetRightArea(show_filters);
 
-  no_results_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
+  no_results_ = new StaticCairoText("", NUX_TRACKER_LOCATION);
   no_results_->SetTextColor(nux::color::White);
   no_results_->SetVisible(false);
   scroll_layout_->AddView(no_results_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
@@ -272,6 +265,9 @@ void LensView::SetupViews(nux::Area* show_filters)
 
 void LensView::SetupCategories()
 {
+  if (!lens_)
+    return;
+
   Categories::Ptr categories = lens_->categories;
   categories->category_added.connect(sigc::mem_fun(this, &LensView::OnCategoryAdded));
 
@@ -281,6 +277,9 @@ void LensView::SetupCategories()
 
 void LensView::SetupResults()
 {
+  if (!lens_)
+    return;
+
   Results::Ptr results = lens_->results;
   results->result_added.connect(sigc::mem_fun(this, &LensView::OnResultAdded));
   results->result_removed.connect(sigc::mem_fun(this, &LensView::OnResultRemoved));
@@ -302,6 +301,9 @@ void LensView::SetupResults()
 
 void LensView::SetupFilters()
 {
+  if (!lens_)
+    return;
+
   Filters::Ptr filters = lens_->filters;
   filters->filter_added.connect(sigc::mem_fun(this, &LensView::OnFilterAdded));
   filters->filter_removed.connect(sigc::mem_fun(this, &LensView::OnFilterRemoved));
@@ -315,7 +317,7 @@ void LensView::OnCategoryAdded(Category const& category)
   std::string name = category.name;
   std::string icon_hint = category.icon_hint;
   std::string renderer_name = category.renderer_name;
-  unsigned index = category.index;
+  unsigned index = (category.index == unsigned(-1)) ? categories_.size() : category.index;
   bool reset_filter_models = false;
 
   LOG_DEBUG(logger) << "Category added: " << name
@@ -331,7 +333,7 @@ void LensView::OnCategoryAdded(Category const& category)
     if (existing_group->GetCategoryIndex() == index) return;
   }
 
-  PlacesGroup* group = new PlacesGroup(dash::Style::Instance());
+  PlacesGroup* group = CreatePlacesGroup();
   AddChild(group);
   group->SetName(name);
   group->SetIcon(icon_hint);
@@ -372,56 +374,58 @@ void LensView::OnCategoryAdded(Category const& category)
   }
   group->SetChildView(grid);
 
-  std::string unique_id = name + lens_->name();
-  grid->unique_id = unique_id;
-  grid->expanded = false;
-
-  group->SetRendererName(renderer_name.c_str());
-  grid->UriActivated.connect(sigc::bind([&] (std::string const& uri, ResultView::ActivateType type, GVariant* data, std::string const& view_id) 
+  if (lens_)
   {
-    uri_activated.emit(type, uri, data, view_id); 
-    switch (type)
+    std::string unique_id = name + lens_->name();
+    grid->unique_id = unique_id;
+    grid->expanded = false;
+
+    group->SetRendererName(renderer_name.c_str());
+    grid->UriActivated.connect([this, unique_id] (std::string const& uri, ResultView::ActivateType type, GVariant* data) 
     {
-      case ResultView::ActivateType::DIRECT:
+      uri_activated.emit(type, uri, data, unique_id); 
+      switch (type)
       {
-        lens_->Activate(uri);
-      } break;
-      case ResultView::ActivateType::PREVIEW:
-      {
-        lens_->Preview(uri);
-      } break;
-      default: break;
-    };
+        case ResultView::ActivateType::DIRECT:
+        {
+          lens_->Activate(uri);
+        } break;
+        case ResultView::ActivateType::PREVIEW:
+        {
+          lens_->Preview(uri);
+        } break;
+        default: break;
+      };
+    });
 
-  }, unique_id));
 
-
-  /* Set up filter model for this category */
-  Results::Ptr results_model = lens_->results;
-  if (results_model->model())
-  {
-    glib::Object<DeeModel> filter_model(lens_->GetFilterModelForCategory(index));
-    grid->SetModel(filter_model, results_model->GetTag());
-  }
-
-  if (reset_filter_models)
-  {
-    /* HomeLens is reodering the categories, and since their index is based
-     * on the row position in the model, we need to re-initialize the filter
-     * models if we got insert and not an append */
-    for (auto it = categories_.begin() + (index + 1); it != categories_.end(); ++it)
+    /* Set up filter model for this category */
+    Results::Ptr results_model = lens_->results;
+    if (results_model->model())
     {
-      grid = static_cast<ResultViewGrid*>((*it)->GetChildView());
-      grid->SetModel(glib::Object<DeeModel>(), NULL);
+      glib::Object<DeeModel> filter_model(lens_->GetFilterModelForCategory(index));
+      grid->SetModel(filter_model, results_model->GetTag());
     }
 
-    if (static_cast<int>(index) < last_good_filter_model_ || last_good_filter_model_ < 0)
+    if (reset_filter_models)
     {
-      last_good_filter_model_ = index;
-    }
-    if (!fix_filter_models_idle_)
-    {
-      fix_filter_models_idle_.reset(new glib::Idle(sigc::mem_fun(this, &LensView::ReinitializeFilterModels), glib::Source::Priority::HIGH));
+      /* HomeLens is reodering the categories, and since their index is based
+       * on the row position in the model, we need to re-initialize the filter
+       * models if we got insert and not an append */
+      for (auto it = categories_.begin() + (index + 1); it != categories_.end(); ++it)
+      {
+        grid = static_cast<ResultViewGrid*>((*it)->GetChildView());
+        grid->SetModel(glib::Object<DeeModel>(), NULL);
+      }
+
+      if (static_cast<int>(index) < last_good_filter_model_ || last_good_filter_model_ < 0)
+      {
+        last_good_filter_model_ = index;
+      }
+      if (!fix_filter_models_idle_)
+      {
+        fix_filter_models_idle_.reset(new glib::Idle(sigc::mem_fun(this, &LensView::ReinitializeFilterModels), glib::Source::Priority::HIGH));
+      }
     }
   }
 
@@ -444,17 +448,20 @@ void LensView::OnCategoryOrderChanged()
     scroll_layout_->RemoveChildObject(categories_.at(i));
   }
 
-  // there should be ~10 categories, so this shouldn't be too big of a deal
-  std::vector<unsigned> order(lens_->GetCategoriesOrder());
-  for (unsigned i = 0; i < order.size(); i++)
+  if (lens_)
   {
-    unsigned desired_category_index = order[i];
-    for (unsigned j = 0; j < child_views.size(); j++)
+    // there should be ~10 categories, so this shouldn't be too big of a deal
+    std::vector<unsigned> order(lens_->GetCategoriesOrder());
+    for (unsigned i = 0; i < order.size(); i++)
     {
-      if (child_views[j]->GetCategoryIndex() == desired_category_index)
+      unsigned desired_category_index = order[i];
+      for (unsigned j = 0; j < child_views.size(); j++)
       {
-        scroll_layout_->AddView(child_views[j].GetPointer(), 0);
-        break;
+        if (child_views[j]->GetCategoryIndex() == desired_category_index)
+        {
+          scroll_layout_->AddView(child_views[j].GetPointer(), 0);
+          break;
+        }
       }
     }
   }
@@ -462,6 +469,9 @@ void LensView::OnCategoryOrderChanged()
 
 bool LensView::ReinitializeFilterModels()
 {
+  if (!lens_)
+    return false;
+
   Results::Ptr results_model = lens_->results;
   for (unsigned i = last_good_filter_model_ + 1; i < categories_.size(); ++i)
   {
@@ -631,7 +641,10 @@ void LensView::HideResultsMessage()
 void LensView::PerformSearch(std::string const& search_query, Lens::SearchFinishedCallback const& cb)
 {
   search_string_ = search_query;
-  lens_->Search(search_query, cb);
+  if (lens_)
+  {
+    lens_->Search(search_query, cb);
+  }
 }
 
 std::string LensView::get_search_string() const
@@ -684,6 +697,9 @@ void LensView::OnFilterRemoved(Filter::Ptr filter)
 
 void LensView::OnViewTypeChanged(ViewType view_type)
 {
+  if (!lens_)
+    return;
+
   if (view_type != HIDDEN && initial_activation_)
   {
     /* We reset the lens for ourselves, in case this is a restart or something */
@@ -692,6 +708,21 @@ void LensView::OnViewTypeChanged(ViewType view_type)
   }
 
   lens_->view_type = view_type;
+}
+
+void LensView::OnLensFilterExpanded(bool expanded)
+{
+  if (fscroll_view_->IsVisible() != expanded)
+  {
+    fscroll_view_->SetVisible(expanded);
+    QueueRelayout();
+    OnColumnsChanged();
+  }
+
+  for (auto it = categories_.begin(); it != categories_.end(); ++it)
+  {
+    (*it)->SetFiltersExpanded(expanded);
+  }
 }
 
 void LensView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
@@ -752,6 +783,12 @@ int LensView::GetNumRows()
   return num_rows;
 }
 
+void LensView::AboutToShow()
+{
+  JumpToTop();
+  OnLensFilterExpanded(filters_expanded);
+}
+
 void LensView::JumpToTop()
 {
   scroll_view_->ScrollToPosition(nux::Geometry(0, 0, 0, 0));
@@ -759,6 +796,9 @@ void LensView::JumpToTop()
 
 void LensView::ActivateFirst()
 {
+  if (!lens_)
+    return;
+
   Results::Ptr results = lens_->results;
   if (results->count())
   {
@@ -792,6 +832,11 @@ void LensView::ActivateFirst()
 bool LensView::AcceptKeyNavFocus()
 {
   return false;
+}
+
+PlacesGroup* LensView::CreatePlacesGroup()
+{
+  return new PlacesGroup(dash::Style::Instance());
 }
 
 // Introspectable

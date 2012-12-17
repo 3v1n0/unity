@@ -52,19 +52,19 @@ TEST(TestHudButton, TestLabelOpacity)
   ASSERT_EQ(children.size(), 3);
 
   auto it = children.begin();
-  nux::StaticCairoText* label = dynamic_cast<nux::StaticCairoText*>(*it);
+  StaticCairoText* label = dynamic_cast<StaticCairoText*>(*it);
   ASSERT_NE(label, nullptr);
   EXPECT_EQ(label->GetText(), "Op");
   EXPECT_EQ(label->GetTextColor().alpha, 1.0f);
 
   it++;
-  label = dynamic_cast<nux::StaticCairoText*>(*it);
+  label = dynamic_cast<StaticCairoText*>(*it);
   ASSERT_NE(label, nullptr);
   EXPECT_EQ(label->GetText(), " Fi");
   EXPECT_EQ(label->GetTextColor().alpha, 0.5f);
 
   it++;
-  label = dynamic_cast<nux::StaticCairoText*>(*it);
+  label = dynamic_cast<StaticCairoText*>(*it);
   ASSERT_NE(label, nullptr);
   EXPECT_EQ(label->GetText(), "le");
   EXPECT_EQ(label->GetTextColor().alpha, 1.0f);

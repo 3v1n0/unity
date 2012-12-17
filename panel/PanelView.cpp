@@ -123,32 +123,6 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
     QueueDraw();
   });
 
-  ubus_manager_.RegisterInterest(UBUS_REFINE_STATUS, [this] (GVariant *data)
-  {
-    gboolean status;
-    g_variant_get(data, UBUS_REFINE_STATUS_FORMAT_STRING, &status);
-
-    refine_is_open_ = status;
-
-    nux::ROPConfig rop;
-    rop.Blend = true;
-    rop.SrcBlend = GL_ONE;
-    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-
-    if (refine_is_open_)
-    {
-      bg_refine_layer_.reset(new nux::TextureLayer(bg_refine_tex_->GetDeviceTexture(),
-                             nux::TexCoordXForm(), nux::color::White, false, rop));
-    }
-    else
-    {
-      bg_refine_layer_.reset(new nux::TextureLayer(bg_refine_no_refine_tex_->GetDeviceTexture(),
-                             nux::TexCoordXForm(), nux::color::White, false, rop));
-
-    }
-    QueueDraw();
-  });
-
   // request the latest colour from bghash
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
@@ -157,7 +131,6 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   //FIXME (gord)- replace with async loading
   panel_sheen_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dash_sheen.png", -1, true));
   bg_refine_tex_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/refine_gradient_panel.png", -1, true));
-  bg_refine_no_refine_tex_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/refine_gradient_panel_no_refine.png", -1, true));
   bg_refine_single_column_tex_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/refine_gradient_panel_single_column.png", -1, true));
 
   rop.Blend = true;
@@ -173,7 +146,6 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
 
   bg_refine_single_column_layer_.reset(new nux::TextureLayer(bg_refine_single_column_tex_->GetDeviceTexture(),
                                        nux::TexCoordXForm(), nux::color::White, false, rop));
-
 }
 
 PanelView::~PanelView()
@@ -356,23 +328,18 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       int refine_x_pos = geo.x + (stored_dash_width_ - refine_gradient_midpoint);
 
       refine_x_pos += launcher_width_;
-      GfxContext.QRP_1Tex(refine_x_pos,
-                          geo.y,
+      GfxContext.QRP_1Tex(refine_x_pos, geo.y,
                           bg_refine_tex_->GetWidth(),
                           bg_refine_tex_->GetHeight(),
                           bg_refine_tex_->GetDeviceTexture(),
-                          refine_texxform,
-                          nux::color::White);
+                          refine_texxform, nux::color::White);
 
       GfxContext.QRP_1Tex(refine_x_pos + bg_refine_tex_->GetWidth(),
-                          geo.y,
-                          geo.width,
-                          geo.height,
+                          geo.y, geo.width, geo.height,
                           bg_refine_single_column_tex_->GetDeviceTexture(),
-                          refine_texxform,
-                          nux::color::White);
-      }
+                          refine_texxform, nux::color::White);
     }
+  }
 
   if (!overlay_is_open_ || GfxContext.UsingGLSLCodePath() == false)
     nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, bg_layer_.get());

@@ -28,7 +28,7 @@
 #include <Nux/AbstractButton.h>
 #include "unity-shared/Introspectable.h"
 
-namespace nux
+namespace unity
 {
 class StaticCairoText;
 }
@@ -93,8 +93,8 @@ private:
   std::string extra_font_hint_;
 
   nux::ObjectPtr<IconTexture> image_;
-  nux::ObjectPtr<nux::StaticCairoText> static_text_;
-  nux::ObjectPtr<nux::StaticCairoText> extra_text_;
+  nux::ObjectPtr<unity::StaticCairoText> static_text_;
+  nux::ObjectPtr<unity::StaticCairoText> extra_text_;
 };
 
 } // namespace dash

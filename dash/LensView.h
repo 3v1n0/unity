@@ -51,7 +51,6 @@ class LensView : public nux::View, public unity::debug::Introspectable
   typedef std::map<PlacesGroup*, unsigned int> ResultCounts;
 
 public:
-  LensView();
   LensView(Lens::Ptr lens, nux::Area* show_filters);
 
   CategoryGroups& categories() { return categories_; }
@@ -60,6 +59,7 @@ public:
   nux::Area* fscroll_view() const;
 
   int GetNumRows();
+  void AboutToShow();
   void JumpToTop();
 
   virtual void ActivateFirst();
@@ -98,6 +98,8 @@ private:
   ResultViewGrid* GetGridForCategory(unsigned category_index);
   ResultView* GetResultViewForCategory(unsigned category_index);
 
+  virtual PlacesGroup* CreatePlacesGroup();
+
   void BuildPreview(std::string const& uri, Preview::Ptr model);
 
   virtual void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
@@ -123,12 +125,14 @@ private:
   LensScrollView* fscroll_view_;
   nux::VLayout* fscroll_layout_;
   FilterBar* filter_bar_;
-  nux::StaticCairoText* no_results_;
+  StaticCairoText* no_results_;
 
   UBusManager ubus_manager_;
   glib::Source::UniquePtr model_updated_timeout_;
   int last_good_filter_model_;
   glib::Source::UniquePtr fix_filter_models_idle_;
+
+  friend class TestLensView;
 };
 
 

@@ -47,6 +47,8 @@
 DECLARE_LOGGER(logger, "unity.dash.placesgroup");
 namespace unity
 {
+namespace dash
+{
 namespace
 {
 
@@ -115,7 +117,7 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   : nux::View(NUX_TRACKER_LOCATION),
     _style(style),
     _child_view(nullptr),
-    _using_nofilters_background(true),
+    _using_filters_background(false),
     _is_expanded(false),
     _n_visible_items_in_unexpand_mode(0),
     _n_total_items(0),
@@ -165,10 +167,10 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   _text_layout->SetHorizontalInternalMargin(15);
   _header_layout->AddLayout(_text_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
-  _name = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
+  _name = new StaticCairoText("", NUX_TRACKER_LOCATION);
   _name->SetFont(NAME_LABEL_FONT);
-  _name->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_END);
-  _name->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
+  _name->SetTextEllipsize(StaticCairoText::NUX_ELLIPSIZE_END);
+  _name->SetTextAlignment(StaticCairoText::NUX_ALIGN_LEFT);
   _text_layout->AddView(_name, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
   _expand_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -178,10 +180,10 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
   _expand_label_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   _expand_layout->AddLayout(_expand_label_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
-  _expand_label = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
+  _expand_label = new StaticCairoText("", NUX_TRACKER_LOCATION);
   _expand_label->SetFont(EXPANDER_LABEL_FONT);
-  _expand_label->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_END);
-  _expand_label->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
+  _expand_label->SetTextEllipsize(StaticCairoText::NUX_ELLIPSIZE_END);
+  _expand_label->SetTextAlignment(StaticCairoText::NUX_ALIGN_LEFT);
   _expand_label->SetTextColor(kExpandDefaultTextColor);
   _expand_label_layout->AddView(_expand_label, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
 
@@ -212,40 +214,6 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
     else
       nux::GetWindowCompositor().SetKeyFocusArea(GetHeaderFocusableView(), direction);
   });
-
-  _ubus.RegisterInterest(UBUS_REFINE_STATUS, [this] (GVariant *data) 
-  {
-    gboolean status;
-    g_variant_get(data, UBUS_REFINE_STATUS_FORMAT_STRING, &status);
-
-    nux::ROPConfig rop;
-    rop.Blend = true;
-    rop.SrcBlend = GL_ONE;
-    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-
-    nux::TexCoordXForm texxform;
-    if (status && _using_nofilters_background)
-    {
-      _background_layer.reset(new nux::TextureLayer(_background->GetDeviceTexture(),
-                              texxform, 
-                              nux::color::White,
-                              false,
-                              rop));
-      _using_nofilters_background = false;
-    }
-    else if (!status && !_using_nofilters_background)
-    {
-      _background_layer.reset(new nux::TextureLayer(_background_nofilters->GetDeviceTexture(),
-                              texxform,
-                              nux::color::White,
-                              false,
-                              rop));
-
-      _using_nofilters_background = true;
-    }
-    QueueDraw();
-  });
-
 }
 
 void
@@ -293,13 +261,13 @@ void PlacesGroup::SetHeaderCountVisible(bool disable)
   Relayout();
 }
 
-nux::StaticCairoText*
+StaticCairoText*
 PlacesGroup::GetLabel()
 {
   return _name;
 }
 
-nux::StaticCairoText*
+StaticCairoText*
 PlacesGroup::GetExpandLabel()
 {
   return _expand_label;
@@ -631,6 +599,35 @@ bool PlacesGroup::ShouldBeHighlighted() const
   return HeaderHasKeyFocus();
 }
 
+void PlacesGroup::SetFiltersExpanded(bool filters_expanded)
+{
+  nux::ROPConfig rop;
+  rop.Blend = true;
+  rop.SrcBlend = GL_ONE;
+  rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
+
+  nux::TexCoordXForm texxform;
+  if (filters_expanded && !_using_filters_background)
+  {
+    _background_layer.reset(new nux::TextureLayer(_background->GetDeviceTexture(),
+                            texxform, 
+                            nux::color::White,
+                            false,
+                            rop));
+  }
+  else if (!filters_expanded && _using_filters_background)
+  {
+    _background_layer.reset(new nux::TextureLayer(_background_nofilters->GetDeviceTexture(),
+                            texxform,
+                            nux::color::White,
+                            false,
+                            rop));
+  }
+
+  _using_filters_background = filters_expanded;
+  QueueDraw();
+}
+
 //
 // Key navigation
 //
@@ -668,4 +665,5 @@ void PlacesGroup::AddProperties(GVariantBuilder* builder)
   wrapper.add("name-label-baseline", _name->GetBaseline());
 }
 
+} // namespace dash
 } // namespace unity

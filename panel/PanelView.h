@@ -99,17 +99,17 @@ private:
   PanelMenuView* menu_view_;
   PanelTray* tray_;
   PanelIndicatorsView* indicators_;
-
-  typedef std::unique_ptr<nux::AbstractPaintLayer> PaintLayerPtr;
-  PaintLayerPtr bg_layer_;
-  PaintLayerPtr bg_darken_layer_;
-  nux::ObjectPtr<nux::BaseTexture> panel_sheen_;
   nux::HLayout* layout_;
 
-  nux::ObjectPtr<nux::BaseTexture> bg_refine_tex_;
-  nux::ObjectPtr<nux::BaseTexture> bg_refine_no_refine_tex_;
+  typedef std::unique_ptr<nux::AbstractPaintLayer> PaintLayerPtr;
+  typedef BaseTexturePtr BaseTexturePtr;
+  PaintLayerPtr bg_layer_;
+  PaintLayerPtr bg_darken_layer_;
+  BaseTexturePtr panel_sheen_;
+
+  BaseTexturePtr bg_refine_tex_;
   std::unique_ptr<nux::AbstractPaintLayer> bg_refine_layer_;
-  nux::ObjectPtr<nux::BaseTexture> bg_refine_single_column_tex_;
+  BaseTexturePtr bg_refine_single_column_tex_;
   std::unique_ptr<nux::AbstractPaintLayer> bg_refine_single_column_layer_;
 
   nux::Geometry last_geo_;

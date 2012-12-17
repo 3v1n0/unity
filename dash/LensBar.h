@@ -39,12 +39,12 @@ namespace nux
 class AbstractPaintLayer;
 class HLayout;
 class LayeredLayout;
-class StaticCairoText;
 }
 
 namespace unity
 {
 class IconTexture;
+class StaticCairoText;
 
 namespace dash
 {
@@ -90,7 +90,7 @@ private:
 
   nux::LayeredLayout* layered_layout_;
   nux::HLayout *legal_layout_;
-  nux::StaticCairoText *legal_;
+  unity::StaticCairoText *legal_;
   nux::HLayout* layout_;
   LayerPtr bg_layer_;
   IconTexture* info_icon_;

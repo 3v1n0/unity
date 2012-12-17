@@ -57,6 +57,8 @@ void Category::SetupGetters()
 
 std::size_t Category::get_index() const
 {
+  if (!model_)
+    return unsigned(-1);
   return dee_model_get_position(model_, iter_);
 }
 

@@ -438,9 +438,9 @@ void CoverArt::SetupViews()
   layout->AddSpace(0, 1);
   SetLayout(layout);
 
-  overlay_text_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
+  overlay_text_ = new StaticCairoText("", NUX_TRACKER_LOCATION);
   overlay_text_->Reference();
-  overlay_text_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
+  overlay_text_->SetTextAlignment(StaticCairoText::NUX_ALIGN_CENTRE);
   overlay_text_->SetFont("Ubuntu 14");
   overlay_text_->SetLines(-3);
   overlay_text_->SetText("No Image Available");
