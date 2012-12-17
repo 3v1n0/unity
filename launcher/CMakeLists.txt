@@ -1,7 +1,5 @@
 set(UNITY_SRC ../plugins/unityshell/src)
 
-find_package (PkgConfig)
-
 set (CFLAGS
      ${CACHED_UNITY_DEPS_CFLAGS}
      ${CACHED_UNITY_DEPS_CFLAGS_OTHER}

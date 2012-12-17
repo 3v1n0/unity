@@ -19,7 +19,6 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/kde4/afile.desktop
 #
 # Unit tests
 #
-find_package (PkgConfig)
 set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.99.0")
 pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS})
 
