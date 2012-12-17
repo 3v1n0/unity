@@ -79,7 +79,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(DashView);
 
 DashView::DashView()
   : nux::View(NUX_TRACKER_LOCATION)
-  , home_lens_(new HomeLens(_("Home"), _("Home screen"), _("Search")))
+  , home_lens_(new HomeLens(_("Home"), _("Home screen"), _("Search your computer and online sources")))
   , preview_container_(nullptr)
   , preview_displaying_(false)
   , preview_navigation_mode_(previews::Navigation::NONE)
@@ -400,7 +400,14 @@ void DashView::SetupViews()
   search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
-  search_bar_->showing_filters.changed.connect([&] (bool showing) { if (active_lens_view_) active_lens_view_->filters_expanded = showing; QueueDraw(); });
+  search_bar_->showing_filters.changed.connect([&] (bool showing)
+  {
+    if (active_lens_view_)
+    {
+      active_lens_view_->filters_expanded = showing;
+      QueueDraw();
+    }
+  });
   search_bar_layout_->AddView(search_bar_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   content_layout_->SetSpecialArea(search_bar_->show_filters());
 
@@ -548,28 +555,29 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
     preview_redraw = preview_container_->IsRedrawNeeded();
   }
 
-  if (!preview_displaying_ && layout_->RedirectRenderingToTexture() && (fade_in_value_ == 0.0f))
-  {
-    nux::Geometry layout_geo = layout_->GetGeometry();
-    graphics_engine.PushClippingRectangle(layout_geo);
-    nux::GetPainter().PaintBackground(graphics_engine, layout_geo);
-    graphics_engine.PopClippingRectangle();
-  }
-
-  if (preview_displaying_ && (IsFullRedraw() || force_draw || preview_redraw) && layout_->RedirectRenderingToTexture())
-  {
-    display_ghost = true;
-    nux::Geometry layout_geo = layout_->GetGeometry();
-    graphics_engine.PushClippingRectangle(layout_geo);
-    nux::GetPainter().PaintBackground(graphics_engine, layout_geo);
-    graphics_engine.PopClippingRectangle();
-  }
-
   if (IsFullRedraw())
   {
     nux::GetPainter().PushBackgroundStack();
   }
+  else
+  {
+    if (!preview_displaying_ && layout_->RedirectRenderingToTexture() && (fade_in_value_ == 0.0f))
+    {
+      nux::Geometry layout_geo = layout_->GetGeometry();
+      graphics_engine.PushClippingRectangle(layout_geo);
+      nux::GetPainter().PaintBackground(graphics_engine, layout_geo);
+      graphics_engine.PopClippingRectangle();
+    }
 
+    if (preview_displaying_ && (force_draw || preview_redraw) && layout_->RedirectRenderingToTexture())
+    {
+      display_ghost = true;
+      nux::Geometry layout_geo = layout_->GetGeometry();
+      graphics_engine.PushClippingRectangle(layout_geo);
+      nux::GetPainter().PaintBackground(graphics_engine, layout_geo);
+      graphics_engine.PopClippingRectangle();
+    }
+  }
 
   if (preview_displaying_)
   {

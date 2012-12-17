@@ -105,6 +105,8 @@ PanelMenuView::PanelMenuView()
 
   window_buttons_->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   window_buttons_->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
+  /* This is needed since when buttons are redrawn, the panel is not. See bug #1090439 */
+  window_buttons_->opacity.changed.connect(sigc::hide(sigc::mem_fun(this, &PanelMenuView::QueueDraw)));
   AddChild(window_buttons_.GetPointer());
 
   layout_->SetLeftAndRightPadding(window_buttons_->GetContentWidth(), 0);

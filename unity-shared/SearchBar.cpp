@@ -30,7 +30,8 @@
 
 #include "SearchBar.h"
 #include "CairoTexture.h"
-#include "unity-shared/DashStyle.h"
+#include "DashStyle.h"
+#include "GraphicsUtils.h"
 
 namespace
 {
@@ -157,7 +158,7 @@ void SearchBar::Init()
 
   nux::HLayout* hint_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  hint_ = new nux::StaticCairoText(" ");
+  hint_ = new StaticCairoText(" ");
   hint_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
   hint_->SetFont(HINT_LABEL_DEFAULT_FONT.c_str());
   hint_layout->AddView(hint_,  0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
@@ -181,11 +182,11 @@ void SearchBar::Init()
   if (show_filter_hint_)
   {
     std::string filter_str(_("Filter results"));
-    show_filters_ = new nux::StaticCairoText(filter_str);
+    show_filters_ = new StaticCairoText(filter_str);
     show_filters_->SetVisible(false);
     show_filters_->SetFont(SHOW_FILTERS_LABEL_DEFAULT_FONT.c_str());
     show_filters_->SetTextColor(nux::color::White);
-    show_filters_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_RIGHT);
+    show_filters_->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
     show_filters_->SetLines(1);
 
     nux::BaseTexture* arrow;
@@ -362,20 +363,13 @@ void SearchBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
   graphics_engine.PushClippingRectangle(base);
 
   if (RedirectedAncestor())
-  {
-    unsigned int alpha = 0, src = 0, dest = 0;
-    graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
-    // This is necessary when doing redirected rendering.
-    // Clean the area below this view before drawing anything.
-    graphics_engine.GetRenderStates().SetBlend(false);
-    graphics_engine.QRP_Color(base.x, base.y, base.width, base.height, nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
-    graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
-  }
+    graphics::ClearGeometry(base);
 
-  bg_layer_->SetGeometry(nux::Geometry(base.x, base.y, last_width_, last_height_));
-  nux::GetPainter().RenderSinglePaintLayer(graphics_engine,
-                                           bg_layer_->GetGeometry(),
-                                           bg_layer_.get());
+  if (bg_layer_)
+  {
+    bg_layer_->SetGeometry(nux::Geometry(base.x, base.y, last_width_, last_height_));
+    bg_layer_->Renderlayer(graphics_engine);
+  }
 
   if (ShouldBeHighlighted())
   {
@@ -398,56 +392,46 @@ void SearchBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 
 void SearchBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  nux::Geometry const& geo = GetGeometry();
+  nux::Geometry const& base = GetGeometry();
 
-  graphics_engine.PushClippingRectangle(geo);
+  graphics_engine.PushClippingRectangle(base);
 
-  if (highlight_layer_ && ShouldBeHighlighted() && !IsFullRedraw())
-  {
-    nux::GetPainter().PushLayer(graphics_engine, highlight_layer_->GetGeometry(), highlight_layer_.get());
-  }
-
+  int pushed_paint_layers = 0;
   if (!IsFullRedraw())
   {
-    unsigned int current_alpha_blend;
-    unsigned int current_src_blend_factor;
-    unsigned int current_dest_blend_factor;
-    graphics_engine.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
-
-    graphics_engine.GetRenderStates().SetBlend(false);
-    graphics_engine.QRP_Color(
-      pango_entry_->GetX(),
-      pango_entry_->GetY(),
-      pango_entry_->GetWidth(),
-      pango_entry_->GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
-
-    if (spinner_->IsRedrawNeeded())
+    if (RedirectedAncestor())
     {
-      graphics_engine.QRP_Color(
-        spinner_->GetX(),
-        spinner_->GetY(),
-        spinner_->GetWidth(),
-        spinner_->GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+      graphics::ClearGeometry(pango_entry_->GetGeometry());
+      if (spinner_->IsRedrawNeeded())
+        graphics::ClearGeometry(spinner_->GetGeometry());
+    }
+
+    if (highlight_layer_ && ShouldBeHighlighted())
+    {
+      pushed_paint_layers++;
+      nux::GetPainter().PushLayer(graphics_engine, highlight_layer_->GetGeometry(), highlight_layer_.get());
     }
     
-    graphics_engine.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
-
-    gPainter.PushLayer(graphics_engine, bg_layer_->GetGeometry(), bg_layer_.get());
+    if (bg_layer_)
+    {
+      pushed_paint_layers++;
+      nux::GetPainter().PushLayer(graphics_engine, bg_layer_->GetGeometry(), bg_layer_.get());
+    }
   }
   else
   {
-    nux::GetPainter().PushPaintLayerStack();
+    nux::GetPainter().PushPaintLayerStack();      
   }
 
   layout_->ProcessDraw(graphics_engine, force_draw);
 
-  if (!IsFullRedraw())
+  if (IsFullRedraw())
   {
-    gPainter.PopBackground();
+    nux::GetPainter().PopPaintLayerStack();      
   }
-  else
+  else if (pushed_paint_layers > 0)
   {
-    nux::GetPainter().PopPaintLayerStack();
+    nux::GetPainter().PopBackground(pushed_paint_layers);
   }
 
   graphics_engine.PopClippingRectangle();
@@ -505,7 +489,8 @@ void SearchBar::UpdateBackground(bool force)
   << layered_layout_->GetGeometry().height << " - "
   << pango_entry_->GetGeometry().height;
 
-  if (geo.width == last_width_
+  if (!bg_layer_ &&
+      geo.width == last_width_
       && geo.height == last_height_
       && force == false)
     return;

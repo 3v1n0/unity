@@ -40,7 +40,7 @@ class TextInputMock : public TextInput
       using TextInput::get_input_string;
 
 
-      nux::StaticCairoText* GetHint() const { return hint_; }
+      StaticCairoText* GetHint() const { return hint_; }
       IMTextEntry* GetPangoEntry() const { return pango_entry_; }
 };
 
@@ -56,7 +56,7 @@ class TestTextInput : public ::testing::Test
      }
 
      nux::ObjectPtr<TextInputMock> entry;
-     nux::StaticCairoText* hint;
+     StaticCairoText* hint;
      IMTextEntry* pango_entry;
 };
 

@@ -123,39 +123,6 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
     QueueDraw();
   });
 
-  _ubus_manager.RegisterInterest(UBUS_REFINE_STATUS, [this] (GVariant *data)
-  {
-    gboolean status;
-    g_variant_get(data, UBUS_REFINE_STATUS_FORMAT_STRING, &status);
-
-    _refine_is_open = status;
-
-    nux::ROPConfig rop;
-    rop.Blend = true;
-    rop.SrcBlend = GL_ONE;
-    rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-
-    nux::TexCoordXForm texxform;
-    if (_refine_is_open)
-    {
-      _bg_refine_layer.reset(new nux::TextureLayer(_bg_refine_tex->GetDeviceTexture(),
-                             texxform,
-                             nux::color::White,
-                             false,
-                             rop));
-    }
-    else
-    {
-      _bg_refine_layer.reset(new nux::TextureLayer(_bg_refine_no_refine_tex->GetDeviceTexture(),
-                             texxform,
-                             nux::color::White,
-                             false,
-                             rop));
-
-    }
-    QueueDraw();
-  });
-
   // request the latest colour from bghash
   _ubus_manager.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
@@ -183,17 +150,6 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   else
   {
     _bg_refine_tex.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
-  }
-
-  //FIXME (gord) like 12 months later, still not async loading!
-  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR "/refine_gradient_panel_no_refine.png", &error);
-  if (error)
-  {
-    LOG_WARN(logger) << "Unable to texture " << PKGDATADIR << "/refine_gradient_panel_no_refine.png";
-  }
-  else
-  {
-    _bg_refine_no_refine_tex.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
   }
 
   rop.Blend = true;

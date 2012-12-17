@@ -61,6 +61,8 @@ public:
   void HideDash(bool restore_focus = true);
   void ShowDash();
 
+  void ReFocusKeyInput();
+
   bool IsVisible() const;
   nux::Geometry GetInputWindowGeometry();
 
@@ -83,6 +85,8 @@ private:
   void OnExternalShowDash(GVariant* variant);
   void OnExternalHideDash(GVariant* variant);
   void OnActivateRequest(GVariant* variant);
+
+  void FocusWindow();
 
   void StartShowHideTimeline();
   void OnViewShowHideFrame(double progress);

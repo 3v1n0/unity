@@ -41,11 +41,13 @@
 namespace nux
 {
 class AbstractPaintLayer;
+class TextureLayer;
 }
 
 namespace unity
 {
-
+namespace dash
+{
 
 class HSeparator;
 
@@ -61,8 +63,8 @@ public:
   void SetRendererName(const char *renderer_name);
   void SetHeaderCountVisible(bool disable);
 
-  nux::StaticCairoText* GetLabel();
-  nux::StaticCairoText* GetExpandLabel();
+  StaticCairoText* GetLabel();
+  StaticCairoText* GetExpandLabel();
 
   void SetChildView(dash::ResultView* view);
   nux::View* GetChildView();
@@ -83,6 +85,8 @@ public:
   int  GetHeaderHeight() const;
   bool HeaderIsFocusable() const;
   nux::View* GetHeaderFocusableView() const;
+
+  void SetFiltersExpanded(bool filters_expanded);
 
   sigc::signal<void, PlacesGroup*> expanded;
   sigc::signal<void, std::string const&> UriActivated;
@@ -127,14 +131,14 @@ private:
   std::unique_ptr<nux::AbstractPaintLayer> _focus_layer;
 
   IconTexture*          _icon;
-  nux::StaticCairoText* _name;
-  nux::StaticCairoText* _expand_label;
+  StaticCairoText* _name;
+  StaticCairoText* _expand_label;
   IconTexture*          _expand_icon;
 
   nux::BaseTexture* _background;
   nux::BaseTexture* _background_nofilters;
-  bool              _using_nofilters_background;
-  std::unique_ptr<nux::AbstractPaintLayer> _background_layer;
+  bool              _using_filters_background;
+  std::unique_ptr<nux::TextureLayer> _background_layer;
 
   bool  _is_expanded;
   unsigned _n_visible_items_in_unexpand_mode;
@@ -150,8 +154,11 @@ private:
 
   glib::Source::UniquePtr _relayout_idle;
   UBusManager _ubus;
+
+  friend class TestLensView;
 };
 
-}
+} // namespace dash
+} // namespace unity
 
 #endif

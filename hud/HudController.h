@@ -61,6 +61,7 @@ public:
   void ShowHideHud();
   void ShowHud();
   void HideHud(bool restore_focus = true);
+  void ReFocusKeyInput();
   bool IsVisible();
 
   nux::Geometry GetInputWindowGeometry();
@@ -76,6 +77,8 @@ private:
   void SetupHudView();
   void RegisterUBusInterests();
   void SetIcon(std::string const& icon_name);
+
+  void FocusWindow();
 
   int GetIdealMonitor();
   bool IsLockedToLauncher(int monitor);

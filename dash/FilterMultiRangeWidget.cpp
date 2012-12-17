@@ -23,6 +23,7 @@
 #include <Nux/Nux.h>
 
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/GraphicsUtils.h"
 #include "FilterMultiRangeWidget.h"
 #include "FilterMultiRangeButton.h"
 #include "FilterBasicButton.h"
@@ -162,6 +163,15 @@ std::string FilterMultiRange::GetFilterType()
 void FilterMultiRange::InitTheme()
 {
   //FIXME - build theme here - store images, cache them, fun fun fun
+}
+
+void FilterMultiRange::ClearRedirectedRenderChildArea()
+{
+  for (auto button : buttons_)
+  {
+    if (button->IsRedrawNeeded())
+      graphics::ClearGeometry(button->GetGeometry());
+  }
 }
 
 } // namespace dash

@@ -1,7 +1,13 @@
 unity (6.12.0daily12.12.05-0ubuntu2) UNRELEASED; urgency=low
 
+  [ Didier Roche ]
   * debian/control:
     - bump some missed build-deps
+
+  [ Brandon Schaefer ]
+  * Ported Compiz to 0.9.9
+  * debian/control:
+    - bump the build-deps
 
  -- Didier Roche <didrocks@ubuntu.com>  Wed, 05 Dec 2012 16:46:53 +0100
 
