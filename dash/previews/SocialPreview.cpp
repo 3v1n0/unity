@@ -196,11 +196,11 @@ void SocialPreview::SetupViews()
         nux::VLayout* social_data_layout = new nux::VLayout();
         social_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
-        title_ = new nux::StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
+        title_ = new StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
         title_->SetLines(-1);
         title_->SetFont(style.title_font().c_str());
 
-        subtitle_ = new nux::StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
+        subtitle_ = new StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
         subtitle_->SetFont(style.content_font().c_str());
         subtitle_->SetLines(-1);
 
@@ -239,10 +239,10 @@ void SocialPreview::SetupViews()
         std::string tmp_comments_hint = _("Comments");
         tmp_comments_hint += ":";
 
-        comments_hint_ = new nux::StaticCairoText(tmp_comments_hint, true, NUX_TRACKER_LOCATION);
+        comments_hint_ = new StaticCairoText(tmp_comments_hint, true, NUX_TRACKER_LOCATION);
         comments_hint_->SetLines(-1);
         comments_hint_->SetFont(style.info_hint_bold_font().c_str());
-        comments_hint_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_RIGHT);
+        comments_hint_->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
         comments_layout->AddView(comments_hint_.GetPointer(), 0, nux::MINOR_POSITION_START);
 
         comments_ = new SocialPreviewComments(preview_model_, NUX_TRACKER_LOCATION);

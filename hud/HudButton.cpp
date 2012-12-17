@@ -218,7 +218,7 @@ void HudButton::SetQuery(Query::Ptr query)
   hlayout_->Clear();
   for (auto item : items)
   {
-    nux::StaticCairoText* text = new nux::StaticCairoText(item.first);
+    StaticCairoText* text = new StaticCairoText(item.first);
     text->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, item.second ? 1.0f : 0.5f));
     text->SetFont(button_font);
     text->SetInputEventSensitivity(false);

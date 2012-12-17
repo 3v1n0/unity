@@ -30,7 +30,7 @@ using namespace unity;
 namespace
 {
 
-class MockStaticCairoText : public nux::StaticCairoText
+class MockStaticCairoText : public StaticCairoText
 {
 public:
   MOCK_METHOD2(SetBaseSize, void(int, int));

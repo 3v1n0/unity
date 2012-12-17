@@ -63,8 +63,8 @@ public:
   void SetRendererName(const char *renderer_name);
   void SetHeaderCountVisible(bool disable);
 
-  nux::StaticCairoText* GetLabel();
-  nux::StaticCairoText* GetExpandLabel();
+  StaticCairoText* GetLabel();
+  StaticCairoText* GetExpandLabel();
 
   void SetChildView(dash::ResultView* view);
   nux::View* GetChildView();
@@ -131,8 +131,8 @@ private:
   std::unique_ptr<nux::AbstractPaintLayer> _focus_layer;
 
   IconTexture*          _icon;
-  nux::StaticCairoText* _name;
-  nux::StaticCairoText* _expand_label;
+  StaticCairoText* _name;
+  StaticCairoText* _expand_label;
   IconTexture*          _expand_icon;
 
   nux::BaseTexture* _background;

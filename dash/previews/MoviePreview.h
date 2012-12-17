@@ -72,9 +72,9 @@ protected:
 
   nux::ObjectPtr<CoverArt> image_;
   nux::ObjectPtr<PreviewRatingsWidget> rating_;
-  nux::ObjectPtr<nux::StaticCairoText> title_;
-  nux::ObjectPtr<nux::StaticCairoText> subtitle_;
-  nux::ObjectPtr<nux::StaticCairoText> description_;
+  nux::ObjectPtr<StaticCairoText> title_;
+  nux::ObjectPtr<StaticCairoText> subtitle_;
+  nux::ObjectPtr<StaticCairoText> description_;
   nux::ObjectPtr<PreviewInfoHintWidget> preview_info_hints_;
 
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;

@@ -125,7 +125,7 @@ private:
   LensScrollView* fscroll_view_;
   nux::VLayout* fscroll_layout_;
   FilterBar* filter_bar_;
-  nux::StaticCairoText* no_results_;
+  StaticCairoText* no_results_;
 
   UBusManager ubus_manager_;
   glib::Source::UniquePtr model_updated_timeout_;

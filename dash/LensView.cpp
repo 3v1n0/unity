@@ -233,7 +233,7 @@ void LensView::SetupViews(nux::Area* show_filters)
   scroll_view_->SetLayout(scroll_layout_);
   scroll_view_->SetRightArea(show_filters);
 
-  no_results_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
+  no_results_ = new StaticCairoText("", NUX_TRACKER_LOCATION);
   no_results_->SetTextColor(nux::color::White);
   no_results_->SetVisible(false);
   scroll_layout_->AddView(no_results_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
