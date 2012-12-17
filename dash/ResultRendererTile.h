@@ -65,7 +65,9 @@ public:
                       Result& row,
                       ResultRendererState state,
                       nux::Geometry const& geometry,
-                      int x_offset, int y_offset);
+                      int x_offset, int y_offset,
+                      nux::Color const& color,
+                      float saturate);
 
   virtual void Preload(Result& row);
   virtual void Unload(Result& row);

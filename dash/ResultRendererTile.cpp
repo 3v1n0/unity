@@ -41,11 +41,47 @@ bool neko;
 namespace unity
 {
 DECLARE_LOGGER(logger, "unity.dash.results");
+
 namespace
 {
 const int FONT_SIZE = 10;
 
 const float CORNER_HIGHTLIGHT_RADIUS = 2.0f;
+
+void RenderTexture(nux::GraphicsEngine& GfxContext, 
+                   int x,
+                   int y,
+                   int width,
+                   int height,
+                   nux::ObjectPtr<nux::IOpenGLBaseTexture> const& texture,
+                   nux::TexCoordXForm &texxform,
+                   const nux::Color &color,
+                   float saturate
+)
+{
+  if (saturate == 1.0)
+  {
+    GfxContext.QRP_1Tex(x,
+                        y,
+                        width,
+                        height,
+                        texture,
+                        texxform,
+                        color);
+  }
+  else
+  {
+    GfxContext.QRP_TexDesaturate(x,
+                                 y,
+                                 width,
+                                 height,
+                                 texture,
+                                 texxform,
+                                 color,
+                                 saturate);
+  }
+}
+
 }
 
 namespace dash
@@ -72,7 +108,9 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
                                 Result& row,
                                 ResultRendererState state,
                                 nux::Geometry const& geometry,
-                                int x_offset, int y_offset)
+                                int x_offset, int y_offset,
+                                nux::Color const& color,
+                                float saturate)
 {
   TextureContainer* container = row.renderer<TextureContainer*>();
   if (container == nullptr)
@@ -104,36 +142,42 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
     int highlight_x =  (geometry.x + geometry.width/2) - style.GetTileIconHightlightWidth()/2;
     int highlight_y =  (geometry.y + padding + tile_icon_size / 2) - style.GetTileIconHightlightHeight()/2;
 
-    GfxContext.QRP_1Tex(highlight_x,
-                        highlight_y,
-                        container->prelight->GetWidth(),
-                        container->prelight->GetHeight(),
-                        container->prelight->GetDeviceTexture(),
-                        texxform,
-                        nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+    RenderTexture(GfxContext,
+                  highlight_x,
+                  highlight_y,
+                  container->prelight->GetWidth(),
+                  container->prelight->GetHeight(),
+                  container->prelight->GetDeviceTexture(),
+                  texxform,
+                  color,
+                  saturate);
   }
 
   // draw the icon
   if (container->icon)
   {
-    GfxContext.QRP_1Tex(icon_left_hand_side,
-                        icon_top_side,
-                        container->icon->GetWidth(),
-                        container->icon->GetHeight(),
-                        container->icon->GetDeviceTexture(),
-                        texxform,
-                        nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+    RenderTexture(GfxContext,
+                  icon_left_hand_side,
+                  icon_top_side,
+                  container->icon->GetWidth(),
+                  container->icon->GetHeight(),
+                  container->icon->GetDeviceTexture(),
+                  texxform,
+                  color,
+                  saturate);
   }
 
   if (container->text)
   {
-    GfxContext.QRP_1Tex(geometry.x + padding,
-                        geometry.y + tile_icon_size + spacing,
-                        style.GetTileWidth() - (padding * 2),
-                        style.GetTileHeight() - tile_icon_size - spacing,
-                        container->text->GetDeviceTexture(),
-                        texxform,
-                        nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+    RenderTexture(GfxContext,
+                  geometry.x + padding,
+                  geometry.y + tile_icon_size + spacing,
+                  style.GetTileWidth() - (padding * 2),
+                  style.GetTileHeight() - tile_icon_size - spacing,
+                  container->text->GetDeviceTexture(),
+                  texxform,
+                  color,
+                  saturate);
   }
 }
 

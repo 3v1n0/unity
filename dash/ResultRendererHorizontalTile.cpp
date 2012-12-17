@@ -44,6 +44,41 @@ const int   CARD_VIEW_HEIGHT               = 74;  // pixels
 const int   CARD_VIEW_HIGHLIGHT_CORNER_RADIUS = 2; // pixels
 const int   CARD_VIEW_ICON_OUTLINE_WIDTH   = 1;   // pixels
 const int   CARD_VIEW_TEXT_LINE_SPACING    = 0; // points
+
+void RenderTexture(nux::GraphicsEngine& GfxContext, 
+                   int x,
+                   int y,
+                   int width,
+                   int height,
+                   nux::ObjectPtr<nux::IOpenGLBaseTexture> const& texture,
+                   nux::TexCoordXForm &texxform,
+                   const nux::Color &color,
+                   float saturate
+)
+{
+  if (saturate == 1.0)
+  {
+    GfxContext.QRP_1Tex(x,
+                        y,
+                        width,
+                        height,
+                        texture,
+                        texxform,
+                        color);
+  }
+  else
+  {
+    GfxContext.QRP_TexDesaturate(x,
+                                 y,
+                                 width,
+                                 height,
+                                 texture,
+                                 texxform,
+                                 color,
+                                 saturate);
+  }
+}
+
 }
 
 namespace dash
@@ -74,7 +109,9 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
                                           Result& row,
                                           ResultRendererState state,
                                           nux::Geometry const& geometry,
-                                          int x_offset, int y_offset)
+                                          int x_offset, int y_offset,
+                                          nux::Color const& color,
+                                          float saturate)
 {
   TextureContainer* container = row.renderer<TextureContainer*>();
   if (container == nullptr)
@@ -100,13 +137,15 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
     GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
     GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-    GfxContext.QRP_1Tex(x,
-                        y,
-                        w,
-                        h,
-                        normal_cache_->GetDeviceTexture(),
-                        texxform,
-                        nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+    RenderTexture(GfxContext,
+                  x,
+                  y,
+                  w,
+                  h,
+                  normal_cache_->GetDeviceTexture(),
+                  texxform,
+                  color,
+                  saturate);
 
     GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
   }
@@ -119,13 +158,15 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
     int w = CARD_VIEW_WIDTH;
     int h = CARD_VIEW_HEIGHT;
 
-    GfxContext.QRP_1Tex(x,
-                        y,
-                        w,
-                        h,
-                        prelight_cache_->GetDeviceTexture(),
-                        texxform,
-                        nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+    RenderTexture(GfxContext,
+                  x,
+                  y,
+                  w,
+                  h,
+                  prelight_cache_->GetDeviceTexture(),
+                  texxform,
+                  color,
+                  saturate);
   }
 
   // draw the icon
@@ -141,13 +182,15 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
                               w + 2 * CARD_VIEW_ICON_OUTLINE_WIDTH,
                               h + 2 * CARD_VIEW_ICON_OUTLINE_WIDTH,
                               nux::color::Black);
-    GfxContext.QRP_1Tex(x,
-                        y,
-                        w,
-                        h,
-                        container->icon->GetDeviceTexture(),
-                        texxform,
-                        nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+    RenderTexture(GfxContext,
+                  x,
+                  y,
+                  w,
+                  h,
+                  container->icon->GetDeviceTexture(),
+                  texxform,
+                  color,
+                  saturate);
   }
 
   if (container->text)
@@ -157,13 +200,15 @@ void ResultRendererHorizontalTile::Render(nux::GraphicsEngine& GfxContext,
     int w = container->text->GetWidth();
     int h = container->text->GetHeight();
 
-    GfxContext.QRP_1Tex(x,
-                        y,
-                        w,
-                        h,
-                        container->text->GetDeviceTexture(),
-                        texxform,
-                        nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+    RenderTexture(GfxContext,
+                  x,
+                  y,
+                  w,
+                  h,
+                  container->text->GetDeviceTexture(),
+                  texxform,
+                  color,
+                  saturate);
   }
 }
 

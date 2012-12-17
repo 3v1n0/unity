@@ -44,7 +44,9 @@ public:
                       Result& row,
                       ResultRendererState state,
                       nux::Geometry const& geometry,
-                      int x_offset, int y_offset);
+                      int x_offset, int y_offset,
+                      nux::Color const& color,
+                      float saturate);
 
   virtual nux::NBitmapData* GetDndImage(Result const& row) const;
 

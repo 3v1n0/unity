@@ -157,6 +157,7 @@ LensView::LensView(Lens::Ptr lens, nux::Area* show_filters)
   , no_results_active_(false)
   , last_expanded_group_(nullptr)
   , last_good_filter_model_(-1)
+  , filter_expansion_pushed_(false)
 {
   SetupViews(show_filters);
   SetupCategories();
@@ -656,9 +657,8 @@ void LensView::OnGroupExpanded(PlacesGroup* group)
 {
   ResultViewGrid* grid = static_cast<ResultViewGrid*>(group->GetChildView());
   grid->expanded = group->GetExpanded();
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_QUEUE_DRAW);
 
-  CheckScrollBarState();
+  QueueRelayout();
 }
 
 void LensView::CheckScrollBarState()
@@ -832,6 +832,100 @@ void LensView::ActivateFirst()
 bool LensView::AcceptKeyNavFocus()
 {
   return false;
+}
+
+void LensView::ForceCategoryExpansion(std::string const& view_id, bool expand)
+{
+  for (auto it = categories_.begin(); it != categories_.end(); ++it)
+  {
+    if ((*it)->GetChildView()->unique_id == view_id)
+    {  if (expand)
+      {
+        (*it)->PushExpanded();
+        (*it)->SetExpanded(true);
+      }
+      else
+      {
+        (*it)->PopExpanded();
+      }
+    }
+  }
+}
+
+void LensView::SetResultsPreviewAnimationValue(float preview_animation)
+{
+  for (auto it = categories_.begin(); it != categories_.end(); ++it)
+  {
+    (*it)->SetResultsPreviewAnimationValue(preview_animation);
+  }
+}
+
+void LensView::EnableResultTextures(bool enable_result_textures)
+{
+  scroll_view_->EnableScrolling(!enable_result_textures);
+
+  for (auto it = categories_.begin(); it != categories_.end(); ++it)
+  {
+    ResultView* result_view = (*it)->GetChildView();
+    if (result_view)
+    {
+      result_view->enable_texture_render = enable_result_textures;
+    }  
+  } 
+}
+
+std::vector<ResultViewTexture::Ptr> LensView::GetResultTextureContainers()
+{
+  // iterate in visual order
+  std::vector<ResultViewTexture::Ptr> textures;
+  auto category_order = lens_->GetCategoriesOrder();
+  for (unsigned int i = 0; i < category_order.size(); i++)
+  {
+    unsigned category_index = category_order.at(i);
+    if (categories_.size() <= category_index)
+      continue;
+
+    PlacesGroup* category = categories_.at(category_index);
+    if (!category || !category->IsVisible())
+      continue;
+
+    ResultView* result_view = category->GetChildView();
+    if (result_view)
+    {
+      // concatenate textures
+      std::vector<ResultViewTexture::Ptr> const& category_textures = result_view->GetResultTextureContainers();
+      for (auto it = category_textures.begin(); it != category_textures.end(); ++it)
+      {
+        ResultViewTexture::Ptr const& result_texture = *it;
+        result_texture->category_index = category_index;
+        textures.push_back(result_texture);
+      }
+    }
+  }
+  return textures;
+}
+
+void LensView::RenderResultTexture(ResultViewTexture::Ptr const& result_texture)
+{
+  ResultView* result_view = GetResultViewForCategory(result_texture->category_index);
+  if (result_view)
+    result_view->RenderResultTexture(result_texture);
+}
+
+void LensView::PushFilterExpansion(bool expand)
+{
+  filter_expansion_pushed_ = filters_expanded;
+  filters_expanded = expand;
+}
+
+void LensView::PopFilterExpansion()
+{
+  filters_expanded = GetPushedFilterExpansion();
+}
+
+bool LensView::GetPushedFilterExpansion() const
+{
+  return filter_expansion_pushed_;
 }
 
 PlacesGroup* LensView::CreatePlacesGroup()

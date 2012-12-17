@@ -76,6 +76,17 @@ public:
   void CheckCategoryExpansion();
   void HideResultsMessage();
 
+  void ForceCategoryExpansion(std::string const& view_id, bool expand);
+  void PushFilterExpansion(bool expand);
+  void PopFilterExpansion();
+  bool GetPushedFilterExpansion() const;
+
+  void SetResultsPreviewAnimationValue(float preview_animation);
+
+  void EnableResultTextures(bool enable_result_textures);
+  std::vector<ResultViewTexture::Ptr> GetResultTextureContainers();
+  void RenderResultTexture(ResultViewTexture::Ptr const& result_texture);
+
 private:
   void SetupViews(nux::Area* show_filters);
   void SetupCategories();
@@ -131,6 +142,8 @@ private:
   glib::Source::UniquePtr model_updated_timeout_;
   int last_good_filter_model_;
   glib::Source::UniquePtr fix_filter_models_idle_;
+
+  bool filter_expansion_pushed_;
 
   friend class TestLensView;
 };

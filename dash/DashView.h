@@ -52,7 +52,7 @@ class DashLayout;
 class DashView : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(DashView, nux::View);
-  typedef std::map<std::string, LensView*> LensViews;
+  typedef std::map<std::string, nux::ObjectPtr<LensView>> LensViews;
 
 public:
   DashView();
@@ -64,9 +64,6 @@ public:
   void DisableBlur();
   void OnActivateRequest(GVariant* args);
   void SetMonitorOffset(int x, int y);
-
-  void SetPreview(Preview::Ptr preview);
-  void ClosePreview();
 
   std::string const GetIdForShortcutActivation(std::string const& shortcut) const;
   std::vector<char> GetAllShortcuts();
@@ -93,7 +90,17 @@ private:
   virtual long PostLayoutManagement (long LayoutResult);
   nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
 
+  // Dash animations
+  void DrawDashSplit(nux::GraphicsEngine& graphics_engine, nux::Geometry& split_clip);
+  void DrawPreviewContainer(nux::GraphicsEngine& graphics_engine);
+  void DrawPreviewResultTextures(nux::GraphicsEngine& gfx_context, bool force_draw);
+  void DrawPreview(nux::GraphicsEngine& gfx_context, bool force_draw);
+  void StartPreviewAnimation();
+  void EndPreviewAnimation();
+
   void BuildPreview(Preview::Ptr model);
+  void ClosePreview();
+  void OnPreviewAnimationFinished();
   void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
   void OnBackgroundColorChanged(GVariant* args);
   void OnSearchChanged(std::string const& search_string);
@@ -134,13 +141,15 @@ private:
 
   nux::VLayout* layout_;
   DashLayout* content_layout_;
+  nux::View* content_view_;
   nux::HLayout* search_bar_layout_;
   SearchBar* search_bar_;
   nux::VLayout* lenses_layout_;
   LensBar* lens_bar_;
 
-  LensView* home_view_;
-  LensView* active_lens_view_;
+  nux::ObjectPtr<LensView> home_view_;
+  nux::ObjectPtr<LensView> active_lens_view_;
+  nux::ObjectPtr<LensView> preview_lens_view_;
 
   // Drawing related
   nux::Geometry content_geo_;
@@ -161,20 +170,21 @@ private:
   nux::ObjectPtr<nux::IOpenGLBaseTexture> filter_view_copy_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> layout_copy_;
 
-  float fade_out_value_;
-  float fade_in_value_;
-  na::AnimateValue<float> animation_;
-
-  void FadeOutCallBack(float const& fade_out_value);
-  void FadeInCallBack(float const& fade_out_value);
-
+  int opening_column_x_;
   int opening_row_y_;
+  int opening_column_width_;
   int opening_row_height_;
 
-  sigc::connection fade_in_connection_;
-  sigc::connection fade_out_connection_;
-
   nux::Color background_color_;
+
+  std::unique_ptr<na::AnimateValue<float>> split_animation_;
+  float animate_split_value_;
+
+  std::unique_ptr<na::AnimateValue<float>> preview_container_animation_;
+  float animate_preview_container_value_;
+
+  std::unique_ptr<na::AnimateValue<float>> preview_animation_;
+  float animate_preview_value_;
 };
 
 

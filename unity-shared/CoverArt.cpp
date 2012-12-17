@@ -378,7 +378,7 @@ void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
   else if (IsFullRedraw())
   {
     if (waiting_)
-    {  
+    {
       nux::TexCoordXForm texxform;
       texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
       texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
@@ -395,11 +395,15 @@ void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
       int spin_offset_w = !(base.width % 2) ? 0 : 1;
       int spin_offset_h = !(base.height % 2) ? 0 : 1;
 
-      gfx_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(-spin_geo.x - (spin_geo.width + spin_offset_w) / 2.0f,
-                                                             -spin_geo.y - (spin_geo.height + spin_offset_h) / 2.0f, 0));
-      gfx_engine.PushModelViewMatrix(rotate_matrix_);
-      gfx_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(spin_geo.x + (spin_geo.width + spin_offset_w) / 2.0f,
-                                                             spin_geo.y + (spin_geo.height + spin_offset_h) / 2.0f, 0));
+      // we need to apply the rotation transformation first.
+      nux::Matrix4 matrix_texture;
+      matrix_texture = nux::Matrix4::TRANSLATE(-spin_geo.x - (spin_geo.width + spin_offset_w) / 2.0f,
+                                               -spin_geo.y - (spin_geo.height + spin_offset_h) / 2.0f, 0) * matrix_texture;
+      matrix_texture = rotate_matrix_ * matrix_texture;
+      matrix_texture = nux::Matrix4::TRANSLATE(spin_geo.x + (spin_geo.width + spin_offset_w) / 2.0f,
+                                               spin_geo.y + (spin_geo.height + spin_offset_h) / 2.0f, 0) * matrix_texture;
+
+      gfx_engine.SetModelViewMatrix(gfx_engine.GetModelViewMatrix() * matrix_texture);
 
       gfx_engine.QRP_1Tex(spin_geo.x,
                           spin_geo.y,
@@ -409,9 +413,8 @@ void CoverArt::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
                           texxform,
                           nux::color::White);
 
-      gfx_engine.PopModelViewMatrix();
-      gfx_engine.PopModelViewMatrix();
-      gfx_engine.PopModelViewMatrix();
+      // revert to model view matrix stack
+      gfx_engine.ApplyModelViewMatrix();
 
       if (!frame_timeout_)
       {
