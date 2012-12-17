@@ -1,4 +1,3 @@
-find_package (PkgConfig)
 set(UNITY_CORE_DEPS
     glib-2.0
     gio-2.0
