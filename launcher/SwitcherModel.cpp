@@ -29,15 +29,6 @@ using launcher::AbstractLauncherIcon;
 
 namespace switcher
 {
-namespace
-{
-bool compare_windows_by_active(Window first, Window second)
-{
-  WindowManager& wm = WindowManager::Default();
-  return wm.GetWindowActiveNumber(first) > wm.GetWindowActiveNumber(second);
-}
-
-}
 
 
 SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> icons)
@@ -142,10 +133,6 @@ int SwitcherModel::LastSelectionIndex()
   return last_index_;
 }
 
-bool WindowOnOtherViewport(Window xid)
-{
-  return !WindowManager::Default().IsWindowOnCurrentDesktop(xid);
-}
 
 std::vector<Window> SwitcherModel::DetailXids()
 {
@@ -155,15 +142,18 @@ std::vector<Window> SwitcherModel::DetailXids()
     results.push_back(window->window_id());
   }
 
+  WindowManager& wm = WindowManager::Default();
   if (only_detail_on_viewport)
   {
-    results.erase(std::remove_if(results.begin(),
-                                 results.end(),
-                                 WindowOnOtherViewport),
-                  results.end());
+    results.erase(std::remove_if(results.begin(), results.end(),
+        [&wm](Window xid) { return !wm.IsWindowOnCurrentDesktop(xid); }),
+        results.end());
   }
 
-  std::sort(results.begin(), results.end(), compare_windows_by_active);
+  std::sort(results.begin(), results.end(), [&wm](Window first, Window second) {
+      return wm.GetWindowActiveNumber(first) > wm.GetWindowActiveNumber(second);
+  });
+
 
   if (Selection() == last_active_icon_ && results.size () > 1)
   {
@@ -178,13 +168,14 @@ std::vector<Window> SwitcherModel::DetailXids()
 
 Window SwitcherModel::DetailSelectionWindow()
 {
-  if (!detail_selection || DetailXids ().empty())
+  auto windows = DetailXids();
+  if (!detail_selection || windows.empty())
     return 0;
 
-  if (detail_selection_index > DetailXids().size() - 1)
+  if (detail_selection_index > windows.size() - 1)
     return 0;
 
-  return DetailXids()[detail_selection_index];
+  return windows[detail_selection_index];
 }
 
 void SwitcherModel::Next()
