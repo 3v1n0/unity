@@ -35,7 +35,7 @@ BFBLauncherIcon::BFBLauncherIcon(LauncherHideMode hide_mode)
  , reader_(dash::LensDirectoryReader::GetDefault())
  , launcher_hide_mode_(hide_mode)
 {
-  tooltip_text = _("Dash Home");
+  tooltip_text = _("Search your computer and online sources");
   icon_name = PKGDATADIR"/launcher_bfb.png";
   position = Position::BEGIN;
   SetQuirk(Quirk::VISIBLE, true);

@@ -58,7 +58,6 @@ LensBarIcon::LensBarIcon(std::string id_, std::string icon_hint)
 
   active.changed.connect(sigc::mem_fun(this, &LensBarIcon::OnActiveChanged));
   key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection){ QueueDraw(); });
-  SetRedirectRenderingToTexture(true);
 }
 
 LensBarIcon::~LensBarIcon()

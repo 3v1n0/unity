@@ -51,7 +51,6 @@ class LensView : public nux::View, public unity::debug::Introspectable
   typedef std::map<PlacesGroup*, unsigned int> ResultCounts;
 
 public:
-  LensView();
   LensView(Lens::Ptr lens, nux::Area* show_filters);
 
   CategoryGroups& categories() { return categories_; }
@@ -105,9 +104,12 @@ private:
   void OnFilterAdded(Filter::Ptr filter);
   void OnFilterRemoved(Filter::Ptr filter);
   void OnViewTypeChanged(ViewType view_type);
+  void OnLensFilterExpanded(bool expanded);
   bool ReinitializeFilterModels();
   ResultViewGrid* GetGridForCategory(unsigned category_index);
   ResultView* GetResultViewForCategory(unsigned category_index);
+
+  virtual PlacesGroup* CreatePlacesGroup();
 
   void BuildPreview(std::string const& uri, Preview::Ptr model);
 
@@ -142,6 +144,8 @@ private:
   glib::Source::UniquePtr fix_filter_models_idle_;
 
   bool filter_expansion_pushed_;
+
+  friend class TestLensView;
 };
 
 

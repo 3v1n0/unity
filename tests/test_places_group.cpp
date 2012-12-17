@@ -27,6 +27,7 @@ using namespace testing;
 
 #include "PlacesGroup.h"
 using namespace unity;
+using namespace unity::dash;
 
 namespace {
 
@@ -84,6 +85,12 @@ public:
 
     ON_CALL(dash_style_, GetGroupUnexpandIcon())
          .WillByDefault(Return(dash_style_.base_texture_.GetPointer()));
+
+    ON_CALL(dash_style_, GetCategoryHeaderLeftPadding())
+         .WillByDefault(Return(19));
+
+    ON_CALL(dash_style_, GetPlacesGroupTopSpace())
+         .WillByDefault(Return(7));
   }
 
   NiceMock<MockDashStyle> dash_style_;

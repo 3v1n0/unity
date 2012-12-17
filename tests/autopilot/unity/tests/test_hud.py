@@ -329,7 +329,8 @@ class HudBehaviorTests(HudTestsBase):
         """Tests that Alt+ArrowKey events are correctly passed to the
         active window when Unity is not responding to them."""
 
-        self.start_app_window("Terminal")
+        term_win = self.start_app_window("Terminal")
+        self.assertProperty(term_win, is_focused=True)
 
         #There's no easy way to read text from terminal, writing input
         #to a text file and then reading from there works.
