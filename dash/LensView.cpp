@@ -34,6 +34,7 @@
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/PlacesVScrollBar.h"
 #include "unity-shared/PlacesOverlayVScrollBar.h"
+#include "unity-shared/GraphicsUtils.h"
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
@@ -106,12 +107,22 @@ public:
     up_area_ = area;
   }
 
-  void RedrawScrollbars()
+  void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   {
-    if (m_horizontal_scrollbar_enable)
-     _hscrollbar->QueueDraw();
-    if (m_vertical_scrollbar_enable)
-      _vscrollbar->QueueDraw();
+    if (RedirectedAncestor())
+    {
+      if (m_horizontal_scrollbar_enable && _hscrollbar->IsRedrawNeeded())
+        graphics::ClearGeometry(_hscrollbar->GetGeometry());
+      if (m_vertical_scrollbar_enable && _vscrollbar->IsRedrawNeeded())
+        graphics::ClearGeometry(_vscrollbar->GetGeometry());
+    }
+
+    ScrollView::DrawContent(graphics_engine, force_draw);
+  }
+
+  void EnableScrolling(bool enable_scrolling)
+  {
+    _vscrollbar->SetInputEventSensitivity(enable_scrolling);    
   }
 
 protected:
@@ -683,46 +694,30 @@ void LensView::OnViewTypeChanged(ViewType view_type)
   lens_->view_type = view_type;
 }
 
-void LensView::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)
+void LensView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  nux::Geometry const& geo = GetGeometry();
-
-  gfx_context.PushClippingRectangle(geo);
-
   if (RedirectedAncestor())
-  {
-    unsigned int alpha = 0, src = 0, dest = 0;
-    gfx_context.GetRenderStates().GetBlend(alpha, src, dest);
-    gfx_context.GetRenderStates().SetBlend(false);
-    gfx_context.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
-    gfx_context.GetRenderStates().SetBlend(alpha, src, dest);
-  }
-
-  nux::GetPainter().PaintBackground(gfx_context, geo);
-  gfx_context.PopClippingRectangle();
+    graphics::ClearGeometry(GetGeometry());
 }
 
-void LensView::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
+void LensView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  gfx_context.PushClippingRectangle(GetGeometry());
+  nux::Geometry const& geo(GetGeometry());
+  graphics_engine.PushClippingRectangle(geo);
 
-  // This is necessary when doing redirected rendering.
-  // Clean the area below this view before drawing anything.
-  if (RedirectedAncestor() && !IsFullRedraw())
+  if (!IsFullRedraw() && RedirectedAncestor())
   {
-    // scrollbars are drawn in Draw, not DrawContent, so we need to flag them to redraw.
-    scroll_view_->RedrawScrollbars();
-    fscroll_view_->RedrawScrollbars();
-
-    unsigned int alpha = 0, src = 0, dest = 0;
-    gfx_context.GetRenderStates().GetBlend(alpha, src, dest);
-    gfx_context.GetRenderStates().SetBlend(false);
-    gfx_context.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
-    gfx_context.GetRenderStates().SetBlend(alpha, src, dest);
+    for (PlacesGroup* category : categories_)
+    {
+      if (category->IsRedrawNeeded() && category->IsVisible())
+        graphics::ClearGeometry(category->GetGeometry());  
+    }
+    if (filter_bar_ && filter_bar_->IsVisible() && filter_bar_->IsRedrawNeeded())
+      graphics::ClearGeometry(filter_bar_->GetGeometry());  
   }
 
-  layout_->ProcessDraw(gfx_context, force_draw);
-  gfx_context.PopClippingRectangle();
+  layout_->ProcessDraw(graphics_engine, force_draw);
+  graphics_engine.PopClippingRectangle();
 }
 
 Lens::Ptr LensView::lens() const

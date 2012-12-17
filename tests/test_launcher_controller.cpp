@@ -929,6 +929,7 @@ TEST_F(TestLauncherController, GetLastIconPriorityUnStickyWithNoIconsAndUri)
   lc.Impl()->SetupIcons();
 
   auto first_icon = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + app::SW_CENTER);
+  ASSERT_TRUE(first_icon);
 
   int last_priority = lc.Impl()->GetLastIconPriority<VolumeLauncherIcon>(places::DEVICES_URI);
   EXPECT_EQ(last_priority, first_icon->SortPriority() - 1);

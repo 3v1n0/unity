@@ -21,6 +21,7 @@
 #ifndef PANEL_MENU_VIEW_H
 #define PANEL_MENU_VIEW_H
 
+#include <NuxCore/Animation.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
 #include <libbamf/libbamf.h>
@@ -29,7 +30,6 @@
 #include "unity-shared/StaticCairoText.h"
 #include "WindowButtons.h"
 #include "PanelTitlebarGrabAreaView.h"
-#include "unity-shared/Animator.h"
 #include "unity-shared/UBusWrapper.h"
 
 namespace unity
@@ -131,60 +131,60 @@ private:
   bool DrawMenus() const;
   bool DrawWindowButtons() const;
 
-  void OnFadeInChanged(double);
-  void OnFadeOutChanged(double);
+  void StartFadeIn(int duration = -1);
+  void StartFadeOut(int duration = -1);
+  void OnFadeAnimatorUpdated(double opacity);
 
-  glib::Object<BamfMatcher> _matcher;
+  glib::Object<BamfMatcher> matcher_;
 
-  nux::TextureLayer* _title_layer;
-  nux::ObjectPtr<WindowButtons> _window_buttons;
-  nux::ObjectPtr<PanelTitlebarGrabArea> _titlebar_grab_area;
-  nux::ObjectPtr<nux::BaseTexture> _title_texture;
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> _gradient_texture;
+  nux::TextureLayer* title_layer_;
+  nux::ObjectPtr<WindowButtons> window_buttons_;
+  nux::ObjectPtr<PanelTitlebarGrabArea> titlebar_grab_area_;
+  nux::ObjectPtr<nux::BaseTexture> title_texture_;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> gradient_texture_;
 
-  bool _is_inside;
-  bool _is_grabbed;
-  bool _is_maximized;
+  bool is_inside_;
+  bool is_grabbed_;
+  bool is_maximized_;
 
-  PanelIndicatorEntryView* _last_active_view;
-  glib::Object<BamfApplication> _new_application;
+  PanelIndicatorEntryView* last_active_view_;
+  glib::Object<BamfApplication> new_application_;
 
-  std::map<Window, bool> _decor_map;
-  std::set<Window> _maximized_set;
-  std::list<glib::Object<BamfApplication>> _new_apps;
-  std::string _panel_title;
-  nux::Geometry _last_geo;
+  std::map<Window, bool> decor_map_;
+  std::set<Window> maximized_set_;
+  std::list<glib::Object<BamfApplication>> new_apps_;
+  std::string panel_title_;
+  nux::Geometry last_geo_;
 
-  bool _overlay_showing;
-  bool _switcher_showing;
-  bool _launcher_keynav;
-  bool _show_now_activated;
-  bool _we_control_active;
-  bool _new_app_menu_shown;
+  bool overlay_showing_;
+  bool switcher_showing_;
+  bool launcher_keynav_;
+  bool show_now_activated_;
+  bool we_control_active_;
+  bool new_app_menu_shown_;
 
-  int _monitor;
-  Window _active_xid;
-  nux::Geometry _monitor_geo;
-  const std::string _desktop_name;
+  int monitor_;
+  Window active_xid_;
+  nux::Geometry monitor_geo_;
+  const std::string desktop_name_;
 
-  int _menus_fadein;
-  int _menus_fadeout;
-  int _menus_discovery;
-  int _menus_discovery_fadein;
-  int _menus_discovery_fadeout;
+  int menus_fadein_;
+  int menus_fadeout_;
+  int menus_discovery_;
+  int menus_discovery_fadein_;
+  int menus_discovery_fadeout_;
 
-  glib::Signal<void, BamfMatcher*, BamfView*> _view_opened_signal;
-  glib::Signal<void, BamfMatcher*, BamfView*> _view_closed_signal;
-  glib::Signal<void, BamfMatcher*, BamfView*, BamfView*> _active_win_changed_signal;
-  glib::Signal<void, BamfMatcher*, BamfApplication*, BamfApplication*> _active_app_changed_signal;
-  glib::Signal<void, BamfView*, gchar*, gchar*> _view_name_changed_signal;
-  sigc::connection _style_changed_connection;
+  glib::Signal<void, BamfMatcher*, BamfView*> view_opened_signal_;
+  glib::Signal<void, BamfMatcher*, BamfView*> view_closed_signal_;
+  glib::Signal<void, BamfMatcher*, BamfView*, BamfView*> active_win_changed_signal_;
+  glib::Signal<void, BamfMatcher*, BamfApplication*, BamfApplication*> active_app_changed_signal_;
+  glib::Signal<void, BamfView*, gchar*, gchar*> view_name_changed_signal_;
+  sigc::connection style_changed_connection_;
 
-  UBusManager _ubus_manager;
-  glib::SourceManager _sources;
+  UBusManager ubus_manager_;
+  glib::SourceManager sources_;
 
-  Animator _fade_in_animator;
-  Animator _fade_out_animator;
+  nux::animation::AnimateValue<double> opacity_animator_;
 };
 
 }
