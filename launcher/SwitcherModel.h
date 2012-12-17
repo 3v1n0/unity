@@ -91,11 +91,10 @@ protected:
   void AddProperties(GVariantBuilder* builder);
 
 private:
-  Base             _inner;
-  unsigned int     _index;
-  unsigned int     _last_index;
-
-  launcher::AbstractLauncherIcon::Ptr _last_active_icon;
+  Base                                inner_;
+  unsigned int                        index_;
+  unsigned int                        last_index_;
+  launcher::AbstractLauncherIcon::Ptr last_active_icon_;
 };
 
 }
