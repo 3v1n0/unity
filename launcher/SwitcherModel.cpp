@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -32,7 +32,7 @@ namespace switcher
 
 
 SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> icons)
-  : inner_(icons)
+  : applications_(icons)
   , index_(0)
   , last_index_(0)
 {
@@ -40,19 +40,19 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> icons)
   detail_selection_index = 0;
   only_detail_on_viewport = false;
 
-  for (auto icon : inner_)
+  for (auto application : applications_)
   {
-    AddChild(icon.GetPointer());
-    if (icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
-      last_active_icon_ = icon;
+    AddChild(application.GetPointer());
+    if (application->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
+      last_active_application_ = application;
   }
 }
 
 SwitcherModel::~SwitcherModel()
 {
-  for (auto icon : inner_)
+  for (auto application : applications_)
   {
-    RemoveChild(icon.GetPointer());
+    RemoveChild(application.GetPointer());
   }
 }
 
@@ -75,25 +75,25 @@ void SwitcherModel::AddProperties(GVariantBuilder* builder)
 SwitcherModel::iterator
 SwitcherModel::begin()
 {
-  return inner_.begin();
+  return applications_.begin();
 }
 
 SwitcherModel::iterator
 SwitcherModel::end()
 {
-  return inner_.end();
+  return applications_.end();
 }
 
 SwitcherModel::reverse_iterator
 SwitcherModel::rbegin()
 {
-  return inner_.rbegin();
+  return applications_.rbegin();
 }
 
 SwitcherModel::reverse_iterator
 SwitcherModel::rend()
 {
-  return inner_.rend();
+  return applications_.rend();
 }
 
 AbstractLauncherIcon::Ptr
@@ -101,19 +101,19 @@ SwitcherModel::at(unsigned int index)
 {
   if ((int) index >= Size ())
     return AbstractLauncherIcon::Ptr();
-  return inner_[index];
+  return applications_[index];
 }
 
 int
 SwitcherModel::Size()
 {
-  return inner_.size();
+  return applications_.size();
 }
 
 AbstractLauncherIcon::Ptr
 SwitcherModel::Selection()
 {
-  return inner_.at(index_);
+  return applications_.at(index_);
 }
 
 int
@@ -125,7 +125,7 @@ SwitcherModel::SelectionIndex()
 AbstractLauncherIcon::Ptr
 SwitcherModel::LastSelection()
 {
-  return inner_.at(last_index_);
+  return applications_.at(last_index_);
 }
 
 int SwitcherModel::LastSelectionIndex()
@@ -155,7 +155,7 @@ std::vector<Window> SwitcherModel::DetailXids()
   });
 
 
-  if (Selection() == last_active_icon_ && results.size () > 1)
+  if (Selection() == last_active_application_ && results.size () > 1)
   {
     for (unsigned int i = 0; i < results.size()-1; i++)
     {
@@ -183,7 +183,7 @@ void SwitcherModel::Next()
   last_index_ = index_;
 
   index_++;
-  if (index_ >= inner_.size())
+  if (index_ >= applications_.size())
     index_ = 0;
 
   detail_selection = false;
@@ -198,14 +198,14 @@ void SwitcherModel::Prev()
   if (index_ > 0)
     index_--;
   else
-    index_ = inner_.size() - 1;
+    index_ = applications_.size() - 1;
 
   detail_selection = false;
   detail_selection_index = 0;
   selection_changed.emit(Selection());
 }
 
-void SwitcherModel::NextDetail ()
+void SwitcherModel::NextDetail()
 {
   if (!detail_selection())
     return;
@@ -252,7 +252,7 @@ void SwitcherModel::Select(AbstractLauncherIcon::Ptr const& selection)
 void
 SwitcherModel::Select(unsigned int index)
 {
-  unsigned int target = CLAMP(index, 0, inner_.size() - 1);
+  unsigned int target = CLAMP(index, 0, applications_.size() - 1);
 
   if (target != index_)
   {
