@@ -83,7 +83,7 @@ unity_places_group_accessible_new(nux::Object* object)
 {
   AtkObject* accessible = NULL;
 
-  g_return_val_if_fail(dynamic_cast<unity::PlacesGroup*>(object), NULL);
+  g_return_val_if_fail(dynamic_cast<unity::dash::PlacesGroup*>(object), NULL);
 
   accessible = ATK_OBJECT(g_object_new(UNITY_TYPE_PLACES_GROUP_ACCESSIBLE, NULL));
 
@@ -102,7 +102,7 @@ unity_places_group_accessible_new(nux::Object* object)
 static void
 ensure_proper_name(UnityPlacesGroupAccessible* self)
 {
-  unity::PlacesGroup* group = NULL;
+  unity::dash::PlacesGroup* group = NULL;
   nux::Object* nux_object = NULL;
   nux::StaticCairoText* label = NULL;
   nux::StaticCairoText* expand_label = NULL;
@@ -110,7 +110,7 @@ ensure_proper_name(UnityPlacesGroupAccessible* self)
   AtkObject* expand_label_accessible = NULL;
 
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(self));
-  group = dynamic_cast<unity::PlacesGroup*>(nux_object);
+  group = dynamic_cast<unity::dash::PlacesGroup*>(nux_object);
 
   if (group == NULL)
     return;
@@ -142,7 +142,7 @@ static void
 unity_places_group_accessible_initialize(AtkObject* accessible,
                                          gpointer data)
 {
-  unity::PlacesGroup* group = NULL;
+  unity::dash::PlacesGroup* group = NULL;
   nux::Object* nux_object = NULL;
   nux::StaticCairoText* label = NULL;
 
@@ -151,7 +151,7 @@ unity_places_group_accessible_initialize(AtkObject* accessible,
   atk_object_set_role(accessible, ATK_ROLE_PANEL);
 
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(accessible));
-  group = dynamic_cast<unity::PlacesGroup*>(nux_object);
+  group = dynamic_cast<unity::dash::PlacesGroup*>(nux_object);
 
   if (group == NULL)
     return;

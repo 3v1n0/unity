@@ -11,8 +11,6 @@ set(UNITY_CORE_DEPS
 pkg_check_modules (CORE_DEPS REQUIRED ${UNITY_CORE_DEPS})
 pkg_check_modules (PRIVATE_CORE_DEPS REQUIRED unity-protocol-private)
 
-execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} unity --variable lensesdir OUTPUT_VARIABLE _lensesdir OUTPUT_STRIP_TRAILING_WHITESPACE)
-
 #
 # Headers & Sources
 #
@@ -103,10 +101,6 @@ set (CORE_SOURCES
 #
 # CFLAGS and LIBS
 #
-set (CFLAGS
-     "-DLENSES_DIR=\"${_lensesdir}\""
-     )
-add_definitions (${CFLAGS})
 include_directories(${CORE_DEPS_INCLUDE_DIRS})
 include_directories(${CMAKE_BINARY_DIR})
 
