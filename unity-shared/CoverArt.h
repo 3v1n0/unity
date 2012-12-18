@@ -81,7 +81,7 @@ protected:
 
 private:
   nux::ObjectPtr<nux::BaseTexture> texture_screenshot_;
-  nux::StaticCairoText* overlay_text_;
+  StaticCairoText* overlay_text_;
 
   std::string image_hint_;
   unsigned int thumb_handle_;

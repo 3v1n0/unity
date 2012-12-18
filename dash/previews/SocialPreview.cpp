@@ -196,11 +196,11 @@ void SocialPreview::SetupViews()
         nux::VLayout* social_data_layout = new nux::VLayout();
         social_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
-        title_ = new nux::StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
+        title_ = new StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
         title_->SetLines(-1);
         title_->SetFont(style.title_font().c_str());
 
-        subtitle_ = new nux::StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
+        subtitle_ = new StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
         subtitle_->SetFont(style.content_font().c_str());
         subtitle_->SetLines(-1);
 
@@ -239,10 +239,10 @@ void SocialPreview::SetupViews()
         std::string tmp_comments_hint = _("Comments");
         tmp_comments_hint += ":";
 
-        comments_hint_ = new nux::StaticCairoText(tmp_comments_hint, true, NUX_TRACKER_LOCATION);
+        comments_hint_ = new StaticCairoText(tmp_comments_hint, true, NUX_TRACKER_LOCATION);
         comments_hint_->SetLines(-1);
         comments_hint_->SetFont(style.info_hint_bold_font().c_str());
-        comments_hint_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_RIGHT);
+        comments_hint_->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
         comments_layout->AddView(comments_hint_.GetPointer(), 0, nux::MINOR_POSITION_START);
 
         comments_ = new SocialPreviewComments(preview_model_, NUX_TRACKER_LOCATION);
@@ -281,12 +281,12 @@ void SocialPreview::PreLayoutManagement()
   nux::Geometry geo_content(geo.x, geo.y, style.GetAppImageAspectRatio() * geo.height, geo.height);
 
   if (geo.width - geo_content.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
-    geo_content.width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
+    geo_content.width = std::max(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
   if (content_) { content_->SetMinMaxSize(geo_content.width, geo_content.height); }
   if (image_) { image_->SetMinMaxSize(geo_content.width, geo_content.height); }
 
-  int details_width = MAX(0, geo.width - geo_content.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
-  int top_social_info_max_width = details_width - style.GetAppIconAreaWidth() - style.GetSpaceBetweenIconAndDetails();
+  int details_width = std::max(0, geo.width - geo_content.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
+  int top_social_info_max_width = std::max(0, details_width - style.GetAppIconAreaWidth() - style.GetSpaceBetweenIconAndDetails());
 
   if (title_) { title_->SetMaximumWidth(top_social_info_max_width); }
   if (subtitle_) { subtitle_->SetMaximumWidth(top_social_info_max_width); }

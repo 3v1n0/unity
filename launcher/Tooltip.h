@@ -54,9 +54,9 @@ public:
 
 protected:
   // protected to simplify testing
-  nux::ObjectPtr<nux::StaticCairoText> _tooltip_text;
+  nux::ObjectPtr<StaticCairoText> _tooltip_text;
 
-  void RecvCairoTextChanged(nux::StaticCairoText* cairo_text);
+  void RecvCairoTextChanged(StaticCairoText* cairo_text);
 
   void PreLayoutManagement();
 

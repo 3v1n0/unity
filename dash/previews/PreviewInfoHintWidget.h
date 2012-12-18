@@ -28,7 +28,7 @@
 #include <UnityCore/Preview.h>
 #include "unity-shared/Introspectable.h"
 
-namespace nux
+namespace unity
 {
 class StaticCairoText;
 }
@@ -72,7 +72,7 @@ protected:
 protected:
   int icon_size_;
 
-  typedef nux::ObjectPtr<nux::StaticCairoText> StaticCairoTextPtr;
+  typedef nux::ObjectPtr<unity::StaticCairoText> StaticCairoTextPtr;
   typedef std::pair<StaticCairoTextPtr, StaticCairoTextPtr> InfoHint; 
   std::list<InfoHint> info_hints_;
   

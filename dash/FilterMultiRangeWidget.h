@@ -61,6 +61,8 @@ protected:
   void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
 
+  void ClearRedirectedRenderChildArea();
+
 private:
   void OnAllActivated(nux::View* view);
   void OnOptionAdded(dash::FilterOption::Ptr const& new_filter);

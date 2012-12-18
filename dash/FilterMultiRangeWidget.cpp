@@ -23,6 +23,7 @@
 #include <Nux/Nux.h>
 
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/GraphicsUtils.h"
 #include "FilterMultiRangeWidget.h"
 #include "FilterMultiRangeButton.h"
 #include "FilterBasicButton.h"
@@ -382,6 +383,15 @@ void FilterMultiRange::Click(FilterMultiRangeButtonPtr const& activated_button)
       activated_button->Deactivate();
   else
     activated_button->Activate();
+}
+
+void FilterMultiRange::ClearRedirectedRenderChildArea()
+{
+  for (auto button : buttons_)
+  {
+    if (button->IsRedrawNeeded())
+      graphics::ClearGeometry(button->GetGeometry());
+  }
 }
 
 } // namespace dash

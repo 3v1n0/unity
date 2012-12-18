@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -29,39 +29,30 @@ using launcher::AbstractLauncherIcon;
 
 namespace switcher
 {
-namespace
-{
-bool compare_windows_by_active(Window first, Window second)
-{
-  WindowManager& wm = WindowManager::Default();
-  return wm.GetWindowActiveNumber(first) > wm.GetWindowActiveNumber(second);
-}
-
-}
 
 
-SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> icons)
-  : _inner(icons)
-  , _index(0)
-  , _last_index(0)
+SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> const& icons)
+  : applications_(icons)
+  , index_(0)
+  , last_index_(0)
 {
   detail_selection = false;
   detail_selection_index = 0;
   only_detail_on_viewport = false;
 
-  for (auto icon : _inner)
+  for (auto application : applications_)
   {
-    AddChild(icon.GetPointer());
-    if (icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
-      _last_active_icon = icon;
+    AddChild(application.GetPointer());
+    if (application->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
+      last_active_application_ = application;
   }
 }
 
 SwitcherModel::~SwitcherModel()
 {
-  for (auto icon : _inner)
+  for (auto application : applications_)
   {
-    RemoveChild(icon.GetPointer());
+    RemoveChild(application.GetPointer());
   }
 }
 
@@ -84,25 +75,25 @@ void SwitcherModel::AddProperties(GVariantBuilder* builder)
 SwitcherModel::iterator
 SwitcherModel::begin()
 {
-  return _inner.begin();
+  return applications_.begin();
 }
 
 SwitcherModel::iterator
 SwitcherModel::end()
 {
-  return _inner.end();
+  return applications_.end();
 }
 
 SwitcherModel::reverse_iterator
 SwitcherModel::rbegin()
 {
-  return _inner.rbegin();
+  return applications_.rbegin();
 }
 
 SwitcherModel::reverse_iterator
 SwitcherModel::rend()
 {
-  return _inner.rend();
+  return applications_.rend();
 }
 
 AbstractLauncherIcon::Ptr
@@ -110,42 +101,38 @@ SwitcherModel::at(unsigned int index)
 {
   if ((int) index >= Size ())
     return AbstractLauncherIcon::Ptr();
-  return _inner[index];
+  return applications_[index];
 }
 
 int
 SwitcherModel::Size()
 {
-  return _inner.size();
+  return applications_.size();
 }
 
 AbstractLauncherIcon::Ptr
 SwitcherModel::Selection()
 {
-  return _inner.at(_index);
+  return applications_.at(index_);
 }
 
 int
 SwitcherModel::SelectionIndex()
 {
-  return _index;
+  return index_;
 }
 
 AbstractLauncherIcon::Ptr
 SwitcherModel::LastSelection()
 {
-  return _inner.at(_last_index);
+  return applications_.at(last_index_);
 }
 
 int SwitcherModel::LastSelectionIndex()
 {
-  return _last_index;
+  return last_index_;
 }
 
-bool WindowOnOtherViewport(Window xid)
-{
-  return !WindowManager::Default().IsWindowOnCurrentDesktop(xid);
-}
 
 std::vector<Window> SwitcherModel::DetailXids()
 {
@@ -155,17 +142,20 @@ std::vector<Window> SwitcherModel::DetailXids()
     results.push_back(window->window_id());
   }
 
+  WindowManager& wm = WindowManager::Default();
   if (only_detail_on_viewport)
   {
-    results.erase(std::remove_if(results.begin(),
-                                 results.end(),
-                                 WindowOnOtherViewport),
-                  results.end());
+    results.erase(std::remove_if(results.begin(), results.end(),
+        [&wm](Window xid) { return !wm.IsWindowOnCurrentDesktop(xid); }),
+        results.end());
   }
 
-  std::sort(results.begin(), results.end(), compare_windows_by_active);
+  std::sort(results.begin(), results.end(), [&wm](Window first, Window second) {
+      return wm.GetWindowActiveNumber(first) > wm.GetWindowActiveNumber(second);
+  });
 
-  if (Selection() == _last_active_icon && results.size () > 1)
+
+  if (Selection() == last_active_application_ && results.size () > 1)
   {
     for (unsigned int i = 0; i < results.size()-1; i++)
     {
@@ -178,22 +168,23 @@ std::vector<Window> SwitcherModel::DetailXids()
 
 Window SwitcherModel::DetailSelectionWindow()
 {
-  if (!detail_selection || DetailXids ().empty())
+  auto windows = DetailXids();
+  if (!detail_selection || windows.empty())
     return 0;
 
-  if (detail_selection_index > DetailXids().size() - 1)
+  if (detail_selection_index > windows.size() - 1)
     return 0;
 
-  return DetailXids()[detail_selection_index];
+  return windows[detail_selection_index];
 }
 
 void SwitcherModel::Next()
 {
-  _last_index = _index;
+  last_index_ = index_;
 
-  _index++;
-  if (_index >= _inner.size())
-    _index = 0;
+  index_++;
+  if (index_ >= applications_.size())
+    index_ = 0;
 
   detail_selection = false;
   detail_selection_index = 0;
@@ -202,19 +193,19 @@ void SwitcherModel::Next()
 
 void SwitcherModel::Prev()
 {
-  _last_index = _index;
+  last_index_ = index_;
 
-  if (_index > 0)
-    _index--;
+  if (index_ > 0)
+    index_--;
   else
-    _index = _inner.size() - 1;
+    index_ = applications_.size() - 1;
 
   detail_selection = false;
   detail_selection_index = 0;
   selection_changed.emit(Selection());
 }
 
-void SwitcherModel::NextDetail ()
+void SwitcherModel::NextDetail()
 {
   if (!detail_selection())
     return;
@@ -243,10 +234,10 @@ void SwitcherModel::Select(AbstractLauncherIcon::Ptr const& selection)
   {
     if (*it == selection)
     {
-      if ((int) _index != i)
+      if ((int) index_ != i)
       {
-        _last_index = _index;
-        _index = i;
+        last_index_ = index_;
+        index_ = i;
 
         detail_selection = false;
         detail_selection_index = 0;
@@ -261,12 +252,12 @@ void SwitcherModel::Select(AbstractLauncherIcon::Ptr const& selection)
 void
 SwitcherModel::Select(unsigned int index)
 {
-  unsigned int target = CLAMP(index, 0, _inner.size() - 1);
+  unsigned int target = CLAMP(index, 0, applications_.size() - 1);
 
-  if (target != _index)
+  if (target != index_)
   {
-    _last_index = _index;
-    _index = target;
+    last_index_ = index_;
+    index_ = target;
 
     detail_selection = false;
     detail_selection_index = 0;

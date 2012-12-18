@@ -3,12 +3,20 @@
 #include <gtk/gtk.h>
 #include <NuxCore/Logger.h>
 #include <Nux/Nux.h>
+#include <config.h>
 
 #include "logger_helper.h"
 
 int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
+
+  // init XDG_DATA_DIRS before GTK to point to the local test-dir as 
+  // the environment is only read once by glib and then cached
+  const std::string LOCAL_DATA_DIR = BUILDDIR"/tests/data:/usr/share";
+  g_setenv("XDG_DATA_DIRS", LOCAL_DATA_DIR.c_str(), TRUE);
+
+
   gtk_init(&argc, &argv);
   setlocale(LC_ALL, "C");
 

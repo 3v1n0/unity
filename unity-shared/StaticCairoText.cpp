@@ -37,12 +37,9 @@
 
 #include "CairoTexture.h"
 
-using namespace unity;
+using namespace nux;
 
-// TODO: Tim Penhey 2011-05-16
-// We shouldn't be pushing stuff into the nux namespace from the unity
-// codebase, that is just rude.
-namespace nux
+namespace unity
 {
 struct StaticCairoText::Impl
 {

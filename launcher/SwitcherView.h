@@ -112,7 +112,7 @@ private:
   SwitcherModel::Ptr model_;
   ui::LayoutSystem layout_system_;
   ui::AbstractIconRenderer::Ptr icon_renderer_;
-  nux::ObjectPtr<nux::StaticCairoText> text_view_;
+  nux::ObjectPtr<StaticCairoText> text_view_;
 
   bool animation_draw_;
   bool target_sizes_set_;

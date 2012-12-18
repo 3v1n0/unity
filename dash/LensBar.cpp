@@ -26,6 +26,8 @@
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/CairoTexture.h"
+#include "unity-shared/GraphicsUtils.h"
+#include "LensBar.h"
 #include "unity-shared/UBusMessages.h"
 
 namespace unity
@@ -71,7 +73,7 @@ void LensBar::SetupLayout()
   std::string legal_text("<span underline='single'>");
   legal_text.append(g_dgettext("credentials-control-center", "Legal notice"));
   legal_text.append("</span>");
-  legal_ = new nux::StaticCairoText(legal_text);
+  legal_ = new StaticCairoText(legal_text);
   legal_->SetFont("Ubuntu 14px");
   legal_layout_->AddSpace(1, 1);
   legal_layout_->SetLeftAndRightPadding(0, 10);
@@ -176,9 +178,15 @@ void LensBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 
   graphics_engine.PushClippingRectangle(base);
 
-  bg_layer_->SetGeometry(base);
-  nux::GetPainter().RenderSinglePaintLayer(graphics_engine, base, bg_layer_.get());
- 
+  if (RedirectedAncestor())
+    graphics::ClearGeometry(base);
+
+  if (bg_layer_)
+  {
+    bg_layer_->SetGeometry(base);
+    bg_layer_->Renderlayer(graphics_engine);
+  }
+
   graphics_engine.PopClippingRectangle();
 }
 
@@ -189,30 +197,35 @@ void LensBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   graphics_engine.PushClippingRectangle(base);
 
   int pushed_paint_layers = 0;
-  if(RedirectedAncestor())
+  if (!IsFullRedraw())
   {
-    {
-      unsigned int alpha = 0, src = 0, dest = 0;
-      graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
-      // This is necessary when doing redirected rendering.
-      // Clean the area below this view before drawing anything.
-      graphics_engine.GetRenderStates().SetBlend(false);
-      graphics_engine.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
-      graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
+    if (RedirectedAncestor())
+    { 
+      // Whole Lens bar needs to be cleared because the PaintAll forces redraw.
+      graphics::ClearGeometry(base);
     }
 
-    nux::GetPainter().RenderSinglePaintLayer(graphics_engine, bg_layer_->GetGeometry(), bg_layer_.get());
+    if (bg_layer_)
+    {
+      nux::GetPainter().PushLayer(graphics_engine, bg_layer_->GetGeometry(), bg_layer_.get());
+      pushed_paint_layers++;
+    }
   }
-  else if (!IsFullRedraw())
+  else
   {
-    pushed_paint_layers += 2;
-    nux::GetPainter().PushLayer(graphics_engine, bg_layer_->GetGeometry(), bg_layer_.get());
+    nux::GetPainter().PushPaintLayerStack();    
   }
 
   GetLayout()->ProcessDraw(graphics_engine, true);
 
-  if (pushed_paint_layers)
+  if (IsFullRedraw())
+  {
+    nux::GetPainter().PopPaintLayerStack();      
+  }
+  else if (pushed_paint_layers > 0)
+  {
     nux::GetPainter().PopBackground(pushed_paint_layers);
+  }
 
   for (auto icon: icons_)
   {

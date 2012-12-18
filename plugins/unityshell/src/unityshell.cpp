@@ -851,19 +851,13 @@ bool UnityScreen::TopPanelBackgroundTextureNeedsUpdate() const
 
 void UnityScreen::UpdateTopPanelBackgroundTexture()
 {
-  auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
   auto &panel_style = panel::Style::Instance();
 
   panel_texture_.Release();
+  auto texture = panel_style.GetBackground(screen->width(), screen->height(), 1.0f);
 
-  std::unique_ptr<nux::NBitmapData> bitmap(panel_style.GetBackground(screen->width(), screen->height(), 1.0f));
-  nux::ObjectPtr<nux::BaseTexture> texture2D(gpu_device->CreateSystemCapableTexture());
-
-  if (bitmap && texture2D)
-  {
-    texture2D->Update(bitmap.get());
-    panel_texture_ = texture2D->GetDeviceTexture();
-  }
+  if (texture)
+    panel_texture_ = texture->GetDeviceTexture();
 
   panel_texture_has_changed_ = false;
 }
@@ -2639,7 +2633,7 @@ UnityWindow::focus ()
 }
 
 bool
-UnityWindow::minimized ()
+UnityWindow::minimized () const
 {
   return mMinimizeHandler.get () != nullptr;
 }
@@ -2729,12 +2723,17 @@ void UnityWindow::windowNotify(CompWindowNotify n)
   {
     UnityScreen* us = UnityScreen::get(screen);
 
-    // can't rely on launcher->IsOverlayVisible on focus change (because ubus is async close on focus change.)
-    if (us && (us->dash_controller_->IsVisible() || us->hud_controller_->IsVisible()))
+    // If focus gets moved to an external program while the Dash/Hud is open, refocus key input.
+    if (us)
     {
-      CompWindow *lw;
-      lw = screen->findWindow(us->launcher_controller_->LauncherWindowId(0));
-      lw->moveInputFocusTo();
+      if (us->dash_controller_->IsVisible())
+      {
+        us->dash_controller_->ReFocusKeyInput();
+      }
+      else if (us->hud_controller_->IsVisible())
+      {
+        us->hud_controller_->ReFocusKeyInput();
+      }
     }
   }
 }

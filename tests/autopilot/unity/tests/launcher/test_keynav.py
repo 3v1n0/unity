@@ -238,4 +238,4 @@ class LauncherKeyNavTests(LauncherTestCase):
       """The panel title must change when in key nav mode."""
 
       self.start_keynav_with_cleanup_cancel()
-      self.assertThat(self.panels.get_active_panel().title, Eventually(Equals("Dash Home")))
+      self.assertThat(self.panels.get_active_panel().title, Eventually(Equals("Search your computer and online sources")))

@@ -1193,13 +1193,15 @@ void LauncherIcon::EmitRemove()
 
 void LauncherIcon::Stick(bool save)
 {
+  // allow save() even for already "_sticky" icons that may have been
+  // made _sticky without "save" (like SoftwareCenterApplications)
+  if (save)
+    position_saved.emit();
+
   if (_sticky)
     return;
 
   _sticky = true;
-
-  if (save)
-    position_saved.emit();
 
   SetQuirk(Quirk::VISIBLE, true);
 }
