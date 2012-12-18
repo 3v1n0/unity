@@ -93,48 +93,47 @@ private:
   void SyncGeometries();
   void AddPanelView(PanelIndicatorsView* child, unsigned int stretchFactor);
 
-  indicator::DBusIndicators::Ptr _remote;
+  indicator::DBusIndicators::Ptr remote_;
 
   // No ownership is taken for these views, that is done by the AddChild method.
-  PanelMenuView* _menu_view;
-  PanelTray* _tray;
-  PanelIndicatorsView* _indicators;
+  PanelMenuView* menu_view_;
+  PanelTray* tray_;
+  PanelIndicatorsView* indicators_;
+  nux::HLayout* layout_;
 
   typedef std::unique_ptr<nux::AbstractPaintLayer> PaintLayerPtr;
-  PaintLayerPtr _bg_layer;
-  PaintLayerPtr _bg_darken_layer;
-  nux::ObjectPtr<nux::BaseTexture> _panel_sheen;
-  nux::HLayout* _layout;
+  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
+  PaintLayerPtr bg_layer_;
+  PaintLayerPtr bg_darken_layer_;
+  BaseTexturePtr panel_sheen_;
 
-  nux::ObjectPtr <nux::BaseTexture> _bg_refine_tex;
-  
-  std::unique_ptr<nux::AbstractPaintLayer> _bg_refine_layer;
-  nux::ObjectPtr <nux::BaseTexture> _bg_refine_single_column_tex;
-  std::unique_ptr<nux::AbstractPaintLayer> _bg_refine_single_column_layer;
-  nux::Geometry _last_geo;
+  BaseTexturePtr bg_refine_tex_;
+  std::unique_ptr<nux::AbstractPaintLayer> bg_refine_layer_;
+  BaseTexturePtr bg_refine_single_column_tex_;
+  std::unique_ptr<nux::AbstractPaintLayer> bg_refine_single_column_layer_;
 
-  nux::Color  _bg_color;
-  bool        _is_dirty;
-  bool        _opacity_maximized_toggle;
-  bool        _needs_geo_sync;
-  bool        _is_primary;
-  bool        _overlay_is_open;
-  float       _opacity;
-  int         _monitor;
-  int         _stored_dash_width;
-  int         _launcher_width;
-  bool        _refine_is_open;
+  nux::Geometry last_geo_;
+  nux::Color bg_color_;
+  std::string active_overlay_;
+  nux::Point  tracked_pointer_pos_;
 
-  std::string _active_overlay;
+  bool is_dirty_;
+  bool opacity_maximized_toggle_;
+  bool needs_geo_sync_;
+  bool is_primary_;
+  bool overlay_is_open_;
+  float opacity_;
+  int monitor_;
+  int stored_dash_width_;
+  int launcher_width_;
+  bool refine_is_open_;
 
-  nux::Point  _tracked_pointer_pos;
-
-  std::vector<sigc::connection> _on_indicator_updated_connections;
-  std::vector<sigc::connection> _maximized_opacity_toggle_connections;
-  BackgroundEffectHelper _bg_effect_helper;
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> _bg_blur_texture;
-  UBusManager _ubus_manager;
-  glib::Source::UniquePtr _track_menu_pointer_timeout;
+  std::vector<sigc::connection> on_indicator_updated_connections_;
+  std::vector<sigc::connection> maximized_opacity_toggle_connections_;
+  BackgroundEffectHelper bg_effect_helper_;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> bg_blur_texture_;
+  UBusManager ubus_manager_;
+  glib::Source::UniquePtr track_menu_pointer_timeout_;
 };
 
 }
