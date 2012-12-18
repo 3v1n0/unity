@@ -41,6 +41,7 @@ set (PREVIEWS_SOURCES
 add_library (previews-lib STATIC ${PREVIEWS_SOURCES})
 add_dependencies (previews-lib unity-core-${UNITY_API_VERSION} unity-shared)
 target_link_libraries (previews-lib unity-shared)
+add_pch(pch/previews_pch.hh previews-lib)
 
 # 
 # Application Standalone variant

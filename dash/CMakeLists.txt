@@ -52,6 +52,9 @@ set (DASH_SOURCES
 add_library (dash-lib STATIC ${DASH_SOURCES})
 add_dependencies (dash-lib unity-core-${UNITY_API_VERSION} unity-shared)
 target_link_libraries (dash-lib previews-lib)
+add_pch(pch/dash_pch.hh dash-lib)
+
+
 # 
 # Standalone variant
 #
