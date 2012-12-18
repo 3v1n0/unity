@@ -185,7 +185,8 @@ class HudBehaviorTests(HudTestsBase):
 
         file_path = mktemp()
         self.addCleanup(remove, file_path)
-        self.start_app('Text Editor', files=[file_path], locale='C')
+        gedit_win = self.start_app_window('Text Editor', files=[file_path], locale='C')
+        self.assertProperty(gedit_win, is_focused=True)
 
         self.keyboard.type("0")
         self.keyboard.type(" ")
@@ -199,6 +200,8 @@ class HudBehaviorTests(HudTestsBase):
                         Eventually(Equals("Edit > Undo")))
         self.keyboard.press_and_release('Return')
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
+
+        self.assertProperty(gedit_win, is_focused=True)
         self.keyboard.press_and_release("Ctrl+s")
         self.assertThat(lambda: exists(file_path), Eventually(Equals(True)))
 
