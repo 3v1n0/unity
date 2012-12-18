@@ -251,15 +251,8 @@ void FilterMultiRange::RecvMouseUp(int x, int y, unsigned long button_flags, uns
 
 void FilterMultiRange::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
-  if (!mouse_down_button_)
+  if (!CheckDrag())
     return;
-
-  if (mouse_down_button_ != mouse_down_left_active_button_ && mouse_down_button_ != mouse_down_right_active_button_)
-  {
-    mouse_down_left_active_button_ = mouse_down_button_;
-    mouse_down_right_active_button_ = mouse_down_button_;
-  }
-
 
   nux::Geometry geo = GetAbsoluteGeometry();
   nux::Point abs_cursor(geo.x + x, geo.y + y);
@@ -322,8 +315,43 @@ void FilterMultiRange::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long
     }
     p++;
   }
+}
 
-  printf("Active: %s\n", ss.str().c_str());
+bool FilterMultiRange::CheckDrag()
+{
+  if (!mouse_down_button_)
+    return false;
+
+  auto end = buttons_.end();
+  bool between = false;
+  bool active_found = false;
+  for (auto iter = buttons_.begin(); iter != end; ++iter)
+  {
+    FilterMultiRangeButtonPtr button = *iter;
+    if (button->Active())
+    {
+      active_found = true;
+      if (button == mouse_down_button_)
+      {
+        between = true;
+      }
+    }
+    else if (active_found)
+    {
+      active_found = false;
+      break;
+    }
+  }
+
+  if (mouse_down_button_ != mouse_down_left_active_button_ && mouse_down_button_ != mouse_down_right_active_button_)
+  {
+    if (between)
+      return false;
+    mouse_down_left_active_button_ = mouse_down_button_;
+    mouse_down_right_active_button_ = mouse_down_button_;
+  }
+
+  return true;
 }
 
 void FilterMultiRange::UpdateMouseFocus(nux::Point const& abs_cursor_position)

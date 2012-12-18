@@ -70,6 +70,8 @@ private:
   void UpdateMouseFocus(nux::Point const& abs_cursor_position);
   void Click(FilterMultiRangeButtonPtr const& button);
 
+  bool CheckDrag();
+
   nux::HLayout* layout_;
   FilterAllButton* all_button_;
 
