@@ -32,17 +32,17 @@ class ReverseWrapper
 {
   private:
 
-    const ConcreteCollection &collection_;
+    ConcreteCollection const& collection_;
 
   public:
 
-    ReverseWrapper (const ConcreteCollection &collection) :
-      collection_ (collection)
+    ReverseWrapper(ConcreteCollection const& collection)
+      : collection_(collection)
     {
     }
 
-    decltype (collection_.rbegin ()) begin () const { return collection_.rbegin (); }
-    decltype (collection_.rend ()) end () const { return collection_.rend (); }
+    decltype(collection_.rbegin ()) begin() const { return collection_.rbegin(); }
+    decltype(collection_.rend ()) end () const { return collection_.rend(); }
 };
 }
 
@@ -60,8 +60,8 @@ class AbstractInterfaceGenerator
     typedef std::function <void (AbstractInterface &)> InterfaceVisitor;
     virtual ~AbstractInterfaceGenerator () {}
 
-    virtual void VisitEachInterface (const InterfaceVisitor &visit) = 0;
-    virtual void VisitEachInterfaceReverse (const InterfaceVisitor &visit) = 0;
+    virtual void VisitEachInterface (InterfaceVisitor const& visit) = 0;
+    virtual void VisitEachInterfaceReverse (InterfaceVisitor const& visit) = 0;
 };
 
 /*
@@ -81,40 +81,40 @@ class AbstractInterfaceCollectionGenerator :
     typedef std::function <AbstractInterface & (typename ConcreteCollection::value_type &) >
       ElementRetreivalFunc;
 
-    AbstractInterfaceCollectionGenerator (const ConcreteCollection   &collection,
-                                          const ElementRetreivalFunc &retreival) :
-      collection_ (collection),
-      retreival_ (retreival)
+    AbstractInterfaceCollectionGenerator (ConcreteCollection const&   collection,
+                                          ElementRetreivalFunc const& retreival) :
+      : collection_(collection)
+      , retreival_(retreival)
     {
     }
 
-    void VisitEachInterface (const Visitor &visit)
+    void VisitEachInterface(Visitor const& visit)
     {
-      VisitEachInterfaceInternal (collection_, visit);
+      VisitEachInterfaceInternal(collection_, visit);
     }
 
-    void VisitEachInterfaceReverse (const Visitor &visit)
+    void VisitEachInterfaceReverse(Visitor const& visit)
     {
-      VisitEachInterfaceInternal (internal::ReverseWrapper<ConcreteCollection> (collection_), visit);
+      VisitEachInterfaceInternal(internal::ReverseWrapper<ConcreteCollection> (collection_), visit);
     }
 
   private:
 
     template <class Container>
-    void VisitEachInterfaceInternal (const Container &container,
-                                     const Visitor   &visit)
+    void VisitEachInterfaceInternal(Container const& container,
+                                    Visitor const&   visit)
     {
-      for (const typename ConcreteCollection::value_type &item : container)
+      for (typename ConcreteCollection::value_type const& item : container)
       {
         /* Someone help */
         auto non_const_item = const_cast <typename ConcreteCollection::value_type *> (&item);
-        AbstractInterface &interface (retreival_ (*non_const_item));
+        AbstractInterface& interface (retreival_ (*non_const_item));
         visit (interface);
       }
     }
 
-    const ConcreteCollection   &collection_;
-    ElementRetreivalFunc       retreival_;
+    ConcreteCollection const& collection_;
+    ElementRetreivalFunc      retreival_;
 };
 }
 

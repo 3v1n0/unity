@@ -33,7 +33,7 @@ class AbstractObject
 {
   public:
 
-    virtual void check () const = 0;
+    virtual void check() const = 0;
 };
 
 class MockObject :
@@ -41,23 +41,23 @@ class MockObject :
 {
   public:
 
-    MOCK_CONST_METHOD0 (check, void ());
+    MOCK_CONST_METHOD0(check, void());
 };
 
 class ConcreteOwningObject
 {
   public:
 
-    ConcreteOwningObject (const AbstractObject &abstract) :
-      mOwnedObject (abstract)
+    ConcreteOwningObject(AbstractObject const& abstract)
+      : mOwnedObject(abstract)
     {
     }
 
-    const AbstractObject & owned () const { return mOwnedObject; }
+    AbstractObject const& owned() const { return mOwnedObject; }
 
   private:
 
-    const AbstractObject &mOwnedObject;
+    AbstractObject const& mOwnedObject;
 };
 
 typedef std::vector <ConcreteOwningObject> ConcreteVector;
@@ -71,19 +71,19 @@ class AbstractObjectGeneratorTest :
   public:
 
     template <typename Collectable>
-    void AddToCollection (const Collectable &collectable)
+    void AddToCollection(const Collectable &collectable)
     {
-      collection.push_back (collectable);
+      collection.push_back(collectable);
     }
 
-    typedef unity::AbstractInterfaceCollectionGenerator<const AbstractObject &, Collection> CollectionGeneratorType;
-    typedef unity::AbstractInterfaceGenerator<const AbstractObject &> GeneratorType;
+    typedef unity::AbstractInterfaceCollectionGenerator<AbstractObject const&, Collection> CollectionGeneratorType;
+    typedef unity::AbstractInterfaceGenerator<AbstractObject const&> GeneratorType;
     typedef std::shared_ptr <GeneratorType> GeneratorPtr;
     typedef typename CollectionGeneratorType::ElementRetreivalFunc RetreivalFunc;
 
-    GeneratorPtr MakeGenerator (const RetreivalFunc &func)
+    GeneratorPtr MakeGenerator(RetreivalFunc const& func)
     {
-      return std::make_shared <CollectionGeneratorType> (collection, func);
+      return std::make_shared <CollectionGeneratorType>(collection, func);
     }
 
   private:
@@ -91,85 +91,85 @@ class AbstractObjectGeneratorTest :
 };
 
 typedef ::testing::Types<ConcreteVector, ConcreteList> GeneratorTypes;
-TYPED_TEST_CASE (AbstractObjectGeneratorTest, GeneratorTypes);
+TYPED_TEST_CASE(AbstractObjectGeneratorTest, GeneratorTypes);
 
-TYPED_TEST (AbstractObjectGeneratorTest, TestConstruction)
+TYPED_TEST(AbstractObjectGeneratorTest, TestConstruction)
 {
   typedef AbstractObjectGeneratorTest<TypeParam> TParam;
   typedef typename TParam::GeneratorPtr GenPtr;
 
-  GenPtr generator (TParam::MakeGenerator ([](const ConcreteOwningObject &owner) -> const AbstractObject &
-                                             {
-                                               return owner.owned ();
-                                             }));
+  GenPtr generator(TParam::MakeGenerator([](ConcreteOwningObject const& owner) -> AbstractObject const&
+                                           {
+                                             return owner.owned();
+                                           }));
 }
 
-TYPED_TEST (AbstractObjectGeneratorTest, TestAddToCollectionAndConstruct)
+TYPED_TEST(AbstractObjectGeneratorTest, TestAddToCollectionAndConstruct)
 {
   typedef AbstractObjectGeneratorTest<TypeParam> TParam;
   typedef typename TParam::GeneratorPtr GenPtr;
 
-  TParam::AddToCollection (ConcreteOwningObject (MockObject ()));
-  GenPtr generator (TParam::MakeGenerator ([](const ConcreteOwningObject &owner) -> const AbstractObject &
-                                              {
-                                                return owner.owned ();
-                                              }));
+  TParam::AddToCollection(ConcreteOwningObject(MockObject()));
+  GenPtr generator(TParam::MakeGenerator([](ConcreteOwningObject const& owner) -> AbstractObject const&
+                                            {
+                                              return owner.owned();
+                                            }));
 }
 
-TYPED_TEST (AbstractObjectGeneratorTest, TestAddToCollectionAndVisitEach)
+TYPED_TEST(AbstractObjectGeneratorTest, TestAddToCollectionAndVisitEach)
 {
   typedef AbstractObjectGeneratorTest<TypeParam> TParam;
   typedef typename TParam::GeneratorPtr GenPtr;
 
   MockObject     mockOne, mockTwo, mockThree;
-  ConcreteOwningObject concreteOne (mockOne), concreteTwo (mockTwo), concreteThree (mockThree);
+  ConcreteOwningObject concreteOne(mockOne), concreteTwo(mockTwo), concreteThree(mockThree);
 
-  TParam::AddToCollection (concreteOne);
-  TParam::AddToCollection (concreteTwo);
-  TParam::AddToCollection (concreteThree);
-  GenPtr generator (TParam::MakeGenerator ([](const ConcreteOwningObject &owner) -> const AbstractObject &
-                                              {
-                                                return owner.owned ();
-                                              }));
+  TParam::AddToCollection(concreteOne);
+  TParam::AddToCollection(concreteTwo);
+  TParam::AddToCollection(concreteThree);
+  GenPtr generator(TParam::MakeGenerator([](ConcreteOwningObject &owner) -> AbstractObject const&
+                                            {
+                                              return owner.owned();
+                                            }));
 
   InSequence s;
 
-  EXPECT_CALL (mockOne, check ()).Times (1);
-  EXPECT_CALL (mockTwo, check ()).Times (1);
-  EXPECT_CALL (mockThree, check ()).Times (1);
+  EXPECT_CALL(mockOne, check()).Times(1);
+  EXPECT_CALL(mockTwo, check()).Times(1);
+  EXPECT_CALL(mockThree, check()).Times(1);
 
-  generator->VisitEachInterface ([&](const AbstractObject &abstract)
-                                 {
-                                   abstract.check ();
-                                 });
+  generator->VisitEachInterface([&](AbstractObject const& abstract)
+                                {
+                                  abstract.check();
+                                });
 }
 
-TYPED_TEST (AbstractObjectGeneratorTest, TestAddToCollectionAndVisitEachReverse)
+TYPED_TEST(AbstractObjectGeneratorTest, TestAddToCollectionAndVisitEachReverse)
 {
   typedef AbstractObjectGeneratorTest<TypeParam> TParam;
   typedef typename TParam::GeneratorPtr GenPtr;
 
   MockObject     mockOne, mockTwo, mockThree;
-  ConcreteOwningObject concreteOne (mockOne), concreteTwo (mockTwo), concreteThree (mockThree);
+  ConcreteOwningObject concreteOne(mockOne), concreteTwo(mockTwo), concreteThree(mockThree);
 
-  TParam::AddToCollection (concreteOne);
-  TParam::AddToCollection (concreteTwo);
-  TParam::AddToCollection (concreteThree);
-  GenPtr generator (TParam::MakeGenerator ([](const ConcreteOwningObject &owner) -> const AbstractObject &
-                                              {
-                                                return owner.owned ();
-                                              }));
+  TParam::AddToCollection(concreteOne);
+  TParam::AddToCollection(concreteTwo);
+  TParam::AddToCollection(concreteThree);
+  GenPtr generator(TParam::MakeGenerator([](ConcreteOwningObject const& owner) -> AbstractObject const&
+                                            {
+                                              return owner.owned();
+                                            }));
 
   InSequence s;
 
-  EXPECT_CALL (mockThree, check ()).Times (1);
-  EXPECT_CALL (mockTwo, check ()).Times (1);
-  EXPECT_CALL (mockOne, check ()).Times (1);
+  EXPECT_CALL(mockThree, check()).Times(1);
+  EXPECT_CALL(mockTwo, check()).Times(1);
+  EXPECT_CALL(mockOne, check()).Times(1);
 
 
-  generator->VisitEachInterfaceReverse ([&](const AbstractObject &abstract)
-                                        {
-                                          abstract.check ();
-                                        });
+  generator->VisitEachInterfaceReverse([&](AbstractObject const& abstract)
+                                       {
+                                         abstract.check();
+                                       });
 }
 
