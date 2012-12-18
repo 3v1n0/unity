@@ -1001,7 +1001,9 @@ class PanelKeyNavigationTests(PanelTestsBase):
 
     def test_panel_indicators_key_navigation_next_works(self):
         """Right arrow key must open the next menu."""
-        self.open_new_application_window("Calculator")
+        calc_win = self.open_new_application_window("Calculator")
+        self.assertProperty(calc_win, is_focused=True)
+
         available_indicators = self.panel.get_indicator_entries(include_hidden_menus=True)
 
         self.keybinding("panel/open_first_menu")
@@ -1014,7 +1016,9 @@ class PanelKeyNavigationTests(PanelTestsBase):
 
     def test_panel_indicators_key_navigation_prev_works(self):
         """Left arrow key must open the previous menu."""
-        self.open_new_application_window("Calculator")
+        calc_win = self.open_new_application_window("Calculator")
+        self.assertProperty(calc_win, is_focused=True)
+
         available_indicators = self.panel.get_indicator_entries(include_hidden_menus=True)
 
         self.keybinding("panel/open_first_menu")
