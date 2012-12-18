@@ -100,6 +100,7 @@ public:
   void paintPanelShadow(const CompRegion& clip);
   void setPanelShadowMatrix(const GLMatrix& matrix);
 
+  void damageCutoff();
   void preparePaint (int ms);
   void paintFboForOutput (CompOutput *output);
   void donePaint ();
@@ -112,6 +113,8 @@ public:
                      CompOption::Vector &o);
 
   void damageRegion(const CompRegion &region);
+
+  bool glPaintCompositedOutputRequired ();
 
   /* paint on top of all windows if we could not find a window
    * to paint underneath */
@@ -215,7 +218,7 @@ private:
   void initLauncher();
 
   void compizDamageNux(CompRegion const& region);
-  void nuxDamageCompiz();
+  void determineNuxDamage(CompRegion &nux_damage);
 
   void onRedrawRequested();
   void Relayout();
@@ -236,6 +239,9 @@ private:
 
   void OnInitiateSpread();
   void OnTerminateSpread();
+
+  void OnViewHidden(nux::BaseWindow *bw);
+  void OnViewShown(nux::BaseWindow *bw);
 
   void RestoreWindow(GVariant* data);
   bool SaveInputThenFocus(const guint xid);
@@ -343,6 +349,8 @@ private:
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
+
+  CompRegion buffered_compiz_damage_;
 
   friend class UnityWindow;
 };

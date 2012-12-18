@@ -411,6 +411,9 @@ UnityScreen::UnityScreen(CompScreen* screen)
     wm.terminate_spread.connect(sigc::mem_fun(this, &UnityScreen::OnTerminateSpread));
 
     AddChild(&screen_introspection_);
+
+    /* Track whole damage on the very first frame */
+    cScreen->damageScreen();
   }
 }
 
@@ -484,6 +487,20 @@ void UnityScreen::OnTerminateSpread()
     UnityWindow::get(swin->window)->OnTerminateSpread();
 
   UnityWindow::CleanupSharedTextures();
+}
+
+void UnityScreen::OnViewHidden(nux::BaseWindow *bw)
+{
+  /* Count this as regular damage */
+  nux::Geometry geometry(bw->GetAbsoluteGeometry());
+  cScreen->damageRegion(CompRegion (geometry.x,
+                                    geometry.y,
+                                    geometry.width,
+                                    geometry.height));
+}
+
+void UnityScreen::OnViewShown(nux::BaseWindow *bw)
+{
 }
 
 void UnityScreen::EnsureSuperKeybindings()
@@ -1245,6 +1262,12 @@ bool UnityWindow::handleEvent(XEvent *event)
   return handled;
 }
 
+bool UnityScreen::glPaintCompositedOutputRequired ()
+{
+    return gScreen->glPaintCompositedOutputRequired() ||
+           BackgroundEffectHelper::HasDirtyHelpers ();
+}
+
 /* called whenever we need to repaint parts of the screen */
 bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
                                 const GLMatrix& transform,
@@ -1264,6 +1287,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   doShellRepaint = force ||
                    ( !region.isEmpty() &&
                      ( !wt->GetDrawList().empty() ||
+                       !wt->GetPresentationListGeometries().empty() ||
                        (mask & PAINT_SCREEN_FULL_MASK)
                      )
                    );
@@ -1302,6 +1326,36 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
   paintPanelShadow(region);
 }
 
+void UnityScreen::damageCutoff()
+{
+  /* We want to run last */
+  cScreen->damageCutoff();
+
+  CompRegion additional_nux_damage;
+
+  do
+  {
+    /* We want to track the nux damage here as we will use it to
+     * determine if we need to present other nux windows too */
+    cScreen->damageRegion(additional_nux_damage);
+
+    /* First apply any damage accumulated to nux to see
+     * what windows need to be redrawn there */
+    compizDamageNux(buffered_compiz_damage_);
+
+    /* Apply the redraw regions to compiz so that we can
+     * draw this frame with that region included */
+    determineNuxDamage(additional_nux_damage);
+
+    /* Subtract the last damage region from the new damage region
+     * - this will give us how much damage remains to be processed
+     */
+  } while (buffered_compiz_damage_.intersected(additional_nux_damage) != additional_nux_damage);
+
+  /* Clear damage buffer */
+  buffered_compiz_damage_ = CompRegion();
+}
+
 void UnityScreen::preparePaint(int ms)
 {
   cScreen->preparePaint(ms);
@@ -1315,8 +1369,6 @@ void UnityScreen::preparePaint(int ms)
   didShellRepaint = false;
   panelShadowPainted = CompRegion();
   firstWindowAboveShell = NULL;
-
-  compizDamageNux(cScreen->currentDamage());
 }
 
 void UnityScreen::donePaint()
@@ -1333,8 +1385,10 @@ void UnityScreen::donePaint()
   if (didShellRepaint)
     wt->ClearDrawList();
 
+  wt->ForeignFrameEnded();
+
   if (animation_controller_->HasRunningAnimations())
-    nuxDamageCompiz();
+    onRedrawRequested();
 
   std::list <ShowdesktopHandlerWindowInterface *> remove_windows;
 
@@ -1380,104 +1434,25 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
     }
   }
 
-  auto const& launchers = launcher_controller_->launchers();
-  for (auto const& launcher : launchers)
+  /* Ask nux to redraw anything in our damage region */
+  CompRect::vector rects (damage.rects());
+  for (const CompRect &r : rects)
   {
-    if (!launcher->Hidden())
-    {
-      nux::Geometry const& geo = launcher->GetAbsoluteGeometry();
-      CompRegion launcher_region(geo.x, geo.y, geo.width, geo.height);
-
-      if (damage.intersects(launcher_region))
-        launcher->QueueDraw();
-
-      nux::ObjectPtr<nux::View> const& tooltip = launcher->GetActiveTooltip();
-
-      if (tooltip)
-      {
-        nux::Geometry const& g = tooltip->GetAbsoluteGeometry();
-        CompRegion tip_region(g.x, g.y, g.width, g.height);
-
-        if (damage.intersects(tip_region))
-          tooltip->QueueDraw();
-      }
-
-      nux::ObjectPtr<LauncherDragWindow> const& dragged_icon = launcher->GetDraggedIcon();
-
-      if (dragged_icon)
-      {
-        nux::Geometry const& g = dragged_icon->GetAbsoluteGeometry();
-        CompRegion icon_region(g.x, g.y, g.width, g.height);
-
-        if (damage.intersects(icon_region))
-          dragged_icon->QueueDraw();
-      }
-    }
-  }
-
-  std::vector<nux::View*> const& panels(panel_controller_->GetPanelViews());
-  for (nux::View* view : panels)
-  {
-    nux::Geometry const& geo = view->GetAbsoluteGeometry();
-
-    CompRegion panel_region(geo.x, geo.y, geo.width, geo.height);
-
-    if (damage.intersects(panel_region))
-      view->QueueDraw();
-  }
-
-  QuicklistManager* qm = QuicklistManager::Default();
-  if (qm)
-  {
-    QuicklistView* view = qm->Current();
-
-    if (view)
-    {
-      nux::Geometry const& geo = view->GetAbsoluteGeometry();
-      CompRegion quicklist_region(geo.x, geo.y, geo.width, geo.height);
-
-      if (damage.intersects(quicklist_region))
-        view->QueueDraw();
-    }
-  }
-
-  if (switcher_controller_ && switcher_controller_->Visible())
-  {
-    unity::switcher::SwitcherView* view = switcher_controller_->GetView();
-
-    if (G_LIKELY(view))
-    {
-      nux::Geometry const& geo = view->GetAbsoluteGeometry();
-      CompRegion switcher_region(geo.x, geo.y, geo.width, geo.height);
-
-      if (damage.intersects(switcher_region))
-        view->QueueDraw();
-    }
+    nux::Geometry g (r.x(), r.y(), r.width(), r.height());
+    wt->PresentWindowsIntersectingGeometryOnThisFrame(g);
   }
 }
 
 /* Grab changed nux regions and add damage rects for them */
-void UnityScreen::nuxDamageCompiz()
+void UnityScreen::determineNuxDamage(CompRegion &nux_damage)
 {
-  /*
-   * If Nux is going to redraw anything then we have to tell Compiz to
-   * redraw everything. This is because Nux has a bad habit (bug??) of drawing
-   * more than just the regions of its DrawList. (LP: #1036519)
-   *
-   * Forunately, this does not happen on most frames. Only when the Unity
-   * Shell needs to redraw something.
-   *
-   * TODO: Try to figure out why redrawing the panel makes the launcher also
-   *       redraw even though the launcher's geometry is not in DrawList, and
-   *       stop it. Then maybe we can revert back to the old code below #else.
-   */
-  std::vector<nux::Geometry> const& dirty = wt->GetDrawList();
-  if (!dirty.empty() || animation_controller_->HasRunningAnimations())
-  {
-    cScreen->damageRegionSetEnabled(this, false);
-    cScreen->damageScreen();
-    cScreen->damageRegionSetEnabled(this, true);
-  }
+  if (!launcher_controller_ || !dash_controller_)
+    return;
+
+  std::vector<nux::Geometry> dirty = wt->GetPresentationListGeometries();
+
+  for (auto const& geo : dirty)
+    nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
 }
 
 /* handle X Events */
@@ -1695,7 +1670,7 @@ void UnityScreen::handleEvent(XEvent* event)
 
 void UnityScreen::damageRegion(const CompRegion &region)
 {
-  compizDamageNux(region);
+  buffered_compiz_damage_ += region;
   cScreen->damageRegion(region);
 }
 
@@ -2865,11 +2840,14 @@ void UnityScreen::initUnity(nux::NThread* thread, void* InitData)
   nux::ColorLayer background(nux::color::Transparent);
   static_cast<nux::WindowThread*>(thread)->SetWindowBackgroundPaintLayer(&background);
   LOG_INFO(logger) << "UnityScreen::initUnity: " << timer.ElapsedSeconds() << "s";
+
+  nux::GetWindowCompositor().sigHiddenViewWindow.connect (sigc::mem_fun(self, &UnityScreen::OnViewHidden));
+  nux::GetWindowCompositor().sigVisibleViewWindow.connect (sigc::mem_fun(self, &UnityScreen::OnViewShown));
 }
 
 void UnityScreen::onRedrawRequested()
 {
-  nuxDamageCompiz();
+  cScreen->damagePending();
 }
 
 /* Handle option changes and plug that into nux windows */
