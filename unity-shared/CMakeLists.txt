@@ -28,6 +28,7 @@ set (UNITY_SHARED_SOURCES
      DashStyle.cpp
      DebugDBusInterface.cpp
      DefaultThumbnailProvider.cpp
+     DeltaRestrainment.cpp
      FontSettings.cpp
      GraphicsUtils.cpp
      IMTextEntry.cpp

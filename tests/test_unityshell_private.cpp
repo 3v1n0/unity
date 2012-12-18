@@ -21,8 +21,74 @@
 #include <gtest/gtest.h>
  
 #include "UnityshellPrivate.h"
+#include "DeltaRestrainment-Inl.h"
 
 using namespace unity;
+
+namespace
+{
+const unsigned int RectangleWidth = 100;
+const unsigned int RectangleHeight = 200;
+const unsigned int RectangleX = 50;
+const unsigned int RectangleY = 25;
+
+const nux::Geometry Rectangle =
+{
+  RectangleX,
+  RectangleY,
+  RectangleWidth,
+  RectangleHeight
+};
+
+const nux::Point2D<int> PointTL (RectangleX, RectangleY);
+const nux::Point2D<int> PointBR (RectangleX + RectangleWidth,
+                                 RectangleY + RectangleHeight);
+
+}
+
+TEST(DeltaRestrainment, RestrainOutWidth)
+{
+  int x = 1;
+  int y = 0;
+
+  util::restrainDelta(x, y, Rectangle, PointBR);
+
+  EXPECT_EQ (x, 0);
+  EXPECT_EQ (y, 0);
+}
+
+TEST(DeltaRestrainment, RestrainOutHeight)
+{
+  int x = 0;
+  int y = 1;
+
+  util::restrainDelta(x, y, Rectangle, PointBR);
+
+  EXPECT_EQ (x, 0);
+  EXPECT_EQ (y, 0);
+}
+
+TEST(DeltaRestrainment, RestrainOutX)
+{
+  int x = -1;
+  int y = 0;
+
+  util::restrainDelta(x, y, Rectangle, PointTL);
+
+  EXPECT_EQ (x, 0);
+  EXPECT_EQ (y, 0);
+}
+
+TEST(DeltaRestrainment, RestrainOutY)
+{
+  int x = 0;
+  int y = -1;
+
+  util::restrainDelta(x, y, Rectangle, PointTL);
+
+  EXPECT_EQ (x, 0);
+  EXPECT_EQ (y, 0);
+}
 
 TEST(TestUnityshellPrivate, TestCreateActionString)
 {
