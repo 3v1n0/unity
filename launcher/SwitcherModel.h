@@ -63,7 +63,7 @@ public:
   nux::Property<unsigned int> detail_selection_index;
   nux::Property<bool>         only_detail_on_viewport;
 
-  SwitcherModel(std::vector<launcher::AbstractLauncherIcon::Ptr> icons);
+  SwitcherModel(std::vector<launcher::AbstractLauncherIcon::Ptr> const& icons);
   virtual ~SwitcherModel();
 
   iterator begin();

@@ -31,7 +31,7 @@ namespace switcher
 {
 
 
-SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> icons)
+SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> const& icons)
   : applications_(icons)
   , index_(0)
   , last_index_(0)
