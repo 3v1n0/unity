@@ -67,7 +67,6 @@ private:
   nux::BaseTexture* _close;
   nux::BaseTexture* _spin;
 
-  glib::Source::UniquePtr _spinner_timeout;
   glib::Source::UniquePtr _frame_timeout;
 
   nux::Matrix4 _2d_rotate;

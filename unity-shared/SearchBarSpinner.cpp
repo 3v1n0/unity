@@ -163,17 +163,8 @@ SearchBarSpinner::SetState(SpinnerState state)
     return;
 
   _state = state;
-  _spinner_timeout.reset();
   _2d_rotate.Rotate_z(0.0f);
   _rotation = 0.0f;
-
-  if (_state == STATE_SEARCHING)
-  {
-    _spinner_timeout.reset(new glib::TimeoutSeconds(5, [&] {
-      _state = STATE_READY;
-      return false;
-    }));
-  }
 
   QueueDraw();
 }
