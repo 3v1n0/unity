@@ -102,7 +102,7 @@ private:
   nux::HLayout* layout_;
 
   typedef std::unique_ptr<nux::AbstractPaintLayer> PaintLayerPtr;
-  typedef BaseTexturePtr BaseTexturePtr;
+  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
   PaintLayerPtr bg_layer_;
   PaintLayerPtr bg_darken_layer_;
   BaseTexturePtr panel_sheen_;
