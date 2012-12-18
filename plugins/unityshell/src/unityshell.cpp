@@ -853,6 +853,7 @@ void UnityScreen::UpdateTopPanelBackgroundTexture()
 {
   auto &panel_style = panel::Style::Instance();
 
+  panel_texture_.Release();
   auto texture = panel_style.GetBackground(screen->width(), screen->height(), 1.0f);
 
   if (texture)
