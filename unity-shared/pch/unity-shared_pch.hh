@@ -27,7 +27,7 @@
 #include <map>
 #include <memory>
 
-#include <dee.h>
-#include <NuxCore/Property.h>
+#include <Nux/Nux.h>
 #include <sigc++/sigc++.h>
 #include <boost/utility.hpp>
+#include <boost/algorithm/string.hpp>
