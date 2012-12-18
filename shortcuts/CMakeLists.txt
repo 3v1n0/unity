@@ -35,6 +35,7 @@ set (SHORTCUTS_SOURCES
 
 add_library (shortcuts-lib STATIC ${SHORTCUTS_SOURCES})
 add_dependencies (shortcuts-lib unity-core-${UNITY_API_VERSION} unity-shared)
+add_pch(pch/shortcuts_pch.hh shortcuts-lib)
 
 # 
 # Standalone variant
