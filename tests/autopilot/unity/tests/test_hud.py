@@ -186,6 +186,7 @@ class HudBehaviorTests(HudTestsBase):
         file_path = mktemp()
         self.addCleanup(remove, file_path)
         gedit_win = self.start_app_window('Text Editor', files=[file_path], locale='C')
+        self.addCleanup(self.close_all_app, 'Text Editor')
         self.assertProperty(gedit_win, is_focused=True)
 
         self.keyboard.type("0")
