@@ -79,7 +79,7 @@ class AbstractObjectGeneratorTest :
     typedef unity::AbstractInterfaceCollectionGenerator<AbstractObject const&, Collection> CollectionGeneratorType;
     typedef unity::AbstractInterfaceGenerator<AbstractObject const&> GeneratorType;
     typedef std::shared_ptr <GeneratorType> GeneratorPtr;
-    typedef typename CollectionGeneratorType::ElementRetreivalFunc RetreivalFunc;
+    typedef typename CollectionGeneratorType::ElementRetrievalFunc RetreivalFunc;
 
     GeneratorPtr MakeGenerator(RetreivalFunc const& func)
     {
@@ -127,7 +127,7 @@ TYPED_TEST(AbstractObjectGeneratorTest, TestAddToCollectionAndVisitEach)
   TParam::AddToCollection(concreteOne);
   TParam::AddToCollection(concreteTwo);
   TParam::AddToCollection(concreteThree);
-  GenPtr generator(TParam::MakeGenerator([](ConcreteOwningObject &owner) -> AbstractObject const&
+  GenPtr generator(TParam::MakeGenerator([](ConcreteOwningObject const& owner) -> AbstractObject const&
                                             {
                                               return owner.owned();
                                             }));

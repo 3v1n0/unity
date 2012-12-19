@@ -78,13 +78,13 @@ class AbstractInterfaceCollectionGenerator :
 
     typedef AbstractInterfaceGenerator<AbstractInterface> InterfaceGenerator;
     typedef typename InterfaceGenerator::InterfaceVisitor Visitor;
-    typedef std::function <AbstractInterface & (typename ConcreteCollection::value_type &) >
-      ElementRetreivalFunc;
+    typedef std::function <AbstractInterface & (typename ConcreteCollection::value_type const&) >
+      ElementRetrievalFunc;
 
     AbstractInterfaceCollectionGenerator (ConcreteCollection const&   collection,
-                                          ElementRetreivalFunc const& retreival) :
+					  ElementRetrievalFunc const& retrieval)
       : collection_(collection)
-      , retreival_(retreival)
+      , retrieval_(retrieval)
     {
     }
 
@@ -106,15 +106,13 @@ class AbstractInterfaceCollectionGenerator :
     {
       for (typename ConcreteCollection::value_type const& item : container)
       {
-        /* Someone help */
-        auto non_const_item = const_cast <typename ConcreteCollection::value_type *> (&item);
-        AbstractInterface& interface (retreival_ (*non_const_item));
+	AbstractInterface& interface (retrieval_ (item));
         visit (interface);
       }
     }
 
     ConcreteCollection const& collection_;
-    ElementRetreivalFunc      retreival_;
+    ElementRetrievalFunc      retrieval_;
 };
 }
 
