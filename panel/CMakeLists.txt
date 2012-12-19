@@ -32,6 +32,7 @@ set (PANEL_SOURCES
 
 add_library (panel-lib STATIC ${PANEL_SOURCES})
 add_dependencies (panel-lib unity-core-${UNITY_API_VERSION} unity-shared)
+add_pch(pch/panel_pch.hh panel-lib)
 
 # 
 # Standalone variant

@@ -84,6 +84,7 @@ endif()
 add_library (unity-shared STATIC ${UNITY_SHARED_SOURCES})
 target_link_libraries (unity-shared ${LIBS})
 add_dependencies (unity-shared unity-core-${UNITY_API_VERSION})
+add_pch(pch/unity-shared_pch.hh unity-shared)
 
 #
 # We also need to build compiz specific parts and standalone variants of those parts

@@ -31,6 +31,7 @@ set (HUD_SOURCES
 
 add_library (hud-lib STATIC ${HUD_SOURCES})
 add_dependencies (hud-lib unity-core-${UNITY_API_VERSION} unity-shared)
+add_pch(pch/hud_pch.hh hud-lib)
 
 # 
 # Standalone variant
