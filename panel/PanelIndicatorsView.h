@@ -63,11 +63,10 @@ public:
   virtual void OverlayShown();
   virtual void OverlayHidden();
 
-  void SetOpacity(double opacity);
-  double GetOpacity();
-
   void SetMaximumEntriesWidth(int max_width);
   void GetGeometryForSync(indicator::EntryLocationMap& locations);
+
+  nux::Property<double> opacity;
 
   sigc::signal<void, PanelIndicatorEntryView*> on_indicator_updated;
 
@@ -94,9 +93,9 @@ protected:
   Entries entries_;
 
 private:
-  Indicators indicators_;
-  double opacity_;
+  bool SetOpacity(double& target, double const& new_value);
 
+  Indicators indicators_;
   std::map<indicator::Indicator::Ptr, std::vector<sigc::connection>> indicators_connections_;
 };
 

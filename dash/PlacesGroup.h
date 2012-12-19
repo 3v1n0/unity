@@ -41,11 +41,13 @@
 namespace nux
 {
 class AbstractPaintLayer;
+class TextureLayer;
 }
 
 namespace unity
 {
-
+namespace dash
+{
 
 class HSeparator;
 
@@ -61,11 +63,11 @@ public:
   void SetRendererName(const char *renderer_name);
   void SetHeaderCountVisible(bool disable);
 
-  nux::StaticCairoText* GetLabel();
-  nux::StaticCairoText* GetExpandLabel();
+  StaticCairoText* GetLabel();
+  StaticCairoText* GetExpandLabel();
 
   void SetChildView(dash::ResultView* view);
-  nux::View* GetChildView();
+  dash::ResultView* GetChildView();
 
   void SetChildLayout(nux::Layout* layout);
 
@@ -80,15 +82,23 @@ public:
   void SetExpanded(bool is_expanded);
   bool GetExpanded() const;
 
+  void PushExpanded();
+  void PopExpanded();
+
+  void SetResultsPreviewAnimationValue(float preview_animation);
+
   int  GetHeaderHeight() const;
   bool HeaderIsFocusable() const;
   nux::View* GetHeaderFocusableView() const;
+
+  void SetFiltersExpanded(bool filters_expanded);
 
   sigc::signal<void, PlacesGroup*> expanded;
   sigc::signal<void, std::string const&> UriActivated;
 
 protected:
   long ComputeContentSize();
+
   void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw);
   void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw);
 
@@ -123,20 +133,22 @@ private:
   nux::HLayout* _text_layout;
   nux::HLayout* _expand_label_layout;
   nux::HLayout* _expand_layout;
-  nux::View*  _child_view;
+  nux::VLayout*  _child_layout;
+  dash::ResultView*  _child_view;
   std::unique_ptr<nux::AbstractPaintLayer> _focus_layer;
 
   IconTexture*          _icon;
-  nux::StaticCairoText* _name;
-  nux::StaticCairoText* _expand_label;
+  StaticCairoText* _name;
+  StaticCairoText* _expand_label;
   IconTexture*          _expand_icon;
 
   nux::BaseTexture* _background;
   nux::BaseTexture* _background_nofilters;
-  bool              _using_nofilters_background;
-  std::unique_ptr<nux::AbstractPaintLayer> _background_layer;
+  bool              _using_filters_background;
+  std::unique_ptr<nux::TextureLayer> _background_layer;
 
   bool  _is_expanded;
+  bool  _is_expanded_pushed;
   unsigned _n_visible_items_in_unexpand_mode;
   unsigned _n_total_items;
   unsigned _category_index;
@@ -150,8 +162,11 @@ private:
 
   glib::Source::UniquePtr _relayout_idle;
   UBusManager _ubus;
+
+  friend class TestLensView;
 };
 
-}
+} // namespace dash
+} // namespace unity
 
 #endif

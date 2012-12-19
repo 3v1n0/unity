@@ -50,13 +50,15 @@ class RowAdaptorBase
 public:
   RowAdaptorBase(DeeModel* model=0, DeeModelIter* iter=0, DeeModelTag* tag=0);
   RowAdaptorBase(RowAdaptorBase const& other);
+  virtual ~RowAdaptorBase();
+
   RowAdaptorBase& operator=(RowAdaptorBase const& other);
 
-  std::string GetStringAt(int position) const;
-  bool GetBoolAt(int position) const;
-  int GetIntAt(int position) const;
-  unsigned int GetUIntAt(int position) const;
-  float GetFloatAt(int position) const;
+  virtual std::string GetStringAt(int position) const;
+  virtual bool GetBoolAt(int position) const;
+  virtual int GetIntAt(int position) const;
+  virtual unsigned int GetUIntAt(int position) const;
+  virtual float GetFloatAt(int position) const;
 
   void SetTarget(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag);
 
@@ -64,9 +66,12 @@ public:
   void set_renderer(T renderer);
 
   template<typename T>
-  T renderer();
+  T renderer() const;
 
 protected:
+  virtual void set_model_tag(gpointer value);
+  virtual gpointer get_model_tag() const;
+
   DeeModel* model_;
   DeeModelIter* iter_;
   DeeModelTag* tag_;

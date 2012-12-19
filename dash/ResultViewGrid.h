@@ -55,6 +55,8 @@ public:
 
   virtual void Activate(std::string const& uri, int index, ActivateType type);
 
+  virtual void RenderResultTexture(ResultViewTexture::Ptr const& result_texture);
+
 protected:
   void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   void MouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -71,9 +73,11 @@ protected:
   virtual void OnKeyNavFocusChange(nux::Area* area, bool has_focus, nux::KeyNavDirection direction);
   void OnKeyDown(unsigned long event_type, unsigned long event_keysym, unsigned long event_state, const TCHAR* character, unsigned short key_repeat_count);
 
-  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);;
+  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual long ComputeContentSize();
+
+  virtual void UpdateRenderTextures();
 
   void AddResult(Result& result);
   void RemoveResult(Result& result);
@@ -85,6 +89,8 @@ protected:
 private:
   typedef std::tuple <int, int> ResultListBounds;
   ResultListBounds GetVisableResults();
+
+  void DrawRow(nux::GraphicsEngine& GfxContext, ResultListBounds const& visible_bounds, int row_index, int y_position, nux::Geometry const& absolute_position);
 
   void QueueLazyLoad();
   void QueueViewChanged();
@@ -106,7 +112,7 @@ private:
   int last_mouse_down_x_;
   int last_mouse_down_y_;
   std::string current_drag_uri_;
-  std::string current_drag_icon_name_;
+  unsigned drag_index_;
 
   int recorded_dash_width_;
   int recorded_dash_height_;
@@ -119,6 +125,7 @@ private:
   UBusManager ubus_;
   glib::Source::UniquePtr lazy_load_source_;
   glib::Source::UniquePtr view_changed_idle_;
+  nux::Color background_color_;
 };
 
 } // namespace dash

@@ -22,16 +22,20 @@
 #include <gtest/gtest.h>
 
 #include <Nux/Nux.h>
-#include <NuxCore/ObjectPtr.h>
+#include <Nux/NuxTimerTickSource.h>
 #include <Nux/VLayout.h>
+#include <NuxCore/ObjectPtr.h>
+#include <NuxCore/AnimationController.h>
+
 
 #include "unity-shared/VScrollBarOverlayWindow.h"
 #include "unity-shared/PlacesOverlayVScrollBar.h"
 #include "unity-shared/UScreen.h"
 
+using namespace unity::dash;
 using namespace testing;
 
-namespace
+namespace unity
 {
 
 class TestOverlayWindow : public Test
@@ -50,103 +54,179 @@ public:
   nux::ObjectPtr<VScrollBarOverlayWindow> overlay_window_;
 };
 
-class TestOverlayScrollBar : public Test
+namespace dash
+{
+
+class MockScrollBar : public unity::dash::PlacesOverlayVScrollBar
+{
+  public:
+    MockScrollBar(NUX_FILE_LINE_DECL)
+    : PlacesOverlayVScrollBar(NUX_FILE_LINE_PARAM)
+    , scroll_tick_(1000 * 401)
+    , scroll_dy_(0)
+    , scroll_up_signal_(false)
+    , scroll_down_signal_(false)
+    {
+      OnScrollUp.connect([&] (float step, int dy) {
+        scroll_dy_ = dy;
+        scroll_up_signal_ = true;
+      });
+
+      OnScrollDown.connect([&] (float step, int dy) {
+        scroll_dy_ = dy;
+        scroll_down_signal_ = true;
+      });
+    }
+
+    // ScrollDown/Up moves the mouse over the overlay scroll bar, then
+    // moves it down/up by scroll_dy
+    void ScrollDown(int scroll_dy)
+    {
+      UpdateStepY();
+
+      auto geo = overlay_window_->GetThumbGeometry();
+      int x = geo.x;
+      int y = geo.y;
+
+      MoveMouse(x, y);
+      MoveDown(x, y);
+
+      MoveMouse(x, y+scroll_dy);
+      MoveUp(x, y+scroll_dy);
+    }
+
+    void ScrollUp(int scroll_dy)
+    {
+      UpdateStepY();
+
+      auto geo = overlay_window_->GetThumbGeometry();
+      int x = geo.x;
+      int y = geo.y;
+
+      MoveMouse(x, y);
+      MoveDown(x, y);
+
+      MoveMouse(x, y-scroll_dy);
+      MoveUp(x, y-scroll_dy);
+    }
+
+    void MoveDown(int x, int y)
+    {
+      nux::Event event;
+      event.type = nux::NUX_MOUSE_PRESSED;
+      event.x = x;
+      event.y = y;
+      nux::GetWindowCompositor().ProcessEvent(event);
+    }
+
+    void MoveUp(int x, int y)
+    {
+      nux::Event event;
+      event.type = nux::NUX_MOUSE_RELEASED;
+      event.x = x;
+      event.y = y;
+      nux::GetWindowCompositor().ProcessEvent(event);
+    }
+
+    void MoveMouse(int x, int y)
+    {
+      nux::Event event;
+      event.type = nux::NUX_MOUSE_MOVE;
+      event.x = x;
+      event.y = y;
+      nux::GetWindowCompositor().ProcessEvent(event);
+    }
+
+    void MoveMouseNear()
+    {
+      auto geo = overlay_window_->GetThumbGeometry();
+      MoveMouse(geo.x, geo.y);
+    }
+
+    void ScrollUpAnimation(int scroll_dy)
+    {
+      nux::animation::AnimationController animation_controller(tick_source_);
+
+      MoveMouseNear();
+      UpdateStepY();
+
+      StartScrollAnimation(ScrollDir::UP, scroll_dy);
+      tick_source_.tick(scroll_tick_);
+    }
+
+    void ScrollDownAnimation(int scroll_dy)
+    {
+      nux::animation::AnimationController animation_controller(tick_source_);
+
+      MoveMouseNear();
+      UpdateStepY();
+
+      StartScrollAnimation(ScrollDir::DOWN, scroll_dy);
+      tick_source_.tick(scroll_tick_);
+    }
+
+    void SetThumbOffset(int y)
+    {
+      overlay_window_->SetThumbOffsetY(y);
+      UpdateConnectorPosition();
+    }
+
+    void StartScrollThenConnectorAnimation()
+    {
+      nux::animation::AnimationController animation_controller(tick_source_);
+
+      StartScrollAnimation(ScrollDir::DOWN, 20);
+      MoveMouse(0,0);
+      StartConnectorAnimation();
+
+      tick_source_.tick(scroll_tick_);
+    }
+
+    nux::NuxTimerTickSource tick_source_;
+
+    using PlacesOverlayVScrollBar::connector_height_;
+    using VScrollBar::_slider;
+
+    int scroll_tick_;
+    int scroll_dy_;
+    bool scroll_up_signal_;
+    bool scroll_down_signal_;
+};
+
+}
+
+class MockScrollView : public nux::ScrollView
 {
 public:
-  class MockScrollBar : public unity::dash::PlacesOverlayVScrollBar
+  MockScrollView(NUX_FILE_LINE_DECL)
+  : nux::ScrollView(NUX_FILE_LINE_PARAM)
   {
-    public:
-      MockScrollBar(NUX_FILE_LINE_DECL)
-      : unity::dash::PlacesOverlayVScrollBar(NUX_FILE_LINE_PARAM)
-      , scroll_dy(0)
-      , scroll_up_signal_(false)
-      , scroll_down_signal_(false)
-      {
-        SetGeometry(nux::Geometry(0,0,200,500));
-        SetContainerSize(0,0,200,200);
-        SetContentSize(0,0,200,2000);
-        ComputeContentSize();
-
-        OnScrollUp.connect([&] (float step, int dy) {
-          scroll_dy = dy;
-          scroll_up_signal_ = true;
-        });
-
-        OnScrollDown.connect([&] (float step, int dy) {
-          scroll_dy = dy;
-          scroll_down_signal_ = true;
-        });
-      }
-
-      void ScrollDown(int scroll_dy)
-      {
-        // Shows we are over the Overlay Thumb
-        int x = _track->GetBaseX() + _track->GetBaseWidth() + 5;
-        int y = _track->GetBaseY();
-
-        MoveMouse(x,y);
-        MoveDown(x,y);
-
-        MoveMouse(x,y+scroll_dy);
-        MoveUp(x,y+scroll_dy);
-      }
-
-      void ScrollUp(int scroll_dy)
-      {
-        ScrollDown(scroll_dy);
-
-        // Shows we are over the Overlay Thumb
-        int x = _track->GetBaseX() + _track->GetBaseWidth() + 5;
-        int y = _track->GetBaseY();
-
-        MoveMouse(x,y+scroll_dy);
-        MoveDown(x,y+scroll_dy);
-
-        MoveMouse(x,y);
-        MoveUp(x,y);
-      }
-
-      void MoveDown(int x, int y)
-      {
-        nux::Event event;
-        event.type = nux::NUX_MOUSE_PRESSED;
-        event.x = x;
-        event.y = y;
-        nux::GetWindowCompositor().ProcessEvent(event);
-      }
-
-      void MoveUp(int x, int y)
-      {
-        nux::Event event;
-        event.type = nux::NUX_MOUSE_RELEASED;
-        event.x = x;
-        event.y = y;
-        nux::GetWindowCompositor().ProcessEvent(event);
-      }
-
-      void MoveMouse(int x, int y)
-      {
-        nux::Event event;
-        event.type = nux::NUX_MOUSE_MOVE;
-        event.x = x;
-        event.y = y;
-        nux::GetWindowCompositor().ProcessEvent(event);
-      }
-
-      using nux::VScrollBar::AtMinimum;
-      using nux::VScrollBar::GetBaseHeight;
-
-      int scroll_dy;
-      bool scroll_up_signal_;
-      bool scroll_down_signal_;
-  };
-
-  TestOverlayScrollBar()
-  {
-     scroll_bar_ = std::make_shared<MockScrollBar>(NUX_TRACKER_LOCATION);
+    scroll_bar_ = new MockScrollBar(NUX_TRACKER_LOCATION);
+    SetVScrollBar(scroll_bar_.GetPointer());
   }
 
-  std::shared_ptr<MockScrollBar> scroll_bar_;
+  nux::ObjectPtr<MockScrollBar> scroll_bar_;
+};
+
+class TestOverlayVScrollBar : public Test
+{
+public:
+  TestOverlayVScrollBar()
+  {
+    nux::VLayout* scroll_layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
+    scroll_layout_->SetGeometry(0,0,1000,5000);
+    scroll_layout_->SetScaleFactor(0);
+
+    scroll_view_ = new MockScrollView(NUX_TRACKER_LOCATION);
+    scroll_view_->EnableVerticalScrollBar(true);
+    scroll_view_->EnableHorizontalScrollBar(false);
+    scroll_view_->SetLayout(scroll_layout_);
+
+    scroll_view_->scroll_bar_->SetContentSize(0, 0, 201, 2000);
+    scroll_view_->scroll_bar_->SetContainerSize(0, 0, 202, 400);
+  }
+
+  nux::ObjectPtr<MockScrollView> scroll_view_;
 };
 
 TEST_F(TestOverlayWindow, TestOverlayShows)
@@ -161,6 +241,7 @@ TEST_F(TestOverlayWindow, TestOverlayHides)
   EXPECT_TRUE(overlay_window_->IsVisible());
 
   overlay_window_->MouseBeyond();
+  overlay_window_->MouseLeave();
   EXPECT_FALSE(overlay_window_->IsVisible());
 }
 
@@ -170,6 +251,7 @@ TEST_F(TestOverlayWindow, TestOverlayStaysOpenWhenMouseDown)
   overlay_window_->MouseDown();
 
   overlay_window_->MouseBeyond();
+  overlay_window_->MouseLeave();
   EXPECT_TRUE(overlay_window_->IsVisible());
 }
 
@@ -241,40 +323,101 @@ TEST_F(TestOverlayWindow, TestOverlayMouseIsInsideOnOffsetChange)
   EXPECT_FALSE(overlay_window_->IsMouseInsideThumb(offset_y + thumb_height + 1));
 }
 
-TEST_F(TestOverlayScrollBar, TestScrollDownSignal)
+
+TEST_F(TestOverlayVScrollBar, TestScrollDownSignal)
 {
-  scroll_bar_->ScrollDown(10);
-  EXPECT_TRUE(scroll_bar_->scroll_down_signal_);
+  scroll_view_->scroll_bar_->ScrollDown(10);
+  EXPECT_TRUE(scroll_view_->scroll_bar_->scroll_down_signal_);
 }
 
-TEST_F(TestOverlayScrollBar, TestScrollUpSignal)
+TEST_F(TestOverlayVScrollBar, TestScrollUpSignal)
 {
-  scroll_bar_->ScrollUp(10);
-  EXPECT_TRUE(scroll_bar_->scroll_up_signal_);
+  scroll_view_->scroll_bar_->ScrollDown(10);
+  scroll_view_->scroll_bar_->ScrollUp(10);
+  EXPECT_TRUE(scroll_view_->scroll_bar_->scroll_up_signal_);
 }
 
-TEST_F(TestOverlayScrollBar, TestScrollDownDeltaY)
+TEST_F(TestOverlayVScrollBar, TestScrollDownDeltaY)
 {
   int scroll_down = 15;
-  scroll_bar_->ScrollDown(scroll_down);
-  EXPECT_EQ(scroll_bar_->scroll_dy, scroll_down);
+  scroll_view_->scroll_bar_->ScrollDown(scroll_down);
+  EXPECT_EQ(scroll_view_->scroll_bar_->scroll_dy_, scroll_down);
 }
 
-TEST_F(TestOverlayScrollBar, TestScrollUpDeltaY)
+TEST_F(TestOverlayVScrollBar, TestScrollUpDeltaY)
 {
   int scroll_up = 7;
-  scroll_bar_->ScrollUp(scroll_up);
-  EXPECT_EQ(scroll_bar_->scroll_dy, scroll_up);
+  scroll_view_->scroll_bar_->ScrollDown(scroll_up+1);
+  scroll_view_->scroll_bar_->ScrollUp(scroll_up);
+  EXPECT_EQ(scroll_view_->scroll_bar_->scroll_dy_, scroll_up);
 }
 
-TEST_F(TestOverlayScrollBar, TestScrollsSlowlyDeltaY)
+TEST_F(TestOverlayVScrollBar, TestScrollDownBaseYMoves)
+{
+  int slider_y = scroll_view_->scroll_bar_->_slider->GetBaseY();
+  int scroll_down = 10;
+  scroll_view_->scroll_bar_->ScrollDown(scroll_down);
+  EXPECT_EQ(scroll_view_->scroll_bar_->scroll_dy_, scroll_down);
+  EXPECT_GT(scroll_view_->scroll_bar_->_slider->GetBaseY(), slider_y);
+}
+
+TEST_F(TestOverlayVScrollBar, TestScrollUpBaseYMoves)
+{
+  int scroll_up = 10;
+  scroll_view_->scroll_bar_->ScrollDown(scroll_up+1);
+
+  int slider_y = scroll_view_->scroll_bar_->_slider->GetBaseY();
+  scroll_view_->scroll_bar_->ScrollUp(scroll_up);
+  EXPECT_EQ(scroll_view_->scroll_bar_->scroll_dy_, scroll_up);
+  EXPECT_LT(scroll_view_->scroll_bar_->_slider->GetBaseY(), slider_y);
+}
+
+TEST_F(TestOverlayVScrollBar, TestScrollsSlowlyDeltaY)
 {
   int scroll_down = 10;
   for (int i = 0; i < scroll_down; i++)
   {
-    scroll_bar_->ScrollDown(1);
-    EXPECT_EQ(scroll_bar_->scroll_dy, 1);
+    scroll_view_->scroll_bar_->ScrollDown(1);
+    EXPECT_EQ(scroll_view_->scroll_bar_->scroll_dy_, 1);
   }
 }
 
+TEST_F(TestOverlayVScrollBar, TestScrollUpAnimationMovesSlider)
+{
+  int scroll_up = 10;
+  scroll_view_->scroll_bar_->ScrollDown(scroll_up+10);
+
+  int slider_y = scroll_view_->scroll_bar_->_slider->GetBaseY();
+  scroll_view_->scroll_bar_->ScrollUpAnimation(scroll_up);
+
+  EXPECT_EQ(scroll_view_->scroll_bar_->scroll_dy_, scroll_up);
+  EXPECT_LT(scroll_view_->scroll_bar_->_slider->GetBaseY(), slider_y);
 }
+
+TEST_F(TestOverlayVScrollBar, TestScrollDownAnimationMovesSlider)
+{
+  int scroll_down = 10;
+  int slider_y = scroll_view_->scroll_bar_->_slider->GetBaseY();
+
+  scroll_view_->scroll_bar_->ScrollDownAnimation(scroll_down);
+
+  EXPECT_EQ(scroll_view_->scroll_bar_->scroll_dy_, scroll_down);
+  EXPECT_GT(scroll_view_->scroll_bar_->_slider->GetBaseY(), slider_y);
+}
+
+TEST_F(TestOverlayVScrollBar, TestConnectorResetsDuringScrollAnimation)
+{
+  scroll_view_->scroll_bar_->MoveMouseNear();
+  scroll_view_->scroll_bar_->SetThumbOffset(100);
+
+  int connector_height = scroll_view_->scroll_bar_->connector_height_;
+  EXPECT_GT(connector_height, 0);
+
+  scroll_view_->scroll_bar_->StartScrollThenConnectorAnimation();
+
+  connector_height = scroll_view_->scroll_bar_->connector_height_;
+  EXPECT_EQ(connector_height, 0);
+}
+
+}
+

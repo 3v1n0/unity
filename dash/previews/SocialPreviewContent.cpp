@@ -130,11 +130,11 @@ void SocialPreviewContent::SetupViews()
 {
   dash::previews::Style const& style = dash::previews::Style::Instance();
 
-  text_ = new nux::StaticCairoText("", false, NUX_TRACKER_LOCATION);
+  text_ = new StaticCairoText("", false, NUX_TRACKER_LOCATION);
   text_->SetLines(-8);
   text_->SetFont(style.content_font());
   text_->SetLineSpacing(5);
-  text_->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_MIDDLE);
+  text_->SetTextEllipsize(StaticCairoText::NUX_ELLIPSIZE_MIDDLE);
 
   nux::Layout* layout = new nux::Layout();
   layout->AddView(text_.GetPointer(), 1);
@@ -149,8 +149,8 @@ void SocialPreviewContent::UpdateBaloonTexture()
 
   nux::Geometry geo_cr(GetBubbleGeometry(geo));
 
-  int max_width = geo_cr.width - 2*(geo_cr.width*0.1);
-  int max_height = (geo_cr.height - TAIL_HEIGHT) - 2*((geo_cr.height - TAIL_HEIGHT)*0.1);
+  int max_width = std::max(0, (int)(geo_cr.width - 2*(geo_cr.width*0.1)));
+  int max_height = std::max(0, (int)((geo_cr.height - TAIL_HEIGHT) - 2*((geo_cr.height - TAIL_HEIGHT)*0.1)));
 
   // this will update the texture with the actual size of the text.
   text_->SetMaximumHeight(max_height);
@@ -169,8 +169,8 @@ void SocialPreviewContent::UpdateBaloonTexture()
 
 void SocialPreviewContent::RedrawBubble(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state)
 {
-  double width = MAX(0, cairo_image_surface_get_width(cairo_get_target(cr)));
-  double height = MAX(0, cairo_image_surface_get_height(cairo_get_target(cr)) - TAIL_HEIGHT);
+  double width = std::max(0, cairo_image_surface_get_width(cairo_get_target(cr)));
+  double height = std::max(0, cairo_image_surface_get_height(cairo_get_target(cr)) - TAIL_HEIGHT);
 
   double tailPosition = width - TAIL_POS_FROM_RIGHT - TAIL_HEIGHT;
   if (width > 0 && height > 0)

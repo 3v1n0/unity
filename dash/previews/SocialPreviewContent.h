@@ -73,7 +73,7 @@ protected:
   virtual void AddProperties(GVariantBuilder* builder);
 
 private:
-  nux::ObjectPtr<nux::StaticCairoText> text_;
+  nux::ObjectPtr<StaticCairoText> text_;
 
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
   NuxCairoPtr cr_bubble_;

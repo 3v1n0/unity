@@ -60,6 +60,12 @@ SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   texxform.min_filter = nux::TEXFILTER_LINEAR;
   texxform.mag_filter = nux::TEXFILTER_LINEAR;
 
+  unsigned int current_alpha_blend;
+  unsigned int current_src_blend_factor;
+  unsigned int current_dest_blend_factor;
+  GfxContext.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+  GfxContext.GetRenderStates().SetBlend(true,  GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
   if (_state == STATE_READY)
   {
     GfxContext.QRP_1Tex(geo.x + ((geo.width - _magnify->GetWidth()) / 2),
@@ -82,11 +88,14 @@ SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     int spin_offset_w = !(geo.width % 2) ? 0 : 1;
     int spin_offset_h = !(geo.height % 2) ? 0 : 1;
 
-    GfxContext.PushModelViewMatrix(nux::Matrix4::TRANSLATE(-spin_geo.x - (spin_geo.width + spin_offset_w) / 2.0f,
-                                                           -spin_geo.y - (spin_geo.height + spin_offset_h) / 2.0f, 0));
-    GfxContext.PushModelViewMatrix(_2d_rotate);
-    GfxContext.PushModelViewMatrix(nux::Matrix4::TRANSLATE(spin_geo.x + (spin_geo.width + spin_offset_w) / 2.0f,
-                                                           spin_geo.y + (spin_geo.height + spin_offset_h) / 2.0f, 0));
+    nux::Matrix4 matrix_texture;
+    matrix_texture = nux::Matrix4::TRANSLATE(-spin_geo.x - (spin_geo.width + spin_offset_w) / 2.0f,
+                                          -spin_geo.y - (spin_geo.height + spin_offset_h) / 2.0f, 0) * matrix_texture;
+    matrix_texture = _2d_rotate * matrix_texture;
+    matrix_texture = nux::Matrix4::TRANSLATE(spin_geo.x + (spin_geo.width + spin_offset_w) / 2.0f,
+                                             spin_geo.y + (spin_geo.height + spin_offset_h) / 2.0f, 0) * matrix_texture;
+
+    GfxContext.SetModelViewMatrix(GfxContext.GetModelViewMatrix() * matrix_texture);
 
     GfxContext.QRP_1Tex(spin_geo.x,
                         spin_geo.y,
@@ -96,9 +105,8 @@ SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                         texxform,
                         nux::color::White);
 
-    GfxContext.PopModelViewMatrix();
-    GfxContext.PopModelViewMatrix();
-    GfxContext.PopModelViewMatrix();
+    // revert to model view matrix stack
+    GfxContext.ApplyModelViewMatrix();
   }
   else
   {
@@ -119,6 +127,8 @@ SearchBarSpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                         nux::color::White);
   }
   GfxContext.PopClippingRectangle();
+
+  GfxContext.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
 
   if (_state == STATE_SEARCHING && !_frame_timeout)
   {

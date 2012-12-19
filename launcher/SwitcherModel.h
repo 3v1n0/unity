@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2012 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -35,24 +35,35 @@ namespace unity
 namespace switcher
 {
 
+/**
+ * Provides a list of applications and application windows for the Switcher.
+ *
+ * This model provides a model two-level iterable data structure.  The first
+ * level of data is effectively a list of applications available for selection.
+ * Each application can further provide a second-level collection of windows for
+ * selection.  To this end, the model provides the notion of the current
+ * iterator value within each list, the second iterator value modally
+ * corresponding to the current iterator value of the first.
+ *
+ * The mode of this model is changed by toggling the @p detail_selection
+ * property.  Different iteration calls need to be made by client code depending
+ * on the state of that property.
+ */
 class SwitcherModel : public debug::Introspectable, public sigc::trackable
 {
 
 public:
   typedef boost::shared_ptr<SwitcherModel> Ptr;
 
-  typedef std::vector<launcher::AbstractLauncherIcon::Ptr> Base;
-  typedef Base::iterator iterator;
-  typedef Base::reverse_iterator reverse_iterator;
+  typedef std::vector<launcher::AbstractLauncherIcon::Ptr> Applications;
+  typedef Applications::iterator iterator;
+  typedef Applications::reverse_iterator reverse_iterator;
 
-  nux::Property<bool> detail_selection;
+  nux::Property<bool>         detail_selection;
   nux::Property<unsigned int> detail_selection_index;
-  nux::Property<bool> only_detail_on_viewport;
+  nux::Property<bool>         only_detail_on_viewport;
 
-  // Icons are owned externally and assumed valid for life of switcher.
-  // When AbstractLauncherIcon is complete, it will be passed as a shared pointer and this
-  // will no longer be a worry.
-  SwitcherModel(std::vector<launcher::AbstractLauncherIcon::Ptr> icons);
+  SwitcherModel(std::vector<launcher::AbstractLauncherIcon::Ptr> const& icons);
   virtual ~SwitcherModel();
 
   iterator begin();
@@ -91,11 +102,10 @@ protected:
   void AddProperties(GVariantBuilder* builder);
 
 private:
-  Base             _inner;
-  unsigned int     _index;
-  unsigned int     _last_index;
-
-  launcher::AbstractLauncherIcon::Ptr _last_active_icon;
+  Applications                        applications_;
+  unsigned int                        index_;
+  unsigned int                        last_index_;
+  launcher::AbstractLauncherIcon::Ptr last_active_application_;
 };
 
 }

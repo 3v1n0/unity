@@ -26,11 +26,11 @@
 #include <UnityCore/Hud.h>
 #include <UnityCore/GLibSignal.h>
 
+#include <NuxCore/Animation.h>
 #include <NuxCore/Property.h>
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/Nux.h>
 
-#include "unity-shared/Animator.h"
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/ResizingBaseWindow.h"
 #include "HudView.h"
@@ -44,8 +44,11 @@ class Controller : public unity::debug::Introspectable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;
+  typedef std::function<AbstractView*()> ViewCreator;
+  typedef std::function<ResizingBaseWindow*()> WindowCreator;
 
-  Controller(std::function<AbstractView*(void)> const& function = []() { return new View; });
+  Controller(ViewCreator const& create_view = nullptr,
+             WindowCreator const& create_window = nullptr);
 
   nux::BaseWindow* window() const;
 
@@ -58,6 +61,7 @@ public:
   void ShowHideHud();
   void ShowHud();
   void HideHud(bool restore_focus = true);
+  void ReFocusKeyInput();
   bool IsVisible();
 
   nux::Geometry GetInputWindowGeometry();
@@ -73,6 +77,8 @@ private:
   void SetupHudView();
   void RegisterUBusInterests();
   void SetIcon(std::string const& icon_name);
+
+  void FocusWindow();
 
   int GetIdealMonitor();
   bool IsLockedToLauncher(int monitor);
@@ -100,13 +106,9 @@ private:
 
 private:
   nux::ObjectPtr<ResizingBaseWindow> window_;
-  UBusManager ubus;
-  glib::SignalManager sig_manager_;
   Hud hud_service_;
   bool visible_;
   bool need_show_;
-
-  Animator timeline_animator_;
 
   AbstractView* view_;
   std::string focused_app_icon_;
@@ -114,7 +116,12 @@ private:
   uint monitor_index_;
   std::string last_search_;
 
-  std::function<AbstractView*(void)> view_function_;
+  ViewCreator create_view_;
+  WindowCreator create_window_;
+
+  UBusManager ubus;
+  glib::SignalManager sig_manager_;
+  nux::animation::AnimateValue<double> timeline_animator_;
 };
 
 } // namespace hud

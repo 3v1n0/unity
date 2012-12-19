@@ -67,15 +67,6 @@ public:
   nux::ROProperty<bool> urgent;
 };
 
-// Used for dbus menus, and nicer than a std::pair of strings.
-struct ApplicationMenu
-{
-  ApplicationMenu(std::string const& path, std::string const& address)
-    : path(path), remote_address(address) {}
-  std::string path;
-  std::string remote_address;
-};
-
 
 class Application
 {
@@ -94,7 +85,6 @@ public:
   virtual bool OwnsWindow(Window window_id) const = 0;
 
   virtual std::vector<std::string> GetSupportedMimeTypes() const = 0;
-  virtual std::vector<ApplicationMenu> GetRemoteMenus() const = 0;
 
   virtual ApplicationWindowPtr GetFocusableWindow() const = 0;
   virtual void Focus(bool show_on_visible, int monitor) const = 0;

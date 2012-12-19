@@ -369,7 +369,7 @@ public:
 
   void minimize();
   void unminimize();
-  bool minimized();
+  bool minimized() const;
   bool focus();
   void activate();
 

@@ -37,7 +37,7 @@ namespace dash
 PlacesOverlayVScrollBar::PlacesOverlayVScrollBar(NUX_FILE_LINE_DECL)
   : PlacesVScrollBar(NUX_FILE_LINE_PARAM)
   , overlay_window_(new VScrollBarOverlayWindow(_track->GetAbsoluteGeometry()))
-  , area_prox_(overlay_window_.GetPointer(), PROXIMITY)
+  , area_prox_(this, PROXIMITY)
   , thumb_above_slider_(false)
   , connector_height_(0)
   , mouse_down_offset_(0)
@@ -46,6 +46,8 @@ PlacesOverlayVScrollBar::PlacesOverlayVScrollBar(NUX_FILE_LINE_DECL)
   area_prox_.mouse_near.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseNear));
   area_prox_.mouse_beyond.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseBeyond));
 
+  overlay_window_->mouse_enter.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseEnter));
+  overlay_window_->mouse_leave.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseLeave));
   overlay_window_->mouse_down.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseDown));
   overlay_window_->mouse_up.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseUp));
   overlay_window_->mouse_click.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseClick));
@@ -54,6 +56,7 @@ PlacesOverlayVScrollBar::PlacesOverlayVScrollBar(NUX_FILE_LINE_DECL)
 
   _track->geometry_changed.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnTrackGeometryChanged));
   OnVisibleChanged.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnVisibilityChanged));
+  OnSensitiveChanged.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnSensitivityChanged));
 }
 
 void PlacesOverlayVScrollBar::OnTrackGeometryChanged(nux::Area* /*area*/, nux::Geometry& /*geo*/)
@@ -77,10 +80,13 @@ void PlacesOverlayVScrollBar::OnVisibilityChanged(nux::Area* /*area*/, bool visi
   }
 }
 
-void PlacesOverlayVScrollBar::StopAnimation()
+void PlacesOverlayVScrollBar::OnSensitivityChanged(nux::Area* /*area*/, bool sensitive)
 {
-  if (animation_.CurrentState() != nux::animation::Animation::State::Stopped)
-    animation_.Stop();
+  if (!sensitive)
+  {
+    overlay_window_->ResetStates();
+    ResetConnector();    
+  }
 }
 
 void PlacesOverlayVScrollBar::SetupAnimation(int start, int stop, int milliseconds)
@@ -142,11 +148,23 @@ bool PlacesOverlayVScrollBar::IsScrollBarVisible() const
   return (content_height_ > container_height_);
 }
 
+void PlacesOverlayVScrollBar::OnMouseEnter(int x, int y, unsigned int button_flags, unsigned int key_flags)
+{
+  overlay_window_->MouseEnter();
+  UpdateConnectorPosition();
+}
+
+void PlacesOverlayVScrollBar::OnMouseLeave(int x, int y, unsigned int button_flags, unsigned int key_flags)
+{
+  overlay_window_->MouseLeave();
+  UpdateConnectorPosition();
+}
+
 void PlacesOverlayVScrollBar::OnMouseNear(nux::Point const& mouse_pos)
 {
-  if (IsVisible() && IsScrollBarVisible())
+  if (IsSensitive() && IsVisible() && IsScrollBarVisible())
   {
-    StopAnimation();
+    animation_.Stop();
 
     overlay_window_->MouseNear();
     AdjustThumbOffsetFromMouse();
@@ -230,7 +248,18 @@ void PlacesOverlayVScrollBar::UpdateConnectorPosition()
 
 void PlacesOverlayVScrollBar::ResetConnector()
 {
-  StartConnectorAnimation();
+  if (animation_.CurrentState() == nux::animation::Animation::State::Stopped)
+  {
+    if (connector_height_ > 0)
+    {
+      StartConnectorAnimation();
+    }
+  }
+  else
+  {
+    connector_height_ = 0;
+  }
+
   QueueDraw();
 }
 
@@ -320,7 +349,7 @@ void PlacesOverlayVScrollBar::OnMouseMove(int /*x*/, int y, int /*dx*/, int /*dy
 
 void PlacesOverlayVScrollBar::OnMouseDrag(int /*x*/, int y, int /*dx*/, int dy, unsigned int /*button_flags*/, unsigned int /*key_flags*/)
 {
-  StopAnimation();
+  animation_.Stop();
   MouseDraggingOverlay(y, dy);
 }
 

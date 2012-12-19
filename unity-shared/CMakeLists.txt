@@ -1,17 +1,13 @@
 set(UNITY_SRC ../plugins/unityshell/src)
 
-find_package (PkgConfig)
-
 set (CFLAGS
      ${CACHED_UNITY_DEPS_CFLAGS}
      ${CACHED_UNITY_DEPS_CFLAGS_OTHER}
+     ${PIC_FLAGS}
      )
 
-if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l")
-  set (CFLAGS ${CFLAGS} "-fPIC")
-endif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l")
-
-add_definitions (${CFLAGS})
+string (REPLACE ";" " " CFLAGS "${CFLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CFLAGS}")
 
 set (LIBS ${CACHED_UNITY_DEPS_LIBRARIES} ${UNITY_STANDALONE_LADD})
 
@@ -26,13 +22,13 @@ include_directories (.. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR
 set (UNITY_SHARED_SOURCES
      AbstractSeparator.cpp
      ApplicationManager.cpp
-     Animator.cpp
      BGHash.cpp
      CoverArt.cpp
      BackgroundEffectHelper.cpp
      DashStyle.cpp
      DebugDBusInterface.cpp
      DefaultThumbnailProvider.cpp
+     DeltaRestrainment.cpp
      FontSettings.cpp
      GraphicsUtils.cpp
      IMTextEntry.cpp
@@ -51,6 +47,7 @@ set (UNITY_SHARED_SOURCES
      PlacesOverlayVScrollBar.cpp
      PreviewStyle.cpp
      RatingsButton.cpp
+     ResizingBaseWindow.cpp
      SearchBar.cpp
      SearchBarSpinner.cpp
      StaticCairoText.cpp

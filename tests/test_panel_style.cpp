@@ -43,7 +43,7 @@ public:
 
   /* override */ void SetUp()
   {
-    g_setenv("GSETTINGS_BACKEND", "memory", TRUE);
+    g_setenv ("GSETTINGS_BACKEND", "memory", 1);
 
     gsettings = g_settings_new("org.gnome.desktop.wm.preferences");
     g_settings_set_string(gsettings, "titlebar-font", TITLEBAR_FONT.c_str());
@@ -53,7 +53,7 @@ public:
 
   /* override */ void TearDown()
   {
-    g_setenv("GSETTINGS_BACKEND", "", TRUE);
+    g_unsetenv ("GSETTINGS_BACKEND");
   }
 };
 
@@ -70,12 +70,16 @@ TEST_F(TestPanelStyle, TestChangedSignal)
     signal_received = true;
   });
 
+  gchar *old_font = g_settings_get_string(gsettings, "titlebar-font");
   g_settings_set_string(gsettings, "titlebar-font", "Ubuntu Italic 11");
 
   sleep(1);
 
   ASSERT_TRUE(signal_received);
   ASSERT_EQ(panel_style_instance->GetFontDescription(panel::PanelItem::TITLE), "Ubuntu Italic 11");  
+
+  g_settings_set_string(gsettings, "titlebar-font", old_font);
+  g_free (old_font);
 }
 
 }

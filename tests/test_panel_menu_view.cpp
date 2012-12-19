@@ -31,21 +31,8 @@ using namespace testing;
 namespace unity
 {
 
-class MockPanelMenuView : public PanelMenuView
-{
-  protected:
-    virtual std::string GetActiveViewName(bool use_appname) const
-    {
-      return "<>'";
-    }
-};
-
 struct TestPanelMenuView : public testing::Test
 {
-  virtual void SetUp()
-  {
-  }
-
   void ProcessUBusMessages()
   {
     bool expired = false;
@@ -54,24 +41,28 @@ struct TestPanelMenuView : public testing::Test
     Utils::WaitUntil(expired);
   }
 
-  std::string panelTitle() const
+  struct MockPanelMenuView : public PanelMenuView
   {
-    const PanelMenuView *panel = &panelMenuView;
-    return panel->GetCurrentTitle();
-  }
+    MOCK_METHOD0(QueueDraw, void());
+    MOCK_CONST_METHOD1(GetActiveViewName, std::string(bool));
 
-private:
-  // The order is important, i.e. PanelMenuView needs
+    using PanelMenuView::window_buttons_;
+    using PanelMenuView::GetCurrentTitle;
+  };
+
+protected:
+  // The order is important, i.e. menu_view needs
   // panel::Style that needs Settings
   Settings settings;
   panel::Style panelStyle;
-  MockPanelMenuView panelMenuView;
+  testing::NiceMock<MockPanelMenuView> menu_view;
 };
 
 TEST_F(TestPanelMenuView, Escaping)
 {
+  ON_CALL(menu_view, GetActiveViewName(testing::_)).WillByDefault(Return("<>'"));
   static const char *escapedText = "Panel d&amp;Inici";
-  EXPECT_TRUE(panelTitle().empty());
+  EXPECT_TRUE(menu_view.GetCurrentTitle().empty());
 
   UBusManager ubus;
   ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV, NULL);
@@ -79,18 +70,24 @@ TEST_F(TestPanelMenuView, Escaping)
                    g_variant_new_string(escapedText));
   ProcessUBusMessages();
 
-  EXPECT_EQ(panelTitle(), escapedText);
+  EXPECT_EQ(menu_view.GetCurrentTitle(), escapedText);
 
   ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV, NULL);
   ProcessUBusMessages();
 
   StandaloneWindowManager *wm = dynamic_cast<StandaloneWindowManager *>(&WindowManager::Default());
   ASSERT_NE(wm, nullptr);
-  // Change the wm to trick PanelMenuView::RefreshTitle to call GetActiveViewName
+  // Change the wm to trick menu_view::RefreshTitle to call GetActiveViewName
   wm->SetScaleActive(true);
   wm->SetScaleActiveForGroup(true);
 
-  EXPECT_EQ(panelTitle(), "&lt;&gt;&apos;");
+  EXPECT_EQ(menu_view.GetCurrentTitle(), "&lt;&gt;&apos;");
+}
+
+TEST_F(TestPanelMenuView, QueuesDrawOnButtonsOpacityChange)
+{
+  EXPECT_CALL(menu_view, QueueDraw());
+  menu_view.window_buttons_->opacity.changed.emit(0.5f);
 }
 
 }
