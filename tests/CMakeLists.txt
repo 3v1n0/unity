@@ -202,6 +202,7 @@ if (ENABLE_X_SUPPORT)
                  test_main.cpp
                  test_action_link.cpp
                  test_application_launcher_icon.cpp
+                 test_bamf_application.cpp
                  test_bfb_launcher_icon.cpp
                  test_dashview_impl.cpp
                  test_dash_controller.cpp
@@ -263,7 +264,7 @@ if (ENABLE_X_SUPPORT)
                  ${UNITY_SRC}/UnityShowdesktopHandler.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unityshell/src/WindowMinimizeSpeedController.cpp
                 )
-  target_link_libraries(test-gtest gtest gmock unity-shared ${LIBS} launcher-lib unity-shared-standalone shortcuts-lib previews-lib hud-lib switcher-lib dash-lib panel-lib)
+  target_link_libraries(test-gtest gtest gmock unity-shared ${LIBS} launcher-lib unity-shared-bamf unity-shared-standalone shortcuts-lib previews-lib hud-lib switcher-lib dash-lib panel-lib)
   add_test(UnityGTest test-gtest)
   add_dependencies(test-gtest unity-core-${UNITY_API_VERSION} gtest gmock)
 endif (ENABLE_X_SUPPORT)
