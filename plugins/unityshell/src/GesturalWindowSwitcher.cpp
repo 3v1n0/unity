@@ -109,8 +109,8 @@ GesturalWindowSwitcherPrivate::GesturalWindowSwitcherPrivate()
   timer_close_switcher.setCallback(
       boost::bind(&GesturalWindowSwitcherPrivate::OnCloseSwitcherTimeout, this));
 
-  view_built_connection = switcher_controller->view_built.connect(
-      sigc::mem_fun(this, &GesturalWindowSwitcherPrivate::ConnectToSwitcherViewMouseEvents));
+  view_built_connection = switcher_controller->ConnectToViewBuilt(
+        sigc::mem_fun(this, &GesturalWindowSwitcherPrivate::ConnectToSwitcherViewMouseEvents));
 }
 
 GesturalWindowSwitcherPrivate::~GesturalWindowSwitcherPrivate()
@@ -335,7 +335,9 @@ void GesturalWindowSwitcherPrivate::ProcessSwitcherViewMouseDown(int x, int y,
 
   state = State::RecognizingMouseClickOrDrag;
 
-  index_icon_hit = switcher_controller->GetView()->IconIndexAt(x, y);
+  unity::switcher::SwitcherView *view = switcher_controller->GetView();
+
+  index_icon_hit = view->IconIndexAt(x, y);
   accumulated_horizontal_drag = 0.0f;
 }
 

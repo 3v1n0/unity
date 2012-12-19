@@ -43,7 +43,18 @@ using unity::launcher::MockLauncherIcon;
 
 static bool enable_flipping = false;
 
-static Controller *view;
+class StandaloneController : public ShellController
+{
+  public:
+
+    StandaloneController() :
+      ShellController()
+    {
+      timeout_length = 0;
+    }
+};
+
+static Controller::Ptr controller;
 
 static gboolean on_timeout(gpointer data)
 {
@@ -63,73 +74,74 @@ void OnFlippingChanged (bool value)
 
 void OnBorderSizeChanged (nux::RangeValueInteger *self)
 {
-  view->GetView ()->border_size = self->GetValue ();
-  view->GetView ()->QueueDraw ();
+  controller->GetView ()->border_size = self->GetValue ();
+  controller->GetView ()->QueueDraw ();
 }
 
 void OnFlatSpacingSizeChanged (nux::RangeValueInteger *self)
 {
-  view->GetView ()->flat_spacing = self->GetValue ();
-  view->GetView ()->QueueDraw ();
+  controller->GetView ()->flat_spacing = self->GetValue ();
+  controller->GetView ()->QueueDraw ();
 }
 
 void OnTextSizeChanged (nux::RangeValueInteger *self)
 {
-  view->GetView ()->text_size = self->GetValue ();
-  view->GetView ()->QueueDraw ();
+  controller->GetView ()->text_size = self->GetValue ();
+  controller->GetView ()->QueueDraw ();
 }
 
 void OnIconSizeChanged (nux::RangeValueInteger *self)
 {
-  view->GetView ()->icon_size = self->GetValue ();
-  view->GetView ()->QueueDraw ();
+  controller->GetView ()->icon_size = self->GetValue ();
+  controller->GetView ()->QueueDraw ();
 }
 
 void OnTileSizeChanged (nux::RangeValueInteger *self)
 {
-  view->GetView ()->tile_size = self->GetValue ();
-  view->GetView ()->QueueDraw ();
+  controller->GetView ()->tile_size = self->GetValue ();
+  controller->GetView ()->QueueDraw ();
 }
 
 void OnAnimationLengthChanged (nux::RangeValueInteger *self)
 {
-  view->GetView ()->animation_length = self->GetValue ();
-  view->GetView ()->QueueDraw ();
+  controller->GetView ()->animation_length = self->GetValue ();
+  controller->GetView ()->QueueDraw ();
 }
 
 void OnNumIconsChanged (nux::SpinBox *self)
 {
-  view->Hide();
+  controller->Hide();
 
   std::vector<nux::ObjectPtr<AbstractLauncherIcon>> icons;
   for (int i = 0; i < self->GetValue (); i++)
     icons.push_back(nux::ObjectPtr<AbstractLauncherIcon>(new MockLauncherIcon()));
 
-  view->Show(ShowMode::ALL, SortMode::FOCUS_ORDER, icons);
+  controller->Show(ShowMode::ALL, SortMode::FOCUS_ORDER, icons);
 }
 
 void OnNextClicked (nux::View *sender)
 {
-  view->Next ();
+  controller->Next ();
 }
 
 void OnDetailClicked (nux::View *sender)
 {
-  view->NextDetail ();
+  controller->NextDetail ();
 }
 
 void OnPreviousClicked (nux::View *sender)
 {
-  view->Prev();
+  controller->Prev();
 }
 
 void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 {
   nux::VLayout* layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
 
-  view = new Controller();
-  view->timeout_length = 0;
-  view->SetWorkspace(nux::Geometry(0, 0, 900, 600), 0);
+  controller = std::make_shared<Controller>([]{
+    return Controller::ImplPtr(new StandaloneController());
+  });
+  controller->SetWorkspace(nux::Geometry(0, 0, 900, 600), 0);
 
   layout->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
   layout->SetHorizontalExternalMargin (10);
@@ -139,9 +151,9 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   for (int i = 0; i < 9; i++)
     icons.push_back(nux::ObjectPtr<AbstractLauncherIcon>(new MockLauncherIcon()));
 
-  view->Show(ShowMode::ALL, SortMode::FOCUS_ORDER, icons);
+  controller->Show(ShowMode::ALL, SortMode::FOCUS_ORDER, icons);
 
-  view->GetView ()->render_boxes = true;
+  controller->GetView ()->render_boxes = true;
 
   nux::CheckBox* flipping_check = new nux::CheckBox(TEXT("Enable Automatic Flipping"), false, NUX_TRACKER_LOCATION);
   flipping_check->SetMaximumWidth(250);
@@ -173,7 +185,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   nux::StaticText* border_label = new nux::StaticText(TEXT("Border Size:"), NUX_TRACKER_LOCATION);
   border_layout->AddView(border_label, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
-  nux::RangeValueInteger * border_size_range = new nux::RangeValueInteger (view->GetView ()->border_size, 0, 200, NUX_TRACKER_LOCATION);
+  nux::RangeValueInteger * border_size_range = new nux::RangeValueInteger (controller->GetView ()->border_size, 0, 200, NUX_TRACKER_LOCATION);
   border_size_range->sigValueChanged.connect (sigc::ptr_fun (OnBorderSizeChanged));
   border_layout->AddView(border_size_range, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FIX);
 
@@ -189,7 +201,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   nux::StaticText* flat_spacing_label = new nux::StaticText(TEXT("Flat Spacing:"), NUX_TRACKER_LOCATION);
   flat_spacing_layout->AddView(flat_spacing_label, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
-  nux::RangeValueInteger * flat_spacing_size_range = new nux::RangeValueInteger (view->GetView ()->flat_spacing, 0, 200, NUX_TRACKER_LOCATION);
+  nux::RangeValueInteger * flat_spacing_size_range = new nux::RangeValueInteger (controller->GetView ()->flat_spacing, 0, 200, NUX_TRACKER_LOCATION);
   flat_spacing_size_range->sigValueChanged.connect (sigc::ptr_fun (OnFlatSpacingSizeChanged));
   flat_spacing_layout->AddView(flat_spacing_size_range, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FIX);
 
@@ -204,7 +216,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   nux::StaticText* text_size_label = new nux::StaticText(TEXT("Text Size:"), NUX_TRACKER_LOCATION);
   text_size_layout->AddView(text_size_label, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
-  nux::RangeValueInteger * text_size_size_range = new nux::RangeValueInteger (view->GetView ()->text_size, 0, 200, NUX_TRACKER_LOCATION);
+  nux::RangeValueInteger * text_size_size_range = new nux::RangeValueInteger (controller->GetView ()->text_size, 0, 200, NUX_TRACKER_LOCATION);
   text_size_size_range->sigValueChanged.connect (sigc::ptr_fun (OnTextSizeChanged));
   text_size_layout->AddView(text_size_size_range, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FIX);
 
@@ -219,7 +231,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   nux::StaticText* icon_size_label = new nux::StaticText(TEXT("Icon Size:"), NUX_TRACKER_LOCATION);
   icon_size_layout->AddView(icon_size_label, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
-  nux::RangeValueInteger * icon_size_size_range = new nux::RangeValueInteger (view->GetView ()->icon_size, 0, 200, NUX_TRACKER_LOCATION);
+  nux::RangeValueInteger * icon_size_size_range = new nux::RangeValueInteger (controller->GetView ()->icon_size, 0, 200, NUX_TRACKER_LOCATION);
   icon_size_size_range->sigValueChanged.connect (sigc::ptr_fun (OnIconSizeChanged));
   icon_size_layout->AddView(icon_size_size_range, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FIX);
 
@@ -234,7 +246,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   nux::StaticText* tile_size_label = new nux::StaticText(TEXT("Tile Size:"), NUX_TRACKER_LOCATION);
   tile_size_layout->AddView(tile_size_label, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
-  nux::RangeValueInteger * tile_size_size_range = new nux::RangeValueInteger (view->GetView ()->tile_size, 0, 200, NUX_TRACKER_LOCATION);
+  nux::RangeValueInteger * tile_size_size_range = new nux::RangeValueInteger (controller->GetView ()->tile_size, 0, 200, NUX_TRACKER_LOCATION);
   tile_size_size_range->sigValueChanged.connect (sigc::ptr_fun (OnTileSizeChanged));
   tile_size_layout->AddView(tile_size_size_range, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FIX);
 
@@ -249,7 +261,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   nux::StaticText* animation_length_label = new nux::StaticText(TEXT("Animation Length:"), NUX_TRACKER_LOCATION);
   animation_length_layout->AddView(animation_length_label, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
-  nux::RangeValueInteger * animation_length_size_range = new nux::RangeValueInteger (view->GetView ()->animation_length, 0, 2000, NUX_TRACKER_LOCATION);
+  nux::RangeValueInteger * animation_length_size_range = new nux::RangeValueInteger (controller->GetView ()->animation_length, 0, 2000, NUX_TRACKER_LOCATION);
   animation_length_size_range->sigValueChanged.connect (sigc::ptr_fun (OnAnimationLengthChanged));
   animation_length_layout->AddView(animation_length_size_range, 1, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FIX);
 
@@ -282,7 +294,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
   nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = background->GetDeviceTexture();
 
 
-  g_timeout_add(1500, on_timeout, view);
+  g_timeout_add(1500, on_timeout, controller.get());
 }
 
 int main(int argc, char** argv)
