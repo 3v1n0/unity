@@ -97,7 +97,7 @@ public:
 
   /* nux draw wrapper */
   void paintDisplay();
-  void paintPanelShadow(const CompRegion& clip);
+  void PaintPanelShadow(const CompRegion& clip);
   void setPanelShadowMatrix(const GLMatrix& matrix);
 
   void damageCutoff();
@@ -240,6 +240,8 @@ private:
   void OnInitiateSpread();
   void OnTerminateSpread();
 
+  void DamagePanelShadow();
+
   void OnViewHidden(nux::BaseWindow *bw);
   void OnViewShown(nux::BaseWindow *bw);
 
@@ -255,6 +257,9 @@ private:
   void DrawTopPanelBackground();
   bool TopPanelBackgroundTextureNeedsUpdate() const;
   void UpdateTopPanelBackgroundTexture();
+
+  void FillShadowRectForOutput(CompRect &shadowRect,
+                               CompOutput *output);
 
   std::unique_ptr<na::TickSource> tick_source_;
   std::unique_ptr<na::AnimationController> animation_controller_;

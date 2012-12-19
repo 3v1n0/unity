@@ -409,6 +409,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
     WindowManager& wm = WindowManager::Default();
     wm.initiate_spread.connect(sigc::mem_fun(this, &UnityScreen::OnInitiateSpread));
     wm.terminate_spread.connect(sigc::mem_fun(this, &UnityScreen::OnTerminateSpread));
+    wm.initiate_expo.connect(sigc::mem_fun(this, &UnityScreen::DamagePanelShadow));
+    wm.terminate_expo.connect(sigc::mem_fun(this, &UnityScreen::DamagePanelShadow));
 
     AddChild(&screen_introspection_);
 
@@ -487,6 +489,17 @@ void UnityScreen::OnTerminateSpread()
     UnityWindow::get(swin->window)->OnTerminateSpread();
 
   UnityWindow::CleanupSharedTextures();
+}
+
+void UnityScreen::DamagePanelShadow()
+{
+  CompRect panelShadow;
+
+  for (CompOutput &output : screen->outputDevs())
+  {
+    FillShadowRectForOutput(panelShadow, &output);
+    cScreen->damageRegion(CompRegion(panelShadow));
+  }
 }
 
 void UnityScreen::OnViewHidden(nux::BaseWindow *bw)
@@ -597,7 +610,18 @@ void UnityScreen::setPanelShadowMatrix(const GLMatrix& matrix)
   panel_shadow_matrix_ = matrix;
 }
 
-void UnityScreen::paintPanelShadow(const CompRegion& clip)
+void UnityScreen::FillShadowRectForOutput(CompRect &shadowRect,
+                                          CompOutput *output)
+{
+  float panel_h = static_cast<float>(panel_style_.panel_height);
+  float shadowX = output->x();
+  float shadowY = output->y() + panel_h;
+  float shadowWidth = output->width();
+  float shadowHeight = _shadow_texture[0]->height();
+  shadowRect.setGeometry(shadowX, shadowY, shadowWidth, shadowHeight);
+}
+
+void UnityScreen::PaintPanelShadow(const CompRegion& clip)
 {
   if (panel_controller_->opacity() == 0.0f)
     return;
@@ -613,17 +637,13 @@ void UnityScreen::paintPanelShadow(const CompRegion& clip)
   if (fullscreenRegion.contains(*output))
     return;
 
-  float panel_h = static_cast<float>(panel_style_.panel_height);
-
   // You have no shadow texture. But how?
   if (_shadow_texture.empty() || !_shadow_texture[0])
     return;
 
-  float shadowX = output->x();
-  float shadowY = output->y() + panel_h;
-  float shadowWidth = output->width();
-  float shadowHeight = _shadow_texture[0]->height();
-  CompRect shadowRect(shadowX, shadowY, shadowWidth, shadowHeight);
+  CompRect shadowRect;
+
+  FillShadowRectForOutput(shadowRect, output);
 
   CompRegion redraw(clip);
   redraw &= shadowRect;
@@ -685,10 +705,10 @@ void UnityScreen::paintPanelShadow(const CompRegion& clip)
       float y2 = r.y2();
 
       // Texture coordinates of the above rectangle:
-      float tx1 = (x1 - shadowX) / shadowWidth;
-      float ty1 = (y1 - shadowY) / shadowHeight;
-      float tx2 = (x2 - shadowX) / shadowWidth;
-      float ty2 = (y2 - shadowY) / shadowHeight;
+      float tx1 = (x1 - shadowRect.x()) / shadowRect.width();
+      float ty1 = (y1 - shadowRect.y()) / shadowRect.height();
+      float tx2 = (x2 - shadowRect.x()) / shadowRect.width();
+      float ty2 = (y2 - shadowRect.y()) / shadowRect.height();
 
       vertexData = {
         x1, y1, 0,
@@ -1331,7 +1351,7 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
     compizDamageNux(CompRegionRef(output->region()));
 
   gScreen->glPaintTransformedOutput(attrib, transform, region, output, mask);
-  paintPanelShadow(region);
+  PaintPanelShadow(region);
 }
 
 void UnityScreen::damageCutoff()
@@ -2517,7 +2537,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       window->id() == active_window &&
       window->type() != CompWindowTypeDesktopMask)
   {
-    uScreen->paintPanelShadow(region);
+    uScreen->PaintPanelShadow(region);
   }
 
   bool ret = gWindow->glDraw(matrix, attrib, region, mask);
@@ -2526,7 +2546,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       (active_window == 0 || active_window == window->id()) &&
       (window->type() == CompWindowTypeDesktopMask))
   {
-    uScreen->paintPanelShadow(region);
+    uScreen->PaintPanelShadow(region);
   }
 
   return ret;
@@ -3052,6 +3072,8 @@ void UnityScreen::Relayout()
                     << " h=" << primary_monitor_().height;
 
   needsRelayout = false;
+
+  DamagePanelShadow ();
 }
 
 /* Handle changes in the number of workspaces by showing the switcher
