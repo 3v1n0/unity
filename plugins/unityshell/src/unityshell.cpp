@@ -1322,6 +1322,14 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
                                            unsigned int mask)
 {
   allowWindowPaint = false;
+
+  /* PAINT_SCREEN_FULL_MASK means that we are ignoring the damage
+   * region and redrawing the whole screen, so we should make all
+   * nux windows be added to the presentation list that intersect
+   * this output */
+  if (mask & PAINT_SCREEN_FULL_MASK)
+    compizDamageNux(CompRegionRef(output->region()));
+
   gScreen->glPaintTransformedOutput(attrib, transform, region, output, mask);
   paintPanelShadow(region);
 }
