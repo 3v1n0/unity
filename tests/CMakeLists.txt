@@ -257,6 +257,7 @@ if (ENABLE_X_SUPPORT)
                  test_xdnd_manager_imp.cpp
                  test_xdnd_start_stop_notifier_imp.cpp
                  bamf-mock-application.c
+                 bamf-mock-window.c
                  gmockmount.c
                  gmockvolume.c
                  ${UNITY_SRC}/UnityShowdesktopHandler.cpp
