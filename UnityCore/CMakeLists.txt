@@ -103,10 +103,7 @@ set (CORE_SOURCES
 include_directories(${CORE_DEPS_INCLUDE_DIRS})
 include_directories(${CMAKE_BINARY_DIR})
 
-set (LIBS ${CORE_DEPS_LIBRARIES})
-
-set (LIB_PATHS ${CORE_DEPS_LIBRARY_DIRS})
-link_directories(${LIB_PATHS})
+set (LIBS ${CORE_DEPS_LDFLAGS} ${PRIVATE_CORE_DEPS_LDFLAGS})
 
 #
 # Library
