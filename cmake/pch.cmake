@@ -51,7 +51,8 @@ function(add_pch_linux header_filename target_name pch_suffix)
   
   # Add the PCH to every source file's include list.
   # This is the only way that is supported by both GCC and Clang.
-  set_property(TARGET ${target_name} APPEND_STRING PROPERTY COMPILE_FLAGS "-include ${header_basename}")
+  set_property(TARGET ${target_name} APPEND_STRING PROPERTY COMPILE_FLAGS " -include ${header_basename} ")
+  set_property(TARGET ${target_name} APPEND_STRING PROPERTY COMPILE_FLAGS " -Winvalid-pch ")
   
   # Each directory should have only one precompiled header
   # for simplicity. If there are several, the current dir
@@ -70,7 +71,6 @@ endif()
 
 if(use_pch)
   message(STATUS "Using precompiled headers.")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Winvalid-pch")
   if(IS_CLANG)
     set(precompiled_header_extension pch)
   else()
