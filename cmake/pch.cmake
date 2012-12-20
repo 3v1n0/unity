@@ -2,7 +2,15 @@ function(get_gcc_flags target_name)
   # CMake does not provide an easy way to get all compiler switches,
   # so this function is a fishing expedition to get them.
   # http://public.kitware.com/Bug/view.php?id=1260
-  set(compile_args ${CMAKE_CXX_FLAGS})
+  if(CMAKE_CXX_COMPILER_ARG1)
+      set(compile_args ${CMAKE_CXX_COMPILER_ARG1})
+  else()
+      set(compile_args "")
+  endif()
+  if(CMAKE_CXX_COMPILER_ARG2)
+      list(APPEND compile_args ${CMAKE_CXX_COMPILER_ARG2})
+  endif()
+  list(APPEND compile_args ${CMAKE_CXX_FLAGS})
   string(TOUPPER "${CMAKE_BUILD_TYPE}" buildtype_name)
   if(CMAKE_CXX_FLAGS_${buildtype_name})
       list(APPEND compile_args ${CMAKE_CXX_FLAGS_${buildtype_name}})
