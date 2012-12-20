@@ -23,7 +23,6 @@
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
-#include "unity-shared/StaticCairoText.h"
 #include "unity-shared/PlacesOverlayVScrollBar.h"
 #include <UnityCore/MoviePreview.h>
 #include <NuxCore/Logger.h>
@@ -33,7 +32,6 @@
 #include <Nux/AbstractButton.h>
 
 #include "MoviePreview.h"
-#include "PreviewInfoHintWidget.h"
 #include "PreviewRatingsWidget.h"
  
 namespace unity
@@ -59,7 +57,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(MoviePreview);
 
 MoviePreview::MoviePreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
-, full_data_layout_(nullptr)
 {
   SetupBackground();
   SetupView();
@@ -134,11 +131,6 @@ void MoviePreview::OnNavigateInComplete()
 
 void MoviePreview::OnNavigateOut()
 {
-}
-
-void MoviePreview::SetupBackground()
-{
-  details_bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
 }
 
 void MoviePreview::SetupView()

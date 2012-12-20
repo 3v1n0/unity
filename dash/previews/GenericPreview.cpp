@@ -23,7 +23,6 @@
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
-#include "unity-shared/StaticCairoText.h"
 #include "unity-shared/PlacesOverlayVScrollBar.h"
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
@@ -33,7 +32,6 @@
 #include <Nux/AbstractButton.h>
 
 #include "GenericPreview.h"
-#include "PreviewInfoHintWidget.h"
 
 namespace unity
 {
@@ -58,7 +56,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(GenericPreview);
 
 GenericPreview::GenericPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
-, full_data_layout_(nullptr)
 {
   SetupBackground();
   SetupViews();
@@ -125,11 +122,6 @@ std::string GenericPreview::GetName() const
 void GenericPreview::AddProperties(GVariantBuilder* builder)
 {
   Preview::AddProperties(builder);
-}
-
-void GenericPreview::SetupBackground()
-{
-  details_bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
 }
 
 void GenericPreview::SetupViews()

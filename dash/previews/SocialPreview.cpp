@@ -24,7 +24,6 @@
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
 #include "unity-shared/IconTexture.h"
-#include "unity-shared/StaticCairoText.h"
 #include "unity-shared/PlacesOverlayVScrollBar.h"
 #include <UnityCore/SocialPreview.h>
 #include <NuxCore/Logger.h>
@@ -40,7 +39,6 @@
 #include "SocialPreviewContent.h"
 #include "SocialPreviewComments.h"
 #include "ActionButton.h"
-#include "PreviewInfoHintWidget.h"
 
 namespace unity
 {
@@ -65,7 +63,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(SocialPreview);
 
 SocialPreview::SocialPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
-, full_data_layout_(nullptr)
 {
   SetupBackground();
   SetupViews();
@@ -132,11 +129,6 @@ std::string SocialPreview::GetName() const
 void SocialPreview::AddProperties(GVariantBuilder* builder)
 {
   Preview::AddProperties(builder);
-}
-
-void SocialPreview::SetupBackground()
-{
-  details_bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
 }
 
 void SocialPreview::SetupViews()

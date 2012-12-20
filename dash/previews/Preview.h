@@ -28,11 +28,16 @@
 #include <UnityCore/Preview.h>
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/PreviewStyle.h"
+#include "unity-shared/StaticCairoText.h"
+#include "PreviewInfoHintWidget.h"
 
 namespace nux
 {
 class AbstractButton;
+class AbstractPaintLayer;
 class Layout;
+class VLayout;
+class StaticCairoText;
 }
 
 namespace unity
@@ -45,6 +50,7 @@ namespace previews
 {
 class CoverArt;
 class TabIterator;
+class PreviewInfoHintWidget;
 
 class Preview : public nux::View, public debug::Introspectable
 {
@@ -80,15 +86,29 @@ protected:
 
   virtual bool AcceptKeyNavFocus() { return false; }
 
+  virtual void SetupViews() {}
+  void SetupBackground(); 
+
   nux::Layout* BuildGridActionsLayout(dash::Preview::ActionPtrList actions, std::list<nux::AbstractButton*>& buttons);
   nux::Layout* BuildVerticalActionsLayout(dash::Preview::ActionPtrList actions, std::list<nux::AbstractButton*>& buttons);
-  
+
   void UpdateCoverArtImage(CoverArt* cover_art);
 
 protected:
   dash::Preview::Ptr preview_model_;
   std::list<nux::AbstractButton*> action_buttons_;
   TabIterator* tab_iterator_;
+
+  nux::VLayout* full_data_layout_;
+
+  nux::ObjectPtr<CoverArt> image_;
+  nux::ObjectPtr<StaticCairoText> title_;
+  nux::ObjectPtr<StaticCairoText> subtitle_;
+  nux::ObjectPtr<StaticCairoText> description_;
+  PreviewInfoHintWidget::Ptr preview_info_hints_;
+
+  typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
+  LayerPtr details_bg_layer_;
 
   friend class PreviewContent;
 };

@@ -24,14 +24,6 @@
 #define APPLICATIONPREVIEW_H
 
 #include "Preview.h"
-#include <Nux/Nux.h>
-
-namespace nux
-{
-class AbstractPaintLayer;
-class VLayout;
-class StaticCairoText;
-}
 
 namespace unity
 {
@@ -41,9 +33,7 @@ namespace dash
 {
 namespace previews
 {
-class CoverArt;
 class PreviewRatingsWidget;
-class PreviewInfoHintWidget;
 
 class ApplicationPreview : public Preview
 {
@@ -63,26 +53,16 @@ protected:
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void PreLayoutManagement();
 
-  void SetupBackground();
-  void SetupViews();
+  virtual void SetupViews();
 
 protected:
-  nux::VLayout* full_data_layout_;
   nux::VLayout* title_subtitle_layout_;
 
-  nux::ObjectPtr<CoverArt> image_;
   nux::ObjectPtr<IconTexture> app_icon_;
   nux::ObjectPtr<PreviewRatingsWidget> app_rating_;
-  nux::ObjectPtr<StaticCairoText> title_;
-  nux::ObjectPtr<StaticCairoText> subtitle_;
   nux::ObjectPtr<StaticCairoText> license_;
   nux::ObjectPtr<StaticCairoText> last_update_;
   nux::ObjectPtr<StaticCairoText> copywrite_;
-  nux::ObjectPtr<StaticCairoText> description_;
-  nux::ObjectPtr<PreviewInfoHintWidget> preview_info_hints_;
-
-  typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
-  LayerPtr details_bg_layer_;
 };
 
 }

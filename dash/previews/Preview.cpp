@@ -33,6 +33,7 @@
 #include "MusicPreview.h"
 #include "MoviePreview.h"
 #include "SocialPreview.h"
+#include "PreviewInfoHintWidget.h"
 
 namespace unity
 {
@@ -219,6 +220,10 @@ Preview::Preview(dash::Preview::Ptr preview_model)
   : View(NUX_TRACKER_LOCATION)
   , preview_model_(preview_model)
   , tab_iterator_(new TabIterator())
+  , full_data_layout_(nullptr)
+  , image_(nullptr)
+  , title_(nullptr)
+  , subtitle_(nullptr)
 {
 }
 
@@ -361,6 +366,11 @@ void Preview::OnNavigateIn()
   nux::InputArea* default_focus = tab_iterator_->DefaultFocus();
   if (default_focus)
     nux::GetWindowCompositor().SetKeyFocusArea(default_focus);
+}
+
+void Preview::SetupBackground()
+{
+  details_bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
 }
 
 }

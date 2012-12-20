@@ -24,7 +24,6 @@
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
 #include "unity-shared/IconTexture.h"
-#include "unity-shared/StaticCairoText.h"
 #include <UnityCore/MusicPreview.h>
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
@@ -33,7 +32,6 @@
  
 #include "MusicPreview.h"
 #include "ActionButton.h"
-#include "PreviewInfoHintWidget.h"
 #include "Tracks.h"
 
 namespace unity
@@ -48,9 +46,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(MusicPreview);
 
 MusicPreview::MusicPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
-, image_(nullptr)
-, title_(nullptr)
-, subtitle_(nullptr)
 {
   SetupBackground();
   SetupViews();
@@ -117,11 +112,6 @@ std::string MusicPreview::GetName() const
 void MusicPreview::AddProperties(GVariantBuilder* builder)
 {
   Preview::AddProperties(builder);
-}
-
-void MusicPreview::SetupBackground()
-{
-  details_bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
 }
 
 void MusicPreview::SetupViews()

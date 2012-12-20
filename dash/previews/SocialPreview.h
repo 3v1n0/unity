@@ -24,14 +24,6 @@
 #define SOCIALPREVIEW_H
 
 #include "Preview.h"
-#include <Nux/Nux.h>
-
-namespace nux
-{
-class AbstractPaintLayer;
-class VLayout;
-class StaticCairoText;
-}
 
 namespace unity
 {
@@ -41,9 +33,7 @@ namespace dash
 {
 namespace previews
 {
-class CoverArt;
 class PreviewLikesWidget;
-class PreviewInfoHintWidget;
 class SocialPreviewContent;
 class SocialPreviewComments;
 
@@ -65,25 +55,16 @@ protected:
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void PreLayoutManagement();
 
-  void SetupBackground();
-  void SetupViews();
+  virtual void SetupViews();
 
 protected:
-  nux::VLayout* full_data_layout_;
   nux::VLayout* sender_layout_;
   nux::VLayout* title_layout_;
 
   nux::ObjectPtr<IconTexture> avatar_;
-  nux::ObjectPtr<CoverArt> image_;
   nux::ObjectPtr<SocialPreviewContent> content_;
   nux::ObjectPtr<SocialPreviewComments> comments_;
-  nux::ObjectPtr<StaticCairoText> title_;
-  nux::ObjectPtr<StaticCairoText> subtitle_;
   nux::ObjectPtr<StaticCairoText> comments_hint_;
-  nux::ObjectPtr<PreviewInfoHintWidget> preview_info_hints_;
-
-  typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
-  LayerPtr details_bg_layer_;
 };
 
 }
