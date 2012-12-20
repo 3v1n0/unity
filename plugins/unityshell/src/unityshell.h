@@ -356,6 +356,7 @@ private:
   glib::SourceManager sources_;
 
   CompRegion buffered_compiz_damage_;
+  bool       ignore_redraw_request_;
 
   friend class UnityWindow;
 };

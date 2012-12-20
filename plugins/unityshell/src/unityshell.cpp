@@ -146,6 +146,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , scale_just_activated_(false)
   , big_tick_(0)
   , screen_introspection_(screen)
+  , ignore_redraw_request_(false)
 {
   Timer timer;
 #ifndef USE_GLES
@@ -473,6 +474,25 @@ void UnityScreen::initAltTabNextWindow()
     LOG_WARN(logger) << "Could not find key above tab!";
   }
 
+  /* Special case, we need to redraw the panel shadow on panel updates */
+  for (auto const& panel_geo : panel_controller_->GetGeometries())
+  {
+    CompRect panel_rect (panel_geo.x,
+                         panel_geo.y,
+                         panel_geo.width,
+                         panel_geo.height);
+
+    if (nux_damage.intersects(panel_rect))
+    {
+      foreach (CompOutput &o, screen->outputDevs())
+      {
+        CompRect shadowRect;
+        FillShadowRectForOutput(shadowRect, &o);
+        nux_damage += shadowRect;
+      }
+    }
+   }
+  }
 }
 
 void UnityScreen::OnInitiateSpread()
@@ -1346,26 +1366,47 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
   /* PAINT_SCREEN_FULL_MASK means that we are ignoring the damage
    * region and redrawing the whole screen, so we should make all
    * nux windows be added to the presentation list that intersect
-   * this output */
+   * this output.
+   *
+   * However, damaging nux has a side effect of notifying compiz
+   * through onRedrawRequested that we need to queue another frame.
+   * In most cases that would be desirable, and in the case where
+   * we did that in damageCutoff, it would not be a problem as compiz
+   * does not queue up new frames for damage that can be processed
+   * on the current frame. However, we're now past damage cutoff, but
+   * a change in circumstances has required that we redraw all the nux
+   * windows on this frame. As such, we need to ensure that damagePending
+   * is not called as a result of queuing windows for redraw, as that
+   * would effectively result in a damage feedback loop in plugins that
+   * require screen transformations (eg, new frame -> plugin redraws full
+   * screen -> we reach this point and request another redraw implicitly)
+   */
   if (mask & PAINT_SCREEN_FULL_MASK)
+  {
+    ignore_redraw_request_ = true;
     compizDamageNux(CompRegionRef(output->region()));
+    ignore_redraw_request_ = false;
+
+    std::vector<nux::Geometry> dirty = wt->GetPresentationListGeometries();
+  }
 
   gScreen->glPaintTransformedOutput(attrib, transform, region, output, mask);
   PaintPanelShadow(region);
 }
+
+
 
 void UnityScreen::damageCutoff()
 {
   /* We want to run last */
   cScreen->damageCutoff();
 
-  CompRegion additional_nux_damage;
+  CompRegion damage_buffer = buffered_compiz_damage_;
 
+  bool moreDamage;
   do
   {
-    /* We want to track the nux damage here as we will use it to
-     * determine if we need to present other nux windows too */
-    cScreen->damageRegion(additional_nux_damage);
+    moreDamage = false;
 
     /* First apply any damage accumulated to nux to see
      * what windows need to be redrawn there */
@@ -1373,15 +1414,22 @@ void UnityScreen::damageCutoff()
 
     /* Apply the redraw regions to compiz so that we can
      * draw this frame with that region included */
-    determineNuxDamage(additional_nux_damage);
+    determineNuxDamage(damage_buffer);
 
-    /* Subtract the last damage region from the new damage region
-     * - this will give us how much damage remains to be processed
-     */
-  } while (buffered_compiz_damage_.intersected(additional_nux_damage) != additional_nux_damage);
+    /* If we had to put more damage into the damage buffer then
+     * damage compiz with it and keep going */
+    moreDamage = buffered_compiz_damage_ != damage_buffer;
+
+    /* We want to track the nux damage here as we will use it to
+     * determine if we need to present other nux windows too */
+    cScreen->damageRegion(damage_buffer);
+
+  } while (moreDamage);
 
   /* Clear damage buffer */
   buffered_compiz_damage_ = CompRegion();
+
+  wt->ForeignFrameCutoff();
 }
 
 void UnityScreen::preparePaint(int ms)
@@ -2875,7 +2923,8 @@ void UnityScreen::initUnity(nux::NThread* thread, void* InitData)
 
 void UnityScreen::onRedrawRequested()
 {
-  cScreen->damagePending();
+  if (!ignore_redraw_request_)
+    cScreen->damagePending();
 }
 
 /* Handle option changes and plug that into nux windows */
