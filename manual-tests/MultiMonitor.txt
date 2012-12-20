@@ -40,3 +40,19 @@ Actions:
 
 Expected Result:
   No crash.
+
+
+The Windows On A Disconnected Monitor Are Moved Over To A Connected Monitor
+---------------------------------------------------------------------------
+lp: 1002246
+
+Setup:
+  #. Get a system with 2 monitors
+  #. Open 2 instances of gedit
+  #. Move 1 instance of gedit to the 2nd monitor
+
+Actions:
+  #. Unplug the 2nd monitor
+
+Expected Results:
+  The 2nd instance of gedit gets moved over to the 1st monitor.
