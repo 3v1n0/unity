@@ -37,9 +37,9 @@ namespace unity
 namespace dash
 {
 
-NUX_IMPLEMENT_OBJECT_TYPE(FilterMultiRange);
+NUX_IMPLEMENT_OBJECT_TYPE(FilterMultiRangeWidget);
 
-FilterMultiRange::FilterMultiRange(NUX_FILE_LINE_DECL)
+FilterMultiRangeWidget::FilterMultiRangeWidget(NUX_FILE_LINE_DECL)
   : FilterExpanderLabel(_("Multi-range"), NUX_FILE_LINE_PARAM)
   , dragging_(false)
 {
@@ -61,27 +61,27 @@ FilterMultiRange::FilterMultiRange(NUX_FILE_LINE_DECL)
   SetContents(layout_);
   OnActiveChanged(false);
 
-  mouse_move.connect(sigc::mem_fun(this, &FilterMultiRange::RecvMouseMove));
-  mouse_leave.connect(sigc::mem_fun(this, &FilterMultiRange::RecvMouseLeave));
-  mouse_down.connect(sigc::mem_fun(this, &FilterMultiRange::RecvMouseDown));
-  mouse_up.connect(sigc::mem_fun(this, &FilterMultiRange::RecvMouseUp));
+  mouse_move.connect(sigc::mem_fun(this, &FilterMultiRangeWidget::RecvMouseMove));
+  mouse_leave.connect(sigc::mem_fun(this, &FilterMultiRangeWidget::RecvMouseLeave));
+  mouse_down.connect(sigc::mem_fun(this, &FilterMultiRangeWidget::RecvMouseDown));
+  mouse_up.connect(sigc::mem_fun(this, &FilterMultiRangeWidget::RecvMouseUp));
 
-  mouse_drag.connect(sigc::mem_fun(this, &FilterMultiRange::RecvMouseDrag));
+  mouse_drag.connect(sigc::mem_fun(this, &FilterMultiRangeWidget::RecvMouseDrag));
 }
 
-FilterMultiRange::~FilterMultiRange()
+FilterMultiRangeWidget::~FilterMultiRangeWidget()
 {
 }
 
-void FilterMultiRange::SetFilter(Filter::Ptr const& filter)
+void FilterMultiRangeWidget::SetFilter(Filter::Ptr const& filter)
 {
   filter_ = std::static_pointer_cast<MultiRangeFilter>(filter);
 
   all_button_->SetFilter(filter_);
   expanded = !filter_->collapsed();
 
-  filter_->option_added.connect(sigc::mem_fun(this, &FilterMultiRange::OnOptionAdded));
-  filter_->option_removed.connect(sigc::mem_fun(this, &FilterMultiRange::OnOptionRemoved));
+  filter_->option_added.connect(sigc::mem_fun(this, &FilterMultiRangeWidget::OnOptionAdded));
+  filter_->option_removed.connect(sigc::mem_fun(this, &FilterMultiRangeWidget::OnOptionRemoved));
 
   // finally - make sure we are up-todate with our filter list
   for (auto it : filter_->options())
@@ -90,7 +90,7 @@ void FilterMultiRange::SetFilter(Filter::Ptr const& filter)
   SetLabel(filter_->name);
 }
 
-void FilterMultiRange::OnActiveChanged(bool value)
+void FilterMultiRangeWidget::OnActiveChanged(bool value)
 {
   // go through all the buttons, and set the state :(
   int start = 2000;
@@ -138,17 +138,17 @@ void FilterMultiRange::OnActiveChanged(bool value)
   }
 }
 
-void FilterMultiRange::OnOptionAdded(FilterOption::Ptr const& new_filter)
+void FilterMultiRangeWidget::OnOptionAdded(FilterOption::Ptr const& new_filter)
 {
   FilterMultiRangeButtonPtr button(new FilterMultiRangeButton(NUX_TRACKER_LOCATION));
   button->SetFilter(new_filter);
   layout_->AddView(button.GetPointer());
   buttons_.push_back(button);
-  new_filter->active.changed.connect(sigc::mem_fun(this, &FilterMultiRange::OnActiveChanged));
+  new_filter->active.changed.connect(sigc::mem_fun(this, &FilterMultiRangeWidget::OnActiveChanged));
   OnActiveChanged(false);
 }
 
-void FilterMultiRange::OnOptionRemoved(FilterOption::Ptr const& removed_filter)
+void FilterMultiRangeWidget::OnOptionRemoved(FilterOption::Ptr const& removed_filter)
 {
   for (auto it=buttons_.begin() ; it != buttons_.end(); it++)
   {
@@ -163,17 +163,17 @@ void FilterMultiRange::OnOptionRemoved(FilterOption::Ptr const& removed_filter)
   OnActiveChanged(false);
 }
 
-std::string FilterMultiRange::GetFilterType()
+std::string FilterMultiRangeWidget::GetFilterType()
 {
-  return "FilterMultiRange";
+  return "FilterMultiRangeWidget";
 }
 
-void FilterMultiRange::InitTheme()
+void FilterMultiRangeWidget::InitTheme()
 {
   //FIXME - build theme here - store images, cache them, fun fun fun
 }
 
-nux::Area* FilterMultiRange::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
+nux::Area* FilterMultiRangeWidget::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
 {
   bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
   if (mouse_inside == false)
@@ -188,18 +188,18 @@ nux::Area* FilterMultiRange::FindAreaUnderMouse(const nux::Point& mouse_position
   return area;
 }
 
-void FilterMultiRange::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
+void FilterMultiRangeWidget::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
   nux::Geometry geo = GetAbsoluteGeometry();
   nux::Point abs_cursor(geo.x + x, geo.y + y);
   UpdateMouseFocus(abs_cursor);
 }
 
-void FilterMultiRange::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
+void FilterMultiRangeWidget::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
 }
 
-void FilterMultiRange::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
+void FilterMultiRangeWidget::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   mouse_down_button_.Release();
   mouse_down_left_active_button_.Release();
@@ -208,10 +208,11 @@ void FilterMultiRange::RecvMouseDown(int x, int y, unsigned long button_flags, u
   dragging_ = false;
   nux::Geometry geo = GetAbsoluteGeometry();
   nux::Point abs_cursor(geo.x + x, geo.y + y);
+
   nux::Area* area = View::FindAreaUnderMouse(nux::Point(abs_cursor.x, abs_cursor.y), nux::NUX_MOUSE_PRESSED);
+
   if (!area || !area->Type().IsDerivedFromType(FilterMultiRangeButton::StaticObjectType))
     return;
-
   mouse_down_button_ = static_cast<FilterMultiRangeButton*>(area);
 
   // Cache the left/right selected buttons.
@@ -228,7 +229,7 @@ void FilterMultiRange::RecvMouseDown(int x, int y, unsigned long button_flags, u
   mouse_down_right_active_button_ = last_selected_button;
 }
 
-void FilterMultiRange::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags)
+void FilterMultiRangeWidget::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   FilterMultiRangeButtonPtr mouse_down_button(mouse_down_button_);
   mouse_down_button_.Release();
@@ -250,14 +251,14 @@ void FilterMultiRange::RecvMouseUp(int x, int y, unsigned long button_flags, uns
     Click(mouse_up_button);
 }
 
-void FilterMultiRange::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
+void FilterMultiRangeWidget::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
-  if (!CheckDrag())
-    return;
-
   nux::Geometry geo = GetAbsoluteGeometry();
   nux::Point abs_cursor(geo.x + x, geo.y + y);
   UpdateMouseFocus(abs_cursor);
+
+  if (!CheckDrag())
+    return;
 
   nux::Area* area = View::FindAreaUnderMouse(nux::Point(abs_cursor.x, abs_cursor.y), nux::NUX_MOUSE_MOVE);
   if (!area || !area->Type().IsDerivedFromType(FilterMultiRangeButton::StaticObjectType))
@@ -273,9 +274,6 @@ void FilterMultiRange::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long
 
   nux::Geometry left_active_button_geometry = mouse_down_left_active_button_->GetAbsoluteGeometry();
   nux::Geometry right_active_button_geometry = mouse_down_right_active_button_->GetAbsoluteGeometry();
-
-  int p = 0;
-  std::stringstream ss;
 
   auto end = buttons_.end();
   int found_buttons = 0;
@@ -307,18 +305,16 @@ void FilterMultiRange::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long
 
     if (activate || (found_buttons > 0 && found_buttons < 2))
     {
-      ss << p << ", ";
       button->Activate();
     }
     else
     {
       button->Deactivate();
     }
-    p++;
   }
 }
 
-bool FilterMultiRange::CheckDrag()
+bool FilterMultiRangeWidget::CheckDrag()
 {
   if (!mouse_down_button_)
     return false;
@@ -355,7 +351,7 @@ bool FilterMultiRange::CheckDrag()
   return true;
 }
 
-void FilterMultiRange::UpdateMouseFocus(nux::Point const& abs_cursor_position)
+void FilterMultiRangeWidget::UpdateMouseFocus(nux::Point const& abs_cursor_position)
 {
   nux::Area* area = View::FindAreaUnderMouse(nux::Point(abs_cursor_position.x, abs_cursor_position.y), nux::NUX_MOUSE_MOVE);
   if (!area || !area->Type().IsDerivedFromType(FilterMultiRangeButton::StaticObjectType))
@@ -364,7 +360,7 @@ void FilterMultiRange::UpdateMouseFocus(nux::Point const& abs_cursor_position)
   nux::GetWindowCompositor().SetKeyFocusArea(static_cast<InputArea*>(area), nux::KEY_NAV_NONE);
 }
 
-void FilterMultiRange::Click(FilterMultiRangeButtonPtr const& activated_button)
+void FilterMultiRangeWidget::Click(FilterMultiRangeButtonPtr const& activated_button)
 {
   bool current_activated = activated_button->Active();
   bool any_others_active = false;
@@ -385,7 +381,7 @@ void FilterMultiRange::Click(FilterMultiRangeButtonPtr const& activated_button)
     activated_button->Activate();
 }
 
-void FilterMultiRange::ClearRedirectedRenderChildArea()
+void FilterMultiRangeWidget::ClearRedirectedRenderChildArea()
 {
   for (auto button : buttons_)
   {

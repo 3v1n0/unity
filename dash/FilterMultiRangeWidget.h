@@ -39,13 +39,13 @@ namespace dash
 
 class FilterMultiRangeButton;
 
-class FilterMultiRange : public FilterExpanderLabel
+class FilterMultiRangeWidget : public FilterExpanderLabel
 {
-  NUX_DECLARE_OBJECT_TYPE(FilterMultiRange, FilterExpanderLabel);
+  NUX_DECLARE_OBJECT_TYPE(FilterMultiRangeWidget, FilterExpanderLabel);
   typedef nux::ObjectPtr<FilterMultiRangeButton> FilterMultiRangeButtonPtr;
 public:
-  FilterMultiRange(NUX_FILE_LINE_PROTO);
-  virtual ~FilterMultiRange();
+  FilterMultiRangeWidget(NUX_FILE_LINE_PROTO);
+  virtual ~FilterMultiRangeWidget();
 
   void SetFilter(Filter::Ptr const& filter);
   std::string GetFilterType();
@@ -70,7 +70,7 @@ private:
   void OnActiveChanged(bool value);
 
   void UpdateMouseFocus(nux::Point const& abs_cursor_position);
-  void Click(FilterMultiRangeButtonPtr const& button);
+  virtual void Click(FilterMultiRangeButtonPtr const& button);
 
   bool CheckDrag();
 
@@ -85,7 +85,7 @@ private:
   FilterMultiRangeButtonPtr mouse_down_right_active_button_;
   bool dragging_;
 
-
+  friend class TestFilterMultiRangeWidget;
 };
 
 } // unityshell dash
