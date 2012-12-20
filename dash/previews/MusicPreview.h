@@ -24,15 +24,6 @@
 #define MUSICPREVIEW_H
 
 #include "Preview.h"
-#include <Nux/Nux.h>
-#include <Nux/StaticText.h>
-
-namespace nux
-{
-class AbstractPaintLayer;
-class StaticCairoText;
-class VLayout;
-}
 
 namespace unity
 {
@@ -40,8 +31,6 @@ namespace dash
 {
 namespace previews
 {
-class CoverArt;
-class PreviewInfoHintWidget;
 class Tracks;
 
 class MusicPreview : public Preview
@@ -62,23 +51,13 @@ protected:
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void PreLayoutManagement();
 
-  void SetupBackground();
-  void SetupViews();
+  virtual void SetupViews();
 
   void OnPlayTrack(std::string const& uri);
   void OnPauseTrack(std::string const& uri);
 
 protected:
-  nux::VLayout* full_data_layout_;
-
-  nux::ObjectPtr<CoverArt> image_;
-  nux::ObjectPtr<StaticCairoText> title_;
-  nux::ObjectPtr<StaticCairoText> subtitle_;
   nux::ObjectPtr<Tracks> tracks_;
-  nux::ObjectPtr<PreviewInfoHintWidget> preview_info_hints_;
-
-  typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
-  LayerPtr details_bg_layer_;
  };
 
 }

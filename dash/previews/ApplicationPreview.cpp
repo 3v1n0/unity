@@ -24,7 +24,6 @@
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
 #include "unity-shared/IconTexture.h"
-#include "unity-shared/StaticCairoText.h"
 #include "unity-shared/PlacesOverlayVScrollBar.h"
 #include <UnityCore/ApplicationPreview.h>
 #include <NuxCore/Logger.h>
@@ -38,7 +37,6 @@
  
 #include "ApplicationPreview.h"
 #include "ActionButton.h"
-#include "PreviewInfoHintWidget.h"
 #include "PreviewRatingsWidget.h"
 
 namespace unity
@@ -64,7 +62,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(ApplicationPreview);
 
 ApplicationPreview::ApplicationPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
-, full_data_layout_(nullptr)
 {
   SetupBackground();
   SetupViews();
@@ -131,11 +128,6 @@ std::string ApplicationPreview::GetName() const
 void ApplicationPreview::AddProperties(GVariantBuilder* builder)
 {
   Preview::AddProperties(builder);
-}
-
-void ApplicationPreview::SetupBackground()
-{
-  details_bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
 }
 
 void ApplicationPreview::SetupViews()
