@@ -60,6 +60,9 @@ Style* style_instance = nullptr;
 
 const int STATES = 5;
 
+const double BUTTON_CORNER_RADIUS = 7.0;
+
+
 // These cairo overrides may also be reused somewhere...
 void cairo_set_source_rgba(cairo_t* cr, nux::Color const& color)
 {
@@ -1002,9 +1005,9 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
 
     // bottom-left, above the corner
     cairo_arc(cr,
-              _align(x, odd) + _align(radius, odd),
-              _align(y + height, odd) - _align(radius, odd),
-              _align(radius, odd),
+              _align(x + radius, odd),
+              _align(y + height - radius, odd),
+              radius,
               90.0f * G_PI / 180.0f,
               180.0f * G_PI / 180.0f);
 
@@ -1013,9 +1016,9 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
 
     // top-left, right of the corner
     cairo_arc(cr,
-              _align(x, odd) + _align(radius, odd),
-              _align(y, odd) + _align(radius, odd),
-              _align(radius, odd),
+              _align(x + radius, odd),
+              _align(y + radius, odd),
+              radius,
               180.0f * G_PI / 180.0f,
               270.0f * G_PI / 180.0f);
 
@@ -1061,9 +1064,9 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
 
     // top-right, below the corner
     cairo_arc(cr,
-              _align(x + width, odd) - _align(radius, odd),
-              _align(y, odd) + _align(radius, odd),
-              _align(radius, odd),
+              _align(x + width - radius, odd),
+              _align(y + radius, odd),
+              radius,
               -90.0f * G_PI / 180.0f,
               0.0f * G_PI / 180.0f);
 
@@ -1072,9 +1075,9 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
 
     // bottom-right, left of the corner
     cairo_arc(cr,
-              _align(x + width, odd) - _align(radius, odd),
-              _align(y + height, odd) - _align(radius, odd),
-              _align(radius, odd),
+              _align(x + width - radius, odd),
+              _align(y + height - radius, odd),
+              radius,
               0.0f * G_PI / 180.0f,
               90.0f * G_PI / 180.0f);
 
@@ -1571,7 +1574,7 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
                 1.0,
                 (double) (garnish) + 1.0,
                 (double) (garnish) + 1.0,
-                7.0,
+                BUTTON_CORNER_RADIUS,
                 w - (double) (2 * garnish) - 2.0,
                 h - (double) (2 * garnish) - 2.0);
   else
@@ -1579,7 +1582,7 @@ bool Style::Button(cairo_t* cr, nux::ButtonVisualState state,
                 1.0,
                 (double) (garnish) + 0.5,
                 (double) (garnish) + 0.5,
-                7.0,
+                BUTTON_CORNER_RADIUS,
                 w - (double) (2 * garnish) - 1.0,
                 h - (double) (2 * garnish) - 1.0);
 
@@ -1672,7 +1675,7 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
     cairo_move_to(cr, _align(x + width, odd), y);
     if (curve_bottom)
     {
-      double radius = 7.0;
+      double radius = BUTTON_CORNER_RADIUS;
       LOG_DEBUG(logger) << "curve: " << _align(x + width, odd) << " - " << _align(y + height - radius, odd);
       // line to bottom-right corner
       cairo_line_to(cr, _align(x + width, odd), _align(y + height - radius, odd));
@@ -1779,7 +1782,7 @@ bool Style::ButtonFocusOverlay(cairo_t* cr, float alpha)
               1.0,
               (double) 0.5,
               (double) 0.5,
-              7.0,
+              BUTTON_CORNER_RADIUS,
               w - 1.0,
               h - 1.0);
 
@@ -1793,6 +1796,7 @@ bool Style::ButtonFocusOverlay(cairo_t* cr, float alpha)
 bool Style::MultiRangeSegment(cairo_t*    cr,
                               nux::ButtonVisualState  state,
                               std::string const& label,
+                              int font_px_size,
                               Arrow       arrow,
                               Segment     segment)
 {
@@ -1827,7 +1831,7 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
                               1.0,
                               x+1.0,
                               y+1.0,
-                              (h-1.0) / 4.0,
+                              BUTTON_CORNER_RADIUS,
                               w-1.0,
                               h-1.0,
                               segment,
@@ -1838,7 +1842,7 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
                               1.0,
                               x,
                               y,
-                              h / 4.0,
+                              BUTTON_CORNER_RADIUS,
                               w,
                               h,
                               segment,
@@ -1855,7 +1859,7 @@ bool Style::MultiRangeSegment(cairo_t*    cr,
   pimpl->Text(cr,
               pimpl->button_label_text_color_[state],
               label,
-              10); // 13px = 10pt
+              font_px_size);
 
   return true;
 }
