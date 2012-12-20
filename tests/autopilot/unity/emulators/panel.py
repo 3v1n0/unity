@@ -197,7 +197,12 @@ class MenuView(UnityIntrospectionObject):
 
     def get_entries(self):
         """Return a list of menu entries"""
-        return self.get_children_by_type(IndicatorEntry)
+        entries = self.get_children_by_type(IndicatorEntry)
+        # We need to filter out empty entries, which are seperators - those
+        # are not valid, visible and working entries
+        # For instance, gedit adds some of those, breaking our tests
+        entries = [e for e in entries if (e.label != "")]
+        return entries
 
     def get_menu_by_label(self, entry_label):
         """Return the first indicator entry found with the given label"""
