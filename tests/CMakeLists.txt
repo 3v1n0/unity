@@ -208,6 +208,7 @@ if (ENABLE_X_SUPPORT)
                  test_desktop_launcher_icon.cpp
                  test_device_launcher_section.cpp
                  test_edge_barrier_controller.cpp
+                 test_filter_widgets.cpp
                  test_hud_button.cpp
                  test_hud_controller.cpp
                  test_hud_launcher_icon.cpp
