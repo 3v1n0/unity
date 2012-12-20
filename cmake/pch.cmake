@@ -53,12 +53,8 @@ function(add_pch_linux header_filename target_name pch_suffix)
   # This is the only way that is supported by both GCC and Clang.
   set_property(TARGET ${target_name} APPEND_STRING PROPERTY COMPILE_FLAGS " -include ${header_basename} ")
   set_property(TARGET ${target_name} APPEND_STRING PROPERTY COMPILE_FLAGS " -Winvalid-pch ")
+  set_property(TARGET ${target_name} APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
   
-  # Each directory should have only one precompiled header
-  # for simplicity. If there are several, the current dir
-  # gets added to the search path several times.
-  # It should not be an issue, though.
-  include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR})
 endfunction()
 
 try_run(IS_CLANG did_build ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/cmake/isclang.cc)
