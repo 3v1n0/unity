@@ -54,7 +54,7 @@ protected:
   virtual void OnNavigateOut();
   virtual void OnNavigateInComplete();
 
-  virtual void SetupView();
+  virtual void SetupViews();
   
 protected:
   nux::ObjectPtr<PreviewRatingsWidget> rating_;
