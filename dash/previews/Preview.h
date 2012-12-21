@@ -86,8 +86,7 @@ protected:
 
   virtual bool AcceptKeyNavFocus() { return false; }
 
-  virtual void SetupViews() {}
-  void SetupBackground(); 
+  virtual void SetupViews() = 0;
 
   nux::Layout* BuildGridActionsLayout(dash::Preview::ActionPtrList actions, std::list<nux::AbstractButton*>& buttons);
   nux::Layout* BuildVerticalActionsLayout(dash::Preview::ActionPtrList actions, std::list<nux::AbstractButton*>& buttons);
@@ -108,7 +107,6 @@ protected:
   PreviewInfoHintWidget::Ptr preview_info_hints_;
 
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
-  LayerPtr details_bg_layer_;
 
   friend class PreviewContent;
 };

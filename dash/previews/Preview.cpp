@@ -368,11 +368,6 @@ void Preview::OnNavigateIn()
     nux::GetWindowCompositor().SetKeyFocusArea(default_focus);
 }
 
-void Preview::SetupBackground()
-{
-  details_bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
-}
-
 }
 }
 }
