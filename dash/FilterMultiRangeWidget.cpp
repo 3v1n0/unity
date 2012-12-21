@@ -75,6 +75,13 @@ FilterMultiRangeWidget::~FilterMultiRangeWidget()
 
 void FilterMultiRangeWidget::SetFilter(Filter::Ptr const& filter)
 {
+  // Reset filter.
+  layout_->Clear();
+  buttons_.clear();
+  mouse_down_button_.Release();
+  mouse_down_left_active_button_.Release();
+  mouse_down_right_active_button_.Release();
+
   filter_ = std::static_pointer_cast<MultiRangeFilter>(filter);
 
   all_button_->SetFilter(filter_);
@@ -146,6 +153,8 @@ void FilterMultiRangeWidget::OnOptionAdded(FilterOption::Ptr const& new_filter)
   buttons_.push_back(button);
   new_filter->active.changed.connect(sigc::mem_fun(this, &FilterMultiRangeWidget::OnActiveChanged));
   OnActiveChanged(false);
+
+  QueueRelayout();
 }
 
 void FilterMultiRangeWidget::OnOptionRemoved(FilterOption::Ptr const& removed_filter)
@@ -159,8 +168,9 @@ void FilterMultiRangeWidget::OnOptionRemoved(FilterOption::Ptr const& removed_fi
       break;
     }
   }
-
   OnActiveChanged(false);
+
+  QueueRelayout();
 }
 
 std::string FilterMultiRangeWidget::GetFilterType()

@@ -21,6 +21,7 @@
 #include "config.h"
 
 #include <Nux/Nux.h>
+#include <Nux/Layout.h>
 
 #include "unity-shared/DashStyle.h"
 #include "FilterMultiRangeButton.h"
@@ -30,18 +31,19 @@ namespace unity
 namespace dash
 {
 
-NUX_IMPLEMENT_OBJECT_TYPE(FilterMultiRangeButton);
-
-FilterMultiRangeButton::FilterMultiRangeButton(std::string const& label, NUX_FILE_LINE_DECL)
-  : nux::ToggleButton(label, NUX_FILE_LINE_PARAM)
-  , has_arrow_(MultiRangeArrow::NONE)
-  , side_(MultiRangeSide::CENTER)
+namespace
 {
-  Init();
+const int kFontSizePx = 10;
+
+const int kLayoutPadLeftRight = 4;
+const int kLayoutPadtopBottom = 2;
 }
+
+NUX_IMPLEMENT_OBJECT_TYPE(FilterMultiRangeButton);
 
 FilterMultiRangeButton::FilterMultiRangeButton(NUX_FILE_LINE_DECL)
   : nux::ToggleButton(NUX_FILE_LINE_PARAM)
+  , theme_init_(false)
   , has_arrow_(MultiRangeArrow::NONE)
   , side_(MultiRangeSide::CENTER)
 {
@@ -108,23 +110,22 @@ long FilterMultiRangeButton::ComputeContentSize()
 {
   long ret = nux::ToggleButton::ComputeContentSize();
   nux::Geometry const& geo = GetGeometry();
-  if (cached_geometry_ != geo)
+  if (theme_init_ && cached_geometry_ != geo)
   {
     cached_geometry_ = geo;
 
     std::vector<MultiRangeSide> sides = {MultiRangeSide::LEFT, MultiRangeSide::RIGHT, MultiRangeSide::CENTER};
     std::vector<MultiRangeArrow> arrows = {MultiRangeArrow::LEFT, MultiRangeArrow::RIGHT, MultiRangeArrow::BOTH, MultiRangeArrow::NONE};
 
-    for (auto arrow : arrows)
+    auto func_invalidate = [&, geo](std::pair<const MapKey, NuxCairoPtr>& pair)
     {
-      for (auto side : sides)
-      {
-        prelight_[MapKey(arrow, side)]->Invalidate(geo);
-        active_[MapKey(arrow, side)]->Invalidate(geo);
-        normal_[MapKey(arrow, side)]->Invalidate(geo);
-        focus_[MapKey(arrow, side)]->Invalidate(geo);
-      }
-    }
+      pair.second->Invalidate(geo);
+    };
+
+    for_each (prelight_.begin(), prelight_.end(), func_invalidate);
+    for_each (active_.begin(), active_.end(), func_invalidate);
+    for_each (normal_.begin(), normal_.end(), func_invalidate);
+    for_each (focus_.begin(), focus_.end(), func_invalidate);
   }
 
   return ret;
@@ -152,6 +153,7 @@ void FilterMultiRangeButton::InitTheme()
   }
 
   SetMinimumHeight(dash::Style::Instance().GetFilterButtonHeight() + 3);
+  theme_init_ = true;
 }
 
 void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom,
@@ -185,7 +187,7 @@ void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom,
   else
     segment = Segment::RIGHT;
 
-  Style::Instance().MultiRangeSegment(cr, faked_state, name, arrow, segment);
+  Style::Instance().MultiRangeSegment(cr, faked_state, name, kFontSizePx, arrow, segment);
   NeedRedraw();
 }
 
