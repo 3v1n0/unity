@@ -813,11 +813,14 @@ void UnityScreen::paintDisplay()
         CompRegionRef (output->region()) & buffered_compiz_damage_last_frame_;
     CompRect::vector direct_draw_rects (direct_draw_region.rects());
 
+    /* Set viewport to fullscreen */
+    glViewport (0, 0, screen->width(), screen->height());
+
     for (const CompRect &r : direct_draw_rects)
     {
       /* For now we should invert the y co-ords */
       CompRect pr (r.x (),
-                   output->height () - r.y2 (),
+                   r.y (),
                    r.width (),
                    r.height ());
 
@@ -826,6 +829,11 @@ void UnityScreen::paintDisplay()
                                           compiz::opengl::ColorData,
                                           compiz::opengl::Fast);
     }
+
+    glViewport(output->x(),
+               screen->height () - output->y2(),
+               output->width(),
+               screen->height());
 
     nux::ObjectPtr<nux::IOpenGLTexture2D> bg_texture
         (nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(directly_drawable_fbo_->tex()->name(),
