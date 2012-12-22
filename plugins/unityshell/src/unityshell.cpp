@@ -3193,6 +3193,17 @@ void UnityScreen::outputChangeNotify()
 {
   screen->outputChangeNotify ();
 
+  /* Unbind and reallocate the directly drawable fbo */
+  cgl::BindableFramebuffer *old_read_buffer =
+      gScreen->bindFramebufferForReading(gScreen->backbuffer());
+  cgl::BindableFramebuffer *old_draw_buffer =
+      gScreen->bindFramebufferForDrawing(gScreen->backbuffer());
+
+  directly_drawable_fbo_->allocate (*screen, NULL, GL_BGRA);
+
+  gScreen->bindFramebufferForReading(old_read_buffer);
+  gScreen->bindFramebufferForDrawing(old_draw_buffer);
+
   ScheduleRelayout(500);
 }
 
