@@ -114,7 +114,7 @@ public:
 
   void damageRegion(const CompRegion &region);
 
-  bool glPaintCompositedOutputRequired ();
+  bool glPaintCompositedOutputRequired();
 
   /* paint on top of all windows if we could not find a window
    * to paint underneath */
@@ -355,8 +355,13 @@ private:
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
 
-  CompRegion buffered_compiz_damage_;
+  CompRegion buffered_compiz_damage_this_frame_;
+  CompRegion buffered_compiz_damage_last_frame_;
   bool       ignore_redraw_request_;
+
+  std::unique_ptr <compiz::opengl::DirectDrawObject> directly_drawable_fbo_;
+  compiz::opengl::BindableFramebuffer *previous_framebuffer_;
+  unsigned int directly_drawable_buffer_age_;
 
   friend class UnityWindow;
 };

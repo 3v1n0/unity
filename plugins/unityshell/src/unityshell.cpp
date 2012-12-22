@@ -25,6 +25,8 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
 
+#include <opengl/framebufferobject.h>
+
 #include <UnityCore/Variant.h>
 
 #include "BaseWindowRaiserImp.h"
@@ -73,6 +75,8 @@
 
 /* Set up vtable symbols */
 COMPIZ_PLUGIN_20090315(unityshell, unity::UnityPluginVTable);
+
+namespace cgl = compiz::opengl;
 
 namespace unity
 {
@@ -147,6 +151,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , big_tick_(0)
   , screen_introspection_(screen)
   , ignore_redraw_request_(false)
+  , previous_framebuffer_(nullptr)
+  , directly_drawable_buffer_age_(0)
 {
   Timer timer;
 #ifndef USE_GLES
@@ -414,6 +420,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
     wm.terminate_expo.connect(sigc::mem_fun(this, &UnityScreen::DamagePanelShadow));
 
     AddChild(&screen_introspection_);
+
+    /* Setup our render target for scraping the blur texture */
+    directly_drawable_fbo_.reset(cgl::createBlittableFramebufferObjectWithFallback(*screen,
+                                                                                   gScreen));
 
     /* Track whole damage on the very first frame */
     cScreen->damageScreen();
@@ -795,16 +805,35 @@ void UnityScreen::paintDisplay()
 
   DrawTopPanelBackground();
 
-  auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
-
-  if (BackgroundEffectHelper::HasDirtyHelpers())
+  if (previous_framebuffer_)
   {
-    auto graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
-    nux::ObjectPtr<nux::IOpenGLTexture2D> bg_texture =
-      graphics_engine->CreateTextureFromBackBuffer(0, 0,
-                                                   screen->width(),
-                                                   screen->height());
-    gpu_device->backup_texture0_ = bg_texture;
+    gScreen->bindFramebufferForDrawing(previous_framebuffer_);
+
+    CompRegion direct_draw_region =
+        CompRegionRef (output->region()) & buffered_compiz_damage_last_frame_;
+    CompRect::vector direct_draw_rects (direct_draw_region.rects());
+
+    for (const CompRect &r : direct_draw_rects)
+    {
+      /* For now we should invert the y co-ords */
+      CompRect pr (r.x (),
+                   output->height () - r.y2 (),
+                   r.width (),
+                   r.height ());
+
+      directly_drawable_fbo_->directDraw (pr,
+                                          pr,
+                                          compiz::opengl::ColorData,
+                                          compiz::opengl::Fast);
+    }
+
+    nux::ObjectPtr<nux::IOpenGLTexture2D> bg_texture
+        (nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(directly_drawable_fbo_->tex()->name(),
+                                           screen->width(), screen->height(),
+                                           0,
+                                           nux::BITFMT_R8G8B8A8));
+    nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = bg_texture;
+    previous_framebuffer_ = nullptr;
   }
 
   nux::Geometry geo(0, 0, screen->width (), screen->height ());
@@ -1302,10 +1331,9 @@ bool UnityWindow::handleEvent(XEvent *event)
   return handled;
 }
 
-bool UnityScreen::glPaintCompositedOutputRequired ()
+bool UnityScreen::glPaintCompositedOutputRequired()
 {
-    return gScreen->glPaintCompositedOutputRequired() ||
-           BackgroundEffectHelper::HasDirtyHelpers ();
+  return false;
 }
 
 /* called whenever we need to repaint parts of the screen */
@@ -1339,6 +1367,14 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   // CompRegion has no clear() method. So this is the fastest alternative.
   fullscreenRegion = CompRegion();
   nuxRegion = CompRegion();
+
+  // bind the framebuffer if we plan to paint nux on this frame
+  if (doShellRepaint && BackgroundEffectHelper::HasDirtyHelpers())
+  {
+    previous_framebuffer_ =
+        gScreen->bindFramebufferForDrawing(directly_drawable_fbo_.get());
+    directly_drawable_buffer_age_ = 0;
+  }
 
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
@@ -1398,36 +1434,41 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
 
 void UnityScreen::damageCutoff()
 {
-  /* We want to run last */
+  /* If there are enabled helpers, we want to apply damage
+   * based on how old our tracking fbo is since we may need
+   * to redraw some of the blur regions if there has been
+   * damage since we last bound it */
+  if (BackgroundEffectHelper::HasEnabledHelpers())
+    cScreen->applyDamageForFrameAge (directly_drawable_buffer_age_);
+
+  /* Determine nux region damage last */
   cScreen->damageCutoff();
 
-  CompRegion damage_buffer = buffered_compiz_damage_;
+  CompRegion damage_buffer, last_damage_buffer;
 
-  bool moreDamage;
   do
   {
-    moreDamage = false;
+    last_damage_buffer = damage_buffer;
 
     /* First apply any damage accumulated to nux to see
      * what windows need to be redrawn there */
-    compizDamageNux(buffered_compiz_damage_);
+    compizDamageNux(buffered_compiz_damage_this_frame_);
 
     /* Apply the redraw regions to compiz so that we can
      * draw this frame with that region included */
     determineNuxDamage(damage_buffer);
 
-    /* If we had to put more damage into the damage buffer then
-     * damage compiz with it and keep going */
-    moreDamage = buffered_compiz_damage_ != damage_buffer;
-
     /* We want to track the nux damage here as we will use it to
      * determine if we need to present other nux windows too */
     cScreen->damageRegion(damage_buffer);
 
-  } while (moreDamage);
+    /* If we had to put more damage into the damage buffer then
+     * damage compiz with it and keep going */
+  } while (last_damage_buffer != damage_buffer);
 
   /* Clear damage buffer */
-  buffered_compiz_damage_ = CompRegion();
+  buffered_compiz_damage_last_frame_ = buffered_compiz_damage_this_frame_;
+  buffered_compiz_damage_this_frame_ = CompRegion();
 
   wt->ForeignFrameCutoff();
 }
@@ -1458,6 +1499,13 @@ void UnityScreen::donePaint()
    * I think this is a Nux bug. ClearDrawList should ideally also mark all
    * the queued views as draw_cmd_queued_=false.
    */
+
+  /* To prevent any potential overflow problems, we are assuming here
+   * that compiz caps the maximum number of frames tracked at 10, so
+   * don't increment the age any more than 11 */
+  if (directly_drawable_buffer_age_ < 11)
+    ++directly_drawable_buffer_age_;
+
   if (didShellRepaint)
     wt->ClearDrawList();
 
@@ -1746,7 +1794,7 @@ void UnityScreen::handleEvent(XEvent* event)
 
 void UnityScreen::damageRegion(const CompRegion &region)
 {
-  buffered_compiz_damage_ += region;
+  buffered_compiz_damage_this_frame_ += region;
   cScreen->damageRegion(region);
 }
 
