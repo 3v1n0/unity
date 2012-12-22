@@ -1331,11 +1331,6 @@ bool UnityWindow::handleEvent(XEvent *event)
   return handled;
 }
 
-bool UnityScreen::glPaintCompositedOutputRequired()
-{
-  return false;
-}
-
 /* called whenever we need to repaint parts of the screen */
 bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
                                 const GLMatrix& transform,
