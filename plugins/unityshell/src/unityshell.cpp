@@ -808,7 +808,6 @@ void UnityScreen::paintDisplay()
   if (previous_framebuffer_)
   {
     gScreen->bindFramebufferForDrawing(previous_framebuffer_);
-    //gScreen->bindFramebufferForReading(directly_drawable_fbo_.get());
 
     CompRegion direct_draw_region =
         CompRegionRef (output->region()) & buffered_compiz_damage_last_frame_;
@@ -819,7 +818,6 @@ void UnityScreen::paintDisplay()
 
     for (const CompRect &r : direct_draw_rects)
     {
-      printf ("this id: %i\n", directly_drawable_fbo_->getResourceId());
       /* For now we should invert the y co-ords */
       directly_drawable_fbo_->directDraw (r,
                                           r,
