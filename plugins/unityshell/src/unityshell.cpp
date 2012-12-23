@@ -808,6 +808,7 @@ void UnityScreen::paintDisplay()
   if (previous_framebuffer_)
   {
     gScreen->bindFramebufferForDrawing(previous_framebuffer_);
+    //gScreen->bindFramebufferForReading(directly_drawable_fbo_.get());
 
     CompRegion direct_draw_region =
         CompRegionRef (output->region()) & buffered_compiz_damage_last_frame_;
@@ -818,14 +819,10 @@ void UnityScreen::paintDisplay()
 
     for (const CompRect &r : direct_draw_rects)
     {
+      printf ("this id: %i\n", directly_drawable_fbo_->getResourceId());
       /* For now we should invert the y co-ords */
-      CompRect pr (r.x (),
-                   r.y (),
-                   r.width (),
-                   r.height ());
-
-      directly_drawable_fbo_->directDraw (pr,
-                                          pr,
+      directly_drawable_fbo_->directDraw (r,
+                                          r,
                                           compiz::opengl::ColorData,
                                           compiz::opengl::Fast);
     }
@@ -848,10 +845,16 @@ void UnityScreen::paintDisplay()
   nux::Geometry outputGeo(output->x (), output->y (), output->width (), output->height ());
   BackgroundEffectHelper::monitor_rect_ = geo;
 
-  GLint fboID;
+  GLint dFBOID, rFBOID;
   // Nux renders to the referenceFramebuffer when it's embedded.
-  glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fboID);
-  wt->GetWindowCompositor().SetReferenceFramebuffer(fboID, outputGeo);
+#ifndef USE_GLES
+  glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING_EXT, &dFBOID);
+  glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING_EXT, &rFBOID);
+#else
+  glGetIntegerv(GL_FRAMEBUFFER_BINDING, &dFBOID);
+  rFBOID = dFBOID;
+#endif
+  wt->GetWindowCompositor().SetReferenceFramebuffer(dFBOID, rFBOID, outputGeo);
 
   nuxPrologue();
   _in_paint = true;
