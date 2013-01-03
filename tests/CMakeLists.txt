@@ -22,12 +22,9 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/kde4/afile.desktop
 set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.99.0")
 pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS})
 
-set (CFLAGS
-     ${TEST_UNIT_DEPS_CFLAGS}
-     ${TEST_UNIT_DEPS_CFLAGS_OTHER}
-     "-g"
-     )
-add_definitions (${CFLAGS})
+string (REPLACE ";" " " TEST_UNIT_DEPS_CFLAGS_OTHER "${TEST_UNIT_CFLAGS_OTHER}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TEST_UNIT_DEPS_CFLAGS_OTHER}")
+include_directories(${TEST_UNIT_DEPS_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lcompiz_core -lm")
