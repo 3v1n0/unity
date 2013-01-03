@@ -1441,7 +1441,14 @@ void UnityScreen::damageCutoff()
   /* If there are enabled helpers, we want to apply damage
    * based on how old our tracking fbo is since we may need
    * to redraw some of the blur regions if there has been
-   * damage since we last bound it */
+   * damage since we last bound it
+   *
+   * XXX: Unfortunately there's a nasty feedback loop here, and not
+   * a whole lot we can do about it. If part of the damage from any frame
+   * intersects a nux window, we have to mark the entire region that the
+   * nux window covers as damaged, because nux does not have any concept
+   * of geometry clipping. That damage will feed back to us on the next frame.
+   */
   if (BackgroundEffectHelper::HasEnabledHelpers())
     cScreen->applyDamageForFrameAge (directly_drawable_buffer_age_);
 
