@@ -49,7 +49,7 @@ public:
 
 protected:
 
-  typedef nux::ObjectPtr<nux::StaticCairoText> StaticCairoTextPtr;
+  typedef nux::ObjectPtr<StaticCairoText> StaticCairoTextPtr;
   typedef std::pair<StaticCairoTextPtr, StaticCairoTextPtr> Comment;
   std::list<Comment> comments_;
 

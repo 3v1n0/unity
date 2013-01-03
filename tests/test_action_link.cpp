@@ -48,7 +48,7 @@ class ActionLinkMock : public ActionLink
       : ActionLink(action_hint, label){}
     ~ActionLinkMock(){}
 
-    nux::ObjectPtr<nux::StaticCairoText> GetText() { return static_text_; }
+    nux::ObjectPtr<StaticCairoText> GetText() { return static_text_; }
 
     using ActionLink::GetLinkAlpha;
     using ActionLink::Draw;
@@ -85,7 +85,7 @@ TEST_F(TestActionLink, AligmentCorrectlySetDifferent)
   EXPECT_CALL(link, ComputeContentSize()).Times(1);
   EXPECT_CALL(link, QueueDraw()).Times(1);
 
-  link.text_aligment.Set(nux::StaticCairoText::NUX_ALIGN_RIGHT);
+  link.text_aligment.Set(StaticCairoText::NUX_ALIGN_RIGHT);
 }
 
 TEST_F(TestActionLink, AligmentCorrectlySetSame)
@@ -100,8 +100,8 @@ TEST_F(TestActionLink, AligmentCorrectlySetSame)
 
 TEST_F(TestActionLink, AligmentCorrectlyRetrieved)
 {
-  nux::StaticCairoText::AlignState aligment =
-    nux::StaticCairoText::NUX_ALIGN_RIGHT;
+  StaticCairoText::AlignState aligment =
+    StaticCairoText::NUX_ALIGN_RIGHT;
   action_link->aligment_ = aligment;
   EXPECT_EQ(aligment, action_link->text_aligment.Get());
 }
@@ -112,7 +112,7 @@ TEST_F(TestActionLink, UnderlineCorrectlySetDifferent)
 
   EXPECT_CALL(link, ComputeContentSize()).Times(1);
   EXPECT_CALL(link, QueueDraw()).Times(1);
-  link.underline_state.Set(nux::StaticCairoText::NUX_UNDERLINE_NONE);
+  link.underline_state.Set(StaticCairoText::NUX_UNDERLINE_NONE);
 }
 
 TEST_F(TestActionLink, UnderlineCorrectlySetSame)
@@ -126,8 +126,7 @@ TEST_F(TestActionLink, UnderlineCorrectlySetSame)
 
 TEST_F(TestActionLink, UnderlineCorrectlyRetrieved)
 {
-  nux::StaticCairoText::UnderlineState underline =
-    nux::StaticCairoText::NUX_UNDERLINE_DOUBLE;
+  StaticCairoText::UnderlineState underline = StaticCairoText::NUX_UNDERLINE_DOUBLE;
   action_link->underline_ = underline;
   EXPECT_EQ(underline, action_link->underline_state.Get());
 }

@@ -24,7 +24,6 @@
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
 #include "unity-shared/IconTexture.h"
-#include "unity-shared/StaticCairoText.h"
 #include "unity-shared/PlacesOverlayVScrollBar.h"
 #include <UnityCore/SocialPreview.h>
 #include <NuxCore/Logger.h>
@@ -40,7 +39,6 @@
 #include "SocialPreviewContent.h"
 #include "SocialPreviewComments.h"
 #include "ActionButton.h"
-#include "PreviewInfoHintWidget.h"
 
 namespace unity
 {
@@ -65,9 +63,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(SocialPreview);
 
 SocialPreview::SocialPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
-, full_data_layout_(nullptr)
 {
-  SetupBackground();
   SetupViews();
 }
 
@@ -79,22 +75,8 @@ void SocialPreview::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
 
-  bool enable_bg_shadows = dash::previews::Style::Instance().GetShadowBackgroundEnabled();
-
   gfx_engine.PushClippingRectangle(base);
   nux::GetPainter().PaintBackground(gfx_engine, base);
-
-  if (enable_bg_shadows && full_data_layout_)
-  {
-    unsigned int alpha, src, dest = 0;
-    gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
-    gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-    details_bg_layer_->SetGeometry(full_data_layout_->GetGeometry());
-    nux::GetPainter().RenderSinglePaintLayer(gfx_engine, full_data_layout_->GetGeometry(), details_bg_layer_.get());
-
-    gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
-  }
 
   gfx_engine.PopClippingRectangle();
 }
@@ -104,11 +86,6 @@ void SocialPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw
   nux::Geometry const& base = GetGeometry();
   gfx_engine.PushClippingRectangle(base);
 
-  bool enable_bg_shadows = dash::previews::Style::Instance().GetShadowBackgroundEnabled();
-
-  if (enable_bg_shadows && !IsFullRedraw())
-    nux::GetPainter().PushLayer(gfx_engine, details_bg_layer_->GetGeometry(), details_bg_layer_.get());
-
   unsigned int alpha, src, dest = 0;
   gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
   gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -117,9 +94,6 @@ void SocialPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw
     GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
 
   gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
-
-  if (enable_bg_shadows && !IsFullRedraw())
-    nux::GetPainter().PopBackground();
 
   gfx_engine.PopClippingRectangle();
 }
@@ -132,11 +106,6 @@ std::string SocialPreview::GetName() const
 void SocialPreview::AddProperties(GVariantBuilder* builder)
 {
   Preview::AddProperties(builder);
-}
-
-void SocialPreview::SetupBackground()
-{
-  details_bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
 }
 
 void SocialPreview::SetupViews()
@@ -196,11 +165,11 @@ void SocialPreview::SetupViews()
         nux::VLayout* social_data_layout = new nux::VLayout();
         social_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
-        title_ = new nux::StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
+        title_ = new StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
         title_->SetLines(-1);
         title_->SetFont(style.title_font().c_str());
 
-        subtitle_ = new nux::StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
+        subtitle_ = new StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
         subtitle_->SetFont(style.content_font().c_str());
         subtitle_->SetLines(-1);
 
@@ -239,10 +208,10 @@ void SocialPreview::SetupViews()
         std::string tmp_comments_hint = _("Comments");
         tmp_comments_hint += ":";
 
-        comments_hint_ = new nux::StaticCairoText(tmp_comments_hint, true, NUX_TRACKER_LOCATION);
+        comments_hint_ = new StaticCairoText(tmp_comments_hint, true, NUX_TRACKER_LOCATION);
         comments_hint_->SetLines(-1);
         comments_hint_->SetFont(style.info_hint_bold_font().c_str());
-        comments_hint_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_RIGHT);
+        comments_hint_->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
         comments_layout->AddView(comments_hint_.GetPointer(), 0, nux::MINOR_POSITION_START);
 
         comments_ = new SocialPreviewComments(preview_model_, NUX_TRACKER_LOCATION);
@@ -281,12 +250,12 @@ void SocialPreview::PreLayoutManagement()
   nux::Geometry geo_content(geo.x, geo.y, style.GetAppImageAspectRatio() * geo.height, geo.height);
 
   if (geo.width - geo_content.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() < style.GetDetailsPanelMinimumWidth())
-    geo_content.width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
+    geo_content.width = std::max(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin() - style.GetDetailsPanelMinimumWidth());
   if (content_) { content_->SetMinMaxSize(geo_content.width, geo_content.height); }
   if (image_) { image_->SetMinMaxSize(geo_content.width, geo_content.height); }
 
-  int details_width = MAX(0, geo.width - geo_content.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
-  int top_social_info_max_width = details_width - style.GetAppIconAreaWidth() - style.GetSpaceBetweenIconAndDetails();
+  int details_width = std::max(0, geo.width - geo_content.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
+  int top_social_info_max_width = std::max(0, details_width - style.GetAppIconAreaWidth() - style.GetSpaceBetweenIconAndDetails());
 
   if (title_) { title_->SetMaximumWidth(top_social_info_max_width); }
   if (subtitle_) { subtitle_->SetMaximumWidth(top_social_info_max_width); }

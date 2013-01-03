@@ -13,7 +13,6 @@ set(UNITY_PANEL_SERVICE_DEPS
     x11
 )
 
-find_package(PkgConfig)
 pkg_check_modules(SERVICE_DEPS REQUIRED ${UNITY_PANEL_SERVICE_DEPS})
 
 set(PANEL_SOURCES
@@ -36,16 +35,20 @@ set(CFLAGS
     ${SERVICE_DEPS_CFLAGS_OTHER}
     "-Werror -Wall"
     )
-add_definitions(${CFLAGS})
+
+string (REPLACE ";" " " CFLAGS "${CFLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CFLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CFLAGS}")
+
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR})
 
 set(LIBS ${SERVICE_DEPS_LIBRARIES})
-link_libraries(${LIBS})
 
 set(LIB_PATHS ${SERVICE_DEPS_LIBRARY_DIRS})
 link_directories(${LIB_PATHS})
 
 add_executable(unity-panel-service ${PANEL_SOURCES})
+target_link_libraries(unity-panel-service ${LIBS})
 install(TARGETS unity-panel-service DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/unity/)
 
 configure_file(com.canonical.Unity.Panel.Service.service.cmake ${CMAKE_CURRENT_BINARY_DIR}/com.canonical.Unity.Panel.Service.service)

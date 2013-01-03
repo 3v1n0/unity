@@ -19,7 +19,6 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/kde4/afile.desktop
 #
 # Unit tests
 #
-find_package (PkgConfig)
 set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.99.0")
 pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS})
 
@@ -36,7 +35,6 @@ set (CFLAGS
 add_definitions (${CFLAGS})
 
 set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lcompiz_core -lm")
-link_libraries (${LIBS})
 
 set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS})
 link_directories (${CMAKE_BINARY_DIR}/UnityCore ${LIB_PATHS} ${COMPIZ_LIBDIR})
@@ -129,6 +127,7 @@ if (GTEST_SRC_DIR AND
        test_favorite_store_private.cpp
        test_home_lens.cpp
        test_launcher_entry_remote.cpp
+       test_launcher_options.cpp
        test_layout_system.cpp
        test_model_iterator.cpp
        test_previews.cpp
@@ -207,24 +206,26 @@ if (ENABLE_X_SUPPORT)
                  test_dashview_impl.cpp
                  test_dash_controller.cpp
                  test_desktop_launcher_icon.cpp
-                 test_edge_barrier_controller.cpp
-                 test_launcher.cpp
                  test_device_launcher_section.cpp
+                 test_edge_barrier_controller.cpp
                  test_hud_button.cpp
                  test_hud_controller.cpp
                  test_hud_launcher_icon.cpp
                  test_hud_view.cpp
                  test_icon_loader.cpp
                  test_im_text_entry.cpp
+                 test_launcher.cpp
                  test_launcher_controller.cpp
                  test_launcher_drag_window.cpp
                  test_launcher_hide_machine.cpp
                  test_launcher_hover_machine.cpp
                  test_launcher_icon.cpp
                  test_launcher_tooltip.cpp
+                 test_lensview.cpp
                  test_keyboard_util.cpp
-                 test_panel_style.cpp
+                 test_panel_indicators_view.cpp
                  test_panel_menu_view.cpp
+                 test_panel_style.cpp
                  test_places_group.cpp
                  test_previews_application.cpp
                  test_previews_generic.cpp
@@ -252,6 +253,7 @@ if (ENABLE_X_SUPPORT)
                  test_unity_settings.cpp
                  test_volume_imp.cpp
                  test_volume_launcher_icon.cpp
+                 test_window_buttons.cpp
                  test_xdnd_manager_imp.cpp
                  test_xdnd_start_stop_notifier_imp.cpp
                  bamf-mock-application.c

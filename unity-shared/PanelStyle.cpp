@@ -21,6 +21,7 @@
 #include "config.h"
 
 #include <math.h>
+#include <array>
 #include <gtk/gtk.h>
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -166,7 +167,7 @@ GtkStyleContext* Style::GetStyleContext()
   return _style_context;
 }
 
-nux::NBitmapData* Style::GetBackground(int width, int height, float opacity)
+BaseTexturePtr Style::GetBackground(int width, int height, float opacity)
 {
   nux::CairoGraphics context(CAIRO_FORMAT_ARGB32, width, height);
 
@@ -178,7 +179,7 @@ nux::NBitmapData* Style::GetBackground(int width, int height, float opacity)
   cairo_pop_group_to_source(cr);
   cairo_paint_with_alpha(cr, opacity);
 
-  return context.GetBitmap();
+  return texture_ptr_from_cairo_graphics(context);
 }
 
 /*!
@@ -192,19 +193,17 @@ nux::NBitmapData* Style::GetBackground(int width, int height, float opacity)
 std::vector<std::string> Style::GetWindowButtonFileNames(WindowButtonType type, WindowState state)
 {
   std::vector<std::string> files;
-  std::string names[] = { "close", "minimize", "unmaximize", "maximize" };
-  std::string states[] = { "", "_focused_prelight", "_focused_pressed", "_unfocused",
-                           "_unfocused", "_unfocused_prelight", "_unfocused_pressed"};
+  static const std::array<std::string, 4> names = {{ "close", "minimize", "unmaximize", "maximize" }};
+  static const std::array<std::string, 7> states = {{ "", "_focused_prelight", "_focused_pressed", "_unfocused",
+                                                      "_unfocused", "_unfocused_prelight", "_unfocused_pressed" }};
 
-  std::ostringstream subpath;
-  subpath << "unity/" << names[static_cast<int>(type)]
-          << states[static_cast<int>(state)] << ".png";
+  std::string subpath = "unity/" + names[static_cast<int>(type)] + states[static_cast<int>(state)] + ".png";
 
   // Look in home directory
   const char* home_dir = g_get_home_dir();
   if (home_dir)
   {
-    glib::String filename(g_build_filename(home_dir, ".themes", _theme_name.c_str(), subpath.str().c_str(), NULL));
+    glib::String filename(g_build_filename(home_dir, ".themes", _theme_name.c_str(), subpath.c_str(), NULL));
 
     if (g_file_test(filename.Value(), G_FILE_TEST_EXISTS))
       files.push_back (filename.Value());
@@ -214,33 +213,23 @@ std::vector<std::string> Style::GetWindowButtonFileNames(WindowButtonType type, 
   if (!var)
     var = "/usr";
 
-  glib::String filename(g_build_filename(var, "share", "themes", _theme_name.c_str(), subpath.str().c_str(), NULL));
+  glib::String filename(g_build_filename(var, "share", "themes", _theme_name.c_str(), subpath.c_str(), NULL));
   if (g_file_test(filename.Value(), G_FILE_TEST_EXISTS))
     files.push_back (filename.Value());
 
   return files;
 }
 
-nux::BaseTexture* Style::GetWindowButton(WindowButtonType type, WindowState state)
+BaseTexturePtr Style::GetWindowButton(WindowButtonType type, WindowState state)
 {
-  nux::BaseTexture* texture = NULL;
+  BaseTexturePtr texture;
 
-  std::vector<std::string> files = GetWindowButtonFileNames (type, state);
-  for (unsigned int i=0; i < files.size(); i++)
+  for (auto const& file : GetWindowButtonFileNames(type, state))
   {
-      glib::Error error;
-      // Try loading the pixbuf
-      glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file(files[i].c_str (), &error));
-      if (error)
-      {
-        LOG_WARNING(logger) << "Unable to load window button " << files[i] << ": " << error.Message();
-      }
-      else
-      {
-        texture = nux::CreateTexture2DFromPixbuf(pixbuf, true);
-        if (texture)
-          break;
-      }
+    texture.Adopt(nux::CreateTexture2DFromFile(file.c_str(), -1, true));
+
+    if (texture)
+      break;
   }
 
   if (!texture)
@@ -249,7 +238,7 @@ nux::BaseTexture* Style::GetWindowButton(WindowButtonType type, WindowState stat
   return texture;
 }
 
-nux::BaseTexture* Style::GetFallbackWindowButton(WindowButtonType type,
+BaseTexturePtr Style::GetFallbackWindowButton(WindowButtonType type,
                                                  WindowState state)
 {
   int width = 17, height = 17;
@@ -265,7 +254,7 @@ nux::BaseTexture* Style::GetFallbackWindowButton(WindowButtonType type,
   float h = height / 3.0f;
   nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32, canvas_w, canvas_h);
   nux::Color main = (state != WindowState::UNFOCUSED) ? _text_color : nux::color::Gray;
-  cairo_t* cr = cairo_graphics.GetContext();
+  cairo_t* cr = cairo_graphics.GetInternalContext();
 
   if (type == WindowButtonType::CLOSE)
   {
@@ -337,9 +326,8 @@ nux::BaseTexture* Style::GetFallbackWindowButton(WindowButtonType type,
   }
 
   cairo_stroke(cr);
-  cairo_destroy(cr);
 
-  return texture_from_cairo_graphics(cairo_graphics);
+  return texture_ptr_from_cairo_graphics(cairo_graphics);
 }
 
 glib::Object<GdkPixbuf> Style::GetHomeButton()

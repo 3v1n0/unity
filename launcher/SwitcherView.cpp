@@ -47,7 +47,7 @@ SwitcherView::SwitcherView()
   , monitor(-1)
   , spread_size(3.5f)
   , icon_renderer_(std::make_shared<IconRenderer>())
-  , text_view_(new nux::StaticCairoText(""))
+  , text_view_(new StaticCairoText(""))
   , animation_draw_(false)
   , target_sizes_set_(false)
 {

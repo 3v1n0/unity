@@ -398,27 +398,6 @@ std::vector<std::string> Application::GetSupportedMimeTypes() const
   return result;
 }
 
-std::vector<ApplicationMenu> Application::GetRemoteMenus() const
-{
-  std::vector<ApplicationMenu> result;
-  std::shared_ptr<GList> children(bamf_view_get_children(bamf_view_), g_list_free);
-  for (GList* l = children.get(); l; l = l->next)
-  {
-    if (!BAMF_IS_INDICATOR(l->data))
-      continue;
-
-    auto indicator = static_cast<BamfIndicator*>(l->data);
-    const gchar* path = bamf_indicator_get_dbus_menu_path(indicator);
-    const gchar* address = bamf_indicator_get_remote_address(indicator);
-
-    // It is possible for path or address to be null on error condintions, or if
-    // the remote is not ready.
-    if (path && address)
-      result.push_back(ApplicationMenu(path, address));
-  }
-  return result;
-}
-
 ApplicationWindowPtr Application::GetFocusableWindow() const
 {
   glib::Object<BamfView> view(bamf_application_get_focusable_child(bamf_app_),

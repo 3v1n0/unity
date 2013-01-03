@@ -23,7 +23,6 @@
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
-#include "unity-shared/StaticCairoText.h"
 #include "unity-shared/PlacesOverlayVScrollBar.h"
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
@@ -33,7 +32,6 @@
 #include <Nux/AbstractButton.h>
 
 #include "GenericPreview.h"
-#include "PreviewInfoHintWidget.h"
 
 namespace unity
 {
@@ -58,9 +56,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(GenericPreview);
 
 GenericPreview::GenericPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
-, full_data_layout_(nullptr)
 {
-  SetupBackground();
   SetupViews();
 }
 
@@ -72,22 +68,8 @@ void GenericPreview::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
 
-  bool enable_bg_shadows = dash::previews::Style::Instance().GetShadowBackgroundEnabled();
-
   gfx_engine.PushClippingRectangle(base);
   nux::GetPainter().PaintBackground(gfx_engine, base);
-
-  if (enable_bg_shadows && full_data_layout_)
-  {
-    unsigned int alpha, src, dest = 0;
-    gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
-    gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-    details_bg_layer_->SetGeometry(full_data_layout_->GetGeometry());
-    nux::GetPainter().RenderSinglePaintLayer(gfx_engine, full_data_layout_->GetGeometry(), details_bg_layer_.get());
-
-    gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
-  }
 
   gfx_engine.PopClippingRectangle(); 
 }
@@ -97,11 +79,6 @@ void GenericPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_dra
   nux::Geometry const& base = GetGeometry();
   gfx_engine.PushClippingRectangle(base);
 
-  bool enable_bg_shadows = dash::previews::Style::Instance().GetShadowBackgroundEnabled();
-
-  if (enable_bg_shadows && !IsFullRedraw())
-    nux::GetPainter().PushLayer(gfx_engine, details_bg_layer_->GetGeometry(), details_bg_layer_.get());
-
   unsigned int alpha, src, dest = 0;
   gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
   gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -110,9 +87,6 @@ void GenericPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_dra
     GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
 
   gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
-
-  if (enable_bg_shadows && !IsFullRedraw())
-    nux::GetPainter().PopBackground();
 
   gfx_engine.PopClippingRectangle();
 }
@@ -125,11 +99,6 @@ std::string GenericPreview::GetName() const
 void GenericPreview::AddProperties(GVariantBuilder* builder)
 {
   Preview::AddProperties(builder);
-}
-
-void GenericPreview::SetupBackground()
-{
-  details_bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
 }
 
 void GenericPreview::SetupViews()
@@ -163,14 +132,14 @@ void GenericPreview::SetupViews()
       nux::VLayout* preview_data_layout = new nux::VLayout();
       preview_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
-      title_ = new nux::StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
+      title_ = new StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
       title_->SetLines(-1);
       title_->SetFont(style.title_font().c_str());
       preview_data_layout->AddView(title_.GetPointer(), 1);
 
       if (!preview_model_->subtitle.Get().empty())
       {
-        subtitle_ = new nux::StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
+        subtitle_ = new StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
         subtitle_->SetLines(-1);
         subtitle_->SetFont(style.subtitle_size_font().c_str());
         preview_data_layout->AddView(subtitle_.GetPointer(), 1);
@@ -188,9 +157,9 @@ void GenericPreview::SetupViews()
 
       if (!preview_model_->description.Get().empty())
       {
-        description_ = new nux::StaticCairoText(preview_model_->description, false, NUX_TRACKER_LOCATION); // not escaped!
+        description_ = new StaticCairoText(preview_model_->description, false, NUX_TRACKER_LOCATION); // not escaped!
         description_->SetFont(style.description_font().c_str());
-        description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
+        description_->SetTextAlignment(StaticCairoText::NUX_ALIGN_TOP);
         description_->SetLines(-style.GetDescriptionLineCount());
         description_->SetLineSpacing(style.GetDescriptionLineSpacing());
         preview_info_layout->AddView(description_.GetPointer());

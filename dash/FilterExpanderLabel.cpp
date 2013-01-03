@@ -140,7 +140,7 @@ void FilterExpanderLabel::BuildLayout()
   expander_view_->SetLayout(expander_layout_);
   top_bar_layout_->AddView(expander_view_, 1);
 
-  cairo_label_ = new nux::StaticCairoText(label_.c_str(), NUX_TRACKER_LOCATION);
+  cairo_label_ = new StaticCairoText(label_.c_str(), NUX_TRACKER_LOCATION);
   cairo_label_->SetFont(FONT_EXPANDER_LABEL);
   cairo_label_->SetTextColor(nux::color::White);
   cairo_label_->SetAcceptKeyboardEvent(false);

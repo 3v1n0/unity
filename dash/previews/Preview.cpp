@@ -35,6 +35,7 @@
 #include "MoviePreview.h"
 #include "MusicPaymentPreview.h"
 #include "SocialPreview.h"
+#include "PreviewInfoHintWidget.h"
 
 namespace unity
 {
@@ -225,6 +226,10 @@ Preview::Preview(dash::Preview::Ptr preview_model)
   : View(NUX_TRACKER_LOCATION)
   , preview_model_(preview_model)
   , tab_iterator_(new TabIterator())
+  , full_data_layout_(nullptr)
+  , image_(nullptr)
+  , title_(nullptr)
+  , subtitle_(nullptr)
 {
 }
 

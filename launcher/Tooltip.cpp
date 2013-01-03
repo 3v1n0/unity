@@ -60,9 +60,9 @@ Tooltip::Tooltip() :
 
   _vlayout->AddLayout(_top_space, 0);
 
-  _tooltip_text = new nux::StaticCairoText(TEXT(""), NUX_TRACKER_LOCATION);
-  _tooltip_text->SetTextAlignment(nux::StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
-  _tooltip_text->SetTextVerticalAlignment(nux::StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
+  _tooltip_text = new StaticCairoText(TEXT(""), NUX_TRACKER_LOCATION);
+  _tooltip_text->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
+  _tooltip_text->SetTextVerticalAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
   _tooltip_text->SetMinimumWidth(MINIMUM_TEXT_WIDTH);
 
   _tooltip_text->sigTextChanged.connect(sigc::mem_fun(this, &Tooltip::RecvCairoTextChanged));
@@ -163,7 +163,7 @@ long Tooltip::PostLayoutManagement(long LayoutResult)
   return result;
 }
 
-void Tooltip::RecvCairoTextChanged(nux::StaticCairoText* cairo_text)
+void Tooltip::RecvCairoTextChanged(StaticCairoText* cairo_text)
 {
   _cairo_text_has_changed = true;
 }

@@ -303,10 +303,12 @@ void CoverflowResultView::Activate(std::string const& uri, int index, ResultView
 
   int left_results = index;
   int right_results = num_results ? (num_results - index) - 1 : 0;
-  int row_y = GetRootGeometry().y;
+  int row_y = GetAbsoluteY();
+  int column_x = -1;
   int row_height = renderer_->height;
+  int column_width = GetWidth();
 
-  glib::Variant data(g_variant_new("(iiii)", row_y, row_height, left_results, right_results));
+  glib::Variant data(g_variant_new("(iiii)", column_x, row_y, column_width, row_height, left_results, right_results));
   UriActivated.emit(uri, type, data);
 }
 

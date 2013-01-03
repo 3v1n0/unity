@@ -81,6 +81,8 @@ public:
                                       unsigned long x11_key_code,
                                       unsigned long special_keys_state);
 
+  nux::Geometry GetLayoutGeometry() const;
+
 protected:
   void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
@@ -99,10 +101,10 @@ private:
 
 private:
   // View related
-  nux::HLayout* layout_;
+  nux::HLayout* layout_content_;
   PreviewNavigator* nav_left_;
   PreviewNavigator* nav_right_;
-  PreviewContent* content_layout_;
+  PreviewContent* preview_layout_;
   Navigation nav_disabled_;
 
   // Animation

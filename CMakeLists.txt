@@ -1,7 +1,8 @@
 project (unity)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.9)
 
 include (cmake/Documentation.cmake)
+include (cmake/pch.cmake)
 
 #
 # Base bits
@@ -30,6 +31,10 @@ option(
   ON
 )
 
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l")
+  set (PIC_FLAGS "-fPIC")
+endif()
+
 if (ENABLE_X_SUPPORT)
   add_definitions(-DUSE_X11)
   message("Unity is configured with support for X.org")
@@ -41,9 +46,9 @@ endif ()
 if (BUILD_GLES)
   add_definitions(-DNUX_OPENGLES_20)
   add_definitions(-DUSE_GLES)
-  set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm -lpthread -ldl")
+  set (UNITY_STANDALONE_LADD "unity-core-${UNITY_API_VERSION};m;pthread;dl")
 else ()
-  set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm -lpthread -ldl -lGL -lGLU")
+  set (UNITY_STANDALONE_LADD "unity-core-${UNITY_API_VERSION};m;pthread;dl;GL;GLU")
 endif ()
 
 if (CMAKE_BUILD_TYPE MATCHES coverage)
@@ -131,6 +136,7 @@ set (VERSION "${UNITY_VERSION}")
 set (BUILDDIR "${CMAKE_BINARY_DIR}")
 
 find_package (PkgConfig)
+execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} unity --variable lensesdir OUTPUT_VARIABLE LENSES_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator3-0.4 --variable indicatordir OUTPUT_VARIABLE INDICATORDIR OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator3-0.4 --variable iconsdir OUTPUT_VARIABLE INDICATORICONDIR OUTPUT_STRIP_TRAILING_WHITESPACE)
 
