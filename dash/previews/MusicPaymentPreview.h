@@ -99,20 +99,20 @@ protected:
   virtual void SetupViews();
   // content elements
   nux::ObjectPtr<CoverArt> image_;
-  nux::ObjectPtr<nux::StaticCairoText> intro_;
-  nux::ObjectPtr<nux::StaticCairoText> title_;
-  nux::ObjectPtr<nux::StaticCairoText> subtitle_;
-  nux::ObjectPtr<nux::StaticCairoText> email_label_;
-  nux::ObjectPtr<nux::StaticCairoText> email_;
-  nux::ObjectPtr<nux::StaticCairoText> payment_label_;
-  nux::ObjectPtr<nux::StaticCairoText> payment_;
-  nux::ObjectPtr<nux::StaticCairoText> password_label_;
+  nux::ObjectPtr<StaticCairoText> intro_;
+  nux::ObjectPtr<StaticCairoText> title_;
+  nux::ObjectPtr<StaticCairoText> subtitle_;
+  nux::ObjectPtr<StaticCairoText> email_label_;
+  nux::ObjectPtr<StaticCairoText> email_;
+  nux::ObjectPtr<StaticCairoText> payment_label_;
+  nux::ObjectPtr<StaticCairoText> payment_;
+  nux::ObjectPtr<StaticCairoText> password_label_;
   nux::ObjectPtr<TextInput> password_entry_;
-  nux::ObjectPtr<nux::StaticCairoText> purchase_hint_;
-  nux::ObjectPtr<nux::StaticCairoText> purchase_prize_;
-  nux::ObjectPtr<nux::StaticCairoText> purchase_type_;
-  nux::ObjectPtr<nux::StaticCairoText> change_payment_;
-  nux::ObjectPtr<nux::StaticCairoText> forgotten_password_;
+  nux::ObjectPtr<StaticCairoText> purchase_hint_;
+  nux::ObjectPtr<StaticCairoText> purchase_prize_;
+  nux::ObjectPtr<StaticCairoText> purchase_type_;
+  nux::ObjectPtr<StaticCairoText> change_payment_;
+  nux::ObjectPtr<StaticCairoText> forgotten_password_;
   nux::ObjectPtr<nux::HLayout> form_layout_;
 
   dash::PaymentPreview* payment_preview_model_;

@@ -152,7 +152,7 @@ nux::Layout* MusicPaymentPreview::GetTitle()
   title_data_layout->SetMaximumHeight(76);
   title_data_layout->SetSpaceBetweenChildren(10);
 
-  title_ = new nux::StaticCairoText(
+  title_ = new StaticCairoText(
           preview_model_->title.Get(), true,
           NUX_TRACKER_LOCATION);
 
@@ -161,7 +161,7 @@ nux::Layout* MusicPaymentPreview::GetTitle()
   title_->SetFont(style.title_font().c_str());
   title_data_layout->AddView(title_.GetPointer(), 1);
 
-  subtitle_ = new nux::StaticCairoText(
+  subtitle_ = new StaticCairoText(
           preview_model_->subtitle.Get(), true,
           NUX_TRACKER_LOCATION);
   subtitle_->SetLines(-1);
@@ -178,7 +178,7 @@ nux::Layout* MusicPaymentPreview::GetPrize()
   prize_data_layout->SetMaximumHeight(76);
   prize_data_layout->SetSpaceBetweenChildren(5);
 
-  purchase_prize_ = new nux::StaticCairoText(
+  purchase_prize_ = new StaticCairoText(
           payment_preview_model_->purchase_prize.Get(), true,
           NUX_TRACKER_LOCATION);
   purchase_prize_->SetLines(-1);
@@ -186,7 +186,7 @@ nux::Layout* MusicPaymentPreview::GetPrize()
   prize_data_layout->AddView(purchase_prize_.GetPointer(), 1,
           nux::MINOR_POSITION_END);
 
-  purchase_hint_ = new nux::StaticCairoText(
+  purchase_hint_ = new StaticCairoText(
           _("Ubuntu One best offer"),
           true, NUX_TRACKER_LOCATION);
   purchase_hint_->SetLines(-1);
@@ -194,7 +194,7 @@ nux::Layout* MusicPaymentPreview::GetPrize()
   prize_data_layout->AddView(purchase_hint_.GetPointer(), 1,
           nux::MINOR_POSITION_END);
 
-  purchase_type_ = new nux::StaticCairoText(
+  purchase_type_ = new StaticCairoText(
           payment_preview_model_->purchase_type.Get(), true,
           NUX_TRACKER_LOCATION);
   purchase_type_->SetLines(-1);
@@ -211,7 +211,7 @@ nux::Layout* MusicPaymentPreview::GetBody()
   nux::VLayout *body_layout = new  nux::VLayout();
   body_layout->SetSpaceBetweenChildren(40);
 
-  intro_ = new nux::StaticCairoText(
+  intro_ = new StaticCairoText(
           payment_preview_model_->header.Get(), true,
           NUX_TRACKER_LOCATION);
   intro_->SetFont(style.payment_intro_font().c_str());
@@ -240,21 +240,21 @@ nux::Layout* MusicPaymentPreview::GetFormLabels()
   previews::Style& style = dash::previews::Style::Instance();
   nux::VLayout *labels_layout = new nux::VLayout();
   labels_layout->SetSpaceBetweenChildren(18);
-  email_label_ = new nux::StaticCairoText(
+  email_label_ = new StaticCairoText(
           _("Ubuntu One email:"), true,
           NUX_TRACKER_LOCATION);
   email_label_->SetLines(-1);
   email_label_->SetFont(style.payment_form_labels_font().c_str());
   labels_layout->AddView(email_label_.GetPointer(), 1, nux::MINOR_POSITION_END);
 
-  payment_label_ = new nux::StaticCairoText(
+  payment_label_ = new StaticCairoText(
           _("Payment method:"), true,
           NUX_TRACKER_LOCATION);
   payment_label_->SetLines(-1);
   payment_label_->SetFont(style.payment_form_labels_font().c_str());
   labels_layout->AddView(payment_label_.GetPointer(), 1, nux::MINOR_POSITION_END);
 
-  password_label_ = new nux::StaticCairoText(
+  password_label_ = new StaticCairoText(
           _("Ubuntu One Password:"), true,
           NUX_TRACKER_LOCATION);
   password_label_->SetLines(-1);
@@ -270,7 +270,7 @@ nux::Layout* MusicPaymentPreview::GetFormFields()
   previews::Style& style = dash::previews::Style::Instance();
   nux::VLayout *fields_layout = new nux::VLayout();
   fields_layout->SetSpaceBetweenChildren(18);
-  email_ = new nux::StaticCairoText(
+  email_ = new StaticCairoText(
           payment_preview_model_->email.Get(), true,
           NUX_TRACKER_LOCATION);
   email_->SetLines(-1);
@@ -278,7 +278,7 @@ nux::Layout* MusicPaymentPreview::GetFormFields()
   fields_layout->AddView(email_.GetPointer(), 1,
                   nux::MINOR_POSITION_START);
 
-  payment_ = new nux::StaticCairoText(
+  payment_ = new StaticCairoText(
           payment_preview_model_->payment_method.Get(), true,
           NUX_TRACKER_LOCATION);
   payment_->SetLines(-1);
@@ -307,8 +307,8 @@ nux::Layout* MusicPaymentPreview::GetFormActions()
   nux::VLayout *actions_layout = new nux::VLayout();
   actions_layout->SetSpaceBetweenChildren(16);
 
-  nux::ObjectPtr<nux::StaticCairoText> empty_;
-  empty_ = new nux::StaticCairoText(
+  nux::ObjectPtr<StaticCairoText> empty_;
+  empty_ = new StaticCairoText(
           "", true,
           NUX_TRACKER_LOCATION);
   empty_->SetLines(-1);
