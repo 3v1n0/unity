@@ -39,6 +39,7 @@
 #include "SocialPreviewContent.h"
 #include "SocialPreviewComments.h"
 #include "ActionButton.h"
+#include "PreviewInfoHintWidget.h"
 
 namespace unity
 {
@@ -156,6 +157,7 @@ void SocialPreview::SetupViews()
         icon_layout->SetSpaceBetweenChildren(3);
         avatar_ = new IconTexture(social_preview_model->avatar.Get().RawPtr() ? g_icon_to_string(social_preview_model->avatar.Get().RawPtr()) : "", MIN(style.GetAvatarAreaWidth(), style.GetAvatarAreaHeight()));
         avatar_->SetMinMaxSize(style.GetAvatarAreaWidth(), style.GetAvatarAreaHeight());
+        avatar_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
         icon_layout->AddView(avatar_.GetPointer(), 0);
 
         /////////////////////
@@ -168,10 +170,12 @@ void SocialPreview::SetupViews()
         title_ = new StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
         title_->SetLines(-1);
         title_->SetFont(style.title_font().c_str());
+        title_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
 
         subtitle_ = new StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
         subtitle_->SetFont(style.content_font().c_str());
         subtitle_->SetLines(-1);
+        subtitle_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
 
         social_data_layout->AddView(title_.GetPointer(), 0);
         social_data_layout->AddView(subtitle_.GetPointer(), 0);
@@ -188,6 +192,7 @@ void SocialPreview::SetupViews()
       // Details
       nux::ScrollView* social_info = new DetailsScrollView(NUX_TRACKER_LOCATION);
       social_info->EnableHorizontalScrollBar(false);
+      social_info->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
 
       nux::VLayout* social_info_layout = new nux::VLayout();
       social_info_layout->SetSpaceBetweenChildren(12);
@@ -197,6 +202,7 @@ void SocialPreview::SetupViews()
       {
         preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetAvatarAreaWidth());
         AddChild(preview_info_hints_.GetPointer());
+        preview_info_hints_->GetPreviewRequestClose().connect([this]() { preview_container_->request_close.emit(); });
         social_info_layout->AddView(preview_info_hints_.GetPointer(), 0);
       }
       /////////////////////
@@ -212,6 +218,7 @@ void SocialPreview::SetupViews()
         comments_hint_->SetLines(-1);
         comments_hint_->SetFont(style.info_hint_bold_font().c_str());
         comments_hint_->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
+        comments_hint_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
         comments_layout->AddView(comments_hint_.GetPointer(), 0, nux::MINOR_POSITION_START);
 
         comments_ = new SocialPreviewComments(preview_model_, NUX_TRACKER_LOCATION);
@@ -237,6 +244,7 @@ void SocialPreview::SetupViews()
   image_data_layout->AddView(social_content_layout, 0);
   image_data_layout->AddLayout(full_data_layout_, 1);
 
+  mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
 
   SetLayout(image_data_layout);
 }

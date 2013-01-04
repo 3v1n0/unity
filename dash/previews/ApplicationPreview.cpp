@@ -37,6 +37,7 @@
  
 #include "ApplicationPreview.h"
 #include "ActionButton.h"
+#include "PreviewInfoHintWidget.h"
 #include "PreviewRatingsWidget.h"
 
 namespace unity
@@ -146,6 +147,7 @@ void ApplicationPreview::SetupViews()
         app_icon_ = new IconTexture(app_preview_model->app_icon.Get().RawPtr() ? g_icon_to_string(app_preview_model->app_icon.Get().RawPtr()) : "", 72);
         app_icon_->SetMinimumSize(style.GetAppIconAreaWidth(), style.GetAppIconAreaWidth());
         app_icon_->SetMaximumSize(style.GetAppIconAreaWidth(), style.GetAppIconAreaWidth());
+        app_icon_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
         icon_layout->AddView(app_icon_.GetPointer(), 0);
 
         app_rating_ = new PreviewRatingsWidget();
@@ -154,6 +156,7 @@ void ApplicationPreview::SetupViews()
         app_rating_->SetMinimumHeight(style.GetRatingWidgetHeight());
         app_rating_->SetRating(app_preview_model->rating);
         app_rating_->SetReviews(app_preview_model->num_ratings);
+        app_rating_->GetPreviewRequestClose().connect([this]() { preview_container_->request_close.emit(); });
         icon_layout->AddView(app_rating_.GetPointer(), 0);
 
         /////////////////////
@@ -170,6 +173,7 @@ void ApplicationPreview::SetupViews()
         title_ = new StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
         title_->SetLines(-1);
         title_->SetFont(style.title_font().c_str());
+        title_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
         title_subtitle_layout_->AddView(title_.GetPointer(), 1);
 
         if (!preview_model_->subtitle.Get().empty())
@@ -177,6 +181,7 @@ void ApplicationPreview::SetupViews()
           subtitle_ = new StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
           subtitle_->SetFont(style.subtitle_size_font().c_str());
           subtitle_->SetLines(-1);
+          subtitle_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
           title_subtitle_layout_->AddView(subtitle_.GetPointer(), 1);
         }
 
@@ -188,6 +193,7 @@ void ApplicationPreview::SetupViews()
           license_ = new StaticCairoText(app_preview_model->license, true, NUX_TRACKER_LOCATION);
           license_->SetFont(style.app_license_font().c_str());
           license_->SetLines(-1);
+          license_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
           app_updated_copywrite_layout->AddView(license_.GetPointer(), 1);
         }
 
@@ -198,6 +204,7 @@ void ApplicationPreview::SetupViews()
 
           last_update_ = new StaticCairoText(last_update.str(), true, NUX_TRACKER_LOCATION);
           last_update_->SetFont(style.app_last_update_font().c_str());
+          last_update_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
           app_updated_copywrite_layout->AddView(last_update_.GetPointer(), 1);
         }
 
@@ -206,6 +213,7 @@ void ApplicationPreview::SetupViews()
           copywrite_ = new StaticCairoText(app_preview_model->copyright, true, NUX_TRACKER_LOCATION);
           copywrite_->SetFont(style.app_copywrite_font().c_str());
           copywrite_->SetLines(-1);
+          copywrite_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
           app_updated_copywrite_layout->AddView(copywrite_.GetPointer(), 1);
         }
 
@@ -223,6 +231,7 @@ void ApplicationPreview::SetupViews()
       // Description
       nux::ScrollView* app_info = new DetailsScrollView(NUX_TRACKER_LOCATION);
       app_info->EnableHorizontalScrollBar(false);
+      app_info->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
 
       nux::VLayout* app_info_layout = new nux::VLayout();
       app_info_layout->SetSpaceBetweenChildren(12);
@@ -235,6 +244,7 @@ void ApplicationPreview::SetupViews()
         description_->SetTextAlignment(StaticCairoText::NUX_ALIGN_TOP);
         description_->SetLines(-style.GetDescriptionLineCount());
         description_->SetLineSpacing(style.GetDescriptionLineSpacing());
+        description_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
         app_info_layout->AddView(description_.GetPointer());
       }
 
@@ -242,6 +252,7 @@ void ApplicationPreview::SetupViews()
       {
         preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
         AddChild(preview_info_hints_.GetPointer());
+        preview_info_hints_->GetPreviewRequestClose().connect([this]() { preview_container_->request_close.emit(); });
         app_info_layout->AddView(preview_info_hints_.GetPointer());
       }
       /////////////////////
@@ -261,6 +272,7 @@ void ApplicationPreview::SetupViews()
   image_data_layout->AddView(image_.GetPointer(), 0);
   image_data_layout->AddLayout(full_data_layout_, 1);
 
+  mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
 
   SetLayout(image_data_layout);
 }

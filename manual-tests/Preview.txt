@@ -235,3 +235,23 @@ Actions:
 
 Expected Result:
   The scroll view will scroll down the list of tracks.
+
+
+Preview Close with Left, Middle, or Right Mouse Click
+-----------------------------------------------------
+This tests closing a preview by right, middle, or left clicking most anywhere on an open
+preview. (https://bugs.launchpad.net/unity/+bug/1046315)
+
+Setup:
+#. Open Dash.
+#. Open a lens which supports previewing (e.g. Application, Music, File)
+#. Open a preview by right-clicking the mouse on an icon.
+
+Actions:
+#. Left, middle, or right click anywhere (besides scroll bars and action buttons) in 
+   the open preview.
+
+Expected Result:
+  The preview will close.  Note that the behavior of scroll bars and actions buttons are
+  not affected by this.
+

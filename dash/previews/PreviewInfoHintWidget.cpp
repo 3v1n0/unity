@@ -163,12 +163,14 @@ void PreviewInfoHintWidget::SetupViews()
       info_name->SetFont(style.info_hint_bold_font());
       info_name->SetLines(-1);
       info_name->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
+      info_name->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
       hint_layout->AddView(info_name.GetPointer(), 0, nux::MINOR_POSITION_CENTER);
     }
 
     StaticCairoTextPtr info_value(new StaticCairoText(StringFromVariant(info_hint->value), true, NUX_TRACKER_LOCATION));
     info_value->SetFont(style.info_hint_font());
     info_value->SetLines(-1);
+    info_value->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
     hint_layout->AddView(info_value.GetPointer(), 1, nux::MINOR_POSITION_CENTER);
 
     InfoHint info_hint_views(info_name, info_value);
@@ -176,6 +178,8 @@ void PreviewInfoHintWidget::SetupViews()
 
     layout->AddLayout(hint_layout, 0);
   }
+
+  mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
 
   SetLayout(layout);
 }
@@ -226,7 +230,6 @@ void PreviewInfoHintWidget::PreLayoutManagement()
 
   View::PreLayoutManagement();
 }
-
 
 } // namespace previews
 } // namespace dash

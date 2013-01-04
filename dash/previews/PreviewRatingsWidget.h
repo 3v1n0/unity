@@ -25,6 +25,7 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
+#include "PreviewContainer.h"
 
 namespace nux
 {
@@ -51,6 +52,8 @@ public:
 
   void SetReviews(int count);
 
+  sigc::signal<void> GetPreviewRequestClose() const { return preview_container_.request_close; }
+
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -64,6 +67,8 @@ protected:
 private:
   RatingsButton* ratings_;
   StaticCairoText* reviews_;
+
+  PreviewContainer preview_container_;
 };
 
 } // namespace previews

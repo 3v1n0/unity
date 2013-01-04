@@ -33,6 +33,7 @@
 #include "MusicPreview.h"
 #include "ActionButton.h"
 #include "Tracks.h"
+#include "PreviewInfoHintWidget.h"
 
 namespace unity
 {
@@ -126,6 +127,7 @@ void MusicPreview::SetupViews()
       title_ = new StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
       title_->SetFont(style.title_font().c_str());
       title_->SetLines(-1);
+      title_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
       album_data_layout->AddView(title_.GetPointer(), 1);
 
       if (!preview_model_->subtitle.Get().empty())
@@ -133,6 +135,7 @@ void MusicPreview::SetupViews()
         subtitle_ = new StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
         subtitle_->SetFont(style.subtitle_size_font().c_str());
         subtitle_->SetLines(-1);
+        subtitle_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
         album_data_layout->AddView(subtitle_.GetPointer(), 1);
       }
 
@@ -147,6 +150,7 @@ void MusicPreview::SetupViews()
         AddChild(tracks_.GetPointer());
         tracks_->play.connect(sigc::mem_fun(this, &MusicPreview::OnPlayTrack));
         tracks_->pause.connect(sigc::mem_fun(this, &MusicPreview::OnPauseTrack));
+        tracks_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
       }
       /////////////////////
 
@@ -163,6 +167,7 @@ void MusicPreview::SetupViews()
         hints_layout->AddSpace(0, 1);
         preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
         AddChild(preview_info_hints_.GetPointer());
+        preview_info_hints_->GetPreviewRequestClose().connect([this]() { preview_container_->request_close.emit(); });
         hints_layout->AddView(preview_info_hints_.GetPointer(), 0);
 
         // If there are actions, we use a vertical layout
@@ -193,6 +198,8 @@ void MusicPreview::SetupViews()
   
   image_data_layout->AddView(image_.GetPointer(), 0);
   image_data_layout->AddLayout(full_data_layout_, 1);
+
+  mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
 
   SetLayout(image_data_layout);
 }

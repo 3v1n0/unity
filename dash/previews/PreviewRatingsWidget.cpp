@@ -51,10 +51,12 @@ PreviewRatingsWidget::PreviewRatingsWidget(NUX_FILE_LINE_DECL)
 
   ratings_ = new RatingsButton(18,2);
   ratings_->SetEditable(false);
+  ratings_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
   layout->AddView(ratings_);
   
   reviews_ = new StaticCairoText("", NUX_TRACKER_LOCATION);
   reviews_->SetFont(style.user_rating_font());
+  reviews_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
   layout->AddView(reviews_);
 
   SetLayout(layout);
@@ -108,7 +110,6 @@ void PreviewRatingsWidget::AddProperties(GVariantBuilder* builder)
   variant::BuilderWrapper(builder)
     .add(GetAbsoluteGeometry());
 }
-
 
 } // namespace previews
 } // namespace dash

@@ -32,6 +32,7 @@
 #include <Nux/AbstractButton.h>
 
 #include "GenericPreview.h"
+#include "PreviewInfoHintWidget.h"
 
 namespace unity
 {
@@ -135,6 +136,7 @@ void GenericPreview::SetupViews()
       title_ = new StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
       title_->SetLines(-1);
       title_->SetFont(style.title_font().c_str());
+      title_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
       preview_data_layout->AddView(title_.GetPointer(), 1);
 
       if (!preview_model_->subtitle.Get().empty())
@@ -142,6 +144,7 @@ void GenericPreview::SetupViews()
         subtitle_ = new StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
         subtitle_->SetLines(-1);
         subtitle_->SetFont(style.subtitle_size_font().c_str());
+        subtitle_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
         preview_data_layout->AddView(subtitle_.GetPointer(), 1);
       }
       /////////////////////
@@ -150,6 +153,7 @@ void GenericPreview::SetupViews()
       // Description
       nux::ScrollView* preview_info = new DetailsScrollView(NUX_TRACKER_LOCATION);
       preview_info->EnableHorizontalScrollBar(false);
+      preview_info->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
 
       nux::VLayout* preview_info_layout = new nux::VLayout();
       preview_info_layout->SetSpaceBetweenChildren(12);
@@ -162,6 +166,7 @@ void GenericPreview::SetupViews()
         description_->SetTextAlignment(StaticCairoText::NUX_ALIGN_TOP);
         description_->SetLines(-style.GetDescriptionLineCount());
         description_->SetLineSpacing(style.GetDescriptionLineSpacing());
+        description_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
         preview_info_layout->AddView(description_.GetPointer());
       }
 
@@ -169,6 +174,7 @@ void GenericPreview::SetupViews()
       {
         preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
         AddChild(preview_info_hints_.GetPointer());
+        preview_info_hints_->GetPreviewRequestClose().connect([this]() { preview_container_->request_close.emit(); });
         preview_info_layout->AddView(preview_info_hints_.GetPointer());
       }
       /////////////////////
@@ -188,6 +194,8 @@ void GenericPreview::SetupViews()
   image_data_layout->AddView(image_.GetPointer(), 0);
 
   image_data_layout->AddLayout(full_data_layout_, 1);
+
+  mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
 
   SetLayout(image_data_layout);
 }

@@ -420,7 +420,7 @@ void PreviewContainer::Preview(dash::Preview::Ptr preview_model, Navigation dire
   
   if (preview_view)
   {
-    preview_view->request_close.connect([this]() { request_close.emit(); });
+    preview_view->GetPreviewRequestClose().connect([this]() { request_close.emit(); });
   }
   
   preview_layout_->PushPreview(preview_view, direction);
@@ -681,7 +681,9 @@ nux::Area* PreviewContainer::KeyNavIteration(nux::KeyNavDirection direction)
 
 void PreviewContainer::OnMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
-  if (nux::GetEventButton(button_flags) == nux::MOUSE_BUTTON1 || nux::GetEventButton(button_flags) == nux::MOUSE_BUTTON3)
+  int button = nux::GetEventButton(button_flags);
+
+  if (button == nux::MOUSE_BUTTON1 || button == nux::MOUSE_BUTTON2 || button == nux::MOUSE_BUTTON3)
   {
     request_close.emit();
   }
@@ -691,7 +693,6 @@ nux::Geometry PreviewContainer::GetLayoutGeometry() const
 {
   return layout_content_->GetAbsoluteGeometry();  
 }
-
 
 } // namespace previews
 } // namespace dash
