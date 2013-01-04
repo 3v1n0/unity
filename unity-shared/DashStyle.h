@@ -203,10 +203,11 @@ public:
   nux::BaseTexture* GetStarDeselectedIcon();
   nux::BaseTexture* GetStarSelectedIcon();
   nux::BaseTexture* GetStarHighlightIcon();
-  
+ 
+  nux::BaseTexture* GetInformationTexture();
+
   nux::BaseTexture* GetRefineTextureCorner();
   nux::BaseTexture* GetRefineTextureDash();
-  nux::BaseTexture* GetRefineNoRefineTextureDash();
   
   // Returns the width of the separator between the dash and the launcher.
   int GetVSeparatorSize() const;
@@ -242,8 +243,11 @@ public:
   int GetScrollbarWidth() const;
 
   // Places Group
+  int GetCategoryIconSize() const;
   int GetCategoryHighlightHeight() const;
   int GetPlacesGroupTopSpace() const;
+  int GetPlacesGroupResultTopPadding() const;
+  int GetPlacesGroupResultLeftPadding() const;  
   int GetCategoryHeaderLeftPadding() const;
   int GetCategorySeparatorLeftPadding() const;
   int GetCategorySeparatorRightPadding() const;

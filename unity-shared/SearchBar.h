@@ -106,12 +106,12 @@ private:
   nux::HLayout* layout_;
   nux::HLayout* entry_layout_;
   nux::LayeredLayout* layered_layout_;
-  nux::StaticCairoText* hint_;
+  StaticCairoText* hint_;
   nux::LinearLayout* expander_layout_;
   IMTextEntry* pango_entry_;
   nux::View* expander_view_;
   nux::HLayout* filter_layout_;
-  nux::StaticCairoText* show_filters_;
+  StaticCairoText* show_filters_;
   nux::VLayout* arrow_layout_;
   nux::SpaceLayout* arrow_top_space_;
   nux::SpaceLayout* arrow_bottom_space_;

@@ -44,7 +44,7 @@ public:
     RESULT_RENDERER_ACTIVE,
     RESULT_RENDERER_PRELIGHT,
     RESULT_RENDERER_SELECTED,
-    RESULT_RENDERER_INSENSITIVE,
+    RESULT_RENDERER_INSENSITIVE
   };
 
   ResultRenderer(NUX_FILE_LINE_PROTO);
@@ -53,7 +53,9 @@ public:
                       Result& row,
                       ResultRendererState state,
                       nux::Geometry const& geometry,
-                      int x_offset, int y_offset);
+                      int x_offset, int y_offset,
+                      nux::Color const& color,
+                      float saturate);
 
   // this is just to start preloading images and text that the renderer might
   // need - can be ignored
@@ -61,6 +63,9 @@ public:
 
   // unload any previous grabbed images
   virtual void Unload(Result& row);
+
+  // get a image to drag
+  virtual nux::NBitmapData* GetDndImage(Result const& row) const;
 
   nux::Property<int> width;
   nux::Property<int> height;

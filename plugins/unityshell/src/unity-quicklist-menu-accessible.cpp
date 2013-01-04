@@ -210,7 +210,6 @@ unity_quicklist_menu_accessible_ref_child(AtkObject* obj,
   QuicklistView* quicklist = NULL;
   QuicklistMenuItem* child = NULL;
   AtkObject* child_accessible = NULL;
-  AtkObject* parent = NULL;
   nux::Object* nux_object = NULL;
 
   g_return_val_if_fail(UNITY_IS_QUICKLIST_MENU_ACCESSIBLE(obj), NULL);
@@ -226,6 +225,7 @@ unity_quicklist_menu_accessible_ref_child(AtkObject* obj,
 
   if (child_accessible != NULL)
   {
+    AtkObject* parent = NULL;
     g_object_ref(child_accessible);
     parent = atk_object_get_parent(child_accessible);
     if (parent != obj)

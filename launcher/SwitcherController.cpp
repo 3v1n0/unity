@@ -30,7 +30,7 @@ namespace unity
 {
 using launcher::AbstractLauncherIcon;
 using launcher::ActionArg;
-using ui::LayoutWindowList;
+using ui::LayoutWindow;
 
 namespace
 {
@@ -398,11 +398,11 @@ void Controller::PrevDetail()
   }
 }
 
-LayoutWindowList Controller::ExternalRenderTargets()
+LayoutWindow::Vector Controller::ExternalRenderTargets()
 {
   if (!view_)
   {
-    LayoutWindowList result;
+    LayoutWindow::Vector result;
     return result;
   }
   return view_->ExternalTargets();
@@ -470,8 +470,9 @@ void Controller::SelectFirstItem()
   unsigned int second_first = 0; // second icons first highest active
 
   WindowManager& wm = WindowManager::Default();
-  for (guint32 xid : first->Windows())
+  for (auto& window : first->Windows())
   {
+    guint32 xid = window->window_id();
     unsigned int num = wm.GetWindowActiveNumber(xid);
 
     if (num > first_highest)
@@ -485,8 +486,9 @@ void Controller::SelectFirstItem()
     }
   }
 
-  for (guint32 xid : second->Windows())
+  for (auto& window : second->Windows())
   {
+    guint32 xid = window->window_id();
     second_first = std::max<unsigned long long>(wm.GetWindowActiveNumber(xid), second_first);
   }
 

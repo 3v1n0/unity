@@ -89,6 +89,13 @@ std::vector<nux::Geometry>& UScreen::GetMonitors()
   return monitors_;
 }
 
+nux::Geometry UScreen::GetScreenGeometry()
+{
+  int width = gdk_screen_get_width(screen_);
+  int height = gdk_screen_get_height(screen_);
+  return nux::Geometry(0, 0, width, height); 
+}
+
 void UScreen::Changed(GdkScreen* screen)
 {
   if (refresh_idle_)

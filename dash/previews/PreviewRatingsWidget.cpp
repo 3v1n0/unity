@@ -23,6 +23,7 @@
 #include <Nux/Nux.h>
 #include <Nux/VLayout.h>
 #include <glib.h>
+#include "config.h"
 #include <glib/gi18n-lib.h>
 
 #include "unity-shared/RatingsButton.h"
@@ -52,7 +53,7 @@ PreviewRatingsWidget::PreviewRatingsWidget(NUX_FILE_LINE_DECL)
   ratings_->SetEditable(false);
   layout->AddView(ratings_);
   
-  reviews_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
+  reviews_ = new StaticCairoText("", NUX_TRACKER_LOCATION);
   reviews_->SetFont(style.user_rating_font());
   layout->AddView(reviews_);
 

@@ -33,6 +33,7 @@
 #include "MusicPreview.h"
 #include "MoviePreview.h"
 #include "SocialPreview.h"
+#include "PreviewInfoHintWidget.h"
 
 namespace unity
 {
@@ -219,6 +220,10 @@ Preview::Preview(dash::Preview::Ptr preview_model)
   : View(NUX_TRACKER_LOCATION)
   , preview_model_(preview_model)
   , tab_iterator_(new TabIterator())
+  , full_data_layout_(nullptr)
+  , image_(nullptr)
+  , title_(nullptr)
+  , subtitle_(nullptr)
 {
 }
 
@@ -276,7 +281,7 @@ nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList action
         actions_layout_h->AddView(button, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
     }
 
-    actions_layout_v->AddLayout(actions_layout_h, 0, nux::MINOR_POSITION_RIGHT, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
+    actions_layout_v->AddLayout(actions_layout_h, 0, nux::MINOR_POSITION_END, nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
   }
 
   return actions_layout_v;

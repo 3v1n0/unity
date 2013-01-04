@@ -9,11 +9,9 @@
 
 from __future__ import absolute_import
 
-from autopilot.emulators.dbus_handler import session_bus
 from autopilot.emulators.X11 import Mouse, ScreenGeometry
 from autopilot.keybindings import KeybindingsHelper
 from autopilot.utilities import get_compiz_option
-import dbus
 import logging
 from testtools.matchers import NotEquals
 from time import sleep
@@ -56,19 +54,6 @@ class LauncherController(UnityIntrospectionObject):
         models = LauncherModel.get_all_instances()
         assert(len(models) == 1)
         return models[0]
-
-    def add_launcher_item_from_position(self,name,icon,icon_x,icon_y,icon_size,desktop_file,aptdaemon_task):
-        """ Emulate a DBus call from Software Center to pin an icon to the launcher """
-        launcher_object = session_bus.get_object('com.canonical.Unity.Launcher',
-                                      '/com/canonical/Unity/Launcher')
-        launcher_iface = dbus.Interface(launcher_object, 'com.canonical.Unity.Launcher')
-        launcher_iface.AddLauncherItemFromPosition(name,
-                                                   icon,
-                                                   icon_x,
-                                                   icon_y,
-                                                   icon_size,
-                                                   desktop_file,
-                                                   aptdaemon_task)
 
 
 class Launcher(UnityIntrospectionObject, KeybindingsHelper):
@@ -423,7 +408,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
         """
         if not isinstance(icon, ApplicationLauncherIcon):
-            raise TypeError("Can only unlock instances of ApplicationLauncherIcon")
+            raise TypeError("Can only unlock instances of ApplicationLauncherIcon, not %s" % type(icon).__name__)
         if not icon.sticky:
             # nothing to do.
             return

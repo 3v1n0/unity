@@ -159,17 +159,16 @@ TEST(TestIndicatorEntry, TestOnScroll)
 
 struct ShowMenuRecorder
 {
-  void OnShowMenu(std::string const& a, unsigned int b, int c, int d, unsigned int e, unsigned int f)
+  void OnShowMenu(std::string const& a, unsigned b, int c, int d, unsigned e)
   {
     name = a;
     xid = b;
     x = c;
     y = d;
     button = e;
-    timestamp = f;
   }
   std::string name;
-  unsigned int xid, timestamp, button;
+  unsigned xid, button;
   int x, y;
 };
 
@@ -182,12 +181,11 @@ TEST(TestIndicatorEntry, TestOnShowMenu)
   ShowMenuRecorder recorder;
   entry.on_show_menu.connect(sigc::mem_fun(recorder, &ShowMenuRecorder::OnShowMenu));
 
-  entry.ShowMenu(10, 20, 1, 12345);
+  entry.ShowMenu(10, 20, 1);
   EXPECT_EQ(recorder.name, "id");
   EXPECT_EQ(recorder.xid, 0);
   EXPECT_EQ(recorder.x, 10);
   EXPECT_EQ(recorder.y, 20);
-  EXPECT_EQ(recorder.timestamp, 12345);
   EXPECT_EQ(recorder.button, 1);
 }
 
@@ -200,12 +198,11 @@ TEST(TestIndicatorEntry, TestOnShowMenuXid)
   ShowMenuRecorder recorder;
   entry.on_show_menu.connect(sigc::mem_fun(recorder, &ShowMenuRecorder::OnShowMenu));
 
-  entry.ShowMenu(88492615, 15, 25, 2, 123456);
+  entry.ShowMenu(88492615, 15, 25, 2);
   EXPECT_EQ(recorder.name, "xid");
   EXPECT_EQ(recorder.xid, 88492615);
   EXPECT_EQ(recorder.x, 15);
   EXPECT_EQ(recorder.y, 25);
-  EXPECT_EQ(recorder.timestamp, 123456);
   EXPECT_EQ(recorder.button, 2);
 }
 

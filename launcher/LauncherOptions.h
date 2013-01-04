@@ -24,9 +24,9 @@
 #include <memory>
 #include <vector>
 #include <sigc++/sigc++.h>
-#include <core/core.h>
 
 #include <Nux/Nux.h>
+#include <UnityCore/GLibSource.h>
 
 namespace unity
 {
@@ -102,6 +102,9 @@ public:
   nux::Property<bool> show_for_all;
 
   sigc::signal<void> option_changed;
+
+private:
+  glib::Source::UniquePtr changed_idle_;
 };
 
 }

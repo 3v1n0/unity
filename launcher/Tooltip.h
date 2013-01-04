@@ -39,10 +39,10 @@ class Tooltip : public CairoBaseWindow, public debug::Introspectable
 public:
   Tooltip();
 
+  nux::RWProperty<std::string> text;
+
   void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
   void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
-
-  void SetText(std::string const& text);
 
   void ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y);
 
@@ -52,11 +52,15 @@ public:
 
   virtual nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
 
-private:
-  void RecvCairoTextChanged(nux::StaticCairoText* cairo_text);
+protected:
+  // protected to simplify testing
+  nux::ObjectPtr<StaticCairoText> _tooltip_text;
+
+  void RecvCairoTextChanged(StaticCairoText* cairo_text);
 
   void PreLayoutManagement();
 
+private:
   long PostLayoutManagement(long layoutResult);
 
   void PositionChildLayout(float offsetX,
@@ -69,9 +73,6 @@ private:
 
   int                   _anchorX;
   int                   _anchorY;
-  std::string           _labelText;
-
-  nux::ObjectPtr<nux::StaticCairoText> _tooltip_text;
 
   nux::HLayout* _hlayout;
   nux::VLayout* _vlayout;

@@ -20,6 +20,7 @@
 
 #include "TrashLauncherIcon.h"
 
+#include "config.h"
 #include <glib/gi18n-lib.h>
 #include <Nux/WindowCompositor.h>
 #include <NuxCore/Logger.h>
@@ -139,7 +140,7 @@ void TrashLauncherIcon::UpdateTrashIconCb(GObject* source,
 
 nux::DndAction TrashLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_data)
 {
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
   return nux::DNDACTION_MOVE;
 #else
   return nux::DNDACTION_NONE;

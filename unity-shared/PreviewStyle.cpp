@@ -171,6 +171,12 @@ int Style::GetPreviewHeight() const
   return preview_height;
 }
 
+
+int Style::GetPreviewTopPadding() const
+{
+  return 100;
+}
+
 int Style::GetDetailsTopMargin() const
 {
   return 5;

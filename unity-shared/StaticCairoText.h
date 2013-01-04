@@ -26,13 +26,13 @@
 #include <Nux/Nux.h>
 #include <Nux/View.h>
 
-namespace nux
+namespace unity
 {
 class Validator;
 
-class StaticCairoText : public View
+class StaticCairoText : public nux::View
 {
-  NUX_DECLARE_OBJECT_TYPE (StaticCairoText, View);
+  NUX_DECLARE_OBJECT_TYPE (StaticCairoText, nux::View);
 public:
   enum EllipsizeState
   {
@@ -51,6 +51,14 @@ public:
     NUX_ALIGN_BOTTOM = NUX_ALIGN_RIGHT
   };
 
+  enum UnderlineState
+  {
+    NUX_UNDERLINE_NONE,
+    NUX_UNDERLINE_SINGLE,
+    NUX_UNDERLINE_DOUBLE,
+    NUX_UNDERLINE_LOW
+  };
+
   StaticCairoText(std::string const& text, NUX_FILE_LINE_PROTO);
   StaticCairoText(std::string const& text, bool escape_text, NUX_FILE_LINE_PROTO);
   ~StaticCairoText();
@@ -59,30 +67,33 @@ public:
 
   long PostLayoutManagement(long layoutResult);
 
-  void Draw(GraphicsEngine& gfxContext,
+  void Draw(nux::GraphicsEngine& gfxContext,
             bool             forceDraw);
 
-  void DrawContent(GraphicsEngine& gfxContext,
+  void DrawContent(nux::GraphicsEngine& gfxContext,
                    bool             forceDraw);
 
   // public API
   void SetText(std::string const& text, bool escape_text = false);
-  void SetTextColor(Color const& textColor);
+  void SetTextAlpha(unsigned int alpha);
+  void SetTextColor(nux::Color const& textColor);
   void SetTextEllipsize(EllipsizeState state);
   void SetTextAlignment(AlignState state);
   void SetTextVerticalAlignment(AlignState state);
   void SetFont(std::string const& font);
+  std::string GetFont();
+  void SetUnderline(UnderlineState underline);
   void SetLines(int maximum_lines);
   void SetLineSpacing(float line_spacing);
 
   std::string GetText() const;
-  Color GetTextColor() const;
+  nux::Color GetTextColor() const;
 
   int GetLineCount() const;
   int GetBaseline() const;
 
   void GetTextExtents(int& width, int& height) const;
-  Size GetTextExtents() const;
+  nux::Size GetTextExtents() const;
 
   sigc::signal<void, StaticCairoText*> sigTextChanged;
   sigc::signal<void, StaticCairoText*> sigTextColorChanged;
@@ -98,6 +109,9 @@ public:
 protected:
   // Key navigation
   virtual bool AcceptKeyNavFocus();
+
+  std::vector<unsigned> GetTextureStartIndices();
+  std::vector<unsigned> GetTextureEndIndices();
 
 private:
   struct Impl;

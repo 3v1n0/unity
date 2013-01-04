@@ -17,22 +17,52 @@
  * Authored by: Andrea Azzarone <azzaronea@gmail.com>
  */
 
+#include "config.h"
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
 #include <Nux/Nux.h>
+#include <Nux/NuxTimerTickSource.h>
 #include <Nux/WindowThread.h>
+#include <NuxCore/AnimationController.h>
 
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "BaseWindowRaiserImp.h"
 #include "MockShortcutHint.h"
 #include "ShortcutController.h"
+#include "unity-shared/UnitySettings.h"
 
 using namespace unity;
 
-static shortcut::Controller::Ptr controller;
-
-void ThreadWidgetInit(nux::NThread* thread, void* InitData)
+struct ShortcutsWindow
 {
+  ShortcutsWindow()
+    : wt(nux::CreateGUIThread("Unity Shortcut Hint Overlay", 1024, 768, 0, &ShortcutsWindow::ThreadWidgetInit, this))
+    , animation_controller(tick_source)
+  {}
+
+  void Show()
+  {
+    wt->Run(nullptr);
+  }
+
+private:
+  void Init();
+
+  static void ThreadWidgetInit(nux::NThread* thread, void* self)
+  {
+    static_cast<ShortcutsWindow*>(self)->Init();
+  }
+
+  unity::Settings settings;
+  std::shared_ptr<nux::WindowThread> wt;
+  nux::NuxTimerTickSource tick_source;
+  nux::animation::AnimationController animation_controller;
+  shortcut::Controller::Ptr controller;
+};
+
+void ShortcutsWindow::Init()
+{
+  BackgroundEffectHelper::blur_type = BLUR_NONE;
   std::list<std::shared_ptr<shortcut::AbstractHint>> hints;
 
   // Launcher...
@@ -230,21 +260,16 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
                                                                                  "initiate_key")));
 
   auto base_window_raiser_ = std::make_shared<shortcut::BaseWindowRaiserImp>();
-  controller.reset(new shortcut::Controller(hints, base_window_raiser_));
+  controller = std::make_shared<shortcut::Controller>(hints, base_window_raiser_);
   controller->Show();
 }
 
 int main(int argc, char** argv)
 {
-  g_type_init();
   gtk_init(&argc, &argv);
 
   nux::NuxInitialize(0);
+  ShortcutsWindow().Show();
 
-  BackgroundEffectHelper::blur_type = BLUR_NONE;
-  nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Shortcut Hint Overlay"), 1200, 720, 0, &ThreadWidgetInit, 0);
-
-  wt->Run(NULL);
-  delete wt;
   return 0;
 }

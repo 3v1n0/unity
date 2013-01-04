@@ -28,7 +28,7 @@
 #include <NuxCore/Rect.h>
 #include <Nux/Utils.h>
 
-#ifdef UNITY_HAS_X_ORG_SUPPORT
+#ifdef USE_X11
 #include <X11/Xlib.h>
 #else
 typedef unsigned long Window;
@@ -62,6 +62,14 @@ public:
     ForceUnminimizeOnCurrentDesktop
   };
 
+  enum class Edge : unsigned
+  {
+    LEFT,
+    RIGHT,
+    TOP,
+    BOTTOM
+  };
+
   static WindowManager& Default();
 
   virtual Window GetActiveWindow() const = 0;
@@ -74,15 +82,19 @@ public:
   virtual bool IsWindowVisible(Window window_id) const = 0;
   virtual bool IsWindowOnTop(Window window_id) const = 0;
   virtual bool IsWindowClosable(Window window_id) const = 0;
+  virtual bool IsWindowMinimized(Window window_id) const = 0;
   virtual bool IsWindowMinimizable(Window window_id) const = 0;
   virtual bool IsWindowMaximizable(Window window_id) const = 0;
+  virtual bool HasWindowDecorations(Window window_id) const = 0;
 
   virtual void ShowDesktop() = 0;
   virtual bool InShowDesktop() const = 0;
 
+  virtual void Maximize(Window window_id) = 0;
   virtual void Restore(Window window_id) = 0;
   virtual void RestoreAt(Window window_id, int x, int y) = 0;
   virtual void Minimize(Window window_id) = 0;
+  virtual void UnMinimize(Window window_id) = 0;
   virtual void Close(Window window_id) = 0;
 
   virtual void Activate(Window window_id) = 0;
@@ -117,6 +129,7 @@ public:
   virtual int GetWindowMonitor(Window window_id) const = 0;
   virtual nux::Geometry GetWindowGeometry(Window window_id) const = 0;
   virtual nux::Geometry GetWindowSavedGeometry(Window window_id) const = 0;
+  virtual nux::Size GetWindowDecorationSize(Window window_id, Edge) const = 0;
   virtual nux::Geometry GetScreenGeometry() const = 0;
   virtual nux::Geometry GetWorkAreaGeometry(Window window_id = 0) const = 0;
 
@@ -127,6 +140,10 @@ public:
   virtual void CheckWindowIntersections (nux::Geometry const& region, bool &active, bool &any) = 0;
 
   virtual int WorkspaceCount() const = 0;
+
+  virtual nux::Point GetCurrentViewport() const = 0;
+  virtual int GetViewportHSize() const = 0;
+  virtual int GetViewportVSize() const = 0;
 
   virtual bool SaveInputFocus() = 0;
   virtual bool RestoreInputFocus() = 0;
@@ -160,6 +177,7 @@ public:
   sigc::signal<void> screen_ungrabbed;
   sigc::signal<void> screen_viewport_switch_started;
   sigc::signal<void> screen_viewport_switch_ended;
+  sigc::signal<void, int, int> viewport_layout_changed;
 
 protected:
   std::string GetName() const;

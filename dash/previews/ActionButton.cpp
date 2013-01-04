@@ -145,11 +145,11 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
 
     if (!label_.empty())
     {
-      static_text_ = new nux::StaticCairoText(label_, true, NUX_TRACKER_LOCATION);
+      static_text_ = new StaticCairoText(label_, true, NUX_TRACKER_LOCATION);
       if (!font_hint_.empty())
         static_text_->SetFont(font_hint_);
       static_text_->SetInputEventSensitivity(false);
-      static_text_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
+      static_text_->SetTextAlignment(StaticCairoText::NUX_ALIGN_CENTRE);
     }
   }
 
@@ -164,11 +164,11 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
 
     if (!extra_hint_.empty())
     {
-      extra_text_ = new nux::StaticCairoText(extra_hint_, true, NUX_TRACKER_LOCATION);
+      extra_text_ = new StaticCairoText(extra_hint_, true, NUX_TRACKER_LOCATION);
       if (!extra_font_hint_.empty())
         extra_text_->SetFont(extra_font_hint_);
       extra_text_->SetInputEventSensitivity(false);
-      extra_text_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
+      extra_text_->SetTextAlignment(StaticCairoText::NUX_ALIGN_CENTRE);
     }
   }
 

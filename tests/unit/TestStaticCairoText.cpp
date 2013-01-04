@@ -44,7 +44,7 @@ switch_language (const char *new_locale)
 static void
 assert_width_increases_with_substring_length (const gchar *test_string)
 {
-  nux::StaticCairoText text("");
+  unity::StaticCairoText text("");
   gchar *substring = new gchar[strlen(test_string)];
 
   int width, oldwidth;

@@ -24,6 +24,7 @@
 #include <NuxCore/Logger.h>
 
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/GraphicsUtils.h"
 #include "FilterBar.h"
 #include "FilterExpanderLabel.h"
 #include "FilterFactory.h"
@@ -76,7 +77,7 @@ void FilterBar::AddFilter(Filter::Ptr const& filter)
   FilterExpanderLabel* filter_view = factory_.WidgetForFilter(filter);
   AddChild(filter_view);
   filter_map_[filter] = filter_view;
-  GetLayout()->AddView(filter_view, 0, nux::MINOR_POSITION_LEFT, nux::MINOR_SIZE_FULL);
+  GetLayout()->AddView(filter_view, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 }
 
 void FilterBar::RemoveFilter(Filter::Ptr const& filter)
@@ -102,6 +103,17 @@ void FilterBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 void FilterBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   graphics_engine.PushClippingRectangle(GetGeometry());
+
+  if (!IsFullRedraw() && RedirectedAncestor())
+  {
+    for (auto iter: filter_map_)
+    {
+      FilterExpanderLabel* filter_view = iter.second;
+      if (filter_view && filter_view->IsVisible() && filter_view->IsRedrawNeeded())
+        graphics::ClearGeometry(filter_view->GetGeometry());  
+    }
+  }
+
   GetLayout()->ProcessDraw(graphics_engine, force_draw);
   graphics_engine.PopClippingRectangle();
 }

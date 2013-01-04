@@ -15,15 +15,46 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Tim Penhey <tim.penhey@canonical.com>
+ *              Marco Trevisan (Treviño) <marco.trevisan@canonical.com>
  */
 
 #ifndef UNITYSHARED_STANDALONE_WINDOW_MANAGER_H
 #define UNITYSHARED_STANDALONE_WINDOW_MANAGER_H
 
 #include "unity-shared/WindowManager.h"
+#include <map>
 
 namespace unity
 {
+
+struct StandaloneWindow
+{
+  typedef std::shared_ptr<StandaloneWindow> Ptr;
+  StandaloneWindow(Window xid);
+
+private:
+  Window xid;
+
+public:
+  Window Xid() const { return xid; }
+
+  std::string name;
+  nux::Geometry geo;
+  nux::Size deco_sizes[4];
+  unsigned current_desktop;
+  unsigned monitor;
+  bool active;
+  bool mapped;
+  bool visible;
+  bool maximized;
+  bool minimized;
+  bool decorated;
+  bool has_decorations;
+  bool on_top;
+  bool closable;
+  bool minimizable;
+  bool maximizable;
+};
 
 class StandaloneWindowManager : public WindowManager
 {
@@ -40,20 +71,27 @@ public:
   virtual bool IsWindowVisible(Window window_id) const;
   virtual bool IsWindowOnTop(Window window_id) const;
   virtual bool IsWindowClosable(Window window_id) const;
+  virtual bool IsWindowMinimized(Window window_id) const;
   virtual bool IsWindowMinimizable(Window window_id) const;
   virtual bool IsWindowMaximizable(Window window_id) const;
+  virtual bool HasWindowDecorations(Window) const;
 
   virtual void ShowDesktop();
   virtual bool InShowDesktop() const;
 
+  virtual void Maximize(Window window_id);
   virtual void Restore(Window window_id);
   virtual void RestoreAt(Window window_id, int x, int y);
   virtual void Minimize(Window window_id);
+  virtual void UnMinimize(Window window_id);
   virtual void Close(Window window_id);
 
   virtual void Activate(Window window_id);
   virtual void Raise(Window window_id);
   virtual void Lower(Window window_id);
+
+  virtual void Decorate(Window window_id) const;
+  virtual void Undecorate(Window window_id) const;
 
   virtual void TerminateScale();
   virtual bool IsScaleActive() const;
@@ -79,6 +117,7 @@ public:
   virtual int GetWindowMonitor(Window window_id) const;
   virtual nux::Geometry GetWindowGeometry(Window window_id) const;
   virtual nux::Geometry GetWindowSavedGeometry(Window window_id) const;
+  virtual nux::Size GetWindowDecorationSize(Window window_id, Edge) const;
   virtual nux::Geometry GetScreenGeometry() const;
   virtual nux::Geometry GetWorkAreaGeometry(Window window_id) const;
 
@@ -90,6 +129,10 @@ public:
 
   virtual int WorkspaceCount() const;
 
+  nux::Point GetCurrentViewport() const override;
+  int GetViewportHSize() const override;
+  int GetViewportVSize() const override;
+
   virtual bool SaveInputFocus();
   virtual bool RestoreInputFocus();
 
@@ -98,6 +141,12 @@ public:
   // Mock functions
   void SetScaleActive(bool scale_active);
   void SetScaleActiveForGroup(bool scale_active_for_group);
+  void SetCurrentDesktop(unsigned desktop_id);
+
+  void AddStandaloneWindow(StandaloneWindow::Ptr const& window);
+  std::map<Window, StandaloneWindow::Ptr> GetStandaloneWindows() const;
+
+  void SetCurrentViewport(nux::Point const& vp);
 
 protected:
   virtual void AddProperties(GVariantBuilder* builder);
@@ -107,6 +156,9 @@ private:
   bool in_show_desktop_;
   bool scale_active_;
   bool scale_active_for_group_;
+  unsigned current_desktop_;
+  std::map<Window, StandaloneWindow::Ptr> standalone_windows_;
+  nux::Point current_vp_;
 };
 
 }

@@ -34,9 +34,9 @@ public:
 
   virtual bool IsAppmenu() const { return true; }
 
-  void ShowAppmenu(unsigned int xid, int x, int y, unsigned int timestamp) const;
+  void ShowAppmenu(unsigned xid, int x, int y) const;
 
-  sigc::signal<void, unsigned int, int, int, unsigned int> on_show_appmenu;
+  sigc::signal<void, unsigned, int, int> on_show_appmenu;
 };
 
 }

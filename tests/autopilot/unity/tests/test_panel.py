@@ -19,6 +19,7 @@ from time import sleep
 from unity.emulators.panel import IndicatorEntry
 from unity.tests import UnityTestCase
 
+import gettext
 
 logger = logging.getLogger(__name__)
 
@@ -145,10 +146,14 @@ class PanelTitleTests(PanelTestsBase):
 
     def test_panel_title_on_empty_desktop(self):
         """With no windows shown, the panel must display the default title."""
+        gettext.install("unity", unicode=True)
+        # We need to start any application, otherwise we cannot leave show desktop mode
+        self.start_app_window('Calculator')
         self.window_manager.enter_show_desktop()
         self.addCleanup(self.window_manager.leave_show_desktop)
 
         self.assertThat(self.panel.desktop_is_active, Eventually(Equals(True)))
+        self.assertThat(self.panel.title, Equals(_("Ubuntu Desktop")))
 
     def test_panel_title_with_restored_application(self):
         """Panel must display application name for a non-maximised application."""
@@ -630,14 +635,14 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.assertThat(self.hud.search_string, Eventually(Equals("HelloWorld")))
 
     def test_double_click_unmaximize_window(self):
-		"""Double clicking the grab area must unmaximize a maximized window."""
-		gedit_win = self.open_new_application_window("Text Editor", maximized=True)
+        """Double clicking the grab area must unmaximize a maximized window."""
+        gedit_win = self.open_new_application_window("Text Editor", maximized=True)
 
-		self.panel.move_mouse_over_grab_area()
-		self.mouse.click()
-		self.mouse.click()
+        self.panel.move_mouse_over_grab_area()
+        self.mouse.click()
+        self.mouse.click()
 
-		self.assertThat(self.panel.title, Eventually(Equals(gedit_win.application.name)))
+        self.assertThat(self.panel.title, Eventually(Equals(gedit_win.application.name)))
 
 
 class PanelHoverTests(PanelTestsBase):
@@ -996,7 +1001,9 @@ class PanelKeyNavigationTests(PanelTestsBase):
 
     def test_panel_indicators_key_navigation_next_works(self):
         """Right arrow key must open the next menu."""
-        self.open_new_application_window("Calculator")
+        calc_win = self.open_new_application_window("Calculator")
+        self.assertProperty(calc_win, is_focused=True)
+
         available_indicators = self.panel.get_indicator_entries(include_hidden_menus=True)
 
         self.keybinding("panel/open_first_menu")
@@ -1009,7 +1016,9 @@ class PanelKeyNavigationTests(PanelTestsBase):
 
     def test_panel_indicators_key_navigation_prev_works(self):
         """Left arrow key must open the previous menu."""
-        self.open_new_application_window("Calculator")
+        calc_win = self.open_new_application_window("Calculator")
+        self.assertProperty(calc_win, is_focused=True)
+
         available_indicators = self.panel.get_indicator_entries(include_hidden_menus=True)
 
         self.keybinding("panel/open_first_menu")

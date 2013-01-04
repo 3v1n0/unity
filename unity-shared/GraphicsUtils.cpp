@@ -53,10 +53,10 @@ void PushOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
 
 void PopOffscreenRenderTarget()
 {
-  g_assert(rendering_stack.size() > 0);
+  g_assert(!rendering_stack.empty());
 
   rendering_stack.pop();
-  if (rendering_stack.size() > 0)
+  if (!rendering_stack.empty())
   {
     nux::ObjectPtr<nux::IOpenGLBaseTexture>& texture = rendering_stack.top();
     PushOffscreenRenderTarget_(texture);
@@ -66,6 +66,23 @@ void PopOffscreenRenderTarget()
     nux::GetWindowCompositor().RestoreRenderingSurface();
   }
 }
+
+void ClearGeometry(nux::Geometry const& geo, nux::Color const& color)
+{
+  nux::GraphicsEngine* graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
+
+  // This is necessary when doing redirected rendering. Clean the area below this view.
+  unsigned int current_alpha_blend;
+  unsigned int current_src_blend_factor;
+  unsigned int current_dest_blend_factor;
+  graphics_engine->GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+
+  graphics_engine->GetRenderStates().SetBlend(false);
+  graphics_engine->QRP_Color(geo.x, geo.y, geo.width, geo.height, color);
+
+  graphics_engine->GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+}
+
 
 }
 }

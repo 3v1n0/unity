@@ -57,6 +57,14 @@ class HudTestsBase(UnityTestCase):
                 num_active += 1
         return num_active
 
+    # Unable to exit SDM without any active apps, need a placeholder.
+    # See bug LP:1079460
+    def start_placeholder_app(self):
+        window_spec = {
+            "Title": "Placeholder application",
+        }
+        self.launch_test_window(window_spec)
+
 
 class HudBehaviorTests(HudTestsBase):
 
@@ -142,6 +150,7 @@ class HudBehaviorTests(HudTestsBase):
         This used to cause unity to crash (hence the lack of assertion in this test).
 
         """
+        self.start_placeholder_app()
         self.window_manager.enter_show_desktop()
         self.addCleanup(self.window_manager.leave_show_desktop)
 
@@ -176,7 +185,9 @@ class HudBehaviorTests(HudTestsBase):
 
         file_path = mktemp()
         self.addCleanup(remove, file_path)
-        self.start_app('Text Editor', files=[file_path], locale='C')
+        gedit_win = self.start_app_window('Text Editor', files=[file_path], locale='C')
+        self.addCleanup(self.close_all_app, 'Text Editor')
+        self.assertProperty(gedit_win, is_focused=True)
 
         self.keyboard.type("0")
         self.keyboard.type(" ")
@@ -190,6 +201,8 @@ class HudBehaviorTests(HudTestsBase):
                         Eventually(Equals("Edit > Undo")))
         self.keyboard.press_and_release('Return')
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
+
+        self.assertProperty(gedit_win, is_focused=True)
         self.keyboard.press_and_release("Ctrl+s")
         self.assertThat(lambda: exists(file_path), Eventually(Equals(True)))
 
@@ -222,6 +235,8 @@ class HudBehaviorTests(HudTestsBase):
 
     def test_hud_closes_on_spread(self):
         """This test shows that when the spread is initiated, the hud closes."""
+        # Need at least one application open for the spread to work.
+        self.start_app_window("Calculator")
         self.hud.ensure_visible()
         self.addCleanup(self.keybinding, "spread/cancel")
         self.keybinding("spread/start")
@@ -319,7 +334,8 @@ class HudBehaviorTests(HudTestsBase):
         """Tests that Alt+ArrowKey events are correctly passed to the
         active window when Unity is not responding to them."""
 
-        self.start_app_window("Terminal")
+        term_win = self.start_app_window("Terminal")
+        self.assertProperty(term_win, is_focused=True)
 
         #There's no easy way to read text from terminal, writing input
         #to a text file and then reading from there works.
@@ -612,6 +628,7 @@ class HudVisualTests(HudTestsBase):
 
     def test_hud_icon_shows_the_ubuntu_emblem_on_empty_desktop(self):
         """When in 'show desktop' mode the hud icon must be the BFB icon."""
+        self.start_placeholder_app()
         self.window_manager.enter_show_desktop()
         self.addCleanup(self.window_manager.leave_show_desktop)
         self.hud.ensure_visible()
@@ -646,8 +663,12 @@ class HudVisualTests(HudTestsBase):
         from the current desktop. As the Hud must go through the entire window
         stack to find the top most window.
         """
+        self.start_placeholder_app()
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
+        self.window_manager.enter_show_desktop()
+        self.addCleanup(self.window_manager.leave_show_desktop)
+
         self.workspace.switch_to(0)
         calc = self.start_app("Calculator")
         self.assertTrue(calc.is_active)

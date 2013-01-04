@@ -9,14 +9,12 @@
 
 from __future__ import absolute_import
 
-from autopilot.emulators.dbus_handler import session_bus
 from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.keybindings import KeybindingsHelper
 from testtools.matchers import GreaterThan
 
 from unity.emulators import UnityIntrospectionObject
 import logging
-from time import sleep
 import dbus
 
 logger = logging.getLogger(__name__)
@@ -32,7 +30,6 @@ class Dash(KeybindingsHelper):
         controllers = DashController.get_all_instances()
         assert(len(controllers) == 1)
         self.controller = controllers[0]
-        self._keyboard = Keyboard()
 
     @property
     def view(self):
@@ -169,7 +166,7 @@ class DashController(UnityIntrospectionObject):
 
     def hide_dash_via_dbus(self):
         """ Emulate a DBus call for dash hiding  """
-        dash_object = session_bus.get_object('com.canonical.Unity',
+        dash_object = dbus.SessionBus().get_object('com.canonical.Unity',
                                              '/com/canonical/Unity/Dash')
         dash_iface = dbus.Interface(dash_object, 'com.canonical.Unity.Dash')
         dash_iface.HideDash()
@@ -360,8 +357,8 @@ class FilterExpanderLabel(UnityIntrospectionObject):
     def ensure_expanded(self):
         """Expand the filter expander label, if it's not already"""
         if not self.expanded:
-            tx = x + width / 2
-            ty = y + height / 2
+            tx = self.x + self.width / 2
+            ty = self.y + self.height / 2
             m = Mouse()
             m.move(tx, ty)
             m.click()
@@ -370,8 +367,8 @@ class FilterExpanderLabel(UnityIntrospectionObject):
     def ensure_collapsed(self):
         """Collapse the filter expander label, if it's not already"""
         if self.expanded:
-            tx = x + width / 2
-            ty = y + height / 2
+            tx = self.x + self.width / 2
+            ty = self.y + self.height / 2
             m = Mouse()
             m.move(tx, ty)
             m.click()

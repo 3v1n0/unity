@@ -36,21 +36,6 @@ struct EdgeBarrierController::Impl
   void OnPointerBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event);
   void BarrierRelease(PointerBarrierWrapper* owner, int event);
 
-  bool StickyEdgeSetter(bool const& new_val)
-  {
-    if (parent_->options() && new_val != parent_->options()->edge_resist())
-    {
-      parent_->options()->edge_resist = new_val;
-      return true;
-    }
-    return false;
-  }
-
-  bool StickyEdgeGetter()
-  {
-    return parent_->options() ? parent_->options()->edge_resist() : false;
-  }
-
   std::vector<PointerBarrierWrapper::Ptr> barriers_;
   std::vector<EdgeBarrierSubscriber*> subscribers_;
   Decaymulator decaymulator_;
@@ -73,15 +58,11 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
     SetupBarriers(layout);
   });
 
-  parent_->sticky_edges.SetGetterFunction(sigc::mem_fun(this, &Impl::StickyEdgeGetter));
-  parent_->sticky_edges.SetSetterFunction(sigc::mem_fun(this, &Impl::StickyEdgeSetter));
-
-/* Set this back, once lp:~3v1n0/nux/use-std-function is merged
-  parent_->sticky_edges.SetGetterFunction([parent_] {
+  parent_->sticky_edges.SetGetterFunction([this] {
     return parent_->options() ? parent_->options()->edge_resist() : false;
   });
 
-  parent_->sticky_edges.SetSetterFunction([parent_] (bool const& new_val) {
+  parent_->sticky_edges.SetSetterFunction([this] (bool const& new_val) {
     if (parent_->options() && new_val != parent_->options()->edge_resist())
     {
       parent_->options()->edge_resist = new_val;
@@ -89,7 +70,6 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
     }
     return false;
   });
-  */
 
   parent_->options.changed.connect([&](launcher::Options::Ptr options) {
     options->option_changed.connect([&]() {

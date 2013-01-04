@@ -39,27 +39,26 @@ NUX_IMPLEMENT_OBJECT_TYPE(PanelIndicatorsView);
 
 PanelIndicatorsView::PanelIndicatorsView()
 : View(NUX_TRACKER_LOCATION)
-, layout_(NULL)
-, opacity_(1.0f)
+, opacity(1.0f, sigc::mem_fun(this, &PanelIndicatorsView::SetOpacity))
+, layout_(new nux::HLayout("", NUX_TRACKER_LOCATION))
 {
-  LOG_DEBUG(logger) << "Indicators View Added: ";
-  layout_ = new nux::HLayout("", NUX_TRACKER_LOCATION);
-  layout_->SetContentDistribution(nux::eStackRight);
-
+  opacity.DisableNotifications();
+  layout_->SetContentDistribution(nux::MAJOR_POSITION_END);
   SetLayout(layout_);
+
+  LOG_DEBUG(logger) << "Indicators View Added: ";
 }
 
 PanelIndicatorsView::~PanelIndicatorsView()
 {
-  for (auto ind : indicators_connections_)
+  for (auto const& ind : indicators_connections_)
   {
     for (auto conn : ind.second)
       conn.disconnect();
   }
 }
 
-void
-PanelIndicatorsView::AddIndicator(Indicator::Ptr const& indicator)
+void PanelIndicatorsView::AddIndicator(Indicator::Ptr const& indicator)
 {
   LOG_DEBUG(logger) << "IndicatorAdded: " << indicator->name();
   indicators_.push_back(indicator);
@@ -75,19 +74,18 @@ PanelIndicatorsView::AddIndicator(Indicator::Ptr const& indicator)
   indicators_connections_[indicator] = connections;
 }
 
-void
-PanelIndicatorsView::RemoveIndicator(Indicator::Ptr const& indicator)
+void PanelIndicatorsView::RemoveIndicator(Indicator::Ptr const& indicator)
 {
   auto connections = indicators_connections_.find(indicator);
 
   if (connections != indicators_connections_.end()) {
-    for (auto conn : connections->second)
+    for (auto& conn : connections->second)
       conn.disconnect();
 
     indicators_connections_.erase(indicator);
   }
 
-  for (auto entry : indicator->GetEntries())
+  for (auto const& entry : indicator->GetEntries())
     OnEntryRemoved(entry->id());
 
   for (auto i = indicators_.begin(); i != indicators_.end(); i++)
@@ -102,34 +100,31 @@ PanelIndicatorsView::RemoveIndicator(Indicator::Ptr const& indicator)
   LOG_DEBUG(logger) << "IndicatorRemoved: " << indicator->name();
 }
 
-PanelIndicatorsView::Indicators
-PanelIndicatorsView::GetIndicators()
+PanelIndicatorsView::Indicators PanelIndicatorsView::GetIndicators()
 {
   return indicators_;
 }
 
-void
-PanelIndicatorsView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+void PanelIndicatorsView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
 
   GfxContext.PushClippingRectangle(geo);
   nux::GetPainter().PaintBackground(GfxContext, geo);
   GfxContext.PopClippingRectangle();
 }
 
-void
-PanelIndicatorsView::SetMaximumEntriesWidth(int max_width)
+void PanelIndicatorsView::SetMaximumEntriesWidth(int max_width)
 {
   unsigned int n_entries = 0;
 
-  for (auto entry : entries_)
+  for (auto const& entry : entries_)
     if (entry.second->IsVisible())
       n_entries++;
 
   if (n_entries > 0)
   {
-    for (auto entry : entries_)
+    for (auto const& entry : entries_)
     {
       if (entry.second->IsVisible() && n_entries > 0)
       {
@@ -145,8 +140,7 @@ PanelIndicatorsView::SetMaximumEntriesWidth(int max_width)
   }
 }
 
-PanelIndicatorEntryView*
-PanelIndicatorsView::ActivateEntry(std::string const& entry_id, int button)
+PanelIndicatorEntryView* PanelIndicatorsView::ActivateEntry(std::string const& entry_id, int button)
 {
   auto entry = entries_.find(entry_id);
 
@@ -163,15 +157,14 @@ PanelIndicatorsView::ActivateEntry(std::string const& entry_id, int button)
   return nullptr;
 }
 
-bool
-PanelIndicatorsView::ActivateIfSensitive()
+bool PanelIndicatorsView::ActivateIfSensitive()
 {
   std::map<int, PanelIndicatorEntryView*> sorted_entries;
-  
-  for (auto entry : entries_)
+
+  for (auto const& entry : entries_)
     sorted_entries[entry.second->GetEntryPriority()] = entry.second;
-  
-  for (auto entry : sorted_entries)
+
+  for (auto const& entry : sorted_entries)
   {
     PanelIndicatorEntryView* view = entry.second;
 
@@ -186,15 +179,13 @@ PanelIndicatorsView::ActivateIfSensitive()
   return false;
 }
 
-void
-PanelIndicatorsView::GetGeometryForSync(EntryLocationMap& locations)
+void PanelIndicatorsView::GetGeometryForSync(EntryLocationMap& locations)
 {
-  for (auto entry : entries_)
+  for (auto const& entry : entries_)
     entry.second->GetGeometryForSync(locations);
 }
 
-PanelIndicatorEntryView*
-PanelIndicatorsView::ActivateEntryAt(int x, int y, int button)
+PanelIndicatorEntryView* PanelIndicatorsView::ActivateEntryAt(int x, int y, int button)
 {
   PanelIndicatorEntryView* target = nullptr;
   bool found_old_active = false;
@@ -205,7 +196,7 @@ PanelIndicatorsView::ActivateEntryAt(int x, int y, int button)
   // which causes visible lag in many cases.
   //
 
-  for (auto entry : entries_)
+  for (auto const& entry : entries_)
   {
     PanelIndicatorEntryView* view = entry.second;
 
@@ -227,7 +218,7 @@ PanelIndicatorsView::ActivateEntryAt(int x, int y, int button)
 
   if (target && !found_old_active)
   {
-    for (auto entry : entries_)
+    for (auto const& entry : entries_)
     {
       PanelIndicatorEntryView* view = entry.second;
 
@@ -242,24 +233,21 @@ PanelIndicatorsView::ActivateEntryAt(int x, int y, int button)
   return target;
 }
 
-void
-PanelIndicatorsView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
+void PanelIndicatorsView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   GfxContext.PushClippingRectangle(GetGeometry());
   layout_->ProcessDraw(GfxContext, force_draw);
   GfxContext.PopClippingRectangle();
 }
 
-void
-PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view,
-                                  IndicatorEntryPosition pos)
+void PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view, IndicatorEntryPosition pos)
 {
   if (!view)
     return;
 
   int entry_pos = pos;
 
-  view->SetOpacity(opacity_);
+  view->SetOpacity(opacity());
   view->refreshed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRefreshed));
 
   if (entry_pos == IndicatorEntryPosition::AUTO)
@@ -283,7 +271,7 @@ PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view,
     }
   }
 
-  layout_->AddView(view, 0, nux::eCenter, nux::eFull, 1.0, (nux::LayoutPosition) entry_pos);
+  layout_->AddView(view, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 1.0, (nux::LayoutPosition) entry_pos);
 
   entries_[view->GetEntryID()] = view;
 
@@ -294,9 +282,7 @@ PanelIndicatorsView::AddEntryView(PanelIndicatorEntryView* view,
   on_indicator_updated.emit(view);
 }
 
-PanelIndicatorEntryView *
-PanelIndicatorsView::AddEntry(Entry::Ptr const& entry, int padding,
-                              IndicatorEntryPosition pos, IndicatorEntryType type)
+PanelIndicatorEntryView *PanelIndicatorsView::AddEntry(Entry::Ptr const& entry, int padding, IndicatorEntryPosition pos, IndicatorEntryType type)
 {
   auto view = new PanelIndicatorEntryView(entry, padding, type);
   AddEntryView(view, pos);
@@ -304,14 +290,12 @@ PanelIndicatorsView::AddEntry(Entry::Ptr const& entry, int padding,
   return view;
 }
 
-void
-PanelIndicatorsView::OnEntryAdded(Entry::Ptr const& entry)
+void PanelIndicatorsView::OnEntryAdded(Entry::Ptr const& entry)
 {
   AddEntry(entry);
 }
 
-void
-PanelIndicatorsView::OnEntryRefreshed(PanelIndicatorEntryView* view)
+void PanelIndicatorsView::OnEntryRefreshed(PanelIndicatorEntryView* view)
 {
   QueueRelayout();
   QueueDraw();
@@ -319,8 +303,7 @@ PanelIndicatorsView::OnEntryRefreshed(PanelIndicatorEntryView* view)
   on_indicator_updated.emit(view);
 }
 
-void
-PanelIndicatorsView::RemoveEntryView(PanelIndicatorEntryView* view)
+void PanelIndicatorsView::RemoveEntryView(PanelIndicatorEntryView* view)
 {
   if (!view)
     return;
@@ -335,51 +318,44 @@ PanelIndicatorsView::RemoveEntryView(PanelIndicatorEntryView* view)
   QueueDraw();
 }
 
-void
-PanelIndicatorsView::RemoveEntry(std::string const& entry_id)
+void PanelIndicatorsView::RemoveEntry(std::string const& entry_id)
 {
   RemoveEntryView(entries_[entry_id]);
 }
 
-void
-PanelIndicatorsView::OnEntryRemoved(std::string const& entry_id)
+void PanelIndicatorsView::OnEntryRemoved(std::string const& entry_id)
 {
   RemoveEntry(entry_id);
 }
 
-void
-PanelIndicatorsView::OverlayShown()
+void PanelIndicatorsView::OverlayShown()
 {
-  for (auto entry: entries_)
+  for (auto const& entry: entries_)
     entry.second->OverlayShown();
 }
 
-void
-PanelIndicatorsView::OverlayHidden()
+void PanelIndicatorsView::OverlayHidden()
 {
-  for (auto entry: entries_)
+  for (auto const& entry: entries_)
     entry.second->OverlayHidden();
 }
 
-double
-PanelIndicatorsView::GetOpacity()
+bool PanelIndicatorsView::SetOpacity(double& target, double const& new_value)
 {
-  return opacity_;
-}
+  double opacity = CLAMP(new_value, 0.0f, 1.0f);
 
-void
-PanelIndicatorsView::SetOpacity(double opacity)
-{
-  opacity = CLAMP(opacity, 0.0f, 1.0f);
-
-  for (auto entry: entries_)
+  for (auto const& entry : entries_)
     entry.second->SetOpacity(opacity);
 
-  if (opacity_ != opacity)
+  if (opacity != target)
   {
-    opacity_ = opacity;
-    NeedRedraw();
+    target = opacity;
+    QueueDraw();
+
+    return true;
   }
+
+  return false;
 }
 
 std::string PanelIndicatorsView::GetName() const
@@ -387,13 +363,12 @@ std::string PanelIndicatorsView::GetName() const
   return "Indicators";
 }
 
-void
-PanelIndicatorsView::AddProperties(GVariantBuilder* builder)
+void PanelIndicatorsView::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
   .add(GetAbsoluteGeometry())
   .add("entries", entries_.size())
-  .add("opacity", opacity_);
+  .add("opacity", opacity);
 }
 
 } // namespace unity

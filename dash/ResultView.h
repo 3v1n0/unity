@@ -43,6 +43,18 @@ class ResultWrapper;
 
 namespace dash
 {
+
+struct ResultViewTexture
+{
+  typedef std::shared_ptr<ResultViewTexture> Ptr;
+
+  unsigned int category_index;
+  nux::Geometry abs_geo;
+  int row_index;
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> texture;
+};
+
+
 class ResultView : public nux::View, public debug::Introspectable
 {
 public:
@@ -66,6 +78,8 @@ public:
   nux::Property<bool> expanded;
   nux::Property<int> results_per_row;
   nux::Property<std::string> unique_id;  
+  nux::Property<float> desaturation_progress;
+  nux::Property<bool> enable_texture_render;
   sigc::signal<void, std::string const&, ActivateType, GVariant*> UriActivated;
 
   std::string GetName() const;
@@ -75,10 +89,15 @@ public:
 
   virtual void Activate(std::string const& uri, int index, ActivateType type) = 0;
 
+  std::vector<ResultViewTexture::Ptr> const& GetResultTextureContainers();
+  virtual void RenderResultTexture(ResultViewTexture::Ptr const& result_texture);
+
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual long ComputeContentSize();
+  virtual long ComputeContentSize(); 
+
+  virtual void UpdateRenderTextures();
 
   virtual void AddResult(Result& result);
   virtual void RemoveResult(Result& result);
@@ -89,12 +108,16 @@ protected:
   virtual debug::ResultWrapper* CreateResultWrapper(Result const& result, int index);
   virtual void UpdateResultWrapper(debug::ResultWrapper* wrapper, Result const& result, int index);
 
+  void OnEnableRenderToTexture(bool enable_render_to_texture);
+
   // properties
   ResultRenderer* renderer_;
   glib::Object<DeeModel> result_model_;
   DeeModelTag* renderer_tag_;
   glib::SignalManager sig_manager_;
   std::map<std::string, debug::ResultWrapper*> introspectable_children_;
+  
+  std::vector<ResultViewTexture::Ptr> result_textures_;
 
 private:
   void OnRowAdded(DeeModel* model, DeeModelIter* iter);

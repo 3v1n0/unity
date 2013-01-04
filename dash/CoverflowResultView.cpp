@@ -24,6 +24,7 @@
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UBusWrapper.h"
+#include "unity-shared/GraphicsUtils.h"
 #include <Nux/Nux.h>
 #include <Nux/View.h>
 #include <Nux/Coverflow.h>
@@ -84,11 +85,11 @@ CoverflowResultItem::CoverflowResultItem(Result& result, CoverflowResultView *pa
   std::string const& icon_hint = result.icon_hint;
   std::string icon_name = !icon_hint.empty() ? icon_hint : ". GThemedIcon text-x-preview";
   static const int element_size = style.GetTileHeight();
-  
+
   icon_texture_ = new IconTexture(icon_name.c_str(), element_size, true);
   icon_texture_->SinkReference();
   icon_texture_->LoadIcon();
-  
+
   icon_texture_->texture_updated.connect([&] (nux::BaseTexture *texture)
   {
     if (parent_)
@@ -168,7 +169,7 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
     glib::String proposed_unique_id;
 
     g_variant_get(data, "(iss)", &nav_mode, &uri, &proposed_unique_id);
-   
+
     if (proposed_unique_id.Str() != parent_->unique_id())
       return;
 
@@ -176,7 +177,7 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
     int current_index = GetIndexForUri(uri);
     if (nav_mode == -1) // left
     {
-      current_index--;  
+      current_index--;
     }
     else if (nav_mode == 1) // right
     {
@@ -187,7 +188,7 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
     {
       return;
     }
-    
+
     if (nav_mode)
     {
       std::string uri = GetUriForIndex(current_index);
@@ -198,7 +199,7 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
 
 CoverflowResultView::Impl::~Impl()
 {
-  
+
 }
 
 int CoverflowResultView::Impl::GetIndexForUri(std::string uri)
@@ -228,7 +229,7 @@ CoverflowResultView::CoverflowResultView(NUX_FILE_LINE_DECL)
 
 CoverflowResultView::~CoverflowResultView()
 {
-  
+
 }
 
 void CoverflowResultView::SetModelRenderer(ResultRenderer* renderer)
@@ -254,7 +255,7 @@ void CoverflowResultView::RemoveResult(Result& result)
       pimpl->coverflow_->model()->RemoveItem(item);
       break;
     }
-  }  
+  }
 }
 
 void CoverflowResultView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -268,19 +269,8 @@ void CoverflowResultView::DrawContent(nux::GraphicsEngine& GfxContext, bool forc
   GfxContext.PushClippingRectangle(base);
 
   if (RedirectedAncestor())
-  {
-    // This is necessary when doing redirected rendering. Clean the area below this view.
-    unsigned int current_alpha_blend;
-    unsigned int current_src_blend_factor;
-    unsigned int current_dest_blend_factor;
-    GfxContext.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+    graphics::ClearGeometry(GetGeometry());
 
-    GfxContext.GetRenderStates().SetBlend(false);
-    GfxContext.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
-
-    GfxContext.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
-  }
-  
   if (GetCompositionLayout())
   {
     nux::Geometry geo = GetCompositionLayout()->GetGeometry();
@@ -313,10 +303,12 @@ void CoverflowResultView::Activate(std::string const& uri, int index, ResultView
 
   int left_results = index;
   int right_results = num_results ? (num_results - index) - 1 : 0;
-  int row_y = GetRootGeometry().y;
+  int row_y = GetAbsoluteY();
+  int column_x = -1;
   int row_height = renderer_->height;
+  int column_width = GetWidth();
 
-  glib::Variant data(g_variant_new("(iiii)", row_y, row_height, left_results, right_results));
+  glib::Variant data(g_variant_new("(iiii)", column_x, row_y, column_width, row_height, left_results, right_results));
   UriActivated.emit(uri, type, data);
 }
 

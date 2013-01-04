@@ -27,6 +27,7 @@
 #include <UnityCore/Variant.h>
 
 #include "unity-shared/IntrospectableWrappers.h"
+#include "unity-shared/GraphicsUtils.h"
 
 namespace unity
 {
@@ -38,6 +39,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(ResultView);
 ResultView::ResultView(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , expanded(true)
+  , desaturation_progress(0.0)
+  , enable_texture_render(false)
   , renderer_(NULL)
   , cached_result_(nullptr, nullptr, nullptr)
 {
@@ -46,6 +49,13 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
     QueueRelayout();
     NeedRedraw();
   });
+
+  desaturation_progress.changed.connect([&](float value)
+  {
+    NeedRedraw();
+  });
+
+  enable_texture_render.changed.connect(sigc::mem_fun(this, &ResultView::OnEnableRenderToTexture));
 }
 
 ResultView::~ResultView()
@@ -59,11 +69,6 @@ ResultView::~ResultView()
   }
 
   renderer_->UnReference();
-}
-
-void ResultView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-
 }
 
 void ResultView::SetModelRenderer(ResultRenderer* renderer)
@@ -187,6 +192,10 @@ long ResultView::ComputeContentSize()
   return View::ComputeContentSize();
 }
 
+void ResultView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+{
+
+}
 
 void ResultView::DrawContent(nux::GraphicsEngine& GfxContent, bool force_draw)
 {
@@ -197,6 +206,80 @@ void ResultView::DrawContent(nux::GraphicsEngine& GfxContent, bool force_draw)
     GetCompositionLayout()->ProcessDraw(GfxContent, force_draw);
 
   GfxContent.PopClippingRectangle();
+}
+
+void ResultView::OnEnableRenderToTexture(bool enable_render_to_texture)
+{
+  if (!enable_render_to_texture) 
+  {
+    result_textures_.clear();
+  }
+}
+
+std::vector<ResultViewTexture::Ptr> const& ResultView::GetResultTextureContainers()
+{
+  UpdateRenderTextures();
+  return result_textures_;
+}
+
+void ResultView::RenderResultTexture(ResultViewTexture::Ptr const& result_texture)
+{
+  // Do we need to re-create the texture?
+  if (!result_texture->texture.IsValid() ||
+       result_texture->texture->GetWidth() != GetWidth() ||
+       result_texture->texture->GetHeight() != GetHeight())
+  {
+    result_texture->texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(GetHeight(),
+                                                                                                         GetWidth(),
+                                                                                                         1,
+                                                                                                         nux::BITFMT_R8G8B8A8);
+
+    if (!result_texture->texture.IsValid())
+      return;
+  }
+
+  nux::GetPainter().PushBackgroundStack();
+
+  graphics::PushOffscreenRenderTarget(result_texture->texture);
+
+  // clear the texture.
+  CHECKGL(glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
+  CHECKGL(glClear(GL_COLOR_BUFFER_BIT));
+
+  nux::GraphicsEngine& graphics_engine(nux::GetWindowThread()->GetGraphicsEngine());
+  nux::Geometry offset_rect = graphics_engine.ModelViewXFormRect(GetGeometry());
+  graphics_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(-offset_rect.x, -offset_rect.y, 0));
+
+  ProcessDraw(graphics_engine, true);
+  
+  graphics_engine.PopModelViewMatrix();
+  graphics::PopOffscreenRenderTarget();
+
+  nux::GetPainter().PopBackgroundStack();
+}
+
+void ResultView::UpdateRenderTextures()
+{ 
+  if (!enable_texture_render)
+    return;
+
+  nux::Geometry root_geo(GetAbsoluteGeometry());
+
+  if (result_textures_.size() > 0)
+  {
+    ResultViewTexture::Ptr const& result_texture = result_textures_[0];
+    result_texture->abs_geo.x = root_geo.x;
+    result_texture->abs_geo.y = root_geo.y;
+    result_texture->abs_geo.width = GetWidth();
+    result_texture->abs_geo.height = GetHeight();     
+  }
+  else
+  {
+    ResultViewTexture::Ptr result_texture(new ResultViewTexture);
+    result_texture->abs_geo = root_geo;
+    result_texture->row_index = 0;
+    result_textures_.push_back(result_texture);
+  }
 }
 
 std::string ResultView::GetName() const
@@ -223,7 +306,7 @@ debug::Introspectable::IntrospectableList ResultView::GetIntrospectableChildren(
 
   // clear children (no delete).
   RemoveAllChildren();
-  
+
   std::set<std::string> existing_results;
   // re-create list of children.
   int index = 0;
@@ -279,7 +362,7 @@ debug::ResultWrapper* ResultView::CreateResultWrapper(Result const& result, int 
 }
 
 void ResultView::UpdateResultWrapper(debug::ResultWrapper* wrapper, Result const& result, int index)
-{  
+{
 }
 
 }
