@@ -3,6 +3,8 @@ unity (6.12.0daily12.12.05-0ubuntu2) UNRELEASED; urgency=low
   [ Didier Roche ]
   * debian/control:
     - bump some missed build-deps
+    - bump compiz and nux build-deps for the API and ABI breakages
+      (LP: #1095981)
   * debian/rules:
     - disable pch for now as it's not working with -g -02 (LP: #1095978)
 
