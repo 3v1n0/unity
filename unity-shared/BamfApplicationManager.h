@@ -120,7 +120,6 @@ public:
   virtual bool OwnsWindow(Window window_id) const;
 
   virtual std::vector<std::string> GetSupportedMimeTypes() const;
-  virtual std::vector<ApplicationMenu> GetRemoteMenus() const;
 
   virtual ApplicationWindowPtr GetFocusableWindow() const;
   virtual void Focus(bool show_on_visible, int monitor) const;
