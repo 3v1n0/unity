@@ -22,23 +22,12 @@
 #include <unity-shared/SearchBarSpinner.h>
 #include <unity-shared/DashStyle.h>
 #include <unity-shared/UnitySettings.h>
+#include "test_utils.h"
 
 using namespace unity;
 
 namespace unity
 {
-
-namespace
-{
-gboolean TimeoutReached (gpointer data)
-{
-  bool *b = static_cast<bool*>(data);
-
-  *b = true;
-
-  return FALSE;
-}
-}
 
 class TestSearchBar : public ::testing::Test
 {
@@ -57,18 +46,7 @@ TEST_F(TestSearchBar, TestSearchBarSpinnerTimeout)
 
   ASSERT_TRUE(search_bar.GetState() == STATE_SEARCHING);
 
-  bool done = false;
-  volatile bool timeout_reached = false;
-  guint tid = g_timeout_add (100, TimeoutReached, (gpointer)(&timeout_reached));
-  while (!timeout_reached && !done)
-  {
-    g_main_context_iteration (NULL, TRUE);
-    done = search_bar.GetState() == STATE_READY;
-  }
-
-  ASSERT_TRUE(done);
-
-  g_source_remove (tid);
+  Utils::WaitUntilMSec([&search_bar] {return search_bar.GetState() == STATE_READY;}, true, 100);
 }
 
 TEST_F(TestSearchBar, TestSearchBarSpinnerNoTimeout)
@@ -79,18 +57,7 @@ TEST_F(TestSearchBar, TestSearchBarSpinnerNoTimeout)
 
   ASSERT_TRUE(search_bar.GetState() == STATE_SEARCHING);
 
-  bool done = false;
-  volatile bool timeout_reached = false;
-  guint tid = g_timeout_add (200, TimeoutReached, (gpointer)(&timeout_reached));
-  while (!timeout_reached && !done)
-  {
-    g_main_context_iteration (NULL, TRUE);
-    done = search_bar.GetState() == STATE_READY;
-  }
-
-  ASSERT_TRUE(!done);
-
-  g_source_remove (tid);
+  Utils::WaitUntilMSec([&search_bar] {return search_bar.GetState() == STATE_READY;}, false, 100);
 }
 
 }
