@@ -45,7 +45,9 @@ void
 bamf_mock_window_set_transient (BamfMockWindow *self, BamfWindow* transient)
 {
   g_return_if_fail (BAMF_IS_MOCK_WINDOW (self));
-  g_object_add_weak_pointer (G_OBJECT (transient), (gpointer *) &self->priv->transient);
+
+  self->priv->transient = transient;
+  g_object_add_weak_pointer (G_OBJECT (self->priv->transient), (gpointer *) &self->priv->transient);
 }
 
 void
