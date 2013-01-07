@@ -561,9 +561,6 @@ void UnityScreen::nuxEpilogue()
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
 
-  glDrawBuffer(GL_BACK);
-  glReadBuffer(GL_BACK);
-
   glPopAttrib();
 
   glDepthRange(0, 1);
