@@ -226,6 +226,7 @@ if (ENABLE_X_SUPPORT)
                  test_quicklist_view.cpp
                  test_result_renderer.cpp
                  test_resultviewgrid.cpp
+                 test_searchbar.cpp
                  test_shortcut_controller.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_expo_launcher_icon.cpp
