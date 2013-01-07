@@ -348,8 +348,7 @@ void Controller::ShowHud()
   if (active_window)
     active_application = active_window->application();
 
-  // Show the BFB icon also when the last active application was the dash
-  if (active_application && active_application->title() != "unity-dash")
+  if (active_application)
   {
     focused_app_icon_ = active_application->icon();
   }
