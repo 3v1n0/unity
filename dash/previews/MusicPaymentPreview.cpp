@@ -79,10 +79,8 @@ nux::Area* MusicPaymentPreview::FindKeyFocusArea(unsigned int key_symbol,
                                     unsigned long x11_key_code,
                                     unsigned long special_keys_state)
 {
-  //if(entry_selected_)
-    return password_entry_->text_entry();
-  //return Preview::FindKeyFocusArea(key_symbol, x11_key_code,
-  //        special_keys_state);
+  return Preview::FindKeyFocusArea(key_symbol, x11_key_code,
+          special_keys_state);
 }
 
 std::string MusicPaymentPreview::GetName() const
@@ -128,6 +126,7 @@ void MusicPaymentPreview::LoadActions()
         nux::ObjectPtr<ActionLink> link = this->CreateLink(action);
         link->activate.connect(sigc::mem_fun(this,
                     &MusicPaymentPreview::OnActionLinkActivated));
+	AddToTabIterator(link);
 
         std::pair<std::string, nux::ObjectPtr<nux::AbstractButton>> data (action->id, link);
         sorted_buttons_.insert(data);
@@ -137,6 +136,7 @@ void MusicPaymentPreview::LoadActions()
         nux::ObjectPtr<ActionButton> button = this->CreateButton(action);
         button->activate.connect(sigc::mem_fun(this,
                     &MusicPaymentPreview::OnActionActivated));
+	AddToTabIterator(button);
 
         std::pair<std::string, nux::ObjectPtr<nux::AbstractButton>> data (action->id, button);
         sorted_buttons_.insert(data);
@@ -290,6 +290,7 @@ nux::Layout* MusicPaymentPreview::GetFormFields()
   password_entry_->SetMinimumHeight(40);
   password_entry_->SetMinimumWidth(240);
   password_entry_->input_hint = _("Password");
+  AddToTabIterator(password_entry_);
 
   fields_layout->AddView(password_entry_.GetPointer(),
           1, nux::MINOR_POSITION_START);
