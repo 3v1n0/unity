@@ -157,7 +157,7 @@
                     <_long>Duration (in millseconds) that will count as a tap for opening the Dash.</_long>
                     <min>1</min>
                     <max>1000</max>
-                    <default>130</default>
+                    <default>250</default>
                 </option>
 
                 <option name="launcher_opacity" type="float">
