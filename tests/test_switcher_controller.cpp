@@ -106,6 +106,7 @@ TEST(TestSwitcherController, LazyConstructionTimeoutLength)
   EXPECT_EQ(controller.GetConstructTimeout(), DEFAULT_LAZY_CONSTRUCT_TIMEOUT);
 }
 
+/*
 TEST(TestSwitcherController, LazyWindowConstruction)
 {
   // Setting the timeout to a lower value to speed-up the test
@@ -123,6 +124,7 @@ TEST(TestSwitcherController, LazyWindowConstruction)
   Utils::WaitUntil(controller.window_constructed_, controller.GetConstructTimeout() + 1);
   EXPECT_TRUE(controller.window_constructed_);
 }
+*/
 
 TEST(TestSwitcherController, InitialDetailTimeout)
 {
