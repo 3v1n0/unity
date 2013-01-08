@@ -582,9 +582,9 @@ class DashLensResultsTests(DashTestCase):
 class DashVisualTests(DashTestCase):
     """Tests that the dash visual is correct."""
 
-    def test_dash_position_with_not_default_launcher_width(self):
+    def test_dash_position_with_non_default_launcher_width(self):
         """"There should be no empty space between launcher and dash when the launcher
-        has a not-default width.
+        has a non-default width.
         """
         self.set_unity_option('icon_size', 60)
         self.dash.ensure_visible()
