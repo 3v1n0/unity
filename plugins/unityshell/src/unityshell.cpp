@@ -2940,12 +2940,6 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       hud_controller_->icon_size = launcher_options->icon_size();
       hud_controller_->tile_size = launcher_options->tile_size();
 
-      /* The launcher geometry includes 1px used to draw the right margin
-       * that must not be considered when drawing an overlay */
-      hud_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
-      dash_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
-      panel_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
-
       if (p)
       {
         CompOption::Vector &opts = p->vTable->getOptions ();
@@ -3151,6 +3145,14 @@ void UnityScreen::initLauncher()
   AddChild(shortcut_controller_.get());
 
   AddChild(dash_controller_.get());
+
+  launcher_controller_->launcher_width_changed.connect([this] (int launcher_width) {
+    /* The launcher geometry includes 1px used to draw the right margin
+     * that must not be considered when drawing an overlay */
+    hud_controller_->launcher_width = launcher_width - 1;
+    dash_controller_->launcher_width = launcher_width - 1;
+    panel_controller_->launcher_width = launcher_width - 1;
+  });
 
   ScheduleRelayout(0);
 }
