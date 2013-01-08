@@ -57,7 +57,8 @@ Controller::Controller(unsigned int load_timeout)
 {
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
-  sources_.AddTimeoutSeconds(construct_timeout_, [&] { ConstructWindow(); return false; }, LAZY_TIMEOUT);
+  // TODO We need to get actual timing data to suggest this is necessary.
+  //sources_.AddTimeoutSeconds(construct_timeout_, [&] { ConstructWindow(); return false; }, LAZY_TIMEOUT);
 }
 
 void Controller::OnBackgroundUpdate(GVariant* data)
