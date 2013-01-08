@@ -306,7 +306,7 @@ nux::Layout* Preview::BuildVerticalActionsLayout(dash::Preview::ActionPtrList ac
       dash::Preview::ActionPtr action = actions[action_iter++];
 
       ActionButton* button = new ActionButton(action->id, action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
-      AddToTabIterator(button);
+      tab_iterator_->AddArea(button);
       AddChild(button);
       button->SetFont(style.action_font());
       button->SetExtraHint(action->extra_text, style.action_extra_font());
@@ -367,10 +367,6 @@ nux::Area* Preview::KeyNavIteration(nux::KeyNavDirection direction)
   return tab_iterator_->KeyNavIteration(direction);
 }
 
-void Preview::AddToTabIterator(nux::InputArea* area)
-{
-  tab_iterator_->AddArea(area);
-}
 
 void Preview::OnNavigateIn()
 {

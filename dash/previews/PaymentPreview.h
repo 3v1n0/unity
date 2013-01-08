@@ -65,9 +65,6 @@ public:
   PaymentPreview(dash::Preview::Ptr preview_model);
   ~PaymentPreview();
 
-  virtual nux::Area* FindKeyFocusArea(unsigned int key_symbol,
-                                      unsigned long x11_key_code,
-                                      unsigned long special_keys_state) = 0;
   // From debug::Introspectable
   std::string GetName() const;
 

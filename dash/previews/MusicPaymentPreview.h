@@ -70,9 +70,6 @@ public:
   MusicPaymentPreview(dash::Preview::Ptr preview_model);
   ~MusicPaymentPreview();
 
-  nux::Area* FindKeyFocusArea(unsigned int key_symbol,
-                              unsigned long x11_key_code,
-                              unsigned long special_keys_state);
   // From debug::Introspectable
   std::string GetName() const;
   nux::Layout* GetTitle();

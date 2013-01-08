@@ -75,14 +75,6 @@ MusicPaymentPreview::~MusicPaymentPreview()
 {
 }
 
-nux::Area* MusicPaymentPreview::FindKeyFocusArea(unsigned int key_symbol,
-                                    unsigned long x11_key_code,
-                                    unsigned long special_keys_state)
-{
-  return Preview::FindKeyFocusArea(key_symbol, x11_key_code,
-          special_keys_state);
-}
-
 std::string MusicPaymentPreview::GetName() const
 {
   return "MusicPaymentPreview";
@@ -92,6 +84,7 @@ void MusicPaymentPreview::OnActionActivated(ActionButton* button, std::string co
 {
   // Check the action id and send the password only when we
   // purchasing a song
+  printf("Executing aciont %s\n", id.c_str());
   if(id.compare(PURCHASE_ALBUM_ACTION) == 0 && preview_model_
           && password_entry_)
   {
@@ -109,6 +102,7 @@ void MusicPaymentPreview::OnActionActivated(ActionButton* button, std::string co
 
 void MusicPaymentPreview::OnActionLinkActivated(ActionLink *link, std::string const& id)
 {
+  printf("Executing aciont %s\n", id.c_str());
   if (preview_model_)
     preview_model_->PerformAction(id);
 }
@@ -126,7 +120,6 @@ void MusicPaymentPreview::LoadActions()
         nux::ObjectPtr<ActionLink> link = this->CreateLink(action);
         link->activate.connect(sigc::mem_fun(this,
                     &MusicPaymentPreview::OnActionLinkActivated));
-	AddToTabIterator(link);
 
         std::pair<std::string, nux::ObjectPtr<nux::AbstractButton>> data (action->id, link);
         sorted_buttons_.insert(data);
@@ -136,7 +129,6 @@ void MusicPaymentPreview::LoadActions()
         nux::ObjectPtr<ActionButton> button = this->CreateButton(action);
         button->activate.connect(sigc::mem_fun(this,
                     &MusicPaymentPreview::OnActionActivated));
-	AddToTabIterator(button);
 
         std::pair<std::string, nux::ObjectPtr<nux::AbstractButton>> data (action->id, button);
         sorted_buttons_.insert(data);
@@ -290,7 +282,6 @@ nux::Layout* MusicPaymentPreview::GetFormFields()
   password_entry_->SetMinimumHeight(40);
   password_entry_->SetMinimumWidth(240);
   password_entry_->input_hint = _("Password");
-  AddToTabIterator(password_entry_);
 
   fields_layout->AddView(password_entry_.GetPointer(),
           1, nux::MINOR_POSITION_START);
