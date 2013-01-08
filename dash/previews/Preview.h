@@ -60,13 +60,13 @@ public:
 
   Preview(dash::Preview::Ptr preview_model);
   virtual ~Preview();
- 
+
   // From debug::Introspectable
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
-  static previews::Preview::Ptr PreviewForModel(dash::Preview::Ptr model);  
-  
+  static previews::Preview::Ptr PreviewForModel(dash::Preview::Ptr model);
+
   sigc::signal<void> request_close;
 
   virtual nux::Area* FindKeyFocusArea(unsigned int key_symbol,
@@ -74,10 +74,12 @@ public:
                                       unsigned long special_keys_state);
   virtual nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
+  void AddToTabIterator(nux::InputArea* area);
+
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {}
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {}
-  
+
   virtual void OnActionActivated(ActionButton* button, std::string const& id);
 
   virtual void OnNavigateIn();
