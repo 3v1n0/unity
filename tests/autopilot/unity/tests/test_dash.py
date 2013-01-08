@@ -582,6 +582,18 @@ class DashLensResultsTests(DashTestCase):
 class DashVisualTests(DashTestCase):
     """Tests that the dash visual is correct."""
 
+    def test_dash_position_with_not_default_launcher_width(self):
+        """"There should be no empty space between launcher and dash when the launcher
+        has a not-default width.
+        """
+        self.set_unity_option('icon_size', 60)
+        self.dash.ensure_visible()
+
+        monitor = self.dash.monitor
+        launcher = self.launcher.get_launcher_for_monitor(monitor)
+
+        self.assertThat(self.dash.geometry[0], Eventually(Equals(launcher.geometry[0] + launcher.geometry[2] - 1)))
+
     def test_see_more_result_alignment(self):
         """The see more results label should be baseline aligned
         with the category name label.
