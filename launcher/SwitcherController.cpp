@@ -59,7 +59,6 @@ Controller::Controller(unsigned int load_timeout)
 
   // TODO We need to get actual timing data to suggest this is necessary.
   //sources_.AddTimeoutSeconds(construct_timeout_, [&] { ConstructWindow(); return false; }, LAZY_TIMEOUT);
-  ConstructWindow();
 }
 
 void Controller::OnBackgroundUpdate(GVariant* data)
