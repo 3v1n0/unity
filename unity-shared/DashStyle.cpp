@@ -1486,7 +1486,6 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
   int                  width      = 0;
   int                  height     = 0;
   int                  stride     = 0;
-  cairo_format_t       format     = CAIRO_FORMAT_INVALID;
   unsigned char*       buffer     = NULL;
   cairo_surface_t*     surface    = NULL;
   cairo_t*             blurred_cr = NULL;
@@ -1498,7 +1497,7 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
   width  = cairo_image_surface_get_width(target);
   height = cairo_image_surface_get_height(target);
   stride = cairo_image_surface_get_stride(target);
-  format = cairo_image_surface_get_format(target);
+  cairo_format_t format = cairo_image_surface_get_format(target);
 
   // get buffer
   buffer = (unsigned char*) calloc(1, height * stride);
