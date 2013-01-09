@@ -573,7 +573,7 @@ ApplicationWindowPtr Manager::GetActiveWindow()
     }
 
     if (bamf_window_get_window_type(active_win) == BAMF_WINDOW_DOCK)
-      active_win = NULL;
+      active_win = nullptr;
   }
 
   auto view = reinterpret_cast<BamfView*>(active_win);
