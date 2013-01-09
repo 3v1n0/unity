@@ -538,20 +538,18 @@ ApplicationWindowPtr Manager::GetActiveWindow()
   // No transfer of ownership for bamf_matcher_get_active_window.
   BamfWindow* active_win = bamf_matcher_get_active_window(matcher_);
 
-  std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
-  Window xid = bamf_window_get_xid(active_win);
-
-  // First check if the active window is not an Unity window
-  if (std::find(our_xids.begin(), our_xids.end(), xid) != our_xids.end())
-    active_win = nullptr;
+  if (!active_win)
+    return result;
 
   // If the active window is a dock type, then we want the first visible, non-dock type.
-  if (active_win &&
-      bamf_window_get_window_type(active_win) == BAMF_WINDOW_DOCK)
+  if (bamf_window_get_window_type(active_win) == BAMF_WINDOW_DOCK)
   {
     LOG_DEBUG(logger) << "Is a dock, looking at the window stack.";
+
     std::shared_ptr<GList> windows(bamf_matcher_get_window_stack_for_monitor(matcher_, -1), g_list_free);
     WindowManager& wm = WindowManager::Default();
+    active_win = nullptr;
+
     for (GList *l = windows.get(); l; l = l->next)
     {
       if (!BAMF_IS_WINDOW(l->data))
@@ -562,13 +560,12 @@ ApplicationWindowPtr Manager::GetActiveWindow()
 
       auto win = static_cast<BamfWindow*>(l->data);
       auto view = static_cast<BamfView*>(l->data);
-      xid = bamf_window_get_xid(win);
+      auto xid = bamf_window_get_xid(win);
 
       if (bamf_view_is_user_visible(view) &&
           bamf_window_get_window_type(win) != BAMF_WINDOW_DOCK &&
           wm.IsWindowOnCurrentDesktop(xid) &&
-          wm.IsWindowVisible(xid) &&
-          std::find(our_xids.begin(), our_xids.end(), xid) == our_xids.end())
+          wm.IsWindowVisible(xid))
       {
         active_win = win;
       }
