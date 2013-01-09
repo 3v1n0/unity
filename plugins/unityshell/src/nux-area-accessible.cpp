@@ -443,6 +443,7 @@ check_parent_window_connected(NuxAreaAccessible* self)
 gboolean
 nux_area_accessible_parent_window_active(NuxAreaAccessible* self)
 {
+  gboolean active = FALSE;
   AtkStateSet* state_set = NULL;
 
   check_parent_window_connected(self);
@@ -548,10 +549,8 @@ check_focus(NuxAreaAccessible* self)
 
   if (self->priv->focused != focus_in)
   {
-    gboolean is_parent_window_active = FALSE;
-
     self->priv->focused = focus_in;
-    is_parent_window_active = nux_area_accessible_parent_window_active(self);
+    gboolean is_parent_window_active = nux_area_accessible_parent_window_active(self);
 
     /* we don't emit focus_in=TRUE events until the top level window
        is active */
