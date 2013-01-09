@@ -538,12 +538,11 @@ ApplicationWindowPtr Manager::GetActiveWindow()
   // No transfer of ownership for bamf_matcher_get_active_window.
   BamfWindow* active_win = bamf_matcher_get_active_window(matcher_);
 
+  if (!active_win)
+    return result;
+
   std::vector<Window> const& our_xids = nux::XInputWindow::NativeHandleList();
   Window xid = bamf_window_get_xid(active_win);
-
-  // First check if the active window is not an Unity window
-  if (std::find(our_xids.begin(), our_xids.end(), xid) == our_xids.end())
-    active_win = nullptr;
 
   // If the active window is a dock type, then we want the first visible, non-dock type.
   if ((active_win && bamf_window_get_window_type(active_win) == BAMF_WINDOW_DOCK))
@@ -572,6 +571,9 @@ ApplicationWindowPtr Manager::GetActiveWindow()
         active_win = win;
       }
     }
+
+    if (bamf_window_get_window_type(active_win) == BAMF_WINDOW_DOCK)
+      active_win = NULL;
   }
 
   auto view = reinterpret_cast<BamfView*>(active_win);
