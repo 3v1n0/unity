@@ -120,7 +120,6 @@ void MusicPaymentPreview::LoadActions()
         nux::ObjectPtr<ActionLink> link = this->CreateLink(action);
         link->activate.connect(sigc::mem_fun(this,
                     &MusicPaymentPreview::OnActionLinkActivated));
-	PushBackToTabIterator(link.GetPointer());
 
         std::pair<std::string, nux::ObjectPtr<nux::AbstractButton>> data (action->id, link);
         sorted_buttons_.insert(data);
@@ -130,7 +129,6 @@ void MusicPaymentPreview::LoadActions()
         nux::ObjectPtr<ActionButton> button = this->CreateButton(action);
         button->activate.connect(sigc::mem_fun(this,
                     &MusicPaymentPreview::OnActionActivated));
-	PushBackToTabIterator(button.GetPointer());
 
         std::pair<std::string, nux::ObjectPtr<nux::AbstractButton>> data (action->id, button);
         sorted_buttons_.insert(data);
@@ -281,7 +279,6 @@ nux::Layout* MusicPaymentPreview::GetFormFields()
                   nux::MINOR_POSITION_START);
 
   password_entry_ = new TextInput();
-  PushBackToTabIterator(password_entry_->text_entry());
   password_entry_->SetMinimumHeight(40);
   password_entry_->SetMinimumWidth(240);
   password_entry_->input_hint = _("Password");
@@ -393,6 +390,13 @@ void MusicPaymentPreview::PreLayoutManagement()
   if(intro_) { intro_->SetMaximumWidth(width); }
   if(form_layout_) { form_layout_->SetMaximumWidth(width); }
   if(footer_layout_) { footer_layout_->SetMaximumWidth(width); }
+
+  // set the tab ordering
+  SetFirstInTabOrder(password_entry_->text_entry());
+  SetLastInTabOrder(sorted_buttons_[CANCEL_PURCHASE_ACTION].GetPointer());
+  SetLastInTabOrder(sorted_buttons_[PURCHASE_ALBUM_ACTION].GetPointer());
+  SetLastInTabOrder(sorted_buttons_[CHANGE_PAYMENT_ACTION].GetPointer());
+  SetLastInTabOrder(sorted_buttons_[FORGOT_PASSWORD_ACTION].GetPointer());
 
   Preview::PreLayoutManagement();
 }
