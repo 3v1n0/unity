@@ -425,6 +425,7 @@ class HudBehaviorTests(HudTestsBase):
         must focus that window and close the hud.
         """
         char_win = self.start_app("Character Map")
+        self.assertProperty(char_win, is_active=True)
         self.keybinding("window/maximize")
         self.start_app("Calculator")
 
