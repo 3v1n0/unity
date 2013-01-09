@@ -90,9 +90,41 @@ class TabIterator
 public:
   TabIterator() {}
 
-  void AddArea(nux::InputArea* area)
+  void AddAreaFirst(nux::InputArea* area)
+  {
+    areas_.push_front(area);
+  }
+
+  void AddAreaLast(nux::InputArea* area)
   {
     areas_.push_back(area);
+  }
+
+  void AddArea(nux::InputArea* area, int index)
+  {
+    std::list<nux::InputArea*>::iterator it;
+    std::advance(it, index);
+    areas_.insert(it, area);
+  }
+
+  void AddAreaBefore(nux::InputArea* area, nux::InputArea* after)
+  {
+    std::list<nux::InputArea*>::iterator it = std::find(areas_.begin(), areas_.end(), after);
+
+    if (it != areas_.end())
+      --it;
+
+    areas_.insert(it, area);
+  }
+
+  void AddAreaAfter(nux::InputArea* area, nux::InputArea* before)
+  {
+    std::list<nux::InputArea*>::iterator it = std::find(areas_.begin(), areas_.end(), before);
+
+    if (it != areas_.end())
+      ++it;
+
+    areas_.insert(it, area);
   }
 
   std::list<nux::InputArea*> const& GetTabAreas() const { return areas_; }
@@ -271,7 +303,7 @@ nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList action
         dash::Preview::ActionPtr action = actions[action_iter];
 
         ActionButton* button = new ActionButton(action->id, action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
-        tab_iterator_->AddArea(button);
+        tab_iterator_->AddAreaLast(button);
         AddChild(button);
         button->SetFont(style.action_font());
         button->SetExtraHint(action->extra_text, style.action_extra_font());
@@ -300,7 +332,7 @@ nux::Layout* Preview::BuildVerticalActionsLayout(dash::Preview::ActionPtrList ac
       dash::Preview::ActionPtr action = actions[action_iter++];
 
       ActionButton* button = new ActionButton(action->id, action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
-      tab_iterator_->AddArea(button);
+      tab_iterator_->AddAreaLast(button);
       AddChild(button);
       button->SetFont(style.action_font());
       button->SetExtraHint(action->extra_text, style.action_extra_font());
@@ -359,6 +391,31 @@ nux::Area* Preview::FindKeyFocusArea(unsigned int key_symbol,
 nux::Area* Preview::KeyNavIteration(nux::KeyNavDirection direction)
 {
   return tab_iterator_->KeyNavIteration(direction);
+}
+
+void Preview::SetFirstInTabOrder(nux::InputArea* area)
+{
+  tab_iterator_->AddAreaFirst(area);
+}
+
+void Preview::SetLastInTabOrder(nux::InputArea* area)
+{
+  tab_iterator_->AddAreaLast(area);
+}
+
+void Preview::SetTabOrder(nux::InputArea* area, int index)
+{
+  tab_iterator_->AddArea(area, index);
+}
+
+void Preview::SetTabOrderBefore(nux::InputArea* area, nux::InputArea* after)
+{
+  tab_iterator_->AddAreaBefore(area, after);
+}
+
+void Preview::SetTabOrderAfter(nux::InputArea* area, nux::InputArea* before)
+{
+  tab_iterator_->AddAreaAfter(area, before);
 }
 
 void Preview::OnNavigateIn()
