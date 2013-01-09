@@ -542,11 +542,11 @@ ApplicationWindowPtr Manager::GetActiveWindow()
   Window xid = bamf_window_get_xid(active_win);
 
   // First check if the active window is not an Unity window
-  if (std::find(our_xids.begin(), our_xids.end(), xid) != our_xids.end())
+  if (std::find(our_xids.begin(), our_xids.end(), xid) == our_xids.end())
     active_win = nullptr;
 
   // If the active window is a dock type, then we want the first visible, non-dock type.
-  if ((active_win && bamf_window_get_window_type(active_win) == BAMF_WINDOW_DOCK) || !active_win)
+  if ((active_win && bamf_window_get_window_type(active_win) == BAMF_WINDOW_DOCK))
   {
     LOG_DEBUG(logger) << "Is a dock, looking at the window stack.";
     std::shared_ptr<GList> windows(bamf_matcher_get_window_stack_for_monitor(matcher_, -1), g_list_free);
