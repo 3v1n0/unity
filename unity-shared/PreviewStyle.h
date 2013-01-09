@@ -169,7 +169,6 @@ public:
   int GetPaymentHeaderWidth() const;
   int GetPaymentHeaderSpace() const;
   int GetPaymentFormSpace() const;
-  int GetPaymentFooterSpace() const;
 
   /////////////////////////////////
 

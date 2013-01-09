@@ -73,6 +73,7 @@ public:
                                       unsigned long x11_key_code,
                                       unsigned long special_keys_state);
   virtual nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
+  void PushBackToTabIterator(nux::InputArea* area);
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {}

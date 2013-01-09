@@ -367,6 +367,10 @@ nux::Area* Preview::KeyNavIteration(nux::KeyNavDirection direction)
   return tab_iterator_->KeyNavIteration(direction);
 }
 
+void Preview::PushBackToTabIterator(nux::InputArea* area)
+{
+  tab_iterator_->AddArea(area);
+}
 
 void Preview::OnNavigateIn()
 {

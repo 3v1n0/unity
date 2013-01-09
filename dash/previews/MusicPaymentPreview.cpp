@@ -120,6 +120,7 @@ void MusicPaymentPreview::LoadActions()
         nux::ObjectPtr<ActionLink> link = this->CreateLink(action);
         link->activate.connect(sigc::mem_fun(this,
                     &MusicPaymentPreview::OnActionLinkActivated));
+	PushBackToTabIterator(link.GetPointer());
 
         std::pair<std::string, nux::ObjectPtr<nux::AbstractButton>> data (action->id, link);
         sorted_buttons_.insert(data);
@@ -129,6 +130,7 @@ void MusicPaymentPreview::LoadActions()
         nux::ObjectPtr<ActionButton> button = this->CreateButton(action);
         button->activate.connect(sigc::mem_fun(this,
                     &MusicPaymentPreview::OnActionActivated));
+	PushBackToTabIterator(button.GetPointer());
 
         std::pair<std::string, nux::ObjectPtr<nux::AbstractButton>> data (action->id, button);
         sorted_buttons_.insert(data);
@@ -201,7 +203,7 @@ nux::Layout* MusicPaymentPreview::GetBody()
   previews::Style& style = dash::previews::Style::Instance();
 
   nux::VLayout *body_layout = new  nux::VLayout();
-  body_layout->SetSpaceBetweenChildren(40);
+  body_layout->SetSpaceBetweenChildren(20);
 
   intro_ = new StaticCairoText(
           payment_preview_model_->header.Get(), true,
@@ -215,7 +217,7 @@ nux::Layout* MusicPaymentPreview::GetBody()
   form_layout_->SetSpaceBetweenChildren(10);
   form_layout_->SetMinimumHeight(107);
   form_layout_->SetLeftAndRightPadding(20);
-  form_layout_->SetTopAndBottomPadding(20);
+  form_layout_->SetTopAndBottomPadding(10);
 
   form_layout_->AddLayout(GetFormLabels(), 1, nux::MINOR_POSITION_END);
   form_layout_->AddLayout(GetFormFields(), 1, nux::MINOR_POSITION_END);
@@ -279,6 +281,7 @@ nux::Layout* MusicPaymentPreview::GetFormFields()
                   nux::MINOR_POSITION_START);
 
   password_entry_ = new TextInput();
+  PushBackToTabIterator(password_entry_->text_entry());
   password_entry_->SetMinimumHeight(40);
   password_entry_->SetMinimumWidth(240);
   password_entry_->input_hint = _("Password");
@@ -367,10 +370,10 @@ nux::Layout* MusicPaymentPreview::GetFooter()
 
   buttons_data_layout->AddSpace(20, 1);
   buttons_data_layout->AddView(sorted_buttons_[CANCEL_PURCHASE_ACTION].GetPointer(),
-          0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
+          1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
           nux::NUX_LAYOUT_END);
   buttons_data_layout->AddView(sorted_buttons_[PURCHASE_ALBUM_ACTION].GetPointer(),
-          0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
+          1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
           nux::NUX_LAYOUT_END);
 
   return buttons_data_layout;
@@ -405,6 +408,9 @@ void MusicPaymentPreview::SetupViews()
 
   // load the buttons so that they can be accessed in order
   LoadActions();
+
+  // TODO: change api so that this makes more sense
+
 
   PaymentPreview::SetupViews();
 }

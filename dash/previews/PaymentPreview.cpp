@@ -92,7 +92,7 @@ nux::ObjectPtr<ActionLink> PaymentPreview::CreateLink(dash::Preview::ActionPtr a
          action->display_name, NUX_TRACKER_LOCATION);
   link->font_hint.Set(style.payment_form_labels_font().c_str());
   link->SetMinimumWidth(178);
-  link->SetMinimumHeight(34);
+  link->SetMaximumHeight(34);
   return link;
 }
 
@@ -108,7 +108,7 @@ nux::ObjectPtr<ActionButton> PaymentPreview::CreateButton(dash::Preview::ActionP
   button->SetFont(style.action_font());
   button->SetExtraHint(action->extra_text, style.action_extra_font());
   button->SetMinimumWidth(178);
-  button->SetMinimumHeight(34);
+  button->SetMaximumHeight(34);
   return button;
 }
 
@@ -169,8 +169,7 @@ void PaymentPreview::SetupViews()
 
   full_data_layout_ = new nux::VLayout();
   full_data_layout_->SetSpaceBetweenChildren(5);
-  full_data_layout_->SetLeftAndRightPadding(10);
-  full_data_layout_->SetTopAndBottomPadding(10);
+  full_data_layout_->SetPadding(10, 10, 0, 10);
 
   header_layout_ = GetHeader();
 
@@ -179,10 +178,9 @@ void PaymentPreview::SetupViews()
 
   body_layout_ = GetBody();
   full_data_layout_->AddLayout(body_layout_, 1);
-  full_data_layout_->AddSpace(style.GetPaymentFooterSpace(), 1);
 
   footer_layout_ = GetFooter();
-  full_data_layout_->AddLayout(footer_layout_, 0);
+  full_data_layout_->AddLayout(footer_layout_, 1);
 
   SetLayout(full_data_layout_);
 }

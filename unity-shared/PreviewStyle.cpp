@@ -364,17 +364,12 @@ int Style::GetPaymentHeaderWidth() const
 
 int Style::GetPaymentHeaderSpace() const
 {
-  return 9;
+  return 0;
 }
 
 int Style::GetPaymentFormSpace() const
 {
   return 5;
-}
-
-int Style::GetPaymentFooterSpace() const
-{
-  return 32;
 }
 
 float Style::GetVideoImageAspectRatio() const
