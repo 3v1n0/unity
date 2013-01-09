@@ -466,9 +466,7 @@ void Style::RoundedRect(cairo_t* cr,
       cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
     return;
 
-  bool odd = true;
-
-  odd = cairo_get_line_width (cr) == 2.0 ? false : true;
+  bool odd = cairo_get_line_width (cr) == 2.0 ? false : true;
 
   double radius = cornerRadius / aspect;
 
