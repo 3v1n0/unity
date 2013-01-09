@@ -546,8 +546,8 @@ ApplicationWindowPtr Manager::GetActiveWindow()
     active_win = nullptr;
 
   // If the active window is a dock type, then we want the first visible, non-dock type.
-  if (active_win &&
-      bamf_window_get_window_type(active_win) == BAMF_WINDOW_DOCK)
+  if ((active_win && bamf_window_get_window_type(active_win) == BAMF_WINDOW_DOCK) ||
+       std::find(our_xids.begin(), our_xids.end(), xid) != our_xids.end())
   {
     LOG_DEBUG(logger) << "Is a dock, looking at the window stack.";
     std::shared_ptr<GList> windows(bamf_matcher_get_window_stack_for_monitor(matcher_, -1), g_list_free);
