@@ -27,7 +27,6 @@
 #include "DesktopLauncherIcon.h"
 #include "TimeUtil.h"
 
-
 using namespace unity::switcher;
 
 namespace
@@ -35,11 +34,11 @@ namespace
 
 unsigned int DEFAULT_LAZY_CONSTRUCT_TIMEOUT = 20;
 
-class MockSwitcherController : public Controller
+class MockSwitcherController : public ShellController
 {
 public:
   MockSwitcherController()
-    : Controller()
+    : ShellController()
     , window_constructed_(false)
     , view_constructed_(false)
     , view_shown_(false)
@@ -47,7 +46,7 @@ public:
   {};
 
   MockSwitcherController(unsigned int load_timeout)
-    : Controller(load_timeout)
+    : ShellController(load_timeout)
     , window_constructed_(false)
     , view_constructed_(false)
     , view_shown_(false)
@@ -96,7 +95,7 @@ public:
 
 TEST(TestSwitcherController, Construction)
 {
-  Controller controller;
+  ShellController controller;
   EXPECT_FALSE(controller.Visible());
 }
 

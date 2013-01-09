@@ -32,6 +32,7 @@
 #include "Launcher.h"
 #include "LauncherIcon.h"
 #include "LauncherController.h"
+#include "SwitcherController.h"
 #include "PluginAdapter.h"
 #include "QuicklistManager.h"
 #include "StartupNotifyService.h"
@@ -2971,7 +2972,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       launcher_controller_->UpdateSuperTapDuration(optionGetDashTapDuration());
       break;
     case UnityshellOptions::AltTabTimeout:
-      switcher_controller_->detail_on_timeout = optionGetAltTabTimeout();
+      switcher_controller_->SetDetailOnTimeout(optionGetAltTabTimeout());
     case UnityshellOptions::AltTabBiasViewport:
       PluginAdapter::Default().bias_active_to_viewport = optionGetAltTabBiasViewport();
       break;
@@ -3108,8 +3109,12 @@ void UnityScreen::initLauncher()
   launcher_controller_->UpdateSuperTapDuration(optionGetDashTapDuration());
   AddChild(launcher_controller_.get());
 
-  switcher_controller_ = std::make_shared<switcher::Controller>();
-  AddChild(switcher_controller_.get());
+  switcher_controller_ = std::make_shared<switcher::Controller>([this]{
+    std::unique_ptr<switcher::ShellController> p(new switcher::ShellController());
+    introspectable_switcher_controller_ = p.get();
+    return p;
+  });
+  AddChild(introspectable_switcher_controller_);
 
   LOG_INFO(logger) << "initLauncher-Launcher " << timer.ElapsedSeconds() << "s";
 

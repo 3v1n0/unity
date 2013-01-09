@@ -20,6 +20,8 @@
 #ifndef SWITCHERCONTROLLER_H
 #define SWITCHERCONTROLLER_H
 
+#include <memory>
+
 #include <UnityCore/Variant.h>
 #include <UnityCore/GLibSource.h>
 
@@ -54,33 +56,133 @@ enum class ShowMode
   CURRENT_VIEWPORT,
 };
 
+class Controller
+{
+  public:
 
-class Controller : public debug::Introspectable, public sigc::trackable
+    class Impl;
+    typedef std::unique_ptr<Impl> ImplPtr;
+    typedef std::function<ImplPtr()> CreateImplFunc;
+    typedef std::shared_ptr<Controller> Ptr;
+
+  public:
+
+    Controller(CreateImplFunc const&);
+
+    void Show(ShowMode show,
+              SortMode sort,
+              std::vector<launcher::AbstractLauncherIcon::Ptr> results);
+    void Hide(bool accept_state=true);
+
+    bool CanShowSwitcher(const std::vector<launcher::AbstractLauncherIcon::Ptr>& resutls) const;
+
+    bool Visible();
+
+    void Next();
+    void Prev();
+
+    void NextDetail();
+    void PrevDetail();
+
+    void Select(int index);
+
+    void SetDetail(bool detail,
+                   unsigned int min_windows = 1);
+
+    void SelectFirstItem();
+
+    void SetWorkspace(nux::Geometry geo,
+                      int monitor);
+
+    SwitcherView * GetView ();
+
+    ui::LayoutWindow::Vector ExternalRenderTargets ();
+
+    guint GetSwitcherInputWindowId() const;
+
+    bool IsShowDesktopDisabled() const;
+    void SetShowDesktopDisabled(bool disabled);
+    int StartIndex() const;
+
+    sigc::connection ConnectToViewBuilt (sigc::slot<void> const&);
+    void SetDetailOnTimeout(bool timeout);
+
+  private:
+    ImplPtr impl_;
+};
+
+class Controller::Impl
+{
+  public:
+
+    virtual ~Impl () {}
+
+    virtual void Show(ShowMode show,
+                      SortMode sort,
+                      std::vector<launcher::AbstractLauncherIcon::Ptr> results) = 0;
+    virtual void Hide(bool accept_state) = 0;
+
+    virtual bool CanShowSwitcher(const std::vector<launcher::AbstractLauncherIcon::Ptr>& resutls) const = 0;
+
+    virtual bool Visible() = 0;
+
+    virtual void Next() = 0;
+    virtual void Prev() = 0;
+
+    virtual void NextDetail() = 0;
+    virtual void PrevDetail() = 0;
+
+    virtual void Select(int index) = 0;
+
+    virtual void SetDetail(bool detail,
+                           unsigned int min_windows) = 0;
+
+    virtual void SelectFirstItem() = 0;
+
+    virtual void SetWorkspace(nux::Geometry geo,
+                              int monitor) = 0;
+
+    virtual SwitcherView * GetView () = 0;
+
+    virtual ui::LayoutWindow::Vector ExternalRenderTargets () = 0;
+
+    virtual guint GetSwitcherInputWindowId() const = 0;
+
+    virtual bool IsShowDesktopDisabled() const = 0;
+    virtual void SetShowDesktopDisabled(bool disabled) = 0;
+    virtual int StartIndex() const = 0;
+
+    sigc::signal<void> view_built;
+    nux::Property<bool> detail_on_timeout;
+};
+
+class ShellController : public Controller::Impl,
+                        public debug::Introspectable,
+                        public sigc::trackable
 {
 public:
-  typedef std::shared_ptr<Controller> Ptr;
-
-  Controller(unsigned int load_timeout = 20);
+  typedef std::shared_ptr<ShellController> Ptr;
 
   nux::Property<int> timeout_length;
-  nux::Property<bool> detail_on_timeout;
   nux::Property<int>  detail_timeout_length;
   nux::Property<int> initial_detail_timeout_length;
 
-  void Show(ShowMode show, SortMode sort, std::vector<launcher::AbstractLauncherIcon::Ptr> results);
-  void Hide(bool accept_state=true);
+  ShellController(unsigned int load_timeout = 20);
+
+  virtual void Show(ShowMode show, SortMode sort, std::vector<launcher::AbstractLauncherIcon::Ptr> results);
+  virtual void Hide(bool accept_state);
 
   bool CanShowSwitcher(const std::vector<launcher::AbstractLauncherIcon::Ptr>& resutls) const;
 
-  bool Visible();
+  virtual bool Visible();
 
-  void Next();
-  void Prev();
+  virtual void Next();
+  virtual void Prev();
 
   void NextDetail();
   void PrevDetail();
 
-  void Select (int index);
+  virtual void Select (int index);
 
   void SetDetail(bool detail, unsigned int min_windows = 1);
 
@@ -88,7 +190,7 @@ public:
 
   void SetWorkspace(nux::Geometry geo, int monitor);
 
-  SwitcherView * GetView ();
+  virtual SwitcherView* GetView();
 
   ui::LayoutWindow::Vector ExternalRenderTargets ();
 
@@ -97,8 +199,6 @@ public:
   bool IsShowDesktopDisabled() const;
   void SetShowDesktopDisabled(bool disabled);
   int StartIndex() const;
-
-  sigc::signal<void> view_built;
 
 protected:
   // Introspectable methods
