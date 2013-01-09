@@ -226,7 +226,6 @@ void View::SetQueries(Hud::Queries queries)
   }
 
   selected_button_ = 0;
-  queries_ = queries_;
   buttons_.clear();
   button_views_->Clear();
   int found_items = 0;
