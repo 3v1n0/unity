@@ -22,7 +22,8 @@
 #include <time.h>
 
 #include "test_utils.h"
-
+#include "StubSwitcherController.h"
+#include "MockSwitcherController.h"
 #include "SwitcherController.h"
 #include "DesktopLauncherIcon.h"
 #include "TimeUtil.h"
@@ -34,64 +35,18 @@ namespace
 
 unsigned int DEFAULT_LAZY_CONSTRUCT_TIMEOUT = 20;
 
-class MockSwitcherController : public ShellController
+TEST(TestSwitcherController, InstantiateMock)
 {
-public:
-  MockSwitcherController()
-    : ShellController()
-    , window_constructed_(false)
-    , view_constructed_(false)
-    , view_shown_(false)
-    , detail_timeout_reached_(false)
-  {};
+  MockSwitcherController mock;
+}
 
-  MockSwitcherController(unsigned int load_timeout)
-    : ShellController(load_timeout)
-    , window_constructed_(false)
-    , view_constructed_(false)
-    , view_shown_(false)
-    , detail_timeout_reached_(false)
-  {};
-
-  virtual void ConstructWindow()
-  {
-    window_constructed_ = true;
-  }
-
-  virtual void ConstructView()
-  {
-    view_constructed_ = true;
-  }
-
-  virtual void ShowView()
-  {
-    view_shown_ = true;
-  }
-
-  virtual bool OnDetailTimer()
-  {
-    detail_timeout_reached_ = true;
-    clock_gettime(CLOCK_MONOTONIC, &detail_timespec_);
-    return false;
-  }
-
-  unsigned int GetConstructTimeout() const
-  {
-    return construct_timeout_;
-  }
-
-  void FakeSelectionChange()
-  {
-    unity::launcher::AbstractLauncherIcon::Ptr icon;
-    OnModelSelectionChanged(icon);
-  }
-
-  bool window_constructed_;
-  bool view_constructed_;
-  bool view_shown_;
-  bool detail_timeout_reached_;
-  struct timespec detail_timespec_;
-};
+TEST(TestSwitcherController, InstantiateMockThroughNVI)
+{
+  MockSwitcherController *mock = new MockSwitcherController;
+  Controller controller ([&](){
+    return std::unique_ptr<Controller::Impl> (mock);
+  });
+}
 
 TEST(TestSwitcherController, Construction)
 {
@@ -101,7 +56,7 @@ TEST(TestSwitcherController, Construction)
 
 TEST(TestSwitcherController, LazyConstructionTimeoutLength)
 {
-  MockSwitcherController controller;
+  StubSwitcherController controller;
   EXPECT_EQ(controller.GetConstructTimeout(), DEFAULT_LAZY_CONSTRUCT_TIMEOUT);
 }
 
@@ -109,12 +64,12 @@ TEST(TestSwitcherController, LazyConstructionTimeoutLength)
 TEST(TestSwitcherController, LazyWindowConstruction)
 {
   // Setting the timeout to a lower value to speed-up the test
-  MockSwitcherController controller(2);
+  StubSwitcherController controller(2);
 
   EXPECT_EQ(controller.GetConstructTimeout(), 2);
 
   g_timeout_add_seconds(controller.GetConstructTimeout()/2, [] (gpointer data) -> gboolean {
-    auto controller = static_cast<MockSwitcherController*>(data);
+    auto controller = static_cast<StubSwitcherController*>(data);
     EXPECT_FALSE(controller->window_constructed_);
 
     return FALSE;
@@ -127,7 +82,7 @@ TEST(TestSwitcherController, LazyWindowConstruction)
 
 TEST(TestSwitcherController, InitialDetailTimeout)
 {
-  MockSwitcherController controller;
+  StubSwitcherController controller;
   std::vector<unity::launcher::AbstractLauncherIcon::Ptr> results;
   results.push_back(unity::launcher::AbstractLauncherIcon::Ptr(new unity::launcher::DesktopLauncherIcon()));
   struct timespec current;
@@ -145,7 +100,7 @@ TEST(TestSwitcherController, InitialDetailTimeout)
 
 TEST(TestSwitcherController, DetailTimeout)
 {
-  MockSwitcherController controller;
+  StubSwitcherController controller;
   struct timespec current;
 
   controller.detail_timeout_length = 1000;
@@ -161,7 +116,7 @@ TEST(TestSwitcherController, DetailTimeout)
 
 TEST(TestSwitcherController, ShowSwitcher)
 {
-  MockSwitcherController controller;
+  StubSwitcherController controller;
   std::vector<unity::launcher::AbstractLauncherIcon::Ptr> results;
   results.push_back(unity::launcher::AbstractLauncherIcon::Ptr(new unity::launcher::DesktopLauncherIcon()));
 
@@ -173,7 +128,7 @@ TEST(TestSwitcherController, ShowSwitcher)
 
 TEST(TestSwitcherController, ShowSwitcherNoShowDeskop)
 {
-  MockSwitcherController controller;
+  StubSwitcherController controller;
   controller.SetShowDesktopDisabled(true);
 
   ASSERT_TRUE(controller.IsShowDesktopDisabled());
@@ -182,7 +137,7 @@ TEST(TestSwitcherController, ShowSwitcherNoShowDeskop)
 
 TEST(TestSwitcherController, ShowSwitcherNoResults)
 {
-  MockSwitcherController controller;
+  StubSwitcherController controller;
   controller.SetShowDesktopDisabled(true);
   std::vector<unity::launcher::AbstractLauncherIcon::Ptr> results;
 
