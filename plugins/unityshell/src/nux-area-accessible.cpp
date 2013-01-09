@@ -443,7 +443,6 @@ check_parent_window_connected(NuxAreaAccessible* self)
 gboolean
 nux_area_accessible_parent_window_active(NuxAreaAccessible* self)
 {
-  gboolean active = FALSE;
   AtkStateSet* state_set = NULL;
 
   check_parent_window_connected(self);
