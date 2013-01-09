@@ -38,7 +38,7 @@ const char* UNSEEN_QUARK = "unity-unseen";
 
 // Due to the way glib handles object inheritance, we need to cast between pointer types.
 // In order to make the up-call for the base class easy, we pass through a void* for the view.
-View::View(Manager const& manager, glib::Object<BamfView> const& view)
+View::View(ApplicationManager const& manager, glib::Object<BamfView> const& view)
   : manager_(manager)
   , bamf_view_(view)
 {
@@ -82,7 +82,7 @@ bool View::GetUrgent() const
 }
 
 
-WindowBase::WindowBase(Manager const& manager,
+WindowBase::WindowBase(ApplicationManager const& manager,
                        glib::Object<BamfView> const& window)
   : View(manager, window)
 {
@@ -141,7 +141,7 @@ bool WindowBase::Focus() const
 }
 
 
-AppWindow::AppWindow(Manager const& manager, glib::Object<BamfView> const& window)
+AppWindow::AppWindow(ApplicationManager const& manager, glib::Object<BamfView> const& window)
   : WindowBase(manager, window)
   , bamf_window_(glib::object_cast<BamfWindow>(window))
 {
@@ -162,8 +162,8 @@ ApplicationPtr AppWindow::application() const
 {
   // Moderately evil, but better than changing the method to non-const.
   // We know that the manager will always be able to be non-const.
-  Manager& m = const_cast<Manager&>(manager_);
-  return m.GetApplicationForWindow(bamf_window_);
+  ApplicationManager& m = const_cast<ApplicationManager&>(manager_);
+  return m.GetApplicationForWindow(window_id());
 }
 
 void AppWindow::Quit() const
@@ -171,7 +171,7 @@ void AppWindow::Quit() const
   WindowManager::Default().Close(window_id());
 }
 
-Tab::Tab(Manager const& manager, glib::Object<BamfView> const& tab)
+Tab::Tab(ApplicationManager const& manager, glib::Object<BamfView> const& tab)
   : WindowBase(manager, tab)
   , bamf_tab_(glib::object_cast<BamfTab>(tab))
 {}
@@ -207,7 +207,7 @@ void Tab::Quit() const
 }
 
 // Being brutal with this function.
-ApplicationWindowPtr create_window(Manager const& manager, glib::Object<BamfView> const& view)
+ApplicationWindowPtr create_window(ApplicationManager const& manager, glib::Object<BamfView> const& view)
 {
   ApplicationWindowPtr result;
   if (view.IsType(BAMF_TYPE_TAB))
@@ -222,14 +222,14 @@ ApplicationWindowPtr create_window(Manager const& manager, glib::Object<BamfView
   return result;
 }
 
-Application::Application(Manager const& manager, glib::Object<BamfView> const& app)
+Application::Application(ApplicationManager const& manager, glib::Object<BamfView> const& app)
   : View(manager, app)
   , bamf_app_(glib::object_cast<BamfApplication>(app))
 {
   HookUpEvents();
 }
 
-Application::Application(Manager const& manager, glib::Object<BamfApplication> const& app)
+Application::Application(ApplicationManager const& manager, glib::Object<BamfApplication> const& app)
   : View(manager, glib::object_cast<BamfView>(app))
   , bamf_app_(app)
 {
@@ -348,21 +348,13 @@ WindowList Application::GetWindows() const
   if (!bamf_app_)
     return result;
 
-  WindowManager& wm = WindowManager::Default();
   std::shared_ptr<GList> children(bamf_view_get_children(bamf_view_), g_list_free);
   for (GList* l = children.get(); l; l = l->next)
   {
     glib::Object<BamfView> view(BAMF_VIEW(l->data), glib::AddRef());
     ApplicationWindowPtr window(create_window(manager_, view));
-    if (!window)
-      continue;
-
-    Window window_id = window->window_id();
-
-    if (wm.IsWindowMapped(window_id))
-    {
+    if (window)
       result.push_back(window);
-    }
   }
   return result;
 }
@@ -601,10 +593,10 @@ ApplicationPtr Manager::GetApplicationForDesktopFile(std::string const& desktop_
   return result;
 }
 
-ApplicationPtr Manager::GetApplicationForWindow(glib::Object<BamfWindow> const& window)
+ApplicationPtr Manager::GetApplicationForWindow(Window xid)
 {
   ApplicationPtr result;
-  glib::Object<BamfApplication> app(bamf_matcher_get_application_for_window(matcher_, window),
+  glib::Object<BamfApplication> app(bamf_matcher_get_application_for_xid(matcher_, xid),
                                     glib::AddRef());
   if (app)
     result.reset(new Application(*this, app));
