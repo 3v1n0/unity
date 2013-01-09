@@ -828,8 +828,6 @@ void Style::Impl::ButtonOutlinePath (cairo_t* cr, bool align)
   double y  = 2.0;
   double w  = cairo_image_surface_get_width(cairo_get_target(cr)) - 4.0;
   double h  = cairo_image_surface_get_height(cairo_get_target(cr)) - 4.0;
-  double xt = 0.0;
-  double yt = 0.0;
 
   // - these absolute values are the "cost" of getting only a SVG from design
   // and not a generic formular how to approximate the curve-shape, thus
@@ -837,8 +835,8 @@ void Style::Impl::ButtonOutlinePath (cairo_t* cr, bool align)
   double width  = w - 22.18;
   double height = h - 24.0;
 
-  xt = x + width + 22.18;
-  yt = y + 12.0;
+  double xt = x + width + 22.18;
+  double yt = y + 12.0;
 
   if (align)
   {
@@ -1098,8 +1096,6 @@ void Style::Impl::ButtonOutlinePathSegment(cairo_t* cr, Segment segment)
   double   y  = 2.0;
   double   w  = cairo_image_surface_get_width(cairo_get_target(cr));
   double   h  = cairo_image_surface_get_height(cairo_get_target(cr)) - 4.0;
-  double   xt = 0.0;
-  double   yt = 0.0;
 
   // - these absolute values are the "cost" of getting only a SVG from design
   // and not a generic formular how to approximate the curve-shape, thus
@@ -1107,8 +1103,8 @@ void Style::Impl::ButtonOutlinePathSegment(cairo_t* cr, Segment segment)
   double width  = w - 22.18;
   double height = h - 24.0;
 
-  xt = x + width + 22.18;
-  yt = y + 12.0;
+  double xt = x + width + 22.18;
+  double yt = y + 12.0;
 
   switch (segment)
   {
