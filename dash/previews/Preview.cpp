@@ -96,18 +96,28 @@ class TabIterator
 public:
   TabIterator() {}
 
+  void RemoveAlreadyPresent(nux::InputArea* area)
+  {
+    std::list<nux::InputArea*>::iterator it = std::find(areas_.begin(), areas_.end(), area);
+    if (it != areas_.end())
+      areas_.erase(it);
+  }
+
   void AddAreaFirst(nux::InputArea* area)
   {
+    RemoveAlreadyPresent(area);
     areas_.push_front(area);
   }
 
   void AddAreaLast(nux::InputArea* area)
   {
+    RemoveAlreadyPresent(area);
     areas_.push_back(area);
   }
 
   void AddArea(nux::InputArea* area, int index)
   {
+    RemoveAlreadyPresent(area);
     std::list<nux::InputArea*>::iterator it;
     std::advance(it, index);
     areas_.insert(it, area);
@@ -115,6 +125,7 @@ public:
 
   void AddAreaBefore(nux::InputArea* area, nux::InputArea* after)
   {
+    RemoveAlreadyPresent(area);
     std::list<nux::InputArea*>::iterator it = std::find(areas_.begin(), areas_.end(), after);
 
     if (it != areas_.end())
@@ -125,6 +136,7 @@ public:
 
   void AddAreaAfter(nux::InputArea* area, nux::InputArea* before)
   {
+    RemoveAlreadyPresent(area);
     std::list<nux::InputArea*>::iterator it = std::find(areas_.begin(), areas_.end(), before);
 
     if (it != areas_.end())
