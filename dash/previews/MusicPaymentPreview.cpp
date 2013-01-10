@@ -84,7 +84,6 @@ void MusicPaymentPreview::OnActionActivated(ActionButton* button, std::string co
 {
   // Check the action id and send the password only when we
   // purchasing a song
-  printf("Executing aciont %s\n", id.c_str());
   if(id.compare(PURCHASE_ALBUM_ACTION) == 0 && preview_model_
           && password_entry_)
   {
@@ -102,7 +101,6 @@ void MusicPaymentPreview::OnActionActivated(ActionButton* button, std::string co
 
 void MusicPaymentPreview::OnActionLinkActivated(ActionLink *link, std::string const& id)
 {
-  printf("Executing aciont %s\n", id.c_str());
   if (preview_model_)
     preview_model_->PerformAction(id);
 }
