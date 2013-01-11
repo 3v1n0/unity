@@ -838,6 +838,11 @@ void UnityScreen::paintDisplay()
     previous_framebuffer_ = nullptr;
   }
 
+  /* Bind the currently bound draw framebuffer to the read framebuffer binding.
+   * The reason being that we want to use the results of nux images being
+   * drawn to this framebuffer in glCopyTexSubImage2D operations */
+  gScreen->bindFramebufferForReading(gScreen->drawFramebuffer());
+
   nux::Geometry geo(0, 0, screen->width (), screen->height ());
   nux::Geometry outputGeo(output->x (), output->y (), output->width (), output->height ());
   BackgroundEffectHelper::monitor_rect_ = geo;
