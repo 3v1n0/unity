@@ -337,6 +337,11 @@ class HudBehaviorTests(HudTestsBase):
         term_win = self.start_app_window("Terminal")
         self.assertProperty(term_win, is_focused=True)
 
+        # Here we anyway need a sleep, since even though the terminal can have
+        # keyboard focus, the shell inside might not be completely loaded yet
+        # and keystrokes might not get registered
+        sleep(1)
+
         #There's no easy way to read text from terminal, writing input
         #to a text file and then reading from there works.
         self.keyboard.type('echo "')
