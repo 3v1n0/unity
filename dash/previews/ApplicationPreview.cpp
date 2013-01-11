@@ -145,6 +145,7 @@ void ApplicationPreview::SetupViews()
         nux::VLayout* icon_layout = new nux::VLayout();
         icon_layout->SetSpaceBetweenChildren(3);
         app_icon_ = new IconTexture(app_preview_model->app_icon.Get().RawPtr() ? g_icon_to_string(app_preview_model->app_icon.Get().RawPtr()) : "", 72);
+        AddChild(app_icon_.GetPointer());
         app_icon_->SetMinimumSize(style.GetAppIconAreaWidth(), style.GetAppIconAreaWidth());
         app_icon_->SetMaximumSize(style.GetAppIconAreaWidth(), style.GetAppIconAreaWidth());
         app_icon_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
@@ -171,6 +172,7 @@ void ApplicationPreview::SetupViews()
         title_subtitle_layout_->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
         title_ = new StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
+        AddChild(title_.GetPointer());
         title_->SetLines(-1);
         title_->SetFont(style.title_font().c_str());
         title_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
@@ -179,6 +181,7 @@ void ApplicationPreview::SetupViews()
         if (!preview_model_->subtitle.Get().empty())
         {
           subtitle_ = new StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
+          AddChild(subtitle_.GetPointer());
           subtitle_->SetFont(style.subtitle_size_font().c_str());
           subtitle_->SetLines(-1);
           subtitle_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
@@ -191,6 +194,7 @@ void ApplicationPreview::SetupViews()
         if (!app_preview_model->license.Get().empty())
         {
           license_ = new StaticCairoText(app_preview_model->license, true, NUX_TRACKER_LOCATION);
+          AddChild(license_.GetPointer());
           license_->SetFont(style.app_license_font().c_str());
           license_->SetLines(-1);
           license_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
@@ -203,6 +207,7 @@ void ApplicationPreview::SetupViews()
           last_update << _("Last Updated") << " " << app_preview_model->last_update.Get();
 
           last_update_ = new StaticCairoText(last_update.str(), true, NUX_TRACKER_LOCATION);
+          AddChild(last_update_.GetPointer());
           last_update_->SetFont(style.app_last_update_font().c_str());
           last_update_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
           app_updated_copywrite_layout->AddView(last_update_.GetPointer(), 1);
@@ -211,6 +216,7 @@ void ApplicationPreview::SetupViews()
         if (!app_preview_model->copyright.Get().empty())
         {
           copywrite_ = new StaticCairoText(app_preview_model->copyright, true, NUX_TRACKER_LOCATION);
+          AddChild(copywrite_.GetPointer());
           copywrite_->SetFont(style.app_copywrite_font().c_str());
           copywrite_->SetLines(-1);
           copywrite_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
@@ -240,6 +246,7 @@ void ApplicationPreview::SetupViews()
       if (!preview_model_->description.Get().empty())
       {
         description_ = new StaticCairoText(preview_model_->description, false, NUX_TRACKER_LOCATION); // not escaped!
+        AddChild(description_.GetPointer());
         description_->SetFont(style.description_font().c_str());
         description_->SetTextAlignment(StaticCairoText::NUX_ALIGN_TOP);
         description_->SetLines(-style.GetDescriptionLineCount());

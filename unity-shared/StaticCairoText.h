@@ -26,11 +26,13 @@
 #include <Nux/Nux.h>
 #include <Nux/View.h>
 
+#include "unity-shared/Introspectable.h"
+
 namespace unity
 {
 class Validator;
 
-class StaticCairoText : public nux::View
+class StaticCairoText : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE (StaticCairoText, nux::View);
 public:
@@ -112,6 +114,10 @@ protected:
 
   std::vector<unsigned> GetTextureStartIndices();
   std::vector<unsigned> GetTextureEndIndices();
+
+  // From debug::Introspectable
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
 private:
   struct Impl;

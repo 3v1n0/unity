@@ -156,6 +156,7 @@ void SocialPreview::SetupViews()
         nux::VLayout* icon_layout = new nux::VLayout();
         icon_layout->SetSpaceBetweenChildren(3);
         avatar_ = new IconTexture(social_preview_model->avatar.Get().RawPtr() ? g_icon_to_string(social_preview_model->avatar.Get().RawPtr()) : "", MIN(style.GetAvatarAreaWidth(), style.GetAvatarAreaHeight()));
+        AddChild(avatar_.GetPointer());
         avatar_->SetMinMaxSize(style.GetAvatarAreaWidth(), style.GetAvatarAreaHeight());
         avatar_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
         icon_layout->AddView(avatar_.GetPointer(), 0);
@@ -168,11 +169,13 @@ void SocialPreview::SetupViews()
         social_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
         title_ = new StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
+        AddChild(title_.GetPointer());
         title_->SetLines(-1);
         title_->SetFont(style.title_font().c_str());
         title_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
 
         subtitle_ = new StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
+        AddChild(subtitle_.GetPointer());
         subtitle_->SetFont(style.content_font().c_str());
         subtitle_->SetLines(-1);
         subtitle_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
@@ -215,6 +218,7 @@ void SocialPreview::SetupViews()
         tmp_comments_hint += ":";
 
         comments_hint_ = new StaticCairoText(tmp_comments_hint, true, NUX_TRACKER_LOCATION);
+        AddChild(comments_hint_.GetPointer());
         comments_hint_->SetLines(-1);
         comments_hint_->SetFont(style.info_hint_bold_font().c_str());
         comments_hint_->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
@@ -223,6 +227,7 @@ void SocialPreview::SetupViews()
 
         comments_ = new SocialPreviewComments(preview_model_, NUX_TRACKER_LOCATION);
         AddChild(comments_.GetPointer());
+        comments_->GetPreviewRequestClose().connect([this]() { preview_container_->request_close.emit(); });
         comments_layout->AddView(comments_.GetPointer());
         social_info_layout->AddView(comments_layout, 0);
       }

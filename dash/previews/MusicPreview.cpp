@@ -125,6 +125,7 @@ void MusicPreview::SetupViews()
       album_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
       title_ = new StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
+      AddChild(title_.GetPointer());
       title_->SetFont(style.title_font().c_str());
       title_->SetLines(-1);
       title_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
@@ -133,6 +134,7 @@ void MusicPreview::SetupViews()
       if (!preview_model_->subtitle.Get().empty())
       {
         subtitle_ = new StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
+        AddChild(subtitle_.GetPointer());
         subtitle_->SetFont(style.subtitle_size_font().c_str());
         subtitle_->SetLines(-1);
         subtitle_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));

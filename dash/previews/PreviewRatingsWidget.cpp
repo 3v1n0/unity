@@ -59,6 +59,8 @@ PreviewRatingsWidget::PreviewRatingsWidget(NUX_FILE_LINE_DECL)
   reviews_->mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
   layout->AddView(reviews_);
 
+  mouse_click.connect(sigc::mem_fun(this->preview_container_, &PreviewContainer::OnMouseDown));
+
   SetLayout(layout);
 }
 

@@ -909,7 +909,7 @@ class PreviewNavigateTests(DashTestCase):
 
     def test_preview_refocus_close(self):
         """Clicking on a preview element must not lose keyboard focus."""
-        cover_art = self.preview_container.current_preview.cover_art
+        cover_art = self.preview_container.current_preview.cover_art[0]
 
         # click the cover-art (this will set focus)
         tx = cover_art.x + (cover_art.width / 2)
@@ -921,27 +921,57 @@ class PreviewNavigateTests(DashTestCase):
 
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
-    def test_left_click_on_preview_image_cancel_preview(self):
-        """Left click on preview image must cancel the preview."""
-        cover_art = self.preview_container.current_preview.cover_art
 
-        tx = cover_art.x + (cover_art.width / 2)
-        ty = cover_art.y + (cover_art.height / 4)
-        self.mouse.move(tx, ty)
-        self.mouse.click(button=1)
+class PreviewClickCancelTests(DashTestCase):
+    """Tests that the preview closes when left, middle, and right clicking in the preview"""
 
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+    def setUp(self):
+        super(PreviewClickCancelTests, self).setUp()
 
-    def test_right_click_on_preview_image_cancel_preview(self):
-        """Right click on preview image must cancel preview."""
-        cover_art = self.preview_container.current_preview.cover_art
 
-        tx = cover_art.x + (cover_art.width / 2)
-        ty = cover_art.y + (cover_art.height / 4)
-        self.mouse.move(tx, ty)
-        self.mouse.click(button=3)
+    def test_click_on_preview_cancel_preview(self):
+        """Clicking on preview image must cancel the preview."""
 
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+        # Use left, middle, and right mouse buttons.
+        buttons = [1, 2, 3]
+
+        # Click on various elements of the preview.
+        elements = ['self.preview_container.current_preview.cover_art',
+                    'self.preview_container.current_preview.ratings_widget',
+                    'self.preview_container.current_preview.info_hint_widget',
+                    'self.preview_container.current_preview.icon',
+                    'self.preview_container.current_preview.text_boxes']
+
+        lens = self.dash.reveal_application_lens()
+        self.addCleanup(self.dash.ensure_hidden)
+        # Only testing an application preview for this test.
+        self.keyboard.type("Software Updater")
+
+        for button in buttons:
+            for element in elements:
+                results_category = lens.get_category_by_name(_("Installed"))
+                results = results_category.get_results()
+
+                result = results[0]
+                result.preview()
+                self.assertThat(self.dash.view.preview_displaying, Eventually(Equals(True)))
+
+                self.preview_container = self.dash.view.get_preview_container()
+
+                objs = eval(element)
+
+                for i in range(len(objs)):
+                    if not self.dash.preview_displaying:
+                       result.preview()
+                       self.preview_container = self.dash.view.get_preview_container()
+                       objs = eval(element)
+                    obj = objs[i]
+                    tx = obj.x + (obj.width / 2)
+                    ty = obj.y + (obj.height / 2)
+                    self.mouse.move(tx, ty)
+                    self.mouse.click(button=button)
+
+                    self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
 
 class DashDBusIfaceTests(DashTestCase):

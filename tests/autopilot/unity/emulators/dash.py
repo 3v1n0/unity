@@ -411,7 +411,25 @@ class Preview(UnityIntrospectionObject):
 
     @property
     def cover_art(self):
-        return self.get_children_by_type(CoverArt)[0]
+        return self.get_children_by_type(CoverArt)
+
+    @property
+    def ratings_widget(self):
+        return self.get_children_by_type(PreviewRatingsWidget)
+
+    @property
+    def info_hint_widget(self):
+        return self.get_children_by_type(PreviewInfoHintWidget)
+
+    @property
+    def icon(self):
+        obj = self.get_children_by_type(IconTexture)
+        return self.get_children_by_type(IconTexture)
+
+    @property
+    def text_boxes(self):
+        return self.get_children_by_type(StaticCairoText)
+
 
 class ApplicationPreview(Preview):
     """A application preview of a dash lens result."""
@@ -555,6 +573,10 @@ class PreviewNavigator(UnityIntrospectionObject):
         return self.get_children_by_type(IconTexture);
 
 
+class PreviewInfoHintWidget(UnityIntrospectionObject):
+    """A view containing additional info for a preview."""
+
+
 class PreviewRatingsWidget(UnityIntrospectionObject):
     """A view containing a rating button and user rating count."""
 
@@ -570,3 +592,10 @@ class Track(UnityIntrospectionObject):
 class ActionButton(UnityIntrospectionObject):
     """A preview action button."""
 
+
+class IconTexture(UnityIntrospectionObject):
+    """An icon for the preview."""
+
+
+class StaticCairoText(UnityIntrospectionObject):
+    """Text boxes in the preview"""
