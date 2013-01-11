@@ -121,6 +121,9 @@ public:
 
   virtual ApplicationList GetRunningApplications() = 0;
 
+  virtual ApplicationPtr GetApplicationForWindow(Window xid) = 0;
+
+
   sigc::signal<void, ApplicationPtr const&> application_started;
 
   sigc::signal<void, ApplicationPtr const&> active_application_changed;

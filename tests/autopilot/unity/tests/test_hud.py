@@ -367,10 +367,11 @@ class HudBehaviorTests(HudTestsBase):
         self.keyboard.type("a")
         (x,y,w,h) = self.hud.view.geometry
 
-        self.mouse.move(w/2, 0)
+        # Specify a slower rate so that HUD can register the mouse movement properly
+        self.mouse.move(w/2, 0, rate=5)
         self.assertThat(self.hud.view.selected_button, Eventually(Equals(1)))
 
-        self.mouse.move(w/2, h)
+        self.mouse.move(w/2, h, rate=5)
         self.assertThat(self.hud.view.selected_button, Eventually(Equals(5)))
 
     def test_keyboard_steals_focus_from_mouse(self):
@@ -424,6 +425,7 @@ class HudBehaviorTests(HudTestsBase):
         must focus that window and close the hud.
         """
         char_win = self.start_app("Character Map")
+        self.assertProperty(char_win, is_active=True)
         self.keybinding("window/maximize")
         self.start_app("Calculator")
 

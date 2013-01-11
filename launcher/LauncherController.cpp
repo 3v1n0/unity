@@ -319,6 +319,10 @@ Launcher* Controller::Impl::CreateLauncher(int monitor)
   launcher_window->InputWindowEnableStruts(parent_->options()->hide_mode == LAUNCHER_HIDE_NEVER);
   launcher_window->SetEnterFocusInputArea(launcher);
 
+  launcher_window->geometry_changed.connect([this] (nux::Area* /*area*/, nux::Geometry const& geo) {
+    parent_->launcher_width_changed.emit(geo.width);
+  });
+
   launcher->add_request.connect(sigc::mem_fun(this, &Impl::OnLauncherAddRequest));
   launcher->remove_request.connect(sigc::mem_fun(this, &Impl::OnLauncherRemoveRequest));
 
