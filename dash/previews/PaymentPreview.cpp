@@ -158,6 +158,32 @@ void PaymentPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_dra
     gfx_engine.PopClippingRectangle();
 }
 
+void PaymentPreview::ShowOverlay(bool isShown)
+{
+  if (!full_data_layout_)
+    return;
+
+  if (isShown)
+  {
+    full_data_layout_->SetActiveLayerN(1);
+  }
+  else
+  {
+    full_data_layout_->SetActiveLayerN(0);
+  }
+  QueueDraw();
+}
+
+void PaymentPreview::ShowOverlay()
+{
+  ShowOverlay(true);
+}
+
+void PaymentPreview::HideOverlay()
+{
+  ShowOverlay(false);
+}
+
 void PaymentPreview::SetupBackground()
 {
   details_bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
@@ -167,20 +193,37 @@ void PaymentPreview::SetupViews()
 {
   previews::Style& style = dash::previews::Style::Instance();
 
-  full_data_layout_ = new nux::VLayout();
-  full_data_layout_->SetSpaceBetweenChildren(5);
-  full_data_layout_->SetPadding(10, 10, 0, 10);
+  full_data_layout_ = new nux::LayeredLayout();
+
+  // layout to be used to show the info
+  content_data_layout_ = new nux::VLayout();
+  content_data_layout_->SetSpaceBetweenChildren(5);
+  content_data_layout_->SetPadding(10, 10, 0, 10);
 
   header_layout_ = GetHeader();
 
-  full_data_layout_->AddLayout(header_layout_, 1);
-  full_data_layout_->AddSpace(style.GetPaymentHeaderSpace(), 0);
+  content_data_layout_->AddLayout(header_layout_, 1);
+  content_data_layout_->AddSpace(style.GetPaymentHeaderSpace(), 0);
 
   body_layout_ = GetBody();
-  full_data_layout_->AddLayout(body_layout_, 1);
+  content_data_layout_->AddLayout(body_layout_, 1);
 
   footer_layout_ = GetFooter();
-  full_data_layout_->AddLayout(footer_layout_, 1);
+  content_data_layout_->AddLayout(footer_layout_, 1);
+
+  full_data_layout_->AddLayout(content_data_layout_);
+
+  // layout to draw an overlay
+  overlay_layout_ = new nux::VLayout();
+  StaticCairoText* calculating = new StaticCairoText(
+                                   "Performing purchase", true,
+                                   NUX_TRACKER_LOCATION);
+
+  overlay_layout_->AddSpace(20, 1);
+  overlay_layout_->AddView(calculating, 1, nux::MINOR_POSITION_CENTER); 
+  overlay_layout_->AddSpace(20, 1);
+
+  full_data_layout_->AddLayout(overlay_layout_);
 
   SetLayout(full_data_layout_);
 }

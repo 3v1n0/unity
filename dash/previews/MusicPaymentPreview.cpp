@@ -94,6 +94,8 @@ void MusicPaymentPreview::OnActionActivated(ActionButton* button, std::string co
     Lens::Hints hints;
     hints[DATA_PASSWORD_KEY] = *password;
     preview_model_->PerformAction(id, hints);
+    // show the overlay
+    ShowOverlay();
     return;
   }
   Preview::OnActionActivated(button, id);

@@ -32,6 +32,7 @@
 
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
+#include <Nux/LayeredLayout.h>
 #include <Nux/AbstractButton.h>
 #include <UnityCore/Lens.h>
 #include <UnityCore/PaymentPreview.h>
@@ -78,6 +79,9 @@ public:
 
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void ShowOverlay(bool isShown);
+  void ShowOverlay();
+  void HideOverlay();
 
 private:
   nux::Layout* GetHeader();
@@ -110,7 +114,9 @@ protected:
   virtual void SetupViews();
   virtual void SetupBackground();
 
-  nux::VLayout* full_data_layout_;
+  nux::LayeredLayout* full_data_layout_;
+  nux::VLayout* content_data_layout_;
+  nux::VLayout* overlay_layout_;
   nux::Layout* header_layout_;
   nux::Layout* body_layout_;
   nux::Layout* footer_layout_;
