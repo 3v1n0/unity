@@ -227,15 +227,11 @@ void StaticCairoText::PreLayoutManagement()
 {
   Geometry geo = GetGeometry();
 
-  if(pimpl->pre_layout_size_.width != geo.width
-    || pimpl->pre_layout_size_.height != geo.height)
-  {
-    pimpl->pre_layout_size_.width = geo.width;
-    pimpl->pre_layout_size_.height = geo.height;
+  pimpl->pre_layout_size_.width = geo.width;
+  pimpl->pre_layout_size_.height = geo.height;
 
-    SetBaseSize(pimpl->cached_extent_.width,
-                pimpl->cached_extent_.height);
-  }
+  SetBaseSize(pimpl->cached_extent_.width,
+              pimpl->cached_extent_.height);
   if (pimpl->textures2D_.empty())
   {
     pimpl->UpdateTexture();
@@ -281,6 +277,7 @@ void StaticCairoText::Draw(GraphicsEngine& gfxContext, bool forceDraw)
     pimpl->cached_base_.height = base.height;
     pimpl->UpdateTexture();
   }
+ 
 
   gfxContext.PushClippingRectangle(base);
 
