@@ -83,6 +83,11 @@ public:
     return &view_;
   }
 
+  sigc::connection ConnectToViewBuilt (sigc::slot<void> const& f)
+  {
+    return view_built.connect (f);
+  }
+
   bool is_visible_;
   SwitcherViewMock view_;
   int prev_count_;

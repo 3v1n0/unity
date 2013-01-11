@@ -174,7 +174,7 @@ unity_a11y_create_accessible(nux::Object* object)
   if (object->Type().IsDerivedFromType(QuicklistMenuItem::StaticObjectType))
     return unity_quicklist_menu_item_accessible_new(object);
 
-  if (object->Type().IsDerivedFromType(nux::StaticCairoText::StaticObjectType))
+  if (object->Type().IsDerivedFromType(StaticCairoText::StaticObjectType))
     return unity_sctext_accessible_new(object);
 
   if (object->Type().IsDerivedFromType(unity::dash::ResultViewGrid::StaticObjectType))

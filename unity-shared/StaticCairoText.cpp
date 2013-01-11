@@ -37,12 +37,9 @@
 
 #include "CairoTexture.h"
 
-using namespace unity;
+using namespace nux;
 
-// TODO: Tim Penhey 2011-05-16
-// We shouldn't be pushing stuff into the nux namespace from the unity
-// codebase, that is just rude.
-namespace nux
+namespace unity
 {
 struct StaticCairoText::Impl
 {
@@ -230,15 +227,11 @@ void StaticCairoText::PreLayoutManagement()
 {
   Geometry geo = GetGeometry();
 
-  if(pimpl->pre_layout_size_.width != geo.width
-    || pimpl->pre_layout_size_.height != geo.height)
-  {
-    pimpl->pre_layout_size_.width = geo.width;
-    pimpl->pre_layout_size_.height = geo.height;
+  pimpl->pre_layout_size_.width = geo.width;
+  pimpl->pre_layout_size_.height = geo.height;
 
-    SetBaseSize(pimpl->cached_extent_.width,
-                pimpl->cached_extent_.height);
-  }
+  SetBaseSize(pimpl->cached_extent_.width,
+              pimpl->cached_extent_.height);
   if (pimpl->textures2D_.empty())
   {
     pimpl->UpdateTexture();
@@ -284,6 +277,7 @@ void StaticCairoText::Draw(GraphicsEngine& gfxContext, bool forceDraw)
     pimpl->cached_base_.height = base.height;
     pimpl->UpdateTexture();
   }
+ 
 
   gfxContext.PushClippingRectangle(base);
 

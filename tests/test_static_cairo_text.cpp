@@ -30,7 +30,7 @@ using namespace unity;
 namespace
 {
 
-class MockStaticCairoText : public nux::StaticCairoText
+class MockStaticCairoText : public StaticCairoText
 {
 public:
   MOCK_METHOD2(SetBaseSize, void(int, int));
@@ -90,11 +90,10 @@ TEST_F(TestStaticCairoText, TextPreLayoutManagementMultipleCalls)
 {
   EXPECT_CALL(*text.GetPointer(), SetBaseSize(_, _)).Times(2);
   text->PreLayoutManagement();
-  
-  // the first prelayout methods should have called set base size and therefore
-  // we should not call it again
-
-  EXPECT_CALL(*text.GetPointer(), SetBaseSize(_, _)).Times(0);
+ 
+  // assert that we do call the set base size that ensures that the layout will
+  // allocate enough space.
+  EXPECT_CALL(*text.GetPointer(), SetBaseSize(_, _)).Times(1);
    text->PreLayoutManagement();
 }
 

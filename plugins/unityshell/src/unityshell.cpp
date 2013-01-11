@@ -34,6 +34,7 @@
 #include "Launcher.h"
 #include "LauncherIcon.h"
 #include "LauncherController.h"
+#include "SwitcherController.h"
 #include "PluginAdapter.h"
 #include "QuicklistManager.h"
 #include "StartupNotifyService.h"
@@ -145,6 +146,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , painting_tray_ (false)
   , last_scroll_event_(0)
   , hud_keypress_time_(0)
+  , first_menu_keypress_time_(0)
   , panel_texture_has_changed_(true)
   , paint_panel_(false)
   , scale_just_activated_(false)
@@ -621,9 +623,6 @@ void UnityScreen::nuxEpilogue()
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
 
-  glDrawBuffer(GL_BACK);
-  glReadBuffer(GL_BACK);
-
   glPopAttrib();
 
   glDepthRange(0, 1);
@@ -946,19 +945,13 @@ bool UnityScreen::TopPanelBackgroundTextureNeedsUpdate() const
 
 void UnityScreen::UpdateTopPanelBackgroundTexture()
 {
-  auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
   auto &panel_style = panel::Style::Instance();
 
   panel_texture_.Release();
+  auto texture = panel_style.GetBackground(screen->width(), screen->height(), 1.0f);
 
-  std::unique_ptr<nux::NBitmapData> bitmap(panel_style.GetBackground(screen->width(), screen->height(), 1.0f));
-  nux::ObjectPtr<nux::BaseTexture> texture2D(gpu_device->CreateSystemCapableTexture());
-
-  if (bitmap && texture2D)
-  {
-    texture2D->Update(bitmap.get());
-    panel_texture_ = texture2D->GetDeviceTexture();
-  }
+  if (texture)
+    panel_texture_ = texture->GetDeviceTexture();
 
   panel_texture_has_changed_ = false;
 }
@@ -3063,12 +3056,6 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       hud_controller_->icon_size = launcher_options->icon_size();
       hud_controller_->tile_size = launcher_options->tile_size();
 
-      /* The launcher geometry includes 1px used to draw the right margin
-       * that must not be considered when drawing an overlay */
-      hud_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
-      dash_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
-      panel_controller_->launcher_width = launcher_controller_->launcher().GetAbsoluteWidth() - 1;
-
       if (p)
       {
         CompOption::Vector &opts = p->vTable->getOptions ();
@@ -3100,7 +3087,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       launcher_controller_->UpdateSuperTapDuration(optionGetDashTapDuration());
       break;
     case UnityshellOptions::AltTabTimeout:
-      switcher_controller_->detail_on_timeout = optionGetAltTabTimeout();
+      switcher_controller_->SetDetailOnTimeout(optionGetAltTabTimeout());
     case UnityshellOptions::AltTabBiasViewport:
       PluginAdapter::Default().bias_active_to_viewport = optionGetAltTabBiasViewport();
       break;
@@ -3250,8 +3237,12 @@ void UnityScreen::initLauncher()
   launcher_controller_->UpdateSuperTapDuration(optionGetDashTapDuration());
   AddChild(launcher_controller_.get());
 
-  switcher_controller_ = std::make_shared<switcher::Controller>();
-  AddChild(switcher_controller_.get());
+  switcher_controller_ = std::make_shared<switcher::Controller>([this]{
+    std::unique_ptr<switcher::ShellController> p(new switcher::ShellController());
+    introspectable_switcher_controller_ = p.get();
+    return p;
+  });
+  AddChild(introspectable_switcher_controller_);
 
   LOG_INFO(logger) << "initLauncher-Launcher " << timer.ElapsedSeconds() << "s";
 
@@ -3287,6 +3278,14 @@ void UnityScreen::initLauncher()
   AddChild(shortcut_controller_.get());
 
   AddChild(dash_controller_.get());
+
+  launcher_controller_->launcher_width_changed.connect([this] (int launcher_width) {
+    /* The launcher geometry includes 1px used to draw the right margin
+     * that must not be considered when drawing an overlay */
+    hud_controller_->launcher_width = launcher_width - 1;
+    dash_controller_->launcher_width = launcher_width - 1;
+    panel_controller_->launcher_width = launcher_width - 1;
+  });
 
   ScheduleRelayout(0);
 }

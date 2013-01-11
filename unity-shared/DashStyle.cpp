@@ -224,7 +224,6 @@ public:
 
   LazyLoadTexture refine_gradient_corner_;
   LazyLoadTexture refine_gradient_dash_;
-  LazyLoadTexture refine_gradient_no_refine_dash_;
 
   LazyLoadTexture group_unexpand_texture_;
   LazyLoadTexture group_expand_texture_;
@@ -271,7 +270,6 @@ Style::Impl::Impl(Style* owner)
   , information_texture_("/information_icon.svg")
   , refine_gradient_corner_("/refine_gradient_corner.png")
   , refine_gradient_dash_("/refine_gradient_dash.png")
-  , refine_gradient_no_refine_dash_("/refine_gradient_dash_no_refine.png")
   , group_unexpand_texture_("/dash_group_unexpand.png")
   , group_expand_texture_("/dash_group_expand.png")
   , star_deselected_texture_("/star_deselected.png")
@@ -468,9 +466,7 @@ void Style::RoundedRect(cairo_t* cr,
       cairo_surface_get_type(cairo_get_target(cr)) != CAIRO_SURFACE_TYPE_IMAGE)
     return;
 
-  bool odd = true;
-
-  odd = cairo_get_line_width (cr) == 2.0 ? false : true;
+  bool odd = cairo_get_line_width (cr) == 2.0 ? false : true;
 
   double radius = cornerRadius / aspect;
 
@@ -832,8 +828,6 @@ void Style::Impl::ButtonOutlinePath (cairo_t* cr, bool align)
   double y  = 2.0;
   double w  = cairo_image_surface_get_width(cairo_get_target(cr)) - 4.0;
   double h  = cairo_image_surface_get_height(cairo_get_target(cr)) - 4.0;
-  double xt = 0.0;
-  double yt = 0.0;
 
   // - these absolute values are the "cost" of getting only a SVG from design
   // and not a generic formular how to approximate the curve-shape, thus
@@ -841,8 +835,8 @@ void Style::Impl::ButtonOutlinePath (cairo_t* cr, bool align)
   double width  = w - 22.18;
   double height = h - 24.0;
 
-  xt = x + width + 22.18;
-  yt = y + 12.0;
+  double xt = x + width + 22.18;
+  double yt = y + 12.0;
 
   if (align)
   {
@@ -976,9 +970,8 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
   double radius  = cornerRadius / aspect;
   double arrow_w = radius / 1.5;
   double arrow_h = radius / 2.0;
-  bool odd = true;
 
-  odd = cairo_get_line_width (cr) == 2.0 ? false : true;
+  bool odd = cairo_get_line_width (cr) == 2.0 ? false : true;
 
   switch (segment)
   {
@@ -1102,8 +1095,6 @@ void Style::Impl::ButtonOutlinePathSegment(cairo_t* cr, Segment segment)
   double   y  = 2.0;
   double   w  = cairo_image_surface_get_width(cairo_get_target(cr));
   double   h  = cairo_image_surface_get_height(cairo_get_target(cr)) - 4.0;
-  double   xt = 0.0;
-  double   yt = 0.0;
 
   // - these absolute values are the "cost" of getting only a SVG from design
   // and not a generic formular how to approximate the curve-shape, thus
@@ -1111,8 +1102,8 @@ void Style::Impl::ButtonOutlinePathSegment(cairo_t* cr, Segment segment)
   double width  = w - 22.18;
   double height = h - 24.0;
 
-  xt = x + width + 22.18;
-  yt = y + 12.0;
+  double xt = x + width + 22.18;
+  double yt = y + 12.0;
 
   switch (segment)
   {
@@ -1490,7 +1481,6 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
   int                  width      = 0;
   int                  height     = 0;
   int                  stride     = 0;
-  cairo_format_t       format     = CAIRO_FORMAT_INVALID;
   unsigned char*       buffer     = NULL;
   cairo_surface_t*     surface    = NULL;
   cairo_t*             blurred_cr = NULL;
@@ -1502,7 +1492,7 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
   width  = cairo_image_surface_get_width(target);
   height = cairo_image_surface_get_height(target);
   stride = cairo_image_surface_get_stride(target);
-  format = cairo_image_surface_get_format(target);
+  cairo_format_t format = cairo_image_surface_get_format(target);
 
   // get buffer
   buffer = (unsigned char*) calloc(1, height * stride);
@@ -2222,11 +2212,6 @@ nux::BaseTexture* Style::GetRefineTextureCorner()
   return pimpl->refine_gradient_corner_.texture();
 }
 
-nux::BaseTexture* Style::GetRefineNoRefineTextureDash()
-{
-  return pimpl->refine_gradient_no_refine_dash_.texture(); 
-}
-
 nux::BaseTexture* Style::GetRefineTextureDash()
 {
   return pimpl->refine_gradient_dash_.texture(); 
@@ -2369,6 +2354,11 @@ int Style::GetScrollbarWidth() const
   return 3;
 }
 
+int Style::GetCategoryIconSize() const
+{
+  return 22;
+}
+
 int Style::GetCategoryHighlightHeight() const
 {
   return 24;
@@ -2377,6 +2367,16 @@ int Style::GetCategoryHighlightHeight() const
 int Style::GetPlacesGroupTopSpace() const
 {
   return 7;
+}
+
+int Style::GetPlacesGroupResultTopPadding() const
+{
+  return 2;
+}
+
+int Style::GetPlacesGroupResultLeftPadding() const
+{
+  return 25;
 }
 
 int Style::GetCategoryHeaderLeftPadding() const

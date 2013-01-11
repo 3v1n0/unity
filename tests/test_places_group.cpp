@@ -27,6 +27,7 @@ using namespace testing;
 
 #include "PlacesGroup.h"
 using namespace unity;
+using namespace unity::dash;
 
 namespace {
 
@@ -47,8 +48,12 @@ public:
   MOCK_METHOD0(GetGroupExpandIcon, nux::BaseTexture*());
   MOCK_METHOD0(GetGroupUnexpandIcon, nux::BaseTexture*());
 
+  MOCK_CONST_METHOD0(GetCategoryIconSize, int());
   MOCK_CONST_METHOD0(GetCategoryHeaderLeftPadding, int());
+
   MOCK_CONST_METHOD0(GetPlacesGroupTopSpace, int());
+  MOCK_CONST_METHOD0(GetPlacesGroupResultTopPadding, int());
+  MOCK_CONST_METHOD0(GetPlacesGroupResultLeftPadding, int());
 
   nux::ObjectPtr<nux::BaseTexture> base_texture_;
 };
@@ -80,6 +85,12 @@ public:
 
     ON_CALL(dash_style_, GetGroupUnexpandIcon())
          .WillByDefault(Return(dash_style_.base_texture_.GetPointer()));
+
+    ON_CALL(dash_style_, GetCategoryHeaderLeftPadding())
+         .WillByDefault(Return(19));
+
+    ON_CALL(dash_style_, GetPlacesGroupTopSpace())
+         .WillByDefault(Return(7));
   }
 
   NiceMock<MockDashStyle> dash_style_;

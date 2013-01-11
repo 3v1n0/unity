@@ -24,15 +24,7 @@
 #define GENERICPREVIEW_H
 
 #include "Preview.h"
-#include <Nux/Nux.h>
 #include <UnityCore/GenericPreview.h>
-
-namespace nux
-{
-class AbstractPaintLayer;
-class StaticCairoText;
-class VLayout;
-}
 
 namespace unity
 {
@@ -40,8 +32,6 @@ namespace dash
 {
 namespace previews
 {
-class CoverArt;
-class PreviewInfoHintWidget;
 
 class GenericPreview : public Preview
 {
@@ -61,20 +51,7 @@ protected:
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void PreLayoutManagement();
 
-  void SetupBackground();
-  void SetupViews();
-
-protected:
-  nux::VLayout* full_data_layout_;
-
-  nux::ObjectPtr<CoverArt> image_;
-  nux::ObjectPtr<nux::StaticCairoText> title_;
-  nux::ObjectPtr<nux::StaticCairoText> subtitle_;
-  nux::ObjectPtr<nux::StaticCairoText> description_;
-  nux::ObjectPtr<PreviewInfoHintWidget> preview_info_hints_;
-
-  typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
-  LayerPtr details_bg_layer_;
+  virtual void SetupViews();
 };
 
 }

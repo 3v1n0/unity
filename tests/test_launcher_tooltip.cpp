@@ -31,7 +31,7 @@
 namespace unity
 {
 
-class MockStaticCairoText : public nux::StaticCairoText
+class MockStaticCairoText : public StaticCairoText
 {
 public:
   MOCK_METHOD1(SetMinimumWidth, void(int));
@@ -51,9 +51,9 @@ public:
     std::string old_text = _tooltip_text->GetText();
     _tooltip_text = new MockStaticCairoText(old_text);
     _tooltip_text->SetTextAlignment(
-      nux::StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
+      StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
     _tooltip_text->SetTextVerticalAlignment(
-      nux::StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
+      StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
 
     _tooltip_text->sigTextChanged.connect(
       sigc::mem_fun(this, &TooltipMock::RecvCairoTextChanged));

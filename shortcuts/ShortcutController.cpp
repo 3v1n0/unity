@@ -61,9 +61,12 @@ Controller::Controller(std::list<AbstractHint::Ptr> const& hints,
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
   fade_animator_.updated.connect([this] (double opacity) {
-    view_window_->SetOpacity(opacity);
+    SetOpacity(opacity);
   });
 }
+
+Controller::~Controller()
+{}
 
 void Controller::OnBackgroundUpdate(GVariant* data)
 {
@@ -79,6 +82,8 @@ bool Controller::Show()
 {
   if (enabled_)
   {
+    EnsureView();
+
     show_timer_.reset(new glib::Timeout(SUPER_TAP_DURATION, sigc::mem_fun(this, &Controller::OnShowTimer)));
     model_->Fill();
     visible_ = true;
@@ -94,7 +99,6 @@ bool Controller::OnShowTimer()
   if (!enabled_)
     return false;
 
-  EnsureView();
   base_window_raiser_->Raise(view_window_);
 
   nux::Geometry geo;
@@ -142,8 +146,8 @@ void Controller::ConstructView()
   main_layout_->AddView(view_.GetPointer());
 
   view_->SetupBackground(false);
-  view_window_->SetOpacity(0.0);
   view_window_->ShowWindow(true);
+  SetOpacity(0.0);
 }
 
 void Controller::EnsureView()
@@ -168,7 +172,7 @@ void Controller::Hide()
   visible_ = false;
   show_timer_.reset();
 
-  if (view_window_)
+  if (view_window_ && view_window_->GetOpacity() > 0.0f)
   {
     view_->SetupBackground(false);
 
@@ -197,6 +201,11 @@ bool Controller::IsEnabled() const
 void Controller::SetEnabled(bool enabled)
 {
   enabled_ = enabled;
+}
+
+void Controller::SetOpacity(double value)
+{
+  view_window_->SetOpacity(value);
 }
 
 //

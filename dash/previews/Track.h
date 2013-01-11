@@ -30,12 +30,12 @@
 
 namespace nux
 {
-  class StaticCairoText;
   class LayeredLayout;
 }
 
 namespace unity
 {
+class StaticCairoText;
 class IconTexture;
 
 namespace dash
@@ -82,9 +82,9 @@ protected:
 protected:
   std::string uri_;
   float progress_;
-  nux::StaticCairoText* track_number_;
-  nux::StaticCairoText* title_;
-  nux::StaticCairoText* duration_;
+  unity::StaticCairoText* track_number_;
+  unity::StaticCairoText* title_;
+  unity::StaticCairoText* duration_;
 
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
   LayerPtr focus_layer_;

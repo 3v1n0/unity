@@ -1,22 +1,15 @@
 set(UNITY_SRC ../plugins/unityshell/src)
 
-find_package (PkgConfig)
-
 set (CFLAGS
      ${CACHED_UNITY_DEPS_CFLAGS}
      ${CACHED_UNITY_DEPS_CFLAGS_OTHER}
+     ${PIC_FLAGS}
      )
 
-if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l")
-  set (CFLAGS ${CFLAGS} "-fPIC")
-endif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l")
+string (REPLACE ";" " " CFLAGS "${CFLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CFLAGS}")
 
-add_definitions (${CFLAGS})
-
-set (LIBS ${CACHED_UNITY_DEPS_LIBRARIES} ${UNITY_STANDALONE_LADD})
-
-set (LIB_PATHS ${CACHED_UNITY_DEPS_LIBRARY_DIRS})
-link_directories (${CMAKE_BINARY_DIR}/UnityCore ${LIB_PATHS})
+set (LIBS ${CACHED_UNITY_DEPS_LDFLAGS} ${UNITY_STANDALONE_LADD})
 
 include_directories (.. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR})
 
@@ -32,6 +25,7 @@ set (UNITY_SHARED_SOURCES
      DashStyle.cpp
      DebugDBusInterface.cpp
      DefaultThumbnailProvider.cpp
+     DeltaRestrainment.cpp
      FontSettings.cpp
      GraphicsUtils.cpp
      IMTextEntry.cpp
@@ -87,6 +81,7 @@ endif()
 add_library (unity-shared STATIC ${UNITY_SHARED_SOURCES})
 target_link_libraries (unity-shared ${LIBS})
 add_dependencies (unity-shared unity-core-${UNITY_API_VERSION})
+add_pch(pch/unity-shared_pch.hh unity-shared)
 
 #
 # We also need to build compiz specific parts and standalone variants of those parts

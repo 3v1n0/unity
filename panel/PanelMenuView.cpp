@@ -97,14 +97,16 @@ PanelMenuView::PanelMenuView()
 
   window_buttons_ = new WindowButtons();
   window_buttons_->SetParentObject(this);
-  window_buttons_->SetMonitor(monitor_);
-  window_buttons_->SetControlledWindow(active_xid_);
+  window_buttons_->monitor = monitor_;
+  window_buttons_->controlled_window = active_xid_;
   window_buttons_->SetLeftAndRightPadding(MAIN_LEFT_PADDING, MENUBAR_PADDING);
   window_buttons_->SetMaximumHeight(panel::Style::Instance().panel_height);
   window_buttons_->ComputeContentSize();
 
   window_buttons_->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
   window_buttons_->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
+  /* This is needed since when buttons are redrawn, the panel is not. See bug #1090439 */
+  window_buttons_->opacity.changed.connect(sigc::hide(sigc::mem_fun(this, &PanelMenuView::QueueDraw)));
   AddChild(window_buttons_.GetPointer());
 
   layout_->SetLeftAndRightPadding(window_buttons_->GetContentWidth(), 0);
@@ -162,8 +164,8 @@ PanelMenuView::PanelMenuView()
 
   opacity_animator_.updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeAnimatorUpdated));
 
-  SetOpacity(0.0f);
-  window_buttons_->SetOpacity(0.0f);
+  opacity = 0.0f;
+  window_buttons_->opacity = 0.0f;
 
   Refresh();
   FullRedraw();
@@ -312,23 +314,23 @@ void PanelMenuView::StartFadeOut(int duration)
   opacity_animator_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
 }
 
-void PanelMenuView::OnFadeAnimatorUpdated(double opacity)
+void PanelMenuView::OnFadeAnimatorUpdated(double progress)
 {
   if (opacity_animator_.GetFinishValue() == 1.0f) /* Fading in... */
   {
-    if (DrawMenus() && GetOpacity() != 1.0f)
-      SetOpacity(opacity);
+    if (DrawMenus() && opacity() != 1.0f)
+      opacity = progress;
 
-    if (DrawWindowButtons() && window_buttons_->GetOpacity() != 1.0f)
-      window_buttons_->SetOpacity(opacity);
+    if (DrawWindowButtons() && window_buttons_->opacity() != 1.0f)
+      window_buttons_->opacity = progress;
   }
   else if (opacity_animator_.GetFinishValue() == 0.0f) /* Fading out... */
   {
-    if (!DrawMenus() && GetOpacity() != 0.0f)
-      SetOpacity(opacity);
+    if (!DrawMenus() && opacity() != 0.0f)
+      opacity = progress;
 
-    if (!DrawWindowButtons() && window_buttons_->GetOpacity() != 0.0f)
-      window_buttons_->SetOpacity(opacity);
+    if (!DrawWindowButtons() && window_buttons_->opacity() != 0.0f)
+      window_buttons_->opacity = progress;
   }
 }
 
@@ -414,7 +416,7 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
 
     if (!draw_window_buttons && we_control_active_ && has_menu &&
-        (draw_menus || (GetOpacity() > 0.0f && window_buttons_->GetOpacity() == 0.0f)))
+        (draw_menus || (opacity() > 0.0f && window_buttons_->opacity() == 0.0f)))
     {
       draw_faded_title = true;
     }
@@ -457,8 +459,8 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       }
 
       BYTE* dest_buffer = (BYTE*) lockrect.pBits;
-      int gradient_opacity = 255.0f * GetOpacity();
-      int buttons_opacity = 255.0f * window_buttons_->GetOpacity();
+      int gradient_opacity = 255.0f * opacity();
+      int buttons_opacity = 255.0f * window_buttons_->opacity();
 
       int first_step = button_width * (factor - 1);
       int second_step = button_width * factor;
@@ -527,8 +529,8 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     {
       double title_opacity = 0.0f;
 
-      if (we_control_active_ && window_buttons_->GetOpacity() == 0.0 &&
-          (!has_menu || (has_menu && GetOpacity() == 0.0)))
+      if (we_control_active_ && window_buttons_->opacity() == 0.0 &&
+          (!has_menu || (has_menu && opacity() == 0.0)))
       {
         title_opacity = 1.0f;
       }
@@ -537,9 +539,9 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
         title_opacity = 1.0f;
 
         if (has_menu)
-          title_opacity -= MAX(GetOpacity(), window_buttons_->GetOpacity());
+          title_opacity -= std::max<double>(opacity(), window_buttons_->opacity());
         else
-          title_opacity -= window_buttons_->GetOpacity();
+          title_opacity -= window_buttons_->opacity();
 
         if (!draw_window_buttons && !draw_menus)
         {
@@ -587,12 +589,12 @@ void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
 
     if (new_application_ && !is_inside_)
     {
-      if (GetOpacity() != 1.0f)
+      if (opacity() != 1.0f)
         StartFadeIn(menus_discovery_fadein_);
     }
     else
     {
-      if (GetOpacity() != 1.0f)
+      if (opacity() != 1.0f)
         StartFadeIn();
 
       new_app_menu_shown_ = false;
@@ -600,7 +602,7 @@ void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
   }
   else /* if (!draw_menus) */
   {
-    if (GetOpacity() != 0.0f && !overlay_showing_)
+    if (opacity() != 0.0f && !overlay_showing_)
     {
       layout_->ProcessDraw(GfxContext, true);
       StartFadeOut(new_app_menu_shown_ ? menus_discovery_fadeout_ : -1);
@@ -614,10 +616,10 @@ void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
   {
     window_buttons_->ProcessDraw(GfxContext, true);
 
-    if (window_buttons_->GetOpacity() != 1.0f)
+    if (window_buttons_->opacity() != 1.0f)
       StartFadeIn();
   }
-  else if (/*!draw_buttons &&*/ window_buttons_->GetOpacity() != 0.0f)
+  else if (/*!draw_buttons &&*/ window_buttons_->opacity() != 0.0f)
   {
     window_buttons_->ProcessDraw(GfxContext, true);
 
@@ -714,7 +716,7 @@ void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::s
   PangoFontDescription* desc;
 
   nux::CairoGraphics util_cg(CAIRO_FORMAT_ARGB32, 1, 1);
-  cr = util_cg.GetContext();
+  cr = util_cg.GetInternalContext();
 
   int dpi = Style::Instance().GetTextDPI();
 
@@ -735,7 +737,6 @@ void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::s
   text_height = log_rect.height / PANGO_SCALE;
 
   pango_font_description_free(desc);
-  cairo_destroy(cr);
 
   // Draw the text
   GtkStyleContext* style_context = Style::Instance().GetStyleContext();
@@ -774,8 +775,6 @@ void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::s
     gtk_render_layout(style_context, cr, x, y, layout);
   }
 
-  x += text_width;
-
   gtk_style_context_restore(style_context);
 }
 
@@ -804,7 +803,7 @@ std::string PanelMenuView::GetCurrentTitle() const
     else
     {
       new_title = GetActiveViewName();
-      window_buttons_->SetControlledWindow(active_xid_);
+      window_buttons_->controlled_window = active_xid_;
     }
 
     // panel_title_ needs to be only escaped when computed
@@ -1062,7 +1061,7 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
     view_name_changed_signal_.Connect(new_view, "name-changed",
                                       sigc::mem_fun(this, &PanelMenuView::OnNameChanged));
 
-    window_buttons_->SetControlledWindow(is_maximized_ ? active_xid_ : 0);
+    window_buttons_->controlled_window = (is_maximized_) ? active_xid_ : 0;
   }
 
   Refresh();
@@ -1665,8 +1664,8 @@ void PanelMenuView::SetMonitor(int monitor)
   Window maximized = GetMaximizedWindow();
   Window buttons_win = (maximized == active_xid_) ? maximized : 0;
 
-  window_buttons_->SetMonitor(monitor_);
-  window_buttons_->SetControlledWindow(buttons_win);
+  window_buttons_->monitor = monitor_;
+  window_buttons_->controlled_window = buttons_win;
 
   g_list_free(windows);
 }

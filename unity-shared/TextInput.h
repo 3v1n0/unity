@@ -94,7 +94,7 @@ protected:
   bool get_im_preedit() const;
 
   // instance vars
-  nux::StaticCairoText* hint_;
+  StaticCairoText* hint_;
   IMTextEntry* pango_entry_;
 
 private:
