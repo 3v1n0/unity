@@ -267,6 +267,7 @@ private:
   launcher::Controller::Ptr launcher_controller_;
   dash::Controller::Ptr     dash_controller_;
   panel::Controller::Ptr    panel_controller_;
+  debug::Introspectable     *introspectable_switcher_controller_;
   switcher::Controller::Ptr switcher_controller_;
   hud::Controller::Ptr      hud_controller_;
   shortcut::Controller::Ptr shortcut_controller_;

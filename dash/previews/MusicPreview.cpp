@@ -24,7 +24,6 @@
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
 #include "unity-shared/IconTexture.h"
-#include "unity-shared/StaticCairoText.h"
 #include <UnityCore/MusicPreview.h>
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
@@ -33,7 +32,6 @@
  
 #include "MusicPreview.h"
 #include "ActionButton.h"
-#include "PreviewInfoHintWidget.h"
 #include "Tracks.h"
 
 namespace unity
@@ -48,11 +46,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(MusicPreview);
 
 MusicPreview::MusicPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
-, image_(nullptr)
-, title_(nullptr)
-, subtitle_(nullptr)
 {
-  SetupBackground();
   SetupViews();
 }
 
@@ -64,22 +58,8 @@ void MusicPreview::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
 
-  bool enable_bg_shadows = dash::previews::Style::Instance().GetShadowBackgroundEnabled();
-
   gfx_engine.PushClippingRectangle(base);
   nux::GetPainter().PaintBackground(gfx_engine, base);
-
-  if (enable_bg_shadows && full_data_layout_)
-  {
-    unsigned int alpha, src, dest = 0;
-    gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
-    gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-    details_bg_layer_->SetGeometry(full_data_layout_->GetGeometry());
-    nux::GetPainter().RenderSinglePaintLayer(gfx_engine, full_data_layout_->GetGeometry(), details_bg_layer_.get());
-
-    gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
-  }
 
   gfx_engine.PopClippingRectangle();
 }
@@ -89,11 +69,6 @@ void MusicPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
   nux::Geometry const& base = GetGeometry();
   gfx_engine.PushClippingRectangle(base);
 
-  bool enable_bg_shadows = dash::previews::Style::Instance().GetShadowBackgroundEnabled();
-
-  if (enable_bg_shadows && !IsFullRedraw())
-    nux::GetPainter().PushLayer(gfx_engine, details_bg_layer_->GetGeometry(), details_bg_layer_.get());
-
   unsigned int alpha, src, dest = 0;
   gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
   gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -102,9 +77,6 @@ void MusicPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
     GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
 
   gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
-
-  if (enable_bg_shadows && !IsFullRedraw())
-    nux::GetPainter().PopBackground();
 
   gfx_engine.PopClippingRectangle();
 }
@@ -117,11 +89,6 @@ std::string MusicPreview::GetName() const
 void MusicPreview::AddProperties(GVariantBuilder* builder)
 {
   Preview::AddProperties(builder);
-}
-
-void MusicPreview::SetupBackground()
-{
-  details_bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
 }
 
 void MusicPreview::SetupViews()

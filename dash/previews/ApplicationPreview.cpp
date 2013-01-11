@@ -24,7 +24,6 @@
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
 #include "unity-shared/IconTexture.h"
-#include "unity-shared/StaticCairoText.h"
 #include "unity-shared/PlacesOverlayVScrollBar.h"
 #include <UnityCore/ApplicationPreview.h>
 #include <NuxCore/Logger.h>
@@ -38,7 +37,6 @@
  
 #include "ApplicationPreview.h"
 #include "ActionButton.h"
-#include "PreviewInfoHintWidget.h"
 #include "PreviewRatingsWidget.h"
 
 namespace unity
@@ -64,9 +62,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(ApplicationPreview);
 
 ApplicationPreview::ApplicationPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
-, full_data_layout_(nullptr)
 {
-  SetupBackground();
   SetupViews();
 }
 
@@ -78,22 +74,8 @@ void ApplicationPreview::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
 
-  bool enable_bg_shadows = dash::previews::Style::Instance().GetShadowBackgroundEnabled();
-
   gfx_engine.PushClippingRectangle(base);
   nux::GetPainter().PaintBackground(gfx_engine, base);
-
-  if (enable_bg_shadows && full_data_layout_)
-  {
-    unsigned int alpha, src, dest = 0;
-    gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
-    gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-    details_bg_layer_->SetGeometry(full_data_layout_->GetGeometry());
-    nux::GetPainter().RenderSinglePaintLayer(gfx_engine, full_data_layout_->GetGeometry(), details_bg_layer_.get());
-
-    gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
-  }
 
   gfx_engine.PopClippingRectangle();
 }
@@ -103,11 +85,6 @@ void ApplicationPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force
   nux::Geometry const& base = GetGeometry();
   gfx_engine.PushClippingRectangle(base);
 
-  bool enable_bg_shadows = dash::previews::Style::Instance().GetShadowBackgroundEnabled();
-
-  if (enable_bg_shadows && !IsFullRedraw())
-    nux::GetPainter().PushLayer(gfx_engine, details_bg_layer_->GetGeometry(), details_bg_layer_.get());
-
   unsigned int alpha, src, dest = 0;
   gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
   gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -116,9 +93,6 @@ void ApplicationPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force
     GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
 
   gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
-
-  if (enable_bg_shadows && !IsFullRedraw())
-    nux::GetPainter().PopBackground();
 
   gfx_engine.PopClippingRectangle();
 }
@@ -131,11 +105,6 @@ std::string ApplicationPreview::GetName() const
 void ApplicationPreview::AddProperties(GVariantBuilder* builder)
 {
   Preview::AddProperties(builder);
-}
-
-void ApplicationPreview::SetupBackground()
-{
-  details_bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
 }
 
 void ApplicationPreview::SetupViews()

@@ -228,7 +228,6 @@ compiz::MinimizedWindowHandler::unminimize ()
 
       nextStateSize = nItems;
 
-      pbegin = nextState = (Atom *) malloc (sizeof (Atom) * nextStateSize);
       pbegin = nextState = (Atom *) memcpy (nextState, data, sizeof (Atom) * nextStateSize);
 
       /* Remove _NET_WM_STATE_HIDDEN */

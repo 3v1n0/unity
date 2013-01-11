@@ -916,8 +916,7 @@ void ql_compute_full_mask_path(cairo_t* cr,
   gfloat padding  = pad;
   int ZEROPOINT5 = 0.0f;
 
-  gfloat HeightToAnchor = 0.0f;
-  HeightToAnchor = ((gfloat) height - 2.0f * radius - anchor_height - 2 * padding) / 2.0f;
+  gfloat HeightToAnchor = ((gfloat) height - 2.0f * radius - anchor_height - 2 * padding) / 2.0f;
   if (HeightToAnchor < 0.0f)
   {
     g_warning("Anchor-height and corner-radius a higher than whole texture!");

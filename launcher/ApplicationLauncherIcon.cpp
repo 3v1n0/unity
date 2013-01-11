@@ -662,17 +662,6 @@ void ApplicationLauncherIcon::UpdateBackgroundColor()
 
 void ApplicationLauncherIcon::UpdateMenus()
 {
-  for (auto& app_menu : app_->GetRemoteMenus())
-  {
-    // we already have this
-    if (_menu_clients.find(app_menu.path) != _menu_clients.end())
-      continue;
-
-    glib::Object<DbusmenuClient> client(dbusmenu_client_new(app_menu.remote_address.c_str(),
-                                                            app_menu.path.c_str()));
-    _menu_clients[app_menu.path] = client;
-  }
-
   // add dynamic quicklist
   if (_menuclient_dynamic_quicklist && _menuclient_dynamic_quicklist.IsType(DBUSMENU_TYPE_CLIENT))
   {
