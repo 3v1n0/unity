@@ -37,6 +37,12 @@ unsigned int DEFAULT_LAZY_CONSTRUCT_TIMEOUT = 20;
 
 class TestSwitcherController : public testing::Test
 {
+protected:
+  TestSwitcherController()
+    : controller_([](){ return Controller::ImplPtr(new ShellController()); })
+  { }
+
+  Controller controller_;
 };
 
 
