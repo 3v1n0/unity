@@ -832,10 +832,10 @@ TEST_F(TestLauncherController, ResetIconPriorities)
   lc.DisconnectSignals();
 
   favorite_store.SetFavorites({ places::DEVICES_URI,
-                                FavoriteStore::URI_PREFIX_APP + app::SW_CENTER,
+                                FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(app::SW_CENTER),
                                 places::APPS_URI,
-                                FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE,
-                                FavoriteStore::URI_PREFIX_APP + app::UPDATE_MANAGER });
+                                FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(app::UBUNTU_ONE),
+                                FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(app::UPDATE_MANAGER) });
   lc.Impl()->ResetIconPriorities();
 
   int icon_index = -1;
@@ -942,7 +942,7 @@ TEST_F(TestLauncherController, GetLastIconPriorityUnStickyWithNoIconsAndUri)
   lc.Impl()->device_section_ = MockDeviceLauncherSection(0);
 
   favorite_store.SetFavorites({ places::DEVICES_URI,
-                                FavoriteStore::URI_PREFIX_APP + app::SW_CENTER });
+                                FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(app::SW_CENTER) });
   lc.Impl()->SetupIcons();
 
   auto first_icon = lc.Impl()->GetIconByUri(FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(app::SW_CENTER));
@@ -951,7 +951,7 @@ TEST_F(TestLauncherController, GetLastIconPriorityUnStickyWithNoIconsAndUri)
   int last_priority = lc.Impl()->GetLastIconPriority<VolumeLauncherIcon>(places::DEVICES_URI);
   EXPECT_EQ(last_priority, first_icon->SortPriority() - 1);
 
-  favorite_store.SetFavorites({ FavoriteStore::URI_PREFIX_APP + app::SW_CENTER,
+  favorite_store.SetFavorites({ FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(app::SW_CENTER),
                                 places::DEVICES_URI });
   favorite_store.reordered.emit();
 
