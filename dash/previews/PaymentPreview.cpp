@@ -23,6 +23,7 @@
 #include <NuxCore/Logger.h>
 #include "PaymentPreview.h"
 #include "unity-shared/CoverArt.h"
+#include "unity-shared/PreviewStyle.h"
 
 namespace unity
 {
@@ -37,6 +38,150 @@ namespace
 {
 nux::logging::Logger logger("unity.dash.previews.MusicPaymentPreview");
 
+}
+
+class OverlaySpinner : public unity::debug::Introspectable, public nux::View
+{
+  NUX_DECLARE_OBJECT_TYPE(OverlaySpinner, nux::View);
+public:
+  OverlaySpinner();
+
+  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+
+protected:
+  // Introspectable methods
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+
+  // Key navigation
+  virtual bool AcceptKeyNavFocus();
+
+private:
+  bool OnFrameTimeout();
+
+  nux::BaseTexture* spin_;
+
+  glib::Source::UniquePtr frame_timeout_;
+
+  nux::Matrix4 rotate_;
+  float rotation_;
+};
+
+NUX_IMPLEMENT_OBJECT_TYPE(OverlaySpinner);
+
+OverlaySpinner::OverlaySpinner()
+  : nux::View(NUX_TRACKER_LOCATION),
+    rotation_(0.0f)
+{
+  previews::Style& style = dash::previews::Style::Instance();
+
+  spin_ = style.GetSearchSpinIcon();
+
+  rotate_.Identity();
+  rotate_.Rotate_z(0.0);
+}
+
+void OverlaySpinner::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+{
+  nux::Geometry const& geo = GetGeometry();
+  nux::TexCoordXForm texxform;
+
+  GfxContext.PushClippingRectangle(geo);
+
+  nux::GetPainter().PaintBackground(GfxContext, geo);
+
+  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+  texxform.min_filter = nux::TEXFILTER_LINEAR;
+  texxform.mag_filter = nux::TEXFILTER_LINEAR;
+
+  unsigned int current_alpha_blend;
+  unsigned int current_src_blend_factor;
+  unsigned int current_dest_blend_factor;
+  GfxContext.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+  GfxContext.GetRenderStates().SetBlend(true,  GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+  nux::Geometry spin_geo(geo.x + ((geo.width - spin_->GetWidth()) / 2),
+                         geo.y + ((geo.height - spin_->GetHeight()) / 2),
+                         spin_->GetWidth(),
+                         spin_->GetHeight());
+  // Geometry (== Rect) uses integers which were rounded above,
+  // hence an extra 0.5 offset for odd sizes is needed
+  // because pure floating point is not being used.
+  int spin_offset_w = !(geo.width % 2) ? 0 : 1;
+  int spin_offset_h = !(geo.height % 2) ? 0 : 1;
+
+  nux::Matrix4 matrix_texture;
+  matrix_texture = nux::Matrix4::TRANSLATE(-spin_geo.x - (spin_geo.width + spin_offset_w) / 2.0f,
+                                          -spin_geo.y - (spin_geo.height + spin_offset_h) / 2.0f, 0) * matrix_texture;
+  matrix_texture = rotate_ * matrix_texture;
+  matrix_texture = nux::Matrix4::TRANSLATE(spin_geo.x + (spin_geo.width + spin_offset_w) / 2.0f,
+                                             spin_geo.y + (spin_geo.height + spin_offset_h) / 2.0f, 0) * matrix_texture;
+
+  GfxContext.SetModelViewMatrix(GfxContext.GetModelViewMatrix() * matrix_texture);
+
+  GfxContext.QRP_1Tex(spin_geo.x,
+                      spin_geo.y,
+                      spin_geo.width,
+                      spin_geo.height,
+                      spin_->GetDeviceTexture(),
+                      texxform,
+                      nux::color::White);
+
+  // revert to model view matrix stack
+  GfxContext.ApplyModelViewMatrix();
+
+  GfxContext.PopClippingRectangle();
+
+  GfxContext.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+
+  if (!frame_timeout_)
+  {
+    frame_timeout_.reset(new glib::Timeout(22, sigc::mem_fun(this, &OverlaySpinner::OnFrameTimeout)));
+  }
+}
+
+
+void OverlaySpinner::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
+{
+}
+
+
+bool OverlaySpinner::OnFrameTimeout()
+{
+  rotation_ += 0.1f;
+
+  if (rotation_ >= 360.0f)
+    rotation_ = 0.0f;
+
+  rotate_.Rotate_z(rotation_);
+  QueueDraw();
+
+  frame_timeout_.reset();
+  return false;
+}
+
+std::string OverlaySpinner::GetName() const
+{
+  return "OverlaySpinner";
+}
+
+void OverlaySpinner::AddProperties(GVariantBuilder* builder)
+{
+  nux::Geometry geo = GetGeometry();
+
+  variant::BuilderWrapper(builder)
+    .add("x", geo.x)
+    .add("y", geo.y)
+    .add("width", geo.width)
+    .add("height", geo.height);
+}
+
+
+bool OverlaySpinner::AcceptKeyNavFocus()
+{
+  return false;
 }
 
 PaymentPreview::PaymentPreview(dash::Preview::Ptr preview_model)
@@ -203,7 +348,6 @@ void PaymentPreview::SetupViews()
   header_layout_ = GetHeader();
 
   content_data_layout_->AddLayout(header_layout_, 1);
-//  content_data_layout_->AddSpace(style.GetPaymentHeaderSpace(), 0);
 
   body_layout_ = GetBody();
   content_data_layout_->AddLayout(body_layout_, 1);
@@ -219,8 +363,10 @@ void PaymentPreview::SetupViews()
                                    "Performing purchase", true,
                                    NUX_TRACKER_LOCATION);
 
+  OverlaySpinner* spinner_ = new OverlaySpinner();
   overlay_layout_->AddSpace(20, 1);
-  overlay_layout_->AddView(calculating, 1, nux::MINOR_POSITION_CENTER); 
+  overlay_layout_->AddView(calculating, 0, nux::MINOR_POSITION_CENTER);
+  overlay_layout_->AddView(spinner_, 1, nux::MINOR_POSITION_CENTER);
   overlay_layout_->AddSpace(20, 1);
 
   full_data_layout_->AddLayout(overlay_layout_);
