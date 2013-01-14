@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Canonical Ltd.
+ * Copyright 2012-2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3, as published
@@ -35,12 +35,17 @@ namespace
 
 unsigned int DEFAULT_LAZY_CONSTRUCT_TIMEOUT = 20;
 
-TEST(TestSwitcherController, InstantiateMock)
+class TestSwitcherController : public testing::Test
+{
+};
+
+
+TEST_F(TestSwitcherController, InstantiateMock)
 {
   MockSwitcherController mock;
 }
 
-TEST(TestSwitcherController, InstantiateMockThroughNVI)
+TEST_F(TestSwitcherController, InstantiateMockThroughNVI)
 {
   MockSwitcherController *mock = new MockSwitcherController;
   Controller controller ([&](){
@@ -48,20 +53,20 @@ TEST(TestSwitcherController, InstantiateMockThroughNVI)
   });
 }
 
-TEST(TestSwitcherController, Construction)
+TEST_F(TestSwitcherController, Construction)
 {
   ShellController controller;
   EXPECT_FALSE(controller.Visible());
 }
 
-TEST(TestSwitcherController, LazyConstructionTimeoutLength)
+TEST_F(TestSwitcherController, LazyConstructionTimeoutLength)
 {
   StubSwitcherController controller;
   EXPECT_EQ(controller.GetConstructTimeout(), DEFAULT_LAZY_CONSTRUCT_TIMEOUT);
 }
 
 /*
-TEST(TestSwitcherController, LazyWindowConstruction)
+TEST_F(TestSwitcherController, LazyWindowConstruction)
 {
   // Setting the timeout to a lower value to speed-up the test
   StubSwitcherController controller(2);
@@ -80,7 +85,7 @@ TEST(TestSwitcherController, LazyWindowConstruction)
 }
 */
 
-TEST(TestSwitcherController, InitialDetailTimeout)
+TEST_F(TestSwitcherController, InitialDetailTimeout)
 {
   StubSwitcherController controller;
   std::vector<unity::launcher::AbstractLauncherIcon::Ptr> results;
@@ -98,7 +103,7 @@ TEST(TestSwitcherController, InitialDetailTimeout)
   EXPECT_TRUE(unity::TimeUtil::TimeDelta(&controller.detail_timespec_, &current) >= 2000);
 }
 
-TEST(TestSwitcherController, DetailTimeout)
+TEST_F(TestSwitcherController, DetailTimeout)
 {
   StubSwitcherController controller;
   struct timespec current;
@@ -114,7 +119,7 @@ TEST(TestSwitcherController, DetailTimeout)
   EXPECT_TRUE(unity::TimeUtil::TimeDelta(&controller.detail_timespec_, &current) >= 1000);
 }
 
-TEST(TestSwitcherController, ShowSwitcher)
+TEST_F(TestSwitcherController, ShowSwitcher)
 {
   StubSwitcherController controller;
   std::vector<unity::launcher::AbstractLauncherIcon::Ptr> results;
@@ -126,7 +131,7 @@ TEST(TestSwitcherController, ShowSwitcher)
   ASSERT_TRUE(controller.view_shown_);
 }
 
-TEST(TestSwitcherController, ShowSwitcherNoShowDeskop)
+TEST_F(TestSwitcherController, ShowSwitcherNoShowDeskop)
 {
   StubSwitcherController controller;
   controller.SetShowDesktopDisabled(true);
@@ -135,7 +140,7 @@ TEST(TestSwitcherController, ShowSwitcherNoShowDeskop)
   ASSERT_TRUE(controller.StartIndex() == 0);
 }
 
-TEST(TestSwitcherController, ShowSwitcherNoResults)
+TEST_F(TestSwitcherController, ShowSwitcherNoResults)
 {
   StubSwitcherController controller;
   controller.SetShowDesktopDisabled(true);
