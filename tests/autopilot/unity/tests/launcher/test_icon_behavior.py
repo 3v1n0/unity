@@ -232,7 +232,7 @@ class LauncherIconsTests(LauncherTestCase):
         icon = self.launcher.model.get_icon(desktop_id=window.application.desktop_file)
 
         self.launcher_instance.click_launcher_icon(icon)
-        self.assertThat(window.x_win.get_wm_state()['state'], Equals(Xutil.NormalState))
+        self.assertThat(lambda: window.x_win.get_wm_state()['state'], Eventually(Equals(Xutil.NormalState)))
 
     def test_unminimize_minimized_immediately_after_show_windows(self):
         """Make sure minimized-immediately-after-show windows can be unminimized."""
@@ -245,7 +245,7 @@ class LauncherIconsTests(LauncherTestCase):
         icon = self.launcher.model.get_icon(desktop_id=window.application.desktop_file)
 
         self.launcher_instance.click_launcher_icon(icon)
-        self.assertThat(window.x_win.get_wm_state()['state'], Equals(Xutil.NormalState))
+        self.assertThat(lambda: window.x_win.get_wm_state()['state'], Eventually(Equals(Xutil.NormalState)))
 
 class LauncherDragIconsBehavior(LauncherTestCase):
     """Tests dragging icons around the Launcher."""
