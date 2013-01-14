@@ -224,6 +224,7 @@ nux::Layout* MusicPaymentPreview::GetBody()
   body_layout->AddView(intro_.GetPointer(), 1);
   body_layout->AddLayout(form_layout_.GetPointer(), 1);
 
+
   return body_layout;
 }
 
@@ -231,20 +232,28 @@ nux::Layout* MusicPaymentPreview::GetFormLabels()
 {
   previews::Style& style = dash::previews::Style::Instance();
   nux::VLayout *labels_layout = new nux::VLayout();
-  labels_layout->SetSpaceBetweenChildren(18);
+  if (!error_message_)
+  {
+    labels_layout->SetSpaceBetweenChildren(18);
+  }
+  else
+  {
+    labels_layout->SetSpaceBetweenChildren(10);
+  }
+
   email_label_ = new StaticCairoText(
           _("Ubuntu One email:"), true,
           NUX_TRACKER_LOCATION);
   email_label_->SetLines(-1);
   email_label_->SetFont(style.payment_form_labels_font().c_str());
-  labels_layout->AddView(email_label_.GetPointer(), 1, nux::MINOR_POSITION_END);
+  labels_layout->AddView(email_label_.GetPointer(), 0, nux::MINOR_POSITION_END);
 
   payment_label_ = new StaticCairoText(
           _("Payment method:"), true,
           NUX_TRACKER_LOCATION);
   payment_label_->SetLines(-1);
   payment_label_->SetFont(style.payment_form_labels_font().c_str());
-  labels_layout->AddView(payment_label_.GetPointer(), 1, nux::MINOR_POSITION_END);
+  labels_layout->AddView(payment_label_.GetPointer(), 0, nux::MINOR_POSITION_END);
 
   password_label_ = new StaticCairoText(
           _("Ubuntu One Password:"), true,
@@ -252,7 +261,7 @@ nux::Layout* MusicPaymentPreview::GetFormLabels()
   password_label_->SetLines(-1);
   password_label_->SetFont(style.payment_form_labels_font().c_str());
   password_label_->SetMinimumHeight(40);
-  labels_layout->AddView(password_label_.GetPointer(), 1, nux::MINOR_POSITION_END);
+  labels_layout->AddView(password_label_.GetPointer(), 0, nux::MINOR_POSITION_END);
 
   return labels_layout;
 }
@@ -261,7 +270,15 @@ nux::Layout* MusicPaymentPreview::GetFormFields()
 {
   previews::Style& style = dash::previews::Style::Instance();
   nux::VLayout *fields_layout = new nux::VLayout();
-  fields_layout->SetSpaceBetweenChildren(18);
+  if (!error_message_)
+  {
+    fields_layout->SetSpaceBetweenChildren(18);
+  }
+  else
+  {
+    fields_layout->SetSpaceBetweenChildren(10);
+  }
+
   email_ = new StaticCairoText(
           payment_preview_model_->email.Get(), true,
           NUX_TRACKER_LOCATION);
@@ -290,6 +307,17 @@ nux::Layout* MusicPaymentPreview::GetFormFields()
   const char password_char = '*';
   password_entry_->text_entry()->SetPasswordChar(&password_char);
 
+  if (error_message_)
+  {
+    StaticCairoText* error = new StaticCairoText(
+            _("Wrong password"), true, NUX_TRACKER_LOCATION);
+    error->SetLines(-1);
+    error->SetFont(style.payment_form_data_font().c_str());
+    // ensure it is an error using red
+    error->SetTextColor(style.payment_error_color());
+    fields_layout->AddView(error, 0, nux::MINOR_POSITION_START);
+  }
+
   return fields_layout;
 }
 
@@ -297,7 +325,14 @@ nux::Layout* MusicPaymentPreview::GetFormActions()
 {
   previews::Style& style = dash::previews::Style::Instance();
   nux::VLayout *actions_layout = new nux::VLayout();
-  actions_layout->SetSpaceBetweenChildren(16);
+  if (!error_message_)
+  {
+    actions_layout->SetSpaceBetweenChildren(16);
+  }
+  else
+  {
+    actions_layout->SetSpaceBetweenChildren(8);
+  }
 
   nux::ObjectPtr<StaticCairoText> empty_;
   empty_ = new StaticCairoText(
@@ -376,6 +411,22 @@ nux::Layout* MusicPaymentPreview::GetFooter()
   return buttons_data_layout;
 }
 
+const char* MusicPaymentPreview::GetErrorMessage(GVariant *dict)
+{
+  printf("get data!\n");
+  GVariant* data = NULL;
+  data = g_variant_lookup_value(dict, "error_message", G_VARIANT_TYPE_ANY);
+  if (data == NULL)
+  {
+    printf("Return null\n");
+    return NULL;
+  }
+  gsize length;
+  std::string data_s = std::string(g_variant_get_string(data, &length));
+  printf("Error %s\n", data_s.c_str());
+  return data_s.c_str();
+}
+
 void MusicPaymentPreview::PreLayoutManagement()
 {
   nux::Geometry geo = GetGeometry();
@@ -410,12 +461,26 @@ void MusicPaymentPreview::SetupViews()
     return;
   }
 
+  dash::Preview::InfoHintPtrList hints = preview_model_->GetInfoHints();
+  GVariant *preview_data = NULL;
+  dash::Preview::InfoHintPtr data_info_hint_ = NULL;
+  if (!hints.empty())
+  {
+    for (dash::Preview::InfoHintPtr info_hint : hints)
+    {
+      if (info_hint->id == DATA_INFOHINT_ID)
+      {
+        preview_data = info_hint->value;
+      }
+      if (preview_data != NULL)
+      {
+        error_message_ = GetErrorMessage(preview_data);
+      }
+    }
+  }
+
   // load the buttons so that they can be accessed in order
   LoadActions();
-
-  // TODO: change api so that this makes more sense
-
-
   PaymentPreview::SetupViews();
 }
 

@@ -191,7 +191,7 @@ void PaymentPreview::SetupBackground()
 
 void PaymentPreview::SetupViews()
 {
-  previews::Style& style = dash::previews::Style::Instance();
+ // previews::Style& style = dash::previews::Style::Instance();
 
   full_data_layout_ = new nux::LayeredLayout();
 
@@ -203,7 +203,7 @@ void PaymentPreview::SetupViews()
   header_layout_ = GetHeader();
 
   content_data_layout_->AddLayout(header_layout_, 1);
-  content_data_layout_->AddSpace(style.GetPaymentHeaderSpace(), 0);
+//  content_data_layout_->AddSpace(style.GetPaymentHeaderSpace(), 0);
 
   body_layout_ = GetBody();
   content_data_layout_->AddLayout(body_layout_, 1);

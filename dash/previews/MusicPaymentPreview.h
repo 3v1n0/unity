@@ -82,6 +82,7 @@ public:
   nux::Layout* GetPayment();
   nux::Layout* GetPassword();
   nux::Layout* GetFooter();
+  const char* GetErrorMessage(GVariant *dict);
 
 private:
   void LoadActions();
@@ -110,11 +111,13 @@ protected:
   nux::ObjectPtr<StaticCairoText> purchase_type_;
   nux::ObjectPtr<StaticCairoText> change_payment_;
   nux::ObjectPtr<StaticCairoText> forgotten_password_;
+  nux::ObjectPtr<StaticCairoText> error_label_;
   nux::ObjectPtr<nux::HLayout> form_layout_;
 
   dash::PaymentPreview* payment_preview_model_;
   // do we want to type?
   bool entry_selected_;
+  const char* error_message_;
 
   // actions
   std::map<std::string, nux::ObjectPtr<nux::AbstractButton>> sorted_buttons_;

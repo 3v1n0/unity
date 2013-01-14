@@ -337,6 +337,11 @@ std::string Style::payment_text_input_font() const
   return "Ubuntu 14";
 }
 
+nux::Color Style::payment_error_color() const
+{
+  return nux::Color(255, 0, 0);
+}
+
 int Style::GetPaymentIconAreaWidth() const
 {
   return 64;

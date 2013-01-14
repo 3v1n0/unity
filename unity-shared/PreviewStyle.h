@@ -160,6 +160,7 @@ public:
   std::string payment_form_data_font() const;
   std::string payment_form_actions_font() const;
   std::string payment_text_input_font() const;
+  nux::Color payment_error_color() const;
 
 
   int GetPaymentIconAreaWidth() const;
