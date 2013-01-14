@@ -459,8 +459,12 @@ TEST_F(TestLauncherController, EnabledStrutsOnNeverHide)
   uscreen.SetupFakeMultiMonitor();
   lc.options()->hide_mode = LAUNCHER_HIDE_NEVER;
 
+  auto check_fn = [this](int index) {
+    return lc.launchers()[index]->GetParent()->InputWindowStrutsEnabled();
+  };
+
   for (int i = 0; i < max_num_monitors; ++i)
-    ASSERT_TRUE(lc.launchers()[i]->GetParent()->InputWindowStrutsEnabled());
+    Utils::WaitUntil(std::bind(check_fn, i));
 }
 
 TEST_F(TestLauncherController, DisabledStrutsOnAutoHide)
@@ -469,8 +473,12 @@ TEST_F(TestLauncherController, DisabledStrutsOnAutoHide)
   uscreen.SetupFakeMultiMonitor();
   lc.options()->hide_mode = LAUNCHER_HIDE_AUTOHIDE;
 
+  auto check_fn = [this](int index) {
+    return !(lc.launchers()[index]->GetParent()->InputWindowStrutsEnabled());
+  };
+
   for (int i = 0; i < max_num_monitors; ++i)
-    ASSERT_FALSE(lc.launchers()[i]->GetParent()->InputWindowStrutsEnabled());
+    Utils::WaitUntil(std::bind(check_fn, i));
 }
 
 TEST_F(TestLauncherController, EnabledStrutsAddingNewLaunchersOnAutoHide)
@@ -486,8 +494,12 @@ TEST_F(TestLauncherController, EnabledStrutsAddingNewLaunchersOnAutoHide)
   // This makes the controller to add again new launchers
   lc.multiple_launchers = true;
 
+  auto check_fn = [this](int index) {
+    return lc.launchers()[index]->GetParent()->InputWindowStrutsEnabled();
+  };
+
   for (int i = 0; i < max_num_monitors; ++i)
-    ASSERT_TRUE(lc.launchers()[i]->GetParent()->InputWindowStrutsEnabled());
+    Utils::WaitUntil(std::bind(check_fn, i));
 }
 
 TEST_F(TestLauncherController, DisabledStrutsAddingNewLaunchersOnNeverHide)
@@ -503,8 +515,12 @@ TEST_F(TestLauncherController, DisabledStrutsAddingNewLaunchersOnNeverHide)
   // This makes the controller to add again new launchers
   lc.multiple_launchers = true;
 
+  auto check_fn = [this](int index) {
+    return !(lc.launchers()[index]->GetParent()->InputWindowStrutsEnabled());
+  };
+
   for (int i = 0; i < max_num_monitors; ++i)
-    ASSERT_FALSE(lc.launchers()[i]->GetParent()->InputWindowStrutsEnabled());
+    Utils::WaitUntil(std::bind(check_fn, i));
 }
 
 TEST_F(TestLauncherController, CreateFavoriteInvalid)
