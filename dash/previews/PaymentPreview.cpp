@@ -299,12 +299,12 @@ void PaymentPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_dra
       rop.SrcBlend = GL_ONE;
       rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
       nux::Color color0 = nux::Color(200, 1, 1, 0.1);
-      nux::Color color1 = nux::Color(1, 200, 1, 0.5);
+      nux::Color color1 = nux::Color(1, 1, 1, 0.5);
       nux::GetPainter().PushDrawCompositionLayer(gfx_engine, base,
-              overlay_layout_->BackupTexture(),
+              content_data_layout_->BackupTexture(),
               cords,
               color0,
-              content_data_layout_->BackupTexture(),
+              overlay_layout_->BackupTexture(),
               cords,
               color1,
               nux::LAYER_BLEND_MODE_OVERLAY, true, rop);
