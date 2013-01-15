@@ -298,12 +298,15 @@ void PaymentPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_dra
       rop.Blend = true;
       rop.SrcBlend = GL_ONE;
       rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-      nux::Color color = nux::Color(200, 1, 1, 0.1);
+      nux::Color color0 = nux::Color(200, 1, 1, 0.1);
+      nux::Color color1 = nux::Color(1, 200, 1, 0.5);
       nux::GetPainter().PushDrawCompositionLayer(gfx_engine, base,
               overlay_layout_->BackupTexture(),
               cords,
-              color,
-              color,
+              color0,
+              content_data_layout_->BackupTexture(),
+              cords,
+              color1,
               nux::LAYER_BLEND_MODE_OVERLAY, true, rop);
 //    }
 /*    unsigned int alpha, src, dest = 0;
@@ -373,7 +376,7 @@ void PaymentPreview::SetupViews()
   footer_layout_ = GetFooter();
   content_data_layout_->AddLayout(footer_layout_, 1);
 
-//  content_data_layout_->SetRedirectRenderingToTexture(true);
+  content_data_layout_->SetRedirectRenderingToTexture(true);
   full_data_layout_->AddLayout(content_data_layout_);
 
   // layout to draw an overlay
