@@ -251,23 +251,15 @@ nux::Geometry SwitcherView::UpdateRenderTargets(nux::Point const& center, timesp
   {
     // Animate the windows thumbnail sizes to make them grow with the switcher
     float to_finish = 1.0f - progress;
-    nux::Point offset;
-    nux::Point layout_center(layout_geo.width/2 * to_finish,
-                             layout_geo.height/2 * to_finish);
+    nux::Point layout_abs_center((layout_geo.x + layout_geo.width/2.0f) * to_finish,
+                                 (layout_geo.y + layout_geo.height/2.0f) * to_finish);
 
     for (LayoutWindow::Ptr const& win : render_targets_)
     {
       auto final_geo = win->result;
       win->result = final_geo * progress;
-
-      if (win == render_targets_[0])
-      {
-        offset.x = final_geo.x;
-        offset.y = final_geo.y;
-      }
-
-      win->result.x += layout_center.x + offset.x * to_finish;
-      win->result.y += layout_center.y + offset.y * to_finish;
+      win->result.x += layout_abs_center.x;
+      win->result.y += layout_abs_center.y;
     }
   }
 
