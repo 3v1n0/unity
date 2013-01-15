@@ -244,22 +244,34 @@ nux::Geometry SwitcherView::UpdateRenderTargets(nux::Point const& center, timesp
   max_bounds.width = spread_size.width;
   max_bounds.height = spread_size.height;
 
-  nux::Geometry final_bounds;
-  layout_system_.LayoutWindows(render_targets_, max_bounds, final_bounds);
+  nux::Geometry layout_geo;
+  layout_system_.LayoutWindows(render_targets_, max_bounds, layout_geo);
 
   if (progress < 1.0f)
   {
     // Animate the windows thumbnail sizes to make them grow with the switcher
+    float to_finish = 1.0f - progress;
+    nux::Point offset;
+    nux::Point layout_center(layout_geo.width/2 * to_finish,
+                             layout_geo.height/2 * to_finish);
+
     for (LayoutWindow::Ptr const& win : render_targets_)
     {
-      auto old_geo = win->result;
-      win->result = old_geo * progress;
-      win->result.x += (old_geo.width - win->result.width) / 4;
-      win->result.y += (old_geo.height - win->result.height) / 4;
+      auto final_geo = win->result;
+      win->result = final_geo * progress;
+
+      if (win == render_targets_[0])
+      {
+        offset.x = final_geo.x;
+        offset.y = final_geo.y;
+      }
+
+      win->result.x += layout_center.x + offset.x * to_finish;
+      win->result.y += layout_center.y + offset.y * to_finish;
     }
   }
 
-  return final_bounds;
+  return layout_geo;
 }
 
 void SwitcherView::OffsetRenderTargets (int x, int y)
@@ -450,10 +462,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
 
       x += (half_size + flat_spacing) * scalar;
 
-      if (should_flat)
-        arg.render_center = nux::Point3((int) x, y, 0);
-      else
-        arg.render_center = nux::Point3(x, y, 0);
+      arg.render_center = nux::Point3(should_flat ? std::floor(x) : x, y, 0);
 
       x += (half_size + flat_spacing) * scalar;
 
@@ -478,7 +487,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
       if (i == selection && detail_selection)
       {
         arg.skip = true;
-        OffsetRenderTargets (arg.render_center.x, arg.render_center.y);
+        OffsetRenderTargets(arg.render_center.x, arg.render_center.y);
       }
 
       results.push_back(arg);
