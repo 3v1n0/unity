@@ -219,12 +219,9 @@ nux::Geometry SwitcherView::InterpolateBackground (nux::Geometry const& start, n
   return result;
 }
 
-nux::Geometry SwitcherView::UpdateRenderTargets(nux::Point const& center, timespec const& current)
+nux::Geometry SwitcherView::UpdateRenderTargets(nux::Point const& center, float progress)
 {
   std::vector<Window> const& xids = model_->DetailXids();
-
-  DeltaTime ms_since_change = TimeUtil::TimeDelta(&current, &save_time_);
-  float progress = std::min<float>(1.0f, ms_since_change / static_cast<float>(animation_length()));
 
   for (Window window : xids)
   {
@@ -360,7 +357,7 @@ void SwitcherView::GetFlatIconPositions (int n_flat_icons,
   }
 }
 
-std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo, int selection, timespec const& current)
+std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo, int selection, float progress)
 {
   std::list<RenderArg> results;
   nux::Geometry const& base = GetGeometry();
@@ -384,7 +381,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
     int spread_padded_width = 0;
     if (detail_selection)
     {
-      nux::Geometry const& spread_bounds = UpdateRenderTargets(nux::Point(), current);
+      nux::Geometry const& spread_bounds = UpdateRenderTargets(nux::Point(), progress);
       // remove extra space consumed by spread
       spread_padded_width = spread_bounds.width + 100;
       max_width -= spread_padded_width - tile_size;
@@ -486,11 +483,8 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
       ++i;
     }
 
-    DeltaTime ms_since_change = TimeUtil::TimeDelta(&current, &save_time_);
-    if (saved_args_.size () == results.size () && ms_since_change < animation_length)
+    if (saved_args_.size () == results.size () && progress < 1.0f)
     {
-      float progress = (float) ms_since_change / (float) animation_length();
-
       std::list<RenderArg> end = results;
       results.clear();
 
@@ -510,6 +504,8 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
 void SwitcherView::PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   clock_gettime(CLOCK_MONOTONIC, &current_);
+  DeltaTime ms_since_change = TimeUtil::TimeDelta(&current_, &save_time_);
+  float progress = std::min<float>(1.0f, ms_since_change / static_cast<float>(animation_length()));
 
   if (!target_sizes_set_)
   {
@@ -518,7 +514,7 @@ void SwitcherView::PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
   }
 
   nux::Geometry background_geo;
-  last_args_ = RenderArgsFlat(background_geo, model_->SelectionIndex(), current_);
+  last_args_ = RenderArgsFlat(background_geo, model_->SelectionIndex(), progress);
   last_background_ = background_geo;
 
   icon_renderer_->PreprocessIcons(last_args_, GetGeometry());

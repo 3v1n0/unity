@@ -83,7 +83,7 @@ protected:
   ui::RenderArg InterpolateRenderArgs(ui::RenderArg const& start, ui::RenderArg const& end, float progress);
   nux::Geometry InterpolateBackground (nux::Geometry const& start, nux::Geometry const& end, float progress);
 
-  std::list<ui::RenderArg> RenderArgsFlat(nux::Geometry& background_geo, int selection, timespec const& current);
+  std::list<ui::RenderArg> RenderArgsFlat(nux::Geometry& background_geo, int selection, float progress);
 
   ui::RenderArg CreateBaseArgForIcon(launcher::AbstractLauncherIcon::Ptr const& icon);
 private:
@@ -94,7 +94,7 @@ private:
   void OnIconSizeChanged (int size);
   void OnTileSizeChanged (int size);
 
-  nux::Geometry UpdateRenderTargets (nux::Point const& center, timespec const& current);
+  nux::Geometry UpdateRenderTargets(nux::Point const& center, float progress);
   void OffsetRenderTargets (int x, int y);
 
   nux::Size SpreadSize ();
