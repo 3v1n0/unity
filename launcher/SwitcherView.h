@@ -130,6 +130,8 @@ private:
   timespec save_time_;
 
   glib::Source::UniquePtr redraw_idle_;
+
+  friend class TestSwitcherView;
 };
 
 }
