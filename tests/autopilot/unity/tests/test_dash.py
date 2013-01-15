@@ -582,6 +582,15 @@ class DashLensResultsTests(DashTestCase):
 class DashVisualTests(DashTestCase):
     """Tests that the dash visual is correct."""
 
+    def test_closing_dash_hides_current_lens(self):
+        """When exiting from the dash the current lens must set it self to not visible."""
+
+        self.dash.ensure_visible()
+        lens = self.dash.get_current_lens()
+        self.dash.ensure_hidden()
+
+        self.assertThat(lens.visible, Eventually(Equals(False)))
+
     def test_dash_position_with_non_default_launcher_width(self):
         """"There should be no empty space between launcher and dash when the launcher
         has a non-default width.
