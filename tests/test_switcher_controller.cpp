@@ -33,7 +33,9 @@ using namespace unity::switcher;
 namespace
 {
 
+#ifdef ENABLE_DELAYED_TWO_PHASE_CONSTRUCTION_TESTS
 unsigned int DEFAULT_LAZY_CONSTRUCT_TIMEOUT = 20;
+#endif
 
 class TestSwitcherController : public testing::Test
 {
@@ -42,7 +44,13 @@ protected:
     : controller_([](){ return Controller::ImplPtr(new ShellController()); })
   { }
 
+  void SetUp()
+  {
+    icons_.push_back(unity::launcher::AbstractLauncherIcon::Ptr(new unity::launcher::DesktopLauncherIcon()));
+  }
+
   Controller controller_;
+  std::vector<unity::launcher::AbstractLauncherIcon::Ptr> icons_;
 };
 
 
@@ -59,19 +67,13 @@ TEST_F(TestSwitcherController, InstantiateMockThroughNVI)
   });
 }
 
-TEST_F(TestSwitcherController, Construction)
-{
-  ShellController controller;
-  EXPECT_FALSE(controller.Visible());
-}
-
+#ifdef ENABLE_DELAYED_TWO_PHASE_CONSTRUCTION_TESTS
 TEST_F(TestSwitcherController, LazyConstructionTimeoutLength)
 {
   StubSwitcherController controller;
   EXPECT_EQ(controller.GetConstructTimeout(), DEFAULT_LAZY_CONSTRUCT_TIMEOUT);
 }
 
-/*
 TEST_F(TestSwitcherController, LazyWindowConstruction)
 {
   // Setting the timeout to a lower value to speed-up the test
@@ -89,20 +91,19 @@ TEST_F(TestSwitcherController, LazyWindowConstruction)
   Utils::WaitUntil(controller.window_constructed_, controller.GetConstructTimeout() + 1);
   EXPECT_TRUE(controller.window_constructed_);
 }
-*/
+#endif
 
 TEST_F(TestSwitcherController, InitialDetailTimeout)
 {
   StubSwitcherController controller;
-  std::vector<unity::launcher::AbstractLauncherIcon::Ptr> results;
-  results.push_back(unity::launcher::AbstractLauncherIcon::Ptr(new unity::launcher::DesktopLauncherIcon()));
-  struct timespec current;
 
   controller.initial_detail_timeout_length = 2000;
   controller.detail_timeout_length = 20000;
+
+  struct timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
 
-  controller.Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, results);
+  controller.Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
 
   Utils::WaitUntil(controller.detail_timeout_reached_, 3);
   ASSERT_TRUE(controller.detail_timeout_reached_);
@@ -127,34 +128,27 @@ TEST_F(TestSwitcherController, DetailTimeout)
 
 TEST_F(TestSwitcherController, ShowSwitcher)
 {
-  StubSwitcherController controller;
-  std::vector<unity::launcher::AbstractLauncherIcon::Ptr> results;
-  results.push_back(unity::launcher::AbstractLauncherIcon::Ptr(new unity::launcher::DesktopLauncherIcon()));
-
-  controller.Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, results);
-
-  Utils::WaitUntil(controller.view_shown_, 2);
-  ASSERT_TRUE(controller.view_shown_);
+  EXPECT_FALSE(controller_.Visible());
+  controller_.Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
+  EXPECT_TRUE(controller_.Visible());
 }
 
 TEST_F(TestSwitcherController, ShowSwitcherNoShowDeskop)
 {
-  StubSwitcherController controller;
-  controller.SetShowDesktopDisabled(true);
+  controller_.SetShowDesktopDisabled(true);
 
-  ASSERT_TRUE(controller.IsShowDesktopDisabled());
-  ASSERT_TRUE(controller.StartIndex() == 0);
+  ASSERT_TRUE(controller_.IsShowDesktopDisabled());
+  ASSERT_TRUE(controller_.StartIndex() == 0);
 }
 
 TEST_F(TestSwitcherController, ShowSwitcherNoResults)
 {
-  StubSwitcherController controller;
-  controller.SetShowDesktopDisabled(true);
+  controller_.SetShowDesktopDisabled(true);
   std::vector<unity::launcher::AbstractLauncherIcon::Ptr> results;
 
-  controller.Show(ShowMode::CURRENT_VIEWPORT, SortMode::FOCUS_ORDER, results);
+  controller_.Show(ShowMode::CURRENT_VIEWPORT, SortMode::FOCUS_ORDER, results);
 
-  ASSERT_FALSE(controller.Visible());
+  ASSERT_FALSE(controller_.Visible());
 }
 
 }
