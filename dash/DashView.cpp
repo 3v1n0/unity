@@ -510,6 +510,9 @@ void DashView::AboutToHide()
   LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HIDDEN
                             << " on '" << home_lens_->id() << "'";
 
+  if (active_lens_view_.IsValid())
+    active_lens_view_->SetVisible(false);
+
   // if a preview is open, close it
   if (preview_displaying_)
   {
