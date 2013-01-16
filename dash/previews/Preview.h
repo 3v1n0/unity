@@ -29,7 +29,6 @@
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/StaticCairoText.h"
-#include "PreviewInfoHintWidget.h"
 
 namespace nux
 {
@@ -51,6 +50,7 @@ namespace previews
 class CoverArt;
 class TabIterator;
 class PreviewInfoHintWidget;
+class PreviewContainer;
 
 class Preview : public nux::View, public debug::Introspectable
 {
@@ -67,7 +67,7 @@ public:
 
   static previews::Preview::Ptr PreviewForModel(dash::Preview::Ptr model);  
   
-  sigc::signal<void> request_close;
+  sigc::signal<void> request_close() const;
 
   virtual nux::Area* FindKeyFocusArea(unsigned int key_symbol,
                                       unsigned long x11_key_code,
@@ -104,11 +104,15 @@ protected:
   nux::ObjectPtr<StaticCairoText> title_;
   nux::ObjectPtr<StaticCairoText> subtitle_;
   nux::ObjectPtr<StaticCairoText> description_;
-  PreviewInfoHintWidget::Ptr preview_info_hints_;
+  nux::ObjectPtr<PreviewInfoHintWidget> preview_info_hints_;
 
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
 
   friend class PreviewContent;
+
+  // Need to declare this as a pointer to avoid a circular header
+  // dependency issue between Preview.h and PreviewContainer.h
+  nux::ObjectPtr<PreviewContainer> preview_container_;
 };
 
 }
