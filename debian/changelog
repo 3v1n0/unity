@@ -1,3 +1,24 @@
+unity (6.12.0daily13.01.17-0ubuntu1) raring; urgency=low
+
+  [ Brandon Schaefer ]
+  * [regression] Scrollbar Overlay still appears after the dash has
+    closed. (LP: #1099999)
+
+  [ Christopher Townsend ]
+  * Dash - Users should be able to exit the Preview and return to the
+    results by right or middle clicking anywhere inside the preview (LP:
+    #1046315)
+
+  [ Andrea Azzarone ]
+  * Need some 'minimize' autopilot tests (LP: #1089981)
+  * TestLauncherController.* fails (LP: #1089900)
+  * Windows that start minimized cannot be opened (LP: #1087422)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3043
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Thu, 17 Jan 2013 07:03:58 +0000
+
 unity (6.12.0daily13.01.11.2-0ubuntu1) raring; urgency=low
 
   [ Didier Roche ]
