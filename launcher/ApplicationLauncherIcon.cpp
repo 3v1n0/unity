@@ -482,7 +482,6 @@ void ApplicationLauncherIcon::AddProperties(GVariantBuilder* builder)
     .add("sticky", IsSticky());
 }
 
-
 void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& uris)
 {
   glib::Error error;
@@ -493,7 +492,7 @@ void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& 
   glib::Object<GdkAppLaunchContext> app_launch_context(gdk_display_get_app_launch_context(display));
 
   auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
-  gdk_app_launch_context_set_timestamp (app_launch_context, timestamp);
+  gdk_app_launch_context_set_timestamp(app_launch_context, timestamp);
 
   if (g_app_info_supports_uris(appInfo))
   {
@@ -502,7 +501,7 @@ void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& 
     for (auto  it : uris)
       list = g_list_prepend(list, g_strdup(it.c_str()));
 
-    g_app_info_launch_uris(appInfo, list, G_APP_LAUNCH_CONTEXT(app_launch_context.RawPtr()), &error);
+    g_app_info_launch_uris(appInfo, list, glib::object_cast<GAppLaunchContext>(app_launch_context), &error);
     g_list_free_full(list, g_free);
   }
   else if (g_app_info_supports_files(appInfo))
@@ -515,12 +514,12 @@ void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& 
       list = g_list_prepend(list, file);
     }
 
-    g_app_info_launch(appInfo, list, G_APP_LAUNCH_CONTEXT(app_launch_context.RawPtr()), &error);
+    g_app_info_launch(appInfo, list, glib::object_cast<GAppLaunchContext>(app_launch_context), &error);
     g_list_free_full(list, g_object_unref);
   }
   else
   {
-    g_app_info_launch(appInfo, nullptr, G_APP_LAUNCH_CONTEXT(app_launch_context.RawPtr()), &error);
+    g_app_info_launch(appInfo, nullptr, glib::object_cast<GAppLaunchContext>(app_launch_context), &error);
   }
 
   if (error)
@@ -530,7 +529,6 @@ void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& 
 
   UpdateQuirkTime(Quirk::STARTING);
 }
-
 
 void ApplicationLauncherIcon::OpenInstanceLauncherIcon()
 {
