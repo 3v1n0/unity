@@ -73,7 +73,7 @@ protected:
   // required to create hidden secret global variables before test objects
   Settings unity_settings_;
 
-  MockWindow* mock_window_;
+  nux::ObjectPtr<MockWindow> mock_window_;
   Controller::Ptr controller_;
   std::vector<unity::launcher::AbstractLauncherIcon::Ptr> icons_;
 };
@@ -160,6 +160,7 @@ TEST_F(TestSwitcherController, ShowSwitcher)
   Utils::WaitForTimeout(2);
 
   EXPECT_TRUE(controller_->Visible());
+  EXPECT_TRUE(controller_->StartIndex() == 1);
 }
 
 TEST_F(TestSwitcherController, ShowSwitcherNoShowDeskop)
@@ -174,6 +175,7 @@ TEST_F(TestSwitcherController, ShowSwitcherNoResults)
 {
   controller_->SetShowDesktopDisabled(true);
   std::vector<unity::launcher::AbstractLauncherIcon::Ptr> results;
+  EXPECT_CALL(*mock_window_, ShowWindow(true, _)).Times(0);
 
   controller_->Show(ShowMode::CURRENT_VIEWPORT, SortMode::FOCUS_ORDER, results);
 

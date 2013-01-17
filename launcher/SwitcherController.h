@@ -161,7 +161,7 @@ class ShellController : public Controller::Impl,
                         public sigc::trackable
 {
 public:
-  typedef std::function<nux::BaseWindow*()> WindowCreator;
+  typedef std::function<nux::ObjectPtr<nux::BaseWindow>()> WindowCreator;
 
   nux::Property<int> timeout_length;
   nux::Property<int>  detail_timeout_length;

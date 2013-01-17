@@ -169,7 +169,7 @@ ShellController::ShellController(unsigned int load_timeout,
 
   if (create_window_ == nullptr)
     create_window_ = []() {
-        return new nux::BaseWindow("Switcher");
+        return nux::ObjectPtr<nux::BaseWindow>(new nux::BaseWindow("Switcher"));
     };
 
   // TODO We need to get actual timing data to suggest this is necessary.
