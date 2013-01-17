@@ -444,6 +444,20 @@ class HudBehaviorTests(HudTestsBase):
 
         self.assertProperty(char_win, is_active=True)
 
+    def test_hud_does_not_focus_wrong_window_after_alt_tab(self):
+        """Test the Hud focuses the correct window after an Alt+Tab."""
+
+        char_win = self.start_app('Character Map')
+        self.start_app('Calculator')
+
+        self.keybinding("switcher/reveal_normal")
+
+        self.hud.ensure_visible()
+        self.hud.ensure_hidden()
+
+        self.assertProperty(char_win, is_active=True)
+
+
 class HudLauncherInteractionsTests(HudTestsBase):
 
     launcher_modes = [('Launcher autohide', {'launcher_autohide': False}),
