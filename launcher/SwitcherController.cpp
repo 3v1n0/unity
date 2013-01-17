@@ -151,11 +151,13 @@ void Controller::SetDetailOnTimeout(bool timeout)
   impl_->detail_on_timeout = timeout;
 }
 
-ShellController::ShellController(unsigned int load_timeout)
+ShellController::ShellController(unsigned int load_timeout,
+                                 WindowCreator const& create_window)
   :  timeout_length(75)
   ,  detail_timeout_length(500)
   ,  initial_detail_timeout_length(1500)
   ,  construct_timeout_(load_timeout)
+  ,  create_window_(create_window)
   ,  main_layout_(nullptr)
   ,  monitor_(0)
   ,  visible_(false)
@@ -164,6 +166,11 @@ ShellController::ShellController(unsigned int load_timeout)
 {
   detail_on_timeout = true;
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &ShellController::OnBackgroundUpdate));
+
+  if (create_window_ == nullptr)
+    create_window_ = []() {
+        return new nux::BaseWindow("Switcher");
+    };
 
   // TODO We need to get actual timing data to suggest this is necessary.
   //sources_.AddTimeoutSeconds(construct_timeout_, [&] { ConstructWindow(); return false; }, LAZY_TIMEOUT);
@@ -296,7 +303,7 @@ void ShellController::ConstructWindow()
     main_layout_->SetVerticalExternalMargin(0);
     main_layout_->SetHorizontalExternalMargin(0);
 
-    view_window_ = new nux::BaseWindow("Switcher");
+    view_window_ = create_window_();
     view_window_->SetLayout(main_layout_);
     view_window_->SetBackgroundColor(nux::Color(0x00000000));
     view_window_->SetGeometry(workarea_);

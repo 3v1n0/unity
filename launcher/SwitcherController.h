@@ -161,13 +161,14 @@ class ShellController : public Controller::Impl,
                         public sigc::trackable
 {
 public:
-  typedef std::shared_ptr<ShellController> Ptr;
+  typedef std::function<nux::BaseWindow*()> WindowCreator;
 
   nux::Property<int> timeout_length;
   nux::Property<int>  detail_timeout_length;
   nux::Property<int> initial_detail_timeout_length;
 
-  ShellController(unsigned int load_timeout = 20);
+  ShellController(unsigned int load_timeout = 20,
+                  WindowCreator const& create_window = nullptr);
 
   virtual void Show(ShowMode show, SortMode sort, std::vector<launcher::AbstractLauncherIcon::Ptr> results);
   virtual void Hide(bool accept_state);
@@ -229,6 +230,7 @@ private:
   SwitcherView::Ptr view_;
 
   nux::Geometry workarea_;
+  WindowCreator create_window_;
   nux::ObjectPtr<nux::BaseWindow> view_window_;
   nux::HLayout* main_layout_;
 

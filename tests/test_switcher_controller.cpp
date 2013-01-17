@@ -18,7 +18,7 @@
  *
  */
 
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <time.h>
 
 #include "test_utils.h"
@@ -27,7 +27,10 @@
 #include "SwitcherController.h"
 #include "DesktopLauncherIcon.h"
 #include "TimeUtil.h"
+#include "unity-shared/UnitySettings.h"
 
+using namespace testing;
+using namespace unity;
 using namespace unity::switcher;
 
 namespace
@@ -37,19 +40,41 @@ namespace
 unsigned int DEFAULT_LAZY_CONSTRUCT_TIMEOUT = 20;
 #endif
 
+
+/**
+ * A mock Switcher view for verifying drawing operations of the Switcher
+ * interface.
+ */
+class MockWindow : public nux::BaseWindow
+{
+public:
+  typedef nux::ObjectPtr<MockWindow> Ptr;
+
+  MOCK_METHOD2(ShowWindow, void(bool, bool));
+};
+
+
+/**
+ * The base test fixture for verifying the Switcher interface.
+ */
 class TestSwitcherController : public testing::Test
 {
 protected:
   TestSwitcherController()
-    : controller_([](){ return Controller::ImplPtr(new ShellController()); })
-  { }
-
-  void SetUp()
+    : mock_window_(new MockWindow())
   {
+    auto create_window = [&](){ return mock_window_; };
+    Controller::Impl* impl = new ShellController(20, create_window);
+    controller_.reset(new Controller([&](){ return Controller::ImplPtr(impl); }));
+
     icons_.push_back(unity::launcher::AbstractLauncherIcon::Ptr(new unity::launcher::DesktopLauncherIcon()));
   }
 
-  Controller controller_;
+  // required to create hidden secret global variables before test objects
+  Settings unity_settings_;
+
+  MockWindow* mock_window_;
+  Controller::Ptr controller_;
   std::vector<unity::launcher::AbstractLauncherIcon::Ptr> icons_;
 };
 
@@ -128,27 +153,31 @@ TEST_F(TestSwitcherController, DetailTimeout)
 
 TEST_F(TestSwitcherController, ShowSwitcher)
 {
-  EXPECT_FALSE(controller_.Visible());
-  controller_.Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
-  EXPECT_TRUE(controller_.Visible());
+  EXPECT_FALSE(controller_->Visible());
+  EXPECT_CALL(*mock_window_, ShowWindow(true, _)).Times(AtLeast(1));
+  controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
+
+  Utils::WaitForTimeout(2);
+
+  EXPECT_TRUE(controller_->Visible());
 }
 
 TEST_F(TestSwitcherController, ShowSwitcherNoShowDeskop)
 {
-  controller_.SetShowDesktopDisabled(true);
+  controller_->SetShowDesktopDisabled(true);
 
-  ASSERT_TRUE(controller_.IsShowDesktopDisabled());
-  ASSERT_TRUE(controller_.StartIndex() == 0);
+  ASSERT_TRUE(controller_->IsShowDesktopDisabled());
+  ASSERT_TRUE(controller_->StartIndex() == 0);
 }
 
 TEST_F(TestSwitcherController, ShowSwitcherNoResults)
 {
-  controller_.SetShowDesktopDisabled(true);
+  controller_->SetShowDesktopDisabled(true);
   std::vector<unity::launcher::AbstractLauncherIcon::Ptr> results;
 
-  controller_.Show(ShowMode::CURRENT_VIEWPORT, SortMode::FOCUS_ORDER, results);
+  controller_->Show(ShowMode::CURRENT_VIEWPORT, SortMode::FOCUS_ORDER, results);
 
-  ASSERT_FALSE(controller_.Visible());
+  ASSERT_FALSE(controller_->Visible());
 }
 
 }
