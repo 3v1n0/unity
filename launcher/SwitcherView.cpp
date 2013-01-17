@@ -205,7 +205,7 @@ RenderArg SwitcherView::InterpolateRenderArgs(RenderArg const& start, RenderArg 
   return result;
 }
 
-nux::Geometry SwitcherView::InterpolateBackground (nux::Geometry const& start, nux::Geometry const& end, float progress)
+nux::Geometry SwitcherView::InterpolateBackground(nux::Geometry const& start, nux::Geometry const& end, float progress)
 {
   progress = -pow(progress - 1.0f, 2) + 1;
 
@@ -219,9 +219,10 @@ nux::Geometry SwitcherView::InterpolateBackground (nux::Geometry const& start, n
   return result;
 }
 
-nux::Geometry SwitcherView::UpdateRenderTargets(nux::Point const& center, float progress)
+nux::Geometry SwitcherView::UpdateRenderTargets(float progress)
 {
   std::vector<Window> const& xids = model_->DetailXids();
+  render_targets_.clear();
 
   for (Window window : xids)
   {
@@ -236,34 +237,37 @@ nux::Geometry SwitcherView::UpdateRenderTargets(nux::Point const& center, float 
   nux::Geometry max_bounds;
   nux::Geometry const& absolute = GetAbsoluteGeometry();
   nux::Size const& spread_size = SpreadSize();
-  max_bounds.x = absolute.x + center.x - spread_size.width / 2;
-  max_bounds.y = absolute.y + center.y - spread_size.height / 2;
+  max_bounds.x = absolute.x - spread_size.width / 2;
+  max_bounds.y = absolute.y - spread_size.height / 2;
   max_bounds.width = spread_size.width;
   max_bounds.height = spread_size.height;
 
   nux::Geometry layout_geo;
   layout_system_.LayoutWindows(render_targets_, max_bounds, layout_geo);
 
-  if (progress < 1.0f)
-  {
-    // Animate the windows thumbnail sizes to make them grow with the switcher
-    float to_finish = 1.0f - progress;
-    nux::Point layout_abs_center((layout_geo.x + layout_geo.width/2.0f) * to_finish,
-                                 (layout_geo.y + layout_geo.height/2.0f) * to_finish);
-
-    for (LayoutWindow::Ptr const& win : render_targets_)
-    {
-      auto final_geo = win->result;
-      win->result = final_geo * progress;
-      win->result.x += layout_abs_center.x;
-      win->result.y += layout_abs_center.y;
-    }
-  }
-
   return layout_geo;
 }
 
-void SwitcherView::OffsetRenderTargets (int x, int y)
+void SwitcherView::ResizeRenderTargets(nux::Geometry const& layout_geo, float progress)
+{
+  if (progress >= 1.0f)
+    return;
+
+  // Animate the windows thumbnail sizes to make them grow with the switcher
+  float to_finish = 1.0f - progress;
+  nux::Point layout_abs_center((layout_geo.x + layout_geo.width/2.0f) * to_finish,
+                               (layout_geo.y + layout_geo.height/2.0f) * to_finish);
+
+  for (LayoutWindow::Ptr const& win : render_targets_)
+  {
+    auto final_geo = win->result;
+    win->result = final_geo * progress;
+    win->result.x += layout_abs_center.x;
+    win->result.y += layout_abs_center.y;
+  }
+}
+
+void SwitcherView::OffsetRenderTargets(int x, int y)
 {
   for (LayoutWindow::Ptr const& target : render_targets_)
   {
@@ -362,8 +366,6 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
   std::list<RenderArg> results;
   nux::Geometry const& base = GetGeometry();
 
-  render_targets_.clear ();
-
   bool detail_selection = model_->detail_selection;
 
   background_geo.y = base.y + base.height / 2 - (vertical_size / 2);
@@ -381,7 +383,8 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
     int spread_padded_width = 0;
     if (detail_selection)
     {
-      nux::Geometry const& spread_bounds = UpdateRenderTargets(nux::Point(), progress);
+      nux::Geometry const& spread_bounds = UpdateRenderTargets(progress);
+      ResizeRenderTargets(spread_bounds, progress);
       // remove extra space consumed by spread
       spread_padded_width = spread_bounds.width + 100;
       max_width -= spread_padded_width - tile_size;
@@ -494,7 +497,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
         results.push_back(InterpolateRenderArgs(*start_it, *end_it, progress));
       }
 
-      background_geo = InterpolateBackground (saved_background_, background_geo, progress);
+      background_geo = InterpolateBackground(saved_background_, background_geo, progress);
     }
   }
 
