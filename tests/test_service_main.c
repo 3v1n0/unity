@@ -43,6 +43,9 @@ static ServiceGDBusWrapper* gdbus_wrapper_ = NULL;
 gint
 main(gint argc, gchar** argv)
 {
+#if G_ENCODE_VERSION (GLIB_MAJOR_VERSION, GLIB_MINOR_VERSION) <= GLIB_VERSION_2_34
+  g_type_init();
+#endif
   loop_ = g_main_loop_new(NULL, FALSE);
 
   lens_ = service_lens_new();
