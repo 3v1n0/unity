@@ -247,14 +247,19 @@ if (ENABLE_X_SUPPORT)
                  test_window_buttons.cpp
                  test_xdnd_manager_imp.cpp
                  test_xdnd_start_stop_notifier_imp.cpp
-                 bamf-mock-application.c
-                 bamf-mock-window.c
-                 gmockmount.c
-                 gmockvolume.c
                  ${UNITY_SRC}/UnityShowdesktopHandler.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unityshell/src/WindowMinimizeSpeedController.cpp
                 )
-  target_link_libraries(test-gtest gtest gmock unity-shared ${LIBS} launcher-lib unity-shared-bamf unity-shared-standalone shortcuts-lib previews-lib hud-lib switcher-lib dash-lib panel-lib)
+
+  # Build plain C files separately so they don't try to include the
+  # C++ pch.
+  add_library(test-gtest-plainc STATIC
+              bamf-mock-application.c
+              bamf-mock-window.c
+              gmockmount.c
+              gmockvolume.c
+              )
+  target_link_libraries(test-gtest test-gtest-plainc gtest gmock unity-shared ${LIBS} launcher-lib unity-shared-bamf unity-shared-standalone shortcuts-lib previews-lib hud-lib switcher-lib dash-lib panel-lib)
   add_test(UnityGTest test-gtest)
 endif (ENABLE_X_SUPPORT)
 endif (GTEST_SRC_DIR AND

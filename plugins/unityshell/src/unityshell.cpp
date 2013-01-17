@@ -2668,7 +2668,8 @@ void UnityWindow::windowNotify(CompWindowNotify n)
     /* Fall through an re-evaluate wraps on map and unmap too */
     case CompWindowNotifyUnmap:
       if (UnityScreen::get (screen)->optionGetShowMinimizedWindows () &&
-          window->mapNum ())
+          window->mapNum () &&
+          !window->pendingUnmaps())
       {
         bool wasMinimized = window->minimized ();
         if (wasMinimized)
