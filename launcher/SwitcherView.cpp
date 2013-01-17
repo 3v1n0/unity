@@ -32,16 +32,21 @@ using launcher::AbstractLauncherIcon;
 namespace switcher
 {
 
+namespace
+{
+  const unsigned int VERTICAL_PADDING = 45;
+}
+
 NUX_IMPLEMENT_OBJECT_TYPE(SwitcherView);
 
 SwitcherView::SwitcherView()
   : render_boxes(false)
   , border_size(50)
-  , flat_spacing(10)
+  , flat_spacing(20)
   , icon_size(128)
   , minimum_spacing(10)
   , tile_size(150)
-  , vertical_size(tile_size + 80)
+  , vertical_size(tile_size + VERTICAL_PADDING * 2)
   , text_size(15)
   , animation_length(250)
   , monitor(-1)
@@ -117,7 +122,7 @@ void SwitcherView::OnIconSizeChanged (int size)
 void SwitcherView::OnTileSizeChanged (int size)
 {
   icon_renderer_->SetTargetSize(tile_size, icon_size, 10);
-  vertical_size = tile_size + 80;
+  vertical_size = tile_size + VERTICAL_PADDING * 2;
 }
 
 void SwitcherView::SaveLast ()
@@ -581,8 +586,10 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
 
   if (text_view_->IsVisible())
   {
+    nux::GetPainter().PushPaintLayerStack();
     text_view_->SetBaseY(last_background_.y + last_background_.height - 45);
     text_view_->Draw(GfxContext, force_draw);
+    nux::GetPainter().PopPaintLayerStack();
   }
 
   DeltaTime ms_since_change = TimeUtil::TimeDelta(&current_, &save_time_);
