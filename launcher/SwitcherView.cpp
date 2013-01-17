@@ -237,11 +237,10 @@ nux::Geometry SwitcherView::UpdateRenderTargets(float progress)
     render_targets_.push_back(layout_window);
   }
 
-  nux::Geometry max_bounds;
-  nux::Geometry const& absolute = GetAbsoluteGeometry();
+  nux::Geometry max_bounds = GetAbsoluteGeometry();
   nux::Size const& spread_size = SpreadSize();
-  max_bounds.x = absolute.x - spread_size.width / 2;
-  max_bounds.y = absolute.y - spread_size.height / 2;
+  max_bounds.x -= spread_size.width / 2;
+  max_bounds.y -= spread_size.height / 2;
   max_bounds.width = spread_size.width;
   max_bounds.height = spread_size.height;
 

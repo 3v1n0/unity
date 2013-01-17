@@ -55,6 +55,7 @@ struct TestSwitcherView : testing::Test
   {
     using SwitcherView::UpdateRenderTargets;
     using SwitcherView::ResizeRenderTargets;
+    using SwitcherView::SpreadSize;
     using SwitcherView::text_view_;
     using SwitcherView::icon_renderer_;
     using SwitcherView::model_;
@@ -71,6 +72,24 @@ struct TestSwitcherView : testing::Test
 
     return fake_window;
   }
+
+  AbstractLauncherIcon::Ptr AddFakeApplicationToSwitcher(unsigned num_of_windows = 5)
+    {
+      MockMockLauncherIcon* app = new MockMockLauncherIcon();
+
+      for (unsigned i = 0; i < num_of_windows; ++i)
+      {
+        Window xid = g_random_int();
+        AddFakeWindowToWM(xid);
+        app->AddWindow(xid);
+      }
+
+      SwitcherModel::Applications apps;
+      apps.push_back(AbstractLauncherIcon::Ptr(app));
+      switcher.SetModel(std::make_shared<SwitcherModel>(apps));
+
+      return apps[0];
+    }
 
   StandaloneWindowManager* WM;
   unity::Settings settings;
@@ -111,20 +130,34 @@ TEST_F(TestSwitcherView, SetModel)
   EXPECT_FALSE(switcher.model_->detail_selection_index.changed.empty());
 }
 
+TEST_F(TestSwitcherView, UpdateRenderTargets)
+{
+  float progress = 0.55;
+
+  AddFakeApplicationToSwitcher();
+  auto const& model = switcher.GetModel();
+
+  switcher.UpdateRenderTargets(progress);
+  auto const& render_targets = switcher.ExternalTargets();
+
+  ASSERT_EQ(render_targets.size(), model->DetailXids().size());
+
+  for (Window xid : model->DetailXids())
+  {
+    auto win_it = std::find_if (render_targets.begin(), render_targets.end(),
+                  [xid] (ui::LayoutWindow::Ptr const& win) { return win->xid == xid; });
+
+    ASSERT_NE(win_it, render_targets.end());
+    auto const& layout_win = *win_it;
+    bool should_be_selected = (xid == model->DetailSelectionWindow());
+    ASSERT_EQ(layout_win->selected, should_be_selected);
+    ASSERT_EQ(layout_win->alpha, (should_be_selected ? 1.0f : 0.9f) * progress);
+  }
+}
+
 TEST_F(TestSwitcherView, ResizeRenderTargets)
 {
-  MockMockLauncherIcon* app = new MockMockLauncherIcon();
-
-  for (unsigned i = 0; i < 5; ++i)
-  {
-    Window xid = g_random_int();
-    AddFakeWindowToWM(xid);
-    app->AddWindow(xid);
-  }
-
-  SwitcherModel::Applications apps;
-  apps.push_back(AbstractLauncherIcon::Ptr(app));
-  switcher.SetModel(std::make_shared<SwitcherModel>(apps));
+  AddFakeApplicationToSwitcher();
 
   for (float progress = 0.1f; progress <= 1.0f; progress += 0.1f)
   {
