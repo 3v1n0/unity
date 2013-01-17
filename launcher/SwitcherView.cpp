@@ -137,7 +137,10 @@ void SwitcherView::OnDetailSelectionChanged(bool detail)
   text_view_->SetVisible(!detail);
 
   if (!detail)
+  {
     text_view_->SetText(model_->Selection()->tooltip_text());
+    render_targets_.clear();
+  }
 
   SaveLast();
   QueueDraw();
