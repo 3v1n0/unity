@@ -405,7 +405,7 @@ TEST_F(TestOverlayVScrollBar, TestScrollDownAnimationMovesSlider)
   EXPECT_GT(scroll_view_->scroll_bar_->_slider->GetBaseY(), slider_y);
 }
 
-TEST_F(TestOverlayVScrollBar, TestConnectorResetsDuringScrollAnimation)
+TEST_F(TestOverlayVScrollBar, DISABLED_TestConnectorResetsDuringScrollAnimation)
 {
   scroll_view_->scroll_bar_->MoveMouseNear();
   scroll_view_->scroll_bar_->SetThumbOffset(100);

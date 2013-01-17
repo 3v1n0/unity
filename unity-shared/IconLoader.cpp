@@ -634,7 +634,10 @@ private:
 
     void PushSchedulerJob()
     {
-      glib::Object<GTask> task(g_task_new(nullptr, nullptr, LoadIconCompleteWrapper, this));
+      glib::Object<GTask> task(g_task_new(nullptr, nullptr, [] (GObject*, GAsyncResult*, gpointer data) {
+        auto self = static_cast<IconLoaderTask*>(data);
+        self->LoadIconComplete(data);
+      }, this));
 
       g_task_set_priority(task, G_PRIORITY_HIGH_IDLE);
       g_task_set_task_data(task, this, nullptr);
@@ -643,10 +646,7 @@ private:
     }
 
     // Loading/rendering of pixbufs is done in a separate thread
-    static void LoaderJobFunc(GTask* job,
-                              gpointer source_object,
-                              gpointer data,
-                              GCancellable* canc)
+    static void LoaderJobFunc(GTask* job, gpointer source_object, gpointer data, GCancellable* canc)
     {
       auto task = static_cast<IconLoaderTask*>(data);
 
@@ -676,13 +676,6 @@ private:
           g_input_stream_close(stream, canc, nullptr);
         }
       }
-    }
-
-    static void LoadIconCompleteWrapper(GObject *source_object,
-                                        GAsyncResult *res,
-                                        gpointer user_data)
-    {
-      LoadIconComplete(user_data);
     }
 
     // this will be invoked back in the thread from which push_job was called
