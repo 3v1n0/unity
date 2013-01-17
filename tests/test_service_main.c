@@ -43,8 +43,6 @@ static ServiceGDBusWrapper* gdbus_wrapper_ = NULL;
 gint
 main(gint argc, gchar** argv)
 {
-  g_type_init();
-
   loop_ = g_main_loop_new(NULL, FALSE);
 
   lens_ = service_lens_new();

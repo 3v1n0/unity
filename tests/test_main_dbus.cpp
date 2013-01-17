@@ -9,7 +9,6 @@ static void tell_service_to_exit();
 int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
-  g_type_init();
   
   nux::NuxInitialize (0);
 
