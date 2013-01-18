@@ -123,6 +123,7 @@ private:
   std::string GetDesktopID();
 
   std::string _remote_uri;
+  Time startup_notification_timestamp_;
   std::set<std::string> _supported_types;
   std::map<std::string, glib::Object<DbusmenuClient>> _menu_clients;
   std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items;
