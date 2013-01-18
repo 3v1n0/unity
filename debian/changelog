@@ -1,3 +1,25 @@
+unity (6.12.0daily13.01.18-0ubuntu1) raring; urgency=low
+
+  [ Brandon Schaefer ]
+  * HUD does not save the current input focus correctly (LP: #1100962)
+
+  [ Andrea Azzarone ]
+  * Unity fails to build on raring: g_io_scheduler_push_job is
+    deprecated (LP: #1100658)
+
+  [ Marco Trevisan (Treviño) ]
+  * Launcher - Update BFB icon to use a new special asset (and no tile)
+    (LP: #1081697)
+  * Launcher - Update Launcher tile assets (LP: #1081687)
+
+  [ Daniel van Vugt ]
+  * Allow launcher icons smaller than 32px (LP: #930031)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3048
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 18 Jan 2013 04:02:06 +0000
+
 unity (6.12.0daily13.01.17-0ubuntu1) raring; urgency=low
 
   [ Brandon Schaefer ]
