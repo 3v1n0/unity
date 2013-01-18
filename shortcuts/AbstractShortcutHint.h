@@ -31,7 +31,7 @@ namespace unity
 namespace shortcut
 {
 
-enum OptionType
+enum class OptionType
 {
   COMPIZ_KEY_OPTION = 0,
   COMPIZ_METAKEY_OPTION,

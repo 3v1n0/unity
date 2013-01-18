@@ -35,7 +35,7 @@ Model::Model(std::list<AbstractHint::Ptr> const& hints)
       return false;
     })
 {
-  for (auto hint : hints)
+  for (auto const& hint : hints)
     AddHint(hint);
 }
 
@@ -53,8 +53,8 @@ void Model::AddHint(AbstractHint::Ptr const& hint)
 
 void Model::Fill()
 {
-  for (auto category : categories_)
-    for (auto item : hints_[category])
+  for (auto const& category : categories_)
+    for (auto const& item : hints_[category])
       item->Fill();
 }
 
