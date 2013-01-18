@@ -29,6 +29,7 @@
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/Introspectable.h"
 #include <UnityCore/SocialPreview.h>
+#include "PreviewContainer.h"
 
 namespace unity
 {
@@ -47,9 +48,11 @@ public:
 
   virtual ~SocialPreviewComments();
 
+  sigc::signal<void> request_close() const { return preview_container_.request_close; }
+
 protected:
 
-  typedef nux::ObjectPtr<nux::StaticCairoText> StaticCairoTextPtr;
+  typedef nux::ObjectPtr<StaticCairoText> StaticCairoTextPtr;
   typedef std::pair<StaticCairoTextPtr, StaticCairoTextPtr> Comment;
   std::list<Comment> comments_;
 
@@ -69,6 +72,8 @@ protected:
 private:
 
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
+
+  PreviewContainer preview_container_;
 };
 
 }

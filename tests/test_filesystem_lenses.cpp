@@ -1,3 +1,4 @@
+#include "config.h"
 #include <gtest/gtest.h>
 #include <glib-object.h>
 #include <UnityCore/FilesystemLenses.h>

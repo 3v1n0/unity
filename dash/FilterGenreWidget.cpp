@@ -21,10 +21,12 @@
  */
 
 #include <glib.h>
+#include "config.h"
 #include <glib/gi18n-lib.h>
 #include <UnityCore/GLibWrapper.h>
 
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/GraphicsUtils.h"
 #include "FilterGenreWidget.h"
 #include "FilterGenreButton.h"
 #include "FilterBasicButton.h"
@@ -121,6 +123,15 @@ std::string FilterGenre::GetFilterType()
 void FilterGenre::InitTheme()
 {
   //FIXME - build theme here - store images, cache them, fun fun fun
+}
+
+void FilterGenre::ClearRedirectedRenderChildArea()
+{
+  for (auto button : buttons_)
+  {
+    if (button->IsRedrawNeeded())
+      graphics::ClearGeometry(button->GetGeometry());
+  }
 }
 
 } // namespace dash

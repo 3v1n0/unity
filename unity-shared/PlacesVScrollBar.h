@@ -44,9 +44,12 @@ protected:
 
   void Draw(nux::GraphicsEngine& gfxContext,
             bool                 forceDraw);
+  void DrawContent(nux::GraphicsEngine& gfxContext,
+            bool                 forceDraw);
 
 private:
   void UpdateTexture();
+  void DrawScrollbar(nux::GraphicsEngine& graphics_engine);
 
 private:
   nux::BaseTexture* _slider_texture;

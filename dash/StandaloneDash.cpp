@@ -33,6 +33,7 @@
 #include "DashView.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/PanelStyle.h"
 #include "unity-shared/ThumbnailGenerator.h"
 
 #define WIDTH 1024
@@ -95,6 +96,7 @@ int main(int argc, char **argv)
   unity::ThumbnailGenerator thumb_generator;
   unity::Settings settings;
   unity::dash::Style dash_style;
+  unity::panel::Style panel_style;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Dash"),

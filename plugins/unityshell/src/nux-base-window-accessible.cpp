@@ -173,7 +173,6 @@ void
 nux_base_window_accessible_check_active(NuxBaseWindowAccessible* self,
                                         nux::BaseWindow* active_window)
 {
-  const gchar* signal_name;
   gboolean is_active;
   nux::Object* nux_object = NULL;
   nux::BaseWindow* bwindow = NULL;
@@ -189,6 +188,7 @@ nux_base_window_accessible_check_active(NuxBaseWindowAccessible* self,
 
   if (self->priv->active != is_active)
   {
+    const gchar* signal_name;
     self->priv->active = is_active;
 
     if (is_active)

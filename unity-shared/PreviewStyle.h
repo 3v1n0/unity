@@ -62,6 +62,7 @@ public:
   
   int GetPreviewWidth() const;
   int GetPreviewHeight() const;
+  int GetPreviewTopPadding() const;
 
   int GetDetailsTopMargin() const;
   int GetDetailsBottomMargin() const;

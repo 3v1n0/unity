@@ -32,7 +32,6 @@
 #include "unity-shared/AbstractIconRenderer.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "DevicesSettings.h"
-#include "DNDCollectionWindow.h"
 #include "DndData.h"
 #include "unity-shared/Introspectable.h"
 #include "LauncherModel.h"
@@ -66,7 +65,7 @@ class Launcher : public unity::debug::Introspectable,
   NUX_DECLARE_OBJECT_TYPE(Launcher, nux::View);
 public:
 
-  Launcher(nux::BaseWindow* parent, nux::ObjectPtr<DNDCollectionWindow> const& collection_window, NUX_FILE_LINE_PROTO);
+  Launcher(nux::BaseWindow* parent, NUX_FILE_LINE_PROTO);
 
   nux::Property<Display*> display;
   nux::Property<int> monitor;
@@ -126,6 +125,11 @@ public:
 
   int GetDragDelta() const;
   void SetHover(bool hovered);
+
+  void DndStarted(std::string const& mimes);
+  void DndFinished();
+  void SetDndQuirk();
+  void UnsetDndQuirk();
 
   sigc::signal<void, std::string const&, AbstractLauncherIcon::Ptr const&> add_request;
   sigc::signal<void, AbstractLauncherIcon::Ptr const&> remove_request;
@@ -214,7 +218,6 @@ private:
   bool StrutHack();
   bool StartIconDragTimeout(int x, int y);
   bool OnScrollTimeout();
-  bool OnUpdateDragManagerTimeout();
 
   void SetMousePosition(int x, int y);
 
@@ -249,6 +252,7 @@ private:
   float DragOutProgress(struct timespec const& current) const;
   float IconDesatValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
   float IconPresentProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
+  float IconUnfoldProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
   float IconUrgentProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
   float IconShimmerProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
   float IconUrgentPulseValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
@@ -323,12 +327,8 @@ private:
 
   virtual long PostLayoutManagement(long LayoutResult);
 
-  void OnDisplayChanged(Display* display);
-  void OnDNDDataCollected(const std::list<char*>& mimes);
-
   void DndReset();
   void DndHoveredIconReset();
-  void DndTimeoutSetup();
   bool DndIsSpecialRequest(std::string const& uri) const;
 
   LauncherModel::Ptr _model;
@@ -384,7 +384,6 @@ private:
   nux::Point2 _mouse_position;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
   nux::ObjectPtr<LauncherDragWindow> _drag_window;
-  nux::ObjectPtr<unity::DNDCollectionWindow> _collection_window;
   LauncherHideMachine _hide_machine;
   LauncherHoverMachine _hover_machine;
 

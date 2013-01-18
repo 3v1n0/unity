@@ -1,7 +1,5 @@
 project (test-input-remover)
 
-include (FindPkgConfig)
-
 pkg_check_modules (COMPIZ_TEST_INPUT_REMOVER REQUIRED x11 xext)
 
 if (COMPIZ_TEST_INPUT_REMOVER_FOUND)

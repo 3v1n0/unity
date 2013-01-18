@@ -321,7 +321,7 @@ public:
 
   void      setMaxConstrainingAreas();
 
-  CompWindow* transientParent();
+  CompWindow* transientParent() const;
 
   void adjustIPW();
 

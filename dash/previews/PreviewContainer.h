@@ -81,13 +81,16 @@ public:
                                       unsigned long x11_key_code,
                                       unsigned long special_keys_state);
 
+  nux::Geometry GetLayoutGeometry() const;
+
+  void OnMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+
 protected:
   void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw);
 
   bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
   void OnKeyDown(unsigned long event_type, unsigned long event_keysym, unsigned long event_state, const TCHAR* character, unsigned short key_repeat_count);
-  void OnMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
   
 private:
   void SetupViews();
@@ -99,10 +102,10 @@ private:
 
 private:
   // View related
-  nux::HLayout* layout_;
+  nux::HLayout* layout_content_;
   PreviewNavigator* nav_left_;
   PreviewNavigator* nav_right_;
-  PreviewContent* content_layout_;
+  PreviewContent* preview_layout_;
   Navigation nav_disabled_;
 
   // Animation
@@ -114,7 +117,7 @@ private:
   friend class PreviewContent;
 };
 
-} // napespace prviews
+} // namespace previews
 } // namespace dash
 } // namespace unity
 

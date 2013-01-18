@@ -92,22 +92,24 @@ class IBusTests(UnityTestCase):
 class IBusWidgetScenariodTests(IBusTests):
     """A class that includes scenarios for the hud and dash widgets."""
 
+    # Use lambdas here so we don't require DBus service at module import time.
     scenarios = [
-        ('dash', {'widget': Dash()}),
-        ('hud', {'widget': Hud()})
+        ('dash', {'widget': lambda: Dash()}),
+        ('hud', {'widget': lambda: Hud()})
     ]
 
     def do_ibus_test(self):
         """Do the basic IBus test on self.widget using self.input and self.result."""
-        self.widget.ensure_visible()
-        self.addCleanup(self.widget.ensure_hidden)
-        self.activate_ibus(self.widget.searchbar)
+        widget = self.widget()
+        widget.ensure_visible()
+        self.addCleanup(widget.ensure_hidden)
+        self.activate_ibus(widget.searchbar)
         self.keyboard.type(self.input)
         commit_key = getattr(self, 'commit_key', None)
         if commit_key:
             self.keyboard.press_and_release(commit_key)
-        self.deactivate_ibus(self.widget.searchbar)
-        self.assertThat(self.widget.search_string, Eventually(Equals(self.result)))
+        self.deactivate_ibus(widget.searchbar)
+        self.assertThat(widget.search_string, Eventually(Equals(self.result)))
 
 
 

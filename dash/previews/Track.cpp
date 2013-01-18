@@ -198,22 +198,22 @@ void Track::SetupViews()
   IconTexture* status_pause = new IconTexture(tex_pause, style.GetStatusIconSize(), style.GetStatusIconSize());
   status_pause->SetDrawMode(IconTexture::DrawMode::STRETCH_WITH_ASPECT);
 
-  track_number_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
-  track_number_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
-  track_number_->SetTextVerticalAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
+  track_number_ = new StaticCairoText("", NUX_TRACKER_LOCATION);
+  track_number_->SetTextAlignment(StaticCairoText::NUX_ALIGN_CENTRE);
+  track_number_->SetTextVerticalAlignment(StaticCairoText::NUX_ALIGN_CENTRE);
   track_number_->SetLines(-1);
   track_number_->SetFont(style.track_font());
 
-  title_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
-  title_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_LEFT);
-  title_->SetTextVerticalAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
+  title_ = new StaticCairoText("", NUX_TRACKER_LOCATION);
+  title_->SetTextAlignment(StaticCairoText::NUX_ALIGN_LEFT);
+  title_->SetTextVerticalAlignment(StaticCairoText::NUX_ALIGN_CENTRE);
   title_->SetLines(-1);
   title_->SetFont(style.track_font());
 
-  duration_ = new nux::StaticCairoText("", NUX_TRACKER_LOCATION);
-  duration_->SetTextEllipsize(nux::StaticCairoText::NUX_ELLIPSIZE_NONE);
-  duration_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_RIGHT);
-  duration_->SetTextVerticalAlignment(nux::StaticCairoText::NUX_ALIGN_CENTRE);
+  duration_ = new StaticCairoText("", NUX_TRACKER_LOCATION);
+  duration_->SetTextEllipsize(StaticCairoText::NUX_ELLIPSIZE_NONE);
+  duration_->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
+  duration_->SetTextVerticalAlignment(StaticCairoText::NUX_ALIGN_CENTRE);
   duration_->SetLines(-1);
   duration_->SetFont(style.track_font());
   duration_->SetMaximumWidth(style.GetMusicDurationWidth());

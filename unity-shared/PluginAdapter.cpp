@@ -734,12 +734,13 @@ void PluginAdapter::FocusWindowGroup(std::vector<Window> const& window_ids,
   CompWindow* top_window = nullptr;
   CompWindow* top_monitor_win = nullptr;
 
+  // mapped windows are visible windows (non-minimised)
   bool any_on_current = false;
   bool any_mapped = false;
   bool any_mapped_on_current = false;
   bool forced_unminimize = false;
 
-  /* sort the list */
+  // Get the compiz windows for the window_ids passed in.
   CompWindowList windows;
   for (auto win : m_Screen->clientList())
   {
@@ -748,30 +749,34 @@ void PluginAdapter::FocusWindowGroup(std::vector<Window> const& window_ids,
       windows.push_back(win);
   }
 
-  /* filter based on workspace */
+  // Work out if there are any visible windows on the current view port.
   for (CompWindow* &win : windows)
   {
-    if (win->defaultViewport() == m_Screen->vp())
+    if (win->defaultViewport() == target_vp)
     {
       any_on_current = true;
-
       if (!win->minimized())
-      {
         any_mapped_on_current = true;
-      }
     }
 
     if (!win->minimized())
-    {
       any_mapped = true;
-    }
 
-    if (any_on_current && any_mapped)
+    // If there is a visible window on the current view port, then don't
+    // bother looking for others, as we will end up focusing the one on the
+    // current view port, so we don't care if there are other windows on other
+    // view ports.
+    if (any_mapped_on_current)
       break;
   }
 
+  // If we don't find any windows on the current view port, we need to look
+  // for the view port of the maooed window.  Or if there are not any mapped
+  // windows, then just choosing any view port is fine.
   if (!any_on_current)
   {
+    // By iterating backwards, we stop at the top most window in the stack
+    // that is either visible, or the top most minimised window.
     for (auto it = windows.rbegin(); it != windows.rend(); ++it)
     {
       CompWindow* win = *it;
@@ -1077,6 +1082,22 @@ void PluginAdapter::CheckWindowIntersections(nux::Geometry const& region, bool &
 int PluginAdapter::WorkspaceCount() const
 {
   return m_Screen->vpSize().width() * m_Screen->vpSize().height();
+}
+
+nux::Point PluginAdapter::GetCurrentViewport() const
+{
+  CompPoint const& vp = m_Screen->vp();
+  return nux::Point(vp.x(), vp.y());
+}
+
+int PluginAdapter::GetViewportHSize() const
+{
+  return m_Screen->vpSize().width();
+}
+
+int PluginAdapter::GetViewportVSize() const
+{
+  return m_Screen->vpSize().height();
 }
 
 void PluginAdapter::SetMwmWindowHints(Window xid, MotifWmHints* new_hints) const

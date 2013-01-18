@@ -63,7 +63,7 @@ private:
   void Init()
   {
     SetupBackground();
-    controller.reset(new launcher::Controller());
+    controller.reset(new launcher::Controller(std::make_shared<XdndManager>()));
     controller->launcher().GetParent()->EnableInputWindow(false);
 
     UScreen* uscreen = UScreen::GetDefault();
@@ -91,7 +91,6 @@ private:
 
 int main(int argc, char** argv)
 {
-  g_type_init();
   gtk_init(&argc, &argv);
   nux::NuxInitialize(0);
 

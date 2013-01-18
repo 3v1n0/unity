@@ -27,6 +27,7 @@
 
 #include "LauncherOptions.h"
 #include "SoftwareCenterLauncherIcon.h"
+#include "XdndManager.h"
 
 namespace unity
 {
@@ -47,7 +48,7 @@ public:
   nux::Property<Options::Ptr> options;
   nux::Property<bool> multiple_launchers;
 
-  Controller();
+  Controller(XdndManager::Ptr const& xdnd_manager);
   ~Controller();
 
   Launcher& launcher() const;
@@ -79,6 +80,10 @@ public:
   bool KeyNavIsActive() const;
 
   bool IsOverlayOpen() const;
+
+  void UpdateSuperTapDuration(int const super_tap_duration);
+
+  sigc::signal<void, int> launcher_width_changed;
 
 protected:
   // Introspectable methods

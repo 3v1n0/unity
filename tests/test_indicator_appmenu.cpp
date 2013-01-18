@@ -42,25 +42,22 @@ TEST(TestAppmenuIndicator, ShowAppmenu)
 
   bool signal_emitted = false;
   int show_x, show_y;
-  unsigned int show_xid, show_timestamp;
+  unsigned show_xid;
 
   // Connecting to signals
-  indicator.on_show_appmenu.connect([&] (unsigned int xid, int x, int y,
-                                         unsigned int timestamp) {
+  indicator.on_show_appmenu.connect([&] (unsigned int xid, int x, int y) {
     signal_emitted = true;
     show_xid = xid;
     show_x = x;
     show_y = y;
-    show_timestamp = timestamp;
   });
 
-  indicator.ShowAppmenu(123456789, 50, 100, 1328308554);
+  indicator.ShowAppmenu(123456789, 50, 100);
   EXPECT_TRUE(signal_emitted);
 
   EXPECT_EQ(show_xid, 123456789);
   EXPECT_EQ(show_x, 50);
   EXPECT_EQ(show_y, 100);
-  EXPECT_EQ(show_timestamp, 1328308554);
 }
 
 }

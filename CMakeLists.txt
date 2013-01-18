@@ -1,7 +1,8 @@
 project (unity)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.9)
 
 include (cmake/Documentation.cmake)
+include (cmake/pch.cmake)
 
 #
 # Base bits
@@ -13,7 +14,7 @@ set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "6.0")
 
-set (CMAKE_CXX_FLAGS "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive")
 set (CMAKE_CXX_FLAGS_DEBUG "-g3")
 set (CMAKE_CXX_FLAGS_RELEASE "")
 
@@ -30,6 +31,10 @@ option(
   ON
 )
 
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l")
+  set (PIC_FLAGS "-fPIC")
+endif()
+
 if (ENABLE_X_SUPPORT)
   add_definitions(-DUSE_X11)
   message("Unity is configured with support for X.org")
@@ -41,10 +46,29 @@ endif ()
 if (BUILD_GLES)
   add_definitions(-DNUX_OPENGLES_20)
   add_definitions(-DUSE_GLES)
-  set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm -lpthread -ldl")
+  set (UNITY_STANDALONE_LADD "unity-core-${UNITY_API_VERSION};m;pthread;dl")
 else ()
-  set (UNITY_STANDALONE_LADD "-lunity-core-${UNITY_API_VERSION} -lm -lpthread -ldl -lGL -lGLU")
+  set (UNITY_STANDALONE_LADD "unity-core-${UNITY_API_VERSION};m;pthread;dl;GL;GLU")
 endif ()
+
+if (CMAKE_BUILD_TYPE MATCHES coverage)
+  set (COVERAGE_XML_FILE "${CMAKE_BINARY_DIR}/coverage.xml")
+
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage" )
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage" )
+  set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} --coverage" )
+  set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage" )
+
+  find_program(GCOVR_EXECUTABLE gcovr HINTS ${GCOVR_ROOT} "${GCOVR_ROOT}/bin")
+  if (NOT GCOVR_EXECUTABLE)
+      message(FATAL_ERROR "Cannot enable coverage targets because gcovr was not found.")
+  else ()
+      message (STATUS "Enabling XML coverage report")
+      add_custom_target (coverage-xml 
+          COMMAND  "${GCOVR_EXECUTABLE}" --exclude="tests.*" --exclude="obj-.*" -x -r "${CMAKE_SOURCE_DIR}" -o "${COVERAGE_XML_FILE}")
+  endif()
+endif (CMAKE_BUILD_TYPE MATCHES coverage)
+
 
 #
 # Niceties
@@ -110,6 +134,12 @@ set (GETTEXT_PACKAGE "unity")
 set (LOCALE_DIR "${DATADIR}/locale")
 set (VERSION "${UNITY_VERSION}")
 set (BUILDDIR "${CMAKE_BINARY_DIR}")
+set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
+
+find_package (PkgConfig)
+execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} unity --variable lensesdir OUTPUT_VARIABLE LENSES_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator3-0.4 --variable indicatordir OUTPUT_VARIABLE INDICATORDIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator3-0.4 --variable iconsdir OUTPUT_VARIABLE INDICATORICONDIR OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 
@@ -127,12 +157,12 @@ add_custom_command (OUTPUT ${CMAKE_SOURCE_DIR}/po/unity.pot
 		)
 
 if (I18N_SUPPORT)
-if (${GETTEXT_FOUND} STREQUAL "TRUE")
+if (GETTEXT_FOUND)
         set (HAVE_GETTEXT true)
         file (GLOB _translations ${CMAKE_SOURCE_DIR}/po/*.po)
         GETTEXT_CREATE_TRANSLATIONS (${CMAKE_SOURCE_DIR}/po/${PROJECT_NAME}.pot
                 ALL ${_translations})
-endif (${GETTEXT_FOUND} STREQUAL "TRUE")
+endif (GETTEXT_FOUND)
 endif()
 
 #
@@ -162,7 +192,7 @@ set(UNITY_PLUGIN_SHARED_DEPS
     atk-bridge-2.0
     dbusmenu-glib-0.4
     dee-1.0
-    gio-2.0
+    gio-2.0>=2.30.0
     gio-unix-2.0
     gmodule-2.0
     gthread-2.0
@@ -183,7 +213,7 @@ set(UNITY_PLUGIN_DEPS ${UNITY_PLUGIN_SHARED_DEPS})
 if(ENABLE_X_SUPPORT)
   set(UNITY_PLUGIN_DEPS
       ${UNITY_PLUGIN_DEPS}
-      compiz>=0.9.8.0
+      compiz>=0.9.9
       libgeis
       x11
       xfixes
@@ -191,7 +221,6 @@ if(ENABLE_X_SUPPORT)
   )
 endif ()
 
-find_package (PkgConfig)
 pkg_check_modules (CACHED_UNITY_DEPS REQUIRED ${UNITY_PLUGIN_DEPS})
 pkg_check_modules (CACHED_UNITY_PRIVATE_DEPS REQUIRED ${UNITY_PROTOCOL_PRIVATE_DEPS})
 add_subdirectory(unity-shared)

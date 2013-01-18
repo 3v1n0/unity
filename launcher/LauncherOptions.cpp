@@ -34,9 +34,9 @@ Options::Options()
   , backlight_mode(BACKLIGHT_NORMAL)
   , reveal_trigger(RevealTrigger::EDGE)
   , background_color(nux::Color(95, 18, 45))
+  , background_alpha(0.6667)
   , icon_size(48)
   , tile_size(54)
-  , background_alpha(0.6667)
   , edge_decay_rate(1500)
   , edge_overcome_pressure(2000)
   , edge_stop_velocity(6500)
@@ -46,23 +46,27 @@ Options::Options()
   , edge_resist(true)
   , show_for_all(false)
 {
-  auto_hide_animation.changed.connect    ([this] (AutoHideAnimation value) { option_changed.emit(); });
-  background_alpha.changed.connect       ([this] (float value)             { option_changed.emit(); });
-  backlight_mode.changed.connect         ([this] (BacklightMode value)     { option_changed.emit(); });
-  edge_decay_rate.changed.connect        ([this] (int value)               { option_changed.emit(); });
-  background_color.changed.connect       ([this] (nux::Color const& value) { option_changed.emit(); });
-  edge_overcome_pressure.changed.connect ([this] (int value)               { option_changed.emit(); });
-  edge_responsiveness.changed.connect    ([this] (float value)             { option_changed.emit(); });
-  edge_reveal_pressure.changed.connect   ([this] (int value)               { option_changed.emit(); });
-  edge_stop_velocity.changed.connect     ([this] (int value)               { option_changed.emit(); });
-  edge_passed_disabled_ms.changed.connect([this] (unsigned value)          { option_changed.emit(); });
-  hide_mode.changed.connect              ([this] (LauncherHideMode value)  { option_changed.emit(); });
-  icon_size.changed.connect              ([this] (int value)               { option_changed.emit(); });
-  launch_animation.changed.connect       ([this] (LaunchAnimation value)   { option_changed.emit(); });
-  reveal_trigger.changed.connect         ([this] (RevealTrigger vallue)    { option_changed.emit(); });
-  tile_size.changed.connect              ([this] (int value)               { option_changed.emit(); });
-  urgent_animation.changed.connect       ([this] (UrgentAnimation value)   { option_changed.emit(); });
-  edge_resist.changed.connect            ([this] (bool value)              { option_changed.emit(); });
+  auto changed_lambda = [this] {
+    changed_idle_.reset(new glib::Idle([this] { option_changed.emit(); return false; }));
+  };
+
+  auto_hide_animation.changed.connect(sigc::hide(changed_lambda));
+  background_alpha.changed.connect(sigc::hide(changed_lambda));
+  background_color.changed.connect(sigc::hide(changed_lambda));
+  backlight_mode.changed.connect(sigc::hide(changed_lambda));
+  edge_decay_rate.changed.connect(sigc::hide(changed_lambda));
+  edge_overcome_pressure.changed.connect(sigc::hide(changed_lambda));
+  edge_responsiveness.changed.connect(sigc::hide(changed_lambda));
+  edge_reveal_pressure.changed.connect(sigc::hide(changed_lambda));
+  edge_stop_velocity.changed.connect(sigc::hide(changed_lambda));
+  edge_passed_disabled_ms.changed.connect(sigc::hide(changed_lambda));
+  hide_mode.changed.connect(sigc::hide(changed_lambda));
+  icon_size.changed.connect(sigc::hide(changed_lambda));
+  launch_animation.changed.connect(sigc::hide(changed_lambda));
+  reveal_trigger.changed.connect(sigc::hide(changed_lambda));
+  tile_size.changed.connect(sigc::hide(changed_lambda));
+  urgent_animation.changed.connect(sigc::hide(changed_lambda));
+  edge_resist.changed.connect(sigc::hide(changed_lambda));
 }
 
 }

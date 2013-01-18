@@ -48,8 +48,8 @@ StandaloneWindow::StandaloneWindow(Window xid)
   , has_decorations(true)
   , on_top(false)
   , closable(true)
-  , minimizable(false)
-  , maximizable(false)
+  , minimizable(true)
+  , maximizable(true)
 {}
 
 WindowManagerPtr create_window_manager()
@@ -98,7 +98,7 @@ bool StandaloneWindowManager::IsWindowOnCurrentDesktop(Window window_id) const
   if (it != standalone_windows_.end())
     return (it->second->current_desktop == current_desktop_);
 
-  return false;
+  return true;
 }
 
 bool StandaloneWindowManager::IsWindowObscured(Window window_id) const
@@ -112,7 +112,7 @@ bool StandaloneWindowManager::IsWindowMapped(Window window_id) const
   if (it != standalone_windows_.end())
     return it->second->mapped;
 
-  return false;
+  return true;
 }
 
 bool StandaloneWindowManager::IsWindowVisible(Window window_id) const
@@ -121,7 +121,7 @@ bool StandaloneWindowManager::IsWindowVisible(Window window_id) const
   if (it != standalone_windows_.end())
     return it->second->visible;
 
-  return false;
+  return true;
 }
 
 bool StandaloneWindowManager::IsWindowOnTop(Window window_id) const
@@ -438,6 +438,21 @@ int StandaloneWindowManager::WorkspaceCount() const
   return 4;
 }
 
+nux::Point StandaloneWindowManager::GetCurrentViewport() const
+{
+  return current_vp_;
+}
+
+ int StandaloneWindowManager::GetViewportHSize() const
+{
+  return 2;
+}
+
+int StandaloneWindowManager::GetViewportVSize() const
+{
+  return 2;
+}
+
 bool StandaloneWindowManager::SaveInputFocus()
 {
   return false;
@@ -480,6 +495,10 @@ std::map<Window, StandaloneWindow::Ptr> StandaloneWindowManager::GetStandaloneWi
   return standalone_windows_;
 }
 
+void StandaloneWindowManager::SetCurrentViewport(nux::Point const& vp)
+{
+  current_vp_ = vp;
+}
 
 void StandaloneWindowManager::AddProperties(GVariantBuilder* builder)
 {

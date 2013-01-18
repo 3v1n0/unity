@@ -20,14 +20,23 @@
 #ifndef TEXTINPUT_H
 #define TEXTINPUT_H
 
+#include "config.h"
+
+#include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
-#include <NuxCore/Property.h>
+
+#include <Nux/Nux.h>
+#include <Nux/HLayout.h>
 #include <Nux/LayeredLayout.h>
 #include <Nux/VLayout.h>
 #include <Nux/TextEntry.h>
+#include <NuxCore/Logger.h>
+#include <NuxCore/Property.h>
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibSource.h>
+#include <UnityCore/Variant.h>
 
+#include "CairoTexture.h"
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/IMTextEntry.h"
 #include "unity-shared/Introspectable.h"
@@ -41,10 +50,10 @@ class LinearLayout;
 
 namespace unity
 {
-
 class TextInput : public unity::debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(TextInput, nux::View);
+
 public:
   typedef nux::ObjectPtr<TextInput> Ptr;
   TextInput(NUX_FILE_LINE_PROTO);
@@ -59,42 +68,49 @@ public:
 
 private:
 
-  void Init();
-
   void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);
-  void OnInputHintChanged();
-
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  void UpdateBackground(bool force);
 
-  void OnMouseButtonDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  std::string GetName() const;
+
+  void AddProperties(GVariantBuilder* builder);
+  bool AcceptKeyNavFocus();
+
+protected:
+
+  void Init();
+  void OnInputHintChanged();
+  void OnMouseButtonDown(int x, int y, unsigned long button_flags,
+          unsigned long key_flags);
   void OnEndKeyFocus();
 
-  void UpdateBackground(bool force);
+  // getters & setters
 
   std::string get_input_string() const;
   bool set_input_string(std::string const& string);
   bool get_im_active() const;
   bool get_im_preedit() const;
 
-  std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
-  bool AcceptKeyNavFocus();
+  // instance vars
+  StaticCairoText* hint_;
+  IMTextEntry* pango_entry_;
 
 private:
+
   bool ShouldBeHighlighted();
 
   std::unique_ptr<nux::AbstractPaintLayer> bg_layer_;
   std::unique_ptr<nux::AbstractPaintLayer> highlight_layer_;
   nux::HLayout* layout_;
   nux::LayeredLayout* layered_layout_;
-  nux::StaticCairoText* hint_;
-  IMTextEntry* pango_entry_;
 
   int last_width_;
   int last_height_;
 
   glib::SignalManager sig_manager_;
+
 };
 
 }

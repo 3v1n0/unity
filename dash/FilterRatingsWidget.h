@@ -50,6 +50,9 @@ public:
   void SetFilter(Filter::Ptr const& filter);
   std::string GetFilterType();
 
+protected:
+  void ClearRedirectedRenderChildArea();
+
 private:
   FilterAllButton* all_button_;
   FilterRatingsButton* ratings_;

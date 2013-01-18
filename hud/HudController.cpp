@@ -22,13 +22,14 @@
 #include <Nux/HLayout.h>
 #include <UnityCore/Variant.h>
 
+#include "unity-shared/ApplicationManager.h"
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
 
 #include "config.h"
-#include <libbamf/libbamf.h>
+
 
 namespace unity
 {
@@ -36,19 +37,43 @@ namespace hud
 {
 DECLARE_LOGGER(logger, "unity.hud.controller");
 
-Controller::Controller(std::function<AbstractView*(void)> const& function)
+Controller::Controller(Controller::ViewCreator const& create_view,
+                       Controller::WindowCreator const& create_window)
   : launcher_width(64)
   , launcher_locked_out(false)
   , multiple_launchers(true)
   , hud_service_("com.canonical.hud", "/com/canonical/hud")
   , visible_(false)
   , need_show_(false)
-  , timeline_animator_(90)
   , view_(nullptr)
   , monitor_index_(0)
-  , view_function_(function)
+  , create_view_(create_view)
+  , create_window_(create_window)
+  , timeline_animator_(90)
 {
   LOG_DEBUG(logger) << "hud startup";
+
+  // As a default, the create_view_ function should just create a view.
+  if (create_view == nullptr)
+  {
+    create_view_ = []() {
+      return new hud::View;
+    };
+  }
+
+  // As a default. the create_window_ function should just create a base window.
+  if (create_window_ == nullptr)
+  {
+    create_window_ = [&]() {
+      return new ResizingBaseWindow("Hud",
+                                    [this](nux::Geometry const& geo) {
+                                      if (view_)
+                                        return GetInputWindowGeometry();
+                                      return geo;
+                                    });
+    };
+  }
+
   SetupWindow();
   UScreen::GetDefault()->changed.connect([&] (int, std::vector<nux::Geometry>&) { Relayout(true); });
 
@@ -76,7 +101,7 @@ Controller::Controller(std::function<AbstractView*(void)> const& function)
   wm.initiate_spread.connect(sigc::bind(sigc::mem_fun(this, &Controller::HideHud), true));
 
   hud_service_.queries_updated.connect(sigc::mem_fun(this, &Controller::OnQueriesFinished));
-  timeline_animator_.animation_updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
+  timeline_animator_.updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
 
   EnsureHud();
 }
@@ -86,12 +111,7 @@ void Controller::SetupWindow()
   // Since BaseWindow is a View it is initially unowned.  This means that the first
   // reference that is taken grabs ownership of the pointer.  Since the smart pointer
   // references it, it becomes the owner, so no need to adopt the pointer here.
-  window_ = new ResizingBaseWindow("Hud", [this](nux::Geometry const& geo)
-  {
-    if (view_)
-      return GetInputWindowGeometry();
-    return geo;
-  });
+  window_ = create_window_();
   window_->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
   window_->SetConfigureNotifyCallback(&Controller::OnWindowConfigure, this);
   window_->ShowWindow(false);
@@ -112,7 +132,7 @@ void Controller::SetupWindow()
 void Controller::SetupHudView()
 {
   LOG_DEBUG(logger) << "SetupHudView called";
-  view_ = view_function_();
+  view_ = create_view_();
 
   layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   layout_->AddView(view_, 1, nux::MINOR_POSITION_START);
@@ -282,6 +302,15 @@ void Controller::ShowHideHud()
   visible_ ? HideHud(true) : ShowHud();
 }
 
+void Controller::ReFocusKeyInput()
+{
+  if (visible_)
+  {
+    window_->PushToFront();
+    window_->SetInputFocus();
+  }
+}
+
 bool Controller::IsVisible()
 {
   return visible_;
@@ -294,7 +323,7 @@ void Controller::ShowHud()
   EnsureHud();
 
   if (visible_ || wm.IsExpoActive() || wm.IsScaleActive())
-   return;
+    return;
 
   if (wm.IsScreenGrabbed())
   {
@@ -313,69 +342,26 @@ void Controller::ShowHud()
   view_->ShowEmbeddedIcon(!IsLockedToLauncher(monitor_index_));
   view_->AboutToShow();
 
-  // We first want to grab the currently active window
-  glib::Object<BamfMatcher> matcher(bamf_matcher_get_default());
-  BamfWindow* active_win = bamf_matcher_get_active_window(matcher);
+  ApplicationManager& app_manager = ApplicationManager::Default();
+  ApplicationPtr active_application;
+  ApplicationWindowPtr active_window = app_manager.GetActiveWindow();
+  if (active_window)
+    active_application = active_window->application();
 
-  Window active_xid = bamf_window_get_xid(active_win);
-  std::vector<Window> const& unity_xids = nux::XInputWindow::NativeHandleList();
-
-  // If the active window is an unity window, we must get the top-most valid window
-  if (std::find(unity_xids.begin(), unity_xids.end(), active_xid) != unity_xids.end())
+  if (active_application)
   {
-    // Windows list stack for all the monitors
-    GList *windows = bamf_matcher_get_window_stack_for_monitor(matcher, -1);
-
-    // Reset values, in case we can't find a window ie. empty current desktop
-    active_xid = 0;
-    active_win = nullptr;
-
-    for (GList *l = windows; l; l = l->next)
-    {
-      if (!BAMF_IS_WINDOW(l->data))
-        continue;
-
-      auto win = static_cast<BamfWindow*>(l->data);
-      auto view = static_cast<BamfView*>(l->data);
-      Window xid = bamf_window_get_xid(win);
-
-      if (bamf_view_is_user_visible(view) && bamf_window_get_window_type(win) != BAMF_WINDOW_DOCK &&
-          wm.IsWindowOnCurrentDesktop(xid) &&
-          wm.IsWindowVisible(xid) &&
-          std::find(unity_xids.begin(), unity_xids.end(), xid) == unity_xids.end())
-      {
-        active_win = win;
-        active_xid = xid;
-      }
-    }
-
-    g_list_free(windows);
-  }
-
-  BamfApplication* active_app = bamf_matcher_get_application_for_window(matcher, active_win);
-
-  if (BAMF_IS_VIEW(active_app))
-  {
-    auto active_view = reinterpret_cast<BamfView*>(active_app);
-    glib::String view_icon(bamf_view_get_icon(active_view));
-    focused_app_icon_ = view_icon.Str();
+    focused_app_icon_ = active_application->icon();
   }
   else
   {
-    focused_app_icon_ = focused_app_icon_ = PKGDATADIR "/launcher_bfb.png";
+    focused_app_icon_ = PKGDATADIR "/launcher_bfb.png";
   }
 
   LOG_DEBUG(logger) << "Taking application icon: " << focused_app_icon_;
   SetIcon(focused_app_icon_);
 
-  window_->ShowWindow(true);
-  window_->PushToFront();
-  window_->EnableInputWindow(true, "Hud", true, false);
-  window_->UpdateInputWindowGeometry();
-  window_->SetInputFocus();
-  window_->CaptureMouseDownAnyWhereElse(true);
-  view_->CaptureMouseDownAnyWhereElse(true);
-  window_->QueueDraw();
+  WindowManager::Default().SaveInputFocus();
+  FocusWindow();
 
   view_->ResetToDefault();
   need_show_ = true;
@@ -391,6 +377,16 @@ void Controller::ShowHud()
 
   nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
   window_->SetEnterFocusInputArea(view_->default_focus());
+}
+
+void Controller::FocusWindow()
+{
+  window_->ShowWindow(true);
+  window_->PushToFront();
+  window_->EnableInputWindow(true, "Hud", true, false);
+  window_->UpdateInputWindowGeometry();
+  window_->SetInputFocus();
+  window_->QueueDraw();
 }
 
 void Controller::HideHud(bool restore)
@@ -428,27 +424,31 @@ void Controller::StartShowHideTimeline()
 {
   EnsureHud();
 
-  double current_opacity = window_->GetOpacity();
-  timeline_animator_.Stop();
-  timeline_animator_.Start(visible_ ? current_opacity : 1.0f - current_opacity);
+  if (timeline_animator_.CurrentState() == nux::animation::Animation::State::Running)
+  {
+    timeline_animator_.Reverse();
+  }
+  else
+  {
+    if (visible_)
+      timeline_animator_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
+    else
+      timeline_animator_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
+  }
 }
 
-void Controller::OnViewShowHideFrame(double progress)
+void Controller::OnViewShowHideFrame(double opacity)
 {
-  window_->SetOpacity(visible_ ? progress : 1.0f - progress);
+  window_->SetOpacity(opacity);
 
-  if (progress == 1.0f)
+  if (opacity == 0.0f && !visible_)
   {
-    if (!visible_)
-    {
-      window_->ShowWindow(false);
-      view_->ResetToDefault();
-    }
-    else
-    {
-      // ensure the text entry is focused
-      nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
-    }
+    window_->ShowWindow(false);
+  }
+  else if (opacity == 1.0f && visible_)
+  {
+    // ensure the text entry is focused
+    nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
   }
 }
 

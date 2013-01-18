@@ -24,12 +24,12 @@
 #include <gdk/gdk.h>
 #include <UnityCore/GLibSignal.h>
 
+#include <NuxCore/Animation.h>
 #include <NuxCore/Property.h>
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/Nux.h>
 
 #include "DashView.h"
-#include "unity-shared/Animator.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/ResizingBaseWindow.h"
@@ -43,8 +43,9 @@ class Controller : public unity::debug::Introspectable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;
+  typedef std::function<ResizingBaseWindow*()> WindowCreator;
 
-  Controller();
+  Controller(WindowCreator const& create_window = nullptr);
   ~Controller();
 
   nux::BaseWindow* window() const;
@@ -58,6 +59,9 @@ public:
   sigc::signal<void> on_realize;
 
   void HideDash(bool restore_focus = true);
+  void ShowDash();
+
+  void ReFocusKeyInput();
 
   bool IsVisible() const;
   nux::Geometry GetInputWindowGeometry();
@@ -82,7 +86,7 @@ private:
   void OnExternalHideDash(GVariant* variant);
   void OnActivateRequest(GVariant* variant);
 
-  void ShowDash();
+  void FocusWindow();
 
   void StartShowHideTimeline();
   void OnViewShowHideFrame(double progress);
@@ -96,6 +100,7 @@ private:
   static void OnWindowConfigure(int width, int height, nux::Geometry& geo, void* data);
 
 private:
+  WindowCreator create_window_;
   nux::ObjectPtr<ResizingBaseWindow> window_;
   int monitor_;
 
@@ -104,13 +109,13 @@ private:
   DashView* view_;
 
   sigc::connection screen_ungrabbed_slot_;
-  glib::TimeoutSeconds ensure_timeout_;
-  Animator timeline_animator_;
-  UBusManager ubus_manager_;
   unsigned int dbus_owner_;
   unsigned place_entry_request_id_;
   glib::Object<GCancellable> dbus_connect_cancellable_;
   static GDBusInterfaceVTable interface_vtable;
+  glib::TimeoutSeconds ensure_timeout_;
+  nux::animation::AnimateValue<double> timeline_animator_;
+  UBusManager ubus_manager_;
 };
 
 
