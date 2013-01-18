@@ -25,6 +25,15 @@ namespace shortcut
 {
 
 Model::Model(std::list<AbstractHint::Ptr> const& hints)
+  : categories_per_column(3, [] (unsigned& target, unsigned const& new_value) {
+      unsigned cat_per_col = std::max<unsigned>(1, new_value);
+      if (cat_per_col != target)
+      {
+        target = cat_per_col;
+        return true;
+      }
+      return false;
+    })
 {
   for (auto hint : hints)
     AddHint(hint);
