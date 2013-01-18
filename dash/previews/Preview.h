@@ -65,9 +65,9 @@ public:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
-  static previews::Preview::Ptr PreviewForModel(dash::Preview::Ptr model);
-
-  sigc::signal<void> request_close;
+  static previews::Preview::Ptr PreviewForModel(dash::Preview::Ptr model);  
+  
+  sigc::signal<void> request_close() const;
 
   virtual nux::Area* FindKeyFocusArea(unsigned int key_symbol,
                                       unsigned long x11_key_code,
