@@ -45,7 +45,6 @@ public:
 
   // Ctor and dtor
   View();
-  ~View();
 
   // Public methods
   bool GetBaseGeometry(nux::Geometry&);
@@ -63,7 +62,7 @@ protected:
 
 private:
   // Private methods
-  nux::LinearLayout* CreateSectionLayout(const char* section_name);
+  nux::LinearLayout* CreateSectionLayout(std::string const& section_name);
   nux::View* CreateShortKeyEntryView(AbstractHint::Ptr const& hint);
   nux::LinearLayout* CreateIntermediateLayout();
 
@@ -71,10 +70,7 @@ private:
 
   // Private members
   Model::Ptr model_;
-
-  nux::VLayout* layout_;
   nux::HLayout* columns_layout_;
-  std::vector<nux::VLayout*> columns_;
 
   int x_adjustment_;
   int y_adjustment_;
