@@ -128,6 +128,8 @@ void SocialPreviewComments::SetupViews()
 
   previews::Style& style = previews::Style::Instance();
 
+  auto on_mouse_down = [&](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_.OnMouseDown(x, y, button_flags, key_flags); };
+
   nux::VLayout* layout = new nux::VLayout();
   layout->SetSpaceBetweenChildren(6);
 
@@ -144,6 +146,7 @@ void SocialPreviewComments::SetupViews()
       comment_name->SetFont(style.info_hint_bold_font());
       comment_name->SetLines(-1);
       comment_name->SetTextAlignment(StaticCairoText::NUX_ALIGN_LEFT);
+      comment_name->mouse_click.connect(on_mouse_down);
       name_layout->AddView(comment_name.GetPointer(), 0, nux::MINOR_POSITION_START);
     }
 
@@ -154,6 +157,7 @@ void SocialPreviewComments::SetupViews()
       comment_time->SetFont(style.info_hint_font());
       comment_time->SetLines(-1);
       comment_time->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
+      comment_time->mouse_click.connect(on_mouse_down);
       name_layout->AddView(comment_time.GetPointer(), 0, nux::MINOR_POSITION_START);
     }
 
@@ -166,6 +170,7 @@ void SocialPreviewComments::SetupViews()
     comment_value->SetFont(style.info_hint_font());
     comment_value->SetLines(-7);
     comment_value->SetTextAlignment(StaticCairoText::NUX_ALIGN_LEFT);
+    comment_value->mouse_click.connect(on_mouse_down);
     comment_layout->AddView(comment_value.GetPointer(), 1, nux::MINOR_POSITION_START);
 
     Comment comment_views(comment_name, comment_value);
@@ -174,6 +179,8 @@ void SocialPreviewComments::SetupViews()
     layout->AddLayout(name_layout, 0);
     layout->AddLayout(comment_layout, 1);
   }
+  mouse_click.connect(on_mouse_down);
+
   SetLayout(layout);
 
 }

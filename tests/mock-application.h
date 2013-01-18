@@ -139,6 +139,12 @@ public:
   {
       return unity::ApplicationList();
   }
+
+  unity::ApplicationPtr GetApplicationForWindow(Window xid)
+  {
+    return unity::ApplicationPtr();
+  }
+
 private:
   typedef std::map<std::string, unity::ApplicationPtr> AppMap;
   AppMap app_map_;

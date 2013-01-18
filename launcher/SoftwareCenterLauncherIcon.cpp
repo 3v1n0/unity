@@ -210,8 +210,8 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
       UpdateDesktopFile();
       UpdateRemoteUri();
 
-      // make it permanent
-      Stick(true);
+      Stick();
+      position_saved.emit();
 
       _source_manager.AddIdle([this]()
       {

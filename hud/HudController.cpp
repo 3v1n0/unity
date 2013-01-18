@@ -354,12 +354,13 @@ void Controller::ShowHud()
   }
   else
   {
-    focused_app_icon_ = focused_app_icon_ = PKGDATADIR "/launcher_bfb.png";
+    focused_app_icon_ = PKGDATADIR "/launcher_bfb.png";
   }
 
   LOG_DEBUG(logger) << "Taking application icon: " << focused_app_icon_;
   SetIcon(focused_app_icon_);
 
+  WindowManager::Default().SaveInputFocus();
   FocusWindow();
 
   view_->ResetToDefault();
