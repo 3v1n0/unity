@@ -29,7 +29,7 @@ namespace
 
 TEST(TestParseLensFilter, TestSimpleString)
 {
-  LensFilter filter = parse_lens_uri("simple");
+  LensFilter filter = parse_scope_uri("simple");
 
   EXPECT_THAT(filter.id, Eq("simple"));
   EXPECT_TRUE(filter.filters.empty());
@@ -38,7 +38,7 @@ TEST(TestParseLensFilter, TestSimpleString)
 TEST(TestParseLensFilter, TestNonFilterParameter)
 {
   // Only params that start with "filter_" are added.
-  LensFilter filter = parse_lens_uri("uri?param=test");
+  LensFilter filter = parse_scope_uri("uri?param=test");
 
   EXPECT_THAT(filter.id, Eq("uri"));
   EXPECT_TRUE(filter.filters.empty());
@@ -46,7 +46,7 @@ TEST(TestParseLensFilter, TestNonFilterParameter)
 
 TEST(TestParseLensFilter, TestSingleParameter)
 {
-  LensFilter filter = parse_lens_uri("uri?filter_param=test");
+  LensFilter filter = parse_scope_uri("uri?filter_param=test");
 
   EXPECT_THAT(filter.id, Eq("uri"));
   EXPECT_THAT(filter.filters.size(), Eq(1));
@@ -55,7 +55,7 @@ TEST(TestParseLensFilter, TestSingleParameter)
 
 TEST(TestParseLensFilter, TestNoEquals)
 {
-  LensFilter filter = parse_lens_uri("uri?filter_param");
+  LensFilter filter = parse_scope_uri("uri?filter_param");
 
   EXPECT_THAT(filter.id, Eq("uri"));
   EXPECT_TRUE(filter.filters.empty());
@@ -63,7 +63,7 @@ TEST(TestParseLensFilter, TestNoEquals)
 
 TEST(TestParseLensFilter, TestEmbeddedEquals)
 {
-  LensFilter filter = parse_lens_uri("uri?filter_param=a=b");
+  LensFilter filter = parse_scope_uri("uri?filter_param=a=b");
 
   EXPECT_THAT(filter.id, Eq("uri"));
   EXPECT_THAT(filter.filters.size(), Eq(1));
@@ -72,7 +72,7 @@ TEST(TestParseLensFilter, TestEmbeddedEquals)
 
 TEST(TestParseLensFilter, TestMultipleParameters)
 {
-  LensFilter filter = parse_lens_uri("uri?filter_param1=first&filter_param2=second");
+  LensFilter filter = parse_scope_uri("uri?filter_param1=first&filter_param2=second");
 
   EXPECT_THAT(filter.id, Eq("uri"));
   EXPECT_THAT(filter.filters.size(), Eq(2));

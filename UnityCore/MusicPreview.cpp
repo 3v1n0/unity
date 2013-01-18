@@ -22,6 +22,7 @@
 
 #include "MusicPreview.h"
 #include "Tracks.h"
+#include "Scope.h"
 
 namespace unity
 {
@@ -70,7 +71,12 @@ void MusicPreview::Impl::PlayUri(std::string const& uri) const
   unity_protocol_music_preview_play_uri(raw_preview_, uri.c_str());
   glib::Variant properties(unity_protocol_preview_end_updates(preview),
                            glib::StealRef());
-  owner_->Update(properties);
+
+  glib::HintsMap property_hints;
+  if (properties.ASVToHints(property_hints))
+    owner_->Update(property_hints);
+  else
+    g_assert(false);
 }
 
 void MusicPreview::Impl::PauseUri(std::string const& uri) const
@@ -81,7 +87,12 @@ void MusicPreview::Impl::PauseUri(std::string const& uri) const
   unity_protocol_music_preview_pause_uri(raw_preview_, uri.c_str());
   glib::Variant properties(unity_protocol_preview_end_updates(preview),
                            glib::StealRef());
-  owner_->Update(properties);
+
+  glib::HintsMap property_hints;
+  if (properties.ASVToHints(property_hints))
+    owner_->Update(property_hints);
+  else
+    g_assert(false);
 }
 
 MusicPreview::MusicPreview(unity::glib::Object<GObject> const& proto_obj)

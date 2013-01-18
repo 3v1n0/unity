@@ -25,6 +25,7 @@ namespace dash
 {
 
 Categories::Categories()
+ : Model<Category>::Model(REMOTE)
 {
   row_added.connect(sigc::mem_fun(this, &Categories::OnRowAdded));
   row_changed.connect(sigc::mem_fun(this, &Categories::OnRowChanged));

@@ -25,6 +25,22 @@ namespace unity
 namespace dash
 {
 
+namespace
+{
+enum ResultColumn
+{
+  URI,
+  ICON_HINT,
+  CATEGORY,
+  RESULT_TYPE,
+  MIMETYPE,
+  TITLE,
+  COMMENT,
+  DND_URI,
+  METADATA
+};
+}
+
 Result::Result(DeeModel* model,
                DeeModelIter* iter,
                DeeModelTag* renderer_tag)
@@ -51,19 +67,21 @@ void Result::SetupGetters()
   uri.SetGetterFunction(sigc::mem_fun(this, &Result::GetURI));
   icon_hint.SetGetterFunction(sigc::mem_fun(this, &Result::GetIconHint));
   category_index.SetGetterFunction(sigc::mem_fun(this, &Result::GetCategoryIndex));
+  result_type.SetGetterFunction(sigc::mem_fun(this, &Result::GetResultType));
   mimetype.SetGetterFunction(sigc::mem_fun(this, &Result::GetMimeType));
   name.SetGetterFunction(sigc::mem_fun(this, &Result::GetName));
   comment.SetGetterFunction(sigc::mem_fun(this, &Result::GetComment));
   dnd_uri.SetGetterFunction(sigc::mem_fun(this, &Result::GetDndURI));
 }
 
-std::string Result::GetURI() const { return GetStringAt(0); }
-std::string Result::GetIconHint() const { return GetStringAt(1); }
-std::size_t Result::GetCategoryIndex() const { return GetUIntAt(2); }
-std::string Result::GetMimeType() const { return GetStringAt(3); }
-std::string Result::GetName() const { return GetStringAt(4); }
-std::string Result::GetComment() const { return GetStringAt(5); }
-std::string Result::GetDndURI() const { return GetStringAt(6); }
+std::string Result::GetURI() const { return GetStringAt(ResultColumn::URI); }
+std::string Result::GetIconHint() const { return GetStringAt(ResultColumn::ICON_HINT); }
+std::size_t Result::GetCategoryIndex() const { return GetUIntAt(ResultColumn::CATEGORY); }
+unsigned Result::GetResultType() const { return GetUIntAt(ResultColumn::RESULT_TYPE); }
+std::string Result::GetMimeType() const { return GetStringAt(ResultColumn::MIMETYPE); }
+std::string Result::GetName() const { return GetStringAt(ResultColumn::TITLE); }
+std::string Result::GetComment() const { return GetStringAt(ResultColumn::COMMENT); }
+std::string Result::GetDndURI() const { return GetStringAt(ResultColumn::DND_URI); }
 
 }
 }

@@ -27,25 +27,24 @@
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/GraphicsUtils.h"
-#include "LensBar.h"
 #include "unity-shared/UBusMessages.h"
 
 namespace unity
 {
 namespace dash
 {
-DECLARE_LOGGER(logger, "unity.dash.lensbar");
+DECLARE_LOGGER(logger, "unity.dash.scopebar");
 namespace
 {
-// according to Q design the inner area of the lensbar should be 40px
+// according to Q design the inner area of the scopebar should be 40px
 // (without any borders)
-const int LENSBAR_HEIGHT = 41;
+const int SCOPEBAR_HEIGHT = 41;
 
 }
 
-NUX_IMPLEMENT_OBJECT_TYPE(LensBar);
+NUX_IMPLEMENT_OBJECT_TYPE(ScopeBar);
 
-LensBar::LensBar()
+ScopeBar::ScopeBar()
   : nux::View(NUX_TRACKER_LOCATION)
   , info_previously_shown_(false)
 {
@@ -55,10 +54,9 @@ LensBar::LensBar()
 
   SetupBackground();
   SetupLayout();
-  SetupHomeLens();
 }
 
-void LensBar::SetupBackground()
+void ScopeBar::SetupBackground()
 {
   nux::ROPConfig rop;
   rop.Blend = true;
@@ -67,7 +65,7 @@ void LensBar::SetupBackground()
   bg_layer_.reset(new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.2f), true, rop));
 }
 
-void LensBar::SetupLayout()
+void ScopeBar::SetupLayout()
 {
   legal_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   std::string legal_text("<span underline='single'>");
@@ -113,24 +111,11 @@ void LensBar::SetupLayout()
 
   SetLayout(layered_layout_);
   
-  SetMinimumHeight(LENSBAR_HEIGHT);
-  SetMaximumHeight(LENSBAR_HEIGHT);
+  SetMinimumHeight(SCOPEBAR_HEIGHT);
+  SetMaximumHeight(SCOPEBAR_HEIGHT);
 }
 
-void LensBar::SetupHomeLens()
-{
-  LensBarIcon* icon = new LensBarIcon("home.lens", PKGDATADIR"/lens-nav-home.svg");
-  icon->SetVisible(true);
-  icon->active = true;
-  icons_.push_back(icon);
-  layout_->AddView(icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  AddChild(icon);
-
-  icon->mouse_click.connect([&, icon] (int x, int y, unsigned long button, unsigned long keyboard) { SetActive(icon); });
-  icon->key_nav_focus_activate.connect([&, icon](nux::Area*){ SetActive(icon); });
-}
-
-void LensBar::DoOpenLegalise()
+void ScopeBar::DoOpenLegalise()
 {
   glib::Error error;
   std::string legal_file_path = "file://";
@@ -147,11 +132,12 @@ void LensBar::DoOpenLegalise()
   ubus_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
 }
 
-void LensBar::AddLens(Lens::Ptr& lens)
+void ScopeBar::AddScope(Scope::Ptr const& scope)
 {
-  LensBarIcon* icon = new LensBarIcon(lens->id, lens->icon_hint);
-  icon->SetVisible(lens->visible);
-  lens->visible.changed.connect([icon](bool visible) { icon->SetVisible(visible); } );
+  ScopeBarIcon* icon = new ScopeBarIcon(scope->id, scope->icon_hint);
+
+  icon->SetVisible(scope->visible);
+  scope->visible.changed.connect([icon](bool visible) { icon->SetVisible(visible); } );
   icons_.push_back(icon);
   layout_->AddView(icon, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
   AddChild(icon);
@@ -160,7 +146,7 @@ void LensBar::AddLens(Lens::Ptr& lens)
   icon->key_nav_focus_activate.connect([&, icon](nux::Area*){ SetActive(icon); });
 }
 
-void LensBar::Activate(std::string id)
+void ScopeBar::Activate(std::string id)
 {
   for (auto icon: icons_)
   {
@@ -172,7 +158,7 @@ void LensBar::Activate(std::string id)
   }
 }
 
-void LensBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
+void ScopeBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
 
@@ -190,7 +176,7 @@ void LensBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
   graphics_engine.PopClippingRectangle();
 }
 
-void LensBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
+void ScopeBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
 
@@ -201,7 +187,7 @@ void LensBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   {
     if (RedirectedAncestor())
     { 
-      // Whole Lens bar needs to be cleared because the PaintAll forces redraw.
+      // Whole Scope bar needs to be cleared because the PaintAll forces redraw.
       graphics::ClearGeometry(base);
     }
 
@@ -251,10 +237,10 @@ void LensBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   graphics_engine.PopClippingRectangle();
 }
 
-nux::Area* LensBar::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
+nux::Area* ScopeBar::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
 {
   //LayeredLayout is acting a little screwy, events are not passing past the first layout like instructed,
-  //so we manually override if the cursor is on the right hand side of the lensbar 
+  //so we manually override if the cursor is on the right hand side of the scopebar 
   auto geo = GetAbsoluteGeometry();
   int info_width = (info_previously_shown_) ? info_icon_->GetGeometry().width : legal_->GetGeometry().width;
   
@@ -272,7 +258,7 @@ nux::Area* LensBar::FindAreaUnderMouse(const nux::Point& mouse_position, nux::Nu
   
 }
 
-void LensBar::SetActive(LensBarIcon* activated)
+void ScopeBar::SetActive(ScopeBarIcon* activated)
 {
   bool state_changed = false;
 
@@ -287,13 +273,13 @@ void LensBar::SetActive(LensBarIcon* activated)
   }
 
   if (state_changed)
-    lens_activated.emit(activated->id);
+    scope_activated.emit(activated->id);
 }
 
-void LensBar::ActivateNext()
+void ScopeBar::ActivateNext()
 {
-  // Special case when switching from the command lens.
-  if (GetActiveLensId() == "commands.lens")
+  // Special case when switching from the command scope.
+  if (GetActiveScopeId() == "commands.scope")
   {
     SetActive(icons_[0]);
     return;
@@ -304,7 +290,7 @@ void LensBar::ActivateNext()
        it < icons_.end();
        it++)
   {
-    LensBarIcon *icon = *it;
+    ScopeBarIcon *icon = *it;
 
     if (activate_next && icon->IsVisible())
     {
@@ -318,10 +304,10 @@ void LensBar::ActivateNext()
 
 }
 
-void LensBar::ActivatePrevious()
+void ScopeBar::ActivatePrevious()
 {
-  // Special case when switching from the command lens.
-  if (GetActiveLensId() == "commands.lens")
+  // Special case when switching from the command scope.
+  if (GetActiveScopeId() == "commands.scope")
   {
     SetActive(icons_.back());
     return;
@@ -332,7 +318,7 @@ void LensBar::ActivatePrevious()
        it < icons_.rend();
        ++it)
   {
-    LensBarIcon *icon = *it;
+    ScopeBarIcon *icon = *it;
 
     if (activate_previous && icon->IsVisible())
     {
@@ -347,34 +333,34 @@ void LensBar::ActivatePrevious()
 }
 
 // Keyboard navigation
-bool LensBar::AcceptKeyNavFocus()
+bool ScopeBar::AcceptKeyNavFocus()
 {
   return false;
 }
 
 // Introspectable
-std::string LensBar::GetName() const
+std::string ScopeBar::GetName() const
 {
-  return "LensBar";
+  return "ScopeBar";
 }
 
-void LensBar::AddProperties(GVariantBuilder* builder)
+void ScopeBar::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper wrapper(builder);
 
-  wrapper.add("focused-lens-icon", "");
+  wrapper.add("focused-scope-icon", "");
 
   for( auto icon : icons_)
   {
     if (icon->active)
-      wrapper.add("active-lens", icon->id.Get());
+      wrapper.add("active-scope", icon->id.Get());
 
     if (icon->HasKeyFocus())
-      wrapper.add("focused-lens-icon", icon->id.Get());
+      wrapper.add("focused-scope-icon", icon->id.Get());
   }
 }
 
-std::string LensBar::GetActiveLensId() const
+std::string ScopeBar::GetActiveScopeId() const
 {
   for (auto icon : icons_)
   {

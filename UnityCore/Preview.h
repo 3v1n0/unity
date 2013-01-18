@@ -40,7 +40,7 @@ namespace unity
 namespace dash
 {
 
-class Lens;
+class Scope;
 
 enum LayoutHint
 {
@@ -110,7 +110,7 @@ public:
 
   virtual ~Preview();
 
-  static Preview::Ptr PreviewForVariant(glib::Variant& properties);
+  static Preview::Ptr PreviewForVariant(glib::Variant const& properties);
   static Preview::Ptr PreviewForProtocolObject(glib::Object<GObject> const& proto_obj);
 
   nux::ROProperty<std::string> renderer_name;
@@ -120,24 +120,24 @@ public:
   nux::ROProperty<unity::glib::Object<GIcon>> image;
   nux::ROProperty<std::string> image_source_uri;
 
-  // can't use Lens::Ptr to avoid circular dependency
-  nux::RWProperty<Lens*> parent_lens;
+  // can't use Scope::Ptr to avoid circular dependency
+  nux::RWProperty<Scope*> parent_scope;
   nux::Property<std::string> preview_uri;
 
   ActionPtrList GetActions() const;
   InfoHintPtrList GetInfoHints() const;
 
   void PerformAction(std::string const& id,
-                     std::map<std::string, glib::Variant> const& hints =
-                     std::map<std::string, glib::Variant>()) const;
+                     glib::HintsMap const& hints =
+                     glib::HintsMap()) const;
   void EmitClosed() const;
 
 protected:
   // this should be UnityProtocolPreview, but we want to keep the usage
   // of libunity-protocol-private private to unity-core
   Preview(glib::Object<GObject> const& proto_obj);
-  void Update(glib::Variant const& properties,
-              glib::DBusProxy::ReplyCallback reply_callback = nullptr) const;
+  void Update(glib::HintsMap const& property_hints,
+              std::function<void(glib::HintsMap const&, glib::Error const&)> const& reply_callback = nullptr) const;
   static glib::Object<GIcon> IconForString(std::string const& icon_hint);
 
 private:

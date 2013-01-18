@@ -33,14 +33,14 @@ public:
   Impl(SeriesPreview* owner, glib::Object<GObject> const& proto_obj);
 
   void SetupGetters();
-  void selected_item_reply(GVariant* reply);
+  void selected_item_reply(glib::HintsMap const&, glib::Error const&);
   int get_selected_item_index() const { return selected_item_index_; };
   bool set_selected_item_index(int index);
   SeriesItemPtrList get_items() const { return items_list_; };
   Preview::Ptr get_child_preview() const
   {
-    if (!child_preview_->parent_lens)
-      child_preview_->parent_lens = owner_->parent_lens();
+    if (!child_preview_->parent_scope)
+      child_preview_->parent_scope = owner_->parent_scope();
     if (child_preview_->preview_uri().empty())
       child_preview_->preview_uri = owner_->preview_uri();
     return child_preview_;
@@ -101,24 +101,24 @@ bool SeriesPreview::Impl::set_selected_item_index(int index)
     unity_protocol_series_preview_set_selected_item(raw_preview_, index);
     glib::Variant properties(unity_protocol_preview_end_updates(preview),
                              glib::StealRef());
-    owner_->Update(properties, sigc::mem_fun(this, &SeriesPreview::Impl::selected_item_reply));
-    return true;
+
+  glib::HintsMap property_hints;
+  if (properties.ASVToHints(property_hints))
+    owner_->Update(property_hints, sigc::mem_fun(this, &SeriesPreview::Impl::selected_item_reply));
+  else
+    g_assert(false);
   }
 
   return false;
 }
 
-void SeriesPreview::Impl::selected_item_reply(GVariant *reply)
+void SeriesPreview::Impl::selected_item_reply(glib::HintsMap const& hints, glib::Error const&)
 {
-  glib::Variant dict(reply);
-  glib::HintsMap hints;
-  dict.ASVToHints(hints);
-
   auto iter = hints.find("preview");
   if (iter != hints.end())
   {
     Preview::Ptr new_child = Preview::PreviewForVariant(iter->second);
-    new_child->parent_lens = owner_->parent_lens();
+    new_child->parent_scope = owner_->parent_scope();
     new_child->preview_uri = owner_->preview_uri(); // FIXME: really?
     child_preview_ = new_child;
     owner_->child_preview_changed.emit(new_child);

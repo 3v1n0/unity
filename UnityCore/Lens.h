@@ -37,19 +37,20 @@ namespace unity
 namespace dash
 {
 
+enum ViewType
+{
+  HIDDEN=0,
+  HOME_VIEW,
+  SCOPE_VIEW
+};
+
 enum HandledType
 {
   NOT_HANDLED=0,
   SHOW_DASH,
   HIDE_DASH,
-  GOTO_DASH_URI
-};
-
-enum ViewType
-{
-  HIDDEN=0,
-  HOME_VIEW,
-  LENS_VIEW
+  GOTO_DASH_URI,
+  SHOW_PREVIEW
 };
 
 class Lens : public sigc::trackable, boost::noncopyable
@@ -133,6 +134,8 @@ private:
   class Impl;
   Impl* pimpl;
 };
+
+typedef Lens Scope;
 
 }
 }

@@ -29,7 +29,6 @@
 
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/Results.h>
-#include <UnityCore/ResultIterator.h>
 
 #include "unity-shared/Introspectable.h"
 #include "ResultRenderer.h"
@@ -70,7 +69,7 @@ public:
   virtual ~ResultView();
 
   void SetModelRenderer(ResultRenderer* renderer);
-  void SetModel(glib::Object<DeeModel> const& model, DeeModelTag* tag);
+  void SetResultsModel(Results::Ptr const& results);
 
   unsigned int GetIndexForUri(const std::string& uri); 
   std::string GetUriForIndex(unsigned int);
@@ -99,8 +98,8 @@ protected:
 
   virtual void UpdateRenderTextures();
 
-  virtual void AddResult(Result& result);
-  virtual void RemoveResult(Result& result);
+  virtual void AddResult(Result const& result);
+  virtual void RemoveResult(Result const& result);
 
   unsigned GetNumResults();
 
@@ -112,9 +111,7 @@ protected:
 
   // properties
   ResultRenderer* renderer_;
-  glib::Object<DeeModel> result_model_;
-  DeeModelTag* renderer_tag_;
-  glib::SignalManager sig_manager_;
+  Results::Ptr result_model_;
   std::map<std::string, debug::ResultWrapper*> introspectable_children_;
   
   std::vector<ResultViewTexture::Ptr> result_textures_;
@@ -124,6 +121,8 @@ private:
   void OnRowRemoved(DeeModel* model, DeeModelIter* iter);
 
   Result cached_result_;
+  sigc::connection result_added_connection_;
+  sigc::connection result_removed_connection_;
 };
 
 }

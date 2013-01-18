@@ -21,8 +21,9 @@ set (CORE_HEADERS
      CheckOptionFilter.h
      DBusIndicators.h
      DesktopUtilities.h
-     FilesystemLenses.h
      Filter.h
+     FilteredModel.h
+     FilteredModel-inl.h
      Filters.h
      GenericPreview.h
      GLibDBusProxy.h
@@ -31,26 +32,31 @@ set (CORE_HEADERS
      GLibSource.h
      GLibWrapper.h
      GLibWrapper-inl.h
+     GSettingsScopes.h
      Hud.h
-     HomeLens.h
      IndicatorEntry.h
      Indicator.h
      Indicators.h
-     Lens.h
-     Lenses.h
+     MiscUtils.h
      MoviePreview.h
      MultiRangeFilter.h
      MusicPreview.h
      Model.h
      Model-inl.h
+     ModelIterator.h
+     ModelIterator-inl.h
      ModelRowAdaptor.h
      ModelRowAdaptor-inl.h
      Preview.h
      RadioOptionFilter.h
      RatingsFilter.h
      Result.h
-     ResultIterator.h
      Results.h
+     Scope.h
+     ScopeData.h
+     Scopes.h
+     ScopeProxy.h
+     ScopeProxyInterface.h
      SeriesPreview.h
      SocialPreview.h
      Track.h
@@ -66,7 +72,6 @@ set (CORE_SOURCES
      CheckOptionFilter.cpp
      DBusIndicators.cpp
      DesktopUtilities.cpp
-     FilesystemLenses.cpp
      Filter.cpp
      Filters.cpp
      GenericPreview.cpp
@@ -74,12 +79,11 @@ set (CORE_SOURCES
      GLibSignal.cpp
      GLibSource.cpp
      GLibWrapper.cpp
+     GSettingsScopes.cpp
      Hud.cpp
-     HomeLens.cpp
      Indicator.cpp
      IndicatorEntry.cpp
      Indicators.cpp
-     Lens.cpp
      MoviePreview.cpp
      MultiRangeFilter.cpp
      MusicPreview.cpp
@@ -88,8 +92,11 @@ set (CORE_SOURCES
      RatingsFilter.cpp
      RadioOptionFilter.cpp
      Result.cpp
-     ResultIterator.cpp
      Results.cpp
+     Scope.cpp
+     ScopeData.cpp
+     Scopes.cpp
+     ScopeProxy.cpp
      SeriesPreview.cpp
      SocialPreview.cpp
      Track.cpp

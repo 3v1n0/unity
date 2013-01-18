@@ -82,12 +82,12 @@ public:
 
   ~FilesystemLenses();
 
-  LensList GetLenses() const;
-  Lens::Ptr GetLens(std::string const& lens_id) const;
-  Lens::Ptr GetLensAtIndex(std::size_t index) const;
-  Lens::Ptr GetLensForShortcut(std::string const& lens_shortcut) const;
+  LensList GetScopes() const;
+  Lens::Ptr GetScope(std::string const& lens_id) const;
+  Lens::Ptr GetScopeAtIndex(std::size_t index) const;
+  Lens::Ptr GetScopeForShortcut(std::string const& lens_shortcut) const;
 
-  sigc::signal<void> lenses_loaded;
+  sigc::signal<void> scopes_loaded;
 
 private:
   void Init();
@@ -95,6 +95,8 @@ private:
   class Impl;
   Impl* pimpl;
 };
+
+typedef FilesystemLenses GSettingsScopes;
 
 }
 }

@@ -546,7 +546,7 @@ void Lens::Impl::ActivationReply(GVariant* parameters)
       {
         // would be nice to make parent_lens a shared_ptr,
         // but that's not really doable from here
-        preview->parent_lens = owner_;
+        // preview->parent_lens = owner_;
         preview->preview_uri = uri.Str();
         owner_->preview_ready.emit(uri.Str(), preview);
         return;

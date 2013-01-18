@@ -163,7 +163,7 @@ private:
   glib::Source::UniquePtr _relayout_idle;
   UBusManager _ubus;
 
-  friend class TestLensView;
+  friend class TestScopeView;
 };
 
 } // namespace dash

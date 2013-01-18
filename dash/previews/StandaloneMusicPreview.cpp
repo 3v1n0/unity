@@ -116,7 +116,7 @@ protected:
   LayerPtr bg_layer_;
 };
 
-class TestRunner :  public previews::LensDBusTestRunner 
+class TestRunner :  public previews::ScopeDBusTestRunner 
 {
 public:
   TestRunner(std::string const& search_string);
@@ -136,7 +136,7 @@ public:
 };
 
 TestRunner::TestRunner (std::string const& search_string)
-: LensDBusTestRunner("com.canonical.Unity.Lens.Music","/com/canonical/unity/lens/music", "com.canonical.Unity.Lens")
+: ScopeDBusTestRunner("com.canonical.Unity.Scope.Music","/com/canonical/unity/scope/music", "com.canonical.Unity.Scope")
 , search_string_(search_string)
 , first_(true)
 {

@@ -23,7 +23,6 @@
 #ifndef UNITYSHELL_RESULTVIEWGRID_H
 #define UNITYSHELL_RESULTVIEWGRID_H
 
-#include <UnityCore/Categories.h>
 #include <UnityCore/GLibSource.h>
 
 #include "ResultView.h"

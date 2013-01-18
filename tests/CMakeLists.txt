@@ -15,6 +15,14 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/no-icon.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/applications/no-icon.desktop)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/kde4/afile.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/applications/kde4/afile.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope1.scope
+                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope1.scope)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope2.scope
+                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope2.scope)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope3.scope
+                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope3.scope)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope4.scope
+                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope4.scope)
 
 #
 # Unit tests
@@ -92,13 +100,13 @@ if (GTEST_SRC_DIR AND
                  test_service_gdbus_wrapper.h
                  test_service_hud.c
                  test_service_hud.h
-                 test_service_lens.c
-                 test_service_lens.h
                  test_service_main.c
                  test_service_model.c
                  test_service_model.h
                  test_service_panel.c
-                 test_service_panel.c)
+                 test_service_panel.c
+                 test_service_scope.c
+                 test_service_scope.h)
   target_link_libraries(test-gtest-service unity-shared ${LIBS})
   add_dependencies (test-gtest-service unity-core-${UNITY_API_VERSION} gtest)
 
@@ -125,7 +133,7 @@ if (GTEST_SRC_DIR AND
        test_favorite_store.cpp
        test_favorite_store_gsettings.cpp
        test_favorite_store_private.cpp
-       test_home_lens.cpp
+       test_gsettings_scopes.cpp
        test_launcher_entry_remote.cpp
        test_launcher_options.cpp
        test_layout_system.cpp
@@ -178,21 +186,21 @@ if (GTEST_SRC_DIR AND
 # tests that require dbus, must not require X
   add_executable(test-gtest-dbus
                  test_categories.cpp
-                 test_filesystem_lenses.cpp
                  test_filter.cpp
                  test_gdbus_proxy.cpp
                  test_hud.cpp
-                 test_lens.cpp
                  test_main_dbus.cpp
                  test_model.cpp
                  test_utils.h
                  test_ratings_filter.cpp
                  test_results.cpp
+                 test_scope.cpp
+                 test_scope_proxy.cpp
                  test_dbus_indicators.cpp
                 )
   target_link_libraries(test-gtest-dbus gtest unity-shared ${LIBS})
   add_test(UnityGTestDBus test-gtest-dbus)
-  add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} test-gtest-service gtest)
+  add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} unity-shared test-gtest-service gtest)
 
 if (ENABLE_X_SUPPORT)
 # Tests that require X
@@ -203,6 +211,7 @@ if (ENABLE_X_SUPPORT)
                  test_action_link.cpp
                  test_application_launcher_icon.cpp
                  test_bfb_launcher_icon.cpp
+                 test_dashview.cpp
                  test_dashview_impl.cpp
                  test_dash_controller.cpp
                  test_desktop_launcher_icon.cpp
@@ -235,8 +244,9 @@ if (ENABLE_X_SUPPORT)
                  test_overlay_scrollbar.cpp
                  test_quicklist_menu_item.cpp
                  test_quicklist_view.cpp
-                 test_result_renderer.cpp
                  test_resultviewgrid.cpp
+                 test_result_renderer.cpp
+                 test_scope_bar.cpp
                  test_shortcut_controller.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_expo_launcher_icon.cpp
@@ -264,7 +274,8 @@ if (ENABLE_X_SUPPORT)
                 )
   target_link_libraries(test-gtest gtest gmock unity-shared ${LIBS} launcher-lib unity-shared-standalone shortcuts-lib previews-lib hud-lib switcher-lib dash-lib panel-lib)
   add_test(UnityGTest test-gtest)
-  add_dependencies(test-gtest unity-core-${UNITY_API_VERSION} gtest gmock)
+  add_dependencies(test-gtest unity-core-${UNITY_API_VERSION} unity-shared gtest gmock)
+
 endif (ENABLE_X_SUPPORT)
 endif (GTEST_SRC_DIR AND
        GMOCK_LIB AND

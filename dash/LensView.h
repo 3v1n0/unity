@@ -27,7 +27,7 @@
 #include <Nux/HLayout.h>
 #include <Nux/View.h>
 #include <Nux/VLayout.h>
-#include <UnityCore/Lens.h>
+#include <UnityCore/Scope.h>
 #include <UnityCore/GLibSource.h>
 
 #include "FilterBar.h"
@@ -42,20 +42,20 @@ namespace unity
 namespace dash
 {
 
-class LensScrollView;
+class ScopeScrollView;
 
-class LensView : public nux::View, public unity::debug::Introspectable
+class ScopeView : public nux::View, public unity::debug::Introspectable
 {
-  NUX_DECLARE_OBJECT_TYPE(LensView, nux::View);
+  NUX_DECLARE_OBJECT_TYPE(ScopeView, nux::View);
   typedef std::vector<PlacesGroup*> CategoryGroups;
   typedef std::map<PlacesGroup*, unsigned int> ResultCounts;
 
 public:
-  LensView(Lens::Ptr lens, nux::Area* show_filters);
+  ScopeView(Scope::Ptr scope, nux::Area* show_filters);
 
   CategoryGroups& categories() { return categories_; }
   FilterBar* filter_bar() const { return filter_bar_; }
-  Lens::Ptr lens() const;
+  Scope::Ptr scope() const;
   nux::Area* fscroll_view() const;
 
   int GetNumRows();
@@ -66,13 +66,13 @@ public:
 
   nux::ROProperty<std::string> search_string;
   nux::Property<bool> filters_expanded;
-  nux::Property<ViewType> view_type;
+  nux::Property<ScopeViewType> view_type;
   nux::Property<bool> can_refine_search;
 
   sigc::signal<void, ResultView::ActivateType, std::string const&, GVariant*, std::string const&> uri_activated;
 
-  void PerformSearch(std::string const& search_query, Lens::SearchFinishedCallback const& cb);
-  void CheckNoResults(Lens::Hints const& hints);
+  void PerformSearch(std::string const& search_query, Scope::SearchCallback const& cb);
+  void CheckNoResults(glib::HintsMap const& hints);
   void CheckCategoryExpansion();
   void HideResultsMessage();
 
@@ -94,17 +94,19 @@ private:
   void SetupFilters();
 
   void OnCategoryAdded(Category const& category);
-  void OnCategoryOrderChanged();
+  void OnCategoryRemoved(Category const& category);
+
   void OnResultAdded(Result const& result);
   void OnResultRemoved(Result const& result);
+  
   void UpdateCounts(PlacesGroup* group);
   void OnGroupExpanded(PlacesGroup* group);
   void CheckScrollBarState();
   void OnColumnsChanged();
   void OnFilterAdded(Filter::Ptr filter);
   void OnFilterRemoved(Filter::Ptr filter);
-  void OnViewTypeChanged(ViewType view_type);
-  void OnLensFilterExpanded(bool expanded);
+  void OnViewTypeChanged(ScopeViewType view_type);
+  void OnScopeFilterExpanded(bool expanded);
   bool ReinitializeFilterModels();
   ResultViewGrid* GetGridForCategory(unsigned category_index);
   ResultView* GetResultViewForCategory(unsigned category_index);
@@ -122,7 +124,7 @@ private:
 
   std::string get_search_string() const;
 
-  Lens::Ptr lens_;
+  Scope::Ptr scope_;
   CategoryGroups categories_;
   ResultCounts counts_;
   bool initial_activation_;
@@ -131,9 +133,9 @@ private:
   PlacesGroup* last_expanded_group_;
 
   nux::HLayout* layout_;
-  LensScrollView* scroll_view_;
+  ScopeScrollView* scroll_view_;
   nux::VLayout* scroll_layout_;
-  LensScrollView* fscroll_view_;
+  ScopeScrollView* fscroll_view_;
   nux::VLayout* fscroll_layout_;
   FilterBar* filter_bar_;
   StaticCairoText* no_results_;
@@ -145,7 +147,7 @@ private:
 
   bool filter_expansion_pushed_;
 
-  friend class TestLensView;
+  friend class TestScopeView;
 };
 
 

@@ -7,14 +7,20 @@
 
 #include "logger_helper.h"
 
+
+const gchar* LOCAL_DATA_DIR = BUILDDIR"/tests/data:/usr/share";
+const gchar* SCHEMA_DIRECTORY = BUILDDIR"/settings";
+
 int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
 
   // init XDG_DATA_DIRS before GTK to point to the local test-dir as 
   // the environment is only read once by glib and then cached
-  const std::string LOCAL_DATA_DIR = BUILDDIR"/tests/data:/usr/share";
-  g_setenv("XDG_DATA_DIRS", LOCAL_DATA_DIR.c_str(), TRUE);
+  g_setenv("XDG_DATA_DIRS", LOCAL_DATA_DIR, TRUE);
+
+  g_setenv("GSETTINGS_SCHEMA_DIR", SCHEMA_DIRECTORY, true);
+
 
 
   gtk_init(&argc, &argv);

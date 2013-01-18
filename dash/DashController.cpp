@@ -396,14 +396,14 @@ void Controller::OnActivateRequest(GVariant* variant)
 gboolean Controller::CheckShortcutActivation(const char* key_string)
 {
   EnsureDash();
-  std::string lens_id = view_->GetIdForShortcutActivation(std::string(key_string));
-  if (lens_id != "")
+  std::string scope_id = view_->GetIdForShortcutActivation(std::string(key_string));
+  if (scope_id != "")
   {
     WindowManager& wm = WindowManager::Default();
     if (wm.IsScaleActive())
       wm.TerminateScale();
 
-    GVariant* args = g_variant_new("(sus)", lens_id.c_str(), dash::GOTO_DASH_URI, "");
+    GVariant* args = g_variant_new("(sus)", scope_id.c_str(), dash::GOTO_DASH_URI, "");
     OnActivateRequest(args);
     g_variant_unref(args);
     return true;

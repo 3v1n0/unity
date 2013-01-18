@@ -46,12 +46,17 @@ TEST(TestCategories, TestRowsValid)
   {
     Category adaptor = model.RowAtIndex(i);
 
-    unity::glib::String tmp(g_strdup_printf("Category%d", i));
-    string value = tmp.Str();
-    EXPECT_EQ(adaptor.name, value);
-    EXPECT_EQ(adaptor.icon_hint, "gtk-apply");
-    EXPECT_EQ(adaptor.index, i);
-    EXPECT_EQ(adaptor.renderer_name, "grid");
+    unity::glib::String tmp(g_strdup_printf("cat%d", i));
+    string id = tmp.Str();
+
+    unity::glib::String tmp2(g_strdup_printf("Category %d", i));
+    string name = tmp2.Str();
+
+    EXPECT_EQ(adaptor.id(), id);
+    EXPECT_EQ(adaptor.name(), name);
+    EXPECT_EQ(adaptor.icon_hint(), "gtk-apply");
+    EXPECT_EQ(adaptor.renderer_name(), "grid");
+    EXPECT_EQ(adaptor.index(), i);
   }
 }
 

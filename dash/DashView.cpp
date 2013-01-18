@@ -30,6 +30,7 @@
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/RadioOptionFilter.h>
+#include <UnityCore/GSettingsScopes.h>
 
 #include "FilterExpanderLabel.h"
 #include "unity-shared/DashStyle.h"
@@ -109,9 +110,8 @@ public:
 
 NUX_IMPLEMENT_OBJECT_TYPE(DashView);
 
-DashView::DashView()
+DashView::DashView(ScopesCreator scopes_creator)
   : nux::View(NUX_TRACKER_LOCATION)
-  , home_lens_(new HomeLens(_("Home"), _("Home screen"), _("Search your computer and online sources")))
   , preview_container_(nullptr)
   , preview_displaying_(false)
   , preview_navigation_mode_(previews::Navigation::NONE)
@@ -135,19 +135,9 @@ DashView::DashView()
   SetupViews();
   SetupUBusConnections();
 
-  lenses_.lens_added.connect(sigc::mem_fun(this, &DashView::OnLensAdded));
   mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
   preview_state_machine_.PreviewActivated.connect(sigc::mem_fun(this, &DashView::BuildPreview));
   Relayout();
-
-  home_lens_->AddLenses(lenses_);
-  lens_bar_->Activate("home.lens");
-
-  // we will special case when applications lens finishes global search
-  // because we want to be able to launch applications immediately
-  // without waiting for the search finished signal which will
-  // be delayed by all the lenses we're searching
-  home_lens_->lens_search_finished.connect(sigc::mem_fun(this, &DashView::OnAppsGlobalSearchFinished));
 
   // We are interested in the color of the desktop background.
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &DashView::OnBGColorChanged));
@@ -155,12 +145,23 @@ DashView::DashView()
   // request the latest colour from bghash
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
+  if (scopes_creator == nullptr)
+  {
+    scopes_creator = [this]() { scopes_.reset(new GSettingsScopes()); };
+  }
+
+  scopes_creator();
+  if (scopes_)
+  {
+    scopes_->scope_added.connect(sigc::mem_fun(this, &DashView::OnScopeAdded));
+    scopes_->LoadScopes();
+  }
 }
 
 DashView::~DashView()
 {
   // Do this explicitely, otherwise dee will complain about invalid access
-  // to the lens models
+  // to the scope models
   RemoveLayout();
 }
 
@@ -218,12 +219,12 @@ void DashView::BuildPreview(Preview::Ptr model)
     StartPreviewAnimation();
 
     content_view_->SetPresentRedirectedView(false);
-    preview_lens_view_ = active_lens_view_;
-    if (preview_lens_view_)
+    preview_scope_view_ = active_scope_view_;
+    if (preview_scope_view_)
     {
-      preview_lens_view_->ForceCategoryExpansion(stored_activated_unique_id_, true);
-      preview_lens_view_->EnableResultTextures(true);
-      preview_lens_view_->PushFilterExpansion(false);
+      preview_scope_view_->ForceCategoryExpansion(stored_activated_unique_id_, true);
+      preview_scope_view_->EnableResultTextures(true);
+      preview_scope_view_->PushFilterExpansion(false);
     }
 
     preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
@@ -232,7 +233,7 @@ void DashView::BuildPreview(Preview::Ptr model)
     preview_container_->SetParentObject(this);
     preview_container_->Preview(model, previews::Navigation::NONE); // no swipe left or right
 
-    preview_container_->SetGeometry(lenses_layout_->GetGeometry());
+    preview_container_->SetGeometry(scopes_layout_->GetGeometry());
     preview_displaying_ = true;
 
     // connect to nav left/right signals to request nav left/right movement.
@@ -349,8 +350,8 @@ void DashView::StartPreviewAnimation()
       preview_container_animation_->Start();
     }
 
-    if (preview_lens_view_)
-      preview_lens_view_->SetResultsPreviewAnimationValue(animate_split_value_);
+    if (preview_scope_view_)
+      preview_scope_view_->SetResultsPreviewAnimationValue(animate_split_value_);
   });
 
   split_animation_->finished.connect(sigc::mem_fun(this, &DashView::OnPreviewAnimationFinished));
@@ -410,8 +411,8 @@ void DashView::EndPreviewAnimation()
           split_animation_->finished.connect(sigc::mem_fun(this, &DashView::OnPreviewAnimationFinished));
           split_animation_->Start();
 
-          // if (preview_lens_view_)
-          //   preview_lens_view_->PopFilterExpansion();
+          // if (preview_scope_view_)
+          //   preview_scope_view_->PopFilterExpansion();
         }
       });
 
@@ -440,14 +441,14 @@ void DashView::OnPreviewAnimationFinished()
   }
 
   // reset the saturation.
-  if (preview_lens_view_.IsValid())
+  if (preview_scope_view_.IsValid())
   {
-    preview_lens_view_->SetResultsPreviewAnimationValue(0.0);
-    preview_lens_view_->ForceCategoryExpansion(stored_activated_unique_id_, false);
-    preview_lens_view_->EnableResultTextures(false);
-    preview_lens_view_->PopFilterExpansion();
+    preview_scope_view_->SetResultsPreviewAnimationValue(0.0);
+    preview_scope_view_->ForceCategoryExpansion(stored_activated_unique_id_, false);
+    preview_scope_view_->EnableResultTextures(false);
+    preview_scope_view_->PopFilterExpansion();
   }
-  preview_lens_view_.Release();
+  preview_scope_view_.Release();
   content_view_->SetPresentRedirectedView(true);
 }
 
@@ -457,29 +458,11 @@ void DashView::AboutToShow()
   visible_ = true;
   search_bar_->text_entry()->SelectAll();
 
-  /* Give the lenses a chance to prep data before we map them  */
-  lens_bar_->Activate(active_lens_view_->lens()->id());
-  if (active_lens_view_)
+  /* Give the scopes a chance to prep data before we map them  */
+  if (active_scope_view_)
   { 
-    if (active_lens_view_->lens()->id() == "home.lens")
-    {
-      for (auto lens : lenses_.GetLenses())
-      {
-        lens->view_type = ViewType::HOME_VIEW;
-        LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HOME_VIEW
-                              << " on '" << lens->id() << "'";
-      }
-
-      home_lens_->view_type = ViewType::LENS_VIEW;
-      LOG_DEBUG(logger) << "Setting ViewType " << ViewType::LENS_VIEW
-                                  << " on '" << home_lens_->id() << "'";
-    }
-    else
-    {
-      // careful here, the lens_view's view_type doesn't get reset when the dash
-      // hides, but lens' view_type does, so we need to update the lens directly
-      active_lens_view_->lens()->view_type = ViewType::LENS_VIEW;
-    }
+    scope_bar_->Activate(active_scope_view_->scope()->id());
+    active_scope_view_->scope()->view_type = ScopeViewType::SCOPE_VIEW;
   }
 
   // this will make sure the spinner animates if the search takes a while
@@ -499,16 +482,15 @@ void DashView::AboutToHide()
   visible_ = false;
   renderer_.AboutToHide();
 
-  for (auto lens : lenses_.GetLenses())
+  if (scopes_)
   {
-    lens->view_type = ViewType::HIDDEN;
-    LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HIDDEN
-                          << " on '" << lens->id() << "'";
+    for (auto scope : scopes_->GetScopes())
+    {
+      scope->view_type = ScopeViewType::HIDDEN;
+      LOG_DEBUG(logger) << "Setting ViewType " << ScopeViewType::HIDDEN
+                            << " on '" << scope->id() << "'";
+    }
   }
-
-  home_lens_->view_type = ViewType::HIDDEN;
-  LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HIDDEN
-                            << " on '" << home_lens_->id() << "'";
 
   // if a preview is open, close it
   if (preview_displaying_)
@@ -548,30 +530,22 @@ void DashView::SetupViews()
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
   search_bar_->showing_filters.changed.connect([&] (bool showing)
   {
-    if (active_lens_view_)
+    if (active_scope_view_)
     {
-      active_lens_view_->filters_expanded = showing;
+      active_scope_view_->filters_expanded = showing;
       QueueDraw();
     }
   });
   search_bar_layout_->AddView(search_bar_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   content_layout_->SetSpecialArea(search_bar_->show_filters());
 
-  lenses_layout_ = new nux::VLayout();
-  content_layout_->AddLayout(lenses_layout_, 1, nux::MINOR_POSITION_START);
+  scopes_layout_ = new nux::VLayout();
+  content_layout_->AddLayout(scopes_layout_, 1, nux::MINOR_POSITION_START);
 
-  home_view_ = new LensView(home_lens_, nullptr);
-  home_view_->uri_activated.connect(sigc::mem_fun(this, &DashView::OnUriActivated));
-
-  AddChild(home_view_.GetPointer());
-  active_lens_view_ = home_view_;
-  lens_views_[home_lens_->id] = home_view_;
-  lenses_layout_->AddView(home_view_.GetPointer());
-
-  lens_bar_ = new LensBar();
-  AddChild(lens_bar_);
-  lens_bar_->lens_activated.connect(sigc::mem_fun(this, &DashView::OnLensBarActivated));
-  content_layout_->AddView(lens_bar_, 0, nux::MINOR_POSITION_CENTER);
+  scope_bar_ = new ScopeBar();
+  AddChild(scope_bar_);
+  scope_bar_->scope_activated.connect(sigc::mem_fun(this, &DashView::OnScopeBarActivated));
+  content_layout_->AddView(scope_bar_, 0, nux::MINOR_POSITION_CENTER);
 }
 
 void DashView::SetupUBusConnections()
@@ -595,8 +569,8 @@ void DashView::Relayout()
   // kinda hacky, but it makes sure the content isn't so big that it throws
   // the bottom of the dash off the screen
   // not hugely happy with this, so FIXME
-  lenses_layout_->SetMaximumHeight (std::max(0, content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height - style.GetDashViewTopPadding()));
-  lenses_layout_->SetMinimumHeight (std::max(0, content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height - style.GetDashViewTopPadding()));
+  scopes_layout_->SetMaximumHeight (std::max(0, content_geo_.height - search_bar_->GetGeometry().height - scope_bar_->GetGeometry().height - style.GetDashViewTopPadding()));
+  scopes_layout_->SetMinimumHeight (std::max(0, content_geo_.height - search_bar_->GetGeometry().height - scope_bar_->GetGeometry().height - style.GetDashViewTopPadding()));
 
   layout_->SetMinMaxSize(content_geo_.width, content_geo_.y + content_geo_.height);
 
@@ -639,7 +613,7 @@ nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
   height += style.GetDashViewTopPadding();
   height += search_bar_->GetGeometry().height;
   height += category_height * DASH_DEFAULT_CATEGORY_COUNT; // adding three categories
-  height += lens_bar_->GetGeometry().height;
+  height += scope_bar_->GetGeometry().height;
 
   // width/height shouldn't be bigger than the geo available.
   width = std::min(width, for_geo.width); // launcher width is taken into account in for_geo.
@@ -701,7 +675,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
 
     graphics_engine.PushClippingRectangle(geo_split_clip);
 
-    if (preview_lens_view_.IsValid())
+    if (preview_scope_view_.IsValid())
     {    
       DrawPreviewResultTextures(graphics_engine, force_draw);
     }
@@ -746,29 +720,29 @@ void DashView::DrawDashSplit(nux::GraphicsEngine& graphics_engine, nux::Geometry
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     texxform.FlipVCoord(true);
 
-    // Lens Bar
-    texxform.uoffset = (lens_bar_->GetX() - content_view_->GetX())/(float)content_view_->GetWidth();
-    texxform.voffset = (lens_bar_->GetY() - content_view_->GetY())/(float)content_view_->GetHeight();
+    // Scope Bar
+    texxform.uoffset = (scope_bar_->GetX() - content_view_->GetX())/(float)content_view_->GetWidth();
+    texxform.voffset = (scope_bar_->GetY() - content_view_->GetY())/(float)content_view_->GetHeight();
 
-    int start_y = lens_bar_->GetY();
+    int start_y = scope_bar_->GetY();
     int final_y = geo_layout.y + geo_layout.height + PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET;
 
-    int lens_y = (1.0f - animate_split_value_) * start_y + (animate_split_value_ * final_y);
+    int scope_y = (1.0f - animate_split_value_) * start_y + (animate_split_value_ * final_y);
 
     graphics_engine.QRP_1Tex
     (
-      lens_bar_->GetX(),
-      lens_y,
-      lens_bar_->GetWidth(),
-      lens_bar_->GetHeight(),
+      scope_bar_->GetX(),
+      scope_y,
+      scope_bar_->GetWidth(),
+      scope_bar_->GetHeight(),
       content_view_->BackupTexture(),
       texxform,
       nux::Color((1.0-animate_split_value_), (1.0-animate_split_value_), (1.0-animate_split_value_), (1.0-animate_split_value_))
     );
 
-    split_clip.height = std::min(lens_y, geo_layout.height);
+    split_clip.height = std::min(scope_y, geo_layout.height);
 
-    if (active_lens_view_ && active_lens_view_->GetPushedFilterExpansion())
+    if (active_scope_view_ && active_scope_view_->GetPushedFilterExpansion())
     {
       // Search Bar
       texxform.uoffset = (search_bar_->GetX() - content_view_->GetX())/(float)content_view_->GetWidth();
@@ -781,7 +755,7 @@ void DashView::DrawDashSplit(nux::GraphicsEngine& graphics_engine, nux::Geometry
       (
         search_bar_->GetX(),
         (1.0f - animate_split_value_) * start_y + (animate_split_value_ * final_y),
-        search_bar_->GetWidth() - active_lens_view_->filter_bar()->GetWidth(),
+        search_bar_->GetWidth() - active_scope_view_->filter_bar()->GetWidth(),
         search_bar_->GetHeight(),
         content_view_->BackupTexture(),
         texxform,
@@ -789,10 +763,10 @@ void DashView::DrawDashSplit(nux::GraphicsEngine& graphics_engine, nux::Geometry
       );
 
       // Filter Bar
-      texxform.uoffset = (active_lens_view_->filter_bar()->GetX() -content_view_->GetX())/(float)content_view_->GetWidth();
+      texxform.uoffset = (active_scope_view_->filter_bar()->GetX() -content_view_->GetX())/(float)content_view_->GetWidth();
       texxform.voffset = (search_bar_->GetY() - content_view_->GetY())/(float)content_view_->GetHeight();
 
-      int start_x = active_lens_view_->filter_bar()->GetX();
+      int start_x = active_scope_view_->filter_bar()->GetX();
       int final_x = content_view_->GetX() + content_view_->GetWidth() + PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET;
 
       int filter_x = (1.0f - animate_split_value_) * start_x + (animate_split_value_ * final_x);
@@ -801,8 +775,8 @@ void DashView::DrawDashSplit(nux::GraphicsEngine& graphics_engine, nux::Geometry
       (
         filter_x,
         search_bar_->GetY(),
-        active_lens_view_->filter_bar()->GetWidth(),
-        active_lens_view_->filter_bar()->GetY() + active_lens_view_->filter_bar()->GetHeight(),
+        active_scope_view_->filter_bar()->GetWidth(),
+        active_scope_view_->filter_bar()->GetY() + active_scope_view_->filter_bar()->GetHeight(),
         content_view_->BackupTexture(),
         texxform,
         nux::Color((1.0-animate_split_value_), (1.0-animate_split_value_), (1.0-animate_split_value_), (1.0-animate_split_value_))
@@ -919,7 +893,7 @@ void DashView::DrawPreviewResultTextures(nux::GraphicsEngine& graphics_engine, b
   texxform.voffset = 0.0f;
   texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
 
-  std::vector<ResultViewTexture::Ptr> result_textures = preview_lens_view_->GetResultTextureContainers();
+  std::vector<ResultViewTexture::Ptr> result_textures = preview_scope_view_->GetResultTextureContainers();
   std::vector<ResultViewTexture::Ptr> top_textures;
   
   int height_concat_below = 0;
@@ -957,7 +931,7 @@ void DashView::DrawPreviewResultTextures(nux::GraphicsEngine& graphics_engine, b
     // off the bottom
     if (geo_tex_top.y <= geo_layout.y + geo_layout.height)
     {
-      preview_lens_view_->RenderResultTexture(result_texture);
+      preview_scope_view_->RenderResultTexture(result_texture);
       // If we haven't got it now, we're not going to get it
       if (!result_texture->texture.IsValid())
         continue;
@@ -998,7 +972,7 @@ void DashView::DrawPreviewResultTextures(nux::GraphicsEngine& graphics_engine, b
     // off the top
     if (geo_tex_top.y + geo_tex_top.height >= geo_layout.y)
     {
-      preview_lens_view_->RenderResultTexture(result_texture);
+      preview_scope_view_->RenderResultTexture(result_texture);
       // If we haven't got it now, we're not going to get it
       if (!result_texture->texture.IsValid())
         continue;
@@ -1095,11 +1069,11 @@ void DashView::OnActivateRequest(GVariant* args)
 {
   glib::String uri;
   glib::String search_string;
-  dash::HandledType handled_type;
+  ScopeHandledType handled_type;
 
   g_variant_get(args, "(sus)", &uri, &handled_type, &search_string);
 
-  std::string id(AnalyseLensURI(uri.Str()));
+  std::string id(AnalyseScopeURI(uri.Str()));
 
   // we got an activation request, we should probably close the preview
   if (preview_displaying_)
@@ -1109,43 +1083,43 @@ void DashView::OnActivateRequest(GVariant* args)
 
   if (!visible_)
   {
-    lens_bar_->Activate(id);
+    scope_bar_->Activate(id);
     ubus_manager_.SendMessage(UBUS_DASH_EXTERNAL_ACTIVATION);
   }
-  else if (/* visible_ && */ handled_type == NOT_HANDLED)
+  else if (/* visible_ && */ handled_type == ScopeHandledType::NOT_HANDLED)
   {
     ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST, NULL,
                               glib::Source::Priority::HIGH);
   }
-  else if (/* visible_ && */ handled_type == GOTO_DASH_URI)
+  else if (/* visible_ && */ handled_type == ScopeHandledType::GOTO_DASH_URI)
   {
-    lens_bar_->Activate(id);
+    scope_bar_->Activate(id);
   }
 }
 
-std::string DashView::AnalyseLensURI(std::string const& uri)
+std::string DashView::AnalyseScopeURI(std::string const& uri)
 {
-  impl::LensFilter filter = impl::parse_lens_uri(uri);
+  impl::ScopeFilter filter = impl::parse_scope_uri(uri);
 
   if (!filter.filters.empty())
   {
-    lens_views_[filter.id]->filters_expanded = true;
-    // update the lens for each filter
+    scope_views_[filter.id]->filters_expanded = true;
+    // update the scope for each filter
     for (auto p : filter.filters) {
-      UpdateLensFilter(filter.id, p.first, p.second);
+      UpdateScopeFilter(filter.id, p.first, p.second);
     }
   }
 
   return filter.id;
 }
 
-void DashView::UpdateLensFilter(std::string lens_id, std::string filter_name, std::string value)
+void DashView::UpdateScopeFilter(std::string scope_id, std::string filter_name, std::string value)
 {
-  if (lenses_.GetLens(lens_id))
+  if (scopes_ && scopes_->GetScope(scope_id))
   {
-    Lens::Ptr lens = lenses_.GetLens(lens_id);
+    Scope::Ptr scope = scopes_->GetScope(scope_id);
 
-    Filters::Ptr filters = lens->filters;
+    Filters::Ptr filters = scope->filters;
 
     for (unsigned int i = 0; i < filters->count(); ++i)
     {
@@ -1153,13 +1127,13 @@ void DashView::UpdateLensFilter(std::string lens_id, std::string filter_name, st
 
       if (filter->id() == filter_name)
       {
-        UpdateLensFilterValue(filter, value);
+        UpdateScopeFilterValue(filter, value);
       }
     }
   }
 }
 
-void DashView::UpdateLensFilterValue(Filter::Ptr filter, std::string value)
+void DashView::UpdateScopeFilterValue(Filter::Ptr filter, std::string value)
 {
   if (filter->renderer_name == "filter-radiooption")
   {
@@ -1175,7 +1149,7 @@ void DashView::UpdateLensFilterValue(Filter::Ptr filter, std::string value)
 void DashView::OnSearchChanged(std::string const& search_string)
 {
   LOG_DEBUG(logger) << "Search changed: " << search_string;
-  if (active_lens_view_)
+  if (active_scope_view_)
   {
     search_in_progress_ = true;
     // it isn't guaranteed that we get a SearchFinished signal, so we need
@@ -1190,7 +1164,7 @@ void DashView::OnSearchChanged(std::string const& search_string)
 
     // 150ms to hide the no reults message if its take a while to return results
     hide_message_delay_.reset(new glib::Timeout(150, [&] () {
-      active_lens_view_->HideResultsMessage();
+      active_scope_view_->HideResultsMessage();
       return false;
     }));
   }
@@ -1199,67 +1173,59 @@ void DashView::OnSearchChanged(std::string const& search_string)
 void DashView::OnLiveSearchReached(std::string const& search_string)
 {
   LOG_DEBUG(logger) << "Live search reached: " << search_string;
-  if (active_lens_view_)
+  if (active_scope_view_)
   {
-    active_lens_view_->PerformSearch(search_string,
+    active_scope_view_->PerformSearch(search_string,
         sigc::mem_fun(this, &DashView::OnSearchFinished));
   }
 }
 
-void DashView::OnLensAdded(Lens::Ptr& lens)
+void DashView::OnScopeAdded(Scope::Ptr const& scope, int position)
 {
-  std::string id = lens->id;
-  lens_bar_->AddLens(lens);
+  LOG_DEBUG(logger) << "Scope Added: " << scope->id();
 
-  nux::ObjectPtr<LensView> view(new LensView(lens, search_bar_->show_filters()));
+  std::string id = scope->id;
+  scope_bar_->AddScope(scope);
+
+  nux::ObjectPtr<ScopeView> view(new ScopeView(scope, search_bar_->show_filters()));
   AddChild(view.GetPointer());
   view->SetVisible(false);
   view->uri_activated.connect(sigc::mem_fun(this, &DashView::OnUriActivated));
 
-  lenses_layout_->AddView(view.GetPointer(), 1);
-  lens_views_[lens->id] = view;
+  scopes_layout_->AddView(view.GetPointer(), 1);
+  scope_views_[scope->id] = view;
 
-  lens->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
-  lens->connected.changed.connect([&] (bool value)
-  {
-    std::string const& search_string = search_bar_->search_string;
-    if (value && lens->search_in_global && active_lens_view_ == home_view_
-        && !search_string.empty())
-    {
-      // force a (global!) search with the correct string
-      lens->GlobalSearch(search_bar_->search_string,
-        sigc::mem_fun(this, &DashView::OnSearchFinished));
-    }
-  });
+  scope->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
+  scope->connected.changed.connect([&] (bool value) { });
 
   // Hook up to the new preview infrastructure
-  lens->preview_ready.connect([&] (std::string const& uri, Preview::Ptr model)
+  scope->preview_ready.connect([&] (std::string const& uri, Preview::Ptr model)
   {
     LOG_DEBUG(logger) << "Got preview for: " << uri;
     preview_state_machine_.ActivatePreview(model); // this does not immediately display a preview - we now wait.
   });
 }
 
-void DashView::OnLensBarActivated(std::string const& id)
+void DashView::OnScopeBarActivated(std::string const& id)
 {
-  if (lens_views_.find(id) == lens_views_.end())
+  if (scope_views_.find(id) == scope_views_.end())
   {
-    LOG_WARN(logger) << "Unable to find Lens " << id;
+    LOG_WARN(logger) << "Unable to find Scope " << id;
     return;
   }
 
-  if (active_lens_view_.IsValid())
-    active_lens_view_->SetVisible(false);
+  if (active_scope_view_.IsValid())
+    active_scope_view_->SetVisible(false);
 
-  nux::ObjectPtr<LensView> view = active_lens_view_ = lens_views_[id];
+  nux::ObjectPtr<ScopeView> view = active_scope_view_ = scope_views_[id];
 
   view->SetVisible(true);
   view->AboutToShow();
 
-  for (auto it: lens_views_)
+  for (auto it: scope_views_)
   {
     bool id_matches = it.first == id;
-    ViewType view_type = id_matches ? LENS_VIEW : (view == home_view_ ? HOME_VIEW : HIDDEN);
+    ScopeViewType view_type = id_matches ? ScopeViewType::SCOPE_VIEW : ScopeViewType::HIDDEN;
     it.second->SetVisible(id_matches);
     it.second->view_type = view_type;
 
@@ -1270,8 +1236,8 @@ void DashView::OnLensBarActivated(std::string const& id)
   search_bar_->SetVisible(true);
   QueueRelayout();
   search_bar_->search_string = view->search_string;
-  search_bar_->search_hint = view->lens()->search_hint;
-  // lenses typically return immediately from Search() if the search query
+  search_bar_->search_hint = view->scope()->search_hint;
+  // scopes typically return immediately from Search() if the search query
   // doesn't change, so SearchFinished will be called in a few ms
   // FIXME: if we're forcing a search here, why don't we get rid of view types?
   search_bar_->ForceSearchChanged();
@@ -1289,17 +1255,17 @@ void DashView::OnLensBarActivated(std::string const& id)
   QueueDraw();
 }
 
-void DashView::OnSearchFinished(Lens::Hints const& hints, glib::Error const& err)
+void DashView::OnSearchFinished(glib::HintsMap const& hints, glib::Error const& err)
 {
   hide_message_delay_.reset();
 
-  if (!active_lens_view_.IsValid()) return;
+  if (!active_scope_view_.IsValid()) return;
 
-  // FIXME: bind the lens_view in PerformSearch
-  active_lens_view_->CheckNoResults(hints);
+  // FIXME: bind the scope_view in PerformSearch
+  active_scope_view_->CheckNoResults(hints);
   std::string const& search_string = search_bar_->search_string;
 
-  if (active_lens_view_->search_string == search_string)
+  if (active_scope_view_->search_string == search_string)
   {
     search_bar_->SearchFinished();
     search_in_progress_ = false;
@@ -1308,29 +1274,7 @@ void DashView::OnSearchFinished(Lens::Hints const& hints, glib::Error const& err
   }
 }
 
-void DashView::OnGlobalSearchFinished(Lens::Hints const& hints, glib::Error const& error)
-{
-  if (active_lens_view_ == home_view_)
-    OnSearchFinished(hints, error);
-}
-
-void DashView::OnAppsGlobalSearchFinished(Lens::Ptr const& lens)
-{
-  if (active_lens_view_ == home_view_ && lens->id() == "applications.lens")
-  {
-    /* HACKITY HACK! We're resetting the state of search_in_progress when
-     * doing searches in the home lens and we get results from apps lens.
-     * This way typing a search query and pressing enter immediately will
-     * wait for the apps lens results and will run correct application.
-     * See lp:966417 and lp:856206 for more info about why we do this.
-     */
-    search_in_progress_ = false;
-    if (activate_on_finish_)
-      this->OnEntryActivated();
-  }
-}
-
-void DashView::OnUriActivatedReply(std::string const& uri, HandledType type, Lens::Hints const&)
+void DashView::OnUriActivatedReply(std::string const& uri, ScopeHandledType type, glib::HintsMap const&)
 {
   // We don't want to close the dash if there was another activation pending
   if (type == NOT_HANDLED)
@@ -1425,9 +1369,9 @@ void DashView::DisableBlur()
 }
 void DashView::OnEntryActivated()
 {
-  if (active_lens_view_.IsValid() && !search_in_progress_)
+  if (active_scope_view_.IsValid() && !search_in_progress_)
   {
-    active_lens_view_->ActivateFirst();
+    active_scope_view_->ActivateFirst();
   }
   // delay the activation until we get the SearchFinished signal
   activate_on_finish_ = search_in_progress_;
@@ -1441,9 +1385,9 @@ bool DashView::AcceptKeyNavFocus()
 
 std::string const DashView::GetIdForShortcutActivation(std::string const& shortcut) const
 {
-  Lens::Ptr lens = lenses_.GetLensForShortcut(shortcut);
-  if (lens)
-    return lens->id;
+  Scope::Ptr scope = scopes_ ? scopes_->GetScopeForShortcut(shortcut) : Scope::Ptr();
+  if (scope)
+    return scope->id;
   return "";
 }
 
@@ -1451,11 +1395,14 @@ std::vector<char> DashView::GetAllShortcuts()
 {
   std::vector<char> result;
 
-  for (Lens::Ptr lens: lenses_.GetLenses())
+  if (scopes_)
   {
-    std::string shortcut = lens->shortcut;
-    if(shortcut.size() > 0)
-      result.push_back(shortcut.at(0));
+    for (Scope::Ptr scope: scopes_->GetScopes())
+    {
+      std::string shortcut = scope->shortcut;
+      if(shortcut.size() > 0)
+        result.push_back(shortcut.at(0));
+    }
   }
   return result;
 }
@@ -1494,8 +1441,8 @@ void DashView::AddProperties(GVariantBuilder* builder)
   dash::Style& style = dash::Style::Instance();
   int num_rows = 1; // The search bar
 
-  if (active_lens_view_.IsValid())
-    num_rows += active_lens_view_->GetNumRows();
+  if (active_scope_view_.IsValid())
+    num_rows += active_scope_view_->GetNumRows();
 
   std::string form_factor("unknown");
 
@@ -1521,17 +1468,17 @@ nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
   {
     return preview_container_->KeyNavIteration(direction);
   }
-  else if (direction == nux::KEY_NAV_DOWN && search_bar_ && active_lens_view_.IsValid())
+  else if (direction == nux::KEY_NAV_DOWN && search_bar_ && active_scope_view_.IsValid())
   {
     auto show_filters = search_bar_->show_filters();
-    auto fscroll_view = active_lens_view_->fscroll_view();
+    auto fscroll_view = active_scope_view_->fscroll_view();
 
     if (show_filters && show_filters->HasKeyFocus())
     {
       if (fscroll_view->IsVisible() && fscroll_view)
         return fscroll_view->KeyNavIteration(direction);
       else
-        return active_lens_view_->KeyNavIteration(direction);
+        return active_scope_view_->KeyNavIteration(direction);
     }
   }
   return this;
@@ -1609,9 +1556,9 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
   if (direction != KEY_NAV_NONE && key_symbol == nux::NUX_KEYDOWN && !search_bar_->im_preedit)
   {
     std::list<nux::Area*> tabs;
-    if (active_lens_view_.IsValid())
+    if (active_scope_view_.IsValid())
     {
-      for (auto category : active_lens_view_->categories())
+      for (auto category : active_scope_view_->categories())
       {
         if (category->IsVisible())
           tabs.push_back(category);
@@ -1624,11 +1571,11 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
       tabs.push_back(search_bar_->show_filters());
     }
 
-    if (active_lens_view_.IsValid() &&
-        active_lens_view_->filter_bar() && active_lens_view_->fscroll_view() &&
-        active_lens_view_->fscroll_view()->IsVisible())
+    if (active_scope_view_.IsValid() &&
+        active_scope_view_->filter_bar() && active_scope_view_->fscroll_view() &&
+        active_scope_view_->fscroll_view()->IsVisible())
     {
-      for (auto child : active_lens_view_->filter_bar()->GetLayout()->GetChildren())
+      for (auto child : active_scope_view_->filter_bar()->GetLayout()->GetChildren())
       {
         FilterExpanderLabel* filter = dynamic_cast<FilterExpanderLabel*>(child);
         if (filter)
@@ -1640,7 +1587,7 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     {
       if (ctrl)
       {
-        lens_bar_->ActivatePrevious();
+        scope_bar_->ActivatePrevious();
       }
       else
       {
@@ -1667,7 +1614,7 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     {
       if (ctrl)
       {
-        lens_bar_->ActivateNext();
+        scope_bar_->ActivateNext();
       }
       else
       {

@@ -69,6 +69,41 @@ std::ostream& operator<<(std::ostream& o, Error const& e)
   return o;
 }
 
+StringRef::StringRef(const char* str)
+  : string_(str)
+{}
+
+StringRef::~StringRef()
+{
+}
+
+const gchar* StringRef::Value()
+{
+  return string_;
+}
+
+StringRef::operator const char*()
+{
+  return string_;
+}
+
+StringRef::operator std::string()
+{
+  return Str();
+}
+
+StringRef::operator bool() const
+{
+  return bool(string_);
+}
+
+std::string StringRef::Str() const
+{
+  if (string_)
+    return std::string(string_);
+  else
+    return std::string("");
+}
 
 String::String()
   : string_(0)
@@ -123,6 +158,15 @@ std::string String::Str() const
 }
 
 std::ostream& operator<<(std::ostream& o, String const& s)
+{
+  if (s)
+    o << s.Str();
+  else
+    o << "<null>";
+  return o;
+}
+
+std::ostream& operator<<(std::ostream& o, StringRef const& s)
 {
   if (s)
     o << s.Str();

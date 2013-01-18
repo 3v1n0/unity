@@ -401,9 +401,9 @@ void FilesystemLenses::Impl::OnLoadingFinished()
   }
 
   for (Lens::Ptr& lens: lenses_)
-    owner_->lens_added.emit(lens);
+    owner_->scope_added.emit(lens);
 
-  owner_->lenses_loaded.emit();
+  owner_->scopes_loaded.emit();
 }
 
 Lenses::LensList FilesystemLenses::Impl::GetLenses() const
@@ -478,22 +478,22 @@ FilesystemLenses::~FilesystemLenses()
   delete pimpl;
 }
 
-Lenses::LensList FilesystemLenses::GetLenses() const
+Lenses::LensList FilesystemLenses::GetScopes() const
 {
   return pimpl->GetLenses();
 }
 
-Lens::Ptr FilesystemLenses::GetLens(std::string const& lens_id) const
+Lens::Ptr FilesystemLenses::GetScope(std::string const& lens_id) const
 {
   return pimpl->GetLens(lens_id);
 }
 
-Lens::Ptr FilesystemLenses::GetLensAtIndex(std::size_t index) const
+Lens::Ptr FilesystemLenses::GetScopeAtIndex(std::size_t index) const
 {
   return pimpl->GetLensAtIndex(index);
 }
 
-Lens::Ptr FilesystemLenses::GetLensForShortcut(std::string const& lens_shortcut) const
+Lens::Ptr FilesystemLenses::GetScopeForShortcut(std::string const& lens_shortcut) const
 {
   return pimpl->GetLensForShortcut(lens_shortcut);
 }

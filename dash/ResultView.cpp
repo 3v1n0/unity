@@ -86,68 +86,44 @@ void ResultView::SetModelRenderer(ResultRenderer* renderer)
   NeedRedraw();
 }
 
-void ResultView::AddResult(Result& result)
+void ResultView::AddResult(Result const& result)
 {
   renderer_->Preload(result);
 
   NeedRedraw();
 }
 
-void ResultView::RemoveResult(Result& result)
+void ResultView::RemoveResult(Result const& result)
 {
   renderer_->Unload(result);
 }
 
-void ResultView::OnRowAdded(DeeModel* model, DeeModelIter* iter)
-{
-  cached_result_.SetTarget(model, iter, renderer_tag_);
-  AddResult(cached_result_);
-}
-
-void ResultView::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
-{
-  cached_result_.SetTarget(model, iter, renderer_tag_);
-  RemoveResult(cached_result_);
-}
-
-void ResultView::SetModel(glib::Object<DeeModel> const& model, DeeModelTag* tag)
+void ResultView::SetResultsModel(Results::Ptr const& result_model)
 {
   // cleanup
   if (result_model_)
   {
-    sig_manager_.Disconnect(result_model_);
-
+    result_added_connection_.disconnect();
+    result_removed_connection_.disconnect();
     for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
     {
       RemoveResult(*it);
     }
   }
 
-  result_model_ = model;
-  renderer_tag_ = tag;
+  result_model_ = result_model;
 
-  if (model)
+  if (result_model_)
   {
-    typedef glib::Signal<void, DeeModel*, DeeModelIter*> RowSignalType;
-
-    sig_manager_.Add(new RowSignalType(model,
-                                       "row-added",
-                                       sigc::mem_fun(this, &ResultView::OnRowAdded)));
-    sig_manager_.Add(new RowSignalType(model,
-                                       "row-removed",
-                                       sigc::mem_fun(this, &ResultView::OnRowRemoved)));
-
-    for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
-    {
-      AddResult(*it);
-    }
+    result_added_connection_ = result_model_->result_added.connect(sigc::mem_fun(this, &ResultView::AddResult));
+    result_removed_connection_ = result_model_->result_removed.connect(sigc::mem_fun(this, &ResultView::RemoveResult));
   }
 }
 
 unsigned ResultView::GetNumResults()
 {
   if (result_model_)
-    return dee_model_get_n_rows(result_model_);
+    return result_model_->count();
 
   return 0;
 }
@@ -157,10 +133,15 @@ ResultIterator ResultView::GetIteratorAtRow(unsigned row)
   DeeModelIter* iter = NULL;
   if (result_model_)
   {
-    iter = row > 0 ? dee_model_get_iter_at_row(result_model_, row) :
-      dee_model_get_first_iter(result_model_);
+    if (result_model_->model())
+    {
+      iter = row > 0 ? dee_model_get_iter_at_row(result_model_->model(), row) :
+        dee_model_get_first_iter(result_model_->model());
+    }
+    
+    return ResultIterator(result_model_->model(), iter, result_model_->GetTag());
   }
-  return ResultIterator(result_model_, iter, renderer_tag_);
+  return ResultIterator(glib::Object<DeeModel>());
 }
 
 // it would be nice to return a result here, but c++ does not have a good mechanism
@@ -312,7 +293,7 @@ debug::Introspectable::IntrospectableList ResultView::GetIntrospectableChildren(
   int index = 0;
   if (result_model_)
   {
-    for (ResultIterator iter(result_model_); !iter.IsLast(); ++iter)
+    for (ResultIterator iter(result_model_->model()); !iter.IsLast(); ++iter)
     {
       Result const& result = *iter;
 

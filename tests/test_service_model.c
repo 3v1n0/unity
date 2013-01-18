@@ -49,8 +49,12 @@ static void
 service_model_create_results(ServiceModel* self)
 {
   self->results_model_ = dee_shared_model_new("com.canonical.test.resultsmodel");
-  dee_model_set_schema(self->results_model_, "s", "s", "u", "s", "s", "s", "s", NULL);
+  dee_model_set_schema(self->results_model_, "s", "s", "u", "u", "s", "s", "s", "s", "a{sv}", NULL);
 
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
+  GVariant *hints = g_variant_builder_end(&b);
+  
   int i;
   for(i = 0; i < 200; i++)
   {
@@ -59,19 +63,22 @@ service_model_create_results(ServiceModel* self)
                      name,
                      name,
                      (guint)(i/50), // new category every 50 results
+                     0,
                      name,
                      name,
                      name,
-                     name);
+                     name,
+                     hints);
     g_free(name);
   }
+  g_variant_unref(hints);
 }
 
 static void
 service_model_create_categories(ServiceModel* self)
 {
   self->categories_model_ = dee_shared_model_new("com.canonical.test.categoriesmodel");
-  dee_model_set_schema(self->categories_model_, "s", "s", "s", "a{sv}", NULL);
+  dee_model_set_schema(self->categories_model_, "s", "s", "s", "s", "a{sv}", NULL);
 
   GVariantBuilder b;
   g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
@@ -80,12 +87,15 @@ service_model_create_categories(ServiceModel* self)
   int i;
   for(i = 0; i < 5; i++)
   {
-    gchar* name = g_strdup_printf("Category%d", i);
+    gchar* id = g_strdup_printf("cat%d", i);
+    gchar* name = g_strdup_printf("Category %d", i);
     dee_model_append(self->categories_model_,
+                     id,
                      name,
                      "gtk-apply",
                      "grid",
                      hints);
+    g_free(id);
     g_free(name);
   }
   g_variant_unref(hints);

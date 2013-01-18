@@ -33,12 +33,12 @@ namespace unity
 namespace dash
 {
 
-class LensBarIcon : public IconTexture
+class ScopeBarIcon : public IconTexture
 {
-  NUX_DECLARE_OBJECT_TYPE(LensBarIcon, IconTexture);
+  NUX_DECLARE_OBJECT_TYPE(ScopeBarIcon, IconTexture);
 public:
-  LensBarIcon(std::string id, std::string icon_hint);
-  ~LensBarIcon();
+  ScopeBarIcon(std::string id, std::string icon_hint);
+  ~ScopeBarIcon();
 
   nux::Property<std::string> id;
   nux::Property<bool> active;

@@ -21,8 +21,8 @@
 #include <NuxCore/Logger.h>
 #include <unity-protocol.h>
 
-#include "Lens.h"
 #include "Preview.h"
+#include "Scope.h"
 
 #include "ApplicationPreview.h"
 #include "GenericPreview.h"
@@ -81,7 +81,7 @@ Preview::Ptr Preview::PreviewForProtocolObject(glib::Object<GObject> const& prot
   return nullptr;
 }
 
-Preview::Ptr Preview::PreviewForVariant(glib::Variant &properties)
+Preview::Ptr Preview::PreviewForVariant(glib::Variant const& properties)
 {
   glib::Object<UnityProtocolPreview> preview(unity_protocol_preview_parse(properties));
   if (!preview)
@@ -123,10 +123,10 @@ public:
   InfoHintPtrList get_info_hints() const { return info_hint_list_; };
   void EmitClosed() const;
 
-  Lens* get_parent_lens() const { return parent_lens_; };
-  bool set_parent_lens(Lens* lens)
+  Scope* get_parent_scope() const { return parent_scope_; };
+  bool set_parent_scope(Scope* scope)
   {
-    parent_lens_ = lens;
+    parent_scope_ = scope;
     return false; // TODO: do we need the notifications here?
   };
 
@@ -141,12 +141,12 @@ public:
   std::string image_source_uri_;
   ActionPtrList actions_list_;
   InfoHintPtrList info_hint_list_;
-  Lens* parent_lens_;
+  Scope* parent_scope_;
 };
 
 Preview::Impl::Impl(Preview* owner, glib::Object<GObject> const& proto_obj)
   : owner_(owner)
-  , parent_lens_(nullptr)
+  , parent_scope_(nullptr)
 {
   if (!proto_obj)
   {
@@ -215,10 +215,10 @@ void Preview::Impl::SetupGetters()
   owner_->image_source_uri.SetGetterFunction(
     sigc::mem_fun(this, &Preview::Impl::get_image_source_uri));
 
-  owner_->parent_lens.SetGetterFunction(
-      sigc::mem_fun(this, &Preview::Impl::get_parent_lens));
-  owner_->parent_lens.SetSetterFunction(
-      sigc::mem_fun(this, &Preview::Impl::set_parent_lens));
+  owner_->parent_scope.SetGetterFunction(
+      sigc::mem_fun(this, &Preview::Impl::get_parent_scope));
+  owner_->parent_scope.SetSetterFunction(
+      sigc::mem_fun(this, &Preview::Impl::set_parent_scope));
 }
 
 void Preview::Impl::EmitClosed() const
@@ -229,7 +229,12 @@ void Preview::Impl::EmitClosed() const
   unity_protocol_preview_preview_closed(raw_preview_);
   glib::Variant properties(unity_protocol_preview_end_updates(preview),
                            glib::StealRef());
-  owner_->Update(properties);
+
+  glib::HintsMap property_hints;
+  if (properties.ASVToHints(property_hints))
+    owner_->Update(property_hints);
+  else
+    g_assert(false);
 }
 
 Preview::Preview(glib::Object<GObject> const& proto_obj)
@@ -251,28 +256,28 @@ Preview::InfoHintPtrList Preview::GetInfoHints() const
   return pimpl->get_info_hints();
 }
 
-void Preview::Update(glib::Variant const& properties,
-                     glib::DBusProxy::ReplyCallback reply_callback) const
+void Preview::Update(glib::HintsMap const& property_hints,
+                     std::function<void(glib::HintsMap const&, glib::Error const&)> const& reply_callback) const
 {
-  if (pimpl->parent_lens_)
+  if (pimpl->parent_scope_)
   {
-    pimpl->parent_lens_->SignalPreview(preview_uri, properties, reply_callback);
+    pimpl->parent_scope_->UpdatePreviewProperty(preview_uri, property_hints, reply_callback);
   }
   else
   {
-    LOG_WARN(logger) << "Unable to update Preview, parent_lens wasn't set!";
+    LOG_WARN(logger) << "Unable to update Preview, parent_scope_ wasn't set!";
   }
 }
 
-void Preview::PerformAction(std::string const& id, Lens::Hints const& hints) const
+void Preview::PerformAction(std::string const& id, glib::HintsMap const& hints) const
 {
-  if (pimpl->parent_lens_)
+  if (pimpl->parent_scope_)
   {
-    pimpl->parent_lens_->ActivatePreviewAction(id, preview_uri, hints);
+    pimpl->parent_scope_->ActivatePreviewAction(id, preview_uri, hints);
   }
   else
   {
-    LOG_WARN(logger) << "Unable to perform action '" << id << "', parent_lens wasn't set!";
+    LOG_WARN(logger) << "Unable to perform action '" << id << "', parent_scope_ wasn't set!";
   }
 }
 

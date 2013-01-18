@@ -532,9 +532,9 @@ void ResultViewGrid::OnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::K
 {
   if (HasKeyFocus())
   {
-    if (selected_index_ < 0 && GetNumResults())
+    if (result_model_ && selected_index_ < 0 && GetNumResults())
     {
-      ResultIterator first_iter(result_model_);
+      ResultIterator first_iter(result_model_->model());
       focused_uri_ = (*first_iter).uri;
       selected_index_ = 0;
     }

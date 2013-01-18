@@ -31,6 +31,7 @@
 #include "hud/HudView.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/UnitySettings.h"
+
 using namespace unity;
 
 namespace

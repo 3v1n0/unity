@@ -35,7 +35,9 @@ struct LensFilter
   std::map<std::string, std::string> filters;
 };
 
-LensFilter parse_lens_uri(std::string const& uri);
+typedef LensFilter ScopeFilter;
+
+ScopeFilter parse_scope_uri(std::string const& uri);
 
 } // namespace impl
 } // namespace dash

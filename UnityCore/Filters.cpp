@@ -50,6 +50,7 @@ DeeModelIter* FilterAdaptor::iter() const
 
 
 Filters::Filters()
+: Model<FilterAdaptor>::Model(ModelType::REMOTE)
 {
   row_added.connect(sigc::mem_fun(this, &Filters::OnRowAdded));
   row_changed.connect(sigc::mem_fun(this, &Filters::OnRowChanged));
@@ -57,7 +58,7 @@ Filters::Filters()
 }
 
 Filters::Filters(ModelType model_type)
- : Model<FilterAdaptor>::Model(model_type)
+: Model<FilterAdaptor>::Model(model_type)
 {
   row_added.connect(sigc::mem_fun(this, &Filters::OnRowAdded));
   row_changed.connect(sigc::mem_fun(this, &Filters::OnRowChanged));
@@ -70,6 +71,10 @@ Filters::~Filters()
 Filter::Ptr Filters::FilterAtIndex(std::size_t index)
 {
   FilterAdaptor adaptor = RowAtIndex(index);
+  if (filter_map_.find(adaptor.iter()) == filter_map_.end())
+  {
+    OnRowAdded(adaptor);
+  }
   return filter_map_[adaptor.iter()];
 }
 

@@ -35,9 +35,9 @@ const int FOCUS_OVERLAY_WIDTH = 60;
 
 }
 
-NUX_IMPLEMENT_OBJECT_TYPE(LensBarIcon);
+NUX_IMPLEMENT_OBJECT_TYPE(ScopeBarIcon);
 
-LensBarIcon::LensBarIcon(std::string id_, std::string icon_hint)
+ScopeBarIcon::ScopeBarIcon(std::string id_, std::string icon_hint)
   : IconTexture(icon_hint, 24)
   , id(id_)
   , active(false)
@@ -56,14 +56,14 @@ LensBarIcon::LensBarIcon(std::string id_, std::string icon_hint)
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(true);
 
-  active.changed.connect(sigc::mem_fun(this, &LensBarIcon::OnActiveChanged));
+  active.changed.connect(sigc::mem_fun(this, &ScopeBarIcon::OnActiveChanged));
   key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection){ QueueDraw(); });
 }
 
-LensBarIcon::~LensBarIcon()
+ScopeBarIcon::~ScopeBarIcon()
 {}
 
-void LensBarIcon::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
+void ScopeBarIcon::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
 
@@ -109,18 +109,18 @@ void LensBarIcon::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
   graphics_engine.PopClippingRectangle();
 }
 
-void LensBarIcon::OnActiveChanged(bool is_active)
+void ScopeBarIcon::OnActiveChanged(bool is_active)
 {
   QueueDraw();
 }
 
 // Introspectable
-std::string LensBarIcon::GetName() const
+std::string ScopeBarIcon::GetName() const
 {
-  return "LensBarIcon";
+  return "ScopeBarIcon";
 }
 
-void LensBarIcon::AddProperties(GVariantBuilder* builder)
+void ScopeBarIcon::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper wrapper(builder);
 

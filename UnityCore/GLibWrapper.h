@@ -105,6 +105,24 @@ private:
   GError* error_;
 };
 
+// wrapper for raw const gchar*. non-deleteable.
+class StringRef : boost::noncopyable
+{
+public:
+  explicit StringRef(const gchar* str);
+  ~StringRef();
+
+  operator bool() const;
+  operator const char*();
+  operator std::string();
+  const gchar* Value();
+  std::string Str() const;
+
+private:
+  const gchar* string_;
+};
+
+// wrapper for raw gcha*. auto-deleted.
 class String : boost::noncopyable
 {
 public:
@@ -127,6 +145,7 @@ private:
 
 std::ostream& operator<<(std::ostream& o, Error const& e);
 std::ostream& operator<<(std::ostream& o, String const& s);
+std::ostream& operator<<(std::ostream& o, StringRef const& s);
 
 }
 }
