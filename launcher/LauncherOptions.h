@@ -89,9 +89,10 @@ public:
   nux::Property<AutoHideAnimation> auto_hide_animation;
   nux::Property<BacklightMode> backlight_mode;
   nux::Property<RevealTrigger> reveal_trigger;
+  nux::Property<nux::Color> background_color;
+  nux::Property<float> background_alpha;
   nux::Property<int> icon_size;
   nux::Property<int> tile_size;
-  nux::Property<float> background_alpha;
   nux::Property<int> edge_decay_rate;
   nux::Property<int> edge_overcome_pressure;
   nux::Property<int> edge_stop_velocity;

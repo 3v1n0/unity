@@ -327,7 +327,7 @@ TEST_F(TestLauncherController, MultimonitorMultipleLaunchers)
 
   for (int i = 0; i < max_num_monitors; ++i)
   {
-    EXPECT_EQ(lc.launchers()[i]->monitor(), i);
+    ASSERT_EQ(lc.launchers()[i]->monitor(), i);
   }
 }
 
@@ -389,7 +389,7 @@ TEST_F(TestLauncherController, MultimonitorRemoveMiddleMonitor)
   ASSERT_EQ(lc.launchers().size(), max_num_monitors - 1);
 
   for (int i = 0; i < max_num_monitors - 1; ++i)
-    EXPECT_EQ(lc.launchers()[i]->monitor(), i);
+    ASSERT_EQ(lc.launchers()[i]->monitor(), i);
 }
 
 TEST_F(TestLauncherController, SingleMonitorSwitchToMultimonitor)
@@ -435,6 +435,20 @@ TEST_F(TestLauncherController, SingleMonitorEdgeBarrierSubscriptionsUpdates)
 }
 
 #endif
+
+TEST_F(TestLauncherController, MultimonitorGeometries)
+{
+  uscreen.SetupFakeMultiMonitor();
+
+  for (int i = 0; i < max_num_monitors; ++i)
+  {
+    auto const& monitor_geo = uscreen.GetMonitorGeometry(i);
+    auto const& launcher_geo = lc.launchers()[i]->GetAbsoluteGeometry();
+    ASSERT_EQ(launcher_geo.x, monitor_geo.x);
+    ASSERT_EQ(launcher_geo.y, monitor_geo.y + panel_style.panel_height);
+    ASSERT_EQ(launcher_geo.height, monitor_geo.height - panel_style.panel_height);
+  }
+}
 
 TEST_F(TestLauncherController, OnlyUnstickIconOnFavoriteRemoval)
 {
@@ -1553,6 +1567,14 @@ TEST_F(TestLauncherController, UpdateSelectionChanged)
   lc.Impl()->model_->Selection()->CloseQuicklist();
   ProcessUBusMessages();
   ASSERT_EQ(lc.Impl()->model_->Selection()->tooltip_text(), last_selection_change);
+}
+
+TEST_F(TestLauncherController, UpdateLaunchersBackgroundColor)
+{
+  UBusManager().SendMessage(UBUS_BACKGROUND_COLOR_CHANGED,
+                            g_variant_new("(dddd)", 11/255.0f, 22/255.0f, 33/255.0f, 1.0f));
+
+  Utils::WaitUntil([this] { return lc.options()->background_color == nux::Color(11, 22, 33); });
 }
 
 // thumper: 2012-11-28 disabling the drag and drop tests as they are taking over 20s

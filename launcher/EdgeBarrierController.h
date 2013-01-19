@@ -26,9 +26,8 @@
 namespace unity {
 namespace ui {
 
-class EdgeBarrierSubscriber
+struct EdgeBarrierSubscriber
 {
-public:
   virtual bool HandleBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event) = 0;
 };
 
