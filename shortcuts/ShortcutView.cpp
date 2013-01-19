@@ -48,6 +48,13 @@ namespace
         : nux::View(NUX_FILE_LINE_PARAM)
       {}
 
+      ~SectionView()
+      {
+        key_changed_conn.disconnect();
+      }
+
+      sigc::connection key_changed_conn;
+
     protected:
       void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
       {}
@@ -145,7 +152,7 @@ nux::LinearLayout* View::CreateSectionLayout(std::string const& section_name)
 
 nux::View* View::CreateShortKeyEntryView(AbstractHint::Ptr const& hint)
 {
-  nux::View* view = new SectionView(NUX_TRACKER_LOCATION);
+  auto* view = new SectionView(NUX_TRACKER_LOCATION);
 
   nux::HLayout* layout = new nux::HLayout("EntryLayout", NUX_TRACKER_LOCATION);
   view->SetLayout(layout);
@@ -187,7 +194,7 @@ nux::View* View::CreateShortKeyEntryView(AbstractHint::Ptr const& hint)
   layout->SetSpaceBetweenChildren(INTER_SPACE_SHORTKEY_DESCRIPTION);
   description_layout->SetContentDistribution(nux::MAJOR_POSITION_START);
 
-  hint->shortkey.changed.connect([this, view, shortkey_view] (std::string const& new_key) {
+  view->key_changed_conn = hint->shortkey.changed.connect([this, view, shortkey_view] (std::string const& new_key) {
     bool enabled = !new_key.empty();
     shortkey_view->SetText(enabled ? "<b>"+new_key+"</b>" : "");
     view->SetVisible(enabled);
