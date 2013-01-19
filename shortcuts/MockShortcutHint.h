@@ -48,14 +48,14 @@ public:
   {
     switch (type())
     {
-      case COMPIZ_MOUSE_OPTION:
-      case COMPIZ_KEY_OPTION:
-      case COMPIZ_METAKEY_OPTION:
+      case OptionType::COMPIZ_MOUSE_OPTION:
+      case OptionType::COMPIZ_KEY_OPTION:
+      case OptionType::COMPIZ_METAKEY_OPTION:
         value = arg1() + "-" + arg2();
         shortkey = prefix() + value() + postfix();
         return true;
       
-      case HARDCODED_OPTION:
+      case OptionType::HARDCODED_OPTION:
         value = arg1();
         shortkey = prefix() + value() + postfix();
         return true;

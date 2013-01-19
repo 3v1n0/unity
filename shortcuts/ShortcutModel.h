@@ -41,7 +41,7 @@ public:
 
   Model(std::list<AbstractHint::Ptr> const& hints);
 
-  nux::Property<unsigned> categories_per_column;
+  nux::Property<int> categories_per_column;
   std::vector<std::string> const& categories() const { return categories_; }
   std::map<std::string, std::list<AbstractHint::Ptr>> const& hints() const { return hints_; }
 
