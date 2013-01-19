@@ -236,7 +236,7 @@ void View::RenderColumns()
 
     section_layout->AddLayout(intermediate_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
-    if ((i + 1) % model_->categories_per_column() != 0)
+    if ((i + 1) % model_->categories_per_column() != 0 && category != model_->categories().back())
     {
       // Add a line with some padding after and before each category that is not
       // the last of the column.
