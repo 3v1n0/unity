@@ -222,12 +222,9 @@ void View::RenderColumns()
 {
   columns_layout_->Clear();
 
-  for (unsigned i = 0; i < model_->categories().size(); ++i)
-    columns_layout_->AddLayout(new nux::VLayout(), 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-
-  auto const& columns = columns_layout_->GetChildren();
   int i = 0;
   int column_idx = 0;
+  auto const& columns = columns_layout_->GetChildren();
 
   for (auto const& category : model_->categories())
   {
@@ -260,7 +257,19 @@ void View::RenderColumns()
       section_layout->AddView(new nux::SpaceLayout(20, 20, 20, 20), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
     }
 
-    auto column = static_cast<nux::VLayout*>(*std::next(columns.begin(), column_idx));
+    nux::VLayout* column = nullptr;
+    auto column_it = std::next(columns.begin(), column_idx);
+
+    if (column_it == columns.end())
+    {
+      column = new nux::VLayout();
+      columns_layout_->AddLayout(column, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+    }
+    else
+    {
+      column = static_cast<nux::VLayout*>(*column_it);
+    }
+
     column->AddView(section_layout, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
     i++;
