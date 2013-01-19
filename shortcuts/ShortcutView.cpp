@@ -33,32 +33,23 @@ namespace shortcut
 {
 namespace
 {
-  int SECTION_NAME_FONT_SIZE = 17/1.33;
-  int SHORTKEY_ENTRY_FONT_SIZE = 13/1.33;
-  int INTER_SPACE_SHORTKEY_DESCRIPTION = 10;
-  int SHORTKEY_COLUMN_WIDTH = 150;
-  int DESCRIPTION_COLUMN_WIDTH = 265;
-  int LINE_SPACING = 5;
+  const unsigned SECTION_NAME_FONT_SIZE = 17/1.33;
+  const unsigned SHORTKEY_ENTRY_FONT_SIZE = 13/1.33;
+  const unsigned INTER_SPACE_SHORTKEY_DESCRIPTION = 10;
+  const unsigned SHORTKEY_COLUMN_WIDTH = 150;
+  const unsigned DESCRIPTION_COLUMN_WIDTH = 265;
+  const unsigned LINE_SPACING = 5;
 
-  // We need this class because SetVisible doesn't work for layouts.
   class SectionView : public nux::View
   {
     public:
       SectionView(NUX_FILE_LINE_DECL)
         : nux::View(NUX_FILE_LINE_PARAM)
-      {
-      }
+      {}
 
     protected:
-      void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
-      {
-      }
-
-      void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
-      {
-        if (GetLayout())
-          GetLayout()->ProcessDraw(graphics_engine, force_draw);
-      }
+      void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw) {}
+      void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw) {}
   };
 
 } // unnamed namespace
@@ -145,13 +136,9 @@ nux::LinearLayout* View::CreateSectionLayout(std::string const& section_name)
   return layout;
 }
 
-nux::View* View::CreateShortKeyEntryView(AbstractHint::Ptr const& hint)
+nux::HLayout* View::CreateShortKeyEntryLayout(AbstractHint::Ptr const& hint)
 {
-  nux::View* view = new SectionView(NUX_TRACKER_LOCATION);
-
   nux::HLayout* layout = new nux::HLayout("EntryLayout", NUX_TRACKER_LOCATION);
-  view->SetLayout(layout);
-
   nux::HLayout* shortkey_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   nux::HLayout* description_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
@@ -189,7 +176,7 @@ nux::View* View::CreateShortKeyEntryView(AbstractHint::Ptr const& hint)
   layout->SetSpaceBetweenChildren(INTER_SPACE_SHORTKEY_DESCRIPTION);
   description_layout->SetContentDistribution(nux::MAJOR_POSITION_START);
 
-  return view;
+  return layout;
 }
 
 nux::LinearLayout* View::CreateIntermediateLayout()
@@ -242,8 +229,8 @@ void View::RenderColumns()
 
       if (!hint->shortkey().empty())
       {
-        nux::View* view = CreateShortKeyEntryView(hint);
-        intermediate_layout->AddView(view, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
+        nux::HLayout* layout = CreateShortKeyEntryLayout(hint);
+        intermediate_layout->AddLayout(layout, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
       }
     }
 
@@ -251,7 +238,8 @@ void View::RenderColumns()
 
     if ((i + 1) % model_->categories_per_column() != 0)
     {
-      // Add a line with some padding after and before.
+      // Add a line with some padding after and before each category that is not
+      // the last of the column.
       section_layout->AddView(new nux::SpaceLayout(23, 23, 23, 23), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
       section_layout->AddView(new HSeparator(), 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
       section_layout->AddView(new nux::SpaceLayout(20, 20, 20, 20), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
