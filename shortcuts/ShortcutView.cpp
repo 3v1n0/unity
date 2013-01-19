@@ -40,6 +40,7 @@ namespace
   const unsigned DESCRIPTION_COLUMN_WIDTH = 265;
   const unsigned LINE_SPACING = 5;
 
+  // We need this class because SetVisible doesn't work for layouts.
   class SectionView : public nux::View
   {
     public:
@@ -48,8 +49,14 @@ namespace
       {}
 
     protected:
-      void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw) {}
-      void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw) {}
+      void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
+      {}
+
+      void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
+      {
+        if (GetLayout())
+          GetLayout()->ProcessDraw(graphics_engine, force_draw);
+      }
   };
 
 } // unnamed namespace
@@ -136,9 +143,13 @@ nux::LinearLayout* View::CreateSectionLayout(std::string const& section_name)
   return layout;
 }
 
-nux::HLayout* View::CreateShortKeyEntryLayout(AbstractHint::Ptr const& hint)
+nux::View* View::CreateShortKeyEntryView(AbstractHint::Ptr const& hint)
 {
+  nux::View* view = new SectionView(NUX_TRACKER_LOCATION);
+
   nux::HLayout* layout = new nux::HLayout("EntryLayout", NUX_TRACKER_LOCATION);
+  view->SetLayout(layout);
+
   nux::HLayout* shortkey_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   nux::HLayout* description_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
@@ -176,7 +187,16 @@ nux::HLayout* View::CreateShortKeyEntryLayout(AbstractHint::Ptr const& hint)
   layout->SetSpaceBetweenChildren(INTER_SPACE_SHORTKEY_DESCRIPTION);
   description_layout->SetContentDistribution(nux::MAJOR_POSITION_START);
 
-  return layout;
+  hint->shortkey.changed.connect([this, view, shortkey_view] (std::string const& new_key) {
+    bool enabled = !new_key.empty();
+    shortkey_view->SetText(enabled ? "<b>"+new_key+"</b>" : "");
+    view->SetVisible(enabled);
+    QueueRelayout();
+  });
+
+  view->SetVisible(!shortkey.Str().empty());
+
+  return view;
 }
 
 nux::LinearLayout* View::CreateIntermediateLayout()
@@ -224,14 +244,8 @@ void View::RenderColumns()
 
     for (auto const& hint : model_->hints().at(category))
     {
-      // Rebuild the layout if a shortkey has been changed
-      hint->shortkey.changed.connect(sigc::hide(sigc::mem_fun(this, &View::RenderColumns)));
-
-      if (!hint->shortkey().empty())
-      {
-        nux::HLayout* layout = CreateShortKeyEntryLayout(hint);
-        intermediate_layout->AddLayout(layout, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
-      }
+      nux::View* view = CreateShortKeyEntryView(hint);
+      intermediate_layout->AddView(view, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
     }
 
     section_layout->AddLayout(intermediate_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
