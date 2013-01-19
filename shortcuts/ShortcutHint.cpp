@@ -58,7 +58,7 @@ bool Hint::Fill()
 {
   switch(type())
   {
-    case OptionType::COMPIZ_MOUSE_OPTION:
+    case OptionType::COMPIZ_MOUSE:
     {
       // Arg1 = Plugin name
       // Arg2 = key Option name
@@ -88,7 +88,7 @@ bool Hint::Fill()
     }
     break;
     
-    case OptionType::COMPIZ_KEY_OPTION:
+    case OptionType::COMPIZ_KEY:
     {
       // Arg1 = Plugin name
       // Arg2 = key Option name
@@ -116,7 +116,7 @@ bool Hint::Fill()
 
       break;
     }
-    case OptionType::COMPIZ_METAKEY_OPTION:
+    case OptionType::COMPIZ_METAKEY:
     {
       // Arg1 = Plugin name
       // Arg2 = key Option name
@@ -145,7 +145,7 @@ bool Hint::Fill()
 
       break;
     }
-    case OptionType::HARDCODED_OPTION:
+    case OptionType::HARDCODED:
       if (value != arg1())
       {
         value = arg1();
@@ -154,7 +154,7 @@ bool Hint::Fill()
       return true;
 
     default:
-      LOG_WARNING(logger) << "Unable to find the option type" << static_cast<int>(type()); 
+      LOG_WARNING(logger) << "Unable to find the option type" << static_cast<unsigned>(type()); 
   }
 
   return false;

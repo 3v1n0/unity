@@ -32,10 +32,10 @@ TEST(TestShortcutModel, TestConstruction)
 {
   std::list<AbstractHint::Ptr> hints;
 
-  hints.push_back(std::make_shared<MockHint>("Launcher", "", "", "Description 1", OptionType::COMPIZ_KEY_OPTION, "Plugin 1", "key_option_1"));
-  hints.push_back(std::make_shared<MockHint>("Launcher", "", "", "Description 2", OptionType::HARDCODED_OPTION, "Value 2"));
-  hints.push_back(std::make_shared<MockHint>("Dash", "Prefix", "Postfix", "Description 3", OptionType::COMPIZ_KEY_OPTION, "Plugin 3", "key_option_3"));
-  hints.push_back(std::make_shared<MockHint>("Menu Bar", "Prefix", "Postfix", "Description 4", OptionType::HARDCODED_OPTION, "Value4"));
+  hints.push_back(std::make_shared<MockHint>("Launcher", "", "", "Description 1", OptionType::COMPIZ_KEY, "Plugin 1", "key_option_1"));
+  hints.push_back(std::make_shared<MockHint>("Launcher", "", "", "Description 2", OptionType::HARDCODED, "Value 2"));
+  hints.push_back(std::make_shared<MockHint>("Dash", "Prefix", "Postfix", "Description 3", OptionType::COMPIZ_KEY, "Plugin 3", "key_option_3"));
+  hints.push_back(std::make_shared<MockHint>("Menu Bar", "Prefix", "Postfix", "Description 4", OptionType::HARDCODED, "Value4"));
 
   Model model(hints);
 
@@ -51,10 +51,10 @@ TEST(TestShortcutModel, TestFill)
 {
   std::list<AbstractHint::Ptr> hints;
 
-  hints.push_back(std::make_shared<MockHint>("Launcher", "", "", "Description 1", OptionType::COMPIZ_KEY_OPTION, "Plugin 1", "key_option_1"));
-  hints.push_back(std::make_shared<MockHint>("Launcher", "", "", "Description 2", OptionType::HARDCODED_OPTION, "Value 2"));
-  hints.push_back(std::make_shared<MockHint>("Dash", "Prefix", "Postfix", "Description 3", OptionType::COMPIZ_KEY_OPTION, "Plugin 3", "key_option_3"));
-  hints.push_back(std::make_shared<MockHint>("Menu Bar", "Prefix", "Postfix", "Description 4", OptionType::HARDCODED_OPTION, "Value 4"));
+  hints.push_back(std::make_shared<MockHint>("Launcher", "", "", "Description 1", OptionType::COMPIZ_KEY, "Plugin 1", "key_option_1"));
+  hints.push_back(std::make_shared<MockHint>("Launcher", "", "", "Description 2", OptionType::HARDCODED, "Value 2"));
+  hints.push_back(std::make_shared<MockHint>("Dash", "Prefix", "Postfix", "Description 3", OptionType::COMPIZ_KEY, "Plugin 3", "key_option_3"));
+  hints.push_back(std::make_shared<MockHint>("Menu Bar", "Prefix", "Postfix", "Description 4", OptionType::HARDCODED, "Value 4"));
 
   Model model(hints);
 
@@ -71,7 +71,7 @@ TEST(TestShortcutModel, TestProperty)
 {
   std::list<AbstractHint::Ptr> hints;
 
-  hints.push_back(std::make_shared<MockHint>("Launcher", "Prefix1", "Postfix1", "Description1", OptionType::COMPIZ_KEY_OPTION, "Plugin1", "key_option1"));
+  hints.push_back(std::make_shared<MockHint>("Launcher", "Prefix1", "Postfix1", "Description1", OptionType::COMPIZ_KEY, "Plugin1", "key_option1"));
 
   Model model(hints);
 
@@ -79,7 +79,7 @@ TEST(TestShortcutModel, TestProperty)
   EXPECT_EQ(model.hints().at("Launcher").front()->prefix(), "Prefix1");
   EXPECT_EQ(model.hints().at("Launcher").front()->postfix(), "Postfix1");
   EXPECT_EQ(model.hints().at("Launcher").front()->description(), "Description1");
-  EXPECT_EQ(model.hints().at("Launcher").front()->type(), OptionType::COMPIZ_KEY_OPTION);
+  EXPECT_EQ(model.hints().at("Launcher").front()->type(), OptionType::COMPIZ_KEY);
   EXPECT_EQ(model.hints().at("Launcher").front()->arg1(), "Plugin1");
   EXPECT_EQ(model.hints().at("Launcher").front()->arg2(), "key_option1");
 }

@@ -3229,37 +3229,37 @@ void UnityScreen::InitHints()
 
   hints_.push_back(std::make_shared<shortcut::Hint>(launcher, "", _(" (Hold)"),
                                                    _("Opens the Launcher, displays shortcuts."),
-                                                   shortcut::COMPIZ_KEY_OPTION,
+                                                   shortcut::OptionType::COMPIZ_KEY,
                                                    COMPIZ_UNITYSHELL_PLUGIN_NAME,
                                                    COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(launcher, "", "",
                                                     _("Opens Launcher keyboard navigation mode."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_UNITYSHELL_PLUGIN_NAME,
                                                     COMPIZ_UNITYSHELL_OPTION_KEYBOARD_FOCUS));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(launcher, "", "",
                                                     _("Switches applications via the Launcher."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_UNITYSHELL_PLUGIN_NAME,
                                                     COMPIZ_UNITYSHELL_OPTION_LAUNCHER_SWITCHER_FORWARD));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(launcher, "", _(" + 1 to 9"),
                                                     _("Same as clicking on a Launcher icon."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_UNITYSHELL_PLUGIN_NAME,
                                                     COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(launcher, "", _(" + Shift + 1 to 9"),
                                                     _("Opens a new window in the app."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_UNITYSHELL_PLUGIN_NAME,
                                                     COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(launcher, "", " + T",
                                                     _("Opens the Trash."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_UNITYSHELL_PLUGIN_NAME,
                                                     COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
@@ -3269,47 +3269,47 @@ void UnityScreen::InitHints()
 
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", _(" (Tap)"),
                                                     _("Opens the Dash Home."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_UNITYSHELL_PLUGIN_NAME,
                                                     COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + A",
                                                     _("Opens the Dash App Lens."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_UNITYSHELL_PLUGIN_NAME,
                                                     COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + F",
                                                     _("Opens the Dash Files Lens."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_UNITYSHELL_PLUGIN_NAME,
                                                     COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + M",
                                                     _("Opens the Dash Music Lens."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_UNITYSHELL_PLUGIN_NAME,
                                                     COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + V",
                                                     _("Opens the Dash Video Lens."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_UNITYSHELL_PLUGIN_NAME,
                                                     COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", "",
                                                     _("Switches between Lenses."),
-                                                    shortcut::HARDCODED_OPTION,
+                                                    shortcut::OptionType::HARDCODED,
                                                     _("Ctrl + Tab")));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", "",
                                                     _("Moves the focus."),
-                                                    shortcut::HARDCODED_OPTION,
+                                                    shortcut::OptionType::HARDCODED,
                                                     _("Arrow Keys")));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", "",
                                                     _("Opens the currently focused item."),
-                                                    shortcut::HARDCODED_OPTION,
+                                                    shortcut::OptionType::HARDCODED,
                                                     _("Enter")));
 
   // Menu Bar
@@ -3317,24 +3317,24 @@ void UnityScreen::InitHints()
 
   hints_.push_back(std::make_shared<shortcut::Hint>(menubar, "", _(" (Tap)"),
                                                     _("Opens the HUD."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_UNITYSHELL_PLUGIN_NAME,
                                                     COMPIZ_UNITYSHELL_OPTION_SHOW_HUD));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(menubar, "", _(" (Hold)"),
                                                     _("Reveals the application menu."),
-                                                    shortcut::HARDCODED_OPTION,
+                                                    shortcut::OptionType::HARDCODED,
                                                     "Alt"));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(menubar, "", "",
                                                     _("Opens the indicator menu."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_UNITYSHELL_PLUGIN_NAME,
                                                     COMPIZ_UNITYSHELL_OPTION_PANEL_FIRST_MENU));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(menubar, "", "",
                                                     _("Moves focus between indicators."),
-                                                    shortcut::HARDCODED_OPTION,
+                                                    shortcut::OptionType::HARDCODED,
                                                     _("Cursor Left or Right")));
 
   // Switching
@@ -3342,19 +3342,19 @@ void UnityScreen::InitHints()
 
   hints_.push_back(std::make_shared<shortcut::Hint>(switching, "", "",
                                                     _("Switches between applications."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_UNITYSHELL_PLUGIN_NAME,
                                                     COMPIZ_UNITYSHELL_OPTION_ALT_TAB_FORWARD));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(switching, "", "",
                                                     _("Switches windows of current applications."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_UNITYSHELL_PLUGIN_NAME,
                                                     COMPIZ_UNITYSHELL_OPTION_ALT_TAB_NEXT_WINDOW));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(switching, "", "",
                                                     _("Moves the focus."),
-                                                    shortcut::HARDCODED_OPTION,
+                                                    shortcut::OptionType::HARDCODED,
                                                     _("Cursor Left or Right")));
 
   // Workspaces
@@ -3362,19 +3362,19 @@ void UnityScreen::InitHints()
 
   hints_.push_back(std::make_shared<shortcut::Hint>(workspaces, "", "",
                                                     _("Switches between workspaces."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_EXPO_PLUGIN_NAME,
                                                     COMPIZ_EXPO_OPTION_EXPO_KEY));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(workspaces, "", _(" + Arrow Keys"),
                                                     _("Switches workspaces."),
-                                                    shortcut::COMPIZ_METAKEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_WALL_PLUGIN_NAME,
                                                     COMPIZ_WALL_OPTION_LEFT_KEY));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(workspaces, "", _(" + Arrow Keys"),
                                                     _("Moves focused window to another workspace."),
-                                                    shortcut::COMPIZ_METAKEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_WALL_PLUGIN_NAME,
                                                     COMPIZ_WALL_OPTION_LEFT_WINDOW_KEY));
 
@@ -3384,60 +3384,60 @@ void UnityScreen::InitHints()
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                     _("Spreads all windows in the current workspace."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_SCALE_PLUGIN_NAME,
                                                     COMPIZ_SCALE_OPTION_INITIATE_ALL_KEY));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                     _("Minimises all windows."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_CORE_PLUGIN_NAME,
                                                     COMPIZ_CORE_OPTION_SHOW_DESKTOP_KEY));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                     _("Maximises the current window."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_CORE_PLUGIN_NAME,
                                                     COMPIZ_CORE_OPTION_MAXIMIZE_WINDOW_KEY));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                     _("Restores or minimises the current window."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_CORE_PLUGIN_NAME,
                                                     COMPIZ_CORE_OPTION_UNMAXIMIZE_WINDOW_KEY));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", _(" or Right"),
                                                     _("Semi-maximise the current window."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_GRID_PLUGIN_NAME,
                                                     COMPIZ_GRID_OPTION_PUT_LEFT_KEY));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                     _("Closes the current window."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_CORE_PLUGIN_NAME,
                                                     COMPIZ_CORE_OPTION_CLOSE_WINDOW_KEY));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                     _("Opens the window accessibility menu."),
-                                                    shortcut::COMPIZ_KEY_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_CORE_PLUGIN_NAME,
                                                     COMPIZ_CORE_OPTION_WINDOW_MENU_KEY));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", "",
                                                     _("Places the window in corresponding position."),
-                                                    shortcut::HARDCODED_OPTION,
+                                                    shortcut::OptionType::HARDCODED,
                                                     _("Ctrl + Alt + Num")));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", _(" Drag"),
                                                     _("Moves the window."),
-                                                    shortcut::COMPIZ_MOUSE_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_MOVE_PLUGIN_NAME,
                                                     COMPIZ_MOVE_OPTION_INITIATE_BUTTON));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", _(" Drag"),
                                                     _("Resizes the window."),
-                                                    shortcut::COMPIZ_MOUSE_OPTION,
+                                                    shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_RESIZE_PLUGIN_NAME,
                                                     COMPIZ_RESIZE_OPTION_INITIATE_BUTTON));
 }
