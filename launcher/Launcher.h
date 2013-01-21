@@ -121,7 +121,7 @@ public:
   int GetMouseX() const;
   int GetMouseY() const;
 
-  void Resize();
+  void Resize(nux::Point const& offset, int height);
 
   int GetDragDelta() const;
   void SetHover(bool hovered);
@@ -196,6 +196,7 @@ private:
 
   void ConfigureBarrier();
 
+  void OnMonitorChanged(int monitor);
   void OnOptionsChanged(Options::Ptr options);
   void OnOptionChanged();
   void UpdateOptions(Options::Ptr options);
@@ -392,7 +393,6 @@ private:
 
   struct timespec  _times[TIME_LAST];
 
-  nux::Color _background_color;
   BaseTexturePtr launcher_sheen_;
   BaseTexturePtr launcher_pressure_effect_;
 

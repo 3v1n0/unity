@@ -44,16 +44,17 @@ public:
       default_screen_ = nullptr;
   }
 
-  void Reset(bool emit = true)
+  void Reset(bool emit_change = true)
   {
     default_screen_ = this;
     primary_ = 0;
     monitors_ = {nux::Geometry(0, 0, MONITOR_WIDTH, MONITOR_HEIGHT)};
 
-    changed.emit(primary_, monitors_);
+    if (emit_change)
+      changed.emit(primary_, monitors_);
   }
 
-  void SetupFakeMultiMonitor(int primary = 0, bool emit_update = true)
+  void SetupFakeMultiMonitor(int primary = 0, bool emit_change = true)
   {
     SetPrimary(primary, false);
     monitors_.clear();
@@ -63,7 +64,7 @@ public:
       monitors_.push_back(nux::Geometry(MONITOR_WIDTH, MONITOR_HEIGHT, total_width, 0));
       total_width += MONITOR_WIDTH;
 
-      if (emit_update)
+      if (emit_change)
         changed.emit(GetPrimaryMonitor(), GetMonitors());
     }
   }
