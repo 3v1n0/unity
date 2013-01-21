@@ -132,8 +132,6 @@ int main(int argc, char **argv)
   // no real tests right now, just make sure we don't get any criticals and such
   // waiting on nice perceptual diff support before we can build real tests
   // for views
-
-  g_type_init ();
   gtk_init (&argc, &argv);
 
   nux::NuxInitialize(0);
