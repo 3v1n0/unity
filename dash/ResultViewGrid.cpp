@@ -662,16 +662,15 @@ void ResultViewGrid::DrawRow(nux::GraphicsEngine& GfxContext, ResultListBounds c
   GfxContext.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
   GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-  float saturation_progress = 1.0 - desaturation_progress();
-  float saturation = 1.0;
-  float opacity = 1.0;
-
   int items_per_row = GetItemsPerRow();
 
   int row_lower_bound = row_index * items_per_row;
   if (row_lower_bound >= std::get<0>(visible_bounds) &&
       row_lower_bound <= std::get<1>(visible_bounds))
   {
+    float saturation_progress = 1.0 - desaturation_progress();
+    float saturation = 1.0;
+    float opacity = 1.0;
     int x_position = padding + GetGeometry().x;
     for (int column_index = 0; column_index < items_per_row; column_index++)
     {

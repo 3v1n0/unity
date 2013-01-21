@@ -60,8 +60,6 @@ int
 main(int argc, char** argv)
 {
   g_setenv("GSETTINGS_SCHEMA_DIR", BUILDDIR"/settings/", TRUE);
-
-  g_type_init();
   
   gtk_init(&argc, &argv);
 

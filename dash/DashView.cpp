@@ -462,6 +462,8 @@ void DashView::AboutToShow()
   if (active_scope_view_)
   { 
     scope_bar_->Activate(active_scope_view_->scope()->id());
+
+    active_scope_view_->SetVisible(true);
     active_scope_view_->scope()->view_type = ScopeViewType::SCOPE_VIEW;
   }
 
@@ -491,6 +493,9 @@ void DashView::AboutToHide()
                             << " on '" << scope->id() << "'";
     }
   }
+
+  if (active_scope_view_.IsValid())
+    active_scope_view_->SetVisible(false);
 
   // if a preview is open, close it
   if (preview_displaying_)

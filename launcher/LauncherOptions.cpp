@@ -33,9 +33,10 @@ Options::Options()
   , auto_hide_animation(FADE_AND_SLIDE)
   , backlight_mode(BACKLIGHT_NORMAL)
   , reveal_trigger(RevealTrigger::EDGE)
+  , background_color(nux::Color(95, 18, 45))
+  , background_alpha(0.6667)
   , icon_size(48)
   , tile_size(54)
-  , background_alpha(0.6667)
   , edge_decay_rate(1500)
   , edge_overcome_pressure(2000)
   , edge_stop_velocity(6500)
@@ -51,6 +52,7 @@ Options::Options()
 
   auto_hide_animation.changed.connect(sigc::hide(changed_lambda));
   background_alpha.changed.connect(sigc::hide(changed_lambda));
+  background_color.changed.connect(sigc::hide(changed_lambda));
   backlight_mode.changed.connect(sigc::hide(changed_lambda));
   edge_decay_rate.changed.connect(sigc::hide(changed_lambda));
   edge_overcome_pressure.changed.connect(sigc::hide(changed_lambda));

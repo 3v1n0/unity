@@ -932,6 +932,7 @@ void ScopeView::AddProperties(GVariantBuilder* builder)
   unity::variant::BuilderWrapper(builder)
     .add("name", scope_->id)
     .add("scope-name", scope_->name)
+    .add("visible", IsVisible())
     .add("no-results-active", no_results_active_);
 }
 

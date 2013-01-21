@@ -299,16 +299,17 @@ class HudBehaviorTests(HudTestsBase):
 
     def test_app_activate_on_enter(self):
         """Hud must close after activating a search item with Enter."""
+        self.start_app('Text Editor', locale='C')
+        self.addCleanup(self.close_all_app, "Text Editor")
+
         self.hud.ensure_visible()
 
-        self.keyboard.type("Device > System Settings")
-        self.assertThat(self.hud.search_string, Eventually(Equals("Device > System Settings")))
+        self.keyboard.type("File > Quit")
+        self.assertThat(self.hud.search_string, Eventually(Equals("File > Quit")))
 
         self.keyboard.press_and_release("Enter")
 
-        app_found = self.bamf.wait_until_application_is_running("gnome-control-center.desktop", 5)
-        self.assertTrue(app_found)
-        self.addCleanup(self.close_all_app,  "System Settings")
+        self.assertFalse(self.app_is_running("Text Editor"))
 
         self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
@@ -336,6 +337,11 @@ class HudBehaviorTests(HudTestsBase):
         term_win = self.start_app_window("Terminal")
         self.assertProperty(term_win, is_focused=True)
 
+        # Here we anyway need a sleep, since even though the terminal can have
+        # keyboard focus, the shell inside might not be completely loaded yet
+        # and keystrokes might not get registered
+        sleep(1)
+
         #There's no easy way to read text from terminal, writing input
         #to a text file and then reading from there works.
         self.keyboard.type('echo "')
@@ -356,29 +362,6 @@ class HudBehaviorTests(HudTestsBase):
 
         self.assertThat(file_contents, Equals('ABCD'))
 
-    def test_hud_closes_on_item_activated(self):
-        """Activating a HUD item with the 'Enter' key MUST close the HUD."""
-        # starting on a clean desktop because this way we are sure that our search
-        # string won't match any menu item from a focused application
-        self.start_placeholder_app()
-        self.window_manager.enter_show_desktop()
-        self.addCleanup(self.window_manager.leave_show_desktop)
-
-        self.hud.ensure_visible()
-
-        self.keyboard.type("settings")
-        self.assertThat(self.hud.search_string, Eventually(Equals("settings")))
-
-        self.keyboard.press_and_release('Down')
-        self.assertThat(self.hud.selected_button, Eventually(Equals(2)))
-        self.keyboard.press_and_release('Down')
-        self.assertThat(self.hud.selected_button, Eventually(Equals(3)))
-        self.keyboard.press_and_release('Enter')
-
-        self.addCleanup(self.close_all_app,  "System Settings")
-
-        self.assertThat(self.hud.visible, Eventually(Equals(False)))
-
     def test_mouse_changes_selected_hud_button(self):
         """This tests moves the mouse from the top of the screen to the bottom, this must
         change the selected button from 1 to 5.
@@ -389,10 +372,11 @@ class HudBehaviorTests(HudTestsBase):
         self.keyboard.type("a")
         (x,y,w,h) = self.hud.view.geometry
 
-        self.mouse.move(w/2, 0)
+        # Specify a slower rate so that HUD can register the mouse movement properly
+        self.mouse.move(w/2, 0, rate=5)
         self.assertThat(self.hud.view.selected_button, Eventually(Equals(1)))
 
-        self.mouse.move(w/2, h)
+        self.mouse.move(w/2, h, rate=5)
         self.assertThat(self.hud.view.selected_button, Eventually(Equals(5)))
 
     def test_keyboard_steals_focus_from_mouse(self):
@@ -446,6 +430,7 @@ class HudBehaviorTests(HudTestsBase):
         must focus that window and close the hud.
         """
         char_win = self.start_app("Character Map")
+        self.assertProperty(char_win, is_active=True)
         self.keybinding("window/maximize")
         self.start_app("Calculator")
 
@@ -458,6 +443,20 @@ class HudBehaviorTests(HudTestsBase):
         self.mouse.click()
 
         self.assertProperty(char_win, is_active=True)
+
+    def test_hud_does_not_focus_wrong_window_after_alt_tab(self):
+        """Test the Hud focuses the correct window after an Alt+Tab."""
+
+        char_win = self.start_app('Character Map')
+        self.start_app('Calculator')
+
+        self.keybinding("switcher/reveal_normal")
+
+        self.hud.ensure_visible()
+        self.hud.ensure_hidden()
+
+        self.assertProperty(char_win, is_active=True)
+
 
 class HudLauncherInteractionsTests(HudTestsBase):
 
