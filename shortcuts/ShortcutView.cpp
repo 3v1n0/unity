@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
  *
  * Authored by: Andrea Azzarone <azzaronea@gmail.com>
  *              Jay Taoko <jay.taoko@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include "ShortcutView.h"
@@ -242,7 +243,7 @@ void View::RenderColumns()
 
   for (auto const& category : model_->categories())
   {
-    // Three sections in the fist column...
+    // Computing column index based on current index
     column_idx = i/model_->categories_per_column();
 
     nux::LinearLayout* section_layout = CreateSectionLayout(category);
