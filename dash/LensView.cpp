@@ -329,7 +329,6 @@ void ScopeView::SetupFilters()
   {
     bool blocked = filter_added_connection.block(true);
 
-    printf("Filter Changed - %d\n", filters->count());
     filter_bar_->ClearFilters();
     for (unsigned int i = 0; i < filters->count(); ++i)
       OnFilterAdded(filters->FilterAtIndex(i));
