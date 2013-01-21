@@ -33,6 +33,25 @@
 
 using namespace unity;
 
+namespace unity
+{
+namespace shortcut
+{
+struct StandaloneController : Controller
+{
+  StandaloneController(std::list<AbstractHint::Ptr> const& hints,
+                       BaseWindowRaiser::Ptr const& raiser)
+    : Controller(hints, raiser)
+  {}
+
+  nux::Geometry GetGeometryPerMonitor(int monitor) override
+  {
+    return nux::Geometry(0, 0, 1024, 700);
+  }
+};
+}
+}
+
 struct ShortcutsWindow
 {
   ShortcutsWindow()
@@ -260,7 +279,7 @@ void ShortcutsWindow::Init()
                                                                                  "initiate_key")));
 
   auto base_window_raiser_ = std::make_shared<shortcut::BaseWindowRaiserImp>();
-  controller = std::make_shared<shortcut::Controller>(hints, base_window_raiser_);
+  controller = std::make_shared<shortcut::StandaloneController>(hints, base_window_raiser_);
   controller->Show();
 }
 
