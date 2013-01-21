@@ -26,7 +26,6 @@
 
 #include "unity-shared/LineSeparator.h"
 #include "unity-shared/StaticCairoText.h"
-#include "unity-shared/UScreen.h"
 
 namespace unity
 {
@@ -73,8 +72,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(View);
 
 View::View()
   : ui::UnityWindowView()
-  , x_adjustment_(0)
-  , y_adjustment_(0)
 {
   auto main_layout = new nux::VLayout();
   main_layout->SetPadding(50, 38);
@@ -107,33 +104,6 @@ void View::SetModel(Model::Ptr model)
 Model::Ptr View::GetModel()
 {
   return model_;
-}
-
-void View::SetAdjustment(int x, int y)
-{
-  x_adjustment_ = x;
-  y_adjustment_ = y;
-}
-
-bool View::GetBaseGeometry(nux::Geometry& geo)
-{
-  UScreen* uscreen = UScreen::GetDefault();
-  int primary_monitor = uscreen->GetMonitorWithMouse();
-  auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
-
-  int w = GetAbsoluteWidth();
-  int h = GetAbsoluteHeight();
-
-  if (x_adjustment_ + w > monitor_geo.width ||
-      y_adjustment_ + h > monitor_geo.height)
-    return false;
-
-  geo.width = w;
-  geo.height = h;
-
-  geo.x = monitor_geo.x + x_adjustment_ + (monitor_geo.width - geo.width -  x_adjustment_) / 2;
-  geo.y = monitor_geo.y + y_adjustment_ + (monitor_geo.height - geo.height -  y_adjustment_) / 2;
-  return true;
 }
 
 nux::LinearLayout* View::CreateSectionLayout(std::string const& section_name)

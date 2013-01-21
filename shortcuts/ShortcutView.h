@@ -48,7 +48,6 @@ public:
 
   // Public methods
   bool GetBaseGeometry(nux::Geometry&);
-  void SetAdjustment(int x, int y);
   void SetModel(Model::Ptr model);
   Model::Ptr GetModel();
 
@@ -71,9 +70,6 @@ private:
   // Private members
   Model::Ptr model_;
   nux::HLayout* columns_layout_;
-
-  int x_adjustment_;
-  int y_adjustment_;
 };
 
 } // namespace shortcut
