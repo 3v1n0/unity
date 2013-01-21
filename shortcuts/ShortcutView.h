@@ -43,11 +43,10 @@ class View : public ui::UnityWindowView
 public:
   typedef nux::ObjectPtr<View> Ptr;
 
-  // Ctor and dtor
+  // Ctor
   View();
 
   // Public methods
-  bool GetBaseGeometry(nux::Geometry&);
   void SetModel(Model::Ptr model);
   Model::Ptr GetModel();
 
