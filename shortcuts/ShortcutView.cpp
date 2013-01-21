@@ -21,7 +21,6 @@
 #include "ShortcutView.h"
 
 #include <glib/gi18n-lib.h>
-#include <boost/algorithm/string.hpp>
 #include <UnityCore/GLibWrapper.h>
 
 #include "unity-shared/LineSeparator.h"

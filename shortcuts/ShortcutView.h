@@ -69,6 +69,8 @@ private:
   // Private members
   Model::Ptr model_;
   nux::HLayout* columns_layout_;
+
+  friend class TestShortcutView;
 };
 
 } // namespace shortcut
