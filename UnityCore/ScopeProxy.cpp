@@ -53,7 +53,6 @@ public:
 
   void OnNewScope(GObject *source_object, GAsyncResult *res);
   void OnChannelOpened(GObject *source_object, GAsyncResult *res);
-  void OnFiltersUpdated(GObject *source_object, GAsyncResult *res);
 
   void Search(std::string const& search_string, SearchCallback const& callback, GCancellable* cancel);
   void Activate(std::string const& uri, uint activate_type, glib::HintsMap const& hints, ScopeProxy::ActivateCallback const& callback, GCancellable* cancellable);
@@ -414,12 +413,8 @@ void ScopeProxy::Impl::OnChannelOpened(GObject *source_object, GAsyncResult *res
   filters_->SetModel(filters_dee_model);
   filters_change_connection.disconnect();
   filters_change_connection = filters_->filter_changed.connect([this](Filter::Ptr const&) {
-    unity_protocol_scope_proxy_update_filters(scope_proxy_,
-                                          this->channel().c_str(),
-                                          g_hash_table_new(g_str_hash, g_str_equal),     // FIXME!
-                                          cancel_scope_,
-                                          OnScopeAsyncCallback,
-                                          new ScopeAyncReplyData(sigc::mem_fun(this, &Impl::OnFiltersUpdated)));
+    // FIXME!!
+    // need to perform search again.
   });
 
   glib::Object<DeeModel> categories_dee_model(DEE_MODEL(unity_protocol_scope_proxy_get_categories_model(scope_proxy_)), glib::AddRef());
@@ -437,15 +432,6 @@ void ScopeProxy::Impl::OnChannelOpened(GObject *source_object, GAsyncResult *res
   channel = tmp_channel.Str();
   LOG_DEBUG(logger) << "Opened channel:" << channel() << " on scope @ '" << scope_data_->dbus_path() << "'";
   connected = true;
-}
-
-void ScopeProxy::Impl::OnFiltersUpdated(GObject *source_object, GAsyncResult *res)
-{
-  if (!UNITY_PROTOCOL_IS_SCOPE_PROXY(source_object))
-    return;
-
-  glib::Error error;
-  unity_protocol_scope_proxy_update_filters_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &error);
 }
 
 void ScopeProxy::Impl::WaitForProxyConnection(GCancellable* cancellable,
