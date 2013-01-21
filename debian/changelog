@@ -1,3 +1,14 @@
+unity (6.12.0daily13.01.21-0ubuntu1) raring; urgency=low
+
+  [ Marco Trevisan (Treviño) ]
+  * Switcher windows spread animation is broken on external monitors
+    (LP: #1100055)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3051
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Mon, 21 Jan 2013 04:01:56 +0000
+
 unity (6.12.0daily13.01.18-0ubuntu1) raring; urgency=low
 
   [ Brandon Schaefer ]
