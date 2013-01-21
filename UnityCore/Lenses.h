@@ -42,16 +42,14 @@ public:
    * the objects have been initiated (and so just connecting to the signals is not
    * enough)
    */
-  virtual LensList GetScopes() const = 0;
-  virtual Lens::Ptr GetScope(std::string const& lens_id) const = 0;
-  virtual Lens::Ptr GetScopeAtIndex(std::size_t index) const = 0;
+  virtual LensList GetLenses() const = 0;
+  virtual Lens::Ptr GetLens(std::string const& lens_id) const = 0;
+  virtual Lens::Ptr GetLensAtIndex(std::size_t index) const = 0;
 
   nux::ROProperty<std::size_t> count;
 
-  sigc::signal<void, Lens::Ptr&> scope_added;
+  sigc::signal<void, Lens::Ptr&> lens_added;
 };
-
-typedef Lenses Scopes;
 
 }
 }

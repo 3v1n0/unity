@@ -22,8 +22,6 @@ set (CORE_HEADERS
      DBusIndicators.h
      DesktopUtilities.h
      Filter.h
-     FilteredModel.h
-     FilteredModel-inl.h
      Filters.h
      GenericPreview.h
      GLibDBusProxy.h
