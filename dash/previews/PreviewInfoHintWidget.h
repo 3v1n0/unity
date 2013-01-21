@@ -27,8 +27,9 @@
 #include <Nux/View.h>
 #include <UnityCore/Preview.h>
 #include "unity-shared/Introspectable.h"
+#include "PreviewContainer.h"
 
-namespace nux
+namespace unity
 {
 class StaticCairoText;
 }
@@ -55,6 +56,8 @@ public:
   
   void PreLayoutManagement();
 
+  sigc::signal<void> request_close() const { return preview_container_.request_close; }
+
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -72,15 +75,18 @@ protected:
 protected:
   int icon_size_;
 
-  typedef nux::ObjectPtr<nux::StaticCairoText> StaticCairoTextPtr;
+  typedef nux::ObjectPtr<unity::StaticCairoText> StaticCairoTextPtr;
   typedef std::pair<StaticCairoTextPtr, StaticCairoTextPtr> InfoHint; 
   std::list<InfoHint> info_hints_;
   
   dash::Preview::Ptr preview_model_;
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
+
+private:
+  PreviewContainer preview_container_;
 };
 
-} // napespace prviews
+} // namespace previews
 } // namespace dash
 } // namespace unity
 

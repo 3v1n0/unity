@@ -63,8 +63,6 @@ QuicklistView* QuicklistManager::Current()
 
 void QuicklistManager::RegisterQuicklist(QuicklistView* quicklist)
 {
-  std::list<QuicklistView*>::iterator it;
-
   if (std::find(_quicklist_list.begin(), _quicklist_list.end(), quicklist) != _quicklist_list.end())
   {
     // quicklist has already been registered

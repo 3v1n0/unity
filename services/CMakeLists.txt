@@ -13,7 +13,6 @@ set(UNITY_PANEL_SERVICE_DEPS
     x11
 )
 
-find_package(PkgConfig)
 pkg_check_modules(SERVICE_DEPS REQUIRED ${UNITY_PANEL_SERVICE_DEPS})
 
 set(PANEL_SOURCES

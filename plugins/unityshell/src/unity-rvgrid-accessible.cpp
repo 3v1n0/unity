@@ -194,7 +194,7 @@ search_for_label(UnityRvgridAccessible* self)
   nux::Object* nux_object = NULL;
   unity::dash::PlacesGroup* group = NULL;
   AtkObject* iter = NULL;
-  nux::StaticCairoText* label = NULL;
+  unity::StaticCairoText* label = NULL;
 
   /* Search for the places group */
   for (iter = atk_object_get_parent(ATK_OBJECT(self)); iter != NULL;

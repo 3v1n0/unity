@@ -24,14 +24,6 @@
 #define MOVIEPREVIEW_H
 
 #include "Preview.h"
-#include <Nux/Nux.h>
-
-namespace nux
-{
-class AbstractPaintLayer;
-class StaticCairoText;
-class VLayout;
-}
 
 namespace unity
 {
@@ -39,9 +31,7 @@ namespace dash
 {
 namespace previews
 {
-class CoverArt;
 class PreviewRatingsWidget;
-class PreviewInfoHintWidget;
 
 class MoviePreview : public Preview
 {
@@ -64,21 +54,10 @@ protected:
   virtual void OnNavigateOut();
   virtual void OnNavigateInComplete();
 
-  void SetupBackground();
-  void SetupView();
+  virtual void SetupViews();
   
 protected:
-  nux::VLayout* full_data_layout_;
-
-  nux::ObjectPtr<CoverArt> image_;
   nux::ObjectPtr<PreviewRatingsWidget> rating_;
-  nux::ObjectPtr<nux::StaticCairoText> title_;
-  nux::ObjectPtr<nux::StaticCairoText> subtitle_;
-  nux::ObjectPtr<nux::StaticCairoText> description_;
-  nux::ObjectPtr<PreviewInfoHintWidget> preview_info_hints_;
-
-  typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
-  LayerPtr details_bg_layer_;
 };
 
 }

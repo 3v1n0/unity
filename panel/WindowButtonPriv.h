@@ -55,7 +55,7 @@ private:
   void UpdateSize();
   void LoadImages();
   bool EnabledSetter(bool enabled);
-  static nux::BaseTexture* GetDashWindowButton(panel::WindowButtonType type, panel::WindowState state);
+  static nux::ObjectPtr<nux::BaseTexture> GetDashWindowButton(panel::WindowButtonType type, panel::WindowState state);
 
   inline WindowButtons* Parent() const
   {

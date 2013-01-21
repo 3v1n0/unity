@@ -28,11 +28,15 @@
 #include <UnityCore/Preview.h>
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/PreviewStyle.h"
+#include "unity-shared/StaticCairoText.h"
 
 namespace nux
 {
 class AbstractButton;
+class AbstractPaintLayer;
 class Layout;
+class VLayout;
+class StaticCairoText;
 }
 
 namespace unity
@@ -45,6 +49,8 @@ namespace previews
 {
 class CoverArt;
 class TabIterator;
+class PreviewInfoHintWidget;
+class PreviewContainer;
 
 class Preview : public nux::View, public debug::Introspectable
 {
@@ -61,7 +67,7 @@ public:
 
   static previews::Preview::Ptr PreviewForModel(dash::Preview::Ptr model);  
   
-  sigc::signal<void> request_close;
+  sigc::signal<void> request_close() const;
 
   virtual nux::Area* FindKeyFocusArea(unsigned int key_symbol,
                                       unsigned long x11_key_code,
@@ -80,9 +86,11 @@ protected:
 
   virtual bool AcceptKeyNavFocus() { return false; }
 
+  virtual void SetupViews() = 0;
+
   nux::Layout* BuildGridActionsLayout(dash::Preview::ActionPtrList actions, std::list<nux::AbstractButton*>& buttons);
   nux::Layout* BuildVerticalActionsLayout(dash::Preview::ActionPtrList actions, std::list<nux::AbstractButton*>& buttons);
-  
+
   void UpdateCoverArtImage(CoverArt* cover_art);
 
 protected:
@@ -90,7 +98,21 @@ protected:
   std::list<nux::AbstractButton*> action_buttons_;
   TabIterator* tab_iterator_;
 
+  nux::VLayout* full_data_layout_;
+
+  nux::ObjectPtr<CoverArt> image_;
+  nux::ObjectPtr<StaticCairoText> title_;
+  nux::ObjectPtr<StaticCairoText> subtitle_;
+  nux::ObjectPtr<StaticCairoText> description_;
+  nux::ObjectPtr<PreviewInfoHintWidget> preview_info_hints_;
+
+  typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
+
   friend class PreviewContent;
+
+  // Need to declare this as a pointer to avoid a circular header
+  // dependency issue between Preview.h and PreviewContainer.h
+  nux::ObjectPtr<PreviewContainer> preview_container_;
 };
 
 }

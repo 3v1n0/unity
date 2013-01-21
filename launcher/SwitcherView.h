@@ -81,9 +81,9 @@ protected:
   nux::Geometry GetBackgroundGeometry();
 
   ui::RenderArg InterpolateRenderArgs(ui::RenderArg const& start, ui::RenderArg const& end, float progress);
-  nux::Geometry InterpolateBackground (nux::Geometry const& start, nux::Geometry const& end, float progress);
+  nux::Geometry InterpolateBackground(nux::Geometry const& start, nux::Geometry const& end, float progress);
 
-  std::list<ui::RenderArg> RenderArgsFlat(nux::Geometry& background_geo, int selection, timespec const& current);
+  std::list<ui::RenderArg> RenderArgsFlat(nux::Geometry& background_geo, int selection, float progress);
 
   ui::RenderArg CreateBaseArgForIcon(launcher::AbstractLauncherIcon::Ptr const& icon);
 private:
@@ -94,25 +94,21 @@ private:
   void OnIconSizeChanged (int size);
   void OnTileSizeChanged (int size);
 
-  nux::Geometry UpdateRenderTargets (nux::Point const& center, timespec const& current);
-  void OffsetRenderTargets (int x, int y);
+  nux::Geometry UpdateRenderTargets(float progress);
+  void ResizeRenderTargets(nux::Geometry const& layout_geo, float progress);
+  void OffsetRenderTargets(int x, int y);
 
-  nux::Size SpreadSize ();
+  nux::Size SpreadSize();
 
-  void GetFlatIconPositions (int n_flat_icons, 
-                             int size, 
-                             int selection, 
-                             int &first_flat, 
-                             int &last_flat, 
-                             int &half_fold_left, 
-                             int &half_fold_right);
-
-  void SaveLast ();
+  void GetFlatIconPositions(int n_flat_icons, int size, int selection,
+                            int &first_flat, int &last_flat,
+                            int &half_fold_left, int &half_fold_right);
+  void SaveLast();
 
   SwitcherModel::Ptr model_;
   ui::LayoutSystem layout_system_;
   ui::AbstractIconRenderer::Ptr icon_renderer_;
-  nux::ObjectPtr<nux::StaticCairoText> text_view_;
+  nux::ObjectPtr<StaticCairoText> text_view_;
 
   bool animation_draw_;
   bool target_sizes_set_;
@@ -130,6 +126,8 @@ private:
   timespec save_time_;
 
   glib::Source::UniquePtr redraw_idle_;
+
+  friend class TestSwitcherView;
 };
 
 }

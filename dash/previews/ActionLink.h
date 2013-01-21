@@ -44,8 +44,8 @@ public:
 
   sigc::signal<void, ActionLink*, std::string const&> activate;
 
-  nux::RWProperty<nux::StaticCairoText::AlignState> text_aligment;
-  nux::RWProperty<nux::StaticCairoText::UnderlineState> underline_state;
+  nux::RWProperty<StaticCairoText::AlignState> text_aligment;
+  nux::RWProperty<StaticCairoText::UnderlineState> underline_state;
   nux::RWProperty<std::string> font_hint;
 
   void Activate() {}
@@ -57,7 +57,7 @@ public:
   std::string GetExtraText() const;
 
 protected:
-  nux::ObjectPtr<nux::StaticCairoText> static_text_;
+  nux::ObjectPtr<StaticCairoText> static_text_;
 
   int GetLinkAlpha(nux::ButtonVisualState state);
 
@@ -75,19 +75,19 @@ protected:
 
   // this methods/vars could be private but are protected to make testing
   //  easier
-  bool set_aligment(nux::StaticCairoText::AlignState aligment);
-  nux::StaticCairoText::AlignState get_aligment();
+  bool set_aligment(StaticCairoText::AlignState aligment);
+  StaticCairoText::AlignState get_aligment();
 
-  bool set_underline(nux::StaticCairoText::UnderlineState underline);
-  nux::StaticCairoText::UnderlineState get_underline();
+  bool set_underline(StaticCairoText::UnderlineState underline);
+  StaticCairoText::UnderlineState get_underline();
 
   bool set_font_hint(std::string font_hint);
   std::string get_font_hint();
 
   std::string action_hint_;
   std::string font_hint_;
-  nux::StaticCairoText::AlignState aligment_;
-  nux::StaticCairoText::UnderlineState underline_;
+  StaticCairoText::AlignState aligment_;
+  StaticCairoText::UnderlineState underline_;
 private:
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
 

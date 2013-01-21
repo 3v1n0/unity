@@ -816,7 +816,7 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
 
   int excess_border = (Settings::Instance().form_factor() != FormFactor::NETBOOK) ? EXCESS_BORDER : 0;
 
-  nux::Geometry larger_content_geo = nux::Geometry(content_geo.x, content_geo.y, content_geo.width, content_geo.height);
+  nux::Geometry larger_content_geo = content_geo;
   larger_content_geo.OffsetSize(excess_border, excess_border);
 
   nux::Geometry larger_geo(larger_content_geo);
@@ -824,7 +824,6 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   nux::Geometry larger_absolute_geo = absolute_geo;
   larger_absolute_geo.OffsetSize(excess_border, excess_border);
   
-
   gfx_context.PushClippingRectangle(larger_geo);
 
   unsigned int blend_alpha, blend_src, blend_dest = 0;
@@ -913,15 +912,13 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
     }
   }
 
+  gfx_context.GetRenderStates().SetBlend(blend_alpha, blend_src, blend_dest);
+  gfx_context.PopClippingRectangle();
 }
 
 void OverlayRendererImpl::DrawContentCleanup(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geometry)
 {
   nux::GetPainter().PopBackground(bgs);
-
-  gfx_context.GetRenderStates().SetBlend(false);
-  gfx_context.PopClippingRectangle();
-
   bgs = 0;
 }
 

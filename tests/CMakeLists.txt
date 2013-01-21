@@ -19,26 +19,17 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/kde4/afile.desktop
 #
 # Unit tests
 #
-find_package (PkgConfig)
 set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.99.0")
 pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS})
 
-set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
+string (REPLACE ";" " " TEST_UNIT_DEPS_CFLAGS_OTHER "${TEST_UNIT_CFLAGS_OTHER}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TEST_UNIT_DEPS_CFLAGS_OTHER}")
+include_directories(${TEST_UNIT_DEPS_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-set (CFLAGS
-     ${TEST_UNIT_DEPS_CFLAGS}
-     ${TEST_UNIT_DEPS_CFLAGS_OTHER}
-     "-g"
-     "-DTESTDATADIR=\"${TESTDATADIR}\""
-     "-DGETTEXT_PACKAGE=\"unity\""
-     "-I${CMAKE_CURRENT_BINARY_DIR}"
-     )
-add_definitions (${CFLAGS})
+set (LIBS ${TEST_UNIT_DEPS_LDFLAGS} "unity-core-${UNITY_API_VERSION};compiz_core;m")
 
-set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lcompiz_core -lm")
-
-set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS})
-link_directories (${CMAKE_BINARY_DIR}/UnityCore ${LIB_PATHS} ${COMPIZ_LIBDIR})
+link_directories(${TEST_UNIT_DEPS_LIBRARY_DIRS} ${COMPIZ_LIBDIR})
 
 include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR})
 include_directories (${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src)
@@ -59,7 +50,6 @@ add_executable (test-unit
                 ../services/panel-service.c
                 )
 target_link_libraries (test-unit unity-shared ${LIBS})
-add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
 add_subdirectory (test-input-remover)
 add_subdirectory (test-minimize-window-handler)
 add_subdirectory (test-get-transients)
@@ -101,7 +91,6 @@ if (GTEST_SRC_DIR AND
                  test_service_panel.c
                  test_service_panel.c)
   target_link_libraries(test-gtest-service unity-shared ${LIBS})
-  add_dependencies (test-gtest-service unity-core-${UNITY_API_VERSION} gtest)
 
 
 # The actual test executable (xless) - do not put anything that requires X in here
@@ -174,7 +163,6 @@ if (GTEST_SRC_DIR AND
   target_link_libraries(test-gtest-xless ${GTEST_XLESS_LIBS})
 
   add_test(UnityGTestXless test-gtest-xless)
-  add_dependencies(test-gtest-xless unity-core-${UNITY_API_VERSION} gtest)
 
 # tests that require dbus, must not require X
   add_executable(test-gtest-dbus
@@ -203,6 +191,7 @@ if (ENABLE_X_SUPPORT)
                  test_main.cpp
                  test_action_link.cpp
                  test_application_launcher_icon.cpp
+                 test_bamf_application.cpp
                  test_bfb_launcher_icon.cpp
                  test_dashview_impl.cpp
                  test_dash_controller.cpp
@@ -221,8 +210,8 @@ if (ENABLE_X_SUPPORT)
                  test_launcher_hide_machine.cpp
                  test_launcher_hover_machine.cpp
                  test_launcher_icon.cpp
-                 test_lensview.cpp
                  test_launcher_tooltip.cpp
+                 test_lensview.cpp
                  test_keyboard_util.cpp
                  test_panel_indicators_view.cpp
                  test_panel_menu_view.cpp
@@ -238,6 +227,7 @@ if (ENABLE_X_SUPPORT)
                  test_quicklist_view.cpp
                  test_result_renderer.cpp
                  test_resultviewgrid.cpp
+                 test_searchbar.cpp
                  test_shortcut_controller.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_expo_launcher_icon.cpp
@@ -246,6 +236,7 @@ if (ENABLE_X_SUPPORT)
                  test_static_cairo_text.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
+                 test_switcher_view.cpp
                  test_texture_cache.cpp
                  test_text_input.cpp
                  test_thumbnail_generator.cpp
@@ -257,15 +248,20 @@ if (ENABLE_X_SUPPORT)
                  test_window_buttons.cpp
                  test_xdnd_manager_imp.cpp
                  test_xdnd_start_stop_notifier_imp.cpp
-                 bamf-mock-application.c
-                 gmockmount.c
-                 gmockvolume.c
                  ${UNITY_SRC}/UnityShowdesktopHandler.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unityshell/src/WindowMinimizeSpeedController.cpp
                 )
-  target_link_libraries(test-gtest gtest gmock unity-shared ${LIBS} launcher-lib unity-shared-standalone shortcuts-lib previews-lib hud-lib switcher-lib dash-lib panel-lib)
+
+  # Build plain C files separately so they don't try to include the
+  # C++ pch.
+  add_library(test-gtest-plainc STATIC
+              bamf-mock-application.c
+              bamf-mock-window.c
+              gmockmount.c
+              gmockvolume.c
+              )
+  target_link_libraries(test-gtest test-gtest-plainc gtest gmock unity-shared ${LIBS} launcher-lib unity-shared-bamf unity-shared-standalone shortcuts-lib previews-lib hud-lib switcher-lib dash-lib panel-lib)
   add_test(UnityGTest test-gtest)
-  add_dependencies(test-gtest unity-core-${UNITY_API_VERSION} gtest gmock)
 endif (ENABLE_X_SUPPORT)
 endif (GTEST_SRC_DIR AND
        GMOCK_LIB AND

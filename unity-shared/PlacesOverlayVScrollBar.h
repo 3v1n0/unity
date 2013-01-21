@@ -50,6 +50,7 @@ private:
 
   void OnTrackGeometryChanged(nux::Area* area, nux::Geometry& geo);
   void OnVisibilityChanged(nux::Area* area, bool visible);
+  void OnSensitivityChanged(nux::Area* area, bool sensitive);
 
   void OnMouseEnter(int x, int y, unsigned int button_flags, unsigned int key_flags);
   void OnMouseLeave(int x, int y, unsigned int button_flags, unsigned int key_flags);

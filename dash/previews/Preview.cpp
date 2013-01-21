@@ -33,6 +33,7 @@
 #include "MusicPreview.h"
 #include "MoviePreview.h"
 #include "SocialPreview.h"
+#include "PreviewInfoHintWidget.h"
 
 namespace unity
 {
@@ -219,7 +220,12 @@ Preview::Preview(dash::Preview::Ptr preview_model)
   : View(NUX_TRACKER_LOCATION)
   , preview_model_(preview_model)
   , tab_iterator_(new TabIterator())
+  , full_data_layout_(nullptr)
+  , image_(nullptr)
+  , title_(nullptr)
+  , subtitle_(nullptr)
 {
+  preview_container_ = new PreviewContainer;
 }
 
 Preview::~Preview()
@@ -315,6 +321,8 @@ void Preview::UpdateCoverArtImage(CoverArt* cover_art)
   
   previews::Style& style = dash::previews::Style::Instance();
 
+  auto on_mouse_down = [&](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_->OnMouseDown(x, y, button_flags, key_flags); };
+
   std::string image_hint;
   if (preview_model_->image.Get())
   {
@@ -329,13 +337,7 @@ void Preview::UpdateCoverArtImage(CoverArt* cover_art)
     cover_art->SetNoImageAvailable();
   cover_art->SetFont(style.no_preview_image_font());
   
-  cover_art->mouse_click.connect([this] (int x, int y, unsigned long button_flags, unsigned long key_flags) 
-  {
-    if (nux::GetEventButton(button_flags) == nux::MOUSE_BUTTON1 || nux::GetEventButton(button_flags) == nux::MOUSE_BUTTON3)
-    {
-      request_close.emit();
-    }
-  });
+  cover_art->mouse_click.connect(on_mouse_down);
 }
 
 nux::Area* Preview::FindKeyFocusArea(unsigned int key_symbol,
@@ -361,6 +363,11 @@ void Preview::OnNavigateIn()
   nux::InputArea* default_focus = tab_iterator_->DefaultFocus();
   if (default_focus)
     nux::GetWindowCompositor().SetKeyFocusArea(default_focus);
+}
+
+sigc::signal<void> Preview::request_close() const
+{
+  return preview_container_->request_close;
 }
 
 }
