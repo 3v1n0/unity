@@ -79,6 +79,15 @@ public:
         changed.emit(primary_, monitors_);
     }
   }
+
+  void SetMonitors(std::vector<nux::Geometry> const& monitors)
+  {
+    if (!std::equal(monitors_.begin(), monitors_.end(), monitors.begin()))
+    {
+      monitors_ = monitors;
+      changed.emit(primary_, monitors_);
+    }
+  }
 };
 
 }
