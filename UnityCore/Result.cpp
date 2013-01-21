@@ -76,7 +76,7 @@ void Result::SetupGetters()
 
 std::string Result::GetURI() const { return GetStringAt(ResultColumn::URI); }
 std::string Result::GetIconHint() const { return GetStringAt(ResultColumn::ICON_HINT); }
-std::size_t Result::GetCategoryIndex() const { return GetUIntAt(ResultColumn::CATEGORY); }
+unsigned Result::GetCategoryIndex() const { return GetUIntAt(ResultColumn::CATEGORY); }
 unsigned Result::GetResultType() const { return GetUIntAt(ResultColumn::RESULT_TYPE); }
 std::string Result::GetMimeType() const { return GetStringAt(ResultColumn::MIMETYPE); }
 std::string Result::GetName() const { return GetStringAt(ResultColumn::TITLE); }

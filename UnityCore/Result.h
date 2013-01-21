@@ -45,7 +45,7 @@ public:
 
   nux::ROProperty<std::string> uri;
   nux::ROProperty<std::string> icon_hint;
-  nux::ROProperty<std::size_t> category_index;
+  nux::ROProperty<unsigned> category_index;
   nux::ROProperty<unsigned> result_type;
   nux::ROProperty<std::string> mimetype;
   nux::ROProperty<std::string> name;
@@ -55,8 +55,8 @@ public:
 protected:
   virtual std::string GetURI() const;
   virtual std::string GetIconHint() const;
-  virtual std::size_t GetCategoryIndex() const;
-  virtual std::size_t GetResultType() const;
+  virtual unsigned GetCategoryIndex() const;
+  virtual unsigned GetResultType() const;
   virtual std::string GetMimeType() const;
   virtual std::string GetName() const;
   virtual std::string GetComment() const;

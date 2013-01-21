@@ -101,7 +101,7 @@ void Scopes::Impl::LoadScopes()
 
 void Scopes::Impl::InsertScope(std::string const& scope_id, unsigned index)
 {
-  index = std::min(index, scopes_.size());
+  index = std::min(index, static_cast<unsigned>(scopes_.size()));
 
   auto start = scopes_.begin();
   auto scope_position = std::find_if(scopes_.begin(),
