@@ -3431,13 +3431,13 @@ void UnityScreen::InitHints()
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", _(" Drag"),
                                                     _("Moves the window."),
-                                                    shortcut::OptionType::COMPIZ_KEY,
+                                                    shortcut::OptionType::COMPIZ_MOUSE,
                                                     COMPIZ_MOVE_PLUGIN_NAME,
                                                     COMPIZ_MOVE_OPTION_INITIATE_BUTTON));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(windows, "", _(" Drag"),
                                                     _("Resizes the window."),
-                                                    shortcut::OptionType::COMPIZ_KEY,
+                                                    shortcut::OptionType::COMPIZ_MOUSE,
                                                     COMPIZ_RESIZE_PLUGIN_NAME,
                                                     COMPIZ_RESIZE_OPTION_INITIATE_BUTTON));
 }
