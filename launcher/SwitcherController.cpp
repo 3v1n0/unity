@@ -44,9 +44,13 @@ namespace switcher
 {
 
 /* Delegation to impl */
-Controller::Controller(CreateImplFunc const& create)
-  : impl_(create())
+Controller::Controller(WindowCreator const& create_window)
+  : detail_on_timeout(true)
+  , detail_timeout_length(500)
+  , initial_detail_timeout_length(1500)
+  , impl_(new ShellController(this, 20, create_window))
 {
+  AddChild(impl_.get());
 }
 
 bool Controller::CanShowSwitcher(const std::vector<AbstractLauncherIcon::Ptr>& results) const
@@ -148,14 +152,29 @@ sigc::connection Controller::ConnectToViewBuilt(const sigc::slot<void> &f)
 
 void Controller::SetDetailOnTimeout(bool timeout)
 {
-  impl_->detail_on_timeout = timeout;
+  detail_on_timeout = timeout;
 }
 
-ShellController::ShellController(unsigned int load_timeout,
-                                 WindowCreator const& create_window)
-  :  timeout_length(75)
-  ,  detail_timeout_length(500)
-  ,  initial_detail_timeout_length(1500)
+std::string
+Controller::GetName() const
+{
+  return "SwitcherController";
+}
+
+void
+Controller::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper(builder)
+  .add("detail_on_timeout", detail_on_timeout())
+  .add("initial_detail_timeout_length", initial_detail_timeout_length())
+  .add("detail_timeout_length", detail_timeout_length());
+}
+
+ShellController::ShellController(Controller* obj,
+                                 unsigned int load_timeout,
+                                 Controller::WindowCreator const& create_window)
+  :  Impl(obj)
+  ,  timeout_length(0)
   ,  construct_timeout_(load_timeout)
   ,  create_window_(create_window)
   ,  main_layout_(nullptr)
@@ -164,7 +183,6 @@ ShellController::ShellController(unsigned int load_timeout,
   ,  show_desktop_disabled_(false)
   ,  bg_color_(0, 0, 0, 0.5)
 {
-  detail_on_timeout = true;
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &ShellController::OnBackgroundUpdate));
 
   if (create_window_ == nullptr)
@@ -227,10 +245,10 @@ void ShellController::Show(ShowMode show, SortMode sort, std::vector<AbstractLau
     ShowView();
   }
 
-  if (detail_on_timeout)
+  if (obj_->detail_on_timeout)
   {
     auto cb_func = sigc::mem_fun(this, &ShellController::OnDetailTimer);
-    sources_.AddTimeout(initial_detail_timeout_length, cb_func, DETAIL_TIMEOUT);
+    sources_.AddTimeout(obj_->initial_detail_timeout_length, cb_func, DETAIL_TIMEOUT);
   }
 
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
@@ -256,10 +274,10 @@ bool ShellController::OnDetailTimer()
 
 void ShellController::OnModelSelectionChanged(AbstractLauncherIcon::Ptr const& icon)
 {
-  if (detail_on_timeout)
+  if (obj_->detail_on_timeout)
   {
     auto cb_func = sigc::mem_fun(this, &ShellController::OnDetailTimer);
-    sources_.AddTimeout(detail_timeout_length, cb_func, DETAIL_TIMEOUT);
+    sources_.AddTimeout(obj_->detail_timeout_length, cb_func, DETAIL_TIMEOUT);
   }
 
   if (icon)
@@ -618,7 +636,7 @@ void ShellController::SelectFirstItem()
 std::string
 ShellController::GetName() const
 {
-  return "SwitcherController";
+  return "SwitcherControllerImpl";
 }
 
 void
@@ -626,9 +644,6 @@ ShellController::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder)
   .add("timeout_length", timeout_length())
-  .add("detail_on_timeout", detail_on_timeout())
-  .add("initial_detail_timeout_length", initial_detail_timeout_length())
-  .add("detail_timeout_length", detail_timeout_length())
   .add("visible", visible_)
   .add("monitor", monitor_)
   .add("show_desktop_disabled", show_desktop_disabled_)

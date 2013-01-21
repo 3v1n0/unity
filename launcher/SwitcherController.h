@@ -56,18 +56,17 @@ enum class ShowMode
   CURRENT_VIEWPORT,
 };
 
-class Controller
+class Controller : public debug::Introspectable
 {
   public:
-
     class Impl;
+    typedef std::function<nux::ObjectPtr<nux::BaseWindow>()> WindowCreator;
     typedef std::unique_ptr<Impl> ImplPtr;
-    typedef std::function<ImplPtr()> CreateImplFunc;
     typedef std::shared_ptr<Controller> Ptr;
 
   public:
 
-    Controller(CreateImplFunc const&);
+    Controller(WindowCreator const& create_window = nullptr);
 
     void Show(ShowMode show,
               SortMode sort,
@@ -107,13 +106,25 @@ class Controller
     sigc::connection ConnectToViewBuilt (sigc::slot<void> const&);
     void SetDetailOnTimeout(bool timeout);
 
+    nux::Property<bool> detail_on_timeout;
+    nux::Property<int>  detail_timeout_length;
+    nux::Property<int>  initial_detail_timeout_length;
+
+  private:
+    // Introspectable methods
+    std::string GetName() const;
+    void AddProperties(GVariantBuilder* builder);
+
   private:
     ImplPtr impl_;
 };
 
-class Controller::Impl
+class Controller::Impl : public debug::Introspectable
 {
   public:
+    Impl(Controller* obj)
+    : obj_(obj)
+    {}
 
     virtual ~Impl () {}
 
@@ -153,22 +164,20 @@ class Controller::Impl
     virtual int StartIndex() const = 0;
 
     sigc::signal<void> view_built;
-    nux::Property<bool> detail_on_timeout;
+  protected:
+    Controller* obj_;
 };
 
 class ShellController : public Controller::Impl,
-                        public debug::Introspectable,
                         public sigc::trackable
 {
 public:
-  typedef std::function<nux::ObjectPtr<nux::BaseWindow>()> WindowCreator;
 
   nux::Property<int> timeout_length;
-  nux::Property<int>  detail_timeout_length;
-  nux::Property<int> initial_detail_timeout_length;
 
-  ShellController(unsigned int load_timeout = 20,
-                  WindowCreator const& create_window = nullptr);
+  ShellController(Controller* obj,
+                  unsigned int load_timeout,
+                  Controller::WindowCreator const& create_window);
 
   virtual void Show(ShowMode show, SortMode sort, std::vector<launcher::AbstractLauncherIcon::Ptr> results);
   virtual void Hide(bool accept_state);
@@ -230,7 +239,7 @@ private:
   SwitcherView::Ptr view_;
 
   nux::Geometry workarea_;
-  WindowCreator create_window_;
+  Controller::WindowCreator create_window_;
   nux::ObjectPtr<nux::BaseWindow> view_window_;
   nux::HLayout* main_layout_;
 

@@ -22,8 +22,7 @@
 #include <time.h>
 
 #include "test_utils.h"
-#include "StubSwitcherController.h"
-#include "MockSwitcherController.h"
+//#include "StubSwitcherController.h"
 #include "SwitcherController.h"
 #include "DesktopLauncherIcon.h"
 #include "TimeUtil.h"
@@ -48,8 +47,6 @@ unsigned int DEFAULT_LAZY_CONSTRUCT_TIMEOUT = 20;
 class MockWindow : public nux::BaseWindow
 {
 public:
-  typedef nux::ObjectPtr<MockWindow> Ptr;
-
   MOCK_METHOD2(ShowWindow, void(bool, bool));
 };
 
@@ -61,11 +58,10 @@ class TestSwitcherController : public testing::Test
 {
 protected:
   TestSwitcherController()
-    : mock_window_(new MockWindow())
+    : mock_window_(new NiceMock<MockWindow>())
   {
     auto create_window = [&](){ return mock_window_; };
-    Controller::Impl* impl = new ShellController(20, create_window);
-    controller_.reset(new Controller([&](){ return Controller::ImplPtr(impl); }));
+    controller_.reset(new Controller(create_window));
 
     icons_.push_back(unity::launcher::AbstractLauncherIcon::Ptr(new unity::launcher::DesktopLauncherIcon()));
   }
@@ -79,30 +75,16 @@ protected:
 };
 
 
-TEST_F(TestSwitcherController, InstantiateMock)
-{
-  MockSwitcherController mock;
-}
-
-TEST_F(TestSwitcherController, InstantiateMockThroughNVI)
-{
-  MockSwitcherController *mock = new MockSwitcherController;
-  Controller controller ([&](){
-    return std::unique_ptr<Controller::Impl> (mock);
-  });
-}
-
 #ifdef ENABLE_DELAYED_TWO_PHASE_CONSTRUCTION_TESTS
 TEST_F(TestSwitcherController, LazyConstructionTimeoutLength)
 {
-  StubSwitcherController controller;
-  EXPECT_EQ(controller.GetConstructTimeout(), DEFAULT_LAZY_CONSTRUCT_TIMEOUT);
+  EXPECT_EQ(controller_->GetConstructTimeout(), DEFAULT_LAZY_CONSTRUCT_TIMEOUT);
 }
 
 TEST_F(TestSwitcherController, LazyWindowConstruction)
 {
   // Setting the timeout to a lower value to speed-up the test
-  StubSwitcherController controller(2);
+  SwitcherController controller(2);
 
   EXPECT_EQ(controller.GetConstructTimeout(), 2);
 
@@ -120,35 +102,41 @@ TEST_F(TestSwitcherController, LazyWindowConstruction)
 
 TEST_F(TestSwitcherController, InitialDetailTimeout)
 {
-  StubSwitcherController controller;
+  static const int initial_details_timeout = 1000;
 
-  controller.initial_detail_timeout_length = 2000;
-  controller.detail_timeout_length = 20000;
+  controller_->initial_detail_timeout_length = initial_details_timeout;
+  controller_->detail_timeout_length = 10 * initial_details_timeout;
 
   struct timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
 
-  controller.Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
+  controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
 
-  Utils::WaitUntil(controller.detail_timeout_reached_, 3);
-  ASSERT_TRUE(controller.detail_timeout_reached_);
-  EXPECT_TRUE(unity::TimeUtil::TimeDelta(&controller.detail_timespec_, &current) >= 2000);
+#ifdef ENABLE_TIMEOUT_VIEW_CHANGE_TESTS
+  Utils::WaitUntil(controller_->detail_timeout_reached, 3);
+  ASSERT_TRUE(controller_->detail_timeout_reached);
+  EXPECT_TRUE(unity::TimeUtil::TimeDelta(&controller_->detail_timespec_, &current) >= 2000);
+#endif
 }
 
 TEST_F(TestSwitcherController, DetailTimeout)
 {
-  StubSwitcherController controller;
+  static const int details_timeout = 1000;
+
   struct timespec current;
 
-  controller.detail_timeout_length = 1000;
-  controller.initial_detail_timeout_length = 10000;
+  controller_->detail_timeout_length = details_timeout;
+  controller_->initial_detail_timeout_length = 10 * details_timeout;
   clock_gettime(CLOCK_MONOTONIC, &current);
 
-  controller.FakeSelectionChange();
+  controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
+  controller_->Next();
 
-  Utils::WaitUntil(controller.detail_timeout_reached_, 2);
-  ASSERT_TRUE(controller.detail_timeout_reached_);
-  EXPECT_TRUE(unity::TimeUtil::TimeDelta(&controller.detail_timespec_, &current) >= 1000);
+#ifdef ENABLE_TIMEOUT_VIEW_CHANGE_TESTS
+  Utils::WaitUntil(controller_->detail_timeout_reached, 2);
+  ASSERT_TRUE(controller_->detail_timeout_reached);
+  EXPECT_TRUE(unity::TimeUtil::TimeDelta(&controller_->detail_timespec_, &current) >= 1000);
+#endif
 }
 
 TEST_F(TestSwitcherController, ShowSwitcher)
