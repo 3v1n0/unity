@@ -1204,6 +1204,9 @@ void DashView::OnScopeAdded(Scope::Ptr const& scope, int position)
     LOG_DEBUG(logger) << "Got preview for: " << uri;
     preview_state_machine_.ActivatePreview(model); // this does not immediately display a preview - we now wait.
   });
+
+  if (!active_scope_view_)
+    OnScopeBarActivated(scope->id());
 }
 
 void DashView::OnScopeBarActivated(std::string const& id)

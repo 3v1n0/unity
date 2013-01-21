@@ -38,16 +38,16 @@ const gchar* ALWAYS_SETTINGS_KEY = "always-search";
 
 
 const char* scopes_default[] =  { "testscope1.scope",
-                          "testscope2.scope",
-                          "testscope3.scope",
-                          "testscope4.scope",
-                          NULL
-                        };
-const char* scopes_2removed[] =  { "testscope1.scope",
-                          "testscope3.scope",
-                          "testscope4.scope",
-                          NULL
-                        };
+                                  "testscope2.scope",
+                                  "testscope3.scope",
+                                  "testscope4.scope",
+                                  NULL
+                                };
+const char* scopes_2removed[] = { "testscope1.scope",
+                                  "testscope3.scope",
+                                  "testscope4.scope",
+                                  NULL
+                                };
 
 const char* always_create[] = { "testscope1.scope",
                                 "testscope2.scope",
