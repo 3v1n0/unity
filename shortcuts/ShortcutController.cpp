@@ -19,6 +19,7 @@
 #include "ShortcutController.h"
 
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UScreen.h"
 
 namespace na = nux::animation;
 
@@ -101,8 +102,10 @@ bool Controller::OnShowTimer()
 
   base_window_raiser_->Raise(view_window_);
 
-  nux::Geometry geo;
-  if (!view_->GetBaseGeometry(geo))
+  int monitor = UScreen::GetDefault()->GetMonitorWithMouse();
+  auto const& geo = GetGeometryPerMonitor(monitor);
+
+  if (geo.IsNull())
     return false;
 
   view_window_->SetGeometry(geo);
@@ -123,6 +126,27 @@ bool Controller::OnShowTimer()
   }
 
   return false;
+}
+
+nux::Geometry Controller::GetGeometryPerMonitor(int monitor)
+{
+  if (!view_)
+    ConstructView();
+
+  auto const& view_geo = view_->GetAbsoluteGeometry();
+  auto const& monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
+
+  if (adjustment_.x + view_geo.width > monitor_geo.width ||
+      adjustment_.y + view_geo.height > monitor_geo.height)
+  {
+    return nux::Geometry();
+  }
+
+  nux::Geometry geo(monitor_geo.x, monitor_geo.y, view_geo.width, view_geo.height);
+  geo.x += adjustment_.x + (monitor_geo.width - view_geo.width - adjustment_.x) / 2;
+  geo.y += adjustment_.y + (monitor_geo.height - view_geo.height - adjustment_.y) / 2;
+
+  return geo;
 }
 
 void Controller::ConstructView()
@@ -158,11 +182,9 @@ void Controller::EnsureView()
 
 void Controller::SetAdjustment(int x, int y)
 {
-  EnsureView();
-
-  view_->SetAdjustment(x, y);
+  adjustment_.x = x;
+  adjustment_.y = y;
 }
-
 
 void Controller::Hide()
 {
