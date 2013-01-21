@@ -30,11 +30,6 @@ namespace dash
 namespace previews
 {
 
-nux::InputArea* TabIterator::GetCurretFocusArea()
-{
-  return nux::GetWindowCompositor().GetKeyFocusArea();
-}
-
 void TabIterator::RemoveAlreadyPresent(nux::InputArea* area)
 {
   std::list<nux::InputArea*>::iterator it = std::find(areas_.begin(), areas_.end(),
@@ -105,7 +100,7 @@ nux::InputArea* TabIterator::FindKeyFocusArea(unsigned int key_symbol,
   if (areas_.empty())
     return nullptr;
 
-  nux::InputArea* current_focus_area = GetCurretFocusArea();
+  nux::InputArea* current_focus_area = nux::GetWindowCompositor().GetKeyFocusArea();
   auto it = std::find(areas_.begin(), areas_.end(), current_focus_area);
   if (it != areas_.end())
     return current_focus_area;
@@ -123,7 +118,7 @@ nux::Area* TabIterator::KeyNavIteration(nux::KeyNavDirection direction)
     return nullptr;
   }
 
-  nux::InputArea* current_focus_area = GetCurretFocusArea();
+  nux::InputArea* current_focus_area = nux::GetWindowCompositor().GetKeyFocusArea();
 
   if (current_focus_area)
   {

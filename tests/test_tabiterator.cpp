@@ -27,6 +27,8 @@
 #include "dash/previews/TabIterator.h"
 #include "test_utils.h"
 
+using ::testing::Return;
+
 namespace unity
 {
 
@@ -39,7 +41,6 @@ namespace previews
 class MockedTabIterator : public TabIterator
 {
 public:
-  MOCK_METHOD0(GetCurretFocusArea, nux::InputArea*());
   using TabIterator::RemoveAlreadyPresent;
   using TabIterator::areas_;
 };
@@ -257,6 +258,12 @@ TEST_F(TestTabIterator, FindKeyFocusAreaEmpty)
   EXPECT_TRUE(tab_iterator->FindKeyFocusArea(0, 0, 0) == nullptr);
 }
 
+TEST_F(TestTabIterator, KeyNavIterationEmpty)
+{
+  nux::Area* area = tab_iterator->KeyNavIteration(nux::KEY_NAV_TAB_PREVIOUS);
+  EXPECT_TRUE(area == nullptr);
+}
+
 TEST_F(TestTabIterator, KeyNavIterationWrongDirection)
 {
   nux::Area* area = tab_iterator->KeyNavIteration(nux::KEY_NAV_NONE);
@@ -265,26 +272,112 @@ TEST_F(TestTabIterator, KeyNavIterationWrongDirection)
 
 TEST_F(TestTabIterator, KeyNavIterationNotCurrentPrevious)
 {
+  unity::IMTextEntry* first_entry = new unity::IMTextEntry();
+  unity::IMTextEntry* second_entry = new unity::IMTextEntry();
+  tab_iterator->areas_.push_front(second_entry);
+  tab_iterator->areas_.push_front(first_entry);
+
+  unity::IMTextEntry* result = (unity::IMTextEntry*) tab_iterator->KeyNavIteration(
+    nux::KEY_NAV_TAB_PREVIOUS);
+
+  EXPECT_TRUE(result == *tab_iterator->areas_.end());
 }
 
 TEST_F(TestTabIterator, KeyNavIterationNotCurrentNext)
 {
+  unity::IMTextEntry* first_entry = new unity::IMTextEntry();
+  unity::IMTextEntry* second_entry = new unity::IMTextEntry();
+  tab_iterator->areas_.push_front(second_entry);
+  tab_iterator->areas_.push_front(first_entry);
+
+  unity::IMTextEntry* result = (unity::IMTextEntry*) tab_iterator->KeyNavIteration(
+    nux::KEY_NAV_TAB_NEXT);
+
+  EXPECT_TRUE(result == *tab_iterator->areas_.begin());
 }
 
 TEST_F(TestTabIterator, KeyNavIterationPreviousIsBegin)
 {
+  unity::IMTextEntry* first_entry = new unity::IMTextEntry();
+  unity::IMTextEntry* second_entry = new unity::IMTextEntry();
+  tab_iterator->areas_.push_front(second_entry);
+  tab_iterator->areas_.push_front(first_entry);
+
+  nux::GetWindowCompositor().SetKeyFocusArea(*tab_iterator->areas_.begin());
+
+  unity::IMTextEntry* result = (unity::IMTextEntry*) tab_iterator->KeyNavIteration(
+    nux::KEY_NAV_TAB_PREVIOUS);
+
+  EXPECT_TRUE(result == *tab_iterator->areas_.end());
 }
 
 TEST_F(TestTabIterator, KeyNavIterationPreviousIsNotBegin)
 {
+  for(int index=0; index < 10; ++index)
+  {
+    unity::IMTextEntry* entry = new unity::IMTextEntry();
+    tab_iterator->areas_.push_front(entry);
+  }
+
+  unity::IMTextEntry* first_entry = new unity::IMTextEntry();
+  unity::IMTextEntry* second_entry = new unity::IMTextEntry();
+  tab_iterator->areas_.push_front(second_entry);
+  tab_iterator->areas_.push_front(first_entry);
+
+  for(int index=0; index < 10; ++index)
+  {
+    unity::IMTextEntry* entry = new unity::IMTextEntry();
+    tab_iterator->areas_.push_front(entry);
+  }
+
+  nux::GetWindowCompositor().SetKeyFocusArea(second_entry);
+
+  unity::IMTextEntry* result = (unity::IMTextEntry*) tab_iterator->KeyNavIteration(
+    nux::KEY_NAV_TAB_PREVIOUS);
+  EXPECT_TRUE(result == first_entry);
 }
 
 TEST_F(TestTabIterator, KeyNavIterationNextIsEnd)
 {
+  unity::IMTextEntry* first_entry = new unity::IMTextEntry();
+  unity::IMTextEntry* second_entry = new unity::IMTextEntry();
+  unity::IMTextEntry* not_in_areas = new unity::IMTextEntry();
+
+  tab_iterator->areas_.push_front(second_entry);
+  tab_iterator->areas_.push_front(first_entry);
+
+  nux::GetWindowCompositor().SetKeyFocusArea(not_in_areas);
+
+  unity::IMTextEntry* result = (unity::IMTextEntry*) tab_iterator->KeyNavIteration(
+    nux::KEY_NAV_TAB_NEXT);
+
+  EXPECT_TRUE(result == *tab_iterator->areas_.begin());
 }
 
 TEST_F(TestTabIterator, KeyNavIterationNextIsNotEnd)
 {
+  for(int index=0; index < 10; ++index)
+  {
+    unity::IMTextEntry* entry = new unity::IMTextEntry();
+    tab_iterator->areas_.push_front(entry);
+  }
+
+  unity::IMTextEntry* first_entry = new unity::IMTextEntry();
+  unity::IMTextEntry* second_entry = new unity::IMTextEntry();
+  tab_iterator->areas_.push_front(second_entry);
+  tab_iterator->areas_.push_front(first_entry);
+
+  for(int index=0; index < 10; ++index)
+  {
+    unity::IMTextEntry* entry = new unity::IMTextEntry();
+    tab_iterator->areas_.push_front(entry);
+  }
+
+  nux::GetWindowCompositor().SetKeyFocusArea(first_entry);
+
+  unity::IMTextEntry* result = (unity::IMTextEntry*) tab_iterator->KeyNavIteration(
+    nux::KEY_NAV_TAB_NEXT);
+  EXPECT_TRUE(result == second_entry);
 }
 
 } // previews
