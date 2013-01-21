@@ -52,6 +52,7 @@ class ScopeView : public nux::View, public unity::debug::Introspectable
 
 public:
   ScopeView(Scope::Ptr scope, nux::Area* show_filters);
+  ~ScopeView();
 
   CategoryGroups& categories() { return categories_; }
   FilterBar* filter_bar() const { return filter_bar_; }
@@ -108,6 +109,7 @@ private:
   void OnViewTypeChanged(ScopeViewType view_type);
   void OnScopeFilterExpanded(bool expanded);
   bool ReinitializeFilterModels();
+  void ClearCategories();
   ResultViewGrid* GetGridForCategory(unsigned category_index);
   ResultView* GetResultViewForCategory(unsigned category_index);
 
@@ -146,6 +148,12 @@ private:
   glib::Source::UniquePtr fix_filter_models_idle_;
 
   bool filter_expansion_pushed_;
+  sigc::connection result_added_connection;
+  sigc::connection result_removed_connection;
+  sigc::connection category_added_connection;
+  sigc::connection category_removed_connection;
+  sigc::connection filter_added_connection;
+  sigc::connection filter_removed_connection;
 
   friend class TestScopeView;
 };

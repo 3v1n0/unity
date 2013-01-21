@@ -125,6 +125,40 @@ Variant::operator bool() const
   return bool(variant_);
 }
 
+GHashTable* hashtable_from_hintsmap(glib::HintsMap const& hints, GHashTable* hash_table)
+{
+  if (!hash_table)
+    return nullptr;
+
+  for (glib::HintsMap::const_iterator it = hints.begin(); it != hints.end(); ++it)
+  {
+    gchar* key = g_strdup(it->first.c_str());
+    GVariant* ptr = g_variant_ref(it->second);
+
+    g_hash_table_insert(hash_table, key, ptr);
+  }
+  return hash_table;
+}
+
+
+HintsMap const& hintsmap_from_hashtable(GHashTable* hashtable, HintsMap& hints)
+{
+  if (!hashtable)
+    return hints;
+
+  GHashTableIter hints_iter;
+  gpointer key, value;
+  g_hash_table_iter_init (&hints_iter, hashtable);
+  while (g_hash_table_iter_next (&hints_iter, &key, &value))
+  {
+    std::string hint_key(static_cast<gchar*>(key));
+    glib::Variant hint_value(static_cast<GVariant*>(value));
+
+    hints[hint_key] = hint_value;
+  }
+  return hints;
+}
+
 } // namespace glib
 
 namespace variant
@@ -219,7 +253,6 @@ BuilderWrapper& BuilderWrapper::add(nux::Rect const& value)
   add("height", value.height);
   return *this;
 }
-
 
 }
 }

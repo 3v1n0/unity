@@ -160,6 +160,7 @@ DashView::DashView(ScopesCreator scopes_creator)
 
 DashView::~DashView()
 {
+  scope_can_refine_connection_.disconnect();
   // Do this explicitely, otherwise dee will complain about invalid access
   // to the scope models
   RemoveLayout();
@@ -1224,6 +1225,7 @@ void DashView::OnScopeBarActivated(std::string const& id)
 
   if (active_scope_view_.IsValid())
     active_scope_view_->SetVisible(false);
+  scope_can_refine_connection_.disconnect();
 
   nux::ObjectPtr<ScopeView> view = active_scope_view_ = scope_views_[id];
 
@@ -1257,6 +1259,9 @@ void DashView::OnScopeBarActivated(std::string const& id)
 
   search_bar_->text_entry()->SelectAll();
   search_bar_->can_refine_search = view->can_refine_search();
+  scope_can_refine_connection_ = view->can_refine_search.changed.connect([this] (bool can_refine_search) {
+    search_bar_->can_refine_search = can_refine_search;
+  });
   hide_message_delay_.reset();
 
   view->QueueDraw();

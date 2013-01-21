@@ -207,7 +207,16 @@ ScopeView::ScopeView(Scope::Ptr scope, nux::Area* show_filters)
   OnVisibleChanged.connect([&] (nux::Area* area, bool visible) {
     scroll_view_->SetVisible(visible);
   });
+}
 
+ScopeView::~ScopeView()
+{
+  result_added_connection.disconnect();
+  result_removed_connection.disconnect();
+  category_added_connection.disconnect();
+  category_removed_connection.disconnect();
+  filter_added_connection.disconnect();
+  filter_removed_connection.disconnect();
 }
 
 void ScopeView::SetupViews(nux::Area* show_filters)
@@ -268,11 +277,12 @@ void ScopeView::SetupCategories()
     return;
 
   Categories::Ptr categories = scope_->categories;
-  categories->category_added.connect(sigc::mem_fun(this, &ScopeView::OnCategoryAdded));
-  categories->category_removed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryRemoved));
+  category_added_connection = categories->category_added.connect(sigc::mem_fun(this, &ScopeView::OnCategoryAdded));
+  category_removed_connection = categories->category_removed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryRemoved));
 
   auto resync_categories = [categories, this] (glib::Object<DeeModel> model)
   {
+    ClearCategories();
     for (unsigned int i = 0; i < categories->count(); ++i)
       OnCategoryAdded(categories->RowAtIndex(i));
   };
@@ -287,8 +297,8 @@ void ScopeView::SetupResults()
     return;
 
   Results::Ptr results = scope_->results;
-  results->result_added.connect(sigc::mem_fun(this, &ScopeView::OnResultAdded));
-  results->result_removed.connect(sigc::mem_fun(this, &ScopeView::OnResultRemoved));
+  result_added_connection = results->result_added.connect(sigc::mem_fun(this, &ScopeView::OnResultAdded));
+  result_added_connection = results->result_removed.connect(sigc::mem_fun(this, &ScopeView::OnResultRemoved));
 
   results->model.changed.connect([this] (glib::Object<DeeModel> model)
   {
@@ -312,11 +322,23 @@ void ScopeView::SetupFilters()
     return;
 
   Filters::Ptr filters = scope_->filters;
-  filters->filter_added.connect(sigc::mem_fun(this, &ScopeView::OnFilterAdded));
-  filters->filter_removed.connect(sigc::mem_fun(this, &ScopeView::OnFilterRemoved));
+  filter_added_connection = filters->filter_added.connect(sigc::mem_fun(this, &ScopeView::OnFilterAdded));
+  filter_removed_connection = filters->filter_removed.connect(sigc::mem_fun(this, &ScopeView::OnFilterRemoved));
 
-  for (unsigned int i = 0; i < filters->count(); ++i)
-    OnFilterAdded(filters->FilterAtIndex(i));
+  auto resync_filters = [filters, this] (glib::Object<DeeModel> model)
+  {
+    bool blocked = filter_added_connection.block(true);
+
+    printf("Filter Changed - %d\n", filters->count());
+    filter_bar_->ClearFilters();
+    for (unsigned int i = 0; i < filters->count(); ++i)
+      OnFilterAdded(filters->FilterAtIndex(i));
+
+    filter_added_connection.block(blocked);
+  };
+
+  filters->model.changed.connect(resync_filters);
+  resync_filters(filters->model());
 }
 
 void ScopeView::OnCategoryAdded(Category const& category)
@@ -459,7 +481,21 @@ void ScopeView::OnCategoryRemoved(Category const& category)
   categories_.erase(category_position);
   counts_.erase(existing_group);
 
+  RemoveChild(existing_group);
   scroll_layout_->RemoveChildObject(existing_group);
+  QueueRelayout();
+}
+
+void ScopeView::ClearCategories()
+{
+  for (auto category_position = categories_.begin(), end = categories_.end(); category_position != end; ++category_position)
+  {
+    PlacesGroup* group = *category_position;
+    RemoveChild(group);
+    scroll_layout_->RemoveChildObject(group);
+  }
+  counts_.clear();
+  categories_.clear();
   QueueRelayout();
 }
 

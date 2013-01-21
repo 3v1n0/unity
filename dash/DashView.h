@@ -146,6 +146,7 @@ private:
 
   nux::ObjectPtr<ScopeView> active_scope_view_;
   nux::ObjectPtr<ScopeView> preview_scope_view_;
+  sigc::connection scope_can_refine_connection_;
 
   // Drawing related
   nux::Geometry content_geo_;

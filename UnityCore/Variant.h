@@ -33,6 +33,8 @@ namespace glib
 
 class Variant;
 typedef std::map<std::string, Variant> HintsMap;
+GHashTable* hashtable_from_hintsmap(HintsMap const& hints, GHashTable* hash_table);
+HintsMap const& hintsmap_from_hashtable(GHashTable* hashtable, HintsMap& hints);
 
 struct StealRef {};
 

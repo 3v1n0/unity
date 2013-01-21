@@ -91,6 +91,17 @@ void FilterBar::RemoveFilter(Filter::Ptr const& filter)
   }
 }
 
+void FilterBar::ClearFilters()
+{
+  for (auto iter: filter_map_)
+  {
+    FilterExpanderLabel* filter_view = iter.second;
+    RemoveChild(filter_view);
+    GetLayout()->RemoveChildObject(filter_view);
+  }
+  filter_map_.clear();
+}
+
 void FilterBar::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
 

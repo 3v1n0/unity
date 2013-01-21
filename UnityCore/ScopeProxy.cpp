@@ -54,7 +54,7 @@ public:
   void OnNewScope(GObject *source_object, GAsyncResult *res);
   void OnChannelOpened(GObject *source_object, GAsyncResult *res);
 
-  void Search(std::string const& search_string, SearchCallback const& callback, GCancellable* cancel);
+  void Search(std::string const& search_string, glib::HintsMap const& hints, SearchCallback const& callback, GCancellable* cancel);
   void Activate(std::string const& uri, uint activate_type, glib::HintsMap const& hints, ScopeProxy::ActivateCallback const& callback, GCancellable* cancellable);
   void UpdatePreviewProperty(std::string const& uri, glib::HintsMap const& hints, UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable);
 
@@ -84,6 +84,7 @@ public:
 
   nux::Property<bool> connected;
   nux::Property<std::string> channel;
+  std::string last_search_;
 
   glib::Object<UnityProtocolScopeProxy> scope_proxy_;
   glib::Object<GCancellable> cancel_scope_;
@@ -145,20 +146,11 @@ private:
     GHashTable* hint_ret = unity_protocol_scope_proxy_search_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &error);
 
     glib::HintsMap hints;
-    GHashTableIter hints_iter;
-    gpointer key, value;
-    g_hash_table_iter_init (&hints_iter, hint_ret);
-    while (g_hash_table_iter_next (&hints_iter, &key, &value))
-    {
-      std::string hint_key(static_cast<gchar*>(key));
-      glib::Variant hint_value(static_cast<GVariant*>(value));
-
-      hints[hint_key] = hint_value;
-    }
+    glib::hintsmap_from_hashtable(hint_ret, hints);
 
     if (data->callback)
       data->callback(hints, error);
-    g_hash_table_destroy(hint_ret);
+    if (hint_ret) { g_hash_table_destroy(hint_ret); }
   }
   /////////////////////////////////////
 
@@ -176,20 +168,12 @@ private:
     GHashTable* hint_ret = unity_protocol_scope_proxy_update_preview_property_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &error);
 
     glib::HintsMap hints;
-    GHashTableIter hints_iter;
-    gpointer key, value;
-    g_hash_table_iter_init (&hints_iter, hint_ret);
-    while (g_hash_table_iter_next (&hints_iter, &key, &value))
-    {
-      std::string hint_key(static_cast<gchar*>(key));
-      glib::Variant hint_value(static_cast<GVariant*>(value));
-
-      hints[hint_key] = hint_value;
-    }
+    glib::hintsmap_from_hashtable(hint_ret, hints);
 
     if (data->callback)
       data->callback(hints, error);
-    g_hash_table_destroy(hint_ret);
+
+    if (hint_ret) { g_hash_table_destroy(hint_ret); }
   }
   /////////////////////////////////////
 
@@ -210,21 +194,13 @@ private:
     {
       std::string uri;
       ScopeHandledType handled = ScopeHandledType::NOT_HANDLED;
-      glib::HintsMap hints;
 
       uri = result.uri;
       handled = static_cast<ScopeHandledType>(result.handled);
 
-      GHashTableIter hints_iter;
-      gpointer key, value;
-      g_hash_table_iter_init (&hints_iter, result.hints);
-      while (g_hash_table_iter_next (&hints_iter, &key, &value))
-      {
-        std::string hint_key(static_cast<gchar*>(key));
-        glib::Variant hint_value(static_cast<GVariant*>(value));
+      glib::HintsMap hints;
+      glib::hintsmap_from_hashtable(result.hints, hints);
 
-        hints[hint_key] = hint_value;
-      }
       data->callback(uri, handled, hints, error);
     }
   }
@@ -412,9 +388,13 @@ void ScopeProxy::Impl::OnChannelOpened(GObject *source_object, GAsyncResult *res
   glib::Object<DeeModel> filters_dee_model(DEE_MODEL(unity_protocol_scope_proxy_get_filters_model(scope_proxy_)), glib::AddRef());
   filters_->SetModel(filters_dee_model);
   filters_change_connection.disconnect();
-  filters_change_connection = filters_->filter_changed.connect([this](Filter::Ptr const&) {
-    // FIXME!!
-    // need to perform search again.
+  filters_change_connection = filters_->filter_changed.connect([this](Filter::Ptr const& filter)
+  {
+    glib::HintsMap hints;
+    hints["changed-filter-row"] = filter->VariantValue();
+
+    printf("Filter changed by user\n");
+    Search(last_search_, hints, nullptr, cancel_scope_);
   });
 
   glib::Object<DeeModel> categories_dee_model(DEE_MODEL(unity_protocol_scope_proxy_get_categories_model(scope_proxy_)), glib::AddRef());
@@ -474,7 +454,7 @@ void ScopeProxy::Impl::WaitForProxyConnection(GCancellable* cancellable,
   }
 }
 
-void ScopeProxy::Impl::Search(std::string const& search_string, SearchCallback const& callback, GCancellable* cancellable)
+void ScopeProxy::Impl::Search(std::string const& search_string, glib::HintsMap const& hints, SearchCallback const& callback, GCancellable* cancellable)
 {
   GCancellable* target_canc = cancellable != NULL ? cancellable : cancel_scope_;
 
@@ -484,7 +464,7 @@ void ScopeProxy::Impl::Search(std::string const& search_string, SearchCallback c
       CreateProxy();
 
     glib::Object<GCancellable> canc(target_canc, glib::AddRef());
-    WaitForProxyConnection(canc, PROXY_CONNECT_TIMEOUT, [this, search_string, callback, canc] (glib::Error const& err)
+    WaitForProxyConnection(canc, PROXY_CONNECT_TIMEOUT, [this, search_string, hints, callback, canc] (glib::Error const& err)
     {
       if (err)
       {
@@ -494,7 +474,7 @@ void ScopeProxy::Impl::Search(std::string const& search_string, SearchCallback c
       }
       else
       {
-        Search(search_string, callback, canc);
+        Search(search_string, hints, callback, canc);
       }
     });
     return;
@@ -503,10 +483,13 @@ void ScopeProxy::Impl::Search(std::string const& search_string, SearchCallback c
   SearchData* data = new SearchData();
   data->callback = callback;
 
+  GHashTable* hints_table = glib::hashtable_from_hintsmap(hints, g_hash_table_new(g_direct_hash, g_direct_equal));
+
+  last_search_ = search_string.c_str();
   unity_protocol_scope_proxy_search(scope_proxy_,
     channel().c_str(),
     search_string.c_str(),
-    g_hash_table_new(g_str_hash, g_str_equal),
+    hints_table,
     target_canc,
     Impl::OnScopeSearchCallback,
     data);
@@ -538,18 +521,10 @@ void ScopeProxy::Impl::Activate(std::string const& uri, uint activate_type, glib
     return;
   }
 
-  GHashTable* hints_table = g_hash_table_new(g_direct_hash, g_direct_equal);
-
-  for (glib::HintsMap::const_iterator it = hints.begin(); it != hints.end(); ++it)
-  {
-    gchar* key = g_strdup(it->first.c_str());
-    GVariant* ptr = g_variant_ref(it->second);
-
-    g_hash_table_insert(hints_table, key, ptr);
-  }
-
   ActivateData* data = new ActivateData();
   data->callback = callback;
+
+  GHashTable* hints_table = glib::hashtable_from_hintsmap(hints, g_hash_table_new(g_direct_hash, g_direct_equal));
 
   unity_protocol_scope_proxy_activate(scope_proxy_,
                                       channel().c_str(),
@@ -587,18 +562,10 @@ void ScopeProxy::Impl::UpdatePreviewProperty(std::string const& uri, glib::Hints
     return;
   }
 
-  GHashTable* hints_table = g_hash_table_new(g_direct_hash, g_direct_equal);
-
-  for (glib::HintsMap::const_iterator it = hints.begin(); it != hints.end(); ++it)
-  {
-    gchar* key = g_strdup(it->first.c_str());
-    GVariant* ptr = g_variant_ref(it->second);
-
-    g_hash_table_insert(hints_table, key, ptr);
-  }
-
   UpdatePreviewPropertyData* data = new UpdatePreviewPropertyData();
   data->callback = callback;
+
+  GHashTable* hints_table = glib::hashtable_from_hintsmap(hints, g_hash_table_new(g_direct_hash, g_direct_equal));
 
   unity_protocol_scope_proxy_update_preview_property(scope_proxy_,
                                                      channel().c_str(),
@@ -643,6 +610,8 @@ void ScopeProxy::Impl::OnScopeViewTypeChanged(UnityProtocolScopeProxy* proxy, GP
 
 void ScopeProxy::Impl::OnScopeFiltersChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param)
 {
+  printf("Filter changed by server\n");
+
   bool blocked = filters_change_connection.block(true);
 
   glib::Object<DeeModel> filters_dee_model(DEE_MODEL(unity_protocol_scope_proxy_get_filters_model(scope_proxy_)), glib::AddRef());
@@ -739,7 +708,7 @@ void ScopeProxy::CreateProxy()
 
 void ScopeProxy::Search(std::string const& search_string, SearchCallback const& callback, GCancellable* cancellable)
 {
-  pimpl->Search(search_string, callback, cancellable);
+  pimpl->Search(search_string, glib::HintsMap(), callback, cancellable);
 }
 
 void ScopeProxy::Activate(std::string const& uri, uint activate_type, glib::HintsMap const& hints, ScopeProxy::ActivateCallback const& callback, GCancellable* cancellable)
