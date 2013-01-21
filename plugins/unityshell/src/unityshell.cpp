@@ -1729,13 +1729,9 @@ bool UnityScreen::showLauncherKeyInitiate(CompAction* action,
 
   if (!shortcut_controller_->Visible() && shortcut_controller_->IsEnabled())
   {
-    int launcher_width = optionGetIconSize() + 18;
-    int panel_height = panel_style_.panel_height;
-
     if (shortcut_controller_->Show())
     {
       LOG_DEBUG(logger) << "Showing shortcut hint.";
-      shortcut_controller_->SetAdjustment(launcher_width, panel_height);
       EnableCancelAction(CancelActionTarget::SHORTCUT_HINT, true, action->key().modifiers());
     }
   }
@@ -3153,12 +3149,14 @@ void UnityScreen::initLauncher()
 
   AddChild(dash_controller_.get());
 
-  launcher_controller_->launcher_width_changed.connect([this] (int launcher_width) {
+  launcher_controller_->launcher().size_changed.connect([this] (nux::Area*, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right margin
      * that must not be considered when drawing an overlay */
-    hud_controller_->launcher_width = launcher_width - 1;
-    dash_controller_->launcher_width = launcher_width - 1;
-    panel_controller_->launcher_width = launcher_width - 1;
+    int launcher_width = w - 1;
+    hud_controller_->launcher_width = launcher_width;
+    dash_controller_->launcher_width = launcher_width;
+    panel_controller_->launcher_width = launcher_width;
+    shortcut_controller_->SetAdjustment(launcher_width, panel_style_.panel_height);
   });
 
   ScheduleRelayout(0);
