@@ -50,7 +50,6 @@ public:
                                    unsigned long x11_key_code,
                                    unsigned long special_keys_state);
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
-  nux::InputArea* GetCurretFocusArea();
 
 protected:
   void RemoveAlreadyPresent(nux::InputArea* area);
