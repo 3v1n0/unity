@@ -49,9 +49,9 @@ class TestShortcutController : public Test
 {
   struct MockShortcutController : public Controller
   {
-    MockShortcutController(std::list<AbstractHint::Ptr> const& hints,
-                           BaseWindowRaiser::Ptr const& base_window_raiser)
-      : Controller(hints, base_window_raiser)
+    MockShortcutController(BaseWindowRaiser::Ptr const& base_window_raiser,
+                           shortcut::Model::Ptr const& model = nullptr)
+      : Controller(base_window_raiser, model)
     {}
 
     MOCK_METHOD1(SetOpacity, void(double));
@@ -67,8 +67,9 @@ class TestShortcutController : public Test
 
 public:
   TestShortcutController()
-    : base_window_raiser_(std::make_shared<MockBaseWindowRaiser>())
-    , controller_(hints_, base_window_raiser_)
+    : base_window_raiser_(std::make_shared<NiceMock<MockBaseWindowRaiser>>())
+    , model_(std::make_shared<Model>(std::list<shortcut::AbstractHint::Ptr>()))
+    , controller_(base_window_raiser_, model_)
     , animation_controller_(tick_source_)
   {
     ON_CALL(controller_, SetOpacity(_))
@@ -77,8 +78,8 @@ public:
 
   MockUScreen uscreen;
   Settings unity_settings;
-  std::list<shortcut::AbstractHint::Ptr> hints_;
   MockBaseWindowRaiser::Ptr base_window_raiser_;
+  Model::Ptr model_;
   NiceMock<MockShortcutController> controller_;
 
   nux::animation::TickSource tick_source_;
@@ -94,8 +95,17 @@ TEST_F (TestShortcutController, WindowIsRaisedOnShow)
   Utils::WaitForTimeout(1);
 }
 
+TEST_F (TestShortcutController, WindowIsNotRaisedOnShowWithNullModel)
+{
+  EXPECT_CALL(*base_window_raiser_, Raise(_))
+    .Times(0);
 
-TEST_F (TestShortcutController, Hide)
+  controller_.SetModel(nullptr);
+  controller_.Show();
+  Utils::WaitForTimeout(1);
+}
+
+TEST_F (TestShortcutController, HiddeenOnConstruction)
 {
   {
     InSequence sequence;
@@ -105,10 +115,8 @@ TEST_F (TestShortcutController, Hide)
       .Times(0);
   }
 
-  controller_.Show();
-
+  controller_.ConstructView();
   controller_.Hide();
-  tick_source_.tick(1000);
 }
 
 TEST_F (TestShortcutController, GetGeometryPerMonitor)
