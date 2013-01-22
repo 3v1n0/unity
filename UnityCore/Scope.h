@@ -36,7 +36,7 @@ class Scope : public sigc::trackable, boost::noncopyable
 public:
   typedef std::shared_ptr<Scope> Ptr;
 
-  Scope(std::string const& scope_id);
+  Scope(ScopeData::Ptr const& scope_data);
   virtual ~Scope();
 
   // Must call this function after construction.

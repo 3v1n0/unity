@@ -101,7 +101,6 @@ public:
 
   /////////////////////////////////////////////////
   // DBus property signals.
-  glib::Signal<void, UnityProtocolScopeProxy*> channels_invalidated_;
   glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> visible_signal_;
   glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> search_in_global_signal_;
   glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> is_master_signal_;
@@ -116,7 +115,6 @@ public:
 private:
   /////////////////////////////////////////////////
   // Signal Connections
-  void OnScopeChannelsInvalidated(UnityProtocolScopeProxy* proxy);
   void OnScopeVisibleChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
   void OnScopeIsMasterChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
   void OnScopeSearchInGlobalChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
@@ -294,10 +292,8 @@ void ScopeProxy::Impl::DestroyProxy()
 {
   scope_proxy_.Release();
   if (cancel_scope_)
-  {
     g_cancellable_cancel(cancel_scope_);
-    cancel_scope_ = g_cancellable_new();
-  } 
+  
   cancel_scope_ = g_cancellable_new(); 
   connected = false;
   proxy_created_ = false;
@@ -322,7 +318,6 @@ void ScopeProxy::Impl::OnNewScope(GObject *source_object, GAsyncResult *res)
   glib::Error error;
   scope_proxy = unity_protocol_scope_proxy_new_from_dbus_finish(res, &error);
 
-  channels_invalidated_.Disconnect();
   visible_signal_.Disconnect();
   search_in_global_signal_.Disconnect();
   is_master_signal_.Disconnect();
@@ -353,7 +348,6 @@ void ScopeProxy::Impl::OnNewScope(GObject *source_object, GAsyncResult *res)
   search_in_global = unity_protocol_scope_proxy_get_search_in_global(scope_proxy_);
   view_type = static_cast<ScopeViewType>(unity_protocol_scope_proxy_get_view_type(scope_proxy_));
 
-  channels_invalidated_.Connect(scope_proxy_, "channels-invalidated", sigc::mem_fun(this, &Impl::OnScopeChannelsInvalidated));
   visible_signal_.Connect(scope_proxy_, "notify::visible", sigc::mem_fun(this, &Impl::OnScopeVisibleChanged));
   search_in_global_signal_.Connect(scope_proxy_, "notify::search-in-global", sigc::mem_fun(this, &Impl::OnScopeSearchInGlobalChanged));
   is_master_signal_.Connect(scope_proxy_, "notify::is-master", sigc::mem_fun(this, &Impl::OnScopeIsMasterChanged));
@@ -483,7 +477,7 @@ void ScopeProxy::Impl::Search(std::string const& search_string, glib::HintsMap c
   SearchData* data = new SearchData();
   data->callback = callback;
 
-  GHashTable* hints_table = glib::hashtable_from_hintsmap(hints, g_hash_table_new(g_direct_hash, g_direct_equal));
+  GHashTable* hints_table = glib::hashtable_from_hintsmap(hints);
 
   last_search_ = search_string.c_str();
   unity_protocol_scope_proxy_search(scope_proxy_,
@@ -493,6 +487,8 @@ void ScopeProxy::Impl::Search(std::string const& search_string, glib::HintsMap c
     target_canc,
     Impl::OnScopeSearchCallback,
     data);
+
+  g_hash_table_unref(hints_table);
 }
 
 void ScopeProxy::Impl::Activate(std::string const& uri, uint activate_type, glib::HintsMap const& hints, ScopeProxy::ActivateCallback const& callback, GCancellable* cancellable)
@@ -524,7 +520,7 @@ void ScopeProxy::Impl::Activate(std::string const& uri, uint activate_type, glib
   ActivateData* data = new ActivateData();
   data->callback = callback;
 
-  GHashTable* hints_table = glib::hashtable_from_hintsmap(hints, g_hash_table_new(g_direct_hash, g_direct_equal));
+  GHashTable* hints_table = glib::hashtable_from_hintsmap(hints);
 
   unity_protocol_scope_proxy_activate(scope_proxy_,
                                       channel().c_str(),
@@ -534,6 +530,7 @@ void ScopeProxy::Impl::Activate(std::string const& uri, uint activate_type, glib
                                       target_canc,
                                       Impl::OnScopeActivateCallback,
                                       data);
+  g_hash_table_unref(hints_table);
 }
 
 void ScopeProxy::Impl::UpdatePreviewProperty(std::string const& uri, glib::HintsMap const& hints, ScopeProxy::UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable)
@@ -565,7 +562,7 @@ void ScopeProxy::Impl::UpdatePreviewProperty(std::string const& uri, glib::Hints
   UpdatePreviewPropertyData* data = new UpdatePreviewPropertyData();
   data->callback = callback;
 
-  GHashTable* hints_table = glib::hashtable_from_hintsmap(hints, g_hash_table_new(g_direct_hash, g_direct_equal));
+  GHashTable* hints_table = glib::hashtable_from_hintsmap(hints);
 
   unity_protocol_scope_proxy_update_preview_property(scope_proxy_,
                                                      channel().c_str(),
@@ -574,13 +571,8 @@ void ScopeProxy::Impl::UpdatePreviewProperty(std::string const& uri, glib::Hints
                                                      target_canc,
                                                      Impl::OnScopeUpdatePreviewPropertyCallback,
                                                      data);
-}
 
-void ScopeProxy::Impl::OnScopeChannelsInvalidated(UnityProtocolScopeProxy* proxy)
-{
-  LOG_WARNING(logger) << "Channels for scope '" << scope_data_->dbus_path() << "' have been invalidated. Attempting proxy re-creation.";
-  DestroyProxy();
-  CreateProxy();
+  g_hash_table_unref(hints_table);
 }
 
 void ScopeProxy::Impl::OnScopeVisibleChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param)
@@ -686,8 +678,8 @@ DeeFilter* ScopeProxy::Impl::GetFilterForCategory(unsigned category, DeeFilter* 
   return filter;
 }
 
-ScopeProxy::ScopeProxy(std::string const& scope_id)
-: pimpl(new Impl(this, ScopeData::ReadProtocolDataForId(scope_id)))
+ScopeProxy::ScopeProxy(ScopeData::Ptr const& scope_data)
+: pimpl(new Impl(this, scope_data))
 {
 }
 

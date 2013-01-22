@@ -34,6 +34,7 @@ public:
 
   virtual void LoadScopes();
   virtual ScopeDataList const& GetScopesData() const;
+  virtual ScopeData::Ptr GetScopeDataById(std::string const& scope_id) const;
 
   static GSettingsScopesReader::Ptr GetDefault();
 

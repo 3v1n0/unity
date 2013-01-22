@@ -57,9 +57,9 @@ TEST_F(TestScopeBar, TestAddScopes)
 {
   ScopeBar scope_bar;
 
-  scope_bar.AddScope(std::make_shared<MockScope>("testscope1.scope", "TestScope1", "icon-sub1.svg"));
-  scope_bar.AddScope(std::make_shared<MockScope>("testscope2.scope", "TestScope2", "icon-sub2.svg"));
-  scope_bar.AddScope(std::make_shared<MockScope>("testscope3.scope", "TestScope3", "icon-sub3.svg"));
+  scope_bar.AddScope(std::make_shared<MockScope>(std::make_shared<MockScopeData>("testscope1.scope"), "TestScope1", "icon-sub1.svg"));
+  scope_bar.AddScope(std::make_shared<MockScope>(std::make_shared<MockScopeData>("testscope2.scope"), "TestScope2", "icon-sub2.svg"));
+  scope_bar.AddScope(std::make_shared<MockScope>(std::make_shared<MockScopeData>("testscope3.scope"), "TestScope3", "icon-sub3.svg"));
 
   CheckSize(scope_bar, 3);
 }
@@ -71,9 +71,9 @@ TEST_F(TestScopeBar, TestActivate)
   std::string active_scope = "";
   scope_bar.scope_activated.connect([&active_scope](std::string const& activated) { active_scope = activated; } );
 
-  scope_bar.AddScope(std::make_shared<MockScope>("testscope1.scope", "TestScope1", "icon-sub1.svg"));
-  scope_bar.AddScope(std::make_shared<MockScope>("testscope2.scope", "TestScope2", "icon-sub2.svg"));
-  scope_bar.AddScope(std::make_shared<MockScope>("testscope3.scope", "TestScope3", "icon-sub3.svg"));
+  scope_bar.AddScope(std::make_shared<MockScope>(std::make_shared<MockScopeData>("testscope1.scope"), "TestScope1", "icon-sub1.svg"));
+  scope_bar.AddScope(std::make_shared<MockScope>(std::make_shared<MockScopeData>("testscope2.scope"), "TestScope2", "icon-sub2.svg"));
+  scope_bar.AddScope(std::make_shared<MockScope>(std::make_shared<MockScopeData>("testscope3.scope"), "TestScope3", "icon-sub3.svg"));
 
   scope_bar.Activate("testscope1.scope");
   EXPECT_EQ(active_scope, "testscope1.scope");
@@ -92,9 +92,9 @@ TEST_F(TestScopeBar, TestActivateNext)
   std::string active_scope = "";
   scope_bar.scope_activated.connect([&active_scope](std::string const& activated) { active_scope = activated; } );
 
-  scope_bar.AddScope(std::make_shared<MockScope>("testscope1.scope", "TestScope1", "icon-sub1.svg"));
-  scope_bar.AddScope(std::make_shared<MockScope>("testscope2.scope", "TestScope2", "icon-sub2.svg"));
-  scope_bar.AddScope(std::make_shared<MockScope>("testscope3.scope", "TestScope3", "icon-sub3.svg"));
+  scope_bar.AddScope(std::make_shared<MockScope>(std::make_shared<MockScopeData>("testscope1.scope"), "TestScope1", "icon-sub1.svg"));
+  scope_bar.AddScope(std::make_shared<MockScope>(std::make_shared<MockScopeData>("testscope2.scope"), "TestScope2", "icon-sub2.svg"));
+  scope_bar.AddScope(std::make_shared<MockScope>(std::make_shared<MockScopeData>("testscope3.scope"), "TestScope3", "icon-sub3.svg"));
 
   scope_bar.ActivateNext();
   EXPECT_EQ(active_scope, "testscope1.scope");
@@ -116,9 +116,9 @@ TEST_F(TestScopeBar, TestActivatePrevious)
   std::string active_scope = "";
   scope_bar.scope_activated.connect([&active_scope](std::string const& activated) { active_scope = activated; } );
 
-  scope_bar.AddScope(std::make_shared<MockScope>("testscope1.scope", "TestScope1", "icon-sub1.svg"));
-  scope_bar.AddScope(std::make_shared<MockScope>("testscope2.scope", "TestScope2", "icon-sub2.svg"));
-  scope_bar.AddScope(std::make_shared<MockScope>("testscope3.scope", "TestScope3", "icon-sub3.svg"));
+  scope_bar.AddScope(std::make_shared<MockScope>(std::make_shared<MockScopeData>("testscope1.scope"), "TestScope1", "icon-sub1.svg"));
+  scope_bar.AddScope(std::make_shared<MockScope>(std::make_shared<MockScopeData>("testscope2.scope"), "TestScope2", "icon-sub2.svg"));
+  scope_bar.AddScope(std::make_shared<MockScope>(std::make_shared<MockScopeData>("testscope3.scope"), "TestScope3", "icon-sub3.svg"));
 
   scope_bar.ActivatePrevious();
   EXPECT_EQ(active_scope, "testscope3.scope");

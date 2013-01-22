@@ -22,6 +22,7 @@
 #define UNITY_SCOPE_DATA_H
 
 #include <NuxCore/Property.h>
+#include "GLibWrapper.h"
 
 namespace unity
 {
@@ -39,7 +40,6 @@ class ScopeData
 {
 public:
   typedef std::shared_ptr<ScopeData> Ptr;
-  typedef std::shared_ptr<ScopeData> C_Ptr;
   ScopeData();
 
   nux::Property<std::string> id;
@@ -59,7 +59,7 @@ public:
   
   nux::Property<bool> visible; // FIXME!
 
-  static ScopeData::Ptr ReadProtocolDataForId(std::string const& scope_id);
+  static ScopeData::Ptr ReadProtocolDataForId(std::string const& scope_id, glib::Error& error);
 };
 
 }

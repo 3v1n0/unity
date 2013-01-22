@@ -28,7 +28,6 @@ namespace unity
 {
 namespace dash
 {
-DECLARE_LOGGER(logger, "unity.dash.scopedata");
 
 namespace
 {
@@ -44,18 +43,16 @@ ScopeData::ScopeData()
 {
 }
 
-ScopeData::Ptr ScopeData::ReadProtocolDataForId(std::string const& scope_id)
+ScopeData::Ptr ScopeData::ReadProtocolDataForId(std::string const& scope_id, glib::Error& error)
 {
   ScopeData::Ptr data(new ScopeData());
 
-  glib::Error error;
   std::shared_ptr<UnityProtocolScopeRegistryScopeMetadata> meta_data(unity_protocol_scope_registry_scope_metadata_for_id(scope_id.c_str(), &error),
                                                                      safe_delete_scope_metadata);
 
   if (error)
   {
     data->id = scope_id;
-    LOG_DEBUG(logger) << "Error fetching metadata for scope: " << scope_id << " : " << error.Message();
   }
   else if (meta_data)
   {
@@ -84,8 +81,6 @@ ScopeData::Ptr ScopeData::ReadProtocolDataForId(std::string const& scope_id)
       keywords.push_back(value);
     }
     data->keywords = keywords;
-
-    LOG_DEBUG(logger) << "Creating scope: " << scope_id << " (" << data->dbus_path()  << " @ " << data->dbus_name() << ")";
   }
   return data;
 }

@@ -125,8 +125,16 @@ Variant::operator bool() const
   return bool(variant_);
 }
 
-GHashTable* hashtable_from_hintsmap(glib::HintsMap const& hints, GHashTable* hash_table)
+static void g_variant_unref0 (gpointer var)
 {
+  if (var)
+    g_variant_unref((GVariant*)var);
+}
+
+GHashTable* hashtable_from_hintsmap(glib::HintsMap const& hints)
+{
+  GHashTable* hash_table = g_hash_table_new_full(g_str_hash, g_direct_equal, g_free, g_variant_unref0);
+
   if (!hash_table)
     return nullptr;
 

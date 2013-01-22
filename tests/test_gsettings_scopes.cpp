@@ -136,7 +136,6 @@ TEST_F(TestGSettingsScopes, TestLensesAdded)
 
   // add another
   scopes.InsertScope("testscope2.scope", 1);
-
   EXPECT_EQ(scopes.count, (unsigned int)2);
   EXPECT_EQ(scopes_reordered, (unsigned int)0);
 

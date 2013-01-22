@@ -234,7 +234,7 @@ void Preview::Impl::EmitClosed() const
   if (properties.ASVToHints(property_hints))
     owner_->Update(property_hints);
   else
-    g_assert(false);
+    LOG_ERROR(logger) << "EmitClosed could not convert property hints to variant for " << owner_->preview_uri.Get();
 }
 
 Preview::Preview(glib::Object<GObject> const& proto_obj)

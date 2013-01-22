@@ -33,7 +33,7 @@ public:
   ~Impl();
 
   void LoadScopes();
-  void InsertScope(std::string const& scope, unsigned index);
+  void InsertScope(ScopeData::Ptr const& data, unsigned index);
   void RemoveScope(std::string const& scope);
 
   ScopeList const& GetScopes() const;
@@ -66,9 +66,9 @@ void Scopes::Impl::UpdateScopes(ScopeDataList const& scopes_list)
 {
   // insert new.
   int index = 0;
-  for (ScopeData::C_Ptr const& scope_data: scopes_list)  
+  for (ScopeData::Ptr const& scope_data: scopes_list)  
   {
-    InsertScope(scope_data->id(), index++);
+    InsertScope(scope_data, index++);
   }
 
   // remove old.
@@ -77,7 +77,7 @@ void Scopes::Impl::UpdateScopes(ScopeDataList const& scopes_list)
   {
     auto scope_data_position = std::find_if(scopes_list.begin(),
                                             scopes_list.end(),
-                                            [scope](ScopeData::C_Ptr const& data) { return data->id() == scope->id(); });
+                                            [scope](ScopeData::Ptr const& data) { return data->id() == scope->id(); });
     if (scope_data_position == scopes_list.end())
     {
       remove_scopes.push_back(scope->id());
@@ -99,17 +99,20 @@ void Scopes::Impl::LoadScopes()
   UpdateScopes(scopes_reader_->GetScopesData());
 }
 
-void Scopes::Impl::InsertScope(std::string const& scope_id, unsigned index)
+void Scopes::Impl::InsertScope(ScopeData::Ptr const& scope_data, unsigned index)
 {
+  if (!scope_data)
+    return;
+
   index = std::min(index, static_cast<unsigned>(scopes_.size()));
 
   auto start = scopes_.begin();
   auto scope_position = std::find_if(scopes_.begin(),
                                      scopes_.end(),
-                                     [scope_id](Scope::Ptr const& value) { return value->id() == scope_id; });
+                                     [scope_data](Scope::Ptr const& value) { return value->id() == scope_data->id(); });
   if (scope_position == scopes_.end())
   {
-    Scope::Ptr scope(owner_->CreateScope(scope_id));
+    Scope::Ptr scope(owner_->CreateScope(scope_data));
     if (scope)
     {
       scopes_.insert(start+index, scope);
@@ -239,7 +242,12 @@ Scope::Ptr Scopes::GetScopeForShortcut(std::string const& scope_shortcut) const
 
 void Scopes::InsertScope(std::string const& scope_id, unsigned index)
 {
-  pimpl->InsertScope(scope_id, index);
+  if (!pimpl->scopes_reader_)
+    return;
+
+  ScopeData::Ptr scope_data(pimpl->scopes_reader_->GetScopeDataById(scope_id));
+  if (scope_data)
+    pimpl->InsertScope(scope_data, index);
 }
 
 void Scopes::RemoveScope(std::string const& scope_id)
@@ -247,9 +255,13 @@ void Scopes::RemoveScope(std::string const& scope_id)
   pimpl->RemoveScope(scope_id);
 }
 
-Scope::Ptr Scopes::CreateScope(std::string const& scope_id)
+Scope::Ptr Scopes::CreateScope(ScopeData::Ptr const& scope_data)
 {
-  Scope::Ptr scope(new Scope(scope_id));
+  if (!scope_data)
+    return Scope::Ptr();
+
+  LOG_DEBUG(logger) << "Creating scope: " << scope_data->id() << " (" << scope_data->dbus_path()  << " @ " << scope_data->dbus_name() << ")";
+  Scope::Ptr scope(new Scope(scope_data));
   scope->Init();
   return scope;
 }

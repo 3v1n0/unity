@@ -25,6 +25,7 @@ namespace unity
 {
 namespace dash
 {
+DECLARE_LOGGER(logger, "unity.dash.gsettingsscopereader");
 
 namespace
 {
@@ -94,13 +95,19 @@ void GSettingsScopesReader::Impl::LoadScopes()
   // insert new
   for (std::string const& scope_id : tmp_scope_ids)
   {
-    auto match_scope_data_to_id = [scope_id](ScopeData::C_Ptr const& scope_data) { return scope_data->id() == scope_id; };
+    auto match_scope_data_to_id = [scope_id](ScopeData::Ptr const& scope_data) { return scope_data->id() == scope_id; };
 
-    ScopeData::C_Ptr scope;
+    ScopeData::Ptr scope;
     auto scope_position = std::find_if(old_scopes_order.begin(), old_scopes_order.end(), match_scope_data_to_id);
     if (scope_position == old_scopes_order.end())
     {
-      scope = ScopeData::ReadProtocolDataForId(scope_id);
+      glib::Error error;
+      scope = ScopeData::ReadProtocolDataForId(scope_id, error);
+      if (error)
+      {
+        LOG_WARN(logger) << "Error fetching protocol metadata for scope: " << scope_id << " : " << error.Message();
+        continue;
+      }
     }
     else
     {
@@ -131,6 +138,20 @@ ScopeDataList const& GSettingsScopesReader::GetScopesData() const
   if (!pimpl->loaded_)
     pimpl->LoadScopes();
   return pimpl->scopes_order_;  
+}
+
+ScopeData::Ptr GSettingsScopesReader::GetScopeDataById(std::string const& scope_id) const
+{
+  if (!pimpl->loaded_)
+    pimpl->LoadScopes();
+
+  auto match_scope_data_to_id = [scope_id](ScopeData::Ptr const& scope_data) { return scope_data->id() == scope_id; };
+  auto scope_position = std::find_if(pimpl->scopes_order_.begin(), pimpl->scopes_order_.end(), match_scope_data_to_id);
+
+  if (scope_position == pimpl->scopes_order_.end())
+    return ScopeData::Ptr();
+
+  return *scope_position;
 }
 
 GSettingsScopesReader::Ptr GSettingsScopesReader::GetDefault()

@@ -6,7 +6,7 @@
 #include "config.h"
 
 static bool wait_until_test_service_appears();
-// static void tell_service_to_exit();
+static void tell_service_to_exit();
 
 int main(int argc, char** argv)
 {
@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 
   int ret = RUN_ALL_TESTS();
 
-  //tell_service_to_exit();
+  tell_service_to_exit();
 
   return ret;
 }
@@ -73,19 +73,19 @@ static bool wait_until_test_service_appears()
   return (have_name && !timeout_reached);
 }
 
-// static void tell_service_to_exit()
-// {
-//   // Ask the service to exit
-//   GDBusConnection* connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
-//   g_dbus_connection_call_sync(connection,
-//                               "com.canonical.Unity.Test",
-//                               "/com/canonical/unity/test/controller",
-//                               "com.canonical.Unity.Test",
-//                               "Exit",
-//                               NULL,
-//                               NULL,
-//                               G_DBUS_CALL_FLAGS_NONE,
-//                               -1,
-//                               NULL, NULL);
-//   g_object_unref(connection);
-// }
+static void tell_service_to_exit()
+{
+  // Ask the service to exit
+  GDBusConnection* connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
+  g_dbus_connection_call_sync(connection,
+                              "com.canonical.Unity.Test",
+                              "/com/canonical/unity/test/controller",
+                              "com.canonical.Unity.Test",
+                              "Exit",
+                              NULL,
+                              NULL,
+                              G_DBUS_CALL_FLAGS_NONE,
+                              -1,
+                              NULL, NULL);
+  g_object_unref(connection);
+}

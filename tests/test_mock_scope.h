@@ -83,15 +83,24 @@ protected:
   bool connected_;
 };
 
+class MockScopeData : public ScopeData
+{
+public:
+  MockScopeData(std::string const& scope_id)
+  {
+    id = scope_id;
+  }
+};
+
 class MockScope : public Scope
 {
 public:
   typedef std::shared_ptr<MockScope> Ptr;
 
-  MockScope(std::string const& scope_id,
+  MockScope(ScopeData::Ptr const& scope_data,
             std::string const& name = "",
             std::string const& icon_hint = "")
-  : Scope(scope_id)
+  : Scope(scope_data)
   {
     proxy_func = [name, icon_hint]()
     {
@@ -119,9 +128,9 @@ public:
   using GSettingsScopes::RemoveScope;
 
 protected:
-  virtual Scope::Ptr CreateScope(std::string const& scope_id)
+  virtual Scope::Ptr CreateScope(ScopeData::Ptr const& scope_data)
   {
-    Scope::Ptr scope(new MockScope(scope_id));
+    Scope::Ptr scope(new MockScope(scope_data));
     return scope;
   }
 };

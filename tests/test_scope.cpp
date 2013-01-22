@@ -39,9 +39,15 @@ const std::string SCOPE_NAME = "testscope1.scope";
 class TestScope : public ::testing::Test
 {
 public:
-  TestScope()
+  TestScope() { }
+
+  virtual void SetUp()
   {
-    scope_.reset(new Scope(SCOPE_NAME));
+    glib::Error err;
+    ScopeData::Ptr data(ScopeData::ReadProtocolDataForId(SCOPE_NAME, err));
+    ASSERT_TRUE(err ? false : true);
+
+    scope_.reset(new Scope(data));
     scope_->Init();
     scope_->Connect();
 

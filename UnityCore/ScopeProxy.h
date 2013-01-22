@@ -30,7 +30,7 @@ namespace dash
 class ScopeProxy : public ScopeProxyInterface
 {
 public:
-  ScopeProxy(std::string const& scope_id);
+  ScopeProxy(ScopeData::Ptr const& scope_data);
   ~ScopeProxy();
 
   virtual void CreateProxy();

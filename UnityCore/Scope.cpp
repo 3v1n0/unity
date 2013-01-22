@@ -33,7 +33,7 @@ DECLARE_LOGGER(logger, "unity.dash.scope");
 class Scope::Impl
 {
 public:
-  Impl(Scope* owner, std::string const& scope_id);
+  Impl(Scope* owner, ScopeData::Ptr const& scope_data);
   ~Impl();
 
   void Init();
@@ -44,16 +44,16 @@ public:
   DeeFilter* GetFilterForCategory(unsigned category, DeeFilter* filter)  const;
 
   Scope* owner_;
-  std::string scope_id_;
+  ScopeData::Ptr scope_data_;
   ScopeProxyInterface::Ptr proxy_;
 
   typedef std::shared_ptr<sigc::connection> ConnectionPtr;
   std::vector<ConnectionPtr> property_connections;
 };
 
-Scope::Impl::Impl(Scope* owner, std::string const& scope_id)
+Scope::Impl::Impl(Scope* owner, ScopeData::Ptr const& scope_data)
 : owner_(owner)
-, scope_id_(scope_id)
+, scope_data_(scope_data)
 {
 }
 
@@ -88,7 +88,7 @@ void Scope::Impl::Init()
     property_connections.push_back(utils::ConnectProperties(owner_->query_pattern, proxy_->query_pattern));
     property_connections.push_back(utils::ConnectProperties(owner_->shortcut, proxy_->shortcut));
 
-    owner_->id.SetGetterFunction([this]() { return scope_id_; });
+    owner_->id.SetGetterFunction([this]() { return scope_data_->id(); });
 
     owner_->results.SetGetterFunction([this]() { return proxy_->results(); });
     proxy_->results.changed.connect([this](Results::Ptr const& value) { owner_->results.EmitChanged(value); });
@@ -146,8 +146,8 @@ void Scope::Impl::OnActivateReply(std::string const& uri, ScopeHandledType handl
   }
 }
 
-Scope::Scope(std::string const& scope_id)
-: pimpl(new Impl(this, scope_id))
+Scope::Scope(ScopeData::Ptr const& scope_data)
+: pimpl(new Impl(this, scope_data))
 {
 }
 
@@ -208,7 +208,7 @@ Results::Ptr Scope::GetResultsForCategory(unsigned category) const
 
 ScopeProxyInterface::Ptr Scope::CreateProxyInterface() const
 {
-  return ScopeProxyInterface::Ptr(new ScopeProxy(pimpl->scope_id_));
+  return ScopeProxyInterface::Ptr(new ScopeProxy(pimpl->scope_data_));
 }
 
 

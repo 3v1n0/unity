@@ -28,6 +28,7 @@ namespace unity
 {
 namespace dash
 {
+DECLARE_LOGGER(logger, "unity.dash.musicpreview");
 
 class MusicPreview::Impl
 {
@@ -76,7 +77,7 @@ void MusicPreview::Impl::PlayUri(std::string const& uri) const
   if (properties.ASVToHints(property_hints))
     owner_->Update(property_hints);
   else
-    g_assert(false);
+    LOG_ERROR(logger) << "PlayUri could not convert property hints to variant for " << uri;
 }
 
 void MusicPreview::Impl::PauseUri(std::string const& uri) const
@@ -92,7 +93,7 @@ void MusicPreview::Impl::PauseUri(std::string const& uri) const
   if (properties.ASVToHints(property_hints))
     owner_->Update(property_hints);
   else
-    g_assert(false);
+    LOG_ERROR(logger) << "PauseUri could not convert property hints to variant for " << uri;
 }
 
 MusicPreview::MusicPreview(unity::glib::Object<GObject> const& proto_obj)

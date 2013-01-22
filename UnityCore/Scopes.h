@@ -31,7 +31,7 @@ namespace unity
 namespace dash
 {
 
-typedef std::vector<ScopeData::C_Ptr> ScopeDataList;
+typedef std::vector<ScopeData::Ptr> ScopeDataList;
 
 class ScopesReader : public sigc::trackable, boost::noncopyable
 {
@@ -41,6 +41,8 @@ public:
 
   virtual void LoadScopes() = 0;
   virtual ScopeDataList const& GetScopesData() const = 0;
+
+  virtual ScopeData::Ptr GetScopeDataById(std::string const& scope_id) const = 0;
 
   sigc::signal<void, ScopeDataList const&> scopes_changed;
 };
@@ -79,7 +81,7 @@ protected:
   virtual void InsertScope(std::string const& scope_id, unsigned index);
   virtual void RemoveScope(std::string const& scope_id);
 
-  virtual Scope::Ptr CreateScope(std::string const& scope_id);
+  virtual Scope::Ptr CreateScope(ScopeData::Ptr const& scope_data);
 
 private:
   class Impl;
