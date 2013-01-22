@@ -74,12 +74,6 @@ public:
                                       unsigned long special_keys_state);
   virtual nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
-  void SetFirstInTabOrder(nux::InputArea* area);
-  void SetLastInTabOrder(nux::InputArea* area);
-  void SetTabOrder(nux::InputArea* area, int index);
-  void SetTabOrderBefore(nux::InputArea* area, nux::InputArea* after);
-  void SetTabOrderAfter(nux::InputArea* area, nux::InputArea* before);
-
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {}
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {}
