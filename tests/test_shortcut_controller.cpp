@@ -39,6 +39,14 @@ struct MockBaseWindowRaiser : public shortcut::BaseWindowRaiser
 
   MOCK_METHOD1 (Raise, void(nux::ObjectPtr<nux::BaseWindow> window));
 };
+
+struct StandaloneModeller : shortcut::AbstractModeller
+{
+  shortcut::Model::Ptr GetCurrentModel() const
+  {
+    return std::make_shared<shortcut::Model>(std::list<shortcut::AbstractHint::Ptr>());
+  }
+};
 }
 
 namespace unity
@@ -50,8 +58,8 @@ class TestShortcutController : public Test
   struct MockShortcutController : public Controller
   {
     MockShortcutController(BaseWindowRaiser::Ptr const& base_window_raiser,
-                           shortcut::Model::Ptr const& model = nullptr)
-      : Controller(base_window_raiser, model)
+                           AbstractModeller::Ptr const& modeller)
+      : Controller(base_window_raiser, modeller)
     {}
 
     MOCK_METHOD1(SetOpacity, void(double));
@@ -68,8 +76,7 @@ class TestShortcutController : public Test
 public:
   TestShortcutController()
     : base_window_raiser_(std::make_shared<NiceMock<MockBaseWindowRaiser>>())
-    , model_(std::make_shared<Model>(std::list<shortcut::AbstractHint::Ptr>()))
-    , controller_(base_window_raiser_, model_)
+    , controller_(base_window_raiser_, std::make_shared<StandaloneModeller>())
     , animation_controller_(tick_source_)
   {
     ON_CALL(controller_, SetOpacity(_))
@@ -79,7 +86,6 @@ public:
   MockUScreen uscreen;
   Settings unity_settings;
   MockBaseWindowRaiser::Ptr base_window_raiser_;
-  Model::Ptr model_;
   NiceMock<MockShortcutController> controller_;
 
   nux::animation::TickSource tick_source_;
@@ -91,16 +97,6 @@ TEST_F (TestShortcutController, WindowIsRaisedOnShow)
   EXPECT_CALL(*base_window_raiser_, Raise(_))
     .Times(1);
 
-  controller_.Show();
-  Utils::WaitForTimeout(1);
-}
-
-TEST_F (TestShortcutController, WindowIsNotRaisedOnShowWithNullModel)
-{
-  EXPECT_CALL(*base_window_raiser_, Raise(_))
-    .Times(0);
-
-  controller_.SetModel(nullptr);
   controller_.Show();
   Utils::WaitForTimeout(1);
 }
