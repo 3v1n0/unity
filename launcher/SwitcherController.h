@@ -58,121 +58,119 @@ enum class ShowMode
 
 class Controller : public debug::Introspectable
 {
-  public:
-    class Impl;
-    typedef std::function<nux::ObjectPtr<nux::BaseWindow>()> WindowCreator;
-    typedef std::unique_ptr<Impl> ImplPtr;
-    typedef std::shared_ptr<Controller> Ptr;
+public:
+  class Impl;
+  typedef std::function<nux::ObjectPtr<nux::BaseWindow>()> WindowCreator;
+  typedef std::unique_ptr<Impl> ImplPtr;
+  typedef std::shared_ptr<Controller> Ptr;
 
-  public:
+public:
+  Controller(WindowCreator const& create_window = nullptr);
 
-    Controller(WindowCreator const& create_window = nullptr);
+  void Show(ShowMode show,
+            SortMode sort,
+            std::vector<launcher::AbstractLauncherIcon::Ptr> results);
+  void Hide(bool accept_state=true);
 
-    void Show(ShowMode show,
-              SortMode sort,
-              std::vector<launcher::AbstractLauncherIcon::Ptr> results);
-    void Hide(bool accept_state=true);
+  bool CanShowSwitcher(const std::vector<launcher::AbstractLauncherIcon::Ptr>& resutls) const;
 
-    bool CanShowSwitcher(const std::vector<launcher::AbstractLauncherIcon::Ptr>& resutls) const;
+  bool Visible();
 
-    bool Visible();
+  void Next();
+  void Prev();
 
-    void Next();
-    void Prev();
+  void NextDetail();
+  void PrevDetail();
 
-    void NextDetail();
-    void PrevDetail();
+  void Select(int index);
 
-    void Select(int index);
+  void SetDetail(bool detail,
+                 unsigned int min_windows = 1);
 
-    void SetDetail(bool detail,
-                   unsigned int min_windows = 1);
+  void SelectFirstItem();
 
-    void SelectFirstItem();
+  void SetWorkspace(nux::Geometry geo,
+                    int monitor);
 
-    void SetWorkspace(nux::Geometry geo,
-                      int monitor);
+  SwitcherView* GetView();
 
-    SwitcherView * GetView ();
+  ui::LayoutWindow::Vector ExternalRenderTargets();
 
-    ui::LayoutWindow::Vector ExternalRenderTargets ();
+  guint GetSwitcherInputWindowId() const;
 
-    guint GetSwitcherInputWindowId() const;
+  bool IsShowDesktopDisabled() const;
+  void SetShowDesktopDisabled(bool disabled);
+  int StartIndex() const;
 
-    bool IsShowDesktopDisabled() const;
-    void SetShowDesktopDisabled(bool disabled);
-    int StartIndex() const;
+  sigc::connection ConnectToViewBuilt(sigc::slot<void> const&);
+  void SetDetailOnTimeout(bool timeout);
 
-    sigc::connection ConnectToViewBuilt (sigc::slot<void> const&);
-    void SetDetailOnTimeout(bool timeout);
+  nux::Property<bool> detail_on_timeout;
+  nux::Property<int>  detail_timeout_length;
+  nux::Property<int>  initial_detail_timeout_length;
 
-    nux::Property<bool> detail_on_timeout;
-    nux::Property<int>  detail_timeout_length;
-    nux::Property<int>  initial_detail_timeout_length;
+private:
+  // Introspectable methods
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
-  private:
-    // Introspectable methods
-    std::string GetName() const;
-    void AddProperties(GVariantBuilder* builder);
-
-  private:
-    ImplPtr impl_;
+private:
+  ImplPtr impl_;
 };
 
 class Controller::Impl : public debug::Introspectable
 {
-  public:
-    Impl(Controller* obj)
-    : obj_(obj)
-    {}
+public:
+  Impl(Controller* obj)
+  : obj_(obj)
+  {}
 
-    virtual ~Impl () {}
+  virtual ~Impl() {}
 
-    virtual void Show(ShowMode show,
-                      SortMode sort,
-                      std::vector<launcher::AbstractLauncherIcon::Ptr> results) = 0;
-    virtual void Hide(bool accept_state) = 0;
+  virtual void Show(ShowMode show,
+                    SortMode sort,
+                    std::vector<launcher::AbstractLauncherIcon::Ptr> results) = 0;
+  virtual void Hide(bool accept_state) = 0;
 
-    virtual bool CanShowSwitcher(const std::vector<launcher::AbstractLauncherIcon::Ptr>& resutls) const = 0;
+  virtual bool CanShowSwitcher(const std::vector<launcher::AbstractLauncherIcon::Ptr>& resutls) const = 0;
 
-    virtual bool Visible() = 0;
+  virtual bool Visible() = 0;
 
-    virtual void Next() = 0;
-    virtual void Prev() = 0;
+  virtual void Next() = 0;
+  virtual void Prev() = 0;
 
-    virtual void NextDetail() = 0;
-    virtual void PrevDetail() = 0;
+  virtual void NextDetail() = 0;
+  virtual void PrevDetail() = 0;
 
-    virtual void Select(int index) = 0;
+  virtual void Select(int index) = 0;
 
-    virtual void SetDetail(bool detail,
-                           unsigned int min_windows) = 0;
+  virtual void SetDetail(bool detail,
+                         unsigned int min_windows) = 0;
 
-    virtual void SelectFirstItem() = 0;
+  virtual void SelectFirstItem() = 0;
 
-    virtual void SetWorkspace(nux::Geometry geo,
-                              int monitor) = 0;
+  virtual void SetWorkspace(nux::Geometry geo,
+                            int monitor) = 0;
 
-    virtual SwitcherView * GetView () = 0;
+  virtual SwitcherView* GetView() = 0;
 
-    virtual ui::LayoutWindow::Vector ExternalRenderTargets () = 0;
+  virtual ui::LayoutWindow::Vector ExternalRenderTargets() = 0;
 
-    virtual guint GetSwitcherInputWindowId() const = 0;
+  virtual guint GetSwitcherInputWindowId() const = 0;
 
-    virtual bool IsShowDesktopDisabled() const = 0;
-    virtual void SetShowDesktopDisabled(bool disabled) = 0;
-    virtual int StartIndex() const = 0;
+  virtual bool IsShowDesktopDisabled() const = 0;
+  virtual void SetShowDesktopDisabled(bool disabled) = 0;
+  virtual int StartIndex() const = 0;
 
-    sigc::signal<void> view_built;
-  protected:
-    Controller* obj_;
+  sigc::signal<void> view_built;
+protected:
+  Controller* obj_;
 };
 
 class ShellController : public Controller::Impl,
                         public sigc::trackable
 {
 public:
-
   nux::Property<int> timeout_length;
 
   ShellController(Controller* obj,
@@ -192,7 +190,7 @@ public:
   void NextDetail();
   void PrevDetail();
 
-  virtual void Select (int index);
+  virtual void Select(int index);
 
   void SetDetail(bool detail, unsigned int min_windows = 1);
 
@@ -202,7 +200,7 @@ public:
 
   virtual SwitcherView* GetView();
 
-  ui::LayoutWindow::Vector ExternalRenderTargets ();
+  ui::LayoutWindow::Vector ExternalRenderTargets();
 
   guint GetSwitcherInputWindowId() const;
 
