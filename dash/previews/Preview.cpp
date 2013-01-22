@@ -142,7 +142,7 @@ nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList action
         dash::Preview::ActionPtr action = actions[action_iter];
 
         ActionButton* button = new ActionButton(action->id, action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
-        tab_iterator_->AddAreaLast(button);
+        tab_iterator_->Append(button);
         AddChild(button);
         button->SetFont(style.action_font());
         button->SetExtraHint(action->extra_text, style.action_extra_font());
@@ -171,7 +171,7 @@ nux::Layout* Preview::BuildVerticalActionsLayout(dash::Preview::ActionPtrList ac
       dash::Preview::ActionPtr action = actions[action_iter++];
 
       ActionButton* button = new ActionButton(action->id, action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
-      tab_iterator_->AddAreaLast(button);
+      tab_iterator_->Append(button);
       AddChild(button);
       button->SetFont(style.action_font());
       button->SetExtraHint(action->extra_text, style.action_extra_font());
@@ -230,27 +230,27 @@ nux::Area* Preview::KeyNavIteration(nux::KeyNavDirection direction)
 
 void Preview::SetFirstInTabOrder(nux::InputArea* area)
 {
-  tab_iterator_->AddAreaFirst(area);
+  tab_iterator_->Prepend(area);
 }
 
 void Preview::SetLastInTabOrder(nux::InputArea* area)
 {
-  tab_iterator_->AddAreaLast(area);
+  tab_iterator_->Append(area);
 }
 
 void Preview::SetTabOrder(nux::InputArea* area, int index)
 {
-  tab_iterator_->AddArea(area, index);
+  tab_iterator_->Insert(area, index);
 }
 
 void Preview::SetTabOrderBefore(nux::InputArea* area, nux::InputArea* after)
 {
-  tab_iterator_->AddAreaBefore(area, after);
+  tab_iterator_->InsertBefore(area, after);
 }
 
 void Preview::SetTabOrderAfter(nux::InputArea* area, nux::InputArea* before)
 {
-  tab_iterator_->AddAreaAfter(area, before);
+  tab_iterator_->InsertAfter(area, before);
 }
 
 void Preview::OnNavigateIn()

@@ -65,20 +65,14 @@ public:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
-  static previews::Preview::Ptr PreviewForModel(dash::Preview::Ptr model);  
-  
+  static previews::Preview::Ptr PreviewForModel(dash::Preview::Ptr model);
+
   sigc::signal<void> request_close() const;
 
   virtual nux::Area* FindKeyFocusArea(unsigned int key_symbol,
                                       unsigned long x11_key_code,
                                       unsigned long special_keys_state);
   virtual nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
-
-  void SetFirstInTabOrder(nux::InputArea* area);
-  void SetLastInTabOrder(nux::InputArea* area);
-  void SetTabOrder(nux::InputArea* area, int index);
-  void SetTabOrderBefore(nux::InputArea* area, nux::InputArea* after);
-  void SetTabOrderAfter(nux::InputArea* area, nux::InputArea* before);
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {}
@@ -98,6 +92,12 @@ protected:
   nux::Layout* BuildVerticalActionsLayout(dash::Preview::ActionPtrList actions, std::list<nux::AbstractButton*>& buttons);
 
   void UpdateCoverArtImage(CoverArt* cover_art);
+
+  void SetFirstInTabOrder(nux::InputArea* area);
+  void SetLastInTabOrder(nux::InputArea* area);
+  void SetTabOrder(nux::InputArea* area, int index);
+  void SetTabOrderBefore(nux::InputArea* area, nux::InputArea* after);
+  void SetTabOrderAfter(nux::InputArea* area, nux::InputArea* before);
 
 protected:
   dash::Preview::Ptr preview_model_;

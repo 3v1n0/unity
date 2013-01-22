@@ -39,11 +39,11 @@ class TabIterator
 public:
   TabIterator() {}
 
-  void AddAreaFirst(nux::InputArea* area);
-  void AddAreaLast(nux::InputArea* area);
-  void AddArea(nux::InputArea* area, int index);
-  void AddAreaBefore(nux::InputArea* area, nux::InputArea* after);
-  void AddAreaAfter(nux::InputArea* area, nux::InputArea* before);
+  void Prepend(nux::InputArea* area);
+  void Append(nux::InputArea* area);
+  void Insert(nux::InputArea* area, int index);
+  void InsertBefore(nux::InputArea* area, nux::InputArea* after);
+  void InsertAfter(nux::InputArea* area, nux::InputArea* before);
   std::list<nux::InputArea*> const& GetTabAreas() const;
   nux::InputArea* DefaultFocus() const;
   nux::InputArea* FindKeyFocusArea(unsigned int key_symbol,
@@ -52,7 +52,7 @@ public:
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
 protected:
-  void RemoveAlreadyPresent(nux::InputArea* area);
+  void Remove(nux::InputArea* area);
 
   std::list<nux::InputArea*> areas_;
 };

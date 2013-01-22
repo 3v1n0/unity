@@ -30,7 +30,7 @@ namespace dash
 namespace previews
 {
 
-void TabIterator::RemoveAlreadyPresent(nux::InputArea* area)
+void TabIterator::Remove(nux::InputArea* area)
 {
   std::list<nux::InputArea*>::iterator it = std::find(areas_.begin(), areas_.end(),
     area);
@@ -38,21 +38,21 @@ void TabIterator::RemoveAlreadyPresent(nux::InputArea* area)
     areas_.erase(it);
 }
 
-void TabIterator::AddAreaFirst(nux::InputArea* area)
+void TabIterator::Prepend(nux::InputArea* area)
 {
-  RemoveAlreadyPresent(area);
+  Remove(area);
   areas_.push_front(area);
 }
 
-void TabIterator::AddAreaLast(nux::InputArea* area)
+void TabIterator::Append(nux::InputArea* area)
 {
-  RemoveAlreadyPresent(area);
+  Remove(area);
   areas_.push_back(area);
 }
 
-void TabIterator::AddArea(nux::InputArea* area, int index)
+void TabIterator::Insert(nux::InputArea* area, int index)
 {
-  RemoveAlreadyPresent(area);
+  Remove(area);
   std::list<nux::InputArea*>::iterator it = areas_.begin();
   if ((uint)index < areas_.size())
   {
@@ -63,17 +63,17 @@ void TabIterator::AddArea(nux::InputArea* area, int index)
     areas_.push_back(area);
 }
 
-void TabIterator::AddAreaBefore(nux::InputArea* area, nux::InputArea* after)
+void TabIterator::InsertBefore(nux::InputArea* area, nux::InputArea* after)
 {
-  RemoveAlreadyPresent(area);
+  Remove(area);
   std::list<nux::InputArea*>::iterator it = std::find(areas_.begin(), areas_.end(),
     after);
   areas_.insert(it, area);
 }
 
-void TabIterator::AddAreaAfter(nux::InputArea* area, nux::InputArea* before)
+void TabIterator::InsertAfter(nux::InputArea* area, nux::InputArea* before)
 {
-  RemoveAlreadyPresent(area);
+  Remove(area);
   std::list<nux::InputArea*>::iterator it = std::find(areas_.begin(), areas_.end(),
     before);
 
