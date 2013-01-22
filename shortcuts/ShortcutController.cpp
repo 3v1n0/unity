@@ -66,13 +66,13 @@ Controller::Controller(BaseWindowRaiser::Ptr const& base_window_raiser,
   });
 
   modeller->model_changed.connect([this] (Model::Ptr const& model) {
-    if (view_)
-    {
-      if (visible_)
-        model->Fill();
+    if (!view_)
+      return;
 
-      view_->SetModel(model);
-    }
+    if (visible_)
+      model->Fill();
+
+    view_->SetModel(model);
   });
 }
 
