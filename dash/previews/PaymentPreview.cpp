@@ -285,40 +285,19 @@ void PaymentPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_dra
     nux::Geometry const& base = GetGeometry();
     gfx_engine.PushClippingRectangle(base);
 
-//    if (!IsFullRedraw())
-//    {
-      printf("Drawin1!!!\n");
-//      nux::GetPainter().PushLayer(gfx_engine, details_bg_layer_->GetGeometry(), details_bg_layer_.get());
-      nux::TexCoordXForm cords;
-      cords.flip_v_coord = true;
-      cords.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-      cords.uoffset = 0;
-      cords.voffset = 0;
-      nux::ROPConfig rop;
-      rop.Blend = true;
-      rop.SrcBlend = GL_ONE;
-      rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-      nux::Color color0 = nux::Color(200, 1, 1, 0.1);
-      nux::Color color1 = nux::Color(1, 1, 1, 0.5);
-      nux::GetPainter().PushDrawCompositionLayer(gfx_engine, base,
-              content_data_layout_->BackupTexture(),
-              cords,
-              color0,
-              overlay_layout_->BackupTexture(),
-              cords,
-              color1,
-              nux::LAYER_BLEND_MODE_OVERLAY, true, rop);
-//    }
-/*    unsigned int alpha, src, dest = 0;
+    if (!IsFullRedraw())
+      nux::GetPainter().PushLayer(gfx_engine, details_bg_layer_->GetGeometry(), details_bg_layer_.get());
+
+    unsigned int alpha, src, dest = 0;
     gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
     gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-*/
+
     if (GetCompositionLayout())
       GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
 
-//    gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
+    gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
 
-//    if (!IsFullRedraw())
+    if (!IsFullRedraw())
       nux::GetPainter().PopBackground();
 
     gfx_engine.PopClippingRectangle();
@@ -376,7 +355,6 @@ void PaymentPreview::SetupViews()
   footer_layout_ = GetFooter();
   content_data_layout_->AddLayout(footer_layout_, 1);
 
-  content_data_layout_->SetRedirectRenderingToTexture(true);
   full_data_layout_->AddLayout(content_data_layout_);
 
   // layout to draw an overlay
@@ -391,7 +369,7 @@ void PaymentPreview::SetupViews()
   overlay_layout_->AddView(spinner_, 1, nux::MINOR_POSITION_CENTER);
   overlay_layout_->AddSpace(20, 1);
 
-  overlay_layout_->SetRedirectRenderingToTexture(true);
+  full_data_layout_->AddLayout(overlay_layout_);
 
   SetLayout(full_data_layout_);
 }
