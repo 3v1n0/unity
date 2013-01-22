@@ -161,25 +161,31 @@ TEST_F(TestActionLink, FontCorrectlyRetrieved)
 TEST_F(TestActionLink, LinkAlphaOnPressed)
 {
    ButtonVisualState state = ButtonVisualState::VISUAL_STATE_PRESSED;
-   EXPECT_EQ(4, action_link->GetLinkAlpha(state));
+   EXPECT_EQ(4, action_link->GetLinkAlpha(state, false));
 }
 
 TEST_F(TestActionLink, LinkAlphaOnNormal)
 {
    ButtonVisualState state = ButtonVisualState::VISUAL_STATE_NORMAL;
-   EXPECT_EQ(4, action_link->GetLinkAlpha(state));
+   EXPECT_EQ(4, action_link->GetLinkAlpha(state, false));
+}
+
+TEST_F(TestActionLink, LinkAlphaOnNormalButKeyboardFocused)
+{
+   ButtonVisualState state = ButtonVisualState::VISUAL_STATE_NORMAL;
+   EXPECT_EQ(1, action_link->GetLinkAlpha(state, true));
 }
 
 TEST_F(TestActionLink, LinkAlphaOnPrelight)
 {
    ButtonVisualState state = ButtonVisualState::VISUAL_STATE_PRELIGHT;
-   EXPECT_EQ(1, action_link->GetLinkAlpha(state));
+   EXPECT_EQ(1, action_link->GetLinkAlpha(state, false));
 }
 
 TEST_F(TestActionLink, LinkAlphaOnDisabled)
 {
    ButtonVisualState state = ButtonVisualState::VISUAL_STATE_DISABLED;
-   EXPECT_EQ(4, action_link->GetLinkAlpha(state));
+   EXPECT_EQ(4, action_link->GetLinkAlpha(state, false));
 }
 
 }
