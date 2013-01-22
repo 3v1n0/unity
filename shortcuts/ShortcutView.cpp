@@ -94,7 +94,9 @@ View::View()
 void View::SetModel(Model::Ptr model)
 {
   model_ = model;
-  model_->categories_per_column.changed.connect(sigc::hide(sigc::mem_fun(this, &View::RenderColumns)));
+
+  if (model_)
+    model_->categories_per_column.changed.connect(sigc::hide(sigc::mem_fun(this, &View::RenderColumns)));
 
   // Fills the columns...
   RenderColumns();
@@ -205,6 +207,12 @@ void View::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Ge
 void View::RenderColumns()
 {
   columns_layout_->Clear();
+
+  if (!model_)
+  {
+    QueueRelayout();
+    return;
+  }
 
   int i = 0;
   int column_idx = 0;
