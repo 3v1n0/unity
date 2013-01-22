@@ -19,6 +19,7 @@ from unity.emulators.icons import ApplicationLauncherIcon, ExpoLauncherIcon
 from unity.emulators.launcher import IconDragType
 from unity.tests.launcher import LauncherTestCase, _make_scenarios
 
+from Xlib import display
 from Xlib import Xutil
 
 logger = logging.getLogger(__name__)
@@ -49,6 +50,20 @@ class LauncherIconsTests(LauncherTestCase):
         self.assertThat(icon.visible, Eventually(Equals(True)))
 
         return icon
+
+    def ensure_calculator_in_launcher_and_not_running(self):
+        calc = self.start_app("Calculator")
+        calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
+        self.addCleanup(self.launcher_instance.unlock_from_launcher, calc_icon)
+        self.launcher_instance.lock_to_launcher(calc_icon)
+        self.close_all_app("Calculator")
+        self.assertThat(lambda: self.app_is_running("Calculator"), Eventually(Equals(False)))
+        return calc_icon
+
+    def get_startup_notification_timestamp(self, bamf_window):
+        atom = display.Display().intern_atom('_NET_WM_USER_TIME')
+        atom_type = display.Display().intern_atom('CARDINAL')
+        return bamf_window.x_win.get_property(atom, atom_type, 0, 1024).value[0]
 
     def test_bfb_tooltip_disappear_when_dash_is_opened(self):
         """Tests that the bfb tooltip disappear when the dash is opened."""
@@ -125,32 +140,14 @@ class LauncherIconsTests(LauncherTestCase):
 
     def test_launcher_uses_startup_notification(self):
         """Tests that unity uses startup notification protocol."""
-
-        if self.app_is_running("Calculator"):
-            self.skipTest("Calculator is already running.")
-
-        desktop_file = self.KNOWN_APPS["Calculator"]['desktop-file']
-        calc_icon = self.launcher.model.get_icon(desktop_id=desktop_file)
-
-        if calc_icon == None:
-            calc = self.start_app("Calculator")
-            desktop_file = calc.desktop_file
-            calc_icon = self.launcher.model.get_icon(desktop_id=desktop_file)
-
-            self.addCleanup(self.launcher_instance.unlock_from_launcher, calc_icon)
-            self.launcher_instance.lock_to_launcher(calc_icon)
-            self.close_all_app("Calculator")
-
+        calc_icon = self.ensure_calculator_in_launcher_and_not_running()
         self.addCleanup(self.close_all_app, "Calculator")
         self.launcher_instance.click_launcher_icon(calc_icon)
 
-        calc_app = Bamf().get_running_applications_by_desktop_file(desktop_file)[0]
+        calc_app = self.bamf.get_running_applications_by_desktop_file(calc_icon.desktop_id)[0]
         calc_window = calc_app.get_windows()[0]
 
-        atom = display.Display().intern_atom('_NET_WM_USER_TIME')
-        atom_type = display.Display().intern_atom('CARDINAL')
-        self.assertThat(lambda: calc_window.x_win.get_property(atom, atom_type, 0, 1024).value[0],\
-                        Eventually(Equals(calc_icon.startup_notification_timestamp)))
+        self.assertThat(lambda: self.get_startup_notification_timestamp(calc_window), Eventually(Equals(calc_icon.startup_notification_timestamp)))
 
     def test_clicking_icon_twice_initiates_spread(self):
         """This tests shows that when you click on a launcher icon twice,

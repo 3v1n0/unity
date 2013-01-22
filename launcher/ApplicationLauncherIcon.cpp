@@ -58,7 +58,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(ApplicationLauncherIcon);
 ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   : SimpleLauncherIcon(IconType::APPLICATION)
   , app_(app)
-  , startup_notification_timestamp_(0)
+  , _startup_notification_timestamp(0)
   , use_custom_bg_color_(false)
   , bg_color_(nux::color::White)
 {
@@ -481,7 +481,7 @@ void ApplicationLauncherIcon::AddProperties(GVariantBuilder* builder)
     .add("desktop_id", GetDesktopID())
     .add("xids", g_variant_builder_end(&xids_builder))
     .add("sticky", IsSticky())
-    .add("startup_notification_timestamp", startup_notification_timestamp_);
+    .add("startup_notification_timestamp", _startup_notification_timestamp);
 }
 
 void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& uris)
@@ -493,8 +493,8 @@ void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& 
   GdkDisplay* display = gdk_display_get_default();
   glib::Object<GdkAppLaunchContext> app_launch_context(gdk_display_get_app_launch_context(display));
 
-  startup_notification_timestamp_ = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
-  gdk_app_launch_context_set_timestamp(app_launch_context, startup_notification_timestamp_);
+  _startup_notification_timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+  gdk_app_launch_context_set_timestamp(app_launch_context, _startup_notification_timestamp);
 
   if (g_app_info_supports_uris(appInfo))
   {
@@ -531,7 +531,6 @@ void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& 
 
   UpdateQuirkTime(Quirk::STARTING);
 }
-
 
 void ApplicationLauncherIcon::OpenInstanceLauncherIcon()
 {
