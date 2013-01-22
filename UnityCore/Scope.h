@@ -69,7 +69,7 @@ public:
   typedef std::function<void(glib::HintsMap const&, glib::Error const&)> SearchCallback;
   virtual void Search(std::string const& search_hint, SearchCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
 
-  typedef std::function<void(std::string const& uri, ScopeHandledType handled_type, glib::Error const&)> ActivateCallback;
+  typedef std::function<void(std::string const&, ScopeHandledType, glib::Error const&)> ActivateCallback;
 
   virtual void Activate(std::string const& uri, ActivateCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
 

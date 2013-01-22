@@ -30,7 +30,6 @@ namespace
 {
 const std::string SETTINGS_NAME = "com.canonical.Unity.Dash";
 const std::string SCOPE_SETTINGS_KEY = "scopes";
-const std::string ALWAYS_SEARCH_SETTINGS_KEY = "always-search";
 }
 
 class GSettingsScopesReader::Impl
@@ -46,7 +45,6 @@ public:
 
   glib::Object<GSettings> settings_;
   glib::Signal<void, GSettings*, gchar*> scopes_changed;
-  glib::Signal<void, GSettings*, gchar*> always_search_changed;
 
   std::vector<std::string> get_string_vector(std::string const& setting)
   {
@@ -83,14 +81,12 @@ GSettingsScopesReader::Impl::Impl(GSettingsScopesReader* owner)
   };
 
   scopes_changed.Connect(settings_, "changed::"+SCOPE_SETTINGS_KEY, change_func);
-  always_search_changed.Connect(settings_, "changed::"+ALWAYS_SEARCH_SETTINGS_KEY, change_func);
 }
 
 
 void GSettingsScopesReader::Impl::LoadScopes()
 {
   std::vector<std::string> tmp_scope_ids = get_string_vector(SCOPE_SETTINGS_KEY);
-  std::vector<std::string> always_search = get_string_vector(ALWAYS_SEARCH_SETTINGS_KEY);
 
   ScopeDataList old_scopes_order = scopes_order_;
   scopes_order_.clear();
@@ -113,7 +109,6 @@ void GSettingsScopesReader::Impl::LoadScopes()
 
     if (scope)
     {
-      scope->always_search = std::find(always_search.begin(), always_search.end(), scope_id) != always_search.end();
       scopes_order_.push_back(scope);
     }
   }

@@ -59,8 +59,6 @@ public:
   
   nux::Property<bool> visible; // FIXME!
 
-  nux::Property<bool> always_search;
-
   static ScopeData::Ptr ReadProtocolDataForId(std::string const& scope_id);
 };
 

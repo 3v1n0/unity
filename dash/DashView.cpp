@@ -1308,11 +1308,11 @@ bool DashView::DoFallbackActivation(std::string const& fake_uri)
   size_t pos = fake_uri.find(":");
   std::string uri = fake_uri.substr(++pos);
 
-  LOG_DEBUG(logger) << "Fallback activating " << uri;
-
   if (g_str_has_prefix(uri.c_str(), "application://"))
   {
     std::string appname = uri.substr(14);
+
+    printf("Actrivating app: %s", appname.c_str());
     return LaunchApp(appname);
   }
   else if (g_str_has_prefix(uri.c_str(), "unity-runner://"))

@@ -348,7 +348,7 @@ void ScopeProxy::Impl::OnNewScope(GObject *source_object, GAsyncResult *res)
   // shared properties
   scope_data_->visible = unity_protocol_scope_proxy_get_visible(scope_proxy_);
   scope_data_->is_master = unity_protocol_scope_proxy_get_is_master(scope_proxy_);
-  scope_data_->search_hint = glib::StringRef(unity_protocol_scope_proxy_get_search_hint(scope_proxy_));
+  scope_data_->search_hint = glib::gchar_to_string(unity_protocol_scope_proxy_get_search_hint(scope_proxy_));
   // remote properties
   search_in_global = unity_protocol_scope_proxy_get_search_in_global(scope_proxy_);
   view_type = static_cast<ScopeViewType>(unity_protocol_scope_proxy_get_view_type(scope_proxy_));

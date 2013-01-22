@@ -117,6 +117,8 @@ void Scope::Impl::Activate(std::string const& uri, guint action_type, glib::Hint
 
 void Scope::Impl::OnActivateReply(std::string const& uri, ScopeHandledType handled, glib::HintsMap const& hints, glib::Error const& error)
 {
+  LOG_DEBUG(logger) << "Activation reply (handled:" << handled << ", error: " << (error ? "true" : "false") << ") for " <<  uri;
+
   if (static_cast<UnityProtocolHandledType>(handled) == UNITY_PROTOCOL_HANDLED_TYPE_SHOW_PREVIEW)
   {
     auto iter = hints.find("preview");

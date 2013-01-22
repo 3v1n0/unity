@@ -41,7 +41,6 @@ namespace
 
 ScopeData::ScopeData()
 : visible(true)
-, always_search(false)
 {
 }
 
@@ -60,20 +59,20 @@ ScopeData::Ptr ScopeData::ReadProtocolDataForId(std::string const& scope_id)
   }
   else if (meta_data)
   {
-    data->dbus_name = glib::StringRef(meta_data->dbus_name);
-    data->dbus_path = glib::StringRef(meta_data->dbus_path);
+    data->dbus_name = glib::gchar_to_string(meta_data->dbus_name);
+    data->dbus_path = glib::gchar_to_string(meta_data->dbus_path);
 
-    data->id = glib::StringRef(meta_data->id);
-    data->full_path = glib::StringRef(meta_data->full_path);
-    data->name = glib::StringRef(meta_data->name);
-    data->icon_hint = glib::StringRef(meta_data->icon);
-    data->category_icon_hint = glib::StringRef(meta_data->category_icon);
+    data->id = glib::gchar_to_string(meta_data->id);
+    data->full_path = glib::gchar_to_string(meta_data->full_path);
+    data->name = glib::gchar_to_string(meta_data->name);
+    data->icon_hint = glib::gchar_to_string(meta_data->icon);
+    data->category_icon_hint = glib::gchar_to_string(meta_data->category_icon);
     data->type = meta_data->type;
-    data->description = glib::StringRef(meta_data->description);
-    data->shortcut = glib::StringRef(meta_data->shortcut);
-    data->search_hint = glib::StringRef(meta_data->search_hint);
+    data->description = glib::gchar_to_string(meta_data->description);
+    data->shortcut = glib::gchar_to_string(meta_data->shortcut);
+    data->search_hint = glib::gchar_to_string(meta_data->search_hint);
     data->is_master = meta_data->is_master;
-    data->query_pattern = glib::StringRef(meta_data->query_pattern);
+    data->query_pattern = glib::gchar_to_string(meta_data->query_pattern);
 
     std::vector<std::string> keywords;
     for (GSList* v = meta_data->keywords; v; v = g_slist_next(v))
