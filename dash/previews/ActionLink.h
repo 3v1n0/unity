@@ -59,7 +59,7 @@ public:
 protected:
   nux::ObjectPtr<StaticCairoText> static_text_;
 
-  int GetLinkAlpha(nux::ButtonVisualState state);
+  int GetLinkAlpha(nux::ButtonVisualState state, bool keyboardFocus);
 
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {}
