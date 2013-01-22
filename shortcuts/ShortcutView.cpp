@@ -188,13 +188,10 @@ nux::LinearLayout* View::CreateIntermediateLayout()
 
 nux::Geometry View::GetBackgroundGeometry()
 {
-  nux::Geometry base = GetGeometry();
-  nux::Geometry background_geo;
+  nux::Geometry background_geo = GetGeometry();
 
-  background_geo.width = base.width;
-  background_geo.height = base.height;
-  background_geo.x = (base.width - background_geo.width)/2;
-  background_geo.y = (base.height - background_geo.height)/2;
+  background_geo.x = 0;
+  background_geo.y = 0;
 
   return background_geo;
 }
