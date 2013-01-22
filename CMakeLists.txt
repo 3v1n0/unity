@@ -14,7 +14,7 @@ set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "6.0")
 
-set (CMAKE_CXX_FLAGS "-DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive")
 set (CMAKE_CXX_FLAGS_DEBUG "-g3")
 set (CMAKE_CXX_FLAGS_RELEASE "")
 
@@ -199,7 +199,7 @@ set(UNITY_PLUGIN_SHARED_DEPS
     gtk+-3.0>=3.1
     indicator3-0.4>=0.4.90
     json-glib-1.0
-    libbamf3
+    libbamf3>=0.4.0
     libnotify
     libstartup-notification-1.0
     nux-4.0>=4.0.0

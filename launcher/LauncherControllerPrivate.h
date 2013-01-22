@@ -54,7 +54,7 @@ public:
 
   void UpdateNumWorkspaces(int workspaces);
 
-  Launcher* CreateLauncher(int monitor);
+  Launcher* CreateLauncher();
 
   void SaveIconsOrder();
   void SortAndUpdate();

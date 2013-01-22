@@ -25,8 +25,17 @@ namespace shortcut
 {
 
 Model::Model(std::list<AbstractHint::Ptr> const& hints)
+  : categories_per_column(3, [] (int& target, int const& new_value) {
+      int cat_per_col = std::max<int>(1, new_value);
+      if (cat_per_col != target)
+      {
+        target = cat_per_col;
+        return true;
+      }
+      return false;
+    })
 {
-  for (auto hint : hints)
+  for (auto const& hint : hints)
     AddHint(hint);
 }
 
@@ -44,8 +53,8 @@ void Model::AddHint(AbstractHint::Ptr const& hint)
 
 void Model::Fill()
 {
-  for (auto category : categories_)
-    for (auto item : hints_[category])
+  for (auto const& category : categories_)
+    for (auto const& item : hints_[category])
       item->Fill();
 }
 

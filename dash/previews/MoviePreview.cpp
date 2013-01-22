@@ -32,6 +32,7 @@
 #include <Nux/AbstractButton.h>
 
 #include "MoviePreview.h"
+#include "PreviewInfoHintWidget.h"
 #include "PreviewRatingsWidget.h"
  
 namespace unity
@@ -120,6 +121,8 @@ void MoviePreview::SetupViews()
   }
   previews::Style& style = dash::previews::Style::Instance();
 
+  auto on_mouse_down = [&](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_->OnMouseDown(x, y, button_flags, key_flags); };
+
   nux::HLayout* image_data_layout = new nux::HLayout();
   image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
 
@@ -143,15 +146,19 @@ void MoviePreview::SetupViews()
       app_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
       title_ = new StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
+      AddChild(title_.GetPointer());
       title_->SetLines(-1);
       title_->SetFont(style.title_font().c_str());
+      title_->mouse_click.connect(on_mouse_down);
       app_data_layout->AddView(title_.GetPointer(), 1);
 
       if (!preview_model_->subtitle.Get().empty())
       {
         subtitle_ = new StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
+        AddChild(subtitle_.GetPointer());
         subtitle_->SetLines(-1);
         subtitle_->SetFont(style.subtitle_size_font().c_str());
+        subtitle_->mouse_click.connect(on_mouse_down);
         app_data_layout->AddView(subtitle_.GetPointer(), 1);
       }
       /////////////////////
@@ -162,11 +169,13 @@ void MoviePreview::SetupViews()
       rating_->SetMinimumHeight(style.GetRatingWidgetHeight());
       rating_->SetRating(movie_preview_model->rating);
       rating_->SetReviews(movie_preview_model->num_ratings);
+      rating_->request_close().connect([this]() { preview_container_->request_close.emit(); });
 
       /////////////////////
       // Description
       nux::ScrollView* preview_info = new DetailsScrollView(NUX_TRACKER_LOCATION);
       preview_info->EnableHorizontalScrollBar(false);
+      preview_info->mouse_click.connect(on_mouse_down);
 
       nux::VLayout* preview_info_layout = new nux::VLayout();
       preview_info_layout->SetSpaceBetweenChildren(12);
@@ -176,16 +185,19 @@ void MoviePreview::SetupViews()
       {
         preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
         AddChild(preview_info_hints_.GetPointer());
+        preview_info_hints_->request_close().connect([this]() { preview_container_->request_close.emit(); });
         preview_info_layout->AddView(preview_info_hints_.GetPointer(), 0);
       }
 
       if (!preview_model_->description.Get().empty())
       {
         description_ = new StaticCairoText(preview_model_->description, false, NUX_TRACKER_LOCATION); // not escaped!
+        AddChild(description_.GetPointer());
         description_->SetFont(style.description_font().c_str());
         description_->SetTextAlignment(StaticCairoText::NUX_ALIGN_TOP);
         description_->SetLines(-style.GetDescriptionLineCount());
         description_->SetLineSpacing(style.GetDescriptionLineSpacing());
+        description_->mouse_click.connect(on_mouse_down);
         preview_info_layout->AddView(description_.GetPointer());
       }
       /////////////////////
@@ -205,6 +217,8 @@ void MoviePreview::SetupViews()
   
   image_data_layout->AddView(image_.GetPointer(), 0);
   image_data_layout->AddLayout(full_data_layout_, 1);
+
+  mouse_click.connect(on_mouse_down);
 
   SetLayout(image_data_layout);
 }

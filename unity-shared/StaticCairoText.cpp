@@ -34,6 +34,7 @@
 #include <pango/pangocairo.h>
 
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/Variant.h>
 
 #include "CairoTexture.h"
 
@@ -227,15 +228,11 @@ void StaticCairoText::PreLayoutManagement()
 {
   Geometry geo = GetGeometry();
 
-  if(pimpl->pre_layout_size_.width != geo.width
-    || pimpl->pre_layout_size_.height != geo.height)
-  {
-    pimpl->pre_layout_size_.width = geo.width;
-    pimpl->pre_layout_size_.height = geo.height;
+  pimpl->pre_layout_size_.width = geo.width;
+  pimpl->pre_layout_size_.height = geo.height;
 
-    SetBaseSize(pimpl->cached_extent_.width,
-                pimpl->cached_extent_.height);
-  }
+  SetBaseSize(pimpl->cached_extent_.width,
+              pimpl->cached_extent_.height);
   if (pimpl->textures2D_.empty())
   {
     pimpl->UpdateTexture();
@@ -281,6 +278,7 @@ void StaticCairoText::Draw(GraphicsEngine& gfxContext, bool forceDraw)
     pimpl->cached_base_.height = base.height;
     pimpl->UpdateTexture();
   }
+ 
 
   gfxContext.PushClippingRectangle(base);
 
@@ -493,6 +491,17 @@ std::vector<unsigned> StaticCairoText::GetTextureEndIndices()
     }
   }
   return list;
+}
+
+std::string StaticCairoText::GetName() const
+{
+  return "StaticCairoText";
+}
+
+void StaticCairoText::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper(builder)
+  .add(GetGeometry());
 }
 
 std::string StaticCairoText::Impl::GetEffectiveFont() const

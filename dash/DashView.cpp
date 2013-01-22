@@ -462,7 +462,9 @@ void DashView::AboutToShow()
   /* Give the lenses a chance to prep data before we map them  */
   lens_bar_->Activate(active_lens_view_->lens()->id());
   if (active_lens_view_)
-  { 
+  {
+    active_lens_view_->SetVisible(true);
+
     if (active_lens_view_->lens()->id() == "home.lens")
     {
       for (auto lens : lenses_.GetLenses())
@@ -511,6 +513,9 @@ void DashView::AboutToHide()
   home_lens_->view_type = ViewType::HIDDEN;
   LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HIDDEN
                             << " on '" << home_lens_->id() << "'";
+
+  if (active_lens_view_.IsValid())
+    active_lens_view_->SetVisible(false);
 
   // if a preview is open, close it
   if (preview_displaying_)

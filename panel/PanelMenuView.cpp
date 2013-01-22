@@ -775,8 +775,6 @@ void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::s
     gtk_render_layout(style_context, cr, x, y, layout);
   }
 
-  x += text_width;
-
   gtk_style_context_restore(style_context);
 }
 

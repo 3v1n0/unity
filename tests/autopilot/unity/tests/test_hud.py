@@ -337,6 +337,11 @@ class HudBehaviorTests(HudTestsBase):
         term_win = self.start_app_window("Terminal")
         self.assertProperty(term_win, is_focused=True)
 
+        # Here we anyway need a sleep, since even though the terminal can have
+        # keyboard focus, the shell inside might not be completely loaded yet
+        # and keystrokes might not get registered
+        sleep(1)
+
         #There's no easy way to read text from terminal, writing input
         #to a text file and then reading from there works.
         self.keyboard.type('echo "')
@@ -367,10 +372,11 @@ class HudBehaviorTests(HudTestsBase):
         self.keyboard.type("a")
         (x,y,w,h) = self.hud.view.geometry
 
-        self.mouse.move(w/2, 0)
+        # Specify a slower rate so that HUD can register the mouse movement properly
+        self.mouse.move(w/2, 0, rate=5)
         self.assertThat(self.hud.view.selected_button, Eventually(Equals(1)))
 
-        self.mouse.move(w/2, h)
+        self.mouse.move(w/2, h, rate=5)
         self.assertThat(self.hud.view.selected_button, Eventually(Equals(5)))
 
     def test_keyboard_steals_focus_from_mouse(self):
@@ -424,6 +430,7 @@ class HudBehaviorTests(HudTestsBase):
         must focus that window and close the hud.
         """
         char_win = self.start_app("Character Map")
+        self.assertProperty(char_win, is_active=True)
         self.keybinding("window/maximize")
         self.start_app("Calculator")
 
@@ -436,6 +443,20 @@ class HudBehaviorTests(HudTestsBase):
         self.mouse.click()
 
         self.assertProperty(char_win, is_active=True)
+
+    def test_hud_does_not_focus_wrong_window_after_alt_tab(self):
+        """Test the Hud focuses the correct window after an Alt+Tab."""
+
+        char_win = self.start_app('Character Map')
+        self.start_app('Calculator')
+
+        self.keybinding("switcher/reveal_normal")
+
+        self.hud.ensure_visible()
+        self.hud.ensure_hidden()
+
+        self.assertProperty(char_win, is_active=True)
+
 
 class HudLauncherInteractionsTests(HudTestsBase):
 
