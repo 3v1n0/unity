@@ -45,8 +45,7 @@ class Controller : public debug::Introspectable
 public:
   typedef std::shared_ptr<Controller> Ptr;
 
-  Controller(std::list<AbstractHint::Ptr> const& hints,
-             BaseWindowRaiser::Ptr const& raiser);
+  Controller(BaseWindowRaiser::Ptr const& raiser, Model::Ptr const& model = nullptr);
   virtual ~Controller();
 
   bool Show();
@@ -55,6 +54,7 @@ public:
   bool Visible() const;
   bool IsEnabled() const;
 
+  void SetModel(Model::Ptr const& model);
   void SetAdjustment(int x, int y);
   void SetEnabled(bool enabled);
   virtual void SetOpacity(double value);
