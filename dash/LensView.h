@@ -127,6 +127,7 @@ private:
   std::string get_search_string() const;
 
   Scope::Ptr scope_;
+  glib::Object<GCancellable> cancellable_;
   CategoryGroups categories_;
   ResultCounts counts_;
   bool initial_activation_;

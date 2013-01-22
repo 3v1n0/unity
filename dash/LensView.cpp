@@ -149,15 +149,16 @@ private:
 NUX_IMPLEMENT_OBJECT_TYPE(ScopeView);
 
 ScopeView::ScopeView(Scope::Ptr scope, nux::Area* show_filters)
-  : nux::View(NUX_TRACKER_LOCATION)
-  , filters_expanded(false)
-  , can_refine_search(false)
-  , scope_(scope)
-  , initial_activation_(true)
-  , no_results_active_(false)
-  , last_expanded_group_(nullptr)
-  , last_good_filter_model_(-1)
-  , filter_expansion_pushed_(false)
+: nux::View(NUX_TRACKER_LOCATION)
+, filters_expanded(false)
+, can_refine_search(false)
+, scope_(scope)
+, cancellable_(g_cancellable_new())
+, initial_activation_(true)
+, no_results_active_(false)
+, last_expanded_group_(nullptr)
+, last_good_filter_model_(-1)
+, filter_expansion_pushed_(false)
 {
   SetupViews(show_filters);
   SetupCategories();
@@ -217,6 +218,8 @@ ScopeView::~ScopeView()
   category_removed_connection.disconnect();
   filter_added_connection.disconnect();
   filter_removed_connection.disconnect();
+
+  g_cancellable_cancel(cancellable_);
 }
 
 void ScopeView::SetupViews(nux::Area* show_filters)
@@ -417,16 +420,15 @@ void ScopeView::OnCategoryAdded(Category const& category)
       {
         case ResultView::ActivateType::DIRECT:
         {
-          scope_->Activate(uri);
+          scope_->Activate(uri, nullptr, cancellable_);
         } break;
         case ResultView::ActivateType::PREVIEW:
         {
-          scope_->Preview(uri);
+          scope_->Preview(uri, nullptr, cancellable_);
         } break;
         default: break;
       };
     });
-
 
     /* Set up filter model for this category */
     grid->SetResultsModel(scope_->GetResultsForCategory(index));
@@ -674,7 +676,7 @@ void ScopeView::PerformSearch(std::string const& search_query, Scope::SearchCall
   search_string_ = search_query;
   if (scope_)
   {
-    scope_->Search(search_query, cb);
+    scope_->Search(search_query, cb, cancellable_);
   }
 }
 
