@@ -29,7 +29,7 @@
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 #include <Nux/AbstractButton.h>
- 
+
 #include "MusicPreview.h"
 #include "ActionButton.h"
 #include "Tracks.h"

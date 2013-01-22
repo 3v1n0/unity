@@ -99,6 +99,13 @@ protected:
 
   void UpdateCoverArtImage(CoverArt* cover_art);
 
+  void SetFirstInTabOrder(nux::InputArea* area);
+  void SetLastInTabOrder(nux::InputArea* area);
+  void SetTabOrder(nux::InputArea* area, int index);
+  void SetTabOrderBefore(nux::InputArea* area, nux::InputArea* after);
+  void SetTabOrderAfter(nux::InputArea* area, nux::InputArea* before);
+  void RemoveFromTabOrder(nux::InputArea* area);
+
 protected:
   dash::Preview::Ptr preview_model_;
   std::list<nux::AbstractButton*> action_buttons_;

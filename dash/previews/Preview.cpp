@@ -21,6 +21,7 @@
  */
 
 #include "Preview.h"
+#include "TabIterator.h"
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/CoverArt.h"
 #include <NuxCore/Logger.h>
@@ -91,181 +92,6 @@ previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
 
 NUX_IMPLEMENT_OBJECT_TYPE(Preview);
 
-class TabIterator
-{
-public:
-  TabIterator() {}
-
-  void RemoveAlreadyPresent(nux::InputArea* area)
-  {
-    std::list<nux::InputArea*>::iterator it = std::find(areas_.begin(), areas_.end(), area);
-    if (it != areas_.end())
-      areas_.erase(it);
-  }
-
-  void AddAreaFirst(nux::InputArea* area)
-  {
-    RemoveAlreadyPresent(area);
-    areas_.push_front(area);
-  }
-
-  void AddAreaLast(nux::InputArea* area)
-  {
-    RemoveAlreadyPresent(area);
-    areas_.push_back(area);
-  }
-
-  void AddArea(nux::InputArea* area, int index)
-  {
-    RemoveAlreadyPresent(area);
-    std::list<nux::InputArea*>::iterator it;
-    std::advance(it, index);
-    areas_.insert(it, area);
-  }
-
-  void AddAreaBefore(nux::InputArea* area, nux::InputArea* after)
-  {
-    RemoveAlreadyPresent(area);
-    std::list<nux::InputArea*>::iterator it = std::find(areas_.begin(), areas_.end(), after);
-
-    if (it != areas_.end())
-      --it;
-
-    areas_.insert(it, area);
-  }
-
-  void AddAreaAfter(nux::InputArea* area, nux::InputArea* before)
-  {
-    RemoveAlreadyPresent(area);
-    std::list<nux::InputArea*>::iterator it = std::find(areas_.begin(), areas_.end(), before);
-
-    if (it != areas_.end())
-      ++it;
-
-    areas_.insert(it, area);
-  }
-
-  std::list<nux::InputArea*> const& GetTabAreas() const { return areas_; }
-
-  nux::InputArea* DefaultFocus() const
-  {
-    if (areas_.empty())
-      return nullptr;
-
-    return *areas_.begin();
-  }
-
-  nux::InputArea* FindKeyFocusArea(unsigned int key_symbol,
-                                      unsigned long x11_key_code,
-                                      unsigned long special_keys_state)
-  {
-    if (areas_.empty())
-      return nullptr;
-
-    nux::InputArea* current_focus_area = nux::GetWindowCompositor().GetKeyFocusArea();
-    auto it = std::find(areas_.begin(), areas_.end(), current_focus_area);
-    if (it != areas_.end())
-      return current_focus_area;
-
-    return *areas_.begin();
-  }
-
-  nux::Area* KeyNavIteration(nux::KeyNavDirection direction)
-  {
-    if (areas_.empty())
-      return nullptr;
-
-    if (direction != nux::KEY_NAV_TAB_PREVIOUS && direction != nux::KEY_NAV_TAB_NEXT)
-    {
-      return nullptr;
-    }
-
-    nux::InputArea* current_focus_area = nux::GetWindowCompositor().GetKeyFocusArea();
-
-    if (current_focus_area)
-    {
-      auto it = std::find(areas_.begin(), areas_.end(), current_focus_area);
-      if (direction == nux::KEY_NAV_TAB_PREVIOUS)
-      {
-        if (it == areas_.begin())
-            return *areas_.end();
-        else
-        {
-          it--;
-          if (it == areas_.begin())
-            return *areas_.end();
-          return *it;
-        }
-      }
-      else if (direction == nux::KEY_NAV_TAB_NEXT)
-      {
-        if (it == areas_.end())
-        {
-          return *areas_.begin();
-        }
-        else
-        {
-          it++;
-          if (it == areas_.end())
-          {
-            return *areas_.begin();
-          }
-          return *it;
-        }
-      }
-    }
-    else
-    {
-      if (direction == nux::KEY_NAV_TAB_PREVIOUS)
-      {
-        return *areas_.end();
-      }
-      else if (direction == nux::KEY_NAV_TAB_NEXT)
-      {
-        return *areas_.begin();
-      }
-    }
-
-    return nullptr;
-  }
-
-  std::list<nux::InputArea*> areas_;
-};
-
-class TabIteratorHLayout  : public nux::HLayout
-{
-public:
-  TabIteratorHLayout(TabIterator* iterator)
-  :tab_iterator_(iterator)
-  {
-  }
-
-  nux::Area* KeyNavIteration(nux::KeyNavDirection direction)
-  {
-    return tab_iterator_->KeyNavIteration(direction);
-  }
-
-private:
-  TabIterator* tab_iterator_;
-};
-
-class TabIteratorVLayout  : public nux::VLayout
-{
-public:
-  TabIteratorVLayout(TabIterator* iterator)
-  :tab_iterator_(iterator)
-  {
-  }
-
-  nux::Area* KeyNavIteration(nux::KeyNavDirection direction)
-  {
-    return tab_iterator_->KeyNavIteration(direction);
-  }
-
-private:
-  TabIterator* tab_iterator_;
-};
-
 Preview::Preview(dash::Preview::Ptr preview_model)
   : View(NUX_TRACKER_LOCATION)
   , preview_model_(preview_model)
@@ -322,7 +148,7 @@ nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList action
         dash::Preview::ActionPtr action = actions[action_iter];
 
         ActionButton* button = new ActionButton(action->id, action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
-        tab_iterator_->AddAreaLast(button);
+        tab_iterator_->Append(button);
         AddChild(button);
         button->SetFont(style.action_font());
         button->SetExtraHint(action->extra_text, style.action_extra_font());
@@ -351,7 +177,7 @@ nux::Layout* Preview::BuildVerticalActionsLayout(dash::Preview::ActionPtrList ac
       dash::Preview::ActionPtr action = actions[action_iter++];
 
       ActionButton* button = new ActionButton(action->id, action->display_name, action->icon_hint, NUX_TRACKER_LOCATION);
-      tab_iterator_->AddAreaLast(button);
+      tab_iterator_->Append(button);
       AddChild(button);
       button->SetFont(style.action_font());
       button->SetExtraHint(action->extra_text, style.action_extra_font());
@@ -410,27 +236,32 @@ nux::Area* Preview::KeyNavIteration(nux::KeyNavDirection direction)
 
 void Preview::SetFirstInTabOrder(nux::InputArea* area)
 {
-  tab_iterator_->AddAreaFirst(area);
+  tab_iterator_->Prepend(area);
 }
 
 void Preview::SetLastInTabOrder(nux::InputArea* area)
 {
-  tab_iterator_->AddAreaLast(area);
+  tab_iterator_->Append(area);
 }
 
 void Preview::SetTabOrder(nux::InputArea* area, int index)
 {
-  tab_iterator_->AddArea(area, index);
+  tab_iterator_->Insert(area, index);
 }
 
 void Preview::SetTabOrderBefore(nux::InputArea* area, nux::InputArea* after)
 {
-  tab_iterator_->AddAreaBefore(area, after);
+  tab_iterator_->InsertBefore(area, after);
 }
 
 void Preview::SetTabOrderAfter(nux::InputArea* area, nux::InputArea* before)
 {
-  tab_iterator_->AddAreaAfter(area, before);
+  tab_iterator_->InsertAfter(area, before);
+}
+
+void Preview::RemoveFromTabOrder(nux::InputArea* area)
+{
+  tab_iterator_->Remove(area);
 }
 
 void Preview::OnNavigateIn()
