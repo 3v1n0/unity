@@ -30,7 +30,7 @@
 #include <UnityCore/GLibSource.h>
 
 #include "BaseWindowRaiser.h"
-#include "ShortcutModel.h"
+#include "AbstractShortcutModeller.h"
 #include "ShortcutView.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/UBusWrapper.h"
@@ -45,7 +45,7 @@ class Controller : public debug::Introspectable
 public:
   typedef std::shared_ptr<Controller> Ptr;
 
-  Controller(BaseWindowRaiser::Ptr const& raiser, Model::Ptr const& model = nullptr);
+  Controller(BaseWindowRaiser::Ptr const& raiser, AbstractModeller::Ptr const& modeller);
   virtual ~Controller();
 
   bool Show();
@@ -54,7 +54,6 @@ public:
   bool Visible() const;
   bool IsEnabled() const;
 
-  void SetModel(Model::Ptr const& model);
   void SetAdjustment(int x, int y);
   void SetEnabled(bool enabled);
   virtual void SetOpacity(double value);
@@ -72,7 +71,7 @@ private:
   bool OnShowTimer();
 
   View::Ptr view_;
-  Model::Ptr model_;
+  AbstractModeller::Ptr modeller_;
   BaseWindowRaiser::Ptr base_window_raiser_;
 
   nux::Geometry workarea_;

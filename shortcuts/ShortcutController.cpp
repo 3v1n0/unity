@@ -18,6 +18,7 @@
  */
 
 #include "ShortcutController.h"
+#include "ShortcutModel.h"
 
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
@@ -34,8 +35,9 @@ const unsigned int SUPER_TAP_DURATION = 650;
 const unsigned int FADE_DURATION = 100;
 }
 
-Controller::Controller(BaseWindowRaiser::Ptr const& base_window_raiser, Model::Ptr const& model)
-  : model_(model)
+Controller::Controller(BaseWindowRaiser::Ptr const& base_window_raiser,
+                       AbstractModeller::Ptr const& modeller)
+  : modeller_(modeller)
   , base_window_raiser_(base_window_raiser)
   , visible_(false)
   , enabled_(true)
@@ -62,21 +64,20 @@ Controller::Controller(BaseWindowRaiser::Ptr const& base_window_raiser, Model::P
   fade_animator_.updated.connect([this] (double opacity) {
     SetOpacity(opacity);
   });
+
+  modeller->model_changed.connect([this] (Model::Ptr const& model) {
+    if (view_)
+    {
+      if (visible_)
+        model->Fill();
+
+      view_->SetModel(model);
+    }
+  });
 }
 
 Controller::~Controller()
 {}
-
-void Controller::SetModel(Model::Ptr const& model)
-{
-  if (model == model_)
-    return;
-
-  model_ = model;
-
-  if (view_)
-    view_->SetModel(model_);
-}
 
 void Controller::OnBackgroundUpdate(GVariant* data)
 {
@@ -90,7 +91,7 @@ void Controller::OnBackgroundUpdate(GVariant* data)
 
 bool Controller::Show()
 {
-  if (enabled_ && model_)
+  if (enabled_ && modeller_->GetCurrentModel())
   {
     show_timer_.reset(new glib::Timeout(SUPER_TAP_DURATION, sigc::mem_fun(this, &Controller::OnShowTimer)));
     visible_ = true;
@@ -103,10 +104,10 @@ bool Controller::Show()
 
 bool Controller::OnShowTimer()
 {
-  if (!enabled_ || !model_)
+  if (!enabled_ || !modeller_->GetCurrentModel())
     return false;
 
-  model_->Fill();
+  modeller_->GetCurrentModel()->Fill();
   EnsureView();
 
   int monitor = UScreen::GetDefault()->GetMonitorWithMouse();
@@ -160,7 +161,7 @@ void Controller::ConstructView()
 {
   view_ = View::Ptr(new View());
   AddChild(view_.GetPointer());
-  view_->SetModel(model_);
+  view_->SetModel(modeller_->GetCurrentModel());
   view_->background_color = bg_color_;
 
   if (!view_window_)
