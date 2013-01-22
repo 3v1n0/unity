@@ -239,8 +239,6 @@ private:
   void RestoreWindow(GVariant* data);
   bool SaveInputThenFocus(const guint xid);
 
-  void InitHints();
-
   void OnPanelStyleChanged();
 
   void InitGesturesSupport();
