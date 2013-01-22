@@ -26,6 +26,7 @@ using namespace testing;
 using namespace unity;
 
 #include "test_utils.h"
+#include "test_uscreen_mock.h"
 
 #include <NuxCore/AnimationController.h>
 
@@ -38,24 +39,32 @@ struct MockBaseWindowRaiser : public shortcut::BaseWindowRaiser
 
   MOCK_METHOD1 (Raise, void(nux::ObjectPtr<nux::BaseWindow> window));
 };
+}
 
-struct MockShortcutController : public shortcut::Controller
+namespace unity
 {
-  MockShortcutController(std::list<shortcut::AbstractHint::Ptr> const& hints,
-                         shortcut::BaseWindowRaiser::Ptr const& base_window_raiser)
-    : Controller(hints, base_window_raiser)
-  {}
-
-  MOCK_METHOD1(SetOpacity, void(double));
-
-  void RealSetOpacity(double value)
-  {
-    Controller::SetOpacity(value);
-  }
-};
-
+namespace shortcut
+{
 class TestShortcutController : public Test
 {
+  struct MockShortcutController : public Controller
+  {
+    MockShortcutController(std::list<AbstractHint::Ptr> const& hints,
+                           BaseWindowRaiser::Ptr const& base_window_raiser)
+      : Controller(hints, base_window_raiser)
+    {}
+
+    MOCK_METHOD1(SetOpacity, void(double));
+    using Controller::GetGeometryPerMonitor;
+    using Controller::ConstructView;
+    using Controller::view_;
+
+    void RealSetOpacity(double value)
+    {
+      Controller::SetOpacity(value);
+    }
+  };
+
 public:
   TestShortcutController()
     : base_window_raiser_(std::make_shared<MockBaseWindowRaiser>())
@@ -66,10 +75,11 @@ public:
       .WillByDefault(Invoke(&controller_, &MockShortcutController::RealSetOpacity));
   }
 
+  MockUScreen uscreen;
   Settings unity_settings;
   std::list<shortcut::AbstractHint::Ptr> hints_;
   MockBaseWindowRaiser::Ptr base_window_raiser_;
-  MockShortcutController controller_;
+  NiceMock<MockShortcutController> controller_;
 
   nux::animation::TickSource tick_source_;
   nux::animation::AnimationController animation_controller_;
@@ -101,5 +111,24 @@ TEST_F (TestShortcutController, Hide)
   tick_source_.tick(1000);
 }
 
+TEST_F (TestShortcutController, GetGeometryPerMonitor)
+{
+  nux::Geometry good_monitor(0, 0, 1366, 768);
+  nux::Geometry invalid_monitor(good_monitor.x + good_monitor.width, 0, 1, 1);
+  uscreen.SetMonitors({good_monitor, invalid_monitor});
 
+  nux::Point offset(g_random_int_range(0, 100), g_random_int_range(0, 100));
+  controller_.SetAdjustment(offset.x, offset.y);
+  controller_.ConstructView();
+
+  nux::Geometry expected = controller_.view_->GetAbsoluteGeometry();
+  expected.x = good_monitor.x + offset.x + (good_monitor.width - expected.width - offset.x) / 2;
+  expected.y = good_monitor.y + offset.y + (good_monitor.height - expected.height - offset.y) / 2;
+  EXPECT_EQ(controller_.GetGeometryPerMonitor(0), expected);
+
+  EXPECT_TRUE(controller_.GetGeometryPerMonitor(1).IsNull());
+}
+
+
+}
 }

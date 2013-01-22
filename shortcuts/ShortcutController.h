@@ -63,6 +63,7 @@ protected:
   // Introspectable
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
+  virtual nux::Geometry GetGeometryPerMonitor(int monitor);
 
 private:
   void ConstructView();
@@ -77,6 +78,7 @@ private:
   nux::Geometry workarea_;
   nux::ObjectPtr<nux::BaseWindow> view_window_;
   nux::HLayout* main_layout_;
+  nux::Point adjustment_;
 
   bool visible_;
   bool enabled_;
@@ -86,6 +88,8 @@ private:
 
   glib::Source::UniquePtr show_timer_;
   UBusManager ubus_manager_;
+
+  friend class TestShortcutController;
 };
 
 }
