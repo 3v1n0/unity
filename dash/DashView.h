@@ -110,8 +110,8 @@ private:
   void OnScopeBarActivated(std::string const& id);
   void OnSearchFinished(glib::HintsMap const& hints, glib::Error const& error);
   void OnUriActivated(ResultView::ActivateType type, std::string const& uri, GVariant* data, std::string const& unique_id);
-  void OnUriActivatedReply(std::string const& uri, ScopeHandledType type, glib::HintsMap const& hints, Scope::Ptr scope);
-  bool DoFallbackActivation(std::string const& uri, bool master_scope);
+  void OnUriActivatedReply(std::string const& uri, ScopeHandledType type, glib::HintsMap const& hints);
+  bool DoFallbackActivation(std::string const& uri);
   bool LaunchApp(std::string const& appname);
   void OnEntryActivated();
   std::string AnalyseScopeURI(std::string const& uri);
