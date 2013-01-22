@@ -39,9 +39,8 @@ namespace shortcut
 {
 struct StandaloneController : Controller
 {
-  StandaloneController(std::list<AbstractHint::Ptr> const& hints,
-                       BaseWindowRaiser::Ptr const& raiser)
-    : Controller(hints, raiser)
+  StandaloneController(BaseWindowRaiser::Ptr const& raiser, Model::Ptr const& model)
+    : Controller(raiser, model)
   {}
 
   nux::Geometry GetGeometryPerMonitor(int monitor) override
@@ -279,7 +278,8 @@ void ShortcutsWindow::Init()
                                                                                  "initiate_key")));
 
   auto base_window_raiser_ = std::make_shared<shortcut::BaseWindowRaiserImp>();
-  controller = std::make_shared<shortcut::StandaloneController>(hints, base_window_raiser_);
+  auto model = std::make_shared<shortcut::Model>(hints);
+  controller = std::make_shared<shortcut::StandaloneController>(base_window_raiser_, model);
   controller->Show();
 }
 
