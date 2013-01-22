@@ -44,6 +44,8 @@ public:
   void Insert(nux::InputArea* area, int index);
   void InsertBefore(nux::InputArea* area, nux::InputArea* after);
   void InsertAfter(nux::InputArea* area, nux::InputArea* before);
+  void Remove(nux::InputArea* area);
+
   std::list<nux::InputArea*> const& GetTabAreas() const;
   nux::InputArea* DefaultFocus() const;
   nux::InputArea* FindKeyFocusArea(unsigned int key_symbol,
@@ -52,8 +54,6 @@ public:
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
 protected:
-  void Remove(nux::InputArea* area);
-
   std::list<nux::InputArea*> areas_;
 };
 

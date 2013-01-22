@@ -253,6 +253,11 @@ void Preview::SetTabOrderAfter(nux::InputArea* area, nux::InputArea* before)
   tab_iterator_->InsertAfter(area, before);
 }
 
+void Preview::RemoveFromTabOrder(nux::InputArea* area)
+{
+  tab_iterator_->Remove(area);
+}
+
 void Preview::OnNavigateIn()
 {
   nux::InputArea* default_focus = tab_iterator_->DefaultFocus();

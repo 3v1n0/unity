@@ -98,6 +98,7 @@ protected:
   void SetTabOrder(nux::InputArea* area, int index);
   void SetTabOrderBefore(nux::InputArea* area, nux::InputArea* after);
   void SetTabOrderAfter(nux::InputArea* area, nux::InputArea* before);
+  void RemoveFromTabOrder(nux::InputArea* area);
 
 protected:
   dash::Preview::Ptr preview_model_;

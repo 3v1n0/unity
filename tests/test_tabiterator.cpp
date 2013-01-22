@@ -41,7 +41,6 @@ namespace previews
 class MockedTabIterator : public TabIterator
 {
 public:
-  using TabIterator::Remove;
   using TabIterator::areas_;
 };
 
