@@ -100,6 +100,7 @@ namespace unity
 // private class
 
 GesturalWindowSwitcherPrivate::GesturalWindowSwitcherPrivate()
+  : accumulated_horizontal_drag(0.0f)
 {
   state = State::WaitingCompoundGesture;
 
