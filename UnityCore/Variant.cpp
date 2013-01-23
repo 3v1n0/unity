@@ -148,7 +148,6 @@ GHashTable* hashtable_from_hintsmap(glib::HintsMap const& hints)
   return hash_table;
 }
 
-
 HintsMap const& hintsmap_from_hashtable(GHashTable* hashtable, HintsMap& hints)
 {
   if (!hashtable)

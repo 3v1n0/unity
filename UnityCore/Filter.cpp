@@ -172,7 +172,7 @@ glib::Variant Filter::VariantValue() const
   g_variant_builder_add(&hints, "b", collapsed(), NULL);
   g_variant_builder_add(&hints, "b", filtering(), NULL);
 
-  return glib::Variant(g_variant_builder_end(&hints), glib::StealRef());
+  return glib::Variant(g_variant_builder_end(&hints));
 }
 
 std::string Filter::get_id() const
