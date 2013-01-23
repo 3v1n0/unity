@@ -126,9 +126,6 @@ bool Controller::OnShowTimer()
   modeller_->GetCurrentModel()->Fill();
   EnsureView();
 
-  view_->ComputeContentSize();
-  view_window_->ComputeContentSize();
-
   int monitor = UScreen::GetDefault()->GetMonitorWithMouse();
   auto const& offset = GetOffsetPerMonitor(monitor);
 
@@ -160,6 +157,7 @@ nux::Point Controller::GetOffsetPerMonitor(int monitor)
 {
   EnsureView();
 
+  view_window_->ComputeContentSize();
   auto const& view_geo = view_->GetAbsoluteGeometry();
   auto const& monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
 
