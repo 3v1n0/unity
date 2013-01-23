@@ -229,6 +229,7 @@ if (ENABLE_X_SUPPORT)
                  test_resultviewgrid.cpp
                  test_searchbar.cpp
                  test_shortcut_controller.cpp
+                 test_shortcut_modeller_compiz.cpp
                  test_shortcut_view.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_expo_launcher_icon.cpp
