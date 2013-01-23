@@ -60,6 +60,10 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
 
 ResultView::~ResultView()
 {
+  for( auto wrapper: introspectable_children_)
+  {
+    delete wrapper.second;
+  }
   introspectable_children_.clear();
 
   for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
@@ -339,7 +343,7 @@ debug::Introspectable::IntrospectableList ResultView::GetIntrospectableChildren(
     {
       // delete and remove the child from the map.
       delete child_iter->second;
-      introspectable_children_.erase(child_iter++);
+      child_iter = introspectable_children_.erase(child_iter);
     }
     else
     {
