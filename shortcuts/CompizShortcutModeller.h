@@ -31,9 +31,18 @@ class CompizModeller : public AbstractModeller
 {
 public:
   CompizModeller();
-  Model::Ptr GetCurrentModel() const {return model_;}
+  Model::Ptr GetCurrentModel() const;
 
 private:
+  void BuildModel(int hsize, int vsize);
+
+  void AddLauncherHints(std::list<shortcut::AbstractHint::Ptr> &hints);
+  void AddDashHints(std::list<shortcut::AbstractHint::Ptr> &hints);
+  void AddMenuHints(std::list<shortcut::AbstractHint::Ptr> &hints);
+  void AddSwitcherHints(std::list<shortcut::AbstractHint::Ptr> &hints);
+  void AddWorkspaceHints(std::list<shortcut::AbstractHint::Ptr> &hints);
+  void AddWindowsHints(std::list<shortcut::AbstractHint::Ptr> &hints);
+
   Model::Ptr model_;
 };
 
