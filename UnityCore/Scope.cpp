@@ -55,6 +55,7 @@ Scope::Impl::Impl(Scope* owner, ScopeData::Ptr const& scope_data)
 : owner_(owner)
 , scope_data_(scope_data)
 {
+  property_connections.push_back(utils::ConnectProperties(owner_->id, scope_data_->id));
 }
 
 Scope::Impl::~Impl()
@@ -88,16 +89,9 @@ void Scope::Impl::Init()
     property_connections.push_back(utils::ConnectProperties(owner_->query_pattern, proxy_->query_pattern));
     property_connections.push_back(utils::ConnectProperties(owner_->shortcut, proxy_->shortcut));
 
-    owner_->id.SetGetterFunction([this]() { return scope_data_->id(); });
-
-    owner_->results.SetGetterFunction([this]() { return proxy_->results(); });
-    proxy_->results.changed.connect([this](Results::Ptr const& value) { owner_->results.EmitChanged(value); });
-
-    owner_->filters.SetGetterFunction([this]() { return proxy_->filters(); });
-    proxy_->filters.changed.connect([this](Filters::Ptr const& value) { owner_->filters.EmitChanged(value); });
-
-    owner_->categories.SetGetterFunction([this]() { return proxy_->categories(); });
-    proxy_->categories.changed.connect([this](Categories::Ptr const& value) { owner_->categories.EmitChanged(value); });
+    property_connections.push_back(utils::ConnectProperties(owner_->results, proxy_->results));
+    property_connections.push_back(utils::ConnectProperties(owner_->filters, proxy_->filters));
+    property_connections.push_back(utils::ConnectProperties(owner_->categories, proxy_->categories));
   }
 }
 
