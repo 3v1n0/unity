@@ -65,15 +65,7 @@ Controller::Controller(BaseWindowRaiser::Ptr const& base_window_raiser,
     SetOpacity(opacity);
   });
 
-  modeller->model_changed.connect([this] (Model::Ptr const& model) {
-    if (!view_)
-      return;
-
-    if (visible_)
-      model->Fill();
-
-    view_->SetModel(model);
-  });
+  modeller_->model_changed.connect(sigc::mem_fun(this, &Controller::OnModelUpdated));
 }
 
 Controller::~Controller()
@@ -87,6 +79,30 @@ void Controller::OnBackgroundUpdate(GVariant* data)
 
   if (view_)
     view_->background_color = bg_color_;
+}
+
+void Controller::OnModelUpdated(Model::Ptr const& model)
+{
+  if (!view_)
+    return;
+
+  view_->SetModel(model);
+
+  if (Visible())
+  {
+    model->Fill();
+    auto uscreen = UScreen::GetDefault();
+    int monitor = uscreen->GetMonitorAtPosition(view_window_->GetX(), view_window_->GetX());
+    auto const& offset = GetOffsetPerMonitor(monitor);
+
+    if (offset.x < 0 || offset.y < 0)
+    {
+      Hide();
+      return;
+    }
+
+    view_window_->SetXY(offset.x, offset.y);
+  }
 }
 
 bool Controller::Show()
@@ -110,14 +126,17 @@ bool Controller::OnShowTimer()
   modeller_->GetCurrentModel()->Fill();
   EnsureView();
 
-  int monitor = UScreen::GetDefault()->GetMonitorWithMouse();
-  auto const& geo = GetGeometryPerMonitor(monitor);
+  view_->ComputeContentSize();
+  view_window_->ComputeContentSize();
 
-  if (geo.IsNull())
+  int monitor = UScreen::GetDefault()->GetMonitorWithMouse();
+  auto const& offset = GetOffsetPerMonitor(monitor);
+
+  if (offset.x < 0 || offset.y < 0)
     return false;
 
   base_window_raiser_->Raise(view_window_);
-  view_window_->SetGeometry(geo);
+  view_window_->SetXY(offset.x, offset.y);
 
   if (visible_)
   {
@@ -137,7 +156,7 @@ bool Controller::OnShowTimer()
   return false;
 }
 
-nux::Geometry Controller::GetGeometryPerMonitor(int monitor)
+nux::Point Controller::GetOffsetPerMonitor(int monitor)
 {
   EnsureView();
 
@@ -147,14 +166,15 @@ nux::Geometry Controller::GetGeometryPerMonitor(int monitor)
   if (adjustment_.x + view_geo.width > monitor_geo.width ||
       adjustment_.y + view_geo.height > monitor_geo.height)
   {
-    return nux::Geometry();
+    // Invalid position
+    return nux::Point(std::numeric_limits<int>::min(), std::numeric_limits<int>::min());
   }
 
-  nux::Geometry geo(monitor_geo.x, monitor_geo.y, view_geo.width, view_geo.height);
-  geo.x += adjustment_.x + (monitor_geo.width - view_geo.width - adjustment_.x) / 2;
-  geo.y += adjustment_.y + (monitor_geo.height - view_geo.height - adjustment_.y) / 2;
+  nux::Point offset(adjustment_.x + monitor_geo.x, adjustment_.y + monitor_geo.y);
+  offset.x += (monitor_geo.width - view_geo.width - adjustment_.x) / 2;
+  offset.y += (monitor_geo.height - view_geo.height - adjustment_.y) / 2;
 
-  return geo;
+  return offset;
 }
 
 void Controller::ConstructView()
@@ -173,6 +193,7 @@ void Controller::ConstructView()
     view_window_ = new nux::BaseWindow("ShortcutHint");
     view_window_->SetLayout(main_layout_);
     view_window_->SetBackgroundColor(nux::color::Transparent);
+    view_window_->SetWindowSizeMatchLayout(true);
   }
 
   main_layout_->AddView(view_.GetPointer());
