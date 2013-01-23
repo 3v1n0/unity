@@ -33,8 +33,6 @@ public:
   CompizModeller();
   Model::Ptr GetCurrentModel() const {return model_;}
 
-  sigc::signal<void, Model::Ptr const&> model_changed;
-
 private:
   Model::Ptr model_;
 };
