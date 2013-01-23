@@ -61,7 +61,6 @@ ResultView::ResultView(NUX_FILE_LINE_DECL)
 ResultView::~ResultView()
 {
   introspectable_children_.clear();
-  RemoveAllChildren(&ResultView::ChildResultDestructor);
 
   for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
   {
@@ -210,7 +209,7 @@ void ResultView::DrawContent(nux::GraphicsEngine& GfxContent, bool force_draw)
 
 void ResultView::OnEnableRenderToTexture(bool enable_render_to_texture)
 {
-  if (!enable_render_to_texture) 
+  if (!enable_render_to_texture)
   {
     result_textures_.clear();
   }
@@ -251,7 +250,7 @@ void ResultView::RenderResultTexture(ResultViewTexture::Ptr const& result_textur
   graphics_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(-offset_rect.x, -offset_rect.y, 0));
 
   ProcessDraw(graphics_engine, true);
-  
+
   graphics_engine.PopModelViewMatrix();
   graphics::PopOffscreenRenderTarget();
 
@@ -259,7 +258,7 @@ void ResultView::RenderResultTexture(ResultViewTexture::Ptr const& result_textur
 }
 
 void ResultView::UpdateRenderTextures()
-{ 
+{
   if (!enable_texture_render)
     return;
 
@@ -271,7 +270,7 @@ void ResultView::UpdateRenderTextures()
     result_texture->abs_geo.x = root_geo.x;
     result_texture->abs_geo.y = root_geo.y;
     result_texture->abs_geo.width = GetWidth();
-    result_texture->abs_geo.height = GetHeight();     
+    result_texture->abs_geo.height = GetHeight();
   }
   else
   {
@@ -291,11 +290,6 @@ void ResultView::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder)
     .add("expanded", expanded);
-}
-
-void ResultView::ChildResultDestructor(debug::Introspectable* child)
-{
-  delete child;
 }
 
 debug::Introspectable::IntrospectableList ResultView::GetIntrospectableChildren()
@@ -344,7 +338,7 @@ debug::Introspectable::IntrospectableList ResultView::GetIntrospectableChildren(
     if (existing_results.find(child_iter->first) == existing_results.end())
     {
       // delete and remove the child from the map.
-      ResultView::ChildResultDestructor(child_iter->second);
+      delete child_iter->second;
       introspectable_children_.erase(child_iter++);
     }
     else
