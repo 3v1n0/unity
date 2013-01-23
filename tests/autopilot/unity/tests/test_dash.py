@@ -39,27 +39,27 @@ class DashRevealTests(DashTestCase):
     def test_application_lens_shortcut(self):
         """Application lense must reveal when Super+a is pressed."""
         self.dash.reveal_application_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('applications.lens')))
+        self.assertThat(self.dash.active_lens, Eventually(Equals('applications.scope')))
 
     def test_music_lens_shortcut(self):
         """Music lense must reveal when Super+w is pressed."""
         self.dash.reveal_music_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('music.lens')))
+        self.assertThat(self.dash.active_lens, Eventually(Equals('music.scope')))
 
     def test_file_lens_shortcut(self):
         """File lense must reveal when Super+f is pressed."""
         self.dash.reveal_file_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('files.lens')))
+        self.assertThat(self.dash.active_lens, Eventually(Equals('files.scope')))
 
     def test_video_lens_shortcut(self):
         """Video lens must reveal when super+v is pressed."""
         self.dash.reveal_video_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('video.lens')))
+        self.assertThat(self.dash.active_lens, Eventually(Equals('video.scope')))
 
     def test_command_lens_shortcut(self):
         """Run Command lens must reveat on alt+F2."""
         self.dash.reveal_command_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('commands.lens')))
+        self.assertThat(self.dash.active_lens, Eventually(Equals('commands.scope')))
 
     def test_alt_f4_close_dash(self):
         """Dash must close on alt+F4."""
@@ -148,7 +148,7 @@ class DashRevealWithSpreadTests(DashTestCase):
         self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
 
         self.dash.reveal_command_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('commands.lens')))
+        self.assertThat(self.dash.active_lens, Eventually(Equals('commands.scope')))
 
     def test_lens_opens_when_in_spread(self):
         """This test shows that any lens opens when in spread mode."""
@@ -157,7 +157,7 @@ class DashRevealWithSpreadTests(DashTestCase):
         self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
 
         self.dash.reveal_application_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('applications.lens')))
+        self.assertThat(self.dash.active_lens, Eventually(Equals('applications.scope')))
 
 
 class DashSearchInputTests(DashTestCase):
@@ -304,7 +304,7 @@ class DashKeyNavTests(DashTestCase):
         self.keyboard.release('Control')
 
         lensbar = self.dash.view.get_lensbar()
-        self.assertEqual(lensbar.active_lens, u'applications.lens')
+        self.assertEqual(lensbar.active_lens, u'applications.scope')
 
         self.keyboard.press('Control')
         self.keyboard.press('Shift')
@@ -312,7 +312,7 @@ class DashKeyNavTests(DashTestCase):
         self.keyboard.release('Control')
         self.keyboard.release('Shift')
 
-        self.assertThat(lensbar.active_lens, Eventually(Equals('home.lens')))
+        self.assertThat(lensbar.active_lens, Eventually(Equals('home.scope')))
 
     def test_tab_cycle_category_headers(self):
         """ Makes sure that pressing tab cycles through the category headers"""

@@ -106,34 +106,34 @@ class Dash(KeybindingsHelper):
         self.search_string.wait_for("")
 
     def reveal_application_lens(self, clear_search=True):
-        """Reveal the application lense."""
-        logger.debug("Revealing application lens with Super+a.")
+        """Reveal the application scope."""
+        logger.debug("Revealing application scope with Super+a.")
         self._reveal_lens("lens_reveal/apps", clear_search)
-        return self.view.get_lensview_by_name("applications.lens")
+        return self.view.get_lensview_by_name("applications.scope")
 
     def reveal_music_lens(self, clear_search=True):
         """Reveal the music lense."""
-        logger.debug("Revealing music lens with Super+m.")
+        logger.debug("Revealing music scope with Super+m.")
         self._reveal_lens("lens_reveal/music", clear_search)
-        return self.view.get_lensview_by_name("music.lens")
+        return self.view.get_lensview_by_name("music.scope")
 
     def reveal_file_lens(self, clear_search=True):
         """Reveal the file lense."""
-        logger.debug("Revealing file lens with Super+f.")
+        logger.debug("Revealing file scope with Super+f.")
         self._reveal_lens("lens_reveal/files", clear_search)
-        return self.view.get_lensview_by_name("files.lens")
+        return self.view.get_lensview_by_name("files.scope")
 
     def reveal_video_lens(self, clear_search=True):
-        """Reveal the video lens"""
-        logger.debug("Revealing video lens with Super+v.")
+        """Reveal the video scope"""
+        logger.debug("Revealing video scope with Super+v.")
         self._reveal_lens("lens_reveal/video", clear_search)
-        return self.view.get_lensview_by_name("video.lens")
+        return self.view.get_lensview_by_name("video.scope")
 
     def reveal_command_lens(self, clear_search=True):
-        """Reveal the 'run command' lens."""
-        logger.debug("Revealing command lens with Alt+F2.")
+        """Reveal the 'run command' scope."""
+        logger.debug("Revealing command scope with Alt+F2.")
         self._reveal_lens("lens_reveal/command", clear_search)
-        return self.view.get_lensview_by_name("commands.lens")
+        return self.view.get_lensview_by_name("commands.scope")
 
     def _reveal_lens(self, binding_name, clear_search):
         self.keybinding_hold(binding_name)
@@ -184,7 +184,7 @@ class DashView(UnityIntrospectionObject):
         return self.get_children_by_type(LensBar)[0]
 
     def get_lensview_by_name(self, lens_name):
-        """Get a LensView child object by it's name. For example, "home.lens"."""
+        """Get a LensView child object by it's name. For example, "home.scope"."""
         lenses = self.get_children_by_type(LensView)
         for lens in lenses:
             if lens.name == lens_name:
@@ -205,7 +205,7 @@ class SearchBar(UnityIntrospectionObject):
 class LensBar(UnityIntrospectionObject):
     """The bar of lens icons at the bottom of the dash."""
     def get_icon_by_name(self, name):
-        """Get a LensBarIcon child object by it's name. For example, 'home.lens'."""
+        """Get a LensBarIcon child object by it's name. For example, 'home.scope'."""
         icons = self.get_children_by_type(LensBarIcon)
         for icon in icons:
             if icon.name == name:

@@ -90,7 +90,7 @@ nux::Color BFBLauncherIcon::GlowColor()
 
 void BFBLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-  ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.lens", dash::NOT_HANDLED, ""));
+  ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.scope", dash::NOT_HANDLED, ""));
 
   // dont chain down to avoid random dash close events
 }

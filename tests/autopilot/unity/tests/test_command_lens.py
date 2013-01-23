@@ -79,10 +79,10 @@ class CommandLensSearchTests(UnityTestCase):
         """Pressing Ctrl+Tab after launching command lens must switch to Home lens."""
         self.dash.reveal_command_lens()
         self.keybinding("dash/lens/next")
-        self.assertThat(self.dash.active_lens, Eventually(Equals("home.lens")))
+        self.assertThat(self.dash.active_lens, Eventually(Equals("home.scope")))
 
     def test_ctrl_shift_tab_switching(self):
         """Pressing Ctrl+Shift+Tab after launching command lens must switch to Video lens."""
         self.dash.reveal_command_lens()
         self.keybinding("dash/lens/prev")
-        self.assertThat(self.dash.active_lens, Eventually(Equals("video.lens")))
+        self.assertThat(self.dash.active_lens, Eventually(Equals("video.scope")))
