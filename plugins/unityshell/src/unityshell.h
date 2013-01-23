@@ -43,7 +43,6 @@
 #include "FavoriteStoreGSettings.h"
 #include "FontSettings.h"
 #include "ShortcutController.h"
-#include "ShortcutHint.h"
 #include "LauncherController.h"
 #include "PanelController.h"
 #include "PanelStyle.h"
@@ -240,8 +239,6 @@ private:
   void RestoreWindow(GVariant* data);
   bool SaveInputThenFocus(const guint xid);
 
-  void InitHints();
-
   void OnPanelStyleChanged();
 
   void InitGesturesSupport();
@@ -272,9 +269,6 @@ private:
   hud::Controller::Ptr      hud_controller_;
   shortcut::Controller::Ptr shortcut_controller_;
   debug::DebugDBusInterface debugger_;
-
-  std::list<shortcut::AbstractHint::Ptr> hints_;
-  bool enable_shortcut_overlay_;
 
   /* Subscription for gestures that manipulate Unity launcher */
   std::unique_ptr<nux::GesturesSubscription> gestures_sub_launcher_;

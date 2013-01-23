@@ -39,6 +39,14 @@ struct MockBaseWindowRaiser : public shortcut::BaseWindowRaiser
 
   MOCK_METHOD1 (Raise, void(nux::ObjectPtr<nux::BaseWindow> window));
 };
+
+struct StandaloneModeller : shortcut::AbstractModeller
+{
+  shortcut::Model::Ptr GetCurrentModel() const
+  {
+    return std::make_shared<shortcut::Model>(std::list<shortcut::AbstractHint::Ptr>());
+  }
+};
 }
 
 namespace unity
@@ -49,9 +57,9 @@ class TestShortcutController : public Test
 {
   struct MockShortcutController : public Controller
   {
-    MockShortcutController(std::list<AbstractHint::Ptr> const& hints,
-                           BaseWindowRaiser::Ptr const& base_window_raiser)
-      : Controller(hints, base_window_raiser)
+    MockShortcutController(BaseWindowRaiser::Ptr const& base_window_raiser,
+                           AbstractModeller::Ptr const& modeller)
+      : Controller(base_window_raiser, modeller)
     {}
 
     MOCK_METHOD1(SetOpacity, void(double));
@@ -67,8 +75,9 @@ class TestShortcutController : public Test
 
 public:
   TestShortcutController()
-    : base_window_raiser_(std::make_shared<MockBaseWindowRaiser>())
-    , controller_(hints_, base_window_raiser_)
+    : base_window_raiser_(std::make_shared<NiceMock<MockBaseWindowRaiser>>())
+    , modeller_(std::make_shared<StandaloneModeller>())
+    , controller_(base_window_raiser_, modeller_)
     , animation_controller_(tick_source_)
   {
     ON_CALL(controller_, SetOpacity(_))
@@ -77,15 +86,15 @@ public:
 
   MockUScreen uscreen;
   Settings unity_settings;
-  std::list<shortcut::AbstractHint::Ptr> hints_;
   MockBaseWindowRaiser::Ptr base_window_raiser_;
+  AbstractModeller::Ptr const& modeller_;
   NiceMock<MockShortcutController> controller_;
 
   nux::animation::TickSource tick_source_;
   nux::animation::AnimationController animation_controller_;
 };
 
-TEST_F (TestShortcutController, WindowIsRaisedOnShow)
+TEST_F(TestShortcutController, WindowIsRaisedOnShow)
 {
   EXPECT_CALL(*base_window_raiser_, Raise(_))
     .Times(1);
@@ -94,8 +103,7 @@ TEST_F (TestShortcutController, WindowIsRaisedOnShow)
   Utils::WaitForTimeout(1);
 }
 
-
-TEST_F (TestShortcutController, Hide)
+TEST_F(TestShortcutController, HiddeenOnConstruction)
 {
   {
     InSequence sequence;
@@ -105,13 +113,11 @@ TEST_F (TestShortcutController, Hide)
       .Times(0);
   }
 
-  controller_.Show();
-
+  controller_.ConstructView();
   controller_.Hide();
-  tick_source_.tick(1000);
 }
 
-TEST_F (TestShortcutController, GetGeometryPerMonitor)
+TEST_F(TestShortcutController, GetGeometryPerMonitor)
 {
   nux::Geometry good_monitor(0, 0, 1366, 768);
   nux::Geometry invalid_monitor(good_monitor.x + good_monitor.width, 0, 1, 1);
@@ -127,6 +133,17 @@ TEST_F (TestShortcutController, GetGeometryPerMonitor)
   EXPECT_EQ(controller_.GetGeometryPerMonitor(0), expected);
 
   EXPECT_TRUE(controller_.GetGeometryPerMonitor(1).IsNull());
+}
+
+TEST_F(TestShortcutController, ModelIsChangedOnModellerChange)
+{
+  controller_.ConstructView();
+  auto old_model = controller_.view_->GetModel();
+  auto model = std::make_shared<Model>(std::list<AbstractHint::Ptr>());
+  modeller_->model_changed(model);
+
+  ASSERT_NE(controller_.view_->GetModel(), old_model);
+  EXPECT_EQ(controller_.view_->GetModel(), model);
 }
 
 

@@ -18,6 +18,7 @@
  */
 
 #include "ShortcutController.h"
+#include "ShortcutModel.h"
 
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
@@ -34,17 +35,15 @@ const unsigned int SUPER_TAP_DURATION = 650;
 const unsigned int FADE_DURATION = 100;
 }
 
-Controller::Controller(std::list<AbstractHint::Ptr> const& hints,
-                       BaseWindowRaiser::Ptr const& base_window_raiser)
-  : model_(std::make_shared<Model>(hints))
+Controller::Controller(BaseWindowRaiser::Ptr const& base_window_raiser,
+                       AbstractModeller::Ptr const& modeller)
+  : modeller_(modeller)
   , base_window_raiser_(base_window_raiser)
   , visible_(false)
   , enabled_(true)
   , bg_color_(0.0, 0.0, 0.0, 0.5)
   , fade_animator_(FADE_DURATION)
 {
-  model_->Fill();
-
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
                                  sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
@@ -65,6 +64,16 @@ Controller::Controller(std::list<AbstractHint::Ptr> const& hints,
   fade_animator_.updated.connect([this] (double opacity) {
     SetOpacity(opacity);
   });
+
+  modeller->model_changed.connect([this] (Model::Ptr const& model) {
+    if (!view_)
+      return;
+
+    if (visible_)
+      model->Fill();
+
+    view_->SetModel(model);
+  });
 }
 
 Controller::~Controller()
@@ -82,12 +91,9 @@ void Controller::OnBackgroundUpdate(GVariant* data)
 
 bool Controller::Show()
 {
-  if (enabled_)
+  if (enabled_ && modeller_->GetCurrentModel())
   {
-    EnsureView();
-
     show_timer_.reset(new glib::Timeout(SUPER_TAP_DURATION, sigc::mem_fun(this, &Controller::OnShowTimer)));
-    model_->Fill();
     visible_ = true;
 
     return true;
@@ -98,10 +104,11 @@ bool Controller::Show()
 
 bool Controller::OnShowTimer()
 {
-  if (!enabled_)
+  if (!enabled_ || !modeller_->GetCurrentModel())
     return false;
 
-  base_window_raiser_->Raise(view_window_);
+  modeller_->GetCurrentModel()->Fill();
+  EnsureView();
 
   int monitor = UScreen::GetDefault()->GetMonitorWithMouse();
   auto const& geo = GetGeometryPerMonitor(monitor);
@@ -109,6 +116,7 @@ bool Controller::OnShowTimer()
   if (geo.IsNull())
     return false;
 
+  base_window_raiser_->Raise(view_window_);
   view_window_->SetGeometry(geo);
 
   if (visible_)
@@ -131,8 +139,7 @@ bool Controller::OnShowTimer()
 
 nux::Geometry Controller::GetGeometryPerMonitor(int monitor)
 {
-  if (!view_)
-    ConstructView();
+  EnsureView();
 
   auto const& view_geo = view_->GetAbsoluteGeometry();
   auto const& monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
@@ -154,7 +161,7 @@ void Controller::ConstructView()
 {
   view_ = View::Ptr(new View());
   AddChild(view_.GetPointer());
-  view_->SetModel(model_);
+  view_->SetModel(modeller_->GetCurrentModel());
   view_->background_color = bg_color_;
 
   if (!view_window_)
@@ -165,7 +172,7 @@ void Controller::ConstructView()
 
     view_window_ = new nux::BaseWindow("ShortcutHint");
     view_window_->SetLayout(main_layout_);
-    view_window_->SetBackgroundColor(nux::Color(0x00000000));
+    view_window_->SetBackgroundColor(nux::color::Transparent);
   }
 
   main_layout_->AddView(view_.GetPointer());

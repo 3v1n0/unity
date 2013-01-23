@@ -73,6 +73,14 @@ TEST_F(TestShortcutView, SetModel)
   EXPECT_FALSE(model->categories_per_column.changed.empty());
 }
 
+TEST_F(TestShortcutView, SetNullModel)
+{
+  view.SetModel(GetMockModel({}, 0));
+  view.SetModel(nullptr);
+  EXPECT_EQ(view.GetModel(), nullptr);
+  EXPECT_TRUE(view.columns_layout_->GetChildren().empty());
+}
+
 TEST_F(TestShortcutView, SettingModelAddsColumns)
 {
   auto model = GetMockModel({"Cat1", "Cat2"}, 1);
