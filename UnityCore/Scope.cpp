@@ -71,7 +71,6 @@ void Scope::Impl::Init()
   if (proxy_)
   {
     property_connections.push_back(utils::ConnectProperties(owner_->connected, proxy_->connected));
-    property_connections.push_back(utils::ConnectProperties(owner_->visible, proxy_->visible));
     property_connections.push_back(utils::ConnectProperties(owner_->is_master, proxy_->is_master));
     property_connections.push_back(utils::ConnectProperties(owner_->search_in_global, proxy_->search_in_global));
     property_connections.push_back(utils::ConnectProperties(owner_->search_hint, proxy_->search_hint));
@@ -89,6 +88,7 @@ void Scope::Impl::Init()
     property_connections.push_back(utils::ConnectProperties(owner_->type, proxy_->type));
     property_connections.push_back(utils::ConnectProperties(owner_->query_pattern, proxy_->query_pattern));
     property_connections.push_back(utils::ConnectProperties(owner_->shortcut, proxy_->shortcut));
+    property_connections.push_back(utils::ConnectProperties(owner_->visible, proxy_->visible));
 
     property_connections.push_back(utils::ConnectProperties(owner_->results, proxy_->results));
     property_connections.push_back(utils::ConnectProperties(owner_->filters, proxy_->filters));

@@ -102,7 +102,6 @@ public:
 
   /////////////////////////////////////////////////
   // DBus property signals.
-  glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> visible_signal_;
   glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> search_in_global_signal_;
   glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> is_master_signal_;
   glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> search_hint_signal_;
@@ -117,7 +116,6 @@ public:
 private:
   /////////////////////////////////////////////////
   // Signal Connections
-  void OnScopeVisibleChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
   void OnScopeIsMasterChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
   void OnScopeSearchInGlobalChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
   void OnScopeSearchHintChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
@@ -252,7 +250,6 @@ ScopeProxy::Impl::Impl(ScopeProxy*const owner, ScopeData::Ptr const& scope_data)
   property_connections.push_back(utils::ConnectProperties(owner_->category_order, category_order));
 
   // shared properties
-  property_connections.push_back(utils::ConnectProperties(owner_->visible, scope_data_->visible));
   property_connections.push_back(utils::ConnectProperties(owner_->is_master, scope_data_->is_master));
   property_connections.push_back(utils::ConnectProperties(owner_->search_hint, scope_data_->search_hint));
   // local properties
@@ -266,7 +263,8 @@ ScopeProxy::Impl::Impl(ScopeProxy*const owner, ScopeData::Ptr const& scope_data)
   property_connections.push_back(utils::ConnectProperties(owner_->keywords, scope_data_->keywords));
   property_connections.push_back(utils::ConnectProperties(owner_->type, scope_data_->type));
   property_connections.push_back(utils::ConnectProperties(owner_->query_pattern, scope_data_->query_pattern));
-
+  property_connections.push_back(utils::ConnectProperties(owner_->visible, scope_data_->visible));
+  
   owner_->filters.SetGetterFunction(sigc::mem_fun(this, &Impl::filters));
   owner_->categories.SetGetterFunction(sigc::mem_fun(this, &Impl::categories));
   owner_->results.SetGetterFunction(sigc::mem_fun(this, &Impl::results));
@@ -323,7 +321,6 @@ void ScopeProxy::Impl::OnNewScope(GObject *source_object, GAsyncResult *res)
   glib::Error error;
   scope_proxy = unity_protocol_scope_proxy_new_from_dbus_finish(res, &error);
 
-  visible_signal_.Disconnect();
   search_in_global_signal_.Disconnect();
   is_master_signal_.Disconnect();
   search_hint_signal_.Disconnect();
@@ -346,14 +343,12 @@ void ScopeProxy::Impl::OnNewScope(GObject *source_object, GAsyncResult *res)
   scope_proxy_ = scope_proxy;
 
   // shared properties
-  scope_data_->visible = unity_protocol_scope_proxy_get_visible(scope_proxy_);
   scope_data_->is_master = unity_protocol_scope_proxy_get_is_master(scope_proxy_);
   scope_data_->search_hint = glib::gchar_to_string(unity_protocol_scope_proxy_get_search_hint(scope_proxy_));
   // remote properties
   search_in_global = unity_protocol_scope_proxy_get_search_in_global(scope_proxy_);
   view_type = static_cast<ScopeViewType>(unity_protocol_scope_proxy_get_view_type(scope_proxy_));
 
-  visible_signal_.Connect(scope_proxy_, "notify::visible", sigc::mem_fun(this, &Impl::OnScopeVisibleChanged));
   search_in_global_signal_.Connect(scope_proxy_, "notify::search-in-global", sigc::mem_fun(this, &Impl::OnScopeSearchInGlobalChanged));
   is_master_signal_.Connect(scope_proxy_, "notify::is-master", sigc::mem_fun(this, &Impl::OnScopeIsMasterChanged));
   search_hint_signal_.Connect(scope_proxy_, "notify::search-hint", sigc::mem_fun(this, &Impl::OnScopeSearchHintChanged));
@@ -577,11 +572,6 @@ void ScopeProxy::Impl::UpdatePreviewProperty(std::string const& uri, glib::Hints
                                                      data);
 
   g_hash_table_unref(hints_table);
-}
-
-void ScopeProxy::Impl::OnScopeVisibleChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param)
-{
-  scope_data_->visible = unity_protocol_scope_proxy_get_visible(proxy);
 }
 
 void ScopeProxy::Impl::OnScopeIsMasterChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param)
