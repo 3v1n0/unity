@@ -3106,12 +3106,8 @@ void UnityScreen::initLauncher()
   launcher_controller_->UpdateSuperTapDuration(optionGetDashTapDuration());
   AddChild(launcher_controller_.get());
 
-  switcher_controller_ = std::make_shared<switcher::Controller>([this]{
-    std::unique_ptr<switcher::ShellController> p(new switcher::ShellController());
-    introspectable_switcher_controller_ = p.get();
-    return p;
-  });
-  AddChild(introspectable_switcher_controller_);
+  switcher_controller_ = std::make_shared<switcher::Controller>();
+  AddChild(switcher_controller_.get());
 
   LOG_INFO(logger) << "initLauncher-Launcher " << timer.ElapsedSeconds() << "s";
 
