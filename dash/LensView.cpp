@@ -292,6 +292,10 @@ void ScopeView::SetupCategories()
 
   categories->model.changed.connect(resync_categories);
   resync_categories(categories->model());
+
+  scope_->category_order.changed.connect([this](std::vector<int> const& category_order) {
+    LOG_DEBUG(logger) << scope_->id() << ": category order changed";
+  });
 }
 
 void ScopeView::SetupResults()

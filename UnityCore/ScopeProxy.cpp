@@ -84,6 +84,7 @@ public:
 
   nux::Property<bool> connected;
   nux::Property<std::string> channel;
+  nux::Property<std::vector<int>> category_order;
   std::string last_search_;
 
   glib::Object<UnityProtocolScopeProxy> scope_proxy_;
@@ -110,6 +111,7 @@ public:
   glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> categories_signal_;
   glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> metadata_signal_;
   glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> optional_metadata_signal_;
+  glib::Signal<void, UnityProtocolScopeProxy*, const gchar*, guint32*, int> category_order_signal_;
   /////////////////////////////////////////////////
 
 private:
@@ -124,6 +126,7 @@ private:
   void OnScopeCategoriesChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
   void OnScopeMetadataChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
   void OnScopeOptionalMetadataChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
+  void OnScopeCategoryOrderChanged(UnityProtocolScopeProxy* sender, const gchar* channel_id, guint32* new_order, int new_order_length1);
   /////////////////////////////////////////////////
 
   void WaitForProxyConnection(GCancellable* cancellable,
@@ -246,6 +249,8 @@ ScopeProxy::Impl::Impl(ScopeProxy*const owner, ScopeData::Ptr const& scope_data)
   property_connections.push_back(utils::ConnectProperties(owner_->channel, channel));
   property_connections.push_back(utils::ConnectProperties(owner_->search_in_global, search_in_global));
   property_connections.push_back(utils::ConnectProperties(owner_->view_type, view_type));
+  property_connections.push_back(utils::ConnectProperties(owner_->category_order, category_order));
+
   // shared properties
   property_connections.push_back(utils::ConnectProperties(owner_->visible, scope_data_->visible));
   property_connections.push_back(utils::ConnectProperties(owner_->is_master, scope_data_->is_master));
@@ -357,6 +362,7 @@ void ScopeProxy::Impl::OnNewScope(GObject *source_object, GAsyncResult *res)
   categories_signal_.Connect(scope_proxy_, "notify::categories-model", sigc::mem_fun(this, &Impl::OnScopeCategoriesChanged));
   metadata_signal_.Connect(scope_proxy_, "notify::metadata", sigc::mem_fun(this, &Impl::OnScopeMetadataChanged));
   optional_metadata_signal_.Connect(scope_proxy_, "notify::optional-metadata", sigc::mem_fun(this, &Impl::OnScopeOptionalMetadataChanged));
+  category_order_signal_.Connect(scope_proxy_, "category-order-changed", sigc::mem_fun(this, &Impl::OnScopeCategoryOrderChanged));
 
   unity_protocol_scope_proxy_open_channel(scope_proxy_,
                                           UNITY_PROTOCOL_CHANNEL_TYPE_DEFAULT,
@@ -386,8 +392,6 @@ void ScopeProxy::Impl::OnChannelOpened(GObject *source_object, GAsyncResult *res
   {
     glib::HintsMap hints;
     hints["changed-filter-row"] = filter->VariantValue();
-
-    printf("Filter changed by user\n");
     Search(last_search_, hints, nullptr, cancel_scope_);
   });
 
@@ -602,8 +606,7 @@ void ScopeProxy::Impl::OnScopeViewTypeChanged(UnityProtocolScopeProxy* proxy, GP
 
 void ScopeProxy::Impl::OnScopeFiltersChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param)
 {
-  printf("Filter changed by server\n");
-
+  LOG_DEBUG(logger) << scope_data_->id() << " - Filter changed by server";
   bool blocked = filters_change_connection.block(true);
 
   glib::Object<DeeModel> filters_dee_model(DEE_MODEL(unity_protocol_scope_proxy_get_filters_model(scope_proxy_)), glib::AddRef());
@@ -628,6 +631,20 @@ void ScopeProxy::Impl::OnScopeMetadataChanged(UnityProtocolScopeProxy* proxy, GP
 
 void ScopeProxy::Impl::OnScopeOptionalMetadataChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param)
 {
+}
+
+void ScopeProxy::Impl::OnScopeCategoryOrderChanged(UnityProtocolScopeProxy* sender, const gchar* channel_id, guint32* new_order, int new_order_length1)
+{
+  if (channel() != glib::gchar_to_string(channel_id))
+    return;
+
+  std::vector<int> order;
+  for (int i = 0; i < new_order_length1; i++)
+  {
+    order.push_back(new_order[i]);
+  }
+
+  category_order = order;
 }
 
 static void category_filter_map_func (DeeModel* orig_model,

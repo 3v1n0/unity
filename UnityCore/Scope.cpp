@@ -79,6 +79,7 @@ void Scope::Impl::Init()
     property_connections.push_back(utils::ConnectProperties(owner_->results, proxy_->results));
     property_connections.push_back(utils::ConnectProperties(owner_->filters, proxy_->filters));
     property_connections.push_back(utils::ConnectProperties(owner_->categories, proxy_->categories));
+    property_connections.push_back(utils::ConnectProperties(owner_->category_order, proxy_->category_order));
 
     property_connections.push_back(utils::ConnectProperties(owner_->name, proxy_->name));
     property_connections.push_back(utils::ConnectProperties(owner_->description, proxy_->description));
