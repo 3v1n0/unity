@@ -239,6 +239,7 @@ if (ENABLE_X_SUPPORT)
                  test_scope_bar.cpp
                  test_searchbar.cpp
                  test_shortcut_controller.cpp
+                 test_shortcut_view.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_expo_launcher_icon.cpp
                  test_showdesktop_handler.cpp
