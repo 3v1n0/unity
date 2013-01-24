@@ -43,9 +43,9 @@ struct StandaloneController : Controller
     : Controller(raiser, modeller)
   {}
 
-  nux::Geometry GetGeometryPerMonitor(int monitor) override
+  nux::Point GetOffsetPerMonitor(int monitor) override
   {
-    return nux::Geometry(0, 0, 1024, 700);
+    return nux::Point();
   }
 };
 }
@@ -54,6 +54,18 @@ struct StandaloneController : Controller
 struct StandaloneModeller : shortcut::AbstractModeller
 {
   StandaloneModeller()
+  {
+    BuildFullModel();
+
+    model_switcher.reset(new glib::TimeoutSeconds(5, [this] {
+      static bool toggle = false;
+      if (toggle) BuildFullModel(); else BuildLightModel();
+      toggle = !toggle;
+      return true;
+    }));
+  }
+
+  void BuildFullModel()
   {
     std::list<shortcut::AbstractHint::Ptr> hints;
 
@@ -251,6 +263,56 @@ struct StandaloneModeller : shortcut::AbstractModeller
                                                                                    "resize",
                                                                                    "initiate_key")));
     model = std::make_shared<shortcut::Model>(hints);
+    model_changed.emit(model);
+  }
+
+  void BuildLightModel()
+  {
+    std::list<shortcut::AbstractHint::Ptr> hints;
+
+    // Launcher...
+    hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Launcher"), "", _(" (Hold)"),
+                                                                                   _("Opens the Launcher, displays shortcuts."),
+                                                                                   shortcut::OptionType::COMPIZ_KEY,
+                                                                                   "unityshell",
+                                                                                   "show_launcher" )));
+
+    hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Launcher"), "", "",
+                                                                                   _("Opens Launcher keyboard navigation mode."),
+                                                                                   shortcut::OptionType::COMPIZ_KEY,
+                                                                                   "unityshell",
+                                                                                   "keyboard_focus")));
+
+    // Dash...
+    hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Dash"), "", _(" (Tap)"),
+                                                                                   _("Opens the Dash Home."),
+                                                                                   shortcut::OptionType::COMPIZ_KEY,
+                                                                                   "unityshell",
+                                                                                   "show_launcher")));
+
+    // Is it really std::shared_ptr<shortcut::AbstractHint>(hard coded?
+    hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("HUD & Menu Bar"), "", _(" (Hold)"),
+                                                                                   _("Reveals the application menu."),
+                                                                                   shortcut::OptionType::HARDCODED,
+                                                                                   "Alt")));
+
+    // Switching
+    hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Switching"), "", "",
+                                                                                   _("Switches between applications."),
+                                                                                  shortcut::OptionType::COMPIZ_KEY,
+                                                                                  "unityshell",
+                                                                                  "alt_tab_forward")));
+
+
+    // Windows
+    hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", "",
+                                                                                   _("Spreads all windows in the current workspace."),
+                                                                                   shortcut::OptionType::COMPIZ_KEY,
+                                                                                   "scale",
+                                                                                   "initiate_output_key")));
+
+    model = std::make_shared<shortcut::Model>(hints);
+    model_changed.emit(model);
   }
 
   shortcut::Model::Ptr GetCurrentModel() const
@@ -259,6 +321,7 @@ struct StandaloneModeller : shortcut::AbstractModeller
   }
 
   shortcut::Model::Ptr model;
+  glib::Source::UniquePtr model_switcher;
 };
 
 struct ShortcutsWindow

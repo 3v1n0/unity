@@ -142,6 +142,7 @@ public:
   void SetScaleActive(bool scale_active);
   void SetScaleActiveForGroup(bool scale_active_for_group);
   void SetCurrentDesktop(unsigned desktop_id);
+  void SetViewportSize(unsigned horizontal, unsigned vertical);
 
   void AddStandaloneWindow(StandaloneWindow::Ptr const& window);
   std::map<Window, StandaloneWindow::Ptr> GetStandaloneWindows() const;
@@ -157,6 +158,7 @@ private:
   bool scale_active_;
   bool scale_active_for_group_;
   unsigned current_desktop_;
+  nux::Size viewport_size_;
   std::map<Window, StandaloneWindow::Ptr> standalone_windows_;
   nux::Point current_vp_;
 };

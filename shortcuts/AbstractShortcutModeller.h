@@ -27,7 +27,7 @@ namespace unity
 namespace shortcut
 {
 
-class AbstractModeller : boost::noncopyable
+class AbstractModeller : boost::noncopyable, public sigc::trackable
 {
 public:
   typedef std::shared_ptr<AbstractModeller> Ptr;

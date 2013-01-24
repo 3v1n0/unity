@@ -188,12 +188,7 @@ nux::LinearLayout* View::CreateIntermediateLayout()
 
 nux::Geometry View::GetBackgroundGeometry()
 {
-  nux::Geometry background_geo = GetGeometry();
-
-  background_geo.x = 0;
-  background_geo.y = 0;
-
-  return background_geo;
+  return GetGeometry();
 }
 
 void View::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry clip)
@@ -207,6 +202,7 @@ void View::RenderColumns()
 
   if (!model_)
   {
+    ComputeContentSize();
     QueueRelayout();
     return;
   }
@@ -259,6 +255,7 @@ void View::RenderColumns()
     i++;
   }
 
+  ComputeContentSize();
   QueueRelayout();
 }
 

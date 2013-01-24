@@ -63,7 +63,7 @@ class TestShortcutController : public Test
     {}
 
     MOCK_METHOD1(SetOpacity, void(double));
-    using Controller::GetGeometryPerMonitor;
+    using Controller::GetOffsetPerMonitor;
     using Controller::ConstructView;
     using Controller::view_;
 
@@ -120,19 +120,23 @@ TEST_F(TestShortcutController, HiddeenOnConstruction)
 TEST_F(TestShortcutController, GetGeometryPerMonitor)
 {
   nux::Geometry good_monitor(0, 0, 1366, 768);
-  nux::Geometry invalid_monitor(good_monitor.x + good_monitor.width, 0, 1, 1);
-  uscreen.SetMonitors({good_monitor, invalid_monitor});
+  nux::Geometry small_monitor(good_monitor.x + good_monitor.width, 0, 1, 1);
+  uscreen.SetMonitors({good_monitor, small_monitor});
 
-  nux::Point offset(g_random_int_range(0, 100), g_random_int_range(0, 100));
+  nux::Point offset(g_random_int_range(0, 10), g_random_int_range(0, 10));
   controller_.SetAdjustment(offset.x, offset.y);
   controller_.ConstructView();
 
-  nux::Geometry expected = controller_.view_->GetAbsoluteGeometry();
-  expected.x = good_monitor.x + offset.x + (good_monitor.width - expected.width - offset.x) / 2;
-  expected.y = good_monitor.y + offset.y + (good_monitor.height - expected.height - offset.y) / 2;
-  EXPECT_EQ(controller_.GetGeometryPerMonitor(0), expected);
+  // Big enough monitor
+  nux::Point expected(good_monitor.x + offset.x, good_monitor.y + offset.y);
+  auto const& view_geo = controller_.view_->GetAbsoluteGeometry();
+  expected.x += (good_monitor.width - view_geo.width - offset.x) / 2;
+  expected.y += (good_monitor.height - view_geo.height - offset.y) / 2;
+  EXPECT_EQ(controller_.GetOffsetPerMonitor(0), expected);
 
-  EXPECT_TRUE(controller_.GetGeometryPerMonitor(1).IsNull());
+  // Too small monitor
+  EXPECT_LT(controller_.GetOffsetPerMonitor(1).x, 0);
+  EXPECT_LT(controller_.GetOffsetPerMonitor(1).y, 0);
 }
 
 TEST_F(TestShortcutController, ModelIsChangedOnModellerChange)
