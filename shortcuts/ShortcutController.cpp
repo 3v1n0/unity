@@ -46,25 +46,16 @@ Controller::Controller(BaseWindowRaiser::Ptr const& base_window_raiser,
 {
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
                                  sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
-
-  ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWITCHER, [this] (GVariant*) {
-                                   enabled_ = false;
-                                 });
-
-  ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWITCHER, [this] (GVariant*) {
-                                   enabled_ = true;
-                                 });
-
-  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [this] (GVariant*) {
-                                   Hide();
-                                 });
+  ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWITCHER, [this] (GVariant*)
+                                 { SetEnabled(false); });
+  ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWITCHER, [this] (GVariant*)
+                                 { SetEnabled(true); });
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN,
+                                 sigc::hide(sigc::mem_fun(this, &Controller::Hide)));
 
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
-  fade_animator_.updated.connect([this] (double opacity) {
-    SetOpacity(opacity);
-  });
-
+  fade_animator_.updated.connect(sigc::mem_fun(this, &Controller::SetOpacity));
   modeller_->model_changed.connect(sigc::mem_fun(this, &Controller::OnModelUpdated));
 }
 
