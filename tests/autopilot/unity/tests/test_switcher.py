@@ -426,10 +426,13 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
 class SwitcherWorkspaceTests(SwitcherTestCase):
     """Test Switcher behavior with respect to multiple workspaces."""
 
-    def test_switcher_shows_current_workspace_only(self):
-        """Switcher must show apps from the current workspace only."""
+    def setUp(self):
+        super(SwitcherWorkspaceTests, self).setUp()
         if self.workspace.num_workspaces <= 1:
             self.skipTest("This test requires enabled more than one workspace.")
+
+    def test_switcher_shows_current_workspace_only(self):
+        """Switcher must show apps from the current workspace only."""
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
 
@@ -446,8 +449,6 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
 
     def test_switcher_all_mode_shows_all_apps(self):
         """Test switcher 'show_all' mode shows apps from all workspaces."""
-        if self.workspace.num_workspaces <= 1:
-            self.skipTest("This test requires enabled more than one workspace.")
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
 
@@ -468,8 +469,6 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         another instance of the same application on a different workspace.
 
         """
-        if self.workspace.num_workspaces <= 1:
-            self.skipTest("This test requires enabled more than one workspace.")
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
 
@@ -495,9 +494,6 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
 
     def test_switcher_is_disabled_when_wall_plugin_active(self):
         """The switcher must not open when the wall plugin is active using ctrl+alt+<direction>."""
-
-        if self.workspace.num_workspaces <= 1:
-            self.skipTest("This test requires enabled more than one workspace.")
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
 
