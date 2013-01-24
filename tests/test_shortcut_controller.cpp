@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Canonical Ltd.
+ * Copyright 2012-2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3, as published
@@ -15,6 +15,7 @@
  * <http://www.gnu.org/licenses/>
  *
  * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include <gmock/gmock.h>
@@ -23,6 +24,7 @@ using namespace testing;
 #include "shortcuts/BaseWindowRaiser.h"
 #include "shortcuts/ShortcutController.h"
 #include "unity-shared/UnitySettings.h"
+#include "UBusMessages.h"
 using namespace unity;
 
 #include "test_utils.h"
@@ -65,6 +67,7 @@ class TestShortcutController : public Test
     MOCK_METHOD1(SetOpacity, void(double));
     using Controller::GetOffsetPerMonitor;
     using Controller::ConstructView;
+    using Controller::bg_color_;
     using Controller::view_;
 
     void RealSetOpacity(double value)
@@ -150,6 +153,39 @@ TEST_F(TestShortcutController, ModelIsChangedOnModellerChange)
   EXPECT_EQ(controller_.view_->GetModel(), model);
 }
 
+TEST_F(TestShortcutController, UpdateackgroundColor)
+{
+  UBusManager().SendMessage(UBUS_BACKGROUND_COLOR_CHANGED,
+                            g_variant_new("(dddd)", 11/255.0f, 22/255.0f, 33/255.0f, 1.0f));
+
+  Utils::WaitUntilMSec([this] { return controller_.bg_color_ == nux::Color(11, 22, 33); });
+}
+
+TEST_F(TestShortcutController, DisabledOnLauncherKeySwitcherStart)
+{
+  ASSERT_TRUE(controller_.IsEnabled());
+  UBusManager().SendMessage(UBUS_LAUNCHER_START_KEY_SWITCHER);
+
+  Utils::WaitUntilMSec([this] { return controller_.IsEnabled(); }, false);
+}
+
+TEST_F(TestShortcutController, EnabledOnLauncherKeySwitcherEnd)
+{
+  controller_.SetEnabled(false);
+  ASSERT_FALSE(controller_.IsEnabled());
+  UBusManager().SendMessage(UBUS_LAUNCHER_END_KEY_SWITCHER);
+
+  Utils::WaitUntilMSec([this] { return controller_.IsEnabled(); }, true);
+}
+
+TEST_F(TestShortcutController, HideOnDashShow)
+{
+  controller_.Show();
+  ASSERT_TRUE(controller_.Visible());
+  UBusManager().SendMessage(UBUS_OVERLAY_SHOWN);
+
+  Utils::WaitUntilMSec([this] { return controller_.Visible(); }, false);
+}
 
 }
 }
