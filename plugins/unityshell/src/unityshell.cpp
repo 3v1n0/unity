@@ -33,6 +33,7 @@
 #include "LauncherIcon.h"
 #include "LauncherController.h"
 #include "SwitcherController.h"
+#include "SwitcherView.h"
 #include "PluginAdapter.h"
 #include "QuicklistManager.h"
 #include "StartupNotifyService.h"
