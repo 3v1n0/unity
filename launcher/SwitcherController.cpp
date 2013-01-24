@@ -374,14 +374,14 @@ void ShellController::Hide(bool accept_state)
     {
       if (model_->detail_selection)
       {
-        selection->Activate(ActionArg(ActionArg::SWITCHER, 0, model_->DetailSelectionWindow ()));
+        selection->Activate(ActionArg(ActionArg::SWITCHER, 0, model_->DetailSelectionWindow()));
       }
       else
       {
         if (selection == last_active_selection_ &&
-            !model_->DetailXids().empty ())
+            !model_->DetailXids().empty())
         {
-          selection->Activate(ActionArg (ActionArg::SWITCHER, 0, model_->DetailXids()[0]));
+          selection->Activate(ActionArg(ActionArg::SWITCHER, 0, model_->DetailXids()[0]));
         }
         else
         {
@@ -433,7 +433,7 @@ void ShellController::Next()
     switch (detail_mode_)
     {
       case TAB_NEXT_WINDOW:
-        if (model_->detail_selection_index < model_->DetailXids().size () - 1)
+        if (model_->detail_selection_index < model_->DetailXids().size() - 1)
           model_->NextDetail();
         else
           model_->Next();
@@ -488,7 +488,7 @@ SwitcherView* ShellController::GetView()
 
 void ShellController::SetDetail(bool value, unsigned int min_windows)
 {
-  if (value && model_->DetailXids().size () >= min_windows)
+  if (value && model_->DetailXids().size() >= min_windows)
   {
     model_->detail_selection = true;
     detail_mode_ = TAB_NEXT_WINDOW;
