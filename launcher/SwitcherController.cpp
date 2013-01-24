@@ -25,6 +25,8 @@
 #include "unity-shared/WindowManager.h"
 
 #include "SwitcherController.h"
+#include "SwitcherControllerImpl.h"
+
 
 namespace unity
 {
@@ -43,7 +45,6 @@ namespace
 namespace switcher
 {
 
-/* Delegation to impl */
 Controller::Controller(WindowCreator const& create_window)
   : detail_on_timeout(true)
   , detail_timeout_length(500)
@@ -52,6 +53,11 @@ Controller::Controller(WindowCreator const& create_window)
 {
   AddChild(impl_.get());
 }
+
+
+Controller::~Controller()
+{ }
+
 
 bool Controller::CanShowSwitcher(const std::vector<AbstractLauncherIcon::Ptr>& results) const
 {

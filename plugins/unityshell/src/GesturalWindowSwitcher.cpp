@@ -21,8 +21,10 @@
  */
 
 #include "GesturalWindowSwitcher.h"
+#include <core/timer.h>
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
+#include "SwitcherView.h"
 #include "unityshell.h"
 
 DECLARE_LOGGER(logger, "unity.gesture.switcher");
