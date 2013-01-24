@@ -22,6 +22,7 @@
 
 #include <memory>
 
+#include "AbstractLauncherIcon.h"
 #include <UnityCore/Variant.h>
 #include <UnityCore/GLibSource.h>
 
@@ -37,10 +38,6 @@
 
 namespace unity
 {
-namespace launcher
-{
-class AbstractLauncherIcon;
-}
 namespace switcher
 {
 
@@ -55,6 +52,17 @@ enum class ShowMode
   ALL,
   CURRENT_VIEWPORT,
 };
+
+
+/**
+ * Represents a selected application+window to be switched to.
+ */
+struct Selection
+{
+  launcher::AbstractLauncherIcon::Ptr application_;
+  Window                              window_;
+};
+
 
 class Controller : public debug::Introspectable
 {
@@ -101,6 +109,8 @@ public:
   bool IsShowDesktopDisabled() const;
   void SetShowDesktopDisabled(bool disabled);
   int StartIndex() const;
+
+  Selection GetCurrentSelection() const;
 
   sigc::connection ConnectToViewBuilt(sigc::slot<void> const&);
   void SetDetailOnTimeout(bool timeout);
@@ -161,6 +171,7 @@ public:
   virtual bool IsShowDesktopDisabled() const = 0;
   virtual void SetShowDesktopDisabled(bool disabled) = 0;
   virtual int StartIndex() const = 0;
+  virtual Selection GetCurrentSelection() const = 0;
 
   sigc::signal<void> view_built;
 protected:
@@ -207,6 +218,7 @@ public:
   bool IsShowDesktopDisabled() const;
   void SetShowDesktopDisabled(bool disabled);
   int StartIndex() const;
+  Selection GetCurrentSelection() const;
 
 protected:
   // Introspectable methods
