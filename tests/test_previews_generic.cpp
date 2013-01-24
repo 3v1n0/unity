@@ -83,7 +83,7 @@ public:
     g_hash_table_unref(action_hints1);
   }
 
-  nux::BaseWindow* parent_window_;
+  nux::ObjectPtr<nux::BaseWindow> parent_window_;
   dash::Preview::Ptr preview_model_;
 
   unity::Settings settings;
