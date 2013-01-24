@@ -21,7 +21,8 @@
 
 #include <gmock/gmock.h>
 using namespace testing;
-
+#include <Nux/NuxTimerTickSource.h>
+#include <NuxCore/AnimationController.h>
 #include "HudController.h"
 #include "mock-base-window.h"
 #include "unity-shared/DashStyle.h"
@@ -32,6 +33,8 @@ using namespace unity;
 
 namespace
 {
+
+const unsigned TICK_DURATION = 90 * 1000; // time is in micro-seconds
 
 class MockHudView : public hud::AbstractView
 {
@@ -94,6 +97,9 @@ protected:
 
 TEST_F(TestHudController, TestShowAndHideHud)
 {
+  nux::NuxTimerTickSource tick_source;
+  nux::animation::AnimationController animation_controller(tick_source);
+
   // Verify initial conditions
   EXPECT_EQ(base_window_->GetOpacity(), 0.0);
 
@@ -109,14 +115,14 @@ TEST_F(TestHudController, TestShowAndHideHud)
   }
 
   controller_->ShowHud();
-  Utils::WaitForTimeout(2);
+  tick_source.tick(TICK_DURATION);
+  EXPECT_EQ(base_window_->GetOpacity(), 1.0);
+
   Mock::VerifyAndClearExpectations(view_.GetPointer());
   Mock::VerifyAndClearExpectations(base_window_.GetPointer());
-  EXPECT_EQ(base_window_->GetOpacity(), 1.0);
 
   // Set expectations for hiding the HUD
   EXPECT_CALL(*view_, AboutToHide()).Times(1);
-  EXPECT_CALL(*view_, ResetToDefault()).Times(1);
   {
     InSequence hiding;
     EXPECT_CALL(*base_window_, SetOpacity(_)).Times(AtLeast(1));
@@ -126,7 +132,7 @@ TEST_F(TestHudController, TestShowAndHideHud)
   }
 
   controller_->HideHud();
-  Utils::WaitForTimeout(2);
+  tick_source.tick(TICK_DURATION*2);
   EXPECT_EQ(base_window_->GetOpacity(), 0.0);
 }
 
