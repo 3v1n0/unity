@@ -137,9 +137,9 @@ ResultIterator ResultView::GetIteratorAtRow(unsigned row)
     {
       iter = row > 0 ? dee_model_get_iter_at_row(result_model_->model(), row) :
         dee_model_get_first_iter(result_model_->model());
+      
+      return ResultIterator(result_model_->model(), iter, result_model_->GetTag());
     }
-    
-    return ResultIterator(result_model_->model(), iter, result_model_->GetTag());
   }
   return ResultIterator(glib::Object<DeeModel>());
 }

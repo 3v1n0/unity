@@ -435,7 +435,10 @@ void ScopeView::OnCategoryAdded(Category const& category)
     });
 
     /* Set up filter model for this category */
-    grid->SetResultsModel(scope_->GetResultsForCategory(index));
+    Results::Ptr results_model = scope_->GetResultsForCategory(index);
+    counts_[group] = results_model ? results_model->count() : 0;
+
+    grid->SetResultsModel(results_model);
 
     if (reset_filter_models)
     {
@@ -464,6 +467,8 @@ void ScopeView::OnCategoryAdded(Category const& category)
   scroll_layout_->AddView(group, 0, nux::MinorDimensionPosition::MINOR_POSITION_START,
                           nux::MinorDimensionSize::MINOR_SIZE_FULL, 100.0f,
                           (nux::LayoutPosition)index);
+
+  UpdateCounts(group);
 }
 
 void ScopeView::OnCategoryRemoved(Category const& category)

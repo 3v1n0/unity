@@ -49,10 +49,14 @@ public:
   static ScopeData::Ptr CreateData(std::string const& dbus_name, std::string const& dbus_path);
 
   void CreateProxy();
+  void OnNewScope(GObject *source_object, GAsyncResult *res);
   void DestroyProxy();
 
-  void OnNewScope(GObject *source_object, GAsyncResult *res);
+  void OpenChannel();
   void OnChannelOpened(GObject *source_object, GAsyncResult *res);
+
+  void CloseChannel();
+  static void OnCloseChannel(GObject *source_object, GAsyncResult *res, gpointer user_data);
 
   void Search(std::string const& search_string, glib::HintsMap const& hints, SearchCallback const& callback, GCancellable* cancel);
   void Activate(std::string const& uri, uint activate_type, glib::HintsMap const& hints, ScopeProxy::ActivateCallback const& callback, GCancellable* cancellable);
@@ -81,7 +85,6 @@ public:
   nux::Property<bool> search_in_global;
   nux::Property<ScopeViewType> view_type;
 
-
   nux::Property<bool> connected;
   nux::Property<std::string> channel;
   nux::Property<std::vector<int>> category_order;
@@ -89,8 +92,9 @@ public:
 
   glib::Object<UnityProtocolScopeProxy> scope_proxy_;
   glib::Object<GCancellable> cancel_scope_;
-
   bool proxy_created_;
+  bool scope_proxy_connected_;
+  bool searching_;
 
   Results::Ptr results_;
   Filters::Ptr filters_;
@@ -102,6 +106,7 @@ public:
 
   /////////////////////////////////////////////////
   // DBus property signals.
+  glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> connected_signal_;
   glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> search_in_global_signal_;
   glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> is_master_signal_;
   glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> search_hint_signal_;
@@ -116,6 +121,7 @@ public:
 private:
   /////////////////////////////////////////////////
   // Signal Connections
+  void OnScopeConnectedChnged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
   void OnScopeIsMasterChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
   void OnScopeSearchInGlobalChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
   void OnScopeSearchHintChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
@@ -221,12 +227,6 @@ private:
       data->callback(source_object, res);    
   }
   /////////////////////////////////////
-
-  static void OnCloseChannel(GObject *source_object, GAsyncResult *res, gpointer user_data)
-  {
-    glib::Error err;
-    unity_protocol_scope_proxy_close_channel_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &err);
-  }
 };
 
 
@@ -238,6 +238,8 @@ ScopeProxy::Impl::Impl(ScopeProxy*const owner, ScopeData::Ptr const& scope_data)
 , connected(false)
 , cancel_scope_(g_cancellable_new())
 , proxy_created_(false)
+, scope_proxy_connected_(false)
+, searching_(false)
 , results_(new Results())
 , filters_(new Filters())
 , categories_(new Categories())
@@ -349,6 +351,7 @@ void ScopeProxy::Impl::OnNewScope(GObject *source_object, GAsyncResult *res)
   search_in_global = unity_protocol_scope_proxy_get_search_in_global(scope_proxy_);
   view_type = static_cast<ScopeViewType>(unity_protocol_scope_proxy_get_view_type(scope_proxy_));
 
+  connected_signal_.Connect(scope_proxy_, "notify::connected", sigc::mem_fun(this, &Impl::OnScopeConnectedChnged));
   search_in_global_signal_.Connect(scope_proxy_, "notify::search-in-global", sigc::mem_fun(this, &Impl::OnScopeSearchInGlobalChanged));
   is_master_signal_.Connect(scope_proxy_, "notify::is-master", sigc::mem_fun(this, &Impl::OnScopeIsMasterChanged));
   search_hint_signal_.Connect(scope_proxy_, "notify::search-hint", sigc::mem_fun(this, &Impl::OnScopeSearchHintChanged));
@@ -358,6 +361,16 @@ void ScopeProxy::Impl::OnNewScope(GObject *source_object, GAsyncResult *res)
   metadata_signal_.Connect(scope_proxy_, "notify::metadata", sigc::mem_fun(this, &Impl::OnScopeMetadataChanged));
   optional_metadata_signal_.Connect(scope_proxy_, "notify::optional-metadata", sigc::mem_fun(this, &Impl::OnScopeOptionalMetadataChanged));
   category_order_signal_.Connect(scope_proxy_, "category-order-changed", sigc::mem_fun(this, &Impl::OnScopeCategoryOrderChanged));
+
+  scope_proxy_connected_ = unity_protocol_scope_proxy_get_search_in_global(scope_proxy_);
+  
+  OpenChannel();
+}
+
+void ScopeProxy::Impl::OpenChannel()
+{
+  if (channel != "")
+    return;
 
   unity_protocol_scope_proxy_open_channel(scope_proxy_,
                                           UNITY_PROTOCOL_CHANNEL_TYPE_DEFAULT,
@@ -405,6 +418,31 @@ void ScopeProxy::Impl::OnChannelOpened(GObject *source_object, GAsyncResult *res
   channel = tmp_channel.Str();
   LOG_DEBUG(logger) << "Opened channel:" << channel() << " on scope @ '" << scope_data_->dbus_path() << "'";
   connected = true;
+
+  if (!searching_)
+  {
+    // If a search hasn't initiated this channel opening, perform the search to get the results.
+    Search(last_search_, glib::HintsMap(), nullptr, cancel_scope_);
+  }
+}
+
+void ScopeProxy::Impl::CloseChannel()
+{
+  if (channel != "")
+  {
+    unity_protocol_scope_proxy_close_channel(scope_proxy_,
+                                             channel.Get().c_str(),
+                                             nullptr,
+                                             OnCloseChannel,
+                                             nullptr);
+    channel = "";
+  }
+}
+
+void ScopeProxy::Impl::OnCloseChannel(GObject *source_object, GAsyncResult *res, gpointer user_data)
+{
+  glib::Error err;
+  unity_protocol_scope_proxy_close_channel_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &err);
 }
 
 void ScopeProxy::Impl::WaitForProxyConnection(GCancellable* cancellable,
@@ -449,6 +487,9 @@ void ScopeProxy::Impl::WaitForProxyConnection(GCancellable* cancellable,
 
 void ScopeProxy::Impl::Search(std::string const& search_string, glib::HintsMap const& hints, SearchCallback const& callback, GCancellable* cancellable)
 {
+  // Activate a guard against performing a "on channel open search" if we're not connected.
+  utils::AutoResettingVariable<bool> searching(&searching_, true);
+
   GCancellable* target_canc = cancellable != NULL ? cancellable : cancel_scope_;
 
   if (!scope_proxy_)
@@ -572,6 +613,23 @@ void ScopeProxy::Impl::UpdatePreviewProperty(std::string const& uri, glib::Hints
                                                      data);
 
   g_hash_table_unref(hints_table);
+}
+
+void ScopeProxy::Impl::OnScopeConnectedChnged(UnityProtocolScopeProxy* proxy, GParamSpec* param)
+{
+  bool tmp_scope_proxy_connected = unity_protocol_scope_proxy_get_search_in_global(scope_proxy_);  
+  if (tmp_scope_proxy_connected != scope_proxy_connected_)
+  {
+    scope_proxy_connected_ = tmp_scope_proxy_connected;
+
+    LOG_WARN(logger) << scope_data_->id() << " - Connection state changed : " << (scope_proxy_connected_ ? "connected" : "disconnected");
+
+    CloseChannel();
+    if (tmp_scope_proxy_connected)
+    {
+      OpenChannel();
+    }
+  }
 }
 
 void ScopeProxy::Impl::OnScopeIsMasterChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param)
@@ -723,6 +781,9 @@ void ScopeProxy::UpdatePreviewProperty(std::string const& uri, glib::HintsMap co
 Results::Ptr ScopeProxy::GetResultsForCategory(unsigned category) const
 {
   Results::Ptr all_results = results;
+
+  if (!all_results || !all_results->model())
+    return Results::Ptr();
 
   DeeFilter filter;
   pimpl->GetFilterForCategory(category, &filter);

@@ -91,6 +91,27 @@ std::shared_ptr<sigc::connection> ConnectProperties(nux::RWProperty<TYPE>& local
   return change_connection;
 }
 
+template <class TYPE>
+class AutoResettingVariable
+{
+public:
+  AutoResettingVariable(TYPE*const variable, TYPE const& new_value)
+  : variable_(variable)
+  , original_value_(*variable)
+  {
+    *variable_ = new_value;
+  }
+
+  ~AutoResettingVariable()
+  {
+    *variable_ = original_value_;
+  }
+
+private:
+  TYPE*const variable_;
+  TYPE original_value_;
+};
+
 }
 }
 
