@@ -140,6 +140,11 @@ int Controller::StartIndex() const
   return impl_->StartIndex();
 }
 
+Selection Controller::GetCurrentSelection() const
+{
+  return impl_->GetCurrentSelection();
+}
+
 void Controller::SelectFirstItem()
 {
   impl_->SelectFirstItem();
@@ -369,25 +374,11 @@ void ShellController::Hide(bool accept_state)
 
   if (accept_state)
   {
-    AbstractLauncherIcon::Ptr const& selection = model_->Selection();
-    if (selection)
+    Selection selection = GetCurrentSelection();
+    if (selection.application_)
     {
-      if (model_->detail_selection)
-      {
-        selection->Activate(ActionArg(ActionArg::SWITCHER, 0, model_->DetailSelectionWindow()));
-      }
-      else
-      {
-        if (selection == last_active_selection_ &&
-            !model_->DetailXids().empty())
-        {
-          selection->Activate(ActionArg(ActionArg::SWITCHER, 0, model_->DetailXids()[0]));
-        }
-        else
-        {
-          selection->Activate(ActionArg(ActionArg::SWITCHER, 0));
-        }
-      }
+      selection.application_->Activate(ActionArg(ActionArg::SWITCHER, 0,
+                                                 selection.window_));
     }
   }
 
@@ -560,6 +551,28 @@ void ShellController::SetShowDesktopDisabled(bool disabled)
 int ShellController::StartIndex() const
 {
   return (show_desktop_disabled_ ? 0 : 1);
+}
+
+Selection ShellController::GetCurrentSelection() const
+{
+  AbstractLauncherIcon::Ptr application;
+  Window window = 0;
+  if (model_)
+  {
+    application = model_->Selection();
+    if (application)
+    {
+      if (model_->detail_selection)
+      {
+        window =  model_->DetailSelectionWindow();
+      }
+      else if (application == last_active_selection_ && !model_->DetailXids().empty())
+      {
+        window =  model_->DetailXids()[0];
+      }
+    }
+  }
+  return {application, window};
 }
 
 bool ShellController::CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr const& first,
