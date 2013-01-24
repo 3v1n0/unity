@@ -62,7 +62,6 @@ set (UNITY_SHARED_SOURCES
      UserThumbnailProvider.cpp
      VScrollBarOverlayWindow.cpp
      WindowManager.cpp
-     XPathQueryPart.cpp
 )
 
 if(ENABLE_X_SUPPORT)

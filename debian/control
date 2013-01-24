@@ -43,6 +43,7 @@ Build-Depends: cmake,
                libxfixes-dev (>= 1:5.0-4ubuntu4),
                libgtest-dev,
                google-mock,
+               libxpathselect-dev,
 Standards-Version: 3.9.3
 Homepage: https://launchpad.net/unity
 # If you aren't a member of ~unity-team but need to upload packaging changes,
@@ -183,7 +184,7 @@ Package: libunity-2d-private0
 Depends: unity, ${misc:Depends}
 Architecture: all
 Section: oldlibs
-Description: transitional dummy package 
+Description: transitional dummy package
  This is a transitional dummy package for unity-2d -> unity migration.
  It can safely be removed.
 
@@ -191,7 +192,7 @@ Package: libunity-2d-private-dev
 Depends: unity, ${misc:Depends}
 Architecture: all
 Section: oldlibs
-Description: transitional dummy package 
+Description: transitional dummy package
  This is a transitional dummy package for unity-2d -> unity migration.
  It can safely be removed.
 
@@ -199,7 +200,7 @@ Package: unity-2d-panel
 Depends: unity, ${misc:Depends}
 Architecture: all
 Section: oldlibs
-Description: transitional dummy package 
+Description: transitional dummy package
  This is a transitional dummy package for unity-2d -> unity migration.
  It can safely be removed.
 
@@ -207,7 +208,7 @@ Package: unity-2d-spread
 Depends: unity, ${misc:Depends}
 Architecture: all
 Section: oldlibs
-Description: transitional dummy package 
+Description: transitional dummy package
  This is a transitional dummy package for unity-2d -> unity migration.
  It can safely be removed.
 
@@ -215,7 +216,7 @@ Package: unity-2d-common
 Depends: unity, ${misc:Depends}
 Architecture: all
 Section: oldlibs
-Description: transitional dummy package 
+Description: transitional dummy package
  This is a transitional dummy package for unity-2d -> unity migration.
  It can safely be removed.
 
