@@ -32,6 +32,7 @@
 #include <gtk/gtk.h>
 
 #include "SwitcherController.h"
+#include "SwitcherView.h"
 #include "MockLauncherIcon.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UnitySettings.h"
