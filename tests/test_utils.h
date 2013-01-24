@@ -34,16 +34,7 @@ public:
 
   static void WaitUntilMSec(bool& success, unsigned int max_wait = 500)
   {
-    bool timeout_reached = false;
-    guint32 timeout_id = ScheduleTimeout(&timeout_reached, max_wait);
-
-    while (!success && !timeout_reached)
-      g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
-
-    if (success)
-      g_source_remove(timeout_id);
-
-    EXPECT_TRUE(success);
+    WaitUntilMSec([&success] {return success;}, true, max_wait);
   }
 
   static void WaitUntil(bool& success, unsigned max_wait = 1)
