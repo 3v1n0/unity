@@ -49,6 +49,13 @@ enum class ShowMode
   CURRENT_VIEWPORT,
 };
 
+enum class DetailMode
+{
+  TAB_NEXT_WINDOW,
+  TAB_NEXT_WINDOW_LOOP,
+  TAB_NEXT_TILE,
+};
+
 
 /**
  * Represents a selected application+window to be switched to.
@@ -117,13 +124,18 @@ public:
   nux::Property<int>  detail_timeout_length;
   nux::Property<int>  initial_detail_timeout_length;
 
+  bool       visible_;
+  int        monitor_;
+  bool       show_desktop_disabled_;
+  DetailMode detail_mode_;
+
 private:
   // Introspectable methods
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
 private:
-  ImplPtr impl_;
+  ImplPtr    impl_;
 };
 
 }

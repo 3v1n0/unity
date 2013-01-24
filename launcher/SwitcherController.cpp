@@ -49,6 +49,10 @@ Controller::Controller(WindowCreator const& create_window)
   : detail_on_timeout(true)
   , detail_timeout_length(500)
   , initial_detail_timeout_length(1500)
+  , visible_(false)
+  , monitor_(0)
+  , show_desktop_disabled_(false)
+  , detail_mode_(DetailMode::TAB_NEXT_WINDOW)
   , impl_(new ShellController(this, 20, create_window))
 {
   AddChild(impl_.get());
@@ -178,7 +182,11 @@ Controller::AddProperties(GVariantBuilder* builder)
   unity::variant::BuilderWrapper(builder)
   .add("detail_on_timeout", detail_on_timeout())
   .add("initial_detail_timeout_length", initial_detail_timeout_length())
-  .add("detail_timeout_length", detail_timeout_length());
+  .add("detail_timeout_length", detail_timeout_length())
+  .add("visible", visible_)
+  .add("monitor", monitor_)
+  .add("show_desktop_disabled", show_desktop_disabled_)
+  .add("detail_mode", static_cast<int>(detail_mode_));
 }
 
 ShellController::ShellController(Controller* obj,
@@ -189,9 +197,6 @@ ShellController::ShellController(Controller* obj,
   ,  construct_timeout_(load_timeout)
   ,  create_window_(create_window)
   ,  main_layout_(nullptr)
-  ,  monitor_(0)
-  ,  visible_(false)
-  ,  show_desktop_disabled_(false)
   ,  bg_color_(0, 0, 0, 0.5)
 {
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &ShellController::OnBackgroundUpdate));
@@ -217,7 +222,7 @@ void ShellController::OnBackgroundUpdate(GVariant* data)
 
 bool ShellController::CanShowSwitcher(const std::vector<AbstractLauncherIcon::Ptr>& results) const
 {
-  bool empty = (show_desktop_disabled_ ? results.empty() : results.size() == 1);
+  bool empty = (IsShowDesktopDisabled() ? results.empty() : results.size() == 1);
 
   return (!empty && !WindowManager::Default().IsWallActive());
 }
@@ -244,7 +249,7 @@ void ShellController::Show(ShowMode show, SortMode sort, std::vector<AbstractLau
   if (model_->Selection()->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
     last_active_selection_ = model_->Selection();
 
-  visible_ = true;
+  obj_->visible_ = true;
 
   if (timeout_length > 0)
   {
@@ -263,21 +268,22 @@ void ShellController::Show(ShowMode show, SortMode sort, std::vector<AbstractLau
   }
 
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
-  ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new("(bi)", true, monitor_));
+  ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN,
+                            g_variant_new("(bi)", true, obj_->monitor_));
 }
 
 void ShellController::Select(int index)
 {
-  if (visible_)
+  if (Visible())
     model_->Select(index);
 }
 
 bool ShellController::OnDetailTimer()
 {
-  if (visible_ && !model_->detail_selection)
+  if (Visible() && !model_->detail_selection)
   {
     SetDetail(true, 2);
-    detail_mode_ = TAB_NEXT_WINDOW;
+    obj_->detail_mode_ = DetailMode::TAB_NEXT_WINDOW;
   }
 
   return false;
@@ -293,9 +299,10 @@ void ShellController::OnModelSelectionChanged(AbstractLauncherIcon::Ptr const& i
 
   if (icon)
   {
-    if (!visible_)
+    if (!Visible())
     {
-      ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new("(bi)", true, monitor_));
+      ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN,
+                                g_variant_new("(bi)", true, obj_->monitor_));
     }
 
     ubus_manager_.SendMessage(UBUS_SWITCHER_SELECTION_CHANGED,
@@ -305,7 +312,7 @@ void ShellController::OnModelSelectionChanged(AbstractLauncherIcon::Ptr const& i
 
 void ShellController::ShowView()
 {
-  if (!visible_)
+  if (!Visible())
     return;
 
   ConstructView();
@@ -352,7 +359,7 @@ void ShellController::ConstructView()
   AddChild(view_.GetPointer());
   view_->SetModel(model_);
   view_->background_color = bg_color_;
-  view_->monitor = monitor_;
+  view_->monitor = obj_->monitor_;
   view_->SetupBackground();
 
   ConstructWindow();
@@ -366,16 +373,16 @@ void ShellController::ConstructView()
 
 void ShellController::SetWorkspace(nux::Geometry geo, int monitor)
 {
-  monitor_ = monitor;
+  obj_->monitor_ = monitor;
   workarea_ = geo;
 
   if (view_)
-    view_->monitor = monitor_;
+    view_->monitor = obj_->monitor_;
 }
 
 void ShellController::Hide(bool accept_state)
 {
-  if (!visible_)
+  if (!Visible())
     return;
 
   if (accept_state)
@@ -395,7 +402,7 @@ void ShellController::Hide(bool accept_state)
   sources_.Remove(DETAIL_TIMEOUT);
 
   model_.reset();
-  visible_ = false;
+  obj_->visible_ = false;
 
   if (view_)
     main_layout_->RemoveChildObject(view_.GetPointer());
@@ -408,7 +415,7 @@ void ShellController::Hide(bool accept_state)
     view_window_->EnableInputWindow(false);
   }
 
-  ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new("(bi)", false, monitor_));
+  ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new("(bi)", false, obj_->monitor_));
 
   last_active_selection_ = nullptr;
 
@@ -417,7 +424,7 @@ void ShellController::Hide(bool accept_state)
 
 bool ShellController::Visible()
 {
-  return visible_;
+  return obj_->visible_;
 }
 
 void ShellController::Next()
@@ -427,18 +434,18 @@ void ShellController::Next()
 
   if (model_->detail_selection)
   {
-    switch (detail_mode_)
+    switch (obj_->detail_mode_)
     {
-      case TAB_NEXT_WINDOW:
+      case DetailMode::TAB_NEXT_WINDOW:
         if (model_->detail_selection_index < model_->DetailXids().size() - 1)
           model_->NextDetail();
         else
           model_->Next();
         break;
-      case TAB_NEXT_TILE:
+      case DetailMode::TAB_NEXT_TILE:
         model_->Next();
         break;
-      case TAB_NEXT_WINDOW_LOOP:
+      case DetailMode::TAB_NEXT_WINDOW_LOOP:
         model_->NextDetail(); //looping automatic
         break;
     }
@@ -456,18 +463,18 @@ void ShellController::Prev()
 
   if (model_->detail_selection)
   {
-    switch (detail_mode_)
+    switch (obj_->detail_mode_)
     {
-      case TAB_NEXT_WINDOW:
+      case DetailMode::TAB_NEXT_WINDOW:
         if (model_->detail_selection_index > (unsigned int) 0)
           model_->PrevDetail();
         else
           model_->Prev();
         break;
-      case TAB_NEXT_TILE:
+      case DetailMode::TAB_NEXT_TILE:
         model_->Prev();
         break;
-      case TAB_NEXT_WINDOW_LOOP:
+      case DetailMode::TAB_NEXT_WINDOW_LOOP:
         model_->PrevDetail(); //looping automatic
         break;
     }
@@ -488,7 +495,7 @@ void ShellController::SetDetail(bool value, unsigned int min_windows)
   if (value && model_->DetailXids().size() >= min_windows)
   {
     model_->detail_selection = true;
-    detail_mode_ = TAB_NEXT_WINDOW;
+    obj_->detail_mode_ = DetailMode::TAB_NEXT_WINDOW;
   }
   else
   {
@@ -504,7 +511,7 @@ void ShellController::NextDetail()
   if (!model_->detail_selection)
   {
     SetDetail(true);
-    detail_mode_ = TAB_NEXT_TILE;
+    obj_->detail_mode_ = DetailMode::TAB_NEXT_TILE;
   }
   else
   {
@@ -520,7 +527,7 @@ void ShellController::PrevDetail()
   if (!model_->detail_selection)
   {
     SetDetail(true);
-    detail_mode_ = TAB_NEXT_TILE;
+    obj_->detail_mode_ = DetailMode::TAB_NEXT_TILE;
     model_->PrevDetail();
   }
   else
@@ -546,17 +553,17 @@ guint ShellController::GetSwitcherInputWindowId() const
 
 bool ShellController::IsShowDesktopDisabled() const
 {
-  return show_desktop_disabled_;
+  return obj_->show_desktop_disabled_;
 }
 
 void ShellController::SetShowDesktopDisabled(bool disabled)
 {
-  show_desktop_disabled_ = disabled;
+  obj_->show_desktop_disabled_ = disabled;
 }
 
 int ShellController::StartIndex() const
 {
-  return (show_desktop_disabled_ ? 0 : 1);
+  return (IsShowDesktopDisabled() ? 0 : 1);
 }
 
 Selection ShellController::GetCurrentSelection() const
@@ -662,11 +669,7 @@ void
 ShellController::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder)
-  .add("timeout_length", timeout_length())
-  .add("visible", visible_)
-  .add("monitor", monitor_)
-  .add("show_desktop_disabled", show_desktop_disabled_)
-  .add("detail_mode", detail_mode_);
+  .add("timeout_length", timeout_length());
 }
 
 } // switcher namespace
