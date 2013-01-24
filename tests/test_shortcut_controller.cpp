@@ -87,7 +87,7 @@ public:
   MockUScreen uscreen;
   Settings unity_settings;
   MockBaseWindowRaiser::Ptr base_window_raiser_;
-  AbstractModeller::Ptr const& modeller_;
+  AbstractModeller::Ptr modeller_;
   NiceMock<MockShortcutController> controller_;
 
   nux::animation::TickSource tick_source_;
