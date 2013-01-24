@@ -166,7 +166,7 @@ Section: python
 Architecture: all
 Depends: ${misc:Depends},
          ${python:Depends},
-         libxpathselect,
+         libxpathselect1.1,
 Description: Autopiloted tests for Unity
  We test Unity automatically through autopilot, a framework which enables us
  to trigger keyboard and mouse events on the fly as well as introspecting
