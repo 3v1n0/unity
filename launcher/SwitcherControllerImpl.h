@@ -38,80 +38,28 @@ namespace unity
 namespace switcher
 {
 
-class Controller::Impl : public debug::Introspectable
+struct Controller::Impl
 {
-public:
-  Impl(Controller* obj)
-  : obj_(obj)
-  {}
-
-  virtual ~Impl() {}
-
-  virtual void Show(ShowMode show,
-                    SortMode sort,
-                    std::vector<launcher::AbstractLauncherIcon::Ptr> results) = 0;
-  virtual void Hide(bool accept_state) = 0;
-
-  virtual bool CanShowSwitcher(const std::vector<launcher::AbstractLauncherIcon::Ptr>& resutls) const = 0;
-
-  virtual bool Visible() = 0;
-
-  virtual void Next() = 0;
-  virtual void Prev() = 0;
-
-  virtual void NextDetail() = 0;
-  virtual void PrevDetail() = 0;
-
-  virtual void Select(int index) = 0;
-
-  virtual void SetDetail(bool detail,
-                         unsigned int min_windows) = 0;
-
-  virtual void SelectFirstItem() = 0;
-
-  virtual void SetWorkspace(nux::Geometry geo,
-                            int monitor) = 0;
-
-  virtual SwitcherView* GetView() = 0;
-
-  virtual ui::LayoutWindow::Vector ExternalRenderTargets() = 0;
-
-  virtual guint GetSwitcherInputWindowId() const = 0;
-
-  virtual bool IsShowDesktopDisabled() const = 0;
-  virtual void SetShowDesktopDisabled(bool disabled) = 0;
-  virtual int StartIndex() const = 0;
-  virtual Selection GetCurrentSelection() const = 0;
-
-  sigc::signal<void> view_built;
-protected:
-  Controller* obj_;
-};
-
-class ShellController : public Controller::Impl,
-                        public sigc::trackable
-{
-public:
   nux::Property<int> timeout_length;
 
-  ShellController(Controller* obj,
-                  unsigned int load_timeout,
-                  Controller::WindowCreator const& create_window);
+  Impl(Controller* obj,
+       unsigned int load_timeout,
+       Controller::WindowCreator const& create_window);
 
-  virtual void Show(ShowMode show, SortMode sort, std::vector<launcher::AbstractLauncherIcon::Ptr> results);
-  virtual void Hide(bool accept_state);
+  void Show(ShowMode show, SortMode sort, std::vector<launcher::AbstractLauncherIcon::Ptr> results);
+  void Hide(bool accept_state);
 
   bool CanShowSwitcher(const std::vector<launcher::AbstractLauncherIcon::Ptr>& resutls) const;
 
-  virtual bool Visible();
+  bool Visible();
 
-  virtual void Next();
-  virtual void Prev();
+  void Next();
+  void Prev();
 
   void NextDetail();
   void PrevDetail();
 
-  virtual void Select(int index);
+  void Select(int index);
 
   void SetDetail(bool detail, unsigned int min_windows = 1);
 
@@ -130,23 +78,22 @@ public:
   int StartIndex() const;
   Selection GetCurrentSelection() const;
 
-protected:
-  // Introspectable methods
-  std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  sigc::signal<void> view_built;
 
-  virtual void ConstructWindow();
-  virtual void ConstructView();
-  virtual void ShowView();
+private:
+  void ConstructWindow();
+  void ConstructView();
+  void ShowView();
 
-  virtual bool OnDetailTimer();
+  bool OnDetailTimer();
   void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr const& icon);
 
   unsigned int construct_timeout_;
 
-private:
   void OnBackgroundUpdate(GVariant* data);
   static bool CompareSwitcherItemsPriority(launcher::AbstractLauncherIcon::Ptr const& first, launcher::AbstractLauncherIcon::Ptr const& second);
+
+  Controller* obj_;
 
   SwitcherModel::Ptr model_;
   SwitcherView::Ptr view_;
