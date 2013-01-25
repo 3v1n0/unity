@@ -796,7 +796,7 @@ class PreviewInvocationTests(DashTestCase):
             if category is None or not category.is_visible:
                 category = lens.get_category_by_name("Online")
                 if category is None or not category.is_visible:
-                    return None
+                    self.skipTest("This lens is probably empty")
             return category
 
         lens = self.dash.reveal_video_lens()
