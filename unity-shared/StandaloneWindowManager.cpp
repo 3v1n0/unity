@@ -63,6 +63,7 @@ StandaloneWindowManager::StandaloneWindowManager()
   , scale_active_(false)
   , scale_active_for_group_(false)
   , current_desktop_(0)
+  , viewport_size_(2, 2)
 {}
 
 Window StandaloneWindowManager::GetActiveWindow() const
@@ -433,9 +434,20 @@ void StandaloneWindowManager::CheckWindowIntersections(nux::Geometry const& regi
 {
 }
 
+void StandaloneWindowManager::SetViewportSize(unsigned horizontal, unsigned vertical)
+{
+  nux::Size new_size(horizontal, vertical);
+
+  if (viewport_size_ == new_size)
+    return;
+
+  viewport_size_ = new_size;
+  viewport_layout_changed.emit(new_size.width, new_size.height);
+}
+
 int StandaloneWindowManager::WorkspaceCount() const
 {
-  return 4;
+  return viewport_size_.width * viewport_size_.height;
 }
 
 nux::Point StandaloneWindowManager::GetCurrentViewport() const
@@ -445,12 +457,12 @@ nux::Point StandaloneWindowManager::GetCurrentViewport() const
 
  int StandaloneWindowManager::GetViewportHSize() const
 {
-  return 2;
+  return viewport_size_.width;
 }
 
 int StandaloneWindowManager::GetViewportVSize() const
 {
-  return 2;
+  return viewport_size_.height;
 }
 
 bool StandaloneWindowManager::SaveInputFocus()

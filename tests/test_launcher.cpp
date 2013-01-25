@@ -130,7 +130,7 @@ public:
     : parent_window_(new nux::BaseWindow("TestLauncherWindow"))
     , model_(new LauncherModel)
     , options_(new Options)
-    , launcher_(new MockLauncher(parent_window_))
+    , launcher_(new MockLauncher(parent_window_.GetPointer()))
   {
     launcher_->options = options_;
     launcher_->SetModel(model_);
@@ -160,7 +160,7 @@ public:
   }
 
   MockUScreen uscreen;
-  nux::BaseWindow* parent_window_;
+  nux::ObjectPtr<nux::BaseWindow> parent_window_;
   Settings settings;
   panel::Style panel_style;
   LauncherModel::Ptr model_;

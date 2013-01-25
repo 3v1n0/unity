@@ -62,12 +62,13 @@ protected:
   // Introspectable
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
-  virtual nux::Geometry GetGeometryPerMonitor(int monitor);
+  virtual nux::Point GetOffsetPerMonitor(int monitor);
 
 private:
   void ConstructView();
   void EnsureView();
   void OnBackgroundUpdate(GVariant* data);
+  void OnModelUpdated(Model::Ptr const&);
   bool OnShowTimer();
 
   View::Ptr view_;
