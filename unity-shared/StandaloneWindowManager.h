@@ -23,11 +23,12 @@
 
 #include "unity-shared/WindowManager.h"
 #include <map>
+#include <NuxCore/Property.h>
 
 namespace unity
 {
 
-struct StandaloneWindow
+struct StandaloneWindow : sigc::trackable
 {
   typedef std::shared_ptr<StandaloneWindow> Ptr;
   StandaloneWindow(Window xid);
@@ -39,21 +40,24 @@ public:
   Window Xid() const { return xid; }
 
   std::string name;
-  nux::Geometry geo;
+  nux::Property<nux::Geometry> geo;
   nux::Size deco_sizes[4];
   unsigned current_desktop;
   unsigned monitor;
-  bool active;
-  bool mapped;
-  bool visible;
-  bool maximized;
-  bool minimized;
-  bool decorated;
-  bool has_decorations;
-  bool on_top;
-  bool closable;
-  bool minimizable;
-  bool maximizable;
+  nux::Property<bool> active;
+  nux::Property<bool> mapped;
+  nux::Property<bool> visible;
+  nux::Property<bool> maximized;
+  nux::Property<bool> minimized;
+  nux::Property<bool> decorated;
+  nux::Property<bool> has_decorations;
+  nux::Property<bool> on_top;
+  nux::Property<bool> closable;
+  nux::Property<bool> minimizable;
+  nux::Property<bool> maximizable;
+
+  sigc::signal<void> resized;
+  sigc::signal<void> moved;
 };
 
 class StandaloneWindowManager : public WindowManager

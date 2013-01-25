@@ -54,7 +54,7 @@ TEST(TestLayoutWindow, InitializationNormalWindow)
   EXPECT_EQ(lwin.geo, fake_window->geo);
   EXPECT_EQ(lwin.decoration_height, 0);
   EXPECT_EQ(lwin.selected, false);
-  EXPECT_EQ(lwin.aspect_ratio, fake_window->geo.width / static_cast<float>(fake_window->geo.height));
+  EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
 }
 
 TEST(TestLayoutWindow, InitializationMinimizedNormalWindow)
@@ -68,7 +68,7 @@ TEST(TestLayoutWindow, InitializationMinimizedNormalWindow)
   EXPECT_EQ(lwin.geo, fake_window->geo);
   EXPECT_EQ(lwin.decoration_height, 0);
   EXPECT_EQ(lwin.selected, false);
-  EXPECT_EQ(lwin.aspect_ratio, fake_window->geo.width / static_cast<float>(fake_window->geo.height));
+  EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
 }
 
 TEST(TestLayoutWindow, InitializationMaximizedWindow)
@@ -101,7 +101,7 @@ TEST(TestLayoutWindow, InitializationMinimizedMaximizedWindow)
   EXPECT_EQ(lwin.geo, fake_window->geo);
   EXPECT_EQ(lwin.decoration_height, 0);
   EXPECT_EQ(lwin.selected, false);
-  EXPECT_EQ(lwin.aspect_ratio, fake_window->geo.width / static_cast<float>(fake_window->geo.height));
+  EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
 }
 
 struct TestLayoutSystem : testing::Test
