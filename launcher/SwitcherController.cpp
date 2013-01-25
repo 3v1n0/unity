@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -110,7 +110,10 @@ void Controller::SetWorkspace(nux::Geometry geo, int monitor)
 
 void Controller::Hide(bool accept_state)
 {
-  impl_->Hide(accept_state);
+  if (Visible())
+  {
+    impl_->Hide(accept_state);
+  }
 }
 
 bool Controller::Visible()
@@ -293,7 +296,7 @@ void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLa
 
 bool Controller::Impl::OnDetailTimer()
 {
-  if (Visible() && !model_->detail_selection)
+  if (obj_->Visible() && !model_->detail_selection)
   {
     SetDetail(true, 2);
     obj_->detail_mode_ = DetailMode::TAB_NEXT_WINDOW;
@@ -312,7 +315,7 @@ void Controller::Impl::OnModelSelectionChanged(AbstractLauncherIcon::Ptr const& 
 
   if (icon)
   {
-    if (!Visible())
+    if (!obj_->Visible())
     {
       ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN,
                                 g_variant_new("(bi)", true, obj_->monitor_));
@@ -325,7 +328,7 @@ void Controller::Impl::OnModelSelectionChanged(AbstractLauncherIcon::Ptr const& 
 
 void Controller::Impl::ShowView()
 {
-  if (!Visible())
+  if (!obj_->Visible())
     return;
 
   ConstructView();
@@ -386,9 +389,6 @@ void Controller::Impl::ConstructView()
 
 void Controller::Impl::Hide(bool accept_state)
 {
-  if (!Visible())
-    return;
-
   if (accept_state)
   {
     Selection selection = GetCurrentSelection();
@@ -426,10 +426,6 @@ void Controller::Impl::Hide(bool accept_state)
   view_.Release();
 }
 
-bool Controller::Impl::Visible()
-{
-  return obj_->visible_;
-}
 
 void Controller::Impl::Next()
 {
