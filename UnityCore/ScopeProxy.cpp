@@ -121,7 +121,7 @@ public:
 private:
   /////////////////////////////////////////////////
   // Signal Connections
-  void OnScopeConnectedChnged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
+  void OnScopeConnectedChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
   void OnScopeIsMasterChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
   void OnScopeSearchInGlobalChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
   void OnScopeSearchHintChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
@@ -336,11 +336,11 @@ void ScopeProxy::Impl::OnNewScope(GObject *source_object, GAsyncResult *res)
   if (error || !scope_proxy)
   {
     scope_proxy_.Release();
-    LOG_ERROR(logger) << "Failed to connect to scope @ '" << scope_data_->dbus_path() << "'";
+    LOG_ERROR(logger) << "Failed to create scope proxy for " << scope_data_->id();
     return;
   }
 
-  LOG_DEBUG(logger) << "Connected to scope @ '" << scope_data_->dbus_path() << "'";
+  LOG_DEBUG(logger) << "Created scope proxy for " << scope_data_->id();
 
   scope_proxy_ = scope_proxy;
 
@@ -351,7 +351,7 @@ void ScopeProxy::Impl::OnNewScope(GObject *source_object, GAsyncResult *res)
   search_in_global = unity_protocol_scope_proxy_get_search_in_global(scope_proxy_);
   view_type = static_cast<ScopeViewType>(unity_protocol_scope_proxy_get_view_type(scope_proxy_));
 
-  connected_signal_.Connect(scope_proxy_, "notify::connected", sigc::mem_fun(this, &Impl::OnScopeConnectedChnged));
+  connected_signal_.Connect(scope_proxy_, "notify::connected", sigc::mem_fun(this, &Impl::OnScopeConnectedChanged));
   search_in_global_signal_.Connect(scope_proxy_, "notify::search-in-global", sigc::mem_fun(this, &Impl::OnScopeSearchInGlobalChanged));
   is_master_signal_.Connect(scope_proxy_, "notify::is-master", sigc::mem_fun(this, &Impl::OnScopeIsMasterChanged));
   search_hint_signal_.Connect(scope_proxy_, "notify::search-hint", sigc::mem_fun(this, &Impl::OnScopeSearchHintChanged));
@@ -362,9 +362,12 @@ void ScopeProxy::Impl::OnNewScope(GObject *source_object, GAsyncResult *res)
   optional_metadata_signal_.Connect(scope_proxy_, "notify::optional-metadata", sigc::mem_fun(this, &Impl::OnScopeOptionalMetadataChanged));
   category_order_signal_.Connect(scope_proxy_, "category-order-changed", sigc::mem_fun(this, &Impl::OnScopeCategoryOrderChanged));
 
-  scope_proxy_connected_ = unity_protocol_scope_proxy_get_search_in_global(scope_proxy_);
+  scope_proxy_connected_ = unity_protocol_scope_proxy_get_connected(scope_proxy_);
   
-  OpenChannel();
+  if (scope_proxy_connected_)
+    OpenChannel();
+  else
+    LOG_WARN(logger) << "Proxy scope not connected for " << scope_data_->id();
 }
 
 void ScopeProxy::Impl::OpenChannel()
@@ -411,12 +414,12 @@ void ScopeProxy::Impl::OnChannelOpened(GObject *source_object, GAsyncResult *res
     channel = "";
     connected = false;
 
-    LOG_ERROR(logger) << "Failed to open channel on '" << scope_data_->dbus_path() << "'";
+    LOG_ERROR(logger) << "Failed to open channel for " << scope_data_->id();
     return;
   }
 
   channel = tmp_channel.Str();
-  LOG_DEBUG(logger) << "Opened channel:" << channel() << " on scope @ '" << scope_data_->dbus_path() << "'";
+  LOG_DEBUG(logger) << "Opened channel:" << channel() << " for " << scope_data_->id();
   connected = true;
 
   if (!searching_)
@@ -503,8 +506,8 @@ void ScopeProxy::Impl::Search(std::string const& search_string, glib::HintsMap c
       if (err)
       {
         callback(glib::HintsMap(), err);
-        LOG_WARNING(logger) << "Could not search " << search_string
-                            << ": " << err;
+        LOG_WARNING(logger) << "Could not search '" << search_string
+                            << "' on " << scope_data_->id() << " => " << err;
       }
       else
       {
@@ -547,7 +550,7 @@ void ScopeProxy::Impl::Activate(std::string const& uri, uint activate_type, glib
       {
         callback(uri, ScopeHandledType::NOT_HANDLED, glib::HintsMap(), err);
         LOG_WARNING(logger) << "Could not activate '" << uri
-                            << "' : " << err;
+                            << "' on " << scope_data_->id() << " => " << err;
       }
       else
       {
@@ -589,7 +592,7 @@ void ScopeProxy::Impl::UpdatePreviewProperty(std::string const& uri, glib::Hints
       {
         callback(glib::HintsMap(), err);
         LOG_WARNING(logger) << "Could not update preview property '" << uri
-                            << "' : " << err;
+                            << "' on " << scope_data_->id() << " => " << err;
       }
       else
       {
@@ -615,14 +618,14 @@ void ScopeProxy::Impl::UpdatePreviewProperty(std::string const& uri, glib::Hints
   g_hash_table_unref(hints_table);
 }
 
-void ScopeProxy::Impl::OnScopeConnectedChnged(UnityProtocolScopeProxy* proxy, GParamSpec* param)
+void ScopeProxy::Impl::OnScopeConnectedChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param)
 {
   bool tmp_scope_proxy_connected = unity_protocol_scope_proxy_get_search_in_global(scope_proxy_);  
   if (tmp_scope_proxy_connected != scope_proxy_connected_)
   {
     scope_proxy_connected_ = tmp_scope_proxy_connected;
 
-    LOG_WARN(logger) << scope_data_->id() << " - Connection state changed : " << (scope_proxy_connected_ ? "connected" : "disconnected");
+    LOG_WARN(logger) << "Connection state changed for " << scope_data_->id() << " => " << (scope_proxy_connected_ ? "connected" : "disconnected");
 
     CloseChannel();
     if (tmp_scope_proxy_connected)
