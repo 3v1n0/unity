@@ -66,7 +66,7 @@ struct TestSwitcherView : testing::Test
     const unsigned top_deco = 5;
     auto fake_window = std::make_shared<StandaloneWindow>(xid);
     fake_window->geo = nux::Geometry(rand_coord(), rand_coord(), rand_coord(), rand_coord());
-    fake_window->deco_sizes[unsigned(WindowManager::Edge::TOP)] = nux::Size(fake_window->geo.width, top_deco);
+    fake_window->deco_sizes[unsigned(WindowManager::Edge::TOP)] = nux::Size(fake_window->geo().width, top_deco);
 
     WM->AddStandaloneWindow(fake_window);
 
