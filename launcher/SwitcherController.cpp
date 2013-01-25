@@ -36,10 +36,29 @@ using ui::LayoutWindow;
 
 namespace
 {
-  const std::string LAZY_TIMEOUT = "lazy-timeout";
-  const std::string SHOW_TIMEOUT = "show-timeout";
-  const std::string DETAIL_TIMEOUT = "detail-timeout";
-  const std::string VIEW_CONSTRUCT_IDLE = "view-construct-idle";
+const std::string LAZY_TIMEOUT = "lazy-timeout";
+const std::string SHOW_TIMEOUT = "show-timeout";
+const std::string DETAIL_TIMEOUT = "detail-timeout";
+const std::string VIEW_CONSTRUCT_IDLE = "view-construct-idle";
+
+/**
+ * Helper comparison functor for sorting application icons.
+ */
+bool CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr const& first,
+                                  AbstractLauncherIcon::Ptr const& second)
+{
+  if (first->GetIconType() == second->GetIconType())
+    return first->SwitcherPriority() > second->SwitcherPriority();
+
+  if (first->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
+    return true;
+
+  if (second->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
+    return false;
+
+  return first->GetIconType() < second->GetIconType();
+}
+
 }
 
 namespace switcher
@@ -63,7 +82,8 @@ Controller::~Controller()
 
 bool Controller::CanShowSwitcher(const std::vector<AbstractLauncherIcon::Ptr>& results) const
 {
-  return impl_->CanShowSwitcher(results);
+  bool empty = (IsShowDesktopDisabled() ? results.empty() : results.size() == 1);
+  return (!empty && !WindowManager::Default().IsWallActive());
 }
 
 void Controller::Show(ShowMode show,
@@ -75,12 +95,17 @@ void Controller::Show(ShowMode show,
 
 void Controller::Select(int index)
 {
-  impl_->Select(index);
+  if (Visible())
+    impl_->model_->Select(index);
 }
 
 void Controller::SetWorkspace(nux::Geometry geo, int monitor)
 {
-  impl_->SetWorkspace(geo, monitor);
+  monitor_ = monitor;
+  impl_->workarea_ = geo;
+
+  if (impl_->view_)
+    impl_->view_->monitor = monitor_;
 }
 
 void Controller::Hide(bool accept_state)
@@ -90,7 +115,7 @@ void Controller::Hide(bool accept_state)
 
 bool Controller::Visible()
 {
-  return impl_->Visible();
+  return visible_;
 }
 
 void Controller::Next()
@@ -135,17 +160,17 @@ guint Controller::GetSwitcherInputWindowId() const
 
 bool Controller::IsShowDesktopDisabled() const
 {
-  return impl_->IsShowDesktopDisabled();
+  return show_desktop_disabled_;
 }
 
 void Controller::SetShowDesktopDisabled(bool disabled)
 {
-  impl_->SetShowDesktopDisabled(disabled);
+  show_desktop_disabled_ = disabled;
 }
 
 int Controller::StartIndex() const
 {
-  return impl_->StartIndex();
+  return (IsShowDesktopDisabled() ? 0 : 1);
 }
 
 Selection Controller::GetCurrentSelection() const
@@ -219,12 +244,6 @@ void Controller::Impl::OnBackgroundUpdate(GVariant* data)
     view_->background_color = bg_color_;
 }
 
-bool Controller::Impl::CanShowSwitcher(const std::vector<AbstractLauncherIcon::Ptr>& results) const
-{
-  bool empty = (IsShowDesktopDisabled() ? results.empty() : results.size() == 1);
-
-  return (!empty && !WindowManager::Default().IsWallActive());
-}
 
 void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLauncherIcon::Ptr> results)
 {
@@ -271,11 +290,6 @@ void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLa
                             g_variant_new("(bi)", true, obj_->monitor_));
 }
 
-void Controller::Impl::Select(int index)
-{
-  if (Visible())
-    model_->Select(index);
-}
 
 bool Controller::Impl::OnDetailTimer()
 {
@@ -368,15 +382,6 @@ void Controller::Impl::ConstructView()
   view_window_->SetOpacity(0.0f);
 
   view_built.emit();
-}
-
-void Controller::Impl::SetWorkspace(nux::Geometry geo, int monitor)
-{
-  obj_->monitor_ = monitor;
-  workarea_ = geo;
-
-  if (view_)
-    view_->monitor = obj_->monitor_;
 }
 
 void Controller::Impl::Hide(bool accept_state)
@@ -550,20 +555,6 @@ guint Controller::Impl::GetSwitcherInputWindowId() const
   return view_window_->GetInputWindowId();
 }
 
-bool Controller::Impl::IsShowDesktopDisabled() const
-{
-  return obj_->show_desktop_disabled_;
-}
-
-void Controller::Impl::SetShowDesktopDisabled(bool disabled)
-{
-  obj_->show_desktop_disabled_ = disabled;
-}
-
-int Controller::Impl::StartIndex() const
-{
-  return (IsShowDesktopDisabled() ? 0 : 1);
-}
 
 Selection Controller::Impl::GetCurrentSelection() const
 {
@@ -587,27 +578,13 @@ Selection Controller::Impl::GetCurrentSelection() const
   return {application, window};
 }
 
-bool Controller::Impl::CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr const& first,
-                                              AbstractLauncherIcon::Ptr const& second)
-{
-  if (first->GetIconType() == second->GetIconType())
-    return first->SwitcherPriority() > second->SwitcherPriority();
-
-  if (first->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
-    return true;
-
-  if (second->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
-    return false;
-
-  return first->GetIconType() < second->GetIconType();
-}
 
 void Controller::Impl::SelectFirstItem()
 {
   if (!model_)
     return;
 
-  int first_icon_index = StartIndex();
+  int first_icon_index = obj_->StartIndex();
   int second_icon_index = first_icon_index + 1;
 
   AbstractLauncherIcon::Ptr const& first  = model_->at(first_icon_index);

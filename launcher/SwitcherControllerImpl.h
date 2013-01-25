@@ -49,8 +49,6 @@ struct Controller::Impl
   void Show(ShowMode show, SortMode sort, std::vector<launcher::AbstractLauncherIcon::Ptr> results);
   void Hide(bool accept_state);
 
-  bool CanShowSwitcher(const std::vector<launcher::AbstractLauncherIcon::Ptr>& resutls) const;
-
   bool Visible();
 
   void Next();
@@ -59,13 +57,9 @@ struct Controller::Impl
   void NextDetail();
   void PrevDetail();
 
-  void Select(int index);
-
   void SetDetail(bool detail, unsigned int min_windows = 1);
 
   void SelectFirstItem();
-
-  void SetWorkspace(nux::Geometry geo, int monitor);
 
   virtual SwitcherView* GetView();
 
@@ -73,36 +67,31 @@ struct Controller::Impl
 
   guint GetSwitcherInputWindowId() const;
 
-  bool IsShowDesktopDisabled() const;
-  void SetShowDesktopDisabled(bool disabled);
   int StartIndex() const;
   Selection GetCurrentSelection() const;
 
   sigc::signal<void> view_built;
 
-private:
   void ConstructWindow();
   void ConstructView();
   void ShowView();
 
   bool OnDetailTimer();
   void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr const& icon);
+  void OnBackgroundUpdate(GVariant* data);
 
   unsigned int construct_timeout_;
-
-  void OnBackgroundUpdate(GVariant* data);
-  static bool CompareSwitcherItemsPriority(launcher::AbstractLauncherIcon::Ptr const& first, launcher::AbstractLauncherIcon::Ptr const& second);
 
   Controller* obj_;
 
   SwitcherModel::Ptr model_;
   SwitcherView::Ptr view_;
 
+  // @todo move these view data into the SwitcherView class
   nux::Geometry workarea_;
   Controller::WindowCreator create_window_;
   nux::ObjectPtr<nux::BaseWindow> view_window_;
   nux::HLayout* main_layout_;
-
   nux::Color bg_color_;
 
   launcher::AbstractLauncherIcon::Ptr last_active_selection_;
