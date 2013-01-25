@@ -139,6 +139,14 @@ class PanelTestsBase(UnityTestCase):
         sleep(self.panel.menus.discovery_duration)
         sleep(self.panel.menus.fadeout_duration / 1000.0)
 
+    # Unable to exit SDM without any active apps, need a placeholder.
+    # See bug LP:1079460
+    def start_placeholder_app(self):
+        window_spec = {
+            "Title": "Placeholder application",
+        }
+        self.launch_test_window(window_spec)
+
 
 class PanelTitleTests(PanelTestsBase):
 
@@ -147,8 +155,7 @@ class PanelTitleTests(PanelTestsBase):
     def test_panel_title_on_empty_desktop(self):
         """With no windows shown, the panel must display the default title."""
         gettext.install("unity", unicode=True)
-        # We need to start any application, otherwise we cannot leave show desktop mode
-        self.start_app_window('Calculator')
+        self.start_placeholder_app()
         self.window_manager.enter_show_desktop()
         self.addCleanup(self.window_manager.leave_show_desktop)
 
@@ -237,6 +244,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
     def test_window_buttons_dont_show_on_empty_desktop(self):
         """Tests that the window buttons are not shown on clean desktop."""
+        self.start_placeholder_app()
         self.window_manager.enter_show_desktop()
         self.addCleanup(self.window_manager.leave_show_desktop)
 

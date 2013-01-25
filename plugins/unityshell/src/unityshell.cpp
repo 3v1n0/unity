@@ -26,6 +26,7 @@
 #include <Nux/WindowCompositor.h>
 
 #include <UnityCore/Variant.h>
+#include <UnityCore/Lens.h>
 
 #include "BaseWindowRaiserImp.h"
 #include "IconRenderer.h"
@@ -1847,7 +1848,7 @@ void UnityScreen::SendExecuteCommand()
   ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL, glib::Source::Priority::HIGH);
 
   ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                            g_variant_new("(sus)", "commands.lens", 0, ""),
+                            g_variant_new("(sus)", "commands.lens", dash::GOTO_DASH_URI, ""),
                             glib::Source::Priority::LOW);
 }
 

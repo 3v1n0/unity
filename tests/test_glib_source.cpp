@@ -136,8 +136,7 @@ TEST(TestGLibTimeout, OneShotRun)
   Timeout timeout(100, &OnSourceCallbackStop);
   timeout.removed.connect([&] (unsigned int id) { removed_called = true; });
 
-  Utils::WaitForTimeoutMSec(500);
-  EXPECT_FALSE(timeout.IsRunning());
+  Utils::WaitUntilMSec([&timeout] {return timeout.IsRunning();}, false, 500);
   EXPECT_TRUE(callback_called);
   EXPECT_EQ(callback_call_count, 1);
   EXPECT_TRUE(removed_called);
@@ -168,8 +167,7 @@ TEST(TestGLibTimeout, OneShotRunWithEmptyCallback)
   Timeout timeout(100, Source::Callback());
   timeout.removed.connect([&] (unsigned int id) { removed_called = true; });
 
-  Utils::WaitForTimeoutMSec(500);
-  EXPECT_FALSE(timeout.IsRunning());
+  Utils::WaitUntilMSec([&timeout] {return timeout.IsRunning();}, false, 500);
   EXPECT_TRUE(removed_called);
 }
 
@@ -185,10 +183,9 @@ TEST(TestGLibTimeout, Removal)
   Utils::WaitForTimeoutMSec(100);
   timeout.Remove();
 
-  Utils::WaitForTimeoutMSec(300);
+  Utils::WaitUntilMSec([&timeout] {return timeout.IsRunning();}, false, 300);
 
   EXPECT_NE(timeout.Id(), 0);
-  EXPECT_FALSE(timeout.IsRunning());
   EXPECT_TRUE(removed_called);
   EXPECT_FALSE(callback_called);
   EXPECT_EQ(callback_call_count, 0);
@@ -204,9 +201,8 @@ TEST(TestGLibTimeout, Running)
 
   timeout.Run(&OnSourceCallbackStop);
   EXPECT_TRUE(timeout.IsRunning());
-  Utils::WaitForTimeoutMSec(600);
 
-  EXPECT_FALSE(timeout.IsRunning());
+  Utils::WaitUntilMSec([&timeout] {return timeout.IsRunning();}, false, 500);
   EXPECT_TRUE(callback_called);
   EXPECT_EQ(callback_call_count, 1);
 }
@@ -323,8 +319,7 @@ TEST(TestGLibTimeoutSeconds, OneShotRun)
   TimeoutSeconds timeout(1, &OnSourceCallbackStop);
   timeout.removed.connect([&] (unsigned int id) { removed_called = true; });
 
-  Utils::WaitForTimeoutMSec(2000);
-  EXPECT_FALSE(timeout.IsRunning());
+  Utils::WaitUntil([&timeout] {return timeout.IsRunning();}, false, 2);
   EXPECT_TRUE(callback_called);
   EXPECT_EQ(callback_call_count, 1);
   EXPECT_TRUE(removed_called);
@@ -340,7 +335,7 @@ TEST(TestGLibTimeoutSeconds, MultipleShotsRun)
   auto check_function = []() { return (callback_call_count > 1) ? true : false; };
   TimeoutSeconds timeout(1, &OnSourceCallbackContinue);
   timeout.removed.connect([&] (unsigned int id) { removed_called = true; });
-  Utils::WaitUntil(check_function, true, 4000);
+  Utils::WaitUntil(check_function, true, 4);
   EXPECT_TRUE(timeout.IsRunning());
   }
 
@@ -384,7 +379,7 @@ TEST(TestGLibIdle, OneShotRun)
   Idle idle(&OnSourceCallbackStop);
   idle.removed.connect([&] (unsigned int id) { post = g_get_monotonic_time(); });
 
-  Utils::WaitForTimeoutMSec(100);
+  Utils::WaitUntilMSec([&idle] {return idle.IsRunning();}, false, 100);
   EXPECT_FALSE(idle.IsRunning());
   EXPECT_TRUE(callback_called);
   EXPECT_EQ(callback_call_count, 1);
@@ -423,10 +418,9 @@ TEST(TestGLibIdle, Removal)
   idle.removed.connect([&] (unsigned int id) { removed_called = true; });
   idle.Remove();
 
-  Utils::WaitForTimeoutMSec(300);
+  Utils::WaitUntilMSec([&idle] {return idle.IsRunning();}, false, 300);
 
   EXPECT_NE(idle.Id(), 0);
-  EXPECT_FALSE(idle.IsRunning());
   EXPECT_TRUE(removed_called);
   EXPECT_FALSE(callback_called);
   EXPECT_EQ(callback_call_count, 0);
@@ -442,9 +436,8 @@ TEST(TestGLibIdle, Running)
 
   idle.Run(&OnSourceCallbackStop);
   EXPECT_TRUE(idle.IsRunning());
-  Utils::WaitForTimeoutMSec(200);
 
-  EXPECT_FALSE(idle.IsRunning());
+  Utils::WaitUntilMSec([&idle] {return idle.IsRunning();}, false, 300);
   EXPECT_TRUE(callback_called);
   EXPECT_EQ(callback_call_count, 1);
 }

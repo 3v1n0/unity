@@ -21,7 +21,8 @@
 
 #include <gmock/gmock.h>
 using namespace testing;
-
+#include <Nux/NuxTimerTickSource.h>
+#include <NuxCore/AnimationController.h>
 #include "HudController.h"
 #include "mock-base-window.h"
 #include "unity-shared/DashStyle.h"
@@ -32,6 +33,9 @@ using namespace unity;
 
 namespace
 {
+
+const unsigned ANIMATION_DURATION = 90 * 1000; // in microseconds
+const unsigned TICK_DURATION = 10 * 1000;
 
 class MockHudView : public hud::AbstractView
 {
@@ -94,6 +98,11 @@ protected:
 
 TEST_F(TestHudController, TestShowAndHideHud)
 {
+  long long t;
+  long long global_tick = 0;
+  nux::NuxTimerTickSource tick_source;
+  nux::animation::AnimationController animation_controller(tick_source);
+
   // Verify initial conditions
   EXPECT_EQ(base_window_->GetOpacity(), 0.0);
 
@@ -102,31 +111,41 @@ TEST_F(TestHudController, TestShowAndHideHud)
   EXPECT_CALL(*view_, ResetToDefault()).Times(1);
   {
     InSequence showing;
-    EXPECT_CALL(*base_window_, SetOpacity(_)).Times(AtLeast(1));
-    EXPECT_CALL(*base_window_, SetOpacity(Eq(1.0f)))
+    EXPECT_CALL(*base_window_, SetOpacity(Eq(0.0f))).Times(AtLeast(1));
+    EXPECT_CALL(*base_window_, SetOpacity(AllOf(Gt(0.0f), Lt(1.0f))))
+        .Times(AtLeast(ANIMATION_DURATION/TICK_DURATION-1));
+    EXPECT_CALL(*base_window_, SetOpacity(Eq(1.0f))).Times(AtLeast(1))
         .WillOnce(Invoke(base_window_.GetPointer(),
                          &testmocks::MockBaseWindow::RealSetOpacity));
   }
 
   controller_->ShowHud();
-  Utils::WaitForTimeout(2);
+  for (t = global_tick; t < global_tick + ANIMATION_DURATION+1; t += TICK_DURATION)
+    tick_source.tick(t);
+  global_tick += t;
+
+  EXPECT_EQ(base_window_->GetOpacity(), 1.0);
+
   Mock::VerifyAndClearExpectations(view_.GetPointer());
   Mock::VerifyAndClearExpectations(base_window_.GetPointer());
-  EXPECT_EQ(base_window_->GetOpacity(), 1.0);
 
   // Set expectations for hiding the HUD
   EXPECT_CALL(*view_, AboutToHide()).Times(1);
-  EXPECT_CALL(*view_, ResetToDefault()).Times(1);
   {
     InSequence hiding;
-    EXPECT_CALL(*base_window_, SetOpacity(_)).Times(AtLeast(1));
-    EXPECT_CALL(*base_window_, SetOpacity(Eq(0.0f)))
+    EXPECT_CALL(*base_window_, SetOpacity(Eq(1.0f))).Times(AtLeast(1));
+    EXPECT_CALL(*base_window_, SetOpacity(AllOf(Lt(1.0f), Gt(0.0f))))
+        .Times(AtLeast(ANIMATION_DURATION/TICK_DURATION-1));
+    EXPECT_CALL(*base_window_, SetOpacity(Eq(0.0f))).Times(AtLeast(1))
         .WillOnce(Invoke(base_window_.GetPointer(),
                          &testmocks::MockBaseWindow::RealSetOpacity));
   }
 
   controller_->HideHud();
-  Utils::WaitForTimeout(2);
+  for (t = global_tick; t < global_tick + ANIMATION_DURATION+1; t += TICK_DURATION)
+    tick_source.tick(t);
+  global_tick += t;
+
   EXPECT_EQ(base_window_->GetOpacity(), 0.0);
 }
 
