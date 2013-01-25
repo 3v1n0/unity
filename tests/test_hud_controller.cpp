@@ -98,8 +98,8 @@ protected:
 
 TEST_F(TestHudController, TestShowAndHideHud)
 {
-  unsigned t;
-  unsigned global_tick = 0;
+  long long t;
+  long long global_tick = 0;
   nux::NuxTimerTickSource tick_source;
   nux::animation::AnimationController animation_controller(tick_source);
 
@@ -120,7 +120,7 @@ TEST_F(TestHudController, TestShowAndHideHud)
   }
 
   controller_->ShowHud();
-  for (t = 0; t <= global_tick + ANIMATION_DURATION+1; t += TICK_DURATION)
+  for (t = global_tick; t < global_tick + ANIMATION_DURATION+1; t += TICK_DURATION)
     tick_source.tick(t);
   global_tick += t;
 
@@ -142,7 +142,7 @@ TEST_F(TestHudController, TestShowAndHideHud)
   }
 
   controller_->HideHud();
-  for (t = 0; t <= global_tick + ANIMATION_DURATION+1; t += TICK_DURATION)
+  for (t = global_tick; t < global_tick + ANIMATION_DURATION+1; t += TICK_DURATION)
     tick_source.tick(t);
   global_tick += t;
 
