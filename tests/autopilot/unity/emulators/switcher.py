@@ -226,14 +226,23 @@ class Switcher(KeybindingsHelper):
 
 class SwitcherController(UnityIntrospectionObject):
     """An emulator class for interacting with the switcher controller."""
+    # XXX: Probably this should be done better on Unity side. Since some things
+    #  moved to private implementation classes, I think the view and model children
+    #  should get exported somehow better.
 
     @property
     def view(self):
-        return self.get_children_by_type(SwitcherView)[0]
+        i = self.get_children_by_type(SwitcherControllerImpl)[0]
+        return i.get_children_by_type(SwitcherView)[0]
 
     @property
     def model(self):
-        return self.get_children_by_type(SwitcherModel)[0]
+        i = self.get_children_by_type(SwitcherControllerImpl)[0]
+        return i.get_children_by_type(SwitcherModel)[0]
+
+
+class SwitcherControllerImpl(UnityIntrospectionObject):
+    """An emulator class for accessing the switcher controller implementation internals."""
 
 
 class SwitcherView(UnityIntrospectionObject):
