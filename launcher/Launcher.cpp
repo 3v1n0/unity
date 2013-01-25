@@ -1380,7 +1380,6 @@ void Launcher::OnMonitorChanged(int new_monitor)
   UScreen* uscreen = UScreen::GetDefault();
   auto monitor_geo = uscreen->GetMonitorGeometry(new_monitor);
   unity::panel::Style &panel_style = panel::Style::Instance();
-
   Resize(nux::Point(monitor_geo.x, monitor_geo.y + panel_style.panel_height),
          monitor_geo.height - panel_style.panel_height);
 }
@@ -1581,9 +1580,9 @@ int Launcher::GetIconSize() const
 void Launcher::Resize(nux::Point const& offset, int height)
 {
   unsigned width = _icon_size + ICON_PADDING * 2 + RIGHT_LINE_WIDTH - 2;
-  _parent->SetGeometry(nux::Geometry(offset.x, offset.y, width, height));
-  SetGeometry(nux::Geometry(0, 0, width, height));
   SetMaximumHeight(height);
+  SetGeometry(nux::Geometry(0, 0, width, height));
+  _parent->SetGeometry(nux::Geometry(offset.x, offset.y, width, height));
 
   ConfigureBarrier();
 }
