@@ -33,13 +33,9 @@ namespace unity
 
 struct TestPanelMenuView : public testing::Test
 {
-  void ProcessUBusMessages()
-  {
-    bool expired = false;
-    glib::Idle idle([&] { expired = true; return false; },
-                    glib::Source::Priority::LOW);
-    Utils::WaitUntil(expired);
-  }
+  TestPanelMenuView()
+    : WM(dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default()))
+  {}
 
   struct MockPanelMenuView : public PanelMenuView
   {
@@ -53,6 +49,7 @@ struct TestPanelMenuView : public testing::Test
 protected:
   // The order is important, i.e. menu_view needs
   // panel::Style that needs Settings
+  StandaloneWindowManager* WM;
   Settings settings;
   panel::Style panelStyle;
   testing::NiceMock<MockPanelMenuView> menu_view;
@@ -65,23 +62,16 @@ TEST_F(TestPanelMenuView, Escaping)
   EXPECT_TRUE(menu_view.GetCurrentTitle().empty());
 
   UBusManager ubus;
-  ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV, NULL);
+  ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV);
   ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
                    g_variant_new_string(escapedText));
-  ProcessUBusMessages();
+  Utils::WaitUntilMSec([this] {return menu_view.GetCurrentTitle() == escapedText;});
 
-  EXPECT_EQ(menu_view.GetCurrentTitle(), escapedText);
 
-  ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV, NULL);
-  ProcessUBusMessages();
-
-  StandaloneWindowManager *wm = dynamic_cast<StandaloneWindowManager *>(&WindowManager::Default());
-  ASSERT_NE(wm, nullptr);
-  // Change the wm to trick menu_view::RefreshTitle to call GetActiveViewName
-  wm->SetScaleActive(true);
-  wm->SetScaleActiveForGroup(true);
-
-  EXPECT_EQ(menu_view.GetCurrentTitle(), "&lt;&gt;&apos;");
+  WM->SetScaleActive(true);
+  WM->SetScaleActiveForGroup(true);
+  ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV);
+  Utils::WaitUntilMSec([this] {return menu_view.GetCurrentTitle() == "&lt;&gt;&apos;";});
 }
 
 TEST_F(TestPanelMenuView, QueuesDrawOnButtonsOpacityChange)
