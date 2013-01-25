@@ -98,13 +98,14 @@ struct TestSwitcherView : testing::Test
 
 TEST_F(TestSwitcherView, Initiate)
 {
+  const int VERTICAL_PADDING = 45;
   EXPECT_FALSE(switcher.render_boxes);
   EXPECT_EQ(switcher.border_size, 50);
   EXPECT_EQ(switcher.flat_spacing, 20);
   EXPECT_EQ(switcher.icon_size, 128);
   EXPECT_EQ(switcher.minimum_spacing, 10);
   EXPECT_EQ(switcher.tile_size, 150);
-  EXPECT_EQ(switcher.vertical_size, switcher.tile_size + 45 * 2);
+  EXPECT_EQ(switcher.vertical_size, switcher.tile_size + VERTICAL_PADDING * 2);
   EXPECT_EQ(switcher.text_size, 15);
   EXPECT_EQ(switcher.animation_length, 250);
   EXPECT_EQ(switcher.monitor, -1);
