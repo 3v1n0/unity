@@ -1412,7 +1412,7 @@ void PanelMenuView::OnMaximizedGrabStart(int x, int y)
 
 void PanelMenuView::OnMaximizedGrabMove(int x, int y)
 {
-  auto panel = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
+  auto panel = GetTopLevelViewWindow();
 
   if (!panel)
     return;
@@ -1427,7 +1427,7 @@ void PanelMenuView::OnMaximizedGrabMove(int x, int y)
    *
    * This is a workaround to avoid that the grid plugin would be fired
    * showing the window shape preview effect. See bug #838923 */
-  if (maximized != 0 && panel)
+  if (maximized != 0)
   {
     nux::Geometry const& panel_geo = panel->GetAbsoluteGeometry();
 
