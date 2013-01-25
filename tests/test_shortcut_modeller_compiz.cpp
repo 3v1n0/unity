@@ -17,9 +17,7 @@
  * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#include "config.h"
 #include <gmock/gmock.h>
-#include <glib/gi18n-lib.h>
 using namespace testing;
 
 #include "CompizShortcutModeller.h"
@@ -43,12 +41,12 @@ struct TestShortcutCompizModeller : Test
   {
     auto const& cats = modeller->GetCurrentModel()->categories();
     auto it = cats.begin();
-    ASSERT_EQ(it, std::find(cats.begin(), cats.end(), _("Launcher")));
-    ASSERT_EQ(it = std::next(it), std::find(cats.begin(), cats.end(), _("Dash")));
-    ASSERT_EQ(it = std::next(it), std::find(cats.begin(), cats.end(), _("HUD & Menu Bar")));
-    ASSERT_EQ(it = std::next(it), std::find(cats.begin(), cats.end(), _("Switching")));
-    ASSERT_EQ(it = std::next(it), std::find(cats.begin(), cats.end(), _("Workspaces")));
-    ASSERT_EQ(it = std::next(it), std::find(cats.begin(), cats.end(), _("Windows")));
+    ASSERT_EQ(it, std::find(cats.begin(), cats.end(), "Launcher"));
+    ASSERT_EQ(it = std::next(it), std::find(cats.begin(), cats.end(), "Dash"));
+    ASSERT_EQ(it = std::next(it), std::find(cats.begin(), cats.end(), "HUD & Menu Bar"));
+    ASSERT_EQ(it = std::next(it), std::find(cats.begin(), cats.end(), "Switching"));
+    ASSERT_EQ(it = std::next(it), std::find(cats.begin(), cats.end(), "Workspaces"));
+    ASSERT_EQ(it = std::next(it), std::find(cats.begin(), cats.end(), "Windows"));
     ASSERT_EQ(std::next(it), cats.end());
   }
 
@@ -56,11 +54,11 @@ struct TestShortcutCompizModeller : Test
   {
     auto const& cats = modeller->GetCurrentModel()->categories();
     auto it = cats.begin();
-    ASSERT_EQ(it, std::find(cats.begin(), cats.end(), _("Launcher")));
-    ASSERT_EQ(it = std::next(it), std::find(cats.begin(), cats.end(), _("HUD & Menu Bar")));
-    ASSERT_EQ(it = std::next(it), std::find(cats.begin(), cats.end(), _("Switching")));
-    ASSERT_EQ(it = std::next(it), std::find(cats.begin(), cats.end(), _("Dash")));
-    ASSERT_EQ(it = std::next(it), std::find(cats.begin(), cats.end(), _("Windows")));
+    ASSERT_EQ(it, std::find(cats.begin(), cats.end(), "Launcher"));
+    ASSERT_EQ(it = std::next(it), std::find(cats.begin(), cats.end(), "HUD & Menu Bar"));
+    ASSERT_EQ(it = std::next(it), std::find(cats.begin(), cats.end(), "Switching"));
+    ASSERT_EQ(it = std::next(it), std::find(cats.begin(), cats.end(), "Dash"));
+    ASSERT_EQ(it = std::next(it), std::find(cats.begin(), cats.end(), "Windows"));
     ASSERT_EQ(std::next(it), cats.end());
     ASSERT_EQ(std::find(cats.begin(), cats.end(), "Workspaces"), cats.end());
   }
