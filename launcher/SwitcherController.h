@@ -120,6 +120,10 @@ public:
   sigc::connection ConnectToViewBuilt(sigc::slot<void> const&);
   void SetDetailOnTimeout(bool timeout);
 
+  // Introspectable methods
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+
   nux::Property<bool> detail_on_timeout;
   nux::Property<int>  detail_timeout_length;
   nux::Property<int>  initial_detail_timeout_length;
@@ -128,11 +132,6 @@ public:
   int        monitor_;
   bool       show_desktop_disabled_;
   DetailMode detail_mode_;
-
-private:
-  // Introspectable methods
-  std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
 
 private:
   ImplPtr    impl_;
