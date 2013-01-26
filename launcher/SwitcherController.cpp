@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -36,10 +36,29 @@ using ui::LayoutWindow;
 
 namespace
 {
-  const std::string LAZY_TIMEOUT = "lazy-timeout";
-  const std::string SHOW_TIMEOUT = "show-timeout";
-  const std::string DETAIL_TIMEOUT = "detail-timeout";
-  const std::string VIEW_CONSTRUCT_IDLE = "view-construct-idle";
+const std::string LAZY_TIMEOUT = "lazy-timeout";
+const std::string SHOW_TIMEOUT = "show-timeout";
+const std::string DETAIL_TIMEOUT = "detail-timeout";
+const std::string VIEW_CONSTRUCT_IDLE = "view-construct-idle";
+
+/**
+ * Helper comparison functor for sorting application icons.
+ */
+bool CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr const& first,
+                                  AbstractLauncherIcon::Ptr const& second)
+{
+  if (first->GetIconType() == second->GetIconType())
+    return first->SwitcherPriority() > second->SwitcherPriority();
+
+  if (first->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
+    return true;
+
+  if (second->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
+    return false;
+
+  return first->GetIconType() < second->GetIconType();
+}
+
 }
 
 namespace switcher
@@ -53,10 +72,8 @@ Controller::Controller(WindowCreator const& create_window)
   , monitor_(0)
   , show_desktop_disabled_(false)
   , detail_mode_(DetailMode::TAB_NEXT_WINDOW)
-  , impl_(new ShellController(this, 20, create_window))
-{
-  AddChild(impl_.get());
-}
+  , impl_(new Controller::Impl(this, 20, create_window))
+{ }
 
 
 Controller::~Controller()
@@ -65,7 +82,8 @@ Controller::~Controller()
 
 bool Controller::CanShowSwitcher(const std::vector<AbstractLauncherIcon::Ptr>& results) const
 {
-  return impl_->CanShowSwitcher(results);
+  bool empty = (IsShowDesktopDisabled() ? results.empty() : results.size() == 1);
+  return (!empty && !WindowManager::Default().IsWallActive());
 }
 
 void Controller::Show(ShowMode show,
@@ -77,22 +95,30 @@ void Controller::Show(ShowMode show,
 
 void Controller::Select(int index)
 {
-  impl_->Select(index);
+  if (Visible())
+    impl_->model_->Select(index);
 }
 
 void Controller::SetWorkspace(nux::Geometry geo, int monitor)
 {
-  impl_->SetWorkspace(geo, monitor);
+  monitor_ = monitor;
+  impl_->workarea_ = geo;
+
+  if (impl_->view_)
+    impl_->view_->monitor = monitor_;
 }
 
 void Controller::Hide(bool accept_state)
 {
-  impl_->Hide(accept_state);
+  if (Visible())
+  {
+    impl_->Hide(accept_state);
+  }
 }
 
 bool Controller::Visible()
 {
-  return impl_->Visible();
+  return visible_;
 }
 
 void Controller::Next()
@@ -137,17 +163,17 @@ guint Controller::GetSwitcherInputWindowId() const
 
 bool Controller::IsShowDesktopDisabled() const
 {
-  return impl_->IsShowDesktopDisabled();
+  return show_desktop_disabled_;
 }
 
 void Controller::SetShowDesktopDisabled(bool disabled)
 {
-  impl_->SetShowDesktopDisabled(disabled);
+  show_desktop_disabled_ = disabled;
 }
 
 int Controller::StartIndex() const
 {
-  return impl_->StartIndex();
+  return (IsShowDesktopDisabled() ? 0 : 1);
 }
 
 Selection Controller::GetCurrentSelection() const
@@ -189,17 +215,18 @@ Controller::AddProperties(GVariantBuilder* builder)
   .add("detail_mode", static_cast<int>(detail_mode_));
 }
 
-ShellController::ShellController(Controller* obj,
-                                 unsigned int load_timeout,
-                                 Controller::WindowCreator const& create_window)
-  :  Impl(obj)
-  ,  timeout_length(0)
+
+Controller::Impl::Impl(Controller* obj,
+                       unsigned int load_timeout,
+                       Controller::WindowCreator const& create_window)
+  :  timeout_length(0)
   ,  construct_timeout_(load_timeout)
+  ,  obj_(obj)
   ,  create_window_(create_window)
   ,  main_layout_(nullptr)
   ,  bg_color_(0, 0, 0, 0.5)
 {
-  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &ShellController::OnBackgroundUpdate));
+  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::Impl::OnBackgroundUpdate));
 
   if (create_window_ == nullptr)
     create_window_ = []() {
@@ -210,7 +237,7 @@ ShellController::ShellController(Controller* obj,
   //sources_.AddTimeoutSeconds(construct_timeout_, [&] { ConstructWindow(); return false; }, LAZY_TIMEOUT);
 }
 
-void ShellController::OnBackgroundUpdate(GVariant* data)
+void Controller::Impl::OnBackgroundUpdate(GVariant* data)
 {
   gdouble red, green, blue, alpha;
   g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
@@ -220,14 +247,8 @@ void ShellController::OnBackgroundUpdate(GVariant* data)
     view_->background_color = bg_color_;
 }
 
-bool ShellController::CanShowSwitcher(const std::vector<AbstractLauncherIcon::Ptr>& results) const
-{
-  bool empty = (IsShowDesktopDisabled() ? results.empty() : results.size() == 1);
 
-  return (!empty && !WindowManager::Default().IsWallActive());
-}
-
-void ShellController::Show(ShowMode show, SortMode sort, std::vector<AbstractLauncherIcon::Ptr> results)
+void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLauncherIcon::Ptr> results)
 {
   if (results.empty())
     return;
@@ -238,8 +259,8 @@ void ShellController::Show(ShowMode show, SortMode sort, std::vector<AbstractLau
   }
 
   model_.reset(new SwitcherModel(results));
-  AddChild(model_.get());
-  model_->selection_changed.connect(sigc::mem_fun(this, &ShellController::OnModelSelectionChanged));
+  obj_->AddChild(model_.get());
+  model_->selection_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnModelSelectionChanged));
   model_->only_detail_on_viewport = (show == ShowMode::CURRENT_VIEWPORT);
 
   SelectFirstItem();
@@ -263,7 +284,7 @@ void ShellController::Show(ShowMode show, SortMode sort, std::vector<AbstractLau
 
   if (obj_->detail_on_timeout)
   {
-    auto cb_func = sigc::mem_fun(this, &ShellController::OnDetailTimer);
+    auto cb_func = sigc::mem_fun(this, &Controller::Impl::OnDetailTimer);
     sources_.AddTimeout(obj_->initial_detail_timeout_length, cb_func, DETAIL_TIMEOUT);
   }
 
@@ -272,15 +293,10 @@ void ShellController::Show(ShowMode show, SortMode sort, std::vector<AbstractLau
                             g_variant_new("(bi)", true, obj_->monitor_));
 }
 
-void ShellController::Select(int index)
-{
-  if (Visible())
-    model_->Select(index);
-}
 
-bool ShellController::OnDetailTimer()
+bool Controller::Impl::OnDetailTimer()
 {
-  if (Visible() && !model_->detail_selection)
+  if (obj_->Visible() && !model_->detail_selection)
   {
     SetDetail(true, 2);
     obj_->detail_mode_ = DetailMode::TAB_NEXT_WINDOW;
@@ -289,17 +305,17 @@ bool ShellController::OnDetailTimer()
   return false;
 }
 
-void ShellController::OnModelSelectionChanged(AbstractLauncherIcon::Ptr const& icon)
+void Controller::Impl::OnModelSelectionChanged(AbstractLauncherIcon::Ptr const& icon)
 {
   if (obj_->detail_on_timeout)
   {
-    auto cb_func = sigc::mem_fun(this, &ShellController::OnDetailTimer);
+    auto cb_func = sigc::mem_fun(this, &Controller::Impl::OnDetailTimer);
     sources_.AddTimeout(obj_->detail_timeout_length, cb_func, DETAIL_TIMEOUT);
   }
 
   if (icon)
   {
-    if (!Visible())
+    if (!obj_->Visible())
     {
       ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN,
                                 g_variant_new("(bi)", true, obj_->monitor_));
@@ -310,9 +326,9 @@ void ShellController::OnModelSelectionChanged(AbstractLauncherIcon::Ptr const& i
   }
 }
 
-void ShellController::ShowView()
+void Controller::Impl::ShowView()
 {
-  if (!Visible())
+  if (!obj_->Visible())
     return;
 
   ConstructView();
@@ -329,7 +345,7 @@ void ShellController::ShowView()
   }
 }
 
-void ShellController::ConstructWindow()
+void Controller::Impl::ConstructWindow()
 {
   sources_.Remove(LAZY_TIMEOUT);
 
@@ -348,7 +364,7 @@ void ShellController::ConstructWindow()
   }
 }
 
-void ShellController::ConstructView()
+void Controller::Impl::ConstructView()
 {
   if (view_ || !model_)
     return;
@@ -356,7 +372,7 @@ void ShellController::ConstructView()
   sources_.Remove(VIEW_CONSTRUCT_IDLE);
 
   view_ = SwitcherView::Ptr(new SwitcherView());
-  AddChild(view_.GetPointer());
+  obj_->AddChild(view_.GetPointer());
   view_->SetModel(model_);
   view_->background_color = bg_color_;
   view_->monitor = obj_->monitor_;
@@ -371,20 +387,8 @@ void ShellController::ConstructView()
   view_built.emit();
 }
 
-void ShellController::SetWorkspace(nux::Geometry geo, int monitor)
+void Controller::Impl::Hide(bool accept_state)
 {
-  obj_->monitor_ = monitor;
-  workarea_ = geo;
-
-  if (view_)
-    view_->monitor = obj_->monitor_;
-}
-
-void ShellController::Hide(bool accept_state)
-{
-  if (!Visible())
-    return;
-
   if (accept_state)
   {
     Selection selection = GetCurrentSelection();
@@ -422,12 +426,8 @@ void ShellController::Hide(bool accept_state)
   view_.Release();
 }
 
-bool ShellController::Visible()
-{
-  return obj_->visible_;
-}
 
-void ShellController::Next()
+void Controller::Impl::Next()
 {
   if (!model_)
     return;
@@ -456,7 +456,7 @@ void ShellController::Next()
   }
 }
 
-void ShellController::Prev()
+void Controller::Impl::Prev()
 {
   if (!model_)
     return;
@@ -485,12 +485,12 @@ void ShellController::Prev()
   }
 }
 
-SwitcherView* ShellController::GetView()
+SwitcherView* Controller::Impl::GetView()
 {
   return view_.GetPointer();
 }
 
-void ShellController::SetDetail(bool value, unsigned int min_windows)
+void Controller::Impl::SetDetail(bool value, unsigned int min_windows)
 {
   if (value && model_->DetailXids().size() >= min_windows)
   {
@@ -503,7 +503,7 @@ void ShellController::SetDetail(bool value, unsigned int min_windows)
   }
 }
 
-void ShellController::NextDetail()
+void Controller::Impl::NextDetail()
 {
   if (!model_)
     return;
@@ -519,7 +519,7 @@ void ShellController::NextDetail()
   }
 }
 
-void ShellController::PrevDetail()
+void Controller::Impl::PrevDetail()
 {
   if (!model_)
     return;
@@ -536,7 +536,7 @@ void ShellController::PrevDetail()
   }
 }
 
-LayoutWindow::Vector ShellController::ExternalRenderTargets()
+LayoutWindow::Vector Controller::Impl::ExternalRenderTargets()
 {
   if (!view_)
   {
@@ -546,27 +546,13 @@ LayoutWindow::Vector ShellController::ExternalRenderTargets()
   return view_->ExternalTargets();
 }
 
-guint ShellController::GetSwitcherInputWindowId() const
+guint Controller::Impl::GetSwitcherInputWindowId() const
 {
   return view_window_->GetInputWindowId();
 }
 
-bool ShellController::IsShowDesktopDisabled() const
-{
-  return obj_->show_desktop_disabled_;
-}
 
-void ShellController::SetShowDesktopDisabled(bool disabled)
-{
-  obj_->show_desktop_disabled_ = disabled;
-}
-
-int ShellController::StartIndex() const
-{
-  return (IsShowDesktopDisabled() ? 0 : 1);
-}
-
-Selection ShellController::GetCurrentSelection() const
+Selection Controller::Impl::GetCurrentSelection() const
 {
   AbstractLauncherIcon::Ptr application;
   Window window = 0;
@@ -588,27 +574,13 @@ Selection ShellController::GetCurrentSelection() const
   return {application, window};
 }
 
-bool ShellController::CompareSwitcherItemsPriority(AbstractLauncherIcon::Ptr const& first,
-                                              AbstractLauncherIcon::Ptr const& second)
-{
-  if (first->GetIconType() == second->GetIconType())
-    return first->SwitcherPriority() > second->SwitcherPriority();
 
-  if (first->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
-    return true;
-
-  if (second->GetIconType() == AbstractLauncherIcon::IconType::DESKTOP)
-    return false;
-
-  return first->GetIconType() < second->GetIconType();
-}
-
-void ShellController::SelectFirstItem()
+void Controller::Impl::SelectFirstItem()
 {
   if (!model_)
     return;
 
-  int first_icon_index = StartIndex();
+  int first_icon_index = obj_->StartIndex();
   int second_icon_index = first_icon_index + 1;
 
   AbstractLauncherIcon::Ptr const& first  = model_->at(first_icon_index);
@@ -656,20 +628,6 @@ void ShellController::SelectFirstItem()
     model_->Select(first);
   else
     model_->Select(second);
-}
-
-/* Introspection */
-std::string
-ShellController::GetName() const
-{
-  return "SwitcherControllerImpl";
-}
-
-void
-ShellController::AddProperties(GVariantBuilder* builder)
-{
-  unity::variant::BuilderWrapper(builder)
-  .add("timeout_length", timeout_length());
 }
 
 } // switcher namespace
