@@ -28,9 +28,9 @@
 
 #include "PanelIndicatorsView.h"
 #include "unity-shared/StaticCairoText.h"
-#include "WindowButtons.h"
 #include "PanelTitlebarGrabAreaView.h"
 #include "unity-shared/UBusWrapper.h"
+#include "unity-shared/WindowButtons.h"
 
 namespace unity
 {
