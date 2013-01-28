@@ -21,8 +21,10 @@
  */
 
 #include "GesturalWindowSwitcher.h"
+#include <core/timer.h>
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
+#include "SwitcherView.h"
 #include "unityshell.h"
 
 DECLARE_LOGGER(logger, "unity.gesture.switcher");
@@ -100,6 +102,7 @@ namespace unity
 // private class
 
 GesturalWindowSwitcherPrivate::GesturalWindowSwitcherPrivate()
+  : accumulated_horizontal_drag(0.0f)
 {
   state = State::WaitingCompoundGesture;
 

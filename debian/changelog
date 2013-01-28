@@ -1,3 +1,32 @@
+unity (6.12.0daily13.01.25.1-0ubuntu1) raring; urgency=low
+
+  [ Romain Perier ]
+  * lp:unity FTBFS on quantal: error: ‘bamf_view_is_user_visible’ was
+    not declared in this scope  (LP: #1086276)
+
+  [ Brandon Schaefer ]
+  * TestOverlayVScrollBar.TestConnectorResetsDuringScrollAnimation
+    segfaults. (LP: #1102699)
+
+  [ Andrea Azzarone ]
+  * Removal of 21_correct_timestamp_.. patch  returns focus issues in
+    Unity session (LP: #1072566)
+
+  [ Marco Trevisan (Treviño) ]
+  * The workspace shortcuts listed in the overlay should be hidden when
+    workspaces are disabled (LP: #1103561)
+  * Shortcuts hints overlay hides a disabled shortcut without
+    relayouting (LP: #1102429)
+
+  [ Manuel de la Pena ]
+  * ActionLink does not highlight when selected via keyboard navigation
+    (LP: #1103048)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3072
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 25 Jan 2013 12:29:18 +0000
+
 unity (6.12.0daily13.01.21-0ubuntu1) raring; urgency=low
 
   [ Marco Trevisan (Treviño) ]

@@ -94,7 +94,9 @@ View::View()
 void View::SetModel(Model::Ptr model)
 {
   model_ = model;
-  model_->categories_per_column.changed.connect(sigc::hide(sigc::mem_fun(this, &View::RenderColumns)));
+
+  if (model_)
+    model_->categories_per_column.changed.connect(sigc::hide(sigc::mem_fun(this, &View::RenderColumns)));
 
   // Fills the columns...
   RenderColumns();
@@ -186,15 +188,7 @@ nux::LinearLayout* View::CreateIntermediateLayout()
 
 nux::Geometry View::GetBackgroundGeometry()
 {
-  nux::Geometry base = GetGeometry();
-  nux::Geometry background_geo;
-
-  background_geo.width = base.width;
-  background_geo.height = base.height;
-  background_geo.x = (base.width - background_geo.width)/2;
-  background_geo.y = (base.height - background_geo.height)/2;
-
-  return background_geo;
+  return GetGeometry();
 }
 
 void View::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry clip)
@@ -205,6 +199,13 @@ void View::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Ge
 void View::RenderColumns()
 {
   columns_layout_->Clear();
+
+  if (!model_)
+  {
+    ComputeContentSize();
+    QueueRelayout();
+    return;
+  }
 
   int i = 0;
   int column_idx = 0;
@@ -254,6 +255,7 @@ void View::RenderColumns()
     i++;
   }
 
+  ComputeContentSize();
   QueueRelayout();
 }
 
