@@ -123,7 +123,7 @@ protected:
   std::map<std::string, nux::ObjectPtr<nux::AbstractButton>> sorted_buttons_;
 
   // lock texture
-  IconTexture* lock_texture_;
+  nux::ObjectPtr<IconTexture> lock_texture_;
 
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
   LayerPtr details_bg_layer_;

@@ -397,7 +397,7 @@ nux::Layout* MusicPaymentPreview::GetFooter()
 
   lock_texture_ = new IconTexture(style.GetLockIcon(), style.GetPaymentLockWidth(),
           style.GetPaymentLockHeight());
-  buttons_data_layout->AddView(lock_texture_, 0, nux::MINOR_POSITION_CENTER,
+  buttons_data_layout->AddView(lock_texture_.GetPointer(), 0, nux::MINOR_POSITION_CENTER,
           nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
 
   buttons_data_layout->AddSpace(20, 1);
