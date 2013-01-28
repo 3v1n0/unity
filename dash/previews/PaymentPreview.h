@@ -114,12 +114,12 @@ protected:
   virtual void SetupViews();
   virtual void SetupBackground();
 
-  nux::LayeredLayout* full_data_layout_;
-  nux::VLayout* content_data_layout_;
-  nux::VLayout* overlay_layout_;
-  nux::Layout* header_layout_;
-  nux::Layout* body_layout_;
-  nux::Layout* footer_layout_;
+  nux::ObjectPtr<nux::LayeredLayout> full_data_layout_;
+  nux::ObjectPtr<nux::VLayout> content_data_layout_;
+  nux::ObjectPtr<nux::VLayout> overlay_layout_;
+  nux::ObjectPtr<nux::Layout> header_layout_;
+  nux::ObjectPtr<nux::Layout> body_layout_;
+  nux::ObjectPtr<nux::Layout> footer_layout_;
 
   // content elements
   nux::ObjectPtr<CoverArt> image_;

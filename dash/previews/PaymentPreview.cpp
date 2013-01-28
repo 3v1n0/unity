@@ -347,15 +347,15 @@ void PaymentPreview::SetupViews()
 
   header_layout_ = GetHeader();
 
-  content_data_layout_->AddLayout(header_layout_, 1);
+  content_data_layout_->AddLayout(header_layout_.GetPointer(), 1);
 
   body_layout_ = GetBody();
-  content_data_layout_->AddLayout(body_layout_, 1);
+  content_data_layout_->AddLayout(body_layout_.GetPointer(), 1);
 
   footer_layout_ = GetFooter();
-  content_data_layout_->AddLayout(footer_layout_, 1);
+  content_data_layout_->AddLayout(footer_layout_.GetPointer(), 1);
 
-  full_data_layout_->AddLayout(content_data_layout_);
+  full_data_layout_->AddLayout(content_data_layout_.GetPointer());
 
   // layout to draw an overlay
   overlay_layout_ = new nux::VLayout();
@@ -369,9 +369,9 @@ void PaymentPreview::SetupViews()
   overlay_layout_->AddView(spinner_, 1, nux::MINOR_POSITION_CENTER);
   overlay_layout_->AddSpace(20, 1);
 
-  full_data_layout_->AddLayout(overlay_layout_);
+  full_data_layout_->AddLayout(overlay_layout_.GetPointer());
 
-  SetLayout(full_data_layout_);
+  SetLayout(full_data_layout_.GetPointer());
 }
 
 }
