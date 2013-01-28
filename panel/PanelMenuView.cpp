@@ -356,8 +356,9 @@ bool PanelMenuView::DrawWindowButtons() const
   WindowManager& wm = WindowManager::Default();
   bool screen_grabbed = (wm.IsExpoActive() || wm.IsScaleActive());
 
+  // TODO: We need to refactor this code to extract the window button logic
   if (overlay_showing_)
-    return true;
+    return false;
 
   if (we_control_active_ && is_maximized_ && !screen_grabbed &&
       !launcher_keynav_ && !switcher_showing_)
