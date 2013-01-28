@@ -84,17 +84,20 @@ public:
   void HideOverlay();
 
 private:
-  nux::Layout* GetHeader();
 
 protected:
   GVariant *data_;
+
+  // build the header to be shown in the preview
+  nux::Layout* GetHeader();
+
   // Return the title layout (including layout data) to be added to the header
   // NULL is a possible return value.
   virtual nux::Layout* GetTitle() = 0;
 
   // Return the pize layout (including data) to be added to the header
   // NULL is a possible return value.
-  virtual nux::Layout* GetPrize() = 0;
+  virtual nux::Layout* GetPrice() = 0;
 
   // Return layout with the content to show. NULL is a possible return value.
   virtual nux::Layout* GetBody() = 0;

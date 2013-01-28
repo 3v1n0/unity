@@ -217,7 +217,7 @@ nux::Layout* PaymentPreview::GetHeader()
   header_data_layout->AddView(image_.GetPointer(), 0);
   header_data_layout->AddLayout(GetTitle(), 0);
   header_data_layout->AddSpace(20, 1);
-  header_data_layout->AddLayout(GetPrize(), 0);
+  header_data_layout->AddLayout(GetPrice(), 0);
   return header_data_layout;
 }
 

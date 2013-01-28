@@ -163,7 +163,7 @@ nux::Layout* MusicPaymentPreview::GetTitle()
   return title_data_layout;
 }
 
-nux::Layout* MusicPaymentPreview::GetPrize()
+nux::Layout* MusicPaymentPreview::GetPrice()
 {
   previews::Style& style = dash::previews::Style::Instance();
   nux::VLayout *prize_data_layout = new nux::VLayout();

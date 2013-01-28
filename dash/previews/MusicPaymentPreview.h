@@ -73,7 +73,7 @@ public:
   // From debug::Introspectable
   std::string GetName() const;
   nux::Layout* GetTitle();
-  nux::Layout* GetPrize();
+  nux::Layout* GetPrice();
   nux::Layout* GetBody();
   nux::Layout* GetFormLabels();
   nux::Layout* GetFormFields();
