@@ -226,7 +226,7 @@ struct StandaloneModeller : shortcut::AbstractModeller
                                                                                    _("Restores or minimises the current window."),
                                                                                    shortcut::OptionType::COMPIZ_KEY,
                                                                                    "core",
-                                                                                   "unmaximize_window_key")));
+                                                                                   "unmaximize_or_minimize_window_key")));
 
     hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Windows"), "", _(" or Right"),
                                                                                    _("Semi-maximises the current window."),
