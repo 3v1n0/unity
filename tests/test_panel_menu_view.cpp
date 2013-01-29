@@ -101,7 +101,10 @@ TEST_F(TestPanelMenuView, QueuesDrawOnButtonsOpacityChange)
   menu_view.window_buttons_->opacity.changed.emit(0.5f);
 }
 
-TEST_F(TestPanelMenuView, RestoreOnGrabInBiggerWorkArea)
+struct ProgressTester : TestPanelMenuView, WithParamInterface<double> {};
+INSTANTIATE_TEST_CASE_P(TestPanelMenuView, ProgressTester, Range(0.0, 1.0, 0.1));
+
+TEST_P(ProgressTester, RestoreOnGrabInBiggerWorkArea)
 {
   uscreen.SetupFakeMultiMonitor();
   unsigned monitor = uscreen.GetMonitors().size() - 1;
@@ -112,6 +115,7 @@ TEST_F(TestPanelMenuView, RestoreOnGrabInBiggerWorkArea)
 
   auto max_window = std::make_shared<StandaloneWindow>(g_random_int());
   WM->AddStandaloneWindow(max_window);
+
   max_window->maximized = true;
   nux::Geometry win_geo(monitor_geo.x + monitor_geo.width/4, monitor_geo.y + monitor_geo.height/4,
                         monitor_geo.width/2, monitor_geo.height/2);
@@ -123,7 +127,7 @@ TEST_F(TestPanelMenuView, RestoreOnGrabInBiggerWorkArea)
   WM->window_moved.connect([&] (Window xid) {moved = (max_window->Xid() == xid);});
 
   // Grab the window outside the panel shape
-  nux::Point mouse_pos(panel_win->GetX() + panel_win->GetWidth() * g_random_double(), panel_win->GetY() + panel_win->GetHeight() + 1);
+  nux::Point mouse_pos(panel_win->GetX() + panel_win->GetWidth() * GetParam(), panel_win->GetY() + panel_win->GetHeight() + 1);
   menu_view.titlebar_grab_area_->grab_move(mouse_pos.x - panel_win->GetX(), mouse_pos.y - panel_win->GetY());
 
   nux::Geometry expected_geo(win_geo);
@@ -135,5 +139,6 @@ TEST_F(TestPanelMenuView, RestoreOnGrabInBiggerWorkArea)
   EXPECT_FALSE(max_window->maximized());
   EXPECT_EQ(max_window->geo(), expected_geo);
 }
+
 
 }
