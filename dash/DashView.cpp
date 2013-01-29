@@ -494,7 +494,7 @@ void DashView::AboutToShow()
     ClosePreview();
   }
 
-  overlay_window_buttons_->AboutToShow();
+  overlay_window_buttons_->Show();
 
   renderer_.AboutToShow();
 }
@@ -524,7 +524,7 @@ void DashView::AboutToHide()
     ClosePreview();
   }
 
-  overlay_window_buttons_->AboutToHide();
+  overlay_window_buttons_->Hide();
 }
 
 void DashView::SetupViews()

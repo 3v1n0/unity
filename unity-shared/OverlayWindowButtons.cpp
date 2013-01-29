@@ -21,11 +21,16 @@
 #include "PanelStyle.h"
 #include "UScreen.h"
 
-const int MAIN_LEFT_PADDING = 4;
-const int MENUBAR_PADDING = 4;
+namespace
+{
+  const int MAIN_LEFT_PADDING = 4;
+  const int MENUBAR_PADDING = 4;
+}
 
 namespace unity
 {
+
+NUX_IMPLEMENT_OBJECT_TYPE(OverlayWindowButtons);
 
 OverlayWindowButtons::OverlayWindowButtons()
   : nux::BaseWindow("OverlayWindowButtons")
@@ -47,7 +52,7 @@ void OverlayWindowButtons::UpdateGeometry()
   window_buttons_->monitor = monitor;
 }
 
-void OverlayWindowButtons::AboutToShow()
+void OverlayWindowButtons::Show()
 {
   UpdateGeometry();
   ShowWindow(true);
@@ -55,7 +60,7 @@ void OverlayWindowButtons::AboutToShow()
   QueueDraw();
 }
 
-void OverlayWindowButtons::AboutToHide()
+void OverlayWindowButtons::Hide()
 {
   ShowWindow(false);
   PushToBack();
@@ -63,7 +68,7 @@ void OverlayWindowButtons::AboutToHide()
 }
 
 nux::Area* OverlayWindowButtons::FindAreaUnderMouse(nux::Point const& mouse_position,
-                                                 nux::NuxEventType event_type)
+                                                    nux::NuxEventType event_type)
 {
   return window_buttons_->FindAreaUnderMouse(mouse_position, event_type);
 }

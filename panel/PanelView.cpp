@@ -636,7 +636,8 @@ void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& g
     tracked_pointer_pos_ = {-1, -1};
   }
 
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  if (overlay_is_open_)
+    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
 }
 
 void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned xid,

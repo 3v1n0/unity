@@ -346,14 +346,14 @@ nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
 void View::AboutToShow()
 {
   visible_ = true;
-  overlay_window_buttons_->AboutToShow();
+  overlay_window_buttons_->Show();
   renderer_.AboutToShow();
 }
 
 void View::AboutToHide()
 {
   visible_ = false;
-  overlay_window_buttons_->AboutToHide();
+  overlay_window_buttons_->Hide();
   renderer_.AboutToHide();
 }
 

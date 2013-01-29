@@ -30,11 +30,12 @@ namespace unity
 
 class OverlayWindowButtons : public nux::BaseWindow
 {
+  NUX_DECLARE_OBJECT_TYPE(OverlayWindowButtons, nux::BaseWindow);
 public:
   OverlayWindowButtons();
 
-  void AboutToShow();
-  void AboutToHide();
+  void Show();
+  void Hide();
 
   nux::Area* FindAreaUnderMouse(nux::Point const& mouse_position,
                                 nux::NuxEventType event_type);
