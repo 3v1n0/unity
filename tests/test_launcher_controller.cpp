@@ -450,6 +450,24 @@ TEST_F(TestLauncherController, MultimonitorGeometries)
   }
 }
 
+TEST_F(TestLauncherController, MonitorResizesLauncher)
+{
+  nux::Geometry monitor_geo = uscreen.GetMonitorGeometry(0);
+  monitor_geo.SetSize(monitor_geo.width/2, monitor_geo.height/2);
+  uscreen.SetMonitors({monitor_geo});
+  nux::Geometry launcher_geo = lc.launcher().GetAbsoluteGeometry();
+  ASSERT_EQ(launcher_geo.x, monitor_geo.x);
+  ASSERT_EQ(launcher_geo.y, monitor_geo.y + panel_style.panel_height);
+  ASSERT_EQ(launcher_geo.height, monitor_geo.height - panel_style.panel_height);
+
+  uscreen.Reset();
+  monitor_geo = uscreen.GetMonitorGeometry(0);
+  launcher_geo = lc.launcher().GetAbsoluteGeometry();
+  ASSERT_EQ(launcher_geo.x, monitor_geo.x);
+  ASSERT_EQ(launcher_geo.y, monitor_geo.y + panel_style.panel_height);
+  ASSERT_EQ(launcher_geo.height, monitor_geo.height - panel_style.panel_height);
+}
+
 TEST_F(TestLauncherController, OnlyUnstickIconOnFavoriteRemoval)
 {
   const std::string desktop = app::BZR_HANDLE_PATCH;

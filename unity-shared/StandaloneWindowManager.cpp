@@ -36,10 +36,10 @@ DECLARE_LOGGER(logger, "unity.wm");
 StandaloneWindow::StandaloneWindow(Window xid)
   : xid(xid)
   , name("StandaloneWindow " + std::to_string(xid))
-  , geo(0, 0, 10, 10)
+  , geo(nux::Geometry(0, 0, 10, 10))
   , current_desktop(0)
   , monitor(0)
-  , active(true)
+  , active(false)
   , mapped(true)
   , visible(true)
   , maximized(false)
@@ -50,7 +50,23 @@ StandaloneWindow::StandaloneWindow(Window xid)
   , closable(true)
   , minimizable(true)
   , maximizable(true)
-{}
+{
+  geo.SetSetterFunction([this] (nux::Geometry &target, nux::Geometry const& new_value) {
+    if (target.x != new_value.x || target.y != new_value.y)
+      moved.emit();
+
+    if (target.width != new_value.width || target.height != new_value.height)
+      resized.emit();
+
+    if (target != new_value)
+    {
+      target = new_value;
+      return true;
+    }
+
+    return false;
+  });
+}
 
 WindowManagerPtr create_window_manager()
 {
@@ -63,6 +79,7 @@ StandaloneWindowManager::StandaloneWindowManager()
   , scale_active_(false)
   , scale_active_for_group_(false)
   , current_desktop_(0)
+  , viewport_size_(2, 2)
 {}
 
 Window StandaloneWindowManager::GetActiveWindow() const
@@ -193,7 +210,7 @@ void StandaloneWindowManager::Decorate(Window window_id) const
   auto it = standalone_windows_.find(window_id);
   if (it != standalone_windows_.end())
   {
-    it->second->decorated = it->second->has_decorations;
+    it->second->decorated = it->second->has_decorations();
   }
 }
 
@@ -228,13 +245,8 @@ void StandaloneWindowManager::Restore(Window window_id)
 
 void StandaloneWindowManager::RestoreAt(Window window_id, int x, int y)
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-  {
-    Restore(window_id);
-    it->second->geo.x = x;
-    it->second->geo.y = y;
-  }
+  Restore(window_id);
+  StartMove(window_id, x, y);
 }
 
 void StandaloneWindowManager::UnMinimize(Window window_id)
@@ -272,16 +284,12 @@ void StandaloneWindowManager::Close(Window window_id)
 
 void StandaloneWindowManager::Activate(Window window_id)
 {
-  auto old = std::find_if(standalone_windows_.begin(), standalone_windows_.end(),
-                          [this] (std::pair<Window, StandaloneWindow::Ptr> const& it)
-                            { return it.second->active; });
-
-  if (old != standalone_windows_.end())
-    old->second->active = false;
-
   auto it = standalone_windows_.find(window_id);
   if (it != standalone_windows_.end())
+  {
+    // This will automatically set the others active windows as unactive
     it->second->active = true;
+  }
 }
 
 void StandaloneWindowManager::Raise(Window window_id)
@@ -367,8 +375,9 @@ void StandaloneWindowManager::StartMove(Window window_id, int x, int y)
   auto it = standalone_windows_.find(window_id);
   if (it != standalone_windows_.end())
   {
-    it->second->geo.x = x;
-    it->second->geo.y = y;
+    nux::Geometry new_geo(it->second->geo());
+    new_geo.SetPosition(x, y);
+    it->second->geo = new_geo;
   }
 }
 
@@ -433,9 +442,20 @@ void StandaloneWindowManager::CheckWindowIntersections(nux::Geometry const& regi
 {
 }
 
+void StandaloneWindowManager::SetViewportSize(unsigned horizontal, unsigned vertical)
+{
+  nux::Size new_size(horizontal, vertical);
+
+  if (viewport_size_ == new_size)
+    return;
+
+  viewport_size_ = new_size;
+  viewport_layout_changed.emit(new_size.width, new_size.height);
+}
+
 int StandaloneWindowManager::WorkspaceCount() const
 {
-  return 4;
+  return viewport_size_.width * viewport_size_.height;
 }
 
 nux::Point StandaloneWindowManager::GetCurrentViewport() const
@@ -445,12 +465,12 @@ nux::Point StandaloneWindowManager::GetCurrentViewport() const
 
  int StandaloneWindowManager::GetViewportHSize() const
 {
-  return 2;
+  return viewport_size_.width;
 }
 
 int StandaloneWindowManager::GetViewportVSize() const
 {
-  return 2;
+  return viewport_size_.height;
 }
 
 bool StandaloneWindowManager::SaveInputFocus()
@@ -487,7 +507,31 @@ void StandaloneWindowManager::AddStandaloneWindow(StandaloneWindow::Ptr const& w
   if (standalone_windows_.empty())
     window->active = true;
 
-  standalone_windows_[window->Xid()] = window;
+  auto xid = window->Xid();
+  standalone_windows_[xid] = window;
+
+  window->mapped.changed.connect([this, xid] (bool v) {v ? window_mapped(xid) : window_unmapped(xid);});
+  window->visible.changed.connect([this, xid] (bool v) {v ? window_shown(xid) : window_hidden(xid);});
+  window->maximized.changed.connect([this, xid] (bool v) {v ? window_maximized(xid) : window_restored(xid);});
+  window->minimized.changed.connect([this, xid] (bool v) {v ? window_minimized(xid) : window_unminimized(xid);});
+  window->decorated.changed.connect([this, xid] (bool v) {v ? window_decorated(xid) : window_undecorated(xid);});
+  window->has_decorations.changed.connect([this, xid] (bool v) {v ? window_decorated(xid) : window_undecorated(xid);});
+  window->resized.connect([this, xid] { window_resized(xid); });
+  window->moved.connect([this, xid] { window_moved(xid); });
+
+  window->active.changed.connect([this, xid] (bool active) {
+    if (!active)
+      return;
+
+    // Ensuring that this is the only active window we have on screen
+    for (auto const& it : standalone_windows_)
+      if (it.second->Xid() != xid && it.second->active)
+        it.second->active = false;
+
+    window_focus_changed(xid);
+  });
+
+  window->active = true;
 }
 
 std::map<Window, StandaloneWindow::Ptr> StandaloneWindowManager::GetStandaloneWindows() const

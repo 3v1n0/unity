@@ -15,7 +15,7 @@ int main(int argc, char** argv)
   // the environment is only read once by glib and then cached
   const std::string LOCAL_DATA_DIR = BUILDDIR"/tests/data:/usr/share";
   g_setenv("XDG_DATA_DIRS", LOCAL_DATA_DIR.c_str(), TRUE);
-
+  g_setenv("LC_ALL", "C", TRUE);
 
   gtk_init(&argc, &argv);
   setlocale(LC_ALL, "C");

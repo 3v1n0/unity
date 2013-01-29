@@ -82,13 +82,10 @@ Introspectable::AddChild(Introspectable* child)
 }
 
 void
-Introspectable::RemoveChild(Introspectable* child, child_destructor destr)
+Introspectable::RemoveChild(Introspectable* child)
 {
   _children.remove(child);
   child->_parents.remove(this);
-
-  if (destr)
-    (*destr)(child);
 }
 
 std::string
@@ -102,14 +99,11 @@ guint64 Introspectable::GetIntrospectionId() const
   return _id;
 }
 
-void
-Introspectable::RemoveAllChildren(child_destructor destr)
+void Introspectable::RemoveAllChildren()
 {
   for (auto child : _children)
   {
     child->_parents.remove(this);
-    if (destr)
-      (*destr)(child);
   }
   _children.clear();
 }

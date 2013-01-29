@@ -12,6 +12,8 @@ from autopilot.emulators.clipboard import get_clipboard_contents
 from autopilot.matchers import Eventually
 from testtools.matchers import Equals, NotEquals, GreaterThan
 from time import sleep
+from tempfile import mkstemp
+from os import remove
 
 from unity.tests import UnityTestCase
 
@@ -60,6 +62,12 @@ class DashRevealTests(DashTestCase):
         """Run Command lens must reveat on alt+F2."""
         self.dash.reveal_command_lens()
         self.assertThat(self.dash.active_lens, Eventually(Equals('commands.lens')))
+
+    def test_can_go_from_dash_to_command_lens(self):
+        """Switch to command lens without closing the dash."""
+        self.dash.ensure_visible()
+        self.dash.reveal_command_lens()
+        self.assertThat(self.dash.visible, Eventually(Equals(False)))
 
     def test_alt_f4_close_dash(self):
         """Dash must close on alt+F4."""
@@ -731,10 +739,21 @@ class PreviewInvocationTests(DashTestCase):
         preview.
         """
         gettext.install("unity-lens-files", unicode=True)
+
+        # Instead of skipping the test, here we can create a dummy file to open and
+        # make sure the lens result is non-empty
+        (file_handle, file_path) = mkstemp()
+        self.addCleanup(remove, file_path)
+        gedit_win = self.start_app_window('Text Editor', files=[file_path], locale='C')
+        self.addCleanup(self.close_all_app, 'Text Editor')
+        self.assertProperty(gedit_win, is_focused=True)
+
         lens = self.dash.reveal_file_lens()
         self.addCleanup(self.dash.ensure_hidden)
 
-        category = lens.get_category_by_name(_("Folders"))
+        category = lens.get_category_by_name(_("Recent"))
+        refresh_results_fn = lambda: len(category.get_results())
+        self.assertThat(refresh_results_fn, Eventually(GreaterThan(0)))
         results = category.get_results()
         result = results[0]
         # result.preview handles finding xy co-ords and right mouse-click
@@ -783,7 +802,7 @@ class PreviewInvocationTests(DashTestCase):
             if category is None or not category.is_visible:
                 category = lens.get_category_by_name("Online")
                 if category is None or not category.is_visible:
-                    return None
+                    self.skipTest("This lens is probably empty")
             return category
 
         lens = self.dash.reveal_video_lens()

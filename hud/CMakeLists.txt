@@ -34,4 +34,4 @@ add_pch(pch/hud_pch.hh hud-lib)
 # Standalone variant
 #
 add_executable (hud StandaloneHud.cpp)
-target_link_libraries (hud hud-lib unity-shared)
+target_link_libraries (hud hud-lib unity-shared unity-shared-standalone)

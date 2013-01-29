@@ -27,12 +27,8 @@
 namespace unity
 {
 
-const unsigned MONITOR_WIDTH = 1024;
-const unsigned MONITOR_HEIGHT = 768;
-
-class MockUScreen : public UScreen
+struct MockUScreen : UScreen
 {
-public:
   MockUScreen()
   {
     Reset(false);
@@ -61,7 +57,7 @@ public:
 
     for (int i = 0, total_width = 0; i < max_num_monitors; ++i)
     {
-      monitors_.push_back(nux::Geometry(MONITOR_WIDTH, MONITOR_HEIGHT, total_width, 0));
+      monitors_.push_back(nux::Geometry(total_width, 0, MONITOR_WIDTH, MONITOR_HEIGHT));
       total_width += MONITOR_WIDTH;
 
       if (emit_change)
@@ -79,6 +75,18 @@ public:
         changed.emit(primary_, monitors_);
     }
   }
+
+  void SetMonitors(std::vector<nux::Geometry> const& monitors)
+  {
+    if (!std::equal(monitors_.begin(), monitors_.end(), monitors.begin()))
+    {
+      monitors_ = monitors;
+      changed.emit(primary_, monitors_);
+    }
+  }
+
+  static const unsigned MONITOR_WIDTH = 1024;
+  static const unsigned MONITOR_HEIGHT = 768;
 };
 
 }
