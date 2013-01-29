@@ -306,13 +306,13 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.dash.ensure_visible()
         self.addCleanup(self.dash.ensure_hidden)
 
-        dash_max = self.dash.view.dash_maximized
-        if dash_max:
-            self.panel.window_buttons.unmaximize.mouse_click()
-        else:
+        desired_max = not self.dash.view.dash_maximized
+        if desired_max:
             self.panel.window_buttons.maximize.mouse_click()
+        else:
+            self.panel.window_buttons.unmaximize.mouse_click()
 
-        self.assertThat(dash_max, NotEquals(self.dash.view.dash_maximized))
+        self.assertThat(self.dash.view.dash_maximized, Eventually(Equals(desired_max)))
 
     def test_window_buttons_show_with_hud(self):
         """Window buttons must be shown when the HUD is open."""
