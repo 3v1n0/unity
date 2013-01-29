@@ -24,9 +24,8 @@
 #include <iosfwd>
 #include <map>
 #include <string>
-
+#include <memory>
 #include <sigc++/signal.h>
-#include <boost/shared_ptr.hpp>
 
 #include <NuxCore/Rect.h>
 
@@ -42,7 +41,7 @@ typedef std::map<std::string, nux::Rect> EntryLocationMap;
 class Entry
 {
 public:
-  typedef boost::shared_ptr<Entry> Ptr;
+  typedef std::shared_ptr<Entry> Ptr;
 
   Entry(std::string const& id,
         std::string const& name_hint,
@@ -86,9 +85,9 @@ public:
   bool show_now() const;
   void set_show_now(bool show_now);
 
-  void ShowMenu(int x, int y, unsigned int button, unsigned int timestamp);
-  void ShowMenu(unsigned int xid, int x, int y, unsigned int button, unsigned int timestamp);
-  void SecondaryActivate(unsigned int timestamp);
+  void ShowMenu(int x, int y, unsigned button);
+  void ShowMenu(unsigned int xid, int x, int y, unsigned button);
+  void SecondaryActivate();
   void Scroll(int delta);
 
   void setLabel(std::string const& label, bool sensitive, bool visible);
@@ -101,8 +100,8 @@ public:
   sigc::signal<void, nux::Rect const&> geometry_changed;
   sigc::signal<void, bool> show_now_changed;
 
-  sigc::signal<void, std::string const&, unsigned int, int, int, unsigned int, unsigned int> on_show_menu;
-  sigc::signal<void, std::string const&, unsigned int> on_secondary_activate;
+  sigc::signal<void, std::string const&, unsigned, int, int, unsigned> on_show_menu;
+  sigc::signal<void, std::string const&> on_secondary_activate;
   sigc::signal<void, std::string const&, int> on_scroll;
 
 private:

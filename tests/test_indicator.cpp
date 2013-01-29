@@ -35,6 +35,7 @@ TEST(TestIndicator, Construction)
   EXPECT_EQ(indicator.name(), "indicator-test");
   EXPECT_FALSE(indicator.IsAppmenu());
   EXPECT_EQ(indicator.GetEntry("test-entry"), nullptr);
+  EXPECT_EQ(indicator.EntryIndex("test-entry"), -1);
   EXPECT_TRUE(indicator.GetEntries().empty());
 }
 
@@ -76,6 +77,7 @@ TEST(TestIndicator, Syncing)
   indicator.Sync(sync_data);
   EXPECT_EQ(indicator.GetEntries().size(), 3);
   EXPECT_EQ(indicator.GetEntry("test-entry-2"), entry2);
+  EXPECT_EQ(indicator.EntryIndex("test-entry-2"), 1);
   EXPECT_EQ(added.size(), 3);
   EXPECT_EQ(added.front()->id(), "test-entry-1");
   EXPECT_EQ(added.back()->id(), "test-entry-3");
@@ -91,6 +93,7 @@ TEST(TestIndicator, Syncing)
   indicator.Sync(sync_data);
   EXPECT_EQ(indicator.GetEntries().size(), 2);
   EXPECT_EQ(indicator.GetEntry("test-entry-2"), nullptr);
+  EXPECT_EQ(indicator.EntryIndex("test-entry-2"), -1);
   EXPECT_EQ(added.size(), 0);
   EXPECT_EQ(removed.size(), 1);
   EXPECT_EQ(removed.front(), entry2->id());
@@ -142,34 +145,31 @@ TEST(TestIndicator, ChildrenSignals)
 
   std::string show_entry;
   int show_x, show_y;
-  unsigned int show_xid, show_button, show_timestamp;
+  unsigned int show_xid, show_button;
 
   // Connecting to signals
   indicator.on_show_menu.connect([&] (std::string const& eid, unsigned int xid,
-                                      int x, int y, unsigned int button,
-                                      unsigned int timestamp) {
+                                      int x, int y, unsigned int button) {
     show_entry = eid;
     show_xid = xid;
     show_x = x;
     show_y = y;
     show_button = button;
-    show_timestamp = timestamp;
   });
 
-  entry1->ShowMenu(123456789, 50, 100, 2, 1328058770);
+  entry1->ShowMenu(123456789, 50, 100, 2);
   EXPECT_EQ(show_entry, "test-entry-1");
   EXPECT_EQ(show_xid, 123456789);
   EXPECT_EQ(show_x, 50);
   EXPECT_EQ(show_y, 100);
   EXPECT_EQ(show_button, 2);
-  EXPECT_EQ(show_timestamp, 1328058770);
 
   // Check if a removed entry still emits a signal to the old indicator
   show_entry = "invalid-entry";
   sync_data.remove(entry1);
   indicator.Sync(sync_data);
 
-  entry1->ShowMenu(123456789, 50, 100, 2, 1328058770);
+  entry1->ShowMenu(123456789, 50, 100, 2);
   EXPECT_EQ(show_entry, "invalid-entry");
 
   // Checking secondary activate signal
@@ -179,16 +179,12 @@ TEST(TestIndicator, ChildrenSignals)
   indicator.Sync(sync_data);
 
   std::string secondary_activated;
-  unsigned int secondary_timestamp;
-  indicator.on_secondary_activate.connect([&] (std::string const& eid,
-                                               unsigned int timestamp) {
+  indicator.on_secondary_activate.connect([&] (std::string const& eid) {
     secondary_activated = eid;
-    secondary_timestamp = timestamp;
   });
 
-  entry->SecondaryActivate(1328060717);
+  entry->SecondaryActivate();
   EXPECT_EQ(secondary_activated, "test-entry-2");
-  EXPECT_EQ(secondary_timestamp, 1328060717);
 
   // Checking scroll signal
   std::string scrolled_entry;

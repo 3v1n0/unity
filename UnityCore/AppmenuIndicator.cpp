@@ -28,9 +28,9 @@ AppmenuIndicator::AppmenuIndicator(std::string const& name)
   : Indicator(name)
 {}
 
-void AppmenuIndicator::ShowAppmenu(unsigned int xid, int x, int y, unsigned int timestamp) const
+void AppmenuIndicator::ShowAppmenu(unsigned int xid, int x, int y) const
 {
-  on_show_appmenu.emit(xid, x, y, timestamp);
+  on_show_appmenu.emit(xid, x, y);
 }
 
 } // namespace indicator

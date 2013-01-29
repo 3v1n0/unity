@@ -23,7 +23,6 @@
 #define _COMPIZ_INPUTREMOVER_H
 
 #include <memory>
-
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/shape.h>
@@ -83,6 +82,50 @@ private:
   int           mShapeError;
 
 };
+
+class WindowInputRemoverLock
+{
+  public:
+
+    typedef std::shared_ptr <WindowInputRemoverLock> Ptr;
+    typedef std::weak_ptr <WindowInputRemoverLock> Weak;
+
+    WindowInputRemoverLock (WindowInputRemoverInterface *remover) :
+        remover_ (remover)
+    {
+      remover->save();
+      remover->remove();
+    }
+
+    ~WindowInputRemoverLock ()
+    {
+      remover_->restore();
+      delete remover_;
+    }
+
+    void refresh ()
+    {
+      remover_->save();
+      remover_->remove();
+    }
+
+  private:
+    WindowInputRemoverInterface *remover_;
+};
+
+class WindowInputRemoverLockAcquireInterface
+{
+public:
+
+  virtual ~WindowInputRemoverLockAcquireInterface () {}
+
+  WindowInputRemoverLock::Ptr InputRemover () { return GetInputRemover (); }
+
+private:
+
+  virtual WindowInputRemoverLock::Ptr GetInputRemover () = 0;
+};
+
 }
 
 #endif

@@ -22,25 +22,11 @@
 #include <gio/gio.h>
 #include <gtk/gtk.h>
 
+#include "config.h"
 #include "panel-a11y.h"
 #include "panel-service.h"
 
 static GDBusNodeInfo *introspection_data = NULL;
-
-/*
- * typedef struct {
- *   gchar *indicator_id
- *   gchar *entry_id;
- *   gchar *label;
- *   bool   label_sensitive;
- *   bool   label_visible;
- *   uint32 icon_hint;
- *   gchar *icon_data;
- *   bool   icon_sensitive;
- *   bool   icon_visible;
- *
- * } EntryInfo;
- */
 
 static const gchar introspection_xml[] =
   "<node>"
@@ -56,7 +42,8 @@ static const gchar introspection_xml[] =
   "    </method>"
   ""
   "    <method name='SyncGeometries'>"
-  "      <arg type='a(ssiiii)' name='geometries' direction='in'/>"
+  "      <arg type='s' name='panel_id' direction='in'/>"
+  "      <arg type='a(siiii)' name='geometries' direction='in'/>"
   "    </method>"
   ""
   "    <method name='ShowEntry'>"
@@ -65,19 +52,16 @@ static const gchar introspection_xml[] =
   "      <arg type='i' name='x' direction='in'/>"
   "      <arg type='i' name='y' direction='in'/>"
   "      <arg type='u' name='button' direction='in'/>"
-  "      <arg type='u' name='timestamp' direction='in'/>"
   "    </method>"
   ""
   "    <method name='ShowAppMenu'>"
   "      <arg type='u' name='xid' direction='in'/>"
   "      <arg type='i' name='x' direction='in'/>"
   "      <arg type='i' name='y' direction='in'/>"
-  "      <arg type='u' name='timestamp' direction='in'/>"
   "    </method>"
   ""
   "    <method name='SecondaryActivateEntry'>"
   "      <arg type='s' name='entry_id' direction='in'/>"
-  "      <arg type='u' name='timestamp' direction='in'/>"
   "    </method>"
   ""
   "    <method name='ScrollEntry'>"
@@ -154,30 +138,33 @@ handle_method_call (GDBusConnection       *connection,
       gchar *id;
       g_variant_get (parameters, "(s)", &id, NULL);
       g_dbus_method_invocation_return_value (invocation,
-                                             panel_service_sync_one (service,
-                                                                     id));
+                                             panel_service_sync_one (service, id));
       g_free (id);
     }
   else if (g_strcmp0 (method_name, "SyncGeometries") == 0)
     {
       GVariantIter *iter;
-      gchar *indicator_id, *entry_id;
+      gchar *panel_id, *entry_id;
       gint x, y, width, height;
 
-      g_variant_get (parameters, "(a(ssiiii))", &iter);
-      while (iter && g_variant_iter_loop (iter, "(ssiiii)",
-                                  &indicator_id,
-                                  &entry_id,
-                                  &x,
-                                  &y,
-                                  &width,
-                                  &height))
-        {
-          panel_service_sync_geometry (service, indicator_id,
-                                       entry_id, x, y, width, height);
-        }
+      g_variant_get (parameters, "(sa(siiii))", &panel_id, &iter);
 
-      if (iter) g_variant_iter_free (iter);
+      if (panel_id)
+        {
+          if (iter)
+            {
+              while (g_variant_iter_loop (iter, "(siiii)", &entry_id, &x, &y,
+                                                           &width, &height))
+                {
+                  panel_service_sync_geometry (service, panel_id, entry_id, x, y,
+                                               width, height);
+                }
+
+              g_variant_iter_free (iter);
+            }
+
+          g_free (panel_id);
+        }
 
       g_dbus_method_invocation_return_value (invocation, NULL);
     }
@@ -188,10 +175,9 @@ handle_method_call (GDBusConnection       *connection,
       gint32  x;
       gint32  y;
       guint32 button;
-      guint32 timestamp;
-      g_variant_get (parameters, "(suiiuu)", &entry_id, &xid, &x, &y, &button, &timestamp, NULL);
+      g_variant_get (parameters, "(suiiu)", &entry_id, &xid, &x, &y, &button);
 
-      panel_service_show_entry (service, entry_id, xid, x, y, button, timestamp);
+      panel_service_show_entry (service, entry_id, xid, x, y, button);
 
       g_dbus_method_invocation_return_value (invocation, NULL);
       g_free (entry_id);
@@ -201,20 +187,18 @@ handle_method_call (GDBusConnection       *connection,
       guint32 xid;
       gint32  x;
       gint32  y;
-      guint32 timestamp;
-      g_variant_get (parameters, "(uiiu)", &xid, &x, &y, &timestamp, NULL);
+      g_variant_get (parameters, "(uii)", &xid, &x, &y);
 
-      panel_service_show_app_menu (service, xid, x, y, timestamp);
+      panel_service_show_app_menu (service, xid, x, y);
 
       g_dbus_method_invocation_return_value (invocation, NULL);
     }
   else if (g_strcmp0 (method_name, "SecondaryActivateEntry") == 0)
     {
-      gchar  *entry_id;
-      guint32 timestamp;
-      g_variant_get (parameters, "(su)", &entry_id, &timestamp, NULL);
+      gchar *entry_id;
+      g_variant_get (parameters, "(s)", &entry_id);
 
-      panel_service_secondary_activate_entry (service, entry_id, timestamp);
+      panel_service_secondary_activate_entry (service, entry_id);
 
       g_dbus_method_invocation_return_value (invocation, NULL);
       g_free (entry_id);
@@ -235,7 +219,7 @@ on_service_resync (PanelService *service, const gchar *indicator_id, GDBusConnec
 {
   GError *error = NULL;
   g_dbus_connection_emit_signal (connection,
-                                 S_NAME,
+                                 NULL,
                                  S_PATH,
                                  S_IFACE,
                                  "ReSync",
@@ -256,7 +240,7 @@ on_service_entry_activated (PanelService    *service,
 {
   GError *error = NULL;
   g_dbus_connection_emit_signal (connection,
-                                 S_NAME,
+                                 NULL,
                                  S_PATH,
                                  S_IFACE,
                                  "EntryActivated",
@@ -276,9 +260,10 @@ on_service_entry_activate_request (PanelService    *service,
                                    GDBusConnection *connection)
 {
   GError *error = NULL;
-  g_warning ("%s, entry_id:%s", G_STRFUNC, entry_id);
+  g_debug ("%s, entry_id: %s", G_STRFUNC, entry_id);
+
   g_dbus_connection_emit_signal (connection,
-                                 S_NAME,
+                                 NULL,
                                  S_PATH,
                                  S_IFACE,
                                  "EntryActivateRequest",
@@ -300,7 +285,7 @@ on_service_entry_show_now_changed (PanelService    *service,
 {
   GError *error = NULL;
   g_dbus_connection_emit_signal (connection,
-                                 S_NAME,
+                                 NULL,
                                  S_PATH,
                                  S_IFACE,
                                  "EntryShowNowChanged",
@@ -356,7 +341,7 @@ on_name_lost (GDBusConnection *connection,
               gpointer         user_data)
 {
   PanelService *service = PANEL_SERVICE (user_data);
-		
+
   g_debug ("%s", G_STRFUNC);
   if (service != NULL)
   {

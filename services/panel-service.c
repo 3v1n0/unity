@@ -19,23 +19,17 @@
  *              Marco Trevisan (Treviño) <mail@3v1n0.net>
  */
 
-#if HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-#include "panel-marshal.h"
+#include "config.h"
 #include "panel-service.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
-#include <gconf/gconf-client.h>
+#include <glib/gi18n-lib.h>
 
 #include <X11/extensions/XInput2.h>
 #include <X11/XKBlib.h>
-
-#include "panel-marshal.h"
 
 G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 
@@ -46,8 +40,9 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 #define N_TIMEOUT_SLOTS 50
 #define MAX_INDICATOR_ENTRIES 50
 
-#define COMPIZ_OPTIONS_PATH "/apps/compiz-1/plugins/unityshell/screen0/options"
-#define MENU_TOGGLE_KEYBINDING_PATH COMPIZ_OPTIONS_PATH"/panel_first_menu"
+#define COMPIZ_OPTION_SCHEMA "org.compiz.unityshell"
+#define COMPIZ_OPTION_PATH "/org/compiz/profiles/unity/plugins/"
+#define MENU_TOGGLE_KEYBINDING_KEY "panel-first-menu"
 
 static PanelService *static_service = NULL;
 
@@ -76,7 +71,7 @@ struct _PanelServicePrivate
 
   KeyCode toggle_key;
   guint32 toggle_modifiers;
-  guint32 key_monitor_id;
+  GSettings *gsettings;
 
   IndicatorObjectEntry *pressed_entry;
   gboolean use_event;
@@ -109,6 +104,7 @@ static const gchar * indicator_order[][2] = {
   {"libappmenu.so", NULL},                    /* indicator-appmenu" */
   {"libapplication.so", NULL},                /* indicator-application" */
   {"libprintersmenu.so", NULL},               /* indicator-printers */
+  {"libsyncindicator.so", NULL},              /* indicator-sync */
   {"libapplication.so", "gsd-keyboard-xkb"},  /* keyboard layout selector */
   {"libmessaging.so", NULL},                  /* indicator-messages */
   {"libpower.so", NULL},                      /* indicator-power */
@@ -135,20 +131,24 @@ static GdkFilterReturn event_filter (GdkXEvent    *ev,
                                      GdkEvent     *gev,
                                      PanelService *self);
 
+static void on_keybinding_changed (GSettings *settings,
+                                   gchar     *key,
+                                   gpointer   data);
+
 /*
  * GObject stuff
  */
 
 static void
-panel_service_class_dispose (GObject *object)
+panel_service_class_dispose (GObject *self)
 {
-  PanelServicePrivate *priv = PANEL_SERVICE (object)->priv;
+  PanelServicePrivate *priv = PANEL_SERVICE (self)->priv;
   gint i;
 
   g_hash_table_destroy (priv->id2entry_hash);
   g_hash_table_destroy (priv->panel2entries_hash);
 
-  gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, object);
+  gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, self);
 
   if (GTK_IS_WIDGET (priv->menubar) &&
       gtk_widget_get_realized (GTK_WIDGET (priv->menubar)))
@@ -186,13 +186,14 @@ panel_service_class_dispose (GObject *object)
         }
     }
 
-  if (priv->key_monitor_id)
+  if (G_IS_OBJECT (priv->gsettings))
     {
-      gconf_client_notify_remove (gconf_client_get_default(), priv->key_monitor_id);
-      priv->key_monitor_id = 0;
+      g_signal_handlers_disconnect_by_func (priv->gsettings, on_keybinding_changed, self);
+      g_object_unref (priv->gsettings);
+      priv->gsettings = NULL;
     }
 
-  G_OBJECT_CLASS (panel_service_parent_class)->dispose (object);
+  G_OBJECT_CLASS (panel_service_parent_class)->dispose (self);
 }
 
 static void
@@ -215,8 +216,7 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
                   0,
-                  NULL, NULL,
-                  panel_marshal_VOID__STRING_INT_INT_UINT_UINT,
+                  NULL, NULL, NULL,
                   G_TYPE_NONE, 5, G_TYPE_STRING, G_TYPE_INT, G_TYPE_INT,
                   G_TYPE_UINT, G_TYPE_UINT);
 
@@ -225,8 +225,7 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
                   0,
-                  NULL, NULL,
-                  g_cclosure_marshal_VOID__STRING,
+                  NULL, NULL, NULL,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
 
  _service_signals[ENTRY_ACTIVATE_REQUEST] =
@@ -234,8 +233,7 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
                   0,
-                  NULL, NULL,
-                  g_cclosure_marshal_VOID__STRING,
+                  NULL, NULL, NULL,
                   G_TYPE_NONE, 1, G_TYPE_STRING);
 
  _service_signals[GEOMETRIES_CHANGED] =
@@ -243,8 +241,7 @@ panel_service_class_init (PanelServiceClass *klass)
       G_OBJECT_CLASS_TYPE (obj_class),
       G_SIGNAL_RUN_LAST,
       0,
-      NULL, NULL,
-      panel_marshal_VOID__OBJECT_POINTER_INT_INT_INT_INT,
+      NULL, NULL, NULL,
       G_TYPE_NONE, 6,
       G_TYPE_OBJECT, G_TYPE_POINTER,
       G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
@@ -254,8 +251,7 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
                   0,
-                  NULL, NULL,
-                  panel_marshal_VOID__STRING_BOOLEAN,
+                  NULL, NULL, NULL,
                   G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_BOOLEAN);
 
   _service_signals[INDICATORS_CLEARED] =
@@ -263,8 +259,7 @@ panel_service_class_init (PanelServiceClass *klass)
                   G_OBJECT_CLASS_TYPE (obj_class),
                   G_SIGNAL_RUN_LAST,
                   0,
-                  NULL, NULL,
-                  g_cclosure_marshal_VOID__VOID,
+                  NULL, NULL, NULL,
                   G_TYPE_NONE, 0);
 
 
@@ -453,7 +448,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
                 }
               else if (entry == priv->pressed_entry)
                 {
-                  panel_service_secondary_activate_entry (self, entry_id, time(NULL));
+                  panel_service_secondary_activate_entry (self, entry_id);
                 }
 
               ret = GDK_FILTER_REMOVE;
@@ -479,8 +474,7 @@ initial_resync (PanelService *self)
 static void
 panel_service_update_menu_keybinding (PanelService *self)
 {
-  GConfClient *client = gconf_client_get_default ();
-  gchar *binding = gconf_client_get_string (client, MENU_TOGGLE_KEYBINDING_PATH, NULL);
+  gchar *binding = g_settings_get_string (self->priv->gsettings, MENU_TOGGLE_KEYBINDING_KEY);
 
   KeyCode keycode = 0;
   KeySym keysym = NoSymbol;
@@ -535,11 +529,11 @@ panel_service_update_menu_keybinding (PanelService *self)
   g_free (binding);
 }
 
-void
-on_keybinding_changed (GConfClient* client, guint id, GConfEntry* entry, gpointer data)
+static void
+on_keybinding_changed (GSettings *settings, gchar *key, gpointer data)
 {
-  PanelService *self = data;
   g_return_if_fail (PANEL_IS_SERVICE (data));
+  PanelService *self = data;
 
   panel_service_update_menu_keybinding (self);
 }
@@ -566,13 +560,11 @@ panel_service_init (PanelService *self)
   sort_indicators (self);
   suppress_signals = FALSE;
 
-  panel_service_update_menu_keybinding (self);
+  priv->gsettings = g_settings_new_with_path (COMPIZ_OPTION_SCHEMA, COMPIZ_OPTION_PATH);
+  g_signal_connect (priv->gsettings, "changed::"MENU_TOGGLE_KEYBINDING_KEY,
+                    G_CALLBACK(on_keybinding_changed), self);
 
-  GConfClient *client = gconf_client_get_default ();
-  gconf_client_add_dir (client, COMPIZ_OPTIONS_PATH, GCONF_CLIENT_PRELOAD_NONE, NULL);
-  priv->key_monitor_id = gconf_client_notify_add (client, MENU_TOGGLE_KEYBINDING_PATH,
-                                                  on_keybinding_changed, self,
-                                                  NULL, NULL);
+  panel_service_update_menu_keybinding (self);
 
   priv->initial_sync_id = g_idle_add ((GSourceFunc)initial_resync, self);
 }
@@ -833,14 +825,12 @@ on_entry_added (IndicatorObject      *object,
     {
       g_signal_connect (entry->label, "notify::label",
                         G_CALLBACK (on_entry_property_changed), object);
-
       g_signal_connect (entry->label, "notify::sensitive",
                         G_CALLBACK (on_entry_property_changed), object);
       g_signal_connect (entry->label, "show",
                         G_CALLBACK (on_entry_changed), object);
       g_signal_connect (entry->label, "hide",
                         G_CALLBACK (on_entry_changed), object);
-
     }
   if (GTK_IS_IMAGE (entry->image))
     {
@@ -856,14 +846,12 @@ on_entry_added (IndicatorObject      *object,
                         G_CALLBACK (on_entry_property_changed), object);
       g_signal_connect (entry->image, "notify::stock",
                         G_CALLBACK (on_entry_property_changed), object);
-
       g_signal_connect (entry->image, "notify::sensitive",
                         G_CALLBACK (on_entry_property_changed), object);
       g_signal_connect (entry->image, "show",
                         G_CALLBACK (on_entry_changed), object);
       g_signal_connect (entry->image, "hide",
                         G_CALLBACK (on_entry_changed), object);
-
     }
 
   notify_object (object);
@@ -904,7 +892,7 @@ on_indicator_menu_show (IndicatorObject      *object,
                         PanelService         *self)
 {
   gchar *entry_id;
-  
+
   g_return_if_fail (PANEL_IS_SERVICE (self));
   if (entry == NULL)
     {
@@ -924,7 +912,7 @@ on_indicator_menu_show_now_changed (IndicatorObject      *object,
                                     PanelService         *self)
 {
   gchar *entry_id;
-  
+
   g_return_if_fail (PANEL_IS_SERVICE (self));
   if (entry == NULL)
     {
@@ -1347,7 +1335,7 @@ panel_service_sync_geometry (PanelService *self,
                              gint width,
                              gint height)
 {
-  IndicatorObject      *object;
+  IndicatorObject *object;
   IndicatorObjectEntry *entry;
   gboolean valid_entry = TRUE;
   PanelServicePrivate  *priv = self->priv;
@@ -1631,7 +1619,18 @@ static void
 menu_deactivated (GtkWidget *menu)
 {
   g_signal_handlers_disconnect_by_func (menu, menu_deactivated, NULL);
-  gtk_widget_destroy (menu);
+
+  if (g_object_is_floating (menu))
+    g_object_ref_sink (menu);
+
+  g_object_unref (menu);
+}
+
+static void
+menuitem_activated (GtkWidget *menuitem, IndicatorObjectEntry *entry)
+{
+  IndicatorObject *object = get_entry_parent_indicator (entry);
+  indicator_object_entry_activate (object, entry, CurrentTime);
 }
 
 static void
@@ -1641,8 +1640,7 @@ panel_service_show_entry_common (PanelService *self,
                                  guint32       xid,
                                  gint32        x,
                                  gint32        y,
-                                 guint32       button,
-                                 guint32       timestamp)
+                                 guint32       button)
 {
   PanelServicePrivate *priv;
   GtkWidget           *last_menu;
@@ -1675,17 +1673,17 @@ panel_service_show_entry_common (PanelService *self,
 
   if (entry != NULL)
     {
-      if (xid > 0)
-        {
-          indicator_object_entry_activate_window (object, entry, xid, CurrentTime);
-        }
-      else
-        {
-          indicator_object_entry_activate (object, entry, CurrentTime);
-        }
-
       if (GTK_IS_MENU (entry->menu))
         {
+          if (xid > 0)
+            {
+              indicator_object_entry_activate_window (object, entry, xid, CurrentTime);
+            }
+          else
+            {
+              indicator_object_entry_activate (object, entry, CurrentTime);
+            }
+
           priv->last_menu = entry->menu;
         }
       else
@@ -1694,10 +1692,17 @@ panel_service_show_entry_common (PanelService *self,
              rest of the code and to keep scrubbing fluidly, we'll create a
              stub menu for the duration of this scrub. */
           priv->last_menu = GTK_MENU (gtk_menu_new ());
+
+          GtkWidget *menu_item = gtk_menu_item_new_with_label (_("Activate"));
+          gtk_menu_shell_append (GTK_MENU_SHELL (priv->last_menu), menu_item);
+          gtk_widget_show (menu_item);
+
           g_signal_connect (priv->last_menu, "deactivate",
                             G_CALLBACK (menu_deactivated), NULL);
           g_signal_connect (priv->last_menu, "destroy",
                             G_CALLBACK (gtk_widget_destroyed), &priv->last_menu);
+          g_signal_connect (menu_item, "activate",
+                            G_CALLBACK (menuitem_activated), entry);
         }
 
       GtkWidget *top_widget = gtk_widget_get_toplevel (GTK_WIDGET (priv->last_menu));
@@ -1763,8 +1768,7 @@ panel_service_show_entry (PanelService *self,
                           guint32       xid,
                           gint32        x,
                           gint32        y,
-                          guint32       button,
-                          guint32       timestamp)
+                          guint32       button)
 {
   IndicatorObject      *object;
   IndicatorObjectEntry *entry;
@@ -1774,15 +1778,11 @@ panel_service_show_entry (PanelService *self,
   entry = get_indicator_entry_by_id (self, entry_id);
   object = get_entry_parent_indicator (entry);
 
-  panel_service_show_entry_common (self, object, entry, xid, x, y, button, timestamp);
+  panel_service_show_entry_common (self, object, entry, xid, x, y, button);
 }
 
 void
-panel_service_show_app_menu (PanelService *self,
-                             guint32       xid,
-                             gint32        x,
-                             gint32        y,
-                             guint32       timestamp)
+panel_service_show_app_menu (PanelService *self, guint32 xid, gint32 x, gint32 y)
 {
   IndicatorObject      *object;
   IndicatorObjectEntry *entry;
@@ -1800,14 +1800,12 @@ panel_service_show_app_menu (PanelService *self,
       entry = entries->data;
       g_list_free (entries);
 
-      panel_service_show_entry_common (self, object, entry, xid, x, y, 1, timestamp);
+      panel_service_show_entry_common (self, object, entry, xid, x, y, 1);
     }
 }
 
 void
-panel_service_secondary_activate_entry (PanelService *self,
-                                        const gchar  *entry_id,
-                                        guint32       timestamp)
+panel_service_secondary_activate_entry (PanelService *self, const gchar *entry_id)
 {
   IndicatorObject      *object;
   IndicatorObjectEntry *entry;
@@ -1817,7 +1815,7 @@ panel_service_secondary_activate_entry (PanelService *self,
 
   object = get_entry_parent_indicator (entry);
   g_signal_emit_by_name(object, INDICATOR_OBJECT_SIGNAL_SECONDARY_ACTIVATE, entry,
-                        timestamp);
+                        CurrentTime);
 }
 
 void

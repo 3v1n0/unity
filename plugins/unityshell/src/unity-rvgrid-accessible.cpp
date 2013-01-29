@@ -146,8 +146,6 @@ check_selection(UnityRvgridAccessible* self)
 {
   AtkObject* child = NULL;
   gint index = 0;
-  ResultView::ResultList result_list;
-  Result* result;
   nux::Object* object = NULL;
   ResultViewGrid* rvgrid = NULL;
   std::string name;
@@ -162,13 +160,12 @@ check_selection(UnityRvgridAccessible* self)
 
   rvgrid = dynamic_cast<ResultViewGrid*>(object);
 
-  result_list = rvgrid->GetResultList();
   index = rvgrid->GetSelectedIndex();
 
   if (index >= 0)
   {
-    result = &result_list[index];
-    name = result->name;
+    Result result(*rvgrid->GetIteratorAtRow(index));
+    name = result.name;
 
     child = ATK_OBJECT(self->priv->result);
     self->priv->has_selection = TRUE;
@@ -195,9 +192,9 @@ search_for_label(UnityRvgridAccessible* self)
 {
   AtkObject* label_accessible = NULL;
   nux::Object* nux_object = NULL;
-  unity::PlacesGroup* group = NULL;
+  unity::dash::PlacesGroup* group = NULL;
   AtkObject* iter = NULL;
-  nux::StaticCairoText* label = NULL;
+  unity::StaticCairoText* label = NULL;
 
   /* Search for the places group */
   for (iter = atk_object_get_parent(ATK_OBJECT(self)); iter != NULL;
@@ -210,7 +207,7 @@ search_for_label(UnityRvgridAccessible* self)
     return;
 
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(iter));
-  group = dynamic_cast<unity::PlacesGroup*>(nux_object);
+  group = dynamic_cast<unity::dash::PlacesGroup*>(nux_object);
 
   if (group == NULL)
     return;

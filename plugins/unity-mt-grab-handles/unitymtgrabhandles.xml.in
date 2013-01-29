@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <compiz>
 	<plugin name="unitymtgrabhandles" useBcop="true">
 	<_short>Unity MT Grab Handles</_short>
@@ -5,11 +6,7 @@
 	<deps>
 		<requirement>
 			<plugin>opengl</plugin>
-		</requirement>
-		<requirement>
 			<plugin>composite</plugin>
-		</requirement>
-		<requirement>
 			<plugin>imgpng</plugin>
 		</requirement>
 		<relation type="after">

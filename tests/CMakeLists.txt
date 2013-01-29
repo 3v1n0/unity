@@ -3,92 +3,61 @@ set(UNITY_SRC ../plugins/unityshell/src)
 #
 # Data
 #
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/ubuntuone-installer.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/ubuntuone-installer.desktop)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/ubuntu-software-center.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/ubuntu-software-center.desktop)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/update-manager.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/update-manager.desktop)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/bzr-handle-patch.desktop
-                ${CMAKE_BINARY_DIR}/tests/data/bzr-handle-patch.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/ubuntuone-installer.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/applications/ubuntuone-installer.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/ubuntu-software-center.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/applications/ubuntu-software-center.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/update-manager.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/applications/update-manager.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/bzr-handle-patch.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/applications/bzr-handle-patch.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/no-icon.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/applications/no-icon.desktop)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/kde4/afile.desktop
+                ${CMAKE_BINARY_DIR}/tests/data/applications/kde4/afile.desktop)
+
 #
 # Unit tests
 #
-find_package (PkgConfig)
 set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.99.0")
 pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS})
 
-set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
+string (REPLACE ";" " " TEST_UNIT_DEPS_CFLAGS_OTHER "${TEST_UNIT_CFLAGS_OTHER}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TEST_UNIT_DEPS_CFLAGS_OTHER}")
+include_directories(${TEST_UNIT_DEPS_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-set (CFLAGS
-     ${TEST_UNIT_DEPS_CFLAGS}
-     ${TEST_UNIT_DEPS_CFLAGS_OTHER}
-     ${MAINTAINER_CFLAGS}
-     "-g"
-     "-DTESTDATADIR=\"${TESTDATADIR}\""
-     "-DGETTEXT_PACKAGE=\"unity\""
-     "-DINDICATORDIR=\"${CMAKE_BINARY_DIR}/tests\""
-     "-DINDICATORICONDIR=\"${CMAKE_BINARY_DIR}/tests\""
-     "-I${CMAKE_CURRENT_BINARY_DIR}"
-     )
-add_definitions (${CFLAGS})
+set (LIBS ${TEST_UNIT_DEPS_LDFLAGS} "unity-core-${UNITY_API_VERSION};compiz_core;m")
 
-set (LIBS ${TEST_UNIT_DEPS_LIBRARIES} "-lunity-core-${UNITY_API_VERSION} -lcompiz_core -lm")
-link_libraries (${LIBS})
-
-set (LIB_PATHS ${TEST_UNIT_DEPS_LIBRARY_DIRS})
-link_directories (${CMAKE_BINARY_DIR}/UnityCore ${LIB_PATHS})
+link_directories(${TEST_UNIT_DEPS_LIBRARY_DIRS} ${COMPIZ_LIBDIR})
 
 include_directories (. .. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR})
 include_directories (${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src)
-
+include_directories (${CMAKE_SOURCE_DIR}/dash)
+include_directories (${CMAKE_SOURCE_DIR}/launcher)
+include_directories (${CMAKE_SOURCE_DIR}/panel)
+include_directories (${CMAKE_SOURCE_DIR}/hud)
+include_directories (${CMAKE_SOURCE_DIR}/shortcuts)
+include_directories (${CMAKE_SOURCE_DIR}/unity-shared)
 # We can't have convenience libs so we need to rebuild with what we need
 # Please keep actual test files alphabetically at top and then files
 # from ../${UNITY_SRC} or ../../services in alphabetically after that
-find_program(GLIB_GENMARSHAL glib-genmarshal)
-add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
-  COMMAND ${GLIB_GENMARSHAL} ARGS ../services/panel-marshal.list --body --prefix=panel_marshal > ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
-  COMMAND ${GLIB_GENMARSHAL} ARGS ../services/panel-marshal.list --header --prefix=panel_marshal > ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.h
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  DEPENDS ../services/panel-marshal.list
-  COMMENT "Generating marshallers for panel-service")
 
 add_executable (test-unit
                 unit/TestMain.cpp
-                unit/TestQuicklistMenuitems.cpp
                 unit/TestPanelService.cpp
-                unit/TestUBus.cpp
                 unit/TestStaticCairoText.cpp
-                ${UNITY_SRC}/CairoBaseWindow.cpp
-                ${UNITY_SRC}/Introspectable.cpp
-                ${UNITY_SRC}/QuicklistMenuItem.cpp
-                ${UNITY_SRC}/QuicklistMenuItemCheckmark.cpp
-                ${UNITY_SRC}/QuicklistMenuItemLabel.cpp
-                ${UNITY_SRC}/QuicklistMenuItemRadio.cpp
-                ${UNITY_SRC}/QuicklistMenuItemSeparator.cpp
-                ${UNITY_SRC}/QuicklistView.cpp
-                ${UNITY_SRC}/StaticCairoText.cpp
                 ../services/panel-service.c
-                ${CMAKE_CURRENT_BINARY_DIR}/panel-marshal.c
-                ${UNITY_SRC}/ubus-server.cpp
                 )
-target_link_libraries (test-unit ${LIBS})
-add_dependencies (test-unit unity-core-${UNITY_API_VERSION})
+target_link_libraries (test-unit unity-shared ${LIBS})
 add_subdirectory (test-input-remover)
 add_subdirectory (test-minimize-window-handler)
 add_subdirectory (test-get-transients)
 
+
 #
 # GTest tests
 #
-find_program(GLIB_GENMARSHAL glib-genmarshal)
-add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
-  COMMAND ${GLIB_GENMARSHAL} ARGS test_glib_signals_utils_marshal.list --body --prefix=test_signals > ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
-  COMMAND ${GLIB_GENMARSHAL} ARGS test_glib_signals_utils_marshal.list --header --prefix=test_signals > ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.h
-  COMMAND sed ARGS -i "s/glib-object/test_glib_signals_utils_marshal/" ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  DEPENDS test_glib_signals_utils_marshal.list
-  COMMENT "Generating marshallers")
 
 enable_testing()
 # :(
@@ -100,8 +69,16 @@ if (GTEST_SRC_DIR AND
     GMOCK_LIB AND
     GMOCK_MAIN_LIB)
 
+  # MockWindowManager
+  add_library (unity_mock_window_manager STATIC
+               MockWindowManager.cpp)
+  target_link_libraries (unity_mock_window_manager
+                         ${GMOCK_LIB}
+                         ${GMOCK_MAIN_LIB})
+
 # The service that provides DBus services to test against
   add_executable(test-gtest-service
+                 mock-application.cpp
                  test_service_gdbus_wrapper.c
                  test_service_gdbus_wrapper.h
                  test_service_hud.c
@@ -110,69 +87,82 @@ if (GTEST_SRC_DIR AND
                  test_service_lens.h
                  test_service_main.c
                  test_service_model.c
-                 test_service_model.h)
-  target_link_libraries(test-gtest-service ${LIBS})
-  add_dependencies (test-gtest-service unity-core-${UNITY_API_VERSION} gtest)
+                 test_service_model.h
+                 test_service_panel.c
+                 test_service_panel.c)
+  target_link_libraries(test-gtest-service unity-shared ${LIBS})
 
 
 # The actual test executable (xless) - do not put anything that requires X in here
-  add_executable(test-gtest-xless
-                 test_animator.cpp
-                 test_launcher_model.cpp
-                 test_glib_object.cpp
-                 test_glib_object_utils.cpp
-                 test_glib_object_utils.h
-                 test_glib_signals.cpp
-                 test_glib_signals_utils.cpp
-                 test_glib_signals_utils.h
-                 test_glib_variant.cpp
-                 test_desktop_utilities.cpp
-                 ${CMAKE_CURRENT_BINARY_DIR}/test_glib_signals_utils_marshal.cpp
-                 test_indicator.cpp
-                 test_indicator_appmenu.cpp
-                 test_indicator_entry.cpp
-                 test_indicators.cpp
-                 test_favorite_store_gsettings.cpp
-                 test_favorite_store_private.cpp
-                 test_home_lens.cpp
-                 test_launcher_entry_remote.cpp
-                 test_shortcut_model.cpp
-                 test_shortcut_private.cpp
-                 test_introspection.cpp
-                 test_main_xless.cpp
-                 test_grabhandle.cpp
-                 test_unityshell_private.cpp
-		 test_showdesktop_handler.cpp
-                 ${UNITY_SRC}/AbstractLauncherIcon.cpp
-                 ${UNITY_SRC}/AbstractShortcutHint.h
-                 ${UNITY_SRC}/Animator.cpp
-                 ${UNITY_SRC}/DebugDBusInterface.cpp
-                 ${UNITY_SRC}/XPathQueryPart.cpp
-                 ${UNITY_SRC}/FavoriteStore.cpp
-                 ${UNITY_SRC}/FavoriteStoreGSettings.cpp
-                 ${UNITY_SRC}/IconTextureSource.cpp
-                 ${UNITY_SRC}/LauncherModel.cpp
-                 ${UNITY_SRC}/LauncherEntryRemote.cpp
-                 ${UNITY_SRC}/FavoriteStorePrivate.cpp
-                 ${UNITY_SRC}/MockLauncherIcon.h
-                 ${UNITY_SRC}/MockShortcutHint.h
-                 ${UNITY_SRC}/ShortcutModel.cpp
-                 ${UNITY_SRC}/ShortcutHintPrivate.cpp
-                 ${UNITY_SRC}/Introspectable.cpp
-                 ${UNITY_SRC}/TextureCache.cpp
-                 ${UNITY_SRC}/Timer.cpp
-                 ${UNITY_SRC}/UnityshellPrivate.cpp
-                 ${UNITY_SRC}/WindowManager.cpp
-		 ${UNITY_SRC}/UnityShowdesktopHandler.cpp
-                 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
-                 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
-                 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-impl-factory.cpp
-                 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-layout.cpp
-                 ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-texture.cpp
-                 )
-  target_link_libraries(test-gtest-xless gtest ${GMOCK_LIB} ${GMOCK_MAIN_LIB} ${LIBS})
+  set (GTEST_XLESS_SOURCES
+       test_main_xless.cpp
+       test_launcher_model.cpp
+       test_glib_object.cpp
+       test_glib_object_utils.cpp
+       test_glib_object_utils.h
+       test_glib_signals.cpp
+       test_glib_signals_utils.cpp
+       test_glib_signals_utils.h
+       test_glib_source.cpp
+       test_glib_variant.cpp
+       test_grabhandle.cpp
+       test_desktop_utilities.cpp
+       test_indicator.cpp
+       test_indicator_appmenu.cpp
+       test_indicator_entry.cpp
+       test_indicators.cpp
+       test_introspection.cpp
+       test_favorite_store.cpp
+       test_favorite_store_gsettings.cpp
+       test_favorite_store_private.cpp
+       test_home_lens.cpp
+       test_launcher_entry_remote.cpp
+       test_launcher_options.cpp
+       test_layout_system.cpp
+       test_model_iterator.cpp
+       test_previews.cpp
+       test_time_util.cpp
+       test_ubus.cpp
+       test_unityshell_private.cpp
+       ${UNITY_SRC}/UnityshellPrivate.cpp
+       ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
+       ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
+       ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-impl-factory.cpp
+       ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-layout.cpp
+       ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-texture.cpp
+  )
+
+  set (GTEST_XLESS_LIBS
+      gtest
+      unity-shared
+      unity-shared-standalone
+      launcher-lib
+      ${GMOCK_LIB}
+      ${GMOCK_MAIN_LIB}
+      ${LIBS}
+  )
+
+  if (ENABLE_X_SUPPORT)
+    set (GTEST_XLESS_SOURCES
+      ${GTEST_XLESS_SOURCES}
+      test_hud_private.cpp
+      test_pointer_barrier.cpp
+      test_shortcut_model.cpp
+      test_shortcut_private.cpp
+      ${LAUNCHER_SOURCES}
+      )
+    set (GTEST_XLESS_LIBS
+      ${GTEST_XLESS_LIBS}
+      shortcuts-lib
+      hud-lib
+    )
+  endif ()
+
+  add_executable(test-gtest-xless ${GTEST_XLESS_SOURCES})
+
+  target_link_libraries(test-gtest-xless ${GTEST_XLESS_LIBS})
+
   add_test(UnityGTestXless test-gtest-xless)
-  add_dependencies(test-gtest-xless unity-core-${UNITY_API_VERSION} gtest)
 
 # tests that require dbus, must not require X
   add_executable(test-gtest-dbus
@@ -187,78 +177,101 @@ if (GTEST_SRC_DIR AND
                  test_utils.h
                  test_ratings_filter.cpp
                  test_results.cpp
+                 test_dbus_indicators.cpp
                 )
-  target_link_libraries(test-gtest-dbus gtest ${LIBS})
+  target_link_libraries(test-gtest-dbus gtest unity-shared ${LIBS})
   add_test(UnityGTestDBus test-gtest-dbus)
   add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} test-gtest-service gtest)
 
+if (ENABLE_X_SUPPORT)
 # Tests that require X
   add_executable(test-gtest
-                 test_dashview_impl.cpp
-                 test_texture_cache.cpp
+                 mock-application.cpp
+                 logger_helper.cpp
                  test_main.cpp
-                 test_lensview_impl.cpp
+                 test_action_link.cpp
+                 test_application_launcher_icon.cpp
+                 test_bamf_application.cpp
+                 test_bfb_launcher_icon.cpp
+                 test_dashview_impl.cpp
+                 test_dash_controller.cpp
+                 test_desktop_launcher_icon.cpp
+                 test_device_launcher_section.cpp
+                 test_edge_barrier_controller.cpp
+                 test_hud_button.cpp
+                 test_hud_controller.cpp
+                 test_hud_launcher_icon.cpp
+                 test_hud_view.cpp
                  test_icon_loader.cpp
+                 test_im_text_entry.cpp
+                 test_launcher.cpp
+                 test_launcher_controller.cpp
+                 test_launcher_drag_window.cpp
+                 test_launcher_hide_machine.cpp
+                 test_launcher_hover_machine.cpp
+                 test_launcher_icon.cpp
+                 test_launcher_tooltip.cpp
+                 test_lensview.cpp
+                 test_keyboard_util.cpp
+                 test_panel_indicators_view.cpp
+                 test_panel_menu_view.cpp
+                 test_panel_style.cpp
+                 test_places_group.cpp
+                 test_previews_application.cpp
+                 test_previews_generic.cpp
+                 test_previews_movie.cpp
+                 test_previews_music.cpp
+                 test_previews_social.cpp
+                 test_overlay_scrollbar.cpp
+                 test_quicklist_menu_item.cpp
+                 test_quicklist_view.cpp
+                 test_result_renderer.cpp
+                 test_resultviewgrid.cpp
+                 test_searchbar.cpp
+                 test_shortcut_controller.cpp
+                 test_shortcut_modeller_compiz.cpp
+                 test_shortcut_view.cpp
                  test_single_monitor_launcher_icon.cpp
+                 test_expo_launcher_icon.cpp
+                 test_showdesktop_handler.cpp
+                 test_software_center_launcher_icon.cpp
+                 test_static_cairo_text.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
-                 ${UNITY_SRC}/AbstractLauncherIcon.cpp
-                 ${UNITY_SRC}/AbstractPlacesGroup.cpp
-                 ${UNITY_SRC}/BackgroundEffectHelper.cpp
-                 ${UNITY_SRC}/CairoBaseWindow.cpp
-                 ${UNITY_SRC}/DashViewPrivate.cpp
-                 ${UNITY_SRC}/Decaymulator.cpp
-                 ${UNITY_SRC}/DNDCollectionWindow.cpp
-                 ${UNITY_SRC}/DndData.cpp
-                 ${UNITY_SRC}/GeisAdapter.cpp
-                 ${UNITY_SRC}/IconLoader.cpp
-                 ${UNITY_SRC}/IconRenderer.cpp
-                 ${UNITY_SRC}/IconTextureSource.cpp
-                 ${UNITY_SRC}/Introspectable.cpp
-                 ${UNITY_SRC}/LayoutSystem.cpp
-                 ${UNITY_SRC}/Launcher.cpp
-                 ${UNITY_SRC}/LauncherDragWindow.cpp
-                 ${UNITY_SRC}/LauncherEntryRemote.cpp
-                 ${UNITY_SRC}/LauncherHideMachine.cpp
-                 ${UNITY_SRC}/LauncherHoverMachine.cpp
-                 ${UNITY_SRC}/LauncherIcon.cpp
-                 ${UNITY_SRC}/LauncherModel.cpp
-                 ${UNITY_SRC}/SimpleLauncherIcon.cpp
-                 ${UNITY_SRC}/SingleMonitorLauncherIcon.cpp
-                 ${UNITY_SRC}/LensViewPrivate.cpp
-                 ${UNITY_SRC}/StaticCairoText.cpp
-                 ${UNITY_SRC}/SwitcherController.cpp
-                 ${UNITY_SRC}/SwitcherModel.cpp
-                 ${UNITY_SRC}/SwitcherView.cpp
-                 ${UNITY_SRC}/Timer.cpp
-                 ${UNITY_SRC}/Tooltip.cpp
-                 ${UNITY_SRC}/PanelStyle.cpp
-                 ${UNITY_SRC}/PointerBarrier.cpp
-                 ${UNITY_SRC}/QuicklistView.cpp
-                 ${UNITY_SRC}/QuicklistManager.cpp
-                 ${UNITY_SRC}/QuicklistMenuItem.cpp
-                 ${UNITY_SRC}/QuicklistMenuItemCheckmark.cpp
-                 ${UNITY_SRC}/QuicklistMenuItemLabel.cpp
-                 ${UNITY_SRC}/QuicklistMenuItemRadio.cpp
-                 ${UNITY_SRC}/QuicklistMenuItemSeparator.cpp
-                 ${UNITY_SRC}/SpacerLauncherIcon.cpp
-                 ${UNITY_SRC}/TextureCache.cpp
-                 ${UNITY_SRC}/UBusWrapper.cpp
-                 ${UNITY_SRC}/UnityWindowStyle.cpp
-                 ${UNITY_SRC}/UnityWindowView.cpp
-                 ${UNITY_SRC}/ubus-server.cpp
-                 ${UNITY_SRC}/UScreen.cpp
-                 ${UNITY_SRC}/WindowManager.cpp
+                 test_switcher_view.cpp
+                 test_texture_cache.cpp
+                 test_text_input.cpp
+                 test_thumbnail_generator.cpp
+                 test_trash_launcher_icon.cpp
+                 test_launcher_minimize_speed.cpp
+                 test_unity_settings.cpp
+                 test_volume_imp.cpp
+                 test_volume_launcher_icon.cpp
+                 test_window_buttons.cpp
+                 test_xdnd_manager_imp.cpp
+                 test_xdnd_start_stop_notifier_imp.cpp
+                 ${UNITY_SRC}/UnityShowdesktopHandler.cpp
+                 ${CMAKE_SOURCE_DIR}/plugins/unityshell/src/WindowMinimizeSpeedController.cpp
                 )
-  target_link_libraries(test-gtest gtest ${LIBS})
-  add_test(UnityGTest test-gtest)
-  add_dependencies(test-gtest unity-core-${UNITY_API_VERSION} gtest)
 
+  # Build plain C files separately so they don't try to include the
+  # C++ pch.
+  add_library(test-gtest-plainc STATIC
+              bamf-mock-application.c
+              bamf-mock-window.c
+              gmockmount.c
+              gmockvolume.c
+              )
+  target_link_libraries(test-gtest test-gtest-plainc gtest gmock unity-shared ${LIBS} launcher-lib unity-shared-bamf unity-shared-standalone shortcuts-lib previews-lib hud-lib switcher-lib dash-lib panel-lib)
+  add_test(UnityGTest test-gtest)
+endif (ENABLE_X_SUPPORT)
 endif (GTEST_SRC_DIR AND
        GMOCK_LIB AND
        GMOCK_MAIN_LIB)
 
-add_subdirectory (test-gesture-engine)
+if(ENABLE_X_SUPPORT)
+  add_subdirectory (test-gestures)
+endif()
 
 #
 # check target
@@ -266,30 +279,38 @@ add_subdirectory (test-gesture-engine)
 set (TEST_RESULT_DIR ${CMAKE_BINARY_DIR}/tests)
 set (TEST_RESULT_XML ${TEST_RESULT_DIR}/test-results.xml)
 set (TEST_RESULT_HTML ${TEST_RESULT_DIR}/test-results.html)
-set (GTEST_TEST_COMMAND ./test-gtest)
+if (ENABLE_X_SUPPORT)
+  set (GTEST_TEST_COMMAND ./test-gtest)
+  set (GTEST_TEST_COMMAND_GESTURES ./test-gestures/test-gestures)
+endif (ENABLE_X_SUPPORT)
 set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless)
 set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --task ./test-gtest-service --task ./test-gtest-dbus)
-set (GTEST_TEST_COMMAND_GESTURE_ENGINE ./test-gesture-engine/test-gesture-engine)
 
 set (TEST_COMMAND
      gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit
-  && ${GTEST_TEST_COMMAND}
-  && ${GTEST_TEST_COMMAND_XLESS}
-  && ${GTEST_TEST_COMMAND_GESTURE_ENGINE}
-  && ${GTEST_TEST_COMMAND_DBUS}
+  && ${GTEST_TEST_COMMAND} --gtest_output=xml:./
+  && ${GTEST_TEST_COMMAND_XLESS} --gtest_output=xml:./
+  && ${GTEST_TEST_COMMAND_GESTURES} --gtest_output=xml:./
+  && ${GTEST_TEST_COMMAND_DBUS} --gtest_output=xml:./
     )
 
 set (TEST_COMMAND_HEADLESS
-     ${GTEST_TEST_COMMAND_XLESS}
-  && ${GTEST_TEST_COMMAND_GESTURE_ENGINE}
-  #&& ${GTEST_TEST_COMMAND_DBUS}
+     ${GTEST_TEST_COMMAND_XLESS} --gtest_output=xml:./
+  && ${GTEST_TEST_COMMAND_GESTURES} --gtest_output=xml:./
+  #&& ${GTEST_TEST_COMMAND_DBUS} --gtest_output=xml:./
   && echo "Warning, DBus test cases are disabled!!")
 
 if (GTEST_SRC_DIR)
-  add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless test-gtest-dbus test-gesture-engine)
-  add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus test-gesture-engine)
+  if (ENABLE_X_SUPPORT)
+    add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless test-gtest-dbus test-gestures)
+    add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus test-gestures)
+    add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)
+  else ()
+    add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest-xless test-gtest-dbus)
+    add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus)
+    add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest-xless)
+  endif ()
   add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
-  add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)
 else (GTEST_SRC_DIR)
   add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit)
 endif (GTEST_SRC_DIR)

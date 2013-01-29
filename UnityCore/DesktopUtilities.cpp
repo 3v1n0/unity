@@ -15,12 +15,17 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
 * Authored by: Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
+*              Andrea Azzarone <azzarone@gmail.com>
 */
 
-#include <glib.h>
 #include <algorithm>
+#include <memory>
+
+#include <glib.h>
+#include <gio/gdesktopappinfo.h>
 
 #include "DesktopUtilities.h"
+#include "GLibWrapper.h"
 
 namespace unity
 {
@@ -64,7 +69,7 @@ std::vector<std::string> DesktopUtilities::GetSystemDataDirectories()
 std::vector<std::string> DesktopUtilities::GetDataDirectories()
 {
   std::vector<std::string> dirs = GetSystemDataDirectories();
-  std::string const& user_directory = GetUserDataDirectory();  
+  std::string const& user_directory = GetUserDataDirectory();
 
   dirs.push_back(user_directory);
 
@@ -82,6 +87,12 @@ std::string DesktopUtilities::GetDesktopID(std::vector<std::string> const& defau
   if (desktop_path.empty())
     return "";
 
+  glib::String unescaped(g_uri_unescape_string(desktop_path.c_str(), NULL));
+  std::string const& desktop_file = unescaped.Str();
+
+  if (desktop_file.empty())
+    return "";
+
   for (auto dir : default_paths)
   {
     if (!dir.empty())
@@ -95,11 +106,11 @@ std::string DesktopUtilities::GetDesktopID(std::vector<std::string> const& defau
         dir.append(G_DIR_SEPARATOR_S "applications" G_DIR_SEPARATOR_S);
       }
 
-      if (desktop_path.find(dir) == 0)
+      if (desktop_file.find(dir) == 0)
       {
         // if we are in a subdirectory of system path, the store name should
         // be subdir-filename.desktop
-        std::string desktop_suffix = desktop_path.substr(dir.size());
+        std::string desktop_suffix = desktop_file.substr(dir.size());
         std::replace(desktop_suffix.begin(), desktop_suffix.end(), G_DIR_SEPARATOR, '-');
 
         return desktop_suffix;
@@ -107,13 +118,57 @@ std::string DesktopUtilities::GetDesktopID(std::vector<std::string> const& defau
     }
   }
 
-  return desktop_path;
+  return desktop_file;
 }
 
 std::string DesktopUtilities::GetDesktopID(std::string const& desktop_path)
 {
   std::vector<std::string> const& data_dirs = GetDataDirectories();
   return GetDesktopID(data_dirs, desktop_path);
+}
+
+std::string DesktopUtilities::GetDesktopPathById(std::string const& desktop_id)
+{
+  if (desktop_id.empty())
+    return "";
+
+  glib::String unescaped_id(g_uri_unescape_string(desktop_id.c_str(), NULL));
+  std::string const& id = unescaped_id.Str();
+
+  if (id.empty())
+    return "";
+
+  glib::Object<GDesktopAppInfo> info;
+
+  if (id.find(G_DIR_SEPARATOR_S) != std::string::npos)
+    info = g_desktop_app_info_new_from_filename(id.c_str());
+  else
+    info = g_desktop_app_info_new(id.c_str());
+
+  if (info)
+  {
+    const char* filename = g_desktop_app_info_get_filename(info);
+
+    if (filename)
+      return filename;
+  }
+
+  return "";
+}
+
+std::string DesktopUtilities::GetBackgroundColor(std::string const& desktop_path)
+{
+  std::shared_ptr<GKeyFile> key_file(g_key_file_new(), g_key_file_free);
+
+  glib::Error error;
+  g_key_file_load_from_file(key_file.get(), desktop_path.c_str(), static_cast<GKeyFileFlags>(0), &error);
+
+  if (error)
+    return "";
+
+  glib::String value(g_key_file_get_string(key_file.get(), "Desktop Entry", "X-Unity-IconBackgroundColor", &error));
+
+  return value.Str();
 }
 
 } // namespace unity

@@ -51,7 +51,7 @@ bool ShowdesktopHandler::ShouldHide (ShowdesktopHandlerWindowInterface *wi)
     return false;
 
   if (wi->Hidden())
-    if ((wi->ShowDesktopMode() || wi->Shaded()))
+    if ((wi->ShowDesktopMode() || wi->Shaded() || wi->Minimized()))
       return false;
 
   return true;
@@ -79,11 +79,13 @@ ShowdesktopHandler::InhibitingXid()
   return inhibiting_xid;
 }
 
-ShowdesktopHandler::ShowdesktopHandler (ShowdesktopHandlerWindowInterface *wi) :
-  showdesktop_handler_window_interface_ (wi),
-  remover_ (wi->InputRemover()),
-  state_ (StateVisible),
-  progress_ (0.0f)
+ShowdesktopHandler::ShowdesktopHandler (ShowdesktopHandlerWindowInterface *wi, compiz::WindowInputRemoverLockAcquireInterface *lock_acquire_interface)
+  : showdesktop_handler_window_interface_(wi)
+  , lock_acquire_interface_(lock_acquire_interface)
+  , remover_()
+  , state_(StateVisible)
+  , progress_(0.0f)
+  , was_hidden_(false)
 {
 }
 
@@ -105,8 +107,7 @@ void ShowdesktopHandler::FadeOut()
   {
     showdesktop_handler_window_interface_->Hide();
     showdesktop_handler_window_interface_->NotifyHidden();
-    remover_->save();
-    remover_->remove();
+    remover_ = lock_acquire_interface_->InputRemover();
 
     if (std::find (animating_windows.begin(),
                    animating_windows.end(),
@@ -127,7 +128,7 @@ void ShowdesktopHandler::FadeIn()
   {
     showdesktop_handler_window_interface_->Show();
     showdesktop_handler_window_interface_->NotifyShown();
-    remover_->restore();
+    remover_.reset();
 
     if (std::find (animating_windows.begin(),
                    animating_windows.end(),
@@ -168,7 +169,7 @@ ShowdesktopHandlerWindowInterface::PostPaintAction ShowdesktopHandler::Animate (
 
 void ShowdesktopHandler::PaintOpacity (unsigned short &opacity)
 {
-  if (progress_ == 1.0f || progress_ == 0.0f)
+  if (progress_ == 0.0f)
     opacity = std::numeric_limits <unsigned short>::max();
   else
     opacity *= (1.0f - progress_);
@@ -184,8 +185,7 @@ void ShowdesktopHandler::HandleShapeEvent()
   /* Ignore sent events from the InputRemover */
   if (remover_)
   {
-    remover_->save();
-    remover_->remove();
+    remover_->refresh();
   }
 }
 

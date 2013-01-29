@@ -18,6 +18,7 @@
  */
 
 #include <gmock/gmock.h>
+#include <sigc++/sigc++.h>
 
 #include "IconLoader.h"
 
@@ -42,12 +43,12 @@ gboolean TimeoutReached (gpointer data)
 
 struct LoadResult
 {
-  GdkPixbuf *pixbuf;
+  glib::Object<GdkPixbuf> pixbuf;
   bool got_callback;
 
   LoadResult() : pixbuf(NULL), got_callback(false) {}
-  void IconLoaded(std::string const& icon_name, unsigned size,
-                  GdkPixbuf *buf)
+  void IconLoaded(std::string const& icon_name, int max_width, int max_height,
+                  glib::Object<GdkPixbuf> const& buf)
   {
     pixbuf = buf;
 
@@ -70,7 +71,29 @@ TEST(TestIconLoader, TestGetOneIcon)
   IconLoader& icon_loader = IconLoader::GetDefault();
   volatile bool timeout_reached = false;
 
-  icon_loader.LoadFromIconName("gedit-icon", 48, sigc::mem_fun(load_result,
+  icon_loader.LoadFromIconName("gedit-icon", -1, 48, sigc::mem_fun(load_result,
+        &LoadResult::IconLoaded));
+
+  guint tid = g_timeout_add (10000, TimeoutReached, (gpointer)(&timeout_reached));
+  while (!timeout_reached && !load_result.got_callback)
+  {
+    g_main_context_iteration (NULL, TRUE);
+  }
+
+  EXPECT_TRUE(load_result.got_callback);
+  EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
+
+  g_source_remove (tid);
+}
+
+TEST(TestIconLoader, TestGetAnnotatedIcon)
+{
+  LoadResult load_result;
+  IconLoader& icon_loader = IconLoader::GetDefault();
+  volatile bool timeout_reached = false;
+
+  
+  icon_loader.LoadFromGIconString(". UnityProtocolAnnotatedIcon %7B'base-icon':%20%3C'gedit-icon'%3E,%20'ribbon':%20%3C'foo'%3E%7D", -1, 48, sigc::mem_fun(load_result,
         &LoadResult::IconLoaded));
 
   guint tid = g_timeout_add (10000, TimeoutReached, (gpointer)(&timeout_reached));
@@ -102,7 +125,7 @@ TEST(TestIconLoader, TestGetOneIconManyTimes)
   // be cached already!
   for (int i = 0; i < load_count; i++)
   {
-    handles[i] = icon_loader.LoadFromIconName("web-browser", 48,
+    handles[i] = icon_loader.LoadFromIconName("web-browser", -1, 48,
         sigc::mem_fun(results[i], &LoadResult::IconLoaded));
   }
 
@@ -167,7 +190,7 @@ TEST(TestIconLoader, TestGetManyIcons)
   for (GList *it = icons; it != NULL; it = it->next)
   {
     const char *icon_name = static_cast<char*>(it->data);
-    icon_loader.LoadFromIconName(icon_name, 48, sigc::mem_fun(results[i++],
+    icon_loader.LoadFromIconName(icon_name, -1, 48, sigc::mem_fun(results[i++],
         &LoadResult::IconLoaded));
     if (i >= icon_count) break;
   }
@@ -212,7 +235,7 @@ TEST(TestIconLoader, TestCancelSome)
   for (GList *it = icons; it != NULL; it = it->next)
   {
     const char *icon_name = static_cast<char*>(it->data);
-    int handle = icon_loader.LoadFromIconName(icon_name, 48, sigc::mem_fun(
+    int handle = icon_loader.LoadFromIconName(icon_name, -1, 48, sigc::mem_fun(
           results[i], &LoadResult::IconLoaded));
     handles[i++] = handle;
     if (i >= icon_count) break;

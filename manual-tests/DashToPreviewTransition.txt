@@ -1,0 +1,38 @@
+Preview Open Animation
+----------------------
+This tests the dash animation transition to the preview
+
+Setup:
+#. Open dash super
+#. Open a lens which supports previewing (e.g. Application, Music, File)
+
+Actions:
+#. Right click on an icon in the dash
+
+Expected Result:
+  The central part of the dash split itself up just below the icon that was clicked, to reveal the preview window. It fades out but does not become fully transparent.
+  The Search Entry slides up and fades out.
+  If opened, the Filter Bar slides away to the right and fades.
+  Above the Preview, there is a faded out row of icons that include the icon that was right clicked.
+
+
+Preview Close Animation
+-----------------------
+This tests the preview close animation
+
+Setup:
+#. Open dash super
+#. Open a lens which supports previewing (e.g. Application, Music, File)
+#. Right-click the mouse on an icon to open its preview.
+#. Wait for the preview window to open and finish animating.
+
+Actions:
+#. Press Escape.
+
+Expected Result:
+  The Preview is progressively scaled down and disapears.
+  The search bar slides in from the top.
+  If the Filter Bar was opened when the Preview started, it will slide in from the right 
+  to its normal position.
+  The splitted and faded out dash appears to close itself and regain it full opacity.
+

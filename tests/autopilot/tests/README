@@ -1,3 +1,0 @@
-This folder contains tests for autopilot itself. These are not "autopilot
-tests". Unless you want to hack autopilot itself, you are probably in the
-wrong place. Try looking in ../autopilot/tests/ instead.

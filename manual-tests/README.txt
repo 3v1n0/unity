@@ -22,21 +22,25 @@ comprehensive `quick reference`_ is available.
 .. _reStructured Text: http://en.wikipedia.org/wiki/ReStructuredText
 .. _quick reference: http://docutils.sourceforge.net/docs/user/rst/quickref.html
 
-Tests have a header, steps to follow, and an expected outcome, as demonstrated
-by the following example:
+Tests have a header, actions (steps to follow), and an expected result. You can use the TEST_TEMPLATE.txt file as template for new tests.
 
 There can be multiple tests in a single file, but they should all be related,
 and the filename should indicate the tests it contains.
 
+Example:
 
 Test Dash
 ---------
 This test shows that the dash appears when the super key is pushed.
 
+Setup:
+#. start an ubuntu (unity) session by logging in
+
+Actions:
 #. Start with a clear screen
 #. Press the <super> key
 
-Outcome
+Expected Result:
   The dash appears, and focus is in the search box.  The icons on the laucher
   are desaturated except for the ubuntu button at the top.  The icons in the
   panel go white.

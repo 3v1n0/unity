@@ -65,7 +65,7 @@ public:
   moveNotify(int dx, int dy, bool immediate);
 
   void
-  resizeNotify(int dx, int dy, unsigned int dwidth, unsigned int dheight);
+  resizeNotify(int dx, int dy, int dwidth, int dheight);
 };
 
 class UnityNETWorkareaRegionPluginVTable :

@@ -32,31 +32,46 @@ public:
       g_source_remove(timeout_id);
   }
 
-  static void WaitUntil(bool& success, unsigned int max_wait = 10)
+  static void WaitUntilMSec(bool& success, unsigned int max_wait = 500)
+  {
+    WaitUntilMSec([&success] {return success;}, true, max_wait);
+  }
+
+  static void WaitUntil(bool& success, unsigned max_wait = 1)
+  {
+    WaitUntilMSec(success, max_wait * 1000);
+  }
+
+  static void WaitUntilMSec(std::function<bool()> const& check_function, bool result = true, unsigned max_wait = 500)
   {
     bool timeout_reached = false;
     guint32 timeout_id = ScheduleTimeout(&timeout_reached, max_wait);
 
-    while (!success && !timeout_reached)
+    while (check_function() != result && !timeout_reached)
       g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
 
-    if (success)
+    if (check_function() == result)
       g_source_remove(timeout_id);
 
-    EXPECT_TRUE(success);
+    EXPECT_EQ(check_function(), result);
   }
 
-  static guint32 ScheduleTimeout(bool* timeout_reached, unsigned int timeout_duration = 10)
+  static void WaitUntil(std::function<bool()> const& check_function, bool result = true, unsigned max_wait = 10)
   {
-    return g_timeout_add(timeout_duration*1000, TimeoutCallback, timeout_reached);
+    WaitUntilMSec(check_function, result, max_wait * 1000);
   }
 
-  static guint32 ScheduleTimeoutMSec(bool* timeout_reached, unsigned int timeout_duration = 10)
+  static guint32 ScheduleTimeout(bool* timeout_reached, unsigned timeout_duration = 10)
   {
     return g_timeout_add(timeout_duration, TimeoutCallback, timeout_reached);
   }
 
-  static void WaitForTimeout(unsigned int timeout_duration = 10)
+  static void WaitForTimeout(unsigned timeout_duration = 1)
+  {
+    WaitForTimeoutMSec(timeout_duration * 1000);
+  }
+
+  static void WaitForTimeoutMSec(unsigned timeout_duration = 500)
   {
     bool timeout_reached = false;
     guint32 timeout_id = ScheduleTimeout(&timeout_reached, timeout_duration);
@@ -66,17 +81,6 @@ public:
 
     g_source_remove(timeout_id);
   }
-
-  static void WaitForTimeoutMSec(unsigned int timeout_duration = 10)
-    {
-      bool timeout_reached = false;
-      guint32 timeout_id = ScheduleTimeoutMSec(&timeout_reached, timeout_duration);
-
-      while (!timeout_reached)
-        g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
-
-      g_source_remove(timeout_id);
-    }
 
 private:
   static gboolean TimeoutCallback(gpointer data)

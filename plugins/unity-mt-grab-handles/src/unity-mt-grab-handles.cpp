@@ -35,7 +35,8 @@ unity::MT::X11TextureFactory::setActiveWrap (const GLTexture::List &t)
 unity::MT::Texture::Ptr
 unity::MT::X11TextureFactory::create ()
 {
-  return boost::shared_static_cast <unity::MT::Texture> (unity::MT::X11Texture::Ptr (new unity::MT::X11Texture (mWrap)));
+  unity::MT::Texture::Ptr tp(static_cast<unity::MT::Texture*> (new unity::MT::X11Texture(mWrap)));
+  return tp;
 }
 
 unity::MT::X11Texture::X11Texture (const GLTexture::List &t)
@@ -151,7 +152,7 @@ unity::MT::X11GrabHandleImpl::buttonPress (int x,
 }
 
 void
-UnityMTGrabHandlesWindow::raiseGrabHandle (const boost::shared_ptr <const unity::MT::GrabHandle> &h)
+UnityMTGrabHandlesWindow::raiseGrabHandle (const std::shared_ptr <const unity::MT::GrabHandle> &h)
 {
   UnityMTGrabHandlesScreen::get (screen)->raiseHandle (h, window->frame ());
 }
@@ -202,12 +203,13 @@ sortPointers(void *p1, void *p2)
 }
 
 void
-UnityMTGrabHandlesScreen::raiseHandle (const boost::shared_ptr <const unity::MT::GrabHandle> &h,
+UnityMTGrabHandlesScreen::raiseHandle (const std::shared_ptr <const unity::MT::GrabHandle> &h,
                                        Window                                                owner)
 {
   for (const auto &pair : mInputHandles)
   {
-    if (*pair.second == *h)
+    const unity::MT::GrabHandle::Ptr gh = pair.second.lock();
+    if (*gh == *h)
     {
       unsigned int mask = CWSibling | CWStackMode;
       XWindowChanges xwc;
@@ -223,9 +225,9 @@ UnityMTGrabHandlesScreen::raiseHandle (const boost::shared_ptr <const unity::MT:
 void
 UnityMTGrabHandlesScreen::handleEvent(XEvent* event)
 {
-  CompWindow* w, *oldPrev, *oldNext;
+  CompWindow* w;
 
-  w = oldPrev = oldNext = NULL;
+  w = NULL;
 
   switch (event->type)
   {
@@ -292,7 +294,7 @@ UnityMTGrabHandlesScreen::handleEvent(XEvent* event)
           CompWindowVector::const_iterator cit = clientListStacking.begin();
           CompWindowVector::const_iterator oit = mLastClientListStacking.begin();
 
-          for (; cit != clientListStacking.end(); cit++, oit++)
+          for (; cit != clientListStacking.end(); ++cit, oit++)
           {
             /* All clients from this point onwards in cit are invalidated
              * so splice the list to the end of the new client list
@@ -322,10 +324,11 @@ UnityMTGrabHandlesScreen::handleEvent(XEvent* event)
 
       if (it != mInputHandles.end())
       {
-	if (it->second)
-          it->second->buttonPress (event->xbutton.x_root,
-                                   event->xbutton.y_root,
-                                   event->xbutton.button);
+        const unity::MT::GrabHandle::Ptr gh = it->second.lock();
+        if (gh)
+          gh->buttonPress (event->xbutton.x_root,
+                           event->xbutton.y_root,
+                           event->xbutton.button);
       }
 
       break;
@@ -346,8 +349,9 @@ UnityMTGrabHandlesScreen::handleEvent(XEvent* event)
 
       if (it != mInputHandles.end())
       {
-        if (it->second)
-          it->second->reposition (0, 0, unity::MT::PositionLock);
+        const unity::MT::GrabHandle::Ptr gh = it->second.lock();
+        if (gh)
+          gh->reposition (0, 0, unity::MT::PositionLock);
       }
 
       break;
@@ -438,28 +442,18 @@ UnityMTGrabHandlesWindow::getOutputExtents(CompWindowExtents& output)
 
 bool
 UnityMTGrabHandlesWindow::glDraw(const GLMatrix&            transform,
-#ifdef USE_GLES
                                  const GLWindowPaintAttrib& attrib,
-#else
-                                 GLFragment::Attrib&      fragment,
-#endif
                                  const CompRegion&          region,
                                  unsigned int              mask)
 {
   /* Draw the window on the bottom, we will be drawing the
    * handles on top */
-#ifdef USE_GLES
   bool status = gWindow->glDraw(transform, attrib, region, mask);
-#else
-  bool status = gWindow->glDraw(transform, fragment, region, mask);
-#endif
 
   if (mHandles && mHandles->visible())
   {
     unsigned int allowedHandles = unity::MT::getLayoutForMask (window->state (), window->actions ());
     unsigned int handle = 0;
-
-    UMTGH_SCREEN (screen);
 
     for(unity::MT::TextureLayout layout : mHandles->layout (allowedHandles))
     {
@@ -467,22 +461,16 @@ UnityMTGrabHandlesWindow::glDraw(const GLMatrix&            transform,
        * region */
       CompRegion reg = CompRegion(layout.second.x, layout.second.y, layout.second.width, layout.second.height);
 
-      for(GLTexture * tex : boost::shared_static_cast <unity::MT::X11Texture> (layout.first)->get ())
+      for(GLTexture * tex : static_cast<unity::MT::X11Texture*>(layout.first.get())->get())
       {
         GLTexture::MatrixList matl;
         GLTexture::Matrix     mat = tex->matrix();
         CompRegion        paintRegion(region);
-#ifdef USE_GLES
         GLWindowPaintAttrib   wAttrib(attrib);
-#endif
 
         /* We can reset the window geometry since it will be
          * re-added later */
-#ifdef USE_GLES
         gWindow->vertexBuffer()->begin();
-#else
-        gWindow->geometry().reset();
-#endif
 
         /* Not sure what this does, but it is necessary
          * (adjusts for scale?) */
@@ -498,35 +486,22 @@ UnityMTGrabHandlesWindow::glDraw(const GLMatrix&            transform,
          * dim (so we get a nice render for things like
          * wobbly etc etc */
         gWindow->glAddGeometry(matl, reg, paintRegion);
-#ifdef USE_GLES
-        gWindow->vertexBuffer()->end();
-        wAttrib.opacity = mHandles->opacity();
-#else
-        /* Did it succeed? */
-        if (gWindow->geometry().vertices)
-        {
-          fragment.setOpacity(mHandles->opacity());
-          /* Texture rendering set-up */
-          us->gScreen->setTexEnvMode(GL_MODULATE);
-#endif
+
+	if (gWindow->vertexBuffer()->end())
+	{
+	  wAttrib.opacity = mHandles->opacity();
+
           glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
           /* Draw the dim texture with all of it's modified
            * geometry glory */
           gWindow->glDrawTexture(tex,
-#ifdef USE_GLES
                                  transform, wAttrib,
-#else
-                                 fragment,
-#endif
                                  mask | PAINT_WINDOW_BLEND_MASK
                                  | PAINT_WINDOW_TRANSLUCENT_MASK |
                                  PAINT_WINDOW_TRANSFORMED_MASK);
           /* Texture rendering tear-down */
           glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-#ifndef USE_GLES
-          us->gScreen->setTexEnvMode(GL_REPLACE);
         }
-#endif
       }
 
       handle++;
@@ -662,7 +637,7 @@ UnityMTGrabHandlesWindow::restackHandles()
 void
 UnityMTGrabHandlesScreen::addHandleWindow(const unity::MT::GrabHandle::Ptr &h, Window w)
 {
-  mInputHandles.insert(std::pair <Window, const unity::MT::GrabHandle::Ptr> (w, h));
+  mInputHandles.insert(std::make_pair(w, h));
 }
 
 void
@@ -803,7 +778,7 @@ UnityMTGrabHandlesScreen::UnityMTGrabHandlesScreen(CompScreen* s) :
     GLTexture::List t = GLTexture::readImageToTexture(fname, pname,
                                                       size);
 
-    (boost::shared_static_cast <unity::MT::X11TextureFactory> (unity::MT::Texture::Factory::Default ()))->setActiveWrap (t);
+    (static_cast<unity::MT::X11TextureFactory*>(unity::MT::Texture::Factory::Default().get())->setActiveWrap(t));
 
     mHandleTextures.at(i).first = unity::MT::Texture::Factory::Default ()->create ();
     mHandleTextures.at (i).second.width = size.width ();

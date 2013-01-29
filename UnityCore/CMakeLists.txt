@@ -1,7 +1,14 @@
-find_package (PkgConfig)
-pkg_check_modules (CORE_DEPS REQUIRED glib-2.0 gio-2.0 dee-1.0 sigc++-2.0 nux-core-2.0 gdk-pixbuf-2.0 unity)
-
-execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} unity --variable lensesdir OUTPUT_VARIABLE _lensesdir OUTPUT_STRIP_TRAILING_WHITESPACE)
+set(UNITY_CORE_DEPS
+    glib-2.0
+    gio-2.0
+    dee-1.0
+    sigc++-2.0
+    nux-core-4.0
+    gdk-pixbuf-2.0
+    unity-protocol-private
+)
+pkg_check_modules (CORE_DEPS REQUIRED ${UNITY_CORE_DEPS})
+pkg_check_modules (PRIVATE_CORE_DEPS REQUIRED unity-protocol-private)
 
 #
 # Headers & Sources
@@ -21,6 +28,7 @@ set (CORE_HEADERS
      GLibDBusProxy.h
      GLibSignal.h
      GLibSignal-inl.h
+     GLibSource.h
      GLibWrapper.h
      GLibWrapper-inl.h
      Hud.h
@@ -30,8 +38,9 @@ set (CORE_HEADERS
      Indicators.h
      Lens.h
      Lenses.h
+     MoviePreview.h
      MultiRangeFilter.h
-     MusicPreviews.h
+     MusicPreview.h
      Model.h
      Model-inl.h
      ModelRowAdaptor.h
@@ -40,7 +49,12 @@ set (CORE_HEADERS
      RadioOptionFilter.h
      RatingsFilter.h
      Result.h
+     ResultIterator.h
      Results.h
+     SeriesPreview.h
+     SocialPreview.h
+     Track.h
+     Tracks.h
      Variant.h
     )
 
@@ -58,6 +72,7 @@ set (CORE_SOURCES
      GenericPreview.cpp
      GLibDBusProxy.cpp
      GLibSignal.cpp
+     GLibSource.cpp
      GLibWrapper.cpp
      Hud.cpp
      HomeLens.cpp
@@ -65,35 +80,30 @@ set (CORE_SOURCES
      IndicatorEntry.cpp
      Indicators.cpp
      Lens.cpp
+     MoviePreview.cpp
      MultiRangeFilter.cpp
-     MusicPreviews.cpp
+     MusicPreview.cpp
      ModelRowAdaptor.cpp
      Preview.cpp
      RatingsFilter.cpp
      RadioOptionFilter.cpp
      Result.cpp
+     ResultIterator.cpp
      Results.cpp
+     SeriesPreview.cpp
+     SocialPreview.cpp
+     Track.cpp
+     Tracks.cpp
      Variant.cpp
     )
 
 #
 # CFLAGS and LIBS
 #
-set (CFLAGS
-     ${CORE_DEPS_CFLAGS}
-     ${CORE_DEPS_CFLAGS_OTHER}
-     ${MAINTAINER_CFLAGS}
-     "-I${CMAKE_BINARY_DIR}"
-     "-DGETTEXT_PACKAGE=\"unity\""
-     "-DLENSES_DIR=\"${_lensesdir}\""
-     )
-add_definitions (${CFLAGS})
+include_directories(${CORE_DEPS_INCLUDE_DIRS})
+include_directories(${CMAKE_BINARY_DIR})
 
-set (LIBS ${CORE_DEPS_LIBRARIES})
-link_libraries (${LIBS})
-
-set (LIB_PATHS ${CORE_DEPS_LIBRARY_DIRS})
-link_directories(${LIB_PATHS})
+set (LIBS ${CORE_DEPS_LDFLAGS} ${PRIVATE_CORE_DEPS_LDFLAGS})
 
 #
 # Library
@@ -111,10 +121,14 @@ set (CORE_LIB_LT_AGE 0)
 set (CORE_LIB_LT_VERSION "${CORE_LIB_LT_CURRENT}:${CORE_LIB_LT_REV}:${CORE_LIB_LT_AGE}")
 
 set (CORE_LIB_NAME "unity-core-${UNITY_API_VERSION}")
+
 add_library (${CORE_LIB_NAME} SHARED ${CORE_SOURCES})
+target_link_libraries (${CORE_LIB_NAME} ${LIBS})
 set_target_properties(${CORE_LIB_NAME} PROPERTIES
                       VERSION ${CORE_LIB_LT_CURRENT}.${CORE_LIB_LT_REV}.${CORE_LIB_LT_AGE}
-                      SOVERSION ${CORE_LIB_LT_CURRENT})
+                      SOVERSION ${CORE_LIB_LT_CURRENT}
+                      INSTALL_RPATH "${PRIVATE_CORE_DEPS_LIBRARY_DIRS}")
+add_pch(pch/unitycore_pch.hh ${CORE_LIB_NAME})
 
 install (TARGETS ${CORE_LIB_NAME}
          RUNTIME DESTINATION bin

@@ -57,6 +57,7 @@ public:
   virtual ~Model();
 
   const RowAdaptor RowAtIndex(std::size_t index);
+  DeeModelTag*     GetTag();
 
   nux::Property<std::string> swarm_name;
   nux::ROProperty<std::size_t> count;
@@ -87,6 +88,10 @@ private:
   glib::SignalManager sig_manager_;
   DeeModelTag* renderer_tag_;
   ModelType model_type_;
+
+  RowAdaptor cached_adaptor1_;
+  RowAdaptor cached_adaptor2_;
+  RowAdaptor cached_adaptor3_;
 };
 
 }

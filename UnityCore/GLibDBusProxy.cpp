@@ -26,15 +26,18 @@
 
 #include "GLibWrapper.h"
 #include "GLibSignal.h"
+#include "GLibSource.h"
+#include "Variant.h"
 
 namespace unity
 {
 namespace glib
 {
+DECLARE_LOGGER(logger, "unity.glib.dbusproxy");
 
 namespace
 {
-nux::logging::Logger logger("unity.glib.dbusproxy");
+const unsigned MAX_RECONNECTION_ATTEMPTS = 5;
 }
 
 using std::string;
@@ -53,13 +56,22 @@ public:
        GDBusProxyFlags flags);
   ~Impl();
 
-  void StartReconnectionTimeout();
+  void StartReconnectionTimeout(unsigned timeout);
   void Connect();
 
-  void Call(string const& method_name,
+  void WaitForProxy(GCancellable* cancellable,
+                    int timeout_msec,
+                    std::function<void(glib::Error const&)> const& callback);
+  void CallNoError(string const& method_name,
+                   GVariant* parameters,
+                   ReplyCallback const& callback,
+                   GCancellable* cancellable,
+                   GDBusCallFlags flags,
+                   int timeout_msec);
+  void Call(std::string const& method_name,
             GVariant* parameters,
-            ReplyCallback callback,
-            GCancellable* cancellable,
+            CallFinishedCallback const& callback,
+            GCancellable *cancellable,
             GDBusCallFlags flags,
             int timeout_msec);
 
@@ -75,8 +87,7 @@ public:
 
   struct CallData
   {
-    DBusProxy::ReplyCallback callback;
-    DBusProxy::Impl* impl;
+    DBusProxy::CallFinishedCallback callback;
     std::string method_name;
   };
 
@@ -89,12 +100,13 @@ public:
 
   glib::Object<GDBusProxy> proxy_;
   glib::Object<GCancellable> cancellable_;
-  guint watcher_id_;
-  guint reconnect_timeout_id_;
   bool connected_;
+  unsigned reconnection_attempts_;
 
   glib::Signal<void, GDBusProxy*, char*, char*, GVariant*> g_signal_connection_;
   glib::Signal<void, GDBusProxy*, GParamSpec*> name_owner_signal_;
+  glib::Source::UniquePtr reconnect_timeout_;
+  sigc::signal<void> proxy_acquired;
 
   SignalHandlers handlers_;
 };
@@ -112,39 +124,31 @@ DBusProxy::Impl::Impl(DBusProxy* owner,
   , bus_type_(bus_type)
   , flags_(flags)
   , cancellable_(g_cancellable_new())
-  , watcher_id_(0)
-  , reconnect_timeout_id_(0)
   , connected_(false)
+  , reconnection_attempts_(0)
 {
-  StartReconnectionTimeout();
+  // FIXME: get rid of this once glib doesn't deadlock in class initiation
+  StartReconnectionTimeout(1);
 }
 
 DBusProxy::Impl::~Impl()
 {
   g_cancellable_cancel(cancellable_);
-  if (watcher_id_)
-    g_bus_unwatch_name(watcher_id_);
-  if (reconnect_timeout_id_)
-    g_source_remove(reconnect_timeout_id_);
 }
 
-void DBusProxy::Impl::StartReconnectionTimeout()
+void DBusProxy::Impl::StartReconnectionTimeout(unsigned timeout)
 {
   LOG_DEBUG(logger) << "Starting reconnection timeout for " << name_;
 
-  if (reconnect_timeout_id_)
-    g_source_remove(reconnect_timeout_id_);
-
-  auto callback = [](gpointer user_data) -> gboolean
+  auto callback = [&]
   {
-    DBusProxy::Impl* self = static_cast<DBusProxy::Impl*>(user_data);
-    if (!self->proxy_)
-      self->Connect();
+    if (!proxy_)
+      Connect();
 
-    self->reconnect_timeout_id_ = 0;
-    return FALSE;
+    return false;
   };
-  reconnect_timeout_id_ = g_timeout_add_seconds(1, callback, this);
+
+  reconnect_timeout_.reset(new glib::TimeoutSeconds(timeout, callback));
 }
 
 void DBusProxy::Impl::Connect()
@@ -179,12 +183,27 @@ void DBusProxy::Impl::OnProxyConnectCallback(GObject* source,
   // therefore we should deal with the error before touching the impl pointer
   if (!proxy || error)
   {
-    LOG_WARNING(logger) << "Unable to connect to proxy: " << error;
+    // if the cancellable was cancelled, "self" points to destroyed object
+    if (error && !g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+    {
+      if (self->reconnection_attempts_++ < MAX_RECONNECTION_ATTEMPTS)
+      {
+        LOG_WARNING(logger) << "Unable to connect to proxy: \"" << error
+          << "\"... Trying to reconnect (attempt "
+          << self->reconnection_attempts_ << ")";
+        self->StartReconnectionTimeout(3);
+      }
+      else
+      {
+        LOG_ERROR(logger) << "Unable to connect to proxy: " << error;
+      }
+    }
     return;
   }
 
   LOG_DEBUG(logger) << "Sucessfully created proxy: " << self->object_path_;
 
+  self->reconnection_attempts_ = 0;
   self->proxy_ = proxy;
   self->g_signal_connection_.Connect(self->proxy_, "g-signal",
                                      sigc::mem_fun(self, &Impl::OnProxySignal));
@@ -198,6 +217,8 @@ void DBusProxy::Impl::OnProxyConnectCallback(GObject* source,
     self->connected_ = true;
     self->owner_->connected.emit();
   }
+
+  self->proxy_acquired.emit();
 }
 
 void DBusProxy::Impl::OnProxyNameOwnerChanged(GDBusProxy* proxy, GParamSpec* param)
@@ -237,64 +258,139 @@ void DBusProxy::Impl::OnProxySignal(GDBusProxy* proxy,
     callback(parameters);
 }
 
+void DBusProxy::Impl::WaitForProxy(GCancellable* cancellable,
+                                   int timeout_msec,
+                                   std::function<void(glib::Error const&)> const& callback)
+{
+  if (!proxy_)
+  {
+    auto con = std::make_shared<sigc::connection>();
+    auto canc = glib::Object<GCancellable>(cancellable, glib::AddRef());
+
+    // add a timeout
+    auto timeout = std::make_shared<glib::Timeout>(timeout_msec < 0 ? 30000 : timeout_msec, [con, canc, callback] ()
+    {
+      if (!g_cancellable_is_cancelled(canc))
+      {
+        glib::Error err;
+        GError** real_err = &err;
+        *real_err = g_error_new_literal(G_DBUS_ERROR, G_DBUS_ERROR_TIMED_OUT,
+                                        "Timed out waiting for proxy");
+        callback(err);
+      }
+      con->disconnect();
+      return false;
+    });
+    // wait for the signal
+    *con = proxy_acquired.connect([con, canc, timeout, callback] ()
+    {
+      if (!g_cancellable_is_cancelled(canc)) callback(glib::Error());
+
+      timeout->Remove();
+      con->disconnect();
+    });
+  }
+  else
+  {
+    callback(glib::Error());
+  }
+}
+
+void DBusProxy::Impl::CallNoError(string const& method_name,
+                                  GVariant* parameters,
+                                  ReplyCallback const& callback,
+                                  GCancellable* cancellable,
+                                  GDBusCallFlags flags,
+                                  int timeout_msec)
+{
+  if (callback)
+  {
+    auto cb = [callback] (GVariant* result, Error const& err)
+    {
+      if (!err) callback(result);
+    };
+
+    Call(method_name, parameters, cb, cancellable, flags, timeout_msec);
+  }
+  else
+  {
+    Call(method_name, parameters, nullptr, cancellable, flags, timeout_msec);
+  }
+}
+
 void DBusProxy::Impl::Call(string const& method_name,
                            GVariant* parameters,
-                           ReplyCallback callback,
+                           CallFinishedCallback const& callback,
                            GCancellable* cancellable,
                            GDBusCallFlags flags,
                            int timeout_msec)
 {
-  if (proxy_)
-  {
-    CallData* data = new CallData();
-    data->callback = callback;
-    data->impl = this;
-    data->method_name = method_name;
+  GCancellable* target_canc = cancellable != NULL ? cancellable : cancellable_;
 
-    g_dbus_proxy_call(proxy_,
-                      method_name.c_str(),
-                      parameters,
-                      flags,
-                      timeout_msec,
-                      cancellable != NULL ? cancellable : cancellable_,
-                      DBusProxy::Impl::OnCallCallback,
-                      data);
-  }
-  else
+  if (!proxy_)
   {
-    LOG_WARNING(logger) << "Cannot call method " << method_name
-                        << " proxy " << object_path_ << " does not exist";
+    glib::Variant sinked_parameters(parameters);
+    glib::Object<GCancellable>canc(target_canc, glib::AddRef());
+    WaitForProxy(canc, timeout_msec, [this, method_name, sinked_parameters, callback, canc, flags, timeout_msec] (glib::Error const& err)
+    {
+      if (err)
+      {
+        callback(glib::Variant(), err);
+        LOG_WARNING(logger) << "Cannot call method " << method_name
+                            << ": " << err;
+      }
+      else
+      {
+        Call(method_name, sinked_parameters, callback, canc, flags, timeout_msec);
+      }
+    });
+    return;
   }
+
+  CallData* data = new CallData();
+  data->callback = callback;
+  data->method_name = method_name;
+
+  g_dbus_proxy_call(proxy_,
+                    method_name.c_str(),
+                    parameters,
+                    flags,
+                    timeout_msec,
+                    target_canc,
+                    DBusProxy::Impl::OnCallCallback,
+                    data);
 }
 
 void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointer call_data)
 {
   glib::Error error;
-  std::unique_ptr<CallData> data (static_cast<CallData*>(call_data));
-  GVariant* result = g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error);
+  std::unique_ptr<CallData> data(static_cast<CallData*>(call_data));
+  glib::Variant result(g_dbus_proxy_call_finish(G_DBUS_PROXY(source), res, &error), glib::StealRef());
 
-  if (error && g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+  if (error)
   {
-    // silently ignore
+    if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+    {
+      // silently ignore, don't even invoke callback, FIXME: really?
+      return;
+    }
+    else
+    {
+      LOG_WARNING(logger) << "Calling method \"" << data->method_name
+        << "\" on object path: \""
+        << g_dbus_proxy_get_object_path(G_DBUS_PROXY(source))
+        << "\" failed: " << error;
+    }
   }
-  else if (error)
-  {
-    // Do not touch the impl pointer as the operation may have been cancelled
-    LOG_WARNING(logger) << "Calling method \"" << data->method_name
-      << "\" on object path: \""
-      << g_dbus_proxy_get_object_path (G_DBUS_PROXY (source))
-      << "\" failed: " << error;
-  }
-  else
-  {
-    data->callback(result);
-    g_variant_unref(result);
-  }
+
+  if (data->callback)
+    data->callback(result, error);
 }
 
 void DBusProxy::Impl::Connect(std::string const& signal_name, ReplyCallback callback)
 {
-  handlers_[signal_name].push_back(callback);
+  if (callback)
+    handlers_[signal_name].push_back(callback);
 }
 
 DBusProxy::DBusProxy(string const& name,
@@ -310,10 +406,21 @@ DBusProxy::~DBusProxy()
 
 void DBusProxy::Call(string const& method_name,
                      GVariant* parameters,
-                     ReplyCallback callback,
+                     ReplyCallback const& callback,
                      GCancellable* cancellable,
                      GDBusCallFlags flags,
                      int timeout_msec)
+{
+  pimpl->CallNoError(method_name, parameters, callback, cancellable, flags,
+                     timeout_msec);
+}
+
+void DBusProxy::CallBegin(std::string const& method_name,
+                          GVariant* parameters,
+                          CallFinishedCallback const& callback,
+                          GCancellable *cancellable,
+                          GDBusCallFlags flags,
+                          int timeout_msec)
 {
   pimpl->Call(method_name, parameters, callback, cancellable, flags,
               timeout_msec);

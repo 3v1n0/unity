@@ -37,7 +37,7 @@ class GrabHandleWindow
                                   int y,
                                   unsigned int direction,
 				  unsigned int button) = 0;
-    virtual void raiseGrabHandle (const boost::shared_ptr <const unity::MT::GrabHandle> &) = 0;
+    virtual void raiseGrabHandle (const std::shared_ptr <const unity::MT::GrabHandle> &) = 0;
 };
 
 };

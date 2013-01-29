@@ -1,0 +1,12 @@
+s|<core/core.h>|<compiz_mock/core/core.h>|
+s|\<CompScreen\>|CompScreenMock|g
+s|\<CompWindow\>|CompWindowMock|g
+s|\<CompWindowVector\>|CompWindowMockVector|g
+s|\<screen\>|screen_mock|g
+s|\<pointerX\>|pointerX_mock|g
+s|\<pointerY\>|pointerY_mock|g
+s|\<XFreeCursor\>|XFreeCursorMock|g
+s|\<XCreateFontCursor\>|XCreateFontCursorMock|g
+s|\<WindowGestureTarget\>|WindowGestureTargetMock|g
+s|\<UnityGestureTarget\>|UnityGestureTargetMock|g
+s|GesturalWindowSwitcher|GesturalWindowSwitcherMock|g

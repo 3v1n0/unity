@@ -1,0 +1,159 @@
+[org.compiz.unityshell:/org/compiz/profiles/unity/plugins/unityshell/]
+launcher-switcher-prev = /apps/compiz-1/plugins/unityshell/screen0/options/launcher_switcher_prev
+shortcut-overlay = /apps/compiz-1/plugins/unityshell/screen0/options/shortcut_overlay
+panel-opacity-maximized-toggle = /apps/compiz-1/plugins/unityshell/screen0/options/panel_opacity_maximized_toggle
+launcher-switcher-forward = /apps/compiz-1/plugins/unityshell/screen0/options/launcher_switcher_forward
+overcome-pressure = /apps/compiz-1/plugins/unityshell/screen0/options/overcome_pressure
+launch-animation = /apps/compiz-1/plugins/unityshell/screen0/options/launch_animation
+alt-tab-timeout = /apps/compiz-1/plugins/unityshell/screen0/options/alt_tab_timeout
+panel-opacity = /apps/compiz-1/plugins/unityshell/screen0/options/panel_opacity
+show-minimized-windows = /apps/compiz-1/plugins/unityshell/screen0/options/show_minimized_windows
+num-launchers = /apps/compiz-1/plugins/unityshell/screen0/options/num_launchers
+alt-tab-right = /apps/compiz-1/plugins/unityshell/screen0/options/alt_tab_right
+show-hud = /apps/compiz-1/plugins/unityshell/screen0/options/show_hud
+launcher-hide-mode = /apps/compiz-1/plugins/unityshell/screen0/options/launcher_hide_mode
+alt-tab-forward = /apps/compiz-1/plugins/unityshell/screen0/options/alt_tab_forward
+alt-tab-left = /apps/compiz-1/plugins/unityshell/screen0/options/alt_tab_left
+launcher-capture-mouse = /apps/compiz-1/plugins/unityshell/screen0/options/launcher_capture_mouse
+alt-tab-detail-stop = /apps/compiz-1/plugins/unityshell/screen0/options/alt_tab_detail_stop
+urgent-animation = /apps/compiz-1/plugins/unityshell/screen0/options/urgent_animation
+keyboard-focus = /apps/compiz-1/plugins/unityshell/screen0/options/keyboard_focus
+alt-tab-prev = /apps/compiz-1/plugins/unityshell/screen0/options/alt_tab_prev
+reveal-pressure = /apps/compiz-1/plugins/unityshell/screen0/options/reveal_pressure
+decay-rate = /apps/compiz-1/plugins/unityshell/screen0/options/decay_rate
+stop-velocity = /apps/compiz-1/plugins/unityshell/screen0/options/stop_velocity
+autohide-animation = /apps/compiz-1/plugins/unityshell/screen0/options/autohide_animation
+alt-tab-bias-viewport = /apps/compiz-1/plugins/unityshell/screen0/options/alt_tab_bias_viewport
+edge-responsiveness = /apps/compiz-1/plugins/unityshell/screen0/options/edge_responsiveness
+automaximize-value = /apps/compiz-1/plugins/unityshell/screen0/options/automaximize_value
+background-color = /apps/compiz-1/plugins/unityshell/screen0/options/background_color
+alt-tab-forward-all = /apps/compiz-1/plugins/unityshell/screen0/options/alt_tab_forward_all
+alt-tab-prev-all = /apps/compiz-1/plugins/unityshell/screen0/options/alt_tab_prev_all
+menus-discovery-fadein = /apps/compiz-1/plugins/unityshell/screen0/options/menus_discovery_fadein
+execute-command = /apps/compiz-1/plugins/unityshell/screen0/options/execute_command
+dash-blur-experimental = /apps/compiz-1/plugins/unityshell/screen0/options/dash_blur_experimental
+menus-discovery-duration = /apps/compiz-1/plugins/unityshell/screen0/options/menus_discovery_duration
+alt-tab-prev-window = /apps/compiz-1/plugins/unityshell/screen0/options/alt_tab_prev_window
+reveal-trigger = /apps/compiz-1/plugins/unityshell/screen0/options/reveal_trigger
+panel-first-menu = /apps/compiz-1/plugins/unityshell/screen0/options/panel_first_menu
+icon-size = /apps/compiz-1/plugins/unityshell/screen0/options/icon_size
+backlight-mode = /apps/compiz-1/plugins/unityshell/screen0/options/backlight_mode
+menus-fadein = /apps/compiz-1/plugins/unityshell/screen0/options/menus_fadein
+alt-tab-detail-start = /apps/compiz-1/plugins/unityshell/screen0/options/alt_tab_detail_start
+show-desktop-icon = /apps/compiz-1/plugins/unityshell/screen0/options/show_desktop_icon
+alt-tab-next-window = /apps/compiz-1/plugins/unityshell/screen0/options/alt_tab_next_window
+launcher-opacity = /apps/compiz-1/plugins/unityshell/screen0/options/launcher_opacity
+show-launcher = /apps/compiz-1/plugins/unityshell/screen0/options/show_launcher
+menus-discovery-fadeout = /apps/compiz-1/plugins/unityshell/screen0/options/menus_discovery_fadeout
+menus-fadeout = /apps/compiz-1/plugins/unityshell/screen0/options/menus_fadeout
+
+
+[org.compiz.core:/org/compiz/profiles/unity/plugins/core/]
+active-plugins = /apps/compiz-1/plugins/core/screen0/options/active_plugins
+vsize = /apps/compiz-1/plugins/core/screen0/options/vsize
+hsize = /apps/compiz-1/plugins/core/screen0/options/vsize
+close-window-button = /apps/compiz-1/plugins/core/screen0/options/close_window_button
+close-window-key = /apps/compiz-1/plugins/core/screen0/options/close_window_key
+lower-window-button = /apps/compiz-1/plugins/core/screen0/options/lower_window_button
+lower-window-key = /apps/compiz-1/plugins/core/screen0/options/lower_window_key
+maximize-window-horizontally-key = /apps/compiz-1/plugins/core/screen0/options/maximize_window_horizontally_key
+maximize-window-key = /apps/compiz-1/plugins/core/screen0/options/maximize_window_key
+maximize-window-vertically-key = /apps/compiz-1/plugins/core/screen0/options/maximize_window_vertically_key
+minimize-window-button = /apps/compiz-1/plugins/core/screen0/options/minimize_window_button
+minimize-window-key = /apps/compiz-1/plugins/core/screen0/options/minimize_window_key
+raise-window-button = /apps/compiz-1/plugins/core/screen0/options/raise_window_button
+raise-window-key = /apps/compiz-1/plugins/core/screen0/options/raise_window_key
+show-desktop-edge = /apps/compiz-1/plugins/core/screen0/options/show_desktop_edge
+show-desktop-key = /apps/compiz-1/plugins/core/screen0/options/show_desktop_key
+toggle-window-maximized-button = /apps/compiz-1/plugins/core/screen0/options/toggle_window_maximized_button
+toggle-window-maximized-horizontally-key = /apps/compiz-1/plugins/core/screen0/options/toggle_window_maximized_horizontally_key
+toggle-window-maximized-key = /apps/compiz-1/plugins/core/screen0/options/toggle_window_maximized_key
+toggle-window-maximized-vertically-key = /apps/compiz-1/plugins/core/screen0/options/toggle_window_maximized_vertically_key
+toggle-window-shaded-key = /apps/compiz-1/plugins/core/screen0/options/toggle_window_shaded_key
+unmaximize-window-key = /apps/compiz-1/plugins/core/screen0/options/unmaximize_window_key
+window-menu-button = /apps/compiz-1/plugins/core/screen0/options/window_menu_button
+window-menu-key = /apps/compiz-1/plugins/core/screen0/options/window_menu_key
+
+
+[org.compiz.composite:/org/compiz/profiles/unity/plugins/composite/]
+detect-refresh-rate = /apps/compiz-1/plugins/composite/screen0/options/detect_refres_rate
+refresh-rate = /apps/compiz-1/plugins/composite/screen0/options/refres_rate
+
+
+[org.compiz.opengl:/org/compiz/profiles/unity/plugins/opengl/]
+lighting = /apps/compiz-1/plugins/opengl/screen0/options/lighting
+sync-to-vblank = /apps/compiz-1/plugins/opengl/screen0/options/sync_to_vblank
+texture-compression = /apps/compiz-1/plugins/opengl/screen0/options/texture_compression
+texture-filter = /apps/compiz-1/plugins/opengl/screen0/options/texture_filter
+
+
+[org.compiz.wall:/org/compiz/profiles/unity/plugins/wall/]
+down-button = /apps/compiz-1/plugins/wall/screen0/options/down_button
+down-key = /apps/compiz-1/plugins/wall/screen0/options/down_button
+down-window-key = /apps/compiz-1/plugins/wall/screen0/options/down_button
+edgeflip-dnd = /apps/compiz-1/plugins/wall/screen0/options/edgeflip_dnd
+edgeflip-move = /apps/compiz-1/plugins/wall/screen0/options/edgeflip_move
+edgeflip-pointer = /apps/compiz-1/plugins/wall/screen0/options/edgeflip_pointer
+edge-radius = /apps/compiz-1/plugins/wall/screen0/options/edge_radius
+flip-down-edge = /apps/compiz-1/plugins/wall/screen0/options/flip_down_edge
+flip-left-edge = /apps/compiz-1/plugins/wall/screen0/options/flip_left_edge
+flip-right-edge = /apps/compiz-1/plugins/wall/screen0/options/flip_right_edge
+flip-up-edge = /apps/compiz-1/plugins/wall/screen0/options/flip_up_edge
+left-button = /apps/compiz-1/plugins/wall/screen0/options/left_button
+left-key = /apps/compiz-1/plugins/wall/screen0/options/left_key
+left-window-key = /apps/compiz-1/plugins/wall/screen0/options/left_window_key
+next-button = /apps/compiz-1/plugins/wall/screen0/options/next_button
+next-key = /apps/compiz-1/plugins/wall/screen0/options/next_key
+prev-button = /apps/compiz-1/plugins/wall/screen0/options/prev_button
+prev-key =/apps/compiz-1/plugins/wall/screen0/options/prev_key
+right-button = /apps/compiz-1/plugins/wall/screen0/options/right_button
+right-key = /apps/compiz-1/plugins/wall/screen0/options/right_key
+right-window-key = /apps/compiz-1/plugins/wall/screen0/options/right_window_key
+up-button = /apps/compiz-1/plugins/wall/screen0/options/up_button
+up-key = /apps/compiz-1/plugins/wall/screen0/options/up_key
+up-window-key = /apps/compiz-1/plugins/wall/screen0/options/up_window_key
+
+
+[org.compiz.expo:/org/compiz/profiles/unity/plugins/expo/]
+exit-button = /apps/compiz-1/plugins/expo/screen0/options/exit_button
+expo-edge = /apps/compiz-1/plugins/expo/screen0/options/expo_edge
+expo-key = /apps/compiz-1/plugins/expo/screen0/options/expo_key
+expo-immediate-move = /apps/compiz-1/plugins/expo/screen0/options/expo_immediate_move
+next-vp-button = /apps/compiz-1/plugins/expo/screen0/options/next_vp_button
+prev-vp-button = /apps/compiz-1/plugins/expo/screen0/options/prev_vp_button
+
+
+[org.compiz.move:/org/compiz/profiles/unity/plugins/move/]
+initiate-button = /apps/compiz-1/plugins/move/screen0/options/initiate_button
+initiate-key = /apps/compiz-1/plugins/move/screen0/options/initiate_key
+
+
+[org.compiz.grid:/org/compiz/profiles/unity/plugins/grid/]
+bottom-edge-action = /apps/compiz-1/plugins/grid/screen0/options/bottom_edge_action
+bottom-edge-threshold = /apps/compiz-1/plugins/grid/screen0/options/bottom_edge_threshold
+bottom-left-corner-action = /apps/compiz-1/plugins/grid/screen0/options/bottom_left_corner_action
+bottom-right-corner-action = /apps/compiz-1/plugins/grid/screen0/options/bottom_right_corner_action
+draw-indicator = /apps/compiz-1/plugins/grid/screen0/options/draw_indicator
+fill-color = /apps/compiz-1/plugins/grid/screen0/options/fill_color
+left-edge-action = /apps/compiz-1/plugins/grid/screen0/options/left_edge_action
+left-edge-threshold = /apps/compiz-1/plugins/grid/screen0/options/left_edge_threshold
+outline-color = /apps/compiz-1/plugins/grid/screen0/options/outline_color
+put-bottom-key = /apps/compiz-1/plugins/grid/screen0/options/put_bottom_key
+put-bottomleft-key = /apps/compiz-1/plugins/grid/screen0/options/put_bottomleft_key
+put-bottomright-key = /apps/compiz-1/plugins/grid/screen0/options/put_bottomright_key
+put-center-key = /apps/compiz-1/plugins/grid/screen0/options/put_center_key
+put-left-key = /apps/compiz-1/plugins/grid/screen0/options/put_left_key
+put-maximize-key = /apps/compiz-1/plugins/grid/screen0/options/put_maximize_key
+put-restore-key = /apps/compiz-1/plugins/grid/screen0/options/put_restore_key
+put-right-key = /apps/compiz-1/plugins/grid/screen0/options/put_right_key
+put-top-key = /apps/compiz-1/plugins/grid/screen0/options/put_top_key
+put-topleft-key = /apps/compiz-1/plugins/grid/screen0/options/put_topleft_key
+put-topright-key = /apps/compiz-1/plugins/grid/screen0/options/put_topright_key
+right-edge-action = /apps/compiz-1/plugins/grid/screen0/options/right_edge_action
+right-edge-threshold = /apps/compiz-1/plugins/grid/screen0/options/right_edge_threshold
+snapback-windows = /apps/compiz-1/plugins/grid/screen0/options/snapback_windows
+snapoff-maximized = /apps/compiz-1/plugins/grid/screen0/options/snapoff_maximized
+top-edge-action = /apps/compiz-1/plugins/grid/screen0/options/top_edge_action
+top-edge-threshold = /apps/compiz-1/plugins/grid/screen0/options/top_edge_threshold
+top-left-corner-action = /apps/compiz-1/plugins/grid/screen0/options/top_left_corner_action
+top-right-corner-action = /apps/compiz-1/plugins/grid/screen0/options/top_right_corner_action

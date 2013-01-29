@@ -4,9 +4,9 @@ from distutils.core import setup
 from setuptools import find_packages
 
 setup(
-    name='autopilot',
+    name='unity',
     version='1.0',
-    description='Unity test driver automation script',
+    description='Unity autopilot tests.',
     author='Alex Launi',
     author_email='alex.launi@canonical.com',
     url='https://launchpad.net/unity',

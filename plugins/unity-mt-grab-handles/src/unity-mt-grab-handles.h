@@ -22,9 +22,7 @@
 #include <composite/composite.h>
 #include <opengl/opengl.h>
 #include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/weak_ptr.hpp>
+#include <memory>
 
 #include <core/atoms.h>
 
@@ -72,7 +70,7 @@ class X11Texture :
 {
   public:
 
-    typedef boost::shared_ptr <X11Texture> Ptr;
+    typedef std::shared_ptr <X11Texture> Ptr;
 
     X11Texture (const GLTexture::List &t);
 
@@ -124,7 +122,7 @@ public:
 
 private:
 
-  boost::weak_ptr <unity::MT::GrabHandle>  mGrabHandle;
+  std::weak_ptr <unity::MT::GrabHandle>  mGrabHandle;
   Window                                   mIpw;
   Display                                  *mDpy;
 };
@@ -175,7 +173,7 @@ public:
   void preparePaint(int);
   void donePaint();
 
-  void raiseHandle (const boost::shared_ptr <const unity::MT::GrabHandle> &,
+  void raiseHandle (const std::shared_ptr <const unity::MT::GrabHandle> &,
                     Window                      owner);
 
   std::vector <unity::MT::TextureSize>  & textures()
@@ -188,7 +186,7 @@ private:
   std::list <unity::MT::GrabHandleGroup::Ptr> mGrabHandles;
   std::vector <unity::MT::TextureSize> mHandleTextures;
 
-  std::map <Window, const unity::MT::GrabHandle::Ptr> mInputHandles;
+  std::map <Window, const std::weak_ptr <unity::MT::GrabHandle> > mInputHandles;
   CompWindowVector         		    mLastClientListStacking;
   Atom             			    mCompResizeWindowAtom;
 
@@ -229,11 +227,7 @@ public:
   void moveNotify(int dx, int dy, bool immediate);
 
   bool glDraw(const GLMatrix&,
-#ifdef USE_GLES
               const GLWindowPaintAttrib&,
-#else
-              GLFragment::Attrib&,
-#endif
               const CompRegion&,
               unsigned int);
 
@@ -247,7 +241,7 @@ public:
 
 protected:
 
-  void raiseGrabHandle (const boost::shared_ptr <const unity::MT::GrabHandle> &h);
+  void raiseGrabHandle (const std::shared_ptr <const unity::MT::GrabHandle> &h);
   void requestMovement (int x,
                         int y,
                         unsigned int direction,

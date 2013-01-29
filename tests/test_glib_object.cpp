@@ -210,6 +210,21 @@ TEST(TestGLibObject, CastObject)
   EXPECT_EQ(GPOINTER_TO_INT(g_object_get_data(g_obj, "TestData")), 55);
 }
 
+TEST(TestGLibObject, TypeCheck)
+{
+  TestObjectWrapper g_obj;
+
+  EXPECT_FALSE(g_obj.IsType(TEST_TYPE_GOBJECT));
+  EXPECT_FALSE(g_obj.IsType(G_TYPE_OBJECT));
+  EXPECT_FALSE(g_obj.IsType(G_TYPE_INITIALLY_UNOWNED));
+
+  g_obj = test_gobject_new();
+
+  EXPECT_TRUE(g_obj.IsType(TEST_TYPE_GOBJECT));
+  EXPECT_TRUE(g_obj.IsType(G_TYPE_OBJECT));
+  EXPECT_FALSE(g_obj.IsType(G_TYPE_INITIALLY_UNOWNED));
+}
+
 TEST(TestGLibObject, BoolOperator)
 {
   TestObjectWrapper g_obj;

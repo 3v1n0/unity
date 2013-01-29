@@ -22,11 +22,13 @@
 #ifndef UNITYSHELL_H
 #define UNITYSHELL_H
 
+#include <NuxCore/AnimationController.h>
+#include <Nux/GesturesSubscription.h>
 #include <Nux/WindowThread.h>
 #include <NuxCore/Property.h>
 #include <sigc++/sigc++.h>
-#include <boost/shared_ptr.hpp>
 
+#include <scale/scale.h>
 #include <core/core.h>
 #include <core/pluginclasshandler.h>
 #include <composite/composite.h>
@@ -36,25 +38,22 @@
 
 #include "Introspectable.h"
 #include "DashController.h"
-#include "DashSettings.h"
+#include "UnitySettings.h"
 #include "DashStyle.h"
 #include "FavoriteStoreGSettings.h"
 #include "FontSettings.h"
 #include "ShortcutController.h"
-#include "ShortcutHint.h"
 #include "LauncherController.h"
 #include "PanelController.h"
 #include "PanelStyle.h"
 #include "UScreen.h"
-#include "GestureEngine.h"
 #include "DebugDBusInterface.h"
+#include "ScreenIntrospection.h"
 #include "SwitcherController.h"
 #include "UBusWrapper.h"
 #include "UnityshellPrivate.h"
 #include "UnityShowdesktopHandler.h"
-#ifndef USE_GLES
-#include "ScreenEffectFramebufferObject.h"
-#endif
+#include "ThumbnailGenerator.h"
 
 #include "compizminimizedwindowhandler.h"
 #include "BGHash.h"
@@ -62,13 +61,17 @@
 #include <dlfcn.h>
 
 #include "HudController.h"
+#include "WindowMinimizeSpeedController.h"
+
+#include "unityshell_glow.h"
 
 namespace unity
 {
+class UnityWindow;
 
 /* base screen class */
 class UnityScreen :
-  public unity::debug::Introspectable,
+  public debug::Introspectable,
   public sigc::trackable,
   public ScreenInterface,
   public CompositeScreenInterface,
@@ -92,12 +95,8 @@ public:
   void nuxEpilogue();
 
   /* nux draw wrapper */
-#ifdef USE_GLES
   void paintDisplay();
-#else
-  void paintDisplay(const CompRegion& region, const GLMatrix& transform, unsigned int mask);
-#endif
-  void paintPanelShadow(const GLMatrix& matrix);
+  void paintPanelShadow(const CompRegion& clip);
   void setPanelShadowMatrix(const GLMatrix& matrix);
 
   void preparePaint (int ms);
@@ -111,6 +110,7 @@ public:
                      const char         *eventName,
                      CompOption::Vector &o);
 
+  void damageRegion(const CompRegion &region);
 
   /* paint on top of all windows if we could not find a window
    * to paint underneath */
@@ -119,11 +119,6 @@ public:
                      const CompRegion&,
                      CompOutput*,
                      unsigned int);
-#ifdef USE_GLES
-  void glPaintCompositedOutput (const CompRegion    &region,
-                                ::GLFramebufferObject *fbo,
-                                unsigned int         mask);
-#endif
 
   /* paint in the special case that the output is transformed */
   void glPaintTransformedOutput(const GLScreenPaintAttrib&,
@@ -131,9 +126,6 @@ public:
                                 const CompRegion&,
                                 CompOutput*,
                                 unsigned int);
-
-  /* Pop our InputOutput windows from the paint list */
-  const CompWindowList& getWindowPaintList();
 
   /* handle X11 events */
   void handleEvent(XEvent*);
@@ -190,6 +182,15 @@ public:
 
   bool forcePaintOnTop ();
 
+  void SetUpAndShowSwitcher(switcher::ShowMode show_mode = switcher::ShowMode::CURRENT_VIEWPORT);
+
+  void OnMinimizeDurationChanged();
+
+  switcher::Controller::Ptr switcher_controller();
+  launcher::Controller::Ptr launcher_controller();
+
+  bool DoesPointIntersectUnityGeos(nux::Point const& pt);
+
 protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
@@ -209,19 +210,19 @@ private:
   void CreateSuperNewAction(char shortcut, impl::ActionModifiers flag);
   void EnableCancelAction(CancelActionTarget target, bool enabled, int modifiers = 0);
 
-  static gboolean initPluginActions(gpointer data);
+  bool initPluginActions();
   void initLauncher();
-  void damageNuxRegions();
+
+  void compizDamageNux(CompRegion const& region);
+  void nuxDamageCompiz();
+
   void onRedrawRequested();
   void Relayout();
 
-  static gboolean RelayoutTimeout(gpointer data);
   static void initUnity(nux::NThread* thread, void* InitData);
   static void OnStartKeyNav(GVariant* data, void* value);
   static void OnExitKeyNav(GVariant* data, void* value);
-  static gboolean OnRedrawTimeout(gpointer data);
 
-  void startLauncherKeyNav();
   void restartLauncherKeyNav();
 
   void OnDashRealized ();
@@ -229,40 +230,61 @@ private:
   void OnLauncherStartKeyNav(GVariant* data);
   void OnLauncherEndKeyNav(GVariant* data);
 
-  void InitHints();
+  void OnSwitcherStart(GVariant* data);
+  void OnSwitcherEnd(GVariant* data);
+
+  void OnInitiateSpread();
+  void OnTerminateSpread();
+
+  void RestoreWindow(GVariant* data);
+  bool SaveInputThenFocus(const guint xid);
 
   void OnPanelStyleChanged();
 
-  dash::Settings dash_settings_;
+  void InitGesturesSupport();
+
+  void DrawTopPanelBackground();
+  bool TopPanelBackgroundTextureNeedsUpdate() const;
+  void UpdateTopPanelBackgroundTexture();
+
+  std::unique_ptr<na::TickSource> tick_source_;
+  std::unique_ptr<na::AnimationController> animation_controller_;
+
+  Settings dash_settings_;
   dash::Style    dash_style_;
   panel::Style   panel_style_;
   FontSettings   font_settings_;
-  GeisAdapter    geis_adapter_;
   internal::FavoriteStoreGSettings favorite_store_;
+  ThumbnailGenerator thumbnail_generator_;
 
+  /* The window thread should be the last thing removed, as c++ does it in reverse order */
+  std::unique_ptr<nux::WindowThread> wt;
+
+  /* These must stay below the window thread, please keep the order */
   launcher::Controller::Ptr launcher_controller_;
   dash::Controller::Ptr     dash_controller_;
   panel::Controller::Ptr    panel_controller_;
+  debug::Introspectable     *introspectable_switcher_controller_;
   switcher::Controller::Ptr switcher_controller_;
   hud::Controller::Ptr      hud_controller_;
-
   shortcut::Controller::Ptr shortcut_controller_;
-  std::list<shortcut::AbstractHint::Ptr> hints_;
-  bool enable_shortcut_overlay_;
+  debug::DebugDBusInterface debugger_;
 
-  std::unique_ptr<GestureEngine>        gesture_engine_;
-  nux::WindowThread*                    wt;
-  nux::BaseWindow*                      panelWindow;
-  nux::Geometry                         lastTooltipArea;
-  unity::debug::DebugDBusInterface*     debugger;
+  /* Subscription for gestures that manipulate Unity launcher */
+  std::unique_ptr<nux::GesturesSubscription> gestures_sub_launcher_;
+
+  /* Subscription for gestures that manipulate Unity dash */
+  std::unique_ptr<nux::GesturesSubscription> gestures_sub_dash_;
+
+  /* Subscription for gestures that manipulate windows. */
+  std::unique_ptr<nux::GesturesSubscription> gestures_sub_windows_;
+
   bool                                  needsRelayout;
   bool                                  _in_paint;
-  guint32                               relayoutSourceId;
-  guint32                               _redraw_handle;
+  bool                                  super_keypressed_;
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;
-  bool            super_keypressed_;
   std::map<CancelActionTarget, CompActionPtr> _escape_actions;
 
   /* keyboard-nav mode */
@@ -273,27 +295,25 @@ private:
 
   /* handle paint order */
   bool    doShellRepaint;
+  bool    didShellRepaint;
   bool    allowWindowPaint;
-  bool    damaged;
   bool    _key_nav_mode_requested;
   CompOutput* _last_output;
-  CompWindowList _withRemovedNuxWindows;
+
+  CompRegion panelShadowPainted;
+  CompRegion nuxRegion;
+  CompRegion fullscreenRegion;
+  CompWindow* firstWindowAboveShell;
 
   nux::Property<nux::Geometry> primary_monitor_;
 
-  unity::BGHash _bghash;
+  std::unique_ptr<BGHash> _bghash;
 
-#ifdef USE_GLES
   ::GLFramebufferObject *oldFbo;
-#else
-  ScreenEffectFramebufferObject::Ptr _fbo;
-  GLuint                             _active_fbo;
-#endif
 
   bool   queryForShader ();
 
-  UBusManager ubus_manager_;
-  int dash_monitor_;
+  int overlay_monitor_;
   CompScreen::GrabHandle grab_index_;
   CompWindowList         fullscreen_windows_;
   bool                   painting_tray_;
@@ -307,10 +327,17 @@ private:
   bool panel_texture_has_changed_;
   bool paint_panel_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> panel_texture_;
+  std::set<UnityWindow*> fake_decorated_windows_;
 
-#ifndef USE_GLES
-  ScreenEffectFramebufferObject::GLXGetProcAddressProc glXGetProcAddressP;
-#endif
+  bool scale_just_activated_;
+  WindowMinimizeSpeedController minimize_speed_controller_;
+
+  long long big_tick_;
+
+  debug::ScreenIntrospection screen_introspection_;
+
+  UBusManager ubus_manager_;
+  glib::SourceManager sources_;
 
   friend class UnityWindow;
 };
@@ -319,8 +346,12 @@ class UnityWindow :
   public WindowInterface,
   public GLWindowInterface,
   public ShowdesktopHandlerWindowInterface,
+  public compiz::WindowInputRemoverLockAcquireInterface,
+  public WrapableHandler<ScaleWindowInterface, 4>,
   public BaseSwitchWindow,
-  public PluginClassHandler <UnityWindow, CompWindow>
+  public PluginClassHandler <UnityWindow, CompWindow>,
+  public debug::Introspectable,
+  public sigc::trackable
 {
 public:
   UnityWindow(CompWindow*);
@@ -331,38 +362,22 @@ public:
 
   nux::Geometry last_bound;
 
-  void minimize ();
-  void unminimize ();
-  bool minimized ();
-  bool focus ();
-  void activate ();
+  void minimize();
+  void unminimize();
+  bool minimized() const;
+  bool focus();
+  void activate();
 
-  void updateFrameRegion (CompRegion &region);
+  void updateFrameRegion(CompRegion &region);
 
   /* occlusion detection
    * and window hiding */
-  bool glPaint(const GLWindowPaintAttrib& attrib,
-               const GLMatrix&            matrix,
-               const CompRegion&          region,
-               unsigned int              mask);
+  bool glPaint(GLWindowPaintAttrib const&, GLMatrix const&, CompRegion const&, unsigned mask);
 
   /* basic window draw function */
-  bool glDraw(const GLMatrix& matrix,
-#ifndef USE_GLES
-              GLFragment::Attrib& attrib,
-#else
-              const GLWindowPaintAttrib& attrib,
-#endif
-              const CompRegion& region,
-              unsigned intmask);
+  bool glDraw(GLMatrix const&, GLWindowPaintAttrib const&, CompRegion const&, unsigned mask);
 
-  void updateIconPos (int   &wx,
-                      int   &wy,
-                      int   x,
-                      int   y,
-                      float width,
-                      float height);
-
+  void updateIconPos (int &wx, int &wy, int x, int y, float width, float height);
   void windowNotify(CompWindowNotify n);
   void moveNotify(int x, int y, bool immediate);
   void resizeNotify(int x, int y, int w, int h);
@@ -370,25 +385,31 @@ public:
 
   bool place(CompPoint& pos);
   CompPoint tryNotIntersectUI(CompPoint& pos);
+  nux::Geometry GetScaledGeometry();
 
-  void paintThumbnail (nux::Geometry const& bounding, float alpha);
+  void paintThumbnail(nux::Geometry const& bounding, float alpha, float scale_ratio, unsigned deco_height, bool selected);
 
-  void enterShowDesktop ();
-  void leaveShowDesktop ();
-  bool HandleAnimations (unsigned int ms);
+  void enterShowDesktop();
+  void leaveShowDesktop();
+  bool HandleAnimations(unsigned int ms);
 
-  void handleEvent (XEvent *event);
+  bool handleEvent(XEvent *event);
+  void scalePaintDecoration(GLWindowPaintAttrib const&, GLMatrix const&, CompRegion const&, unsigned mask);
 
-  typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
-          UnityMinimizedHandler;
-  std::unique_ptr <UnityMinimizedHandler> mMinimizeHandler;
+  //! Emited when CompWindowNotifyBeforeDestroy is received
+  sigc::signal<void> being_destroyed;
 
-  ShowdesktopHandler             *mShowdesktopHandler;
+
+protected:
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
 private:
-
-  guint  focusdesktop_handle_;
-  static gboolean FocusDesktopTimeout(gpointer data);
+  typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>
+          UnityMinimizedHandler;
+  struct PixmapTexture;
+  typedef std::shared_ptr<PixmapTexture> PixmapTexturePtr;
+  struct CairoContext;
 
   void DoEnableFocus ();
   void DoDisableFocus ();
@@ -409,6 +430,9 @@ private:
   void DoShow ();
   void DoNotifyShown ();
 
+  void OnInitiateSpread();
+  void OnTerminateSpread();
+
   void DoAddDamage ();
   ShowdesktopHandlerWindowInterface::PostPaintAction DoHandleAnimations (unsigned int ms);
 
@@ -418,7 +442,44 @@ private:
 
   unsigned int GetNoCoreInstanceMask ();
 
-  compiz::WindowInputRemoverInterface::Ptr GetInputRemover ();
+  compiz::WindowInputRemoverLock::Ptr GetInputRemover ();
+
+  void RenderDecoration(CairoContext const&, double aspect = 1.0f);
+  void RenderText(CairoContext const&, int x, int y, int width, int height);
+  void DrawTexture(GLTexture::List const& textures, GLWindowPaintAttrib const&,
+                   GLMatrix const&, unsigned mask, int x, int y, double aspect = 1.0f);
+
+  void paintFakeDecoration(nux::Geometry const& geo, GLWindowPaintAttrib const& attrib, GLMatrix const& transform, unsigned int mask, bool highlighted, double scale);
+  void paintInnerGlow(nux::Geometry glow_geo, GLMatrix const&, GLWindowPaintAttrib const&, unsigned mask);
+  glow::Quads computeGlowQuads(nux::Geometry const& geo, GLTexture::List const& texture, int glow_size);
+  void paintGlow(GLMatrix const&, GLWindowPaintAttrib const&, glow::Quads const&,
+                 GLTexture::List const&, nux::Color const&, unsigned mask);
+
+  void BuildDecorationTexture();
+  void CleanupCachedTextures();
+  static void SetupSharedTextures();
+  static void CleanupSharedTextures();
+  static void LoadCloseIcon(panel::WindowState state, GLTexture::List& texture);
+
+public:
+  std::unique_ptr <UnityMinimizedHandler> mMinimizeHandler;
+
+private:
+  std::unique_ptr <ShowdesktopHandler> mShowdesktopHandler;
+  static GLTexture::List close_normal_tex_;
+  static GLTexture::List close_prelight_tex_;
+  static GLTexture::List close_pressed_tex_;
+  static GLTexture::List glow_texture_;
+  PixmapTexturePtr decoration_tex_;
+  PixmapTexturePtr decoration_selected_tex_;
+  std::string decoration_title_;
+  compiz::WindowInputRemoverLock::Weak input_remover_;
+  panel::WindowState close_icon_state_;
+  nux::Geometry close_button_geo_;
+  bool middle_clicked_;
+  glib::Source::UniquePtr focus_desktop_timeout_;
+
+  friend class UnityScreen;
 };
 
 

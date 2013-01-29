@@ -30,6 +30,8 @@
 #include "nux-base-window-accessible.h"
 #include "unitya11y.h"
 
+#include <UnityCore/Variant.h>
+
 #include "UBusWrapper.h"
 #include "UBusMessages.h"
 
@@ -259,7 +261,7 @@ add_window(UnityRootAccessible* self,
     unity_a11y_get_accessible(window);
 
   /* FIXME: temporal */
-  atk_object_set_name (window_accessible, window->GetWindowName().GetTCharPtr());
+  atk_object_set_name (window_accessible, window->GetWindowName().c_str());
 
   if (g_slist_find(self->priv->window_list, window_accessible))
     return;
@@ -338,7 +340,7 @@ search_for_launcher_window(UnityRootAccessible* self)
     nux_object = nux_object_accessible_get_object(accessible);
     bwindow = dynamic_cast<nux::BaseWindow*>(nux_object);
 
-    if ((bwindow!= NULL) && (g_strcmp0(bwindow->GetWindowName().GetTCharPtr(), "LauncherWindow") == 0))
+    if ((bwindow!= NULL) && (g_strcmp0(bwindow->GetWindowName().c_str(), "LauncherWindow") == 0))
     {
       found = TRUE;
       break;
@@ -352,7 +354,7 @@ search_for_launcher_window(UnityRootAccessible* self)
 }
 
 static void
-ubus_launcher_register_interest_cb(GVariant* variant,
+ubus_launcher_register_interest_cb(unity::glib::Variant const& variant,
                                    UnityRootAccessible* self)
 {
   //launcher window is the same during all the life of Unity
@@ -395,7 +397,7 @@ register_interesting_messages(UnityRootAccessible* self)
                                 sigc::bind(sigc::ptr_fun(ubus_launcher_register_interest_cb),
                                 self));
 
-  ubus_manager.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWTICHER,
+  ubus_manager.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWITCHER,
                                 sigc::bind(sigc::ptr_fun(ubus_launcher_register_interest_cb),
                                 self));
 

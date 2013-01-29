@@ -33,10 +33,10 @@ namespace unity
 {
 namespace hud
 {
+DECLARE_LOGGER(logger, "unity.hud.impl");
 
 namespace
 {
-nux::logging::Logger logger("unity.hud.hud");
 const int request_number_of_results = 6;
 }
 
@@ -249,8 +249,8 @@ void Hud::ExecuteQueryBySearch(std::string execute_string, unsigned int timestam
 
 void Hud::CloseQuery()
 {
-  //Send close hint to the hud
-  pimpl_->CloseQuery();
+  if (pimpl_->query_key_)
+    pimpl_->CloseQuery();
 }
 
 }

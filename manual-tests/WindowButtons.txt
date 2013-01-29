@@ -1,6 +1,6 @@
 Window Close Button should be Disabled if not available
 -------------------------------------------------------
-
+Setup:
 Actions:  
  * Start the Update Manager
  * Press on the "Check" button

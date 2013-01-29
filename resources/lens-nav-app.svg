@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="24"
+   height="24"
+   id="svg3416"
+   version="1.1"
+   inkscape:version="0.48.3.1 r9886"
+   sodipodi:docname="lens-nav-apps.svg">
+  <defs
+     id="defs3418" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="30.357661"
+     inkscape:cx="16.840889"
+     inkscape:cy="13.242127"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1-7"
+     showgrid="true"
+     inkscape:window-width="1920"
+     inkscape:window-height="1029"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid2986"
+       empspacing="8"
+       visible="true"
+       enabled="true"
+       snapvisiblegridlinesonly="true" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata3421">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-1028.3622)">
+    <g
+       style="display:inline"
+       transform="matrix(1.2495717,0,0,1.2495717,0.01542069,-262.63982)"
+       id="layer1-7"
+       inkscape:label="Layer 1"
+       inkscape:export-filename="PNG/app_lense_icon@18.png"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90">
+      <path
+         style="font-size:15px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Ubuntu;-inkscape-font-specification:Sans Bold"
+         d="M 10.28125 4 C 9.7425234 5.1082451 9.2266818 6.2365259 8.71875 7.40625 C 8.2262008 8.5607293 7.7108254 9.8009431 7.1875 11.09375 C 7.0758879 11.377852 6.9568481 11.707718 6.84375 12 L 10.25 12 C 10.286928 11.898572 10.338458 11.787394 10.375 11.6875 C 10.621266 11.056466 10.831148 10.492071 11.03125 9.96875 C 11.231339 9.4454294 11.408572 8.9627378 11.5625 8.5625 C 11.716412 8.1622622 11.82929 7.8559209 11.90625 7.625 C 11.998594 7.8559209 12.127322 8.1622622 12.28125 8.5625 C 12.435162 8.9627378 12.612396 9.4454294 12.8125 9.96875 C 13.027979 10.492071 13.26911 11.056466 13.5 11.6875 C 13.53654 11.787394 13.588074 11.898572 13.625 12 L 17.125 12 C 17.009561 11.708482 16.895948 11.37713 16.78125 11.09375 C 16.273302 9.8009431 15.789173 8.5607293 15.28125 7.40625 C 14.773303 6.2365259 14.242067 5.1082451 13.71875 4 L 10.28125 4 z M 5 17 C 4.6470541 17.980077 4.2835139 18.916573 3.90625 20 L 7.65625 20 C 7.825559 19.445815 7.9874007 18.866175 8.1875 18.28125 C 8.3457001 17.85182 8.5063412 17.42938 8.65625 17 L 5 17 z M 15.21875 17 C 15.365342 17.428483 15.509646 17.852718 15.65625 18.28125 C 15.871725 18.866175 16.080676 19.445815 16.25 20 L 20.09375 20 C 19.716476 18.916573 19.352943 17.980077 19 17 L 15.21875 17 z "
+         transform="matrix(0.80027421,0,0,0.80027421,-0.01234078,1033.1556)"
+         id="path2993" />
+      <path
+         style="color:#000000;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
+         d="M 4.5 13 C 3.669 13 3 13.669 3 14.5 C 3 15.331 3.669 16 4.5 16 L 19.5 16 C 20.331 16 21 15.331 21 14.5 C 21 13.669 20.331 13 19.5 13 L 4.5 13 z M 4.5 14 L 13.5 14 C 13.777 14 14 14.223 14 14.5 C 14 14.777 13.777 15 13.5 15 L 4.5 15 C 4.2229999 15 4 14.777 4 14.5 C 4 14.223 4.2229999 14 4.5 14 z "
+         transform="matrix(0.80027421,0,0,0.80027421,-0.01234078,1033.1556)"
+         id="rect2995" />
+    </g>
+  </g>
+</svg>

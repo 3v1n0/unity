@@ -30,6 +30,7 @@ static AtkStateSet *panel_indicator_entry_accessible_ref_state_set  (AtkObject *
 struct _PanelIndicatorEntryAccessiblePrivate
 {
   IndicatorObjectEntry *entry;
+  GtkMenu *             menu;
   PanelService         *service;
   gint                  x;
   gint                  y;
@@ -111,6 +112,25 @@ on_geometries_changed_cb (PanelService *service,
 }
 
 static void
+panel_indicator_entry_accessible_dispose (GObject *object)
+{
+  PanelIndicatorEntryAccessible *piea;
+
+  g_return_if_fail (PANEL_IS_INDICATOR_ENTRY_ACCESSIBLE (object));
+
+  piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (object);
+
+  if (piea->priv != NULL)
+    {
+      piea->priv->entry = NULL;
+      g_clear_object(&piea->priv->menu);
+    }
+
+  G_OBJECT_CLASS (panel_indicator_entry_accessible_parent_class)->dispose (object);
+  return;
+}
+
+static void
 panel_indicator_entry_accessible_finalize (GObject *object)
 {
   PanelIndicatorEntryAccessible *piea;
@@ -136,6 +156,7 @@ panel_indicator_entry_accessible_class_init (PanelIndicatorEntryAccessibleClass 
 
   /* GObject */
   object_class = G_OBJECT_CLASS (klass);
+  object_class->dispose = panel_indicator_entry_accessible_dispose;
   object_class->finalize = panel_indicator_entry_accessible_finalize;
 
   /* AtkObject */
@@ -225,6 +246,10 @@ panel_indicator_entry_accessible_initialize (AtkObject *accessible, gpointer dat
 
   piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible);
   piea->priv->entry = (IndicatorObjectEntry *) data;
+  if (piea->priv->entry->menu != NULL)
+    {
+      piea->priv->menu = g_object_ref(piea->priv->entry->menu);
+    }
 
   if (GTK_IS_LABEL (piea->priv->entry->label))
     {
@@ -253,7 +278,7 @@ panel_indicator_entry_accessible_get_n_children (AtkObject *accessible)
 
   piea = PANEL_INDICATOR_ENTRY_ACCESSIBLE (accessible);
 
-  if (piea->priv->entry->parent_object && GTK_IS_MENU (piea->priv->entry->menu))
+  if (piea->priv->entry != NULL && piea->priv->entry->parent_object && piea->priv->menu != NULL && GTK_IS_MENU (piea->priv->menu))
     n_children = 1;
 
   return n_children;

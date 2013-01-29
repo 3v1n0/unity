@@ -26,6 +26,7 @@
 #include <sigc++/trackable.h>
 
 #include "Variant.h"
+#include "GLibDBusProxy.h"
 #include "Categories.h"
 #include "Filters.h"
 #include "Preview.h"
@@ -56,6 +57,7 @@ class Lens : public sigc::trackable, boost::noncopyable
 public:
   typedef std::shared_ptr<Lens> Ptr;
   typedef std::map<std::string, unity::glib::Variant> Hints;
+  typedef std::function<void(Hints const&, glib::Error const&)> SearchFinishedCallback;
 
   Lens(std::string const& id,
        std::string const& dbus_name,
@@ -80,10 +82,24 @@ public:
 
   virtual ~Lens();
 
-  virtual void GlobalSearch(std::string const& search_string);
-  virtual void Search(std::string const& search_string);
+  virtual void GlobalSearch(std::string const& search_string, SearchFinishedCallback const& cb = nullptr);
+  virtual void Search(std::string const& search_string, SearchFinishedCallback const& cb = nullptr);
   virtual void Activate(std::string const& uri);
   virtual void Preview(std::string const& uri);
+  virtual void ActivatePreviewAction(std::string const& action_id,
+                                     std::string const& uri,
+                                     Hints const& hints);
+  virtual void SignalPreview(std::string const& uri,
+      glib::Variant const& preview_update,
+      glib::DBusProxy::ReplyCallback reply_cb = nullptr);
+
+  /**
+   * Note that this model is only valid for as long as the results model
+   * doesn't change.
+   * (you should call this again after models_changed is emitted)
+   */
+  virtual glib::Object<DeeModel> GetFilterModelForCategory(unsigned category);
+  virtual std::vector<unsigned> GetCategoriesOrder();
 
   nux::RWProperty<std::string> id;
   nux::RWProperty<std::string> dbus_name;
@@ -100,13 +116,18 @@ public:
   nux::RWProperty<Categories::Ptr> categories;
   nux::RWProperty<Filters::Ptr> filters;
   nux::RWProperty<bool> connected;
+  nux::RWProperty<bool> provides_personal_content;
+  nux::ROProperty<std::string> last_search_string;
+  nux::ROProperty<std::string> last_global_search_string;
 
   nux::Property<ViewType> view_type;
 
-  sigc::signal<void, Hints const&> search_finished;
-  sigc::signal<void, Hints const&> global_search_finished;
+  sigc::signal<void> categories_reordered;
+  /* Emitted when any of the models' swarm name changes, but collates the name
+   * changes into a single signal emission (when all are changed) */
+  sigc::signal<void> models_changed;
   sigc::signal<void, std::string const&, HandledType, Hints const&> activated;
-  sigc::signal<void, std::string const&, Preview::Ptr> preview_ready;
+  sigc::signal<void, std::string const&, Preview::Ptr const&> preview_ready;
 
 private:
   class Impl;

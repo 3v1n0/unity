@@ -38,7 +38,7 @@ class X11TransientForReader
 public:
 
   X11TransientForReader (Display *dpy, Window xid);
-  ~X11TransientForReader ();
+  virtual ~X11TransientForReader ();
 
   bool isTransientFor (unsigned int ancestor);
   bool isGroupTransientFor (unsigned int clientLeader);

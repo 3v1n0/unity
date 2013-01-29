@@ -27,14 +27,12 @@ namespace unity
 namespace dash
 {
 
-namespace
-{
-nux::logging::Logger _model_inl_logger("unity.dash.model");
-}
-
 template<class RowAdaptor>
 Model<RowAdaptor>::Model()
   : model_type_(ModelType::REMOTE)
+  , cached_adaptor1_(nullptr, nullptr, nullptr)
+  , cached_adaptor2_(nullptr, nullptr, nullptr)
+  , cached_adaptor3_(nullptr, nullptr, nullptr)
 {
   Init();
 }
@@ -42,6 +40,9 @@ Model<RowAdaptor>::Model()
 template<class RowAdaptor>
 Model<RowAdaptor>::Model (ModelType model_type)
   : model_type_(model_type)
+  , cached_adaptor1_(nullptr, nullptr, nullptr)
+  , cached_adaptor2_(nullptr, nullptr, nullptr)
+  , cached_adaptor3_(nullptr, nullptr, nullptr)
 {
   Init();
 
@@ -61,14 +62,19 @@ void Model<RowAdaptor>::Init ()
 template<class RowAdaptor>
 void Model<RowAdaptor>::OnSwarmNameChanged(std::string const& swarm_name)
 {
+  static nux::logging::Logger local_logger("unity.dash.model");
+
   typedef glib::Signal<void, DeeModel*, DeeModelIter*> RowSignalType;
   typedef glib::Signal<void, DeeModel*, guint64, guint64> TransactionSignalType;
 
-  LOG_DEBUG(_model_inl_logger) << "New swarm name: " << swarm_name;
+  LOG_DEBUG(local_logger) << "New swarm name: " << swarm_name;
 
   // Let the views clean up properly
   if (model_)
+  {
     dee_model_clear(model_);
+    sig_manager_.Disconnect(model_);
+  }
 
   switch(model_type_)
   {
@@ -86,7 +92,7 @@ void Model<RowAdaptor>::OnSwarmNameChanged(std::string const& swarm_name)
                                                  sigc::mem_fun(this, &Model<RowAdaptor>::OnTransactionEnd)));
       break;
     default:
-      LOG_ERROR(_model_inl_logger) <<  "Unexpected ModelType " << model_type_;
+      LOG_ERROR(local_logger) <<  "Unexpected ModelType " << model_type_;
       break;
   }
 
@@ -115,22 +121,31 @@ Model<RowAdaptor>::~Model()
 template<class RowAdaptor>
 void Model<RowAdaptor>::OnRowAdded(DeeModel* model, DeeModelIter* iter)
 {
-  RowAdaptor it(model, iter, renderer_tag_);
-  row_added.emit(it);
+  // careful here - adding rows to the model inside the callback
+  // will invalidate the cached_adaptor!
+  // This needs to be used as a listener only!
+  cached_adaptor1_.SetTarget(model, iter, renderer_tag_);
+  row_added.emit(cached_adaptor1_);
 }
 
 template<class RowAdaptor>
 void Model<RowAdaptor>::OnRowChanged(DeeModel* model, DeeModelIter* iter)
 {
-  RowAdaptor it(model, iter, renderer_tag_);
-  row_changed.emit(it);
+  // careful here - changing rows inside the callback will invalidate
+  // the cached_adaptor!
+  // This needs to be used as a listener only!
+  cached_adaptor2_.SetTarget(model, iter, renderer_tag_);
+  row_changed.emit(cached_adaptor2_);
 }
 
 template<class RowAdaptor>
 void Model<RowAdaptor>::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
 {
-  RowAdaptor it(model, iter, renderer_tag_);
-  row_removed.emit(it);
+  // careful here - removing rows from the model inside the callback
+  // will invalidate the cached_adaptor!
+  // This needs to be used as a listener only!
+  cached_adaptor3_.SetTarget(model, iter, renderer_tag_);
+  row_removed.emit(cached_adaptor3_);
 }
 
 template<class RowAdaptor>
@@ -160,6 +175,12 @@ const RowAdaptor Model<RowAdaptor>::RowAtIndex(std::size_t index)
                 dee_model_get_iter_at_row(model_, index),
                 renderer_tag_);
   return it;
+}
+
+template<class RowAdaptor>
+DeeModelTag* Model<RowAdaptor>::GetTag()
+{
+  return renderer_tag_;
 }
 
 template<class RowAdaptor>

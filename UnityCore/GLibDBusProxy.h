@@ -26,6 +26,8 @@
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
 
+#include "GLibWrapper.h"
+
 namespace unity
 {
 namespace glib
@@ -37,7 +39,8 @@ class DBusProxy : public sigc::trackable, boost::noncopyable
 {
 public:
   typedef std::shared_ptr<DBusProxy> Ptr;
-  typedef sigc::slot<void, GVariant*> ReplyCallback;
+  typedef std::function<void(GVariant*)> ReplyCallback;
+  typedef std::function<void(GVariant*, Error const&)> CallFinishedCallback;
 
   DBusProxy(std::string const& name,
             std::string const& object_path,
@@ -47,19 +50,23 @@ public:
   ~DBusProxy();
 
   void Call(std::string const& method_name,
-            GVariant* parameters = NULL,
-            ReplyCallback callback = sigc::ptr_fun(&NoReplyCallback),
-            GCancellable *cancellable = NULL,
+            GVariant* parameters = nullptr,
+            ReplyCallback const& callback = nullptr,
+            GCancellable *cancellable = nullptr,
             GDBusCallFlags flags = G_DBUS_CALL_FLAGS_NONE,
             int timeout_msec = -1);
+  void CallBegin(std::string const& method_name,
+                 GVariant* parameters,
+                 CallFinishedCallback const& callback,
+                 GCancellable *cancellable = nullptr,
+                 GDBusCallFlags flags = G_DBUS_CALL_FLAGS_NONE,
+                 int timeout_msec = -1);
 
   void Connect(std::string const& signal_name, ReplyCallback callback);
   bool IsConnected();
 
   sigc::signal<void> connected;
   sigc::signal<void> disconnected;
-
-  static void NoReplyCallback(GVariant* v) {};
 
   // Public due to use in some callbacks
 private:

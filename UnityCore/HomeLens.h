@@ -46,11 +46,21 @@ class HomeLens : public Lens, public Lenses
 public:
   typedef std::shared_ptr<HomeLens> Ptr;
 
+  /* Specifies mode for category merging */
+  enum MergeMode
+  {
+    DISPLAY_NAME,
+    OWNER_LENS
+  };
+
   /**
    * Should be constructed with i18n arguments:
    *                         _("Home"), _("Home screen"), _("Search")
    */
-  HomeLens(std::string const& name, std::string const& description, std::string const& search_hint);
+  HomeLens(std::string const& name,
+           std::string const& description,
+           std::string const& search_hint,
+           MergeMode merge_mode = MergeMode::OWNER_LENS);
   virtual ~HomeLens();
 
   void AddLenses(Lenses& lenses);
@@ -59,10 +69,16 @@ public:
   Lens::Ptr GetLens(std::string const& lens_id) const;
   Lens::Ptr GetLensAtIndex(std::size_t index) const;
 
-  void GlobalSearch(std::string const& search_string);
-  void Search(std::string const& search_string);
+  void GlobalSearch(std::string const& search_string, SearchFinishedCallback const& cb);
+  void Search(std::string const& search_string, SearchFinishedCallback const& cb);
   void Activate(std::string const& uri);
   void Preview(std::string const& uri);
+
+  std::vector<unsigned> GetCategoriesOrder();
+  glib::Object<DeeModel> GetFilterModelForCategory(unsigned category);
+
+  // emitted when global search for one lens finishes
+  sigc::signal<void, Lens::Ptr const&> lens_search_finished;
 
 private:
   class Impl;

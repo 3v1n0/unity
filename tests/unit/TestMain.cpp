@@ -26,8 +26,6 @@
 #include "Nux/WindowThread.h"
 
 void TestPanelServiceCreateSuite();
-void TestUBusCreateSuite();
-void TestQuicklistMenuitemsCreateSuite();
 void TestStaticCairoTextCreateSuite();
 
 nux::WindowThread*
@@ -62,8 +60,6 @@ int
 main(int argc, char** argv)
 {
   g_setenv("GSETTINGS_SCHEMA_DIR", BUILDDIR"/settings/", TRUE);
-
-  g_type_init();
   
   gtk_init(&argc, &argv);
 
@@ -71,9 +67,7 @@ main(int argc, char** argv)
 
   //Keep alphabetical please
   TestPanelServiceCreateSuite();
-  TestQuicklistMenuitemsCreateSuite();
   TestStaticCairoTextCreateSuite();
-  TestUBusCreateSuite();
 
   nux::WindowThread* thread = createThread();
 
