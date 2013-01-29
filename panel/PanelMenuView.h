@@ -28,7 +28,7 @@
 
 #include "PanelIndicatorsView.h"
 #include "unity-shared/StaticCairoText.h"
-#include "WindowButtons.h"
+#include "unity-shared/WindowButtons.h"
 #include "PanelTitlebarGrabAreaView.h"
 #include "unity-shared/UBusWrapper.h"
 
