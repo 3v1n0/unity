@@ -31,6 +31,7 @@ set (PREVIEWS_SOURCES
      SocialPreview.cpp
      SocialPreviewContent.cpp
      SocialPreviewComments.cpp
+     TabIterator.cpp
      Track.cpp
      Tracks.cpp
      )
