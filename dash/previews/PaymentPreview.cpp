@@ -336,8 +336,6 @@ void PaymentPreview::SetupBackground()
 
 void PaymentPreview::SetupViews()
 {
- // previews::Style& style = dash::previews::Style::Instance();
-
   full_data_layout_ = new nux::LayeredLayout();
 
   // layout to be used to show the info

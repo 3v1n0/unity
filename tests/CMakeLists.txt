@@ -221,6 +221,7 @@ if (ENABLE_X_SUPPORT)
                  test_previews_generic.cpp
                  test_previews_movie.cpp
                  test_previews_music.cpp
+                 test_previews_music_payment.cpp
                  test_previews_payment.cpp
                  test_previews_social.cpp
                  test_overlay_scrollbar.cpp

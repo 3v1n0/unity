@@ -67,8 +67,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(MusicPaymentPreview)
 MusicPaymentPreview::MusicPaymentPreview(dash::Preview::Ptr preview_model)
 : PaymentPreview(preview_model)
 {
-  PaymentPreview::SetupBackground();
   SetupViews();
+  PaymentPreview::SetupBackground();
 }
 
 MusicPaymentPreview::~MusicPaymentPreview()
@@ -199,7 +199,6 @@ nux::Layout* MusicPaymentPreview::GetPrice()
 nux::Layout* MusicPaymentPreview::GetBody()
 {
   previews::Style& style = dash::previews::Style::Instance();
-
   nux::VLayout *body_layout = new  nux::VLayout();
   body_layout->SetSpaceBetweenChildren(20);
 
@@ -220,6 +219,7 @@ nux::Layout* MusicPaymentPreview::GetBody()
   form_layout_->AddLayout(GetFormLabels(), 1, nux::MINOR_POSITION_END);
   form_layout_->AddLayout(GetFormFields(), 1, nux::MINOR_POSITION_END);
   form_layout_->AddLayout(GetFormActions(), 1, nux::MINOR_POSITION_END);
+
 
   body_layout->AddView(intro_.GetPointer(), 1);
   body_layout->AddLayout(form_layout_.GetPointer(), 1);
@@ -355,37 +355,6 @@ nux::Layout* MusicPaymentPreview::GetFormActions()
   return actions_layout;
 }
 
-nux::Layout* MusicPaymentPreview::GetEmail()
-{
-  nux::HLayout *email_data_layout = new nux::HLayout();
-  return email_data_layout;
-}
-
-nux::Layout* MusicPaymentPreview::GetPayment()
-{
-  nux::HLayout *payment_data_layout = new nux::HLayout();
-  payment_data_layout->SetSpaceBetweenChildren(5);
-
-  payment_data_layout->AddSpace(20, 0);
-
-
-  payment_data_layout->AddSpace(20, 0);
-
-  return payment_data_layout;
-}
-
-nux::Layout* MusicPaymentPreview::GetPassword()
-{
-  nux::HLayout *password_data_layout = new nux::HLayout();
-  password_data_layout->SetSpaceBetweenChildren(5);
-
-  password_data_layout->AddSpace(20, 0);
-
-
-  password_data_layout->AddSpace(20, 0);
-  return password_data_layout;
-}
-
 nux::Layout* MusicPaymentPreview::GetFooter()
 {
   previews::Style& style = dash::previews::Style::Instance();
@@ -413,17 +382,14 @@ nux::Layout* MusicPaymentPreview::GetFooter()
 
 const char* MusicPaymentPreview::GetErrorMessage(GVariant *dict)
 {
-  printf("get data!\n");
   GVariant* data = NULL;
   data = g_variant_lookup_value(dict, "error_message", G_VARIANT_TYPE_ANY);
   if (data == NULL)
   {
-    printf("Return null\n");
     return NULL;
   }
   gsize length;
   std::string data_s = std::string(g_variant_get_string(data, &length));
-  printf("Error %s\n", data_s.c_str());
   return data_s.c_str();
 }
 

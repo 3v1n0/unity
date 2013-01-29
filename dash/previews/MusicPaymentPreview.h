@@ -72,29 +72,29 @@ public:
 
   // From debug::Introspectable
   std::string GetName() const;
+
+private:
+  void LoadActions();
+
+protected:
   nux::Layout* GetTitle();
   nux::Layout* GetPrice();
   nux::Layout* GetBody();
   nux::Layout* GetFormLabels();
   nux::Layout* GetFormFields();
   nux::Layout* GetFormActions();
-  nux::Layout* GetEmail();
-  nux::Layout* GetPayment();
-  nux::Layout* GetPassword();
   nux::Layout* GetFooter();
+
   const char* GetErrorMessage(GVariant *dict);
 
-private:
-  void LoadActions();
-
-protected:
   void OnActionActivated(ActionButton* button, std::string const& id);
   void OnActionLinkActivated(ActionLink* link, std::string const& id);
+
+  virtual void SetupViews();
 
   void PreLayoutManagement();
 
 protected:
-  virtual void SetupViews();
   // content elements
   nux::ObjectPtr<CoverArt> image_;
   nux::ObjectPtr<StaticCairoText> intro_;
@@ -116,7 +116,6 @@ protected:
 
   dash::PaymentPreview* payment_preview_model_;
   // do we want to type?
-  bool entry_selected_;
   const char* error_message_;
 
   // actions

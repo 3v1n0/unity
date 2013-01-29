@@ -31,26 +31,28 @@ using namespace testing;
 
 #include <unity-protocol.h>
 #include "UnityCore/ApplicationPreview.h"
-#include "dash/previews/ApplicationPreview.h"
-#include "dash/previews/PreviewInfoHintWidget.h"
-#include "dash/previews/PreviewRatingsWidget.h"
-#include "dash/previews/ActionButton.h"
+#include "dash/previews/MusicPaymentPreview.h"
 #include "test_utils.h"
-using namespace unity;
-using namespace unity::dash;
 
-namespace
+namespace unity
 {
 
-class MockMusicPaymentPreview : public previews::MusicPaymentPreview
+namespace dash
+{
+
+namespace previews
+{
+
+class MockedMusicPaymentPreview : public MusicPaymentPreview
 {
 public:
-  typedef nux::ObjectPtr<MockMusicPaymentPreview> Ptr;
+  typedef nux::ObjectPtr<MockedMusicPaymentPreview> Ptr;
 
-  MockMusicPaymentPreview(dash::Preview::Ptr preview_model)
+  MockedMusicPaymentPreview(dash::Preview::Ptr preview_model)
   : MusicPaymentPreview(preview_model)
   {}
 
+  using MusicPaymentPreview::image_;
   using MusicPaymentPreview::intro_;
   using MusicPaymentPreview::title_;
   using MusicPaymentPreview::subtitle_;
@@ -65,90 +67,84 @@ public:
   using MusicPaymentPreview::purchase_type_;
   using MusicPaymentPreview::change_payment_;
   using MusicPaymentPreview::forgotten_password_;
+  using MusicPaymentPreview::error_label_;
+  using MusicPaymentPreview::form_layout_;
+  using MusicPaymentPreview::SetupViews;
 };
 
-class TestPreviewApplication : public Test
+class TestMusicPaymentPreview : public ::testing::Test
 {
-public:
-  TestPreviewApplication()
-  : parent_window_(new nux::BaseWindow("TestPreviewApplication"))
+  protected:
+  TestMusicPaymentPreview() :
+    Test(),
+    parent_window_(new nux::BaseWindow("TestPreviewMusicPayment"))
   {
-    glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(
-      unity_protocol_music_payment_preview_new()));
+    title = "Turning Japanese";
+    subtitle = "The vapors";
+    header = "Hi test, you purchased in the past from Ubuntu One.";
+    email = "test@canonical.com";
+    payment_method = "*** *** ** 12";
+    purchase_prize = "65$";
+    purchase_type = "Mp3";
+    preview_type = UNITY_PROTOCOL_PREVIEW_PAYMENT_TYPE_MUSIC;  
 
-    GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
-    g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£30.99"));
+    glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_payment_preview_new()));
 
-    unity_protocol_application_preview_set_app_icon(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), g_icon_new_for_string("/home/nick/SkypeIcon.png", NULL));
-    unity_protocol_application_preview_set_license(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "License & special char");
-    unity_protocol_application_preview_set_copyright(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "Copywrite & special char");
-    unity_protocol_application_preview_set_last_update(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), "11th Apr 2012");
-    unity_protocol_application_preview_set_rating(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 0.8);
-    unity_protocol_application_preview_set_num_ratings(UNITY_PROTOCOL_APPLICATION_PREVIEW(proto_obj.RawPtr()), 12);
+    unity_protocol_preview_set_title(proto_obj, title.c_str());
+    unity_protocol_preview_set_subtitle(proto_obj, subtitle.c_str());
+    unity_protocol_preview_add_action(proto_obj, "change_payment_method", "Change payment", NULL, 0);
+    unity_protocol_preview_add_action(proto_obj, "forgot_password", "Forgot password", NULL, 0);
+    unity_protocol_preview_add_action(proto_obj, "cancel_purchase", "Cancel", NULL, 0);
+    unity_protocol_preview_add_action(proto_obj, "purchase_album", "Purchase", NULL, 0);
 
-    unity_protocol_preview_set_image_source_uri(proto_obj, "http://ia.media-imdb.com/images/M/MV5BMTM3NDM5MzY5Ml5BMl5BanBnXkFtZTcwNjExMDUwOA@@._V1._SY317_.jpg");
-    unity_protocol_preview_set_title(proto_obj, "Application Title & special char");
-    unity_protocol_preview_set_subtitle(proto_obj, "Application Subtitle > special char");
-    unity_protocol_preview_set_description(proto_obj, "Application Desctiption &lt; special char");
-    unity_protocol_preview_add_action(proto_obj, "action1", "Action 1", NULL, 0);
-    unity_protocol_preview_add_action_with_hints(proto_obj, "action2", "Action 2", NULL, 0, action_hints1);
-    unity_protocol_preview_add_info_hint(proto_obj, "hint1", "Hint 1", NULL, g_variant_new("s", "string hint 1"));
-    unity_protocol_preview_add_info_hint(proto_obj, "hint2", "Hint 2", NULL, g_variant_new("s", "string hint 2"));
-    unity_protocol_preview_add_info_hint(proto_obj, "hint3", "Hint 3", NULL, g_variant_new("i", 12));
+
+    unity_protocol_payment_preview_set_header(UNITY_PROTOCOL_PAYMENT_PREVIEW(proto_obj.RawPtr()), header.c_str());
+    unity_protocol_payment_preview_set_email(UNITY_PROTOCOL_PAYMENT_PREVIEW(proto_obj.RawPtr()), email.c_str());
+    unity_protocol_payment_preview_set_payment_method(UNITY_PROTOCOL_PAYMENT_PREVIEW(proto_obj.RawPtr()), payment_method.c_str());
+    unity_protocol_payment_preview_set_purchase_prize(UNITY_PROTOCOL_PAYMENT_PREVIEW(proto_obj.RawPtr()), purchase_prize.c_str());
+    unity_protocol_payment_preview_set_purchase_type(UNITY_PROTOCOL_PAYMENT_PREVIEW(proto_obj.RawPtr()), purchase_type.c_str());
+    unity_protocol_payment_preview_set_preview_type(UNITY_PROTOCOL_PAYMENT_PREVIEW(proto_obj.RawPtr()), preview_type);
 
     glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())), glib::StealRef());
-    preview_model_ = dash::Preview::PreviewForVariant(v);
 
-    g_hash_table_unref(action_hints1);
+    preview_model = dash::Preview::PreviewForVariant(v);
   }
 
-  nux::BaseWindow* parent_window_;
-  dash::Preview::Ptr preview_model_;
+  nux::ObjectPtr<nux::BaseWindow> parent_window_;
+  dash::Preview::Ptr preview_model;
 
+  // testing data
+  std::string title;
+  std::string subtitle;
+  std::string header;
+  std::string email;
+  std::string payment_method;
+  std::string purchase_prize;
+  std::string purchase_type;
+  UnityProtocolPreviewPaymentType preview_type;
+
+  // needed for styles
   unity::Settings settings;
-  previews::Style panel_style;
   dash::Style dash_style;
-  ThumbnailGenerator thumbnail_generator;
+
 };
 
-TEST_F(TestPreviewApplication, TestCreate)
+TEST_F(TestMusicPaymentPreview, TestContentLoading)
 {
-  previews::Preview::Ptr preview_view = previews::Preview::PreviewForModel(preview_model_);
+  MockedMusicPaymentPreview::Ptr preview_view(new MockedMusicPaymentPreview(preview_model));
 
-  EXPECT_TRUE(dynamic_cast<previews::ApplicationPreview*>(preview_view.GetPointer()) != NULL);
+  EXPECT_EQ(preview_view->title_->GetText(), title);
+  EXPECT_EQ(preview_view->subtitle_->GetText(), subtitle);
+  EXPECT_EQ(preview_view->intro_->GetText(), header);
+  EXPECT_EQ(preview_view->email_->GetText(), email);
+  EXPECT_EQ(preview_view->payment_->GetText(), payment_method);
+  EXPECT_EQ(preview_view->purchase_type_->GetText(), purchase_type);
+  EXPECT_EQ(preview_view->purchase_prize_->GetText(), purchase_prize);
 }
 
-TEST_F(TestPreviewApplication, TestUIValues)
-{  
-  MockApplicationPreview::Ptr preview_view(new MockApplicationPreview(preview_model_));
 
-  EXPECT_EQ(preview_view->title_->GetText(), "Application Title &amp; special char");
-  EXPECT_EQ(preview_view->subtitle_->GetText(), "Application Subtitle &gt; special char");
-  EXPECT_EQ(preview_view->description_->GetText(), "Application Desctiption &lt; special char");
-  EXPECT_EQ(preview_view->license_->GetText(), "License &amp; special char");
-  //EXPECT_EQ(preview_view->last_update_->GetText(), "Last Updated 11th Apr 2012"); // Not 100% sure this will work with translations.
-  EXPECT_EQ(preview_view->copywrite_->GetText(), "Copywrite &amp; special char");
+} // previews
 
-  EXPECT_EQ(preview_view->app_rating_->GetRating(), 0.8f);
-  EXPECT_EQ(preview_view->action_buttons_.size(), 2);
+} // dash
 
-  if (preview_view->action_buttons_.size() >= 2)
-  {
-    auto iter = preview_view->action_buttons_.begin();
-    if ((*iter)->Type().IsDerivedFromType(ActionButton::StaticObjectType))
-    {
-      ActionButton *action = static_cast<ActionButton*>(*iter);
-      EXPECT_EQ(action->GetLabel(), "Action 1");
-      EXPECT_EQ(action->GetExtraText(), "");
-    }
-    iter++;
-    if ((*iter)->Type().IsDerivedFromType(ActionButton::StaticObjectType))
-    {
-      ActionButton *action = static_cast<ActionButton*>(*iter);
-      EXPECT_EQ(action->GetLabel(), "Action 2");
-      EXPECT_EQ(action->GetExtraText(), "£30.99");
-    }
-  }
-}
-
-}
+} // unity
