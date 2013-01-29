@@ -64,7 +64,7 @@ class DashRevealTests(DashTestCase):
         self.assertThat(self.dash.active_lens, Eventually(Equals('commands.lens')))
 
     def test_can_go_from_dash_to_command_lens(self):
-	"""Switch to command lens without closing the dash."""
+        """Switch to command lens without closing the dash."""
         self.dash.ensure_visible()
         self.dash.reveal_command_lens()
         self.assertThat(self.dash.visible, Eventually(Equals(False)))

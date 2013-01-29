@@ -1,3 +1,10 @@
+unity (6.12.0daily13.01.25.1-0ubuntu2) UNRELEASED; urgency=low
+
+  * debian/control:
+    - bump compiz build-dep due to the last ABI break
+
+ -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Tue, 29 Jan 2013 09:32:22 +0100
+
 unity (6.12.0daily13.01.25.1-0ubuntu1) raring; urgency=low
 
   [ Romain Perier ]

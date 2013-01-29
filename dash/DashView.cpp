@@ -20,6 +20,7 @@
 
 #include "DashView.h"
 #include "DashViewPrivate.h"
+#include "FilterExpanderLabel.h"
 
 #include <math.h>
 
@@ -32,13 +33,12 @@
 #include <UnityCore/RadioOptionFilter.h>
 #include <UnityCore/PaymentPreview.h>
 
-#include "FilterExpanderLabel.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/KeyboardUtil.h"
-#include "unity-shared/UnitySettings.h"
-#include "unity-shared/UBusMessages.h"
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/PanelStyle.h"
+#include "unity-shared/UBusMessages.h"
+#include "unity-shared/UnitySettings.h"
 
 namespace unity
 {
@@ -127,6 +127,7 @@ DashView::DashView()
   , animate_split_value_(0.0)
   , animate_preview_container_value_(0.0)
   , animate_preview_value_(0.0)
+  , overlay_window_buttons_(new OverlayWindowButtons())
 {
   renderer_.SetOwner(this);
   renderer_.need_redraw.connect([this] () {
@@ -495,6 +496,8 @@ void DashView::AboutToShow()
     ClosePreview();
   }
 
+  overlay_window_buttons_->Show();
+
   renderer_.AboutToShow();
 }
 
@@ -522,6 +525,8 @@ void DashView::AboutToHide()
   {
     ClosePreview();
   }
+
+  overlay_window_buttons_->Hide();
 }
 
 void DashView::SetupViews()
@@ -729,6 +734,8 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
   {
     nux::GetPainter().PopBackgroundStack();
   }
+
+  overlay_window_buttons_->QueueDraw();
 
   graphics_engine.PopClippingRectangle();
 
@@ -1090,11 +1097,6 @@ void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned lo
   {
     geo.width += style.GetDashRightTileWidth();
     geo.height += style.GetDashBottomTileHeight();
-  }
-
-  if (!geo.IsPointInside(x, y))
-  {
-    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
 }
 
@@ -1529,6 +1531,7 @@ void DashView::AddProperties(GVariantBuilder* builder)
   wrapper.add("right-border-width", style.GetDashRightTileWidth());
   wrapper.add("bottom-border-height", style.GetDashBottomTileHeight());
   wrapper.add("preview_displaying", preview_displaying_);
+  wrapper.add("dash_maximized", style.always_maximised());
 }
 
 nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
@@ -1730,7 +1733,12 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
 nux::Area* DashView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
 {
   nux::Area* view = nullptr;
-  if (preview_displaying_)
+
+  if (overlay_window_buttons_->GetGeometry().IsInside(mouse_position))
+  {
+    return overlay_window_buttons_->FindAreaUnderMouse(mouse_position, event_type);
+  }
+  else if (preview_displaying_)
   {
     nux::Point newpos = mouse_position;
     view = dynamic_cast<nux::Area*>(preview_container_.GetPointer())->FindAreaUnderMouse(newpos, event_type);
