@@ -24,6 +24,7 @@
 #include "UnitySettings.h"
 #include "UBusMessages.h"
 #include "StandaloneWindowManager.h"
+#include "test_uscreen_mock.h"
 #include "test_utils.h"
 
 using namespace testing;
@@ -42,16 +43,36 @@ struct TestPanelMenuView : public testing::Test
     MOCK_METHOD0(QueueDraw, void());
     MOCK_CONST_METHOD1(GetActiveViewName, std::string(bool));
 
-    using PanelMenuView::window_buttons_;
     using PanelMenuView::GetCurrentTitle;
+    using PanelMenuView::window_buttons_;
+    using PanelMenuView::titlebar_grab_area_;
   };
+
+  nux::ObjectPtr<nux::BaseWindow> AddPanelToWindow(int monitor)
+  {
+    nux::ObjectPtr<nux::BaseWindow> panel_win(new nux::BaseWindow());
+    auto const& monitor_geo = uscreen.GetMonitorGeometry(monitor);
+    panel_win->SetGeometry(monitor_geo);
+    panel_win->SetMaximumHeight(panelStyle.panel_height());
+    panel_win->SetLayout(new nux::HLayout(NUX_TRACKER_LOCATION));
+    panel_win->GetLayout()->AddView(&menu_view, 1);
+    panel_win->GetLayout()->SetContentDistribution(nux::MAJOR_POSITION_START);
+    panel_win->GetLayout()->SetVerticalExternalMargin(0);
+    panel_win->GetLayout()->SetHorizontalExternalMargin(0);
+    panel_win->ComputeContentSize();
+
+    menu_view.SetMonitor(monitor);
+
+    return panel_win;
+  }
 
 protected:
   // The order is important, i.e. menu_view needs
   // panel::Style that needs Settings
-  StandaloneWindowManager* WM;
+  MockUScreen uscreen;
   Settings settings;
   panel::Style panelStyle;
+  StandaloneWindowManager* WM;
   testing::NiceMock<MockPanelMenuView> menu_view;
 };
 
@@ -78,6 +99,41 @@ TEST_F(TestPanelMenuView, QueuesDrawOnButtonsOpacityChange)
 {
   EXPECT_CALL(menu_view, QueueDraw());
   menu_view.window_buttons_->opacity.changed.emit(0.5f);
+}
+
+TEST_F(TestPanelMenuView, RestoreOnGrabInBiggerWorkArea)
+{
+  uscreen.SetupFakeMultiMonitor();
+  unsigned monitor = uscreen.GetMonitors().size() - 1;
+  auto const& monitor_geo = uscreen.GetMonitorGeometry(monitor);
+  WM->SetWorkareaGeometry(monitor_geo);
+
+  auto panel_win = AddPanelToWindow(monitor);
+
+  auto max_window = std::make_shared<StandaloneWindow>(g_random_int());
+  WM->AddStandaloneWindow(max_window);
+  max_window->maximized = true;
+  nux::Geometry win_geo(monitor_geo.x + monitor_geo.width/4, monitor_geo.y + monitor_geo.height/4,
+                        monitor_geo.width/2, monitor_geo.height/2);
+  max_window->geo = win_geo;
+
+  bool restored = false;
+  bool moved = false;
+  WM->window_restored.connect([&] (Window xid) {restored = (max_window->Xid() == xid);});
+  WM->window_moved.connect([&] (Window xid) {moved = (max_window->Xid() == xid);});
+
+  // Grab the window outside the panel shape
+  nux::Point mouse_pos(panel_win->GetX() + panel_win->GetWidth() * g_random_double(), panel_win->GetY() + panel_win->GetHeight() + 1);
+  menu_view.titlebar_grab_area_->grab_move(mouse_pos.x - panel_win->GetX(), mouse_pos.y - panel_win->GetY());
+
+  nux::Geometry expected_geo(win_geo);
+  expected_geo.SetPosition(mouse_pos.x - (win_geo.width * (mouse_pos.x - panel_win->GetX()) / panel_win->GetWidth()), mouse_pos.y);
+  expected_geo.x = std::max<int>(expected_geo.x, monitor_geo.x);
+
+  EXPECT_TRUE(restored);
+  EXPECT_TRUE(moved);
+  EXPECT_FALSE(max_window->maximized());
+  EXPECT_EQ(max_window->geo(), expected_geo);
 }
 
 }
