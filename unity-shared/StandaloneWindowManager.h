@@ -143,15 +143,16 @@ public:
   virtual std::string GetWindowName(Window window_id) const;
 
   // Mock functions
-  void SetScaleActive(bool scale_active);
-  void SetScaleActiveForGroup(bool scale_active_for_group);
-  void SetCurrentDesktop(unsigned desktop_id);
-  void SetViewportSize(unsigned horizontal, unsigned vertical);
-
   void AddStandaloneWindow(StandaloneWindow::Ptr const& window);
   std::map<Window, StandaloneWindow::Ptr> GetStandaloneWindows() const;
 
+  void SetScaleActive(bool scale_active);
+  void SetScaleActiveForGroup(bool scale_active_for_group);
+  void SetCurrentDesktop(unsigned desktop_id);
+
+  void SetViewportSize(unsigned horizontal, unsigned vertical);
   void SetCurrentViewport(nux::Point const& vp);
+  void SetWorkareaGeometry(nux::Geometry const& geo);
 
 protected:
   virtual void AddProperties(GVariantBuilder* builder);
@@ -163,8 +164,9 @@ private:
   bool scale_active_for_group_;
   unsigned current_desktop_;
   nux::Size viewport_size_;
-  std::map<Window, StandaloneWindow::Ptr> standalone_windows_;
   nux::Point current_vp_;
+  nux::Geometry workarea_geo_;
+  std::map<Window, StandaloneWindow::Ptr> standalone_windows_;
 };
 
 }

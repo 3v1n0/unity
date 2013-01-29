@@ -245,8 +245,10 @@ void StandaloneWindowManager::Restore(Window window_id)
 
 void StandaloneWindowManager::RestoreAt(Window window_id, int x, int y)
 {
+  nux::Geometry new_geo = GetWindowGeometry(window_id);
+  new_geo.SetPosition(x, y);
   Restore(window_id);
-  StartMove(window_id, x, y);
+  MoveResizeWindow(window_id, new_geo);
 }
 
 void StandaloneWindowManager::UnMinimize(Window window_id)
@@ -372,13 +374,8 @@ void StandaloneWindowManager::MoveResizeWindow(Window window_id, nux::Geometry g
 
 void StandaloneWindowManager::StartMove(Window window_id, int x, int y)
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-  {
-    nux::Geometry new_geo(it->second->geo());
-    new_geo.SetPosition(x, y);
-    it->second->geo = new_geo;
-  }
+  // This is called when we ask the WM to start the movement of a window,
+  // but it does not actually move it.
 }
 
 int StandaloneWindowManager::GetWindowMonitor(Window window_id) const
@@ -415,8 +412,12 @@ nux::Geometry StandaloneWindowManager::GetScreenGeometry() const
 
 nux::Geometry StandaloneWindowManager::GetWorkAreaGeometry(Window window_id) const
 {
-  nux::Geometry geo(0, 0, 1, 1);
-  return geo;
+  return workarea_geo_;
+}
+
+void StandaloneWindowManager::SetWorkareaGeometry(nux::Geometry const& geo)
+{
+  workarea_geo_ = geo;
 }
 
 nux::Size StandaloneWindowManager::GetWindowDecorationSize(Window window_id, WindowManager::Edge edge) const
@@ -503,9 +504,6 @@ void StandaloneWindowManager::AddStandaloneWindow(StandaloneWindow::Ptr const& w
 {
   if (!window)
     return;
-
-  if (standalone_windows_.empty())
-    window->active = true;
 
   auto xid = window->Xid();
   standalone_windows_[xid] = window;
