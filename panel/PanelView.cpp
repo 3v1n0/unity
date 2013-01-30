@@ -57,19 +57,19 @@ NUX_IMPLEMENT_OBJECT_TYPE(PanelView);
 
 PanelView::PanelView(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
-  , _is_dirty(true)
-  , _opacity_maximized_toggle(false)
-  , _needs_geo_sync(false)
-  , _is_primary(false)
-  , _overlay_is_open(false)
-  , _opacity(1.0f)
-  , _monitor(0)
-  , _stored_dash_width(0)
-  , _launcher_width(64)
+  , is_dirty_(true)
+  , opacity_maximized_toggle_(false)
+  , needs_geo_sync_(false)
+  , is_primary_(false)
+  , overlay_is_open_(false)
+  , opacity_(1.0f)
+  , monitor_(0)
+  , stored_dash_width_(0)
+  , launcher_width_(64)
 {
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
 
-  _bg_layer.reset(new nux::ColorLayer(nux::Color(0xff595853), true));
+  bg_layer_.reset(new nux::ColorLayer(nux::Color(0xff595853), true));
 
   nux::ROPConfig rop;
   rop.Blend = true;
@@ -85,130 +85,92 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   {
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-    darken_colour = _bg_color;
+    darken_colour = bg_color_;
   }
 
-  _bg_darken_layer.reset(new nux::ColorLayer(darken_colour, false, rop));
+  bg_darken_layer_.reset(new nux::ColorLayer(darken_colour, false, rop));
 
-  _layout = new nux::HLayout("", NUX_TRACKER_LOCATION);
-  _layout->SetContentDistribution(nux::MAJOR_POSITION_START);
+  layout_ = new nux::HLayout("", NUX_TRACKER_LOCATION);
+  layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
 
-  _menu_view = new PanelMenuView();
-  AddPanelView(_menu_view, 1);
+  menu_view_ = new PanelMenuView();
+  AddPanelView(menu_view_, 1);
 
-  SetCompositionLayout(_layout);
+  SetCompositionLayout(layout_);
 
-  _tray = new PanelTray();
-  _layout->AddView(_tray, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  AddChild(_tray);
+  tray_ = new PanelTray();
+  layout_->AddView(tray_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  AddChild(tray_);
 
-  _indicators = new PanelIndicatorsView();
-  AddPanelView(_indicators, 0);
+  indicators_ = new PanelIndicatorsView();
+  AddPanelView(indicators_, 0);
 
-  _remote = indicator::DBusIndicators::Ptr(new indicator::DBusIndicators());
-  _remote->on_object_added.connect(sigc::mem_fun(this, &PanelView::OnObjectAdded));
-  _remote->on_object_removed.connect(sigc::mem_fun(this, &PanelView::OnObjectRemoved));
-  _remote->on_entry_activate_request.connect(sigc::mem_fun(this, &PanelView::OnEntryActivateRequest));
-  _remote->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
-  _remote->on_entry_show_menu.connect(sigc::mem_fun(this, &PanelView::OnEntryShowMenu));
+  remote_ = indicator::DBusIndicators::Ptr(new indicator::DBusIndicators());
+  remote_->on_object_added.connect(sigc::mem_fun(this, &PanelView::OnObjectAdded));
+  remote_->on_object_removed.connect(sigc::mem_fun(this, &PanelView::OnObjectRemoved));
+  remote_->on_entry_activate_request.connect(sigc::mem_fun(this, &PanelView::OnEntryActivateRequest));
+  remote_->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
+  remote_->on_entry_show_menu.connect(sigc::mem_fun(this, &PanelView::OnEntryShowMenu));
 
-  _ubus_manager.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &PanelView::OnBackgroundUpdate));
-  _ubus_manager.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &PanelView::OnOverlayHidden));
-  _ubus_manager.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &PanelView::OnOverlayShown));
-  _ubus_manager.RegisterInterest(UBUS_DASH_SIZE_CHANGED, [&] (GVariant *data)
+  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &PanelView::OnBackgroundUpdate));
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &PanelView::OnOverlayHidden));
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &PanelView::OnOverlayShown));
+  ubus_manager_.RegisterInterest(UBUS_DASH_SIZE_CHANGED, [&] (GVariant *data)
   {
     int width, height;
     g_variant_get(data, "(ii)", &width, &height);
-    _stored_dash_width = width;
+    stored_dash_width_ = width;
     QueueDraw();
   });
 
   // request the latest colour from bghash
-  _ubus_manager.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
+  ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
-  _bg_effect_helper.owner = this;
+  bg_effect_helper_.owner = this;
 
   //FIXME (gord)- replace with async loading
-  glib::Object<GdkPixbuf> pixbuf;
-  glib::Error error;
-  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR "/dash_sheen.png", &error);
-  if (error)
-  {
-    LOG_WARN(logger) << "Unable to texture " << PKGDATADIR << "/dash_sheen.png" << ": " << error;
-  }
-  else
-  {
-    _panel_sheen.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
-  }
-
-  //FIXME (gord) like 12 months later, still not async loading!
-  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR "/refine_gradient_panel.png", &error);
-  if (error)
-  {
-    LOG_WARN(logger) << "Unable to texture " << PKGDATADIR << "/refine_gradient_panel.png";
-  }
-  else
-  {
-    _bg_refine_tex.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
-  }
+  panel_sheen_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dash_sheen.png", -1, true));
+  bg_refine_tex_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/refine_gradient_panel.png", -1, true));
+  bg_refine_single_column_tex_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/refine_gradient_panel_single_column.png", -1, true));
 
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-  nux::TexCoordXForm texxform;
-  _bg_refine_layer.reset(new nux::TextureLayer(_bg_refine_tex->GetDeviceTexture(),
-                         texxform,
-                         nux::color::White,
-                         false,
-                         rop));
-
-  //FIXME (gord) like 12 months later, still not async loading!
-  pixbuf = gdk_pixbuf_new_from_file(PKGDATADIR "/refine_gradient_panel_single_column.png", &error);
-  if (error)
-  {
-    LOG_WARN(logger) << "Unable to texture " << PKGDATADIR << "/refine_gradient_panel_single_column.png";
-  }
-  else
-  {
-    _bg_refine_single_column_tex.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
-  }
+  bg_refine_layer_.reset(new nux::TextureLayer(bg_refine_tex_->GetDeviceTexture(),
+                         nux::TexCoordXForm(), nux::color::White, false, rop));
 
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-  _bg_refine_single_column_layer.reset(new nux::TextureLayer(_bg_refine_single_column_tex->GetDeviceTexture(),
-                         texxform,
-                         nux::color::White,
-                         false,
-                         rop));
-
+  bg_refine_single_column_layer_.reset(new nux::TextureLayer(bg_refine_single_column_tex_->GetDeviceTexture(),
+                                       nux::TexCoordXForm(), nux::color::White, false, rop));
 }
 
 PanelView::~PanelView()
 {
-  for (auto conn : _on_indicator_updated_connections)
+  for (auto conn : on_indicator_updated_connections_)
     conn.disconnect();
 
-  for (auto conn : _maximized_opacity_toggle_connections)
+  for (auto conn : maximized_opacity_toggle_connections_)
     conn.disconnect();
 
   indicator::EntryLocationMap locations;
-  _remote->SyncGeometries(GetName() + boost::lexical_cast<std::string>(_monitor), locations);
+  remote_->SyncGeometries(GetName() + boost::lexical_cast<std::string>(monitor_), locations);
 }
 
 Window PanelView::GetTrayXid() const
 {
-  if (!_tray)
+  if (!tray_)
     return 0;
 
-  return _tray->xid();
+  return tray_->xid();
 }
 
 void PanelView::SetLauncherWidth(int width)
 {
-  _launcher_width = width;
+  launcher_width_ = width;
   QueueDraw();
 }
 
@@ -217,10 +179,10 @@ void PanelView::OnBackgroundUpdate(GVariant *data)
   gdouble red, green, blue, alpha;
   g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
 
-  _bg_color.red = red;
-  _bg_color.green = green;
-  _bg_color.blue = blue;
-  _bg_color.alpha = alpha;
+  bg_color_.red = red;
+  bg_color_.green = green;
+  bg_color_.blue = blue;
+  bg_color_.alpha = alpha;
 
   ForceUpdateBackground();
 }
@@ -233,15 +195,15 @@ void PanelView::OnOverlayHidden(GVariant* data)
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
-  if (_monitor == overlay_monitor && overlay_identity.Str() == _active_overlay)
+  if (monitor_ == overlay_monitor && overlay_identity.Str() == active_overlay_)
   {
-    if (_opacity >= 1.0f)
-      _bg_effect_helper.enabled = false;
+    if (opacity_ >= 1.0f)
+      bg_effect_helper_.enabled = false;
 
-    _overlay_is_open = false;
-    _active_overlay = "";
-    _menu_view->OverlayHidden();
-    _indicators->OverlayHidden();
+    overlay_is_open_ = false;
+    active_overlay_ = "";
+    menu_view_->OverlayHidden();
+    indicators_->OverlayHidden();
     SetAcceptKeyNavFocusOnMouseDown(true);
     ForceUpdateBackground();
   }
@@ -255,13 +217,13 @@ void PanelView::OnOverlayShown(GVariant* data)
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
                 &overlay_identity, &can_maximise, &overlay_monitor);
 
-  if (_monitor == overlay_monitor)
+  if (monitor_ == overlay_monitor)
   {
-    _bg_effect_helper.enabled = true;
-    _active_overlay = overlay_identity.Str();
-    _overlay_is_open = true;
-    _indicators->OverlayShown();
-    _menu_view->OverlayShown();
+    bg_effect_helper_.enabled = true;
+    active_overlay_ = overlay_identity.Str();
+    overlay_is_open_ = true;
+    indicators_->OverlayShown();
+    menu_view_->OverlayShown();
     SetAcceptKeyNavFocusOnMouseDown(false);
     ForceUpdateBackground();
   }
@@ -270,9 +232,9 @@ void PanelView::OnOverlayShown(GVariant* data)
 void PanelView::AddPanelView(PanelIndicatorsView* child,
                              unsigned int stretchFactor)
 {
-  _layout->AddView(child, stretchFactor, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  layout_->AddView(child, stretchFactor, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   auto conn = child->on_indicator_updated.connect(sigc::mem_fun(this, &PanelView::OnIndicatorViewUpdated));
-  _on_indicator_updated_connections.push_back(conn);
+  on_indicator_updated_connections_.push_back(conn);
   AddChild(child);
 }
 
@@ -285,7 +247,7 @@ void PanelView::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
   .add("backend", "remote")
-  .add("monitor", _monitor)
+  .add("monitor", monitor_)
   .add("active", IsActive())
   .add(GetAbsoluteGeometry());
 }
@@ -298,21 +260,21 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(geo);
 
-  if ((_overlay_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
+  if ((overlay_is_open_ || (opacity_ != 1.0f && opacity_ != 0.0f)))
   {
     nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
     nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, geo.width, geo.height);
 
     if (BackgroundEffectHelper::blur_type != BLUR_NONE)
     {
-      _bg_blur_texture = _bg_effect_helper.GetBlurRegion(blur_geo);
+      bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
     }
     else
     {
-      _bg_blur_texture = _bg_effect_helper.GetRegion(blur_geo);
+      bg_blur_texture_ = bg_effect_helper_.GetRegion(blur_geo);
     }
 
-    if (_bg_blur_texture.IsValid() && (_overlay_is_open || _opacity != 1.0f))
+    if (bg_blur_texture_.IsValid() && (overlay_is_open_ || opacity_ != 1.0f))
     {
       nux::TexCoordXForm texxform_blur_bg;
       texxform_blur_bg.flip_v_coord = true;
@@ -330,25 +292,25 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 #ifndef NUX_OPENGLES_20
       if (GfxContext.UsingGLSLCodePath())
         gPainter.PushDrawCompositionLayer(GfxContext, geo,
-                                          _bg_blur_texture,
+                                          bg_blur_texture_,
                                           texxform_blur_bg,
                                           nux::color::White,
-                                          _bg_color,
+                                          bg_color_,
                                           nux::LAYER_BLEND_MODE_OVERLAY,
                                           true, rop);
       else
         gPainter.PushDrawTextureLayer(GfxContext, geo,
-                                      _bg_blur_texture,
+                                      bg_blur_texture_,
                                       texxform_blur_bg,
                                       nux::color::White,
                                       true,
                                       rop);
 #else
         gPainter.PushDrawCompositionLayer(GfxContext, geo,
-                                          _bg_blur_texture,
+                                          bg_blur_texture_,
                                           texxform_blur_bg,
                                           nux::color::White,
-                                          _bg_color,
+                                          bg_color_,
                                           nux::LAYER_BLEND_MODE_OVERLAY,
                                           true, rop);
 #endif
@@ -356,43 +318,38 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       GfxContext.PopClippingRectangle();
     }
 
-    if (_overlay_is_open && Settings::Instance().GetLowGfxMode() == false)
+    if (overlay_is_open_ && Settings::Instance().GetLowGfxMode() == false)
     {
-      nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, _bg_darken_layer.get());
+      nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, bg_darken_layer_.get());
 
       GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
       nux::TexCoordXForm refine_texxform;
 
-      int refine_x_pos = geo.x + (_stored_dash_width - refine_gradient_midpoint);
+      int refine_x_pos = geo.x + (stored_dash_width_ - refine_gradient_midpoint);
 
-      refine_x_pos += _launcher_width;
-      GfxContext.QRP_1Tex(refine_x_pos,
-                          geo.y,
-                          _bg_refine_tex->GetWidth(),
-                          _bg_refine_tex->GetHeight(),
-                          _bg_refine_tex->GetDeviceTexture(),
-                          refine_texxform,
-                          nux::color::White);
+      refine_x_pos += launcher_width_;
+      GfxContext.QRP_1Tex(refine_x_pos, geo.y,
+                          bg_refine_tex_->GetWidth(),
+                          bg_refine_tex_->GetHeight(),
+                          bg_refine_tex_->GetDeviceTexture(),
+                          refine_texxform, nux::color::White);
 
-      GfxContext.QRP_1Tex(refine_x_pos + _bg_refine_tex->GetWidth(),
-                          geo.y,
-                          geo.width,
-                          geo.height,
-                          _bg_refine_single_column_tex->GetDeviceTexture(),
-                          refine_texxform,
-                          nux::color::White);
-      }
+      GfxContext.QRP_1Tex(refine_x_pos + bg_refine_tex_->GetWidth(),
+                          geo.y, geo.width, geo.height,
+                          bg_refine_single_column_tex_->GetDeviceTexture(),
+                          refine_texxform, nux::color::White);
     }
+  }
 
-  if (!_overlay_is_open || GfxContext.UsingGLSLCodePath() == false)
-    nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, _bg_layer.get());
+  if (!overlay_is_open_ || GfxContext.UsingGLSLCodePath() == false)
+    nux::GetPainter().RenderSinglePaintLayer(GfxContext, geo, bg_layer_.get());
 
   GfxContext.PopClippingRectangle();
 
-  if (_needs_geo_sync)
+  if (needs_geo_sync_)
   {
     SyncGeometries();
-    _needs_geo_sync = false;
+    needs_geo_sync_ = false;
   }
 }
 
@@ -407,8 +364,8 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates().SetBlend(true);
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-  if (_bg_blur_texture.IsValid() &&
-      (_overlay_is_open || (_opacity != 1.0f && _opacity != 0.0f)))
+  if (bg_blur_texture_.IsValid() &&
+      (overlay_is_open_ || (opacity_ != 1.0f && opacity_ != 0.0f)))
   {
     nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
     nux::TexCoordXForm texxform_blur_bg;
@@ -425,16 +382,16 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 #ifndef NUX_OPENGLES_20
     if (GfxContext.UsingGLSLCodePath())
       gPainter.PushCompositionLayer(GfxContext, geo,
-                                    _bg_blur_texture,
+                                    bg_blur_texture_,
                                     texxform_blur_bg,
                                     nux::color::White,
-                                    _bg_color,
+                                    bg_color_,
                                     nux::LAYER_BLEND_MODE_OVERLAY,
                                     true,
                                     rop);
     else
       gPainter.PushTextureLayer(GfxContext, geo,
-                                _bg_blur_texture,
+                                bg_blur_texture_,
                                 texxform_blur_bg,
                                 nux::color::White,
                                 true,
@@ -442,54 +399,54 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 #else
       gPainter.PushCompositionLayer(GfxContext, geo,
-                                    _bg_blur_texture,
+                                    bg_blur_texture_,
                                     texxform_blur_bg,
                                     nux::color::White,
-                                    _bg_color,
+                                    bg_color_,
                                     nux::LAYER_BLEND_MODE_OVERLAY,
                                     true,
                                     rop);
 #endif
     bgs++;
 
-    if (_overlay_is_open)
+    if (overlay_is_open_)
     {
       if (Settings::Instance().GetLowGfxMode())
       {
         rop.Blend = false;
-        _bg_darken_layer.reset(new nux::ColorLayer(_bg_color, false, rop));
+        bg_darken_layer_.reset(new nux::ColorLayer(bg_color_, false, rop));
       }
 
-      nux::GetPainter().PushLayer(GfxContext, geo, _bg_darken_layer.get());
+      nux::GetPainter().PushLayer(GfxContext, geo, bg_darken_layer_.get());
       bgs++;
 
       nux::Geometry refine_geo = geo;
 
-      int refine_x_pos = geo.x + (_stored_dash_width - refine_gradient_midpoint);
-      refine_x_pos += _launcher_width;
+      int refine_x_pos = geo.x + (stored_dash_width_ - refine_gradient_midpoint);
+      refine_x_pos += launcher_width_;
 
       refine_geo.x = refine_x_pos;
-      refine_geo.width = _bg_refine_tex->GetWidth();
-      refine_geo.height = _bg_refine_tex->GetHeight();
+      refine_geo.width = bg_refine_tex_->GetWidth();
+      refine_geo.height = bg_refine_tex_->GetHeight();
 
       if (Settings::Instance().GetLowGfxMode() == false)
       {
-        nux::GetPainter().PushLayer(GfxContext, refine_geo, _bg_refine_layer.get());
+        nux::GetPainter().PushLayer(GfxContext, refine_geo, bg_refine_layer_.get());
         bgs++;
 
         refine_geo.x += refine_geo.width;
         refine_geo.width = geo.width;
         refine_geo.height = geo.height;
-        nux::GetPainter().PushLayer(GfxContext, refine_geo, _bg_refine_single_column_layer.get());
+        nux::GetPainter().PushLayer(GfxContext, refine_geo, bg_refine_single_column_layer_.get());
         bgs++;
       }
     }
   }
 
-  if (!_overlay_is_open || GfxContext.UsingGLSLCodePath() == false)
-    gPainter.PushLayer(GfxContext, geo, _bg_layer.get());
+  if (!overlay_is_open_ || GfxContext.UsingGLSLCodePath() == false)
+    gPainter.PushLayer(GfxContext, geo, bg_layer_.get());
 
-  if (_overlay_is_open && Settings::Instance().GetLowGfxMode() == false)
+  if (overlay_is_open_ && Settings::Instance().GetLowGfxMode() == false)
   {
     // apply the shine
     nux::TexCoordXForm texxform;
@@ -501,13 +458,13 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     rop.SrcBlend = GL_DST_COLOR;
     rop.DstBlend = GL_ONE;
     nux::GetPainter().PushTextureLayer(GfxContext, geo,
-                                       _panel_sheen->GetDeviceTexture(),
+                                       panel_sheen_->GetDeviceTexture(),
                                        texxform,
                                        nux::color::White,
                                        false,
                                        rop);
   }
-  _layout->ProcessDraw(GfxContext, force_draw);
+  layout_->ProcessDraw(GfxContext, force_draw);
 
   gPainter.PopBackground(bgs);
 
@@ -520,29 +477,29 @@ PanelView::UpdateBackground()
 {
   nux::Geometry const& geo = GetGeometry();
 
-  if (!_is_dirty && geo == _last_geo)
+  if (!is_dirty_ && geo == last_geo_)
     return;
 
-  _last_geo = geo;
-  _is_dirty = false;
+  last_geo_ = geo;
+  is_dirty_ = false;
 
   nux::ROPConfig rop;
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-  if (_overlay_is_open)
+  if (overlay_is_open_)
   {
-    _bg_layer.reset(new nux::ColorLayer(_bg_color, true, rop));
+    bg_layer_.reset(new nux::ColorLayer(bg_color_, true, rop));
   }
   else
   {
-    double opacity = _opacity;
+    double opacity = opacity_;
 
-    if (_opacity_maximized_toggle)
+    if (opacity_maximized_toggle_)
     {
       WindowManager& wm = WindowManager::Default();
-      Window maximized_win = _menu_view->GetMaximizedWindow();
+      Window maximized_win = menu_view_->GetMaximizedWindow();
 
       if (wm.IsExpoActive() || (maximized_win != 0 && !wm.IsWindowObscured(maximized_win)))
         opacity = 1.0f;
@@ -553,19 +510,19 @@ PanelView::UpdateBackground()
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
 
-    _bg_layer.reset(new nux::TextureLayer(tex->GetDeviceTexture(), texxform,
+    bg_layer_.reset(new nux::TextureLayer(tex->GetDeviceTexture(), texxform,
                                           nux::color::White, true, rop));
   }
 }
 
 void PanelView::ForceUpdateBackground()
 {
-  _is_dirty = true;
+  is_dirty_ = true;
   UpdateBackground();
 
-  _indicators->QueueDraw();
-  _menu_view->QueueDraw();
-  _tray->QueueDraw();
+  indicators_->QueueDraw();
+  menu_view_->QueueDraw();
+  tray_->QueueDraw();
   QueueDraw();
 }
 
@@ -578,11 +535,11 @@ void PanelView::OnObjectAdded(indicator::Indicator::Ptr const& proxy)
   // We could do this in a more special way, but who has the time for special?
   if (proxy->IsAppmenu())
   {
-    _menu_view->AddIndicator(proxy);
+    menu_view_->AddIndicator(proxy);
   }
   else
   {
-    _indicators->AddIndicator(proxy);
+    indicators_->AddIndicator(proxy);
   }
 
   ComputeContentSize();
@@ -593,11 +550,11 @@ void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
 {
   if (proxy->IsAppmenu())
   {
-    _menu_view->RemoveIndicator(proxy);
+    menu_view_->RemoveIndicator(proxy);
   }
   else
   {
-    _indicators->RemoveIndicator(proxy);
+    indicators_->RemoveIndicator(proxy);
   }
 
   ComputeContentSize();
@@ -606,7 +563,7 @@ void PanelView::OnObjectRemoved(indicator::Indicator::Ptr const& proxy)
 
 void PanelView::OnIndicatorViewUpdated(PanelIndicatorEntryView* view)
 {
-  _needs_geo_sync = true;
+  needs_geo_sync_ = true;
   ComputeContentSize();
 }
 
@@ -618,16 +575,16 @@ void PanelView::OnMenuPointerMoved(int x, int y)
   {
     PanelIndicatorEntryView* view = nullptr;
 
-    if (_menu_view->GetControlsActive())
-      view = _menu_view->ActivateEntryAt(x, y);
+    if (menu_view_->GetControlsActive())
+      view = menu_view_->ActivateEntryAt(x, y);
 
-    if (!view) _indicators->ActivateEntryAt(x, y);
+    if (!view) indicators_->ActivateEntryAt(x, y);
 
-    _menu_view->SetMousePosition(x, y);
+    menu_view_->SetMousePosition(x, y);
   }
   else
   {
-    _menu_view->SetMousePosition(-1, -1);
+    menu_view_->SetMousePosition(-1, -1);
   }
 }
 
@@ -638,17 +595,17 @@ void PanelView::OnEntryActivateRequest(std::string const& entry_id)
 
   bool ret;
 
-  ret = _menu_view->ActivateEntry(entry_id, 0);
-  if (!ret) _indicators->ActivateEntry(entry_id, 0);
+  ret = menu_view_->ActivateEntry(entry_id, 0);
+  if (!ret) indicators_->ActivateEntry(entry_id, 0);
 }
 
 bool PanelView::TrackMenuPointer()
 {
   nux::Point const& mouse = nux::GetGraphicsDisplay()->GetMouseScreenCoord();
-  if (_tracked_pointer_pos != mouse)
+  if (tracked_pointer_pos_ != mouse)
   {
     OnMenuPointerMoved(mouse.x, mouse.y);
-    _tracked_pointer_pos = mouse;
+    tracked_pointer_pos_ = mouse;
   }
 
   return true;
@@ -657,7 +614,7 @@ bool PanelView::TrackMenuPointer()
 void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& geo)
 {
   bool active = (entry_id.size() > 0);
-  if (active && !_track_menu_pointer_timeout)
+  if (active && !track_menu_pointer_timeout_)
   {
     //
     // Track menus being scrubbed at 60Hz (about every 16 millisec)
@@ -669,17 +626,18 @@ void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& g
     // process. All the motion events will go to unity-panel-service while
     // scrubbing because the active panel menu has (needs) the pointer grab.
     //
-    _track_menu_pointer_timeout.reset(new glib::Timeout(16));
-    _track_menu_pointer_timeout->Run(sigc::mem_fun(this, &PanelView::TrackMenuPointer));
+    track_menu_pointer_timeout_.reset(new glib::Timeout(16));
+    track_menu_pointer_timeout_->Run(sigc::mem_fun(this, &PanelView::TrackMenuPointer));
   }
   else if (!active)
   {
-    _track_menu_pointer_timeout.reset();
-    _menu_view->NotifyAllMenusClosed();
-    _tracked_pointer_pos = {-1, -1};
+    track_menu_pointer_timeout_.reset();
+    menu_view_->NotifyAllMenusClosed();
+    tracked_pointer_pos_ = {-1, -1};
   }
 
-  _ubus_manager.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  if (overlay_is_open_)
+    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
 }
 
 void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned xid,
@@ -724,19 +682,19 @@ bool PanelView::FirstMenuShow() const
   if (!IsActive())
     return ret;
 
-  ret = _menu_view->ActivateIfSensitive();
-  if (!ret) _indicators->ActivateIfSensitive();
+  ret = menu_view_->ActivateIfSensitive();
+  if (!ret) indicators_->ActivateIfSensitive();
 
   return ret;
 }
 
 void PanelView::SetOpacity(float opacity)
 {
-  if (_opacity == opacity)
+  if (opacity_ == opacity)
     return;
 
-  _opacity = opacity;
-  _bg_effect_helper.enabled = (_opacity < 1.0f || _overlay_is_open);
+  opacity_ = opacity;
+  bg_effect_helper_.enabled = (opacity_ < 1.0f || overlay_is_open_);
 
   ForceUpdateBackground();
 }
@@ -744,18 +702,18 @@ void PanelView::SetOpacity(float opacity)
 void PanelView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
                                    int discovery_fadein, int discovery_fadeout)
 {
-  _menu_view->SetMenuShowTimings(fadein, fadeout, discovery, discovery_fadein, discovery_fadeout);
+  menu_view_->SetMenuShowTimings(fadein, fadeout, discovery, discovery_fadein, discovery_fadeout);
 }
 
 void PanelView::SetOpacityMaximizedToggle(bool enabled)
 {
-  if (_opacity_maximized_toggle != enabled)
+  if (opacity_maximized_toggle_ != enabled)
   {
     if (enabled)
     {
       WindowManager& win_manager = WindowManager::Default();
       auto update_bg_lambda = [&](guint32) { ForceUpdateBackground(); };
-      auto conn = &_maximized_opacity_toggle_connections;
+      auto conn = &maximized_opacity_toggle_connections_;
 
       conn->push_back(win_manager.window_minimized.connect(update_bg_lambda));
       conn->push_back(win_manager.window_unminimized.connect(update_bg_lambda));
@@ -772,53 +730,53 @@ void PanelView::SetOpacityMaximizedToggle(bool enabled)
     }
     else
     {
-      for (auto conn : _maximized_opacity_toggle_connections)
+      for (auto conn : maximized_opacity_toggle_connections_)
         conn.disconnect();
 
-      _maximized_opacity_toggle_connections.clear();
+      maximized_opacity_toggle_connections_.clear();
     }
 
-    _opacity_maximized_toggle = enabled;
+    opacity_maximized_toggle_ = enabled;
     ForceUpdateBackground();
   }
 }
 
 bool PanelView::GetPrimary() const
 {
-  return _is_primary;
+  return is_primary_;
 }
 
 void PanelView::SetPrimary(bool primary)
 {
-  _is_primary = primary;
+  is_primary_ = primary;
 }
 
 void PanelView::SyncGeometries()
 {
   indicator::EntryLocationMap locations;
-  std::string panel_id = GetName() + boost::lexical_cast<std::string>(_monitor);
+  std::string panel_id = GetName() + boost::lexical_cast<std::string>(monitor_);
 
-  if (_menu_view->GetControlsActive())
-    _menu_view->GetGeometryForSync(locations);
+  if (menu_view_->GetControlsActive())
+    menu_view_->GetGeometryForSync(locations);
 
-  _indicators->GetGeometryForSync(locations);
-  _remote->SyncGeometries(panel_id, locations);
+  indicators_->GetGeometryForSync(locations);
+  remote_->SyncGeometries(panel_id, locations);
 }
 
 void PanelView::SetMonitor(int monitor)
 {
-  _monitor = monitor;
-  _menu_view->SetMonitor(monitor);
+  monitor_ = monitor;
+  menu_view_->SetMonitor(monitor);
 }
 
 int PanelView::GetMonitor() const
 {
-  return _monitor;
+  return monitor_;
 }
 
 bool PanelView::IsActive() const
 {
-  return _menu_view->GetControlsActive();
+  return menu_view_->GetControlsActive();
 }
 
 } // namespace unity

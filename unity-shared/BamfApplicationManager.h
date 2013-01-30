@@ -31,11 +31,10 @@ namespace unity
 {
 namespace bamf
 {
-class Manager;
 class View
 {
 public:
-  View(Manager const& manager,
+  View(ApplicationManager const& manager,
        glib::Object<BamfView> const& view);
 
   std::string title() const;
@@ -48,7 +47,7 @@ public:
   bool GetUrgent() const;
 
 protected:
-  Manager const& manager_;
+  ApplicationManager const& manager_;
   glib::Object<BamfView> bamf_view_;
 };
 
@@ -56,7 +55,7 @@ protected:
 class WindowBase: public ::unity::ApplicationWindow, public View
 {
 protected:
-  WindowBase(Manager const& manager,
+  WindowBase(ApplicationManager const& manager,
              glib::Object<BamfView> const& window);
 
 public:
@@ -74,7 +73,7 @@ private:
 class AppWindow: public WindowBase
 {
 public:
-  AppWindow(Manager const& manager,
+  AppWindow(ApplicationManager const& manager,
             glib::Object<BamfView> const& window);
 
   virtual Window window_id() const;
@@ -89,7 +88,7 @@ private:
 class Tab: public WindowBase
 {
 public:
-  Tab(Manager const& manager,
+  Tab(ApplicationManager const& manager,
       glib::Object<BamfView> const& tab);
 
   virtual Window window_id() const;
@@ -106,9 +105,9 @@ private:
 class Application : public ::unity::Application, public View
 {
 public:
-  Application(Manager const& manager,
+  Application(ApplicationManager const& manager,
               glib::Object<BamfView> const& app);
-  Application(Manager const& manager,
+  Application(ApplicationManager const& manager,
               glib::Object<BamfApplication> const& app);
 
   virtual std::string title() const;
@@ -120,7 +119,6 @@ public:
   virtual bool OwnsWindow(Window window_id) const;
 
   virtual std::vector<std::string> GetSupportedMimeTypes() const;
-  virtual std::vector<ApplicationMenu> GetRemoteMenus() const;
 
   virtual ApplicationWindowPtr GetFocusableWindow() const;
   virtual void Focus(bool show_on_visible, int monitor) const;
@@ -150,14 +148,13 @@ public:
   Manager();
   ~Manager();
 
-  virtual ApplicationWindowPtr GetActiveWindow();
+  ApplicationWindowPtr GetActiveWindow() override;
 
-  virtual ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file);
+  ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) override;
 
-  virtual ApplicationList GetRunningApplications();
+  ApplicationList GetRunningApplications() override;
 
-
-  virtual ApplicationPtr GetApplicationForWindow(glib::Object<BamfWindow> const& window);
+  ApplicationPtr GetApplicationForWindow(Window xid) override;
 
 private:
   void OnViewOpened(BamfMatcher* matcher, BamfView* view);

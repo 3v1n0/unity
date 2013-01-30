@@ -142,6 +142,9 @@ class LauncherKeyNavTests(LauncherTestCase):
 
     def test_launcher_keynav_expo_focus(self):
         """When entering expo mode from KeyNav the Desktop must get focus."""
+        if self.workspace.num_workspaces < 2:
+            self.skipTest("This test requires enabled more than one workspace.")
+
         self.start_keynav_with_cleanup_cancel()
 
         self.launcher_instance.keyboard_select_icon(tooltip_text="Workspace Switcher")
@@ -152,6 +155,9 @@ class LauncherKeyNavTests(LauncherTestCase):
 
     def test_launcher_keynav_expo_exit_on_esc(self):
         """Esc should quit expo when entering it from KeyNav."""
+        if self.workspace.num_workspaces < 2:
+            self.skipTest("This test requires enabled more than one workspace.")
+
         self.start_keynav_with_cleanup_cancel()
 
         self.launcher_instance.keyboard_select_icon(tooltip_text="Workspace Switcher")

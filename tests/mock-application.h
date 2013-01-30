@@ -71,7 +71,6 @@ public:
   virtual bool OwnsWindow(Window window_id) const { return false; }
 
   virtual std::vector<std::string> GetSupportedMimeTypes() const { return {}; }
-  virtual std::vector<unity::ApplicationMenu> GetRemoteMenus() const { return {}; }
 
   virtual unity::ApplicationWindowPtr GetFocusableWindow() const { return unity::ApplicationWindowPtr(); }
   virtual void Focus(bool show_on_visible, int monitor) const  {}
@@ -140,6 +139,12 @@ public:
   {
       return unity::ApplicationList();
   }
+
+  unity::ApplicationPtr GetApplicationForWindow(Window xid)
+  {
+    return unity::ApplicationPtr();
+  }
+
 private:
   typedef std::map<std::string, unity::ApplicationPtr> AppMap;
   AppMap app_map_;

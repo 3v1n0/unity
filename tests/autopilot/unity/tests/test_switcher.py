@@ -308,9 +308,11 @@ class SwitcherDetailsTests(SwitcherTestCase):
 
     def test_details_mode_on_delay(self):
         """Test that details mode activates on a timeout."""
+        if self.workspace.num_workspaces <= 1:
+            self.skipTest("This test requires enabled more than one workspace.")
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
-        self.workspace.switch_to(1)
+        self.workspace.switch_to((initial_workspace + 1) % self.workspace.num_workspaces)
         self.start_applications("Character Map", "Character Map", "Mahjongg")
 
         self.switcher.initiate()
@@ -326,11 +328,12 @@ class SwitcherDetailsTests(SwitcherTestCase):
         Regression test for LP:933406.
 
         """
+        if self.workspace.num_workspaces <= 1:
+            self.skipTest("This test requires enabled more than one workspace.")
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
-        self.workspace.switch_to(1)
         self.start_app_window("Character Map")
-        self.workspace.switch_to(2)
+        self.workspace.switch_to((initial_workspace + 1) % self.workspace.num_workspaces)
         self.start_applications("Character Map", "Mahjongg")
 
         self.switcher.initiate()
@@ -423,14 +426,18 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
 class SwitcherWorkspaceTests(SwitcherTestCase):
     """Test Switcher behavior with respect to multiple workspaces."""
 
+    def setUp(self):
+        super(SwitcherWorkspaceTests, self).setUp()
+        if self.workspace.num_workspaces <= 1:
+            self.skipTest("This test requires enabled more than one workspace.")
+
     def test_switcher_shows_current_workspace_only(self):
         """Switcher must show apps from the current workspace only."""
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
 
-        self.workspace.switch_to(1)
         calc = self.start_app("Calculator")
-        self.workspace.switch_to(2)
+        self.workspace.switch_to((initial_workspace + 1) % self.workspace.num_workspaces)
         char_map = self.start_app("Character Map")
 
         self.switcher.initiate()
@@ -445,9 +452,8 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
 
-        self.workspace.switch_to(1)
         calc = self.start_app("Calculator")
-        self.workspace.switch_to(2)
+        self.workspace.switch_to((initial_workspace + 1) % self.workspace.num_workspaces)
         char_map = self.start_app("Character Map")
 
         self.switcher.initiate(SwitcherMode.ALL)
@@ -470,10 +476,9 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         # it harder to write the tests.
         self.set_unity_option("alt_tab_timeout", False)
 
-        self.workspace.switch_to(1)
         self.start_app("Character Map")
 
-        self.workspace.switch_to(3)
+        self.workspace.switch_to((initial_workspace + 1) % self.workspace.num_workspaces)
         char_win2 = self.start_app_window("Character Map")
         self.keybinding("window/minimize")
         self.assertProperty(char_win2, is_hidden=True)
@@ -489,7 +494,6 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
 
     def test_switcher_is_disabled_when_wall_plugin_active(self):
         """The switcher must not open when the wall plugin is active using ctrl+alt+<direction>."""
-
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
 

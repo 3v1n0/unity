@@ -12,6 +12,8 @@ from autopilot.emulators.clipboard import get_clipboard_contents
 from autopilot.matchers import Eventually
 from testtools.matchers import Equals, NotEquals, GreaterThan
 from time import sleep
+from tempfile import mkstemp
+from os import remove
 
 from unity.tests import UnityTestCase
 
@@ -60,6 +62,12 @@ class DashRevealTests(DashTestCase):
         """Run Command lens must reveat on alt+F2."""
         self.dash.reveal_command_lens()
         self.assertThat(self.dash.active_lens, Eventually(Equals('commands.lens')))
+
+    def test_can_go_from_dash_to_command_lens(self):
+        """Switch to command lens without closing the dash."""
+        self.dash.ensure_visible()
+        self.dash.reveal_command_lens()
+        self.assertThat(self.dash.visible, Eventually(Equals(False)))
 
     def test_alt_f4_close_dash(self):
         """Dash must close on alt+F4."""
@@ -582,6 +590,27 @@ class DashLensResultsTests(DashTestCase):
 class DashVisualTests(DashTestCase):
     """Tests that the dash visual is correct."""
 
+    def test_closing_dash_hides_current_lens(self):
+        """When exiting from the dash the current lens must set it self to not visible."""
+
+        self.dash.ensure_visible()
+        lens = self.dash.get_current_lens()
+        self.dash.ensure_hidden()
+
+        self.assertThat(lens.visible, Eventually(Equals(False)))
+
+    def test_dash_position_with_non_default_launcher_width(self):
+        """"There should be no empty space between launcher and dash when the launcher
+        has a non-default width.
+        """
+        self.set_unity_option('icon_size', 60)
+        self.dash.ensure_visible()
+
+        monitor = self.dash.monitor
+        launcher = self.launcher.get_launcher_for_monitor(monitor)
+
+        self.assertThat(self.dash.geometry[0], Eventually(Equals(launcher.geometry[0] + launcher.geometry[2] - 1)))
+
     def test_see_more_result_alignment(self):
         """The see more results label should be baseline aligned
         with the category name label.
@@ -710,10 +739,21 @@ class PreviewInvocationTests(DashTestCase):
         preview.
         """
         gettext.install("unity-lens-files", unicode=True)
+
+        # Instead of skipping the test, here we can create a dummy file to open and
+        # make sure the lens result is non-empty
+        (file_handle, file_path) = mkstemp()
+        self.addCleanup(remove, file_path)
+        gedit_win = self.start_app_window('Text Editor', files=[file_path], locale='C')
+        self.addCleanup(self.close_all_app, 'Text Editor')
+        self.assertProperty(gedit_win, is_focused=True)
+
         lens = self.dash.reveal_file_lens()
         self.addCleanup(self.dash.ensure_hidden)
 
-        category = lens.get_category_by_name(_("Folders"))
+        category = lens.get_category_by_name(_("Recent"))
+        refresh_results_fn = lambda: len(category.get_results())
+        self.assertThat(refresh_results_fn, Eventually(GreaterThan(0)))
         results = category.get_results()
         result = results[0]
         # result.preview handles finding xy co-ords and right mouse-click
@@ -762,7 +802,7 @@ class PreviewInvocationTests(DashTestCase):
             if category is None or not category.is_visible:
                 category = lens.get_category_by_name("Online")
                 if category is None or not category.is_visible:
-                    return None
+                    self.skipTest("This lens is probably empty")
             return category
 
         lens = self.dash.reveal_video_lens()
@@ -909,7 +949,7 @@ class PreviewNavigateTests(DashTestCase):
 
     def test_preview_refocus_close(self):
         """Clicking on a preview element must not lose keyboard focus."""
-        cover_art = self.preview_container.current_preview.cover_art
+        cover_art = self.preview_container.current_preview.cover_art[0]
 
         # click the cover-art (this will set focus)
         tx = cover_art.x + (cover_art.width / 2)
@@ -921,23 +961,185 @@ class PreviewNavigateTests(DashTestCase):
 
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
-    def test_left_click_on_preview_image_cancel_preview(self):
-        """Left click on preview image must cancel the preview."""
-        cover_art = self.preview_container.current_preview.cover_art
 
-        tx = cover_art.x + (cover_art.width / 2)
-        ty = cover_art.y + (cover_art.height / 4)
+class PreviewClickCancelTests(DashTestCase):
+    """Tests that the preview closes when left, middle, and right clicking in the preview"""
+
+    def setUp(self):
+        super(PreviewClickCancelTests, self).setUp()
+        lens = self.dash.reveal_application_lens()
+        self.addCleanup(self.dash.ensure_hidden)
+        # Only testing an application preview for this test.
+        self.keyboard.type("Software Updater")
+        results_category = lens.get_category_by_name(_("Installed"))
+        results = results_category.get_results()
+
+        result = results[0]
+        result.preview()
+        self.assertThat(self.dash.view.preview_displaying, Eventually(Equals(True)))
+
+        self.preview_container = self.dash.view.get_preview_container()
+
+    def test_left_click_on_preview_icon_cancel_preview(self):
+        """Left click on preview icon must close preview."""
+        icon = self.preview_container.current_preview.icon[0]
+
+        tx = icon.x + icon.width
+        ty = icon.y + (icon.height / 2)
         self.mouse.move(tx, ty)
         self.mouse.click(button=1)
 
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
-    def test_right_click_on_preview_image_cancel_preview(self):
-        """Right click on preview image must cancel preview."""
-        cover_art = self.preview_container.current_preview.cover_art
+    def test_middle_click_on_preview_icon_cancel_preview(self):
+        """Middle click on preview icon must close preview."""
+        icon = self.preview_container.current_preview.icon[0]
+
+        tx = icon.x + icon.width
+        ty = icon.y + (icon.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=2)
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_right_click_on_preview_icon_cancel_preview(self):
+        """Right click on preview icon must close preview."""
+        icon = self.preview_container.current_preview.icon[0]
+
+        tx = icon.x + icon.width
+        ty = icon.y + (icon.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=3)
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_left_click_on_preview_image_cancel_preview(self):
+        """Left click on preview image must cancel the preview."""
+        cover_art = self.preview_container.current_preview.cover_art[0]
 
         tx = cover_art.x + (cover_art.width / 2)
-        ty = cover_art.y + (cover_art.height / 4)
+        ty = cover_art.y + (cover_art.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=1)
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_middle_click_on_preview_image_cancel_preview(self):
+        """Middle click on preview image must cancel the preview."""
+        cover_art = self.preview_container.current_preview.cover_art[0]
+
+        tx = cover_art.x + (cover_art.width / 2)
+        ty = cover_art.y + (cover_art.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=2)
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_right_click_on_preview_image_cancel_preview(self):
+        """Right click on preview image must cancel the preview."""
+        cover_art = self.preview_container.current_preview.cover_art[0]
+
+        tx = cover_art.x + (cover_art.width / 2)
+        ty = cover_art.y + (cover_art.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=3)
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_left_click_on_preview_text_cancel_preview(self):
+        """Left click on some preview text must cancel the preview."""
+        text = self.preview_container.current_preview.text_boxes[0]
+
+        tx = text.x + (text.width / 2)
+        ty = text.y + (text.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=1)
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_middle_click_on_preview_text_cancel_preview(self):
+        """Middle click on some preview text must cancel the preview."""
+        text = self.preview_container.current_preview.text_boxes[0]
+
+        tx = text.x + (text.width / 2)
+        ty = text.y + (text.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=2)
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_right_click_on_preview_text_cancel_preview(self):
+        """Right click on some preview text must cancel the preview."""
+        text = self.preview_container.current_preview.text_boxes[0]
+
+        tx = text.x + (text.width / 2)
+        ty = text.y + (text.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=3)
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_left_click_on_preview_ratings_widget_cancel_preview(self):
+        """Left click on the ratings widget must cancel the preview."""
+        ratings_widget = self.preview_container.current_preview.ratings_widget[0]
+
+        tx = ratings_widget.x + (ratings_widget.width / 2)
+        ty = ratings_widget.y + (ratings_widget.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=1)
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_middle_click_on_preview_ratings_widget_cancel_preview(self):
+        """Middle click on the ratings widget must cancel the preview."""
+        ratings_widget = self.preview_container.current_preview.ratings_widget[0]
+
+        tx = ratings_widget.x + (ratings_widget.width / 2)
+        ty = ratings_widget.y + (ratings_widget.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=2)
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_right_click_on_preview_ratings_widget_cancel_preview(self):
+        """Right click on the ratings widget must cancel the preview."""
+        ratings_widget = self.preview_container.current_preview.ratings_widget[0]
+
+        tx = ratings_widget.x + (ratings_widget.width / 2)
+        ty = ratings_widget.y + (ratings_widget.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=3)
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_left_click_on_preview_info_hint_cancel_preview(self):
+        """Left click on the info hint must cancel the preview."""
+        info_hint = self.preview_container.current_preview.info_hint_widget[0]
+
+        tx = info_hint.x + (info_hint.width / 2)
+        ty = info_hint.y + (info_hint.height / 8)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=1)
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_middle_click_on_preview_info_hint_cancel_preview(self):
+        """Middle click on the info hint must cancel the preview."""
+        info_hint = self.preview_container.current_preview.info_hint_widget[0]
+
+        tx = info_hint.x + (info_hint.width / 2)
+        ty = info_hint.y + (info_hint.height / 8)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=2)
+
+        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_right_click_on_preview_info_hint_cancel_preview(self):
+        """Right click on the info hint must cancel the preview."""
+        info_hint = self.preview_container.current_preview.info_hint_widget[0]
+
+        tx = info_hint.x + (info_hint.width / 2)
+        ty = info_hint.y + (info_hint.height / 8)
         self.mouse.move(tx, ty)
         self.mouse.click(button=3)
 

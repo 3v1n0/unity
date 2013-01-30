@@ -67,6 +67,7 @@ View::View()
   , selected_button_(0)
   , show_embedded_icon_(true)
   , keyboard_stole_focus_(false)
+  , overlay_window_buttons_(new OverlayWindowButtons())
 {
   renderer_.SetOwner(this);
   renderer_.need_redraw.connect([this] () {
@@ -226,7 +227,6 @@ void View::SetQueries(Hud::Queries queries)
   }
 
   selected_button_ = 0;
-  queries_ = queries_;
   buttons_.clear();
   button_views_->Clear();
   int found_items = 0;
@@ -346,12 +346,14 @@ nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
 void View::AboutToShow()
 {
   visible_ = true;
+  overlay_window_buttons_->Show();
   renderer_.AboutToShow();
 }
 
 void View::AboutToHide()
 {
   visible_ = false;
+  overlay_window_buttons_->Hide();
   renderer_.AboutToHide();
 }
 
@@ -485,6 +487,9 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   {
     GetLayout()->ProcessDraw(gfx_context, force_draw);
   }
+
+  overlay_window_buttons_->QueueDraw();
+
   gfx_context.PopClippingRectangle();
 
   renderer_.DrawInnerCleanup(gfx_context, draw_content_geo, GetAbsoluteGeometry(), GetGeometry());

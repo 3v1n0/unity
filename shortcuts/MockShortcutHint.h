@@ -37,34 +37,34 @@ public:
            std::string const& postfix,
            std::string const& description,
            OptionType const type,
-           std::string const& arg1, 
+           std::string const& arg1,
            std::string const& arg2 = "",
            std::string const& arg3 = "")
     : AbstractHint(category, prefix, postfix, description, type, arg1, arg2, arg3)
   {}
-  
+
   // Methods...
   bool Fill()
   {
     switch (type())
     {
-      case COMPIZ_MOUSE_OPTION:
-      case COMPIZ_KEY_OPTION:
-      case COMPIZ_METAKEY_OPTION:
+      case OptionType::COMPIZ_MOUSE:
+      case OptionType::COMPIZ_KEY:
+      case OptionType::COMPIZ_METAKEY:
         value = arg1() + "-" + arg2();
         shortkey = prefix() + value() + postfix();
         return true;
-      
-      case HARDCODED_OPTION:
+
+      case OptionType::HARDCODED:
         value = arg1();
         shortkey = prefix() + value() + postfix();
         return true;
     }
-    
+
     return false;
   }
 };
-  
+
 }
 }
 

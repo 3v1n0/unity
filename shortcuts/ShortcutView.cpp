@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,17 +15,16 @@
  *
  * Authored by: Andrea Azzarone <azzaronea@gmail.com>
  *              Jay Taoko <jay.taoko@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include "ShortcutView.h"
 
 #include <glib/gi18n-lib.h>
-#include <boost/algorithm/string.hpp>
 #include <UnityCore/GLibWrapper.h>
 
 #include "unity-shared/LineSeparator.h"
 #include "unity-shared/StaticCairoText.h"
-#include "unity-shared/UScreen.h"
 
 namespace unity
 {
@@ -33,12 +32,12 @@ namespace shortcut
 {
 namespace
 {
-  int SECTION_NAME_FONT_SIZE = 17/1.33;
-  int SHORTKEY_ENTRY_FONT_SIZE = 13/1.33;
-  int INTER_SPACE_SHORTKEY_DESCRIPTION = 10;
-  int SHORTKEY_COLUMN_WIDTH = 150;
-  int DESCRIPTION_COLUMN_WIDTH = 265;
-  int LINE_SPACING = 5;
+  const unsigned SECTION_NAME_FONT_SIZE = 17/1.33;
+  const unsigned SHORTKEY_ENTRY_FONT_SIZE = 13/1.33;
+  const unsigned INTER_SPACE_SHORTKEY_DESCRIPTION = 10;
+  const unsigned SHORTKEY_COLUMN_WIDTH = 150;
+  const unsigned DESCRIPTION_COLUMN_WIDTH = 265;
+  const unsigned LINE_SPACING = 5;
 
   // We need this class because SetVisible doesn't work for layouts.
   class SectionView : public nux::View
@@ -46,13 +45,18 @@ namespace
     public:
       SectionView(NUX_FILE_LINE_DECL)
         : nux::View(NUX_FILE_LINE_PARAM)
+      {}
+
+      ~SectionView()
       {
+        key_changed_conn.disconnect();
       }
+
+      sigc::connection key_changed_conn;
 
     protected:
       void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
-      {
-      }
+      {}
 
       void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
       {
@@ -67,45 +71,32 @@ NUX_IMPLEMENT_OBJECT_TYPE(View);
 
 View::View()
   : ui::UnityWindowView()
-  , x_adjustment_(0)
-  , y_adjustment_(0)
 {
-  layout_ = new nux::VLayout();
-  layout_->SetPadding(50, 38);
-  layout_->SetSpaceBetweenChildren(20);
-  SetLayout(layout_);
+  auto main_layout = new nux::VLayout();
+  main_layout->SetPadding(50, 38);
+  main_layout->SetSpaceBetweenChildren(20);
+  SetLayout(main_layout);
 
-  std::string header = "<b>";
-  header += _("Keyboard Shortcuts");
-  header += "</b>";
+  std::string header = "<b>"+std::string(_("Keyboard Shortcuts"))+"</b>";
 
   nux::StaticText* header_view = new nux::StaticText(header, NUX_TRACKER_LOCATION);
   header_view->SetTextPointSize(20/1.33);
   header_view->SetFontName("Ubuntu");
-  layout_->AddView(header_view, 1 , nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  main_layout->AddView(header_view, 1 , nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
-  layout_->AddView(new HSeparator(), 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+  main_layout->AddView(new HSeparator(), 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
   columns_layout_ = new nux::HLayout();
   columns_layout_->SetSpaceBetweenChildren(30);
-  layout_->AddLayout(columns_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-
-  // Column 1...
-  columns_.push_back(new nux::VLayout());
-  columns_layout_->AddLayout(columns_[0], 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-
-  // Column 2...
-  columns_.push_back(new nux::VLayout());
-  columns_layout_->AddLayout(columns_[1], 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-}
-
-View::~View()
-{
+  main_layout->AddLayout(columns_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 }
 
 void View::SetModel(Model::Ptr model)
 {
   model_ = model;
+
+  if (model_)
+    model_->categories_per_column.changed.connect(sigc::hide(sigc::mem_fun(this, &View::RenderColumns)));
 
   // Fills the columns...
   RenderColumns();
@@ -116,41 +107,11 @@ Model::Ptr View::GetModel()
   return model_;
 }
 
-void View::SetAdjustment(int x, int y)
-{
-  x_adjustment_ = x;
-  y_adjustment_ = y;
-}
-
-bool View::GetBaseGeometry(nux::Geometry& geo)
-{
-  UScreen* uscreen = UScreen::GetDefault();
-  int primary_monitor = uscreen->GetMonitorWithMouse();
-  auto monitor_geo = uscreen->GetMonitorGeometry(primary_monitor);
-
-  int w = GetAbsoluteWidth();
-  int h = GetAbsoluteHeight();
-
-  if (x_adjustment_ + w > monitor_geo.width ||
-      y_adjustment_ + h > monitor_geo.height)
-    return false;
-
-  geo.width = w;
-  geo.height = h;
-
-  geo.x = monitor_geo.x + x_adjustment_ + (monitor_geo.width - geo.width -  x_adjustment_) / 2;
-  geo.y = monitor_geo.y + y_adjustment_ + (monitor_geo.height - geo.height -  y_adjustment_) / 2;
-  return true;
-}
-
-nux::LinearLayout* View::CreateSectionLayout(const char* section_name)
+nux::LinearLayout* View::CreateSectionLayout(std::string const& section_name)
 {
   nux::VLayout* layout = new nux::VLayout(NUX_TRACKER_LOCATION);
 
-  std::string name("<b>");
-  name += glib::String(g_markup_escape_text(section_name, -1)).Str();
-  name += "</b>";
-
+  std::string name("<b>"+glib::String(g_markup_escape_text(section_name.c_str(), -1)).Str()+"</b>");
   nux::StaticText* section_name_view = new nux::StaticText(name, NUX_TRACKER_LOCATION);
   section_name_view->SetTextPointSize(SECTION_NAME_FONT_SIZE);
   section_name_view->SetFontName("Ubuntu");
@@ -163,7 +124,7 @@ nux::LinearLayout* View::CreateSectionLayout(const char* section_name)
 
 nux::View* View::CreateShortKeyEntryView(AbstractHint::Ptr const& hint)
 {
-  nux::View* view = new SectionView(NUX_TRACKER_LOCATION);
+  auto* view = new SectionView(NUX_TRACKER_LOCATION);
 
   nux::HLayout* layout = new nux::HLayout("EntryLayout", NUX_TRACKER_LOCATION);
   view->SetLayout(layout);
@@ -173,10 +134,7 @@ nux::View* View::CreateShortKeyEntryView(AbstractHint::Ptr const& hint)
 
   glib::String shortkey(g_markup_escape_text(hint->shortkey().c_str(), -1));
 
-  std::string skey = "<b>";
-  skey += shortkey.Str();
-  skey += "</b>";
-
+  std::string skey = "<b>"+shortkey.Str()+"</b>";
   nux::StaticText* shortkey_view = new nux::StaticText(skey, NUX_TRACKER_LOCATION);
   shortkey_view->SetTextAlignment(nux::StaticText::ALIGN_LEFT);
   shortkey_view->SetFontName("Ubuntu");
@@ -208,16 +166,14 @@ nux::View* View::CreateShortKeyEntryView(AbstractHint::Ptr const& hint)
   layout->SetSpaceBetweenChildren(INTER_SPACE_SHORTKEY_DESCRIPTION);
   description_layout->SetContentDistribution(nux::MAJOR_POSITION_START);
 
-   auto on_shortkey_changed = [view, shortkey_view] (std::string const& new_shortkey) {
-      std::string skey("<b>");
-      skey += new_shortkey;
-      skey += "</b>";
+  view->key_changed_conn = hint->shortkey.changed.connect([this, view, shortkey_view] (std::string const& new_key) {
+    bool enabled = !new_key.empty();
+    shortkey_view->SetText(enabled ? "<b>"+new_key+"</b>" : "");
+    view->SetVisible(enabled);
+    QueueRelayout();
+  });
 
-      shortkey_view->SetText(skey);
-      view->SetVisible(!new_shortkey.empty());
-   };
-
-  hint->shortkey.changed.connect(on_shortkey_changed);
+  view->SetVisible(!shortkey.Str().empty());
 
   return view;
 }
@@ -232,59 +188,75 @@ nux::LinearLayout* View::CreateIntermediateLayout()
 
 nux::Geometry View::GetBackgroundGeometry()
 {
-  nux::Geometry base = GetGeometry();
-  nux::Geometry background_geo;
-
-  background_geo.width = base.width;
-  background_geo.height = base.height;
-  background_geo.x = (base.width - background_geo.width)/2;
-  background_geo.y = (base.height - background_geo.height)/2;
-
-  return background_geo;
+  return GetGeometry();
 }
 
 void View::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry clip)
 {
-  layout_->ProcessDraw(GfxContext, force_draw);
+  view_layout_->ProcessDraw(GfxContext, force_draw);
 }
 
 void View::RenderColumns()
 {
-  int i = 0;
-  int column = 0;
+  columns_layout_->Clear();
 
-  for (auto category : model_->categories())
+  if (!model_)
   {
-    // Three sections in the fist column...
-    if (i > 2)
-      column = 1;
+    ComputeContentSize();
+    QueueRelayout();
+    return;
+  }
 
-    nux::LinearLayout* section_layout = CreateSectionLayout(category.c_str());
+  int i = 0;
+  int column_idx = 0;
+  auto const& columns = columns_layout_->GetChildren();
+
+  for (auto const& category : model_->categories())
+  {
+    // Computing column index based on current index
+    column_idx = i/model_->categories_per_column();
+
+    nux::LinearLayout* section_layout = CreateSectionLayout(category);
     nux::LinearLayout* intermediate_layout = CreateIntermediateLayout();
     intermediate_layout->SetContentDistribution(nux::MAJOR_POSITION_START);
 
-    for (auto hint : model_->hints()[category])
+    for (auto const& hint : model_->hints().at(category))
     {
       nux::View* view = CreateShortKeyEntryView(hint);
-      view->SetVisible(!hint->shortkey().empty());
       intermediate_layout->AddView(view, 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
     }
 
     section_layout->AddLayout(intermediate_layout, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
 
-    if (i == 0 or i==1 or i==3 or i==4)
+    if ((i + 1) % model_->categories_per_column() != 0 && category != model_->categories().back())
     {
-      // Add space before the line
+      // Add a line with some padding after and before each category that is not
+      // the last of the column.
       section_layout->AddView(new nux::SpaceLayout(23, 23, 23, 23), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
       section_layout->AddView(new HSeparator(), 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-      // Add space after the line
       section_layout->AddView(new nux::SpaceLayout(20, 20, 20, 20), 0, nux::MINOR_POSITION_START, nux::MINOR_SIZE_MATCHCONTENT);
     }
 
-    columns_[column]->AddView(section_layout, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
+    nux::VLayout* column = nullptr;
+    auto column_it = std::next(columns.begin(), column_idx);
+
+    if (column_it == columns.end())
+    {
+      column = new nux::VLayout();
+      columns_layout_->AddLayout(column, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
+    }
+    else
+    {
+      column = static_cast<nux::VLayout*>(*column_it);
+    }
+
+    column->AddView(section_layout, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
     i++;
   }
+
+  ComputeContentSize();
+  QueueRelayout();
 }
 
 //

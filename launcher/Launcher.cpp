@@ -144,7 +144,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   , _drag_gesture_ongoing(false)
   , _last_reveal_progress(0.0f)
   , _selection_atom(0)
-  , _background_color(nux::color::DimGray)
+  , icon_renderer(std::make_shared<ui::IconRenderer>())
 {
   m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
@@ -190,13 +190,8 @@ Launcher::Launcher(nux::BaseWindow* parent,
 
   ubus_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &Launcher::OnOverlayShown));
   ubus_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &Launcher::OnOverlayHidden));
-  ubus_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Launcher::OnBGColorChanged));
   ubus_.RegisterInterest(UBUS_LAUNCHER_LOCK_HIDE, sigc::mem_fun(this, &Launcher::OnLockHideChanged));
 
-  // request the latest colour from bghash
-  ubus_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
-
-  icon_renderer = ui::AbstractIconRenderer::Ptr(new ui::IconRenderer());
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 
   TextureCache& cache = TextureCache::GetDefault();
@@ -208,6 +203,7 @@ Launcher::Launcher(nux::BaseWindow* parent,
   launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect", 0, 0, cb);
 
   options.changed.connect(sigc::mem_fun(this, &Launcher::OnOptionsChanged));
+  monitor.changed.connect(sigc::mem_fun(this, &Launcher::OnMonitorChanged));
 }
 
 /* Introspection */
@@ -989,7 +985,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   struct timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
 
-  nux::Color colorify = FullySaturateColor(_background_color);
+  nux::Color const& colorify = FullySaturateColor(options()->background_color);
 
   float hover_progress = GetHoverProgress(current);
   float folded_z_distance = _folded_z_distance * (1.0f - hover_progress);
@@ -1169,17 +1165,6 @@ void Launcher::ShowShortcuts(bool show)
   _shortcuts_shown = show;
   _hide_machine.SetQuirk(LauncherHideMachine::SHORTCUT_KEYS_VISIBLE, show);
   EnsureAnimation();
-}
-
-void Launcher::OnBGColorChanged(GVariant *data)
-{
-  ui::IconRenderer::DestroyShortcutTextures();
-
-  double red = 0.0f, green = 0.0f, blue = 0.0f, alpha = 0.0f;
-
-  g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-  _background_color = nux::Color(red, green, blue, alpha);
-  QueueDraw();
 }
 
 void Launcher::OnLockHideChanged(GVariant *data)
@@ -1390,6 +1375,15 @@ void Launcher::OnOptionChanged()
   UpdateOptions(options());
 }
 
+void Launcher::OnMonitorChanged(int new_monitor)
+{
+  UScreen* uscreen = UScreen::GetDefault();
+  auto monitor_geo = uscreen->GetMonitorGeometry(new_monitor);
+  unity::panel::Style &panel_style = panel::Style::Instance();
+  Resize(nux::Point(monitor_geo.x, monitor_geo.y + panel_style.panel_height),
+         monitor_geo.height - panel_style.panel_height);
+}
+
 void Launcher::UpdateOptions(Options::Ptr options)
 {
   SetIconSize(options->tile_size, options->icon_size);
@@ -1574,24 +1568,21 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
 
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 
-  Resize();
+  nux::Geometry const& parent_geo = _parent->GetGeometry();
+  Resize(nux::Point(parent_geo.x, parent_geo.y), parent_geo.height);
 }
 
 int Launcher::GetIconSize() const
 {
-    return _icon_size;
+  return _icon_size;
 }
 
-void Launcher::Resize()
+void Launcher::Resize(nux::Point const& offset, int height)
 {
-  UScreen* uscreen = UScreen::GetDefault();
-  auto geo = uscreen->GetMonitorGeometry(monitor());
-  unity::panel::Style &panel_style = panel::Style::Instance();
-  int width = _icon_size + ICON_PADDING*2 + RIGHT_LINE_WIDTH - 2;
-  nux::Geometry new_geometry(geo.x, geo.y + panel_style.panel_height, width, geo.height - panel_style.panel_height);
-  SetMaximumHeight(new_geometry.height);
-  _parent->SetGeometry(new_geometry);
-  SetGeometry(nux::Geometry(0, 0, new_geometry.width, new_geometry.height));
+  unsigned width = _icon_size + ICON_PADDING * 2 + RIGHT_LINE_WIDTH - 2;
+  SetMaximumHeight(height);
+  SetGeometry(nux::Geometry(0, 0, width, height));
+  _parent->SetGeometry(nux::Geometry(offset.x, offset.y, width, height));
 
   ConfigureBarrier();
 }
@@ -1722,7 +1713,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   
   if (Settings::Instance().GetLowGfxMode())
   {
-    clear_colour = _background_color;
+    clear_colour = options()->background_color;
     clear_colour.alpha = 1.0f;
   }
 
@@ -1796,7 +1787,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 					    blur_texture,
 					    texxform_blur_bg,
 					    nux::color::White,
-					    _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
+					    options()->background_color, nux::LAYER_BLEND_MODE_OVERLAY,
 					    true, ROP);
 	else
 	  gPainter.PushDrawTextureLayer(GfxContext, base,
@@ -1810,7 +1801,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 					    blur_texture,
 					    texxform_blur_bg,
 					    nux::color::White,
-					    _background_color, nux::LAYER_BLEND_MODE_OVERLAY,
+					    options()->background_color, nux::LAYER_BLEND_MODE_OVERLAY,
 					    true, ROP);
 #endif
 	GfxContext.PopClippingRectangle();
@@ -1829,7 +1820,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       // apply the bg colour
 #ifndef NUX_OPENGLES_20
       if (GfxContext.UsingGLSLCodePath() == false)
-	gPainter.Paint2DQuadColor(GfxContext, bkg_box, _background_color);
+	gPainter.Paint2DQuadColor(GfxContext, bkg_box, options()->background_color);
 #endif
 
       // apply the shine
@@ -1849,7 +1840,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     else
     {
-      nux::Color color = _background_color;
+      nux::Color color = options()->background_color;
       color.alpha = options()->background_alpha;
       gPainter.Paint2DQuadColor(GfxContext, bkg_box, color);
     }

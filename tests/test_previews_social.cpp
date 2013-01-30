@@ -81,7 +81,7 @@ public:
     preview_model_ = dash::Preview::PreviewForVariant(v);
   }
 
-  nux::BaseWindow* parent_window_;
+  nux::ObjectPtr<nux::BaseWindow> parent_window_;
   dash::Preview::Ptr preview_model_;
 
   unity::Settings settings;

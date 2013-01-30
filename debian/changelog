@@ -1,15 +1,177 @@
-unity (6.12.0daily12.12.05-0ubuntu2) UNRELEASED; urgency=low
+unity (6.12.0daily13.01.25.1-0ubuntu2) UNRELEASED; urgency=low
+
+  * debian/control:
+    - bump compiz build-dep due to the last ABI break
+
+ -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Tue, 29 Jan 2013 09:32:22 +0100
+
+unity (6.12.0daily13.01.25.1-0ubuntu1) raring; urgency=low
+
+  [ Romain Perier ]
+  * lp:unity FTBFS on quantal: error: ‘bamf_view_is_user_visible’ was
+    not declared in this scope  (LP: #1086276)
+
+  [ Brandon Schaefer ]
+  * TestOverlayVScrollBar.TestConnectorResetsDuringScrollAnimation
+    segfaults. (LP: #1102699)
+
+  [ Andrea Azzarone ]
+  * Removal of 21_correct_timestamp_.. patch  returns focus issues in
+    Unity session (LP: #1072566)
+
+  [ Marco Trevisan (Treviño) ]
+  * The workspace shortcuts listed in the overlay should be hidden when
+    workspaces are disabled (LP: #1103561)
+  * Shortcuts hints overlay hides a disabled shortcut without
+    relayouting (LP: #1102429)
+
+  [ Manuel de la Pena ]
+  * ActionLink does not highlight when selected via keyboard navigation
+    (LP: #1103048)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3072
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 25 Jan 2013 12:29:18 +0000
+
+unity (6.12.0daily13.01.21-0ubuntu1) raring; urgency=low
+
+  [ Marco Trevisan (Treviño) ]
+  * Switcher windows spread animation is broken on external monitors
+    (LP: #1100055)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3051
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Mon, 21 Jan 2013 04:01:56 +0000
+
+unity (6.12.0daily13.01.18-0ubuntu1) raring; urgency=low
+
+  [ Brandon Schaefer ]
+  * HUD does not save the current input focus correctly (LP: #1100962)
+
+  [ Andrea Azzarone ]
+  * Unity fails to build on raring: g_io_scheduler_push_job is
+    deprecated (LP: #1100658)
+
+  [ Marco Trevisan (Treviño) ]
+  * Launcher - Update BFB icon to use a new special asset (and no tile)
+    (LP: #1081697)
+  * Launcher - Update Launcher tile assets (LP: #1081687)
+
+  [ Daniel van Vugt ]
+  * Allow launcher icons smaller than 32px (LP: #930031)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3048
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 18 Jan 2013 04:02:06 +0000
+
+unity (6.12.0daily13.01.17-0ubuntu1) raring; urgency=low
+
+  [ Brandon Schaefer ]
+  * [regression] Scrollbar Overlay still appears after the dash has
+    closed. (LP: #1099999)
+
+  [ Christopher Townsend ]
+  * Dash - Users should be able to exit the Preview and return to the
+    results by right or middle clicking anywhere inside the preview (LP:
+    #1046315)
+
+  [ Andrea Azzarone ]
+  * Need some 'minimize' autopilot tests (LP: #1089981)
+  * TestLauncherController.* fails (LP: #1089900)
+  * Windows that start minimized cannot be opened (LP: #1087422)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3043
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Thu, 17 Jan 2013 07:03:58 +0000
+
+unity (6.12.0daily13.01.11.2-0ubuntu1) raring; urgency=low
 
   [ Didier Roche ]
   * debian/control:
     - bump some missed build-deps
+    - bump compiz and nux build-deps for the API and ABI breakages
+      (LP: #1095981)
+  * debian/rules:
+    - disable pch for now as it's not working with -g -02 (LP: #1095978)
 
   [ Brandon Schaefer ]
   * Ported Compiz to 0.9.9
   * debian/control:
     - bump the build-deps
+  * Dash and HUD do not have X event focus, causing XIM to not work.
+    (LP: #1086988)
+  * Windows losing focus after the start/restart of Unity (LP: #1097368)
 
- -- Didier Roche <didrocks@ubuntu.com>  Wed, 05 Dec 2012 16:46:53 +0100
+  [ Łukasz 'sil2100' Zemczak ]
+  * Dash - Update Dash nav bar icons (LP: #1089373)
+  * Autopilot tests failing in the test_hud suite due to locale
+    dependency (LP: #1076531)
+  * Super key not registered if held too long (LP: #1097189)
+  * Unity HUD uses wrong icon when switching from the Dash to HUD (LP:
+    #1089482)
+
+  [ Marco Trevisan (Treviño) ]
+  * Using bleeding edge Mesa drivers causes GL_INVALID_OPERATION error
+    in glDrawBuffer / glReadBuffer (LP: #1092550)
+  * [Regression] Window buttons / Title doesn't redraw correctly on
+    windows with no menus (LP: #1090439)
+
+  [ Nick Dedekind ]
+  * Dash - When the Dash preview is open, the ghost images should run
+    all the way to the top of the screen as shown in the design (LP:
+    #1060948)
+  * Dash - When the Dash preview opens, the category headers should be
+    expanded and the filters should hide (LP: #1060937)
+  * Dash - In the Dash preview, when a user moves to the next or
+    previous preview the highlighted ghost image should change (LP:
+    #1060941)
+  * Dash - As soon as a user starts dragging a .png file from the Dash,
+    the file icon changes size (LP: #863412)
+
+  [ Gord Allott <gord.allott@canonical.com>, Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>, Didier Roche ]
+  * "unitydashlegalseen" Causing back-up error (LP: #1066646)
+  * unity dash should show legal disclaimer (LP: #1065652)
+
+  [ Manuel de la Pena ]
+  * StaticCairoText makes NUX get into an infinte loop (LP: #1071327)
+
+  [ Daniel van Vugt ]
+  * Minimized windows don't restore, or restore as blank (LP: #1089779)
+
+  [ Andrea Azzarone ]
+  * TestOverlayScrollBar.TestScrollDownSignal segfaults  (LP: #1089888)
+  * Dash - Update Dash Launcher icon tooltip to say "Search your
+    computer and online sources"  (LP: #1090325)
+  * TestLauncherController.GetLastIconPriorityUnStickyWithNoIconsAndUri
+    segfaults (LP: #1089894)
+  * TestDashController.TestShowAndHideDash fails (LP: #1089904)
+  * [Regression] Tapping super key shows shortcuts overlay. (LP:
+    #1090388)
+  * [Regression] Unity fails to restore initially minimized windows.
+    (LP: #1097686)
+  * launcher does not show minimized update manager while clicked (LP:
+    #1003950)
+  *  Dash - Update Dash Home search box hint message to say "Search your
+    computer and online sources" (LP: #1090327)
+  * can't quit a minimized application (LP: #1086366)
+  * Unity daily-build (07.01.13) empty space between launcher and dash
+    in non default launcher size (LP: #1097184)
+
+  [ Sam Spilsbury ]
+  * Fonts get changed to Ubuntu Italic 11 when running make check (LP:
+    #1086762)
+
+  [ Gord Allott ]
+  * "unitydashlegalseen" Causing back-up error (LP: #1066646)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3034
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 11 Jan 2013 13:05:11 +0000
 
 unity (6.12.0daily12.12.05-0ubuntu1) raring; urgency=low
 

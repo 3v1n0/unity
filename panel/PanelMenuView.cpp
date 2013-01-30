@@ -155,7 +155,6 @@ PanelMenuView::PanelMenuView()
   titlebar_grab_area_->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
 
   ubus_manager_.RegisterInterest(UBUS_SWITCHER_SHOWN, sigc::mem_fun(this, &PanelMenuView::OnSwitcherShown));
-
   ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV, sigc::mem_fun(this, &PanelMenuView::OnLauncherKeyNavStarted));
   ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_NAV, sigc::mem_fun(this, &PanelMenuView::OnLauncherKeyNavEnded));
   ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWITCHER, sigc::mem_fun(this, &PanelMenuView::OnLauncherKeyNavStarted));
@@ -356,8 +355,9 @@ bool PanelMenuView::DrawWindowButtons() const
   WindowManager& wm = WindowManager::Default();
   bool screen_grabbed = (wm.IsExpoActive() || wm.IsScaleActive());
 
+  // TODO: We need to refactor this code to extract the window button logic
   if (overlay_showing_)
-    return true;
+    return false;
 
   if (we_control_active_ && is_maximized_ && !screen_grabbed &&
       !launcher_keynav_ && !switcher_showing_)
@@ -774,8 +774,6 @@ void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::s
   {
     gtk_render_layout(style_context, cr, x, y, layout);
   }
-
-  x += text_width;
 
   gtk_style_context_restore(style_context);
 }
@@ -1415,7 +1413,7 @@ void PanelMenuView::OnMaximizedGrabStart(int x, int y)
 
 void PanelMenuView::OnMaximizedGrabMove(int x, int y)
 {
-  auto panel = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
+  auto panel = GetTopLevelViewWindow();
 
   if (!panel)
     return;
@@ -1430,7 +1428,7 @@ void PanelMenuView::OnMaximizedGrabMove(int x, int y)
    *
    * This is a workaround to avoid that the grid plugin would be fired
    * showing the window shape preview effect. See bug #838923 */
-  if (maximized != 0 && panel)
+  if (maximized != 0)
   {
     nux::Geometry const& panel_geo = panel->GetAbsoluteGeometry();
 
@@ -1444,7 +1442,7 @@ void PanelMenuView::OnMaximizedGrabMove(int x, int y)
        * pointer position, if it doesn't fit on that area try to keep it into the
        * current workarea as much as possible, but giving priority to the left border
        * that shouldn't be never put out of the workarea */
-      int restore_x = x - (restored_geo.width * x / panel_geo.width);
+      int restore_x = x - (restored_geo.width * (x - panel_geo.x) / panel_geo.width);
       int restore_y = y;
 
       if (restore_x + restored_geo.width > workarea_geo.x + workarea_geo.width)

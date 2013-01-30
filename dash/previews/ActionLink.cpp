@@ -131,9 +131,9 @@ void ActionLink::BuildLayout(std::string const& label)
   QueueDraw();
 }
 
-int ActionLink::GetLinkAlpha(nux::ButtonVisualState state)
+int ActionLink::GetLinkAlpha(nux::ButtonVisualState state, bool keyboardFocus)
 {
-  if (state == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
+  if (keyboardFocus || state == nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)
     return LINK_HIGHLIGHTED_ALPHA_VALUE;
   else
     return LINK_NORMAL_ALPHA_VALUE;
@@ -153,7 +153,7 @@ void ActionLink::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   unsigned int alpha = 0, src = 0, dest = 0;
 
   // set the alpha of the text according to its state
-  static_text_->SetTextAlpha(GetLinkAlpha(GetVisualState()));
+  static_text_->SetTextAlpha(GetLinkAlpha(GetVisualState(), HasKeyboardFocus()));
 
   GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
   GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);

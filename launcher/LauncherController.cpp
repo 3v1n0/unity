@@ -40,6 +40,7 @@
 #include "ExpoLauncherIcon.h"
 #include "TrashLauncherIcon.h"
 #include "BFBLauncherIcon.h"
+#include "unity-shared/IconRenderer.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/TimeUtil.h"
@@ -119,6 +120,17 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager)
   edge_barriers_.options = parent_->options();
 #endif
 
+  ubus.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, [this](GVariant * data) {
+    ui::IconRenderer::DestroyShortcutTextures();
+
+    double red = 0.0f, green = 0.0f, blue = 0.0f, alpha = 0.0f;
+    g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
+    parent_->options()->background_color = nux::Color(red, green, blue, alpha);
+  });
+
+  // request the latest color from bghash
+  ubus.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
+
   UScreen* uscreen = UScreen::GetDefault();
   EnsureLaunchers(uscreen->GetPrimaryMonitor(), uscreen->GetMonitors());
 
@@ -148,7 +160,7 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager)
   wm.window_focus_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnWindowFocusChanged));
   wm.viewport_layout_changed.connect(sigc::group(sigc::mem_fun(this, &Controller::Impl::UpdateNumWorkspaces), sigc::_1 * sigc::_2));
 
-  ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [&](GVariant * args) {
+  ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [this](GVariant * args) {
     if (reactivate_keynav)
       parent_->KeyNavGrab();
 
@@ -197,24 +209,27 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
   {
     if (i >= launchers_size)
     {
-      launchers.push_back(nux::ObjectPtr<Launcher>(CreateLauncher(i)));
+      launchers.push_back(nux::ObjectPtr<Launcher>(CreateLauncher()));
     }
     else if (!launchers[i])
     {
-      launchers[i] = nux::ObjectPtr<Launcher>(CreateLauncher(i));
+      launchers[i] = nux::ObjectPtr<Launcher>(CreateLauncher());
     }
 
     int monitor = (num_launchers == 1) ? primary : i;
 
-#ifdef USE_X11
     if (launchers[i]->monitor() != monitor)
     {
+#ifdef USE_X11
       edge_barriers_.Unsubscribe(launchers[i].GetPointer(), launchers[i]->monitor);
-    }
 #endif
+      launchers[i]->monitor = monitor;
+    }
+    else
+    {
+      launchers[i]->monitor.changed(monitor);
+    }
 
-    launchers[i]->monitor(monitor);
-    launchers[i]->Resize();
 #ifdef USE_X11
     edge_barriers_.Subscribe(launchers[i].GetPointer(), launchers[i]->monitor);
 #endif
@@ -222,7 +237,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
 
   for (unsigned int i = last_launcher; i < launchers_size; ++i)
   {
-    auto launcher = launchers[i];
+    auto const& launcher = launchers[i];
     if (launcher)
     {
       parent_->RemoveChild(launcher.GetPointer());
@@ -297,12 +312,11 @@ void Controller::Impl::OnDndMonitorChanged(int monitor)
  }
 }
 
-Launcher* Controller::Impl::CreateLauncher(int monitor)
+Launcher* Controller::Impl::CreateLauncher()
 {
   nux::BaseWindow* launcher_window = new nux::BaseWindow(TEXT("LauncherWindow"));
 
   Launcher* launcher = new Launcher(launcher_window);
-  launcher->monitor = monitor;
   launcher->options = parent_->options();
   launcher->SetModel(model_);
 
