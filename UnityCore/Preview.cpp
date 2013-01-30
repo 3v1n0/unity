@@ -32,7 +32,6 @@
 #include "SocialPreview.h"
 #include "SeriesPreview.h"
 
-
 namespace unity
 {
 namespace dash

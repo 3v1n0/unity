@@ -94,7 +94,7 @@ public:
     unity::glib::Variant value;
 
     InfoHint() {};
-    InfoHint(const gchar* id_, const gchar* display_name_, 
+    InfoHint(const gchar* id_, const gchar* display_name_,
              const gchar* icon_hint_, GVariant* value_)
       : id(id_ != NULL ? id_ : "")
       , display_name(display_name_ != NULL ? display_name_ : "")
