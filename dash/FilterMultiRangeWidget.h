@@ -45,7 +45,6 @@ class FilterMultiRangeWidget : public FilterExpanderLabel
   typedef nux::ObjectPtr<FilterMultiRangeButton> FilterMultiRangeButtonPtr;
 public:
   FilterMultiRangeWidget(NUX_FILE_LINE_PROTO);
-  virtual ~FilterMultiRangeWidget();
 
   void SetFilter(Filter::Ptr const& filter);
   std::string GetFilterType();
@@ -56,7 +55,6 @@ protected:
   nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
 
   void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
-  void RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);

@@ -122,7 +122,7 @@ void MultiRangeFilter::OptionChanged(bool is_active, std::string const& id)
   {
     // otherwise just ensure there is a single continuous option range
     bool active_found = false, inactive_found = false;
-    for (FilterOption::Ptr option : options_)
+    for (FilterOption::Ptr const& option : options_)
     {
       if (inactive_found)
         option->active = false;

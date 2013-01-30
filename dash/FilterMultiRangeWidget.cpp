@@ -62,15 +62,10 @@ FilterMultiRangeWidget::FilterMultiRangeWidget(NUX_FILE_LINE_DECL)
   OnActiveChanged(false);
 
   mouse_move.connect(sigc::mem_fun(this, &FilterMultiRangeWidget::RecvMouseMove));
-  mouse_leave.connect(sigc::mem_fun(this, &FilterMultiRangeWidget::RecvMouseLeave));
   mouse_down.connect(sigc::mem_fun(this, &FilterMultiRangeWidget::RecvMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &FilterMultiRangeWidget::RecvMouseUp));
 
   mouse_drag.connect(sigc::mem_fun(this, &FilterMultiRangeWidget::RecvMouseDrag));
-}
-
-FilterMultiRangeWidget::~FilterMultiRangeWidget()
-{
 }
 
 void FilterMultiRangeWidget::SetFilter(Filter::Ptr const& filter)
@@ -186,8 +181,8 @@ void FilterMultiRangeWidget::InitTheme()
 nux::Area* FilterMultiRangeWidget::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
 {
   bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
-  if (mouse_inside == false)
-    return NULL;
+  if (!mouse_inside)
+    return nullptr;
 
   nux::Area* area = View::FindAreaUnderMouse(mouse_position, nux::NUX_MOUSE_MOVE);
   if (area && area->Type().IsDerivedFromType(FilterMultiRangeButton::StaticObjectType))
@@ -203,10 +198,6 @@ void FilterMultiRangeWidget::RecvMouseMove(int x, int y, int dx, int dy, unsigne
   nux::Geometry geo = GetAbsoluteGeometry();
   nux::Point abs_cursor(geo.x + x, geo.y + y);
   UpdateMouseFocus(abs_cursor);
-}
-
-void FilterMultiRangeWidget::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
 }
 
 void FilterMultiRangeWidget::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)

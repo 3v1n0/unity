@@ -117,7 +117,7 @@ long FilterMultiRangeButton::ComputeContentSize()
     std::vector<MultiRangeSide> sides = {MultiRangeSide::LEFT, MultiRangeSide::RIGHT, MultiRangeSide::CENTER};
     std::vector<MultiRangeArrow> arrows = {MultiRangeArrow::LEFT, MultiRangeArrow::RIGHT, MultiRangeArrow::BOTH, MultiRangeArrow::NONE};
 
-    auto func_invalidate = [&, geo](std::pair<const MapKey, NuxCairoPtr>& pair)
+    auto func_invalidate = [geo](std::pair<const MapKey, NuxCairoPtr>& pair)
     {
       pair.second->Invalidate(geo);
     };
