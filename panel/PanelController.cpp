@@ -59,6 +59,8 @@ public:
                           int discovery_fadein, int discovery_fadeout);
 
   void OnScreenChanged(unsigned int primary_monitor, std::vector<nux::Geometry>& monitors, Introspectable *iobj);
+
+  bool IsMouseInsideIndicator(nux::Point mouse_position) const;
 private:
   typedef nux::ObjectPtr<nux::BaseWindow> BaseWindowPtr;
 
@@ -289,6 +291,19 @@ void Controller::Impl::WindowConfigureCallback(int window_width,
 {
   nux::BaseWindow* window = static_cast<nux::BaseWindow*>(user_data);
   geo = window->GetGeometry();
+}
+
+bool Controller::IsMouseInsideIndicator(nux::Point mouse_position) const
+{
+  for (auto view : pimpl->GetPanelViews())
+  {
+    PanelView* panel_view = static_cast<PanelView*>(view);
+
+    if (panel_view->IsMouseInsideIndicator(mouse_position))
+      return true;
+  }
+
+  return false;
 }
 
 float Controller::Impl::opacity() const
