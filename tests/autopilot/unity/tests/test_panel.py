@@ -981,6 +981,18 @@ class PanelIndicatorEntryTests(PanelTestsBase):
         self.assertThat(menu_entry.menu_x, Eventually(Equals(0)))
         self.assertThat(menu_entry.menu_y, Eventually(Equals(0)))
 
+    def test_indicator_opens_when_dash_is_open(self):
+        """When the dash is open and a click is on an indicator the dash
+        must close and the indicator must open.
+        """
+        self.dash.ensure_visible()
+
+        indicator = self.panel.indicators.get_indicator_by_name_hint("indicator-session")
+        self.mouse_open_indicator(indicator)
+
+        self.assertThat(indicator.active, Eventually(Equals(True)))
+        self.assertThat(self.dash.visible, Eventually(Equals(False)))
+
 
 class PanelKeyNavigationTests(PanelTestsBase):
 
