@@ -174,7 +174,7 @@ void PanelView::SetLauncherWidth(int width)
   QueueDraw();
 }
 
-bool PanelView::IsMouseInsideIndicator(nux::Point mouse_position) const
+bool PanelView::IsMouseInsideIndicator(nux::Point const& mouse_position) const
 {
   return indicators_->GetGeometry().IsInside(mouse_position);
 }

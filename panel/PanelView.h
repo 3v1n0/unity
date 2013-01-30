@@ -66,7 +66,7 @@ public:
 
   void SetLauncherWidth(int width);
 
-  bool IsMouseInsideIndicator(nux::Point mouse_position) const;
+  bool IsMouseInsideIndicator(nux::Point const& mouse_position) const;
 
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);

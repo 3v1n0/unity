@@ -53,7 +53,7 @@ public:
 
   float opacity() const;
 
-  bool IsMouseInsideIndicator(nux::Point mouse_position) const;
+  bool IsMouseInsideIndicator(nux::Point const& mouse_position) const;
 
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);

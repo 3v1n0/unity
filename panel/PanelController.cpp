@@ -60,7 +60,6 @@ public:
 
   void OnScreenChanged(unsigned int primary_monitor, std::vector<nux::Geometry>& monitors, Introspectable *iobj);
 
-  bool IsMouseInsideIndicator(nux::Point mouse_position) const;
 private:
   typedef nux::ObjectPtr<nux::BaseWindow> BaseWindowPtr;
 
@@ -293,7 +292,7 @@ void Controller::Impl::WindowConfigureCallback(int window_width,
   geo = window->GetGeometry();
 }
 
-bool Controller::IsMouseInsideIndicator(nux::Point mouse_position) const
+bool Controller::IsMouseInsideIndicator(nux::Point const& mouse_position) const
 {
   for (auto view : pimpl->GetPanelViews())
   {
