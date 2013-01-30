@@ -30,7 +30,6 @@ using namespace testing;
 #include "unity-shared/UnitySettings.h"
 
 #include <unity-protocol.h>
-#include "UnityCore/ApplicationPreview.h"
 #include "dash/previews/MusicPaymentPreview.h"
 #include "test_utils.h"
 
