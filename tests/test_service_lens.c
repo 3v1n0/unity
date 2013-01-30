@@ -23,6 +23,8 @@ service_lens_dispose(GObject* object)
 
   g_object_unref(self->priv->lens);
   g_object_unref(self->priv->scope);
+
+  G_OBJECT_CLASS (service_lens_parent_class)->dispose (object);
 }
 
 static void
