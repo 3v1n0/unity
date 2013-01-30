@@ -106,6 +106,7 @@ private:
   };
 
   void EnsureWindowState();
+  void AddMenuItemsWindowList(MenuItemsVector result);
   void EnsureMenuItemsReady();
   void UpdateBackgroundColor();
   void UpdateMenus();

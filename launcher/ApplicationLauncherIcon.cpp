@@ -667,6 +667,66 @@ void ApplicationLauncherIcon::UpdateBackgroundColor()
     EmitNeedsRedraw();
 }
 
+void ApplicationLauncherIcon::AddMenuItemsWindowList(MenuItemsVector result)
+{
+    WindowManager& wm = WindowManager::Default();
+    // delete all menu items for windows
+    for ( auto mitem_it = _menu_items.begin();
+          mitem_it != _menu_items.end() ; mitem_it++ ) {
+        if ( !strncmp(mitem_it->first.c_str(),"w_list_",7 ) ) {
+            _menu_items.erase( mitem_it );
+        }
+    }
+
+    int i = 0;
+    bool windows_added = false;
+    // add menu items for all open windows
+    for ( auto w: Windows() ) {
+        windows_added = true;
+        i++;
+        int name_size = snprintf(NULL,0,"w_list_%d",i)+1;
+        if (name_size < 1) {
+            continue;
+        }
+        char menu_item_name[name_size];
+        sprintf(menu_item_name,"w_list_%d",i);
+
+        glib::Object<DbusmenuMenuitem> menu_item;
+        menu_item = dbusmenu_menuitem_new();
+        dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+        dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+        _gsignals.Add(
+                new glib::Signal<void, DbusmenuMenuitem*, int>(menu_item,
+                    DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+                        [w,&wm] (DbusmenuMenuitem*,int) -> void {
+                            wm.Activate(w->window_id());
+                            wm.Raise(w->window_id());
+                        } ) 
+                );
+        _menu_items[menu_item_name] = menu_item;
+        std::string winName( ( wm.GetWindowName( w->window_id() ) ) );
+        dbusmenu_menuitem_property_set(menu_item, 
+                DBUSMENU_MENUITEM_PROP_LABEL, winName.c_str() );
+        result.push_back( menu_item );
+    }
+
+    if (windows_added) {
+        // add seperator after window list
+        auto sep = _menu_items_extra.find("WindowListSeparator");
+        glib::Object<DbusmenuMenuitem> item;
+        if (sep == _menu_items_extra.end()) {
+            item = dbusmenu_menuitem_new();
+            dbusmenu_menuitem_property_set(item,
+                    DBUSMENU_MENUITEM_PROP_TYPE,
+                    DBUSMENU_CLIENT_TYPES_SEPARATOR);
+            _menu_items_extra["WindowListSeparator"] = glib::Object<DbusmenuMenuitem>(item);
+        } else {
+            item = sep->second;
+        }
+        result.push_back( item );
+    }
+}
+
 void ApplicationLauncherIcon::UpdateMenus()
 {
   // add dynamic quicklist
@@ -901,6 +961,7 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
   }
   result.push_back(item);
 
+  AddMenuItemsWindowList(result);
   EnsureMenuItemsReady();
 
   for (auto it : _menu_items)
