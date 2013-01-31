@@ -347,8 +347,6 @@ void QuicklistMenuItem::EnableLabelMarkup(bool enabled)
   if (IsMarkupEnabled() != enabled)
   {
     dbusmenu_menuitem_property_set_bool(_menu_item, MARKUP_ENABLED_PROPERTY, enabled ? TRUE : FALSE);
-
-    _text = "";
     InitializeText();
   }
 }
@@ -367,8 +365,6 @@ void QuicklistMenuItem::SetMaxLabelWidth(int max_width)
   if (GetMaxLabelWidth() != max_width)
   {
     dbusmenu_menuitem_property_set_int(_menu_item, MAXIMUM_LABEL_WIDTH_PROPERTY, max_width);
-
-    _text = "";
     InitializeText();
   }
 }
