@@ -29,7 +29,13 @@
 namespace unity
 {
 const char* QuicklistMenuItem::MARKUP_ENABLED_PROPERTY = "unity-use-markup";
+const char* QuicklistMenuItem::LIMITED_WIDTH_PROPERTY = "unity-use-limited-width";
 const char* QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY = "unity-overlay-item";
+
+namespace
+{
+  const unsigned LIMITED_ITEM_MAX_WIDTH = 200;
+}
 
 NUX_IMPLEMENT_OBJECT_TYPE(QuicklistMenuItem);
 
@@ -279,8 +285,14 @@ void QuicklistMenuItem::DrawText(nux::CairoGraphics& cairo, int width, int heigh
   std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font_name), pango_font_description_free);
   pango_layout_set_font_description(layout, desc.get());
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
-  pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
   pango_layout_set_markup_with_accel(layout, _text.c_str(), -1, '_', nullptr);
+
+  if (IsWidthLimited())
+  {
+    int max_width = std::min<int>(GetMaximumWidth(), LIMITED_ITEM_MAX_WIDTH);
+    pango_layout_set_width(layout, max_width * PANGO_SCALE);
+    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_MIDDLE);
+  }
 
   PangoContext* pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
   pango_cairo_context_set_font_options(pangoCtx, gdk_screen_get_font_options(screen));
@@ -339,7 +351,7 @@ void QuicklistMenuItem::EnableLabelMarkup(bool enabled)
 {
   if (IsMarkupEnabled() != enabled)
   {
-    dbusmenu_menuitem_property_set_bool(_menu_item, MARKUP_ENABLED_PROPERTY, enabled);
+    dbusmenu_menuitem_property_set_bool(_menu_item, MARKUP_ENABLED_PROPERTY, enabled ? TRUE : FALSE);
 
     _text = "";
     InitializeText();
@@ -353,6 +365,26 @@ bool QuicklistMenuItem::IsMarkupEnabled() const
 
   gboolean markup = dbusmenu_menuitem_property_get_bool(_menu_item, MARKUP_ENABLED_PROPERTY);
   return (markup != FALSE);
+}
+
+void QuicklistMenuItem::EnableWidthLimiter(bool enabled)
+{
+  if (IsWidthLimited() != enabled)
+  {
+    dbusmenu_menuitem_property_set_bool(_menu_item, LIMITED_WIDTH_PROPERTY, enabled ? TRUE : FALSE);
+
+    _text = "";
+    InitializeText();
+  }
+}
+
+bool QuicklistMenuItem::IsWidthLimited() const
+{
+  if (!_menu_item)
+    return false;
+
+  gboolean limited = dbusmenu_menuitem_property_get_bool(_menu_item, LIMITED_WIDTH_PROPERTY);
+  return (limited != FALSE);
 }
 
 bool QuicklistMenuItem::IsOverlayQuicklist() const
