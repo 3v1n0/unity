@@ -206,12 +206,13 @@ public:
     glib::Object<GMount> mount(g_volume_get_mount(volume_));
     glib::Object<GMountOperation> op(gtk_mount_operation_new(nullptr));
 
-    g_mount_unmount_with_operation(mount, (GMountUnmountFlags) 0, op,
-                                   cancellable_, [] (GObject* source_object, GAsyncResult* res, gpointer /*user_data*/)
-      {
-        GMount* mount = G_MOUNT(source_object);
-        g_mount_unmount_with_operation_finish(mount, res, nullptr);
-      }, nullptr);
+    g_mount_unmount_with_operation(mount, (GMountUnmountFlags) 0, op, cancellable_,
+                                   &VolumeImp::Impl::FinishUmount, nullptr);
+  }
+
+  static void FinishUmount(GObject* object, GAsyncResult* res, gpointer)
+  {
+    g_mount_unmount_with_operation_finish(G_MOUNT(object), res, nullptr);
   }
 
   VolumeImp* parent_;
