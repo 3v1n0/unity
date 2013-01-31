@@ -109,7 +109,7 @@ private:
   void UpdateTitleTexture(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label) const;
 
   void UpdateLastGeometry(nux::Geometry const& geo);
-  void UpdateGradientTexture();
+  void UpdateTitleGradientTexture();
 
   void OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
@@ -135,7 +135,7 @@ private:
   bool ShouldDrawMenus() const;
   bool ShouldDrawButtons() const;
   bool ShouldDrawFadingTitle() const;
-  bool HasMenu() const;
+  bool HasVisibleMenus() const;
 
   double GetTitleOpacity() const;
 

@@ -373,11 +373,11 @@ bool PanelMenuView::ShouldDrawButtons() const
 
 bool PanelMenuView::ShouldDrawFadingTitle() const
 {
-  return (!ShouldDrawButtons() && we_control_active_ && HasMenu() &&
+  return (!ShouldDrawButtons() && we_control_active_ && HasVisibleMenus() &&
          (ShouldDrawMenus() || (opacity() > 0.0f && window_buttons_->opacity() == 0.0f)));
 }
 
-bool PanelMenuView::HasMenu() const
+bool PanelMenuView::HasVisibleMenus() const
 {
   for (auto const& entry : entries_)
     if (entry.second->IsVisible())
@@ -389,7 +389,7 @@ bool PanelMenuView::HasMenu() const
 double PanelMenuView::GetTitleOpacity() const
 {
   double title_opacity = 1.0f;
-  bool has_menu = HasMenu();
+  bool has_menu = HasVisibleMenus();
 
   bool is_title_soild = we_control_active_ && (!has_menu || opacity() == 0.0) &&
                         window_buttons_->opacity() == 0.0;
@@ -450,7 +450,7 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
     if (ShouldDrawFadingTitle())
     {
-      UpdateGradientTexture();
+      UpdateTitleGradientTexture();
 
       GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -487,7 +487,7 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
 }
 
-void PanelMenuView::UpdateGradientTexture()
+void PanelMenuView::UpdateTitleGradientTexture()
 {
   float const factor = 4;
   float button_width = window_buttons_->GetContentWidth() / 4;
