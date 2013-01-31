@@ -29,13 +29,8 @@
 namespace unity
 {
 const char* QuicklistMenuItem::MARKUP_ENABLED_PROPERTY = "unity-use-markup";
-const char* QuicklistMenuItem::LIMITED_WIDTH_PROPERTY = "unity-use-limited-width";
+const char* QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY = "unity-max-label-width";
 const char* QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY = "unity-overlay-item";
-
-namespace
-{
-  const unsigned LIMITED_ITEM_MAX_WIDTH = 200;
-}
 
 NUX_IMPLEMENT_OBJECT_TYPE(QuicklistMenuItem);
 
@@ -287,9 +282,9 @@ void QuicklistMenuItem::DrawText(nux::CairoGraphics& cairo, int width, int heigh
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
   pango_layout_set_markup_with_accel(layout, _text.c_str(), -1, '_', nullptr);
 
-  if (IsWidthLimited())
+  if (GetMaxLabelWidth() > 0)
   {
-    int max_width = std::min<int>(GetMaximumWidth(), LIMITED_ITEM_MAX_WIDTH);
+    int max_width = std::min<int>(GetMaximumWidth(), GetMaxLabelWidth());
     pango_layout_set_width(layout, max_width * PANGO_SCALE);
     pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_MIDDLE);
   }
@@ -367,24 +362,23 @@ bool QuicklistMenuItem::IsMarkupEnabled() const
   return (markup != FALSE);
 }
 
-void QuicklistMenuItem::EnableWidthLimiter(bool enabled)
+void QuicklistMenuItem::SetMaxLabelWidth(int max_width)
 {
-  if (IsWidthLimited() != enabled)
+  if (GetMaxLabelWidth() != max_width)
   {
-    dbusmenu_menuitem_property_set_bool(_menu_item, LIMITED_WIDTH_PROPERTY, enabled ? TRUE : FALSE);
+    dbusmenu_menuitem_property_set_int(_menu_item, MAXIMUM_LABEL_WIDTH_PROPERTY, max_width);
 
     _text = "";
     InitializeText();
   }
 }
 
-bool QuicklistMenuItem::IsWidthLimited() const
+int QuicklistMenuItem::GetMaxLabelWidth() const
 {
   if (!_menu_item)
-    return false;
+    return -1;
 
-  gboolean limited = dbusmenu_menuitem_property_get_bool(_menu_item, LIMITED_WIDTH_PROPERTY);
-  return (limited != FALSE);
+  return dbusmenu_menuitem_property_get_int(_menu_item, MAXIMUM_LABEL_WIDTH_PROPERTY);
 }
 
 bool QuicklistMenuItem::IsOverlayQuicklist() const
