@@ -317,23 +317,23 @@ void PanelMenuView::OnFadeAnimatorUpdated(double progress)
 {
   if (opacity_animator_.GetFinishValue() == 1.0f) /* Fading in... */
   {
-    if (DrawMenus() && opacity() != 1.0f)
+    if (ShouldDrawMenus() && opacity() != 1.0f)
       opacity = progress;
 
-    if (DrawWindowButtons() && window_buttons_->opacity() != 1.0f)
+    if (ShouldDrawButtons() && window_buttons_->opacity() != 1.0f)
       window_buttons_->opacity = progress;
   }
   else if (opacity_animator_.GetFinishValue() == 0.0f) /* Fading out... */
   {
-    if (!DrawMenus() && opacity() != 0.0f)
+    if (!ShouldDrawMenus() && opacity() != 0.0f)
       opacity = progress;
 
-    if (!DrawWindowButtons() && window_buttons_->opacity() != 0.0f)
+    if (!ShouldDrawButtons() && window_buttons_->opacity() != 0.0f)
       window_buttons_->opacity = progress;
   }
 }
 
-bool PanelMenuView::DrawMenus() const
+bool PanelMenuView::ShouldDrawMenus() const
 {
   WindowManager& wm = WindowManager::Default();
   bool screen_grabbed = (wm.IsExpoActive() || wm.IsScaleActive());
@@ -350,7 +350,7 @@ bool PanelMenuView::DrawMenus() const
   return false;
 }
 
-bool PanelMenuView::DrawWindowButtons() const
+bool PanelMenuView::ShouldDrawButtons() const
 {
   WindowManager& wm = WindowManager::Default();
   bool screen_grabbed = (wm.IsExpoActive() || wm.IsScaleActive());
@@ -371,19 +371,65 @@ bool PanelMenuView::DrawWindowButtons() const
   return false;
 }
 
-void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+bool PanelMenuView::ShouldDrawFadingTitle() const
 {
-  nux::Geometry const& geo = GetGeometry();
-  int button_width = window_buttons_->GetContentWidth();
-  const float factor = 4;
-  button_width /= factor;
+  return (!ShouldDrawButtons() && we_control_active_ && HasMenu() &&
+         (ShouldDrawMenus() || (opacity() > 0.0f && window_buttons_->opacity() == 0.0f)));
+}
 
+bool PanelMenuView::HasMenu() const
+{
+  for (auto const& entry : entries_)
+    if (entry.second->IsVisible())
+      return true;
+
+  return false;
+}
+
+double PanelMenuView::GetTitleOpacity() const
+{
+  double title_opacity = 1.0f;
+  bool has_menu = HasMenu();
+
+  bool is_title_soild = we_control_active_ && (!has_menu || opacity() == 0.0) &&
+                        window_buttons_->opacity() == 0.0;
+
+  if (!is_title_soild)
+  {
+    if (has_menu)
+      title_opacity -= std::max<double>(opacity(), window_buttons_->opacity());
+    else
+      title_opacity -= window_buttons_->opacity();
+
+    if (!ShouldDrawButtons() && !ShouldDrawMenus())
+    {
+      // If we're fading-out the buttons/menus, let's fade-in quickly the title
+      title_opacity = CLAMP(title_opacity + 0.1f, 0.0f, 1.0f);
+    }
+    else
+    {
+      // If we're fading-in the buttons/menus, let's fade-out quickly the title
+      title_opacity = CLAMP(title_opacity - 0.2f, 0.0f, 1.0f);
+    }
+  }
+
+  return title_opacity;
+}
+
+void PanelMenuView::UpdateLastGeometry(nux::Geometry const& geo)
+{
   if (geo != last_geo_)
   {
     last_geo_ = geo;
     QueueRelayout();
     Refresh(true);
   }
+}
+
+void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
+{
+  nux::Geometry const& geo = GetGeometry();
+  UpdateLastGeometry(geo);
 
   GfxContext.PushClippingRectangle(geo);
 
@@ -393,123 +439,18 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-  nux::ColorLayer layer(nux::Color(0x00000000), true, rop);
-  nux::GetPainter().PushDrawLayer(GfxContext, GetGeometry(), &layer);
+  nux::ColorLayer layer(nux::color::Transparent, true, rop);
+  nux::GetPainter().PushDrawLayer(GfxContext, geo, &layer);
 
   if (title_texture_)
   {
     guint blend_alpha = 0, blend_src = 0, blend_dest = 0;
-    bool draw_menus = DrawMenus();
-    bool draw_window_buttons = DrawWindowButtons();
-    bool has_menu = false;
-    bool draw_faded_title = false;
 
     GfxContext.GetRenderStates().GetBlend(blend_alpha, blend_src, blend_dest);
 
-    for (auto const& entry : entries_)
+    if (ShouldDrawFadingTitle())
     {
-      if (entry.second->IsVisible())
-      {
-        has_menu = true;
-        break;
-      }
-    }
-
-    if (!draw_window_buttons && we_control_active_ && has_menu &&
-        (draw_menus || (opacity() > 0.0f && window_buttons_->opacity() == 0.0f)))
-    {
-      draw_faded_title = true;
-    }
-
-    if (draw_faded_title)
-    {
-      bool build_gradient = false;
-      nux::SURFACE_LOCKED_RECT lockrect;
-      lockrect.pBits = 0;
-      bool locked = false;
-
-      if (gradient_texture_.IsNull() || (gradient_texture_->GetWidth() != geo.width))
-      {
-        build_gradient = true;
-      }
-      else
-      {
-        if (gradient_texture_->LockRect(0, &lockrect, nullptr) != OGL_OK)
-          build_gradient = true;
-        else
-          locked = true;
-
-        if (!lockrect.pBits)
-        {
-          build_gradient = true;
-
-          if (locked)
-            gradient_texture_->UnlockRect(0);
-        }
-      }
-
-      if (build_gradient)
-      {
-        nux::NTextureData texture_data(nux::BITFMT_R8G8B8A8, geo.width, 1, 1);
-
-        gradient_texture_ = nux::GetGraphicsDisplay()->GetGpuDevice()->
-                            CreateSystemCapableDeviceTexture(texture_data.GetWidth(),
-                            texture_data.GetHeight(), 1, texture_data.GetFormat());
-        locked = (gradient_texture_->LockRect(0, &lockrect, nullptr) == OGL_OK);
-      }
-
-      BYTE* dest_buffer = (BYTE*) lockrect.pBits;
-      int gradient_opacity = 255.0f * opacity();
-      int buttons_opacity = 255.0f * window_buttons_->opacity();
-
-      int first_step = button_width * (factor - 1);
-      int second_step = button_width * factor;
-
-      for (int x = 0; x < geo.width && dest_buffer && locked; x++)
-      {
-        BYTE r, g, b, a;
-
-        r = 223;
-        g = 219;
-        b = 210;
-
-        if (x < first_step)
-        {
-          int color_increment = (first_step - x) * 4;
-
-          r = CLAMP(r + color_increment, r, 0xff);
-          g = CLAMP(g + color_increment, g, 0xff);
-          b = CLAMP(b + color_increment, b, 0xff);
-          a = 0xff - buttons_opacity;
-        }
-        else if (x < second_step)
-        {
-          a = 0xff - gradient_opacity * (((float)x - (first_step)) /
-                                         (float)(button_width));
-        }
-        else
-        {
-          if (!draw_menus)
-          {
-            a = 0xff - gradient_opacity;
-          }
-          else
-          {
-            // If we're fading-out the title, it's better to quickly hide
-            // the transparent right-most area
-            a = CLAMP(0xff - gradient_opacity - 0x55, 0x00, 0xff);
-          }
-        }
-
-        *(dest_buffer + 4 * x + 0) = (r * a) / 0xff; //red
-        *(dest_buffer + 4 * x + 1) = (g * a) / 0xff; //green
-        *(dest_buffer + 4 * x + 2) = (b * a) / 0xff; //blue
-        *(dest_buffer + 4 * x + 3) = a;
-      }
-
-      // FIXME Nux shouldn't make unity to crash if we try to unlock a wrong rect
-      if (locked)
-        gradient_texture_->UnlockRect(0);
+      UpdateGradientTexture();
 
       GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -527,33 +468,7 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     }
     else if (!overlay_showing_)
     {
-      double title_opacity = 0.0f;
-
-      if (we_control_active_ && window_buttons_->opacity() == 0.0 &&
-          (!has_menu || (has_menu && opacity() == 0.0)))
-      {
-        title_opacity = 1.0f;
-      }
-      else
-      {
-        title_opacity = 1.0f;
-
-        if (has_menu)
-          title_opacity -= std::max<double>(opacity(), window_buttons_->opacity());
-        else
-          title_opacity -= window_buttons_->opacity();
-
-        if (!draw_window_buttons && !draw_menus)
-        {
-          // If we're fading-out the buttons/menus, let's fade-in quickly the title
-          title_opacity = CLAMP(title_opacity + 0.1f, 0.0f, 1.0f);
-        }
-        else
-        {
-          // If we're fading-in the buttons/menus, let's fade-out quickly the title
-          title_opacity = CLAMP(title_opacity - 0.2f, 0.0f, 1.0f);
-        }
-      }
+      double title_opacity = GetTitleOpacity();
 
       if (title_opacity > 0.0f)
       {
@@ -572,11 +487,106 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.PopClippingRectangle();
 }
 
+void PanelMenuView::UpdateGradientTexture()
+{
+  float const factor = 4;
+  float button_width = window_buttons_->GetContentWidth() / 4;
+
+  nux::Geometry const& geo = GetGeometry();
+  nux::SURFACE_LOCKED_RECT lockrect;
+  bool build_gradient = false;
+  bool locked = false;
+  lockrect.pBits = 0;
+
+  if (gradient_texture_.IsNull() || (gradient_texture_->GetWidth() != geo.width))
+  {
+    build_gradient = true;
+  }
+  else
+  {
+    if (gradient_texture_->LockRect(0, &lockrect, nullptr) != OGL_OK)
+      build_gradient = true;
+    else
+      locked = true;
+
+    if (!lockrect.pBits)
+    {
+      build_gradient = true;
+
+      if (locked)
+        gradient_texture_->UnlockRect(0);
+    }
+  }
+
+  if (build_gradient)
+  {
+    nux::NTextureData texture_data(nux::BITFMT_R8G8B8A8, geo.width, 1, 1);
+
+    gradient_texture_ = nux::GetGraphicsDisplay()->GetGpuDevice()->
+                        CreateSystemCapableDeviceTexture(texture_data.GetWidth(),
+                        texture_data.GetHeight(), 1, texture_data.GetFormat());
+
+    locked = (gradient_texture_->LockRect(0, &lockrect, nullptr) == OGL_OK);
+  }
+
+  BYTE* dest_buffer = (BYTE*) lockrect.pBits;
+  int gradient_opacity = 255.0f * opacity();
+  int buttons_opacity = 255.0f * window_buttons_->opacity();
+
+  int first_step = button_width * (factor - 1);
+  int second_step = button_width * factor;
+
+  for (int x = 0; x < geo.width && dest_buffer && locked; x++)
+  {
+    BYTE r, g, b, a;
+
+    r = 223;
+    g = 219;
+    b = 210;
+
+    if (x < first_step)
+    {
+      int color_increment = (first_step - x) * 4;
+
+      r = CLAMP(r + color_increment, r, 0xff);
+      g = CLAMP(g + color_increment, g, 0xff);
+      b = CLAMP(b + color_increment, b, 0xff);
+      a = 0xff - buttons_opacity;
+    }
+    else if (x < second_step)
+    {
+      a = 0xff - gradient_opacity * (((float)x - (first_step)) / (button_width));
+    }
+    else
+    {
+      if (ShouldDrawMenus())
+      {
+        // If we're fading-out the title, it's better to quickly hide
+        // the transparent right-most area
+        a = CLAMP(0xff - gradient_opacity - 0x55, 0x00, 0xff);
+      }
+      else
+      {
+        a = 0xff - gradient_opacity;
+      }
+    }
+
+    dest_buffer[4 * x]     = (r * a) / 0xff;
+    dest_buffer[4 * x + 1] = (g * a) / 0xff;
+    dest_buffer[4 * x + 2] = (b * a) / 0xff;
+    dest_buffer[4 * x + 3] = a;
+  }
+
+  // FIXME Nux shouldn't make unity to crash if we try to unlock a wrong rect
+  if (locked)
+    gradient_texture_->UnlockRect(0);
+}
+
 void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
-  bool draw_menus = DrawMenus();
-  bool draw_buttons = DrawWindowButtons();
+  bool draw_menus = ShouldDrawMenus();
+  bool draw_buttons = ShouldDrawButtons();
 
   GfxContext.PushClippingRectangle(geo);
 
@@ -619,7 +629,7 @@ void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
     if (window_buttons_->opacity() != 1.0f)
       StartFadeIn();
   }
-  else if (/*!draw_buttons &&*/ window_buttons_->opacity() != 0.0f)
+  else if (window_buttons_->opacity() != 0.0f)
   {
     window_buttons_->ProcessDraw(GfxContext, true);
 
@@ -698,7 +708,7 @@ std::string PanelMenuView::GetActiveViewName(bool use_appname) const
   return label;
 }
 
-void PanelMenuView::DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label) const
+void PanelMenuView::UpdateTitleTexture(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label) const
 {
   using namespace panel;
   cairo_t* cr;
@@ -847,7 +857,7 @@ void PanelMenuView::Refresh(bool force)
   cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
   cairo_paint(cr);
 
-  DrawTitle(cr, geo, panel_title_);
+  UpdateTitleTexture(cr, geo, panel_title_);
 
   cairo_destroy(cr);
 
@@ -1504,8 +1514,8 @@ void PanelMenuView::AddProperties(GVariantBuilder* builder)
   .add("desktop_active", (panel_title_ == desktop_name_))
   .add("monitor", monitor_)
   .add("active_window", active_xid_)
-  .add("draw_menus", DrawMenus())
-  .add("draw_window_buttons", DrawWindowButtons())
+  .add("draw_menus", ShouldDrawMenus())
+  .add("draw_window_buttons", ShouldDrawButtons())
   .add("controls_active_window", we_control_active_)
   .add("fadein_duration", menus_fadein_)
   .add("fadeout_duration", menus_fadeout_)
