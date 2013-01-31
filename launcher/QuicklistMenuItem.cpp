@@ -286,7 +286,7 @@ void QuicklistMenuItem::DrawText(nux::CairoGraphics& cairo, int width, int heigh
   {
     int max_width = std::min<int>(GetMaximumWidth(), GetMaxLabelWidth());
     pango_layout_set_width(layout, max_width * PANGO_SCALE);
-    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_MIDDLE);
+    pango_layout_set_ellipsize(layout, PANGO_ELLIPSIZE_END);
   }
 
   PangoContext* pangoCtx = pango_layout_get_context(layout);  // is not ref'ed
