@@ -3,6 +3,7 @@ unity (6.12.0daily13.01.25.1-0ubuntu2) UNRELEASED; urgency=low
   * debian/control:
     - recommends indicator-sync so it gets installed by default 
       (lp: #1053482)
+    - recommends indicator-bluetooth as well (lp: #1111314)
 
   [ Łukasz 'sil2100' Zemczak ]
   * debian/control:
