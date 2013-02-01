@@ -1530,11 +1530,23 @@ void UnityScreen::handleEvent(XEvent* event)
 
         Window dash_xid = dash_controller_->window()->GetInputWindowId();
         Window top_xid = wm.GetTopWindowAbove(dash_xid);
-        nux::Geometry const& on_top_geo = wm.GetWindowGeometry(top_xid);
+        nux::Geometry const& always_on_top_geo = wm.GetWindowGeometry(top_xid);
 
-        if (!dash_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt) && !on_top_geo.IsInside(pt))
+        bool indicator_clicked = panel_controller_->IsMouseInsideIndicator(pt);
+        bool outside_dash = !dash_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt);
+
+        if ((outside_dash || indicator_clicked) && !always_on_top_geo.IsInside(pt))
         {
-          dash_controller_->HideDash(false);
+          if (indicator_clicked)
+          {
+            // We must skip the Dash hide animation, otherwise the indicators
+            // wont recive the mouse click event
+            dash_controller_->QuicklyHideDash();
+          }
+          else
+          {
+            dash_controller_->HideDash(false);
+          }
         }
       }
 

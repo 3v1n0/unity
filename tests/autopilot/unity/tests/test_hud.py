@@ -452,6 +452,7 @@ class HudBehaviorTests(HudTestsBase):
         self.start_app('Calculator')
 
         self.keybinding("switcher/reveal_normal")
+        self.assertProperty(char_win, is_active=True)
 
         self.hud.ensure_visible()
         self.hud.ensure_hidden()
