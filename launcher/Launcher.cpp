@@ -2227,21 +2227,25 @@ void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_
   EventLogic();
 }
 
-void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags)
+void Launcher::RecvMouseWheel(int /*x*/, int /*y*/, int wheel_delta, unsigned long /*button_flags*/, unsigned long key_flags)
 {
   if (!_hovered)
     return;
 
+  bool alt_pressed = nux::GetKeyModifierState(key_flags, nux::NUX_STATE_ALT);
+
+  if (alt_pressed)
+    ScrollLauncher(wheel_delta);
+}
+
+void Launcher::ScrollLauncher(int wheel_delta)
+{
   if (wheel_delta < 0)
-  {
-    // scroll up
-    _launcher_drag_delta -= 25;
-  }
-  else
-  {
     // scroll down
+    _launcher_drag_delta -= 25;
+  else
+    // scroll up
     _launcher_drag_delta += 25;
-  }
 
   EnsureAnimation();
 }

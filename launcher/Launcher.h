@@ -118,6 +118,8 @@ public:
   virtual void RecvQuicklistOpened(QuicklistView* quicklist);
   virtual void RecvQuicklistClosed(QuicklistView* quicklist);
 
+  void ScrollLauncher(int wheel_delta);
+
   int GetMouseX() const;
   int GetMouseY() const;
 
