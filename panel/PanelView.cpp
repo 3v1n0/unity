@@ -521,8 +521,11 @@ void PanelView::ForceUpdateBackground()
   UpdateBackground();
 
   indicators_->QueueDraw();
-  menu_view_->QueueDraw();
   tray_->QueueDraw();
+
+  if (!overlay_is_open_)
+    menu_view_->QueueDraw();
+
   QueueDraw();
 }
 
