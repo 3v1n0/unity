@@ -64,7 +64,6 @@ set (UNITY_SHARED_SOURCES
      VScrollBarOverlayWindow.cpp
      WindowButtons.cpp
      WindowManager.cpp
-     XPathQueryPart.cpp
 )
 
 if(ENABLE_X_SUPPORT)
