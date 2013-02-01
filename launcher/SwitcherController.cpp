@@ -555,7 +555,7 @@ Selection Controller::Impl::GetCurrentSelection() const
       }
       else if (application->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
       {
-        auto const xids = model_->DetailXids();
+        auto const& xids = model_->DetailXids();
         if (!xids.empty())
           window = xids.front();
       }
