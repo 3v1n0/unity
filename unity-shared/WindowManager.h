@@ -101,6 +101,7 @@ public:
   virtual void Activate(Window window_id) = 0;
   virtual void Raise(Window window_id) = 0;
   virtual void Lower(Window window_id) = 0;
+  virtual void RestackBelow(Window window_id, Window sibiling_id) = 0;
 
   virtual void TerminateScale() = 0;
   virtual bool IsScaleActive() const = 0;

@@ -726,6 +726,17 @@ void PluginAdapter::Lower(Window window_id)
     window->lower();
 }
 
+void PluginAdapter::RestackBelow(Window window_id, Window sibiling_id)
+{
+  CompWindow* window = m_Screen->findWindow(window_id);
+  if (!window)
+    return;
+
+  CompWindow* sibiling = m_Screen->findWindow(sibiling_id);
+  if (sibiling)
+    window->restackBelow(sibiling);
+}
+
 void PluginAdapter::FocusWindowGroup(std::vector<Window> const& window_ids,
                                      FocusVisibility focus_visibility,
                                      int monitor, bool only_top_win)
