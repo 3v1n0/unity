@@ -234,12 +234,6 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
 
   Area* found_area = nullptr;
 
-  if (overlay_showing_)
-  {
-    if (window_buttons_)
-      return window_buttons_->FindAreaUnderMouse(mouse_position, event_type);
-  }
-
   if (!we_control_active_)
   {
     /* When the current panel is not active, it all behaves like a grab-area */
@@ -256,7 +250,7 @@ nux::Area* PanelMenuView::FindAreaUnderMouse(const nux::Point& mouse_position, n
     }
   }
 
-  if (titlebar_grab_area_ && !overlay_showing_)
+  if (titlebar_grab_area_)
   {
     found_area = titlebar_grab_area_->FindAreaUnderMouse(mouse_position, event_type);
     NUX_RETURN_VALUE_IF_NOTNULL(found_area, found_area);
@@ -338,7 +332,7 @@ bool PanelMenuView::ShouldDrawMenus() const
   WindowManager& wm = WindowManager::Default();
   bool screen_grabbed = (wm.IsExpoActive() || wm.IsScaleActive());
 
-  if (we_control_active_ && !overlay_showing_ && !screen_grabbed &&
+  if (we_control_active_ && !screen_grabbed &&
       !switcher_showing_ && !launcher_keynav_ && !entries_.empty())
   {
     if (is_inside_ || last_active_view_ || show_now_activated_ || new_application_)
@@ -354,10 +348,6 @@ bool PanelMenuView::ShouldDrawButtons() const
 {
   WindowManager& wm = WindowManager::Default();
   bool screen_grabbed = (wm.IsExpoActive() || wm.IsScaleActive());
-
-  // TODO: We need to refactor this code to extract the window button logic
-  if (overlay_showing_)
-    return false;
 
   if (we_control_active_ && is_maximized_ && !screen_grabbed &&
       !launcher_keynav_ && !switcher_showing_)
@@ -428,6 +418,9 @@ void PanelMenuView::UpdateLastGeometry(nux::Geometry const& geo)
 
 void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  if (overlay_showing_)
+    return;
+
   nux::Geometry const& geo = GetGeometry();
   UpdateLastGeometry(geo);
 
@@ -466,7 +459,7 @@ void PanelMenuView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                              texxform1,
                              nux::color::White);
     }
-    else if (!overlay_showing_)
+    else
     {
       double title_opacity = GetTitleOpacity();
 
@@ -584,6 +577,9 @@ void PanelMenuView::UpdateTitleGradientTexture()
 
 void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
+  if (overlay_showing_)
+    return;
+
   nux::Geometry const& geo = GetGeometry();
   bool draw_menus = ShouldDrawMenus();
   bool draw_buttons = ShouldDrawButtons();
@@ -610,9 +606,9 @@ void PanelMenuView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
       new_app_menu_shown_ = false;
     }
   }
-  else /* if (!draw_menus) */
+  else
   {
-    if (opacity() != 0.0f && !overlay_showing_)
+    if (opacity() != 0.0f)
     {
       layout_->ProcessDraw(GfxContext, true);
       StartFadeOut(new_app_menu_shown_ ? menus_discovery_fadeout_ : -1);
@@ -1378,9 +1374,6 @@ void PanelMenuView::OnMaximizedActivate(int x, int y)
 
 void PanelMenuView::OnMaximizedRestore(int x, int y)
 {
-  if (overlay_showing_)
-    return;
-
   Window maximized = GetMaximizedWindow();
 
   if (maximized != 0)
@@ -1392,9 +1385,6 @@ void PanelMenuView::OnMaximizedRestore(int x, int y)
 
 void PanelMenuView::OnMaximizedLower(int x, int y)
 {
-  if (overlay_showing_)
-    return;
-
   Window maximized = GetMaximizedWindow();
 
   if (maximized != 0)
