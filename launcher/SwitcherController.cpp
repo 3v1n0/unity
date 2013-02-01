@@ -250,7 +250,7 @@ void Controller::Impl::OnBackgroundUpdate(GVariant* data)
 
 void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLauncherIcon::Ptr> results)
 {
-  if (results.empty())
+  if (results.empty() || obj_->visible_)
     return;
 
   if (sort == SortMode::FOCUS_ORDER)
@@ -258,17 +258,12 @@ void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLa
     std::sort(results.begin(), results.end(), CompareSwitcherItemsPriority);
   }
 
-  model_.reset(new SwitcherModel(results));
+  model_ = std::make_shared<SwitcherModel>(results);
   obj_->AddChild(model_.get());
   model_->selection_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnModelSelectionChanged));
   model_->only_detail_on_viewport = (show == ShowMode::CURRENT_VIEWPORT);
 
   SelectFirstItem();
-
-  // XXX: Workaround for a problem related to Alt+TAB which is needed since the
-  //   switcher is set as the active window (LP: #1071298)
-  if (model_->Selection()->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
-    last_active_selection_ = model_->Selection();
 
   obj_->visible_ = true;
 
@@ -339,8 +334,6 @@ void Controller::Impl::ShowView()
     view_window_->ShowWindow(true);
     view_window_->PushToFront();
     view_window_->SetOpacity(1.0f);
-    view_window_->EnableInputWindow(true, "Switcher", true /* take focus */, false);
-    view_window_->SetInputFocus();
     view_window_->CaptureMouseDownAnyWhereElse(true);
   }
 }
@@ -359,8 +352,6 @@ void Controller::Impl::ConstructWindow()
     view_window_->SetLayout(main_layout_);
     view_window_->SetBackgroundColor(nux::Color(0x00000000));
     view_window_->SetGeometry(workarea_);
-    view_window_->EnableInputWindow(true, "Switcher", false, false);
-    view_window_->InputWindowEnableStruts(false);
   }
 }
 
@@ -416,12 +407,9 @@ void Controller::Impl::Hide(bool accept_state)
     view_window_->SetOpacity(0.0f);
     view_window_->ShowWindow(false);
     view_window_->PushToBack();
-    view_window_->EnableInputWindow(false);
   }
 
   ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new("(bi)", false, obj_->monitor_));
-
-  last_active_selection_ = nullptr;
 
   view_.Release();
 }
@@ -563,11 +551,13 @@ Selection Controller::Impl::GetCurrentSelection() const
     {
       if (model_->detail_selection)
       {
-        window =  model_->DetailSelectionWindow();
+        window = model_->DetailSelectionWindow();
       }
-      else if (application == last_active_selection_ && !model_->DetailXids().empty())
+      else if (application->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
       {
-        window =  model_->DetailXids()[0];
+        auto const& xids = model_->DetailXids();
+        if (!xids.empty())
+          window = xids.front();
       }
     }
   }
