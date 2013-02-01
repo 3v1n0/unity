@@ -303,17 +303,41 @@ void StandaloneWindowManager::Activate(Window window_id)
 
 void StandaloneWindowManager::Raise(Window window_id)
 {
-  /* TODO */
+  auto begin = standalone_windows_.begin();
+  auto end = standalone_windows_.end();
+  auto window = std::find_if(begin, end, [window_id] (StandaloneWindow::Ptr window) {
+    return window->Xid() == window_id;
+  });
+
+  if (window != end)
+    standalone_windows_.splice(begin, standalone_windows_, window);
 }
 
 void StandaloneWindowManager::Lower(Window window_id)
 {
-  /* TODO */
+  auto end = standalone_windows_.end();
+  auto window = std::find_if(standalone_windows_.begin(), end, [window_id] (StandaloneWindow::Ptr window) {
+    return window->Xid() == window_id;
+  });
+
+  if (window != end)
+    standalone_windows_.splice(end, standalone_windows_, window);
 }
 
 void StandaloneWindowManager::RestackBelow(Window window_id, Window sibiling_id)
 {
-  /* TODO */
+  auto end = standalone_windows_.end();
+  auto begin = standalone_windows_.begin();
+
+  auto window = std::find_if(begin, end, [window_id] (StandaloneWindow::Ptr window) {
+    return window->Xid() == window_id;
+  });
+  auto sibiling = std::find_if(begin, end, [sibiling_id] (StandaloneWindow::Ptr window) {
+    return window->Xid() == sibiling_id;
+  });
+
+  if (window != end && sibiling != end)
+    standalone_windows_.splice(std::next(sibiling), standalone_windows_, window);
 }
 
 void StandaloneWindowManager::TerminateScale()
