@@ -73,6 +73,13 @@ protected:
 private:
   friend class TestPanelMenuView;
 
+  void SetupPanelMenuViewSignals();
+  void SetupWindowButtons();
+  void SetupLayout();
+  void SetupTitlebarGrabArea();
+  void SetupWindowManagerSignals();
+  void SetupUBusManagerInterests();
+
   void OnActiveChanged(PanelIndicatorEntryView* view, bool is_active);
   void OnViewOpened(BamfMatcher* matcher, BamfView* view);
   void OnViewClosed(BamfMatcher* matcher, BamfView* view);
