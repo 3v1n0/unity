@@ -70,7 +70,7 @@ toggle-window-maximized-horizontally-key = /apps/compizconfig-1/profiles/unity/p
 toggle-window-maximized-key = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/toggle_window_maximized_key
 toggle-window-maximized-vertically-key = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/toggle_window_maximized_vertically_key
 toggle-window-shaded-key = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/toggle_window_shaded_key
-unmaximize-window-key = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/unmaximize_window_key
+unmaximize-or-minimize-window-key = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/unmaximize_or_minimize_window_key
 window-menu-button = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/window_menu_button
 window-menu-key = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/window_menu_key
 
