@@ -109,7 +109,7 @@ std::vector<Window> StandaloneWindowManager::GetWindowsInStackingOrder() const
 {
   std::vector<Window> ret;
   for (auto const& window : standalone_windows_)
-    ret.push_back(window->id());
+    ret.push_back(window->Xid());
 
   return ret;
 }
