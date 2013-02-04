@@ -33,6 +33,7 @@ class MockWindowManager : public WindowManager
     ~MockWindowManager();
 
     MOCK_CONST_METHOD0(GetActiveWindow, Window());
+    MOCK_CONST_METHOD0(GetWindowsInStackingOrder, std::vector<Window>());
     MOCK_CONST_METHOD1(IsWindowDecorated, bool(Window));
     MOCK_CONST_METHOD1(IsWindowMaximized, bool(Window));
     MOCK_CONST_METHOD1(IsWindowOnCurrentDesktop, bool(Window));
