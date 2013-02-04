@@ -17,6 +17,7 @@ from unity.emulators.hud import HudController
 from unity.emulators.launcher import LauncherController
 from unity.emulators.panel import PanelController
 from unity.emulators.screen import Screen
+from unity.emulators.shortcut_hint import ShortcutController
 from unity.emulators.switcher import SwitcherController
 from unity.emulators.window_manager import WindowManager
 
@@ -95,6 +96,10 @@ class Unity(UnityIntrospectionObject):
     @property
     def switcher(self):
         return self.get_children_by_type(SwitcherController)[0]
+
+    @property
+    def shortcut_hint(self):
+        return self.get_children_by_type(ShortcutController)[0]
 
     @property
     def window_manager(self):
