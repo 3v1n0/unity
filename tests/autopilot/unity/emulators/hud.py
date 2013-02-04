@@ -19,15 +19,16 @@ from unity.emulators.dash import SearchBar
 from unity.emulators.icons import HudEmbeddedIcon, HudLauncherIcon
 
 
-class Hud(KeybindingsHelper):
-    """An emulator class that makes it easier to iteract with unity hud."""
+class HudController(UnityIntrospectionObject, KeybindingsHelper):
+    """Proxy object for the Unity Hud Controller."""
 
-    def __init__(self):
-        super (Hud, self).__init__()
-        controllers = HudController.get_all_instances()
-        assert(len(controllers) == 1)
-        self.controller = controllers[0]
+    def __init__(self, *args, **kwargs):
+        super(HudController, self).__init__(*args, **kwargs)
         self.keyboard = Keyboard()
+
+    def get_hud_view(self):
+        views = self.get_children_by_type(HudView)
+        return views[0] if views else None
 
     def ensure_hidden(self):
         """Hides the hud if it's not already hidden."""
@@ -77,17 +78,12 @@ class Hud(KeybindingsHelper):
     @property
     def view(self):
         """Returns the HudView."""
-        return self.controller.get_hud_view()
-
-    @property
-    def visible(self):
-        """Is the Hud visible?"""
-        return self.controller.visible
+        return self.get_hud_view()
 
     @property
     def searchbar(self):
         """Returns the searchbar attached to the hud."""
-        return self.controller.get_hud_view().searchbar
+        return self.get_hud_view().searchbar
 
     @property
     def search_string(self):
@@ -96,24 +92,19 @@ class Hud(KeybindingsHelper):
 
     @property
     def is_locked_launcher(self):
-        return self.controller.locked_to_launcher
+        return self.locked_to_launcher
 
     @property
     def monitor(self):
-        return self.controller.hud_monitor
-
-    @property
-    def ideal_monitor(self):
-        """The target monitor for the Hud to appear on."""
-        return self.controller.ideal_monitor
+        return self.hud_monitor
 
     @property
     def geometry(self):
-        return (self.controller.x, self.controller.y, self.controller.width, self.controller.height)
+        return (self.x, self.y, self.width, self.height)
 
     @property
     def selected_button(self):
-        view = self.controller.get_hud_view()
+        view = self.get_hud_view()
         if view:
             return view.selected_button
         else:
@@ -134,7 +125,7 @@ class Hud(KeybindingsHelper):
 
     @property
     def num_buttons(self):
-        view = self.controller.get_hud_view()
+        view = self.get_hud_view()
         if view:
             return view.num_buttons
         else:
@@ -157,13 +148,6 @@ class HudView(UnityIntrospectionObject):
     def geometry(self):
         return (self.x, self.y, self.width, self.height)
 
-
-class HudController(UnityIntrospectionObject):
-    """Proxy object for the Unity Hud Controller."""
-
-    def get_hud_view(self):
-        views = self.get_children_by_type(HudView)
-        return views[0] if views else None
 
 class HudButton(UnityIntrospectionObject):
     """Proxy object for the hud buttons."""
