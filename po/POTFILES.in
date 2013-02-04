@@ -31,6 +31,7 @@ plugins/unityshell/src/unityshell.cpp
 plugins/unityshell/unityshell.xml.in
 shortcuts/ShortcutHintPrivate.cpp
 shortcuts/ShortcutView.cpp
+shortcuts/CompizShortcutsModeller.cpp
 services/panel-service.c
 unity-shared/DashStyle.cpp
 unity-shared/SearchBar.cpp

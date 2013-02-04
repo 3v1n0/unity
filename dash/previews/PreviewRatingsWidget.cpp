@@ -49,13 +49,19 @@ PreviewRatingsWidget::PreviewRatingsWidget(NUX_FILE_LINE_DECL)
 
   previews::Style& style = previews::Style::Instance();
 
+  auto on_mouse_down = [&](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_.OnMouseDown(x, y, button_flags, key_flags); };
+
   ratings_ = new RatingsButton(18,2);
   ratings_->SetEditable(false);
+  ratings_->mouse_click.connect(on_mouse_down);
   layout->AddView(ratings_);
   
   reviews_ = new StaticCairoText("", NUX_TRACKER_LOCATION);
   reviews_->SetFont(style.user_rating_font());
+  reviews_->mouse_click.connect(on_mouse_down);
   layout->AddView(reviews_);
+
+  mouse_click.connect(on_mouse_down);
 
   SetLayout(layout);
 }
@@ -108,7 +114,6 @@ void PreviewRatingsWidget::AddProperties(GVariantBuilder* builder)
   variant::BuilderWrapper(builder)
     .add(GetAbsoluteGeometry());
 }
-
 
 } // namespace previews
 } // namespace dash

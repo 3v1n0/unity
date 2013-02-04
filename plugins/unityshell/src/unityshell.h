@@ -43,7 +43,6 @@
 #include "FavoriteStoreGSettings.h"
 #include "FontSettings.h"
 #include "ShortcutController.h"
-#include "ShortcutHint.h"
 #include "LauncherController.h"
 #include "PanelController.h"
 #include "PanelStyle.h"
@@ -244,9 +243,8 @@ private:
   void OnViewShown(nux::BaseWindow *bw);
 
   void RestoreWindow(GVariant* data);
-  bool SaveInputThenFocus(const guint xid);
 
-  void InitHints();
+  bool SaveInputThenFocus(const guint xid);
 
   void OnPanelStyleChanged();
 
@@ -258,6 +256,10 @@ private:
 
   void FillShadowRectForOutput(CompRect &shadowRect,
                                CompOutput *output);
+  unsigned CompizModifiersToNux(unsigned input) const;
+  unsigned XModifiersToNux(unsigned input) const;
+
+  void UpdateCloseWindowKey(CompAction::KeyBinding const&);
 
   std::unique_ptr<na::TickSource> tick_source_;
   std::unique_ptr<na::AnimationController> animation_controller_;
@@ -281,9 +283,6 @@ private:
   hud::Controller::Ptr      hud_controller_;
   shortcut::Controller::Ptr shortcut_controller_;
   debug::DebugDBusInterface debugger_;
-
-  std::list<shortcut::AbstractHint::Ptr> hints_;
-  bool enable_shortcut_overlay_;
 
   /* Subscription for gestures that manipulate Unity launcher */
   std::unique_ptr<nux::GesturesSubscription> gestures_sub_launcher_;

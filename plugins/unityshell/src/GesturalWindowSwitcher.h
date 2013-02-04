@@ -25,8 +25,7 @@
 
 #include <Nux/Gesture.h>
 #include "CompoundGestureRecognizer.h"
-#include "SwitcherController.h"
-#include <core/timer.h>
+
 
 namespace unity
 {

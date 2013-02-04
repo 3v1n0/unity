@@ -32,6 +32,7 @@
 #include <gtk/gtk.h>
 
 #include "SwitcherController.h"
+#include "SwitcherView.h"
 #include "MockLauncherIcon.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UnitySettings.h"
@@ -42,17 +43,6 @@ using unity::launcher::AbstractLauncherIcon;
 using unity::launcher::MockLauncherIcon;
 
 static bool enable_flipping = false;
-
-class StandaloneController : public ShellController
-{
-  public:
-
-    StandaloneController() :
-      ShellController()
-    {
-      timeout_length = 0;
-    }
-};
 
 static Controller::Ptr controller;
 
@@ -138,9 +128,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 {
   nux::VLayout* layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
 
-  controller = std::make_shared<Controller>([]{
-    return Controller::ImplPtr(new StandaloneController());
-  });
+  controller = std::make_shared<Controller>();
   controller->SetWorkspace(nux::Geometry(0, 0, 900, 600), 0);
 
   layout->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
@@ -299,7 +287,6 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 
 int main(int argc, char** argv)
 {
-  g_type_init();
   gtk_init(&argc, &argv);
   nux::NuxInitialize(0);
 

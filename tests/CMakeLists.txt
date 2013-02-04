@@ -96,6 +96,7 @@ if (GTEST_SRC_DIR AND
 # The actual test executable (xless) - do not put anything that requires X in here
   set (GTEST_XLESS_SOURCES
        test_main_xless.cpp
+       test_abstract_interface_generator.cpp
        test_launcher_model.cpp
        test_glib_object.cpp
        test_glib_object_utils.cpp
@@ -229,6 +230,8 @@ if (ENABLE_X_SUPPORT)
                  test_resultviewgrid.cpp
                  test_searchbar.cpp
                  test_shortcut_controller.cpp
+                 test_shortcut_modeller_compiz.cpp
+                 test_shortcut_view.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_expo_launcher_icon.cpp
                  test_showdesktop_handler.cpp
@@ -236,6 +239,8 @@ if (ENABLE_X_SUPPORT)
                  test_static_cairo_text.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
+                 test_tabiterator.cpp
+                 test_switcher_view.cpp
                  test_texture_cache.cpp
                  test_text_input.cpp
                  test_thumbnail_generator.cpp
@@ -247,14 +252,19 @@ if (ENABLE_X_SUPPORT)
                  test_window_buttons.cpp
                  test_xdnd_manager_imp.cpp
                  test_xdnd_start_stop_notifier_imp.cpp
-                 bamf-mock-application.c
-                 bamf-mock-window.c
-                 gmockmount.c
-                 gmockvolume.c
                  ${UNITY_SRC}/UnityShowdesktopHandler.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unityshell/src/WindowMinimizeSpeedController.cpp
                 )
-  target_link_libraries(test-gtest gtest gmock unity-shared ${LIBS} launcher-lib unity-shared-bamf unity-shared-standalone shortcuts-lib previews-lib hud-lib switcher-lib dash-lib panel-lib)
+
+  # Build plain C files separately so they don't try to include the
+  # C++ pch.
+  add_library(test-gtest-plainc STATIC
+              bamf-mock-application.c
+              bamf-mock-window.c
+              gmockmount.c
+              gmockvolume.c
+              )
+  target_link_libraries(test-gtest test-gtest-plainc gtest gmock unity-shared ${LIBS} launcher-lib unity-shared-bamf unity-shared-standalone shortcuts-lib previews-lib hud-lib switcher-lib dash-lib panel-lib)
   add_test(UnityGTest test-gtest)
 endif (ENABLE_X_SUPPORT)
 endif (GTEST_SRC_DIR AND

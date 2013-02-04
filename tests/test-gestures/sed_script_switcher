@@ -22,4 +22,5 @@ s|\<LauncherController\>|LauncherControllerMock|g
 s|\<SwitcherController\>|SwitcherControllerMock|g
 s|\<switcher\:\:Controller\>|switcher\:\:ControllerMock|g
 s|\<launcher\:\:Controller\>|launcher\:\:ControllerMock|g
+/SwitcherView\.h/d
 s|\<SwitcherView\>|SwitcherViewMock|g

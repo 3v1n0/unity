@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,11 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include "ShortcutController.h"
+#include "ShortcutModel.h"
 
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UScreen.h"
 
 namespace na = nux::animation;
 
@@ -32,37 +35,28 @@ const unsigned int SUPER_TAP_DURATION = 650;
 const unsigned int FADE_DURATION = 100;
 }
 
-Controller::Controller(std::list<AbstractHint::Ptr> const& hints,
-                       BaseWindowRaiser::Ptr const& base_window_raiser)
-  : model_(std::make_shared<Model>(hints))
+Controller::Controller(BaseWindowRaiser::Ptr const& base_window_raiser,
+                       AbstractModeller::Ptr const& modeller)
+  : modeller_(modeller)
   , base_window_raiser_(base_window_raiser)
   , visible_(false)
   , enabled_(true)
   , bg_color_(0.0, 0.0, 0.0, 0.5)
   , fade_animator_(FADE_DURATION)
 {
-  model_->Fill();
-
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
                                  sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
-
-  ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWITCHER, [this] (GVariant*) {
-                                   enabled_ = false;
-                                 });
-
-  ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWITCHER, [this] (GVariant*) {
-                                   enabled_ = true;
-                                 });
-
-  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [this] (GVariant*) {
-                                   Hide();
-                                 });
+  ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWITCHER, [this] (GVariant*)
+                                 { SetEnabled(false); });
+  ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWITCHER, [this] (GVariant*)
+                                 { SetEnabled(true); });
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN,
+                                 sigc::hide(sigc::mem_fun(this, &Controller::Hide)));
 
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
-  fade_animator_.updated.connect([this] (double opacity) {
-    SetOpacity(opacity);
-  });
+  fade_animator_.updated.connect(sigc::mem_fun(this, &Controller::SetOpacity));
+  modeller_->model_changed.connect(sigc::mem_fun(this, &Controller::OnModelUpdated));
 }
 
 Controller::~Controller()
@@ -78,14 +72,35 @@ void Controller::OnBackgroundUpdate(GVariant* data)
     view_->background_color = bg_color_;
 }
 
+void Controller::OnModelUpdated(Model::Ptr const& model)
+{
+  if (!view_)
+    return;
+
+  view_->SetModel(model);
+
+  if (Visible())
+  {
+    model->Fill();
+    auto uscreen = UScreen::GetDefault();
+    int monitor = uscreen->GetMonitorAtPosition(view_window_->GetX(), view_window_->GetX());
+    auto const& offset = GetOffsetPerMonitor(monitor);
+
+    if (offset.x < 0 || offset.y < 0)
+    {
+      Hide();
+      return;
+    }
+
+    view_window_->SetXY(offset.x, offset.y);
+  }
+}
+
 bool Controller::Show()
 {
-  if (enabled_)
+  if (enabled_ && modeller_->GetCurrentModel())
   {
-    EnsureView();
-
     show_timer_.reset(new glib::Timeout(SUPER_TAP_DURATION, sigc::mem_fun(this, &Controller::OnShowTimer)));
-    model_->Fill();
     visible_ = true;
 
     return true;
@@ -96,16 +111,20 @@ bool Controller::Show()
 
 bool Controller::OnShowTimer()
 {
-  if (!enabled_)
+  if (!enabled_ || !modeller_->GetCurrentModel())
+    return false;
+
+  modeller_->GetCurrentModel()->Fill();
+  EnsureView();
+
+  int monitor = UScreen::GetDefault()->GetMonitorWithMouse();
+  auto const& offset = GetOffsetPerMonitor(monitor);
+
+  if (offset.x < 0 || offset.y < 0)
     return false;
 
   base_window_raiser_->Raise(view_window_);
-
-  nux::Geometry geo;
-  if (!view_->GetBaseGeometry(geo))
-    return false;
-
-  view_window_->SetGeometry(geo);
+  view_window_->SetXY(offset.x, offset.y);
 
   if (visible_)
   {
@@ -125,11 +144,33 @@ bool Controller::OnShowTimer()
   return false;
 }
 
+nux::Point Controller::GetOffsetPerMonitor(int monitor)
+{
+  EnsureView();
+
+  view_window_->ComputeContentSize();
+  auto const& view_geo = view_->GetAbsoluteGeometry();
+  auto const& monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
+
+  if (adjustment_.x + view_geo.width > monitor_geo.width ||
+      adjustment_.y + view_geo.height > monitor_geo.height)
+  {
+    // Invalid position
+    return nux::Point(std::numeric_limits<int>::min(), std::numeric_limits<int>::min());
+  }
+
+  nux::Point offset(adjustment_.x + monitor_geo.x, adjustment_.y + monitor_geo.y);
+  offset.x += (monitor_geo.width - view_geo.width - adjustment_.x) / 2;
+  offset.y += (monitor_geo.height - view_geo.height - adjustment_.y) / 2;
+
+  return offset;
+}
+
 void Controller::ConstructView()
 {
   view_ = View::Ptr(new View());
   AddChild(view_.GetPointer());
-  view_->SetModel(model_);
+  view_->SetModel(modeller_->GetCurrentModel());
   view_->background_color = bg_color_;
 
   if (!view_window_)
@@ -140,7 +181,8 @@ void Controller::ConstructView()
 
     view_window_ = new nux::BaseWindow("ShortcutHint");
     view_window_->SetLayout(main_layout_);
-    view_window_->SetBackgroundColor(nux::Color(0x00000000));
+    view_window_->SetBackgroundColor(nux::color::Transparent);
+    view_window_->SetWindowSizeMatchLayout(true);
   }
 
   main_layout_->AddView(view_.GetPointer());
@@ -158,11 +200,9 @@ void Controller::EnsureView()
 
 void Controller::SetAdjustment(int x, int y)
 {
-  EnsureView();
-
-  view_->SetAdjustment(x, y);
+  adjustment_.x = x;
+  adjustment_.y = y;
 }
-
 
 void Controller::Hide()
 {

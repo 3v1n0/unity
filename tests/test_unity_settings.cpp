@@ -77,7 +77,7 @@ TEST_F(TestUnitySettings, FormFactorChangedSignal_Extern)
   });
 
   g_settings_set_enum(gsettings, "form-factor", static_cast<int>(unity::FormFactor::NETBOOK));
-  Utils::WaitUntil(signal_received);
+  Utils::WaitUntilMSec(signal_received);
   EXPECT_EQ(new_form_factor, unity::FormFactor::NETBOOK);
 }
 
@@ -89,7 +89,7 @@ TEST_F(TestUnitySettings, FormFactorChangedSignal_Extern_OtherKeys)
   });
 
   g_settings_set_int(gsettings, "minimize-count", 0);
-  Utils::WaitForTimeout(1);
+  Utils::WaitForTimeoutMSec(100);
   EXPECT_FALSE(signal_received);
 }
 
@@ -103,7 +103,7 @@ TEST_F(TestUnitySettings, FormFactorChangedSignal_Inter)
   });
 
   unity_settings->form_factor = unity::FormFactor::NETBOOK;
-  Utils::WaitUntil(signal_received);
+  Utils::WaitUntilMSec(signal_received);
   EXPECT_EQ(new_form_factor, unity::FormFactor::NETBOOK);
 }
 

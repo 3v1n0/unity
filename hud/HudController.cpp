@@ -360,6 +360,7 @@ void Controller::ShowHud()
   LOG_DEBUG(logger) << "Taking application icon: " << focused_app_icon_;
   SetIcon(focused_app_icon_);
 
+  WindowManager::Default().SaveInputFocus();
   FocusWindow();
 
   view_->ResetToDefault();

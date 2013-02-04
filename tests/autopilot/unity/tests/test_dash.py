@@ -12,6 +12,8 @@ from autopilot.emulators.clipboard import get_clipboard_contents
 from autopilot.matchers import Eventually
 from testtools.matchers import Equals, NotEquals, GreaterThan
 from time import sleep
+from tempfile import mkstemp
+from os import remove
 
 from unity.tests import UnityTestCase
 
@@ -22,9 +24,9 @@ class DashTestCase(UnityTestCase):
         super(DashTestCase, self).setUp()
         self.set_unity_log_level("unity.shell.compiz", "DEBUG")
         self.set_unity_log_level("unity.launcher", "DEBUG")
-        self.dash.ensure_hidden()
+        self.unity.dash.ensure_hidden()
         # On shutdown, ensure hidden too.  Also add a delay.  Cleanup is LIFO.
-        self.addCleanup(self.dash.ensure_hidden)
+        self.addCleanup(self.unity.dash.ensure_hidden)
         self.addCleanup(sleep, 1)
 
 
@@ -33,62 +35,68 @@ class DashRevealTests(DashTestCase):
 
     def test_dash_reveal(self):
         """Ensure we can show and hide the dash."""
-        self.dash.ensure_visible()
-        self.dash.ensure_hidden()
+        self.unity.dash.ensure_visible()
+        self.unity.dash.ensure_hidden()
 
     def test_application_lens_shortcut(self):
         """Application lense must reveal when Super+a is pressed."""
-        self.dash.reveal_application_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('applications.lens')))
+        self.unity.dash.reveal_application_lens()
+        self.assertThat(self.unity.dash.active_lens, Eventually(Equals('applications.lens')))
 
     def test_music_lens_shortcut(self):
         """Music lense must reveal when Super+w is pressed."""
-        self.dash.reveal_music_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('music.lens')))
+        self.unity.dash.reveal_music_lens()
+        self.assertThat(self.unity.dash.active_lens, Eventually(Equals('music.lens')))
 
     def test_file_lens_shortcut(self):
         """File lense must reveal when Super+f is pressed."""
-        self.dash.reveal_file_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('files.lens')))
+        self.unity.dash.reveal_file_lens()
+        self.assertThat(self.unity.dash.active_lens, Eventually(Equals('files.lens')))
 
     def test_video_lens_shortcut(self):
         """Video lens must reveal when super+v is pressed."""
-        self.dash.reveal_video_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('video.lens')))
+        self.unity.dash.reveal_video_lens()
+        self.assertThat(self.unity.dash.active_lens, Eventually(Equals('video.lens')))
 
     def test_command_lens_shortcut(self):
         """Run Command lens must reveat on alt+F2."""
-        self.dash.reveal_command_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('commands.lens')))
+        self.unity.dash.reveal_command_lens()
+        self.assertThat(self.unity.dash.active_lens, Eventually(Equals('commands.lens')))
+
+    def test_can_go_from_dash_to_command_lens(self):
+        """Switch to command lens without closing the dash."""
+        self.unity.dash.ensure_visible()
+        self.unity.dash.reveal_command_lens()
+        self.assertThat(self.unity.dash.visible, Eventually(Equals(False)))
 
     def test_alt_f4_close_dash(self):
         """Dash must close on alt+F4."""
-        self.dash.ensure_visible()
+        self.unity.dash.ensure_visible()
         self.keyboard.press_and_release("Alt+F4")
-        self.assertThat(self.dash.visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.dash.visible, Eventually(Equals(False)))
 
     def test_alt_f4_close_dash_with_capslock_on(self):
         """Dash must close on Alt+F4 even when the capslock is turned on."""
         self.keyboard.press_and_release("Caps_Lock")
         self.addCleanup(self.keyboard.press_and_release, "Caps_Lock")
 
-        self.dash.ensure_visible()
+        self.unity.dash.ensure_visible()
         self.keyboard.press_and_release("Alt+F4")
-        self.assertThat(self.dash.visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.dash.visible, Eventually(Equals(False)))
 
     def test_closes_mouse_down_outside(self):
         """Test that a mouse down outside of the dash closes the dash."""
 
-        self.dash.ensure_visible()
-        current_monitor = self.dash.monitor
+        self.unity.dash.ensure_visible()
+        current_monitor = self.unity.dash.monitor
 
-        (x,y,w,h) = self.dash.geometry
+        (x,y,w,h) = self.unity.dash.geometry
         (screen_x,screen_y,screen_w,screen_h) = self.screen_geo.get_monitor_geometry(current_monitor)
 
         self.mouse.move(x + w + (screen_w-((screen_x-x)+w))/2, y + h + (screen_h-((screen_y-y)+h))/2)
         self.mouse.click()
 
-        self.assertThat(self.dash.visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.dash.visible, Eventually(Equals(False)))
 
     def test_closes_then_focuses_window_on_mouse_down(self):
         """If 2 windows are open with 1 maximized and the non-maxmized
@@ -99,7 +107,7 @@ class DashRevealTests(DashTestCase):
         self.keybinding("window/maximize")
         self.start_app("Calculator")
 
-        self.dash.ensure_visible()
+        self.unity.dash.ensure_visible()
 
         #Click bottom right of the screen
         w = self.screen_geo.get_screen_width()
@@ -108,6 +116,7 @@ class DashRevealTests(DashTestCase):
         self.mouse.click()
 
         self.assertProperty(char_win, is_active=True)
+
 
 class DashRevealWithSpreadTests(DashTestCase):
     """Test the interaction of the Dash with the Spead/Scale
@@ -126,49 +135,49 @@ class DashRevealWithSpreadTests(DashTestCase):
     def test_dash_closes_on_spread(self):
         """This test shows that when the spread is initiated, the dash closes."""
         self.start_placeholder_app()
-        self.dash.ensure_visible()
+        self.unity.dash.ensure_visible()
         self.addCleanup(self.keybinding, "spread/cancel")
         self.keybinding("spread/start")
-        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
-        self.assertThat(self.dash.visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.window_manager.scale_active, Eventually(Equals(True)))
+        self.assertThat(self.unity.dash.visible, Eventually(Equals(False)))
 
     def test_dash_opens_when_in_spread(self):
         """This test shows the dash opens when in spread mode."""
         self.start_placeholder_app()
         self.keybinding("spread/start")
-        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+        self.assertThat(self.unity.window_manager.scale_active, Eventually(Equals(True)))
 
-        self.dash.ensure_visible()
-        self.assertThat(self.dash.visible, Eventually(Equals(True)))
+        self.unity.dash.ensure_visible()
+        self.assertThat(self.unity.dash.visible, Eventually(Equals(True)))
 
     def test_command_lens_opens_when_in_spread(self):
         """This test shows the command lens opens when in spread mode."""
         self.start_placeholder_app()
         self.keybinding("spread/start")
-        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+        self.assertThat(self.unity.window_manager.scale_active, Eventually(Equals(True)))
 
-        self.dash.reveal_command_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('commands.lens')))
+        self.unity.dash.reveal_command_lens()
+        self.assertThat(self.unity.dash.active_lens, Eventually(Equals('commands.lens')))
 
     def test_lens_opens_when_in_spread(self):
         """This test shows that any lens opens when in spread mode."""
         self.start_placeholder_app()
         self.keybinding("spread/start")
-        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+        self.assertThat(self.unity.window_manager.scale_active, Eventually(Equals(True)))
 
-        self.dash.reveal_application_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('applications.lens')))
+        self.unity.dash.reveal_application_lens()
+        self.assertThat(self.unity.dash.active_lens, Eventually(Equals('applications.lens')))
 
 
 class DashSearchInputTests(DashTestCase):
     """Test features involving input to the dash search"""
 
     def assertSearchText(self, text):
-        self.assertThat(self.dash.search_string, Eventually(Equals(text)))
+        self.assertThat(self.unity.dash.search_string, Eventually(Equals(text)))
 
     def test_search_keyboard_focus(self):
         """Dash must put keyboard focus on the search bar at all times."""
-        self.dash.ensure_visible()
+        self.unity.dash.ensure_visible()
         self.keyboard.type("Hello")
         self.assertSearchText("Hello")
 
@@ -184,28 +193,28 @@ class DashMultiKeyTests(DashSearchInputTests):
 
     def test_multi_key(self):
         """Pressing 'Multi_key' must not add any characters to the search."""
-        self.dash.reveal_application_lens()
+        self.unity.dash.reveal_application_lens()
         self.keyboard.press_and_release('Multi_key')
         self.keyboard.type("o")
         self.assertSearchText("")
 
     def test_multi_key_o(self):
         """Pressing the sequences 'Multi_key' + '^' + 'o' must produce 'ô'."""
-        self.dash.reveal_application_lens()
+        self.unity.dash.reveal_application_lens()
         self.keyboard.press_and_release('Multi_key')
         self.keyboard.type("^o")
         self.assertSearchText(u'\xf4')
 
     def test_multi_key_copyright(self):
         """Pressing the sequences 'Multi_key' + 'c' + 'o' must produce '©'."""
-        self.dash.reveal_application_lens()
+        self.unity.dash.reveal_application_lens()
         self.keyboard.press_and_release('Multi_key')
         self.keyboard.type("oc")
         self.assertSearchText(u'\xa9')
 
     def test_multi_key_delete(self):
         """Pressing 'Multi_key' must not get stuck looking for a sequence."""
-        self.dash.reveal_application_lens()
+        self.unity.dash.reveal_application_lens()
         self.keyboard.type("dd")
         self.keyboard.press_and_release('Multi_key')
         self.keyboard.press_and_release('BackSpace')
@@ -218,21 +227,21 @@ class DashKeyNavTests(DashTestCase):
 
     def test_lensbar_gets_keyfocus(self):
         """Test that the lensbar gets key focus after using Down keypresses."""
-        self.dash.ensure_visible()
+        self.unity.dash.ensure_visible()
 
         # Make sure that the lens bar can get the focus
-        for i in range(self.dash.get_num_rows()):
+        for i in range(self.unity.dash.get_num_rows()):
             self.keyboard.press_and_release("Down")
-        lensbar = self.dash.view.get_lensbar()
+        lensbar = self.unity.dash.view.get_lensbar()
         self.assertThat(lensbar.focused_lens_icon, Eventually(NotEquals('')))
 
     def test_lensbar_focus_changes(self):
         """Lensbar focused icon should change with Left and Right keypresses."""
-        self.dash.ensure_visible()
+        self.unity.dash.ensure_visible()
 
-        for i in range(self.dash.get_num_rows()):
+        for i in range(self.unity.dash.get_num_rows()):
             self.keyboard.press_and_release("Down")
-        lensbar = self.dash.view.get_lensbar()
+        lensbar = self.unity.dash.view.get_lensbar()
 
         current_focused_icon = lensbar.focused_lens_icon
 
@@ -244,12 +253,12 @@ class DashKeyNavTests(DashTestCase):
 
     def test_lensbar_enter_activation(self):
         """Must be able to activate LensBar icons that have focus with an Enter keypress."""
-        self.dash.ensure_visible()
+        self.unity.dash.ensure_visible()
 
-        for i in range(self.dash.get_num_rows()):
+        for i in range(self.unity.dash.get_num_rows()):
             self.keyboard.press_and_release("Down")
         self.keyboard.press_and_release("Right")
-        lensbar = self.dash.view.get_lensbar()
+        lensbar = self.unity.dash.view.get_lensbar()
         focused_icon = lensbar.focused_lens_icon
         self.keyboard.press_and_release("Enter")
 
@@ -261,12 +270,12 @@ class DashKeyNavTests(DashTestCase):
     def test_focus_returns_to_searchbar(self):
         """This test makes sure that the focus is returned to the searchbar of the newly
         activated lens."""
-        self.dash.ensure_visible()
+        self.unity.dash.ensure_visible()
 
-        for i in range(self.dash.get_num_rows()):
+        for i in range(self.unity.dash.get_num_rows()):
             self.keyboard.press_and_release("Down")
         self.keyboard.press_and_release("Right")
-        lensbar = self.dash.view.get_lensbar()
+        lensbar = self.unity.dash.view.get_lensbar()
         focused_icon = lensbar.focused_lens_icon
         self.keyboard.press_and_release("Enter")
 
@@ -276,7 +285,7 @@ class DashKeyNavTests(DashTestCase):
         # Now we make sure if the newly activated lens searchbar have the focus.
         self.keyboard.type("HasFocus")
 
-        self.assertThat(self.dash.search_string, Eventually(Equals("HasFocus")))
+        self.assertThat(self.unity.dash.search_string, Eventually(Equals("HasFocus")))
 
     def test_category_header_keynav(self):
         """ Tests that a category header gets focus when 'down' is pressed after the
@@ -286,10 +295,10 @@ class DashKeyNavTests(DashTestCase):
         focused, not the first and from doing this it seems that it's common
         for a header other than the first to get focus.
         """
-        self.dash.ensure_visible()
+        self.unity.dash.ensure_visible()
         # Make sure that a category have the focus.
         self.keyboard.press_and_release("Down")
-        lens = self.dash.get_current_lens()
+        lens = self.unity.dash.get_current_lens()
         category = lens.get_focused_category()
         self.assertIsNot(category, None)
         # Make sure that the category is highlighted.
@@ -297,13 +306,13 @@ class DashKeyNavTests(DashTestCase):
 
     def test_control_tab_lens_cycle(self):
         """This test makes sure that Ctrl+Tab cycles lenses."""
-        self.dash.ensure_visible()
+        self.unity.dash.ensure_visible()
 
         self.keyboard.press('Control')
         self.keyboard.press_and_release('Tab')
         self.keyboard.release('Control')
 
-        lensbar = self.dash.view.get_lensbar()
+        lensbar = self.unity.dash.view.get_lensbar()
         self.assertEqual(lensbar.active_lens, u'applications.lens')
 
         self.keyboard.press('Control')
@@ -316,8 +325,8 @@ class DashKeyNavTests(DashTestCase):
 
     def test_tab_cycle_category_headers(self):
         """ Makes sure that pressing tab cycles through the category headers"""
-        self.dash.ensure_visible()
-        lens = self.dash.get_current_lens()
+        self.unity.dash.ensure_visible()
+        lens = self.unity.dash.get_current_lens()
 
         # Test that tab cycles through the categories.
         # + 1 is to cycle back to first header
@@ -328,20 +337,20 @@ class DashKeyNavTests(DashTestCase):
 
     def test_tab_with_filter_bar(self):
         """ This test makes sure that Tab works well with the filter bara."""
-        self.dash.reveal_application_lens()
-        lens = self.dash.get_current_lens()
+        self.unity.dash.reveal_application_lens()
+        lens = self.unity.dash.get_current_lens()
 
         # Tabs to last category
         for i in range(lens.get_num_visible_categories()):
             self.keyboard.press_and_release('Tab')
 
         self.keyboard.press_and_release('Tab')
-        self.assertThat(self.dash.searchbar.expander_has_focus, Eventually(Equals(True)))
+        self.assertThat(self.unity.dash.searchbar.expander_has_focus, Eventually(Equals(True)))
 
         filter_bar = lens.get_filterbar()
-        if not self.dash.searchbar.showing_filters:
+        if not self.unity.dash.searchbar.showing_filters:
             self.keyboard.press_and_release('Enter')
-            self.assertThat(self.dash.searchbar.showing_filters, Eventually(Equals(True)))
+            self.assertThat(self.unity.dash.searchbar.showing_filters, Eventually(Equals(True)))
             self.addCleanup(filter_bar.ensure_collapsed)
 
         for i in range(filter_bar.get_num_filters()):
@@ -358,8 +367,8 @@ class DashKeyNavTests(DashTestCase):
         """This test makes sure that bottom-up key navigation works well
         in the dash filter bar.
         """
-        self.dash.reveal_application_lens()
-        lens = self.dash.get_current_lens()
+        self.unity.dash.reveal_application_lens()
+        lens = self.unity.dash.get_current_lens()
 
         filter_bar = lens.get_filterbar()
         # Need to ensure the filter expander has focus, so if it's already
@@ -391,21 +400,21 @@ class DashClipboardTests(DashTestCase):
 
     def test_ctrl_a(self):
         """ This test if ctrl+a selects all text """
-        self.dash.ensure_visible()
+        self.unity.dash.ensure_visible()
 
         self.keyboard.type("SelectAll")
-        self.assertThat(self.dash.search_string, Eventually(Equals("SelectAll")))
+        self.assertThat(self.unity.dash.search_string, Eventually(Equals("SelectAll")))
 
         self.keyboard.press_and_release("Ctrl+a")
         self.keyboard.press_and_release("Delete")
-        self.assertThat(self.dash.search_string, Eventually(Equals('')))
+        self.assertThat(self.unity.dash.search_string, Eventually(Equals('')))
 
     def test_ctrl_c(self):
         """ This test if ctrl+c copies text into the clipboard """
-        self.dash.ensure_visible()
+        self.unity.dash.ensure_visible()
 
         self.keyboard.type("Copy")
-        self.assertThat(self.dash.search_string, Eventually(Equals("Copy")))
+        self.assertThat(self.unity.dash.search_string, Eventually(Equals("Copy")))
 
         self.keyboard.press_and_release("Ctrl+a")
         self.keyboard.press_and_release("Ctrl+c")
@@ -414,44 +423,44 @@ class DashClipboardTests(DashTestCase):
 
     def test_ctrl_x(self):
         """ This test if ctrl+x deletes all text and copys it """
-        self.dash.ensure_visible()
+        self.unity.dash.ensure_visible()
 
         self.keyboard.type("Cut")
-        self.assertThat(self.dash.search_string, Eventually(Equals("Cut")))
+        self.assertThat(self.unity.dash.search_string, Eventually(Equals("Cut")))
 
         self.keyboard.press_and_release("Ctrl+a")
         self.keyboard.press_and_release("Ctrl+x")
-        self.assertThat(self.dash.search_string, Eventually(Equals("")))
+        self.assertThat(self.unity.dash.search_string, Eventually(Equals("")))
 
         self.assertThat(get_clipboard_contents, Eventually(Equals('Cut')))
 
     def test_ctrl_c_v(self):
         """ This test if ctrl+c and ctrl+v copies and pastes text"""
-        self.dash.ensure_visible()
+        self.unity.dash.ensure_visible()
 
         self.keyboard.type("CopyPaste")
-        self.assertThat(self.dash.search_string, Eventually(Equals("CopyPaste")))
+        self.assertThat(self.unity.dash.search_string, Eventually(Equals("CopyPaste")))
 
         self.keyboard.press_and_release("Ctrl+a")
         self.keyboard.press_and_release("Ctrl+c")
         self.keyboard.press_and_release("Ctrl+v")
         self.keyboard.press_and_release("Ctrl+v")
 
-        self.assertThat(self.dash.search_string, Eventually(Equals('CopyPasteCopyPaste')))
+        self.assertThat(self.unity.dash.search_string, Eventually(Equals('CopyPasteCopyPaste')))
 
     def test_ctrl_x_v(self):
         """ This test if ctrl+x and ctrl+v cuts and pastes text"""
-        self.dash.ensure_visible()
+        self.unity.dash.ensure_visible()
 
         self.keyboard.type("CutPaste")
-        self.assertThat(self.dash.search_string, Eventually(Equals("CutPaste")))
+        self.assertThat(self.unity.dash.search_string, Eventually(Equals("CutPaste")))
 
         self.keyboard.press_and_release("Ctrl+a")
         self.keyboard.press_and_release("Ctrl+x")
         self.keyboard.press_and_release("Ctrl+v")
         self.keyboard.press_and_release("Ctrl+v")
 
-        self.assertThat(self.dash.search_string, Eventually(Equals('CutPasteCutPaste')))
+        self.assertThat(self.unity.dash.search_string, Eventually(Equals('CutPasteCutPaste')))
 
     def test_middle_click_paste(self):
         """Tests if Middle mouse button pastes into searchbar"""
@@ -461,28 +470,28 @@ class DashClipboardTests(DashTestCase):
         self.keyboard.type("ThirdButtonPaste")
         self.keyboard.press_and_release("Ctrl+a")
 
-        self.dash.ensure_visible()
+        self.unity.dash.ensure_visible()
 
-        self.mouse.move(self.dash.searchbar.x + self.dash.searchbar.width / 2,
-                       self.dash.searchbar.y + self.dash.searchbar.height / 2)
+        self.mouse.move(self.unity.dash.searchbar.x + self.unity.dash.searchbar.width / 2,
+                       self.unity.dash.searchbar.y + self.unity.dash.searchbar.height / 2)
 
         self.mouse.click(button=2)
 
-        self.assertThat(self.dash.search_string, Eventually(Equals('ThirdButtonPaste')))
+        self.assertThat(self.unity.dash.search_string, Eventually(Equals('ThirdButtonPaste')))
 
 
 class DashKeyboardFocusTests(DashTestCase):
     """Tests that keyboard focus works."""
 
     def assertSearchText(self, text):
-        self.assertThat(self.dash.search_string, Eventually(Equals(text)))
+        self.assertThat(self.unity.dash.search_string, Eventually(Equals(text)))
 
     def test_filterbar_expansion_leaves_kb_focus(self):
         """Expanding or collapsing the filterbar must keave keyboard focus in the
         search bar.
         """
-        self.dash.reveal_application_lens()
-        filter_bar = self.dash.get_current_lens().get_filterbar()
+        self.unity.dash.reveal_application_lens()
+        filter_bar = self.unity.dash.get_current_lens().get_filterbar()
         filter_bar.ensure_collapsed()
 
         self.keyboard.type("hello")
@@ -494,8 +503,8 @@ class DashKeyboardFocusTests(DashTestCase):
     def test_keep_focus_on_application_opens(self):
         """The Dash must keep key focus as well as stay open if an app gets opened from an external source. """
 
-        self.dash.ensure_visible()
-        self.addCleanup(self.hud.ensure_hidden)
+        self.unity.dash.ensure_visible()
+        self.addCleanup(self.unity.hud.ensure_hidden)
 
         self.start_app_window("Calculator")
         sleep(1)
@@ -509,33 +518,33 @@ class DashLensResultsTests(DashTestCase):
 
     def test_results_message_empty_search(self):
         """This tests a message is not shown when there is no text."""
-        self.dash.reveal_application_lens()
-        lens = self.dash.get_current_lens()
+        self.unity.dash.reveal_application_lens()
+        lens = self.unity.dash.get_current_lens()
         self.assertThat(lens.no_results_active, Eventually(Equals(False)))
 
     def test_results_message(self):
         """This test no mesage will be shown when results are there."""
-        self.dash.reveal_application_lens()
+        self.unity.dash.reveal_application_lens()
         self.keyboard.type("Terminal")
-        self.assertThat(self.dash.search_string, Eventually(Equals("Terminal")))
-        lens = self.dash.get_current_lens()
+        self.assertThat(self.unity.dash.search_string, Eventually(Equals("Terminal")))
+        lens = self.unity.dash.get_current_lens()
         self.assertThat(lens.no_results_active, Eventually(Equals(False)))
 
     def test_no_results_message(self):
         """This test shows a message will appear in the lens."""
-        self.dash.reveal_application_lens()
+        self.unity.dash.reveal_application_lens()
         self.keyboard.type("qwerlkjzvxc")
-        self.assertThat(self.dash.search_string, Eventually(Equals("qwerlkjzvxc")))
-        lens = self.dash.get_current_lens()
+        self.assertThat(self.unity.dash.search_string, Eventually(Equals("qwerlkjzvxc")))
+        lens = self.unity.dash.get_current_lens()
         self.assertThat(lens.no_results_active, Eventually(Equals(True)))
 
     def test_results_update_on_filter_changed(self):
         """This test makes sure the results change when filters change."""
         gettext.install("unity-lens-applications")
-        self.dash.reveal_application_lens()
-        lens = self.dash.get_current_lens()
+        self.unity.dash.reveal_application_lens()
+        lens = self.unity.dash.get_current_lens()
         self.keyboard.type(" ")
-        self.assertThat(self.dash.search_string, Eventually(Equals(" ")))
+        self.assertThat(self.unity.dash.search_string, Eventually(Equals(" ")))
         results_category = lens.get_category_by_name(_("Installed"))
         old_results = results_category.get_results()
 
@@ -548,12 +557,12 @@ class DashLensResultsTests(DashTestCase):
                 self.keyboard.press_and_release('Tab')
 
             self.keyboard.press_and_release('Tab')
-            self.assertThat(self.dash.searchbar.expander_has_focus, Eventually(Equals(True)))
+            self.assertThat(self.unity.dash.searchbar.expander_has_focus, Eventually(Equals(True)))
 
             filter_bar = lens.get_filterbar()
-            if not self.dash.searchbar.showing_filters:
+            if not self.unity.dash.searchbar.showing_filters:
                 self.keyboard.press_and_release('Enter')
-                self.assertThat(self.dash.searchbar.showing_filters, Eventually(Equals(True)))
+                self.assertThat(self.unity.dash.searchbar.showing_filters, Eventually(Equals(True)))
                 if add_cleanup:
                     self.addCleanup(filter_bar.ensure_collapsed)
 
@@ -582,25 +591,34 @@ class DashLensResultsTests(DashTestCase):
 class DashVisualTests(DashTestCase):
     """Tests that the dash visual is correct."""
 
+    def test_closing_dash_hides_current_lens(self):
+        """When exiting from the dash the current lens must set it self to not visible."""
+
+        self.unity.dash.ensure_visible()
+        lens = self.unity.dash.get_current_lens()
+        self.unity.dash.ensure_hidden()
+
+        self.assertThat(lens.visible, Eventually(Equals(False)))
+
     def test_dash_position_with_non_default_launcher_width(self):
         """"There should be no empty space between launcher and dash when the launcher
         has a non-default width.
         """
         self.set_unity_option('icon_size', 60)
-        self.dash.ensure_visible()
+        self.unity.dash.ensure_visible()
 
-        monitor = self.dash.monitor
-        launcher = self.launcher.get_launcher_for_monitor(monitor)
+        monitor = self.unity.dash.monitor
+        launcher = self.unity.launcher.get_launcher_for_monitor(monitor)
 
-        self.assertThat(self.dash.geometry[0], Eventually(Equals(launcher.geometry[0] + launcher.geometry[2] - 1)))
+        self.assertThat(self.unity.dash.geometry[0], Eventually(Equals(launcher.geometry[0] + launcher.geometry[2] - 1)))
 
     def test_see_more_result_alignment(self):
         """The see more results label should be baseline aligned
         with the category name label.
         """
-        self.dash.reveal_application_lens()
+        self.unity.dash.reveal_application_lens()
 
-        lens = self.dash.get_current_lens()
+        lens = self.unity.dash.get_current_lens()
         groups = lens.get_groups()
 
         for group in groups:
@@ -615,8 +633,8 @@ class DashLensBarTests(DashTestCase):
 
     def setUp(self):
         super(DashLensBarTests, self).setUp()
-        self.dash.ensure_visible()
-        self.lensbar = self.dash.view.get_lensbar()
+        self.unity.dash.ensure_visible()
+        self.lensbar = self.unity.dash.view.get_lensbar()
 
     def test_click_inside_highlight(self):
         """Lens selection should work when clicking in
@@ -636,37 +654,37 @@ class DashBorderTests(DashTestCase):
     """
     def setUp(self):
         super(DashBorderTests, self).setUp()
-        self.dash.ensure_visible()
+        self.unity.dash.ensure_visible()
 
     def test_click_right_border(self):
         """Clicking on the right dash border should do nothing,
         *NOT* close the dash.
         """
-        if (self.dash.view.form_factor != "desktop"):
+        if (self.unity.dash.view.form_factor != "desktop"):
             self.skip("Not in desktop form-factor.")
 
-        x = self.dash.view.x + self.dash.view.width + self.dash.view.right_border_width / 2
-        y = self.dash.view.y + self.dash.view.height / 2
+        x = self.unity.dash.view.x + self.unity.dash.view.width + self.unity.dash.view.right_border_width / 2
+        y = self.unity.dash.view.y + self.unity.dash.view.height / 2
 
         self.mouse.move(x, y)
         self.mouse.click()
 
-        self.assertThat(self.dash.visible, Eventually(Equals(True)))
+        self.assertThat(self.unity.dash.visible, Eventually(Equals(True)))
 
     def test_click_bottom_border(self):
         """Clicking on the bottom dash border should do nothing,
         *NOT* close the dash.
         """
-        if (self.dash.view.form_factor != "desktop"):
+        if (self.unity.dash.view.form_factor != "desktop"):
             self.skip("Not in desktop form-factor.")
 
-        x = self.dash.view.x + self.dash.view.width / 2
-        y = self.dash.view.y + self.dash.view.height + self.dash.view.bottom_border_height / 2
+        x = self.unity.dash.view.x + self.unity.dash.view.width / 2
+        y = self.unity.dash.view.y + self.unity.dash.view.height + self.unity.dash.view.bottom_border_height / 2
 
         self.mouse.move(x, y)
         self.mouse.click()
 
-        self.assertThat(self.dash.visible, Eventually(Equals(True)))
+        self.assertThat(self.unity.dash.visible, Eventually(Equals(True)))
 
 
 class CategoryHeaderTests(DashTestCase):
@@ -677,13 +695,13 @@ class CategoryHeaderTests(DashTestCase):
         the view.
         """
         gettext.install("unity-lens-applications", unicode=True)
-        lens = self.dash.reveal_application_lens()
-        self.addCleanup(self.dash.ensure_hidden)
+        lens = self.unity.dash.reveal_application_lens()
+        self.addCleanup(self.unity.dash.ensure_hidden)
 
         category = lens.get_category_by_name(_("Installed"))
         is_expanded = category.is_expanded
 
-        self.mouse.move(self.dash.view.x + self.dash.view.width / 2,
+        self.mouse.move(self.unity.dash.view.x + self.unity.dash.view.width / 2,
                         category.header_y + category.header_height / 2)
 
         self.mouse.click()
@@ -703,45 +721,56 @@ class PreviewInvocationTests(DashTestCase):
 
         """
         gettext.install("unity-lens-applications", unicode=True)
-        lens = self.dash.reveal_application_lens()
-        self.addCleanup(self.dash.ensure_hidden)
+        lens = self.unity.dash.reveal_application_lens()
+        self.addCleanup(self.unity.dash.ensure_hidden)
 
         category = lens.get_category_by_name(_("More suggestions"))
         results = category.get_results()
         result = results[0]
         # result.preview handles finding xy co-ords and right mouse-click
         result.preview()
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(True)))
 
         self.keyboard.press_and_release("Escape")
 
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
 
     def test_files_lens_preview_open_close(self):
         """Right-clicking on a files lens result must show its
         preview.
         """
         gettext.install("unity-lens-files", unicode=True)
-        lens = self.dash.reveal_file_lens()
-        self.addCleanup(self.dash.ensure_hidden)
 
-        category = lens.get_category_by_name(_("Folders"))
+        # Instead of skipping the test, here we can create a dummy file to open and
+        # make sure the lens result is non-empty
+        (file_handle, file_path) = mkstemp()
+        self.addCleanup(remove, file_path)
+        gedit_win = self.start_app_window('Text Editor', files=[file_path], locale='C')
+        self.addCleanup(self.close_all_app, 'Text Editor')
+        self.assertProperty(gedit_win, is_focused=True)
+
+        lens = self.unity.dash.reveal_file_lens()
+        self.addCleanup(self.unity.dash.ensure_hidden)
+
+        category = lens.get_category_by_name(_("Recent"))
+        refresh_results_fn = lambda: len(category.get_results())
+        self.assertThat(refresh_results_fn, Eventually(GreaterThan(0)))
         results = category.get_results()
         result = results[0]
         # result.preview handles finding xy co-ords and right mouse-click
         result.preview()
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(True)))
 
         self.keyboard.press_and_release("Escape")
 
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
 
     def test_music_lens_preview_open_close(self):
         """Right-clicking on a music lens result must show its
         preview.
         """
-        lens = self.dash.reveal_music_lens()
-        self.addCleanup(self.dash.ensure_hidden)
+        lens = self.unity.dash.reveal_music_lens()
+        self.addCleanup(self.unity.dash.ensure_hidden)
 
         category = lens.get_category_by_name("Songs")
         # Incase there was no music ever played we skip the test instead
@@ -754,11 +783,11 @@ class PreviewInvocationTests(DashTestCase):
         result = results[0]
         # result.preview handles finding xy co-ords and right mouse-click
         result.preview()
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(True)))
 
         self.keyboard.press_and_release("Escape")
 
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
 
     def test_video_lens_preview_open_close(self):
         """Right-clicking on a video lens result must show its
@@ -774,11 +803,11 @@ class PreviewInvocationTests(DashTestCase):
             if category is None or not category.is_visible:
                 category = lens.get_category_by_name("Online")
                 if category is None or not category.is_visible:
-                    return None
+                    self.skipTest("This lens is probably empty")
             return category
 
-        lens = self.dash.reveal_video_lens()
-        self.addCleanup(self.dash.ensure_hidden)
+        lens = self.unity.dash.reveal_video_lens()
+        self.addCleanup(self.unity.dash.ensure_hidden)
 
         self.assertThat(lambda: get_category(lens), Eventually(NotEquals(None)))
         category = get_category(lens)
@@ -788,26 +817,26 @@ class PreviewInvocationTests(DashTestCase):
         result = results[0]
         # result.preview handles finding xy co-ords and right mouse-click
         result.preview()
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(True)))
 
         self.keyboard.press_and_release("Escape")
 
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
 
     def test_preview_key(self):
         """Pressing menu key on a selected dash result must show
         its preview.
         """
         gettext.install("unity-lens-applications", unicode=True)
-        lens = self.dash.reveal_application_lens()
-        self.addCleanup(self.dash.ensure_hidden)
+        lens = self.unity.dash.reveal_application_lens()
+        self.addCleanup(self.unity.dash.ensure_hidden)
 
         category = lens.get_category_by_name(_("More suggestions"))
         results = category.get_results()
         result = results[0]
         # result.preview_key() handles finding xy co-ords and key press
         result.preview_key()
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(True)))
 
 
 class PreviewNavigateTests(DashTestCase):
@@ -817,8 +846,8 @@ class PreviewNavigateTests(DashTestCase):
         super(PreviewNavigateTests, self).setUp()
         gettext.install("unity-lens-applications", unicode=True)
 
-        lens = self.dash.reveal_application_lens()
-        self.addCleanup(self.dash.ensure_hidden)
+        lens = self.unity.dash.reveal_application_lens()
+        self.addCleanup(self.unity.dash.ensure_hidden)
 
         results_category = lens.get_category_by_name(_("More suggestions"))
         # wait for results (we need 4 results to perorm the multi-navigation tests)
@@ -828,9 +857,10 @@ class PreviewNavigateTests(DashTestCase):
 
         result = results[2] # 2 so we can navigate left
         result.preview()
-        self.assertThat(self.dash.view.preview_displaying, Eventually(Equals(True)))
+        self.assertThat(self.unity.dash.view.preview_displaying, Eventually(Equals(True)))
+        self.assertThat(self.unity.dash.view.get_preview_container, Eventually(NotEquals(None)))
 
-        self.preview_container = self.dash.view.get_preview_container()
+        self.preview_container = self.unity.dash.view.get_preview_container()
 
     def test_navigate_left(self):
         """Tests that left navigation works with previews."""
@@ -854,7 +884,7 @@ class PreviewNavigateTests(DashTestCase):
 
         # Test close preview after navigate
         self.keyboard.press_and_release("Escape")
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
 
     def test_navigate_left_multi(self):
         """Tests that multiple left navigation works with previews."""
@@ -899,7 +929,7 @@ class PreviewNavigateTests(DashTestCase):
 
         # Test close preview after navigate
         self.keyboard.press_and_release("Escape")
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
 
     def test_navigate_right_multi(self):
         """Tests that multiple right navigation works with previews."""
@@ -921,7 +951,7 @@ class PreviewNavigateTests(DashTestCase):
 
     def test_preview_refocus_close(self):
         """Clicking on a preview element must not lose keyboard focus."""
-        cover_art = self.preview_container.current_preview.cover_art
+        cover_art = self.preview_container.current_preview.cover_art[0]
 
         # click the cover-art (this will set focus)
         tx = cover_art.x + (cover_art.width / 2)
@@ -931,29 +961,191 @@ class PreviewNavigateTests(DashTestCase):
 
         self.keyboard.press_and_release("Escape")
 
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
 
-    def test_left_click_on_preview_image_cancel_preview(self):
-        """Left click on preview image must cancel the preview."""
-        cover_art = self.preview_container.current_preview.cover_art
 
-        tx = cover_art.x + (cover_art.width / 2)
-        ty = cover_art.y + (cover_art.height / 4)
+class PreviewClickCancelTests(DashTestCase):
+    """Tests that the preview closes when left, middle, and right clicking in the preview"""
+
+    def setUp(self):
+        super(PreviewClickCancelTests, self).setUp()
+        lens = self.unity.dash.reveal_application_lens()
+        self.addCleanup(self.unity.dash.ensure_hidden)
+        # Only testing an application preview for this test.
+        self.keyboard.type("Software Updater")
+        results_category = lens.get_category_by_name(_("Installed"))
+        results = results_category.get_results()
+
+        result = results[0]
+        result.preview()
+        self.assertThat(self.unity.dash.view.preview_displaying, Eventually(Equals(True)))
+
+        self.preview_container = self.unity.dash.view.get_preview_container()
+
+    def test_left_click_on_preview_icon_cancel_preview(self):
+        """Left click on preview icon must close preview."""
+        icon = self.preview_container.current_preview.icon[0]
+
+        tx = icon.x + icon.width
+        ty = icon.y + (icon.height / 2)
         self.mouse.move(tx, ty)
         self.mouse.click(button=1)
 
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
 
-    def test_right_click_on_preview_image_cancel_preview(self):
-        """Right click on preview image must cancel preview."""
-        cover_art = self.preview_container.current_preview.cover_art
+    def test_middle_click_on_preview_icon_cancel_preview(self):
+        """Middle click on preview icon must close preview."""
+        icon = self.preview_container.current_preview.icon[0]
 
-        tx = cover_art.x + (cover_art.width / 2)
-        ty = cover_art.y + (cover_art.height / 4)
+        tx = icon.x + icon.width
+        ty = icon.y + (icon.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=2)
+
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_right_click_on_preview_icon_cancel_preview(self):
+        """Right click on preview icon must close preview."""
+        icon = self.preview_container.current_preview.icon[0]
+
+        tx = icon.x + icon.width
+        ty = icon.y + (icon.height / 2)
         self.mouse.move(tx, ty)
         self.mouse.click(button=3)
 
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_left_click_on_preview_image_cancel_preview(self):
+        """Left click on preview image must cancel the preview."""
+        cover_art = self.preview_container.current_preview.cover_art[0]
+
+        tx = cover_art.x + (cover_art.width / 2)
+        ty = cover_art.y + (cover_art.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=1)
+
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_middle_click_on_preview_image_cancel_preview(self):
+        """Middle click on preview image must cancel the preview."""
+        cover_art = self.preview_container.current_preview.cover_art[0]
+
+        tx = cover_art.x + (cover_art.width / 2)
+        ty = cover_art.y + (cover_art.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=2)
+
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_right_click_on_preview_image_cancel_preview(self):
+        """Right click on preview image must cancel the preview."""
+        cover_art = self.preview_container.current_preview.cover_art[0]
+
+        tx = cover_art.x + (cover_art.width / 2)
+        ty = cover_art.y + (cover_art.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=3)
+
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_left_click_on_preview_text_cancel_preview(self):
+        """Left click on some preview text must cancel the preview."""
+        text = self.preview_container.current_preview.text_boxes[0]
+
+        tx = text.x + (text.width / 2)
+        ty = text.y + (text.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=1)
+
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_middle_click_on_preview_text_cancel_preview(self):
+        """Middle click on some preview text must cancel the preview."""
+        text = self.preview_container.current_preview.text_boxes[0]
+
+        tx = text.x + (text.width / 2)
+        ty = text.y + (text.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=2)
+
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_right_click_on_preview_text_cancel_preview(self):
+        """Right click on some preview text must cancel the preview."""
+        text = self.preview_container.current_preview.text_boxes[0]
+
+        tx = text.x + (text.width / 2)
+        ty = text.y + (text.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=3)
+
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_left_click_on_preview_ratings_widget_cancel_preview(self):
+        """Left click on the ratings widget must cancel the preview."""
+        ratings_widget = self.preview_container.current_preview.ratings_widget[0]
+
+        tx = ratings_widget.x + (ratings_widget.width / 2)
+        ty = ratings_widget.y + (ratings_widget.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=1)
+
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_middle_click_on_preview_ratings_widget_cancel_preview(self):
+        """Middle click on the ratings widget must cancel the preview."""
+        ratings_widget = self.preview_container.current_preview.ratings_widget[0]
+
+        tx = ratings_widget.x + (ratings_widget.width / 2)
+        ty = ratings_widget.y + (ratings_widget.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=2)
+
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_right_click_on_preview_ratings_widget_cancel_preview(self):
+        """Right click on the ratings widget must cancel the preview."""
+        ratings_widget = self.preview_container.current_preview.ratings_widget[0]
+
+        tx = ratings_widget.x + (ratings_widget.width / 2)
+        ty = ratings_widget.y + (ratings_widget.height / 2)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=3)
+
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_left_click_on_preview_info_hint_cancel_preview(self):
+        """Left click on the info hint must cancel the preview."""
+        info_hint = self.preview_container.current_preview.info_hint_widget[0]
+
+        tx = info_hint.x + (info_hint.width / 2)
+        ty = info_hint.y + (info_hint.height / 8)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=1)
+
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_middle_click_on_preview_info_hint_cancel_preview(self):
+        """Middle click on the info hint must cancel the preview."""
+        info_hint = self.preview_container.current_preview.info_hint_widget[0]
+
+        tx = info_hint.x + (info_hint.width / 2)
+        ty = info_hint.y + (info_hint.height / 8)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=2)
+
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_right_click_on_preview_info_hint_cancel_preview(self):
+        """Right click on the info hint must cancel the preview."""
+        info_hint = self.preview_container.current_preview.info_hint_widget[0]
+
+        tx = info_hint.x + (info_hint.width / 2)
+        ty = info_hint.y + (info_hint.height / 8)
+        self.mouse.move(tx, ty)
+        self.mouse.click(button=3)
+
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
 
 
 class DashDBusIfaceTests(DashTestCase):
@@ -961,10 +1153,10 @@ class DashDBusIfaceTests(DashTestCase):
 
     def test_dash_hide(self):
         """Ensure we can hide the dash via HideDash() dbus method."""
-        self.dash.ensure_visible()
-        self.dash.controller.hide_dash_via_dbus()
-        self.assertThat(self.dash.visible, Eventually(Equals(False)))
-        self.dash.ensure_hidden()
+        self.unity.dash.ensure_visible()
+        self.unity.dash.hide_dash_via_dbus()
+        self.assertThat(self.unity.dash.visible, Eventually(Equals(False)))
+        self.unity.dash.ensure_hidden()
 
 
 class DashCrossMonitorsTests(DashTestCase):
@@ -979,27 +1171,27 @@ class DashCrossMonitorsTests(DashTestCase):
         """If the dash is opened, then the mouse is moved to another monitor and
         the keyboard is used. The Dash must not move to that monitor.
         """
-        current_monitor = self.dash.ideal_monitor
+        current_monitor = self.unity.dash.ideal_monitor
 
-        self.dash.ensure_visible()
-        self.addCleanup(self.dash.ensure_hidden)
+        self.unity.dash.ensure_visible()
+        self.addCleanup(self.unity.dash.ensure_hidden)
 
         self.screen_geo.move_mouse_to_monitor((current_monitor + 1) % self.screen_geo.get_num_monitors())
         self.keyboard.type("abc")
 
-        self.assertThat(self.dash.ideal_monitor, Eventually(Equals(current_monitor)))
+        self.assertThat(self.unity.dash.ideal_monitor, Eventually(Equals(current_monitor)))
 
     def test_dash_close_on_cross_monitor_click(self):
         """Dash must close when clicking on a window in a different screen."""
 
-        self.addCleanup(self.dash.ensure_hidden)
+        self.addCleanup(self.unity.dash.ensure_hidden)
 
         for monitor in range(self.screen_geo.get_num_monitors()-1):
             self.screen_geo.move_mouse_to_monitor(monitor)
-            self.dash.ensure_visible()
+            self.unity.dash.ensure_visible()
 
             self.screen_geo.move_mouse_to_monitor(monitor+1)
             sleep(.5)
             self.mouse.click()
 
-            self.assertThat(self.dash.visible, Eventually(Equals(False)))
+            self.assertThat(self.unity.dash.visible, Eventually(Equals(False)))

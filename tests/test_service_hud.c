@@ -97,6 +97,7 @@ service_hud_dispose(GObject* object)
     self->priv->sig_emission_handle = 0;
   }
 
+  G_OBJECT_CLASS (service_hud_parent_class)->dispose (object);
 }
 
 static void
