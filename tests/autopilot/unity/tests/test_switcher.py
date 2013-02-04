@@ -14,7 +14,7 @@ import logging
 from testtools.matchers import Equals, Contains, Not
 from time import sleep
 
-from unity.emulators.switcher import Switcher, SwitcherMode
+from unity.emulators.switcher import SwitcherDirection, SwitcherMode
 from unity.tests import UnityTestCase
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class SwitcherTestCase(UnityTestCase):
         if type(state) is not bool:
             raise TypeError("'state' must be boolean, not %r" % type(state))
         self.set_unity_option("disable_show_desktop", state)
-        self.assertThat(self.switcher.controller.show_desktop_disabled, Eventually(Equals(state)))
+        self.assertThat(self.unity.switcher.show_desktop_disabled, Eventually(Equals(state)))
 
     def set_timeout_setting(self, state):
         if type(state) is not bool:
@@ -79,90 +79,90 @@ class SwitcherTests(SwitcherTestCase):
         """Switcher must start in normal (i.e.- not details) mode."""
         self.start_app("Character Map")
 
-        self.switcher.initiate()
-        self.addCleanup(self.switcher.terminate)
-        self.assertProperty(self.switcher, mode=SwitcherMode.NORMAL)
+        self.unity.switcher.initiate()
+        self.addCleanup(self.unity.switcher.terminate)
+        self.assertProperty(self.unity.switcher, mode=SwitcherMode.NORMAL)
 
     def test_label_matches_application_name(self):
         """The switcher label must match the selected application name in normal mode."""
         windows = self.start_applications()
-        self.switcher.initiate()
-        self.addCleanup(self.switcher.terminate)
+        self.unity.switcher.initiate()
+        self.addCleanup(self.unity.switcher.terminate)
 
         for win in windows:
             app_name = win.application.name
-            self.switcher.select_icon(Switcher.DIRECTION_FORWARDS, tooltip_text=app_name)
-            self.assertThat(self.switcher.label_visible, Eventually(Equals(True)))
-            self.assertThat(self.switcher.label, Eventually(Equals(app_name)))
+            self.unity.switcher.select_icon(SwitcherDirection.FORWARDS, tooltip_text=app_name)
+            self.assertThat(self.unity.switcher.label_visible, Eventually(Equals(True)))
+            self.assertThat(self.unity.switcher.label, Eventually(Equals(app_name)))
 
     def test_application_window_is_fake_decorated(self):
         """When the switcher is in details mode must not show the focused window title."""
         window = self.start_app_window("Text Editor")
-        self.switcher.initiate()
-        self.addCleanup(self.switcher.terminate)
+        self.unity.switcher.initiate()
+        self.addCleanup(self.unity.switcher.terminate)
 
-        self.switcher.select_icon(Switcher.DIRECTION_BACKWARDS, tooltip_text=window.application.name)
+        self.unity.switcher.select_icon(SwitcherDirection.BACKWARDS, tooltip_text=window.application.name)
 
-        self.switcher.show_details()
-        self.assertThat(self.switcher.label_visible, Eventually(Equals(False)))
-        self.assertThat(self.screen.window(window.x_id).fake_decorated, Eventually(Equals(True)))
+        self.unity.switcher.show_details()
+        self.assertThat(self.unity.switcher.label_visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.screen.window(window.x_id).fake_decorated, Eventually(Equals(True)))
 
     def test_application_window_is_fake_decorated_in_detail_mode(self):
         """Starting switcher in details mode must not show the focused window title."""
         window = self.start_app_window("Text Editor")
-        self.switcher.initiate(SwitcherMode.DETAIL)
-        self.addCleanup(self.switcher.terminate)
+        self.unity.switcher.initiate(SwitcherMode.DETAIL)
+        self.addCleanup(self.unity.switcher.terminate)
 
-        self.assertThat(self.switcher.label_visible, Eventually(Equals(False)))
-        self.assertThat(self.screen.window(window.x_id).fake_decorated, Eventually(Equals(True)))
+        self.assertThat(self.unity.switcher.label_visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.screen.window(window.x_id).fake_decorated, Eventually(Equals(True)))
 
     def test_switcher_move_next(self):
         """Test that pressing the next icon binding moves to the next icon"""
         self.start_applications()
-        self.switcher.initiate()
-        self.addCleanup(self.switcher.terminate)
+        self.unity.switcher.initiate()
+        self.addCleanup(self.unity.switcher.terminate)
 
-        start = self.switcher.selection_index
-        self.switcher.next_icon()
+        start = self.unity.switcher.selection_index
+        self.unity.switcher.next_icon()
         # Allow for wrap-around to first icon in switcher
-        next_index = (start + 1) % len(self.switcher.icons)
+        next_index = (start + 1) % len(self.unity.switcher.icons)
 
-        self.assertThat(self.switcher.selection_index, Eventually(Equals(next_index)))
+        self.assertThat(self.unity.switcher.selection_index, Eventually(Equals(next_index)))
 
     def test_switcher_move_prev(self):
         """Test that pressing the previous icon binding moves to the previous icon"""
         self.start_applications()
-        self.switcher.initiate()
-        self.addCleanup(self.switcher.terminate)
+        self.unity.switcher.initiate()
+        self.addCleanup(self.unity.switcher.terminate)
 
-        start = self.switcher.selection_index
-        self.switcher.previous_icon()
+        start = self.unity.switcher.selection_index
+        self.unity.switcher.previous_icon()
 
-        self.assertThat(self.switcher.selection_index, Eventually(Equals(start - 1)))
+        self.assertThat(self.unity.switcher.selection_index, Eventually(Equals(start - 1)))
 
     def test_switcher_scroll_next(self):
         """Test that scrolling the mouse wheel down moves to the next icon"""
         self.start_applications()
-        self.switcher.initiate()
-        self.addCleanup(self.switcher.terminate)
+        self.unity.switcher.initiate()
+        self.addCleanup(self.unity.switcher.terminate)
 
-        start = self.switcher.selection_index
-        self.switcher.next_via_mouse()
+        start = self.unity.switcher.selection_index
+        self.unity.switcher.next_via_mouse()
         # Allow for wrap-around to first icon in switcher
-        next_index = (start + 1) % len(self.switcher.icons)
+        next_index = (start + 1) % len(self.unity.switcher.icons)
 
-        self.assertThat(self.switcher.selection_index, Eventually(Equals(next_index)))
+        self.assertThat(self.unity.switcher.selection_index, Eventually(Equals(next_index)))
 
     def test_switcher_scroll_prev(self):
         """Test that scrolling the mouse wheel up moves to the previous icon"""
         self.start_applications()
-        self.switcher.initiate()
-        self.addCleanup(self.switcher.terminate)
+        self.unity.switcher.initiate()
+        self.addCleanup(self.unity.switcher.terminate)
 
-        start = self.switcher.selection_index
-        self.switcher.previous_via_mouse()
+        start = self.unity.switcher.selection_index
+        self.unity.switcher.previous_via_mouse()
 
-        self.assertThat(self.switcher.selection_index, Eventually(Equals(start - 1)))
+        self.assertThat(self.unity.switcher.selection_index, Eventually(Equals(start - 1)))
 
     def test_switcher_arrow_key_does_not_init(self):
         """Ensure that Alt+Right does not initiate switcher.
@@ -171,7 +171,7 @@ class SwitcherTests(SwitcherTestCase):
 
         """
         self.keyboard.press_and_release('Alt+Right')
-        self.assertThat(self.switcher.visible, Equals(False))
+        self.assertThat(self.unity.switcher.visible, Equals(False))
 
     def test_lazy_switcher_initiate(self):
         """Inserting a long delay between the Alt press and the Tab tab must still
@@ -182,22 +182,22 @@ class SwitcherTests(SwitcherTestCase):
 
         self.keybinding_hold("switcher/reveal_normal")
         self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
-        self.assertThat(self.switcher.visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.switcher.visible, Eventually(Equals(False)))
         sleep(5)
         self.keybinding_tap("switcher/reveal_normal")
         self.addCleanup(self.keybinding, "switcher/cancel")
-        self.assertThat(self.switcher.visible, Eventually(Equals(True)))
+        self.assertThat(self.unity.switcher.visible, Eventually(Equals(True)))
 
     def test_switcher_cancel(self):
         """Pressing the switcher cancel keystroke must cancel the switcher."""
         self.start_app("Character Map")
 
-        self.switcher.initiate()
-        self.addCleanup(self.switcher.terminate)
+        self.unity.switcher.initiate()
+        self.addCleanup(self.unity.switcher.terminate)
 
-        self.assertThat(self.switcher.visible, Eventually(Equals(True)))
-        self.switcher.cancel()
-        self.assertThat(self.switcher.visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.switcher.visible, Eventually(Equals(True)))
+        self.unity.switcher.cancel()
+        self.assertThat(self.unity.switcher.visible, Eventually(Equals(False)))
 
     def test_lazy_switcher_cancel(self):
         """Must be able to cancel the switcher after a 'lazy' initiation."""
@@ -205,12 +205,12 @@ class SwitcherTests(SwitcherTestCase):
 
         self.keybinding_hold("switcher/reveal_normal")
         self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
-        self.assertThat(self.switcher.visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.switcher.visible, Eventually(Equals(False)))
         sleep(5)
         self.keybinding_tap("switcher/reveal_normal")
-        self.assertThat(self.switcher.visible, Eventually(Equals(True)))
-        self.switcher.cancel()
-        self.assertThat(self.switcher.visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.switcher.visible, Eventually(Equals(True)))
+        self.unity.switcher.cancel()
+        self.assertThat(self.unity.switcher.visible, Eventually(Equals(False)))
 
     def test_switcher_appears_on_monitor_with_mouse(self):
         """Tests that the switches appears on the correct monitor.
@@ -229,17 +229,17 @@ class SwitcherTests(SwitcherTestCase):
 
         for monitor in range(num_monitors):
             self.screen_geo.move_mouse_to_monitor(monitor)
-            self.switcher.initiate()
-            self.addCleanup(self.switcher.terminate)
-            self.assertThat(self.switcher.controller.monitor, Eventually(Equals(monitor)))
+            self.unity.switcher.initiate()
+            self.addCleanup(self.unity.switcher.terminate)
+            self.assertThat(self.unity.switcher.monitor, Eventually(Equals(monitor)))
 
     def test_switcher_alt_f4_is_disabled(self):
         """Tests that alt+f4 does not work while switcher is active."""
 
         win = self.start_app_window("Text Editor")
 
-        self.switcher.initiate(SwitcherMode.DETAIL)
-        self.addCleanup(self.switcher.terminate)
+        self.unity.switcher.initiate(SwitcherMode.DETAIL)
+        self.addCleanup(self.unity.switcher.terminate)
 
         self.keyboard.press_and_release("Alt+F4")
         # Need the sleep to allow the window time to close, for jenkins!
@@ -315,11 +315,11 @@ class SwitcherDetailsTests(SwitcherTestCase):
         self.workspace.switch_to((initial_workspace + 1) % self.workspace.num_workspaces)
         self.start_applications("Character Map", "Character Map", "Mahjongg")
 
-        self.switcher.initiate()
-        self.addCleanup(self.switcher.terminate)
+        self.unity.switcher.initiate()
+        self.addCleanup(self.unity.switcher.terminate)
         # Wait longer than details mode.
         sleep(3)
-        self.assertProperty(self.switcher, mode=SwitcherMode.DETAIL)
+        self.assertProperty(self.unity.switcher, mode=SwitcherMode.DETAIL)
 
     def test_no_details_for_apps_on_different_workspace(self):
         """Tests that details mode does not initiates when there are multiple windows
@@ -336,11 +336,11 @@ class SwitcherDetailsTests(SwitcherTestCase):
         self.workspace.switch_to((initial_workspace + 1) % self.workspace.num_workspaces)
         self.start_applications("Character Map", "Mahjongg")
 
-        self.switcher.initiate()
-        self.addCleanup(self.switcher.terminate)
+        self.unity.switcher.initiate()
+        self.addCleanup(self.unity.switcher.terminate)
         # Wait longer than details mode.
         sleep(3)
-        self.assertProperty(self.switcher, mode=SwitcherMode.NORMAL)
+        self.assertProperty(self.unity.switcher, mode=SwitcherMode.NORMAL)
 
 
 class SwitcherDetailsModeTests(SwitcherTestCase):
@@ -366,12 +366,12 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
 
         """
         self.start_app_window("Character Map")
-        self.switcher.initiate()
-        self.addCleanup(self.switcher.terminate)
+        self.unity.switcher.initiate()
+        self.addCleanup(self.unity.switcher.terminate)
 
         self.keyboard.press_and_release(self.initiate_keycode)
 
-        self.assertProperty(self.switcher, mode=SwitcherMode.DETAIL)
+        self.assertProperty(self.unity.switcher, mode=SwitcherMode.DETAIL)
 
     def test_next_icon_from_last_detail_works(self):
         """Pressing next while showing last switcher item in details mode
@@ -379,19 +379,19 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
 
         """
         self.start_app("Character Map")
-        self.switcher.initiate()
-        self.addCleanup(self.switcher.terminate)
-        while self.switcher.selection_index < len(self.switcher.icons) - 1:
-            self.switcher.next_icon()
+        self.unity.switcher.initiate()
+        self.addCleanup(self.unity.switcher.terminate)
+        while self.unity.switcher.selection_index < len(self.unity.switcher.icons) - 1:
+            self.unity.switcher.next_icon()
         self.keyboard.press_and_release(self.initiate_keycode)
         sleep(0.5)
         # Make sure we're at the end of the details list for this icon
-        possible_details = self.switcher.detail_current_count - 1
-        while self.switcher.detail_selection_index < possible_details:
-            self.switcher.next_detail()
+        possible_details = self.unity.switcher.detail_current_count - 1
+        while self.unity.switcher.detail_selection_index < possible_details:
+            self.unity.switcher.next_detail()
 
-        self.switcher.next_icon()
-        self.assertThat(self.switcher.selection_index, Eventually(Equals(0)))
+        self.unity.switcher.next_icon()
+        self.assertThat(self.unity.switcher.selection_index, Eventually(Equals(0)))
 
     def test_detail_mode_selects_last_active_window(self):
         """The active selection in detail mode must be the last focused window.
@@ -400,12 +400,12 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
         char_win1, char_win2 = self.start_applications("Character Map", "Character Map")
         self.assertVisibleWindowStack([char_win2, char_win1])
 
-        self.switcher.initiate()
-        while self.switcher.current_icon.tooltip_text != char_win2.application.name:
-            self.switcher.next_icon()
+        self.unity.switcher.initiate()
+        while self.unity.switcher.current_icon.tooltip_text != char_win2.application.name:
+            self.unity.switcher.next_icon()
         self.keyboard.press_and_release(self.initiate_keycode)
         sleep(0.5)
-        self.switcher.select()
+        self.unity.switcher.select()
 
         self.assertProperty(char_win1, is_focused=True)
 
@@ -416,10 +416,10 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
         char_win1, char_win2, char_win3 = self.start_applications("Character Map", "Character Map", "Character Map")
         self.assertVisibleWindowStack([char_win3, char_win2, char_win1])
 
-        self.switcher.initiate(SwitcherMode.DETAIL)
-        self.switcher.next_detail()
+        self.unity.switcher.initiate(SwitcherMode.DETAIL)
+        self.unity.switcher.next_detail()
 
-        self.switcher.select()
+        self.unity.switcher.select()
         self.assertVisibleWindowStack([char_win1, char_win3, char_win2])
 
 
@@ -440,10 +440,10 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         self.workspace.switch_to((initial_workspace + 1) % self.workspace.num_workspaces)
         char_map = self.start_app("Character Map")
 
-        self.switcher.initiate()
-        self.addCleanup(self.switcher.terminate)
+        self.unity.switcher.initiate()
+        self.addCleanup(self.unity.switcher.terminate)
 
-        get_icon_names = lambda: [i.tooltip_text for i in self.switcher.icons]
+        get_icon_names = lambda: [i.tooltip_text for i in self.unity.switcher.icons]
         self.assertThat(get_icon_names, Eventually(Contains(char_map.name)))
         self.assertThat(get_icon_names, Eventually(Not(Contains(calc.name))))
 
@@ -456,10 +456,10 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         self.workspace.switch_to((initial_workspace + 1) % self.workspace.num_workspaces)
         char_map = self.start_app("Character Map")
 
-        self.switcher.initiate(SwitcherMode.ALL)
-        self.addCleanup(self.switcher.terminate)
+        self.unity.switcher.initiate(SwitcherMode.ALL)
+        self.addCleanup(self.unity.switcher.terminate)
 
-        get_icon_names = lambda: [i.tooltip_text for i in self.switcher.icons]
+        get_icon_names = lambda: [i.tooltip_text for i in self.unity.switcher.icons]
         self.assertThat(get_icon_names, Eventually(Contains(calc.name)))
         self.assertThat(get_icon_names, Eventually(Contains(char_map.name)))
 
@@ -485,10 +485,10 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
 
         self.start_app("Calculator")
 
-        self.switcher.initiate()
-        while self.switcher.current_icon.tooltip_text != char_win2.application.name:
-            self.switcher.next_icon()
-        self.switcher.select()
+        self.unity.switcher.initiate()
+        while self.unity.switcher.current_icon.tooltip_text != char_win2.application.name:
+            self.unity.switcher.next_icon()
+        self.unity.switcher.select()
 
         self.assertProperty(char_win2, is_hidden=False)
 
@@ -503,6 +503,6 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         self.addCleanup(self.keyboard.release, "Ctrl+Alt+Right")
         sleep(1)
         self.keybinding_hold_part_then_tap("switcher/reveal_normal")
-        self.addCleanup(self.switcher.terminate)
+        self.addCleanup(self.unity.switcher.terminate)
 
-        self.assertThat(self.switcher.visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.switcher.visible, Eventually(Equals(False)))
