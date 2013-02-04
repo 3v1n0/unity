@@ -108,7 +108,7 @@ static const gchar * indicator_order[][2] = {
   {"libapplication.so", "gsd-keyboard-xkb"},  /* keyboard layout selector */
   {"libmessaging.so", NULL},                  /* indicator-messages */
   {"libpower.so", NULL},                      /* indicator-power */
-  {"libapplication.so", "bluetooth-manager"}, /* bluetooth manager */
+  {"libbluetooth.so", NULL},                  /* indicator-bluetooth */
   {"libnetwork.so", NULL},                    /* indicator-network */
   {"libnetworkmenu.so", NULL},                /* indicator-network */
   {"libapplication.so", "nm-applet"},         /* network manager */
