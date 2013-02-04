@@ -19,7 +19,6 @@ from unity.emulators.panel import PanelController
 from unity.emulators.screen import Screen
 from unity.emulators.switcher import SwitcherController
 from unity.emulators.window_manager import WindowManager
-from unity.emulators.workspace import WorkspaceManager
 
 
 # acquire the debugging dbus object
