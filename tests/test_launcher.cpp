@@ -98,6 +98,7 @@ public:
     using Launcher::ProcessDndMove;
     using Launcher::ProcessDndDrop;
     using Launcher::_drag_icon_position;
+    using Launcher::_icon_under_mouse;
 
     using Launcher::IconStartingBlinkValue;
     using Launcher::IconStartingPulseValue;
@@ -207,6 +208,25 @@ TEST_F(TestLauncher, TestQuirksDuringDnd)
 
 TEST_F(TestLauncher, TestMouseWheelScroll)
 {
+  MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon);
+  model_->AddIcon(icon);
+
+  launcher_->SetHover(true);
+  launcher_->_icon_under_mouse = icon;
+
+  unsigned long key_flags = 0; 
+
+  EXPECT_CALL(*icon, PerformScroll(AbstractLauncherIcon::ScrollDirection::UP, _));
+  launcher_->RecvMouseWheel(0, 0, 20, 0, key_flags);
+
+  EXPECT_CALL(*icon, PerformScroll(AbstractLauncherIcon::ScrollDirection::DOWN, _));
+  launcher_->RecvMouseWheel(0, 0, -20, 0, key_flags);
+
+  launcher_->SetHover(false);
+}
+
+TEST_F(TestLauncher, TestMouseWheelScrollAltPressed)
+{
   int initial_scroll_delta;
 
   launcher_->SetHover(true);
@@ -219,11 +239,11 @@ TEST_F(TestLauncher, TestMouseWheelScroll)
 
   key_flags |= nux::NUX_STATE_ALT;
 
-  // scroll down
+  // scroll down 
   launcher_->RecvMouseWheel(0, 0, 20, 0, key_flags);
   EXPECT_EQ((launcher_->GetDragDelta() - initial_scroll_delta), 25);
 
-  // scroll up
+  // scroll up - alt pressed
   launcher_->RecvMouseWheel(0, 0, -20, 0, key_flags);
   EXPECT_EQ(launcher_->GetDragDelta(), initial_scroll_delta);
 
