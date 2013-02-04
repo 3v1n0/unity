@@ -86,7 +86,7 @@ class UnityTestCase(AutopilotTestCase):
             well_behaved = False
             reasons.append("The test left the dash open.")
             log.warning("Test left the dash open, closing it...")
-            self.dash.ensure_hidden()
+            self.unity.dash.ensure_hidden()
         # ... or the hud?
         if not self.well_behaved(self.unity.hud, visible=False):
             well_behaved = False
