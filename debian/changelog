@@ -1,4 +1,4 @@
-unity (6.12.0daily13.01.25.1-0ubuntu2) UNRELEASED; urgency=low
+unity (6.12.0daily13.02.04.1-0ubuntu1) raring; urgency=low
 
   * debian/control:
     - recommends indicator-sync so it gets installed by default 
@@ -9,7 +9,58 @@ unity (6.12.0daily13.01.25.1-0ubuntu2) UNRELEASED; urgency=low
   * debian/control:
     - bump compiz build-dep due to the last ABI break
 
- -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 31 Jan 2013 11:39:19 +0100
+  [ Brandon Schaefer ]
+  * [regression] Clicking on the indicators when the Dash is open no
+    longer closes the Dash. (LP: #1109150)
+  * [staging][raring] Dash Maximise/Restore button depends on the
+    launcher icon size. (LP: #1101310)
+
+  [ Romain Perier ]
+  * The Dash closes when trying to switch to the Command lens (Alt+F2)
+    (LP: #1019457)
+
+  [ Marco Trevisan (Treviño) ]
+  * Launcher can have smaller size on monitor resolution change (LP:
+    #1105382)
+  * Dragging down a window from the panel on an external monitor,
+    restores it at wrong offset (LP: #1104043)
+  * [regression] Alt+Tab/Alt+grave brings other window to the front but
+    loses focus entirely.  (LP: #1111620)
+  * Quicklist items need a way to be ellipsized (LP: #1111471)
+
+  [ Charles Kerr <charles.kerr@canonical.com>, Andrea Azzarone ]
+  * the GObject subclasses in tests/ don't dispose() properly (LP:
+    #986875)
+
+  [ Nicolas d'Offay ]
+  * Speed up dash blur (LP: #1102410)
+
+  [ Manuel de la Pena ]
+  * API changes to FindKeyFocusArea in the Preview class stops more
+    complicated previous fom setting the correct focus (LP: #1102387)
+
+  [ MC Return ]
+  * Wrong description in Dconf key
+    com.canonical.unity.launcher.favorites (LP: #1112560)
+  * Keyboard shortcut overlay says Ctrl+Super+Down "minimises" the
+    current window, but it doesn't (LP: #966099)
+
+  [ Andrea Azzarone ]
+  * unmounting any gvfs-mounted device from unity menu crashes compiz
+    (LP: #1111389)
+  * compiz crashed with SIGSEGV in async_wrapper_callback() from
+    g_simple_async_result_complete() from
+    _g_simple_async_result_complete_with_cancellable() from
+    unmount_reply() (LP: #1102926)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * SwitcherControllerImpl autopilot test failures in unity -
+    6.12.0daily13.01.29.2-0ubuntu1 (LP: #1109192)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3117
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Mon, 04 Feb 2013 09:59:13 +0000
 
 unity (6.12.0daily13.01.25.1-0ubuntu1) raring; urgency=low
 
