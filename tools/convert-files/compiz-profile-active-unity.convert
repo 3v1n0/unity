@@ -70,7 +70,7 @@ toggle-window-maximized-horizontally-key = /apps/compiz-1/plugins/core/screen0/o
 toggle-window-maximized-key = /apps/compiz-1/plugins/core/screen0/options/toggle_window_maximized_key
 toggle-window-maximized-vertically-key = /apps/compiz-1/plugins/core/screen0/options/toggle_window_maximized_vertically_key
 toggle-window-shaded-key = /apps/compiz-1/plugins/core/screen0/options/toggle_window_shaded_key
-unmaximize-or-minimize-window-key = /apps/compiz-1/plugins/core/screen0/options/unmaximize_or_minimize_window_key
+unmaximize-window-key = /apps/compiz-1/plugins/core/screen0/options/unmaximize_window_key
 window-menu-button = /apps/compiz-1/plugins/core/screen0/options/window_menu_button
 window-menu-key = /apps/compiz-1/plugins/core/screen0/options/window_menu_key
 
