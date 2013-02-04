@@ -233,15 +233,17 @@ class SwitcherTests(SwitcherTestCase):
             self.addCleanup(self.switcher.terminate)
             self.assertThat(self.switcher.controller.monitor, Eventually(Equals(monitor)))
 
-    def test_switcher_alt_f4_is_disabled(self):
-        """Tests that alt+f4 does not work while switcher is active."""
+    def test_alt_f4_closes_switcher(self):
+        """Tests that alt+f4 should close the switcher when active."""
 
         win = self.start_app_window("Text Editor")
 
-        self.switcher.initiate(SwitcherMode.DETAIL)
+        self.switcher.initiate()
         self.addCleanup(self.switcher.terminate)
+        self.assertThat(self.switcher.visible, Eventually(Equals(True)))
 
         self.keyboard.press_and_release("Alt+F4")
+        self.assertThat(self.switcher.visible, Eventually(Equals(False)))
         # Need the sleep to allow the window time to close, for jenkins!
         sleep(10)
         self.assertProperty(win, is_valid=True)
