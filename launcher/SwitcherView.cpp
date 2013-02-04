@@ -32,16 +32,21 @@ using launcher::AbstractLauncherIcon;
 namespace switcher
 {
 
+namespace
+{
+  const unsigned int VERTICAL_PADDING = 45;
+}
+
 NUX_IMPLEMENT_OBJECT_TYPE(SwitcherView);
 
 SwitcherView::SwitcherView()
   : render_boxes(false)
   , border_size(50)
-  , flat_spacing(10)
+  , flat_spacing(20)
   , icon_size(128)
   , minimum_spacing(10)
   , tile_size(150)
-  , vertical_size(tile_size + 80)
+  , vertical_size(tile_size + VERTICAL_PADDING * 2)
   , text_size(15)
   , animation_length(250)
   , monitor(-1)
@@ -117,7 +122,7 @@ void SwitcherView::OnIconSizeChanged (int size)
 void SwitcherView::OnTileSizeChanged (int size)
 {
   icon_renderer_->SetTargetSize(tile_size, icon_size, 10);
-  vertical_size = tile_size + 80;
+  vertical_size = tile_size + VERTICAL_PADDING * 2;
 }
 
 void SwitcherView::SaveLast ()
@@ -137,7 +142,10 @@ void SwitcherView::OnDetailSelectionChanged(bool detail)
   text_view_->SetVisible(!detail);
 
   if (!detail)
+  {
     text_view_->SetText(model_->Selection()->tooltip_text());
+    render_targets_.clear();
+  }
 
   SaveLast();
   QueueDraw();
@@ -205,7 +213,7 @@ RenderArg SwitcherView::InterpolateRenderArgs(RenderArg const& start, RenderArg 
   return result;
 }
 
-nux::Geometry SwitcherView::InterpolateBackground (nux::Geometry const& start, nux::Geometry const& end, float progress)
+nux::Geometry SwitcherView::InterpolateBackground(nux::Geometry const& start, nux::Geometry const& end, float progress)
 {
   progress = -pow(progress - 1.0f, 2) + 1;
 
@@ -219,12 +227,10 @@ nux::Geometry SwitcherView::InterpolateBackground (nux::Geometry const& start, n
   return result;
 }
 
-nux::Geometry SwitcherView::UpdateRenderTargets(nux::Point const& center, timespec const& current)
+nux::Geometry SwitcherView::UpdateRenderTargets(float progress)
 {
   std::vector<Window> const& xids = model_->DetailXids();
-
-  DeltaTime ms_since_change = TimeUtil::TimeDelta(&current, &save_time_);
-  float progress = std::min<float>(1.0f, ms_since_change / static_cast<float>(animation_length()));
+  render_targets_.clear();
 
   for (Window window : xids)
   {
@@ -236,33 +242,39 @@ nux::Geometry SwitcherView::UpdateRenderTargets(nux::Point const& center, timesp
     render_targets_.push_back(layout_window);
   }
 
-  nux::Geometry max_bounds;
-  nux::Geometry const& absolute = GetAbsoluteGeometry();
+  nux::Geometry max_bounds = GetAbsoluteGeometry();
   nux::Size const& spread_size = SpreadSize();
-  max_bounds.x = absolute.x + center.x - spread_size.width / 2;
-  max_bounds.y = absolute.y + center.y - spread_size.height / 2;
+  max_bounds.x -= spread_size.width / 2;
+  max_bounds.y -= spread_size.height / 2;
   max_bounds.width = spread_size.width;
   max_bounds.height = spread_size.height;
 
-  nux::Geometry final_bounds;
-  layout_system_.LayoutWindows(render_targets_, max_bounds, final_bounds);
+  nux::Geometry layout_geo;
+  layout_system_.LayoutWindows(render_targets_, max_bounds, layout_geo);
 
-  if (progress < 1.0f)
-  {
-    // Animate the windows thumbnail sizes to make them grow with the switcher
-    for (LayoutWindow::Ptr const& win : render_targets_)
-    {
-      auto old_geo = win->result;
-      win->result = old_geo * progress;
-      win->result.x += (old_geo.width - win->result.width) / 4;
-      win->result.y += (old_geo.height - win->result.height) / 4;
-    }
-  }
-
-  return final_bounds;
+  return layout_geo;
 }
 
-void SwitcherView::OffsetRenderTargets (int x, int y)
+void SwitcherView::ResizeRenderTargets(nux::Geometry const& layout_geo, float progress)
+{
+  if (progress >= 1.0f)
+    return;
+
+  // Animate the windows thumbnail sizes to make them grow with the switcher
+  float to_finish = 1.0f - progress;
+  nux::Point layout_abs_center((layout_geo.x + layout_geo.width/2.0f) * to_finish,
+                               (layout_geo.y + layout_geo.height/2.0f) * to_finish);
+
+  for (LayoutWindow::Ptr const& win : render_targets_)
+  {
+    auto final_geo = win->result;
+    win->result = final_geo * progress;
+    win->result.x += layout_abs_center.x;
+    win->result.y += layout_abs_center.y;
+  }
+}
+
+void SwitcherView::OffsetRenderTargets(int x, int y)
 {
   for (LayoutWindow::Ptr const& target : render_targets_)
   {
@@ -356,12 +368,10 @@ void SwitcherView::GetFlatIconPositions (int n_flat_icons,
   }
 }
 
-std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo, int selection, timespec const& current)
+std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo, int selection, float progress)
 {
   std::list<RenderArg> results;
   nux::Geometry const& base = GetGeometry();
-
-  render_targets_.clear ();
 
   bool detail_selection = model_->detail_selection;
 
@@ -380,7 +390,8 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
     int spread_padded_width = 0;
     if (detail_selection)
     {
-      nux::Geometry const& spread_bounds = UpdateRenderTargets(nux::Point(), current);
+      nux::Geometry const& spread_bounds = UpdateRenderTargets(progress);
+      ResizeRenderTargets(spread_bounds, progress);
       // remove extra space consumed by spread
       spread_padded_width = spread_bounds.width + 100;
       max_width -= spread_padded_width - tile_size;
@@ -450,10 +461,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
 
       x += (half_size + flat_spacing) * scalar;
 
-      if (should_flat)
-        arg.render_center = nux::Point3((int) x, y, 0);
-      else
-        arg.render_center = nux::Point3(x, y, 0);
+      arg.render_center = nux::Point3(should_flat ? std::floor(x) : x, y, 0);
 
       x += (half_size + flat_spacing) * scalar;
 
@@ -478,18 +486,15 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
       if (i == selection && detail_selection)
       {
         arg.skip = true;
-        OffsetRenderTargets (arg.render_center.x, arg.render_center.y);
+        OffsetRenderTargets(arg.render_center.x, arg.render_center.y);
       }
 
       results.push_back(arg);
       ++i;
     }
 
-    DeltaTime ms_since_change = TimeUtil::TimeDelta(&current, &save_time_);
-    if (saved_args_.size () == results.size () && ms_since_change < animation_length)
+    if (saved_args_.size () == results.size () && progress < 1.0f)
     {
-      float progress = (float) ms_since_change / (float) animation_length();
-
       std::list<RenderArg> end = results;
       results.clear();
 
@@ -499,7 +504,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
         results.push_back(InterpolateRenderArgs(*start_it, *end_it, progress));
       }
 
-      background_geo = InterpolateBackground (saved_background_, background_geo, progress);
+      background_geo = InterpolateBackground(saved_background_, background_geo, progress);
     }
   }
 
@@ -509,6 +514,8 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
 void SwitcherView::PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   clock_gettime(CLOCK_MONOTONIC, &current_);
+  DeltaTime ms_since_change = TimeUtil::TimeDelta(&current_, &save_time_);
+  float progress = std::min<float>(1.0f, ms_since_change / static_cast<float>(animation_length()));
 
   if (!target_sizes_set_)
   {
@@ -517,7 +524,7 @@ void SwitcherView::PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
   }
 
   nux::Geometry background_geo;
-  last_args_ = RenderArgsFlat(background_geo, model_->SelectionIndex(), current_);
+  last_args_ = RenderArgsFlat(background_geo, model_->SelectionIndex(), progress);
   last_background_ = background_geo;
 
   icon_renderer_->PreprocessIcons(last_args_, GetGeometry());
@@ -581,8 +588,10 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
 
   if (text_view_->IsVisible())
   {
+    nux::GetPainter().PushPaintLayerStack();
     text_view_->SetBaseY(last_background_.y + last_background_.height - 45);
     text_view_->Draw(GfxContext, force_draw);
+    nux::GetPainter().PopPaintLayerStack();
   }
 
   DeltaTime ms_since_change = TimeUtil::TimeDelta(&current_, &save_time_);

@@ -26,8 +26,6 @@
 #include "LauncherModel.h"
 
 #include "unity-shared/Introspectable.h"
-
-#include <boost/shared_ptr.hpp>
 #include <sigc++/sigc++.h>
 
 namespace unity
@@ -53,7 +51,7 @@ class SwitcherModel : public debug::Introspectable, public sigc::trackable
 {
 
 public:
-  typedef boost::shared_ptr<SwitcherModel> Ptr;
+  typedef std::shared_ptr<SwitcherModel> Ptr;
 
   typedef std::vector<launcher::AbstractLauncherIcon::Ptr> Applications;
   typedef Applications::iterator iterator;

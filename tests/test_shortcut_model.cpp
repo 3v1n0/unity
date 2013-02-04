@@ -18,6 +18,7 @@
  */
 
 #include <memory>
+#include <stdexcept>
 #include <gtest/gtest.h>
 
 #include "MockShortcutHint.h"
@@ -31,55 +32,79 @@ TEST(TestShortcutModel, TestConstruction)
 {
   std::list<AbstractHint::Ptr> hints;
 
-  hints.push_back(std::make_shared<MockHint>("Launcher", "", "", "Description 1", COMPIZ_KEY_OPTION, "Plugin 1", "key_option_1"));
-  hints.push_back(std::make_shared<MockHint>("Launcher", "", "", "Description 2", HARDCODED_OPTION, "Value 2"));
-  hints.push_back(std::make_shared<MockHint>("Dash", "Prefix", "Postfix", "Description 3", COMPIZ_KEY_OPTION, "Plugin 3", "key_option_3"));
-  hints.push_back(std::make_shared<MockHint>("Menu Bar", "Prefix", "Postfix", "Description 4", HARDCODED_OPTION, "Value4"));
+  hints.push_back(std::make_shared<MockHint>("Launcher", "", "", "Description 1", OptionType::COMPIZ_KEY, "Plugin 1", "key_option_1"));
+  hints.push_back(std::make_shared<MockHint>("Launcher", "", "", "Description 2", OptionType::HARDCODED, "Value 2"));
+  hints.push_back(std::make_shared<MockHint>("Dash", "Prefix", "Postfix", "Description 3", OptionType::COMPIZ_KEY, "Plugin 3", "key_option_3"));
+  hints.push_back(std::make_shared<MockHint>("Menu Bar", "Prefix", "Postfix", "Description 4", OptionType::HARDCODED, "Value4"));
 
   Model model(hints);
 
+  EXPECT_EQ(model.categories_per_column(), 3);
   EXPECT_EQ(model.categories().size(), 3);
-  EXPECT_EQ(model.hints()["Launcher"].size(), 2);
-  EXPECT_EQ(model.hints()["Dash"].size(), 1);
-  EXPECT_EQ(model.hints()["Menu Bar"].size(), 1);
-  EXPECT_EQ(model.hints()["Unity"].size(), 0);
+  EXPECT_EQ(model.hints().at("Launcher").size(), 2);
+  EXPECT_EQ(model.hints().at("Dash").size(), 1);
+  EXPECT_EQ(model.hints().at("Menu Bar").size(), 1);
+  EXPECT_EQ(model.hints().find("Unity"), model.hints().end());
 }
 
 TEST(TestShortcutModel, TestFill)
 {
   std::list<AbstractHint::Ptr> hints;
 
-  hints.push_back(std::make_shared<MockHint>("Launcher", "", "", "Description 1", COMPIZ_KEY_OPTION, "Plugin 1", "key_option_1"));
-  hints.push_back(std::make_shared<MockHint>("Launcher", "", "", "Description 2", HARDCODED_OPTION, "Value 2"));
-  hints.push_back(std::make_shared<MockHint>("Dash", "Prefix", "Postfix", "Description 3", COMPIZ_KEY_OPTION, "Plugin 3", "key_option_3"));
-  hints.push_back(std::make_shared<MockHint>("Menu Bar", "Prefix", "Postfix", "Description 4", HARDCODED_OPTION, "Value 4"));
+  hints.push_back(std::make_shared<MockHint>("Launcher", "", "", "Description 1", OptionType::COMPIZ_KEY, "Plugin 1", "key_option_1"));
+  hints.push_back(std::make_shared<MockHint>("Launcher", "", "", "Description 2", OptionType::HARDCODED, "Value 2"));
+  hints.push_back(std::make_shared<MockHint>("Dash", "Prefix", "Postfix", "Description 3", OptionType::COMPIZ_KEY, "Plugin 3", "key_option_3"));
+  hints.push_back(std::make_shared<MockHint>("Menu Bar", "Prefix", "Postfix", "Description 4", OptionType::HARDCODED, "Value 4"));
 
   Model model(hints);
 
   model.Fill();
 
   // We cannot test CompOption here... :/
-  EXPECT_EQ(model.hints()["Launcher"].front()->value(), "Plugin 1-key_option_1");
-  EXPECT_EQ(model.hints()["Launcher"].back()->value(), "Value 2");
-  EXPECT_EQ(model.hints()["Dash"].front()->value(),"Plugin 3-key_option_3");
-  EXPECT_EQ(model.hints()["Menu Bar"].front()->value(), "Value 4");
+  EXPECT_EQ(model.hints().at("Launcher").front()->value(), "Plugin 1-key_option_1");
+  EXPECT_EQ(model.hints().at("Launcher").back()->value(), "Value 2");
+  EXPECT_EQ(model.hints().at("Dash").front()->value(),"Plugin 3-key_option_3");
+  EXPECT_EQ(model.hints().at("Menu Bar").front()->value(), "Value 4");
 }
 
 TEST(TestShortcutModel, TestProperty)
 {
   std::list<AbstractHint::Ptr> hints;
 
-  hints.push_back(std::make_shared<MockHint>("Launcher", "Prefix1", "Postfix1", "Description1", COMPIZ_KEY_OPTION, "Plugin1", "key_option1"));
+  hints.push_back(std::make_shared<MockHint>("Launcher", "Prefix1", "Postfix1", "Description1", OptionType::COMPIZ_KEY, "Plugin1", "key_option1"));
 
   Model model(hints);
 
-  EXPECT_EQ(model.hints()["Launcher"].front()->category(), "Launcher");
-  EXPECT_EQ(model.hints()["Launcher"].front()->prefix(), "Prefix1");
-  EXPECT_EQ(model.hints()["Launcher"].front()->postfix(), "Postfix1");
-  EXPECT_EQ(model.hints()["Launcher"].front()->description(), "Description1");
-  EXPECT_EQ(model.hints()["Launcher"].front()->type(), COMPIZ_KEY_OPTION);
-  EXPECT_EQ(model.hints()["Launcher"].front()->arg1(), "Plugin1");
-  EXPECT_EQ(model.hints()["Launcher"].front()->arg2(), "key_option1");
+  EXPECT_EQ(model.hints().at("Launcher").front()->category(), "Launcher");
+  EXPECT_EQ(model.hints().at("Launcher").front()->prefix(), "Prefix1");
+  EXPECT_EQ(model.hints().at("Launcher").front()->postfix(), "Postfix1");
+  EXPECT_EQ(model.hints().at("Launcher").front()->description(), "Description1");
+  EXPECT_EQ(model.hints().at("Launcher").front()->type(), OptionType::COMPIZ_KEY);
+  EXPECT_EQ(model.hints().at("Launcher").front()->arg1(), "Plugin1");
+  EXPECT_EQ(model.hints().at("Launcher").front()->arg2(), "key_option1");
+}
+
+TEST(TestShortcutModel, CategoriesPerColumnSetter)
+{
+  std::list<AbstractHint::Ptr> hints;
+  Model model(hints);
+
+  bool changed = false;
+  model.categories_per_column.changed.connect([&changed] (int) {changed = true;});
+
+  model.categories_per_column = 3456789;
+  EXPECT_TRUE(changed);
+  EXPECT_EQ(model.categories_per_column(), 3456789);
+
+  changed = false;
+  model.categories_per_column = 0;
+  EXPECT_TRUE(changed);
+  EXPECT_EQ(model.categories_per_column(), 1);
+
+  changed = false;
+  model.categories_per_column = -1;
+  EXPECT_FALSE(changed);
+  EXPECT_EQ(model.categories_per_column(), 1);
 }
 
 } // anonymouse namespace

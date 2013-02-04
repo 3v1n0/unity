@@ -944,6 +944,7 @@ void LensView::AddProperties(GVariantBuilder* builder)
   unity::variant::BuilderWrapper(builder)
     .add("name", lens_->id)
     .add("lens-name", lens_->name)
+    .add("visible", IsVisible())
     .add("no-results-active", no_results_active_);
 }
 

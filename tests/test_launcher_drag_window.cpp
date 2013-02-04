@@ -38,19 +38,19 @@ namespace launcher
 struct TestLauncherDragWindow : public testing::Test
 {
   TestLauncherDragWindow()
-    : drag_window(nux::ObjectPtr<nux::IOpenGLBaseTexture>(new nux::IOpenGLBaseTexture(nux::RTTEXTURE, ICON_WIDTH, ICON_HEIGHT, 24, 1, nux::BITFMT_B8G8R8A8)))
+    : drag_window(new LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture>(new nux::IOpenGLBaseTexture(nux::RTTEXTURE, ICON_WIDTH, ICON_HEIGHT, 24, 1, nux::BITFMT_B8G8R8A8))))
   {}
 
-  LauncherDragWindow drag_window;
+  nux::ObjectPtr<LauncherDragWindow> drag_window;
 };
 }
 
 TEST_F(TestLauncherDragWindow, Construction)
 {
-  EXPECT_EQ(drag_window.GetBaseWidth(), ICON_WIDTH);
-  EXPECT_EQ(drag_window.GetBaseHeight(), ICON_HEIGHT);
-  EXPECT_FALSE(drag_window.Animating());
-  EXPECT_FALSE(drag_window.Cancelled());
+  EXPECT_EQ(drag_window->GetBaseWidth(), ICON_WIDTH);
+  EXPECT_EQ(drag_window->GetBaseHeight(), ICON_HEIGHT);
+  EXPECT_FALSE(drag_window->Animating());
+  EXPECT_FALSE(drag_window->Cancelled());
 }
 
 TEST_F(TestLauncherDragWindow, EscapeRequestsCancellation)
@@ -60,32 +60,32 @@ TEST_F(TestLauncherDragWindow, EscapeRequestsCancellation)
   cancel.x11_keysym = NUX_VK_ESCAPE;
   bool got_signal;
 
-  drag_window.drag_cancel_request.connect([&got_signal] { got_signal = true; });
-  drag_window.GrabKeyboard();
+  drag_window->drag_cancel_request.connect([&got_signal] { got_signal = true; });
+  drag_window->GrabKeyboard();
   nux::GetWindowCompositor().ProcessEvent(cancel);
 
   EXPECT_TRUE(got_signal);
-  EXPECT_TRUE(drag_window.Cancelled());
+  EXPECT_TRUE(drag_window->Cancelled());
 }
 
 TEST_F(TestLauncherDragWindow, CancelsOnWindowMapped)
 {
   bool got_signal;
-  drag_window.drag_cancel_request.connect([&got_signal] { got_signal = true; });
+  drag_window->drag_cancel_request.connect([&got_signal] { got_signal = true; });
   WindowManager::Default().window_mapped.emit(0);
 
   EXPECT_TRUE(got_signal);
-  EXPECT_TRUE(drag_window.Cancelled());
+  EXPECT_TRUE(drag_window->Cancelled());
 }
 
 TEST_F(TestLauncherDragWindow, CancelsOnWindowUnmapped)
 {
   bool got_signal;
-  drag_window.drag_cancel_request.connect([&got_signal] { got_signal = true; });
+  drag_window->drag_cancel_request.connect([&got_signal] { got_signal = true; });
   WindowManager::Default().window_unmapped.emit(0);
 
   EXPECT_TRUE(got_signal);
-  EXPECT_TRUE(drag_window.Cancelled());
+  EXPECT_TRUE(drag_window->Cancelled());
 }
 
 }

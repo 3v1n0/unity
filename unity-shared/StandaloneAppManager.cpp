@@ -178,7 +178,6 @@ std::shared_ptr<ApplicationManager> create_application_manager();
 
 int main(int argc, char* argv[])
 {
-  g_type_init();
   gtk_init(&argc, &argv);
   nux::logging::configure_logging(::getenv("UNITY_APP_LOG_SEVERITY"));
   g_log_set_default_handler(capture_g_log_calls, NULL);

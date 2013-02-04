@@ -19,6 +19,9 @@ from unity.emulators.icons import ApplicationLauncherIcon, ExpoLauncherIcon
 from unity.emulators.launcher import IconDragType
 from unity.tests.launcher import LauncherTestCase, _make_scenarios
 
+from Xlib import display
+from Xlib import Xutil
+
 logger = logging.getLogger(__name__)
 
 
@@ -42,29 +45,43 @@ class LauncherIconsTests(LauncherTestCase):
             self.addCleanup(self.call_gsettings_cmd, 'set', 'com.canonical.Unity.Launcher', 'favorites', old_fav)
             self.call_gsettings_cmd('set', 'com.canonical.Unity.Launcher', 'favorites', new_fav)
 
-        icon = self.launcher.model.get_children_by_type(ExpoLauncherIcon)[0]
+        icon = self.unity.launcher.model.get_children_by_type(ExpoLauncherIcon)[0]
         self.assertThat(icon, NotEquals(None))
         self.assertThat(icon.visible, Eventually(Equals(True)))
 
         return icon
 
+    def ensure_calculator_in_launcher_and_not_running(self):
+        calc = self.start_app("Calculator")
+        calc_icon = self.unity.launcher.model.get_icon(desktop_id=calc.desktop_file)
+        self.addCleanup(self.launcher_instance.unlock_from_launcher, calc_icon)
+        self.launcher_instance.lock_to_launcher(calc_icon)
+        self.close_all_app("Calculator")
+        self.assertThat(lambda: self.app_is_running("Calculator"), Eventually(Equals(False)))
+        return calc_icon
+
+    def get_startup_notification_timestamp(self, bamf_window):
+        atom = display.Display().intern_atom('_NET_WM_USER_TIME')
+        atom_type = display.Display().intern_atom('CARDINAL')
+        return bamf_window.x_win.get_property(atom, atom_type, 0, 1024).value[0]
+
     def test_bfb_tooltip_disappear_when_dash_is_opened(self):
         """Tests that the bfb tooltip disappear when the dash is opened."""
-        bfb = self.launcher.model.get_bfb_icon()
+        bfb = self.unity.launcher.model.get_bfb_icon()
         self.mouse.move(bfb.center_x, bfb.center_y)
 
         self.assertThat(bfb.get_tooltip().active, Eventually(Equals(True)))
-        self.dash.ensure_visible()
-        self.addCleanup(self.dash.ensure_hidden)
+        self.unity.dash.ensure_visible()
+        self.addCleanup(self.unity.dash.ensure_hidden)
 
         self.assertThat(bfb.get_tooltip().active, Eventually(Equals(False)))
 
     def test_bfb_tooltip_is_disabled_when_dash_is_open(self):
         """Tests the that bfb tooltip is disabled when the dash is open."""
-        self.dash.ensure_visible()
-        self.addCleanup(self.dash.ensure_hidden)
+        self.unity.dash.ensure_visible()
+        self.addCleanup(self.unity.dash.ensure_hidden)
 
-        bfb = self.launcher.model.get_bfb_icon()
+        bfb = self.unity.launcher.model.get_bfb_icon()
         self.mouse.move(bfb.center_x, bfb.center_y)
 
         # Tooltips are lazy-created  in Unity, so if the BFB tooltip has never
@@ -77,8 +94,8 @@ class LauncherIconsTests(LauncherTestCase):
     def test_shift_click_opens_new_application_instance(self):
         """Shift+Clicking MUST open a new instance of an already-running application."""
         app = self.start_app("Calculator")
-        icon = self.launcher.model.get_icon(desktop_id=app.desktop_file)
-        launcher_instance = self.launcher.get_launcher_for_monitor(0)
+        icon = self.unity.launcher.model.get_icon(desktop_id=app.desktop_file)
+        launcher_instance = self.unity.launcher.get_launcher_for_monitor(0)
 
         self.keyboard.press("Shift")
         self.addCleanup(self.keyboard.release, "Shift")
@@ -97,9 +114,9 @@ class LauncherIconsTests(LauncherTestCase):
 
         self.assertVisibleWindowStack([char_win2, calc_win, char_win1])
 
-        char_icon = self.launcher.model.get_icon(
+        char_icon = self.unity.launcher.model.get_icon(
             desktop_id=char_win2.application.desktop_file)
-        calc_icon = self.launcher.model.get_icon(
+        calc_icon = self.unity.launcher.model.get_icon(
             desktop_id=calc_win.application.desktop_file)
 
         self.launcher_instance.click_launcher_icon(calc_icon)
@@ -121,6 +138,17 @@ class LauncherIconsTests(LauncherTestCase):
         self.assertThat(lambda: char_win2.is_hidden, Eventually(Equals(True)))
         self.assertVisibleWindowStack([char_win1, calc_win])
 
+    def test_launcher_uses_startup_notification(self):
+        """Tests that unity uses startup notification protocol."""
+        calc_icon = self.ensure_calculator_in_launcher_and_not_running()
+        self.addCleanup(self.close_all_app, "Calculator")
+        self.launcher_instance.click_launcher_icon(calc_icon)
+
+        calc_app = self.bamf.get_running_applications_by_desktop_file(calc_icon.desktop_id)[0]
+        calc_window = calc_app.get_windows()[0]
+
+        self.assertThat(lambda: self.get_startup_notification_timestamp(calc_window), Eventually(Equals(calc_icon.startup_notification_timestamp)))
+
     def test_clicking_icon_twice_initiates_spread(self):
         """This tests shows that when you click on a launcher icon twice,
         when an application window is focused, the spread is initiated.
@@ -132,12 +160,12 @@ class LauncherIconsTests(LauncherTestCase):
         self.assertVisibleWindowStack([char_win2, char_win1])
         self.assertProperty(char_win2, is_focused=True)
 
-        char_icon = self.launcher.model.get_icon(desktop_id=char_app.desktop_file)
+        char_icon = self.unity.launcher.model.get_icon(desktop_id=char_app.desktop_file)
         self.addCleanup(self.keybinding, "spread/cancel")
         self.launcher_instance.click_launcher_icon(char_icon)
 
-        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
-        self.assertThat(self.window_manager.scale_active_for_group, Eventually(Equals(True)))
+        self.assertThat(self.unity.window_manager.scale_active, Eventually(Equals(True)))
+        self.assertThat(self.unity.window_manager.scale_active_for_group, Eventually(Equals(True)))
 
     def test_while_in_scale_mode_the_dash_will_still_open(self):
         """If scale is initiated through the laucher pressing super must close
@@ -150,28 +178,28 @@ class LauncherIconsTests(LauncherTestCase):
         self.assertVisibleWindowStack([char_win2, char_win1])
         self.assertProperty(char_win2, is_focused=True)
 
-        char_icon = self.launcher.model.get_icon(desktop_id=char_app.desktop_file)
+        char_icon = self.unity.launcher.model.get_icon(desktop_id=char_app.desktop_file)
         self.launcher_instance.click_launcher_icon(char_icon)
-        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
+        self.assertThat(self.unity.window_manager.scale_active, Eventually(Equals(True)))
 
-        self.dash.ensure_visible()
-        self.addCleanup(self.dash.ensure_hidden)
+        self.unity.dash.ensure_visible()
+        self.addCleanup(self.unity.dash.ensure_hidden)
 
-        self.assertThat(self.dash.visible, Eventually(Equals(True)))
-        self.assertThat(self.window_manager.scale_active, Eventually(Equals(False)))
+        self.assertThat(self.unity.dash.visible, Eventually(Equals(True)))
+        self.assertThat(self.unity.window_manager.scale_active, Eventually(Equals(False)))
 
     def test_icon_shows_on_quick_application_reopen(self):
         """Icons must stay on launcher when an application is quickly closed/reopened."""
         calc = self.start_app("Calculator")
         desktop_file = calc.desktop_file
-        calc_icon = self.launcher.model.get_icon(desktop_id=desktop_file)
+        calc_icon = self.unity.launcher.model.get_icon(desktop_id=desktop_file)
         self.assertThat(calc_icon.visible, Eventually(Equals(True)))
 
         self.close_all_app("Calculator")
         calc = self.start_app("Calculator")
         sleep(2)
 
-        calc_icon = self.launcher.model.get_icon(desktop_id=desktop_file)
+        calc_icon = self.unity.launcher.model.get_icon(desktop_id=desktop_file)
         self.assertThat(calc_icon, NotEquals(None))
         self.assertThat(calc_icon.visible, Eventually(Equals(True)))
 
@@ -184,15 +212,15 @@ class LauncherIconsTests(LauncherTestCase):
             self.skipTest("This test requires enabled workspaces.")
 
         self.keybinding("expo/start")
-        self.assertThat(self.window_manager.expo_active, Eventually(Equals(True)))
+        self.assertThat(self.unity.window_manager.expo_active, Eventually(Equals(True)))
         self.addCleanup(self.keybinding, "expo/cancel")
 
-        bfb = self.launcher.model.get_bfb_icon()
+        bfb = self.unity.launcher.model.get_bfb_icon()
         self.mouse.move(bfb.center_x, bfb.center_y)
         self.mouse.click(button=3)
 
         self.assertThat(self.launcher_instance.quicklist_open, Eventually(Equals(True)))
-        self.assertThat(self.window_manager.expo_active, Eventually(Equals(False)))
+        self.assertThat(self.unity.window_manager.expo_active, Eventually(Equals(False)))
 
     def test_expo_launcher_icon_initiates_expo(self):
         """Clicking on the expo launcher icon must start the expo."""
@@ -203,7 +231,7 @@ class LauncherIconsTests(LauncherTestCase):
         self.addCleanup(self.keybinding, "expo/cancel")
         self.launcher_instance.click_launcher_icon(expo)
 
-        self.assertThat(self.window_manager.expo_active, Eventually(Equals(True)))
+        self.assertThat(self.unity.window_manager.expo_active, Eventually(Equals(True)))
 
     def test_expo_launcher_icon_terminates_expo(self):
         """Clicking on the expo launcher icon when expo is active must close it."""
@@ -211,14 +239,39 @@ class LauncherIconsTests(LauncherTestCase):
             self.skipTest("This test requires enabled workspaces.")
 
         self.keybinding("expo/start")
-        self.assertThat(self.window_manager.expo_active, Eventually(Equals(True)))
+        self.assertThat(self.unity.window_manager.expo_active, Eventually(Equals(True)))
         self.addCleanup(self.keybinding, "expo/cancel")
 
         expo = self.ensure_expo_launcher_icon()
         self.launcher_instance.click_launcher_icon(expo)
 
-        self.assertThat(self.window_manager.expo_active, Eventually(Equals(False)))
+        self.assertThat(self.unity.window_manager.expo_active, Eventually(Equals(False)))
 
+    def test_unminimize_initially_minimized_windows(self):
+        """Make sure initially minimized windows can be unminimized."""
+        window_spec = {
+            "Title": "Hello",
+            "Minimized": True
+        }
+
+        window = self.launch_test_window(window_spec)
+        icon = self.unity.launcher.model.get_icon(desktop_id=window.application.desktop_file)
+
+        self.launcher_instance.click_launcher_icon(icon)
+        self.assertThat(lambda: window.x_win.get_wm_state()['state'], Eventually(Equals(Xutil.NormalState)))
+
+    def test_unminimize_minimized_immediately_after_show_windows(self):
+        """Make sure minimized-immediately-after-show windows can be unminimized."""
+        window_spec = {
+            "Title": "Hello",
+            "MinimizeImmediatelyAfterShow": True
+        }
+
+        window = self.launch_test_window(window_spec)
+        icon = self.unity.launcher.model.get_icon(desktop_id=window.application.desktop_file)
+
+        self.launcher_instance.click_launcher_icon(icon)
+        self.assertThat(lambda: window.x_win.get_wm_state()['state'], Eventually(Equals(Xutil.NormalState)))
 
 class LauncherDragIconsBehavior(LauncherTestCase):
     """Tests dragging icons around the Launcher."""
@@ -238,7 +291,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
         # Normally we'd use get_icon(desktop_id="...") but we're expecting it to
         # not exist, and we don't want to wait for 10 seconds, so we do this
         # the old fashioned way.
-        get_icon_fn = lambda: self.launcher.model.get_children_by_type(
+        get_icon_fn = lambda: self.unity.launcher.model.get_children_by_type(
             ApplicationLauncherIcon, desktop_id="gcalctool.desktop")
         calc_icon = get_icon_fn()
         if calc_icon:
@@ -251,15 +304,15 @@ class LauncherDragIconsBehavior(LauncherTestCase):
 
         self.ensure_calc_icon_not_in_launcher()
         calc = self.start_app("Calculator")
-        calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
-        bfb_icon = self.launcher.model.get_bfb_icon()
+        calc_icon = self.unity.launcher.model.get_icon(desktop_id=calc.desktop_file)
+        bfb_icon = self.unity.launcher.model.get_bfb_icon()
 
         self.launcher_instance.drag_icon_to_position(
             calc_icon,
             IconDragType.AFTER,
             bfb_icon,
             self.drag_type)
-        moved_icon = self.launcher.model.\
+        moved_icon = self.unity.launcher.model.\
                      get_launcher_icons_for_monitor(self.launcher_monitor)[1]
         self.assertThat(moved_icon.id, Equals(calc_icon.id))
 
@@ -268,9 +321,9 @@ class LauncherDragIconsBehavior(LauncherTestCase):
 
         self.ensure_calc_icon_not_in_launcher()
         calc = self.start_app("Calculator")
-        calc_icon = self.launcher.model.get_icon(desktop_id=calc.desktop_file)
-        bfb_icon = self.launcher.model.get_bfb_icon()
-        trash_icon = self.launcher.model.get_trash_icon()
+        calc_icon = self.unity.launcher.model.get_icon(desktop_id=calc.desktop_file)
+        bfb_icon = self.unity.launcher.model.get_bfb_icon()
+        trash_icon = self.unity.launcher.model.get_trash_icon()
 
         # Move a known icon to the top as it needs to be more than 2 icon
         # spaces away for this test to actually do anything
@@ -288,7 +341,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
             self.drag_type)
 
         # Must be the last bamf icon - not necessarily the third-from-end icon.
-        refresh_fn = lambda: self.launcher.model.get_launcher_icons()[-2].id
+        refresh_fn = lambda: self.unity.launcher.model.get_launcher_icons()[-2].id
         self.assertThat(refresh_fn,
             Eventually(Equals(calc_icon.id)),
-            "Launcher icons are: %r" % self.launcher.model.get_launcher_icons())
+            "Launcher icons are: %r" % self.unity.launcher.model.get_launcher_icons())
