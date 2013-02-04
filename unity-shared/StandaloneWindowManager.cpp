@@ -91,6 +91,11 @@ Window StandaloneWindowManager::GetActiveWindow() const
   return 0;
 }
 
+std::vector<Window> StandaloneWindowManager::GetWindowsInStackingOrder() const
+{
+  return std::vector<Window>();
+}
+
 bool StandaloneWindowManager::IsWindowMaximized(Window window_id) const
 {
   auto it = standalone_windows_.find(window_id);
