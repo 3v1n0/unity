@@ -14,7 +14,7 @@ import logging
 from testtools.matchers import Equals, Contains, Not
 from time import sleep
 
-from unity.emulators.switcher import Switcher, SwitcherMode
+from unity.emulators.switcher import SwitcherDirection, SwitcherMode
 from unity.tests import UnityTestCase
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class SwitcherTestCase(UnityTestCase):
         if type(state) is not bool:
             raise TypeError("'state' must be boolean, not %r" % type(state))
         self.set_unity_option("disable_show_desktop", state)
-        self.assertThat(self.unity.switcher.controller.show_desktop_disabled, Eventually(Equals(state)))
+        self.assertThat(self.unity.switcher.show_desktop_disabled, Eventually(Equals(state)))
 
     def set_timeout_setting(self, state):
         if type(state) is not bool:
@@ -91,7 +91,7 @@ class SwitcherTests(SwitcherTestCase):
 
         for win in windows:
             app_name = win.application.name
-            self.unity.switcher.select_icon(Switcher.DIRECTION_FORWARDS, tooltip_text=app_name)
+            self.unity.switcher.select_icon(SwitcherDirection.FORWARDS, tooltip_text=app_name)
             self.assertThat(self.unity.switcher.label_visible, Eventually(Equals(True)))
             self.assertThat(self.unity.switcher.label, Eventually(Equals(app_name)))
 
@@ -101,7 +101,7 @@ class SwitcherTests(SwitcherTestCase):
         self.unity.switcher.initiate()
         self.addCleanup(self.unity.switcher.terminate)
 
-        self.unity.switcher.select_icon(Switcher.DIRECTION_BACKWARDS, tooltip_text=window.application.name)
+        self.unity.switcher.select_icon(SwitcherDirection.BACKWARDS, tooltip_text=window.application.name)
 
         self.unity.switcher.show_details()
         self.assertThat(self.unity.switcher.label_visible, Eventually(Equals(False)))
@@ -127,7 +127,7 @@ class SwitcherTests(SwitcherTestCase):
         # Allow for wrap-around to first icon in switcher
         next_index = (start + 1) % len(self.unity.switcher.icons)
 
-        self.assertThat(self.switcher.selection_index, Eventually(Equals(next_index)))
+        self.assertThat(self.unity.switcher.selection_index, Eventually(Equals(next_index)))
 
     def test_switcher_move_prev(self):
         """Test that pressing the previous icon binding moves to the previous icon"""
@@ -231,7 +231,7 @@ class SwitcherTests(SwitcherTestCase):
             self.screen_geo.move_mouse_to_monitor(monitor)
             self.unity.switcher.initiate()
             self.addCleanup(self.unity.switcher.terminate)
-            self.assertThat(self.unity.switcher.controller.monitor, Eventually(Equals(monitor)))
+            self.assertThat(self.unity.switcher.monitor, Eventually(Equals(monitor)))
 
     def test_switcher_alt_f4_is_disabled(self):
         """Tests that alt+f4 does not work while switcher is active."""
@@ -337,7 +337,7 @@ class SwitcherDetailsTests(SwitcherTestCase):
         self.start_applications("Character Map", "Mahjongg")
 
         self.unity.switcher.initiate()
-        self.addCleanup(self.switcher.terminate)
+        self.addCleanup(self.unity.switcher.terminate)
         # Wait longer than details mode.
         sleep(3)
         self.assertProperty(self.unity.switcher, mode=SwitcherMode.NORMAL)
