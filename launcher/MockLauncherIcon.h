@@ -311,6 +311,8 @@ public:
   
   void UnStick() {}
 
+  void PerformScroll(ScrollDirection /*direction*/, Time /*timestamp*/) override {}
+
 private:
   nux::BaseTexture* TextureFromGtkTheme(const char* icon_name, int size)
   {

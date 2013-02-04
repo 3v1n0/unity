@@ -1216,6 +1216,9 @@ void LauncherIcon::UnStick()
   SetQuirk(Quirk::VISIBLE, false);
 }
 
+void LauncherIcon::PerformScroll(ScrollDirection direction, Time timestamp)
+{}
+
 
 } // namespace launcher
 } // namespace unity

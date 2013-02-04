@@ -52,6 +52,7 @@ public:
 
   MOCK_METHOD1(ShouldHighlightOnDrag, bool(DndData const&));
   MOCK_METHOD1(Stick, void(bool));
+  MOCK_METHOD2(PerformScroll, void(ScrollDirection, Time));
 };
 
 struct MockPointerBarrierWrapper : ui::PointerBarrierWrapper
