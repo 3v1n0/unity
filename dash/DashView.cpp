@@ -1122,10 +1122,7 @@ void DashView::OnActivateRequest(GVariant* args)
   }
   else if (/* visible_ && */ handled_type == NOT_HANDLED)
   {
-    if (lens_bar_->GetActiveLensId() != id)
-      lens_bar_->Activate(id);
-    else
-      ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST, NULL,
+    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST, NULL,
                               glib::Source::Priority::HIGH);
   }
   else if (/* visible_ && */ handled_type == GOTO_DASH_URI)
