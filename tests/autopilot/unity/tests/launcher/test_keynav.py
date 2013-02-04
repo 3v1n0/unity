@@ -163,7 +163,7 @@ class LauncherKeyNavTests(LauncherTestCase):
         self.launcher_instance.key_nav_activate()
 
         self.keyboard.press_and_release("Escape")
-        self.assertThat(self.window_manager.expo_active, Eventually(Equals(False)))
+        self.assertThat(self.unity.window_manager.expo_active, Eventually(Equals(False)))
 
     def test_launcher_keynav_alt_tab_quits(self):
         """Tests that alt+tab exits keynav mode."""
