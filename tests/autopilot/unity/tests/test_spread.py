@@ -38,21 +38,21 @@ class SpreadTests(UnityTestCase):
         """Initiate the Spread for all windows"""
         self.addCleanup(self.keybinding, "spread/cancel")
         self.keybinding("spread/start")
-        self.assertThat(self.unity.window_manager.scale_active, Eventually(Equals(True)))
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
 
     def initiate_spread_for_application(self, desktop_id):
         """Initiate the Spread for windows of the given app"""
-        icon = self.unity.launcher.model.get_icon(desktop_id=desktop_id)
+        icon = self.launcher.model.get_icon(desktop_id=desktop_id)
         self.assertThat(icon, NotEquals(None))
-        launcher = self.unity.launcher.get_launcher_for_monitor(self.screen_geo.get_primary_monitor())
+        launcher = self.launcher.get_launcher_for_monitor(self.screen_geo.get_primary_monitor())
 
         self.addCleanup(self.keybinding, "spread/cancel")
         launcher.click_launcher_icon(icon)
-        self.assertThat(self.unity.window_manager.scale_active_for_group, Eventually(Equals(True)))
+        self.assertThat(self.window_manager.scale_active_for_group, Eventually(Equals(True)))
 
     def assertWindowIsNotScaled(self, xid):
         """Assert that a window is not scaled"""
-        refresh_fn = lambda: xid in [w.xid for w in self.unity.screen.scaled_windows]
+        refresh_fn = lambda: xid in [w.xid for w in self.screen.scaled_windows]
         self.assertThat(refresh_fn, Eventually(Equals(False)))
 
     def assertWindowIsClosed(self, xid):
@@ -68,8 +68,8 @@ class SpreadTests(UnityTestCase):
         [win1, win2] = self.start_test_application_windows("Calculator")
         self.initiate_spread_for_application(win1.application.desktop_file)
 
-        self.assertThat(lambda: len(self.unity.screen.scaled_windows), Eventually(Equals(2)))
-        self.assertThat(lambda: (win1.x_id and win2.x_id) in [w.xid for w in self.unity.screen.scaled_windows],
+        self.assertThat(lambda: len(self.screen.scaled_windows), Eventually(Equals(2)))
+        self.assertThat(lambda: (win1.x_id and win2.x_id) in [w.xid for w in self.screen.scaled_windows],
                         Eventually(Equals(True)))
 
     def test_scaled_window_is_focused_on_click(self):
@@ -80,7 +80,7 @@ class SpreadTests(UnityTestCase):
         not_focused = [w for w in windows if not w.is_focused][0]
 
         target_xid = not_focused.x_id
-        [target_win] = [w for w in self.unity.screen.scaled_windows if w.xid == target_xid]
+        [target_win] = [w for w in self.screen.scaled_windows if w.xid == target_xid]
 
         (x, y, w, h) = target_win.geometry
         self.mouse.move(x + w / 2, y + h / 2)
@@ -95,7 +95,7 @@ class SpreadTests(UnityTestCase):
         self.initiate_spread_for_application(win.application.desktop_file)
 
         target_xid = win.x_id
-        [target_win] = [w for w in self.unity.screen.scaled_windows if w.xid == target_xid]
+        [target_win] = [w for w in self.screen.scaled_windows if w.xid == target_xid]
 
         (x, y, w, h) = target_win.geometry
         self.mouse.move(x + w / 2, y + h / 2)
@@ -111,7 +111,7 @@ class SpreadTests(UnityTestCase):
         self.initiate_spread_for_screen()
 
         target_xid = win.x_id
-        [target_win] = [w for w in self.unity.screen.scaled_windows if w.xid == target_xid]
+        [target_win] = [w for w in self.screen.scaled_windows if w.xid == target_xid]
 
         (x, y, w, h) = target_win.scale_close_geometry
         self.mouse.move(x + w / 2, y + h / 2)

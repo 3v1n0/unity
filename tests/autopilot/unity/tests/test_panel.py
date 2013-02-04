@@ -43,7 +43,7 @@ class PanelTestsBase(UnityTestCase):
 
     def setUp(self):
         super(PanelTestsBase, self).setUp()
-        self.panel = self.unity.panels.get_panel_for_monitor(self.panel_monitor)
+        self.panel = self.panels.get_panel_for_monitor(self.panel_monitor)
         self.panel.move_mouse_below_the_panel()
         self.addCleanup(self.panel.move_mouse_below_the_panel)
 
@@ -156,8 +156,8 @@ class PanelTitleTests(PanelTestsBase):
         """With no windows shown, the panel must display the default title."""
         gettext.install("unity", unicode=True)
         self.start_placeholder_app()
-        self.unity.window_manager.enter_show_desktop()
-        self.addCleanup(self.unity.window_manager.leave_show_desktop)
+        self.window_manager.enter_show_desktop()
+        self.addCleanup(self.window_manager.leave_show_desktop)
 
         self.assertThat(self.panel.desktop_is_active, Eventually(Equals(True)))
         self.assertThat(self.panel.title, Equals(_("Ubuntu Desktop")))
@@ -200,8 +200,8 @@ class PanelTitleTests(PanelTestsBase):
         text_win = self.open_new_application_window("Text Editor", maximized=True)
         self.open_new_application_window("Calculator", maximized=False)
 
-        icon = self.unity.launcher.model.get_icon(desktop_id=text_win.application.desktop_file)
-        launcher = self.unity.launcher.get_launcher_for_monitor(self.panel_monitor)
+        icon = self.launcher.model.get_icon(desktop_id=text_win.application.desktop_file)
+        launcher = self.launcher.get_launcher_for_monitor(self.panel_monitor)
         launcher.click_launcher_icon(icon)
 
         self.assertProperty(text_win, is_focused=True)
@@ -224,9 +224,9 @@ class PanelTitleTests(PanelTestsBase):
         text_win = self.open_new_application_window("Text Editor")
         current_title = self.panel.title
 
-        self.unity.switcher.initiate()
-        self.addCleanup(self.unity.switcher.terminate)
-        self.unity.switcher.next_icon()
+        self.switcher.initiate()
+        self.addCleanup(self.switcher.terminate)
+        self.switcher.next_icon()
 
         self.assertThat(self.panel.title,
                         Eventually(Equals(current_title)))
@@ -245,8 +245,8 @@ class PanelWindowButtonsTests(PanelTestsBase):
     def test_window_buttons_dont_show_on_empty_desktop(self):
         """Tests that the window buttons are not shown on clean desktop."""
         self.start_placeholder_app()
-        self.unity.window_manager.enter_show_desktop()
-        self.addCleanup(self.unity.window_manager.leave_show_desktop)
+        self.window_manager.enter_show_desktop()
+        self.addCleanup(self.window_manager.leave_show_desktop)
 
         self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
 
@@ -292,8 +292,8 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
     def test_window_buttons_show_with_dash(self):
         """Window buttons must be shown when the dash is open."""
-        self.unity.dash.ensure_visible()
-        self.addCleanup(self.unity.dash.ensure_hidden)
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
 
         self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
         self.assertWinButtonsInOverlayMode(True)
@@ -303,29 +303,29 @@ class PanelWindowButtonsTests(PanelTestsBase):
         buttons must still work in the dash."""
 
         self.set_unity_option("icon_size", 25)
-        self.unity.dash.ensure_visible()
-        self.addCleanup(self.unity.dash.ensure_hidden)
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
 
-        desired_max = not self.unity.dash.view.dash_maximized
+        desired_max = not self.dash.view.dash_maximized
         if desired_max:
             self.panel.window_buttons.maximize.mouse_click()
         else:
             self.panel.window_buttons.unmaximize.mouse_click()
 
-        self.assertThat(self.unity.dash.view.dash_maximized, Eventually(Equals(desired_max)))
+        self.assertThat(self.dash.view.dash_maximized, Eventually(Equals(desired_max)))
 
     def test_window_buttons_show_with_hud(self):
         """Window buttons must be shown when the HUD is open."""
-        self.unity.hud.ensure_visible()
-        self.addCleanup(self.unity.hud.ensure_hidden)
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
 
         self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
         self.assertWinButtonsInOverlayMode(True)
 
     def test_window_buttons_update_visual_state(self):
         """Window button must update its state in response to mouse events."""
-        self.unity.hud.ensure_visible()
-        self.addCleanup(self.unity.hud.ensure_hidden)
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
         button = self.panel.window_buttons.close
 
         self.assertThat(button.visual_state, Eventually(Equals("normal")))
@@ -341,8 +341,8 @@ class PanelWindowButtonsTests(PanelTestsBase):
         """Window buttons must ignore clicks when the mouse released outside
         their area.
         """
-        self.unity.hud.ensure_visible()
-        self.addCleanup(self.unity.hud.ensure_hidden)
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
 
         button = self.panel.window_buttons.close
         button.mouse_move_to()
@@ -352,7 +352,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.mouse.release()
 
         self.assertThat(button.visual_state, Eventually(Equals("normal")))
-        self.assertThat(self.unity.hud.visible, Eventually(Equals(True)))
+        self.assertThat(self.hud.visible, Eventually(Equals(True)))
 
     def test_window_buttons_close_button_works_for_window(self):
         """Close window button must actually closes a window."""
@@ -441,43 +441,43 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
     def test_window_buttons_close_button_works_for_hud(self):
         """Tests that the window 'Close' actually closes the HUD."""
-        self.unity.hud.ensure_visible()
-        self.addCleanup(self.unity.hud.ensure_hidden)
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
 
         self.panel.window_buttons.close.mouse_click()
-        self.assertThat(self.unity.hud.visible, Eventually(Equals(False)))
+        self.assertThat(self.hud.visible, Eventually(Equals(False)))
 
     def test_minimize_button_disabled_for_hud(self):
         """Minimize button must be disabled for the HUD."""
-        self.unity.hud.ensure_visible()
-        self.addCleanup(self.unity.hud.ensure_hidden)
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
 
         self.assertThat(self.panel.window_buttons.minimize.enabled, Eventually(Equals(False)))
 
     def test_minimize_button_does_nothing_for_hud(self):
         """Minimize button must not affect the Hud."""
-        self.unity.hud.ensure_visible()
-        self.addCleanup(self.unity.hud.ensure_hidden)
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
 
         self.panel.window_buttons.minimize.mouse_click()
 
-        self.assertThat(self.unity.hud.visible, Eventually(Equals(True)))
+        self.assertThat(self.hud.visible, Eventually(Equals(True)))
 
     def test_maximize_button_disabled_for_hud(self):
         """Maximize button must be disabled for the HUD."""
-        self.unity.hud.ensure_visible()
-        self.addCleanup(self.unity.hud.ensure_hidden)
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
 
         self.assertThat(self.panel.window_buttons.maximize.enabled, Eventually(Equals(False)))
 
     def test_maximize_button_does_nothing_for_hud(self):
         """Maximize button must not affect the Hud."""
-        self.unity.hud.ensure_visible()
-        self.addCleanup(self.unity.hud.ensure_hidden)
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
 
         self.panel.window_buttons.maximize.mouse_click()
 
-        self.assertThat(self.unity.hud.visible, Eventually(Equals(True)))
+        self.assertThat(self.hud.visible, Eventually(Equals(True)))
 
     def test_hud_maximize_button_does_not_change_dash_form_factor(self):
         """Clicking on the 'Maximize' button of the HUD must not change the dash
@@ -485,39 +485,39 @@ class PanelWindowButtonsTests(PanelTestsBase):
 
         See bug #939054
         """
-        inital_form_factor = self.unity.dash.view.form_factor
-        self.unity.hud.ensure_visible()
-        self.addCleanup(self.unity.hud.ensure_hidden)
+        inital_form_factor = self.dash.view.form_factor
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
 
         self.panel.window_buttons.maximize.mouse_click()
         # long sleep here to make sure that any change that might happen will
         # have already happened.
         sleep(5)
-        self.assertThat(self.unity.dash.view.form_factor, Equals(inital_form_factor))
+        self.assertThat(self.dash.view.form_factor, Equals(inital_form_factor))
 
     def test_window_buttons_close_button_works_for_dash(self):
         """Tests that the window 'Close' actually closes the Dash."""
-        self.unity.dash.ensure_visible()
-        self.addCleanup(self.unity.dash.ensure_hidden)
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
         self.panel.window_buttons.close.mouse_click()
 
-        self.assertThat(self.unity.dash.visible, Eventually(Equals(False)))
+        self.assertThat(self.dash.visible, Eventually(Equals(False)))
 
     def test_minimize_button_disabled_for_dash(self):
         """Tests that the 'Minimize' button is disabled for the dash."""
-        self.unity.dash.ensure_visible()
-        self.addCleanup(self.unity.dash.ensure_hidden)
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
 
         self.assertThat(self.panel.window_buttons.minimize.enabled, Eventually(Equals(False)))
 
     def test_minimize_button_does_nothing_for_dash(self):
         """Tests that the 'Minimize' button is disabled for the dash."""
-        self.unity.dash.ensure_visible()
-        self.addCleanup(self.unity.dash.ensure_hidden)
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
 
         self.panel.window_buttons.minimize.mouse_click()
         sleep(5)
-        self.assertThat(self.unity.dash.visible, Eventually(Equals(True)))
+        self.assertThat(self.dash.visible, Eventually(Equals(True)))
 
     def test_window_buttons_maximization_buttons_works_for_dash(self):
         """'Maximize' and 'Restore' buttons (when both enabled) must work as expected."""
@@ -529,14 +529,14 @@ class PanelWindowButtonsTests(PanelTestsBase):
         # this test out and make it suck less.
         #
         # For your sanity I have annotated it with comments.
-        self.unity.dash.ensure_visible()
+        self.dash.ensure_visible()
         self.addCleanup(self.panel.window_buttons.close.mouse_click)
 
         unmaximize = self.panel.window_buttons.unmaximize
         maximize = self.panel.window_buttons.maximize
 
         # "netbook" means "dash is maximised"
-        dash_maximised = (self.unity.dash.view.form_factor == "netbook")
+        dash_maximised = (self.dash.view.form_factor == "netbook")
 
         # this if statement will trigger only when we're on very small screens,
         # where it doesn't make sense to have the dash anything other than
@@ -545,7 +545,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
             unmaximize.mouse_click()
             # nice long sleep to make sure that any changes have time to process.
             sleep(5)
-            self.assertThat(self.unity.dash.view.form_factor, Equals("netbook"))
+            self.assertThat(self.dash.view.form_factor, Equals("netbook"))
         else:
             # we are able to resize the dash.
             # maximise and unmaximise (restore) buttons are shown in the same place
@@ -571,9 +571,9 @@ class PanelWindowButtonsTests(PanelTestsBase):
             self.assertThat(active_button.visible, Eventually(Equals(False)))
 
             if dash_maximised:
-                self.assertThat(self.unity.dash.view.form_factor, Eventually(Equals("desktop")))
+                self.assertThat(self.dash.view.form_factor, Eventually(Equals("desktop")))
             else:
-                self.assertThat(self.unity.dash.view.form_factor, Eventually(Equals("netbook")))
+                self.assertThat(self.dash.view.form_factor, Eventually(Equals("netbook")))
 
             self.addCleanup(active_button.mouse_click)
             inactive_button.mouse_click()
@@ -582,9 +582,9 @@ class PanelWindowButtonsTests(PanelTestsBase):
             self.assertThat(inactive_button.visible, Eventually(Equals(False)))
 
             if dash_maximised:
-                self.assertThat(self.unity.dash.view.form_factor, Eventually(Equals("netbook")))
+                self.assertThat(self.dash.view.form_factor, Eventually(Equals("netbook")))
             else:
-                self.assertThat(self.unity.dash.view.form_factor, Eventually(Equals("desktop")))
+                self.assertThat(self.dash.view.form_factor, Eventually(Equals("desktop")))
 
     def test_minimize_button_disabled_for_non_minimizable_windows(self):
         """Minimize button must be disabled for windows that don't support minimization."""
@@ -645,14 +645,14 @@ class PanelWindowButtonsTests(PanelTestsBase):
         you must still be able to type into the Hud.
 
         """
-        self.unity.hud.ensure_visible()
-        self.addCleanup(self.unity.hud.ensure_hidden)
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
 
         self.keyboard.type("Hello")
         self.panel.window_buttons.minimize.mouse_click()
         self.keyboard.type("World")
 
-        self.assertThat(self.unity.hud.search_string, Eventually(Equals("HelloWorld")))
+        self.assertThat(self.hud.search_string, Eventually(Equals("HelloWorld")))
 
     def test_double_click_unmaximize_window(self):
         """Double clicking the grab area must unmaximize a maximized window."""
@@ -915,8 +915,8 @@ class PanelMenuTests(PanelTestsBase):
     def test_menus_dont_show_with_dash(self):
         """Tests that menus are not showing when opening the dash."""
         self.open_new_application_window("Text Editor", maximized=True)
-        self.unity.dash.ensure_visible()
-        self.addCleanup(self.unity.dash.ensure_hidden)
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
 
         self.assertThat(self.panel.menus_shown, Eventually(Equals(False)))
 
@@ -924,8 +924,8 @@ class PanelMenuTests(PanelTestsBase):
     def test_menus_dont_show_with_hud(self):
         """Tests that menus are not showing when opening the HUD."""
         self.open_new_application_window("Text Editor", maximized=True)
-        self.unity.hud.ensure_visible()
-        self.addCleanup(self.unity.hud.ensure_hidden)
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
 
         self.assertThat(self.panel.menus_shown, Eventually(Equals(False)))
 
@@ -985,13 +985,13 @@ class PanelIndicatorEntryTests(PanelTestsBase):
         """When the dash is open and a click is on an indicator the dash
         must close and the indicator must open.
         """
-        self.unity.dash.ensure_visible()
+        self.dash.ensure_visible()
 
         indicator = self.panel.indicators.get_indicator_by_name_hint("indicator-session")
         self.mouse_open_indicator(indicator)
 
         self.assertThat(indicator.active, Eventually(Equals(True)))
-        self.assertThat(self.unity.dash.visible, Eventually(Equals(False)))
+        self.assertThat(self.dash.visible, Eventually(Equals(False)))
 
 
 class PanelKeyNavigationTests(PanelTestsBase):
@@ -1130,15 +1130,15 @@ class PanelGrabAreaTests(PanelTestsBase):
 
     def test_panels_dont_steal_keynav_foucs_from_hud(self):
         """On a mouse click event on the panel you must still be able to type into the Hud."""
-        self.unity.hud.ensure_visible()
-        self.addCleanup(self.unity.hud.ensure_hidden)
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
 
         self.keyboard.type("Hello")
         self.move_mouse_over_grab_area()
         self.mouse.click()
         self.keyboard.type("World")
 
-        self.assertThat(self.unity.hud.search_string, Eventually(Equals("HelloWorld")))
+        self.assertThat(self.hud.search_string, Eventually(Equals("HelloWorld")))
 
 
 class PanelCrossMonitorsTests(PanelTestsBase):
@@ -1159,10 +1159,10 @@ class PanelCrossMonitorsTests(PanelTestsBase):
                 self.screen_geo.drag_window_to_monitor(calc_win, monitor)
 
             if prev_monitor:
-                prev_panel = self.unity.panels.get_panel_for_monitor(prev_monitor)
+                prev_panel = self.panels.get_panel_for_monitor(prev_monitor)
                 self.assertThat(prev_panel.active, Eventually(Equals(False)))
 
-            panel = self.unity.panels.get_panel_for_monitor(monitor)
+            panel = self.panels.get_panel_for_monitor(monitor)
             self.assertThat(panel.active, Eventually(Equals(True)))
             self.assertThat(panel.title, Eventually(Equals(calc_win.application.name)))
 
@@ -1176,7 +1176,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         self.sleep_menu_settle_period()
 
         for monitor in range(0, self.screen_geo.get_num_monitors()):
-            panel = self.unity.panels.get_panel_for_monitor(monitor)
+            panel = self.panels.get_panel_for_monitor(monitor)
             panel.move_mouse_over_window_buttons()
 
             self.sleep_menu_settle_period()
@@ -1190,13 +1190,13 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         """Window buttons must not show on the panels other than the one where
         the dash is opened.
         """
-        self.unity.dash.ensure_visible()
-        self.addCleanup(self.unity.dash.ensure_hidden)
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
 
         for monitor in range(0, self.screen_geo.get_num_monitors()):
-            panel = self.unity.panels.get_panel_for_monitor(monitor)
+            panel = self.panels.get_panel_for_monitor(monitor)
 
-            if self.unity.dash.monitor == monitor:
+            if self.dash.monitor == monitor:
                 self.assertThat(panel.window_buttons_shown, Eventually(Equals(True)))
             else:
                 self.assertThat(panel.window_buttons_shown, Eventually(Equals(False)))
@@ -1205,13 +1205,13 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         """Window buttons must not show on the panels other than the one where
         the hud is opened.
         """
-        self.unity.hud.ensure_visible()
-        self.addCleanup(self.unity.hud.ensure_hidden)
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
 
         for monitor in range(0, self.screen_geo.get_num_monitors()):
-            panel = self.unity.panels.get_panel_for_monitor(monitor)
+            panel = self.panels.get_panel_for_monitor(monitor)
 
-            if self.unity.hud.monitor == monitor:
+            if self.hud.monitor == monitor:
                 self.assertThat(panel.window_buttons_shown, Eventually(Equals(True)))
             else:
                 self.assertThat(panel.window_buttons_shown, Eventually(Equals(False)))
@@ -1225,7 +1225,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         text_win = self.open_new_application_window("Text Editor", maximized=True)
 
         for monitor in range(self.screen_geo.get_num_monitors()):
-            panel = self.unity.panels.get_panel_for_monitor(monitor)
+            panel = self.panels.get_panel_for_monitor(monitor)
 
             if monitor != text_win.monitor:
                 panel.window_buttons.close.mouse_move_to()
@@ -1241,7 +1241,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         text_win = self.open_new_application_window("Text Editor", maximized=True)
 
         for monitor in range(self.screen_geo.get_num_monitors()):
-            panel = self.unity.panels.get_panel_for_monitor(monitor)
+            panel = self.panels.get_panel_for_monitor(monitor)
 
             if monitor != text_win.monitor:
                 panel.window_buttons.minimize.mouse_click()
@@ -1256,7 +1256,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         text_win = self.open_new_application_window("Text Editor", maximized=True)
 
         for monitor in range(0, self.screen_geo.get_num_monitors()):
-            panel = self.unity.panels.get_panel_for_monitor(monitor)
+            panel = self.panels.get_panel_for_monitor(monitor)
 
             if monitor != text_win.monitor:
                 panel.window_buttons.unmaximize.mouse_click()
@@ -1265,12 +1265,12 @@ class PanelCrossMonitorsTests(PanelTestsBase):
     def test_hovering_indicators_on_multiple_monitors(self):
         """Opening an indicator entry and then hovering others entries must open them."""
         text_win = self.open_new_application_window("Text Editor")
-        panel = self.unity.panels.get_panel_for_monitor(text_win.monitor)
+        panel = self.panels.get_panel_for_monitor(text_win.monitor)
         indicator = panel.indicators.get_indicator_by_name_hint("indicator-session")
         self.mouse_open_indicator(indicator)
 
         for monitor in range(0, self.screen_geo.get_num_monitors()):
-            panel = self.unity.panels.get_panel_for_monitor(monitor)
+            panel = self.panels.get_panel_for_monitor(monitor)
 
             entries = panel.get_indicator_entries(include_hidden_menus=True)
             self.assertThat(len(entries), GreaterThan(0))

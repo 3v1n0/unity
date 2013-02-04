@@ -54,19 +54,19 @@ class GcinTestHangul(GcinTestCase):
     def test_dash_input(self):
         """Entering an input string through gcin will result in a Korean string result in the dash."""
 
-        self.unity.dash.ensure_visible()
-        self.addCleanup(self.unity.dash.ensure_hidden)
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
         self.enter_hangul_mode()
 
         self.keyboard.type(self.input)
-        self.assertThat(self.unity.dash.search_string, Eventually(Equals(self.result)))
+        self.assertThat(self.dash.search_string, Eventually(Equals(self.result)))
 
     def test_hud_input(self):
         """Entering an input string through gcin will result in a Korean string result in the hud."""
 
-        self.unity.hud.ensure_visible()
-        self.addCleanup(self.unity.hud.ensure_hidden)
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
         self.enter_hangul_mode()
 
         self.keyboard.type(self.input)
-        self.assertThat(self.unity.hud.search_string, Eventually(Equals(self.result)))
+        self.assertThat(self.hud.search_string, Eventually(Equals(self.result)))

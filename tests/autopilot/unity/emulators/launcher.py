@@ -51,7 +51,7 @@ class LauncherController(UnityIntrospectionObject):
     @property
     def model(self):
         """Return the launcher model."""
-        models = self.get_children_by_type(LauncherModel)
+        models = LauncherModel.get_all_instances()
         assert(len(models) == 1)
         return models[0]
 

@@ -36,14 +36,14 @@ class LauncherSwitcherTests(LauncherTestCase):
 
     def safe_quit_switcher(self):
         """Quit the keynav mode if it's engaged."""
-        if self.unity.launcher.key_nav_is_active:
+        if self.launcher.key_nav_is_active:
             self.launcher_instance.switcher_cancel()
 
     def test_launcher_switcher_cancel(self):
         """Test that ending the launcher switcher actually works."""
         self.launcher_instance.switcher_start()
         self.launcher_instance.switcher_cancel()
-        self.assertThat(self.unity.launcher.key_nav_is_active, Eventually(Equals(False)))
+        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))
 
     def test_launcher_switcher_cancel_resume_focus(self):
         """Test that ending the launcher switcher resume the focus."""
@@ -63,9 +63,9 @@ class LauncherSwitcherTests(LauncherTestCase):
         """Test that starting the Launcher switcher puts the keyboard focus on item 0."""
         self.start_switcher_with_cleanup_cancel()
 
-        self.assertThat(self.unity.launcher.key_nav_is_active, Eventually(Equals(True)))
-        self.assertThat(self.unity.launcher.key_nav_is_grabbed, Eventually(Equals(False)))
-        self.assertThat(self.unity.launcher.key_nav_selection, Eventually(Equals(0)))
+        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(True)))
+        self.assertThat(self.launcher.key_nav_is_grabbed, Eventually(Equals(False)))
+        self.assertThat(self.launcher.key_nav_selection, Eventually(Equals(0)))
 
     def test_launcher_switcher_next(self):
         """Moving to the next launcher item while switcher is activated must work."""
@@ -77,13 +77,13 @@ class LauncherSwitcherTests(LauncherTestCase):
         # make sure that the index has increased. This opens us to the
         # possibility that the launcher really is skipping forward more than one
         # icon at a time, but we can't do much about that.
-        self.assertThat(self.unity.launcher.key_nav_selection, Eventually(GreaterThan(0)))
+        self.assertThat(self.launcher.key_nav_selection, Eventually(GreaterThan(0)))
 
     def test_launcher_switcher_prev(self):
         """Moving to the previous launcher item while switcher is activated must work."""
         self.start_switcher_with_cleanup_cancel()
         self.launcher_instance.switcher_prev()
-        self.assertThat(self.unity.launcher.key_nav_selection, Eventually(NotEquals(0)))
+        self.assertThat(self.launcher.key_nav_selection, Eventually(NotEquals(0)))
 
     def test_launcher_switcher_down(self):
         """Pressing the down arrow key while switcher is activated must work."""
@@ -95,13 +95,13 @@ class LauncherSwitcherTests(LauncherTestCase):
         # make sure that the index has increased. This opens us to the
         # possibility that the launcher really is skipping forward more than one
         # icon at a time, but we can't do much about that.
-        self.assertThat(self.unity.launcher.key_nav_selection, Eventually(GreaterThan(0)))
+        self.assertThat(self.launcher.key_nav_selection, Eventually(GreaterThan(0)))
 
     def test_launcher_switcher_up(self):
         """Pressing the up arrow key while switcher is activated must work."""
         self.start_switcher_with_cleanup_cancel()
         self.launcher_instance.switcher_up()
-        self.assertThat(self.unity.launcher.key_nav_selection, Eventually(NotEquals(0)))
+        self.assertThat(self.launcher.key_nav_selection, Eventually(NotEquals(0)))
 
     def test_launcher_switcher_next_doesnt_show_shortcuts(self):
         """Moving forward in launcher switcher must not show launcher shortcuts."""
@@ -123,25 +123,25 @@ class LauncherSwitcherTests(LauncherTestCase):
         """Launcher Switcher must loop through icons when cycling forwards"""
         self.start_switcher_with_cleanup_cancel()
         prev_icon = 0
-        num_icons = self.unity.launcher.model.num_launcher_icons()
+        num_icons = self.launcher.model.num_launcher_icons()
         logger.info("This launcher has %d icons", num_icons)
         for icon in range(1, num_icons):
             self.launcher_instance.switcher_next()
             # FIXME We can't directly check for selection/icon number equalty
             # since the launcher model also contains "hidden" icons that aren't
             # shown, so the selection index can increment by more than 1.
-            self.assertThat(self.unity.launcher.key_nav_selection, Eventually(GreaterThan(prev_icon)))
-            prev_icon = self.unity.launcher.key_nav_selection
+            self.assertThat(self.launcher.key_nav_selection, Eventually(GreaterThan(prev_icon)))
+            prev_icon = self.launcher.key_nav_selection
 
         self.launcher_instance.switcher_next()
-        self.assertThat(self.unity.launcher.key_nav_selection, Eventually(Equals(0)))
+        self.assertThat(self.launcher.key_nav_selection, Eventually(Equals(0)))
 
     def test_launcher_switcher_cycling_backward(self):
         """Launcher Switcher must loop through icons when cycling backwards"""
         self.start_switcher_with_cleanup_cancel()
         self.launcher_instance.switcher_prev()
-        # FIXME We can't directly check for self.unity.launcher.num_launcher_icons - 1
-        self.assertThat(self.unity.launcher.key_nav_selection, Eventually(GreaterThan(1)))
+        # FIXME We can't directly check for self.launcher.num_launcher_icons - 1
+        self.assertThat(self.launcher.key_nav_selection, Eventually(GreaterThan(1)))
 
     def test_launcher_switcher_activate_keep_focus(self):
         """Activating a running launcher icon should focus the application."""
@@ -165,4 +165,4 @@ class LauncherSwitcherTests(LauncherTestCase):
         sleep(.25)
         self.keyboard.press_and_release("Escape")
         sleep(.25)
-        self.assertThat(self.unity.launcher.key_nav_is_active, Eventually(Equals(False)))
+        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(False)))

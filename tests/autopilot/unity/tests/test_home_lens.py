@@ -22,22 +22,22 @@ class HomeLensSearchTests(UnityTestCase):
         super(HomeLensSearchTests, self).setUp()
 
     def tearDown(self):
-        self.unity.dash.ensure_hidden()
+        self.dash.ensure_hidden()
         super(HomeLensSearchTests, self).tearDown()
 
     def test_quick_run_app(self):
         """Hitting enter runs an application even though a search might not have fully
         finished yet.
-
+       
         """
         if self.app_is_running("Text Editor"):
             self.close_all_app("Text Editor")
             sleep(1)
 
         kb = self.keyboard
-        self.unity.dash.ensure_visible()
+        self.dash.ensure_visible()
         kb.type("g")
-        self.assertThat(self.unity.dash.search_string, Eventually(Equals("g")))
+        self.assertThat(self.dash.search_string, Eventually(Equals("g")))
         kb.type("edit", 0.1)
         kb.press_and_release("Enter", 0.1)
         self.addCleanup(self.close_all_app,  "Text Editor")

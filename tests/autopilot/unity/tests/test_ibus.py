@@ -20,6 +20,8 @@ from autopilot.emulators.ibus import (
 from autopilot.matchers import Eventually
 from autopilot.testcase import multiply_scenarios
 from testtools.matchers import Equals, NotEquals
+from unity.emulators.dash import Dash
+from unity.emulators.hud import Hud
 
 from unity.tests import UnityTestCase
 
@@ -92,13 +94,13 @@ class IBusWidgetScenariodTests(IBusTests):
 
     # Use lambdas here so we don't require DBus service at module import time.
     scenarios = [
-        ('dash', {'widget': 'dash'}),
-        ('hud', {'widget': 'hud'})
+        ('dash', {'widget': lambda: Dash()}),
+        ('hud', {'widget': lambda: Hud()})
     ]
 
     def do_ibus_test(self):
         """Do the basic IBus test on self.widget using self.input and self.result."""
-        widget = getattr(self.unity, self.widget)
+        widget = self.widget()
         widget.ensure_visible()
         self.addCleanup(widget.ensure_hidden)
         self.activate_ibus(widget.searchbar)
@@ -193,26 +195,26 @@ class IBusTestsPinyinIgnore(IBusTests):
         self.activate_input_engine_or_skip(self.engine_name)
 
     def test_ignore_key_events_on_dash(self):
-        self.unity.dash.ensure_visible()
-        self.addCleanup(self.unity.dash.ensure_hidden)
-        self.activate_ibus(self.unity.dash.searchbar)
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+        self.activate_ibus(self.dash.searchbar)
         self.keyboard.type("cipan")
         self.keyboard.press_and_release("Tab")
         self.keyboard.type("  ")
-        self.deactivate_ibus(self.unity.dash.searchbar)
-        self.assertThat(self.unity.dash.search_string, Eventually(NotEquals("  ")))
+        self.deactivate_ibus(self.dash.searchbar)
+        self.assertThat(self.dash.search_string, Eventually(NotEquals("  ")))
 
     def test_ignore_key_events_on_hud(self):
-        self.unity.hud.ensure_visible()
-        self.addCleanup(self.unity.hud.ensure_hidden)
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
 
         self.keyboard.type("a")
-        self.activate_ibus(self.unity.hud.searchbar)
+        self.activate_ibus(self.hud.searchbar)
         self.keyboard.type("riqi")
-        old_selected = self.unity.hud.selected_button
+        old_selected = self.hud.selected_button
         self.keyboard.press_and_release("Down")
-        new_selected = self.unity.hud.selected_button
-        self.deactivate_ibus(self.unity.hud.searchbar)
+        new_selected = self.hud.selected_button
+        self.deactivate_ibus(self.hud.searchbar)
 
         self.assertEqual(old_selected, new_selected)
 
@@ -228,26 +230,26 @@ class IBusTestsAnthyIgnore(IBusTests):
         self.activate_input_engine_or_skip(self.engine_name)
 
     def test_ignore_key_events_on_dash(self):
-        self.unity.dash.ensure_visible()
-        self.addCleanup(self.unity.dash.ensure_hidden)
-        self.activate_ibus(self.unity.dash.searchbar)
+        self.dash.ensure_visible()
+        self.addCleanup(self.dash.ensure_hidden)
+        self.activate_ibus(self.dash.searchbar)
         self.keyboard.type("shisutemu ")
         self.keyboard.press_and_release("Tab")
         self.keyboard.press_and_release("Ctrl+j")
-        self.deactivate_ibus(self.unity.dash.searchbar)
-        dash_search_string = self.unity.dash.search_string
+        self.deactivate_ibus(self.dash.searchbar)
+        dash_search_string = self.dash.search_string
 
         self.assertNotEqual("", dash_search_string)
 
     def test_ignore_key_events_on_hud(self):
-        self.unity.hud.ensure_visible()
-        self.addCleanup(self.unity.hud.ensure_hidden)
+        self.hud.ensure_visible()
+        self.addCleanup(self.hud.ensure_hidden)
         self.keyboard.type("a")
-        self.activate_ibus(self.unity.hud.searchbar)
+        self.activate_ibus(self.hud.searchbar)
         self.keyboard.type("hiduke")
-        old_selected = self.unity.hud.selected_button
+        old_selected = self.hud.selected_button
         self.keyboard.press_and_release("Down")
-        new_selected = self.unity.hud.selected_button
-        self.deactivate_ibus(self.unity.hud.searchbar)
+        new_selected = self.hud.selected_button
+        self.deactivate_ibus(self.hud.searchbar)
 
         self.assertEqual(old_selected, new_selected)

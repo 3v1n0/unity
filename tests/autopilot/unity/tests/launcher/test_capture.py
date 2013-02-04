@@ -37,7 +37,7 @@ class LauncherCaptureTests(UnityTestCase):
 
     def setHideMode(self, mode):
         self.set_unity_option('launcher_hide_mode', mode)
-        launcher = self.unity.launcher.get_launcher_for_monitor(0)
+        launcher = self.launcher.get_launcher_for_monitor(0)
         self.assertThat(launcher.hidemode, Eventually(Equals(mode)))
 
     def leftMostMonitor(self):

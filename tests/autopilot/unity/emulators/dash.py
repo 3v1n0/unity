@@ -20,23 +20,20 @@ import dbus
 logger = logging.getLogger(__name__)
 
 
-class DashController(UnityIntrospectionObject, KeybindingsHelper):
-    """The main dash controller object."""
+class Dash(KeybindingsHelper):
+    """
+    An emulator class that makes it easier to interact with the unity dash.
+    """
 
-    def get_dash_view(self):
-        """Get the dash view that's attached to this controller."""
-        return self.get_children_by_type(DashView)[0]
-
-    def hide_dash_via_dbus(self):
-        """ Emulate a DBus call for dash hiding  """
-        dash_object = dbus.SessionBus().get_object('com.canonical.Unity',
-                                             '/com/canonical/Unity/Dash')
-        dash_iface = dbus.Interface(dash_object, 'com.canonical.Unity.Dash')
-        dash_iface.HideDash()
+    def __init__(self):
+        super(Dash, self).__init__()
+        controllers = DashController.get_all_instances()
+        assert(len(controllers) == 1)
+        self.controller = controllers[0]
 
     @property
     def view(self):
-        return self.get_dash_view()
+        return self.controller.get_dash_view()
 
     def toggle_reveal(self):
         """
@@ -64,6 +61,21 @@ class DashController(UnityIntrospectionObject, KeybindingsHelper):
         if self.visible:
             self.toggle_reveal()
             self.visible.wait_for(False)
+
+    @property
+    def visible(self):
+        """Returns if the dash is currently visible"""
+        return self.controller.visible
+
+    @property
+    def monitor(self):
+        """The monitor where the dash is"""
+        return self.controller.monitor
+
+    @property
+    def ideal_monitor(self):
+        """The ideal monitor for the dash to appear on"""
+        return self.controller.ideal_monitor
 
     @property
     def search_string(self):
@@ -143,6 +155,21 @@ class DashController(UnityIntrospectionObject, KeybindingsHelper):
     @property
     def geometry(self):
         return (self.view.x, self.view.y, self.view.width, self.view.height)
+
+
+class DashController(UnityIntrospectionObject):
+    """The main dash controller object."""
+
+    def get_dash_view(self):
+        """Get the dash view that's attached to this controller."""
+        return self.get_children_by_type(DashView)[0]
+
+    def hide_dash_via_dbus(self):
+        """ Emulate a DBus call for dash hiding  """
+        dash_object = dbus.SessionBus().get_object('com.canonical.Unity',
+                                             '/com/canonical/Unity/Dash')
+        dash_iface = dbus.Interface(dash_object, 'com.canonical.Unity.Dash')
+        dash_iface.HideDash()
 
 
 class DashView(UnityIntrospectionObject):

@@ -79,21 +79,21 @@ class LauncherRevealTests(LauncherTestCase):
         char_win2 = self.start_app_window("Character Map")
         char_app = char_win1.application
 
-        char_icon = self.unity.launcher.model.get_icon(desktop_id=char_app.desktop_file)
+        char_icon = self.launcher.model.get_icon(desktop_id=char_app.desktop_file)
 
         self.launcher_instance.click_launcher_icon(char_icon, move_mouse_after=False)
-        self.assertThat(self.unity.window_manager.scale_active, Eventually(Equals(True)))
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
         self.launcher_instance.click_launcher_icon(char_icon, move_mouse_after=False)
 
         self.assertThat(self.launcher_instance.is_showing, Eventually(Equals(True)))
-        self.assertThat(self.unity.window_manager.scale_active, Eventually(Equals(False)))
+        self.assertThat(self.window_manager.scale_active, Eventually(Equals(False)))
 
     def test_launcher_stays_open_after_icon_click(self):
         """Clicking on a launcher icon must not hide the launcher."""
         char_win = self.start_app_window("Character Map")
         char_app = char_win.application
 
-        char_icon = self.unity.launcher.model.get_icon(desktop_id=char_app.desktop_file)
+        char_icon = self.launcher.model.get_icon(desktop_id=char_app.desktop_file)
         self.launcher_instance.click_launcher_icon(char_icon, move_mouse_after=False)
 
         # Have to sleep to give the launcher time to hide (what the old behavior was)
@@ -103,13 +103,13 @@ class LauncherRevealTests(LauncherTestCase):
 
     def test_new_icon_has_the_shortcut(self):
          """New icons should have an associated shortcut"""
-         if self.unity.launcher.model.num_bamf_launcher_icons() >= 10:
+         if self.launcher.model.num_bamf_launcher_icons() >= 10:
              self.skip("There are already more than 9 icons in the launcher")
 
          desktop_file = self.KNOWN_APPS['Calculator']['desktop-file']
-         if self.unity.launcher.model.get_icon(desktop_id=desktop_file) != None:
+         if self.launcher.model.get_icon(desktop_id=desktop_file) != None:
              self.skip("Calculator icon is already on the launcher.")
 
          self.start_app('Calculator')
-         icon = self.unity.launcher.model.get_icon(desktop_id=desktop_file)
+         icon = self.launcher.model.get_icon(desktop_id=desktop_file)
          self.assertThat(icon.shortcut, GreaterThan(0))
