@@ -74,6 +74,7 @@ public:
   static WindowManager& Default();
 
   virtual Window GetActiveWindow() const = 0;
+  virtual std::vector<Window> GetWindowsInStackingOrder() const = 0;
 
   virtual bool IsWindowMaximized(Window window_id) const = 0;
   virtual bool IsWindowDecorated(Window window_id) const = 0;

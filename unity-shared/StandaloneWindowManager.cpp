@@ -105,6 +105,11 @@ StandaloneWindow::Ptr StandaloneWindowManager::GetWindowByXid(Window window_id) 
     return StandaloneWindow::Ptr();
 }
 
+std::vector<Window> StandaloneWindowManager::GetWindowsInStackingOrder() const
+{
+  return standalone_windows_;
+}
+
 bool StandaloneWindowManager::IsWindowMaximized(Window window_id) const
 {
   auto window = GetWindowByXid(window_id);

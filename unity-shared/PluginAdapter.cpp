@@ -431,6 +431,18 @@ Window PluginAdapter::GetActiveWindow() const
   return m_Screen->activeWindow();
 }
 
+std::vector<Window> PluginAdapter::GetWindowsInStackingOrder() const
+{
+  bool stacking_order = true;
+  auto const& windows = m_Screen->clientList(stacking_order);
+
+  std::vector<Window> ret;
+  for (auto const& window : windows)
+    ret.push_back(window->id());
+
+  return ret;
+}
+
 bool PluginAdapter::IsWindowMaximized(Window window_id) const
 {
   CompWindow* window = m_Screen->findWindow(window_id);
