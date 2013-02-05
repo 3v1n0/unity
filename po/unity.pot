@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2013-02-05 21:03+0100\n"
+"POT-Creation-Date: 2012-12-05 10:41+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -23,7 +23,7 @@ msgstr ""
 msgid "Home screen"
 msgstr ""
 
-msgid "Search your computer and online sources"
+msgid "Search"
 msgstr ""
 
 msgid "All"
@@ -102,9 +102,11 @@ msgstr ""
 msgid "Ubuntu Desktop"
 msgstr ""
 
+#. Dash...
 msgid "Dash"
 msgstr ""
 
+#. Launcher...
 msgid "Launcher"
 msgstr ""
 
@@ -112,18 +114,6 @@ msgid "Quicklist"
 msgstr ""
 
 msgid "Switcher"
-msgstr ""
-
-msgid "Left Mouse"
-msgstr ""
-
-msgid "Middle Mouse"
-msgstr ""
-
-msgid "Right Mouse"
-msgstr ""
-
-msgid "Keyboard Shortcuts"
 msgstr ""
 
 msgid " (Hold)"
@@ -189,6 +179,7 @@ msgstr ""
 msgid "Enter"
 msgstr ""
 
+#. Menu Bar
 msgid "HUD & Menu Bar"
 msgstr ""
 
@@ -207,6 +198,7 @@ msgstr ""
 msgid "Cursor Left or Right"
 msgstr ""
 
+#. Switching
 msgid "Switching"
 msgstr ""
 
@@ -216,6 +208,7 @@ msgstr ""
 msgid "Switches windows of current applications."
 msgstr ""
 
+#. Workspaces
 msgid "Workspaces"
 msgstr ""
 
@@ -231,6 +224,7 @@ msgstr ""
 msgid "Moves focused window to another workspace."
 msgstr ""
 
+#. Windows
 msgid "Windows"
 msgstr ""
 
@@ -273,7 +267,16 @@ msgstr ""
 msgid "Resizes the window."
 msgstr ""
 
-msgid "Activate"
+msgid "Left Mouse"
+msgstr ""
+
+msgid "Middle Mouse"
+msgstr ""
+
+msgid "Right Mouse"
+msgstr ""
+
+msgid "Keyboard Shortcuts"
 msgstr ""
 
 msgid "Filter results"
