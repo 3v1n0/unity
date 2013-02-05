@@ -396,9 +396,7 @@ void StandaloneWindowManager::FocusWindowGroup(std::vector<Window> const& window
                                                FocusVisibility,
                                                int monitor,
                                                bool only_top_win)
-{
-  /* TODO */
-}
+{}
 
 bool StandaloneWindowManager::ScaleWindowGroup(std::vector<Window> const& windows,
                                                int state, bool force)
