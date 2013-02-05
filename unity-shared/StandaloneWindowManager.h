@@ -22,7 +22,7 @@
 #define UNITYSHARED_STANDALONE_WINDOW_MANAGER_H
 
 #include "unity-shared/WindowManager.h"
-#include <map>
+#include <list>
 #include <NuxCore/Property.h>
 
 namespace unity
@@ -146,7 +146,7 @@ public:
 
   // Mock functions
   void AddStandaloneWindow(StandaloneWindow::Ptr const& window);
-  std::map<Window, StandaloneWindow::Ptr> GetStandaloneWindows() const;
+  std::list<StandaloneWindow::Ptr> GetStandaloneWindows() const;
 
   void SetScaleActive(bool scale_active);
   void SetScaleActiveForGroup(bool scale_active_for_group);
@@ -160,6 +160,8 @@ protected:
   virtual void AddProperties(GVariantBuilder* builder);
 
 private:
+  StandaloneWindow::Ptr GetWindowByXid(Window window_id) const;
+
   bool expo_state_;
   bool in_show_desktop_;
   bool scale_active_;
@@ -168,7 +170,7 @@ private:
   nux::Size viewport_size_;
   nux::Point current_vp_;
   nux::Geometry workarea_geo_;
-  std::map<Window, StandaloneWindow::Ptr> standalone_windows_;
+  std::list<StandaloneWindow::Ptr> standalone_windows_;
 };
 
 }

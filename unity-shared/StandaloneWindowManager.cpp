@@ -84,41 +84,59 @@ StandaloneWindowManager::StandaloneWindowManager()
 
 Window StandaloneWindowManager::GetActiveWindow() const
 {
-  for (auto const& it : standalone_windows_)
-    if (it.second->active)
-      return it.second->Xid();
+  for (auto const& window : standalone_windows_)
+    if (window->active)
+      return window->Xid();
 
   return 0;
 }
 
+StandaloneWindow::Ptr StandaloneWindowManager::GetWindowByXid(Window window_id) const
+{
+  auto begin = standalone_windows_.begin();
+  auto end = standalone_windows_.end();
+  auto it = std::find_if(begin, end, [window_id] (StandaloneWindow::Ptr window) {
+    return window->Xid() == window_id;
+  });
+
+  if (it != end)
+    return *it;
+  else
+    return StandaloneWindow::Ptr();
+}
+
 std::vector<Window> StandaloneWindowManager::GetWindowsInStackingOrder() const
 {
-  return std::vector<Window>();
+  std::vector<Window> ret;
+  for (auto const& window : standalone_windows_)
+    ret.push_back(window->Xid());
+
+  return ret;
 }
 
 bool StandaloneWindowManager::IsWindowMaximized(Window window_id) const
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-    return it->second->maximized;
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->maximized;
 
   return false;
 }
 
 bool StandaloneWindowManager::IsWindowDecorated(Window window_id) const
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end() && it->second->has_decorations)
-    return it->second->decorated;
+  auto window = GetWindowByXid(window_id);
+  if (window && window->has_decorations)
+    return window->decorated;
 
   return false;
 }
 
 bool StandaloneWindowManager::IsWindowOnCurrentDesktop(Window window_id) const
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-    return (it->second->current_desktop == current_desktop_);
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return (window->current_desktop == current_desktop_);
 
   return true;
 }
@@ -130,72 +148,73 @@ bool StandaloneWindowManager::IsWindowObscured(Window window_id) const
 
 bool StandaloneWindowManager::IsWindowMapped(Window window_id) const
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-    return it->second->mapped;
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->mapped;
 
   return true;
 }
 
 bool StandaloneWindowManager::IsWindowVisible(Window window_id) const
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-    return it->second->visible;
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->visible;
 
   return true;
 }
 
 bool StandaloneWindowManager::IsWindowOnTop(Window window_id) const
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-    return it->second->on_top;
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->on_top;
 
   return false;
 }
 
 bool StandaloneWindowManager::IsWindowClosable(Window window_id) const
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-    return it->second->closable;
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->closable;
 
   return false;
 }
 
 bool StandaloneWindowManager::IsWindowMinimized(Window window_id) const
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-    return it->second->minimized;
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->minimized;
 
   return false;
 }
 
 bool StandaloneWindowManager::IsWindowMinimizable(Window window_id) const
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-    return it->second->minimizable;
+  auto window = GetWindowByXid(window_id);
+
+  if (window)
+    return window->minimizable;
 
   return false;
 }
 
 bool StandaloneWindowManager::IsWindowMaximizable(Window window_id) const
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-    return it->second->maximizable;
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->maximizable;
 
   return false;
 }
 
 bool StandaloneWindowManager::HasWindowDecorations(Window window_id) const
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-    return it->second->has_decorations;
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->has_decorations;
 
   return false;
 }
@@ -212,38 +231,34 @@ bool StandaloneWindowManager::InShowDesktop() const
 
 void StandaloneWindowManager::Decorate(Window window_id) const
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-  {
-    it->second->decorated = it->second->has_decorations();
-  }
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    window->decorated = window->has_decorations();
 }
 
 void StandaloneWindowManager::Undecorate(Window window_id) const
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-  {
-    it->second->decorated = false;
-  }
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    window->decorated = false;
 }
 
 void StandaloneWindowManager::Maximize(Window window_id)
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
+  auto window = GetWindowByXid(window_id);
+  if (window)
   {
-    it->second->maximized = true;
+    window->maximized = true;
     Undecorate(window_id);
   }
 }
 
 void StandaloneWindowManager::Restore(Window window_id)
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
+  auto window = GetWindowByXid(window_id);
+  if (window)
   {
-    it->second->maximized = false;
+    window->maximized = false;
     Decorate(window_id);
   }
 }
@@ -258,55 +273,81 @@ void StandaloneWindowManager::RestoreAt(Window window_id, int x, int y)
 
 void StandaloneWindowManager::UnMinimize(Window window_id)
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
+  auto window = GetWindowByXid(window_id);
+  if (window)
   {
-    it->second->minimized = false;
+    window->minimized = false;
 
-    if (it->second->maximized)
-    {
+    if (window->maximized)
       Undecorate(window_id);
-    }
   }
 }
 
 void StandaloneWindowManager::Minimize(Window window_id)
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
+  auto window = GetWindowByXid(window_id);
+  if (window)
   {
-    it->second->minimized = true;
+    window->minimized = true;
 
-    if (it->second->maximized)
-    {
+    if (window->maximized)
       Decorate(window_id);
-    }
   }
 }
 
 void StandaloneWindowManager::Close(Window window_id)
 {
-  standalone_windows_.erase(window_id);
+  standalone_windows_.remove_if([window_id] (StandaloneWindow::Ptr window) {
+    return window->Xid() == window_id;
+  });
 }
 
 void StandaloneWindowManager::Activate(Window window_id)
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-  {
+  auto window = GetWindowByXid(window_id);
+  if (window)
     // This will automatically set the others active windows as unactive
-    it->second->active = true;
-  }
+    window->active = true;
+}
+
+void StandaloneWindowManager::Lower(Window window_id)
+{
+  auto begin = standalone_windows_.begin();
+  auto end = standalone_windows_.end();
+  auto window = std::find_if(begin, end, [window_id] (StandaloneWindow::Ptr window) {
+    return window->Xid() == window_id;
+  });
+
+  if (window != end)
+    standalone_windows_.splice(begin, standalone_windows_, window);
 }
 
 void StandaloneWindowManager::Raise(Window window_id)
-{}
+{
+  auto end = standalone_windows_.end();
+  auto window = std::find_if(standalone_windows_.begin(), end, [window_id] (StandaloneWindow::Ptr window) {
+    return window->Xid() == window_id;
+  });
 
-void StandaloneWindowManager::Lower(Window window_id)
-{}
+  if (window != end)
+    standalone_windows_.splice(end, standalone_windows_, window);
+}
 
 void StandaloneWindowManager::RestackBelow(Window window_id, Window sibiling_id)
-{}
+{
+  auto end = standalone_windows_.end();
+  auto begin = standalone_windows_.begin();
+
+  auto window = std::find_if(begin, end, [window_id] (StandaloneWindow::Ptr window) {
+    return window->Xid() == window_id;
+  });
+  auto sibiling = std::find_if(begin, end, [sibiling_id] (StandaloneWindow::Ptr window) {
+    return window->Xid() == sibiling_id;
+  });
+
+  if (window != end && sibiling != end)
+    standalone_windows_.splice(sibiling, standalone_windows_, window);
+}
 
 void StandaloneWindowManager::TerminateScale()
 {}
@@ -375,9 +416,9 @@ bool StandaloneWindowManager::IsViewPortSwitchStarted() const
 
 void StandaloneWindowManager::MoveResizeWindow(Window window_id, nux::Geometry geometry)
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-    it->second->geo = geometry;
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    window->geo = geometry;
 }
 
 void StandaloneWindowManager::StartMove(Window window_id, int x, int y)
@@ -388,27 +429,27 @@ void StandaloneWindowManager::StartMove(Window window_id, int x, int y)
 
 int StandaloneWindowManager::GetWindowMonitor(Window window_id) const
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-    return it->second->monitor;
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->monitor;
 
   return -1;
 }
 
 nux::Geometry StandaloneWindowManager::GetWindowGeometry(Window window_id) const
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-    return it->second->geo;
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->geo;
 
   return nux::Geometry(0, 0, 1, 1);
 }
 
 nux::Geometry StandaloneWindowManager::GetWindowSavedGeometry(Window window_id) const
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-    return it->second->geo;
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->geo;
 
   return nux::Geometry();
 }
@@ -430,9 +471,9 @@ void StandaloneWindowManager::SetWorkareaGeometry(nux::Geometry const& geo)
 
 nux::Size StandaloneWindowManager::GetWindowDecorationSize(Window window_id, WindowManager::Edge edge) const
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-    return it->second->deco_sizes[unsigned(edge)];
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->deco_sizes[unsigned(edge)];
 
   return nux::Size();
 }
@@ -494,9 +535,9 @@ bool StandaloneWindowManager::RestoreInputFocus()
 
 std::string StandaloneWindowManager::GetWindowName(Window window_id) const
 {
-  auto it = standalone_windows_.find(window_id);
-  if (it != standalone_windows_.end())
-    return it->second->name;
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->name;
 
   return "";
 }
@@ -514,7 +555,8 @@ void StandaloneWindowManager::AddStandaloneWindow(StandaloneWindow::Ptr const& w
     return;
 
   auto xid = window->Xid();
-  standalone_windows_[xid] = window;
+  Close(xid);
+  standalone_windows_.push_back(window);
 
   window->mapped.changed.connect([this, xid] (bool v) {v ? window_mapped(xid) : window_unmapped(xid);});
   window->visible.changed.connect([this, xid] (bool v) {v ? window_shown(xid) : window_hidden(xid);});
@@ -530,9 +572,9 @@ void StandaloneWindowManager::AddStandaloneWindow(StandaloneWindow::Ptr const& w
       return;
 
     // Ensuring that this is the only active window we have on screen
-    for (auto const& it : standalone_windows_)
-      if (it.second->Xid() != xid && it.second->active)
-        it.second->active = false;
+    for (auto const& window : standalone_windows_)
+      if (window->Xid() != xid && window->active)
+        window->active = false;
 
     window_focus_changed(xid);
   });
@@ -540,7 +582,7 @@ void StandaloneWindowManager::AddStandaloneWindow(StandaloneWindow::Ptr const& w
   window->active = true;
 }
 
-std::map<Window, StandaloneWindow::Ptr> StandaloneWindowManager::GetStandaloneWindows() const
+std::list<StandaloneWindow::Ptr> StandaloneWindowManager::GetStandaloneWindows() const
 {
   return standalone_windows_;
 }
