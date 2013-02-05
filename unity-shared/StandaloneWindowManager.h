@@ -93,6 +93,7 @@ public:
   virtual void Activate(Window window_id);
   virtual void Raise(Window window_id);
   virtual void Lower(Window window_id);
+  void RestackBelow(Window window_id, Window sibiling_id) override;
 
   virtual void Decorate(Window window_id) const;
   virtual void Undecorate(Window window_id) const;

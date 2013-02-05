@@ -300,6 +300,9 @@ void StandaloneWindowManager::Raise(Window window_id)
 void StandaloneWindowManager::Lower(Window window_id)
 {}
 
+void StandaloneWindowManager::RestackBelow(Window window_id, Window sibiling_id)
+{}
+
 void StandaloneWindowManager::TerminateScale()
 {}
 

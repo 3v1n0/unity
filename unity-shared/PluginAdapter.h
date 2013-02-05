@@ -147,6 +147,7 @@ public:
   void Activate(Window window_id);
   void Raise(Window window_id);
   void Lower(Window window_id);
+  void RestackBelow(Window window_id, Window sibiling_id) override;
 
   void ShowDesktop();
   bool InShowDesktop() const;

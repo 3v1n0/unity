@@ -58,6 +58,7 @@ class MockWindowManager : public WindowManager
     MOCK_METHOD1(Activate, void(Window));
     MOCK_METHOD1(Raise, void(Window));
     MOCK_METHOD1(Lower, void(Window));
+    MOCK_METHOD2(RestackBelow, void(Window, Window));
 
     MOCK_METHOD0(TerminateScale, void());
     MOCK_CONST_METHOD0(IsScaleActive, bool());
