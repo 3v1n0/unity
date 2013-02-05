@@ -547,17 +547,16 @@ Selection Controller::Impl::GetCurrentSelection() const
   if (model_)
   {
     application = model_->Selection();
+
     if (application)
     {
       if (model_->detail_selection)
       {
         window = model_->DetailSelectionWindow();
       }
-      else if (application->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
+      else if (model_->SelectionIsActive())
       {
-        auto const& xids = model_->DetailXids();
-        if (!xids.empty())
-          window = xids.front();
+        window = model_->DetailXids().front();
       }
     }
   }
