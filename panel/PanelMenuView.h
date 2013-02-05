@@ -73,6 +73,13 @@ protected:
 private:
   friend class TestPanelMenuView;
 
+  void SetupPanelMenuViewSignals();
+  void SetupWindowButtons();
+  void SetupLayout();
+  void SetupTitlebarGrabArea();
+  void SetupWindowManagerSignals();
+  void SetupUBusManagerInterests();
+
   void OnActiveChanged(PanelIndicatorEntryView* view, bool is_active);
   void OnViewOpened(BamfMatcher* matcher, BamfView* view);
   void OnViewClosed(BamfMatcher* matcher, BamfView* view);
@@ -105,7 +112,11 @@ private:
   void FullRedraw();
   std::string GetCurrentTitle() const;
   void Refresh(bool force = false);
-  void DrawTitle(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label) const;
+
+  void UpdateTitleTexture(cairo_t *cr_real, nux::Geometry const& geo, std::string const& label) const;
+
+  void UpdateLastGeometry(nux::Geometry const& geo);
+  void UpdateTitleGradientTexture();
 
   void OnPanelViewMouseEnter(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
   void OnPanelViewMouseLeave(int x, int y, unsigned long mouse_button_state, unsigned long special_keys_state);
@@ -128,8 +139,12 @@ private:
   bool IsValidWindow(Window xid) const;
   bool IsWindowUnderOurControl(Window xid) const;
 
-  bool DrawMenus() const;
-  bool DrawWindowButtons() const;
+  bool ShouldDrawMenus() const;
+  bool ShouldDrawButtons() const;
+  bool ShouldDrawFadingTitle() const;
+  bool HasVisibleMenus() const;
+
+  double GetTitleOpacity() const;
 
   void StartFadeIn(int duration = -1);
   void StartFadeOut(int duration = -1);

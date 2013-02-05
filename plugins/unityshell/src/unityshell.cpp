@@ -877,7 +877,7 @@ void UnityScreen::EnableCancelAction(CancelActionTarget target, bool enabled, in
   {
     /* Create a new keybinding for the Escape key and the current modifiers,
      * compiz will take of the ref-counting of the repeated actions */
-    KeyCode escape = XKeysymToKeycode(screen->dpy(), XStringToKeysym("Escape"));
+    KeyCode escape = XKeysymToKeycode(screen->dpy(), XK_Escape);
     CompAction::KeyBinding binding(escape, modifiers);
 
     CompActionPtr &escape_action = _escape_actions[target];
@@ -1530,11 +1530,23 @@ void UnityScreen::handleEvent(XEvent* event)
 
         Window dash_xid = dash_controller_->window()->GetInputWindowId();
         Window top_xid = wm.GetTopWindowAbove(dash_xid);
-        nux::Geometry const& on_top_geo = wm.GetWindowGeometry(top_xid);
+        nux::Geometry const& always_on_top_geo = wm.GetWindowGeometry(top_xid);
 
-        if (!dash_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt) && !on_top_geo.IsInside(pt))
+        bool indicator_clicked = panel_controller_->IsMouseInsideIndicator(pt);
+        bool outside_dash = !dash_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt);
+
+        if ((outside_dash || indicator_clicked) && !always_on_top_geo.IsInside(pt))
         {
-          dash_controller_->HideDash(false);
+          if (indicator_clicked)
+          {
+            // We must skip the Dash hide animation, otherwise the indicators
+            // wont recive the mouse click event
+            dash_controller_->QuicklyHideDash();
+          }
+          else
+          {
+            dash_controller_->HideDash(false);
+          }
         }
       }
 
@@ -1611,6 +1623,16 @@ void UnityScreen::handleEvent(XEvent* event)
           break;
         }
       }
+      else if (switcher_controller_->Visible())
+      {
+        auto const& close_key = wm.close_window_key();
+
+        if (key_sym == close_key.second && XModifiersToNux(event->xkey.state) == close_key.first)
+        {
+          switcher_controller_->Hide(false);
+          skip_other_plugins = true;
+        }
+      }
 
       if (result > 0)
       {
@@ -1681,10 +1703,9 @@ void UnityScreen::handleEvent(XEvent* event)
   }
 
   if (!skip_other_plugins &&
-      screen->otherGrabExist("deco", "move", "switcher", "resize", NULL) &&
-      !switcher_controller_->Visible())
+      screen->otherGrabExist("deco", "move", "switcher", "resize", "unity-switcher", nullptr))
   {
-    wt->ProcessForeignEvent(event, NULL);
+    wt->ProcessForeignEvent(event, nullptr);
   }
 }
 
@@ -2123,35 +2144,26 @@ void UnityScreen::OnLauncherStartKeyNav(GVariant* data)
 
 void UnityScreen::OnLauncherEndKeyNav(GVariant* data)
 {
-  RestoreWindow(data);
+  // Return input-focus to previously focused window (before key-nav-mode was
+  // entered)
+  if (data && g_variant_get_boolean(data))
+    PluginAdapter::Default().RestoreInputFocus();
 }
 
 void UnityScreen::OnSwitcherStart(GVariant* data)
 {
   if (switcher_controller_->Visible())
   {
-    SaveInputThenFocus(switcher_controller_->GetSwitcherInputWindowId());
     UnityWindow::SetupSharedTextures();
   }
 }
 
 void UnityScreen::OnSwitcherEnd(GVariant* data)
 {
-  RestoreWindow(data);
   UnityWindow::CleanupSharedTextures();
 
   for (UnityWindow* uwin : fake_decorated_windows_)
     uwin->CleanupCachedTextures();
-}
-
-void UnityScreen::RestoreWindow(GVariant* data)
-{
-  bool preserve_focus = data ? g_variant_get_boolean(data) : false;
-
-  // Return input-focus to previously focused window (before key-nav-mode was
-  // entered)
-  if (preserve_focus)
-    PluginAdapter::Default().RestoreInputFocus();
 }
 
 bool UnityScreen::SaveInputThenFocus(const guint xid)
@@ -2258,10 +2270,74 @@ bool UnityScreen::ShowHudTerminate(CompAction* action,
   return ShowHud();
 }
 
+unsigned UnityScreen::CompizModifiersToNux(unsigned input) const
+{
+  unsigned modifiers = 0;
+
+  if (input & CompAltMask)
+  {
+    input &= ~CompAltMask;
+    input |= Mod1Mask;
+  }
+
+  if (modifiers & CompSuperMask)
+  {
+    input &= ~CompSuperMask;
+    input |= Mod4Mask;
+  }
+
+  return XModifiersToNux(input);
+}
+
+unsigned UnityScreen::XModifiersToNux(unsigned input) const
+{
+  unsigned modifiers = 0;
+
+  if (input & Mod1Mask)
+    modifiers |= nux::KEY_MODIFIER_ALT;
+
+  if (input & ShiftMask)
+    modifiers |= nux::KEY_MODIFIER_SHIFT;
+
+  if (input & ControlMask)
+    modifiers |= nux::KEY_MODIFIER_CTRL;
+
+  if (input & Mod4Mask)
+    modifiers |= nux::KEY_MODIFIER_SUPER;
+
+  return modifiers;
+}
+
+void UnityScreen::UpdateCloseWindowKey(CompAction::KeyBinding const& keybind)
+{
+  KeySym keysym = XkbKeycodeToKeysym(screen->dpy(), keybind.keycode(), 0, 0);
+  unsigned modifiers = CompizModifiersToNux(keybind.modifiers());
+
+  WindowManager::Default().close_window_key = std::make_pair(modifiers, keysym);
+}
+
 bool UnityScreen::initPluginActions()
 {
-  CompPlugin* p = CompPlugin::find("expo");
   PluginAdapter& adapter = PluginAdapter::Default();
+
+  CompPlugin* p = CompPlugin::find("core");
+
+  if (p)
+  {
+    MultiActionList expoActions;
+
+    for (CompOption& option : p->vTable->getOptions())
+    {
+      if (option.name() == "close_window_key")
+      {
+        UpdateCloseWindowKey(option.value().action().key());
+        break;
+      }
+    }
+  }
+
+  p = CompPlugin::find("expo");
+
   if (p)
   {
     MultiActionList expoActions;
@@ -2465,7 +2541,8 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     }
   }
 
-  if (WindowManager::Default().IsScaleActive() && ScaleScreen::get(screen)->getSelectedWindow() == window->id())
+  if (WindowManager::Default().IsScaleActive() &&
+      ScaleScreen::get(screen)->getSelectedWindow() == window->id())
   {
     nux::Geometry const& scaled_geo = GetScaledGeometry();
     paintInnerGlow(scaled_geo, matrix, attrib, mask);
@@ -3068,6 +3145,10 @@ bool UnityScreen::setOptionForPlugin(const char* plugin, const char* name,
       {
         WindowManager& wm = WindowManager::Default();
         wm.viewport_layout_changed.emit(screen->vpSize().width(), screen->vpSize().height());
+      }
+      else if (strcmp(name, "close_window_key") == 0)
+      {
+        UpdateCloseWindowKey(v.action().key());
       }
     }
   }

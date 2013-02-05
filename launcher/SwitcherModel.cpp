@@ -32,15 +32,14 @@ namespace switcher
 
 
 SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> const& icons)
-  : applications_(icons)
+  : detail_selection(false)
+  , detail_selection_index(0)
+  , only_detail_on_viewport(false)
+  , applications_(icons)
   , index_(0)
   , last_index_(0)
 {
-  detail_selection = false;
-  detail_selection_index = 0;
-  only_detail_on_viewport = false;
-
-  for (auto application : applications_)
+  for (auto const& application : applications_)
   {
     AddChild(application.GetPointer());
     if (application->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
@@ -50,7 +49,7 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> const& icons
 
 SwitcherModel::~SwitcherModel()
 {
-  for (auto application : applications_)
+  for (auto const& application : applications_)
   {
     RemoveChild(application.GetPointer());
   }
@@ -72,101 +71,90 @@ void SwitcherModel::AddProperties(GVariantBuilder* builder)
   .add("last-selection-index", LastSelectionIndex());
 }
 
-SwitcherModel::iterator
-SwitcherModel::begin()
+SwitcherModel::iterator SwitcherModel::begin()
 {
   return applications_.begin();
 }
 
-SwitcherModel::iterator
-SwitcherModel::end()
+SwitcherModel::iterator SwitcherModel::end()
 {
   return applications_.end();
 }
 
-SwitcherModel::reverse_iterator
-SwitcherModel::rbegin()
+SwitcherModel::reverse_iterator SwitcherModel::rbegin()
 {
   return applications_.rbegin();
 }
 
-SwitcherModel::reverse_iterator
-SwitcherModel::rend()
+SwitcherModel::reverse_iterator SwitcherModel::rend()
 {
   return applications_.rend();
 }
 
-AbstractLauncherIcon::Ptr
-SwitcherModel::at(unsigned int index)
+AbstractLauncherIcon::Ptr SwitcherModel::at(unsigned int index) const
 {
   if ((int) index >= Size ())
     return AbstractLauncherIcon::Ptr();
   return applications_[index];
 }
 
-int
-SwitcherModel::Size()
+int SwitcherModel::Size() const
 {
   return applications_.size();
 }
 
-AbstractLauncherIcon::Ptr
-SwitcherModel::Selection()
+AbstractLauncherIcon::Ptr SwitcherModel::Selection() const
 {
   return applications_.at(index_);
 }
 
-int
-SwitcherModel::SelectionIndex()
+int SwitcherModel::SelectionIndex() const
 {
   return index_;
 }
 
-AbstractLauncherIcon::Ptr
-SwitcherModel::LastSelection()
+bool SwitcherModel::SelectionIsActive() const
+{
+  return Selection()->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE);
+}
+
+AbstractLauncherIcon::Ptr SwitcherModel::LastSelection() const
 {
   return applications_.at(last_index_);
 }
 
-int SwitcherModel::LastSelectionIndex()
+int SwitcherModel::LastSelectionIndex() const
 {
   return last_index_;
 }
 
-
-std::vector<Window> SwitcherModel::DetailXids()
+std::vector<Window> SwitcherModel::DetailXids() const
 {
+  WindowManager& wm = WindowManager::Default();
   std::vector<Window> results;
+
   for (auto& window : Selection()->Windows())
   {
-    results.push_back(window->window_id());
-  }
+    Window xid = window->window_id();
 
-  WindowManager& wm = WindowManager::Default();
-  if (only_detail_on_viewport)
-  {
-    results.erase(std::remove_if(results.begin(), results.end(),
-        [&wm](Window xid) { return !wm.IsWindowOnCurrentDesktop(xid); }),
-        results.end());
+    if (!only_detail_on_viewport || wm.IsWindowOnCurrentDesktop(xid))
+      results.push_back(xid);
   }
 
   std::sort(results.begin(), results.end(), [&wm](Window first, Window second) {
       return wm.GetWindowActiveNumber(first) > wm.GetWindowActiveNumber(second);
   });
 
-
-  if (Selection() == last_active_application_ && results.size () > 1)
+  if (Selection() == last_active_application_ && results.size() > 1)
   {
-    for (unsigned int i = 0; i < results.size()-1; i++)
-    {
-      std::swap (results[i], results[i+1]);
-    }
+    results.push_back(results.front());
+    results.erase(results.begin());
   }
 
   return results;
 }
 
-Window SwitcherModel::DetailSelectionWindow()
+Window SwitcherModel::DetailSelectionWindow() const
 {
   auto windows = DetailXids();
   if (!detail_selection || windows.empty())
@@ -216,7 +204,7 @@ void SwitcherModel::NextDetail()
     detail_selection_index = 0;
 }
 
-void SwitcherModel::PrevDetail ()
+void SwitcherModel::PrevDetail()
 {
   if (!detail_selection())
     return;
@@ -249,8 +237,7 @@ void SwitcherModel::Select(AbstractLauncherIcon::Ptr const& selection)
   }
 }
 
-void
-SwitcherModel::Select(unsigned int index)
+void SwitcherModel::Select(unsigned int index)
 {
   unsigned int target = CLAMP(index, 0, applications_.size() - 1);
 

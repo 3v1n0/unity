@@ -334,6 +334,13 @@ void Controller::FocusWindow()
   nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
 }
 
+void Controller::QuicklyHideDash(bool restore)
+{
+  HideDash(restore);
+  timeline_animator_.Stop();
+  window_->ShowWindow(false);
+}
+
 void Controller::HideDash(bool restore)
 {
   if (!visible_)
