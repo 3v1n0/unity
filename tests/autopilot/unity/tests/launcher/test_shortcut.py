@@ -37,7 +37,7 @@ class LauncherShortcutTests(LauncherTestCase):
         self.launcher_instance.switcher_start()
         self.addCleanup(self.launcher_instance.switcher_cancel)
 
-        self.assertThat(self.launcher.key_nav_is_active, Eventually(Equals(True)))
+        self.assertThat(self.unity.launcher.key_nav_is_active, Eventually(Equals(True)))
         self.assertThat(self.launcher_instance.shortcuts_shown, Eventually(Equals(True)))
 
     def test_launcher_switcher_next_keeps_shortcuts(self):

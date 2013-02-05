@@ -56,4 +56,4 @@ class LauncherTestCase(UnityTestCase):
 
     def get_launcher(self):
         """Get the launcher for the current scenario."""
-        return self.launcher.get_launcher_for_monitor(self.launcher_monitor)
+        return self.unity.launcher.get_launcher_for_monitor(self.launcher_monitor)

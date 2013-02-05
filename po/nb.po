@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2012-11-08 12:05+0000\n"
+"POT-Creation-Date: 2013-02-05 21:03+0100\n"
 "PO-Revision-Date: 2010-03-02 12:36-0500\n"
 "Last-Translator: Canonical OEM\n"
 "Language-Team: Norwegian Bokmal\n"
@@ -38,6 +38,9 @@ msgstr ""
 msgid " or Right"
 msgstr ""
 
+msgid "Activate"
+msgstr ""
+
 msgid "All"
 msgstr ""
 
@@ -59,7 +62,6 @@ msgstr ""
 msgid "Cursor Left or Right"
 msgstr ""
 
-#. Dash...
 msgid "Dash"
 msgstr ""
 
@@ -84,7 +86,6 @@ msgstr ""
 msgid "Filter results"
 msgstr ""
 
-#. Menu Bar
 msgid "HUD & Menu Bar"
 msgstr ""
 
@@ -97,7 +98,6 @@ msgstr ""
 msgid "Keyboard Shortcuts"
 msgstr ""
 
-#. Launcher...
 msgid "Launcher"
 msgstr ""
 
@@ -207,7 +207,7 @@ msgstr ""
 msgid "Same as clicking on a Launcher icon."
 msgstr ""
 
-msgid "Search"
+msgid "Search your computer and online sources"
 msgstr ""
 
 msgid "See fewer results"
@@ -246,7 +246,6 @@ msgstr ""
 msgid "Switches workspaces."
 msgstr ""
 
-#. Switching
 msgid "Switching"
 msgstr ""
 
@@ -273,14 +272,12 @@ msgstr ""
 msgid "Waiting to install"
 msgstr ""
 
-#. Windows
 msgid "Windows"
 msgstr ""
 
 msgid "Workspace Switcher"
 msgstr ""
 
-#. Workspaces
 msgid "Workspaces"
 msgstr ""
 

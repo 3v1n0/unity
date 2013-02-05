@@ -32,6 +32,7 @@
 
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/WindowManager.h"
 
 namespace unity
 {
@@ -648,13 +649,15 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
     // Not sure if Enter should be a navigation key
     direction = nux::KEY_NAV_ENTER;
     break;
-  case NUX_VK_F4:
-    if (special_keys_state == nux::NUX_STATE_ALT)
+  default:
+    auto const& close_key = WindowManager::Default().close_window_key();
+
+    if (close_key.first == special_keys_state && close_key.second == x11_key_code)
     {
       ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
+      return nullptr;
     }
-    break;
-  default:
+
     direction = nux::KEY_NAV_NONE;
     break;
   }

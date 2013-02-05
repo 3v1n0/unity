@@ -70,18 +70,19 @@ public:
   reverse_iterator rbegin();
   reverse_iterator rend();
 
-  launcher::AbstractLauncherIcon::Ptr at(unsigned int index);
+  launcher::AbstractLauncherIcon::Ptr at(unsigned int index) const;
 
-  int Size();
+  int Size() const;
 
-  launcher::AbstractLauncherIcon::Ptr Selection();
-  int SelectionIndex();
+  launcher::AbstractLauncherIcon::Ptr Selection() const;
+  int SelectionIndex() const;
+  bool SelectionIsActive() const;
 
-  launcher::AbstractLauncherIcon::Ptr LastSelection();
-  int LastSelectionIndex();
+  launcher::AbstractLauncherIcon::Ptr LastSelection() const;
+  int LastSelectionIndex() const;
 
-  std::vector<Window> DetailXids ();
-  Window DetailSelectionWindow ();
+  std::vector<Window> DetailXids() const;
+  Window DetailSelectionWindow() const;
 
   void Next();
   void Prev();

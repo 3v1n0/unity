@@ -29,13 +29,13 @@ class ShoppingLensTests(UnityTestCase):
         gettext.install("unity-lens-shopping")
 
     def tearDown(self):
-        self.dash.ensure_hidden()
+        self.unity.dash.ensure_hidden()
         super(ShoppingLensTests, self).tearDown()
 
     def test_no_results_in_home_lens_if_empty_search(self):
         """Test that the home lens contains no results if the search bar is empty."""
-        self.dash.ensure_visible()
-        lens = self.dash.get_current_lens()
+        self.unity.dash.ensure_visible()
+        lens = self.unity.dash.get_current_lens()
 
         results_category = lens.get_category_by_name(_("More suggestions"))
         refresh_results_fn = lambda: len(results_category.get_results())
@@ -43,8 +43,8 @@ class ShoppingLensTests(UnityTestCase):
 
     def test_home_lens_has_shopping_results(self):
         """Test that the home lens contains results."""
-        self.dash.ensure_visible()
-        lens = self.dash.get_current_lens()
+        self.unity.dash.ensure_visible()
+        lens = self.unity.dash.get_current_lens()
 
         self.keyboard.type("playstation")
         results_category = lens.get_category_by_name(_("More suggestions"))
@@ -54,8 +54,8 @@ class ShoppingLensTests(UnityTestCase):
 
     def test_application_lens_has_shopping_results(self):
         """Test that the application lens contains results."""
-        self.dash.reveal_application_lens()
-        lens = self.dash.get_current_lens()
+        self.unity.dash.reveal_application_lens()
+        lens = self.unity.dash.get_current_lens()
 
         self.keyboard.type("Text Editor")
         results_category = lens.get_category_by_name(_("More suggestions"))
@@ -65,8 +65,8 @@ class ShoppingLensTests(UnityTestCase):
 
     def test_music_lens_has_shopping_results(self):
         """Test that the music lens contains results."""
-        self.dash.reveal_music_lens()
-        lens = self.dash.get_current_lens()
+        self.unity.dash.reveal_music_lens()
+        lens = self.unity.dash.get_current_lens()
 
         self.keyboard.type("megadeth")
         results_category = lens.get_category_by_name(_("More suggestions"))
@@ -76,8 +76,8 @@ class ShoppingLensTests(UnityTestCase):
 
     def test_preview_works_with_shopping_lens(self):
         """This test shows the dash preview works with shopping lens results."""
-        self.dash.ensure_visible()
-        lens = self.dash.get_current_lens()
+        self.unity.dash.ensure_visible()
+        lens = self.unity.dash.get_current_lens()
 
         self.keyboard.type("playstation")
         results_category = lens.get_category_by_name(_("More suggestions"))
@@ -88,14 +88,14 @@ class ShoppingLensTests(UnityTestCase):
         results = results_category.get_results()
         results[0].preview()
 
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(True)))
 
     def test_shopping_lens_preview_navigate_right(self):
         """This test shows that shopping lens results can open previews,
         then move to the next shopping result.
         """
-        self.dash.ensure_visible()
-        lens = self.dash.get_current_lens()
+        self.unity.dash.ensure_visible()
+        lens = self.unity.dash.get_current_lens()
 
         self.keyboard.type("playstation")
         results_category = lens.get_category_by_name(_("More suggestions"))
@@ -106,8 +106,8 @@ class ShoppingLensTests(UnityTestCase):
         results = results_category.get_results()
         results[0].preview()
 
-        self.assertThat(self.dash.preview_displaying, Eventually(Equals(True)))
-        self.preview_container = self.dash.view.get_preview_container()
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(True)))
+        self.preview_container = self.unity.dash.view.get_preview_container()
         start_index = self.preview_container.relative_nav_index
         self.preview_container.navigate_right()
 

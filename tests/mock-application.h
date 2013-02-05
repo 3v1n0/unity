@@ -20,14 +20,57 @@
 #define TESTS_MOCK_APPLICATION_H
 
 #include <map>
-#include "unity-shared/ApplicationManager.h"
 
+#include "unity-shared/ApplicationManager.h"
+#include "unity-shared/WindowManager.h"
 
 namespace testmocks
 {
-class MockApplication : public unity::Application
+struct MockApplicationWindow : unity::ApplicationWindow
 {
-public:
+  MockApplicationWindow(Window xid)
+    : xid_(xid)
+    , monitor_(0)
+    , type_("window")
+    , visible_(true)
+    , active_(false)
+    , urgent_(false)
+  {
+    visible.SetGetterFunction([this] { return visible_; });
+    active.SetGetterFunction([this] { return active_; });
+    urgent.SetGetterFunction([this] { return urgent_; });
+  }
+
+  Window xid_;
+  int monitor_;
+  std::string title_;
+  std::string icon_;
+  std::string type_;
+
+  bool visible_;
+  bool active_;
+  bool urgent_;
+
+  virtual std::string title() const { return title_; }
+  virtual std::string icon() const { return icon_; }
+  virtual std::string type() const { return type_; }
+
+  virtual Window window_id() const { return xid_; }
+  virtual int monitor() const { return monitor_; }
+
+  virtual unity::ApplicationPtr application() const { return unity::ApplicationPtr(); }
+  virtual bool Focus() const
+  {
+    auto& wm = unity::WindowManager::Default();
+    wm.Raise(xid_);
+    wm.Activate(xid_);
+    return true;
+  }
+  virtual void Quit() const {}
+};
+
+struct MockApplication : unity::Application
+{
   MockApplication(std::string const& desktop_file,
                   std::string const& icon = "",
                   std::string const& title = "")
@@ -103,6 +146,14 @@ public:
       return true;
     }
     return false;
+  }
+
+  void SetActiveState(bool state)
+  {
+    if (active_ == state)
+      return;
+    active_ = state;
+    active.changed.emit(state);
   }
 
   bool GetVisible() const { return visible_; }
