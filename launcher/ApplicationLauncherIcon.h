@@ -51,6 +51,8 @@ public:
   bool IsRunning() const;
   bool IsUrgent() const;
 
+  virtual bool GetQuirk(Quirk quirk) const;
+
   virtual void Quit();
   virtual void AboutToRemove();
 

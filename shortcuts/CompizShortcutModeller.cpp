@@ -42,7 +42,7 @@ namespace
   // Compiz Core Options
   const std::string CORE_OPTION_SHOW_DESKTOP_KEY = "show_desktop_key";
   const std::string CORE_OPTION_MAXIMIZE_WINDOW_KEY = "maximize_window_key";
-  const std::string CORE_OPTION_UNMAXIMIZE_WINDOW_KEY = "unmaximize_window_key";
+  const std::string CORE_OPTION_UNMAXIMIZE_OR_MINIMIZE_WINDOW_KEY = "unmaximize_or_minimize_window_key";
   const std::string CORE_OPTION_CLOSE_WINDOW_KEY = "close_window_key";
   const std::string CORE_OPTION_WINDOW_MENU_KEY = "window_menu_key";
 
@@ -304,7 +304,7 @@ void CompizModeller::AddWindowsHints(std::list<shortcut::AbstractHint::Ptr> &hin
                                                    _("Restores or minimises the current window."),
                                                    shortcut::OptionType::COMPIZ_KEY,
                                                    CORE_PLUGIN_NAME,
-                                                   CORE_OPTION_UNMAXIMIZE_WINDOW_KEY));
+                                                   CORE_OPTION_UNMAXIMIZE_OR_MINIMIZE_WINDOW_KEY));
 
   hints.push_back(std::make_shared<shortcut::Hint>(windows, "", _(" or Right"),
                                                    _("Semi-maximise the current window."),

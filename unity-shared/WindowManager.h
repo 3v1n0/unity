@@ -26,6 +26,7 @@
 
 // To bring in nux::Geometry we first need the Rect header, then Utils.
 #include <NuxCore/Rect.h>
+#include <NuxCore/Property.h>
 #include <Nux/Utils.h>
 
 #ifdef USE_X11
@@ -149,6 +150,9 @@ public:
   virtual bool RestoreInputFocus() = 0;
 
   virtual std::string GetWindowName(Window window_id) const = 0;
+
+  // Nux Modifiers, Nux Keycode (= X11 KeySym)
+  nux::Property<std::pair<unsigned, unsigned>> close_window_key;
 
   // Signals
   sigc::signal<void, Window> window_mapped;
