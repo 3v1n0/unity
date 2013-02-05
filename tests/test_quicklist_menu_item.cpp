@@ -121,6 +121,24 @@ TEST_F(TestQuicklistMenuItem, OverlayMenuitem)
   EXPECT_TRUE(qlitem->IsOverlayQuicklist());
 }
 
+TEST_F(TestQuicklistMenuItem, MaxLabelWidth)
+{
+  dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, "Label");
+  dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+
+  nux::ObjectPtr<QuicklistMenuItemLabel> qlitem(new QuicklistMenuItemLabel(item));
+  int max_width = 200;
+
+  EXPECT_EQ(qlitem->GetMaxLabelWidth(), 0);
+
+  dbusmenu_menuitem_property_set_int(item, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY, max_width);
+  EXPECT_EQ(qlitem->GetMaxLabelWidth(), max_width);
+
+  max_width = 100;
+  qlitem->SetMaxLabelWidth(max_width);
+  EXPECT_EQ(dbusmenu_menuitem_property_get_int(item, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY), max_width);
+}
+
 TEST_F(TestQuicklistMenuItem, ItemActivate)
 {
   dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, "Label");

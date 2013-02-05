@@ -174,6 +174,11 @@ void PanelView::SetLauncherWidth(int width)
   QueueDraw();
 }
 
+bool PanelView::IsMouseInsideIndicator(nux::Point const& mouse_position) const
+{
+  return indicators_->GetGeometry().IsInside(mouse_position);
+}
+
 void PanelView::OnBackgroundUpdate(GVariant *data)
 {
   gdouble red, green, blue, alpha;
@@ -521,8 +526,11 @@ void PanelView::ForceUpdateBackground()
   UpdateBackground();
 
   indicators_->QueueDraw();
-  menu_view_->QueueDraw();
   tray_->QueueDraw();
+
+  if (!overlay_is_open_)
+    menu_view_->QueueDraw();
+
   QueueDraw();
 }
 

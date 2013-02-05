@@ -68,7 +68,6 @@ bool View::GetVisible() const
 bool View::GetActive() const
 {
   return bamf_view_is_active(bamf_view_);
-
 }
 
 bool View::GetRunning() const

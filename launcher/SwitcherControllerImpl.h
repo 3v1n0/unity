@@ -92,8 +92,6 @@ struct Controller::Impl
   nux::HLayout* main_layout_;
   nux::Color bg_color_;
 
-  launcher::AbstractLauncherIcon::Ptr last_active_selection_;
-
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
 };

@@ -28,7 +28,7 @@
 #include "ApplicationLauncherIcon.h"
 #include "FavoriteStore.h"
 #include "mock-application.h"
-
+#include "StandaloneWindowManager.h"
 
 using namespace unity;
 using namespace testmocks;
@@ -45,6 +45,7 @@ class TestApplicationLauncherIcon : public testing::Test
 public:
   virtual void SetUp()
   {
+    WM = dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default());
     usc_app.reset(new MockApplication(USC_DESKTOP, "softwarecenter"));
     usc_icon = new launcher::ApplicationLauncherIcon(usc_app);
     ASSERT_EQ(usc_icon->DesktopFile(), USC_DESKTOP);
@@ -58,6 +59,7 @@ public:
     ASSERT_TRUE(mock_icon->DesktopFile().empty());
   }
 
+  StandaloneWindowManager* WM;
   std::shared_ptr<MockApplication> usc_app;
   std::shared_ptr<MockApplication> empty_app;
   std::shared_ptr<MockApplication> mock_app;
@@ -163,6 +165,19 @@ TEST_F(TestApplicationLauncherIcon, InvalidIconUpdatesOnRunning)
   mock_app->icon_ = "new-icon-name";
   mock_app->SetRunState(true);
   EXPECT_EQ(mock_icon->icon_name(), "icon-name");
+}
+
+TEST_F(TestApplicationLauncherIcon, ActiveQuirkWMCrossCheck)
+{
+  auto win = std::make_shared<MockApplicationWindow>(g_random_int());
+  mock_app->window_list_ = { win };
+  ASSERT_FALSE(mock_icon->IsActive());
+
+  mock_app->SetActiveState(true);
+  ASSERT_FALSE(mock_icon->IsActive());
+
+  WM->AddStandaloneWindow(std::make_shared<StandaloneWindow>(win->window_id()));
+  EXPECT_TRUE(mock_icon->IsActive());
 }
 
 }

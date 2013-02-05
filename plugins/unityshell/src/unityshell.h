@@ -236,7 +236,6 @@ private:
   void OnInitiateSpread();
   void OnTerminateSpread();
 
-  void RestoreWindow(GVariant* data);
   bool SaveInputThenFocus(const guint xid);
 
   void OnPanelStyleChanged();
@@ -246,6 +245,11 @@ private:
   void DrawTopPanelBackground();
   bool TopPanelBackgroundTextureNeedsUpdate() const;
   void UpdateTopPanelBackgroundTexture();
+
+  unsigned CompizModifiersToNux(unsigned input) const;
+  unsigned XModifiersToNux(unsigned input) const;
+
+  void UpdateCloseWindowKey(CompAction::KeyBinding const&);
 
   std::unique_ptr<na::TickSource> tick_source_;
   std::unique_ptr<na::AnimationController> animation_controller_;

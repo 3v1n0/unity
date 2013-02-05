@@ -28,9 +28,9 @@ class LauncherVisualTests(LauncherTestCase):
 
         Tests fix for bug #913569.
         """
-        bfb = self.launcher.model.get_bfb_icon()
+        bfb = self.unity.launcher.model.get_bfb_icon()
         self.mouse.move(bfb.center_x, bfb.center_y)
-        self.dash.ensure_visible()
+        self.unity.dash.ensure_visible()
         sleep(1)
         # We can't use 'launcher_instance.switcher_start()' since it moves the mouse.
         self.keybinding_hold_part_then_tap("launcher/switcher")
@@ -38,15 +38,15 @@ class LauncherVisualTests(LauncherTestCase):
         self.addCleanup(self.keybinding, "launcher/switcher/exit")
 
         self.keybinding_tap("launcher/switcher/next")
-        for icon in self.launcher.model.get_launcher_icons():
+        for icon in self.unity.launcher.model.get_launcher_icons():
             self.assertThat(icon.desaturated, Eventually(Equals(False)))
 
     def test_opening_dash_desaturates_icons(self):
         """Opening the dash must desaturate all the launcher icons."""
-        self.dash.ensure_visible()
-        self.addCleanup(self.dash.ensure_hidden)
+        self.unity.dash.ensure_visible()
+        self.addCleanup(self.unity.dash.ensure_hidden)
 
-        for icon in self.launcher.model.get_launcher_icons():
+        for icon in self.unity.launcher.model.get_launcher_icons():
             if isinstance(icon, BFBLauncherIcon):
                 self.assertThat(icon.desaturated, Eventually(Equals(False)))
             else:
@@ -58,19 +58,19 @@ class LauncherVisualTests(LauncherTestCase):
         x,y,w,h = launcher_instance.geometry
         self.mouse.move(x + w/2, y + h/2)
         sleep(.5)
-        self.dash.ensure_visible()
-        self.addCleanup(self.dash.ensure_hidden)
-        for icon in self.launcher.model.get_launcher_icons():
+        self.unity.dash.ensure_visible()
+        self.addCleanup(self.unity.dash.ensure_hidden)
+        for icon in self.unity.launcher.model.get_launcher_icons():
             self.assertThat(icon.desaturated, Eventually(Equals(False)))
 
     def test_mouse_over_with_dash_open_desaturates_icons(self):
         """Moving mouse over launcher with dash open must saturate icons."""
         launcher_instance = self.get_launcher()
-        self.dash.ensure_visible()
-        self.addCleanup(self.dash.ensure_hidden)
+        self.unity.dash.ensure_visible()
+        self.addCleanup(self.unity.dash.ensure_hidden)
         sleep(.5)
         x,y,w,h = launcher_instance.geometry
         self.mouse.move(x + w/2, y + h/2)
         sleep(.5)
-        for icon in self.launcher.model.get_launcher_icons():
+        for icon in self.unity.launcher.model.get_launcher_icons():
             self.assertThat(icon.desaturated, Eventually(Equals(False)))

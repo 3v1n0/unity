@@ -39,6 +39,7 @@
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UnitySettings.h"
+#include "unity-shared/WindowManager.h"
 
 namespace unity
 {
@@ -1603,15 +1604,15 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     // Not sure if Enter should be a navigation key
     direction = KEY_NAV_ENTER;
     break;
-  case NUX_VK_F4:
-    // Maybe we should not do it here, but it needs to be checked where
-    // we are able to know if alt is pressed.
-    if (special_keys_state == NUX_STATE_ALT)
+  default:
+    auto const& close_key = WindowManager::Default().close_window_key();
+
+    if (close_key.first == special_keys_state && close_key.second == x11_key_code)
     {
       ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+      return nullptr;
     }
-    break;
-  default:
+
     direction = KEY_NAV_NONE;
   }
 
