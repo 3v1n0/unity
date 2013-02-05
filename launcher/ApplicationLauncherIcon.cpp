@@ -173,6 +173,31 @@ ApplicationLauncherIcon::~ApplicationLauncherIcon()
   }
 }
 
+bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk) const
+{
+  if (quirk == Quirk::ACTIVE)
+  {
+    if (!SimpleLauncherIcon::GetQuirk(Quirk::ACTIVE))
+      return false;
+
+    if (app_->type() == "webapp")
+      return true;
+
+    // Sometimes BAMF is not fast enough to update the active application
+    // while quickly switching between apps, so we double check that the
+    // real active window is part of the selection (see bug #1111620)
+    Window active = WindowManager::Default().GetActiveWindow();
+
+    for (auto& window : app_->GetWindows())
+      if (window->window_id() == active)
+        return true;
+
+    return false;
+  }
+
+  return SimpleLauncherIcon::GetQuirk(quirk);
+}
+
 void ApplicationLauncherIcon::Remove()
 {
   /* Removing the unity-seen flag to the wrapped bamf application, on remove
