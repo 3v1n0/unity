@@ -556,7 +556,7 @@ void StandaloneWindowManager::AddStandaloneWindow(StandaloneWindow::Ptr const& w
 
   auto xid = window->Xid();
   Close(xid);
-  standalone_windows_.push_front(window);
+  standalone_windows_.push_back(window);
 
   window->mapped.changed.connect([this, xid] (bool v) {v ? window_mapped(xid) : window_unmapped(xid);});
   window->visible.changed.connect([this, xid] (bool v) {v ? window_shown(xid) : window_hidden(xid);});
