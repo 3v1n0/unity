@@ -182,13 +182,13 @@ TEST_F(TestApplicationLauncherIcon, InvalidIconUpdatesOnRunning)
 
 TEST_F(TestApplicationLauncherIcon, PerformScrollTowardsTheUser)
 {
-  AddMockWindow(1, 0, 0);
-  AddMockWindow(2, 0, 0);
-  AddMockWindow(3, 1, 0);
-  AddMockWindow(4, 0, 0);
-  AddMockWindow(5, 0, 0);
-  AddMockWindow(6, 0, 1);
   AddMockWindow(7, 1, 1);
+  AddMockWindow(6, 0, 1);
+  AddMockWindow(5, 0, 0);
+  AddMockWindow(4, 0, 0);
+  AddMockWindow(3, 1, 0);
+  AddMockWindow(2, 0, 0);
+  AddMockWindow(1, 0, 0);
 
   mock_icon->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
   
@@ -223,13 +223,13 @@ TEST_F(TestApplicationLauncherIcon, PerformScrollTowardsTheUser)
 
 TEST_F(TestApplicationLauncherIcon, PerformScrollAwayFromTheUser)
 {
-  AddMockWindow(1, 0, 0);
-  AddMockWindow(2, 0, 0);
-  AddMockWindow(3, 1, 0);
-  AddMockWindow(4, 0, 0);
-  AddMockWindow(5, 0, 0);
-  AddMockWindow(6, 0, 1);
   AddMockWindow(7, 1, 1);
+  AddMockWindow(6, 0, 1);
+  AddMockWindow(5, 0, 0);
+  AddMockWindow(4, 0, 0);
+  AddMockWindow(3, 1, 0);
+  AddMockWindow(2, 0, 0);
+  AddMockWindow(1, 0, 0);
 
   mock_icon->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
 
@@ -264,13 +264,13 @@ TEST_F(TestApplicationLauncherIcon, PerformScrollAwayFromTheUser)
 
 TEST_F(TestApplicationLauncherIcon, PerformScrollSwitchDirection)
 {
-  AddMockWindow(1, 0, 0);
-  AddMockWindow(2, 0, 0);
-  AddMockWindow(3, 1, 0);
-  AddMockWindow(4, 0, 0);
-  AddMockWindow(5, 0, 0);
-  AddMockWindow(6, 0, 1);
   AddMockWindow(7, 1, 1);
+  AddMockWindow(6, 0, 1);
+  AddMockWindow(5, 0, 0);
+  AddMockWindow(4, 0, 0);
+  AddMockWindow(3, 1, 0);
+  AddMockWindow(2, 0, 0);
+  AddMockWindow(1, 0, 0);
   
   mock_icon->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
 
@@ -292,18 +292,16 @@ TEST_F(TestApplicationLauncherIcon, PerformScrollNoWindows)
 
 TEST_F(TestApplicationLauncherIcon, PerformScrollInitiallyUnfocusedWindow)
 {
+  AddMockWindow(7, 1, 1);
+  AddMockWindow(6, 0, 1);
+  AddMockWindow(5, 0, 0);
+  AddMockWindow(4, 0, 0);
+  AddMockWindow(3, 1, 0);
+  AddMockWindow(2, 0, 0);
+  AddMockWindow(1, 0, 0);
+  
   auto external_window = std::make_shared<unity::StandaloneWindow>(8);
   WM->AddStandaloneWindow(external_window);
-
-  AddMockWindow(1, 0, 0);
-  AddMockWindow(2, 0, 0);
-  AddMockWindow(3, 1, 0);
-  AddMockWindow(4, 0, 0);
-  AddMockWindow(5, 0, 0);
-  AddMockWindow(6, 0, 1);
-  AddMockWindow(7, 1, 1);
-  
-  external_window->active = true;
   mock_icon->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, false);
 
   EXPECT_THAT(WM->GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 3, 2, 1, 8));
