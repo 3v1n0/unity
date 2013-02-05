@@ -120,6 +120,7 @@ public:
   void NotifyNewDecorationState(Window xid);
 
   Window GetActiveWindow() const;
+  std::vector<Window> GetWindowsInStackingOrder() const override;
 
   void Decorate(Window xid) const;
   void Undecorate(Window xid) const;

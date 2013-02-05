@@ -27,6 +27,7 @@
 
 #include "ApplicationLauncherIcon.h"
 #include "FavoriteStore.h"
+#include "StandaloneWindowManager.h"
 #include "mock-application.h"
 
 
@@ -39,6 +40,33 @@ namespace
 const std::string DEFAULT_EMPTY_ICON = "application-default-icon";
 const std::string USC_DESKTOP = BUILDDIR"/tests/data/applications/ubuntu-software-center.desktop";
 const std::string NO_ICON_DESKTOP = BUILDDIR"/tests/data/applications/no-icon.desktop";
+
+class MockApplicationWindow : public ApplicationWindow
+{
+public:
+  MockApplicationWindow(Window xid, unsigned int monitor)
+    : xid_(xid)
+    , monitor_(monitor)
+  {}
+
+  std::string title() const { return "MockApplicationWindow"; }
+  virtual std::string icon() const { return ""; }
+  virtual std::string type() const { return "mock"; }
+
+  virtual Window window_id() const { return xid_; }
+  virtual int monitor() const { return monitor_; }
+  virtual ApplicationPtr application() const { return ApplicationPtr(); }
+  virtual bool Focus() const {
+    auto& wm = unity::WindowManager::Default();
+    wm.Raise(xid_);
+    wm.Activate(xid_);
+    return true; 
+  }
+  virtual void Quit() const {}
+private:
+  Window xid_;
+  unsigned int monitor_;
+};
 
 class TestApplicationLauncherIcon : public testing::Test
 {
@@ -57,6 +85,8 @@ public:
     mock_icon = new launcher::ApplicationLauncherIcon(mock_app);
     ASSERT_TRUE(mock_icon->DesktopFile().empty());
   }
+
+  void AddMockWindow(Window xid, int monitor, int current_desktop);
 
   std::shared_ptr<MockApplication> usc_app;
   std::shared_ptr<MockApplication> empty_app;
@@ -163,6 +193,157 @@ TEST_F(TestApplicationLauncherIcon, InvalidIconUpdatesOnRunning)
   mock_app->icon_ = "new-icon-name";
   mock_app->SetRunState(true);
   EXPECT_EQ(mock_icon->icon_name(), "icon-name");
+}
+
+TEST_F(TestApplicationLauncherIcon, PerformScrollTowardsTheUser)
+{
+  AddMockWindow(1, 0, 0);
+  AddMockWindow(2, 0, 0);
+  AddMockWindow(3, 1, 0);
+  AddMockWindow(4, 0, 0);
+  AddMockWindow(5, 0, 0);
+  AddMockWindow(6, 0, 1);
+  AddMockWindow(7, 1, 1);
+
+  mock_icon->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
+  
+  auto& wm = unity::WindowManager::Default();
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 3, 2, 1));
+
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::DOWN, 0);
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 3, 1, 2));
+
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::DOWN, 10);
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 2, 1, 3));
+
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::DOWN, 20);
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 3, 2, 1, 4));
+
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::DOWN, 30);
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 4, 3, 2, 1, 5));
+
+  // Make sure it wraps
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::DOWN, 40);
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 3, 2, 1));
+
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::DOWN, 50);
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 3, 1, 2));
+
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::DOWN, 60);
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 2, 1, 3));
+
+  // Much later...
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::DOWN, 100000);
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 2, 3, 1));
+}
+
+TEST_F(TestApplicationLauncherIcon, PerformScrollAwayFromTheUser)
+{
+  AddMockWindow(1, 0, 0);
+  AddMockWindow(2, 0, 0);
+  AddMockWindow(3, 1, 0);
+  AddMockWindow(4, 0, 0);
+  AddMockWindow(5, 0, 0);
+  AddMockWindow(6, 0, 1);
+  AddMockWindow(7, 1, 1);
+
+  mock_icon->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
+
+  auto& wm = unity::WindowManager::Default();
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 3, 2, 1));
+
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::UP, 0);
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 4, 3, 2, 1, 5));
+
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::UP, 10);
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 3, 2, 1, 4));
+
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::UP, 20);
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 2, 1, 3));
+
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::UP, 30);
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 3, 1, 2));
+
+  // Make sure it wraps
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::UP, 40);
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 3, 2, 1));
+
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::UP, 50);
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 4, 3, 2, 1, 5));
+
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::UP, 60);
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 3, 2, 1, 4));
+
+  // Much later...
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::UP, 100000);
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 3, 2, 1, 4, 5));
+}
+
+TEST_F(TestApplicationLauncherIcon, PerformScrollSwitchDirection)
+{
+  AddMockWindow(1, 0, 0);
+  AddMockWindow(2, 0, 0);
+  AddMockWindow(3, 1, 0);
+  AddMockWindow(4, 0, 0);
+  AddMockWindow(5, 0, 0);
+  AddMockWindow(6, 0, 1);
+  AddMockWindow(7, 1, 1);
+  
+  mock_icon->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
+
+  auto& wm = unity::WindowManager::Default();
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 3, 2, 1));
+
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::DOWN, 0);
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 3, 1, 2));
+
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::UP, 10);
+  EXPECT_THAT(wm.GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 4, 3, 1, 2, 5));
+}
+
+TEST_F(TestApplicationLauncherIcon, PerformScrollNoWindows)
+{
+  // Just to make sure it does not crash.
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::DOWN, 0);
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::UP, 10);
+}
+
+TEST_F(TestApplicationLauncherIcon, PerformScrollInitiallyUnfocusedWindow)
+{
+  auto wm = dynamic_cast<unity::StandaloneWindowManager*>(&unity::WindowManager::Default());
+  auto external_window = std::make_shared<unity::StandaloneWindow>(8);
+  wm->AddStandaloneWindow(external_window);
+
+  AddMockWindow(1, 0, 0);
+  AddMockWindow(2, 0, 0);
+  AddMockWindow(3, 1, 0);
+  AddMockWindow(4, 0, 0);
+  AddMockWindow(5, 0, 0);
+  AddMockWindow(6, 0, 1);
+  AddMockWindow(7, 1, 1);
+  
+  external_window->active = true;
+  mock_icon->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, false);
+
+  EXPECT_THAT(wm->GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 3, 2, 1, 8));
+  ASSERT_EQ(wm->GetActiveWindow(), 8);
+
+  mock_icon->PerformScroll(AbstractLauncherIcon::ScrollDirection::DOWN, 0);
+  EXPECT_THAT(wm->GetWindowsInStackingOrder(), testing::ElementsAre(7, 6, 5, 4, 3, 2, 8, 1));
+  ASSERT_EQ(wm->GetActiveWindow(), 1);
+}
+
+
+void TestApplicationLauncherIcon::AddMockWindow(Window xid, int monitor, int desktop)
+{
+  auto app_window = std::make_shared<MockApplicationWindow>(xid, monitor);
+  mock_app->windows_.push_back(app_window);
+
+  auto standalone_window = std::make_shared<unity::StandaloneWindow>(xid);
+  standalone_window->current_desktop = desktop;
+
+  auto wm = dynamic_cast<unity::StandaloneWindowManager*>(&unity::WindowManager::Default());
+  wm->AddStandaloneWindow(standalone_window);
 }
 
 }

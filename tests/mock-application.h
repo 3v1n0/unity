@@ -60,6 +60,8 @@ public:
   bool active_;
   bool running_;
   bool urgent_;
+  unity::WindowList windows_;
+
 
   virtual std::string icon() const { return icon_; }
   virtual std::string title() const { return title_; }
@@ -67,8 +69,13 @@ public:
   virtual std::string type() const { return "mock"; }
   virtual std::string repr() const { return "MockApplication"; }
 
-  virtual unity::WindowList GetWindows() const { return unity::WindowList(); }
-  virtual bool OwnsWindow(Window window_id) const { return false; }
+  virtual unity::WindowList GetWindows() const { return windows_; }
+  virtual bool OwnsWindow(Window window_id) const {
+    auto end = std::end(windows_);
+    return std::find_if(std::begin(windows_), end, [window_id] (unity::ApplicationWindowPtr window) {
+      return window->window_id() == window_id;
+    }) != end;
+  }
 
   virtual std::vector<std::string> GetSupportedMimeTypes() const { return {}; }
 

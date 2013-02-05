@@ -105,6 +105,15 @@ StandaloneWindow::Ptr StandaloneWindowManager::GetWindowByXid(Window window_id) 
     return StandaloneWindow::Ptr();
 }
 
+std::vector<Window> StandaloneWindowManager::GetWindowsInStackingOrder() const
+{
+  std::vector<Window> ret;
+  for (auto const& window : standalone_windows_)
+    ret.push_back(window->Xid());
+
+  return ret;
+}
+
 bool StandaloneWindowManager::IsWindowMaximized(Window window_id) const
 {
   auto window = GetWindowByXid(window_id);
@@ -301,7 +310,7 @@ void StandaloneWindowManager::Activate(Window window_id)
     window->active = true;
 }
 
-void StandaloneWindowManager::Raise(Window window_id)
+void StandaloneWindowManager::Lower(Window window_id)
 {
   auto begin = standalone_windows_.begin();
   auto end = standalone_windows_.end();
@@ -313,7 +322,7 @@ void StandaloneWindowManager::Raise(Window window_id)
     standalone_windows_.splice(begin, standalone_windows_, window);
 }
 
-void StandaloneWindowManager::Lower(Window window_id)
+void StandaloneWindowManager::Raise(Window window_id)
 {
   auto end = standalone_windows_.end();
   auto window = std::find_if(standalone_windows_.begin(), end, [window_id] (StandaloneWindow::Ptr window) {
@@ -337,7 +346,7 @@ void StandaloneWindowManager::RestackBelow(Window window_id, Window sibiling_id)
   });
 
   if (window != end && sibiling != end)
-    standalone_windows_.splice(std::next(sibiling), standalone_windows_, window);
+    standalone_windows_.splice(sibiling, standalone_windows_, window);
 }
 
 void StandaloneWindowManager::TerminateScale()
@@ -549,7 +558,7 @@ void StandaloneWindowManager::AddStandaloneWindow(StandaloneWindow::Ptr const& w
 
   auto xid = window->Xid();
   Close(xid);
-  standalone_windows_.push_back(window);
+  standalone_windows_.push_front(window);
 
   window->mapped.changed.connect([this, xid] (bool v) {v ? window_mapped(xid) : window_unmapped(xid);});
   window->visible.changed.connect([this, xid] (bool v) {v ? window_shown(xid) : window_hidden(xid);});
