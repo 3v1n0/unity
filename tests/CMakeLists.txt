@@ -289,7 +289,7 @@ set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless)
 set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --task ./test-gtest-service --task ./test-gtest-dbus)
 
 set (TEST_COMMAND
-     gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit
+     gtester --verbose -k -o=${TEST_RESULT_XML} ./test-unit
   && ${GTEST_TEST_COMMAND} --gtest_output=xml:./
   && ${GTEST_TEST_COMMAND_XLESS} --gtest_output=xml:./
   && ${GTEST_TEST_COMMAND_GESTURES} --gtest_output=xml:./
