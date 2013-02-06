@@ -114,6 +114,7 @@ public:
   bool IsShowDesktopDisabled() const;
   void SetShowDesktopDisabled(bool disabled);
   int StartIndex() const;
+  double Opacity() const;
 
   Selection GetCurrentSelection() const;
 

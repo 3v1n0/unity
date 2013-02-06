@@ -32,6 +32,7 @@
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
+#include <NuxCore/Animation.h>
 
 namespace unity
 {
@@ -73,6 +74,7 @@ struct Controller::Impl
   void ConstructWindow();
   void ConstructView();
   void ShowView();
+  void HideWindow();
 
   bool OnDetailTimer();
   void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr const& icon);
@@ -91,6 +93,7 @@ struct Controller::Impl
   nux::ObjectPtr<nux::BaseWindow> view_window_;
   nux::HLayout* main_layout_;
   nux::Color bg_color_;
+  nux::animation::AnimateValue<double> fade_animator_;
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
