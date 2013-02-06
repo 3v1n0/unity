@@ -41,6 +41,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(SwitcherView);
 
 SwitcherView::SwitcherView()
   : render_boxes(false)
+  , animate(true)
   , border_size(50)
   , flat_spacing(20)
   , icon_size(128)
@@ -57,8 +58,6 @@ SwitcherView::SwitcherView()
   , target_sizes_set_(false)
 {
   icon_renderer_->pip_style = OVER_TILE;
-  save_time_.tv_sec = 0;
-  save_time_.tv_nsec = 0;
 
   text_view_->SetMaximumWidth(tile_size * spread_size);
   text_view_->SetLines(1);
@@ -69,6 +68,19 @@ SwitcherView::SwitcherView()
   tile_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnTileSizeChanged));
 
   CaptureMouseDownAnyWhereElse(true);
+  ResetTimer();
+
+  animate.changed.connect([this] (bool enabled) {
+    if (enabled)
+    {
+      SaveTime();
+      QueueDraw();
+    }
+    else
+    {
+      ResetTimer();
+    }
+  });
 }
 
 std::string SwitcherView::GetName() const
@@ -125,11 +137,24 @@ void SwitcherView::OnTileSizeChanged (int size)
   vertical_size = tile_size + VERTICAL_PADDING * 2;
 }
 
-void SwitcherView::SaveLast ()
+void SwitcherView::SaveTime()
+{
+  clock_gettime(CLOCK_MONOTONIC, &save_time_);
+}
+
+void SwitcherView::ResetTimer()
+{
+  save_time_.tv_sec = 0;
+  save_time_.tv_nsec = 0;
+}
+
+void SwitcherView::SaveLast()
 {
   saved_args_ = last_args_;
   saved_background_ = last_background_;
-  clock_gettime(CLOCK_MONOTONIC, &save_time_);
+
+  if (animate())
+    SaveTime();
 }
 
 void SwitcherView::OnDetailSelectionIndexChanged(unsigned int index)
@@ -511,11 +536,16 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
   return results;
 }
 
-void SwitcherView::PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
+double SwitcherView::GetCurrentProgress()
 {
   clock_gettime(CLOCK_MONOTONIC, &current_);
   DeltaTime ms_since_change = TimeUtil::TimeDelta(&current_, &save_time_);
-  float progress = std::min<float>(1.0f, ms_since_change / static_cast<float>(animation_length()));
+  return std::min<double>(1.0f, ms_since_change / static_cast<double>(animation_length()));
+}
+
+void SwitcherView::PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
+{
+  double progress = GetCurrentProgress();
 
   if (!target_sizes_set_)
   {
