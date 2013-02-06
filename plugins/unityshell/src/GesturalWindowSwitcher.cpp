@@ -338,7 +338,7 @@ void GesturalWindowSwitcherPrivate::ProcessSwitcherViewMouseDown(int x, int y,
 
   state = State::RecognizingMouseClickOrDrag;
 
-  unity::switcher::SwitcherView *view = switcher_controller->GetView();
+  unity::switcher::SwitcherView::Ptr view = switcher_controller->GetView();
 
   index_icon_hit = view->IconIndexAt(x, y);
   accumulated_horizontal_drag = 0.0f;
@@ -416,7 +416,7 @@ void GesturalWindowSwitcherPrivate::ProcessAccumulatedHorizontalDrag()
 
 void GesturalWindowSwitcherPrivate::ConnectToSwitcherViewMouseEvents()
 {
-  unity::switcher::SwitcherView *switcher_view = switcher_controller->GetView();
+  unity::switcher::SwitcherView::Ptr switcher_view = switcher_controller->GetView();
   g_assert(switcher_view);
 
   mouse_down_connection = switcher_view->mouse_down.connect(
