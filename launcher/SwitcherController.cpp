@@ -66,7 +66,8 @@ namespace switcher
 {
 
 Controller::Controller(WindowCreator const& create_window)
-  : detail_on_timeout(true)
+  : timeout_length(0)
+  , detail_on_timeout(true)
   , detail_timeout_length(500)
   , initial_detail_timeout_length(1500)
   , visible_(false)
@@ -74,11 +75,11 @@ Controller::Controller(WindowCreator const& create_window)
   , show_desktop_disabled_(false)
   , detail_mode_(DetailMode::TAB_NEXT_WINDOW)
   , impl_(new Controller::Impl(this, 20, create_window))
-{ }
+{}
 
 
 Controller::~Controller()
-{ }
+{}
 
 
 bool Controller::CanShowSwitcher(const std::vector<AbstractLauncherIcon::Ptr>& results) const
@@ -228,8 +229,7 @@ Controller::AddProperties(GVariantBuilder* builder)
 Controller::Impl::Impl(Controller* obj,
                        unsigned int load_timeout,
                        Controller::WindowCreator const& create_window)
-  :  timeout_length(0)
-  ,  construct_timeout_(load_timeout)
+  :  construct_timeout_(load_timeout)
   ,  obj_(obj)
   ,  create_window_(create_window)
   ,  main_layout_(nullptr)
@@ -246,6 +246,8 @@ Controller::Impl::Impl(Controller* obj,
   // TODO We need to get actual timing data to suggest this is necessary.
   //sources_.AddTimeoutSeconds(construct_timeout_, [&] { ConstructWindow(); return false; }, LAZY_TIMEOUT);
 
+  // nux::animation::EasingCurve curve(nux::animation::EasingCurve::Type::ExpoEaseIn);
+  // fade_animator_.SetEasingCurve(curve);
   fade_animator_.updated.connect([this] (double opacity) {
     if (view_window_)
     {
@@ -287,7 +289,7 @@ void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLa
   SelectFirstItem();
 
   obj_->visible_ = true;
-  int real_wait = timeout_length - fade_animator_.Duration();
+  int real_wait = obj_->timeout_length() - fade_animator_.Duration();
 
   if (real_wait > 0)
   {

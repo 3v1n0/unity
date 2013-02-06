@@ -41,8 +41,6 @@ namespace switcher
 
 struct Controller::Impl
 {
-  nux::Property<int> timeout_length;
-
   Impl(Controller* obj,
        unsigned int load_timeout,
        Controller::WindowCreator const& create_window);
