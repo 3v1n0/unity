@@ -110,7 +110,6 @@ private:
   ui::AbstractIconRenderer::Ptr icon_renderer_;
   nux::ObjectPtr<StaticCairoText> text_view_;
 
-  bool animation_draw_;
   bool target_sizes_set_;
 
 

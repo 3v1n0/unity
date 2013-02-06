@@ -53,7 +53,6 @@ SwitcherView::SwitcherView()
   , spread_size(3.5f)
   , icon_renderer_(std::make_shared<IconRenderer>())
   , text_view_(new StaticCairoText(""))
-  , animation_draw_(false)
   , target_sizes_set_(false)
 {
   icon_renderer_->pip_style = OVER_TILE;
@@ -600,13 +599,10 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
   {
     redraw_idle_.reset(new glib::Idle([this] () {
       QueueDraw();
-      animation_draw_ = true;
       redraw_idle_.reset();
       return false;
     }, glib::Source::Priority::DEFAULT));
   }
-
-  animation_draw_ = false;
 }
 
 int SwitcherView::IconIndexAt(int x, int y)
