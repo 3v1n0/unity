@@ -29,6 +29,8 @@
 #include "Nux/StaticText.h"
 #include "Nux/RangeValueInteger.h"
 #include "NuxGraphics/GraphicsEngine.h"
+#include <Nux/NuxTimerTickSource.h>
+#include <NuxCore/AnimationController.h>
 #include <gtk/gtk.h>
 
 #include "SwitcherController.h"
@@ -293,6 +295,8 @@ int main(int argc, char** argv)
   unity::Settings settings;
   BackgroundEffectHelper::blur_type = unity::BLUR_ACTIVE;
   nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Switcher"), 1200, 600, 0, &ThreadWidgetInit, 0);
+  nux::NuxTimerTickSource tick_source;
+  nux::animation::AnimationController animation_controller(tick_source);
 
   wt->Run(NULL);
   delete wt;
