@@ -131,9 +131,13 @@ TEST_F(TestSwitcherView, SetModel)
   EXPECT_FALSE(switcher.model_->detail_selection_index.changed.empty());
 }
 
-TEST_F(TestSwitcherView, UpdateRenderTargets)
+
+struct AnimationProgress : TestSwitcherView, testing::WithParamInterface<double> {};
+INSTANTIATE_TEST_CASE_P(TestSwitcherView, AnimationProgress, testing::Range(0.0, 1.0, 0.1));
+
+TEST_P(AnimationProgress, UpdateRenderTargets)
 {
-  float progress = 0.55;
+  float progress = GetParam();
 
   AddFakeApplicationToSwitcher();
   auto const& model = switcher.GetModel();
@@ -156,42 +160,40 @@ TEST_F(TestSwitcherView, UpdateRenderTargets)
   }
 }
 
-TEST_F(TestSwitcherView, ResizeRenderTargets)
+TEST_P(AnimationProgress, ResizeRenderTargets)
 {
   AddFakeApplicationToSwitcher();
 
-  for (float progress = 0.1f; progress <= 1.0f; progress += 0.1f)
+  float progress = GetParam();
+  auto const& layout_geo = switcher.UpdateRenderTargets(progress);
+  std::map<Window, nux::Geometry> old_thumbs;
+
+  for (auto const& win : switcher.ExternalTargets())
+    old_thumbs[win->xid] = win->result;
+
+  float to_finish = 1.0f - progress;
+  nux::Point layout_abs_center((layout_geo.x + layout_geo.width/2.0f) * to_finish,
+                               (layout_geo.y + layout_geo.height/2.0f) * to_finish);
+
+  switcher.ResizeRenderTargets(layout_geo, progress);
+
+  for (auto const& win : switcher.ExternalTargets())
   {
-    auto const& layout_geo = switcher.UpdateRenderTargets(progress);
-    std::map<Window, nux::Geometry> old_thumbs;
+    auto const& thumb_geo = win->result;
+    auto const& old_thumb_geo = old_thumbs[win->xid];
 
-    for (auto const& win : switcher.ExternalTargets())
-      old_thumbs[win->xid] = win->result;
+    nux::Geometry expected_geo;
+    expected_geo.x = old_thumb_geo.x * progress + layout_abs_center.x;
+    expected_geo.y = old_thumb_geo.y * progress + layout_abs_center.y;
+    expected_geo.width = old_thumb_geo.width * progress;
+    expected_geo.height = old_thumb_geo.height * progress;
 
-    float to_finish = 1.0f - progress;
-    nux::Point layout_abs_center((layout_geo.x + layout_geo.width/2.0f) * to_finish,
-                                 (layout_geo.y + layout_geo.height/2.0f) * to_finish);
-
-    switcher.ResizeRenderTargets(layout_geo, progress);
-
-    for (auto const& win : switcher.ExternalTargets())
-    {
-      auto const& thumb_geo = win->result;
-      auto const& old_thumb_geo = old_thumbs[win->xid];
-
-      nux::Geometry expected_geo;
-      expected_geo.x = old_thumb_geo.x * progress + layout_abs_center.x;
-      expected_geo.y = old_thumb_geo.y * progress + layout_abs_center.y;
-      expected_geo.width = old_thumb_geo.width * progress;
-      expected_geo.height = old_thumb_geo.height * progress;
-
-      // Like ASSERT_EQ(thumb_geo, expected_geo), but more informative on failure
-      ASSERT_EQ(thumb_geo.x, expected_geo.x);
-      ASSERT_EQ(thumb_geo.y, expected_geo.y);
-      ASSERT_EQ(thumb_geo.width, expected_geo.width);
-      ASSERT_EQ(thumb_geo.height, expected_geo.height);
-      ASSERT_EQ(thumb_geo, expected_geo);
-    }
+    // Like ASSERT_EQ(thumb_geo, expected_geo), but more informative on failure
+    ASSERT_EQ(thumb_geo.x, expected_geo.x);
+    ASSERT_EQ(thumb_geo.y, expected_geo.y);
+    ASSERT_EQ(thumb_geo.width, expected_geo.width);
+    ASSERT_EQ(thumb_geo.height, expected_geo.height);
+    ASSERT_EQ(thumb_geo, expected_geo);
   }
 }
 
