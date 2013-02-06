@@ -62,3 +62,4 @@
 
   EXPECT_FALSE(unity::PanelTray::FilterTray("Ubuntu", "Unity", "Hello world!"));
 }
+
