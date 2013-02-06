@@ -30,9 +30,14 @@ public:
   typedef nux::ObjectPtr<MockBaseWindow> Ptr;
 
   MockBaseWindow(ResizingBaseWindow::GeometryAdjuster const& input_adjustment)
-  : ResizingBaseWindow("Mock", input_adjustment)
-  { }
+  	: ResizingBaseWindow("Mock", input_adjustment)
+  {}
 
+  MockBaseWindow()
+  	: ResizingBaseWindow("Mock", [](nux::Geometry const& geo) { return geo; })
+  {}
+
+  MOCK_METHOD2(ShowWindow, void(bool, bool));
   MOCK_METHOD1(SetOpacity, void(float));
 
   // Really invoke the SetOpacity member function, a callthrough for use with

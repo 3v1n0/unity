@@ -18,6 +18,7 @@
  *
  */
 
+#include <NuxCore/AnimationController.h>
 #include <gmock/gmock.h>
 #include <chrono>
 
@@ -27,6 +28,7 @@
 #include "SwitcherController.h"
 #include "TimeUtil.h"
 #include "unity-shared/UnitySettings.h"
+#include "mock-base-window.h"
 
 using namespace testing;
 using namespace unity;
@@ -41,16 +43,6 @@ typedef std::chrono::high_resolution_clock Clock;
 unsigned int DEFAULT_LAZY_CONSTRUCT_TIMEOUT = 20;
 #endif
 
-
-/**
- * A mock Switcher view for verifying drawing operations of the Switcher
- * interface.
- */
-class MockWindow : public nux::BaseWindow
-{
-public:
-  MOCK_METHOD2(ShowWindow, void(bool, bool));
-};
 
 /**
  * A fake ApplicationWindow for verifying selection of the switcher.
@@ -105,10 +97,12 @@ class TestSwitcherController : public testing::Test
 {
 protected:
   TestSwitcherController()
-    : mock_window_(new NiceMock<MockWindow>())
+    : animation_controller_(tick_source_)
+    , mock_window_(new testmocks::MockBaseWindow())
   {
     auto create_window = [&](){ return mock_window_; };
     controller_.reset(new Controller(create_window));
+    controller_->timeout_length = 0;
 
     icons_.push_back(launcher::AbstractLauncherIcon::Ptr(new launcher::DesktopLauncherIcon()));
 
@@ -121,7 +115,9 @@ protected:
   // required to create hidden secret global variables before test objects
   Settings unity_settings_;
 
-  nux::ObjectPtr<MockWindow> mock_window_;
+  nux::animation::TickSource tick_source_;
+  nux::animation::AnimationController animation_controller_;
+  nux::ObjectPtr<NiceMock<testmocks::MockBaseWindow>> mock_window_;
   Controller::Ptr controller_;
   std::vector<unity::launcher::AbstractLauncherIcon::Ptr> icons_;
 };

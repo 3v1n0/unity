@@ -67,8 +67,7 @@ class TestHudController : public Test
 public:
   TestHudController()
   : view_(new NiceMock<MockHudView>)
-  , base_window_(new testmocks::MockBaseWindow([](nux::Geometry const& geo)
-                                               { return geo; }))
+  , base_window_(new testmocks::MockBaseWindow())
   { }
 
   virtual void SetUp()
