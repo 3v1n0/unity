@@ -52,6 +52,7 @@ struct Controller::Impl
   void Next();
   void Prev();
 
+  void InitiateDetail(bool animate=false);
   void NextDetail();
   void PrevDetail();
 
@@ -59,7 +60,7 @@ struct Controller::Impl
 
   void SelectFirstItem();
 
-  virtual SwitcherView* GetView();
+  virtual SwitcherView::Ptr GetView() const;
 
   ui::LayoutWindow::Vector ExternalRenderTargets();
 
