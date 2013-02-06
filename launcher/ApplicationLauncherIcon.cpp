@@ -1186,9 +1186,10 @@ void PerformScrollDown(WindowList const& windows, unsigned int progressive_scrol
 
 void ApplicationLauncherIcon::PerformScroll(ScrollDirection direction, Time timestamp)
 {
- if (timestamp - _last_scroll_timestamp > 1500 || direction != _last_scroll_direction) {
+ if (timestamp - _last_scroll_timestamp < 150)
+  return;
+ else if (timestamp - _last_scroll_timestamp > 1500 || direction != _last_scroll_direction)
     _progressive_scroll = 0;
-  }
 
   _last_scroll_timestamp = timestamp;
   _last_scroll_direction = direction;
