@@ -1223,20 +1223,19 @@ void ApplicationLauncherIcon::PerformScroll(ScrollDirection direction, Time time
 WindowList ApplicationLauncherIcon::GetWindowsOnCurrentDesktopInStackingOrder()
 {
   auto windows = GetWindows(WindowFilter::ON_CURRENT_DESKTOP | WindowFilter::ON_ALL_MONITORS);
+  auto sorted_windows = WindowManager::Default().GetWindowsInStackingOrder();
 
   // Order the windows
-  std::sort(windows.begin(), windows.end(), [] (ApplicationWindowPtr const& win1, ApplicationWindowPtr const& win2) {
-    auto windows = WindowManager::Default().GetWindowsInStackingOrder();
-    
-    auto win1_it = std::find_if(windows.begin(), windows.end(), [win1] (Window win) {
-      return win == win1->window_id();
-    });
+  std::sort(windows.begin(), windows.end(), [&sorted_windows] (ApplicationWindowPtr const& win1, ApplicationWindowPtr const& win2) {
+    for (auto const& window : sorted_windows)
+    {
+      if (window == win1->window_id())
+        return false;
+      else if (window == win2->window_id())
+        return true;
+    }
 
-    auto win2_it = std::find_if(windows.begin(), windows.end(), [win2] (Window win) {
-      return win == win2->window_id();
-    });
-
-    return std::distance(windows.begin(), win1_it) > std::distance(windows.begin(), win2_it);
+    return true;
   });
 
   return windows;
