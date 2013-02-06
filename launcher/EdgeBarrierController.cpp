@@ -19,6 +19,7 @@
  */
 
 #include "EdgeBarrierController.h"
+#include "EdgeBarrierControllerPrivate.h"
 #include "Decaymulator.h"
 #include "unity-shared/UScreen.h"
 #include "UnityCore/GLibSource.h"
@@ -26,23 +27,6 @@
 namespace unity {
 namespace ui {
 
-struct EdgeBarrierController::Impl
-{
-  Impl(EdgeBarrierController *parent);
-
-  void ResizeBarrierList(std::vector<nux::Geometry> const& layout);
-  void SetupBarriers(std::vector<nux::Geometry> const& layout);
-
-  void OnPointerBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event);
-  void BarrierRelease(PointerBarrierWrapper* owner, int event);
-
-  std::vector<PointerBarrierWrapper::Ptr> barriers_;
-  std::vector<EdgeBarrierSubscriber*> subscribers_;
-  Decaymulator decaymulator_;
-  glib::Source::UniquePtr release_timeout_;
-  float edge_overcome_pressure_;
-  EdgeBarrierController* parent_;
-};
 
 EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
   : edge_overcome_pressure_(0)
@@ -106,7 +90,7 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
 
     barrier->DestroyBarrier();
 
-    if (!edge_resist && (subscribers_[i] == nullptr || parent_->options()->hide_mode() == launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER))
+    if (!edge_resist && parent_->options()->hide_mode() == launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER)
       continue;
 
     barrier->x1 = monitor.x;

@@ -23,6 +23,7 @@
 #include "test_uscreen_mock.h"
 
 #include "EdgeBarrierController.h"
+#include "EdgeBarrierControllerPrivate.h"
 
 using namespace unity;
 using namespace unity::ui;
@@ -267,6 +268,24 @@ TEST_F(TestEdgeBarrierController, StickyEdgePropertyProxiesLauncherOption)
 
   bc.sticky_edges = true;
   EXPECT_TRUE(bc.options()->edge_resist());
+}
+
+TEST_F(TestEdgeBarrierController, TestTheDirectionIsAlawysSetToBothSides)
+{
+  std::shared_ptr<MockEdgeBarrierController> mc = std::make_shared<MockEdgeBarrierController>();
+  std::unique_ptr<EdgeBarrierController::Impl> pimpl_(new EdgeBarrierController::Impl(mc.get()));
+
+  mc->options = std::make_shared<launcher::Options>();
+
+  mc->options()->edge_resist = false;
+  mc->options()->hide_mode = launcher::LauncherHideMode::LAUNCHER_HIDE_AUTOHIDE;
+
+  // Remake the barries for each subscriber
+  for (int i = 0; i < max_num_monitors; ++i)
+    mc->Subscribe(&subscribers_[i], i);
+
+  for (auto barrier : pimpl_->barriers_)
+    ASSERT_EQ(barrier->direction, BarrierDirection::BOTH);
 }
 
 }
