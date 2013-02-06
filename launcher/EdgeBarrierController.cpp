@@ -102,8 +102,6 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
     barrier->threshold = parent_->options()->edge_stop_velocity();
     barrier->max_velocity_multiplier = parent_->options()->edge_responsiveness();
 
-    barrier->direction = BarrierDirection::BOTH;
-
     barrier->ConstructBarrier();
   }
 
