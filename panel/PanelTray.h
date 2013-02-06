@@ -59,10 +59,8 @@ private:
 
   int WidthOfTray();
 
-  glib::Object<GSettings> settings_;
   glib::Object<GtkWidget> window_;
   glib::Object<NaTray> tray_;
-  char** whitelist_;
 
   glib::Signal<void, GSettings*, gchar*> whitelist_changed_;
   glib::Signal<gboolean, GtkWidget*, cairo_t*> draw_signal_;
