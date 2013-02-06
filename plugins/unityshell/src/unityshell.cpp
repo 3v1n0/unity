@@ -802,7 +802,7 @@ void UnityScreen::paintDisplay()
     }
   }
 
-  if (switcher_controller_->Visible())
+  if (switcher_controller_->Opacity() > 0.0f)
   {
     LayoutWindow::Vector const& targets = switcher_controller_->ExternalRenderTargets();
 
@@ -3808,7 +3808,7 @@ void UnityWindow::paintThumbnail(nux::Geometry const& geo, float alpha, float pa
   paintThumb(attrib, matrix, mask, g.x, g.y, g.width, g.height, g.width, g.height);
 
   mask |= PAINT_WINDOW_BLEND_MASK;
-  attrib.opacity = (parent_alpha >= 1.0f) ? OPAQUE : parent_alpha * G_MAXUSHORT;
+  attrib.opacity = parent_alpha * G_MAXUSHORT;
 
   // The thumbnail is still animating, don't draw the decoration as selected
   if (selected && alpha < 1.0f)
