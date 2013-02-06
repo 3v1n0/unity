@@ -65,7 +65,8 @@ namespace switcher
 {
 
 Controller::Controller(WindowCreator const& create_window)
-  : detail_on_timeout(true)
+  : detail_mode([this] { return detail_mode_; })
+  , detail_on_timeout(true)
   , detail_timeout_length(500)
   , initial_detail_timeout_length(1500)
   , visible_(false)
@@ -131,7 +132,7 @@ void Controller::Prev()
   impl_->Prev();
 }
 
-SwitcherView* Controller::GetView()
+SwitcherView::Ptr Controller::GetView() const
 {
   return impl_->GetView();
 }
@@ -479,9 +480,9 @@ void Controller::Impl::Prev()
   }
 }
 
-SwitcherView* Controller::Impl::GetView()
+SwitcherView::Ptr Controller::Impl::GetView() const
 {
-  return view_.GetPointer();
+  return view_;
 }
 
 void Controller::Impl::SetDetail(bool value, unsigned int min_windows)

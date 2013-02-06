@@ -60,7 +60,7 @@ struct Controller::Impl
 
   void SelectFirstItem();
 
-  virtual SwitcherView* GetView();
+  virtual SwitcherView::Ptr GetView() const;
 
   ui::LayoutWindow::Vector ExternalRenderTargets();
 

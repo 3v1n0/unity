@@ -103,10 +103,9 @@ public:
 
   void SelectFirstItem();
 
-  void SetWorkspace(nux::Geometry geo,
-                    int monitor);
+  void SetWorkspace(nux::Geometry geo, int monitor);
 
-  SwitcherView* GetView();
+  nux::ObjectPtr<SwitcherView> GetView() const;
 
   ui::LayoutWindow::Vector ExternalRenderTargets();
 
@@ -125,16 +124,17 @@ public:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
+  nux::ROProperty<DetailMode> detail_mode;
   nux::Property<bool> detail_on_timeout;
   nux::Property<int>  detail_timeout_length;
   nux::Property<int>  initial_detail_timeout_length;
 
+private:
   bool       visible_;
   int        monitor_;
   bool       show_desktop_disabled_;
   DetailMode detail_mode_;
 
-private:
   ImplPtr    impl_;
 };
 
