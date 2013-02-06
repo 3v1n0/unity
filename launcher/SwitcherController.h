@@ -92,6 +92,7 @@ public:
   void Next();
   void Prev();
 
+  void InitiateDetail();
   void NextDetail();
   void PrevDetail();
 

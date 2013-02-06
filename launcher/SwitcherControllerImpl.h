@@ -52,6 +52,7 @@ struct Controller::Impl
   void Next();
   void Prev();
 
+  void InitiateDetail(bool animate=false);
   void NextDetail();
   void PrevDetail();
 

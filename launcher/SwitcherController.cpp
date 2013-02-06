@@ -141,6 +141,11 @@ void Controller::SetDetail(bool value, unsigned int min_windows)
   impl_->SetDetail(value, min_windows);
 }
 
+void Controller::InitiateDetail()
+{
+  impl_->InitiateDetail();
+}
+
 void Controller::NextDetail()
 {
   impl_->NextDetail();
@@ -492,20 +497,38 @@ void Controller::Impl::SetDetail(bool value, unsigned int min_windows)
   }
 }
 
-void Controller::Impl::NextDetail()
+void Controller::Impl::InitiateDetail(bool animate)
 {
   if (!model_)
     return;
 
   if (!model_->detail_selection)
   {
+    view_->animate = animate;
+
     SetDetail(true);
     obj_->detail_mode_ = DetailMode::TAB_NEXT_TILE;
+
+    if (!view_->animate())
+    {
+      // As soon as the detail selection is changed we re-enable the animations
+      auto conn = std::make_shared<sigc::connection>();
+      *conn = model_->detail_selection.changed.connect([this, conn] (bool) {
+        if (view_)
+          view_->animate = true;
+        conn->disconnect();
+      });
+    }
   }
-  else
-  {
-    model_->NextDetail();
-  }
+}
+
+void Controller::Impl::NextDetail()
+{
+  if (!model_)
+    return;
+
+  InitiateDetail(true);
+  model_->NextDetail();
 }
 
 void Controller::Impl::PrevDetail()
@@ -513,16 +536,8 @@ void Controller::Impl::PrevDetail()
   if (!model_)
     return;
 
-  if (!model_->detail_selection)
-  {
-    SetDetail(true);
-    obj_->detail_mode_ = DetailMode::TAB_NEXT_TILE;
-    model_->PrevDetail();
-  }
-  else
-  {
-    model_->PrevDetail();
-  }
+  InitiateDetail(true);
+  model_->PrevDetail();
 }
 
 LayoutWindow::Vector Controller::Impl::ExternalRenderTargets()
