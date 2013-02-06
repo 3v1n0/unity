@@ -261,6 +261,7 @@ void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLa
   model_ = std::make_shared<SwitcherModel>(results);
   obj_->AddChild(model_.get());
   model_->selection_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnModelSelectionChanged));
+  model_->detail_selection.changed.connect([this] (bool) { sources_.Remove(DETAIL_TIMEOUT); });
   model_->only_detail_on_viewport = (show == ShowMode::CURRENT_VIEWPORT);
 
   SelectFirstItem();
