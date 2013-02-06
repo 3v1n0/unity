@@ -46,6 +46,8 @@ public:
   void Sync();
   Window xid();
 
+  static bool FilterTray(std::string const& title, std::string const& res_name, std::string const& res_class);
+
 protected:
   void Draw(nux::GraphicsEngine& gfx_content, bool force_draw);
   std::string GetName() const;

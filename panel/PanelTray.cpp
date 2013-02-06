@@ -127,24 +127,13 @@ void PanelTray::Sync()
 
 gboolean PanelTray::FilterTrayCallback(NaTray* tray, NaTrayChild* icon, PanelTray* self)
 {
-  bool accept = false;
-
   glib::String title(na_tray_child_get_title(icon));
 
   glib::String res_class;
   glib::String res_name;
   na_tray_child_get_wm_class(icon, &res_name, &res_class);
 
-  for (auto const& name : WHITELIST)
-  {
-    if (name.find(title.Str()) == 0 ||
-        name.find(res_name.Str()) == 0 ||
-        name.find(res_class.Str()) == 0)
-    {
-      accept = true;
-      break;
-    }
-  }
+  bool accept = FilterTray(title.Str(), res_name.Str(), res_class.Str());
 
   if (accept)
   {
@@ -161,6 +150,15 @@ gboolean PanelTray::FilterTrayCallback(NaTray* tray, NaTrayChild* icon, PanelTra
                     << res_name << " " << res_class;
 
   return accept ? TRUE : FALSE;
+}
+
+bool PanelTray::FilterTray(std::string const& title, std::string const& res_name, std::string const& res_class)
+{
+  for (auto const& item : WHITELIST)
+    if (title.find(item) == 0 || res_name.find(item) == 0 || res_class.find(item) == 0)
+      return true;
+
+  return false;
 }
 
 void PanelTray::OnTrayIconRemoved(NaTrayManager* manager, NaTrayChild* removed)
