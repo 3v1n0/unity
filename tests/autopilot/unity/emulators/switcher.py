@@ -61,13 +61,6 @@ class SwitcherController(UnityIntrospectionObject, KeybindingsHelper):
         models = self.get_children_by_type(SwitcherModel)
         return models[0] if models else None
 
-    # @property
-    # def visible(self):
-    #     """Is the switcher currently visible
-
-    #     """
-    #     return self.visible
-
     @property
     def icons(self):
         """The set of icons in the switcher model

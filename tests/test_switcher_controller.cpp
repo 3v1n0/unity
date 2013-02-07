@@ -25,6 +25,7 @@
 #include "DesktopLauncherIcon.h"
 #include "SimpleLauncherIcon.h"
 #include "SwitcherController.h"
+#include "SwitcherView.h"
 #include "TimeUtil.h"
 #include "unity-shared/UnitySettings.h"
 
@@ -158,6 +159,7 @@ TEST_F(TestSwitcherController, InitialDetailTimeout)
   static const int initial_details_timeout = 500;
   static const int details_timeout = 10 * initial_details_timeout;
 
+  controller_->detail_on_timeout = true;
   controller_->initial_detail_timeout_length = initial_details_timeout;
   controller_->detail_timeout_length = details_timeout;
 
@@ -177,12 +179,13 @@ TEST_F(TestSwitcherController, InitialDetailTimeout)
   EXPECT_TRUE(time_diff < details_timeout);
 }
 
-TEST_F(TestSwitcherController, DetailTimeout)
+TEST_F(TestSwitcherController, DetailTimeoutRemoval)
 {
   Clock::time_point start_time = Clock::now();
   static const int details_timeout = 500;
   static const int initial_details_timeout = 10 * details_timeout;
 
+  controller_->detail_on_timeout = true;
   controller_->detail_timeout_length = details_timeout;
   controller_->initial_detail_timeout_length = initial_details_timeout;
 
@@ -211,6 +214,43 @@ TEST_F(TestSwitcherController, DetailTimeout)
   auto time_diff = duration_cast<milliseconds>(elapsed_time).count();
   EXPECT_TRUE(details_timeout < time_diff);
   EXPECT_TRUE(time_diff < initial_details_timeout);
+}
+
+TEST_F(TestSwitcherController, DetailTimeoutOnDetailActivate)
+{
+  static const int initial_details_timeout = 500;
+  static const int details_timeout = 10 * initial_details_timeout;
+
+  controller_->detail_on_timeout = true;
+  controller_->initial_detail_timeout_length = initial_details_timeout;
+  controller_->detail_timeout_length = details_timeout;
+
+  controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
+  EXPECT_EQ(controller_->GetCurrentSelection().window_, 0);
+
+  // Manually open-close the detail mode before that the timeout has occurred
+  controller_->SetDetail(true);
+  controller_->SetDetail(false);
+
+  Utils::WaitForTimeoutMSec(initial_details_timeout * 1.1);
+  EXPECT_EQ(controller_->GetCurrentSelection().window_, 0);
+}
+
+TEST_F(TestSwitcherController, InitiateDetail)
+{
+  controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
+  controller_->InitiateDetail();
+
+  auto const& view = controller_->GetView();
+  auto const& model = view->GetModel();
+  EXPECT_EQ(controller_->detail_mode(), DetailMode::TAB_NEXT_TILE);
+  EXPECT_FALSE(view->animate());
+  EXPECT_TRUE(model->detail_selection());
+
+  auto prev_size = model->detail_selection.changed.size();
+  model->detail_selection = false;
+  EXPECT_TRUE(view->animate());
+  EXPECT_LT(model->detail_selection.changed.size(), prev_size);
 }
 
 TEST_F(TestSwitcherController, ShowSwitcher)

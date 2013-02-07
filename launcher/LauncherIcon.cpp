@@ -133,9 +133,6 @@ LauncherIcon::~LauncherIcon()
   if (on_order_changed_connection.connected())
     on_order_changed_connection.disconnect();
 
-  if (on_expo_terminated_connection.connected())
-    on_expo_terminated_connection.disconnect();
-
   if (_unity_theme)
   {
     _unity_theme = NULL;
@@ -616,13 +613,14 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
   if (win_manager.IsScaleActive())
     win_manager.TerminateScale();
 
-  /* If the expo plugin is active, we need to wait it to be termated, before
-   * shwing the icon quicklist. */
+  /* If the expo plugin is active, we need to wait it to be terminated, before
+   * showing the icon quicklist. */
   if (win_manager.IsExpoActive())
   {
-    on_expo_terminated_connection = win_manager.terminate_expo.connect([&, tip_x, tip_y]() {
-        QuicklistManager::Default()->ShowQuicklist(_quicklist.GetPointer(), tip_x, tip_y);
-        on_expo_terminated_connection.disconnect();
+    auto conn = std::make_shared<sigc::connection>();
+    *conn = win_manager.terminate_expo.connect([this, conn, tip_x, tip_y] {
+      QuicklistManager::Default()->ShowQuicklist(_quicklist.GetPointer(), tip_x, tip_y);
+      conn->disconnect();
     });
   }
   else

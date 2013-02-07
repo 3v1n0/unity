@@ -211,12 +211,19 @@ TEST_F(TestLauncher, TestMouseWheelScroll)
   launcher_->SetHover(true);
   initial_scroll_delta = launcher_->GetDragDelta();
 
+  unsigned long key_flags = 0; 
+
+  launcher_->RecvMouseWheel(0, 0, 20, 0, key_flags);
+  EXPECT_EQ((launcher_->GetDragDelta()), initial_scroll_delta);
+
+  key_flags |= nux::NUX_STATE_ALT;
+
   // scroll down
-  launcher_->RecvMouseWheel(0,0,20,0,0);
+  launcher_->RecvMouseWheel(0, 0, 20, 0, key_flags);
   EXPECT_EQ((launcher_->GetDragDelta() - initial_scroll_delta), 25);
 
   // scroll up
-  launcher_->RecvMouseWheel(0,0,-20,0,0);
+  launcher_->RecvMouseWheel(0, 0, -20, 0, key_flags);
   EXPECT_EQ(launcher_->GetDragDelta(), initial_scroll_delta);
 
   launcher_->SetHover(false);

@@ -147,4 +147,15 @@ TEST_F(TestSwitcherModel, TestActiveDetailWindowSort)
   EXPECT_EQ(sorted, unsorted);
 }
 
+TEST_F(TestSwitcherModel, SelectionIsActive)
+{
+  SwitcherModel model(icons_);
+
+  model.Selection()->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, false);
+  EXPECT_FALSE(model.SelectionIsActive());
+
+  model.Selection()->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
+  EXPECT_TRUE(model.SelectionIsActive());
+}
+
 }

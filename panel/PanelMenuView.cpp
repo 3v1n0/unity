@@ -80,25 +80,63 @@ PanelMenuView::PanelMenuView()
   , menus_discovery_fadein_(DEFAULT_DISCOVERY_FADEIN)
   , menus_discovery_fadeout_(DEFAULT_DISCOVERY_FADEOUT)
 {
-  layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
 
   BamfWindow* active_win = bamf_matcher_get_active_window(matcher_);
   if (BAMF_IS_WINDOW(active_win))
     active_xid_ = bamf_window_get_xid(active_win);
 
-  view_opened_signal_.Connect(matcher_, "view-opened",
-                              sigc::mem_fun(this, &PanelMenuView::OnViewOpened));
-  view_closed_signal_.Connect(matcher_, "view-closed",
-                              sigc::mem_fun(this, &PanelMenuView::OnViewClosed));
+  SetupPanelMenuViewSignals();
+  SetupWindowButtons();
+  SetupTitlebarGrabArea();
+  SetupWindowManagerSignals();
+  SetupUBusManagerInterests();
+
+  style_changed_connection_ = panel::Style::Instance().changed.connect([&] {
+    window_buttons_->ComputeContentSize();
+    layout_->SetLeftAndRightPadding(window_buttons_->GetContentWidth(), 0);
+
+    Refresh(true);
+    FullRedraw();
+  });
+
+  opacity = 0.0f;
+
+  Refresh();
+  FullRedraw();
+}
+
+PanelMenuView::~PanelMenuView()
+{
+  style_changed_connection_.disconnect();
+  window_buttons_->UnParentObject();
+  titlebar_grab_area_->UnParentObject();
+}
+
+void PanelMenuView::SetupPanelMenuViewSignals()
+{
   active_win_changed_signal_.Connect(matcher_, "active-window-changed",
                                      sigc::mem_fun(this, &PanelMenuView::OnActiveWindowChanged));
   active_app_changed_signal_.Connect(matcher_, "active-application-changed",
                                      sigc::mem_fun(this, &PanelMenuView::OnActiveAppChanged));
+  view_opened_signal_.Connect(matcher_, "view-opened",
+                              sigc::mem_fun(this, &PanelMenuView::OnViewOpened));
+  view_closed_signal_.Connect(matcher_, "view-closed",
+                              sigc::mem_fun(this, &PanelMenuView::OnViewClosed));
 
+  mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
+  mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
+
+  opacity_animator_.updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeAnimatorUpdated));
+}
+
+
+void PanelMenuView::SetupWindowButtons()
+{
   window_buttons_ = new WindowButtons();
   window_buttons_->SetParentObject(this);
   window_buttons_->monitor = monitor_;
   window_buttons_->controlled_window = active_xid_;
+  window_buttons_->opacity = 0.0f;
   window_buttons_->SetLeftAndRightPadding(MAIN_LEFT_PADDING, MENUBAR_PADDING);
   window_buttons_->SetMaximumHeight(panel::Style::Instance().panel_height);
   window_buttons_->ComputeContentSize();
@@ -109,9 +147,18 @@ PanelMenuView::PanelMenuView()
   window_buttons_->opacity.changed.connect(sigc::hide(sigc::mem_fun(this, &PanelMenuView::QueueDraw)));
   AddChild(window_buttons_.GetPointer());
 
+  SetupLayout();
+}
+
+void PanelMenuView::SetupLayout()
+{
+  layout_->SetContentDistribution(nux::MAJOR_POSITION_START);
   layout_->SetLeftAndRightPadding(window_buttons_->GetContentWidth(), 0);
   layout_->SetBaseHeight(panel::Style::Instance().panel_height);
+}
 
+void PanelMenuView::SetupTitlebarGrabArea()
+{
   titlebar_grab_area_ = new PanelTitlebarGrabArea();
   titlebar_grab_area_->SetParentObject(this);
   titlebar_grab_area_->activate_request.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedActivate));
@@ -120,8 +167,13 @@ PanelMenuView::PanelMenuView()
   titlebar_grab_area_->grab_started.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabStart));
   titlebar_grab_area_->grab_move.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabMove));
   titlebar_grab_area_->grab_end.connect(sigc::mem_fun(this, &PanelMenuView::OnMaximizedGrabEnd));
+  titlebar_grab_area_->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
+  titlebar_grab_area_->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
   AddChild(titlebar_grab_area_.GetPointer());
+}
 
+void PanelMenuView::SetupWindowManagerSignals()
+{
   WindowManager& wm = WindowManager::Default();
   wm.window_minimized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowMinimized));
   wm.window_unminimized.connect(sigc::mem_fun(this, &PanelMenuView::OnWindowUnminimized));
@@ -138,43 +190,16 @@ PanelMenuView::PanelMenuView()
   wm.initiate_expo.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoInitiate));
   wm.terminate_expo.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoTerminate));
   wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &PanelMenuView::OnExpoTerminate));
+}
 
-  style_changed_connection_ = panel::Style::Instance().changed.connect([&] {
-    window_buttons_->ComputeContentSize();
-    layout_->SetLeftAndRightPadding(window_buttons_->GetContentWidth(), 0);
-
-    Refresh(true);
-    FullRedraw();
-  });
-
-  mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
-  mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
-  //mouse_move.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseMove));
-
-  titlebar_grab_area_->mouse_enter.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseEnter));
-  titlebar_grab_area_->mouse_leave.connect(sigc::mem_fun(this, &PanelMenuView::OnPanelViewMouseLeave));
-
+void PanelMenuView::SetupUBusManagerInterests()
+{
   ubus_manager_.RegisterInterest(UBUS_SWITCHER_SHOWN, sigc::mem_fun(this, &PanelMenuView::OnSwitcherShown));
   ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_NAV, sigc::mem_fun(this, &PanelMenuView::OnLauncherKeyNavStarted));
   ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_NAV, sigc::mem_fun(this, &PanelMenuView::OnLauncherKeyNavEnded));
   ubus_manager_.RegisterInterest(UBUS_LAUNCHER_START_KEY_SWITCHER, sigc::mem_fun(this, &PanelMenuView::OnLauncherKeyNavStarted));
   ubus_manager_.RegisterInterest(UBUS_LAUNCHER_END_KEY_SWITCHER, sigc::mem_fun(this, &PanelMenuView::OnLauncherKeyNavEnded));
   ubus_manager_.RegisterInterest(UBUS_LAUNCHER_SELECTION_CHANGED, sigc::mem_fun(this, &PanelMenuView::OnLauncherSelectionChanged));
-
-  opacity_animator_.updated.connect(sigc::mem_fun(this, &PanelMenuView::OnFadeAnimatorUpdated));
-
-  opacity = 0.0f;
-  window_buttons_->opacity = 0.0f;
-
-  Refresh();
-  FullRedraw();
-}
-
-PanelMenuView::~PanelMenuView()
-{
-  style_changed_connection_.disconnect();
-  window_buttons_->UnParentObject();
-  titlebar_grab_area_->UnParentObject();
 }
 
 void PanelMenuView::OverlayShown()

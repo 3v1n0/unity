@@ -65,7 +65,8 @@ namespace switcher
 {
 
 Controller::Controller(WindowCreator const& create_window)
-  : detail_on_timeout(true)
+  : detail_mode([this] { return detail_mode_; })
+  , detail_on_timeout(true)
   , detail_timeout_length(500)
   , initial_detail_timeout_length(1500)
   , visible_(false)
@@ -131,7 +132,7 @@ void Controller::Prev()
   impl_->Prev();
 }
 
-SwitcherView* Controller::GetView()
+SwitcherView::Ptr Controller::GetView() const
 {
   return impl_->GetView();
 }
@@ -139,6 +140,11 @@ SwitcherView* Controller::GetView()
 void Controller::SetDetail(bool value, unsigned int min_windows)
 {
   impl_->SetDetail(value, min_windows);
+}
+
+void Controller::InitiateDetail()
+{
+  impl_->InitiateDetail();
 }
 
 void Controller::NextDetail()
@@ -261,6 +267,7 @@ void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLa
   model_ = std::make_shared<SwitcherModel>(results);
   obj_->AddChild(model_.get());
   model_->selection_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnModelSelectionChanged));
+  model_->detail_selection.changed.connect([this] (bool) { sources_.Remove(DETAIL_TIMEOUT); });
   model_->only_detail_on_viewport = (show == ShowMode::CURRENT_VIEWPORT);
 
   SelectFirstItem();
@@ -473,9 +480,9 @@ void Controller::Impl::Prev()
   }
 }
 
-SwitcherView* Controller::Impl::GetView()
+SwitcherView::Ptr Controller::Impl::GetView() const
 {
-  return view_.GetPointer();
+  return view_;
 }
 
 void Controller::Impl::SetDetail(bool value, unsigned int min_windows)
@@ -491,20 +498,38 @@ void Controller::Impl::SetDetail(bool value, unsigned int min_windows)
   }
 }
 
-void Controller::Impl::NextDetail()
+void Controller::Impl::InitiateDetail(bool animate)
 {
   if (!model_)
     return;
 
   if (!model_->detail_selection)
   {
+    view_->animate = animate;
+
     SetDetail(true);
     obj_->detail_mode_ = DetailMode::TAB_NEXT_TILE;
+
+    if (!view_->animate())
+    {
+      // As soon as the detail selection is changed we re-enable the animations
+      auto conn = std::make_shared<sigc::connection>();
+      *conn = model_->detail_selection.changed.connect([this, conn] (bool) {
+        if (view_)
+          view_->animate = true;
+        conn->disconnect();
+      });
+    }
   }
-  else
-  {
-    model_->NextDetail();
-  }
+}
+
+void Controller::Impl::NextDetail()
+{
+  if (!model_)
+    return;
+
+  InitiateDetail(true);
+  model_->NextDetail();
 }
 
 void Controller::Impl::PrevDetail()
@@ -512,16 +537,8 @@ void Controller::Impl::PrevDetail()
   if (!model_)
     return;
 
-  if (!model_->detail_selection)
-  {
-    SetDetail(true);
-    obj_->detail_mode_ = DetailMode::TAB_NEXT_TILE;
-    model_->PrevDetail();
-  }
-  else
-  {
-    model_->PrevDetail();
-  }
+  InitiateDetail(true);
+  model_->PrevDetail();
 }
 
 LayoutWindow::Vector Controller::Impl::ExternalRenderTargets()
@@ -547,17 +564,16 @@ Selection Controller::Impl::GetCurrentSelection() const
   if (model_)
   {
     application = model_->Selection();
+
     if (application)
     {
       if (model_->detail_selection)
       {
         window = model_->DetailSelectionWindow();
       }
-      else if (application->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
+      else if (model_->SelectionIsActive())
       {
-        auto const& xids = model_->DetailXids();
-        if (!xids.empty())
-          window = xids.front();
+        window = model_->DetailXids().front();
       }
     }
   }

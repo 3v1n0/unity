@@ -238,8 +238,9 @@ class SwitcherTests(SwitcherTestCase):
 
         win = self.start_app_window("Text Editor")
 
-        self.unity.switcher.initiate(SwitcherMode.DETAIL)
+        self.unity.switcher.initiate()
         self.addCleanup(self.unity.switcher.terminate)
+        self.assertThat(self.unity.switcher.visible, Eventually(Equals(True)))
 
         self.keyboard.press_and_release("Alt+F4")
         # Need the sleep to allow the window time to close, for jenkins!
