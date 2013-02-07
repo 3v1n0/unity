@@ -21,11 +21,11 @@ import sys
 from tempfile import mktemp
 from time import sleep
 try:
-    import testapp
+    import windowmocker
     import json
-    HAVE_TESTAPP=True
+    HAVE_WINDOWMOCKER=True
 except ImportError:
-    HAVE_TESTAPP=False
+    HAVE_WINDOWMOCKER=False
 import tempfile
 from testtools.content import text_content
 from testtools.matchers import Equals
@@ -192,29 +192,29 @@ class UnityTestCase(AutopilotTestCase):
     def launch_test_window(self, window_spec={}):
         """Launch a test window, for the duration of this test only.
 
-        This uses the 'testapp' application, which is not part of the
+        This uses the 'window-mocker' application, which is not part of the
         python-autopilot or unity-autopilot packages. To use this method, you
-        must have python-testapp installed. If the python-testapp packge is not
-        installed, this method will raise a SkipTest exception, causing the
-        calling test to be silently skipped.
+        must have python-windowmocker installed. If the package is not installed, 
+        this method will raise a SkipTest exception, causing the calling test 
+        to be silently skipped.
 
-        window_spec is a list or dictionary that conforms to the testapp
+        window_spec is a list or dictionary that conforms to the window-mocker
         specification.
 
         """
-        if not HAVE_TESTAPP:
-            raise SkipTest("The python-testapp package is required to run this test.")
+        if not HAVE_WINDOWMOCKER:
+            raise SkipTest("The python-windowmocker package is required to run this test.")
 
-        if 'Test App' not in self.KNOWN_APPS:
+        if 'Window Mocker' not in self.KNOWN_APPS:
             self.register_known_application(
-                'Test App',
-                'testapp.desktop',
-                'testapp'
+                'Window Mocker',
+                'window-mocker.desktop',
+                'window-mocker'
                 )
         if window_spec:
             file_path = tempfile.mktemp()
             json.dump(window_spec, open(file_path, 'w'))
             self.addCleanup(os.remove, file_path)
-            return self.start_app_window('Test App', [file_path])
+            return self.start_app_window('Window Mocker', [file_path])
         else:
-            return self.start_app_window('Test App')
+            return self.start_app_window('Window Mocker')
