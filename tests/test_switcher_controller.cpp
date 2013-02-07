@@ -294,6 +294,16 @@ TEST_F(TestSwitcherController, ShowSwitcherNoResults)
   EXPECT_FALSE(selection.application_);
 }
 
+TEST_F(TestSwitcherController, Opacity)
+{
+  EXPECT_EQ(controller_->Opacity(), 0.0f);
+
+  controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
+  tick_source_.tick(TICK_DURATION);
+
+  EXPECT_EQ(controller_->Opacity(), mock_window_->GetOpacity());
+}
+
 TEST_F(TestSwitcherController, ShowHideSwitcherFading)
 {
   long long global_tick = 0, t;
