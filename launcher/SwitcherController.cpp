@@ -252,8 +252,6 @@ Controller::Impl::Impl(Controller* obj,
   // TODO We need to get actual timing data to suggest this is necessary.
   //sources_.AddTimeoutSeconds(construct_timeout_, [&] { ConstructWindow(); return false; }, LAZY_TIMEOUT);
 
-  // nux::animation::EasingCurve curve(nux::animation::EasingCurve::Type::ExpoEaseIn);
-  // fade_animator_.SetEasingCurve(curve);
   fade_animator_.updated.connect([this] (double opacity) {
     if (view_window_)
     {
