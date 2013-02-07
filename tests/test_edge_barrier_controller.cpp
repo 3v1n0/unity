@@ -153,6 +153,7 @@ TEST_F(TestEdgeBarrierController, ProcessHandledEvent)
 
   EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
   ProcessBarrierEvent(&owner, breaking_barrier_event);
+  EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), 0);
 }
 
 TEST_F(TestEdgeBarrierController, ProcessHandledEventOnReleasedBarrier)
@@ -188,9 +189,6 @@ TEST_F(TestEdgeBarrierController, ProcessUnHandledEventBreakingBarrierOnMaxMonit
   MockPointerBarrier owner(monitor);
   auto breaking_barrier_event = MakeBarrierEvent(0, true);
 
-  // This was leading to a crash, see bug #1020075
-  // you can reproduce this repeating this test multiple times using the
-  // --gtest_repeat=X command line
   EXPECT_CALL(owner, ReleaseBarrier(_));
   ProcessBarrierEvent(&owner, breaking_barrier_event);
 }
@@ -217,6 +215,64 @@ TEST_F(TestEdgeBarrierController, ProcessUnHandledEventOnReleasedBarrier)
 
   EXPECT_CALL(owner, ReleaseBarrier(not_breaking_id));
   ProcessBarrierEvent(&owner, not_breaking_barrier_event);
+}
+
+TEST_F(TestEdgeBarrierController, ProcessAlreadyHandledEvent)
+{
+  int monitor = g_random_int_range(0, max_num_monitors);
+
+  MockPointerBarrier owner(monitor);
+  subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::ALREADY_HANDLED;
+
+  auto event = MakeBarrierEvent(g_random_int(), false);
+
+  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
+  ProcessBarrierEvent(&owner, event);
+  EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), event->velocity);
+}
+
+TEST_F(TestEdgeBarrierController, ProcessIgnoredEventWithStickyEdges)
+{
+  int monitor = g_random_int_range(0, max_num_monitors);
+
+  bc.sticky_edges = true;
+  MockPointerBarrier owner(monitor);
+  subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::IGNORED;
+
+  auto event = MakeBarrierEvent(g_random_int(), false);
+
+  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
+  ProcessBarrierEvent(&owner, event);
+  EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), event->velocity);
+}
+
+TEST_F(TestEdgeBarrierController, ProcessIgnoredEventWithOutStickyEdges)
+{
+  int monitor = g_random_int_range(0, max_num_monitors);
+
+  bc.sticky_edges = false;
+  MockPointerBarrier owner(monitor);
+  subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::IGNORED;
+
+  auto event = MakeBarrierEvent(g_random_int(), false);
+
+  EXPECT_CALL(owner, ReleaseBarrier(event->event_id));
+  ProcessBarrierEvent(&owner, event);
+  EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), 0);
+}
+
+TEST_F(TestEdgeBarrierController, ProcessNeedsReleaseEvent)
+{
+  int monitor = g_random_int_range(0, max_num_monitors);
+
+  MockPointerBarrier owner(monitor);
+  subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::NEEDS_RELEASE;
+
+  auto event = MakeBarrierEvent(g_random_int(), false);
+
+  EXPECT_CALL(owner, ReleaseBarrier(event->event_id));
+  ProcessBarrierEvent(&owner, event);
+  EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), 0);
 }
 
 TEST_F(TestEdgeBarrierController, BreakingEdgeTemporaryReleasesBarrier)
