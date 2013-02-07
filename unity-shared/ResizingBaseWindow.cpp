@@ -22,7 +22,7 @@ namespace unity
 
 ResizingBaseWindow::ResizingBaseWindow(char const* window_name,
                                        GeometryAdjuster const& input_adjustment)
-: BaseWindow(window_name, NUX_TRACKER_LOCATION)
+: MockableBaseWindow(window_name)
 , input_adjustment_(input_adjustment)
 { }
 
@@ -40,12 +40,6 @@ void ResizingBaseWindow::SetGeometry(const nux::Geometry &geo)
 {
    Area::SetGeometry(geo);
    UpdateInputWindowGeometry();
-}
-
-
-void ResizingBaseWindow::SetOpacity(float opacity)
-{
-  nux::BaseWindow::SetOpacity(opacity);
 }
 
 }
