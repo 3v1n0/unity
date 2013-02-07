@@ -50,16 +50,16 @@ public:
 class TestBarrierSubscriber : public EdgeBarrierSubscriber
 {
 public:
-  TestBarrierSubscriber(bool handles = false)
-    : handles_(handles)
+  TestBarrierSubscriber(EdgeBarrierSubscriber::Result result = EdgeBarrierSubscriber::Result::IGNORED)
+    : handle_result_(result)
   {}
 
-  bool HandleBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event)
+  EdgeBarrierSubscriber::Result HandleBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event)
   {
-    return handles_;
+    return handle_result_;
   }
 
-  bool handles_;
+  EdgeBarrierSubscriber::Result handle_result_;
 };
 
 } // namespace
@@ -136,7 +136,7 @@ TEST_F(TestEdgeBarrierController, UnsubscribeInvalid)
 
 TEST_F(TestEdgeBarrierController, SubscriberReplace)
 {
-  TestBarrierSubscriber handling_subscriber(true);
+  TestBarrierSubscriber handling_subscriber(EdgeBarrierSubscriber::Result::HANDLED);
   bc.Subscribe(&handling_subscriber, 0);
   EXPECT_EQ(bc.GetSubscriber(0), &handling_subscriber);
 }
@@ -145,7 +145,7 @@ TEST_F(TestEdgeBarrierController, ProcessHandledEvent)
 {
   int monitor = 0;
 
-  TestBarrierSubscriber handling_subscriber(true);
+  TestBarrierSubscriber handling_subscriber(EdgeBarrierSubscriber::Result::HANDLED);
   bc.Subscribe(&handling_subscriber, monitor);
 
   MockPointerBarrier owner(monitor);
@@ -159,7 +159,7 @@ TEST_F(TestEdgeBarrierController, ProcessHandledEventOnReleasedBarrier)
 {
   int monitor = max_num_monitors-1;
 
-  TestBarrierSubscriber handling_subscriber(true);
+  TestBarrierSubscriber handling_subscriber(EdgeBarrierSubscriber::Result::HANDLED);
   bc.Subscribe(&handling_subscriber, monitor);
 
   MockPointerBarrier owner(monitor, true);
@@ -235,13 +235,13 @@ TEST_F(TestEdgeBarrierController, BreakingEdgeTemporaryReleasesBarrierForNotHand
 {
   MockPointerBarrier owner;
   int monitor = 0;
-  subscribers_[monitor].handles_ = false;
+  subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::IGNORED;
 
   EXPECT_CALL(owner, ReleaseBarrier(5));
   ProcessBarrierEvent(&owner, MakeBarrierEvent(5, true));
   ASSERT_TRUE(owner.released());
 
-  subscribers_[monitor].handles_ = false;
+  subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::IGNORED;
   EXPECT_CALL(owner, ReleaseBarrier(6));
   ProcessBarrierEvent(&owner, MakeBarrierEvent(6, false));
 }
@@ -250,13 +250,13 @@ TEST_F(TestEdgeBarrierController, BreakingEdgeTemporaryReleasesBarrierForHandled
 {
   MockPointerBarrier owner;
   int monitor = 0;
-  subscribers_[monitor].handles_ = false;
+  subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::IGNORED;
 
   EXPECT_CALL(owner, ReleaseBarrier(5));
   ProcessBarrierEvent(&owner, MakeBarrierEvent(5, true));
   ASSERT_TRUE(owner.released());
 
-  subscribers_[monitor].handles_ = true;
+  subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::HANDLED;
   EXPECT_CALL(owner, ReleaseBarrier(6)).Times(1);
   ProcessBarrierEvent(&owner, MakeBarrierEvent(6, true));
 }

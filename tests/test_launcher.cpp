@@ -54,11 +54,6 @@ public:
   MOCK_METHOD1(Stick, void(bool));
 };
 
-struct MockPointerBarrierWrapper : ui::PointerBarrierWrapper
-{
-  MOCK_METHOD1(ReleaseBarrier, void(int event_id));
-};
-
 }
 
 class TestLauncher : public Test
@@ -100,6 +95,7 @@ public:
 
     using Launcher::IconStartingBlinkValue;
     using Launcher::IconStartingPulseValue;
+    using Launcher::HandleBarrierEvent;
 
     void FakeProcessDndMove(int x, int y, std::list<std::string> uris)
     {
@@ -118,11 +114,6 @@ public:
       }
 
       _dnd_hovered_icon = MouseIconIntersection(x, y);
-    }
-
-    bool HandleBarrierEvent(ui::PointerBarrierWrapper* barrier, ui::BarrierEvent::Ptr event)
-    {
-      return Launcher::HandleBarrierEvent(barrier, event);
     }
   };
 
@@ -456,13 +447,13 @@ TEST_F(TestLauncher, DragLauncherIconHidesOutsideLauncherEmitsMouseEnter)
 
 TEST_F(TestLauncher, EdgeResistDuringDnd)
 {
-  auto barrier = std::make_shared<MockPointerBarrierWrapper>();
+  auto barrier = std::make_shared<ui::PointerBarrierWrapper>();
   auto event = std::make_shared<ui::BarrierEvent>(0, 0, 0, 100);
 
   launcher_->DndStarted("");
 
-  EXPECT_CALL(*barrier, ReleaseBarrier(100));
-  EXPECT_TRUE(launcher_->HandleBarrierEvent(barrier.get(), event));
+  EXPECT_EQ(launcher_->HandleBarrierEvent(barrier.get(), event),
+            ui::EdgeBarrierSubscriber::Result::NEEDS_RELEASE);
 }
 
 TEST_F(TestLauncher, DndIsSpecialRequest)
