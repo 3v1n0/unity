@@ -115,6 +115,7 @@ Architecture: all
 Pre-Depends: ${misc:Pre-Depends},
 Depends: ${misc:Depends},
          ${python:Depends},
+         python-windowmocker,
 Description: Common files for the Unity interface.
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
  community, Unity is all about the combination of familiarity and the future. We
