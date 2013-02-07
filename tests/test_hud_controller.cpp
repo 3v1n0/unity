@@ -67,20 +67,17 @@ class TestHudController : public Test
 public:
   TestHudController()
   : view_(new NiceMock<MockHudView>)
-  , base_window_(new testmocks::MockBaseWindow())
-  { }
-
-  virtual void SetUp()
+  , base_window_(new NiceMock<testmocks::MockBaseWindow>())
   {
+    ON_CALL(*base_window_, SetOpacity(_))
+      .WillByDefault(Invoke(base_window_.GetPointer(),
+                     &testmocks::MockBaseWindow::RealSetOpacity));
+
     // Set expectations for creating the controller
-    EXPECT_CALL(*base_window_, SetOpacity(0.0f))
-      .WillOnce(Invoke(base_window_.GetPointer(),
-                       &testmocks::MockBaseWindow::RealSetOpacity));
+    EXPECT_CALL(*base_window_, SetOpacity(0.0f));
 
     controller_.reset(new hud::Controller([&](){ return view_.GetPointer(); },
                                           [&](){ return base_window_.GetPointer();}));
-    Mock::VerifyAndClearExpectations(view_.GetPointer());
-    Mock::VerifyAndClearExpectations(base_window_.GetPointer());
   }
 
 protected:
@@ -112,10 +109,8 @@ TEST_F(TestHudController, TestShowAndHideHud)
     InSequence showing;
     EXPECT_CALL(*base_window_, SetOpacity(Eq(0.0f))).Times(AtLeast(1));
     EXPECT_CALL(*base_window_, SetOpacity(AllOf(Gt(0.0f), Lt(1.0f))))
-        .Times(AtLeast(ANIMATION_DURATION/TICK_DURATION-1));
-    EXPECT_CALL(*base_window_, SetOpacity(Eq(1.0f))).Times(AtLeast(1))
-        .WillOnce(Invoke(base_window_.GetPointer(),
-                         &testmocks::MockBaseWindow::RealSetOpacity));
+      .Times(AtLeast(ANIMATION_DURATION/TICK_DURATION-1));
+    EXPECT_CALL(*base_window_, SetOpacity(Eq(1.0f))).Times(AtLeast(1));
   }
 
   controller_->ShowHud();
@@ -134,10 +129,8 @@ TEST_F(TestHudController, TestShowAndHideHud)
     InSequence hiding;
     EXPECT_CALL(*base_window_, SetOpacity(Eq(1.0f))).Times(AtLeast(1));
     EXPECT_CALL(*base_window_, SetOpacity(AllOf(Lt(1.0f), Gt(0.0f))))
-        .Times(AtLeast(ANIMATION_DURATION/TICK_DURATION-1));
-    EXPECT_CALL(*base_window_, SetOpacity(Eq(0.0f))).Times(AtLeast(1))
-        .WillOnce(Invoke(base_window_.GetPointer(),
-                         &testmocks::MockBaseWindow::RealSetOpacity));
+      .Times(AtLeast(ANIMATION_DURATION/TICK_DURATION-1));
+    EXPECT_CALL(*base_window_, SetOpacity(Eq(0.0f))).Times(AtLeast(1));
   }
 
   controller_->HideHud();
