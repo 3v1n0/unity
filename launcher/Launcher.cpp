@@ -2252,19 +2252,21 @@ void Launcher::ScrollLauncher(int wheel_delta)
 
 #ifdef USE_X11
 
-bool Launcher::HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
+ui::EdgeBarrierSubscriber::Result Launcher::HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
 {
   if (_hide_machine.GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE))
   {
-    owner->ReleaseBarrier(event->event_id);
-    return true;
+    return ui::EdgeBarrierSubscriber::Result::NEEDS_RELEASE;
   }
 
   nux::Geometry const& abs_geo = GetAbsoluteGeometry();
 
   bool apply_to_reveal = false;
-  if (_hidden && event->x >= abs_geo.x && event->x <= abs_geo.x + abs_geo.width)
+  if (event->x >= abs_geo.x && event->x <= abs_geo.x + abs_geo.width)
   {
+    if (!_hidden)
+      return ui::EdgeBarrierSubscriber::Result::ALREADY_HANDLED;
+
     if (options()->reveal_trigger == RevealTrigger::EDGE)
     {
       if (event->y >= abs_geo.y)
@@ -2288,15 +2290,15 @@ bool Launcher::HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierE
                        &root_y_return, &win_x_return, &win_y_return, &mask_return))
     {
       if (mask_return & (Button1Mask | Button3Mask))
-        apply_to_reveal = false;
+        return ui::EdgeBarrierSubscriber::Result::NEEDS_RELEASE;
     }
   }
 
   if (!apply_to_reveal)
-    return false;
+    return ui::EdgeBarrierSubscriber::Result::IGNORED;
 
   _hide_machine.AddRevealPressure(event->velocity);
-  return true;
+  return ui::EdgeBarrierSubscriber::Result::HANDLED;
 }
 
 #endif

@@ -37,8 +37,10 @@ struct EdgeBarrierController::Impl
   void ResizeBarrierList(std::vector<nux::Geometry> const& layout);
   void SetupBarriers(std::vector<nux::Geometry> const& layout);
 
-  void OnPointerBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event);
+  void OnPointerBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr const& event);
+  void BarrierPush(PointerBarrierWrapper* owner, BarrierEvent::Ptr const& event);
   void BarrierRelease(PointerBarrierWrapper* owner, int event);
+  void BarrierReset();
 
   std::vector<PointerBarrierWrapper::Ptr> barriers_;
   std::vector<EdgeBarrierSubscriber*> subscribers_;
