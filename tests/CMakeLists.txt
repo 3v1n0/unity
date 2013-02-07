@@ -225,6 +225,7 @@ if (ENABLE_X_SUPPORT)
                  test_previews_music.cpp
                  test_previews_social.cpp
                  test_overlay_scrollbar.cpp
+                 test_quicklist_manager.cpp
                  test_quicklist_menu_item.cpp
                  test_quicklist_view.cpp
                  test_result_renderer.cpp
