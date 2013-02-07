@@ -115,7 +115,6 @@ Architecture: all
 Pre-Depends: ${misc:Pre-Depends},
 Depends: ${misc:Depends},
          ${python:Depends},
-         python-windowmocker,
 Description: Common files for the Unity interface.
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
  community, Unity is all about the combination of familiarity and the future. We
@@ -168,6 +167,7 @@ Section: python
 Architecture: all
 Depends: ${misc:Depends},
          ${python:Depends},
+         python-windowmocker,
 Description: Autopiloted tests for Unity
  We test Unity automatically through autopilot, a framework which enables us
  to trigger keyboard and mouse events on the fly as well as introspecting
