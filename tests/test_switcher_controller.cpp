@@ -43,6 +43,9 @@ typedef std::chrono::high_resolution_clock Clock;
 unsigned int DEFAULT_LAZY_CONSTRUCT_TIMEOUT = 20;
 #endif
 
+const unsigned FADE_DURATION = 80 * 1000; // in microseconds
+const unsigned TICK_DURATION = 10 * 1000;
+
 
 /**
  * A fake ApplicationWindow for verifying selection of the switcher.
@@ -98,9 +101,13 @@ class TestSwitcherController : public testing::Test
 protected:
   TestSwitcherController()
     : animation_controller_(tick_source_)
-    , mock_window_(new testmocks::MockBaseWindow())
+    , mock_window_(new NiceMock<testmocks::MockBaseWindow>())
   {
-    auto create_window = [&](){ return mock_window_; };
+    ON_CALL(*mock_window_, SetOpacity(_))
+      .WillByDefault(Invoke(mock_window_.GetPointer(),
+                     &testmocks::MockBaseWindow::RealSetOpacity));
+
+    auto create_window = [this] { return mock_window_; };
     controller_.reset(new Controller(create_window));
     controller_->timeout_length = 0;
 
@@ -117,7 +124,7 @@ protected:
 
   nux::animation::TickSource tick_source_;
   nux::animation::AnimationController animation_controller_;
-  nux::ObjectPtr<NiceMock<testmocks::MockBaseWindow>> mock_window_;
+  testmocks::MockBaseWindow::Ptr mock_window_;
   Controller::Ptr controller_;
   std::vector<unity::launcher::AbstractLauncherIcon::Ptr> icons_;
 };
@@ -136,12 +143,8 @@ TEST_F(TestSwitcherController, LazyWindowConstruction)
 
   EXPECT_EQ(controller.GetConstructTimeout(), 2);
 
-  g_timeout_add_seconds(controller.GetConstructTimeout()/2, [] (gpointer data) -> gboolean {
-    auto controller = static_cast<StubSwitcherController*>(data);
-    EXPECT_FALSE(controller->window_constructed_);
-
-    return FALSE;
-  }, &controller);
+  Utils::WaitForTimeout(controller.GetConstructTimeout()/2);
+  ASSERT_FALSE(controller->window_constructed_);
 
   Utils::WaitUntil(controller.window_constructed_, controller.GetConstructTimeout() + 1);
   EXPECT_TRUE(controller.window_constructed_);
@@ -271,6 +274,53 @@ TEST_F(TestSwitcherController, ShowSwitcherNoResults)
   ASSERT_FALSE(controller_->Visible());
   Selection selection = controller_->GetCurrentSelection();
   EXPECT_FALSE(selection.application_);
+}
+
+TEST_F(TestSwitcherController, ShowHideSwitcherFading)
+{
+  long long global_tick = 0, t;
+
+  EXPECT_CALL(*mock_window_, ShowWindow(true, _)).Times(1);
+  {
+    InSequence showing;
+    EXPECT_CALL(*mock_window_, SetOpacity(Eq(0.0f))).Times(AtLeast(1));
+
+    EXPECT_CALL(*mock_window_, SetOpacity(AllOf(Gt(0.0f), Lt(1.0f))))
+      .Times(AtLeast(FADE_DURATION/TICK_DURATION-1));
+
+    EXPECT_CALL(*mock_window_, SetOpacity(Eq(1.0f))).Times(AtLeast(1));
+  }
+
+  controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
+  ASSERT_EQ(mock_window_->GetOpacity(), 0.0f);
+
+  for (t = global_tick; t < global_tick + FADE_DURATION+1; t += TICK_DURATION)
+    tick_source_.tick(t);
+  global_tick += t;
+
+  ASSERT_EQ(mock_window_->GetOpacity(), 1.0);
+  Mock::VerifyAndClearExpectations(mock_window_.GetPointer());
+
+  {
+    InSequence hiding;
+    EXPECT_CALL(*mock_window_, SetOpacity(Eq(1.0f))).Times(AtLeast(1));
+
+    EXPECT_CALL(*mock_window_, SetOpacity(AllOf(Lt(1.0f), Gt(0.0f))))
+      .Times(AtLeast(FADE_DURATION/TICK_DURATION-1));
+
+    EXPECT_CALL(*mock_window_, SetOpacity(Eq(0.0f))).Times(AtLeast(1));
+    EXPECT_CALL(*mock_window_, ShowWindow(false, _)).Times(1);
+  }
+
+  controller_->Hide(false);
+  ASSERT_EQ(mock_window_->GetOpacity(), 1.0);
+
+  for (t = global_tick; t < global_tick + FADE_DURATION+1; t += TICK_DURATION)
+    tick_source_.tick(t);
+  global_tick += t;
+
+  EXPECT_EQ(mock_window_->GetOpacity(), 0.0f);
+  Mock::VerifyAndClearExpectations(mock_window_.GetPointer());
 }
 
 }
