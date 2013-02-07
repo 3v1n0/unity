@@ -54,6 +54,8 @@ TEST(TestQuicklistManager, RegisterQuicklist)
     ASSERT_EQ(quicklist1.GetPointer(), (unity::QuicklistView*) buf);
     ASSERT_TRUE(unity::QuicklistManager::Default()->RegisterQuicklist(quicklist1));
     ASSERT_EQ(quicklist1->GetReferenceCount(), 1);
+    ASSERT_FALSE(unity::QuicklistManager::Default()->RegisterQuicklist(quicklist1));
+    ASSERT_EQ(quicklist1->GetReferenceCount(), 1);
   }
   
   ASSERT_FALSE(ptr.IsValid());
