@@ -24,6 +24,7 @@
 #include <UnityCore/GLibSource.h>
 
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/MockableBaseWindow.h"
 #include "unity-shared/UBusWrapper.h"
 
 #include "SwitcherModel.h"
@@ -88,7 +89,7 @@ struct Controller::Impl
   // @todo move these view data into the SwitcherView class
   nux::Geometry workarea_;
   Controller::WindowCreator create_window_;
-  nux::ObjectPtr<nux::BaseWindow> view_window_;
+  MockableBaseWindow::Ptr view_window_;
   nux::HLayout* main_layout_;
   nux::Color bg_color_;
   nux::animation::AnimateValue<double> fade_animator_;

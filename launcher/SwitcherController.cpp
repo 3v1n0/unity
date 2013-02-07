@@ -240,7 +240,7 @@ Controller::Impl::Impl(Controller* obj,
 
   if (create_window_ == nullptr)
     create_window_ = []() {
-        return nux::ObjectPtr<nux::BaseWindow>(new nux::BaseWindow("Switcher"));
+        return nux::ObjectPtr<nux::BaseWindow>(new MockableBaseWindow("Switcher"));
     };
 
   // TODO We need to get actual timing data to suggest this is necessary.
@@ -358,7 +358,6 @@ void Controller::Impl::ShowView()
   {
     view_window_->ShowWindow(true);
     view_window_->PushToFront();
-    view_window_->SetOpacity(1.0f);
 
     if (fade_animator_.CurrentState() == nux::animation::Animation::State::Running)
     {
@@ -382,8 +381,9 @@ void Controller::Impl::ConstructWindow()
     main_layout_->SetHorizontalExternalMargin(0);
 
     view_window_ = create_window_();
+    view_window_->SetOpacity(0.0f);
     view_window_->SetLayout(main_layout_);
-    view_window_->SetBackgroundColor(nux::Color(0x00000000));
+    view_window_->SetBackgroundColor(nux::color::Transparent);
     view_window_->SetGeometry(workarea_);
   }
 }
@@ -406,7 +406,6 @@ void Controller::Impl::ConstructView()
   main_layout_->AddView(view_.GetPointer(), 1);
   view_window_->SetEnterFocusInputArea(view_.GetPointer());
   view_window_->SetGeometry(workarea_);
-  view_window_->SetOpacity(0.0f);
 
   view_built.emit();
 }
