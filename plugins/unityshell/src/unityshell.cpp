@@ -1439,7 +1439,7 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
 
   if (switcher_controller_ && switcher_controller_->Visible())
   {
-    unity::switcher::SwitcherView* view = switcher_controller_->GetView();
+    auto const& view = switcher_controller_->GetView();
 
     if (G_LIKELY(view))
     {
@@ -2057,9 +2057,12 @@ bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State
   {
     altTabInitiateCommon(action, switcher::ShowMode::CURRENT_VIEWPORT);
     switcher_controller_->Select((switcher_controller_->StartIndex())); // always select the current application
+    switcher_controller_->InitiateDetail();
   }
-
-  switcher_controller_->NextDetail();
+  else
+  {
+    switcher_controller_->NextDetail();
+  }
 
   action->setState(action->state() | CompAction::StateTermKey);
   return true;
