@@ -44,12 +44,10 @@ public:
   void Unsubscribe(EdgeBarrierSubscriber* subscriber, unsigned int monitor);
   EdgeBarrierSubscriber* GetSubscriber(unsigned int monitor);
 
-  class Impl;
-protected:
-  void ProcessBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event);
-
 private:
+  struct Impl;
   std::unique_ptr<Impl> pimpl;
+  friend class TestEdgeBarrierController;
 };
 
 }

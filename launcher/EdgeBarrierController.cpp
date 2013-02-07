@@ -196,10 +196,5 @@ EdgeBarrierSubscriber* EdgeBarrierController::GetSubscriber(unsigned int monitor
   return pimpl->subscribers_[monitor];
 }
 
-void EdgeBarrierController::ProcessBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event)
-{
-  pimpl->OnPointerBarrierEvent(owner, event);
-}
-
 }
 }

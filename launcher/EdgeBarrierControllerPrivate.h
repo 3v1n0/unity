@@ -30,9 +30,8 @@ namespace ui
 {
 
 // NOTE: This private header is not part of the public interface
-class EdgeBarrierController::Impl
+struct EdgeBarrierController::Impl
 {
-public:
   Impl(EdgeBarrierController *parent);
 
   void ResizeBarrierList(std::vector<nux::Geometry> const& layout);
