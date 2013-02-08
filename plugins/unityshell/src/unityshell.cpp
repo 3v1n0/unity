@@ -1425,7 +1425,7 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
   QuicklistManager* qm = QuicklistManager::Default();
   if (qm)
   {
-    QuicklistView* view = qm->Current();
+    auto const& view = qm->Current();
 
     if (view)
     {

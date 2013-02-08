@@ -157,7 +157,7 @@ void LauncherIcon::LoadQuicklist()
     _allow_quicklist_to_show = false;
   });
 
-  QuicklistManager::Default()->RegisterQuicklist(_quicklist.GetPointer());
+  QuicklistManager::Default()->RegisterQuicklist(_quicklist);
 }
 
 const bool
@@ -619,13 +619,13 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
   {
     auto conn = std::make_shared<sigc::connection>();
     *conn = win_manager.terminate_expo.connect([this, conn, tip_x, tip_y] {
-      QuicklistManager::Default()->ShowQuicklist(_quicklist.GetPointer(), tip_x, tip_y);
+      QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
       conn->disconnect();
     });
   }
   else
   {
-    QuicklistManager::Default()->ShowQuicklist(_quicklist.GetPointer(), tip_x, tip_y);
+    QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
   }
 
   return true;
@@ -710,7 +710,7 @@ LauncherIcon::SetCenter(nux::Point3 const& center, int monitor, nux::Geometry co
     tip_y = new_center.y;
 
     if (_quicklist && _quicklist->IsVisible())
-      QuicklistManager::Default()->ShowQuicklist(_quicklist.GetPointer(), tip_x, tip_y);
+      QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
     else if (_tooltip && _tooltip->IsVisible())
       _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
   }
