@@ -163,6 +163,7 @@ void EdgeBarrierController::Impl::OnPointerBarrierEvent(PointerBarrierWrapper* o
       }
       else
       {
+        owner->release_once = true;
         BarrierRelease(owner, event->event_id);
       }
       break;
@@ -179,11 +180,16 @@ void EdgeBarrierController::Impl::BarrierRelease(PointerBarrierWrapper* owner, i
   owner->released = true;
   BarrierReset();
 
-  unsigned duration = parent_->options()->edge_passed_disabled_ms;
-  release_timeout_.reset(new glib::Timeout(duration, [owner] {
-    owner->released = false;
-    return false;
-  }));
+  if (!owner->release_once() ||
+      (owner->release_once() && (!release_timeout_ || !release_timeout_->IsRunning())))
+  {
+    unsigned duration = parent_->options()->edge_passed_disabled_ms;
+    release_timeout_.reset(new glib::Timeout(duration, [owner] {
+      owner->released = false;
+      owner->release_once = false;
+      return false;
+    }));
+  }
 }
 
 EdgeBarrierController::EdgeBarrierController()

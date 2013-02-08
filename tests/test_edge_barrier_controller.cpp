@@ -243,6 +243,8 @@ TEST_F(TestEdgeBarrierController, ProcessIgnoredEventWithStickyEdges)
 
   EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
   ProcessBarrierEvent(&owner, event);
+  EXPECT_FALSE(owner.released());
+  EXPECT_FALSE(owner.release_once());
   EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), event->velocity);
 }
 
@@ -258,6 +260,8 @@ TEST_F(TestEdgeBarrierController, ProcessIgnoredEventWithOutStickyEdges)
 
   EXPECT_CALL(owner, ReleaseBarrier(event->event_id));
   ProcessBarrierEvent(&owner, event);
+  EXPECT_TRUE(owner.released());
+  EXPECT_TRUE(owner.release_once());
   EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), 0);
 }
 
