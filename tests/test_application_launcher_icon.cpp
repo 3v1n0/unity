@@ -214,6 +214,10 @@ TEST_F(TestApplicationLauncherIcon, WindowListMenusWithTwoWindows)
   });
 
   ASSERT_NE(menu1_it, menus.end());
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu1_it, DBUSMENU_MENUITEM_PROP_ENABLED));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu1_it, DBUSMENU_MENUITEM_PROP_VISIBLE));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu1_it, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY));
+  EXPECT_EQ(dbusmenu_menuitem_property_get_int(*menu1_it, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY), 300);
 
   auto menu2_it = std::find_if(menus.begin(), menus.end(), [win2] (glib::Object<DbusmenuMenuitem> it) {
     auto* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
@@ -221,6 +225,10 @@ TEST_F(TestApplicationLauncherIcon, WindowListMenusWithTwoWindows)
   });
 
   ASSERT_NE(menu2_it, menus.end());
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu2_it, DBUSMENU_MENUITEM_PROP_ENABLED));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu2_it, DBUSMENU_MENUITEM_PROP_VISIBLE));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu2_it, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY));
+  EXPECT_EQ(dbusmenu_menuitem_property_get_int(*menu2_it, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY), 300);
 
   bool activated = false;
   wm_win1->active.changed.connect([&activated] (bool a) { activated = a; });
@@ -235,6 +243,23 @@ TEST_F(TestApplicationLauncherIcon, WindowListMenusWithTwoWindows)
 
   EXPECT_TRUE(wm_win2->active());
   EXPECT_TRUE(activated);
+}
+
+TEST_F(TestApplicationLauncherIcon, WindowListMenusWithEmptyTitles)
+{
+  auto win1 = std::make_shared<MockApplicationWindow>(1);
+  auto win2 = std::make_shared<MockApplicationWindow>(2);
+  win1->title_.clear();
+
+  mock_app->window_list_ = { win1, win2 };
+  auto const& menus = mock_icon->Menus();
+
+  auto menu1_it = std::find_if(menus.begin(), menus.end(), [win1] (glib::Object<DbusmenuMenuitem> it) {
+    auto* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
+    return (label && std::string(label) == win1->title());
+  });
+
+  ASSERT_EQ(menu1_it, menus.end());
 }
 
 }

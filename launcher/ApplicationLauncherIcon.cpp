@@ -707,11 +707,14 @@ void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
   // add menu items for all open windows
   for (auto const& w : windows)
   {
+    if (w->title().empty())
+      continue;
+
     glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
     dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, w->title().c_str());
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-    dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY, TRUE);
+    dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY, true);
     dbusmenu_menuitem_property_set_int(menu_item, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY, MAXIMUM_QUICKLIST_WIDTH);
 
     Window xid = w->window_id();
