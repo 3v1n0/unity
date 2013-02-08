@@ -708,8 +708,12 @@ void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
   for (auto const& w : windows)
   {
     glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, w->title().c_str());
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY, TRUE);
+    dbusmenu_menuitem_property_set_int(menu_item, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY, MAXIMUM_QUICKLIST_WIDTH);
+
     Window xid = w->window_id();
     _gsignals.Add<void, DbusmenuMenuitem*, int>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
       [xid] (DbusmenuMenuitem*, int) {
@@ -717,8 +721,6 @@ void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
         wm.Activate(xid);
         wm.Raise(xid);
     });
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, w->title().c_str());
-    dbusmenu_menuitem_property_set_int(menu_item, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY, MAXIMUM_QUICKLIST_WIDTH);
 
     _menu_items_windows.push_back(menu_item);
   }
