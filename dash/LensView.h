@@ -70,11 +70,10 @@ public:
   nux::Property<ScopeViewType> view_type;
   nux::Property<bool> can_refine_search;
 
-  sigc::signal<void, ResultView::ActivateType, std::string const&, GVariant*, std::string const&> uri_activated;
+  sigc::signal<void, ResultView::ActivateType, LocalResult const&, GVariant*, std::string const&> result_activated;
 
   void PerformSearch(std::string const& search_query, Scope::SearchCallback const& cb);
   void CheckNoResults(glib::HintsMap const& hints);
-  void CheckCategoryExpansion();
   void HideResultsMessage();
 
   void ForceCategoryExpansion(std::string const& view_id, bool expand);
@@ -100,7 +99,6 @@ private:
   void OnResultAdded(Result const& result);
   void OnResultRemoved(Result const& result);
   
-  void UpdateCounts(PlacesGroup* group);
   void OnGroupExpanded(PlacesGroup* group);
   void CheckScrollBarState();
   void OnColumnsChanged();
@@ -110,6 +108,10 @@ private:
   void OnScopeFilterExpanded(bool expanded);
   bool ReinitializeFilterModels();
   void ClearCategories();
+
+  void QueueCategoryCountsCheck();
+  void CheckCategoryCounts();
+
   ResultViewGrid* GetGridForCategory(unsigned category_index);
   ResultView* GetResultViewForCategory(unsigned category_index);
 

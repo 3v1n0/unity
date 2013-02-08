@@ -245,7 +245,7 @@ void Preview::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
     .add(GetAbsoluteGeometry())
-    .add("uri", preview_model_->preview_uri.Get());
+    .add("uri", preview_model_->preview_result.uri);
 }
 
 void Preview::OnActionActivated(ActionButton* button, std::string const& id)

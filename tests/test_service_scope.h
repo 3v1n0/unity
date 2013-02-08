@@ -38,7 +38,7 @@ G_BEGIN_DECLS
 #define SERVICE_IS_SCOPE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass),\
   SERVICE_TYPE_SCOPE))
 
-#define ServiceScope_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj),\
+#define SERVICE_SCOPE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj),\
   SERVICE_TYPE_SCOPE, ServiceScopeClass))
 
 typedef struct _ServiceScope        ServiceScope;
@@ -59,7 +59,7 @@ struct _ServiceScopeClass
 
 GType service_scope_get_type(void) G_GNUC_CONST;
 
-ServiceScope* service_scope_new(void);
+// ServiceScope* service_scope_new(void);
 
 G_END_DECLS
 

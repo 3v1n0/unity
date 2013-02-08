@@ -77,10 +77,11 @@ public:
 
   sigc::signal<void, ScopeList const&> scopes_reordered;
 
-protected:
+  virtual void AppendScope(std::string const& scope_id);
   virtual void InsertScope(std::string const& scope_id, unsigned index);
   virtual void RemoveScope(std::string const& scope_id);
 
+protected:
   virtual Scope::Ptr CreateScope(ScopeData::Ptr const& scope_data);
 
 private:

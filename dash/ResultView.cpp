@@ -144,14 +144,12 @@ ResultIterator ResultView::GetIteratorAtRow(unsigned row)
   return ResultIterator(glib::Object<DeeModel>());
 }
 
-// it would be nice to return a result here, but c++ does not have a good mechanism
-// for indicating out of bounds errors. so i return the index
-unsigned int ResultView::GetIndexForUri(const std::string& uri)
+unsigned int ResultView::GetIndexForLocalResult(LocalResult const& local_result)
 {
   unsigned int index = 0;
   for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
   {
-    if ((*it).uri == uri)
+    if ((*it).uri == local_result.uri)
       break;
 
     index++;
@@ -160,12 +158,12 @@ unsigned int ResultView::GetIndexForUri(const std::string& uri)
   return index;
 }
 
-std::string ResultView::GetUriForIndex(unsigned int index)
+LocalResult ResultView::GetLocalResultForIndex(unsigned int index)
 {
   if (index >= GetNumResults())
-    return "";
+    return LocalResult();
 
-  return (*GetIteratorAtRow(index)).uri();
+  return LocalResult(*GetIteratorAtRow(index));
 }
 
 long ResultView::ComputeContentSize()

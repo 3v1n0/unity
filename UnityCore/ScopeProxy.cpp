@@ -59,8 +59,8 @@ public:
   static void OnCloseChannel(GObject *source_object, GAsyncResult *res, gpointer user_data);
 
   void Search(std::string const& search_string, glib::HintsMap const& hints, SearchCallback const& callback, GCancellable* cancel);
-  void Activate(std::string const& uri, uint activate_type, glib::HintsMap const& hints, ScopeProxy::ActivateCallback const& callback, GCancellable* cancellable);
-  void UpdatePreviewProperty(std::string const& uri, glib::HintsMap const& hints, UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable);
+  void Activate(LocalResult const& result, uint activate_type, glib::HintsMap const& hints, ScopeProxy::ActivateCallback const& callback, GCancellable* cancellable);
+  void UpdatePreviewProperty(LocalResult const& result, glib::HintsMap const& hints, UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable);
 
   bool set_view_type(ScopeViewType const& view_type)
   {
@@ -82,7 +82,6 @@ public:
   ScopeData::Ptr scope_data_;
 
   // scope proxy properties
-  nux::Property<bool> search_in_global;
   nux::Property<ScopeViewType> view_type;
 
   nux::Property<bool> connected;
@@ -107,7 +106,6 @@ public:
   /////////////////////////////////////////////////
   // DBus property signals.
   glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> connected_signal_;
-  glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> search_in_global_signal_;
   glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> is_master_signal_;
   glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> search_hint_signal_;
   glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> view_type_signal_;
@@ -187,6 +185,7 @@ private:
   struct ActivateData
   {
     ScopeProxy::ActivateCallback callback;
+    LocalResult result;
   };
   static void OnScopeActivateCallback(GObject *source_object, GAsyncResult *res, gpointer user_data)
   {
@@ -197,16 +196,15 @@ private:
 
     if (data->callback)
     {
-      std::string uri;
       ScopeHandledType handled = ScopeHandledType::NOT_HANDLED;
 
-      uri = result.uri;
+      data->result.uri = result.uri;
       handled = static_cast<ScopeHandledType>(result.handled);
 
       glib::HintsMap hints;
       glib::hintsmap_from_hashtable(result.hints, hints);
 
-      data->callback(uri, handled, hints, error);
+      data->callback(data->result, handled, hints, error);
     }
   }
   /////////////////////////////////////
@@ -233,7 +231,6 @@ private:
 ScopeProxy::Impl::Impl(ScopeProxy*const owner, ScopeData::Ptr const& scope_data)
 : owner_(owner)
 , scope_data_(scope_data)
-, search_in_global(false)
 , view_type(ScopeViewType::HIDDEN)
 , connected(false)
 , cancel_scope_(g_cancellable_new())
@@ -247,7 +244,6 @@ ScopeProxy::Impl::Impl(ScopeProxy*const owner, ScopeData::Ptr const& scope_data)
   // remote properties
   property_connections.push_back(utils::ConnectProperties(owner_->connected, connected));
   property_connections.push_back(utils::ConnectProperties(owner_->channel, channel));
-  property_connections.push_back(utils::ConnectProperties(owner_->search_in_global, search_in_global));
   property_connections.push_back(utils::ConnectProperties(owner_->view_type, view_type));
   property_connections.push_back(utils::ConnectProperties(owner_->category_order, category_order));
 
@@ -323,7 +319,6 @@ void ScopeProxy::Impl::OnNewScope(GObject *source_object, GAsyncResult *res)
   glib::Error error;
   scope_proxy = unity_protocol_scope_proxy_new_from_dbus_finish(res, &error);
 
-  search_in_global_signal_.Disconnect();
   is_master_signal_.Disconnect();
   search_hint_signal_.Disconnect();
   view_type_signal_.Disconnect();
@@ -348,11 +343,9 @@ void ScopeProxy::Impl::OnNewScope(GObject *source_object, GAsyncResult *res)
   scope_data_->is_master = unity_protocol_scope_proxy_get_is_master(scope_proxy_);
   scope_data_->search_hint = glib::gchar_to_string(unity_protocol_scope_proxy_get_search_hint(scope_proxy_));
   // remote properties
-  search_in_global = unity_protocol_scope_proxy_get_search_in_global(scope_proxy_);
   view_type = static_cast<ScopeViewType>(unity_protocol_scope_proxy_get_view_type(scope_proxy_));
 
   connected_signal_.Connect(scope_proxy_, "notify::connected", sigc::mem_fun(this, &Impl::OnScopeConnectedChanged));
-  search_in_global_signal_.Connect(scope_proxy_, "notify::search-in-global", sigc::mem_fun(this, &Impl::OnScopeSearchInGlobalChanged));
   is_master_signal_.Connect(scope_proxy_, "notify::is-master", sigc::mem_fun(this, &Impl::OnScopeIsMasterChanged));
   search_hint_signal_.Connect(scope_proxy_, "notify::search-hint", sigc::mem_fun(this, &Impl::OnScopeSearchHintChanged));
   view_type_signal_.Connect(scope_proxy_, "notify::view-type", sigc::mem_fun(this, &Impl::OnScopeViewTypeChanged));
@@ -433,6 +426,7 @@ void ScopeProxy::Impl::CloseChannel()
 {
   if (channel != "")
   {
+    connected = false;
     unity_protocol_scope_proxy_close_channel(scope_proxy_,
                                              channel.Get().c_str(),
                                              nullptr,
@@ -495,7 +489,7 @@ void ScopeProxy::Impl::Search(std::string const& search_string, glib::HintsMap c
 
   GCancellable* target_canc = cancellable != NULL ? cancellable : cancel_scope_;
 
-  if (!scope_proxy_)
+  if (!connected)
   {
     if (!proxy_created_)
       CreateProxy();
@@ -534,27 +528,27 @@ void ScopeProxy::Impl::Search(std::string const& search_string, glib::HintsMap c
   g_hash_table_unref(hints_table);
 }
 
-void ScopeProxy::Impl::Activate(std::string const& uri, uint activate_type, glib::HintsMap const& hints, ScopeProxy::ActivateCallback const& callback, GCancellable* cancellable)
+void ScopeProxy::Impl::Activate(LocalResult const& result, uint activate_type, glib::HintsMap const& hints, ScopeProxy::ActivateCallback const& callback, GCancellable* cancellable)
 {
   GCancellable* target_canc = cancellable != NULL ? cancellable : cancel_scope_;
 
-  if (!scope_proxy_)
+  if (!connected)
   {
     if (!proxy_created_)
       CreateProxy();
 
     glib::Object<GCancellable> canc(target_canc, glib::AddRef());
-    WaitForProxyConnection(canc, PROXY_CONNECT_TIMEOUT, [this, uri, activate_type, hints, callback, canc] (glib::Error const& err)
+    WaitForProxyConnection(canc, PROXY_CONNECT_TIMEOUT, [this, result, activate_type, hints, callback, canc] (glib::Error const& err)
     {
       if (err)
       {
-        callback(uri, ScopeHandledType::NOT_HANDLED, glib::HintsMap(), err);
-        LOG_WARNING(logger) << "Could not activate '" << uri
+        callback(result, ScopeHandledType::NOT_HANDLED, glib::HintsMap(), err);
+        LOG_WARNING(logger) << "Could not activate '" << result.uri
                             << "' on " << scope_data_->id() << " => " << err;
       }
       else
       {
-        Activate(uri, activate_type, hints, callback, canc);
+        Activate(result, activate_type, hints, callback, canc);
       }
     });
     return;
@@ -562,41 +556,52 @@ void ScopeProxy::Impl::Activate(std::string const& uri, uint activate_type, glib
 
   ActivateData* data = new ActivateData();
   data->callback = callback;
+  data->result = result;
 
   GHashTable* hints_table = glib::hashtable_from_hintsmap(hints);
 
+  std::vector<glib::Variant> columns = result.Variants();
+  GVariant** variants = new GVariant*[columns.size()];
+  
+  for (unsigned i = 0; i < columns.size(); i++)
+  {
+    variants[i] = g_variant_ref(columns[i]);
+  }
+
   unity_protocol_scope_proxy_activate(scope_proxy_,
                                       channel().c_str(),
-                                      uri.c_str(),
+                                      variants,
+                                      columns.size(),
                                       (UnityProtocolActionType)activate_type,
                                       hints_table,
                                       target_canc,
                                       Impl::OnScopeActivateCallback,
                                       data);
+  delete [] variants;
   g_hash_table_unref(hints_table);
 }
 
-void ScopeProxy::Impl::UpdatePreviewProperty(std::string const& uri, glib::HintsMap const& hints, ScopeProxy::UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable)
+void ScopeProxy::Impl::UpdatePreviewProperty(LocalResult const& result, glib::HintsMap const& hints, ScopeProxy::UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable)
 {
   GCancellable* target_canc = cancellable != NULL ? cancellable : cancel_scope_;
 
-  if (!scope_proxy_)
+  if (!connected)
   {
     if (!proxy_created_)
       CreateProxy();
 
     glib::Object<GCancellable> canc(target_canc, glib::AddRef());
-    WaitForProxyConnection(canc, PROXY_CONNECT_TIMEOUT, [this, uri, hints, callback, canc] (glib::Error const& err)
+    WaitForProxyConnection(canc, PROXY_CONNECT_TIMEOUT, [this, result, hints, callback, canc] (glib::Error const& err)
     {
       if (err)
       {
         callback(glib::HintsMap(), err);
-        LOG_WARNING(logger) << "Could not update preview property '" << uri
+        LOG_WARNING(logger) << "Could not update preview property '" << result.uri
                             << "' on " << scope_data_->id() << " => " << err;
       }
       else
       {
-        UpdatePreviewProperty(uri, hints, callback, canc);
+        UpdatePreviewProperty(result, hints, callback, canc);
       }
     });
     return;
@@ -609,7 +614,7 @@ void ScopeProxy::Impl::UpdatePreviewProperty(std::string const& uri, glib::Hints
 
   unity_protocol_scope_proxy_update_preview_property(scope_proxy_,
                                                      channel().c_str(),
-                                                     uri.c_str(),
+                                                     result.uri.c_str(),
                                                      hints_table,
                                                      target_canc,
                                                      Impl::OnScopeUpdatePreviewPropertyCallback,
@@ -620,7 +625,7 @@ void ScopeProxy::Impl::UpdatePreviewProperty(std::string const& uri, glib::Hints
 
 void ScopeProxy::Impl::OnScopeConnectedChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param)
 {
-  bool tmp_scope_proxy_connected = unity_protocol_scope_proxy_get_search_in_global(scope_proxy_);  
+  bool tmp_scope_proxy_connected = unity_protocol_scope_proxy_get_connected(scope_proxy_);  
   if (tmp_scope_proxy_connected != scope_proxy_connected_)
   {
     scope_proxy_connected_ = tmp_scope_proxy_connected;
@@ -638,11 +643,6 @@ void ScopeProxy::Impl::OnScopeConnectedChanged(UnityProtocolScopeProxy* proxy, G
 void ScopeProxy::Impl::OnScopeIsMasterChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param)
 {
   scope_data_->is_master = unity_protocol_scope_proxy_get_is_master(proxy);
-}
-
-void ScopeProxy::Impl::OnScopeSearchInGlobalChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param)
-{
-  search_in_global = unity_protocol_scope_proxy_get_search_in_global(proxy);
 }
 
 void ScopeProxy::Impl::OnScopeSearchHintChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param)
@@ -771,14 +771,14 @@ void ScopeProxy::Search(std::string const& search_string, SearchCallback const& 
   pimpl->Search(search_string, glib::HintsMap(), callback, cancellable);
 }
 
-void ScopeProxy::Activate(std::string const& uri, uint activate_type, glib::HintsMap const& hints, ScopeProxy::ActivateCallback const& callback, GCancellable* cancellable)
+void ScopeProxy::Activate(LocalResult const& result, uint activate_type, glib::HintsMap const& hints, ScopeProxy::ActivateCallback const& callback, GCancellable* cancellable)
 {
-  pimpl->Activate(uri, activate_type, hints, callback, cancellable);
+  pimpl->Activate(result, activate_type, hints, callback, cancellable);
 }
 
-void ScopeProxy::UpdatePreviewProperty(std::string const& uri, glib::HintsMap const& hints, ScopeProxy::UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable)
+void ScopeProxy::UpdatePreviewProperty(LocalResult const& result, glib::HintsMap const& hints, ScopeProxy::UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable)
 {
-  pimpl->UpdatePreviewProperty(uri, hints, callback, cancellable);
+  pimpl->UpdatePreviewProperty(result, hints, callback, cancellable);
 }
 
 Results::Ptr ScopeProxy::GetResultsForCategory(unsigned category) const

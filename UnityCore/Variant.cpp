@@ -95,6 +95,23 @@ bool Variant::ASVToHints(HintsMap& hints) const
   return true;
 }
 
+Variant Variant::FromHints(HintsMap const& hints)
+{
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
+
+  for (glib::HintsMap::const_iterator it = hints.begin(); it != hints.end(); ++it)
+  {
+    gchar* key = g_strdup(it->first.c_str());
+    GVariant* ptr = g_variant_ref(it->second);
+
+
+    g_variant_builder_add(&b, "{sv}", key, ptr);
+  }
+
+  return g_variant_builder_end(&b);
+}
+
 void Variant::swap(Variant& other)
 {
   std::swap(this->variant_, other.variant_);

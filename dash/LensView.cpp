@@ -165,8 +165,6 @@ ScopeView::ScopeView(Scope::Ptr scope, nux::Area* show_filters)
   SetupResults();
   SetupFilters();
 
-  dash::Style::Instance().columns_changed.connect(sigc::mem_fun(this, &ScopeView::OnColumnsChanged));
-
   search_string.SetGetterFunction(sigc::mem_fun(this, &ScopeView::get_search_string));
   filters_expanded.changed.connect(sigc::mem_fun(this, &ScopeView::OnScopeFilterExpanded));
   view_type.changed.connect(sigc::mem_fun(this, &ScopeView::OnViewTypeChanged));
@@ -285,6 +283,7 @@ void ScopeView::SetupCategories()
 
   auto resync_categories = [categories, this] (glib::Object<DeeModel> model)
   {
+    printf("Categories Changed %s\n", scope_->id().c_str());
     ClearCategories();
     for (unsigned int i = 0; i < categories->count(); ++i)
       OnCategoryAdded(categories->RowAtIndex(i));
@@ -417,18 +416,18 @@ void ScopeView::OnCategoryAdded(Category const& category)
     grid->expanded = false;
 
     group->SetRendererName(renderer_name.c_str());
-    grid->UriActivated.connect([this, unique_id] (std::string const& uri, ResultView::ActivateType type, GVariant* data) 
+    grid->ResultActivated.connect([this, unique_id] (LocalResult const& local_result, ResultView::ActivateType type, GVariant* data) 
     {
-      uri_activated.emit(type, uri, data, unique_id); 
+      result_activated.emit(type, local_result, data, unique_id); 
       switch (type)
       {
         case ResultView::ActivateType::DIRECT:
         {
-          scope_->Activate(uri, nullptr, cancellable_);
+          scope_->Activate(local_result, nullptr, cancellable_);
         } break;
         case ResultView::ActivateType::PREVIEW:
         {
-          scope_->Preview(uri, nullptr, cancellable_);
+          scope_->Preview(local_result, nullptr, cancellable_);
         } break;
         default: break;
       };
@@ -468,7 +467,7 @@ void ScopeView::OnCategoryAdded(Category const& category)
                           nux::MinorDimensionSize::MINOR_SIZE_FULL, 100.0f,
                           (nux::LayoutPosition)index);
 
-  UpdateCounts(group);
+  QueueCategoryCountsCheck();
 }
 
 void ScopeView::OnCategoryRemoved(Category const& category)
@@ -488,6 +487,8 @@ void ScopeView::OnCategoryRemoved(Category const& category)
 
   auto category_position = categories_.begin() + index;
   PlacesGroup* existing_group = *category_position;
+  if (last_expanded_group_ == existing_group)
+    last_expanded_group_ = nullptr;
   categories_.erase(category_position);
   counts_.erase(existing_group);
 
@@ -506,6 +507,7 @@ void ScopeView::ClearCategories()
   }
   counts_.clear();
   categories_.clear();
+  last_expanded_group_ = nullptr;
   QueueRelayout();
 }
 
@@ -552,23 +554,11 @@ void ScopeView::OnResultAdded(Result const& result)
     LOG_TRACE(logger) << "Result added: " << uri;
 
     counts_[group]++;
-    UpdateCounts(group);
     // make sure we don't display the no-results-hint if we do have results
-    if (G_UNLIKELY (no_results_active_))
-    {
-      CheckNoResults(glib::HintsMap());
-    }
+    CheckNoResults(glib::HintsMap());
 
-    if (!model_updated_timeout_)
-    {
-      model_updated_timeout_.reset(new glib::Idle([&] () {
-        // Check if all results so far are from one category
-        // If so, then expand that category.
-        CheckCategoryExpansion();
-        model_updated_timeout_.reset();
-        return false;
-      }, glib::Source::Priority::HIGH));
-    }
+    QueueCategoryCountsCheck();
+
   } catch (std::out_of_range& oor) {
     LOG_WARN(logger) << "Result does not have a valid category index: "
                      << boost::lexical_cast<unsigned int>(result.category_index)
@@ -585,21 +575,16 @@ void ScopeView::OnResultRemoved(Result const& result)
     LOG_TRACE(logger) << "Result removed: " << uri;
 
     counts_[group]--;
-    UpdateCounts(group);
+    // make sure we don't display the no-results-hint if we do have results
+    CheckNoResults(glib::HintsMap());
+
+    QueueCategoryCountsCheck();
+
   } catch (std::out_of_range& oor) {
     LOG_WARN(logger) << "Result does not have a valid category index: "
                      << boost::lexical_cast<unsigned int>(result.category_index)
                      << ". Is out of range.";
   }
-}
-
-void ScopeView::UpdateCounts(PlacesGroup* group)
-{
-  unsigned int columns = dash::Style::Instance().GetDefaultNColumns();
-  columns -= filters_expanded ? 2 : 0;
-
-  group->SetCounts(columns, counts_[group]);
-  group->SetVisible(counts_[group]);
 }
 
 void ScopeView::CheckNoResults(glib::HintsMap const& hints)
@@ -642,31 +627,53 @@ void ScopeView::CheckNoResults(glib::HintsMap const& hints)
   }
 }
 
-void ScopeView::CheckCategoryExpansion()
+void ScopeView::QueueCategoryCountsCheck()
+{
+  if (!model_updated_timeout_)
+  {
+    model_updated_timeout_.reset(new glib::Idle([&] () {
+      // Check if all results so far are from one category
+      // If so, then expand that category.
+      CheckCategoryCounts();
+      model_updated_timeout_.reset();
+      return false;
+    }, glib::Source::Priority::HIGH));
+  }
+}
+
+void ScopeView::CheckCategoryCounts()
 {
     int number_of_displayed_categories = 0;
 
-    // Check if we had expanded a group in last run
-    // If so, collapse it for now
-    if (last_expanded_group_ != nullptr)
-    {
-        last_expanded_group_->SetExpanded(false);
-        last_expanded_group_ = nullptr;
-    }
+    PlacesGroup* new_expanded_category = nullptr;
 
     // Cycle through all categories
     for (auto category : categories_)
     {
-        if (counts_[category] > 0) {
-            number_of_displayed_categories++;
-            last_expanded_group_ = category;
-        }
+      category->SetCounts(counts_[category]);
+      category->SetVisible(counts_[category] > 0);
+
+      if (counts_[category] > 0)
+      {
+        number_of_displayed_categories++;
+        new_expanded_category = category;
+      }
     }
 
-    if (number_of_displayed_categories == 1 && last_expanded_group_ != nullptr)
-        last_expanded_group_->SetExpanded(true);
-    else
-        last_expanded_group_ = nullptr;
+    if (new_expanded_category)
+    {
+      // only expand the category if we have only one with results.
+      if (number_of_displayed_categories == 1)
+        new_expanded_category->SetExpanded(true);
+      if (last_expanded_group_ && last_expanded_group_ != new_expanded_category)
+        last_expanded_group_->SetExpanded(false);
+    }
+    else if (last_expanded_group_)
+    {
+      last_expanded_group_->SetExpanded(false);
+    }
+
+    last_expanded_group_ = new_expanded_category;
 }
 
 void ScopeView::HideResultsMessage()
@@ -714,17 +721,6 @@ void ScopeView::CheckScrollBarState()
   }
 }
 
-void ScopeView::OnColumnsChanged()
-{
-  unsigned int columns = dash::Style::Instance().GetDefaultNColumns();
-  columns -= filters_expanded ? 2 : 0;
-
-  for (auto group: categories_)
-  {
-    group->SetCounts(columns, counts_[group]);
-  }
-}
-
 void ScopeView::OnFilterAdded(Filter::Ptr filter)
 {
   filter_bar_->AddFilter(filter);
@@ -757,7 +753,6 @@ void ScopeView::OnScopeFilterExpanded(bool expanded)
   {
     fscroll_view_->SetVisible(expanded);
     QueueRelayout();
-    OnColumnsChanged();
   }
 
   for (auto it = categories_.begin(); it != categories_.end(); ++it)
@@ -804,17 +799,15 @@ nux::Area* ScopeView::fscroll_view() const
 
 int ScopeView::GetNumRows()
 {
-  unsigned int columns = dash::Style::Instance().GetDefaultNColumns();
-  columns -= filters_expanded ? 2 : 0;
-
   int num_rows = 0;
   for (auto group: categories_)
   {
-    if (group->IsVisible())
+    if (group->IsVisible() && group->GetChildView())
     {
+      int columns = group->GetChildView()->results_per_row;
       num_rows += 1; // The category header
 
-      if (group->GetExpanded() && columns)
+      if (group->GetExpanded() && columns > 0)
         num_rows += ceil(counts_[group] / static_cast<double>(columns));
       else
         num_rows += 1;
@@ -852,7 +845,7 @@ void ScopeView::ActivateFirst()
       if (!it.IsLast())
       {
         Result result(*it);
-        result_view->Activate(result.uri, result_view->GetIndexForUri(result.uri), ResultView::ActivateType::DIRECT);
+        result_view->Activate(result, result_view->GetIndexForLocalResult(result), ResultView::ActivateType::DIRECT);
         return;
       }
     }
@@ -861,8 +854,8 @@ void ScopeView::ActivateFirst()
     Result result = results->RowAtIndex(0);
     if (result.uri != "")
     {
-      uri_activated.emit(ResultView::ActivateType::DIRECT, result.uri, nullptr, "");
-      scope_->Activate(result.uri);
+      result_activated.emit(ResultView::ActivateType::DIRECT, LocalResult(result), nullptr, "");
+      scope_->Activate(result);
     }
   }
 }

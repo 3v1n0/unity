@@ -82,6 +82,167 @@ std::string Result::GetMimeType() const { return GetStringAt(ResultColumn::MIMET
 std::string Result::GetName() const { return GetStringAt(ResultColumn::TITLE); }
 std::string Result::GetComment() const { return GetStringAt(ResultColumn::COMMENT); }
 std::string Result::GetDndURI() const { return GetStringAt(ResultColumn::DND_URI); }
+glib::HintsMap Result::GetHints() const
+{
+  glib::HintsMap hints;
+  GetVariantAt(ResultColumn::METADATA).ASVToHints(hints);
+  return hints;
+}
+
+LocalResult::LocalResult()
+{
+}
+
+LocalResult::LocalResult(LocalResult const& other)
+{
+  operator=(other);
+}
+
+LocalResult::LocalResult(Result const& result)
+{
+  operator=(result);
+}
+
+LocalResult& LocalResult::operator=(Result const& rhs)
+{
+  uri = rhs.uri;
+  icon_hint = rhs.icon_hint;
+  category_index = rhs.category_index;
+  result_type = rhs.result_type;
+  mimetype = rhs.mimetype;
+  name = rhs.name;
+  comment = rhs.comment;
+  dnd_uri = rhs.dnd_uri;  
+  hints = rhs.hints;
+
+  return *this;
+}
+
+LocalResult& LocalResult::operator=(LocalResult const& rhs)
+{
+  if (this == &rhs)
+    return *this;
+
+  uri = rhs.uri;
+  icon_hint = rhs.icon_hint;
+  category_index = rhs.category_index;
+  result_type = rhs.result_type;
+  mimetype = rhs.mimetype;
+  name = rhs.name;
+  comment = rhs.comment;
+  dnd_uri = rhs.dnd_uri;
+  hints = rhs.hints;
+
+  return *this;
+}
+
+bool LocalResult::operator==(LocalResult const& rhs) const
+{
+  return uri == rhs.uri;
+}
+
+bool LocalResult::operator!=(LocalResult const& rhs) const
+{
+  return !(operator==(rhs));
+}
+
+std::vector<glib::Variant> LocalResult::Variants() const
+{
+  std::vector<glib::Variant> vars;
+  vars.push_back(g_variant_new_string(uri.c_str()));
+  vars.push_back(g_variant_new_string(icon_hint.c_str()));
+  vars.push_back(g_variant_new_uint32(category_index));
+  vars.push_back(g_variant_new_uint32(result_type));
+  vars.push_back(g_variant_new_string(mimetype.c_str()));
+  vars.push_back(g_variant_new_string(name.c_str()));
+  vars.push_back(g_variant_new_string(comment.c_str()));
+  vars.push_back(g_variant_new_string(dnd_uri.c_str()));
+  vars.push_back(glib::Variant::FromHints(hints));
+
+  return vars;
+}
+
+glib::Variant LocalResult::Variant() const
+{
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("av"));
+
+  std::vector<glib::Variant> vars = Variants();
+  for (glib::Variant const& v : vars)
+  {
+    g_variant_builder_add(&b, "v", g_variant_ref(v));
+  }
+
+  return g_variant_builder_end(&b);
+}
+
+LocalResult LocalResult::FromVariant(glib::Variant const& v)
+{
+  GVariantIter* var_iter;
+  GVariant* value = NULL;
+
+  if (!v || !g_variant_is_of_type (v, G_VARIANT_TYPE ("av")))
+  {
+    return LocalResult();
+  }
+
+  g_variant_get(v, g_variant_get_type_string(v), &var_iter);
+
+  int i = 0;
+  std::vector<glib::Variant> vars;
+  LocalResult result;
+  while (g_variant_iter_loop(var_iter, "v", &value))
+  {
+    vars.push_back(value);
+    switch (i)
+    {
+      case URI:
+        result.uri = g_variant_get_string(value, NULL);
+        break;
+      case ICON_HINT:
+        result.icon_hint = g_variant_get_string(value, NULL);
+        break;
+      case CATEGORY:
+        result.category_index = g_variant_get_uint32(value);
+        break;
+      case RESULT_TYPE:
+        result.result_type = g_variant_get_uint32(value);
+        break;
+      case MIMETYPE:
+        result.mimetype = g_variant_get_string(value, NULL);
+        break;
+      case TITLE:
+        result.name = g_variant_get_string(value, NULL);
+        break;
+      case COMMENT:
+        result.comment = g_variant_get_string(value, NULL);
+        break;
+      case DND_URI:
+        result.dnd_uri = g_variant_get_string(value, NULL);
+        break;
+      case METADATA:
+        glib::HintsMap hints;
+        if (glib::Variant(value).ASVToHints(hints))
+        {
+          result.hints = hints;
+        }
+        break;
+    }
+  }
+  g_variant_iter_free (var_iter);
+
+  return result;
+}
+
+void LocalResult::clear()
+{
+  uri.clear();
+}
+
+bool LocalResult::empty() const
+{
+  return uri.empty();
+}
 
 }
 }

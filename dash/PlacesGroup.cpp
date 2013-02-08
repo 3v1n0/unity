@@ -353,7 +353,7 @@ PlacesGroup::RefreshLabel()
 
   bool visible = !(_n_visible_items_in_unexpand_mode >= _n_total_items && _n_total_items != 0);
 
-  _expand_icon->SetVisible(visible);;
+  _expand_icon->SetVisible(visible);
   SetName(_cached_name);
 
   _expand_label->SetText(result_string);
@@ -521,8 +521,7 @@ PlacesGroup::GetCategoryIndex() const
 }
 
 void
-PlacesGroup::SetCounts(unsigned n_visible_items_in_unexpand_mode,
-                       unsigned n_total_items)
+PlacesGroup::SetCounts(unsigned n_total_items)
 {
   _n_total_items = n_total_items;
 

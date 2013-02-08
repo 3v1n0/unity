@@ -17,22 +17,23 @@
  * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
- #include "test_service_scope.h"
+#include "test_service_scope.h"
 
 #include <unity.h>
- #include "stdio.h"
+#include "stdio.h"
+#include "test_scope_impl.h"
 
 G_DEFINE_TYPE(ServiceScope, service_scope, G_TYPE_OBJECT);
 
 static void add_categories(ServiceScope* self);
 static void add_filters(ServiceScope *self);
-static void on_search_changed(UnityScope* scope, UnityScopeSearch *search, UnitySearchType search_type, GCancellable *canc, ServiceScope* self);
-static UnityActivationResponse* on_activate_uri(UnityScope* scope, const char* uri, ServiceScope* self);
-static UnityPreview* on_preview_uri(UnityScope* scope, const char* uri, ServiceScope *self);
+static UnityActivationResponse* on_activate_uri(TestScope* scope, const char* uri, ServiceScope* self);
+static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_ctx, gpointer self);
+
 
 struct _ServiceScopePrivate
 {
-  UnityAbstractScope* scope;
+  TestScope* scope;
 };
 
 static void
@@ -60,23 +61,18 @@ service_scope_init(ServiceScope* self)
   priv = self->priv = G_TYPE_INSTANCE_GET_PRIVATE(self, SERVICE_TYPE_SCOPE, ServiceScopePrivate);
 
   /* Scope */
-  priv->scope = UNITY_ABSTRACT_SCOPE(unity_scope_new("/com/canonical/unity/scope/testscope1", "TestScope1"));
-  unity_abstract_scope_set_search_in_global(priv->scope, TRUE);
-  unity_abstract_scope_set_visible(priv->scope, TRUE);
-  unity_abstract_scope_set_search_hint(priv->scope, "Search Test Scope");
-
+  priv->scope = test_scope_new("/com/canonical/unity/scope/testscope1");
   add_categories(self);
   add_filters(self);
 
-  g_signal_connect(priv->scope, "search-changed",
-                   G_CALLBACK(on_search_changed), self);
   g_signal_connect(priv->scope, "activate-uri",
                    G_CALLBACK(on_activate_uri), self);
-  g_signal_connect(priv->scope, "preview-uri",
-                   G_CALLBACK(on_preview_uri), self);
+
+  g_signal_connect(priv->scope, "search",
+                   G_CALLBACK(on_scope_search), self);
 
   /* Export */
-  unity_abstract_scope_export(priv->scope, &error);
+  test_scope_export(priv->scope, &error);
   if (error)
   {
     g_error ("Unable to export Scope: %s", error->message);
@@ -87,35 +83,45 @@ service_scope_init(ServiceScope* self)
 static void
 add_categories(ServiceScope* self)
 {
-  GList *cats = NULL;
+  UnityCategorySet* categories;
   GIcon *icon;
+  UnityCategory* cateogry;
+
+  categories = unity_category_set_new();
 
   icon = g_themed_icon_new("gtk-apply");
-  cats = g_list_append (cats, unity_category_new("cat1", "Cateogry 1", icon,
-                                                 UNITY_CATEGORY_RENDERER_VERTICAL_TILE));
+  cateogry = unity_category_new("cat1", "Cateogry 1", icon,
+                                                 UNITY_CATEGORY_RENDERER_VERTICAL_TILE);
+  unity_category_set_add(categories, cateogry);
+  g_object_unref (cateogry);
   g_object_unref (icon);
   
   icon = g_themed_icon_new("gtk-cancel");
-  cats = g_list_append (cats, unity_category_new("cat2", "Category 2", icon,
-                                                 UNITY_CATEGORY_RENDERER_HORIZONTAL_TILE));
+  cateogry = unity_category_new("cat2", "Category 2", icon,
+                                                 UNITY_CATEGORY_RENDERER_HORIZONTAL_TILE);
+  unity_category_set_add(categories, cateogry);
+  g_object_unref (cateogry);
   g_object_unref (icon);
 
   icon = g_themed_icon_new("gtk-close");
-  cats = g_list_append (cats, unity_category_new("cat3", "Category 3", icon,
-                                                 UNITY_CATEGORY_RENDERER_FLOW));
+  cateogry = unity_category_new("cat3", "Category 3", icon,
+                                                 UNITY_CATEGORY_RENDERER_FLOW);
+  unity_category_set_add(categories, cateogry);
+  g_object_unref (cateogry);
   g_object_unref (icon);
 
-
-  unity_abstract_scope_set_categories(self->priv->scope, cats);
-  g_list_free_full (cats, (GDestroyNotify) g_object_unref);
+  test_scope_set_categories(self->priv->scope, categories);
+  g_object_unref (categories);
 }
 
 static void
 add_filters(ServiceScope *self)
 {
-  GList       *filters = NULL;
+  UnityFilterSet *filters = NULL;
   UnityFilter *filter;
   GIcon       *icon;
+
+  filters = unity_filter_set_new();
 
   filter = UNITY_FILTER (unity_radio_option_filter_new("when", "When",
                                                        NULL, FALSE));
@@ -125,7 +131,8 @@ add_filters(ServiceScope *self)
                                   "yesterday", "Yesterday", NULL);
   unity_options_filter_add_option(UNITY_OPTIONS_FILTER (filter),
                                   "lastweek", "Last Week", NULL);
-  filters = g_list_append (filters, filter);
+  unity_filter_set_add (filters, filter);
+  g_object_unref(filter);
 
   filter = UNITY_FILTER (unity_check_option_filter_new("type", "Type",
                                                        NULL, FALSE));
@@ -141,105 +148,69 @@ add_filters(ServiceScope *self)
   unity_options_filter_add_option(UNITY_OPTIONS_FILTER (filter),
                                   "music", "Music", icon);
   g_object_unref (icon);
-  filters = g_list_append (filters, filter);
+  unity_filter_set_add (filters, filter);
+  g_object_unref(filter);
 
-  filters = g_list_append (filters, unity_ratings_filter_new("ratings",
-                                                             "Ratings",
-                                                             NULL, FALSE));
+
+  filter = UNITY_FILTER (unity_ratings_filter_new("ratings",
+                                    "Ratings",
+                                    NULL,
+                                    FALSE));
+  unity_filter_set_add (filters, filter);
+  g_object_unref(filter);
 
   filter = UNITY_FILTER (unity_multi_range_filter_new("size", "Size", NULL, TRUE));
   unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filter), "1MB", "1MB", NULL);
   unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filter), "10MB", "10MB", NULL);
   unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filter), "100MB", "100MB", NULL);
   unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filter), "1000MB", "1000MB", NULL);
-  filters = g_list_append (filters, filter);
- 
+  unity_filter_set_add (filters, filter);
+  g_object_unref(filter); 
 
-  unity_abstract_scope_set_filters(self->priv->scope, filters);
-  g_list_free_full (filters, (GDestroyNotify) g_object_unref);
+  test_scope_set_filters(self->priv->scope, filters);
+  g_object_unref (filters);
 }
 
-static void
-on_search_changed(UnityScope* scope, UnityScopeSearch *search,
-    UnitySearchType search_type, GCancellable *canc, ServiceScope* self)
-{
-  int i = 0;
-  UnityScopeSearchBase* base_search = UNITY_SCOPE_SEARCH_BASE(search);
-  if (!base_search)
-    return;
-
-  // cheeky search string format to control how many results to return
-  // count:title
-
-  int num_items = 0;
-  const gchar* search_string = unity_scope_search_base_get_search_string(base_search);
-  gchar* search_title = g_strnfill(strlen(search_string), 0);
-
-  if (sscanf(search_string, "%d:%s", &num_items, search_title) < 1)
-    num_items = 6;
-  if (g_strcmp0(search_title, "") == 0)
-  {
-    g_free(search_title);
-    search_title = g_strdup("global_result");
-  }
-
-
-  DeeModel* model = (DeeModel*)unity_scope_search_base_get_results_model(base_search);
-
-  for (i = 0; i < num_items; i++)
-  {
-    gchar* name = g_strdup_printf("%s%d",
-                                  search_title,
-                                  i);
-
-    dee_model_append(model,
-                     "file:///test",
-                     "gtk-apply",
-                     i%3,         // 3 categoies, 4 results in each
-                     0,
-                     "text/html",
-                     name,
-                     "kamstrup likes ponies",
-                     "file:///test",
-                     g_variant_new_array (G_VARIANT_TYPE("{sv}"), NULL, 0));
-    g_free(name);
-  }
-  g_free(search_title);
-
-  unity_scope_search_finished (search);
-}
-
-static UnityActivationResponse*
-on_activate_uri(UnityScope* scope, const char* uri, ServiceScope* self)
+static UnityActivationResponse* on_activate_uri(TestScope* scope, const char* uri, ServiceScope* self)
 {
   return unity_activation_response_new(UNITY_HANDLED_TYPE_HIDE_DASH, "");
 }
 
-static UnityActivationResponse*
-preview_action_activated(UnityPreviewAction* action, const char* uri)
-{
-  return unity_activation_response_new(UNITY_HANDLED_TYPE_SHOW_DASH, "");
+static void _g_variant_unref0_ (gpointer var) {
+  (var == NULL) ? NULL : (var = (g_variant_unref (var), NULL));
 }
 
-static UnityPreview*
-on_preview_uri(UnityScope* scope, const char* uri, ServiceScope *self)
+static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_ctx, gpointer self)
 {
-  UnityPreviewAction* action;
-  UnityMoviePreview* preview;
+  UnityScopeResult result;
 
-  preview = unity_movie_preview_new("A movie", "With subtitle",
-                                    "And description", NULL);
+  int i;
+  for (i = 0; i < 10; i++)
+  {
+    memset (&result, 0, sizeof (UnityScopeResult));
 
-  action = unity_preview_action_new("action_A", "An action", NULL);
-  unity_preview_add_action(UNITY_PREVIEW(preview), action);
-  g_signal_connect(action, "activated",
-                   G_CALLBACK(preview_action_activated), NULL);
+    result.uri          = g_strdup_printf("test://uri.%d", i);
+    result.icon_hint    = g_strdup("");
+    result.result_type  = UNITY_RESULT_TYPE_DEFAULT;
+    result.category     = (guint) 0;
+    result.title        = g_strdup_printf("Title %d", i);
+    result.mimetype     = g_strdup("inode/folder");
+    result.comment      = g_strdup_printf("Comment %d", i);
+    result.dnd_uri      = g_strdup_printf("test://dnd_uri.%d", i);
 
-  return (UnityPreview*) preview;
+    result.metadata = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, _g_variant_unref0_);
+
+    g_hash_table_insert (result.metadata, g_strdup ("required_int"), g_variant_ref_sink (g_variant_new_int32 (5)));
+    g_hash_table_insert (result.metadata, g_strdup ("required_string"), g_variant_ref_sink (g_variant_new_string ("foo")));
+
+    unity_result_set_add_result (search_ctx->search_context->result_set, &result);    
+  }
+
+  unity_scope_result_destroy (&result);
 }
 
-ServiceScope*
-service_scope_new()
+ServiceScope* service_scope_new()
 {
   return g_object_new(SERVICE_TYPE_SCOPE, NULL);
 }
+

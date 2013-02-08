@@ -109,8 +109,8 @@ private:
   void OnScopeAdded(Scope::Ptr const& scope, int position);
   void OnScopeBarActivated(std::string const& id);
   void OnSearchFinished(glib::HintsMap const& hints, glib::Error const& error);
-  void OnUriActivated(ResultView::ActivateType type, std::string const& uri, GVariant* data, std::string const& unique_id);
-  void OnUriActivatedReply(std::string const& uri, ScopeHandledType type, glib::HintsMap const& hints);
+  void OnResultActivated(ResultView::ActivateType type, LocalResult const& local_result, GVariant* data, std::string const& unique_id);
+  void OnResultActivatedReply(LocalResult const& local_result, ScopeHandledType type, glib::HintsMap const& hints);
   bool DoFallbackActivation(std::string const& uri);
   bool LaunchApp(std::string const& appname);
   void OnEntryActivated();
@@ -152,7 +152,7 @@ private:
   nux::Geometry content_geo_;
   OverlayRenderer renderer_;
 
-  std::string last_activated_uri_;
+  LocalResult last_activated_result_;
   // we're passing this back to g_* functions, so we'll keep the g* type
   bool search_in_progress_;
   bool activate_on_finish_;

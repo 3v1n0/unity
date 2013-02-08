@@ -71,22 +71,22 @@ public:
   void SetModelRenderer(ResultRenderer* renderer);
   void SetResultsModel(Results::Ptr const& results);
 
-  unsigned int GetIndexForUri(const std::string& uri); 
-  std::string GetUriForIndex(unsigned int);
+  unsigned int GetIndexForLocalResult(LocalResult const& local_result); 
+  LocalResult GetLocalResultForIndex(unsigned int);
 
   nux::Property<bool> expanded;
   nux::Property<int> results_per_row;
   nux::Property<std::string> unique_id;  
   nux::Property<float> desaturation_progress;
   nux::Property<bool> enable_texture_render;
-  sigc::signal<void, std::string const&, ActivateType, GVariant*> UriActivated;
+  sigc::signal<void, LocalResult const&, ActivateType, GVariant*> ResultActivated;
 
   std::string GetName() const;
   ResultIterator GetIteratorAtRow(unsigned row);
   void AddProperties(GVariantBuilder* builder);
   IntrospectableList GetIntrospectableChildren();
 
-  virtual void Activate(std::string const& uri, int index, ActivateType type) = 0;
+  virtual void Activate(LocalResult const& local_result, int index, ActivateType type) = 0;
 
   std::vector<ResultViewTexture::Ptr> const& GetResultTextureContainers();
   virtual void RenderResultTexture(ResultViewTexture::Ptr const& result_texture);

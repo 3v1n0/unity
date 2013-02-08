@@ -8,6 +8,8 @@
 static bool wait_until_test_service_appears();
 static void tell_service_to_exit();
 
+#define EXIT_ON_COMPLETE 0
+
 int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
@@ -75,6 +77,7 @@ static bool wait_until_test_service_appears()
 
 static void tell_service_to_exit()
 {
+#if EXIT_ON_COMPLETE == 1
   // Ask the service to exit
   GDBusConnection* connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
   g_dbus_connection_call_sync(connection,
@@ -88,4 +91,5 @@ static void tell_service_to_exit()
                               -1,
                               NULL, NULL);
   g_object_unref(connection);
+#endif
 }

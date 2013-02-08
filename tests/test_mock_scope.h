@@ -56,17 +56,17 @@ public:
     }, "Search");
   }
 
-  virtual void Activate(std::string const& uri, uint activate_type, glib::HintsMap const& hints, ActivateCallback const& callback = nullptr, GCancellable* cancellable = nullptr)
+  virtual void Activate(LocalResult const& result, uint activate_type, glib::HintsMap const& hints, ActivateCallback const& callback = nullptr, GCancellable* cancellable = nullptr)
   {
-    source_manager.AddIdle([callback, uri] (){
-      callback(uri, ScopeHandledType::GOTO_DASH_URI, glib::HintsMap(), glib::Error());
+    source_manager.AddIdle([callback, result] (){
+      callback(result, ScopeHandledType::GOTO_DASH_URI, glib::HintsMap(), glib::Error());
       return true;
     }, "Activate");
   }
 
-  virtual void UpdatePreviewProperty(std::string const& uri, glib::HintsMap const& hints, UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable)
+  virtual void UpdatePreviewProperty(LocalResult const& result, glib::HintsMap const& hints, UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable)
   {
-    source_manager.AddIdle([callback, uri] (){
+    source_manager.AddIdle([callback, result] (){
       callback(glib::HintsMap(), glib::Error());
       return true;
     }, "UpdatePreviewProperty");

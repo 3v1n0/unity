@@ -67,13 +67,6 @@ TEST_F(TestScope, TestConnection)
   ASSERT_TRUE(scope_->connected);
 }
 
-TEST_F(TestScope, TestSynchronization)
-{
-  EXPECT_EQ(scope_->search_hint(), "Search Test Scope");
-  EXPECT_TRUE(scope_->visible());
-  EXPECT_TRUE(scope_->search_in_global());
-}
-
 TEST_F(TestScope, TestSearch)
 {
   bool search_ok = false;
@@ -91,30 +84,32 @@ TEST_F(TestScope, TestSearch)
 TEST_F(TestScope, TestActivateUri)
 {
   bool activated_return = false;
-  auto func = [&] (std::string const& uri, ScopeHandledType handled, glib::Error const& error) {
+  auto func = [&activated_return] (LocalResult const& result, ScopeHandledType handled, glib::Error const& error) {
     activated_return = true;
 
     EXPECT_TRUE(error==false);
     EXPECT_EQ(handled, ScopeHandledType::HIDE_DASH);
   };
 
-  scope_->Activate("file:://test", func);
+  LocalResult result; result.uri = "file:://test";
+  scope_->Activate(result, func);
 
   Utils::WaitUntilMSec([&activated_return] { return activated_return; }, true, 2000);
 }
 
-TEST_F(TestScope, TestPreview)
-{
-  bool prevew_returned = false;
-  auto func = [&] (std::string const& uri, ScopeHandledType handled, glib::Error const& error) {
-    prevew_returned = true;
+// TEST_F(TestScope, TestPreview)
+// {
+//   bool prevew_returned = false;
+//   auto func = [&prevew_returned] (LocalResult const& result, ScopeHandledType handled, glib::Error const& error) {
+//     prevew_returned = true;
 
-    EXPECT_TRUE(error==false);
-    EXPECT_EQ(handled, ScopeHandledType::SHOW_PREVIEW);
-  };
-  scope_->Preview("file:://test", func);
+//     EXPECT_TRUE(error==false);
+//     EXPECT_EQ(handled, ScopeHandledType::SHOW_PREVIEW);
+//   };
+//   LocalResult result; result.uri = "file:://test";
+//   scope_->Preview(result, func);
 
-  Utils::WaitUntilMSec([&prevew_returned] { return prevew_returned; }, true, 2000);
-}
+//   Utils::WaitUntilMSec([&prevew_returned] { return prevew_returned; }, true, 2000);
+// }
 
 }

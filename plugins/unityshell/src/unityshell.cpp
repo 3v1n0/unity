@@ -1846,7 +1846,7 @@ void UnityScreen::SendExecuteCommand()
   ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL, glib::Source::Priority::HIGH);
 
   ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                            g_variant_new("(sus)", "commands.scope", 0, ""),
+                            g_variant_new("(sus)", "commands.scope", dash::ScopeHandledType::NOT_HANDLED, ""),
                             glib::Source::Priority::LOW);
 }
 

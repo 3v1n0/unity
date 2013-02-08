@@ -38,8 +38,8 @@ public:
 
   void Init();
 
-  void Activate(std::string const& uri, guint action_type, glib::HintsMap const& hints, ActivateCallback const& callback, GCancellable* cancellable);
-  void OnActivateReply(std::string const& uri, ScopeHandledType handled_type, glib::HintsMap const& hints, glib::Error const& error);
+  void Activate(LocalResult const& result, guint action_type, glib::HintsMap const& hints, ActivateCallback const& callback, GCancellable* cancellable);
+  void OnActivateReply(LocalResult const& result, ScopeHandledType handled_type, glib::HintsMap const& hints, glib::Error const& error);
 
   DeeFilter* GetFilterForCategory(unsigned category, DeeFilter* filter)  const;
 
@@ -72,7 +72,6 @@ void Scope::Impl::Init()
   {
     property_connections.push_back(utils::ConnectProperties(owner_->connected, proxy_->connected));
     property_connections.push_back(utils::ConnectProperties(owner_->is_master, proxy_->is_master));
-    property_connections.push_back(utils::ConnectProperties(owner_->search_in_global, proxy_->search_in_global));
     property_connections.push_back(utils::ConnectProperties(owner_->search_hint, proxy_->search_hint));
     property_connections.push_back(utils::ConnectProperties(owner_->view_type, proxy_->view_type));
     property_connections.push_back(utils::ConnectProperties(owner_->results, proxy_->results));
@@ -96,23 +95,23 @@ void Scope::Impl::Init()
   }
 }
 
-void Scope::Impl::Activate(std::string const& uri, guint action_type, glib::HintsMap const& hints, ActivateCallback const& callback, GCancellable* cancellable)
+void Scope::Impl::Activate(LocalResult const& result, guint action_type, glib::HintsMap const& hints, ActivateCallback const& callback, GCancellable* cancellable)
 {
-  proxy_->Activate(uri,
+  proxy_->Activate(result,
                    action_type,
                    hints,
-                   [this, callback] (std::string const& uri, ScopeHandledType handled_type, glib::HintsMap const& hints, glib::Error const& error) {
+                   [this, callback] (LocalResult const& result, ScopeHandledType handled_type, glib::HintsMap const& hints, glib::Error const& error) {
       if (callback)
-        callback(uri, handled_type, error);
-      OnActivateReply(uri, handled_type, hints, error);
+        callback(result, handled_type, error);
+      OnActivateReply(result, handled_type, hints, error);
     },
     cancellable);
 }
 
 
-void Scope::Impl::OnActivateReply(std::string const& uri, ScopeHandledType handled, glib::HintsMap const& hints, glib::Error const& error)
+void Scope::Impl::OnActivateReply(LocalResult const& result, ScopeHandledType handled, glib::HintsMap const& hints, glib::Error const& error)
 {
-  LOG_DEBUG(logger) << "Activation reply (handled:" << handled << ", error: " << (error ? "true" : "false") << ") for " <<  uri;
+  LOG_DEBUG(logger) << "Activation reply (handled:" << handled << ", error: " << (error ? "true" : "false") << ") for " <<  result.uri;
 
   if (static_cast<UnityProtocolHandledType>(handled) == UNITY_PROTOCOL_HANDLED_TYPE_SHOW_PREVIEW)
   {
@@ -127,8 +126,8 @@ void Scope::Impl::OnActivateReply(std::string const& uri, ScopeHandledType handl
         // would be nice to make parent_scope_ a shared_ptr,
         // but that's not really doable from here
         preview->parent_scope = owner_;
-        preview->preview_uri = uri;
-        owner_->preview_ready.emit(uri, preview);
+        preview->preview_result = result;
+        owner_->preview_ready.emit(result, preview);
         return;
       }
     }
@@ -137,7 +136,7 @@ void Scope::Impl::OnActivateReply(std::string const& uri, ScopeHandledType handl
   }
   else
   {
-    owner_->activated.emit(uri, handled, hints);
+    owner_->activated.emit(result, handled, hints);
   }
 }
 
@@ -168,32 +167,34 @@ void Scope::Search(std::string const& search_hint, SearchCallback const& callbac
   return pimpl->proxy_->Search(search_hint, callback, cancellable);
 }
 
-void Scope::Activate(std::string const& uri, ActivateCallback const& callback, GCancellable* cancellable)
+void Scope::Activate(LocalResult const& result, ActivateCallback const& callback, GCancellable* cancellable)
 {
-  pimpl->Activate(uri, UNITY_PROTOCOL_ACTION_TYPE_ACTIVATE_RESULT, glib::HintsMap(), callback, cancellable);
+  pimpl->Activate(result, UNITY_PROTOCOL_ACTION_TYPE_ACTIVATE_RESULT, glib::HintsMap(), callback, cancellable);
 }
 
-void Scope::Preview(std::string const& uri, ActivateCallback const& callback, GCancellable* cancellable)
+void Scope::Preview(LocalResult const& result, ActivateCallback const& callback, GCancellable* cancellable)
 {
-  pimpl->Activate(uri, UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_RESULT, glib::HintsMap(), callback, cancellable);
+  pimpl->Activate(result, UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_RESULT, glib::HintsMap(), callback, cancellable);
 }
 
 void Scope::ActivatePreviewAction(std::string const& action_id,
-                                   std::string const& uri,
-                                   glib::HintsMap const& hints,
-                                   ActivateCallback const& callback,
-                                   GCancellable* cancellable)
+                                  LocalResult const& result,
+                                  glib::HintsMap const& hints,
+                                  ActivateCallback const& callback,
+                                  GCancellable* cancellable)
 {
+  LocalResult local_result(result);
   std::string activation_uri(action_id);
   activation_uri += ":";
-  activation_uri += uri;
+  activation_uri += result.uri;
+  local_result.uri = activation_uri;
 
-  pimpl->Activate(activation_uri, UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_ACTION, hints, callback, cancellable);
+  pimpl->Activate(local_result, UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_ACTION, hints, callback, cancellable);
 }
 
-void Scope::UpdatePreviewProperty(std::string const& uri, glib::HintsMap const& hints, UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable)
+void Scope::UpdatePreviewProperty(LocalResult const& result, glib::HintsMap const& hints, UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable)
 {
-  pimpl->proxy_->UpdatePreviewProperty(uri, glib::HintsMap(), callback, cancellable);
+  pimpl->proxy_->UpdatePreviewProperty(result, glib::HintsMap(), callback, cancellable);
 }
 
 Results::Ptr Scope::GetResultsForCategory(unsigned category) const

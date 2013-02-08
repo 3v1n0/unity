@@ -34,6 +34,7 @@
 #include "GLibWrapper.h"
 #include "GLibDBusProxy.h"
 #include "Variant.h"
+#include "Result.h"
 
 namespace unity
 {
@@ -122,7 +123,7 @@ public:
 
   // can't use Scope::Ptr to avoid circular dependency
   nux::RWProperty<Scope*> parent_scope;
-  nux::Property<std::string> preview_uri;
+  LocalResult preview_result;
 
   ActionPtrList GetActions() const;
   InfoHintPtrList GetInfoHints() const;

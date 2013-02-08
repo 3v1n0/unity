@@ -76,8 +76,7 @@ public:
   void SetCategoryIndex(unsigned index);
   unsigned GetCategoryIndex() const;
 
-  void SetCounts(unsigned n_visible_items_in_unexpand_mode,
-                 unsigned n_total_items);
+  void SetCounts(unsigned n_total_items);
 
   void SetExpanded(bool is_expanded);
   bool GetExpanded() const;
@@ -94,7 +93,6 @@ public:
   void SetFiltersExpanded(bool filters_expanded);
 
   sigc::signal<void, PlacesGroup*> expanded;
-  sigc::signal<void, std::string const&> UriActivated;
 
 protected:
   long ComputeContentSize();

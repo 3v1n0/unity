@@ -54,6 +54,7 @@ public:
   bool GetBool() const;
 
   bool ASVToHints(HintsMap& hints) const;
+  static Variant FromHints(HintsMap const& hints);
 
   void swap(Variant&);
   Variant& operator=(GVariant*);

@@ -234,7 +234,7 @@ void Preview::Impl::EmitClosed() const
   if (properties.ASVToHints(property_hints))
     owner_->Update(property_hints);
   else
-    LOG_ERROR(logger) << "EmitClosed could not convert property hints to variant for " << owner_->preview_uri.Get();
+    LOG_ERROR(logger) << "EmitClosed could not convert property hints to variant for " << owner_->preview_result.uri;
 }
 
 Preview::Preview(glib::Object<GObject> const& proto_obj)
@@ -261,7 +261,7 @@ void Preview::Update(glib::HintsMap const& property_hints,
 {
   if (pimpl->parent_scope_)
   {
-    pimpl->parent_scope_->UpdatePreviewProperty(preview_uri, property_hints, reply_callback);
+    pimpl->parent_scope_->UpdatePreviewProperty(preview_result, property_hints, reply_callback);
   }
   else
   {
@@ -273,7 +273,7 @@ void Preview::PerformAction(std::string const& id, glib::HintsMap const& hints) 
 {
   if (pimpl->parent_scope_)
   {
-    pimpl->parent_scope_->ActivatePreviewAction(id, preview_uri, hints);
+    pimpl->parent_scope_->ActivatePreviewAction(id, preview_result, hints);
   }
   else
   {

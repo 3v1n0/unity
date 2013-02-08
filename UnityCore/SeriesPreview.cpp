@@ -41,8 +41,8 @@ public:
   {
     if (!child_preview_->parent_scope)
       child_preview_->parent_scope = owner_->parent_scope();
-    if (child_preview_->preview_uri().empty())
-      child_preview_->preview_uri = owner_->preview_uri();
+    if (child_preview_->preview_result.empty())
+      child_preview_->preview_result = owner_->preview_result;
     return child_preview_;
   };
 
@@ -119,7 +119,7 @@ void SeriesPreview::Impl::selected_item_reply(glib::HintsMap const& hints, glib:
   {
     Preview::Ptr new_child = Preview::PreviewForVariant(iter->second);
     new_child->parent_scope = owner_->parent_scope();
-    new_child->preview_uri = owner_->preview_uri(); // FIXME: really?
+    new_child->preview_result = owner_->preview_result; // FIXME: really?
     child_preview_ = new_child;
     owner_->child_preview_changed.emit(new_child);
   }

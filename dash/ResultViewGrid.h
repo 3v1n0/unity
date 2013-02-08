@@ -52,7 +52,7 @@ public:
   int GetSelectedIndex();
   virtual unsigned GetIndexAtPosition(int x, int y);
 
-  virtual void Activate(std::string const& uri, int index, ActivateType type);
+  virtual void Activate(LocalResult const& local_result, int index, ActivateType type);
 
   virtual void RenderResultTexture(ResultViewTexture::Ptr const& result_texture);
 
@@ -97,20 +97,20 @@ private:
 
   int GetItemsPerRow();
   void SizeReallocate();
-  std::tuple<int, int> GetResultPosition(const std::string& uri);
+  std::tuple<int, int> GetResultPosition(LocalResult const& local_result);
   std::tuple<int, int> GetResultPosition(const unsigned int& index);
 
   unsigned mouse_over_index_;
   int active_index_;
   nux::Property<int> selected_index_;
-  std::string focused_uri_;
+  LocalResult focused_result_;
 
-  std::string activated_uri_;
+  LocalResult activated_result_;
 
   unsigned last_lazy_loaded_result_;
   int last_mouse_down_x_;
   int last_mouse_down_y_;
-  std::string current_drag_uri_;
+  LocalResult current_drag_result_;
   unsigned drag_index_;
 
   int recorded_dash_width_;

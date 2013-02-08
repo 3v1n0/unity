@@ -49,7 +49,6 @@ public:
 
   nux::ROProperty<bool> visible;
   nux::ROProperty<bool> is_master;
-  nux::ROProperty<bool> search_in_global;
   nux::ROProperty<std::string> search_hint;
   nux::RWProperty<ScopeViewType> view_type;
 
@@ -70,26 +69,26 @@ public:
   typedef std::function<void(glib::HintsMap const&, glib::Error const&)> SearchCallback;
   virtual void Search(std::string const& search_hint, SearchCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
 
-  typedef std::function<void(std::string const&, ScopeHandledType, glib::Error const&)> ActivateCallback;
+  typedef std::function<void(LocalResult const&, ScopeHandledType, glib::Error const&)> ActivateCallback;
 
-  virtual void Activate(std::string const& uri, ActivateCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
+  virtual void Activate(LocalResult const& result, ActivateCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
 
-  virtual void Preview(std::string const& uri, ActivateCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
+  virtual void Preview(LocalResult const& result, ActivateCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
 
   virtual void ActivatePreviewAction(std::string const& action_id,
-                                     std::string const& uri,
+                                     LocalResult const& result,
                                      glib::HintsMap const& hints,
                                      ActivateCallback const& callback = nullptr,
                                      GCancellable* cancellable = nullptr);
 
   typedef std::function<void(glib::HintsMap const&, glib::Error const&)> UpdatePreviewPropertyCallback;
-  virtual void UpdatePreviewProperty(std::string const& uri, glib::HintsMap const& hints, UpdatePreviewPropertyCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
+  virtual void UpdatePreviewProperty(LocalResult const& result, glib::HintsMap const& hints, UpdatePreviewPropertyCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
 
   virtual Results::Ptr GetResultsForCategory(unsigned category) const;
 
 
-  sigc::signal<void, std::string const&, ScopeHandledType, glib::HintsMap const&> activated;
-  sigc::signal<void, std::string const&, Preview::Ptr const&> preview_ready;
+  sigc::signal<void, LocalResult const&, ScopeHandledType, glib::HintsMap const&> activated;
+  sigc::signal<void, LocalResult const&, Preview::Ptr const&> preview_ready;
 
 protected:
   virtual ScopeProxyInterface::Ptr CreateProxyInterface() const;

@@ -240,6 +240,11 @@ Scope::Ptr Scopes::GetScopeForShortcut(std::string const& scope_shortcut) const
   return pimpl->GetScopeForShortcut(scope_shortcut);
 }
 
+void Scopes::AppendScope(std::string const& scope_id)
+{
+  InsertScope(scope_id, pimpl->scopes_.size());
+}
+
 void Scopes::InsertScope(std::string const& scope_id, unsigned index)
 {
   if (!pimpl->scopes_reader_)
@@ -248,6 +253,22 @@ void Scopes::InsertScope(std::string const& scope_id, unsigned index)
   ScopeData::Ptr scope_data(pimpl->scopes_reader_->GetScopeDataById(scope_id));
   if (scope_data)
     pimpl->InsertScope(scope_data, index);
+
+  // Fallback - manually create and insert the scope.
+  auto scope_data_position = std::find_if(pimpl->scopes_.begin(),
+                                     pimpl->scopes_.end(),
+                                     [scope_id](Scope::Ptr const& scope) { return scope->id() == scope_id; });
+  if (scope_data_position == pimpl->scopes_.end())
+  {
+    glib::Error error;
+    ScopeData::Ptr scope_data(ScopeData::ReadProtocolDataForId(scope_id, error));
+    // manually created scopes are not visible.
+    scope_data->visible = false;
+    if (scope_data && !error)
+    {
+      pimpl->InsertScope(scope_data, index);
+    }
+  }
 }
 
 void Scopes::RemoveScope(std::string const& scope_id)

@@ -58,7 +58,6 @@ public:
 
   nux::ROProperty<bool> visible;
   nux::ROProperty<bool> is_master;
-  nux::ROProperty<bool> search_in_global;
   nux::ROProperty<std::string> search_hint;
   nux::RWProperty<ScopeViewType> view_type;
 
@@ -81,11 +80,11 @@ public:
   typedef std::function<void(glib::HintsMap const&, glib::Error const&)> SearchCallback;
   virtual void Search(std::string const& search_hint, SearchCallback const& callback, GCancellable* cancellable) = 0;
 
-  typedef std::function<void(std::string const&, ScopeHandledType, glib::HintsMap const&, glib::Error const&)> ActivateCallback;
-  virtual void Activate(std::string const& uri, uint activate_type, glib::HintsMap const& hints, ActivateCallback const& callback, GCancellable* cancellable) = 0;
+  typedef std::function<void(LocalResult const&, ScopeHandledType, glib::HintsMap const&, glib::Error const&)> ActivateCallback;
+  virtual void Activate(LocalResult const& result, uint activate_type, glib::HintsMap const& hints, ActivateCallback const& callback, GCancellable* cancellable) = 0;
 
   typedef std::function<void(glib::HintsMap const&, glib::Error const&)> UpdatePreviewPropertyCallback;
-  virtual void UpdatePreviewProperty(std::string const& uri, glib::HintsMap const& hints, UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable) = 0;
+  virtual void UpdatePreviewProperty(LocalResult const& result, glib::HintsMap const& hints, UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable) = 0;
 
   virtual Results::Ptr GetResultsForCategory(unsigned category) const = 0;
 };

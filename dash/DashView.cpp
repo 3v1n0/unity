@@ -115,7 +115,6 @@ DashView::DashView(ScopesCreator scopes_creator)
   , preview_container_(nullptr)
   , preview_displaying_(false)
   , preview_navigation_mode_(previews::Navigation::NONE)
-  , last_activated_uri_("")
   , search_in_progress_(false)
   , activate_on_finish_(false)
   , visible_(false)
@@ -181,9 +180,9 @@ void DashView::SetMonitorOffset(int x, int y)
   renderer_.y_offset = y;
 }
 
-void DashView::OnUriActivated(ResultView::ActivateType type, std::string const& uri, GVariant* data, std::string const& unique_id) 
+void DashView::OnResultActivated(ResultView::ActivateType type, LocalResult const& local_result, GVariant* data, std::string const& unique_id) 
 {
-  last_activated_uri_ = uri;
+  last_activated_result_ = local_result;
   stored_activated_unique_id_ = unique_id;
 
   if (data)
@@ -243,7 +242,7 @@ void DashView::BuildPreview(Preview::Ptr model)
 
       // sends a message to all result views, sending the the uri of the current preview result
       // and the unique id of the result view that should be handling the results
-      ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", -1, last_activated_uri_.c_str(), stored_activated_unique_id_.c_str()));
+      ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(ivs)", -1, g_variant_ref(last_activated_result_.Variant()), stored_activated_unique_id_.c_str()));
     });
 
     preview_container_->navigate_right.connect([&] () {
@@ -251,7 +250,7 @@ void DashView::BuildPreview(Preview::Ptr model)
 
       // sends a message to all result views, sending the the uri of the current preview result
       // and the unique id of the result view that should be handling the results
-      ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", 1, last_activated_uri_.c_str(), stored_activated_unique_id_.c_str()));
+      ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(ivs)", 1, g_variant_ref(last_activated_result_.Variant()), stored_activated_unique_id_.c_str()));
     });
 
     preview_container_->request_close.connect([&] () { ClosePreview(); });
@@ -1099,6 +1098,12 @@ void DashView::OnActivateRequest(GVariant* args)
   }
   else if (/* visible_ && */ handled_type == ScopeHandledType::GOTO_DASH_URI)
   {
+    if (!scopes_->GetScope(id))
+    {
+      // should trigger the addition of the scope.
+      scopes_->AppendScope(id);
+    }
+
     scope_bar_->Activate(id);
   }
 }
@@ -1196,18 +1201,18 @@ void DashView::OnScopeAdded(Scope::Ptr const& scope, int position)
   nux::ObjectPtr<ScopeView> view(new ScopeView(scope, search_bar_->show_filters()));
   AddChild(view.GetPointer());
   view->SetVisible(false);
-  view->uri_activated.connect(sigc::mem_fun(this, &DashView::OnUriActivated));
+  view->result_activated.connect(sigc::mem_fun(this, &DashView::OnResultActivated));
 
   scopes_layout_->AddView(view.GetPointer(), 1);
   scope_views_[scope->id] = view;
 
-  scope->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
+  scope->activated.connect(sigc::mem_fun(this, &DashView::OnResultActivatedReply));
   scope->connected.changed.connect([&] (bool value) { });
 
   // Hook up to the new preview infrastructure
-  scope->preview_ready.connect([&] (std::string const& uri, Preview::Ptr model)
+  scope->preview_ready.connect([&] (LocalResult const& result, Preview::Ptr model)
   {
-    LOG_DEBUG(logger) << "Got preview for: " << uri;
+    LOG_DEBUG(logger) << "Got preview for: " << result.uri;
     preview_state_machine_.ActivatePreview(model); // this does not immediately display a preview - we now wait.
   });
 
@@ -1287,12 +1292,12 @@ void DashView::OnSearchFinished(glib::HintsMap const& hints, glib::Error const& 
   }
 }
 
-void DashView::OnUriActivatedReply(std::string const& uri, ScopeHandledType type, glib::HintsMap const&)
+void DashView::OnResultActivatedReply(LocalResult const& local_result, ScopeHandledType type, glib::HintsMap const&)
 {
   // We don't want to close the dash if there was another activation pending
   if (type == NOT_HANDLED)
   {
-    if (!DoFallbackActivation(uri))
+    if (!DoFallbackActivation(local_result.uri))
       return;
   }
   else if (type == SHOW_DASH)
