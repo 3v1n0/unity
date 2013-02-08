@@ -180,4 +180,61 @@ TEST_F(TestApplicationLauncherIcon, ActiveQuirkWMCrossCheck)
   EXPECT_TRUE(mock_icon->IsActive());
 }
 
+TEST_F(TestApplicationLauncherIcon, NoWindowListMenusWithOneWindow)
+{
+  auto win = std::make_shared<MockApplicationWindow>(g_random_int());
+  mock_app->window_list_ = { win };
+
+  auto const& menus = mock_icon->Menus();
+  auto menu_it = std::find_if(menus.begin(), menus.end(), [win] (glib::Object<DbusmenuMenuitem> it) {
+    auto* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
+    return (label && std::string(label) == win->title());
+  });
+
+  EXPECT_EQ(menu_it, menus.end());
+}
+
+TEST_F(TestApplicationLauncherIcon, WindowListMenusWithTwoWindows)
+{
+  auto win1 = std::make_shared<MockApplicationWindow>(1);
+  auto wm_win1 = std::make_shared<StandaloneWindow>(win1->window_id());
+  auto win2 = std::make_shared<MockApplicationWindow>(2);
+  auto wm_win2 = std::make_shared<StandaloneWindow>(win2->window_id());
+
+  mock_app->window_list_ = { win1, win2 };
+  WM->AddStandaloneWindow(wm_win1);
+  WM->AddStandaloneWindow(wm_win2);
+  ASSERT_TRUE(wm_win2->active());
+
+  auto const& menus = mock_icon->Menus();
+
+  auto menu1_it = std::find_if(menus.begin(), menus.end(), [win1] (glib::Object<DbusmenuMenuitem> it) {
+    auto* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
+    return (label && std::string(label) == win1->title());
+  });
+
+  ASSERT_NE(menu1_it, menus.end());
+
+  auto menu2_it = std::find_if(menus.begin(), menus.end(), [win2] (glib::Object<DbusmenuMenuitem> it) {
+    auto* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
+    return (label && std::string(label) == win2->title());
+  });
+
+  ASSERT_NE(menu2_it, menus.end());
+
+  bool activated = false;
+  wm_win1->active.changed.connect([&activated] (bool a) { activated = a; });
+  g_signal_emit_by_name(*menu1_it, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, 0);
+
+  EXPECT_TRUE(wm_win1->active());
+  EXPECT_TRUE(activated);
+
+  activated = false;
+  wm_win2->active.changed.connect([&activated] (bool a) { activated = a; });
+  g_signal_emit_by_name(*menu2_it, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, 0);
+
+  EXPECT_TRUE(wm_win2->active());
+  EXPECT_TRUE(activated);
+}
+
 }
