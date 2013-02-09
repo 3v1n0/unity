@@ -32,6 +32,7 @@ class ExpoLauncherIcon : public SimpleLauncherIcon
 public:
   ExpoLauncherIcon();
   void Stick(bool save);
+  void AboutToRemove();
 
 protected:
   void ActivateLauncherIcon(ActionArg arg);
