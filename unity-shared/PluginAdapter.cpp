@@ -1115,7 +1115,22 @@ nux::Point PluginAdapter::GetCurrentViewport() const
 
 void PluginAdapter::SetViewportSize(int horizontal, int vertical)
 {
-  g_print("Setting viewport size to %ux%u\n",horizontal,vertical);
+  if (horizontal < 1 || vertical < 1)
+  {
+    LOG_ERROR(logger) << "Impossible to set viewport to invalid values "
+                      << horizontal << "x" << vertical;
+    return;
+  }
+
+  CompOption::Value hsize;
+  hsize.set<int>(horizontal);
+  m_Screen->setOptionForPlugin("core", "hsize", hsize);
+
+  CompOption::Value vsize(vertical);
+  vsize.set<int>(vertical);
+  m_Screen->setOptionForPlugin("core", "vsize", vsize);
+
+  LOG_INFO(logger) << "Setting viewport size to " << hsize.i() << "x" << vsize.i();
 }
 
 int PluginAdapter::GetViewportHSize() const
