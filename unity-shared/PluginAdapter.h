@@ -180,6 +180,7 @@ public:
   int WorkspaceCount() const;
 
   nux::Point GetCurrentViewport() const override;
+  void SetViewportSize(int horizontal, int vertical) override;
   int GetViewportHSize() const override;
   int GetViewportVSize() const override;
 

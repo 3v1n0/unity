@@ -1113,6 +1113,11 @@ nux::Point PluginAdapter::GetCurrentViewport() const
   return nux::Point(vp.x(), vp.y());
 }
 
+void PluginAdapter::SetViewportSize(int horizontal, int vertical)
+{
+  g_print("Setting viewport size to %ux%u\n",horizontal,vertical);
+}
+
 int PluginAdapter::GetViewportHSize() const
 {
   return m_Screen->vpSize().width();
