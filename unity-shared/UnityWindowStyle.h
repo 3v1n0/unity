@@ -33,11 +33,10 @@ public:
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
   UnityWindowStyle();
-  ~UnityWindowStyle();
 
-  nux::BaseTexture* GetBackgroundTop() const;
-  nux::BaseTexture* GetBackgroundLeft() const;
-  nux::BaseTexture* GetBackgroundCorner() const;
+  BaseTexturePtr GetBackgroundTop() const;
+  BaseTexturePtr GetBackgroundLeft() const;
+  BaseTexturePtr GetBackgroundCorner() const;
   int GetBorderSize() const;
   int GetInternalOffset() const;
 

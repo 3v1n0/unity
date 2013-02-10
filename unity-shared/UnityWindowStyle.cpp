@@ -30,11 +30,6 @@ UnityWindowStyle::UnityWindowStyle()
   background_corner_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_corner.png", -1, true));
 }
 
-UnityWindowStyle::~UnityWindowStyle()
-{
-  // nothing to do
-}
-
 int UnityWindowStyle::GetBorderSize() const
 {
   return 30; // as measured from textures
@@ -45,19 +40,19 @@ int UnityWindowStyle::GetInternalOffset() const
   return 20;
 }
 
-nux::BaseTexture* UnityWindowStyle::GetBackgroundTop() const
+UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetBackgroundTop() const
 {
-  return background_top_.GetPointer();
+  return background_top_;
 }
 
-nux::BaseTexture* UnityWindowStyle::GetBackgroundLeft() const
+UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetBackgroundLeft() const
 {
-  return background_left_.GetPointer();
+  return background_left_;
 }
 
-nux::BaseTexture* UnityWindowStyle::GetBackgroundCorner() const
+UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetBackgroundCorner() const
 {
-  return background_corner_.GetPointer();
+  return background_corner_;
 }
 
 
