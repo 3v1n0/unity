@@ -1570,7 +1570,16 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
     }
   }
 
-  /* Ask nux to redraw anything in our damage region */
+  /* Ask nux to present anything in our damage region
+   *
+   * Note: This is using a new nux API, to "present" windows
+   * to the screen, as opposed to drawing them. The difference is
+   * important. The former will just draw the window backing texture
+   * directly to the screen, the latter will re-draw the entire window.
+   *
+   * The former is a lot faster, do not use QueueDraw unless the contents
+   * of the window need to be re-drawn.
+   */
   CompRect::vector rects (damage.rects());
   for (const CompRect &r : rects)
   {

@@ -176,7 +176,7 @@ void PanelView::SetLauncherWidth(int width)
 
 bool PanelView::IsMouseInsideIndicator(nux::Point const& mouse_position) const
 {
-  return indicators_->GetGeometry().IsInside(mouse_position);
+  return indicators_->GetAbsoluteGeometry().IsInside(mouse_position);
 }
 
 void PanelView::OnBackgroundUpdate(GVariant *data)
