@@ -21,14 +21,28 @@
 #define UNITY_GNOME_SESSION_MANAGER_IMPL_H
 
 #include "GnomeSessionManager.h"
+#include "GLibDBusProxy.h"
 
+namespace unity
+{
 namespace session
 {
 
 struct GnomeManager::Impl
 {
+  Impl();
+
+  void QueryUPowerCapabilities();
+
+  bool can_shutdown_;
+  bool can_suspend_;
+  bool can_hibernate_;
+
+  glib::DBusProxy upower_proxy_;
+  glib::DBusProxy gsession_proxy_;
 };
 
 } // namespace session
+} // namespace unity
 
 #endif //UNITY_GNOME_SESSION_MANAGER_IMPL_H

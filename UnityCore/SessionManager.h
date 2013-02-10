@@ -23,6 +23,8 @@
 #include <sigc++/sigc++.h>
 #include <memory>
 
+namespace unity
+{
 namespace session
 {
 
@@ -60,5 +62,6 @@ public:
 };
 
 } // namespace session
+} // namespace unity
 
 #endif //UNITY_SESSION_MANAGER_H

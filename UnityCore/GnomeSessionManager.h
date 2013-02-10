@@ -22,6 +22,8 @@
 
 #include "SessionManager.h"
 
+namespace unity
+{
 namespace session
 {
 
@@ -57,5 +59,6 @@ private:
 };
 
 } // namespace session
+} // namespace unity
 
 #endif //UNITY_GNOME_SESSION_MANAGER_H
