@@ -409,7 +409,7 @@ public:
   CompPoint tryNotIntersectUI(CompPoint& pos);
   nux::Geometry GetScaledGeometry();
 
-  void paintThumbnail(nux::Geometry const& bounding, float alpha, float scale_ratio, unsigned deco_height, bool selected);
+  void paintThumbnail(nux::Geometry const& bounding, float parent_alpha, float alpha, float scale_ratio, unsigned deco_height, bool selected);
 
   void enterShowDesktop();
   void leaveShowDesktop();

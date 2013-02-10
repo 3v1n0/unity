@@ -29,6 +29,7 @@
 namespace unity
 {
 const char* QuicklistMenuItem::MARKUP_ENABLED_PROPERTY = "unity-use-markup";
+const char* QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY = "unity-disable-accel";
 const char* QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY = "unity-max-label-width";
 const char* QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY = "unity-overlay-item";
 
@@ -280,7 +281,11 @@ void QuicklistMenuItem::DrawText(nux::CairoGraphics& cairo, int width, int heigh
   std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font_name), pango_font_description_free);
   pango_layout_set_font_description(layout, desc.get());
   pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
-  pango_layout_set_markup_with_accel(layout, _text.c_str(), -1, '_', nullptr);
+
+  if (IsMarkupAccelEnabled())
+    pango_layout_set_markup_with_accel(layout, _text.c_str(), -1, '_', nullptr);
+  else
+    pango_layout_set_markup(layout, _text.c_str(), -1);
 
   if (GetMaxLabelWidth() > 0)
   {
@@ -358,6 +363,24 @@ bool QuicklistMenuItem::IsMarkupEnabled() const
 
   gboolean markup = dbusmenu_menuitem_property_get_bool(_menu_item, MARKUP_ENABLED_PROPERTY);
   return (markup != FALSE);
+}
+
+void QuicklistMenuItem::EnableLabelMarkupAccel(bool enabled)
+{
+  if (IsMarkupAccelEnabled() != enabled)
+  {
+    dbusmenu_menuitem_property_set_bool(_menu_item, MARKUP_ACCEL_DISABLED_PROPERTY, enabled ? FALSE : TRUE);
+    InitializeText();
+  }
+}
+
+bool QuicklistMenuItem::IsMarkupAccelEnabled() const
+{
+  if (!_menu_item)
+    return false;
+
+  gboolean disabled = dbusmenu_menuitem_property_get_bool(_menu_item, MARKUP_ACCEL_DISABLED_PROPERTY);
+  return (disabled == FALSE);
 }
 
 void QuicklistMenuItem::SetMaxLabelWidth(int max_width)

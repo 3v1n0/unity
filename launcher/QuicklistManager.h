@@ -20,7 +20,14 @@
 #ifndef QUICKLISTMANAGER_H
 #define QUICKLISTMANAGER_H
 
+#include <NuxCore/ObjectPtr.h>
+#include <sigc++/sigc++.h>
+
+namespace nux { class BaseWindow; }
+
 namespace unity {
+
+class QuicklistView;
 
 class QuicklistManager : public sigc::trackable
 {
@@ -30,24 +37,24 @@ public:
 
   ~QuicklistManager();
 
-  QuicklistView* Current();
+  nux::ObjectPtr<QuicklistView> Current();
 
-  void RegisterQuicklist(QuicklistView* quicklist);
-  void ShowQuicklist(QuicklistView* quicklist, int tip_x, int tip_y, bool hide_existing_if_open = true);
-  void HideQuicklist(QuicklistView* quicklist);
+  bool RegisterQuicklist(nux::ObjectPtr<QuicklistView> const& quicklist);
+  void ShowQuicklist(nux::ObjectPtr<QuicklistView> const& quicklist, int tip_x, int tip_y, bool hide_existing_if_open = true);
+  void HideQuicklist(nux::ObjectPtr<QuicklistView> const& quicklist);
 
   void RecvShowQuicklist(nux::BaseWindow* window);
   void RecvHideQuicklist(nux::BaseWindow* window);
 
-  sigc::signal<void, QuicklistView*> quicklist_opened;
-  sigc::signal<void, QuicklistView*> quicklist_closed;
+  sigc::signal<void, nux::ObjectPtr<QuicklistView> const&> quicklist_opened;
+  sigc::signal<void, nux::ObjectPtr<QuicklistView> const&> quicklist_closed;
 
 private:
   QuicklistManager();
   static QuicklistManager* _default;
 
-  std::list<QuicklistView*> _quicklist_list;
-  QuicklistView* _current_quicklist;
+  std::list<nux::ObjectWeakPtr<QuicklistView>> _quicklist_list;
+  nux::ObjectPtr<QuicklistView> _current_quicklist;
 
 };
 

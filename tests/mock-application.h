@@ -30,6 +30,7 @@ struct MockApplicationWindow : unity::ApplicationWindow
   MockApplicationWindow(Window xid)
     : xid_(xid)
     , monitor_(0)
+    , title_("MockApplicationWindow "+std::to_string(xid_))
     , type_("window")
     , visible_(true)
     , active_(false)
