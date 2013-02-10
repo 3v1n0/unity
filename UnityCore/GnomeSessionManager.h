@@ -31,7 +31,6 @@ class GnomeManager : Manager
 {
 public:
   GnomeManager();
-  ~GnomeManager() = default;
 
   void Logout();
   void Reboot();

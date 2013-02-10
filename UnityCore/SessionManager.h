@@ -33,7 +33,7 @@ class Manager
 public:
   typedef std::shared_ptr<Manager> Ptr;
 
-  Manager() {}
+  Manager() = default;
   virtual ~Manager() = default;
 
   virtual void Logout() = 0;
