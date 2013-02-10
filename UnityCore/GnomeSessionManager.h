@@ -53,8 +53,8 @@ public:
   sigc::signal<void, unsigned> reboot_requested;
   sigc::signal<void, unsigned> shutdown_requested;
 
-private:
   struct Impl;
+private:
   std::unique_ptr<Impl> impl_;
 };
 
