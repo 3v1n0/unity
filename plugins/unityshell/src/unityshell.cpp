@@ -1566,6 +1566,18 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
     nux::Geometry g (r.x(), r.y(), r.width(), r.height());
     wt->PresentWindowsIntersectingGeometryOnThisFrame(g);
   }
+}
+
+/* Grab changed nux regions and add damage rects for them */
+void UnityScreen::determineNuxDamage(CompRegion &nux_damage)
+{
+  if (!launcher_controller_ || !dash_controller_)
+    return;
+
+  std::vector<nux::Geometry> dirty = wt->GetPresentationListGeometries();
+
+  for (auto const& geo : dirty)
+    nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);'
 
   /* Special case, we need to redraw the panel shadow on panel updates */
   for (auto const& panel_geo : panel_controller_->GetGeometries())
@@ -1585,18 +1597,6 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
       }
     }
   }
-}
-
-/* Grab changed nux regions and add damage rects for them */
-void UnityScreen::determineNuxDamage(CompRegion &nux_damage)
-{
-  if (!launcher_controller_ || !dash_controller_)
-    return;
-
-  std::vector<nux::Geometry> dirty = wt->GetPresentationListGeometries();
-
-  for (auto const& geo : dirty)
-    nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
 }
 
 /* handle X Events */
