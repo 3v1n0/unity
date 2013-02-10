@@ -72,7 +72,7 @@ GDBusInterfaceVTable INTERFACE_VTABLE =
   nullptr, nullptr
 };
 
-enum DIALOG_TYPE
+enum class DIALOG_TYPE : unsigned
 {
   LOGOUT = 0,
   SHUTDOWN,
