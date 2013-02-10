@@ -487,26 +487,6 @@ void UnityScreen::initAltTabNextWindow()
   {
     LOG_WARN(logger) << "Could not find key above tab!";
   }
-
-  /* Special case, we need to redraw the panel shadow on panel updates */
-  for (auto const& panel_geo : panel_controller_->GetGeometries())
-  {
-    CompRect panel_rect (panel_geo.x,
-                         panel_geo.y,
-                         panel_geo.width,
-                         panel_geo.height);
-
-    if (nux_damage.intersects(panel_rect))
-    {
-      foreach (CompOutput &o, screen->outputDevs())
-      {
-        CompRect shadowRect;
-        FillShadowRectForOutput(shadowRect, &o);
-        nux_damage += shadowRect;
-      }
-    }
-   }
-  }
 }
 
 void UnityScreen::OnInitiateSpread()
@@ -1585,6 +1565,25 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
   {
     nux::Geometry g (r.x(), r.y(), r.width(), r.height());
     wt->PresentWindowsIntersectingGeometryOnThisFrame(g);
+  }
+
+  /* Special case, we need to redraw the panel shadow on panel updates */
+  for (auto const& panel_geo : panel_controller_->GetGeometries())
+  {
+    CompRect panel_rect (panel_geo.x,
+                         panel_geo.y,
+                         panel_geo.width,
+                         panel_geo.height);
+
+    if (nux_damage.intersects(panel_rect))
+    {
+      foreach (CompOutput &o, screen->outputDevs())
+      {
+        CompRect shadowRect;
+        FillShadowRectForOutput(shadowRect, &o);
+        nux_damage += shadowRect;
+      }
+    }
   }
 }
 
