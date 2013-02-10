@@ -36,6 +36,9 @@ compiz::WindowInputRemover::WindowInputRemover (Display *dpy,
   mInputRects (NULL),
   mNInputRects (0),
   mInputRectOrdering (0),
+  mBoundingRects (NULL),
+  mNBoundingRects (0),
+  mBoundingRectOrdering (0),
   mRemoved (false)
 {
   /* FIXME: roundtrip */
@@ -106,6 +109,38 @@ compiz::WindowInputRemover::sendShapeNotify ()
     XTranslateCoordinates (mDpy, mShapeWindow, parentReturn, 0, 0,
 			   &xOffset, &yOffset, &childReturn);
 
+    xsev.kind = ShapeBounding;
+
+    /* Calculate extents of the bounding shape */
+    if (!mNBoundingRects)
+    {
+      /* No set input shape, we must use the client geometry */
+      xsev.x = x - xOffset;
+      xsev.y = y - yOffset;
+      xsev.width = width; 
+      xsev.height = height;
+      xsev.shaped = false;
+    }
+    else
+    {
+      Region      boundingRegion = XCreateRegion ();
+
+      for (int i = 0; i < mNBoundingRects; i++)
+        XUnionRectWithRegion (&(mBoundingRects[i]), boundingRegion, boundingRegion);
+
+      xsev.x = boundingRegion->extents.x1 - xOffset;
+      xsev.y = boundingRegion->extents.y1 - yOffset;
+      xsev.width = boundingRegion->extents.x2 - boundingRegion->extents.x1;
+      xsev.height = boundingRegion->extents.y2 - boundingRegion->extents.y1;
+      xsev.shaped = true;
+
+      XDestroyRegion (boundingRegion);
+    }
+
+    xsev.time = CurrentTime;
+
+    XSendEvent (mDpy, mShapeWindow, FALSE, NoEventMask, xev);
+    XSendEvent (mDpy, parentReturn, FALSE, NoEventMask, xev);
     xsev.kind = ShapeInput;
 
     /* Calculate extents of the bounding shape */
@@ -145,6 +180,19 @@ compiz::WindowInputRemover::sendShapeNotify ()
   else
   {
     XQueryTree (mDpy, mShapeWindow, &rootReturn, &parentReturn, &children, &nchildren);
+
+    xsev.kind = ShapeBounding;
+
+    xsev.x = 0;
+    xsev.y = 0;
+    xsev.width = 0;
+    xsev.height = 0;
+    xsev.shaped = true;
+
+    xsev.time = CurrentTime;
+    XSendEvent (mDpy, mShapeWindow, FALSE, NoEventMask, xev);
+    XSendEvent (mDpy, parentReturn, FALSE, NoEventMask, xev);
+
     xsev.kind = ShapeInput;
 
     /* Both ShapeBounding and ShapeInput are null */
@@ -196,6 +244,27 @@ compiz::WindowInputRemover::saveInput ()
   mNInputRects = count;
   mInputRectOrdering = ordering;
 
+  rects = XShapeGetRectangles (mDpy, mShapeWindow, ShapeBounding,
+                               &count, &ordering);
+
+  /* check if the returned shape exactly matches the window shape -
+   * if that is true, the window currently has no set bounding shape */
+  if ((count == 1) &&
+      (rects[0].x == -((int) border)) &&
+      (rects[0].y == -((int) border)) &&
+      (rects[0].width == (width + border)) &&
+      (rects[0].height == (height + border)))
+  {
+    count = 0;
+  }
+
+  if (mBoundingRects)
+    XFree (mBoundingRects);
+
+  mBoundingRects = rects;
+  mNBoundingRects = count;
+  mBoundingRectOrdering = ordering;
+
   mShapeMask = XShapeInputSelected (mDpy, mShapeWindow);
 
   return true;
@@ -211,6 +280,8 @@ compiz::WindowInputRemover::removeInput ()
   XShapeSelectInput (mDpy, mShapeWindow, NoEventMask);
 
   XShapeCombineRectangles (mDpy, mShapeWindow, ShapeInput, 0, 0,
+                           NULL, 0, ShapeSet, 0);
+  XShapeCombineRectangles (mDpy, mShapeWindow, ShapeBounding, 0, 0,
                            NULL, 0, ShapeSet, 0);
 
   XShapeSelectInput (mDpy, mShapeWindow, mShapeMask);
@@ -247,6 +318,25 @@ compiz::WindowInputRemover::restoreInput ()
       XFree (mInputRects);
       mInputRects = NULL;
       mNInputRects = 0;
+    }
+
+    if (mNBoundingRects)
+    {
+      XShapeCombineRectangles (mDpy, mShapeWindow, ShapeBounding, 0, 0,
+                         mBoundingRects, mNBoundingRects,
+                         ShapeSet, mBoundingRectOrdering);
+    }
+    else
+    {
+      XShapeCombineMask (mDpy, mShapeWindow, ShapeBounding,
+                   0, 0, None, ShapeSet);
+    }
+
+    if (mBoundingRects)
+    {
+      XFree (mBoundingRects);
+      mBoundingRects = NULL;
+      mNBoundingRects = 0;
     }
   }
 
