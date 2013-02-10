@@ -26,7 +26,7 @@
 #include <sigc++/sigc++.h>
 
 #include <Nux/Nux.h>
-#include <Nux/View.h>
+#include <Nux/TextureArea.h>
 #include <NuxCore/ObjectPtr.h>
 #include <NuxCore/Property.h>
 
@@ -39,15 +39,19 @@ class UnityWindowView : public debug::Introspectable, public nux::View
 public:
   nux::Property<nux::Color> background_color;
   nux::Property<UnityWindowStyle::Ptr> style;
+  nux::Property<bool> closable;
 
   UnityWindowView(NUX_FILE_LINE_PROTO);
-  virtual ~UnityWindowView();
+  virtual ~UnityWindowView() = default;
 
   void SetupBackground(bool enabled = true);
+
+  sigc::signal<void> request_close;
 
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
+  Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
 
   virtual void PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {};
   virtual void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry clip) = 0;
@@ -58,9 +62,11 @@ protected:
   void AddProperties(GVariantBuilder* builder);
 
 private:
+  void OnClosableChanged(bool closable);
   void DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo);
 
   BackgroundEffectHelper bg_helper_;
+  nux::ObjectPtr<nux::TextureArea> close_button_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> bg_texture_;
 };
 
