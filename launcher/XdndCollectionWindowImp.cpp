@@ -38,7 +38,8 @@ public:
     auto uscreen = UScreen::GetDefault();
     SetGeometry(uscreen->GetScreenGeometry());
 
-    //ShowWindow(true);
+    // We are not calling ShowWindow () as this window
+    // isn't really visible
     PushToBack();
     // Hack to create the X Window as soon as possible.
     EnableInputWindow(true, "XdndCollectionWindowImp");
