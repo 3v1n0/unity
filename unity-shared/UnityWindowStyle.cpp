@@ -25,6 +25,7 @@ namespace ui {
 
 UnityWindowStyle::UnityWindowStyle()
 {
+  close_icon_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dialog_close.png", -1, true));
   background_top_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_top.png", -1, true));
   background_left_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_left.png", -1, true));
   background_corner_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_corner.png", -1, true));
@@ -38,6 +39,11 @@ int UnityWindowStyle::GetBorderSize() const
 int UnityWindowStyle::GetInternalOffset() const
 {
   return 20;
+}
+
+UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIcon() const
+{
+  return close_icon_;
 }
 
 UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetBackgroundTop() const

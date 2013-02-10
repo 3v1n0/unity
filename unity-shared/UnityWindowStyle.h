@@ -34,6 +34,7 @@ public:
 
   UnityWindowStyle();
 
+  BaseTexturePtr GetCloseIcon() const;
   BaseTexturePtr GetBackgroundTop() const;
   BaseTexturePtr GetBackgroundLeft() const;
   BaseTexturePtr GetBackgroundCorner() const;
@@ -41,10 +42,10 @@ public:
   int GetInternalOffset() const;
 
 private:
+  BaseTexturePtr close_icon_;
   BaseTexturePtr background_top_;
   BaseTexturePtr background_left_;
   BaseTexturePtr background_corner_;
-
 };
 
 }
