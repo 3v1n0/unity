@@ -34,12 +34,13 @@ public:
 
   UnityWindowStyle();
 
-  BaseTexturePtr GetCloseIcon() const;
+  BaseTexturePtr GetCloseIcon();
   BaseTexturePtr GetBackgroundTop() const;
   BaseTexturePtr GetBackgroundLeft() const;
   BaseTexturePtr GetBackgroundCorner() const;
   int GetBorderSize() const;
   int GetInternalOffset() const;
+  int GetCloseButtonPadding() const;
 
 private:
   BaseTexturePtr close_icon_;
