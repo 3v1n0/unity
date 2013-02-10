@@ -26,21 +26,51 @@ namespace ui {
 
 NUX_IMPLEMENT_OBJECT_TYPE(UnityWindowView);
 
-UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL) : View(NUX_FILE_LINE_PARAM)
+UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
+  : View(NUX_FILE_LINE_PARAM)
+  , style(std::make_shared<UnityWindowStyle>())
+  , closable(false)
 {
-  style = UnityWindowStyle::Ptr(new UnityWindowStyle());
   bg_helper_.owner = this;
+
+  closable.changed.connect(sigc::mem_fun(this, &UnityWindowView::OnClosableChanged));
 }
 
-UnityWindowView::~UnityWindowView()
+nux::Area*
+UnityWindowView::FindAreaUnderMouse(const nux::Point& mouse, nux::NuxEventType etype)
 {
+  if (close_button_ && close_button_->GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y))
+    return close_button_.GetPointer();
 
+  return nux::View::FindAreaUnderMouse(mouse, etype);
 }
 
 void
 UnityWindowView::SetupBackground(bool enabled)
 {
   bg_helper_.enabled = enabled;
+}
+
+void UnityWindowView::OnClosableChanged(bool closable)
+{
+  if (!closable)
+  {
+    close_button_ = nullptr;
+    return;
+  }
+
+  auto const& texture = style()->GetCloseIcon();
+  int padding = style()->GetCloseButtonPadding();
+  close_button_ = new nux::TextureArea();
+  close_button_->SetTexture(texture.GetPointer());
+  close_button_->SetSize(texture->GetWidth(), texture->GetHeight());
+  close_button_->SetBaseXY(padding, padding);
+
+  close_button_->mouse_click.connect([this](int, int, unsigned long, unsigned long)
+  {
+    request_close.emit();
+    QueueDraw();
+  });
 }
 
 void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
@@ -148,6 +178,13 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
   GfxContext.PopClippingRectangle();
 
   DrawBackground(GfxContext, background_geo);
+
+  if (close_button_)
+  {
+    nux::GetPainter().PushPaintLayerStack();
+    close_button_->ProcessDraw(GfxContext, force_draw);
+    nux::GetPainter().PopPaintLayerStack();
+  }
 }
 
 void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo)
