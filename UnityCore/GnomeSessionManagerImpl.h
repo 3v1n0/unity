@@ -37,14 +37,17 @@ struct GnomeManager::Impl
 
   void SetupShellSessionHandler();
   void OnShellMethodCall(std::string const& method_name, GVariant* parameters);
+  void EmitShellSignal(std::string const& signal_name, GVariant* parameters = nullptr);
 
   bool can_shutdown_;
   bool can_suspend_;
   bool can_hibernate_;
 
+  unsigned shell_owner_name_;
+  glib::Object<GDBusConnection> shell_connection_;
+
   glib::DBusProxy upower_proxy_;
   glib::DBusProxy gsession_proxy_;
-  unsigned shell_owner_name_;
 };
 
 } // namespace session

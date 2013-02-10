@@ -75,6 +75,7 @@ GnomeManager::Impl::Impl()
   : can_shutdown_(true)
   , can_suspend_(false)
   , can_hibernate_(false)
+  , shell_owner_name_(0)
   , upower_proxy_("org.freedesktop.UPower", "/org/freedesktop/UPower",
                   "org.freedesktop.UPower", G_BUS_TYPE_SYSTEM)
   , gsession_proxy_("org.gnome.SessionManager", "/org/gnome/SessionManager",
@@ -135,12 +136,30 @@ void GnomeManager::Impl::SetupShellSessionHandler()
                             << error.Message();
         }
       }
+
+      auto self = static_cast<GnomeManager::Impl*>(data);
+      self->shell_connection_ = glib::Object<GDBusConnection>(conn, glib::AddRef());
+
     }, nullptr, nullptr, this, nullptr);
 }
 
 void GnomeManager::Impl::OnShellMethodCall(std::string const& method_name, GVariant* parameters)
 {
+  LOG_DEBUG(logger) << "Called method '" << method_name << "'";
+}
 
+void GnomeManager::Impl::EmitShellSignal(std::string const& signal_name, GVariant* parameters)
+{
+  glib::Error error;
+  g_dbus_connection_emit_signal(shell_connection_, nullptr, shell::DBUS_OBJECT_PATH,
+                                shell::DBUS_INTERFACE, signal_name.c_str(), parameters,
+                                &error);
+
+  if (error)
+  {
+    LOG_WARNING(logger) << "Got error when emitting signal '" << signal_name << "': "
+                        << signal_name;
+  }
 }
 
 // Public implementation
@@ -184,22 +203,27 @@ void GnomeManager::Hibernate()
 
 void GnomeManager::ConfirmLogout()
 {
+  impl_->EmitShellSignal("ConfirmLogout");
 }
 
 void GnomeManager::ConfirmReboot()
 {
+  impl_->EmitShellSignal("ConfirmReboot");
 }
 
 void GnomeManager::ConfirmShutdown()
 {
+  impl_->EmitShellSignal("ConfirmShutdown");
 }
 
 void GnomeManager::CancelAction()
 {
+  impl_->EmitShellSignal("CancelAction");
 }
 
 void GnomeManager::ClosedDialog()
 {
+  impl_->EmitShellSignal("ClosedDialog");
 }
 
 bool GnomeManager::CanShutdown()
