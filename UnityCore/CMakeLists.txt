@@ -31,6 +31,7 @@ set (CORE_HEADERS
      GLibSource.h
      GLibWrapper.h
      GLibWrapper-inl.h
+     GnomeSessionManager.h
      Hud.h
      HomeLens.h
      IndicatorEntry.h
@@ -52,6 +53,7 @@ set (CORE_HEADERS
      ResultIterator.h
      Results.h
      SeriesPreview.h
+     SessionManager.h
      SocialPreview.h
      Track.h
      Tracks.h
@@ -74,6 +76,7 @@ set (CORE_SOURCES
      GLibSignal.cpp
      GLibSource.cpp
      GLibWrapper.cpp
+     GnomeSessionManager.cpp
      Hud.cpp
      HomeLens.cpp
      Indicator.cpp
