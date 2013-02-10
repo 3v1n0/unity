@@ -56,9 +56,10 @@ public:
   Manager(const Manager&) = delete;
   Manager& operator=(const Manager&) = delete;
 
-  sigc::signal<void, unsigned> logout_requested;
-  sigc::signal<void, unsigned> reboot_requested;
-  sigc::signal<void, unsigned> shutdown_requested;
+  sigc::signal<void> logout_requested;
+  sigc::signal<void> reboot_requested;
+  sigc::signal<void> shutdown_requested;
+  sigc::signal<void> cancel_requested;
 };
 
 } // namespace session

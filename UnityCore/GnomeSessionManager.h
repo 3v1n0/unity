@@ -49,10 +49,6 @@ public:
   bool CanSuspend();
   bool CanHibernate();
 
-  sigc::signal<void, unsigned> logout_requested;
-  sigc::signal<void, unsigned> reboot_requested;
-  sigc::signal<void, unsigned> shutdown_requested;
-
   struct Impl;
 private:
   std::unique_ptr<Impl> impl_;

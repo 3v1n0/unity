@@ -30,7 +30,7 @@ namespace session
 
 struct GnomeManager::Impl
 {
-  Impl();
+  Impl(GnomeManager* parent);
   ~Impl();
 
   void QueryUPowerCapabilities();
@@ -39,6 +39,7 @@ struct GnomeManager::Impl
   void OnShellMethodCall(std::string const& method_name, GVariant* parameters);
   void EmitShellSignal(std::string const& signal_name, GVariant* parameters = nullptr);
 
+  GnomeManager* manager_;
   bool can_shutdown_;
   bool can_suspend_;
   bool can_hibernate_;
@@ -48,6 +49,7 @@ struct GnomeManager::Impl
 
   glib::DBusProxy upower_proxy_;
   glib::DBusProxy gsession_proxy_;
+
 };
 
 } // namespace session

@@ -46,6 +46,8 @@ R"(<node>
     <arg type="ao" name="inhibitors" direction="in">
     </arg>
   </method>
+  <method name="Close">
+  </method>
   <signal name="ConfirmedLogout">
   </signal>
   <signal name="ConfirmedReboot">
@@ -69,10 +71,19 @@ GDBusInterfaceVTable INTERFACE_VTABLE =
   },
   nullptr, nullptr
 };
+
+enum DIALOG_TYPE
+{
+  LOGOUT = 0,
+  SHUTDOWN,
+  REBOOT,
+};
+
 }
 
-GnomeManager::Impl::Impl()
-  : can_shutdown_(true)
+GnomeManager::Impl::Impl(GnomeManager* manager)
+  : manager_(manager)
+  , can_shutdown_(true)
   , can_suspend_(false)
   , can_hibernate_(false)
   , shell_owner_name_(0)
@@ -146,6 +157,40 @@ void GnomeManager::Impl::SetupShellSessionHandler()
 void GnomeManager::Impl::OnShellMethodCall(std::string const& method_name, GVariant* parameters)
 {
   LOG_DEBUG(logger) << "Called method '" << method_name << "'";
+
+  if (method_name == "Open")
+  {
+    shell::DIALOG_TYPE type;
+    unsigned arg1, timeout_length;
+    GVariantIter *inhibitors;
+    g_variant_get(parameters, "(uuuao)", &type, &arg1, &timeout_length, &inhibitors);
+    bool has_inibitors = (g_variant_iter_n_children(inhibitors) > 0);
+    g_variant_iter_free(inhibitors);
+
+    //XXX: we need to define the proper policy here
+    if (has_inibitors)
+    {
+      manager_->ClosedDialog();
+      return;
+    }
+
+    switch(type)
+    {
+      case shell::DIALOG_TYPE::LOGOUT:
+        manager_->logout_requested.emit();
+        break;
+      case shell::DIALOG_TYPE::SHUTDOWN:
+        manager_->shutdown_requested.emit();
+        break;
+      case shell::DIALOG_TYPE::REBOOT:
+        manager_->reboot_requested.emit();
+        break;
+    }
+  }
+  else if (method_name == "Close")
+  {
+    manager_->cancel_requested.emit();
+  }
 }
 
 void GnomeManager::Impl::EmitShellSignal(std::string const& signal_name, GVariant* parameters)
@@ -165,14 +210,14 @@ void GnomeManager::Impl::EmitShellSignal(std::string const& signal_name, GVarian
 // Public implementation
 
 GnomeManager::GnomeManager()
-  : impl_(new GnomeManager::Impl())
+  : impl_(new GnomeManager::Impl(this))
 {}
 
 void GnomeManager::Logout()
 {
   enum LogoutMethods
   {
-    NORMAL = 0,
+    INTERACTIVE = 0,
     NO_CONFIRMATION,
     FORCE_LOGOUT
   };
