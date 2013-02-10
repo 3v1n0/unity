@@ -1577,7 +1577,7 @@ void UnityScreen::determineNuxDamage(CompRegion &nux_damage)
   std::vector<nux::Geometry> dirty = wt->GetPresentationListGeometries();
 
   for (auto const& geo : dirty)
-    nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);'
+    nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
 
   /* Special case, we need to redraw the panel shadow on panel updates */
   for (auto const& panel_geo : panel_controller_->GetGeometries())
