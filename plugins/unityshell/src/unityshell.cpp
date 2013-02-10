@@ -1136,7 +1136,11 @@ UnityWindow::GetInputRemover ()
   if (!input_remover_.expired ())
     return input_remover_.lock ();
 
-  compiz::WindowInputRemoverLock::Ptr ret (new compiz::WindowInputRemoverLock (new compiz::WindowInputRemover (screen->dpy (), window->id ())));
+  compiz::WindowInputRemoverLock::Ptr
+      ret (new compiz::WindowInputRemoverLock (
+             new compiz::WindowInputRemover (screen->dpy (),
+                                             window->id (),
+                                             window->id ())));
   input_remover_ = ret;
   return ret;
 }
@@ -3354,14 +3358,18 @@ UnityWindow::UnityWindow(CompWindow* window)
   GLWindowInterface::setHandler(gWindow);
   ScaleWindowInterface::setHandler (ScaleWindow::get (window));
 
+  /* This needs to happen before we set our wrapable functions, since we
+   * need to ask core (and not ourselves) whether or not the window is
+   * minimized */
   if (UnityScreen::get (screen)->optionGetShowMinimizedWindows () &&
       window->mapNum ())
   {
+    /* Query the core function */
+    window->minimizedSetEnabled (this, false);
+
     bool wasMinimized = window->minimized ();
     if (wasMinimized)
       window->unminimize ();
-    window->minimizeSetEnabled (this, true);
-    window->unminimizeSetEnabled (this, true);
     window->minimizedSetEnabled (this, true);
 
     if (wasMinimized)
@@ -3373,6 +3381,8 @@ UnityWindow::UnityWindow(CompWindow* window)
     window->unminimizeSetEnabled (this, false);
     window->minimizedSetEnabled (this, false);
   }
+
+  /* Keep this after the optionGetShowMinimizedWindows branch */
 
   if (window->state () & CompWindowStateFullscreenMask)
     UnityScreen::get (screen)->fullscreen_windows_.push_back(window);
