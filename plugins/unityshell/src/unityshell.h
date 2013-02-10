@@ -96,9 +96,10 @@ public:
 
   /* nux draw wrapper */
   void paintDisplay();
-  void paintPanelShadow(const CompRegion& clip);
+  void PaintPanelShadow(const CompRegion& clip);
   void setPanelShadowMatrix(const GLMatrix& matrix);
 
+  void damageCutoff();
   void preparePaint (int ms);
   void paintFboForOutput (CompOutput *output);
   void donePaint ();
@@ -214,7 +215,7 @@ private:
   void initLauncher();
 
   void compizDamageNux(CompRegion const& region);
-  void nuxDamageCompiz();
+  void determineNuxDamage(CompRegion &nux_damage);
 
   void onRedrawRequested();
   void Relayout();
@@ -236,6 +237,13 @@ private:
   void OnInitiateSpread();
   void OnTerminateSpread();
 
+  void DamagePanelShadow();
+
+  void OnViewHidden(nux::BaseWindow *bw);
+  void OnViewShown(nux::BaseWindow *bw);
+
+  void RestoreWindow(GVariant* data);
+
   bool SaveInputThenFocus(const guint xid);
 
   void OnPanelStyleChanged();
@@ -246,6 +254,8 @@ private:
   bool TopPanelBackgroundTextureNeedsUpdate() const;
   void UpdateTopPanelBackgroundTexture();
 
+  void FillShadowRectForOutput(CompRect &shadowRect,
+                               CompOutput *output);
   unsigned CompizModifiersToNux(unsigned input) const;
   unsigned XModifiersToNux(unsigned input) const;
 
@@ -342,6 +352,14 @@ private:
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
+
+  CompRegion buffered_compiz_damage_this_frame_;
+  CompRegion buffered_compiz_damage_last_frame_;
+  bool       ignore_redraw_request_;
+
+  std::unique_ptr <compiz::opengl::DirectDrawObject> directly_drawable_fbo_;
+  compiz::opengl::BindableFramebuffer *previous_framebuffer_;
+  unsigned int directly_drawable_buffer_age_;
 
   friend class UnityWindow;
 };
