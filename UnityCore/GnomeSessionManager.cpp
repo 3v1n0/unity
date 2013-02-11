@@ -98,7 +98,7 @@ GnomeManager::Impl::Impl(GnomeManager* manager)
 
   upower_proxy_.Connect("Changed", sigc::hide(sigc::mem_fun(this, &GnomeManager::Impl::QueryUPowerCapabilities)));
 
-    gsession_proxy_.Call("CanShutdown", nullptr, [this] (GVariant* variant) {
+  gsession_proxy_.Call("CanShutdown", nullptr, [this] (GVariant* variant) {
     can_shutdown_ = false;
     if (variant)
       g_variant_get(variant, "(b)", &can_shutdown_);
