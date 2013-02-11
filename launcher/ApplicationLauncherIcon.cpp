@@ -51,6 +51,7 @@ const std::string WINDOW_MOVE_TIMEOUT = "bamf-window-move";
 const std::string ICON_REMOVE_TIMEOUT = "bamf-icon-remove";
 //const std::string ICON_DND_OVER_TIMEOUT = "bamf-icon-dnd-over";
 const std::string DEFAULT_ICON = "application-default-icon";
+const int MAXIMUM_QUICKLIST_WIDTH = 300;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(ApplicationLauncherIcon);
@@ -692,6 +693,42 @@ void ApplicationLauncherIcon::UpdateBackgroundColor()
     EmitNeedsRedraw();
 }
 
+void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
+{
+  // delete all menu items for windows
+  _menu_items_windows.clear();
+
+  auto const& windows = Windows();
+
+  // We only add quicklist menu-items for windows if we have more than one window
+  if (windows.size() < 2)
+    return;
+
+  // add menu items for all open windows
+  for (auto const& w : windows)
+  {
+    if (w->title().empty())
+      continue;
+
+    glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, w->title().c_str());
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY, true);
+    dbusmenu_menuitem_property_set_int(menu_item, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY, MAXIMUM_QUICKLIST_WIDTH);
+
+    Window xid = w->window_id();
+    _gsignals.Add<void, DbusmenuMenuitem*, int>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+      [xid] (DbusmenuMenuitem*, int) {
+        WindowManager& wm = WindowManager::Default();
+        wm.Activate(xid);
+        wm.Raise(xid);
+    });
+
+    _menu_items_windows.push_back(menu_item);
+  }
+}
+
 void ApplicationLauncherIcon::UpdateMenus()
 {
   // add dynamic quicklist
@@ -925,6 +962,28 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
     _menu_items_extra["SecondSeparator"] = glib::Object<DbusmenuMenuitem>(item);
   }
   result.push_back(item);
+
+  EnsureMenuItemsWindowsReady();
+
+  if (!_menu_items_windows.empty())
+  {
+    for (auto const& it : _menu_items_windows)
+      result.push_back(it);
+
+    auto third_sep = _menu_items_extra.find("ThirdSeparator");
+    if (third_sep != _menu_items_extra.end())
+    {
+      item = third_sep->second;
+    }
+    else
+    {
+      item = dbusmenu_menuitem_new();
+      dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_TYPE, DBUSMENU_CLIENT_TYPES_SEPARATOR);
+      _menu_items_extra["ThirdSeparator"] = glib::Object<DbusmenuMenuitem>(item);
+    }
+
+    result.push_back(item);
+  }
 
   EnsureMenuItemsReady();
 

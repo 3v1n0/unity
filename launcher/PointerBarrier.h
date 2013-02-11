@@ -70,6 +70,7 @@ public:
 
   nux::Property<bool> active;
   nux::Property<bool> released;
+  nux::Property<bool> release_once;
 
   nux::Property<int> smoothing;
 

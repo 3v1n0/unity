@@ -67,10 +67,18 @@ void OverlayWindowButtons::Hide()
   QueueDraw();
 }
 
+nux::Point GetRelativeMousePosition(nux::Point const& pos)
+{
+  int monitor = unity::UScreen::GetDefault()->GetMonitorWithMouse();
+  nux::Geometry const& geo = unity::UScreen::GetDefault()->GetMonitorGeometry(monitor);
+
+  return nux::Point(pos.x - geo.x, pos.y - geo.y);
+}
+
 nux::Area* OverlayWindowButtons::FindAreaUnderMouse(nux::Point const& mouse_position,
                                                     nux::NuxEventType event_type)
 {
-  return window_buttons_->FindAreaUnderMouse(mouse_position, event_type);
+  return window_buttons_->FindAreaUnderMouse(GetRelativeMousePosition(mouse_position), event_type);
 }
 
 void OverlayWindowButtons::Draw(nux::GraphicsEngine& gfx_context, bool force_draw)

@@ -1,3 +1,57 @@
+unity (6.12.0daily13.02.08-0ubuntu1) raring; urgency=low
+
+  [ Brandon Schaefer ]
+  * Multi-monitor - Add 'sticky edges deactivated for number of
+    milliseconds after the user breaks the barrier' variable that works
+    when the Launcher set to 'auto-hide' and sticky edges set to 'off'
+    (LP: #1064945)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * testapp is a bad name (LP: #1089561)
+
+  [ Marco Trevisan (Treviño) <mail@3v1n0.net>, Brandon Schaefer ]
+  * Multi-monitor - Add 'sticky edges deactivated for number of
+    milliseconds after the user breaks the barrier' variable that works
+    when the Launcher set to 'auto-hide' and sticky edges set to 'off'
+    (LP: #1064945)
+
+  [ Marco Trevisan (Treviño) ]
+  * Alt-Tab switcher should use a very fast fade-in/out effect when
+    showing/hiding (LP: #1105058)
+  * Multi-monitor - Add 'sticky edges deactivated for number of
+    milliseconds after the user breaks the barrier' variable that works
+    when the Launcher set to 'auto-hide' and sticky edges set to 'off'
+    (LP: #1064945)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3140
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 08 Feb 2013 04:02:00 +0000
+
+unity (6.12.0daily13.02.07-0ubuntu1) raring; urgency=low
+
+  [ Andrea Azzarone ]
+  * make check fails on test-unit (LP: #1117487)
+  * Notification area whitelist is obsolete (LP: #974480)
+
+  [ Marco Trevisan (Treviño) ]
+  * Switcher - when opening in detail mode (Alt+`) it should not use the
+    spread animation (LP: #1116927)
+  * Alt-tab sometimes focuses a window that is not in top of the app
+    stack (LP: #1115775)
+  * Switcher: Opening and closing the detail mode quickly makes unity
+    re-enable it (LP: #1116785)
+  * Exiting expo mode leaves the BFB quicklist open (LP: #1090565)
+
+  [ MC Return ]
+  * unmaximize_window_key instead of unmaximize_or_minimize_window_key
+    exposed in g-c-c (LP: #1115128)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3136
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Thu, 07 Feb 2013 06:20:12 +0000
+
 unity (6.12.0daily13.02.04.1-0ubuntu1) raring; urgency=low
 
   * debian/control:

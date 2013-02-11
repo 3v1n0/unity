@@ -40,6 +40,7 @@ const std::string LAZY_TIMEOUT = "lazy-timeout";
 const std::string SHOW_TIMEOUT = "show-timeout";
 const std::string DETAIL_TIMEOUT = "detail-timeout";
 const std::string VIEW_CONSTRUCT_IDLE = "view-construct-idle";
+const unsigned FADE_DURATION = 80;
 
 /**
  * Helper comparison functor for sorting application icons.
@@ -65,7 +66,9 @@ namespace switcher
 {
 
 Controller::Controller(WindowCreator const& create_window)
-  : detail_on_timeout(true)
+  : detail_mode([this] { return detail_mode_; })
+  , timeout_length(0)
+  , detail_on_timeout(true)
   , detail_timeout_length(500)
   , initial_detail_timeout_length(1500)
   , visible_(false)
@@ -73,11 +76,11 @@ Controller::Controller(WindowCreator const& create_window)
   , show_desktop_disabled_(false)
   , detail_mode_(DetailMode::TAB_NEXT_WINDOW)
   , impl_(new Controller::Impl(this, 20, create_window))
-{ }
+{}
 
 
 Controller::~Controller()
-{ }
+{}
 
 
 bool Controller::CanShowSwitcher(const std::vector<AbstractLauncherIcon::Ptr>& results) const
@@ -131,7 +134,7 @@ void Controller::Prev()
   impl_->Prev();
 }
 
-SwitcherView* Controller::GetView()
+SwitcherView::Ptr Controller::GetView() const
 {
   return impl_->GetView();
 }
@@ -139,6 +142,11 @@ SwitcherView* Controller::GetView()
 void Controller::SetDetail(bool value, unsigned int min_windows)
 {
   impl_->SetDetail(value, min_windows);
+}
+
+void Controller::InitiateDetail()
+{
+  impl_->InitiateDetail();
 }
 
 void Controller::NextDetail()
@@ -196,6 +204,14 @@ void Controller::SetDetailOnTimeout(bool timeout)
   detail_on_timeout = timeout;
 }
 
+double Controller::Opacity() const
+{
+  if (!impl_->view_window_)
+    return 0.0f;
+
+  return impl_->view_window_->GetOpacity();
+}
+
 std::string
 Controller::GetName() const
 {
@@ -219,22 +235,32 @@ Controller::AddProperties(GVariantBuilder* builder)
 Controller::Impl::Impl(Controller* obj,
                        unsigned int load_timeout,
                        Controller::WindowCreator const& create_window)
-  :  timeout_length(0)
-  ,  construct_timeout_(load_timeout)
+  :  construct_timeout_(load_timeout)
   ,  obj_(obj)
   ,  create_window_(create_window)
   ,  main_layout_(nullptr)
   ,  bg_color_(0, 0, 0, 0.5)
+  ,  fade_animator_(FADE_DURATION)
 {
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::Impl::OnBackgroundUpdate));
 
   if (create_window_ == nullptr)
     create_window_ = []() {
-        return nux::ObjectPtr<nux::BaseWindow>(new nux::BaseWindow("Switcher"));
+        return nux::ObjectPtr<nux::BaseWindow>(new MockableBaseWindow("Switcher"));
     };
 
   // TODO We need to get actual timing data to suggest this is necessary.
   //sources_.AddTimeoutSeconds(construct_timeout_, [&] { ConstructWindow(); return false; }, LAZY_TIMEOUT);
+
+  fade_animator_.updated.connect([this] (double opacity) {
+    if (view_window_)
+    {
+      view_window_->SetOpacity(opacity);
+
+      if (!obj_->visible_ && opacity == 0.0f)
+        HideWindow();
+    }
+  });
 }
 
 void Controller::Impl::OnBackgroundUpdate(GVariant* data)
@@ -261,16 +287,18 @@ void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLa
   model_ = std::make_shared<SwitcherModel>(results);
   obj_->AddChild(model_.get());
   model_->selection_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnModelSelectionChanged));
+  model_->detail_selection.changed.connect([this] (bool) { sources_.Remove(DETAIL_TIMEOUT); });
   model_->only_detail_on_viewport = (show == ShowMode::CURRENT_VIEWPORT);
 
   SelectFirstItem();
 
   obj_->visible_ = true;
+  int real_wait = obj_->timeout_length() - fade_animator_.Duration();
 
-  if (timeout_length > 0)
+  if (real_wait > 0)
   {
     sources_.AddIdle([&] { ConstructView(); return false; }, VIEW_CONSTRUCT_IDLE);
-    sources_.AddTimeout(timeout_length, [&] { ShowView(); return false; }, SHOW_TIMEOUT);
+    sources_.AddTimeout(real_wait, [&] { ShowView(); return false; }, SHOW_TIMEOUT);
   }
   else
   {
@@ -330,11 +358,19 @@ void Controller::Impl::ShowView()
 
   ubus_manager_.SendMessage(UBUS_SWITCHER_START, NULL);
 
-  if (view_window_) {
+  if (view_window_)
+  {
     view_window_->ShowWindow(true);
     view_window_->PushToFront();
-    view_window_->SetOpacity(1.0f);
-    view_window_->CaptureMouseDownAnyWhereElse(true);
+
+    if (fade_animator_.CurrentState() == nux::animation::Animation::State::Running)
+    {
+      fade_animator_.Reverse();
+    }
+    else
+    {
+      fade_animator_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
+    }
   }
 }
 
@@ -349,8 +385,9 @@ void Controller::Impl::ConstructWindow()
     main_layout_->SetHorizontalExternalMargin(0);
 
     view_window_ = create_window_();
+    view_window_->SetOpacity(0.0f);
     view_window_->SetLayout(main_layout_);
-    view_window_->SetBackgroundColor(nux::Color(0x00000000));
+    view_window_->SetBackgroundColor(nux::color::Transparent);
     view_window_->SetGeometry(workarea_);
   }
 }
@@ -373,7 +410,6 @@ void Controller::Impl::ConstructView()
   main_layout_->AddView(view_.GetPointer(), 1);
   view_window_->SetEnterFocusInputArea(view_.GetPointer());
   view_window_->SetGeometry(workarea_);
-  view_window_->SetOpacity(0.0f);
 
   view_built.emit();
 }
@@ -391,29 +427,36 @@ void Controller::Impl::Hide(bool accept_state)
   }
 
   ubus_manager_.SendMessage(UBUS_SWITCHER_END, g_variant_new_boolean(!accept_state));
+  ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new("(bi)", false, obj_->monitor_));
 
   sources_.Remove(VIEW_CONSTRUCT_IDLE);
   sources_.Remove(SHOW_TIMEOUT);
   sources_.Remove(DETAIL_TIMEOUT);
 
-  model_.reset();
   obj_->visible_ = false;
 
-  if (view_)
-    main_layout_->RemoveChildObject(view_.GetPointer());
-
-  if (view_window_)
+  if (fade_animator_.CurrentState() == nux::animation::Animation::State::Running)
   {
-    view_window_->SetOpacity(0.0f);
-    view_window_->ShowWindow(false);
-    view_window_->PushToBack();
+    fade_animator_.Reverse();
   }
-
-  ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new("(bi)", false, obj_->monitor_));
-
-  view_.Release();
+  else
+  {
+    fade_animator_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
+  }
 }
 
+void Controller::Impl::HideWindow()
+{
+  main_layout_->RemoveChildObject(view_.GetPointer());
+
+  view_window_->SetOpacity(0.0f);
+  view_window_->ShowWindow(false);
+  view_window_->PushToBack();
+  view_window_->EnableInputWindow(false);
+
+  model_.reset();
+  view_.Release();
+}
 
 void Controller::Impl::Next()
 {
@@ -473,9 +516,9 @@ void Controller::Impl::Prev()
   }
 }
 
-SwitcherView* Controller::Impl::GetView()
+SwitcherView::Ptr Controller::Impl::GetView() const
 {
-  return view_.GetPointer();
+  return view_;
 }
 
 void Controller::Impl::SetDetail(bool value, unsigned int min_windows)
@@ -491,20 +534,38 @@ void Controller::Impl::SetDetail(bool value, unsigned int min_windows)
   }
 }
 
-void Controller::Impl::NextDetail()
+void Controller::Impl::InitiateDetail(bool animate)
 {
   if (!model_)
     return;
 
   if (!model_->detail_selection)
   {
+    view_->animate = animate;
+
     SetDetail(true);
     obj_->detail_mode_ = DetailMode::TAB_NEXT_TILE;
+
+    if (!view_->animate())
+    {
+      // As soon as the detail selection is changed we re-enable the animations
+      auto conn = std::make_shared<sigc::connection>();
+      *conn = model_->detail_selection.changed.connect([this, conn] (bool) {
+        if (view_)
+          view_->animate = true;
+        conn->disconnect();
+      });
+    }
   }
-  else
-  {
-    model_->NextDetail();
-  }
+}
+
+void Controller::Impl::NextDetail()
+{
+  if (!model_)
+    return;
+
+  InitiateDetail(true);
+  model_->NextDetail();
 }
 
 void Controller::Impl::PrevDetail()
@@ -512,16 +573,8 @@ void Controller::Impl::PrevDetail()
   if (!model_)
     return;
 
-  if (!model_->detail_selection)
-  {
-    SetDetail(true);
-    obj_->detail_mode_ = DetailMode::TAB_NEXT_TILE;
-    model_->PrevDetail();
-  }
-  else
-  {
-    model_->PrevDetail();
-  }
+  InitiateDetail(true);
+  model_->PrevDetail();
 }
 
 LayoutWindow::Vector Controller::Impl::ExternalRenderTargets()

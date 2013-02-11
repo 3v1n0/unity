@@ -802,7 +802,7 @@ void UnityScreen::paintDisplay()
     }
   }
 
-  if (switcher_controller_->Visible())
+  if (switcher_controller_->Opacity() > 0.0f)
   {
     LayoutWindow::Vector const& targets = switcher_controller_->ExternalRenderTargets();
 
@@ -812,7 +812,8 @@ void UnityScreen::paintDisplay()
       {
         UnityWindow *unity_window = UnityWindow::get(window);
         double scale = target->result.width / static_cast<double>(target->geo.width);
-        unity_window->paintThumbnail(target->result, target->alpha, scale,
+        double parent_alpha = switcher_controller_->Opacity();
+        unity_window->paintThumbnail(target->result, target->alpha, parent_alpha, scale,
                                      target->decoration_height, target->selected);
       }
     }
@@ -1424,7 +1425,7 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
   QuicklistManager* qm = QuicklistManager::Default();
   if (qm)
   {
-    QuicklistView* view = qm->Current();
+    auto const& view = qm->Current();
 
     if (view)
     {
@@ -1438,7 +1439,7 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
 
   if (switcher_controller_ && switcher_controller_->Visible())
   {
-    unity::switcher::SwitcherView* view = switcher_controller_->GetView();
+    auto const& view = switcher_controller_->GetView();
 
     if (G_LIKELY(view))
     {
@@ -2056,9 +2057,12 @@ bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State
   {
     altTabInitiateCommon(action, switcher::ShowMode::CURRENT_VIEWPORT);
     switcher_controller_->Select((switcher_controller_->StartIndex())); // always select the current application
+    switcher_controller_->InitiateDetail();
   }
-
-  switcher_controller_->NextDetail();
+  else
+  {
+    switcher_controller_->NextDetail();
+  }
 
   action->setState(action->state() | CompAction::StateTermKey);
   return true;
@@ -3787,14 +3791,14 @@ void UnityWindow::paintInnerGlow(nux::Geometry glow_geo, GLMatrix const& matrix,
   paintGlow(matrix, attrib, quads, glow_texture_, win::decoration::GLOW_COLOR, mask);
 }
 
-void UnityWindow::paintThumbnail(nux::Geometry const& geo, float alpha, float scale_ratio, unsigned deco_height, bool selected)
+void UnityWindow::paintThumbnail(nux::Geometry const& geo, float alpha, float parent_alpha, float scale_ratio, unsigned deco_height, bool selected)
 {
   GLMatrix matrix;
   matrix.toScreenSpace(UnityScreen::get(screen)->_last_output, -DEFAULT_Z_CAMERA);
   last_bound = geo;
 
   GLWindowPaintAttrib attrib = gWindow->lastPaintAttrib();
-  attrib.opacity = (alpha * G_MAXUSHORT);
+  attrib.opacity = (alpha * parent_alpha * G_MAXUSHORT);
   unsigned mask = gWindow->lastMask();
   nux::Geometry thumb_geo = geo;
 
@@ -3807,7 +3811,7 @@ void UnityWindow::paintThumbnail(nux::Geometry const& geo, float alpha, float sc
   paintThumb(attrib, matrix, mask, g.x, g.y, g.width, g.height, g.width, g.height);
 
   mask |= PAINT_WINDOW_BLEND_MASK;
-  attrib.opacity = OPAQUE;
+  attrib.opacity = parent_alpha * G_MAXUSHORT;
 
   // The thumbnail is still animating, don't draw the decoration as selected
   if (selected && alpha < 1.0f)

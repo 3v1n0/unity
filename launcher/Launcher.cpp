@@ -2227,40 +2227,46 @@ void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_
   EventLogic();
 }
 
-void Launcher::RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags)
+void Launcher::RecvMouseWheel(int /*x*/, int /*y*/, int wheel_delta, unsigned long /*button_flags*/, unsigned long key_flags)
 {
   if (!_hovered)
     return;
 
+  bool alt_pressed = nux::GetKeyModifierState(key_flags, nux::NUX_STATE_ALT);
+
+  if (alt_pressed)
+    ScrollLauncher(wheel_delta);
+}
+
+void Launcher::ScrollLauncher(int wheel_delta)
+{
   if (wheel_delta < 0)
-  {
-    // scroll up
-    _launcher_drag_delta -= 25;
-  }
-  else
-  {
     // scroll down
+    _launcher_drag_delta -= 25;
+  else
+    // scroll up
     _launcher_drag_delta += 25;
-  }
 
   EnsureAnimation();
 }
 
 #ifdef USE_X11
 
-bool Launcher::HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
+ui::EdgeBarrierSubscriber::Result Launcher::HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
 {
   if (_hide_machine.GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE))
   {
-    owner->ReleaseBarrier(event->event_id);
-    return true;
+    return ui::EdgeBarrierSubscriber::Result::NEEDS_RELEASE;
   }
 
   nux::Geometry const& abs_geo = GetAbsoluteGeometry();
 
   bool apply_to_reveal = false;
-  if (_hidden && event->x >= abs_geo.x && event->x <= abs_geo.x + abs_geo.width)
+  if (event->x >= abs_geo.x && event->x <= abs_geo.x + abs_geo.width)
   {
+    if (!_hidden)
+      return ui::EdgeBarrierSubscriber::Result::ALREADY_HANDLED;
+
     if (options()->reveal_trigger == RevealTrigger::EDGE)
     {
       if (event->y >= abs_geo.y)
@@ -2284,15 +2290,15 @@ bool Launcher::HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierE
                        &root_y_return, &win_x_return, &win_y_return, &mask_return))
     {
       if (mask_return & (Button1Mask | Button3Mask))
-        apply_to_reveal = false;
+        return ui::EdgeBarrierSubscriber::Result::NEEDS_RELEASE;
     }
   }
 
   if (!apply_to_reveal)
-    return false;
+    return ui::EdgeBarrierSubscriber::Result::IGNORED;
 
   _hide_machine.AddRevealPressure(event->velocity);
-  return true;
+  return ui::EdgeBarrierSubscriber::Result::HANDLED;
 }
 
 #endif
@@ -2315,7 +2321,7 @@ void Launcher::ExitKeyNavMode()
   _hover_machine.SetQuirk(LauncherHoverMachine::KEY_NAV_ACTIVE, false);
 }
 
-void Launcher::RecvQuicklistOpened(QuicklistView* quicklist)
+void Launcher::RecvQuicklistOpened(nux::ObjectPtr<QuicklistView> const& quicklist)
 {
   UScreen* uscreen = UScreen::GetDefault();
   if (uscreen->GetMonitorGeometry(monitor).IsInside(nux::Point(quicklist->GetGeometry().x, quicklist->GetGeometry().y)))
@@ -2327,7 +2333,7 @@ void Launcher::RecvQuicklistOpened(QuicklistView* quicklist)
   }
 }
 
-void Launcher::RecvQuicklistClosed(QuicklistView* quicklist)
+void Launcher::RecvQuicklistClosed(nux::ObjectPtr<QuicklistView> const& quicklist)
 {
   nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
   if (!GetAbsoluteGeometry().IsInside(pt))
