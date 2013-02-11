@@ -66,10 +66,13 @@ void UnityWindowView::OnClosableChanged(bool closable)
   close_button_->SetSize(texture->GetWidth(), texture->GetHeight());
   close_button_->SetBaseXY(padding, padding);
 
-  close_button_->mouse_click.connect([this](int, int, unsigned long, unsigned long)
-  {
+  close_button_->SetParentObject(this);   
+
+  close_button_->mouse_down.connect([this](int, int, unsigned long, unsigned long) { QueueDraw(); });
+  close_button_->mouse_up.connect([this](int, int, unsigned long, unsigned long) { QueueDraw(); });
+
+  close_button_->mouse_click.connect([this](int, int, unsigned long, unsigned long) {
     request_close.emit();
-    QueueDraw();
   });
 }
 
