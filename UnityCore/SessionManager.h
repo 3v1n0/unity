@@ -36,6 +36,9 @@ public:
   Manager() = default;
   virtual ~Manager() = default;
 
+  virtual std::string RealName() const = 0;
+  virtual std::string UserName() const = 0;
+
   virtual void Logout() = 0;
   virtual void Reboot() = 0;
   virtual void Shutdown() = 0;
@@ -48,9 +51,9 @@ public:
   virtual void CancelAction() = 0;
   virtual void ClosedDialog() = 0;
 
-  virtual bool CanShutdown() = 0;
-  virtual bool CanSuspend() = 0;
-  virtual bool CanHibernate() = 0;
+  virtual bool CanShutdown() const = 0;
+  virtual bool CanSuspend() const = 0;
+  virtual bool CanHibernate() const = 0;
 
   // not copyable class
   Manager(const Manager&) = delete;
