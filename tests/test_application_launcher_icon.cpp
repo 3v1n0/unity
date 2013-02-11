@@ -108,25 +108,40 @@ TEST_F(TestApplicationLauncherIcon, Stick)
 TEST_F(TestApplicationLauncherIcon, StickAndSave)
 {
   bool saved = false;
-  usc_icon->position_saved.connect([&saved] {saved = true;});
+  mock_icon->position_saved.connect([&saved] {saved = true;});
 
-  usc_icon->Stick(true);
-  EXPECT_TRUE(usc_app->sticky());
-  EXPECT_TRUE(usc_icon->IsSticky());
-  EXPECT_TRUE(usc_icon->IsVisible());
+  mock_icon->Stick(true);
+  EXPECT_TRUE(mock_app->sticky());
+  EXPECT_TRUE(mock_icon->IsSticky());
+  EXPECT_TRUE(mock_icon->IsVisible());
   EXPECT_TRUE(saved);
 }
 
-TEST_F(TestApplicationLauncherIcon, Unstick)
+TEST_F(TestApplicationLauncherIcon, UnstickNotRunning)
 {
   bool forgot = false;
-  usc_icon->position_forgot.connect([&forgot] {forgot = true;});
+  mock_app->running_ = false;
+  mock_icon->position_forgot.connect([&forgot] {forgot = true;});
 
-  usc_icon->Stick(false);
-  usc_icon->UnStick();
-  EXPECT_FALSE(usc_app->sticky());
-  EXPECT_FALSE(usc_icon->IsSticky());
-  EXPECT_FALSE(usc_icon->IsVisible());
+  mock_icon->Stick();
+  mock_icon->UnStick();
+  EXPECT_FALSE(mock_app->sticky());
+  EXPECT_FALSE(mock_icon->IsSticky());
+  EXPECT_FALSE(mock_icon->IsVisible());
+  EXPECT_TRUE(forgot);
+}
+
+TEST_F(TestApplicationLauncherIcon, UnstickRunning)
+{
+  bool forgot = false;
+  mock_app->running_ = true;
+  mock_icon->position_forgot.connect([&forgot] {forgot = true;});
+
+  mock_icon->Stick();
+  mock_icon->UnStick();
+  EXPECT_FALSE(mock_app->sticky());
+  EXPECT_FALSE(mock_icon->IsSticky());
+  EXPECT_TRUE(mock_icon->IsVisible());
   EXPECT_TRUE(forgot);
 }
 
