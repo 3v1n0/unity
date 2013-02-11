@@ -43,6 +43,7 @@ PointerBarrierWrapper::PointerBarrierWrapper()
   , max_velocity_multiplier(1.0f)
   , direction(BOTH)
   , event_base_(0)
+  , last_event_(0)
   , barrier(0)
   , smoothing_count_(0)
   , smoothing_accum_(0)
@@ -148,15 +149,24 @@ bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
         int y = notify_event->y;
         int event = notify_event->event_id;
 
-        auto smoothing_cb = [&, event, x, y] ()
+        // If we are a new event, don't delay sending the first event
+        if (last_event_ != event)
         {
           EmitCurrentData(event, x, y);
+          last_event_ = event;
+        }
+        else
+        {
+          auto smoothing_cb = [&, event, x, y] ()
+          {
+            EmitCurrentData(event, x, y);
 
-          smoothing_timeout_.reset();
-          return false;
-        };
+            smoothing_timeout_.reset();
+            return false;
+          };
 
-        smoothing_timeout_.reset(new glib::Timeout(smoothing, smoothing_cb));
+          smoothing_timeout_.reset(new glib::Timeout(smoothing, smoothing_cb));
+        }
       }
     }
 

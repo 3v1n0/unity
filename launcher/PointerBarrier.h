@@ -94,6 +94,7 @@ private:
   static bool HandleEventWrapper(XEvent event, void* data);
 
   int event_base_;
+  int last_event_;
   PointerBarrier barrier;
 
   int smoothing_count_;
