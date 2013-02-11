@@ -27,10 +27,11 @@ namespace unity
 namespace session
 {
 
-class GnomeManager : Manager
+class GnomeManager : public Manager
 {
 public:
   GnomeManager();
+  ~GnomeManager();
 
   void Logout();
   void Reboot();

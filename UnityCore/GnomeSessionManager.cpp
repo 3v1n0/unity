@@ -68,6 +68,7 @@ GDBusInterfaceVTable INTERFACE_VTABLE =
       GDBusMethodInvocation* invocation, gpointer user_data) {
         auto impl = static_cast<GnomeManager::Impl*>(user_data);
         impl->OnShellMethodCall(method_name ? method_name : "", parameters);
+        g_dbus_method_invocation_return_value(invocation, nullptr);
   },
   nullptr, nullptr
 };
@@ -97,24 +98,31 @@ GnomeManager::Impl::Impl(GnomeManager* manager)
 
   upower_proxy_.Connect("Changed", sigc::hide(sigc::mem_fun(this, &GnomeManager::Impl::QueryUPowerCapabilities)));
 
-  gsession_proxy_.Call("CanShutdown", nullptr, [this] (GVariant* value) {
-    can_shutdown_ = value ? g_variant_get_boolean(value) != FALSE : false;
+    gsession_proxy_.Call("CanShutdown", nullptr, [this] (GVariant* variant) {
+    can_shutdown_ = false;
+    if (variant)
+      g_variant_get(variant, "(b)", &can_shutdown_);
   });
 }
 
 GnomeManager::Impl::~Impl()
 {
-  g_bus_unown_name(shell_owner_name_);
+  if (shell_owner_name_)
+    g_bus_unown_name(shell_owner_name_);
 }
 
 void GnomeManager::Impl::QueryUPowerCapabilities()
 {
-  upower_proxy_.Call("HibernateAllowed", nullptr, [this] (GVariant* value) {
-    can_hibernate_ = value ? g_variant_get_boolean(value) != FALSE : false;
+  upower_proxy_.Call("HibernateAllowed", nullptr, [this] (GVariant* variant) {
+    can_hibernate_ = false;
+    if (variant)
+      g_variant_get(variant, "(b)", &can_hibernate_);
   });
 
-  upower_proxy_.Call("SuspendAllowed", nullptr, [this] (GVariant* value) {
-    can_suspend_ = value ? g_variant_get_boolean(value) != FALSE : false;
+  upower_proxy_.Call("SuspendAllowed", nullptr, [this] (GVariant* variant) {
+    can_suspend_ = false;
+    if (variant)
+      g_variant_get(variant, "(b)", &can_suspend_);
   });
 }
 
@@ -151,7 +159,11 @@ void GnomeManager::Impl::SetupShellSessionHandler()
       auto self = static_cast<GnomeManager::Impl*>(data);
       self->shell_connection_ = glib::Object<GDBusConnection>(conn, glib::AddRef());
 
-    }, nullptr, nullptr, this, nullptr);
+    }, nullptr, [] (GDBusConnection *connection, const gchar *name, gpointer user_data)
+    {
+      LOG_ERROR(logger) << "DBus name Lost " << name;
+    }
+    , this, nullptr);
 }
 
 void GnomeManager::Impl::OnShellMethodCall(std::string const& method_name, GVariant* parameters)
@@ -211,6 +223,9 @@ void GnomeManager::Impl::EmitShellSignal(std::string const& signal_name, GVarian
 
 GnomeManager::GnomeManager()
   : impl_(new GnomeManager::Impl(this))
+{}
+
+GnomeManager::~GnomeManager()
 {}
 
 void GnomeManager::Logout()
