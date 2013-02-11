@@ -3348,6 +3348,25 @@ struct UnityWindow::CairoContext
   cairo_t *cr_;
 };
 
+namespace
+{
+bool WindowHasInconsistentShapeRects (Display *d,
+                                      Window  w)
+{
+  int n;
+  Atom *atoms = XListProperties(d, w, &n);
+  Atom unity_shape_rects_atom = XInternAtom (d, "_UNITY_SAVED_WINDOW_SHAPE", FALSE);
+  bool has_inconsistent_shape = false;
+
+  for (int i = 0; i < n; ++i)
+    if (atoms[i] == unity_shape_rects_atom)
+      has_inconsistent_shape = true;
+
+  XFree (atoms);
+  return has_inconsistent_shape;
+}
+}
+
 UnityWindow::UnityWindow(CompWindow* window)
   : BaseSwitchWindow (dynamic_cast<BaseSwitchScreen *> (UnityScreen::get (screen)), window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
@@ -3362,7 +3381,9 @@ UnityWindow::UnityWindow(CompWindow* window)
    * need to ask core (and not ourselves) whether or not the window is
    * minimized */
   if (UnityScreen::get (screen)->optionGetShowMinimizedWindows () &&
-      window->mapNum ())
+      window->mapNum () &&
+      WindowHasInconsistentShapeRects (screen->dpy (),
+                                       window->id ()))
   {
     /* Query the core function */
     window->minimizedSetEnabled (this, false);
