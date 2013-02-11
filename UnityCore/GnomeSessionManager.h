@@ -33,6 +33,9 @@ public:
   GnomeManager();
   ~GnomeManager();
 
+  std::string RealName() const;
+  std::string UserName() const;
+
   void Logout();
   void Reboot();
   void Shutdown();
@@ -45,9 +48,9 @@ public:
   void CancelAction();
   void ClosedDialog();
 
-  bool CanShutdown();
-  bool CanSuspend();
-  bool CanHibernate();
+  bool CanShutdown() const;
+  bool CanSuspend() const;
+  bool CanHibernate() const;
 
   struct Impl;
 private:

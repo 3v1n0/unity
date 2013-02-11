@@ -228,6 +228,25 @@ GnomeManager::GnomeManager()
 GnomeManager::~GnomeManager()
 {}
 
+std::string GnomeManager::RealName() const
+{
+  const char* name = g_get_real_name();
+
+  std::string real_name(name ? name : "");
+
+  if (real_name == "Unknown")
+    real_name.clear();
+
+  return real_name;
+}
+
+std::string GnomeManager::UserName() const
+{
+  const char* name = g_get_user_name();
+
+  return name ? name : "";
+}
+
 void GnomeManager::Logout()
 {
   enum LogoutMethods
@@ -286,17 +305,17 @@ void GnomeManager::ClosedDialog()
   impl_->EmitShellSignal("ClosedDialog");
 }
 
-bool GnomeManager::CanShutdown()
+bool GnomeManager::CanShutdown() const
 {
   return impl_->can_shutdown_;
 }
 
-bool GnomeManager::CanSuspend()
+bool GnomeManager::CanSuspend() const
 {
   return impl_->can_suspend_;
 }
 
-bool GnomeManager::CanHibernate()
+bool GnomeManager::CanHibernate() const
 {
   return impl_->can_hibernate_;
 }
