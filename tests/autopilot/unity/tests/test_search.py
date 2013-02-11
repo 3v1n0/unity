@@ -31,9 +31,9 @@ class SearchTestsBase(UnityTestCase):
         super(SearchTestsBase, self).setUp()
 
     def start_test_app(self):
-        """Start the testapp for our search testing.
+        """Start the window mocker for our search testing.
 
-        This method creates a testapp application with a custom name and
+        This method creates a windowmocker application with a custom name and
         custom menu. We want it to have a locale-independent menu with a
         more-or-less unique menu entry for HUD testing. Also, the name of
         the application is rather unique too.
@@ -84,10 +84,10 @@ class ApplicationLensSearchTests(ApplicationLensSearchTestBase):
     """Simple search tests for the application lens."""
 
     scenarios = [
-        ('basic', {'input': 'testapp', 'result': 'testapp'}),
-        ('capital', {'input': 'Testapp', 'result': 'testapp'}),
-        ('uppercase', {'input': 'TESTAPP', 'result': 'testapp'}),
-        ('partial', {'input': 'Testa', 'result': 'testapp'}),
+        ('basic', {'input': 'Window Mocker', 'result': 'Window Mocker'}),
+        ('lowercase', {'input': 'window mocker', 'result': 'Window Mocker'}),
+        ('uppercase', {'input': 'WINDOW MOCKER', 'result': 'Window Mocker'}),
+        ('partial', {'input': 'Window Mock', 'result': 'Window Mocker'}),
     ]       
 
     def setUp(self):
@@ -100,14 +100,14 @@ class ApplicationLensSearchTests(ApplicationLensSearchTestBase):
 class ApplicationLensFuzzySearchTests(ApplicationLensSearchTestBase):
     """Fuzzy, erroneous search tests for the application lens.
     This checks if the application lens will find the searched application
-    (testapp here, since we want some app that has the name locale-independent)
-    when small spelling errors are made."""
+    (windowmocker here, since we want some app that has the name 
+    locale-independent) when small spelling errors are made."""
 
     scenarios = [
-        ('transposition', {'input': 'tetsapp', 'result': 'testapp'}),
-        ('duplication', {'input': 'teestapp', 'result': 'testapp'}),
-        ('insertion', {'input': 'terstapp', 'result': 'testapp'}),
-        ('deletion', {'input': 'tetapp', 'result': 'testapp'}),
+        ('transposition', {'input': 'Wnidow Mocker', 'result': 'Window Mocker'}),
+        ('duplication', {'input': 'Wiindow Mocker', 'result': 'Window Mocker'}),
+        ('insertion', {'input': 'Wiondow Mocker', 'result': 'Window Mocker'}),
+        ('deletion', {'input': 'Wndow Mocker', 'result': 'Window Mocker'}),
     ]       
 
     def setUp(self):
@@ -156,8 +156,8 @@ class HudSearchTests(HudSearchTestBase):
 class HudFuzzySearchTests(HudSearchTestBase):
     """Fuzzy, erroneous search tests for the HUD.
     This checks if the HUD will find the searched menu entry from our application
-    (testapp here, since we want to have unique, locale-independent menu entries)
-    when small spelling errors are made."""
+    (windowmocker here, since we want to have unique, locale-independent menu 
+    entries) when small spelling errors are made."""
 
     scenarios = [
         ('transposition', {'input': 'Saerch entry', 'result': 'Search entry'}),
