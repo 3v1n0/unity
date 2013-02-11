@@ -43,6 +43,8 @@ PointerBarrierWrapper::PointerBarrierWrapper()
   , max_velocity_multiplier(1.0f)
   , direction(BOTH)
   , event_base_(0)
+  , last_event_(0)
+  , first_event_(false)
   , barrier(0)
   , smoothing_count_(0)
   , smoothing_accum_(0)
@@ -122,11 +124,19 @@ void PointerBarrierWrapper::EmitCurrentData(int event_id, int x, int y)
   smoothing_count_ = 0;
 }
 
+bool PointerBarrierWrapper::IsFirstEvent() const
+{
+  return first_event_;
+}
+
 bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
 {
   if (xevent.type - event_base_ == XFixesBarrierNotify)
   {
     auto notify_event = reinterpret_cast<XFixesBarrierNotifyEvent*>(&xevent);
+
+    if (first_event_)
+      first_event_ = false;
 
     if (notify_event->barrier == barrier && notify_event->subtype == XFixesBarrierHitNotify)
     {
@@ -148,15 +158,21 @@ bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
         int y = notify_event->y;
         int event = notify_event->event_id;
 
-        auto smoothing_cb = [&, event, x, y] ()
+        // If we are a new event, don't delay sending the first event
+        if (last_event_ != event)
         {
+          EmitCurrentData(event, x, y);
+
+          last_event_ = event;
+          first_event_ = true;
+        }
+
+        smoothing_timeout_.reset(new glib::Timeout(smoothing, [this, event, x, y] () {
           EmitCurrentData(event, x, y);
 
           smoothing_timeout_.reset();
           return false;
-        };
-
-        smoothing_timeout_.reset(new glib::Timeout(smoothing, smoothing_cb));
+        }));
       }
     }
 

@@ -2297,7 +2297,9 @@ ui::EdgeBarrierSubscriber::Result Launcher::HandleBarrierEvent(ui::PointerBarrie
   if (!apply_to_reveal)
     return ui::EdgeBarrierSubscriber::Result::IGNORED;
 
-  _hide_machine.AddRevealPressure(event->velocity);
+  if (!owner->IsFirstEvent())
+    _hide_machine.AddRevealPressure(event->velocity);
+
   return ui::EdgeBarrierSubscriber::Result::HANDLED;
 }
 
