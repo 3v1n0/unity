@@ -779,7 +779,10 @@ void ApplicationLauncherIcon::UnStick()
   if (!IsSticky())
     return;
 
+  SetQuirk(Quirk::VISIBLE, app_->running());
+
   app_->sticky = false;
+
   if (!app_->running())
     Remove();
 }
