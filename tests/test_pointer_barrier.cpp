@@ -90,13 +90,16 @@ TEST(TestPointerBarrier, HandleHitNotifyEvents)
   bool got_event = false;
 
   pb.barrier_event.connect([&] (PointerBarrierWrapper* pbw, BarrierEvent::Ptr bev) {
-    got_event = true;
+    if (!pbw->IsFirstEvent())
+    {
+      got_event = true;
 
-    EXPECT_EQ(pbw, &pb);
-    EXPECT_EQ(bev->x, ev.x);
-    EXPECT_EQ(bev->y, ev.y);
-    EXPECT_EQ(bev->velocity, 600 * pb.max_velocity_multiplier);
-    EXPECT_EQ(bev->event_id, ev.event_id);
+      EXPECT_EQ(pbw, &pb);
+      EXPECT_EQ(bev->x, ev.x);
+      EXPECT_EQ(bev->y, ev.y);
+      EXPECT_EQ(bev->velocity, 600 * pb.max_velocity_multiplier);
+      EXPECT_EQ(bev->event_id, ev.event_id);
+     }
   });
 
   EXPECT_TRUE(pb.HandleEvent(*xev));
@@ -136,6 +139,62 @@ TEST(TestPointerBarrier, HandleHitNotifyReleasedEvents)
   pb.released = true;
   EXPECT_TRUE(pb.HandleEvent(*xev));
   EXPECT_TRUE(got_event);
+}
+
+TEST(TestPointerBarrier, ReciveFirstEvent)
+{
+  MockPointerBarrier pb;
+  XFixesBarrierNotifyEvent ev;
+  auto xev = reinterpret_cast<XEvent*>(&ev);
+
+  ev.type = XFixesBarrierNotify;
+  ev.subtype = XFixesBarrierHitNotify;
+  ev.barrier = 0;
+  ev.event_id = 0xabba;
+  ev.x = 3333;
+  ev.y = 5555;
+  ev.velocity = std::numeric_limits<int>::max();
+
+  bool first_is_true = false;
+
+  pb.barrier_event.connect([&] (PointerBarrierWrapper* pbw, BarrierEvent::Ptr bev) {
+    first_is_true = true;
+  });
+
+  EXPECT_TRUE(pb.HandleEvent(*xev));
+  EXPECT_TRUE(first_is_true);
+}
+
+TEST(TestPointerBarrier, ReciveSecondEventFirstFalse)
+{
+  MockPointerBarrier pb;
+  XFixesBarrierNotifyEvent ev;
+  auto xev = reinterpret_cast<XEvent*>(&ev);
+
+  ev.type = XFixesBarrierNotify;
+  ev.subtype = XFixesBarrierHitNotify;
+  ev.barrier = 0;
+  ev.event_id = 0xabba;
+  ev.x = 3333;
+  ev.y = 5555;
+  ev.velocity = std::numeric_limits<int>::max();
+
+  int events_recived = 0;
+
+  pb.barrier_event.connect([&] (PointerBarrierWrapper* pbw, BarrierEvent::Ptr bev) {
+      events_recived++;
+
+      if (events_recived == 1)
+        EXPECT_TRUE(pbw->IsFirstEvent());
+      else
+        EXPECT_FALSE(pbw->IsFirstEvent());
+  });
+
+  EXPECT_TRUE(pb.HandleEvent(*xev));
+
+  Utils::WaitForTimeoutMSec(pb.smoothing());
+
+  EXPECT_EQ(events_recived, 2);
 }
 
 }
