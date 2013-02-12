@@ -50,7 +50,6 @@ public:
 
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
   Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
 
   virtual void PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {};
