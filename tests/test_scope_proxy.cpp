@@ -169,7 +169,7 @@ TEST_F(TestScopeProxy, TestSearchCategories)
   Utils::WaitUntilMSec([results] { return results->count() == 12; },
                        true,
                        2000,
-                       glib::String(g_strdup_printf("Result count is not as expected (%d != 12).", results->count())));
+                       glib::String(g_strdup_printf("Result count is not as expected (%u != 12).", static_cast<unsigned>(results->count()))));
 
   Results::Ptr category_model0 = scope_proxy_->GetResultsForCategory(0);
   Results::Ptr category_model1 = scope_proxy_->GetResultsForCategory(1);
