@@ -101,6 +101,9 @@ GnomeManager::Impl::Impl(GnomeManager* manager)
 
 GnomeManager::Impl::~Impl()
 {
+  manager_->CancelAction();
+  manager_->ClosedDialog();
+
   if (shell_owner_name_)
     g_bus_unown_name(shell_owner_name_);
 }
