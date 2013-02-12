@@ -66,6 +66,8 @@ public:
       SetHighlighted(false);
     });
 
+    mouse_click.connect([this] (int, int, unsigned long, unsigned long) { activated.emit(); });
+
     SetLayout(main_layout);
     SetHighlighted(false);
   }
@@ -88,6 +90,8 @@ public:
   {
     GetLayout()->ProcessDraw(ctx, force);
   }
+
+  sigc::signal<void> activated;
 
   nux::ObjectPtr<nux::BaseTexture> normal_tex_;
   nux::ObjectPtr<nux::BaseTexture> highlight_tex_;
@@ -125,15 +129,23 @@ View::View(Manager::Ptr const& manager)
   buttons_layout_->AddView(button);
 
   button = new ActionButton(_("Suspend"), "suspend", NUX_TRACKER_LOCATION);
+  button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Suspend));
+  button->activated.connect([this] {request_hide.emit();});
   buttons_layout_->AddView(button);
 
   button = new ActionButton(_("Hibernate"), "hibernate", NUX_TRACKER_LOCATION);
+  button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Hibernate));
+  button->activated.connect([this] {request_hide.emit();});
   buttons_layout_->AddView(button);
 
   button = new ActionButton(_("Shutdown"), "shutdown", NUX_TRACKER_LOCATION);
+  button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Shutdown));
+  button->activated.connect([this] {request_hide.emit();});
   buttons_layout_->AddView(button);
 
   button = new ActionButton(_("Restart"), "restart", NUX_TRACKER_LOCATION);
+  button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Reboot));
+  button->activated.connect([this] {request_hide.emit();});
   buttons_layout_->AddView(button);
 }
 

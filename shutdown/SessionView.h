@@ -39,6 +39,8 @@ public:
 
   View(Manager::Ptr const& manager);
 
+  sigc::signal<void> request_hide;
+
 protected:
   void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry clip);
   nux::Geometry GetBackgroundGeometry();
