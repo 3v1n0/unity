@@ -35,7 +35,7 @@ namespace ui {
 
 class UnityWindowView : public debug::Introspectable, public nux::View
 {
-  NUX_DECLARE_OBJECT_TYPE(UnityWindowView, nux::View)  
+  NUX_DECLARE_OBJECT_TYPE(UnityWindowView, nux::View)
 public:
   nux::Property<nux::Color> background_color;
   nux::Property<UnityWindowStyle::Ptr> style;

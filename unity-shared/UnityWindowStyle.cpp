@@ -42,7 +42,7 @@ int UnityWindowStyle::GetInternalOffset() const
 
 int UnityWindowStyle::GetCloseButtonPadding() const
 {
-  return 4;
+  return 3;
 }
 
 UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIcon()
