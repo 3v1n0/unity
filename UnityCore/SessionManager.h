@@ -39,6 +39,7 @@ public:
   virtual std::string RealName() const = 0;
   virtual std::string UserName() const = 0;
 
+  virtual void LockScreen() = 0;
   virtual void Logout() = 0;
   virtual void Reboot() = 0;
   virtual void Shutdown() = 0;
