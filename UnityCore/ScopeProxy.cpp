@@ -62,11 +62,12 @@ public:
   void Activate(LocalResult const& result, uint activate_type, glib::HintsMap const& hints, ScopeProxy::ActivateCallback const& callback, GCancellable* cancellable);
   void UpdatePreviewProperty(LocalResult const& result, glib::HintsMap const& hints, UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable);
 
-  bool set_view_type(ScopeViewType const& view_type)
+  bool set_view_type(ScopeViewType const& _view_type)
   {
-    if (scope_proxy_ && unity_protocol_scope_proxy_get_view_type(scope_proxy_) != static_cast<UnityProtocolViewType>(view_type))
+    if (scope_proxy_ && view_type != _view_type)
     {
-      unity_protocol_scope_proxy_set_view_type(scope_proxy_, static_cast<UnityProtocolViewType>(view_type));
+      view_type = _view_type;
+      unity_protocol_scope_proxy_set_view_type(scope_proxy_, static_cast<UnityProtocolViewType>(_view_type));
       return true;
     }
     return false;
@@ -244,7 +245,6 @@ ScopeProxy::Impl::Impl(ScopeProxy*const owner, ScopeData::Ptr const& scope_data)
   // remote properties
   property_connections.push_back(utils::ConnectProperties(owner_->connected, connected));
   property_connections.push_back(utils::ConnectProperties(owner_->channel, channel));
-  property_connections.push_back(utils::ConnectProperties(owner_->view_type, view_type));
   property_connections.push_back(utils::ConnectProperties(owner_->category_order, category_order));
 
   // shared properties
@@ -262,6 +262,9 @@ ScopeProxy::Impl::Impl(ScopeProxy*const owner, ScopeData::Ptr const& scope_data)
   property_connections.push_back(utils::ConnectProperties(owner_->type, scope_data_->type));
   property_connections.push_back(utils::ConnectProperties(owner_->query_pattern, scope_data_->query_pattern));
   property_connections.push_back(utils::ConnectProperties(owner_->visible, scope_data_->visible));
+  // Writable properties.
+  owner_->view_type.SetGetterFunction([this]() { return view_type.Get(); });
+  owner_->view_type.SetSetterFunction(sigc::mem_fun(this, &Impl::set_view_type));
   
   owner_->filters.SetGetterFunction(sigc::mem_fun(this, &Impl::filters));
   owner_->categories.SetGetterFunction(sigc::mem_fun(this, &Impl::categories));
