@@ -31,6 +31,18 @@ static UnityActivationResponse* on_activate_uri(TestScope* scope, const char* ur
 static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_ctx, gpointer self);
 
 
+const gchar* icons[] = {  "gtk-cdrom",
+                          "gtk-directory",
+                          "gtk-clear",
+                          "gtk-find",
+                          "gtk-bold",
+                          "gtk-copy",
+                          "gtk-cut",
+                          "gtk-delete",
+                          "gtk-dialog-authentication",
+                          "gtk-dialog-error",
+                          "gtk-dialog-info" };
+
 struct _ServiceScopePrivate
 {
   TestScope* scope;
@@ -180,20 +192,47 @@ static void _g_variant_unref0_ (gpointer var) {
   (var == NULL) ? NULL : (var = (g_variant_unref (var), NULL));
 }
 
-static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_ctx, gpointer self)
+static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_base, gpointer self)
 {
-  UnityScopeResult result;
+  // cheeky search string format to control how many results to return
+  // count:title
 
+  UnitySearchContext* search_ctx;
+  search_ctx = search_base->search_context;
+  g_return_if_fail (search_ctx != NULL);
+
+  int num_items = 0;
+  gchar* search_title = g_strdup(search_ctx->search_query);
+
+
+  if (g_strcmp0(search_title, "") == 0)
+  {
+    g_free(search_title);
+    search_title = g_strdup("Title");    
+    num_items = 64;
+  }
+  else if (sscanf(search_ctx->search_query, "%d:%s", &num_items, search_title) != 2)
+  {
+    g_free(search_title);
+    search_title = g_strdup(search_ctx->search_query);
+    num_items = 64;
+  }
+
+  printf("result count %d %s\n", num_items, search_title);
+
+  printf("search string: %d %s\n", (int)search_title, search_title);
+
+  UnityScopeResult result;
   int i;
-  for (i = 0; i < 10; i++)
+  for (i = 0; i < num_items; i++)
   {
     memset (&result, 0, sizeof (UnityScopeResult));
 
     result.uri          = g_strdup_printf("test://uri.%d", i);
-    result.icon_hint    = g_strdup("");
+    result.title        = g_strdup_printf("%s.%d", search_title, i);
+    result.icon_hint    = g_strdup(icons[i%10]);
     result.result_type  = UNITY_RESULT_TYPE_DEFAULT;
-    result.category     = (guint) 0;
-    result.title        = g_strdup_printf("Title %d", i);
+    result.category     = (guint) (i%3),         // 3 categoies
     result.mimetype     = g_strdup("inode/folder");
     result.comment      = g_strdup_printf("Comment %d", i);
     result.dnd_uri      = g_strdup_printf("test://dnd_uri.%d", i);
@@ -203,10 +242,12 @@ static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_ctx,
     g_hash_table_insert (result.metadata, g_strdup ("required_int"), g_variant_ref_sink (g_variant_new_int32 (5)));
     g_hash_table_insert (result.metadata, g_strdup ("required_string"), g_variant_ref_sink (g_variant_new_string ("foo")));
 
-    unity_result_set_add_result (search_ctx->search_context->result_set, &result);    
+    unity_result_set_add_result (search_ctx->result_set, &result);    
+    
+    unity_scope_result_destroy (&result);
   }
 
-  unity_scope_result_destroy (&result);
+  g_free(search_title);
 }
 
 ServiceScope* service_scope_new()

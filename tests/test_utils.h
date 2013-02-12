@@ -2,10 +2,12 @@
 #define TEST_UTILS_H
 
 #include <UnityCore/Model.h>
+#include "GLibWrapper.h"
 
 namespace
 {
 
+using namespace unity;
 using unity::dash::Model;
 
 class Utils
@@ -32,7 +34,7 @@ public:
       g_source_remove(timeout_id);
   }
 
-  static void WaitUntilMSec(bool& success, unsigned int max_wait = 10)
+  static void WaitUntilMSec(bool& success, unsigned int max_wait = 10, glib::String const& error = glib::String())
   {
     bool timeout_reached = false;
     guint32 timeout_id = ScheduleTimeout(&timeout_reached, max_wait);
@@ -46,12 +48,12 @@ public:
     EXPECT_TRUE(success);
   }
 
-  static void WaitUntil(bool& success, unsigned int max_wait = 10)
+  static void WaitUntil(bool& success, unsigned int max_wait = 10, glib::String const& error = glib::String())
   {
     WaitUntilMSec(success, 10 * 1000);
   }
 
-  static void WaitUntilMSec(std::function<bool()> const& check_function, bool result = true, unsigned int max_wait = 10)
+  static void WaitUntilMSec(std::function<bool()> const& check_function, bool result = true, unsigned int max_wait = 10, glib::String const& error = glib::String())
   {
     bool timeout_reached = false;
     guint32 timeout_id = ScheduleTimeout(&timeout_reached, max_wait);
@@ -62,10 +64,17 @@ public:
     if (check_function())
       g_source_remove(timeout_id);
 
-    EXPECT_EQ(check_function(), result);
+    if (error)
+    {
+      EXPECT_EQ(check_function(), result) << "Error: " << error;
+    }
+    else
+    {
+      EXPECT_EQ(check_function(), result);
+    }
   }
 
-  static void WaitUntil(std::function<bool()> const& check_function, bool result = true, unsigned int max_wait = 10)
+  static void WaitUntil(std::function<bool()> const& check_function, bool result = true, unsigned int max_wait = 10, glib::String const& error = glib::String())
   {
     WaitUntilMSec(check_function, result, max_wait * 1000);
   }

@@ -32,9 +32,15 @@ using namespace std;
 using namespace unity;
 using namespace unity::dash;
 
+namespace unity
+{
+namespace dash
+{
+
 namespace
 {
 const std::string SCOPE_NAME = "testscope1.scope";
+}
 
 class TestScope : public ::testing::Test
 {
@@ -67,49 +73,6 @@ TEST_F(TestScope, TestConnection)
   ASSERT_TRUE(scope_->connected);
 }
 
-TEST_F(TestScope, TestSearch)
-{
-  bool search_ok = false;
-  bool search_finished = false;
-  scope_->Search("12:test_search", [&] (glib::HintsMap const&, glib::Error const& error) {
-    search_ok = error ? false : true;
-    search_finished = true;
-  });
 
-  Results::Ptr results = scope_->results();
-  Utils::WaitUntilMSec([&, results] { return search_finished == true && results->count() > 0; }, true, 2000);
-  EXPECT_TRUE(search_ok == true);
-}
-
-TEST_F(TestScope, TestActivateUri)
-{
-  bool activated_return = false;
-  auto func = [&activated_return] (LocalResult const& result, ScopeHandledType handled, glib::Error const& error) {
-    activated_return = true;
-
-    EXPECT_TRUE(error==false);
-    EXPECT_EQ(handled, ScopeHandledType::HIDE_DASH);
-  };
-
-  LocalResult result; result.uri = "file:://test";
-  scope_->Activate(result, func);
-
-  Utils::WaitUntilMSec([&activated_return] { return activated_return; }, true, 2000);
-}
-
-// TEST_F(TestScope, TestPreview)
-// {
-//   bool prevew_returned = false;
-//   auto func = [&prevew_returned] (LocalResult const& result, ScopeHandledType handled, glib::Error const& error) {
-//     prevew_returned = true;
-
-//     EXPECT_TRUE(error==false);
-//     EXPECT_EQ(handled, ScopeHandledType::SHOW_PREVIEW);
-//   };
-//   LocalResult result; result.uri = "file:://test";
-//   scope_->Preview(result, func);
-
-//   Utils::WaitUntilMSec([&prevew_returned] { return prevew_returned; }, true, 2000);
-// }
-
-}
+} // namespace dash
+} // namespace unity

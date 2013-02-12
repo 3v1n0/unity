@@ -19,7 +19,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <dash/LensBar.h>
+#include <dash/ScopeBar.h>
 
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/UnitySettings.h"

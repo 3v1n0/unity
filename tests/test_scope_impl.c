@@ -6,7 +6,6 @@
 
 
 #define TEST_DBUS_NAME "com.canonical.Unity.Scope.Test"
-#define TEST_DBUS_PATH "/com/canonical/Unity/Scope/Test"
 
 #define _g_object_unref_safe(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free_safe(var) (var = (g_free (var), NULL))
@@ -46,6 +45,7 @@ enum  {
 };
 
 static TestSearcher* test_searcher_new (TestScope* scope);
+static void test_searcher_run_async (UnityScopeSearchBase* self, UnityScopeSearchBaseCallback async_callback, void* async_callback_target);
 static void test_searcher_run (UnityScopeSearchBase* base);
 static TestScope* test_searcher_get_owner (TestSearcher* self);
 static void test_searcher_set_owner (TestSearcher* self, TestScope* value);
@@ -74,6 +74,7 @@ static void test_searcher_set_owner (TestSearcher* self, TestScope* value)
 static void test_searcher_class_init (TestSearcherClass * klass) 
 {
   g_type_class_add_private (klass, sizeof (TestSearcherPrivate));
+  UNITY_SCOPE_SEARCH_BASE_CLASS (klass)->run_async = test_searcher_run_async;
   UNITY_SCOPE_SEARCH_BASE_CLASS (klass)->run = test_searcher_run;
   G_OBJECT_CLASS (klass)->get_property = test_searcher_get_property;
   G_OBJECT_CLASS (klass)->set_property = test_searcher_set_property;
@@ -89,14 +90,14 @@ static void test_searcher_init(TestSearcher* self)
 static void test_searcher_finalize (GObject* obj)
 {
   TestSearcher * self;
-  self = G_TYPE_CHECK_INSTANCE_CAST (obj, TEST_TYPE_SEARCHER, TestSearcher);
+  self = TEST_SCOPE_SEARCHER (obj);
   G_OBJECT_CLASS (test_searcher_parent_class)->finalize (obj);
 }
 
 static void test_searcher_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec)
 {
   TestSearcher * self;
-  self = G_TYPE_CHECK_INSTANCE_CAST (object, TEST_TYPE_SEARCHER, TestSearcher);
+  self = TEST_SCOPE_SEARCHER (object);
   switch (property_id) {
     case TEST_SEARCHER_OWNER:
     g_value_set_object (value, test_searcher_get_owner (self));
@@ -110,7 +111,7 @@ static void test_searcher_get_property (GObject * object, guint property_id, GVa
 static void test_searcher_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec)
 {
   TestSearcher * self;
-  self = G_TYPE_CHECK_INSTANCE_CAST (object, TEST_TYPE_SEARCHER, TestSearcher);
+  self = TEST_SCOPE_SEARCHER (object);
   switch (property_id) {
     case TEST_SEARCHER_OWNER:
     test_searcher_set_owner (self, g_value_get_object (value));
@@ -121,11 +122,14 @@ static void test_searcher_set_property (GObject * object, guint property_id, con
   }
 }
 
+
 struct _SearcherRunData 
 {
   int _ref_count_;
   TestSearcher * self;
   GMainLoop* ml;
+  UnityScopeSearchBaseCallback async_callback;
+  void* async_callback_target;
 };
 
 static SearcherRunData* run_data_ref (SearcherRunData* data)
@@ -148,29 +152,47 @@ static void run_data_unref (void * _userdata_)
   }
 }
 
-static gboolean test_searcher_main_loop_func (gpointer self)
+static gboolean test_searcher_main_loop_func (gpointer data)
 {
-  SearcherRunData* data;
-  data = (SearcherRunData*) self;
-  g_main_loop_quit (data->ml);
+  SearcherRunData* search_data;
+  search_data = (SearcherRunData*) data;
+
+  TestSearcher* self;
+  self = search_data->self;
+  UNITY_SCOPE_SEARCH_BASE_GET_CLASS (self)->run(UNITY_SCOPE_SEARCH_BASE (self));
+
+  search_data->async_callback (UNITY_SCOPE_SEARCH_BASE (self), search_data->async_callback_target);
+  g_main_loop_quit (search_data->ml);
   return FALSE;
 }
 
-static void test_searcher_run (UnityScopeSearchBase* base)
+static void test_searcher_run_async (UnityScopeSearchBase* base, UnityScopeSearchBaseCallback async_callback, void* async_callback_target)
 {
   TestSearcher * self;
   SearcherRunData* data;
-  self = (TestSearcher*) base;
+  self = TEST_SCOPE_SEARCHER (base);
   data = g_slice_new (SearcherRunData);
   data->_ref_count_ = 1;
   data->self = g_object_ref (self);
   data->ml = g_main_loop_new (NULL, FALSE);
-  g_signal_emit_by_name (self->priv->_owner, "search", (UnityScopeSearchBase*) self);
+  data->async_callback = async_callback;
+  data->async_callback_target = async_callback_target;
+
   g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, test_searcher_main_loop_func, run_data_ref (data), run_data_unref);
   g_main_loop_run (data->ml);
   run_data_unref (data);
   data = NULL;
 }
+
+static void test_searcher_run (UnityScopeSearchBase* base)
+{
+  TestSearcher* self;
+  self = TEST_SCOPE_SEARCHER (base);
+
+  printf("running search\n");
+  g_signal_emit_by_name (self->priv->_owner, "search", base);
+}
+
 
 
 #define TEST_SCOPE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), TEST_TYPE_SCOPE, TestScopePrivate))
@@ -196,8 +218,8 @@ static UnityCategorySet* test_scope_get_categories(UnityAbstractScope* self);
 static UnityFilterSet* test_scope_get_filters(UnityAbstractScope* self);
 static UnitySchema* test_scope_get_schema(UnityAbstractScope* self);
 static gchar* test_scope_get_search_hint(UnityAbstractScope* self);
-static gchar* test_scope_get_reversed_fqdn(UnityAbstractScope* self);
-static gchar* test_scope_get_object_path(UnityAbstractScope* self);
+static gchar* test_scope_get_group_name(UnityAbstractScope* self);
+static gchar* test_scope_get_unique_name(UnityAbstractScope* self);
 static UnityActivationResponse* test_scope_activate(UnityAbstractScope* self, UnityScopeResult* _result_);
 static void test_scope_set_dbus_path (TestScope* self, const gchar* value);
 static const gchar* test_scope_get_dbus_path (TestScope* self);
@@ -216,8 +238,8 @@ static void test_scope_class_init(TestScopeClass* klass)
   UNITY_ABSTRACT_SCOPE_CLASS (klass)->get_filters = test_scope_get_filters;
   UNITY_ABSTRACT_SCOPE_CLASS (klass)->get_schema = test_scope_get_schema;
   UNITY_ABSTRACT_SCOPE_CLASS (klass)->get_search_hint = test_scope_get_search_hint;
-  UNITY_ABSTRACT_SCOPE_CLASS (klass)->get_reversed_fqdn = test_scope_get_reversed_fqdn;
-  UNITY_ABSTRACT_SCOPE_CLASS (klass)->get_object_path = test_scope_get_object_path;
+  UNITY_ABSTRACT_SCOPE_CLASS (klass)->get_group_name = test_scope_get_group_name;
+  UNITY_ABSTRACT_SCOPE_CLASS (klass)->get_unique_name = test_scope_get_unique_name;
   UNITY_ABSTRACT_SCOPE_CLASS (klass)->activate = test_scope_activate;
   G_OBJECT_CLASS (klass)->get_property = test_scope_get_property;
   G_OBJECT_CLASS (klass)->set_property = test_scope_set_property;
@@ -285,6 +307,7 @@ static UnityScopeSearchBase* test_scope_create_search_for_query(UnityAbstractSco
 
   UnitySearchContext ctx;
   ctx = *search_context;
+  printf("new search\n");
   unity_scope_search_base_set_search_context (searcher, &ctx);
   return searcher;
 }
@@ -326,12 +349,12 @@ static gchar* test_scope_get_search_hint(UnityAbstractScope* self)
   return g_strdup ("Search hint");
 }
 
-static gchar* test_scope_get_reversed_fqdn(UnityAbstractScope* self)
+static gchar* test_scope_get_group_name(UnityAbstractScope* self)
 {
   return g_strdup (TEST_DBUS_NAME);
 }
 
-static gchar* test_scope_get_object_path(UnityAbstractScope* base)
+static gchar* test_scope_get_unique_name(UnityAbstractScope* base)
 {
   TestScope * self;
   self = (TestScope*) base;
