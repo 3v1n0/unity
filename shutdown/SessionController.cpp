@@ -132,10 +132,12 @@ void Controller::ConstructView()
   view_window_->ShowWindow(false);
   view_window_->SetOpacity(0.0f);
 
+  view_->request_hide.connect(sigc::mem_fun(this, &Controller::Hide));
   view_->request_close.connect([this] {
     Hide();
     manager_->CancelAction();
   });
+
 }
 
 void Controller::EnsureView()
