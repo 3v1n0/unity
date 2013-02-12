@@ -73,13 +73,6 @@ GDBusInterfaceVTable INTERFACE_VTABLE =
   nullptr, nullptr
 };
 
-enum class DIALOG_TYPE : unsigned
-{
-  LOGOUT = 0,
-  SHUTDOWN,
-  REBOOT,
-};
-
 }
 
 GnomeManager::Impl::Impl(GnomeManager* manager)
@@ -88,6 +81,7 @@ GnomeManager::Impl::Impl(GnomeManager* manager)
   , can_suspend_(false)
   , can_hibernate_(false)
   , shell_owner_name_(0)
+  , pending_action_(shell::Action::NONE)
   , upower_proxy_("org.freedesktop.UPower", "/org/freedesktop/UPower",
                   "org.freedesktop.UPower", G_BUS_TYPE_SYSTEM)
   , gsession_proxy_("org.gnome.SessionManager", "/org/gnome/SessionManager",
@@ -166,13 +160,13 @@ void GnomeManager::Impl::SetupShellSessionHandler()
     , this, nullptr);
 }
 
-void GnomeManager::Impl::OnShellMethodCall(std::string const& method_name, GVariant* parameters)
+void GnomeManager::Impl::OnShellMethodCall(std::string const& method, GVariant* parameters)
 {
-  LOG_DEBUG(logger) << "Called method '" << method_name << "'";
+  LOG_DEBUG(logger) << "Called method '" << method << "'";
 
-  if (method_name == "Open")
+  if (method == "Open")
   {
-    shell::DIALOG_TYPE type;
+    shell::Action type;
     unsigned arg1, timeout_length;
     GVariantIter *inhibitors;
     g_variant_get(parameters, "(uuuao)", &type, &arg1, &timeout_length, &inhibitors);
@@ -182,41 +176,79 @@ void GnomeManager::Impl::OnShellMethodCall(std::string const& method_name, GVari
     //XXX: we need to define the proper policy here
     if (has_inibitors)
     {
+      manager_->CancelAction();
       manager_->ClosedDialog();
       return;
     }
 
-    switch(type)
+    if (pending_action_ == shell::Action::NONE)
     {
-      case shell::DIALOG_TYPE::LOGOUT:
-        manager_->logout_requested.emit();
-        break;
-      case shell::DIALOG_TYPE::SHUTDOWN:
-        manager_->shutdown_requested.emit();
-        break;
-      case shell::DIALOG_TYPE::REBOOT:
-        manager_->reboot_requested.emit();
-        break;
+      pending_action_ = type;
+
+      switch(type)
+      {
+        case shell::Action::LOGOUT:
+          manager_->logout_requested.emit();
+          break;
+        case shell::Action::SHUTDOWN:
+          manager_->shutdown_requested.emit();
+          break;
+        case shell::Action::REBOOT:
+          manager_->reboot_requested.emit();
+          break;
+        default:
+          break;
+      }
+    }
+    else if (pending_action_ == type)
+    {
+      switch(type)
+      {
+        case shell::Action::LOGOUT:
+          manager_->ConfirmLogout();
+          break;
+        case shell::Action::SHUTDOWN:
+          manager_->ConfirmShutdown();
+          break;
+        case shell::Action::REBOOT:
+          manager_->ConfirmReboot();
+          break;
+        default:
+          break;
+      }
     }
   }
-  else if (method_name == "Close")
+  else if (method == "Close")
   {
     manager_->cancel_requested.emit();
   }
 }
 
-void GnomeManager::Impl::EmitShellSignal(std::string const& signal_name, GVariant* parameters)
+void GnomeManager::Impl::EmitShellSignal(std::string const& signal, GVariant* parameters)
 {
   glib::Error error;
   g_dbus_connection_emit_signal(shell_connection_, nullptr, shell::DBUS_OBJECT_PATH,
-                                shell::DBUS_INTERFACE, signal_name.c_str(), parameters,
-                                &error);
+                                shell::DBUS_INTERFACE, signal.c_str(), parameters, &error);
 
   if (error)
   {
-    LOG_WARNING(logger) << "Got error when emitting signal '" << signal_name << "': "
-                        << signal_name;
+    LOG_WARNING(logger) << "Got error when emitting signal '" << signal << "': "
+                        << error.Message();
   }
+}
+
+void GnomeManager::Impl::CallFallbackMethod(std::string const& method, GVariant* parameters)
+{
+  auto proxy = std::make_shared<glib::DBusProxy>("org.freedesktop.ConsoleKit",
+                                                 "/org/freedesktop/ConsoleKit/Manager",
+                                                 "org.freedesktop.ConsoleKit.Manager",
+                                                 G_BUS_TYPE_SYSTEM);
+
+  // By passing the proxy to the lambda we ensure that it will stay alive
+  // until we get the last callback.
+  proxy->CallBegin(method, parameters, [proxy] (GVariant*, glib::Error const& e) {
+    LOG_ERROR(logger) << "Fallback call failed: " << e.Message();
+  });
 }
 
 // Public implementation
@@ -257,10 +289,21 @@ void GnomeManager::LockScreen()
   // until we get the last callback.
   proxy->Call("Lock", nullptr, [proxy] (GVariant*) {});
   proxy->Call("SimulateUserActivity", nullptr, [proxy] (GVariant*) {});
+  CancelAction();
 }
 
 void GnomeManager::Logout()
 {
+  if (impl_->pending_action_ == shell::Action::LOGOUT)
+  {
+    manager_->ConfirmLogout();
+    return;
+  }
+  else if (impl_->pending_action_ != shell::Action::NONE)
+  {
+    CancelAction();
+  }
+
   enum LogoutMethods
   {
     INTERACTIVE = 0,
@@ -269,52 +312,110 @@ void GnomeManager::Logout()
   };
 
   unsigned mode = LogoutMethods::NO_CONFIRMATION;
-  impl_->gsession_proxy_.Call("Logout", g_variant_new_uint32(mode));
+
+  impl_->pending_action_ = shell::Action::LOGOUT;
+  impl_->gsession_proxy_.CallBegin("Logout", g_variant_new_uint32(mode),
+    [this] (GVariant*, glib::Error const& err) {
+      if (err)
+      {
+        LOG_WARNING(logger) << "Got error during call: " << err.Message();
+        impl_->pending_action_ = shell::Action::NONE;
+      }
+  });
 }
 
 void GnomeManager::Reboot()
 {
-  impl_->gsession_proxy_.Call("RequestReboot");
+  if (impl_->pending_action_ == shell::Action::REBOOT)
+  {
+    manager_->ConfirmReboot();
+    return;
+  }
+  else if (impl_->pending_action_ != shell::Action::NONE)
+  {
+    CancelAction();
+  }
+
+  impl_->pending_action_ = shell::Action::REBOOT;
+  impl_->gsession_proxy_.CallBegin("RequestReboot", nullptr,
+    [this] (GVariant*, glib::Error const& err) {
+      if (err)
+      {
+        LOG_WARNING(logger) << "Got error during call: " << err.Message()
+                            << ". Using fallback method";
+
+        impl_->pending_action_ = shell::Action::NONE;
+        impl_->CallFallbackMethod("Restart");
+      }
+  });
 }
 
 void GnomeManager::Shutdown()
 {
-  impl_->gsession_proxy_.Call("RequestShutdown");
+  if (impl_->pending_action_ == shell::Action::SHUTDOWN)
+  {
+    manager_->ConfirmShutdown();
+    return;
+  }
+  else if (impl_->pending_action_ != shell::Action::NONE)
+  {
+    CancelAction();
+  }
+
+  impl_->pending_action_ = shell::Action::SHUTDOWN;
+  impl_->gsession_proxy_.CallBegin("RequestShutdown", nullptr,
+    [this] (GVariant*, glib::Error const& err) {
+      if (err)
+      {
+        LOG_WARNING(logger) << "Got error during call: " << err.Message()
+                            << ". Using fallback method";
+
+        impl_->pending_action_ = shell::Action::NONE;
+        impl_->CallFallbackMethod("Stop");
+      }
+  });
 }
 
 void GnomeManager::Suspend()
 {
+  CancelAction();
   impl_->upower_proxy_.Call("Suspend");
 }
 
 void GnomeManager::Hibernate()
 {
+  CancelAction();
   impl_->upower_proxy_.Call("Hibernate");
 }
 
 void GnomeManager::ConfirmLogout()
 {
-  impl_->EmitShellSignal("ConfirmLogout");
+  impl_->pending_action_ = shell::Action::NONE;
+  impl_->EmitShellSignal("ConfirmedLogout");
 }
 
 void GnomeManager::ConfirmReboot()
 {
-  impl_->EmitShellSignal("ConfirmReboot");
+  impl_->pending_action_ = shell::Action::NONE;
+  impl_->EmitShellSignal("ConfirmedReboot");
 }
 
 void GnomeManager::ConfirmShutdown()
 {
-  impl_->EmitShellSignal("ConfirmShutdown");
+  impl_->pending_action_ = shell::Action::NONE;
+  impl_->EmitShellSignal("ConfirmedShutdown");
 }
 
 void GnomeManager::CancelAction()
 {
-  impl_->EmitShellSignal("CancelAction");
+  impl_->pending_action_ = shell::Action::NONE;
+  impl_->EmitShellSignal("Canceled");
 }
 
 void GnomeManager::ClosedDialog()
 {
-  impl_->EmitShellSignal("ClosedDialog");
+  impl_->pending_action_ = shell::Action::NONE;
+  impl_->EmitShellSignal("Closed");
 }
 
 bool GnomeManager::CanShutdown() const

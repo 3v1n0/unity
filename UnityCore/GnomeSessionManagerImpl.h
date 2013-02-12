@@ -28,6 +28,17 @@ namespace unity
 namespace session
 {
 
+namespace shell
+{
+  enum class Action : unsigned
+  {
+    LOGOUT = 0,
+    SHUTDOWN,
+    REBOOT,
+    NONE
+  };
+}
+
 struct GnomeManager::Impl
 {
   Impl(GnomeManager* parent);
@@ -36,8 +47,9 @@ struct GnomeManager::Impl
   void QueryUPowerCapabilities();
 
   void SetupShellSessionHandler();
-  void OnShellMethodCall(std::string const& method_name, GVariant* parameters);
-  void EmitShellSignal(std::string const& signal_name, GVariant* parameters = nullptr);
+  void CallFallbackMethod(std::string const& method, GVariant* parameters = nullptr);
+  void OnShellMethodCall(std::string const& method, GVariant* parameters);
+  void EmitShellSignal(std::string const& signal, GVariant* parameters = nullptr);
 
   GnomeManager* manager_;
   bool can_shutdown_;
@@ -46,6 +58,7 @@ struct GnomeManager::Impl
 
   unsigned shell_owner_name_;
   glib::Object<GDBusConnection> shell_connection_;
+  shell::Action pending_action_;
 
   glib::DBusProxy upower_proxy_;
   glib::DBusProxy gsession_proxy_;
