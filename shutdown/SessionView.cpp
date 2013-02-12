@@ -50,14 +50,13 @@ public:
 
     image_view_ = new nux::TextureArea();
     image_view_->SetInputEventSensitivity(false);
-    SetHighlighted(false);
     main_layout->AddView(image_view_, 1, nux::MINOR_POSITION_CENTER);
 
-    auto label_view = new StaticCairoText(label);
-    label_view->SetFont("Ubuntu Light 12");
-    label_view->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
-    label_view->SetInputEventSensitivity(false);
-    main_layout->AddView(label_view, 1, nux::MINOR_POSITION_CENTER);
+    label_view_ = new StaticCairoText(label);
+    label_view_->SetFont("Ubuntu Light 12");
+    label_view_->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
+    label_view_->SetInputEventSensitivity(false);
+    main_layout->AddView(label_view_, 1, nux::MINOR_POSITION_CENTER);
 
     mouse_enter.connect([this] (int, int, unsigned long, unsigned long) {
       SetHighlighted(true);
@@ -68,6 +67,7 @@ public:
     });
 
     SetLayout(main_layout);
+    SetHighlighted(false);
   }
 
   void SetHighlighted(bool highlighted)
@@ -80,6 +80,8 @@ public:
 
     image_view_->SetTexture(tex);
     image_view_->SetMinMaxSize(tex->GetWidth(), tex->GetHeight());
+
+    label_view_->SetTextColor(highlighted ? nux::color::White : nux::color::Transparent);
   }
 
   void Draw(nux::GraphicsEngine& ctx, bool force)
@@ -90,6 +92,7 @@ public:
   nux::ObjectPtr<nux::BaseTexture> normal_tex_;
   nux::ObjectPtr<nux::BaseTexture> highlight_tex_;
   nux::TextureArea* image_view_;
+  StaticCairoText* label_view_;
   nux::VLayout* layout_;
   std::string label_;
   std::string image_;
