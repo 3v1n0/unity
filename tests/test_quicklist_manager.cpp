@@ -28,7 +28,7 @@
 
 namespace {
 
-QuicklistView buf[2];
+unity::QuicklistView buf[2];
 
 struct MockQuicklistView : public unity::QuicklistView
 {
