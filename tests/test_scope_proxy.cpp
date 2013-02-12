@@ -121,7 +121,7 @@ TEST_F(TestScopeProxy, TestSearch)
   Utils::WaitUntilMSec([&, results] { return search_finished == true && results->count() == 12; },
                        true,
                        2000,
-                       glib::String(g_strdup_printf("Either search didn't finish, or result count is not as expected (%d != 12).", static_cast<unsigned>(results->count()))));
+                       glib::String(g_strdup_printf("Either search didn't finish, or result count is not as expected (%u != 12).", static_cast<unsigned>(results->count()))));
   EXPECT_TRUE(search_ok == true);
 }
 
@@ -144,7 +144,7 @@ TEST_F(TestScopeProxy, TestMultiSearch)
   Utils::WaitUntilMSec([&, results] { return search_finished == true && results->count() == 12; },
                        true,
                        2000,
-                       glib::String(g_strdup_printf("First search. Either search didn't finish, or result count is not as expected (%d != 12).", static_cast<int>(results->count()))));
+                       glib::String(g_strdup_printf("First search. Either search didn't finish, or result count is not as expected (%u != 12).", static_cast<int>(results->count()))));
   EXPECT_TRUE(search_ok == true);
 
   // Second Search
@@ -155,7 +155,7 @@ TEST_F(TestScopeProxy, TestMultiSearch)
   Utils::WaitUntilMSec([&search_finished, results] { return search_finished == true && results->count() == 5; },
                        true,
                        2000,
-                       glib::String(g_strdup_printf("Second search. Either search didn't finish, or result count is not as expected (%d != 5).", static_cast<unsigned>(results->count()))));
+                       glib::String(g_strdup_printf("Second search. Either search didn't finish, or result count is not as expected (%u != 5).", static_cast<unsigned>(results->count()))));
   EXPECT_TRUE(search_ok == true);
 }
 
