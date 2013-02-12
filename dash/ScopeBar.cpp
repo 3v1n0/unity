@@ -17,7 +17,7 @@
  */
 
 #include <glib/gstdio.h>
-#include "LensBar.h"
+#include "ScopeBar.h"
 #include <NuxCore/Logger.h>
 #include "config.h"
 #include <Nux/HLayout.h>

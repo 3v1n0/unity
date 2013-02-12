@@ -16,8 +16,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITYSHELL_LENS_BAR_H
-#define UNITYSHELL_LENS_BAR_H
+#ifndef UNITYSHELL_SCOPE_BAR_H
+#define UNITYSHELL_SCOPE_BAR_H
 
 #include <memory>
 #include <string>
@@ -32,7 +32,7 @@
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/UBusWrapper.h"
-#include "LensBarIcon.h"
+#include "ScopeBarIcon.h"
 
 namespace nux
 {
@@ -103,4 +103,4 @@ private:
 } // namespace dash
 } // namespace unity
 
-#endif // UNITYSHELL_LENS_BAR_H
+#endif // UNITYSHELL_SCOPE_BAR_H

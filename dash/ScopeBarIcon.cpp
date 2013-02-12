@@ -19,7 +19,7 @@
 #include <UnityCore/Variant.h>
 
 #include "unity-shared/DashStyle.h"
-#include "LensBarIcon.h"
+#include "ScopeBarIcon.h"
 
 #include "config.h"
 

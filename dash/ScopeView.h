@@ -17,8 +17,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_LENS_VIEW_H_
-#define UNITY_LENS_VIEW_H_
+#ifndef UNITY_SCOPE_VIEW_H_
+#define UNITY_SCOPE_VIEW_H_
 
 #include <string>
 
@@ -161,7 +161,7 @@ private:
   friend class TestScopeView;
 };
 
+} // namespace dash
+} // namespace unity
 
-}
-}
-#endif
+#endif // UNITY_SCOPE_VIEW_H_

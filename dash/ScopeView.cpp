@@ -17,7 +17,7 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include "LensView.h"
+#include "ScopeView.h"
 
 #include <boost/lexical_cast.hpp>
 
@@ -441,7 +441,7 @@ void ScopeView::OnCategoryAdded(Category const& category)
 
     if (reset_filter_models)
     {
-      /* HomeLens is reodering the categories, and since their index is based
+      /* Lens is reodering the categories, and since their index is based
        * on the row position in the model, we need to re-initialize the filter
        * models if we got insert and not an append */
       for (auto it = categories_.begin() + (index + 1); it != categories_.end(); ++it)

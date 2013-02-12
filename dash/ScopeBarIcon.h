@@ -16,8 +16,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_LENS_BAR_ICON_H_
-#define UNITY_LENS_BAR_ICON_H_
+#ifndef UNITY_SCOPE_BAR_ICON_H_
+#define UNITY_SCOPE_BAR_ICON_H_
 
 #include <string>
 
@@ -60,4 +60,4 @@ private:
 
 }
 }
-#endif
+#endif // UNITY_SCOPE_BAR_ICON_H_

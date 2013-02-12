@@ -29,13 +29,11 @@ namespace dash
 namespace impl
 {
 
-struct LensFilter
+struct ScopeFilter
 {
   std::string id;
   std::map<std::string, std::string> filters;
 };
-
-typedef LensFilter ScopeFilter;
 
 ScopeFilter parse_scope_uri(std::string const& uri);
 
