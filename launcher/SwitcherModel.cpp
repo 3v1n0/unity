@@ -145,7 +145,7 @@ std::vector<Window> SwitcherModel::DetailXids() const
       return wm.GetWindowActiveNumber(first) > wm.GetWindowActiveNumber(second);
   });
 
-  if (Selection() == last_active_application_ && results.size() > 1)
+  if (results.size() > 1)
   {
     results.push_back(results.front());
     results.erase(results.begin());
