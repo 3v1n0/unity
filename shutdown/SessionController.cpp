@@ -76,6 +76,7 @@ void Controller::Show()
   view_window_->EnableInputWindow(true, view_window_->GetWindowName().c_str(), true, false);
   view_window_->ShowWindow(true);
   view_window_->PushToFront();
+  view_window_->SetInputFocus();
 
   if (fade_animator_.CurrentState() == na::Animation::State::Running)
   {
@@ -121,6 +122,12 @@ void Controller::ConstructView()
   view_window_->SetBackgroundColor(nux::color::Transparent);
   view_window_->SetWindowSizeMatchLayout(true);
   view_window_->ShowWindow(false);
+
+  view_->request_close.connect([this] {
+    Hide();
+    manager_->CancelAction();
+    manager_->ClosedDialog();
+  });
 }
 
 void Controller::EnsureView()
