@@ -22,6 +22,7 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
+#include <Nux/HLayout.h>
 
 #include "unity-shared/UnityWindowView.h"
 
@@ -47,6 +48,7 @@ protected:
 
 private:
   Manager::Ptr manager_;
+  nux::HLayout* buttons_layout_;
 };
 
 } // namespace session
