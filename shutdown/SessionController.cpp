@@ -81,7 +81,10 @@ void Controller::Show()
   int monitor = UScreen::GetDefault()->GetMonitorWithMouse();
   auto const& offset = GetOffsetPerMonitor(monitor);
   view_window_->SetXY(offset.x, offset.y);
-  view_window_->EnableInputWindow(true, view_window_->GetWindowName().c_str(), true, false);
+
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
+    view_window_->EnableInputWindow(true, view_window_->GetWindowName().c_str(), true, false);
+
   view_window_->ShowWindow(true);
   view_window_->PushToFront();
   view_window_->SetInputFocus();
