@@ -126,6 +126,8 @@ View::View(Manager::Ptr const& manager)
   main_layout->AddLayout(buttons_layout_);
 
   auto button = new ActionButton(_("Lock"), "lockscreen", NUX_TRACKER_LOCATION);
+  button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
+  button->activated.connect([this] {request_hide.emit();});
   buttons_layout_->AddView(button);
 
   button = new ActionButton(_("Suspend"), "suspend", NUX_TRACKER_LOCATION);
