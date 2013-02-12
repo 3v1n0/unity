@@ -66,6 +66,11 @@ void ExpoLauncherIcon::OnViewportLayoutChanged(int hsize, int vsize)
   }
 }
 
+void ExpoLauncherIcon::AboutToRemove()
+{
+  WindowManager::Default().SetViewportSize(1, 1);
+}
+
 void ExpoLauncherIcon::UpdateIcon()
 {
   auto const& vp = WindowManager::Default().GetCurrentViewport();
