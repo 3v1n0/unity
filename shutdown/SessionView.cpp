@@ -47,11 +47,13 @@ public:
     auto image_view = new nux::TextureArea();
     image_view->LoadImageFile(PKGDATADIR"/" + texture_name + ".png");
     image_view->SetMinMaxSize(168, 168);
+    image_view->SetInputEventSensitivity(false);
     main_layout->AddView(image_view, 1, nux::MINOR_POSITION_CENTER);
 
     label_view_ = new StaticCairoText(label);
     label_view_->SetFont("Ubuntu Light 12");
     label_view_->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
+    label_view_->SetInputEventSensitivity(false);
     main_layout->AddView(label_view_, 1, nux::MINOR_POSITION_CENTER);
 
     SetLayout(main_layout);
