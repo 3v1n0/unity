@@ -36,6 +36,7 @@ public:
   std::string RealName() const;
   std::string UserName() const;
 
+  void LockScreen();
   void Logout();
   void Reboot();
   void Shutdown();

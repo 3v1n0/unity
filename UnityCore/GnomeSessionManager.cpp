@@ -247,6 +247,18 @@ std::string GnomeManager::UserName() const
   return name ? name : "";
 }
 
+void GnomeManager::LockScreen()
+{
+  auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.ScreenSaver",
+                                                 "/org/gnome/ScreenSaver",
+                                                 "org.gnome.ScreenSaver");
+
+  // By passing the proxy to the lambda we ensure that it will stay alive
+  // until we get the last callback.
+  proxy->Call("Lock", nullptr, [proxy] (GVariant*) {});
+  proxy->Call("SimulateUserActivity", nullptr, [proxy] (GVariant*) {});
+}
+
 void GnomeManager::Logout()
 {
   enum LogoutMethods
