@@ -66,19 +66,12 @@ void UnityWindowView::OnClosableChanged(bool closable)
   close_button_->SetSize(texture->GetWidth(), texture->GetHeight());
   close_button_->SetBaseXY(padding, padding);
 
-  close_button_->mouse_click.connect([this](int, int, unsigned long, unsigned long)
-  {
+  close_button_->mouse_click.connect([this](int, int, unsigned long, unsigned long) {
     request_close.emit();
-    QueueDraw();
   });
 }
 
 void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-  // fixme???
-}
-
-void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   PreDraw(GfxContext, force_draw);
 
