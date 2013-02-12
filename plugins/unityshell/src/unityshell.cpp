@@ -3272,31 +3272,31 @@ void UnityScreen::InitHints()
                                                     COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + A",
-                                                    _("Opens the Dash App Lens."),
+                                                    _("Opens the Dash App SCope."),
                                                     shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_UNITYSHELL_PLUGIN_NAME,
                                                     COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + F",
-                                                    _("Opens the Dash Files Lens."),
+                                                    _("Opens the Dash Files Scope."),
                                                     shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_UNITYSHELL_PLUGIN_NAME,
                                                     COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + M",
-                                                    _("Opens the Dash Music Lens."),
+                                                    _("Opens the Dash Music Scope."),
                                                     shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_UNITYSHELL_PLUGIN_NAME,
                                                     COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", " + V",
-                                                    _("Opens the Dash Video Lens."),
+                                                    _("Opens the Dash Video Scope."),
                                                     shortcut::OptionType::COMPIZ_KEY,
                                                     COMPIZ_UNITYSHELL_PLUGIN_NAME,
                                                     COMPIZ_UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
   hints_.push_back(std::make_shared<shortcut::Hint>(dash, "", "",
-                                                    _("Switches between Lenses."),
+                                                    _("Switches between Scopes."),
                                                     shortcut::OptionType::HARDCODED,
                                                     _("Ctrl + Tab")));
 

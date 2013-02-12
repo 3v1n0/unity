@@ -130,25 +130,25 @@ void ShortcutsWindow::Init()
 
   // These are notstd::shared_ptr<shortcut::AbstractHint>( really hardcoded...
   hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Dash"), "", " + A",
-                                                                                 _("Opens the Dash App Lens."),
+                                                                                 _("Opens the Dash App Scope."),
                                                                                  shortcut::OptionType::COMPIZ_KEY,
                                                                                  "unityshell",
                                                                                  "show_launcher")));
 
   hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Dash"), "", " + F",
-                                                                                 _("Opens the Dash Files Lens."),
+                                                                                 _("Opens the Dash Files Scope."),
                                                                                  shortcut::OptionType::COMPIZ_KEY,
                                                                                  "unityshell",
                                                                                  "show_launcher")));
 
   hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Dash"), "", " + M",
-                                                                                 _("Opens the Dash Music Lens."),
+                                                                                 _("Opens the Dash Music Scope."),
                                                                                  shortcut::OptionType::COMPIZ_KEY,
                                                                                  "unityshell",
                                                                                  "show_launcher")));
 
   hints.push_back(std::shared_ptr<shortcut::AbstractHint>(new shortcut::MockHint(_("Dash"), "", "",
-                                                                                 _("Switches between Lenses."),
+                                                                                 _("Switches between Scopes."),
                                                                                  shortcut::OptionType::HARDCODED,
                                                                                  "Ctrl + Tab")));
 

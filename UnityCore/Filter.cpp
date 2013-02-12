@@ -42,7 +42,7 @@ Filter::Filter(DeeModel* model, DeeModelIter* iter)
 {
   typedef Signal<void, DeeModel*, DeeModelIter*> RowSignalType;
 
-  // If the model is destroyed (say if the lens restarts) then we should handle
+  // If the model is destroyed (say if the scope restarts) then we should handle
   // that gracefully
   g_object_weak_ref(reinterpret_cast<GObject*>(model_),
                     (GWeakNotify)Filter::OnModelDestroyed, this);

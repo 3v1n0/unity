@@ -125,7 +125,7 @@ TEST_F(TestGSettingsScopes, TestLoad)
   EXPECT_TRUE(scopes.GetScope("testscope4.scope", &position) && position == 3);
 }
 
-TEST_F(TestGSettingsScopes, TestLensesAdded)
+TEST_F(TestGSettingsScopes, TestScopesAdded)
 {
   MockGSettingsScopes scopes;
   ConnectScope(&scopes);
@@ -153,7 +153,7 @@ TEST_F(TestGSettingsScopes, TestLensesAdded)
   EXPECT_TRUE(scopes.GetScope("testscope2.scope", &position) && position == 0);
 }
 
-TEST_F(TestGSettingsScopes, TestLensesAddSame)
+TEST_F(TestGSettingsScopes, TestScopesAddSame)
 {
   MockGSettingsScopes scopes;
   ConnectScope(&scopes);
@@ -170,7 +170,7 @@ TEST_F(TestGSettingsScopes, TestLensesAddSame)
   EXPECT_EQ(scopes_reordered, (unsigned int)0);
 }
 
-TEST_F(TestGSettingsScopes, TestLensesRemove)
+TEST_F(TestGSettingsScopes, TestScopesRemove)
 {
   MockGSettingsScopes scopes;
   ConnectScope(&scopes);

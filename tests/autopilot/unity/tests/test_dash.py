@@ -36,30 +36,30 @@ class DashRevealTests(DashTestCase):
         self.dash.ensure_visible()
         self.dash.ensure_hidden()
 
-    def test_application_lens_shortcut(self):
-        """Application lense must reveal when Super+a is pressed."""
-        self.dash.reveal_application_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('applications.scope')))
+    def test_application_scope_shortcut(self):
+        """Application scope must reveal when Super+a is pressed."""
+        self.dash.reveal_application_scope()
+        self.assertThat(self.dash.active_scope, Eventually(Equals('applications.scope')))
 
-    def test_music_lens_shortcut(self):
-        """Music lense must reveal when Super+w is pressed."""
-        self.dash.reveal_music_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('music.scope')))
+    def test_music_scope_shortcut(self):
+        """Music scope must reveal when Super+w is pressed."""
+        self.dash.reveal_music_scope()
+        self.assertThat(self.dash.active_scope, Eventually(Equals('music.scope')))
 
-    def test_file_lens_shortcut(self):
-        """File lense must reveal when Super+f is pressed."""
-        self.dash.reveal_file_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('files.scope')))
+    def test_file_scope_shortcut(self):
+        """File scope must reveal when Super+f is pressed."""
+        self.dash.reveal_file_scope()
+        self.assertThat(self.dash.active_scope, Eventually(Equals('files.scope')))
 
-    def test_video_lens_shortcut(self):
-        """Video lens must reveal when super+v is pressed."""
-        self.dash.reveal_video_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('video.scope')))
+    def test_video_scope_shortcut(self):
+        """Video scope must reveal when super+v is pressed."""
+        self.dash.reveal_video_scope()
+        self.assertThat(self.dash.active_scope, Eventually(Equals('video.scope')))
 
-    def test_command_lens_shortcut(self):
-        """Run Command lens must reveat on alt+F2."""
-        self.dash.reveal_command_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('commands.scope')))
+    def test_command_scope_shortcut(self):
+        """Run Command scope must reveat on alt+F2."""
+        self.dash.reveal_command_scope()
+        self.assertThat(self.dash.active_scope, Eventually(Equals('commands.scope')))
 
     def test_alt_f4_close_dash(self):
         """Dash must close on alt+F4."""
@@ -141,23 +141,23 @@ class DashRevealWithSpreadTests(DashTestCase):
         self.dash.ensure_visible()
         self.assertThat(self.dash.visible, Eventually(Equals(True)))
 
-    def test_command_lens_opens_when_in_spread(self):
-        """This test shows the command lens opens when in spread mode."""
+    def test_command_scope_opens_when_in_spread(self):
+        """This test shows the command scope opens when in spread mode."""
         self.start_placeholder_app()
         self.keybinding("spread/start")
         self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
 
-        self.dash.reveal_command_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('commands.scope')))
+        self.dash.reveal_command_scope()
+        self.assertThat(self.dash.active_scope, Eventually(Equals('commands.scope')))
 
-    def test_lens_opens_when_in_spread(self):
-        """This test shows that any lens opens when in spread mode."""
+    def test_scope_opens_when_in_spread(self):
+        """This test shows that any scope opens when in spread mode."""
         self.start_placeholder_app()
         self.keybinding("spread/start")
         self.assertThat(self.window_manager.scale_active, Eventually(Equals(True)))
 
-        self.dash.reveal_application_lens()
-        self.assertThat(self.dash.active_lens, Eventually(Equals('applications.scope')))
+        self.dash.reveal_application_scope()
+        self.assertThat(self.dash.active_scope, Eventually(Equals('applications.scope')))
 
 
 class DashSearchInputTests(DashTestCase):
@@ -184,28 +184,28 @@ class DashMultiKeyTests(DashSearchInputTests):
 
     def test_multi_key(self):
         """Pressing 'Multi_key' must not add any characters to the search."""
-        self.dash.reveal_application_lens()
+        self.dash.reveal_application_scope()
         self.keyboard.press_and_release('Multi_key')
         self.keyboard.type("o")
         self.assertSearchText("")
 
     def test_multi_key_o(self):
         """Pressing the sequences 'Multi_key' + '^' + 'o' must produce 'ô'."""
-        self.dash.reveal_application_lens()
+        self.dash.reveal_application_scope()
         self.keyboard.press_and_release('Multi_key')
         self.keyboard.type("^o")
         self.assertSearchText(u'\xf4')
 
     def test_multi_key_copyright(self):
         """Pressing the sequences 'Multi_key' + 'c' + 'o' must produce '©'."""
-        self.dash.reveal_application_lens()
+        self.dash.reveal_application_scope()
         self.keyboard.press_and_release('Multi_key')
         self.keyboard.type("oc")
         self.assertSearchText(u'\xa9')
 
     def test_multi_key_delete(self):
         """Pressing 'Multi_key' must not get stuck looking for a sequence."""
-        self.dash.reveal_application_lens()
+        self.dash.reveal_application_scope()
         self.keyboard.type("dd")
         self.keyboard.press_and_release('Multi_key')
         self.keyboard.press_and_release('BackSpace')
@@ -216,64 +216,64 @@ class DashMultiKeyTests(DashSearchInputTests):
 class DashKeyNavTests(DashTestCase):
     """Test the unity Dash keyboard navigation."""
 
-    def test_lensbar_gets_keyfocus(self):
-        """Test that the lensbar gets key focus after using Down keypresses."""
+    def test_scopebar_gets_keyfocus(self):
+        """Test that the scopebar gets key focus after using Down keypresses."""
         self.dash.ensure_visible()
 
-        # Make sure that the lens bar can get the focus
+        # Make sure that the scope bar can get the focus
         for i in range(self.dash.get_num_rows()):
             self.keyboard.press_and_release("Down")
-        lensbar = self.dash.view.get_lensbar()
-        self.assertThat(lensbar.focused_lens_icon, Eventually(NotEquals('')))
+        scopebar = self.dash.view.get_scopebar()
+        self.assertThat(scopebar.focused_scope_icon, Eventually(NotEquals('')))
 
-    def test_lensbar_focus_changes(self):
-        """Lensbar focused icon should change with Left and Right keypresses."""
+    def test_scopebar_focus_changes(self):
+        """Scopebar focused icon should change with Left and Right keypresses."""
         self.dash.ensure_visible()
 
         for i in range(self.dash.get_num_rows()):
             self.keyboard.press_and_release("Down")
-        lensbar = self.dash.view.get_lensbar()
+        scopebar = self.dash.view.get_scopebar()
 
-        current_focused_icon = lensbar.focused_lens_icon
+        current_focused_icon = scopebar.focused_scope_icon
 
         self.keyboard.press_and_release("Right")
-        self.assertThat(lensbar.focused_lens_icon, Eventually(NotEquals(current_focused_icon)))
+        self.assertThat(scopebar.focused_scope_icon, Eventually(NotEquals(current_focused_icon)))
 
         self.keyboard.press_and_release("Left")
-        self.assertThat(lensbar.focused_lens_icon, Eventually(Equals(current_focused_icon)))
+        self.assertThat(scopebar.focused_scope_icon, Eventually(Equals(current_focused_icon)))
 
-    def test_lensbar_enter_activation(self):
-        """Must be able to activate LensBar icons that have focus with an Enter keypress."""
+    def test_scopebar_enter_activation(self):
+        """Must be able to activate ScopeBar icons that have focus with an Enter keypress."""
         self.dash.ensure_visible()
 
         for i in range(self.dash.get_num_rows()):
             self.keyboard.press_and_release("Down")
         self.keyboard.press_and_release("Right")
-        lensbar = self.dash.view.get_lensbar()
-        focused_icon = lensbar.focused_lens_icon
+        scopebar = self.dash.view.get_scopebar()
+        focused_icon = scopebar.focused_scope_icon
         self.keyboard.press_and_release("Enter")
 
-        self.assertThat(lensbar.active_lens, Eventually(Equals(focused_icon)))
+        self.assertThat(scopebar.active_scope, Eventually(Equals(focused_icon)))
 
-        # lensbar should lose focus after activation.
-        self.assertThat(lensbar.focused_lens_icon, Eventually(Equals("")))
+        # scopebar should lose focus after activation.
+        self.assertThat(scopebar.focused_scope_icon, Eventually(Equals("")))
 
     def test_focus_returns_to_searchbar(self):
         """This test makes sure that the focus is returned to the searchbar of the newly
-        activated lens."""
+        activated scope."""
         self.dash.ensure_visible()
 
         for i in range(self.dash.get_num_rows()):
             self.keyboard.press_and_release("Down")
         self.keyboard.press_and_release("Right")
-        lensbar = self.dash.view.get_lensbar()
-        focused_icon = lensbar.focused_lens_icon
+        scopebar = self.dash.view.get_scopebar()
+        focused_icon = scopebar.focused_scope_icon
         self.keyboard.press_and_release("Enter")
 
-        self.assertThat(lensbar.active_lens, Eventually(Equals(focused_icon)))
-        self.assertThat(lensbar.focused_lens_icon, Eventually(Equals("")))
+        self.assertThat(scopebar.active_scope, Eventually(Equals(focused_icon)))
+        self.assertThat(scopebar.focused_scope_icon, Eventually(Equals("")))
 
-        # Now we make sure if the newly activated lens searchbar have the focus.
+        # Now we make sure if the newly activated scope searchbar have the focus.
         self.keyboard.type("HasFocus")
 
         self.assertThat(self.dash.search_string, Eventually(Equals("HasFocus")))
@@ -289,22 +289,22 @@ class DashKeyNavTests(DashTestCase):
         self.dash.ensure_visible()
         # Make sure that a category have the focus.
         self.keyboard.press_and_release("Down")
-        lens = self.dash.get_current_lens()
-        category = lens.get_focused_category()
+        scope = self.dash.get_current_scope()
+        category = scope.get_focused_category()
         self.assertIsNot(category, None)
         # Make sure that the category is highlighted.
         self.assertTrue(category.header_is_highlighted)
 
-    def test_control_tab_lens_cycle(self):
-        """This test makes sure that Ctrl+Tab cycles lenses."""
+    def test_control_tab_scope_cycle(self):
+        """This test makes sure that Ctrl+Tab cycles scopes."""
         self.dash.ensure_visible()
 
         self.keyboard.press('Control')
         self.keyboard.press_and_release('Tab')
         self.keyboard.release('Control')
 
-        lensbar = self.dash.view.get_lensbar()
-        self.assertEqual(lensbar.active_lens, u'applications.scope')
+        scopebar = self.dash.view.get_scopebar()
+        self.assertEqual(scopebar.active_scope, u'applications.scope')
 
         self.keyboard.press('Control')
         self.keyboard.press('Shift')
@@ -312,33 +312,33 @@ class DashKeyNavTests(DashTestCase):
         self.keyboard.release('Control')
         self.keyboard.release('Shift')
 
-        self.assertThat(lensbar.active_lens, Eventually(Equals('home.scope')))
+        self.assertThat(scopebar.active_scope, Eventually(Equals('home.scope')))
 
     def test_tab_cycle_category_headers(self):
         """ Makes sure that pressing tab cycles through the category headers"""
         self.dash.ensure_visible()
-        lens = self.dash.get_current_lens()
+        scope = self.dash.get_current_scope()
 
         # Test that tab cycles through the categories.
         # + 1 is to cycle back to first header
-        for i in range(lens.get_num_visible_categories() + 1):
+        for i in range(scope.get_num_visible_categories() + 1):
             self.keyboard.press_and_release('Tab')
-            category = lens.get_focused_category()
+            category = scope.get_focused_category()
             self.assertIsNot(category, None)
 
     def test_tab_with_filter_bar(self):
         """ This test makes sure that Tab works well with the filter bara."""
-        self.dash.reveal_application_lens()
-        lens = self.dash.get_current_lens()
+        self.dash.reveal_application_scope()
+        scope = self.dash.get_current_scope()
 
         # Tabs to last category
-        for i in range(lens.get_num_visible_categories()):
+        for i in range(scope.get_num_visible_categories()):
             self.keyboard.press_and_release('Tab')
 
         self.keyboard.press_and_release('Tab')
         self.assertThat(self.dash.searchbar.expander_has_focus, Eventually(Equals(True)))
 
-        filter_bar = lens.get_filterbar()
+        filter_bar = scope.get_filterbar()
         if not self.dash.searchbar.showing_filters:
             self.keyboard.press_and_release('Enter')
             self.assertThat(self.dash.searchbar.showing_filters, Eventually(Equals(True)))
@@ -351,17 +351,17 @@ class DashKeyNavTests(DashTestCase):
 
         # Ensure that tab cycles back to a category header
         self.keyboard.press_and_release('Tab')
-        category = lens.get_focused_category()
+        category = scope.get_focused_category()
         self.assertIsNot(category, None)
 
     def test_bottom_up_keynav_with_filter_bar(self):
         """This test makes sure that bottom-up key navigation works well
         in the dash filter bar.
         """
-        self.dash.reveal_application_lens()
-        lens = self.dash.get_current_lens()
+        self.dash.reveal_application_scope()
+        scope = self.dash.get_current_scope()
 
-        filter_bar = lens.get_filterbar()
+        filter_bar = scope.get_filterbar()
         # Need to ensure the filter expander has focus, so if it's already
         # expanded, we collapse it first:
         filter_bar.ensure_collapsed()
@@ -481,8 +481,8 @@ class DashKeyboardFocusTests(DashTestCase):
         """Expanding or collapsing the filterbar must keave keyboard focus in the
         search bar.
         """
-        self.dash.reveal_application_lens()
-        filter_bar = self.dash.get_current_lens().get_filterbar()
+        self.dash.reveal_application_scope()
+        filter_bar = self.dash.get_current_scope().get_filterbar()
         filter_bar.ensure_collapsed()
 
         self.keyboard.type("hello")
@@ -504,39 +504,39 @@ class DashKeyboardFocusTests(DashTestCase):
         self.assertSearchText("HasFocus")
 
 
-class DashLensResultsTests(DashTestCase):
-    """Tests results from the lens view."""
+class DashScopeResultsTests(DashTestCase):
+    """Tests results from the scope view."""
 
     def test_results_message_empty_search(self):
         """This tests a message is not shown when there is no text."""
-        self.dash.reveal_application_lens()
-        lens = self.dash.get_current_lens()
-        self.assertThat(lens.no_results_active, Eventually(Equals(False)))
+        self.dash.reveal_application_scope()
+        scope = self.dash.get_current_scope()
+        self.assertThat(scope.no_results_active, Eventually(Equals(False)))
 
     def test_results_message(self):
         """This test no mesage will be shown when results are there."""
-        self.dash.reveal_application_lens()
+        self.dash.reveal_application_scope()
         self.keyboard.type("Terminal")
         self.assertThat(self.dash.search_string, Eventually(Equals("Terminal")))
-        lens = self.dash.get_current_lens()
-        self.assertThat(lens.no_results_active, Eventually(Equals(False)))
+        scope = self.dash.get_current_scope()
+        self.assertThat(scope.no_results_active, Eventually(Equals(False)))
 
     def test_no_results_message(self):
-        """This test shows a message will appear in the lens."""
-        self.dash.reveal_application_lens()
+        """This test shows a message will appear in the scope."""
+        self.dash.reveal_application_scope()
         self.keyboard.type("qwerlkjzvxc")
         self.assertThat(self.dash.search_string, Eventually(Equals("qwerlkjzvxc")))
-        lens = self.dash.get_current_lens()
-        self.assertThat(lens.no_results_active, Eventually(Equals(True)))
+        scope = self.dash.get_current_scope()
+        self.assertThat(scope.no_results_active, Eventually(Equals(True)))
 
     def test_results_update_on_filter_changed(self):
         """This test makes sure the results change when filters change."""
-        gettext.install("unity-lens-applications")
-        self.dash.reveal_application_lens()
-        lens = self.dash.get_current_lens()
+        gettext.install("unity-scope-applications")
+        self.dash.reveal_application_scope()
+        scope = self.dash.get_current_scope()
         self.keyboard.type(" ")
         self.assertThat(self.dash.search_string, Eventually(Equals(" ")))
-        results_category = lens.get_category_by_name(_("Installed"))
+        results_category = scope.get_category_by_name(_("Installed"))
         old_results = results_category.get_results()
 
         # FIXME: This should be a method on the dash emulator perhaps, or
@@ -544,20 +544,20 @@ class DashLensResultsTests(DashTestCase):
         # function that is only called once!
         def activate_filter(add_cleanup = False):
             # Tabs to last category
-            for i in range(lens.get_num_visible_categories()):
+            for i in range(scope.get_num_visible_categories()):
                 self.keyboard.press_and_release('Tab')
 
             self.keyboard.press_and_release('Tab')
             self.assertThat(self.dash.searchbar.expander_has_focus, Eventually(Equals(True)))
 
-            filter_bar = lens.get_filterbar()
+            filter_bar = scope.get_filterbar()
             if not self.dash.searchbar.showing_filters:
                 self.keyboard.press_and_release('Enter')
                 self.assertThat(self.dash.searchbar.showing_filters, Eventually(Equals(True)))
                 if add_cleanup:
                     self.addCleanup(filter_bar.ensure_collapsed)
 
-            # Tab to the "Type" filter in apps lens
+            # Tab to the "Type" filter in apps scope
             self.keyboard.press_and_release('Tab')
             new_focused_filter = filter_bar.get_focused_filter()
             self.assertIsNotNone(new_focused_filter)
@@ -571,7 +571,7 @@ class DashLensResultsTests(DashTestCase):
         activate_filter(True)
         self.addCleanup(activate_filter)
 
-        results_category = lens.get_category_by_name(_("Installed"))
+        results_category = scope.get_category_by_name(_("Installed"))
         results = results_category.get_results()
         self.assertIsNot(results, old_results)
 
@@ -582,14 +582,14 @@ class DashLensResultsTests(DashTestCase):
 class DashVisualTests(DashTestCase):
     """Tests that the dash visual is correct."""
 
-    def test_closing_dash_hides_current_lens(self):
-        """When exiting from the dash the current lens must set it self to not visible."""
+    def test_closing_dash_hides_current_scope(self):
+        """When exiting from the dash the current scope must set it self to not visible."""
 
         self.dash.ensure_visible()
-        lens = self.dash.get_current_lens()
+        scope = self.dash.get_current_scope()
         self.dash.ensure_hidden()
 
-        self.assertThat(lens.visible, Eventually(Equals(False)))
+        self.assertThat(scope.visible, Eventually(Equals(False)))
 
     def test_dash_position_with_non_default_launcher_width(self):
         """"There should be no empty space between launcher and dash when the launcher
@@ -607,10 +607,10 @@ class DashVisualTests(DashTestCase):
         """The see more results label should be baseline aligned
         with the category name label.
         """
-        self.dash.reveal_application_lens()
+        self.dash.reveal_application_scope()
 
-        lens = self.dash.get_current_lens()
-        groups = lens.get_groups()
+        scope = self.dash.get_current_scope()
+        groups = scope.get_groups()
 
         for group in groups:
             if (group.is_visible and group.expand_label_is_visible):
@@ -619,25 +619,25 @@ class DashVisualTests(DashTestCase):
                 self.assertThat(expand_label_y, Equals(name_label_y))
 
 
-class DashLensBarTests(DashTestCase):
-    """Tests that the lensbar works well."""
+class DashScopeBarTests(DashTestCase):
+    """Tests that the scopebar works well."""
 
     def setUp(self):
-        super(DashLensBarTests, self).setUp()
+        super(DashScopeBarTests, self).setUp()
         self.dash.ensure_visible()
-        self.lensbar = self.dash.view.get_lensbar()
+        self.scopebar = self.dash.view.get_scopebar()
 
     def test_click_inside_highlight(self):
-        """Lens selection should work when clicking in
+        """Scope selection should work when clicking in
         the rectangle outside of the icon.
         """
-        app_icon = self.lensbar.get_icon_by_name(u'applications.lens')
+        app_icon = self.scopebar.get_icon_by_name(u'applications.scope')
 
         self.mouse.move(app_icon.x + (app_icon.width / 2),
                         app_icon.y + (app_icon.height / 2))
         self.mouse.click()
 
-        self.assertThat(self.lensbar.active_lens, Eventually(Equals('applications.lens')))
+        self.assertThat(self.scopebar.active_scope, Eventually(Equals('applications.scope')))
 
 
 class DashBorderTests(DashTestCase):
@@ -685,11 +685,11 @@ class CategoryHeaderTests(DashTestCase):
         """Clicking into a category highlight must expand/collapse
         the view.
         """
-        gettext.install("unity-lens-applications", unicode=True)
-        lens = self.dash.reveal_application_lens()
+        gettext.install("unity-scope-applications", unicode=True)
+        scope = self.dash.reveal_application_scope()
         self.addCleanup(self.dash.ensure_hidden)
 
-        category = lens.get_category_by_name(_("Installed"))
+        category = scope.get_category_by_name(_("Installed"))
         is_expanded = category.is_expanded
 
         self.mouse.move(self.dash.view.x + self.dash.view.width / 2,
@@ -704,18 +704,18 @@ class CategoryHeaderTests(DashTestCase):
 
 class PreviewInvocationTests(DashTestCase):
     """Tests that dash previews can be opened and closed in different
-    lenses.
+    scopes.
     """
-    def test_app_lens_preview_open_close(self):
-        """Right-clicking on an application lens result must show
+    def test_app_scope_preview_open_close(self):
+        """Right-clicking on an application scope result must show
         its preview.
 
         """
-        gettext.install("unity-lens-applications", unicode=True)
-        lens = self.dash.reveal_application_lens()
+        gettext.install("unity-scope-applications", unicode=True)
+        scope = self.dash.reveal_application_scope()
         self.addCleanup(self.dash.ensure_hidden)
 
-        category = lens.get_category_by_name(_("More suggestions"))
+        category = scope.get_category_by_name(_("More suggestions"))
         results = category.get_results()
         result = results[0]
         # result.preview handles finding xy co-ords and right mouse-click
@@ -726,15 +726,15 @@ class PreviewInvocationTests(DashTestCase):
 
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
-    def test_files_lens_preview_open_close(self):
-        """Right-clicking on a files lens result must show its
+    def test_files_scope_preview_open_close(self):
+        """Right-clicking on a files scope result must show its
         preview.
         """
-        gettext.install("unity-lens-files", unicode=True)
-        lens = self.dash.reveal_file_lens()
+        gettext.install("unity-scope-files", unicode=True)
+        scope = self.dash.reveal_file_scope()
         self.addCleanup(self.dash.ensure_hidden)
 
-        category = lens.get_category_by_name(_("Folders"))
+        category = scope.get_category_by_name(_("Folders"))
         results = category.get_results()
         result = results[0]
         # result.preview handles finding xy co-ords and right mouse-click
@@ -745,18 +745,18 @@ class PreviewInvocationTests(DashTestCase):
 
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
-    def test_music_lens_preview_open_close(self):
-        """Right-clicking on a music lens result must show its
+    def test_music_scope_preview_open_close(self):
+        """Right-clicking on a music scope result must show its
         preview.
         """
-        lens = self.dash.reveal_music_lens()
+        scope = self.dash.reveal_music_scope()
         self.addCleanup(self.dash.ensure_hidden)
 
-        category = lens.get_category_by_name("Songs")
+        category = scope.get_category_by_name("Songs")
         # Incase there was no music ever played we skip the test instead
         # of failing.
         if category is None or not category.is_visible:
-            self.skipTest("This lens is probably empty")
+            self.skipTest("This scope is probably empty")
 
         results = category.get_results()
 
@@ -769,28 +769,28 @@ class PreviewInvocationTests(DashTestCase):
 
         self.assertThat(self.dash.preview_displaying, Eventually(Equals(False)))
 
-    def test_video_lens_preview_open_close(self):
-        """Right-clicking on a video lens result must show its
+    def test_video_scope_preview_open_close(self):
+        """Right-clicking on a video scope result must show its
         preview.
         """
-        gettext.install("unity-lens-video", unicode=True)
+        gettext.install("unity-scope-video", unicode=True)
 
-        def get_category(lens):
-            category = lens.get_category_by_name(_("Recently Viewed"))
+        def get_category(scope):
+            category = scope.get_category_by_name(_("Recently Viewed"))
             # If there was no video played on this system this category is expected
             # to be empty, if its empty we check if the 'Online' category have any
             # contents, if not then we skip the test.
             if category is None or not category.is_visible:
-                category = lens.get_category_by_name("Online")
+                category = scope.get_category_by_name("Online")
                 if category is None or not category.is_visible:
                     return None
             return category
 
-        lens = self.dash.reveal_video_lens()
+        scope = self.dash.reveal_video_scope()
         self.addCleanup(self.dash.ensure_hidden)
 
-        self.assertThat(lambda: get_category(lens), Eventually(NotEquals(None)))
-        category = get_category(lens)
+        self.assertThat(lambda: get_category(scope), Eventually(NotEquals(None)))
+        category = get_category(scope)
 
         results = category.get_results()
 
@@ -807,11 +807,11 @@ class PreviewInvocationTests(DashTestCase):
         """Pressing menu key on a selected dash result must show
         its preview.
         """
-        gettext.install("unity-lens-applications", unicode=True)
-        lens = self.dash.reveal_application_lens()
+        gettext.install("unity-scope-applications", unicode=True)
+        scope = self.dash.reveal_application_scope()
         self.addCleanup(self.dash.ensure_hidden)
 
-        category = lens.get_category_by_name(_("More suggestions"))
+        category = scope.get_category_by_name(_("More suggestions"))
         results = category.get_results()
         result = results[0]
         # result.preview_key() handles finding xy co-ords and key press
@@ -824,12 +824,12 @@ class PreviewNavigateTests(DashTestCase):
 
     def setUp(self):
         super(PreviewNavigateTests, self).setUp()
-        gettext.install("unity-lens-applications", unicode=True)
+        gettext.install("unity-scope-applications", unicode=True)
 
-        lens = self.dash.reveal_application_lens()
+        scope = self.dash.reveal_application_scope()
         self.addCleanup(self.dash.ensure_hidden)
 
-        results_category = lens.get_category_by_name(_("More suggestions"))
+        results_category = scope.get_category_by_name(_("More suggestions"))
         # wait for results (we need 4 results to perorm the multi-navigation tests)
         refresh_fn = lambda: len(results_category.get_results())
         self.assertThat(refresh_fn, Eventually(GreaterThan(4)))
@@ -948,11 +948,11 @@ class PreviewClickCancelTests(DashTestCase):
 
     def setUp(self):
         super(PreviewClickCancelTests, self).setUp()
-        lens = self.dash.reveal_application_lens()
+        scope = self.dash.reveal_application_scope()
         self.addCleanup(self.dash.ensure_hidden)
         # Only testing an application preview for this test.
         self.keyboard.type("Software Updater")
-        results_category = lens.get_category_by_name(_("Installed"))
+        results_category = scope.get_category_by_name(_("Installed"))
         results = results_category.get_results()
 
         result = results[0]
