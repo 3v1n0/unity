@@ -38,6 +38,11 @@ Controller::Controller(session::Manager::Ptr const& manager)
   , bg_color_(0.0, 0.0, 0.0, 0.5)
   , fade_animator_(FADE_DURATION)
 {
+  manager_->logout_requested.connect(sigc::mem_fun(this, &Controller::Show));
+  manager_->reboot_requested.connect(sigc::mem_fun(this, &Controller::Show));
+  manager_->shutdown_requested.connect(sigc::mem_fun(this, &Controller::Show));
+  manager_->cancel_requested.connect(sigc::mem_fun(this, &Controller::Hide));
+
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
                                  sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
@@ -67,6 +72,9 @@ void Controller::OnBackgroundUpdate(GVariant* data)
 void Controller::Show()
 {
   EnsureView();
+
+  if (view_window_->GetOpacity() == 1.0f)
+    return;
 
   view_->SetupBackground(true);
 
@@ -122,11 +130,11 @@ void Controller::ConstructView()
   view_window_->SetBackgroundColor(nux::color::Transparent);
   view_window_->SetWindowSizeMatchLayout(true);
   view_window_->ShowWindow(false);
+  view_window_->SetOpacity(0.0f);
 
   view_->request_close.connect([this] {
     Hide();
     manager_->CancelAction();
-    manager_->ClosedDialog();
   });
 }
 
@@ -155,6 +163,7 @@ void Controller::CloseWindow()
   view_window_->ShowWindow(false);
   view_window_->EnableInputWindow(false);
   view_->SetupBackground(false);
+  manager_->ClosedDialog();
 }
 
 //
