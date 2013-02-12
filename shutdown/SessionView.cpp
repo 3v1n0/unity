@@ -40,23 +40,46 @@ public:
   ActionButton(std::string const& label, std::string const& texture_name, NUX_FILE_LINE_DECL)
     : nux::View(NUX_FILE_LINE_PARAM)
   {
+    std::string texture_prefix = PKGDATADIR"/" + texture_name;
+    normal_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + ".png").c_str(), -1, true));
+    highlight_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + "_highlight.png").c_str(), -1, true));
+
     auto main_layout = new nux::VLayout();
     main_layout->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
     main_layout->SetSpaceBetweenChildren(9);
 
-    auto image_view = new nux::TextureArea();
-    image_view->LoadImageFile(PKGDATADIR"/" + texture_name + ".png");
-    image_view->SetMinMaxSize(168, 168);
-    image_view->SetInputEventSensitivity(false);
-    main_layout->AddView(image_view, 1, nux::MINOR_POSITION_CENTER);
+    image_view_ = new nux::TextureArea();
+    image_view_->SetInputEventSensitivity(false);
+    SetHighlighted(false);
+    main_layout->AddView(image_view_, 1, nux::MINOR_POSITION_CENTER);
 
-    label_view_ = new StaticCairoText(label);
-    label_view_->SetFont("Ubuntu Light 12");
-    label_view_->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
-    label_view_->SetInputEventSensitivity(false);
-    main_layout->AddView(label_view_, 1, nux::MINOR_POSITION_CENTER);
+    auto label_view = new StaticCairoText(label);
+    label_view->SetFont("Ubuntu Light 12");
+    label_view->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
+    label_view->SetInputEventSensitivity(false);
+    main_layout->AddView(label_view, 1, nux::MINOR_POSITION_CENTER);
+
+    mouse_enter.connect([this] (int, int, unsigned long, unsigned long) {
+      SetHighlighted(true);
+    });
+
+    mouse_leave.connect([this] (int, int, unsigned long, unsigned long) {
+      SetHighlighted(false);
+    });
 
     SetLayout(main_layout);
+  }
+
+  void SetHighlighted(bool highlighted)
+  {
+    nux::BaseTexture *tex;
+    if (highlighted)
+      tex = highlight_tex_.GetPointer();
+    else
+      tex = normal_tex_.GetPointer();
+
+    image_view_->SetTexture(tex);
+    image_view_->SetMinMaxSize(tex->GetWidth(), tex->GetHeight());
   }
 
   void Draw(nux::GraphicsEngine& ctx, bool force)
@@ -64,7 +87,9 @@ public:
     GetLayout()->ProcessDraw(ctx, force);
   }
 
-  StaticCairoText* label_view_;
+  nux::ObjectPtr<nux::BaseTexture> normal_tex_;
+  nux::ObjectPtr<nux::BaseTexture> highlight_tex_;
+  nux::TextureArea* image_view_;
   nux::VLayout* layout_;
   std::string label_;
   std::string image_;
