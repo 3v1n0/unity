@@ -33,6 +33,18 @@ namespace unity
 namespace session
 {
 
+namespace theme
+{
+  const std::string FONT = "Ubuntu Light 12";
+  const unsigned LEFT_RIGHT_PADDING = 30;
+  const unsigned TOP_PADDING = 19;
+  const unsigned BOTTOM_PADDING = 12;
+
+  const unsigned MAIN_SPACE = 10;
+  const unsigned BUTTON_SPACE = 9;
+  const unsigned BUTTONS_SPACE = 20;
+}
+
 class ActionButton : public nux::View
 {
 public:
@@ -46,26 +58,20 @@ public:
 
     auto main_layout = new nux::VLayout();
     main_layout->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
-    main_layout->SetSpaceBetweenChildren(9);
+    main_layout->SetSpaceBetweenChildren(theme::BUTTON_SPACE);
 
     image_view_ = new nux::TextureArea();
     image_view_->SetInputEventSensitivity(false);
     main_layout->AddView(image_view_, 1, nux::MINOR_POSITION_CENTER);
 
     label_view_ = new StaticCairoText(label);
-    label_view_->SetFont("Ubuntu Light 12");
+    label_view_->SetFont(theme::FONT);
     label_view_->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
     label_view_->SetInputEventSensitivity(false);
     main_layout->AddView(label_view_, 1, nux::MINOR_POSITION_CENTER);
 
-    mouse_enter.connect([this] (int, int, unsigned long, unsigned long) {
-      SetHighlighted(true);
-    });
-
-    mouse_leave.connect([this] (int, int, unsigned long, unsigned long) {
-      SetHighlighted(false);
-    });
-
+    mouse_enter.connect([this] (int, int, unsigned long, unsigned long) { SetHighlighted(true); });
+    mouse_leave.connect([this] (int, int, unsigned long, unsigned long) { SetHighlighted(false); });
     mouse_click.connect([this] (int, int, unsigned long, unsigned long) { activated.emit(); });
 
     SetLayout(main_layout);
@@ -110,9 +116,9 @@ View::View(Manager::Ptr const& manager)
   closable = true;
   auto main_layout = new nux::VLayout();
   int offset = style()->GetInternalOffset();
-  main_layout->SetTopAndBottomPadding(offset + 19, offset + 12);
-  main_layout->SetLeftAndRightPadding(offset + 30);
-  main_layout->SetSpaceBetweenChildren(10);
+  main_layout->SetTopAndBottomPadding(offset + theme::TOP_PADDING, offset + theme::BOTTOM_PADDING);
+  main_layout->SetLeftAndRightPadding(offset + theme::LEFT_RIGHT_PADDING);
+  main_layout->SetSpaceBetweenChildren(theme::MAIN_SPACE);
   SetLayout(main_layout);
 
   auto header = glib::String(g_strdup_printf(_("Goodbye %s! Would you like to…"), manager->RealName().c_str())).Str();
@@ -122,7 +128,7 @@ View::View(Manager::Ptr const& manager)
   main_layout->AddView(header_view);
 
   buttons_layout_ = new nux::HLayout();
-  buttons_layout_->SetSpaceBetweenChildren(20);
+  buttons_layout_->SetSpaceBetweenChildren(theme::BUTTONS_SPACE);
   main_layout->AddLayout(buttons_layout_);
 
   auto button = new ActionButton(_("Lock"), "lockscreen", NUX_TRACKER_LOCATION);
