@@ -525,7 +525,7 @@ void Controller::Impl::OnLauncherEntryRemoteRemoved(LauncherEntryRemote::Ptr con
 
 void Controller::Impl::OnFavoriteStoreFavoriteAdded(std::string const& entry, std::string const& pos, bool before)
 {
-  if (entry == local::RUNNING_APPS_URI || entry == local::DEVICES_URI || entry == expo_icon_->RemoteUri())
+  if (entry == local::RUNNING_APPS_URI || entry == local::DEVICES_URI)
   {
     // Since the running apps and the devices are always shown, when added to
     // the model, we only have to re-order them
@@ -570,11 +570,12 @@ void Controller::Impl::OnFavoriteStoreFavoriteAdded(std::string const& entry, st
 
 void Controller::Impl::OnFavoriteStoreFavoriteRemoved(std::string const& entry)
 {
-  if (entry == local::RUNNING_APPS_URI || entry == local::DEVICES_URI || entry == expo_icon_->RemoteUri())
+  if (entry == local::RUNNING_APPS_URI || entry == local::DEVICES_URI)
   {
     // Since the running apps and the devices are always shown, when added to
     // the model, we only have to re-order them
     ResetIconPriorities();
+    SaveIconsOrder();
     return;
   }
 
@@ -595,7 +596,6 @@ void Controller::Impl::ResetIconPriorities()
   auto const& apps_icons = model_->GetSublist<ApplicationLauncherIcon>();
   auto const& volumes_icons = model_->GetSublist<VolumeLauncherIcon>();
   bool running_apps_found = false;
-  bool expo_icon_found = false;
   bool volumes_found = false;
 
   for (auto const& fav : favs)
@@ -622,10 +622,6 @@ void Controller::Impl::ResetIconPriorities()
       volumes_found = true;
       continue;
     }
-    else if (fav == expo_icon_->RemoteUri())
-    {
-      expo_icon_found = true;
-    }
 
     auto const& icon = GetIconByUri(fav);
 
@@ -642,9 +638,6 @@ void Controller::Impl::ResetIconPriorities()
     }
   }
 
-  if (!expo_icon_found)
-    expo_icon_->SetSortPriority(++sort_priority_);
-
   if (!volumes_found)
   {
     for (auto const& ico : volumes_icons)
@@ -655,9 +648,6 @@ void Controller::Impl::ResetIconPriorities()
   }
 
   model_->Sort();
-
-  if (!expo_icon_found)
-    SaveIconsOrder();
 }
 
 void Controller::Impl::UpdateNumWorkspaces(int workspaces)
@@ -825,8 +815,6 @@ AbstractLauncherIcon::Ptr Controller::Impl::CreateFavoriteIcon(std::string const
     if (!app || app->seen())
       return result;
 
-    // Sticky apps are those that are in the launcher when not running.
-    app->sticky = true;
     result = AbstractLauncherIcon::Ptr(new ApplicationLauncherIcon(app));
   }
   else if (icon_uri.find(FavoriteStore::URI_PREFIX_DEVICE) == 0)
@@ -923,12 +911,33 @@ void Controller::Impl::AddDevices()
   }
 }
 
+void Controller::Impl::MigrateFavorites()
+{
+  // This migrates favorites to new format, ensuring that upgrades won't lose anything
+  auto& favorites = FavoriteStore::Instance();
+  auto const& favs = favorites.GetFavorites();
+
+  auto fav_it = std::find_if(begin(favs), end(favs), [](std::string const& fav) {
+    return (fav.find(FavoriteStore::URI_PREFIX_UNITY) != std::string::npos);
+  });
+
+  if (fav_it == end(favs))
+  {
+    favorites.AddFavorite(local::RUNNING_APPS_URI, -1);
+    favorites.AddFavorite(expo_icon_->RemoteUri(), -1);
+    favorites.AddFavorite(local::DEVICES_URI, -1);
+  }
+}
+
 void Controller::Impl::SetupIcons()
 {
+  MigrateFavorites();
+
   auto& favorite_store = FavoriteStore::Instance();
   FavoriteList const& favs = favorite_store.GetFavorites();
   bool running_apps_added = false;
   bool devices_added = false;
+
   for (auto const& fav_uri : favs)
   {
     if (fav_uri == local::RUNNING_APPS_URI)
@@ -956,23 +965,15 @@ void Controller::Impl::SetupIcons()
     AddRunningApps();
   }
 
-  if (model_->IconIndex(expo_icon_) < 0)
-  {
-    LOG_INFO(logger) << "Adding expo icon";
-    RegisterIcon(CreateFavoriteIcon(expo_icon_->RemoteUri()), ++sort_priority_);
-  }
-
   if (!devices_added)
   {
     LOG_INFO(logger) << "Adding devices";
     AddDevices();
   }
 
-  if (std::find(favs.begin(), favs.end(), expo_icon_->RemoteUri()) == favs.end())
-    SaveIconsOrder();
-
   ApplicationManager::Default().application_started
     .connect(sigc::mem_fun(this, &Impl::OnApplicationStarted));
+
   device_section_.icon_added.connect(sigc::mem_fun(this, &Impl::OnDeviceIconAdded));
   favorite_store.favorite_added.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteAdded));
   favorite_store.favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
