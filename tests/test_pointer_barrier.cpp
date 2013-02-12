@@ -35,6 +35,21 @@ public:
   bool HandleEvent(XEvent ev) { return PointerBarrierWrapper::HandleEvent(ev); }
 };
 
+XFixesBarrierNotifyEvent GetGenericEvent (unsigned int id)
+{
+  XFixesBarrierNotifyEvent ev;
+
+  ev.type = XFixesBarrierNotify;
+  ev.subtype = XFixesBarrierHitNotify;
+  ev.barrier = 0;
+  ev.event_id = id;
+  ev.x = 555;
+  ev.y = 333;
+  ev.velocity = std::numeric_limits<int>::max();
+
+  return ev;
+}
+
 TEST(TestPointerBarrier, Construction)
 {
   PointerBarrierWrapper pb;
@@ -76,16 +91,8 @@ TEST(TestPointerBarrier, HandleInvalidEvents)
 TEST(TestPointerBarrier, HandleHitNotifyEvents)
 {
   MockPointerBarrier pb;
-  XFixesBarrierNotifyEvent ev;
+  XFixesBarrierNotifyEvent ev = GetGenericEvent(0xdeadbeef);
   auto xev = reinterpret_cast<XEvent*>(&ev);
-
-  ev.type = XFixesBarrierNotify;
-  ev.subtype = XFixesBarrierHitNotify;
-  ev.barrier = 0;
-  ev.event_id = 0xdeadbeef;
-  ev.x = 555;
-  ev.y = 333;
-  ev.velocity = std::numeric_limits<int>::max();
 
   bool got_event = false;
 
@@ -113,17 +120,8 @@ TEST(TestPointerBarrier, HandleHitNotifyEvents)
 TEST(TestPointerBarrier, HandleHitNotifyReleasedEvents)
 {
   MockPointerBarrier pb;
-  XFixesBarrierNotifyEvent ev;
+  XFixesBarrierNotifyEvent ev = GetGenericEvent(0xabba);
   auto xev = reinterpret_cast<XEvent*>(&ev);
-
-  ev.type = XFixesBarrierNotify;
-  ev.subtype = XFixesBarrierHitNotify;
-  ev.barrier = 0;
-  ev.event_id = 0xabba;
-  ev.x = 3333;
-  ev.y = 5555;
-  ev.velocity = std::numeric_limits<int>::max();
-
   bool got_event = false;
 
   pb.barrier_event.connect([&] (PointerBarrierWrapper* pbw, BarrierEvent::Ptr bev) {
@@ -144,16 +142,8 @@ TEST(TestPointerBarrier, HandleHitNotifyReleasedEvents)
 TEST(TestPointerBarrier, ReciveFirstEvent)
 {
   MockPointerBarrier pb;
-  XFixesBarrierNotifyEvent ev;
+  XFixesBarrierNotifyEvent ev = GetGenericEvent(0xabba);
   auto xev = reinterpret_cast<XEvent*>(&ev);
-
-  ev.type = XFixesBarrierNotify;
-  ev.subtype = XFixesBarrierHitNotify;
-  ev.barrier = 0;
-  ev.event_id = 0xabba;
-  ev.x = 3333;
-  ev.y = 5555;
-  ev.velocity = std::numeric_limits<int>::max();
 
   bool first_is_true = false;
 
@@ -168,17 +158,8 @@ TEST(TestPointerBarrier, ReciveFirstEvent)
 TEST(TestPointerBarrier, ReciveSecondEventFirstFalse)
 {
   MockPointerBarrier pb;
-  XFixesBarrierNotifyEvent ev;
+  XFixesBarrierNotifyEvent ev = GetGenericEvent(0xabba);
   auto xev = reinterpret_cast<XEvent*>(&ev);
-
-  ev.type = XFixesBarrierNotify;
-  ev.subtype = XFixesBarrierHitNotify;
-  ev.barrier = 0;
-  ev.event_id = 0xabba;
-  ev.x = 3333;
-  ev.y = 5555;
-  ev.velocity = std::numeric_limits<int>::max();
-
   int events_recived = 0;
 
   pb.barrier_event.connect([&] (PointerBarrierWrapper* pbw, BarrierEvent::Ptr bev) {
