@@ -296,7 +296,7 @@ void GnomeManager::Logout()
 {
   if (impl_->pending_action_ == shell::Action::LOGOUT)
   {
-    manager_->ConfirmLogout();
+    ConfirmLogout();
     return;
   }
   else if (impl_->pending_action_ != shell::Action::NONE)
@@ -328,7 +328,7 @@ void GnomeManager::Reboot()
 {
   if (impl_->pending_action_ == shell::Action::REBOOT)
   {
-    manager_->ConfirmReboot();
+    ConfirmReboot();
     return;
   }
   else if (impl_->pending_action_ != shell::Action::NONE)
@@ -354,7 +354,7 @@ void GnomeManager::Shutdown()
 {
   if (impl_->pending_action_ == shell::Action::SHUTDOWN)
   {
-    manager_->ConfirmShutdown();
+    ConfirmShutdown();
     return;
   }
   else if (impl_->pending_action_ != shell::Action::NONE)
