@@ -67,9 +67,29 @@ void UnityWindowView::OnClosableChanged(bool closable)
 
   auto const& texture = style()->GetCloseIcon();
   int padding = style()->GetCloseButtonPadding();
-  close_button_ = new IconTexture(texture.GetPointer());
+  close_button_ = new IconTexture(texture);
   close_button_->SetBaseXY(padding, padding);
   close_button_->SetParentObject(this);
+
+  close_button_->mouse_enter.connect([this](int, int, unsigned long, unsigned long) {
+    if (close_button_->IsMouseOwner())
+      close_button_->SetTexture(style()->GetCloseIconPressed());
+    else
+      close_button_->SetTexture(style()->GetCloseIconHighligted());
+  });
+
+  close_button_->mouse_leave.connect([this](int, int, unsigned long, unsigned long) {
+    close_button_->SetTexture(style()->GetCloseIcon());
+  });
+
+  close_button_->mouse_down.connect([this](int, int, unsigned long, unsigned long) {
+    close_button_->SetTexture(style()->GetCloseIconPressed());
+  });
+
+  close_button_->mouse_up.connect([this](int, int, unsigned long, unsigned long) {
+    bool inside = close_button_->IsMouseInside();
+    close_button_->SetTexture(inside ? style()->GetCloseIconHighligted() : style()->GetCloseIcon());
+  });
 
   close_button_->mouse_click.connect([this](int, int, unsigned long, unsigned long) {
     request_close.emit();
@@ -190,7 +210,7 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     nux::TexCoordXForm texxform;
     auto const& geo = close_button_->GetGeometry();
     GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
-                        style()->GetCloseIcon()->GetDeviceTexture(),
+                        close_button_->texture()->GetDeviceTexture(),
                         texxform, nux::color::White);
 
     GfxContext.GetRenderStates().SetBlend(false);
