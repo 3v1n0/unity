@@ -21,13 +21,12 @@
 #define UNITYWINDOWVIEW_H
 
 #include "unity-shared/BackgroundEffectHelper.h"
+#include "unity-shared/IconTexture.h"
 #include "Introspectable.h"
 #include "UnityWindowStyle.h"
 #include <sigc++/sigc++.h>
 
 #include <Nux/Nux.h>
-#include <Nux/TextureArea.h>
-#include <NuxCore/ObjectPtr.h>
 #include <NuxCore/Property.h>
 
 namespace unity {
@@ -42,7 +41,7 @@ public:
   nux::Property<bool> closable;
 
   UnityWindowView(NUX_FILE_LINE_PROTO);
-  virtual ~UnityWindowView() = default;
+  virtual ~UnityWindowView();
 
   void SetupBackground(bool enabled = true);
 
@@ -65,7 +64,7 @@ private:
   void DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo);
 
   BackgroundEffectHelper bg_helper_;
-  nux::ObjectPtr<nux::TextureArea> close_button_;
+  nux::ObjectPtr<IconTexture> close_button_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> bg_texture_;
 };
 
