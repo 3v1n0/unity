@@ -285,6 +285,9 @@ void IconTexture::SetOpacity(float opacity)
 
 void IconTexture::SetTexture(BaseTexturePtr const& texture)
 {
+  if (_texture_cached == texture)
+    return;
+
   _texture_cached = texture;
 
   if (texture)
@@ -294,6 +297,8 @@ void IconTexture::SetTexture(BaseTexturePtr const& texture)
     _size = _texture_size.height;
     SetMinMaxSize(_texture_size.width, _texture_size.height);
   }
+
+  texture_updated.emit(_texture_cached);
 }
 
 void IconTexture::SetTexture(nux::BaseTexture* texture)
