@@ -35,18 +35,23 @@ public:
   UnityWindowStyle();
 
   BaseTexturePtr GetCloseIcon();
+  BaseTexturePtr GetCloseIconHighligted();
+  BaseTexturePtr GetCloseIconPressed();
+  int GetCloseButtonPadding() const;
+
   BaseTexturePtr GetBackgroundTop() const;
   BaseTexturePtr GetBackgroundLeft() const;
   BaseTexturePtr GetBackgroundCorner() const;
   int GetBorderSize() const;
   int GetInternalOffset() const;
-  int GetCloseButtonPadding() const;
 
 private:
-  BaseTexturePtr close_icon_;
   BaseTexturePtr background_top_;
   BaseTexturePtr background_left_;
   BaseTexturePtr background_corner_;
+  BaseTexturePtr close_icon_;
+  BaseTexturePtr close_icon_highlighted_;
+  BaseTexturePtr close_icon_pressed_;
 };
 
 }

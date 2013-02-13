@@ -48,9 +48,25 @@ int UnityWindowStyle::GetCloseButtonPadding() const
 UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIcon()
 {
   if (!close_icon_)
-  	close_icon_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dialog_close.png", -1, true));
+    close_icon_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dialog_close.png", -1, true));
 
   return close_icon_;
+}
+
+UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIconHighligted()
+{
+  if (!close_icon_highlighted_)
+    close_icon_highlighted_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dialog_close_highlight.png", -1, true));
+
+  return close_icon_highlighted_;
+}
+
+UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIconPressed()
+{
+  if (!close_icon_pressed_)
+    close_icon_pressed_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dialog_close_press.png", -1, true));
+
+  return close_icon_pressed_;
 }
 
 UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetBackgroundTop() const

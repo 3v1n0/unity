@@ -31,9 +31,9 @@ DECLARE_LOGGER(logger, "unity.hud.icon");
 Icon::Icon()
   : IconTexture("", 0, true)
 {
-  texture_updated.connect([&] (nux::BaseTexture* texture)
+  texture_updated.connect([this] (nux::ObjectPtr<nux::BaseTexture> const& texture)
   {
-    icon_texture_source_ = new HudIconTextureSource(nux::ObjectPtr<nux::BaseTexture>(texture));
+    icon_texture_source_ = new HudIconTextureSource(texture);
     icon_texture_source_->ColorForIcon(_pixbuf_cached);
     QueueDraw();
     LOG_DEBUG(logger) << "got our texture";
