@@ -181,6 +181,11 @@ void Controller::CloseWindow()
   WindowManager::Default().RestoreInputFocus();
 }
 
+bool Controller::Visible() const
+{
+  return (view_window_ && view_window_->IsVisible());
+}
+
 //
 // Introspection
 //
@@ -192,7 +197,7 @@ std::string Controller::GetName() const
 void Controller::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder)
-  .add("visible", (view_window_ && view_window_->GetOpacity() == 1.0f));
+  .add("visible", Visible());
 }
 
 } // namespace session
