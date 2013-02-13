@@ -191,7 +191,7 @@ nux::Geometry View::GetBackgroundGeometry()
   return GetGeometry();
 }
 
-void View::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry clip)
+void View::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip)
 {
   view_layout_->ProcessDraw(GfxContext, force_draw);
 }
