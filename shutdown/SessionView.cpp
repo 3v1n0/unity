@@ -60,7 +60,7 @@ public:
     main_layout->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
     main_layout->SetSpaceBetweenChildren(theme::BUTTON_SPACE);
 
-    image_view_ = new nux::TextureArea();
+    image_view_ = new IconTexture(normal_tex_.GetPointer());
     image_view_->SetInputEventSensitivity(false);
     main_layout->AddView(image_view_, 1, nux::MINOR_POSITION_CENTER);
 
@@ -75,7 +75,6 @@ public:
     mouse_click.connect([this] (int, int, unsigned long, unsigned long) { activated.emit(); });
 
     SetLayout(main_layout);
-    SetHighlighted(false);
   }
 
   void SetHighlighted(bool highlighted)
@@ -101,7 +100,7 @@ public:
 
   nux::ObjectPtr<nux::BaseTexture> normal_tex_;
   nux::ObjectPtr<nux::BaseTexture> highlight_tex_;
-  nux::TextureArea* image_view_;
+  IconTexture* image_view_;
   StaticCairoText* label_view_;
   nux::VLayout* layout_;
   std::string label_;
