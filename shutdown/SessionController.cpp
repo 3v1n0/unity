@@ -77,8 +77,6 @@ void Controller::Show()
   if (view_window_->GetOpacity() == 1.0f)
     return;
 
-  view_->SetupBackground(true);
-
   int monitor = UScreen::GetDefault()->GetMonitorWithMouse();
   auto const& offset = GetOffsetPerMonitor(monitor);
   view_window_->SetXY(offset.x, offset.y);
@@ -92,6 +90,7 @@ void Controller::Show()
     view_window_->GrabKeyboard();
   }
 
+  view_->SetupBackground(true);
   view_window_->ShowWindow(true);
   view_window_->PushToFront();
   view_window_->SetInputFocus();

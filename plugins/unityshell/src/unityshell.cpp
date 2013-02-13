@@ -25,8 +25,9 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
 
-#include <UnityCore/Variant.h>
 #include <UnityCore/Lens.h>
+#include <UnityCore/GnomeSessionManager.h>
+#include <UnityCore/Variant.h>
 
 #include "BaseWindowRaiserImp.h"
 #include "IconRenderer.h"
@@ -3229,6 +3230,11 @@ void UnityScreen::initLauncher()
   auto shortcuts_modeller = std::make_shared<shortcut::CompizModeller>();
   shortcut_controller_ = std::make_shared<shortcut::Controller>(base_window_raiser, shortcuts_modeller);
   AddChild(shortcut_controller_.get());
+
+  // Setup Session Controller
+  auto manager = std::make_shared<session::GnomeManager>();
+  session_controller_ = std::make_shared<session::Controller>(manager);
+  AddChild(session_controller_.get());
 
   launcher_controller_->launcher().size_changed.connect([this] (nux::Area*, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right margin
