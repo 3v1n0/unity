@@ -93,11 +93,12 @@ void UnityWindowView::OnClosableChanged(bool closable)
     close_button_->SetTexture(inside ? style()->GetCloseIconHighligted() : style()->GetCloseIcon());
   });
 
-  close_button_->texture_updated.connect(sigc::hide(sigc::mem_fun(this, &UnityWindowView::QueueDraw)));
-
   close_button_->mouse_click.connect([this](int, int, unsigned long, unsigned long) {
+    close_button_->SetTexture(style()->GetCloseIcon());
     request_close.emit();
   });
+
+  close_button_->texture_updated.connect(sigc::hide(sigc::mem_fun(this, &UnityWindowView::QueueDraw)));
 }
 
 void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
