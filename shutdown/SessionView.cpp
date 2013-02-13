@@ -79,15 +79,7 @@ public:
 
   void SetHighlighted(bool highlighted)
   {
-    nux::BaseTexture *tex;
-    if (highlighted)
-      tex = highlight_tex_.GetPointer();
-    else
-      tex = normal_tex_.GetPointer();
-
-    image_view_->SetTexture(tex);
-    image_view_->SetMinMaxSize(tex->GetWidth(), tex->GetHeight());
-
+    image_view_->SetTexture(highlighted ? highlight_tex_ : normal_tex_);
     label_view_->SetTextColor(highlighted ? nux::color::White : nux::color::Transparent);
   }
 
