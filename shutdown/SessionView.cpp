@@ -32,6 +32,7 @@ namespace unity
 {
 namespace session
 {
+//"Hi %s, you have open files that you might want to save before shutting down. Would you like to…";
 
 namespace theme
 {
@@ -48,7 +49,6 @@ namespace theme
 class ActionButton : public nux::View
 {
 public:
-
   ActionButton(std::string const& label, std::string const& texture_name, NUX_FILE_LINE_DECL)
     : nux::View(NUX_FILE_LINE_PARAM)
   {
@@ -60,7 +60,7 @@ public:
     main_layout->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
     main_layout->SetSpaceBetweenChildren(theme::BUTTON_SPACE);
 
-    image_view_ = new IconTexture(normal_tex_.GetPointer());
+    image_view_ = new IconTexture(normal_tex_);
     image_view_->SetInputEventSensitivity(false);
     main_layout->AddView(image_view_, 1, nux::MINOR_POSITION_CENTER);
 
@@ -90,13 +90,11 @@ public:
 
   sigc::signal<void> activated;
 
-  nux::ObjectPtr<nux::BaseTexture> normal_tex_;
-  nux::ObjectPtr<nux::BaseTexture> highlight_tex_;
+private:
   IconTexture* image_view_;
   StaticCairoText* label_view_;
-  nux::VLayout* layout_;
-  std::string label_;
-  std::string image_;
+  nux::ObjectPtr<nux::BaseTexture> normal_tex_;
+  nux::ObjectPtr<nux::BaseTexture> highlight_tex_;
 };
 
 NUX_IMPLEMENT_OBJECT_TYPE(View);
@@ -127,15 +125,21 @@ View::View(Manager::Ptr const& manager)
   button->activated.connect([this] {request_hide.emit();});
   buttons_layout_->AddView(button);
 
-  button = new ActionButton(_("Suspend"), "suspend", NUX_TRACKER_LOCATION);
-  button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Suspend));
-  button->activated.connect([this] {request_hide.emit();});
-  buttons_layout_->AddView(button);
+  if (manager_->CanSuspend())
+  {
+    button = new ActionButton(_("Suspend"), "suspend", NUX_TRACKER_LOCATION);
+    button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Suspend));
+    button->activated.connect([this] {request_hide.emit();});
+    buttons_layout_->AddView(button);
+  }
 
-  button = new ActionButton(_("Hibernate"), "hibernate", NUX_TRACKER_LOCATION);
-  button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Hibernate));
-  button->activated.connect([this] {request_hide.emit();});
-  buttons_layout_->AddView(button);
+  if (manager_->CanHibernate())
+  {
+    button = new ActionButton(_("Hibernate"), "hibernate", NUX_TRACKER_LOCATION);
+    button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Hibernate));
+    button->activated.connect([this] {request_hide.emit();});
+    buttons_layout_->AddView(button);
+  }
 
   button = new ActionButton(_("Shutdown"), "shutdown", NUX_TRACKER_LOCATION);
   button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Shutdown));
