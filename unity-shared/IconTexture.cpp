@@ -288,6 +288,14 @@ void IconTexture::SetOpacity(float opacity)
 void IconTexture::SetTexture(nux::BaseTexture* texture)
 {
   _texture_cached = texture;
+
+  if (texture)
+  {
+    _texture_size.width = texture->GetWidth();
+    _texture_size.height = texture->GetHeight();
+    _size = _texture_size.height;
+    SetMinMaxSize(_texture_size.width, _texture_size.height);
+  }
 }
 
 nux::BaseTexture* IconTexture::texture()
