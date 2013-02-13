@@ -452,7 +452,6 @@ void Controller::Impl::HideWindow()
   view_window_->SetOpacity(0.0f);
   view_window_->ShowWindow(false);
   view_window_->PushToBack();
-  view_window_->EnableInputWindow(false);
 
   model_.reset();
   view_.Release();

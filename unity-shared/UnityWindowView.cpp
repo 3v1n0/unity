@@ -36,10 +36,16 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
   closable.changed.connect(sigc::mem_fun(this, &UnityWindowView::OnClosableChanged));
 }
 
+UnityWindowView::~UnityWindowView()
+{
+  if (close_button_)
+    close_button_->UnParentObject();
+}
+
 nux::Area*
 UnityWindowView::FindAreaUnderMouse(const nux::Point& mouse, nux::NuxEventType etype)
 {
-  if (close_button_ && close_button_->GetAbsoluteGeometry().IsPointInside(mouse.x, mouse.y))
+  if (close_button_ && close_button_->TestMousePointerInclusionFilterMouseWheel(mouse, etype))
     return close_button_.GetPointer();
 
   return nux::View::FindAreaUnderMouse(mouse, etype);
@@ -61,10 +67,9 @@ void UnityWindowView::OnClosableChanged(bool closable)
 
   auto const& texture = style()->GetCloseIcon();
   int padding = style()->GetCloseButtonPadding();
-  close_button_ = new nux::TextureArea();
-  close_button_->SetTexture(texture.GetPointer());
-  close_button_->SetSize(texture->GetWidth(), texture->GetHeight());
+  close_button_ = new IconTexture(texture.GetPointer());
   close_button_->SetBaseXY(padding, padding);
+  close_button_->SetParentObject(this);
 
   close_button_->mouse_click.connect([this](int, int, unsigned long, unsigned long) {
     request_close.emit();
@@ -75,7 +80,7 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   PreDraw(GfxContext, force_draw);
 
-  nux::Geometry base = GetGeometry();
+  nux::Geometry const& base = GetGeometry();
   GfxContext.PushClippingRectangle(base);
 
   // clear region
@@ -88,6 +93,7 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                               background_geo.y + internal_offset,
                               background_geo.width - internal_offset * 2,
                               background_geo.height - internal_offset * 2);
+
   GfxContext.PushClippingRectangle(internal_clip);
 
   nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
@@ -175,7 +181,19 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (close_button_)
   {
     nux::GetPainter().PushPaintLayerStack();
-    close_button_->ProcessDraw(GfxContext, force_draw);
+    GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Just doing ProcessDraw on the area should be enough, but unfortunately
+    // this leads to a flickering close icon that is randomly drawn.
+    // close_button_->ProcessDraw(GfxContext, force_draw);
+
+    nux::TexCoordXForm texxform;
+    auto const& geo = close_button_->GetGeometry();
+    GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
+                        style()->GetCloseIcon()->GetDeviceTexture(),
+                        texxform, nux::color::White);
+
+    GfxContext.GetRenderStates().SetBlend(false);
     nux::GetPainter().PopPaintLayerStack();
   }
 }
@@ -184,7 +202,7 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
 {
   int border = style()->GetBorderSize();
 
-  GfxContext.GetRenderStates().SetBlend (TRUE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+  GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
   nux::TexCoordXForm texxform;
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
@@ -271,7 +289,7 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   texxform.flip_v_coord = false;
   GfxContext.QRP_1Tex (geo.x + geo.width - border, geo.y + border, border, geo.height - border - border, style()->GetBackgroundLeft()->GetDeviceTexture(), texxform, nux::color::White);
 
-  GfxContext.GetRenderStates().SetBlend (FALSE);
+  GfxContext.GetRenderStates().SetBlend(false);
 }
 
 // Introspectable methods

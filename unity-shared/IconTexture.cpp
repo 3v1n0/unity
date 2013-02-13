@@ -43,6 +43,20 @@ const char* const DEFAULT_ICON = "text-x-preview";
 
 using namespace unity;
 
+IconTexture::IconTexture(nux::BaseTexture* texture)
+  : TextureArea(NUX_TRACKER_LOCATION),
+    _accept_key_nav_focus(false),
+    _size(texture ? texture->GetHeight() : 0),
+    _texture_cached(texture),
+    _texture_size(texture ? texture->GetWidth() : 0, texture ? texture->GetHeight() : 0),
+    _loading(false),
+    _opacity(1.0f),
+    _handle(0),
+    _draw_mode(DrawMode::NORMAL)
+{
+  SetMinMaxSize(_texture_size.width, _texture_size.height);
+}
+
 IconTexture::IconTexture(nux::BaseTexture* texture, guint width, guint height)
   : TextureArea(NUX_TRACKER_LOCATION),
     _accept_key_nav_focus(false),
@@ -274,6 +288,14 @@ void IconTexture::SetOpacity(float opacity)
 void IconTexture::SetTexture(nux::BaseTexture* texture)
 {
   _texture_cached = texture;
+
+  if (texture)
+  {
+    _texture_size.width = texture->GetWidth();
+    _texture_size.height = texture->GetHeight();
+    _size = _texture_size.height;
+    SetMinMaxSize(_texture_size.width, _texture_size.height);
+  }
 }
 
 nux::BaseTexture* IconTexture::texture()

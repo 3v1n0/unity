@@ -79,7 +79,7 @@ protected:
   void AddProperties(GVariantBuilder* builder);
 
   void PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry clip);
+  void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip);
   nux::Geometry GetBackgroundGeometry();
 
   ui::RenderArg InterpolateRenderArgs(ui::RenderArg const& start, ui::RenderArg const& end, float progress);

@@ -42,7 +42,7 @@ public:
   sigc::signal<void> request_hide;
 
 protected:
-  void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry clip);
+  void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip);
   nux::Geometry GetBackgroundGeometry();
 
   // Introspectable methods
