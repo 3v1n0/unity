@@ -24,7 +24,6 @@
 #include <Nux/NuxTimerTickSource.h>
 #include <Nux/WindowThread.h>
 #include <NuxCore/AnimationController.h>
-#include <UnityCore/SessionManager.h>
 
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "SessionController.h"
@@ -40,6 +39,7 @@ public:
   std::string RealName() const { return "Marco Trevisan"; }
   std::string UserName() const { return "marco"; }
 
+  void LockScreen() { std::cout << "LockScreen" << std::endl; }
   void Logout() { std::cout << "Logout" << std::endl; }
   void Reboot() { std::cout << "Reboot" << std::endl; }
   void Shutdown() { std::cout << "Shutdown" << std::endl; }
@@ -107,7 +107,7 @@ void SessionWindow::Init()
   BackgroundEffectHelper::blur_type = BLUR_NONE;
   auto manager = std::make_shared<MockSessionManager>();
   controller = std::make_shared<session::StandaloneController>(manager);
-  controller->Show();
+  manager->shutdown_requested.emit();
 }
 
 int main(int argc, char** argv)
