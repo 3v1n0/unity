@@ -76,6 +76,8 @@ void UnityWindowView::OnClosableChanged(bool closable)
       close_button_->SetTexture(style()->GetCloseIconPressed());
     else
       close_button_->SetTexture(style()->GetCloseIconHighligted());
+
+     close_button_->QueueDraw();
   });
 
   close_button_->mouse_leave.connect([this](int, int, unsigned long, unsigned long) {
@@ -90,6 +92,8 @@ void UnityWindowView::OnClosableChanged(bool closable)
     bool inside = close_button_->IsMouseInside();
     close_button_->SetTexture(inside ? style()->GetCloseIconHighligted() : style()->GetCloseIcon());
   });
+
+  close_button_->texture_updated.connect(sigc::hide(sigc::mem_fun(this, &UnityWindowView::QueueDraw)));
 
   close_button_->mouse_click.connect([this](int, int, unsigned long, unsigned long) {
     request_close.emit();
