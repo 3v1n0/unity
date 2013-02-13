@@ -43,6 +43,10 @@ const gchar* icons[] = {  "gtk-cdrom",
                           "gtk-dialog-error",
                           "gtk-dialog-info" };
 
+const gchar* category_titles[] = { "cat0",
+                                   "cat1",
+                                   "cat2" };
+
 struct _ServiceScopePrivate
 {
   TestScope* scope;
@@ -101,26 +105,23 @@ add_categories(ServiceScope* self)
 
   categories = unity_category_set_new();
 
-  icon = g_themed_icon_new("gtk-apply");
-  cateogry = unity_category_new("cat1", "Cateogry 1", icon,
-                                                 UNITY_CATEGORY_RENDERER_VERTICAL_TILE);
-  unity_category_set_add(categories, cateogry);
-  g_object_unref (cateogry);
-  g_object_unref (icon);
-  
-  icon = g_themed_icon_new("gtk-cancel");
-  cateogry = unity_category_new("cat2", "Category 2", icon,
-                                                 UNITY_CATEGORY_RENDERER_HORIZONTAL_TILE);
-  unity_category_set_add(categories, cateogry);
-  g_object_unref (cateogry);
-  g_object_unref (icon);
+  int i = 0;
+  int sizeof_categories = sizeof(category_titles) / sizeof(gchar*);
+  int sizeof_icons = sizeof(icons) / sizeof(gchar*);
 
-  icon = g_themed_icon_new("gtk-close");
-  cateogry = unity_category_new("cat3", "Category 3", icon,
-                                                 UNITY_CATEGORY_RENDERER_FLOW);
-  unity_category_set_add(categories, cateogry);
-  g_object_unref (cateogry);
-  g_object_unref (icon);
+  for (i = 0; i < sizeof_categories; i++)
+  {
+    gchar* title = g_strdup_printf("Category %d", i);
+
+    icon = g_themed_icon_new(icons[i % sizeof_icons]);
+    cateogry = unity_category_new(category_titles[i], title, icon,
+                                                   UNITY_CATEGORY_RENDERER_VERTICAL_TILE);
+    unity_category_set_add(categories, cateogry);
+    g_object_unref (cateogry);
+    g_object_unref (icon);
+
+    g_free(title);
+  }
 
   test_scope_set_categories(self->priv->scope, categories);
   g_object_unref (categories);
@@ -135,6 +136,29 @@ add_filters(ServiceScope *self)
 
   filters = unity_filter_set_new();
 
+  // Check option filter - Categories
+  filter = UNITY_FILTER (unity_check_option_filter_new("categories", "Categories",
+                                                       NULL, FALSE));
+
+  int i = 0;
+  int sizeof_categories = sizeof(category_titles) / sizeof(gchar*);
+  int sizeof_icons = sizeof(icons) / sizeof(gchar*);
+
+  for (i = 0; i < sizeof_categories; i++)
+  {
+    gchar* title = g_strdup_printf("Category %d", i);
+
+    icon = g_themed_icon_new(icons[i % sizeof_icons]);
+    unity_options_filter_add_option(UNITY_OPTIONS_FILTER (filter),
+                                    category_titles[i], title, icon);
+    g_object_unref (icon);
+    g_free(title);
+  }
+
+  unity_filter_set_add (filters, filter);
+  g_object_unref(filter);
+
+  // Radio optoin filter
   filter = UNITY_FILTER (unity_radio_option_filter_new("when", "When",
                                                        NULL, FALSE));
   unity_options_filter_add_option(UNITY_OPTIONS_FILTER (filter),
@@ -146,24 +170,7 @@ add_filters(ServiceScope *self)
   unity_filter_set_add (filters, filter);
   g_object_unref(filter);
 
-  filter = UNITY_FILTER (unity_check_option_filter_new("type", "Type",
-                                                       NULL, FALSE));
-  icon = g_themed_icon_new ("gtk-apps");
-  unity_options_filter_add_option(UNITY_OPTIONS_FILTER (filter),
-                                  "apps", "Apps", icon);
-  g_object_unref (icon);
-  icon = g_themed_icon_new ("gtk-files");
-  unity_options_filter_add_option(UNITY_OPTIONS_FILTER (filter),
-                                  "files", "Files", icon);
-  g_object_unref (icon);
-  icon = g_themed_icon_new ("gtk-music");
-  unity_options_filter_add_option(UNITY_OPTIONS_FILTER (filter),
-                                  "music", "Music", icon);
-  g_object_unref (icon);
-  unity_filter_set_add (filters, filter);
-  g_object_unref(filter);
-
-
+  // Rating filter
   filter = UNITY_FILTER (unity_ratings_filter_new("ratings",
                                     "Ratings",
                                     NULL,
@@ -171,6 +178,7 @@ add_filters(ServiceScope *self)
   unity_filter_set_add (filters, filter);
   g_object_unref(filter);
 
+  // Range filter
   filter = UNITY_FILTER (unity_multi_range_filter_new("size", "Size", NULL, TRUE));
   unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filter), "1MB", "1MB", NULL);
   unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filter), "10MB", "10MB", NULL);
@@ -204,35 +212,44 @@ static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_base
   int num_items = 0;
   gchar* search_title = g_strdup(search_ctx->search_query);
 
-
   if (g_strcmp0(search_title, "") == 0)
   {
-    g_free(search_title);
-    search_title = g_strdup("Title");    
     num_items = 64;
   }
-  else if (sscanf(search_ctx->search_query, "%d:%s", &num_items, search_title) != 2)
+  else if (sscanf(search_title, "%d:%s", &num_items, search_title) != 2)
   {
-    g_free(search_title);
-    search_title = g_strdup(search_ctx->search_query);
     num_items = 64;
   }
-
-  printf("result count %d %s\n", num_items, search_title);
-
-  printf("search string: %d %s\n", (int)search_title, search_title);
+  g_free(search_title);
 
   UnityScopeResult result;
   int i;
+
+  int sizeof_categories = sizeof(category_titles) / sizeof(gchar*);
+  int sizeof_icons = sizeof(icons) / sizeof(gchar*);
+
+  UnityOptionsFilter* options_filter = UNITY_OPTIONS_FILTER (unity_filter_set_get_filter_by_id(search_ctx->filter_state, "categories"));
+
   for (i = 0; i < num_items; i++)
   {
     memset (&result, 0, sizeof (UnityScopeResult));
 
+    int category = i % 3;//sizeof_categories;
+    const gchar* category_id = category_titles[category];
+
+    if (options_filter && unity_filter_get_filtering(UNITY_FILTER (options_filter)))
+    {
+      UnityFilterOption* filter_option = unity_options_filter_get_option(options_filter, category_id);
+
+      if (filter_option && !unity_filter_option_get_active(filter_option))
+        continue;
+    }
+
     result.uri          = g_strdup_printf("test://uri.%d", i);
-    result.title        = g_strdup_printf("%s.%d", search_title, i);
-    result.icon_hint    = g_strdup(icons[i%10]);
+    result.title        = g_strdup_printf("%s.%d", "category_id", i);
+    result.icon_hint    = g_strdup(icons[i % 10]);
     result.result_type  = UNITY_RESULT_TYPE_DEFAULT;
-    result.category     = (guint) (i%3),         // 3 categoies
+    result.category     = (guint) (category),         // 3 categoies
     result.mimetype     = g_strdup("inode/folder");
     result.comment      = g_strdup_printf("Comment %d", i);
     result.dnd_uri      = g_strdup_printf("test://dnd_uri.%d", i);
@@ -246,8 +263,6 @@ static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_base
     
     unity_scope_result_destroy (&result);
   }
-
-  g_free(search_title);
 }
 
 ServiceScope* service_scope_new()

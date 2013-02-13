@@ -189,7 +189,6 @@ static void test_searcher_run (UnityScopeSearchBase* base)
   TestSearcher* self;
   self = TEST_SCOPE_SEARCHER (base);
 
-  printf("running search\n");
   g_signal_emit_by_name (self->priv->_owner, "search", base);
 }
 
@@ -307,7 +306,6 @@ static UnityScopeSearchBase* test_scope_create_search_for_query(UnityAbstractSco
 
   UnitySearchContext ctx;
   ctx = *search_context;
-  printf("new search\n");
   unity_scope_search_base_set_search_context (searcher, &ctx);
   return searcher;
 }

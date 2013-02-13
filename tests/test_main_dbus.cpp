@@ -8,7 +8,7 @@
 static bool wait_until_test_service_appears();
 static void tell_service_to_exit();
 
-#define EXIT_ON_COMPLETE 0
+#define EXIT_ON_COMPLETE 1
 
 int main(int argc, char** argv)
 {
@@ -77,7 +77,7 @@ static bool wait_until_test_service_appears()
 
 static void tell_service_to_exit()
 {
-#if EXIT_ON_COMPLETE == 1
+#if EXIT_ON_COMPLETE != 0
   // Ask the service to exit
   GDBusConnection* connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
   g_dbus_connection_call_sync(connection,

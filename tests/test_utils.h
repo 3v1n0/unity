@@ -17,20 +17,13 @@ public:
   static void WaitForModelSynchronize(Model<Adaptor>& model, unsigned int n_rows)
   {
     bool timeout_reached = false;
-
-    auto timeout_cb = [](gpointer data) -> gboolean
-    {
-      *(bool*)data = true;
-      return FALSE;
-    };
-
-    guint32 timeout_id = g_timeout_add(10000, timeout_cb, &timeout_reached);
+    guint32 timeout_id = ScheduleTimeout(&timeout_reached, 10000);
 
     while (model.count != n_rows && !timeout_reached)
     {
       g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
     }
-    if (model.count == n_rows)
+    if (!timeout_reached)
       g_source_remove(timeout_id);
   }
 
@@ -42,7 +35,7 @@ public:
     while (!success && !timeout_reached)
       g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
 
-    if (success)
+    if (!timeout_reached)
       g_source_remove(timeout_id);
 
     EXPECT_TRUE(success);
@@ -58,19 +51,20 @@ public:
     bool timeout_reached = false;
     guint32 timeout_id = ScheduleTimeout(&timeout_reached, max_wait);
 
-    while (!check_function() && !timeout_reached)
+    bool check_function_result = false;
+    while (!(check_function_result=check_function()) && !timeout_reached)
       g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
 
-    if (check_function())
+    if (!timeout_reached)
       g_source_remove(timeout_id);
 
     if (error)
     {
-      EXPECT_EQ(check_function(), result) << "Error: " << error;
+      EXPECT_EQ(check_function_result, result) << "Error: " << error;
     }
     else
     {
-      EXPECT_EQ(check_function(), result);
+      EXPECT_EQ(check_function_result, result);
     }
   }
 
@@ -92,12 +86,10 @@ public:
   static void WaitForTimeoutMSec(unsigned int timeout_duration = 10)
   {
     bool timeout_reached = false;
-    guint32 timeout_id = ScheduleTimeout(&timeout_reached, timeout_duration);
+    ScheduleTimeout(&timeout_reached, timeout_duration);
 
     while (!timeout_reached)
       g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
-
-    g_source_remove(timeout_id);
   }
 
 private:
