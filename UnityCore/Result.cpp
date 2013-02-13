@@ -194,7 +194,7 @@ LocalResult LocalResult::FromVariant(glib::Variant const& v)
   while (g_variant_iter_loop(var_iter, "v", &value))
   {
     vars.push_back(value);
-    switch (i)
+    switch (i++)
     {
       case URI:
         result.uri = g_variant_get_string(value, NULL);
