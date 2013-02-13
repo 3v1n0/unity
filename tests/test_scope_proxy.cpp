@@ -57,7 +57,7 @@ public:
     Utils::WaitUntilMSec([this] { return scope_proxy_->connected == true; },
                          true,
                          2000,
-                         glib::String(g_strdup("Could not connect to proxy")));
+                         [] { return g_strdup("Could not connect to proxy"); });
   }
 
   ScopeProxyInterface::Ptr scope_proxy_;
@@ -80,7 +80,7 @@ TEST_F(TestScopeProxy, TestFilterSync)
   Utils::WaitUntilMSec([filters] { return filters->count() > 0; },
                        true,
                        3000,
-                       glib::String(g_strdup("Filters coutn = 0")));
+                       [] { return g_strdup("Filters coutn = 0"); });
 
   FilterAdaptor adaptor = filters->RowAtIndex(0);
 
@@ -101,7 +101,7 @@ TEST_F(TestScopeProxy, TestCategorySync)
   Utils::WaitUntilMSec([categories] { return categories->count() > 0; },
                        true,
                        3000,
-                       glib::String(g_strdup("Cateogry count = 0")));
+                       [] { return g_strdup("Cateogry count = 0"); });
 }
 
 TEST_F(TestScopeProxy, TestSearch)
@@ -121,7 +121,7 @@ TEST_F(TestScopeProxy, TestSearch)
   Utils::WaitUntilMSec([&, results] { return search_finished == true && results->count() == 12; },
                        true,
                        2000,
-                       glib::String(g_strdup_printf("Either search didn't finish, or result count is not as expected (%u != 12).", static_cast<unsigned>(results->count()))));
+                       [results] { return g_strdup_printf("Either search didn't finish, or result count is not as expected (%u != 12).", static_cast<unsigned>(results->count())); });
   EXPECT_TRUE(search_ok == true);
 }
 
@@ -144,7 +144,7 @@ TEST_F(TestScopeProxy, TestMultiSearch)
   Utils::WaitUntilMSec([&, results] { return search_finished == true && results->count() == 12; },
                        true,
                        2000,
-                       glib::String(g_strdup_printf("First search. Either search didn't finish, or result count is not as expected (%u != 12).", static_cast<int>(results->count()))));
+                       [results] { return g_strdup_printf("First search. Either search didn't finish, or result count is not as expected (%u != 12).", static_cast<int>(results->count())); });
   EXPECT_TRUE(search_ok == true);
 
   // Second Search
@@ -155,7 +155,7 @@ TEST_F(TestScopeProxy, TestMultiSearch)
   Utils::WaitUntilMSec([&search_finished, results] { return search_finished == true && results->count() == 5; },
                        true,
                        2000,
-                       glib::String(g_strdup_printf("Second search. Either search didn't finish, or result count is not as expected (%u != 5).", static_cast<unsigned>(results->count()))));
+                       [results] { return g_strdup_printf("Second search. Either search didn't finish, or result count is not as expected (%u != 5).", static_cast<unsigned>(results->count())); });
   EXPECT_TRUE(search_ok == true);
 }
 
@@ -169,7 +169,7 @@ TEST_F(TestScopeProxy, TestSearchCategories)
   Utils::WaitUntilMSec([results] { return results->count() == 12; },
                        true,
                        2000,
-                       glib::String(g_strdup_printf("Result count is not as expected (%u != 12).", static_cast<unsigned>(results->count()))));
+                       [results] { return g_strdup_printf("Result count is not as expected (%u != 12).", static_cast<unsigned>(results->count())); });
 
   Results::Ptr category_model0 = scope_proxy_->GetResultsForCategory(0);
   Results::Ptr category_model1 = scope_proxy_->GetResultsForCategory(1);
@@ -203,7 +203,7 @@ TEST_F(TestScopeProxy, TestActivateUri)
 
   Utils::WaitUntilMSec(activated_return,
                        2000,
-                       glib::String(g_strdup("Failed to activate")));
+                       [] { return g_strdup("Failed to activate"); });
 }
 
 TEST_F(TestScopeProxy, TestPreview)
@@ -228,7 +228,7 @@ TEST_F(TestScopeProxy, TestPreview)
 
   Utils::WaitUntilMSec(prevew_returned,
                        2000,
-                       glib::String(g_strdup("Failed to preview")));
+                       [] { return g_strdup("Failed to preview"); });
 }
 
 

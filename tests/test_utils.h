@@ -13,6 +13,7 @@ using unity::dash::Model;
 class Utils
 {
 public:
+
   template <typename Adaptor>
   static void WaitForModelSynchronize(Model<Adaptor>& model, unsigned int n_rows)
   {
@@ -26,8 +27,11 @@ public:
     if (!timeout_reached)
       g_source_remove(timeout_id);
   }
+  
+  typedef std::function<gchar*()> ErrorStringFunc;
+  static gchar* DefaultErrorString() { return nullptr; }
 
-  static void WaitUntilMSec(bool& success, unsigned int max_wait = 10, glib::String const& error = glib::String())
+  static void WaitUntilMSec(bool& success, unsigned int max_wait = 10, ErrorStringFunc const& error_func = &Utils::DefaultErrorString)
   {
     bool timeout_reached = false;
     guint32 timeout_id = ScheduleTimeout(&timeout_reached, max_wait);
@@ -38,15 +42,24 @@ public:
     if (!timeout_reached)
       g_source_remove(timeout_id);
 
-    EXPECT_TRUE(success);
+    glib::String error(error_func());
+
+    if (error)
+    {
+      EXPECT_TRUE(success) << "Error: " << error;
+    }
+    else
+    {
+      EXPECT_TRUE(success);
+    }
   }
 
-  static void WaitUntil(bool& success, unsigned int max_wait = 10, glib::String const& error = glib::String())
+  static void WaitUntil(bool& success, unsigned int max_wait = 10, ErrorStringFunc const& error_func = &Utils::DefaultErrorString)
   {
-    WaitUntilMSec(success, 10 * 1000);
+    WaitUntilMSec(success, 10 * 1000, error_func);
   }
 
-  static void WaitUntilMSec(std::function<bool()> const& check_function, bool result = true, unsigned int max_wait = 10, glib::String const& error = glib::String())
+  static void WaitUntilMSec(std::function<bool()> const& check_function, bool result = true, unsigned int max_wait = 10, ErrorStringFunc const& error_func = &Utils::DefaultErrorString)
   {
     bool timeout_reached = false;
     guint32 timeout_id = ScheduleTimeout(&timeout_reached, max_wait);
@@ -58,6 +71,8 @@ public:
     if (!timeout_reached)
       g_source_remove(timeout_id);
 
+    glib::String error(error_func());
+
     if (error)
     {
       EXPECT_EQ(check_function_result, result) << "Error: " << error;
@@ -68,9 +83,9 @@ public:
     }
   }
 
-  static void WaitUntil(std::function<bool()> const& check_function, bool result = true, unsigned int max_wait = 10, glib::String const& error = glib::String())
+  static void WaitUntil(std::function<bool()> const& check_function, bool result = true, unsigned int max_wait = 10, ErrorStringFunc const& error_func = &Utils::DefaultErrorString)
   {
-    WaitUntilMSec(check_function, result, max_wait * 1000);
+    WaitUntilMSec(check_function, result, max_wait * 1000, error_func);
   }
 
   static guint32 ScheduleTimeout(bool* timeout_reached, unsigned int timeout_duration = 10)
