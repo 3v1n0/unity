@@ -31,4 +31,4 @@ add_pch(pch/shutdown_pch.hh shutdown-lib)
 # Standalone variant
 #
 add_executable (shutdown StandaloneSession.cpp)
-target_link_libraries (shutdown shutdown-lib unity-shared)
+target_link_libraries (shutdown shutdown-lib unity-shared unity-shared-standalone)

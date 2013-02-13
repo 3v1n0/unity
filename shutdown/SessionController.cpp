@@ -21,6 +21,7 @@
 
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
+#include "unity-shared/WindowManager.h"
 
 namespace na = nux::animation;
 
@@ -82,8 +83,14 @@ void Controller::Show()
   auto const& offset = GetOffsetPerMonitor(monitor);
   view_window_->SetXY(offset.x, offset.y);
 
+  WindowManager::Default().SaveInputFocus();
+
   if (nux::GetWindowThread()->IsEmbeddedWindow())
+  {
     view_window_->EnableInputWindow(true, view_window_->GetWindowName().c_str(), true, false);
+    view_window_->GrabPointer();
+    view_window_->GrabKeyboard();
+  }
 
   view_window_->ShowWindow(true);
   view_window_->PushToFront();
@@ -166,9 +173,13 @@ void Controller::CloseWindow()
 {
   view_window_->PushToBack();
   view_window_->ShowWindow(false);
+  view_window_->UnGrabPointer();
+  view_window_->UnGrabKeyboard();
   view_window_->EnableInputWindow(false);
   view_->SetupBackground(false);
   manager_->ClosedDialog();
+
+  WindowManager::Default().RestoreInputFocus();
 }
 
 //
