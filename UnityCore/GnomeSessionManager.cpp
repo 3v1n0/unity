@@ -139,7 +139,7 @@ void GnomeManager::Impl::SetupShellSessionHandler()
         return;
       }
 
-      for (unsigned i; introspection->interfaces[i]; ++i)
+      for (unsigned i = 0; introspection->interfaces[i]; ++i)
       {
         glib::Error error;
         GDBusInterfaceInfo *interface = introspection->interfaces[i];
