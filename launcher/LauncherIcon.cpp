@@ -230,7 +230,7 @@ LauncherIcon::OpenInstance(ActionArg arg)
   if (wm.IsScaleActive())
     wm.TerminateScale();
 
-  OpenInstanceLauncherIcon();
+  OpenInstanceLauncherIcon(arg.timestamp);
 
   UpdateQuirkTime(Quirk::LAST_ACTION);
 }
@@ -661,7 +661,9 @@ void LauncherIcon::RecvMouseUp(int button, int monitor, unsigned long key_flags)
 
 void LauncherIcon::RecvMouseClick(int button, int monitor, unsigned long key_flags)
 {
-  ActionArg arg(ActionArg::LAUNCHER, button);
+  auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+
+  ActionArg arg(ActionArg::LAUNCHER, button, timestamp);
   arg.monitor = monitor;
 
   bool shift_pressed = nux::GetKeyModifierState(key_flags, nux::NUX_STATE_SHIFT);

@@ -324,7 +324,7 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       return;
 
     SetQuirk(Quirk::STARTING, true);
-    OpenInstanceLauncherIcon();
+    OpenInstanceLauncherIcon(arg.timestamp);
   }
   else // app is running
   {
@@ -510,7 +510,7 @@ void ApplicationLauncherIcon::AddProperties(GVariantBuilder* builder)
     .add("startup_notification_timestamp", _startup_notification_timestamp);
 }
 
-void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& uris)
+void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& uris, Time timestamp)
 {
   glib::Error error;
   glib::Object<GDesktopAppInfo> desktopInfo(g_desktop_app_info_new_from_filename(DesktopFile().c_str()));
@@ -519,8 +519,9 @@ void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& 
   GdkDisplay* display = gdk_display_get_default();
   glib::Object<GdkAppLaunchContext> app_launch_context(gdk_display_get_app_launch_context(display));
 
-  _startup_notification_timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
-  gdk_app_launch_context_set_timestamp(app_launch_context, _startup_notification_timestamp);
+  _startup_notification_timestamp = timestamp;
+  if (_startup_notification_timestamp >= 0)
+    gdk_app_launch_context_set_timestamp(app_launch_context, _startup_notification_timestamp);
 
   if (g_app_info_supports_uris(appInfo))
   {
@@ -558,10 +559,10 @@ void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& 
   UpdateQuirkTime(Quirk::STARTING);
 }
 
-void ApplicationLauncherIcon::OpenInstanceLauncherIcon()
+void ApplicationLauncherIcon::OpenInstanceLauncherIcon(Time timestamp)
 {
   std::set<std::string> empty;
-  OpenInstanceWithUris(empty);
+  OpenInstanceWithUris(empty, timestamp);
 }
 
 void ApplicationLauncherIcon::Focus(ActionArg arg)
@@ -576,7 +577,7 @@ void ApplicationLauncherIcon::Focus(ActionArg arg)
   else if (app_->type() == "webapp")
   {
     // Webapps are again special.
-    OpenInstanceLauncherIcon();
+    OpenInstanceLauncherIcon(arg.timestamp);
     return;
   }
 
@@ -1146,7 +1147,8 @@ nux::DndAction ApplicationLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_dat
 
 void ApplicationLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
 {
-  OpenInstanceWithUris(ValidateUrisForLaunch(dnd_data));
+  auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+  OpenInstanceWithUris(ValidateUrisForLaunch(dnd_data), timestamp);
 }
 
 bool ApplicationLauncherIcon::ShowInSwitcher(bool current)
