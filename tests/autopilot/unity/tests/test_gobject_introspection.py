@@ -1,5 +1,5 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
-# Copyright 2012 Canonical
+# Copyright 2013 Canonical
 # Author: Iain Lane
 #
 # This program is free software: you can redistribute it and/or modify it
