@@ -29,18 +29,6 @@ class GirTests(TestCase):
 
         self.assertTrue(imported)
 
-    def test_indicate_import(self):
-        imported = False
-
-        try:
-            from gi.repository import Indicate
-            imported = True
-        except ImportError:
-            # failed
-            pass
-
-        self.assertTrue(imported)
-
     def test_dbusmenu_import(self):
         imported = False
 
