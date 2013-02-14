@@ -39,11 +39,18 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> const& icons
   , index_(0)
   , last_index_(0)
 {
+  // When using Webapps, there are more than one active icon, so let's just pick
+  // up the first one found which is the web browser.
+  bool found = false;
+
   for (auto const& application : applications_)
   {
     AddChild(application.GetPointer());
-    if (application->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
+    if (application->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE) && !found)
+    {
       last_active_application_ = application;
+      found = true;
+    }
   }
 }
 
@@ -145,7 +152,7 @@ std::vector<Window> SwitcherModel::DetailXids() const
       return wm.GetWindowActiveNumber(first) > wm.GetWindowActiveNumber(second);
   });
 
-  if (results.size() > 1)
+  if (Selection() == last_active_application_ && results.size() > 1)
   {
     results.push_back(results.front());
     results.erase(results.begin());
