@@ -77,6 +77,9 @@ bool Variant::ASVToHints(HintsMap& hints) const
   char* key = NULL;
   GVariant* value = NULL;
 
+  if (!variant_)
+    return false;
+
   if (!g_variant_is_of_type (variant_, G_VARIANT_TYPE ("(a{sv})")) &&
       !g_variant_is_of_type (variant_, G_VARIANT_TYPE ("a{sv}")))
   {

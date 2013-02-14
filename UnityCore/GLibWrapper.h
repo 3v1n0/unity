@@ -126,7 +126,7 @@ private:
   gchar* string_;
 };
 
-inline std::string gchar_to_string(const char* str)
+inline std::string gchar_to_string(const gchar* str)
 {
   if (!str)
     return std::string("");

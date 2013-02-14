@@ -183,13 +183,9 @@ void Scope::ActivatePreviewAction(std::string const& action_id,
                                   ActivateCallback const& callback,
                                   GCancellable* cancellable)
 {
-  LocalResult local_result(result);
-  std::string activation_uri(action_id);
-  activation_uri += ":";
-  activation_uri += result.uri;
-  local_result.uri = activation_uri;
-
-  pimpl->Activate(local_result, UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_ACTION, hints, callback, cancellable);
+  glib::HintsMap tmp_hints = hints;
+  tmp_hints["preview-action-id"] = g_variant_new_string(action_id.c_str());
+  pimpl->Activate(result, UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_ACTION, tmp_hints, callback, cancellable);
 }
 
 void Scope::UpdatePreviewProperty(LocalResult const& result, glib::HintsMap const& hints, UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable)

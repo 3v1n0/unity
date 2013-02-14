@@ -141,12 +141,15 @@ public:
   std::string image_source_uri_;
   ActionPtrList actions_list_;
   InfoHintPtrList info_hint_list_;
+
   Scope* parent_scope_;
+  glib::Object<GCancellable> cancel_scope_;
 };
 
 Preview::Impl::Impl(Preview* owner, glib::Object<GObject> const& proto_obj)
   : owner_(owner)
   , parent_scope_(nullptr)
+  , cancel_scope_(g_cancellable_new())
 {
   if (!proto_obj)
   {
@@ -261,7 +264,7 @@ void Preview::Update(glib::HintsMap const& property_hints,
 {
   if (pimpl->parent_scope_)
   {
-    pimpl->parent_scope_->UpdatePreviewProperty(preview_result, property_hints, reply_callback);
+    pimpl->parent_scope_->UpdatePreviewProperty(preview_result, property_hints, reply_callback, pimpl->cancel_scope_);
   }
   else
   {
@@ -273,7 +276,15 @@ void Preview::PerformAction(std::string const& id, glib::HintsMap const& hints) 
 {
   if (pimpl->parent_scope_)
   {
-    pimpl->parent_scope_->ActivatePreviewAction(id, preview_result, hints);
+    auto reply_func = [id] (LocalResult const&, ScopeHandledType, glib::Error const& error) 
+    {
+      if (error)
+      {
+        LOG_WARN(logger) << "Preview action '" << id << "' failed => '" << error;
+      }
+    };
+
+    pimpl->parent_scope_->ActivatePreviewAction(id, preview_result, hints, reply_func);
   }
   else
   {

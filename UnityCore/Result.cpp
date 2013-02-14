@@ -19,6 +19,7 @@
 
 #include "Result.h"
 #include <sigc++/bind.h>
+#include "GLibWrapper.h"
 
 namespace unity
 {
@@ -194,13 +195,13 @@ LocalResult LocalResult::FromVariant(glib::Variant const& v)
   while (g_variant_iter_loop(var_iter, "v", &value))
   {
     vars.push_back(value);
-    switch (i++)
+    switch (i)
     {
       case URI:
-        result.uri = g_variant_get_string(value, NULL);
+        result.uri = glib::gchar_to_string(g_variant_get_string(value, NULL));
         break;
       case ICON_HINT:
-        result.icon_hint = g_variant_get_string(value, NULL);
+        result.icon_hint = glib::gchar_to_string(g_variant_get_string(value, NULL));
         break;
       case CATEGORY:
         result.category_index = g_variant_get_uint32(value);
@@ -209,16 +210,16 @@ LocalResult LocalResult::FromVariant(glib::Variant const& v)
         result.result_type = g_variant_get_uint32(value);
         break;
       case MIMETYPE:
-        result.mimetype = g_variant_get_string(value, NULL);
+        result.mimetype = glib::gchar_to_string(g_variant_get_string(value, NULL));
         break;
       case TITLE:
-        result.name = g_variant_get_string(value, NULL);
+        result.name = glib::gchar_to_string(g_variant_get_string(value, NULL));
         break;
       case COMMENT:
-        result.comment = g_variant_get_string(value, NULL);
+        result.comment = glib::gchar_to_string(g_variant_get_string(value, NULL));
         break;
       case DND_URI:
-        result.dnd_uri = g_variant_get_string(value, NULL);
+        result.dnd_uri = glib::gchar_to_string(g_variant_get_string(value, NULL));
         break;
       case METADATA:
         glib::HintsMap hints;
@@ -228,6 +229,7 @@ LocalResult LocalResult::FromVariant(glib::Variant const& v)
         }
         break;
     }
+    i++;
   }
   g_variant_iter_free (var_iter);
 
