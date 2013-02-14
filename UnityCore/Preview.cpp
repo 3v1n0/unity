@@ -111,6 +111,7 @@ class Preview::Impl
 {
 public:
   Impl(Preview* owner, glib::Object<GObject> const& proto_obj);
+  ~Impl();
 
   void SetupGetters();
   std::string get_renderer_name() const { return renderer_name_; };
@@ -201,6 +202,11 @@ Preview::Impl::Impl(Preview* owner, glib::Object<GObject> const& proto_obj)
   }
 
   SetupGetters();
+}
+
+Preview::Impl::~Impl()
+{
+  g_cancellable_cancel(cancel_scope_);
 }
 
 void Preview::Impl::SetupGetters()
