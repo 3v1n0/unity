@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright 2012 Canonical Ltd.
+ * Copyright 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -16,7 +16,7 @@
  * License version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
+ * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  *
  */
 
@@ -27,10 +27,29 @@
 #include <UnityCore/GSettingsScopes.h>
 #include <UnityCore/GLibSource.h>
 
+#include <unity-protocol.h>
+
 namespace unity
 {
 namespace dash
 {
+
+namespace
+{
+#define G_SCOPE_ERROR g_scope_error_quark ()
+typedef enum
+{
+  G_SCOPE_ERROR_NO_ACTIVATION_HANDLER = (1 << 0)
+} GScopeError;
+
+GQuark
+g_scope_error_quark (void)
+{
+  return g_quark_from_static_string ("g-scope-error-quark");
+}
+
+}
+
 
 // Mock Scopes for use in xless tests. (no dbus!)
 
@@ -58,8 +77,30 @@ public:
 
   virtual void Activate(LocalResult const& result, uint activate_type, glib::HintsMap const& hints, ActivateCallback const& callback = nullptr, GCancellable* cancellable = nullptr)
   {
-    source_manager.AddIdle([callback, result] (){
-      callback(result, ScopeHandledType::GOTO_DASH_URI, glib::HintsMap(), glib::Error());
+    source_manager.AddIdle([activate_type, callback, result] ()
+    {
+      switch (activate_type)
+      {
+        case UNITY_PROTOCOL_ACTION_TYPE_ACTIVATE_RESULT:
+          callback(result, ScopeHandledType::NOT_HANDLED, glib::HintsMap(), glib::Error());
+          break;
+
+        case UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_RESULT:
+          callback(result, ScopeHandledType::SHOW_PREVIEW, glib::HintsMap(), glib::Error());
+          break;
+
+        case UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_ACTION:
+          callback(result, ScopeHandledType::HIDE_DASH, glib::HintsMap(), glib::Error());
+          break;
+
+        default:
+        {
+          glib::Error error;
+          GError** real_err = &error;
+          *real_err = g_error_new_literal(G_SCOPE_ERROR, G_SCOPE_ERROR_NO_ACTIVATION_HANDLER, "Invalid scope activation typehandler");
+          callback(result, ScopeHandledType::NOT_HANDLED, glib::HintsMap(), error);
+        } break;
+      }
       return true;
     }, "Activate");
   }
@@ -121,11 +162,13 @@ public:
 class MockGSettingsScopes : public GSettingsScopes
 {
 public:
-  MockGSettingsScopes() {}
-  ~MockGSettingsScopes() {}
+  MockGSettingsScopes(const char* scopes_settings[]);
+  ~MockGSettingsScopes();
 
   using GSettingsScopes::InsertScope;
   using GSettingsScopes::RemoveScope;
+
+  void UpdateScopes(const char* scopes_settings[]);
 
 protected:
   virtual Scope::Ptr CreateScope(ScopeData::Ptr const& scope_data)
@@ -133,6 +176,9 @@ protected:
     Scope::Ptr scope(new MockScope(scope_data));
     return scope;
   }
+
+private:
+  glib::Object<GSettings> gsettings_client;
 };
 
 } // namesapce dash

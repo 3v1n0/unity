@@ -129,6 +129,7 @@ if (GTEST_SRC_DIR AND
        test_launcher_entry_remote.cpp
        test_launcher_options.cpp
        test_layout_system.cpp
+       test_mock_scope.cpp
        test_model_iterator.cpp
        test_previews.cpp
        test_time_util.cpp
@@ -215,6 +216,7 @@ if (ENABLE_X_SUPPORT)
                  test_hud_view.cpp
                  test_icon_loader.cpp
                  test_im_text_entry.cpp
+                 test_keyboard_util.cpp
                  test_launcher.cpp
                  test_launcher_controller.cpp
                  test_launcher_drag_window.cpp
@@ -222,8 +224,7 @@ if (ENABLE_X_SUPPORT)
                  test_launcher_hover_machine.cpp
                  test_launcher_icon.cpp
                  test_launcher_tooltip.cpp
-                 test_scopeview.cpp
-                 test_keyboard_util.cpp
+                 test_mock_scope.cpp
                  test_panel_indicators_view.cpp
                  test_panel_menu_view.cpp
                  test_panel_style.cpp
@@ -239,6 +240,7 @@ if (ENABLE_X_SUPPORT)
                  test_result_renderer.cpp
                  test_resultviewgrid.cpp
                  test_scope_bar.cpp
+                 test_scopeview.cpp
                  test_searchbar.cpp
                  test_shortcut_controller.cpp
                  test_shortcut_view.cpp

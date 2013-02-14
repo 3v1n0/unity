@@ -21,20 +21,12 @@
 #include "test_mock_scope.h"
 #include "test_utils.h"
 
-#include "config.h"
-
 using namespace std;
 using namespace unity;
 using namespace unity::dash;
 
 namespace
 {
-
-const gchar* SCHEMA_DIRECTORY = BUILDDIR"/settings";
-
-const gchar* SETTINGS_NAME = "com.canonical.Unity.Dash";
-const gchar* SCOPES_SETTINGS_KEY = "scopes";
-const gchar* ALWAYS_SETTINGS_KEY = "always-search";
 
 
 const char* scopes_default[] =  { "testscope1.scope",
@@ -49,11 +41,6 @@ const char* scopes_2removed[] = { "testscope1.scope",
                                   NULL
                                 };
 
-const char* always_create[] = { "testscope1.scope",
-                                "testscope2.scope",
-                                NULL
-                              };
-
 // A new one of these is created for each test
 class TestGSettingsScopes : public testing::Test
 {
@@ -61,23 +48,8 @@ public:
   TestGSettingsScopes():scope_added(0),scope_removed(0),scopes_reordered(0)
   {}
 
-  virtual void SetUp()
-  {
-    // set the data directory so gsettings can find the schema
-    g_setenv("GSETTINGS_SCHEMA_DIR", SCHEMA_DIRECTORY, true);
-    g_setenv("GSETTINGS_BACKEND", "memory", true);
-
-    // Setting the test values
-    gsettings_client = g_settings_new(SETTINGS_NAME);
-    g_settings_set_strv(gsettings_client, SCOPES_SETTINGS_KEY, scopes_default);
-    g_settings_set_strv(gsettings_client, ALWAYS_SETTINGS_KEY, always_create);
-  }
-
-  virtual void TearDown()
-  {
-    g_setenv("GSETTINGS_SCHEMA_DIR", "", true);
-    g_setenv("GSETTINGS_BACKEND", "", true);
-  }
+  virtual void SetUp() { Utils::init_gsettings_test_environment(); }
+  virtual void TearDown() { Utils::reset_gsettings_test_environment(); }
 
   void ConnectScope(Scopes* scopes)
   {
@@ -98,20 +70,18 @@ public:
   int scope_added;
   int scope_removed;
   int scopes_reordered;
-
-  glib::Object<GSettings> gsettings_client;
 };
 
 
 
 TEST_F(TestGSettingsScopes, TestConstruction)
 {
-  MockGSettingsScopes scopes;
+  MockGSettingsScopes scopes(scopes_default);
 }
 
 TEST_F(TestGSettingsScopes, TestLoad)
 {
-  MockGSettingsScopes scopes;
+  MockGSettingsScopes scopes(scopes_default);
   ConnectScope(&scopes);
 
   scopes.LoadScopes();
@@ -127,7 +97,7 @@ TEST_F(TestGSettingsScopes, TestLoad)
 
 TEST_F(TestGSettingsScopes, TestScopesAdded)
 {
-  MockGSettingsScopes scopes;
+  MockGSettingsScopes scopes(scopes_default);
   ConnectScope(&scopes);
 
   scopes.InsertScope("testscope1.scope", 0);
@@ -155,7 +125,7 @@ TEST_F(TestGSettingsScopes, TestScopesAdded)
 
 TEST_F(TestGSettingsScopes, TestScopesAddSame)
 {
-  MockGSettingsScopes scopes;
+  MockGSettingsScopes scopes(scopes_default);
   ConnectScope(&scopes);
 
   scopes.InsertScope("testscope1.scope", 0);
@@ -172,7 +142,7 @@ TEST_F(TestGSettingsScopes, TestScopesAddSame)
 
 TEST_F(TestGSettingsScopes, TestScopesRemove)
 {
-  MockGSettingsScopes scopes;
+  MockGSettingsScopes scopes(scopes_default);
   ConnectScope(&scopes);
   
   scopes.LoadScopes();
@@ -180,7 +150,7 @@ TEST_F(TestGSettingsScopes, TestScopesRemove)
   EXPECT_EQ(scope_added, (unsigned int)4);
   EXPECT_EQ(scopes.count, (unsigned int)4);
 
-  g_settings_set_strv(gsettings_client, SCOPES_SETTINGS_KEY, scopes_2removed);
+  scopes.UpdateScopes(scopes_2removed);
   Utils::WaitUntilMSec([this] { return scope_removed > 0; }, true, 2000);
 
   EXPECT_EQ(scope_removed, (unsigned int)1);

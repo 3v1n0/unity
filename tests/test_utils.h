@@ -1,8 +1,11 @@
 #ifndef TEST_UTILS_H
 #define TEST_UTILS_H
 
+#include <gtest/gtest.h>
+
 #include <UnityCore/Model.h>
 #include "GLibWrapper.h"
+#include "config.h"
 
 namespace
 {
@@ -105,6 +108,19 @@ public:
 
     while (!timeout_reached)
       g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
+  }
+
+  static void init_gsettings_test_environment()
+  {
+    // set the data directory so gsettings can find the schema
+    g_setenv("GSETTINGS_SCHEMA_DIR", BUILDDIR"/settings", true);
+    g_setenv("GSETTINGS_BACKEND", "memory", true);
+  }
+
+  static void reset_gsettings_test_environment()
+  {
+    g_setenv("GSETTINGS_SCHEMA_DIR", "", true);
+    g_setenv("GSETTINGS_BACKEND", "", true);
   }
 
 private:

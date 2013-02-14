@@ -31,25 +31,58 @@
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UnitySettings.h"
 
+#include "test_mock_scope.h"
+#include "test_utils.h"
+
 using namespace unity;
 using namespace unity::dash;
 
+namespace unity
+{
+namespace dash
+{
+
 namespace
 {
+const char* scopes_default[] =  { "testscope1.scope",
+                                  "testscope2.scope",
+                                  "testscope3.scope",
+                                  "testscope4.scope",
+                                  NULL };
+}
 
 class TestDashView : public ::testing::Test
 {
 public:
   TestDashView() {}
 
+  virtual void SetUp() { Utils::init_gsettings_test_environment(); }
+  virtual void TearDown() { Utils::reset_gsettings_test_environment(); }
+
+  class MockDashView  : public DashView
+  {
+  public:
+    MockDashView(ScopesCreator scopes_creator = nullptr)
+    : DashView(scopes_creator)
+    {
+    }
+
+    using DashView::scope_views_;
+  };
+
+private:
   Settings unity_settings_;
   dash::Style dash_style_;
   panel::Style panel_style_;
 };
 
-TEST_F(TestDashView, TestSetQueries)
+TEST_F(TestDashView, TestConstruct)
 {
-  nux::ObjectPtr<DashView> view(new dash::DashView());
+  auto scope_creator = [] () { return Scopes::Ptr(new MockGSettingsScopes(scopes_default)); };
+  nux::ObjectPtr<MockDashView> view(new MockDashView(scope_creator));
+
+  EXPECT_EQ(view->scope_views_.size(), 4) << "Error: Incorrect number of scope views (" << view->scope_views_.size() << " != 4)";
 }
 
+}
 }
