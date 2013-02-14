@@ -146,10 +146,10 @@ DashView::DashView(ScopesCreator scopes_creator)
 
   if (scopes_creator == nullptr)
   {
-    scopes_creator = [this]() { scopes_.reset(new GSettingsScopes()); };
+    scopes_creator = [this]() { return Scopes::Ptr(new GSettingsScopes()); };
   }
 
-  scopes_creator();
+  scopes_ = scopes_creator();
   if (scopes_)
   {
     scopes_->scope_added.connect(sigc::mem_fun(this, &DashView::OnScopeAdded));
@@ -1277,6 +1277,11 @@ void DashView::OnSearchFinished(glib::HintsMap const& hints, glib::Error const& 
 {
   hide_message_delay_.reset();
 
+  if (err)
+  {
+    LOG_WARNING(logger) << "Search failed => " << err;
+  }
+
   if (!active_scope_view_.IsValid()) return;
 
   // FIXME: bind the scope_view in PerformSearch
@@ -1308,16 +1313,11 @@ void DashView::OnResultActivatedReply(LocalResult const& local_result, ScopeHand
   ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
 }
 
-bool DashView::DoFallbackActivation(std::string const& fake_uri)
+bool DashView::DoFallbackActivation(std::string const& uri)
 {
-  size_t pos = fake_uri.find(":");
-  std::string uri = fake_uri.substr(++pos);
-
   if (g_str_has_prefix(uri.c_str(), "application://"))
   {
     std::string appname = uri.substr(14);
-
-    printf("Actrivating app: %s", appname.c_str());
     return LaunchApp(appname);
   }
   else if (g_str_has_prefix(uri.c_str(), "unity-runner://"))

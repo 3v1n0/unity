@@ -161,15 +161,22 @@ ScopeView::ScopeView(Scope::Ptr scope, nux::Area* show_filters)
 , filter_expansion_pushed_(false)
 {
   SetupViews(show_filters);
-  SetupCategories();
-  SetupResults();
-  SetupFilters();
 
   search_string.SetGetterFunction(sigc::mem_fun(this, &ScopeView::get_search_string));
   filters_expanded.changed.connect(sigc::mem_fun(this, &ScopeView::OnScopeFilterExpanded));
   view_type.changed.connect(sigc::mem_fun(this, &ScopeView::OnViewTypeChanged));
+
   if (scope_)
   {
+    categories_updated = scope_->categories.changed.connect([this](Categories::Ptr const& categories) { SetupCategories(categories); });
+    SetupCategories(scope->categories);
+
+    results_updated = scope_->results.changed.connect([this](Results::Ptr const& results) { SetupResults(results); });
+    SetupResults(scope->results);
+
+    filters_updated = scope_->filters.changed.connect([this](Filters::Ptr const& filters) { SetupFilters(filters); });
+    SetupFilters(scope->filters);
+
     scope_->connected.changed.connect([&](bool is_connected) {
       if (is_connected)
         initial_activation_ = true;
@@ -210,10 +217,15 @@ ScopeView::ScopeView(Scope::Ptr scope, nux::Area* show_filters)
 
 ScopeView::~ScopeView()
 {
+  results_updated.disconnect();
   result_added_connection.disconnect();
   result_removed_connection.disconnect();
+  
+  categories_updated.disconnect();
   category_added_connection.disconnect();
   category_removed_connection.disconnect();
+
+  filters_updated.disconnect();
   filter_added_connection.disconnect();
   filter_removed_connection.disconnect();
 
@@ -272,12 +284,14 @@ void ScopeView::SetupViews(nux::Area* show_filters)
   SetLayout(layout_);
 }
 
-void ScopeView::SetupCategories()
+void ScopeView::SetupCategories(Categories::Ptr const& categories)
 {
-  if (!scope_)
+  category_added_connection.disconnect();
+  category_removed_connection.disconnect();
+
+  if (!categories)
     return;
 
-  Categories::Ptr categories = scope_->categories;
   category_added_connection = categories->category_added.connect(sigc::mem_fun(this, &ScopeView::OnCategoryAdded));
   category_removed_connection = categories->category_removed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryRemoved));
 
@@ -297,12 +311,14 @@ void ScopeView::SetupCategories()
   });
 }
 
-void ScopeView::SetupResults()
+void ScopeView::SetupResults(Results::Ptr const& results)
 {
-  if (!scope_)
+  result_added_connection.disconnect();
+  result_removed_connection.disconnect();
+
+  if (!results)
     return;
 
-  Results::Ptr results = scope_->results;
   result_added_connection = results->result_added.connect(sigc::mem_fun(this, &ScopeView::OnResultAdded));
   result_added_connection = results->result_removed.connect(sigc::mem_fun(this, &ScopeView::OnResultRemoved));
 
@@ -322,12 +338,14 @@ void ScopeView::SetupResults()
     OnResultAdded(results->RowAtIndex(i));
 }
 
-void ScopeView::SetupFilters()
+void ScopeView::SetupFilters(Filters::Ptr const& filters)
 {
-  if (!scope_)
+  filter_added_connection.disconnect();
+  filter_removed_connection.disconnect();
+
+  if (!filters)
     return;
 
-  Filters::Ptr filters = scope_->filters;
   filter_added_connection = filters->filter_added.connect(sigc::mem_fun(this, &ScopeView::OnFilterAdded));
   filter_removed_connection = filters->filter_removed.connect(sigc::mem_fun(this, &ScopeView::OnFilterRemoved));
 
@@ -740,7 +758,13 @@ void ScopeView::OnViewTypeChanged(ScopeViewType view_type)
   if (view_type != ScopeViewType::HIDDEN && initial_activation_)
   {
     /* We reset the scope for ourselves, in case this is a restart or something */
-    scope_->Search(search_string_, [] (glib::HintsMap const&, glib::Error const&) {});
+    scope_->Search(search_string_, [this] (glib::HintsMap const&, glib::Error const& error)
+    {
+      if (error)
+      {
+        LOG_WARNING(logger) << "Search failed on " << scope_->id() << " => " << error;
+      }
+    });
     initial_activation_ = false;
   }
 

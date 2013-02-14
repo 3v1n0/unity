@@ -89,9 +89,9 @@ public:
 
 private:
   void SetupViews(nux::Area* show_filters);
-  void SetupCategories();
-  void SetupResults();
-  void SetupFilters();
+  void SetupCategories(Categories::Ptr const& categories);
+  void SetupResults(Results::Ptr const& results);
+  void SetupFilters(Filters::Ptr const& filters);
 
   void OnCategoryAdded(Category const& category);
   void OnCategoryRemoved(Category const& category);
@@ -151,10 +151,16 @@ private:
   glib::Source::UniquePtr fix_filter_models_idle_;
 
   bool filter_expansion_pushed_;
+
+  sigc::connection results_updated;
   sigc::connection result_added_connection;
   sigc::connection result_removed_connection;
+
+  sigc::connection categories_updated;
   sigc::connection category_added_connection;
   sigc::connection category_removed_connection;
+
+  sigc::connection filters_updated;
   sigc::connection filter_added_connection;
   sigc::connection filter_removed_connection;
 

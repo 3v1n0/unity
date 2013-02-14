@@ -54,7 +54,7 @@ class DashView : public nux::View, public unity::debug::Introspectable
   typedef std::map<std::string, nux::ObjectPtr<ScopeView>> ScopeViews;
 
 public:
-  typedef std::function<void()> ScopesCreator;
+  typedef std::function<Scopes::Ptr()> ScopesCreator;
 
   DashView(ScopesCreator scopes_creator = nullptr);
   ~DashView();
@@ -183,6 +183,8 @@ private:
 
   std::unique_ptr<na::AnimateValue<float>> preview_animation_;
   float animate_preview_value_;
+
+  friend class TestDashView;
 };
 
 
