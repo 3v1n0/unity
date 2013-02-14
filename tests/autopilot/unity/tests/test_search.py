@@ -101,7 +101,8 @@ class ApplicationLensFuzzySearchTests(ApplicationLensSearchTestBase):
     """Fuzzy, erroneous search tests for the application lens.
     This checks if the application lens will find the searched application
     (windowmocker here, since we want some app that has the name 
-    locale-independent) when small spelling errors are made."""
+    locale-independent) when small spelling errors are made.
+    """
 
     scenarios = [
         ('transposition', {'input': 'Wnidow Mocker', 'result': 'Window Mocker'}),
@@ -159,7 +160,8 @@ class HudFuzzySearchTests(HudSearchTestBase):
     """Fuzzy, erroneous search tests for the HUD.
     This checks if the HUD will find the searched menu entry from our application
     (windowmocker here, since we want to have unique, locale-independent menu 
-    entries) when small spelling errors are made."""
+    entries) when small spelling errors are made.
+    """
 
     scenarios = [
         ('transposition', {'input': 'Saerch entry', 'result': 'Search entry'}),
