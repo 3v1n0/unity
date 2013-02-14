@@ -346,6 +346,16 @@ TEST_F(TestLauncherController, MultimonitorSingleLauncher)
   }
 }
 
+TEST_F(TestLauncherController, MirroredMultimonitorSingleLauncherOnExternalMonitor)
+{
+  // See lp bug 991637
+  lc.multiple_launchers = false;
+  uscreen.SetPrimary(1);
+
+  ASSERT_EQ(lc.launchers().size(), 1);
+  ASSERT_EQ(lc.launcher().monitor(), 0);
+}
+
 TEST_F(TestLauncherController, MultimonitorSwitchToMultipleLaunchers)
 {
   lc.multiple_launchers = false;

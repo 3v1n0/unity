@@ -216,7 +216,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
       launchers[i] = nux::ObjectPtr<Launcher>(CreateLauncher());
     }
 
-    int monitor = (num_launchers == 1) ? primary : i;
+    int monitor = (num_launchers == 1 && num_monitors > 1) ? primary : i;
 
     if (launchers[i]->monitor() != monitor)
     {
