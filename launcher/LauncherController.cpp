@@ -1182,7 +1182,7 @@ void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
   }
 }
 
-bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string)
+bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string, Time timestamp)
 {
   LauncherModel::iterator it;
 
@@ -1198,9 +1198,9 @@ bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, 
       if (TimeUtil::TimeDelta(&current, &last_action_time) > local::ignore_repeat_shortcut_duration)
       {
         if (g_ascii_isdigit((gchar)(*it)->GetShortcut()) && (key_state & ShiftMask))
-          (*it)->OpenInstance(ActionArg(ActionArg::LAUNCHER, 0));
+          (*it)->OpenInstance(ActionArg(ActionArg::LAUNCHER, 0, timestamp));
         else
-          (*it)->Activate(ActionArg(ActionArg::LAUNCHER, 0));
+          (*it)->Activate(ActionArg(ActionArg::LAUNCHER, 0, timestamp));
       }
 
       // disable the "tap on super" check
@@ -1320,8 +1320,10 @@ void Controller::KeyNavTerminate(bool activate)
 
   if (activate)
   {
-    pimpl->sources_.AddIdle([this] {
-      pimpl->model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0));
+    auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+
+    pimpl->sources_.AddIdle([this, timestamp] {
+      pimpl->model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0, timestamp));
       return false;
     });
   }
@@ -1421,10 +1423,12 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
 
       // <SPACE> (open a new instance)
     case NUX_VK_SPACE:
-      model_->Selection()->OpenInstance(ActionArg(ActionArg::LAUNCHER, 0));
+    {
+      auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+      model_->Selection()->OpenInstance(ActionArg(ActionArg::LAUNCHER, 0, timestamp));
       parent_->KeyNavTerminate(false);
       break;
-
+    }
       // <RETURN> (start/activate currently selected icon)
     case NUX_VK_ENTER:
     case NUX_KP_ENTER:
