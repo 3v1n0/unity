@@ -1200,7 +1200,7 @@ bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, 
         if (g_ascii_isdigit((gchar)(*it)->GetShortcut()) && (key_state & ShiftMask))
           (*it)->OpenInstance(ActionArg(ActionArg::LAUNCHER, 0, timestamp));
         else
-          (*it)->Activate(ActionArg(ActionArg::LAUNCHER, 0));
+          (*it)->Activate(ActionArg(ActionArg::LAUNCHER, 0, timestamp));
       }
 
       // disable the "tap on super" check
