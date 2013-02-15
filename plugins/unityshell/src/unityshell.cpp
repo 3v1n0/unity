@@ -2556,7 +2556,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
   if (uScreen->session_controller_ && uScreen->session_controller_->Visible())
   {
     // Let's darken the other windows if the session dialog is visible
-    wAttrib.brightness *= 0.80f;
+    wAttrib.brightness *= 0.75f;
   }
 
   return gWindow->glPaint(wAttrib, matrix, region, mask);
