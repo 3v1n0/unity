@@ -4,7 +4,7 @@ dash/FilterExpanderLabel.cpp
 dash/FilterGenreWidget.cpp
 dash/FilterMultiRangeWidget.cpp
 dash/FilterRatingsWidget.cpp
-dash/LensView.cpp
+dash/ScopeView.cpp
 dash/PlacesGroup.cpp
 hud/HudController.cpp
 hud/HudView.cpp
