@@ -150,4 +150,61 @@ TEST(TestGLibVariant, HintsMap)
   EXPECT_EQ(hints["last"].GetString(), "foo");
 }
 
+TEST(TestGLibVariant, GetString)
+{
+  Variant v1(g_variant_new_string("Unity"));
+  EXPECT_EQ(v1.GetString(), "Unity");
+
+  Variant v2(g_variant_new("(s)", "Rocks"));
+  EXPECT_EQ(v2.GetString(), "Rocks");
+
+  Variant v3(g_variant_new("(si)", "!!!", G_MININT));
+  EXPECT_EQ(v3.GetString(), "");
+}
+
+TEST(TestGLibVariant, GetInt)
+{
+  gint32 value = g_random_int_range(G_MININT, G_MAXINT);
+  Variant v1(g_variant_new_int32(value));
+  EXPECT_EQ(v1.GetInt(), value);
+
+  value = g_random_int_range(G_MININT, G_MAXINT);
+  Variant v2(g_variant_new("(i)", value));
+  EXPECT_EQ(v2.GetInt(), value);
+
+  Variant v3(g_variant_new("(is)", value, "fooostring"));
+  EXPECT_EQ(v3.GetInt(), 0);
+}
+
+TEST(TestGLibVariant, GetUInt)
+{
+  guint32 value = g_random_int();
+  Variant v1(g_variant_new_uint32(value));
+  EXPECT_EQ(v1.GetUInt(), value);
+
+  value = g_random_int();
+  Variant v2(g_variant_new("(u)", value));
+  EXPECT_EQ(v2.GetUInt(), value);
+
+  Variant v3(g_variant_new("(ui)", value, G_MAXINT));
+  EXPECT_EQ(v3.GetUInt(), 0);
+}
+
+TEST(TestGLibVariant, GetBool)
+{
+  gboolean value = (g_random_int() % 2) ? TRUE : FALSE;
+  Variant v1(g_variant_new_boolean(value));
+  EXPECT_EQ(v1.GetBool(), (value != FALSE));
+
+  value = (g_random_int() % 2) ? TRUE : FALSE;
+  Variant v2(g_variant_new("(b)", value));
+  EXPECT_EQ(v2.GetBool(), (value != FALSE));
+
+  Variant v3(g_variant_new("(bs)", value, "fooostring"));
+  EXPECT_EQ(v3.GetBool(), false);
+}
+
+
+
+
 } // Namespace
