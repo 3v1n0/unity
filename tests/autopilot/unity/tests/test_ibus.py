@@ -23,7 +23,7 @@ from testtools.matchers import Equals, NotEquals
 
 from unity.tests import UnityTestCase
 
-from gi.repository import GObject
+from gi.repository import GLib
 from gi.repository import IBus
 import time
 import dbus
@@ -45,7 +45,7 @@ class IBusQuery:
         path = self._test.CreateInputContext("IBusQuery")
         self._context = IBus.InputContext.new(path, self._bus.get_connection(), None)
 
-        self._glibloop = GObject.MainLoop()
+        self._glibloop = GLib.MainLoop()
 
         self._context.connect("commit-text", self.__commit_text_cb)
         self._context.connect("disabled", self.__disabled_cb)
@@ -76,7 +76,7 @@ class IBusQuery:
         time.sleep(0.1)
         self._context.focus_out()
 
-        GObject.timeout_add_seconds(10, lambda *args: self._glibloop.quit())
+        GLib.timeout_add_seconds(10, lambda *args: self._glibloop.quit())
         self._glibloop.run()
 
         return unicode(self.result, "UTF-8")
