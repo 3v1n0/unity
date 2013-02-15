@@ -26,8 +26,6 @@
 #include "unity-shared/StaticCairoText.h"
 #include "config.h"
 
-#include <Nux/Button.h>
-
 namespace unity
 {
 namespace session
@@ -74,6 +72,24 @@ public:
     mouse_leave.connect([this] (int, int, unsigned long, unsigned long) { SetHighlighted(false); });
     mouse_click.connect([this] (int, int, unsigned long, unsigned long) { activated.emit(); });
 
+    // This function ensures that when an item is activated, the button state
+    // is reset as soon as the parent window has been closed.
+    activated.connect([this] {
+      auto* top_win = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
+      if (top_win && top_win->IsVisible())
+      {
+        auto conn = std::make_shared<sigc::connection>();
+        *conn = top_win->sigHidden.connect([this, conn] (nux::BaseWindow*) {
+          SetHighlighted(false);
+          conn->disconnect();
+        });
+      }
+      else
+      {
+        SetHighlighted(false);
+      }
+    });
+
     SetLayout(main_layout);
   }
 
@@ -110,9 +126,11 @@ View::View(Manager::Ptr const& manager)
   main_layout->SetSpaceBetweenChildren(theme::MAIN_SPACE);
   SetLayout(main_layout);
 
-  auto header = glib::String(g_strdup_printf(_("Goodbye %s! Would you like to…"), manager->RealName().c_str())).Str();
+  auto const& real_name = manager->RealName();
+  auto const& name = (real_name.empty() ? manager->UserName() : real_name);
+  auto header = glib::String(g_strdup_printf(_("Goodbye %s! Would you like to…"), name.c_str())).Str();
   auto* header_view = new StaticCairoText(header);
-  header_view->SetFont("Ubuntu Light 12");
+  header_view->SetFont(theme::FONT);
   header_view->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_LEFT);
   main_layout->AddView(header_view);
 
