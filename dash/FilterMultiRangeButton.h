@@ -52,8 +52,8 @@ enum class MultiRangeArrow : unsigned int
 
 class FilterMultiRangeButton : public nux::ToggleButton
 {
+  NUX_DECLARE_OBJECT_TYPE(FilterMultiRangeButton, nux::ToggleButton);
 public:
-  FilterMultiRangeButton (std::string const& label, NUX_FILE_LINE_PROTO);
   FilterMultiRangeButton (NUX_FILE_LINE_PROTO);
   ~FilterMultiRangeButton();
 
@@ -94,6 +94,7 @@ private:
   std::map<MapKey, NuxCairoPtr> focus_;
   std::map<MapKey, NuxCairoPtr> normal_;
   std::map<MapKey, NuxCairoPtr> prelight_;
+  bool theme_init_;
 
   nux::Geometry cached_geometry_;
   MultiRangeArrow has_arrow_;
