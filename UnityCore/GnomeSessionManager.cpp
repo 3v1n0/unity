@@ -20,6 +20,7 @@
 #include "GnomeSessionManagerImpl.h"
 
 #include <NuxCore/Logger.h>
+#include "Variant.h"
 
 namespace unity
 {
@@ -93,9 +94,7 @@ GnomeManager::Impl::Impl(GnomeManager* manager)
   upower_proxy_.Connect("Changed", sigc::hide(sigc::mem_fun(this, &GnomeManager::Impl::QueryUPowerCapabilities)));
 
   gsession_proxy_.Call("CanShutdown", nullptr, [this] (GVariant* variant) {
-    can_shutdown_ = false;
-    if (variant)
-      g_variant_get(variant, "(b)", &can_shutdown_);
+    can_shutdown_ = glib::Variant(variant).GetBool();
   });
 }
 
@@ -111,15 +110,11 @@ GnomeManager::Impl::~Impl()
 void GnomeManager::Impl::QueryUPowerCapabilities()
 {
   upower_proxy_.Call("HibernateAllowed", nullptr, [this] (GVariant* variant) {
-    can_hibernate_ = false;
-    if (variant)
-      g_variant_get(variant, "(b)", &can_hibernate_);
+    can_hibernate_ = glib::Variant(variant).GetBool();
   });
 
   upower_proxy_.Call("SuspendAllowed", nullptr, [this] (GVariant* variant) {
-    can_suspend_ = false;
-    if (variant)
-      g_variant_get(variant, "(b)", &can_suspend_);
+    can_suspend_ = glib::Variant(variant).GetBool();
   });
 }
 

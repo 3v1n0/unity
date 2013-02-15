@@ -62,7 +62,6 @@ struct GnomeManager::Impl
 
   glib::DBusProxy upower_proxy_;
   glib::DBusProxy gsession_proxy_;
-
 };
 
 } // namespace session
