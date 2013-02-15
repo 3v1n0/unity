@@ -36,6 +36,9 @@ namespace dash
 
 namespace
 {
+const gchar* SETTINGS_NAME = "com.canonical.Unity.Dash";
+const gchar* SCOPES_SETTINGS_KEY = "scopes";
+
 #define G_SCOPE_ERROR g_scope_error_quark ()
 typedef enum
 {
@@ -50,9 +53,7 @@ g_scope_error_quark (void)
 
 }
 
-
 // Mock Scopes for use in xless tests. (no dbus!)
-
 class MockScopeProxy : public ScopeProxyInterface
 {
 public:
@@ -162,13 +163,19 @@ public:
 class MockGSettingsScopes : public GSettingsScopes
 {
 public:
-  MockGSettingsScopes(const char* scopes_settings[]);
-  ~MockGSettingsScopes();
+  MockGSettingsScopes(const char* scopes_settings[])
+  {
+    gsettings_client = g_settings_new(SETTINGS_NAME);
+    UpdateScopes(scopes_settings);
+  }
 
   using GSettingsScopes::InsertScope;
   using GSettingsScopes::RemoveScope;
 
-  void UpdateScopes(const char* scopes_settings[]);
+  void UpdateScopes(const char* scopes_settings[])
+  {
+    g_settings_set_strv(gsettings_client, SCOPES_SETTINGS_KEY, scopes_settings);
+  }
 
 protected:
   virtual Scope::Ptr CreateScope(ScopeData::Ptr const& scope_data)

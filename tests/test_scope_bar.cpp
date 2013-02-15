@@ -49,10 +49,6 @@ public:
   dash::Style style;
 };
 
-TEST_F(TestScopeBar, TestConstruct)
-{
-}
-
 TEST_F(TestScopeBar, TestAddScopes)
 {
   ScopeBar scope_bar;

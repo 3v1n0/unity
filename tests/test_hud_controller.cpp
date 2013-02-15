@@ -28,6 +28,9 @@ using namespace testing;
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UnitySettings.h"
 #include "test_utils.h"
+
+#include <NuxCore/AnimationController.h>
+
 using namespace unity;
 
 namespace
@@ -62,7 +65,8 @@ class TestHudController : public Test
 {
 public:
   TestHudController()
-  : view_(new NiceMock<MockHudView>)
+  : animation_controller(tick_source)
+  , view_(new NiceMock<MockHudView>)
   , base_window_(new testmocks::MockBaseWindow([](nux::Geometry const& geo)
                                                { return geo; }))
   { }
@@ -81,6 +85,9 @@ public:
   }
 
 protected:
+  nux::animation::TickSource tick_source;
+  nux::animation::AnimationController animation_controller;
+
   hud::Controller::Ptr controller_;
   MockHudView::Ptr view_;
   testmocks::MockBaseWindow::Ptr base_window_;
@@ -109,14 +116,13 @@ TEST_F(TestHudController, TestShowAndHideHud)
   }
 
   controller_->ShowHud();
-  Utils::WaitForTimeout(2);
+  tick_source.tick.emit(2000*1000);
   Mock::VerifyAndClearExpectations(view_.GetPointer());
   Mock::VerifyAndClearExpectations(base_window_.GetPointer());
   EXPECT_EQ(base_window_->GetOpacity(), 1.0);
 
   // Set expectations for hiding the HUD
   EXPECT_CALL(*view_, AboutToHide()).Times(1);
-  EXPECT_CALL(*view_, ResetToDefault()).Times(1);
   {
     InSequence hiding;
     EXPECT_CALL(*base_window_, SetOpacity(_)).Times(AtLeast(1));
@@ -126,7 +132,7 @@ TEST_F(TestHudController, TestShowAndHideHud)
   }
 
   controller_->HideHud();
-  Utils::WaitForTimeout(2);
+  tick_source.tick.emit(4000*1000);
   EXPECT_EQ(base_window_->GetOpacity(), 0.0);
 }
 

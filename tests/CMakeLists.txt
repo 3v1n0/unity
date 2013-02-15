@@ -129,9 +129,9 @@ if (GTEST_SRC_DIR AND
        test_launcher_entry_remote.cpp
        test_launcher_options.cpp
        test_layout_system.cpp
-       test_mock_scope.cpp
        test_model_iterator.cpp
        test_previews.cpp
+       test_scope_data.cpp
        test_time_util.cpp
        test_ubus.cpp
        test_unityshell_private.cpp
@@ -224,7 +224,6 @@ if (ENABLE_X_SUPPORT)
                  test_launcher_hover_machine.cpp
                  test_launcher_icon.cpp
                  test_launcher_tooltip.cpp
-                 test_mock_scope.cpp
                  test_panel_indicators_view.cpp
                  test_panel_menu_view.cpp
                  test_panel_style.cpp

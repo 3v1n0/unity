@@ -84,5 +84,6 @@ TEST_F(TestDashView, TestConstruct)
   EXPECT_EQ(view->scope_views_.size(), 4) << "Error: Incorrect number of scope views (" << view->scope_views_.size() << " != 4)";
 }
 
+
 }
 }

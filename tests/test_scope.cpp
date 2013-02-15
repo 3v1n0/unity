@@ -56,13 +56,11 @@ public:
 
     scope_.reset(new Scope(data));
     scope_->Init();
-    scope_->Connect();
-
-    WaitForConnected();
   }
  
-  void WaitForConnected()
+  void ConnectAndWait()
   {
+    scope_->Connect();
     Utils::WaitUntilMSec([this] { return scope_->connected() == true; }, true, 2000);
   }
 
@@ -94,7 +92,96 @@ public:
 
 TEST_F(TestScope, TestConnection)
 {
+  ConnectAndWait();
   ASSERT_TRUE(scope_->connected);
+}
+
+TEST_F(TestScope, Search)
+{
+  // Auto-connect on search
+  bool search_ok = false;
+  auto search_callback = [&search_ok] (glib::HintsMap const&, glib::Error const&) {
+    search_ok = true;
+  };
+
+  scope_->Search("12:test_search", search_callback, nullptr);
+  Utils::WaitUntilMSec(search_ok,
+                       2000,
+                       [] { return g_strdup("Search did not finish sucessfully"); });
+}
+
+TEST_F(TestScope, ActivateUri)
+{
+  // Auto-connect on activate
+  bool activated_return = false;
+  auto activate_callback = [&activated_return] (LocalResult const&, ScopeHandledType, glib::Error const&) {
+    activated_return = true;
+  };
+
+  LocalResult result; result.uri = "file:://test";
+  scope_->Activate(result,
+                   activate_callback);
+
+  Utils::WaitUntilMSec(activated_return,
+                       2000,
+                       [] { return g_strdup("Failed to activate"); });
+}
+
+TEST_F(TestScope, Preview)
+{
+  // Auto-connect on preview
+  bool preview_ok = false;
+  auto preview_callback = [&preview_ok] (LocalResult const&, ScopeHandledType, glib::Error const&) {
+    preview_ok = true;
+  };
+
+  LocalResult result; result.uri = "file:://test";
+  scope_->Preview(result,
+                  preview_callback);
+
+  Utils::WaitUntilMSec(preview_ok,
+                       2000,
+                       [] { return g_strdup("Failed to preview"); });
+}
+
+TEST_F(TestScope, ActivatePreviewAction)
+{
+  // Auto-connect on preview
+  bool preview_action_ok = false;
+  auto preview_action_callback = [&preview_action_ok] (LocalResult const&, ScopeHandledType, glib::Error const&) {
+    preview_action_ok = true;
+  };
+
+  LocalResult result; result.uri = "file:://test";
+  scope_->ActivatePreviewAction("play",
+                                result,
+                                glib::HintsMap(),
+                                preview_action_callback);
+
+  Utils::WaitUntilMSec(preview_action_ok,
+                       2000,
+                       [] { return g_strdup("Failed to activate preview action"); });
+}
+
+TEST_F(TestScope, UpdatePreviewProperty)
+{
+  // Auto-connect on preview
+  bool update_preview_property_returned = false;
+  auto update_property_callback = [&update_preview_property_returned] (glib::HintsMap const&, glib::Error const&) {
+    update_preview_property_returned = true;
+  };
+
+  LocalResult result; result.uri = "file:://test";
+  glib::HintsMap hints;
+  hints["test"] = g_variant_new_string("plop");
+  scope_->UpdatePreviewProperty(result,
+                                hints,
+                                update_property_callback,
+                                nullptr);
+
+  Utils::WaitUntilMSec(update_preview_property_returned,
+                       2000,
+                       [] { return g_strdup("Failed to update preview property"); });
 }
 
 TEST_F(TestScope, UpdateSearchCategoryWorkflow)

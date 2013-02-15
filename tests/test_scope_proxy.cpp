@@ -63,14 +63,27 @@ public:
   ScopeProxyInterface::Ptr scope_proxy_;
 };
 
-TEST_F(TestScopeProxy, TestConnection)
+TEST_F(TestScopeProxy, Connection)
 {
   ConnectAndWait();
 
   ASSERT_TRUE(scope_proxy_->connected);
 }
 
-TEST_F(TestScopeProxy, TestFilterSync)
+TEST_F(TestScopeProxy, SetViewType)
+{
+  ASSERT_EQ(scope_proxy_->view_type(), dash::HIDDEN);
+  ConnectAndWait();
+
+  bool scope_view_type_changed = false;
+  scope_proxy_->view_type.changed.connect([&scope_view_type_changed] (ScopeViewType const&) { scope_view_type_changed = true; });
+  scope_proxy_->view_type = dash::SCOPE_VIEW;
+
+  EXPECT_TRUE(scope_view_type_changed);
+}
+
+
+TEST_F(TestScopeProxy, FilterSync)
 {
   ConnectAndWait();
 
@@ -86,14 +99,14 @@ TEST_F(TestScopeProxy, TestFilterSync)
 
   Filter::Ptr filter = filters->FilterAtIndex(0);
   EXPECT_TRUE(filter ? true : false);
-  EXPECT_EQ(filter->renderer_name, "filter-radiooption");
+  EXPECT_EQ(filter->renderer_name(), "filter-checkoption");
 
   RadioOptionFilter::Ptr radio_option_filter = std::static_pointer_cast<RadioOptionFilter>(filter);
   RadioOptionFilter::RadioOptions radio_opitons = radio_option_filter->options();
   EXPECT_TRUE(radio_opitons.size() > 0);
 }
 
-TEST_F(TestScopeProxy, TestCategorySync)
+TEST_F(TestScopeProxy, CategorySync)
 {
   ConnectAndWait();
 
@@ -104,7 +117,7 @@ TEST_F(TestScopeProxy, TestCategorySync)
                        [] { return g_strdup("Cateogry count = 0"); });
 }
 
-TEST_F(TestScopeProxy, TestSearch)
+TEST_F(TestScopeProxy, Search)
 {
   // Auto-connect on search
 
@@ -118,7 +131,7 @@ TEST_F(TestScopeProxy, TestSearch)
   scope_proxy_->Search("12:test_search", search_callback, nullptr);
 
   Results::Ptr results = scope_proxy_->results();
-  Utils::WaitUntilMSec([&, results] { return search_finished == true && results->count() == 12; },
+  Utils::WaitUntilMSec([&search_finished, results] { return search_finished == true && results->count() == 12; },
                        true,
                        2000,
                        [results] { return g_strdup_printf("Either search didn't finish, or result count is not as expected (%u != 12).", static_cast<unsigned>(results->count())); });
@@ -126,7 +139,7 @@ TEST_F(TestScopeProxy, TestSearch)
 }
 
 // Test that searching twice will not concatenate results.
-TEST_F(TestScopeProxy, TestMultiSearch)
+TEST_F(TestScopeProxy, MultiSearch)
 {
   // Auto-connect on search
 
@@ -141,7 +154,7 @@ TEST_F(TestScopeProxy, TestMultiSearch)
   scope_proxy_->Search("12:test_search", search_callback, nullptr);
 
   Results::Ptr results = scope_proxy_->results();
-  Utils::WaitUntilMSec([&, results] { return search_finished == true && results->count() == 12; },
+  Utils::WaitUntilMSec([&search_finished, results] { return search_finished == true && results->count() == 12; },
                        true,
                        2000,
                        [results] { return g_strdup_printf("First search. Either search didn't finish, or result count is not as expected (%u != 12).", static_cast<int>(results->count())); });
@@ -159,7 +172,7 @@ TEST_F(TestScopeProxy, TestMultiSearch)
   EXPECT_TRUE(search_ok == true);
 }
 
-TEST_F(TestScopeProxy, TestSearchCategories)
+TEST_F(TestScopeProxy, SearchCategories)
 {
   // Auto-connect on search
 
@@ -182,12 +195,12 @@ TEST_F(TestScopeProxy, TestSearchCategories)
   EXPECT_EQ(category_model3->count(), 0) << "Category 3 result count not as expected (" << category_model3->count() << " != 0)";
 }
 
-TEST_F(TestScopeProxy, TestActivateUri)
+TEST_F(TestScopeProxy, ActivateUri)
 {
   // Auto-connect on activate
 
   bool activated_return = false;
-  auto func = [&activated_return] (LocalResult const& result, ScopeHandledType handled, glib::HintsMap const&, glib::Error const& error) {
+  auto activate_callback = [&activated_return] (LocalResult const& result, ScopeHandledType handled, glib::HintsMap const&, glib::Error const& error) {
     activated_return = true;
 
     EXPECT_TRUE(error==false);
@@ -198,7 +211,7 @@ TEST_F(TestScopeProxy, TestActivateUri)
   scope_proxy_->Activate(result,
                           UNITY_PROTOCOL_ACTION_TYPE_ACTIVATE_RESULT,
                           glib::HintsMap(),
-                          func,
+                          activate_callback,
                           nullptr);
 
   Utils::WaitUntilMSec(activated_return,
@@ -206,12 +219,12 @@ TEST_F(TestScopeProxy, TestActivateUri)
                        [] { return g_strdup("Failed to activate"); });
 }
 
-TEST_F(TestScopeProxy, TestPreview)
+TEST_F(TestScopeProxy, Preview)
 {
   // Auto-connect on preview
 
   bool prevew_returned = false;
-  auto func = [&prevew_returned] (LocalResult const& result, ScopeHandledType handled, glib::HintsMap const& hints, glib::Error const& error) {
+  auto activate_callback = [&prevew_returned] (LocalResult const& result, ScopeHandledType handled, glib::HintsMap const& hints, glib::Error const& error) {
     prevew_returned = true;
 
     EXPECT_TRUE(error==false) << "Preview request returned with error: " << error.Message();
@@ -223,14 +236,13 @@ TEST_F(TestScopeProxy, TestPreview)
   scope_proxy_->Activate(result,
                           UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_RESULT,
                           glib::HintsMap(),
-                          func,
+                          activate_callback,
                           nullptr);
 
   Utils::WaitUntilMSec(prevew_returned,
                        2000,
                        [] { return g_strdup("Failed to preview"); });
 }
-
 
 } // namespace dash
 } // namespace unity
