@@ -342,4 +342,29 @@ TEST_F(TestEdgeBarrierController, TestTheDirectionIsAlawysSetToBothSides)
     ASSERT_EQ(barrier->direction, BarrierDirection::BOTH);
 }
 
+TEST_F(TestEdgeBarrierController, BarrierDoesNotBreakIfYEventToFarApart)
+{
+  MockPointerBarrier owner;
+
+  int velocity = bc.options()->edge_overcome_pressure() * bc.options()->edge_responsiveness();
+  auto firstEvent = std::make_shared<BarrierEvent>(0, 50, velocity, 10);
+  auto secondEvent = std::make_shared<BarrierEvent>(0, 150, velocity, 11);
+
+  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
+  ProcessBarrierEvent(&owner, firstEvent);
+  ProcessBarrierEvent(&owner, secondEvent);
+}
+
+TEST_F(TestEdgeBarrierController, BarrierBreaksInYBreakZone)
+{
+  MockPointerBarrier owner;
+
+  int velocity = bc.options()->edge_overcome_pressure() * bc.options()->edge_responsiveness();
+  auto firstEvent = std::make_shared<BarrierEvent>(0, 50, velocity, 10);
+
+  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(1);
+  ProcessBarrierEvent(&owner, firstEvent);
+  ProcessBarrierEvent(&owner, firstEvent);
+}
+
 }
