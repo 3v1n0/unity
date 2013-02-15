@@ -23,7 +23,7 @@
 
 
 #include "DBusTestRunner.h"
-#include "ScopeData.h"
+#include "UnityCore/ScopeProxyInterface.h"
 
 namespace unity
 {

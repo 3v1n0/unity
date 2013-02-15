@@ -44,6 +44,13 @@ enum ScopeHandledType
   SHOW_PREVIEW
 };
 
+enum ScopeViewType
+{
+  HIDDEN=0,
+  HOME_VIEW,
+  SCOPE_VIEW
+};
+
 class ScopeProxyInterface : public sigc::trackable, boost::noncopyable
 {
 public:

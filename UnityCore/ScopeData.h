@@ -29,13 +29,6 @@ namespace unity
 namespace dash
 {
 
-enum ScopeViewType
-{
-  HIDDEN=0,
-  HOME_VIEW,
-  SCOPE_VIEW
-};
-
 class ScopeData
 {
 public:

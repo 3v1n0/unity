@@ -125,16 +125,20 @@ void Scopes::Impl::InsertScope(ScopeData::Ptr const& scope_data, unsigned index)
     Scope::Ptr scope = *scope_position;
     if (scope_position > (start + index))
     {
+      // move before
       scopes_.erase(scope_position);
       scopes_.insert(start + index, scope);
 
       owner_->scopes_reordered.emit(GetScopes());
     }
-    else if (index > 0 && scope_position < (start + index - 1))
+    else if (index > 0 &&
+             scope_position < (start + index) &&
+             scopes_.size() > index)
     {
+      // move after
       scopes_.erase(scope_position);
 
-      scopes_.insert(start + index - 1, scope);
+      scopes_.insert(start + index, scope);
 
       owner_->scopes_reordered.emit(GetScopes());
     }
@@ -247,27 +251,23 @@ void Scopes::AppendScope(std::string const& scope_id)
 
 void Scopes::InsertScope(std::string const& scope_id, unsigned index)
 {
-  if (!pimpl->scopes_reader_)
-    return;
-
-  ScopeData::Ptr scope_data(pimpl->scopes_reader_->GetScopeDataById(scope_id));
-  if (scope_data)
-    pimpl->InsertScope(scope_data, index);
-
-  // Fallback - manually create and insert the scope.
-  auto scope_data_position = std::find_if(pimpl->scopes_.begin(),
-                                     pimpl->scopes_.end(),
-                                     [scope_id](Scope::Ptr const& scope) { return scope->id() == scope_id; });
-  if (scope_data_position == pimpl->scopes_.end())
+  if (pimpl->scopes_reader_)
   {
-    glib::Error error;
-    ScopeData::Ptr scope_data(ScopeData::ReadProtocolDataForId(scope_id, error));
-    // manually created scopes are not visible.
-    scope_data->visible = false;
-    if (scope_data && !error)
+    ScopeData::Ptr scope_data(pimpl->scopes_reader_->GetScopeDataById(scope_id));
+    if (scope_data)
     {
       pimpl->InsertScope(scope_data, index);
+      return;
     }
+  }
+
+  // Fallback - manually create and insert the scope.
+  glib::Error error;
+  ScopeData::Ptr scope_data(ScopeData::ReadProtocolDataForId(scope_id, error));
+  scope_data->visible = false;
+  if (scope_data && !error)
+  {
+    pimpl->InsertScope(scope_data, index);
   }
 }
 
