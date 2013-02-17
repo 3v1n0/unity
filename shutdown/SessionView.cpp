@@ -20,6 +20,7 @@
 #include "SessionView.h"
 
 #include <Nux/VLayout.h>
+#include <NuxCore/Property.h>
 #include <UnityCore/GLibWrapper.h>
 #include <glib/gi18n-lib.h>
 
@@ -47,8 +48,11 @@ namespace theme
 class ActionButton : public nux::View
 {
 public:
+  nux::Property<bool> highlighted;
+
   ActionButton(std::string const& label, std::string const& texture_name, NUX_FILE_LINE_DECL)
     : nux::View(NUX_FILE_LINE_PARAM)
+    , highlighted(false)
   {
     std::string texture_prefix = PKGDATADIR"/" + texture_name;
     normal_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + ".png").c_str(), -1, true));
@@ -65,12 +69,18 @@ public:
     label_view_ = new StaticCairoText(label);
     label_view_->SetFont(theme::FONT);
     label_view_->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
+    label_view_->SetTextColor(nux::color::Transparent);
     label_view_->SetInputEventSensitivity(false);
     main_layout->AddView(label_view_, 1, nux::MINOR_POSITION_CENTER);
 
-    mouse_enter.connect([this] (int, int, unsigned long, unsigned long) { SetHighlighted(true); });
-    mouse_leave.connect([this] (int, int, unsigned long, unsigned long) { SetHighlighted(false); });
+    mouse_enter.connect([this] (int, int, unsigned long, unsigned long) { highlighted = true; });
+    mouse_leave.connect([this] (int, int, unsigned long, unsigned long) { highlighted = false; });
     mouse_click.connect([this] (int, int, unsigned long, unsigned long) { activated.emit(); });
+
+    highlighted.changed.connect([this] (bool value) {
+      image_view_->SetTexture(value ? highlight_tex_ : normal_tex_);
+      label_view_->SetTextColor(value ? nux::color::White : nux::color::Transparent);
+    });
 
     // This function ensures that when an item is activated, the button state
     // is reset as soon as the parent window has been closed.
@@ -80,23 +90,17 @@ public:
       {
         auto conn = std::make_shared<sigc::connection>();
         *conn = top_win->sigHidden.connect([this, conn] (nux::BaseWindow*) {
-          SetHighlighted(false);
+          highlighted = false;
           conn->disconnect();
         });
       }
       else
       {
-        SetHighlighted(false);
+        highlighted = false;
       }
     });
 
     SetLayout(main_layout);
-  }
-
-  void SetHighlighted(bool highlighted)
-  {
-    image_view_->SetTexture(highlighted ? highlight_tex_ : normal_tex_);
-    label_view_->SetTextColor(highlighted ? nux::color::White : nux::color::Transparent);
   }
 
   void Draw(nux::GraphicsEngine& ctx, bool force)

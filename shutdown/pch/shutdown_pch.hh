@@ -25,4 +25,5 @@
 #include <memory>
 
 #include <Nux/Nux.h>
+#include <NuxCore/Property.h>
 #include <UnityCore/GnomeSessionManager.h>
