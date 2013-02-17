@@ -94,6 +94,7 @@ void Controller::Show()
   view_window_->ShowWindow(true);
   view_window_->PushToFront();
   view_window_->SetInputFocus();
+  nux::GetWindowCompositor().SetKeyFocusArea(view_.GetPointer());
 
   if (fade_animator_.CurrentState() == na::Animation::State::Running)
   {
@@ -140,6 +141,7 @@ void Controller::ConstructView()
   view_window_->SetWindowSizeMatchLayout(true);
   view_window_->ShowWindow(false);
   view_window_->SetOpacity(0.0f);
+  view_window_->SetEnterFocusInputArea(view_.GetPointer());
 
   view_->request_hide.connect(sigc::mem_fun(this, &Controller::Hide));
   view_->request_close.connect([this] {
