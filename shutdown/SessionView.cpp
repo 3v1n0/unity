@@ -61,6 +61,7 @@ public:
     auto main_layout = new nux::VLayout();
     main_layout->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
     main_layout->SetSpaceBetweenChildren(theme::BUTTON_SPACE);
+    SetLayout(main_layout);
 
     image_view_ = new IconTexture(normal_tex_);
     image_view_->SetInputEventSensitivity(false);
@@ -77,9 +78,16 @@ public:
     mouse_leave.connect([this] (int, int, unsigned long, unsigned long) { highlighted = false; });
     mouse_click.connect([this] (int, int, unsigned long, unsigned long) { activated.emit(); });
 
+    begin_key_focus.connect([this] { highlighted = true; });
+    end_key_focus.connect([this] { highlighted = false; });
+    key_nav_focus_activate.connect([this] (Area*) { activated.emit(); });
+
     highlighted.changed.connect([this] (bool value) {
       image_view_->SetTexture(value ? highlight_tex_ : normal_tex_);
       label_view_->SetTextColor(value ? nux::color::White : nux::color::Transparent);
+
+      if (value)
+        nux::GetWindowCompositor().SetKeyFocusArea(this);
     });
 
     // This function ensures that when an item is activated, the button state
@@ -99,8 +107,6 @@ public:
         highlighted = false;
       }
     });
-
-    SetLayout(main_layout);
   }
 
   void Draw(nux::GraphicsEngine& ctx, bool force)
@@ -182,6 +188,48 @@ nux::Geometry View::GetBackgroundGeometry()
 void View::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip)
 {
   view_layout_->ProcessDraw(GfxContext, force_draw);
+}
+
+nux::Area* View::FindKeyFocusArea(unsigned etype, unsigned long key_code, unsigned long modifiers)
+{
+  if (etype != nux::NUX_KEYDOWN)
+    return UnityWindowView::FindKeyFocusArea(etype, key_code, modifiers);
+
+  if (key_code == NUX_VK_LEFT || key_code == NUX_VK_RIGHT)
+  {
+    nux::InputArea* focused = nux::GetWindowCompositor().GetKeyFocusArea();
+
+    if (!focused || focused == this || !focused->IsChildOf(this))
+    {
+      if (key_code == NUX_VK_LEFT)
+      {
+        return buttons_layout_->GetChildren().front();
+      }
+      else if (key_code == NUX_VK_RIGHT)
+      {
+        return buttons_layout_->GetChildren().back();
+      }
+    }
+  }
+  else if (key_code == NUX_VK_ESCAPE)
+  {
+    nux::InputArea* focused = nux::GetWindowCompositor().GetKeyFocusArea();
+
+    if (!focused || !focused->IsMouseInside())
+      return this;
+  }
+
+  return nux::View::FindKeyFocusArea(etype, key_code, modifiers);
+}
+
+nux::Area* View::KeyNavIteration(nux::KeyNavDirection direction)
+{
+  if (direction == nux::KEY_NAV_LEFT)
+    return buttons_layout_->GetChildren().back();
+  else if (direction == nux::KEY_NAV_RIGHT)
+    return buttons_layout_->GetChildren().front();
+
+  return nux::View::KeyNavIteration(direction);
 }
 
 //

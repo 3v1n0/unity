@@ -45,6 +45,9 @@ protected:
   void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip);
   nux::Geometry GetBackgroundGeometry();
 
+  nux::Area* FindKeyFocusArea(unsigned etype, unsigned long key_code, unsigned long modifiers);
+  nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
+
   // Introspectable methods
   std::string GetName() const;
 
