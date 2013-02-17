@@ -17,10 +17,9 @@ include_directories (.. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR
 # Headers & Sources
 #
 set (SHUTDOWN_SOURCES
+     SessionButton.cpp
      SessionController.cpp
-     SessionController.h
      SessionView.cpp
-     SessionView.h
      )
 
 add_library (shutdown-lib STATIC ${SHUTDOWN_SOURCES})

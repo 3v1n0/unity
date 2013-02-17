@@ -17,48 +17,44 @@
 * Authored by: Marco Trevisan (Treviño) <marco@ubuntu.com>
 */
 
-#ifndef UNITYSHELL_SESSION_VIEW_H
-#define UNITYSHELL_SESSION_VIEW_H
+#ifndef UNITYSHELL_SESSION_BUTTON_H
+#define UNITYSHELL_SESSION_BUTTON_H
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
-#include <Nux/HLayout.h>
+#include <NuxCore/Property.h>
 
-#include "unity-shared/UnityWindowView.h"
+#include "unity-shared/IconTexture.h"
+#include "unity-shared/StaticCairoText.h"
 
 namespace unity
 {
 namespace session
 {
 
-class View : public ui::UnityWindowView
+class Button : public nux::View
 {
-  NUX_DECLARE_OBJECT_TYPE(View, ui::UnityWindowView);
+  NUX_DECLARE_OBJECT_TYPE(Button, nux::View);
 public:
-  typedef nux::ObjectPtr<View> Ptr;
+  Button(std::string const& label, std::string const& texture_name, NUX_FILE_LINE_PROTO);
 
-  View(Manager::Ptr const& manager);
+  nux::Property<bool> highlighted;
 
-  sigc::signal<void> request_hide;
+  sigc::signal<void> activated;
 
 protected:
-  void DrawOverlay(nux::GraphicsEngine&, bool force, nux::Geometry const&);
-  nux::Geometry GetBackgroundGeometry();
-
-  nux::Area* FindKeyFocusArea(unsigned etype, unsigned long key, unsigned long mod);
-  nux::Area* KeyNavIteration(nux::KeyNavDirection);
-
-  // Introspectable methods
-  std::string GetName() const;
+  void Draw(nux::GraphicsEngine&, bool force);
 
 private:
-  Manager::Ptr manager_;
-  nux::HLayout* buttons_layout_;
+  IconTexture* image_view_;
+  StaticCairoText* label_view_;
+  nux::ObjectPtr<nux::BaseTexture> normal_tex_;
+  nux::ObjectPtr<nux::BaseTexture> highlight_tex_;
 };
 
 } // namespace session
 
 } // namespace unity
 
-#endif // UNITYSHELL_SESSION_VIEW_H
+#endif // UNITYSHELL_SESSION_BUTTON_H
 

@@ -18,14 +18,11 @@
 */
 
 #include "SessionView.h"
+#include "SessionButton.h"
 
 #include <Nux/VLayout.h>
-#include <NuxCore/Property.h>
 #include <UnityCore/GLibWrapper.h>
 #include <glib/gi18n-lib.h>
-
-#include "unity-shared/StaticCairoText.h"
-#include "config.h"
 
 namespace unity
 {
@@ -41,87 +38,8 @@ namespace theme
   const unsigned BOTTOM_PADDING = 12;
 
   const unsigned MAIN_SPACE = 10;
-  const unsigned BUTTON_SPACE = 9;
   const unsigned BUTTONS_SPACE = 20;
 }
-
-class ActionButton : public nux::View
-{
-public:
-  nux::Property<bool> highlighted;
-
-  ActionButton(std::string const& label, std::string const& texture_name, NUX_FILE_LINE_DECL)
-    : nux::View(NUX_FILE_LINE_PARAM)
-    , highlighted(false)
-  {
-    std::string texture_prefix = PKGDATADIR"/" + texture_name;
-    normal_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + ".png").c_str(), -1, true));
-    highlight_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + "_highlight.png").c_str(), -1, true));
-
-    auto main_layout = new nux::VLayout();
-    main_layout->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
-    main_layout->SetSpaceBetweenChildren(theme::BUTTON_SPACE);
-    SetLayout(main_layout);
-
-    image_view_ = new IconTexture(normal_tex_);
-    image_view_->SetInputEventSensitivity(false);
-    main_layout->AddView(image_view_, 1, nux::MINOR_POSITION_CENTER);
-
-    label_view_ = new StaticCairoText(label);
-    label_view_->SetFont(theme::FONT);
-    label_view_->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
-    label_view_->SetTextColor(nux::color::Transparent);
-    label_view_->SetInputEventSensitivity(false);
-    main_layout->AddView(label_view_, 1, nux::MINOR_POSITION_CENTER);
-
-    mouse_enter.connect([this] (int, int, unsigned long, unsigned long) { highlighted = true; });
-    mouse_leave.connect([this] (int, int, unsigned long, unsigned long) { highlighted = false; });
-    mouse_click.connect([this] (int, int, unsigned long, unsigned long) { activated.emit(); });
-
-    begin_key_focus.connect([this] { highlighted = true; });
-    end_key_focus.connect([this] { highlighted = false; });
-    key_nav_focus_activate.connect([this] (Area*) { activated.emit(); });
-
-    highlighted.changed.connect([this] (bool value) {
-      image_view_->SetTexture(value ? highlight_tex_ : normal_tex_);
-      label_view_->SetTextColor(value ? nux::color::White : nux::color::Transparent);
-
-      if (value)
-        nux::GetWindowCompositor().SetKeyFocusArea(this);
-    });
-
-    // This function ensures that when an item is activated, the button state
-    // is reset as soon as the parent window has been closed.
-    activated.connect([this] {
-      auto* top_win = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
-      if (top_win && top_win->IsVisible())
-      {
-        auto conn = std::make_shared<sigc::connection>();
-        *conn = top_win->sigHidden.connect([this, conn] (nux::BaseWindow*) {
-          highlighted = false;
-          conn->disconnect();
-        });
-      }
-      else
-      {
-        highlighted = false;
-      }
-    });
-  }
-
-  void Draw(nux::GraphicsEngine& ctx, bool force)
-  {
-    GetLayout()->ProcessDraw(ctx, force);
-  }
-
-  sigc::signal<void> activated;
-
-private:
-  IconTexture* image_view_;
-  StaticCairoText* label_view_;
-  nux::ObjectPtr<nux::BaseTexture> normal_tex_;
-  nux::ObjectPtr<nux::BaseTexture> highlight_tex_;
-};
 
 NUX_IMPLEMENT_OBJECT_TYPE(View);
 
@@ -148,14 +66,14 @@ View::View(Manager::Ptr const& manager)
   buttons_layout_->SetSpaceBetweenChildren(theme::BUTTONS_SPACE);
   main_layout->AddLayout(buttons_layout_);
 
-  auto button = new ActionButton(_("Lock"), "lockscreen", NUX_TRACKER_LOCATION);
+  auto button = new Button(_("Lock"), "lockscreen", NUX_TRACKER_LOCATION);
   button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
   button->activated.connect([this] {request_hide.emit();});
   buttons_layout_->AddView(button);
 
   if (manager_->CanSuspend())
   {
-    button = new ActionButton(_("Suspend"), "suspend", NUX_TRACKER_LOCATION);
+    button = new Button(_("Suspend"), "suspend", NUX_TRACKER_LOCATION);
     button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Suspend));
     button->activated.connect([this] {request_hide.emit();});
     buttons_layout_->AddView(button);
@@ -163,18 +81,18 @@ View::View(Manager::Ptr const& manager)
 
   if (manager_->CanHibernate())
   {
-    button = new ActionButton(_("Hibernate"), "hibernate", NUX_TRACKER_LOCATION);
+    button = new Button(_("Hibernate"), "hibernate", NUX_TRACKER_LOCATION);
     button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Hibernate));
     button->activated.connect([this] {request_hide.emit();});
     buttons_layout_->AddView(button);
   }
 
-  button = new ActionButton(_("Shutdown"), "shutdown", NUX_TRACKER_LOCATION);
+  button = new Button(_("Shutdown"), "shutdown", NUX_TRACKER_LOCATION);
   button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Shutdown));
   button->activated.connect([this] {request_hide.emit();});
   buttons_layout_->AddView(button);
 
-  button = new ActionButton(_("Restart"), "restart", NUX_TRACKER_LOCATION);
+  button = new Button(_("Restart"), "restart", NUX_TRACKER_LOCATION);
   button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Reboot));
   button->activated.connect([this] {request_hide.emit();});
   buttons_layout_->AddView(button);
