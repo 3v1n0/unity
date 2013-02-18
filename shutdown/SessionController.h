@@ -62,6 +62,8 @@ private:
   void ConstructView();
   void EnsureView();
   void CloseWindow();
+  void HideAndCancel();
+
   void OnBackgroundUpdate(GVariant* data);
 
   View::Ptr view_;

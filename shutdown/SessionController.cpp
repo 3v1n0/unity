@@ -143,18 +143,24 @@ void Controller::ConstructView()
   view_window_->SetOpacity(0.0f);
   view_window_->SetEnterFocusInputArea(view_.GetPointer());
 
-  view_->request_hide.connect(sigc::mem_fun(this, &Controller::Hide));
-  view_->request_close.connect([this] {
-    Hide();
-    manager_->CancelAction();
+  view_window_->mouse_down_outside_pointer_grab_area.connect([this] (int, int, unsigned long, unsigned long) {
+    HideAndCancel();
   });
 
+  view_->request_hide.connect(sigc::mem_fun(this, &Controller::Hide));
+  view_->request_close.connect(sigc::mem_fun(this, &Controller::HideAndCancel));
 }
 
 void Controller::EnsureView()
 {
   if (!view_window_)
     ConstructView();
+}
+
+void Controller::HideAndCancel()
+{
+  manager_->CancelAction();
+  Hide();
 }
 
 void Controller::Hide()
