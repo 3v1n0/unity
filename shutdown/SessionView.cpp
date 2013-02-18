@@ -48,9 +48,8 @@ View::View(Manager::Ptr const& manager)
 {
   closable = true;
   auto main_layout = new nux::VLayout();
-  int offset = style()->GetInternalOffset();
-  main_layout->SetTopAndBottomPadding(offset + theme::TOP_PADDING, offset + theme::BOTTOM_PADDING);
-  main_layout->SetLeftAndRightPadding(offset + theme::LEFT_RIGHT_PADDING);
+  main_layout->SetTopAndBottomPadding(theme::TOP_PADDING, theme::BOTTOM_PADDING);
+  main_layout->SetLeftAndRightPadding(theme::LEFT_RIGHT_PADDING);
   main_layout->SetSpaceBetweenChildren(theme::MAIN_SPACE);
   SetLayout(main_layout);
 
@@ -60,13 +59,14 @@ View::View(Manager::Ptr const& manager)
   auto* header_view = new StaticCairoText(header);
   header_view->SetFont(theme::FONT);
   header_view->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_LEFT);
+  header_view->SetInputEventSensitivity(false);
   main_layout->AddView(header_view);
 
   buttons_layout_ = new nux::HLayout();
   buttons_layout_->SetSpaceBetweenChildren(theme::BUTTONS_SPACE);
   main_layout->AddLayout(buttons_layout_);
 
-  auto button = new Button(_("Lock"), "lockscreen", NUX_TRACKER_LOCATION);
+  auto* button = new Button(_("Lock"), "lockscreen", NUX_TRACKER_LOCATION);
   button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
   AddButton(button);
 
@@ -91,6 +91,8 @@ View::View(Manager::Ptr const& manager)
   button = new Button(_("Restart"), "restart", NUX_TRACKER_LOCATION);
   button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Reboot));
   AddButton(button);
+
+  GetBoundingArea()->mouse_click.connect([this] (int, int, unsigned long, unsigned long) { request_close.emit(); });
 }
 
 void View::AddButton(Button* button)
