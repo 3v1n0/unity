@@ -30,6 +30,13 @@ UnityWindowStyle::UnityWindowStyle()
   background_corner_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_corner.png", -1, true));
 }
 
+UnityWindowStyle::Ptr UnityWindowStyle::Get()
+{
+  // This is set only the first time;
+  static UnityWindowStyle::Ptr instance(new UnityWindowStyle());
+  return instance;
+}
+
 int UnityWindowStyle::GetBorderSize() const
 {
   return 30; // as measured from textures

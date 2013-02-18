@@ -32,7 +32,7 @@ public:
   typedef std::shared_ptr<UnityWindowStyle> Ptr;
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
-  UnityWindowStyle();
+  static UnityWindowStyle::Ptr Get();
 
   BaseTexturePtr GetCloseIcon();
   BaseTexturePtr GetCloseIconHighligted();
@@ -46,6 +46,8 @@ public:
   int GetInternalOffset() const;
 
 private:
+  UnityWindowStyle();
+
   BaseTexturePtr background_top_;
   BaseTexturePtr background_left_;
   BaseTexturePtr background_corner_;
