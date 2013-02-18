@@ -90,7 +90,7 @@ void Controller::Show()
     view_window_->GrabKeyboard();
   }
 
-  view_->SetupBackground(true);
+  view_->live_background = true;
   view_window_->ShowWindow(true);
   view_window_->PushToFront();
   view_window_->SetInputFocus();
@@ -126,7 +126,6 @@ nux::Point Controller::GetOffsetPerMonitor(int monitor)
 void Controller::ConstructView()
 {
   view_ = View::Ptr(new View(manager_));
-  view_->SetupBackground(false);
   view_->background_color = bg_color_;
   AddChild(view_.GetPointer());
 
@@ -183,7 +182,7 @@ void Controller::CloseWindow()
   view_window_->UnGrabPointer();
   view_window_->UnGrabKeyboard();
   view_window_->EnableInputWindow(false);
-  view_->SetupBackground(false);
+  view_->live_background = false;
   manager_->ClosedDialog();
 
   WindowManager::Default().RestoreInputFocus();
