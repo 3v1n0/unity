@@ -48,7 +48,7 @@ public:
   bool SetLayout(nux::Layout* layout) override;
   nux::Layout* GetLayout() override;
 
-  nux::ObjectPtr<nux::InputArea> GetBoundingArea() const;
+  nux::ObjectPtr<nux::InputArea> GetBoundingArea();
 
   sigc::signal<void> request_close;
 
