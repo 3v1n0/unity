@@ -27,6 +27,7 @@ from gi.repository import GLib
 from gi.repository import IBus
 import time
 import dbus
+import threading
 
 
 # See lp:ibus-query
@@ -58,6 +59,9 @@ class IBusQuery:
     def __disabled_cb(self, a):
         self._glibloop.quit()
 
+    def __abort(self):
+        self._abort = True
+
     def poll(self, engine, ibus_input):
         if len(ibus_input) <= 0:
             return None
@@ -65,8 +69,17 @@ class IBusQuery:
         self.result = ''
         self._context.focus_in()
         self._context.set_engine(engine)
+
+        # Timeout in case of the engine not being installed
+        self._abort = False
+        timeout = threading.Timer(4.0, self.__abort)
+        timeout.start()
         while self._context.get_engine() is None:
+            if self._abort is True:
+                print "Error! Could not set the engine correctly."
+                return None
             continue
+        timeout.cancel()
 
         for c in ibus_input:
             self._context.process_key_event(ord(c), 0, 0)
