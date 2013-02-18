@@ -70,43 +70,28 @@ private:
   bool queryShapeRectangles(XRectangle **input,
                             int *nInput,
                             int *inputOrdering,
-                            XRectangle **bounding,
-                            int *nBounding,
-                            int *boundingOrdering,
                             unsigned int *width,
                             unsigned int *height,
                             unsigned int *border);
 
   bool queryProperty(XRectangle **input,
                      int *nInput,
-                     int *inputOrdering,
-                     XRectangle **bounding,
-                     int *nBounding,
-                     int *boundingOrdering);
+                     int *inputOrdering);
 
   bool writeProperty(XRectangle *input,
                      int nInput,
-                     int inputOrdering,
-                     XRectangle *bounding,
-                     int nBounding,
-                     int boundingOrdering);
+                     int inputOrdering);
 
   bool checkRectangles(XRectangle *input,
                        int *nInput,
                        int inputOrdering,
-                       XRectangle *bounding,
-                       int *nBounding,
-                       int boundingOrdering,
                        unsigned int width,
                        unsigned int height,
                        unsigned int border);
 
   bool saveRectangles(XRectangle *input,
                       int nInput,
-                      int inputOrdering,
-                      XRectangle *bounding,
-                      int nBounding,
-                      int boundingOrdering);
+                      int inputOrdering);
 
   void clearProperty ();
   void clearRectangles ();
@@ -120,9 +105,6 @@ private:
   int           mNInputRects;
   int           mInputRectOrdering;
 
-  XRectangle    *mBoundingRects;
-  int           mNBoundingRects;
-  int           mBoundingRectOrdering;
   bool          mRemoved;
 
   int           mShapeEvent;
