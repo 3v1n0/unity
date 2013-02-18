@@ -187,6 +187,7 @@ if (GTEST_SRC_DIR AND
                  test_ratings_filter.cpp
                  test_results.cpp
                  test_scope.cpp
+                 test_scope_filter.cpp
                  test_scope_proxy.cpp
                  test_dbus_indicators.cpp
                 )

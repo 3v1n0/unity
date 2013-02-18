@@ -43,9 +43,9 @@ const gchar* icons[] = {  "gtk-cdrom",
                           "gtk-dialog-error",
                           "gtk-dialog-info" };
 
-const gchar* category_titles[] = { "cat0",
-                                   "cat1",
-                                   "cat2" };
+const gchar* category_ids[] = { "cat0",
+                                "cat1",
+                                "cat2" };
 
 struct _ServiceScopePrivate
 {
@@ -106,7 +106,7 @@ add_categories(ServiceScope* self)
   categories = unity_category_set_new();
 
   int i = 0;
-  int sizeof_categories = sizeof(category_titles) / sizeof(gchar*);
+  int sizeof_categories = sizeof(category_ids) / sizeof(gchar*);
   int sizeof_icons = sizeof(icons) / sizeof(gchar*);
 
   for (i = 0; i < sizeof_categories; i++)
@@ -114,7 +114,7 @@ add_categories(ServiceScope* self)
     gchar* title = g_strdup_printf("Category %d", i);
 
     icon = g_themed_icon_new(icons[i % sizeof_icons]);
-    cateogry = unity_category_new(category_titles[i], title, icon,
+    cateogry = unity_category_new(category_ids[i], title, icon,
                                                    UNITY_CATEGORY_RENDERER_VERTICAL_TILE);
     unity_category_set_add(categories, cateogry);
     g_object_unref (cateogry);
@@ -141,7 +141,7 @@ add_filters(ServiceScope *self)
                                                        NULL, FALSE));
 
   int i = 0;
-  int sizeof_categories = sizeof(category_titles) / sizeof(gchar*);
+  int sizeof_categories = sizeof(category_ids) / sizeof(gchar*);
   int sizeof_icons = sizeof(icons) / sizeof(gchar*);
 
   for (i = 0; i < sizeof_categories; i++)
@@ -150,7 +150,7 @@ add_filters(ServiceScope *self)
 
     icon = g_themed_icon_new(icons[i % sizeof_icons]);
     unity_options_filter_add_option(UNITY_OPTIONS_FILTER (filter),
-                                    category_titles[i], title, icon);
+                                    category_ids[i], title, icon);
     g_object_unref (icon);
     g_free(title);
   }
@@ -225,7 +225,7 @@ static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_base
   UnityScopeResult result;
   int i;
 
-  int sizeof_categories = sizeof(category_titles) / sizeof(gchar*);
+  int sizeof_categories = sizeof(category_ids) / sizeof(gchar*);
   int sizeof_icons = sizeof(icons) / sizeof(gchar*);
 
   UnityOptionsFilter* options_filter = UNITY_OPTIONS_FILTER (unity_filter_set_get_filter_by_id(search_ctx->filter_state, "categories"));
@@ -235,7 +235,7 @@ static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_base
     memset (&result, 0, sizeof (UnityScopeResult));
 
     int category = i % 3;//sizeof_categories;
-    const gchar* category_id = category_titles[category];
+    const gchar* category_id = category_ids[category];
 
     if (options_filter && unity_filter_get_filtering(UNITY_FILTER (options_filter)))
     {

@@ -18,7 +18,7 @@ class Utils
 public:
 
   template <typename Adaptor>
-  static void WaitForModelSynchronize(Model<Adaptor>& model, unsigned int n_rows)
+  static void WaitForModelSynchronize(Model<Adaptor> const& model, unsigned int n_rows)
   {
     bool timeout_reached = false;
     guint32 timeout_id = ScheduleTimeout(&timeout_reached, 10000);

@@ -32,14 +32,6 @@ Categories::Categories()
   row_removed.connect(sigc::mem_fun(this, &Categories::OnRowRemoved));
 }
 
-Categories::Categories(ModelType model_type)
- : Model<Category>::Model(model_type)
-{
-  row_added.connect(sigc::mem_fun(this, &Categories::OnRowAdded));
-  row_changed.connect(sigc::mem_fun(this, &Categories::OnRowChanged));
-  row_removed.connect(sigc::mem_fun(this, &Categories::OnRowRemoved));
-}
-
 void Categories::OnRowAdded(Category& category)
 {
   category_added.emit(category);

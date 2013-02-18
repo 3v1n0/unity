@@ -73,6 +73,7 @@ void Result::SetupGetters()
   name.SetGetterFunction(sigc::mem_fun(this, &Result::GetName));
   comment.SetGetterFunction(sigc::mem_fun(this, &Result::GetComment));
   dnd_uri.SetGetterFunction(sigc::mem_fun(this, &Result::GetDndURI));
+  hints.SetGetterFunction(sigc::mem_fun(this, &Result::GetHints));
 }
 
 std::string Result::GetURI() const { return GetStringAt(ResultColumn::URI); }

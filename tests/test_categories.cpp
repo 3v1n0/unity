@@ -13,6 +13,7 @@ namespace
 {
 
 static const string swarm_name = "com.canonical.test.categoriesmodel";
+static const string swarm_name_changing = "com.canonical.test.categoriesmodel_changing";
 static const unsigned int n_rows = 5;
 
 static void WaitForSynchronize(Categories& model)
@@ -85,6 +86,49 @@ TEST(TestCategories, TestSetGetRenderer)
 
     EXPECT_EQ(value.Str(), renderer.Str());
   }
+}
+
+// We're testing the model's ability to store and retrieve random pointers
+TEST(TestCategories, TestOnRowChanged)
+{
+  Categories model;
+  model.swarm_name = swarm_name_changing;
+  WaitForSynchronize(model);
+
+  bool changed = false;
+  model.category_changed.connect([&changed] (Category const&) { changed = true;});
+  Utils::WaitUntilMSec(changed,
+                       2000,
+                       []() { return g_strdup_printf("Did not detect row change from %s.", swarm_name_changing.c_str()); });
+}
+
+
+// We're testing the model's ability to store and retrieve random pointers
+TEST(TestCategories, OnRowAdded)
+{
+  Categories model;
+  model.swarm_name = swarm_name_changing;
+  WaitForSynchronize(model);
+
+  bool added = false;
+  model.category_added.connect([&added] (Category const&) { added = true;});
+  Utils::WaitUntilMSec(added,
+                       2000,
+                       []() { return g_strdup_printf("Did not detect row add %s.", swarm_name_changing.c_str()); });
+}
+
+// We're testing the model's ability to store and retrieve random pointers
+TEST(TestCategories, OnRowRemoved)
+{
+  Categories model;
+  model.swarm_name = swarm_name_changing;
+  WaitForSynchronize(model);
+
+  bool removed = false;
+  model.category_removed.connect([&removed] (Category const&) { removed = true;});
+  Utils::WaitUntilMSec(removed,
+                       2000,
+                       []() { return g_strdup_printf("Did not detect row remove %s.", swarm_name_changing.c_str()); });
 }
 
 }
