@@ -32,16 +32,10 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
   , style(std::make_shared<UnityWindowStyle>())
   , closable(false)
   , internal_layout_(nullptr)
-  , bounding_area_(new nux::InputArea())
 {
   bg_helper_.owner = this;
 
   closable.changed.connect(sigc::mem_fun(this, &UnityWindowView::OnClosableChanged));
-
-  // The bounding area always matches this size, but only handles events outside
-  // the internal layout (when defined)
-  bounding_area_->SetParentObject(this);
-  geometry_changed.connect([this] (nux::Area*, nux::Geometry const& g) { bounding_area_->SetGeometry(g); });
 }
 
 UnityWindowView::~UnityWindowView()
@@ -49,7 +43,8 @@ UnityWindowView::~UnityWindowView()
   if (close_button_)
     close_button_->UnParentObject();
 
-  bounding_area_->UnParentObject();
+  if (bounding_area_)
+    bounding_area_->UnParentObject();
 }
 
 nux::Area*
@@ -64,7 +59,7 @@ UnityWindowView::FindAreaUnderMouse(const nux::Point& mouse, nux::NuxEventType e
   {
     if (internal_layout_ && !internal_layout_->TestMousePointerInclusionFilterMouseWheel(mouse, etype))
     {
-      if (bounding_area_->TestMousePointerInclusionFilterMouseWheel(mouse, etype))
+      if (bounding_area_ && bounding_area_->TestMousePointerInclusionFilterMouseWheel(mouse, etype))
         return bounding_area_.GetPointer();
 
       return nullptr;
@@ -157,8 +152,18 @@ nux::Geometry UnityWindowView::GetInternalBackground()
   return GetBackgroundGeometry().GetExpand(-offset, -offset);
 }
 
-nux::ObjectPtr<nux::InputArea> UnityWindowView::GetBoundingArea() const
+nux::ObjectPtr<nux::InputArea> UnityWindowView::GetBoundingArea()
 {
+  if (!bounding_area_)
+  {
+    // The bounding area always matches this size, but only handles events outside
+    // the internal layout (when defined)
+    bounding_area_ = new nux::InputArea();
+    bounding_area_->SetParentObject(this);
+    bounding_area_->SetGeometry(GetGeometry());
+    geometry_changed.connect([this] (nux::Area*, nux::Geometry const& g) { bounding_area_->SetGeometry(g); });
+  }
+
   return bounding_area_;
 }
 
