@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2012 Canonical Ltd
+ * Copyright (C) 2012-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include <UnityCore/Variant.h>
@@ -34,6 +35,18 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
   , internal_layout_(nullptr)
 {
   bg_helper_.owner = this;
+
+  live_background.SetGetterFunction([this] { return bg_helper_.enabled(); });
+  live_background.SetSetterFunction([this] (bool e) {
+    if (bg_helper_.enabled() != e)
+    {
+      bg_helper_.enabled = e;
+      return true;
+    }
+    return false;
+  });
+
+  live_background = false;
 
   closable.changed.connect(sigc::mem_fun(this, &UnityWindowView::OnClosableChanged));
 }
@@ -67,12 +80,6 @@ UnityWindowView::FindAreaUnderMouse(const nux::Point& mouse, nux::NuxEventType e
   }
 
   return under;
-}
-
-void
-UnityWindowView::SetupBackground(bool enabled)
-{
-  bg_helper_.enabled = enabled;
 }
 
 void UnityWindowView::OnClosableChanged(bool closable)
