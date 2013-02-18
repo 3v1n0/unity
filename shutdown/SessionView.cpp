@@ -98,6 +98,12 @@ void View::AddButton(Button* button)
   button->activated.connect([this] {request_hide.emit();});
   buttons_layout_->AddView(button);
 
+  // This resets back the keyboard focus to the view when a button is unselected
+  button->highlighted.changed.connect([this] (bool value) {
+    if (!value)
+      nux::GetWindowCompositor().SetKeyFocusArea(this);
+  });
+
   // This function ensures that when an item is activated, the button state
   // is reset as soon as the parent window has been closed.
   button->activated.connect([this, button] {
