@@ -20,6 +20,7 @@
 #include <UnityCore/Variant.h>
 
 #include "UnityWindowView.h"
+#include <Nux/VLayout.h>
 
 namespace unity {
 namespace ui {
@@ -30,10 +31,16 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , style(std::make_shared<UnityWindowStyle>())
   , closable(false)
+  , internal_layout_(nullptr)
+  , bounding_area_(new nux::InputArea())
 {
   bg_helper_.owner = this;
 
   closable.changed.connect(sigc::mem_fun(this, &UnityWindowView::OnClosableChanged));
+
+  // The bounding area always matches this size, but only handles events outside
+  // the internal layout (when defined)
+  geometry_changed.connect(sigc::hide<0>(sigc::mem_fun1(bounding_area_.GetPointer(), &nux::InputArea::SetGeometry)));
 }
 
 UnityWindowView::~UnityWindowView()
@@ -48,7 +55,20 @@ UnityWindowView::FindAreaUnderMouse(const nux::Point& mouse, nux::NuxEventType e
   if (close_button_ && close_button_->TestMousePointerInclusionFilterMouseWheel(mouse, etype))
     return close_button_.GetPointer();
 
-  return nux::View::FindAreaUnderMouse(mouse, etype);
+  nux::Area* under = nux::View::FindAreaUnderMouse(mouse, etype);
+
+  if (under == this)
+  {
+    if (internal_layout_ && !internal_layout_->TestMousePointerInclusionFilterMouseWheel(mouse, etype))
+    {
+      if (bounding_area_->TestMousePointerInclusionFilterMouseWheel(mouse, etype))
+        return bounding_area_.GetPointer();
+
+      return nullptr;
+    }
+  }
+
+  return under;
 }
 
 void
@@ -101,28 +121,59 @@ void UnityWindowView::OnClosableChanged(bool closable)
   close_button_->texture_updated.connect(sigc::hide(sigc::mem_fun(this, &UnityWindowView::QueueDraw)));
 }
 
+bool UnityWindowView::SetLayout(nux::Layout* layout)
+{
+  if (layout && layout->IsLayout())
+  {
+    int offset = style()->GetInternalOffset();
+
+    // We wrap the internal layout adding some padding, so that inherited classes
+    // can ignore the offsets we define here.
+    nux::ObjectPtr<nux::Layout> wrapper(new nux::VLayout());
+    wrapper->SetPadding(offset, offset);
+    wrapper->AddLayout(layout);
+
+    if (View::SetLayout(wrapper.GetPointer()))
+    {
+      internal_layout_ = layout;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+nux::Layout* UnityWindowView::GetLayout()
+{
+  return internal_layout_;
+}
+
+nux::Geometry UnityWindowView::GetInternalBackground()
+{
+  int offset = style()->GetInternalOffset();
+  return GetBackgroundGeometry().GetExpand(-offset, -offset);
+}
+
+nux::ObjectPtr<nux::InputArea> UnityWindowView::GetBoundingArea() const
+{
+  return bounding_area_;
+}
+
 void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   PreDraw(GfxContext, force_draw);
+  unsigned push = 0;
 
   nux::Geometry const& base = GetGeometry();
-  GfxContext.PushClippingRectangle(base);
+  GfxContext.PushClippingRectangle(base); ++push;
 
   // clear region
   gPainter.PaintBackground(GfxContext, base);
 
-  nux::Geometry background_geo(GetBackgroundGeometry());
-  int internal_offset = style()->GetInternalOffset();
+  nux::Geometry const& internal_clip = GetInternalBackground();
+  GfxContext.PushClippingRectangle(internal_clip); ++push;
 
-  nux::Geometry internal_clip(background_geo.x + internal_offset,
-                              background_geo.y + internal_offset,
-                              background_geo.width - internal_offset * 2,
-                              background_geo.height - internal_offset * 2);
-
-  GfxContext.PushClippingRectangle(internal_clip);
-
-  nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
-  nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
+  nux::Geometry const& blur_geo = GetAbsoluteGeometry();
 
   if (BackgroundEffectHelper::blur_type != BLUR_NONE)
   {
@@ -138,8 +189,8 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     nux::TexCoordXForm texxform_blur_bg;
     texxform_blur_bg.flip_v_coord = true;
     texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-    texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
-    texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
+    texxform_blur_bg.uoffset = base.x / static_cast<float>(blur_geo.width);
+    texxform_blur_bg.voffset = base.y / static_cast<float>(blur_geo.height);
 
     nux::ROPConfig rop;
     rop.Blend = false;
@@ -198,10 +249,10 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   DrawOverlay(GfxContext, force_draw, internal_clip);
 
-  GfxContext.PopClippingRectangle();
-  GfxContext.PopClippingRectangle();
+  for (unsigned i = 0; i < push; ++i)
+    GfxContext.PopClippingRectangle();
 
-  DrawBackground(GfxContext, background_geo);
+  DrawBackground(GfxContext, GetBackgroundGeometry());
 
   if (close_button_)
   {

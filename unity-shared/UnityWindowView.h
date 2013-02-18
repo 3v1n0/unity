@@ -45,6 +45,11 @@ public:
 
   void SetupBackground(bool enabled = true);
 
+  bool SetLayout(nux::Layout* layout) override;
+  nux::Layout* GetLayout() override;
+
+  nux::ObjectPtr<nux::InputArea> GetBoundingArea() const;
+
   sigc::signal<void> request_close;
 
 protected:
@@ -53,6 +58,7 @@ protected:
 
   virtual void PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {};
   virtual void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip) = 0;
+  nux::Geometry GetInternalBackground();
   virtual nux::Geometry GetBackgroundGeometry() = 0;
 
   // Introspectable methods
@@ -63,7 +69,9 @@ private:
   void OnClosableChanged(bool closable);
   void DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo);
 
+  nux::Layout *internal_layout_;
   BackgroundEffectHelper bg_helper_;
+  nux::ObjectPtr<nux::InputArea> bounding_area_;
   nux::ObjectPtr<IconTexture> close_button_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> bg_texture_;
 };
