@@ -29,7 +29,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(UnityWindowView);
 
 UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
-  , style(std::make_shared<UnityWindowStyle>())
+  , style(UnityWindowStyle::Get())
   , closable(false)
   , internal_layout_(nullptr)
 {
