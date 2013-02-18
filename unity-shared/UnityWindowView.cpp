@@ -36,6 +36,18 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
 {
   bg_helper_.owner = this;
 
+  live_background.SetGetterFunction([this] { return bg_helper_.enabled(); });
+  live_background.SetSetterFunction([this] (bool e) {
+    if (bg_helper_.enabled() != e)
+    {
+      bg_helper_.enabled = e;
+      return true;
+    }
+    return false;
+  });
+
+  live_background = false;
+
   closable.changed.connect(sigc::mem_fun(this, &UnityWindowView::OnClosableChanged));
 }
 
@@ -68,12 +80,6 @@ UnityWindowView::FindAreaUnderMouse(const nux::Point& mouse, nux::NuxEventType e
   }
 
   return under;
-}
-
-void
-UnityWindowView::SetupBackground(bool enabled)
-{
-  bg_helper_.enabled = enabled;
 }
 
 void UnityWindowView::OnClosableChanged(bool closable)

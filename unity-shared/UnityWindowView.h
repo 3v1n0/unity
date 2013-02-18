@@ -37,14 +37,13 @@ class UnityWindowView : public debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(UnityWindowView, nux::View)  
 public:
+  nux::RWProperty<bool> live_background;
   nux::Property<nux::Color> background_color;
   nux::Property<UnityWindowStyle::Ptr> style;
   nux::Property<bool> closable;
 
   UnityWindowView(NUX_FILE_LINE_PROTO);
   virtual ~UnityWindowView();
-
-  void SetupBackground(bool enabled = true);
 
   bool SetLayout(nux::Layout* layout) override;
   nux::Layout* GetLayout() override;
