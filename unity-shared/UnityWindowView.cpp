@@ -40,13 +40,16 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
 
   // The bounding area always matches this size, but only handles events outside
   // the internal layout (when defined)
-  geometry_changed.connect(sigc::hide<0>(sigc::mem_fun1(bounding_area_.GetPointer(), &nux::InputArea::SetGeometry)));
+  bounding_area_->SetParentObject(this);
+  geometry_changed.connect([this] (nux::Area*, nux::Geometry const& g) { bounding_area_->SetGeometry(g); });
 }
 
 UnityWindowView::~UnityWindowView()
 {
   if (close_button_)
     close_button_->UnParentObject();
+
+  bounding_area_->UnParentObject();
 }
 
 nux::Area*
