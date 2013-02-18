@@ -159,7 +159,7 @@ void Scope::Connect()
   if (pimpl->proxy_->connected())
     return;
   
-  pimpl->proxy_->CreateProxy();
+  pimpl->proxy_->ConnectProxy();
 }
 
 void Scope::Search(std::string const& search_hint, SearchCallback const& callback, GCancellable* cancellable)

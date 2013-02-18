@@ -33,7 +33,8 @@ public:
   ScopeProxy(ScopeData::Ptr const& scope_data);
   ~ScopeProxy();
 
-  virtual void CreateProxy();
+  virtual void ConnectProxy();
+  virtual void DisconnectProxy();
 
   virtual void Search(std::string const& search_hint, SearchCallback const& callback, GCancellable* cancellable);
 
@@ -42,9 +43,6 @@ public:
   virtual void UpdatePreviewProperty(LocalResult const& result, glib::HintsMap const& hints, UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable);
 
   Results::Ptr GetResultsForCategory(unsigned category) const;
-
-protected:
-  ScopeProxy(std::string const& dbus_name, std::string const& dbus_path);
 
 private:
   class Impl;

@@ -66,7 +66,8 @@ public:
     visible.SetGetterFunction([]() { return true; });
   }
 
-  void CreateProxy() { connected_ = true; }
+  virtual void ConnectProxy() { connected_ = true; }
+  virtual void DisconnectProxy() { connected_ = false; }
 
   virtual void Search(std::string const& search_hint, SearchCallback const& callback = nullptr, GCancellable* cancellable = nullptr)
   {
@@ -128,9 +129,13 @@ protected:
 class MockScopeData : public ScopeData
 {
 public:
-  MockScopeData(std::string const& scope_id)
+  MockScopeData(std::string const& scope_id,
+              std::string const& _dbus_name = "",
+              std::string const& _dbus_path = "")
   {
     id = scope_id;
+    dbus_name = _dbus_name;
+    dbus_path = _dbus_path;
   }
 };
 

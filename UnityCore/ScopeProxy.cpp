@@ -46,14 +46,12 @@ public:
   Impl(ScopeProxy*const owner, ScopeData::Ptr const& scope_data);
   ~Impl();
 
-  static ScopeData::Ptr CreateData(std::string const& dbus_name, std::string const& dbus_path);
-
   void CreateProxy();
-  void OnNewScope(GObject *source_object, GAsyncResult *res);
+  void OnNewScope(glib::Object<UnityProtocolScopeProxy> const& scope_proxy, glib::Error const& error);
   void DestroyProxy();
 
   void OpenChannel();
-  void OnChannelOpened(GObject *source_object, GAsyncResult *res);
+  void OnChannelOpened(glib::String const& opened_channel, glib::Object<DeeModel> results_dee_model, glib::Error const& error);
 
   void CloseChannel();
   static void OnCloseChannel(GObject *source_object, GAsyncResult *res, gpointer user_data);
@@ -143,18 +141,22 @@ private:
     SearchCallback callback;
   };
 
+  static void g_hash_table_unref0(GHashTable* hash_table) { if (hash_table) g_hash_table_unref(hash_table); }
+
   static void OnScopeSearchCallback(GObject *source_object, GAsyncResult *res, gpointer user_data)
   {
     std::unique_ptr<SearchData> data(static_cast<SearchData*>(user_data));
     glib::Error error;
-    GHashTable* hint_ret = unity_protocol_scope_proxy_search_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &error);
+    std::unique_ptr<GHashTable, void(*)(GHashTable*)> hint_ret(unity_protocol_scope_proxy_search_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &error),
+                                         g_hash_table_unref0);
+    if (error && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+      return;
 
     glib::HintsMap hints;
-    glib::hintsmap_from_hashtable(hint_ret, hints);
+    glib::hintsmap_from_hashtable(hint_ret.get(), hints);
 
     if (data->callback)
       data->callback(hints, error);
-    if (hint_ret) { g_hash_table_destroy(hint_ret); }
   }
   /////////////////////////////////////
 
@@ -169,15 +171,17 @@ private:
   {
     std::unique_ptr<UpdatePreviewPropertyData> data(static_cast<UpdatePreviewPropertyData*>(user_data));
     glib::Error error;
-    GHashTable* hint_ret = unity_protocol_scope_proxy_update_preview_property_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &error);
+
+    std::unique_ptr<GHashTable, void(*)(GHashTable*)> hint_ret(unity_protocol_scope_proxy_update_preview_property_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &error),
+                                         g_hash_table_unref0);
+    if (error && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+      return;
 
     glib::HintsMap hints;
-    glib::hintsmap_from_hashtable(hint_ret, hints);
+    glib::hintsmap_from_hashtable(hint_ret.get(), hints);
 
     if (data->callback)
       data->callback(hints, error);
-
-    if (hint_ret) { g_hash_table_destroy(hint_ret); }
   }
   /////////////////////////////////////
 
@@ -194,6 +198,8 @@ private:
     UnityProtocolActivationReplyRaw result;
     glib::Error error;
     unity_protocol_scope_proxy_activate_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &result, &error);
+    if (error && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+      return;
 
     if (data->callback)
     {
@@ -212,18 +218,40 @@ private:
 
   /////////////////////////////////////
   // Async Calls
-  struct ScopeAyncReplyData
+  static void OnNewScopeCallback(GObject *source_object, GAsyncResult *res, gpointer user_data)
   {
-    typedef std::function<void(GObject *source_object, GAsyncResult *res)> ScopeAsyncReplyCallback;
-    ScopeAyncReplyData(ScopeAsyncReplyCallback const& callback): callback(callback) {}
+    glib::Object<UnityProtocolScopeProxy> scope_proxy;
+    glib::Error error;
+    scope_proxy = unity_protocol_scope_proxy_new_from_dbus_finish(res, &error);
+    if (error && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+      return;
+    
+    if (user_data)
+    {
+      ScopeProxy::Impl* pimpl = (ScopeProxy::Impl*)user_data;
+      pimpl->OnNewScope(scope_proxy, error);
+    }
+  }
 
-    ScopeAsyncReplyCallback callback;
-  };
-  static void OnScopeAsyncCallback(GObject *source_object, GAsyncResult *res, gpointer user_data)
+  static void OnOpenChannelCallback(GObject *source_object, GAsyncResult *res, gpointer user_data)
   {
-    std::unique_ptr<ScopeAyncReplyData> data(static_cast<ScopeAyncReplyData*>(user_data));
-    if (data->callback)
-      data->callback(source_object, res);    
+    if (!UNITY_PROTOCOL_IS_SCOPE_PROXY(source_object))
+      return;
+
+    glib::Object<UnityProtocolScopeProxy> scope_proxy;
+    glib::Error error;
+    DeeSerializableModel* serialisable_model = nullptr;
+    glib::String tmp_channel(unity_protocol_scope_proxy_open_channel_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &serialisable_model, &error));
+    if (error && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+      return;
+
+    if (user_data)
+    {
+      ScopeProxy::Impl* pimpl = (ScopeProxy::Impl*)user_data;
+
+      glib::Object<DeeModel> results_dee_model(DEE_MODEL(serialisable_model));
+      pimpl->OnChannelOpened(tmp_channel, results_dee_model, error);
+    }
   }
   /////////////////////////////////////
 };
@@ -277,30 +305,25 @@ ScopeProxy::Impl::~Impl()
   for_each(property_connections.begin(), property_connections.end(), [](ConnectionPtr const& con) { con->disconnect(); });
   property_connections.clear();
 
-  g_cancellable_cancel(cancel_scope_);
+  if (cancel_scope_ && !g_cancellable_is_cancelled(cancel_scope_))
+    g_cancellable_cancel(cancel_scope_);
 
   if (scope_proxy_ && connected)
     unity_protocol_scope_proxy_close_channel(scope_proxy_, channel().c_str(), nullptr, Impl::OnCloseChannel, nullptr);
 }
 
-ScopeData::Ptr ScopeProxy::Impl::CreateData(std::string const& dbus_name, std::string const& dbus_path)
-{
-  ScopeData::Ptr data(new ScopeData);
-  data->dbus_path = dbus_path;
-  data->dbus_name = dbus_name;
-
-  return data;
-}
-
 void ScopeProxy::Impl::DestroyProxy()
 {
+  CloseChannel();
+  
   scope_proxy_.Release();
-  if (cancel_scope_)
+  if (cancel_scope_ && !g_cancellable_is_cancelled(cancel_scope_))
     g_cancellable_cancel(cancel_scope_);
   
   cancel_scope_ = g_cancellable_new(); 
   connected = false;
   proxy_created_ = false;
+  scope_proxy_connected_ = false;
 }
 
 void ScopeProxy::Impl::CreateProxy()
@@ -312,16 +335,12 @@ void ScopeProxy::Impl::CreateProxy()
   unity_protocol_scope_proxy_new_from_dbus(scope_data_->dbus_name().c_str(),
                                            scope_data_->dbus_path().c_str(),
                                            cancel_scope_,
-                                           Impl::OnScopeAsyncCallback,
-                                           new ScopeAyncReplyData(sigc::mem_fun(this, &Impl::OnNewScope)));
+                                           Impl::OnNewScopeCallback,
+                                           this);
 }
 
-void ScopeProxy::Impl::OnNewScope(GObject *source_object, GAsyncResult *res)
+void ScopeProxy::Impl::OnNewScope(glib::Object<UnityProtocolScopeProxy> const& scope_proxy, glib::Error const& error)
 { 
-  glib::Object<UnityProtocolScopeProxy> scope_proxy;
-  glib::Error error;
-  scope_proxy = unity_protocol_scope_proxy_new_from_dbus_finish(res, &error);
-
   is_master_signal_.Disconnect();
   search_hint_signal_.Disconnect();
   view_type_signal_.Disconnect();
@@ -375,21 +394,12 @@ void ScopeProxy::Impl::OpenChannel()
                                           UNITY_PROTOCOL_CHANNEL_TYPE_DEFAULT,
                                           UNITY_PROTOCOL_CHANNEL_FLAGS_NONE,
                                           cancel_scope_,
-                                          OnScopeAsyncCallback,
-                                          new ScopeAyncReplyData(sigc::mem_fun(this, &Impl::OnChannelOpened)));
+                                          OnOpenChannelCallback,
+                                          this);
 }
 
-void ScopeProxy::Impl::OnChannelOpened(GObject *source_object, GAsyncResult *res)
+void ScopeProxy::Impl::OnChannelOpened(glib::String const& opened_channel, glib::Object<DeeModel> results_dee_model, glib::Error const& error)
 {
-  if (!UNITY_PROTOCOL_IS_SCOPE_PROXY(source_object))
-    return;
-
-  glib::Object<UnityProtocolScopeProxy> scope_proxy;
-  glib::Error error;
-  DeeSerializableModel* serialisable_model = nullptr;
-  glib::String tmp_channel(unity_protocol_scope_proxy_open_channel_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &serialisable_model, &error));
-
-  glib::Object<DeeModel> results_dee_model(DEE_MODEL(serialisable_model));
   results_->SetModel(results_dee_model);
 
   glib::Object<DeeModel> filters_dee_model(DEE_MODEL(unity_protocol_scope_proxy_get_filters_model(scope_proxy_)), glib::AddRef());
@@ -405,7 +415,7 @@ void ScopeProxy::Impl::OnChannelOpened(GObject *source_object, GAsyncResult *res
   glib::Object<DeeModel> categories_dee_model(DEE_MODEL(unity_protocol_scope_proxy_get_categories_model(scope_proxy_)), glib::AddRef());
   categories_->SetModel(categories_dee_model);
 
-  if (tmp_channel.Str().empty() || error)
+  if (opened_channel.Str().empty() || error)
   {
     channel = "";
     connected = false;
@@ -414,7 +424,7 @@ void ScopeProxy::Impl::OnChannelOpened(GObject *source_object, GAsyncResult *res
     return;
   }
 
-  channel = tmp_channel.Str();
+  channel = opened_channel.Str();
   LOG_DEBUG(logger) << "Opened channel:" << channel() << " for " << scope_data_->id();
   connected = true;
 
@@ -754,19 +764,18 @@ ScopeProxy::ScopeProxy(ScopeData::Ptr const& scope_data)
 {
 }
 
-
-ScopeProxy::ScopeProxy(std::string const& dbus_name, std::string const& dbus_path)
-: pimpl(new Impl(this, Impl::CreateData(dbus_name, dbus_path)))
-{
-}
-
 ScopeProxy::~ScopeProxy()
 {  
 }
 
-void ScopeProxy::CreateProxy()
+void ScopeProxy::ConnectProxy()
 {
   pimpl->CreateProxy();
+}
+
+void ScopeProxy::DisconnectProxy()
+{
+  pimpl->DestroyProxy();
 }
 
 void ScopeProxy::Search(std::string const& search_string, SearchCallback const& callback, GCancellable* cancellable)

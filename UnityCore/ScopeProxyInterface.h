@@ -82,7 +82,8 @@ public:
   nux::ROProperty<std::string> query_pattern;
   nux::ROProperty<std::string> shortcut;
 
-  virtual void CreateProxy() {}
+  virtual void ConnectProxy() = 0;
+  virtual void DisconnectProxy() = 0;
 
   typedef std::function<void(glib::HintsMap const&, glib::Error const&)> SearchCallback;
   virtual void Search(std::string const& search_hint, SearchCallback const& callback, GCancellable* cancellable) = 0;
