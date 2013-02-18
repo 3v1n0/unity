@@ -73,7 +73,7 @@ View::View()
   : ui::UnityWindowView()
 {
   auto main_layout = new nux::VLayout();
-  main_layout->SetPadding(50, 38);
+  main_layout->SetPadding(30, 18);
   main_layout->SetSpaceBetweenChildren(20);
   SetLayout(main_layout);
 
