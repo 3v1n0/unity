@@ -54,7 +54,9 @@ class WindowInputRemover :
 {
 public:
 
-  WindowInputRemover (Display *, Window xid);
+  WindowInputRemover (Display *,
+                      Window shapeWindow,
+                      Window propWindow);
   ~WindowInputRemover ();
 
 private:
@@ -65,8 +67,53 @@ private:
 
   void sendShapeNotify ();
 
+  bool queryShapeRectangles(XRectangle **input,
+                            int *nInput,
+                            int *inputOrdering,
+                            XRectangle **bounding,
+                            int *nBounding,
+                            int *boundingOrdering,
+                            unsigned int *width,
+                            unsigned int *height,
+                            unsigned int *border);
+
+  bool queryProperty(XRectangle **input,
+                     int *nInput,
+                     int *inputOrdering,
+                     XRectangle **bounding,
+                     int *nBounding,
+                     int *boundingOrdering);
+
+  bool writeProperty(XRectangle *input,
+                     int nInput,
+                     int inputOrdering,
+                     XRectangle *bounding,
+                     int nBounding,
+                     int boundingOrdering);
+
+  bool checkRectangles(XRectangle *input,
+                       int *nInput,
+                       int inputOrdering,
+                       XRectangle *bounding,
+                       int *nBounding,
+                       int boundingOrdering,
+                       unsigned int width,
+                       unsigned int height,
+                       unsigned int border);
+
+  bool saveRectangles(XRectangle *input,
+                      int nInput,
+                      int inputOrdering,
+                      XRectangle *bounding,
+                      int nBounding,
+                      int boundingOrdering);
+
+  void clearProperty ();
+  void clearRectangles ();
+
   Display       *mDpy;
   Window        mShapeWindow;
+  Window        mPropWindow;
   unsigned long mShapeMask;
 
   XRectangle    *mInputRects;

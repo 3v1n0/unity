@@ -1137,7 +1137,11 @@ UnityWindow::GetInputRemover ()
   if (!input_remover_.expired ())
     return input_remover_.lock ();
 
-  compiz::WindowInputRemoverLock::Ptr ret (new compiz::WindowInputRemoverLock (new compiz::WindowInputRemover (screen->dpy (), window->id ())));
+  compiz::WindowInputRemoverLock::Ptr
+      ret (new compiz::WindowInputRemoverLock (
+             new compiz::WindowInputRemover (screen->dpy (),
+                                             window->id (),
+                                             window->id ())));
   input_remover_ = ret;
   return ret;
 }
@@ -3348,6 +3352,25 @@ struct UnityWindow::CairoContext
   cairo_t *cr_;
 };
 
+namespace
+{
+bool WindowHasInconsistentShapeRects (Display *d,
+                                      Window  w)
+{
+  int n;
+  Atom *atoms = XListProperties(d, w, &n);
+  Atom unity_shape_rects_atom = XInternAtom (d, "_UNITY_SAVED_WINDOW_SHAPE", FALSE);
+  bool has_inconsistent_shape = false;
+
+  for (int i = 0; i < n; ++i)
+    if (atoms[i] == unity_shape_rects_atom)
+      has_inconsistent_shape = true;
+
+  XFree (atoms);
+  return has_inconsistent_shape;
+}
+}
+
 UnityWindow::UnityWindow(CompWindow* window)
   : BaseSwitchWindow (dynamic_cast<BaseSwitchScreen *> (UnityScreen::get (screen)), window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
@@ -3358,14 +3381,20 @@ UnityWindow::UnityWindow(CompWindow* window)
   GLWindowInterface::setHandler(gWindow);
   ScaleWindowInterface::setHandler (ScaleWindow::get (window));
 
+  /* This needs to happen before we set our wrapable functions, since we
+   * need to ask core (and not ourselves) whether or not the window is
+   * minimized */
   if (UnityScreen::get (screen)->optionGetShowMinimizedWindows () &&
-      window->mapNum ())
+      window->mapNum () &&
+      WindowHasInconsistentShapeRects (screen->dpy (),
+                                       window->id ()))
   {
+    /* Query the core function */
+    window->minimizedSetEnabled (this, false);
+
     bool wasMinimized = window->minimized ();
     if (wasMinimized)
       window->unminimize ();
-    window->minimizeSetEnabled (this, true);
-    window->unminimizeSetEnabled (this, true);
     window->minimizedSetEnabled (this, true);
 
     if (wasMinimized)
@@ -3377,6 +3406,8 @@ UnityWindow::UnityWindow(CompWindow* window)
     window->unminimizeSetEnabled (this, false);
     window->minimizedSetEnabled (this, false);
   }
+
+  /* Keep this after the optionGetShowMinimizedWindows branch */
 
   if (window->state () & CompWindowStateFullscreenMask)
     UnityScreen::get (screen)->fullscreen_windows_.push_back(window);
