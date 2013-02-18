@@ -41,6 +41,9 @@ Button::Button(std::string const& label, std::string const& texture_name, NUX_FI
     : nux::View(NUX_FILE_LINE_PARAM)
     , highlighted(false)
 {
+  SetAcceptKeyNavFocusOnMouseDown(false);
+  SetAcceptKeyNavFocusOnMouseEnter(true);
+
   std::string texture_prefix = PKGDATADIR"/" + texture_name;
   normal_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + ".png").c_str(), -1, true));
   highlight_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + "_highlight.png").c_str(), -1, true));
@@ -72,9 +75,6 @@ Button::Button(std::string const& label, std::string const& texture_name, NUX_FI
   highlighted.changed.connect([this] (bool value) {
     image_view_->SetTexture(value ? highlight_tex_ : normal_tex_);
     label_view_->SetTextColor(value ? nux::color::White : nux::color::Transparent);
-
-    if (value)
-      nux::GetWindowCompositor().SetKeyFocusArea(this);
   });
 }
 
