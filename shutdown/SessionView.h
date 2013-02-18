@@ -30,6 +30,7 @@ namespace unity
 {
 namespace session
 {
+class Button;
 
 class View : public ui::UnityWindowView
 {
@@ -52,6 +53,8 @@ protected:
   std::string GetName() const;
 
 private:
+  void AddButton(Button*);
+
   Manager::Ptr manager_;
   nux::HLayout* buttons_layout_;
 };

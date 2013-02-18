@@ -68,34 +68,53 @@ View::View(Manager::Ptr const& manager)
 
   auto button = new Button(_("Lock"), "lockscreen", NUX_TRACKER_LOCATION);
   button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
-  button->activated.connect([this] {request_hide.emit();});
-  buttons_layout_->AddView(button);
+  AddButton(button);
 
   if (manager_->CanSuspend())
   {
     button = new Button(_("Suspend"), "suspend", NUX_TRACKER_LOCATION);
     button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Suspend));
-    button->activated.connect([this] {request_hide.emit();});
-    buttons_layout_->AddView(button);
+    AddButton(button);
   }
 
   if (manager_->CanHibernate())
   {
     button = new Button(_("Hibernate"), "hibernate", NUX_TRACKER_LOCATION);
     button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Hibernate));
-    button->activated.connect([this] {request_hide.emit();});
-    buttons_layout_->AddView(button);
+    AddButton(button);
   }
 
   button = new Button(_("Shutdown"), "shutdown", NUX_TRACKER_LOCATION);
   button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Shutdown));
-  button->activated.connect([this] {request_hide.emit();});
-  buttons_layout_->AddView(button);
+  AddButton(button);
 
   button = new Button(_("Restart"), "restart", NUX_TRACKER_LOCATION);
   button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Reboot));
+  AddButton(button);
+}
+
+void View::AddButton(Button* button)
+{
   button->activated.connect([this] {request_hide.emit();});
   buttons_layout_->AddView(button);
+
+  // This function ensures that when an item is activated, the button state
+  // is reset as soon as the parent window has been closed.
+  button->activated.connect([this, button] {
+    auto* top_win = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
+    if (top_win && top_win->IsVisible())
+    {
+      auto conn = std::make_shared<sigc::connection>();
+      *conn = top_win->sigHidden.connect([this, button, conn] (nux::BaseWindow*) {
+        button->highlighted = false;
+        conn->disconnect();
+      });
+    }
+    else
+    {
+      button->highlighted = false;
+    }
+  });
 }
 
 nux::Geometry View::GetBackgroundGeometry()

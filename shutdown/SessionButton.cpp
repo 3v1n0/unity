@@ -76,24 +76,6 @@ Button::Button(std::string const& label, std::string const& texture_name, NUX_FI
     if (value)
       nux::GetWindowCompositor().SetKeyFocusArea(this);
   });
-
-  // This function ensures that when an item is activated, the button state
-  // is reset as soon as the parent window has been closed.
-  activated.connect([this] {
-    auto* top_win = static_cast<nux::BaseWindow*>(GetTopLevelViewWindow());
-    if (top_win && top_win->IsVisible())
-    {
-      auto conn = std::make_shared<sigc::connection>();
-      *conn = top_win->sigHidden.connect([this, conn] (nux::BaseWindow*) {
-        highlighted = false;
-        conn->disconnect();
-      });
-    }
-    else
-    {
-      highlighted = false;
-    }
-  });
 }
 
 void Button::Draw(nux::GraphicsEngine& ctx, bool force)
