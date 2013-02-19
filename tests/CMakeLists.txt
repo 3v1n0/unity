@@ -106,6 +106,7 @@ if (GTEST_SRC_DIR AND
 # The actual test executable (xless) - do not put anything that requires X in here
   set (GTEST_XLESS_SOURCES
        test_main_xless.cpp
+       test_abstract_interface_generator.cpp
        test_launcher_model.cpp
        test_glib_object.cpp
        test_glib_object_utils.cpp
@@ -211,6 +212,7 @@ if (ENABLE_X_SUPPORT)
                  test_desktop_launcher_icon.cpp
                  test_device_launcher_section.cpp
                  test_edge_barrier_controller.cpp
+                 test_filter_widgets.cpp
                  test_hud_button.cpp
                  test_hud_controller.cpp
                  test_hud_launcher_icon.cpp
@@ -228,6 +230,7 @@ if (ENABLE_X_SUPPORT)
                  test_panel_indicators_view.cpp
                  test_panel_menu_view.cpp
                  test_panel_style.cpp
+                 test_panel_tray.cpp
                  test_places_group.cpp
                  test_previews_application.cpp
                  test_previews_generic.cpp
@@ -235,6 +238,7 @@ if (ENABLE_X_SUPPORT)
                  test_previews_music.cpp
                  test_previews_social.cpp
                  test_overlay_scrollbar.cpp
+                 test_quicklist_manager.cpp
                  test_quicklist_menu_item.cpp
                  test_quicklist_view.cpp
                  test_result_renderer.cpp
@@ -243,6 +247,7 @@ if (ENABLE_X_SUPPORT)
                  test_scopeview.cpp
                  test_searchbar.cpp
                  test_shortcut_controller.cpp
+                 test_shortcut_modeller_compiz.cpp
                  test_shortcut_view.cpp
                  test_single_monitor_launcher_icon.cpp
                  test_expo_launcher_icon.cpp
@@ -251,6 +256,7 @@ if (ENABLE_X_SUPPORT)
                  test_static_cairo_text.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
+                 test_tabiterator.cpp
                  test_switcher_view.cpp
                  test_texture_cache.cpp
                  test_text_input.cpp
@@ -300,7 +306,7 @@ set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless)
 set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --task ./test-gtest-service --task ./test-gtest-dbus)
 
 set (TEST_COMMAND
-     gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit
+     gtester --verbose -k -o=${TEST_RESULT_XML} ./test-unit
   && ${GTEST_TEST_COMMAND} --gtest_output=xml:./
   && ${GTEST_TEST_COMMAND_XLESS} --gtest_output=xml:./
   && ${GTEST_TEST_COMMAND_GESTURES} --gtest_output=xml:./

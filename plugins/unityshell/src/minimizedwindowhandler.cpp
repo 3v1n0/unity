@@ -227,6 +227,7 @@ compiz::MinimizedWindowHandler::unminimize ()
       int  count = 0;
 
       nextStateSize = nItems;
+      nextState = reinterpret_cast<Atom *>(malloc(sizeof(Atom) * nextStateSize));
 
       pbegin = nextState = (Atom *) memcpy (nextState, data, sizeof (Atom) * nextStateSize);
 

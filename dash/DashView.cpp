@@ -20,6 +20,7 @@
 
 #include "DashView.h"
 #include "DashViewPrivate.h"
+#include "FilterExpanderLabel.h"
 
 #include <math.h>
 
@@ -32,13 +33,13 @@
 #include <UnityCore/RadioOptionFilter.h>
 #include <UnityCore/GSettingsScopes.h>
 
-#include "FilterExpanderLabel.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/KeyboardUtil.h"
-#include "unity-shared/UnitySettings.h"
-#include "unity-shared/UBusMessages.h"
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/PanelStyle.h"
+#include "unity-shared/UBusMessages.h"
+#include "unity-shared/UnitySettings.h"
+#include "unity-shared/WindowManager.h"
 
 namespace unity
 {
@@ -125,6 +126,7 @@ DashView::DashView(ScopesCreator scopes_creator)
   , animate_split_value_(0.0)
   , animate_preview_container_value_(0.0)
   , animate_preview_value_(0.0)
+  , overlay_window_buttons_(new OverlayWindowButtons())
 {
   renderer_.SetOwner(this);
   renderer_.need_redraw.connect([this] () {
@@ -227,10 +229,13 @@ void DashView::BuildPreview(Preview::Ptr model)
       preview_scope_view_->PushFilterExpansion(false);
     }
 
-    preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
-    preview_container_->SetRedirectRenderingToTexture(true);
-    AddChild(preview_container_.GetPointer());
-    preview_container_->SetParentObject(this);
+    if (!preview_container_)
+    {
+      preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
+      preview_container_->SetRedirectRenderingToTexture(true);
+      AddChild(preview_container_.GetPointer());
+      preview_container_->SetParentObject(this);
+    }
     preview_container_->Preview(model, previews::Navigation::NONE); // no swipe left or right
 
     preview_container_->SetGeometry(scopes_layout_->GetGeometry());
@@ -476,6 +481,8 @@ void DashView::AboutToShow()
     ClosePreview();
   }
 
+  overlay_window_buttons_->Show();
+
   renderer_.AboutToShow();
 }
 
@@ -502,6 +509,8 @@ void DashView::AboutToHide()
   {
     ClosePreview();
   }
+
+  overlay_window_buttons_->Hide();
 }
 
 void DashView::SetupViews()
@@ -701,6 +710,8 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
   {
     nux::GetPainter().PopBackgroundStack();
   }
+
+  overlay_window_buttons_->QueueDraw();
 
   graphics_engine.PopClippingRectangle();
 
@@ -1062,11 +1073,6 @@ void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned lo
   {
     geo.width += style.GetDashRightTileWidth();
     geo.height += style.GetDashBottomTileHeight();
-  }
-
-  if (!geo.IsPointInside(x, y))
-  {
-    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
 }
 
@@ -1478,6 +1484,7 @@ void DashView::AddProperties(GVariantBuilder* builder)
   wrapper.add("right-border-width", style.GetDashRightTileWidth());
   wrapper.add("bottom-border-height", style.GetDashBottomTileHeight());
   wrapper.add("preview_displaying", preview_displaying_);
+  wrapper.add("dash_maximized", style.always_maximised());
 }
 
 nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
@@ -1549,15 +1556,15 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     // Not sure if Enter should be a navigation key
     direction = KEY_NAV_ENTER;
     break;
-  case NUX_VK_F4:
-    // Maybe we should not do it here, but it needs to be checked where
-    // we are able to know if alt is pressed.
-    if (special_keys_state == NUX_STATE_ALT)
+  default:
+    auto const& close_key = WindowManager::Default().close_window_key();
+
+    if (close_key.first == special_keys_state && close_key.second == x11_key_code)
     {
       ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+      return nullptr;
     }
-    break;
-  default:
+
     direction = KEY_NAV_NONE;
   }
 
@@ -1679,7 +1686,12 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
 nux::Area* DashView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
 {
   nux::Area* view = nullptr;
-  if (preview_displaying_)
+
+  if (overlay_window_buttons_->GetGeometry().IsInside(mouse_position))
+  {
+    return overlay_window_buttons_->FindAreaUnderMouse(mouse_position, event_type);
+  }
+  else if (preview_displaying_)
   {
     nux::Point newpos = mouse_position;
     view = dynamic_cast<nux::Area*>(preview_container_.GetPointer())->FindAreaUnderMouse(newpos, event_type);

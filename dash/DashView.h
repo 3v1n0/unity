@@ -27,17 +27,21 @@
 #include <UnityCore/Scopes.h>
 #include <UnityCore/GLibSource.h>
 
-#include "unity-shared/BackgroundEffectHelper.h"
-#include "unity-shared/SearchBar.h"
-#include "unity-shared/Introspectable.h"
-#include "unity-shared/BGHash.h"
 #include "ScopeBar.h"
 #include "ScopeView.h"
-#include "unity-shared/UBusWrapper.h"
-#include "unity-shared/OverlayRenderer.h"
-#include "UnityCore/Preview.h"
 #include "previews/PreviewContainer.h"
 #include "PreviewStateMachine.h"
+#include "UnityCore/Preview.h"
+
+#include "unity-shared/BackgroundEffectHelper.h"
+#include "unity-shared/BGHash.h"
+#include "unity-shared/Introspectable.h"
+#include "unity-shared/OverlayRenderer.h"
+#include "unity-shared/SearchBar.h"
+#include "unity-shared/UBusWrapper.h"
+#include "unity-shared/OverlayWindowButtons.h"
+
+
 
 namespace na = nux::animation;
 
@@ -183,6 +187,8 @@ private:
 
   std::unique_ptr<na::AnimateValue<float>> preview_animation_;
   float animate_preview_value_;
+
+  nux::ObjectPtr<OverlayWindowButtons> overlay_window_buttons_;
 
   friend class TestDashView;
 };

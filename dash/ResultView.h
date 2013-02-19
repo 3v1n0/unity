@@ -71,12 +71,12 @@ public:
   void SetModelRenderer(ResultRenderer* renderer);
   void SetResultsModel(Results::Ptr const& results);
 
-  unsigned int GetIndexForLocalResult(LocalResult const& local_result); 
+  unsigned int GetIndexForLocalResult(LocalResult const& local_result);
   LocalResult GetLocalResultForIndex(unsigned int);
 
   nux::Property<bool> expanded;
   nux::Property<int> results_per_row;
-  nux::Property<std::string> unique_id;  
+  nux::Property<std::string> unique_id;
   nux::Property<float> desaturation_progress;
   nux::Property<bool> enable_texture_render;
   sigc::signal<void, LocalResult const&, ActivateType, GVariant*> ResultActivated;
@@ -94,7 +94,7 @@ public:
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual long ComputeContentSize(); 
+  virtual long ComputeContentSize();
 
   virtual void UpdateRenderTextures();
 
@@ -103,7 +103,6 @@ protected:
 
   unsigned GetNumResults();
 
-  static void ChildResultDestructor(debug::Introspectable* child);
   virtual debug::ResultWrapper* CreateResultWrapper(Result const& result, int index);
   virtual void UpdateResultWrapper(debug::ResultWrapper* wrapper, Result const& result, int index);
 
@@ -113,7 +112,7 @@ protected:
   ResultRenderer* renderer_;
   Results::Ptr result_model_;
   std::map<std::string, debug::ResultWrapper*> introspectable_children_;
-  
+
   std::vector<ResultViewTexture::Ptr> result_textures_;
 
 private:

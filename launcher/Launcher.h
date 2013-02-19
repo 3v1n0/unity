@@ -115,8 +115,10 @@ public:
   virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
 
-  virtual void RecvQuicklistOpened(QuicklistView* quicklist);
-  virtual void RecvQuicklistClosed(QuicklistView* quicklist);
+  virtual void RecvQuicklistOpened(nux::ObjectPtr<QuicklistView> const& quicklist);
+  virtual void RecvQuicklistClosed(nux::ObjectPtr<QuicklistView> const& quicklist);
+
+  void ScrollLauncher(int wheel_delta);
 
   int GetMouseX() const;
   int GetMouseY() const;
@@ -208,7 +210,7 @@ private:
 #endif
 
 #ifdef USE_X11
-  bool HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
+  ui::EdgeBarrierSubscriber::Result HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
 #endif
 
   void OnPluginStateChanged();

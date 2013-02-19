@@ -176,7 +176,8 @@ TEST(TestResults, TestResultEqual)
   WaitForSynchronize(model);
 
   Result result_1(*model.begin());
-  Result result_2 = result_1;
+  Result result_2(NULL, NULL, NULL);
+  result_2 = result_1;
 
   EXPECT_EQ(result_2.uri(), result_1.uri());
   EXPECT_EQ(result_2.icon_hint(), result_1.icon_hint());

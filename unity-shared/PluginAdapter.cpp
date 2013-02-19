@@ -431,6 +431,18 @@ Window PluginAdapter::GetActiveWindow() const
   return m_Screen->activeWindow();
 }
 
+std::vector<Window> PluginAdapter::GetWindowsInStackingOrder() const
+{
+  bool stacking_order = true;
+  auto const& windows = m_Screen->clientList(stacking_order);
+
+  std::vector<Window> ret;
+  for (auto const& window : windows)
+    ret.push_back(window->id());
+
+  return ret;
+}
+
 bool PluginAdapter::IsWindowMaximized(Window window_id) const
 {
   CompWindow* window = m_Screen->findWindow(window_id);
@@ -724,6 +736,17 @@ void PluginAdapter::Lower(Window window_id)
   CompWindow* window = m_Screen->findWindow(window_id);
   if (window)
     window->lower();
+}
+
+void PluginAdapter::RestackBelow(Window window_id, Window sibiling_id)
+{
+  CompWindow* window = m_Screen->findWindow(window_id);
+  if (!window)
+    return;
+
+  CompWindow* sibiling = m_Screen->findWindow(sibiling_id);
+  if (sibiling)
+    window->restackBelow(sibiling);
 }
 
 void PluginAdapter::FocusWindowGroup(std::vector<Window> const& window_ids,
@@ -1088,6 +1111,26 @@ nux::Point PluginAdapter::GetCurrentViewport() const
 {
   CompPoint const& vp = m_Screen->vp();
   return nux::Point(vp.x(), vp.y());
+}
+
+void PluginAdapter::SetViewportSize(int horizontal, int vertical)
+{
+  if (horizontal < 1 || vertical < 1)
+  {
+    LOG_ERROR(logger) << "Impossible to set viewport to invalid values "
+                      << horizontal << "x" << vertical;
+    return;
+  }
+
+  CompOption::Value hsize;
+  hsize.set<int>(horizontal);
+  m_Screen->setOptionForPlugin("core", "hsize", hsize);
+
+  CompOption::Value vsize(vertical);
+  vsize.set<int>(vertical);
+  m_Screen->setOptionForPlugin("core", "vsize", vsize);
+
+  LOG_INFO(logger) << "Setting viewport size to " << hsize.i() << "x" << vsize.i();
 }
 
 int PluginAdapter::GetViewportHSize() const

@@ -24,7 +24,6 @@ set (PANEL_SOURCES
      PanelTitlebarGrabAreaView.cpp
      PanelTray.cpp
      PanelView.cpp
-     WindowButtons.cpp
      )
 
 add_library (panel-lib STATIC ${PANEL_SOURCES})

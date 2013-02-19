@@ -174,6 +174,11 @@ void PanelView::SetLauncherWidth(int width)
   QueueDraw();
 }
 
+bool PanelView::IsMouseInsideIndicator(nux::Point const& mouse_position) const
+{
+  return indicators_->GetAbsoluteGeometry().IsInside(mouse_position);
+}
+
 void PanelView::OnBackgroundUpdate(GVariant *data)
 {
   gdouble red, green, blue, alpha;
@@ -521,8 +526,11 @@ void PanelView::ForceUpdateBackground()
   UpdateBackground();
 
   indicators_->QueueDraw();
-  menu_view_->QueueDraw();
   tray_->QueueDraw();
+
+  if (!overlay_is_open_)
+    menu_view_->QueueDraw();
+
   QueueDraw();
 }
 
@@ -636,7 +644,8 @@ void PanelView::OnEntryActivated(std::string const& entry_id, nux::Rect const& g
     tracked_pointer_pos_ = {-1, -1};
   }
 
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  if (overlay_is_open_)
+    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
 }
 
 void PanelView::OnEntryShowMenu(std::string const& entry_id, unsigned xid,

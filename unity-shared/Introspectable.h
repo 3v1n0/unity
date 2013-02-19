@@ -32,14 +32,13 @@ class Introspectable
 {
 public:
   typedef std::list<Introspectable*> IntrospectableList;
-  typedef void(*child_destructor)(Introspectable*);
 
   Introspectable();
   virtual ~Introspectable();
   GVariant* Introspect();
   virtual std::string GetName() const = 0;
   void AddChild(Introspectable* child);
-  void RemoveChild(Introspectable* child, child_destructor = NULL);
+  void RemoveChild(Introspectable* child);
   virtual void AddProperties(GVariantBuilder* builder) = 0;
   virtual IntrospectableList GetIntrospectableChildren();
   guint64 GetIntrospectionId() const;
@@ -49,7 +48,7 @@ protected:
   /// is if you have a property that simply *must* be called 'Children'.
   virtual std::string GetChildsName() const;
 
-  void RemoveAllChildren(child_destructor = NULL);
+  void RemoveAllChildren();
 
   /*
    * AddProperties should be implemented as such ...

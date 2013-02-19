@@ -21,8 +21,10 @@
  */
 
 #include "GesturalWindowSwitcher.h"
+#include <core/timer.h>
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
+#include "SwitcherView.h"
 #include "unityshell.h"
 
 DECLARE_LOGGER(logger, "unity.gesture.switcher");
@@ -100,6 +102,7 @@ namespace unity
 // private class
 
 GesturalWindowSwitcherPrivate::GesturalWindowSwitcherPrivate()
+  : accumulated_horizontal_drag(0.0f)
 {
   state = State::WaitingCompoundGesture;
 
@@ -335,7 +338,7 @@ void GesturalWindowSwitcherPrivate::ProcessSwitcherViewMouseDown(int x, int y,
 
   state = State::RecognizingMouseClickOrDrag;
 
-  unity::switcher::SwitcherView *view = switcher_controller->GetView();
+  auto view = switcher_controller->GetView();
 
   index_icon_hit = view->IconIndexAt(x, y);
   accumulated_horizontal_drag = 0.0f;
@@ -413,7 +416,7 @@ void GesturalWindowSwitcherPrivate::ProcessAccumulatedHorizontalDrag()
 
 void GesturalWindowSwitcherPrivate::ConnectToSwitcherViewMouseEvents()
 {
-  unity::switcher::SwitcherView *switcher_view = switcher_controller->GetView();
+  auto switcher_view = switcher_controller->GetView();
   g_assert(switcher_view);
 
   mouse_down_connection = switcher_view->mouse_down.connect(

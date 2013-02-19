@@ -54,11 +54,6 @@ public:
   MOCK_METHOD1(Stick, void(bool));
 };
 
-struct MockPointerBarrierWrapper : ui::PointerBarrierWrapper
-{
-  MOCK_METHOD1(ReleaseBarrier, void(int event_id));
-};
-
 }
 
 class TestLauncher : public Test
@@ -96,10 +91,12 @@ public:
     using Launcher::ProcessDndLeave;
     using Launcher::ProcessDndMove;
     using Launcher::ProcessDndDrop;
-    using Launcher::_drag_icon_position;
-
     using Launcher::IconStartingBlinkValue;
     using Launcher::IconStartingPulseValue;
+    using Launcher::HandleBarrierEvent;
+    using Launcher::SetHidden;
+    using Launcher::_drag_icon_position;
+
 
     void FakeProcessDndMove(int x, int y, std::list<std::string> uris)
     {
@@ -119,18 +116,13 @@ public:
 
       _dnd_hovered_icon = MouseIconIntersection(x, y);
     }
-
-    bool HandleBarrierEvent(ui::PointerBarrierWrapper* barrier, ui::BarrierEvent::Ptr event)
-    {
-      return Launcher::HandleBarrierEvent(barrier, event);
-    }
   };
 
   TestLauncher()
     : parent_window_(new nux::BaseWindow("TestLauncherWindow"))
     , model_(new LauncherModel)
     , options_(new Options)
-    , launcher_(new MockLauncher(parent_window_))
+    , launcher_(new MockLauncher(parent_window_.GetPointer()))
   {
     launcher_->options = options_;
     launcher_->SetModel(model_);
@@ -160,7 +152,7 @@ public:
   }
 
   MockUScreen uscreen;
-  nux::BaseWindow* parent_window_;
+  nux::ObjectPtr<nux::BaseWindow> parent_window_;
   Settings settings;
   panel::Style panel_style;
   LauncherModel::Ptr model_;
@@ -211,12 +203,19 @@ TEST_F(TestLauncher, TestMouseWheelScroll)
   launcher_->SetHover(true);
   initial_scroll_delta = launcher_->GetDragDelta();
 
+  unsigned long key_flags = 0; 
+
+  launcher_->RecvMouseWheel(0, 0, 20, 0, key_flags);
+  EXPECT_EQ((launcher_->GetDragDelta()), initial_scroll_delta);
+
+  key_flags |= nux::NUX_STATE_ALT;
+
   // scroll down
-  launcher_->RecvMouseWheel(0,0,20,0,0);
+  launcher_->RecvMouseWheel(0, 0, 20, 0, key_flags);
   EXPECT_EQ((launcher_->GetDragDelta() - initial_scroll_delta), 25);
 
   // scroll up
-  launcher_->RecvMouseWheel(0,0,-20,0,0);
+  launcher_->RecvMouseWheel(0, 0, -20, 0, key_flags);
   EXPECT_EQ(launcher_->GetDragDelta(), initial_scroll_delta);
 
   launcher_->SetHover(false);
@@ -447,15 +446,79 @@ TEST_F(TestLauncher, DragLauncherIconHidesOutsideLauncherEmitsMouseEnter)
   EXPECT_FALSE(mouse_entered);
 }
 
-TEST_F(TestLauncher, EdgeResistDuringDnd)
+TEST_F(TestLauncher, EdgeReleasesDuringDnd)
 {
-  auto barrier = std::make_shared<MockPointerBarrierWrapper>();
+  auto barrier = std::make_shared<ui::PointerBarrierWrapper>();
   auto event = std::make_shared<ui::BarrierEvent>(0, 0, 0, 100);
 
   launcher_->DndStarted("");
 
-  EXPECT_CALL(*barrier, ReleaseBarrier(100));
-  EXPECT_TRUE(launcher_->HandleBarrierEvent(barrier.get(), event));
+  EXPECT_EQ(launcher_->HandleBarrierEvent(barrier.get(), event),
+            ui::EdgeBarrierSubscriber::Result::NEEDS_RELEASE);
+}
+
+TEST_F(TestLauncher, EdgeBarriersIgnoreEvents)
+{
+  auto const& launcher_geo = launcher_->GetAbsoluteGeometry();
+  auto barrier = std::make_shared<ui::PointerBarrierWrapper>();
+  auto event = std::make_shared<ui::BarrierEvent>(0, 0, 0, 100);
+  launcher_->SetHidden(true);
+
+  event->x = launcher_geo.x-1;
+  event->y = launcher_geo.y;
+  EXPECT_EQ(launcher_->HandleBarrierEvent(barrier.get(), event),
+            ui::EdgeBarrierSubscriber::Result::IGNORED);
+
+  event->x = launcher_geo.x+launcher_geo.width+1;
+  event->y = launcher_geo.y;
+  EXPECT_EQ(launcher_->HandleBarrierEvent(barrier.get(), event),
+            ui::EdgeBarrierSubscriber::Result::IGNORED);
+
+  options_->reveal_trigger = RevealTrigger::EDGE;
+  event->x = launcher_geo.x+launcher_geo.width/2;
+  event->y = launcher_geo.y - 1;
+  EXPECT_EQ(launcher_->HandleBarrierEvent(barrier.get(), event),
+            ui::EdgeBarrierSubscriber::Result::IGNORED);
+
+  options_->reveal_trigger = RevealTrigger::CORNER;
+  event->x = launcher_geo.x+launcher_geo.width/2;
+  event->y = launcher_geo.y;
+  EXPECT_EQ(launcher_->HandleBarrierEvent(barrier.get(), event),
+            ui::EdgeBarrierSubscriber::Result::IGNORED);
+}
+
+TEST_F(TestLauncher, EdgeBarriersHandlesEvent)
+{
+  auto const& launcher_geo = launcher_->GetAbsoluteGeometry();
+  auto barrier = std::make_shared<ui::PointerBarrierWrapper>();
+  auto event = std::make_shared<ui::BarrierEvent>(0, 0, 0, 100);
+  launcher_->SetHidden(true);
+
+  options_->reveal_trigger = RevealTrigger::EDGE;
+
+  for (int x = launcher_geo.x; x < launcher_geo.x+launcher_geo.width; ++x)
+  {
+    for (int y = launcher_geo.y; y < launcher_geo.y+launcher_geo.height; ++y)
+    {
+      event->x = x;
+      event->y = y;
+      ASSERT_EQ(launcher_->HandleBarrierEvent(barrier.get(), event),
+                ui::EdgeBarrierSubscriber::Result::HANDLED);
+    }
+  }
+
+  options_->reveal_trigger = RevealTrigger::CORNER;
+
+  for (int x = launcher_geo.x; x < launcher_geo.x+launcher_geo.width; ++x)
+  {
+    for (int y = launcher_geo.y-10; y < launcher_geo.y; ++y)
+    {
+      event->x = x;
+      event->y = y;
+      ASSERT_EQ(launcher_->HandleBarrierEvent(barrier.get(), event),
+                ui::EdgeBarrierSubscriber::Result::HANDLED);
+    }
+  }
 }
 
 TEST_F(TestLauncher, DndIsSpecialRequest)

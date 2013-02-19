@@ -425,8 +425,10 @@ void PlacesGroup::Draw(nux::GraphicsEngine& graphics_engine,
                        bool                 forceDraw)
 {
   nux::Geometry const& base(GetGeometry());
-
   graphics_engine.PushClippingRectangle(base);
+
+  if (RedirectedAncestor())
+    graphics::ClearGeometry(GetGeometry());
 
   if (ShouldBeHighlighted() && _focus_layer)
   {

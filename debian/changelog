@@ -1,3 +1,150 @@
+unity (6.12.0daily13.02.08-0ubuntu1) raring; urgency=low
+
+  [ Brandon Schaefer ]
+  * Multi-monitor - Add 'sticky edges deactivated for number of
+    milliseconds after the user breaks the barrier' variable that works
+    when the Launcher set to 'auto-hide' and sticky edges set to 'off'
+    (LP: #1064945)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * testapp is a bad name (LP: #1089561)
+
+  [ Marco Trevisan (Treviño) <mail@3v1n0.net>, Brandon Schaefer ]
+  * Multi-monitor - Add 'sticky edges deactivated for number of
+    milliseconds after the user breaks the barrier' variable that works
+    when the Launcher set to 'auto-hide' and sticky edges set to 'off'
+    (LP: #1064945)
+
+  [ Marco Trevisan (Treviño) ]
+  * Alt-Tab switcher should use a very fast fade-in/out effect when
+    showing/hiding (LP: #1105058)
+  * Multi-monitor - Add 'sticky edges deactivated for number of
+    milliseconds after the user breaks the barrier' variable that works
+    when the Launcher set to 'auto-hide' and sticky edges set to 'off'
+    (LP: #1064945)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3140
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 08 Feb 2013 04:02:00 +0000
+
+unity (6.12.0daily13.02.07-0ubuntu1) raring; urgency=low
+
+  [ Andrea Azzarone ]
+  * make check fails on test-unit (LP: #1117487)
+  * Notification area whitelist is obsolete (LP: #974480)
+
+  [ Marco Trevisan (Treviño) ]
+  * Switcher - when opening in detail mode (Alt+`) it should not use the
+    spread animation (LP: #1116927)
+  * Alt-tab sometimes focuses a window that is not in top of the app
+    stack (LP: #1115775)
+  * Switcher: Opening and closing the detail mode quickly makes unity
+    re-enable it (LP: #1116785)
+  * Exiting expo mode leaves the BFB quicklist open (LP: #1090565)
+
+  [ MC Return ]
+  * unmaximize_window_key instead of unmaximize_or_minimize_window_key
+    exposed in g-c-c (LP: #1115128)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3136
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Thu, 07 Feb 2013 06:20:12 +0000
+
+unity (6.12.0daily13.02.04.1-0ubuntu1) raring; urgency=low
+
+  * debian/control:
+    - recommends indicator-sync so it gets installed by default 
+      (lp: #1053482)
+    - recommends indicator-bluetooth as well (lp: #1111314)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * debian/control:
+    - bump compiz build-dep due to the last ABI break
+
+  [ Brandon Schaefer ]
+  * [regression] Clicking on the indicators when the Dash is open no
+    longer closes the Dash. (LP: #1109150)
+  * [staging][raring] Dash Maximise/Restore button depends on the
+    launcher icon size. (LP: #1101310)
+
+  [ Romain Perier ]
+  * The Dash closes when trying to switch to the Command lens (Alt+F2)
+    (LP: #1019457)
+
+  [ Marco Trevisan (Treviño) ]
+  * Launcher can have smaller size on monitor resolution change (LP:
+    #1105382)
+  * Dragging down a window from the panel on an external monitor,
+    restores it at wrong offset (LP: #1104043)
+  * [regression] Alt+Tab/Alt+grave brings other window to the front but
+    loses focus entirely.  (LP: #1111620)
+  * Quicklist items need a way to be ellipsized (LP: #1111471)
+
+  [ Charles Kerr <charles.kerr@canonical.com>, Andrea Azzarone ]
+  * the GObject subclasses in tests/ don't dispose() properly (LP:
+    #986875)
+
+  [ Nicolas d'Offay ]
+  * Speed up dash blur (LP: #1102410)
+
+  [ Manuel de la Pena ]
+  * API changes to FindKeyFocusArea in the Preview class stops more
+    complicated previous fom setting the correct focus (LP: #1102387)
+
+  [ MC Return ]
+  * Wrong description in Dconf key
+    com.canonical.unity.launcher.favorites (LP: #1112560)
+  * Keyboard shortcut overlay says Ctrl+Super+Down "minimises" the
+    current window, but it doesn't (LP: #966099)
+
+  [ Andrea Azzarone ]
+  * unmounting any gvfs-mounted device from unity menu crashes compiz
+    (LP: #1111389)
+  * compiz crashed with SIGSEGV in async_wrapper_callback() from
+    g_simple_async_result_complete() from
+    _g_simple_async_result_complete_with_cancellable() from
+    unmount_reply() (LP: #1102926)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * SwitcherControllerImpl autopilot test failures in unity -
+    6.12.0daily13.01.29.2-0ubuntu1 (LP: #1109192)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3117
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Mon, 04 Feb 2013 09:59:13 +0000
+
+unity (6.12.0daily13.01.25.1-0ubuntu1) raring; urgency=low
+
+  [ Romain Perier ]
+  * lp:unity FTBFS on quantal: error: ‘bamf_view_is_user_visible’ was
+    not declared in this scope  (LP: #1086276)
+
+  [ Brandon Schaefer ]
+  * TestOverlayVScrollBar.TestConnectorResetsDuringScrollAnimation
+    segfaults. (LP: #1102699)
+
+  [ Andrea Azzarone ]
+  * Removal of 21_correct_timestamp_.. patch  returns focus issues in
+    Unity session (LP: #1072566)
+
+  [ Marco Trevisan (Treviño) ]
+  * The workspace shortcuts listed in the overlay should be hidden when
+    workspaces are disabled (LP: #1103561)
+  * Shortcuts hints overlay hides a disabled shortcut without
+    relayouting (LP: #1102429)
+
+  [ Manuel de la Pena ]
+  * ActionLink does not highlight when selected via keyboard navigation
+    (LP: #1103048)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3072
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 25 Jan 2013 12:29:18 +0000
+
 unity (6.12.0daily13.01.21-0ubuntu1) raring; urgency=low
 
   [ Marco Trevisan (Treviño) ]

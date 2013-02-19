@@ -19,30 +19,21 @@
  */
 
 #include "EdgeBarrierController.h"
+#include "EdgeBarrierControllerPrivate.h"
 #include "Decaymulator.h"
 #include "unity-shared/UScreen.h"
 #include "UnityCore/GLibSource.h"
 
-namespace unity {
-namespace ui {
-
-struct EdgeBarrierController::Impl
+namespace unity
 {
-  Impl(EdgeBarrierController *parent);
+namespace ui
+{
 
-  void ResizeBarrierList(std::vector<nux::Geometry> const& layout);
-  void SetupBarriers(std::vector<nux::Geometry> const& layout);
+namespace
+{
+  int const Y_BREAK_BUFFER = 20;
+}
 
-  void OnPointerBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event);
-  void BarrierRelease(PointerBarrierWrapper* owner, int event);
-
-  std::vector<PointerBarrierWrapper::Ptr> barriers_;
-  std::vector<EdgeBarrierSubscriber*> subscribers_;
-  Decaymulator decaymulator_;
-  glib::Source::UniquePtr release_timeout_;
-  float edge_overcome_pressure_;
-  EdgeBarrierController* parent_;
-};
 
 EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
   : edge_overcome_pressure_(0)
@@ -106,7 +97,7 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
 
     barrier->DestroyBarrier();
 
-    if (!edge_resist && (subscribers_[i] == nullptr || parent_->options()->hide_mode() == launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER))
+    if (!edge_resist && parent_->options()->hide_mode() == launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER)
       continue;
 
     barrier->x1 = monitor.x;
@@ -118,11 +109,6 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
     barrier->threshold = parent_->options()->edge_stop_velocity();
     barrier->max_velocity_multiplier = parent_->options()->edge_responsiveness();
 
-    if (edge_resist)
-      barrier->direction = BarrierDirection::BOTH;
-    else
-      barrier->direction = BarrierDirection::LEFT;
-
     barrier->ConstructBarrier();
   }
 
@@ -133,7 +119,45 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
   edge_overcome_pressure_ = parent_->options()->edge_overcome_pressure() * overcome_responsiveness_mult;
 }
 
-void EdgeBarrierController::Impl::OnPointerBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event)
+void EdgeBarrierController::Impl::BarrierReset()
+{
+  decaymulator_.value = 0;
+}
+
+void EdgeBarrierController::Impl::BarrierPush(PointerBarrierWrapper* owner, BarrierEvent::Ptr const& event)
+{
+  if (EventIsInsideYBreakZone(event))
+  {
+    decaymulator_.value = decaymulator_.value + event->velocity;
+  }
+  else
+  {
+    BarrierReset();
+  }
+
+  if (decaymulator_.value > edge_overcome_pressure_)
+  {
+    BarrierRelease(owner, event->event_id);
+  }
+}
+
+bool EdgeBarrierController::Impl::EventIsInsideYBreakZone(BarrierEvent::Ptr const& event)
+{
+  static int y_break_zone = event->y;
+
+  if (decaymulator_.value <= 0)
+    y_break_zone = event->y;
+
+  if (event->y <= y_break_zone + Y_BREAK_BUFFER &&
+      event->y >= y_break_zone - Y_BREAK_BUFFER)
+  {
+    return true;
+  }
+
+  return false;
+}
+
+void EdgeBarrierController::Impl::OnPointerBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr const& event)
 {
   if (owner->released)
   {
@@ -142,28 +166,41 @@ void EdgeBarrierController::Impl::OnPointerBarrierEvent(PointerBarrierWrapper* o
   }
 
   unsigned int monitor = owner->index;
-  bool process = true;
+  auto result = EdgeBarrierSubscriber::Result::IGNORED;
 
   if (monitor < subscribers_.size())
   {
     auto subscriber = subscribers_[monitor];
 
-    if (subscriber && subscriber->HandleBarrierEvent(owner, event))
-      process = false;
+    if (subscriber)
+      result = subscriber->HandleBarrierEvent(owner, event);
   }
 
-  if (process && owner->x1 > 0)
+  switch (result)
   {
-    decaymulator_.value = decaymulator_.value + event->velocity;
+    case EdgeBarrierSubscriber::Result::HANDLED:
+      BarrierReset();
+      break;
 
-    if (decaymulator_.value > edge_overcome_pressure_ || (!parent_->sticky_edges() && !subscribers_[monitor]))
-    {
+    case EdgeBarrierSubscriber::Result::ALREADY_HANDLED:
+      BarrierPush(owner, event);
+      break;
+
+    case EdgeBarrierSubscriber::Result::IGNORED:
+      if (parent_->sticky_edges())
+      {
+        BarrierPush(owner, event);
+      }
+      else
+      {
+        owner->release_once = true;
+        BarrierRelease(owner, event->event_id);
+      }
+      break;
+
+    case EdgeBarrierSubscriber::Result::NEEDS_RELEASE:
       BarrierRelease(owner, event->event_id);
-    }
-  }
-  else
-  {
-    decaymulator_.value = 0;
+      break;
   }
 }
 
@@ -171,13 +208,18 @@ void EdgeBarrierController::Impl::BarrierRelease(PointerBarrierWrapper* owner, i
 {
   owner->ReleaseBarrier(event);
   owner->released = true;
-  decaymulator_.value = 0;
+  BarrierReset();
 
-  unsigned duration = parent_->options()->edge_passed_disabled_ms;
-  release_timeout_.reset(new glib::Timeout(duration, [owner] {
-    owner->released = false;
-    return false;
-  }));
+  if (!owner->release_once() ||
+      (owner->release_once() && (!release_timeout_ || !release_timeout_->IsRunning())))
+  {
+    unsigned duration = parent_->options()->edge_passed_disabled_ms;
+    release_timeout_.reset(new glib::Timeout(duration, [owner] {
+      owner->released = false;
+      owner->release_once = false;
+      return false;
+    }));
+  }
 }
 
 EdgeBarrierController::EdgeBarrierController()
@@ -215,11 +257,6 @@ EdgeBarrierSubscriber* EdgeBarrierController::GetSubscriber(unsigned int monitor
     return nullptr;
 
   return pimpl->subscribers_[monitor];
-}
-
-void EdgeBarrierController::ProcessBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event)
-{
-  pimpl->OnPointerBarrierEvent(owner, event);
 }
 
 }

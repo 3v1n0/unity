@@ -50,7 +50,6 @@ void Model::AddHint(AbstractHint::Ptr const& hint)
   hints_[hint->category()].push_back(hint);
 }
 
-
 void Model::Fill()
 {
   for (auto const& category : categories_)

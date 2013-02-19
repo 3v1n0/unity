@@ -32,6 +32,8 @@ namespace unity
 namespace dash
 {
 
+NUX_IMPLEMENT_OBJECT_TYPE(FilterAllButton);
+
 FilterAllButton::FilterAllButton(NUX_FILE_LINE_DECL)
  : FilterBasicButton(_("All"), NUX_FILE_LINE_PARAM)
 {

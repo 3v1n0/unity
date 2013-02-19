@@ -17,11 +17,10 @@ int main(int argc, char** argv)
 
   // init XDG_DATA_DIRS before GTK to point to the local test-dir as 
   // the environment is only read once by glib and then cached
-  g_setenv("XDG_DATA_DIRS", LOCAL_DATA_DIR, TRUE);
-
+  const std::string LOCAL_DATA_DIR = BUILDDIR"/tests/data:/usr/share";
+  g_setenv("XDG_DATA_DIRS", LOCAL_DATA_DIR.c_str(), TRUE);
+  g_setenv("LC_ALL", "C", TRUE);
   g_setenv("GSETTINGS_SCHEMA_DIR", SCHEMA_DIRECTORY, true);
-
-
 
   gtk_init(&argc, &argv);
   setlocale(LC_ALL, "C");

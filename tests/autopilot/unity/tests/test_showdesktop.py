@@ -11,6 +11,7 @@ from __future__ import absolute_import
 from testtools import skip
 from time import sleep
 
+from unity.emulators.switcher import SwitcherDirection
 from unity.tests import UnityTestCase
 
 
@@ -35,8 +36,8 @@ class ShowDesktopTests(UnityTestCase):
         test_windows = self.launch_test_apps()
 
         # show desktop, verify all windows are hidden:
-        self.window_manager.enter_show_desktop()
-        self.addCleanup(self.window_manager.leave_show_desktop)
+        self.unity.window_manager.enter_show_desktop()
+        self.addCleanup(self.unity.window_manager.leave_show_desktop)
 
         for win in test_windows:
             self.assertProperty(win, is_valid=True)
@@ -47,15 +48,15 @@ class ShowDesktopTests(UnityTestCase):
         test_windows = self.launch_test_apps()
 
         # show desktop, verify all windows are hidden:
-        self.window_manager.enter_show_desktop()
-        self.addCleanup(self.window_manager.leave_show_desktop)
+        self.unity.window_manager.enter_show_desktop()
+        self.addCleanup(self.unity.window_manager.leave_show_desktop)
 
         for win in test_windows:
             self.assertProperty(win, is_valid=True)
             self.assertProperty(win, is_hidden=True)
 
         # un-show desktop, verify all windows are shown:
-        self.window_manager.leave_show_desktop()
+        self.unity.window_manager.leave_show_desktop()
 
         for win in test_windows:
             self.assertProperty(win, is_valid=True)
@@ -66,17 +67,17 @@ class ShowDesktopTests(UnityTestCase):
         charmap, calc = self.launch_test_apps()
 
         # show desktop, verify all windows are hidden:
-        self.window_manager.enter_show_desktop()
-        self.addCleanup(self.window_manager.leave_show_desktop)
+        self.unity.window_manager.enter_show_desktop()
+        self.addCleanup(self.unity.window_manager.leave_show_desktop)
 
         for win in (charmap, calc):
             self.assertProperty(win, is_valid=True)
             self.assertProperty(win, is_hidden=True)
 
         # We'll un-minimise the character map - find it's launcherIcon in the launcher:
-        charmap_icon = self.launcher.model.get_icon(desktop_id="gucharmap.desktop")
+        charmap_icon = self.unity.launcher.model.get_icon(desktop_id="gucharmap.desktop")
         if charmap_icon:
-            self.launcher.get_launcher_for_monitor(0).click_launcher_icon(charmap_icon)
+            self.unity.launcher.get_launcher_for_monitor(0).click_launcher_icon(charmap_icon)
         else:
             self.fail("Could not find launcher icon in launcher.")
 
@@ -84,7 +85,7 @@ class ShowDesktopTests(UnityTestCase):
         self.assertProperty(calc, is_hidden=True)
 
         # hide desktop - now all windows should be visible:
-        self.window_manager.leave_show_desktop()
+        self.unity.window_manager.leave_show_desktop()
 
         for win in (charmap, calc):
             self.assertProperty(win, is_hidden=False)
@@ -95,9 +96,9 @@ class ShowDesktopTests(UnityTestCase):
         test_windows = self.launch_test_apps()
 
         # show desktop, verify all windows are hidden:
-        self.switcher.initiate()
-        self.switcher.select_icon(self.switcher.DIRECTION_BACKWARDS, tooltip_text="Show Desktop")
-        self.addCleanup(self.window_manager.leave_show_desktop)
+        self.unity.switcher.initiate()
+        self.unity.switcher.select_icon(SwitcherDirection.BACKWARDS, tooltip_text="Show Desktop")
+        self.addCleanup(self.unity.window_manager.leave_show_desktop)
         self.switcher.select()
 
         for win in test_windows:

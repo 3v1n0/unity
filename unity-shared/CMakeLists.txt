@@ -39,6 +39,7 @@ set (UNITY_SHARED_SOURCES
      LayoutSystem.cpp
      LineSeparator.cpp
      OverlayRenderer.cpp
+     OverlayWindowButtons.cpp
      PanelStyle.cpp
      PlacesVScrollBar.cpp
      PlacesOverlayVScrollBar.cpp
@@ -61,6 +62,7 @@ set (UNITY_SHARED_SOURCES
      UnityWindowView.cpp
      UserThumbnailProvider.cpp
      VScrollBarOverlayWindow.cpp
+     WindowButtons.cpp
      WindowManager.cpp
      XPathQueryPart.cpp
 )

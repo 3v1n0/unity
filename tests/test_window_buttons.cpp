@@ -24,8 +24,8 @@
 #include "PanelStyle.h"
 #include "StandaloneWindowManager.h"
 #include "UnitySettings.h"
-#include "WindowButtons.h"
-#include "WindowButtonPriv.h"
+#include "unity-shared/WindowButtons.h"
+#include "unity-shared/WindowButtonPriv.h"
 
 namespace unity
 {

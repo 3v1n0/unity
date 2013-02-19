@@ -111,6 +111,7 @@ public:
   virtual bool MultiRangeSegment(cairo_t*    cr,
                                  nux::ButtonVisualState  state,
                                  std::string const& label,
+                                 int font_px_size,
                                  Arrow       arrow,
                                  Segment     segment);
 

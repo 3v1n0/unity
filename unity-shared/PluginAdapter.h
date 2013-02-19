@@ -120,6 +120,7 @@ public:
   void NotifyNewDecorationState(Window xid);
 
   Window GetActiveWindow() const;
+  std::vector<Window> GetWindowsInStackingOrder() const override;
 
   void Decorate(Window xid) const;
   void Undecorate(Window xid) const;
@@ -147,6 +148,7 @@ public:
   void Activate(Window window_id);
   void Raise(Window window_id);
   void Lower(Window window_id);
+  void RestackBelow(Window window_id, Window sibiling_id) override;
 
   void ShowDesktop();
   bool InShowDesktop() const;
@@ -178,6 +180,7 @@ public:
   int WorkspaceCount() const;
 
   nux::Point GetCurrentViewport() const override;
+  void SetViewportSize(int horizontal, int vertical) override;
   int GetViewportHSize() const override;
   int GetViewportVSize() const override;
 

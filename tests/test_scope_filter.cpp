@@ -81,7 +81,6 @@ TEST_F(TestScopeFilter, TestFilterCheckOption)
 {
   Filters::Ptr filters = scope_->filters;
   WaitForModel(filters, 4);
-  printf("Filter Count: %d\n", scope_->results()->count());
 
   CheckOptionFilter::Ptr filter = static_pointer_cast<CheckOptionFilter>(filters->FilterAtIndex(0));
   EXPECT_EQ(filter->id, "categories");
@@ -303,26 +302,25 @@ TEST_F(TestScopeFilter, TestFilterMultiRangeLogic)
   EXPECT_FALSE (options[3]->active);
 
   options[0]->active = true;
-  options[3]->active = true;
-  EXPECT_TRUE (filter->filtering);
   EXPECT_TRUE (options[0]->active);
-  EXPECT_TRUE (options[1]->active);
-  EXPECT_TRUE (options[2]->active);
+  EXPECT_TRUE (filter->filtering);
+  options[3]->active = true;
+  EXPECT_FALSE (options[0]->active);
   EXPECT_TRUE (options[3]->active);
 
   options[0]->active = true;
-  options[2]->active = false;
+  options[1]->active = true;
   EXPECT_TRUE (filter->filtering);
   EXPECT_TRUE (options[0]->active);
   EXPECT_TRUE (options[1]->active);
-  EXPECT_TRUE (options[2]->active);
+  EXPECT_FALSE (options[2]->active);
   EXPECT_FALSE (options[3]->active);
 
   options[0]->active = false;
   EXPECT_TRUE (filter->filtering);
   EXPECT_FALSE (options[0]->active);
   EXPECT_TRUE (options[1]->active);
-  EXPECT_TRUE (options[2]->active);
+  EXPECT_FALSE (options[2]->active);
   EXPECT_FALSE (options[3]->active);
 
   filter->Clear();

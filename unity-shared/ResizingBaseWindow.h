@@ -19,7 +19,7 @@
 #ifndef RESIZEDINPUTWINDOW_BASEWINDOW_H
 #define RESIZEDINPUTWINDOW_BASEWINDOW_H
 
-#include <Nux/BaseWindow.h>
+#include "MockableBaseWindow.h"
 
 namespace unity
 {
@@ -28,10 +28,9 @@ namespace unity
  * A base window with a separate input area overlay.
  *
  * This Unity class extends the base Nux class with a bound function to
- * recalculate the input window geometry.  It also provides virtualized
- * forwarding functions that can be replaced by mocks in the test suite.
+ * recalculate the input window geometry.
  */
-class ResizingBaseWindow : public nux::BaseWindow
+class ResizingBaseWindow : public MockableBaseWindow
 {
 public:
   /**
@@ -39,6 +38,7 @@ public:
    * displayed window geometry in some way.
    */
   typedef std::function<nux::Geometry (nux::Geometry const&)> GeometryAdjuster;
+  typedef nux::ObjectPtr<ResizingBaseWindow> Ptr;
 
 public:
   /**
@@ -62,15 +62,6 @@ public:
    * @param[in] geometry The new window geometry.
    */
   virtual void SetGeometry(const nux::Geometry &geometry);
-
-  /**
-   * Sets the window opacity.
-   * @param[in] opacity Window opacity (alpha) value on [0, 1).
-   *
-   * This function override is provided so the window can be mocked during
-   * testing.
-   */
-  virtual void SetOpacity(float opacity);
 
 private:
   GeometryAdjuster input_adjustment_;

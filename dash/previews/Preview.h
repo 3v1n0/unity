@@ -60,13 +60,13 @@ public:
 
   Preview(dash::Preview::Ptr preview_model);
   virtual ~Preview();
- 
+
   // From debug::Introspectable
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
-  static previews::Preview::Ptr PreviewForModel(dash::Preview::Ptr model);  
-  
+  static previews::Preview::Ptr PreviewForModel(dash::Preview::Ptr model);
+
   sigc::signal<void> request_close() const;
 
   virtual nux::Area* FindKeyFocusArea(unsigned int key_symbol,
@@ -77,7 +77,7 @@ public:
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw) {}
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {}
-  
+
   virtual void OnActionActivated(ActionButton* button, std::string const& id);
 
   virtual void OnNavigateIn();
@@ -92,6 +92,13 @@ protected:
   nux::Layout* BuildVerticalActionsLayout(dash::Preview::ActionPtrList actions, std::list<nux::AbstractButton*>& buttons);
 
   void UpdateCoverArtImage(CoverArt* cover_art);
+
+  void SetFirstInTabOrder(nux::InputArea* area);
+  void SetLastInTabOrder(nux::InputArea* area);
+  void SetTabOrder(nux::InputArea* area, int index);
+  void SetTabOrderBefore(nux::InputArea* area, nux::InputArea* after);
+  void SetTabOrderAfter(nux::InputArea* area, nux::InputArea* before);
+  void RemoveFromTabOrder(nux::InputArea* area);
 
 protected:
   dash::Preview::Ptr preview_model_;

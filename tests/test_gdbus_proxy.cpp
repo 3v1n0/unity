@@ -46,7 +46,7 @@ public:
 TEST_F(TestGDBusProxy, TestConstruction)
 {
   EXPECT_FALSE(proxy.IsConnected());
-  Utils::WaitUntil(sigc::mem_fun(proxy, &glib::DBusProxy::IsConnected));
+  Utils::WaitUntil(sigc::mem_fun(proxy, &glib::DBusProxy::IsConnected), true, 5);
   EXPECT_TRUE(proxy.IsConnected());
 }
 
@@ -166,7 +166,7 @@ TEST_F(TestGDBusProxyInvalidService, TestTimeouting)
   // be acquired (with a dbus error)
   g_usleep(110000);
 
-  Utils::WaitUntil(got_result_return);
+  Utils::WaitUntil(got_result_return, 3);
   EXPECT_EQ(call_return, "");
 }
 
@@ -189,7 +189,7 @@ TEST_F(TestGDBusProxy, TestMethodCall)
   proxy.Call("TestMethod", g_variant_new("(s)", "TestStringTestString"),
              method_connection);
 
-  Utils::WaitUntil(got_result_return);
+  Utils::WaitUntil(got_result_return, 3);
  
   EXPECT_TRUE(proxy.IsConnected());
   EXPECT_EQ("TestStringTestString", call_return);

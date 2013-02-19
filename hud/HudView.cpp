@@ -32,6 +32,7 @@
 
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/WindowManager.h"
 
 namespace unity
 {
@@ -67,6 +68,7 @@ View::View()
   , selected_button_(0)
   , show_embedded_icon_(true)
   , keyboard_stole_focus_(false)
+  , overlay_window_buttons_(new OverlayWindowButtons())
 {
   renderer_.SetOwner(this);
   renderer_.need_redraw.connect([this] () {
@@ -345,12 +347,14 @@ nux::Geometry View::GetBestFitGeometry(nux::Geometry const& for_geo)
 void View::AboutToShow()
 {
   visible_ = true;
+  overlay_window_buttons_->Show();
   renderer_.AboutToShow();
 }
 
 void View::AboutToHide()
 {
   visible_ = false;
+  overlay_window_buttons_->Hide();
   renderer_.AboutToHide();
 }
 
@@ -484,6 +488,9 @@ void View::DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw)
   {
     GetLayout()->ProcessDraw(gfx_context, force_draw);
   }
+
+  overlay_window_buttons_->QueueDraw();
+
   gfx_context.PopClippingRectangle();
 
   renderer_.DrawInnerCleanup(gfx_context, draw_content_geo, GetAbsoluteGeometry(), GetGeometry());
@@ -642,13 +649,15 @@ nux::Area* View::FindKeyFocusArea(unsigned int event_type,
     // Not sure if Enter should be a navigation key
     direction = nux::KEY_NAV_ENTER;
     break;
-  case NUX_VK_F4:
-    if (special_keys_state == nux::NUX_STATE_ALT)
+  default:
+    auto const& close_key = WindowManager::Default().close_window_key();
+
+    if (close_key.first == special_keys_state && close_key.second == x11_key_code)
     {
       ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
+      return nullptr;
     }
-    break;
-  default:
+
     direction = nux::KEY_NAV_NONE;
     break;
   }

@@ -147,4 +147,35 @@ TEST_F(TestSwitcherModel, TestActiveDetailWindowSort)
   EXPECT_EQ(sorted, unsorted);
 }
 
+TEST_F(TestSwitcherModel, SelectionIsActive)
+{
+  SwitcherModel model(icons_);
+
+  model.Selection()->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, false);
+  EXPECT_FALSE(model.SelectionIsActive());
+
+  model.Selection()->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
+  EXPECT_TRUE(model.SelectionIsActive());
+}
+
+TEST_F(TestSwitcherModel, TestWebAppActive)
+{
+  // Create a base case
+  SwitcherModel::Ptr base_model(new SwitcherModel(icons_));
+
+  // Set the first icon as Active to simulate Firefox being active
+  icons_.front()->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
+
+  // Set the last icon as Active to simulate that it is a WebApp
+  icons_.back()->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
+
+  SwitcherModel::Ptr model(new SwitcherModel(icons_));
+
+  model->DetailXids();
+
+  // model's front Window should be different than the base case due to the
+  // re-sorting in DetailXids().
+  EXPECT_NE(model->DetailXids().front(), base_model->DetailXids().front());
+}
+
 }

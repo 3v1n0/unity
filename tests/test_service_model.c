@@ -29,8 +29,9 @@ service_model_dispose(GObject* object)
   g_object_unref(self->priv->results_model_);
   g_object_unref(self->priv->categories_model_);
   g_object_unref(self->priv->categories_model_changing_);
-
   g_source_remove(self->priv->timout_id_);
+
+  G_OBJECT_CLASS (service_model_parent_class)->dispose (object);
 }
 
 static void

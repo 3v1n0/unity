@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -21,28 +21,21 @@
 #define SWITCHERCONTROLLER_H
 
 #include <memory>
+#include <string>
+#include <sigc++/connection.h>
 
-#include <UnityCore/Variant.h>
-#include <UnityCore/GLibSource.h>
-
-#include "unity-shared/Introspectable.h"
-#include "unity-shared/UBusWrapper.h"
-
-#include "SwitcherModel.h"
-#include "SwitcherView.h"
-
+#include "AbstractLauncherIcon.h"
 #include <Nux/Nux.h>
-#include <Nux/BaseWindow.h>
-#include <Nux/WindowCompositor.h>
+#include "unity-shared/Introspectable.h"
+#include "unity-shared/LayoutSystem.h"
+
 
 namespace unity
 {
-namespace launcher
-{
-class AbstractLauncherIcon;
-}
 namespace switcher
 {
+
+class SwitcherView;
 
 enum class SortMode
 {
@@ -56,192 +49,95 @@ enum class ShowMode
   CURRENT_VIEWPORT,
 };
 
-class Controller
+enum class DetailMode
 {
-  public:
-
-    class Impl;
-    typedef std::unique_ptr<Impl> ImplPtr;
-    typedef std::function<ImplPtr()> CreateImplFunc;
-    typedef std::shared_ptr<Controller> Ptr;
-
-  public:
-
-    Controller(CreateImplFunc const&);
-
-    void Show(ShowMode show,
-              SortMode sort,
-              std::vector<launcher::AbstractLauncherIcon::Ptr> results);
-    void Hide(bool accept_state=true);
-
-    bool CanShowSwitcher(const std::vector<launcher::AbstractLauncherIcon::Ptr>& resutls) const;
-
-    bool Visible();
-
-    void Next();
-    void Prev();
-
-    void NextDetail();
-    void PrevDetail();
-
-    void Select(int index);
-
-    void SetDetail(bool detail,
-                   unsigned int min_windows = 1);
-
-    void SelectFirstItem();
-
-    void SetWorkspace(nux::Geometry geo,
-                      int monitor);
-
-    SwitcherView * GetView ();
-
-    ui::LayoutWindow::Vector ExternalRenderTargets ();
-
-    guint GetSwitcherInputWindowId() const;
-
-    bool IsShowDesktopDisabled() const;
-    void SetShowDesktopDisabled(bool disabled);
-    int StartIndex() const;
-
-    sigc::connection ConnectToViewBuilt (sigc::slot<void> const&);
-    void SetDetailOnTimeout(bool timeout);
-
-  private:
-    ImplPtr impl_;
+  TAB_NEXT_WINDOW,
+  TAB_NEXT_WINDOW_LOOP,
+  TAB_NEXT_TILE,
 };
 
-class Controller::Impl
+
+/**
+ * Represents a selected application+window to be switched to.
+ */
+struct Selection
 {
-  public:
-
-    virtual ~Impl () {}
-
-    virtual void Show(ShowMode show,
-                      SortMode sort,
-                      std::vector<launcher::AbstractLauncherIcon::Ptr> results) = 0;
-    virtual void Hide(bool accept_state) = 0;
-
-    virtual bool CanShowSwitcher(const std::vector<launcher::AbstractLauncherIcon::Ptr>& resutls) const = 0;
-
-    virtual bool Visible() = 0;
-
-    virtual void Next() = 0;
-    virtual void Prev() = 0;
-
-    virtual void NextDetail() = 0;
-    virtual void PrevDetail() = 0;
-
-    virtual void Select(int index) = 0;
-
-    virtual void SetDetail(bool detail,
-                           unsigned int min_windows) = 0;
-
-    virtual void SelectFirstItem() = 0;
-
-    virtual void SetWorkspace(nux::Geometry geo,
-                              int monitor) = 0;
-
-    virtual SwitcherView * GetView () = 0;
-
-    virtual ui::LayoutWindow::Vector ExternalRenderTargets () = 0;
-
-    virtual guint GetSwitcherInputWindowId() const = 0;
-
-    virtual bool IsShowDesktopDisabled() const = 0;
-    virtual void SetShowDesktopDisabled(bool disabled) = 0;
-    virtual int StartIndex() const = 0;
-
-    sigc::signal<void> view_built;
-    nux::Property<bool> detail_on_timeout;
+  launcher::AbstractLauncherIcon::Ptr application_;
+  Window                              window_;
 };
 
-class ShellController : public Controller::Impl,
-                        public debug::Introspectable,
-                        public sigc::trackable
+
+class Controller : public debug::Introspectable
 {
 public:
-  typedef std::shared_ptr<ShellController> Ptr;
+  class Impl;
+  typedef std::function<nux::ObjectPtr<nux::BaseWindow>()> WindowCreator;
+  typedef std::unique_ptr<Impl> ImplPtr;
+  typedef std::shared_ptr<Controller> Ptr;
 
-  nux::Property<int> timeout_length;
-  nux::Property<int>  detail_timeout_length;
-  nux::Property<int> initial_detail_timeout_length;
+public:
+  Controller(WindowCreator const& create_window = nullptr);
 
-  ShellController(unsigned int load_timeout = 20);
+  ~Controller();
 
-  virtual void Show(ShowMode show, SortMode sort, std::vector<launcher::AbstractLauncherIcon::Ptr> results);
-  virtual void Hide(bool accept_state);
+  void Show(ShowMode show,
+            SortMode sort,
+            std::vector<launcher::AbstractLauncherIcon::Ptr> results);
+  void Hide(bool accept_state=true);
 
   bool CanShowSwitcher(const std::vector<launcher::AbstractLauncherIcon::Ptr>& resutls) const;
 
-  virtual bool Visible();
+  bool Visible();
 
-  virtual void Next();
-  virtual void Prev();
+  void Next();
+  void Prev();
 
+  void InitiateDetail();
   void NextDetail();
   void PrevDetail();
 
-  virtual void Select (int index);
+  void Select(int index);
 
-  void SetDetail(bool detail, unsigned int min_windows = 1);
+  void SetDetail(bool detail,
+                 unsigned int min_windows = 1);
 
   void SelectFirstItem();
 
   void SetWorkspace(nux::Geometry geo, int monitor);
 
-  virtual SwitcherView* GetView();
+  nux::ObjectPtr<SwitcherView> GetView() const;
 
-  ui::LayoutWindow::Vector ExternalRenderTargets ();
+  ui::LayoutWindow::Vector ExternalRenderTargets();
 
   guint GetSwitcherInputWindowId() const;
 
   bool IsShowDesktopDisabled() const;
   void SetShowDesktopDisabled(bool disabled);
   int StartIndex() const;
+  double Opacity() const;
 
-protected:
+  Selection GetCurrentSelection() const;
+
+  sigc::connection ConnectToViewBuilt(sigc::slot<void> const&);
+  void SetDetailOnTimeout(bool timeout);
+
   // Introspectable methods
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
-  virtual void ConstructWindow();
-  virtual void ConstructView();
-  virtual void ShowView();
-
-  virtual bool OnDetailTimer();
-  void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr const& icon);
-
-  unsigned int construct_timeout_;
+  nux::ROProperty<DetailMode> detail_mode;
+  nux::Property<int>  timeout_length;
+  nux::Property<bool> detail_on_timeout;
+  nux::Property<int>  detail_timeout_length;
+  nux::Property<int>  initial_detail_timeout_length;
 
 private:
-  enum DetailMode
-  {
-    TAB_NEXT_WINDOW,
-    TAB_NEXT_WINDOW_LOOP,
-    TAB_NEXT_TILE,
-  };
-
-  void OnBackgroundUpdate(GVariant* data);
-  static bool CompareSwitcherItemsPriority(launcher::AbstractLauncherIcon::Ptr const& first, launcher::AbstractLauncherIcon::Ptr const& second);
-
-  SwitcherModel::Ptr model_;
-  SwitcherView::Ptr view_;
-
-  nux::Geometry workarea_;
-  nux::ObjectPtr<nux::BaseWindow> view_window_;
-  nux::HLayout* main_layout_;
-
-  int monitor_;
-  bool visible_;
-  bool show_desktop_disabled_;
-  nux::Color bg_color_;
+  bool       visible_;
+  int        monitor_;
+  bool       show_desktop_disabled_;
   DetailMode detail_mode_;
 
-  launcher::AbstractLauncherIcon::Ptr last_active_selection_;
-
-  UBusManager ubus_manager_;
-  glib::SourceManager sources_;
+  ImplPtr    impl_;
 };
 
 }

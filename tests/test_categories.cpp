@@ -104,7 +104,7 @@ TEST(TestCategories, TestOnRowChanged)
 
 
 // We're testing the model's ability to store and retrieve random pointers
-TEST(TestCategories, OnRowAdded)
+TEST(TestCategories, TestOnRowAdded)
 {
   Categories model;
   model.swarm_name = swarm_name_changing;
@@ -118,7 +118,7 @@ TEST(TestCategories, OnRowAdded)
 }
 
 // We're testing the model's ability to store and retrieve random pointers
-TEST(TestCategories, OnRowRemoved)
+TEST(TestCategories, TestOnRowRemoved)
 {
   Categories model;
   model.swarm_name = swarm_name_changing;
@@ -129,6 +129,39 @@ TEST(TestCategories, OnRowRemoved)
   Utils::WaitUntilMSec(removed,
                        2000,
                        []() { return g_strdup_printf("Did not detect row remove %s.", swarm_name_changing.c_str()); });
+}
+
+TEST(TestCategories, TestCategoryCopy)
+{
+  Categories model;
+  model.swarm_name = swarm_name_changing;
+  WaitForSynchronize(model);
+  
+  Category category = model.RowAtIndex(0);
+  Category category_2(category);
+
+  EXPECT_EQ(category.id(), category_2.id());
+  EXPECT_EQ(category.name(), category_2.name());
+  EXPECT_EQ(category.icon_hint(), category_2.icon_hint());
+  EXPECT_EQ(category.renderer_name(), category_2.renderer_name());
+  EXPECT_EQ(category.index(), category_2.index());
+}
+
+TEST(TestCategories, TestCategoryEqual)
+{
+  Categories model;
+  model.swarm_name = swarm_name_changing;
+  WaitForSynchronize(model);
+
+  Category category = model.RowAtIndex(0);
+  Category category_2(NULL, NULL, NULL);
+  category_2 = category;
+
+  EXPECT_EQ(category.id(), category_2.id());
+  EXPECT_EQ(category.name(), category_2.name());
+  EXPECT_EQ(category.icon_hint(), category_2.icon_hint());
+  EXPECT_EQ(category.renderer_name(), category_2.renderer_name());
+  EXPECT_EQ(category.index(), category_2.index());
 }
 
 }

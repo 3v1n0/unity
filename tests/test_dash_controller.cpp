@@ -37,12 +37,15 @@ class TestDashController : public Test
 public:
   TestDashController()
     : animation_controller(tick_source)
-    , base_window_(new testmocks::MockBaseWindow([](nux::Geometry const& geo)
-                                                 { return geo; }))
+    , base_window_(new NiceMock<testmocks::MockBaseWindow>())
   { }
 
   virtual void SetUp()
   {
+    ON_CALL(*base_window_, SetOpacity(_))
+      .WillByDefault(Invoke(base_window_.GetPointer(),
+                     &testmocks::MockBaseWindow::RealSetOpacity));
+
     // Set expectations for creating the controller
     EXPECT_CALL(*base_window_, SetOpacity(0.0f))
       .WillOnce(Invoke(base_window_.GetPointer(),
@@ -75,9 +78,7 @@ TEST_F(TestDashController, TestShowAndHideDash)
   {
     InSequence showing;
     EXPECT_CALL(*base_window_, SetOpacity(_)).Times(AtLeast(1));
-    EXPECT_CALL(*base_window_, SetOpacity(Eq(1.0f)))
-        .WillOnce(Invoke(base_window_.GetPointer(),
-                         &testmocks::MockBaseWindow::RealSetOpacity));
+    EXPECT_CALL(*base_window_, SetOpacity(Eq(1.0f)));
   }
 
   controller_->ShowDash();
@@ -89,9 +90,7 @@ TEST_F(TestDashController, TestShowAndHideDash)
   {
     InSequence hiding;
     EXPECT_CALL(*base_window_, SetOpacity(_)).Times(AtLeast(1));
-    EXPECT_CALL(*base_window_, SetOpacity(Eq(0.0f)))
-        .WillOnce(Invoke(base_window_.GetPointer(),
-                         &testmocks::MockBaseWindow::RealSetOpacity));
+    EXPECT_CALL(*base_window_, SetOpacity(Eq(0.0f)));
   }
 
   controller_->HideDash();

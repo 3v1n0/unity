@@ -29,9 +29,12 @@
 #include "Nux/StaticText.h"
 #include "Nux/RangeValueInteger.h"
 #include "NuxGraphics/GraphicsEngine.h"
+#include <Nux/NuxTimerTickSource.h>
+#include <NuxCore/AnimationController.h>
 #include <gtk/gtk.h>
 
 #include "SwitcherController.h"
+#include "SwitcherView.h"
 #include "MockLauncherIcon.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UnitySettings.h"
@@ -42,17 +45,6 @@ using unity::launcher::AbstractLauncherIcon;
 using unity::launcher::MockLauncherIcon;
 
 static bool enable_flipping = false;
-
-class StandaloneController : public ShellController
-{
-  public:
-
-    StandaloneController() :
-      ShellController()
-    {
-      timeout_length = 0;
-    }
-};
 
 static Controller::Ptr controller;
 
@@ -138,9 +130,7 @@ void ThreadWidgetInit(nux::NThread* thread, void* InitData)
 {
   nux::VLayout* layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
 
-  controller = std::make_shared<Controller>([]{
-    return Controller::ImplPtr(new StandaloneController());
-  });
+  controller = std::make_shared<Controller>();
   controller->SetWorkspace(nux::Geometry(0, 0, 900, 600), 0);
 
   layout->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
@@ -305,6 +295,8 @@ int main(int argc, char** argv)
   unity::Settings settings;
   BackgroundEffectHelper::blur_type = unity::BLUR_ACTIVE;
   nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Switcher"), 1200, 600, 0, &ThreadWidgetInit, 0);
+  nux::NuxTimerTickSource tick_source;
+  nux::animation::AnimationController animation_controller(tick_source);
 
   wt->Run(NULL);
   delete wt;

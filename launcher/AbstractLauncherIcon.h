@@ -59,9 +59,10 @@ public:
   {
   }
 
-  ActionArg(Source source, int button, Window target = 0, int monitor = -1)
+  ActionArg(Source source, int button, Time timestamp = -1,  Window target = 0, int monitor = -1)
     : source(source)
     , button(button)
+    , timestamp(timestamp)
     , target(target)
     , monitor(monitor)
   {
@@ -69,6 +70,7 @@ public:
 
   Source source;
   int button;
+  Time timestamp;
   Window target;
   int monitor;
 };
@@ -240,7 +242,6 @@ public:
   sigc::connection on_icon_added_connection;
   sigc::connection on_icon_removed_connection;
   sigc::connection on_order_changed_connection;
-  sigc::connection on_expo_terminated_connection;
 };
 
 }

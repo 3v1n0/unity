@@ -28,7 +28,7 @@
 #include "ApplicationLauncherIcon.h"
 #include "FavoriteStore.h"
 #include "mock-application.h"
-
+#include "StandaloneWindowManager.h"
 
 using namespace unity;
 using namespace testmocks;
@@ -45,6 +45,7 @@ class TestApplicationLauncherIcon : public testing::Test
 public:
   virtual void SetUp()
   {
+    WM = dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default());
     usc_app.reset(new MockApplication(USC_DESKTOP, "softwarecenter"));
     usc_icon = new launcher::ApplicationLauncherIcon(usc_app);
     ASSERT_EQ(usc_icon->DesktopFile(), USC_DESKTOP);
@@ -58,6 +59,7 @@ public:
     ASSERT_TRUE(mock_icon->DesktopFile().empty());
   }
 
+  StandaloneWindowManager* WM;
   std::shared_ptr<MockApplication> usc_app;
   std::shared_ptr<MockApplication> empty_app;
   std::shared_ptr<MockApplication> mock_app;
@@ -106,25 +108,40 @@ TEST_F(TestApplicationLauncherIcon, Stick)
 TEST_F(TestApplicationLauncherIcon, StickAndSave)
 {
   bool saved = false;
-  usc_icon->position_saved.connect([&saved] {saved = true;});
+  mock_icon->position_saved.connect([&saved] {saved = true;});
 
-  usc_icon->Stick(true);
-  EXPECT_TRUE(usc_app->sticky());
-  EXPECT_TRUE(usc_icon->IsSticky());
-  EXPECT_TRUE(usc_icon->IsVisible());
+  mock_icon->Stick(true);
+  EXPECT_TRUE(mock_app->sticky());
+  EXPECT_TRUE(mock_icon->IsSticky());
+  EXPECT_TRUE(mock_icon->IsVisible());
   EXPECT_TRUE(saved);
 }
 
-TEST_F(TestApplicationLauncherIcon, Unstick)
+TEST_F(TestApplicationLauncherIcon, UnstickNotRunning)
 {
   bool forgot = false;
-  usc_icon->position_forgot.connect([&forgot] {forgot = true;});
+  mock_app->running_ = false;
+  mock_icon->position_forgot.connect([&forgot] {forgot = true;});
 
-  usc_icon->Stick(false);
-  usc_icon->UnStick();
-  EXPECT_FALSE(usc_app->sticky());
-  EXPECT_FALSE(usc_icon->IsSticky());
-  EXPECT_FALSE(usc_icon->IsVisible());
+  mock_icon->Stick();
+  mock_icon->UnStick();
+  EXPECT_FALSE(mock_app->sticky());
+  EXPECT_FALSE(mock_icon->IsSticky());
+  EXPECT_FALSE(mock_icon->IsVisible());
+  EXPECT_TRUE(forgot);
+}
+
+TEST_F(TestApplicationLauncherIcon, UnstickRunning)
+{
+  bool forgot = false;
+  mock_app->running_ = true;
+  mock_icon->position_forgot.connect([&forgot] {forgot = true;});
+
+  mock_icon->Stick();
+  mock_icon->UnStick();
+  EXPECT_FALSE(mock_app->sticky());
+  EXPECT_FALSE(mock_icon->IsSticky());
+  EXPECT_TRUE(mock_icon->IsVisible());
   EXPECT_TRUE(forgot);
 }
 
@@ -163,6 +180,101 @@ TEST_F(TestApplicationLauncherIcon, InvalidIconUpdatesOnRunning)
   mock_app->icon_ = "new-icon-name";
   mock_app->SetRunState(true);
   EXPECT_EQ(mock_icon->icon_name(), "icon-name");
+}
+
+TEST_F(TestApplicationLauncherIcon, ActiveQuirkWMCrossCheck)
+{
+  auto win = std::make_shared<MockApplicationWindow>(g_random_int());
+  mock_app->window_list_ = { win };
+  ASSERT_FALSE(mock_icon->IsActive());
+
+  mock_app->SetActiveState(true);
+  ASSERT_FALSE(mock_icon->IsActive());
+
+  WM->AddStandaloneWindow(std::make_shared<StandaloneWindow>(win->window_id()));
+  EXPECT_TRUE(mock_icon->IsActive());
+}
+
+TEST_F(TestApplicationLauncherIcon, NoWindowListMenusWithOneWindow)
+{
+  auto win = std::make_shared<MockApplicationWindow>(g_random_int());
+  mock_app->window_list_ = { win };
+
+  auto const& menus = mock_icon->Menus();
+  auto menu_it = std::find_if(menus.begin(), menus.end(), [win] (glib::Object<DbusmenuMenuitem> it) {
+    auto* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
+    return (label && std::string(label) == win->title());
+  });
+
+  EXPECT_EQ(menu_it, menus.end());
+}
+
+TEST_F(TestApplicationLauncherIcon, WindowListMenusWithTwoWindows)
+{
+  auto win1 = std::make_shared<MockApplicationWindow>(1);
+  auto wm_win1 = std::make_shared<StandaloneWindow>(win1->window_id());
+  auto win2 = std::make_shared<MockApplicationWindow>(2);
+  auto wm_win2 = std::make_shared<StandaloneWindow>(win2->window_id());
+
+  mock_app->window_list_ = { win1, win2 };
+  WM->AddStandaloneWindow(wm_win1);
+  WM->AddStandaloneWindow(wm_win2);
+  ASSERT_TRUE(wm_win2->active());
+
+  auto const& menus = mock_icon->Menus();
+
+  auto menu1_it = std::find_if(menus.begin(), menus.end(), [win1] (glib::Object<DbusmenuMenuitem> it) {
+    auto* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
+    return (label && std::string(label) == win1->title());
+  });
+
+  ASSERT_NE(menu1_it, menus.end());
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu1_it, DBUSMENU_MENUITEM_PROP_ENABLED));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu1_it, DBUSMENU_MENUITEM_PROP_VISIBLE));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu1_it, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY));
+  EXPECT_EQ(dbusmenu_menuitem_property_get_int(*menu1_it, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY), 300);
+
+  auto menu2_it = std::find_if(menus.begin(), menus.end(), [win2] (glib::Object<DbusmenuMenuitem> it) {
+    auto* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
+    return (label && std::string(label) == win2->title());
+  });
+
+  ASSERT_NE(menu2_it, menus.end());
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu2_it, DBUSMENU_MENUITEM_PROP_ENABLED));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu2_it, DBUSMENU_MENUITEM_PROP_VISIBLE));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu2_it, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY));
+  EXPECT_EQ(dbusmenu_menuitem_property_get_int(*menu2_it, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY), 300);
+
+  bool activated = false;
+  wm_win1->active.changed.connect([&activated] (bool a) { activated = a; });
+  g_signal_emit_by_name(*menu1_it, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, 0);
+
+  EXPECT_TRUE(wm_win1->active());
+  EXPECT_TRUE(activated);
+
+  activated = false;
+  wm_win2->active.changed.connect([&activated] (bool a) { activated = a; });
+  g_signal_emit_by_name(*menu2_it, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, 0);
+
+  EXPECT_TRUE(wm_win2->active());
+  EXPECT_TRUE(activated);
+}
+
+TEST_F(TestApplicationLauncherIcon, WindowListMenusWithEmptyTitles)
+{
+  auto win1 = std::make_shared<MockApplicationWindow>(1);
+  auto win2 = std::make_shared<MockApplicationWindow>(2);
+  win1->title_.clear();
+
+  mock_app->window_list_ = { win1, win2 };
+  auto const& menus = mock_icon->Menus();
+
+  auto menu1_it = std::find_if(menus.begin(), menus.end(), [win1] (glib::Object<DbusmenuMenuitem> it) {
+    auto* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
+    return (label && std::string(label) == win1->title());
+  });
+
+  ASSERT_EQ(menu1_it, menus.end());
 }
 
 }

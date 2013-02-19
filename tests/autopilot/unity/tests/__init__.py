@@ -21,29 +21,23 @@ import sys
 from tempfile import mktemp
 from time import sleep
 try:
-    import testapp
+    import windowmocker
     import json
-    HAVE_TESTAPP=True
+    HAVE_WINDOWMOCKER=True
 except ImportError:
-    HAVE_TESTAPP=False
+    HAVE_WINDOWMOCKER=False
 import tempfile
 from testtools.content import text_content
 from testtools.matchers import Equals
 from unittest.case import SkipTest
 
 from unity.emulators import ensure_unity_is_running
-from unity.emulators.screen import Screen
-from unity.emulators.dash import Dash
-from unity.emulators.hud import Hud
-from unity.emulators.launcher import LauncherController
-from unity.emulators.panel import PanelController
-from unity.emulators.switcher import Switcher
-from unity.emulators.window_manager import WindowManager
 from unity.emulators.workspace import WorkspaceManager
 from unity.emulators.unity import (
     set_log_severity,
     start_log_to_file,
     reset_logging,
+    Unity
     )
 
 
@@ -52,9 +46,6 @@ log = getLogger(__name__)
 
 class UnityTestCase(AutopilotTestCase):
     """Unity test case base class, with improvments specific to Unity tests."""
-
-    def __init__(self, *args):
-        super(UnityTestCase, self).__init__(*args)
 
     def setUp(self):
         super(UnityTestCase, self).setUp()
@@ -91,19 +82,19 @@ class UnityTestCase(AutopilotTestCase):
             log.warning("Test changed the active workspace, changing it back...")
             self.workspace.switch_to(self._initial_workspace_num)
         # Have we left the dash open?
-        if not self.well_behaved(self.dash, visible=False):
+        if not self.well_behaved(self.unity.dash, visible=False):
             well_behaved = False
             reasons.append("The test left the dash open.")
             log.warning("Test left the dash open, closing it...")
-            self.dash.ensure_hidden()
+            self.unity.dash.ensure_hidden()
         # ... or the hud?
-        if not self.well_behaved(self.hud, visible=False):
+        if not self.well_behaved(self.unity.hud, visible=False):
             well_behaved = False
             reasons.append("The test left the hud open.")
             log.warning("Test left the hud open, closing it...")
             self.hud.ensure_hidden()
         # Are we in show desktop mode?
-        if not self.well_behaved(self.window_manager, showdesktop_active=False):
+        if not self.well_behaved(self.unity.window_manager, showdesktop_active=False):
             well_behaved = False
             reasons.append("The test left the system in show_desktop mode.")
             log.warning("Test left the system in show desktop mode, exiting it...")
@@ -116,15 +107,15 @@ class UnityTestCase(AutopilotTestCase):
             # exception.
             win = self.start_app_window('Calculator', locale='C')
             count = 1
-            while self.window_manager.showdesktop_active:
+            while self.unity.window_manager.showdesktop_active:
                 self.keybinding("window/show_desktop")
                 sleep(count)
                 count+=1
                 if count > 10:
                     break
             win.close()
-            self.window_manager.showdesktop_active.wait_for(False)
-        for launcher in self.launcher.get_launchers():
+            self.unity.window_manager.showdesktop_active.wait_for(False)
+        for launcher in self.unity.launcher.get_launchers():
             if not self.well_behaved(launcher, in_keynav_mode=False):
                 well_behaved = False
                 reasons.append("The test left the launcher keynav mode enabled.")
@@ -154,72 +145,14 @@ class UnityTestCase(AutopilotTestCase):
         return True
 
     @property
-    def screen(self):
-        if not getattr(self, '__screen', None):
-            self.__screen = self._get_screen()
-        return self.__screen
-
-    @property
-    def dash(self):
-        if not getattr(self, '__dash', None):
-            self.__dash = Dash()
-        return self.__dash
-
-    @property
-    def hud(self):
-        if not getattr(self, '__hud', None):
-            self.__hud = Hud();
-        return self.__hud
-
-    @property
-    def launcher(self):
-        if not getattr(self, '__launcher', None):
-            self.__launcher = self._get_launcher_controller()
-        return self.__launcher
-
-    @property
-    def panels(self):
-        if not getattr(self, '__panels', None):
-            self.__panels = self._get_panel_controller()
-        return self.__panels
-
-    @property
-    def switcher(self):
-        if not getattr(self, '__switcher', None):
-            self.__switcher = Switcher()
-        return self.__switcher
-
-    @property
-    def window_manager(self):
-        if not getattr(self, '__window_manager', None):
-            self.__window_manager = self._get_window_manager()
-        return self.__window_manager
+    def unity(self):
+        return Unity.get_root_instance()
 
     @property
     def workspace(self):
         if not getattr(self, '__workspace', None):
             self.__workspace = WorkspaceManager()
         return self.__workspace
-
-    def _get_screen(self):
-        screens = Screen.get_all_instances()
-        self.assertThat(len(screens), Equals(1))
-        return screens[0]
-
-    def _get_launcher_controller(self):
-        controllers = LauncherController.get_all_instances()
-        self.assertThat(len(controllers), Equals(1))
-        return controllers[0]
-
-    def _get_panel_controller(self):
-        controllers = PanelController.get_all_instances()
-        self.assertThat(len(controllers), Equals(1))
-        return controllers[0]
-
-    def _get_window_manager(self):
-        managers = WindowManager.get_all_instances()
-        self.assertThat(len(managers), Equals(1))
-        return managers[0]
 
     def _setUpUnityLogging(self):
         self._unity_log_file_name = mktemp(prefix=self.shortDescription())
@@ -259,29 +192,29 @@ class UnityTestCase(AutopilotTestCase):
     def launch_test_window(self, window_spec={}):
         """Launch a test window, for the duration of this test only.
 
-        This uses the 'testapp' application, which is not part of the
+        This uses the 'window-mocker' application, which is not part of the
         python-autopilot or unity-autopilot packages. To use this method, you
-        must have python-testapp installed. If the python-testapp packge is not
-        installed, this method will raise a SkipTest exception, causing the
-        calling test to be silently skipped.
+        must have python-windowmocker installed. If the package is not installed, 
+        this method will raise a SkipTest exception, causing the calling test 
+        to be silently skipped.
 
-        window_spec is a list or dictionary that conforms to the testapp
+        window_spec is a list or dictionary that conforms to the window-mocker
         specification.
 
         """
-        if not HAVE_TESTAPP:
-            raise SkipTest("The python-testapp package is required to run this test.")
+        if not HAVE_WINDOWMOCKER:
+            raise SkipTest("The python-windowmocker package is required to run this test.")
 
-        if 'Test App' not in self.KNOWN_APPS:
+        if 'Window Mocker' not in self.KNOWN_APPS:
             self.register_known_application(
-                'Test App',
-                'testapp.desktop',
-                'testapp'
+                'Window Mocker',
+                'window-mocker.desktop',
+                'window-mocker'
                 )
         if window_spec:
             file_path = tempfile.mktemp()
             json.dump(window_spec, open(file_path, 'w'))
             self.addCleanup(os.remove, file_path)
-            return self.start_app_window('Test App', [file_path])
+            return self.start_app_window('Window Mocker', [file_path])
         else:
-            return self.start_app_window('Test App')
+            return self.start_app_window('Window Mocker')
