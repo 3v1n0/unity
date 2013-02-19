@@ -28,6 +28,7 @@
 
 namespace unity
 {
+class StaticCairoText;
 namespace session
 {
 class Button;
@@ -38,13 +39,24 @@ class View : public ui::UnityWindowView
 public:
   typedef nux::ObjectPtr<View> Ptr;
 
+  enum class Mode
+  {
+    FULL,
+    SHUTDOWN
+  };
+
   View(Manager::Ptr const& manager);
+
+  nux::Property<Mode> mode;
+  nux::Property<bool> have_inhibitors;
 
   sigc::signal<void> request_hide;
 
 protected:
+  void PreLayoutManagement();
   void DrawOverlay(nux::GraphicsEngine&, bool force, nux::Geometry const&);
   nux::Geometry GetBackgroundGeometry();
+
 
   nux::Area* FindKeyFocusArea(unsigned etype, unsigned long key, unsigned long mod);
   nux::Area* KeyNavIteration(nux::KeyNavDirection);
@@ -53,9 +65,13 @@ protected:
   std::string GetName() const;
 
 private:
+  void UpdateText();
+  void Populate();
   void AddButton(Button*);
 
   Manager::Ptr manager_;
+  StaticCairoText* title_;
+  StaticCairoText* subtitle_;
   nux::HLayout* buttons_layout_;
 };
 

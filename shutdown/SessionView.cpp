@@ -28,11 +28,12 @@ namespace unity
 {
 namespace session
 {
-//"Hi %s, you have open files that you might want to save before shutting down. Would you like to…";
 
 namespace theme
 {
-  const std::string FONT = "Ubuntu Light 12";
+  const std::string FONT = "Ubuntu Light";
+  const std::string TITLE_FONT = FONT+" 15";
+  const std::string SUBTITLE_FONT = FONT+" 12";
   const unsigned LEFT_RIGHT_PADDING = 30;
   const unsigned TOP_PADDING = 19;
   const unsigned BOTTOM_PADDING = 12;
@@ -44,7 +45,8 @@ namespace theme
 NUX_IMPLEMENT_OBJECT_TYPE(View);
 
 View::View(Manager::Ptr const& manager)
-  : manager_(manager)
+  : mode(Mode::FULL)
+  , manager_(manager)
 {
   closable = true;
   auto main_layout = new nux::VLayout();
@@ -53,38 +55,105 @@ View::View(Manager::Ptr const& manager)
   main_layout->SetSpaceBetweenChildren(theme::MAIN_SPACE);
   SetLayout(main_layout);
 
-  auto const& real_name = manager->RealName();
-  auto const& name = (real_name.empty() ? manager->UserName() : real_name);
-  auto header = glib::String(g_strdup_printf(_("Goodbye %s! Would you like to…"), name.c_str())).Str();
-  auto* header_view = new StaticCairoText(header);
-  header_view->SetFont(theme::FONT);
-  header_view->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_LEFT);
-  header_view->SetInputEventSensitivity(false);
-  main_layout->AddView(header_view);
+  title_ = new StaticCairoText(_("Shut Down"));
+  title_->SetFont(theme::TITLE_FONT);
+  title_->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_LEFT);
+  title_->SetInputEventSensitivity(false);
+  title_->SetVisible(false);
+  main_layout->AddView(title_);
+
+  subtitle_ = new StaticCairoText("");
+  subtitle_->SetFont(theme::SUBTITLE_FONT);
+  subtitle_->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_LEFT);
+  subtitle_->SetInputEventSensitivity(false);
+  subtitle_->SetLines(std::numeric_limits<int>::min());
+  subtitle_->SetLineSpacing(2);
+  main_layout->AddView(subtitle_, 1);
 
   buttons_layout_ = new nux::HLayout();
   buttons_layout_->SetSpaceBetweenChildren(theme::BUTTONS_SPACE);
+  main_layout->AddLayout(buttons_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_PERCENTAGE, 0.0f);
   main_layout->AddLayout(buttons_layout_);
 
-  auto* button = new Button(_("Lock"), "lockscreen", NUX_TRACKER_LOCATION);
-  button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
-  AddButton(button);
+  GetBoundingArea()->mouse_click.connect([this] (int, int, unsigned long, unsigned long) { request_close.emit(); });
 
-  if (manager_->CanSuspend())
+  have_inhibitors.changed.connect(sigc::hide(sigc::mem_fun(this, &View::UpdateText)));
+
+  mode.changed.connect([this] (Mode) {
+    UpdateText();
+    Populate();
+    ComputeContentSize();
+  });
+
+  UpdateText();
+  Populate();
+}
+
+void View::UpdateText()
+{
+  const char* message = nullptr;
+  auto const& real_name = manager_->RealName();
+  auto const& name = (real_name.empty() ? manager_->UserName() : real_name);
+
+  if (mode() == Mode::SHUTDOWN)
   {
-    button = new Button(_("Suspend"), "suspend", NUX_TRACKER_LOCATION);
-    button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Suspend));
-    AddButton(button);
+    title_->SetVisible(true);
+
+    if (have_inhibitors())
+    {
+      message = _("Hi %s, you have open files that you might want to save " \
+                  "before shutting down. Are you sure you want to continue?");
+    }
+    else
+    {
+      message = _("Goodbye %s! Are you sure you want to close all programs " \
+                  "and shut down the computer?");
+    }
+  }
+  else
+  {
+    title_->SetVisible(false);
+
+    if (have_inhibitors())
+    {
+      message = _("Hi %s, you have open files that you might want to save " \
+                  "before shutting down.\nWould you like to…");
+    }
+    else
+    {
+      message = _("Goodbye %s! Would you like to…");
+    }
   }
 
-  if (manager_->CanHibernate())
+  subtitle_->SetText(glib::String(g_strdup_printf(message, name.c_str())).Str());
+}
+
+void View::Populate()
+{
+  buttons_layout_->Clear();
+
+  if (mode() == Mode::FULL)
   {
-    button = new Button(_("Hibernate"), "hibernate", NUX_TRACKER_LOCATION);
-    button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Hibernate));
+    auto* button = new Button(_("Lock"), "lockscreen", NUX_TRACKER_LOCATION);
+    button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
     AddButton(button);
+
+    if (manager_->CanSuspend())
+    {
+      button = new Button(_("Suspend"), "suspend", NUX_TRACKER_LOCATION);
+      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Suspend));
+      AddButton(button);
+    }
+
+    if (manager_->CanHibernate())
+    {
+      button = new Button(_("Hibernate"), "hibernate", NUX_TRACKER_LOCATION);
+      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Hibernate));
+      AddButton(button);
+    }
   }
 
-  button = new Button(_("Shutdown"), "shutdown", NUX_TRACKER_LOCATION);
+  auto* button = new Button(_("Shutdown"), "shutdown", NUX_TRACKER_LOCATION);
   button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Shutdown));
   AddButton(button);
 
@@ -92,7 +161,7 @@ View::View(Manager::Ptr const& manager)
   button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Reboot));
   AddButton(button);
 
-  GetBoundingArea()->mouse_click.connect([this] (int, int, unsigned long, unsigned long) { request_close.emit(); });
+  ComputeContentSize();
 }
 
 void View::AddButton(Button* button)
@@ -123,6 +192,13 @@ void View::AddButton(Button* button)
       button->highlighted = false;
     }
   });
+}
+
+void View::PreLayoutManagement()
+{
+  subtitle_->SetMaximumWidth(buttons_layout_->GetContentWidth());
+
+  nux::View::PreLayoutManagement();
 }
 
 nux::Geometry View::GetBackgroundGeometry()
