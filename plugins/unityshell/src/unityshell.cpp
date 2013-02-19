@@ -1767,7 +1767,7 @@ void UnityScreen::handleEvent(XEvent* event)
 
         if (super_keypressed_)
         {
-          skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
+          skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string, event->xkey.time);
           if (!skip_other_plugins)
             skip_other_plugins = dash_controller_->CheckShortcutActivation(key_string);
 
