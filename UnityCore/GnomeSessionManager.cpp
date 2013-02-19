@@ -171,14 +171,6 @@ void GnomeManager::Impl::OnShellMethodCall(std::string const& method, GVariant* 
     bool has_inibitors = (g_variant_iter_n_children(inhibitors) > 0);
     g_variant_iter_free(inhibitors);
 
-    //XXX: we need to define the proper policy here
-    if (has_inibitors)
-    {
-      manager_->CancelAction();
-      manager_->ClosedDialog();
-      return;
-    }
-
     if (pending_action_ == shell::Action::NONE)
     {
       pending_action_ = type;
@@ -186,13 +178,13 @@ void GnomeManager::Impl::OnShellMethodCall(std::string const& method, GVariant* 
       switch(type)
       {
         case shell::Action::LOGOUT:
-          manager_->logout_requested.emit();
+          manager_->logout_requested.emit(has_inibitors);
           break;
         case shell::Action::SHUTDOWN:
-          manager_->shutdown_requested.emit();
+          manager_->shutdown_requested.emit(has_inibitors);
           break;
         case shell::Action::REBOOT:
-          manager_->reboot_requested.emit();
+          manager_->reboot_requested.emit(has_inibitors);
           break;
         default:
           break;

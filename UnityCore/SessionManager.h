@@ -60,9 +60,10 @@ public:
   Manager(const Manager&) = delete;
   Manager& operator=(const Manager&) = delete;
 
-  sigc::signal<void> logout_requested;
-  sigc::signal<void> reboot_requested;
-  sigc::signal<void> shutdown_requested;
+  sigc::signal<void, bool /* inhibitors */> logout_requested;
+  sigc::signal<void, bool /* inhibitors */> reboot_requested;
+  sigc::signal<void, bool /* inhibitors */> shutdown_requested;
+
   sigc::signal<void> cancel_requested;
 };
 
