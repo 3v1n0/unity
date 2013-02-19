@@ -39,9 +39,18 @@ Controller::Controller(session::Manager::Ptr const& manager)
   , bg_color_(0.0, 0.0, 0.0, 0.5)
   , fade_animator_(FADE_DURATION)
 {
-  manager_->logout_requested.connect(sigc::mem_fun(this, &Controller::Show));
-  manager_->reboot_requested.connect(sigc::mem_fun(this, &Controller::Show));
-  manager_->shutdown_requested.connect(sigc::mem_fun(this, &Controller::Show));
+  manager_->reboot_requested.connect([this] (bool inhibitors) {
+    Show(View::Mode::SHUTDOWN, inhibitors);
+  });
+
+  manager_->shutdown_requested.connect([this] (bool inhibitors) {
+    Show(View::Mode::SHUTDOWN, inhibitors);
+  });
+
+  manager_->logout_requested.connect([this] (bool inhibitors) {
+    Show(View::Mode::FULL, inhibitors);
+  });
+
   manager_->cancel_requested.connect(sigc::mem_fun(this, &Controller::Hide));
 
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
@@ -70,12 +79,20 @@ void Controller::OnBackgroundUpdate(GVariant* data)
     view_->background_color = bg_color_;
 }
 
-void Controller::Show()
+void Controller::Show(View::Mode mode)
+{
+  Show(mode, false);
+}
+
+void Controller::Show(View::Mode mode, bool inhibitors)
 {
   EnsureView();
 
   if (view_window_->GetOpacity() == 1.0f)
     return;
+
+  view_->mode = mode;
+  view_->have_inhibitors = inhibitors;
 
   int monitor = UScreen::GetDefault()->GetMonitorWithMouse();
   auto const& offset = GetOffsetPerMonitor(monitor);
@@ -111,7 +128,6 @@ nux::Point Controller::GetOffsetPerMonitor(int monitor)
 {
   EnsureView();
 
-  // view_window_->ComputeContentSize();
   auto const& view_geo = view_->GetAbsoluteGeometry();
   auto const& monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
 

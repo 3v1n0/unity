@@ -46,7 +46,7 @@ public:
   Controller(session::Manager::Ptr const& manager);
   virtual ~Controller() = default;
 
-  void Show();
+  void Show(View::Mode mode);
   void Hide();
 
   bool Visible() const;
@@ -59,6 +59,7 @@ protected:
   virtual nux::Point GetOffsetPerMonitor(int monitor);
 
 private:
+  void Show(View::Mode mode, bool inhibitors);
   void ConstructView();
   void EnsureView();
   void CloseWindow();
