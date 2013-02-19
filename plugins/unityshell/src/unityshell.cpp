@@ -2520,8 +2520,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     if (uScreen->windows_for_monitor_.find(monitor) == end(uScreen->windows_for_monitor_))
       uScreen->windows_for_monitor_[monitor] = 0;
 
-    if (!(window->type() & CompWindowTypeDesktopMask))
-      ++(uScreen->windows_for_monitor_[monitor]);
+    ++(uScreen->windows_for_monitor_[monitor]);
 
     if (!(mask & nonOcclusionBits) &&
         (window->state() & CompWindowStateFullscreenMask) &&
