@@ -68,12 +68,11 @@ View::View(Manager::Ptr const& manager)
   subtitle_->SetInputEventSensitivity(false);
   subtitle_->SetLines(std::numeric_limits<int>::min());
   subtitle_->SetLineSpacing(2);
-  main_layout->AddView(subtitle_, 1);
+  main_layout->AddView(subtitle_);
 
   buttons_layout_ = new nux::HLayout();
   buttons_layout_->SetSpaceBetweenChildren(theme::BUTTONS_SPACE);
   main_layout->AddLayout(buttons_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_PERCENTAGE, 0.0f);
-  main_layout->AddLayout(buttons_layout_);
 
   GetBoundingArea()->mouse_click.connect([this] (int, int, unsigned long, unsigned long) { request_close.emit(); });
 
