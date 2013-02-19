@@ -1275,6 +1275,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   // CompRegion has no clear() method. So this is the fastest alternative.
   fullscreenRegion = CompRegion();
   nuxRegion = CompRegion();
+  windows_for_monitor_.clear();
 
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
@@ -2513,15 +2514,25 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
                               PAINT_WINDOW_TRANSLUCENT_MASK |
                               PAINT_WINDOW_TRANSFORMED_MASK |
                               PAINT_WINDOW_NO_CORE_INSTANCE_MASK;
+
+    int monitor = window->outputDevice();
+
+    if (uScreen->windows_for_monitor_.find(monitor) == end(uScreen->windows_for_monitor_))
+      uScreen->windows_for_monitor_[monitor] = 0;
+
+    if (!(window->type() & CompWindowTypeDesktopMask))
+      ++(uScreen->windows_for_monitor_[monitor]);
+
     if (!(mask & nonOcclusionBits) &&
-        (window->state() & CompWindowStateFullscreenMask))
+        (window->state() & CompWindowStateFullscreenMask) &&
+        uScreen->windows_for_monitor_[monitor] == 1)
         // And I've been advised to test other things, but they don't work:
         // && (attrib.opacity == OPAQUE)) <-- Doesn't work; Only set in glDraw
         // && !window->alpha() <-- Doesn't work; Opaque windows often have alpha
     {
       uScreen->fullscreenRegion += window->geometry();
-      uScreen->fullscreenRegion -= uScreen->nuxRegion;
     }
+
     if (uScreen->nuxRegion.isEmpty())
       uScreen->firstWindowAboveShell = window;
   }
