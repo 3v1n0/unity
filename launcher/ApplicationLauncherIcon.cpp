@@ -468,12 +468,19 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
     g_file_monitor_set_rate_limit(_desktop_file_monitor, 1000);
 
     auto sig = new glib::Signal<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent>(_desktop_file_monitor, "changed",
-                                [&] (GFileMonitor*, GFile*, GFile*, GFileMonitorEvent event_type) {
+                                [&] (GFileMonitor*, GFile* f, GFile*, GFileMonitorEvent event_type) {
                                   switch (event_type)
                                   {
                                     case G_FILE_MONITOR_EVENT_DELETED:
-                                      UnStick();
+                                    {
+                                      glib::Object<GFile> file(f, glib::AddRef());
+                                      _source_manager.AddTimeoutSeconds(1, [this, file] {
+                                        if (!g_file_query_exists (file, nullptr))
+                                          UnStick();
+                                        return false;
+                                      });
                                       break;
+                                    }
                                     case G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT:
                                       UpdateDesktopQuickList();
                                       UpdateBackgroundColor();
