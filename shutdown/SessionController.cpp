@@ -48,7 +48,7 @@ Controller::Controller(session::Manager::Ptr const& manager)
   });
 
   manager_->logout_requested.connect([this] (bool inhibitors) {
-    Show(View::Mode::FULL, inhibitors);
+    Show(View::Mode::LOGOUT, inhibitors);
   });
 
   manager_->cancel_requested.connect(sigc::mem_fun(this, &Controller::Hide));
