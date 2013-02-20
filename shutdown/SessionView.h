@@ -42,7 +42,8 @@ public:
   enum class Mode
   {
     FULL,
-    SHUTDOWN
+    SHUTDOWN,
+    LOGOUT
   };
 
   View(Manager::Ptr const& manager);

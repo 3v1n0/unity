@@ -34,10 +34,10 @@ namespace theme
   const std::string FONT = "Ubuntu Light";
   const std::string TITLE_FONT = FONT+" 15";
   const std::string SUBTITLE_FONT = FONT+" 12";
+
   const unsigned LEFT_RIGHT_PADDING = 30;
   const unsigned TOP_PADDING = 19;
   const unsigned BOTTOM_PADDING = 12;
-
   const unsigned MAIN_SPACE = 10;
   const unsigned BUTTONS_SPACE = 20;
 }
@@ -55,7 +55,7 @@ View::View(Manager::Ptr const& manager)
   main_layout->SetSpaceBetweenChildren(theme::MAIN_SPACE);
   SetLayout(main_layout);
 
-  title_ = new StaticCairoText(_("Shut Down"));
+  title_ = new StaticCairoText("");
   title_->SetFont(theme::TITLE_FONT);
   title_->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_LEFT);
   title_->SetInputEventSensitivity(false);
@@ -78,7 +78,20 @@ View::View(Manager::Ptr const& manager)
 
   have_inhibitors.changed.connect(sigc::hide(sigc::mem_fun(this, &View::UpdateText)));
 
-  mode.changed.connect([this] (Mode) {
+  mode.SetSetterFunction([this] (Mode& target, Mode new_mode) {
+    if (new_mode == Mode::SHUTDOWN && !manager_->CanShutdown())
+      new_mode = Mode::LOGOUT;
+
+    if (target != new_mode)
+    {
+      target = new_mode;
+      return true;
+    }
+
+    return false;
+  });
+
+  mode.changed.connect([this] (Mode m) {
     UpdateText();
     Populate();
     ComputeContentSize();
@@ -96,6 +109,7 @@ void View::UpdateText()
 
   if (mode() == Mode::SHUTDOWN)
   {
+    title_->SetText(_("Shut Down"));
     title_->SetVisible(true);
 
     if (have_inhibitors())
@@ -107,6 +121,22 @@ void View::UpdateText()
     {
       message = _("Goodbye %s! Are you sure you want to close all programs " \
                   "and shut down the computer?");
+    }
+  }
+  else if (mode() == Mode::LOGOUT)
+  {
+    title_->SetText(_("Log Out"));
+    title_->SetVisible(true);
+
+    if (have_inhibitors())
+    {
+      message = _("Hi %s, you have open files that you might want to save " \
+                  "before logging out. Are you sure you want to continue?");
+    }
+    else
+    {
+      message = _("Goodbye %s! Are you sure you want to close all programs " \
+                  "and log out from your account?");
     }
   }
   else
@@ -131,34 +161,50 @@ void View::Populate()
 {
   buttons_layout_->Clear();
 
-  if (mode() == Mode::FULL)
+  if (mode() == Mode::LOGOUT)
   {
     auto* button = new Button(_("Lock"), "lockscreen", NUX_TRACKER_LOCATION);
     button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
     AddButton(button);
 
-    if (manager_->CanSuspend())
+    button = new Button(_("Logout"), "logout", NUX_TRACKER_LOCATION);
+    button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Logout));
+    AddButton(button);
+  }
+  else
+  {
+    if (mode() == Mode::FULL)
     {
-      button = new Button(_("Suspend"), "suspend", NUX_TRACKER_LOCATION);
-      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Suspend));
+      auto* button = new Button(_("Lock"), "lockscreen", NUX_TRACKER_LOCATION);
+      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
       AddButton(button);
+
+      if (manager_->CanSuspend())
+      {
+        button = new Button(_("Suspend"), "suspend", NUX_TRACKER_LOCATION);
+        button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Suspend));
+        AddButton(button);
+      }
+
+      if (manager_->CanHibernate())
+      {
+        button = new Button(_("Hibernate"), "hibernate", NUX_TRACKER_LOCATION);
+        button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Hibernate));
+        AddButton(button);
+      }
     }
 
-    if (manager_->CanHibernate())
+    if (manager_->CanShutdown())
     {
-      button = new Button(_("Hibernate"), "hibernate", NUX_TRACKER_LOCATION);
-      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Hibernate));
+      auto* button = new Button(_("Shutdown"), "shutdown", NUX_TRACKER_LOCATION);
+      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Shutdown));
+      AddButton(button);
+
+      button = new Button(_("Restart"), "restart", NUX_TRACKER_LOCATION);
+      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Reboot));
       AddButton(button);
     }
   }
-
-  auto* button = new Button(_("Shutdown"), "shutdown", NUX_TRACKER_LOCATION);
-  button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Shutdown));
-  AddButton(button);
-
-  button = new Button(_("Restart"), "restart", NUX_TRACKER_LOCATION);
-  button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Reboot));
-  AddButton(button);
 
   ComputeContentSize();
 }
