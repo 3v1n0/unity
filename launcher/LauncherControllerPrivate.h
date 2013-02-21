@@ -71,6 +71,7 @@ public:
   void OnLauncherAddRequest(std::string const& icon_uri, AbstractLauncherIcon::Ptr const& before);
   void OnLauncherAddRequestSpecial(std::string const& path, std::string const& aptdaemon_trans_id,
                                    std::string const& icon_path, int icon_x, int icon_y, int icon_size);
+  void OnLauncherUpdateIconStickyState(std::string const& desktop_file, bool sticky);
   void OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr const& icon);
 
   void OnLauncherEntryRemoteAdded(LauncherEntryRemote::Ptr const& entry);

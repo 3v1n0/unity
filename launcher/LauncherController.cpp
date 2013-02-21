@@ -68,6 +68,11 @@ const std::string DBUS_INTROSPECTION =
   "      <arg type='s' name='aptdaemon_task' direction='in'/>"
   "    </method>"
   ""
+  "    <method name='UpdateLauncherIconFavoriteState'>"
+  "      <arg type='s' name='icon_uri' direction='in'/>"
+  "      <arg type='b' name='is_sticky' direction='in'/>"
+  "    </method>"
+  ""
   "  </interface>"
   "</node>";
 }
@@ -88,6 +93,16 @@ namespace
 
   const std::string RUNNING_APPS_URI = FavoriteStore::URI_PREFIX_UNITY + "running-apps";
   const std::string DEVICES_URI = FavoriteStore::URI_PREFIX_UNITY + "devices";
+}
+std::string CreateAppUriNameFromDesktopPath(const std::string &desktop_path)
+{
+  std::string app_uri;
+  if (desktop_path.empty())
+    return app_uri;
+
+  app_uri = FavoriteStore::URI_PREFIX_APP +
+    DesktopUtilities::GetDesktopID(desktop_path);
+  return app_uri;
 }
 }
 
@@ -348,7 +363,7 @@ void Controller::Impl::OnLauncherAddRequest(std::string const& icon_uri, Abstrac
   if (icon_uri.find(FavoriteStore::URI_PREFIX_FILE) == 0)
   {
     auto const& desktop_path = icon_uri.substr(FavoriteStore::URI_PREFIX_FILE.length());
-    app_uri = FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(desktop_path);
+    app_uri = local::CreateAppUriNameFromDesktopPath(desktop_path);
   }
 
   auto const& icon = GetIconByUri(app_uri.empty() ? icon_uri : app_uri);
@@ -430,6 +445,53 @@ void Controller::Impl::SaveIconsOrder()
     AddFavoriteKeepingOldPosition(icons, local::DEVICES_URI);
 
   FavoriteStore::Instance().SetFavorites(icons);
+}
+
+void
+Controller::Impl::OnLauncherUpdateIconStickyState(std::string const& icon_uri,
+                                                  bool sticky)
+{
+  if (icon_uri.empty())
+    return;
+
+  std::string target_uri = icon_uri;
+  if (icon_uri.find(FavoriteStore::URI_PREFIX_FILE) == 0)
+  {
+    auto const& desktop_path =
+      icon_uri.substr(FavoriteStore::URI_PREFIX_FILE.length());
+
+    // app uri instead
+    target_uri = local::CreateAppUriNameFromDesktopPath(desktop_path);
+  }
+  AbstractLauncherIcon::Ptr existing_icon_entry =
+    GetIconByUri(target_uri);
+
+  if (existing_icon_entry)
+    {
+      // use the backgroung mechanism of model updates & propagation
+      if (sticky)
+        existing_icon_entry->Stick(true);
+      else
+        existing_icon_entry->UnStick();
+
+      SortAndUpdate();
+    }
+    else
+    {
+      FavoriteStore& favorite_store = FavoriteStore::Instance();
+
+      bool should_update = (favorite_store.IsFavorite(target_uri) != sticky);
+      if (should_update)
+        {
+          if (sticky)
+            {
+              favorite_store.AddFavorite(target_uri, -1);
+              RegisterIcon(CreateFavoriteIcon(target_uri));
+            }
+          else
+            favorite_store.RemoveFavorite(target_uri);
+        }
+    }
 }
 
 void
@@ -1496,6 +1558,17 @@ void Controller::Impl::OnDBusMethodCall(GDBusConnection* connection, const gchar
 
     self->OnLauncherAddRequestSpecial(desktop_file.Str(), aptdaemon_task.Str(),
                                       icon.Str(), icon_x, icon_y, icon_size);
+
+    g_dbus_method_invocation_return_value(invocation, nullptr);
+  }
+  else if (g_strcmp0(method_name, "UpdateLauncherIconFavoriteState") == 0)
+  {
+    auto self = static_cast<Controller::Impl*>(user_data);
+    gboolean is_sticky;
+    glib::String icon_uri;
+    g_variant_get(parameters, "(sb)", &icon_uri, &is_sticky);
+
+    self->OnLauncherUpdateIconStickyState(icon_uri.Str(), is_sticky);
 
     g_dbus_method_invocation_return_value(invocation, nullptr);
   }
