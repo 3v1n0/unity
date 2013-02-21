@@ -578,7 +578,7 @@ void ScopeProxy::Impl::Activate(LocalResult const& result, uint activate_type, g
   
   for (unsigned i = 0; i < columns.size(); i++)
   {
-    variants[i] = g_variant_ref(columns[i]);
+    variants[i] = columns[i];
   }
 
   unity_protocol_scope_proxy_activate(scope_proxy_,

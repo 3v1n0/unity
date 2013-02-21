@@ -53,7 +53,7 @@ std::string Variant::GetString() const
 {
   // g_variant_get_string doesn't duplicate the string
   const gchar *result = g_variant_get_string (variant_, NULL);
-  return result != NULL ? result : ""84;
+  return result != NULL ? result : "";
 }
 
 int32_t Variant::GetInt32() const
@@ -125,9 +125,8 @@ Variant Variant::FromHints(HintsMap const& hints)
 
   for (glib::HintsMap::const_iterator it = hints.begin(); it != hints.end(); ++it)
   {
-    gchar* key = g_strdup(it->first.c_str());
-    GVariant* ptr = g_variant_ref(it->second);
-
+    const gchar* key = it->first.c_str();
+    GVariant* ptr = it->second;
 
     g_variant_builder_add(&b, "{sv}", key, ptr);
   }
@@ -180,10 +179,7 @@ GHashTable* hashtable_from_hintsmap(glib::HintsMap const& hints)
 
   for (glib::HintsMap::const_iterator it = hints.begin(); it != hints.end(); ++it)
   {
-    gchar* key = g_strdup(it->first.c_str());
-    GVariant* ptr = g_variant_ref(it->second);
-
-    g_hash_table_insert(hash_table, key, ptr);
+    g_hash_table_insert(hash_table, g_strdup(it->first.c_str()), it->second);
   }
   return hash_table;
 }
