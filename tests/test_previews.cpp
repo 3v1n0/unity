@@ -122,7 +122,7 @@ TEST(TestPreviews, DeserializeGenericWithMeta)
   EXPECT_EQ(hint1->id, "hint1");
   EXPECT_EQ(hint1->display_name, "Hint 1");
   EXPECT_EQ(hint1->icon_hint, "");
-  EXPECT_EQ(hint1->value.GetInt(), 34);
+  EXPECT_EQ(hint1->value.GetInt32(), 34);
   auto hint2 = info_hints[1];
   EXPECT_EQ(hint2->id, "hint2");
   EXPECT_EQ(hint2->display_name, "Hint 2");

@@ -49,9 +49,13 @@ public:
   ~Variant();
 
   std::string GetString() const;
-  int GetInt() const;
-  unsigned GetUInt() const;
+  gint32 GetInt32() const;
+  guint32 GetUInt32() const;
+  gint64 GetInt64() const;
+  guint64 GetUInt64() const;
   bool GetBool() const;
+  double GetDouble() const;
+  float GetFloat() const;
 
   bool ASVToHints(HintsMap& hints) const;
   static Variant FromHints(HintsMap const& hints);
@@ -79,16 +83,17 @@ public:
   BuilderWrapper& add(char const* name, bool value);
   BuilderWrapper& add(char const* name, char const* value);
   BuilderWrapper& add(char const* name, std::string const& value);
-  BuilderWrapper& add(char const* name, int value);
-  BuilderWrapper& add(char const* name, long int value);
-  BuilderWrapper& add(char const* name, long long int value);
-  BuilderWrapper& add(char const* name, unsigned int value);
-  BuilderWrapper& add(char const* name, long unsigned int value);
-  BuilderWrapper& add(char const* name, long long unsigned int value);
+  BuilderWrapper& add(char const* name, gint32 value);
+  BuilderWrapper& add(char const* name, gint64 value);
+  BuilderWrapper& add(char const* name, guint32 value);
+  BuilderWrapper& add(char const* name, guint64 value);
   BuilderWrapper& add(char const* name, float value);
   BuilderWrapper& add(char const* name, double value);
   BuilderWrapper& add(char const* name, GVariant* value);
   BuilderWrapper& add(nux::Rect const& value);
+
+  // other types.
+  BuilderWrapper& add(char const* name, unsigned long value) { return add(name, (guint64)value); }
 
 private:
   GVariantBuilder* builder_;

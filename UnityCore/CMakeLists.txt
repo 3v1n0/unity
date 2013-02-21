@@ -4,7 +4,6 @@ set(UNITY_CORE_DEPS
     dee-1.0
     sigc++-2.0
     nux-core-4.0
-    gdk-pixbuf-2.0
     unity-protocol-private
 )
 pkg_check_modules (CORE_DEPS REQUIRED ${UNITY_CORE_DEPS})

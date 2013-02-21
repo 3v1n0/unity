@@ -8,7 +8,14 @@
 static bool wait_until_test_service_appears();
 static void tell_service_to_exit();
 
-#define EXIT_ON_COMPLETE 1
+static gboolean no_exit = FALSE;
+
+static GOptionEntry entries[] =
+{
+  { "no-exit", 'n', 0, G_OPTION_ARG_NONE, &no_exit, "Do not handle exit call", NULL },
+  { NULL }
+};
+
 
 int main(int argc, char** argv)
 {
@@ -16,6 +23,16 @@ int main(int argc, char** argv)
 #if G_ENCODE_VERSION (GLIB_MAJOR_VERSION, GLIB_MINOR_VERSION) <= GLIB_VERSION_2_34
   g_type_init();
 #endif
+
+  GError *error = NULL;
+  GOptionContext *context;
+  context = g_option_context_new ("- test tree model performance");
+  g_option_context_add_main_entries (context, entries, NULL);
+  if (!g_option_context_parse (context, &argc, &argv, &error))
+  {
+    g_print ("option parsing failed: %s\n", error->message);
+    return 1;
+  }
   
   nux::NuxInitialize (0);
 
@@ -36,7 +53,8 @@ int main(int argc, char** argv)
 
   int ret = RUN_ALL_TESTS();
 
-  tell_service_to_exit();
+  if (!no_exit)
+    tell_service_to_exit();
 
   return ret;
 }
@@ -77,7 +95,6 @@ static bool wait_until_test_service_appears()
 
 static void tell_service_to_exit()
 {
-#if EXIT_ON_COMPLETE != 0
   // Ask the service to exit
   GDBusConnection* connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, NULL);
   g_dbus_connection_call_sync(connection,
@@ -91,5 +108,4 @@ static void tell_service_to_exit()
                               -1,
                               NULL, NULL);
   g_object_unref(connection);
-#endif
 }

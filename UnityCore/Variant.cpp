@@ -53,22 +53,42 @@ std::string Variant::GetString() const
 {
   // g_variant_get_string doesn't duplicate the string
   const gchar *result = g_variant_get_string (variant_, NULL);
-  return result != NULL ? result : "";
+  return result != NULL ? result : ""84;
 }
 
-int Variant::GetInt() const
+gint32 Variant::GetInt32() const
 {
-  return static_cast<int>(g_variant_get_int32 (variant_));
+  return g_variant_get_int32 (variant_);
 }
 
-unsigned Variant::GetUInt() const
+guint32 Variant::GetUInt32() const
 {
-  return static_cast<unsigned>(g_variant_get_uint32 (variant_));
+  return g_variant_get_uint32 (variant_);
+}
+
+gint64 Variant::GetInt64() const
+{
+  return static_cast<int>(g_variant_get_int64 (variant_));
+}
+
+guint64 Variant::GetUInt64() const
+{
+  return g_variant_get_uint64 (variant_);
 }
 
 bool Variant::GetBool() const
 {
   return (g_variant_get_boolean (variant_) != FALSE);
+}
+
+double Variant::GetDouble() const
+{
+  return g_variant_get_double (variant_);
+}
+
+float Variant::GetFloat() const
+{
+  return static_cast<float>(g_variant_get_double (variant_));
 }
 
 bool Variant::ASVToHints(HintsMap& hints) const
@@ -218,37 +238,25 @@ BuilderWrapper& BuilderWrapper::add(char const* name, std::string const& value)
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, int value)
+BuilderWrapper& BuilderWrapper::add(char const* name, gint32 value)
 {
   g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int32(value));
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, long int value)
+BuilderWrapper& BuilderWrapper::add(char const* name, gint64 value)
 {
   g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int64(value));
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, long long int value)
-{
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int64(value));
-  return *this;
-}
-
-BuilderWrapper& BuilderWrapper::add(char const* name, unsigned int value)
+BuilderWrapper& BuilderWrapper::add(char const* name, guint32 value)
 {
   g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint32(value));
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, long unsigned int value)
-{
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint64(value));
-  return *this;
-}
-
-BuilderWrapper& BuilderWrapper::add(char const* name, long long unsigned int value)
+BuilderWrapper& BuilderWrapper::add(char const* name, guint64 value)
 {
   g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint64(value));
   return *this;
