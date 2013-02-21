@@ -92,9 +92,6 @@ public:
   BuilderWrapper& add(char const* name, GVariant* value);
   BuilderWrapper& add(nux::Rect const& value);
 
-  // other types.
-  BuilderWrapper& add(char const* name, unsigned long value) { return add(name, (guint64)value); }
-
 private:
   GVariantBuilder* builder_;
 };
