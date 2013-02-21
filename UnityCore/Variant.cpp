@@ -56,24 +56,24 @@ std::string Variant::GetString() const
   return result != NULL ? result : ""84;
 }
 
-gint32 Variant::GetInt32() const
+int32_t Variant::GetInt32() const
 {
-  return g_variant_get_int32 (variant_);
+  return static_cast<int32_t>(g_variant_get_int32 (variant_));
 }
 
-guint32 Variant::GetUInt32() const
+uint32_t Variant::GetUInt32() const
 {
-  return g_variant_get_uint32 (variant_);
+  return static_cast<uint32_t>(g_variant_get_uint32 (variant_));
 }
 
-gint64 Variant::GetInt64() const
+int64_t Variant::GetInt64() const
 {
-  return static_cast<int>(g_variant_get_int64 (variant_));
+  return static_cast<int64_t>(g_variant_get_int64 (variant_));
 }
 
-guint64 Variant::GetUInt64() const
+uint64_t Variant::GetUInt64() const
 {
-  return g_variant_get_uint64 (variant_);
+  return static_cast<uint64_t>(g_variant_get_uint64 (variant_));
 }
 
 bool Variant::GetBool() const
@@ -238,25 +238,25 @@ BuilderWrapper& BuilderWrapper::add(char const* name, std::string const& value)
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, gint32 value)
+BuilderWrapper& BuilderWrapper::add(char const* name, int32_t value)
 {
   g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int32(value));
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, gint64 value)
-{
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int64(value));
-  return *this;
-}
-
-BuilderWrapper& BuilderWrapper::add(char const* name, guint32 value)
+BuilderWrapper& BuilderWrapper::add(char const* name, uint32_t value)
 {
   g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint32(value));
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, guint64 value)
+BuilderWrapper& BuilderWrapper::add(char const* name, int64_t value)
+{
+  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int64(value));
+  return *this;
+}
+
+BuilderWrapper& BuilderWrapper::add(char const* name, uint64_t value)
 {
   g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint64(value));
   return *this;
