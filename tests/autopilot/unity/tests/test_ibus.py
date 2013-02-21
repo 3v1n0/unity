@@ -49,14 +49,21 @@ class IBusQuery:
         self._glibloop = GLib.MainLoop()
 
         self._context.connect("commit-text", self.__commit_text_cb)
+        self._context.connect("update-preedit-text", self.__update_preedit_cb)
         self._context.connect("disabled", self.__disabled_cb)
 
         self._context.set_capabilities (9)
 
     def __commit_text_cb(self, context, text):
         self.result += text.text
+        self._preedit = ''
+
+    def __update_preedit_cb(self, context, text, cursor_pos, visible):
+        if visible:
+            self._preedit = text.text
 
     def __disabled_cb(self, a):
+        self.result += self._preedit
         self._glibloop.quit()
 
     def __abort(self):
@@ -67,6 +74,7 @@ class IBusQuery:
             return None
 
         self.result = ''
+        self._preedit = ''
         self._context.focus_in()
         self._context.set_engine(engine)
 
@@ -84,12 +92,10 @@ class IBusQuery:
         for c in ibus_input:
             self._context.process_key_event(ord(c), 0, 0)
 
-        # Sadly, there's no other safe way of doing it, we need to give some time
-        # for ibus to handle the events - sleep seems the only way
-        time.sleep(0.1)
+        self._context.set_engine('')
         self._context.focus_out()
 
-        GLib.timeout_add_seconds(10, lambda *args: self._glibloop.quit())
+        GLib.timeout_add_seconds(5, lambda *args: self._glibloop.quit())
         self._glibloop.run()
 
         return unicode(self.result, "UTF-8")
