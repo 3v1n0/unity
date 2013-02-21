@@ -2516,18 +2516,16 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
                               PAINT_WINDOW_NO_CORE_INSTANCE_MASK;
 
     if (window->isMapped() &&
-        !window->overrideRedirect() &&
-        window->managed() &&
         window->defaultViewport() == uScreen->screen->vp())
     {
       int monitor = window->outputDevice();
 
       auto it = uScreen->windows_for_monitor_.find(monitor);
 
-      if (it == end(uScreen->windows_for_monitor_))
-        (it->second) = 1;
-      else
+      if (it != end(uScreen->windows_for_monitor_))
         ++(it->second);
+      else
+        uScreen->windows_for_monitor_[monitor] = 1;
 
       if (!(mask & nonOcclusionBits) &&
           (window->state() & CompWindowStateFullscreenMask) &&
