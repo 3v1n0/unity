@@ -100,11 +100,7 @@ GnomeManager::Impl::Impl(GnomeManager* manager)
 
 GnomeManager::Impl::~Impl()
 {
-  CancelAction();
-  ClosedDialog();
-
-  if (shell_owner_name_)
-    g_bus_unown_name(shell_owner_name_);
+  TearDownShellSessionHandler();
 }
 
 void GnomeManager::Impl::QueryUPowerCapabilities()
@@ -124,6 +120,7 @@ void GnomeManager::Impl::SetupShellSessionHandler()
                                      G_BUS_NAME_OWNER_FLAGS_REPLACE,
     [] (GDBusConnection* conn, const gchar* name, gpointer data)
     {
+      auto self = static_cast<GnomeManager::Impl*>(data);
       auto xml_int = g_dbus_node_info_new_for_xml(shell::INTROSPECTION_XML, nullptr);
       std::shared_ptr<GDBusNodeInfo> introspection(xml_int, g_dbus_node_info_unref);
 
@@ -139,16 +136,19 @@ void GnomeManager::Impl::SetupShellSessionHandler()
         glib::Error error;
         GDBusInterfaceInfo *interface = introspection->interfaces[i];
 
-        g_dbus_connection_register_object(conn, shell::DBUS_OBJECT_PATH, interface,
-                                          &shell::INTERFACE_VTABLE, data, nullptr, &error);
+        unsigned id = g_dbus_connection_register_object(conn, shell::DBUS_OBJECT_PATH, interface,
+                                                        &shell::INTERFACE_VTABLE, data, nullptr, &error);
         if (error)
         {
           LOG_ERROR(logger) << "Could not register debug interface onto d-bus: "
                             << error.Message();
         }
+        else
+        {
+          self->shell_objects_ids_.push_back(id);
+        }
       }
 
-      auto self = static_cast<GnomeManager::Impl*>(data);
       self->shell_connection_ = glib::Object<GDBusConnection>(conn, glib::AddRef());
 
     }, nullptr, [] (GDBusConnection *connection, const gchar *name, gpointer user_data)
@@ -156,6 +156,18 @@ void GnomeManager::Impl::SetupShellSessionHandler()
       LOG_ERROR(logger) << "DBus name Lost " << name;
     }
     , this, nullptr);
+}
+
+void GnomeManager::Impl::TearDownShellSessionHandler()
+{
+  CancelAction();
+  ClosedDialog();
+
+  for (auto id : shell_objects_ids_)
+    g_dbus_connection_unregister_object(shell_connection_, id);
+
+  if (shell_owner_name_)
+    g_bus_unown_name(shell_owner_name_);
 }
 
 void GnomeManager::Impl::OnShellMethodCall(std::string const& method, GVariant* parameters)
@@ -178,9 +190,21 @@ void GnomeManager::Impl::OnShellMethodCall(std::string const& method, GVariant* 
     bool has_inibitors = (g_variant_iter_next_value(inhibitors) != nullptr);
     g_variant_iter_free(inhibitors);
 
+    LOG_INFO(logger) << "Got Open request for action " << unsigned(action)
+                     << " with inhibitors " << has_inibitors;
+
     if (pending_action_ == shell::Action::NONE)
     {
-      CancelAction();
+      if (has_inibitors)
+      {
+        // If there are inhibitors we need to use the "standard" way
+        // otherwise the action will be postponed until an inhibitor is closed
+        pending_action_ = action;
+      }
+      else
+      {
+        CancelAction();
+      }
 
       switch (action)
       {
@@ -228,6 +252,10 @@ void GnomeManager::Impl::OnShellMethodCall(std::string const& method, GVariant* 
 void GnomeManager::Impl::EmitShellSignal(std::string const& signal, GVariant* parameters)
 {
   glib::Error error;
+
+  pending_action_ = shell::Action::NONE;
+
+  LOG_INFO(logger) << "Emitting Shell signal '" << signal << "'";
   g_dbus_connection_emit_signal(shell_connection_, nullptr, shell::DBUS_OBJECT_PATH,
                                 shell::DBUS_INTERFACE, signal.c_str(), parameters, &error);
 
@@ -240,31 +268,26 @@ void GnomeManager::Impl::EmitShellSignal(std::string const& signal, GVariant* pa
 
 void GnomeManager::Impl::ConfirmLogout()
 {
-  pending_action_ = shell::Action::NONE;
   EmitShellSignal("ConfirmedLogout");
 }
 
 void GnomeManager::Impl::ConfirmReboot()
 {
-  pending_action_ = shell::Action::NONE;
   EmitShellSignal("ConfirmedReboot");
 }
 
 void GnomeManager::Impl::ConfirmShutdown()
 {
-  pending_action_ = shell::Action::NONE;
   EmitShellSignal("ConfirmedShutdown");
 }
 
 void GnomeManager::Impl::CancelAction()
 {
-  pending_action_ = shell::Action::NONE;
   EmitShellSignal("Canceled");
 }
 
 void GnomeManager::Impl::ClosedDialog()
 {
-  pending_action_ = shell::Action::NONE;
   EmitShellSignal("Closed");
 }
 
@@ -277,8 +300,11 @@ void GnomeManager::Impl::CallConsoleKitMethod(std::string const& method, GVarian
 
   // By passing the proxy to the lambda we ensure that it will stay alive
   // until we get the last callback.
-  proxy->CallBegin(method, parameters, [proxy] (GVariant*, glib::Error const& e) {
-    LOG_ERROR(logger) << "Fallback call failed: " << e.Message();
+  proxy->CallBegin(method, parameters, [this, proxy] (GVariant*, glib::Error const& e) {
+    if (e)
+    {
+      LOG_ERROR(logger) << "Fallback call failed: " << e.Message();
+    }
   });
 }
 
@@ -313,7 +339,7 @@ std::string GnomeManager::UserName() const
 void GnomeManager::LockScreen()
 {
   if (impl_->pending_action_ != shell::Action::NONE)
-    impl_->CancelAction();
+    CancelAction();
 
   auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.ScreenSaver",
                                                  "/org/gnome/ScreenSaver",
@@ -328,9 +354,11 @@ void GnomeManager::LockScreen()
 void GnomeManager::Logout()
 {
   if (impl_->pending_action_ != shell::Action::NONE)
-    impl_->CancelAction();
+  {
+    CancelAction();
+  }
 
-  enum LogoutMethods
+  enum class LogoutMethods : unsigned
   {
     INTERACTIVE = 0,
     NO_CONFIRMATION,
@@ -358,7 +386,9 @@ void GnomeManager::Logout()
 void GnomeManager::Reboot()
 {
   if (impl_->pending_action_ != shell::Action::NONE)
-    impl_->CancelAction();
+  {
+    CancelAction();
+  }
 
   impl_->pending_action_ = shell::Action::REBOOT;
   impl_->gsession_proxy_.CallBegin("RequestReboot", nullptr,
@@ -377,7 +407,9 @@ void GnomeManager::Reboot()
 void GnomeManager::Shutdown()
 {
   if (impl_->pending_action_ != shell::Action::NONE)
-    impl_->CancelAction();
+  {
+    CancelAction();
+  }
 
   impl_->pending_action_ = shell::Action::SHUTDOWN;
   impl_->gsession_proxy_.CallBegin("RequestShutdown", nullptr,
@@ -418,6 +450,11 @@ bool GnomeManager::CanSuspend() const
 bool GnomeManager::CanHibernate() const
 {
   return impl_->can_hibernate_;
+}
+
+void GnomeManager::CancelAction()
+{
+  impl_->CancelAction();
 }
 
 } // namespace session

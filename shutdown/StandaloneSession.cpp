@@ -46,6 +46,8 @@ public:
   void Suspend() { std::cout << "Suspend" << std::endl; }
   void Hibernate() { std::cout << "Hibernate" << std::endl; }
 
+  void CancelAction() { std::cout << "CancelAction" << std::endl; }
+
   bool CanShutdown() const {return true;}
   bool CanSuspend() const {return true;}
   bool CanHibernate() const {return false;}
