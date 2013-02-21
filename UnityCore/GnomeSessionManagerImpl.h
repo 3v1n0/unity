@@ -45,9 +45,8 @@ struct GnomeManager::Impl
   ~Impl();
 
   void QueryUPowerCapabilities();
-
   void SetupShellSessionHandler();
-  void CallFallbackMethod(std::string const& method, GVariant* parameters = nullptr);
+  void CallConsoleKitMethod(std::string const& method, GVariant* parameters = nullptr);
   void OnShellMethodCall(std::string const& method, GVariant* parameters);
   void EmitShellSignal(std::string const& signal, GVariant* parameters = nullptr);
 
