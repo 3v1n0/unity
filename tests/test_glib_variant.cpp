@@ -118,10 +118,16 @@ TEST(TestGLibVariant, HintsMap)
 
   g_variant_builder_init (&b, G_VARIANT_TYPE ("a{sv}"));
   variant::BuilderWrapper bw (&b);
-  bw.add ("string-key", "string-value");
-  bw.add ("int-key", 123);
+  bw.add ("charstring-key", "charstring-value");
+  bw.add ("string-key", std::string("string-value"));
+  bw.add ("gint32-key", (gint32)-1);
+  bw.add ("guint32-key", (guint32)-2);
+  bw.add ("gint64-key", (gint64)-3);
+  bw.add ("guint64-key", (guint64)-4);
+  bw.add ("float-key", (float)1.1);
+  bw.add ("double-key", (double)2.2);
   bw.add ("bool-key", true);
-  bw.add ("last", "foo");
+  bw.add ("variant-key", g_variant_new_int32(123));
 
   GVariant *dict_variant = g_variant_builder_end (&b);
   Variant dict (g_variant_new_tuple (&dict_variant, 1));
@@ -132,10 +138,15 @@ TEST(TestGLibVariant, HintsMap)
   HintsMap hints;
   EXPECT_TRUE(dict.ASVToHints (hints));
 
+  EXPECT_EQ(hints["charstring-key"].GetString(), "charstring-value");
   EXPECT_EQ(hints["string-key"].GetString(), "string-value");
-  EXPECT_EQ(hints["int-key"].GetInt32(), 123);
+  EXPECT_EQ(hints["gint32-key"].GetInt32(), (gint32)-1);
+  EXPECT_EQ(hints["guint32-key"].GetUInt32(), (guint32)-2);
+  EXPECT_EQ(hints["gint64-key"].GetInt64(), (gint64)-3);
+  EXPECT_EQ(hints["guint64-key"].GetUInt64(), (guint64)-4);
+  EXPECT_EQ(hints["float-key"].GetFloat(), (float)1.1);
+  EXPECT_EQ(hints["double-key"].GetDouble(), (double)2.2);
   EXPECT_EQ(hints["bool-key"].GetBool(), true);
-  EXPECT_EQ(hints["last"].GetString(), "foo");
 
   // throw away all references to the original variant
   dict = g_variant_new_string ("bar");
@@ -144,10 +155,16 @@ TEST(TestGLibVariant, HintsMap)
   EXPECT_EQ(dict.GetString(), "bar");
 
   // this has to still work
+  EXPECT_EQ(hints["charstring-key"].GetString(), "charstring-value");
   EXPECT_EQ(hints["string-key"].GetString(), "string-value");
-  EXPECT_EQ(hints["int-key"].GetInt32(), 123);
+  EXPECT_EQ(hints["gint32-key"].GetInt32(), (gint32)-1);
+  EXPECT_EQ(hints["guint32-key"].GetUInt32(), (guint32)-2);
+  EXPECT_EQ(hints["gint64-key"].GetInt64(), (gint64)-3);
+  EXPECT_EQ(hints["guint64-key"].GetUInt64(), (guint64)-4);
+  EXPECT_EQ(hints["float-key"].GetFloat(), (float)1.1);
+  EXPECT_EQ(hints["double-key"].GetDouble(), (double)2.2);
   EXPECT_EQ(hints["bool-key"].GetBool(), true);
-  EXPECT_EQ(hints["last"].GetString(), "foo");
 }
+
 
 } // Namespace

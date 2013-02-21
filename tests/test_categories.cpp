@@ -13,6 +13,7 @@ namespace
 {
 
 static const string swarm_name = "com.canonical.test.categoriesmodel";
+static const string swarm_name_changing = "com.canonical.test.categoriesmodel_changing";
 static const unsigned int n_rows = 5;
 
 static void WaitForSynchronize(Categories& model)
@@ -46,12 +47,17 @@ TEST(TestCategories, TestRowsValid)
   {
     Category adaptor = model.RowAtIndex(i);
 
-    unity::glib::String tmp(g_strdup_printf("Category%d", i));
-    string value = tmp.Str();
-    EXPECT_EQ(adaptor.name, value);
-    EXPECT_EQ(adaptor.icon_hint, "gtk-apply");
-    EXPECT_EQ(adaptor.index, i);
-    EXPECT_EQ(adaptor.renderer_name, "grid");
+    unity::glib::String tmp(g_strdup_printf("cat%d", i));
+    string id = tmp.Str();
+
+    unity::glib::String tmp2(g_strdup_printf("Category %d", i));
+    string name = tmp2.Str();
+
+    EXPECT_EQ(adaptor.id(), id);
+    EXPECT_EQ(adaptor.name(), name);
+    EXPECT_EQ(adaptor.icon_hint(), "gtk-apply");
+    EXPECT_EQ(adaptor.renderer_name(), "grid");
+    EXPECT_EQ(adaptor.index(), i);
   }
 }
 
@@ -80,6 +86,82 @@ TEST(TestCategories, TestSetGetRenderer)
 
     EXPECT_EQ(value.Str(), renderer.Str());
   }
+}
+
+// We're testing the model's ability to store and retrieve random pointers
+TEST(TestCategories, TestOnRowChanged)
+{
+  Categories model;
+  model.swarm_name = swarm_name_changing;
+  WaitForSynchronize(model);
+
+  bool changed = false;
+  model.category_changed.connect([&changed] (Category const&) { changed = true;});
+  Utils::WaitUntilMSec(changed,
+                       2000,
+                       []() { return g_strdup_printf("Did not detect row change from %s.", swarm_name_changing.c_str()); });
+}
+
+
+// We're testing the model's ability to store and retrieve random pointers
+TEST(TestCategories, TestOnRowAdded)
+{
+  Categories model;
+  model.swarm_name = swarm_name_changing;
+  WaitForSynchronize(model);
+
+  bool added = false;
+  model.category_added.connect([&added] (Category const&) { added = true;});
+  Utils::WaitUntilMSec(added,
+                       2000,
+                       []() { return g_strdup_printf("Did not detect row add %s.", swarm_name_changing.c_str()); });
+}
+
+// We're testing the model's ability to store and retrieve random pointers
+TEST(TestCategories, TestOnRowRemoved)
+{
+  Categories model;
+  model.swarm_name = swarm_name_changing;
+  WaitForSynchronize(model);
+
+  bool removed = false;
+  model.category_removed.connect([&removed] (Category const&) { removed = true;});
+  Utils::WaitUntilMSec(removed,
+                       2000,
+                       []() { return g_strdup_printf("Did not detect row remove %s.", swarm_name_changing.c_str()); });
+}
+
+TEST(TestCategories, TestCategoryCopy)
+{
+  Categories model;
+  model.swarm_name = swarm_name_changing;
+  WaitForSynchronize(model);
+  
+  Category category = model.RowAtIndex(0);
+  Category category_2(category);
+
+  EXPECT_EQ(category.id(), category_2.id());
+  EXPECT_EQ(category.name(), category_2.name());
+  EXPECT_EQ(category.icon_hint(), category_2.icon_hint());
+  EXPECT_EQ(category.renderer_name(), category_2.renderer_name());
+  EXPECT_EQ(category.index(), category_2.index());
+}
+
+TEST(TestCategories, TestCategoryEqual)
+{
+  Categories model;
+  model.swarm_name = swarm_name_changing;
+  WaitForSynchronize(model);
+
+  Category category = model.RowAtIndex(0);
+  Category category_2(NULL, NULL, NULL);
+  category_2 = category;
+
+  EXPECT_EQ(category.id(), category_2.id());
+  EXPECT_EQ(category.name(), category_2.name());
+  EXPECT_EQ(category.icon_hint(), category_2.icon_hint());
+  EXPECT_EQ(category.renderer_name(), category_2.renderer_name());
+  EXPECT_EQ(category.index(), category_2.index());
 }
 
 }

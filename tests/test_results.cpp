@@ -3,7 +3,6 @@
 
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Results.h>
-#include <UnityCore/ResultIterator.h>
 
 #include "test_utils.h"
 
@@ -75,10 +74,21 @@ TEST(TestResults, TestRowsValid)
     EXPECT_EQ(result.uri(), value);
     EXPECT_EQ(result.icon_hint(), value);
     EXPECT_EQ(result.category_index(), (i / 50));
+    EXPECT_EQ(result.result_type(), 0);
     EXPECT_EQ(result.mimetype(), value);
     EXPECT_EQ(result.name(), value);
     EXPECT_EQ(result.comment(), value);
     EXPECT_EQ(result.dnd_uri(), value);
+
+    glib::HintsMap hints = result.hints();
+    auto iter = hints.find("key");
+    EXPECT_TRUE(iter != hints.end());
+    if (iter != hints.end())
+    {
+      std::string value = glib::gchar_to_string(g_variant_get_string(iter->second, NULL));
+      EXPECT_EQ(value, "value");
+    }
+
     i++;
   }
 
@@ -155,6 +165,135 @@ TEST(TestResults, TestSetGetRenderer)
 
     EXPECT_EQ(value.Str(), renderer.Str());
   }
+}
+
+// We're testing the model's ability to store and retrieve random pointers
+TEST(TestResults, TestResultEqual)
+{
+  Results model;
+  model.swarm_name = swarm_name;
+
+  WaitForSynchronize(model);
+
+  Result result_1(*model.begin());
+  Result result_2(NULL, NULL, NULL);
+  result_2 = result_1;
+
+  EXPECT_EQ(result_2.uri(), result_1.uri());
+  EXPECT_EQ(result_2.icon_hint(), result_1.icon_hint());
+  EXPECT_EQ(result_2.category_index(), result_1.category_index());
+  EXPECT_EQ(result_2.result_type(), result_1.result_type());
+  EXPECT_EQ(result_2.mimetype(), result_1.mimetype());
+  EXPECT_EQ(result_2.name(), result_1.name());
+  EXPECT_EQ(result_2.comment(), result_1.comment());
+  EXPECT_EQ(result_2.dnd_uri(), result_1.dnd_uri());
+}
+
+// We're testing the model's ability to store and retrieve random pointers
+TEST(TestResults, LocalResult_Construct)
+{
+  Results model;
+  model.swarm_name = swarm_name;
+
+  WaitForSynchronize(model);
+
+  ResultIterator iter(model.model);
+  for (Result const& result : model)
+  {
+    LocalResult local_result_1(result);
+    LocalResult local_result_2(local_result_1);
+
+    EXPECT_EQ(local_result_1.uri, result.uri());
+    EXPECT_EQ(local_result_1.icon_hint, result.icon_hint());
+    EXPECT_EQ(local_result_1.category_index, result.category_index());
+    EXPECT_EQ(local_result_1.result_type, result.result_type());
+    EXPECT_EQ(local_result_1.mimetype, result.mimetype());
+    EXPECT_EQ(local_result_1.name, result.name());
+    EXPECT_EQ(local_result_1.comment, result.comment());
+    EXPECT_EQ(local_result_1.dnd_uri, result.dnd_uri());
+
+    EXPECT_EQ(local_result_2.uri, result.uri());
+    EXPECT_EQ(local_result_2.icon_hint, result.icon_hint());
+    EXPECT_EQ(local_result_2.category_index, result.category_index());
+    EXPECT_EQ(local_result_2.result_type, result.result_type());
+    EXPECT_EQ(local_result_2.mimetype, result.mimetype());
+    EXPECT_EQ(local_result_2.name, result.name());
+    EXPECT_EQ(local_result_2.comment, result.comment());
+    EXPECT_EQ(local_result_2.dnd_uri, result.dnd_uri());
+  }
+}
+
+
+// We're testing the model's ability to store and retrieve random pointers
+TEST(TestResults, LocalResult_OperatorEqual)
+{
+  Results model;
+  model.swarm_name = swarm_name;
+
+  WaitForSynchronize(model);
+
+  ResultIterator iter(model.model);
+  for (Result const& result : model)
+  {
+    LocalResult local_result_1(result);
+    LocalResult local_result_2(local_result_1);
+
+    EXPECT_TRUE(local_result_1 == local_result_2);
+    EXPECT_FALSE(local_result_1 != local_result_2);
+  }
+}
+
+
+// We're testing the model's ability to store and retrieve random pointers
+TEST(TestResults, LocalResult_FromToVariant)
+{
+  LocalResult local_result_1;
+  local_result_1.uri = "uri";
+  local_result_1.icon_hint = "icon_hint";
+  local_result_1.category_index = 1;
+  local_result_1.result_type = 2;
+  local_result_1.mimetype = "mimetype";
+  local_result_1.name = "name";
+  local_result_1.comment = "comment";
+  local_result_1.dnd_uri = "dnd_uri";
+  
+  local_result_1.hints["key1"] = g_variant_new_string("value1");
+  local_result_1.hints["key2"] = g_variant_new_string("value2");
+
+  glib::Variant variant_value = local_result_1.Variant();
+  LocalResult local_result_2 = LocalResult::FromVariant(variant_value);
+
+  EXPECT_EQ(local_result_2.uri, "uri");
+  EXPECT_EQ(local_result_2.icon_hint, "icon_hint");
+  EXPECT_EQ(local_result_2.category_index, 1);
+  EXPECT_EQ(local_result_2.result_type, 2);
+  EXPECT_EQ(local_result_2.mimetype, "mimetype");
+  EXPECT_EQ(local_result_2.name, "name");
+  EXPECT_EQ(local_result_2.comment, "comment");
+  EXPECT_EQ(local_result_2.dnd_uri, "dnd_uri");
+
+  auto iter = local_result_2.hints.find("key1");
+  EXPECT_TRUE(iter != local_result_2.hints.end());
+  if (iter != local_result_2.hints.end())
+  {
+    std::string value = glib::gchar_to_string(g_variant_get_string(iter->second, NULL));
+    EXPECT_EQ(value, "value1");
+  }
+  iter = local_result_2.hints.find("key2");
+  EXPECT_TRUE(iter != local_result_2.hints.end());
+  if (iter != local_result_2.hints.end())
+  {
+    std::string value = glib::gchar_to_string(g_variant_get_string(iter->second, NULL));
+    EXPECT_EQ(value, "value2");
+  }
+}
+
+
+// We're testing the model's ability to store and retrieve random pointers
+TEST(TestResults, LocalResult_Variants)
+{
+  LocalResult local_result;
+  EXPECT_EQ(local_result.Variants().size(), 9);
 }
 
 }
