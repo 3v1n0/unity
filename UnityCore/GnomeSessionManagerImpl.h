@@ -52,6 +52,7 @@ struct GnomeManager::Impl
 
   void QueryUPowerCapabilities();
   void SetupShellSessionHandler();
+  void TearDownShellSessionHandler();
   void CallConsoleKitMethod(std::string const& method, GVariant* parameters = nullptr);
   void OnShellMethodCall(std::string const& method, GVariant* parameters);
   void EmitShellSignal(std::string const& signal, GVariant* parameters = nullptr);
@@ -62,6 +63,7 @@ struct GnomeManager::Impl
   bool can_hibernate_;
 
   unsigned shell_owner_name_;
+  std::vector<unsigned> shell_objects_ids_;
   glib::Object<GDBusConnection> shell_connection_;
   shell::Action pending_action_;
 

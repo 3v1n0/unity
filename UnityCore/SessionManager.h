@@ -50,6 +50,8 @@ public:
   virtual bool CanSuspend() const = 0;
   virtual bool CanHibernate() const = 0;
 
+  virtual void CancelAction() = 0;
+
   // not copyable class
   Manager(const Manager&) = delete;
   Manager& operator=(const Manager&) = delete;

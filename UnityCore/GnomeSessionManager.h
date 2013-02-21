@@ -47,6 +47,8 @@ public:
   bool CanSuspend() const;
   bool CanHibernate() const;
 
+  void CancelAction();
+
   struct Impl;
 private:
   std::unique_ptr<Impl> impl_;
