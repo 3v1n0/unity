@@ -46,12 +46,6 @@ public:
   void Suspend() { std::cout << "Suspend" << std::endl; }
   void Hibernate() { std::cout << "Hibernate" << std::endl; }
 
-  void ConfirmLogout() { std::cout << "ConfirmLogout" << std::endl; }
-  void ConfirmReboot() { std::cout << "ConfirmReboot" << std::endl; }
-  void ConfirmShutdown() { std::cout << "ConfirmShutdown" << std::endl; }
-  void CancelAction() { std::cout << "CancelAction" << std::endl; }
-  void ClosedDialog() { std::cout << "ClosedDialog" << std::endl; }
-
   bool CanShutdown() const {return true;}
   bool CanSuspend() const {return true;}
   bool CanHibernate() const {return false;}
@@ -107,7 +101,7 @@ void SessionWindow::Init()
   BackgroundEffectHelper::blur_type = BLUR_NONE;
   auto manager = std::make_shared<MockSessionManager>();
   controller = std::make_shared<session::StandaloneController>(manager);
-  manager->shutdown_requested.emit();
+  manager->shutdown_requested.emit(false);
 }
 
 int main(int argc, char** argv)

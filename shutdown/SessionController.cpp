@@ -159,23 +159,18 @@ void Controller::ConstructView()
   view_window_->SetEnterFocusInputArea(view_.GetPointer());
 
   view_window_->mouse_down_outside_pointer_grab_area.connect([this] (int, int, unsigned long, unsigned long) {
-    HideAndCancel();
+    Hide();
   });
 
-  view_->request_hide.connect(sigc::mem_fun(this, &Controller::Hide));
-  view_->request_close.connect(sigc::mem_fun(this, &Controller::HideAndCancel));
+  auto const& hide_cb = sigc::mem_fun(this, &Controller::Hide);
+  view_->request_hide.connect(hide_cb);
+  view_->request_close.connect(hide_cb);
 }
 
 void Controller::EnsureView()
 {
   if (!view_window_)
     ConstructView();
-}
-
-void Controller::HideAndCancel()
-{
-  manager_->CancelAction();
-  Hide();
 }
 
 void Controller::Hide()
@@ -199,7 +194,6 @@ void Controller::CloseWindow()
   view_window_->UnGrabKeyboard();
   view_window_->EnableInputWindow(false);
   view_->live_background = false;
-  manager_->ClosedDialog();
 
   WindowManager::Default().RestoreInputFocus();
 }

@@ -36,30 +36,30 @@ const char* DBUS_INTERFACE = "org.gnome.SessionManager.EndSessionDialog";
 const char* DBUS_OBJECT_PATH = "/org/gnome/SessionManager/EndSessionDialog";
 const char* INTROSPECTION_XML =
 R"(<node>
-<interface name="org.gnome.SessionManager.EndSessionDialog">
-  <method name="Open">
-    <arg type="u" name="type" direction="in">
-    </arg>
-    <arg type="u" name="arg_1" direction="in">
-    </arg>
-    <arg type="u" name="max_wait" direction="in">
-    </arg>
-    <arg type="ao" name="inhibitors" direction="in">
-    </arg>
-  </method>
-  <method name="Close">
-  </method>
-  <signal name="ConfirmedLogout">
-  </signal>
-  <signal name="ConfirmedReboot">
-  </signal>
-  <signal name="ConfirmedShutdown">
-  </signal>
-  <signal name="Canceled">
-  </signal>
-  <signal name="Closed">
-  </signal>
-</interface>
+  <interface name="org.gnome.SessionManager.EndSessionDialog">
+    <method name="Open">
+      <arg type="u" name="type" direction="in">
+      </arg>
+      <arg type="u" name="arg_1" direction="in">
+      </arg>
+      <arg type="u" name="max_wait" direction="in">
+      </arg>
+      <arg type="ao" name="inhibitors" direction="in">
+      </arg>
+    </method>
+    <method name="Close">
+    </method>
+    <signal name="ConfirmedLogout">
+    </signal>
+    <signal name="ConfirmedReboot">
+    </signal>
+    <signal name="ConfirmedShutdown">
+    </signal>
+    <signal name="Canceled">
+    </signal>
+    <signal name="Closed">
+    </signal>
+  </interface>
 </node>)";
 
 GDBusInterfaceVTable INTERFACE_VTABLE =
@@ -100,8 +100,8 @@ GnomeManager::Impl::Impl(GnomeManager* manager)
 
 GnomeManager::Impl::~Impl()
 {
-  manager_->CancelAction();
-  manager_->ClosedDialog();
+  CancelAction();
+  ClosedDialog();
 
   if (shell_owner_name_)
     g_bus_unown_name(shell_owner_name_);
@@ -164,18 +164,25 @@ void GnomeManager::Impl::OnShellMethodCall(std::string const& method, GVariant* 
 
   if (method == "Open")
   {
-    shell::Action type;
+    // This method is called both when the session manager was invoked from
+    // any external caller (such as the gnome-session) and when we call it
+    // internally in the GnomeManager.
+    // So, in the first case we just ignore the request informing our clients,
+    // while in the second case, we know what we requested and we can immediately
+    // proceed with the requested action.
+
+    shell::Action action;
     unsigned arg1, timeout_length;
     GVariantIter *inhibitors;
-    g_variant_get(parameters, "(uuuao)", &type, &arg1, &timeout_length, &inhibitors);
-    bool has_inibitors = (g_variant_iter_n_children(inhibitors) > 0);
+    g_variant_get(parameters, "(uuuao)", &action, &arg1, &timeout_length, &inhibitors);
+    bool has_inibitors = (g_variant_iter_next_value(inhibitors) != nullptr);
     g_variant_iter_free(inhibitors);
 
     if (pending_action_ == shell::Action::NONE)
     {
-      pending_action_ = type;
+      CancelAction();
 
-      switch(type)
+      switch (action)
       {
         case shell::Action::LOGOUT:
           manager_->logout_requested.emit(has_inibitors);
@@ -190,18 +197,21 @@ void GnomeManager::Impl::OnShellMethodCall(std::string const& method, GVariant* 
           break;
       }
     }
-    else if (pending_action_ == type)
+    else if (pending_action_ == action)
     {
-      switch(type)
+      switch (action)
       {
         case shell::Action::LOGOUT:
-          manager_->ConfirmLogout();
+          ConfirmLogout();
+          ClosedDialog();
           break;
         case shell::Action::SHUTDOWN:
-          manager_->ConfirmShutdown();
+          ConfirmShutdown();
+          ClosedDialog();
           break;
         case shell::Action::REBOOT:
-          manager_->ConfirmReboot();
+          ConfirmReboot();
+          ClosedDialog();
           break;
         default:
           break;
@@ -211,6 +221,7 @@ void GnomeManager::Impl::OnShellMethodCall(std::string const& method, GVariant* 
   else if (method == "Close")
   {
     manager_->cancel_requested.emit();
+    ClosedDialog();
   }
 }
 
@@ -227,7 +238,37 @@ void GnomeManager::Impl::EmitShellSignal(std::string const& signal, GVariant* pa
   }
 }
 
-void GnomeManager::Impl::CallFallbackMethod(std::string const& method, GVariant* parameters)
+void GnomeManager::Impl::ConfirmLogout()
+{
+  pending_action_ = shell::Action::NONE;
+  EmitShellSignal("ConfirmedLogout");
+}
+
+void GnomeManager::Impl::ConfirmReboot()
+{
+  pending_action_ = shell::Action::NONE;
+  EmitShellSignal("ConfirmedReboot");
+}
+
+void GnomeManager::Impl::ConfirmShutdown()
+{
+  pending_action_ = shell::Action::NONE;
+  EmitShellSignal("ConfirmedShutdown");
+}
+
+void GnomeManager::Impl::CancelAction()
+{
+  pending_action_ = shell::Action::NONE;
+  EmitShellSignal("Canceled");
+}
+
+void GnomeManager::Impl::ClosedDialog()
+{
+  pending_action_ = shell::Action::NONE;
+  EmitShellSignal("Closed");
+}
+
+void GnomeManager::Impl::CallConsoleKitMethod(std::string const& method, GVariant* parameters)
 {
   auto proxy = std::make_shared<glib::DBusProxy>("org.freedesktop.ConsoleKit",
                                                  "/org/freedesktop/ConsoleKit/Manager",
@@ -271,6 +312,9 @@ std::string GnomeManager::UserName() const
 
 void GnomeManager::LockScreen()
 {
+  if (impl_->pending_action_ != shell::Action::NONE)
+    impl_->CancelAction();
+
   auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.ScreenSaver",
                                                  "/org/gnome/ScreenSaver",
                                                  "org.gnome.ScreenSaver");
@@ -279,20 +323,12 @@ void GnomeManager::LockScreen()
   // until we get the last callback.
   proxy->Call("Lock", nullptr, [proxy] (GVariant*) {});
   proxy->Call("SimulateUserActivity", nullptr, [proxy] (GVariant*) {});
-  CancelAction();
 }
 
 void GnomeManager::Logout()
 {
-  if (impl_->pending_action_ == shell::Action::LOGOUT)
-  {
-    ConfirmLogout();
-    return;
-  }
-  else if (impl_->pending_action_ != shell::Action::NONE)
-  {
-    CancelAction();
-  }
+  if (impl_->pending_action_ != shell::Action::NONE)
+    impl_->CancelAction();
 
   enum LogoutMethods
   {
@@ -301,30 +337,28 @@ void GnomeManager::Logout()
     FORCE_LOGOUT
   };
 
-  unsigned mode = LogoutMethods::NO_CONFIRMATION;
+  auto mode = LogoutMethods::NO_CONFIRMATION;
 
   impl_->pending_action_ = shell::Action::LOGOUT;
-  impl_->gsession_proxy_.CallBegin("Logout", g_variant_new_uint32(mode),
+  impl_->gsession_proxy_.CallBegin("Logout", g_variant_new("(u)", mode),
     [this] (GVariant*, glib::Error const& err) {
       if (err)
       {
         LOG_WARNING(logger) << "Got error during call: " << err.Message();
+
         impl_->pending_action_ = shell::Action::NONE;
+        const char* cookie = g_getenv("XDG_SESSION_COOKIE");
+
+        if (cookie && cookie[0] != '\0')
+          impl_->CallConsoleKitMethod("CloseSession", g_variant_new("(s)", cookie));
       }
   });
 }
 
 void GnomeManager::Reboot()
 {
-  if (impl_->pending_action_ == shell::Action::REBOOT)
-  {
-    ConfirmReboot();
-    return;
-  }
-  else if (impl_->pending_action_ != shell::Action::NONE)
-  {
-    CancelAction();
-  }
+  if (impl_->pending_action_ != shell::Action::NONE)
+    impl_->CancelAction();
 
   impl_->pending_action_ = shell::Action::REBOOT;
   impl_->gsession_proxy_.CallBegin("RequestReboot", nullptr,
@@ -335,22 +369,15 @@ void GnomeManager::Reboot()
                             << ". Using fallback method";
 
         impl_->pending_action_ = shell::Action::NONE;
-        impl_->CallFallbackMethod("Restart");
+        impl_->CallConsoleKitMethod("Restart");
       }
   });
 }
 
 void GnomeManager::Shutdown()
 {
-  if (impl_->pending_action_ == shell::Action::SHUTDOWN)
-  {
-    ConfirmShutdown();
-    return;
-  }
-  else if (impl_->pending_action_ != shell::Action::NONE)
-  {
-    CancelAction();
-  }
+  if (impl_->pending_action_ != shell::Action::NONE)
+    impl_->CancelAction();
 
   impl_->pending_action_ = shell::Action::SHUTDOWN;
   impl_->gsession_proxy_.CallBegin("RequestShutdown", nullptr,
@@ -361,51 +388,21 @@ void GnomeManager::Shutdown()
                             << ". Using fallback method";
 
         impl_->pending_action_ = shell::Action::NONE;
-        impl_->CallFallbackMethod("Stop");
+        impl_->CallConsoleKitMethod("Stop");
       }
   });
 }
 
 void GnomeManager::Suspend()
 {
-  CancelAction();
+  impl_->CancelAction();
   impl_->upower_proxy_.Call("Suspend");
 }
 
 void GnomeManager::Hibernate()
 {
-  CancelAction();
+  impl_->CancelAction();
   impl_->upower_proxy_.Call("Hibernate");
-}
-
-void GnomeManager::ConfirmLogout()
-{
-  impl_->pending_action_ = shell::Action::NONE;
-  impl_->EmitShellSignal("ConfirmedLogout");
-}
-
-void GnomeManager::ConfirmReboot()
-{
-  impl_->pending_action_ = shell::Action::NONE;
-  impl_->EmitShellSignal("ConfirmedReboot");
-}
-
-void GnomeManager::ConfirmShutdown()
-{
-  impl_->pending_action_ = shell::Action::NONE;
-  impl_->EmitShellSignal("ConfirmedShutdown");
-}
-
-void GnomeManager::CancelAction()
-{
-  impl_->pending_action_ = shell::Action::NONE;
-  impl_->EmitShellSignal("Canceled");
-}
-
-void GnomeManager::ClosedDialog()
-{
-  impl_->pending_action_ = shell::Action::NONE;
-  impl_->EmitShellSignal("Closed");
 }
 
 bool GnomeManager::CanShutdown() const
