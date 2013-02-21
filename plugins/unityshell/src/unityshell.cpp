@@ -2515,25 +2515,33 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
                               PAINT_WINDOW_TRANSFORMED_MASK |
                               PAINT_WINDOW_NO_CORE_INSTANCE_MASK;
 
-    int monitor = window->outputDevice();
-
-    if (uScreen->windows_for_monitor_.find(monitor) == end(uScreen->windows_for_monitor_))
-      uScreen->windows_for_monitor_[monitor] = 0;
-
-    ++(uScreen->windows_for_monitor_[monitor]);
-
-    if (!(mask & nonOcclusionBits) &&
-        (window->state() & CompWindowStateFullscreenMask) &&
-        uScreen->windows_for_monitor_[monitor] == 1)
-        // And I've been advised to test other things, but they don't work:
-        // && (attrib.opacity == OPAQUE)) <-- Doesn't work; Only set in glDraw
-        // && !window->alpha() <-- Doesn't work; Opaque windows often have alpha
+    if (window->isMapped() &&
+        !window->overrideRedirect() &&
+        window->managed() &&
+        window->defaultViewport() == uScreen->screen->vp())
     {
-      uScreen->fullscreenRegion += window->geometry();
-    }
+      int monitor = window->outputDevice();
 
-    if (uScreen->nuxRegion.isEmpty())
-      uScreen->firstWindowAboveShell = window;
+      auto it = uScreen->windows_for_monitor_.find(monitor);
+
+      if (it == end(uScreen->windows_for_monitor_))
+        (it->second) = 1;
+      else
+        ++(it->second);
+
+      if (!(mask & nonOcclusionBits) &&
+          (window->state() & CompWindowStateFullscreenMask) &&
+          uScreen->windows_for_monitor_[monitor] == 1)
+          // And I've been advised to test other things, but they don't work:
+          // && (attrib.opacity == OPAQUE)) <-- Doesn't work; Only set in glDraw
+          // && !window->alpha() <-- Doesn't work; Opaque windows often have alpha
+      {
+        uScreen->fullscreenRegion += window->geometry();
+      }
+
+      if (uScreen->nuxRegion.isEmpty())
+        uScreen->firstWindowAboveShell = window;
+    }
   }
 
   GLWindowPaintAttrib wAttrib = attrib;
