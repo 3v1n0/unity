@@ -43,12 +43,6 @@ public:
   void Suspend();
   void Hibernate();
 
-  void ConfirmLogout();
-  void ConfirmReboot();
-  void ConfirmShutdown();
-  void CancelAction();
-  void ClosedDialog();
-
   bool CanShutdown() const;
   bool CanSuspend() const;
   bool CanHibernate() const;

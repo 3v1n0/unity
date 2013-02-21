@@ -44,6 +44,12 @@ struct GnomeManager::Impl
   Impl(GnomeManager* parent);
   ~Impl();
 
+  void ConfirmLogout();
+  void ConfirmReboot();
+  void ConfirmShutdown();
+  void CancelAction();
+  void ClosedDialog();
+
   void QueryUPowerCapabilities();
   void SetupShellSessionHandler();
   void CallConsoleKitMethod(std::string const& method, GVariant* parameters = nullptr);

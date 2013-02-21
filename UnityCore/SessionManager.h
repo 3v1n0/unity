@@ -46,12 +46,6 @@ public:
   virtual void Suspend() = 0;
   virtual void Hibernate() = 0;
 
-  virtual void ConfirmLogout() = 0;
-  virtual void ConfirmReboot() = 0;
-  virtual void ConfirmShutdown() = 0;
-  virtual void CancelAction() = 0;
-  virtual void ClosedDialog() = 0;
-
   virtual bool CanShutdown() const = 0;
   virtual bool CanSuspend() const = 0;
   virtual bool CanHibernate() const = 0;
