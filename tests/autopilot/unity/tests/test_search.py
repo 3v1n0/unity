@@ -54,21 +54,21 @@ class SearchTestsBase(UnityTestCase):
         self.input_and_check_result(self.input, self.result) 
 
 
-# Scope tests
+# Lens tests
 
-class ApplicationScopeSearchTestBase(SearchTestsBase):
-    """Common class for all tests for searching in the application scope."""
+class ApplicationLensSearchTestBase(SearchTestsBase):
+    """Common class for all tests for searching in the application lens."""
 
     def setUp(self):
-        super(ApplicationScopeSearchTestBase, self).setUp()
-        self.app_scope = self.unity.dash.reveal_application_scope()
+        super(ApplicationLensSearchTestBase, self).setUp()
+        self.app_lens = self.unity.dash.reveal_application_lens()
         self.addCleanup(self.unity.dash.ensure_hidden)
-        gettext.install("unity-scope-applications", unicode=True)
+        gettext.install("unity-lens-applications", unicode=True)
 
     def input_and_check_result(self, string, expected):
         self.keyboard.type(string)
         self.assertThat(self.unity.dash.search_string, Eventually(Equals(string)))
-        category = self.app_scope.get_category_by_name(_("Installed"))
+        category = self.app_lens.get_category_by_name(_("Installed"))
         refresh_results_fn = lambda: len(category.get_results())
         self.assertThat(refresh_results_fn, Eventually(GreaterThan(0)))
         results = category.get_results()
@@ -80,8 +80,8 @@ class ApplicationScopeSearchTestBase(SearchTestsBase):
         self.assertTrue(found)
  
 
-class ApplicationScopeSearchTests(ApplicationScopeSearchTestBase):
-    """Simple search tests for the application scope."""
+class ApplicationLensSearchTests(ApplicationLensSearchTestBase):
+    """Simple search tests for the application lens."""
 
     scenarios = [
         ('basic', {'input': 'Window Mocker', 'result': 'Window Mocker'}),
@@ -91,15 +91,15 @@ class ApplicationScopeSearchTests(ApplicationScopeSearchTestBase):
     ]       
 
     def setUp(self):
-        super(ApplicationScopeSearchTests, self).setUp()
+        super(ApplicationLensSearchTests, self).setUp()
 
-    def test_application_scope_search(self):
+    def test_application_lens_search(self):
         self.do_search_test()
 
 
-class ApplicationScopeFuzzySearchTests(ApplicationScopeSearchTestBase):
-    """Fuzzy, erroneous search tests for the application scope.
-    This checks if the application scope will find the searched application
+class ApplicationLensFuzzySearchTests(ApplicationLensSearchTestBase):
+    """Fuzzy, erroneous search tests for the application lens.
+    This checks if the application lens will find the searched application
     (windowmocker here, since we want some app that has the name 
     locale-independent) when small spelling errors are made.
     """
@@ -112,11 +112,11 @@ class ApplicationScopeFuzzySearchTests(ApplicationScopeSearchTestBase):
     ]       
 
     def setUp(self):
-        super(ApplicationScopeFuzzySearchTests, self).setUp()
+        super(ApplicationLensFuzzySearchTests, self).setUp()
         # XXX: These should be enabled once libcolumbus is used on 
-        self.skipTest("Application scope fuzzy search tests disabled until libcolumbus gets released.")
+        self.skipTest("Application lens fuzzy search tests disabled until libcolumbus gets released.")
 
-    def test_application_scope_fuzzy_search(self):
+    def test_application_lens_fuzzy_search(self):
         self.do_search_test()
 
 

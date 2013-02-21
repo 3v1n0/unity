@@ -1,6 +1,5 @@
 #include <glib-object.h>
 
-#include "test_service_scope.h"
 #include "test_service_model.h"
 #include "test_service_hud.h"
 #include "test_service_panel.h"
@@ -35,7 +34,6 @@ static const GDBusInterfaceVTable interface_vtable =
 };
 
 static GMainLoop* loop_ = NULL;
-static ServiceScope* scope_ = NULL;
 static ServiceModel* model_ = NULL;
 static ServiceHud* hud_ = NULL;
 static ServicePanel* panel_ = NULL;
@@ -48,7 +46,6 @@ main(gint argc, gchar** argv)
 #endif
   loop_ = g_main_loop_new(NULL, FALSE);
 
-  scope_ = service_scope_new();
   model_ = service_model_new();
   hud_ = service_hud_new();
   panel_ = service_panel_new();
@@ -69,7 +66,6 @@ main(gint argc, gchar** argv)
   //g_object_unref(model_);
   g_object_unref(hud_);
   g_object_unref(panel_);
-  g_object_unref(scope_);
   g_dbus_node_info_unref(introspection_data);
 
   return 0;

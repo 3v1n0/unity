@@ -15,14 +15,6 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/no-icon.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/applications/no-icon.desktop)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/kde4/afile.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/applications/kde4/afile.desktop)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope1.scope
-                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope1.scope)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope2.scope
-                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope2.scope)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope3.scope
-                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope3.scope)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope4.scope
-                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope4.scope)
 
 #
 # Unit tests
@@ -87,8 +79,6 @@ if (GTEST_SRC_DIR AND
 # The service that provides DBus services to test against
   add_executable(test-gtest-service
                  mock-application.cpp
-                 test_scope_impl.c
-                 test_scope_impl.h
                  test_service_gdbus_wrapper.c
                  test_service_gdbus_wrapper.h
                  test_service_hud.c
@@ -97,9 +87,7 @@ if (GTEST_SRC_DIR AND
                  test_service_model.c
                  test_service_model.h
                  test_service_panel.c
-                 test_service_panel.c
-                 test_service_scope.c
-                 test_service_scope.h)
+                 test_service_panel.c)
   target_link_libraries(test-gtest-service unity-shared ${LIBS})
 
 
@@ -126,13 +114,11 @@ if (GTEST_SRC_DIR AND
        test_favorite_store.cpp
        test_favorite_store_gsettings.cpp
        test_favorite_store_private.cpp
-       test_gsettings_scopes.cpp
        test_launcher_entry_remote.cpp
        test_launcher_options.cpp
        test_layout_system.cpp
        test_model_iterator.cpp
        test_previews.cpp
-       test_scope_data.cpp
        test_time_util.cpp
        test_ubus.cpp
        test_unityshell_private.cpp
@@ -187,14 +173,11 @@ if (GTEST_SRC_DIR AND
                  test_utils.h
                  test_ratings_filter.cpp
                  test_results.cpp
-                 test_scope.cpp
-                 test_scope_filter.cpp
-                 test_scope_proxy.cpp
                  test_dbus_indicators.cpp
                 )
   target_link_libraries(test-gtest-dbus gtest unity-shared ${LIBS})
   add_test(UnityGTestDBus test-gtest-dbus)
-  add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} unity-shared test-gtest-service gtest)
+  add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} test-gtest-service gtest)
 
 if (ENABLE_X_SUPPORT)
 # Tests that require X
@@ -206,8 +189,6 @@ if (ENABLE_X_SUPPORT)
                  test_application_launcher_icon.cpp
                  test_bamf_application.cpp
                  test_bfb_launcher_icon.cpp
-                 test_dashview.cpp
-                 test_dashview_impl.cpp
                  test_dash_controller.cpp
                  test_desktop_launcher_icon.cpp
                  test_device_launcher_section.cpp
@@ -219,7 +200,6 @@ if (ENABLE_X_SUPPORT)
                  test_hud_view.cpp
                  test_icon_loader.cpp
                  test_im_text_entry.cpp
-                 test_keyboard_util.cpp
                  test_launcher.cpp
                  test_launcher_controller.cpp
                  test_launcher_drag_window.cpp
@@ -227,6 +207,7 @@ if (ENABLE_X_SUPPORT)
                  test_launcher_hover_machine.cpp
                  test_launcher_icon.cpp
                  test_launcher_tooltip.cpp
+                 test_keyboard_util.cpp
                  test_panel_indicators_view.cpp
                  test_panel_menu_view.cpp
                  test_panel_style.cpp
@@ -243,8 +224,6 @@ if (ENABLE_X_SUPPORT)
                  test_quicklist_view.cpp
                  test_result_renderer.cpp
                  test_resultviewgrid.cpp
-                 test_scope_bar.cpp
-                 test_scopeview.cpp
                  test_searchbar.cpp
                  test_shortcut_controller.cpp
                  test_shortcut_modeller_compiz.cpp

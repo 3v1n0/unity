@@ -19,7 +19,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include <dash/ScopeView.h>
+#include <dash/LensView.h>
 #include <dash/PlacesGroup.h>
 #include <unity-shared/DashStyle.h>
 #include <unity-shared/UnitySettings.h>
@@ -33,7 +33,7 @@ namespace unity
 namespace dash
 {
 
-class TestScopeView : public ::testing::Test
+class TestLensView : public ::testing::Test
 {
 public:
 
@@ -45,12 +45,12 @@ public:
     using PlacesGroup::_using_filters_background;
   };
 
-  class FakeScopeView : public ScopeView
+  class FakeLensView : public LensView
   {
   public:
-    FakeScopeView():ScopeView(Scope::Ptr(), nullptr) {}
+    FakeLensView():LensView(Lens::Ptr(), nullptr) {}
 
-    using ScopeView::OnCategoryAdded;
+    using LensView::OnCategoryAdded;
 
     PlacesGroup* CreatePlacesGroup()
     {
@@ -62,35 +62,35 @@ public:
     std::vector<FakePlacesGroup*> fake_categories_;
   };
 
-  TestScopeView()
-    : scope_view_(new FakeScopeView())
+  TestLensView()
+    : lens_view_(new FakeLensView())
   {
   }
 
   unity::Settings settings;
   dash::Style style;
-  std::unique_ptr<FakeScopeView> scope_view_;
+  std::unique_ptr<FakeLensView> lens_view_;
 };
 
-TEST_F(TestScopeView, TestCategoryInsert)
+TEST_F(TestLensView, TestCategoryInsert)
 {
   Category cat(NULL, NULL, NULL);
-  scope_view_->OnCategoryAdded(cat);
+  lens_view_->OnCategoryAdded(cat);
 
-  ASSERT_TRUE(scope_view_->categories().size() > 0);
+  ASSERT_TRUE(lens_view_->categories().size() > 0);
 }
 
-TEST_F(TestScopeView, TestFilterExpansion)
+TEST_F(TestLensView, TestFilterExpansion)
 {
   Category cat(NULL, NULL, NULL);
-  scope_view_->OnCategoryAdded(cat);
-  scope_view_->OnCategoryAdded(cat);
-  scope_view_->OnCategoryAdded(cat);
+  lens_view_->OnCategoryAdded(cat);
+  lens_view_->OnCategoryAdded(cat);
+  lens_view_->OnCategoryAdded(cat);
 
-  scope_view_->filters_expanded = true;
-  for (unsigned i = 0; i < scope_view_->fake_categories_.size(); i++)
+  lens_view_->filters_expanded = true;
+  for (unsigned i = 0; i < lens_view_->fake_categories_.size(); i++)
   {
-    EXPECT_EQ(scope_view_->fake_categories_[i]->_using_filters_background, true);
+    EXPECT_EQ(lens_view_->fake_categories_[i]->_using_filters_background, true);
   }
 }
 

@@ -22,16 +22,16 @@ G_BEGIN_DECLS
 #define ServiceModel_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj),\
   SERVICE_TYPE_MODEL, ServiceModelClass))
 
-typedef struct _ServiceModel         ServiceModel;
-typedef struct _ServiceModelClass    ServiceModelClass;
-typedef struct _ServiceModelPrivate  ServiceModelPrivate;
-
+typedef struct _ServiceModel        ServiceModel;
+typedef struct _ServiceModelClass   ServiceModelClass;
 
 struct _ServiceModel
 {
   GObject parent;
 
-  ServiceModelPrivate *priv;
+  DeeModel* model_;
+  DeeModel* results_model_;
+  DeeModel* categories_model_;
 };
 
 struct _ServiceModelClass

@@ -27,52 +27,52 @@ using namespace unity::dash::impl;
 namespace
 {
 
-TEST(TestParseScopeFilter, TestSimpleString)
+TEST(TestParseLensFilter, TestSimpleString)
 {
-  ScopeFilter filter = parse_scope_uri("simple");
+  LensFilter filter = parse_lens_uri("simple");
 
   EXPECT_THAT(filter.id, Eq("simple"));
   EXPECT_TRUE(filter.filters.empty());
 }
 
-TEST(TestParseScopeFilter, TestNonFilterParameter)
+TEST(TestParseLensFilter, TestNonFilterParameter)
 {
   // Only params that start with "filter_" are added.
-  ScopeFilter filter = parse_scope_uri("uri?param=test");
+  LensFilter filter = parse_lens_uri("uri?param=test");
 
   EXPECT_THAT(filter.id, Eq("uri"));
   EXPECT_TRUE(filter.filters.empty());
 }
 
-TEST(TestParseScopeFilter, TestSingleParameter)
+TEST(TestParseLensFilter, TestSingleParameter)
 {
-  ScopeFilter filter = parse_scope_uri("uri?filter_param=test");
+  LensFilter filter = parse_lens_uri("uri?filter_param=test");
 
   EXPECT_THAT(filter.id, Eq("uri"));
   EXPECT_THAT(filter.filters.size(), Eq(1));
   EXPECT_THAT(filter.filters["param"], Eq("test"));
 }
 
-TEST(TestParseScopeFilter, TestNoEquals)
+TEST(TestParseLensFilter, TestNoEquals)
 {
-  ScopeFilter filter = parse_scope_uri("uri?filter_param");
+  LensFilter filter = parse_lens_uri("uri?filter_param");
 
   EXPECT_THAT(filter.id, Eq("uri"));
   EXPECT_TRUE(filter.filters.empty());
 }
 
-TEST(TestParseScopeFilter, TestEmbeddedEquals)
+TEST(TestParseLensFilter, TestEmbeddedEquals)
 {
-  ScopeFilter filter = parse_scope_uri("uri?filter_param=a=b");
+  LensFilter filter = parse_lens_uri("uri?filter_param=a=b");
 
   EXPECT_THAT(filter.id, Eq("uri"));
   EXPECT_THAT(filter.filters.size(), Eq(1));
   EXPECT_THAT(filter.filters["param"], Eq("a=b"));
 }
 
-TEST(TestParseScopeFilter, TestMultipleParameters)
+TEST(TestParseLensFilter, TestMultipleParameters)
 {
-  ScopeFilter filter = parse_scope_uri("uri?filter_param1=first&filter_param2=second");
+  LensFilter filter = parse_lens_uri("uri?filter_param1=first&filter_param2=second");
 
   EXPECT_THAT(filter.id, Eq("uri"));
   EXPECT_THAT(filter.filters.size(), Eq(2));
