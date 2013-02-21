@@ -88,7 +88,7 @@ void Controller::Show(View::Mode mode, bool inhibitors)
 {
   EnsureView();
 
-  if (view_window_->GetOpacity() == 1.0f)
+  if (Visible() && mode == view_->mode())
     return;
 
   view_->mode = mode;
@@ -159,18 +159,23 @@ void Controller::ConstructView()
   view_window_->SetEnterFocusInputArea(view_.GetPointer());
 
   view_window_->mouse_down_outside_pointer_grab_area.connect([this] (int, int, unsigned long, unsigned long) {
-    Hide();
+    CancelAndHide();
   });
 
-  auto const& hide_cb = sigc::mem_fun(this, &Controller::Hide);
-  view_->request_hide.connect(hide_cb);
-  view_->request_close.connect(hide_cb);
+  view_->request_hide.connect(sigc::mem_fun(this, &Controller::Hide));
+  view_->request_close.connect(sigc::mem_fun(this, &Controller::CancelAndHide));
 }
 
 void Controller::EnsureView()
 {
   if (!view_window_)
     ConstructView();
+}
+
+void Controller::CancelAndHide()
+{
+  manager_->CancelAction();
+  Hide();
 }
 
 void Controller::Hide()

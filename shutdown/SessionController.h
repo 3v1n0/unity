@@ -60,6 +60,7 @@ protected:
 
 private:
   void Show(View::Mode mode, bool inhibitors);
+  void CancelAndHide();
   void ConstructView();
   void EnsureView();
   void CloseWindow();
