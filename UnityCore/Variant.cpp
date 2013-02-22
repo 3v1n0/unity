@@ -179,7 +179,7 @@ GHashTable* hashtable_from_hintsmap(glib::HintsMap const& hints)
 
   for (glib::HintsMap::const_iterator it = hints.begin(); it != hints.end(); ++it)
   {
-    g_hash_table_insert(hash_table, g_strdup(it->first.c_str()), it->second);
+    g_hash_table_insert(hash_table, g_strdup(it->first.c_str()), g_variant_ref(it->second));
   }
   return hash_table;
 }
