@@ -179,7 +179,10 @@ class IBusWidgetScenariodTests(IBusTests):
 
     def do_ibus_test(self):
         """Do the basic IBus test on self.widget using self.input and self.result."""
-        result = self._ibus_query.poll(self.engine_name, self.input)
+        try:
+            result = self.result
+        except:
+            result = self._ibus_query.poll(self.engine_name, self.input)
 
         widget = getattr(self.unity, self.widget)
         widget.ensure_visible()
@@ -226,9 +229,9 @@ class IBusTestsHangul(IBusWidgetScenariodTests):
     scenarios = multiply_scenarios(
         IBusWidgetScenariodTests.scenarios,
             [
-                ('transmission', {'input': 'xmfostmaltus '}),
-                ('social', {'input': 'httuf '}),
-                ('document', {'input': 'anstj '}),
+                ('transmission', {'input': 'xmfostmaltus ', 'result': u'\ud2b8\ub79c\uc2a4\ubbf8\uc158 '}),
+                ('social', {'input': 'httuf ', 'result': u'\uc18c\uc15c '}),
+                ('document', {'input': 'anstj ', 'result': u'\ubb38\uc11c '}),
             ]
         )
 
