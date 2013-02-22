@@ -3441,7 +3441,7 @@ void UnityWindow::AddProperties(GVariantBuilder* builder)
 
   variant::BuilderWrapper(builder)
     .add(scaled ? GetScaledGeometry() : wm.GetWindowGeometry(xid))
-    .add("xid", (guint64)xid)
+    .add("xid", (uint64_t)xid)
     .add("title", wm.GetWindowName(xid))
     .add("fake_decorated", uScreen->fake_decorated_windows_.find(this) != uScreen->fake_decorated_windows_.end())
     .add("scaled", scaled)

@@ -514,7 +514,7 @@ void ApplicationLauncherIcon::AddProperties(GVariantBuilder* builder)
     .add("desktop_id", GetDesktopID())
     .add("xids", g_variant_builder_end(&xids_builder))
     .add("sticky", IsSticky())
-    .add("startup_notification_timestamp", (guint64)_startup_notification_timestamp);
+    .add("startup_notification_timestamp", (uint64_t)_startup_notification_timestamp);
 }
 
 void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& uris, Time timestamp)

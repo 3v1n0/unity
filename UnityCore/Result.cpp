@@ -172,7 +172,7 @@ glib::Variant LocalResult::Variant() const
   std::vector<glib::Variant> vars = Variants();
   for (glib::Variant const& v : vars)
   {
-    g_variant_builder_add(&b, "v", g_variant_ref(v));
+    g_variant_builder_add(&b, "v", (GVariant*)v);
   }
 
   return g_variant_builder_end(&b);

@@ -53,27 +53,27 @@ std::string Variant::GetString() const
 {
   // g_variant_get_string doesn't duplicate the string
   const gchar *result = g_variant_get_string (variant_, NULL);
-  return result != NULL ? result : ""84;
+  return result != NULL ? result : "";
 }
 
-gint32 Variant::GetInt32() const
+int32_t Variant::GetInt32() const
 {
-  return g_variant_get_int32 (variant_);
+  return static_cast<int32_t>(g_variant_get_int32 (variant_));
 }
 
-guint32 Variant::GetUInt32() const
+uint32_t Variant::GetUInt32() const
 {
-  return g_variant_get_uint32 (variant_);
+  return static_cast<uint32_t>(g_variant_get_uint32 (variant_));
 }
 
-gint64 Variant::GetInt64() const
+int64_t Variant::GetInt64() const
 {
-  return static_cast<int>(g_variant_get_int64 (variant_));
+  return static_cast<int64_t>(g_variant_get_int64 (variant_));
 }
 
-guint64 Variant::GetUInt64() const
+uint64_t Variant::GetUInt64() const
 {
-  return g_variant_get_uint64 (variant_);
+  return static_cast<uint64_t>(g_variant_get_uint64 (variant_));
 }
 
 bool Variant::GetBool() const
@@ -125,9 +125,8 @@ Variant Variant::FromHints(HintsMap const& hints)
 
   for (glib::HintsMap::const_iterator it = hints.begin(); it != hints.end(); ++it)
   {
-    gchar* key = g_strdup(it->first.c_str());
-    GVariant* ptr = g_variant_ref(it->second);
-
+    const gchar* key = it->first.c_str();
+    GVariant* ptr = it->second;
 
     g_variant_builder_add(&b, "{sv}", key, ptr);
   }
@@ -180,10 +179,7 @@ GHashTable* hashtable_from_hintsmap(glib::HintsMap const& hints)
 
   for (glib::HintsMap::const_iterator it = hints.begin(); it != hints.end(); ++it)
   {
-    gchar* key = g_strdup(it->first.c_str());
-    GVariant* ptr = g_variant_ref(it->second);
-
-    g_hash_table_insert(hash_table, key, ptr);
+    g_hash_table_insert(hash_table, g_strdup(it->first.c_str()), it->second);
   }
   return hash_table;
 }
@@ -238,25 +234,25 @@ BuilderWrapper& BuilderWrapper::add(char const* name, std::string const& value)
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, gint32 value)
+BuilderWrapper& BuilderWrapper::add(char const* name, int32_t value)
 {
   g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int32(value));
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, gint64 value)
-{
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int64(value));
-  return *this;
-}
-
-BuilderWrapper& BuilderWrapper::add(char const* name, guint32 value)
+BuilderWrapper& BuilderWrapper::add(char const* name, uint32_t value)
 {
   g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint32(value));
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, guint64 value)
+BuilderWrapper& BuilderWrapper::add(char const* name, int64_t value)
+{
+  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int64(value));
+  return *this;
+}
+
+BuilderWrapper& BuilderWrapper::add(char const* name, uint64_t value)
 {
   g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint64(value));
   return *this;
