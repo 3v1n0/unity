@@ -106,6 +106,7 @@ LauncherIcon::LauncherIcon(IconType type)
   tooltip_text = "blank";
 
   position = Position::FLOATING;
+  removed = false;
 
   // FIXME: the abstraction is already broken, should be fixed for O
   // right now, hooking the dynamic quicklist the less ugly possible way
