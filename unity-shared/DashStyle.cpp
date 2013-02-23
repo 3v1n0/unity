@@ -978,9 +978,8 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
                                          Segment    segment)
 {
   double radius  = cornerRadius / aspect;
-  bool odd = true;
 
-  odd = cairo_get_line_width (cr) == 2.0 ? false : true;
+  bool odd = cairo_get_line_width (cr) == 2.0 ? false : true;
 
   switch (segment)
   {
