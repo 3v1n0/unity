@@ -26,6 +26,10 @@ unity (6.12.0daily13.02.08-0ubuntu1) raring; urgency=low
   [ Automatic PS uploader ]
   * Automatic snapshot from revision 3140
 
+  [ Brandon Schaefer ]
+  * Moved PointerBarrier logic to the new xserver 1.14 (libXi 1.6.99.1)
+    version.
+
  -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 08 Feb 2013 04:02:00 +0000
 
 unity (6.12.0daily13.02.07-0ubuntu1) raring; urgency=low

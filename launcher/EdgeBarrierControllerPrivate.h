@@ -44,10 +44,18 @@ struct EdgeBarrierController::Impl
 
   bool EventIsInsideYBreakZone(BarrierEvent::Ptr const& event);
 
+  void AddEventFilter();
+
+  PointerBarrierWrapper::Ptr FindBarrierEventOwner(XIBarrierEvent* barrier_event);
+
+  static bool HandleEventCB(XEvent event, void* data);
+  bool HandleEvent(XEvent event);
+
   std::vector<PointerBarrierWrapper::Ptr> barriers_;
   std::vector<EdgeBarrierSubscriber*> subscribers_;
   Decaymulator decaymulator_;
   glib::Source::UniquePtr release_timeout_;
+  int xi2_opcode_;
   float edge_overcome_pressure_;
   EdgeBarrierController* parent_;
 };

@@ -217,6 +217,7 @@ if(ENABLE_X_SUPPORT)
       libgeis
       x11
       xfixes
+      xi>=1.6.99.1
       xrender>=0.9
   )
 endif ()
