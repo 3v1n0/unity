@@ -76,13 +76,12 @@ void PointerBarrierWrapper::DestroyBarrier()
 
   Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
   XFixesDestroyPointerBarrier(dpy, barrier_);
-
-  nux::GetGraphicsDisplay()->RemoveEventFilter(this);
 }
 
 void PointerBarrierWrapper::ReleaseBarrier(int event_id)
 {
-  XIBarrierReleasePointer(nux::GetGraphicsDisplay()->GetX11Display(), current_device_, barrier_, event_id);
+  Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
+  XIBarrierReleasePointer(dpy, current_device_, barrier_, event_id);
 }
 
 void PointerBarrierWrapper::EmitCurrentData(int event_id, int x, int y)

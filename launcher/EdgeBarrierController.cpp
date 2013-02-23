@@ -99,7 +99,6 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
   xi2_opcode_ = GetXI2OpCode();
 }
 
-
 void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry> const& layout)
 {
   auto num_monitors = layout.size();
@@ -166,6 +165,9 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
 
 void EdgeBarrierController::Impl::AddEventFilter()
 {
+  // Remove an old one, if it exists
+  nux::GetGraphicsDisplay()->RemoveEventFilter(this);
+
   nux::GraphicsDisplay::EventFilterArg event_filter;
   event_filter.filter = &HandleEventCB;
   event_filter.data = this;
