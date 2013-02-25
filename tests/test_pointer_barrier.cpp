@@ -75,6 +75,7 @@ TEST(TestPointerBarrier, EventConstruction)
 TEST(TestPointerBarrier, HandleHitNotifyEvents)
 {
   MockPointerBarrier pb;
+  pb.threshold = 1000;
   XIBarrierEvent ev = GetGenericEvent(0xdeadbeef);
 
   bool got_event = false;
@@ -103,6 +104,7 @@ TEST(TestPointerBarrier, HandleHitNotifyEvents)
 TEST(TestPointerBarrier, HandleHitNotifyReleasedEvents)
 {
   MockPointerBarrier pb;
+  pb.threshold = 1000;
   XIBarrierEvent ev = GetGenericEvent(0xabba);
   bool got_event = false;
 
@@ -124,6 +126,7 @@ TEST(TestPointerBarrier, HandleHitNotifyReleasedEvents)
 TEST(TestPointerBarrier, ReciveFirstEvent)
 {
   MockPointerBarrier pb;
+  pb.threshold = 1000;
   XIBarrierEvent ev = GetGenericEvent(0xabba);
 
   bool first_is_true = false;
@@ -139,6 +142,7 @@ TEST(TestPointerBarrier, ReciveFirstEvent)
 TEST(TestPointerBarrier, ReciveSecondEventFirstFalse)
 {
   MockPointerBarrier pb;
+  pb.threshold = 1000;
   XIBarrierEvent ev = GetGenericEvent(0xabba);
   int events_recived = 0;
 
