@@ -423,7 +423,9 @@ compiz::WindowInputRemover::queryProperty(XRectangle **input,
     return false;
   }
 
-  unsigned long *headerData = reinterpret_cast<unsigned long *>(propData);
+  /* XXX: the cast to void * before the reinterpret_cast is a hack to calm down
+   *  gcc on ARM machines and its misalignment cast errors */
+  unsigned long *headerData = reinterpret_cast<unsigned long *>(static_cast<void *>(propData));
 
   /* If version is mismatched, return false */
   if (headerData[0] != propVersion)
@@ -458,7 +460,7 @@ compiz::WindowInputRemover::queryProperty(XRectangle **input,
     return false;
   }
 
-  unsigned long *data = reinterpret_cast<unsigned long *>(propData);
+  unsigned long *data = reinterpret_cast<unsigned long *>(static_cast<void *>(propData));
 
   /* Read in the header */
   *nInput = data[1];

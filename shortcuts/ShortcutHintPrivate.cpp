@@ -35,10 +35,8 @@ namespace impl
 std::string GetMetaKey(std::string const& scut)
 {
   size_t index = scut.find_last_of( ">");
-  if (index >= 0)
-    return std::string(scut.begin(), scut.begin() + index + 1);
-  else
-    return "";
+
+  return std::string(scut.begin(), scut.begin() + index + 1);
 }
 
 std::string FixShortcutFormat(std::string const& scut)
