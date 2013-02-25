@@ -624,6 +624,9 @@ void UnityScreen::setPanelShadowMatrix(const GLMatrix& matrix)
 void UnityScreen::FillShadowRectForOutput(CompRect &shadowRect,
                                           CompOutput *output)
 {
+  if (shadow_texture_.empty ())
+    return;
+
   float panel_h = static_cast<float>(panel_style_.panel_height);
   float shadowX = output->x();
   float shadowY = output->y() + panel_h;
