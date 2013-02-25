@@ -33,6 +33,7 @@ namespace ui
 struct EdgeBarrierController::Impl
 {
   Impl(EdgeBarrierController *parent);
+  ~Impl();
 
   void ResizeBarrierList(std::vector<nux::Geometry> const& layout);
   void SetupBarriers(std::vector<nux::Geometry> const& layout);

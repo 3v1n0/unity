@@ -21,6 +21,7 @@
 #include "EdgeBarrierController.h"
 #include "EdgeBarrierControllerPrivate.h"
 #include "Decaymulator.h"
+#include <NuxCore/Logger.h>
 #include "unity-shared/UScreen.h"
 #include "UnityCore/GLibSource.h"
 
@@ -32,7 +33,11 @@ namespace ui
 namespace
 {
   int const Y_BREAK_BUFFER = 20;
+  int const MAJOR = 2;
+  int const MINOR = 3;
 }
+
+DECLARE_LOGGER(logger, "unity.edge_barrier_controller");
 
 int GetXI2OpCode()
 {
@@ -44,6 +49,7 @@ int GetXI2OpCode()
                        &event_base,
                        &error_base))
   {
+    LOG_ERROR(logger) << "Missing XFixes";
     return -1;
   }
 
@@ -52,17 +58,24 @@ int GetXI2OpCode()
                         &event_base,
                         &error_base))
   {
+    LOG_ERROR(logger) << "Missing XInput";
     return -1;
   }
 
-  int maj,min;
-  XIQueryVersion(dpy, &maj, &min);
+  int maj = MAJOR;
+  int min = MINOR;
+
+  if (XIQueryVersion(dpy, &maj, &min) == BadRequest)
+  {
+    LOG_ERROR(logger) << "Need XInput version 2.3";
+    return -1;
+  }
 
   return opcode;
 }
 
 EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
-  : xi2_opcode_(0)
+  : xi2_opcode_(-1)
   , edge_overcome_pressure_(0)
   , parent_(parent)
 {
@@ -97,6 +110,11 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
   });
 
   xi2_opcode_ = GetXI2OpCode();
+}
+
+EdgeBarrierController::Impl::~Impl()
+{
+  nux::GetGraphicsDisplay()->RemoveEventFilter(this);
 }
 
 void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry> const& layout)
