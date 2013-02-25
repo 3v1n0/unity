@@ -145,6 +145,7 @@ public:
   virtual int WorkspaceCount() const = 0;
 
   virtual nux::Point GetCurrentViewport() const = 0;
+  virtual void SetViewportSize(int horizontal, int vertical) = 0;
   virtual int GetViewportHSize() const = 0;
   virtual int GetViewportVSize() const = 0;
 

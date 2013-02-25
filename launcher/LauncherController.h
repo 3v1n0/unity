@@ -70,7 +70,8 @@ public:
                               unsigned int key_sym,
                               unsigned long key_code,
                               unsigned long key_state,
-                              char* key_string);
+                              char* key_string,
+                              Time timestamp);
 
   void KeyNavActivate();
   void KeyNavGrab();

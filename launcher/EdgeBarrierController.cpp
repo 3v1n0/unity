@@ -24,8 +24,15 @@
 #include "unity-shared/UScreen.h"
 #include "UnityCore/GLibSource.h"
 
-namespace unity {
-namespace ui {
+namespace unity
+{
+namespace ui
+{
+
+namespace
+{
+  int const Y_BREAK_BUFFER = 20;
+}
 
 
 EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
@@ -119,12 +126,35 @@ void EdgeBarrierController::Impl::BarrierReset()
 
 void EdgeBarrierController::Impl::BarrierPush(PointerBarrierWrapper* owner, BarrierEvent::Ptr const& event)
 {
-  decaymulator_.value = decaymulator_.value + event->velocity;
+  if (EventIsInsideYBreakZone(event))
+  {
+    decaymulator_.value = decaymulator_.value + event->velocity;
+  }
+  else
+  {
+    BarrierReset();
+  }
 
   if (decaymulator_.value > edge_overcome_pressure_)
   {
     BarrierRelease(owner, event->event_id);
   }
+}
+
+bool EdgeBarrierController::Impl::EventIsInsideYBreakZone(BarrierEvent::Ptr const& event)
+{
+  static int y_break_zone = event->y;
+
+  if (decaymulator_.value <= 0)
+    y_break_zone = event->y;
+
+  if (event->y <= y_break_zone + Y_BREAK_BUFFER &&
+      event->y >= y_break_zone - Y_BREAK_BUFFER)
+  {
+    return true;
+  }
+
+  return false;
 }
 
 void EdgeBarrierController::Impl::OnPointerBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr const& event)

@@ -492,8 +492,11 @@ void StandaloneWindowManager::CheckWindowIntersections(nux::Geometry const& regi
 {
 }
 
-void StandaloneWindowManager::SetViewportSize(unsigned horizontal, unsigned vertical)
+void StandaloneWindowManager::SetViewportSize(int horizontal, int vertical)
 {
+  if (horizontal < 1 || vertical < 1)
+    return;
+
   nux::Size new_size(horizontal, vertical);
 
   if (viewport_size_ == new_size)

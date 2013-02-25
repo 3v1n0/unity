@@ -1,3 +1,52 @@
+unity (6.12.0daily13.02.19.1-0ubuntu1) raring; urgency=low
+
+  [ Brandon Schaefer ]
+  * Multi-monitor: Mousepointer hangs when passing between monitors,
+    although no Launcher is there (regression) (LP: #1120223)
+  * Sticky edges should only use horizontal mouse movement (LP: #982543)
+
+  [ Marco Trevisan (Treviño) ]
+  * Launcher - Workspace switcher should not be in the Launcher by
+    default (LP: #868423)
+  * [regression] Unlocking a running application, removes it from the
+    Launcher (LP: #1122311)
+  * Launcher, Workspaces - dragging and dropping the workspaces icon on
+    to the trash should switch Workspaces off (LP: #1118271)
+
+  [ Chris Townsend ]
+  * webapp: alt-tab gets "stucked" on the browser rather than going to
+    the next entry (LP: #1070715)
+
+  [ Nick Dedekind ]
+  * Dash - the "Decade" and "Size" dash filter category widgets are
+    broken (LP: #841899)
+  * Dash Places group is shining on quick mouse over (LP: #1119487)
+
+  [ Lukas Vacek ]
+  * Show window list when right clicking an icon in launcher - enables
+    quick window switching (LP: #1107866)
+
+  [ Marco Trevisan (Treviño) <mail@3v1n0.net>, Lukas Vacek ]
+  * Show window list when right clicking an icon in launcher - enables
+    quick window switching (LP: #1107866)
+
+  [ Andrea Azzarone ]
+  * unity launcher vanishes when switching to mirrored displays (LP:
+    #991637)
+  * Opening an app with super+num shorcut doesn't give focus to the app
+    (LP: #1125331)
+  * Alt+` and detail switcher broken after revision 3153 (LP: #1129372)
+
+  [ Sam Spilsbury ]
+  * Unity unnecessarily clears the ShapeBounding shape of windows on
+    minimize (LP: #1091600)
+  * Can't access minimized window after Unity restarts (LP: #851964)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3163
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Tue, 19 Feb 2013 14:26:14 +0000
+
 unity (6.12.0daily13.02.08-0ubuntu1) raring; urgency=low
 
   [ Brandon Schaefer ]
