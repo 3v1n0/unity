@@ -55,6 +55,9 @@ public:
   using MusicPreview::subtitle_;
   using MusicPreview::action_buttons_;
   using MusicPreview::preview_info_hints_;
+  
+  using MusicPreview::OnPlayTrack;
+  using MusicPreview::OnPauseTrack;
 };
 
 class TestPreviewMusic : public Test
@@ -128,6 +131,21 @@ TEST_F(TestPreviewMusic, TestUIValues)
       EXPECT_EQ(action->GetExtraText(), "£3.99");
     }
   }
+}
+
+TEST_F(TestPreviewMusic, TestPlayTrack)
+{
+  MockMusicPreview::Ptr preview_view(new MockMusicPreview(preview_model_));
+
+  preview_view->OnPlayTrack("uri://test.play");
+}
+
+
+TEST_F(TestPreviewMusic, TestPauseTrack)
+{
+  MockMusicPreview::Ptr preview_view(new MockMusicPreview(preview_model_));
+
+  preview_view->OnPauseTrack("uri://test.pause");
 }
 
 }
