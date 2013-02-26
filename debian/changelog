@@ -1,3 +1,22 @@
+unity (6.12.0daily13.02.26-0ubuntu1) raring; urgency=low
+
+  [ Andrea Azzarone ]
+  * Multi-monitor - Panel and launcher visible on top of multimonitor
+    non-focused fullscreen apps (LP: #748539)
+  * unity.tests.launcher.test_icon_behavior.LauncherIconsTests.* fails
+    randomly (LP: #1131679)
+
+  [ Xiao-Long Chen ]
+  * Add timeout before removing launcher (LP: #1119801)
+
+  [ MC Return ]
+  * cppcheck reports true positives (LP: #1131152)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3171
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Tue, 26 Feb 2013 04:02:40 +0000
+
 unity (6.12.0daily13.02.19.1-0ubuntu1) raring; urgency=low
 
   [ Brandon Schaefer ]
