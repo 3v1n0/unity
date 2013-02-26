@@ -959,6 +959,8 @@ class PanelIndicatorEntryTests(PanelTestsBase):
 
         # This assert is for timing purposes only:
         self.assertThat(menu_entry.active, Eventually(Equals(True)))
+        # Make sure we wait at least enough time that the menu appeared as well
+        sleep(self.panel.menus.fadein_duration / 1000.0)
         self.mouse.click()
 
         self.assertThat(menu_entry.active, Eventually(Equals(False)))
