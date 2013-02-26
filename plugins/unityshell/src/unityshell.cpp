@@ -2063,6 +2063,10 @@ bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State
     switcher_controller_->Select((switcher_controller_->StartIndex())); // always select the current application
     switcher_controller_->InitiateDetail();
   }
+  else if (switcher_controller_->IsDetailViewShown())
+  {
+    switcher_controller_->NextDetail();
+  }
   else
   {
     switcher_controller_->SetDetail(true);
