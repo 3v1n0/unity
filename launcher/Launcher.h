@@ -222,6 +222,7 @@ private:
   bool OnScrollTimeout();
 
   void SetMousePosition(int x, int y);
+  void SetIconUnderMouse(AbstractLauncherIcon::Ptr const& icon);
 
   void SetStateMouseOverLauncher(bool over_launcher);
 

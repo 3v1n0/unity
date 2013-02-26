@@ -58,6 +58,8 @@
 #include <boost/algorithm/string.hpp>
 #include <sigc++/sigc++.h>
 
+#define NULL_ICON (AbstractLauncherIcon::Ptr)nullptr 
+
 namespace unity
 {
 using ui::RenderArg;
@@ -286,6 +288,18 @@ void Launcher::SetStateMouseOverLauncher(bool over_launcher)
   _hide_machine.SetQuirk(LauncherHideMachine::MOUSE_OVER_LAUNCHER, over_launcher);
   _hide_machine.SetQuirk(LauncherHideMachine::REVEAL_PRESSURE_PASS, false);
   _hover_machine.SetQuirk(LauncherHoverMachine::MOUSE_OVER_LAUNCHER, over_launcher);
+}
+
+void Launcher::SetIconUnderMouse(AbstractLauncherIcon::Ptr const& icon) {
+  if (_icon_under_mouse == icon)
+    return;
+
+  if (_icon_under_mouse)
+    _icon_under_mouse->mouse_leave.emit(monitor);
+  if (icon)
+    icon->mouse_enter.emit(monitor);
+
+  _icon_under_mouse = icon;
 }
 
 bool Launcher::MouseBeyondDragThreshold() const
@@ -1600,8 +1614,7 @@ void Launcher::OnIconRemoved(AbstractLauncherIcon::Ptr const& icon)
   if (icon->needs_redraw_connection.connected())
     icon->needs_redraw_connection.disconnect();
 
-  if (icon == _icon_under_mouse)
-    _icon_under_mouse = nullptr;
+  SetIconUnderMouse(NULL_ICON);
   if (icon == _icon_mouse_down)
     _icon_mouse_down = nullptr;
   if (icon == _drag_icon)
@@ -1920,11 +1933,7 @@ bool Launcher::StartIconDragTimeout(int x, int y)
   // if we are still waiting…
   if (GetActionState() == ACTION_NONE)
   {
-    if (_icon_under_mouse)
-    {
-      _icon_under_mouse->mouse_leave.emit(monitor);
-      _icon_under_mouse = nullptr;
-    }
+    SetIconUnderMouse(NULL_ICON);
     _initial_drag_animation = true;
     StartIconDragRequest(x, y);
   }
@@ -2163,11 +2172,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
       GetActionState() == ACTION_NONE)
     return;
 
-  if (_icon_under_mouse)
-  {
-    _icon_under_mouse->mouse_leave.emit(monitor);
-    _icon_under_mouse = nullptr;
-  }
+  SetIconUnderMouse(NULL_ICON);
 
   if (GetActionState() == ACTION_NONE)
   {
@@ -2367,18 +2372,7 @@ void Launcher::EventLogic()
     launcher_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
   }
 
-
-  if (_icon_under_mouse && (_icon_under_mouse != launcher_icon))
-  {
-    _icon_under_mouse->mouse_leave.emit(monitor);
-    _icon_under_mouse = nullptr;
-  }
-
-  if (launcher_icon && (_icon_under_mouse != launcher_icon))
-  {
-    launcher_icon->mouse_enter.emit(monitor);
-    _icon_under_mouse = launcher_icon;
-  }
+  SetIconUnderMouse(launcher_icon);
 }
 
 void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned long key_flags)
