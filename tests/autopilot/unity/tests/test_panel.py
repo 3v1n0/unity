@@ -295,8 +295,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.unity.dash.ensure_visible()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
-        self.assertWinButtonsInOverlayMode(True)
+        self.assertThat(self.unity.dash.view.overlay_window_buttons_shown, Eventually(Equals(True)))
 
     def test_window_buttons_work_in_dash_after_launcher_resize(self):
         """When the launcher icons are resized, the window
@@ -319,14 +318,13 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.unity.hud.ensure_visible()
         self.addCleanup(self.unity.hud.ensure_hidden)
 
-        self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(True)))
-        self.assertWinButtonsInOverlayMode(True)
+        self.assertThat(self.unity.hud.view.overlay_window_buttons_shown, Eventually(Equals(True)))
 
     def test_window_buttons_update_visual_state(self):
         """Window button must update its state in response to mouse events."""
-        self.unity.hud.ensure_visible()
-        self.addCleanup(self.unity.hud.ensure_hidden)
-        button = self.panel.window_buttons.close
+        self.open_new_application_window("Text Editor", maximized=True, move_to_monitor=True)
+        self.panel.move_mouse_over_window_buttons()
+        button = self.panel.window_buttons.unmaximize
 
         self.assertThat(button.visual_state, Eventually(Equals("normal")))
 
@@ -341,18 +339,17 @@ class PanelWindowButtonsTests(PanelTestsBase):
         """Window buttons must ignore clicks when the mouse released outside
         their area.
         """
-        self.unity.hud.ensure_visible()
-        self.addCleanup(self.unity.hud.ensure_hidden)
+        win = self.open_new_application_window("Text Editor", maximized=True, move_to_monitor=True)
+        self.panel.move_mouse_over_window_buttons()
 
-        button = self.panel.window_buttons.close
+        button = self.panel.window_buttons.unmaximize
         button.mouse_move_to()
         self.mouse.press()
         self.assertThat(button.visual_state, Eventually(Equals("pressed")))
         self.panel.move_mouse_below_the_panel()
         self.mouse.release()
 
-        self.assertThat(button.visual_state, Eventually(Equals("normal")))
-        self.assertThat(self.unity.hud.visible, Eventually(Equals(True)))
+        self.assertThat(win.is_maximized, Equals(True))
 
     def test_window_buttons_close_button_works_for_window(self):
         """Close window button must actually closes a window."""
