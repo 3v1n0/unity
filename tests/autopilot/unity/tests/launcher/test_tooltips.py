@@ -15,11 +15,14 @@ from unity.tests.launcher import LauncherTestCase, _make_scenarios
 class LauncherTooltipTests(LauncherTestCase):
     """Tests whether tooltips display only at appropriate times."""
 
+    def setUp(self):
+        super(LauncherTooltipTests, self).setUp()
+        self.set_unity_option('launcher_hide_mode', 0)
+
     def test_launcher_tooltip_show(self):
         """Tests whether icon tooltips delay showing themselves and,
         once shown, whether subsequent icons show them instantly."""
         # no tooltips before entering launcher
-        self.set_unity_option('launcher_hide_mode', 0)
         self.launcher_instance.move_mouse_to_right_of_launcher()
         icons = self.unity.launcher.model.get_launcher_icons(visible_only=True)
         for i in icons:
@@ -46,7 +49,6 @@ class LauncherTooltipTests(LauncherTestCase):
 
     def test_launcher_tooltip_disabling(self):
         """Tests whether clicking on an icon hides its tooltip."""
-        self.set_unity_option('launcher_hide_mode', 0)
         self.launcher_instance.move_mouse_to_right_of_launcher()
         icons = self.unity.launcher.model.get_launcher_icons(visible_only=True)
         bfb, other = icons[0], icons[1]
