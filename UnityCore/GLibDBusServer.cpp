@@ -42,87 +42,86 @@ DBusObject::DBusObject(std::string const& introspection_xml, std::string const& 
                         << interface_name << ": " << error.Message();
   }
 
-  if (node_info)
+  if (!node_info)
+    return;
+
+  interface_info_.reset(g_dbus_node_info_lookup_interface(node_info.get(), interface_name.c_str()));
+
+  if (!interface_info_)
   {
-    interface_info_.reset(g_dbus_node_info_lookup_interface(node_info.get(), interface_name.c_str()));
+    LOG_ERROR(logger_o) << "Unable to find the interface '" << interface_name
+                        << "' in the provided introspection XML";
+    return;
+  }
 
-    if (interface_info_)
+  g_dbus_interface_info_ref(interface_info_.get());
+
+  interface_vtable_.method_call = [] (GDBusConnection* connection, const gchar* sender,
+                                      const gchar* object_path, const gchar* interface_name,
+                                      const gchar* method_name, GVariant* parameters,
+                                      GDBusMethodInvocation* invocation, gpointer user_data) {
+    auto self = static_cast<DBusObject*>(user_data);
+    GVariant *ret = nullptr;
+
+    if (self->method_cb_)
+      ret = self->method_cb_(method_name ? method_name : "", parameters);
+
+    LOG_INFO(logger_o) << "Called method '" << method_name << "' on '"
+                       << interface_name << "' , returning: '"
+                       << g_variant_print(ret, TRUE) << "'";
+
+    g_dbus_method_invocation_return_value(invocation, ret);
+  };
+
+  interface_vtable_.get_property = [] (GDBusConnection* connection, const gchar* sender,
+                                       const gchar* object_path, const gchar* interface_name,
+                                       const gchar* property_name, GError **error, gpointer user_data) {
+    auto self = static_cast<DBusObject*>(user_data);
+    GVariant *value = nullptr;
+
+    if (self->property_get_cb_)
+      value = self->property_get_cb_(property_name ? property_name : "");
+
+    LOG_INFO(logger_o) << "Getting property '" << property_name << "' on '"
+                       << interface_name << "' , returning: '"
+                       << g_variant_print(value, TRUE) << "'";
+
+    return value;
+  };
+
+  interface_vtable_.set_property = [] (GDBusConnection* connection, const gchar* sender,
+                                       const gchar* object_path, const gchar* interface_name,
+                                       const gchar* property_name, GVariant *value,
+                                       GError **error, gpointer user_data) {
+    auto self = static_cast<DBusObject*>(user_data);
+    gboolean ret = TRUE;
+
+    if (self->property_set_cb_)
     {
-      g_dbus_interface_info_ref(interface_info_.get());
+      if (!self->property_set_cb_(property_name ? property_name : "", value))
+      {
+        ret = FALSE;
 
-      interface_vtable_.method_call = [] (GDBusConnection* connection, const gchar* sender,
-                                          const gchar* object_path, const gchar* interface_name,
-                                          const gchar* method_name, GVariant* parameters,
-                                          GDBusMethodInvocation* invocation, gpointer user_data) {
-        auto self = static_cast<DBusObject*>(user_data);
-        GVariant *ret = nullptr;
+        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "It was impossible " \
+                     "to set the property '%s' on '%s'", property_name, interface_name);
+      }
+    }
 
-        if (self->method_cb_)
-          ret = self->method_cb_(method_name ? method_name : "", parameters);
-
-        LOG_INFO(logger_o) << "Called method '" << method_name << "' on '"
-                           << interface_name << "' , returning: '"
-                           << g_variant_print(ret, TRUE) << "'";
-
-        g_dbus_method_invocation_return_value(invocation, ret);
-      };
-
-      interface_vtable_.get_property = [] (GDBusConnection* connection, const gchar* sender,
-                                           const gchar* object_path, const gchar* interface_name,
-                                           const gchar* property_name, GError **error, gpointer user_data) {
-        auto self = static_cast<DBusObject*>(user_data);
-        GVariant *value = nullptr;
-
-        if (self->property_get_cb_)
-          value = self->property_get_cb_(property_name ? property_name : "");
-
-        LOG_INFO(logger_o) << "Getting property '" << property_name << "' on '"
-                           << interface_name << "' , returning: '"
-                           << g_variant_print(value, TRUE) << "'";
-
-        return value;
-      };
-
-      interface_vtable_.set_property = [] (GDBusConnection* connection, const gchar* sender,
-                                           const gchar* object_path, const gchar* interface_name,
-                                           const gchar* property_name, GVariant *value,
-                                           GError **error, gpointer user_data) {
-        auto self = static_cast<DBusObject*>(user_data);
-        gboolean ret = TRUE;
-
-        if (self->property_set_cb_)
-        {
-          if (!self->property_set_cb_(property_name ? property_name : "", value))
-          {
-            ret = FALSE;
-
-            g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "It was impossible " \
-                         "to set the property '%s' on '%s'", property_name, interface_name);
-          }
-        }
-
-        if (ret)
-        {
-          LOG_INFO(logger_o) << "Setting property '" << property_name << "' on '"
-                             << interface_name << "' , to value: '"
-                             << g_variant_print(value, TRUE) << "'";
-        }
-        else
-        {
-          LOG_WARN(logger_o) << "It was impossible to set the property '"
-                             << property_name << "' on '" << interface_name
-                             << "' , to value: '" << g_variant_print(value, TRUE) << "'";
-        }
-
-        return ret;
-      };
+    if (ret)
+    {
+      LOG_INFO(logger_o) << "Setting property '" << property_name << "' on '"
+                         << interface_name << "' , to value: '"
+                         << g_variant_print(value, TRUE) << "'";
     }
     else
     {
-      LOG_ERROR(logger_o) << "Unable to find the interface '" << interface_name
-                          << "' in the provided introspection XML";
+      LOG_WARN(logger_o) << "It was impossible to set the property '"
+                         << property_name << "' on '" << interface_name
+                         << "' , to value: '" << g_variant_print(value, TRUE) << "'";
     }
-  }
+
+    return ret;
+  };
 }
 
 void DBusObject::SetMethodsCallHandler(MethodCallback const& func)
