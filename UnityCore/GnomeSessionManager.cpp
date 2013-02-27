@@ -83,35 +83,31 @@ GnomeManager::Impl::Impl(GnomeManager* manager)
   , can_hibernate_(false)
   , shell_owner_name_(0)
   , pending_action_(shell::Action::NONE)
-  , upower_proxy_("org.freedesktop.UPower", "/org/freedesktop/UPower",
-                  "org.freedesktop.UPower", G_BUS_TYPE_SYSTEM)
-  , gsession_proxy_("org.gnome.SessionManager", "/org/gnome/SessionManager",
-                    "org.gnome.SessionManager")
 {
   SetupShellSessionHandler();
-  QueryUPowerCapabilities();
 
-  upower_proxy_.Connect("Changed", sigc::hide(sigc::mem_fun(this, &GnomeManager::Impl::QueryUPowerCapabilities)));
+  CallUPowerMethod("HibernateAllowed", [this] (GVariant* variant) {
+    can_hibernate_ = glib::Variant(variant).GetBool();
+    LOG_INFO(logger) << "Can hibernate: " << can_hibernate_;
+  });
 
-  gsession_proxy_.Call("CanShutdown", nullptr, [this] (GVariant* variant) {
-    can_shutdown_ = glib::Variant(variant).GetBool();
+  CallUPowerMethod("SuspendAllowed", [this] (GVariant* variant) {
+    can_suspend_ = glib::Variant(variant).GetBool();
+    LOG_INFO(logger) << "Can suspend: " << can_suspend_;
+  });
+
+  CallGnomeSessionMethod("CanShutdown", nullptr, [this] (GVariant* variant, glib::Error const& e) {
+    if (!e)
+    {
+      can_shutdown_ = glib::Variant(variant).GetBool();
+      LOG_INFO(logger) << "Can shutdown: " << can_shutdown_;
+    }
   });
 }
 
 GnomeManager::Impl::~Impl()
 {
   TearDownShellSessionHandler();
-}
-
-void GnomeManager::Impl::QueryUPowerCapabilities()
-{
-  upower_proxy_.Call("HibernateAllowed", nullptr, [this] (GVariant* variant) {
-    can_hibernate_ = glib::Variant(variant).GetBool();
-  });
-
-  upower_proxy_.Call("SuspendAllowed", nullptr, [this] (GVariant* variant) {
-    can_suspend_ = glib::Variant(variant).GetBool();
-  });
 }
 
 void GnomeManager::Impl::SetupShellSessionHandler()
@@ -177,8 +173,8 @@ void GnomeManager::Impl::OnShellMethodCall(std::string const& method, GVariant* 
   if (method == "Open")
   {
     // This method is called both when the session manager was invoked from
-    // any external caller (such as the gnome-session) and when we call it
-    // internally in the GnomeManager.
+    // any external caller (such as the gnome-session) and when we call the
+    // gnome-session methods internally (in the GnomeManager).
     // So, in the first case we just ignore the request informing our clients,
     // while in the second case, we know what we requested and we can immediately
     // proceed with the requested action.
@@ -291,6 +287,42 @@ void GnomeManager::Impl::ClosedDialog()
   EmitShellSignal("Closed");
 }
 
+void GnomeManager::Impl::CallGnomeSessionMethod(std::string const& method, GVariant* parameters,
+                                                glib::DBusProxy::CallFinishedCallback const& cb)
+{
+  auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.SessionManager",
+                                                 "/org/gnome/SessionManager",
+                                                 "org.gnome.SessionManager");
+
+  // By passing the proxy to the lambda we ensure that it will be smartly handled
+  proxy->CallBegin(method, parameters, [proxy, cb] (GVariant* ret, glib::Error const& e) {
+    if (e)
+    {
+      LOG_ERROR(logger) << "Gnome Session call failed: " << e.Message();
+    }
+
+    if (cb)
+      cb(ret, e);
+  });
+}
+
+void GnomeManager::Impl::CallUPowerMethod(std::string const& method, glib::DBusProxy::ReplyCallback const& cb)
+{
+  auto proxy = std::make_shared<glib::DBusProxy>("org.freedesktop.UPower", "/org/freedesktop/UPower",
+                                                 "org.freedesktop.UPower", G_BUS_TYPE_SYSTEM);
+
+  proxy->CallBegin(method, nullptr, [proxy, cb] (GVariant *ret, glib::Error const& e) {
+    if (e)
+    {
+      LOG_ERROR(logger) << "UPower call failed: " << e.Message();
+    }
+    else if (cb)
+    {
+      cb(ret);
+    }
+  });
+}
+
 void GnomeManager::Impl::CallConsoleKitMethod(std::string const& method, GVariant* parameters)
 {
   auto proxy = std::make_shared<glib::DBusProxy>("org.freedesktop.ConsoleKit",
@@ -298,8 +330,7 @@ void GnomeManager::Impl::CallConsoleKitMethod(std::string const& method, GVarian
                                                  "org.freedesktop.ConsoleKit.Manager",
                                                  G_BUS_TYPE_SYSTEM);
 
-  // By passing the proxy to the lambda we ensure that it will stay alive
-  // until we get the last callback.
+  // By passing the proxy to the lambda we ensure that it will be smartly handled
   proxy->CallBegin(method, parameters, [this, proxy] (GVariant*, glib::Error const& e) {
     if (e)
     {
@@ -368,7 +399,7 @@ void GnomeManager::Logout()
   auto mode = LogoutMethods::NO_CONFIRMATION;
 
   impl_->pending_action_ = shell::Action::LOGOUT;
-  impl_->gsession_proxy_.CallBegin("Logout", g_variant_new("(u)", mode),
+  impl_->CallGnomeSessionMethod("Logout", g_variant_new("(u)", mode),
     [this] (GVariant*, glib::Error const& err) {
       if (err)
       {
@@ -391,7 +422,7 @@ void GnomeManager::Reboot()
   }
 
   impl_->pending_action_ = shell::Action::REBOOT;
-  impl_->gsession_proxy_.CallBegin("RequestReboot", nullptr,
+  impl_->CallGnomeSessionMethod("RequestReboot", nullptr,
     [this] (GVariant*, glib::Error const& err) {
       if (err)
       {
@@ -412,7 +443,7 @@ void GnomeManager::Shutdown()
   }
 
   impl_->pending_action_ = shell::Action::SHUTDOWN;
-  impl_->gsession_proxy_.CallBegin("RequestShutdown", nullptr,
+  impl_->CallGnomeSessionMethod("RequestShutdown", nullptr,
     [this] (GVariant*, glib::Error const& err) {
       if (err)
       {
@@ -428,13 +459,13 @@ void GnomeManager::Shutdown()
 void GnomeManager::Suspend()
 {
   impl_->CancelAction();
-  impl_->upower_proxy_.Call("Suspend");
+  impl_->CallUPowerMethod("Suspend");
 }
 
 void GnomeManager::Hibernate()
 {
   impl_->CancelAction();
-  impl_->upower_proxy_.Call("Hibernate");
+  impl_->CallUPowerMethod("Hibernate");
 }
 
 bool GnomeManager::CanShutdown() const

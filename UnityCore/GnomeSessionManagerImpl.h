@@ -50,12 +50,16 @@ struct GnomeManager::Impl
   void CancelAction();
   void ClosedDialog();
 
-  void QueryUPowerCapabilities();
   void SetupShellSessionHandler();
   void TearDownShellSessionHandler();
-  void CallConsoleKitMethod(std::string const& method, GVariant* parameters = nullptr);
   void OnShellMethodCall(std::string const& method, GVariant* parameters);
   void EmitShellSignal(std::string const& signal, GVariant* parameters = nullptr);
+
+  void CallGnomeSessionMethod(std::string const& method, GVariant* parameters = nullptr,
+                              glib::DBusProxy::CallFinishedCallback const& cb = nullptr);
+  void CallUPowerMethod(std::string const& method, glib::DBusProxy::ReplyCallback const& cb = nullptr);
+  void CallConsoleKitMethod(std::string const& method, GVariant* parameters = nullptr);
+
 
   GnomeManager* manager_;
   bool can_shutdown_;
@@ -66,9 +70,6 @@ struct GnomeManager::Impl
   std::vector<unsigned> shell_objects_ids_;
   glib::Object<GDBusConnection> shell_connection_;
   shell::Action pending_action_;
-
-  glib::DBusProxy upower_proxy_;
-  glib::DBusProxy gsession_proxy_;
 };
 
 } // namespace session
