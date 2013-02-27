@@ -362,7 +362,7 @@ static UnityResultPreviewer* test_scope_create_previewer(UnityAbstractScope* sel
 {
   UnityResultPreviewer* previewer;
   previewer = UNITY_RESULT_PREVIEWER (test_result_previewer_new());
-  previewer->result = *result;
+  unity_scope_result_copy(result, &previewer->result);
   return previewer;
 }
 

@@ -232,6 +232,7 @@ if (ENABLE_X_SUPPORT)
                  test_panel_style.cpp
                  test_panel_tray.cpp
                  test_places_group.cpp
+                 test_preview_player.cpp
                  test_previews_application.cpp
                  test_previews_generic.cpp
                  test_previews_movie.cpp
