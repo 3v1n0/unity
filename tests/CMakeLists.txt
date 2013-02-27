@@ -217,6 +217,7 @@ if (ENABLE_X_SUPPORT)
                  test_panel_indicators_view.cpp
                  test_panel_menu_view.cpp
                  test_panel_style.cpp
+                 test_panel_tray.cpp
                  test_places_group.cpp
                  test_previews_application.cpp
                  test_previews_generic.cpp
@@ -291,7 +292,7 @@ set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless)
 set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --task ./test-gtest-service --task ./test-gtest-dbus)
 
 set (TEST_COMMAND
-     gtester --verbose -k --g-fatal-warnings -o=${TEST_RESULT_XML} ./test-unit
+     gtester --verbose -k -o=${TEST_RESULT_XML} ./test-unit
   && ${GTEST_TEST_COMMAND} --gtest_output=xml:./
   && ${GTEST_TEST_COMMAND_XLESS} --gtest_output=xml:./
   && ${GTEST_TEST_COMMAND_GESTURES} --gtest_output=xml:./

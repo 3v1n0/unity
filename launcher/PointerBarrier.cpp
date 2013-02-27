@@ -38,6 +38,7 @@ namespace
 PointerBarrierWrapper::PointerBarrierWrapper()
   : active(false)
   , released(false)
+  , release_once(false)
   , smoothing(75)
   , max_velocity_multiplier(1.0f)
   , direction(BOTH)

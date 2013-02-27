@@ -210,7 +210,7 @@ private:
 #endif
 
 #ifdef USE_X11
-  bool HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
+  ui::EdgeBarrierSubscriber::Result HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
 #endif
 
   void OnPluginStateChanged();

@@ -240,7 +240,6 @@ public:
   sigc::connection on_icon_added_connection;
   sigc::connection on_icon_removed_connection;
   sigc::connection on_order_changed_connection;
-  sigc::connection on_expo_terminated_connection;
 };
 
 }

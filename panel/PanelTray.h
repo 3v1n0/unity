@@ -46,6 +46,8 @@ public:
   void Sync();
   Window xid();
 
+  static bool FilterTray(std::string const& title, std::string const& res_name, std::string const& res_class);
+
 protected:
   void Draw(nux::GraphicsEngine& gfx_content, bool force_draw);
   std::string GetName() const;
@@ -59,10 +61,8 @@ private:
 
   int WidthOfTray();
 
-  glib::Object<GSettings> settings_;
   glib::Object<GtkWidget> window_;
   glib::Object<NaTray> tray_;
-  char** whitelist_;
 
   glib::Signal<void, GSettings*, gchar*> whitelist_changed_;
   glib::Signal<gboolean, GtkWidget*, cairo_t*> draw_signal_;
