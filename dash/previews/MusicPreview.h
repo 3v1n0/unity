@@ -53,6 +53,8 @@ protected:
 
   virtual void SetupViews();
 
+  virtual void OnNavigateOut();
+
 protected:
   nux::ObjectPtr<Tracks> tracks_;
  };

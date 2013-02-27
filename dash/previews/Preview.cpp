@@ -72,10 +72,6 @@ previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
   {
     return Preview::Ptr(new SocialPreview(model));
   }
-  // else if (renderer_name == "preview-series")
-  // {
-  //   return Preview::Ptr(new SeriesPreview(model));
-  // }
   else
   {
     LOG_WARN(logger) << "Unable to create Preview for renderer: " << model->renderer_name.Get() << "; using generic";
@@ -100,9 +96,6 @@ Preview::Preview(dash::Preview::Ptr preview_model)
 
 Preview::~Preview()
 {
-  if (preview_model_)
-    preview_model_->EmitClosed();
-
   delete tab_iterator_;
 }
 

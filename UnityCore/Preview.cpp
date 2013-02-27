@@ -29,7 +29,6 @@
 #include "MusicPreview.h"
 #include "MoviePreview.h"
 #include "SocialPreview.h"
-#include "SeriesPreview.h"
 
 namespace unity
 {
@@ -69,10 +68,6 @@ Preview::Ptr Preview::PreviewForProtocolObject(glib::Object<GObject> const& prot
   {
     return Preview::Ptr(new SocialPreview(proto_obj));
   }
-  else if (renderer_name == "preview-series")
-  {
-    return Preview::Ptr(new SeriesPreview(proto_obj));
-  }
   else
   {
     LOG_WARN(logger) << "Unable to create Preview for renderer: " << renderer_name;
@@ -94,19 +89,6 @@ Preview::Ptr Preview::PreviewForVariant(glib::Variant const& properties)
   return PreviewForProtocolObject(proto_obj);
 }
 
-unity::glib::Object<GIcon> Preview::IconForString(std::string const& icon_hint)
-{
-  glib::Error error;
-  glib::Object<GIcon> icon(g_icon_new_for_string(icon_hint.c_str(), &error));
-
-  if (error)
-  {
-    LOG_WARN(logger) << "Unable to instantiate icon: " << icon_hint;
-  }
-
-  return icon;
-}
-
 class Preview::Impl
 {
 public:
@@ -122,7 +104,6 @@ public:
   std::string get_image_source_uri() const { return image_source_uri_; };
   ActionPtrList get_actions() const { return actions_list_; };
   InfoHintPtrList get_info_hints() const { return info_hint_list_; };
-  void EmitClosed() const;
 
   Scope* get_parent_scope() const { return parent_scope_; };
   bool set_parent_scope(Scope* scope)
@@ -230,22 +211,6 @@ void Preview::Impl::SetupGetters()
       sigc::mem_fun(this, &Preview::Impl::set_parent_scope));
 }
 
-void Preview::Impl::EmitClosed() const
-{
-  UnityProtocolPreview *preview = UNITY_PROTOCOL_PREVIEW(raw_preview_.RawPtr());
-
-  unity_protocol_preview_begin_updates(preview);
-  unity_protocol_preview_preview_closed(raw_preview_);
-  glib::Variant properties(unity_protocol_preview_end_updates(preview),
-                           glib::StealRef());
-
-  glib::HintsMap property_hints;
-  if (properties.ASVToHints(property_hints))
-    owner_->Update(property_hints);
-  else
-    LOG_ERROR(logger) << "EmitClosed could not convert property hints to variant for " << owner_->preview_result.uri;
-}
-
 Preview::Preview(glib::Object<GObject> const& proto_obj)
   : pimpl(new Impl(this, proto_obj))
 {
@@ -263,19 +228,6 @@ Preview::ActionPtrList Preview::GetActions() const
 Preview::InfoHintPtrList Preview::GetInfoHints() const
 {
   return pimpl->get_info_hints();
-}
-
-void Preview::Update(glib::HintsMap const& property_hints,
-                     std::function<void(glib::HintsMap const&, glib::Error const&)> const& reply_callback) const
-{
-  if (pimpl->parent_scope_)
-  {
-    pimpl->parent_scope_->UpdatePreviewProperty(preview_result, property_hints, reply_callback, pimpl->cancel_scope_);
-  }
-  else
-  {
-    LOG_WARN(logger) << "Unable to update Preview, parent_scope_ wasn't set!";
-  }
 }
 
 void Preview::PerformAction(std::string const& id, glib::HintsMap const& hints) const
@@ -296,11 +248,6 @@ void Preview::PerformAction(std::string const& id, glib::HintsMap const& hints) 
   {
     LOG_WARN(logger) << "Unable to perform action '" << id << "', parent_scope_ wasn't set!";
   }
-}
-
-void Preview::EmitClosed() const
-{
-  pimpl->EmitClosed();
 }
 
 } // namespace dash

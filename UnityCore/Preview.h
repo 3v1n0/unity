@@ -131,15 +131,11 @@ public:
   void PerformAction(std::string const& id,
                      glib::HintsMap const& hints =
                      glib::HintsMap()) const;
-  void EmitClosed() const;
 
 protected:
   // this should be UnityProtocolPreview, but we want to keep the usage
   // of libunity-protocol-private private to unity-core
   Preview(glib::Object<GObject> const& proto_obj);
-  void Update(glib::HintsMap const& property_hints,
-              std::function<void(glib::HintsMap const&, glib::Error const&)> const& reply_callback = nullptr) const;
-  static glib::Object<GIcon> IconForString(std::string const& icon_hint);
 
 private:
   class Impl;

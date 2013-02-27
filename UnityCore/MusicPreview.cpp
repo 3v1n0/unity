@@ -36,14 +36,9 @@ class MusicPreview::Impl
 public:
   Impl(MusicPreview* owner, glib::Object<GObject> const& proto_obj);
 
-  void PlayUri(std::string const& uri);
-  void Pause();
-  void Resume();
-
   MusicPreview* owner_;
 
   glib::Object<UnityProtocolMusicPreview> raw_preview_;
-  PreviewPlayer player_;
   Tracks::Ptr tracks_model;
 };
 
@@ -67,21 +62,6 @@ MusicPreview::Impl::Impl(MusicPreview* owner,
   }
 }
 
-void MusicPreview::Impl::PlayUri(std::string const& uri)
-{
-  player_.Play(uri);
-}
-
-void MusicPreview::Impl::Pause()
-{
-  player_.Pause();
-}
-
-void MusicPreview::Impl::Resume()
-{
-  player_.Resume();
-}
-
 MusicPreview::MusicPreview(unity::glib::Object<GObject> const& proto_obj)
   : Preview(proto_obj)
   , pimpl(new Impl(this, proto_obj))
@@ -95,21 +75,6 @@ MusicPreview::~MusicPreview()
 Tracks::Ptr MusicPreview::GetTracksModel() const
 {
   return pimpl->tracks_model;
-}
-
-void MusicPreview::PlayUri(std::string const& uri)
-{
-  pimpl->PlayUri(uri);
-}
-
-void MusicPreview::Pause()
-{
-  pimpl->Pause();
-}
-
-void MusicPreview::Resume()
-{
-  pimpl->Resume();
 }
 
 }
