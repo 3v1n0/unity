@@ -25,12 +25,14 @@
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
 
+#include "GLibWrapper.h"
+
 namespace unity
 {
 namespace glib
 {
 
-class DBusObject : public sigc::trackable
+class DBusObject
 {
 public:
   typedef std::shared_ptr<DBusObject> Ptr;
@@ -49,22 +51,19 @@ public:
   std::string InterfaceName() const;
 
   std::shared_ptr<GDBusInterfaceInfo> InterfaceInfo() const;
-  GDBusInterfaceVTable InterfaceVTable() const;
+  const GDBusInterfaceVTable* InterfaceVTable() const;
 
 private:
   // not copyable class
   DBusObject(DBusObject const&) = delete;
   DBusObject& operator=(DBusObject const&) = delete;
 
-  // GDBusInterfaceInfo *interface_info_;
   std::shared_ptr<GDBusInterfaceInfo> interface_info_;
   GDBusInterfaceVTable interface_vtable_;
 
   MethodCallback method_cb_;
   PropertyGetterCallback property_get_cb_;
   PropertySetterCallback property_set_cb_;
-
-  // friend class DBusServer;
 };
 
 class DBusServer : public sigc::trackable
@@ -72,27 +71,24 @@ class DBusServer : public sigc::trackable
 public:
   typedef std::shared_ptr<DBusServer> Ptr;
 
-  DBusServer(std::string const& name);
-  virtual ~DBusServer() = default;
-
-  // typedef std::function<GVariant*(std::string const&, GVariant*)> MethodCallback;
-  // typedef std::function<GVariant*(std::string const&)> PropertyGetterCallback;
-  // typedef std::function<bool(std::string const&, GVariant*)> PropertySetterCallback;
-
-  // void AddObject(std::string const& introspection_xml, std::string const& interface_name);
+  DBusServer(std::string const& name, GBusType bus_type = G_BUS_TYPE_SESSION);
+  virtual ~DBusServer();
 
   void AddObject(DBusObject::Ptr const&, std::string const& path);
+  bool OwnsName() const;
 
   sigc::signal<void> name_acquired;
   sigc::signal<void> name_lost;
 
-  // struct Impl;
 private:
   // not copyable class
   DBusServer(DBusServer const&) = delete;
   DBusServer& operator=(DBusServer const&) = delete;
 
-  // std::unique_ptr<Impl> impl_;
+  glib::Object<GDBusConnection> connection_;
+  guint owner_name_;
+  bool name_owned_;
+  std::map<guint, DBusObject::Ptr> objects_;
 };
 
 } // namespace glib
