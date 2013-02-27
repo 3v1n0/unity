@@ -20,7 +20,6 @@
 #include <NuxCore/Logger.h>
 
 #include "GLibDBusServer.h"
-#include "GLibWrapper.h"
 
 namespace unity
 {
@@ -43,7 +42,6 @@ DECLARE_LOGGER(logger_o, "unity.glib.dbus.object");
 
 DBusObject::DBusObject(std::string const& introspection_xml, std::string const& interface_name)
   : interface_info_(nullptr, safe_interface_info_unref)
-  , registration_id_(0)
 {
   glib::Error error;
   auto xml_int = g_dbus_node_info_new_for_xml(introspection_xml.c_str(), &error);
@@ -143,8 +141,12 @@ DBusObject::DBusObject(std::string const& introspection_xml, std::string const& 
 
 DBusObject::~DBusObject()
 {
-  if (registration_id_)
-    g_dbus_connection_unregister_object(connection_, registration_id_);
+  for (auto const& pair : registrations_)
+  {
+    auto const& registration_id = pair.first;
+    auto const& connection = pair.second;
+    g_dbus_connection_unregister_object(connection, registration_id);
+  }
 }
 
 void DBusObject::SetMethodsCallHandler(MethodCallback const& func)
@@ -186,26 +188,18 @@ bool DBusObject::Register(glib::Object<GDBusConnection> const& conn, std::string
     return false;
   }
 
-  if (connection_)
-  {
-    LOG_ERROR(logger_o) << "Can't register object '" << InterfaceName()
-                        << "', it's already registered\n";
-    return false;
-  }
-
   glib::Error error;
 
-  connection_ = conn;
-  registration_id_ = g_dbus_connection_register_object(connection_, path.c_str(),
-                                                       interface_info_.get(),
-                                                       &interface_vtable_, this,
-                                                       nullptr, &error);
+  guint id = g_dbus_connection_register_object(conn, path.c_str(), interface_info_.get(),
+                                               &interface_vtable_, this, nullptr, &error);
   if (error)
   {
     LOG_ERROR(logger_o) << "Could not register object in dbus: "
                         << error.Message();
     return false;
   }
+
+  registrations_[id] = conn;
 
   LOG_INFO(logger_o) << "Registering object '" << InterfaceName() << "'";
 

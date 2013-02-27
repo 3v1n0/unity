@@ -63,8 +63,7 @@ private:
 
   std::shared_ptr<GDBusInterfaceInfo> interface_info_;
   GDBusInterfaceVTable interface_vtable_;
-  glib::Object<GDBusConnection> connection_;
-  guint registration_id_;
+  std::map<guint, glib::Object<GDBusConnection>> registrations_;
 };
 
 class DBusServer : public sigc::trackable
