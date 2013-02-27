@@ -98,7 +98,7 @@ std::string CreateAppUriNameFromDesktopPath(const std::string &desktop_path)
 {
   std::string app_uri;
   if (desktop_path.empty())
-    return app_uri;
+    return "";
 
   app_uri = FavoriteStore::URI_PREFIX_APP +
     DesktopUtilities::GetDesktopID(desktop_path);
@@ -448,8 +448,7 @@ void Controller::Impl::SaveIconsOrder()
 }
 
 void
-Controller::Impl::OnLauncherUpdateIconStickyState(std::string const& icon_uri,
-                                                  bool sticky)
+Controller::Impl::OnLauncherUpdateIconStickyState(std::string const& icon_uri, bool sticky)
 {
   if (icon_uri.empty())
     return;
@@ -463,18 +462,22 @@ Controller::Impl::OnLauncherUpdateIconStickyState(std::string const& icon_uri,
     // app uri instead
     target_uri = local::CreateAppUriNameFromDesktopPath(desktop_path);
   }
-  AbstractLauncherIcon::Ptr existing_icon_entry =
+  auto const& existing_icon_entry =
     GetIconByUri(target_uri);
 
   if (existing_icon_entry)
     {
       // use the backgroung mechanism of model updates & propagation
-      if (sticky)
-        existing_icon_entry->Stick(true);
-      else
-        existing_icon_entry->UnStick();
-
-      SortAndUpdate();
+      bool should_update = (existing_icon_entry->IsSticky() != sticky);
+      if (should_update)
+        {
+          if (sticky)
+            existing_icon_entry->Stick(true);
+          else
+            existing_icon_entry->UnStick();
+          
+          SortAndUpdate();
+        }
     }
     else
     {
@@ -489,7 +492,9 @@ Controller::Impl::OnLauncherUpdateIconStickyState(std::string const& icon_uri,
               RegisterIcon(CreateFavoriteIcon(target_uri));
             }
           else
-            favorite_store.RemoveFavorite(target_uri);
+            {
+              favorite_store.RemoveFavorite(target_uri);
+            }
         }
     }
 }
