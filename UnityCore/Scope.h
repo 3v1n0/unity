@@ -31,6 +31,22 @@ namespace unity
 namespace dash
 {
 
+namespace
+{
+#define G_SCOPE_ERROR g_scope_error_quark ()
+typedef enum
+{
+  G_SCOPE_ERROR_NO_ACTIVATION_HANDLER  = (1 << 0),
+  G_SCOPE_ERROR_INVALID_PREVIEW        = (2 << 0)
+} GScopeError;
+
+GQuark
+g_scope_error_quark (void)
+{
+  return g_quark_from_static_string ("g-scope-error-quark");
+}
+}
+
 class Scope : public sigc::trackable, boost::noncopyable
 {
 public:
@@ -70,10 +86,10 @@ public:
   virtual void Search(std::string const& search_hint, SearchCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
 
   typedef std::function<void(LocalResult const&, ScopeHandledType, glib::Error const&)> ActivateCallback;
-
   virtual void Activate(LocalResult const& result, ActivateCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
 
-  virtual void Preview(LocalResult const& result, ActivateCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
+  typedef std::function<void(LocalResult const&, Preview::Ptr const&, glib::Error const&)> PreviewCallback;
+  virtual void Preview(LocalResult const& result, PreviewCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
 
   virtual void ActivatePreviewAction(std::string const& action_id,
                                      LocalResult const& result,

@@ -43,8 +43,9 @@ public:
 
   Tracks::Ptr GetTracksModel() const;
 
-  void PlayUri(std::string const& uri) const;
-  void PauseUri(std::string const& uri) const;
+  void PlayUri(std::string const& uri);
+  void Pause();
+  void Resume();
 
 private:
   class Impl;

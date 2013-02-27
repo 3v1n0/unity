@@ -297,7 +297,6 @@ void ScopeView::SetupCategories(Categories::Ptr const& categories)
 
   auto resync_categories = [categories, this] (glib::Object<DeeModel> model)
   {
-    printf("Categories Changed %s\n", scope_->id().c_str());
     ClearCategories();
     for (unsigned int i = 0; i < categories->count(); ++i)
       OnCategoryAdded(categories->RowAtIndex(i));

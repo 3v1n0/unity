@@ -39,7 +39,10 @@ public:
   void Init();
 
   void Activate(LocalResult const& result, guint action_type, glib::HintsMap const& hints, ActivateCallback const& callback, GCancellable* cancellable);
-  void OnActivateReply(LocalResult const& result, ScopeHandledType handled_type, glib::HintsMap const& hints, glib::Error const& error);
+  void OnActivateResultReply(LocalResult const& result, ScopeHandledType handled_type, glib::HintsMap const& hints, glib::Error const& error);
+
+  void Preview(LocalResult const& result, glib::HintsMap const& hints, PreviewCallback const& callback, GCancellable* cancellable);
+  void OnPreviewReply(LocalResult const& result, ScopeHandledType handled, glib::HintsMap const& hints, glib::Error const& error, PreviewCallback const& callback);
 
   DeeFilter* GetFilterForCategory(unsigned category, DeeFilter* filter)  const;
 
@@ -103,13 +106,12 @@ void Scope::Impl::Activate(LocalResult const& result, guint action_type, glib::H
                    [this, callback] (LocalResult const& result, ScopeHandledType handled_type, glib::HintsMap const& hints, glib::Error const& error) {
       if (callback)
         callback(result, handled_type, error);
-      OnActivateReply(result, handled_type, hints, error);
+      OnActivateResultReply(result, handled_type, hints, error);
     },
     cancellable);
 }
 
-
-void Scope::Impl::OnActivateReply(LocalResult const& result, ScopeHandledType handled, glib::HintsMap const& hints, glib::Error const& error)
+void Scope::Impl::OnActivateResultReply(LocalResult const& result, ScopeHandledType handled, glib::HintsMap const& hints, glib::Error const& error)
 {
   LOG_DEBUG(logger) << "Activation reply (handled:" << handled << ", error: " << (error ? "true" : "false") << ") for " <<  result.uri;
 
@@ -137,6 +139,64 @@ void Scope::Impl::OnActivateReply(LocalResult const& result, ScopeHandledType ha
   else
   {
     owner_->activated.emit(result, handled, hints);
+  }
+}
+
+void Scope::Impl::Preview(LocalResult const& result, glib::HintsMap const& hints, PreviewCallback const& callback, GCancellable* cancellable)
+{
+  proxy_->Activate(result,
+                   UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_RESULT,
+                   hints,
+                   [this, callback] (LocalResult const& result, ScopeHandledType handled_type, glib::HintsMap const& hints, glib::Error const& error) {
+                      OnPreviewReply(result, handled_type, hints, error, callback);
+                   },
+                   cancellable);
+}
+
+void Scope::Impl::OnPreviewReply(LocalResult const& result, ScopeHandledType handled, glib::HintsMap const& hints, glib::Error const& error, PreviewCallback const& callback)
+{
+  LOG_DEBUG(logger) << "Activation reply (handled:" << handled << ", error: " << (error ? "true" : "false") << ") for " <<  result.uri;
+
+  if (!error)
+  {
+    Preview::Ptr preview;
+    if (static_cast<UnityProtocolHandledType>(handled) == UNITY_PROTOCOL_HANDLED_TYPE_SHOW_PREVIEW)
+    {
+      auto iter = hints.find("preview");
+      if (iter != hints.end())
+      {
+        glib::Variant v = iter->second;
+        preview = Preview::PreviewForVariant(v);
+      }
+      else
+      {
+        LOG_WARNING(logger) << "Unable to deserialize Preview";
+      }
+    }
+
+    glib::Error err_local;
+    if (preview)
+    {
+      // would be nice to make parent_scope_ a shared_ptr,
+      // but that's not really doable from here
+      preview->parent_scope = owner_;
+      preview->preview_result = result;
+      owner_->preview_ready.emit(result, preview);
+    }
+    else
+    {
+      owner_->activated.emit(result, handled, hints);
+
+      GError** real_err = &err_local;
+      *real_err = g_error_new_literal(G_SCOPE_ERROR, G_SCOPE_ERROR_INVALID_PREVIEW,
+                                      "Not a preview");
+    }
+    if (callback)
+      callback(result, preview, err_local);
+  }
+  else if (callback)
+  {
+    callback(result, Preview::Ptr(), error);
   }
 }
 
@@ -172,9 +232,9 @@ void Scope::Activate(LocalResult const& result, ActivateCallback const& callback
   pimpl->Activate(result, UNITY_PROTOCOL_ACTION_TYPE_ACTIVATE_RESULT, glib::HintsMap(), callback, cancellable);
 }
 
-void Scope::Preview(LocalResult const& result, ActivateCallback const& callback, GCancellable* cancellable)
+void Scope::Preview(LocalResult const& result, PreviewCallback const& callback, GCancellable* cancellable)
 {
-  pimpl->Activate(result, UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_RESULT, glib::HintsMap(), callback, cancellable);
+  pimpl->Preview(result, glib::HintsMap(), callback, cancellable);
 }
 
 void Scope::ActivatePreviewAction(std::string const& action_id,

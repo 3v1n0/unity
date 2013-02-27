@@ -29,13 +29,6 @@ namespace unity
 namespace dash
 {
 
-enum PlayState
-{
-  STOPPED,
-  PLAYING,
-  PAUSED
-};
-
 /* This class represents a DeeModelIter for a TracksModel
  * It's slightly chunky, but that is because it's optimized to be stack-allocated
  * as it is not expected to be kept by the views, rather views can easily attach
@@ -54,12 +47,9 @@ public:
   nux::ROProperty<int> track_number;
   nux::ROProperty<std::string> title;
   nux::ROProperty<unsigned> length;
-  nux::ROProperty<PlayState> play_state;
-  nux::ROProperty<float> progress;
 
 private:
   void SetupGetters();
-  PlayState GetPlayState(int position);
 };
 
 }
