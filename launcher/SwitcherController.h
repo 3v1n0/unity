@@ -98,6 +98,7 @@ public:
 
   void Select(int index);
 
+  bool IsDetailViewShown();
   void SetDetail(bool detail,
                  unsigned int min_windows = 1);
 
