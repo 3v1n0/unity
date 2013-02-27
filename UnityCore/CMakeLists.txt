@@ -43,6 +43,7 @@ set (CORE_HEADERS
      ModelRowAdaptor.h
      ModelRowAdaptor-inl.h
      Preview.h
+     PreviewPlayer.h
      RadioOptionFilter.h
      RatingsFilter.h
      Result.h
@@ -85,6 +86,7 @@ set (CORE_SOURCES
      MusicPreview.cpp
      ModelRowAdaptor.cpp
      Preview.cpp
+     PreviewPlayer.cpp
      RatingsFilter.cpp
      RadioOptionFilter.cpp
      Result.cpp

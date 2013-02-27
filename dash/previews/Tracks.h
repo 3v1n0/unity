@@ -56,9 +56,6 @@ public:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);  
 
-  sigc::signal<void, std::string const&> play;
-  sigc::signal<void, std::string const&> pause;
-
 protected:
   virtual bool AcceptKeyNavFocus() { return false; }
 
@@ -67,9 +64,6 @@ protected:
   void OnTrackUpdated(dash::Track const& track);
   void OnTrackAdded(dash::Track const& track);
   void OnTrackRemoved(dash::Track const&track);
-
-  void onPlayTrack(std::string const& uri);
-  void onPauseTrack(std::string const& uri);
 
 protected:
   dash::Tracks::Ptr tracks_;

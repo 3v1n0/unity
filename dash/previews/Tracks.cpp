@@ -105,8 +105,6 @@ void Tracks::OnTrackAdded(dash::Track const& track_row)
 
   previews::Track::Ptr track_view(new previews::Track(NUX_TRACKER_LOCATION));
   AddChild(track_view.GetPointer());
-  track_view->play.connect([&](std::string const& uri) { play.emit(uri); });
-  track_view->pause.connect([&](std::string const& uri) { pause.emit(uri); });
 
   track_view->Update(track_row);
   track_view->SetMinimumHeight(style.GetTrackHeight());

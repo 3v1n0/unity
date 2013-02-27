@@ -23,6 +23,7 @@
 #include "MusicPreview.h"
 #include "Tracks.h"
 #include "Scope.h"
+#include "PreviewPlayer.h"
 
 namespace unity
 {
@@ -35,12 +36,14 @@ class MusicPreview::Impl
 public:
   Impl(MusicPreview* owner, glib::Object<GObject> const& proto_obj);
 
-  void PlayUri(std::string const& uri) const;
-  void PauseUri(std::string const& uri) const;
+  void PlayUri(std::string const& uri);
+  void Pause();
+  void Resume();
 
   MusicPreview* owner_;
 
   glib::Object<UnityProtocolMusicPreview> raw_preview_;
+  PreviewPlayer player_;
   Tracks::Ptr tracks_model;
 };
 
@@ -64,36 +67,19 @@ MusicPreview::Impl::Impl(MusicPreview* owner,
   }
 }
 
-void MusicPreview::Impl::PlayUri(std::string const& uri) const
+void MusicPreview::Impl::PlayUri(std::string const& uri)
 {
-  UnityProtocolPreview *preview = UNITY_PROTOCOL_PREVIEW(raw_preview_.RawPtr());
-
-  unity_protocol_preview_begin_updates(preview);
-  unity_protocol_music_preview_play_uri(raw_preview_, uri.c_str());
-  glib::Variant properties(unity_protocol_preview_end_updates(preview),
-                           glib::StealRef());
-
-  glib::HintsMap property_hints;
-  if (properties.ASVToHints(property_hints))
-    owner_->Update(property_hints);
-  else
-    LOG_ERROR(logger) << "PlayUri could not convert property hints to variant for " << uri;
+  player_.Play(uri);
 }
 
-void MusicPreview::Impl::PauseUri(std::string const& uri) const
+void MusicPreview::Impl::Pause()
 {
-  UnityProtocolPreview *preview = UNITY_PROTOCOL_PREVIEW(raw_preview_.RawPtr());
+  player_.Pause();
+}
 
-  unity_protocol_preview_begin_updates(preview);
-  unity_protocol_music_preview_pause_uri(raw_preview_, uri.c_str());
-  glib::Variant properties(unity_protocol_preview_end_updates(preview),
-                           glib::StealRef());
-
-  glib::HintsMap property_hints;
-  if (properties.ASVToHints(property_hints))
-    owner_->Update(property_hints);
-  else
-    LOG_ERROR(logger) << "PauseUri could not convert property hints to variant for " << uri;
+void MusicPreview::Impl::Resume()
+{
+  player_.Resume();
 }
 
 MusicPreview::MusicPreview(unity::glib::Object<GObject> const& proto_obj)
@@ -111,14 +97,19 @@ Tracks::Ptr MusicPreview::GetTracksModel() const
   return pimpl->tracks_model;
 }
 
-void MusicPreview::PlayUri(std::string const& uri) const
+void MusicPreview::PlayUri(std::string const& uri)
 {
   pimpl->PlayUri(uri);
 }
 
-void MusicPreview::PauseUri(std::string const& uri) const
+void MusicPreview::Pause()
 {
-  pimpl->PauseUri(uri);
+  pimpl->Pause();
+}
+
+void MusicPreview::Resume()
+{
+  pimpl->Resume();
 }
 
 }
