@@ -145,7 +145,7 @@ int main (int argc, char **argv)
   if (argc == 3)
     std::stringstream (argv[2]) >> std::dec >> time;
 
-  remover = new compiz::WindowInputRemover (dpy, xid);
+  remover = new compiz::WindowInputRemover (dpy, xid, xid);
   if (!remover)
     return 1;
 

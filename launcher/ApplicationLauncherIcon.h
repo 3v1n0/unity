@@ -77,7 +77,7 @@ protected:
   void OnDndEnter();
   void OnDndHovered();
   void OnDndLeave();
-  void OpenInstanceLauncherIcon();
+  void OpenInstanceLauncherIcon(Time timestamp) override;
   void ToggleSticky();
 
   bool OnShouldHighlightOnDrag(DndData const& dnd_data);
@@ -108,12 +108,13 @@ private:
   };
 
   void EnsureWindowState();
+  void EnsureMenuItemsWindowsReady();
   void EnsureMenuItemsReady();
   void UpdateBackgroundColor();
   void UpdateMenus();
   void UpdateDesktopQuickList();
 
-  void OpenInstanceWithUris(std::set<std::string> const& uris);
+  void OpenInstanceWithUris(std::set<std::string> const& uris, Time timestamp);
   void Focus(ActionArg arg);
   bool Spread(bool current_desktop, int state, bool force);
 
@@ -130,6 +131,7 @@ private:
   std::map<std::string, glib::Object<DbusmenuClient>> _menu_clients;
   std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items;
   std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items_extra;
+  std::vector<glib::Object<DbusmenuMenuitem>> _menu_items_windows;
   glib::Object<IndicatorDesktopShortcuts> _desktop_shortcuts;
   glib::Object<DbusmenuMenuitem> _menu_desktop_shortcuts;
   glib::Object<GFileMonitor> _desktop_file_monitor;

@@ -250,7 +250,7 @@ protected:
 
   virtual void ActivateLauncherIcon(ActionArg arg) {}
 
-  virtual void OpenInstanceLauncherIcon() {}
+  virtual void OpenInstanceLauncherIcon(Time timestamp) {}
 
   virtual bool HandlesSpread () { return false; }
 

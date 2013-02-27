@@ -56,6 +56,7 @@ struct Controller::Impl
   void NextDetail();
   void PrevDetail();
 
+  bool IsDetailViewShown();
   void SetDetail(bool detail, unsigned int min_windows = 1);
 
   void SelectFirstItem();

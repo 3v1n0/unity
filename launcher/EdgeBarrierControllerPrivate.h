@@ -42,6 +42,8 @@ struct EdgeBarrierController::Impl
   void BarrierRelease(PointerBarrierWrapper* owner, int event);
   void BarrierReset();
 
+  bool EventIsInsideYBreakZone(BarrierEvent::Ptr const& event);
+
   std::vector<PointerBarrierWrapper::Ptr> barriers_;
   std::vector<EdgeBarrierSubscriber*> subscribers_;
   Decaymulator decaymulator_;

@@ -1,6 +1,6 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
 # Copyright 2012 Canonical
-# Author: Thomi Richards, Martin Mrazik
+# Authors: Thomi Richards, Martin Mrazik, Łukasz 'sil2100' Zemczak
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3, as published
@@ -23,6 +23,84 @@ from testtools.matchers import Equals, NotEquals
 
 from unity.tests import UnityTestCase
 
+from gi.repository import GLib
+from gi.repository import IBus
+import time
+import dbus
+import threading
+
+
+# See lp:ibus-query
+class IBusQuery:
+    """A simple class allowing string queries to the IBus engine."""
+
+    def __init__(self):
+        self._bus = IBus.Bus()
+        self._dbusconn = dbus.connection.Connection(IBus.get_address())
+
+        # XXX: the new IBus bindings do not export create_input_context for
+        #  introspection. This is troublesome - so, to workaround this problem
+        #  we're directly fetching a new input context manually
+        ibus_obj = self._dbusconn.get_object(IBus.SERVICE_IBUS, IBus.PATH_IBUS)
+        self._test = dbus.Interface(ibus_obj, dbus_interface="org.freedesktop.IBus")
+        path = self._test.CreateInputContext("IBusQuery")
+        self._context = IBus.InputContext.new(path, self._bus.get_connection(), None)
+
+        self._glibloop = GLib.MainLoop()
+
+        self._context.connect("commit-text", self.__commit_text_cb)
+        self._context.connect("update-preedit-text", self.__update_preedit_cb)
+        self._context.connect("disabled", self.__disabled_cb)
+
+        self._context.set_capabilities (9)
+
+    def __commit_text_cb(self, context, text):
+        self.result += text.text
+        self._preedit = ''
+
+    def __update_preedit_cb(self, context, text, cursor_pos, visible):
+        if visible:
+            self._preedit = text.text
+
+    def __disabled_cb(self, a):
+        self.result += self._preedit
+        self._glibloop.quit()
+
+    def __abort(self):
+        self._abort = True
+
+    def poll(self, engine, ibus_input):
+        if len(ibus_input) <= 0:
+            return None
+
+        self.result = ''
+        self._preedit = ''
+        self._context.focus_in()
+        self._context.set_engine(engine)
+
+        # Timeout in case of the engine not being installed
+        self._abort = False
+        timeout = threading.Timer(4.0, self.__abort)
+        timeout.start()
+        while self._context.get_engine() is None:
+            if self._abort is True:
+                print "Error! Could not set the engine correctly."
+                return None
+            continue
+        timeout.cancel()
+
+        for c in ibus_input:
+            self._context.process_key_event(ord(c), 0, 0)
+
+        self._context.set_engine('')
+        self._context.focus_out()
+
+        GLib.timeout_add_seconds(5, lambda *args: self._glibloop.quit())
+        self._glibloop.run()
+
+        return unicode(self.result, "UTF-8")
+
+
 
 class IBusTests(UnityTestCase):
     """Base class for IBus tests."""
@@ -30,6 +108,7 @@ class IBusTests(UnityTestCase):
     def setUp(self):
         super(IBusTests, self).setUp()
         self.set_correct_ibus_trigger_keys()
+        self._ibus_query = None
 
     def set_correct_ibus_trigger_keys(self):
         """Set the correct keys to trigger IBus.
@@ -68,6 +147,8 @@ class IBusTests(UnityTestCase):
 
         """
         available_engines = get_available_input_engines()
+        if self._ibus_query is None:
+            self._ibus_query = IBusQuery()
         if engine_name in available_engines:
             if get_active_input_engines() != [engine_name]:
                 IBusTests._old_engines = set_active_engines([engine_name])
@@ -98,6 +179,11 @@ class IBusWidgetScenariodTests(IBusTests):
 
     def do_ibus_test(self):
         """Do the basic IBus test on self.widget using self.input and self.result."""
+        try:
+            result = self.result
+        except:
+            result = self._ibus_query.poll(self.engine_name, self.input)
+
         widget = getattr(self.unity, self.widget)
         widget.ensure_visible()
         self.addCleanup(widget.ensure_hidden)
@@ -107,7 +193,7 @@ class IBusWidgetScenariodTests(IBusTests):
         if commit_key:
             self.keyboard.press_and_release(commit_key)
         self.deactivate_ibus(widget.searchbar)
-        self.assertThat(widget.search_string, Eventually(Equals(self.result)))
+        self.assertThat(widget.search_string, Eventually(Equals(result)))
 
 
 
@@ -119,11 +205,11 @@ class IBusTestsPinyin(IBusWidgetScenariodTests):
     scenarios = multiply_scenarios(
         IBusWidgetScenariodTests.scenarios,
         [
-            ('basic', {'input': 'abc1', 'result': u'\u963f\u5e03\u4ece'}),
-            ('photo', {'input': 'zhaopian ', 'result': u'\u7167\u7247'}),
-            ('internet', {'input': 'hulianwang ', 'result': u'\u4e92\u8054\u7f51'}),
-            ('disk', {'input': 'cipan ', 'result': u'\u78c1\u76d8'}),
-            ('disk_management', {'input': 'cipan guanli ', 'result': u'\u78c1\u76d8\u7ba1\u7406'}),
+            ('basic', {'input': 'abc1'}),
+            ('photo', {'input': 'zhaopian '}),
+            ('internet', {'input': 'hulianwang '}),
+            ('disk', {'input': 'cipan '}),
+            ('disk_management', {'input': 'cipan guanli '}),
         ]
     )
 
@@ -165,9 +251,9 @@ class IBusTestsAnthy(IBusWidgetScenariodTests):
     scenarios = multiply_scenarios(
         IBusWidgetScenariodTests.scenarios,
         [
-            ('system', {'input': 'shisutemu ', 'result': u'\u30b7\u30b9\u30c6\u30e0'}),
-            ('game', {'input': 'ge-mu ', 'result': u'\u30b2\u30fc\u30e0'}),
-            ('user', {'input': 'yu-za- ', 'result': u'\u30e6\u30fc\u30b6\u30fc'}),
+            ('system', {'input': 'shisutemu '}),
+            ('game', {'input': 'ge-mu '}),
+            ('user', {'input': 'yu-za- '}),
         ],
         [
             ('commit_j', {'commit_key': 'Ctrl+j'}),

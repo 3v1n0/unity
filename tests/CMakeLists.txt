@@ -199,6 +199,7 @@ if (ENABLE_X_SUPPORT)
                  test_desktop_launcher_icon.cpp
                  test_device_launcher_section.cpp
                  test_edge_barrier_controller.cpp
+                 test_filter_widgets.cpp
                  test_hud_button.cpp
                  test_hud_controller.cpp
                  test_hud_launcher_icon.cpp
@@ -227,6 +228,7 @@ if (ENABLE_X_SUPPORT)
                  test_previews_payment.cpp
                  test_previews_social.cpp
                  test_overlay_scrollbar.cpp
+                 test_quicklist_manager.cpp
                  test_quicklist_menu_item.cpp
                  test_quicklist_view.cpp
                  test_result_renderer.cpp

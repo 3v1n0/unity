@@ -2297,7 +2297,9 @@ ui::EdgeBarrierSubscriber::Result Launcher::HandleBarrierEvent(ui::PointerBarrie
   if (!apply_to_reveal)
     return ui::EdgeBarrierSubscriber::Result::IGNORED;
 
-  _hide_machine.AddRevealPressure(event->velocity);
+  if (!owner->IsFirstEvent())
+    _hide_machine.AddRevealPressure(event->velocity);
+
   return ui::EdgeBarrierSubscriber::Result::HANDLED;
 }
 
@@ -2321,7 +2323,7 @@ void Launcher::ExitKeyNavMode()
   _hover_machine.SetQuirk(LauncherHoverMachine::KEY_NAV_ACTIVE, false);
 }
 
-void Launcher::RecvQuicklistOpened(QuicklistView* quicklist)
+void Launcher::RecvQuicklistOpened(nux::ObjectPtr<QuicklistView> const& quicklist)
 {
   UScreen* uscreen = UScreen::GetDefault();
   if (uscreen->GetMonitorGeometry(monitor).IsInside(nux::Point(quicklist->GetGeometry().x, quicklist->GetGeometry().y)))
@@ -2333,7 +2335,7 @@ void Launcher::RecvQuicklistOpened(QuicklistView* quicklist)
   }
 }
 
-void Launcher::RecvQuicklistClosed(QuicklistView* quicklist)
+void Launcher::RecvQuicklistClosed(nux::ObjectPtr<QuicklistView> const& quicklist)
 {
   nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
   if (!GetAbsoluteGeometry().IsInside(pt))
