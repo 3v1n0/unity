@@ -40,17 +40,31 @@ void TooltipManager::SetIcon(AbstractLauncherIcon::Ptr const& newIcon) {
   if (_icon == newIcon)
     return;
 
+  // Unlock hover timer, in case the previous icon had no valid tooltip
+  _icon_clicked = false;
+ 
   if (_show_tooltips) {
+    // Show new tooltip, get rid of the old olne
     if (_icon)
       _icon->HideTooltip();
     if (newIcon)
       newIcon->ShowTooltip();
   }
   else if (!newIcon) {
+    // Stop the hover timer for null launcher space
     StopTimer();
   }
+  else { 
+    AbstractLauncherIcon::IconType type = newIcon->GetIconType();
+    if ((type == AbstractLauncherIcon::IconType::HOME ||
+         type == AbstractLauncherIcon::IconType::HUD) &&
+         newIcon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE)) {
+      // Lock the hover timer for no valid tooltip cases
+      _icon_clicked = true;
+      StopTimer();
+    }
+  }
 
-  _icon_clicked = false;
   _icon = newIcon;
 }
 

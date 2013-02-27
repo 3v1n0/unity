@@ -18,40 +18,37 @@ class LauncherTooltipTests(LauncherTestCase):
     def setUp(self):
         super(LauncherTooltipTests, self).setUp()
         self.set_unity_option('launcher_hide_mode', 0)
+        self.launcher_instance.move_mouse_to_right_of_launcher()
+        self.icons = self.unity.launcher.model.get_launcher_icons(visible_only=True)
 
     def test_launcher_tooltip_show(self):
         """Tests whether icon tooltips delay showing themselves and,
         once shown, whether subsequent icons show them instantly."""
-        # no tooltips before entering launcher
-        self.launcher_instance.move_mouse_to_right_of_launcher()
-        icons = self.unity.launcher.model.get_launcher_icons(visible_only=True)
-        for i in icons:
+        for i in self.icons:
             tooltip = i.get_tooltip()
             if not tooltip:
                 continue
             self.assertThat(tooltip.active, Eventually(Equals(False)))
 
         # only reveal tooltips after short wait
-        self.assertEqual(self.get_reveal_behavior(icons[0]), self.DELAYED)
+        self.assertEqual(self.get_reveal_behavior(self.icons[0]), self.DELAYED)
 
         # subsequent tooltips reveal instantly, but hide on exit
         a, b = 0, 1
-        while b < len(icons):
-            self.mouse.move(icons[b].center_x, icons[b].center_y)
-            self.assertTrue(icons[b].get_tooltip().active)
-            self.assertFalse(icons[a].get_tooltip().active)
+        while b < len(self.icons):
+            self.mouse.move(self.icons[b].center_x, self.icons[b].center_y)
+            self.assertTrue(self.icons[b].get_tooltip().active)
+            self.assertFalse(self.icons[a].get_tooltip().active)
             a, b = a + 1, b + 1
         b -= 1
 
         # leaving launcher clears tooltips, and instant reveal
         self.launcher_instance.move_mouse_to_right_of_launcher()
-        self.assertEqual(self.get_reveal_behavior(icons[b]), self.DELAYED)
+        self.assertEqual(self.get_reveal_behavior(self.icons[b]), self.DELAYED)
 
     def test_launcher_tooltip_disabling(self):
         """Tests whether clicking on an icon hides its tooltip."""
-        self.launcher_instance.move_mouse_to_right_of_launcher()
-        icons = self.unity.launcher.model.get_launcher_icons(visible_only=True)
-        bfb, other = icons[0], icons[1]
+        bfb, other = self.icons[0], self.icons[1]
         self.assertEqual(self.get_reveal_behavior(bfb), self.DELAYED)
 
         # clicking icon hides its launcher until further input
@@ -62,6 +59,18 @@ class LauncherTooltipTests(LauncherTestCase):
         # normal behavior resumes on moving away from icon
         self.assertEqual(self.get_reveal_behavior(other), self.DELAYED)
         self.assertEqual(self.get_reveal_behavior(bfb), self.INSTANT)
+
+    def test_launcher_bfb_tooltip_when_open(self):
+        """Tests whether hovering over the active BFB starts a tooltip timer"""
+        self.unity.dash.ensure_visible()
+        self.addCleanup(self.unity.dash.ensure_hidden)
+        bfb, other = self.icons[0], self.icons[1]
+
+        # hovering an open dash's BFB does not show a tooltip ...
+        self.assertEqual(self.get_reveal_behavior(bfb), self.NEVER)
+
+        # ... nor did it timeout instant tooltips for other icons
+        self.assertEqual(self.get_reveal_behavior(other), self.DELAYED)
 
     # Tooltip reveal types
     (INSTANT, DELAYED, NEVER) = range(3)
