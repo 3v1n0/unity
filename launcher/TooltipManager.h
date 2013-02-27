@@ -37,6 +37,7 @@ public:
   void SetHover(bool on_launcher);
   void SetIcon(AbstractLauncherIcon::Ptr const& newIcon);
   void MouseMoved();
+  void IconClicked();
 
 private:
   void ResetTimer();
@@ -45,6 +46,7 @@ private:
   bool                      _show_tooltips;
   bool                      _hovered;
   AbstractLauncherIcon::Ptr _icon;
+  bool                      _icon_clicked;
   glib::Source::UniquePtr   _hover_timer;
 };
 

@@ -2390,6 +2390,7 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
     sources_.AddTimeout(START_DRAGICON_DURATION, cb_func, START_DRAGICON_TIMEOUT);
 
     launcher_icon->mouse_down.emit(nux::GetEventButton(button_flags), monitor, key_flags);
+    _tooltip_manager.IconClicked();
   }
 }
 

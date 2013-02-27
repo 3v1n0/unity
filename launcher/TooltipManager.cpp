@@ -33,6 +33,7 @@ TooltipManager::TooltipManager()
    : _show_tooltips(false)
    , _hovered(false)
    , _icon(nullptr)
+   , _icon_clicked(false)
 {}
 
 void TooltipManager::SetIcon(AbstractLauncherIcon::Ptr const& newIcon) { 
@@ -49,6 +50,7 @@ void TooltipManager::SetIcon(AbstractLauncherIcon::Ptr const& newIcon) {
     StopTimer();
   }
 
+  _icon_clicked = false;
   _icon = newIcon;
 }
 
@@ -72,7 +74,19 @@ void TooltipManager::MouseMoved() {
   ResetTimer();
 }
 
+void TooltipManager::IconClicked() {
+  StopTimer();
+  if (_show_tooltips && _icon)
+    _icon->HideTooltip();
+
+  _show_tooltips = false;
+  _icon_clicked = true;
+}
+
 void TooltipManager::ResetTimer() {
+  if (_icon_clicked)
+    return;
+
   StopTimer();
   _hover_timer->Run([&] () {
     _show_tooltips = true;
