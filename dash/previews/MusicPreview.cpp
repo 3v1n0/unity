@@ -34,6 +34,7 @@
 #include "ActionButton.h"
 #include "Tracks.h"
 #include "PreviewInfoHintWidget.h"
+#include "PreviewPlayer.h"
 
 namespace unity
 {
@@ -232,6 +233,12 @@ void MusicPreview::PreLayoutManagement()
   Preview::PreLayoutManagement();
 }
 
+void MusicPreview::OnNavigateOut()
+{
+  PreviewPlayer player;
+  player.Stop();
 }
-}
-}
+
+} // namespace previews
+} // namespace dash
+} // namespace unity

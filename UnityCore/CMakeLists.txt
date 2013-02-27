@@ -54,7 +54,6 @@ set (CORE_HEADERS
      Scopes.h
      ScopeProxy.h
      ScopeProxyInterface.h
-     SeriesPreview.h
      SocialPreview.h
      Track.h
      Tracks.h
@@ -96,7 +95,6 @@ set (CORE_SOURCES
      ScopeData.cpp
      Scopes.cpp
      ScopeProxy.cpp
-     SeriesPreview.cpp
      SocialPreview.cpp
      Track.cpp
      Tracks.cpp
