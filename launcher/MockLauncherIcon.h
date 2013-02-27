@@ -80,6 +80,7 @@ public:
 
   void AddProperties(GVariantBuilder* builder) {}
 
+  void ShowTooltip() {}
   void HideTooltip() {}
 
   void    SetShortcut(guint64 shortcut) {}
