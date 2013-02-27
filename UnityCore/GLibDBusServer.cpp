@@ -211,8 +211,8 @@ bool DBusObject::Register(glib::Object<GDBusConnection> const& conn, std::string
 DECLARE_LOGGER(logger_s, "unity.glib.dbus.server");
 
 DBusServer::DBusServer(std::string const& name, GBusType bus_type)
-  : owner_name_(0)
-  , name_owned_(false)
+  : name_owned_(false)
+  , owner_name_(0)
 {
   owner_name_ = g_bus_own_name(bus_type, name.c_str(), G_BUS_NAME_OWNER_FLAGS_NONE,
     [] (GDBusConnection* conn, const gchar* name, gpointer data)
@@ -259,7 +259,7 @@ bool DBusServer::AddObject(DBusObject::Ptr const& obj, std::string const& path)
   if (!connection_)
   {
     LOG_WARN(logger_s) << "Can't register object '" << obj->InterfaceName()
-                       << "' yet as we don't have a connection, waiting for it.";
+                       << "' yet as we don't have a connection, waiting for it...";
 
     // Since the connection is not available, let's wait it to be set and
     // and then we retry to add it again.

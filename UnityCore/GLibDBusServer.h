@@ -61,8 +61,8 @@ private:
   PropertyGetterCallback property_get_cb_;
   PropertySetterCallback property_set_cb_;
 
-  std::shared_ptr<GDBusInterfaceInfo> interface_info_;
   GDBusInterfaceVTable interface_vtable_;
+  std::shared_ptr<GDBusInterfaceInfo> interface_info_;
   std::map<guint, glib::Object<GDBusConnection>> registrations_;
 };
 
@@ -85,9 +85,9 @@ private:
   DBusServer(DBusServer const&) = delete;
   DBusServer& operator=(DBusServer const&) = delete;
 
-  glib::Object<GDBusConnection> connection_;
-  guint owner_name_;
   bool name_owned_;
+  guint owner_name_;
+  glib::Object<GDBusConnection> connection_;
   std::vector<DBusObject::Ptr> objects_;
 };
 
