@@ -288,6 +288,7 @@ void Launcher::SetStateMouseOverLauncher(bool over_launcher)
   _hide_machine.SetQuirk(LauncherHideMachine::MOUSE_OVER_LAUNCHER, over_launcher);
   _hide_machine.SetQuirk(LauncherHideMachine::REVEAL_PRESSURE_PASS, false);
   _hover_machine.SetQuirk(LauncherHoverMachine::MOUSE_OVER_LAUNCHER, over_launcher);
+  _tooltip_manager.SetHover(over_launcher);
 }
 
 void Launcher::SetIconUnderMouse(AbstractLauncherIcon::Ptr const& icon) {
@@ -300,6 +301,7 @@ void Launcher::SetIconUnderMouse(AbstractLauncherIcon::Ptr const& icon) {
     icon->mouse_enter.emit(monitor);
 
   _icon_under_mouse = icon;
+  _tooltip_manager.SetIcon(icon);
 }
 
 bool Launcher::MouseBeyondDragThreshold() const
@@ -2224,6 +2226,7 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
 void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
   SetMousePosition(x, y);
+  _tooltip_manager.MouseMoved();
 
   if (!_hidden)
     UpdateChangeInMousePosition(dx, dy);

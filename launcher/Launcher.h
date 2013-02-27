@@ -41,6 +41,7 @@
 #include "LauncherHoverMachine.h"
 #include "unity-shared/UBusWrapper.h"
 #include "SoftwareCenterLauncherIcon.h"
+#include "TooltipManager.h"
 
 #ifdef USE_X11
 # include "PointerBarrier.h"
@@ -389,6 +390,7 @@ private:
   nux::ObjectPtr<LauncherDragWindow> _drag_window;
   LauncherHideMachine _hide_machine;
   LauncherHoverMachine _hover_machine;
+  TooltipManager _tooltip_manager;
 
   unity::DndData _dnd_data;
   nux::DndAction _drag_action;
