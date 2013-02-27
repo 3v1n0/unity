@@ -10,6 +10,8 @@
 #define _g_object_unref_safe(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free_safe(var) (var = (g_free (var), NULL))
 
+/* ------------------ Test Searcher ---------------------- */
+
 #define TEST_TYPE_SEARCHER (test_searcher_get_type ())
 #define TEST_SCOPE_SEARCHER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TEST_TYPE_SEARCHER, TestSearcher))
 #define TEST_SEARCHER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TEST_TYPE_SEARCHER, TestSearcherClass))
@@ -122,7 +124,6 @@ static void test_searcher_set_property (GObject * object, guint property_id, con
   }
 }
 
-
 struct _SearcherRunData 
 {
   int _ref_count_;
@@ -192,7 +193,54 @@ static void test_searcher_run (UnityScopeSearchBase* base)
   g_signal_emit_by_name (self->priv->_owner, "search", base);
 }
 
+/* ------------------ Test Result Previewer ---------------------- */
 
+#define TEST_TYPE_RESULT_PREVIEWER (test_result_previewer_get_type ())
+#define TEST_RESULT_PREVIEWER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TEST_TYPE_RESULT_PREVIEWER, TestResultPreviewer))
+#define TEST_RESULT_PREVIEWER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TEST_TYPE_RESULT_PREVIEWER, TestResultPreviewerClass))
+#define TEST_IS_RESULT_PREVIEWER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TEST_TYPE_RESULT_PREVIEWER))
+#define TEST_IS_RESULT_PREVIEWER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TEST_TYPE_RESULT_PREVIEWER))
+#define TEST_RESULT_PREVIEWER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TEST_TYPE_RESULT_PREVIEWER, TestResultPreviewerClass))
+
+typedef struct _TestResultPreviewer TestResultPreviewer;
+typedef struct _TestResultPreviewerClass TestResultPreviewerClass;
+
+struct _TestResultPreviewer {
+  UnityResultPreviewer parent_instance;
+};
+
+struct _TestResultPreviewerClass {
+  UnityResultPreviewerClass parent_class;
+};
+
+G_DEFINE_TYPE(TestResultPreviewer, test_result_previewer, UNITY_TYPE_RESULT_PREVIEWER);
+
+static UnityAbstractPreview* test_result_previewer_run(UnityResultPreviewer* self)
+{
+  UnityAbstractPreview* preview;
+  preview = UNITY_ABSTRACT_PREVIEW (unity_generic_preview_new ("title", "description", NULL));
+
+  unity_preview_add_action(UNITY_PREVIEW (preview), unity_preview_action_new ("action1", "Action 1", NULL));
+  unity_preview_add_action(UNITY_PREVIEW (preview), unity_preview_action_new ("action2", "Action 2", NULL));
+
+  return preview;
+}
+
+static void test_result_previewer_class_init(TestResultPreviewerClass* klass)
+{
+  UNITY_RESULT_PREVIEWER_CLASS (klass)->run = test_result_previewer_run;
+}
+
+static void test_result_previewer_init(TestResultPreviewer* self)
+{
+}
+
+TestResultPreviewer* test_result_previewer_new ()
+{
+  return (TestResultPreviewer*) g_object_new (TEST_TYPE_RESULT_PREVIEWER, NULL);
+}
+
+/* ------------------ Test Scope ---------------------- */
 
 #define TEST_SCOPE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), TEST_TYPE_SCOPE, TestScopePrivate))
 
@@ -310,9 +358,12 @@ static UnityScopeSearchBase* test_scope_create_search_for_query(UnityAbstractSco
   return searcher;
 }
 
-static UnityResultPreviewer* test_scope_create_previewer(UnityAbstractScope* self, UnityScopeResult* _result_)
+static UnityResultPreviewer* test_scope_create_previewer(UnityAbstractScope* self, UnityScopeResult* result)
 {
-  return NULL;
+  UnityResultPreviewer* previewer;
+  previewer = UNITY_RESULT_PREVIEWER (test_result_previewer_new());
+  previewer->result = *result;
+  return previewer;
 }
 
 static UnityCategorySet* test_scope_get_categories(UnityAbstractScope* base)

@@ -127,12 +127,14 @@ TEST_F(TestScope, ActivateUri)
                        [] { return g_strdup("Failed to activate"); });
 }
 
-TEST_F(TestScope, Preview)
+TEST_F(TestScope, PreviewPerformAction)
 {
+  Preview::Ptr preview;
   // Auto-connect on preview
   bool preview_ok = false;
-  auto preview_callback = [&preview_ok] (LocalResult const&, ScopeHandledType, glib::Error const&) {
+  auto preview_callback = [&preview_ok, &preview] (LocalResult const&, Preview::Ptr const& _preview, glib::Error const&) {
     preview_ok = true;
+    preview = _preview;
   };
 
   LocalResult result; result.uri = "file:://test";
@@ -142,6 +144,14 @@ TEST_F(TestScope, Preview)
   Utils::WaitUntilMSec(preview_ok,
                        2000,
                        [] { return g_strdup("Failed to preview"); });
+  EXPECT_TRUE(preview ? true : false);
+  if (preview)
+  {
+    Preview::ActionPtrList actions = preview->GetActions();
+    // EXPECT_TRUE(actions.size() > 0);
+    for (auto action : actions)
+      preview->PerformAction(action->id);    
+  }
 }
 
 TEST_F(TestScope, ActivatePreviewAction)

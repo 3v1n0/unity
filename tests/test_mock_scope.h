@@ -38,19 +38,6 @@ namespace
 {
 const gchar* SETTINGS_NAME = "com.canonical.Unity.Dash";
 const gchar* SCOPES_SETTINGS_KEY = "scopes";
-
-#define G_SCOPE_ERROR g_scope_error_quark ()
-typedef enum
-{
-  G_SCOPE_ERROR_NO_ACTIVATION_HANDLER = (1 << 0)
-} GScopeError;
-
-GQuark
-g_scope_error_quark (void)
-{
-  return g_quark_from_static_string ("g-scope-error-quark");
-}
-
 }
 
 // Mock Scopes for use in xless tests. (no dbus!)
