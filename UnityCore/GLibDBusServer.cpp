@@ -43,6 +43,7 @@ DECLARE_LOGGER(logger_o, "unity.glib.dbus.object");
 
 DBusObject::DBusObject(std::string const& introspection_xml, std::string const& interface_name)
   : interface_info_(nullptr, safe_interface_info_unref)
+  , registration_id_(0)
 {
   glib::Error error;
   auto xml_int = g_dbus_node_info_new_for_xml(introspection_xml.c_str(), &error);
@@ -140,6 +141,12 @@ DBusObject::DBusObject(std::string const& introspection_xml, std::string const& 
   };
 }
 
+DBusObject::~DBusObject()
+{
+  if (registration_id_)
+    g_dbus_connection_unregister_object(connection_, registration_id_);
+}
+
 void DBusObject::SetMethodsCallHandler(MethodCallback const& func)
 {
   method_cb_ = func;
@@ -163,16 +170,47 @@ std::string DBusObject::InterfaceName() const
   return "";
 }
 
-std::shared_ptr<GDBusInterfaceInfo> DBusObject::InterfaceInfo() const
+bool DBusObject::Register(glib::Object<GDBusConnection> const& conn, std::string const& path)
 {
-  return interface_info_;
-}
+  if (!interface_info_)
+  {
+    LOG_ERROR(logger_o) << "Can't register object '" << InterfaceName()
+                        << "', bad interface\n";
+    return false;
+  }
 
-const GDBusInterfaceVTable* DBusObject::InterfaceVTable() const
-{
-  return &interface_vtable_;
-}
+  if (!conn.IsType(G_TYPE_DBUS_CONNECTION))
+  {
+    LOG_ERROR(logger_o) << "Can't register object '" << InterfaceName()
+                        << "', invalid connection\n";
+    return false;
+  }
 
+  if (connection_)
+  {
+    LOG_ERROR(logger_o) << "Can't register object '" << InterfaceName()
+                        << "', it's already registered\n";
+    return false;
+  }
+
+  glib::Error error;
+
+  connection_ = conn;
+  registration_id_ = g_dbus_connection_register_object(connection_, path.c_str(),
+                                                       interface_info_.get(),
+                                                       &interface_vtable_, this,
+                                                       nullptr, &error);
+  if (error)
+  {
+    LOG_ERROR(logger_o) << "Could not register object in dbus: "
+                        << error.Message();
+    return false;
+  }
+
+  LOG_INFO(logger_o) << "Registering object '" << InterfaceName() << "'";
+
+  return true;
+}
 
 // DBusServer
 
@@ -212,22 +250,16 @@ bool DBusServer::OwnsName() const
 
 DBusServer::~DBusServer()
 {
-  if (connection_)
-  {
-    for (auto const& pair : objects_)
-      g_dbus_connection_unregister_object(connection_, pair.first);
-  }
-
   if (owner_name_)
     g_bus_unown_name(owner_name_);
 }
 
-void DBusServer::AddObject(DBusObject::Ptr const& obj, std::string const& path)
+bool DBusServer::AddObject(DBusObject::Ptr const& obj, std::string const& path)
 {
-  if (!obj || !obj->InterfaceInfo())
+  if (!obj)
   {
-    LOG_ERROR(logger_s) << "Could not register an invalid object";
-    return;
+    LOG_ERROR(logger_s) << "Can't register an invalid object";
+    return false;
   }
 
   if (!connection_)
@@ -235,32 +267,24 @@ void DBusServer::AddObject(DBusObject::Ptr const& obj, std::string const& path)
     LOG_WARN(logger_s) << "Can't register object '" << obj->InterfaceName()
                        << "' yet as we don't have a connection, waiting for it.";
 
+    // Since the connection is not available, let's wait it to be set and
+    // and then we retry to add it again.
     auto conn = std::make_shared<sigc::connection>();
     *conn = name_acquired.connect([this, obj, path, conn] {
-      LOG_INFO(logger_s) << "Name Was acquired";
       AddObject(obj, path);
       conn->disconnect();
     });
   }
   else
   {
-    glib::Error error;
-
-    unsigned id = g_dbus_connection_register_object(connection_, path.c_str(),
-                                                    obj->InterfaceInfo().get(),
-                                                    obj->InterfaceVTable(), obj.get(),
-                                                    nullptr, &error);
-    if (error)
+    if (obj->Register(connection_, path))
     {
-      LOG_ERROR(logger_s) << "Could not register object in dbus: "
-                          << error.Message();
-    }
-    else
-    {
-      LOG_INFO(logger_s) << "Registering object '" << obj->InterfaceName() << "'";
-      objects_[id] = obj;
+      objects_.push_back(obj);
+      return true;
     }
   }
+
+  return false;
 }
 
 } // namespace glib

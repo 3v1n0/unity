@@ -38,7 +38,7 @@ public:
   typedef std::shared_ptr<DBusObject> Ptr;
 
   DBusObject(std::string const& introspection_xml, std::string const& interface_name);
-  virtual ~DBusObject() = default;
+  virtual ~DBusObject();
 
   typedef std::function<GVariant*(std::string const&, GVariant*)> MethodCallback;
   typedef std::function<GVariant*(std::string const&)> PropertyGetterCallback;
@@ -50,20 +50,21 @@ public:
 
   std::string InterfaceName() const;
 
-  std::shared_ptr<GDBusInterfaceInfo> InterfaceInfo() const;
-  const GDBusInterfaceVTable* InterfaceVTable() const;
+  bool Register(glib::Object<GDBusConnection> const&, std::string const& path);
 
 private:
   // not copyable class
   DBusObject(DBusObject const&) = delete;
   DBusObject& operator=(DBusObject const&) = delete;
 
-  std::shared_ptr<GDBusInterfaceInfo> interface_info_;
-  GDBusInterfaceVTable interface_vtable_;
-
   MethodCallback method_cb_;
   PropertyGetterCallback property_get_cb_;
   PropertySetterCallback property_set_cb_;
+
+  std::shared_ptr<GDBusInterfaceInfo> interface_info_;
+  GDBusInterfaceVTable interface_vtable_;
+  glib::Object<GDBusConnection> connection_;
+  guint registration_id_;
 };
 
 class DBusServer : public sigc::trackable
@@ -74,7 +75,7 @@ public:
   DBusServer(std::string const& name, GBusType bus_type = G_BUS_TYPE_SESSION);
   virtual ~DBusServer();
 
-  void AddObject(DBusObject::Ptr const&, std::string const& path);
+  bool AddObject(DBusObject::Ptr const&, std::string const& path);
   bool OwnsName() const;
 
   sigc::signal<void> name_acquired;
@@ -88,7 +89,7 @@ private:
   glib::Object<GDBusConnection> connection_;
   guint owner_name_;
   bool name_owned_;
-  std::map<guint, DBusObject::Ptr> objects_;
+  std::vector<DBusObject::Ptr> objects_;
 };
 
 } // namespace glib
