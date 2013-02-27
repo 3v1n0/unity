@@ -33,7 +33,7 @@ namespace unity
 {
 namespace glib
 {
-DECLARE_LOGGER(logger, "unity.glib.dbusproxy");
+DECLARE_LOGGER(logger, "unity.glib.dbus.proxy");
 
 namespace
 {
