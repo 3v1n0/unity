@@ -51,7 +51,7 @@ public:
   std::string InterfaceName() const;
 
   bool Register(glib::Object<GDBusConnection> const&, std::string const& path);
-  void EmitSignal(std::string const& path, std::string const& signal, GVariant* parameters = nullptr);
+  void EmitSignal(std::string const& signal, GVariant* parameters = nullptr, std::string const& path = "");
 
 private:
   // not copyable class

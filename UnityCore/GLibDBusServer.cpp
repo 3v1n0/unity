@@ -20,6 +20,7 @@
 #include <NuxCore/Logger.h>
 
 #include "GLibDBusServer.h"
+#include "Variant.h"
 
 namespace unity
 {
@@ -181,7 +182,7 @@ bool DBusObject::Register(glib::Object<GDBusConnection> const& conn, std::string
     return false;
   }
 
-  if (connection_by_path_.find(path) == connection_by_path_.end())
+  if (connection_by_path_.find(path) != connection_by_path_.end())
   {
     LOG_ERROR(logger_o) << "Can't register object '" << InterfaceName()
                         << "', it's already registered on path '" << path << "'";
@@ -214,35 +215,59 @@ bool DBusObject::Register(glib::Object<GDBusConnection> const& conn, std::string
   return true;
 }
 
-void DBusObject::EmitSignal(std::string const& path, std::string const& signal, GVariant* parameters)
+void DBusObject::EmitSignal(std::string const& signal, GVariant* parameters, std::string const& path)
 {
-  if (signal.empty() || path.empty())
+  if (signal.empty())
   {
-    LOG_ERROR(logger_o) << "Impossible to emit signal '" << signal << "' "
-                        << "on object path '" << path << "'";
+    LOG_ERROR(logger_o) << "Impossible to emit an empty signal";
     return;
   }
 
-  auto conn_it = connection_by_path_.find(path);
-
-  if (conn_it == connection_by_path_.end())
+  if (!path.empty())
   {
-    LOG_ERROR(logger_o) << "Impossible to emit signal '" << signal << "' "
-                        << "on object path '" << path << "': no connection available";
-    return;
+    auto conn_it = connection_by_path_.find(path);
+
+    if (conn_it == connection_by_path_.end())
+    {
+      LOG_ERROR(logger_o) << "Impossible to emit signal '" << signal << "' "
+                          << "on object path '" << path << "': no connection available";
+      return;
+    }
+
+    LOG_INFO(logger_o) << "Emitting signal '" << signal << "'" << " on object path '"
+                       << path << "'";
+
+    glib::Error error;
+    g_dbus_connection_emit_signal(conn_it->second, nullptr, path.c_str(), InterfaceName().c_str(),
+                                  signal.c_str(), glib::Variant(parameters), &error);
+
+    if (error)
+    {
+      LOG_ERROR(logger_o) << "Got error when emitting signal '" << signal << "': "
+                          << " on object path '" << path << "': " << error.Message();
+    }
   }
-
-  LOG_INFO(logger_o) << "Emitting signal '" << signal << "'" << " on object path '"
-                     << path << "'";
-
-  glib::Error error;
-  g_dbus_connection_emit_signal(conn_it->second, nullptr, path.c_str(), InterfaceName().c_str(),
-                                signal.c_str(), parameters, &error);
-
-  if (error)
+  else
   {
-    LOG_ERROR(logger_o) << "Got error when emitting signal '" << signal << "': "
-                        << " on object path '" << path << "': " << error.Message();
+    for (auto const& pair : connection_by_path_)
+    {
+      glib::Variant reffed_params(parameters);
+      auto const& obj_path = pair.first;
+      auto const& conn = pair.second;
+
+      LOG_INFO(logger_o) << "Emitting signal '" << signal << "'" << " on object path '"
+                         << path << "'";
+
+      glib::Error error;
+      g_dbus_connection_emit_signal(conn, nullptr, obj_path.c_str(), InterfaceName().c_str(),
+                                    signal.c_str(), reffed_params, &error);
+
+      if (error)
+      {
+        LOG_ERROR(logger_o) << "Got error when emitting signal '" << signal << "': "
+                            << " on object path '" << obj_path << "': " << error.Message();
+      }
+    }
   }
 }
 
