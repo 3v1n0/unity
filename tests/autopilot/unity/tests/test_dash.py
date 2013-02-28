@@ -73,7 +73,7 @@ class DashRevealTests(DashTestCase):
         """Switch to command lens without closing the dash."""
         self.unity.dash.ensure_visible()
         self.unity.dash.reveal_command_lens()
-        self.assertThat(self.unity.dash.visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.dash.active_lens, Eventually(Equals('commands.lens')))
 
     def test_alt_f4_close_dash(self):
         """Dash must close on alt+F4."""

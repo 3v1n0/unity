@@ -624,7 +624,7 @@ void UnityScreen::setPanelShadowMatrix(const GLMatrix& matrix)
 void UnityScreen::FillShadowRectForOutput(CompRect &shadowRect,
                                           CompOutput *output)
 {
-  if (shadow_texture_.empty ())
+  if (_shadow_texture.empty ())
     return;
 
   float panel_h = static_cast<float>(panel_style_.panel_height);
@@ -1359,6 +1359,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   // CompRegion has no clear() method. So this is the fastest alternative.
   fullscreenRegion = CompRegion();
   nuxRegion = CompRegion();
+  windows_for_monitor_.clear();
 
   // bind the framebuffer if we plan to paint nux on this frame
   if (doShellRepaint && BackgroundEffectHelper::HasDirtyHelpers())
@@ -2189,9 +2190,13 @@ bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State
     switcher_controller_->Select((switcher_controller_->StartIndex())); // always select the current application
     switcher_controller_->InitiateDetail();
   }
-  else
+  else if (switcher_controller_->IsDetailViewShown())
   {
     switcher_controller_->NextDetail();
+  }
+  else
+  {
+    switcher_controller_->SetDetail(true);
   }
 
   action->setState(action->state() | CompAction::StateTermKey);
@@ -2639,17 +2644,32 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
                               PAINT_WINDOW_TRANSLUCENT_MASK |
                               PAINT_WINDOW_TRANSFORMED_MASK |
                               PAINT_WINDOW_NO_CORE_INSTANCE_MASK;
-    if (!(mask & nonOcclusionBits) &&
-        (window->state() & CompWindowStateFullscreenMask))
-        // And I've been advised to test other things, but they don't work:
-        // && (attrib.opacity == OPAQUE)) <-- Doesn't work; Only set in glDraw
-        // && !window->alpha() <-- Doesn't work; Opaque windows often have alpha
+
+    if (window->isMapped() &&
+        window->defaultViewport() == uScreen->screen->vp())
     {
-      uScreen->fullscreenRegion += window->geometry();
-      uScreen->fullscreenRegion -= uScreen->nuxRegion;
+      int monitor = window->outputDevice();
+
+      auto it = uScreen->windows_for_monitor_.find(monitor);
+
+      if (it != end(uScreen->windows_for_monitor_))
+        ++(it->second);
+      else
+        uScreen->windows_for_monitor_[monitor] = 1;
+
+      if (!(mask & nonOcclusionBits) &&
+          (window->state() & CompWindowStateFullscreenMask) &&
+          uScreen->windows_for_monitor_[monitor] == 1)
+          // And I've been advised to test other things, but they don't work:
+          // && (attrib.opacity == OPAQUE)) <-- Doesn't work; Only set in glDraw
+          // && !window->alpha() <-- Doesn't work; Opaque windows often have alpha
+      {
+        uScreen->fullscreenRegion += window->geometry();
+      }
+
+      if (uScreen->nuxRegion.isEmpty())
+        uScreen->firstWindowAboveShell = window;
     }
-    if (uScreen->nuxRegion.isEmpty())
-      uScreen->firstWindowAboveShell = window;
   }
 
   GLWindowPaintAttrib wAttrib = attrib;
