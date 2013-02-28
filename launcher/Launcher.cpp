@@ -288,7 +288,7 @@ void Launcher::SetStateMouseOverLauncher(bool over_launcher)
   _hide_machine.SetQuirk(LauncherHideMachine::MOUSE_OVER_LAUNCHER, over_launcher);
   _hide_machine.SetQuirk(LauncherHideMachine::REVEAL_PRESSURE_PASS, false);
   _hover_machine.SetQuirk(LauncherHoverMachine::MOUSE_OVER_LAUNCHER, over_launcher);
-  _tooltip_manager.SetHover(over_launcher);
+  tooltip_manager_.SetHover(over_launcher);
 }
 
 void Launcher::SetIconUnderMouse(AbstractLauncherIcon::Ptr const& icon) {
@@ -301,7 +301,7 @@ void Launcher::SetIconUnderMouse(AbstractLauncherIcon::Ptr const& icon) {
     icon->mouse_enter.emit(monitor);
 
   _icon_under_mouse = icon;
-  _tooltip_manager.SetIcon(icon);
+  tooltip_manager_.SetIcon(icon);
 }
 
 bool Launcher::MouseBeyondDragThreshold() const
@@ -2226,7 +2226,7 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
 void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
   SetMousePosition(x, y);
-  _tooltip_manager.MouseMoved();
+  tooltip_manager_.MouseMoved();
 
   if (!_hidden)
     UpdateChangeInMousePosition(dx, dy);
@@ -2390,7 +2390,7 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
     sources_.AddTimeout(START_DRAGICON_DURATION, cb_func, START_DRAGICON_TIMEOUT);
 
     launcher_icon->mouse_down.emit(nux::GetEventButton(button_flags), monitor, key_flags);
-    _tooltip_manager.IconClicked();
+    tooltip_manager_.IconClicked();
   }
 }
 

@@ -390,7 +390,7 @@ private:
   nux::ObjectPtr<LauncherDragWindow> _drag_window;
   LauncherHideMachine _hide_machine;
   LauncherHoverMachine _hover_machine;
-  TooltipManager _tooltip_manager;
+  TooltipManager tooltip_manager_;
 
   unity::DndData _dnd_data;
   nux::DndAction _drag_action;
