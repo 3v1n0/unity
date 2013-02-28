@@ -58,8 +58,6 @@
 #include <boost/algorithm/string.hpp>
 #include <sigc++/sigc++.h>
 
-#define NULL_ICON (AbstractLauncherIcon::Ptr)nullptr 
-
 namespace unity
 {
 using ui::RenderArg;
@@ -1616,7 +1614,7 @@ void Launcher::OnIconRemoved(AbstractLauncherIcon::Ptr const& icon)
   if (icon->needs_redraw_connection.connected())
     icon->needs_redraw_connection.disconnect();
 
-  SetIconUnderMouse(NULL_ICON);
+  SetIconUnderMouse((AbstractLauncherIcon::Ptr)nullptr);
   if (icon == _icon_mouse_down)
     _icon_mouse_down = nullptr;
   if (icon == _drag_icon)
@@ -1935,7 +1933,7 @@ bool Launcher::StartIconDragTimeout(int x, int y)
   // if we are still waiting…
   if (GetActionState() == ACTION_NONE)
   {
-    SetIconUnderMouse(NULL_ICON);
+    SetIconUnderMouse((AbstractLauncherIcon::Ptr)nullptr);
     _initial_drag_animation = true;
     StartIconDragRequest(x, y);
   }
@@ -2174,7 +2172,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
       GetActionState() == ACTION_NONE)
     return;
 
-  SetIconUnderMouse(NULL_ICON);
+  SetIconUnderMouse((AbstractLauncherIcon::Ptr)nullptr);
 
   if (GetActionState() == ACTION_NONE)
   {
