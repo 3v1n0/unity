@@ -204,7 +204,7 @@ TEST_F(TestScope, UpdateSearchCategoryWorkflow)
   };
 
   // 1. First search
-  scope_->Search("13:test_search1", search_callback);
+  scope_->Search("13:cat", search_callback);
 
   Results::Ptr results = scope_->results();
   Utils::WaitUntilMSec(search_ok, 2000, [] { return g_strdup("First search failed."); });

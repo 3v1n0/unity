@@ -202,25 +202,43 @@ static void _g_variant_unref0_ (gpointer var) {
 
 static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_base, gpointer self)
 {
-  // cheeky search string format to control how many results to return
-  // count:title
-
   UnitySearchContext* search_ctx;
   search_ctx = search_base->search_context;
   g_return_if_fail (search_ctx != NULL);
 
   int num_items = 0;
   gchar* search_title = g_strdup(search_ctx->search_query);
+  gchar* search_title_tmp = g_strdup(search_title);
 
+  // cheeky search string format to control how many results to return
+  // count:title
   if (g_strcmp0(search_title, "") == 0)
   {
     num_items = 64;
   }
-  else if (sscanf(search_title, "%d:%s", &num_items, search_title) != 2)
+  else
   {
-    num_items = 64;
+    int sscanf_n = sscanf(search_title, "%d:%s", &num_items, search_title_tmp);
+    switch (sscanf_n)
+    {
+      case 0:
+        g_free(search_title_tmp);
+        num_items = 64;
+        break;
+
+      case 1:
+        g_free(search_title);
+        g_free(search_title_tmp);
+        search_title = g_strdup("");
+        break;
+
+      case 2:
+      default:
+        g_free(search_title);
+        search_title = search_title_tmp;
+        break;
+    }
   }
-  g_free(search_title);
 
   UnityScopeResult result;
   int i;
@@ -234,7 +252,7 @@ static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_base
   {
     memset (&result, 0, sizeof (UnityScopeResult));
 
-    int category = i % 3;//sizeof_categories;
+    int category = i % sizeof_categories;
     const gchar* category_id = category_ids[category];
 
     if (options_filter && unity_filter_get_filtering(UNITY_FILTER (options_filter)))
@@ -245,8 +263,18 @@ static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_base
         continue;
     }
 
+    // Match title to search string.
+    gchar* title = g_strdup_printf("%s.%d", category_id, i);
+    if (search_title &&
+        g_strcmp0(search_title, "") != 0 &&
+        g_strrstr(title, search_title) == NULL)
+    {
+      g_free(title);
+      continue;
+    }
+
     result.uri          = g_strdup_printf("test://uri.%d", i);
-    result.title        = g_strdup_printf("%s.%d", "category_id", i);
+    result.title        = title;
     result.icon_hint    = g_strdup(icons[i % 10]);
     result.result_type  = UNITY_RESULT_TYPE_DEFAULT;
     result.category     = (guint) (category),         // 3 categoies
@@ -263,6 +291,7 @@ static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_base
     
     unity_scope_result_destroy (&result);
   }
+  g_free(search_title);
 }
 
 ServiceScope* service_scope_new()

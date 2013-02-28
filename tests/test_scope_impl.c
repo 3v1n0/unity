@@ -378,10 +378,11 @@ static UnityScopeSearchBase* test_scope_create_search_for_query(UnityAbstractSco
 
 static UnityResultPreviewer* test_scope_create_previewer(UnityAbstractScope* self, UnityScopeResult* result)
 {
-  UnityResultPreviewer* previewer;
-  previewer = UNITY_RESULT_PREVIEWER (test_result_previewer_new());
-  unity_scope_result_copy(result, &previewer->result);
-  return previewer;
+  return NULL;
+  // UnityResultPreviewer* previewer;
+  // previewer = UNITY_RESULT_PREVIEWER (test_result_previewer_new());
+  // unity_scope_result_copy(result, &previewer->result);
+  // return previewer;
 }
 
 static UnityCategorySet* test_scope_get_categories(UnityAbstractScope* base)
