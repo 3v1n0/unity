@@ -462,18 +462,43 @@ bool DBusServer::RemoveObject(DBusObject::Ptr const& obj)
     {
       pending_objects_.erase(it);
       removed = true;
+      LOG_INFO(logger_s) << "Removing object '" << obj->InterfaceName() << "' ...";
       break;
     }
   }
 
   if (!removed)
   {
-    removed = (std::remove(objects_.begin(), objects_.end(), obj) != objects_.end());
+    if (std::remove(objects_.begin(), objects_.end(), obj) != objects_.end())
+    {
+      removed = true;
+      LOG_INFO(logger_s) << "Removing object '" << obj->InterfaceName() << "' ...";
+    }
   }
 
-  obj->UnRegister();
+  if (removed)
+  {
+    obj->UnRegister();
+  }
 
   return removed;
+}
+
+DBusObject::Ptr DBusServer::GetObject(std::string const& interface)
+{
+  for (auto const& pair : pending_objects_)
+  {
+    if (pair.first->InterfaceName() == interface)
+      return pair.first;
+  }
+
+  for (auto const& obj : objects_)
+  {
+    if (obj->InterfaceName() == interface)
+      return obj;
+  }
+
+  return DBusObject::Ptr();
 }
 
 } // namespace glib

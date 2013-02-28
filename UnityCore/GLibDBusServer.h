@@ -90,6 +90,8 @@ public:
   bool AddObject(DBusObject::Ptr const&, std::string const& path);
   bool RemoveObject(DBusObject::Ptr const&);
 
+  DBusObject::Ptr GetObject(std::string const& interface);
+
   bool OwnsName() const;
 
   sigc::signal<void> name_acquired;
