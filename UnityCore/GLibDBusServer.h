@@ -92,6 +92,7 @@ public:
 
   void EmitSignal(std::string const& interface, std::string const& signal, GVariant* parameters = nullptr);
 
+  std::string const& Name() const;
   bool OwnsName() const;
 
   sigc::signal<void> name_acquired;

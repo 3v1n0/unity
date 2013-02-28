@@ -460,6 +460,7 @@ struct DBusServer::Impl
 {
   Impl(DBusServer* server, std::string const& name, GBusType bus_type)
     : server_(server)
+    , name_(name)
     , name_owned_(false)
     , owner_name_(0)
   {
@@ -546,8 +547,10 @@ struct DBusServer::Impl
 
     if (!removed)
     {
-      if (std::remove(objects_.begin(), objects_.end(), obj) != objects_.end())
+      auto it = std::find(objects_.begin(), objects_.end(), obj);
+      if (it != objects_.end())
       {
+        objects_.erase(it);
         removed = true;
         LOG_INFO(logger_s) << "Removing object '" << obj->InterfaceName() << "' ...";
       }
@@ -587,6 +590,7 @@ struct DBusServer::Impl
   }
 
   DBusServer* server_;
+  std::string name_;
   bool name_owned_;
   guint owner_name_;
   glib::Object<GDBusConnection> connection_;
@@ -600,6 +604,11 @@ DBusServer::DBusServer(std::string const& name, GBusType bus_type)
 
 DBusServer::~DBusServer()
 {}
+
+std::string const& DBusServer::Name() const
+{
+  return impl_->name_;
+}
 
 bool DBusServer::OwnsName() const
 {
