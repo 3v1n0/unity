@@ -47,9 +47,11 @@ public:
   nux::ROProperty<int> track_number;
   nux::ROProperty<std::string> title;
   nux::ROProperty<unsigned> length;
+  nux::ROProperty<std::size_t> index;
 
 private:
   void SetupGetters();
+  std::size_t get_index() const;
 };
 
 }

@@ -52,6 +52,14 @@ void Track::SetupGetters()
   track_number.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetIntAt), 1));
   title.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 2));
   length.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetUIntAt), 3));
+  index.SetGetterFunction(sigc::mem_fun(this, &Track::get_index));
+}
+
+std::size_t Track::get_index() const
+{
+  if (!model_)
+    return unsigned(-1);
+  return dee_model_get_position(model_, iter_);
 }
 
 }
