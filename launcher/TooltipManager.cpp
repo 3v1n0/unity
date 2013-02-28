@@ -30,23 +30,23 @@ const unsigned int TOOLTIPS_SHOW_TIMEOUT_LENGTH = 1000;
 }
 
 TooltipManager::TooltipManager()
-   : _show_tooltips(false)
-   , _hovered(false)
-   , _icon(nullptr)
-   , _icon_clicked(false)
+   : show_tooltips_(false)
+   , hovered_(false)
+   , icon_(nullptr)
+   , icon_clicked_(false)
 {}
 
 void TooltipManager::SetIcon(AbstractLauncherIcon::Ptr const& newIcon) { 
-  if (_icon == newIcon)
+  if (icon_ == newIcon)
     return;
 
   // Unlock hover timer, in case the previous icon had no valid tooltip
-  _icon_clicked = false;
+  icon_clicked_ = false;
  
-  if (_show_tooltips) {
+  if (show_tooltips_) {
     // Show new tooltip, get rid of the old olne
-    if (_icon)
-      _icon->HideTooltip();
+    if (icon_)
+      icon_->HideTooltip();
     if (newIcon)
       newIcon->ShowTooltip();
   }
@@ -60,29 +60,29 @@ void TooltipManager::SetIcon(AbstractLauncherIcon::Ptr const& newIcon) {
          type == AbstractLauncherIcon::IconType::HUD) &&
          newIcon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE)) {
       // Lock the hover timer for no valid tooltip cases
-      _icon_clicked = true;
+      icon_clicked_ = true;
       StopTimer();
     }
   }
 
-  _icon = newIcon;
+  icon_ = newIcon;
 }
 
 void TooltipManager::SetHover(bool on_launcher) { 
-  if (_hovered == on_launcher) {
+  if (hovered_ == on_launcher) {
     return;
   }
-  _hovered = on_launcher;
+  hovered_ = on_launcher;
 
-  if (_show_tooltips && !_hovered) {
-    _show_tooltips = false;
-    if (_icon)
-      _icon->HideTooltip();
+  if (show_tooltips_ && !hovered_) {
+    show_tooltips_ = false;
+    if (icon_)
+      icon_->HideTooltip();
   }
 }
 
 void TooltipManager::MouseMoved() {
-  if (!_icon || _show_tooltips)
+  if (!icon_ || show_tooltips_)
     return;
 
   ResetTimer();
@@ -90,27 +90,27 @@ void TooltipManager::MouseMoved() {
 
 void TooltipManager::IconClicked() {
   StopTimer();
-  if (_show_tooltips && _icon)
-    _icon->HideTooltip();
+  if (show_tooltips_ && icon_)
+    icon_->HideTooltip();
 
-  _show_tooltips = false;
-  _icon_clicked = true;
+  show_tooltips_ = false;
+  icon_clicked_ = true;
 }
 
 void TooltipManager::ResetTimer() {
-  if (_icon_clicked)
+  if (icon_clicked_)
     return;
 
   StopTimer();
-  _hover_timer->Run([&] () {
-    _show_tooltips = true;
-    _icon->ShowTooltip();
+  hover_timer_->Run([&] () {
+    show_tooltips_ = true;
+    icon_->ShowTooltip();
     return false;
   });
 }
 
 void TooltipManager::StopTimer() {
-  _hover_timer.reset(new glib::Timeout(TOOLTIPS_SHOW_TIMEOUT_LENGTH));
+  hover_timer_.reset(new glib::Timeout(TOOLTIPS_SHOW_TIMEOUT_LENGTH));
 }
 
 } // namespace launcher

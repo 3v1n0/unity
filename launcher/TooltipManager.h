@@ -43,11 +43,11 @@ private:
   void ResetTimer();
   void StopTimer();
 
-  bool                      _show_tooltips;
-  bool                      _hovered;
-  AbstractLauncherIcon::Ptr _icon;
-  bool                      _icon_clicked;
-  glib::Source::UniquePtr   _hover_timer;
+  bool                      show_tooltips_;
+  bool                      hovered_;
+  AbstractLauncherIcon::Ptr icon_;
+  bool                      icon_clicked_;
+  glib::Source::UniquePtr   hover_timer_;
 };
 
 } // namespace launcher
