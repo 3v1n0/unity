@@ -421,6 +421,37 @@ void DBusObject::EmitPropertyChanged(std::string const& property, std::string co
   impl_->EmitPropertyChanged(property, path);
 }
 
+// DBusObjectBuilder
+
+DECLARE_LOGGER(logger_b, "unity.glib.dbus.object.builder");
+
+std::list<DBusObject::Ptr> DBusObjectBuilder::GetObjectsForIntrospection(std::string const& xml)
+{
+  std::list<DBusObject::Ptr> objects;
+  glib::Error error;
+  auto xml_int = g_dbus_node_info_new_for_xml(xml.c_str(), &error);
+  std::shared_ptr<GDBusNodeInfo> node_info(xml_int, safe_node_info_unref);
+
+  if (error || !node_info)
+  {
+    LOG_ERROR(logger_b) << "Unable to parse the given introspection: "
+                        << error.Message();
+
+    return objects;
+  }
+
+  for (unsigned i = 0; node_info->interfaces[i]; ++i)
+  {
+    glib::Error error;
+    GDBusInterfaceInfo *interface = node_info->interfaces[i];
+
+    auto obj = std::make_shared<DBusObject>(xml, interface->name);
+    objects.push_back(obj);
+  }
+
+  return objects;
+}
+
 // DBusServer
 
 DECLARE_LOGGER(logger_s, "unity.glib.dbus.server");
@@ -530,7 +561,7 @@ struct DBusServer::Impl
     return removed;
   }
 
-  DBusObject::Ptr GetObject(std::string const& interface)
+  DBusObject::Ptr GetObject(std::string const& interface) const
   {
     for (auto const& pair : pending_objects_)
     {
@@ -575,6 +606,21 @@ bool DBusServer::OwnsName() const
   return impl_->name_owned_;
 }
 
+void DBusServer::AddObjects(std::string const& introspection_xml, std::string const& path)
+{
+  auto const& objs = DBusObjectBuilder::GetObjectsForIntrospection(introspection_xml);
+
+  if (objs.empty())
+  {
+    LOG_WARN(logger_s) << "Impossible to add empty objects list";
+  }
+  else
+  {
+    for (auto const& obj : objs)
+      AddObject(obj, path);
+  }
+}
+
 bool DBusServer::AddObject(DBusObject::Ptr const& obj, std::string const& path)
 {
   return impl_->AddObject(obj, path);
@@ -585,7 +631,20 @@ bool DBusServer::RemoveObject(DBusObject::Ptr const& obj)
   return impl_->RemoveObject(obj);
 }
 
-DBusObject::Ptr DBusServer::GetObject(std::string const& interface)
+std::list<DBusObject::Ptr> DBusServer::GetObjects() const
+{
+  std::list<DBusObject::Ptr> objects;
+
+  for (auto const& pair : impl_->pending_objects_)
+    objects.push_back(pair.first);
+
+  for (auto const& obj : impl_->objects_)
+    objects.push_back(obj);
+
+  return objects;
+}
+
+DBusObject::Ptr DBusServer::GetObject(std::string const& interface) const
 {
   return impl_->GetObject(interface);
 }

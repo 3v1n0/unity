@@ -69,6 +69,12 @@ private:
   std::unique_ptr<Impl> impl_;
 };
 
+class DBusObjectBuilder
+{
+public:
+  static std::list<DBusObject::Ptr> GetObjectsForIntrospection(std::string const& introspection_xml);
+};
+
 class DBusServer : public sigc::trackable
 {
 public:
@@ -77,10 +83,13 @@ public:
   DBusServer(std::string const& name, GBusType bus_type = G_BUS_TYPE_SESSION);
   virtual ~DBusServer();
 
+  void AddObjects(std::string const& introspection_xml, std::string const& path);
   bool AddObject(DBusObject::Ptr const&, std::string const& path);
   bool RemoveObject(DBusObject::Ptr const&);
 
-  DBusObject::Ptr GetObject(std::string const& interface);
+
+  std::list<DBusObject::Ptr> GetObjects() const;
+  DBusObject::Ptr GetObject(std::string const& interface) const;
 
   void EmitSignal(std::string const& interface, std::string const& signal, GVariant* parameters = nullptr);
 
