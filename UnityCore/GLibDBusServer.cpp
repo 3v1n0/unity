@@ -149,15 +149,10 @@ DBusObject::DBusObject(std::string const& introspection_xml, std::string const& 
 
 DBusObject::~DBusObject()
 {
-  for (auto const& pair : registrations_)
-  {
-    auto const& registration_id = pair.first;
-    auto const& connection = pair.second;
-    g_dbus_connection_unregister_object(connection, registration_id);
-  }
+  UnRegister();
 }
 
-void DBusObject::SetMethodsCallHandler(MethodCallback const& func)
+void DBusObject::SetMethodsCallsHandler(MethodCallback const& func)
 {
   method_cb_ = func;
 }
@@ -214,12 +209,70 @@ bool DBusObject::Register(glib::Object<GDBusConnection> const& conn, std::string
     return false;
   }
 
-  registrations_[id] = conn;
+  registrations_[id] = path;
   connection_by_path_[path] = conn;
+  registered.emit(path);
 
   LOG_INFO(logger_o) << "Registering object '" << InterfaceName() << "'";
 
   return true;
+}
+
+void DBusObject::UnRegister(std::string const& path)
+{
+  if (!path.empty())
+  {
+    auto conn_it = connection_by_path_.find(path);
+
+    if (conn_it == connection_by_path_.end())
+    {
+      LOG_WARN(logger_o) << "Impossible unregistering object for path " << path;
+      return;
+    }
+
+    guint registration_id = 0;
+
+    for (auto const& pair : registrations_)
+    {
+      auto const& obj_path = pair.second;
+
+      if (obj_path == path)
+      {
+        registration_id = pair.first;
+        g_dbus_connection_unregister_object(conn_it->second, registration_id);
+        unregistered.emit(path);
+
+        LOG_INFO(logger_o) << "Unregistering object '" << InterfaceName() << "'"
+                           << " on path '" << path << "'";
+        break;
+      }
+    }
+
+    registrations_.erase(registration_id);
+    connection_by_path_.erase(conn_it);
+
+    if (registrations_.empty())
+      fully_unregistered.emit();
+  }
+  else
+  {
+    for (auto const& pair : registrations_)
+    {
+      auto const& registration_id = pair.first;
+      auto const& obj_path = pair.second;
+      auto connection = connection_by_path_[obj_path];
+
+      g_dbus_connection_unregister_object(connection, registration_id);
+      unregistered.emit(obj_path);
+
+      LOG_INFO(logger_o) << "Unregistering object '" << InterfaceName() << "'"
+                         << " on path '" << obj_path << "'";
+    }
+
+    registrations_.clear();
+    connection_by_path_.clear();
+    fully_unregistered.emit();
+  }
 }
 
 void DBusObject::EmitSignal(std::string const& signal, GVariant* parameters, std::string const& path)
@@ -339,6 +392,11 @@ DBusServer::DBusServer(std::string const& name, GBusType bus_type)
       self->name_owned_ = true;
       self->name_acquired.emit();
 
+      for (auto const& pair : self->pending_objects_)
+        self->AddObject(pair.first, pair.second);
+
+      self->pending_objects_.clear();
+
     }, nullptr, [] (GDBusConnection *connection, const gchar *name, gpointer data)
     {
       auto self = static_cast<DBusServer*>(data);
@@ -360,6 +418,8 @@ DBusServer::~DBusServer()
 {
   if (owner_name_)
     g_bus_unown_name(owner_name_);
+
+  LOG_INFO(logger_s) << "Removing dbus server";
 }
 
 bool DBusServer::AddObject(DBusObject::Ptr const& obj, std::string const& path)
@@ -375,13 +435,7 @@ bool DBusServer::AddObject(DBusObject::Ptr const& obj, std::string const& path)
     LOG_WARN(logger_s) << "Can't register object '" << obj->InterfaceName()
                        << "' yet as we don't have a connection, waiting for it...";
 
-    // Since the connection is not available, let's wait it to be set and
-    // and then we retry to add it again.
-    auto conn = std::make_shared<sigc::connection>();
-    *conn = name_acquired.connect([this, obj, path, conn] {
-      AddObject(obj, path);
-      conn->disconnect();
-    });
+    pending_objects_.push_back(std::make_pair(obj, path));
   }
   else
   {
@@ -393,6 +447,33 @@ bool DBusServer::AddObject(DBusObject::Ptr const& obj, std::string const& path)
   }
 
   return false;
+}
+
+bool DBusServer::RemoveObject(DBusObject::Ptr const& obj)
+{
+  if (!obj)
+    return false;
+
+  bool removed = false;
+
+  for (auto it = pending_objects_.begin(); it != pending_objects_.end(); ++it)
+  {
+    if (it->first == obj)
+    {
+      pending_objects_.erase(it);
+      removed = true;
+      break;
+    }
+  }
+
+  if (!removed)
+  {
+    removed = (std::remove(objects_.begin(), objects_.end(), obj) != objects_.end());
+  }
+
+  obj->UnRegister();
+
+  return removed;
 }
 
 } // namespace glib

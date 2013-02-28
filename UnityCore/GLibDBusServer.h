@@ -32,7 +32,7 @@ namespace unity
 namespace glib
 {
 
-class DBusObject
+class DBusObject : public sigc::trackable
 {
 public:
   typedef std::shared_ptr<DBusObject> Ptr;
@@ -44,16 +44,21 @@ public:
   typedef std::function<GVariant*(std::string const&)> PropertyGetterCallback;
   typedef std::function<bool(std::string const&, GVariant*)> PropertySetterCallback;
 
-  void SetMethodsCallHandler(MethodCallback const&);
+  void SetMethodsCallsHandler(MethodCallback const&);
   void SetPropertyGetter(PropertyGetterCallback const&);
   void SetPropertySetter(PropertySetterCallback const&);
 
   std::string InterfaceName() const;
 
   bool Register(glib::Object<GDBusConnection> const&, std::string const& path);
-  void EmitSignal(std::string const& signal, GVariant* parameters = nullptr, std::string const& path = "");
+  void UnRegister(std::string const& path = "");
 
+  void EmitSignal(std::string const& signal, GVariant* parameters = nullptr, std::string const& path = "");
   void EmitPropertyChanged(std::string const& property, std::string const& path = "");
+
+  sigc::signal<void, std::string const&> registered;
+  sigc::signal<void, std::string const&> unregistered;
+  sigc::signal<void> fully_unregistered;
 
 private:
   // not copyable class
@@ -70,7 +75,7 @@ private:
 
   GDBusInterfaceVTable interface_vtable_;
   std::shared_ptr<GDBusInterfaceInfo> interface_info_;
-  std::map<guint, glib::Object<GDBusConnection>> registrations_;
+  std::map<guint, std::string> registrations_;
   std::map<std::string, glib::Object<GDBusConnection>> connection_by_path_;
 };
 
@@ -83,6 +88,8 @@ public:
   virtual ~DBusServer();
 
   bool AddObject(DBusObject::Ptr const&, std::string const& path);
+  bool RemoveObject(DBusObject::Ptr const&);
+
   bool OwnsName() const;
 
   sigc::signal<void> name_acquired;
@@ -97,6 +104,7 @@ private:
   guint owner_name_;
   glib::Object<GDBusConnection> connection_;
   std::vector<DBusObject::Ptr> objects_;
+  std::vector<std::pair<DBusObject::Ptr, std::string>> pending_objects_;
 };
 
 } // namespace glib
