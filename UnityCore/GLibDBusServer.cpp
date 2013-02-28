@@ -425,136 +425,174 @@ void DBusObject::EmitPropertyChanged(std::string const& property, std::string co
 
 DECLARE_LOGGER(logger_s, "unity.glib.dbus.server");
 
-DBusServer::DBusServer(std::string const& name, GBusType bus_type)
-  : name_owned_(false)
-  , owner_name_(0)
+struct DBusServer::Impl
 {
-  owner_name_ = g_bus_own_name(bus_type, name.c_str(), G_BUS_NAME_OWNER_FLAGS_NONE,
-    [] (GDBusConnection* conn, const gchar* name, gpointer data)
+  Impl(DBusServer* server, std::string const& name, GBusType bus_type)
+    : server_(server)
+    , name_owned_(false)
+    , owner_name_(0)
+  {
+    owner_name_ = g_bus_own_name(bus_type, name.c_str(), G_BUS_NAME_OWNER_FLAGS_NONE,
+      [] (GDBusConnection* conn, const gchar* name, gpointer data)
+      {
+        auto self = static_cast<DBusServer::Impl*>(data);
+
+        LOG_INFO(logger_s) << "DBus name acquired '" << name << "'";
+
+        self->connection_ = glib::Object<GDBusConnection>(conn, glib::AddRef());
+        self->name_owned_ = true;
+        self->server_->name_acquired.emit();
+
+        for (auto const& pair : self->pending_objects_)
+          self->AddObject(pair.first, pair.second);
+
+        self->pending_objects_.clear();
+
+      }, nullptr, [] (GDBusConnection *connection, const gchar *name, gpointer data)
+      {
+        auto self = static_cast<DBusServer::Impl*>(data);
+
+        LOG_ERROR(logger_s) << "DBus name lost '" << name << "'";
+
+        self->name_owned_ = false;
+        self->server_->name_lost.emit();
+      }
+      , this, nullptr);
+  }
+
+  ~Impl()
+  {
+    if (owner_name_)
+      g_bus_unown_name(owner_name_);
+
+    LOG_INFO(logger_s) << "Removing dbus server";
+  }
+
+  bool AddObject(DBusObject::Ptr const& obj, std::string const& path)
+  {
+    if (!obj)
     {
-      auto self = static_cast<DBusServer*>(data);
-
-      LOG_INFO(logger_s) << "DBus name acquired '" << name << "'";
-
-      self->connection_ = glib::Object<GDBusConnection>(conn, glib::AddRef());
-      self->name_owned_ = true;
-      self->name_acquired.emit();
-
-      for (auto const& pair : self->pending_objects_)
-        self->AddObject(pair.first, pair.second);
-
-      self->pending_objects_.clear();
-
-    }, nullptr, [] (GDBusConnection *connection, const gchar *name, gpointer data)
-    {
-      auto self = static_cast<DBusServer*>(data);
-
-      LOG_ERROR(logger_s) << "DBus name lost '" << name << "'";
-
-      self->name_owned_ = false;
-      self->name_lost.emit();
+      LOG_ERROR(logger_s) << "Can't register an invalid object";
+      return false;
     }
-    , this, nullptr);
-}
+
+    if (!connection_)
+    {
+      LOG_WARN(logger_s) << "Can't register object '" << obj->InterfaceName()
+                         << "' yet as we don't have a connection, waiting for it...";
+
+      pending_objects_.push_back(std::make_pair(obj, path));
+    }
+    else
+    {
+      if (obj->Register(connection_, path))
+      {
+        objects_.push_back(obj);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  bool RemoveObject(DBusObject::Ptr const& obj)
+  {
+    if (!obj)
+      return false;
+
+    bool removed = false;
+
+    for (auto it = pending_objects_.begin(); it != pending_objects_.end(); ++it)
+    {
+      if (it->first == obj)
+      {
+        pending_objects_.erase(it);
+        removed = true;
+        LOG_INFO(logger_s) << "Removing object '" << obj->InterfaceName() << "' ...";
+        break;
+      }
+    }
+
+    if (!removed)
+    {
+      if (std::remove(objects_.begin(), objects_.end(), obj) != objects_.end())
+      {
+        removed = true;
+        LOG_INFO(logger_s) << "Removing object '" << obj->InterfaceName() << "' ...";
+      }
+    }
+
+    if (removed)
+    {
+      obj->UnRegister();
+    }
+
+    return removed;
+  }
+
+  DBusObject::Ptr GetObject(std::string const& interface)
+  {
+    for (auto const& pair : pending_objects_)
+    {
+      if (pair.first->InterfaceName() == interface)
+        return pair.first;
+    }
+
+    for (auto const& obj : objects_)
+    {
+      if (obj->InterfaceName() == interface)
+        return obj;
+    }
+
+    return DBusObject::Ptr();
+  }
+
+  void EmitSignal(std::string const& interface, std::string const& signal, GVariant* parameters)
+  {
+    auto const& obj = GetObject(interface);
+
+    if (obj)
+      obj->EmitSignal(signal, parameters);
+  }
+
+  DBusServer* server_;
+  bool name_owned_;
+  guint owner_name_;
+  glib::Object<GDBusConnection> connection_;
+  std::vector<DBusObject::Ptr> objects_;
+  std::vector<std::pair<DBusObject::Ptr, std::string>> pending_objects_;
+};
+
+DBusServer::DBusServer(std::string const& name, GBusType bus_type)
+  : impl_(new DBusServer::Impl(this, name, bus_type))
+{}
+
+DBusServer::~DBusServer()
+{}
 
 bool DBusServer::OwnsName() const
 {
-  return name_owned_;
-}
-
-DBusServer::~DBusServer()
-{
-  if (owner_name_)
-    g_bus_unown_name(owner_name_);
-
-  LOG_INFO(logger_s) << "Removing dbus server";
+  return impl_->name_owned_;
 }
 
 bool DBusServer::AddObject(DBusObject::Ptr const& obj, std::string const& path)
 {
-  if (!obj)
-  {
-    LOG_ERROR(logger_s) << "Can't register an invalid object";
-    return false;
-  }
-
-  if (!connection_)
-  {
-    LOG_WARN(logger_s) << "Can't register object '" << obj->InterfaceName()
-                       << "' yet as we don't have a connection, waiting for it...";
-
-    pending_objects_.push_back(std::make_pair(obj, path));
-  }
-  else
-  {
-    if (obj->Register(connection_, path))
-    {
-      objects_.push_back(obj);
-      return true;
-    }
-  }
-
-  return false;
+  return impl_->AddObject(obj, path);
 }
 
 bool DBusServer::RemoveObject(DBusObject::Ptr const& obj)
 {
-  if (!obj)
-    return false;
-
-  bool removed = false;
-
-  for (auto it = pending_objects_.begin(); it != pending_objects_.end(); ++it)
-  {
-    if (it->first == obj)
-    {
-      pending_objects_.erase(it);
-      removed = true;
-      LOG_INFO(logger_s) << "Removing object '" << obj->InterfaceName() << "' ...";
-      break;
-    }
-  }
-
-  if (!removed)
-  {
-    if (std::remove(objects_.begin(), objects_.end(), obj) != objects_.end())
-    {
-      removed = true;
-      LOG_INFO(logger_s) << "Removing object '" << obj->InterfaceName() << "' ...";
-    }
-  }
-
-  if (removed)
-  {
-    obj->UnRegister();
-  }
-
-  return removed;
+  return impl_->RemoveObject(obj);
 }
 
 DBusObject::Ptr DBusServer::GetObject(std::string const& interface)
 {
-  for (auto const& pair : pending_objects_)
-  {
-    if (pair.first->InterfaceName() == interface)
-      return pair.first;
-  }
-
-  for (auto const& obj : objects_)
-  {
-    if (obj->InterfaceName() == interface)
-      return obj;
-  }
-
-  return DBusObject::Ptr();
+  return impl_->GetObject(interface);
 }
 
 void DBusServer::EmitSignal(std::string const& interface, std::string const& signal, GVariant* parameters)
 {
-  auto const& obj = GetObject(interface);
-
-  if (obj)
-    obj->EmitSignal(signal, parameters);
+  impl_->EmitSignal(interface, signal, parameters);
 }
 
 } // namespace glib

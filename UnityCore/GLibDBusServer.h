@@ -94,11 +94,8 @@ private:
   DBusServer(DBusServer const&) = delete;
   DBusServer& operator=(DBusServer const&) = delete;
 
-  bool name_owned_;
-  guint owner_name_;
-  glib::Object<GDBusConnection> connection_;
-  std::vector<DBusObject::Ptr> objects_;
-  std::vector<std::pair<DBusObject::Ptr, std::string>> pending_objects_;
+  struct Impl;
+  std::unique_ptr<Impl> impl_;
 };
 
 } // namespace glib
