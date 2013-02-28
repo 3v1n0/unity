@@ -53,10 +53,16 @@ public:
   bool Register(glib::Object<GDBusConnection> const&, std::string const& path);
   void EmitSignal(std::string const& signal, GVariant* parameters = nullptr, std::string const& path = "");
 
+  void EmitPropertyChanged(std::string const& property, std::string const& path = "");
+
 private:
   // not copyable class
   DBusObject(DBusObject const&) = delete;
   DBusObject& operator=(DBusObject const&) = delete;
+
+  void EmitGenericSignal(glib::Object<GDBusConnection> const&, std::string const& path,
+                         std::string const& interface, std::string const& signal,
+                         GVariant* parameters = nullptr);
 
   MethodCallback method_cb_;
   PropertyGetterCallback property_get_cb_;

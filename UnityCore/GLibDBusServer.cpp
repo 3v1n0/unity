@@ -108,7 +108,11 @@ DBusObject::DBusObject(std::string const& introspection_xml, std::string const& 
                                        const gchar* property_name, GVariant *value,
                                        GError **error, gpointer user_data) {
     auto self = static_cast<DBusObject*>(user_data);
+    glib::Variant old_value;
     gboolean ret = TRUE;
+
+    if (self->property_get_cb_)
+      old_value = self->property_get_cb_(property_name ? property_name : "");
 
     if (self->property_set_cb_)
     {
@@ -126,6 +130,9 @@ DBusObject::DBusObject(std::string const& introspection_xml, std::string const& 
       LOG_INFO(logger_o) << "Setting property '" << property_name << "' on '"
                          << interface_name << "' , to value: '"
                          << (value ? g_variant_print(value, TRUE) : "<null>") << "'";
+
+      if (!g_variant_equal(old_value, value))
+        self->EmitPropertyChanged(property_name ? property_name : "");
     }
     else
     {
@@ -217,6 +224,8 @@ bool DBusObject::Register(glib::Object<GDBusConnection> const& conn, std::string
 
 void DBusObject::EmitSignal(std::string const& signal, GVariant* parameters, std::string const& path)
 {
+  glib::Variant reffed_params(parameters);
+
   if (signal.empty())
   {
     LOG_ERROR(logger_o) << "Impossible to emit an empty signal";
@@ -234,18 +243,52 @@ void DBusObject::EmitSignal(std::string const& signal, GVariant* parameters, std
       return;
     }
 
-    LOG_INFO(logger_o) << "Emitting signal '" << signal << "'" << " on object path '"
-                       << path << "'";
-
-    glib::Error error;
-    g_dbus_connection_emit_signal(conn_it->second, nullptr, path.c_str(), InterfaceName().c_str(),
-                                  signal.c_str(), glib::Variant(parameters), &error);
-
-    if (error)
+    EmitGenericSignal(conn_it->second, path, InterfaceName(), signal, parameters);
+  }
+  else
+  {
+    for (auto const& pair : connection_by_path_)
     {
-      LOG_ERROR(logger_o) << "Got error when emitting signal '" << signal << "': "
-                          << " on object path '" << path << "': " << error.Message();
+      glib::Variant params(parameters);
+      auto const& obj_path = pair.first;
+      auto const& conn = pair.second;
+
+      EmitGenericSignal(conn, obj_path, InterfaceName(), signal, params);
     }
+  }
+}
+
+void DBusObject::EmitPropertyChanged(std::string const& property, std::string const& path)
+{
+  if (property.empty())
+  {
+    LOG_ERROR(logger_o) << "Impossible to emit a changed property for an invalid one";
+    return;
+  }
+
+  if (!property_get_cb_)
+  {
+    LOG_ERROR(logger_o) << "We don't have a property getter for this object";
+    return;
+  }
+
+  auto builder = g_variant_builder_new(G_VARIANT_TYPE_ARRAY);
+  GVariant* value = property_get_cb_(property.c_str());
+  g_variant_builder_add(builder, "{sv}", property.c_str(), value);
+  glib::Variant parameters(g_variant_new("(sa{sv}as)", InterfaceName().c_str(), builder, nullptr));
+
+  if (!path.empty())
+  {
+    auto conn_it = connection_by_path_.find(path);
+
+    if (conn_it == connection_by_path_.end())
+    {
+      LOG_ERROR(logger_o) << "Impossible to emit property changed '" << property << "' "
+                          << "on object path '" << path << "': no connection available";
+      return;
+    }
+
+    EmitGenericSignal(conn_it->second, path, "org.freedesktop.DBus.Properties", "PropertiesChanged", parameters);
   }
   else
   {
@@ -255,19 +298,25 @@ void DBusObject::EmitSignal(std::string const& signal, GVariant* parameters, std
       auto const& obj_path = pair.first;
       auto const& conn = pair.second;
 
-      LOG_INFO(logger_o) << "Emitting signal '" << signal << "'" << " on object path '"
-                         << path << "'";
-
-      glib::Error error;
-      g_dbus_connection_emit_signal(conn, nullptr, obj_path.c_str(), InterfaceName().c_str(),
-                                    signal.c_str(), reffed_params, &error);
-
-      if (error)
-      {
-        LOG_ERROR(logger_o) << "Got error when emitting signal '" << signal << "': "
-                            << " on object path '" << obj_path << "': " << error.Message();
-      }
+      EmitGenericSignal(conn, obj_path, "org.freedesktop.DBus.Properties", "PropertiesChanged", reffed_params);
     }
+  }
+}
+
+void DBusObject::EmitGenericSignal(glib::Object<GDBusConnection> const& conn, std::string const& path, std::string const& interface, std::string const& signal, GVariant* parameters)
+{
+  LOG_INFO(logger_o) << "Emitting signal '" << signal << "'" << " for the interface "
+                     << "'" << interface << "' on object path '" << path << "'";
+
+  glib::Error error;
+  g_dbus_connection_emit_signal(conn, nullptr, path.c_str(), interface.c_str(),
+                                signal.c_str(), parameters, &error);
+
+  if (error)
+  {
+    LOG_ERROR(logger_o) << "Got error when emitting signal '" << signal << "': "
+                        << " for the interface '" << interface << "' on object path '"
+                        << path << "': " << error.Message();
   }
 }
 
