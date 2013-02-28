@@ -65,18 +65,8 @@ private:
   DBusObject(DBusObject const&) = delete;
   DBusObject& operator=(DBusObject const&) = delete;
 
-  void EmitGenericSignal(glib::Object<GDBusConnection> const&, std::string const& path,
-                         std::string const& interface, std::string const& signal,
-                         GVariant* parameters = nullptr);
-
-  MethodCallback method_cb_;
-  PropertyGetterCallback property_get_cb_;
-  PropertySetterCallback property_set_cb_;
-
-  GDBusInterfaceVTable interface_vtable_;
-  std::shared_ptr<GDBusInterfaceInfo> interface_info_;
-  std::map<guint, std::string> registrations_;
-  std::map<std::string, glib::Object<GDBusConnection>> connection_by_path_;
+  struct Impl;
+  std::unique_ptr<Impl> impl_;
 };
 
 class DBusServer : public sigc::trackable

@@ -41,336 +41,384 @@ void safe_node_info_unref(GDBusNodeInfo* info)
 
 DECLARE_LOGGER(logger_o, "unity.glib.dbus.object");
 
-DBusObject::DBusObject(std::string const& introspection_xml, std::string const& interface_name)
-  : interface_info_(nullptr, safe_interface_info_unref)
+struct DBusObject::Impl
 {
-  glib::Error error;
-  auto xml_int = g_dbus_node_info_new_for_xml(introspection_xml.c_str(), &error);
-  std::shared_ptr<GDBusNodeInfo> node_info(xml_int, safe_node_info_unref);
-
-  if (error)
+  Impl(DBusObject* obj, std::string const& introspection_xml, std::string const& interface_name)
+    : object_(obj)
+    , interface_info_(nullptr, safe_interface_info_unref)
   {
-    LOG_ERROR(logger_o) << "Unable to parse the given introspection for "
-                        << interface_name << ": " << error.Message();
-  }
+    glib::Error error;
+    auto xml_int = g_dbus_node_info_new_for_xml(introspection_xml.c_str(), &error);
+    std::shared_ptr<GDBusNodeInfo> node_info(xml_int, safe_node_info_unref);
 
-  if (!node_info)
-    return;
-
-  interface_info_.reset(g_dbus_node_info_lookup_interface(node_info.get(), interface_name.c_str()));
-
-  if (!interface_info_)
-  {
-    LOG_ERROR(logger_o) << "Unable to find the interface '" << interface_name
-                        << "' in the provided introspection XML";
-    return;
-  }
-
-  g_dbus_interface_info_ref(interface_info_.get());
-
-  interface_vtable_.method_call = [] (GDBusConnection* connection, const gchar* sender,
-                                      const gchar* object_path, const gchar* interface_name,
-                                      const gchar* method_name, GVariant* parameters,
-                                      GDBusMethodInvocation* invocation, gpointer user_data) {
-    auto self = static_cast<DBusObject*>(user_data);
-    GVariant *ret = nullptr;
-
-    if (self->method_cb_)
-      ret = self->method_cb_(method_name ? method_name : "", parameters);
-
-    LOG_INFO(logger_o) << "Called method: '" << method_name << " "
-                       << (parameters ? g_variant_print(parameters, TRUE) : "()")
-                       << "' on object '" << object_path << "' with interface '"
-                       << interface_name << "' , returning: '"
-                       << (ret ? g_variant_print(ret, TRUE) : "()") << "'";
-
-    g_dbus_method_invocation_return_value(invocation, ret);
-  };
-
-  interface_vtable_.get_property = [] (GDBusConnection* connection, const gchar* sender,
-                                       const gchar* object_path, const gchar* interface_name,
-                                       const gchar* property_name, GError **error, gpointer user_data) {
-    auto self = static_cast<DBusObject*>(user_data);
-    GVariant *value = nullptr;
-
-    if (self->property_get_cb_)
-      value = self->property_get_cb_(property_name ? property_name : "");
-
-    LOG_INFO(logger_o) << "Getting property '" << property_name << "' on '"
-                       << interface_name << "' , returning: '"
-                       << (value ? g_variant_print(value, TRUE) : "()") << "'";
-
-    return value;
-  };
-
-  interface_vtable_.set_property = [] (GDBusConnection* connection, const gchar* sender,
-                                       const gchar* object_path, const gchar* interface_name,
-                                       const gchar* property_name, GVariant *value,
-                                       GError **error, gpointer user_data) {
-    auto self = static_cast<DBusObject*>(user_data);
-    glib::Variant old_value;
-    gboolean ret = TRUE;
-
-    if (self->property_get_cb_)
-      old_value = self->property_get_cb_(property_name ? property_name : "");
-
-    if (self->property_set_cb_)
+    if (error)
     {
-      if (!self->property_set_cb_(property_name ? property_name : "", value))
-      {
-        ret = FALSE;
-
-        g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "It was impossible " \
-                     "to set the property '%s' on '%s'", property_name, interface_name);
-      }
+      LOG_ERROR(logger_o) << "Unable to parse the given introspection for "
+                          << interface_name << ": " << error.Message();
     }
 
-    if (ret)
-    {
-      LOG_INFO(logger_o) << "Setting property '" << property_name << "' on '"
-                         << interface_name << "' , to value: '"
-                         << (value ? g_variant_print(value, TRUE) : "<null>") << "'";
+    if (!node_info)
+      return;
 
-      if (!g_variant_equal(old_value, value))
-        self->EmitPropertyChanged(property_name ? property_name : "");
+    interface_info_.reset(g_dbus_node_info_lookup_interface(node_info.get(), interface_name.c_str()));
+
+    if (!interface_info_)
+    {
+      LOG_ERROR(logger_o) << "Unable to find the interface '" << interface_name
+                          << "' in the provided introspection XML";
+      return;
+    }
+
+    g_dbus_interface_info_ref(interface_info_.get());
+
+    interface_vtable_.method_call = [] (GDBusConnection* connection, const gchar* sender,
+                                        const gchar* object_path, const gchar* interface_name,
+                                        const gchar* method_name, GVariant* parameters,
+                                        GDBusMethodInvocation* invocation, gpointer user_data) {
+      auto self = static_cast<DBusObject::Impl*>(user_data);
+      GVariant *ret = nullptr;
+
+      if (self->method_cb_)
+        ret = self->method_cb_(method_name ? method_name : "", parameters);
+
+      LOG_INFO(logger_o) << "Called method: '" << method_name << " "
+                         << (parameters ? g_variant_print(parameters, TRUE) : "()")
+                         << "' on object '" << object_path << "' with interface '"
+                         << interface_name << "' , returning: '"
+                         << (ret ? g_variant_print(ret, TRUE) : "()") << "'";
+
+      g_dbus_method_invocation_return_value(invocation, ret);
+    };
+
+    interface_vtable_.get_property = [] (GDBusConnection* connection, const gchar* sender,
+                                         const gchar* object_path, const gchar* interface_name,
+                                         const gchar* property_name, GError **error, gpointer user_data) {
+      auto self = static_cast<DBusObject::Impl*>(user_data);
+      GVariant *value = nullptr;
+
+      if (self->property_get_cb_)
+        value = self->property_get_cb_(property_name ? property_name : "");
+
+      LOG_INFO(logger_o) << "Getting property '" << property_name << "' on '"
+                         << interface_name << "' , returning: '"
+                         << (value ? g_variant_print(value, TRUE) : "()") << "'";
+
+      return value;
+    };
+
+    interface_vtable_.set_property = [] (GDBusConnection* connection, const gchar* sender,
+                                         const gchar* object_path, const gchar* interface_name,
+                                         const gchar* property_name, GVariant *value,
+                                         GError **error, gpointer user_data) {
+      auto self = static_cast<DBusObject::Impl*>(user_data);
+      glib::Variant old_value;
+      gboolean ret = TRUE;
+
+      if (self->property_get_cb_)
+        old_value = self->property_get_cb_(property_name ? property_name : "");
+
+      if (self->property_set_cb_)
+      {
+        if (!self->property_set_cb_(property_name ? property_name : "", value))
+        {
+          ret = FALSE;
+
+          g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED, "It was impossible " \
+                       "to set the property '%s' on '%s'", property_name, interface_name);
+        }
+      }
+
+      if (ret)
+      {
+        LOG_INFO(logger_o) << "Setting property '" << property_name << "' on '"
+                           << interface_name << "' , to value: '"
+                           << (value ? g_variant_print(value, TRUE) : "<null>") << "'";
+
+        if (!g_variant_equal(old_value, value))
+          self->EmitPropertyChanged(property_name ? property_name : "");
+      }
+      else
+      {
+        LOG_WARN(logger_o) << "It was impossible to set the property '"
+                           << property_name << "' on '" << interface_name
+                           << "' , to value: '"
+                           << (value ? g_variant_print(value, TRUE) : "()")
+                           << "'";
+      }
+
+      return ret;
+    };
+  }
+
+  ~Impl()
+  {
+    UnRegister();
+  }
+
+  std::string InterfaceName() const
+  {
+    if (interface_info_ && interface_info_->name)
+      return interface_info_->name;
+
+    return "";
+  }
+
+  bool Register(glib::Object<GDBusConnection> const& conn, std::string const& path)
+  {
+    if (!interface_info_)
+    {
+      LOG_ERROR(logger_o) << "Can't register object '" << InterfaceName()
+                          << "', bad interface";
+      return false;
+    }
+
+    if (connection_by_path_.find(path) != connection_by_path_.end())
+    {
+      LOG_ERROR(logger_o) << "Can't register object '" << InterfaceName()
+                          << "', it's already registered on path '" << path << "'";
+      return false;
+    }
+
+    if (!conn.IsType(G_TYPE_DBUS_CONNECTION))
+    {
+      LOG_ERROR(logger_o) << "Can't register object '" << InterfaceName()
+                          << "', invalid connection";
+      return false;
+    }
+
+    glib::Error error;
+
+    guint id = g_dbus_connection_register_object(conn, path.c_str(), interface_info_.get(),
+                                                 &interface_vtable_, this, nullptr, &error);
+    if (error)
+    {
+      LOG_ERROR(logger_o) << "Could not register object in dbus: "
+                          << error.Message();
+      return false;
+    }
+
+    registrations_[id] = path;
+    connection_by_path_[path] = conn;
+    object_->registered.emit(path);
+
+    LOG_INFO(logger_o) << "Registering object '" << InterfaceName() << "'";
+
+    return true;
+  }
+
+  void UnRegister(std::string const& path = "")
+  {
+    if (!path.empty())
+    {
+      auto conn_it = connection_by_path_.find(path);
+
+      if (conn_it == connection_by_path_.end())
+      {
+        LOG_WARN(logger_o) << "Impossible unregistering object for path " << path;
+        return;
+      }
+
+      guint registration_id = 0;
+
+      for (auto const& pair : registrations_)
+      {
+        auto const& obj_path = pair.second;
+
+        if (obj_path == path)
+        {
+          registration_id = pair.first;
+          g_dbus_connection_unregister_object(conn_it->second, registration_id);
+          object_->unregistered.emit(path);
+
+          LOG_INFO(logger_o) << "Unregistering object '" << InterfaceName() << "'"
+                             << " on path '" << path << "'";
+          break;
+        }
+      }
+
+      registrations_.erase(registration_id);
+      connection_by_path_.erase(conn_it);
+
+      if (registrations_.empty())
+        object_->fully_unregistered.emit();
     }
     else
     {
-      LOG_WARN(logger_o) << "It was impossible to set the property '"
-                         << property_name << "' on '" << interface_name
-                         << "' , to value: '"
-                         << (value ? g_variant_print(value, TRUE) : "()")
-                         << "'";
+      for (auto const& pair : registrations_)
+      {
+        auto const& registration_id = pair.first;
+        auto const& obj_path = pair.second;
+        auto connection = connection_by_path_[obj_path];
+
+        g_dbus_connection_unregister_object(connection, registration_id);
+        object_->unregistered.emit(obj_path);
+
+        LOG_INFO(logger_o) << "Unregistering object '" << InterfaceName() << "'"
+                           << " on path '" << obj_path << "'";
+      }
+
+      registrations_.clear();
+      connection_by_path_.clear();
+      object_->fully_unregistered.emit();
+    }
+  }
+
+  void EmitGenericSignal(glib::Object<GDBusConnection> const& conn, std::string const& path,
+                         std::string const& interface, std::string const& signal,
+                         GVariant* parameters = nullptr)
+  {
+    LOG_INFO(logger_o) << "Emitting signal '" << signal << "'" << " for the interface "
+                     << "'" << interface << "' on object path '" << path << "'";
+
+    glib::Error error;
+    g_dbus_connection_emit_signal(conn, nullptr, path.c_str(), interface.c_str(),
+                                  signal.c_str(), parameters, &error);
+
+    if (error)
+    {
+      LOG_ERROR(logger_o) << "Got error when emitting signal '" << signal << "': "
+                          << " for the interface '" << interface << "' on object path '"
+                          << path << "': " << error.Message();
+    }
+  }
+
+  void EmitSignal(std::string const& signal, GVariant* parameters, std::string const& path)
+  {
+    glib::Variant reffed_params(parameters);
+
+    if (signal.empty())
+    {
+      LOG_ERROR(logger_o) << "Impossible to emit an empty signal";
+      return;
     }
 
-    return ret;
-  };
-}
+    if (!path.empty())
+    {
+      auto conn_it = connection_by_path_.find(path);
+
+      if (conn_it == connection_by_path_.end())
+      {
+        LOG_ERROR(logger_o) << "Impossible to emit signal '" << signal << "' "
+                            << "on object path '" << path << "': no connection available";
+        return;
+      }
+
+      EmitGenericSignal(conn_it->second, path, InterfaceName(), signal, parameters);
+    }
+    else
+    {
+      for (auto const& pair : connection_by_path_)
+      {
+        glib::Variant params(parameters);
+        auto const& obj_path = pair.first;
+        auto const& conn = pair.second;
+
+        EmitGenericSignal(conn, obj_path, InterfaceName(), signal, params);
+      }
+    }
+  }
+
+  void EmitPropertyChanged(std::string const& property, std::string const& path = "")
+  {
+    if (property.empty())
+    {
+      LOG_ERROR(logger_o) << "Impossible to emit a changed property for an invalid one";
+      return;
+    }
+
+    if (!property_get_cb_)
+    {
+      LOG_ERROR(logger_o) << "We don't have a property getter for this object";
+      return;
+    }
+
+    auto builder = g_variant_builder_new(G_VARIANT_TYPE_ARRAY);
+    GVariant* value = property_get_cb_(property.c_str());
+    g_variant_builder_add(builder, "{sv}", property.c_str(), value);
+    glib::Variant parameters(g_variant_new("(sa{sv}as)", InterfaceName().c_str(), builder, nullptr));
+
+    if (!path.empty())
+    {
+      auto conn_it = connection_by_path_.find(path);
+
+      if (conn_it == connection_by_path_.end())
+      {
+        LOG_ERROR(logger_o) << "Impossible to emit property changed '" << property << "' "
+                            << "on object path '" << path << "': no connection available";
+        return;
+      }
+
+      EmitGenericSignal(conn_it->second, path, "org.freedesktop.DBus.Properties", "PropertiesChanged", parameters);
+    }
+    else
+    {
+      for (auto const& pair : connection_by_path_)
+      {
+        glib::Variant reffed_params(parameters);
+        auto const& obj_path = pair.first;
+        auto const& conn = pair.second;
+
+        EmitGenericSignal(conn, obj_path, "org.freedesktop.DBus.Properties", "PropertiesChanged", reffed_params);
+      }
+    }
+  }
+
+  DBusObject* object_;
+  MethodCallback method_cb_;
+  PropertyGetterCallback property_get_cb_;
+  PropertySetterCallback property_set_cb_;
+
+  GDBusInterfaceVTable interface_vtable_;
+  std::shared_ptr<GDBusInterfaceInfo> interface_info_;
+  std::map<guint, std::string> registrations_;
+  std::map<std::string, glib::Object<GDBusConnection>> connection_by_path_;
+};
+
+DBusObject::DBusObject(std::string const& introspection_xml, std::string const& interface_name)
+  : impl_(new DBusObject::Impl(this, introspection_xml, interface_name))
+{}
 
 DBusObject::~DBusObject()
-{
-  UnRegister();
-}
+{}
 
 void DBusObject::SetMethodsCallsHandler(MethodCallback const& func)
 {
-  method_cb_ = func;
+  impl_->method_cb_ = func;
 }
 
 void DBusObject::SetPropertyGetter(PropertyGetterCallback const& func)
 {
-  property_get_cb_ = func;
+  impl_->property_get_cb_ = func;
 }
 
 void DBusObject::SetPropertySetter(PropertySetterCallback const& func)
 {
-  property_set_cb_ = func;
+  impl_->property_set_cb_ = func;
 }
 
 std::string DBusObject::InterfaceName() const
 {
-  if (interface_info_ && interface_info_->name)
-    return interface_info_->name;
-
-  return "";
+  return impl_->InterfaceName();
 }
 
 bool DBusObject::Register(glib::Object<GDBusConnection> const& conn, std::string const& path)
 {
-  if (!interface_info_)
-  {
-    LOG_ERROR(logger_o) << "Can't register object '" << InterfaceName()
-                        << "', bad interface";
-    return false;
-  }
-
-  if (connection_by_path_.find(path) != connection_by_path_.end())
-  {
-    LOG_ERROR(logger_o) << "Can't register object '" << InterfaceName()
-                        << "', it's already registered on path '" << path << "'";
-    return false;
-  }
-
-  if (!conn.IsType(G_TYPE_DBUS_CONNECTION))
-  {
-    LOG_ERROR(logger_o) << "Can't register object '" << InterfaceName()
-                        << "', invalid connection";
-    return false;
-  }
-
-  glib::Error error;
-
-  guint id = g_dbus_connection_register_object(conn, path.c_str(), interface_info_.get(),
-                                               &interface_vtable_, this, nullptr, &error);
-  if (error)
-  {
-    LOG_ERROR(logger_o) << "Could not register object in dbus: "
-                        << error.Message();
-    return false;
-  }
-
-  registrations_[id] = path;
-  connection_by_path_[path] = conn;
-  registered.emit(path);
-
-  LOG_INFO(logger_o) << "Registering object '" << InterfaceName() << "'";
-
-  return true;
+  return impl_->Register(conn, path);
 }
 
 void DBusObject::UnRegister(std::string const& path)
 {
-  if (!path.empty())
-  {
-    auto conn_it = connection_by_path_.find(path);
-
-    if (conn_it == connection_by_path_.end())
-    {
-      LOG_WARN(logger_o) << "Impossible unregistering object for path " << path;
-      return;
-    }
-
-    guint registration_id = 0;
-
-    for (auto const& pair : registrations_)
-    {
-      auto const& obj_path = pair.second;
-
-      if (obj_path == path)
-      {
-        registration_id = pair.first;
-        g_dbus_connection_unregister_object(conn_it->second, registration_id);
-        unregistered.emit(path);
-
-        LOG_INFO(logger_o) << "Unregistering object '" << InterfaceName() << "'"
-                           << " on path '" << path << "'";
-        break;
-      }
-    }
-
-    registrations_.erase(registration_id);
-    connection_by_path_.erase(conn_it);
-
-    if (registrations_.empty())
-      fully_unregistered.emit();
-  }
-  else
-  {
-    for (auto const& pair : registrations_)
-    {
-      auto const& registration_id = pair.first;
-      auto const& obj_path = pair.second;
-      auto connection = connection_by_path_[obj_path];
-
-      g_dbus_connection_unregister_object(connection, registration_id);
-      unregistered.emit(obj_path);
-
-      LOG_INFO(logger_o) << "Unregistering object '" << InterfaceName() << "'"
-                         << " on path '" << obj_path << "'";
-    }
-
-    registrations_.clear();
-    connection_by_path_.clear();
-    fully_unregistered.emit();
-  }
+  impl_->UnRegister(path);
 }
 
 void DBusObject::EmitSignal(std::string const& signal, GVariant* parameters, std::string const& path)
 {
-  glib::Variant reffed_params(parameters);
-
-  if (signal.empty())
-  {
-    LOG_ERROR(logger_o) << "Impossible to emit an empty signal";
-    return;
-  }
-
-  if (!path.empty())
-  {
-    auto conn_it = connection_by_path_.find(path);
-
-    if (conn_it == connection_by_path_.end())
-    {
-      LOG_ERROR(logger_o) << "Impossible to emit signal '" << signal << "' "
-                          << "on object path '" << path << "': no connection available";
-      return;
-    }
-
-    EmitGenericSignal(conn_it->second, path, InterfaceName(), signal, parameters);
-  }
-  else
-  {
-    for (auto const& pair : connection_by_path_)
-    {
-      glib::Variant params(parameters);
-      auto const& obj_path = pair.first;
-      auto const& conn = pair.second;
-
-      EmitGenericSignal(conn, obj_path, InterfaceName(), signal, params);
-    }
-  }
+  impl_->EmitSignal(signal, parameters, path);
 }
 
 void DBusObject::EmitPropertyChanged(std::string const& property, std::string const& path)
 {
-  if (property.empty())
-  {
-    LOG_ERROR(logger_o) << "Impossible to emit a changed property for an invalid one";
-    return;
-  }
-
-  if (!property_get_cb_)
-  {
-    LOG_ERROR(logger_o) << "We don't have a property getter for this object";
-    return;
-  }
-
-  auto builder = g_variant_builder_new(G_VARIANT_TYPE_ARRAY);
-  GVariant* value = property_get_cb_(property.c_str());
-  g_variant_builder_add(builder, "{sv}", property.c_str(), value);
-  glib::Variant parameters(g_variant_new("(sa{sv}as)", InterfaceName().c_str(), builder, nullptr));
-
-  if (!path.empty())
-  {
-    auto conn_it = connection_by_path_.find(path);
-
-    if (conn_it == connection_by_path_.end())
-    {
-      LOG_ERROR(logger_o) << "Impossible to emit property changed '" << property << "' "
-                          << "on object path '" << path << "': no connection available";
-      return;
-    }
-
-    EmitGenericSignal(conn_it->second, path, "org.freedesktop.DBus.Properties", "PropertiesChanged", parameters);
-  }
-  else
-  {
-    for (auto const& pair : connection_by_path_)
-    {
-      glib::Variant reffed_params(parameters);
-      auto const& obj_path = pair.first;
-      auto const& conn = pair.second;
-
-      EmitGenericSignal(conn, obj_path, "org.freedesktop.DBus.Properties", "PropertiesChanged", reffed_params);
-    }
-  }
-}
-
-void DBusObject::EmitGenericSignal(glib::Object<GDBusConnection> const& conn, std::string const& path, std::string const& interface, std::string const& signal, GVariant* parameters)
-{
-  LOG_INFO(logger_o) << "Emitting signal '" << signal << "'" << " for the interface "
-                     << "'" << interface << "' on object path '" << path << "'";
-
-  glib::Error error;
-  g_dbus_connection_emit_signal(conn, nullptr, path.c_str(), interface.c_str(),
-                                signal.c_str(), parameters, &error);
-
-  if (error)
-  {
-    LOG_ERROR(logger_o) << "Got error when emitting signal '" << signal << "': "
-                        << " for the interface '" << interface << "' on object path '"
-                        << path << "': " << error.Message();
-  }
+  impl_->EmitPropertyChanged(property, path);
 }
 
 // DBusServer
