@@ -92,6 +92,8 @@ public:
 
   DBusObject::Ptr GetObject(std::string const& interface);
 
+  void EmitSignal(std::string const& interface, std::string const& signal, GVariant* parameters = nullptr);
+
   bool OwnsName() const;
 
   sigc::signal<void> name_acquired;

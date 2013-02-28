@@ -501,5 +501,13 @@ DBusObject::Ptr DBusServer::GetObject(std::string const& interface)
   return DBusObject::Ptr();
 }
 
+void DBusServer::EmitSignal(std::string const& interface, std::string const& signal, GVariant* parameters)
+{
+  auto const& obj = GetObject(interface);
+
+  if (obj)
+    obj->EmitSignal(signal, parameters);
+}
+
 } // namespace glib
 } // namespace unity
