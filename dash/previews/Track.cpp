@@ -272,16 +272,16 @@ void Track::SetupViews()
     switch (play_state_)
     {
       case PlayerState::PLAYING:
-        player_.Play(uri_);
+        player_.Pause();
         break;
 
       case PlayerState::PAUSED:
-        player_.Pause();
+        player_.Resume();
         break;
 
       case PlayerState::STOPPED:
       default:
-        player_.Resume();
+        player_.Play(uri_);
         break;
     }
   });

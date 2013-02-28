@@ -83,21 +83,25 @@ public:
 
   void Play(std::string const& uri, PlayerInterface::Callback const& callback)
   {
+    LOG_INFO(logger) << "Play '" << uri << "'";
     unity_protocol_preview_player_play(player_, uri.c_str(), OnAsyncCallback, new AsyncCallData(unity_protocol_preview_player_play_finish, callback));
   }
 
   void Pause(PlayerInterface::Callback const& callback)
   {
+    LOG_INFO(logger) << "Pause";
     unity_protocol_preview_player_pause(player_, OnAsyncCallback, new AsyncCallData(unity_protocol_preview_player_pause_finish, callback));
   }
 
   void Resume(PlayerInterface::Callback const& callback)
   {
+    LOG_INFO(logger) << "Resume";
     unity_protocol_preview_player_resume(player_, OnAsyncCallback, new AsyncCallData(unity_protocol_preview_player_resume_finish, callback));
   }
 
   void Stop(PlayerInterface::Callback const& callback)
   {
+    LOG_INFO(logger) << "Stop";
     unity_protocol_preview_player_stop(player_, OnAsyncCallback, new AsyncCallData(unity_protocol_preview_player_stop_finish, callback));
   }
 
