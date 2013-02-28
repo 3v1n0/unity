@@ -1,3 +1,17 @@
+unity (6.12.0daily13.02.28-0ubuntu1) raring; urgency=low
+
+  [ Stephen M. Webb ]
+  * unity watchfile is broken (LP: #1121754)
+
+  [ Andrea Azzarone ]
+  * Switcher does not focus the last active window in detail mode (using
+    alt+grave) (LP: #1133338)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3175
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Thu, 28 Feb 2013 04:02:34 +0000
+
 unity (6.12.0daily13.02.26-0ubuntu1) raring; urgency=low
 
   [ Andrea Azzarone ]
