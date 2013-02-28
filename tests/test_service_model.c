@@ -1,5 +1,6 @@
 #include "test_service_model.h"
 #include <dee.h>
+#include "config.h"
 
 G_DEFINE_TYPE(ServiceModel, service_model, G_TYPE_OBJECT);
 
@@ -10,15 +11,19 @@ struct _ServiceModelPrivate
   DeeModel* categories_model_;
 
   DeeModel* categories_model_changing_;
-  guint timout_id_;
-};
+  guint category_timeout_id_;
 
+  DeeModel* tracks_model_;
+  guint track_timeout_id_;
+};
 
 static void service_model_create_model(ServiceModel* self);
 static void service_model_create_results(ServiceModel* self);
 static void service_model_create_categories(ServiceModel* self);
 static void service_model_create_categories_changing(ServiceModel* self);
+static void service_model_create_tracks(ServiceModel* self);
 static gboolean service_model_categories_add_remove_change(gpointer user_data);
+static gboolean service_model_tracks_add_remove_change(gpointer user_data);
 
 static void
 service_model_dispose(GObject* object)
@@ -29,7 +34,9 @@ service_model_dispose(GObject* object)
   g_object_unref(self->priv->results_model_);
   g_object_unref(self->priv->categories_model_);
   g_object_unref(self->priv->categories_model_changing_);
-  g_source_remove(self->priv->timout_id_);
+  g_source_remove(self->priv->category_timeout_id_);
+  g_object_unref(self->priv->tracks_model_);
+  g_source_remove(self->priv->track_timeout_id_);
 
   G_OBJECT_CLASS (service_model_parent_class)->dispose (object);
 }
@@ -52,6 +59,7 @@ service_model_init(ServiceModel* self)
   service_model_create_results(self);
   service_model_create_categories(self);
   service_model_create_categories_changing(self);
+  service_model_create_tracks(self);
 }
 
 static void
@@ -63,7 +71,7 @@ service_model_create_model(ServiceModel* self)
   guint i;
   for (i = 0; i < 100; i++)
   {
-    gchar* name = g_strdup_printf("Test%d", i);
+    gchar* name = g_strdup_printf("Test%u", i);
     dee_model_append(self->priv->model_, i, name);
     g_free(name);
   }
@@ -80,14 +88,14 @@ service_model_create_results(ServiceModel* self)
   g_variant_builder_add(&b, "{sv}", "key", g_variant_new_string("value"));
   GVariant *hints = g_variant_builder_end(&b);
   
-  int i;
+  guint i;
   for(i = 0; i < 200; i++)
   {
-    gchar* name = g_strdup_printf("Result%d", i);
+    gchar* name = g_strdup_printf("Result%u", i);
     dee_model_append(self->priv->results_model_,
                      name,
                      name,
-                     (guint)(i/50), // new category every 50 results
+                     i/50, // new category every 50 results
                      0,
                      name,
                      name,
@@ -110,11 +118,11 @@ service_model_create_categories(ServiceModel* self)
   GVariant *hints = g_variant_builder_end(&b);
   g_variant_ref_sink(hints);
 
-  int i;
+  guint i;
   for(i = 0; i < 5; i++)
   {
-    gchar* id = g_strdup_printf("cat%d", i);
-    gchar* name = g_strdup_printf("Category %d", i);
+    gchar* id = g_strdup_printf("cat%u", i);
+    gchar* name = g_strdup_printf("Category %u", i);
     dee_model_append(self->priv->categories_model_,
                      id,
                      name,
@@ -139,7 +147,7 @@ service_model_categories_add_remove_change(gpointer user_data)
   if (!iter)
     return TRUE;
 
-  static int new_category = 0;
+  static guint new_category = 5;
 
   // remove first row.
   dee_model_remove(self->priv->categories_model_changing_, iter);
@@ -153,8 +161,8 @@ service_model_categories_add_remove_change(gpointer user_data)
     GVariant *hints = g_variant_builder_end(&b);
     g_variant_ref_sink(hints);
 
-    gchar* id = g_strdup_printf("cat%d", new_category);
-    gchar* name = g_strdup_printf("Category %d", new_category);
+    gchar* id = g_strdup_printf("cat%u", new_category);
+    gchar* name = g_strdup_printf("Category %u", new_category);
     dee_model_set(self->priv->categories_model_changing_,
                   iter,
                   id,
@@ -176,8 +184,8 @@ service_model_categories_add_remove_change(gpointer user_data)
     GVariant *hints = g_variant_builder_end(&b);
     g_variant_ref_sink(hints);
 
-    gchar* id = g_strdup_printf("cat%d", new_category);
-    gchar* name = g_strdup_printf("Category %d", new_category);
+    gchar* id = g_strdup_printf("cat%u", new_category);
+    gchar* name = g_strdup_printf("Category %u", new_category);
     dee_model_append(self->priv->categories_model_changing_,
                      id,
                      name,
@@ -205,11 +213,11 @@ service_model_create_categories_changing(ServiceModel* self)
   GVariant *hints = g_variant_builder_end(&b);
   g_variant_ref_sink(hints);
 
-  int i;
+  guint i;
   for(i = 0; i < 5; i++)
   {
-    gchar* id = g_strdup_printf("cat%d", i);
-    gchar* name = g_strdup_printf("Category %d", i);
+    gchar* id = g_strdup_printf("cat%u", i);
+    gchar* name = g_strdup_printf("Category %u", i);
     dee_model_append(self->priv->categories_model_changing_,
                      id,
                      name,
@@ -222,7 +230,87 @@ service_model_create_categories_changing(ServiceModel* self)
   g_variant_unref(hints);
 
 
-  self->priv->timout_id_ = g_timeout_add(100, service_model_categories_add_remove_change, self);
+  self->priv->category_timeout_id_ = g_timeout_add(100, service_model_categories_add_remove_change, self);
+}
+
+
+
+static gboolean
+service_model_tracks_add_remove_change(gpointer user_data)
+{
+  ServiceModel* self = SERVICE_MODEL(user_data);
+  if (!self)
+    return TRUE;
+
+  DeeModelIter* iter = dee_model_get_first_iter(self->priv->tracks_model_);
+  if (!iter)
+    return TRUE;
+
+  static int new_track = 5;
+
+  // remove first row.
+  dee_model_remove(self->priv->tracks_model_, iter);
+
+  // change first
+  iter = dee_model_get_first_iter(self->priv->tracks_model_);
+  if (iter)
+  {
+    gchar* uri = g_strdup_printf("uri://track%u", new_track);
+    gchar* title = g_strdup_printf("Track %u", new_track);
+
+    dee_model_set(self->priv->tracks_model_,
+                  iter,
+                  uri,
+                  new_track+1,
+                  title,
+                  (unsigned)10);
+    g_free(uri);
+    g_free(title);
+
+    new_track++;
+  }
+
+  // append new,
+  {
+    gchar* uri = g_strdup_printf("uri://track%u", new_track);
+    gchar* title = g_strdup_printf("Track %u", new_track);
+
+    dee_model_append(self->priv->tracks_model_,
+                     uri,
+                     new_track+1,
+                     title,
+                     (unsigned)10);
+    g_free(uri);
+    g_free(title);
+
+    new_track++;
+  }
+
+  return TRUE;
+}
+
+static void
+service_model_create_tracks(ServiceModel* self)
+{
+  self->priv->tracks_model_ = dee_shared_model_new("com.canonical.test.tracks");
+  dee_model_set_schema(self->priv->tracks_model_, "s", "i", "s", "u", NULL);
+
+  guint i;
+  for(i = 0; i < 5; i++)
+  {
+    gchar* uri = g_strdup_printf("uri://track%u", i);
+    gchar* title = g_strdup_printf("Track %u", i);
+
+    dee_model_append(self->priv->tracks_model_,
+                     uri,
+                     i+1,
+                     title,
+                     (unsigned)10);
+    g_free(uri);
+    g_free(title);
+  }
+
+  self->priv->track_timeout_id_ = g_timeout_add(500, service_model_tracks_add_remove_change, self);
 }
 
 ServiceModel*

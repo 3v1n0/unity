@@ -23,6 +23,12 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope3.scope
                 ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope3.scope)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope4.scope
                 ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope4.scope)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/brownnoise.mp3
+                ${CMAKE_BINARY_DIR}/tests/data/unity/sounds/brownnoise.mp3)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/pinknoise.mp3
+                ${CMAKE_BINARY_DIR}/tests/data/unity/sounds/pinknoise.mp3)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/whitenoise.mp3
+                ${CMAKE_BINARY_DIR}/tests/data/unity/sounds/whitenoise.mp3)
 
 #
 # Unit tests
@@ -190,6 +196,7 @@ if (GTEST_SRC_DIR AND
                  test_scope.cpp
                  test_scope_filter.cpp
                  test_scope_proxy.cpp
+                 test_tracks.cpp
                  test_dbus_indicators.cpp
                 )
   target_link_libraries(test-gtest-dbus gtest unity-shared ${LIBS})
