@@ -24,11 +24,11 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope3.scope
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope4.scope
                 ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope4.scope)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/brownnoise.mp3
-                ${CMAKE_BINARY_DIR}/tests/data/unity/sounds/brownnoise.mp3)
+                ${CMAKE_BINARY_DIR}/tests/data/unity/sounds/brownnoise.mp3 COPYONLY)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/pinknoise.mp3
-                ${CMAKE_BINARY_DIR}/tests/data/unity/sounds/pinknoise.mp3)
+                ${CMAKE_BINARY_DIR}/tests/data/unity/sounds/pinknoise.mp3 COPYONLY)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/whitenoise.mp3
-                ${CMAKE_BINARY_DIR}/tests/data/unity/sounds/whitenoise.mp3)
+                ${CMAKE_BINARY_DIR}/tests/data/unity/sounds/whitenoise.mp3 COPYONLY)
 
 #
 # Unit tests
