@@ -87,7 +87,6 @@ public:
   bool AddObject(DBusObject::Ptr const&, std::string const& path);
   bool RemoveObject(DBusObject::Ptr const&);
 
-
   std::list<DBusObject::Ptr> GetObjects() const;
   DBusObject::Ptr GetObject(std::string const& interface) const;
 

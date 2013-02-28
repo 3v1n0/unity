@@ -98,6 +98,7 @@ if (GTEST_SRC_DIR AND
        test_main_xless.cpp
        test_abstract_interface_generator.cpp
        test_launcher_model.cpp
+       test_glib_dbus_object.cpp
        test_glib_object.cpp
        test_glib_object_utils.cpp
        test_glib_object_utils.h
