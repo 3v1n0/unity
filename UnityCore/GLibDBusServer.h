@@ -51,6 +51,7 @@ public:
   std::string InterfaceName() const;
 
   bool Register(glib::Object<GDBusConnection> const&, std::string const& path);
+  void EmitSignal(std::string const& path, std::string const& signal, GVariant* parameters = nullptr);
 
 private:
   // not copyable class
@@ -64,6 +65,7 @@ private:
   GDBusInterfaceVTable interface_vtable_;
   std::shared_ptr<GDBusInterfaceInfo> interface_info_;
   std::map<guint, glib::Object<GDBusConnection>> registrations_;
+  std::map<std::string, glib::Object<GDBusConnection>> connection_by_path_;
 };
 
 class DBusServer : public sigc::trackable

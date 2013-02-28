@@ -177,14 +177,21 @@ bool DBusObject::Register(glib::Object<GDBusConnection> const& conn, std::string
   if (!interface_info_)
   {
     LOG_ERROR(logger_o) << "Can't register object '" << InterfaceName()
-                        << "', bad interface\n";
+                        << "', bad interface";
+    return false;
+  }
+
+  if (connection_by_path_.find(path) == connection_by_path_.end())
+  {
+    LOG_ERROR(logger_o) << "Can't register object '" << InterfaceName()
+                        << "', it's already registered on path '" << path << "'";
     return false;
   }
 
   if (!conn.IsType(G_TYPE_DBUS_CONNECTION))
   {
     LOG_ERROR(logger_o) << "Can't register object '" << InterfaceName()
-                        << "', invalid connection\n";
+                        << "', invalid connection";
     return false;
   }
 
@@ -200,10 +207,43 @@ bool DBusObject::Register(glib::Object<GDBusConnection> const& conn, std::string
   }
 
   registrations_[id] = conn;
+  connection_by_path_[path] = conn;
 
   LOG_INFO(logger_o) << "Registering object '" << InterfaceName() << "'";
 
   return true;
+}
+
+void DBusObject::EmitSignal(std::string const& path, std::string const& signal, GVariant* parameters)
+{
+  if (signal.empty() || path.empty())
+  {
+    LOG_ERROR(logger_o) << "Impossible to emit signal '" << signal << "' "
+                        << "on object path '" << path << "'";
+    return;
+  }
+
+  auto conn_it = connection_by_path_.find(path);
+
+  if (conn_it == connection_by_path_.end())
+  {
+    LOG_ERROR(logger_o) << "Impossible to emit signal '" << signal << "' "
+                        << "on object path '" << path << "': no connection available";
+    return;
+  }
+
+  LOG_INFO(logger_o) << "Emitting signal '" << signal << "'" << " on object path '"
+                     << path << "'";
+
+  glib::Error error;
+  g_dbus_connection_emit_signal(conn_it->second, nullptr, path.c_str(), InterfaceName().c_str(),
+                                signal.c_str(), parameters, &error);
+
+  if (error)
+  {
+    LOG_ERROR(logger_o) << "Got error when emitting signal '" << signal << "': "
+                        << " on object path '" << path << "': " << error.Message();
+  }
 }
 
 // DBusServer
