@@ -70,7 +70,9 @@ protected:
 
   nux::VLayout* layout_;
   std::map<std::string, previews::Track::Ptr> m_tracks;
-  int track_count_;
+  sigc::connection add_track_;
+  sigc::connection change_track_;
+  sigc::connection remove_track_;
 };
 
 }
