@@ -300,4 +300,45 @@ TEST_F(TestGLibDBusServerInteractions, MethodWithParametersAndReturnValueCall)
   TestMethodCall("MethodWithParametersAndReturnValue", parameters, return_value);
 }
 
+TEST_F(TestGLibDBusServerInteractions, SignalWithNoParametersEmission)
+{
+  auto const& signal_name = "SignalWithNoParameters";
+
+  bool signal_got = false;
+  proxy->Connect(signal_name, [&signal_got] (GVariant* parameters) {
+    signal_got = true;
+    EXPECT_TRUE(g_variant_equal(g_variant_new("()"), parameters) != FALSE);
+  });
+
+  object->EmitSignal(signal_name);
+  Utils::WaitUntilMSec(signal_got);
+  EXPECT_TRUE(signal_got);
+
+  signal_got = false;
+  server->EmitSignal(object->InterfaceName(), signal_name);
+  Utils::WaitUntilMSec(signal_got);
+  EXPECT_TRUE(signal_got);
+}
+
+TEST_F(TestGLibDBusServerInteractions, SignalWithParameterEmission)
+{
+  auto const& signal_name = "SignalWithParameter";
+  Variant sent_parameters = g_variant_new("(s)", "Unity is Awesome!");
+
+  bool signal_got = false;
+  proxy->Connect(signal_name, [&signal_got, &sent_parameters] (GVariant* parameters) {
+    signal_got = true;
+    EXPECT_TRUE(g_variant_equal(sent_parameters, parameters) != FALSE);
+  });
+
+  object->EmitSignal(signal_name, sent_parameters);
+  Utils::WaitUntilMSec(signal_got);
+  EXPECT_TRUE(signal_got);
+
+  signal_got = false;
+  server->EmitSignal(object->InterfaceName(), signal_name, sent_parameters);
+  Utils::WaitUntilMSec(signal_got);
+  EXPECT_TRUE(signal_got);
+}
+
 } // Namespace
