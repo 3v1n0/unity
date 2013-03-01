@@ -248,7 +248,7 @@ struct DBusObject::Impl
       {
         auto const& registration_id = pair.first;
         auto const& obj_path = pair.second;
-        auto connection = connection_by_path_[obj_path];
+        auto const& connection = connection_by_path_[obj_path];
 
         g_dbus_connection_unregister_object(connection, registration_id);
         object_->unregistered.emit(obj_path);
