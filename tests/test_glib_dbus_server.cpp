@@ -21,6 +21,7 @@
 #include "test_utils.h"
 #include <UnityCore/GLibDBusServer.h>
 #include <UnityCore/GLibDBusProxy.h>
+#include <UnityCore/Variant.h>
 
 using namespace unity::glib;
 
@@ -31,44 +32,27 @@ const std::string DBUS_TEST_NAME = "com.canonical.Unity.Test.Server.Name";
 const std::string OBJECT_INTERFACE = "com.canonical.Unity.ObjectTest";
 const std::string TEST_OBJECT_PATH = "/com/canonical/Unity/Test/Object";
 
-std::string GetRandomServerName()
-{
-  return DBUS_TEST_NAME/* + std::to_string(g_random_int())*/;
-}
-
 namespace introspection
 {
 const std::string SINGLE_OJBECT =
 R"(<node>
   <interface name="com.canonical.Unity.ObjectTest">
-    <method name="Foo">
-      <arg type="i" name="type" direction="in"/>
+    <method name="VoidMethod" />
+    <method name="MethodWithParameters">
+      <arg type="i" name="arg_int" direction="in"/>
+      <arg type="s" name="arg_string" direction="in"/>
+      <arg type="u" name="arg_uint" direction="in"/>
     </method>
-    <method name="Bar">
-      <arg type="i" name="type" direction="out"/>
+    <method name="MethodWithReturnValue">
+      <arg type="u" name="reply" direction="out"/>
     </method>
-    <signal name="SignalWithNoParameters" />
-    <signal name="SignalWithParameter">
-      <arg type="i" name="arg" />
-    </signal>
-    <property name="ReadOnlyProperty" type="i" access="read"/>
-    <property name="WriteOnlyProperty" type="i" access="write"/>
-    <property name="ReadWriteProperty" type="i" access="readwrite"/>
-  </interface>
-</node>)";
-
-const std::string SINGLE_OJBECT2 =
-R"(<node>
-  <interface name="com.canonical.Unity.ObjectTestFoo">
-    <method name="Foo">
-      <arg type="i" name="type" direction="in"/>
-    </method>
-    <method name="Bar">
-      <arg type="i" name="type" direction="out"/>
+    <method name="MethodWithParametersAndReturnValue">
+      <arg type="s" name="query" direction="in"/>
+      <arg type="s" name="reply" direction="out"/>
     </method>
     <signal name="SignalWithNoParameters" />
     <signal name="SignalWithParameter">
-      <arg type="i" name="arg" />
+      <arg type="s" name="arg" />
     </signal>
     <property name="ReadOnlyProperty" type="i" access="read"/>
     <property name="WriteOnlyProperty" type="i" access="write"/>
@@ -212,6 +196,108 @@ TEST_F(TestGLibDBusServer, RemovingObjectsUnregistersThem)
   server.RemoveObject(server.GetObjects().front());
   ASSERT_EQ(server.GetObjects().size(), 0);
   EXPECT_EQ(objects_unregistered, 3);
+}
+
+///
+
+struct TestGLibDBusServerInteractions : testing::Test
+{
+  TestGLibDBusServerInteractions()
+  {}
+
+  static void SetUpTestCase()
+  {
+    server = std::make_shared<DBusServer>(DBUS_TEST_NAME);
+    server->AddObjects(introspection::SINGLE_OJBECT, TEST_OBJECT_PATH);
+    proxy = std::make_shared<DBusProxy>(server->Name(), TEST_OBJECT_PATH, OBJECT_INTERFACE);
+  }
+
+  void SetUp()
+  {
+    Utils::WaitUntilMSec([this] { return server->OwnsName(); });
+    Utils::WaitUntil([this] { return proxy->IsConnected();}, true, 3);
+    ASSERT_TRUE(proxy->IsConnected());
+
+    auto const& objects = server->GetObjects();
+    ASSERT_EQ(objects.size(), 1);
+    object = objects.front();
+    ASSERT_NE(object, nullptr);
+  }
+
+  void TearDown()
+  {
+    object->SetMethodsCallsHandler(nullptr);
+    object->SetPropertyGetter(nullptr);
+    object->SetPropertySetter(nullptr);
+
+    called_method_.clear();
+  }
+
+  GVariant* OnMethodCall(std::string const& method, GVariant* parameters)
+  {
+    called_method_ = method;
+
+    EXPECT_EQ(called_method_, expected_method_);
+    EXPECT_TRUE(g_variant_equal(parameters, expected_parameters_) != FALSE);
+
+    return returned_value_;
+  }
+
+  void TestMethodCall(std::string const& method_name, GVariant* parameters = nullptr, GVariant* returns = nullptr)
+  {
+    object->SetMethodsCallsHandler(sigc::mem_fun(this, &TestGLibDBusServerInteractions::OnMethodCall));
+
+    expected_method_ = method_name;
+    expected_parameters_ = parameters ? parameters : g_variant_new("()");
+    returned_value_ = returns ? returns : g_variant_new("()");
+
+    bool returned = false;
+    proxy->Call(expected_method_, expected_parameters_, [this, &returned] (GVariant* ret) {
+      returned = true;
+      EXPECT_TRUE(g_variant_equal(ret, returned_value_) != FALSE);
+    });
+
+    Utils::WaitUntilMSec([this] { return called_method_ == expected_method_; });
+    Utils::WaitUntilMSec(returned);
+
+    EXPECT_TRUE(returned);
+  }
+
+  static DBusServer::Ptr server;
+  static DBusProxy::Ptr proxy;
+  DBusObject::Ptr object;
+
+  std::string called_method_;
+  std::string expected_method_;
+  Variant expected_parameters_;
+  Variant returned_value_;
+};
+
+DBusServer::Ptr TestGLibDBusServerInteractions::server;
+DBusProxy::Ptr TestGLibDBusServerInteractions::proxy;
+
+TEST_F(TestGLibDBusServerInteractions, VoidMethodCall)
+{
+  TestMethodCall("VoidMethod");
+}
+
+TEST_F(TestGLibDBusServerInteractions, MethodWithParametersCall)
+{
+  auto parameters = g_variant_new("(isu)", 1, "unity", g_random_int());
+  TestMethodCall("MethodWithParameters", parameters);
+}
+
+TEST_F(TestGLibDBusServerInteractions, MethodWithReturnValueCall)
+{
+  auto return_value = g_variant_new("(u)", g_random_int());
+  TestMethodCall("MethodWithReturnValue", nullptr, return_value);
+}
+
+TEST_F(TestGLibDBusServerInteractions, MethodWithParametersAndReturnValueCall)
+{
+  auto parameters = g_variant_new("(s)", "unity?");
+  auto return_value = g_variant_new("(s)", "It's Awesome!");
+  TestMethodCall("MethodWithParametersAndReturnValue", parameters, return_value);
 }
 
 } // Namespace
