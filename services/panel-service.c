@@ -1242,10 +1242,6 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
   g_signal_handler_disconnect (priv->last_menu, priv->last_menu_id);
   g_signal_handler_disconnect (priv->last_menu, priv->last_menu_move_id);
 
-  GtkWidget *top_win = gtk_widget_get_toplevel (GTK_WIDGET (priv->last_menu));
-  if (GTK_IS_WINDOW (top_win))
-    gtk_window_set_attached_to (GTK_WINDOW (top_win), NULL);
-
   priv->last_menu = NULL;
   priv->last_menu_id = 0;
   priv->last_menu_move_id = 0;
@@ -1703,16 +1699,6 @@ panel_service_show_entry_common (PanelService *self,
                             G_CALLBACK (gtk_widget_destroyed), &priv->last_menu);
           g_signal_connect (menu_item, "activate",
                             G_CALLBACK (menuitem_activated), entry);
-        }
-
-      GtkWidget *top_widget = gtk_widget_get_toplevel (GTK_WIDGET (priv->last_menu));
-
-      if (GTK_IS_WINDOW (top_widget))
-        {
-          GtkWindow *top_win = GTK_WINDOW (top_widget);
-
-          if (gtk_window_get_attached_to (top_win) != priv->menubar)
-            gtk_window_set_attached_to (top_win, priv->menubar);
         }
 
       priv->last_entry = entry;
