@@ -229,48 +229,39 @@ struct TestGLibDBusServerInteractions : testing::Test
     object->SetMethodsCallsHandler(nullptr);
     object->SetPropertyGetter(nullptr);
     object->SetPropertySetter(nullptr);
-
-    called_method_.clear();
-  }
-
-  GVariant* OnMethodCall(std::string const& method, GVariant* parameters)
-  {
-    called_method_ = method;
-
-    EXPECT_EQ(called_method_, expected_method_);
-    EXPECT_TRUE(g_variant_equal(parameters, expected_parameters_) != FALSE);
-
-    return returned_value_;
   }
 
   void TestMethodCall(std::string const& method_name, GVariant* parameters = nullptr, GVariant* returns = nullptr)
   {
-    object->SetMethodsCallsHandler(sigc::mem_fun(this, &TestGLibDBusServerInteractions::OnMethodCall));
+    std::string const& expected_method = method_name;
+    Variant expected_parameters = parameters ? parameters : g_variant_new("()");
+    Variant returned_value = returns ? returns : g_variant_new("()");
 
-    expected_method_ = method_name;
-    expected_parameters_ = parameters ? parameters : g_variant_new("()");
-    returned_value_ = returns ? returns : g_variant_new("()");
+    bool called = false;
+    object->SetMethodsCallsHandler([&] (std::string const& called_method, GVariant* called_parameters) {
+      called = true;
+      EXPECT_EQ(called_method, expected_method);
+      EXPECT_TRUE(g_variant_equal(called_parameters, expected_parameters) != FALSE);
 
-    bool returned = false;
-    proxy->Call(expected_method_, expected_parameters_, [this, &returned] (GVariant* ret) {
-      returned = true;
-      EXPECT_TRUE(g_variant_equal(ret, returned_value_) != FALSE);
+      return returned_value;
     });
 
-    Utils::WaitUntilMSec([this] { return called_method_ == expected_method_; });
-    Utils::WaitUntilMSec(returned);
+    bool returned = false;
+    proxy->Call(expected_method, expected_parameters, [&returned, &returned_value] (GVariant* ret) {
+      returned = true;
+      EXPECT_TRUE(g_variant_equal(ret, returned_value) != FALSE);
+    });
 
+    Utils::WaitUntilMSec(called);
+    EXPECT_TRUE(called);
+
+    Utils::WaitUntilMSec(returned);
     EXPECT_TRUE(returned);
   }
 
   static DBusServer::Ptr server;
   static DBusProxy::Ptr proxy;
   DBusObject::Ptr object;
-
-  std::string called_method_;
-  std::string expected_method_;
-  Variant expected_parameters_;
-  Variant returned_value_;
 };
 
 DBusServer::Ptr TestGLibDBusServerInteractions::server;
