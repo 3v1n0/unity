@@ -37,14 +37,14 @@ public:
 
 static void WaitForSynchronize(Model<TestAdaptor>& model)
 {
-  ::Utils::WaitForModelSynchronize<TestAdaptor>(model, n_rows);
+  Utils::WaitUntil([&model] { return model.count == n_rows; });
 }
 
 TEST(TestModel, TestConstruction)
 {
   Model<TestAdaptor> model;
   model.swarm_name = swarm_name;
-  ::Utils::WaitForModelSynchronize<TestAdaptor>(model, n_rows);
+  WaitForSynchronize(model);
 }
 
 TEST(TestModel, TestSynchronization)
