@@ -79,17 +79,14 @@ if (GTEST_SRC_DIR AND
 # The service that provides DBus services to test against
   add_executable(test-gtest-service
                  mock-application.cpp
-                 test_service_gdbus_wrapper.c
-                 test_service_gdbus_wrapper.h
-                 test_service_hud.c
-                 test_service_hud.h
+                 test_service_gdbus_wrapper.cpp
+                 test_service_hud.cpp
                  test_service_lens.c
                  test_service_lens.h
-                 test_service_main.c
+                 test_service_main.cpp
                  test_service_model.c
                  test_service_model.h
-                 test_service_panel.c
-                 test_service_panel.c)
+                 test_service_panel.cpp)
   target_link_libraries(test-gtest-service unity-shared ${LIBS})
 
 
