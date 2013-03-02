@@ -12,7 +12,7 @@ from __future__ import absolute_import
 from autopilot.matchers import Eventually
 from autopilot.testcase import multiply_scenarios
 import logging
-from testtools.matchers import Equals, NotEquals
+from testtools.matchers import Equals, NotEquals, GreaterThan
 from time import sleep
 
 from unity.emulators.icons import ApplicationLauncherIcon, ExpoLauncherIcon
@@ -148,6 +148,29 @@ class LauncherIconsTests(LauncherTestCase):
         calc_window = calc_app.get_windows()[0]
 
         self.assertThat(lambda: self.get_startup_notification_timestamp(calc_window), Eventually(Equals(calc_icon.startup_notification_timestamp)))
+
+    def test_super_number_shortcut_focuses_new_windows(self):
+        """Windows launched using super+number must have
+        keyboard focus.
+
+        """
+        bfb_icon = self.unity.launcher.model.get_bfb_icon()
+        calc_icon = self.ensure_calculator_in_launcher_and_not_running()
+        self.addCleanup(self.close_all_app, "Calculator")
+
+        self.launcher_instance.drag_icon_to_position(
+            calc_icon,
+            IconDragType.AFTER,
+            bfb_icon)
+
+        self.launcher_instance.keyboard_reveal_launcher()
+        self.addCleanup(self.launcher_instance.keyboard_unreveal_launcher)
+        self.keyboard.press_and_release("1");
+
+        calc_app = self.bamf.get_running_applications_by_desktop_file(calc_icon.desktop_id)[0]
+        calc_window = calc_app.get_windows()[0]
+
+        self.assertThat(lambda: calc_window.is_focused, Eventually(Equals(True)))
 
     def test_clicking_icon_twice_initiates_spread(self):
         """This tests shows that when you click on a launcher icon twice,
@@ -292,7 +315,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
         # not exist, and we don't want to wait for 10 seconds, so we do this
         # the old fashioned way.
         get_icon_fn = lambda: self.unity.launcher.model.get_children_by_type(
-            ApplicationLauncherIcon, desktop_id="gcalctool.desktop")
+            ApplicationLauncherIcon, desktop_id="gnome-calculator.desktop")
         calc_icon = get_icon_fn()
         if calc_icon:
             self.launcher_instance.unlock_from_launcher(calc_icon[0])

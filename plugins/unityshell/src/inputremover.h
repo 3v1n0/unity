@@ -54,7 +54,9 @@ class WindowInputRemover :
 {
 public:
 
-  WindowInputRemover (Display *, Window xid);
+  WindowInputRemover (Display *,
+                      Window shapeWindow,
+                      Window propWindow);
   ~WindowInputRemover ();
 
 private:
@@ -65,17 +67,44 @@ private:
 
   void sendShapeNotify ();
 
+  bool queryShapeRectangles(XRectangle **input,
+                            int *nInput,
+                            int *inputOrdering,
+                            unsigned int *width,
+                            unsigned int *height,
+                            unsigned int *border);
+
+  bool queryProperty(XRectangle **input,
+                     int *nInput,
+                     int *inputOrdering);
+
+  bool writeProperty(XRectangle *input,
+                     int nInput,
+                     int inputOrdering);
+
+  bool checkRectangles(XRectangle *input,
+                       int *nInput,
+                       int inputOrdering,
+                       unsigned int width,
+                       unsigned int height,
+                       unsigned int border);
+
+  bool saveRectangles(XRectangle *input,
+                      int nInput,
+                      int inputOrdering);
+
+  void clearProperty ();
+  void clearRectangles ();
+
   Display       *mDpy;
   Window        mShapeWindow;
+  Window        mPropWindow;
   unsigned long mShapeMask;
 
   XRectangle    *mInputRects;
   int           mNInputRects;
   int           mInputRectOrdering;
 
-  XRectangle    *mBoundingRects;
-  int           mNBoundingRects;
-  int           mBoundingRectOrdering;
   bool          mRemoved;
 
   int           mShapeEvent;

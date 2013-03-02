@@ -35,6 +35,7 @@ namespace dash
 
 class FilterGenreButton : public FilterBasicButton
 {
+  NUX_DECLARE_OBJECT_TYPE(FilterGenreButton, FilterBasicButton);
 public:
   FilterGenreButton(std::string const& label, NUX_FILE_LINE_PROTO);
   FilterGenreButton(NUX_FILE_LINE_PROTO);

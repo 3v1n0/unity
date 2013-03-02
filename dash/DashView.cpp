@@ -228,10 +228,13 @@ void DashView::BuildPreview(Preview::Ptr model)
       preview_lens_view_->PushFilterExpansion(false);
     }
 
-    preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
-    preview_container_->SetRedirectRenderingToTexture(true);
-    AddChild(preview_container_.GetPointer());
-    preview_container_->SetParentObject(this);
+    if (!preview_container_)
+    {
+      preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
+      preview_container_->SetRedirectRenderingToTexture(true);
+      AddChild(preview_container_.GetPointer());
+      preview_container_->SetParentObject(this);
+    }
     preview_container_->Preview(model, previews::Navigation::NONE); // no swipe left or right
 
     preview_container_->SetGeometry(lenses_layout_->GetGeometry());
@@ -1522,6 +1525,7 @@ void DashView::AddProperties(GVariantBuilder* builder)
   wrapper.add("bottom-border-height", style.GetDashBottomTileHeight());
   wrapper.add("preview_displaying", preview_displaying_);
   wrapper.add("dash_maximized", style.always_maximised());
+  wrapper.add("overlay_window_buttons_shown", overlay_window_buttons_->IsVisible());
 }
 
 nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
