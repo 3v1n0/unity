@@ -458,11 +458,15 @@ DECLARE_LOGGER(logger_s, "unity.glib.dbus.server");
 
 struct DBusServer::Impl
 {
-  Impl(DBusServer* server, std::string const& name, GBusType bus_type)
+  Impl(DBusServer* server, std::string const& name = "")
     : server_(server)
     , name_(name)
     , name_owned_(false)
     , owner_name_(0)
+  {}
+
+  Impl(DBusServer* server, std::string const& name, GBusType bus_type)
+    : Impl(server, name)
   {
     owner_name_ = g_bus_own_name(bus_type, name.c_str(), G_BUS_NAME_OWNER_FLAGS_NONE,
       [] (GDBusConnection* conn, const gchar* name, gpointer data)
@@ -474,6 +478,7 @@ struct DBusServer::Impl
         self->connection_ = glib::Object<GDBusConnection>(conn, glib::AddRef());
         self->name_owned_ = true;
         self->server_->name_acquired.emit();
+        self->server_->connected.emit();
 
         for (auto const& pair : self->pending_objects_)
           self->AddObject(pair.first, pair.second);
@@ -492,10 +497,35 @@ struct DBusServer::Impl
       , this, nullptr);
   }
 
+  Impl(DBusServer* server, GBusType bus_type)
+    : Impl(server)
+  {
+    cancellable_ = g_cancellable_new();
+    g_bus_get(bus_type, cancellable_, [] (GObject*, GAsyncResult* res, gpointer data) {
+      auto self = static_cast<DBusServer::Impl*>(data);
+      glib::Error error;
+
+      GDBusConnection* conn = g_bus_get_finish(res, &error);
+
+      if (!error)
+      {
+        self->connection_ = glib::Object<GDBusConnection>(conn, glib::AddRef());
+        self->server_->connected.emit();
+      }
+      else
+      {
+        LOG_ERROR(logger_s) << "Can't get bus: " << error.Message();
+      }
+    }, this);
+  }
+
   ~Impl()
   {
     if (owner_name_)
       g_bus_unown_name(owner_name_);
+
+    if (cancellable_)
+      g_cancellable_cancel(cancellable_);
 
     LOG_INFO(logger_s) << "Removing dbus server";
   }
@@ -594,6 +624,7 @@ struct DBusServer::Impl
   bool name_owned_;
   guint owner_name_;
   glib::Object<GDBusConnection> connection_;
+  glib::Object<GCancellable> cancellable_;
   std::vector<DBusObject::Ptr> objects_;
   std::vector<std::pair<DBusObject::Ptr, std::string>> pending_objects_;
 };
@@ -602,8 +633,17 @@ DBusServer::DBusServer(std::string const& name, GBusType bus_type)
   : impl_(new DBusServer::Impl(this, name, bus_type))
 {}
 
+DBusServer::DBusServer(GBusType bus_type)
+  : impl_(new DBusServer::Impl(this, bus_type))
+{}
+
 DBusServer::~DBusServer()
 {}
+
+bool DBusServer::IsConnected() const
+{
+  return impl_->connection_.IsType(G_TYPE_DBUS_CONNECTION);
+}
 
 std::string const& DBusServer::Name() const
 {

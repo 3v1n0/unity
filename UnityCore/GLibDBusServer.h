@@ -80,6 +80,7 @@ class DBusServer : public sigc::trackable
 public:
   typedef std::shared_ptr<DBusServer> Ptr;
 
+  DBusServer(GBusType bus_type = G_BUS_TYPE_SESSION);
   DBusServer(std::string const& name, GBusType bus_type = G_BUS_TYPE_SESSION);
   virtual ~DBusServer();
 
@@ -92,9 +93,11 @@ public:
 
   void EmitSignal(std::string const& interface, std::string const& signal, GVariant* parameters = nullptr);
 
+  bool IsConnected() const;
   std::string const& Name() const;
   bool OwnsName() const;
 
+  sigc::signal<void> connected;
   sigc::signal<void> name_acquired;
   sigc::signal<void> name_lost;
 
