@@ -75,6 +75,22 @@ R"(<node>
 
 }
 
+TEST(TestGLibDBusServerUnnamed, Connects)
+{
+  bool connected = false;
+  DBusServer server;
+  server.connected.connect([&connected] { connected = true; });
+  Utils::WaitUntilMSec(connected);
+
+  EXPECT_TRUE(connected);
+  EXPECT_TRUE(server.IsConnected());
+  EXPECT_TRUE(server.Name().empty());
+  EXPECT_FALSE(server.OwnsName());
+
+  Utils::WaitForTimeoutMSec(50);
+  EXPECT_TRUE(server.IsConnected());
+}
+
 struct TestGLibDBusServer : testing::Test
 {
   TestGLibDBusServer()
@@ -91,6 +107,17 @@ struct TestGLibDBusServer : testing::Test
   DBusServer server;
 };
 
+TEST_F(TestGLibDBusServer, Connects)
+{
+  bool connected = false;
+  server.connected.connect([&connected] { connected = true; });
+  Utils::WaitUntilMSec(connected);
+
+  EXPECT_TRUE(connected);
+  EXPECT_TRUE(server.OwnsName());
+  EXPECT_TRUE(server.IsConnected());
+}
+
 TEST_F(TestGLibDBusServer, OwnsName)
 {
   bool name_owned = false;
@@ -101,6 +128,7 @@ TEST_F(TestGLibDBusServer, OwnsName)
 
   EXPECT_TRUE(name_owned);
   EXPECT_TRUE(server.OwnsName());
+  EXPECT_TRUE(server.IsConnected());
 }
 
 TEST_F(TestGLibDBusServer, AddsObjectWhenOwingName)
