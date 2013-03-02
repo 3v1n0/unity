@@ -91,6 +91,28 @@ TEST(TestGLibDBusServerUnnamed, Connects)
   EXPECT_TRUE(server.IsConnected());
 }
 
+TEST(TestGLibDBusServerUnnamed, AddsObjectWhenConnected)
+{
+  bool object_registered = false;
+
+  DBusServer server;
+  auto object = std::make_shared<DBusObject>(introspection::SINGLE_OJBECT, OBJECT_INTERFACE);
+
+  object->registered.connect([&object_registered] (std::string const& path) {
+    EXPECT_EQ(path, TEST_OBJECT_PATH);
+    object_registered = true;
+  });
+
+  server.AddObject(object, TEST_OBJECT_PATH);
+  ASSERT_EQ(server.GetObject(OBJECT_INTERFACE), object);
+  ASSERT_EQ(server.GetObjects().front(), object);
+
+  Utils::WaitUntilMSec([&server] { return server.IsConnected(); });
+
+  ASSERT_EQ(server.GetObjects().front(), object);
+  EXPECT_TRUE(object_registered);
+}
+
 struct TestGLibDBusServer : testing::Test
 {
   TestGLibDBusServer()
