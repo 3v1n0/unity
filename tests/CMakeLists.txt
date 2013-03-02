@@ -16,6 +16,17 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/no-icon.desktop
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/kde4/afile.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/applications/kde4/afile.desktop)
 
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/lenses/social/social.lens
+                ${CMAKE_BINARY_DIR}/tests/data/lenses/social/social.lens)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/lenses/files/files.lens
+                ${CMAKE_BINARY_DIR}/tests/data/lenses/files/files.lens)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/lenses/applications/applications.lens
+                ${CMAKE_BINARY_DIR}/tests/data/lenses/applications/applications.lens)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/lenses/invalid-lens-file/invalid-lens-file.lens
+                ${CMAKE_BINARY_DIR}/tests/data/lenses/invalid-lens-file/invalid-lens-file.lens)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/lenses/invalid-lens-group/invalid-lens-group.lens
+                ${CMAKE_BINARY_DIR}/tests/data/lenses/invalid-lens-group/invalid-lens-group.lens)
+
 #
 # Unit tests
 #
