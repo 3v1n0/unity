@@ -1,3 +1,14 @@
+unity (6.12.0daily13.03.01-0ubuntu1) raring; urgency=low
+
+  [ Andrea Azzarone ]
+  * unity.tests.test_dash.DashVisualTests.test_dash_position_with_non_de
+    fault_launcher_width  randomly fails (LP: #1135628)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3179
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 01 Mar 2013 04:02:36 +0000
+
 unity (6.12.0daily13.02.28-0ubuntu1) raring; urgency=low
 
   [ Stephen M. Webb ]
