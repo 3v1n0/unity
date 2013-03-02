@@ -479,13 +479,9 @@ struct DBusServer::Impl
         self->name_owned_ = true;
         self->server_->name_acquired.emit();
         self->server_->connected.emit();
-
-        for (auto const& pair : self->pending_objects_)
-          self->AddObject(pair.first, pair.second);
-
-        self->pending_objects_.clear();
-
-      }, nullptr, [] (GDBusConnection *connection, const gchar *name, gpointer data)
+        self->RegisterPendingObjects();
+      }, nullptr,
+      [] (GDBusConnection *connection, const gchar *name, gpointer data)
       {
         auto self = static_cast<DBusServer::Impl*>(data);
 
@@ -493,8 +489,7 @@ struct DBusServer::Impl
 
         self->name_owned_ = false;
         self->server_->name_lost.emit();
-      }
-      , this, nullptr);
+      }, this, nullptr);
   }
 
   Impl(DBusServer* server, GBusType bus_type)
@@ -511,6 +506,7 @@ struct DBusServer::Impl
       {
         self->connection_ = glib::Object<GDBusConnection>(conn, glib::AddRef());
         self->server_->connected.emit();
+        self->RegisterPendingObjects();
       }
       else
       {
@@ -528,6 +524,14 @@ struct DBusServer::Impl
       g_cancellable_cancel(cancellable_);
 
     LOG_INFO(logger_s) << "Removing dbus server";
+  }
+
+  void RegisterPendingObjects()
+  {
+    for (auto const& pair : pending_objects_)
+      AddObject(pair.first, pair.second);
+
+    pending_objects_.clear();
   }
 
   bool AddObject(DBusObject::Ptr const& obj, std::string const& path)
