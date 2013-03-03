@@ -2,12 +2,9 @@
 #define TEST_UTILS_H
 
 #include <gtest/gtest.h>
-#include <UnityCore/Model.h>
 
 namespace
 {
-
-using unity::dash::Model;
 
 class Utils
 {
