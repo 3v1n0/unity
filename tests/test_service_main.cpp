@@ -1,6 +1,3 @@
-#include <glib-object.h>
-#include <UnityCore/GLibDBusServer.h>
-
 #include "test_service_lens.h"
 #include "test_service_model.h"
 #include "test_service_hud.h"
@@ -19,7 +16,6 @@ static const gchar introspection_xml[] =
   "  </interface>"
   "</node>";
 
-static ServiceModel* model_ = NULL;
 
 int main(int argc, char** argv)
 {
@@ -42,13 +38,10 @@ int main(int argc, char** argv)
   service::GDBus gdbus;
   service::Panel panel;
   service::Lens lens;
-
-  model_ = service_model_new();
+  service::Model model;
 
   g_main_loop_run(loop);
   g_main_loop_unref(loop);
-
-  //g_object_unref(model_);
 
   return 0;
 }

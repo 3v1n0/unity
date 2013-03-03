@@ -1,7 +1,6 @@
 #ifndef _SERVICE_LENS_H_
 #define _SERVICE_LENS_H_
 
-#include <dee.h>
 #include <unity.h>
 #include <UnityCore/GLibWrapper.h>
 

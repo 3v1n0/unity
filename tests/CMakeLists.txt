@@ -94,8 +94,7 @@ if (GTEST_SRC_DIR AND
                  test_service_hud.cpp
                  test_service_lens.cpp
                  test_service_main.cpp
-                 test_service_model.c
-                 test_service_model.h
+                 test_service_model.cpp
                  test_service_panel.cpp)
   target_link_libraries(test-gtest-service unity-shared ${LIBS})
 
