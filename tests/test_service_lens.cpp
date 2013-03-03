@@ -2,110 +2,76 @@
 
 #include <unity.h>
 
-G_DEFINE_TYPE(ServiceLens, service_lens, G_TYPE_OBJECT);
-
-static void add_categories(ServiceLens* self);
-static void add_filters(ServiceLens *self);
-static void on_search_changed(UnityScope* scope, UnityLensSearch *lens_search, UnitySearchType search_type, GCancellable *canc, ServiceLens* self);
-static UnityActivationResponse* on_activate_uri(UnityScope* scope, const char* uri, ServiceLens* self);
-static UnityPreview* on_preview_uri(UnityScope* scope, const char* uri, ServiceLens *self);
-
-struct _ServiceLensPrivate
+namespace unity
 {
-  UnityLens* lens;
-  UnityScope* scope;
-};
-
-static void
-service_lens_dispose(GObject* object)
+namespace service
 {
-  ServiceLens* self = SERVICE_LENS(object);
+static void on_search_changed(UnityScope* scope, UnityLensSearch *lens_search, UnitySearchType search_type, GCancellable *canc, Lens* self);
+static UnityActivationResponse* on_activate_uri(UnityScope* scope, const char* uri, Lens* self);
+static UnityPreview* on_preview_uri(UnityScope* scope, const char* uri, Lens *self);
 
-  g_object_unref(self->priv->lens);
-  g_object_unref(self->priv->scope);
-
-  G_OBJECT_CLASS (service_lens_parent_class)->dispose (object);
-}
-
-static void
-service_lens_class_init(ServiceLensClass* klass)
+Lens::Lens()
+  : lens_(unity_lens_new("/com/canonical/unity/testlens", "testlens"))
+  , scope_(unity_scope_new("/com/canonical/unity/testscope"))
 {
-  G_OBJECT_CLASS(klass)->dispose = service_lens_dispose;
+  g_object_set(lens_, "search-hint", "Search Test Lens", "visible", TRUE,
+               "search-in-global", TRUE, NULL);
 
-	g_type_class_add_private (klass, sizeof (ServiceLensPrivate));
-}
+  AddCategories();
+  AddFilters();
 
-static void
-service_lens_init(ServiceLens* self)
-{
-  ServiceLensPrivate* priv;
-  GError* error = NULL;
+  unity_scope_set_search_in_global(scope_, TRUE);
 
-  priv = self->priv = G_TYPE_INSTANCE_GET_PRIVATE(self, SERVICE_TYPE_LENS, ServiceLensPrivate);
+  // sig_manager_.Add<UnityScope*, UnityLensSearch*, UnitySearchType, GCancellable*>(scope_, "search-changed")
+  // void Add(G object, std::string const& signal_name, typename Signal<R, G, Ts...>::SignalCallback const& callback)
 
-  /* Setup Lens */
-  priv->lens = unity_lens_new("/com/canonical/unity/testlens", "testlens");
-  g_object_set(priv->lens,
-               "search-hint", "Search Test Lens",
-               "visible", TRUE,
-               "search-in-global", TRUE,
-               NULL);
-  add_categories(self);
-  add_filters(self);
-
-  /* Scope */
-  priv->scope = unity_scope_new("/com/canonical/unity/testscope");
-  unity_scope_set_search_in_global(priv->scope, TRUE);
-
-  g_signal_connect(priv->scope, "search-changed",
-                   G_CALLBACK(on_search_changed), self);
-  g_signal_connect(priv->scope, "activate-uri",
-                   G_CALLBACK(on_activate_uri), self);
-  g_signal_connect(priv->scope, "preview-uri",
-                   G_CALLBACK(on_preview_uri), self);
+  g_signal_connect(scope_, "search-changed", G_CALLBACK(on_search_changed), this);
+  g_signal_connect(scope_, "activate-uri", G_CALLBACK(on_activate_uri), this);
+  g_signal_connect(scope_, "preview-uri", G_CALLBACK(on_preview_uri), this);
 
   /* Get ready to export and export */
-  unity_lens_add_local_scope(priv->lens, priv->scope);
-  unity_lens_export(priv->lens, &error);
+  glib::Error error;
+  unity_lens_add_local_scope(lens_, scope_);
+  unity_lens_export(lens_, &error);
+
   if (error)
   {
-    g_error ("Unable to export Lens: %s", error->message);
-    g_error_free (error);
+    g_error ("Unable to export Lens: %s", error.Message().c_str());
   }
 }
 
-static void
-add_categories(ServiceLens* self)
+Lens::~Lens()
+{
+  g_signal_handlers_disconnect_by_data(scope_, this);
+}
+
+void Lens::AddCategories()
 {
   GList *cats = NULL;
-  GIcon *icon;
+  glib::Object<GIcon> icon;
 
   icon = g_themed_icon_new("gtk-apply");
   cats = g_list_append (cats, unity_category_new("Category1", icon,
                                                  UNITY_CATEGORY_RENDERER_VERTICAL_TILE));
-  g_object_unref (icon);
-  
+
   icon = g_themed_icon_new("gtk-cancel");
   cats = g_list_append (cats, unity_category_new("Category2", icon,
                                                  UNITY_CATEGORY_RENDERER_HORIZONTAL_TILE));
-  g_object_unref (icon);
 
   icon = g_themed_icon_new("gtk-close");
   cats = g_list_append (cats, unity_category_new("Category3", icon,
                                                  UNITY_CATEGORY_RENDERER_FLOW));
-  g_object_unref (icon);
 
 
-  unity_lens_set_categories(self->priv->lens, cats);
+  unity_lens_set_categories(lens_, cats);
   g_list_free_full (cats, (GDestroyNotify) g_object_unref);
 }
 
-static void
-add_filters(ServiceLens *self)
+void Lens::AddFilters()
 {
   GList       *filters = NULL;
   UnityFilter *filter;
-  GIcon       *icon;
+  glib::Object<GIcon> icon;
 
   filter = UNITY_FILTER (unity_radio_option_filter_new("when", "When",
                                                        NULL, FALSE));
@@ -122,17 +88,16 @@ add_filters(ServiceLens *self)
   icon = g_themed_icon_new ("gtk-apps");
   unity_options_filter_add_option(UNITY_OPTIONS_FILTER (filter),
                                   "apps", "Apps", icon);
-  g_object_unref (icon);
+
   icon = g_themed_icon_new ("gtk-files");
   unity_options_filter_add_option(UNITY_OPTIONS_FILTER (filter),
                                   "files", "Files", icon);
-  g_object_unref (icon);
+
   icon = g_themed_icon_new ("gtk-music");
   unity_options_filter_add_option(UNITY_OPTIONS_FILTER (filter),
                                   "music", "Music", icon);
-  g_object_unref (icon);
-  filters = g_list_append (filters, filter);
 
+  filters = g_list_append (filters, filter);
   filters = g_list_append (filters, unity_ratings_filter_new("ratings",
                                                              "Ratings",
                                                              NULL, FALSE));
@@ -143,15 +108,13 @@ add_filters(ServiceLens *self)
   unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filter), "100MB", "100MB", NULL);
   unity_options_filter_add_option(UNITY_OPTIONS_FILTER(filter), "1000MB", "1000MB", NULL);
   filters = g_list_append (filters, filter);
- 
 
-  unity_lens_set_filters(self->priv->lens, filters);
+  unity_lens_set_filters(lens_, filters);
   g_list_free_full (filters, (GDestroyNotify) g_object_unref);
 }
 
-static void
-on_search_changed(UnityScope* scope, UnityLensSearch *search,
-    UnitySearchType search_type, GCancellable *canc, ServiceLens* self)
+
+static void on_search_changed(UnityScope* scope, UnityLensSearch *search, UnitySearchType search_type, GCancellable *canc, Lens* self)
 {
   int i = 0;
   // to differentiate global and non-global searches, we'll return more items
@@ -179,20 +142,17 @@ on_search_changed(UnityScope* scope, UnityLensSearch *search,
   unity_lens_search_finished (search);
 }
 
-static UnityActivationResponse*
-on_activate_uri(UnityScope* scope, const char* uri, ServiceLens* self)
+static UnityActivationResponse* on_activate_uri(UnityScope* scope, const char* uri, Lens* self)
 {
   return unity_activation_response_new(UNITY_HANDLED_TYPE_HIDE_DASH, "");
 }
 
-static UnityActivationResponse*
-preview_action_activated(UnityPreviewAction* action, const char* uri)
+static UnityActivationResponse* preview_action_activated(UnityPreviewAction* action, const char* uri)
 {
   return unity_activation_response_new(UNITY_HANDLED_TYPE_SHOW_DASH, "");
 }
 
-static UnityPreview*
-on_preview_uri(UnityScope* scope, const char* uri, ServiceLens *self)
+static UnityPreview* on_preview_uri(UnityScope* scope, const char* uri, Lens *self)
 {
   UnityPreviewAction* action;
   UnityMoviePreview* preview;
@@ -208,8 +168,5 @@ on_preview_uri(UnityScope* scope, const char* uri, ServiceLens *self)
   return (UnityPreview*) preview;
 }
 
-ServiceLens*
-service_lens_new()
-{
-  return g_object_new(SERVICE_TYPE_LENS, NULL);
+}
 }

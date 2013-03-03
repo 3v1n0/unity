@@ -19,7 +19,6 @@ static const gchar introspection_xml[] =
   "  </interface>"
   "</node>";
 
-static ServiceLens* lens_ = NULL;
 static ServiceModel* model_ = NULL;
 
 int main(int argc, char** argv)
@@ -42,14 +41,13 @@ int main(int argc, char** argv)
   service::Hud hud;
   service::GDBus gdbus;
   service::Panel panel;
+  service::Lens lens;
 
-  lens_ = service_lens_new();
   model_ = service_model_new();
 
   g_main_loop_run(loop);
   g_main_loop_unref(loop);
 
-  //g_object_unref(lens_);
   //g_object_unref(model_);
 
   return 0;

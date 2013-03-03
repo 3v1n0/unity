@@ -92,8 +92,7 @@ if (GTEST_SRC_DIR AND
                  mock-application.cpp
                  test_service_gdbus_wrapper.cpp
                  test_service_hud.cpp
-                 test_service_lens.c
-                 test_service_lens.h
+                 test_service_lens.cpp
                  test_service_main.cpp
                  test_service_model.c
                  test_service_model.h
