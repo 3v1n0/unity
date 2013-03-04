@@ -789,4 +789,9 @@ bool PanelView::IsActive() const
   return menu_view_->GetControlsActive();
 }
 
+int PanelView::GetStoredDashWidth() const
+{
+  return stored_dash_width_;
+}
+
 } // namespace unity
