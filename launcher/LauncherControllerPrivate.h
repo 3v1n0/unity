@@ -24,6 +24,7 @@
 #define LAUNCHER_CONTROLLER_PRIVATE_H
 
 #include <Nux/Nux.h>
+#include <UnityCore/GLibDBusServer.h>
 
 #include "AbstractLauncherIcon.h"
 #include "DeviceLauncherSection.h"
@@ -116,14 +117,7 @@ public:
   void OnDndStarted(std::string const& data, int monitor);
   void OnDndFinished();
   void OnDndMonitorChanged(int monitor);
-
-  static void OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer user_data);
-  static void OnDBusMethodCall(GDBusConnection* connection, const gchar* sender, const gchar* object_path,
-                               const gchar* interface_name, const gchar* method_name,
-                               GVariant* parameters, GDBusMethodInvocation* invocation,
-                               gpointer user_data);
-
-  static GDBusInterfaceVTable interface_vtable;
+  GVariant* OnDBusMethodCall(std::string const& method, GVariant *parameters);
 
   Controller* parent_;
   LauncherModel::Ptr model_;
@@ -152,10 +146,7 @@ public:
   int last_dnd_monitor_;
   int super_tap_duration_;
 
-  unsigned dbus_owner_;
-  GDBusConnection* gdbus_connection_;
-  unsigned reg_id_;
-
+  glib::DBusServer dbus_server_;
   glib::SourceManager sources_;
   UBusManager ubus;
 
