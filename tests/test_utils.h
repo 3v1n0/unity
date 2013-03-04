@@ -1,6 +1,8 @@
 #ifndef TEST_UTILS_H
 #define TEST_UTILS_H
 
+#include <glib.h>
+#include <functional>
 #include <gtest/gtest.h>
 
 namespace
@@ -21,6 +23,8 @@ public:
 
   static void WaitUntilMSec(std::function<bool()> const& check_function, bool result = true, unsigned max_wait = 500)
   {
+    ASSERT_NE(check_function, nullptr);
+
     bool timeout_reached = false;
     guint32 timeout_id = ScheduleTimeout(&timeout_reached, max_wait);
 
