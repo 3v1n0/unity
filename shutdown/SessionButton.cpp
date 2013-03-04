@@ -28,7 +28,7 @@ namespace unity
 namespace session
 {
 
-namespace theme
+namespace style
 {
   const std::string FONT = "Ubuntu Light 12";
 
@@ -50,7 +50,7 @@ Button::Button(std::string const& label, std::string const& texture_name, NUX_FI
 
   auto main_layout = new nux::VLayout();
   main_layout->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
-  main_layout->SetSpaceBetweenChildren(theme::BUTTON_SPACE);
+  main_layout->SetSpaceBetweenChildren(style::BUTTON_SPACE);
   SetLayout(main_layout);
 
   image_view_ = new IconTexture(normal_tex_);
@@ -58,7 +58,7 @@ Button::Button(std::string const& label, std::string const& texture_name, NUX_FI
   main_layout->AddView(image_view_, 1, nux::MINOR_POSITION_CENTER);
 
   label_view_ = new StaticCairoText(label);
-  label_view_->SetFont(theme::FONT);
+  label_view_->SetFont(style::FONT);
   label_view_->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_CENTRE);
   label_view_->SetTextColor(nux::color::Transparent);
   label_view_->SetInputEventSensitivity(false);

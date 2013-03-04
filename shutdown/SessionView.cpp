@@ -29,7 +29,7 @@ namespace unity
 namespace session
 {
 
-namespace theme
+namespace style
 {
   const std::string FONT = "Ubuntu Light";
   const std::string TITLE_FONT = FONT+" 15";
@@ -50,20 +50,20 @@ View::View(Manager::Ptr const& manager)
 {
   closable = true;
   auto main_layout = new nux::VLayout();
-  main_layout->SetTopAndBottomPadding(theme::TOP_PADDING, theme::BOTTOM_PADDING);
-  main_layout->SetLeftAndRightPadding(theme::LEFT_RIGHT_PADDING);
-  main_layout->SetSpaceBetweenChildren(theme::MAIN_SPACE);
+  main_layout->SetTopAndBottomPadding(style::TOP_PADDING, style::BOTTOM_PADDING);
+  main_layout->SetLeftAndRightPadding(style::LEFT_RIGHT_PADDING);
+  main_layout->SetSpaceBetweenChildren(style::MAIN_SPACE);
   SetLayout(main_layout);
 
   title_ = new StaticCairoText("");
-  title_->SetFont(theme::TITLE_FONT);
+  title_->SetFont(style::TITLE_FONT);
   title_->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_LEFT);
   title_->SetInputEventSensitivity(false);
   title_->SetVisible(false);
   main_layout->AddView(title_);
 
   subtitle_ = new StaticCairoText("");
-  subtitle_->SetFont(theme::SUBTITLE_FONT);
+  subtitle_->SetFont(style::SUBTITLE_FONT);
   subtitle_->SetTextAlignment(StaticCairoText::AlignState::NUX_ALIGN_LEFT);
   subtitle_->SetInputEventSensitivity(false);
   subtitle_->SetLines(std::numeric_limits<int>::min());
@@ -71,7 +71,7 @@ View::View(Manager::Ptr const& manager)
   main_layout->AddView(subtitle_);
 
   buttons_layout_ = new nux::HLayout();
-  buttons_layout_->SetSpaceBetweenChildren(theme::BUTTONS_SPACE);
+  buttons_layout_->SetSpaceBetweenChildren(style::BUTTONS_SPACE);
   main_layout->AddLayout(buttons_layout_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_PERCENTAGE, 0.0f);
 
   GetBoundingArea()->mouse_click.connect([this] (int, int, unsigned long, unsigned long) { request_close.emit(); });
