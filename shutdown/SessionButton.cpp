@@ -38,8 +38,8 @@ namespace style
 NUX_IMPLEMENT_OBJECT_TYPE(Button);
 
 Button::Button(std::string const& label, std::string const& texture_name, NUX_FILE_LINE_DECL)
-    : nux::View(NUX_FILE_LINE_PARAM)
-    , highlighted(false)
+  : nux::View(NUX_FILE_LINE_PARAM)
+  , highlighted(false)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(true);
