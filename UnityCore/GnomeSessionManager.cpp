@@ -73,7 +73,7 @@ GnomeManager::Impl::Impl(GnomeManager* manager)
   , shell_server_(shell::DBUS_NAME)
 {
   shell_server_.AddObjects(shell::INTROSPECTION_XML, shell::DBUS_OBJECT_PATH);
-  shell_server_.GetObject(shell::DBUS_INTERFACE);
+  shell_object_ = shell_server_.GetObject(shell::DBUS_INTERFACE);
   shell_object_->SetMethodsCallsHandler(sigc::mem_fun(this, &Impl::OnShellMethodCall));
 
   CallUPowerMethod("HibernateAllowed", [this] (GVariant* variant) {
