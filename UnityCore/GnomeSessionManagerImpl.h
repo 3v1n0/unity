@@ -22,6 +22,7 @@
 
 #include "GnomeSessionManager.h"
 #include "GLibDBusProxy.h"
+#include "GLibDBusServer.h"
 
 namespace unity
 {
@@ -50,11 +51,7 @@ struct GnomeManager::Impl
   void CancelAction();
   void ClosedDialog();
 
-  void SetupShellSessionHandler();
-  void TearDownShellSessionHandler();
-  void OnShellMethodCall(std::string const& method, GVariant* parameters);
-  void EmitShellSignal(std::string const& signal, GVariant* parameters = nullptr);
-
+  GVariant* OnShellMethodCall(std::string const& method, GVariant* parameters);
   void CallGnomeSessionMethod(std::string const& method, GVariant* parameters = nullptr,
                               glib::DBusProxy::CallFinishedCallback const& cb = nullptr);
   void CallUPowerMethod(std::string const& method, glib::DBusProxy::ReplyCallback const& cb = nullptr);
@@ -66,10 +63,9 @@ struct GnomeManager::Impl
   bool can_suspend_;
   bool can_hibernate_;
 
-  unsigned shell_owner_name_;
-  std::vector<unsigned> shell_objects_ids_;
-  glib::Object<GDBusConnection> shell_connection_;
   shell::Action pending_action_;
+  glib::DBusServer shell_server_;
+  glib::DBusObject::Ptr shell_object_;
 };
 
 } // namespace session
