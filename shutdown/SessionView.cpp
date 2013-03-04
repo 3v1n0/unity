@@ -285,7 +285,7 @@ nux::Area* View::FindKeyFocusArea(unsigned etype, unsigned long key_code, unsign
       return this;
   }
 
-  return nux::View::FindKeyFocusArea(etype, key_code, modifiers);
+  return UnityWindowView::FindKeyFocusArea(etype, key_code, modifiers);
 }
 
 nux::Area* View::KeyNavIteration(nux::KeyNavDirection direction)
