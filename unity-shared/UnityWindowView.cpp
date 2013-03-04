@@ -22,6 +22,7 @@
 
 #include "UnityWindowView.h"
 #include <Nux/VLayout.h>
+#include "unity-shared/WindowManager.h"
 
 namespace unity {
 namespace ui {
@@ -60,8 +61,7 @@ UnityWindowView::~UnityWindowView()
     bounding_area_->UnParentObject();
 }
 
-nux::Area*
-UnityWindowView::FindAreaUnderMouse(const nux::Point& mouse, nux::NuxEventType etype)
+nux::Area* UnityWindowView::FindAreaUnderMouse(const nux::Point& mouse, nux::NuxEventType etype)
 {
   if (close_button_ && close_button_->TestMousePointerInclusionFilterMouseWheel(mouse, etype))
     return close_button_.GetPointer();
@@ -80,6 +80,23 @@ UnityWindowView::FindAreaUnderMouse(const nux::Point& mouse, nux::NuxEventType e
   }
 
   return under;
+}
+
+nux::Area* UnityWindowView::FindKeyFocusArea(unsigned etype, unsigned long key_code, unsigned long modifiers)
+{
+  if (closable && etype == nux::NUX_KEYDOWN)
+  {
+    modifiers &= (nux::NUX_STATE_ALT | nux::NUX_STATE_CTRL | nux::NUX_STATE_SUPER | nux::NUX_STATE_SHIFT);
+    auto const& close_key = WindowManager::Default().close_window_key();
+
+    if (close_key.first == modifiers && close_key.second == key_code)
+    {
+      request_close.emit();
+      return nullptr;
+    }
+  }
+
+  return View::FindKeyFocusArea(etype, key_code, modifiers);
 }
 
 void UnityWindowView::OnClosableChanged(bool closable)
@@ -101,8 +118,6 @@ void UnityWindowView::OnClosableChanged(bool closable)
       close_button_->SetTexture(style()->GetCloseIconPressed());
     else
       close_button_->SetTexture(style()->GetCloseIconHighligted());
-
-     close_button_->QueueDraw();
   });
 
   close_button_->mouse_leave.connect([this](int, int, unsigned long, unsigned long) {
