@@ -297,9 +297,10 @@ struct TestGLibDBusServerInteractions : testing::Test
     });
 
     bool returned = false;
-    proxy->Call(expected_method, expected_parameters, [&returned, &returned_value] (GVariant* ret) {
+    proxy->CallBegin(expected_method, expected_parameters, [&returned, &returned_value] (GVariant* ret, Error const& error) {
       returned = true;
       EXPECT_TRUE(g_variant_equal(ret, returned_value) != FALSE);
+      EXPECT_FALSE(error);
     });
 
     Utils::WaitUntilMSec(called);
@@ -339,6 +340,18 @@ TEST_F(TestGLibDBusServerInteractions, MethodWithParametersAndReturnValueCall)
   auto parameters = g_variant_new("(s)", "unity?");
   auto return_value = g_variant_new("(s)", "It's Awesome!");
   TestMethodCall("MethodWithParametersAndReturnValue", parameters, return_value);
+}
+
+TEST_F(TestGLibDBusServerInteractions, NotHandledMethod)
+{
+  bool got_return = false;
+  proxy->CallBegin("VoidMethod", nullptr, [&got_return] (GVariant* ret, Error const& error) {
+    got_return = TRUE;
+    EXPECT_TRUE(error);
+  });
+
+  Utils::WaitUntilMSec(got_return);
+  EXPECT_TRUE(got_return);
 }
 
 TEST_F(TestGLibDBusServerInteractions, SignalWithNoParametersEmission)
