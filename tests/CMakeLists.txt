@@ -175,6 +175,7 @@ if (GTEST_SRC_DIR AND
 # tests that require dbus, must not require X
   add_executable(test-gtest-dbus
                  test_categories.cpp
+                 test_dbus_indicators.cpp
                  test_filesystem_lenses.cpp
                  test_filter.cpp
                  test_gdbus_proxy.cpp
@@ -185,7 +186,6 @@ if (GTEST_SRC_DIR AND
                  test_utils.h
                  test_ratings_filter.cpp
                  test_results.cpp
-                 test_dbus_indicators.cpp
                 )
   target_link_libraries(test-gtest-dbus gtest unity-shared ${LIBS})
   add_test(UnityGTestDBus test-gtest-dbus)

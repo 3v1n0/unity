@@ -22,9 +22,6 @@ Lens::Lens()
 
   unity_scope_set_search_in_global(scope_, TRUE);
 
-  // sig_manager_.Add<UnityScope*, UnityLensSearch*, UnitySearchType, GCancellable*>(scope_, "search-changed")
-  // void Add(G object, std::string const& signal_name, typename Signal<R, G, Ts...>::SignalCallback const& callback)
-
   g_signal_connect(scope_, "search-changed", G_CALLBACK(on_search_changed), this);
   g_signal_connect(scope_, "activate-uri", G_CALLBACK(on_activate_uri), this);
   g_signal_connect(scope_, "preview-uri", G_CALLBACK(on_preview_uri), this);
@@ -61,7 +58,6 @@ void Lens::AddCategories()
   icon = g_themed_icon_new("gtk-close");
   cats = g_list_append (cats, unity_category_new("Category3", icon,
                                                  UNITY_CATEGORY_RENDERER_FLOW));
-
 
   unity_lens_set_categories(lens_, cats);
   g_list_free_full (cats, (GDestroyNotify) g_object_unref);
