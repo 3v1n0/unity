@@ -33,6 +33,8 @@ namespace unity
 {
 namespace dash
 {
+  
+NUX_IMPLEMENT_OBJECT_TYPE(FilterBasicButton);
 
 FilterBasicButton::FilterBasicButton(nux::TextureArea* image, NUX_FILE_LINE_DECL)
   : nux::ToggleButton(image, NUX_FILE_LINE_PARAM)

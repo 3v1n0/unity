@@ -1138,7 +1138,11 @@ UnityWindow::GetInputRemover ()
   if (!input_remover_.expired ())
     return input_remover_.lock ();
 
-  compiz::WindowInputRemoverLock::Ptr ret (new compiz::WindowInputRemoverLock (new compiz::WindowInputRemover (screen->dpy (), window->id ())));
+  compiz::WindowInputRemoverLock::Ptr
+      ret (new compiz::WindowInputRemoverLock (
+             new compiz::WindowInputRemover (screen->dpy (),
+                                             window->id (),
+                                             window->id ())));
   input_remover_ = ret;
   return ret;
 }
@@ -1272,6 +1276,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   // CompRegion has no clear() method. So this is the fastest alternative.
   fullscreenRegion = CompRegion();
   nuxRegion = CompRegion();
+  windows_for_monitor_.clear();
 
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
@@ -1645,7 +1650,7 @@ void UnityScreen::handleEvent(XEvent* event)
 
         if (super_keypressed_)
         {
-          skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string);
+          skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string, event->xkey.time);
           if (!skip_other_plugins)
             skip_other_plugins = dash_controller_->CheckShortcutActivation(key_string);
 
@@ -2060,9 +2065,13 @@ bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State
     switcher_controller_->Select((switcher_controller_->StartIndex())); // always select the current application
     switcher_controller_->InitiateDetail();
   }
-  else
+  else if (switcher_controller_->IsDetailViewShown())
   {
     switcher_controller_->NextDetail();
+  }
+  else
+  {
+    switcher_controller_->SetDetail(true);
   }
 
   action->setState(action->state() | CompAction::StateTermKey);
@@ -2510,17 +2519,32 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
                               PAINT_WINDOW_TRANSLUCENT_MASK |
                               PAINT_WINDOW_TRANSFORMED_MASK |
                               PAINT_WINDOW_NO_CORE_INSTANCE_MASK;
-    if (!(mask & nonOcclusionBits) &&
-        (window->state() & CompWindowStateFullscreenMask))
-        // And I've been advised to test other things, but they don't work:
-        // && (attrib.opacity == OPAQUE)) <-- Doesn't work; Only set in glDraw
-        // && !window->alpha() <-- Doesn't work; Opaque windows often have alpha
+
+    if (window->isMapped() &&
+        window->defaultViewport() == uScreen->screen->vp())
     {
-      uScreen->fullscreenRegion += window->geometry();
-      uScreen->fullscreenRegion -= uScreen->nuxRegion;
+      int monitor = window->outputDevice();
+
+      auto it = uScreen->windows_for_monitor_.find(monitor);
+
+      if (it != end(uScreen->windows_for_monitor_))
+        ++(it->second);
+      else
+        uScreen->windows_for_monitor_[monitor] = 1;
+
+      if (!(mask & nonOcclusionBits) &&
+          (window->state() & CompWindowStateFullscreenMask) &&
+          uScreen->windows_for_monitor_[monitor] == 1)
+          // And I've been advised to test other things, but they don't work:
+          // && (attrib.opacity == OPAQUE)) <-- Doesn't work; Only set in glDraw
+          // && !window->alpha() <-- Doesn't work; Opaque windows often have alpha
+      {
+        uScreen->fullscreenRegion += window->geometry();
+      }
+
+      if (uScreen->nuxRegion.isEmpty())
+        uScreen->firstWindowAboveShell = window;
     }
-    if (uScreen->nuxRegion.isEmpty())
-      uScreen->firstWindowAboveShell = window;
   }
 
   GLWindowPaintAttrib wAttrib = attrib;
@@ -3360,6 +3384,25 @@ struct UnityWindow::CairoContext
   cairo_t *cr_;
 };
 
+namespace
+{
+bool WindowHasInconsistentShapeRects (Display *d,
+                                      Window  w)
+{
+  int n;
+  Atom *atoms = XListProperties(d, w, &n);
+  Atom unity_shape_rects_atom = XInternAtom (d, "_UNITY_SAVED_WINDOW_SHAPE", FALSE);
+  bool has_inconsistent_shape = false;
+
+  for (int i = 0; i < n; ++i)
+    if (atoms[i] == unity_shape_rects_atom)
+      has_inconsistent_shape = true;
+
+  XFree (atoms);
+  return has_inconsistent_shape;
+}
+}
+
 UnityWindow::UnityWindow(CompWindow* window)
   : BaseSwitchWindow (dynamic_cast<BaseSwitchScreen *> (UnityScreen::get (screen)), window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
@@ -3370,14 +3413,20 @@ UnityWindow::UnityWindow(CompWindow* window)
   GLWindowInterface::setHandler(gWindow);
   ScaleWindowInterface::setHandler (ScaleWindow::get (window));
 
+  /* This needs to happen before we set our wrapable functions, since we
+   * need to ask core (and not ourselves) whether or not the window is
+   * minimized */
   if (UnityScreen::get (screen)->optionGetShowMinimizedWindows () &&
-      window->mapNum ())
+      window->mapNum () &&
+      WindowHasInconsistentShapeRects (screen->dpy (),
+                                       window->id ()))
   {
+    /* Query the core function */
+    window->minimizedSetEnabled (this, false);
+
     bool wasMinimized = window->minimized ();
     if (wasMinimized)
       window->unminimize ();
-    window->minimizeSetEnabled (this, true);
-    window->unminimizeSetEnabled (this, true);
     window->minimizedSetEnabled (this, true);
 
     if (wasMinimized)
@@ -3389,6 +3438,8 @@ UnityWindow::UnityWindow(CompWindow* window)
     window->unminimizeSetEnabled (this, false);
     window->minimizedSetEnabled (this, false);
   }
+
+  /* Keep this after the optionGetShowMinimizedWindows branch */
 
   if (window->state () & CompWindowStateFullscreenMask)
     UnityScreen::get (screen)->fullscreen_windows_.push_back(window);

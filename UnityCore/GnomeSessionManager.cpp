@@ -62,18 +62,6 @@ R"(<node>
   </interface>
 </node>)";
 
-GDBusInterfaceVTable INTERFACE_VTABLE =
-{
-  [] (GDBusConnection* connection, const gchar* sender, const gchar* object_path,
-      const gchar* interface_name, const gchar* method_name, GVariant* parameters,
-      GDBusMethodInvocation* invocation, gpointer user_data) {
-        auto impl = static_cast<GnomeManager::Impl*>(user_data);
-        impl->OnShellMethodCall(method_name ? method_name : "", parameters);
-        g_dbus_method_invocation_return_value(invocation, nullptr);
-  },
-  nullptr, nullptr
-};
-
 }
 
 GnomeManager::Impl::Impl(GnomeManager* manager)
@@ -81,10 +69,12 @@ GnomeManager::Impl::Impl(GnomeManager* manager)
   , can_shutdown_(true)
   , can_suspend_(false)
   , can_hibernate_(false)
-  , shell_owner_name_(0)
   , pending_action_(shell::Action::NONE)
+  , shell_server_(shell::DBUS_NAME)
 {
-  SetupShellSessionHandler();
+  shell_server_.AddObjects(shell::INTROSPECTION_XML, shell::DBUS_OBJECT_PATH);
+  shell_server_.GetObject(shell::DBUS_INTERFACE);
+  shell_object_->SetMethodsCallsHandler(sigc::mem_fun(this, &Impl::OnShellMethodCall));
 
   CallUPowerMethod("HibernateAllowed", [this] (GVariant* variant) {
     can_hibernate_ = glib::Variant(variant).GetBool();
@@ -107,66 +97,11 @@ GnomeManager::Impl::Impl(GnomeManager* manager)
 
 GnomeManager::Impl::~Impl()
 {
-  TearDownShellSessionHandler();
-}
-
-void GnomeManager::Impl::SetupShellSessionHandler()
-{
-  shell_owner_name_ = g_bus_own_name(G_BUS_TYPE_SESSION, shell::DBUS_NAME,
-                                     G_BUS_NAME_OWNER_FLAGS_REPLACE,
-    [] (GDBusConnection* conn, const gchar* name, gpointer data)
-    {
-      auto self = static_cast<GnomeManager::Impl*>(data);
-      auto xml_int = g_dbus_node_info_new_for_xml(shell::INTROSPECTION_XML, nullptr);
-      std::shared_ptr<GDBusNodeInfo> introspection(xml_int, g_dbus_node_info_unref);
-
-      if (!introspection)
-      {
-        LOG_ERROR(logger) << "No dbus introspection data could be loaded."
-                          << "Session manager integration will not work";
-        return;
-      }
-
-      for (unsigned i = 0; introspection->interfaces[i]; ++i)
-      {
-        glib::Error error;
-        GDBusInterfaceInfo *interface = introspection->interfaces[i];
-
-        unsigned id = g_dbus_connection_register_object(conn, shell::DBUS_OBJECT_PATH, interface,
-                                                        &shell::INTERFACE_VTABLE, data, nullptr, &error);
-        if (error)
-        {
-          LOG_ERROR(logger) << "Could not register debug interface onto d-bus: "
-                            << error.Message();
-        }
-        else
-        {
-          self->shell_objects_ids_.push_back(id);
-        }
-      }
-
-      self->shell_connection_ = glib::Object<GDBusConnection>(conn, glib::AddRef());
-
-    }, nullptr, [] (GDBusConnection *connection, const gchar *name, gpointer user_data)
-    {
-      LOG_ERROR(logger) << "DBus name Lost " << name;
-    }
-    , this, nullptr);
-}
-
-void GnomeManager::Impl::TearDownShellSessionHandler()
-{
   CancelAction();
   ClosedDialog();
-
-  for (auto id : shell_objects_ids_)
-    g_dbus_connection_unregister_object(shell_connection_, id);
-
-  if (shell_owner_name_)
-    g_bus_unown_name(shell_owner_name_);
 }
 
-void GnomeManager::Impl::OnShellMethodCall(std::string const& method, GVariant* parameters)
+GVariant* GnomeManager::Impl::OnShellMethodCall(std::string const& method, GVariant* parameters)
 {
   LOG_DEBUG(logger) << "Called method '" << method << "'";
 
@@ -243,48 +178,37 @@ void GnomeManager::Impl::OnShellMethodCall(std::string const& method, GVariant* 
     manager_->cancel_requested.emit();
     ClosedDialog();
   }
-}
 
-void GnomeManager::Impl::EmitShellSignal(std::string const& signal, GVariant* parameters)
-{
-  glib::Error error;
-
-  pending_action_ = shell::Action::NONE;
-
-  LOG_INFO(logger) << "Emitting Shell signal '" << signal << "'";
-  g_dbus_connection_emit_signal(shell_connection_, nullptr, shell::DBUS_OBJECT_PATH,
-                                shell::DBUS_INTERFACE, signal.c_str(), parameters, &error);
-
-  if (error)
-  {
-    LOG_WARNING(logger) << "Got error when emitting signal '" << signal << "': "
-                        << error.Message();
-  }
+  return nullptr;
 }
 
 void GnomeManager::Impl::ConfirmLogout()
 {
-  EmitShellSignal("ConfirmedLogout");
+  pending_action_ = shell::Action::NONE;
+  shell_object_->EmitSignal("ConfirmedLogout");
 }
 
 void GnomeManager::Impl::ConfirmReboot()
 {
-  EmitShellSignal("ConfirmedReboot");
+  pending_action_ = shell::Action::NONE;
+  shell_object_->EmitSignal("ConfirmedReboot");
 }
 
 void GnomeManager::Impl::ConfirmShutdown()
 {
-  EmitShellSignal("ConfirmedShutdown");
+  pending_action_ = shell::Action::NONE;
+  shell_object_->EmitSignal("ConfirmedShutdown");
 }
 
 void GnomeManager::Impl::CancelAction()
 {
-  EmitShellSignal("Canceled");
+  pending_action_ = shell::Action::NONE;
+  shell_object_->EmitSignal("Canceled");
 }
 
 void GnomeManager::Impl::ClosedDialog()
 {
-  EmitShellSignal("Closed");
+  shell_object_->EmitSignal("Closed");
 }
 
 void GnomeManager::Impl::CallGnomeSessionMethod(std::string const& method, GVariant* parameters,

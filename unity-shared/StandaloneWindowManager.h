@@ -136,6 +136,7 @@ public:
   virtual int WorkspaceCount() const;
 
   nux::Point GetCurrentViewport() const override;
+  void SetViewportSize(int horizontal, int vertical);
   int GetViewportHSize() const override;
   int GetViewportVSize() const override;
 
@@ -152,7 +153,6 @@ public:
   void SetScaleActiveForGroup(bool scale_active_for_group);
   void SetCurrentDesktop(unsigned desktop_id);
 
-  void SetViewportSize(unsigned horizontal, unsigned vertical);
   void SetCurrentViewport(nux::Point const& vp);
   void SetWorkareaGeometry(nux::Geometry const& geo);
 

@@ -77,7 +77,7 @@ protected:
   void OnDndEnter();
   void OnDndHovered();
   void OnDndLeave();
-  void OpenInstanceLauncherIcon();
+  void OpenInstanceLauncherIcon(Time timestamp) override;
   void ToggleSticky();
 
   bool OnShouldHighlightOnDrag(DndData const& dnd_data);
@@ -114,7 +114,7 @@ private:
   void UpdateMenus();
   void UpdateDesktopQuickList();
 
-  void OpenInstanceWithUris(std::set<std::string> const& uris);
+  void OpenInstanceWithUris(std::set<std::string> const& uris, Time timestamp);
   void Focus(ActionArg arg);
   bool Spread(bool current_desktop, int state, bool force);
 

@@ -33,6 +33,7 @@ namespace dash
 
 class FilterBasicButton : public nux::ToggleButton
 {
+  NUX_DECLARE_OBJECT_TYPE(FilterBasicButton, nux::ToggleButton);
 public:
   FilterBasicButton(nux::TextureArea* image, NUX_FILE_LINE_PROTO);
   FilterBasicButton(std::string const& label, NUX_FILE_LINE_PROTO);

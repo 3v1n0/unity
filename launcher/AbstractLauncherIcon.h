@@ -59,9 +59,10 @@ public:
   {
   }
 
-  ActionArg(Source source, int button, Window target = 0, int monitor = -1)
+  ActionArg(Source source, int button, Time timestamp = -1,  Window target = 0, int monitor = -1)
     : source(source)
     , button(button)
+    , timestamp(timestamp)
     , target(target)
     , monitor(monitor)
   {
@@ -69,6 +70,7 @@ public:
 
   Source source;
   int button;
+  Time timestamp;
   Window target;
   int monitor;
 };
@@ -131,6 +133,7 @@ public:
   nux::Property<std::string> tooltip_text;
   nux::Property<bool> tooltip_enabled;
   nux::Property<Position> position;
+  nux::Property<bool> removed;
 
   virtual void HideTooltip() = 0;
 

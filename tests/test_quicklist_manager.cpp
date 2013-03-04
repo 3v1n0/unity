@@ -34,7 +34,7 @@ struct MockQuicklistView : public unity::QuicklistView
 {
   void *operator new(size_t uiSize) {
     GObjectStats._allocation_list.push_back(buf);
-    return (void *)buf;
+    return (void *) buf;
   }
 
   void  operator delete(void *p) {
@@ -51,7 +51,6 @@ TEST(TestQuicklistManager, RegisterQuicklist)
     nux::ObjectPtr<unity::QuicklistView> quicklist1(new MockQuicklistView);
     ptr = quicklist1;
     ASSERT_EQ(quicklist1->GetReferenceCount(), 1);
-    ASSERT_EQ(quicklist1.GetPointer(), (unity::QuicklistView*) buf);
     ASSERT_TRUE(unity::QuicklistManager::Default()->RegisterQuicklist(quicklist1));
     ASSERT_EQ(quicklist1->GetReferenceCount(), 1);
     ASSERT_FALSE(unity::QuicklistManager::Default()->RegisterQuicklist(quicklist1));
@@ -61,7 +60,6 @@ TEST(TestQuicklistManager, RegisterQuicklist)
   ASSERT_FALSE(ptr.IsValid());
 
   nux::ObjectPtr<unity::QuicklistView> quicklist2(new MockQuicklistView);
-  ASSERT_EQ(quicklist2.GetPointer(), (unity::QuicklistView*) buf);
   ASSERT_EQ(quicklist2->GetReferenceCount(), 1);
   ASSERT_TRUE(unity::QuicklistManager::Default()->RegisterQuicklist(quicklist2));
   ASSERT_EQ(quicklist2->GetReferenceCount(), 1);
