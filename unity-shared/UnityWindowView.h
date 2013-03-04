@@ -54,7 +54,8 @@ public:
 
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
+  nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
+  nux::Area* FindKeyFocusArea(unsigned etype, unsigned long key_code, unsigned long modifiers);
 
   virtual void PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw) {};
   virtual void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip) = 0;
