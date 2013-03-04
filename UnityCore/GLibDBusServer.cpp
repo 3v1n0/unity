@@ -79,15 +79,28 @@ struct DBusObject::Impl
       GVariant *ret = nullptr;
 
       if (self->method_cb_)
+      {
         ret = self->method_cb_(method_name ? method_name : "", parameters);
 
-      LOG_INFO(logger_o) << "Called method: '" << method_name << " "
-                         << (parameters ? g_variant_print(parameters, TRUE) : "()")
-                         << "' on object '" << object_path << "' with interface '"
-                         << interface_name << "' , returning: '"
-                         << (ret ? g_variant_print(ret, TRUE) : "()") << "'";
+        LOG_INFO(logger_o) << "Called method: '" << method_name << " "
+                           << (parameters ? g_variant_print(parameters, TRUE) : "()")
+                           << "' on object '" << object_path << "' with interface '"
+                           << interface_name << "' , returning: '"
+                           << (ret ? g_variant_print(ret, TRUE) : "()") << "'";
 
-      g_dbus_method_invocation_return_value(invocation, ret);
+        g_dbus_method_invocation_return_value(invocation, ret);
+      }
+      else
+      {
+        LOG_WARN(logger_o) << "Called method: '" << method_name << " "
+                           << (parameters ? g_variant_print(parameters, TRUE) : "()")
+                           << "' on object '" << object_path << "' with interface '"
+                           << interface_name << "', but no methods handler is set";
+
+        std::string error_name = std::string(interface_name)+".Error.NoHandlerSet";
+        std::string error = "No handler set for method '"+std::string(method_name)+"' on path '"+std::string(object_path)+"'.";
+        g_dbus_method_invocation_return_dbus_error(invocation, error_name.c_str(), error.c_str());
+      }
     };
 
     interface_vtable_.get_property = [] (GDBusConnection* connection, const gchar* sender,
