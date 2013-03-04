@@ -35,8 +35,8 @@
 #define UBUS_DASH_ABOUT_TO_SHOW "DASH_ABOUT_TO_SHOW"
 
 // Signal sent when an overlay interface is shown, includes a gvariant
-// gvariant format is (sb), (interface-name, can_maximize?)
-#define UBUS_OVERLAY_FORMAT_STRING "(sbi)"
+// gvariant format is (sb), (interface-name, can_maximize?, width, height)
+#define UBUS_OVERLAY_FORMAT_STRING "(sbiii)"
 #define UBUS_OVERLAY_HIDDEN "OVERLAY_HIDDEN"
 #define UBUS_OVERLAY_SHOWN "OVERLAY_SHOWN"
 

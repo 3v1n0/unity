@@ -86,7 +86,8 @@ Controller::Controller(Controller::ViewCreator const& create_view,
     unity::glib::String overlay_identity;
     gboolean can_maximise = FALSE;
     gint32 overlay_monitor = 0;
-    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise, &overlay_monitor);
+    int width, height;
+    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
 
     if (overlay_identity.Str() != "hud")
     {
@@ -372,7 +373,10 @@ void Controller::ShowHud()
   // hide the launcher
   GVariant* message_data = g_variant_new("(b)", TRUE);
   ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, message_data);
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, monitor_index_);
+
+  auto const& view_content_geometry = view_->GetContentGeometry();
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, monitor_index_,
+                                 view_content_geometry.width, view_content_geometry.height);
   ubus.SendMessage(UBUS_OVERLAY_SHOWN, info);
 
   nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
@@ -416,7 +420,9 @@ void Controller::HideHud(bool restore)
   GVariant* message_data = g_variant_new("(b)", FALSE);
   ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, message_data);
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, monitor_index_);
+  auto const& view_content_geometry = view_->GetContentGeometry();
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, monitor_index_,
+                                 view_content_geometry.width, view_content_geometry.height);
   ubus.SendMessage(UBUS_OVERLAY_HIDDEN, info);
 }
 
