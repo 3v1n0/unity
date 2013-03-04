@@ -101,7 +101,7 @@ void TooltipManager::ResetTimer() {
   if (icon_clicked_)
     return;
 
-  StopTimer();
+  hover_timer_.reset(new glib::Timeout(TOOLTIPS_SHOW_TIMEOUT_LENGTH));
   hover_timer_->Run([&] () {
     show_tooltips_ = true;
     icon_->ShowTooltip();
@@ -110,7 +110,7 @@ void TooltipManager::ResetTimer() {
 }
 
 void TooltipManager::StopTimer() {
-  hover_timer_.reset(new glib::Timeout(TOOLTIPS_SHOW_TIMEOUT_LENGTH));
+  hover_timer_.reset();
 }
 
 } // namespace launcher
