@@ -354,6 +354,36 @@ TEST_F(TestGLibDBusServerInteractions, NotHandledMethod)
   EXPECT_TRUE(got_return);
 }
 
+TEST_F(TestGLibDBusServerInteractions, NullReturnOnMethodWithReturn)
+{
+  object->SetMethodsCallsHandler([&] (std::string const& called_method, GVariant* called_parameters) {
+    return static_cast<GVariant*>(nullptr);
+  });
+
+  bool returned = false;
+  proxy->CallBegin("MethodWithReturnValue", nullptr, [&returned] (GVariant*, Error const& error) {
+    returned = true;
+    EXPECT_TRUE(error);
+  });
+
+  Utils::WaitUntilMSec(returned);
+}
+
+TEST_F(TestGLibDBusServerInteractions, EmptyReturnOnMethodWithReturn)
+{
+  object->SetMethodsCallsHandler([&] (std::string const& called_method, GVariant* called_parameters) {
+    return g_variant_new("()");
+  });
+
+  bool returned = false;
+  proxy->CallBegin("MethodWithReturnValue", nullptr, [&returned] (GVariant*, Error const& error) {
+    returned = true;
+    EXPECT_TRUE(error);
+  });
+
+  Utils::WaitUntilMSec(returned);
+}
+
 TEST_F(TestGLibDBusServerInteractions, SignalWithNoParametersEmission)
 {
   auto const& signal_name = "SignalWithNoParameters";
