@@ -88,7 +88,21 @@ struct DBusObject::Impl
                            << interface_name << "' , returning: '"
                            << (ret ? g_variant_print(ret, TRUE) : "()") << "'";
 
-        g_dbus_method_invocation_return_value(invocation, ret);
+        const GDBusMethodInfo* info = g_dbus_method_invocation_get_method_info(invocation);
+
+        if ((!ret || g_variant_equal(ret, glib::Variant(g_variant_new("()")))) && info->out_args && info->out_args[0])
+        {
+          LOG_ERROR(logger_o) << "Retuning NULL on method call '" << method_name << "' "
+                              << "while its interface requires a value";
+
+          std::string error_name = std::string(interface_name)+".Error.BadReturn";
+          std::string error = "Returning invalid value for '"+std::string(method_name)+"' on path '"+std::string(object_path)+"'.";
+          g_dbus_method_invocation_return_dbus_error(invocation, error_name.c_str(), error.c_str());
+        }
+        else
+        {
+          g_dbus_method_invocation_return_value(invocation, ret);
+        }
       }
       else
       {
