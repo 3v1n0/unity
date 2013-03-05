@@ -130,10 +130,10 @@ void Controller::SetupWindow()
    * window not to actually get input, this side steps that by causing an input window
    * show and hide before we really need it. */
     WindowManager& wm = WindowManager::Default();
-    wm.SaveInputFocus ();
+    wm.SaveInputFocus();
     window_->EnableInputWindow(true, dash::window_title, true, false);
     window_->EnableInputWindow(false, dash::window_title, true, false);
-    wm.RestoreInputFocus ();
+    wm.RestoreInputFocus();
   }
 }
 
