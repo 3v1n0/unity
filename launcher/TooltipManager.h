@@ -47,8 +47,8 @@ private:
   bool                      show_tooltips_;
   bool                      hovered_;
   AbstractLauncherIcon::Ptr icon_;
-  bool                      icon_clicked_;
   glib::Source::UniquePtr   hover_timer_;
+  bool                      timer_locked_;
 };
 
 } // namespace launcher

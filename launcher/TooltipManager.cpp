@@ -32,7 +32,7 @@ const unsigned int TOOLTIPS_SHOW_TIMEOUT_LENGTH = 1000;
 TooltipManager::TooltipManager()
   : show_tooltips_(false)
   , hovered_(false)
-  , icon_clicked_(false)
+  , timer_locked_(false)
 {}
 
 void TooltipManager::SetIcon(AbstractLauncherIcon::Ptr const& newIcon)
@@ -41,7 +41,7 @@ void TooltipManager::SetIcon(AbstractLauncherIcon::Ptr const& newIcon)
     return;
 
   // Unlock hover timer, in case the previous icon had no valid tooltip
-  icon_clicked_ = false;
+  timer_locked_ = false;
  
   if (show_tooltips_)
   {
@@ -64,7 +64,7 @@ void TooltipManager::SetIcon(AbstractLauncherIcon::Ptr const& newIcon)
          newIcon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
     {
       // Lock the hover timer for no valid tooltip cases
-      icon_clicked_ = true;
+      timer_locked_ = true;
       StopTimer();
     }
   }
@@ -101,12 +101,12 @@ void TooltipManager::IconClicked()
     icon_->HideTooltip();
 
   show_tooltips_ = false;
-  icon_clicked_ = true;
+  timer_locked_ = true;
 }
 
 void TooltipManager::ResetTimer()
 {
-  if (icon_clicked_)
+  if (timer_locked_)
     return;
 
   hover_timer_.reset(new glib::Timeout(TOOLTIPS_SHOW_TIMEOUT_LENGTH));
