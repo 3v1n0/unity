@@ -289,7 +289,8 @@ void Launcher::SetStateMouseOverLauncher(bool over_launcher)
   tooltip_manager_.SetHover(over_launcher);
 }
 
-void Launcher::SetIconUnderMouse(AbstractLauncherIcon::Ptr const& icon) {
+void Launcher::SetIconUnderMouse(AbstractLauncherIcon::Ptr const& icon)
+{
   if (_icon_under_mouse == icon)
     return;
 

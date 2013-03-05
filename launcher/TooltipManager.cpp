@@ -36,29 +36,34 @@ TooltipManager::TooltipManager()
    , icon_clicked_(false)
 {}
 
-void TooltipManager::SetIcon(AbstractLauncherIcon::Ptr const& newIcon) { 
+void TooltipManager::SetIcon(AbstractLauncherIcon::Ptr const& newIcon)
+{ 
   if (icon_ == newIcon)
     return;
 
   // Unlock hover timer, in case the previous icon had no valid tooltip
   icon_clicked_ = false;
  
-  if (show_tooltips_) {
+  if (show_tooltips_)
+  {
     // Show new tooltip, get rid of the old olne
     if (icon_)
       icon_->HideTooltip();
     if (newIcon)
       newIcon->ShowTooltip();
   }
-  else if (!newIcon) {
+  else if (!newIcon)
+  {
     // Stop the hover timer for null launcher space
     StopTimer();
   }
-  else { 
+  else
+  { 
     AbstractLauncherIcon::IconType type = newIcon->GetIconType();
     if ((type == AbstractLauncherIcon::IconType::HOME ||
          type == AbstractLauncherIcon::IconType::HUD) &&
-         newIcon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE)) {
+         newIcon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
+    {
       // Lock the hover timer for no valid tooltip cases
       icon_clicked_ = true;
       StopTimer();
@@ -68,27 +73,30 @@ void TooltipManager::SetIcon(AbstractLauncherIcon::Ptr const& newIcon) {
   icon_ = newIcon;
 }
 
-void TooltipManager::SetHover(bool on_launcher) { 
-  if (hovered_ == on_launcher) {
+void TooltipManager::SetHover(bool on_launcher)
+{ 
+  if (hovered_ == on_launcher)
     return;
-  }
   hovered_ = on_launcher;
 
-  if (show_tooltips_ && !hovered_) {
+  if (show_tooltips_ && !hovered_)
+  {
     show_tooltips_ = false;
     if (icon_)
       icon_->HideTooltip();
   }
 }
 
-void TooltipManager::MouseMoved() {
+void TooltipManager::MouseMoved()
+{
   if (!icon_ || show_tooltips_)
     return;
 
   ResetTimer();
 }
 
-void TooltipManager::IconClicked() {
+void TooltipManager::IconClicked()
+{
   StopTimer();
   if (show_tooltips_ && icon_)
     icon_->HideTooltip();
@@ -97,7 +105,8 @@ void TooltipManager::IconClicked() {
   icon_clicked_ = true;
 }
 
-void TooltipManager::ResetTimer() {
+void TooltipManager::ResetTimer()
+{
   if (icon_clicked_)
     return;
 
@@ -109,7 +118,8 @@ void TooltipManager::ResetTimer() {
   });
 }
 
-void TooltipManager::StopTimer() {
+void TooltipManager::StopTimer()
+{
   hover_timer_.reset();
 }
 

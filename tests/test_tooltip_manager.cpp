@@ -29,9 +29,11 @@ namespace unity
 namespace launcher
 {
 
-namespace {
+namespace
+{
 
-TEST(TestTooltipManager, TestHideAndShowTooltip) {
+TEST(TestTooltipManager, TestHideAndShowTooltip)
+{
   // Makes sure that TooltipManager calls icon->ShowTooltip() when the mouse
   // hovers it, and icon->HideTooltip() after the mouse dehovers it.
   TooltipManager tm;
@@ -48,5 +50,5 @@ TEST(TestTooltipManager, TestHideAndShowTooltip) {
 
 }
 
-}
-}
+} // launcher
+} // unity
