@@ -91,13 +91,6 @@ void Controller::Show(View::Mode mode, bool inhibitors)
   if (Visible() && mode == view_->mode())
     return;
 
-  view_->mode = mode;
-  view_->have_inhibitors = inhibitors;
-
-  int monitor = UScreen::GetDefault()->GetMonitorWithMouse();
-  auto const& offset = GetOffsetPerMonitor(monitor);
-  view_window_->SetXY(offset.x, offset.y);
-
   WindowManager::Default().SaveInputFocus();
 
   if (nux::GetWindowThread()->IsEmbeddedWindow())
@@ -107,7 +100,10 @@ void Controller::Show(View::Mode mode, bool inhibitors)
     view_window_->GrabKeyboard();
   }
 
+  view_->mode = mode;
+  view_->have_inhibitors = inhibitors;
   view_->live_background = true;
+
   view_window_->ShowWindow(true);
   view_window_->PushToFront();
   view_window_->SetInputFocus();
@@ -128,7 +124,7 @@ nux::Point Controller::GetOffsetPerMonitor(int monitor)
 {
   EnsureView();
 
-  auto const& view_geo = view_->GetAbsoluteGeometry();
+  auto const& view_geo = view_->GetGeometry();
   auto const& monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
 
   //TODO get adjustment from windowmanager!
@@ -164,6 +160,12 @@ void Controller::ConstructView()
 
   view_->request_hide.connect(sigc::mem_fun(this, &Controller::Hide));
   view_->request_close.connect(sigc::mem_fun(this, &Controller::CancelAndHide));
+
+  view_->size_changed.connect([this] (nux::Area*, int, int) {
+    int monitor = UScreen::GetDefault()->GetMonitorWithMouse();
+    auto const& offset = GetOffsetPerMonitor(monitor);
+    view_window_->SetXY(offset.x, offset.y);
+  });
 }
 
 void Controller::EnsureView()

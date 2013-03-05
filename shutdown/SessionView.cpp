@@ -94,7 +94,6 @@ View::View(Manager::Ptr const& manager)
   mode.changed.connect([this] (Mode m) {
     UpdateText();
     Populate();
-    ComputeContentSize();
   });
 
   UpdateText();
@@ -205,8 +204,6 @@ void View::Populate()
       AddButton(button);
     }
   }
-
-  ComputeContentSize();
 }
 
 void View::AddButton(Button* button)
