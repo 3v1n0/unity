@@ -113,8 +113,6 @@ class ApplicationLensFuzzySearchTests(ApplicationLensSearchTestBase):
 
     def setUp(self):
         super(ApplicationLensFuzzySearchTests, self).setUp()
-        # XXX: These should be enabled once libcolumbus is used on 
-        self.skipTest("Application lens fuzzy search tests disabled until libcolumbus gets released.")
 
     def test_application_lens_fuzzy_search(self):
         self.do_search_test()

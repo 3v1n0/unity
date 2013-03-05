@@ -101,7 +101,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(Launcher);
 
 const int Launcher::Launcher::ANIM_DURATION_SHORT = 125;
 
-Launcher::Launcher(nux::BaseWindow* parent,
+Launcher::Launcher(MockableBaseWindow* parent,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
 #ifdef USE_X11
@@ -1225,8 +1225,9 @@ void Launcher::OnOverlayShown(GVariant* data)
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
+  int width, height;
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
-                &overlay_identity, &can_maximise, &overlay_monitor);
+                &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
   std::string identity(overlay_identity.Str());
 
   LOG_DEBUG(logger) << "Overlay shown: " << identity
@@ -1266,8 +1267,9 @@ void Launcher::OnOverlayHidden(GVariant* data)
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
+  int width, height;
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
-                &overlay_identity, &can_maximise, &overlay_monitor);
+                &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
 
   std::string identity = overlay_identity.Str();
 
@@ -1331,7 +1333,8 @@ void Launcher::SetHidden(bool hide_launcher)
 
   TimeUtil::SetTimeStruct(&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
 
-  _parent->EnableInputWindow(!hide_launcher, launcher::window_title, false, false);
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
+    _parent->EnableInputWindow(!hide_launcher, launcher::window_title, false, false);
 
   if (!hide_launcher && GetActionState() == ACTION_DRAG_EXTERNAL)
     DndReset();

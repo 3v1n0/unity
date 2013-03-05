@@ -1,3 +1,18 @@
+unity (6.12.0daily13.03.05-0ubuntu1) raring; urgency=low
+
+  [ Didier Roche ]
+  * Need a .json file for having the list of default installed lens and
+    scopes (LP: #1137303)
+
+  [ Andrea Azzarone ]
+  * [regression] On start up the Hud draws the panel gradient
+    incorrectly (LP: #1136447)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3185
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Tue, 05 Mar 2013 04:02:33 +0000
+
 unity (6.12.0daily13.03.01-0ubuntu1) raring; urgency=low
 
   [ Andrea Azzarone ]

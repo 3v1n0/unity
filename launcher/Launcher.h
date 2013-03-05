@@ -39,6 +39,7 @@
 #include "LauncherDragWindow.h"
 #include "LauncherHideMachine.h"
 #include "LauncherHoverMachine.h"
+#include "unity-shared/MockableBaseWindow.h"
 #include "unity-shared/UBusWrapper.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "TooltipManager.h"
@@ -66,7 +67,7 @@ class Launcher : public unity::debug::Introspectable,
   NUX_DECLARE_OBJECT_TYPE(Launcher, nux::View);
 public:
 
-  Launcher(nux::BaseWindow* parent, NUX_FILE_LINE_PROTO);
+  Launcher(MockableBaseWindow* parent, NUX_FILE_LINE_PROTO);
 
   nux::Property<Display*> display;
   nux::Property<int> monitor;
@@ -100,7 +101,7 @@ public:
   BacklightMode GetBacklightMode() const;
   bool IsBackLightModeToggles() const;
 
-  nux::BaseWindow* GetParent() const
+  MockableBaseWindow* GetParent() const
   {
     return _parent;
   };
@@ -336,7 +337,7 @@ private:
   bool DndIsSpecialRequest(std::string const& uri) const;
 
   LauncherModel::Ptr _model;
-  nux::BaseWindow* _parent;
+  MockableBaseWindow* _parent;
   nux::ObjectPtr<nux::View> _active_tooltip;
   QuicklistView* _active_quicklist;
 

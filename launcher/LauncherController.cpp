@@ -24,7 +24,6 @@
 
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
-#include <Nux/BaseWindow.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/DesktopUtilities.h>
 
@@ -314,7 +313,7 @@ void Controller::Impl::OnDndMonitorChanged(int monitor)
 
 Launcher* Controller::Impl::CreateLauncher()
 {
-  nux::BaseWindow* launcher_window = new nux::BaseWindow(TEXT("LauncherWindow"));
+  auto* launcher_window = new MockableBaseWindow(TEXT("LauncherWindow"));
 
   Launcher* launcher = new Launcher(launcher_window);
   launcher->options = parent_->options();
@@ -329,7 +328,10 @@ Launcher* Controller::Impl::CreateLauncher()
   launcher_window->SetLayout(layout);
   launcher_window->SetBackgroundColor(nux::color::Transparent);
   launcher_window->ShowWindow(true);
-  launcher_window->EnableInputWindow(true, launcher::window_title, false, false);
+
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
+    launcher_window->EnableInputWindow(true, launcher::window_title, false, false);
+
   launcher_window->InputWindowEnableStruts(parent_->options()->hide_mode == LAUNCHER_HIDE_NEVER);
   launcher_window->SetEnterFocusInputArea(launcher);
 

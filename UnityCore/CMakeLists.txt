@@ -26,6 +26,7 @@ set (CORE_HEADERS
      Filters.h
      GenericPreview.h
      GLibDBusProxy.h
+     GLibDBusServer.h
      GLibSignal.h
      GLibSignal-inl.h
      GLibSource.h
@@ -71,6 +72,7 @@ set (CORE_SOURCES
      Filters.cpp
      GenericPreview.cpp
      GLibDBusProxy.cpp
+     GLibDBusServer.cpp
      GLibSignal.cpp
      GLibSource.cpp
      GLibWrapper.cpp
