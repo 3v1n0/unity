@@ -35,6 +35,7 @@ public:
 
   MockableBaseWindow(char const* window_name = "", NUX_FILE_LINE_PROTO)
     : nux::BaseWindow(window_name, NUX_TRACKER_LOCATION)
+    , struts_enabled_(false)
   {}
 
   /**
@@ -45,6 +46,22 @@ public:
    * testing.
    */
   virtual void SetOpacity(float opacity) { BaseWindow::SetOpacity(opacity); }
+
+  virtual void InputWindowEnableStruts(bool enable)
+  {
+    struts_enabled_ = enable;
+    BaseWindow::InputWindowEnableStruts(enable);
+  }
+
+  virtual bool InputWindowStrutsEnabled()
+  {
+    if (!InputWindowEnabled())
+      return struts_enabled_;
+
+    return BaseWindow::InputWindowStrutsEnabled();
+  }
+
+  bool struts_enabled_;
 };
 
 }

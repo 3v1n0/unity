@@ -64,7 +64,6 @@ private:
   {
     SetupBackground();
     controller.reset(new launcher::Controller(std::make_shared<XdndManager>()));
-    controller->launcher().GetParent()->EnableInputWindow(false);
 
     UScreen* uscreen = UScreen::GetDefault();
     std::vector<nux::Geometry> fake_monitor({nux::Geometry(0, 0, win_size.width, win_size.height)});

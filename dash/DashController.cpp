@@ -124,12 +124,17 @@ void Controller::SetupWindow()
   window_->SetOpacity(0.0f);
   window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
 
-  /* FIXME - first time we load our windows there is a race that causes the input window not to actually get input, this side steps that by causing an input window show and hide before we really need it. */
-  WindowManager& wm = WindowManager::Default();
-  wm.SaveInputFocus ();
-  window_->EnableInputWindow(true, dash::window_title, true, false);
-  window_->EnableInputWindow(false, dash::window_title, true, false);
-  wm.RestoreInputFocus ();
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
+  {
+  /* FIXME - first time we load our windows there is a race that causes the input
+   * window not to actually get input, this side steps that by causing an input window
+   * show and hide before we really need it. */
+    WindowManager& wm = WindowManager::Default();
+    wm.SaveInputFocus();
+    window_->EnableInputWindow(true, dash::window_title, true, false);
+    window_->EnableInputWindow(false, dash::window_title, true, false);
+    wm.RestoreInputFocus();
+  }
 }
 
 void Controller::SetupDashView()
@@ -326,8 +331,9 @@ void Controller::FocusWindow()
 {
   window_->ShowWindow(true);
   window_->PushToFront();
-  if (!Settings::Instance().is_standalone) // in standalone mode, we do not need an input window. we are one.
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
   {
+    // in standalone (i.e. not embedded) mode, we do not need an input window. we are one.
     window_->EnableInputWindow(true, dash::window_title, true, false);
     // update the input window geometry. This causes the input window to match the actual size of the dash.
     window_->UpdateInputWindowGeometry();
