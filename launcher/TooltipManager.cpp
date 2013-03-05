@@ -30,10 +30,9 @@ const unsigned int TOOLTIPS_SHOW_TIMEOUT_LENGTH = 1000;
 }
 
 TooltipManager::TooltipManager()
-   : show_tooltips_(false)
-   , hovered_(false)
-   , icon_(nullptr)
-   , icon_clicked_(false)
+  : show_tooltips_(false)
+  , hovered_(false)
+  , icon_clicked_(false)
 {}
 
 void TooltipManager::SetIcon(AbstractLauncherIcon::Ptr const& newIcon)
