@@ -98,6 +98,7 @@ if (GTEST_SRC_DIR AND
        test_main_xless.cpp
        test_abstract_interface_generator.cpp
        test_launcher_model.cpp
+       test_glib_dbus_object.cpp
        test_glib_object.cpp
        test_glib_object_utils.cpp
        test_glib_object_utils.h
@@ -200,6 +201,7 @@ if (ENABLE_X_SUPPORT)
                  test_device_launcher_section.cpp
                  test_edge_barrier_controller.cpp
                  test_filter_widgets.cpp
+                 test_glib_dbus_server.cpp
                  test_hud_button.cpp
                  test_hud_controller.cpp
                  test_hud_launcher_icon.cpp
