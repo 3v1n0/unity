@@ -39,12 +39,12 @@ TEST(TestTooltipManager, TestHideAndShowTooltip)
   TooltipManager tm;
   MockLauncherIcon* icon = new MockLauncherIcon();
 
-  tm.SetIcon((AbstractLauncherIcon::Ptr)icon);
+  tm.SetIcon(AbstractLauncherIcon::Ptr(icon));
   tm.MouseMoved();
   Utils::WaitForTimeoutMSec(1050);
 
   EXPECT_TRUE(icon->IsTooltipVisible());
-  tm.SetIcon((AbstractLauncherIcon::Ptr)nullptr);
+  tm.SetIcon(AbstractLauncherIcon::Ptr());
   EXPECT_FALSE(icon->IsTooltipVisible());
 }
 
