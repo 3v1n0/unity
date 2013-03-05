@@ -25,6 +25,7 @@
 #include "ExpoLauncherIcon.h"
 #include "DesktopLauncherIcon.h"
 #include "DesktopUtilities.h"
+#include "MockableBaseWindow.h"
 #include "MockLauncherIcon.h"
 #include "BFBLauncherIcon.h"
 #include "HudLauncherIcon.h"
@@ -222,7 +223,7 @@ struct TestLauncherController : public testing::Test
     bool expired = false;
     glib::Idle idle([&] { expired = true; return false; },
                     glib::Source::Priority::LOW);
-    Utils::WaitUntil(expired);
+    Utils::WaitUntilMSec(expired);
   }
 
 protected:
@@ -509,7 +510,7 @@ TEST_F(TestLauncherController, EnabledStrutsOnNeverHide)
   };
 
   for (int i = 0; i < max_num_monitors; ++i)
-    Utils::WaitUntil(std::bind(check_fn, i));
+    Utils::WaitUntilMSec(std::bind(check_fn, i));
 }
 
 TEST_F(TestLauncherController, DisabledStrutsOnAutoHide)
@@ -519,11 +520,11 @@ TEST_F(TestLauncherController, DisabledStrutsOnAutoHide)
   lc.options()->hide_mode = LAUNCHER_HIDE_AUTOHIDE;
 
   auto check_fn = [this](int index) {
-    return !(lc.launchers()[index]->GetParent()->InputWindowStrutsEnabled());
+    return lc.launchers()[index]->GetParent()->InputWindowStrutsEnabled();
   };
 
   for (int i = 0; i < max_num_monitors; ++i)
-    Utils::WaitUntil(std::bind(check_fn, i));
+    Utils::WaitUntilMSec(std::bind(check_fn, i), false);
 }
 
 TEST_F(TestLauncherController, EnabledStrutsAddingNewLaunchersOnAutoHide)
@@ -544,7 +545,7 @@ TEST_F(TestLauncherController, EnabledStrutsAddingNewLaunchersOnAutoHide)
   };
 
   for (int i = 0; i < max_num_monitors; ++i)
-    Utils::WaitUntil(std::bind(check_fn, i));
+    Utils::WaitUntilMSec(std::bind(check_fn, i));
 }
 
 TEST_F(TestLauncherController, DisabledStrutsAddingNewLaunchersOnNeverHide)
@@ -561,11 +562,11 @@ TEST_F(TestLauncherController, DisabledStrutsAddingNewLaunchersOnNeverHide)
   lc.multiple_launchers = true;
 
   auto check_fn = [this](int index) {
-    return !(lc.launchers()[index]->GetParent()->InputWindowStrutsEnabled());
+    return lc.launchers()[index]->GetParent()->InputWindowStrutsEnabled();
   };
 
   for (int i = 0; i < max_num_monitors; ++i)
-    Utils::WaitUntil(std::bind(check_fn, i));
+    Utils::WaitUntilMSec(std::bind(check_fn, i), false);
 }
 
 TEST_F(TestLauncherController, CreateFavoriteInvalid)
@@ -1640,7 +1641,7 @@ TEST_F(TestLauncherController, UpdateLaunchersBackgroundColor)
   UBusManager().SendMessage(UBUS_BACKGROUND_COLOR_CHANGED,
                             g_variant_new("(dddd)", 11/255.0f, 22/255.0f, 33/255.0f, 1.0f));
 
-  Utils::WaitUntil([this] { return lc.options()->background_color == nux::Color(11, 22, 33); });
+  Utils::WaitUntilMSec([this] { return lc.options()->background_color == nux::Color(11, 22, 33); });
 }
 
 // thumper: 2012-11-28 disabling the drag and drop tests as they are taking over 20s
@@ -1659,17 +1660,17 @@ TEST_F(TestLauncherController, DISABLED_DragAndDrop_MultipleLaunchers)
   xdnd_manager_->dnd_started.emit("my_awesome_file", 0);
 
   for (int i = 0; i < max_num_monitors; ++i)
-    Utils::WaitUntil(std::bind(check_fn, i), i != 0);
+    Utils::WaitUntilMSec(std::bind(check_fn, i), i != 0);
 
   xdnd_manager_->monitor_changed.emit(3);
 
   for (int i = 0; i < max_num_monitors; ++i)
-    Utils::WaitUntil(std::bind(check_fn, i), i != 3);
+    Utils::WaitUntilMSec(std::bind(check_fn, i), i != 3);
 
   xdnd_manager_->dnd_finished.emit();
 
   for (int i = 0; i < max_num_monitors; ++i)
-    Utils::WaitUntil(std::bind(check_fn, i), true);
+    Utils::WaitUntilMSec(std::bind(check_fn, i), true);
 }
 
 TEST_F(TestLauncherController, DISABLED_DragAndDrop_SingleLauncher)
@@ -1683,13 +1684,13 @@ TEST_F(TestLauncherController, DISABLED_DragAndDrop_SingleLauncher)
   };
 
   xdnd_manager_->dnd_started.emit("my_awesome_file", 0);
-  Utils::WaitUntil(check_fn, false);
+  Utils::WaitUntilMSec(check_fn, false);
 
   xdnd_manager_->monitor_changed.emit(2);
-  Utils::WaitUntil(check_fn, false);
+  Utils::WaitUntilMSec(check_fn, false);
 
   xdnd_manager_->dnd_finished.emit();
-  Utils::WaitUntil(check_fn, true);
+  Utils::WaitUntilMSec(check_fn, true);
 }
 
 }

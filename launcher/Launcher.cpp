@@ -101,7 +101,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(Launcher);
 
 const int Launcher::Launcher::ANIM_DURATION_SHORT = 125;
 
-Launcher::Launcher(nux::BaseWindow* parent,
+Launcher::Launcher(MockableBaseWindow* parent,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
 #ifdef USE_X11
@@ -1316,7 +1316,8 @@ void Launcher::SetHidden(bool hide_launcher)
 
   TimeUtil::SetTimeStruct(&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
 
-  _parent->EnableInputWindow(!hide_launcher, launcher::window_title, false, false);
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
+    _parent->EnableInputWindow(!hide_launcher, launcher::window_title, false, false);
 
   if (!hide_launcher && GetActionState() == ACTION_DRAG_EXTERNAL)
     DndReset();
