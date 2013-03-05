@@ -20,6 +20,7 @@
 #ifndef TOOLTIPMANAGER
 #define TOOLTIPMANAGER
 
+#include <boost/noncopyable.hpp>
 #include <UnityCore/GLibSource.h>
 
 #include "AbstractLauncherIcon.h"
@@ -29,7 +30,7 @@ namespace unity
 namespace launcher
 {
 
-class TooltipManager : public sigc::trackable
+class TooltipManager : public boost::noncopyable
 {
 public:
   TooltipManager();
