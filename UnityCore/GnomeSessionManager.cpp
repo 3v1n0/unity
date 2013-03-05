@@ -211,6 +211,14 @@ void GnomeManager::Impl::ClosedDialog()
   shell_object_->EmitSignal("Closed");
 }
 
+void GnomeManager::Impl::EnsureCancelPendingAction()
+{
+  if (pending_action_ == shell::Action::NONE)
+    return;
+
+  CancelAction();
+}
+
 void GnomeManager::Impl::CallGnomeSessionMethod(std::string const& method, GVariant* parameters,
                                                 glib::DBusProxy::CallFinishedCallback const& cb)
 {
@@ -293,8 +301,7 @@ std::string GnomeManager::UserName() const
 
 void GnomeManager::LockScreen()
 {
-  if (impl_->pending_action_ != shell::Action::NONE)
-    CancelAction();
+  impl_->EnsureCancelPendingAction();
 
   auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.ScreenSaver",
                                                  "/org/gnome/ScreenSaver",
@@ -308,11 +315,6 @@ void GnomeManager::LockScreen()
 
 void GnomeManager::Logout()
 {
-  if (impl_->pending_action_ != shell::Action::NONE)
-  {
-    CancelAction();
-  }
-
   enum class LogoutMethods : unsigned
   {
     INTERACTIVE = 0,
@@ -322,6 +324,7 @@ void GnomeManager::Logout()
 
   auto mode = LogoutMethods::NO_CONFIRMATION;
 
+  impl_->EnsureCancelPendingAction();
   impl_->pending_action_ = shell::Action::LOGOUT;
   impl_->CallGnomeSessionMethod("Logout", g_variant_new("(u)", mode),
     [this] (GVariant*, glib::Error const& err) {
@@ -340,13 +343,9 @@ void GnomeManager::Logout()
 
 void GnomeManager::Reboot()
 {
-  if (impl_->pending_action_ != shell::Action::NONE)
-  {
-    CancelAction();
-  }
-
+  impl_->EnsureCancelPendingAction();
   impl_->pending_action_ = shell::Action::REBOOT;
-  impl_->CallGnomeSessionMethod("RequestReboot", nullptr,
+  impl_->CallGnomeSessionMethod("Reboot", nullptr,
     [this] (GVariant*, glib::Error const& err) {
       if (err)
       {
@@ -361,13 +360,9 @@ void GnomeManager::Reboot()
 
 void GnomeManager::Shutdown()
 {
-  if (impl_->pending_action_ != shell::Action::NONE)
-  {
-    CancelAction();
-  }
-
+  impl_->EnsureCancelPendingAction();
   impl_->pending_action_ = shell::Action::SHUTDOWN;
-  impl_->CallGnomeSessionMethod("RequestShutdown", nullptr,
+  impl_->CallGnomeSessionMethod("Shutdown", nullptr,
     [this] (GVariant*, glib::Error const& err) {
       if (err)
       {
@@ -382,13 +377,13 @@ void GnomeManager::Shutdown()
 
 void GnomeManager::Suspend()
 {
-  impl_->CancelAction();
+  impl_->EnsureCancelPendingAction();
   impl_->CallUPowerMethod("Suspend");
 }
 
 void GnomeManager::Hibernate()
 {
-  impl_->CancelAction();
+  impl_->EnsureCancelPendingAction();
   impl_->CallUPowerMethod("Hibernate");
 }
 
