@@ -31,10 +31,10 @@ DECLARE_LOGGER(logger, "unity.session.gnome");
 // Private implementation
 namespace shell
 {
-const char* DBUS_NAME = "org.gnome.Shell";
-const char* DBUS_INTERFACE = "org.gnome.SessionManager.EndSessionDialog";
-const char* DBUS_OBJECT_PATH = "/org/gnome/SessionManager/EndSessionDialog";
-const char* INTROSPECTION_XML =
+const std::string DBUS_NAME = "org.gnome.Shell";
+const std::string DBUS_INTERFACE = "org.gnome.SessionManager.EndSessionDialog";
+const std::string DBUS_OBJECT_PATH = "/org/gnome/SessionManager/EndSessionDialog";
+const std::string INTROSPECTION_XML =
 R"(<node>
   <interface name="org.gnome.SessionManager.EndSessionDialog">
     <method name="Open">
@@ -61,16 +61,21 @@ R"(<node>
     </signal>
   </interface>
 </node>)";
-
 }
 
-GnomeManager::Impl::Impl(GnomeManager* manager)
+namespace testing
+{
+const std::string DBUS_NAME = "com.canonical.Unity.Test.GnomeManager";
+}
+
+GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
   : manager_(manager)
+  , test_mode_(test_mode)
   , can_shutdown_(true)
   , can_suspend_(false)
   , can_hibernate_(false)
   , pending_action_(shell::Action::NONE)
-  , shell_server_(shell::DBUS_NAME)
+  , shell_server_(test_mode_ ? testing::DBUS_NAME : shell::DBUS_NAME)
 {
   shell_server_.AddObjects(shell::INTROSPECTION_XML, shell::DBUS_OBJECT_PATH);
   shell_object_ = shell_server_.GetObject(shell::DBUS_INTERFACE);
@@ -134,6 +139,8 @@ GVariant* GnomeManager::Impl::OnShellMethodCall(std::string const& method, GVari
       }
       else
       {
+        // FIXME: if no confirmation dialog is set in options, we need
+        // to confirm immediately!
         CancelAction();
       }
 
@@ -222,9 +229,8 @@ void GnomeManager::Impl::EnsureCancelPendingAction()
 void GnomeManager::Impl::CallGnomeSessionMethod(std::string const& method, GVariant* parameters,
                                                 glib::DBusProxy::CallFinishedCallback const& cb)
 {
-  auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.SessionManager",
-                                                 "/org/gnome/SessionManager",
-                                                 "org.gnome.SessionManager");
+  auto proxy = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.gnome.SessionManager",
+                                                 "/org/gnome/SessionManager", "org.gnome.SessionManager");
 
   // By passing the proxy to the lambda we ensure that it will be smartly handled
   proxy->CallBegin(method, parameters, [proxy, cb] (GVariant* ret, glib::Error const& e) {
@@ -240,8 +246,9 @@ void GnomeManager::Impl::CallGnomeSessionMethod(std::string const& method, GVari
 
 void GnomeManager::Impl::CallUPowerMethod(std::string const& method, glib::DBusProxy::ReplyCallback const& cb)
 {
-  auto proxy = std::make_shared<glib::DBusProxy>("org.freedesktop.UPower", "/org/freedesktop/UPower",
-                                                 "org.freedesktop.UPower", G_BUS_TYPE_SYSTEM);
+  auto proxy = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.UPower",
+                                                 "/org/freedesktop/UPower", "org.freedesktop.UPower",
+                                                 test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
 
   proxy->CallBegin(method, nullptr, [proxy, cb] (GVariant *ret, glib::Error const& e) {
     if (e)
@@ -257,10 +264,10 @@ void GnomeManager::Impl::CallUPowerMethod(std::string const& method, glib::DBusP
 
 void GnomeManager::Impl::CallConsoleKitMethod(std::string const& method, GVariant* parameters)
 {
-  auto proxy = std::make_shared<glib::DBusProxy>("org.freedesktop.ConsoleKit",
+  auto proxy = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.ConsoleKit",
                                                  "/org/freedesktop/ConsoleKit/Manager",
                                                  "org.freedesktop.ConsoleKit.Manager",
-                                                 G_BUS_TYPE_SYSTEM);
+                                                 test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
 
   // By passing the proxy to the lambda we ensure that it will be smartly handled
   proxy->CallBegin(method, parameters, [this, proxy] (GVariant*, glib::Error const& e) {
@@ -275,6 +282,10 @@ void GnomeManager::Impl::CallConsoleKitMethod(std::string const& method, GVarian
 
 GnomeManager::GnomeManager()
   : impl_(new GnomeManager::Impl(this))
+{}
+
+GnomeManager::GnomeManager(GnomeManager::TestMode const& tm)
+  : impl_(new GnomeManager::Impl(this, true))
 {}
 
 GnomeManager::~GnomeManager()
@@ -303,9 +314,8 @@ void GnomeManager::LockScreen()
 {
   impl_->EnsureCancelPendingAction();
 
-  auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.ScreenSaver",
-                                                 "/org/gnome/ScreenSaver",
-                                                 "org.gnome.ScreenSaver");
+  auto proxy = std::make_shared<glib::DBusProxy>(impl_->test_mode_ ? testing::DBUS_NAME : "org.gnome.ScreenSaver",
+                                                 "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
 
   // By passing the proxy to the lambda we ensure that it will stay alive
   // until we get the last callback.

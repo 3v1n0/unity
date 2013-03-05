@@ -42,7 +42,7 @@ namespace shell
 
 struct GnomeManager::Impl
 {
-  Impl(GnomeManager* parent);
+  Impl(GnomeManager* parent, bool test_mode = false);
   ~Impl();
 
   void ConfirmLogout();
@@ -60,6 +60,7 @@ struct GnomeManager::Impl
 
 
   GnomeManager* manager_;
+  bool test_mode_;
   bool can_shutdown_;
   bool can_suspend_;
   bool can_hibernate_;
