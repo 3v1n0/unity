@@ -119,14 +119,17 @@ void Controller::SetupWindow()
   window_->mouse_down_outside_pointer_grab_area.connect(
     sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
 
-  /* FIXME - first time we load our windows there is a race that causes the
-   * input window not to actually get input, this side steps that by causing
-   * an input window show and hide before we really need it. */
-  WindowManager& wm = WindowManager::Default();
-  wm.SaveInputFocus();
-  window_->EnableInputWindow(true, "Hud", true, false);
-  window_->EnableInputWindow(false, "Hud", true, false);
-  wm.RestoreInputFocus();
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
+  {
+    /* FIXME - first time we load our windows there is a race that causes the
+     * input window not to actually get input, this side steps that by causing
+     * an input window show and hide before we really need it. */
+    WindowManager& wm = WindowManager::Default();
+    wm.SaveInputFocus();
+    window_->EnableInputWindow(true, "Hud", true, false);
+    window_->EnableInputWindow(false, "Hud", true, false);
+    wm.RestoreInputFocus();
+  }
 }
 
 void Controller::SetupHudView()
@@ -383,8 +386,13 @@ void Controller::FocusWindow()
 {
   window_->ShowWindow(true);
   window_->PushToFront();
-  window_->EnableInputWindow(true, "Hud", true, false);
-  window_->UpdateInputWindowGeometry();
+
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
+  {
+    window_->EnableInputWindow(true, "Hud", true, false);
+    window_->UpdateInputWindowGeometry();
+  }
+
   window_->SetInputFocus();
   window_->QueueDraw();
 }
