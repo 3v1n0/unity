@@ -165,7 +165,9 @@ void Controller::RegisterUBusInterests()
     unity::glib::String overlay_identity;
     gboolean can_maximise = FALSE;
     gint32 overlay_monitor = 0;
-    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise, &overlay_monitor);
+    int width = 0;
+    int height = 0;
+    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
 
     // hide if something else is coming up
     if (overlay_identity.Str() != "dash")
@@ -314,7 +316,9 @@ void Controller::ShowDash()
 
   StartShowHideTimeline();
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_);
+  nux::Geometry const& view_content_geo = view_->GetContentGeometry();
+
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_, view_content_geo.width, view_content_geo.height);
   ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
 }
 
@@ -363,7 +367,9 @@ void Controller::HideDash(bool restore)
 
   StartShowHideTimeline();
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_);
+  nux::Geometry const& view_content_geo = view_->GetContentGeometry();
+
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_, view_content_geo.width, view_content_geo.height);
   ubus_manager_.SendMessage(UBUS_OVERLAY_HIDDEN, info);
 }
 
