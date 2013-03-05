@@ -44,7 +44,7 @@ Controller::Controller(session::Manager::Ptr const& manager)
   });
 
   manager_->shutdown_requested.connect([this] (bool inhibitors) {
-    Show(View::Mode::SHUTDOWN, inhibitors);
+    Show(View::Mode::FULL, inhibitors);
   });
 
   manager_->logout_requested.connect([this] (bool inhibitors) {
