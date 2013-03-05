@@ -329,7 +329,7 @@ void Controller::FocusWindow()
   window_->PushToFront();
   if (nux::GetWindowThread()->IsEmbeddedWindow())
   {
-    // in standalone (!= embedded) mode, we do not need an input window. we are one.
+    // in standalone (i.e. not embedded) mode, we do not need an input window. we are one.
     window_->EnableInputWindow(true, dash::window_title, true, false);
     // update the input window geometry. This causes the input window to match the actual size of the dash.
     window_->UpdateInputWindowGeometry();
