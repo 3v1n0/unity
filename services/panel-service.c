@@ -27,6 +27,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include <glib/gi18n-lib.h>
+#include <libindicator/indicator-ng.h>
 
 #include <X11/extensions/XInput2.h>
 #include <X11/XKBlib.h>
@@ -123,6 +124,7 @@ static void load_indicator  (PanelService    *self,
                              IndicatorObject *object,
                              const gchar     *_name);
 static void load_indicators (PanelService    *self);
+static void load_indicators_from_indicator_files (PanelService *self);
 static void sort_indicators (PanelService    *self);
 
 static void notify_object (IndicatorObject *object);
@@ -557,6 +559,7 @@ panel_service_init (PanelService *self)
 
   suppress_signals = TRUE;
   load_indicators (self);
+  load_indicators_from_indicator_files (self);
   sort_indicators (self);
   suppress_signals = FALSE;
 
@@ -1009,6 +1012,42 @@ load_indicators (PanelService *self)
     }
 
   g_dir_close (dir);
+}
+
+static void
+load_indicators_from_indicator_files (PanelService *self)
+{
+  GDir *dir;
+  const gchar *name;
+  GError *error = NULL;
+
+  dir = g_dir_open (INDICATOR_SERVICE_DIR, 0, &error);
+  if (!dir)
+    {
+      g_warning ("unable to open indicator service file directory: %s", error->message);
+      g_error_free (error);
+      return;
+    }
+
+  while ((name = g_dir_read_name (dir)))
+    {
+      gchar *filename;
+      IndicatorNg *indicator;
+
+      filename = g_build_filename (INDICATOR_SERVICE_DIR, name, NULL);
+      indicator = indicator_ng_new_for_profile (filename, "desktop", &error);
+      if (indicator)
+        {
+          load_indicator (self, INDICATOR_OBJECT (indicator), NULL);
+        }
+      else
+        {
+          g_warning ("unable to load '%s': %s", name, error->message);
+          g_clear_error (&error);
+        }
+
+      g_free (filename);
+    }
 }
 
 static gint

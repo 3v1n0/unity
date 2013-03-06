@@ -124,12 +124,17 @@ void Controller::SetupWindow()
   window_->SetOpacity(0.0f);
   window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
 
-  /* FIXME - first time we load our windows there is a race that causes the input window not to actually get input, this side steps that by causing an input window show and hide before we really need it. */
-  WindowManager& wm = WindowManager::Default();
-  wm.SaveInputFocus ();
-  window_->EnableInputWindow(true, dash::window_title, true, false);
-  window_->EnableInputWindow(false, dash::window_title, true, false);
-  wm.RestoreInputFocus ();
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
+  {
+  /* FIXME - first time we load our windows there is a race that causes the input
+   * window not to actually get input, this side steps that by causing an input window
+   * show and hide before we really need it. */
+    WindowManager& wm = WindowManager::Default();
+    wm.SaveInputFocus();
+    window_->EnableInputWindow(true, dash::window_title, true, false);
+    window_->EnableInputWindow(false, dash::window_title, true, false);
+    wm.RestoreInputFocus();
+  }
 }
 
 void Controller::SetupDashView()
@@ -165,7 +170,9 @@ void Controller::RegisterUBusInterests()
     unity::glib::String overlay_identity;
     gboolean can_maximise = FALSE;
     gint32 overlay_monitor = 0;
-    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise, &overlay_monitor);
+    int width = 0;
+    int height = 0;
+    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
 
     // hide if something else is coming up
     if (overlay_identity.Str() != "dash")
@@ -314,7 +321,9 @@ void Controller::ShowDash()
 
   StartShowHideTimeline();
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_);
+  nux::Geometry const& view_content_geo = view_->GetContentGeometry();
+
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_, view_content_geo.width, view_content_geo.height);
   ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
 }
 
@@ -322,8 +331,9 @@ void Controller::FocusWindow()
 {
   window_->ShowWindow(true);
   window_->PushToFront();
-  if (!Settings::Instance().is_standalone) // in standalone mode, we do not need an input window. we are one.
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
   {
+    // in standalone (i.e. not embedded) mode, we do not need an input window. we are one.
     window_->EnableInputWindow(true, dash::window_title, true, false);
     // update the input window geometry. This causes the input window to match the actual size of the dash.
     window_->UpdateInputWindowGeometry();
@@ -363,7 +373,9 @@ void Controller::HideDash(bool restore)
 
   StartShowHideTimeline();
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_);
+  nux::Geometry const& view_content_geo = view_->GetContentGeometry();
+
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_, view_content_geo.width, view_content_geo.height);
   ubus_manager_.SendMessage(UBUS_OVERLAY_HIDDEN, info);
 }
 

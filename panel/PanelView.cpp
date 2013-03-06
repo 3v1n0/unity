@@ -115,8 +115,7 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &PanelView::OnBackgroundUpdate));
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &PanelView::OnOverlayHidden));
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &PanelView::OnOverlayShown));
-  ubus_manager_.RegisterInterest(UBUS_DASH_SIZE_CHANGED, [&] (GVariant *data)
-  {
+  ubus_manager_.RegisterInterest(UBUS_DASH_SIZE_CHANGED, [&] (GVariant *data) {
     int width, height;
     g_variant_get(data, "(ii)", &width, &height);
     stored_dash_width_ = width;
@@ -197,8 +196,9 @@ void PanelView::OnOverlayHidden(GVariant* data)
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
+  int width, height;
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
-                &overlay_identity, &can_maximise, &overlay_monitor);
+                &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
 
   if (monitor_ == overlay_monitor && overlay_identity.Str() == active_overlay_)
   {
@@ -219,11 +219,13 @@ void PanelView::OnOverlayShown(GVariant* data)
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
+  int width, height;
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
-                &overlay_identity, &can_maximise, &overlay_monitor);
+                &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
 
   if (monitor_ == overlay_monitor)
   {
+    stored_dash_width_ = width;
     bg_effect_helper_.enabled = true;
     active_overlay_ = overlay_identity.Str();
     overlay_is_open_ = true;
@@ -785,6 +787,11 @@ int PanelView::GetMonitor() const
 bool PanelView::IsActive() const
 {
   return menu_view_->GetControlsActive();
+}
+
+int PanelView::GetStoredDashWidth() const
+{
+  return stored_dash_width_;
 }
 
 } // namespace unity
