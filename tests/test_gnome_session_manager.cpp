@@ -36,6 +36,7 @@ const std::string SHELL_INTERFACE = "org.gnome.SessionManager.EndSessionDialog";
 const std::string SHELL_OBJECT_PATH = "/org/gnome/SessionManager/EndSessionDialog";
 
 const std::string UPOWER_PATH = "/org/freedesktop/UPower";
+const std::string CONSOLE_KIT_PATH = "/org/freedesktop/ConsoleKit/Manager";
 const std::string SCREEN_SAVER_PATH = "/org/gnome/ScreenSaver";
 const std::string SESSION_MANAGER_PATH = "/org/gnome/SessionManager";
 }
@@ -52,6 +53,17 @@ R"(<node>
     </method>
     <method name="SuspendAllowed">
       <arg type="b" name="suspend_allowed" direction="out"/>
+    </method>
+  </interface>
+</node>)";
+
+const std::string CONSOLE_KIT =
+R"(<node>
+  <interface name="org.freedesktop.ConsoleKit.Manager">
+    <method name="Stop"/>
+    <method name="Restart"/>
+    <method name="CloseSession">
+      <arg type="s" name="cookie" direction="in"/>
     </method>
   </interface>
 </node>)";
@@ -115,6 +127,9 @@ struct TestGnomeSessionManager : testing::Test
       return static_cast<GVariant*>(nullptr);
     });
 
+    console_kit_ = std::make_shared<DBusServer>();
+    console_kit_->AddObjects(introspection::CONSOLE_KIT, CONSOLE_KIT_PATH);
+
     screen_saver_ = std::make_shared<DBusServer>();
     screen_saver_->AddObjects(introspection::SCREEN_SAVER, SCREEN_SAVER_PATH);
 
@@ -143,6 +158,7 @@ struct TestGnomeSessionManager : testing::Test
 
   void SetUp()
   {
+    ASSERT_NE(manager, nullptr);
     Utils::WaitUntilMSec([this] { return upower_->IsConnected(); });
     Utils::WaitUntilMSec([this] { return screen_saver_->IsConnected(); });
     Utils::WaitUntilMSec([this] { return session_manager_->IsConnected(); });
@@ -156,6 +172,7 @@ struct TestGnomeSessionManager : testing::Test
 
   static session::Manager::Ptr manager;
   static DBusServer::Ptr upower_;
+  static DBusServer::Ptr console_kit_;
   static DBusServer::Ptr screen_saver_;
   static DBusServer::Ptr session_manager_;
   static DBusProxy::Ptr shell_proxy_;
@@ -163,6 +180,7 @@ struct TestGnomeSessionManager : testing::Test
 
 session::Manager::Ptr TestGnomeSessionManager::manager;
 DBusServer::Ptr TestGnomeSessionManager::upower_;
+DBusServer::Ptr TestGnomeSessionManager::console_kit_;
 DBusServer::Ptr TestGnomeSessionManager::screen_saver_;
 DBusServer::Ptr TestGnomeSessionManager::session_manager_;
 DBusProxy::Ptr TestGnomeSessionManager::shell_proxy_;
