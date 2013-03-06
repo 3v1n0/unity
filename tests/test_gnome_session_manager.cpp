@@ -268,4 +268,68 @@ TEST_F(TestGnomeSessionManager, Logout)
   EXPECT_TRUE(logout_called);
 }
 
+TEST_F(TestGnomeSessionManager, LogoutFallback)
+{
+  // This makes the standard call to return an error.
+  session_manager_->GetObjects().front()->SetMethodsCallsHandler(nullptr);
+  const gchar* cookie = g_getenv("XDG_SESSION_COOKIE");
+
+  if (!cookie)
+    g_setenv("XDG_SESSION_COOKIE", "foo-cookie", TRUE);
+
+  bool logout_called = false;
+
+  console_kit_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant* par) {
+    if (method == "CloseSession")
+    {
+      logout_called = true;
+      EXPECT_EQ(Variant(par).GetString(), cookie);
+    }
+
+    return static_cast<GVariant*>(nullptr);
+  });
+
+  manager->Logout();
+
+  Utils::WaitUntil(logout_called, 2);
+  EXPECT_TRUE(logout_called);
+}
+
+TEST_F(TestGnomeSessionManager, Reboot)
+{
+  bool reboot_called = false;
+
+  session_manager_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {
+    if (method == "Reboot")
+      reboot_called = true;
+
+    return static_cast<GVariant*>(nullptr);
+  });
+
+  manager->Reboot();
+
+  Utils::WaitUntil(reboot_called, 2);
+  EXPECT_TRUE(reboot_called);
+}
+
+TEST_F(TestGnomeSessionManager, RebootFallback)
+{
+  // This makes the standard call to return an error.
+  session_manager_->GetObjects().front()->SetMethodsCallsHandler(nullptr);
+
+  bool reboot_called = false;
+
+  console_kit_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant* par) {
+    if (method == "Restart")
+      reboot_called = true;
+
+    return static_cast<GVariant*>(nullptr);
+  });
+
+  manager->Reboot();
+
+  Utils::WaitUntil(reboot_called, 2);
+  EXPECT_TRUE(reboot_called);
+}
+
 } // Namespace
