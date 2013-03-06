@@ -184,8 +184,19 @@ struct TestGnomeSessionManager : testing::Test
 
   static void TearDownTestCase()
   {
-    shell_proxy_.reset();
+    bool cancelled = false;
+    bool closed = false;
+    shell_proxy_->Connect("Canceled", [&cancelled] (GVariant*) { cancelled = true; });
+    shell_proxy_->Connect("Closed", [&closed] (GVariant*) { closed = true; });
+
     manager.reset();
+
+    Utils::WaitUntilMSec(cancelled);
+    Utils::WaitUntilMSec(closed);
+    EXPECT_TRUE(cancelled);
+    EXPECT_TRUE(closed);
+
+    shell_proxy_.reset();
     upower_.reset();
     console_kit_.reset();
     screen_saver_.reset();
