@@ -173,6 +173,7 @@ struct TestGnomeSessionManager : testing::Test
     manager->logout_requested.clear();
     manager->reboot_requested.clear();
     manager->shutdown_requested.clear();
+    manager->cancel_requested.clear();
 
     // By calling this we reset the internal pending action status
     bool cancelled = false;
@@ -469,7 +470,7 @@ TEST_F(TestGnomeSessionManager, LogoutRequestedInhibitors)
     EXPECT_TRUE(inhibitors);
   });
 
-  shell_proxy_->Connect("Canceled", [&cancelled] (GVariant*) { g_print("cancelled\n"); cancelled = true; });
+  shell_proxy_->Connect("Canceled", [&cancelled] (GVariant*) { cancelled = true; });
 
   GVariantBuilder builder;
   g_variant_builder_init(&builder, G_VARIANT_TYPE ("ao"));
@@ -483,6 +484,111 @@ TEST_F(TestGnomeSessionManager, LogoutRequestedInhibitors)
   EXPECT_FALSE(cancelled);
 }
 
+TEST_F(TestGnomeSessionManager, ShutdownRequested)
+{
+  bool shutdown_requested = false;
+  bool cancelled = false;
 
+  manager->shutdown_requested.connect([&shutdown_requested] (bool inhibitors) {
+    shutdown_requested = true;
+    EXPECT_FALSE(inhibitors);
+  });
+
+  shell_proxy_->Connect("Canceled", [&cancelled] (GVariant*) { cancelled = true; });
+
+  shell_proxy_->Call("Open", g_variant_new("(uuuao)", 1, 0, 0, nullptr));
+
+  Utils::WaitUntilMSec(shutdown_requested);
+  EXPECT_TRUE(shutdown_requested);
+
+  Utils::WaitUntilMSec(cancelled);
+  EXPECT_TRUE(cancelled);
+}
+
+TEST_F(TestGnomeSessionManager, ShutdownRequestedInhibitors)
+{
+  bool shutdown_requested = false;
+  bool cancelled = false;
+
+  manager->shutdown_requested.connect([&shutdown_requested] (bool inhibitors) {
+    shutdown_requested = true;
+    EXPECT_TRUE(inhibitors);
+  });
+
+  shell_proxy_->Connect("Canceled", [&cancelled] (GVariant*) { cancelled = true; });
+
+  GVariantBuilder builder;
+  g_variant_builder_init(&builder, G_VARIANT_TYPE ("ao"));
+  g_variant_builder_add(&builder, "o", "/any/inhibitor/object");
+  shell_proxy_->Call("Open", g_variant_new("(uuuao)", 1, 0, 0, &builder));
+
+  Utils::WaitUntilMSec(shutdown_requested);
+  EXPECT_TRUE(shutdown_requested);
+
+  Utils::WaitForTimeoutMSec(10);
+  EXPECT_FALSE(cancelled);
+}
+
+TEST_F(TestGnomeSessionManager, RebootRequested)
+{
+  bool reboot_requested = false;
+  bool cancelled = false;
+
+  manager->reboot_requested.connect([&reboot_requested] (bool inhibitors) {
+    reboot_requested = true;
+    EXPECT_FALSE(inhibitors);
+  });
+
+  shell_proxy_->Connect("Canceled", [&cancelled] (GVariant*) { cancelled = true; });
+
+  shell_proxy_->Call("Open", g_variant_new("(uuuao)", 2, 0, 0, nullptr));
+
+  Utils::WaitUntilMSec(reboot_requested);
+  EXPECT_TRUE(reboot_requested);
+
+  Utils::WaitUntilMSec(cancelled);
+  EXPECT_TRUE(cancelled);
+}
+
+TEST_F(TestGnomeSessionManager, RebootRequestedInhibitors)
+{
+  bool reboot_requested = false;
+  bool cancelled = false;
+
+  manager->reboot_requested.connect([&reboot_requested] (bool inhibitors) {
+    reboot_requested = true;
+    EXPECT_TRUE(inhibitors);
+  });
+
+  shell_proxy_->Connect("Canceled", [&cancelled] (GVariant*) { cancelled = true; });
+
+  GVariantBuilder builder;
+  g_variant_builder_init(&builder, G_VARIANT_TYPE ("ao"));
+  g_variant_builder_add(&builder, "o", "/any/inhibitor/object");
+  shell_proxy_->Call("Open", g_variant_new("(uuuao)", 2, 0, 0, &builder));
+
+  Utils::WaitUntilMSec(reboot_requested);
+  EXPECT_TRUE(reboot_requested);
+
+  Utils::WaitForTimeoutMSec(10);
+  EXPECT_FALSE(cancelled);
+}
+
+TEST_F(TestGnomeSessionManager, CancelRequested)
+{
+  bool cancel_requested = false;
+  bool closed = false;
+
+  manager->cancel_requested.connect([&cancel_requested] { cancel_requested = true; });
+  shell_proxy_->Connect("Closed", [&closed] (GVariant*) { closed = true; });
+
+  shell_proxy_->Call("Close");
+
+  Utils::WaitUntilMSec(cancel_requested);
+  EXPECT_TRUE(cancel_requested);
+
+  Utils::WaitUntilMSec(closed);
+  EXPECT_TRUE(closed);
+}
 
 } // Namespace
