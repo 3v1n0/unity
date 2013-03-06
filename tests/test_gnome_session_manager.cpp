@@ -168,6 +168,19 @@ struct TestGnomeSessionManager : testing::Test
     ASSERT_TRUE(shell_proxy_->IsConnected());
   }
 
+  void TearDown()
+  {
+    manager->logout_requested.clear();
+    manager->reboot_requested.clear();
+    manager->shutdown_requested.clear();
+
+    // By calling this we reset the internal pending action status
+    bool cancelled = false;
+    shell_proxy_->Connect("Canceled", [&cancelled] (GVariant*) { cancelled = true; });
+    manager->CancelAction();
+    Utils::WaitUntilMSec(cancelled);
+  }
+
   static void TearDownTestCase()
   {
     shell_proxy_.reset();
@@ -424,5 +437,52 @@ TEST_F(TestGnomeSessionManager, CancelAction)
   Utils::WaitUntilMSec(cancelled);
   EXPECT_TRUE(cancelled);
 }
+
+TEST_F(TestGnomeSessionManager, LogoutRequested)
+{
+  bool logout_requested = false;
+  bool cancelled = false;
+
+  manager->logout_requested.connect([&logout_requested] (bool inhibitors) {
+    logout_requested = true;
+    EXPECT_FALSE(inhibitors);
+  });
+
+  shell_proxy_->Connect("Canceled", [&cancelled] (GVariant*) { cancelled = true; });
+
+  shell_proxy_->Call("Open", g_variant_new("(uuuao)", 0, 0, 0, nullptr));
+
+  Utils::WaitUntilMSec(logout_requested);
+  EXPECT_TRUE(logout_requested);
+
+  Utils::WaitUntilMSec(cancelled);
+  EXPECT_TRUE(cancelled);
+}
+
+TEST_F(TestGnomeSessionManager, LogoutRequestedInhibitors)
+{
+  bool logout_requested = false;
+  bool cancelled = false;
+
+  manager->logout_requested.connect([&logout_requested] (bool inhibitors) {
+    logout_requested = true;
+    EXPECT_TRUE(inhibitors);
+  });
+
+  shell_proxy_->Connect("Canceled", [&cancelled] (GVariant*) { g_print("cancelled\n"); cancelled = true; });
+
+  GVariantBuilder builder;
+  g_variant_builder_init(&builder, G_VARIANT_TYPE ("ao"));
+  g_variant_builder_add(&builder, "o", "/any/inhibitor/object");
+  shell_proxy_->Call("Open", g_variant_new("(uuuao)", 0, 0, 0, &builder));
+
+  Utils::WaitUntilMSec(logout_requested);
+  EXPECT_TRUE(logout_requested);
+
+  Utils::WaitForTimeoutMSec(10);
+  EXPECT_FALSE(cancelled);
+}
+
+
 
 } // Namespace
