@@ -84,7 +84,7 @@ R"(<node>
       <arg type="u" name="type" direction="in"/>
     </method>
     <method name="Reboot"/>
-    <signal name="Shutdown"/>
+    <method name="Shutdown"/>
     <method name="CanShutdown">
       <arg type="b" name="can_shutdown" direction="out"/>
     </method>
@@ -319,7 +319,7 @@ TEST_F(TestGnomeSessionManager, RebootFallback)
 
   bool reboot_called = false;
 
-  console_kit_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant* par) {
+  console_kit_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {
     if (method == "Restart")
       reboot_called = true;
 
@@ -330,6 +330,43 @@ TEST_F(TestGnomeSessionManager, RebootFallback)
 
   Utils::WaitUntil(reboot_called, 2);
   EXPECT_TRUE(reboot_called);
+}
+
+TEST_F(TestGnomeSessionManager, Shutdown)
+{
+  bool shutdown_called = false;
+
+  session_manager_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {
+    if (method == "Shutdown")
+      shutdown_called = true;
+
+    return static_cast<GVariant*>(nullptr);
+  });
+
+  manager->Shutdown();
+
+  Utils::WaitUntil(shutdown_called, 2);
+  EXPECT_TRUE(shutdown_called);
+}
+
+TEST_F(TestGnomeSessionManager, ShutdownFallback)
+{
+  // This makes the standard call to return an error.
+  session_manager_->GetObjects().front()->SetMethodsCallsHandler(nullptr);
+
+  bool shutdown_called = false;
+
+  console_kit_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {
+    if (method == "Stop")
+      shutdown_called = true;
+
+    return static_cast<GVariant*>(nullptr);
+  });
+
+  manager->Shutdown();
+
+  Utils::WaitUntil(shutdown_called, 2);
+  EXPECT_TRUE(shutdown_called);
 }
 
 } // Namespace
