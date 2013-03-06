@@ -35,34 +35,25 @@ public:
   }
 };
 
-static void WaitForSynchronize(Model<TestAdaptor>& model)
+struct TestModel : public ::testing::Test
 {
-  ::Utils::WaitForModelSynchronize<TestAdaptor>(model, n_rows);
+  void SetUp()
+  {
+    model.swarm_name = swarm_name;
+    Utils::WaitUntil([this] { return model.count == n_rows; }, true, 2);
+    ASSERT_EQ(model.count, n_rows);
+  }
+
+  Model<TestAdaptor> model;
+};
+
+TEST_F(TestModel, TestConstruction)
+{
+  EXPECT_EQ(model.swarm_name(), swarm_name);
 }
 
-TEST(TestModel, TestConstruction)
+TEST_F(TestModel, TestRowsValid)
 {
-  Model<TestAdaptor> model;
-  model.swarm_name = swarm_name;
-  ::Utils::WaitForModelSynchronize<TestAdaptor>(model, n_rows);
-}
-
-TEST(TestModel, TestSynchronization)
-{
-  Model<TestAdaptor> model;
-  model.swarm_name = swarm_name;
-
-  WaitForSynchronize(model);
-  EXPECT_EQ(model.count, n_rows);
-}
-
-TEST(TestModel, TestRowsValid)
-{
-  Model<TestAdaptor> model;
-  model.swarm_name = swarm_name;
-
-  WaitForSynchronize(model);
-
   for (unsigned int i = 0; i < n_rows; i++)
   {
     TestAdaptor adaptor = model.RowAtIndex(i);
@@ -74,13 +65,8 @@ TEST(TestModel, TestRowsValid)
 }
 
 // We're testing the model's ability to store and retrieve random pointers
-TEST(TestModel, TestSetGetRenderer)
+TEST_F(TestModel, TestSetGetRenderer)
 {
-  Model<TestAdaptor> model;
-  model.swarm_name = swarm_name;
-
-  WaitForSynchronize(model);
-
   for (unsigned int i = 0; i < n_rows; i++)
   {
     TestAdaptor adaptor = model.RowAtIndex(i);
