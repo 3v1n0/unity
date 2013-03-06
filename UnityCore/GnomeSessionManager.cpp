@@ -68,6 +68,12 @@ namespace testing
 const std::string DBUS_NAME = "com.canonical.Unity.Test.GnomeManager";
 }
 
+namespace
+{
+const std::string SESSION_OPTIONS = "com.canonical.indicator.session";
+const std::string SUPPRESS_DIALOGS_KEY = "suppress-logout-restart-shutdown";
+}
+
 GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
   : manager_(manager)
   , test_mode_(test_mode)
@@ -106,6 +112,27 @@ GnomeManager::Impl::~Impl()
   ClosedDialog();
 }
 
+bool GnomeManager::Impl::InteractiveMode()
+{
+  bool schema_found = false;
+  const gchar* const* schemas = g_settings_list_schemas();
+
+  for (unsigned i = 0; schemas[i]; ++i)
+  {
+    if (g_strcmp0(schemas[i], SESSION_OPTIONS.c_str()) == 0)
+    {
+      schema_found = true;
+      break;
+    }
+  }
+
+  if (!schema_found)
+    return true;
+
+  glib::Object<GSettings> setting(g_settings_new(SESSION_OPTIONS.c_str()));
+  return g_settings_get_boolean(setting, SUPPRESS_DIALOGS_KEY.c_str()) != TRUE;
+}
+
 GVariant* GnomeManager::Impl::OnShellMethodCall(std::string const& method, GVariant* parameters)
 {
   LOG_DEBUG(logger) << "Called method '" << method << "'";
@@ -123,11 +150,21 @@ GVariant* GnomeManager::Impl::OnShellMethodCall(std::string const& method, GVari
     unsigned arg1, timeout_length;
     GVariantIter *inhibitors;
     g_variant_get(parameters, "(uuuao)", &action, &arg1, &timeout_length, &inhibitors);
-    bool has_inibitors = (g_variant_iter_next_value(inhibitors) != nullptr);
+    bool has_inibitors = (g_variant_iter_n_children(inhibitors) > 0);
     g_variant_iter_free(inhibitors);
 
     LOG_INFO(logger) << "Got Open request for action " << unsigned(action)
                      << " with inhibitors " << has_inibitors;
+
+    if (pending_action_ == shell::Action::NONE)
+    {
+      if (!InteractiveMode() && !has_inibitors)
+      {
+        // If we're in non-interactive mode and we don't have inhibitors,
+        // We must immediately proceed with the requested action.
+        pending_action_ = action;
+      }
+    }
 
     if (pending_action_ == shell::Action::NONE)
     {
@@ -139,8 +176,6 @@ GVariant* GnomeManager::Impl::OnShellMethodCall(std::string const& method, GVari
       }
       else
       {
-        // FIXME: if no confirmation dialog is set in options, we need
-        // to confirm immediately!
         CancelAction();
       }
 
