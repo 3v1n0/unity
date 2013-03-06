@@ -160,11 +160,22 @@ struct TestGnomeSessionManager : testing::Test
   void SetUp()
   {
     ASSERT_NE(manager, nullptr);
-    Utils::WaitUntilMSec([this] { return upower_->IsConnected(); });
-    Utils::WaitUntilMSec([this] { return screen_saver_->IsConnected(); });
-    Utils::WaitUntilMSec([this] { return session_manager_->IsConnected(); });
-    Utils::WaitUntil([this] { return shell_proxy_->IsConnected();}, true, 3);
+    Utils::WaitUntilMSec([] { return upower_->IsConnected(); });
+    Utils::WaitUntilMSec([] { return console_kit_->IsConnected(); });
+    Utils::WaitUntilMSec([] { return screen_saver_->IsConnected(); });
+    Utils::WaitUntilMSec([] { return session_manager_->IsConnected(); });
+    Utils::WaitUntil([] { return shell_proxy_->IsConnected();}, true, 3);
     ASSERT_TRUE(shell_proxy_->IsConnected());
+  }
+
+  static void TearDownTestCase()
+  {
+    shell_proxy_.reset();
+    manager.reset();
+    upower_.reset();
+    console_kit_.reset();
+    screen_saver_.reset();
+    session_manager_.reset();
   }
 
   static bool can_shutdown_;
@@ -275,7 +286,7 @@ TEST_F(TestGnomeSessionManager, LogoutFallback)
   const gchar* cookie = g_getenv("XDG_SESSION_COOKIE");
 
   if (!cookie)
-    g_setenv("XDG_SESSION_COOKIE", "foo-cookie", TRUE);
+    g_setenv("XDG_SESSION_COOKIE", "session-cookie", TRUE);
 
   bool logout_called = false;
 
@@ -367,6 +378,40 @@ TEST_F(TestGnomeSessionManager, ShutdownFallback)
 
   Utils::WaitUntil(shutdown_called, 2);
   EXPECT_TRUE(shutdown_called);
+}
+
+TEST_F(TestGnomeSessionManager, Suspend)
+{
+  bool suspend_called = false;
+
+  upower_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {
+    if (method == "Suspend")
+      suspend_called = true;
+
+    return static_cast<GVariant*>(nullptr);
+  });
+
+  manager->Suspend();
+
+  Utils::WaitUntil(suspend_called, 2);
+  EXPECT_TRUE(suspend_called);
+}
+
+TEST_F(TestGnomeSessionManager, Hibernate)
+{
+  bool hibernate_called = false;
+
+  upower_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {
+    if (method == "Hibernate")
+      hibernate_called = true;
+
+    return static_cast<GVariant*>(nullptr);
+  });
+
+  manager->Hibernate();
+
+  Utils::WaitUntil(hibernate_called, 2);
+  EXPECT_TRUE(hibernate_called);
 }
 
 } // Namespace
