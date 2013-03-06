@@ -204,12 +204,12 @@ static gboolean
 a11y_unit_test_launcher_connection(void)
 {
   Launcher* launcher = NULL;
-  nux::BaseWindow* window = NULL;
+  unity::MockableBaseWindow* window = NULL;
   AtkObject* launcher_accessible = NULL;
   LauncherIcon* launcher_icon = NULL;
   AtkObject* launcher_icon_accessible = NULL;
 
-  window = new nux::BaseWindow(TEXT(""));
+  window = new unity::MockableBaseWindow(TEXT(""));
   launcher = new Launcher(window, NULL);
   launcher->SinkReference();
   launcher_accessible = unity_a11y_get_accessible(launcher);
