@@ -68,6 +68,7 @@ public:
     , type_(type)
     , sort_priority_(DefaultPriority(type))
     , remote_uri_("fake")
+    , is_tooltip_visible_(false)
   {
     tooltip_text = "Mock Icon";
     position = Position::FLOATING;
@@ -80,7 +81,9 @@ public:
 
   void AddProperties(GVariantBuilder* builder) {}
 
-  void HideTooltip() {}
+  void ShowTooltip() { is_tooltip_visible_ = true; }
+  void HideTooltip() { is_tooltip_visible_ = false; }
+  bool IsTooltipVisible() { return is_tooltip_visible_; }
 
   void    SetShortcut(guint64 shortcut) {}
 
@@ -368,6 +371,7 @@ private:
   timespec quirk_times_[unsigned(Quirk::LAST)];
   std::map<int, nux::Point3> center_;
   std::string remote_uri_;
+  bool is_tooltip_visible_;
 };
 
 }

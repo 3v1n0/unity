@@ -92,20 +92,21 @@ public:
   void Next();
   void Prev();
 
+  void InitiateDetail();
   void NextDetail();
   void PrevDetail();
 
   void Select(int index);
 
+  bool IsDetailViewShown();
   void SetDetail(bool detail,
                  unsigned int min_windows = 1);
 
   void SelectFirstItem();
 
-  void SetWorkspace(nux::Geometry geo,
-                    int monitor);
+  void SetWorkspace(nux::Geometry geo, int monitor);
 
-  SwitcherView* GetView();
+  nux::ObjectPtr<SwitcherView> GetView() const;
 
   ui::LayoutWindow::Vector ExternalRenderTargets();
 
@@ -114,6 +115,7 @@ public:
   bool IsShowDesktopDisabled() const;
   void SetShowDesktopDisabled(bool disabled);
   int StartIndex() const;
+  double Opacity() const;
 
   Selection GetCurrentSelection() const;
 
@@ -124,16 +126,18 @@ public:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
+  nux::ROProperty<DetailMode> detail_mode;
+  nux::Property<int>  timeout_length;
   nux::Property<bool> detail_on_timeout;
   nux::Property<int>  detail_timeout_length;
   nux::Property<int>  initial_detail_timeout_length;
 
+private:
   bool       visible_;
   int        monitor_;
   bool       show_desktop_disabled_;
   DetailMode detail_mode_;
 
-private:
   ImplPtr    impl_;
 };
 

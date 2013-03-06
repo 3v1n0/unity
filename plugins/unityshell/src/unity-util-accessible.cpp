@@ -286,6 +286,7 @@ atk_key_event_from_nux_event_key(nux::Event* event)
       /* we don't call atk_key_event_from_nux_event_key if the event
          is different to keydown or keyup */
       g_assert_not_reached();
+      g_free(atk_event);
       return NULL;
   }
 

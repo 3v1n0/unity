@@ -56,6 +56,7 @@ public:
   SwitcherModel::Ptr GetModel();
 
   nux::Property<bool> render_boxes;
+  nux::Property<bool> animate;
   nux::Property<int> border_size;
   nux::Property<int> flat_spacing;
   nux::Property<int> icon_size;
@@ -70,6 +71,7 @@ public:
   // Returns the index of the icon at the given position, in window coordinates.
   // If there's no icon there, -1 is returned.
   int IconIndexAt(int x, int y);
+
 
 protected:
   // Introspectable methods
@@ -100,9 +102,13 @@ private:
 
   nux::Size SpreadSize();
 
+  double GetCurrentProgress();
   void GetFlatIconPositions(int n_flat_icons, int size, int selection,
                             int &first_flat, int &last_flat,
                             int &half_fold_left, int &half_fold_right);
+
+  void SaveTime();
+  void ResetTimer();
   void SaveLast();
 
   SwitcherModel::Ptr model_;
@@ -110,7 +116,6 @@ private:
   ui::AbstractIconRenderer::Ptr icon_renderer_;
   nux::ObjectPtr<StaticCairoText> text_view_;
 
-  bool animation_draw_;
   bool target_sizes_set_;
 
 

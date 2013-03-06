@@ -39,8 +39,10 @@
 #include "LauncherDragWindow.h"
 #include "LauncherHideMachine.h"
 #include "LauncherHoverMachine.h"
+#include "unity-shared/MockableBaseWindow.h"
 #include "unity-shared/UBusWrapper.h"
 #include "SoftwareCenterLauncherIcon.h"
+#include "TooltipManager.h"
 
 #ifdef USE_X11
 # include "PointerBarrier.h"
@@ -65,7 +67,7 @@ class Launcher : public unity::debug::Introspectable,
   NUX_DECLARE_OBJECT_TYPE(Launcher, nux::View);
 public:
 
-  Launcher(nux::BaseWindow* parent, NUX_FILE_LINE_PROTO);
+  Launcher(MockableBaseWindow* parent, NUX_FILE_LINE_PROTO);
 
   nux::Property<Display*> display;
   nux::Property<int> monitor;
@@ -99,7 +101,7 @@ public:
   BacklightMode GetBacklightMode() const;
   bool IsBackLightModeToggles() const;
 
-  nux::BaseWindow* GetParent() const
+  MockableBaseWindow* GetParent() const
   {
     return _parent;
   };
@@ -115,8 +117,8 @@ public:
   virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
 
-  virtual void RecvQuicklistOpened(QuicklistView* quicklist);
-  virtual void RecvQuicklistClosed(QuicklistView* quicklist);
+  virtual void RecvQuicklistOpened(nux::ObjectPtr<QuicklistView> const& quicklist);
+  virtual void RecvQuicklistClosed(nux::ObjectPtr<QuicklistView> const& quicklist);
 
   void ScrollLauncher(int wheel_delta);
 
@@ -210,7 +212,7 @@ private:
 #endif
 
 #ifdef USE_X11
-  bool HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
+  ui::EdgeBarrierSubscriber::Result HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
 #endif
 
   void OnPluginStateChanged();
@@ -222,6 +224,7 @@ private:
   bool OnScrollTimeout();
 
   void SetMousePosition(int x, int y);
+  void SetIconUnderMouse(AbstractLauncherIcon::Ptr const& icon);
 
   void SetStateMouseOverLauncher(bool over_launcher);
 
@@ -334,7 +337,7 @@ private:
   bool DndIsSpecialRequest(std::string const& uri) const;
 
   LauncherModel::Ptr _model;
-  nux::BaseWindow* _parent;
+  MockableBaseWindow* _parent;
   nux::ObjectPtr<nux::View> _active_tooltip;
   QuicklistView* _active_quicklist;
 
@@ -388,6 +391,7 @@ private:
   nux::ObjectPtr<LauncherDragWindow> _drag_window;
   LauncherHideMachine _hide_machine;
   LauncherHoverMachine _hover_machine;
+  TooltipManager tooltip_manager_;
 
   unity::DndData _dnd_data;
   nux::DndAction _drag_action;

@@ -64,7 +64,7 @@ FilterExpanderLabel* FilterFactory::WidgetForFilter(Filter::Ptr const& filter)
   }
   else if (filter_type == renderer_type_multirange)
   {
-    widget = new FilterMultiRange(NUX_TRACKER_LOCATION);
+    widget = new FilterMultiRangeWidget(NUX_TRACKER_LOCATION);
   }
   else if (filter_type == renderer_type_radio_options)
   {

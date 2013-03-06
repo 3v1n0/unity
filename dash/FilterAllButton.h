@@ -35,6 +35,7 @@ namespace dash
 
 class FilterAllButton : public FilterBasicButton
 {
+  NUX_DECLARE_OBJECT_TYPE(FilterAllButton, FilterBasicButton);
 public:
    FilterAllButton(NUX_FILE_LINE_PROTO);
    ~FilterAllButton();

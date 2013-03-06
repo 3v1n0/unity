@@ -24,7 +24,6 @@
 
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
-#include <Nux/BaseWindow.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/DesktopUtilities.h>
 
@@ -68,6 +67,11 @@ const std::string DBUS_INTROSPECTION =
   "      <arg type='s' name='aptdaemon_task' direction='in'/>"
   "    </method>"
   ""
+  "    <method name='UpdateLauncherIconFavoriteState'>"
+  "      <arg type='s' name='icon_uri' direction='in'/>"
+  "      <arg type='b' name='is_sticky' direction='in'/>"
+  "    </method>"
+  ""
   "  </interface>"
   "</node>";
 }
@@ -88,6 +92,16 @@ namespace
 
   const std::string RUNNING_APPS_URI = FavoriteStore::URI_PREFIX_UNITY + "running-apps";
   const std::string DEVICES_URI = FavoriteStore::URI_PREFIX_UNITY + "devices";
+}
+std::string CreateAppUriNameFromDesktopPath(const std::string &desktop_path)
+{
+  std::string app_uri;
+  if (desktop_path.empty())
+    return "";
+
+  app_uri = FavoriteStore::URI_PREFIX_APP +
+    DesktopUtilities::GetDesktopID(desktop_path);
+  return app_uri;
 }
 }
 
@@ -216,7 +230,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
       launchers[i] = nux::ObjectPtr<Launcher>(CreateLauncher());
     }
 
-    int monitor = (num_launchers == 1) ? primary : i;
+    int monitor = (num_launchers == 1 && num_monitors > 1) ? primary : i;
 
     if (launchers[i]->monitor() != monitor)
     {
@@ -314,7 +328,7 @@ void Controller::Impl::OnDndMonitorChanged(int monitor)
 
 Launcher* Controller::Impl::CreateLauncher()
 {
-  nux::BaseWindow* launcher_window = new nux::BaseWindow(TEXT("LauncherWindow"));
+  auto* launcher_window = new MockableBaseWindow(TEXT("LauncherWindow"));
 
   Launcher* launcher = new Launcher(launcher_window);
   launcher->options = parent_->options();
@@ -329,7 +343,10 @@ Launcher* Controller::Impl::CreateLauncher()
   launcher_window->SetLayout(layout);
   launcher_window->SetBackgroundColor(nux::color::Transparent);
   launcher_window->ShowWindow(true);
-  launcher_window->EnableInputWindow(true, launcher::window_title, false, false);
+
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
+    launcher_window->EnableInputWindow(true, launcher::window_title, false, false);
+
   launcher_window->InputWindowEnableStruts(parent_->options()->hide_mode == LAUNCHER_HIDE_NEVER);
   launcher_window->SetEnterFocusInputArea(launcher);
 
@@ -348,7 +365,7 @@ void Controller::Impl::OnLauncherAddRequest(std::string const& icon_uri, Abstrac
   if (icon_uri.find(FavoriteStore::URI_PREFIX_FILE) == 0)
   {
     auto const& desktop_path = icon_uri.substr(FavoriteStore::URI_PREFIX_FILE.length());
-    app_uri = FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(desktop_path);
+    app_uri = local::CreateAppUriNameFromDesktopPath(desktop_path);
   }
 
   auto const& icon = GetIconByUri(app_uri.empty() ? icon_uri : app_uri);
@@ -430,6 +447,58 @@ void Controller::Impl::SaveIconsOrder()
     AddFavoriteKeepingOldPosition(icons, local::DEVICES_URI);
 
   FavoriteStore::Instance().SetFavorites(icons);
+}
+
+void
+Controller::Impl::OnLauncherUpdateIconStickyState(std::string const& icon_uri, bool sticky)
+{
+  if (icon_uri.empty())
+    return;
+
+  std::string target_uri = icon_uri;
+  if (icon_uri.find(FavoriteStore::URI_PREFIX_FILE) == 0)
+  {
+    auto const& desktop_path =
+      icon_uri.substr(FavoriteStore::URI_PREFIX_FILE.length());
+
+    // app uri instead
+    target_uri = local::CreateAppUriNameFromDesktopPath(desktop_path);
+  }
+  auto const& existing_icon_entry =
+    GetIconByUri(target_uri);
+
+  if (existing_icon_entry)
+    {
+      // use the backgroung mechanism of model updates & propagation
+      bool should_update = (existing_icon_entry->IsSticky() != sticky);
+      if (should_update)
+        {
+          if (sticky)
+            existing_icon_entry->Stick(true);
+          else
+            existing_icon_entry->UnStick();
+          
+          SortAndUpdate();
+        }
+    }
+    else
+    {
+      FavoriteStore& favorite_store = FavoriteStore::Instance();
+
+      bool should_update = (favorite_store.IsFavorite(target_uri) != sticky);
+      if (should_update)
+        {
+          if (sticky)
+            {
+              favorite_store.AddFavorite(target_uri, -1);
+              RegisterIcon(CreateFavoriteIcon(target_uri));
+            }
+          else
+            {
+              favorite_store.RemoveFavorite(target_uri);
+            }
+        }
+    }
 }
 
 void
@@ -525,7 +594,7 @@ void Controller::Impl::OnLauncherEntryRemoteRemoved(LauncherEntryRemote::Ptr con
 
 void Controller::Impl::OnFavoriteStoreFavoriteAdded(std::string const& entry, std::string const& pos, bool before)
 {
-  if (entry == local::RUNNING_APPS_URI || entry == local::DEVICES_URI || entry == expo_icon_->RemoteUri())
+  if (entry == local::RUNNING_APPS_URI || entry == local::DEVICES_URI)
   {
     // Since the running apps and the devices are always shown, when added to
     // the model, we only have to re-order them
@@ -570,11 +639,12 @@ void Controller::Impl::OnFavoriteStoreFavoriteAdded(std::string const& entry, st
 
 void Controller::Impl::OnFavoriteStoreFavoriteRemoved(std::string const& entry)
 {
-  if (entry == local::RUNNING_APPS_URI || entry == local::DEVICES_URI || entry == expo_icon_->RemoteUri())
+  if (entry == local::RUNNING_APPS_URI || entry == local::DEVICES_URI)
   {
     // Since the running apps and the devices are always shown, when added to
     // the model, we only have to re-order them
     ResetIconPriorities();
+    SaveIconsOrder();
     return;
   }
 
@@ -595,7 +665,6 @@ void Controller::Impl::ResetIconPriorities()
   auto const& apps_icons = model_->GetSublist<ApplicationLauncherIcon>();
   auto const& volumes_icons = model_->GetSublist<VolumeLauncherIcon>();
   bool running_apps_found = false;
-  bool expo_icon_found = false;
   bool volumes_found = false;
 
   for (auto const& fav : favs)
@@ -622,10 +691,6 @@ void Controller::Impl::ResetIconPriorities()
       volumes_found = true;
       continue;
     }
-    else if (fav == expo_icon_->RemoteUri())
-    {
-      expo_icon_found = true;
-    }
 
     auto const& icon = GetIconByUri(fav);
 
@@ -642,9 +707,6 @@ void Controller::Impl::ResetIconPriorities()
     }
   }
 
-  if (!expo_icon_found)
-    expo_icon_->SetSortPriority(++sort_priority_);
-
   if (!volumes_found)
   {
     for (auto const& ico : volumes_icons)
@@ -655,9 +717,6 @@ void Controller::Impl::ResetIconPriorities()
   }
 
   model_->Sort();
-
-  if (!expo_icon_found)
-    SaveIconsOrder();
 }
 
 void Controller::Impl::UpdateNumWorkspaces(int workspaces)
@@ -825,8 +884,6 @@ AbstractLauncherIcon::Ptr Controller::Impl::CreateFavoriteIcon(std::string const
     if (!app || app->seen())
       return result;
 
-    // Sticky apps are those that are in the launcher when not running.
-    app->sticky = true;
     result = AbstractLauncherIcon::Ptr(new ApplicationLauncherIcon(app));
   }
   else if (icon_uri.find(FavoriteStore::URI_PREFIX_DEVICE) == 0)
@@ -923,12 +980,33 @@ void Controller::Impl::AddDevices()
   }
 }
 
+void Controller::Impl::MigrateFavorites()
+{
+  // This migrates favorites to new format, ensuring that upgrades won't lose anything
+  auto& favorites = FavoriteStore::Instance();
+  auto const& favs = favorites.GetFavorites();
+
+  auto fav_it = std::find_if(begin(favs), end(favs), [](std::string const& fav) {
+    return (fav.find(FavoriteStore::URI_PREFIX_UNITY) != std::string::npos);
+  });
+
+  if (fav_it == end(favs))
+  {
+    favorites.AddFavorite(local::RUNNING_APPS_URI, -1);
+    favorites.AddFavorite(expo_icon_->RemoteUri(), -1);
+    favorites.AddFavorite(local::DEVICES_URI, -1);
+  }
+}
+
 void Controller::Impl::SetupIcons()
 {
+  MigrateFavorites();
+
   auto& favorite_store = FavoriteStore::Instance();
   FavoriteList const& favs = favorite_store.GetFavorites();
   bool running_apps_added = false;
   bool devices_added = false;
+
   for (auto const& fav_uri : favs)
   {
     if (fav_uri == local::RUNNING_APPS_URI)
@@ -956,23 +1034,15 @@ void Controller::Impl::SetupIcons()
     AddRunningApps();
   }
 
-  if (model_->IconIndex(expo_icon_) < 0)
-  {
-    LOG_INFO(logger) << "Adding expo icon";
-    RegisterIcon(CreateFavoriteIcon(expo_icon_->RemoteUri()), ++sort_priority_);
-  }
-
   if (!devices_added)
   {
     LOG_INFO(logger) << "Adding devices";
     AddDevices();
   }
 
-  if (std::find(favs.begin(), favs.end(), expo_icon_->RemoteUri()) == favs.end())
-    SaveIconsOrder();
-
   ApplicationManager::Default().application_started
     .connect(sigc::mem_fun(this, &Impl::OnApplicationStarted));
+
   device_section_.icon_added.connect(sigc::mem_fun(this, &Impl::OnDeviceIconAdded));
   favorite_store.favorite_added.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteAdded));
   favorite_store.favorite_removed.connect(sigc::mem_fun(this, &Impl::OnFavoriteStoreFavoriteRemoved));
@@ -1181,7 +1251,7 @@ void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
   }
 }
 
-bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string)
+bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string, Time timestamp)
 {
   LauncherModel::iterator it;
 
@@ -1197,9 +1267,9 @@ bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, 
       if (TimeUtil::TimeDelta(&current, &last_action_time) > local::ignore_repeat_shortcut_duration)
       {
         if (g_ascii_isdigit((gchar)(*it)->GetShortcut()) && (key_state & ShiftMask))
-          (*it)->OpenInstance(ActionArg(ActionArg::LAUNCHER, 0));
+          (*it)->OpenInstance(ActionArg(ActionArg::LAUNCHER, 0, timestamp));
         else
-          (*it)->Activate(ActionArg(ActionArg::LAUNCHER, 0));
+          (*it)->Activate(ActionArg(ActionArg::LAUNCHER, 0, timestamp));
       }
 
       // disable the "tap on super" check
@@ -1319,8 +1389,10 @@ void Controller::KeyNavTerminate(bool activate)
 
   if (activate)
   {
-    pimpl->sources_.AddIdle([this] {
-      pimpl->model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0));
+    auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+
+    pimpl->sources_.AddIdle([this, timestamp] {
+      pimpl->model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0, timestamp));
       return false;
     });
   }
@@ -1420,10 +1492,12 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
 
       // <SPACE> (open a new instance)
     case NUX_VK_SPACE:
-      model_->Selection()->OpenInstance(ActionArg(ActionArg::LAUNCHER, 0));
+    {
+      auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+      model_->Selection()->OpenInstance(ActionArg(ActionArg::LAUNCHER, 0, timestamp));
       parent_->KeyNavTerminate(false);
       break;
-
+    }
       // <RETURN> (start/activate currently selected icon)
     case NUX_VK_ENTER:
     case NUX_KP_ENTER:
@@ -1491,6 +1565,17 @@ void Controller::Impl::OnDBusMethodCall(GDBusConnection* connection, const gchar
 
     self->OnLauncherAddRequestSpecial(desktop_file.Str(), aptdaemon_task.Str(),
                                       icon.Str(), icon_x, icon_y, icon_size);
+
+    g_dbus_method_invocation_return_value(invocation, nullptr);
+  }
+  else if (g_strcmp0(method_name, "UpdateLauncherIconFavoriteState") == 0)
+  {
+    auto self = static_cast<Controller::Impl*>(user_data);
+    gboolean is_sticky;
+    glib::String icon_uri;
+    g_variant_get(parameters, "(sb)", &icon_uri, &is_sticky);
+
+    self->OnLauncherUpdateIconStickyState(icon_uri.Str(), is_sticky);
 
     g_dbus_method_invocation_return_value(invocation, nullptr);
   }
