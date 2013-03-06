@@ -1693,4 +1693,49 @@ TEST_F(TestLauncherController, DISABLED_DragAndDrop_SingleLauncher)
   Utils::WaitUntilMSec(check_fn, true);
 }
 
+TEST_F(TestLauncherController, SetExistingLauncherIconAsFavorite)
+{
+  const char * desktop_file = "normal-icon.desktop";
+  MockApplicationLauncherIcon::Ptr
+    app_icon(new NiceMock<MockApplicationLauncherIcon>(true, desktop_file));
+  lc.Impl()->RegisterIcon(app_icon);
+  ASSERT_FALSE(favorite_store.IsFavorite(app_icon->RemoteUri()));
+
+  const std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop_file;
+  lc.Impl()->OnLauncherUpdateIconStickyState(icon_uri, true);
+
+  ASSERT_TRUE(app_icon->IsSticky());
+  EXPECT_TRUE(favorite_store.IsFavorite(app_icon->RemoteUri()));
+}
+
+TEST_F(TestLauncherController, SetExistingLauncherIconAsNonFavorite)
+{
+  const char * desktop_file = "normal-icon.desktop";
+  MockApplicationLauncherIcon::Ptr
+    app_icon(new NiceMock<MockApplicationLauncherIcon>(true, desktop_file));
+  lc.Impl()->RegisterIcon(app_icon);
+  ASSERT_FALSE(favorite_store.IsFavorite(app_icon->RemoteUri()));
+  app_icon->Stick(true);
+
+  EXPECT_CALL(*app_icon, UnStick());
+
+  const std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop_file;
+  lc.Impl()->OnLauncherUpdateIconStickyState(icon_uri, false);
+}
+
+TEST_F(TestLauncherController, SetNonExistingLauncherIconAsFavorite)
+{
+  std::string desktop = app::BZR_HANDLE_PATCH;
+  std::string icon_uri = FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(desktop);
+
+  lc.Impl()->OnLauncherUpdateIconStickyState(icon_uri, true);
+
+  // Make sure that the icon now exists and is sticky
+  EXPECT_TRUE(favorite_store.IsFavorite(icon_uri));
+
+  auto const& icon = lc.Impl()->GetIconByUri(icon_uri);
+  ASSERT_TRUE(icon.IsValid());
+  ASSERT_TRUE(icon->IsSticky());
+}
+
 }
