@@ -88,22 +88,29 @@ struct MockGnomeSessionManager : session::GnomeManager {
 
 struct TestGnomeSessionManager : testing::Test
 {
-  TestGnomeSessionManager()
-  {}
-
   static void SetUpTestCase()
   {
     can_shutdown_ = (g_random_int() % 2) ? true : false;
     can_suspend_ = (g_random_int() % 2) ? true : false;
     can_hibernate_ = (g_random_int() % 2) ? true : false;
 
+    bool shutdown_called = false;
+    bool hibernate_called = false;
+    bool suspend_called = false;
+
     upower_ = std::make_shared<DBusServer>();
     upower_->AddObjects(introspection::UPOWER, UPOWER_PATH);
-    upower_->GetObjects().front()->SetMethodsCallsHandler([] (std::string const& method, GVariant*) {
+    upower_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {
       if (method == "SuspendAllowed")
+      {
+        suspend_called = true;
         return g_variant_new("(b)", can_suspend_ ? TRUE : FALSE);
+      }
       else if (method == "HibernateAllowed")
+      {
+        hibernate_called = true;
         return g_variant_new("(b)", can_hibernate_ ? TRUE : FALSE);
+      }
 
       return static_cast<GVariant*>(nullptr);
     });
@@ -113,9 +120,12 @@ struct TestGnomeSessionManager : testing::Test
 
     session_manager_ = std::make_shared<DBusServer>();
     session_manager_->AddObjects(introspection::SESSION_MANAGER, SESSION_MANAGER_PATH);
-    session_manager_->GetObjects().front()->SetMethodsCallsHandler([] (std::string const& method, GVariant*) {
+    session_manager_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {
       if (method == "CanShutdown")
+      {
+        shutdown_called = true;
         return g_variant_new("(b)", can_shutdown_ ? TRUE : FALSE);
+      }
 
       return static_cast<GVariant*>(nullptr);
     });
@@ -124,7 +134,11 @@ struct TestGnomeSessionManager : testing::Test
 
     shell_proxy_ = std::make_shared<DBusProxy>(TEST_SERVER_NAME, SHELL_OBJECT_PATH, SHELL_INTERFACE);
 
-    Utils::WaitForTimeout(2);
+    // We need to wait until the session manager has got its capabilities.
+    Utils::WaitUntil(hibernate_called, 3);
+    Utils::WaitUntil(suspend_called, 3);
+    Utils::WaitUntil(shutdown_called, 3);
+    Utils::WaitForTimeoutMSec(100);
   }
 
   void SetUp()
