@@ -150,7 +150,7 @@ struct TestGnomeSessionManager : testing::Test
 
     shell_proxy_ = std::make_shared<DBusProxy>(TEST_SERVER_NAME, SHELL_OBJECT_PATH, SHELL_INTERFACE);
 
-    // We need to wait until the session manager has got its capabilities.
+    // We need to wait until the session manager has setup its internal values.
     Utils::WaitUntil(hibernate_called, 3);
     Utils::WaitUntil(suspend_called, 3);
     Utils::WaitUntil(shutdown_called, 3);
@@ -412,6 +412,17 @@ TEST_F(TestGnomeSessionManager, Hibernate)
 
   Utils::WaitUntil(hibernate_called, 2);
   EXPECT_TRUE(hibernate_called);
+}
+
+TEST_F(TestGnomeSessionManager, CancelAction)
+{
+  bool cancelled = false;
+
+  shell_proxy_->Connect("Canceled", [&cancelled] (GVariant*) { cancelled = true; });
+  manager->CancelAction();
+
+  Utils::WaitUntilMSec(cancelled);
+  EXPECT_TRUE(cancelled);
 }
 
 } // Namespace
