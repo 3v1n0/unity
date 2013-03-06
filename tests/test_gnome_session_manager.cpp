@@ -310,8 +310,11 @@ TEST_F(TestGnomeSessionManager, LogoutFallback)
   session_manager_->GetObjects().front()->SetMethodsCallsHandler(nullptr);
   const gchar* cookie = g_getenv("XDG_SESSION_COOKIE");
 
-  if (!cookie)
+  if (!cookie || cookie[0] == '\0')
+  {
     g_setenv("XDG_SESSION_COOKIE", "session-cookie", TRUE);
+    cookie = g_getenv("XDG_SESSION_COOKIE");
+  }
 
   bool logout_called = false;
 
