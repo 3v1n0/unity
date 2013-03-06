@@ -88,7 +88,7 @@ class ApplicationLensSearchTests(ApplicationLensSearchTestBase):
         ('lowercase', {'input': 'window mocker', 'result': 'Window Mocker'}),
         ('uppercase', {'input': 'WINDOW MOCKER', 'result': 'Window Mocker'}),
         ('partial', {'input': 'Window Mock', 'result': 'Window Mocker'}),
-        ('keyword', {'input': 'newsgroup', 'result': 'Thunderbird Mail'}),
+        ('keyword', {'input': 'arithmetic', 'result': 'Calculator'}),
     ]
 
     def setUp(self):
