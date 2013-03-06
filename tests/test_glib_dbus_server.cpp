@@ -281,6 +281,12 @@ struct TestGLibDBusServerInteractions : testing::Test
     object->SetPropertySetter(nullptr);
   }
 
+  static void TearDownTestCase()
+  {
+    proxy.reset();
+    server.reset();
+  }
+
   void TestMethodCall(std::string const& method_name, GVariant* parameters = nullptr, GVariant* returns = nullptr)
   {
     std::string const& expected_method = method_name;
