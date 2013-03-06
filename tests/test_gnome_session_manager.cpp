@@ -21,6 +21,7 @@
 #include <UnityCore/GLibDBusProxy.h>
 #include <UnityCore/GLibDBusServer.h>
 #include <UnityCore/GnomeSessionManager.h>
+#include <UnityCore/Variant.h>
 #include "test_utils.h"
 
 using namespace unity;
@@ -241,7 +242,30 @@ TEST_F(TestGnomeSessionManager, LockScreen)
   manager->LockScreen();
 
   Utils::WaitUntil(lock_called, 2);
+  EXPECT_TRUE(lock_called);
+
   Utils::WaitUntil(simulate_activity_called, 2);
+  EXPECT_TRUE(simulate_activity_called);
+}
+
+TEST_F(TestGnomeSessionManager, Logout)
+{
+  bool logout_called = false;
+
+  session_manager_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant* par) {
+    if (method == "Logout")
+    {
+      logout_called = true;
+      EXPECT_EQ(Variant(par).GetUInt(), 1);
+    }
+
+    return static_cast<GVariant*>(nullptr);
+  });
+
+  manager->Logout();
+
+  Utils::WaitUntil(logout_called, 2);
+  EXPECT_TRUE(logout_called);
 }
 
 } // Namespace

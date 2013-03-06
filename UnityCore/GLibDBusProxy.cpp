@@ -129,6 +129,7 @@ DBusProxy::Impl::Impl(DBusProxy* owner,
 {
   // FIXME: get rid of this once glib doesn't deadlock in class initiation
   StartReconnectionTimeout(1);
+  // Connect(); // Remove the WaitUntil and use MSec!
 }
 
 DBusProxy::Impl::~Impl()
