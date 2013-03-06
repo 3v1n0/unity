@@ -185,4 +185,45 @@ TEST_F(TestGnomeSessionManager, CanSuspend)
   EXPECT_EQ(manager->CanSuspend(), can_suspend_);
 }
 
+TEST_F(TestGnomeSessionManager, RealName)
+{
+  const char* name = g_get_real_name();
+
+  if (!name || g_strcmp0(name, "Unknown") == 0)
+    EXPECT_TRUE(manager->RealName().empty());
+  else
+    EXPECT_EQ(manager->RealName(), name);
+}
+
+TEST_F(TestGnomeSessionManager, UserName)
+{
+  EXPECT_EQ(manager->UserName(), g_get_user_name());
+}
+
+TEST_F(TestGnomeSessionManager, LockScreen)
+{
+  bool lock_called = false;
+  bool simulate_activity_called = false;
+
+  screen_saver_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {
+    if (method == "Lock")
+    {
+      lock_called = true;
+      EXPECT_FALSE(simulate_activity_called);
+    }
+    else if (method == "SimulateUserActivity")
+    {
+      simulate_activity_called = true;
+      EXPECT_TRUE(lock_called);
+    }
+
+    return static_cast<GVariant*>(nullptr);
+  });
+
+  manager->LockScreen();
+
+  Utils::WaitUntil(lock_called, 2);
+  Utils::WaitUntil(simulate_activity_called, 2);
+}
+
 } // Namespace
