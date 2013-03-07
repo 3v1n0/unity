@@ -249,6 +249,7 @@ if (ENABLE_X_SUPPORT)
                  test_thumbnail_generator.cpp
                  test_trash_launcher_icon.cpp
                  test_unity_settings.cpp
+                 test_unity_window_style.cpp
                  test_unity_window_view.cpp
                  test_volume_imp.cpp
                  test_volume_launcher_icon.cpp
