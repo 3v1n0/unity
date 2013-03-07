@@ -26,7 +26,7 @@ int main(int argc, char** argv)
 
   GError *error = NULL;
   GOptionContext *context;
-  context = g_option_context_new ("- test tree model performance");
+  context = g_option_context_new ("- DBus tests");
   g_option_context_add_main_entries (context, entries, NULL);
   if (!g_option_context_parse (context, &argc, &argv, &error))
   {

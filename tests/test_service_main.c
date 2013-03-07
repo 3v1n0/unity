@@ -34,6 +34,15 @@ static const GDBusInterfaceVTable interface_vtable =
   NULL
 };
 
+static gchar* scope_id = "testscope1";
+
+static GOptionEntry entries[] =
+{
+  { "scope-id", 's', 0, G_OPTION_ARG_STRING, &scope_id, "Test scope id (/com/canonical/unity/scope/SCOPE_NAME)", "SCOPE_NAME" },
+  { NULL }
+};
+
+
 static GMainLoop* loop_ = NULL;
 static ServiceScope* scope_ = NULL;
 static ServiceModel* model_ = NULL;
@@ -46,9 +55,20 @@ main(gint argc, gchar** argv)
 #if G_ENCODE_VERSION (GLIB_MAJOR_VERSION, GLIB_MINOR_VERSION) <= GLIB_VERSION_2_34
   g_type_init();
 #endif
+
+  GError *error = NULL;
+  GOptionContext *context;
+  context = g_option_context_new ("- DBus tests");
+  g_option_context_add_main_entries (context, entries, NULL);
+  if (!g_option_context_parse (context, &argc, &argv, &error))
+  {
+    g_print ("option parsing failed: %s\n", error->message);
+    return 1;
+  }
+
   loop_ = g_main_loop_new(NULL, FALSE);
 
-  scope_ = service_scope_new();
+  scope_ = service_scope_new(scope_id);
   model_ = service_model_new();
   hud_ = service_hud_new();
   panel_ = service_panel_new();

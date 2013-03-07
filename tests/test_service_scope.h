@@ -59,7 +59,7 @@ struct _ServiceScopeClass
 
 GType service_scope_get_type(void) G_GNUC_CONST;
 
-ServiceScope* service_scope_new(void);
+ServiceScope* service_scope_new(const gchar* scope_id);
 
 G_END_DECLS
 
