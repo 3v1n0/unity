@@ -58,7 +58,6 @@ protected:
   void DrawOverlay(nux::GraphicsEngine&, bool force, nux::Geometry const&);
   nux::Geometry GetBackgroundGeometry();
 
-
   nux::Area* FindKeyFocusArea(unsigned etype, unsigned long key, unsigned long mod);
   nux::Area* KeyNavIteration(nux::KeyNavDirection);
 
@@ -66,6 +65,8 @@ protected:
   std::string GetName() const;
 
 private:
+  friend class TestSessionView;
+
   void UpdateText();
   void Populate();
   void AddButton(Button*);
