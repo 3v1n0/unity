@@ -55,16 +55,16 @@ protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
-  virtual nux::Point GetOffsetPerMonitor(int monitor);
-
 private:
+  friend class TestSessionController;
+
   void Show(View::Mode mode, bool inhibitors);
   void CancelAndHide();
   void ConstructView();
   void EnsureView();
   void CloseWindow();
-
   void OnBackgroundUpdate(GVariant* data);
+  nux::Point GetOffsetPerMonitor(int monitor);
 
   View::Ptr view_;
   nux::ObjectPtr<nux::BaseWindow> view_window_;

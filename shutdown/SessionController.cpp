@@ -127,7 +127,6 @@ nux::Point Controller::GetOffsetPerMonitor(int monitor)
   auto const& view_geo = view_->GetGeometry();
   auto const& monitor_geo = UScreen::GetDefault()->GetMonitorGeometry(monitor);
 
-  //TODO get adjustment from windowmanager!
   nux::Point offset(adjustment_.x + monitor_geo.x, adjustment_.y + monitor_geo.y);
   offset.x += (monitor_geo.width - view_geo.width - adjustment_.x) / 2;
   offset.y += (monitor_geo.height - view_geo.height - adjustment_.y) / 2;
@@ -161,11 +160,18 @@ void Controller::ConstructView()
   view_->request_hide.connect(sigc::mem_fun(this, &Controller::Hide));
   view_->request_close.connect(sigc::mem_fun(this, &Controller::CancelAndHide));
 
-  view_->size_changed.connect([this] (nux::Area*, int, int) {
-    int monitor = UScreen::GetDefault()->GetMonitorWithMouse();
-    auto const& offset = GetOffsetPerMonitor(monitor);
-    view_window_->SetXY(offset.x, offset.y);
-  });
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
+  {
+    view_->size_changed.connect([this] (nux::Area*, int, int) {
+      int monitor = UScreen::GetDefault()->GetMonitorWithMouse();
+      auto const& offset = GetOffsetPerMonitor(monitor);
+      view_window_->SetXY(offset.x, offset.y);
+    });
+  }
+  else
+  {
+    view_window_->SetXY(0, 0);
+  }
 }
 
 void Controller::EnsureView()

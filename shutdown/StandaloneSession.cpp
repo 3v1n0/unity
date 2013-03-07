@@ -53,24 +53,6 @@ public:
   bool CanHibernate() const {return true;}
 };
 
-namespace unity
-{
-namespace session
-{
-struct StandaloneController : Controller
-{
-  StandaloneController(session::Manager::Ptr const& manager)
-    : Controller(manager)
-  {}
-
-  nux::Point GetOffsetPerMonitor(int monitor) override
-  {
-    return nux::Point();
-  }
-};
-}
-}
-
 struct SessionWindow
 {
   SessionWindow()
@@ -102,7 +84,7 @@ void SessionWindow::Init()
 {
   BackgroundEffectHelper::blur_type = BLUR_NONE;
   auto manager = std::make_shared<MockSessionManager>();
-  controller = std::make_shared<session::StandaloneController>(manager);
+  controller = std::make_shared<session::Controller>(manager);
   manager->shutdown_requested.emit(false);
 }
 
