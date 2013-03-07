@@ -37,14 +37,18 @@ struct TestUnityWindowView : testing::Test
   struct MockUnityWindowView : UnityWindowView
   {
     void DrawOverlay(nux::GraphicsEngine& ge, bool force, const nux::Geometry& geo) {}
-    nux::Geometry GetBackgroundGeometry() { return nux::Geometry(); }
+    nux::Geometry GetBackgroundGeometry() { return background_geo_; }
 
     MOCK_METHOD0(QueueDraw, void());
 
+    using UnityWindowView::GetInternalBackground;
     using UnityWindowView::FindKeyFocusArea;
     using UnityWindowView::internal_layout_;
     using UnityWindowView::bg_helper_;
     using UnityWindowView::close_button_;
+    using UnityWindowView::bounding_area_;
+
+    nux::Geometry background_geo_;
   };
 
   Settings settings;
@@ -57,6 +61,7 @@ TEST_F(TestUnityWindowView, Construct)
   EXPECT_NE(view.style(), nullptr);
   EXPECT_FALSE(view.closable());
   EXPECT_EQ(view.internal_layout_, nullptr);
+  EXPECT_EQ(view.bounding_area_, nullptr);
 }
 
 TEST_F(TestUnityWindowView, LiveBackgroundChange)
@@ -175,6 +180,32 @@ TEST_F(TestUnityWindowView, GetLayout)
   EXPECT_EQ(view.GetLayout(), layout);
 }
 
+TEST_F(TestUnityWindowView, GetInternalBackground)
+{
+  int offset = view.style()->GetInternalOffset();
+  view.background_geo_.Set(g_random_int(), g_random_int(), g_random_int(), g_random_int());
+  EXPECT_EQ(view.GetInternalBackground(), view.background_geo_.GetExpand(-offset, -offset));
+}
+
+TEST_F(TestUnityWindowView, GetBoundingArea)
+{
+  auto const& input_area = view.GetBoundingArea();
+  ASSERT_NE(input_area, nullptr);
+  ASSERT_EQ(input_area, view.bounding_area_);
+  EXPECT_EQ(input_area->GetGeometry(), view.GetGeometry());
+}
+
+TEST_F(TestUnityWindowView, BoundingAreaMatchesGeometry)
+{
+  auto const& input_area = view.GetBoundingArea();
+  ASSERT_NE(input_area, nullptr);
+
+  view.SetGeometry(nux::Geometry(g_random_int(), g_random_int(), g_random_int(), g_random_int()));
+  EXPECT_EQ(input_area->GetGeometry(), view.GetGeometry());
+
+  view.SetGeometry(nux::Geometry(g_random_int(), g_random_int(), g_random_int(), g_random_int()));
+  EXPECT_EQ(input_area->GetGeometry(), view.GetGeometry());
+}
 
 } // ui
 } // unity
