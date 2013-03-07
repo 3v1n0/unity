@@ -31,10 +31,10 @@ DECLARE_LOGGER(logger, "unity.session.gnome");
 // Private implementation
 namespace shell
 {
-const char* DBUS_NAME = "org.gnome.Shell";
-const char* DBUS_INTERFACE = "org.gnome.SessionManager.EndSessionDialog";
-const char* DBUS_OBJECT_PATH = "/org/gnome/SessionManager/EndSessionDialog";
-const char* INTROSPECTION_XML =
+const std::string DBUS_NAME = "org.gnome.Shell";
+const std::string DBUS_INTERFACE = "org.gnome.SessionManager.EndSessionDialog";
+const std::string DBUS_OBJECT_PATH = "/org/gnome/SessionManager/EndSessionDialog";
+const std::string INTROSPECTION_XML =
 R"(<node>
   <interface name="org.gnome.SessionManager.EndSessionDialog">
     <method name="Open">
@@ -61,16 +61,27 @@ R"(<node>
     </signal>
   </interface>
 </node>)";
-
 }
 
-GnomeManager::Impl::Impl(GnomeManager* manager)
+namespace testing
+{
+const std::string DBUS_NAME = "com.canonical.Unity.Test.GnomeManager";
+}
+
+namespace
+{
+const std::string SESSION_OPTIONS = "com.canonical.indicator.session";
+const std::string SUPPRESS_DIALOGS_KEY = "suppress-logout-restart-shutdown";
+}
+
+GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
   : manager_(manager)
+  , test_mode_(test_mode)
   , can_shutdown_(true)
   , can_suspend_(false)
   , can_hibernate_(false)
   , pending_action_(shell::Action::NONE)
-  , shell_server_(shell::DBUS_NAME)
+  , shell_server_(test_mode_ ? testing::DBUS_NAME : shell::DBUS_NAME)
 {
   shell_server_.AddObjects(shell::INTROSPECTION_XML, shell::DBUS_OBJECT_PATH);
   shell_object_ = shell_server_.GetObject(shell::DBUS_INTERFACE);
@@ -101,6 +112,27 @@ GnomeManager::Impl::~Impl()
   ClosedDialog();
 }
 
+bool GnomeManager::Impl::InteractiveMode()
+{
+  bool schema_found = false;
+  const gchar* const* schemas = g_settings_list_schemas();
+
+  for (unsigned i = 0; schemas[i]; ++i)
+  {
+    if (g_strcmp0(schemas[i], SESSION_OPTIONS.c_str()) == 0)
+    {
+      schema_found = true;
+      break;
+    }
+  }
+
+  if (!schema_found)
+    return true;
+
+  glib::Object<GSettings> setting(g_settings_new(SESSION_OPTIONS.c_str()));
+  return g_settings_get_boolean(setting, SUPPRESS_DIALOGS_KEY.c_str()) != TRUE;
+}
+
 GVariant* GnomeManager::Impl::OnShellMethodCall(std::string const& method, GVariant* parameters)
 {
   LOG_DEBUG(logger) << "Called method '" << method << "'";
@@ -118,11 +150,22 @@ GVariant* GnomeManager::Impl::OnShellMethodCall(std::string const& method, GVari
     unsigned arg1, timeout_length;
     GVariantIter *inhibitors;
     g_variant_get(parameters, "(uuuao)", &action, &arg1, &timeout_length, &inhibitors);
-    bool has_inibitors = (g_variant_iter_next_value(inhibitors) != nullptr);
+    bool has_inibitors = (g_variant_iter_n_children(inhibitors) > 0);
     g_variant_iter_free(inhibitors);
 
     LOG_INFO(logger) << "Got Open request for action " << unsigned(action)
                      << " with inhibitors " << has_inibitors;
+
+    if (pending_action_ == shell::Action::NONE)
+    {
+      if (!InteractiveMode() && !has_inibitors)
+      {
+        // If we're in non-interactive mode and we don't have inhibitors,
+        // We must immediately proceed with the requested action.
+        LOG_INFO(logger) << "Not using interactive mode, proceeding with requested action...";
+        pending_action_ = action;
+      }
+    }
 
     if (pending_action_ == shell::Action::NONE)
     {
@@ -211,12 +254,19 @@ void GnomeManager::Impl::ClosedDialog()
   shell_object_->EmitSignal("Closed");
 }
 
+void GnomeManager::Impl::EnsureCancelPendingAction()
+{
+  if (pending_action_ == shell::Action::NONE)
+    return;
+
+  CancelAction();
+}
+
 void GnomeManager::Impl::CallGnomeSessionMethod(std::string const& method, GVariant* parameters,
                                                 glib::DBusProxy::CallFinishedCallback const& cb)
 {
-  auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.SessionManager",
-                                                 "/org/gnome/SessionManager",
-                                                 "org.gnome.SessionManager");
+  auto proxy = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.gnome.SessionManager",
+                                                 "/org/gnome/SessionManager", "org.gnome.SessionManager");
 
   // By passing the proxy to the lambda we ensure that it will be smartly handled
   proxy->CallBegin(method, parameters, [proxy, cb] (GVariant* ret, glib::Error const& e) {
@@ -232,8 +282,9 @@ void GnomeManager::Impl::CallGnomeSessionMethod(std::string const& method, GVari
 
 void GnomeManager::Impl::CallUPowerMethod(std::string const& method, glib::DBusProxy::ReplyCallback const& cb)
 {
-  auto proxy = std::make_shared<glib::DBusProxy>("org.freedesktop.UPower", "/org/freedesktop/UPower",
-                                                 "org.freedesktop.UPower", G_BUS_TYPE_SYSTEM);
+  auto proxy = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.UPower",
+                                                 "/org/freedesktop/UPower", "org.freedesktop.UPower",
+                                                 test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
 
   proxy->CallBegin(method, nullptr, [proxy, cb] (GVariant *ret, glib::Error const& e) {
     if (e)
@@ -249,10 +300,10 @@ void GnomeManager::Impl::CallUPowerMethod(std::string const& method, glib::DBusP
 
 void GnomeManager::Impl::CallConsoleKitMethod(std::string const& method, GVariant* parameters)
 {
-  auto proxy = std::make_shared<glib::DBusProxy>("org.freedesktop.ConsoleKit",
+  auto proxy = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.ConsoleKit",
                                                  "/org/freedesktop/ConsoleKit/Manager",
                                                  "org.freedesktop.ConsoleKit.Manager",
-                                                 G_BUS_TYPE_SYSTEM);
+                                                 test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
 
   // By passing the proxy to the lambda we ensure that it will be smartly handled
   proxy->CallBegin(method, parameters, [this, proxy] (GVariant*, glib::Error const& e) {
@@ -267,6 +318,10 @@ void GnomeManager::Impl::CallConsoleKitMethod(std::string const& method, GVarian
 
 GnomeManager::GnomeManager()
   : impl_(new GnomeManager::Impl(this))
+{}
+
+GnomeManager::GnomeManager(GnomeManager::TestMode const& tm)
+  : impl_(new GnomeManager::Impl(this, true))
 {}
 
 GnomeManager::~GnomeManager()
@@ -293,12 +348,10 @@ std::string GnomeManager::UserName() const
 
 void GnomeManager::LockScreen()
 {
-  if (impl_->pending_action_ != shell::Action::NONE)
-    CancelAction();
+  impl_->EnsureCancelPendingAction();
 
-  auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.ScreenSaver",
-                                                 "/org/gnome/ScreenSaver",
-                                                 "org.gnome.ScreenSaver");
+  auto proxy = std::make_shared<glib::DBusProxy>(impl_->test_mode_ ? testing::DBUS_NAME : "org.gnome.ScreenSaver",
+                                                 "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
 
   // By passing the proxy to the lambda we ensure that it will stay alive
   // until we get the last callback.
@@ -308,11 +361,6 @@ void GnomeManager::LockScreen()
 
 void GnomeManager::Logout()
 {
-  if (impl_->pending_action_ != shell::Action::NONE)
-  {
-    CancelAction();
-  }
-
   enum class LogoutMethods : unsigned
   {
     INTERACTIVE = 0,
@@ -322,6 +370,7 @@ void GnomeManager::Logout()
 
   auto mode = LogoutMethods::NO_CONFIRMATION;
 
+  impl_->EnsureCancelPendingAction();
   impl_->pending_action_ = shell::Action::LOGOUT;
   impl_->CallGnomeSessionMethod("Logout", g_variant_new("(u)", mode),
     [this] (GVariant*, glib::Error const& err) {
@@ -340,13 +389,9 @@ void GnomeManager::Logout()
 
 void GnomeManager::Reboot()
 {
-  if (impl_->pending_action_ != shell::Action::NONE)
-  {
-    CancelAction();
-  }
-
+  impl_->EnsureCancelPendingAction();
   impl_->pending_action_ = shell::Action::REBOOT;
-  impl_->CallGnomeSessionMethod("RequestReboot", nullptr,
+  impl_->CallGnomeSessionMethod("Reboot", nullptr,
     [this] (GVariant*, glib::Error const& err) {
       if (err)
       {
@@ -361,13 +406,9 @@ void GnomeManager::Reboot()
 
 void GnomeManager::Shutdown()
 {
-  if (impl_->pending_action_ != shell::Action::NONE)
-  {
-    CancelAction();
-  }
-
+  impl_->EnsureCancelPendingAction();
   impl_->pending_action_ = shell::Action::SHUTDOWN;
-  impl_->CallGnomeSessionMethod("RequestShutdown", nullptr,
+  impl_->CallGnomeSessionMethod("Shutdown", nullptr,
     [this] (GVariant*, glib::Error const& err) {
       if (err)
       {
@@ -382,13 +423,13 @@ void GnomeManager::Shutdown()
 
 void GnomeManager::Suspend()
 {
-  impl_->CancelAction();
+  impl_->EnsureCancelPendingAction();
   impl_->CallUPowerMethod("Suspend");
 }
 
 void GnomeManager::Hibernate()
 {
-  impl_->CancelAction();
+  impl_->EnsureCancelPendingAction();
   impl_->CallUPowerMethod("Hibernate");
 }
 

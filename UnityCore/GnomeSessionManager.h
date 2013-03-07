@@ -50,6 +50,10 @@ public:
   void CancelAction();
 
   struct Impl;
+protected:
+  struct TestMode {};
+  GnomeManager(TestMode const&);
+
 private:
   std::unique_ptr<Impl> impl_;
 };

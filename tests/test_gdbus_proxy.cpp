@@ -46,7 +46,7 @@ public:
 TEST_F(TestGDBusProxy, TestConstruction)
 {
   EXPECT_FALSE(proxy.IsConnected());
-  Utils::WaitUntil(sigc::mem_fun(proxy, &glib::DBusProxy::IsConnected), 2);
+  Utils::WaitUntilMSec(sigc::mem_fun(proxy, &glib::DBusProxy::IsConnected));
   EXPECT_TRUE(proxy.IsConnected());
 }
 
@@ -81,13 +81,13 @@ TEST_F(TestGDBusProxy, TestMethodReturn)
     got_result_return = true;
   };
 
-  Utils::WaitUntil(sigc::mem_fun(proxy, &glib::DBusProxy::IsConnected));
+  Utils::WaitUntilMSec(sigc::mem_fun(proxy, &glib::DBusProxy::IsConnected));
   EXPECT_TRUE(proxy.IsConnected()); // fail if we are not connected
   proxy.Connect("TestSignal", signal_connection);
   proxy.Call("TestMethod", parameters, method_connection); 
 
-  Utils::WaitUntil(got_result_return, 2);
-  Utils::WaitUntil(got_signal_return, 2);
+  Utils::WaitUntilMSec(got_result_return);
+  Utils::WaitUntilMSec(got_signal_return);
  
   EXPECT_EQ(returned_result, expected_return);
   EXPECT_EQ(returned_signal, expected_return);
@@ -141,7 +141,7 @@ TEST_F(TestGDBusProxy, TestAcquiring)
                     method_connection, nullptr);
     Utils::WaitForTimeoutMSec(150);
   }
-  Utils::WaitUntil(got_result_return, 2);
+  Utils::WaitUntilMSec(got_result_return, 2);
 }
 
 TEST_F(TestGDBusProxyInvalidService, TestTimeouting)
@@ -166,7 +166,7 @@ TEST_F(TestGDBusProxyInvalidService, TestTimeouting)
   // be acquired (with a dbus error)
   g_usleep(110000);
 
-  Utils::WaitUntil(got_result_return, 2);
+  Utils::WaitUntilMSec(got_result_return);
   EXPECT_EQ(call_return, "");
 }
 
@@ -189,11 +189,42 @@ TEST_F(TestGDBusProxy, TestMethodCall)
   proxy.Call("TestMethod", g_variant_new("(s)", "TestStringTestString"),
              method_connection);
 
-  Utils::WaitUntil(got_result_return, 2);
+  Utils::WaitUntilMSec(got_result_return);
  
   EXPECT_TRUE(proxy.IsConnected());
   EXPECT_EQ("TestStringTestString", call_return);
 }
 
+TEST_F(TestGDBusProxy, TestDisconnectSignal)
+{
+  bool got_signal = false;
+  proxy.Connect("TestSignal", [&got_signal] (GVariant*) { got_signal = true; });
+  proxy.Call("TestMethod", g_variant_new("(s)", "Signal!"));
+  Utils::WaitUntilMSec(got_signal);
+  ASSERT_TRUE(got_signal);
+
+  got_signal = false;
+  proxy.DisconnectSignal("TestSignal");
+  proxy.Call("TestMethod", g_variant_new("(s)", "NewSignal!"));
+
+  Utils::WaitForTimeoutMSec(50);
+  EXPECT_FALSE(got_signal);
+}
+
+TEST_F(TestGDBusProxy, TestDisconnectSignalAll)
+{
+  bool got_signal = false;
+  proxy.Connect("TestSignal", [&got_signal] (GVariant*) { got_signal = true; });
+  proxy.Call("TestMethod", g_variant_new("(s)", "Signal!"));
+  Utils::WaitUntilMSec(got_signal);
+  ASSERT_TRUE(got_signal);
+
+  got_signal = false;
+  proxy.DisconnectSignal();
+  proxy.Call("TestMethod", g_variant_new("(s)", "NewSignal!"));
+
+  Utils::WaitForTimeoutMSec(50);
+  EXPECT_FALSE(got_signal);
+}
 
 }

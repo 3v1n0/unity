@@ -42,7 +42,7 @@ namespace shell
 
 struct GnomeManager::Impl
 {
-  Impl(GnomeManager* parent);
+  Impl(GnomeManager* parent, bool test_mode = false);
   ~Impl();
 
   void ConfirmLogout();
@@ -50,15 +50,17 @@ struct GnomeManager::Impl
   void ConfirmShutdown();
   void CancelAction();
   void ClosedDialog();
+  void EnsureCancelPendingAction();
 
   GVariant* OnShellMethodCall(std::string const& method, GVariant* parameters);
   void CallGnomeSessionMethod(std::string const& method, GVariant* parameters = nullptr,
                               glib::DBusProxy::CallFinishedCallback const& cb = nullptr);
   void CallUPowerMethod(std::string const& method, glib::DBusProxy::ReplyCallback const& cb = nullptr);
   void CallConsoleKitMethod(std::string const& method, GVariant* parameters = nullptr);
-
+  bool InteractiveMode();
 
   GnomeManager* manager_;
+  bool test_mode_;
   bool can_shutdown_;
   bool can_suspend_;
   bool can_hibernate_;
