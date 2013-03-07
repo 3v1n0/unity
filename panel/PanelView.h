@@ -23,6 +23,7 @@
 #include <vector>
 #include <memory>
 
+#include <Nux/Nux.h>
 #include <Nux/View.h>
 #include <Nux/TextureArea.h>
 #include <NuxGraphics/GraphicsEngine.h>
@@ -63,6 +64,7 @@ public:
                           int discovery_fadein, int discovery_fadeout);
 
   Window GetTrayXid() const;
+  int GetStoredDashWidth() const;
 
   void SetLauncherWidth(int width);
 

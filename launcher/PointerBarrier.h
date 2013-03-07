@@ -86,6 +86,8 @@ public:
 
   sigc::signal<void, PointerBarrierWrapper*, BarrierEvent::Ptr> barrier_event;
 
+  bool IsFirstEvent() const;
+
 protected:
   void EmitCurrentData(int event_id, int x, int y);
   bool HandleEvent(XEvent event);
@@ -93,7 +95,11 @@ protected:
 private:
   static bool HandleEventWrapper(XEvent event, void* data);
 
+  void SendBarrierEvent(int x, int y, int velocity, int event_id);
+
   int event_base_;
+  int last_event_;
+  bool first_event_;
   PointerBarrier barrier;
 
   int smoothing_count_;

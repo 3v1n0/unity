@@ -16,6 +16,17 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/no-icon.desktop
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/kde4/afile.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/applications/kde4/afile.desktop)
 
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/lenses/social/social.lens
+                ${CMAKE_BINARY_DIR}/tests/data/lenses/social/social.lens)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/lenses/files/files.lens
+                ${CMAKE_BINARY_DIR}/tests/data/lenses/files/files.lens)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/lenses/applications/applications.lens
+                ${CMAKE_BINARY_DIR}/tests/data/lenses/applications/applications.lens)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/lenses/invalid-lens-file/invalid-lens-file.lens
+                ${CMAKE_BINARY_DIR}/tests/data/lenses/invalid-lens-file/invalid-lens-file.lens)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/lenses/invalid-lens-group/invalid-lens-group.lens
+                ${CMAKE_BINARY_DIR}/tests/data/lenses/invalid-lens-group/invalid-lens-group.lens)
+
 #
 # Unit tests
 #
@@ -79,17 +90,12 @@ if (GTEST_SRC_DIR AND
 # The service that provides DBus services to test against
   add_executable(test-gtest-service
                  mock-application.cpp
-                 test_service_gdbus_wrapper.c
-                 test_service_gdbus_wrapper.h
-                 test_service_hud.c
-                 test_service_hud.h
-                 test_service_lens.c
-                 test_service_lens.h
-                 test_service_main.c
-                 test_service_model.c
-                 test_service_model.h
-                 test_service_panel.c
-                 test_service_panel.c)
+                 test_service_gdbus_wrapper.cpp
+                 test_service_hud.cpp
+                 test_service_lens.cpp
+                 test_service_main.cpp
+                 test_service_model.cpp
+                 test_service_panel.cpp)
   target_link_libraries(test-gtest-service unity-shared ${LIBS})
 
 
@@ -98,6 +104,7 @@ if (GTEST_SRC_DIR AND
        test_main_xless.cpp
        test_abstract_interface_generator.cpp
        test_launcher_model.cpp
+       test_glib_dbus_object.cpp
        test_glib_object.cpp
        test_glib_object_utils.cpp
        test_glib_object_utils.h
@@ -168,6 +175,7 @@ if (GTEST_SRC_DIR AND
 # tests that require dbus, must not require X
   add_executable(test-gtest-dbus
                  test_categories.cpp
+                 test_dbus_indicators.cpp
                  test_filesystem_lenses.cpp
                  test_filter.cpp
                  test_gdbus_proxy.cpp
@@ -178,7 +186,6 @@ if (GTEST_SRC_DIR AND
                  test_utils.h
                  test_ratings_filter.cpp
                  test_results.cpp
-                 test_dbus_indicators.cpp
                 )
   target_link_libraries(test-gtest-dbus gtest unity-shared ${LIBS})
   add_test(UnityGTestDBus test-gtest-dbus)
@@ -200,6 +207,8 @@ if (ENABLE_X_SUPPORT)
                  test_device_launcher_section.cpp
                  test_edge_barrier_controller.cpp
                  test_expo_launcher_icon.cpp
+                 test_filter_widgets.cpp
+                 test_glib_dbus_server.cpp
                  test_hud_button.cpp
                  test_hud_controller.cpp
                  test_hud_launcher_icon.cpp
@@ -220,6 +229,7 @@ if (ENABLE_X_SUPPORT)
                  test_panel_menu_view.cpp
                  test_panel_style.cpp
                  test_panel_tray.cpp
+                 test_panel_view.cpp
                  test_places_group.cpp
                  test_previews_application.cpp
                  test_previews_generic.cpp
@@ -247,6 +257,7 @@ if (ENABLE_X_SUPPORT)
                  test_texture_cache.cpp
                  test_text_input.cpp
                  test_thumbnail_generator.cpp
+                 test_tooltip_manager.cpp
                  test_trash_launcher_icon.cpp
                  test_unity_settings.cpp
                  test_unity_window_style.cpp

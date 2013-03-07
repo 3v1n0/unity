@@ -290,6 +290,7 @@ private:
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;
   std::map<CancelActionTarget, CompActionPtr> _escape_actions;
+  std::map<int, unsigned int> windows_for_monitor_;
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;

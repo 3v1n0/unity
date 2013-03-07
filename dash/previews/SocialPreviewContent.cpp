@@ -223,8 +223,7 @@ void SocialPreviewContent::DrawBubble(cairo_t* cr,
 
   cairo_set_line_width(cr, line_width);
 
-  bool odd = true;
-  odd = line_width != double((int)line_width);
+  bool odd = line_width != double((int)line_width);
 
   // top-left, right of the corner
   cairo_move_to(cr, _align (x + radius, odd), _align (y, odd));

@@ -43,6 +43,8 @@ PointerBarrierWrapper::PointerBarrierWrapper()
   , max_velocity_multiplier(1.0f)
   , direction(BOTH)
   , event_base_(0)
+  , last_event_(0)
+  , first_event_(false)
   , barrier(0)
   , smoothing_count_(0)
   , smoothing_accum_(0)
@@ -114,12 +116,22 @@ void PointerBarrierWrapper::EmitCurrentData(int event_id, int x, int y)
     return;
 
   int velocity = std::min<int>(600 * max_velocity_multiplier, smoothing_accum_ / smoothing_count_);
-  auto event = std::make_shared<BarrierEvent>(x, y, velocity, event_id);
-
-  barrier_event.emit(this, event);
+  SendBarrierEvent(x, y, velocity, event_id);
 
   smoothing_accum_ = 0;
   smoothing_count_ = 0;
+}
+
+void PointerBarrierWrapper::SendBarrierEvent(int x, int y, int velocity, int event_id)
+{
+  auto event = std::make_shared<BarrierEvent>(x, y, velocity, event_id);
+
+  barrier_event.emit(this, event);
+}
+
+bool PointerBarrierWrapper::IsFirstEvent() const
+{
+  return first_event_;
 }
 
 bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
@@ -138,9 +150,9 @@ bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
         /* If the barrier is released, just emit the current event without
          * waiting, so there won't be any delay on releasing the barrier. */
         smoothing_timeout_.reset();
-        auto event = std::make_shared<BarrierEvent>(notify_event->x, notify_event->y,
-                                                    notify_event->velocity, notify_event->event_id);
-        barrier_event.emit(this, event);
+
+        SendBarrierEvent(notify_event->x, notify_event->y,
+                         notify_event->velocity, notify_event->event_id);
       }
       else if (!smoothing_timeout_)
       {
@@ -148,15 +160,24 @@ bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
         int y = notify_event->y;
         int event = notify_event->event_id;
 
-        auto smoothing_cb = [&, event, x, y] ()
+        // If we are a new event, don't delay sending the first event
+        if (last_event_ != event)
         {
+          first_event_ = true;
+          last_event_ = event;
+
+          SendBarrierEvent(notify_event->x, notify_event->y,
+                           notify_event->velocity, notify_event->event_id);
+
+          first_event_ = false;
+        }
+
+        smoothing_timeout_.reset(new glib::Timeout(smoothing, [this, event, x, y] () {
           EmitCurrentData(event, x, y);
 
           smoothing_timeout_.reset();
           return false;
-        };
-
-        smoothing_timeout_.reset(new glib::Timeout(smoothing, smoothing_cb));
+        }));
       }
     }
 
