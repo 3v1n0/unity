@@ -29,11 +29,17 @@ namespace session
 
 struct TestSessionButton : testing::Test
 {
-  TestSessionButton()
-    : button("ButtonLabel", "hibernate")
-  {}
+  struct ButtonWrap : Button
+  {
+    ButtonWrap() : Button("ButtonLabel", "hibernate") {}
 
-  Button button;
+    using Button::image_view_;
+    using Button::highlight_tex_;
+    using Button::normal_tex_;
+    using Button::label_view_;
+  };
+
+  ButtonWrap button;
 };
 
 TEST_F(TestSessionButton, Construct)
@@ -45,14 +51,27 @@ TEST_F(TestSessionButton, Construct)
 TEST_F(TestSessionButton, HighlightUpdatesTextures)
 {
   button.highlighted = true;
-  EXPECT_EQ(button.image_view_->texture(), button_->highlight_tex_);
+  EXPECT_EQ(button.image_view_->texture(), button.highlight_tex_);
+}
+
+TEST_F(TestSessionButton, HighlightShowsText)
+{
+  button.highlighted = true;
+  EXPECT_NE(button.label_view_->GetTextColor(), nux::color::Transparent);
 }
 
 TEST_F(TestSessionButton, UnHighlightUpdatesTextures)
 {
   button.highlighted = true;
   button.highlighted = false;
-  EXPECT_EQ(button.image_view_->texture(), button_->normal_tex_);
+  EXPECT_EQ(button.image_view_->texture(), button.normal_tex_);
+}
+
+TEST_F(TestSessionButton, UnHighlightHidesText)
+{
+  button.highlighted = true;
+  button.highlighted = false;
+  EXPECT_EQ(button.label_view_->GetTextColor(), nux::color::Transparent);
 }
 
 TEST_F(TestSessionButton, MouseEnterHighlights)
