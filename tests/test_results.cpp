@@ -19,7 +19,7 @@ static const unsigned int n_rows = 200;
 
 static void WaitForSynchronize(Results& model)
 {
-  ::Utils::WaitForModelSynchronize<Result>(model, n_rows);
+  Utils::WaitUntil([&model] { return model.count == n_rows; });
 }
 
 TEST(TestResults, TestConstruction)

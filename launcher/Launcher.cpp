@@ -101,7 +101,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(Launcher);
 
 const int Launcher::Launcher::ANIM_DURATION_SHORT = 125;
 
-Launcher::Launcher(nux::BaseWindow* parent,
+Launcher::Launcher(MockableBaseWindow* parent,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
 #ifdef USE_X11
@@ -286,6 +286,21 @@ void Launcher::SetStateMouseOverLauncher(bool over_launcher)
   _hide_machine.SetQuirk(LauncherHideMachine::MOUSE_OVER_LAUNCHER, over_launcher);
   _hide_machine.SetQuirk(LauncherHideMachine::REVEAL_PRESSURE_PASS, false);
   _hover_machine.SetQuirk(LauncherHoverMachine::MOUSE_OVER_LAUNCHER, over_launcher);
+  tooltip_manager_.SetHover(over_launcher);
+}
+
+void Launcher::SetIconUnderMouse(AbstractLauncherIcon::Ptr const& icon)
+{
+  if (_icon_under_mouse == icon)
+    return;
+
+  if (_icon_under_mouse)
+    _icon_under_mouse->mouse_leave.emit(monitor);
+  if (icon)
+    icon->mouse_enter.emit(monitor);
+
+  _icon_under_mouse = icon;
+  tooltip_manager_.SetIcon(icon);
 }
 
 bool Launcher::MouseBeyondDragThreshold() const
@@ -1210,8 +1225,9 @@ void Launcher::OnOverlayShown(GVariant* data)
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
+  int width, height;
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
-                &overlay_identity, &can_maximise, &overlay_monitor);
+                &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
   std::string identity(overlay_identity.Str());
 
   LOG_DEBUG(logger) << "Overlay shown: " << identity
@@ -1251,8 +1267,9 @@ void Launcher::OnOverlayHidden(GVariant* data)
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
+  int width, height;
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
-                &overlay_identity, &can_maximise, &overlay_monitor);
+                &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
 
   std::string identity = overlay_identity.Str();
 
@@ -1316,7 +1333,8 @@ void Launcher::SetHidden(bool hide_launcher)
 
   TimeUtil::SetTimeStruct(&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
 
-  _parent->EnableInputWindow(!hide_launcher, launcher::window_title, false, false);
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
+    _parent->EnableInputWindow(!hide_launcher, launcher::window_title, false, false);
 
   if (!hide_launcher && GetActionState() == ACTION_DRAG_EXTERNAL)
     DndReset();
@@ -1600,8 +1618,7 @@ void Launcher::OnIconRemoved(AbstractLauncherIcon::Ptr const& icon)
   if (icon->needs_redraw_connection.connected())
     icon->needs_redraw_connection.disconnect();
 
-  if (icon == _icon_under_mouse)
-    _icon_under_mouse = nullptr;
+  SetIconUnderMouse(AbstractLauncherIcon::Ptr());
   if (icon == _icon_mouse_down)
     _icon_mouse_down = nullptr;
   if (icon == _drag_icon)
@@ -1920,11 +1937,7 @@ bool Launcher::StartIconDragTimeout(int x, int y)
   // if we are still waiting…
   if (GetActionState() == ACTION_NONE)
   {
-    if (_icon_under_mouse)
-    {
-      _icon_under_mouse->mouse_leave.emit(monitor);
-      _icon_under_mouse = nullptr;
-    }
+    SetIconUnderMouse(AbstractLauncherIcon::Ptr());
     _initial_drag_animation = true;
     StartIconDragRequest(x, y);
   }
@@ -2163,11 +2176,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
       GetActionState() == ACTION_NONE)
     return;
 
-  if (_icon_under_mouse)
-  {
-    _icon_under_mouse->mouse_leave.emit(monitor);
-    _icon_under_mouse = nullptr;
-  }
+  SetIconUnderMouse(AbstractLauncherIcon::Ptr());
 
   if (GetActionState() == ACTION_NONE)
   {
@@ -2219,6 +2228,7 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
 void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
   SetMousePosition(x, y);
+  tooltip_manager_.MouseMoved();
 
   if (!_hidden)
     UpdateChangeInMousePosition(dx, dy);
@@ -2367,18 +2377,7 @@ void Launcher::EventLogic()
     launcher_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
   }
 
-
-  if (_icon_under_mouse && (_icon_under_mouse != launcher_icon))
-  {
-    _icon_under_mouse->mouse_leave.emit(monitor);
-    _icon_under_mouse = nullptr;
-  }
-
-  if (launcher_icon && (_icon_under_mouse != launcher_icon))
-  {
-    launcher_icon->mouse_enter.emit(monitor);
-    _icon_under_mouse = launcher_icon;
-  }
+  SetIconUnderMouse(launcher_icon);
 }
 
 void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -2393,6 +2392,7 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
     sources_.AddTimeout(START_DRAGICON_DURATION, cb_func, START_DRAGICON_TIMEOUT);
 
     launcher_icon->mouse_down.emit(nux::GetEventButton(button_flags), monitor, key_flags);
+    tooltip_manager_.IconClicked();
   }
 }
 

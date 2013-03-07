@@ -67,6 +67,8 @@ protected:
   void AddProperties(GVariantBuilder* builder);
 
 private:
+  friend class TestUnityWindowView;
+
   void OnClosableChanged(bool closable);
   void DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo);
 

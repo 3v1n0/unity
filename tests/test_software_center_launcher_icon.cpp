@@ -124,7 +124,7 @@ TEST_F(TestSoftwareCenterLauncherIcon, Animate)
 
   Settings settings;
   panel::Style panel;
-  nux::ObjectPtr<nux::BaseWindow> win(new nux::BaseWindow(""));
+  nux::ObjectPtr<MockableBaseWindow> win(new MockableBaseWindow(""));
   nux::ObjectPtr<Launcher> launcher(new Launcher(win.GetPointer()));
   launcher->options = Options::Ptr(new Options);
   launcher->SetModel(LauncherModel::Ptr(new LauncherModel));

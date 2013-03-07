@@ -135,6 +135,7 @@ public:
   nux::Property<Position> position;
   nux::Property<bool> removed;
 
+  virtual void ShowTooltip() = 0;
   virtual void HideTooltip() = 0;
 
   virtual void    SetShortcut(guint64 shortcut) = 0;

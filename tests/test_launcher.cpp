@@ -62,7 +62,7 @@ public:
   class MockLauncher : public Launcher
   {
   public:
-    MockLauncher(nux::BaseWindow* parent)
+    MockLauncher(MockableBaseWindow* parent)
       : Launcher(parent)
     {}
 
@@ -119,7 +119,7 @@ public:
   };
 
   TestLauncher()
-    : parent_window_(new nux::BaseWindow("TestLauncherWindow"))
+    : parent_window_(new MockableBaseWindow("TestLauncherWindow"))
     , model_(new LauncherModel)
     , options_(new Options)
     , launcher_(new MockLauncher(parent_window_.GetPointer()))
@@ -152,7 +152,7 @@ public:
   }
 
   MockUScreen uscreen;
-  nux::ObjectPtr<nux::BaseWindow> parent_window_;
+  nux::ObjectPtr<MockableBaseWindow> parent_window_;
   Settings settings;
   panel::Style panel_style;
   LauncherModel::Ptr model_;
