@@ -75,7 +75,8 @@ public:
             GDBusCallFlags flags,
             int timeout_msec);
 
-  void Connect(string const& signal_name, ReplyCallback callback);
+  void Connect(string const& signal_name, ReplyCallback const& callback);
+  void DisconnectSignal(string const& signal_name);
   bool IsConnected();
 
   void OnProxyNameOwnerChanged(GDBusProxy*, GParamSpec*);
@@ -254,8 +255,13 @@ void DBusProxy::Impl::OnProxySignal(GDBusProxy* proxy,
                     << "SignalName: " << signal_name << " "
                     << "ParameterType: " << g_variant_get_type_string(parameters);
 
-  for (ReplyCallback callback: handlers_[signal_name])
-    callback(parameters);
+  auto handler_it = handlers_.find(signal_name);
+
+  if (handler_it != handlers_.end())
+  {
+    for (ReplyCallback const& callback : handler_it->second)
+      callback(parameters);
+  }
 }
 
 void DBusProxy::Impl::WaitForProxy(GCancellable* cancellable,
@@ -387,10 +393,22 @@ void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointe
     data->callback(result, error);
 }
 
-void DBusProxy::Impl::Connect(std::string const& signal_name, ReplyCallback callback)
+void DBusProxy::Impl::Connect(std::string const& signal_name, ReplyCallback const& callback)
 {
   if (callback)
     handlers_[signal_name].push_back(callback);
+}
+
+void DBusProxy::Impl::DisconnectSignal(std::string const& signal_name)
+{
+  if (signal_name.empty())
+  {
+    handlers_.clear();
+  }
+  else
+  {
+    handlers_.erase(signal_name);
+  }
 }
 
 DBusProxy::DBusProxy(string const& name,
@@ -426,9 +444,14 @@ void DBusProxy::CallBegin(std::string const& method_name,
               timeout_msec);
 }
 
-void DBusProxy::Connect(std::string const& signal_name, ReplyCallback callback)
+void DBusProxy::Connect(std::string const& signal_name, ReplyCallback const& callback)
 {
   pimpl->Connect(signal_name, callback);
+}
+
+void DBusProxy::DisconnectSignal(std::string const& signal_name)
+{
+  pimpl->DisconnectSignal(signal_name);
 }
 
 bool DBusProxy::IsConnected()
