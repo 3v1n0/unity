@@ -195,5 +195,36 @@ TEST_F(TestGDBusProxy, TestMethodCall)
   EXPECT_EQ("TestStringTestString", call_return);
 }
 
+TEST_F(TestGDBusProxy, TestDisconnectSignal)
+{
+  bool got_signal = false;
+  proxy.Connect("TestSignal", [&got_signal] (GVariant*) { got_signal = true; });
+  proxy.Call("TestMethod", g_variant_new("(s)", "Signal!"));
+  Utils::WaitUntil(got_signal);
+  ASSERT_TRUE(got_signal);
+
+  got_signal = false;
+  proxy.DisconnectSignal("TestSignal");
+  proxy.Call("TestMethod", g_variant_new("(s)", "NewSignal!"));
+
+  Utils::WaitForTimeoutMSec(50);
+  EXPECT_FALSE(got_signal);
+}
+
+TEST_F(TestGDBusProxy, TestDisconnectSignalAll)
+{
+  bool got_signal = false;
+  proxy.Connect("TestSignal", [&got_signal] (GVariant*) { got_signal = true; });
+  proxy.Call("TestMethod", g_variant_new("(s)", "Signal!"));
+  Utils::WaitUntil(got_signal);
+  ASSERT_TRUE(got_signal);
+
+  got_signal = false;
+  proxy.DisconnectSignal();
+  proxy.Call("TestMethod", g_variant_new("(s)", "NewSignal!"));
+
+  Utils::WaitForTimeoutMSec(50);
+  EXPECT_FALSE(got_signal);
+}
 
 }
