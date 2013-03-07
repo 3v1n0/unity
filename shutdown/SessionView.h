@@ -63,6 +63,7 @@ protected:
 
   // Introspectable methods
   std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
 private:
   friend class TestSessionView;

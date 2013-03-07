@@ -22,6 +22,7 @@
 
 #include <Nux/VLayout.h>
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/Variant.h>
 #include <glib/gi18n-lib.h>
 
 namespace unity
@@ -158,6 +159,7 @@ void View::UpdateText()
 
 void View::Populate()
 {
+  debug::Introspectable::RemoveAllChildren();
   buttons_layout_->Clear();
 
   if (mode() == Mode::LOGOUT)
@@ -210,6 +212,7 @@ void View::AddButton(Button* button)
 {
   button->activated.connect([this] {request_hide.emit();});
   buttons_layout_->AddView(button);
+  debug::Introspectable::AddChild(button);
 
   // This resets back the keyboard focus to the view when a button is unselected
   button->highlighted.changed.connect([this] (bool value) {
@@ -301,6 +304,16 @@ nux::Area* View::KeyNavIteration(nux::KeyNavDirection direction)
 std::string View::GetName() const
 {
   return "SessionView";
+}
+
+void View::AddProperties(GVariantBuilder* builder)
+{
+  UnityWindowView::AddProperties(builder);
+  variant::BuilderWrapper(builder)
+    .add("mode", static_cast<int>(mode()))
+    .add("inhibitors", have_inhibitors())
+    .add("title",title_->GetText())
+    .add("subtitle",subtitle_->GetText());
 }
 
 } // namespace session

@@ -139,7 +139,7 @@ void Controller::ConstructView()
 {
   view_ = View::Ptr(new View(manager_));
   view_->background_color = bg_color_;
-  AddChild(view_.GetPointer());
+  debug::Introspectable::AddChild(view_.GetPointer());
 
   auto layout = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout->SetVerticalExternalMargin(0);
@@ -215,13 +215,13 @@ bool Controller::Visible() const
 //
 std::string Controller::GetName() const
 {
-  return "ShutdownController";
+  return "SessionController";
 }
 
 void Controller::AddProperties(GVariantBuilder* builder)
 {
-  unity::variant::BuilderWrapper(builder)
-  .add("visible", Visible());
+  variant::BuilderWrapper(builder)
+    .add("visible", Visible());
 }
 
 } // namespace session

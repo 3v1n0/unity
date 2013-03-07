@@ -25,6 +25,7 @@
 #include <NuxCore/Property.h>
 
 #include "unity-shared/IconTexture.h"
+#include "unity-shared/Introspectable.h"
 #include "unity-shared/StaticCairoText.h"
 
 namespace unity
@@ -32,7 +33,7 @@ namespace unity
 namespace session
 {
 
-class Button : public nux::View
+class Button : public nux::View, public debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(Button, nux::View);
 public:
@@ -45,6 +46,10 @@ public:
 
 protected:
   void Draw(nux::GraphicsEngine&, bool force);
+
+  // Introspectable methods
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
 private:
   friend class TestSessionButton;

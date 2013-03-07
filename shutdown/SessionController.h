@@ -30,7 +30,6 @@
 #include <UnityCore/SessionManager.h>
 
 #include "SessionView.h"
-#include "unity-shared/Introspectable.h"
 #include "unity-shared/UBusWrapper.h"
 
 namespace unity

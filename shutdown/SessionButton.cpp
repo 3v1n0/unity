@@ -21,6 +21,7 @@
 #include "SessionButton.h"
 
 #include <Nux/VLayout.h>
+#include <UnityCore/Variant.h>
 
 
 namespace unity
@@ -82,6 +83,22 @@ Button::Button(std::string const& label, std::string const& texture_name, NUX_FI
 void Button::Draw(nux::GraphicsEngine& ctx, bool force)
 {
   GetLayout()->ProcessDraw(ctx, force);
+}
+
+//
+// Introspectable methods
+//
+std::string Button::GetName() const
+{
+  return "SessionButton";
+}
+
+void Button::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper(builder)
+    .add("highlighted", highlighted())
+    .add("label", label())
+    .add("label_visible", label_view_->GetTextColor() != nux::color::Transparent);
 }
 
 } // namespace session
