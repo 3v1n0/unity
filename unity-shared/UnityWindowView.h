@@ -35,7 +35,7 @@ namespace ui {
 
 class UnityWindowView : public debug::Introspectable, public nux::View
 {
-  NUX_DECLARE_OBJECT_TYPE(UnityWindowView, nux::View)  
+  NUX_DECLARE_OBJECT_TYPE(UnityWindowView, nux::View)
 public:
   nux::RWProperty<bool> live_background;
   nux::Property<nux::Color> background_color;
@@ -67,6 +67,8 @@ protected:
   void AddProperties(GVariantBuilder* builder);
 
 private:
+  friend class TestUnityWindowView;
+
   void OnClosableChanged(bool closable);
   void DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo);
 
