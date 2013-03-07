@@ -20,6 +20,7 @@
 #include <gmock/gmock.h>
 #include "UnityWindowView.h"
 #include "UnitySettings.h"
+#include "WindowManager.h"
 #include "test_utils.h"
 
 using namespace unity;
@@ -39,6 +40,7 @@ struct TestUnityWindowView : testing::Test
 
     MOCK_METHOD0(QueueDraw, void());
 
+    using UnityWindowView::FindKeyFocusArea;
     using UnityWindowView::internal_layout_;
     using UnityWindowView::bg_helper_;
     using UnityWindowView::close_button_;
@@ -114,6 +116,37 @@ TEST_F(TestUnityWindowView, CloseButtonClicksRequestsClose)
   EXPECT_TRUE(close_requested);
 }
 
+TEST_F(TestUnityWindowView, WindowManagerCloseKeyRequestsClose)
+{
+  view.closable = true;
+  ASSERT_NE(view.close_button_, nullptr);
+
+  auto& close_key = WindowManager::Default().close_window_key;
+  close_key = std::make_pair(nux::KEY_MODIFIER_ALT, g_random_int());
+
+  bool close_requested = false;
+  view.request_close.connect([&close_requested] { close_requested = true; });
+
+  view.FindKeyFocusArea(nux::NUX_KEYDOWN, close_key().second, close_key().first);
+  EXPECT_TRUE(close_requested);
+}
+
+TEST_F(TestUnityWindowView, WindowManagerCloseKeyRequestsCloseWithCaps)
+{
+  view.closable = true;
+  ASSERT_NE(view.close_button_, nullptr);
+
+  auto& close_key = WindowManager::Default().close_window_key;
+  close_key = std::make_pair(nux::KEY_MODIFIER_ALT, g_random_int());
+
+  bool close_requested = false;
+  view.request_close.connect([&close_requested] { close_requested = true; });
+
+  unsigned sent_modifier = close_key().second|nux::KEY_MODIFIER_CAPS_LOCK;
+  view.FindKeyFocusArea(nux::NUX_KEYDOWN, sent_modifier, close_key().first);
+  EXPECT_TRUE(close_requested);
+}
+
 TEST_F(TestUnityWindowView, QueueDrawsOnCloseTextureUpdate)
 {
   view.closable = true;
@@ -122,6 +155,7 @@ TEST_F(TestUnityWindowView, QueueDrawsOnCloseTextureUpdate)
   EXPECT_CALL(view, QueueDraw());
   view.close_button_->texture_updated(nux::ObjectPtr<nux::BaseTexture>());
 }
+
 
 } // ui
 } // unity
