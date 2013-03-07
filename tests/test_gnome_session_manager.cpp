@@ -504,33 +504,6 @@ TEST_F(TestGnomeSessionManager, LogoutRequested)
   EXPECT_TRUE(cancelled);
 }
 
-TEST_F(TestGnomeSessionManager, ImmediateLogoutRequested)
-{
-  EnableInteractiveShutdown(false);
-  bool logout_requested = false;
-  bool confirmed = false;
-  bool closed = false;
-
-  manager->logout_requested.connect([&logout_requested] (bool inhibitors) {
-    logout_requested = true;
-    EXPECT_FALSE(inhibitors);
-  });
-
-  shell_proxy_->Connect("ConfirmedLogout", [&confirmed] (GVariant*) { confirmed = true; });
-  shell_proxy_->Connect("Closed", [&closed] (GVariant*) { closed = true; });
-
-  shell_proxy_->Call("Open", g_variant_new("(uuuao)", 0, 0, 0, nullptr));
-
-  Utils::WaitForTimeoutMSec(100);
-  EXPECT_FALSE(logout_requested);
-
-  Utils::WaitUntilMSec(confirmed);
-  EXPECT_TRUE(confirmed);
-
-  Utils::WaitUntilMSec(closed);
-  EXPECT_TRUE(closed);
-}
-
 struct InteractiveMode : TestGnomeSessionManager, testing::WithParamInterface<bool> {};
 INSTANTIATE_TEST_CASE_P(TestGnomeSessionManager, InteractiveMode, testing::Bool());
 
@@ -558,6 +531,33 @@ TEST_P(/*TestGnomeSessionManager*/InteractiveMode, LogoutRequestedInhibitors)
 
   Utils::WaitForTimeoutMSec(10);
   EXPECT_FALSE(cancelled);
+}
+
+TEST_F(TestGnomeSessionManager, ImmediateLogout)
+{
+  EnableInteractiveShutdown(false);
+  bool logout_requested = false;
+  bool confirmed = false;
+  bool closed = false;
+
+  manager->logout_requested.connect([&logout_requested] (bool inhibitors) {
+    logout_requested = true;
+    EXPECT_FALSE(inhibitors);
+  });
+
+  shell_proxy_->Connect("ConfirmedLogout", [&confirmed] (GVariant*) { confirmed = true; });
+  shell_proxy_->Connect("Closed", [&closed] (GVariant*) { closed = true; });
+
+  shell_proxy_->Call("Open", g_variant_new("(uuuao)", 0, 0, 0, nullptr));
+
+  Utils::WaitForTimeoutMSec(100);
+  EXPECT_FALSE(logout_requested);
+
+  Utils::WaitUntilMSec(confirmed);
+  EXPECT_TRUE(confirmed);
+
+  Utils::WaitUntilMSec(closed);
+  EXPECT_TRUE(closed);
 }
 
 TEST_F(TestGnomeSessionManager, ShutdownRequested)
@@ -605,6 +605,33 @@ TEST_P(/*TestGnomeSessionManager*/InteractiveMode, ShutdownRequestedInhibitors)
   EXPECT_FALSE(cancelled);
 }
 
+TEST_F(TestGnomeSessionManager, ImmediateShutdown)
+{
+  EnableInteractiveShutdown(false);
+  bool shutdown_requested = false;
+  bool confirmed = false;
+  bool closed = false;
+
+  manager->shutdown_requested.connect([&shutdown_requested] (bool inhibitors) {
+    shutdown_requested = true;
+    EXPECT_FALSE(inhibitors);
+  });
+
+  shell_proxy_->Connect("ConfirmedShutdown", [&confirmed] (GVariant*) { confirmed = true; });
+  shell_proxy_->Connect("Closed", [&closed] (GVariant*) { closed = true; });
+
+  shell_proxy_->Call("Open", g_variant_new("(uuuao)", 1, 0, 0, nullptr));
+
+  Utils::WaitForTimeoutMSec(100);
+  EXPECT_FALSE(shutdown_requested);
+
+  Utils::WaitUntilMSec(confirmed);
+  EXPECT_TRUE(confirmed);
+
+  Utils::WaitUntilMSec(closed);
+  EXPECT_TRUE(closed);
+}
+
 TEST_F(TestGnomeSessionManager, RebootRequested)
 {
   bool reboot_requested = false;
@@ -648,6 +675,33 @@ TEST_P(/*TestGnomeSessionManager*/InteractiveMode, RebootRequestedInhibitors)
 
   Utils::WaitForTimeoutMSec(10);
   EXPECT_FALSE(cancelled);
+}
+
+TEST_F(TestGnomeSessionManager, ImmediateReboot)
+{
+  EnableInteractiveShutdown(false);
+  bool reboot_requested = false;
+  bool confirmed = false;
+  bool closed = false;
+
+  manager->reboot_requested.connect([&reboot_requested] (bool inhibitors) {
+    reboot_requested = true;
+    EXPECT_FALSE(inhibitors);
+  });
+
+  shell_proxy_->Connect("ConfirmedReboot", [&confirmed] (GVariant*) { confirmed = true; });
+  shell_proxy_->Connect("Closed", [&closed] (GVariant*) { closed = true; });
+
+  shell_proxy_->Call("Open", g_variant_new("(uuuao)", 2, 0, 0, nullptr));
+
+  Utils::WaitForTimeoutMSec(100);
+  EXPECT_FALSE(reboot_requested);
+
+  Utils::WaitUntilMSec(confirmed);
+  EXPECT_TRUE(confirmed);
+
+  Utils::WaitUntilMSec(closed);
+  EXPECT_TRUE(closed);
 }
 
 TEST_F(TestGnomeSessionManager, CancelRequested)
