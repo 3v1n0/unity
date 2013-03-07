@@ -42,5 +42,60 @@ TEST_F(TestSessionButton, Construct)
   EXPECT_EQ(button.label(), "ButtonLabel");
 }
 
+TEST_F(TestSessionButton, HighlightUpdatesTextures)
+{
+  button.highlighted = true;
+  EXPECT_EQ(button.image_view_->texture(), button_->highlight_tex_);
+}
+
+TEST_F(TestSessionButton, UnHighlightUpdatesTextures)
+{
+  button.highlighted = true;
+  button.highlighted = false;
+  EXPECT_EQ(button.image_view_->texture(), button_->normal_tex_);
+}
+
+TEST_F(TestSessionButton, MouseEnterHighlights)
+{
+  button.mouse_enter.emit(0, 0, 0, 0);
+  EXPECT_TRUE(button.highlighted());
+}
+
+TEST_F(TestSessionButton, MouseLeaveUnhighlights)
+{
+  button.highlighted = true;
+  button.mouse_leave.emit(0, 0, 0, 0);
+  EXPECT_FALSE(button.highlighted());
+}
+
+TEST_F(TestSessionButton, MouseClickActivatesIt)
+{
+  bool activated = false;
+  button.activated.connect([&activated] { activated = true; });
+  button.mouse_click.emit(0, 0, 0, 0);
+  EXPECT_TRUE(activated);
+}
+
+TEST_F(TestSessionButton, KeyFocusBeginHighlights)
+{
+  button.begin_key_focus.emit();
+  EXPECT_TRUE(button.highlighted());
+}
+
+TEST_F(TestSessionButton, KeyFocusEndUnhighlights)
+{
+  button.highlighted = true;
+  button.end_key_focus.emit();
+  EXPECT_FALSE(button.highlighted());
+}
+
+TEST_F(TestSessionButton, KeyFocusActivatesIt)
+{
+  bool activated = false;
+  button.activated.connect([&activated] { activated = true; });
+  button.key_nav_focus_activate.emit(&button);
+  EXPECT_TRUE(activated);
+}
+
 } // session
 } // unity
