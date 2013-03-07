@@ -194,6 +194,7 @@ TEST_F(TestSessionView, ButtonsActivateRequestsHide)
   view.request_hide.connect([&request_hide] { request_hide = true; });
 
   auto button = view.GetButtonByLabel("Lock");
+  ASSERT_NE(button, nullptr);
   button->activated.emit();
 
   EXPECT_TRUE(request_hide);
@@ -202,12 +203,73 @@ TEST_F(TestSessionView, ButtonsActivateRequestsHide)
 TEST_F(TestSessionView, ButtonsActivateDeselectButton)
 {
   auto button = view.GetButtonByLabel("Lock");
+  ASSERT_NE(button, nullptr);
   button->highlighted = true;
   button->activated.emit();
 
   EXPECT_FALSE(button->highlighted());
 }
 
+TEST_F(TestSessionView, LockButtonActivateLocks)
+{
+  EXPECT_CALL(*manager, LockScreen());
+  auto button = view.GetButtonByLabel("Lock");
+  ASSERT_NE(button, nullptr);
+  button->activated.emit();
+}
+
+TEST_F(TestSessionView, LogoutButtonActivateLogouts)
+{
+  view.mode = View::Mode::LOGOUT;
+  EXPECT_CALL(*manager, Logout());
+  auto button = view.GetButtonByLabel("Logout");
+  ASSERT_NE(button, nullptr);
+  button->activated.emit();
+}
+
+TEST_F(TestSessionView, SuspendButtonActivateSuspends)
+{
+  ON_CALL(*manager, CanSuspend()).WillByDefault(testing::Return(true));
+  view.mode.changed.emit(View::Mode::FULL);
+
+  EXPECT_CALL(*manager, Suspend());
+  auto button = view.GetButtonByLabel("Suspend");
+  ASSERT_NE(button, nullptr);
+  button->activated.emit();
+}
+
+TEST_F(TestSessionView, HibernateButtonActivateHibernates)
+{
+  ON_CALL(*manager, CanHibernate()).WillByDefault(testing::Return(true));
+  view.mode.changed.emit(View::Mode::FULL);
+
+  EXPECT_CALL(*manager, Hibernate());
+  auto button = view.GetButtonByLabel("Hibernate");
+  ASSERT_NE(button, nullptr);
+  button->activated.emit();
+}
+
+TEST_F(TestSessionView, ShutdownButtonActivateShutsdown)
+{
+  ON_CALL(*manager, CanShutdown()).WillByDefault(testing::Return(true));
+  view.mode = View::Mode::SHUTDOWN;
+
+  EXPECT_CALL(*manager, Shutdown());
+  auto button = view.GetButtonByLabel("Shutdown");
+  ASSERT_NE(button, nullptr);
+  button->activated.emit();
+}
+
+TEST_F(TestSessionView, RebootButtonActivateReboots)
+{
+  ON_CALL(*manager, CanShutdown()).WillByDefault(testing::Return(true));
+  view.mode = View::Mode::SHUTDOWN;
+
+  EXPECT_CALL(*manager, Reboot());
+  auto button = view.GetButtonByLabel("Restart");
+  ASSERT_NE(button, nullptr);
+  button->activated.emit();
+}
 
 } // session
 } // unity
