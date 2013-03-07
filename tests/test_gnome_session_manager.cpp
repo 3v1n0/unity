@@ -152,13 +152,12 @@ struct TestGnomeSessionManager : testing::Test
     });
 
     manager = std::make_shared<MockGnomeSessionManager>();
-
     shell_proxy_ = std::make_shared<DBusProxy>(TEST_SERVER_NAME, SHELL_OBJECT_PATH, SHELL_INTERFACE);
 
     // We need to wait until the session manager has setup its internal values.
-    Utils::WaitUntil(hibernate_called, 3);
-    Utils::WaitUntil(suspend_called, 3);
-    Utils::WaitUntil(shutdown_called, 3);
+    Utils::WaitUntilMSec(hibernate_called);
+    Utils::WaitUntilMSec(suspend_called);
+    Utils::WaitUntilMSec(shutdown_called);
     Utils::WaitForTimeoutMSec(100);
   }
 
@@ -169,7 +168,7 @@ struct TestGnomeSessionManager : testing::Test
     Utils::WaitUntilMSec([] { return console_kit_->IsConnected(); });
     Utils::WaitUntilMSec([] { return screen_saver_->IsConnected(); });
     Utils::WaitUntilMSec([] { return session_manager_->IsConnected(); });
-    Utils::WaitUntil([] { return shell_proxy_->IsConnected();}, true, 3);
+    Utils::WaitUntilMSec([] { return shell_proxy_->IsConnected();});
     ASSERT_TRUE(shell_proxy_->IsConnected());
     EnableInteractiveShutdown(true);
   }
@@ -327,10 +326,10 @@ TEST_F(TestGnomeSessionManager, LockScreen)
 
   manager->LockScreen();
 
-  Utils::WaitUntil(lock_called, 2);
+  Utils::WaitUntilMSec(lock_called);
   EXPECT_TRUE(lock_called);
 
-  Utils::WaitUntil(simulate_activity_called, 2);
+  Utils::WaitUntilMSec(simulate_activity_called);
   EXPECT_TRUE(simulate_activity_called);
 }
 
@@ -350,7 +349,7 @@ TEST_F(TestGnomeSessionManager, Logout)
 
   manager->Logout();
 
-  Utils::WaitUntil(logout_called, 2);
+  Utils::WaitUntilMSec(logout_called);
   EXPECT_TRUE(logout_called);
 }
 
@@ -380,7 +379,7 @@ TEST_F(TestGnomeSessionManager, LogoutFallback)
 
   manager->Logout();
 
-  Utils::WaitUntil(logout_called, 2);
+  Utils::WaitUntilMSec(logout_called);
   EXPECT_TRUE(logout_called);
 }
 
@@ -397,7 +396,7 @@ TEST_F(TestGnomeSessionManager, Reboot)
 
   manager->Reboot();
 
-  Utils::WaitUntil(reboot_called, 2);
+  Utils::WaitUntilMSec(reboot_called);
   EXPECT_TRUE(reboot_called);
 }
 
@@ -417,7 +416,7 @@ TEST_F(TestGnomeSessionManager, RebootFallback)
 
   manager->Reboot();
 
-  Utils::WaitUntil(reboot_called, 2);
+  Utils::WaitUntilMSec(reboot_called);
   EXPECT_TRUE(reboot_called);
 }
 
@@ -434,7 +433,7 @@ TEST_F(TestGnomeSessionManager, Shutdown)
 
   manager->Shutdown();
 
-  Utils::WaitUntil(shutdown_called, 2);
+  Utils::WaitUntilMSec(shutdown_called);
   EXPECT_TRUE(shutdown_called);
 }
 
@@ -454,7 +453,7 @@ TEST_F(TestGnomeSessionManager, ShutdownFallback)
 
   manager->Shutdown();
 
-  Utils::WaitUntil(shutdown_called, 2);
+  Utils::WaitUntilMSec(shutdown_called);
   EXPECT_TRUE(shutdown_called);
 }
 
@@ -471,7 +470,7 @@ TEST_F(TestGnomeSessionManager, Suspend)
 
   manager->Suspend();
 
-  Utils::WaitUntil(suspend_called, 2);
+  Utils::WaitUntilMSec(suspend_called);
   EXPECT_TRUE(suspend_called);
 }
 
@@ -488,7 +487,7 @@ TEST_F(TestGnomeSessionManager, Hibernate)
 
   manager->Hibernate();
 
-  Utils::WaitUntil(hibernate_called, 2);
+  Utils::WaitUntilMSec(hibernate_called);
   EXPECT_TRUE(hibernate_called);
 }
 

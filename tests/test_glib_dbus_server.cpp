@@ -265,7 +265,7 @@ struct TestGLibDBusServerInteractions : testing::Test
   void SetUp()
   {
     Utils::WaitUntilMSec([this] { return server->OwnsName(); });
-    Utils::WaitUntil([this] { return proxy->IsConnected();}, true, 3);
+    Utils::WaitUntilMSec([this] { return proxy->IsConnected();});
     ASSERT_TRUE(proxy->IsConnected());
 
     auto const& objects = server->GetObjects();
