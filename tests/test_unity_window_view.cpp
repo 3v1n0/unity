@@ -37,11 +37,15 @@ struct TestUnityWindowView : testing::Test
     void DrawOverlay(nux::GraphicsEngine& ge, bool force, const nux::Geometry& geo) {}
     nux::Geometry GetBackgroundGeometry() { return nux::Geometry(); }
 
+    MOCK_METHOD0(QueueDraw, void());
+
     using UnityWindowView::internal_layout_;
+    using UnityWindowView::bg_helper_;
+    using UnityWindowView::close_button_;
   };
 
   Settings settings;
-  MockUnityWindowView view;
+  testing::NiceMock<MockUnityWindowView> view;
 };
 
 TEST_F(TestUnityWindowView, Construct)
@@ -50,6 +54,73 @@ TEST_F(TestUnityWindowView, Construct)
   EXPECT_NE(view.style(), nullptr);
   EXPECT_FALSE(view.closable());
   EXPECT_EQ(view.internal_layout_, nullptr);
+}
+
+TEST_F(TestUnityWindowView, LiveBackgroundChange)
+{
+  EXPECT_EQ(view.bg_helper_.enabled(), view.live_background());
+
+  view.live_background = true;
+  EXPECT_TRUE(view.bg_helper_.enabled());
+  EXPECT_TRUE(view.live_background());
+
+  view.live_background = false;
+  EXPECT_FALSE(view.bg_helper_.enabled());
+  EXPECT_FALSE(view.live_background());
+}
+
+TEST_F(TestUnityWindowView, Closable)
+{
+  EXPECT_EQ(view.close_button_, nullptr);
+
+  view.closable = true;
+  ASSERT_NE(view.close_button_, nullptr);
+
+  EXPECT_EQ(view.close_button_->texture(), view.style()->GetCloseIcon());
+  EXPECT_EQ(view.close_button_->GetParentObject(), &view);
+
+  int padding = view.style()->GetCloseButtonPadding();
+  EXPECT_EQ(view.close_button_->GetBaseX(), padding);
+  EXPECT_EQ(view.close_button_->GetBaseY(), padding);
+}
+
+TEST_F(TestUnityWindowView, CloseButtonStates)
+{
+  view.closable = true;
+  ASSERT_NE(view.close_button_, nullptr);
+
+  view.close_button_->mouse_enter.emit(0, 0, 0, 0);
+  EXPECT_EQ(view.close_button_->texture(), view.style()->GetCloseIconHighligted());
+
+  view.close_button_->mouse_leave.emit(0, 0, 0, 0);
+  EXPECT_EQ(view.close_button_->texture(), view.style()->GetCloseIcon());
+
+  view.close_button_->mouse_down.emit(0, 0, 0, 0);
+  EXPECT_EQ(view.close_button_->texture(), view.style()->GetCloseIconPressed());
+
+  view.close_button_->mouse_up.emit(0, 0, 0, 0);
+  EXPECT_EQ(view.close_button_->texture(), view.style()->GetCloseIcon());
+}
+
+TEST_F(TestUnityWindowView, CloseButtonClicksRequestsClose)
+{
+  view.closable = true;
+  ASSERT_NE(view.close_button_, nullptr);
+
+  bool close_requested = false;
+  view.request_close.connect([&close_requested] { close_requested = true; });
+
+  view.close_button_->mouse_click.emit(0, 0, 0, 0);
+  EXPECT_TRUE(close_requested);
+}
+
+TEST_F(TestUnityWindowView, QueueDrawsOnCloseTextureUpdate)
+{
+  view.closable = true;
+  ASSERT_NE(view.close_button_, nullptr);
+
+  EXPECT_CALL(view, QueueDraw());
+  view.close_button_->texture_updated(nux::ObjectPtr<nux::BaseTexture>());
 }
 
 } // ui
