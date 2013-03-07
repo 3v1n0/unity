@@ -33,6 +33,8 @@ struct TestSessionButton : testing::Test
   {
     ButtonWrap() : Button("ButtonLabel", "hibernate") {}
 
+    using Button::AcceptKeyNavFocusOnMouseEnter;
+    using Button::AcceptKeyNavFocusOnMouseDown;
     using Button::image_view_;
     using Button::highlight_tex_;
     using Button::normal_tex_;
@@ -46,6 +48,8 @@ TEST_F(TestSessionButton, Construct)
 {
   EXPECT_FALSE(button.highlighted());
   EXPECT_EQ(button.label(), "ButtonLabel");
+  EXPECT_TRUE(button.AcceptKeyNavFocusOnMouseEnter());
+  EXPECT_FALSE(button.AcceptKeyNavFocusOnMouseDown());
 }
 
 TEST_F(TestSessionButton, HighlightUpdatesTextures)
