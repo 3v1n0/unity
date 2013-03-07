@@ -91,9 +91,6 @@ public:
   typedef std::function<void(LocalResult const&, ScopeHandledType, glib::HintsMap const&, glib::Error const&)> ActivateCallback;
   virtual void Activate(LocalResult const& result, uint activate_type, glib::HintsMap const& hints, ActivateCallback const& callback, GCancellable* cancellable) = 0;
 
-  typedef std::function<void(glib::HintsMap const&, glib::Error const&)> UpdatePreviewPropertyCallback;
-  virtual void UpdatePreviewProperty(LocalResult const& result, glib::HintsMap const& hints, UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable) = 0;
-
   virtual Results::Ptr GetResultsForCategory(unsigned category) const = 0;
 };
 

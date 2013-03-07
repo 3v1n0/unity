@@ -94,15 +94,6 @@ public:
     }, "Activate");
   }
 
-  virtual void UpdatePreviewProperty(LocalResult const& result, glib::HintsMap const& hints, UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable)
-  {
-    source_manager.AddIdle([callback, result] (){
-      callback(glib::HintsMap(), glib::Error());
-      return true;
-    }, "UpdatePreviewProperty");
-  }
-
-
   virtual Results::Ptr GetResultsForCategory(unsigned category) const
   {
     return Results::Ptr();

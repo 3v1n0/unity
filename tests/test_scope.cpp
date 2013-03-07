@@ -173,27 +173,6 @@ TEST_F(TestScope, ActivatePreviewAction)
                        [] { return g_strdup("Failed to activate preview action"); });
 }
 
-TEST_F(TestScope, UpdatePreviewProperty)
-{
-  // Auto-connect on preview
-  bool update_preview_property_returned = false;
-  auto update_property_callback = [&update_preview_property_returned] (glib::HintsMap const&, glib::Error const&) {
-    update_preview_property_returned = true;
-  };
-
-  LocalResult result; result.uri = "file:://test";
-  glib::HintsMap hints;
-  hints["test"] = g_variant_new_string("plop");
-  scope_->UpdatePreviewProperty(result,
-                                hints,
-                                update_property_callback,
-                                nullptr);
-
-  Utils::WaitUntilMSec(update_preview_property_returned,
-                       2000,
-                       [] { return g_strdup("Failed to update preview property"); });
-}
-
 TEST_F(TestScope, UpdateSearchCategoryWorkflow)
 {
   bool search_ok = false;

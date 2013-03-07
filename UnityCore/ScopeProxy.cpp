@@ -58,7 +58,6 @@ public:
 
   void Search(std::string const& search_string, glib::HintsMap const& hints, SearchCallback const& callback, GCancellable* cancel);
   void Activate(LocalResult const& result, uint activate_type, glib::HintsMap const& hints, ScopeProxy::ActivateCallback const& callback, GCancellable* cancellable);
-  void UpdatePreviewProperty(LocalResult const& result, glib::HintsMap const& hints, UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable);
 
   bool set_view_type(ScopeViewType const& _view_type)
   {
@@ -148,31 +147,6 @@ private:
     std::unique_ptr<SearchData> data(static_cast<SearchData*>(user_data));
     glib::Error error;
     std::unique_ptr<GHashTable, void(*)(GHashTable*)> hint_ret(unity_protocol_scope_proxy_search_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &error),
-                                         g_hash_table_unref0);
-    if (error && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
-      return;
-
-    glib::HintsMap hints;
-    glib::hintsmap_from_hashtable(hint_ret.get(), hints);
-
-    if (data->callback)
-      data->callback(hints, error);
-  }
-  /////////////////////////////////////
-
-  /////////////////////////////////////
-  // Search Callback
-  struct UpdatePreviewPropertyData
-  {
-    UpdatePreviewPropertyCallback callback;
-  };
-
-  static void OnScopeUpdatePreviewPropertyCallback(GObject *source_object, GAsyncResult *res, gpointer user_data)
-  {
-    std::unique_ptr<UpdatePreviewPropertyData> data(static_cast<UpdatePreviewPropertyData*>(user_data));
-    glib::Error error;
-
-    std::unique_ptr<GHashTable, void(*)(GHashTable*)> hint_ret(unity_protocol_scope_proxy_update_preview_property_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &error),
                                          g_hash_table_unref0);
     if (error && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
       return;
@@ -594,48 +568,6 @@ void ScopeProxy::Impl::Activate(LocalResult const& result, uint activate_type, g
   g_hash_table_unref(hints_table);
 }
 
-void ScopeProxy::Impl::UpdatePreviewProperty(LocalResult const& result, glib::HintsMap const& hints, ScopeProxy::UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable)
-{
-  GCancellable* target_canc = cancellable != NULL ? cancellable : cancel_scope_;
-
-  if (!connected)
-  {
-    if (!proxy_created_)
-      CreateProxy();
-
-    glib::Object<GCancellable> canc(target_canc, glib::AddRef());
-    WaitForProxyConnection(canc, PROXY_CONNECT_TIMEOUT, [this, result, hints, callback, canc] (glib::Error const& err)
-    {
-      if (err)
-      {
-        callback(glib::HintsMap(), err);
-        LOG_WARNING(logger) << "Could not update preview property '" << result.uri
-                            << "' on " << scope_data_->id() << " => " << err;
-      }
-      else
-      {
-        UpdatePreviewProperty(result, hints, callback, canc);
-      }
-    });
-    return;
-  }
-
-  UpdatePreviewPropertyData* data = new UpdatePreviewPropertyData();
-  data->callback = callback;
-
-  GHashTable* hints_table = glib::hashtable_from_hintsmap(hints);
-
-  unity_protocol_scope_proxy_update_preview_property(scope_proxy_,
-                                                     channel().c_str(),
-                                                     result.uri.c_str(),
-                                                     hints_table,
-                                                     target_canc,
-                                                     Impl::OnScopeUpdatePreviewPropertyCallback,
-                                                     data);
-
-  g_hash_table_unref(hints_table);
-}
-
 void ScopeProxy::Impl::OnScopeConnectedChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param)
 {
   bool tmp_scope_proxy_connected = unity_protocol_scope_proxy_get_connected(scope_proxy_);  
@@ -786,11 +718,6 @@ void ScopeProxy::Search(std::string const& search_string, SearchCallback const& 
 void ScopeProxy::Activate(LocalResult const& result, uint activate_type, glib::HintsMap const& hints, ScopeProxy::ActivateCallback const& callback, GCancellable* cancellable)
 {
   pimpl->Activate(result, activate_type, hints, callback, cancellable);
-}
-
-void ScopeProxy::UpdatePreviewProperty(LocalResult const& result, glib::HintsMap const& hints, ScopeProxy::UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable)
-{
-  pimpl->UpdatePreviewProperty(result, hints, callback, cancellable);
 }
 
 Results::Ptr ScopeProxy::GetResultsForCategory(unsigned category) const
