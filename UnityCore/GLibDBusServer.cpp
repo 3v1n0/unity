@@ -98,6 +98,9 @@ struct DBusObject::Impl
           std::string error_name = std::string(interface_name)+".Error.BadReturn";
           std::string error = "Returning invalid value for '"+std::string(method_name)+"' on path '"+std::string(object_path)+"'.";
           g_dbus_method_invocation_return_dbus_error(invocation, error_name.c_str(), error.c_str());
+
+          if (ret)
+            g_variant_unref (ret);
         }
         else
         {
