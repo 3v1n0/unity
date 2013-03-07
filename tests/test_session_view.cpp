@@ -72,6 +72,11 @@ struct TestSessionView : testing::Test
     }
   };
 
+  void TearDown()
+  {
+    nux::GetWindowCompositor().SetKeyFocusArea(nullptr);
+  }
+
   unity::Settings settings;
   MockManager::Ptr manager;
   ViewWrap view;

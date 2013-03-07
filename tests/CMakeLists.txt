@@ -245,6 +245,7 @@ if (ENABLE_X_SUPPORT)
                  test_resultviewgrid.cpp
                  test_searchbar.cpp
                  test_session_button.cpp
+                 test_session_controller.cpp
                  test_session_view.cpp
                  test_shortcut_controller.cpp
                  test_shortcut_modeller_compiz.cpp

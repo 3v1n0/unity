@@ -208,6 +208,7 @@ void Controller::CloseWindow()
   view_window_->EnableInputWindow(false);
   view_->live_background = false;
 
+  nux::GetWindowCompositor().SetKeyFocusArea(nullptr);
   WindowManager::Default().RestoreInputFocus();
 }
 
