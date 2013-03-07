@@ -2,7 +2,7 @@
 DBusName=com.canonical.Unity.Test
 DBusPath=/com/canonical/unity/scope/testscope3
 Icon=/usr/share/unity/6/icon-sub3.svg
-RequiredMetadata=bid[s];
+RequiredMetadata=
 OptionalMetadata=
 Keywords=misc;
 Type=varia
