@@ -40,6 +40,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(Button);
 Button::Button(std::string const& label, std::string const& texture_name, NUX_FILE_LINE_DECL)
   : nux::View(NUX_FILE_LINE_PARAM)
   , highlighted(false)
+  , label([this] { return label_view_->GetText(); })
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(true);

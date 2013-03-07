@@ -21,7 +21,6 @@
 #include "UnityWindowView.h"
 #include "UnitySettings.h"
 #include "WindowManager.h"
-#include "test_utils.h"
 #include <Nux/VLayout.h>
 
 using namespace unity;

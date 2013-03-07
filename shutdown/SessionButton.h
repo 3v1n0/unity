@@ -39,6 +39,7 @@ public:
   Button(std::string const& label, std::string const& texture_name, NUX_FILE_LINE_PROTO);
 
   nux::Property<bool> highlighted;
+  nux::ROProperty<std::string> label;
 
   sigc::signal<void> activated;
 
@@ -46,6 +47,8 @@ protected:
   void Draw(nux::GraphicsEngine&, bool force);
 
 private:
+  friend class TestSessionButton;
+
   IconTexture* image_view_;
   StaticCairoText* label_view_;
   nux::ObjectPtr<nux::BaseTexture> normal_tex_;

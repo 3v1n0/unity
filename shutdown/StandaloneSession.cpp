@@ -50,7 +50,7 @@ public:
 
   bool CanShutdown() const {return true;}
   bool CanSuspend() const {return true;}
-  bool CanHibernate() const {return false;}
+  bool CanHibernate() const {return true;}
 };
 
 namespace unity
