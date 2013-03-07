@@ -27,6 +27,8 @@ namespace session
 
 struct MockManager : Manager
 {
+  typedef std::shared_ptr<MockManager> Ptr;
+
   MOCK_CONST_METHOD0(RealName, std::string());
   MOCK_CONST_METHOD0(UserName, std::string());
 
