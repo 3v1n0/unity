@@ -22,6 +22,7 @@
 #include "UnitySettings.h"
 #include "WindowManager.h"
 #include "test_utils.h"
+#include <Nux/VLayout.h>
 
 using namespace unity;
 using namespace unity::ui;
@@ -142,8 +143,8 @@ TEST_F(TestUnityWindowView, WindowManagerCloseKeyRequestsCloseWithCaps)
   bool close_requested = false;
   view.request_close.connect([&close_requested] { close_requested = true; });
 
-  unsigned sent_modifier = close_key().second|nux::KEY_MODIFIER_CAPS_LOCK;
-  view.FindKeyFocusArea(nux::NUX_KEYDOWN, sent_modifier, close_key().first);
+  unsigned long sent_modifier = close_key().first|nux::KEY_MODIFIER_CAPS_LOCK;
+  view.FindKeyFocusArea(nux::NUX_KEYDOWN, close_key().second, sent_modifier);
   EXPECT_TRUE(close_requested);
 }
 
@@ -154,6 +155,24 @@ TEST_F(TestUnityWindowView, QueueDrawsOnCloseTextureUpdate)
 
   EXPECT_CALL(view, QueueDraw());
   view.close_button_->texture_updated(nux::ObjectPtr<nux::BaseTexture>());
+}
+
+TEST_F(TestUnityWindowView, SetLayoutWrapsOriginalLayout)
+{
+  auto* layout = new nux::VLayout();
+  view.SetLayout(layout);
+  view.ComputeContentSize();
+
+  int offset = view.style()->GetInternalOffset();
+  EXPECT_EQ(layout->GetBaseX(), offset);
+  EXPECT_EQ(layout->GetBaseY(), offset);
+}
+
+TEST_F(TestUnityWindowView, GetLayout)
+{
+  auto* layout = new nux::VLayout();
+  view.SetLayout(layout);
+  EXPECT_EQ(view.GetLayout(), layout);
 }
 
 
