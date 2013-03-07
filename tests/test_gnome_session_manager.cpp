@@ -233,6 +233,26 @@ struct TestGnomeSessionManager : testing::Test
     g_settings_set_boolean(setting, SUPPRESS_DIALOGS_KEY.c_str(), enable ? FALSE : TRUE);
   }
 
+  enum class Action : unsigned
+  {
+    LOGOUT = 0,
+    SHUTDOWN,
+    REBOOT
+  };
+
+  void ShellOpenAction(Action action)
+  {
+    shell_proxy_->Call("Open", g_variant_new("(uuuao)", action, 0, 0, nullptr));
+  }
+
+  void ShellOpenActionWithInhibitor(Action action)
+  {
+    GVariantBuilder builder;
+    g_variant_builder_init(&builder, G_VARIANT_TYPE ("ao"));
+    g_variant_builder_add(&builder, "o", "/any/inhibitor/object");
+    shell_proxy_->Call("Open", g_variant_new("(uuuao)", action, 0, 0, &builder));
+  }
+
   static bool can_shutdown_;
   static bool can_suspend_;
   static bool can_hibernate_;
@@ -495,7 +515,7 @@ TEST_F(TestGnomeSessionManager, LogoutRequested)
 
   shell_proxy_->Connect("Canceled", [&cancelled] (GVariant*) { cancelled = true; });
 
-  shell_proxy_->Call("Open", g_variant_new("(uuuao)", 0, 0, 0, nullptr));
+  ShellOpenAction(Action::LOGOUT);
 
   Utils::WaitUntilMSec(logout_requested);
   EXPECT_TRUE(logout_requested);
@@ -521,10 +541,7 @@ TEST_P(/*TestGnomeSessionManager*/InteractiveMode, LogoutRequestedInhibitors)
 
   shell_proxy_->Connect("Canceled", [&cancelled] (GVariant*) { cancelled = true; });
 
-  GVariantBuilder builder;
-  g_variant_builder_init(&builder, G_VARIANT_TYPE ("ao"));
-  g_variant_builder_add(&builder, "o", "/any/inhibitor/object");
-  shell_proxy_->Call("Open", g_variant_new("(uuuao)", 0, 0, 0, &builder));
+  ShellOpenActionWithInhibitor(Action::LOGOUT);
 
   Utils::WaitUntilMSec(logout_requested);
   EXPECT_TRUE(logout_requested);
@@ -548,7 +565,7 @@ TEST_F(TestGnomeSessionManager, ImmediateLogout)
   shell_proxy_->Connect("ConfirmedLogout", [&confirmed] (GVariant*) { confirmed = true; });
   shell_proxy_->Connect("Closed", [&closed] (GVariant*) { closed = true; });
 
-  shell_proxy_->Call("Open", g_variant_new("(uuuao)", 0, 0, 0, nullptr));
+  ShellOpenAction(Action::LOGOUT);
 
   Utils::WaitForTimeoutMSec(100);
   EXPECT_FALSE(logout_requested);
@@ -572,7 +589,7 @@ TEST_F(TestGnomeSessionManager, ShutdownRequested)
 
   shell_proxy_->Connect("Canceled", [&cancelled] (GVariant*) { cancelled = true; });
 
-  shell_proxy_->Call("Open", g_variant_new("(uuuao)", 1, 0, 0, nullptr));
+  ShellOpenAction(Action::SHUTDOWN);
 
   Utils::WaitUntilMSec(shutdown_requested);
   EXPECT_TRUE(shutdown_requested);
@@ -593,10 +610,7 @@ TEST_P(/*TestGnomeSessionManager*/InteractiveMode, ShutdownRequestedInhibitors)
 
   shell_proxy_->Connect("Canceled", [&cancelled] (GVariant*) { cancelled = true; });
 
-  GVariantBuilder builder;
-  g_variant_builder_init(&builder, G_VARIANT_TYPE ("ao"));
-  g_variant_builder_add(&builder, "o", "/any/inhibitor/object");
-  shell_proxy_->Call("Open", g_variant_new("(uuuao)", 1, 0, 0, &builder));
+  ShellOpenActionWithInhibitor(Action::SHUTDOWN);
 
   Utils::WaitUntilMSec(shutdown_requested);
   EXPECT_TRUE(shutdown_requested);
@@ -620,7 +634,7 @@ TEST_F(TestGnomeSessionManager, ImmediateShutdown)
   shell_proxy_->Connect("ConfirmedShutdown", [&confirmed] (GVariant*) { confirmed = true; });
   shell_proxy_->Connect("Closed", [&closed] (GVariant*) { closed = true; });
 
-  shell_proxy_->Call("Open", g_variant_new("(uuuao)", 1, 0, 0, nullptr));
+  ShellOpenAction(Action::SHUTDOWN);
 
   Utils::WaitForTimeoutMSec(100);
   EXPECT_FALSE(shutdown_requested);
@@ -644,7 +658,7 @@ TEST_F(TestGnomeSessionManager, RebootRequested)
 
   shell_proxy_->Connect("Canceled", [&cancelled] (GVariant*) { cancelled = true; });
 
-  shell_proxy_->Call("Open", g_variant_new("(uuuao)", 2, 0, 0, nullptr));
+  ShellOpenAction(Action::REBOOT);
 
   Utils::WaitUntilMSec(reboot_requested);
   EXPECT_TRUE(reboot_requested);
@@ -665,10 +679,7 @@ TEST_P(/*TestGnomeSessionManager*/InteractiveMode, RebootRequestedInhibitors)
 
   shell_proxy_->Connect("Canceled", [&cancelled] (GVariant*) { cancelled = true; });
 
-  GVariantBuilder builder;
-  g_variant_builder_init(&builder, G_VARIANT_TYPE ("ao"));
-  g_variant_builder_add(&builder, "o", "/any/inhibitor/object");
-  shell_proxy_->Call("Open", g_variant_new("(uuuao)", 2, 0, 0, &builder));
+  ShellOpenActionWithInhibitor(Action::REBOOT);
 
   Utils::WaitUntilMSec(reboot_requested);
   EXPECT_TRUE(reboot_requested);
@@ -692,7 +703,7 @@ TEST_F(TestGnomeSessionManager, ImmediateReboot)
   shell_proxy_->Connect("ConfirmedReboot", [&confirmed] (GVariant*) { confirmed = true; });
   shell_proxy_->Connect("Closed", [&closed] (GVariant*) { closed = true; });
 
-  shell_proxy_->Call("Open", g_variant_new("(uuuao)", 2, 0, 0, nullptr));
+  ShellOpenAction(Action::REBOOT);
 
   Utils::WaitForTimeoutMSec(100);
   EXPECT_FALSE(reboot_requested);
