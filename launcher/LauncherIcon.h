@@ -196,6 +196,8 @@ public:
 
   virtual void UnStick();
 
+  void PerformScroll(ScrollDirection direction, Time timestamp) override;
+
 protected:
   std::vector<nux::Point3> GetCenters();
 
