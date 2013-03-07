@@ -42,6 +42,7 @@ struct TestUnityWindowView : testing::Test
     MOCK_METHOD0(QueueDraw, void());
 
     using UnityWindowView::GetInternalBackground;
+    using UnityWindowView::FindAreaUnderMouse;
     using UnityWindowView::FindKeyFocusArea;
     using UnityWindowView::internal_layout_;
     using UnityWindowView::bg_helper_;
@@ -205,6 +206,21 @@ TEST_F(TestUnityWindowView, BoundingAreaMatchesGeometry)
 
   view.SetGeometry(nux::Geometry(g_random_int(), g_random_int(), g_random_int(), g_random_int()));
   EXPECT_EQ(input_area->GetGeometry(), view.GetGeometry());
+}
+
+TEST_F(TestUnityWindowView, FindAreaUnderMouse)
+{
+  auto* layout = new nux::VLayout();
+  layout->SetSize(30, 40);
+  view.SetLayout(layout);
+  view.ComputeContentSize();
+  auto const& input_area = view.GetBoundingArea();
+
+  nux::Point event_pos(layout->GetAbsoluteX(), layout->GetAbsoluteY());
+  EXPECT_EQ(view.FindAreaUnderMouse(event_pos, nux::NUX_MOUSE_MOVE), &view);
+
+  event_pos = nux::Point(input_area->GetAbsoluteX(), input_area->GetAbsoluteY());
+  EXPECT_EQ(view.FindAreaUnderMouse(event_pos, nux::NUX_MOUSE_MOVE), input_area.GetPointer());
 }
 
 } // ui
