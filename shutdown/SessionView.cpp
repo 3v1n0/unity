@@ -205,6 +205,12 @@ void View::Populate()
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Reboot));
       AddButton(button);
     }
+    else if (mode() == Mode::FULL)
+    {
+      auto* button = new Button(_("Logout"), "logout", NUX_TRACKER_LOCATION);
+      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Logout));
+      AddButton(button);
+    }
   }
 }
 
