@@ -248,11 +248,6 @@ void Scope::ActivatePreviewAction(std::string const& action_id,
   pimpl->Activate(result, UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_ACTION, tmp_hints, callback, cancellable);
 }
 
-void Scope::UpdatePreviewProperty(LocalResult const& result, glib::HintsMap const& hints, UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable)
-{
-  pimpl->proxy_->UpdatePreviewProperty(result, glib::HintsMap(), callback, cancellable);
-}
-
 Results::Ptr Scope::GetResultsForCategory(unsigned category) const
 {
   return pimpl->proxy_->GetResultsForCategory(category);

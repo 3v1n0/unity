@@ -97,9 +97,6 @@ public:
                                      ActivateCallback const& callback = nullptr,
                                      GCancellable* cancellable = nullptr);
 
-  typedef std::function<void(glib::HintsMap const&, glib::Error const&)> UpdatePreviewPropertyCallback;
-  virtual void UpdatePreviewProperty(LocalResult const& result, glib::HintsMap const& hints, UpdatePreviewPropertyCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
-
   virtual Results::Ptr GetResultsForCategory(unsigned category) const;
 
 

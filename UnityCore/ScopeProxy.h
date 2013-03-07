@@ -40,8 +40,6 @@ public:
 
   virtual void Activate(LocalResult const& result, uint activate_type, glib::HintsMap const& hints, ActivateCallback const& callback, GCancellable* cancellable);
 
-  virtual void UpdatePreviewProperty(LocalResult const& result, glib::HintsMap const& hints, UpdatePreviewPropertyCallback const& callback, GCancellable* cancellable);
-
   Results::Ptr GetResultsForCategory(unsigned category) const;
 
 private:
