@@ -40,6 +40,9 @@ const std::string UPOWER_PATH = "/org/freedesktop/UPower";
 const std::string CONSOLE_KIT_PATH = "/org/freedesktop/ConsoleKit/Manager";
 const std::string SCREEN_SAVER_PATH = "/org/gnome/ScreenSaver";
 const std::string SESSION_MANAGER_PATH = "/org/gnome/SessionManager";
+
+const std::string SESSION_OPTIONS = "com.canonical.indicator.session";
+const std::string SUPPRESS_DIALOGS_KEY = "suppress-logout-restart-shutdown";
 }
 
 namespace introspection
@@ -103,6 +106,8 @@ struct TestGnomeSessionManager : testing::Test
 {
   static void SetUpTestCase()
   {
+    g_setenv("GSETTINGS_BACKEND", "memory", TRUE);
+
     can_shutdown_ = (g_random_int() % 2) ? true : false;
     can_suspend_ = (g_random_int() % 2) ? true : false;
     can_hibernate_ = (g_random_int() % 2) ? true : false;
@@ -113,7 +118,7 @@ struct TestGnomeSessionManager : testing::Test
 
     upower_ = std::make_shared<DBusServer>();
     upower_->AddObjects(introspection::UPOWER, UPOWER_PATH);
-    upower_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {
+    upower_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
       if (method == "SuspendAllowed")
       {
         suspend_called = true;
@@ -125,7 +130,7 @@ struct TestGnomeSessionManager : testing::Test
         return g_variant_new("(b)", can_hibernate_ ? TRUE : FALSE);
       }
 
-      return static_cast<GVariant*>(nullptr);
+      return nullptr;
     });
 
     console_kit_ = std::make_shared<DBusServer>();
@@ -136,14 +141,14 @@ struct TestGnomeSessionManager : testing::Test
 
     session_manager_ = std::make_shared<DBusServer>();
     session_manager_->AddObjects(introspection::SESSION_MANAGER, SESSION_MANAGER_PATH);
-    session_manager_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {
+    session_manager_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
       if (method == "CanShutdown")
       {
         shutdown_called = true;
         return g_variant_new("(b)", can_shutdown_ ? TRUE : FALSE);
       }
 
-      return static_cast<GVariant*>(nullptr);
+      return nullptr;
     });
 
     manager = std::make_shared<MockGnomeSessionManager>();
@@ -166,6 +171,7 @@ struct TestGnomeSessionManager : testing::Test
     Utils::WaitUntilMSec([] { return session_manager_->IsConnected(); });
     Utils::WaitUntil([] { return shell_proxy_->IsConnected();}, true, 3);
     ASSERT_TRUE(shell_proxy_->IsConnected());
+    EnableInteractiveShutdown(true);
   }
 
   void TearDown()
@@ -184,6 +190,8 @@ struct TestGnomeSessionManager : testing::Test
 
   static void TearDownTestCase()
   {
+    g_setenv("GSETTINGS_BACKEND", "", TRUE);
+
     bool cancelled = false;
     bool closed = false;
     shell_proxy_->Connect("Canceled", [&cancelled] (GVariant*) { cancelled = true; });
@@ -201,6 +209,28 @@ struct TestGnomeSessionManager : testing::Test
     console_kit_.reset();
     screen_saver_.reset();
     session_manager_.reset();
+  }
+
+  bool SettingsAvailable()
+  {
+    const gchar* const* schemas = g_settings_list_schemas();
+
+    for (unsigned i = 0; schemas[i]; ++i)
+    {
+      if (g_strcmp0(schemas[i], SESSION_OPTIONS.c_str()) == 0)
+        return true;
+    }
+
+    return false;
+  }
+
+  void EnableInteractiveShutdown(bool enable)
+  {
+    if (!SettingsAvailable())
+      return;
+
+    glib::Object<GSettings> setting(g_settings_new(SESSION_OPTIONS.c_str()));
+    g_settings_set_boolean(setting, SUPPRESS_DIALOGS_KEY.c_str(), enable ? FALSE : TRUE);
   }
 
   static bool can_shutdown_;
@@ -260,7 +290,7 @@ TEST_F(TestGnomeSessionManager, LockScreen)
   bool lock_called = false;
   bool simulate_activity_called = false;
 
-  screen_saver_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {
+  screen_saver_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
     if (method == "Lock")
     {
       lock_called = true;
@@ -272,7 +302,7 @@ TEST_F(TestGnomeSessionManager, LockScreen)
       EXPECT_TRUE(lock_called);
     }
 
-    return static_cast<GVariant*>(nullptr);
+    return nullptr;
   });
 
   manager->LockScreen();
@@ -288,14 +318,14 @@ TEST_F(TestGnomeSessionManager, Logout)
 {
   bool logout_called = false;
 
-  session_manager_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant* par) {
+  session_manager_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant* par) -> GVariant* {
     if (method == "Logout")
     {
       logout_called = true;
       EXPECT_EQ(Variant(par).GetUInt(), 1);
     }
 
-    return static_cast<GVariant*>(nullptr);
+    return nullptr;
   });
 
   manager->Logout();
@@ -318,14 +348,14 @@ TEST_F(TestGnomeSessionManager, LogoutFallback)
 
   bool logout_called = false;
 
-  console_kit_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant* par) {
+  console_kit_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant* par) -> GVariant* {
     if (method == "CloseSession")
     {
       logout_called = true;
       EXPECT_EQ(Variant(par).GetString(), cookie);
     }
 
-    return static_cast<GVariant*>(nullptr);
+    return nullptr;
   });
 
   manager->Logout();
@@ -338,11 +368,11 @@ TEST_F(TestGnomeSessionManager, Reboot)
 {
   bool reboot_called = false;
 
-  session_manager_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {
+  session_manager_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
     if (method == "Reboot")
       reboot_called = true;
 
-    return static_cast<GVariant*>(nullptr);
+    return nullptr;
   });
 
   manager->Reboot();
@@ -358,11 +388,11 @@ TEST_F(TestGnomeSessionManager, RebootFallback)
 
   bool reboot_called = false;
 
-  console_kit_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {
+  console_kit_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
     if (method == "Restart")
       reboot_called = true;
 
-    return static_cast<GVariant*>(nullptr);
+    return nullptr;
   });
 
   manager->Reboot();
@@ -375,11 +405,11 @@ TEST_F(TestGnomeSessionManager, Shutdown)
 {
   bool shutdown_called = false;
 
-  session_manager_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {
+  session_manager_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
     if (method == "Shutdown")
       shutdown_called = true;
 
-    return static_cast<GVariant*>(nullptr);
+    return nullptr;
   });
 
   manager->Shutdown();
@@ -395,11 +425,11 @@ TEST_F(TestGnomeSessionManager, ShutdownFallback)
 
   bool shutdown_called = false;
 
-  console_kit_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {
+  console_kit_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
     if (method == "Stop")
       shutdown_called = true;
 
-    return static_cast<GVariant*>(nullptr);
+    return nullptr;
   });
 
   manager->Shutdown();
@@ -412,11 +442,11 @@ TEST_F(TestGnomeSessionManager, Suspend)
 {
   bool suspend_called = false;
 
-  upower_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {
+  upower_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
     if (method == "Suspend")
       suspend_called = true;
 
-    return static_cast<GVariant*>(nullptr);
+    return nullptr;
   });
 
   manager->Suspend();
@@ -429,11 +459,11 @@ TEST_F(TestGnomeSessionManager, Hibernate)
 {
   bool hibernate_called = false;
 
-  upower_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) {
+  upower_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
     if (method == "Hibernate")
       hibernate_called = true;
 
-    return static_cast<GVariant*>(nullptr);
+    return nullptr;
   });
 
   manager->Hibernate();

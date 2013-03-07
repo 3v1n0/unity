@@ -162,6 +162,7 @@ GVariant* GnomeManager::Impl::OnShellMethodCall(std::string const& method, GVari
       {
         // If we're in non-interactive mode and we don't have inhibitors,
         // We must immediately proceed with the requested action.
+        LOG_INFO(logger) << "Not using interactive mode, proceeding with requested action...";
         pending_action_ = action;
       }
     }
