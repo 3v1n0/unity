@@ -531,8 +531,13 @@ TEST_F(TestGnomeSessionManager, ImmediateLogoutRequested)
   EXPECT_TRUE(closed);
 }
 
-TEST_F(TestGnomeSessionManager, LogoutRequestedInhibitors)
+struct InteractiveMode : TestGnomeSessionManager, testing::WithParamInterface<bool> {};
+INSTANTIATE_TEST_CASE_P(TestGnomeSessionManager, InteractiveMode, testing::Bool());
+
+TEST_P(/*TestGnomeSessionManager*/InteractiveMode, LogoutRequestedInhibitors)
 {
+  EnableInteractiveShutdown(GetParam());
+
   bool logout_requested = false;
   bool cancelled = false;
 
@@ -576,7 +581,7 @@ TEST_F(TestGnomeSessionManager, ShutdownRequested)
   EXPECT_TRUE(cancelled);
 }
 
-TEST_F(TestGnomeSessionManager, ShutdownRequestedInhibitors)
+TEST_P(/*TestGnomeSessionManager*/InteractiveMode, ShutdownRequestedInhibitors)
 {
   bool shutdown_requested = false;
   bool cancelled = false;
@@ -621,7 +626,7 @@ TEST_F(TestGnomeSessionManager, RebootRequested)
   EXPECT_TRUE(cancelled);
 }
 
-TEST_F(TestGnomeSessionManager, RebootRequestedInhibitors)
+TEST_P(/*TestGnomeSessionManager*/InteractiveMode, RebootRequestedInhibitors)
 {
   bool reboot_requested = false;
   bool cancelled = false;
