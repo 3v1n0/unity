@@ -577,6 +577,30 @@ TEST_F(TestGnomeSessionManager, ImmediateLogout)
   EXPECT_TRUE(closed);
 }
 
+TEST_F(TestGnomeSessionManager, SimulateRealLogout)
+{
+  bool confirmed = false;
+  bool closed = false;
+
+  session_manager_->GetObjects().front()->SetMethodsCallsHandler([this] (std::string const& method, GVariant*) -> GVariant* {
+    if (method == "Logout")
+      ShellOpenAction(Action::LOGOUT);
+
+    return nullptr;
+  });
+
+  manager->Logout();
+
+  shell_proxy_->Connect("ConfirmedLogout", [&confirmed] (GVariant*) { confirmed = true; });
+  shell_proxy_->Connect("Closed", [&closed] (GVariant*) { closed = true; });
+
+  Utils::WaitUntilMSec(confirmed);
+  EXPECT_TRUE(confirmed);
+
+  Utils::WaitUntilMSec(closed);
+  EXPECT_TRUE(closed);
+}
+
 TEST_F(TestGnomeSessionManager, ShutdownRequested)
 {
   bool shutdown_requested = false;
@@ -646,6 +670,30 @@ TEST_F(TestGnomeSessionManager, ImmediateShutdown)
   EXPECT_TRUE(closed);
 }
 
+TEST_F(TestGnomeSessionManager, SimulateRealShutdown)
+{
+  bool confirmed = false;
+  bool closed = false;
+
+  session_manager_->GetObjects().front()->SetMethodsCallsHandler([this] (std::string const& method, GVariant*) -> GVariant* {
+    if (method == "Shutdown")
+      ShellOpenAction(Action::SHUTDOWN);
+
+    return nullptr;
+  });
+
+  manager->Shutdown();
+
+  shell_proxy_->Connect("ConfirmedShutdown", [&confirmed] (GVariant*) { confirmed = true; });
+  shell_proxy_->Connect("Closed", [&closed] (GVariant*) { closed = true; });
+
+  Utils::WaitUntilMSec(confirmed);
+  EXPECT_TRUE(confirmed);
+
+  Utils::WaitUntilMSec(closed);
+  EXPECT_TRUE(closed);
+}
+
 TEST_F(TestGnomeSessionManager, RebootRequested)
 {
   bool reboot_requested = false;
@@ -707,6 +755,30 @@ TEST_F(TestGnomeSessionManager, ImmediateReboot)
 
   Utils::WaitForTimeoutMSec(100);
   EXPECT_FALSE(reboot_requested);
+
+  Utils::WaitUntilMSec(confirmed);
+  EXPECT_TRUE(confirmed);
+
+  Utils::WaitUntilMSec(closed);
+  EXPECT_TRUE(closed);
+}
+
+TEST_F(TestGnomeSessionManager, SimulateRealReboot)
+{
+  bool confirmed = false;
+  bool closed = false;
+
+  session_manager_->GetObjects().front()->SetMethodsCallsHandler([this] (std::string const& method, GVariant*) -> GVariant* {
+    if (method == "Reboot")
+      ShellOpenAction(Action::REBOOT);
+
+    return nullptr;
+  });
+
+  manager->Reboot();
+
+  shell_proxy_->Connect("ConfirmedReboot", [&confirmed] (GVariant*) { confirmed = true; });
+  shell_proxy_->Connect("Closed", [&closed] (GVariant*) { closed = true; });
 
   Utils::WaitUntilMSec(confirmed);
   EXPECT_TRUE(confirmed);
