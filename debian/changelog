@@ -1,3 +1,19 @@
+unity (6.12.0daily13.03.06.1-0ubuntu1) raring; urgency=low
+
+  [ Didier Roche ]
+  * Build-dep on libjson-perl to get debian/scopes-recommends-generator
+    parsing the libunity-common json file successfully (and so having
+    the recommended scopes… recommended)
+
+  [ Alexandre Abreu ]
+  * Web apps - After the user quits a web app that has just been
+    installed the icon doesn't stay in the launcher (LP: #1061056)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3190
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Wed, 06 Mar 2013 13:26:28 +0000
+
 unity (6.12.0daily13.03.05-0ubuntu1) raring; urgency=low
 
   [ Didier Roche ]

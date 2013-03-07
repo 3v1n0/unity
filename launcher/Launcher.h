@@ -42,6 +42,7 @@
 #include "unity-shared/MockableBaseWindow.h"
 #include "unity-shared/UBusWrapper.h"
 #include "SoftwareCenterLauncherIcon.h"
+#include "TooltipManager.h"
 
 #ifdef USE_X11
 # include "PointerBarrier.h"
@@ -223,6 +224,7 @@ private:
   bool OnScrollTimeout();
 
   void SetMousePosition(int x, int y);
+  void SetIconUnderMouse(AbstractLauncherIcon::Ptr const& icon);
 
   void SetStateMouseOverLauncher(bool over_launcher);
 
@@ -389,6 +391,7 @@ private:
   nux::ObjectPtr<LauncherDragWindow> _drag_window;
   LauncherHideMachine _hide_machine;
   LauncherHoverMachine _hover_machine;
+  TooltipManager tooltip_manager_;
 
   unity::DndData _dnd_data;
   nux::DndAction _drag_action;

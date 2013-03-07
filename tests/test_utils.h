@@ -1,37 +1,16 @@
 #ifndef TEST_UTILS_H
 #define TEST_UTILS_H
 
-#include <UnityCore/Model.h>
+#include <glib.h>
+#include <functional>
+#include <gtest/gtest.h>
 
 namespace
 {
 
-using unity::dash::Model;
-
 class Utils
 {
 public:
-  template <typename Adaptor>
-  static void WaitForModelSynchronize(Model<Adaptor>& model, unsigned int n_rows)
-  {
-    bool timeout_reached = false;
-
-    auto timeout_cb = [](gpointer data) -> gboolean
-    {
-      *(bool*)data = true;
-      return FALSE;
-    };
-
-    guint32 timeout_id = g_timeout_add(10000, timeout_cb, &timeout_reached);
-
-    while (model.count != n_rows && !timeout_reached)
-    {
-      g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
-    }
-    if (model.count == n_rows)
-      g_source_remove(timeout_id);
-  }
-
   static void WaitUntilMSec(bool& success, unsigned int max_wait = 500)
   {
     WaitUntilMSec([&success] {return success;}, true, max_wait);
@@ -44,6 +23,8 @@ public:
 
   static void WaitUntilMSec(std::function<bool()> const& check_function, bool result = true, unsigned max_wait = 500)
   {
+    ASSERT_NE(check_function, nullptr);
+
     bool timeout_reached = false;
     guint32 timeout_id = ScheduleTimeout(&timeout_reached, max_wait);
 

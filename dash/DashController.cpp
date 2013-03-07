@@ -43,8 +43,10 @@ namespace
 {
 const unsigned int PRELOAD_TIMEOUT_LENGTH = 40;
 
-const std::string DBUS_PATH = "/com/canonical/Unity/Dash";
-const std::string DBUS_INTROSPECTION =\
+namespace dbus
+{
+const std::string PATH = "/com/canonical/Unity/Dash";
+const std::string INTROSPECTION =\
   "<node>"
   "  <interface name='com.canonical.Unity.Dash'>"
   ""
@@ -54,9 +56,7 @@ const std::string DBUS_INTROSPECTION =\
   "  </interface>"
   "</node>";
 }
-
-GDBusInterfaceVTable Controller::interface_vtable =
-  { Controller::OnDBusMethodCall, NULL, NULL};
+}
 
 Controller::Controller(Controller::WindowCreator const& create_window)
   : launcher_width(64)
@@ -66,7 +66,6 @@ Controller::Controller(Controller::WindowCreator const& create_window)
   , visible_(false)
   , need_show_(false)
   , view_(nullptr)
-  , dbus_connect_cancellable_(g_cancellable_new())
   , ensure_timeout_(PRELOAD_TIMEOUT_LENGTH)
   , timeline_animator_(90)
 {
@@ -93,7 +92,7 @@ Controller::Controller(Controller::WindowCreator const& create_window)
 
   Settings::Instance().form_factor.changed.connect([this](FormFactor)
   {
-    if (window_ && view_  && visible_)
+    if (window_ && view_ && visible_)
     {
       // Relayout here so the input window size updates.
       Relayout();
@@ -107,12 +106,13 @@ Controller::Controller(Controller::WindowCreator const& create_window)
   auto spread_cb = sigc::bind(sigc::mem_fun(this, &Controller::HideDash), true);
   WindowManager::Default().initiate_spread.connect(spread_cb);
 
-  g_bus_get (G_BUS_TYPE_SESSION, dbus_connect_cancellable_, OnBusAcquired, this);
-}
+  dbus_server_.AddObjects(dbus::INTROSPECTION, dbus::PATH);
+  dbus_server_.GetObjects().front()->SetMethodsCallsHandler([this] (std::string const& method, GVariant*) {
+    if (method == "HideDash")
+      HideDash();
 
-Controller::~Controller()
-{
-  g_cancellable_cancel(dbus_connect_cancellable_);
+    return static_cast<GVariant*>(nullptr);
+  });
 }
 
 void Controller::SetupWindow()
@@ -461,52 +461,6 @@ void Controller::ReFocusKeyInput()
 bool Controller::IsVisible() const
 {
   return visible_;
-}
-
-void Controller::OnBusAcquired(GObject *obj, GAsyncResult *result, gpointer user_data)
-{
-  glib::Error error;
-  glib::Object<GDBusConnection> connection(g_bus_get_finish (result, &error));
-
-  if (!connection || error)
-  {
-    LOG_WARNING(logger) << "Failed to connect to DBus:" << error;
-  }
-  else
-  {
-    GDBusNodeInfo* introspection_data = g_dbus_node_info_new_for_xml(DBUS_INTROSPECTION.c_str(), nullptr);
-    unsigned int reg_id;
-
-    if (!introspection_data)
-    {
-      LOG_WARNING(logger) << "No introspection data loaded.";
-      return;
-    }
-
-    reg_id = g_dbus_connection_register_object(connection, DBUS_PATH.c_str(),
-                                               introspection_data->interfaces[0],
-                                               &interface_vtable, user_data,
-                                               nullptr, nullptr);
-    if (!reg_id)
-    {
-      LOG_WARNING(logger) << "Object registration failed. Dash DBus interface not available.";
-    }
-
-    g_dbus_node_info_unref(introspection_data);
-  }
-}
-
-void Controller::OnDBusMethodCall(GDBusConnection* connection, const gchar* sender,
-                                        const gchar* object_path, const gchar* interface_name,
-                                        const gchar* method_name, GVariant* parameters,
-                                        GDBusMethodInvocation* invocation, gpointer user_data)
-{
-  if (g_strcmp0(method_name, "HideDash") == 0)
-  {
-    auto self = static_cast<Controller*>(user_data);
-    self->HideDash();
-    g_dbus_method_invocation_return_value(invocation, nullptr);
-  }
 }
 
 nux::Geometry Controller::GetInputWindowGeometry()
