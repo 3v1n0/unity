@@ -128,8 +128,7 @@ DBusProxy::Impl::Impl(DBusProxy* owner,
   , connected_(false)
   , reconnection_attempts_(0)
 {
-  // FIXME: get rid of this once glib doesn't deadlock in class initiation
-  StartReconnectionTimeout(1);
+  Connect();
 }
 
 DBusProxy::Impl::~Impl()
