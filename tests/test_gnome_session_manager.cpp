@@ -180,12 +180,14 @@ struct TestGnomeSessionManager : testing::Test
     manager->reboot_requested.clear();
     manager->shutdown_requested.clear();
     manager->cancel_requested.clear();
+    shell_proxy_->DisconnectSignal();
 
     // By calling this we reset the internal pending action status
     bool cancelled = false;
     shell_proxy_->Connect("Canceled", [&cancelled] (GVariant*) { cancelled = true; });
     manager->CancelAction();
     Utils::WaitUntilMSec(cancelled);
+    shell_proxy_->DisconnectSignal("Canceled");
   }
 
   static void TearDownTestCase()
@@ -226,9 +228,7 @@ struct TestGnomeSessionManager : testing::Test
 
   void EnableInteractiveShutdown(bool enable)
   {
-    if (!SettingsAvailable())
-      return;
-
+    ASSERT_TRUE(SettingsAvailable());
     glib::Object<GSettings> setting(g_settings_new(SESSION_OPTIONS.c_str()));
     g_settings_set_boolean(setting, SUPPRESS_DIALOGS_KEY.c_str(), enable ? FALSE : TRUE);
   }
@@ -502,6 +502,33 @@ TEST_F(TestGnomeSessionManager, LogoutRequested)
 
   Utils::WaitUntilMSec(cancelled);
   EXPECT_TRUE(cancelled);
+}
+
+TEST_F(TestGnomeSessionManager, ImmediateLogoutRequested)
+{
+  EnableInteractiveShutdown(false);
+  bool logout_requested = false;
+  bool confirmed = false;
+  bool closed = false;
+
+  manager->logout_requested.connect([&logout_requested] (bool inhibitors) {
+    logout_requested = true;
+    EXPECT_FALSE(inhibitors);
+  });
+
+  shell_proxy_->Connect("ConfirmedLogout", [&confirmed] (GVariant*) { confirmed = true; });
+  shell_proxy_->Connect("Closed", [&closed] (GVariant*) { closed = true; });
+
+  shell_proxy_->Call("Open", g_variant_new("(uuuao)", 0, 0, 0, nullptr));
+
+  Utils::WaitForTimeoutMSec(100);
+  EXPECT_FALSE(logout_requested);
+
+  Utils::WaitUntilMSec(confirmed);
+  EXPECT_TRUE(confirmed);
+
+  Utils::WaitUntilMSec(closed);
+  EXPECT_TRUE(closed);
 }
 
 TEST_F(TestGnomeSessionManager, LogoutRequestedInhibitors)
