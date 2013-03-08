@@ -125,7 +125,6 @@ TEST_F(TestUnityWindowView, CloseButtonClicksRequestsClose)
 TEST_F(TestUnityWindowView, WindowManagerCloseKeyRequestsClose)
 {
   view.closable = true;
-  ASSERT_NE(view.close_button_, nullptr);
 
   auto& close_key = WindowManager::Default().close_window_key;
   close_key = std::make_pair(nux::KEY_MODIFIER_ALT, g_random_int());
@@ -140,7 +139,6 @@ TEST_F(TestUnityWindowView, WindowManagerCloseKeyRequestsClose)
 TEST_F(TestUnityWindowView, WindowManagerCloseKeyRequestsCloseWithCaps)
 {
   view.closable = true;
-  ASSERT_NE(view.close_button_, nullptr);
 
   auto& close_key = WindowManager::Default().close_window_key;
   close_key = std::make_pair(nux::KEY_MODIFIER_ALT, g_random_int());
@@ -151,6 +149,21 @@ TEST_F(TestUnityWindowView, WindowManagerCloseKeyRequestsCloseWithCaps)
   unsigned long sent_modifier = close_key().first|nux::KEY_MODIFIER_CAPS_LOCK;
   view.FindKeyFocusArea(nux::NUX_KEYDOWN, close_key().second, sent_modifier);
   EXPECT_TRUE(close_requested);
+}
+
+TEST_F(TestUnityWindowView, EscapeKeyRequestsClose)
+{
+  view.closable = true;
+
+  bool close_requested = false;
+  view.request_close.connect([&close_requested] { close_requested = true; });
+
+  view.FindKeyFocusArea(nux::NUX_KEYDOWN, NUX_VK_ESCAPE, 0);
+  EXPECT_TRUE(close_requested);
+
+  close_requested = false;
+  view.closable = false;
+  EXPECT_FALSE(close_requested);
 }
 
 TEST_F(TestUnityWindowView, QueueDrawsOnCloseTextureUpdate)
