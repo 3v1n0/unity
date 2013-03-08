@@ -145,8 +145,17 @@ void View::UpdateText()
 
     if (have_inhibitors())
     {
-      message = _("Hi %s, you have open files that you might want to save " \
-                  "before shutting down.\nWould you like to…");
+      if (buttons_layout_->GetChildren().size() > 3)
+      {
+        // We have enough buttons to show the message without a new line.
+        message = _("Hi %s, you have open files you might want to save. " \
+                    "Would you like to…");
+      }
+      else
+      {
+        message = _("Hi %s, you have open files you might want to save.\n" \
+                    "Would you like to…");
+      }
     }
     else
     {
