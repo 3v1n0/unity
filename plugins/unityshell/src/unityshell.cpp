@@ -25,8 +25,9 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
 
-#include <UnityCore/Variant.h>
 #include <UnityCore/Lens.h>
+#include <UnityCore/GnomeSessionManager.h>
+#include <UnityCore/Variant.h>
 
 #include "BaseWindowRaiserImp.h"
 #include "IconRenderer.h"
@@ -392,8 +393,9 @@ UnityScreen::UnityScreen(CompScreen* screen)
        unity::glib::String overlay_identity;
        gboolean can_maximise = FALSE;
        gint32 overlay_monitor = 0;
+       int width, height;
        g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
-                    &overlay_identity, &can_maximise, &overlay_monitor);
+                    &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
 
        overlay_monitor_ = overlay_monitor;
 
@@ -1275,6 +1277,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   // CompRegion has no clear() method. So this is the fastest alternative.
   fullscreenRegion = CompRegion();
   nuxRegion = CompRegion();
+  windows_for_monitor_.clear();
 
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
@@ -2063,9 +2066,13 @@ bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State
     switcher_controller_->Select((switcher_controller_->StartIndex())); // always select the current application
     switcher_controller_->InitiateDetail();
   }
-  else
+  else if (switcher_controller_->IsDetailViewShown())
   {
     switcher_controller_->NextDetail();
+  }
+  else
+  {
+    switcher_controller_->SetDetail(true);
   }
 
   action->setState(action->state() | CompAction::StateTermKey);
@@ -2513,17 +2520,32 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
                               PAINT_WINDOW_TRANSLUCENT_MASK |
                               PAINT_WINDOW_TRANSFORMED_MASK |
                               PAINT_WINDOW_NO_CORE_INSTANCE_MASK;
-    if (!(mask & nonOcclusionBits) &&
-        (window->state() & CompWindowStateFullscreenMask))
-        // And I've been advised to test other things, but they don't work:
-        // && (attrib.opacity == OPAQUE)) <-- Doesn't work; Only set in glDraw
-        // && !window->alpha() <-- Doesn't work; Opaque windows often have alpha
+
+    if (window->isMapped() &&
+        window->defaultViewport() == uScreen->screen->vp())
     {
-      uScreen->fullscreenRegion += window->geometry();
-      uScreen->fullscreenRegion -= uScreen->nuxRegion;
+      int monitor = window->outputDevice();
+
+      auto it = uScreen->windows_for_monitor_.find(monitor);
+
+      if (it != end(uScreen->windows_for_monitor_))
+        ++(it->second);
+      else
+        uScreen->windows_for_monitor_[monitor] = 1;
+
+      if (!(mask & nonOcclusionBits) &&
+          (window->state() & CompWindowStateFullscreenMask) &&
+          uScreen->windows_for_monitor_[monitor] == 1)
+          // And I've been advised to test other things, but they don't work:
+          // && (attrib.opacity == OPAQUE)) <-- Doesn't work; Only set in glDraw
+          // && !window->alpha() <-- Doesn't work; Opaque windows often have alpha
+      {
+        uScreen->fullscreenRegion += window->geometry();
+      }
+
+      if (uScreen->nuxRegion.isEmpty())
+        uScreen->firstWindowAboveShell = window;
     }
-    if (uScreen->nuxRegion.isEmpty())
-      uScreen->firstWindowAboveShell = window;
   }
 
   GLWindowPaintAttrib wAttrib = attrib;
@@ -2554,6 +2576,12 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
   {
     nux::Geometry const& scaled_geo = GetScaledGeometry();
     paintInnerGlow(scaled_geo, matrix, attrib, mask);
+  }
+
+  if (uScreen->session_controller_ && uScreen->session_controller_->Visible())
+  {
+    // Let's darken the other windows if the session dialog is visible
+    wAttrib.brightness *= 0.75f;
   }
 
   return gWindow->glPaint(wAttrib, matrix, region, mask);
@@ -3233,6 +3261,11 @@ void UnityScreen::initLauncher()
   auto shortcuts_modeller = std::make_shared<shortcut::CompizModeller>();
   shortcut_controller_ = std::make_shared<shortcut::Controller>(base_window_raiser, shortcuts_modeller);
   AddChild(shortcut_controller_.get());
+
+  // Setup Session Controller
+  auto manager = std::make_shared<session::GnomeManager>();
+  session_controller_ = std::make_shared<session::Controller>(manager);
+  AddChild(session_controller_.get());
 
   launcher_controller_->launcher().size_changed.connect([this] (nux::Area*, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right margin

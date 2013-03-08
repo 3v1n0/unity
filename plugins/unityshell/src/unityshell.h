@@ -50,6 +50,7 @@
 #include "DebugDBusInterface.h"
 #include "ScreenIntrospection.h"
 #include "SwitcherController.h"
+#include "SessionController.h"
 #include "UBusWrapper.h"
 #include "UnityshellPrivate.h"
 #include "UnityShowdesktopHandler.h"
@@ -272,6 +273,7 @@ private:
   switcher::Controller::Ptr switcher_controller_;
   hud::Controller::Ptr      hud_controller_;
   shortcut::Controller::Ptr shortcut_controller_;
+  session::Controller::Ptr  session_controller_;
   debug::DebugDBusInterface debugger_;
 
   /* Subscription for gestures that manipulate Unity launcher */
@@ -290,6 +292,7 @@ private:
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;
   std::map<CancelActionTarget, CompActionPtr> _escape_actions;
+  std::map<int, unsigned int> windows_for_monitor_;
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;

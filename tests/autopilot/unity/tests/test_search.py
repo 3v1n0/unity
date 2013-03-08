@@ -88,7 +88,8 @@ class ApplicationLensSearchTests(ApplicationLensSearchTestBase):
         ('lowercase', {'input': 'window mocker', 'result': 'Window Mocker'}),
         ('uppercase', {'input': 'WINDOW MOCKER', 'result': 'Window Mocker'}),
         ('partial', {'input': 'Window Mock', 'result': 'Window Mocker'}),
-    ]       
+        ('keyword', {'input': 'arithmetic', 'result': 'Calculator'}),
+    ]
 
     def setUp(self):
         super(ApplicationLensSearchTests, self).setUp()
@@ -113,8 +114,6 @@ class ApplicationLensFuzzySearchTests(ApplicationLensSearchTestBase):
 
     def setUp(self):
         super(ApplicationLensFuzzySearchTests, self).setUp()
-        # XXX: These should be enabled once libcolumbus is used on 
-        self.skipTest("Application lens fuzzy search tests disabled until libcolumbus gets released.")
 
     def test_application_lens_fuzzy_search(self):
         self.do_search_test()

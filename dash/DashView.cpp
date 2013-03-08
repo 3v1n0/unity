@@ -1525,6 +1525,7 @@ void DashView::AddProperties(GVariantBuilder* builder)
   wrapper.add("bottom-border-height", style.GetDashBottomTileHeight());
   wrapper.add("preview_displaying", preview_displaying_);
   wrapper.add("dash_maximized", style.always_maximised());
+  wrapper.add("overlay_window_buttons_shown", overlay_window_buttons_->IsVisible());
 }
 
 nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)

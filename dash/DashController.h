@@ -22,6 +22,7 @@
 #include <memory>
 
 #include <gdk/gdk.h>
+#include <UnityCore/GLibDBusServer.h>
 #include <UnityCore/GLibSignal.h>
 
 #include <NuxCore/Animation.h>
@@ -46,7 +47,6 @@ public:
   typedef std::function<ResizingBaseWindow*()> WindowCreator;
 
   Controller(WindowCreator const& create_window = nullptr);
-  ~Controller();
 
   nux::BaseWindow* window() const;
 
@@ -92,12 +92,6 @@ private:
   void StartShowHideTimeline();
   void OnViewShowHideFrame(double progress);
 
-  static void OnBusAcquired(GObject *obj, GAsyncResult *result, gpointer user_data);
-  static void OnDBusMethodCall(GDBusConnection* connection, const gchar* sender,
-                               const gchar* object_path, const gchar* interface_name,
-                               const gchar* method_name, GVariant* parameters,
-                               GDBusMethodInvocation* invocation, gpointer user_data);
-
   static void OnWindowConfigure(int width, int height, nux::Geometry& geo, void* data);
 
 private:
@@ -110,10 +104,8 @@ private:
   DashView* view_;
 
   sigc::connection screen_ungrabbed_slot_;
-  unsigned int dbus_owner_;
   unsigned place_entry_request_id_;
-  glib::Object<GCancellable> dbus_connect_cancellable_;
-  static GDBusInterfaceVTable interface_vtable;
+  glib::DBusServer dbus_server_;
   glib::TimeoutSeconds ensure_timeout_;
   nux::animation::AnimateValue<double> timeline_animator_;
   UBusManager ubus_manager_;

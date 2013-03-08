@@ -73,7 +73,7 @@ View::View()
   : ui::UnityWindowView()
 {
   auto main_layout = new nux::VLayout();
-  main_layout->SetPadding(50, 38);
+  main_layout->SetPadding(30, 18);
   main_layout->SetSpaceBetweenChildren(20);
   SetLayout(main_layout);
 
@@ -191,7 +191,7 @@ nux::Geometry View::GetBackgroundGeometry()
   return GetGeometry();
 }
 
-void View::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry clip)
+void View::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip)
 {
   view_layout_->ProcessDraw(GfxContext, force_draw);
 }
