@@ -49,6 +49,7 @@ include_directories (${CMAKE_SOURCE_DIR}/launcher)
 include_directories (${CMAKE_SOURCE_DIR}/panel)
 include_directories (${CMAKE_SOURCE_DIR}/hud)
 include_directories (${CMAKE_SOURCE_DIR}/shortcuts)
+include_directories (${CMAKE_SOURCE_DIR}/shutdown)
 include_directories (${CMAKE_SOURCE_DIR}/unity-shared)
 # We can't have convenience libs so we need to rebuild with what we need
 # Please keep actual test files alphabetically at top and then files
@@ -244,6 +245,9 @@ if (ENABLE_X_SUPPORT)
                  test_result_renderer.cpp
                  test_resultviewgrid.cpp
                  test_searchbar.cpp
+                 test_session_button.cpp
+                 test_session_controller.cpp
+                 test_session_view.cpp
                  test_shortcut_controller.cpp
                  test_shortcut_modeller_compiz.cpp
                  test_shortcut_view.cpp
@@ -280,7 +284,22 @@ if (ENABLE_X_SUPPORT)
               gmockmount.c
               gmockvolume.c
               )
-  target_link_libraries(test-gtest test-gtest-plainc gtest gmock unity-shared ${LIBS} launcher-lib unity-shared-bamf unity-shared-standalone shortcuts-lib previews-lib hud-lib switcher-lib dash-lib panel-lib)
+  target_link_libraries(test-gtest
+                        test-gtest-plainc
+                        gtest
+                        gmock
+                        unity-shared
+                        ${LIBS}
+                        launcher-lib
+                        unity-shared-bamf
+                        unity-shared-standalone
+                        shortcuts-lib
+                        previews-lib
+                        hud-lib
+                        switcher-lib
+                        shutdown-lib
+                        dash-lib
+                        panel-lib)
   add_test(UnityGTest test-gtest)
 endif (ENABLE_X_SUPPORT)
 endif (GTEST_SRC_DIR AND
