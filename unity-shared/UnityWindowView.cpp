@@ -94,6 +94,12 @@ nux::Area* UnityWindowView::FindKeyFocusArea(unsigned etype, unsigned long key_c
       request_close.emit();
       return nullptr;
     }
+
+    if (key_code == NUX_VK_ESCAPE)
+    {
+      request_close.emit();
+      return nullptr;
+    }
   }
 
   return View::FindKeyFocusArea(etype, key_code, modifiers);
