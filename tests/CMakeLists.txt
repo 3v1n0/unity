@@ -206,6 +206,7 @@ if (ENABLE_X_SUPPORT)
                  test_desktop_launcher_icon.cpp
                  test_device_launcher_section.cpp
                  test_edge_barrier_controller.cpp
+                 test_expo_launcher_icon.cpp
                  test_filter_widgets.cpp
                  test_glib_dbus_server.cpp
                  test_gnome_session_manager.cpp
@@ -221,6 +222,7 @@ if (ENABLE_X_SUPPORT)
                  test_launcher_hide_machine.cpp
                  test_launcher_hover_machine.cpp
                  test_launcher_icon.cpp
+                 test_launcher_minimize_speed.cpp
                  test_launcher_tooltip.cpp
                  test_lensview.cpp
                  test_keyboard_util.cpp
@@ -246,21 +248,21 @@ if (ENABLE_X_SUPPORT)
                  test_shortcut_modeller_compiz.cpp
                  test_shortcut_view.cpp
                  test_single_monitor_launcher_icon.cpp
-                 test_expo_launcher_icon.cpp
                  test_showdesktop_handler.cpp
                  test_software_center_launcher_icon.cpp
                  test_static_cairo_text.cpp
                  test_switcher_controller.cpp
                  test_switcher_model.cpp
-                 test_tabiterator.cpp
                  test_switcher_view.cpp
+                 test_tabiterator.cpp
                  test_texture_cache.cpp
                  test_text_input.cpp
                  test_thumbnail_generator.cpp
                  test_tooltip_manager.cpp
                  test_trash_launcher_icon.cpp
-                 test_launcher_minimize_speed.cpp
                  test_unity_settings.cpp
+                 test_unity_window_style.cpp
+                 test_unity_window_view.cpp
                  test_volume_imp.cpp
                  test_volume_launcher_icon.cpp
                  test_window_buttons.cpp

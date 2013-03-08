@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2012 Canonical Ltd
+ * Copyright (C) 2012-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,60 +15,195 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include <UnityCore/Variant.h>
 
 #include "UnityWindowView.h"
+#include <Nux/VLayout.h>
+#include "unity-shared/WindowManager.h"
 
 namespace unity {
 namespace ui {
 
 NUX_IMPLEMENT_OBJECT_TYPE(UnityWindowView);
 
-UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL) : View(NUX_FILE_LINE_PARAM)
+UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
+  : View(NUX_FILE_LINE_PARAM)
+  , style(UnityWindowStyle::Get())
+  , closable(false)
+  , internal_layout_(nullptr)
 {
-  style = UnityWindowStyle::Ptr(new UnityWindowStyle());
   bg_helper_.owner = this;
+
+  live_background.SetGetterFunction([this] { return bg_helper_.enabled(); });
+  live_background.SetSetterFunction([this] (bool e) {
+    if (bg_helper_.enabled() != e)
+    {
+      bg_helper_.enabled = e;
+      return true;
+    }
+    return false;
+  });
+
+  live_background = false;
+
+  closable.changed.connect(sigc::mem_fun(this, &UnityWindowView::OnClosableChanged));
 }
 
 UnityWindowView::~UnityWindowView()
 {
+  if (close_button_)
+    close_button_->UnParentObject();
 
+  if (bounding_area_)
+    bounding_area_->UnParentObject();
 }
 
-void
-UnityWindowView::SetupBackground(bool enabled)
+nux::Area* UnityWindowView::FindAreaUnderMouse(const nux::Point& mouse, nux::NuxEventType etype)
 {
-  bg_helper_.enabled = enabled;
+  if (close_button_ && close_button_->TestMousePointerInclusionFilterMouseWheel(mouse, etype))
+    return close_button_.GetPointer();
+
+  nux::Area* under = nux::View::FindAreaUnderMouse(mouse, etype);
+
+  if (under == this)
+  {
+    if (internal_layout_ && !internal_layout_->TestMousePointerInclusionFilterMouseWheel(mouse, etype))
+    {
+      if (bounding_area_ && bounding_area_->TestMousePointerInclusionFilterMouseWheel(mouse, etype))
+        return bounding_area_.GetPointer();
+
+      return nullptr;
+    }
+  }
+
+  return under;
+}
+
+nux::Area* UnityWindowView::FindKeyFocusArea(unsigned etype, unsigned long key_code, unsigned long modifiers)
+{
+  if (closable && etype == nux::NUX_KEYDOWN)
+  {
+    modifiers &= (nux::NUX_STATE_ALT | nux::NUX_STATE_CTRL | nux::NUX_STATE_SUPER | nux::NUX_STATE_SHIFT);
+    auto const& close_key = WindowManager::Default().close_window_key();
+
+    if (close_key.first == modifiers && close_key.second == key_code)
+    {
+      request_close.emit();
+      return nullptr;
+    }
+  }
+
+  return View::FindKeyFocusArea(etype, key_code, modifiers);
+}
+
+void UnityWindowView::OnClosableChanged(bool closable)
+{
+  if (!closable)
+  {
+    close_button_ = nullptr;
+    return;
+  }
+
+  auto const& texture = style()->GetCloseIcon();
+  int padding = style()->GetCloseButtonPadding();
+  close_button_ = new IconTexture(texture);
+  close_button_->SetBaseXY(padding, padding);
+  close_button_->SetParentObject(this);
+
+  close_button_->mouse_enter.connect([this](int, int, unsigned long, unsigned long) {
+    if (close_button_->IsMouseOwner())
+      close_button_->SetTexture(style()->GetCloseIconPressed());
+    else
+      close_button_->SetTexture(style()->GetCloseIconHighligted());
+  });
+
+  close_button_->mouse_leave.connect([this](int, int, unsigned long, unsigned long) {
+    close_button_->SetTexture(style()->GetCloseIcon());
+  });
+
+  close_button_->mouse_down.connect([this](int, int, unsigned long, unsigned long) {
+    close_button_->SetTexture(style()->GetCloseIconPressed());
+  });
+
+  close_button_->mouse_up.connect([this](int, int, unsigned long, unsigned long) {
+    bool inside = close_button_->IsMouseInside();
+    close_button_->SetTexture(inside ? style()->GetCloseIconHighligted() : style()->GetCloseIcon());
+  });
+
+  close_button_->mouse_click.connect([this](int, int, unsigned long, unsigned long) {
+    close_button_->SetTexture(style()->GetCloseIcon());
+    request_close.emit();
+  });
+
+  close_button_->texture_updated.connect(sigc::hide(sigc::mem_fun(this, &UnityWindowView::QueueDraw)));
+}
+
+bool UnityWindowView::SetLayout(nux::Layout* layout)
+{
+  if (layout && layout->IsLayout())
+  {
+    int offset = style()->GetInternalOffset();
+
+    // We wrap the internal layout adding some padding, so that inherited classes
+    // can ignore the offsets we define here.
+    nux::ObjectPtr<nux::Layout> wrapper(new nux::VLayout());
+    wrapper->SetPadding(offset, offset);
+    wrapper->AddLayout(layout);
+
+    if (View::SetLayout(wrapper.GetPointer()))
+    {
+      internal_layout_ = layout;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+nux::Layout* UnityWindowView::GetLayout()
+{
+  return internal_layout_;
+}
+
+nux::Geometry UnityWindowView::GetInternalBackground()
+{
+  int offset = style()->GetInternalOffset();
+  return GetBackgroundGeometry().GetExpand(-offset, -offset);
+}
+
+nux::ObjectPtr<nux::InputArea> UnityWindowView::GetBoundingArea()
+{
+  if (!bounding_area_)
+  {
+    // The bounding area always matches this size, but only handles events outside
+    // the internal layout (when defined)
+    bounding_area_ = new nux::InputArea();
+    bounding_area_->SetParentObject(this);
+    bounding_area_->SetGeometry(GetGeometry());
+    geometry_changed.connect([this] (nux::Area*, nux::Geometry const& g) { bounding_area_->SetGeometry(g); });
+  }
+
+  return bounding_area_;
 }
 
 void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  // fixme???
-}
-
-void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
   PreDraw(GfxContext, force_draw);
+  unsigned push = 0;
 
-  nux::Geometry base = GetGeometry();
-  GfxContext.PushClippingRectangle(base);
+  nux::Geometry const& base = GetGeometry();
+  GfxContext.PushClippingRectangle(base); ++push;
 
   // clear region
   gPainter.PaintBackground(GfxContext, base);
 
-  nux::Geometry background_geo(GetBackgroundGeometry());
-  int internal_offset = style()->GetInternalOffset();
+  nux::Geometry const& internal_clip = GetInternalBackground();
+  GfxContext.PushClippingRectangle(internal_clip); ++push;
 
-  nux::Geometry internal_clip(background_geo.x + internal_offset,
-                              background_geo.y + internal_offset,
-                              background_geo.width - internal_offset * 2,
-                              background_geo.height - internal_offset * 2);
-  GfxContext.PushClippingRectangle(internal_clip);
-
-  nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
-  nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
+  nux::Geometry const& blur_geo = GetAbsoluteGeometry();
 
   if (BackgroundEffectHelper::blur_type != BLUR_NONE)
   {
@@ -84,8 +219,8 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
     nux::TexCoordXForm texxform_blur_bg;
     texxform_blur_bg.flip_v_coord = true;
     texxform_blur_bg.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-    texxform_blur_bg.uoffset = ((float) base.x) / geo_absolute.width;
-    texxform_blur_bg.voffset = ((float) base.y) / geo_absolute.height;
+    texxform_blur_bg.uoffset = base.x / static_cast<float>(blur_geo.width);
+    texxform_blur_bg.voffset = base.y / static_cast<float>(blur_geo.height);
 
     nux::ROPConfig rop;
     rop.Blend = false;
@@ -144,17 +279,36 @@ void UnityWindowView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dr
 
   DrawOverlay(GfxContext, force_draw, internal_clip);
 
-  GfxContext.PopClippingRectangle();
-  GfxContext.PopClippingRectangle();
+  for (unsigned i = 0; i < push; ++i)
+    GfxContext.PopClippingRectangle();
 
-  DrawBackground(GfxContext, background_geo);
+  DrawBackground(GfxContext, GetBackgroundGeometry());
+
+  if (close_button_)
+  {
+    nux::GetPainter().PushPaintLayerStack();
+    GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Just doing ProcessDraw on the area should be enough, but unfortunately
+    // this leads to a flickering close icon that is randomly drawn.
+    // close_button_->ProcessDraw(GfxContext, force_draw);
+
+    nux::TexCoordXForm texxform;
+    auto const& geo = close_button_->GetGeometry();
+    GfxContext.QRP_1Tex(geo.x, geo.y, geo.width, geo.height,
+                        close_button_->texture()->GetDeviceTexture(),
+                        texxform, nux::color::White);
+
+    GfxContext.GetRenderStates().SetBlend(false);
+    nux::GetPainter().PopPaintLayerStack();
+  }
 }
 
 void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geometry const& geo)
 {
   int border = style()->GetBorderSize();
 
-  GfxContext.GetRenderStates().SetBlend (TRUE, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+  GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
   nux::TexCoordXForm texxform;
   texxform.SetTexCoordType (nux::TexCoordXForm::OFFSET_COORD);
@@ -241,7 +395,7 @@ void UnityWindowView::DrawBackground(nux::GraphicsEngine& GfxContext, nux::Geome
   texxform.flip_v_coord = false;
   GfxContext.QRP_1Tex (geo.x + geo.width - border, geo.y + border, border, geo.height - border - border, style()->GetBackgroundLeft()->GetDeviceTexture(), texxform, nux::color::White);
 
-  GfxContext.GetRenderStates().SetBlend (FALSE);
+  GfxContext.GetRenderStates().SetBlend(false);
 }
 
 // Introspectable methods

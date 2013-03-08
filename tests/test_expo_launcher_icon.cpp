@@ -35,6 +35,11 @@ struct TestExpoLauncherIcon : testing::Test
     : wm(dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default()))
   {}
 
+  void TearDown()
+  {
+    wm->SetViewportSize(2, 2);
+  }
+
   ExpoLauncherIcon icon;
   StandaloneWindowManager* wm;
 };

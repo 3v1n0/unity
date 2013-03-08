@@ -90,7 +90,7 @@ CoverflowResultItem::CoverflowResultItem(Result& result, CoverflowResultView *pa
   icon_texture_->SinkReference();
   icon_texture_->LoadIcon();
 
-  icon_texture_->texture_updated.connect([&] (nux::BaseTexture *texture)
+  icon_texture_->texture_updated.connect([this] (nux::ObjectPtr<nux::BaseTexture> const&)
   {
     if (parent_)
       parent_->NeedRedraw();
@@ -121,7 +121,7 @@ int CoverflowResultItem::Index()
 
 nux::ObjectPtr<nux::BaseTexture> CoverflowResultItem::GetTexture() const
 {
-  return nux::ObjectPtr<nux::BaseTexture>(icon_texture_->texture());
+  return icon_texture_->texture();
 }
 
 void CoverflowResultItem::Activate(int button)

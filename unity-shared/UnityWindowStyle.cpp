@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2012 Canonical Ltd
+ * Copyright (C) 2012-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include "UnityWindowStyle.h"
@@ -30,9 +31,11 @@ UnityWindowStyle::UnityWindowStyle()
   background_corner_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/switcher_corner.png", -1, true));
 }
 
-UnityWindowStyle::~UnityWindowStyle()
+UnityWindowStyle::Ptr UnityWindowStyle::Get()
 {
-  // nothing to do
+  // This is set only the first time;
+  static UnityWindowStyle::Ptr instance(new UnityWindowStyle());
+  return instance;
 }
 
 int UnityWindowStyle::GetBorderSize() const
@@ -45,19 +48,48 @@ int UnityWindowStyle::GetInternalOffset() const
   return 20;
 }
 
-nux::BaseTexture* UnityWindowStyle::GetBackgroundTop() const
+int UnityWindowStyle::GetCloseButtonPadding() const
 {
-  return background_top_.GetPointer();
+  return 2;
 }
 
-nux::BaseTexture* UnityWindowStyle::GetBackgroundLeft() const
+UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIcon()
 {
-  return background_left_.GetPointer();
+  if (!close_icon_)
+    close_icon_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dialog_close.png", -1, true));
+
+  return close_icon_;
 }
 
-nux::BaseTexture* UnityWindowStyle::GetBackgroundCorner() const
+UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIconHighligted()
 {
-  return background_corner_.GetPointer();
+  if (!close_icon_highlighted_)
+    close_icon_highlighted_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dialog_close_highlight.png", -1, true));
+
+  return close_icon_highlighted_;
+}
+
+UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetCloseIconPressed()
+{
+  if (!close_icon_pressed_)
+    close_icon_pressed_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dialog_close_press.png", -1, true));
+
+  return close_icon_pressed_;
+}
+
+UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetBackgroundTop() const
+{
+  return background_top_;
+}
+
+UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetBackgroundLeft() const
+{
+  return background_left_;
+}
+
+UnityWindowStyle::BaseTexturePtr UnityWindowStyle::GetBackgroundCorner() const
+{
+  return background_corner_;
 }
 
 
