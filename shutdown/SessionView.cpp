@@ -287,7 +287,8 @@ nux::Area* View::FindKeyFocusArea(unsigned etype, unsigned long key_code, unsign
   {
     nux::InputArea* focused = nux::GetWindowCompositor().GetKeyFocusArea();
 
-    if (!focused || !focused->IsMouseInside())
+    // Let's reset the focused area if we're in keyboard-navigation mode.
+    if (focused && focused->IsChildOf(buttons_layout_) && !focused->IsMouseInside())
       return this;
   }
 
