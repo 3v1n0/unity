@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2012 Canonical Ltd
+ * Copyright (C) 2012-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #ifndef UNITYWINDOWSTYLE_H
@@ -32,20 +33,28 @@ public:
   typedef std::shared_ptr<UnityWindowStyle> Ptr;
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
-  UnityWindowStyle();
-  ~UnityWindowStyle();
+  static UnityWindowStyle::Ptr Get();
 
-  nux::BaseTexture* GetBackgroundTop() const;
-  nux::BaseTexture* GetBackgroundLeft() const;
-  nux::BaseTexture* GetBackgroundCorner() const;
+  BaseTexturePtr GetCloseIcon();
+  BaseTexturePtr GetCloseIconHighligted();
+  BaseTexturePtr GetCloseIconPressed();
+  int GetCloseButtonPadding() const;
+
+  BaseTexturePtr GetBackgroundTop() const;
+  BaseTexturePtr GetBackgroundLeft() const;
+  BaseTexturePtr GetBackgroundCorner() const;
   int GetBorderSize() const;
   int GetInternalOffset() const;
 
 private:
+  UnityWindowStyle();
+
   BaseTexturePtr background_top_;
   BaseTexturePtr background_left_;
   BaseTexturePtr background_corner_;
-
+  BaseTexturePtr close_icon_;
+  BaseTexturePtr close_icon_highlighted_;
+  BaseTexturePtr close_icon_pressed_;
 };
 
 }

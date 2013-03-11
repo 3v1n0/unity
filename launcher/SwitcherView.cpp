@@ -564,11 +564,13 @@ nux::Geometry SwitcherView::GetBackgroundGeometry()
   return last_background_;
 }
 
-void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry internal_clip)
+void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip)
 {
-  nux::Geometry base = GetGeometry();
+  nux::Geometry const& base = GetGeometry();
+  nux::Geometry internal_clip = clip;
 
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+
 
   for (auto const& arg : last_args_)
   {

@@ -16,6 +16,7 @@ from autopilot.emulators.ibus import (
     get_available_input_engines,
     get_gconf_option,
     set_gconf_option,
+    get_ibus_bus,
     )
 from autopilot.matchers import Eventually
 from autopilot.testcase import multiply_scenarios
@@ -147,8 +148,6 @@ class IBusTests(UnityTestCase):
 
         """
         available_engines = get_available_input_engines()
-        if self._ibus_query is None:
-            self._ibus_query = IBusQuery()
         if engine_name in available_engines:
             if get_active_input_engines() != [engine_name]:
                 IBusTests._old_engines = set_active_engines([engine_name])
@@ -177,12 +176,34 @@ class IBusWidgetScenariodTests(IBusTests):
         ('hud', {'widget': 'hud'})
     ]
 
+    def try_ibus_query(self):
+        """This helper method tries to query ibus, and if it has connection problems,
+        it restarts the ibus connection.
+        It is to be used in a loop until it returns True, which means we probably
+        got a proper result - stored in self.result
+
+        """
+        self.result = None
+        try:
+            self._ibus_query = IBusQuery()
+        except:
+            # Here is a tricky situation. Probably for some reason the ibus connection
+            # got busted. In this case, restarting the connection from IBusQuery is not
+            # enough. We have to restart the global ibus connection to be sure
+            self._ibus_query = None
+            get_ibus_bus()
+            return False
+        self.result = self._ibus_query.poll(self.engine_name, self.input)
+        return self.result is not None
+
+
     def do_ibus_test(self):
         """Do the basic IBus test on self.widget using self.input and self.result."""
         try:
             result = self.result
         except:
-            result = self._ibus_query.poll(self.engine_name, self.input)
+            self.assertThat(self.try_ibus_query, Eventually(Equals(True)))
+            result = self.result
 
         widget = getattr(self.unity, self.widget)
         widget.ensure_visible()
