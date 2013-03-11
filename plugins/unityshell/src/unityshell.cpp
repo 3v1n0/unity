@@ -2491,8 +2491,10 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
    * fully covers the shell on its output. It does not include regular windows
    * stacked above the shell like DnD icons or Onboard etc.
    */
-  if (is_nux_window_)
+  if (G_UNLIKELY(is_nux_window_))
   {
+    static bool drawing_nux_active = false;
+
     if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
     {
       uScreen->nuxRegion += window->geometry();
@@ -2502,8 +2504,17 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     if (window->id() == screen->activeWindow() &&
         !(mask & PAINT_WINDOW_ON_TRANSFORMED_SCREEN_MASK))
     {
-      uScreen->panelShadowPainted = CompRect();
+      if (!drawing_nux_active)
+      {
+        uScreen->panelShadowPainted = CompRect();
+        drawing_nux_active = true;
+      }
+
       uScreen->paintPanelShadow(region);
+    }
+    else
+    {
+      drawing_nux_active = false;
     }
 
     return false;  // Ensure nux windows are never painted by compiz
