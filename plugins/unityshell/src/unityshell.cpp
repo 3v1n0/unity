@@ -578,13 +578,17 @@ void UnityScreen::nuxEpilogue()
   glDisable(GL_SCISSOR_TEST);
 }
 
-void UnityScreen::setPanelShadowMatrix(const GLMatrix& matrix)
+void UnityScreen::setPanelShadowMatrix(GLMatrix const& matrix)
 {
   panel_shadow_matrix_ = matrix;
 }
 
-void UnityScreen::paintPanelShadow(const CompRegion& clip)
+void UnityScreen::paintPanelShadow(CompRegion const& clip)
 {
+  // You have no shadow texture. But how?
+  if (_shadow_texture.empty() || !_shadow_texture[0])
+    return;
+
   if (panel_controller_->opacity() == 0.0f)
     return;
 
@@ -599,16 +603,17 @@ void UnityScreen::paintPanelShadow(const CompRegion& clip)
   if (fullscreenRegion.contains(*output))
     return;
 
-  float panel_h = static_cast<float>(panel_style_.panel_height);
+  if (launcher_controller_->IsOverlayOpen())
+  {
+    auto const& uscreen = UScreen::GetDefault();
+    if (uscreen->GetMonitorAtPosition(output->x(), output->y()) == overlay_monitor_)
+      return;
+  }
 
-  // You have no shadow texture. But how?
-  if (_shadow_texture.empty() || !_shadow_texture[0])
-    return;
-
-  float shadowX = output->x();
-  float shadowY = output->y() + panel_h;
-  float shadowWidth = output->width();
-  float shadowHeight = _shadow_texture[0]->height();
+  int shadowX = output->x();
+  int shadowY = output->y() + panel_style_.panel_height;
+  int shadowWidth = output->width();
+  int shadowHeight = _shadow_texture[0]->height();
   CompRect shadowRect(shadowX, shadowY, shadowWidth, shadowHeight);
 
   CompRegion redraw(clip);
@@ -620,31 +625,11 @@ void UnityScreen::paintPanelShadow(const CompRegion& clip)
 
   panelShadowPainted |= redraw;
 
-  // compiz doesn't use the same method of tracking monitors as our toolkit
-  // we need to make sure we properly associate with the right monitor
-  int current_monitor = -1;
-  auto monitors = UScreen::GetDefault()->GetMonitors();
-  int i = 0;
-  for (auto monitor : monitors)
-  {
-    if (monitor.x == output->x() && monitor.y == output->y())
-    {
-      current_monitor = i;
-      break;
-    }
-    i++;
-  }
-
-  if (launcher_controller_->IsOverlayOpen() && current_monitor == overlay_monitor_)
-    return;
-
   nuxPrologue();
 
-  const CompRect::vector& rects = redraw.rects();
-
-  for (auto const& r : rects)
+  for (auto const& r : redraw.rects())
   {
-    foreach(GLTexture * tex, _shadow_texture)
+    for (GLTexture* tex : _shadow_texture)
     {
       std::vector<GLfloat>  vertexData;
       std::vector<GLfloat>  textureData;
