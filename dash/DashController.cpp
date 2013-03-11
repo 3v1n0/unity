@@ -23,6 +23,7 @@
 #include <Nux/HLayout.h>
 #include <UnityCore/GLibWrapper.h>
 
+#include "ApplicationStarterImp.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusMessages.h"
@@ -139,7 +140,7 @@ void Controller::SetupWindow()
 
 void Controller::SetupDashView()
 {
-  view_ = new DashView();
+  view_ = new DashView(std::make_shared<ApplicationStarterImp>());
   AddChild(view_);
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);

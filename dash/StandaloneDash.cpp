@@ -28,6 +28,7 @@
 #include <NuxCore/AnimationController.h>
 #include <NuxCore/Logger.h>
 
+#include "ApplicationStarterImp.h"
 #include "unity-shared/BGHash.h"
 #include "unity-shared/FontSettings.h"
 #include "DashView.h"
@@ -64,7 +65,7 @@ void TestRunner::Init ()
 {
   layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  DashView* view = new DashView();
+  DashView* view = new DashView(std::make_shared<unity::ApplicationStarterImp>());
   view->DisableBlur();
   view->SetMinMaxSize(WIDTH, HEIGHT);
   layout->AddView (view, 1, nux::MINOR_POSITION_CENTER);
