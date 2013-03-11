@@ -648,10 +648,8 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
 nux::BaseTexture* IconRenderer::RenderCharToTexture(char label, int width, int height, nux::Color const& bg_color)
 {
   nux::BaseTexture*     texture  = NULL;
-  nux::CairoGraphics*   cg       = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32,
-                                                          width,
-                                                          height);
-  cairo_t*              cr       = cg->GetContext();
+  nux::CairoGraphics    cg(CAIRO_FORMAT_ARGB32, width, height);
+  cairo_t*              cr       = cg.GetInternalContext();
   PangoLayout*          layout   = NULL;
   PangoFontDescription* desc     = NULL;
   GtkSettings*          settings = gtk_settings_get_default();  // not ref'ed
@@ -669,7 +667,7 @@ nux::BaseTexture* IconRenderer::RenderCharToTexture(char label, int width, int h
   cairo_paint(cr);
   cairo_scale(cr, 1.0f, 1.0f);
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-  cg->DrawRoundedRectangle(cr, 1.0f, label_x, label_y, label_radius, label_w, label_h);
+  cg.DrawRoundedRectangle(cr, 1.0f, label_x, label_y, label_radius, label_w, label_h);
   cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 0.75f);
   cairo_fill_preserve(cr);
   cairo_set_source_rgba(cr, bg_color.red, bg_color.green, bg_color.blue, 0.20f);
@@ -695,11 +693,10 @@ nux::BaseTexture* IconRenderer::RenderCharToTexture(char label, int width, int h
   cairo_move_to(cr, x, y);
   pango_cairo_show_layout(cr, layout);
 
-  nux::NBitmapData* bitmap = cg->GetBitmap();
+  nux::NBitmapData* bitmap = cg.GetBitmap();
   texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
   texture->Update(bitmap);
   delete bitmap;
-  delete cg;
   g_object_unref(layout);
   pango_font_description_free(desc);
   g_free(fontName);
