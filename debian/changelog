@@ -1,3 +1,14 @@
+unity (6.12.0daily13.03.11-0ubuntu1) raring; urgency=low
+
+  [ Marco Trevisan (Treviño) ]
+  * [FFe] Add Unity Style Shutdown Dialog  (LP: #1152374)
+  * New unity style shutdown dialogues (LP: #882041)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3202
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Mon, 11 Mar 2013 04:02:43 +0000
+
 unity (6.12.0daily13.03.08-0ubuntu1) raring; urgency=low
 
   [ Andrea Azzarone ]
