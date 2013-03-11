@@ -1583,10 +1583,10 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     std::list<nux::Area*> tabs;
     if (active_scope_view_.IsValid())
     {
-      for (auto category : active_scope_view_->categories())
+      for (auto category : active_scope_view_->GetOrderedCategoryViews())
       {
         if (category->IsVisible())
-          tabs.push_back(category);
+          tabs.push_back(category.GetPointer());
       }
     }
 

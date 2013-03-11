@@ -47,14 +47,14 @@ class ScopeScrollView;
 class ScopeView : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(ScopeView, nux::View);
-  typedef std::vector<PlacesGroup*> CategoryGroups;
-  typedef std::map<PlacesGroup*, unsigned int> ResultCounts;
+  typedef std::vector<PlacesGroup::Ptr> CategoryGroups;
+  typedef std::map<PlacesGroup::Ptr, unsigned int> ResultCounts;
 
 public:
   ScopeView(Scope::Ptr scope, nux::Area* show_filters);
   ~ScopeView();
 
-  CategoryGroups& categories() { return categories_; }
+  CategoryGroups GetOrderedCategoryViews() const;
   FilterBar* filter_bar() const { return filter_bar_; }
   Scope::Ptr scope() const;
   nux::Area* fscroll_view() const;
@@ -94,6 +94,7 @@ private:
   void SetupFilters(Filters::Ptr const& filters);
 
   void OnCategoryAdded(Category const& category);
+  void OnCategoryChanged(Category const& category);
   void OnCategoryRemoved(Category const& category);
 
   void OnResultAdded(Result const& result);
@@ -106,16 +107,17 @@ private:
   void OnFilterRemoved(Filter::Ptr filter);
   void OnViewTypeChanged(ScopeViewType view_type);
   void OnScopeFilterExpanded(bool expanded);
-  bool ReinitializeFilterModels();
+  void QueueReinitializeFilterCategoryModels(unsigned int index);
+  bool ReinitializeCategoryResultModels();
   void ClearCategories();
+  void OnCategoryOrderChanged();
 
   void QueueCategoryCountsCheck();
   void CheckCategoryCounts();
 
-  ResultViewGrid* GetGridForCategory(unsigned category_index);
-  ResultView* GetResultViewForCategory(unsigned category_index);
+  ResultView* GetResultViewForCategory(unsigned int category_index);
 
-  virtual PlacesGroup* CreatePlacesGroup();
+  virtual PlacesGroup::Ptr CreatePlacesGroup(Category const& category);
 
   void BuildPreview(std::string const& uri, Preview::Ptr model);
 
@@ -128,14 +130,16 @@ private:
 
   std::string get_search_string() const;
 
+  CategoryGroups category_views_;
+
   Scope::Ptr scope_;
   glib::Object<GCancellable> cancellable_;
-  CategoryGroups categories_;
+  std::vector<unsigned int> category_order_;
   ResultCounts counts_;
   bool initial_activation_;
   bool no_results_active_;
   std::string search_string_;
-  PlacesGroup* last_expanded_group_;
+  PlacesGroup::Ptr last_expanded_group_;
 
   nux::HLayout* layout_;
   ScopeScrollView* scroll_view_;
@@ -158,6 +162,7 @@ private:
 
   sigc::connection categories_updated;
   sigc::connection category_added_connection;
+  sigc::connection category_changed_connection;
   sigc::connection category_removed_connection;
 
   sigc::connection filters_updated;
