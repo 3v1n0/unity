@@ -1287,6 +1287,7 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
 {
   allowWindowPaint = false;
   gScreen->glPaintTransformedOutput(attrib, transform, region, output, mask);
+  setPanelShadowMatrix(transform);
   paintPanelShadow(region);
 }
 
