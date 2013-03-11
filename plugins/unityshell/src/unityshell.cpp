@@ -2456,7 +2456,7 @@ std::string UnityScreen::GetName() const
   return "Unity";
 }
 
-bool isNuxWindow (CompWindow* value)
+bool isNuxWindow(CompWindow* value)
 {
   std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
   auto id = value->id();
@@ -2505,7 +2505,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
    * fully covers the shell on its output. It does not include regular windows
    * stacked above the shell like DnD icons or Onboard etc.
    */
-  if (isNuxWindow(window))
+  if (is_nux_window_)
   {
     if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
     {
@@ -2622,8 +2622,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   if (uScreen->doShellRepaint &&
       !uScreen->forcePaintOnTop () &&
       window == uScreen->firstWindowAboveShell &&
-      !uScreen->fullscreenRegion.contains(window->geometry())
-     )
+      !uScreen->fullscreenRegion.contains(window->geometry()))
   {
     uScreen->paintDisplay();
   }
@@ -2634,6 +2633,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     uScreen->setPanelShadowMatrix(matrix);
 
   Window active_window = screen->activeWindow();
+
   if (!screen_transformed &&
       window->id() == active_window &&
       window->type() != CompWindowTypeDesktopMask)
@@ -3409,6 +3409,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
   , window(window)
   , gWindow(GLWindow::get(window))
+  , is_nux_window_(isNuxWindow(window))
 {
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
