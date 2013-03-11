@@ -2498,6 +2498,14 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
       uScreen->nuxRegion += window->geometry();
       uScreen->nuxRegion -= uScreen->fullscreenRegion;
     }
+
+    if (window->id() == screen->activeWindow() &&
+        !(mask & PAINT_WINDOW_ON_TRANSFORMED_SCREEN_MASK))
+    {
+      uScreen->panelShadowPainted = CompRect();
+      uScreen->paintPanelShadow(region);
+    }
+
     return false;  // Ensure nux windows are never painted by compiz
   }
   else if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
