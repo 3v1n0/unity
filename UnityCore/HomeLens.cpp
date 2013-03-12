@@ -1163,7 +1163,6 @@ Lens::Ptr HomeLens::GetLensForShortcut(std::string const& lens_shortcut) const
   return Lens::Ptr();
 }
 
-
 void HomeLens::GlobalSearch(std::string const& search_string, SearchFinishedCallback const& cb)
 {
   LOG_WARN(logger) << "Global search not enabled for HomeLens class."
