@@ -106,6 +106,7 @@ LauncherIcon::LauncherIcon(IconType type)
   tooltip_text = "blank";
 
   position = Position::FLOATING;
+  removed = false;
 
   // FIXME: the abstraction is already broken, should be fixed for O
   // right now, hooking the dynamic quicklist the less ugly possible way
@@ -133,9 +134,6 @@ LauncherIcon::~LauncherIcon()
   if (on_order_changed_connection.connected())
     on_order_changed_connection.disconnect();
 
-  if (on_expo_terminated_connection.connected())
-    on_expo_terminated_connection.disconnect();
-
   if (_unity_theme)
   {
     _unity_theme = NULL;
@@ -160,7 +158,7 @@ void LauncherIcon::LoadQuicklist()
     _allow_quicklist_to_show = false;
   });
 
-  QuicklistManager::Default()->RegisterQuicklist(_quicklist.GetPointer());
+  QuicklistManager::Default()->RegisterQuicklist(_quicklist);
 }
 
 const bool
@@ -233,7 +231,7 @@ LauncherIcon::OpenInstance(ActionArg arg)
   if (wm.IsScaleActive())
     wm.TerminateScale();
 
-  OpenInstanceLauncherIcon();
+  OpenInstanceLauncherIcon(arg.timestamp);
 
   UpdateQuirkTime(Quirk::LAST_ACTION);
 }
@@ -530,23 +528,12 @@ void
 LauncherIcon::RecvMouseEnter(int monitor)
 {
   _last_monitor = monitor;
-  if (QuicklistManager::Default()->Current())
-  {
-    // A quicklist is active
-    return;
-  }
-
-  ShowTooltip();
 }
 
 void LauncherIcon::RecvMouseLeave(int monitor)
 {
   _last_monitor = -1;
   _allow_quicklist_to_show = true;
-
-  if (_tooltip)
-    _tooltip->ShowWindow(false);
-  tooltip_visible.emit(nux::ObjectPtr<nux::View>(nullptr));
 }
 
 bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
@@ -616,18 +603,19 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
   if (win_manager.IsScaleActive())
     win_manager.TerminateScale();
 
-  /* If the expo plugin is active, we need to wait it to be termated, before
-   * shwing the icon quicklist. */
+  /* If the expo plugin is active, we need to wait it to be terminated, before
+   * showing the icon quicklist. */
   if (win_manager.IsExpoActive())
   {
-    on_expo_terminated_connection = win_manager.terminate_expo.connect([&, tip_x, tip_y]() {
-        QuicklistManager::Default()->ShowQuicklist(_quicklist.GetPointer(), tip_x, tip_y);
-        on_expo_terminated_connection.disconnect();
+    auto conn = std::make_shared<sigc::connection>();
+    *conn = win_manager.terminate_expo.connect([this, conn, tip_x, tip_y] {
+      QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
+      conn->disconnect();
     });
   }
   else
   {
-    QuicklistManager::Default()->ShowQuicklist(_quicklist.GetPointer(), tip_x, tip_y);
+    QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
   }
 
   return true;
@@ -663,7 +651,9 @@ void LauncherIcon::RecvMouseUp(int button, int monitor, unsigned long key_flags)
 
 void LauncherIcon::RecvMouseClick(int button, int monitor, unsigned long key_flags)
 {
-  ActionArg arg(ActionArg::LAUNCHER, button);
+  auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+
+  ActionArg arg(ActionArg::LAUNCHER, button, timestamp);
   arg.monitor = monitor;
 
   bool shift_pressed = nux::GetKeyModifierState(key_flags, nux::NUX_STATE_SHIFT);
@@ -712,7 +702,7 @@ LauncherIcon::SetCenter(nux::Point3 const& center, int monitor, nux::Geometry co
     tip_y = new_center.y;
 
     if (_quicklist && _quicklist->IsVisible())
-      QuicklistManager::Default()->ShowQuicklist(_quicklist.GetPointer(), tip_x, tip_y);
+      QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
     else if (_tooltip && _tooltip->IsVisible())
       _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
   }
@@ -1215,6 +1205,9 @@ void LauncherIcon::UnStick()
 
   SetQuirk(Quirk::VISIBLE, false);
 }
+
+void LauncherIcon::PerformScroll(ScrollDirection direction, Time timestamp)
+{}
 
 
 } // namespace launcher

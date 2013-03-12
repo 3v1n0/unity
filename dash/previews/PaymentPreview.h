@@ -24,12 +24,6 @@
 #ifndef PAYMENT_PREVIEW_H
 #define PAYMENT_PREVIEW_H
 
-// ations ids
-#define CHANGE_PAYMENT_ACTION "change_payment_method"
-#define FORGOT_PASSWORD_ACTION "forgot_password"
-#define CANCEL_PURCHASE_ACTION "cancel_purchase"
-#define PURCHASE_ALBUM_ACTION "purchase_album"
-
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
 #include <Nux/LayeredLayout.h>
@@ -64,12 +58,9 @@ public:
   typedef nux::ObjectPtr<PaymentPreview> Ptr;
 
   PaymentPreview(dash::Preview::Ptr preview_model);
-  ~PaymentPreview();
 
   // From debug::Introspectable
   std::string GetName() const;
-
-  void AddProperties(GVariantBuilder* builder);
 
   // Create and connect an action link to OnActionLinkActivated
   nux::ObjectPtr<ActionLink> CreateLink(dash::Preview::ActionPtr action);

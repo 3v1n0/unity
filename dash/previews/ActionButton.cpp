@@ -125,7 +125,7 @@ void ActionButton::BuildLayout(std::string const& label, std::string const& icon
     if (!icon_hint_.empty())
     {
       image_ = new IconTexture(icon_hint, icon_size);
-      image_->texture_updated.connect([&](nux::BaseTexture*)
+      image_->texture_updated.connect([this](nux::ObjectPtr<nux::BaseTexture> const&)
       {
         BuildLayout(label_, icon_hint_, extra_hint_);
       });

@@ -68,6 +68,8 @@ public:
   std::vector<Window> WindowsOnViewport();
   std::vector<Window> WindowsForMonitor(int monitor);
 
+  void PerformScroll(ScrollDirection direction, Time timestamp) override;
+
 protected:
   void Remove();
   void UpdateIconGeometries(std::vector<nux::Point3> center);
@@ -77,7 +79,7 @@ protected:
   void OnDndEnter();
   void OnDndHovered();
   void OnDndLeave();
-  void OpenInstanceLauncherIcon();
+  void OpenInstanceLauncherIcon(Time timestamp) override;
   void ToggleSticky();
 
   bool OnShouldHighlightOnDrag(DndData const& dnd_data);
@@ -108,12 +110,13 @@ private:
   };
 
   void EnsureWindowState();
+  void EnsureMenuItemsWindowsReady();
   void EnsureMenuItemsReady();
   void UpdateBackgroundColor();
   void UpdateMenus();
   void UpdateDesktopQuickList();
 
-  void OpenInstanceWithUris(std::set<std::string> const& uris);
+  void OpenInstanceWithUris(std::set<std::string> const& uris, Time timestamp);
   void Focus(ActionArg arg);
   bool Spread(bool current_desktop, int state, bool force);
 
@@ -123,13 +126,18 @@ private:
   WindowList GetWindows(WindowFilterMask filter = 0, int monitor = -1);
   const std::set<std::string> GetSupportedTypes();
   std::string GetDesktopID();
+  WindowList GetWindowsOnCurrentDesktopInStackingOrder();
 
   std::string _remote_uri;
   Time _startup_notification_timestamp;
+  Time _last_scroll_timestamp;
+  ScrollDirection _last_scroll_direction;
+  unsigned int _progressive_scroll;
   std::set<std::string> _supported_types;
   std::map<std::string, glib::Object<DbusmenuClient>> _menu_clients;
   std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items;
   std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items_extra;
+  std::vector<glib::Object<DbusmenuMenuitem>> _menu_items_windows;
   glib::Object<IndicatorDesktopShortcuts> _desktop_shortcuts;
   glib::Object<DbusmenuMenuitem> _menu_desktop_shortcuts;
   glib::Object<GFileMonitor> _desktop_file_monitor;

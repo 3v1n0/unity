@@ -30,7 +30,6 @@ using namespace testing;
 #include "config.h"
 
 using namespace unity;
-using namespace unity::dash;
 
 namespace
 {

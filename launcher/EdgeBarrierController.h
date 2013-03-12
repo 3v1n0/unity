@@ -28,7 +28,15 @@ namespace ui {
 
 struct EdgeBarrierSubscriber
 {
-  virtual bool HandleBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event) = 0;
+  enum class Result
+  {
+    IGNORED,
+    HANDLED,
+    ALREADY_HANDLED,
+    NEEDS_RELEASE
+  };
+
+  virtual Result HandleBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event) = 0;
 };
 
 class EdgeBarrierController : public sigc::trackable
@@ -44,12 +52,10 @@ public:
   void Unsubscribe(EdgeBarrierSubscriber* subscriber, unsigned int monitor);
   EdgeBarrierSubscriber* GetSubscriber(unsigned int monitor);
 
-protected:
-  void ProcessBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event);
-
 private:
   struct Impl;
   std::unique_ptr<Impl> pimpl;
+  friend class TestEdgeBarrierController;
 };
 
 }

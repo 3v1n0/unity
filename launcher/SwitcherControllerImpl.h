@@ -24,6 +24,7 @@
 #include <UnityCore/GLibSource.h>
 
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/MockableBaseWindow.h"
 #include "unity-shared/UBusWrapper.h"
 
 #include "SwitcherModel.h"
@@ -32,6 +33,7 @@
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
+#include <NuxCore/Animation.h>
 
 namespace unity
 {
@@ -40,8 +42,6 @@ namespace switcher
 
 struct Controller::Impl
 {
-  nux::Property<int> timeout_length;
-
   Impl(Controller* obj,
        unsigned int load_timeout,
        Controller::WindowCreator const& create_window);
@@ -52,14 +52,16 @@ struct Controller::Impl
   void Next();
   void Prev();
 
+  void InitiateDetail(bool animate=false);
   void NextDetail();
   void PrevDetail();
 
+  bool IsDetailViewShown();
   void SetDetail(bool detail, unsigned int min_windows = 1);
 
   void SelectFirstItem();
 
-  virtual SwitcherView* GetView();
+  virtual SwitcherView::Ptr GetView() const;
 
   ui::LayoutWindow::Vector ExternalRenderTargets();
 
@@ -73,6 +75,7 @@ struct Controller::Impl
   void ConstructWindow();
   void ConstructView();
   void ShowView();
+  void HideWindow();
 
   bool OnDetailTimer();
   void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr const& icon);
@@ -88,9 +91,10 @@ struct Controller::Impl
   // @todo move these view data into the SwitcherView class
   nux::Geometry workarea_;
   Controller::WindowCreator create_window_;
-  nux::ObjectPtr<nux::BaseWindow> view_window_;
+  MockableBaseWindow::Ptr view_window_;
   nux::HLayout* main_layout_;
   nux::Color bg_color_;
+  nux::animation::AnimateValue<double> fade_animator_;
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;

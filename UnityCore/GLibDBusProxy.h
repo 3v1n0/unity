@@ -62,7 +62,8 @@ public:
                  GDBusCallFlags flags = G_DBUS_CALL_FLAGS_NONE,
                  int timeout_msec = -1);
 
-  void Connect(std::string const& signal_name, ReplyCallback callback);
+  void Connect(std::string const& signal_name, ReplyCallback const& callback);
+  void DisconnectSignal(std::string const& signal_name = "");
   bool IsConnected();
 
   sigc::signal<void> connected;

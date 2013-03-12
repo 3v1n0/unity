@@ -23,6 +23,7 @@
 #include "test_uscreen_mock.h"
 
 #include "EdgeBarrierController.h"
+#include "EdgeBarrierControllerPrivate.h"
 
 using namespace unity;
 using namespace unity::ui;
@@ -46,35 +47,25 @@ public:
   MOCK_METHOD1(ReleaseBarrier, void(int));
 };
 
-class MockEdgeBarrierController : public EdgeBarrierController
-{
-public:
-  void ProcessBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event)
-  {
-    EdgeBarrierController::ProcessBarrierEvent(owner, event);
-  }
-
-  EdgeBarrierSubscriber* GetSubscriber(unsigned int monitor)
-  {
-    return EdgeBarrierController::GetSubscriber(monitor);
-  }
-};
-
 class TestBarrierSubscriber : public EdgeBarrierSubscriber
 {
 public:
-  TestBarrierSubscriber(bool handles = false)
-    : handles_(handles)
+  TestBarrierSubscriber(EdgeBarrierSubscriber::Result result = EdgeBarrierSubscriber::Result::IGNORED)
+    : handle_result_(result)
   {}
 
-  bool HandleBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event)
+  EdgeBarrierSubscriber::Result HandleBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event)
   {
-    return handles_;
+    return handle_result_;
   }
 
-  bool handles_;
+  EdgeBarrierSubscriber::Result handle_result_;
 };
 
+} // namespace
+
+namespace unity {
+namespace ui {
 class TestEdgeBarrierController : public Test
 {
 public:
@@ -93,16 +84,32 @@ public:
     }
   }
 
+  void ProcessBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr event)
+  {
+    GetPrivateImpl()->OnPointerBarrierEvent(owner, event);
+  }
+
+  EdgeBarrierController::Impl* GetPrivateImpl() const
+  {
+    return bc.pimpl.get();
+  }
+
   BarrierEvent::Ptr MakeBarrierEvent(int id, bool breaker)
   {
     int velocity = breaker ? std::numeric_limits<int>::max() : bc.options()->edge_overcome_pressure() - 1;
     return std::make_shared<BarrierEvent>(0, 1, velocity, id);
   }
 
+
   TestBarrierSubscriber subscribers_[max_num_monitors];
   MockUScreen uscreen;
-  MockEdgeBarrierController bc;
+  EdgeBarrierController bc;
 };
+} // namespace ui
+} // namespace unity
+
+namespace
+{
 
 TEST_F(TestEdgeBarrierController, Construction)
 {
@@ -129,7 +136,7 @@ TEST_F(TestEdgeBarrierController, UnsubscribeInvalid)
 
 TEST_F(TestEdgeBarrierController, SubscriberReplace)
 {
-  TestBarrierSubscriber handling_subscriber(true);
+  TestBarrierSubscriber handling_subscriber(EdgeBarrierSubscriber::Result::HANDLED);
   bc.Subscribe(&handling_subscriber, 0);
   EXPECT_EQ(bc.GetSubscriber(0), &handling_subscriber);
 }
@@ -138,28 +145,29 @@ TEST_F(TestEdgeBarrierController, ProcessHandledEvent)
 {
   int monitor = 0;
 
-  TestBarrierSubscriber handling_subscriber(true);
+  TestBarrierSubscriber handling_subscriber(EdgeBarrierSubscriber::Result::HANDLED);
   bc.Subscribe(&handling_subscriber, monitor);
 
   MockPointerBarrier owner(monitor);
   auto breaking_barrier_event = MakeBarrierEvent(0, true);
 
   EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
-  bc.ProcessBarrierEvent(&owner, breaking_barrier_event);
+  ProcessBarrierEvent(&owner, breaking_barrier_event);
+  EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), 0);
 }
 
 TEST_F(TestEdgeBarrierController, ProcessHandledEventOnReleasedBarrier)
 {
   int monitor = max_num_monitors-1;
 
-  TestBarrierSubscriber handling_subscriber(true);
+  TestBarrierSubscriber handling_subscriber(EdgeBarrierSubscriber::Result::HANDLED);
   bc.Subscribe(&handling_subscriber, monitor);
 
   MockPointerBarrier owner(monitor, true);
   auto breaking_barrier_event = MakeBarrierEvent(5, true);
 
   EXPECT_CALL(owner, ReleaseBarrier(5)).Times(1);
-  bc.ProcessBarrierEvent(&owner, breaking_barrier_event);
+  ProcessBarrierEvent(&owner, breaking_barrier_event);
 }
 
 TEST_F(TestEdgeBarrierController, ProcessUnHandledEventBreakingBarrier)
@@ -171,7 +179,7 @@ TEST_F(TestEdgeBarrierController, ProcessUnHandledEventBreakingBarrier)
   auto breaking_barrier_event = MakeBarrierEvent(breaking_id, true);
 
   EXPECT_CALL(owner, ReleaseBarrier(breaking_id));
-  bc.ProcessBarrierEvent(&owner, breaking_barrier_event);
+  ProcessBarrierEvent(&owner, breaking_barrier_event);
 }
 
 TEST_F(TestEdgeBarrierController, ProcessUnHandledEventBreakingBarrierOnMaxMonitor)
@@ -181,11 +189,8 @@ TEST_F(TestEdgeBarrierController, ProcessUnHandledEventBreakingBarrierOnMaxMonit
   MockPointerBarrier owner(monitor);
   auto breaking_barrier_event = MakeBarrierEvent(0, true);
 
-  // This was leading to a crash, see bug #1020075
-  // you can reproduce this repeating this test multiple times using the
-  // --gtest_repeat=X command line
   EXPECT_CALL(owner, ReleaseBarrier(_));
-  bc.ProcessBarrierEvent(&owner, breaking_barrier_event);
+  ProcessBarrierEvent(&owner, breaking_barrier_event);
 }
 
 TEST_F(TestEdgeBarrierController, ProcessUnHandledEventNotBreakingBarrier)
@@ -197,7 +202,7 @@ TEST_F(TestEdgeBarrierController, ProcessUnHandledEventNotBreakingBarrier)
   auto not_breaking_barrier_event = MakeBarrierEvent(not_breaking_id, false);
 
   EXPECT_CALL(owner, ReleaseBarrier(not_breaking_id)).Times(0);
-  bc.ProcessBarrierEvent(&owner, not_breaking_barrier_event);
+  ProcessBarrierEvent(&owner, not_breaking_barrier_event);
 }
 
 TEST_F(TestEdgeBarrierController, ProcessUnHandledEventOnReleasedBarrier)
@@ -209,7 +214,69 @@ TEST_F(TestEdgeBarrierController, ProcessUnHandledEventOnReleasedBarrier)
   auto not_breaking_barrier_event = MakeBarrierEvent(not_breaking_id, false);
 
   EXPECT_CALL(owner, ReleaseBarrier(not_breaking_id));
-  bc.ProcessBarrierEvent(&owner, not_breaking_barrier_event);
+  ProcessBarrierEvent(&owner, not_breaking_barrier_event);
+}
+
+TEST_F(TestEdgeBarrierController, ProcessAlreadyHandledEvent)
+{
+  int monitor = g_random_int_range(0, max_num_monitors);
+
+  MockPointerBarrier owner(monitor);
+  subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::ALREADY_HANDLED;
+
+  auto event = MakeBarrierEvent(g_random_int(), false);
+
+  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
+  ProcessBarrierEvent(&owner, event);
+  EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), event->velocity);
+}
+
+TEST_F(TestEdgeBarrierController, ProcessIgnoredEventWithStickyEdges)
+{
+  int monitor = g_random_int_range(0, max_num_monitors);
+
+  bc.sticky_edges = true;
+  MockPointerBarrier owner(monitor);
+  subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::IGNORED;
+
+  auto event = MakeBarrierEvent(g_random_int(), false);
+
+  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
+  ProcessBarrierEvent(&owner, event);
+  EXPECT_FALSE(owner.released());
+  EXPECT_FALSE(owner.release_once());
+  EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), event->velocity);
+}
+
+TEST_F(TestEdgeBarrierController, ProcessIgnoredEventWithOutStickyEdges)
+{
+  int monitor = g_random_int_range(0, max_num_monitors);
+
+  bc.sticky_edges = false;
+  MockPointerBarrier owner(monitor);
+  subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::IGNORED;
+
+  auto event = MakeBarrierEvent(g_random_int(), false);
+
+  EXPECT_CALL(owner, ReleaseBarrier(event->event_id));
+  ProcessBarrierEvent(&owner, event);
+  EXPECT_TRUE(owner.released());
+  EXPECT_TRUE(owner.release_once());
+  EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), 0);
+}
+
+TEST_F(TestEdgeBarrierController, ProcessNeedsReleaseEvent)
+{
+  int monitor = g_random_int_range(0, max_num_monitors);
+
+  MockPointerBarrier owner(monitor);
+  subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::NEEDS_RELEASE;
+
+  auto event = MakeBarrierEvent(g_random_int(), false);
+
+  EXPECT_CALL(owner, ReleaseBarrier(event->event_id));
+  ProcessBarrierEvent(&owner, event);
+  EXPECT_EQ(GetPrivateImpl()->decaymulator_.value(), 0);
 }
 
 TEST_F(TestEdgeBarrierController, BreakingEdgeTemporaryReleasesBarrier)
@@ -217,7 +284,7 @@ TEST_F(TestEdgeBarrierController, BreakingEdgeTemporaryReleasesBarrier)
   MockPointerBarrier owner;
 
   EXPECT_CALL(owner, ReleaseBarrier(1));
-  bc.ProcessBarrierEvent(&owner, MakeBarrierEvent(1, true));
+  ProcessBarrierEvent(&owner, MakeBarrierEvent(1, true));
   ASSERT_TRUE(owner.released());
 
   Utils::WaitForTimeoutMSec(bc.options()->edge_passed_disabled_ms);
@@ -228,30 +295,30 @@ TEST_F(TestEdgeBarrierController, BreakingEdgeTemporaryReleasesBarrierForNotHand
 {
   MockPointerBarrier owner;
   int monitor = 0;
-  subscribers_[monitor].handles_ = false;
+  subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::IGNORED;
 
   EXPECT_CALL(owner, ReleaseBarrier(5));
-  bc.ProcessBarrierEvent(&owner, MakeBarrierEvent(5, true));
+  ProcessBarrierEvent(&owner, MakeBarrierEvent(5, true));
   ASSERT_TRUE(owner.released());
 
-  subscribers_[monitor].handles_ = false;
+  subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::IGNORED;
   EXPECT_CALL(owner, ReleaseBarrier(6));
-  bc.ProcessBarrierEvent(&owner, MakeBarrierEvent(6, false));
+  ProcessBarrierEvent(&owner, MakeBarrierEvent(6, false));
 }
 
 TEST_F(TestEdgeBarrierController, BreakingEdgeTemporaryReleasesBarrierForHandledEvents)
 {
   MockPointerBarrier owner;
   int monitor = 0;
-  subscribers_[monitor].handles_ = false;
+  subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::IGNORED;
 
   EXPECT_CALL(owner, ReleaseBarrier(5));
-  bc.ProcessBarrierEvent(&owner, MakeBarrierEvent(5, true));
+  ProcessBarrierEvent(&owner, MakeBarrierEvent(5, true));
   ASSERT_TRUE(owner.released());
 
-  subscribers_[monitor].handles_ = true;
+  subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::HANDLED;
   EXPECT_CALL(owner, ReleaseBarrier(6)).Times(1);
-  bc.ProcessBarrierEvent(&owner, MakeBarrierEvent(6, true));
+  ProcessBarrierEvent(&owner, MakeBarrierEvent(6, true));
 }
 
 TEST_F(TestEdgeBarrierController, StickyEdgePropertyProxiesLauncherOption)
@@ -267,6 +334,37 @@ TEST_F(TestEdgeBarrierController, StickyEdgePropertyProxiesLauncherOption)
 
   bc.sticky_edges = true;
   EXPECT_TRUE(bc.options()->edge_resist());
+}
+
+TEST_F(TestEdgeBarrierController, TestTheDirectionIsAlawysSetToBothSides)
+{
+  for (auto barrier : GetPrivateImpl()->barriers_)
+    ASSERT_EQ(barrier->direction, BarrierDirection::BOTH);
+}
+
+TEST_F(TestEdgeBarrierController, BarrierDoesNotBreakIfYEventToFarApart)
+{
+  MockPointerBarrier owner;
+
+  int velocity = bc.options()->edge_overcome_pressure() * bc.options()->edge_responsiveness();
+  auto firstEvent = std::make_shared<BarrierEvent>(0, 50, velocity, 10);
+  auto secondEvent = std::make_shared<BarrierEvent>(0, 150, velocity, 11);
+
+  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(0);
+  ProcessBarrierEvent(&owner, firstEvent);
+  ProcessBarrierEvent(&owner, secondEvent);
+}
+
+TEST_F(TestEdgeBarrierController, BarrierBreaksInYBreakZone)
+{
+  MockPointerBarrier owner;
+
+  int velocity = bc.options()->edge_overcome_pressure() * bc.options()->edge_responsiveness();
+  auto firstEvent = std::make_shared<BarrierEvent>(0, 50, velocity, 10);
+
+  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(1);
+  ProcessBarrierEvent(&owner, firstEvent);
+  ProcessBarrierEvent(&owner, firstEvent);
 }
 
 }

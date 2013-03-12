@@ -24,6 +24,7 @@
 #define LAUNCHER_CONTROLLER_PRIVATE_H
 
 #include <Nux/Nux.h>
+#include <UnityCore/GLibDBusServer.h>
 
 #include "AbstractLauncherIcon.h"
 #include "DeviceLauncherSection.h"
@@ -71,6 +72,7 @@ public:
   void OnLauncherAddRequest(std::string const& icon_uri, AbstractLauncherIcon::Ptr const& before);
   void OnLauncherAddRequestSpecial(std::string const& path, std::string const& aptdaemon_trans_id,
                                    std::string const& icon_path, int icon_x, int icon_y, int icon_size);
+  void OnLauncherUpdateIconStickyState(std::string const& desktop_file, bool sticky);
   void OnLauncherRemoveRequest(AbstractLauncherIcon::Ptr const& icon);
 
   void OnLauncherEntryRemoteAdded(LauncherEntryRemote::Ptr const& entry);
@@ -91,6 +93,7 @@ public:
   SoftwareCenterLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path);
 
   void SetupIcons();
+  void MigrateFavorites();
   void AddRunningApps();
   void AddDevices();
 
@@ -115,14 +118,7 @@ public:
   void OnDndStarted(std::string const& data, int monitor);
   void OnDndFinished();
   void OnDndMonitorChanged(int monitor);
-
-  static void OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer user_data);
-  static void OnDBusMethodCall(GDBusConnection* connection, const gchar* sender, const gchar* object_path,
-                               const gchar* interface_name, const gchar* method_name,
-                               GVariant* parameters, GDBusMethodInvocation* invocation,
-                               gpointer user_data);
-
-  static GDBusInterfaceVTable interface_vtable;
+  GVariant* OnDBusMethodCall(std::string const& method, GVariant *parameters);
 
   Controller* parent_;
   LauncherModel::Ptr model_;
@@ -151,10 +147,7 @@ public:
   int last_dnd_monitor_;
   int super_tap_duration_;
 
-  unsigned dbus_owner_;
-  GDBusConnection* gdbus_connection_;
-  unsigned reg_id_;
-
+  glib::DBusServer dbus_server_;
   glib::SourceManager sources_;
   UBusManager ubus;
 

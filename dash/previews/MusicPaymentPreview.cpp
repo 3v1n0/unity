@@ -47,9 +47,17 @@ namespace previews
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.previews.MusicPaymentPreview");
+nux::logging::Logger logger("unity.dash.previews.payment.preview.music");
 
 }
+
+// static string definitions
+const std::string MusicPaymentPreview::DATA_INFOHINT_ID = "album_purchase_preview";
+const std::string MusicPaymentPreview::DATA_PASSWORD_KEY = "password";
+const std::string MusicPaymentPreview::CHANGE_PAYMENT_ACTION = "change_payment_method";
+const std::string MusicPaymentPreview::FORGOT_PASSWORD_ACTION = "forgot_password";
+const std::string MusicPaymentPreview::CANCEL_PURCHASE_ACTION = "cancel_purchase";
+const std::string MusicPaymentPreview::PURCHASE_ALBUM_ACTION = "purchase_album";
 
 class DetailsScrollView : public nux::ScrollView
 {
@@ -71,10 +79,6 @@ MusicPaymentPreview::MusicPaymentPreview(dash::Preview::Ptr preview_model)
   PaymentPreview::SetupBackground();
 }
 
-MusicPaymentPreview::~MusicPaymentPreview()
-{
-}
-
 std::string MusicPaymentPreview::GetName() const
 {
   return "MusicPaymentPreview";
@@ -84,16 +88,17 @@ void MusicPaymentPreview::OnActionActivated(ActionButton* button, std::string co
 {
   // Check the action id and send the password only when we
   // purchasing a song
-  if(id.compare(PURCHASE_ALBUM_ACTION) == 0 && preview_model_
+  if(id == MusicPaymentPreview::PURCHASE_ALBUM_ACTION && preview_model_
           && password_entry_)
   {
     // HACK: We need to think a better way to do this
-    GVariant *variant = g_variant_new_string(
-        password_entry_->text_entry()->GetText().c_str());
-    glib::Variant* password = new glib::Variant(variant);
-    Lens::Hints hints;
-    hints[DATA_PASSWORD_KEY] = *password;
+    auto const& password = password_entry_->text_entry()->GetText();
+    glib::Variant variant_pw(g_variant_new_string(password.c_str()));
+    Lens::Hints hints {
+      std::make_pair(MusicPaymentPreview::DATA_PASSWORD_KEY, variant_pw)
+    };
     preview_model_->PerformAction(id, hints);
+
     // show the overlay
     ShowOverlay();
     return;
@@ -114,15 +119,14 @@ void MusicPaymentPreview::LoadActions()
   for (dash::Preview::ActionPtr action : preview_model_->GetActions())
   {
       const char *action_id = action->id.c_str();
-      if(strcmp(CHANGE_PAYMENT_ACTION, action_id) == 0
-              || strcmp(FORGOT_PASSWORD_ACTION, action_id) == 0)
+      if(MusicPaymentPreview::CHANGE_PAYMENT_ACTION == action_id
+              || MusicPaymentPreview::FORGOT_PASSWORD_ACTION == action_id)
       {
         nux::ObjectPtr<ActionLink> link = this->CreateLink(action);
         link->activate.connect(sigc::mem_fun(this,
                     &MusicPaymentPreview::OnActionLinkActivated));
 
-        std::pair<std::string, nux::ObjectPtr<nux::AbstractButton>> data (action->id, link);
-        sorted_buttons_.insert(data);
+        sorted_buttons_.insert(std::make_pair(action->id, link));
       }
       else
       {
@@ -130,8 +134,7 @@ void MusicPaymentPreview::LoadActions()
         button->activate.connect(sigc::mem_fun(this,
                     &MusicPaymentPreview::OnActionActivated));
 
-        std::pair<std::string, nux::ObjectPtr<nux::AbstractButton>> data (action->id, button);
-        sorted_buttons_.insert(data);
+        sorted_buttons_.insert(std::make_pair(action->id, button));
       }
       LOG_DEBUG(logger) << "added button for action with id '" << action->id << "'";
   }
@@ -148,16 +151,16 @@ nux::Layout* MusicPaymentPreview::GetTitle()
           preview_model_->title.Get(), true,
           NUX_TRACKER_LOCATION);
 
-  title_->SetFont(style.payment_title_font().c_str());
+  title_->SetFont(style.payment_title_font());
   title_->SetLines(-1);
-  title_->SetFont(style.title_font().c_str());
+  title_->SetFont(style.title_font());
   title_data_layout->AddView(title_.GetPointer(), 1);
 
   subtitle_ = new StaticCairoText(
           preview_model_->subtitle.Get(), true,
           NUX_TRACKER_LOCATION);
   subtitle_->SetLines(-1);
-  subtitle_->SetFont(style.payment_subtitle_font().c_str());
+  subtitle_->SetFont(style.payment_subtitle_font());
   title_data_layout->AddView(subtitle_.GetPointer(), 1);
   title_data_layout->AddSpace(1, 1);
   return title_data_layout;
@@ -174,7 +177,7 @@ nux::Layout* MusicPaymentPreview::GetPrice()
           payment_preview_model_->purchase_prize.Get(), true,
           NUX_TRACKER_LOCATION);
   purchase_prize_->SetLines(-1);
-  purchase_prize_->SetFont(style.payment_prize_title_font().c_str());
+  purchase_prize_->SetFont(style.payment_prize_title_font());
   prize_data_layout->AddView(purchase_prize_.GetPointer(), 1,
           nux::MINOR_POSITION_END);
 
@@ -182,7 +185,7 @@ nux::Layout* MusicPaymentPreview::GetPrice()
           _("Ubuntu One best offer"),
           true, NUX_TRACKER_LOCATION);
   purchase_hint_->SetLines(-1);
-  purchase_hint_->SetFont(style.payment_prize_subtitle_font().c_str());
+  purchase_hint_->SetFont(style.payment_prize_subtitle_font());
   prize_data_layout->AddView(purchase_hint_.GetPointer(), 1,
           nux::MINOR_POSITION_END);
 
@@ -190,7 +193,7 @@ nux::Layout* MusicPaymentPreview::GetPrice()
           payment_preview_model_->purchase_type.Get(), true,
           NUX_TRACKER_LOCATION);
   purchase_type_->SetLines(-1);
-  purchase_type_->SetFont(style.payment_prize_subtitle_font().c_str());
+  purchase_type_->SetFont(style.payment_prize_subtitle_font());
   prize_data_layout->AddView(purchase_type_.GetPointer(), 1,
           nux::MINOR_POSITION_END);
   return prize_data_layout;
@@ -205,7 +208,7 @@ nux::Layout* MusicPaymentPreview::GetBody()
   intro_ = new StaticCairoText(
           payment_preview_model_->header.Get(), true,
           NUX_TRACKER_LOCATION);
-  intro_->SetFont(style.payment_intro_font().c_str());
+  intro_->SetFont(style.payment_intro_font());
   intro_->SetLineSpacing(10);
   intro_->SetLines(-style.GetDescriptionLineCount());
   intro_->SetMinimumHeight(50);
@@ -232,7 +235,7 @@ nux::Layout* MusicPaymentPreview::GetFormLabels()
 {
   previews::Style& style = dash::previews::Style::Instance();
   nux::VLayout *labels_layout = new nux::VLayout();
-  if (!error_message_)
+  if (error_message_.empty())
   {
     labels_layout->SetSpaceBetweenChildren(18);
   }
@@ -245,21 +248,21 @@ nux::Layout* MusicPaymentPreview::GetFormLabels()
           _("Ubuntu One email:"), true,
           NUX_TRACKER_LOCATION);
   email_label_->SetLines(-1);
-  email_label_->SetFont(style.payment_form_labels_font().c_str());
+  email_label_->SetFont(style.payment_form_labels_font());
   labels_layout->AddView(email_label_.GetPointer(), 0, nux::MINOR_POSITION_END);
 
   payment_label_ = new StaticCairoText(
           _("Payment method:"), true,
           NUX_TRACKER_LOCATION);
   payment_label_->SetLines(-1);
-  payment_label_->SetFont(style.payment_form_labels_font().c_str());
+  payment_label_->SetFont(style.payment_form_labels_font());
   labels_layout->AddView(payment_label_.GetPointer(), 0, nux::MINOR_POSITION_END);
 
   password_label_ = new StaticCairoText(
           _("Ubuntu One Password:"), true,
           NUX_TRACKER_LOCATION);
   password_label_->SetLines(-1);
-  password_label_->SetFont(style.payment_form_labels_font().c_str());
+  password_label_->SetFont(style.payment_form_labels_font());
   password_label_->SetMinimumHeight(40);
   labels_layout->AddView(password_label_.GetPointer(), 0, nux::MINOR_POSITION_END);
 
@@ -270,7 +273,7 @@ nux::Layout* MusicPaymentPreview::GetFormFields()
 {
   previews::Style& style = dash::previews::Style::Instance();
   nux::VLayout *fields_layout = new nux::VLayout();
-  if (!error_message_)
+  if (error_message_.empty())
   {
     fields_layout->SetSpaceBetweenChildren(18);
   }
@@ -283,7 +286,7 @@ nux::Layout* MusicPaymentPreview::GetFormFields()
           payment_preview_model_->email.Get(), true,
           NUX_TRACKER_LOCATION);
   email_->SetLines(-1);
-  email_->SetFont(style.payment_form_data_font().c_str());
+  email_->SetFont(style.payment_form_data_font());
   fields_layout->AddView(email_.GetPointer(), 1,
                   nux::MINOR_POSITION_START);
 
@@ -291,7 +294,7 @@ nux::Layout* MusicPaymentPreview::GetFormFields()
           payment_preview_model_->payment_method.Get(), true,
           NUX_TRACKER_LOCATION);
   payment_->SetLines(-1);
-  payment_->SetFont(style.payment_form_data_font().c_str());
+  payment_->SetFont(style.payment_form_data_font());
   fields_layout->AddView(payment_.GetPointer(), 1,
                   nux::MINOR_POSITION_START);
 
@@ -307,12 +310,12 @@ nux::Layout* MusicPaymentPreview::GetFormFields()
   const char password_char = '*';
   password_entry_->text_entry()->SetPasswordChar(&password_char);
 
-  if (error_message_)
+  if (!error_message_.empty())
   {
     StaticCairoText* error = new StaticCairoText(
             _("Wrong password"), true, NUX_TRACKER_LOCATION);
     error->SetLines(-1);
-    error->SetFont(style.payment_form_data_font().c_str());
+    error->SetFont(style.payment_form_data_font());
     // ensure it is an error using red
     error->SetTextColor(style.payment_error_color());
     fields_layout->AddView(error, 0, nux::MINOR_POSITION_START);
@@ -325,7 +328,7 @@ nux::Layout* MusicPaymentPreview::GetFormActions()
 {
   previews::Style& style = dash::previews::Style::Instance();
   nux::VLayout *actions_layout = new nux::VLayout();
-  if (!error_message_)
+  if (error_message_.empty())
   {
     actions_layout->SetSpaceBetweenChildren(16);
   }
@@ -339,16 +342,16 @@ nux::Layout* MusicPaymentPreview::GetFormActions()
           "", true,
           NUX_TRACKER_LOCATION);
   empty_->SetLines(-1);
-  empty_->SetFont(style.payment_form_labels_font().c_str());
+  empty_->SetFont(style.payment_form_labels_font());
   actions_layout->AddView(empty_.GetPointer(), 1,
                   nux::MINOR_POSITION_START);
 
   actions_layout->AddView(
-          sorted_buttons_[CHANGE_PAYMENT_ACTION].GetPointer(),
+          sorted_buttons_[MusicPaymentPreview::CHANGE_PAYMENT_ACTION].GetPointer(),
           1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL,
       100.0f, nux::NUX_LAYOUT_END);
   actions_layout->AddView(
-           sorted_buttons_[FORGOT_PASSWORD_ACTION].GetPointer(),
+           sorted_buttons_[MusicPaymentPreview::FORGOT_PASSWORD_ACTION].GetPointer(),
           1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL,
       100.0f, nux::NUX_LAYOUT_END);
 
@@ -370,37 +373,36 @@ nux::Layout* MusicPaymentPreview::GetFooter()
           nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
 
   buttons_data_layout->AddSpace(20, 1);
-  buttons_data_layout->AddView(sorted_buttons_[CANCEL_PURCHASE_ACTION].GetPointer(),
+  buttons_data_layout->AddView(sorted_buttons_[MusicPaymentPreview::CANCEL_PURCHASE_ACTION].GetPointer(),
           1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
           nux::NUX_LAYOUT_END);
-  buttons_data_layout->AddView(sorted_buttons_[PURCHASE_ALBUM_ACTION].GetPointer(),
+  buttons_data_layout->AddView(sorted_buttons_[MusicPaymentPreview::PURCHASE_ALBUM_ACTION].GetPointer(),
           1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
           nux::NUX_LAYOUT_END);
 
   return buttons_data_layout;
 }
 
-const char* MusicPaymentPreview::GetErrorMessage(GVariant *dict)
+const std::string MusicPaymentPreview::GetErrorMessage(GVariant *dict)
 {
-  GVariant* data = NULL;
-  data = g_variant_lookup_value(dict, "error_message", G_VARIANT_TYPE_ANY);
-  if (data == NULL)
-  {
-    return NULL;
-  }
-  gsize length;
-  std::string data_s = std::string(g_variant_get_string(data, &length));
-  return data_s.c_str();
+
+  glib::Variant data(g_variant_lookup_value(dict, "error_message",
+    G_VARIANT_TYPE_ANY));
+
+  if (!data)
+    return "";
+
+  return data.GetString();
 }
 
 void MusicPaymentPreview::PreLayoutManagement()
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
   GetLayout()->SetGeometry(geo);
 
   previews::Style& style = dash::previews::Style::Instance();
 
-  int width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
+  int width = std::max<int>(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
 
   if(full_data_layout_) { full_data_layout_->SetMaximumWidth(width); }
   if(header_layout_) { header_layout_->SetMaximumWidth(width); }
@@ -410,10 +412,10 @@ void MusicPaymentPreview::PreLayoutManagement()
 
   // set the tab ordering
   SetFirstInTabOrder(password_entry_->text_entry());
-  SetLastInTabOrder(sorted_buttons_[CANCEL_PURCHASE_ACTION].GetPointer());
-  SetLastInTabOrder(sorted_buttons_[PURCHASE_ALBUM_ACTION].GetPointer());
-  SetLastInTabOrder(sorted_buttons_[CHANGE_PAYMENT_ACTION].GetPointer());
-  SetLastInTabOrder(sorted_buttons_[FORGOT_PASSWORD_ACTION].GetPointer());
+  SetLastInTabOrder(sorted_buttons_[MusicPaymentPreview::CANCEL_PURCHASE_ACTION].GetPointer());
+  SetLastInTabOrder(sorted_buttons_[MusicPaymentPreview::PURCHASE_ALBUM_ACTION].GetPointer());
+  SetLastInTabOrder(sorted_buttons_[MusicPaymentPreview::CHANGE_PAYMENT_ACTION].GetPointer());
+  SetLastInTabOrder(sorted_buttons_[MusicPaymentPreview::FORGOT_PASSWORD_ACTION].GetPointer());
 
   Preview::PreLayoutManagement();
 }
@@ -434,7 +436,7 @@ void MusicPaymentPreview::SetupViews()
   {
     for (dash::Preview::InfoHintPtr info_hint : hints)
     {
-      if (info_hint->id == DATA_INFOHINT_ID)
+      if (info_hint->id == MusicPaymentPreview::DATA_INFOHINT_ID)
       {
         preview_data = info_hint->value;
       }

@@ -36,6 +36,7 @@ namespace dash
 
 class FilterRatingsButton : public nux::ToggleButton
 {
+  NUX_DECLARE_OBJECT_TYPE(FilterRatingsButton, nux::ToggleButton);
 public:
   FilterRatingsButton(NUX_FILE_LINE_PROTO);
   virtual ~FilterRatingsButton();

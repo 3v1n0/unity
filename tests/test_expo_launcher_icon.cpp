@@ -35,6 +35,11 @@ struct TestExpoLauncherIcon : testing::Test
     : wm(dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default()))
   {}
 
+  void TearDown()
+  {
+    wm->SetViewportSize(2, 2);
+  }
+
   ExpoLauncherIcon icon;
   StandaloneWindowManager* wm;
 };
@@ -71,14 +76,14 @@ TEST_F(TestExpoLauncherIcon, Icon2x2Layout)
   wm->SetCurrentViewport(nux::Point(0, 1));
   wm->screen_viewport_switch_ended.emit();
   EXPECT_EQ(icon.icon_name, "workspace-switcher-left-bottom");
-  
+
   wm->SetCurrentViewport(nux::Point(1, 1));
   wm->screen_viewport_switch_ended.emit();
   EXPECT_EQ(icon.icon_name, "workspace-switcher-right-bottom");
 
   wm->SetCurrentViewport(nux::Point(0, 0));
   wm->screen_viewport_switch_ended.emit();
-  EXPECT_EQ(icon.icon_name, "workspace-switcher-top-left"); 
+  EXPECT_EQ(icon.icon_name, "workspace-switcher-top-left");
 }
 
 TEST_F(TestExpoLauncherIcon, Icon2x2Layout_Expo)
@@ -92,14 +97,14 @@ TEST_F(TestExpoLauncherIcon, Icon2x2Layout_Expo)
   wm->SetCurrentViewport(nux::Point(0, 1));
   wm->terminate_expo.emit();
   EXPECT_EQ(icon.icon_name, "workspace-switcher-left-bottom");
-  
+
   wm->SetCurrentViewport(nux::Point(1, 1));
   wm->terminate_expo.emit();
   EXPECT_EQ(icon.icon_name, "workspace-switcher-right-bottom");
 
   wm->SetCurrentViewport(nux::Point(0, 0));
   wm->terminate_expo.emit();
-  EXPECT_EQ(icon.icon_name, "workspace-switcher-top-left"); 
+  EXPECT_EQ(icon.icon_name, "workspace-switcher-top-left");
 }
 
 TEST_F(TestExpoLauncherIcon, IconNot2x2Layout)
@@ -114,6 +119,15 @@ TEST_F(TestExpoLauncherIcon, IconNot2x2Layout)
   wm->SetCurrentViewport(nux::Point(1, 1));
   wm->screen_viewport_switch_ended.emit();
   EXPECT_EQ(icon.icon_name, "workspace-switcher-top-left");
+}
+
+TEST_F(TestExpoLauncherIcon, AboutToRemoveDisablesViewport)
+{
+  wm->SetViewportSize(2, 2);
+
+  icon.AboutToRemove();
+  EXPECT_EQ(wm->GetViewportHSize(), 1);
+  EXPECT_EQ(wm->GetViewportVSize(), 1);
 }
 
 }

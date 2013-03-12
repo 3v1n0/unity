@@ -38,6 +38,9 @@ namespace unity
 {
 namespace dash
 {
+  
+NUX_IMPLEMENT_OBJECT_TYPE(FilterRatingsButton);
+
 FilterRatingsButton::FilterRatingsButton(NUX_FILE_LINE_DECL)
   : nux::ToggleButton(NUX_FILE_LINE_PARAM)
   , focused_star_(-1)

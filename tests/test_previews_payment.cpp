@@ -29,6 +29,7 @@ using ::testing::Return;
 #include <unity-shared/DashStyle.h>
 #include <unity-shared/PreviewStyle.h>
 #include <unity-shared/ThumbnailGenerator.h>
+#include <unity-shared/CoverArt.h>
 #include "unity-shared/UnitySettings.h"
 
 #include <unity-protocol.h>
@@ -145,7 +146,6 @@ class TestPaymentPreview : public ::testing::Test
 
   // needed for styles
   unity::Settings settings;
-  previews::Style panel_style;
   dash::Style dash_style;
 
 };

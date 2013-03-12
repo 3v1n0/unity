@@ -25,6 +25,7 @@
 #include "ExpoLauncherIcon.h"
 #include "DesktopLauncherIcon.h"
 #include "DesktopUtilities.h"
+#include "MockableBaseWindow.h"
 #include "MockLauncherIcon.h"
 #include "BFBLauncherIcon.h"
 #include "HudLauncherIcon.h"
@@ -70,9 +71,10 @@ struct MockFavoriteStore : FavoriteStore
 {
   MockFavoriteStore()
   {
-    fav_list_ = { FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE,
-                  FavoriteStore::URI_PREFIX_APP + app::SW_CENTER,
-                  FavoriteStore::URI_PREFIX_APP + app::UPDATE_MANAGER };
+    fav_list_ = { FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(app::UBUNTU_ONE),
+                  FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(app::SW_CENTER),
+                  FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(app::UPDATE_MANAGER),
+                  places::APPS_URI, places::DEVICES_URI };
   }
 
   FavoriteList const& GetFavorites() const
@@ -221,7 +223,7 @@ struct TestLauncherController : public testing::Test
     bool expired = false;
     glib::Idle idle([&] { expired = true; return false; },
                     glib::Source::Priority::LOW);
-    Utils::WaitUntil(expired);
+    Utils::WaitUntilMSec(expired);
   }
 
 protected:
@@ -261,7 +263,7 @@ protected:
 
     void DisconnectSignals()
     {
-      // Impl()->view_opened_signal_.Disconnect();
+      ApplicationManager::Default().application_started.clear();
       Impl()->device_section_.icon_added.clear();
       Impl()->model_->icon_removed.clear();
       Impl()->model_->saved.clear();
@@ -304,6 +306,7 @@ TEST_F(TestLauncherController, Construction)
   {
     auto model_icon_it = std::find_if(lc.Impl()->model_->begin(), lc.Impl()->model_->end(),
       [&fav_uri](AbstractLauncherIcon::Ptr const& i) { return (i->RemoteUri() == fav_uri); });
+
     bool valid_iter = (model_icon_it != lc.Impl()->model_->end());
 
     if (fav_uri == places::APPS_URI || fav_uri == places::DEVICES_URI)
@@ -342,6 +345,16 @@ TEST_F(TestLauncherController, MultimonitorSingleLauncher)
     ASSERT_EQ(lc.launchers().size(), 1);
     EXPECT_EQ(lc.launcher().monitor(), i);
   }
+}
+
+TEST_F(TestLauncherController, MirroredMultimonitorSingleLauncherOnExternalMonitor)
+{
+  // See lp bug 991637
+  lc.multiple_launchers = false;
+  uscreen.SetPrimary(1);
+
+  ASSERT_EQ(lc.launchers().size(), 1);
+  ASSERT_EQ(lc.launcher().monitor(), 0);
 }
 
 TEST_F(TestLauncherController, MultimonitorSwitchToMultipleLaunchers)
@@ -497,7 +510,7 @@ TEST_F(TestLauncherController, EnabledStrutsOnNeverHide)
   };
 
   for (int i = 0; i < max_num_monitors; ++i)
-    Utils::WaitUntil(std::bind(check_fn, i));
+    Utils::WaitUntilMSec(std::bind(check_fn, i));
 }
 
 TEST_F(TestLauncherController, DisabledStrutsOnAutoHide)
@@ -507,11 +520,11 @@ TEST_F(TestLauncherController, DisabledStrutsOnAutoHide)
   lc.options()->hide_mode = LAUNCHER_HIDE_AUTOHIDE;
 
   auto check_fn = [this](int index) {
-    return !(lc.launchers()[index]->GetParent()->InputWindowStrutsEnabled());
+    return lc.launchers()[index]->GetParent()->InputWindowStrutsEnabled();
   };
 
   for (int i = 0; i < max_num_monitors; ++i)
-    Utils::WaitUntil(std::bind(check_fn, i));
+    Utils::WaitUntilMSec(std::bind(check_fn, i), false);
 }
 
 TEST_F(TestLauncherController, EnabledStrutsAddingNewLaunchersOnAutoHide)
@@ -532,7 +545,7 @@ TEST_F(TestLauncherController, EnabledStrutsAddingNewLaunchersOnAutoHide)
   };
 
   for (int i = 0; i < max_num_monitors; ++i)
-    Utils::WaitUntil(std::bind(check_fn, i));
+    Utils::WaitUntilMSec(std::bind(check_fn, i));
 }
 
 TEST_F(TestLauncherController, DisabledStrutsAddingNewLaunchersOnNeverHide)
@@ -549,11 +562,11 @@ TEST_F(TestLauncherController, DisabledStrutsAddingNewLaunchersOnNeverHide)
   lc.multiple_launchers = true;
 
   auto check_fn = [this](int index) {
-    return !(lc.launchers()[index]->GetParent()->InputWindowStrutsEnabled());
+    return lc.launchers()[index]->GetParent()->InputWindowStrutsEnabled();
   };
 
   for (int i = 0; i < max_num_monitors; ++i)
-    Utils::WaitUntil(std::bind(check_fn, i));
+    Utils::WaitUntilMSec(std::bind(check_fn, i), false);
 }
 
 TEST_F(TestLauncherController, CreateFavoriteInvalid)
@@ -591,7 +604,7 @@ TEST_F(TestLauncherController, CreateFavoriteDevice)
 {
   lc.Impl()->device_section_ = MockDeviceLauncherSection();
   auto const& icons = lc.Impl()->device_section_.GetIcons();
-  auto const& device_icon = *(icons.begin());
+  auto const& device_icon = icons.front();
 
   ASSERT_TRUE(device_icon.IsValid());
   ASSERT_FALSE(device_icon->IsSticky());
@@ -720,7 +733,7 @@ TEST_F(TestLauncherController, RegisteredIconSavesPosition)
 
 TEST_F(TestLauncherController, RegisteredIconForgetsPosition)
 {
-  auto const& fav = lc.Impl()->GetIconByUri(*(favorite_store.GetFavorites().begin()));
+  auto const& fav = lc.Impl()->GetIconByUri(favorite_store.GetFavorites().front());
   ASSERT_TRUE(favorite_store.IsFavorite(fav->RemoteUri()));
 
   fav->UnStick();
@@ -754,6 +767,13 @@ TEST_F(TestLauncherController, GetIconByUriApplications)
 
     auto const& model_icon_it = std::find_if(lc.Impl()->model_->begin(), lc.Impl()->model_->end(),
     [&fav_uri](AbstractLauncherIcon::Ptr const& i) { return (i->RemoteUri() == fav_uri); });
+
+    if (fav_uri == places::APPS_URI || fav_uri == places::DEVICES_URI)
+    {
+      ASSERT_EQ(model_icon_it, lc.Impl()->model_->end());
+      continue;
+    }
+
     ASSERT_NE(model_icon_it, lc.Impl()->model_->end());
 
     auto const& fav = lc.Impl()->GetIconByUri(fav_uri);
@@ -795,7 +815,7 @@ TEST_F(TestLauncherController, AddDevices)
   lc.DisconnectSignals();
   lc.Impl()->device_section_ = MockDeviceLauncherSection();
   auto const& icons = lc.Impl()->device_section_.GetIcons();
-  auto const& device_icon1 = *(icons.begin());
+  auto const& device_icon1 = icons.front();
   auto const& device_icon2 = *(std::next(icons.begin()));
 
   device_icon1->Stick(false);
@@ -804,6 +824,36 @@ TEST_F(TestLauncherController, AddDevices)
 
   EXPECT_FALSE(lc.Impl()->GetIconByUri(device_icon1->RemoteUri()).IsValid());
   EXPECT_TRUE(lc.Impl()->GetIconByUri(device_icon2->RemoteUri()).IsValid());
+}
+
+TEST_F(TestLauncherController, MigrateFavorites)
+{
+  favorite_store.SetFavorites({"old_file.desktop"});
+
+  lc.Impl()->MigrateFavorites();
+
+  auto new_favs = favorite_store.GetFavorites();
+
+  EXPECT_EQ(*std::next(new_favs.begin(), 0), "old_file.desktop");
+  EXPECT_EQ(*std::next(new_favs.begin(), 1), places::APPS_URI);
+  EXPECT_EQ(*std::next(new_favs.begin(), 2), lc.Impl()->expo_icon_->RemoteUri());
+  EXPECT_EQ(*std::next(new_favs.begin(), 3), places::DEVICES_URI);
+
+  lc.Impl()->MigrateFavorites();
+
+  auto new_new_favs = favorite_store.GetFavorites();
+
+  EXPECT_EQ(new_favs, new_new_favs);
+}
+
+TEST_F(TestLauncherController, MigrateFavoritesUnneeded)
+{
+  favorite_store.SetFavorites({places::APPS_URI});
+  auto old_favs = favorite_store.GetFavorites();
+  lc.Impl()->MigrateFavorites();
+  auto new_favs = favorite_store.GetFavorites();
+
+  EXPECT_EQ(old_favs, new_favs);
 }
 
 TEST_F(TestLauncherController, SetupIcons)
@@ -848,8 +898,6 @@ TEST_F(TestLauncherController, SetupIcons)
     auto icon = lc.GetIconByDesktop(path);
     ASSERT_EQ(model->IconIndex(icon), ++icon_index);
   }
-
-  ASSERT_EQ(model->IconIndex(lc.Impl()->expo_icon_), ++icon_index);
 }
 
 TEST_F(TestLauncherController, ResetIconPriorities)
@@ -905,7 +953,7 @@ TEST_F(TestLauncherController, GetLastIconPriorityUnSticky)
   lc.ClearModel();
   lc.Impl()->device_section_ = MockDeviceLauncherSection(3);
   auto const& device_icons = lc.Impl()->device_section_.GetIcons();
-  auto const& last_device = *(device_icons.rbegin());
+  auto const& last_device = device_icons.back();
 
   favorite_store.SetFavorites({ places::DEVICES_URI,
                                 FavoriteStore::URI_PREFIX_APP + app::SW_CENTER });
@@ -922,7 +970,7 @@ TEST_F(TestLauncherController, GetLastIconPriorityUnStickyWithAllStickyIcons)
   lc.ClearModel();
   lc.Impl()->device_section_ = MockDeviceLauncherSection(3);
   auto const& device_icons = lc.Impl()->device_section_.GetIcons();
-  auto const& last_device = *(device_icons.rbegin());
+  auto const& last_device = device_icons.back();
 
   favorite_store.SetFavorites({ places::DEVICES_URI,
                                 FavoriteStore::URI_PREFIX_APP + app::SW_CENTER });
@@ -943,7 +991,7 @@ TEST_F(TestLauncherController, GetLastIconPriorityUnStickyWithSomeStickyIcons)
   lc.Impl()->device_section_ = MockDeviceLauncherSection(3);
   auto const& device_icons = lc.Impl()->device_section_.GetIcons();
   auto const& first_device = *(std::next(device_icons.rbegin()));
-  auto const& last_device = *(device_icons.rbegin());
+  auto const& last_device = device_icons.back();
 
   favorite_store.SetFavorites({ places::DEVICES_URI,
                                 FavoriteStore::URI_PREFIX_APP + app::SW_CENTER });
@@ -1001,7 +1049,7 @@ TEST_F(TestLauncherController, GetLastIconPrioritySticky)
   lc.DisconnectSignals();
 
   auto const& device_icons = lc.Impl()->device_section_.GetIcons();
-  auto const& first_device = *(device_icons.begin());
+  auto const& first_device = device_icons.front();
 
   int last_priority = lc.Impl()->GetLastIconPriority<VolumeLauncherIcon>("", true);
   EXPECT_EQ(last_priority, first_device->SortPriority() - 1);
@@ -1012,7 +1060,7 @@ TEST_F(TestLauncherController, GetLastIconPriorityStickyWithAllStickyIcons)
   lc.ClearModel();
   lc.Impl()->device_section_ = MockDeviceLauncherSection(3);
   auto const& device_icons = lc.Impl()->device_section_.GetIcons();
-  auto const& last_device = *(device_icons.rbegin());
+  auto const& last_device = device_icons.back();
 
   favorite_store.SetFavorites({ places::DEVICES_URI,
                                 FavoriteStore::URI_PREFIX_APP + app::SW_CENTER });
@@ -1084,7 +1132,7 @@ TEST_F(TestLauncherController, LauncherAddRequestApplicationStick)
   lc.Impl()->RegisterIcon(bamf_icon, std::numeric_limits<int>::max());
 
   auto app_icons = model->GetSublist<ApplicationLauncherIcon>();
-  auto const& first_app = *(app_icons.begin());
+  auto const& first_app = app_icons.front();
   ASSERT_LT(model->IconIndex(first_app), model->IconIndex(bamf_icon));
 
   EXPECT_CALL(*bamf_icon, Stick(false));
@@ -1098,13 +1146,13 @@ TEST_F(TestLauncherController, LauncherAddRequestDeviceAdd)
   auto const& model = lc.Impl()->model_;
   lc.Impl()->device_section_ = MockDeviceLauncherSection();
   auto const& icons = lc.Impl()->device_section_.GetIcons();
-  auto const& device_icon = *(icons.begin());
+  auto const& device_icon = icons.front();
   auto const& icon_uri = device_icon->RemoteUri();
 
   ASSERT_FALSE(lc.Impl()->GetIconByUri(icon_uri).IsValid());
 
   auto app_icons = model->GetSublist<ApplicationLauncherIcon>();
-  auto const& first_app = *(app_icons.begin());
+  auto const& first_app = app_icons.front();
 
   lc.launcher().add_request.emit(icon_uri, first_app);
 
@@ -1362,7 +1410,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedNewBeforeIcon)
   auto const& model = lc.Impl()->model_;
 
   auto app_icons = model->GetSublist<ApplicationLauncherIcon>();
-  auto const& first_app = *(app_icons.begin());
+  auto const& first_app = app_icons.front();
   favorite_store.favorite_added.emit(icon_uri, first_app->RemoteUri(), true);
 
   auto const& new_icon = lc.Impl()->GetIconByUri(icon_uri);
@@ -1378,7 +1426,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedNewAfterIcon)
   auto const& model = lc.Impl()->model_;
 
   auto app_icons = model->GetSublist<ApplicationLauncherIcon>();
-  auto const& first_app = *(app_icons.begin());
+  auto const& first_app = app_icons.front();
   favorite_store.favorite_added.emit(icon_uri, first_app->RemoteUri(), false);
 
   auto const& new_icon = lc.Impl()->GetIconByUri(icon_uri);
@@ -1411,7 +1459,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedStickBefore)
   lc.Impl()->RegisterIcon(app_icon, std::numeric_limits<int>::max());
 
   auto app_icons = model->GetSublist<ApplicationLauncherIcon>();
-  auto const& first_app = *(app_icons.begin());
+  auto const& first_app = app_icons.front();
   ASSERT_LT(model->IconIndex(first_app), model->IconIndex(app_icon));
 
   EXPECT_CALL(*app_icon, Stick(false));
@@ -1431,7 +1479,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedStickAfter)
   lc.Impl()->RegisterIcon(app_icon, std::numeric_limits<int>::max());
 
   auto const& app_icons = model->GetSublist<ApplicationLauncherIcon>();
-  auto const& first_app = *(app_icons.begin());
+  auto const& first_app = app_icons.front();
   ASSERT_LT(model->IconIndex(first_app), model->IconIndex(app_icon));
 
   EXPECT_CALL(*app_icon, Stick(false));
@@ -1447,7 +1495,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedDeviceSection)
   lc.Impl()->device_section_ = MockDeviceLauncherSection();
   auto const& model = lc.Impl()->model_;
   auto const& icons = lc.Impl()->device_section_.GetIcons();
-  auto const& device_icon1(*(icons.begin()));
+  auto const& device_icon1(icons.front());
   auto const& device_icon2(*(std::next(icons.begin())));
 
   favorite_store.SetFavorites({ lc.Impl()->expo_icon_->RemoteUri(),
@@ -1456,7 +1504,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedDeviceSection)
   lc.DisconnectSignals();
 
   auto const& app_icons = lc.Impl()->model_->GetSublist<ApplicationLauncherIcon>();
-  auto const& last_app = *(app_icons.rbegin());
+  auto const& last_app = app_icons.back();
 
   ASSERT_EQ(model->IconIndex(device_icon1), model->IconIndex(last_app) + 1);
   ASSERT_EQ(model->IconIndex(device_icon2), model->IconIndex(last_app) + 2);
@@ -1485,7 +1533,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedDevice)
   auto const& model = lc.Impl()->model_;
 
   auto const& icons = lc.Impl()->device_section_.GetIcons();
-  auto const& device_icon(*(icons.begin()));
+  auto const& device_icon(icons.front());
 
   favorite_store.SetFavorites({ lc.Impl()->expo_icon_->RemoteUri(),
                                 FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(app::UBUNTU_ONE),
@@ -1500,7 +1548,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedDevice)
   favorite_store.favorite_removed.emit(device_icon->RemoteUri());
 
   auto const& app_icons = lc.Impl()->model_->GetSublist<ApplicationLauncherIcon>();
-  auto const& last_app = *(app_icons.rbegin());
+  auto const& last_app = app_icons.back();
   EXPECT_EQ(model->IconIndex(device_icon), model->IconIndex(last_app) + 1);
 }
 
@@ -1511,7 +1559,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedDeviceSection)
   auto const& model = lc.Impl()->model_;
 
   auto const& icons = lc.Impl()->device_section_.GetIcons();
-  auto const& device_icon1(*(icons.begin()));
+  auto const& device_icon1(icons.front());
   auto const& device_icon2(*(std::next(icons.begin())));
 
   favorite_store.SetFavorites({ lc.Impl()->expo_icon_->RemoteUri(), places::DEVICES_URI,
@@ -1526,15 +1574,16 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedDeviceSection)
   favorite_store.favorite_removed.emit(places::DEVICES_URI);
 
   auto const& app_icons = lc.Impl()->model_->GetSublist<ApplicationLauncherIcon>();
-  auto const& last_app = *(app_icons.rbegin());
+  auto const& last_app = app_icons.back();
   EXPECT_EQ(model->IconIndex(device_icon1), model->IconIndex(last_app) + 1);
   EXPECT_EQ(model->IconIndex(device_icon2), model->IconIndex(last_app) + 2);
+  EXPECT_TRUE(favorite_store.IsFavorite(places::DEVICES_URI));
 }
 
 TEST_F(TestLauncherController, OnViewOpened)
 {
   auto const& app_icons = lc.Impl()->model_->GetSublist<ApplicationLauncherIcon>();
-  auto const& last_app = *(app_icons.rbegin());
+  auto const& last_app = app_icons.back();
 
   testmocks::MockApplicationManager::StartApp(app::BZR_HANDLE_PATCH);
   auto const& icon = lc.GetIconByDesktop(app::BZR_HANDLE_PATCH);
@@ -1592,7 +1641,7 @@ TEST_F(TestLauncherController, UpdateLaunchersBackgroundColor)
   UBusManager().SendMessage(UBUS_BACKGROUND_COLOR_CHANGED,
                             g_variant_new("(dddd)", 11/255.0f, 22/255.0f, 33/255.0f, 1.0f));
 
-  Utils::WaitUntil([this] { return lc.options()->background_color == nux::Color(11, 22, 33); });
+  Utils::WaitUntilMSec([this] { return lc.options()->background_color == nux::Color(11, 22, 33); });
 }
 
 // thumper: 2012-11-28 disabling the drag and drop tests as they are taking over 20s
@@ -1611,17 +1660,17 @@ TEST_F(TestLauncherController, DISABLED_DragAndDrop_MultipleLaunchers)
   xdnd_manager_->dnd_started.emit("my_awesome_file", 0);
 
   for (int i = 0; i < max_num_monitors; ++i)
-    Utils::WaitUntil(std::bind(check_fn, i), i != 0);
+    Utils::WaitUntilMSec(std::bind(check_fn, i), i != 0);
 
   xdnd_manager_->monitor_changed.emit(3);
 
   for (int i = 0; i < max_num_monitors; ++i)
-    Utils::WaitUntil(std::bind(check_fn, i), i != 3);
+    Utils::WaitUntilMSec(std::bind(check_fn, i), i != 3);
 
   xdnd_manager_->dnd_finished.emit();
 
   for (int i = 0; i < max_num_monitors; ++i)
-    Utils::WaitUntil(std::bind(check_fn, i), true);
+    Utils::WaitUntilMSec(std::bind(check_fn, i), true);
 }
 
 TEST_F(TestLauncherController, DISABLED_DragAndDrop_SingleLauncher)
@@ -1635,13 +1684,58 @@ TEST_F(TestLauncherController, DISABLED_DragAndDrop_SingleLauncher)
   };
 
   xdnd_manager_->dnd_started.emit("my_awesome_file", 0);
-  Utils::WaitUntil(check_fn, false);
+  Utils::WaitUntilMSec(check_fn, false);
 
   xdnd_manager_->monitor_changed.emit(2);
-  Utils::WaitUntil(check_fn, false);
+  Utils::WaitUntilMSec(check_fn, false);
 
   xdnd_manager_->dnd_finished.emit();
-  Utils::WaitUntil(check_fn, true);
+  Utils::WaitUntilMSec(check_fn, true);
+}
+
+TEST_F(TestLauncherController, SetExistingLauncherIconAsFavorite)
+{
+  const char * desktop_file = "normal-icon.desktop";
+  MockApplicationLauncherIcon::Ptr
+    app_icon(new NiceMock<MockApplicationLauncherIcon>(true, desktop_file));
+  lc.Impl()->RegisterIcon(app_icon);
+  ASSERT_FALSE(favorite_store.IsFavorite(app_icon->RemoteUri()));
+
+  const std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop_file;
+  lc.Impl()->OnLauncherUpdateIconStickyState(icon_uri, true);
+
+  ASSERT_TRUE(app_icon->IsSticky());
+  EXPECT_TRUE(favorite_store.IsFavorite(app_icon->RemoteUri()));
+}
+
+TEST_F(TestLauncherController, SetExistingLauncherIconAsNonFavorite)
+{
+  const char * desktop_file = "normal-icon.desktop";
+  MockApplicationLauncherIcon::Ptr
+    app_icon(new NiceMock<MockApplicationLauncherIcon>(true, desktop_file));
+  lc.Impl()->RegisterIcon(app_icon);
+  ASSERT_FALSE(favorite_store.IsFavorite(app_icon->RemoteUri()));
+  app_icon->Stick(true);
+
+  EXPECT_CALL(*app_icon, UnStick());
+
+  const std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop_file;
+  lc.Impl()->OnLauncherUpdateIconStickyState(icon_uri, false);
+}
+
+TEST_F(TestLauncherController, SetNonExistingLauncherIconAsFavorite)
+{
+  std::string desktop = app::BZR_HANDLE_PATCH;
+  std::string icon_uri = FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(desktop);
+
+  lc.Impl()->OnLauncherUpdateIconStickyState(icon_uri, true);
+
+  // Make sure that the icon now exists and is sticky
+  EXPECT_TRUE(favorite_store.IsFavorite(icon_uri));
+
+  auto const& icon = lc.Impl()->GetIconByUri(icon_uri);
+  ASSERT_TRUE(icon.IsValid());
+  ASSERT_TRUE(icon->IsSticky());
 }
 
 }

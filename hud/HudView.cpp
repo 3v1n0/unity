@@ -557,6 +557,7 @@ void View::AddProperties(GVariantBuilder* builder)
   variant::BuilderWrapper(builder)
     .add(GetGeometry())
     .add("selected_button", selected_button_)
+    .add("overlay_window_buttons_shown", overlay_window_buttons_->IsVisible())
     .add("num_buttons", num_buttons);
 }
 

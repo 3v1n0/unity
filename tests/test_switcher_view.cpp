@@ -18,7 +18,7 @@
  *
  */
 
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include "SwitcherModel.h"
 #include "SwitcherView.h"
@@ -53,8 +53,11 @@ struct TestSwitcherView : testing::Test
 
   struct MockSwitcherView : SwitcherView
   {
+    MOCK_METHOD0(QueueDraw, void());
+
     using SwitcherView::UpdateRenderTargets;
     using SwitcherView::ResizeRenderTargets;
+    using SwitcherView::GetCurrentProgress;
     using SwitcherView::SpreadSize;
     using SwitcherView::text_view_;
     using SwitcherView::icon_renderer_;
@@ -93,13 +96,14 @@ struct TestSwitcherView : testing::Test
 
   StandaloneWindowManager* WM;
   unity::Settings settings;
-  MockSwitcherView switcher;
+  testing::NiceMock<MockSwitcherView> switcher;
 };
 
 TEST_F(TestSwitcherView, Initiate)
 {
   const int VERTICAL_PADDING = 45;
   EXPECT_FALSE(switcher.render_boxes);
+  EXPECT_TRUE(switcher.animate);
   EXPECT_EQ(switcher.border_size, 50);
   EXPECT_EQ(switcher.flat_spacing, 20);
   EXPECT_EQ(switcher.icon_size, 128);
@@ -129,6 +133,19 @@ TEST_F(TestSwitcherView, SetModel)
   EXPECT_FALSE(switcher.model_->selection_changed.empty());
   EXPECT_FALSE(switcher.model_->detail_selection.changed.empty());
   EXPECT_FALSE(switcher.model_->detail_selection_index.changed.empty());
+}
+
+TEST_F(TestSwitcherView, Animate)
+{
+  switcher.animate = false;
+  EXPECT_EQ(switcher.GetCurrentProgress(), 1.0f);
+
+  EXPECT_CALL(switcher, QueueDraw());
+  switcher.animate = true;
+  EXPECT_EQ(switcher.GetCurrentProgress(), 0.0f);
+
+  switcher.animate = false;
+  EXPECT_EQ(switcher.GetCurrentProgress(), 1.0f);
 }
 
 

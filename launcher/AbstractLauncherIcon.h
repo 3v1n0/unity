@@ -59,9 +59,10 @@ public:
   {
   }
 
-  ActionArg(Source source, int button, Window target = 0, int monitor = -1)
+  ActionArg(Source source, int button, Time timestamp = -1,  Window target = 0, int monitor = -1)
     : source(source)
     , button(button)
+    , timestamp(timestamp)
     , target(target)
     , monitor(monitor)
   {
@@ -69,6 +70,7 @@ public:
 
   Source source;
   int button;
+  Time timestamp;
   Window target;
   int monitor;
 };
@@ -126,12 +128,20 @@ public:
     END
   };
 
+  enum class ScrollDirection
+  {
+    UP,
+    DOWN
+  };
+
   virtual ~AbstractLauncherIcon() {}
 
   nux::Property<std::string> tooltip_text;
   nux::Property<bool> tooltip_enabled;
   nux::Property<Position> position;
+  nux::Property<bool> removed;
 
+  virtual void ShowTooltip() = 0;
   virtual void HideTooltip() = 0;
 
   virtual void    SetShortcut(guint64 shortcut) = 0;
@@ -223,6 +233,8 @@ public:
     return static_cast<int>(type) * 1000;
   }
 
+  virtual void PerformScroll(ScrollDirection direction, Time timestamp) = 0;
+
   sigc::signal<void, int, int, unsigned long> mouse_down;
   sigc::signal<void, int, int, unsigned long> mouse_up;
   sigc::signal<void, int, int, unsigned long> mouse_click;
@@ -240,7 +252,6 @@ public:
   sigc::connection on_icon_added_connection;
   sigc::connection on_icon_removed_connection;
   sigc::connection on_order_changed_connection;
-  sigc::connection on_expo_terminated_connection;
 };
 
 }

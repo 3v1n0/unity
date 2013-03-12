@@ -24,6 +24,7 @@ using namespace testing;
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <unity-shared/StaticCairoText.h>
+#include <unity-shared/CoverArt.h>
 #include <unity-shared/DashStyle.h>
 #include <unity-shared/PreviewStyle.h>
 #include <unity-shared/ThumbnailGenerator.h>

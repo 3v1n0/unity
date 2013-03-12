@@ -52,31 +52,31 @@ Preview::Ptr Preview::PreviewForProtocolObject(glib::Object<GObject> const& prot
 
   if (renderer_name == "preview-generic")
   {
-    return Preview::Ptr(new GenericPreview(proto_obj));
+    return std::make_shared<GenericPreview>(proto_obj);
   }
   else if (renderer_name == "preview-payment")
   {
-    return Preview::Ptr(new PaymentPreview(proto_obj));
+    return std::make_shared<PaymentPreview>(proto_obj);
   }
   else if (renderer_name == "preview-application")
   {
-    return Preview::Ptr(new ApplicationPreview(proto_obj));
+    return std::make_shared<ApplicationPreview>(proto_obj);
   }
   else if (renderer_name == "preview-music")
   {
-    return Preview::Ptr(new MusicPreview(proto_obj));
+    return std::make_shared<MusicPreview>(proto_obj);
   }
   else if (renderer_name == "preview-movie")
   {
-    return Preview::Ptr(new MoviePreview(proto_obj));
+    return std::make_shared<MoviePreview>(proto_obj);
   }
   else if (renderer_name == "preview-social")
   {
-    return Preview::Ptr(new SocialPreview(proto_obj));
+    return std::make_shared<SocialPreview>(proto_obj);
   }
   else if (renderer_name == "preview-series")
   {
-    return Preview::Ptr(new SeriesPreview(proto_obj));
+    return std::make_shared<SeriesPreview>(proto_obj);
   }
   else
   {

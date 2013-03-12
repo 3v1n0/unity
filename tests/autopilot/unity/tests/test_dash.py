@@ -29,6 +29,12 @@ class DashTestCase(UnityTestCase):
         self.addCleanup(self.unity.dash.ensure_hidden)
         self.addCleanup(sleep, 1)
 
+    def get_current_preview(self):
+        """Method to open the currently selected preview, if opened."""
+        preview_fn = lambda: self.preview_container.current_preview
+        self.assertThat(preview_fn, Eventually(NotEquals(None)))
+        return preview_fn()
+
 
 class DashRevealTests(DashTestCase):
     """Test the Unity dash Reveal."""
@@ -67,7 +73,7 @@ class DashRevealTests(DashTestCase):
         """Switch to command lens without closing the dash."""
         self.unity.dash.ensure_visible()
         self.unity.dash.reveal_command_lens()
-        self.assertThat(self.unity.dash.visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.dash.active_lens, Eventually(Equals('commands.lens')))
 
     def test_alt_f4_close_dash(self):
         """Dash must close on alt+F4."""
@@ -604,13 +610,16 @@ class DashVisualTests(DashTestCase):
         """"There should be no empty space between launcher and dash when the launcher
         has a non-default width.
         """
-        self.set_unity_option('icon_size', 60)
-        self.unity.dash.ensure_visible()
-
         monitor = self.unity.dash.monitor
         launcher = self.unity.launcher.get_launcher_for_monitor(monitor)
 
+        self.set_unity_option('icon_size', 60)
+        self.assertThat(launcher.icon_size, Eventually(Equals(66)))
+
+        self.unity.dash.ensure_visible()
+
         self.assertThat(self.unity.dash.geometry[0], Eventually(Equals(launcher.geometry[0] + launcher.geometry[2] - 1)))
+
 
     def test_see_more_result_alignment(self):
         """The see more results label should be baseline aligned
@@ -951,7 +960,7 @@ class PreviewNavigateTests(DashTestCase):
 
     def test_preview_refocus_close(self):
         """Clicking on a preview element must not lose keyboard focus."""
-        cover_art = self.preview_container.current_preview.cover_art[0]
+        cover_art = self.get_current_preview().cover_art[0]
 
         # click the cover-art (this will set focus)
         tx = cover_art.x + (cover_art.width / 2)
@@ -969,6 +978,7 @@ class PreviewClickCancelTests(DashTestCase):
 
     def setUp(self):
         super(PreviewClickCancelTests, self).setUp()
+        gettext.install("unity-lens-applications")
         lens = self.unity.dash.reveal_application_lens()
         self.addCleanup(self.unity.dash.ensure_hidden)
         # Only testing an application preview for this test.
@@ -984,7 +994,7 @@ class PreviewClickCancelTests(DashTestCase):
 
     def test_left_click_on_preview_icon_cancel_preview(self):
         """Left click on preview icon must close preview."""
-        icon = self.preview_container.current_preview.icon[0]
+        icon = self.get_current_preview().icon[0]
 
         tx = icon.x + icon.width
         ty = icon.y + (icon.height / 2)
@@ -995,7 +1005,7 @@ class PreviewClickCancelTests(DashTestCase):
 
     def test_middle_click_on_preview_icon_cancel_preview(self):
         """Middle click on preview icon must close preview."""
-        icon = self.preview_container.current_preview.icon[0]
+        icon = self.get_current_preview().icon[0]
 
         tx = icon.x + icon.width
         ty = icon.y + (icon.height / 2)
@@ -1006,7 +1016,7 @@ class PreviewClickCancelTests(DashTestCase):
 
     def test_right_click_on_preview_icon_cancel_preview(self):
         """Right click on preview icon must close preview."""
-        icon = self.preview_container.current_preview.icon[0]
+        icon = self.get_current_preview().icon[0]
 
         tx = icon.x + icon.width
         ty = icon.y + (icon.height / 2)
@@ -1017,7 +1027,7 @@ class PreviewClickCancelTests(DashTestCase):
 
     def test_left_click_on_preview_image_cancel_preview(self):
         """Left click on preview image must cancel the preview."""
-        cover_art = self.preview_container.current_preview.cover_art[0]
+        cover_art = self.get_current_preview().cover_art[0]
 
         tx = cover_art.x + (cover_art.width / 2)
         ty = cover_art.y + (cover_art.height / 2)
@@ -1028,7 +1038,7 @@ class PreviewClickCancelTests(DashTestCase):
 
     def test_middle_click_on_preview_image_cancel_preview(self):
         """Middle click on preview image must cancel the preview."""
-        cover_art = self.preview_container.current_preview.cover_art[0]
+        cover_art = self.get_current_preview().cover_art[0]
 
         tx = cover_art.x + (cover_art.width / 2)
         ty = cover_art.y + (cover_art.height / 2)
@@ -1039,7 +1049,7 @@ class PreviewClickCancelTests(DashTestCase):
 
     def test_right_click_on_preview_image_cancel_preview(self):
         """Right click on preview image must cancel the preview."""
-        cover_art = self.preview_container.current_preview.cover_art[0]
+        cover_art = self.get_current_preview().cover_art[0]
 
         tx = cover_art.x + (cover_art.width / 2)
         ty = cover_art.y + (cover_art.height / 2)
@@ -1050,7 +1060,7 @@ class PreviewClickCancelTests(DashTestCase):
 
     def test_left_click_on_preview_text_cancel_preview(self):
         """Left click on some preview text must cancel the preview."""
-        text = self.preview_container.current_preview.text_boxes[0]
+        text = self.get_current_preview().text_boxes[0]
 
         tx = text.x + (text.width / 2)
         ty = text.y + (text.height / 2)
@@ -1061,7 +1071,7 @@ class PreviewClickCancelTests(DashTestCase):
 
     def test_middle_click_on_preview_text_cancel_preview(self):
         """Middle click on some preview text must cancel the preview."""
-        text = self.preview_container.current_preview.text_boxes[0]
+        text = self.get_current_preview().text_boxes[0]
 
         tx = text.x + (text.width / 2)
         ty = text.y + (text.height / 2)
@@ -1072,7 +1082,7 @@ class PreviewClickCancelTests(DashTestCase):
 
     def test_right_click_on_preview_text_cancel_preview(self):
         """Right click on some preview text must cancel the preview."""
-        text = self.preview_container.current_preview.text_boxes[0]
+        text = self.get_current_preview().text_boxes[0]
 
         tx = text.x + (text.width / 2)
         ty = text.y + (text.height / 2)
@@ -1083,7 +1093,7 @@ class PreviewClickCancelTests(DashTestCase):
 
     def test_left_click_on_preview_ratings_widget_cancel_preview(self):
         """Left click on the ratings widget must cancel the preview."""
-        ratings_widget = self.preview_container.current_preview.ratings_widget[0]
+        ratings_widget = self.get_current_preview().ratings_widget[0]
 
         tx = ratings_widget.x + (ratings_widget.width / 2)
         ty = ratings_widget.y + (ratings_widget.height / 2)
@@ -1094,7 +1104,7 @@ class PreviewClickCancelTests(DashTestCase):
 
     def test_middle_click_on_preview_ratings_widget_cancel_preview(self):
         """Middle click on the ratings widget must cancel the preview."""
-        ratings_widget = self.preview_container.current_preview.ratings_widget[0]
+        ratings_widget = self.get_current_preview().ratings_widget[0]
 
         tx = ratings_widget.x + (ratings_widget.width / 2)
         ty = ratings_widget.y + (ratings_widget.height / 2)
@@ -1105,7 +1115,7 @@ class PreviewClickCancelTests(DashTestCase):
 
     def test_right_click_on_preview_ratings_widget_cancel_preview(self):
         """Right click on the ratings widget must cancel the preview."""
-        ratings_widget = self.preview_container.current_preview.ratings_widget[0]
+        ratings_widget = self.get_current_preview().ratings_widget[0]
 
         tx = ratings_widget.x + (ratings_widget.width / 2)
         ty = ratings_widget.y + (ratings_widget.height / 2)
@@ -1116,7 +1126,7 @@ class PreviewClickCancelTests(DashTestCase):
 
     def test_left_click_on_preview_info_hint_cancel_preview(self):
         """Left click on the info hint must cancel the preview."""
-        info_hint = self.preview_container.current_preview.info_hint_widget[0]
+        info_hint = self.get_current_preview().info_hint_widget[0]
 
         tx = info_hint.x + (info_hint.width / 2)
         ty = info_hint.y + (info_hint.height / 8)
@@ -1127,7 +1137,7 @@ class PreviewClickCancelTests(DashTestCase):
 
     def test_middle_click_on_preview_info_hint_cancel_preview(self):
         """Middle click on the info hint must cancel the preview."""
-        info_hint = self.preview_container.current_preview.info_hint_widget[0]
+        info_hint = self.get_current_preview().info_hint_widget[0]
 
         tx = info_hint.x + (info_hint.width / 2)
         ty = info_hint.y + (info_hint.height / 8)
@@ -1138,7 +1148,7 @@ class PreviewClickCancelTests(DashTestCase):
 
     def test_right_click_on_preview_info_hint_cancel_preview(self):
         """Right click on the info hint must cancel the preview."""
-        info_hint = self.preview_container.current_preview.info_hint_widget[0]
+        info_hint = self.get_current_preview().info_hint_widget[0]
 
         tx = info_hint.x + (info_hint.width / 2)
         ty = info_hint.y + (info_hint.height / 8)

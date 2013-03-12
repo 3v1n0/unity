@@ -51,6 +51,7 @@ const std::string WINDOW_MOVE_TIMEOUT = "bamf-window-move";
 const std::string ICON_REMOVE_TIMEOUT = "bamf-icon-remove";
 //const std::string ICON_DND_OVER_TIMEOUT = "bamf-icon-dnd-over";
 const std::string DEFAULT_ICON = "application-default-icon";
+const int MAXIMUM_QUICKLIST_WIDTH = 300;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(ApplicationLauncherIcon);
@@ -59,6 +60,9 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   : SimpleLauncherIcon(IconType::APPLICATION)
   , app_(app)
   , _startup_notification_timestamp(0)
+  , _last_scroll_timestamp(0)
+  , _last_scroll_direction(ScrollDirection::DOWN)
+  , _progressive_scroll(0)
   , use_custom_bg_color_(false)
   , bg_color_(nux::color::White)
 {
@@ -323,7 +327,7 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       return;
 
     SetQuirk(Quirk::STARTING, true);
-    OpenInstanceLauncherIcon();
+    OpenInstanceLauncherIcon(arg.timestamp);
   }
   else // app is running
   {
@@ -467,12 +471,19 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
     g_file_monitor_set_rate_limit(_desktop_file_monitor, 1000);
 
     auto sig = new glib::Signal<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent>(_desktop_file_monitor, "changed",
-                                [&] (GFileMonitor*, GFile*, GFile*, GFileMonitorEvent event_type) {
+                                [&] (GFileMonitor*, GFile* f, GFile*, GFileMonitorEvent event_type) {
                                   switch (event_type)
                                   {
                                     case G_FILE_MONITOR_EVENT_DELETED:
-                                      UnStick();
+                                    {
+                                      glib::Object<GFile> file(f, glib::AddRef());
+                                      _source_manager.AddTimeoutSeconds(1, [this, file] {
+                                        if (!g_file_query_exists (file, nullptr))
+                                          UnStick();
+                                        return false;
+                                      });
                                       break;
+                                    }
                                     case G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT:
                                       UpdateDesktopQuickList();
                                       UpdateBackgroundColor();
@@ -509,7 +520,7 @@ void ApplicationLauncherIcon::AddProperties(GVariantBuilder* builder)
     .add("startup_notification_timestamp", _startup_notification_timestamp);
 }
 
-void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& uris)
+void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& uris, Time timestamp)
 {
   glib::Error error;
   glib::Object<GDesktopAppInfo> desktopInfo(g_desktop_app_info_new_from_filename(DesktopFile().c_str()));
@@ -518,8 +529,9 @@ void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& 
   GdkDisplay* display = gdk_display_get_default();
   glib::Object<GdkAppLaunchContext> app_launch_context(gdk_display_get_app_launch_context(display));
 
-  _startup_notification_timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
-  gdk_app_launch_context_set_timestamp(app_launch_context, _startup_notification_timestamp);
+  _startup_notification_timestamp = timestamp;
+  if (_startup_notification_timestamp >= 0)
+    gdk_app_launch_context_set_timestamp(app_launch_context, _startup_notification_timestamp);
 
   if (g_app_info_supports_uris(appInfo))
   {
@@ -557,10 +569,10 @@ void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& 
   UpdateQuirkTime(Quirk::STARTING);
 }
 
-void ApplicationLauncherIcon::OpenInstanceLauncherIcon()
+void ApplicationLauncherIcon::OpenInstanceLauncherIcon(Time timestamp)
 {
   std::set<std::string> empty;
-  OpenInstanceWithUris(empty);
+  OpenInstanceWithUris(empty, timestamp);
 }
 
 void ApplicationLauncherIcon::Focus(ActionArg arg)
@@ -575,7 +587,7 @@ void ApplicationLauncherIcon::Focus(ActionArg arg)
   else if (app_->type() == "webapp")
   {
     // Webapps are again special.
-    OpenInstanceLauncherIcon();
+    OpenInstanceLauncherIcon(arg.timestamp);
     return;
   }
 
@@ -692,6 +704,42 @@ void ApplicationLauncherIcon::UpdateBackgroundColor()
     EmitNeedsRedraw();
 }
 
+void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
+{
+  // delete all menu items for windows
+  _menu_items_windows.clear();
+
+  auto const& windows = Windows();
+
+  // We only add quicklist menu-items for windows if we have more than one window
+  if (windows.size() < 2)
+    return;
+
+  // add menu items for all open windows
+  for (auto const& w : windows)
+  {
+    if (w->title().empty())
+      continue;
+
+    glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, w->title().c_str());
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
+    dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY, true);
+    dbusmenu_menuitem_property_set_int(menu_item, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY, MAXIMUM_QUICKLIST_WIDTH);
+
+    Window xid = w->window_id();
+    _gsignals.Add<void, DbusmenuMenuitem*, int>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+      [xid] (DbusmenuMenuitem*, int) {
+        WindowManager& wm = WindowManager::Default();
+        wm.Activate(xid);
+        wm.Raise(xid);
+    });
+
+    _menu_items_windows.push_back(menu_item);
+  }
+}
+
 void ApplicationLauncherIcon::UpdateMenus()
 {
   // add dynamic quicklist
@@ -742,7 +790,10 @@ void ApplicationLauncherIcon::UnStick()
   if (!IsSticky())
     return;
 
+  SetQuirk(Quirk::VISIBLE, app_->running());
+
   app_->sticky = false;
+
   if (!app_->running())
     Remove();
 }
@@ -926,6 +977,28 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
   }
   result.push_back(item);
 
+  EnsureMenuItemsWindowsReady();
+
+  if (!_menu_items_windows.empty())
+  {
+    for (auto const& it : _menu_items_windows)
+      result.push_back(it);
+
+    auto third_sep = _menu_items_extra.find("ThirdSeparator");
+    if (third_sep != _menu_items_extra.end())
+    {
+      item = third_sep->second;
+    }
+    else
+    {
+      item = dbusmenu_menuitem_new();
+      dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_TYPE, DBUSMENU_CLIENT_TYPES_SEPARATOR);
+      _menu_items_extra["ThirdSeparator"] = glib::Object<DbusmenuMenuitem>(item);
+    }
+
+    result.push_back(item);
+  }
+
   EnsureMenuItemsReady();
 
   for (auto it : _menu_items)
@@ -1084,7 +1157,8 @@ nux::DndAction ApplicationLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_dat
 
 void ApplicationLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
 {
-  OpenInstanceWithUris(ValidateUrisForLaunch(dnd_data));
+  auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+  OpenInstanceWithUris(ValidateUrisForLaunch(dnd_data), timestamp);
 }
 
 bool ApplicationLauncherIcon::ShowInSwitcher(bool current)
@@ -1149,6 +1223,94 @@ const std::set<std::string> ApplicationLauncherIcon::GetSupportedTypes()
   }
 
   return supported_types;
+}
+
+void PerformScrollUp(WindowList const& windows, unsigned int progressive_scroll)
+{
+  if (!progressive_scroll)
+  {
+    windows.at(1)->Focus();
+    return;
+  }
+  else if (progressive_scroll == 1)
+  {
+    windows.back()->Focus();
+    return;
+  }
+
+  WindowManager::Default().RestackBelow(windows.at(0)->window_id(), windows.at(windows.size() - progressive_scroll + 1)->window_id());
+  windows.at(windows.size() - progressive_scroll + 1)->Focus();
+}
+
+void PerformScrollDown(WindowList const& windows, unsigned int progressive_scroll)
+{
+  if (!progressive_scroll)
+  {
+    WindowManager::Default().RestackBelow(windows.at(0)->window_id(), windows.back()->window_id());
+    windows.at(1)->Focus();
+    return;
+  }
+
+  WindowManager::Default().RestackBelow(windows.at(0)->window_id(), windows.at(progressive_scroll)->window_id());
+  windows.at(progressive_scroll)->Focus();
+}
+
+void ApplicationLauncherIcon::PerformScroll(ScrollDirection direction, Time timestamp)
+{
+  if (timestamp - _last_scroll_timestamp < 150)
+    return;
+  else if (timestamp - _last_scroll_timestamp > 1500 || direction != _last_scroll_direction)
+    _progressive_scroll = 0;
+
+  _last_scroll_timestamp = timestamp;
+  _last_scroll_direction = direction;
+
+  auto const& windows = GetWindowsOnCurrentDesktopInStackingOrder();
+  if (windows.empty())
+    return;
+
+  if (!IsActive())
+  {
+    windows.at(0)->Focus();
+    return;
+  }
+
+  if (windows.size() <= 1)
+    return; 
+
+  ++_progressive_scroll;
+  _progressive_scroll %= windows.size();
+
+  switch(direction)
+  {
+  case ScrollDirection::UP:
+    PerformScrollUp(windows, _progressive_scroll);
+    break;
+  case ScrollDirection::DOWN:
+    PerformScrollDown(windows, _progressive_scroll);
+    break;
+  }
+}
+
+WindowList ApplicationLauncherIcon::GetWindowsOnCurrentDesktopInStackingOrder()
+{
+  auto windows = GetWindows(WindowFilter::ON_CURRENT_DESKTOP | WindowFilter::ON_ALL_MONITORS);
+  auto sorted_windows = WindowManager::Default().GetWindowsInStackingOrder();
+
+  // Order the windows
+  std::sort(windows.begin(), windows.end(), [&sorted_windows] (ApplicationWindowPtr const& win1, ApplicationWindowPtr const& win2) {
+    for (auto const& window : sorted_windows)
+    {
+      if (window == win1->window_id())
+        return false;
+      else if (window == win2->window_id())
+        return true;
+    }
+
+    return true;
+  });
+
+  return windows;
 }
 
 std::string ApplicationLauncherIcon::GetName() const

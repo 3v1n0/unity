@@ -23,18 +23,6 @@
 #ifndef MUSIC_PAYMENT_PREVIEW_H
 #define MUSIC_PAYMENT_PREVIEW_H
 
-// key used to find the correct info hint
-#define DATA_INFOHINT_ID "album_purchase_preview"
-
-// keys of the data preview
-#define DATA_PASSWORD_KEY "password"
-
-// ations ids
-#define CHANGE_PAYMENT_ACTION "change_payment_method"
-#define FORGOT_PASSWORD_ACTION "forgot_password"
-#define CANCEL_PURCHASE_ACTION "cancel_purchase"
-#define PURCHASE_ALBUM_ACTION "purchase_album"
-
 #include <Nux/Nux.h>
 #include <Nux/AbstractButton.h>
 #include <UnityCore/Lens.h>
@@ -68,15 +56,26 @@ public:
   NUX_DECLARE_OBJECT_TYPE(MusicPaymentPreview, Preview);
 
   MusicPaymentPreview(dash::Preview::Ptr preview_model);
-  ~MusicPaymentPreview();
-
-  // From debug::Introspectable
-  std::string GetName() const;
 
 private:
   void LoadActions();
 
 protected:
+  // key used to find the correct info hint
+  static const std::string DATA_INFOHINT_ID;
+
+  // keys of the data preview
+  static const std::string DATA_PASSWORD_KEY;
+
+  // ations ids
+  static const std::string CHANGE_PAYMENT_ACTION;
+  static const std::string FORGOT_PASSWORD_ACTION;
+  static const std::string CANCEL_PURCHASE_ACTION;
+  static const std::string PURCHASE_ALBUM_ACTION;
+
+  // From debug::Introspectable
+  std::string GetName() const;
+
   nux::Layout* GetTitle();
   nux::Layout* GetPrice();
   nux::Layout* GetBody();
@@ -85,7 +84,7 @@ protected:
   nux::Layout* GetFormActions();
   nux::Layout* GetFooter();
 
-  const char* GetErrorMessage(GVariant *dict);
+  const std::string GetErrorMessage(GVariant *dict);
 
   void OnActionActivated(ActionButton* button, std::string const& id);
   void OnActionLinkActivated(ActionLink* link, std::string const& id);
@@ -116,7 +115,7 @@ protected:
 
   dash::PaymentPreview* payment_preview_model_;
   // do we want to type?
-  const char* error_message_;
+  std::string error_message_;
 
   // actions
   std::map<std::string, nux::ObjectPtr<nux::AbstractButton>> sorted_buttons_;

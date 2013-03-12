@@ -196,6 +196,8 @@ public:
 
   virtual void UnStick();
 
+  void PerformScroll(ScrollDirection direction, Time timestamp) override;
+
 protected:
   std::vector<nux::Point3> GetCenters();
 
@@ -250,7 +252,7 @@ protected:
 
   virtual void ActivateLauncherIcon(ActionArg arg) {}
 
-  virtual void OpenInstanceLauncherIcon() {}
+  virtual void OpenInstanceLauncherIcon(Time timestamp) {}
 
   virtual bool HandlesSpread () { return false; }
 

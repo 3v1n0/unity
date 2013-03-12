@@ -1,3 +1,209 @@
+unity (6.12.0daily13.03.11-0ubuntu1) raring; urgency=low
+
+  [ Marco Trevisan (Treviño) ]
+  * [FFe] Add Unity Style Shutdown Dialog  (LP: #1152374)
+  * New unity style shutdown dialogues (LP: #882041)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3202
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Mon, 11 Mar 2013 04:02:43 +0000
+
+unity (6.12.0daily13.03.08-0ubuntu1) raring; urgency=low
+
+  [ Andrea Azzarone ]
+  * Launcher, Window Management - More Effective window switching for
+    apps with multiple windows using the Launcher (LP: #1081843)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3199
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 08 Mar 2013 10:34:28 +0000
+
+unity (6.12.0daily13.03.07-0ubuntu1) raring; urgency=low
+
+  * Automatic snapshot from revision 3194
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Thu, 07 Mar 2013 04:02:28 +0000
+
+unity (6.12.0daily13.03.06.1-0ubuntu1) raring; urgency=low
+
+  [ Didier Roche ]
+  * Build-dep on libjson-perl to get debian/scopes-recommends-generator
+    parsing the libunity-common json file successfully (and so having
+    the recommended scopes… recommended)
+
+  [ Alexandre Abreu ]
+  * Web apps - After the user quits a web app that has just been
+    installed the icon doesn't stay in the launcher (LP: #1061056)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3190
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Wed, 06 Mar 2013 13:26:28 +0000
+
+unity (6.12.0daily13.03.05-0ubuntu1) raring; urgency=low
+
+  [ Didier Roche ]
+  * Need a .json file for having the list of default installed lens and
+    scopes (LP: #1137303)
+
+  [ Andrea Azzarone ]
+  * [regression] On start up the Hud draws the panel gradient
+    incorrectly (LP: #1136447)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3185
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Tue, 05 Mar 2013 04:02:33 +0000
+
+unity (6.12.0daily13.03.01-0ubuntu1) raring; urgency=low
+
+  [ Andrea Azzarone ]
+  * unity.tests.test_dash.DashVisualTests.test_dash_position_with_non_de
+    fault_launcher_width  randomly fails (LP: #1135628)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3179
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 01 Mar 2013 04:02:36 +0000
+
+unity (6.12.0daily13.02.28-0ubuntu1) raring; urgency=low
+
+  [ Stephen M. Webb ]
+  * unity watchfile is broken (LP: #1121754)
+
+  [ Andrea Azzarone ]
+  * Switcher does not focus the last active window in detail mode (using
+    alt+grave) (LP: #1133338)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3175
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Thu, 28 Feb 2013 04:02:34 +0000
+
+unity (6.12.0daily13.02.26-0ubuntu1) raring; urgency=low
+
+  [ Andrea Azzarone ]
+  * Multi-monitor - Panel and launcher visible on top of multimonitor
+    non-focused fullscreen apps (LP: #748539)
+  * unity.tests.launcher.test_icon_behavior.LauncherIconsTests.* fails
+    randomly (LP: #1131679)
+
+  [ Xiao-Long Chen ]
+  * Add timeout before removing launcher (LP: #1119801)
+
+  [ MC Return ]
+  * cppcheck reports true positives (LP: #1131152)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3171
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Tue, 26 Feb 2013 04:02:40 +0000
+
+unity (6.12.0daily13.02.19.1-0ubuntu1) raring; urgency=low
+
+  [ Brandon Schaefer ]
+  * Multi-monitor: Mousepointer hangs when passing between monitors,
+    although no Launcher is there (regression) (LP: #1120223)
+  * Sticky edges should only use horizontal mouse movement (LP: #982543)
+
+  [ Marco Trevisan (Treviño) ]
+  * Launcher - Workspace switcher should not be in the Launcher by
+    default (LP: #868423)
+  * [regression] Unlocking a running application, removes it from the
+    Launcher (LP: #1122311)
+  * Launcher, Workspaces - dragging and dropping the workspaces icon on
+    to the trash should switch Workspaces off (LP: #1118271)
+
+  [ Chris Townsend ]
+  * webapp: alt-tab gets "stucked" on the browser rather than going to
+    the next entry (LP: #1070715)
+
+  [ Nick Dedekind ]
+  * Dash - the "Decade" and "Size" dash filter category widgets are
+    broken (LP: #841899)
+  * Dash Places group is shining on quick mouse over (LP: #1119487)
+
+  [ Lukas Vacek ]
+  * Show window list when right clicking an icon in launcher - enables
+    quick window switching (LP: #1107866)
+
+  [ Marco Trevisan (Treviño) <mail@3v1n0.net>, Lukas Vacek ]
+  * Show window list when right clicking an icon in launcher - enables
+    quick window switching (LP: #1107866)
+
+  [ Andrea Azzarone ]
+  * unity launcher vanishes when switching to mirrored displays (LP:
+    #991637)
+  * Opening an app with super+num shorcut doesn't give focus to the app
+    (LP: #1125331)
+  * Alt+` and detail switcher broken after revision 3153 (LP: #1129372)
+
+  [ Sam Spilsbury ]
+  * Unity unnecessarily clears the ShapeBounding shape of windows on
+    minimize (LP: #1091600)
+  * Can't access minimized window after Unity restarts (LP: #851964)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3163
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Tue, 19 Feb 2013 14:26:14 +0000
+
+unity (6.12.0daily13.02.08-0ubuntu1) raring; urgency=low
+
+  [ Brandon Schaefer ]
+  * Multi-monitor - Add 'sticky edges deactivated for number of
+    milliseconds after the user breaks the barrier' variable that works
+    when the Launcher set to 'auto-hide' and sticky edges set to 'off'
+    (LP: #1064945)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * testapp is a bad name (LP: #1089561)
+
+  [ Marco Trevisan (Treviño) <mail@3v1n0.net>, Brandon Schaefer ]
+  * Multi-monitor - Add 'sticky edges deactivated for number of
+    milliseconds after the user breaks the barrier' variable that works
+    when the Launcher set to 'auto-hide' and sticky edges set to 'off'
+    (LP: #1064945)
+
+  [ Marco Trevisan (Treviño) ]
+  * Alt-Tab switcher should use a very fast fade-in/out effect when
+    showing/hiding (LP: #1105058)
+  * Multi-monitor - Add 'sticky edges deactivated for number of
+    milliseconds after the user breaks the barrier' variable that works
+    when the Launcher set to 'auto-hide' and sticky edges set to 'off'
+    (LP: #1064945)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3140
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 08 Feb 2013 04:02:00 +0000
+
+unity (6.12.0daily13.02.07-0ubuntu1) raring; urgency=low
+
+  [ Andrea Azzarone ]
+  * make check fails on test-unit (LP: #1117487)
+  * Notification area whitelist is obsolete (LP: #974480)
+
+  [ Marco Trevisan (Treviño) ]
+  * Switcher - when opening in detail mode (Alt+`) it should not use the
+    spread animation (LP: #1116927)
+  * Alt-tab sometimes focuses a window that is not in top of the app
+    stack (LP: #1115775)
+  * Switcher: Opening and closing the detail mode quickly makes unity
+    re-enable it (LP: #1116785)
+  * Exiting expo mode leaves the BFB quicklist open (LP: #1090565)
+
+  [ MC Return ]
+  * unmaximize_window_key instead of unmaximize_or_minimize_window_key
+    exposed in g-c-c (LP: #1115128)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3136
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Thu, 07 Feb 2013 06:20:12 +0000
+
 unity (6.12.0daily13.02.04.1-0ubuntu1) raring; urgency=low
 
   * debian/control:
