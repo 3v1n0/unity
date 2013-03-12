@@ -47,7 +47,7 @@ namespace previews
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.previews.MusicPaymentPreview");
+nux::logging::Logger logger("unity.dash.previews.payment.preview.music");
 
 }
 
@@ -397,12 +397,12 @@ const std::string MusicPaymentPreview::GetErrorMessage(GVariant *dict)
 
 void MusicPaymentPreview::PreLayoutManagement()
 {
-  nux::Geometry geo = GetGeometry();
+  nux::Geometry const& geo = GetGeometry();
   GetLayout()->SetGeometry(geo);
 
   previews::Style& style = dash::previews::Style::Instance();
 
-  int width = MAX(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
+  int width = std::max<int>(0, geo.width - style.GetPanelSplitWidth() - style.GetDetailsLeftMargin() - style.GetDetailsRightMargin());
 
   if(full_data_layout_) { full_data_layout_->SetMaximumWidth(width); }
   if(header_layout_) { header_layout_->SetMaximumWidth(width); }

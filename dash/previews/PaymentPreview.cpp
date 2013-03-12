@@ -36,7 +36,7 @@ namespace previews
 
 namespace
 {
-nux::logging::Logger logger("unity.dash.previews.MusicPaymentPreview");
+nux::logging::Logger logger("unity.dash.previews.payment.preview");
 
 }
 
@@ -215,13 +215,6 @@ nux::Layout* PaymentPreview::GetHeader()
   header_data_layout->AddLayout(GetPrice(), 0);
   return header_data_layout;
 }
-
-
-void PaymentPreview::AddProperties(GVariantBuilder* builder)
-{
-  Preview::AddProperties(builder);
-}
-
 
 nux::ObjectPtr<ActionLink> PaymentPreview::CreateLink(dash::Preview::ActionPtr action)
 {

@@ -146,7 +146,6 @@ class TestPaymentPreview : public ::testing::Test
 
   // needed for styles
   unity::Settings settings;
-  previews::Style panel_style;
   dash::Style dash_style;
 
 };

@@ -57,9 +57,6 @@ public:
 
   MusicPaymentPreview(dash::Preview::Ptr preview_model);
 
-  // From debug::Introspectable
-  std::string GetName() const;
-
 private:
   void LoadActions();
 
@@ -75,6 +72,9 @@ protected:
   static const std::string FORGOT_PASSWORD_ACTION;
   static const std::string CANCEL_PURCHASE_ACTION;
   static const std::string PURCHASE_ALBUM_ACTION;
+
+  // From debug::Introspectable
+  std::string GetName() const;
 
   nux::Layout* GetTitle();
   nux::Layout* GetPrice();
