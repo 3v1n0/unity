@@ -235,7 +235,7 @@ nux::Layout* MusicPaymentPreview::GetFormLabels()
 {
   previews::Style& style = dash::previews::Style::Instance();
   nux::VLayout *labels_layout = new nux::VLayout();
-  if (!error_message_)
+  if (!error_message_.empty())
   {
     labels_layout->SetSpaceBetweenChildren(18);
   }
@@ -273,7 +273,7 @@ nux::Layout* MusicPaymentPreview::GetFormFields()
 {
   previews::Style& style = dash::previews::Style::Instance();
   nux::VLayout *fields_layout = new nux::VLayout();
-  if (!error_message_)
+  if (!error_message_.empty())
   {
     fields_layout->SetSpaceBetweenChildren(18);
   }
@@ -310,7 +310,7 @@ nux::Layout* MusicPaymentPreview::GetFormFields()
   const char password_char = '*';
   password_entry_->text_entry()->SetPasswordChar(&password_char);
 
-  if (error_message_)
+  if (error_message_.empty())
   {
     StaticCairoText* error = new StaticCairoText(
             _("Wrong password"), true, NUX_TRACKER_LOCATION);
@@ -328,7 +328,7 @@ nux::Layout* MusicPaymentPreview::GetFormActions()
 {
   previews::Style& style = dash::previews::Style::Instance();
   nux::VLayout *actions_layout = new nux::VLayout();
-  if (!error_message_)
+  if (!error_message_.empty())
   {
     actions_layout->SetSpaceBetweenChildren(16);
   }
@@ -383,17 +383,16 @@ nux::Layout* MusicPaymentPreview::GetFooter()
   return buttons_data_layout;
 }
 
-const char* MusicPaymentPreview::GetErrorMessage(GVariant *dict)
+const std::string MusicPaymentPreview::GetErrorMessage(GVariant *dict)
 {
-  GVariant* data = NULL;
-  data = g_variant_lookup_value(dict, "error_message", G_VARIANT_TYPE_ANY);
-  if (data == NULL)
-  {
-    return NULL;
-  }
-  gsize length;
-  std::string data_s = std::string(g_variant_get_string(data, &length));
-  return data_s.c_str();
+
+  glib::Variant data(g_variant_lookup_value(dict, "error_message",
+    G_VARIANT_TYPE_ANY));
+
+  if (!data)
+    return "";
+
+  return data.GetString();
 }
 
 void MusicPaymentPreview::PreLayoutManagement()

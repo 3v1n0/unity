@@ -84,7 +84,7 @@ protected:
   nux::Layout* GetFormActions();
   nux::Layout* GetFooter();
 
-  const char* GetErrorMessage(GVariant *dict);
+  const std::string GetErrorMessage(GVariant *dict);
 
   void OnActionActivated(ActionButton* button, std::string const& id);
   void OnActionLinkActivated(ActionLink* link, std::string const& id);
@@ -115,7 +115,7 @@ protected:
 
   dash::PaymentPreview* payment_preview_model_;
   // do we want to type?
-  const char* error_message_;
+  std::string error_message_;
 
   // actions
   std::map<std::string, nux::ObjectPtr<nux::AbstractButton>> sorted_buttons_;
