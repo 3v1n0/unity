@@ -191,11 +191,6 @@ PaymentPreview::PaymentPreview(dash::Preview::Ptr preview_model)
 {
 }
 
-PaymentPreview::~PaymentPreview()
-{
-}
-
-
 std::string PaymentPreview::GetName() const
 {
   return "";

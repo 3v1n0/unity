@@ -64,7 +64,6 @@ public:
   typedef nux::ObjectPtr<PaymentPreview> Ptr;
 
   PaymentPreview(dash::Preview::Ptr preview_model);
-  ~PaymentPreview();
 
   // From debug::Introspectable
   std::string GetName() const;
