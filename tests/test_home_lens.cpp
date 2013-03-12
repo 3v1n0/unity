@@ -205,7 +205,7 @@ TEST(TestHomeLens, TestOrderingAfterSearch)
 {
   HomeLens home_lens_("name", "description", "searchhint",
                       HomeLens::MergeMode::OWNER_LENS);
-  std::shared_ptr<Lenses> lenses_ = std::make_shared<TwoMockTestLenses>();
+  std::shared_ptr<Lenses> lenses_ = std::make_shared<ThreeMockTestLenses>();
   DeeModel* results = home_lens_.results()->model();
   DeeModel* cats = home_lens_.categories()->model();
   DeeModel* filters = home_lens_.filters()->model();
@@ -256,7 +256,7 @@ TEST(TestHomeLens, TestOrderingWithExactAppsMatch)
 {
   HomeLens home_lens_("name", "description", "searchhint",
                       HomeLens::MergeMode::OWNER_LENS);
-  std::shared_ptr<Lenses> lenses_ = std::make_shared<TwoMockTestLenses>();
+  std::shared_ptr<Lenses> lenses_ = std::make_shared<ThreeMockTestLenses>();
   // the lens is added as third, so must have cat == 2
   unsigned int apps_lens_cat = 2;
 
@@ -300,7 +300,7 @@ TEST(TestHomeLens, TestOrderingWithoutExactAppsMatch)
 {
   HomeLens home_lens_("name", "description", "searchhint",
                       HomeLens::MergeMode::OWNER_LENS);
-  std::shared_ptr<Lenses> lenses_ = std::make_shared<TwoMockTestLenses>();
+  std::shared_ptr<Lenses> lenses_ = std::make_shared<ThreeMockTestLenses>();
   // the lens is added as third, so must have cat == 2
   unsigned int apps_lens_cat = 2;
 
@@ -344,7 +344,7 @@ TEST(TestHomeLens, TestOrderingByNumResults)
 {
   HomeLens home_lens_("name", "description", "searchhint",
                       HomeLens::MergeMode::OWNER_LENS);
-  std::shared_ptr<Lenses> lenses_ = std::make_shared<TwoMockTestLenses>();
+  std::shared_ptr<Lenses> lenses_ = std::make_shared<ThreeMockTestLenses>();
   unsigned int lens1_cat = 0;
   unsigned int lens2_cat = 1;
   // the lens is added as third, so must have cat == 2
@@ -403,7 +403,7 @@ TEST(TestHomeLens, TestPersonalResultsFirst)
 {
   HomeLens home_lens_("name", "description", "searchhint",
                       HomeLens::MergeMode::OWNER_LENS);
-  std::shared_ptr<Lenses> lenses_ = std::make_shared<TwoMockTestLenses>();
+  std::shared_ptr<Lenses> lenses_ = std::make_shared<ThreeMockTestLenses>();
   unsigned int lens1_cat = 0;
   unsigned int lens2_cat = 1;
   // the lens is added as third, so must have cat == 2
@@ -463,7 +463,7 @@ TEST(TestHomeLens, TestNonPersonalCategoriesBeforeEmpty)
 {
   HomeLens home_lens_("name", "description", "searchhint",
                       HomeLens::MergeMode::OWNER_LENS);
-  std::shared_ptr<Lenses> lenses_ = std::make_shared<TwoMockTestLenses>();
+  std::shared_ptr<Lenses> lenses_ = std::make_shared<ThreeMockTestLenses>();
   unsigned int lens1_cat = 0;
   unsigned int lens2_cat = 1;
   // the lens is added as third, so must have cat == 2
