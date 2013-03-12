@@ -51,6 +51,14 @@ nux::logging::Logger logger("unity.dash.previews.MusicPaymentPreview");
 
 }
 
+// static string definitions
+const std::string MusicPaymentPreview::DATA_INFOHINT_ID = "album_purchase_preview";
+const std::string MusicPaymentPreview::DATA_PASSWORD_KEY = "password";
+const std::string MusicPaymentPreview::CHANGE_PAYMENT_ACTION = "change_payment_method";
+const std::string MusicPaymentPreview::FORGOT_PASSWORD_ACTION = "forgot_password";
+const std::string MusicPaymentPreview::CANCEL_PURCHASE_ACTION = "cancel_purchase";
+const std::string MusicPaymentPreview::PURCHASE_ALBUM_ACTION = "purchase_album";
+
 class DetailsScrollView : public nux::ScrollView
 {
 public:
@@ -80,7 +88,7 @@ void MusicPaymentPreview::OnActionActivated(ActionButton* button, std::string co
 {
   // Check the action id and send the password only when we
   // purchasing a song
-  if(id.compare(PURCHASE_ALBUM_ACTION) == 0 && preview_model_
+  if(id.compare(MusicPaymentPreview::PURCHASE_ALBUM_ACTION) == 0 && preview_model_
           && password_entry_)
   {
     // HACK: We need to think a better way to do this
@@ -88,7 +96,7 @@ void MusicPaymentPreview::OnActionActivated(ActionButton* button, std::string co
         password_entry_->text_entry()->GetText().c_str());
     glib::Variant* password = new glib::Variant(variant);
     Lens::Hints hints;
-    hints[DATA_PASSWORD_KEY] = *password;
+    hints[MusicPaymentPreview::DATA_PASSWORD_KEY] = *password;
     preview_model_->PerformAction(id, hints);
     // show the overlay
     ShowOverlay();
@@ -110,8 +118,8 @@ void MusicPaymentPreview::LoadActions()
   for (dash::Preview::ActionPtr action : preview_model_->GetActions())
   {
       const char *action_id = action->id.c_str();
-      if(strcmp(CHANGE_PAYMENT_ACTION, action_id) == 0
-              || strcmp(FORGOT_PASSWORD_ACTION, action_id) == 0)
+      if(MusicPaymentPreview::CHANGE_PAYMENT_ACTION == action_id
+              || MusicPaymentPreview::FORGOT_PASSWORD_ACTION == action_id)
       {
         nux::ObjectPtr<ActionLink> link = this->CreateLink(action);
         link->activate.connect(sigc::mem_fun(this,
@@ -340,11 +348,11 @@ nux::Layout* MusicPaymentPreview::GetFormActions()
                   nux::MINOR_POSITION_START);
 
   actions_layout->AddView(
-          sorted_buttons_[CHANGE_PAYMENT_ACTION].GetPointer(),
+          sorted_buttons_[MusicPaymentPreview::CHANGE_PAYMENT_ACTION].GetPointer(),
           1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL,
       100.0f, nux::NUX_LAYOUT_END);
   actions_layout->AddView(
-           sorted_buttons_[FORGOT_PASSWORD_ACTION].GetPointer(),
+           sorted_buttons_[MusicPaymentPreview::FORGOT_PASSWORD_ACTION].GetPointer(),
           1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL,
       100.0f, nux::NUX_LAYOUT_END);
 
@@ -366,10 +374,10 @@ nux::Layout* MusicPaymentPreview::GetFooter()
           nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
 
   buttons_data_layout->AddSpace(20, 1);
-  buttons_data_layout->AddView(sorted_buttons_[CANCEL_PURCHASE_ACTION].GetPointer(),
+  buttons_data_layout->AddView(sorted_buttons_[MusicPaymentPreview::CANCEL_PURCHASE_ACTION].GetPointer(),
           1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
           nux::NUX_LAYOUT_END);
-  buttons_data_layout->AddView(sorted_buttons_[PURCHASE_ALBUM_ACTION].GetPointer(),
+  buttons_data_layout->AddView(sorted_buttons_[MusicPaymentPreview::PURCHASE_ALBUM_ACTION].GetPointer(),
           1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
           nux::NUX_LAYOUT_END);
 
@@ -406,10 +414,10 @@ void MusicPaymentPreview::PreLayoutManagement()
 
   // set the tab ordering
   SetFirstInTabOrder(password_entry_->text_entry());
-  SetLastInTabOrder(sorted_buttons_[CANCEL_PURCHASE_ACTION].GetPointer());
-  SetLastInTabOrder(sorted_buttons_[PURCHASE_ALBUM_ACTION].GetPointer());
-  SetLastInTabOrder(sorted_buttons_[CHANGE_PAYMENT_ACTION].GetPointer());
-  SetLastInTabOrder(sorted_buttons_[FORGOT_PASSWORD_ACTION].GetPointer());
+  SetLastInTabOrder(sorted_buttons_[MusicPaymentPreview::CANCEL_PURCHASE_ACTION].GetPointer());
+  SetLastInTabOrder(sorted_buttons_[MusicPaymentPreview::PURCHASE_ALBUM_ACTION].GetPointer());
+  SetLastInTabOrder(sorted_buttons_[MusicPaymentPreview::CHANGE_PAYMENT_ACTION].GetPointer());
+  SetLastInTabOrder(sorted_buttons_[MusicPaymentPreview::FORGOT_PASSWORD_ACTION].GetPointer());
 
   Preview::PreLayoutManagement();
 }
@@ -430,7 +438,7 @@ void MusicPaymentPreview::SetupViews()
   {
     for (dash::Preview::InfoHintPtr info_hint : hints)
     {
-      if (info_hint->id == DATA_INFOHINT_ID)
+      if (info_hint->id == MusicPaymentPreview::DATA_INFOHINT_ID)
       {
         preview_data = info_hint->value;
       }
