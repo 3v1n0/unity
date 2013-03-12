@@ -578,13 +578,17 @@ void UnityScreen::nuxEpilogue()
   glDisable(GL_SCISSOR_TEST);
 }
 
-void UnityScreen::setPanelShadowMatrix(const GLMatrix& matrix)
+void UnityScreen::setPanelShadowMatrix(GLMatrix const& matrix)
 {
   panel_shadow_matrix_ = matrix;
 }
 
-void UnityScreen::paintPanelShadow(const CompRegion& clip)
+void UnityScreen::paintPanelShadow(CompRegion const& clip)
 {
+  // You have no shadow texture. But how?
+  if (_shadow_texture.empty() || !_shadow_texture[0])
+    return;
+
   if (panel_controller_->opacity() == 0.0f)
     return;
 
@@ -599,16 +603,17 @@ void UnityScreen::paintPanelShadow(const CompRegion& clip)
   if (fullscreenRegion.contains(*output))
     return;
 
-  float panel_h = static_cast<float>(panel_style_.panel_height);
+  if (launcher_controller_->IsOverlayOpen())
+  {
+    auto const& uscreen = UScreen::GetDefault();
+    if (uscreen->GetMonitorAtPosition(output->x(), output->y()) == overlay_monitor_)
+      return;
+  }
 
-  // You have no shadow texture. But how?
-  if (_shadow_texture.empty() || !_shadow_texture[0])
-    return;
-
-  float shadowX = output->x();
-  float shadowY = output->y() + panel_h;
-  float shadowWidth = output->width();
-  float shadowHeight = _shadow_texture[0]->height();
+  int shadowX = output->x();
+  int shadowY = output->y() + panel_style_.panel_height;
+  int shadowWidth = output->width();
+  int shadowHeight = _shadow_texture[0]->height();
   CompRect shadowRect(shadowX, shadowY, shadowWidth, shadowHeight);
 
   CompRegion redraw(clip);
@@ -620,31 +625,11 @@ void UnityScreen::paintPanelShadow(const CompRegion& clip)
 
   panelShadowPainted |= redraw;
 
-  // compiz doesn't use the same method of tracking monitors as our toolkit
-  // we need to make sure we properly associate with the right monitor
-  int current_monitor = -1;
-  auto monitors = UScreen::GetDefault()->GetMonitors();
-  int i = 0;
-  for (auto monitor : monitors)
-  {
-    if (monitor.x == output->x() && monitor.y == output->y())
-    {
-      current_monitor = i;
-      break;
-    }
-    i++;
-  }
-
-  if (launcher_controller_->IsOverlayOpen() && current_monitor == overlay_monitor_)
-    return;
-
   nuxPrologue();
 
-  const CompRect::vector& rects = redraw.rects();
-
-  for (auto const& r : rects)
+  for (auto const& r : redraw.rects())
   {
-    foreach(GLTexture * tex, _shadow_texture)
+    for (GLTexture* tex : _shadow_texture)
     {
       std::vector<GLfloat>  vertexData;
       std::vector<GLfloat>  textureData;
@@ -2456,7 +2441,7 @@ std::string UnityScreen::GetName() const
   return "Unity";
 }
 
-bool isNuxWindow (CompWindow* value)
+bool isNuxWindow(CompWindow* value)
 {
   std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
   auto id = value->id();
@@ -2505,13 +2490,23 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
    * fully covers the shell on its output. It does not include regular windows
    * stacked above the shell like DnD icons or Onboard etc.
    */
-  if (isNuxWindow(window))
+  if (G_UNLIKELY(is_nux_window_))
   {
     if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
     {
       uScreen->nuxRegion += window->geometry();
       uScreen->nuxRegion -= uScreen->fullscreenRegion;
     }
+
+    if (window->id() == screen->activeWindow() &&
+        !(mask & PAINT_WINDOW_ON_TRANSFORMED_SCREEN_MASK))
+    {
+      if (!mask)
+        uScreen->panelShadowPainted = CompRect();
+
+      uScreen->paintPanelShadow(region);
+    }
+
     return false;  // Ensure nux windows are never painted by compiz
   }
   else if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
@@ -2622,8 +2617,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   if (uScreen->doShellRepaint &&
       !uScreen->forcePaintOnTop () &&
       window == uScreen->firstWindowAboveShell &&
-      !uScreen->fullscreenRegion.contains(window->geometry())
-     )
+      !uScreen->fullscreenRegion.contains(window->geometry()))
   {
     uScreen->paintDisplay();
   }
@@ -2634,6 +2628,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     uScreen->setPanelShadowMatrix(matrix);
 
   Window active_window = screen->activeWindow();
+
   if (!screen_transformed &&
       window->id() == active_window &&
       window->type() != CompWindowTypeDesktopMask)
@@ -3409,6 +3404,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
   , window(window)
   , gWindow(GLWindow::get(window))
+  , is_nux_window_(isNuxWindow(window))
 {
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
