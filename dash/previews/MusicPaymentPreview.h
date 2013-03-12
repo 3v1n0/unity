@@ -68,7 +68,6 @@ public:
   NUX_DECLARE_OBJECT_TYPE(MusicPaymentPreview, Preview);
 
   MusicPaymentPreview(dash::Preview::Ptr preview_model);
-  ~MusicPaymentPreview();
 
   // From debug::Introspectable
   std::string GetName() const;

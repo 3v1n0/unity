@@ -71,10 +71,6 @@ MusicPaymentPreview::MusicPaymentPreview(dash::Preview::Ptr preview_model)
   PaymentPreview::SetupBackground();
 }
 
-MusicPaymentPreview::~MusicPaymentPreview()
-{
-}
-
 std::string MusicPaymentPreview::GetName() const
 {
   return "MusicPaymentPreview";
