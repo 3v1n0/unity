@@ -140,7 +140,7 @@ void Controller::SetupWindow()
 
 void Controller::SetupDashView()
 {
-  view_ = new DashView(std::make_shared<ApplicationStarterImp>());
+  view_ = new DashView(std::make_shared<FilesystemLenses>(), std::make_shared<ApplicationStarterImp>());
   AddChild(view_);
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);

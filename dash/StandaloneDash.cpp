@@ -65,7 +65,8 @@ void TestRunner::Init ()
 {
   layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  DashView* view = new DashView(std::make_shared<unity::ApplicationStarterImp>());
+  DashView* view = new DashView(std::make_shared<unity::dash::FilesystemLenses>(), 
+                                std::make_shared<unity::ApplicationStarterImp>());
   view->DisableBlur();
   view->SetMinMaxSize(WIDTH, HEIGHT);
   layout->AddView (view, 1, nux::MINOR_POSITION_CENTER);

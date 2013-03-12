@@ -109,8 +109,9 @@ public:
 
 NUX_IMPLEMENT_OBJECT_TYPE(DashView);
 
-DashView::DashView(ApplicationStarter::Ptr application_starter)
+DashView::DashView(Lenses::Ptr const& lenses, ApplicationStarter::Ptr const& application_starter)
   : nux::View(NUX_TRACKER_LOCATION)
+  , lenses_(lenses)
   , home_lens_(new HomeLens(_("Home"), _("Home screen"), _("Search your computer and online sources")))
   , application_starter_(application_starter)
   , preview_container_(nullptr)
@@ -138,7 +139,7 @@ DashView::DashView(ApplicationStarter::Ptr application_starter)
   SetupViews();
   SetupUBusConnections();
 
-  lenses_.lens_added.connect(sigc::mem_fun(this, &DashView::OnLensAdded));
+  lenses_->lens_added.connect(sigc::mem_fun(this, &DashView::OnLensAdded));
   mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
   preview_state_machine_.PreviewActivated.connect(sigc::mem_fun(this, &DashView::BuildPreview));
   Relayout();
@@ -472,7 +473,7 @@ void DashView::AboutToShow()
 
     if (active_lens_view_->lens()->id() == "home.lens")
     {
-      for (auto lens : lenses_.GetLenses())
+      for (auto lens : lenses_->GetLenses())
       {
         lens->view_type = ViewType::HOME_VIEW;
         LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HOME_VIEW
@@ -510,7 +511,7 @@ void DashView::AboutToHide()
   visible_ = false;
   renderer_.AboutToHide();
 
-  for (auto lens : lenses_.GetLenses())
+  for (auto lens : lenses_->GetLenses())
   {
     lens->view_type = ViewType::HIDDEN;
     LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HIDDEN
@@ -1154,9 +1155,9 @@ std::string DashView::AnalyseLensURI(std::string const& uri)
 
 void DashView::UpdateLensFilter(std::string lens_id, std::string filter_name, std::string value)
 {
-  if (lenses_.GetLens(lens_id))
+  if (lenses_->GetLens(lens_id))
   {
-    Lens::Ptr lens = lenses_.GetLens(lens_id);
+    Lens::Ptr lens = lenses_->GetLens(lens_id);
 
     Filters::Ptr filters = lens->filters;
 
@@ -1404,7 +1405,7 @@ bool DashView::AcceptKeyNavFocus()
 
 std::string const DashView::GetIdForShortcutActivation(std::string const& shortcut) const
 {
-  Lens::Ptr lens = lenses_.GetLensForShortcut(shortcut);
+  Lens::Ptr lens = lenses_->GetLensForShortcut(shortcut);
   if (lens)
     return lens->id;
   return "";
@@ -1414,7 +1415,7 @@ std::vector<char> DashView::GetAllShortcuts()
 {
   std::vector<char> result;
 
-  for (Lens::Ptr lens: lenses_.GetLenses())
+  for (Lens::Ptr lens: lenses_->GetLenses())
   {
     std::string shortcut = lens->shortcut;
     if(shortcut.size() > 0)

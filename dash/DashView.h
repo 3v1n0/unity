@@ -59,7 +59,7 @@ class DashView : public nux::View, public unity::debug::Introspectable
   typedef std::map<std::string, nux::ObjectPtr<LensView>> LensViews;
 
 public:
-  DashView(ApplicationStarter::Ptr application_starter);
+   DashView(Lenses::Ptr const& lenses, ApplicationStarter::Ptr const& application_starter);
   ~DashView();
 
   void AboutToShow();
@@ -132,7 +132,7 @@ private:
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
   UBusManager ubus_manager_;
-  FilesystemLenses lenses_;
+  Lenses::Ptr lenses_;
   HomeLens::Ptr home_lens_;
   LensViews lens_views_;
 
