@@ -60,6 +60,9 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   : SimpleLauncherIcon(IconType::APPLICATION)
   , app_(app)
   , _startup_notification_timestamp(0)
+  , _last_scroll_timestamp(0)
+  , _last_scroll_direction(ScrollDirection::DOWN)
+  , _progressive_scroll(0)
   , use_custom_bg_color_(false)
   , bg_color_(nux::color::White)
 {
@@ -468,12 +471,19 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
     g_file_monitor_set_rate_limit(_desktop_file_monitor, 1000);
 
     auto sig = new glib::Signal<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent>(_desktop_file_monitor, "changed",
-                                [&] (GFileMonitor*, GFile*, GFile*, GFileMonitorEvent event_type) {
+                                [&] (GFileMonitor*, GFile* f, GFile*, GFileMonitorEvent event_type) {
                                   switch (event_type)
                                   {
                                     case G_FILE_MONITOR_EVENT_DELETED:
-                                      UnStick();
+                                    {
+                                      glib::Object<GFile> file(f, glib::AddRef());
+                                      _source_manager.AddTimeoutSeconds(1, [this, file] {
+                                        if (!g_file_query_exists (file, nullptr))
+                                          UnStick();
+                                        return false;
+                                      });
                                       break;
+                                    }
                                     case G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT:
                                       UpdateDesktopQuickList();
                                       UpdateBackgroundColor();
@@ -1213,6 +1223,94 @@ const std::set<std::string> ApplicationLauncherIcon::GetSupportedTypes()
   }
 
   return supported_types;
+}
+
+void PerformScrollUp(WindowList const& windows, unsigned int progressive_scroll)
+{
+  if (!progressive_scroll)
+  {
+    windows.at(1)->Focus();
+    return;
+  }
+  else if (progressive_scroll == 1)
+  {
+    windows.back()->Focus();
+    return;
+  }
+
+  WindowManager::Default().RestackBelow(windows.at(0)->window_id(), windows.at(windows.size() - progressive_scroll + 1)->window_id());
+  windows.at(windows.size() - progressive_scroll + 1)->Focus();
+}
+
+void PerformScrollDown(WindowList const& windows, unsigned int progressive_scroll)
+{
+  if (!progressive_scroll)
+  {
+    WindowManager::Default().RestackBelow(windows.at(0)->window_id(), windows.back()->window_id());
+    windows.at(1)->Focus();
+    return;
+  }
+
+  WindowManager::Default().RestackBelow(windows.at(0)->window_id(), windows.at(progressive_scroll)->window_id());
+  windows.at(progressive_scroll)->Focus();
+}
+
+void ApplicationLauncherIcon::PerformScroll(ScrollDirection direction, Time timestamp)
+{
+  if (timestamp - _last_scroll_timestamp < 150)
+    return;
+  else if (timestamp - _last_scroll_timestamp > 1500 || direction != _last_scroll_direction)
+    _progressive_scroll = 0;
+
+  _last_scroll_timestamp = timestamp;
+  _last_scroll_direction = direction;
+
+  auto const& windows = GetWindowsOnCurrentDesktopInStackingOrder();
+  if (windows.empty())
+    return;
+
+  if (!IsActive())
+  {
+    windows.at(0)->Focus();
+    return;
+  }
+
+  if (windows.size() <= 1)
+    return; 
+
+  ++_progressive_scroll;
+  _progressive_scroll %= windows.size();
+
+  switch(direction)
+  {
+  case ScrollDirection::UP:
+    PerformScrollUp(windows, _progressive_scroll);
+    break;
+  case ScrollDirection::DOWN:
+    PerformScrollDown(windows, _progressive_scroll);
+    break;
+  }
+}
+
+WindowList ApplicationLauncherIcon::GetWindowsOnCurrentDesktopInStackingOrder()
+{
+  auto windows = GetWindows(WindowFilter::ON_CURRENT_DESKTOP | WindowFilter::ON_ALL_MONITORS);
+  auto sorted_windows = WindowManager::Default().GetWindowsInStackingOrder();
+
+  // Order the windows
+  std::sort(windows.begin(), windows.end(), [&sorted_windows] (ApplicationWindowPtr const& win1, ApplicationWindowPtr const& win2) {
+    for (auto const& window : sorted_windows)
+    {
+      if (window == win1->window_id())
+        return false;
+      else if (window == win2->window_id())
+        return true;
+    }
+
+    return true;
+  });
+
+  return windows;
 }
 
 std::string ApplicationLauncherIcon::GetName() const

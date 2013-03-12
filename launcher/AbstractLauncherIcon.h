@@ -128,12 +128,20 @@ public:
     END
   };
 
+  enum class ScrollDirection
+  {
+    UP,
+    DOWN
+  };
+
   virtual ~AbstractLauncherIcon() {}
 
   nux::Property<std::string> tooltip_text;
   nux::Property<bool> tooltip_enabled;
   nux::Property<Position> position;
+  nux::Property<bool> removed;
 
+  virtual void ShowTooltip() = 0;
   virtual void HideTooltip() = 0;
 
   virtual void    SetShortcut(guint64 shortcut) = 0;
@@ -224,6 +232,8 @@ public:
   {
     return static_cast<int>(type) * 1000;
   }
+
+  virtual void PerformScroll(ScrollDirection direction, Time timestamp) = 0;
 
   sigc::signal<void, int, int, unsigned long> mouse_down;
   sigc::signal<void, int, int, unsigned long> mouse_up;

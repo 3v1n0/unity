@@ -264,6 +264,7 @@ LayoutWindow::LayoutWindow(Window xid)
  , decoration_height(0)
  , selected(false)
  , aspect_ratio(geo.width / static_cast<float>(geo.height))
+ , alpha(0.0f)
 {
   auto& wm = WindowManager::Default();
 

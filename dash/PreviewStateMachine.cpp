@@ -30,6 +30,7 @@ PreviewStateMachine::PreviewStateMachine()
   , right_results(-1)
   , stored_preview_(nullptr)
   , requires_activation_(true)
+  , requires_new_position_(false)
 {
   for (int pos = SplitPosition::START; pos != SplitPosition::END; pos++)
   {

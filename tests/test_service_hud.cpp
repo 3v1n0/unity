@@ -1,8 +1,12 @@
 #include "test_service_hud.h"
-#include <unity.h>
-#include <gio/gio.h>
 
-const char * hud_interface = 
+namespace unity
+{
+namespace service
+{
+namespace
+{
+const char * hud_interface =
 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 "<node name=\"/\">\n"
 "        <interface name=\"com.canonical.hud\">\n"
@@ -41,159 +45,22 @@ const char * hud_interface =
 "        </interface>\n"
 "</node>\n"
 ;
-static void bus_got_cb          (GObject *object, GAsyncResult * res, gpointer user_data);
-static void bus_method          (GDBusConnection *connection,
-                                const gchar *sender,
-                                const gchar *object_path,
-                                const gchar *interface_name,
-                                const gchar *method_name,
-                                GVariant *parameters,
-                                GDBusMethodInvocation *invocation,
-                                gpointer user_data);
-
-static gboolean                 do_emit_signal(gpointer data);
-static void                     emit_signal(GDBusConnection *connection);
-
-
-G_DEFINE_TYPE(ServiceHud, service_hud, G_TYPE_OBJECT);
-static GDBusNodeInfo * node_info = NULL;
-static GDBusInterfaceInfo * iface_info = NULL;
-static GDBusInterfaceVTable bus_vtable = {
-  method_call: bus_method,
-  get_property: NULL,
-  set_property: NULL,
-};
-
-struct _ServiceHudPrivate
-{
-  GDBusConnection * bus;
-  GCancellable * bus_lookup;
-  guint bus_registration;
-  guint sig_emission_handle;
-};
-
-static void
-service_hud_dispose(GObject* object)
-{
-  ServiceHud* self = SERVICE_HUD(object);
-  if (self->priv->bus_lookup != NULL) {
-    g_cancellable_cancel(self->priv->bus_lookup);
-    g_object_unref(self->priv->bus_lookup);
-    self->priv->bus_lookup = NULL;
-  }
-
-  if (self->priv->bus_registration != 0) {
-    g_dbus_connection_unregister_object(self->priv->bus, self->priv->bus_registration);
-    self->priv->bus_registration = 0;
-  }
-
-  if (self->priv->bus != NULL) {
-    g_object_unref(self->priv->bus);
-    self->priv->bus = NULL;
-  }
-
-  if (self->priv->sig_emission_handle) {
-    g_source_remove(self->priv->sig_emission_handle);
-    self->priv->sig_emission_handle = 0;
-  }
-
-  G_OBJECT_CLASS (service_hud_parent_class)->dispose (object);
 }
 
-static void
-service_hud_class_init(ServiceHudClass* klass)
+
+Hud::Hud()
 {
-  G_OBJECT_CLASS(klass)->dispose = service_hud_dispose;
-  g_type_class_add_private (klass, sizeof (ServiceHudPrivate));
+  auto object = std::make_shared<glib::DBusObject>(hud_interface, "com.canonical.hud");
+  object->SetMethodsCallsHandler(sigc::mem_fun(this, &Hud::OnMethodCall));
+  object->registered.connect([this] (std::string const&) {
+    timeout_.reset(new glib::TimeoutSeconds(1));
+    timeout_->Run([this] { EmitSignal(); return true; });
+  });
 
-  if (node_info == NULL) 
-  {
-    GError * error = NULL;
-
-    node_info = g_dbus_node_info_new_for_xml(hud_interface, &error);
-    if (error != NULL) 
-    {
-        g_error("Unable to parse HUD interface: %s", error->message);
-        g_error_free(error);
-    }
-  }
-
-  if (node_info != NULL && iface_info == NULL) 
-  {
-    iface_info = g_dbus_node_info_lookup_interface(node_info,"com.canonical.hud");
-    if (iface_info == NULL) 
-    {
-      g_error("Unable to find interface 'com.canonical.hud'");
-    }
-  }
-
+  server_.AddObject(object, "/com/canonical/hud");
 }
 
-static void
-service_hud_init(ServiceHud* self)
-{
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE(self, SERVICE_TYPE_HUD, ServiceHudPrivate);
-  self->priv->bus = NULL;
-  self->priv->bus_lookup = NULL;
-  self->priv->bus_registration = 0;
-  
-  self->priv->bus_lookup = g_cancellable_new();
-  g_bus_get(G_BUS_TYPE_SESSION, self->priv->bus_lookup, bus_got_cb, self);
-}
-
-ServiceHud*
-service_hud_new()
-{
-  return g_object_new(SERVICE_TYPE_HUD, NULL);
-}
-
-static void
-bus_got_cb (GObject *object, GAsyncResult * res, gpointer user_data)
-{
-  GError * error = NULL;
-  ServiceHud * self = SERVICE_HUD(user_data);
-  GDBusConnection * bus;
-
-  bus = g_bus_get_finish(res, &error);
-  if (error != NULL) {
-    g_critical("Unable to get bus: %s", error->message);
-    g_error_free(error);
-    return;
-  }
-
-  self->priv->bus = bus;
-
-  /* Register object */
-  self->priv->bus_registration = g_dbus_connection_register_object(bus,
-                                                  /* path */       "/com/canonical/hud",
-                                                  /* interface */  iface_info,
-                                                  /* vtable */     &bus_vtable,
-                                                  /* userdata */   self,
-                                                  /* destroy */    NULL,
-                                                  /* error */      &error);
-
-  if (error != NULL) {
-    g_critical ("Unable to create bus connection object, %s", error->message);
-    g_error_free(error);
-    return;
-  }
-  else
-  {
-    self->priv->sig_emission_handle = g_timeout_add(1000, do_emit_signal, bus);
-  }
-  
-  return;
-}
-
-static gboolean
-do_emit_signal(gpointer data)
-{
-  emit_signal(G_DBUS_CONNECTION(data));
-  return TRUE;
-}
-
-static void
-emit_signal(GDBusConnection *connection)
+void Hud::EmitSignal()
 {
   GVariant *query;
   int num_entries = 5;
@@ -203,11 +70,11 @@ emit_signal(GDBusConnection *connection)
   g_variant_builder_init(&ret_builder, G_VARIANT_TYPE_TUPLE);
   g_variant_builder_add_value(&ret_builder, g_variant_new_string("target"));
   GVariantBuilder builder;
-  
+
   g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
-   
+
   int i = 0;
-  for (i = 0; i < num_entries; i++) 
+  for (i = 0; i < num_entries; i++)
   {
     gchar* target = g_strdup_printf("test-%i", i);
     gchar* icon = g_strdup_printf("icon-%i", i);
@@ -243,7 +110,7 @@ emit_signal(GDBusConnection *connection)
     g_free(completion_text);
   }
   g_variant_builder_add_value(&ret_builder, g_variant_builder_end(&builder));
- 
+
   GVariant* query_key;
   {
     GVariantBuilder keybuilder;
@@ -257,21 +124,17 @@ emit_signal(GDBusConnection *connection)
   }
   g_variant_ref_sink(query_key);
   g_variant_builder_add_value(&ret_builder, query_key);
-  
+
   query = g_variant_builder_end(&ret_builder);
-  
-  g_dbus_connection_emit_signal (connection, NULL, "/com/canonical/hud",
-                                 "com.canonical.hud", "UpdatedQuery",
-                                 query, NULL);
+
+  server_.EmitSignal("com.canonical.hud", "UpdatedQuery", query);
 }
 
-static void
-bus_method (GDBusConnection *connection, const gchar *sender, const gchar *object_path, const gchar *interface_name, const gchar *method_name, GVariant *parameters, GDBusMethodInvocation *invocation, gpointer user_data)
+GVariant* Hud::OnMethodCall(std::string const& method, GVariant *parameters)
 {
-  if (g_strcmp0(method_name, "StartQuery") == 0) 
+  if (method == "StartQuery")
   {
-    GVariant * ret = NULL;
-    gchar * query = NULL;
+    glib::String query;
     int num_entries = 0;
 
     g_variant_get(parameters, "(si)", &query, &num_entries);
@@ -281,11 +144,11 @@ bus_method (GDBusConnection *connection, const gchar *sender, const gchar *objec
     g_variant_builder_init(&ret_builder, G_VARIANT_TYPE_TUPLE);
     g_variant_builder_add_value(&ret_builder, g_variant_new_string("target"));
     GVariantBuilder builder;
-    
+
     g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
-     
+
     int i = 0;
-    for (i = 0; i < num_entries; i++) 
+    for (i = 0; i < num_entries; i++)
     {
       gchar* target = g_strdup_printf("test-%i", i);
       gchar* icon = g_strdup_printf("icon-%i", i);
@@ -321,7 +184,7 @@ bus_method (GDBusConnection *connection, const gchar *sender, const gchar *objec
       g_free(completion_text);
     }
     g_variant_builder_add_value(&ret_builder, g_variant_builder_end(&builder));
-   
+
     GVariant* query_key;
     {
       GVariantBuilder keybuilder;
@@ -335,27 +198,25 @@ bus_method (GDBusConnection *connection, const gchar *sender, const gchar *objec
     }
     g_variant_ref_sink(query_key);
     g_variant_builder_add_value(&ret_builder, query_key);
-    
-    ret = g_variant_builder_end(&ret_builder);
 
-    g_dbus_method_invocation_return_value(invocation, ret);
-    g_free(query);
-  } 
-  else if (g_strcmp0(method_name, "ExecuteQuery") == 0) 
+    return g_variant_builder_end(&ret_builder);
+  }
+  else if (method == "ExecuteQuery")
   {
     GVariant * key = NULL;
     key = g_variant_get_child_value(parameters, 0);
-    g_dbus_method_invocation_return_value(invocation, NULL);
     g_variant_unref(key);
   }
-  else if (g_strcmp0(method_name, "CloseQuery") == 0)
+  else if (method == "CloseQuery")
   {
     GVariant * key = NULL;
     key = g_variant_get_child_value(parameters, 0);
-    g_dbus_method_invocation_return_value(invocation, NULL);
     g_variant_unref(key);
   }
 
-  return;
+  return nullptr;
+}
+
+}
 }
 

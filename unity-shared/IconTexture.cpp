@@ -43,7 +43,7 @@ const char* const DEFAULT_ICON = "text-x-preview";
 
 using namespace unity;
 
-IconTexture::IconTexture(nux::BaseTexture* texture, guint width, guint height)
+IconTexture::IconTexture(BaseTexturePtr const& texture, unsigned width, unsigned height)
   : TextureArea(NUX_TRACKER_LOCATION),
     _accept_key_nav_focus(false),
     _size(height),
@@ -56,6 +56,18 @@ IconTexture::IconTexture(nux::BaseTexture* texture, guint width, guint height)
 {
   SetMinMaxSize(width, height);
 }
+
+IconTexture::IconTexture(nux::BaseTexture* texture, unsigned width, unsigned height)
+  : IconTexture(BaseTexturePtr(texture), width, height)
+{}
+
+IconTexture::IconTexture(BaseTexturePtr const& texture)
+  : IconTexture(texture, texture ? texture->GetWidth() : 0, texture ? texture->GetHeight() : 0)
+{}
+
+IconTexture::IconTexture(nux::BaseTexture* texture)
+  : IconTexture(BaseTexturePtr(texture))
+{}
 
 IconTexture::IconTexture(std::string const& icon_name, unsigned int size, bool defer_icon_loading)
   : TextureArea(NUX_TRACKER_LOCATION),
@@ -175,7 +187,7 @@ void IconTexture::IconLoaded(std::string const& icon_name,
       SetByIconName(DEFAULT_ICON, _size);
   }
 
-  texture_updated.emit(_texture_cached.GetPointer());
+  texture_updated.emit(_texture_cached);
   QueueDraw();
 }
 
@@ -271,14 +283,32 @@ void IconTexture::SetOpacity(float opacity)
   QueueDraw();
 }
 
-void IconTexture::SetTexture(nux::BaseTexture* texture)
+void IconTexture::SetTexture(BaseTexturePtr const& texture)
 {
+  if (_texture_cached == texture)
+    return;
+
   _texture_cached = texture;
+
+  if (texture)
+  {
+    _texture_size.width = texture->GetWidth();
+    _texture_size.height = texture->GetHeight();
+    _size = _texture_size.height;
+    SetMinMaxSize(_texture_size.width, _texture_size.height);
+  }
+
+  texture_updated.emit(_texture_cached);
 }
 
-nux::BaseTexture* IconTexture::texture()
+void IconTexture::SetTexture(nux::BaseTexture* texture)
 {
-  return _texture_cached.GetPointer();
+  SetTexture(BaseTexturePtr(texture));
+}
+
+IconTexture::BaseTexturePtr IconTexture::texture()
+{
+  return _texture_cached;
 }
 
 bool IconTexture::DoCanFocus()

@@ -139,6 +139,11 @@ SwitcherView::Ptr Controller::GetView() const
   return impl_->GetView();
 }
 
+bool Controller::IsDetailViewShown()
+{
+  return impl_->IsDetailViewShown();
+}
+
 void Controller::SetDetail(bool value, unsigned int min_windows)
 {
   impl_->SetDetail(value, min_windows);
@@ -360,6 +365,7 @@ void Controller::Impl::ShowView()
 
   if (view_window_)
   {
+    view_->live_background = true;
     view_window_->ShowWindow(true);
     view_window_->PushToFront();
 
@@ -404,7 +410,6 @@ void Controller::Impl::ConstructView()
   view_->SetModel(model_);
   view_->background_color = bg_color_;
   view_->monitor = obj_->monitor_;
-  view_->SetupBackground();
 
   ConstructWindow();
   main_layout_->AddView(view_.GetPointer(), 1);
@@ -453,7 +458,6 @@ void Controller::Impl::HideWindow()
   view_window_->SetOpacity(0.0f);
   view_window_->ShowWindow(false);
   view_window_->PushToBack();
-  view_window_->EnableInputWindow(false);
 
   model_.reset();
   view_.Release();
@@ -520,6 +524,11 @@ void Controller::Impl::Prev()
 SwitcherView::Ptr Controller::Impl::GetView() const
 {
   return view_;
+}
+
+bool Controller::Impl::IsDetailViewShown()
+{
+  return model_ && model_->detail_selection();
 }
 
 void Controller::Impl::SetDetail(bool value, unsigned int min_windows)

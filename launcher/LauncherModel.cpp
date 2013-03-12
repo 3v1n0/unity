@@ -49,7 +49,8 @@ unity::debug::Introspectable::IntrospectableList LauncherModel::GetIntrospectabl
   introspection_results_.clear();
 
   for (auto icon : _inner)
-    introspection_results_.push_back(icon.GetPointer());
+    if (!icon->removed)
+      introspection_results_.push_back(icon.GetPointer());
 
   return introspection_results_;
 }
@@ -139,6 +140,8 @@ void LauncherModel::RemoveIcon(AbstractLauncherIcon::Ptr const& icon)
 
 void LauncherModel::OnIconRemove(AbstractLauncherIcon::Ptr const& icon)
 {
+  icon->removed = true;
+
   timeouts_.AddTimeout(1000, [this, icon] {
     RemoveIcon(icon);
     return false;

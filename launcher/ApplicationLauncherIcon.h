@@ -68,6 +68,8 @@ public:
   std::vector<Window> WindowsOnViewport();
   std::vector<Window> WindowsForMonitor(int monitor);
 
+  void PerformScroll(ScrollDirection direction, Time timestamp) override;
+
 protected:
   void Remove();
   void UpdateIconGeometries(std::vector<nux::Point3> center);
@@ -124,9 +126,13 @@ private:
   WindowList GetWindows(WindowFilterMask filter = 0, int monitor = -1);
   const std::set<std::string> GetSupportedTypes();
   std::string GetDesktopID();
+  WindowList GetWindowsOnCurrentDesktopInStackingOrder();
 
   std::string _remote_uri;
   Time _startup_notification_timestamp;
+  Time _last_scroll_timestamp;
+  ScrollDirection _last_scroll_direction;
+  unsigned int _progressive_scroll;
   std::set<std::string> _supported_types;
   std::map<std::string, glib::Object<DbusmenuClient>> _menu_clients;
   std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items;

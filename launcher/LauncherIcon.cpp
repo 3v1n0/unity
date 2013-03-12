@@ -106,6 +106,7 @@ LauncherIcon::LauncherIcon(IconType type)
   tooltip_text = "blank";
 
   position = Position::FLOATING;
+  removed = false;
 
   // FIXME: the abstraction is already broken, should be fixed for O
   // right now, hooking the dynamic quicklist the less ugly possible way
@@ -527,23 +528,12 @@ void
 LauncherIcon::RecvMouseEnter(int monitor)
 {
   _last_monitor = monitor;
-  if (QuicklistManager::Default()->Current())
-  {
-    // A quicklist is active
-    return;
-  }
-
-  ShowTooltip();
 }
 
 void LauncherIcon::RecvMouseLeave(int monitor)
 {
   _last_monitor = -1;
   _allow_quicklist_to_show = true;
-
-  if (_tooltip)
-    _tooltip->ShowWindow(false);
-  tooltip_visible.emit(nux::ObjectPtr<nux::View>(nullptr));
 }
 
 bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
@@ -1215,6 +1205,9 @@ void LauncherIcon::UnStick()
 
   SetQuirk(Quirk::VISIBLE, false);
 }
+
+void LauncherIcon::PerformScroll(ScrollDirection direction, Time timestamp)
+{}
 
 
 } // namespace launcher

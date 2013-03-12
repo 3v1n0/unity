@@ -315,7 +315,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
         # not exist, and we don't want to wait for 10 seconds, so we do this
         # the old fashioned way.
         get_icon_fn = lambda: self.unity.launcher.model.get_children_by_type(
-            ApplicationLauncherIcon, desktop_id="gcalctool.desktop")
+            ApplicationLauncherIcon, desktop_id="gnome-calculator.desktop")
         calc_icon = get_icon_fn()
         if calc_icon:
             self.launcher_instance.unlock_from_launcher(calc_icon[0])

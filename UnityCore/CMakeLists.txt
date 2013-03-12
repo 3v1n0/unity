@@ -24,11 +24,13 @@ set (CORE_HEADERS
      Filters.h
      GenericPreview.h
      GLibDBusProxy.h
+     GLibDBusServer.h
      GLibSignal.h
      GLibSignal-inl.h
      GLibSource.h
      GLibWrapper.h
      GLibWrapper-inl.h
+     GnomeSessionManager.h
      GSettingsScopes.h
      Hud.h
      IndicatorEntry.h
@@ -54,6 +56,8 @@ set (CORE_HEADERS
      Scopes.h
      ScopeProxy.h
      ScopeProxyInterface.h
+     SeriesPreview.h
+     SessionManager.h
      SocialPreview.h
      Track.h
      Tracks.h
@@ -72,9 +76,11 @@ set (CORE_SOURCES
      Filters.cpp
      GenericPreview.cpp
      GLibDBusProxy.cpp
+     GLibDBusServer.cpp
      GLibSignal.cpp
      GLibSource.cpp
      GLibWrapper.cpp
+     GnomeSessionManager.cpp
      GSettingsScopes.cpp
      Hud.cpp
      Indicator.cpp

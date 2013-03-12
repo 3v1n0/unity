@@ -110,12 +110,12 @@ TEST_F(TestResultIterator, TestIncrement)
 
   ResultIterator it(results->model());
 
-  EXPECT_EQ((*it).uri, "file:///foo.txt");
-  EXPECT_EQ((*it).name, "Result #1");
+  EXPECT_EQ((*it).uri(), "file:///foo.txt");
+  EXPECT_EQ((*it).name(), "Result #1");
 
   it++;
-  EXPECT_EQ((*it).uri, "file:///qoo.txt");
-  EXPECT_EQ((*it).name, "Result #2");
+  EXPECT_EQ((*it).uri(), "file:///qoo.txt");
+  EXPECT_EQ((*it).name(), "Result #2");
 
   it++;
   EXPECT_TRUE(it.IsLast());
