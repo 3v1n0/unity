@@ -151,16 +151,16 @@ nux::Layout* MusicPaymentPreview::GetTitle()
           preview_model_->title.Get(), true,
           NUX_TRACKER_LOCATION);
 
-  title_->SetFont(style.payment_title_font().c_str());
+  title_->SetFont(style.payment_title_font());
   title_->SetLines(-1);
-  title_->SetFont(style.title_font().c_str());
+  title_->SetFont(style.title_font());
   title_data_layout->AddView(title_.GetPointer(), 1);
 
   subtitle_ = new StaticCairoText(
           preview_model_->subtitle.Get(), true,
           NUX_TRACKER_LOCATION);
   subtitle_->SetLines(-1);
-  subtitle_->SetFont(style.payment_subtitle_font().c_str());
+  subtitle_->SetFont(style.payment_subtitle_font());
   title_data_layout->AddView(subtitle_.GetPointer(), 1);
   title_data_layout->AddSpace(1, 1);
   return title_data_layout;
@@ -177,7 +177,7 @@ nux::Layout* MusicPaymentPreview::GetPrice()
           payment_preview_model_->purchase_prize.Get(), true,
           NUX_TRACKER_LOCATION);
   purchase_prize_->SetLines(-1);
-  purchase_prize_->SetFont(style.payment_prize_title_font().c_str());
+  purchase_prize_->SetFont(style.payment_prize_title_font());
   prize_data_layout->AddView(purchase_prize_.GetPointer(), 1,
           nux::MINOR_POSITION_END);
 
@@ -185,7 +185,7 @@ nux::Layout* MusicPaymentPreview::GetPrice()
           _("Ubuntu One best offer"),
           true, NUX_TRACKER_LOCATION);
   purchase_hint_->SetLines(-1);
-  purchase_hint_->SetFont(style.payment_prize_subtitle_font().c_str());
+  purchase_hint_->SetFont(style.payment_prize_subtitle_font());
   prize_data_layout->AddView(purchase_hint_.GetPointer(), 1,
           nux::MINOR_POSITION_END);
 
@@ -193,7 +193,7 @@ nux::Layout* MusicPaymentPreview::GetPrice()
           payment_preview_model_->purchase_type.Get(), true,
           NUX_TRACKER_LOCATION);
   purchase_type_->SetLines(-1);
-  purchase_type_->SetFont(style.payment_prize_subtitle_font().c_str());
+  purchase_type_->SetFont(style.payment_prize_subtitle_font());
   prize_data_layout->AddView(purchase_type_.GetPointer(), 1,
           nux::MINOR_POSITION_END);
   return prize_data_layout;
@@ -208,7 +208,7 @@ nux::Layout* MusicPaymentPreview::GetBody()
   intro_ = new StaticCairoText(
           payment_preview_model_->header.Get(), true,
           NUX_TRACKER_LOCATION);
-  intro_->SetFont(style.payment_intro_font().c_str());
+  intro_->SetFont(style.payment_intro_font());
   intro_->SetLineSpacing(10);
   intro_->SetLines(-style.GetDescriptionLineCount());
   intro_->SetMinimumHeight(50);
@@ -248,21 +248,21 @@ nux::Layout* MusicPaymentPreview::GetFormLabels()
           _("Ubuntu One email:"), true,
           NUX_TRACKER_LOCATION);
   email_label_->SetLines(-1);
-  email_label_->SetFont(style.payment_form_labels_font().c_str());
+  email_label_->SetFont(style.payment_form_labels_font());
   labels_layout->AddView(email_label_.GetPointer(), 0, nux::MINOR_POSITION_END);
 
   payment_label_ = new StaticCairoText(
           _("Payment method:"), true,
           NUX_TRACKER_LOCATION);
   payment_label_->SetLines(-1);
-  payment_label_->SetFont(style.payment_form_labels_font().c_str());
+  payment_label_->SetFont(style.payment_form_labels_font());
   labels_layout->AddView(payment_label_.GetPointer(), 0, nux::MINOR_POSITION_END);
 
   password_label_ = new StaticCairoText(
           _("Ubuntu One Password:"), true,
           NUX_TRACKER_LOCATION);
   password_label_->SetLines(-1);
-  password_label_->SetFont(style.payment_form_labels_font().c_str());
+  password_label_->SetFont(style.payment_form_labels_font());
   password_label_->SetMinimumHeight(40);
   labels_layout->AddView(password_label_.GetPointer(), 0, nux::MINOR_POSITION_END);
 
@@ -286,7 +286,7 @@ nux::Layout* MusicPaymentPreview::GetFormFields()
           payment_preview_model_->email.Get(), true,
           NUX_TRACKER_LOCATION);
   email_->SetLines(-1);
-  email_->SetFont(style.payment_form_data_font().c_str());
+  email_->SetFont(style.payment_form_data_font());
   fields_layout->AddView(email_.GetPointer(), 1,
                   nux::MINOR_POSITION_START);
 
@@ -294,7 +294,7 @@ nux::Layout* MusicPaymentPreview::GetFormFields()
           payment_preview_model_->payment_method.Get(), true,
           NUX_TRACKER_LOCATION);
   payment_->SetLines(-1);
-  payment_->SetFont(style.payment_form_data_font().c_str());
+  payment_->SetFont(style.payment_form_data_font());
   fields_layout->AddView(payment_.GetPointer(), 1,
                   nux::MINOR_POSITION_START);
 
@@ -315,7 +315,7 @@ nux::Layout* MusicPaymentPreview::GetFormFields()
     StaticCairoText* error = new StaticCairoText(
             _("Wrong password"), true, NUX_TRACKER_LOCATION);
     error->SetLines(-1);
-    error->SetFont(style.payment_form_data_font().c_str());
+    error->SetFont(style.payment_form_data_font());
     // ensure it is an error using red
     error->SetTextColor(style.payment_error_color());
     fields_layout->AddView(error, 0, nux::MINOR_POSITION_START);
@@ -342,7 +342,7 @@ nux::Layout* MusicPaymentPreview::GetFormActions()
           "", true,
           NUX_TRACKER_LOCATION);
   empty_->SetLines(-1);
-  empty_->SetFont(style.payment_form_labels_font().c_str());
+  empty_->SetFont(style.payment_form_labels_font());
   actions_layout->AddView(empty_.GetPointer(), 1,
                   nux::MINOR_POSITION_START);
 
