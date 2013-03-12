@@ -144,6 +144,9 @@ DashView::DashView(Lenses::Ptr const& lenses, ApplicationStarter::Ptr const& app
   preview_state_machine_.PreviewActivated.connect(sigc::mem_fun(this, &DashView::BuildPreview));
   Relayout();
 
+  for (auto lens : lenses_->GetLenses())
+    lenses_->lens_added.emit(lens);
+
   home_lens_->AddLenses(lenses_);
   lens_bar_->Activate("home.lens");
 
@@ -1222,7 +1225,6 @@ void DashView::OnLiveSearchReached(std::string const& search_string)
 
 void DashView::OnLensAdded(Lens::Ptr& lens)
 {
-  std::string id = lens->id;
   lens_bar_->AddLens(lens);
 
   nux::ObjectPtr<LensView> view(new LensView(lens, search_bar_->show_filters()));
@@ -1378,7 +1380,7 @@ bool DashView::DoFallbackActivation(std::string const& fake_uri)
     return application_starter_->Launch(appname, last_activated_timestamp_);
   }
   else
-    return gtk_show_uri(NULL, uri.c_str(), CurrentTime, NULL);
+    return gtk_show_uri(NULL, uri.c_str(), last_activated_timestamp_, NULL);
 
   return false;
 }

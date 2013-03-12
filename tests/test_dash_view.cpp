@@ -29,10 +29,12 @@
 #include "mock-lenses.h"
 
 using namespace unity::dash;
+using namespace testing;
 
 namespace  {
 
 struct MockApplicationStarter : public unity::ApplicationStarter {
+  typedef std::shared_ptr<MockApplicationStarter> Ptr;
   MOCK_METHOD2(Launch, bool(std::string const&, Time));
 };
 
@@ -48,13 +50,18 @@ struct TestDashView : public testing::Test {
   Style dash_style;
   unity::panel::Style panel_style;
   Lenses::Ptr lenses_;
-  unity::ApplicationStarter::Ptr application_starter_;
+  MockApplicationStarter::Ptr application_starter_;
   nux::ObjectPtr<DashView> dash_view_;
 };
 
 
-TEST_F(TestDashView, TestApplicationStarter)
+TEST_F(TestDashView, LensActivatedSignal)
 {
+  EXPECT_CALL(*application_starter_, Launch("uri", _)).Times(1);
+  lenses_->GetLensAtIndex(0)->activated.emit("0xaabbcc:application://uri", NOT_HANDLED, Lens::Hints());
+
+  EXPECT_CALL(*application_starter_, Launch("uri", _)).Times(1);
+  lenses_->GetLensAtIndex(0)->activated.emit("0xaabbcc:unity-runner://uri", NOT_HANDLED, Lens::Hints());
 }
 
 }
