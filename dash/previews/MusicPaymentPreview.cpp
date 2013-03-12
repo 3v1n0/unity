@@ -88,16 +88,17 @@ void MusicPaymentPreview::OnActionActivated(ActionButton* button, std::string co
 {
   // Check the action id and send the password only when we
   // purchasing a song
-  if(id.compare(MusicPaymentPreview::PURCHASE_ALBUM_ACTION) == 0 && preview_model_
+  if(id == MusicPaymentPreview::PURCHASE_ALBUM_ACTION && preview_model_
           && password_entry_)
   {
     // HACK: We need to think a better way to do this
-    GVariant *variant = g_variant_new_string(
-        password_entry_->text_entry()->GetText().c_str());
-    glib::Variant* password = new glib::Variant(variant);
-    Lens::Hints hints;
-    hints[MusicPaymentPreview::DATA_PASSWORD_KEY] = *password;
+    auto const& password = password_entry_->text_entry()->GetText();
+    glib::Variant variant_pw(g_variant_new_string(password.c_str()));
+    Lens::Hints hints {
+      std::make_pair(MusicPaymentPreview::DATA_PASSWORD_KEY, variant_pw)
+    };
     preview_model_->PerformAction(id, hints);
+
     // show the overlay
     ShowOverlay();
     return;
@@ -125,8 +126,7 @@ void MusicPaymentPreview::LoadActions()
         link->activate.connect(sigc::mem_fun(this,
                     &MusicPaymentPreview::OnActionLinkActivated));
 
-        std::pair<std::string, nux::ObjectPtr<nux::AbstractButton>> data (action->id, link);
-        sorted_buttons_.insert(data);
+        sorted_buttons_.insert(std::make_pair(action->id, link));
       }
       else
       {
@@ -134,8 +134,7 @@ void MusicPaymentPreview::LoadActions()
         button->activate.connect(sigc::mem_fun(this,
                     &MusicPaymentPreview::OnActionActivated));
 
-        std::pair<std::string, nux::ObjectPtr<nux::AbstractButton>> data (action->id, button);
-        sorted_buttons_.insert(data);
+        sorted_buttons_.insert(std::make_pair(action->id, button));
       }
       LOG_DEBUG(logger) << "added button for action with id '" << action->id << "'";
   }
