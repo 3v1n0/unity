@@ -164,12 +164,22 @@ TEST_F(TestQuicklistMenuItem, ItemActivate)
   dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, "Label");
   dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
 
+  XEvent xevent;
+  xevent.type = ButtonPress;
+  xevent.xany.display = nux::GetGraphicsDisplay()->GetX11Display();
+  xevent.xbutton.time = g_random_int();
+  nux::GetGraphicsDisplay()->ProcessXEvent(xevent, true);
+
+  auto event_time = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
+  ASSERT_EQ(xevent.xbutton.time, event_time);
+
   nux::ObjectPtr<QuicklistMenuItemLabel> qlitem(new QuicklistMenuItemLabel(item));
 
   bool item_activated = false;
-  glib::Signal<void, DbusmenuMenuitem*, int> signal(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-  [&] (DbusmenuMenuitem* menu_item, int time) {
+  glib::Signal<void, DbusmenuMenuitem*, unsigned> signal(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+  [this, event_time, &item_activated] (DbusmenuMenuitem* menu_item, unsigned time) {
     EXPECT_EQ(menu_item, item);
+    EXPECT_EQ(time, event_time);
     item_activated = true;
   });
 
