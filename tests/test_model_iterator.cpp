@@ -54,12 +54,14 @@ public:
                      uri.c_str(),  // uri
                      "icon",       // icon-hint
                      0,            // category
-                     0,            // result type
+                     0,            // result-type
                      "text/plain", // mimetype
                      name.c_str(), // display name
                      "",           // comment
                      uri.c_str(),  // dnd-uri
-                     hints);
+                     hints);       // hints
+
+    g_variant_unref(hints);
   }
 
   Results::Ptr results;
@@ -129,12 +131,12 @@ TEST_F(TestResultIterator, TestIncrement)
 
   ResultIterator it(results->model());
 
-  EXPECT_EQ((*it).uri, "file:///foo.txt");
-  EXPECT_EQ((*it).name, "Result #1");
+  EXPECT_EQ((*it).uri(), "file:///foo.txt");
+  EXPECT_EQ((*it).name(), "Result #1");
 
   it++;
-  EXPECT_EQ((*it).uri, "file:///qoo.txt");
-  EXPECT_EQ((*it).name, "Result #2");
+  EXPECT_EQ((*it).uri(), "file:///qoo.txt");
+  EXPECT_EQ((*it).name(), "Result #2");
 
   it++;
   EXPECT_TRUE(it.IsLast());

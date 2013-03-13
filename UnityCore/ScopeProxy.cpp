@@ -84,7 +84,7 @@ public:
 
   nux::Property<bool> connected;
   nux::Property<std::string> channel;
-  nux::Property<std::vector<int>> category_order;
+  nux::Property<std::vector<unsigned int>> category_order;
   std::string last_search_;
 
   glib::Object<UnityProtocolScopeProxy> scope_proxy_;
@@ -634,7 +634,7 @@ void ScopeProxy::Impl::OnScopeCategoryOrderChanged(UnityProtocolScopeProxy* send
   if (channel() != glib::gchar_to_string(channel_id))
     return;
 
-  std::vector<int> order;
+  std::vector<unsigned int> order;
   for (int i = 0; i < new_order_length1; i++)
   {
     order.push_back(new_order[i]);

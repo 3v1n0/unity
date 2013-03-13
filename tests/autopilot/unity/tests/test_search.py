@@ -18,6 +18,11 @@ from unity.tests import UnityTestCase
 
 import gettext
 
+# XXX: Ugly workaround for a really annoying bug (LP: #1152517) which breaks
+#  this test suite. So, to workaround, we toggle the dash once before doing any
+#  app scope search tests
+workaround_scopes_load_done = False
+
 class SearchTestsBase(UnityTestCase):
     """Base class for testing searching in search fields.
       
@@ -61,9 +66,16 @@ class ApplicationScopeSearchTestBase(SearchTestsBase):
 
     def setUp(self):
         super(ApplicationScopeSearchTestBase, self).setUp()
+        # XXX: Temporary workaround for LP: #1152517
+        global workaround_scopes_load_done
+        if not workaround_scopes_load_done:
+            self.unity.dash.ensure_visible()
+            self.unity.dash.ensure_hidden()
+            workaround_scopes_load_done = True
+
         self.app_scope = self.unity.dash.reveal_application_scope()
         self.addCleanup(self.unity.dash.ensure_hidden)
-        gettext.install("unity-scope-applications", unicode=True)
+        gettext.install("unity-lens-applications", unicode=True)
 
     def input_and_check_result(self, string, expected):
         self.keyboard.type(string)
@@ -88,7 +100,8 @@ class ApplicationScopeSearchTests(ApplicationScopeSearchTestBase):
         ('lowercase', {'input': 'window mocker', 'result': 'Window Mocker'}),
         ('uppercase', {'input': 'WINDOW MOCKER', 'result': 'Window Mocker'}),
         ('partial', {'input': 'Window Mock', 'result': 'Window Mocker'}),
-    ]       
+        ('keyword', {'input': 'arithmetic', 'result': 'Calculator'}),
+    ]
 
     def setUp(self):
         super(ApplicationScopeSearchTests, self).setUp()
@@ -113,8 +126,6 @@ class ApplicationScopeFuzzySearchTests(ApplicationScopeSearchTestBase):
 
     def setUp(self):
         super(ApplicationScopeFuzzySearchTests, self).setUp()
-        # XXX: These should be enabled once libcolumbus is used on 
-        self.skipTest("Application scope fuzzy search tests disabled until libcolumbus gets released.")
 
     def test_application_scope_fuzzy_search(self):
         self.do_search_test()

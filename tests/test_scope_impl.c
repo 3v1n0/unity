@@ -22,8 +22,7 @@
 
 #include <stdio.h>
 
-
-#define TEST_DBUS_NAME "com.canonical.Unity.Test"
+#define TEST_DBUS_NAME "com.canonical.Unity.Test.Scope"
 
 #define _g_object_unref_safe(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free_safe(var) (var = (g_free (var), NULL))

@@ -1485,6 +1485,7 @@ void DashView::AddProperties(GVariantBuilder* builder)
   wrapper.add("bottom-border-height", style.GetDashBottomTileHeight());
   wrapper.add("preview_displaying", preview_displaying_);
   wrapper.add("dash_maximized", style.always_maximised());
+  wrapper.add("overlay_window_buttons_shown", overlay_window_buttons_->IsVisible());
 }
 
 nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
@@ -1583,10 +1584,10 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     std::list<nux::Area*> tabs;
     if (active_scope_view_.IsValid())
     {
-      for (auto category : active_scope_view_->categories())
+      for (auto category : active_scope_view_->GetOrderedCategoryViews())
       {
         if (category->IsVisible())
-          tabs.push_back(category);
+          tabs.push_back(category.GetPointer());
       }
     }
 

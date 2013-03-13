@@ -44,7 +44,7 @@ TEST_F(TestScopeData, TestReadExisting)
 
   EXPECT_EQ(scope_data->id(),                  "testscope1.scope");
   EXPECT_EQ(scope_data->name(),                "TestScope1");
-  EXPECT_EQ(scope_data->dbus_name(),           "com.canonical.Unity.Test");
+  EXPECT_EQ(scope_data->dbus_name(),           "com.canonical.Unity.Test.Scope");
   EXPECT_EQ(scope_data->dbus_path(),           "/com/canonical/unity/scope/testscope1");
   EXPECT_EQ(scope_data->icon_hint(),           "/usr/share/unity/6/icon-sub1.svg");
   EXPECT_EQ(scope_data->category_icon_hint(),  "");

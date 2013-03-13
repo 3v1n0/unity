@@ -69,9 +69,9 @@ public:
     Utils::WaitUntilMSec([this] { return scope_->connected() == true; }, true, 2000);
   }
 
-  void WaitForModel(Filters::Ptr const& filters, int count)
+  void WaitForSynchronize(Filters::Ptr const& model, unsigned int count)
   {
-    ::Utils::WaitForModelSynchronize<FilterAdaptor>(*filters.get(), count);    
+    Utils::WaitUntil([model,count] { return model->count == count; });
   }
 
   Scope::Ptr scope_;
@@ -80,7 +80,7 @@ public:
 TEST_F(TestScopeFilter, TestFilterCheckOption)
 {
   Filters::Ptr filters = scope_->filters;
-  WaitForModel(filters, 4);
+  WaitForSynchronize(filters, 4);
 
   CheckOptionFilter::Ptr filter = static_pointer_cast<CheckOptionFilter>(filters->FilterAtIndex(0));
   EXPECT_EQ(filter->id, "categories");
@@ -113,7 +113,7 @@ TEST_F(TestScopeFilter, TestFilterCheckOption)
 TEST_F(TestScopeFilter, TestFilterCheckOptionLogic)
 {
   Filters::Ptr filters = scope_->filters;
-  WaitForModel(filters, 4);
+  WaitForSynchronize(filters, 4);
 
   CheckOptionFilter::Ptr filter = static_pointer_cast<CheckOptionFilter>(filters->FilterAtIndex(0));
   CheckOptionFilter::CheckOptions options = filter->options;
@@ -158,7 +158,7 @@ TEST_F(TestScopeFilter, TestFilterCheckOptionLogic)
 TEST_F(TestScopeFilter, TestFilterRadioOption)
 {
   Filters::Ptr filters = scope_->filters;
-  WaitForModel(filters, 4);
+  WaitForSynchronize(filters, 4);
 
   RadioOptionFilter::Ptr filter = static_pointer_cast<RadioOptionFilter>(filters->FilterAtIndex(1));
   EXPECT_EQ(filter->id, "when");
@@ -191,7 +191,7 @@ TEST_F(TestScopeFilter, TestFilterRadioOption)
 TEST_F(TestScopeFilter, TestFilterRadioOptionLogic)
 {
   Filters::Ptr filters = scope_->filters;
-  WaitForModel(filters, 4);
+  WaitForSynchronize(filters, 4);
 
   RadioOptionFilter::Ptr filter = static_pointer_cast<RadioOptionFilter>(filters->FilterAtIndex(1));
   RadioOptionFilter::RadioOptions options = filter->options;
@@ -236,7 +236,7 @@ TEST_F(TestScopeFilter, TestFilterRadioOptionLogic)
 TEST_F(TestScopeFilter, TestFilterRatings)
 {
   Filters::Ptr filters = scope_->filters;
-  WaitForModel(filters, 4);
+  WaitForSynchronize(filters, 4);
 
   RatingsFilter::Ptr filter = static_pointer_cast<RatingsFilter>(filters->FilterAtIndex(2));
   EXPECT_EQ(filter->id, "ratings");
@@ -256,7 +256,7 @@ TEST_F(TestScopeFilter, TestFilterRatings)
 TEST_F(TestScopeFilter, TestFilterMultiRange)
 {
   Filters::Ptr filters = scope_->filters;
-  WaitForModel(filters, 4);
+  WaitForSynchronize(filters, 4);
 
   MultiRangeFilter::Ptr filter = static_pointer_cast<MultiRangeFilter>(filters->FilterAtIndex(3));
   EXPECT_EQ(filter->id, "size");
@@ -290,7 +290,7 @@ TEST_F(TestScopeFilter, TestFilterMultiRange)
 TEST_F(TestScopeFilter, TestFilterMultiRangeLogic)
 {
   Filters::Ptr filters = scope_->filters;
-  WaitForModel(filters, 4);
+  WaitForSynchronize(filters, 4);
 
   MultiRangeFilter::Ptr filter = static_pointer_cast<MultiRangeFilter>(filters->FilterAtIndex(3));
   MultiRangeFilter::Options options = filter->options;

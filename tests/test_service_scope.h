@@ -20,47 +20,29 @@
  #ifndef _SERVICE_SCOPE_H_
 #define _SERVICE_SCOPE_H_
 
-#include <dee.h>
+#include "test_scope_impl.h"
+#include <UnityCore/GLibWrapper.h>
 
-G_BEGIN_DECLS
-
-#define SERVICE_TYPE_SCOPE (service_scope_get_type ())
-
-#define SERVICE_SCOPE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj),\
-  SERVICE_TYPE_SCOPE, ServiceScope))
-
-#define SERVICE_SCOPE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass),\
-  SERVICE_TYPE_SCOPE, ServiceScopeClass))
-
-#define SERVICE_IS_SCOPE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj),\
-  SERVICE_TYPE_SCOPE))
-
-#define SERVICE_IS_SCOPE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass),\
-  SERVICE_TYPE_SCOPE))
-
-#define SERVICE_SCOPE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj),\
-  SERVICE_TYPE_SCOPE, ServiceScopeClass))
-
-typedef struct _ServiceScope        ServiceScope;
-typedef struct _ServiceScopeClass   ServiceScopeClass;
-typedef struct _ServiceScopePrivate ServiceScopePrivate;
-
-struct _ServiceScope
+namespace unity
 {
-  GObject parent;
+namespace service
+{
 
-  ServiceScopePrivate *priv;
+class Scope
+{
+public:
+  Scope(std::string const& scope_id);
+  ~Scope();
+
+private:
+  void AddCategories();
+  void AddFilters();
+
+private:
+  glib::Object<TestScope> scope_;
 };
 
-struct _ServiceScopeClass
-{
-  GObjectClass parent_class;
-};
-
-GType service_scope_get_type(void) G_GNUC_CONST;
-
-ServiceScope* service_scope_new(const gchar* scope_id);
-
-G_END_DECLS
+}
+}
 
 #endif /* _SERVICE_SCOPE_H_ */

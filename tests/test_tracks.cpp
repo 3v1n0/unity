@@ -30,13 +30,13 @@ using namespace unity::dash;
 
 namespace
 {
-
 static const string swarm_name = "com.canonical.test.tracks";
 static const unsigned int n_rows = 5;
 
 static void WaitForSynchronize(Tracks& model)
 {
-  ::Utils::WaitForModelSynchronize<Track>(model, n_rows);
+  Utils::WaitUntil([&model] { return model.count == n_rows; });
+}
 }
 
 TEST(TestTracks, TestConstruction)
@@ -128,6 +128,4 @@ TEST(TestTracks, TestTrackEqual)
   EXPECT_EQ(track.title(), track_2.title());
   EXPECT_EQ(track.length(), track_2.length());
   EXPECT_EQ(track.index(), track_2.index());
-}
-
 }

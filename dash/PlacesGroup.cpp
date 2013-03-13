@@ -122,7 +122,6 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
     _is_expanded_pushed(false),
     _n_visible_items_in_unexpand_mode(0),
     _n_total_items(0),
-    _category_index(0),
     _coverflow_enabled(false),
     disabled_header_count_(false)
 {
@@ -242,17 +241,6 @@ PlacesGroup::SetName(std::string const& name)
     _cached_name = name;
     _name->SetText(glib::String(g_markup_escape_text(name.c_str(), -1)).Str());
   }
-}
-
-void
-PlacesGroup::SetRendererName(const char *renderer_name)
-{
-  _renderer_name = renderer_name;
-
-  if (g_strcmp0(renderer_name, "tile-horizontal") == 0)
-    (static_cast<dash::ResultView*>(_child_view))->SetModelRenderer(new dash::ResultRendererHorizontalTile(NUX_TRACKER_LOCATION));
-  else if (g_strcmp0(renderer_name, "tile-vertical") == 0)
-    (static_cast<dash::ResultView*>(_child_view))->SetModelRenderer(new dash::ResultRendererTile(NUX_TRACKER_LOCATION));
 }
 
 void PlacesGroup::SetHeaderCountVisible(bool disable)
@@ -508,18 +496,6 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   }
 
   graphics_engine.PopClippingRectangle();
-}
-
-void
-PlacesGroup::SetCategoryIndex(unsigned index)
-{
-  _category_index = index;
-}
-
-unsigned
-PlacesGroup::GetCategoryIndex() const
-{
-  return _category_index;
 }
 
 void

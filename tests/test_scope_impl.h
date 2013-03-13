@@ -17,11 +17,13 @@
  * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
-#ifndef _TEST_SCOPE_H_
-#define _TEST_SCOPE_H_
+#ifndef _TEST_SCOPE_IMPL_H_
+#define _TEST_SCOPE_IMPL_H_
 
 #include <glib-object.h>
 #include <unity.h>
+
+G_BEGIN_DECLS
 
 #define TEST_TYPE_SCOPE                  (test_scope_get_type ())
 #define TEST_SCOPE(obj)                  (G_TYPE_CHECK_INSTANCE_CAST ((obj), TEST_TYPE_SCOPE, TestScope))
@@ -59,8 +61,6 @@ void test_scope_set_filters(TestScope* self, UnityFilterSet* filters);
 void test_scope_export (TestScope* self, GError** error);
 void test_scope_unexport (TestScope* self);
 
-/*
- * Method definitions.
- */
+G_END_DECLS
 
-#endif /* _TEST_SCOPE_H_ */
+#endif /* _TEST_SCOPE_IMPL_H_ */

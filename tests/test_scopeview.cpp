@@ -77,7 +77,7 @@ TEST_F(TestScopeView, TestCategoryInsert)
   Category cat(NULL, NULL, NULL);
   scope_view_->OnCategoryAdded(cat);
 
-  ASSERT_TRUE(scope_view_->categories().size() > 0);
+  ASSERT_TRUE(scope_view_->GetOrderedCategoryViews().size() > 0);
 }
 
 TEST_F(TestScopeView, TestFilterExpansion)

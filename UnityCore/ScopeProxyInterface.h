@@ -71,7 +71,7 @@ public:
   nux::ROProperty<Results::Ptr> results;
   nux::ROProperty<Filters::Ptr> filters;
   nux::ROProperty<Categories::Ptr> categories;
-  nux::ROProperty<std::vector<int>> category_order;
+  nux::ROProperty<std::vector<unsigned int>> category_order;
 
   nux::ROProperty<std::string> name;
   nux::ROProperty<std::string> description;

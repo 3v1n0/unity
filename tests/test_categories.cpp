@@ -18,7 +18,7 @@ static const unsigned int n_rows = 5;
 
 static void WaitForSynchronize(Categories& model)
 {
-  ::Utils::WaitForModelSynchronize<Category>(model, n_rows);
+  Utils::WaitUntil([&model] { return model.count == n_rows; });
 }
 
 TEST(TestCategories, TestConstruction)

@@ -978,9 +978,8 @@ void Style::Impl::RoundedRectSegment(cairo_t*   cr,
                                          Segment    segment)
 {
   double radius  = cornerRadius / aspect;
-  bool odd = true;
 
-  odd = cairo_get_line_width (cr) == 2.0 ? false : true;
+  bool odd = cairo_get_line_width (cr) == 2.0 ? false : true;
 
   switch (segment)
   {
@@ -1558,11 +1557,11 @@ void Style::Impl::Text(cairo_t*    cr,
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
   cairo_set_source_rgba(cr, color);
   pango_layout_context_changed(layout);
-  PangoRectangle ink = {0, 0, 0, 0};
-  PangoRectangle log = {0, 0, 0, 0};
-  pango_layout_get_extents(layout, &ink, &log);
+  int layout_w = 0;
+  int layout_h = 0;
+  pango_layout_get_pixel_size(layout, &layout_w, &layout_h);
   x = horizMargin; // let pango alignment handle the x position
-  y = ((double) h - pango_units_to_double(log.height)) / 2.0;
+  y = (h - layout_h) / 2.0f;
 
   cairo_move_to(cr, x, y);
   pango_cairo_show_layout(cr, layout);

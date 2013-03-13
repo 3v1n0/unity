@@ -27,6 +27,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include <glib/gi18n-lib.h>
+#include <libindicator/indicator-ng.h>
 
 #include <X11/extensions/XInput2.h>
 #include <X11/XKBlib.h>
@@ -123,6 +124,7 @@ static void load_indicator  (PanelService    *self,
                              IndicatorObject *object,
                              const gchar     *_name);
 static void load_indicators (PanelService    *self);
+static void load_indicators_from_indicator_files (PanelService *self);
 static void sort_indicators (PanelService    *self);
 
 static void notify_object (IndicatorObject *object);
@@ -557,6 +559,7 @@ panel_service_init (PanelService *self)
 
   suppress_signals = TRUE;
   load_indicators (self);
+  load_indicators_from_indicator_files (self);
   sort_indicators (self);
   suppress_signals = FALSE;
 
@@ -1011,6 +1014,42 @@ load_indicators (PanelService *self)
   g_dir_close (dir);
 }
 
+static void
+load_indicators_from_indicator_files (PanelService *self)
+{
+  GDir *dir;
+  const gchar *name;
+  GError *error = NULL;
+
+  dir = g_dir_open (INDICATOR_SERVICE_DIR, 0, &error);
+  if (!dir)
+    {
+      g_warning ("unable to open indicator service file directory: %s", error->message);
+      g_error_free (error);
+      return;
+    }
+
+  while ((name = g_dir_read_name (dir)))
+    {
+      gchar *filename;
+      IndicatorNg *indicator;
+
+      filename = g_build_filename (INDICATOR_SERVICE_DIR, name, NULL);
+      indicator = indicator_ng_new_for_profile (filename, "desktop", &error);
+      if (indicator)
+        {
+          load_indicator (self, INDICATOR_OBJECT (indicator), NULL);
+        }
+      else
+        {
+          g_warning ("unable to load '%s': %s", name, error->message);
+          g_clear_error (&error);
+        }
+
+      g_free (filename);
+    }
+}
+
 static gint
 name2order (const gchar * name, const gchar * hint)
 {
@@ -1241,10 +1280,6 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
 
   g_signal_handler_disconnect (priv->last_menu, priv->last_menu_id);
   g_signal_handler_disconnect (priv->last_menu, priv->last_menu_move_id);
-
-  GtkWidget *top_win = gtk_widget_get_toplevel (GTK_WIDGET (priv->last_menu));
-  if (GTK_IS_WINDOW (top_win))
-    gtk_window_set_attached_to (GTK_WINDOW (top_win), NULL);
 
   priv->last_menu = NULL;
   priv->last_menu_id = 0;
@@ -1703,16 +1738,6 @@ panel_service_show_entry_common (PanelService *self,
                             G_CALLBACK (gtk_widget_destroyed), &priv->last_menu);
           g_signal_connect (menu_item, "activate",
                             G_CALLBACK (menuitem_activated), entry);
-        }
-
-      GtkWidget *top_widget = gtk_widget_get_toplevel (GTK_WIDGET (priv->last_menu));
-
-      if (GTK_IS_WINDOW (top_widget))
-        {
-          GtkWindow *top_win = GTK_WINDOW (top_widget);
-
-          if (gtk_window_get_attached_to (top_win) != priv->menubar)
-            gtk_window_set_attached_to (top_win, priv->menubar);
         }
 
       priv->last_entry = entry;

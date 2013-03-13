@@ -73,7 +73,7 @@ class DashRevealTests(DashTestCase):
         """Switch to command scope without closing the dash."""
         self.unity.dash.ensure_visible()
         self.unity.dash.reveal_command_scope()
-        self.assertThat(self.unity.dash.visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.dash.active_scope, Eventually(Equals('commands.scope')))
 
     def test_alt_f4_close_dash(self):
         """Dash must close on alt+F4."""
@@ -610,13 +610,16 @@ class DashVisualTests(DashTestCase):
         """"There should be no empty space between launcher and dash when the launcher
         has a non-default width.
         """
-        self.set_unity_option('icon_size', 60)
-        self.unity.dash.ensure_visible()
-
         monitor = self.unity.dash.monitor
         launcher = self.unity.launcher.get_launcher_for_monitor(monitor)
 
+        self.set_unity_option('icon_size', 60)
+        self.assertThat(launcher.icon_size, Eventually(Equals(66)))
+
+        self.unity.dash.ensure_visible()
+
         self.assertThat(self.unity.dash.geometry[0], Eventually(Equals(launcher.geometry[0] + launcher.geometry[2] - 1)))
+
 
     def test_see_more_result_alignment(self):
         """The see more results label should be baseline aligned

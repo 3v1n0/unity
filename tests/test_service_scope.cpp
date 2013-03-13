@@ -17,26 +17,15 @@
  * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
  */
 
+#include "stdio.h"
 #include "test_service_scope.h"
 
-#include <unity.h>
-#include "stdio.h"
-#include "test_scope_impl.h"
+namespace unity
+{
+namespace service
+{
 
- #define _g_free_safe(var) (var = (g_free (var), NULL))
-
-G_DEFINE_TYPE(ServiceScope, service_scope, G_TYPE_OBJECT);
-
-static void add_categories(ServiceScope* self);
-static void add_filters(ServiceScope *self);
-static UnityActivationResponse* on_activate_uri(TestScope* scope, const char* uri, ServiceScope* self);
-static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_ctx, gpointer self);
-
-static GObject * service_scope_constructor (GType gtype, guint n_properties, GObjectConstructParam *properties);
-static void service_scope_set_scope_id (ServiceScope* self, const gchar* value);
-static const gchar* service_scope_get_scope_id (ServiceScope* self);
-static void service_scope_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
-static void service_scope_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
+#define _g_free_safe(var) (var = (g_free (var), NULL))
 
 const gchar* icons[] = {  "gtk-cdrom",
                           "gtk-directory",
@@ -54,136 +43,34 @@ const gchar* category_ids[] = { "cat0",
                                 "cat1",
                                 "cat2" };
 
-struct _ServiceScopePrivate
+static UnityActivationResponse* on_activate_uri(TestScope* scope, const char* uri, Scope* self);
+static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_ctx, Scope* self);
+
+Scope::Scope(std::string const& scope_id)
+: scope_(test_scope_new (("/com/canonical/unity/scope/"+scope_id).c_str()))
 {
-  TestScope* scope;
-  gchar* _scope_id;
-};
+  AddCategories();
+  AddFilters();
 
-enum  {
-  SERVICE_SCOPE_DUMMY_PROPERTY,
-  SERVICE_SCOPE_SCOPE_ID
-};
-
-static void
-service_scope_dispose(GObject* object)
-{
-  ServiceScope* self = SERVICE_SCOPE(object);
-
-  g_object_unref(self->priv->scope);
-}
-
-static void
-service_scope_class_init(ServiceScopeClass* klass)
-{
-  G_OBJECT_CLASS(klass)->dispose = service_scope_dispose;
-
-	g_type_class_add_private (klass, sizeof (ServiceScopePrivate));
-
-  G_OBJECT_CLASS (klass)->constructor = service_scope_constructor;
-  G_OBJECT_CLASS (klass)->get_property = service_scope_get_property;
-  G_OBJECT_CLASS (klass)->set_property = service_scope_set_property;
-
-  g_object_class_install_property (G_OBJECT_CLASS (klass), SERVICE_SCOPE_SCOPE_ID, g_param_spec_string ("scope-id", "scope-id", "scope-id", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
-}
-
-static void
-service_scope_init(ServiceScope* self)
-{
-  ServiceScopePrivate* priv;
-
-  priv = self->priv = G_TYPE_INSTANCE_GET_PRIVATE(self, SERVICE_TYPE_SCOPE, ServiceScopePrivate);
-  priv->scope = NULL;
-  priv->_scope_id = NULL;
-}
-
-static GObject *
-service_scope_constructor(GType                  gtype,
-                          guint                  n_properties,
-                          GObjectConstructParam *properties)
-{
-  GObject *obj;
-  {
-    obj = G_OBJECT_CLASS (service_scope_parent_class)->constructor (gtype, n_properties, properties);
-  }
-
-  GError* error = NULL;
-  ServiceScope * self;
-  self = SERVICE_SCOPE (obj);
-  if (!self)
-    return;
-
-  gchar* scope_name = g_strdup_printf("/com/canonical/unity/scope/%s", self->priv->_scope_id);
-  /* Scope */
-  self->priv->scope = test_scope_new(scope_name);
-  add_categories(self);
-  add_filters(self);
-
-  g_signal_connect(self->priv->scope, "activate-uri",
-                   G_CALLBACK(on_activate_uri), self);
-
-  g_signal_connect(self->priv->scope, "search",
-                   G_CALLBACK(on_scope_search), self);
+  g_signal_connect(scope_, "activate-uri", G_CALLBACK(on_activate_uri), this);
+  g_signal_connect(scope_, "search", G_CALLBACK(on_scope_search), this);
 
   /* Export */
-  test_scope_export(self->priv->scope, &error);
+  GError* error = NULL;
+  test_scope_export(scope_, &error);
   if (error)
   {
     g_error ("Unable to export Scope: %s", error->message);
     g_error_free (error);
   }
-
-  g_free(scope_name);
-
-  return obj;
 }
 
-static void service_scope_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec)
+Scope::~Scope()
 {
-  ServiceScope * self;
-  self = SERVICE_SCOPE (object);
-  switch (property_id)
-  {
-    case SERVICE_SCOPE_SCOPE_ID:
-    g_value_set_string (value, service_scope_get_scope_id (self));
-    break;
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-    break;
-  }
+  g_signal_handlers_disconnect_by_data(scope_, this);
 }
 
-static void service_scope_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec)
-{
-  ServiceScope * self;
-  self = SERVICE_SCOPE (object);
-  switch (property_id) {
-    case SERVICE_SCOPE_SCOPE_ID:
-    service_scope_set_scope_id (self, g_value_get_string (value));
-    break;
-  default:
-    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-    break;
-  }
-}
-
-static const gchar* service_scope_get_scope_id (ServiceScope* self)
-{
-  g_return_val_if_fail (self != NULL, NULL);
-  return self->priv->_scope_id;
-}
-
-static void service_scope_set_scope_id (ServiceScope* self, const gchar* value)
-{
-  g_return_if_fail (self != NULL);
-  _g_free_safe (self->priv->_scope_id);
-  self->priv->_scope_id = g_strdup (value);;
-  g_object_notify ((GObject *) self, "scope-id");
-}
-
-
-static void
-add_categories(ServiceScope* self)
+void Scope::AddCategories()
 {
   UnityCategorySet* categories;
   GIcon *icon;
@@ -209,12 +96,11 @@ add_categories(ServiceScope* self)
     g_free(title);
   }
 
-  test_scope_set_categories(self->priv->scope, categories);
+  test_scope_set_categories(scope_, categories);
   g_object_unref (categories);
 }
 
-static void
-add_filters(ServiceScope *self)
+void Scope::AddFilters()
 {
   UnityFilterSet *filters = NULL;
   UnityFilter *filter;
@@ -273,20 +159,20 @@ add_filters(ServiceScope *self)
   unity_filter_set_add (filters, filter);
   g_object_unref(filter); 
 
-  test_scope_set_filters(self->priv->scope, filters);
+  test_scope_set_filters(scope_, filters);
   g_object_unref (filters);
 }
 
-static UnityActivationResponse* on_activate_uri(TestScope* scope, const char* uri, ServiceScope* self)
+static UnityActivationResponse* on_activate_uri(TestScope* scope, const char* uri, Scope* self)
 {
   return unity_activation_response_new(UNITY_HANDLED_TYPE_HIDE_DASH, "");
 }
 
 static void _g_variant_unref0_ (gpointer var) {
-  (var == NULL) ? NULL : (var = (g_variant_unref (var), NULL));
+  if (var) g_variant_unref ((GVariant*)var);
 }
 
-static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_base, gpointer self)
+static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_base, Scope* self)
 {
   UnitySearchContext* search_ctx;
   search_ctx = search_base->search_context;
@@ -361,7 +247,7 @@ static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_base
 
     result.uri          = g_strdup_printf("test://uri.%d", i);
     result.title        = title;
-    result.icon_hint    = g_strdup(icons[i % 10]);
+    result.icon_hint    = g_strdup(icons[i % sizeof_icons]);
     result.result_type  = UNITY_RESULT_TYPE_DEFAULT;
     result.category     = (guint) (category),         // 3 categoies
     result.mimetype     = g_strdup("inode/folder");
@@ -380,8 +266,5 @@ static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_base
   g_free(search_title);
 }
 
-ServiceScope* service_scope_new(const gchar* scope_name)
-{
-  return g_object_new(SERVICE_TYPE_SCOPE, "scope-id", scope_name, NULL);
 }
-
+}

@@ -56,6 +56,8 @@ public:
 
   virtual void RenderResultTexture(ResultViewTexture::Ptr const& result_texture);
 
+  virtual void GetResultDimensions(int rows, int columns);
+
 protected:
   void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   void MouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);

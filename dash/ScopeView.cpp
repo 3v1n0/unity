@@ -156,7 +156,6 @@ ScopeView::ScopeView(Scope::Ptr scope, nux::Area* show_filters)
 , cancellable_(g_cancellable_new())
 , initial_activation_(true)
 , no_results_active_(false)
-, last_expanded_group_(nullptr)
 , last_good_filter_model_(-1)
 , filter_expansion_pushed_(false)
 {
@@ -190,12 +189,12 @@ ScopeView::ScopeView(Scope::Ptr scope, nux::Area* show_filters)
     nux::Geometry focused_pos;
     g_variant_get (data, "(iiii)", &focused_pos.x, &focused_pos.y, &focused_pos.width, &focused_pos.height);
 
-    for (auto category : categories_)
+    for (auto group : category_views_)
     {
-      if (category->GetLayout() != nullptr)
+      if (group->GetLayout() != nullptr)
       {
-        auto expand_label = category->GetHeaderFocusableView();
-        auto child = category->GetChildView();
+        auto expand_label = group->GetHeaderFocusableView();
+        auto child = group->GetChildView();
 
         if ((child && child->HasKeyFocus()) ||
             (expand_label && expand_label->HasKeyFocus()))
@@ -223,6 +222,7 @@ ScopeView::~ScopeView()
   
   categories_updated.disconnect();
   category_added_connection.disconnect();
+  category_changed_connection.disconnect();
   category_removed_connection.disconnect();
 
   filters_updated.disconnect();
@@ -287,12 +287,14 @@ void ScopeView::SetupViews(nux::Area* show_filters)
 void ScopeView::SetupCategories(Categories::Ptr const& categories)
 {
   category_added_connection.disconnect();
+  category_changed_connection.disconnect();
   category_removed_connection.disconnect();
 
   if (!categories)
     return;
 
   category_added_connection = categories->category_added.connect(sigc::mem_fun(this, &ScopeView::OnCategoryAdded));
+  category_changed_connection = categories->category_changed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryChanged));
   category_removed_connection = categories->category_removed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryRemoved));
 
   auto resync_categories = [categories, this] (glib::Object<DeeModel> model)
@@ -305,9 +307,49 @@ void ScopeView::SetupCategories(Categories::Ptr const& categories)
   categories->model.changed.connect(resync_categories);
   resync_categories(categories->model());
 
-  scope_->category_order.changed.connect([this](std::vector<int> const& category_order) {
+  scope_->category_order.changed.connect([this](std::vector<unsigned int> const& category_order) {
     LOG_DEBUG(logger) << scope_->id() << ": category order changed";
+    category_order_ = category_order;
+
+    OnCategoryOrderChanged();
   });
+}
+
+
+void ScopeView::OnCategoryOrderChanged()
+{
+  LOG_DEBUG(logger) << "Reordering categories for " << scope_->name();
+
+  for (auto iter = category_views_.begin(); iter != category_views_.end(); ++iter)
+  {
+    PlacesGroup::Ptr group = *iter;
+    scroll_layout_->RemoveChildObject(group.GetPointer());
+  }
+
+  if (scope_)
+  {
+    Categories::Ptr category_model = scope_->categories();
+    if (!category_model)
+      return;
+
+    printf("CATEGORY ORDER: ");
+
+    // there should be ~10 categories, so this shouldn't be too big of a deal
+    for (unsigned i = 0; i < category_order_.size(); i++)
+    {
+      unsigned int desired_category_index = category_order_[i];
+
+      printf("%d , ", desired_category_index);
+
+
+      if (category_views_.size() <= desired_category_index)
+        continue;
+
+      scroll_layout_->AddView(category_views_[desired_category_index].GetPointer(), 0);       
+    }
+    printf("\n");
+
+  }
 }
 
 void ScopeView::SetupResults(Results::Ptr const& results)
@@ -323,12 +365,12 @@ void ScopeView::SetupResults(Results::Ptr const& results)
 
   results->model.changed.connect([this] (glib::Object<DeeModel> model)
   {
-    for (unsigned int i = 0; i < categories_.size(); ++i)
+    for (unsigned int i = 0; i < category_views_.size(); ++i)
     {
-      ResultViewGrid* grid = GetGridForCategory(i);
-      if (grid)
+      ResultView* result_view = GetResultViewForCategory(i);
+      if (result_view)
       {
-        grid->SetResultsModel(scope_->GetResultsForCategory(i));
+        result_view->SetResultsModel(scope_->GetResultsForCategory(i));
       }
     }
   });
@@ -368,72 +410,62 @@ void ScopeView::OnCategoryAdded(Category const& category)
   std::string name = category.name;
   std::string icon_hint = category.icon_hint;
   std::string renderer_name = category.renderer_name;
-  unsigned index = (category.index == unsigned(-1)) ? categories_.size() : category.index;
-  bool reset_filter_models = false;
+  if (category.index == unsigned(-1))
+    return;
+  unsigned index = category.index;
+  bool reset_filter_models = index < category_views_.size();
 
-  LOG_DEBUG(logger) << "Category added: " << name
+  LOG_DEBUG(logger) << "Category added '" << (scope_ ? scope_->name() : "unknown") << "': "
+                    << name
                     << "(" << icon_hint
                     << ", " << renderer_name
                     << ", " << boost::lexical_cast<int>(index) << ")";
 
-  if (index < categories_.size())
-  {
-    // the scope might have restarted and we don't want to create
-    // new PlacesGroup if we can reuse the old one
-    PlacesGroup* existing_group = categories_.at(index);
-    if (existing_group->GetCategoryIndex() == index)
-      return;
-  }
 
-  PlacesGroup* group = CreatePlacesGroup();
-  AddChild(group);
+  PlacesGroup::Ptr group(CreatePlacesGroup(category));
+  AddChild(group.GetPointer());
   group->SetName(name);
   group->SetIcon(icon_hint);
-  group->SetCategoryIndex(index);
   group->SetExpanded(false);
   group->SetVisible(false);
-  group->expanded.connect(sigc::mem_fun(this, &ScopeView::OnGroupExpanded));
 
-  reset_filter_models = index < categories_.size();
-  /* Add the group at the correct offset into the categories vector */
-  categories_.insert(categories_.begin() + index, group);
+  int view_index = category_order_.size();
+  auto find_view_index = std::find(category_order_.begin(), category_order_.end(), index);
+  if (find_view_index == category_order_.end())
+  {
+    category_order_.push_back(index);
+  }
+  else
+    view_index = find_view_index - category_order_.begin();
+
+  category_views_.insert(category_views_.begin() + index, group);
+
+  group->expanded.connect(sigc::mem_fun(this, &ScopeView::OnGroupExpanded));
 
   /* Reset result count */
   counts_[group] = 0;
 
-  ResultView* grid;
-
-  if (renderer_name == "tile-horizontal")
+  ResultView* results_view = nullptr;
+  if (category.renderer_name == "tile-horizontal")
   {
-    grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
-    grid->SetModelRenderer(new ResultRendererHorizontalTile(NUX_TRACKER_LOCATION));
-    static_cast<ResultViewGrid*> (grid)->horizontal_spacing = CARD_VIEW_GAP_HORIZ;
-    static_cast<ResultViewGrid*> (grid)->vertical_spacing = CARD_VIEW_GAP_VERT;
+    results_view = new ResultViewGrid(NUX_TRACKER_LOCATION);
+    results_view->SetModelRenderer(new ResultRendererHorizontalTile(NUX_TRACKER_LOCATION));
+    static_cast<ResultViewGrid*> (results_view)->horizontal_spacing = CARD_VIEW_GAP_HORIZ;
+    static_cast<ResultViewGrid*> (results_view)->vertical_spacing = CARD_VIEW_GAP_VERT;
   }
-  /*
-   * The flow renderer is disabled for now, expecting return later
-  else if (renderer_name == "flow" && nux::GetWindowThread()->GetGraphicsEngine().UsingGLSLCodePath())
-  {
-    grid = new CoverflowResultView(NUX_TRACKER_LOCATION);
-    grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
-    group->SetHeaderCountVisible(false);
-  }
-  */
   else
   {
-    grid = new ResultViewGrid(NUX_TRACKER_LOCATION);
-    grid->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
+    results_view = new ResultViewGrid(NUX_TRACKER_LOCATION);
+    results_view->SetModelRenderer(new ResultRendererTile(NUX_TRACKER_LOCATION));
   }
-  group->SetChildView(grid);
 
   if (scope_)
   {
-    std::string unique_id = name + scope_->name();
-    grid->unique_id = unique_id;
-    grid->expanded = false;
+    std::string unique_id = category.name() + scope_->name();
+    results_view->unique_id = unique_id;
+    results_view->expanded = false;
 
-    group->SetRendererName(renderer_name.c_str());
-    grid->ResultActivated.connect([this, unique_id] (LocalResult const& local_result, ResultView::ActivateType type, GVariant* data) 
+    results_view->ResultActivated.connect([this, unique_id] (LocalResult const& local_result, ResultView::ActivateType type, GVariant* data) 
     {
       result_activated.emit(type, local_result, data, unique_id); 
       switch (type)
@@ -454,35 +486,34 @@ void ScopeView::OnCategoryAdded(Category const& category)
     Results::Ptr results_model = scope_->GetResultsForCategory(index);
     counts_[group] = results_model ? results_model->count() : 0;
 
-    grid->SetResultsModel(results_model);
-
-    if (reset_filter_models)
-    {
-      /* Lens is reodering the categories, and since their index is based
-       * on the row position in the model, we need to re-initialize the filter
-       * models if we got insert and not an append */
-      for (auto it = categories_.begin() + (index + 1); it != categories_.end(); ++it)
-      {
-        grid = static_cast<ResultViewGrid*>((*it)->GetChildView());
-        grid->SetResultsModel(Results::Ptr());
-      }
-
-      if (static_cast<int>(index) < last_good_filter_model_ || last_good_filter_model_ < 0)
-      {
-        last_good_filter_model_ = index;
-      }
-      if (!fix_filter_models_idle_)
-      {
-        fix_filter_models_idle_.reset(new glib::Idle(sigc::mem_fun(this, &ScopeView::ReinitializeFilterModels), glib::Source::Priority::HIGH));
-      }
-    }
+    results_view->SetResultsModel(results_model);
   }
+
+  group->SetChildView(results_view);
 
   /* We need the full range of method args so we can specify the offset
    * of the group into the layout */
-  scroll_layout_->AddView(group, 0, nux::MinorDimensionPosition::MINOR_POSITION_START,
+  scroll_layout_->AddView(group.GetPointer(), 0, nux::MinorDimensionPosition::MINOR_POSITION_START,
                           nux::MinorDimensionSize::MINOR_SIZE_FULL, 100.0f,
-                          (nux::LayoutPosition)index);
+                          (nux::LayoutPosition)view_index);
+
+  if (reset_filter_models)
+  {
+    QueueReinitializeFilterCategoryModels(index);
+  }
+
+  QueueCategoryCountsCheck();
+}
+
+void ScopeView::OnCategoryChanged(Category const& category)
+{
+  if (category_views_.size() <= category.index)
+    return;
+
+  PlacesGroup::Ptr group = category_views_[category.index];
+
+  group->SetName(category.name);
+  group->SetIcon(category.icon_hint);
 
   QueueCategoryCountsCheck();
 }
@@ -492,53 +523,105 @@ void ScopeView::OnCategoryRemoved(Category const& category)
   std::string name = category.name;
   std::string icon_hint = category.icon_hint;
   std::string renderer_name = category.renderer_name;
-  unsigned index = (category.index == unsigned(-1)) ? categories_.size() : category.index;
+  unsigned index = category.index;
+  if (index == unsigned(-1) || category_views_.size() <= index)
+    return;
+  bool reset_filter_models = index < category_views_.size()-1;
 
-  LOG_DEBUG(logger) << "Category removed: " << name
+  LOG_DEBUG(logger) << "Category removed '" << (scope_ ? scope_->name() : "unknown") << "': "
+                    << name
                     << "(" << icon_hint
                     << ", " << renderer_name
                     << ", " << boost::lexical_cast<int>(index) << ")";
 
-  if (index >= categories_.size())
-    return;
+  auto category_pos = category_views_.begin() + index;
+  PlacesGroup::Ptr group = *category_pos;
 
-  auto category_position = categories_.begin() + index;
-  PlacesGroup* existing_group = *category_position;
-  if (last_expanded_group_ == existing_group)
-    last_expanded_group_ = nullptr;
-  categories_.erase(category_position);
-  counts_.erase(existing_group);
+  if (last_expanded_group_ == group)
+    last_expanded_group_.Release();
 
-  RemoveChild(existing_group);
-  scroll_layout_->RemoveChildObject(existing_group);
+  counts_.erase(group);
+  category_views_.erase(category_pos);
+
+  // remove from order
+  auto order_pos = std::find(category_order_.begin(), category_order_.end(), index);
+  if (order_pos != category_order_.end())
+    category_order_.erase(order_pos);
+ 
+  scroll_layout_->RemoveChildObject(group.GetPointer());
+  RemoveChild(group.GetPointer());
   QueueRelayout();
+
+  if (reset_filter_models)
+  {
+    QueueReinitializeFilterCategoryModels(index);
+  }
 }
 
 void ScopeView::ClearCategories()
 {
-  for (auto category_position = categories_.begin(), end = categories_.end(); category_position != end; ++category_position)
+  for (auto iter = category_views_.begin(), end = category_views_.end(); iter != end; ++iter)
   {
-    PlacesGroup* group = *category_position;
-    RemoveChild(group);
-    scroll_layout_->RemoveChildObject(group);
+    PlacesGroup::Ptr group = *iter;
+    RemoveChild(group.GetPointer());
+    scroll_layout_->RemoveChildObject(group.GetPointer());
   }
   counts_.clear();
-  categories_.clear();
-  last_expanded_group_ = nullptr;
+  category_views_.clear();
+  last_expanded_group_.Release();
   QueueRelayout();
 }
 
-bool ScopeView::ReinitializeFilterModels()
+void ScopeView::QueueReinitializeFilterCategoryModels(unsigned int start_category_index)
+{
+  if (!scope_)
+    return;
+
+  Categories::Ptr category_model = scope_->categories();
+  unsigned int category_count = 0;
+  if (!category_model || (category_count=category_model->count()) <= start_category_index)
+    return;
+
+  if (category_views_.size() <= (start_category_index + 1))
+    return;
+
+  /* Scope is reodering the categories, and since their category index is based
+   * on the row position in the model, we need to re-initialize the category result
+   * models if we got insert and not an append */
+  for (auto iter = category_views_.begin() + start_category_index +1, end = category_views_.end(); iter != end; ++iter)
+  {
+    ResultView* result_view = (*iter)->GetChildView();
+    if (result_view)
+      result_view->SetResultsModel(Results::Ptr());
+  }
+
+  if (last_good_filter_model_ == -1 || static_cast<int>(start_category_index) < last_good_filter_model_)
+  {
+    last_good_filter_model_ = static_cast<int>(start_category_index);
+  }
+  if (!fix_filter_models_idle_)
+  {
+    fix_filter_models_idle_.reset(new glib::Idle(sigc::mem_fun(this, &ScopeView::ReinitializeCategoryResultModels), glib::Source::Priority::HIGH));
+  }
+}
+
+bool ScopeView::ReinitializeCategoryResultModels()
 {
   if (!scope_)
     return false;
 
-  Results::Ptr results_model = scope_->results;
-  for (unsigned i = last_good_filter_model_ + 1; i < categories_.size(); ++i)
+  if (last_good_filter_model_ < 0)
+    return false;
+
+  if (category_views_.size() < static_cast<unsigned int>(last_good_filter_model_)+1)
   {
-    ResultViewGrid* grid = GetGridForCategory(i);
-    if (grid)
-      grid->SetResultsModel(scope_->GetResultsForCategory(i));
+    unsigned int category_index =  static_cast<unsigned int>(last_good_filter_model_) +1;
+    for (auto iter = category_views_.begin() + category_index, end = category_views_.end(); iter != end; ++iter, category_index++)
+    {
+      ResultView* result_view = (*iter)->GetChildView();
+      if (result_view)
+        result_view->SetResultsModel(scope_->GetResultsForCategory(category_index));
+    }
   }
 
   last_good_filter_model_ = -1;
@@ -546,62 +629,54 @@ bool ScopeView::ReinitializeFilterModels()
   return false;
 }
 
-ResultViewGrid* ScopeView::GetGridForCategory(unsigned category_index)
-{
-  if (category_index >= categories_.size()) return nullptr;
-  PlacesGroup* group = categories_.at(category_index);
-  return static_cast<ResultViewGrid*>(group->GetChildView());
-}
+ResultView* ScopeView::GetResultViewForCategory(unsigned int category_index)
+{  
+  if (category_views_.size() >= category_index)
+    return nullptr;
 
-ResultView* ScopeView::GetResultViewForCategory(unsigned category_index)
-{
-  if (category_index >= categories_.size()) return nullptr;
-  PlacesGroup* group = categories_.at(category_index);
+  auto category_pos = category_views_.begin() + category_index;
+  PlacesGroup::Ptr group = *category_pos;
   return static_cast<ResultView*>(group->GetChildView());
 }
 
 void ScopeView::OnResultAdded(Result const& result)
 {
-  try {
-    // Anything done in this method needs to be super fast, if in doubt, add
-    // it to the model_updated_timeout_ callback!
-    PlacesGroup* group = categories_.at(result.category_index);
-
-    std::string uri = result.uri;
-    LOG_TRACE(logger) << "Result added: " << uri;
-
-    counts_[group]++;
-    // make sure we don't display the no-results-hint if we do have results
-    CheckNoResults(glib::HintsMap());
-
-    QueueCategoryCountsCheck();
-
-  } catch (std::out_of_range& oor) {
+  if (category_views_.size() <= result.category_index)
+  {
     LOG_WARN(logger) << "Result does not have a valid category index: "
                      << boost::lexical_cast<unsigned int>(result.category_index)
                      << ". Is out of range.";
+    return;
   }
+
+  std::string uri = result.uri;
+  LOG_TRACE(logger) << "Result added '" << (scope_ ? scope_->name() : "unknown") << "': " << uri;
+
+  counts_[category_views_[result.category_index]]++;
+  // make sure we don't display the no-results-hint if we do have results
+  CheckNoResults(glib::HintsMap());
+
+  QueueCategoryCountsCheck();
 }
 
 void ScopeView::OnResultRemoved(Result const& result)
 {
-  try {
-    PlacesGroup* group = categories_.at(result.category_index);
-
-    std::string uri = result.uri;
-    LOG_TRACE(logger) << "Result removed: " << uri;
-
-    counts_[group]--;
-    // make sure we don't display the no-results-hint if we do have results
-    CheckNoResults(glib::HintsMap());
-
-    QueueCategoryCountsCheck();
-
-  } catch (std::out_of_range& oor) {
+  if (category_views_.size() <= result.category_index)
+  {
     LOG_WARN(logger) << "Result does not have a valid category index: "
                      << boost::lexical_cast<unsigned int>(result.category_index)
                      << ". Is out of range.";
+    return;
   }
+
+  std::string uri = result.uri;
+  LOG_TRACE(logger) << "Result removed '" << (scope_ ? scope_->name() : "unknown") << "': " << uri;
+
+  counts_[category_views_[result.category_index]]--;
+  // make sure we don't display the no-results-hint if we do have results
+  CheckNoResults(glib::HintsMap());
+
+  QueueCategoryCountsCheck();
 }
 
 void ScopeView::CheckNoResults(glib::HintsMap const& hints)
@@ -662,27 +737,32 @@ void ScopeView::CheckCategoryCounts()
 {
     int number_of_displayed_categories = 0;
 
-    PlacesGroup* new_expanded_category = nullptr;
+    PlacesGroup::Ptr new_expanded_group;
 
-    // Cycle through all categories
-    for (auto category : categories_)
+    for (auto iter = category_order_.begin(); iter != category_order_.end(); ++iter)
     {
-      category->SetCounts(counts_[category]);
-      category->SetVisible(counts_[category] > 0);
+      unsigned int category_index = *iter;
+      if (category_views_.size() <= category_index)
+       continue;
 
-      if (counts_[category] > 0)
+      PlacesGroup::Ptr group = category_views_[category_index];
+
+      group->SetCounts(counts_[group]);
+      group->SetVisible(counts_[group] > 0);
+
+      if (counts_[group] > 0)
       {
         number_of_displayed_categories++;
-        new_expanded_category = category;
+        new_expanded_group = group;
       }
     }
 
-    if (new_expanded_category)
+    if (new_expanded_group)
     {
       // only expand the category if we have only one with results.
-      if (number_of_displayed_categories == 1)
-        new_expanded_category->SetExpanded(true);
-      if (last_expanded_group_ && last_expanded_group_ != new_expanded_category)
+      if (number_of_displayed_categories <= 2)
+        new_expanded_group->SetExpanded(true);
+      if (last_expanded_group_ && last_expanded_group_ != new_expanded_group)
         last_expanded_group_->SetExpanded(false);
     }
     else if (last_expanded_group_)
@@ -690,7 +770,7 @@ void ScopeView::CheckCategoryCounts()
       last_expanded_group_->SetExpanded(false);
     }
 
-    last_expanded_group_ = new_expanded_category;
+    last_expanded_group_ = new_expanded_group;
 }
 
 void ScopeView::HideResultsMessage()
@@ -778,7 +858,7 @@ void ScopeView::OnScopeFilterExpanded(bool expanded)
     QueueRelayout();
   }
 
-  for (auto it = categories_.begin(); it != categories_.end(); ++it)
+  for (auto it = category_views_.begin(); it != category_views_.end(); ++it)
   {
     (*it)->SetFiltersExpanded(expanded);
   }
@@ -797,10 +877,10 @@ void ScopeView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_dra
 
   if (!IsFullRedraw() && RedirectedAncestor())
   {
-    for (PlacesGroup* category : categories_)
+    for (PlacesGroup::Ptr const& group : category_views_)
     {
-      if (category->IsRedrawNeeded() && category->IsVisible())
-        graphics::ClearGeometry(category->GetGeometry());  
+      if (group->IsRedrawNeeded() && group->IsVisible())
+        graphics::ClearGeometry(group->GetGeometry());  
     }
     if (filter_bar_ && filter_bar_->IsVisible() && filter_bar_->IsRedrawNeeded())
       graphics::ClearGeometry(filter_bar_->GetGeometry());  
@@ -823,15 +903,18 @@ nux::Area* ScopeView::fscroll_view() const
 int ScopeView::GetNumRows()
 {
   int num_rows = 0;
-  for (auto group: categories_)
+  for (PlacesGroup::Ptr const& group : category_views_)
   {
     if (group->IsVisible() && group->GetChildView())
     {
-      int columns = group->GetChildView()->results_per_row;
       num_rows += 1; // The category header
 
-      if (group->GetExpanded() && columns > 0)
-        num_rows += ceil(counts_[group] / static_cast<double>(columns));
+      if (group->GetExpanded())
+      {
+        int result_columns = 0, result_rows = 0;
+        group->GetChildView()->GetResultDimensions(result_columns, result_rows);
+        num_rows += result_rows;
+      }
       else
         num_rows += 1;
     }
@@ -859,11 +942,17 @@ void ScopeView::ActivateFirst()
   Results::Ptr results = scope_->results;
   if (results->count())
   {
-    // the first displayed category might not be categories_[0]
-    for (unsigned int i = 0; i < categories_.size(); i++)
+    // the first displayed category might not be category_views_[0]
+    for (auto iter = category_order_.begin(); iter != category_order_.end(); ++iter)
     {
-      ResultView* result_view = GetResultViewForCategory(i);
+      unsigned int category_index = *iter;
+      if (category_views_.size() <= category_index)
+       continue;
+      PlacesGroup::Ptr group = category_views_[category_index];
+
+      ResultView* result_view = group->GetChildView();
       if (result_view == nullptr) continue;
+
       auto it = result_view->GetIteratorAtRow(0);
       if (!it.IsLast())
       {
@@ -891,17 +980,19 @@ bool ScopeView::AcceptKeyNavFocus()
 
 void ScopeView::ForceCategoryExpansion(std::string const& view_id, bool expand)
 {
-  for (auto it = categories_.begin(); it != categories_.end(); ++it)
+  for (auto iter = category_views_.begin(); iter != category_views_.end(); ++iter)
   {
-    if ((*it)->GetChildView()->unique_id == view_id)
-    {  if (expand)
+    PlacesGroup::Ptr group = *iter;
+    if (group->GetChildView()->unique_id == view_id)
+    {  
+      if (expand)
       {
-        (*it)->PushExpanded();
-        (*it)->SetExpanded(true);
+        group->PushExpanded();
+        group->SetExpanded(true);
       }
       else
       {
-        (*it)->PopExpanded();
+        group->PopExpanded();
       }
     }
   }
@@ -909,7 +1000,7 @@ void ScopeView::ForceCategoryExpansion(std::string const& view_id, bool expand)
 
 void ScopeView::SetResultsPreviewAnimationValue(float preview_animation)
 {
-  for (auto it = categories_.begin(); it != categories_.end(); ++it)
+  for (auto it = category_views_.begin(); it != category_views_.end(); ++it)
   {
     (*it)->SetResultsPreviewAnimationValue(preview_animation);
   }
@@ -919,7 +1010,7 @@ void ScopeView::EnableResultTextures(bool enable_result_textures)
 {
   scroll_view_->EnableScrolling(!enable_result_textures);
 
-  for (auto it = categories_.begin(); it != categories_.end(); ++it)
+  for (auto it = category_views_.begin(); it != category_views_.end(); ++it)
   {
     ResultView* result_view = (*it)->GetChildView();
     if (result_view)
@@ -933,20 +1024,25 @@ std::vector<ResultViewTexture::Ptr> ScopeView::GetResultTextureContainers()
 {
   // iterate in visual order
   std::vector<ResultViewTexture::Ptr> textures;
-  for (unsigned int category_index = 0; category_index < categories_.size(); category_index++)
+
+  for (auto iter = category_order_.begin(); iter != category_order_.end(); ++iter)
   {
-    PlacesGroup* category = categories_.at(category_index);
-    if (!category || !category->IsVisible())
+    unsigned int category_index = *iter;
+    if (category_views_.size() <= category_index)
+     continue;
+    PlacesGroup::Ptr cateogry_view = category_views_[category_index];
+
+    if (!cateogry_view || !cateogry_view->IsVisible())
       continue;
 
-    ResultView* result_view = category->GetChildView();
+    ResultView* result_view = cateogry_view->GetChildView();
     if (result_view)
     {
       // concatenate textures
       std::vector<ResultViewTexture::Ptr> const& category_textures = result_view->GetResultTextureContainers();
-      for (auto it = category_textures.begin(); it != category_textures.end(); ++it)
+      for (auto iter2 = category_textures.begin(); iter2 != category_textures.end(); ++iter2)
       {
-        ResultViewTexture::Ptr const& result_texture = *it;
+        ResultViewTexture::Ptr const& result_texture = *iter2;
         result_texture->category_index = category_index;
         textures.push_back(result_texture);
       }
@@ -978,9 +1074,24 @@ bool ScopeView::GetPushedFilterExpansion() const
   return filter_expansion_pushed_;
 }
 
-PlacesGroup* ScopeView::CreatePlacesGroup()
+PlacesGroup::Ptr ScopeView::CreatePlacesGroup(Category const& category)
 {
-  return new PlacesGroup(dash::Style::Instance());
+  return PlacesGroup::Ptr(new PlacesGroup(dash::Style::Instance()));
+}
+
+ScopeView::CategoryGroups ScopeView::GetOrderedCategoryViews() const
+{
+  CategoryGroups category_view_ordered;
+  for (auto iter = category_order_.begin(); iter != category_order_.end(); ++iter)
+  {
+    unsigned int category_index = *iter;
+    if (category_views_.size() <= category_index)
+     continue;
+
+    PlacesGroup::Ptr group = category_views_[category_index];
+    category_view_ordered.push_back(group);
+  }
+  return category_view_ordered;
 }
 
 // Introspectable

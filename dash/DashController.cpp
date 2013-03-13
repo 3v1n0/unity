@@ -43,8 +43,10 @@ namespace
 {
 const unsigned int PRELOAD_TIMEOUT_LENGTH = 40;
 
-const std::string DBUS_PATH = "/com/canonical/Unity/Dash";
-const std::string DBUS_INTROSPECTION =\
+namespace dbus
+{
+const std::string PATH = "/com/canonical/Unity/Dash";
+const std::string INTROSPECTION =\
   "<node>"
   "  <interface name='com.canonical.Unity.Dash'>"
   ""
@@ -54,9 +56,7 @@ const std::string DBUS_INTROSPECTION =\
   "  </interface>"
   "</node>";
 }
-
-GDBusInterfaceVTable Controller::interface_vtable =
-  { Controller::OnDBusMethodCall, NULL, NULL};
+}
 
 Controller::Controller(Controller::WindowCreator const& create_window)
   : launcher_width(64)
@@ -66,7 +66,6 @@ Controller::Controller(Controller::WindowCreator const& create_window)
   , visible_(false)
   , need_show_(false)
   , view_(nullptr)
-  , dbus_connect_cancellable_(g_cancellable_new())
   , ensure_timeout_(PRELOAD_TIMEOUT_LENGTH)
   , timeline_animator_(90)
 {
@@ -93,7 +92,7 @@ Controller::Controller(Controller::WindowCreator const& create_window)
 
   Settings::Instance().form_factor.changed.connect([this](FormFactor)
   {
-    if (window_ && view_  && visible_)
+    if (window_ && view_ && visible_)
     {
       // Relayout here so the input window size updates.
       Relayout();
@@ -107,12 +106,13 @@ Controller::Controller(Controller::WindowCreator const& create_window)
   auto spread_cb = sigc::bind(sigc::mem_fun(this, &Controller::HideDash), true);
   WindowManager::Default().initiate_spread.connect(spread_cb);
 
-  g_bus_get (G_BUS_TYPE_SESSION, dbus_connect_cancellable_, OnBusAcquired, this);
-}
+  dbus_server_.AddObjects(dbus::INTROSPECTION, dbus::PATH);
+  dbus_server_.GetObjects().front()->SetMethodsCallsHandler([this] (std::string const& method, GVariant*) {
+    if (method == "HideDash")
+      HideDash();
 
-Controller::~Controller()
-{
-  g_cancellable_cancel(dbus_connect_cancellable_);
+    return static_cast<GVariant*>(nullptr);
+  });
 }
 
 void Controller::SetupWindow()
@@ -124,12 +124,17 @@ void Controller::SetupWindow()
   window_->SetOpacity(0.0f);
   window_->mouse_down_outside_pointer_grab_area.connect(sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
 
-  /* FIXME - first time we load our windows there is a race that causes the input window not to actually get input, this side steps that by causing an input window show and hide before we really need it. */
-  WindowManager& wm = WindowManager::Default();
-  wm.SaveInputFocus ();
-  window_->EnableInputWindow(true, dash::window_title, true, false);
-  window_->EnableInputWindow(false, dash::window_title, true, false);
-  wm.RestoreInputFocus ();
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
+  {
+  /* FIXME - first time we load our windows there is a race that causes the input
+   * window not to actually get input, this side steps that by causing an input window
+   * show and hide before we really need it. */
+    WindowManager& wm = WindowManager::Default();
+    wm.SaveInputFocus();
+    window_->EnableInputWindow(true, dash::window_title, true, false);
+    window_->EnableInputWindow(false, dash::window_title, true, false);
+    wm.RestoreInputFocus();
+  }
 }
 
 void Controller::SetupDashView()
@@ -165,7 +170,9 @@ void Controller::RegisterUBusInterests()
     unity::glib::String overlay_identity;
     gboolean can_maximise = FALSE;
     gint32 overlay_monitor = 0;
-    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise, &overlay_monitor);
+    int width = 0;
+    int height = 0;
+    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
 
     // hide if something else is coming up
     if (overlay_identity.Str() != "dash")
@@ -314,7 +321,9 @@ void Controller::ShowDash()
 
   StartShowHideTimeline();
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_);
+  nux::Geometry const& view_content_geo = view_->GetContentGeometry();
+
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_, view_content_geo.width, view_content_geo.height);
   ubus_manager_.SendMessage(UBUS_OVERLAY_SHOWN, info);
 }
 
@@ -322,8 +331,9 @@ void Controller::FocusWindow()
 {
   window_->ShowWindow(true);
   window_->PushToFront();
-  if (!Settings::Instance().is_standalone) // in standalone mode, we do not need an input window. we are one.
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
   {
+    // in standalone (i.e. not embedded) mode, we do not need an input window. we are one.
     window_->EnableInputWindow(true, dash::window_title, true, false);
     // update the input window geometry. This causes the input window to match the actual size of the dash.
     window_->UpdateInputWindowGeometry();
@@ -363,7 +373,9 @@ void Controller::HideDash(bool restore)
 
   StartShowHideTimeline();
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_);
+  nux::Geometry const& view_content_geo = view_->GetContentGeometry();
+
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, monitor_, view_content_geo.width, view_content_geo.height);
   ubus_manager_.SendMessage(UBUS_OVERLAY_HIDDEN, info);
 }
 
@@ -449,52 +461,6 @@ void Controller::ReFocusKeyInput()
 bool Controller::IsVisible() const
 {
   return visible_;
-}
-
-void Controller::OnBusAcquired(GObject *obj, GAsyncResult *result, gpointer user_data)
-{
-  glib::Error error;
-  glib::Object<GDBusConnection> connection(g_bus_get_finish (result, &error));
-
-  if (!connection || error)
-  {
-    LOG_WARNING(logger) << "Failed to connect to DBus:" << error;
-  }
-  else
-  {
-    GDBusNodeInfo* introspection_data = g_dbus_node_info_new_for_xml(DBUS_INTROSPECTION.c_str(), nullptr);
-    unsigned int reg_id;
-
-    if (!introspection_data)
-    {
-      LOG_WARNING(logger) << "No introspection data loaded.";
-      return;
-    }
-
-    reg_id = g_dbus_connection_register_object(connection, DBUS_PATH.c_str(),
-                                               introspection_data->interfaces[0],
-                                               &interface_vtable, user_data,
-                                               nullptr, nullptr);
-    if (!reg_id)
-    {
-      LOG_WARNING(logger) << "Object registration failed. Dash DBus interface not available.";
-    }
-
-    g_dbus_node_info_unref(introspection_data);
-  }
-}
-
-void Controller::OnDBusMethodCall(GDBusConnection* connection, const gchar* sender,
-                                        const gchar* object_path, const gchar* interface_name,
-                                        const gchar* method_name, GVariant* parameters,
-                                        GDBusMethodInvocation* invocation, gpointer user_data)
-{
-  if (g_strcmp0(method_name, "HideDash") == 0)
-  {
-    auto self = static_cast<Controller*>(user_data);
-    self->HideDash();
-    g_dbus_method_invocation_return_value(invocation, nullptr);
-  }
 }
 
 nux::Geometry Controller::GetInputWindowGeometry()

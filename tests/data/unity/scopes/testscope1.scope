@@ -1,5 +1,5 @@
 [Scope]
-DBusName=com.canonical.Unity.Test
+DBusName=com.canonical.Unity.Test.Scope
 DBusPath=/com/canonical/unity/scope/testscope1
 Icon=/usr/share/unity/6/icon-sub1.svg
 RequiredMetadata=

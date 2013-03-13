@@ -91,6 +91,8 @@ public:
   std::vector<ResultViewTexture::Ptr> const& GetResultTextureContainers();
   virtual void RenderResultTexture(ResultViewTexture::Ptr const& result_texture);
 
+  virtual void GetResultDimensions(int rows, int columns);
+
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
