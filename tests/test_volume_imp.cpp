@@ -36,7 +36,7 @@ class MockFileManagerOpener : public launcher::FileManagerOpener
 public:
   typedef std::shared_ptr<MockFileManagerOpener> Ptr;
 
-  MOCK_METHOD1(Open, void(std::string const& uri));
+  MOCK_METHOD2(Open, void(std::string const& uri, unsigned long long time));
 };
 
 class MockDeviceNotificationDisplay : public launcher::DeviceNotificationDisplay
@@ -128,17 +128,17 @@ TEST_F(TestVolumeImp, TestEjectAndShowNotification)
 
 TEST_F(TestVolumeImp, TestMountAndOpenInFileManager)
 {
-  EXPECT_CALL(*file_manager_opener_, Open(ROOT_FILE_URI))
-      .Times(1);
+  unsigned long long time = g_random_int();
+  EXPECT_CALL(*file_manager_opener_, Open(ROOT_FILE_URI, time));
 
-  volume_->MountAndOpenInFileManager();
+  volume_->MountAndOpenInFileManager(time);
   EXPECT_EQ(g_mock_volume_last_mount_had_mount_operation(gvolume_), TRUE);
   EXPECT_TRUE(volume_->IsMounted());
 
-  EXPECT_CALL(*file_manager_opener_, Open(ROOT_FILE_URI))
-      .Times(1);
+  time = g_random_int();
+  EXPECT_CALL(*file_manager_opener_, Open(ROOT_FILE_URI, time));
 
-  volume_->MountAndOpenInFileManager();
+  volume_->MountAndOpenInFileManager(time);
   EXPECT_EQ(g_mock_volume_last_mount_had_mount_operation(gvolume_), TRUE);
   EXPECT_TRUE(volume_->IsMounted());
 }

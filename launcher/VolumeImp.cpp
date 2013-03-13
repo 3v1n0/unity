@@ -40,6 +40,7 @@ public:
        DeviceNotificationDisplay::Ptr const& device_notification_display,
        VolumeImp* parent)
     : parent_(parent)
+    , open_timestamp_(0)
     , cancellable_(g_cancellable_new())
     , volume_(volume)
     , file_manager_opener_(file_manager_opener)
@@ -140,8 +141,10 @@ public:
     }
   }
 
-  void MountAndOpenInFileManager()
+  void MountAndOpenInFileManager(unsigned long long timestamp)
   {
+    open_timestamp_ = timestamp;
+
     if (!IsMounted())
       MountAndOnFinishOpenInFileManager();
     else
@@ -170,7 +173,7 @@ public:
 
   void OpenInFileManager()
   {
-    file_manager_opener_->Open(GetUri());
+    file_manager_opener_->Open(GetUri(), open_timestamp_);
   }
 
   std::string GetUri()
@@ -216,6 +219,7 @@ public:
   }
 
   VolumeImp* parent_;
+  unsigned long long open_timestamp_;
   glib::Object<GCancellable> cancellable_;
   glib::Object<GVolume> volume_;
   FileManagerOpener::Ptr file_manager_opener_;
@@ -278,9 +282,9 @@ bool VolumeImp::IsMounted() const
   return pimpl->IsMounted();
 }
 
-void VolumeImp::MountAndOpenInFileManager()
+void VolumeImp::MountAndOpenInFileManager(unsigned long long timestamp)
 {
-  pimpl->MountAndOpenInFileManager();
+  pimpl->MountAndOpenInFileManager(timestamp);
 }
 
 void VolumeImp::EjectAndShowNotification()

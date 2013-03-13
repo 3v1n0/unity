@@ -46,7 +46,7 @@ const unsigned int volume_changed_timeout = 500;
 class VolumeLauncherIcon::Impl
 {
 public:
-  typedef glib::Signal<void, DbusmenuMenuitem*, int> ItemSignal;
+  typedef glib::Signal<void, DbusmenuMenuitem*, unsigned> ItemSignal;
 
   Impl(Volume::Ptr const& volume,
        DevicesSettings::Ptr const& devices_settings,
@@ -136,7 +136,7 @@ public:
   void ActivateLauncherIcon(ActionArg arg)
   {
     parent_->SimpleLauncherIcon::ActivateLauncherIcon(arg);
-    volume_->MountAndOpenInFileManager();
+    volume_->MountAndOpenInFileManager(arg.timestamp);
   }
 
   MenuItemsVector GetMenus()
@@ -194,8 +194,8 @@ public:
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
     dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY, true);
 
-    gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
-        volume_->MountAndOpenInFileManager();
+    gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, unsigned timestamp) {
+        volume_->MountAndOpenInFileManager(timestamp);
     }));
 
     menu.push_back(menu_item);
@@ -209,8 +209,8 @@ public:
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
-        volume_->MountAndOpenInFileManager();
+    gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, unsigned timestamp) {
+        volume_->MountAndOpenInFileManager(timestamp);
     }));
 
     menu.push_back(menu_item);
