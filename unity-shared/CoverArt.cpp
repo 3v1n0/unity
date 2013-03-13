@@ -20,6 +20,7 @@
  *              Nick Dedekind <nick.dedekind@canonical.com>
  *
  */
+#include "config.h"
 
 #include "CoverArt.h"
 #include "unity-shared/IntrospectableWrappers.h"
@@ -29,6 +30,7 @@
 #include "DashStyle.h"
 #include "IconLoader.h"
 #include "PreviewStyle.h"
+#include <glib/gi18n-lib.h>
 
 namespace unity
 {
@@ -446,7 +448,7 @@ void CoverArt::SetupViews()
   overlay_text_->SetTextAlignment(StaticCairoText::NUX_ALIGN_CENTRE);
   overlay_text_->SetFont("Ubuntu 14");
   overlay_text_->SetLines(-3);
-  overlay_text_->SetText("No Image Available");
+  overlay_text_->SetText(_("No Image Available"));
 
   dash::Style& style = dash::Style::Instance();
   spin_ = style.GetSearchSpinIcon();
