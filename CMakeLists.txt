@@ -235,6 +235,7 @@ if (ENABLE_X_SUPPORT)
   add_subdirectory(plugins/unitydialog)
   add_subdirectory(plugins/unity-mt-grab-handles)
   add_subdirectory(shortcuts)
+  add_subdirectory(shutdown)
   add_subdirectory(unity-standalone)
 endif ()
 

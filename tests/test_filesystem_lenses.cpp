@@ -1,7 +1,8 @@
 #include "config.h"
+
 #include <gtest/gtest.h>
-#include <glib-object.h>
 #include <UnityCore/FilesystemLenses.h>
+#include "test_utils.h"
 
 using namespace std;
 using namespace unity::dash;
@@ -9,52 +10,34 @@ using namespace unity::dash;
 namespace
 {
 
-void WaitForResult(bool& result)
-{
-  bool timeout_reached;
-
-  auto timeout_cb = [](gpointer data) -> gboolean
-  {
-    *(bool*)data = true;
-    return FALSE;
-  };
-
-  guint32 timeout_id = g_timeout_add(10000, timeout_cb, &timeout_reached);
-
-  while (!result && !timeout_reached)
-  {
-    g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
-  }
-  if (result)
-    g_source_remove(timeout_id);
-}
+const std::string TEST_LENSES_DIR = BUILDDIR"/tests/data/lenses";
 
 void WaitForLensesToLoad(FilesystemLenses& lenses)
 {
   bool result = false;
   lenses.lenses_loaded.connect([&result] {result = true;});
 
-  WaitForResult(result);
+  Utils::WaitUntil(result);
   EXPECT_TRUE(result);
 }
 
 TEST(TestFilesystemLenses, TestConstruction)
 {
   FilesystemLenses lenses0;
-  LensDirectoryReader::Ptr test_reader(new LensDirectoryReader(TESTDATADIR"/lenses"));
+  LensDirectoryReader::Ptr test_reader(new LensDirectoryReader(TEST_LENSES_DIR));
   FilesystemLenses lenses1(test_reader);
 }
 
 TEST(TestFilesystemLenses, TestFileLoading)
 {
-  LensDirectoryReader::Ptr test_reader(new LensDirectoryReader(TESTDATADIR"/lenses"));
+  LensDirectoryReader::Ptr test_reader(new LensDirectoryReader(TEST_LENSES_DIR));
   FilesystemLenses lenses(test_reader);
   WaitForLensesToLoad(lenses);
 }
 
 TEST(TestFilesystemLenses, TestLensesAdded)
 {
-  LensDirectoryReader::Ptr test_reader(new LensDirectoryReader(TESTDATADIR"/lenses"));
+  LensDirectoryReader::Ptr test_reader(new LensDirectoryReader(TEST_LENSES_DIR));
   FilesystemLenses lenses(test_reader);
   unsigned int n_lenses = 0;
   lenses.lens_added.connect([&n_lenses](Lens::Ptr & p) { ++n_lenses; });
@@ -66,7 +49,7 @@ TEST(TestFilesystemLenses, TestLensesAdded)
 
 TEST(TestFilesystemLenses, TestLensContent)
 {
-  LensDirectoryReader::Ptr test_reader(new LensDirectoryReader(TESTDATADIR"/lenses"));
+  LensDirectoryReader::Ptr test_reader(new LensDirectoryReader(TEST_LENSES_DIR));
   FilesystemLenses lenses(test_reader);
   WaitForLensesToLoad(lenses);
 

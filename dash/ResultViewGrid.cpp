@@ -208,7 +208,8 @@ void ResultViewGrid::Activate(std::string const& uri, int index, ResultView::Act
   }
 
   active_index_ = index;
-  glib::Variant data(g_variant_new("(iiiiii)", column_x, row_y, column_width, row_height, left_results, right_results));
+  auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+  glib::Variant data(g_variant_new("(iiiiiii)", timestamp, column_x, row_y, column_width, row_height, left_results, right_results));
   UriActivated.emit(uri, type, data);
 }
 

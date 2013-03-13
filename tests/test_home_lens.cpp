@@ -1,7 +1,5 @@
 #include <gtest/gtest.h>
 #include <glib-object.h>
-#include <dee.h>
-#include <string>
 #include <iostream>
 #include <stdexcept>
 #include <map>
@@ -9,253 +7,20 @@
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
 
-#include <UnityCore/GLibWrapper.h>
-#include <UnityCore/GLibSource.h>
+
 #include <UnityCore/Variant.h>
 #include <UnityCore/HomeLens.h>
-#include <UnityCore/Lens.h>
-#include <UnityCore/Lenses.h>
 
 #include "test_utils.h"
+#include "mock-lenses.h"
 
 using namespace std;
 using namespace unity;
 using namespace unity::dash;
+using namespace testmocks;
 
 namespace
 {
-
-/*
- * FORWARDS
- */
-
-class StaticTestLens;
-
-/*
- * Mock Lens instance that does not use DBus. The default search does like this:
- * For input "bar" output:
- *
- * i = 0
- * for letter in "bar":
- *   put result row [ "uri+$letter+$lens_id", "icon+$letter+$lens_id", i % 3, "mime+$letter+$lens_id", ...]
- *   i++
- *
- * The mock lens has 3 categories:
- *
- *  0) "cat0+$lens_id"
- *  1) "cat1+$lens_id"
- *  2) "Shared cat"
- */
-class StaticTestLens : public Lens
-{
-public:
-  typedef std::shared_ptr<StaticTestLens> Ptr;
-
-  StaticTestLens(string const& id, string const& name, string const& description, string const& search_hint)
-    : Lens(id, "", "", name, "lens-icon.png",
-           description, search_hint, true, "",
-           ModelType::LOCAL)
-    , num_results_(-1)
-    , provides_personal_results_(true)
-  {
-    search_in_global(true);
-    connected.SetGetterFunction(sigc::mem_fun(this, &StaticTestLens::force_connected));
-    provides_personal_content.SetGetterFunction(sigc::mem_fun(this, &StaticTestLens::get_provides_personal_results));
-
-    DeeModel* cats = categories()->model();
-    DeeModel* results = global_results()->model();
-    DeeModel* flters = filters()->model();
-
-    // Set model schemas
-    dee_model_set_schema(cats, "s", "s", "s", "a{sv}", NULL);
-    dee_model_set_schema(results, "s", "s", "u", "s", "s", "s", "s", NULL);
-    dee_model_set_schema(flters, "s", "s", "s", "s", "a{sv}", "b", "b", "b", NULL);
-
-    // Populate categories model
-    ostringstream cat0, cat1;
-    cat0 << "cat0+" << id;
-    cat1 << "cat1+" << id;
-    GVariantBuilder b;
-    g_variant_builder_init(&b, G_VARIANT_TYPE_VARDICT);
-    GVariant *asv = g_variant_builder_end(&b);
-
-    dee_model_append(cats, cat0.str().c_str(), "icon.png", "tile-vertical", asv);
-    dee_model_append(cats, cat1.str().c_str(), "icon.png", "tile-vertical", asv);
-    dee_model_append(cats, "Shared cat", "icon.png", "tile-vertical", asv);
-  }
-
-  virtual ~StaticTestLens() {}
-
-  bool force_connected()
-  {
-    return true;
-  }
-
-  bool get_provides_personal_results()
-  {
-    return provides_personal_results_;
-  }
-
-  virtual void DoGlobalSearch(string const& search_string)
-  {
-    DeeModel* model = global_results()->model();
-    GVariant** row_buf = g_new(GVariant*, 8);
-
-    row_buf[1] = g_variant_new_string("");
-    row_buf[3] = g_variant_new_string("");
-    row_buf[5] = g_variant_new_string("");
-    row_buf[6] = g_variant_new_string("");
-    row_buf[7] = NULL;
-
-    unsigned int i;
-    unsigned int results_count = search_string.size();
-    if (num_results_ >= 0) results_count = static_cast<unsigned>(num_results_);
-    for (i = 0; i < results_count; i++)
-    {
-      ostringstream uri;
-      char res_id(i >= search_string.size() ? '-' : search_string.at(i));
-      uri << "uri+" << res_id << "+" << id();
-      row_buf[0] = g_variant_new_string(uri.str().c_str());
-      row_buf[2] = g_variant_new_uint32(i % 3);
-      glib::String name(g_strdup_printf("%s - %d",
-            results_base_name_.empty() ?
-                search_string.c_str() : results_base_name_.c_str(),
-            i));
-      row_buf[4] = g_variant_new_string(name);
-
-      dee_model_append_row(model, row_buf);
-    }
-
-    g_free(row_buf);
-  }
-
-  void GlobalSearch(string const& search_string,
-                    SearchFinishedCallback const& cb)
-  {
-    /* Dispatch search async, because that's what it'd normally do */
-    source_manager_.Add(new glib::Idle([this, search_string, cb] ()
-    {
-      DoGlobalSearch(search_string);
-      cb(Lens::Hints(), glib::Error());
-      return false;
-    }));
-  }
-
-  void Search(string const& search_string, SearchFinishedCallback const& cb)
-  {
-    /* Dispatch search async, because that's what it'd normally do */
-    source_manager_.Add(new glib::Idle([search_string, cb] ()
-    {
-      cb(Lens::Hints(), glib::Error());
-      return false;
-    }));
-  }
-
-  void Activate(string const& uri)
-  {
-
-  }
-
-  void Preview(string const& uri)
-  {
-
-  }
-
-  void SetResultsBaseName(string const& name)
-  {
-    results_base_name_ = name;
-  }
-
-  void SetNumResults(int count)
-  {
-    num_results_ = count;
-  }
-
-  void SetProvidesPersonalResults(bool value)
-  {
-    provides_personal_results_ = value;
-  }
-
-private:
-  string results_base_name_;
-  int num_results_;
-  bool provides_personal_results_;
-  glib::SourceManager source_manager_;
-};
-
-/*
- * Mock Lenses class
- */
-class StaticTestLenses : public Lenses
-{
-public:
-  typedef std::shared_ptr<StaticTestLenses> Ptr;
-
-  StaticTestLenses()
-  {
-    count.SetGetterFunction(sigc::mem_fun(&list_, &Lenses::LensList::size));
-  }
-
-  virtual ~StaticTestLenses() {}
-
-  Lenses::LensList GetLenses() const
-  {
-    return list_;
-  }
-
-  Lens::Ptr GetLens(std::string const& lens_id) const
-  {
-    for (auto lens : list_)
-    {
-      if (lens->id() == lens_id)
-        return lens;
-    }
-    return Lens::Ptr();
-  }
-
-  Lens::Ptr GetLensAtIndex(std::size_t index) const
-  {
-    return list_.at(index);
-  }
-
-protected:
-  Lenses::LensList list_;
-};
-
-class TwoStaticTestLenses : public StaticTestLenses
-{
-public:
-  TwoStaticTestLenses()
-  : lens_1_(new StaticTestLens("first.lens", "First Lens", "The very first lens", "First search hint"))
-  , lens_2_(new StaticTestLens("second.lens", "Second Lens", "The second lens", "Second search hint"))
-  {
-    list_.push_back(lens_1_);
-    list_.push_back(lens_2_);
-  }
-
-private:
-  Lens::Ptr lens_1_;
-  Lens::Ptr lens_2_;
-};
-
-class ThreeStaticTestLenses : public StaticTestLenses
-{
-public:
-  ThreeStaticTestLenses()
-  : lens_1_(new StaticTestLens("first.lens", "First Lens", "The very first lens", "First search hint"))
-  , lens_2_(new StaticTestLens("second.lens", "Second Lens", "The second lens", "Second search hint"))
-  , lens_3_(new StaticTestLens("applications.lens", "Applications", "The applications lens", "Search applications"))
-  {
-    list_.push_back(lens_1_);
-    list_.push_back(lens_2_);
-    list_.push_back(lens_3_);
-  }
-
-private:
-  Lens::Ptr lens_1_;
-  Lens::Ptr lens_2_;
-  Lens::Ptr lens_3_;
-};
 
 TEST(TestHomeLens, TestConstruction)
 {
@@ -286,7 +51,7 @@ TEST(TestHomeLens, TestInitiallyEmpty)
 TEST(TestHomeLens, TestTwoStaticLenses)
 {
   HomeLens home_lens_("name", "description", "searchhint");
-  TwoStaticTestLenses lenses_;
+  std::shared_ptr<Lenses> lenses_ = std::make_shared<TwoMockTestLenses>();
 
   home_lens_.AddLenses(lenses_);
 
@@ -312,7 +77,7 @@ TEST(TestHomeLens, TestCategoryMergingDisplayName)
 {
   HomeLens home_lens_("name", "description", "searchhint",
                       HomeLens::MergeMode::DISPLAY_NAME);
-  TwoStaticTestLenses lenses_;
+  std::shared_ptr<Lenses> lenses_ = std::make_shared<TwoMockTestLenses>();
   DeeModel* cats = home_lens_.categories()->model();
   DeeModelIter* iter;
   unsigned int cat0_first = 0,
@@ -347,7 +112,7 @@ TEST(TestHomeLens, TestCategoryMergingPerLens)
 {
   HomeLens home_lens_("name", "description", "searchhint",
                       HomeLens::MergeMode::OWNER_LENS);
-  TwoStaticTestLenses lenses_;
+  std::shared_ptr<Lenses> lenses_ = std::make_shared<TwoMockTestLenses>();
   DeeModel* cats = home_lens_.categories()->model();
   DeeModelIter* iter;
   const unsigned int NAME_COLUMN = 0;
@@ -371,7 +136,7 @@ TEST(TestHomeLens, TestCategoryMergingPerLens)
 TEST(TestHomeLens, TestIgnoreFilters)
 {
   HomeLens home_lens_("name", "description", "searchhint");
-  TwoStaticTestLenses lenses_;
+  std::shared_ptr<Lenses> lenses_ = std::make_shared<TwoMockTestLenses>();
   DeeModel* filters = home_lens_.filters()->model();
 
   EXPECT_EQ(dee_model_get_n_rows(filters), 0);
@@ -381,7 +146,7 @@ TEST(TestHomeLens, TestOneSearch)
 {
   HomeLens home_lens_("name", "description", "searchhint",
                       HomeLens::MergeMode::DISPLAY_NAME);
-  TwoStaticTestLenses lenses_;
+  std::shared_ptr<Lenses> lenses_ = std::make_shared<TwoMockTestLenses>();
   DeeModel* results = home_lens_.results()->model();
   DeeModel* cats = home_lens_.categories()->model();
   DeeModel* filters = home_lens_.filters()->model();
@@ -440,7 +205,7 @@ TEST(TestHomeLens, TestOrderingAfterSearch)
 {
   HomeLens home_lens_("name", "description", "searchhint",
                       HomeLens::MergeMode::OWNER_LENS);
-  ThreeStaticTestLenses lenses_;
+  std::shared_ptr<Lenses> lenses_ = std::make_shared<ThreeMockTestLenses>();
   DeeModel* results = home_lens_.results()->model();
   DeeModel* cats = home_lens_.categories()->model();
   DeeModel* filters = home_lens_.filters()->model();
@@ -491,14 +256,14 @@ TEST(TestHomeLens, TestOrderingWithExactAppsMatch)
 {
   HomeLens home_lens_("name", "description", "searchhint",
                       HomeLens::MergeMode::OWNER_LENS);
-  ThreeStaticTestLenses lenses_;
+  std::shared_ptr<Lenses> lenses_ = std::make_shared<ThreeMockTestLenses>();
   // the lens is added as third, so must have cat == 2
   unsigned int apps_lens_cat = 2;
 
   home_lens_.AddLenses(lenses_);
-  Lens::Ptr apps_lens = lenses_.GetLens("applications.lens");
+  Lens::Ptr apps_lens = lenses_->GetLens("applications.lens");
 
-  auto static_lens = dynamic_pointer_cast<StaticTestLens>(apps_lens);
+  auto static_lens = dynamic_pointer_cast<MockTestLens>(apps_lens);
   static_lens->SetNumResults(1);
 
   bool order_changed = false;
@@ -535,14 +300,14 @@ TEST(TestHomeLens, TestOrderingWithoutExactAppsMatch)
 {
   HomeLens home_lens_("name", "description", "searchhint",
                       HomeLens::MergeMode::OWNER_LENS);
-  ThreeStaticTestLenses lenses_;
+  std::shared_ptr<Lenses> lenses_ = std::make_shared<ThreeMockTestLenses>();
   // the lens is added as third, so must have cat == 2
   unsigned int apps_lens_cat = 2;
 
   home_lens_.AddLenses(lenses_);
-  Lens::Ptr apps_lens = lenses_.GetLens("applications.lens");
+  Lens::Ptr apps_lens = lenses_->GetLens("applications.lens");
 
-  auto static_lens = dynamic_pointer_cast<StaticTestLens>(apps_lens);
+  auto static_lens = dynamic_pointer_cast<MockTestLens>(apps_lens);
   static_lens->SetResultsBaseName("noapes");
   static_lens->SetNumResults(1);
 
@@ -579,7 +344,7 @@ TEST(TestHomeLens, TestOrderingByNumResults)
 {
   HomeLens home_lens_("name", "description", "searchhint",
                       HomeLens::MergeMode::OWNER_LENS);
-  ThreeStaticTestLenses lenses_;
+  std::shared_ptr<Lenses> lenses_ = std::make_shared<ThreeMockTestLenses>();
   unsigned int lens1_cat = 0;
   unsigned int lens2_cat = 1;
   // the lens is added as third, so must have cat == 2
@@ -587,14 +352,14 @@ TEST(TestHomeLens, TestOrderingByNumResults)
 
   home_lens_.AddLenses(lenses_);
 
-  Lens::Ptr lens = lenses_.GetLensAtIndex(2);
-  auto static_lens = dynamic_pointer_cast<StaticTestLens>(lens);
+  Lens::Ptr lens = lenses_->GetLensAtIndex(2);
+  auto static_lens = dynamic_pointer_cast<MockTestLens>(lens);
   static_lens->SetResultsBaseName("noapes"); // no exact match in apps lens
   static_lens->SetNumResults(2);
 
-  static_lens = dynamic_pointer_cast<StaticTestLens>(lenses_.GetLensAtIndex(0));
+  static_lens = dynamic_pointer_cast<MockTestLens>(lenses_->GetLensAtIndex(0));
   static_lens->SetNumResults(1);
-  static_lens = dynamic_pointer_cast<StaticTestLens>(lenses_.GetLensAtIndex(1));
+  static_lens = dynamic_pointer_cast<MockTestLens>(lenses_->GetLensAtIndex(1));
   static_lens->SetNumResults(3);
 
   bool order_changed = false;
@@ -638,7 +403,7 @@ TEST(TestHomeLens, TestPersonalResultsFirst)
 {
   HomeLens home_lens_("name", "description", "searchhint",
                       HomeLens::MergeMode::OWNER_LENS);
-  ThreeStaticTestLenses lenses_;
+  std::shared_ptr<Lenses> lenses_ = std::make_shared<ThreeMockTestLenses>();
   unsigned int lens1_cat = 0;
   unsigned int lens2_cat = 1;
   // the lens is added as third, so must have cat == 2
@@ -652,14 +417,14 @@ TEST(TestHomeLens, TestPersonalResultsFirst)
    * lens3 -> 2 results (apps.lens)
    */
 
-  Lens::Ptr lens = lenses_.GetLensAtIndex(2);
-  auto static_lens = dynamic_pointer_cast<StaticTestLens>(lens);
+  Lens::Ptr lens = lenses_->GetLensAtIndex(2);
+  auto static_lens = dynamic_pointer_cast<MockTestLens>(lens);
   static_lens->SetResultsBaseName("noapes"); // no exact match in apps lens
   static_lens->SetNumResults(2);
 
-  static_lens = dynamic_pointer_cast<StaticTestLens>(lenses_.GetLensAtIndex(0));
+  static_lens = dynamic_pointer_cast<MockTestLens>(lenses_->GetLensAtIndex(0));
   static_lens->SetNumResults(1);
-  static_lens = dynamic_pointer_cast<StaticTestLens>(lenses_.GetLensAtIndex(1));
+  static_lens = dynamic_pointer_cast<MockTestLens>(lenses_->GetLensAtIndex(1));
   static_lens->SetNumResults(3);
   static_lens->SetProvidesPersonalResults(false);
 
@@ -698,7 +463,7 @@ TEST(TestHomeLens, TestNonPersonalCategoriesBeforeEmpty)
 {
   HomeLens home_lens_("name", "description", "searchhint",
                       HomeLens::MergeMode::OWNER_LENS);
-  ThreeStaticTestLenses lenses_;
+  std::shared_ptr<Lenses> lenses_ = std::make_shared<ThreeMockTestLenses>();
   unsigned int lens1_cat = 0;
   unsigned int lens2_cat = 1;
   // the lens is added as third, so must have cat == 2
@@ -712,13 +477,13 @@ TEST(TestHomeLens, TestNonPersonalCategoriesBeforeEmpty)
    * lens3 -> 0 results (apps.lens)
    */
 
-  Lens::Ptr lens = lenses_.GetLensAtIndex(2);
-  auto static_lens = dynamic_pointer_cast<StaticTestLens>(lens);
+  Lens::Ptr lens = lenses_->GetLensAtIndex(2);
+  auto static_lens = dynamic_pointer_cast<MockTestLens>(lens);
   static_lens->SetNumResults(0);
 
-  static_lens = dynamic_pointer_cast<StaticTestLens>(lenses_.GetLensAtIndex(0));
+  static_lens = dynamic_pointer_cast<MockTestLens>(lenses_->GetLensAtIndex(0));
   static_lens->SetNumResults(1);
-  static_lens = dynamic_pointer_cast<StaticTestLens>(lenses_.GetLensAtIndex(1));
+  static_lens = dynamic_pointer_cast<MockTestLens>(lenses_->GetLensAtIndex(1));
   static_lens->SetNumResults(3);
   static_lens->SetProvidesPersonalResults(false);
 

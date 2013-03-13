@@ -128,7 +128,7 @@ bool Controller::OnShowTimer()
 
   if (visible_)
   {
-    view_->SetupBackground(true);
+    view_->live_background = true;
 
     if (fade_animator_.CurrentState() == na::Animation::State::Running)
     {
@@ -187,7 +187,6 @@ void Controller::ConstructView()
 
   main_layout_->AddView(view_.GetPointer());
 
-  view_->SetupBackground(false);
   view_window_->ShowWindow(true);
   SetOpacity(0.0);
 }
@@ -214,7 +213,7 @@ void Controller::Hide()
 
   if (view_window_ && view_window_->GetOpacity() > 0.0f)
   {
-    view_->SetupBackground(false);
+    view_->live_background = false;
 
     if (fade_animator_.CurrentState() == na::Animation::State::Running)
     {

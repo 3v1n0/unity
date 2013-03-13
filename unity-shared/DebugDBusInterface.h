@@ -22,6 +22,8 @@
 #ifndef _DEBUG_DBUS_INTERFACE_H
 #define _DEBUG_DBUS_INTERFACE_H
 
+#include <UnityCore/GLibDBusServer.h>
+
 class CompScreen;
 
 namespace unity
@@ -37,29 +39,12 @@ class DebugDBusInterface
 {
 public:
   DebugDBusInterface(Introspectable* introspectable);
-  ~DebugDBusInterface();
 
 private:
-  /* methods */
-  static void OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer data);
-  static void OnNameAcquired(GDBusConnection* connection, const gchar* name, gpointer data);
-  static void OnNameLost(GDBusConnection* connection, const gchar* name, gpointer data);
-  static void HandleDBusMethodCall(GDBusConnection* connection,
-                                   const gchar* sender,
-                                   const gchar* object_path,
-                                   const gchar* interface_name,
-                                   const gchar* method_name,
-                                   GVariant* parameters,
-                                   GDBusMethodInvocation* invocation,
-                                   gpointer user_data);
-  static const char* DBUS_DEBUG_OBJECT_PATH;
-  static const gchar introspection_xml[];
-  static GDBusInterfaceVTable interface_vtable;
-
+  static GVariant* HandleDBusMethodCall(std::string const&, GVariant*);
   static GVariant* BuildFakeReturn();
 
-  /* members */
-  guint           _owner_id;
+  glib::DBusServer server_;
 };
 }
 }

@@ -18,6 +18,11 @@ from unity.tests import UnityTestCase
 
 import gettext
 
+# XXX: Ugly workaround for a really annoying bug (LP: #1152517) which breaks
+#  this test suite. So, to workaround, we toggle the dash once before doing any
+#  app lens search tests
+workaround_lenses_load_done = False
+
 class SearchTestsBase(UnityTestCase):
     """Base class for testing searching in search fields.
       
@@ -61,6 +66,13 @@ class ApplicationLensSearchTestBase(SearchTestsBase):
 
     def setUp(self):
         super(ApplicationLensSearchTestBase, self).setUp()
+        # XXX: Temporary workaround for LP: #1152517
+        global workaround_lenses_load_done
+        if not workaround_lenses_load_done:
+            self.unity.dash.ensure_visible()
+            self.unity.dash.ensure_hidden()
+            workaround_lenses_load_done = True
+
         self.app_lens = self.unity.dash.reveal_application_lens()
         self.addCleanup(self.unity.dash.ensure_hidden)
         gettext.install("unity-lens-applications", unicode=True)

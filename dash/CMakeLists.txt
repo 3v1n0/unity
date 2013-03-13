@@ -19,6 +19,7 @@ add_subdirectory(previews)
 # Headers & Sources
 #
 set (DASH_SOURCES
+     ApplicationStarterImp.cpp
      CoverflowResultView.cpp
      DashController.cpp
      DashView.cpp

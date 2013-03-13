@@ -2238,9 +2238,16 @@ void Launcher::RecvMouseWheel(int /*x*/, int /*y*/, int wheel_delta, unsigned lo
     return;
 
   bool alt_pressed = nux::GetKeyModifierState(key_flags, nux::NUX_STATE_ALT);
-
   if (alt_pressed)
+  {
     ScrollLauncher(wheel_delta);
+  }
+  else if (_icon_under_mouse)
+  {
+    auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp; 
+    auto scroll_direction = (wheel_delta < 0) ? AbstractLauncherIcon::ScrollDirection::DOWN : AbstractLauncherIcon::ScrollDirection::UP;
+    _icon_under_mouse->PerformScroll(scroll_direction, timestamp);
+  }
 }
 
 void Launcher::ScrollLauncher(int wheel_delta)

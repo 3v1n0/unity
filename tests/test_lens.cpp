@@ -27,10 +27,12 @@ class TestLens : public ::testing::Test
 {
 public:
   TestLens()
-    : lens_(new Lens("testlens", lens_name, lens_path,
-                     "Test Lens", "gtk-apply")),
-      n_categories_(0)
+    : lens_(make_shared<Lens>("testlens", lens_name, lens_path, "Test Lens", "gtk-apply"))
+    , n_categories_(0)
     , n_filters_(0)
+  {}
+
+  void SetUp()
   {
     WaitForConnected();
 
@@ -53,33 +55,15 @@ public:
  
   void WaitForConnected()
   {
-    bool timeout_reached = false;
-    guint32 timeout_id = Utils::ScheduleTimeout(&timeout_reached, 2000);
-
-    while (!lens_->connected && !timeout_reached)
-    {
-      g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
-    }
-    if (lens_->connected)
-      g_source_remove(timeout_id);
-
-    EXPECT_FALSE(timeout_reached);
+    Utils::WaitUntil([this] { return lens_->connected(); }, true, 2);
+    ASSERT_TRUE(lens_->connected());
   }
 
   template<typename Adaptor>
   void WaitForModel(Model<Adaptor>* model, unsigned int n_rows)
   {
-    bool timeout_reached = false;
-    guint32 timeout_id = Utils::ScheduleTimeout(&timeout_reached, 2000);
-    
-    while (model->count != n_rows && !timeout_reached)
-    {
-      g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
-    }
-    if (model->count == n_rows)
-      g_source_remove(timeout_id);
-
-    EXPECT_FALSE(timeout_reached);
+    Utils::WaitUntil([model, n_rows] { return model->count() == n_rows; }, true, 2);
+    ASSERT_EQ(model->count(), n_rows);
   }
 
   std::string PopulateAndGetFirstResultURI()
@@ -120,7 +104,7 @@ TEST_F(TestLens, TestCategories)
   WaitForModel<Category>(categories.get(), 3);
 
   EXPECT_EQ(categories->count, (unsigned int)3);
-  EXPECT_EQ(n_categories_, 3);
+  EXPECT_EQ(n_categories_, (unsigned int)3);
   
   Category category = categories->RowAtIndex(0);
   EXPECT_EQ(category.name, "Category1");

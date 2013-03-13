@@ -18,11 +18,13 @@
  */
 
 #include "Variant.h"
+#include <NuxCore/Logger.h>
 
 namespace unity
 {
 namespace glib
 {
+DECLARE_LOGGER(logger, "unity.glib.variant");
 
 Variant::Variant()
   : variant_(NULL)
@@ -51,24 +53,88 @@ Variant::~Variant()
 
 std::string Variant::GetString() const
 {
-  // g_variant_get_string doesn't duplicate the string
-  const gchar *result = g_variant_get_string (variant_, NULL);
-  return result != NULL ? result : "";
+  const gchar *result = nullptr;
+
+  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_STRING))
+  {
+    // g_variant_get_string doesn't duplicate the string
+    result = g_variant_get_string(variant_, nullptr);
+  }
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(s)")))
+  {
+    // As we're using the '&' prefix we don't need to free the string!
+    g_variant_get(variant_, "(&s)", &result);
+  }
+  else
+  {
+    LOG_ERROR(logger) << "You're trying to extract a String from a variant which is of type "
+                      << g_variant_type_peek_string(g_variant_get_type(variant_));
+  }
+
+  return result ? result : "";
 }
 
 int Variant::GetInt() const
 {
-  return static_cast<int>(g_variant_get_int32 (variant_));
+  gint32 value = 0;
+
+  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_INT32))
+  {
+    value = g_variant_get_int32(variant_);
+  }
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(i)")))
+  {
+    g_variant_get(variant_, "(i)", &value);
+  }
+  else
+  {
+    LOG_ERROR(logger) << "You're trying to extract an Int32 from a variant which is of type "
+                      << g_variant_type_peek_string(g_variant_get_type(variant_));
+  }
+
+  return static_cast<int>(value);
 }
 
 unsigned Variant::GetUInt() const
 {
-  return static_cast<unsigned>(g_variant_get_uint32 (variant_));
+  guint32 value = 0;
+
+  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_UINT32))
+  {
+    value = g_variant_get_uint32(variant_);
+  }
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(u)")))
+  {
+    g_variant_get(variant_, "(u)", &value);
+  }
+  else
+  {
+    LOG_ERROR(logger) << "You're trying to extract an Uint32 from a variant which is of type "
+                      << g_variant_type_peek_string(g_variant_get_type(variant_));
+  }
+
+  return static_cast<unsigned>(value);
 }
 
 bool Variant::GetBool() const
 {
-  return (g_variant_get_boolean (variant_) != FALSE);
+  gboolean value = FALSE;
+
+  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_BOOLEAN))
+  {
+    value = g_variant_get_boolean(variant_);
+  }
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(b)")))
+  {
+    g_variant_get(variant_, "(b)", &value);
+  }
+  else
+  {
+    LOG_ERROR(logger) << "You're trying to extract a Boolean from a variant which is of type "
+                      << g_variant_type_peek_string(g_variant_get_type(variant_));
+  }
+
+  return (value != FALSE);
 }
 
 bool Variant::ASVToHints(HintsMap& hints) const

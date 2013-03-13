@@ -1116,14 +1116,14 @@ HomeLens::~HomeLens()
   delete pimpl;
 }
 
-void HomeLens::AddLenses(Lenses& lenses)
+void HomeLens::AddLenses(Lenses::Ptr const& lenses)
 {
-  for (auto lens : lenses.GetLenses())
+  for (auto lens : lenses->GetLenses())
   {
     pimpl->OnLensAdded(lens);
   }
 
-  lenses.lens_added.connect(sigc::mem_fun(pimpl, &HomeLens::Impl::OnLensAdded));
+  lenses->lens_added.connect(sigc::mem_fun(pimpl, &HomeLens::Impl::OnLensAdded));
 }
 
 Lenses::LensList HomeLens::GetLenses() const
@@ -1155,6 +1155,11 @@ Lens::Ptr HomeLens::GetLensAtIndex(std::size_t index) const
     LOG_WARN(logger) << error.what();
   }
 
+  return Lens::Ptr();
+}
+
+Lens::Ptr HomeLens::GetLensForShortcut(std::string const& lens_shortcut) const
+{
   return Lens::Ptr();
 }
 
