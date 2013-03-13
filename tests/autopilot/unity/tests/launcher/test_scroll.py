@@ -22,14 +22,8 @@ class LauncherScrollTests(LauncherTestCase):
 
     def open_apps_in_launcher(self):
         """Opens some apps in order to get icon stacking in the Launcher"""
-        apps = [
-            ("Calculator"),
-            ("Mahjongg"),
-            ("Text Editor"),
-            ("Character Map"),
-            ("Terminal"),
-            ("Remmina")
-        ]
+        apps = ("Calculator", "Mahjongg", "Text Editor", "Character Map", "Terminal", "Remmina")
+        
         for app in apps:
             self.start_app_window(app)
    

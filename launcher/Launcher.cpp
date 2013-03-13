@@ -92,6 +92,7 @@ const int MOUSE_DEADZONE = 15;
 const float DRAG_OUT_PIXELS = 300.0f;
 
 const int SCROLL_AREA_HEIGHT = 24;
+const int SCROLL_FPS = 30;
 
 const std::string START_DRAGICON_TIMEOUT = "start-dragicon-timeout";
 const std::string SCROLL_TIMEOUT = "scroll-timeout";
@@ -1529,7 +1530,7 @@ bool Launcher::OnScrollTimeout()
       continue_animation = false;
     else
     {
-        speed = (SCROLL_AREA_HEIGHT - _mouse_position.y) / SCROLL_AREA_HEIGHT * 30;
+        speed = (SCROLL_AREA_HEIGHT - _mouse_position.y) / SCROLL_AREA_HEIGHT * SCROLL_FPS;
         _launcher_drag_delta += speed;
     }
   }
@@ -1539,7 +1540,7 @@ bool Launcher::OnScrollTimeout()
       continue_animation = false;
     else
     {
-        speed = ((_mouse_position.y + 1) - (GetGeometry().height - SCROLL_AREA_HEIGHT)) / SCROLL_AREA_HEIGHT * 30;
+        speed = ((_mouse_position.y + 1) - (GetGeometry().height - SCROLL_AREA_HEIGHT)) / SCROLL_AREA_HEIGHT * SCROLL_FPS;
         _launcher_drag_delta -= speed;
     } 
   }
