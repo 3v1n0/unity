@@ -108,7 +108,7 @@ void Model::PopulateCategoriesChangesModel()
   }
   g_variant_unref(hints);
 
-  category_timeout_.reset(new glib::Timeout(100, sigc::mem_fun(this, &Model::OnCategoryChangeTimeout)));
+  category_timeout_.reset(new glib::Timeout(200, sigc::mem_fun(this, &Model::OnCategoryChangeTimeout)));
 }
 
 bool Model::OnCategoryChangeTimeout()
@@ -190,6 +190,8 @@ void Model::PopulateTracksModel()
     g_free(uri);
     g_free(title);
   }
+
+  track_timeout_.reset(new glib::Timeout(200, sigc::mem_fun(this, &Model::OnTrackChangeTimeout)));
 }
 
 bool Model::OnTrackChangeTimeout()

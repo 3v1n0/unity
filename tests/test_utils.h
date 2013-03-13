@@ -21,7 +21,7 @@ public:
 
   static void WaitUntilMSec(bool& success, unsigned max_wait = 500, ErrorStringFunc const& error_func = &Utils::DefaultErrorString)
   {
-    WaitUntilMSec([&success] {return success;}, true, max_wait);
+    WaitUntilMSec([&success] {return success;}, true, max_wait, error_func);
   }
 
   static void WaitUntil(bool& success, unsigned max_wait = 1, ErrorStringFunc const& error_func = &Utils::DefaultErrorString)

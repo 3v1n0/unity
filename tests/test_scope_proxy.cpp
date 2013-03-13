@@ -241,9 +241,13 @@ TEST(TestScopeProxy, SearchCategories)
                        [results] { return g_strdup_printf("Result count is not as expected (%u != 12).", static_cast<unsigned>(results->count())); });
 
   Results::Ptr category_model0 = scope_proxy->GetResultsForCategory(0);
+  ASSERT_TRUE(category_model0 ? true : false);
   Results::Ptr category_model1 = scope_proxy->GetResultsForCategory(1);
+  ASSERT_TRUE(category_model1 ? true : false);
   Results::Ptr category_model2 = scope_proxy->GetResultsForCategory(2);
+  ASSERT_TRUE(category_model2 ? true : false);
   Results::Ptr category_model3 = scope_proxy->GetResultsForCategory(3);
+  ASSERT_TRUE(category_model3 ? true : false);
 
   EXPECT_EQ(category_model0->count(), 4) << "Category 0 result count not as expected (" << category_model0->count() << " != 4)";
   EXPECT_EQ(category_model1->count(), 4) << "Category 1 result count not as expected (" << category_model1->count() << " != 4)";
