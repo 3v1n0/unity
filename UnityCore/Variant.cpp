@@ -140,7 +140,7 @@ uint64_t Variant::GetUInt64() const
 {
   guint64 value = 0;
 
-  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_INT64))
+  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_UINT64))
   {
     value = g_variant_get_uint64(variant_);
   }

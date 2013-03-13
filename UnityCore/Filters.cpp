@@ -50,11 +50,8 @@ DeeModelIter* FilterAdaptor::iter() const
 
 
 Filters::Filters()
-: Model<FilterAdaptor>::Model(ModelType::REMOTE)
+: Filters(ModelType::REMOTE)
 {
-  row_added.connect(sigc::mem_fun(this, &Filters::OnRowAdded));
-  row_changed.connect(sigc::mem_fun(this, &Filters::OnRowChanged));
-  row_removed.connect(sigc::mem_fun(this, &Filters::OnRowRemoved));
 }
 
 Filters::Filters(ModelType model_type)

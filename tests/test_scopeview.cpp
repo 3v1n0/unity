@@ -25,6 +25,8 @@
 #include <unity-shared/UnitySettings.h>
 #include <UnityCore/Category.h>
 
+#include "MockCategories.h"
+
 using namespace unity;
 using namespace unity::dash;
 
@@ -52,45 +54,49 @@ public:
 
     using ScopeView::OnCategoryAdded;
 
-    PlacesGroup* CreatePlacesGroup()
+    virtual PlacesGroup::Ptr CreatePlacesGroup(Category const& category)
     {
-      FakePlacesGroup* category = new FakePlacesGroup();
-      fake_categories_.push_back(category);
-      return category;
+      FakePlacesGroup* group = new FakePlacesGroup();
+      fake_groups_.push_back(group);
+      return PlacesGroup::Ptr(group);
     }
 
-    std::vector<FakePlacesGroup*> fake_categories_;
+    std::vector<FakePlacesGroup*> fake_groups_;
   };
 
   TestScopeView()
     : scope_view_(new FakeScopeView())
+    , categories_(5)
   {
   }
 
   unity::Settings settings;
   dash::Style style;
   std::unique_ptr<FakeScopeView> scope_view_;
+  MockCategories categories_;
 };
 
 TEST_F(TestScopeView, TestCategoryInsert)
 {
-  Category cat(NULL, NULL, NULL);
-  scope_view_->OnCategoryAdded(cat);
+  scope_view_->OnCategoryAdded(categories_.RowAtIndex(0));
+  scope_view_->OnCategoryAdded(categories_.RowAtIndex(1));
 
-  ASSERT_TRUE(scope_view_->GetOrderedCategoryViews().size() > 0);
+  EXPECT_EQ(scope_view_->GetOrderedCategoryViews().size(), 2);
 }
 
 TEST_F(TestScopeView, TestFilterExpansion)
 {
-  Category cat(NULL, NULL, NULL);
-  scope_view_->OnCategoryAdded(cat);
-  scope_view_->OnCategoryAdded(cat);
-  scope_view_->OnCategoryAdded(cat);
+  scope_view_->OnCategoryAdded(categories_.RowAtIndex(0));
+  scope_view_->OnCategoryAdded(categories_.RowAtIndex(1));
+  scope_view_->OnCategoryAdded(categories_.RowAtIndex(2));
+  scope_view_->OnCategoryAdded(categories_.RowAtIndex(3));
+
+  EXPECT_EQ(scope_view_->fake_groups_.size(), 4);
 
   scope_view_->filters_expanded = true;
-  for (unsigned i = 0; i < scope_view_->fake_categories_.size(); i++)
+  for (unsigned i = 0; i < scope_view_->fake_groups_.size(); i++)
   {
-    EXPECT_EQ(scope_view_->fake_categories_[i]->_using_filters_background, true);
+    EXPECT_EQ(scope_view_->fake_groups_[i]->_using_filters_background, true);
   }
 }
 
