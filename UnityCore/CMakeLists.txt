@@ -56,7 +56,6 @@ set (CORE_HEADERS
      Scopes.h
      ScopeProxy.h
      ScopeProxyInterface.h
-     SeriesPreview.h
      SessionManager.h
      SocialPreview.h
      Track.h
