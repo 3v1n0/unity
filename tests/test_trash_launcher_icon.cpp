@@ -26,8 +26,19 @@ using namespace unity::launcher;
 
 namespace
 {
+struct MockFileManagerOpener : launcher::FileManagerOpener
+{
+  MOCK_METHOD2(Open, void(std::string const& uri, unsigned long long time));
+};
+
 struct TestTrashLauncherIcon : testing::Test
 {
+  TestTrashLauncherIcon()
+    : fmo_(std::make_shared<MockFileManagerOpener>())
+    , icon(fmo_)
+  {}
+
+  std::shared_ptr<MockFileManagerOpener> fmo_;
   TrashLauncherIcon icon;
 };
 
