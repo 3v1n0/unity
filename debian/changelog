@@ -1,3 +1,9 @@
+unity (6.12.0daily13.03.13-0ubuntu1) UNRELEASED; urgency=low
+
+  * bump build-dep on libunity-dev
+
+ -- Didier Roche <didrocks@ubuntu.com>  Wed, 13 Mar 2013 11:26:45 +0100
+
 unity (6.12.0daily13.03.11-0ubuntu1) raring; urgency=low
 
   [ Marco Trevisan (Treviño) ]
