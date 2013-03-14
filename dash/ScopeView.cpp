@@ -613,7 +613,7 @@ bool ScopeView::ReinitializeCategoryResultModels()
   if (last_good_filter_model_ < 0)
     return false;
 
-  if (category_views_.size() < static_cast<unsigned int>(last_good_filter_model_)+1)
+  if (category_views_.size() > static_cast<unsigned int>(last_good_filter_model_)+1)
   {
     unsigned int category_index =  static_cast<unsigned int>(last_good_filter_model_) +1;
     for (auto iter = category_views_.begin() + category_index, end = category_views_.end(); iter != end; ++iter, category_index++)
@@ -641,13 +641,9 @@ ResultView* ScopeView::GetResultViewForCategory(unsigned int category_index)
 
 void ScopeView::OnResultAdded(Result const& result)
 {
+  // category not added yet.
   if (category_views_.size() <= result.category_index)
-  {
-    LOG_WARN(logger) << "Result does not have a valid category index: "
-                     << boost::lexical_cast<unsigned int>(result.category_index)
-                     << ". Is out of range.";
     return;
-  }
 
   std::string uri = result.uri;
   LOG_TRACE(logger) << "Result added '" << (scope_ ? scope_->name() : "unknown") << "': " << uri;
@@ -661,14 +657,10 @@ void ScopeView::OnResultAdded(Result const& result)
 
 void ScopeView::OnResultRemoved(Result const& result)
 {
+  // category not added yet.
   if (category_views_.size() <= result.category_index)
-  {
-    LOG_WARN(logger) << "Result does not have a valid category index: "
-                     << boost::lexical_cast<unsigned int>(result.category_index)
-                     << ". Is out of range.";
     return;
-  }
-
+  
   std::string uri = result.uri;
   LOG_TRACE(logger) << "Result removed '" << (scope_ ? scope_->name() : "unknown") << "': " << uri;
 

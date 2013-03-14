@@ -363,6 +363,8 @@ void ScopeProxy::Impl::OpenChannel()
 {
   if (channel != "")
     return;
+  
+  LOG_DEBUG(logger) << "Opening channel open for " << scope_data_->id();
 
   unity_protocol_scope_proxy_open_channel(scope_proxy_,
                                           UNITY_PROTOCOL_CHANNEL_TYPE_DEFAULT,
@@ -394,7 +396,16 @@ void ScopeProxy::Impl::OnChannelOpened(glib::String const& opened_channel, glib:
     channel = "";
     connected = false;
 
-    LOG_ERROR(logger) << "Failed to open channel for " << scope_data_->id();
+    LOG_ERROR(logger) << "Failed to open channel for " << scope_data_->id() << " => " << error;
+
+    // if (scope_proxy_connected_)
+    {
+      new glib::Timeout(2000, [this] () {
+        LOG_ERROR(logger) << "Retrying channel open for " << scope_data_->id();
+        OpenChannel();
+        return false;
+      });
+    }
     return;
   }
 
@@ -413,6 +424,8 @@ void ScopeProxy::Impl::CloseChannel()
 {
   if (channel != "")
   {
+    LOG_DEBUG(logger) << "Closing channel open for " << scope_data_->id();
+
     connected = false;
     unity_protocol_scope_proxy_close_channel(scope_proxy_,
                                              channel.Get().c_str(),
