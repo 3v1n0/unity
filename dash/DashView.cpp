@@ -704,6 +704,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
 
   nux::Geometry const& geo_layout(layout_->GetGeometry());
 
+  // See lp bug: 1125346 (The sharp white line between dash and launcher is missing)
   nux::Geometry clip_geo = geo_layout;
   clip_geo.x += 1;
   graphics_engine.PushClippingRectangle(clip_geo);
