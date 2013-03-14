@@ -397,15 +397,6 @@ void ScopeProxy::Impl::OnChannelOpened(glib::String const& opened_channel, glib:
     connected = false;
 
     LOG_ERROR(logger) << "Failed to open channel for " << scope_data_->id() << " => " << error;
-
-    // if (scope_proxy_connected_)
-    {
-      new glib::Timeout(2000, [this] () {
-        LOG_ERROR(logger) << "Retrying channel open for " << scope_data_->id();
-        OpenChannel();
-        return false;
-      });
-    }
     return;
   }
 
