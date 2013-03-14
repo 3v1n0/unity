@@ -52,6 +52,15 @@ struct MockApplicationLauncherIcon : ApplicationLauncherIcon
   MOCK_METHOD1(ActivateLauncherIcon, void(ActionArg));
 };
 
+MATCHER_P(AreArgsEqual, a, "")
+{
+  return arg.source == a.source &&
+         arg.button == a.button &&
+         arg.timestamp == a.timestamp &&
+         arg.target == a.target;
+         arg.monitor = a.monitor;
+}
+
 struct TestApplicationLauncherIcon : Test
 {
   virtual void SetUp()
@@ -451,6 +460,31 @@ TEST_F(TestApplicationLauncherIcon, WindowListMenusWithEmptyTitles)
   });
 
   ASSERT_EQ(menu1_it, menus.end());
+}
+
+TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemForAppName)
+{
+  mock_app->title_ = "MockApplicationTitle";
+
+  auto const& menus = mock_icon->Menus();
+  auto app_it = std::find_if(menus.begin(), menus.end(), [this] (glib::Object<DbusmenuMenuitem> it) {
+    auto* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
+    return (label && std::string(label) == ("<b>"+mock_app->title_+"</b>"));
+  });
+
+  ASSERT_NE(app_it, menus.end());
+
+  bool method_called = false;
+  ON_CALL(*mock_icon, ActivateLauncherIcon(_)).WillByDefault(Invoke([&method_called] (ActionArg arg) {
+    method_called = true;
+  }));
+
+  unsigned time = g_random_int();
+  EXPECT_CALL(*mock_icon, ActivateLauncherIcon(AreArgsEqual(ActionArg(ActionArg::Source::LAUNCHER, 0, time))));
+  dbusmenu_menuitem_handle_event(*app_it, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, time);
+
+  Utils::WaitUntilMSec(method_called);
+  EXPECT_TRUE(method_called);
 }
 
 }
