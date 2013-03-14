@@ -85,7 +85,8 @@ void CoverArt::AddProperties(GVariantBuilder* builder)
   variant::BuilderWrapper(builder)
     .add(GetAbsoluteGeometry())
     .add("image-hint", image_hint_)
-    .add("waiting", waiting_);
+    .add("waiting", waiting_)
+    .add("overlay-text", overlay_text_->GetText());
 }
 
 void CoverArt::SetImage(std::string const& image_hint)
