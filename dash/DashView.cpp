@@ -703,7 +703,10 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
   renderer_.DrawInner(graphics_engine, content_geo_, renderer_geo_abs, renderer_geo);
 
   nux::Geometry const& geo_layout(layout_->GetGeometry());
-  graphics_engine.PushClippingRectangle(geo_layout);
+
+  nux::Geometry clip_geo = geo_layout;
+  clip_geo.x += 1;
+  graphics_engine.PushClippingRectangle(clip_geo);
 
   if (IsFullRedraw())
   {
