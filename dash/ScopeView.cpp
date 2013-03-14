@@ -308,9 +308,7 @@ void ScopeView::SetupCategories(Categories::Ptr const& categories)
   resync_categories(categories->model());
 
   scope_->category_order.changed.connect([this](std::vector<unsigned int> const& category_order) {
-    LOG_DEBUG(logger) << scope_->id() << ": category order changed";
     category_order_ = category_order;
-
     OnCategoryOrderChanged();
   });
 }
@@ -332,23 +330,16 @@ void ScopeView::OnCategoryOrderChanged()
     if (!category_model)
       return;
 
-    printf("CATEGORY ORDER: ");
-
     // there should be ~10 categories, so this shouldn't be too big of a deal
     for (unsigned i = 0; i < category_order_.size(); i++)
     {
       unsigned int desired_category_index = category_order_[i];
-
-      printf("%d , ", desired_category_index);
-
 
       if (category_views_.size() <= desired_category_index)
         continue;
 
       scroll_layout_->AddView(category_views_[desired_category_index].GetPointer(), 0);       
     }
-    printf("\n");
-
   }
 }
 
