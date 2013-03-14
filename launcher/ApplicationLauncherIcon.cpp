@@ -262,7 +262,7 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
    * an unmapped (!= minimized) window around and
    * if so force "Focus" behaviour */
 
-  if (arg.source != ActionArg::SWITCHER)
+  if (arg.source != ActionArg::Source::SWITCHER)
   {
     user_visible = app_->visible();
 
@@ -339,7 +339,7 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       }
       else // #2 above
       {
-        if (arg.source != ActionArg::SWITCHER)
+        if (arg.source != ActionArg::Source::SWITCHER)
         {
           Spread(true, 0, false);
         }
@@ -350,7 +350,7 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       if (scaleWasActive) // #4 above
       {
         Focus(arg);
-        if (arg.source != ActionArg::SWITCHER)
+        if (arg.source != ActionArg::Source::SWITCHER)
           Spread(true, 0, false);
       }
       else // #3 above
@@ -592,7 +592,7 @@ void ApplicationLauncherIcon::Focus(ActionArg arg)
     return;
   }
 
-  bool show_only_visible = arg.source == ActionArg::SWITCHER;
+  bool show_only_visible = arg.source == ActionArg::Source::SWITCHER;
   app_->Focus(show_only_visible, arg.monitor);
 }
 
@@ -1150,7 +1150,7 @@ nux::DndAction ApplicationLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_dat
 
 void ApplicationLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
 {
-  auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+  auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
   OpenInstanceWithUris(ValidateUrisForLaunch(dnd_data), timestamp);
 }
 
@@ -1167,7 +1167,7 @@ bool ApplicationLauncherIcon::ShowInSwitcher(bool current)
     }
     else
     {
-      for (int i = 0; i < max_num_monitors; i++)
+      for (int i = 0; i < max_num_monitors; ++i)
       {
         if (WindowVisibleOnMonitor(i))
         {
