@@ -30,9 +30,11 @@
 #include "StandaloneWindowManager.h"
 #include "mock-application.h"
 #include "StandaloneWindowManager.h"
+#include "test_utils.h"
 
-using namespace unity;
+using namespace testing;
 using namespace testmocks;
+using namespace unity;
 using namespace unity::launcher;
 
 namespace
@@ -41,22 +43,30 @@ const std::string DEFAULT_EMPTY_ICON = "application-default-icon";
 const std::string USC_DESKTOP = BUILDDIR"/tests/data/applications/ubuntu-software-center.desktop";
 const std::string NO_ICON_DESKTOP = BUILDDIR"/tests/data/applications/no-icon.desktop";
 
-class TestApplicationLauncherIcon : public testing::Test
+struct MockApplicationLauncherIcon : ApplicationLauncherIcon
 {
-public:
+  MockApplicationLauncherIcon(ApplicationPtr const& app)
+    : ApplicationLauncherIcon(app)
+  {}
+
+  MOCK_METHOD1(ActivateLauncherIcon, void(ActionArg));
+};
+
+struct TestApplicationLauncherIcon : Test
+{
   virtual void SetUp()
   {
     WM = dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default());
-    usc_app.reset(new MockApplication(USC_DESKTOP, "softwarecenter"));
-    usc_icon = new launcher::ApplicationLauncherIcon(usc_app);
+    usc_app = std::make_shared<MockApplication>(USC_DESKTOP, "softwarecenter");
+    usc_icon = new NiceMock<MockApplicationLauncherIcon>(usc_app);
     ASSERT_EQ(usc_icon->DesktopFile(), USC_DESKTOP);
 
-    empty_app.reset(new MockApplication(NO_ICON_DESKTOP));
-    empty_icon = new launcher::ApplicationLauncherIcon(empty_app);
+    empty_app = std::make_shared<MockApplication>(NO_ICON_DESKTOP);
+    empty_icon = new NiceMock<MockApplicationLauncherIcon>(empty_app);
     ASSERT_EQ(empty_icon->DesktopFile(), NO_ICON_DESKTOP);
 
-    mock_app.reset(new MockApplication(""));
-    mock_icon = new launcher::ApplicationLauncherIcon(mock_app);
+    mock_app = std::make_shared<MockApplication>("");
+    mock_icon = new NiceMock<MockApplicationLauncherIcon>(mock_app);
     ASSERT_TRUE(mock_icon->DesktopFile().empty());
   }
 
@@ -76,9 +86,9 @@ public:
   std::shared_ptr<MockApplication> usc_app;
   std::shared_ptr<MockApplication> empty_app;
   std::shared_ptr<MockApplication> mock_app;
-  nux::ObjectPtr<launcher::ApplicationLauncherIcon> usc_icon;
-  nux::ObjectPtr<launcher::ApplicationLauncherIcon> empty_icon;
-  nux::ObjectPtr<launcher::ApplicationLauncherIcon> mock_icon;
+  nux::ObjectPtr<MockApplicationLauncherIcon> usc_icon;
+  nux::ObjectPtr<MockApplicationLauncherIcon> empty_icon;
+  nux::ObjectPtr<MockApplicationLauncherIcon> mock_icon;
 };
 
 TEST_F(TestApplicationLauncherIcon, Position)
