@@ -729,8 +729,8 @@ void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
     dbusmenu_menuitem_property_set_int(menu_item, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY, MAXIMUM_QUICKLIST_WIDTH);
 
     Window xid = w->window_id();
-    _gsignals.Add<void, DbusmenuMenuitem*, int>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-      [xid] (DbusmenuMenuitem*, int) {
+    _gsignals.Add<void, DbusmenuMenuitem*, unsigned>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+      [xid] (DbusmenuMenuitem*, unsigned) {
         WindowManager& wm = WindowManager::Default();
         wm.Activate(xid);
         wm.Raise(xid);
@@ -821,8 +821,8 @@ void ApplicationLauncherIcon::EnsureMenuItemsReady()
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    _gsignals.Add<void, DbusmenuMenuitem*, int>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-      [&] (DbusmenuMenuitem*, int) {
+    _gsignals.Add<void, DbusmenuMenuitem*, unsigned>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+      [&] (DbusmenuMenuitem*, unsigned) {
         ToggleSticky();
     });
 
@@ -945,9 +945,9 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
     dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
     dbusmenu_menuitem_property_set_bool(item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY, TRUE);
 
-    _gsignals.Add<void, DbusmenuMenuitem*, int>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-      [&] (DbusmenuMenuitem*, int timestamp) {
-        _source_manager.AddIdle([&] {
+    _gsignals.Add<void, DbusmenuMenuitem*, unsigned>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+      [&] (DbusmenuMenuitem*, unsigned timestamp) {
+        _source_manager.AddIdle([this, timestamp] {
           ActivateLauncherIcon(ActionArg(ActionArg::Source::LAUNCHER, 0, timestamp));
           return false;
         });
