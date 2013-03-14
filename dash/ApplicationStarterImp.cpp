@@ -37,7 +37,7 @@ bool ApplicationStarterImp::Launch(std::string const& application_name, Time tim
   GdkDisplay* display = gdk_display_get_default();
   glib::Object<GdkAppLaunchContext> app_launch_context(gdk_display_get_app_launch_context(display));
 
-  if (timestamp >= 0)
+  if (timestamp > 0)
     gdk_app_launch_context_set_timestamp(app_launch_context, timestamp);
 
   while (true)

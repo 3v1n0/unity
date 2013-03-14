@@ -162,7 +162,7 @@ private:
   OverlayRenderer renderer_;
 
   std::string last_activated_uri_;
-  Time last_activated_timestamp_;
+  guint64 last_activated_timestamp_;
   bool search_in_progress_;
   bool activate_on_finish_;
 

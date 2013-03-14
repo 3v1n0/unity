@@ -200,7 +200,7 @@ void DashView::OnUriActivated(ResultView::ActivateType type, std::string const& 
     int row_height = 0;
     int results_to_the_left = 0;
     int results_to_the_right = 0;
-    g_variant_get(data, "(iiiiiii)", &last_activated_timestamp_, &column_x, &row_y, &column_width, &row_height, &results_to_the_left, &results_to_the_right);
+    g_variant_get(data, "(tiiiiii)", &last_activated_timestamp_, &column_x, &row_y, &column_width, &row_height, &results_to_the_left, &results_to_the_right);
 
     preview_state_machine_.SetSplitPosition(SplitPosition::CONTENT_AREA, row_y);
     preview_state_machine_.left_results = results_to_the_left;

@@ -426,8 +426,8 @@ void Controller::Impl::Hide(bool accept_state)
     Selection selection = GetCurrentSelection();
     if (selection.application_)
     {
-      Time timestamp = -1;
-      selection.application_->Activate(ActionArg(ActionArg::SWITCHER, 0,
+      Time timestamp = 0;
+      selection.application_->Activate(ActionArg(ActionArg::Source::SWITCHER, 0,
                                                  timestamp, selection.window_));
     }
   }
