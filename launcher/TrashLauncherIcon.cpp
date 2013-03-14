@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,6 +16,7 @@
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
  *              Andrea Azzarone <azzaronea@gmail.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include "TrashLauncherIcon.h"

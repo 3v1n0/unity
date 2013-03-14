@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Canonical Ltd.
+ * Copyright 2012-2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3, as published
@@ -45,6 +45,13 @@ struct TestTrashLauncherIcon : testing::Test
 TEST_F(TestTrashLauncherIcon, Position)
 {
   EXPECT_EQ(icon.position(), AbstractLauncherIcon::Position::END);
+}
+
+TEST_F(TestTrashLauncherIcon, Activate)
+{
+  unsigned long long time = g_random_int();
+  EXPECT_CALL(*fmo_, Open("trash:///", time));
+  icon.Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
 }
 
 }
