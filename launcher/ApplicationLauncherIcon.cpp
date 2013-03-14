@@ -530,7 +530,7 @@ void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& 
   glib::Object<GdkAppLaunchContext> app_launch_context(gdk_display_get_app_launch_context(display));
 
   _startup_notification_timestamp = timestamp;
-  if (_startup_notification_timestamp >= 0)
+  if (_startup_notification_timestamp > 0)
     gdk_app_launch_context_set_timestamp(app_launch_context, _startup_notification_timestamp);
 
   if (g_app_info_supports_uris(appInfo))
@@ -936,24 +936,19 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
   else
   {
     glib::String app_name(g_markup_escape_text(app_->title().c_str(), -1));
-    std::ostringstream bold_app_name;
-    bold_app_name << "<b>" << app_name << "</b>";
+    std::string bold_app_name("<b>"+app_name.Str()+"</b>");
 
     item = dbusmenu_menuitem_new();
     dbusmenu_menuitem_property_set(item,
                                    DBUSMENU_MENUITEM_PROP_LABEL,
-                                   bold_app_name.str().c_str());
-    dbusmenu_menuitem_property_set_bool(item,
-                                        DBUSMENU_MENUITEM_PROP_ENABLED,
-                                        true);
-    dbusmenu_menuitem_property_set_bool(item,
-                                        QuicklistMenuItem::MARKUP_ENABLED_PROPERTY,
-                                        true);
+                                   bold_app_name.c_str());
+    dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
+    dbusmenu_menuitem_property_set_bool(item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY, TRUE);
 
     _gsignals.Add<void, DbusmenuMenuitem*, int>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-      [&] (DbusmenuMenuitem*, int) {
+      [&] (DbusmenuMenuitem*, int timestamp) {
         _source_manager.AddIdle([&] {
-          ActivateLauncherIcon(ActionArg());
+          ActivateLauncherIcon(ActionArg(ActionArg::Source::LAUNCHER, 0, timestamp));
           return false;
         });
     });
