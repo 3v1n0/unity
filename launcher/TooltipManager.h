@@ -36,7 +36,7 @@ public:
   TooltipManager();
 
   void SetHover(bool on_launcher);
-  void SetIcon(AbstractLauncherIcon::Ptr const& newIcon);
+  void SetIcon(AbstractLauncherIcon::Ptr const& new_icon);
   void MouseMoved();
   void IconClicked();
 
@@ -44,11 +44,11 @@ private:
   void ResetTimer();
   void StopTimer();
 
-  bool                      show_tooltips_;
-  bool                      hovered_;
+  bool show_tooltips_;
+  bool hovered_;
   AbstractLauncherIcon::Ptr icon_;
-  glib::Source::UniquePtr   hover_timer_;
-  bool                      timer_locked_;
+  glib::Source::UniquePtr hover_timer_;
+  bool timer_locked_;
 };
 
 } // namespace launcher

@@ -35,9 +35,9 @@ TooltipManager::TooltipManager()
   , timer_locked_(false)
 {}
 
-void TooltipManager::SetIcon(AbstractLauncherIcon::Ptr const& newIcon)
+void TooltipManager::SetIcon(AbstractLauncherIcon::Ptr const& new_icon)
 { 
-  if (icon_ == newIcon)
+  if (icon_ == new_icon)
     return;
 
   // Unlock hover timer, in case the previous icon had no valid tooltip
@@ -48,20 +48,20 @@ void TooltipManager::SetIcon(AbstractLauncherIcon::Ptr const& newIcon)
     // Show new tooltip, get rid of the old olne
     if (icon_)
       icon_->HideTooltip();
-    if (newIcon)
-      newIcon->ShowTooltip();
+    if (new_icon)
+      new_icon->ShowTooltip();
   }
-  else if (!newIcon)
+  else if (!new_icon)
   {
     // Stop the hover timer for null launcher space
     StopTimer();
   }
   else
   { 
-    AbstractLauncherIcon::IconType type = newIcon->GetIconType();
+    AbstractLauncherIcon::IconType type = new_icon->GetIconType();
     if ((type == AbstractLauncherIcon::IconType::HOME ||
          type == AbstractLauncherIcon::IconType::HUD) &&
-         newIcon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
+         new_icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
     {
       // Lock the hover timer for no valid tooltip cases
       timer_locked_ = true;
@@ -69,7 +69,7 @@ void TooltipManager::SetIcon(AbstractLauncherIcon::Ptr const& newIcon)
     }
   }
 
-  icon_ = newIcon;
+  icon_ = new_icon;
 }
 
 void TooltipManager::SetHover(bool on_launcher)
