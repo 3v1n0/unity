@@ -116,7 +116,7 @@ StaticCairoText::Impl::Impl(StaticCairoText* parent, std::string const& text)
   , text_color_(color::White)
   , ellipsize_(NUX_ELLIPSIZE_END)
   , align_(NUX_ALIGN_LEFT)
-  , valign_(NUX_ALIGN_TOP)
+  , valign_(NUX_ALIGN_CENTRE)
   , underline_(NUX_UNDERLINE_NONE)
   , lines_(-2)  // should find out why -2...
     // the desired height of the layout in Pango units if positive, or desired
@@ -293,7 +293,7 @@ void StaticCairoText::Draw(GraphicsEngine& gfxContext, bool forceDraw)
   gfxContext.QRP_Color(base.x, base.y, base.width, base.height, color::Transparent);
 
   int current_x = base.x;
-  int current_y = base.y + ((base.height - pimpl->cached_extent_.height) / 2);
+  int current_y = base.y;
 
   if (pimpl->align_ == NUX_ALIGN_CENTRE)
   {
@@ -302,6 +302,15 @@ void StaticCairoText::Draw(GraphicsEngine& gfxContext, bool forceDraw)
   else if (pimpl->align_ == NUX_ALIGN_RIGHT)
   {
     current_x += base.width - pimpl->cached_extent_.width;
+  }
+
+  if (pimpl->valign_ == NUX_ALIGN_CENTRE)
+  {
+    current_y += std::round((base.height - pimpl->cached_extent_.height) / 2.0f);
+  }
+  else if (pimpl->valign_ == NUX_ALIGN_BOTTOM)
+  {
+    current_y += base.height - pimpl->cached_extent_.height;
   }
 
   for (BaseTexturePtr tex : pimpl->textures2D_)
@@ -502,7 +511,8 @@ std::string StaticCairoText::GetName() const
 void StaticCairoText::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder)
-  .add(GetGeometry());
+  .add(GetGeometry())
+  .add("text", pimpl->text_);
 }
 
 std::string StaticCairoText::Impl::GetEffectiveFont() const
@@ -669,10 +679,8 @@ void StaticCairoText::Impl::DrawText(CacheTexture::Ptr const& texture)
   if (!texture)
     return;
 
-  nux::Size tex_size(parent_->GetWidth(), parent_->GetHeight());
   nux::Size layout_size(-1, lines_ < 0 ? lines_ : std::numeric_limits<int>::min());
-
-  texture->cr.reset(new CairoGraphics(CAIRO_FORMAT_ARGB32, tex_size.width, tex_size.height));
+  texture->cr.reset(new CairoGraphics(CAIRO_FORMAT_ARGB32, cached_extent_.width, cached_extent_.height));
   cairo_t* cr = texture->cr->GetInternalContext();
 
   PangoLayout*          layout     = NULL;
