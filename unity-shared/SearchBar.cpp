@@ -468,6 +468,7 @@ void SearchBar::ForceSearchChanged()
 void
 SearchBar::SearchFinished()
 {
+  LOG_DEBUG(logger) << "Search finished for '" << search_string() << "'";
   start_spinner_timeout_.reset();
 
   bool is_empty = pango_entry_->im_active() ?

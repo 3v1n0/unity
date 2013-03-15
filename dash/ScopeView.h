@@ -134,6 +134,7 @@ private:
 
   Scope::Ptr scope_;
   glib::Object<GCancellable> cancellable_;
+  glib::Object<GCancellable> search_cancellable_;
   std::vector<unsigned int> category_order_;
   ResultCounts counts_;
   bool initial_activation_;

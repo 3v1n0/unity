@@ -1279,7 +1279,7 @@ void DashView::OnScopeBarActivated(std::string const& id)
   QueueDraw();
 }
 
-void DashView::OnSearchFinished(glib::HintsMap const& hints, glib::Error const& err)
+void DashView::OnSearchFinished(std::string const& search_string, glib::HintsMap const& hints, glib::Error const& err)
 {
   hide_message_delay_.reset();
 
@@ -1292,9 +1292,8 @@ void DashView::OnSearchFinished(glib::HintsMap const& hints, glib::Error const& 
 
   // FIXME: bind the scope_view in PerformSearch
   active_scope_view_->CheckNoResults(hints);
-  std::string const& search_string = search_bar_->search_string;
 
-  if (active_scope_view_->search_string == search_string)
+  if (search_string == search_bar_->search_string)
   {
     search_bar_->SearchFinished();
     search_in_progress_ = false;

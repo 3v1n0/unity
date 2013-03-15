@@ -137,6 +137,7 @@ private:
   // Search Callback
   struct SearchData
   {
+    std::string search_string;
     SearchCallback callback;
   };
 
@@ -149,13 +150,16 @@ private:
     std::unique_ptr<GHashTable, void(*)(GHashTable*)> hint_ret(unity_protocol_scope_proxy_search_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &error),
                                          g_hash_table_unref0);
     if (error && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+    {
+      LOG_DEBUG(logger) << "Search cancelled ('" << (data ? data->search_string : "[unknown]") << "').";
       return;
+    }
 
     glib::HintsMap hints;
     glib::hintsmap_from_hashtable(hint_ret.get(), hints);
 
-    if (data->callback)
-      data->callback(hints, error);
+    if (data && data->callback)
+      data->callback(data->search_string, hints, error);
   }
   /////////////////////////////////////
 
@@ -173,9 +177,12 @@ private:
     glib::Error error;
     unity_protocol_scope_proxy_activate_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &result, &error);
     if (error && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+    {
+      LOG_DEBUG(logger) << "Activate cancelled.";
       return;
+    }
 
-    if (data->callback)
+    if (data && data->callback)
     {
       ScopeHandledType handled = ScopeHandledType::NOT_HANDLED;
 
@@ -198,7 +205,10 @@ private:
     glib::Error error;
     scope_proxy = unity_protocol_scope_proxy_new_from_dbus_finish(res, &error);
     if (error && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+    {
+      LOG_DEBUG(logger) << "Proxy create cancelled.";
       return;
+    }
     
     if (user_data)
     {
@@ -217,8 +227,10 @@ private:
     DeeSerializableModel* serialisable_model = nullptr;
     glib::String tmp_channel(unity_protocol_scope_proxy_open_channel_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &serialisable_model, &error));
     if (error && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+    {
+      LOG_DEBUG(logger) << "Open channel cancelled.";
       return;
-
+    }
     if (user_data)
     {
       ScopeProxy::Impl* pimpl = (ScopeProxy::Impl*)user_data;
@@ -490,7 +502,7 @@ void ScopeProxy::Impl::Search(std::string const& search_string, glib::HintsMap c
     {
       if (err)
       {
-        callback(glib::HintsMap(), err);
+        callback(search_string, glib::HintsMap(), err);
         LOG_WARNING(logger) << "Could not search '" << search_string
                             << "' on " << scope_data_->id() << " => " << err;
       }
@@ -503,6 +515,7 @@ void ScopeProxy::Impl::Search(std::string const& search_string, glib::HintsMap c
   }
 
   SearchData* data = new SearchData();
+  data->search_string = search_string;
   data->callback = callback;
 
   GHashTable* hints_table = glib::hashtable_from_hintsmap(hints);
