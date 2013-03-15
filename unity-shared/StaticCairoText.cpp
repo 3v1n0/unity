@@ -548,7 +548,7 @@ Size StaticCairoText::Impl::GetTextExtents() const
   std::string font = GetEffectiveFont();
   nux::Size layout_size(-1, lines_ < 0 ? lines_ : std::numeric_limits<int>::min());
 
-  surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 1, 1);
+  surface = cairo_image_surface_create(CAIRO_FORMAT_A1, 1, 1);
   cr = cairo_create(surface);
   cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
 
