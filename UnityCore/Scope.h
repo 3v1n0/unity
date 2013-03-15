@@ -82,7 +82,7 @@ public:
   nux::ROProperty<std::string> query_pattern;
   nux::ROProperty<std::string> shortcut;
 
-  typedef std::function<void(glib::HintsMap const&, glib::Error const&)> SearchCallback;
+  typedef std::function<void(std::string const&, glib::HintsMap const&, glib::Error const&)> SearchCallback;
   virtual void Search(std::string const& search_hint, SearchCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
 
   typedef std::function<void(LocalResult const&, ScopeHandledType, glib::Error const&)> ActivateCallback;

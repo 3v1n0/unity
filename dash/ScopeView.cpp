@@ -230,6 +230,7 @@ ScopeView::~ScopeView()
   filter_removed_connection.disconnect();
 
   g_cancellable_cancel(cancellable_);
+  if (search_cancellable_) g_cancellable_cancel(search_cancellable_);
 }
 
 void ScopeView::SetupViews(nux::Area* show_filters)
@@ -308,9 +309,7 @@ void ScopeView::SetupCategories(Categories::Ptr const& categories)
   resync_categories(categories->model());
 
   scope_->category_order.changed.connect([this](std::vector<unsigned int> const& category_order) {
-    LOG_DEBUG(logger) << scope_->id() << ": category order changed";
     category_order_ = category_order;
-
     OnCategoryOrderChanged();
   });
 }
@@ -332,23 +331,16 @@ void ScopeView::OnCategoryOrderChanged()
     if (!category_model)
       return;
 
-    printf("CATEGORY ORDER: ");
-
     // there should be ~10 categories, so this shouldn't be too big of a deal
     for (unsigned i = 0; i < category_order_.size(); i++)
     {
       unsigned int desired_category_index = category_order_[i];
-
-      printf("%d , ", desired_category_index);
-
 
       if (category_views_.size() <= desired_category_index)
         continue;
 
       scroll_layout_->AddView(category_views_[desired_category_index].GetPointer(), 0);       
     }
-    printf("\n");
-
   }
 }
 
@@ -781,7 +773,11 @@ void ScopeView::PerformSearch(std::string const& search_query, Scope::SearchCall
   search_string_ = search_query;
   if (scope_)
   {
-    scope_->Search(search_query, cb, cancellable_);
+    // cancel old search.
+    if (search_cancellable_) g_cancellable_cancel (search_cancellable_);
+    search_cancellable_ = g_cancellable_new ();
+
+    scope_->Search(search_query, cb, search_cancellable_);
   }
 }
 
@@ -829,7 +825,7 @@ void ScopeView::OnViewTypeChanged(ScopeViewType view_type)
   if (view_type != ScopeViewType::HIDDEN && initial_activation_)
   {
     /* We reset the scope for ourselves, in case this is a restart or something */
-    scope_->Search(search_string_, [this] (glib::HintsMap const&, glib::Error const& error)
+    scope_->Search(search_string_, [this] (std::string const&, glib::HintsMap const&, glib::Error const& error)
     {
       if (error)
       {

@@ -112,7 +112,7 @@ private:
   void OnLiveSearchReached(std::string const& search_string);
   void OnScopeAdded(Scope::Ptr const& scope, int position);
   void OnScopeBarActivated(std::string const& id);
-  void OnSearchFinished(glib::HintsMap const& hints, glib::Error const& error);
+  void OnSearchFinished(std::string const& search_string, glib::HintsMap const& hints, glib::Error const& error);
   void OnResultActivated(ResultView::ActivateType type, LocalResult const& local_result, GVariant* data, std::string const& unique_id);
   void OnResultActivatedReply(LocalResult const& local_result, ScopeHandledType type, glib::HintsMap const& hints);
   bool DoFallbackActivation(std::string const& uri);
