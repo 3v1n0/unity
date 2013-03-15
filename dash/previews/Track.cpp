@@ -172,7 +172,16 @@ void Track::Update(dash::Track const& track)
   player_connection_ = player_.updated.connect([this](std::string const& uri, PlayerState player_state, double progress)
   {
     if (uri != uri_)
+    {
+      // If we're received an update for another track, we're obviously not playing this track anymore.
+      if (progress_ != 0.0 || play_state_ != PlayerState::STOPPED)
+      {
+        progress_ = 0.0;
+        play_state_ = PlayerState::STOPPED;
+        UpdateTrackState();
+      }
       return;
+    }
 
     progress_ = progress;
     play_state_ = player_state;
