@@ -58,8 +58,8 @@ public:
 
   virtual void Search(std::string const& search_hint, SearchCallback const& callback = nullptr, GCancellable* cancellable = nullptr)
   {
-    source_manager.AddIdle([callback] () {
-      callback(glib::HintsMap(), glib::Error());
+    source_manager.AddIdle([search_hint, callback] () {
+      callback(search_hint, glib::HintsMap(), glib::Error());
       return true;
     }, "Search");
   }

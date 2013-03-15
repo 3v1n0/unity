@@ -100,7 +100,7 @@ TEST_F(TestScope, Search)
 {
   // Auto-connect on search
   bool search_ok = false;
-  auto search_callback = [&search_ok] (glib::HintsMap const&, glib::Error const&) {
+  auto search_callback = [&search_ok] (std::string const& search_string, glib::HintsMap const&, glib::Error const&) {
     search_ok = true;
   };
 
@@ -177,7 +177,7 @@ TEST_F(TestScope, UpdateSearchCategoryWorkflow)
 {
   bool search_ok = false;
   bool search_finished = false;
-  auto search_callback = [&search_ok, &search_finished] (glib::HintsMap const&, glib::Error const& error) {
+  auto search_callback = [&search_ok, &search_finished] (std::string const& search_string, glib::HintsMap const&, glib::Error const& error) {
     search_finished = true;
     search_ok = error ? false : true;
   };
@@ -222,7 +222,6 @@ TEST_F(TestScope, UpdateSearchCategoryWorkflow)
                        true,
                        2000,
                        [results] { return g_strdup_printf("First search. Either search didn't finish, or result count is not as expected (%u != 4).", static_cast<int>(results->count())); });
-  EXPECT_EQ(search_ok, true);
 
   category_model0 = scope_->GetResultsForCategory(0);
   category_model1 = scope_->GetResultsForCategory(1);

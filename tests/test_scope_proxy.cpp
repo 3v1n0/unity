@@ -138,8 +138,10 @@ TEST(TestScopeProxy, Search)
 
   bool search_ok = false;
   bool search_finished = false;
-  auto search_callback = [&search_ok, &search_finished] (glib::HintsMap const&, glib::Error const& error) {
+  auto search_callback = [&search_ok, &search_finished] (std::string const& search_string, glib::HintsMap const&, glib::Error const& error) {
     search_ok = error ? false : true;
+    if (error)
+      printf("Error: %s\n", error.Message().c_str());
     search_finished = true;
   };
 
@@ -161,7 +163,7 @@ TEST(TestScopeProxy, MultiSearch)
 
   bool search_ok = false;
   bool search_finished = false;
-  auto search_callback = [&search_ok, &search_finished] (glib::HintsMap const&, glib::Error const& error) {
+  auto search_callback = [&search_ok, &search_finished] (std::string const& search_string, glib::HintsMap const&, glib::Error const& error) {
     search_ok = error ? false : true;
     search_finished = true;
   };
@@ -195,7 +197,7 @@ TEST(TestScopeProxy, SearchFail)
 
   bool search_ok = false;
   bool search_finished = false;
-  auto search_callback = [&search_ok, &search_finished] (glib::HintsMap const&, glib::Error const& error) {
+  auto search_callback = [&search_ok, &search_finished] (std::string const& search_string, glib::HintsMap const&, glib::Error const& error) {
     search_ok = error ? false : true;
     search_finished = true;
   };
@@ -215,7 +217,7 @@ TEST(TestScopeProxy, SearchCancelled)
 
   bool search_ok = false;
   bool search_finished = false;
-  auto search_callback = [&search_ok, &search_finished] (glib::HintsMap const&, glib::Error const& error) {
+  auto search_callback = [&search_ok, &search_finished] (std::string const& search_string, glib::HintsMap const&, glib::Error const& error) {
     search_finished = true;
   };
 
@@ -232,7 +234,7 @@ TEST(TestScopeProxy, SearchCategories)
   ScopeProxyInterface::Ptr scope_proxy(new ScopeProxy(ScopeData::Ptr(new MockScopeData("testscope1", scope_name, scope_path))));
   // Auto-connect on search
 
-  scope_proxy->Search("12:cat", [&] (glib::HintsMap const&, glib::Error const& error) { }, nullptr);
+  scope_proxy->Search("12:cat", nullptr, nullptr);
 
   Results::Ptr results = scope_proxy->results();
   Utils::WaitUntilMSec([results] { return results->count() == 12; },
