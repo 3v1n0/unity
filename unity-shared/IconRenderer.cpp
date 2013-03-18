@@ -404,9 +404,10 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
 
   nux::Color background_tile_color = arg.icon->BackgroundColor();
   nux::Color glow_color = arg.icon->GlowColor();
-  nux::Color edge_color(0x55555555);
+  nux::Color edge_color = nux::color::White;
   nux::Color colorify = arg.colorify;
   nux::Color background_tile_colorify = arg.colorify;
+  nux::Color edge_tile_colorify = nux::color::White;
   bool colorify_background = arg.colorify_background;
   float backlight_intensity = arg.backlight_intensity;
   float glow_intensity = arg.glow_intensity;
@@ -502,10 +503,10 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   backlight_intensity * arg.alpha,
                   force_filter,
                   tile_transform);
-  }
 
-  edge_color = edge_color + ((background_tile_color - edge_color) * backlight_intensity);
-  nux::Color edge_tile_colorify = background_tile_colorify;
+    edge_tile_colorify = background_tile_colorify * backlight_intensity;
+    edge_color = edge_color + ((background_tile_color - edge_color) * backlight_intensity);
+  }
 
   if (colorify_background && !arg.keyboard_nav_hl)
   {
