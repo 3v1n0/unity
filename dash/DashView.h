@@ -29,6 +29,7 @@
 
 #include "ScopeBar.h"
 #include "ScopeView.h"
+#include "ApplicationStarter.h"
 #include "previews/PreviewContainer.h"
 #include "PreviewStateMachine.h"
 #include "UnityCore/Preview.h"
@@ -40,7 +41,6 @@
 #include "unity-shared/SearchBar.h"
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/OverlayWindowButtons.h"
-
 
 
 namespace na = nux::animation;
@@ -58,9 +58,7 @@ class DashView : public nux::View, public unity::debug::Introspectable
   typedef std::map<std::string, nux::ObjectPtr<ScopeView>> ScopeViews;
 
 public:
-  typedef std::function<Scopes::Ptr()> ScopesCreator;
-
-  DashView(ScopesCreator scopes_creator = nullptr);
+  DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& application_starter);
   ~DashView();
 
   void AboutToShow();
@@ -133,6 +131,8 @@ private:
   Scopes::Ptr scopes_;
   ScopeViews scope_views_;
 
+  ApplicationStarter::Ptr application_starter_;
+
   // View related
   PreviewStateMachine preview_state_machine_;
   previews::PreviewContainer::Ptr preview_container_;
@@ -157,13 +157,12 @@ private:
   OverlayRenderer renderer_;
 
   LocalResult last_activated_result_;
-  // we're passing this back to g_* functions, so we'll keep the g* type
+  guint64 last_activated_timestamp_;
   bool search_in_progress_;
   bool activate_on_finish_;
 
   bool visible_;
 
-  glib::Source::UniquePtr init_timeout_;
   glib::Source::UniquePtr searching_timeout_;
   glib::Source::UniquePtr hide_message_delay_;
 

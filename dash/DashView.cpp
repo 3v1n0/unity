@@ -24,14 +24,12 @@
 
 #include <math.h>
 
-#include <gio/gdesktopappinfo.h>
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
 
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/RadioOptionFilter.h>
-#include <UnityCore/GSettingsScopes.h>
 
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/KeyboardUtil.h"
@@ -111,11 +109,14 @@ public:
 
 NUX_IMPLEMENT_OBJECT_TYPE(DashView);
 
-DashView::DashView(ScopesCreator scopes_creator)
+DashView::DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& application_starter)
   : nux::View(NUX_TRACKER_LOCATION)
+  , scopes_(scopes)
+  , application_starter_(application_starter)
   , preview_container_(nullptr)
   , preview_displaying_(false)
   , preview_navigation_mode_(previews::Navigation::NONE)
+  , last_activated_timestamp_(0)
   , search_in_progress_(false)
   , activate_on_finish_(false)
   , visible_(false)
@@ -146,12 +147,6 @@ DashView::DashView(ScopesCreator scopes_creator)
   // request the latest colour from bghash
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
-  if (scopes_creator == nullptr)
-  {
-    scopes_creator = [this]() { return Scopes::Ptr(new GSettingsScopes()); };
-  }
-
-  scopes_ = scopes_creator();
   if (scopes_)
   {
     scopes_->scope_added.connect(sigc::mem_fun(this, &DashView::OnScopeAdded));
@@ -196,7 +191,8 @@ void DashView::OnResultActivated(ResultView::ActivateType type, LocalResult cons
     int row_height = 0;
     int results_to_the_left = 0;
     int results_to_the_right = 0;
-    g_variant_get(data, "(iiiiii)", &column_x, &row_y, &column_width, &row_height, &results_to_the_left, &results_to_the_right);
+    g_variant_get(data, "(tiiiiii)", &last_activated_timestamp_, &column_x, &row_y, &column_width, &row_height, &results_to_the_left, &results_to_the_right);
+
     preview_state_machine_.SetSplitPosition(SplitPosition::CONTENT_AREA, row_y);
     preview_state_machine_.left_results = results_to_the_left;
     preview_state_machine_.right_results = results_to_the_right;
@@ -671,7 +667,11 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
   renderer_.DrawInner(graphics_engine, content_geo_, renderer_geo_abs, renderer_geo);
 
   nux::Geometry const& geo_layout(layout_->GetGeometry());
-  graphics_engine.PushClippingRectangle(geo_layout);
+
+  // See lp bug: 1125346 (The sharp white line between dash and launcher is missing)
+  nux::Geometry clip_geo = geo_layout;
+  clip_geo.x += 1;
+  graphics_engine.PushClippingRectangle(clip_geo);
 
   if (IsFullRedraw())
   {
@@ -1201,7 +1201,6 @@ void DashView::OnScopeAdded(Scope::Ptr const& scope, int position)
 {
   LOG_DEBUG(logger) << "Scope Added: " << scope->id();
 
-  std::string id = scope->id;
   scope_bar_->AddScope(scope);
 
   nux::ObjectPtr<ScopeView> view(new ScopeView(scope, search_bar_->show_filters()));
@@ -1322,68 +1321,18 @@ bool DashView::DoFallbackActivation(std::string const& uri)
 {
   if (g_str_has_prefix(uri.c_str(), "application://"))
   {
-    std::string appname = uri.substr(14);
-    return LaunchApp(appname);
+    std::string const& appname = uri.substr(14);
+    return application_starter_->Launch(appname, last_activated_timestamp_);
   }
   else if (g_str_has_prefix(uri.c_str(), "unity-runner://"))
   {
-    std::string appname = uri.substr(15);
-    return LaunchApp(appname);
+    std::string const& appname = uri.substr(15);
+    return application_starter_->Launch(appname, last_activated_timestamp_);
   }
   else
-    return gtk_show_uri(NULL, uri.c_str(), CurrentTime, NULL);
+    return gtk_show_uri(NULL, uri.c_str(), last_activated_timestamp_, NULL);
 
   return false;
-}
-
-bool DashView::LaunchApp(std::string const& appname)
-{
-  GDesktopAppInfo* info;
-  bool ret = false;
-  char *id = g_strdup(appname.c_str());
-  int i = 0;
-
-  LOG_DEBUG(logger) << "Launching " << appname;
-
-  while (id != NULL)
-  {
-    info = g_desktop_app_info_new(id);
-    if (info != NULL)
-    {
-      GError* error = NULL;
-
-      g_app_info_launch(G_APP_INFO(info), NULL, NULL, &error);
-      if (error)
-      {
-        g_warning("Unable to launch %s: %s", id,  error->message);
-        g_error_free(error);
-      }
-      else
-        ret = true;
-      g_object_unref(info);
-      break;
-    }
-
-    /* Try to replace the next - with a / and do the lookup again.
-     * If we set id=NULL we'll exit the outer loop */
-    for (i = 0; ; i++)
-    {
-      if (id[i] == '-')
-      {
-        id[i] = '/';
-        break;
-      }
-      else if (id[i] == '\0')
-      {
-        g_free(id);
-        id = NULL;
-        break;
-      }
-    }
-  }
-
-  g_free(id);
-  return ret;
 }
 
 void DashView::DisableBlur()

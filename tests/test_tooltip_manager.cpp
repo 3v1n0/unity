@@ -15,40 +15,79 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Jacob Edwards <j.johan.edwards@gmail.com>
+ *              Andrea Azzarone <andrea.azzarone@gmail.com>
  */
 
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 using namespace testing;
 
 #include "launcher/TooltipManager.h"
 #include "launcher/MockLauncherIcon.h"
-#include "test_utils.h"
+using unity::launcher::MockLauncherIcon;
+using unity::launcher::TooltipManager;
 
-namespace unity
-{
-namespace launcher
-{
+#include "test_utils.h"
 
 namespace
 {
 
-TEST(TestTooltipManager, TestHideAndShowTooltip)
+bool CheckIsTooltipVisible(nux::ObjectPtr<MockLauncherIcon> const& icon, bool value) {
+  return icon->IsTooltipVisible() == value;
+}
+
+struct TestTooltipManager : public Test {
+  TooltipManager tooltip_manager;
+};
+
+TEST_F(TestTooltipManager, MouseMoved)
 {
-  // Makes sure that TooltipManager calls icon->ShowTooltip() when the mouse
-  // hovers it, and icon->HideTooltip() after the mouse dehovers it.
-  TooltipManager tm;
-  MockLauncherIcon* icon = new MockLauncherIcon();
+  nux::ObjectPtr<MockLauncherIcon> icon1(new MockLauncherIcon());
+  nux::ObjectPtr<MockLauncherIcon> icon2(new MockLauncherIcon());
 
-  tm.SetIcon(AbstractLauncherIcon::Ptr(icon));
-  tm.MouseMoved();
-  Utils::WaitForTimeoutMSec(1050);
+  tooltip_manager.MouseMoved(icon1);
+  ASSERT_FALSE(icon1->IsTooltipVisible()); // don't skip the timeout!
+  Utils::WaitUntil(std::bind(CheckIsTooltipVisible, icon1, true));
+  Utils::WaitUntil(std::bind(CheckIsTooltipVisible, icon2, false));
 
-  EXPECT_TRUE(icon->IsTooltipVisible());
-  tm.SetIcon(AbstractLauncherIcon::Ptr());
-  EXPECT_FALSE(icon->IsTooltipVisible());
+  tooltip_manager.MouseMoved(icon2);
+  ASSERT_FALSE(icon1->IsTooltipVisible());
+  ASSERT_TRUE(icon2->IsTooltipVisible());
+
+  tooltip_manager.MouseMoved(nux::ObjectPtr<MockLauncherIcon>());
+  ASSERT_FALSE(icon1->IsTooltipVisible());
+  ASSERT_FALSE(icon2->IsTooltipVisible());
+
+  tooltip_manager.MouseMoved(icon1);
+  ASSERT_TRUE(icon1->IsTooltipVisible());
+  ASSERT_FALSE(icon2->IsTooltipVisible());
+}
+
+TEST_F(TestTooltipManager, IconClicked)
+{
+  nux::ObjectPtr<MockLauncherIcon> icon(new MockLauncherIcon());
+
+  tooltip_manager.MouseMoved(icon);
+  ASSERT_FALSE(icon->IsTooltipVisible()); // don't skip the timeout!
+  Utils::WaitUntil(std::bind(CheckIsTooltipVisible, icon, true));
+
+  tooltip_manager.IconClicked();
+  ASSERT_FALSE(icon->IsTooltipVisible());
+}
+
+TEST_F(TestTooltipManager, SetHover)
+{
+  nux::ObjectPtr<MockLauncherIcon> icon(new MockLauncherIcon());
+
+  tooltip_manager.MouseMoved(icon);
+  ASSERT_FALSE(icon->IsTooltipVisible()); // don't skip the timeout!
+  Utils::WaitUntil(std::bind(CheckIsTooltipVisible, icon, true));
+
+  tooltip_manager.SetHover(false);
+  ASSERT_FALSE(icon->IsTooltipVisible());
+
+  tooltip_manager.MouseMoved(icon);
+  ASSERT_FALSE(icon->IsTooltipVisible()); // don't skip the timeout!
+  Utils::WaitUntil(std::bind(CheckIsTooltipVisible, icon, true));
 }
 
 }
-
-} // launcher
-} // unity

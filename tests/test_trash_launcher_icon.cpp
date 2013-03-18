@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Canonical Ltd.
+ * Copyright 2012-2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3, as published
@@ -26,14 +26,32 @@ using namespace unity::launcher;
 
 namespace
 {
+struct MockFileManagerOpener : launcher::FileManagerOpener
+{
+  MOCK_METHOD2(Open, void(std::string const& uri, unsigned long long time));
+};
+
 struct TestTrashLauncherIcon : testing::Test
 {
+  TestTrashLauncherIcon()
+    : fmo_(std::make_shared<MockFileManagerOpener>())
+    , icon(fmo_)
+  {}
+
+  std::shared_ptr<MockFileManagerOpener> fmo_;
   TrashLauncherIcon icon;
 };
 
 TEST_F(TestTrashLauncherIcon, Position)
 {
   EXPECT_EQ(icon.position(), AbstractLauncherIcon::Position::END);
+}
+
+TEST_F(TestTrashLauncherIcon, Activate)
+{
+  unsigned long long time = g_random_int();
+  EXPECT_CALL(*fmo_, Open("trash:///", time));
+  icon.Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
 }
 
 }
