@@ -189,6 +189,8 @@ nux::BaseTexture* progress_bar_trough = 0;
 nux::BaseTexture* progress_bar_fill = 0;
 nux::BaseTexture* pip_ltr = 0;
 nux::BaseTexture* pip_rtl = 0;
+nux::BaseTexture* large_pip_ltr = 0;
+nux::BaseTexture* large_pip_rtl = 0;
 nux::BaseTexture* arrow_ltr = 0;
 nux::BaseTexture* arrow_rtl = 0;
 nux::BaseTexture* arrow_empty_ltr = 0;
@@ -891,8 +893,8 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
   if (running > 0)
   {
     int scale = 1;
-
     int markerX;
+
     if (pip_style == OUTSIDE_TILE)
     {
       markerX = geo.x;
@@ -900,8 +902,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     else
     {
       auto bounds = arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_TILE, monitor);
-      markerX = bounds[0].x + 2;
-      scale = 2;
+      markerX = bounds[0].x + 1;
     }
 
     nux::TexCoordXForm texxform;
@@ -922,26 +923,47 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
 
     if (!arg.running_on_viewport)
     {
+      scale = (pip_style == OUTSIDE_TILE) ? 1 : 2;
       markers[0] = markerCenter;
       texture = local::arrow_empty_ltr;
     }
     else if (running == 1)
     {
+      scale = (pip_style == OUTSIDE_TILE) ? 1 : 2;
       markers[0] = markerCenter;
       texture = local::arrow_ltr;
     }
     else if (running == 2)
     {
-      markers[0] = markerCenter - 2 * scale;
-      markers[1] = markerCenter + 2 * scale;
-      texture = local::pip_ltr;
+      if (pip_style == OUTSIDE_TILE)
+      {
+        texture = local::pip_ltr;
+        markers[0] = markerCenter - 2;
+        markers[1] = markerCenter + 2;
+      }
+      else
+      {
+        texture = local::large_pip_ltr;
+        markers[0] = markerCenter - 4;
+        markers[1] = markerCenter + 4;
+      }
     }
     else
     {
-      markers[0] = markerCenter - 4 * scale;
-      markers[1] = markerCenter;
-      markers[2] = markerCenter + 4 * scale;
-      texture = local::pip_ltr;
+      if (pip_style == OUTSIDE_TILE)
+      {
+        texture = local::pip_ltr;
+        markers[0] = markerCenter - 4;
+        markers[1] = markerCenter;
+        markers[2] = markerCenter + 4;
+      }
+      else
+      {
+        texture = local::large_pip_ltr;
+        markers[0] = markerCenter - 8;
+        markers[1] = markerCenter;
+        markers[2] = markerCenter + 8;
+      }
     }
 
 
@@ -1224,10 +1246,12 @@ void generate_textures()
   // squircle_shine = load_texture(PKGDATADIR"/squircle_shine_54.png");
 
   pip_ltr = load_texture(PKGDATADIR"/launcher_pip_ltr.png");
+  large_pip_ltr = load_texture(PKGDATADIR"/launcher_pip_large_ltr.png");
   arrow_ltr = load_texture(PKGDATADIR"/launcher_arrow_ltr.png");
   arrow_empty_ltr = load_texture(PKGDATADIR"/launcher_arrow_outline_ltr.png");
 
   pip_rtl = load_texture(PKGDATADIR"/launcher_pip_rtl.png");
+  large_pip_rtl = load_texture(PKGDATADIR"/launcher_pip_large_rt.png");
   arrow_rtl = load_texture(PKGDATADIR"/launcher_arrow_rtl.png");
   arrow_empty_rtl = load_texture(PKGDATADIR"/launcher_arrow_outline_rtl.png");
 
@@ -1254,6 +1278,8 @@ void destroy_textures()
   progress_bar_fill->UnReference();
   pip_ltr->UnReference();
   pip_rtl->UnReference();
+  large_pip_ltr->UnReference();
+  large_pip_rtl->UnReference();
   arrow_ltr->UnReference();
   arrow_rtl->UnReference();
   arrow_empty_ltr->UnReference();
