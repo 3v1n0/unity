@@ -21,12 +21,9 @@
 #ifndef LAUNCHERICON_H
 #define LAUNCHERICON_H
 
-#include <set>
-#include <boost/unordered_map.hpp>
-
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
-#include <NuxCore/Math/MathInc.h>
+#include <NuxCore/Animation.h>
 
 #include <gtk/gtk.h>
 #include <libdbusmenu-glib/client.h>
@@ -337,6 +334,8 @@ private:
   bool             _allow_quicklist_to_show;
 
   std::list<LauncherEntryRemote::Ptr> _entry_list;
+
+  nux::animation::AnimateValue<double> _tooltip_fade_animator;
 
 protected:
   glib::SourceManager _source_manager;
