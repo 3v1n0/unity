@@ -187,6 +187,8 @@ void View::ResetToDefault()
   SetQueries(Hud::Queries());
   current_height_ = content_layout_->GetBaseHeight();;
 
+  UpdateLayoutGeometry();
+
   search_bar_->search_string = "";
   search_bar_->search_hint = _("Type your command");
 }
@@ -315,6 +317,7 @@ void View::ShowEmbeddedIcon(bool show)
     RemoveChild(icon_.GetPointer());
   }
 
+  UpdateLayoutGeometry();
   Relayout();
 }
 
@@ -397,17 +400,22 @@ void View::SetupViews()
       }
     });
 
-    nux::Geometry const& geo = GetGeometry();
-    content_geo_ = GetBestFitGeometry(geo);
-
-    layout_->SetMinimumWidth(content_geo_.width);
-    layout_->SetMaximumSize(content_geo_.width, content_geo_.height);
+    UpdateLayoutGeometry();
 
     layout_->AddLayout(content_layout_.GetPointer(), 1, nux::MINOR_POSITION_START);
   }
 
   super_layout->AddLayout(layout_.GetPointer(), 0);
   SetLayout(super_layout);
+}
+
+void View::UpdateLayoutGeometry()
+{
+  nux::Geometry const& geo = GetGeometry();
+  content_geo_ = GetBestFitGeometry(geo);
+
+  layout_->SetMinimumWidth(content_geo_.width);
+  layout_->SetMaximumSize(content_geo_.width, content_geo_.height);
 }
 
 void View::OnSearchChanged(std::string const& search_string)
