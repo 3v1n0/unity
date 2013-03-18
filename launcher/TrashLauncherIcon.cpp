@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,6 +16,7 @@
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
  *              Andrea Azzarone <azzaronea@gmail.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include "TrashLauncherIcon.h"
@@ -24,11 +25,13 @@
 #include <glib/gi18n-lib.h>
 #include <Nux/WindowCompositor.h>
 #include <NuxCore/Logger.h>
+#include <UnityCore/GLibDBusProxy.h>
 #include <zeitgeist.h>
 
 #include "Launcher.h"
 #include "QuicklistManager.h"
 #include "QuicklistMenuItemLabel.h"
+#include "FileManagerOpenerImp.h"
 
 namespace unity
 {
@@ -38,11 +41,12 @@ DECLARE_LOGGER(logger, "unity.launcher.icon");
 namespace
 {
   const std::string ZEITGEIST_UNITY_ACTOR = "application://compiz.desktop";
+  const std::string TRASH_URI = "trash:///";
 }
 
-TrashLauncherIcon::TrashLauncherIcon()
+TrashLauncherIcon::TrashLauncherIcon(FileManagerOpener::Ptr const& fmo)
   : SimpleLauncherIcon(IconType::TRASH)
-  , proxy_("org.gnome.Nautilus", "/org/gnome/Nautilus", "org.gnome.Nautilus.FileOperations")
+  , file_manager_(fmo ? fmo : std::make_shared<FileManagerOpenerImp>())
   , cancellable_(g_cancellable_new())
 {
   tooltip_text = _("Trash");
@@ -52,10 +56,11 @@ TrashLauncherIcon::TrashLauncherIcon()
   SetQuirk(Quirk::RUNNING, false);
   SetShortcut('t');
 
-  glib::Object<GFile> location(g_file_new_for_uri("trash:///"));
+  glib::Object<GFile> location(g_file_new_for_uri(TRASH_URI.c_str()));
 
   glib::Error err;
   trash_monitor_ = g_file_monitor_directory(location, G_FILE_MONITOR_NONE, nullptr, &err);
+  g_file_monitor_set_rate_limit(trash_monitor_, 1000);
 
   if (err)
   {
@@ -83,12 +88,16 @@ AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()
 
   /* Empty Trash */
   glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
-  dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Empty Trash..."));
+  dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Empty Trash…"));
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, !empty_);
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
   empty_activated_signal_.Connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-  [this] (DbusmenuMenuitem*, int) {
-    proxy_.Call("EmptyTrash");
+  [this] (DbusmenuMenuitem*, unsigned) {
+    auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.Nautilus", "/org/gnome/Nautilus",
+                                                   "org.gnome.Nautilus.FileOperations");
+
+    // Passing the proxy to the lambda we ensure that it will be destroyed when needed
+    proxy->CallBegin("EmptyTrash", nullptr, [proxy] (GVariant*, glib::Error const&) {});
   });
 
   result.push_back(menu_item);
@@ -100,13 +109,12 @@ void TrashLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
 
-  glib::Error error;
-  g_spawn_command_line_async("xdg-open trash://", &error);
+  file_manager_->Open(TRASH_URI.c_str(), arg.timestamp);
 }
 
 void TrashLauncherIcon::UpdateTrashIcon()
 {
-  glib::Object<GFile> location(g_file_new_for_uri("trash:///"));
+  glib::Object<GFile> location(g_file_new_for_uri(TRASH_URI.c_str()));
 
   g_file_query_info_async(location,
                           G_FILE_ATTRIBUTE_STANDARD_ICON,
@@ -117,14 +125,12 @@ void TrashLauncherIcon::UpdateTrashIcon()
                           this);
 }
 
-void TrashLauncherIcon::UpdateTrashIconCb(GObject* source,
-                                          GAsyncResult* res,
-                                          gpointer data)
+void TrashLauncherIcon::UpdateTrashIconCb(GObject* source, GAsyncResult* res, gpointer data)
 {
-  TrashLauncherIcon* self = (TrashLauncherIcon*) data;
+  auto self = static_cast<TrashLauncherIcon*>(data);
 
   // FIXME: should use the generic LoadIcon function (not taking from the unity theme)
-  glib::Object<GFileInfo> info(g_file_query_info_finish(G_FILE(source), res, NULL));
+  glib::Object<GFileInfo> info(g_file_query_info_finish(G_FILE(source), res, nullptr));
 
   if (info)
   {
@@ -132,7 +138,6 @@ void TrashLauncherIcon::UpdateTrashIconCb(GObject* source,
     glib::String icon_string(g_icon_to_string(icon));
 
     self->icon_name = icon_string.Str();
-
     self->empty_ = (self->icon_name == "user-trash");
   }
 }
@@ -152,23 +157,22 @@ bool TrashLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
   return true;
 }
 
-
 void TrashLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
 {
-  for (auto it : dnd_data.Uris())
+  for (auto const& uri : dnd_data.Uris())
   {
-    glib::Object<GFile> file(g_file_new_for_uri(it.c_str()));
+    glib::Object<GFile> file(g_file_new_for_uri(uri.c_str()));
 
     /* Log ZG event when moving file to trash; this is requred by File Scope.
        See https://bugs.launchpad.net/unity/+bug/870150  */
     if (g_file_trash(file, NULL, NULL))
     {
       // based on nautilus zg event logging code
-      glib::String origin(g_path_get_dirname(it.c_str()));
+      glib::String origin(g_path_get_dirname(uri.c_str()));
       glib::String parse_name(g_file_get_parse_name(file));
       glib::String display_name(g_path_get_basename(parse_name));
 
-      ZeitgeistSubject *subject = zeitgeist_subject_new_full(it.c_str(),
+      ZeitgeistSubject *subject = zeitgeist_subject_new_full(uri.c_str(),
                                                              NULL, // subject interpretation
                                                              NULL, // suject manifestation
                                                              NULL, // mime-type

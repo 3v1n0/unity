@@ -1,6 +1,5 @@
-// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2012 Canonical Ltd
+ * Copyright (C) 2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,23 +16,19 @@
  * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#ifndef UNITYSHELL_FILEMANAGER_OPENER_IMP_H
-#define UNITYSHELL_FILEMANAGER_OPENER_IMP_H
+#ifndef UNITY_SHARED_APPLICATION_STARTER_IMP_H
+#define UNITY_SHARED_APPLICATION_STARTER_IMP_H
 
-#include "FileManagerOpener.h"
+#include "ApplicationStarter.h"
 
-namespace unity
-{
-namespace launcher
-{
+namespace unity {
 
-class FileManagerOpenerImp : public FileManagerOpener
+class ApplicationStarterImp : public ApplicationStarter 
 {
 public:
-  virtual void Open(std::string const& uri, unsigned long long timestamp);
+  bool Launch(std::string const& application_name, Time timestamp) override;
 };
 
-}
 }
 
 #endif

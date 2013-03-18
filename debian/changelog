@@ -4,6 +4,39 @@ unity (6.12.0daily13.03.13-0ubuntu1) UNRELEASED; urgency=low
 
  -- Didier Roche <didrocks@ubuntu.com>  Wed, 13 Mar 2013 11:26:45 +0100
 
+unity (6.12.0daily13.03.13.1-0ubuntu1) raring; urgency=low
+
+  [ Sebastien Bacher ]
+  * Launcher - Update the icons used for the Software Centre, Nautilus,
+    and Software Updater (LP: #1081691)
+
+  [ Andrea Azzarone ]
+  * Nautilus windows don't get the the focus when opened via the dash.
+    (LP: #1152733)
+
+  [ Marco Trevisan (Treviño) ]
+  * New Shutdown view disables panel shadow (LP: #1152760)
+  * Shutdown goodbye text is sometimes partly missing (LP: #1152978)
+  * Shutdown view should be closable by escape-key (LP: #1152712)
+  * Press Alt+F1, panel’s shadow dissapear (LP: #942965)
+  * Long text in previews or dialogs is not properly aligned and/or
+    missing (LP: #1152980)
+  * Panel Shadow is not drawn properly during workspace switching (LP:
+    #1153699)
+  * QuicklistMenuItem's do not export the event timestamp on Activate
+    (LP: #1154082)
+  * [multimonitor] Dash - Opening dash or HUD on one screen removes
+    panel shadow on the other (LP: #892718)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Lenses shortcuts not working in singular cases (e.g. Super+A) (LP:
+    #1152517)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3211
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 13 Mar 2013 09:23:11 +0000
+
 unity (6.12.0daily13.03.11-0ubuntu1) raring; urgency=low
 
   [ Marco Trevisan (Treviño) ]

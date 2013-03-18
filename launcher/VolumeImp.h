@@ -53,7 +53,7 @@ public:
   virtual bool IsMounted() const;
 
   virtual void EjectAndShowNotification();
-  virtual void MountAndOpenInFileManager();
+  virtual void MountAndOpenInFileManager(unsigned long long timestamp);
   virtual void StopDrive();
   virtual void Unmount();
 
