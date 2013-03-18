@@ -138,7 +138,6 @@ void View::ProcessGrowShrink()
 {
   float diff = g_get_monotonic_time() - start_time_;
   int target_height = content_layout_->GetGeometry().height;
-
   // only animate if we are after our defined pause time
   if (diff > pause_before_grow_length)
   {
@@ -156,10 +155,16 @@ void View::ProcessGrowShrink()
       //shrink
       new_height = last_height - ((last_height - target_height) * progress);
     }
+    
 
     LOG_DEBUG(logger) << "resizing to " << target_height << " (" << new_height << ")"
                      << "View height: " << GetGeometry().height;
     current_height_ = new_height;
+  }
+
+  for (auto button : buttons_)
+  {
+    button->SetSkipDraw((button->GetAbsoluteY() + button->GetBaseHeight()) > (GetAbsoluteY() + current_height_));
   }
 
   if (diff > grow_anim_length + pause_before_grow_length)
@@ -180,10 +185,6 @@ void View::ProcessGrowShrink()
       return false;
     }));
   }
-
-  // Do this after we check if we are finished, it will skip drawing buttons otherwise
-  for (auto button : buttons_)
-    button->SetSkipDraw((button->GetAbsoluteY() + button->GetBaseHeight()) > (GetAbsoluteY() + current_height_));
 }
 
 void View::ResetToDefault()
@@ -197,6 +198,13 @@ void View::ResetToDefault()
 
 void View::Relayout()
 {
+  nux::Geometry const& geo = GetGeometry();
+  content_geo_ = GetBestFitGeometry(geo);
+  LOG_DEBUG(logger) << "content_geo: " << content_geo_.width << "x" << content_geo_.height;
+
+  layout_->SetMinimumWidth(content_geo_.width);
+  layout_->SetMaximumSize(content_geo_.width, content_geo_.height);
+
   QueueDraw();
 }
 
@@ -353,7 +361,6 @@ void View::AboutToHide()
   visible_ = false;
   overlay_window_buttons_->Hide();
   renderer_.AboutToHide();
-  ResetToDefault();
 }
 
 void View::SetupViews()
@@ -402,11 +409,6 @@ void View::SetupViews()
       }
     });
 
-    nux::Geometry const& geo = GetGeometry();
-    content_geo_ = GetBestFitGeometry(geo);
-
-    layout_->SetMinimumWidth(content_geo_.width);
-    layout_->SetMaximumSize(content_geo_.width, content_geo_.height);
 
     layout_->AddLayout(content_layout_.GetPointer(), 1, nux::MINOR_POSITION_START);
   }
