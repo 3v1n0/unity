@@ -234,6 +234,7 @@ void View::SetQueries(Hud::Queries queries)
 
     HudButton::Ptr button(new HudButton());
     buttons_.push_front(button);
+    button->SetInputEventSensitivity(false);
     button->SetMinimumWidth(content_width);
     button->SetMaximumWidth(content_width);
     button->SetQuery(query);
@@ -594,9 +595,6 @@ bool View::InspectKeyEvent(unsigned int eventType,
 
 void View::SearchFinished()
 {
-  for (auto button : buttons_)
-    button->SetInputEventSensitivity(false);
-
   search_bar_->SearchFinished();
 }
 
