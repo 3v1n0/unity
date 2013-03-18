@@ -463,7 +463,8 @@ void ScopeProxy::Impl::WaitForProxyConnection(GCancellable* cancellable,
         GError** real_err = &err;
         *real_err = g_error_new_literal(G_DBUS_ERROR, G_DBUS_ERROR_TIMED_OUT,
                                         "Timed out waiting for scope proxy connection");
-        callback(err);
+        if (callback)
+          callback(err);
       }
       con->disconnect();
       return false;
@@ -474,14 +475,16 @@ void ScopeProxy::Impl::WaitForProxyConnection(GCancellable* cancellable,
       if (!connected)
         return;
 
-      if (!g_cancellable_is_cancelled(canc)) callback(glib::Error());
+      if (callback && !g_cancellable_is_cancelled(canc))
+        callback(glib::Error());
       timeout->Remove();
       con->disconnect();
     });
   }
   else
   {
-    callback(glib::Error());
+    if (callback)
+      callback(glib::Error());
   }
 }
 
@@ -502,7 +505,8 @@ void ScopeProxy::Impl::Search(std::string const& search_string, glib::HintsMap c
     {
       if (err)
       {
-        callback(search_string, glib::HintsMap(), err);
+        if (callback)
+          callback(search_string, glib::HintsMap(), err);
         LOG_WARNING(logger) << "Could not search '" << search_string
                             << "' on " << scope_data_->id() << " => " << err;
       }
@@ -546,7 +550,8 @@ void ScopeProxy::Impl::Activate(LocalResult const& result, uint activate_type, g
     {
       if (err)
       {
-        callback(result, ScopeHandledType::NOT_HANDLED, glib::HintsMap(), err);
+        if (callback)
+          callback(result, ScopeHandledType::NOT_HANDLED, glib::HintsMap(), err);
         LOG_WARNING(logger) << "Could not activate '" << result.uri
                             << "' on " << scope_data_->id() << " => " << err;
       }
