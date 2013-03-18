@@ -623,7 +623,7 @@ bool ScopeView::ReinitializeCategoryResultModels()
 
 ResultView* ScopeView::GetResultViewForCategory(unsigned int category_index)
 {  
-  if (category_views_.size() >= category_index)
+  if (category_views_.size() <= category_index)
     return nullptr;
 
   auto category_pos = category_views_.begin() + category_index;
