@@ -124,7 +124,7 @@ LauncherIcon::LauncherIcon(IconType type)
     {
       _tooltip->SetOpacity(opacity);
 
-      if (opacity == 0.0f && _tooltip_fade_animator.GetStartValue() >= _tooltip_fade_animator.GetFinishValue())
+      if (opacity == 0.0f && _tooltip_fade_animator.GetStartValue() > _tooltip_fade_animator.GetFinishValue())
       {
         _tooltip->ShowWindow(false);
         _tooltip->SetOpacity(0.0f);
