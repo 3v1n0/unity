@@ -70,7 +70,7 @@ TEST_P(/*TestSessionController*/ShowMode, Show)
   controller.Show(GetParam());
   EXPECT_TRUE(controller.Visible());
   EXPECT_EQ(controller.view_->mode(), GetParam());
-  EXPECT_EQ(nux::GetWindowCompositor().GetKeyFocusArea(), controller.view_.GetPointer());
+  EXPECT_EQ(nux::GetWindowCompositor().GetKeyFocusArea(), controller.view_->key_focus_area());
   EXPECT_TRUE(controller.view_->live_background());
 }
 
