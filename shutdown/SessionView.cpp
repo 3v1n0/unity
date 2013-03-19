@@ -145,8 +145,17 @@ void View::UpdateText()
 
     if (have_inhibitors())
     {
-      message = _("Hi %s, you have open files that you might want to save " \
-                  "before shutting down.\nWould you like to…");
+      if (buttons_layout_->GetChildren().size() > 3)
+      {
+        // We have enough buttons to show the message without a new line.
+        message = _("Hi %s, you have open files you might want to save. " \
+                    "Would you like to…");
+      }
+      else
+      {
+        message = _("Hi %s, you have open files you might want to save.\n" \
+                    "Would you like to…");
+      }
     }
     else
     {
@@ -164,11 +173,11 @@ void View::Populate()
 
   if (mode() == Mode::LOGOUT)
   {
-    auto* button = new Button(_("Lock"), "lockscreen", NUX_TRACKER_LOCATION);
+    auto* button = new Button(Button::Action::LOCK, NUX_TRACKER_LOCATION);
     button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
     AddButton(button);
 
-    button = new Button(_("Logout"), "logout", NUX_TRACKER_LOCATION);
+    button = new Button(Button::Action::LOGOUT, NUX_TRACKER_LOCATION);
     button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Logout));
     AddButton(button);
   }
@@ -176,20 +185,20 @@ void View::Populate()
   {
     if (mode() == Mode::FULL)
     {
-      auto* button = new Button(_("Lock"), "lockscreen", NUX_TRACKER_LOCATION);
+      auto* button = new Button(Button::Action::LOCK, NUX_TRACKER_LOCATION);
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
       AddButton(button);
 
       if (manager_->CanSuspend())
       {
-        button = new Button(_("Suspend"), "suspend", NUX_TRACKER_LOCATION);
+        button = new Button(Button::Action::SUSPEND, NUX_TRACKER_LOCATION);
         button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Suspend));
         AddButton(button);
       }
 
       if (manager_->CanHibernate())
       {
-        button = new Button(_("Hibernate"), "hibernate", NUX_TRACKER_LOCATION);
+        button = new Button(Button::Action::HIBERNATE, NUX_TRACKER_LOCATION);
         button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Hibernate));
         AddButton(button);
       }
@@ -197,17 +206,17 @@ void View::Populate()
 
     if (manager_->CanShutdown())
     {
-      auto* button = new Button(_("Shutdown"), "shutdown", NUX_TRACKER_LOCATION);
+      auto* button = new Button(Button::Action::SHUTDOWN, NUX_TRACKER_LOCATION);
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Shutdown));
       AddButton(button);
 
-      button = new Button(_("Restart"), "restart", NUX_TRACKER_LOCATION);
+      button = new Button(Button::Action::REBOOT, NUX_TRACKER_LOCATION);
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Reboot));
       AddButton(button);
     }
     else if (mode() == Mode::FULL)
     {
-      auto* button = new Button(_("Logout"), "logout", NUX_TRACKER_LOCATION);
+      auto* button = new Button(Button::Action::LOGOUT, NUX_TRACKER_LOCATION);
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Logout));
       AddButton(button);
     }
@@ -287,7 +296,8 @@ nux::Area* View::FindKeyFocusArea(unsigned etype, unsigned long key_code, unsign
   {
     nux::InputArea* focused = nux::GetWindowCompositor().GetKeyFocusArea();
 
-    if (!focused || !focused->IsMouseInside())
+    // Let's reset the focused area if we're in keyboard-navigation mode.
+    if (focused && focused->IsChildOf(buttons_layout_) && !focused->IsMouseInside())
       return this;
   }
 

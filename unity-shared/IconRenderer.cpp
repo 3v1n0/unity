@@ -189,6 +189,8 @@ nux::BaseTexture* progress_bar_trough = 0;
 nux::BaseTexture* progress_bar_fill = 0;
 nux::BaseTexture* pip_ltr = 0;
 nux::BaseTexture* pip_rtl = 0;
+nux::BaseTexture* large_pip_ltr = 0;
+nux::BaseTexture* large_pip_rtl = 0;
 nux::BaseTexture* arrow_ltr = 0;
 nux::BaseTexture* arrow_rtl = 0;
 nux::BaseTexture* arrow_empty_ltr = 0;
@@ -404,9 +406,10 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
 
   nux::Color background_tile_color = arg.icon->BackgroundColor();
   nux::Color glow_color = arg.icon->GlowColor();
-  nux::Color edge_color(0x55555555);
+  nux::Color edge_color = nux::color::White;
   nux::Color colorify = arg.colorify;
   nux::Color background_tile_colorify = arg.colorify;
+  nux::Color edge_tile_colorify = nux::color::White;
   bool colorify_background = arg.colorify_background;
   float backlight_intensity = arg.backlight_intensity;
   float glow_intensity = arg.glow_intensity;
@@ -502,10 +505,10 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   backlight_intensity * arg.alpha,
                   force_filter,
                   tile_transform);
-  }
 
-  edge_color = edge_color + ((background_tile_color - edge_color) * backlight_intensity);
-  nux::Color edge_tile_colorify = background_tile_colorify;
+    edge_tile_colorify = background_tile_colorify * backlight_intensity;
+    edge_color = edge_color + ((background_tile_color - edge_color) * backlight_intensity);
+  }
 
   if (colorify_background && !arg.keyboard_nav_hl)
   {
@@ -648,10 +651,8 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
 nux::BaseTexture* IconRenderer::RenderCharToTexture(char label, int width, int height, nux::Color const& bg_color)
 {
   nux::BaseTexture*     texture  = NULL;
-  nux::CairoGraphics*   cg       = new nux::CairoGraphics(CAIRO_FORMAT_ARGB32,
-                                                          width,
-                                                          height);
-  cairo_t*              cr       = cg->GetContext();
+  nux::CairoGraphics    cg(CAIRO_FORMAT_ARGB32, width, height);
+  cairo_t*              cr       = cg.GetInternalContext();
   PangoLayout*          layout   = NULL;
   PangoFontDescription* desc     = NULL;
   GtkSettings*          settings = gtk_settings_get_default();  // not ref'ed
@@ -669,7 +670,7 @@ nux::BaseTexture* IconRenderer::RenderCharToTexture(char label, int width, int h
   cairo_paint(cr);
   cairo_scale(cr, 1.0f, 1.0f);
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-  cg->DrawRoundedRectangle(cr, 1.0f, label_x, label_y, label_radius, label_w, label_h);
+  cg.DrawRoundedRectangle(cr, 1.0f, label_x, label_y, label_radius, label_w, label_h);
   cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 0.75f);
   cairo_fill_preserve(cr);
   cairo_set_source_rgba(cr, bg_color.red, bg_color.green, bg_color.blue, 0.20f);
@@ -695,11 +696,10 @@ nux::BaseTexture* IconRenderer::RenderCharToTexture(char label, int width, int h
   cairo_move_to(cr, x, y);
   pango_cairo_show_layout(cr, layout);
 
-  nux::NBitmapData* bitmap = cg->GetBitmap();
+  nux::NBitmapData* bitmap = cg.GetBitmap();
   texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableTexture();
   texture->Update(bitmap);
   delete bitmap;
-  delete cg;
   g_object_unref(layout);
   pango_font_description_free(desc);
   g_free(fontName);
@@ -893,8 +893,8 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
   if (running > 0)
   {
     int scale = 1;
-
     int markerX;
+
     if (pip_style == OUTSIDE_TILE)
     {
       markerX = geo.x;
@@ -902,8 +902,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     else
     {
       auto bounds = arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_TILE, monitor);
-      markerX = bounds[0].x + 2;
-      scale = 2;
+      markerX = bounds[0].x + 1;
     }
 
     nux::TexCoordXForm texxform;
@@ -924,26 +923,47 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
 
     if (!arg.running_on_viewport)
     {
+      scale = (pip_style == OUTSIDE_TILE) ? 1 : 2;
       markers[0] = markerCenter;
       texture = local::arrow_empty_ltr;
     }
     else if (running == 1)
     {
+      scale = (pip_style == OUTSIDE_TILE) ? 1 : 2;
       markers[0] = markerCenter;
       texture = local::arrow_ltr;
     }
     else if (running == 2)
     {
-      markers[0] = markerCenter - 2 * scale;
-      markers[1] = markerCenter + 2 * scale;
-      texture = local::pip_ltr;
+      if (pip_style == OUTSIDE_TILE)
+      {
+        texture = local::pip_ltr;
+        markers[0] = markerCenter - 2;
+        markers[1] = markerCenter + 2;
+      }
+      else
+      {
+        texture = local::large_pip_ltr;
+        markers[0] = markerCenter - 4;
+        markers[1] = markerCenter + 4;
+      }
     }
     else
     {
-      markers[0] = markerCenter - 4 * scale;
-      markers[1] = markerCenter;
-      markers[2] = markerCenter + 4 * scale;
-      texture = local::pip_ltr;
+      if (pip_style == OUTSIDE_TILE)
+      {
+        texture = local::pip_ltr;
+        markers[0] = markerCenter - 4;
+        markers[1] = markerCenter;
+        markers[2] = markerCenter + 4;
+      }
+      else
+      {
+        texture = local::large_pip_ltr;
+        markers[0] = markerCenter - 8;
+        markers[1] = markerCenter;
+        markers[2] = markerCenter + 8;
+      }
     }
 
 
@@ -1226,10 +1246,12 @@ void generate_textures()
   // squircle_shine = load_texture(PKGDATADIR"/squircle_shine_54.png");
 
   pip_ltr = load_texture(PKGDATADIR"/launcher_pip_ltr.png");
+  large_pip_ltr = load_texture(PKGDATADIR"/launcher_pip_large_ltr.png");
   arrow_ltr = load_texture(PKGDATADIR"/launcher_arrow_ltr.png");
   arrow_empty_ltr = load_texture(PKGDATADIR"/launcher_arrow_outline_ltr.png");
 
   pip_rtl = load_texture(PKGDATADIR"/launcher_pip_rtl.png");
+  large_pip_rtl = load_texture(PKGDATADIR"/launcher_pip_large_rt.png");
   arrow_rtl = load_texture(PKGDATADIR"/launcher_arrow_rtl.png");
   arrow_empty_rtl = load_texture(PKGDATADIR"/launcher_arrow_outline_rtl.png");
 
@@ -1256,6 +1278,8 @@ void destroy_textures()
   progress_bar_fill->UnReference();
   pip_ltr->UnReference();
   pip_rtl->UnReference();
+  large_pip_ltr->UnReference();
+  large_pip_rtl->UnReference();
   arrow_ltr->UnReference();
   arrow_rtl->UnReference();
   arrow_empty_ltr->UnReference();

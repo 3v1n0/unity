@@ -68,7 +68,6 @@ public:
   sigc::signal<void, std::string const&> live_search_reached;
 
 private:
-
   void Init();
 
   void OnFontChanged(GtkSettings* settings, GParamSpec* pspec=NULL);

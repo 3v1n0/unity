@@ -90,68 +90,68 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   // Lambda functions should be fine here because when the application the icon
   // is only ever removed when the application is closed.
   app->window_opened.connect([this](ApplicationWindow const&) {
-                               EnsureWindowState();
-                               UpdateMenus();
-                               UpdateIconGeometries(GetCenters());
-                             });
-  app->window_closed.connect([this]() { EnsureWindowState(); });
-  app->window_moved.connect([this](ApplicationWindow const&) { EnsureWindowState(); });
+    EnsureWindowState();
+    UpdateMenus();
+    UpdateIconGeometries(GetCenters());
+  });
+  app->window_closed.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
+  app->window_moved.connect(sigc::hide(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState)));
 
   app->urgent.changed.connect([this](bool const& urgent) {
-                            LOG_DEBUG(logger) << tooltip_text() << " urgent now " << (urgent ? "true" : "false");
-                            SetQuirk(Quirk::URGENT, urgent);
-                          });
+    LOG_DEBUG(logger) << tooltip_text() << " urgent now " << (urgent ? "true" : "false");
+    SetQuirk(Quirk::URGENT, urgent);
+  });
   app->active.changed.connect([this](bool const& active) {
-                            LOG_DEBUG(logger) << tooltip_text() << " active now " << (active ? "true" : "false");
-                            SetQuirk(Quirk::ACTIVE, active);
-                          });
+    LOG_DEBUG(logger) << tooltip_text() << " active now " << (active ? "true" : "false");
+    SetQuirk(Quirk::ACTIVE, active);
+  });
   app->running.changed.connect([this](bool const& running) {
-                            LOG_DEBUG(logger) << tooltip_text() << " running now " << (running ? "true" : "false");
-                            SetQuirk(Quirk::RUNNING, running);
+    LOG_DEBUG(logger) << tooltip_text() << " running now " << (running ? "true" : "false");
+    SetQuirk(Quirk::RUNNING, running);
 
-                            if (running)
-                            {
-                              _source_manager.Remove(ICON_REMOVE_TIMEOUT);
+    if (running)
+    {
+      _source_manager.Remove(ICON_REMOVE_TIMEOUT);
 
-                              /* It can happen that these values are not set
-                               * during initialization if the view is closed
-                               * very early, so we need to make sure that they
-                               * are updated as soon as the view is re-opened. */
-                              if (tooltip_text().empty())
-                                tooltip_text = app_->title();
+      /* It can happen that these values are not set
+       * during initialization if the view is closed
+       * very early, so we need to make sure that they
+       * are updated as soon as the view is re-opened. */
+      if (tooltip_text().empty())
+        tooltip_text = app_->title();
 
-                              if (icon_name == DEFAULT_ICON)
-                              {
-                                std::string icon = app_->icon();
-                                icon_name = (icon.empty() ? DEFAULT_ICON : icon);
-                              }
+      if (icon_name == DEFAULT_ICON)
+      {
+        std::string icon = app_->icon();
+        icon_name = (icon.empty() ? DEFAULT_ICON : icon);
+      }
 
-                              EnsureWindowState();
-                              UpdateIconGeometries(GetCenters());
-                            }
-                          });
+      EnsureWindowState();
+      UpdateIconGeometries(GetCenters());
+    }
+  });
   app->visible.changed.connect([this](bool const& visible) {
-                            if (!IsSticky())
-                              SetQuirk(Quirk::VISIBLE, visible);
-                          });
+    if (!IsSticky())
+      SetQuirk(Quirk::VISIBLE, visible);
+  });
 
   app->closed.connect([this]() {
-                            if (!IsSticky())
-                            {
-                              SetQuirk(Quirk::VISIBLE, false);
+    if (!IsSticky())
+    {
+      SetQuirk(Quirk::VISIBLE, false);
 
-                              /* Use a timeout to remove the icon, this avoids
-                               * that we remove an application that is going
-                               * to be reopened soon. So applications that
-                               * have a splash screen won't be removed from
-                               * the launcher while the splash is closed and
-                               * a new window is opened. */
-                              _source_manager.AddTimeoutSeconds(1, [&] {
-                                Remove();
-                                return false;
-                              }, ICON_REMOVE_TIMEOUT);
-                            }
-                          });
+      /* Use a timeout to remove the icon, this avoids
+       * that we remove an application that is going
+       * to be reopened soon. So applications that
+       * have a splash screen won't be removed from
+       * the launcher while the splash is closed and
+       * a new window is opened. */
+      _source_manager.AddTimeoutSeconds(1, [this] {
+        Remove();
+        return false;
+      }, ICON_REMOVE_TIMEOUT);
+    }
+  });
 
   WindowManager& wm = WindowManager::Default();
   wm.window_minimized.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::OnWindowMinimized));
@@ -262,7 +262,7 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
    * an unmapped (!= minimized) window around and
    * if so force "Focus" behaviour */
 
-  if (arg.source != ActionArg::SWITCHER)
+  if (arg.source != ActionArg::Source::SWITCHER)
   {
     user_visible = app_->visible();
 
@@ -339,7 +339,7 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       }
       else // #2 above
       {
-        if (arg.source != ActionArg::SWITCHER)
+        if (arg.source != ActionArg::Source::SWITCHER)
         {
           Spread(true, 0, false);
         }
@@ -350,7 +350,7 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       if (scaleWasActive) // #4 above
       {
         Focus(arg);
-        if (arg.source != ActionArg::SWITCHER)
+        if (arg.source != ActionArg::Source::SWITCHER)
           Spread(true, 0, false);
       }
       else // #3 above
@@ -443,7 +443,7 @@ void ApplicationLauncherIcon::OnWindowMoved(guint32 moved_win)
   if (!app_->OwnsWindow(moved_win))
     return;
 
-  _source_manager.AddTimeout(250, [&] {
+  _source_manager.AddTimeout(250, [this] {
     EnsureWindowState();
     UpdateIconGeometries(GetCenters());
 
@@ -468,31 +468,32 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
     glib::Object<GFile> desktop_file(g_file_new_for_path(_desktop_file.c_str()));
     _desktop_file_monitor = g_file_monitor_file(desktop_file, G_FILE_MONITOR_NONE,
                                                 nullptr, nullptr);
-    g_file_monitor_set_rate_limit(_desktop_file_monitor, 1000);
+    g_file_monitor_set_rate_limit(_desktop_file_monitor, 2000);
 
-    auto sig = new glib::Signal<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent>(_desktop_file_monitor, "changed",
-                                [&] (GFileMonitor*, GFile* f, GFile*, GFileMonitorEvent event_type) {
-                                  switch (event_type)
-                                  {
-                                    case G_FILE_MONITOR_EVENT_DELETED:
-                                    {
-                                      glib::Object<GFile> file(f, glib::AddRef());
-                                      _source_manager.AddTimeoutSeconds(1, [this, file] {
-                                        if (!g_file_query_exists (file, nullptr))
-                                          UnStick();
-                                        return false;
-                                      });
-                                      break;
-                                    }
-                                    case G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT:
-                                      UpdateDesktopQuickList();
-                                      UpdateBackgroundColor();
-                                      break;
-                                    default:
-                                      break;
-                                  }
-                                });
-    _gsignals.Add(sig);
+    _gsignals.Add<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent>(_desktop_file_monitor, "changed",
+      [this] (GFileMonitor*, GFile* f, GFile*, GFileMonitorEvent event_type) {
+      switch (event_type)
+      {
+        case G_FILE_MONITOR_EVENT_DELETED:
+        {
+          glib::Object<GFile> file(f, glib::AddRef());
+          _source_manager.AddTimeoutSeconds(1, [this, file] {
+            if (!g_file_query_exists (file, nullptr))
+              UnStick();
+            return false;
+          });
+          break;
+        }
+        case G_FILE_MONITOR_EVENT_CHANGES_DONE_HINT:
+        {
+          UpdateDesktopQuickList();
+          UpdateBackgroundColor();
+          break;
+        }
+        default:
+          break;
+      }
+    });
   }
 }
 
@@ -530,7 +531,7 @@ void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& 
   glib::Object<GdkAppLaunchContext> app_launch_context(gdk_display_get_app_launch_context(display));
 
   _startup_notification_timestamp = timestamp;
-  if (_startup_notification_timestamp >= 0)
+  if (_startup_notification_timestamp > 0)
     gdk_app_launch_context_set_timestamp(app_launch_context, _startup_notification_timestamp);
 
   if (g_app_info_supports_uris(appInfo))
@@ -591,7 +592,7 @@ void ApplicationLauncherIcon::Focus(ActionArg arg)
     return;
   }
 
-  bool show_only_visible = arg.source == ActionArg::SWITCHER;
+  bool show_only_visible = arg.source == ActionArg::Source::SWITCHER;
   app_->Focus(show_only_visible, arg.monitor);
 }
 
@@ -645,7 +646,7 @@ void ApplicationLauncherIcon::UpdateDesktopQuickList()
   {
     for (GList *l = dbusmenu_menuitem_get_children(_menu_desktop_shortcuts); l; l = l->next)
     {
-      _gsignals.Disconnect(l->data, "item-activated");
+      _gsignals.Disconnect(l->data, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED);
     }
   }
 
@@ -672,15 +673,12 @@ void ApplicationLauncherIcon::UpdateDesktopQuickList()
     dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, name);
     dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
     dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
-    dbusmenu_menuitem_property_set(item, "shortcut-nick", nicks[index]);
+    std::string nick(nicks[index]);
 
-    auto sig = new glib::Signal<void, DbusmenuMenuitem*, gint>(item, "item-activated",
-                                [&] (DbusmenuMenuitem* item, gint) {
-                                  const gchar *nick;
-                                  nick = dbusmenu_menuitem_property_get(item, "shortcut-nick");
-                                  indicator_desktop_shortcuts_nick_exec(_desktop_shortcuts, nick);
-                                });
-    _gsignals.Add(sig);
+    _gsignals.Add<void, DbusmenuMenuitem*, gint>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+    [this, nick] (DbusmenuMenuitem* item, unsigned) {
+      indicator_desktop_shortcuts_nick_exec(_desktop_shortcuts, nick.c_str());
+    });
 
     dbusmenu_menuitem_child_append(_menu_desktop_shortcuts, item);
     index++;
@@ -729,8 +727,8 @@ void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
     dbusmenu_menuitem_property_set_int(menu_item, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY, MAXIMUM_QUICKLIST_WIDTH);
 
     Window xid = w->window_id();
-    _gsignals.Add<void, DbusmenuMenuitem*, int>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-      [xid] (DbusmenuMenuitem*, int) {
+    _gsignals.Add<void, DbusmenuMenuitem*, unsigned>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+      [xid] (DbusmenuMenuitem*, unsigned) {
         WindowManager& wm = WindowManager::Default();
         wm.Activate(xid);
         wm.Raise(xid);
@@ -821,8 +819,8 @@ void ApplicationLauncherIcon::EnsureMenuItemsReady()
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    _gsignals.Add<void, DbusmenuMenuitem*, int>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-      [&] (DbusmenuMenuitem*, int) {
+    _gsignals.Add<void, DbusmenuMenuitem*, unsigned>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+      [this] (DbusmenuMenuitem*, unsigned) {
         ToggleSticky();
     });
 
@@ -842,8 +840,8 @@ void ApplicationLauncherIcon::EnsureMenuItemsReady()
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    _gsignals.Add<void, DbusmenuMenuitem*, int>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-      [&] (DbusmenuMenuitem*, int) {
+    _gsignals.Add<void, DbusmenuMenuitem*, unsigned>(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+      [this] (DbusmenuMenuitem*, unsigned) {
         Quit();
     });
 
@@ -936,24 +934,19 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
   else
   {
     glib::String app_name(g_markup_escape_text(app_->title().c_str(), -1));
-    std::ostringstream bold_app_name;
-    bold_app_name << "<b>" << app_name << "</b>";
+    std::string bold_app_name("<b>"+app_name.Str()+"</b>");
 
     item = dbusmenu_menuitem_new();
     dbusmenu_menuitem_property_set(item,
                                    DBUSMENU_MENUITEM_PROP_LABEL,
-                                   bold_app_name.str().c_str());
-    dbusmenu_menuitem_property_set_bool(item,
-                                        DBUSMENU_MENUITEM_PROP_ENABLED,
-                                        true);
-    dbusmenu_menuitem_property_set_bool(item,
-                                        QuicklistMenuItem::MARKUP_ENABLED_PROPERTY,
-                                        true);
+                                   bold_app_name.c_str());
+    dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
+    dbusmenu_menuitem_property_set_bool(item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY, TRUE);
 
-    _gsignals.Add<void, DbusmenuMenuitem*, int>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-      [&] (DbusmenuMenuitem*, int) {
-        _source_manager.AddIdle([&] {
-          ActivateLauncherIcon(ActionArg());
+    _gsignals.Add<void, DbusmenuMenuitem*, unsigned>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+      [this] (DbusmenuMenuitem*, unsigned timestamp) {
+        _source_manager.AddIdle([this, timestamp] {
+          ActivateLauncherIcon(ActionArg(ActionArg::Source::LAUNCHER, 0, timestamp));
           return false;
         });
     });
@@ -1107,7 +1100,7 @@ void ApplicationLauncherIcon::OnDndHovered()
 void ApplicationLauncherIcon::OnDndEnter()
 {
   /* Disabled, since the DND code is currently disabled as well.
-  _source_manager.AddTimeout(1000, [&] {
+  _source_manager.AddTimeout(1000, [this] {
     OnDndHovered();
     return false;
   }, ICON_DND_OVER_TIMEOUT);
@@ -1157,7 +1150,7 @@ nux::DndAction ApplicationLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_dat
 
 void ApplicationLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
 {
-  auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+  auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
   OpenInstanceWithUris(ValidateUrisForLaunch(dnd_data), timestamp);
 }
 
@@ -1174,7 +1167,7 @@ bool ApplicationLauncherIcon::ShowInSwitcher(bool current)
     }
     else
     {
-      for (int i = 0; i < max_num_monitors; i++)
+      for (int i = 0; i < max_num_monitors; ++i)
       {
         if (WindowVisibleOnMonitor(i))
         {

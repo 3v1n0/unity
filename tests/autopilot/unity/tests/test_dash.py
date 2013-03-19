@@ -972,6 +972,12 @@ class PreviewNavigateTests(DashTestCase):
 
         self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
 
+    def test_overlay_text(self):
+        """Fallback overlay text is internationalized, should always be valid."""
+        cover_art = self.get_current_preview().cover_art[0]
+        self.assertThat(cover_art.overlay_text,
+                        Eventually(Equals("No Image Available")))
+
 
 class PreviewClickCancelTests(DashTestCase):
     """Tests that the preview closes when left, middle, and right clicking in the preview"""

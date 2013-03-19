@@ -28,6 +28,7 @@
 #include <UnityCore/HomeLens.h>
 #include <UnityCore/GLibSource.h>
 
+#include "ApplicationStarter.h"
 #include "LensBar.h"
 #include "LensView.h"
 #include "previews/PreviewContainer.h"
@@ -58,7 +59,7 @@ class DashView : public nux::View, public unity::debug::Introspectable
   typedef std::map<std::string, nux::ObjectPtr<LensView>> LensViews;
 
 public:
-  DashView();
+   DashView(Lenses::Ptr const& lenses, ApplicationStarter::Ptr const& application_starter);
   ~DashView();
 
   void AboutToShow();
@@ -131,9 +132,11 @@ private:
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
   UBusManager ubus_manager_;
-  FilesystemLenses lenses_;
+  Lenses::Ptr lenses_;
   HomeLens::Ptr home_lens_;
   LensViews lens_views_;
+
+  ApplicationStarter::Ptr application_starter_;
 
   // View related
   PreviewStateMachine preview_state_machine_;
@@ -159,7 +162,7 @@ private:
   OverlayRenderer renderer_;
 
   std::string last_activated_uri_;
-  // we're passing this back to g_* functions, so we'll keep the g* type
+  guint64 last_activated_timestamp_;
   bool search_in_progress_;
   bool activate_on_finish_;
 
