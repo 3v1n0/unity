@@ -41,7 +41,9 @@ NUX_IMPLEMENT_OBJECT_TYPE(Button);
 Button::Button(Action action, NUX_FILE_LINE_DECL)
   : nux::View(NUX_FILE_LINE_PARAM)
   , highlighted(false)
+  , action([this] { return action_; })
   , label([this] { return label_view_->GetText(); })
+  , action_(action)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(true);

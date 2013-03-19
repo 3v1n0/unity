@@ -50,6 +50,7 @@ public:
   Button(Action, NUX_FILE_LINE_PROTO);
 
   nux::Property<bool> highlighted;
+  nux::ROProperty<Action> action;
   nux::ROProperty<std::string> label;
 
   sigc::signal<void> activated;
@@ -64,6 +65,7 @@ protected:
 private:
   friend class TestSessionButton;
 
+  Action action_;
   IconTexture* image_view_;
   StaticCairoText* label_view_;
   nux::ObjectPtr<nux::BaseTexture> normal_tex_;
