@@ -87,7 +87,8 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
   shell_object_ = shell_server_.GetObject(shell::DBUS_INTERFACE);
   shell_object_->SetMethodsCallsHandler(sigc::mem_fun(this, &Impl::OnShellMethodCall));
 
-  if (g_getenv("XDG_SESSION_ID") != NULL) {
+  if (g_getenv("XDG_SESSION_ID"))
+  {
     CallLogindMethod("CanHibernate", nullptr, [this] (GVariant* variant) {
       can_hibernate_ = glib::Variant(variant).GetString() == "yes";
       LOG_INFO(logger) << "Can hibernate (logind): " << can_hibernate_;
@@ -415,7 +416,9 @@ void GnomeManager::Logout()
         const char* session_id = g_getenv("XDG_SESSION_ID");
 
         if (session_id && session_id[0] != '\0')
+        {
           impl_->CallLogindMethod("TerminateSession", g_variant_new("(s)", session_id));
+        }
         else
         {
           // fallback to ConsoleKit
@@ -441,8 +444,8 @@ void GnomeManager::Reboot()
 
         impl_->pending_action_ = shell::Action::NONE;
         /* ConsoleKit / logind fallback */
-        if (g_getenv("XDG_SESSION_ID") != NULL)
-          impl_->CallLogindMethod("Reboot", g_variant_new("(b)", false));
+        if (g_getenv("XDG_SESSION_ID"))
+          impl_->CallLogindMethod("Reboot", g_variant_new("(b)", FALSE));
         else
           impl_->CallConsoleKitMethod("Restart");
       }
@@ -462,8 +465,8 @@ void GnomeManager::Shutdown()
 
         impl_->pending_action_ = shell::Action::NONE;
         /* ConsoleKit / logind fallback */
-        if (g_getenv("XDG_SESSION_ID") != NULL)
-          impl_->CallLogindMethod("PowerOff", g_variant_new("(b)", false));
+        if (g_getenv("XDG_SESSION_ID"))
+          impl_->CallLogindMethod("PowerOff", g_variant_new("(b)", FALSE));
         else
           impl_->CallConsoleKitMethod("Stop");
       }
@@ -473,8 +476,8 @@ void GnomeManager::Shutdown()
 void GnomeManager::Suspend()
 {
   impl_->EnsureCancelPendingAction();
-  if (g_getenv("XDG_SESSION_ID") != NULL)
-    impl_->CallLogindMethod("Suspend", g_variant_new("(b)", false));
+  if (g_getenv("XDG_SESSION_ID"))
+    impl_->CallLogindMethod("Suspend", g_variant_new("(b)", FALSE));
   else
     impl_->CallUPowerMethod("Suspend");
 }
@@ -482,8 +485,8 @@ void GnomeManager::Suspend()
 void GnomeManager::Hibernate()
 {
   impl_->EnsureCancelPendingAction();
-  if (g_getenv("XDG_SESSION_ID") != NULL)
-    impl_->CallLogindMethod("Hibernate", g_variant_new("(b)", false));
+  if (g_getenv("XDG_SESSION_ID"))
+    impl_->CallLogindMethod("Hibernate", g_variant_new("(b)", FALSE));
   else
     impl_->CallUPowerMethod("Hibernate");
 }
