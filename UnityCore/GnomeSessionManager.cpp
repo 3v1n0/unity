@@ -298,6 +298,22 @@ void GnomeManager::Impl::CallUPowerMethod(std::string const& method, glib::DBusP
   });
 }
 
+void GnomeManager::Impl::CallLogindMethod(std::string const& method, GVariant* parameters)
+{
+  auto proxy = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.login1",
+                                                 "/org/freedesktop/login1",
+                                                 "org.freedesktop.login1.Manager",
+                                                 test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
+
+  // By passing the proxy to the lambda we ensure that it will be smartly handled
+  proxy->CallBegin(method, parameters, [this, proxy] (GVariant*, glib::Error const& e) {
+    if (e)
+    {
+      LOG_ERROR(logger) << "Fallback call failed: " << e.Message();
+    }
+  });
+}
+
 void GnomeManager::Impl::CallConsoleKitMethod(std::string const& method, GVariant* parameters)
 {
   auto proxy = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.ConsoleKit",
@@ -379,10 +395,19 @@ void GnomeManager::Logout()
         LOG_WARNING(logger) << "Got error during call: " << err.Message();
 
         impl_->pending_action_ = shell::Action::NONE;
-        const char* cookie = g_getenv("XDG_SESSION_COOKIE");
+        // fallback to logind
+        const char* session_id = g_getenv("XDG_SESSION_ID");
 
-        if (cookie && cookie[0] != '\0')
-          impl_->CallConsoleKitMethod("CloseSession", g_variant_new("(s)", cookie));
+        if (session_id && session_id[0] != '\0')
+          impl_->CallLogindMethod("TerminateSession", g_variant_new("(s)", session_id));
+        else
+        {
+          // fallback to ConsoleKit
+          const char* cookie = g_getenv("XDG_SESSION_COOKIE");
+
+          if (cookie && cookie[0] != '\0')
+            impl_->CallConsoleKitMethod("CloseSession", g_variant_new("(s)", cookie));
+        }
       }
   });
 }
@@ -399,7 +424,11 @@ void GnomeManager::Reboot()
                             << ". Using fallback method";
 
         impl_->pending_action_ = shell::Action::NONE;
-        impl_->CallConsoleKitMethod("Restart");
+        /* ConsoleKit / logind fallback */
+        if (g_getenv("XDG_SESSION_ID") != NULL)
+          impl_->CallLogindMethod("Reboot", g_variant_new("(b)", false));
+        else
+          impl_->CallConsoleKitMethod("Restart");
       }
   });
 }
@@ -416,7 +445,11 @@ void GnomeManager::Shutdown()
                             << ". Using fallback method";
 
         impl_->pending_action_ = shell::Action::NONE;
-        impl_->CallConsoleKitMethod("Stop");
+        /* ConsoleKit / logind fallback */
+        if (g_getenv("XDG_SESSION_ID") != NULL)
+          impl_->CallLogindMethod("PowerOff", g_variant_new("(b)", false));
+        else
+          impl_->CallConsoleKitMethod("Stop");
       }
   });
 }
