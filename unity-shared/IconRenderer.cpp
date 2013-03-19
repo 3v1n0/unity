@@ -506,7 +506,6 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   force_filter,
                   tile_transform);
 
-    edge_tile_colorify = background_tile_colorify * backlight_intensity;
     edge_color = edge_color + ((background_tile_color - edge_color) * backlight_intensity);
   }
 
