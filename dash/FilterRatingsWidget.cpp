@@ -46,10 +46,9 @@ namespace dash
 NUX_IMPLEMENT_OBJECT_TYPE(FilterRatingsWidget);
 
 FilterRatingsWidget::FilterRatingsWidget(NUX_FILE_LINE_DECL)
-  : FilterExpanderLabel(_("Rating"), NUX_FILE_LINE_PARAM)
+: FilterExpanderLabel(_("Rating"), NUX_FILE_LINE_PARAM)
+, all_button_(nullptr)
 {
-  all_button_ = new FilterAllButton(NUX_TRACKER_LOCATION);
-
   dash::Style& style = dash::Style::Instance();
   const int top_padding    = style.GetSpaceBetweenFilterWidgets() - style.GetFilterHighlightPadding() - 1; // -1 (PNGs have an 1px top padding)
   const int bottom_padding = style.GetFilterHighlightPadding();
@@ -61,7 +60,6 @@ FilterRatingsWidget::FilterRatingsWidget(NUX_FILE_LINE_DECL)
 
   layout->AddView(ratings_);
 
-  SetRightHandView(all_button_);
   SetContents(layout);
 }
 
@@ -72,6 +70,17 @@ FilterRatingsWidget::~FilterRatingsWidget()
 void FilterRatingsWidget::SetFilter(Filter::Ptr const& filter)
 {
   filter_ = std::static_pointer_cast<RatingsFilter>(filter);
+
+  // all button
+  auto show_button_func = [this] (bool show_all_button)
+  {
+    all_button_ = show_all_button ? new FilterAllButton(NUX_TRACKER_LOCATION) : nullptr;
+    SetRightHandView(all_button_);
+    if (all_button_)
+      all_button_->SetFilter(filter_);
+  };
+  show_button_func(filter_->show_all_button);
+  filter_->show_all_button.changed.connect(show_button_func);
 
   all_button_->SetFilter(filter_);
   expanded = !filter_->collapsed();

@@ -28,9 +28,11 @@ namespace dash
 DECLARE_LOGGER(logger, "unity.dash.filter.checkoption");
 
 CheckOptionFilter::CheckOptionFilter(DeeModel* model, DeeModelIter* iter)
-  : Filter(model, iter)
+: Filter(model, iter)
+, show_all_button_(true)
 {
   options.SetGetterFunction(sigc::mem_fun(this, &CheckOptionFilter::get_options));
+  show_all_button.SetGetterFunction(sigc::mem_fun(this, &CheckOptionFilter::get_show_all_button));
   Refresh();
 }
 
@@ -41,7 +43,16 @@ void CheckOptionFilter::Clear()
 }
 
 void CheckOptionFilter::Update(Filter::Hints& hints)
-{
+{  
+  GVariant* show_all_button_variant = hints["show-all-button"];
+  if (show_all_button_variant)
+  {
+    bool tmp_show = show_all_button_;
+    g_variant_get(show_all_button_variant, "b", &show_all_button_);
+    if (tmp_show != show_all_button_)
+      show_all_button.EmitChanged(show_all_button_);
+  }
+
   GVariant* options_variant = hints["options"];
   GVariantIter* options_iter;
 
@@ -78,6 +89,11 @@ void CheckOptionFilter::OptionChanged(bool is_active, std::string const& id)
 CheckOptionFilter::CheckOptions const& CheckOptionFilter::get_options() const
 {
   return options_;
+}
+
+bool CheckOptionFilter::get_show_all_button() const
+{
+  return show_all_button_;
 }
 
 void CheckOptionFilter::UpdateState()
