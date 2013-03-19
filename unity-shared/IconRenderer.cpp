@@ -278,7 +278,7 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
   nux::Matrix4 ProjectionMatrix;
   nux::Matrix4 ViewProjectionMatrix;
 
-  _stored_projection_matrix = nux::GetWindowThread()->GetGraphicsEngine().GetOpenGLModelViewProjectionMatrix();
+  stored_projection_matrix_ = nux::GetWindowThread()->GetGraphicsEngine().GetOpenGLModelViewProjectionMatrix();
 
   GetInverseScreenPerspectiveMatrix(ViewMatrix, ProjectionMatrix, geo.width, geo.height, 0.1f, 1000.0f, DEGTORAD(90));
 
@@ -825,7 +825,7 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
     int VPMatrixLocation = textures_->shader_program_uv_persp_correction->GetUniformLocationARB("ViewProjectionMatrix");
     if (VPMatrixLocation != -1)
     {
-      textures_->shader_program_uv_persp_correction->SetUniformLocMatrix4fv((GLint)VPMatrixLocation, 1, false, (GLfloat*) & (_stored_projection_matrix.m));
+      textures_->shader_program_uv_persp_correction->SetUniformLocMatrix4fv((GLint)VPMatrixLocation, 1, false, (GLfloat*) & (stored_projection_matrix_.m));
     }
   }
 #ifndef USE_GLES

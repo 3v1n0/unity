@@ -89,7 +89,7 @@ private:
 
   struct TexturesPool;
   std::shared_ptr<TexturesPool> textures_;
-  nux::Matrix4 _stored_projection_matrix;
+  nux::Matrix4 stored_projection_matrix_;
 };
 
 }
