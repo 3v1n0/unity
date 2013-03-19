@@ -107,7 +107,7 @@ void Controller::Show(View::Mode mode, bool inhibitors)
   view_window_->ShowWindow(true);
   view_window_->PushToFront();
   view_window_->SetInputFocus();
-  nux::GetWindowCompositor().SetKeyFocusArea(view_.GetPointer());
+  nux::GetWindowCompositor().SetKeyFocusArea(view_->key_focus_area());
 
   if (fade_animator_.CurrentState() == na::Animation::State::Running)
   {
