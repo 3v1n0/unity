@@ -129,18 +129,18 @@ TEST_F(TestSessionView, FullModeButtons)
   ON_CALL(*manager, CanHibernate()).WillByDefault(testing::Return(true));
   view.mode.changed.emit(View::Mode::FULL);
 
-  EXPECT_EQ(view.GetButtonByLabel("Logout"), nullptr);
+  EXPECT_EQ(view.GetButtonByLabel("Log Out"), nullptr);
   EXPECT_NE(view.GetButtonByLabel("Lock"), nullptr);
   EXPECT_NE(view.GetButtonByLabel("Suspend"), nullptr);
   EXPECT_NE(view.GetButtonByLabel("Hibernate"), nullptr);
-  EXPECT_NE(view.GetButtonByLabel("Shutdown"), nullptr);
+  EXPECT_NE(view.GetButtonByLabel("Shut Down"), nullptr);
   EXPECT_NE(view.GetButtonByLabel("Restart"), nullptr);
 
   ON_CALL(*manager, CanShutdown()).WillByDefault(testing::Return(false));
   view.mode.changed.emit(View::Mode::FULL);
 
-  EXPECT_NE(view.GetButtonByLabel("Logout"), nullptr);
-  EXPECT_EQ(view.GetButtonByLabel("Shutdown"), nullptr);
+  EXPECT_NE(view.GetButtonByLabel("Log Out"), nullptr);
+  EXPECT_EQ(view.GetButtonByLabel("Shut Down"), nullptr);
   EXPECT_EQ(view.GetButtonByLabel("Restart"), nullptr);
 
   ON_CALL(*manager, CanSuspend()).WillByDefault(testing::Return(false));
@@ -160,7 +160,7 @@ TEST_F(TestSessionView, ShutdownModeButtons)
   view.mode = View::Mode::SHUTDOWN;
 
   EXPECT_EQ(view.GetButtons().size(), 2);
-  EXPECT_NE(view.GetButtonByLabel("Shutdown"), nullptr);
+  EXPECT_NE(view.GetButtonByLabel("Shut Down"), nullptr);
   EXPECT_NE(view.GetButtonByLabel("Restart"), nullptr);
 }
 
@@ -169,7 +169,7 @@ TEST_F(TestSessionView, LogoutModeButtons)
   view.mode = View::Mode::LOGOUT;
 
   EXPECT_EQ(view.GetButtons().size(), 2);
-  EXPECT_NE(view.GetButtonByLabel("Logout"), nullptr);
+  EXPECT_NE(view.GetButtonByLabel("Log Out"), nullptr);
   EXPECT_NE(view.GetButtonByLabel("Lock"), nullptr);
 }
 
@@ -227,7 +227,7 @@ TEST_F(TestSessionView, LogoutButtonActivateLogouts)
 {
   view.mode = View::Mode::LOGOUT;
   EXPECT_CALL(*manager, Logout());
-  auto button = view.GetButtonByLabel("Logout");
+  auto button = view.GetButtonByLabel("Log Out");
   ASSERT_NE(button, nullptr);
   button->activated.emit();
 }
@@ -260,7 +260,7 @@ TEST_F(TestSessionView, ShutdownButtonActivateShutsdown)
   view.mode = View::Mode::SHUTDOWN;
 
   EXPECT_CALL(*manager, Shutdown());
-  auto button = view.GetButtonByLabel("Shutdown");
+  auto button = view.GetButtonByLabel("Shut Down");
   ASSERT_NE(button, nullptr);
   button->activated.emit();
 }

@@ -177,7 +177,7 @@ void View::Populate()
     button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
     AddButton(button);
 
-    button = new Button(_("Logout"), "logout", NUX_TRACKER_LOCATION);
+    button = new Button(_("Log Out"), "logout", NUX_TRACKER_LOCATION);
     button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Logout));
     AddButton(button);
   }
@@ -206,7 +206,7 @@ void View::Populate()
 
     if (manager_->CanShutdown())
     {
-      auto* button = new Button(_("Shutdown"), "shutdown", NUX_TRACKER_LOCATION);
+      auto* button = new Button(_("Shut Down"), "shutdown", NUX_TRACKER_LOCATION);
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Shutdown));
       AddButton(button);
 
@@ -216,7 +216,7 @@ void View::Populate()
     }
     else if (mode() == Mode::FULL)
     {
-      auto* button = new Button(_("Logout"), "logout", NUX_TRACKER_LOCATION);
+      auto* button = new Button(_("Log Out"), "logout", NUX_TRACKER_LOCATION);
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Logout));
       AddButton(button);
     }
