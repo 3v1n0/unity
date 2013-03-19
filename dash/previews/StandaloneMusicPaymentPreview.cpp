@@ -14,7 +14,7 @@
  * version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
+ * Authored by: Manuel de la Pena <manuel.delapena@canonical.com>
  *
  */
 #include <gtk/gtk.h>

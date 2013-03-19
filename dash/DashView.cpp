@@ -213,7 +213,6 @@ void DashView::OnResultActivated(ResultView::ActivateType type, LocalResult cons
 
 void DashView::BuildPreview(Preview::Ptr model)
 {
-
   if (!preview_displaying_)
   {     
     StartPreviewAnimation();

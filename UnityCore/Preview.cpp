@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011-2012 Canonical Ltd
+ * Copyright (C) 2011-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,6 +16,7 @@
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  *              Michal Hruby <michal.hruby@canonical.com>
+ *              Manuel de la Pena <manuel.delapena@canonical.com>
  */
 
 #include <NuxCore/Logger.h>

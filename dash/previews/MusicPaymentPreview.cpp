@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright 2012 Canonical Ltd.
+ * Copyright 2012-2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -126,7 +126,7 @@ void MusicPaymentPreview::LoadActions()
         link->activate.connect(sigc::mem_fun(this,
                     &MusicPaymentPreview::OnActionLinkActivated));
 
-        sorted_buttons_.insert(std::make_pair(action->id, link));
+        buttons_map_.insert(std::make_pair(action->id, link));
       }
       else
       {
@@ -134,7 +134,7 @@ void MusicPaymentPreview::LoadActions()
         button->activate.connect(sigc::mem_fun(this,
                     &MusicPaymentPreview::OnActionActivated));
 
-        sorted_buttons_.insert(std::make_pair(action->id, button));
+        buttons_map_.insert(std::make_pair(action->id, button));
       }
       LOG_DEBUG(logger) << "added button for action with id '" << action->id << "'";
   }
@@ -346,14 +346,16 @@ nux::Layout* MusicPaymentPreview::GetFormActions()
   actions_layout->AddView(empty_.GetPointer(), 1,
                   nux::MINOR_POSITION_START);
 
-  actions_layout->AddView(
-          sorted_buttons_[MusicPaymentPreview::CHANGE_PAYMENT_ACTION].GetPointer(),
-          1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL,
-      100.0f, nux::NUX_LAYOUT_END);
-  actions_layout->AddView(
-           sorted_buttons_[MusicPaymentPreview::FORGOT_PASSWORD_ACTION].GetPointer(),
-          1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL,
-      100.0f, nux::NUX_LAYOUT_END);
+  if(buttons_map_[MusicPaymentPreview::CHANGE_PAYMENT_ACTION].GetPointer())
+    actions_layout->AddView(
+            buttons_map_[MusicPaymentPreview::CHANGE_PAYMENT_ACTION].GetPointer(),
+            1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL,
+            100.0f, nux::NUX_LAYOUT_END);
+  if(buttons_map_[MusicPaymentPreview::FORGOT_PASSWORD_ACTION].GetPointer())
+    actions_layout->AddView(
+            buttons_map_[MusicPaymentPreview::FORGOT_PASSWORD_ACTION].GetPointer(),
+            1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL,
+            100.0f, nux::NUX_LAYOUT_END);
 
   return actions_layout;
 }
@@ -373,10 +375,10 @@ nux::Layout* MusicPaymentPreview::GetFooter()
           nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
 
   buttons_data_layout->AddSpace(20, 1);
-  buttons_data_layout->AddView(sorted_buttons_[MusicPaymentPreview::CANCEL_PURCHASE_ACTION].GetPointer(),
+  buttons_data_layout->AddView(buttons_map_[MusicPaymentPreview::CANCEL_PURCHASE_ACTION].GetPointer(),
           1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
           nux::NUX_LAYOUT_END);
-  buttons_data_layout->AddView(sorted_buttons_[MusicPaymentPreview::PURCHASE_ALBUM_ACTION].GetPointer(),
+  buttons_data_layout->AddView(buttons_map_[MusicPaymentPreview::PURCHASE_ALBUM_ACTION].GetPointer(),
           1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
           nux::NUX_LAYOUT_END);
 
@@ -412,10 +414,10 @@ void MusicPaymentPreview::PreLayoutManagement()
 
   // set the tab ordering
   SetFirstInTabOrder(password_entry_->text_entry());
-  SetLastInTabOrder(sorted_buttons_[MusicPaymentPreview::CANCEL_PURCHASE_ACTION].GetPointer());
-  SetLastInTabOrder(sorted_buttons_[MusicPaymentPreview::PURCHASE_ALBUM_ACTION].GetPointer());
-  SetLastInTabOrder(sorted_buttons_[MusicPaymentPreview::CHANGE_PAYMENT_ACTION].GetPointer());
-  SetLastInTabOrder(sorted_buttons_[MusicPaymentPreview::FORGOT_PASSWORD_ACTION].GetPointer());
+  SetLastInTabOrder(buttons_map_[MusicPaymentPreview::CANCEL_PURCHASE_ACTION].GetPointer());
+  SetLastInTabOrder(buttons_map_[MusicPaymentPreview::PURCHASE_ALBUM_ACTION].GetPointer());
+  SetLastInTabOrder(buttons_map_[MusicPaymentPreview::CHANGE_PAYMENT_ACTION].GetPointer());
+  SetLastInTabOrder(buttons_map_[MusicPaymentPreview::FORGOT_PASSWORD_ACTION].GetPointer());
 
   Preview::PreLayoutManagement();
 }
