@@ -88,7 +88,7 @@ private:
   int spacing;
 
   struct TexturesPool;
-  static std::unique_ptr<TexturesPool> textures_;
+  std::shared_ptr<TexturesPool> textures_;
   nux::Matrix4 _stored_projection_matrix;
 };
 

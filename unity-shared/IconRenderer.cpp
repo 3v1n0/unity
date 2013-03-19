@@ -191,11 +191,13 @@ enum IconSize
 } // anonymous namespace
 } // local namespace
 
-std::unique_ptr<IconRenderer::TexturesPool> IconRenderer::textures_;
-
 struct IconRenderer::TexturesPool
 {
-  TexturesPool();
+  static std::shared_ptr<TexturesPool> Get()
+  {
+    static std::shared_ptr<TexturesPool> instance(new TexturesPool());
+    return instance;
+  }
 
   nux::ObjectPtr<nux::BaseTexture> RenderLabelTexture(char label, int icon_size, nux::Color const& bg_color);
 
@@ -233,6 +235,8 @@ struct IconRenderer::TexturesPool
   std::map<char, BaseTexturePtr> labels;
 
 private:
+  TexturesPool();
+
   inline void LoadTexture(BaseTexturePtr &texture_ptr, std::string const& filename)
   {
     texture_ptr.Adopt(nux::CreateTexture2DFromFile(filename.c_str(), -1, true));
@@ -252,11 +256,9 @@ IconRenderer::IconRenderer()
   : icon_size(0)
   , image_size(0)
   , spacing(0)
+  , textures_(TexturesPool::Get())
 {
   pip_style = OUTSIDE_TILE;
-
-  if (!textures_)
-    textures_.reset(new IconRenderer::TexturesPool());
 }
 
 IconRenderer::~IconRenderer()
@@ -1091,7 +1093,7 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
 
 void IconRenderer::DestroyShortcutTextures()
 {
-  textures_->labels.clear();
+  TexturesPool::Get()->labels.clear();
 }
 
 void IconRenderer::GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, nux::Matrix4& PerspectiveMatrix,
