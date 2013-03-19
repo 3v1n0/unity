@@ -32,6 +32,8 @@ class ApplicationStarter : boost::noncopyable
 public:
   typedef std::shared_ptr<ApplicationStarter> Ptr;
 
+  virtual ~ApplicationStarter() {}
+
   virtual bool Launch(std::string const& application_name, Time timestamp) = 0;
 };
 
