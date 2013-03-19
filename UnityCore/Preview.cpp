@@ -21,8 +21,8 @@
 #include <NuxCore/Logger.h>
 #include <unity-protocol.h>
 
-#include "Lens.h"
 #include "Preview.h"
+#include "Scope.h"
 
 #include "ApplicationPreview.h"
 #include "GenericPreview.h"
@@ -30,7 +30,6 @@
 #include "MoviePreview.h"
 #include "PaymentPreview.h"
 #include "SocialPreview.h"
-#include "SeriesPreview.h"
 
 
 namespace unity
@@ -87,7 +86,7 @@ Preview::Ptr Preview::PreviewForProtocolObject(glib::Object<GObject> const& prot
   return nullptr;
 }
 
-Preview::Ptr Preview::PreviewForVariant(glib::Variant &properties)
+Preview::Ptr Preview::PreviewForVariant(glib::Variant const& properties)
 {
   glib::Object<UnityProtocolPreview> preview(unity_protocol_preview_parse(properties));
   if (!preview)
@@ -100,23 +99,11 @@ Preview::Ptr Preview::PreviewForVariant(glib::Variant &properties)
   return PreviewForProtocolObject(proto_obj);
 }
 
-unity::glib::Object<GIcon> Preview::IconForString(std::string const& icon_hint)
-{
-  glib::Error error;
-  glib::Object<GIcon> icon(g_icon_new_for_string(icon_hint.c_str(), &error));
-
-  if (error)
-  {
-    LOG_WARN(logger) << "Unable to instantiate icon: " << icon_hint;
-  }
-
-  return icon;
-}
-
 class Preview::Impl
 {
 public:
   Impl(Preview* owner, glib::Object<GObject> const& proto_obj);
+  ~Impl();
 
   void SetupGetters();
   std::string get_renderer_name() const { return renderer_name_; };
@@ -127,12 +114,11 @@ public:
   std::string get_image_source_uri() const { return image_source_uri_; };
   ActionPtrList get_actions() const { return actions_list_; };
   InfoHintPtrList get_info_hints() const { return info_hint_list_; };
-  void EmitClosed() const;
 
-  Lens* get_parent_lens() const { return parent_lens_; };
-  bool set_parent_lens(Lens* lens)
+  Scope* get_parent_scope() const { return parent_scope_; };
+  bool set_parent_scope(Scope* scope)
   {
-    parent_lens_ = lens;
+    parent_scope_ = scope;
     return false; // TODO: do we need the notifications here?
   };
 
@@ -147,12 +133,15 @@ public:
   std::string image_source_uri_;
   ActionPtrList actions_list_;
   InfoHintPtrList info_hint_list_;
-  Lens* parent_lens_;
+
+  Scope* parent_scope_;
+  glib::Object<GCancellable> cancel_scope_;
 };
 
 Preview::Impl::Impl(Preview* owner, glib::Object<GObject> const& proto_obj)
   : owner_(owner)
-  , parent_lens_(nullptr)
+  , parent_scope_(nullptr)
+  , cancel_scope_(g_cancellable_new())
 {
   if (!proto_obj)
   {
@@ -206,6 +195,11 @@ Preview::Impl::Impl(Preview* owner, glib::Object<GObject> const& proto_obj)
   SetupGetters();
 }
 
+Preview::Impl::~Impl()
+{
+  g_cancellable_cancel(cancel_scope_);
+}
+
 void Preview::Impl::SetupGetters()
 {
   owner_->renderer_name.SetGetterFunction(
@@ -221,21 +215,10 @@ void Preview::Impl::SetupGetters()
   owner_->image_source_uri.SetGetterFunction(
     sigc::mem_fun(this, &Preview::Impl::get_image_source_uri));
 
-  owner_->parent_lens.SetGetterFunction(
-      sigc::mem_fun(this, &Preview::Impl::get_parent_lens));
-  owner_->parent_lens.SetSetterFunction(
-      sigc::mem_fun(this, &Preview::Impl::set_parent_lens));
-}
-
-void Preview::Impl::EmitClosed() const
-{
-  UnityProtocolPreview *preview = UNITY_PROTOCOL_PREVIEW(raw_preview_.RawPtr());
-
-  unity_protocol_preview_begin_updates(preview);
-  unity_protocol_preview_preview_closed(raw_preview_);
-  glib::Variant properties(unity_protocol_preview_end_updates(preview),
-                           glib::StealRef());
-  owner_->Update(properties);
+  owner_->parent_scope.SetGetterFunction(
+      sigc::mem_fun(this, &Preview::Impl::get_parent_scope));
+  owner_->parent_scope.SetSetterFunction(
+      sigc::mem_fun(this, &Preview::Impl::set_parent_scope));
 }
 
 Preview::Preview(glib::Object<GObject> const& proto_obj)
@@ -257,34 +240,24 @@ Preview::InfoHintPtrList Preview::GetInfoHints() const
   return pimpl->get_info_hints();
 }
 
-void Preview::Update(glib::Variant const& properties,
-                     glib::DBusProxy::ReplyCallback reply_callback) const
+void Preview::PerformAction(std::string const& id, glib::HintsMap const& hints) const
 {
-  if (pimpl->parent_lens_)
+  if (pimpl->parent_scope_)
   {
-    pimpl->parent_lens_->SignalPreview(preview_uri, properties, reply_callback);
+    auto reply_func = [id] (LocalResult const&, ScopeHandledType, glib::Error const& error) 
+    {
+      if (error)
+      {
+        LOG_WARN(logger) << "Preview action '" << id << "' failed => '" << error;
+      }
+    };
+
+    pimpl->parent_scope_->ActivatePreviewAction(id, preview_result, hints, reply_func);
   }
   else
   {
-    LOG_WARN(logger) << "Unable to update Preview, parent_lens wasn't set!";
+    LOG_WARN(logger) << "Unable to perform action '" << id << "', parent_scope_ wasn't set!";
   }
-}
-
-void Preview::PerformAction(std::string const& id, Lens::Hints const& hints) const
-{
-  if (pimpl->parent_lens_)
-  {
-    pimpl->parent_lens_->ActivatePreviewAction(id, preview_uri, hints);
-  }
-  else
-  {
-    LOG_WARN(logger) << "Unable to perform action '" << id << "', parent_lens wasn't set!";
-  }
-}
-
-void Preview::EmitClosed() const
-{
-  pimpl->EmitClosed();
 }
 
 } // namespace dash

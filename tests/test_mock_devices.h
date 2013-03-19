@@ -85,7 +85,7 @@ public:
   MOCK_CONST_METHOD0(IsMounted, bool(void));
 
   MOCK_METHOD0(EjectAndShowNotification, void(void));
-  MOCK_METHOD0(MountAndOpenInFileManager, void(void));
+  MOCK_METHOD1(MountAndOpenInFileManager, void(unsigned long long));
   MOCK_METHOD0(StopDrive, void(void));
   MOCK_METHOD0(Unmount, void(void));
 };

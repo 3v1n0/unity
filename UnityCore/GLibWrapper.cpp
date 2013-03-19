@@ -69,7 +69,6 @@ std::ostream& operator<<(std::ostream& o, Error const& e)
   return o;
 }
 
-
 String::String()
   : string_(0)
 {}
@@ -116,10 +115,7 @@ String::operator bool() const
 
 std::string String::Str() const
 {
-  if (string_)
-    return std::string(string_);
-  else
-    return std::string("");
+  return glib::gchar_to_string(string_);
 }
 
 std::ostream& operator<<(std::ostream& o, String const& s)

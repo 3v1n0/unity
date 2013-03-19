@@ -81,12 +81,11 @@ bool LensDirectoryReader::LensFileData::IsValid(GKeyFile* file, glib::Error& err
  * /usr/share/unity/lenses
  *                        /applications
  *                                     /applications.lens
- *                                     /applications.scope
- *                                     /chromium-webapps.scope
+ *                                     /chromium-webapps.lens
  *                        /files
  *                              /files.lens
- *                              /zeitgiest.scope
- *                              /ubuntuone.scope
+ *                              /zeitgiest.lens
+ *                              /ubuntuone.lens
  *
  * Etc, etc. We therefore need to enumerate these directories and find our
  * .lens files in them.
@@ -401,7 +400,7 @@ void FilesystemLenses::Impl::OnLoadingFinished()
   }
 
   for (Lens::Ptr& lens: lenses_)
-    owner_->lens_added.emit(lens);
+    owner_->lenses_added.emit(lens);
 
   owner_->lenses_loaded.emit();
 }

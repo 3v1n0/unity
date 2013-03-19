@@ -53,8 +53,7 @@ protected:
 
   virtual void SetupViews();
 
-  void OnPlayTrack(std::string const& uri);
-  void OnPauseTrack(std::string const& uri);
+  virtual void OnNavigateOut();
 
 protected:
   nux::ObjectPtr<Tracks> tracks_;

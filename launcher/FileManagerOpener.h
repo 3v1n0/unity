@@ -20,7 +20,6 @@
 #ifndef UNITYSHELL_FILEMANAGER_OPENER_H
 #define UNITYSHELL_FILEMANAGER_OPENER_H
 
-#include <boost/noncopyable.hpp>
 #include <memory>
 #include <string>
 
@@ -29,14 +28,18 @@ namespace unity
 namespace launcher
 {
 
-class FileManagerOpener : private boost::noncopyable
+class FileManagerOpener
 {
 public:
   typedef std::shared_ptr<FileManagerOpener> Ptr;
 
+  FileManagerOpener() = default;
   virtual ~FileManagerOpener() {}
+  virtual void Open(std::string const& uri, unsigned long long timestamp = 0) = 0;
 
-  virtual void Open(std::string const& uri) = 0;
+private:
+  FileManagerOpener(FileManagerOpener const&) = delete;
+  FileManagerOpener& operator=(FileManagerOpener const&) = delete;
 };
 
 }

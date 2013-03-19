@@ -2474,7 +2474,7 @@ int Style::GetFilterButtonHeight() const
   return 30;
 }
 
-int Style::GetSpaceBetweenLensAndFilters() const
+int Style::GetSpaceBetweenScopeAndFilters() const
 {
   return 10;
 }

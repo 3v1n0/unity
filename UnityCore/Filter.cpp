@@ -25,6 +25,7 @@
 #include "MultiRangeFilter.h"
 #include "RadioOptionFilter.h"
 #include "RatingsFilter.h"
+#include "GLibWrapper.h"
 
 namespace unity
 {
@@ -41,7 +42,7 @@ Filter::Filter(DeeModel* model, DeeModelIter* iter)
 {
   typedef Signal<void, DeeModel*, DeeModelIter*> RowSignalType;
 
-  // If the model is destroyed (say if the lens restarts) then we should handle
+  // If the model is destroyed (say if the scope restarts) then we should handle
   // that gracefully
   g_object_weak_ref(reinterpret_cast<GObject*>(model_),
                     (GWeakNotify)Filter::OnModelDestroyed, this);
@@ -152,6 +153,26 @@ void Filter::HintsToMap(Hints& map)
     map[key] = value;
   }
   g_variant_unref(row_value);
+}
+
+glib::Variant Filter::VariantValue() const
+{
+  if (!IsValid())
+    return glib::Variant();
+
+  GVariantBuilder hints;
+  g_variant_builder_init  (&hints, G_VARIANT_TYPE("(ssssa{sv}bbb)"));
+
+  g_variant_builder_add(&hints, "s", id().c_str(), NULL);
+  g_variant_builder_add(&hints, "s", name().c_str(), NULL);
+  g_variant_builder_add(&hints, "s", icon_hint().c_str(), NULL);
+  g_variant_builder_add(&hints, "s", renderer_name().c_str(), NULL);
+  g_variant_builder_add(&hints, "@a{sv}", dee_model_get_value(model_, iter_, FilterColumn::RENDERER_STATE), NULL);
+  g_variant_builder_add(&hints, "b", visible(), NULL);
+  g_variant_builder_add(&hints, "b", collapsed(), NULL);
+  g_variant_builder_add(&hints, "b", filtering(), NULL);
+
+  return glib::Variant(g_variant_builder_end(&hints));
 }
 
 std::string Filter::get_id() const

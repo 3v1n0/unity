@@ -16,8 +16,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITY_LENS_BAR_ICON_H_
-#define UNITY_LENS_BAR_ICON_H_
+#ifndef UNITY_SCOPE_BAR_ICON_H_
+#define UNITY_SCOPE_BAR_ICON_H_
 
 #include <string>
 
@@ -33,12 +33,12 @@ namespace unity
 namespace dash
 {
 
-class LensBarIcon : public IconTexture
+class ScopeBarIcon : public IconTexture
 {
-  NUX_DECLARE_OBJECT_TYPE(LensBarIcon, IconTexture);
+  NUX_DECLARE_OBJECT_TYPE(ScopeBarIcon, IconTexture);
 public:
-  LensBarIcon(std::string id, std::string icon_hint);
-  ~LensBarIcon();
+  ScopeBarIcon(std::string id, std::string icon_hint);
+  ~ScopeBarIcon();
 
   nux::Property<std::string> id;
   nux::Property<bool> active;
@@ -60,4 +60,4 @@ private:
 
 }
 }
-#endif
+#endif // UNITY_SCOPE_BAR_ICON_H_

@@ -25,6 +25,7 @@ namespace dash
 {
 
 Results::Results()
+: Model<Result>::Model(ModelType::REMOTE_SHARED)
 {
   row_added.connect(sigc::mem_fun(this, &Results::OnRowAdded));
   row_changed.connect(sigc::mem_fun(this, &Results::OnRowChanged));

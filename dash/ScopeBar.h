@@ -16,8 +16,8 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#ifndef UNITYSHELL_LENS_BAR_H
-#define UNITYSHELL_LENS_BAR_H
+#ifndef UNITYSHELL_SCOPE_BAR_H
+#define UNITYSHELL_SCOPE_BAR_H
 
 #include <memory>
 #include <string>
@@ -27,12 +27,12 @@
 #include <Nux/Nux.h>
 #include <Nux/PaintLayer.h>
 #include <Nux/View.h>
-#include <UnityCore/Lens.h>
+#include <UnityCore/Scope.h>
 
 #include "unity-shared/IconTexture.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/UBusWrapper.h"
-#include "LensBarIcon.h"
+#include "ScopeBarIcon.h"
 
 namespace nux
 {
@@ -49,25 +49,24 @@ class StaticCairoText;
 namespace dash
 {
 
-class LensBar : public nux::View, public unity::debug::Introspectable
+class ScopeBar : public nux::View, public unity::debug::Introspectable
 {
-  NUX_DECLARE_OBJECT_TYPE(LensBar, nux::View);
-  typedef std::vector<LensBarIcon*> LensIcons;
+  NUX_DECLARE_OBJECT_TYPE(ScopeBar, nux::View);
+  typedef std::vector<ScopeBarIcon*> ScopeIcons;
 
 public:
-  LensBar();
+  ScopeBar();
 
-  void AddLens(Lens::Ptr& lens);
+  void AddScope(Scope::Ptr const& scope);
   void Activate(std::string id);
   void ActivateNext();
   void ActivatePrevious();
 
-  sigc::signal<void, std::string const&> lens_activated;
+  sigc::signal<void, std::string const&> scope_activated;
 
 private:
   void SetupBackground();
   void SetupLayout();
-  void SetupHomeLens();
   void DoOpenLegalise();
 
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
@@ -75,16 +74,16 @@ private:
 
   nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
 
-  void SetActive(LensBarIcon* icon);
+  void SetActive(ScopeBarIcon* icon);
 
   bool AcceptKeyNavFocus();
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
-  std::string GetActiveLensId() const;
+  std::string GetActiveScopeId() const;
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
 
-  LensIcons icons_;
+  ScopeIcons icons_;
 
   UBusManager ubus_;
 
@@ -97,9 +96,11 @@ private:
 
   bool info_previously_shown_;
   std::string legal_seen_file_path_;
+
+  friend class TestScopeBar;
 };
 
 } // namespace dash
 } // namespace unity
 
-#endif // UNITYSHELL_LENS_BAR_H
+#endif // UNITYSHELL_SCOPE_BAR_H

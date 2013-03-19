@@ -22,19 +22,19 @@
 
 #include "MusicPreview.h"
 #include "Tracks.h"
+#include "Scope.h"
+#include "PreviewPlayer.h"
 
 namespace unity
 {
 namespace dash
 {
+DECLARE_LOGGER(logger, "unity.dash.musicpreview");
 
 class MusicPreview::Impl
 {
 public:
   Impl(MusicPreview* owner, glib::Object<GObject> const& proto_obj);
-
-  void PlayUri(std::string const& uri) const;
-  void PauseUri(std::string const& uri) const;
 
   MusicPreview* owner_;
 
@@ -62,28 +62,6 @@ MusicPreview::Impl::Impl(MusicPreview* owner,
   }
 }
 
-void MusicPreview::Impl::PlayUri(std::string const& uri) const
-{
-  UnityProtocolPreview *preview = UNITY_PROTOCOL_PREVIEW(raw_preview_.RawPtr());
-
-  unity_protocol_preview_begin_updates(preview);
-  unity_protocol_music_preview_play_uri(raw_preview_, uri.c_str());
-  glib::Variant properties(unity_protocol_preview_end_updates(preview),
-                           glib::StealRef());
-  owner_->Update(properties);
-}
-
-void MusicPreview::Impl::PauseUri(std::string const& uri) const
-{
-  UnityProtocolPreview *preview = UNITY_PROTOCOL_PREVIEW(raw_preview_.RawPtr());
-
-  unity_protocol_preview_begin_updates(preview);
-  unity_protocol_music_preview_pause_uri(raw_preview_, uri.c_str());
-  glib::Variant properties(unity_protocol_preview_end_updates(preview),
-                           glib::StealRef());
-  owner_->Update(properties);
-}
-
 MusicPreview::MusicPreview(unity::glib::Object<GObject> const& proto_obj)
   : Preview(proto_obj)
   , pimpl(new Impl(this, proto_obj))
@@ -97,16 +75,6 @@ MusicPreview::~MusicPreview()
 Tracks::Ptr MusicPreview::GetTracksModel() const
 {
   return pimpl->tracks_model;
-}
-
-void MusicPreview::PlayUri(std::string const& uri) const
-{
-  pimpl->PlayUri(uri);
-}
-
-void MusicPreview::PauseUri(std::string const& uri) const
-{
-  pimpl->PauseUri(uri);
 }
 
 }
