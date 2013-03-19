@@ -211,6 +211,15 @@ struct TestGnomeSessionManager : testing::Test
     Utils::WaitUntilMSec([] { return shell_proxy_->IsConnected();});
     ASSERT_TRUE(shell_proxy_->IsConnected());
     EnableInteractiveShutdown(true);
+
+    // reset default logind methods, to avoid tests clobbering each other
+    logind_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
+      if (method == "CanSuspend")
+        return g_variant_new("(s)", can_suspend_ ? "yes" : "no");
+      else if (method == "CanHibernate")
+        return g_variant_new("(s)", can_hibernate_ ? "yes" : "no");
+      return nullptr;
+    });
   }
 
   void TearDown()
@@ -324,25 +333,25 @@ TEST_F(TestGnomeSessionManager, CanShutdown)
 
 TEST_F(TestGnomeSessionManager, CanHibernateUPower)
 {
-  g_unsetenv("XDG_SESSION_ID");
+  // disable logind
+  logind_->GetObjects().front()->SetMethodsCallsHandler(nullptr);
   EXPECT_EQ(manager->CanHibernate(), can_hibernate_);
 }
 
 TEST_F(TestGnomeSessionManager, CanHibernateLogind)
 {
-  g_setenv("XDG_SESSION_ID", "logind-id0", TRUE);
   EXPECT_EQ(manager->CanHibernate(), can_hibernate_);
 }
 
 TEST_F(TestGnomeSessionManager, CanSuspendUPower)
 {
-  g_unsetenv("XDG_SESSION_ID");
+  // disable logind
+  logind_->GetObjects().front()->SetMethodsCallsHandler(nullptr);
   EXPECT_EQ(manager->CanSuspend(), can_suspend_);
 }
 
 TEST_F(TestGnomeSessionManager, CanSuspendLogind)
 {
-  g_setenv("XDG_SESSION_ID", "logind-id0", TRUE);
   EXPECT_EQ(manager->CanSuspend(), can_suspend_);
 }
 
@@ -481,8 +490,6 @@ TEST_F(TestGnomeSessionManager, RebootFallbackLogind)
 {
   // This makes the standard call to return an error.
   session_manager_->GetObjects().front()->SetMethodsCallsHandler(nullptr);
-  g_setenv("XDG_SESSION_ID", "logind-id0", TRUE);
-  g_unsetenv("XDG_SESSION_COOKIE");
 
   bool reboot_called = false;
 
@@ -503,8 +510,8 @@ TEST_F(TestGnomeSessionManager, RebootFallbackConsoleKit)
 {
   // This makes the standard call to return an error.
   session_manager_->GetObjects().front()->SetMethodsCallsHandler(nullptr);
-  g_setenv("XDG_SESSION_COOKIE", "ck-session-cookie", TRUE);
-  g_unsetenv("XDG_SESSION_ID");
+  // disable logind
+  logind_->GetObjects().front()->SetMethodsCallsHandler(nullptr);
 
   bool reboot_called = false;
 
@@ -542,8 +549,6 @@ TEST_F(TestGnomeSessionManager, ShutdownFallbackLogind)
 {
   // This makes the standard call to return an error.
   session_manager_->GetObjects().front()->SetMethodsCallsHandler(nullptr);
-  g_setenv("XDG_SESSION_ID", "logind-id0", TRUE);
-  g_unsetenv("XDG_SESSION_COOKIE");
 
   bool shutdown_called = false;
 
@@ -564,8 +569,8 @@ TEST_F(TestGnomeSessionManager, ShutdownFallbackConsoleKit)
 {
   // This makes the standard call to return an error.
   session_manager_->GetObjects().front()->SetMethodsCallsHandler(nullptr);
-  g_setenv("XDG_SESSION_COOKIE", "ck-session-cookie", TRUE);
-  g_unsetenv("XDG_SESSION_ID");
+  // disable logind
+  logind_->GetObjects().front()->SetMethodsCallsHandler(nullptr);
 
   bool shutdown_called = false;
 
@@ -585,8 +590,9 @@ TEST_F(TestGnomeSessionManager, ShutdownFallbackConsoleKit)
 TEST_F(TestGnomeSessionManager, SuspendUPower)
 {
   bool suspend_called = false;
-  g_setenv("XDG_SESSION_COOKIE", "ck-session-cookie", TRUE);
-  g_unsetenv("XDG_SESSION_ID");
+
+  // disable logind
+  logind_->GetObjects().front()->SetMethodsCallsHandler(nullptr);
 
   upower_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
     if (method == "Suspend")
@@ -604,8 +610,6 @@ TEST_F(TestGnomeSessionManager, SuspendUPower)
 TEST_F(TestGnomeSessionManager, SuspendLogind)
 {
   bool suspend_called = false;
-  g_setenv("XDG_SESSION_ID", "logind-id0", TRUE);
-  g_unsetenv("XDG_SESSION_COOKIE");
 
   logind_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
     if (method == "Suspend")
@@ -623,8 +627,9 @@ TEST_F(TestGnomeSessionManager, SuspendLogind)
 TEST_F(TestGnomeSessionManager, HibernateUPower)
 {
   bool hibernate_called = false;
-  g_setenv("XDG_SESSION_COOKIE", "ck-session-cookie", TRUE);
-  g_unsetenv("XDG_SESSION_ID");
+
+  // disable logind
+  logind_->GetObjects().front()->SetMethodsCallsHandler(nullptr);
 
   upower_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
     if (method == "Hibernate")
@@ -642,8 +647,6 @@ TEST_F(TestGnomeSessionManager, HibernateUPower)
 TEST_F(TestGnomeSessionManager, HibernateLogind)
 {
   bool hibernate_called = false;
-  g_setenv("XDG_SESSION_ID", "logind-id0", TRUE);
-  g_unsetenv("XDG_SESSION_COOKIE");
 
   logind_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
     if (method == "Hibernate")
