@@ -43,19 +43,16 @@ class View : public ui::UnityWindowView
 public:
   typedef nux::ObjectPtr<View> Ptr;
 
-  // Ctor and dtor
+  // Ctor
   View();
-  ~View();
 
   // Public methods
-  bool GetBaseGeometry(nux::Geometry&);
-  void SetAdjustment(int x, int y);
   void SetModel(Model::Ptr model);
   Model::Ptr GetModel();
 
 protected:
   // Protected methods
-  void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry clip);
+  void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip);
   nux::Geometry GetBackgroundGeometry();
 
   // Introspectable methods
@@ -63,7 +60,7 @@ protected:
 
 private:
   // Private methods
-  nux::LinearLayout* CreateSectionLayout(const char* section_name);
+  nux::LinearLayout* CreateSectionLayout(std::string const& section_name);
   nux::View* CreateShortKeyEntryView(AbstractHint::Ptr const& hint);
   nux::LinearLayout* CreateIntermediateLayout();
 
@@ -71,13 +68,9 @@ private:
 
   // Private members
   Model::Ptr model_;
-
-  nux::VLayout* layout_;
   nux::HLayout* columns_layout_;
-  std::vector<nux::VLayout*> columns_;
 
-  int x_adjustment_;
-  int y_adjustment_;
+  friend class TestShortcutView;
 };
 
 } // namespace shortcut

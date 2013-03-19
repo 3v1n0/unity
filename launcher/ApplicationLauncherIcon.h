@@ -18,13 +18,12 @@
  *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
-#ifndef BAMFLAUNCHERICON_H
-#define BAMFLAUNCHERICON_H
+#ifndef APPLICATIONLAUNCHERICON_H
+#define APPLICATIONLAUNCHERICON_H
 
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
 
-#include <libbamf/libbamf.h>
 #include <libindicator/indicator-desktop-shortcuts.h>
 
 #include "SimpleLauncherIcon.h"
@@ -40,7 +39,7 @@ class ApplicationLauncherIcon : public SimpleLauncherIcon
 {
   NUX_DECLARE_OBJECT_TYPE(ApplicationLauncherIcon, SimpleLauncherIcon);
 public:
-  ApplicationLauncherIcon(BamfApplication* app);
+  ApplicationLauncherIcon(ApplicationPtr const& app);
   virtual ~ApplicationLauncherIcon();
 
   virtual void ActivateLauncherIcon(ActionArg arg);
@@ -52,7 +51,11 @@ public:
   bool IsRunning() const;
   bool IsUrgent() const;
 
+  virtual bool GetQuirk(Quirk quirk) const;
+
   virtual void Quit();
+  virtual void AboutToRemove();
+
   virtual void Stick(bool save = true);
   virtual void UnStick();
 
@@ -61,10 +64,11 @@ public:
 
   virtual nux::Color BackgroundColor() const;
 
-  std::vector<Window> Windows();
+  WindowList Windows();
   std::vector<Window> WindowsOnViewport();
   std::vector<Window> WindowsForMonitor(int monitor);
-  std::string NameForWindow(Window window);
+
+  void PerformScroll(ScrollDirection direction, Time timestamp) override;
 
 protected:
   void Remove();
@@ -75,7 +79,7 @@ protected:
   void OnDndEnter();
   void OnDndHovered();
   void OnDndLeave();
-  void OpenInstanceLauncherIcon(ActionArg arg);
+  void OpenInstanceLauncherIcon(Time timestamp) override;
   void ToggleSticky();
 
   bool OnShouldHighlightOnDrag(DndData const& dnd_data);
@@ -85,10 +89,15 @@ protected:
   std::set<std::string> ValidateUrisForLaunch(DndData const& dnd_data);
 
   std::string GetRemoteUri();
-  std::string BamfName() const;
 
   bool HandlesSpread() { return true; }
   std::string GetName() const;
+
+protected:
+  void UpdateDesktopFile();
+  void UpdateRemoteUri();
+  std::string _desktop_file;
+  ApplicationPtr app_;
 
 private:
   typedef unsigned long int WindowFilterMask;
@@ -101,33 +110,34 @@ private:
   };
 
   void EnsureWindowState();
+  void EnsureMenuItemsWindowsReady();
   void EnsureMenuItemsReady();
   void UpdateBackgroundColor();
-  void UpdateDesktopFile();
   void UpdateMenus();
   void UpdateDesktopQuickList();
 
-  void OpenInstanceWithUris(std::set<std::string> uris);
+  void OpenInstanceWithUris(std::set<std::string> const& uris, Time timestamp);
   void Focus(ActionArg arg);
-  std::vector<Window> GetFocusableWindows(ActionArg arg, bool &any_visible, bool &any_urgent);
   bool Spread(bool current_desktop, int state, bool force);
 
   void OnWindowMinimized(guint32 xid);
   void OnWindowMoved(guint32 xid);
 
-  bool OwnsWindow(Window w) const;
-
-  std::vector<Window> GetWindows(WindowFilterMask filter = 0, int monitor = -1);
+  WindowList GetWindows(WindowFilterMask filter = 0, int monitor = -1);
   const std::set<std::string> GetSupportedTypes();
   std::string GetDesktopID();
-
-  glib::Object<BamfApplication> _bamf_app;
+  WindowList GetWindowsOnCurrentDesktopInStackingOrder();
 
   std::string _remote_uri;
-  std::string _desktop_file;
+  Time _startup_notification_timestamp;
+  Time _last_scroll_timestamp;
+  ScrollDirection _last_scroll_direction;
+  unsigned int _progressive_scroll;
+  std::set<std::string> _supported_types;
   std::map<std::string, glib::Object<DbusmenuClient>> _menu_clients;
   std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items;
   std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items_extra;
+  std::vector<glib::Object<DbusmenuMenuitem>> _menu_items_windows;
   glib::Object<IndicatorDesktopShortcuts> _desktop_shortcuts;
   glib::Object<DbusmenuMenuitem> _menu_desktop_shortcuts;
   glib::Object<GFileMonitor> _desktop_file_monitor;

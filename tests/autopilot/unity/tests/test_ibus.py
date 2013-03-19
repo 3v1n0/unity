@@ -1,6 +1,6 @@
 # -*- Mode: Python; coding: utf-8; indent-tabs-mode: nil; tab-width: 4 -*-
 # Copyright 2012 Canonical
-# Author: Thomi Richards, Martin Mrazik
+# Authors: Thomi Richards, Martin Mrazik, Łukasz 'sil2100' Zemczak
 #
 # This program is free software: you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 3, as published
@@ -16,14 +16,91 @@ from autopilot.emulators.ibus import (
     get_available_input_engines,
     get_gconf_option,
     set_gconf_option,
+    get_ibus_bus,
     )
 from autopilot.matchers import Eventually
 from autopilot.testcase import multiply_scenarios
 from testtools.matchers import Equals, NotEquals
-from unity.emulators.dash import Dash
-from unity.emulators.hud import Hud
 
 from unity.tests import UnityTestCase
+
+from gi.repository import GLib
+from gi.repository import IBus
+import time
+import dbus
+import threading
+
+
+# See lp:ibus-query
+class IBusQuery:
+    """A simple class allowing string queries to the IBus engine."""
+
+    def __init__(self):
+        self._bus = IBus.Bus()
+        self._dbusconn = dbus.connection.Connection(IBus.get_address())
+
+        # XXX: the new IBus bindings do not export create_input_context for
+        #  introspection. This is troublesome - so, to workaround this problem
+        #  we're directly fetching a new input context manually
+        ibus_obj = self._dbusconn.get_object(IBus.SERVICE_IBUS, IBus.PATH_IBUS)
+        self._test = dbus.Interface(ibus_obj, dbus_interface="org.freedesktop.IBus")
+        path = self._test.CreateInputContext("IBusQuery")
+        self._context = IBus.InputContext.new(path, self._bus.get_connection(), None)
+
+        self._glibloop = GLib.MainLoop()
+
+        self._context.connect("commit-text", self.__commit_text_cb)
+        self._context.connect("update-preedit-text", self.__update_preedit_cb)
+        self._context.connect("disabled", self.__disabled_cb)
+
+        self._context.set_capabilities (9)
+
+    def __commit_text_cb(self, context, text):
+        self.result += text.text
+        self._preedit = ''
+
+    def __update_preedit_cb(self, context, text, cursor_pos, visible):
+        if visible:
+            self._preedit = text.text
+
+    def __disabled_cb(self, a):
+        self.result += self._preedit
+        self._glibloop.quit()
+
+    def __abort(self):
+        self._abort = True
+
+    def poll(self, engine, ibus_input):
+        if len(ibus_input) <= 0:
+            return None
+
+        self.result = ''
+        self._preedit = ''
+        self._context.focus_in()
+        self._context.set_engine(engine)
+
+        # Timeout in case of the engine not being installed
+        self._abort = False
+        timeout = threading.Timer(4.0, self.__abort)
+        timeout.start()
+        while self._context.get_engine() is None:
+            if self._abort is True:
+                print "Error! Could not set the engine correctly."
+                return None
+            continue
+        timeout.cancel()
+
+        for c in ibus_input:
+            self._context.process_key_event(ord(c), 0, 0)
+
+        self._context.set_engine('')
+        self._context.focus_out()
+
+        GLib.timeout_add_seconds(5, lambda *args: self._glibloop.quit())
+        self._glibloop.run()
+
+        return unicode(self.result, "UTF-8")
+
 
 
 class IBusTests(UnityTestCase):
@@ -32,6 +109,7 @@ class IBusTests(UnityTestCase):
     def setUp(self):
         super(IBusTests, self).setUp()
         self.set_correct_ibus_trigger_keys()
+        self._ibus_query = None
 
     def set_correct_ibus_trigger_keys(self):
         """Set the correct keys to trigger IBus.
@@ -92,22 +170,51 @@ class IBusTests(UnityTestCase):
 class IBusWidgetScenariodTests(IBusTests):
     """A class that includes scenarios for the hud and dash widgets."""
 
+    # Use lambdas here so we don't require DBus service at module import time.
     scenarios = [
-        ('dash', {'widget': Dash()}),
-        ('hud', {'widget': Hud()})
+        ('dash', {'widget': 'dash'}),
+        ('hud', {'widget': 'hud'})
     ]
+
+    def try_ibus_query(self):
+        """This helper method tries to query ibus, and if it has connection problems,
+        it restarts the ibus connection.
+        It is to be used in a loop until it returns True, which means we probably
+        got a proper result - stored in self.result
+
+        """
+        self.result = None
+        try:
+            self._ibus_query = IBusQuery()
+        except:
+            # Here is a tricky situation. Probably for some reason the ibus connection
+            # got busted. In this case, restarting the connection from IBusQuery is not
+            # enough. We have to restart the global ibus connection to be sure
+            self._ibus_query = None
+            get_ibus_bus()
+            return False
+        self.result = self._ibus_query.poll(self.engine_name, self.input)
+        return self.result is not None
+
 
     def do_ibus_test(self):
         """Do the basic IBus test on self.widget using self.input and self.result."""
-        self.widget.ensure_visible()
-        self.addCleanup(self.widget.ensure_hidden)
-        self.activate_ibus(self.widget.searchbar)
+        try:
+            result = self.result
+        except:
+            self.assertThat(self.try_ibus_query, Eventually(Equals(True)))
+            result = self.result
+
+        widget = getattr(self.unity, self.widget)
+        widget.ensure_visible()
+        self.addCleanup(widget.ensure_hidden)
+        self.activate_ibus(widget.searchbar)
         self.keyboard.type(self.input)
         commit_key = getattr(self, 'commit_key', None)
         if commit_key:
             self.keyboard.press_and_release(commit_key)
-        self.deactivate_ibus(self.widget.searchbar)
-        self.assertThat(self.widget.search_string, Eventually(Equals(self.result)))
+        self.deactivate_ibus(widget.searchbar)
+        self.assertThat(widget.search_string, Eventually(Equals(result)))
 
 
 
@@ -119,11 +226,11 @@ class IBusTestsPinyin(IBusWidgetScenariodTests):
     scenarios = multiply_scenarios(
         IBusWidgetScenariodTests.scenarios,
         [
-            ('basic', {'input': 'abc1', 'result': u'\u963f\u5e03\u4ece'}),
-            ('photo', {'input': 'zhaopian ', 'result': u'\u7167\u7247'}),
-            ('internet', {'input': 'hulianwang ', 'result': u'\u4e92\u8054\u7f51'}),
-            ('disk', {'input': 'cipan ', 'result': u'\u78c1\u76d8'}),
-            ('disk_management', {'input': 'cipan guanli ', 'result': u'\u78c1\u76d8\u7ba1\u7406'}),
+            ('basic', {'input': 'abc1'}),
+            ('photo', {'input': 'zhaopian '}),
+            ('internet', {'input': 'hulianwang '}),
+            ('disk', {'input': 'cipan '}),
+            ('disk_management', {'input': 'cipan guanli '}),
         ]
     )
 
@@ -165,9 +272,9 @@ class IBusTestsAnthy(IBusWidgetScenariodTests):
     scenarios = multiply_scenarios(
         IBusWidgetScenariodTests.scenarios,
         [
-            ('system', {'input': 'shisutemu ', 'result': u'\u30b7\u30b9\u30c6\u30e0'}),
-            ('game', {'input': 'ge-mu ', 'result': u'\u30b2\u30fc\u30e0'}),
-            ('user', {'input': 'yu-za- ', 'result': u'\u30e6\u30fc\u30b6\u30fc'}),
+            ('system', {'input': 'shisutemu '}),
+            ('game', {'input': 'ge-mu '}),
+            ('user', {'input': 'yu-za- '}),
         ],
         [
             ('commit_j', {'commit_key': 'Ctrl+j'}),
@@ -193,26 +300,26 @@ class IBusTestsPinyinIgnore(IBusTests):
         self.activate_input_engine_or_skip(self.engine_name)
 
     def test_ignore_key_events_on_dash(self):
-        self.dash.ensure_visible()
-        self.addCleanup(self.dash.ensure_hidden)
-        self.activate_ibus(self.dash.searchbar)
+        self.unity.dash.ensure_visible()
+        self.addCleanup(self.unity.dash.ensure_hidden)
+        self.activate_ibus(self.unity.dash.searchbar)
         self.keyboard.type("cipan")
         self.keyboard.press_and_release("Tab")
         self.keyboard.type("  ")
-        self.deactivate_ibus(self.dash.searchbar)
-        self.assertThat(self.dash.search_string, Eventually(NotEquals("  ")))
+        self.deactivate_ibus(self.unity.dash.searchbar)
+        self.assertThat(self.unity.dash.search_string, Eventually(NotEquals("  ")))
 
     def test_ignore_key_events_on_hud(self):
-        self.hud.ensure_visible()
-        self.addCleanup(self.hud.ensure_hidden)
+        self.unity.hud.ensure_visible()
+        self.addCleanup(self.unity.hud.ensure_hidden)
 
         self.keyboard.type("a")
-        self.activate_ibus(self.hud.searchbar)
+        self.activate_ibus(self.unity.hud.searchbar)
         self.keyboard.type("riqi")
-        old_selected = self.hud.selected_button
+        old_selected = self.unity.hud.selected_button
         self.keyboard.press_and_release("Down")
-        new_selected = self.hud.selected_button
-        self.deactivate_ibus(self.hud.searchbar)
+        new_selected = self.unity.hud.selected_button
+        self.deactivate_ibus(self.unity.hud.searchbar)
 
         self.assertEqual(old_selected, new_selected)
 
@@ -228,26 +335,26 @@ class IBusTestsAnthyIgnore(IBusTests):
         self.activate_input_engine_or_skip(self.engine_name)
 
     def test_ignore_key_events_on_dash(self):
-        self.dash.ensure_visible()
-        self.addCleanup(self.dash.ensure_hidden)
-        self.activate_ibus(self.dash.searchbar)
+        self.unity.dash.ensure_visible()
+        self.addCleanup(self.unity.dash.ensure_hidden)
+        self.activate_ibus(self.unity.dash.searchbar)
         self.keyboard.type("shisutemu ")
         self.keyboard.press_and_release("Tab")
         self.keyboard.press_and_release("Ctrl+j")
-        self.deactivate_ibus(self.dash.searchbar)
-        dash_search_string = self.dash.search_string
+        self.deactivate_ibus(self.unity.dash.searchbar)
+        dash_search_string = self.unity.dash.search_string
 
         self.assertNotEqual("", dash_search_string)
 
     def test_ignore_key_events_on_hud(self):
-        self.hud.ensure_visible()
-        self.addCleanup(self.hud.ensure_hidden)
+        self.unity.hud.ensure_visible()
+        self.addCleanup(self.unity.hud.ensure_hidden)
         self.keyboard.type("a")
-        self.activate_ibus(self.hud.searchbar)
+        self.activate_ibus(self.unity.hud.searchbar)
         self.keyboard.type("hiduke")
-        old_selected = self.hud.selected_button
+        old_selected = self.unity.hud.selected_button
         self.keyboard.press_and_release("Down")
-        new_selected = self.hud.selected_button
-        self.deactivate_ibus(self.hud.searchbar)
+        new_selected = self.unity.hud.selected_button
+        self.deactivate_ibus(self.unity.hud.searchbar)
 
         self.assertEqual(old_selected, new_selected)

@@ -145,6 +145,8 @@ void PreviewInfoHintWidget::SetupViews()
 
   previews::Style& style = previews::Style::Instance();
 
+  auto on_mouse_down = [&](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_.OnMouseDown(x, y, button_flags, key_flags); };
+
   nux::VLayout* layout = new nux::VLayout();
   layout->SetSpaceBetweenChildren(6);
 
@@ -159,16 +161,18 @@ void PreviewInfoHintWidget::SetupViews()
       std::string tmp_display_name = info_hint->display_name;
       tmp_display_name += ":";
 
-      info_name = new nux::StaticCairoText(tmp_display_name, true, NUX_TRACKER_LOCATION);
+      info_name = new StaticCairoText(tmp_display_name, true, NUX_TRACKER_LOCATION);
       info_name->SetFont(style.info_hint_bold_font());
       info_name->SetLines(-1);
-      info_name->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_RIGHT);
+      info_name->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
+      info_name->mouse_click.connect(on_mouse_down);
       hint_layout->AddView(info_name.GetPointer(), 0, nux::MINOR_POSITION_CENTER);
     }
 
-    StaticCairoTextPtr info_value(new nux::StaticCairoText(StringFromVariant(info_hint->value), true, NUX_TRACKER_LOCATION));
+    StaticCairoTextPtr info_value(new StaticCairoText(StringFromVariant(info_hint->value), true, NUX_TRACKER_LOCATION));
     info_value->SetFont(style.info_hint_font());
     info_value->SetLines(-1);
+    info_value->mouse_click.connect(on_mouse_down);
     hint_layout->AddView(info_value.GetPointer(), 1, nux::MINOR_POSITION_CENTER);
 
     InfoHint info_hint_views(info_name, info_value);
@@ -176,6 +180,8 @@ void PreviewInfoHintWidget::SetupViews()
 
     layout->AddLayout(hint_layout, 0);
   }
+
+  mouse_click.connect(on_mouse_down);
 
   SetLayout(layout);
 }
@@ -226,7 +232,6 @@ void PreviewInfoHintWidget::PreLayoutManagement()
 
   View::PreLayoutManagement();
 }
-
 
 } // namespace previews
 } // namespace dash

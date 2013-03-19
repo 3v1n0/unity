@@ -21,12 +21,9 @@
 #ifndef LAUNCHERICON_H
 #define LAUNCHERICON_H
 
-#include <set>
-#include <boost/unordered_map.hpp>
-
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
-#include <NuxCore/Math/MathInc.h>
+#include <NuxCore/Animation.h>
 
 #include <gtk/gtk.h>
 #include <libdbusmenu-glib/client.h>
@@ -97,13 +94,11 @@ public:
 
   int SortPriority();
 
-  virtual std::vector<Window> Windows() { return std::vector<Window> (); }
+  virtual WindowList Windows() { return WindowList(); }
 
   virtual std::vector<Window> WindowsOnViewport() { return std::vector<Window> (); }
 
   virtual std::vector<Window> WindowsForMonitor(int monitor) { return std::vector<Window> (); }
-
-  virtual std::string NameForWindow(Window window) { return std::string(); }
 
   const bool WindowVisibleOnMonitor(int monitor);
 
@@ -198,6 +193,8 @@ public:
 
   virtual void UnStick();
 
+  void PerformScroll(ScrollDirection direction, Time timestamp) override;
+
 protected:
   std::vector<nux::Point3> GetCenters();
 
@@ -252,7 +249,7 @@ protected:
 
   virtual void ActivateLauncherIcon(ActionArg arg) {}
 
-  virtual void OpenInstanceLauncherIcon(ActionArg arg) {}
+  virtual void OpenInstanceLauncherIcon(Time timestamp) {}
 
   virtual bool HandlesSpread () { return false; }
 
@@ -337,6 +334,8 @@ private:
   bool             _allow_quicklist_to_show;
 
   std::list<LauncherEntryRemote::Ptr> _entry_list;
+
+  nux::animation::AnimateValue<double> _tooltip_fade_animator;
 
 protected:
   glib::SourceManager _source_manager;

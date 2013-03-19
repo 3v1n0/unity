@@ -48,6 +48,9 @@ public:
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
   void SetState(SpinnerState state);
+  SpinnerState GetState() const;
+
+  void SetSpinnerTimeout(int timeout);
 
 protected:
   // Introspectable methods
@@ -60,18 +63,19 @@ protected:
 private:
   bool OnFrameTimeout();
 
-  SpinnerState _state;
+  SpinnerState state_;
 
-  nux::BaseTexture* _magnify;
-  nux::BaseTexture* _circle;
-  nux::BaseTexture* _close;
-  nux::BaseTexture* _spin;
+  nux::BaseTexture* magnify_;
+  nux::BaseTexture* circle_;
+  nux::BaseTexture* close_;
+  nux::BaseTexture* spin_;
 
-  glib::Source::UniquePtr _spinner_timeout;
-  glib::Source::UniquePtr _frame_timeout;
+  glib::Source::UniquePtr spinner_timeout_;
+  glib::Source::UniquePtr frame_timeout_;
+  int search_timeout_;
 
-  nux::Matrix4 _2d_rotate;
-  float _rotation;
+  nux::Matrix4 rotate_;
+  float rotation_;
 };
 
 }

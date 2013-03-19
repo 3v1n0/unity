@@ -22,12 +22,13 @@
 #define UNITYSHARED_STANDALONE_WINDOW_MANAGER_H
 
 #include "unity-shared/WindowManager.h"
-#include <map>
+#include <list>
+#include <NuxCore/Property.h>
 
 namespace unity
 {
 
-struct StandaloneWindow
+struct StandaloneWindow : sigc::trackable
 {
   typedef std::shared_ptr<StandaloneWindow> Ptr;
   StandaloneWindow(Window xid);
@@ -39,21 +40,24 @@ public:
   Window Xid() const { return xid; }
 
   std::string name;
-  nux::Geometry geo;
+  nux::Property<nux::Geometry> geo;
   nux::Size deco_sizes[4];
   unsigned current_desktop;
   unsigned monitor;
-  bool active;
-  bool mapped;
-  bool visible;
-  bool maximized;
-  bool minimized;
-  bool decorated;
-  bool has_decorations;
-  bool on_top;
-  bool closable;
-  bool minimizable;
-  bool maximizable;
+  nux::Property<bool> active;
+  nux::Property<bool> mapped;
+  nux::Property<bool> visible;
+  nux::Property<bool> maximized;
+  nux::Property<bool> minimized;
+  nux::Property<bool> decorated;
+  nux::Property<bool> has_decorations;
+  nux::Property<bool> on_top;
+  nux::Property<bool> closable;
+  nux::Property<bool> minimizable;
+  nux::Property<bool> maximizable;
+
+  sigc::signal<void> resized;
+  sigc::signal<void> moved;
 };
 
 class StandaloneWindowManager : public WindowManager
@@ -62,6 +66,7 @@ public:
   StandaloneWindowManager();
 
   virtual Window GetActiveWindow() const;
+  std::vector<Window> GetWindowsInStackingOrder() const override;
 
   virtual bool IsWindowMaximized(Window window_id) const;
   virtual bool IsWindowDecorated(Window window_id) const;
@@ -89,6 +94,7 @@ public:
   virtual void Activate(Window window_id);
   virtual void Raise(Window window_id);
   virtual void Lower(Window window_id);
+  void RestackBelow(Window window_id, Window sibiling_id) override;
 
   virtual void Decorate(Window window_id) const;
   virtual void Undecorate(Window window_id) const;
@@ -129,29 +135,42 @@ public:
 
   virtual int WorkspaceCount() const;
 
+  nux::Point GetCurrentViewport() const override;
+  void SetViewportSize(int horizontal, int vertical);
+  int GetViewportHSize() const override;
+  int GetViewportVSize() const override;
+
   virtual bool SaveInputFocus();
   virtual bool RestoreInputFocus();
 
   virtual std::string GetWindowName(Window window_id) const;
 
   // Mock functions
+  void AddStandaloneWindow(StandaloneWindow::Ptr const& window);
+  std::list<StandaloneWindow::Ptr> GetStandaloneWindows() const;
+
   void SetScaleActive(bool scale_active);
   void SetScaleActiveForGroup(bool scale_active_for_group);
   void SetCurrentDesktop(unsigned desktop_id);
 
-  void AddStandaloneWindow(StandaloneWindow::Ptr const& window);
-  std::map<Window, StandaloneWindow::Ptr> GetStandaloneWindows() const;
+  void SetCurrentViewport(nux::Point const& vp);
+  void SetWorkareaGeometry(nux::Geometry const& geo);
 
 protected:
   virtual void AddProperties(GVariantBuilder* builder);
 
 private:
+  StandaloneWindow::Ptr GetWindowByXid(Window window_id) const;
+
   bool expo_state_;
   bool in_show_desktop_;
   bool scale_active_;
   bool scale_active_for_group_;
   unsigned current_desktop_;
-  std::map<Window, StandaloneWindow::Ptr> standalone_windows_;
+  nux::Size viewport_size_;
+  nux::Point current_vp_;
+  nux::Geometry workarea_geo_;
+  std::list<StandaloneWindow::Ptr> standalone_windows_;
 };
 
 }

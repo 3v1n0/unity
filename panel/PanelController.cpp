@@ -59,6 +59,7 @@ public:
                           int discovery_fadein, int discovery_fadeout);
 
   void OnScreenChanged(unsigned int primary_monitor, std::vector<nux::Geometry>& monitors, Introspectable *iobj);
+
 private:
   typedef nux::ObjectPtr<nux::BaseWindow> BaseWindowPtr;
 
@@ -221,8 +222,11 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
       view->SetPrimary(i == primary_monitor);
       view->SetMonitor(i);
 
-      (*it)->EnableInputWindow(true);
-      (*it)->InputWindowEnableStruts(true);
+      if (nux::GetWindowThread()->IsEmbeddedWindow())
+      {
+        (*it)->EnableInputWindow(true);
+        (*it)->InputWindowEnableStruts(true);
+      }
 
       LOG_DEBUG(logger) << "Updated Panel for Monitor " << i;
 
@@ -260,7 +264,10 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
       window->SetConfigureNotifyCallback(&Impl::WindowConfigureCallback, window.GetPointer());
       window->SetBackgroundColor(nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
       window->ShowWindow(true);
-      window->EnableInputWindow(true, panel::window_title, false, false);
+
+      if (nux::GetWindowThread()->IsEmbeddedWindow())
+        window->EnableInputWindow(true, panel::window_title, false, false);
+
       window->SetGeometry(geo);
       window->SetMinMaxSize(geo.width, geo.height);
       window->SetLayout(layout);
@@ -289,6 +296,19 @@ void Controller::Impl::WindowConfigureCallback(int window_width,
 {
   nux::BaseWindow* window = static_cast<nux::BaseWindow*>(user_data);
   geo = window->GetGeometry();
+}
+
+bool Controller::IsMouseInsideIndicator(nux::Point const& mouse_position) const
+{
+  for (auto view : pimpl->GetPanelViews())
+  {
+    PanelView* panel_view = static_cast<PanelView*>(view);
+
+    if (panel_view->IsMouseInsideIndicator(mouse_position))
+      return true;
+  }
+
+  return false;
 }
 
 float Controller::Impl::opacity() const

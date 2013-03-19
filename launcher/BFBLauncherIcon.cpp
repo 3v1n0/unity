@@ -18,6 +18,7 @@
  *              Andrea Azzarone <azzaronea@gmail.com>
  */
 
+#include "config.h"
 #include <glib/gi18n-lib.h>
 #include "unity-shared/UBusMessages.h"
 
@@ -34,7 +35,7 @@ BFBLauncherIcon::BFBLauncherIcon(LauncherHideMode hide_mode)
  , reader_(dash::LensDirectoryReader::GetDefault())
  , launcher_hide_mode_(hide_mode)
 {
-  tooltip_text = _("Dash Home");
+  tooltip_text = _("Search your computer and online sources");
   icon_name = PKGDATADIR"/launcher_bfb.png";
   position = Position::BEGIN;
   SetQuirk(Quirk::VISIBLE, true);
@@ -57,8 +58,9 @@ void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
+  int width, height;
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
-                &overlay_identity, &can_maximise, &overlay_monitor);
+                &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
 
   if (overlay_identity.Str() == "dash" && IsVisibleOnMonitor(overlay_monitor))
   {

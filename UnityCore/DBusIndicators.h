@@ -38,17 +38,13 @@ public:
   DBusIndicators();
   ~DBusIndicators();
 
-  void SyncGeometries(std::string const& name,
-                      EntryLocationMap const& locations);
+  void SyncGeometries(std::string const& name, EntryLocationMap const& locations);
 
   virtual void OnEntryScroll(std::string const& entry_id, int delta);
   virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
-                               int x, int y, unsigned int button,
-                               unsigned int timestamp);
-  virtual void OnEntrySecondaryActivate(std::string const& entry_id,
-                                        unsigned int timestamp);
-  virtual void OnShowAppMenu(unsigned int xid, int x, int y,
-                             unsigned int timestamp);
+                               int x, int y, unsigned int button);
+  virtual void OnEntrySecondaryActivate(std::string const& entry_id);
+  virtual void OnShowAppMenu(unsigned int xid, int x, int y);
 
 protected:
   DBusIndicators(std::string const& dbus_name);

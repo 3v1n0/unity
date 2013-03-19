@@ -2,6 +2,7 @@
 #include <gio/gio.h>
 #include <NuxCore/Logger.h>
 #include <Nux/Nux.h>
+#include "test_utils.h"
 
 static bool wait_until_test_service_appears();
 static void tell_service_to_exit();
@@ -9,14 +10,17 @@ static void tell_service_to_exit();
 int main(int argc, char** argv)
 {
   ::testing::InitGoogleTest(&argc, argv);
+#if G_ENCODE_VERSION (GLIB_MAJOR_VERSION, GLIB_MINOR_VERSION) <= GLIB_VERSION_2_34
   g_type_init();
-  
+#endif
+
   nux::NuxInitialize (0);
 
   // We need the service to be ready before we are
+
   if (!wait_until_test_service_appears())
   {
-    std::cerr << "FATAL: Unable to connect to test service";
+    std::cerr << "FATAL: Unable to connect to test service" << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -24,7 +28,7 @@ int main(int argc, char** argv)
   nux::logging::configure_logging("<root>=error");
 
   // but you can still change it if you're debugging ;)
-  nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
+  nux::logging::configure_logging(::getenv("UNITY_TEST_LOG_SEVERITY"));
 
   int ret = RUN_ALL_TESTS();
 
@@ -36,13 +40,6 @@ int main(int argc, char** argv)
 static bool wait_until_test_service_appears()
 {
   bool have_name = false;
-  bool timeout_reached = false;
-
-  auto timeout_cb = [](gpointer data) -> gboolean
-  {
-    *(bool*)data = true;
-    return FALSE;
-  };
 
   auto callback = [](GDBusConnection * conn,
                      const char * name,
@@ -59,12 +56,11 @@ static bool wait_until_test_service_appears()
                    NULL,
                    &have_name,
                    NULL);
-  g_timeout_add(10000, timeout_cb, &timeout_reached);
 
-  while (!have_name && !timeout_reached)
-    g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
+  Utils::WaitUntil(have_name, 3);
+  EXPECT_TRUE(have_name);
 
-  return (have_name && !timeout_reached);
+  return have_name;
 }
 
 static void tell_service_to_exit()

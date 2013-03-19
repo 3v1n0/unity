@@ -37,7 +37,14 @@ namespace unity
 class IconTexture : public nux::TextureArea, public unity::debug::Introspectable
 {
 public:
-  IconTexture(nux::BaseTexture* texture, guint width, guint height);
+  typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
+
+  IconTexture(BaseTexturePtr const& texture);
+  IconTexture(nux::BaseTexture* texture);
+
+  IconTexture(BaseTexturePtr const& texture, unsigned width, unsigned height);
+  IconTexture(nux::BaseTexture* texture, unsigned width, unsigned height);
+
   IconTexture(std::string const& icon_name, unsigned int size, bool defer_icon_loading = false);
   virtual ~IconTexture();
 
@@ -48,11 +55,13 @@ public:
   void LoadIcon();
 
   void SetOpacity(float opacity);
+
+  void SetTexture(BaseTexturePtr const& texture);
   void SetTexture(nux::BaseTexture* texture);
 
   void SetAcceptKeyNavFocus(bool accept);
 
-  nux::BaseTexture* texture();
+  BaseTexturePtr texture();
 
   enum class DrawMode
   {
@@ -60,8 +69,8 @@ public:
     STRETCH_WITH_ASPECT
   };
   void SetDrawMode(DrawMode mode);
-  
-  sigc::signal<void, nux::BaseTexture*> texture_updated;
+
+  sigc::signal<void, BaseTexturePtr const&> texture_updated;
 
 protected:
   // Key navigation
@@ -84,7 +93,7 @@ private:
   std::string _icon_name;
   unsigned int _size;
 
-  nux::ObjectPtr<nux::BaseTexture> _texture_cached;
+  BaseTexturePtr _texture_cached;
   nux::Size _texture_size;
 
   bool _loading;

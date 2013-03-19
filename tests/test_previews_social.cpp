@@ -14,8 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
- *              Ken VanDine <ken.vandine@canonical.com>
+ * Authored by: Ken VanDine <ken.vandine@canonical.com>
  */
 
 #include <list>
@@ -82,7 +81,7 @@ public:
     preview_model_ = dash::Preview::PreviewForVariant(v);
   }
 
-  nux::BaseWindow* parent_window_;
+  nux::ObjectPtr<nux::BaseWindow> parent_window_;
   dash::Preview::Ptr preview_model_;
 
   unity::Settings settings;

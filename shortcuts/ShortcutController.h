@@ -25,13 +25,13 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/HLayout.h>
 #include <NuxCore/Color.h>
+#include <NuxCore/Animation.h>
 #include <UnityCore/Variant.h>
 #include <UnityCore/GLibSource.h>
 
 #include "BaseWindowRaiser.h"
-#include "ShortcutModel.h"
+#include "AbstractShortcutModeller.h"
 #include "ShortcutView.h"
-#include "unity-shared/Animator.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/UBusWrapper.h"
 
@@ -45,8 +45,8 @@ class Controller : public debug::Introspectable
 public:
   typedef std::shared_ptr<Controller> Ptr;
 
-  Controller(std::list<AbstractHint::Ptr> const& hints,
-             BaseWindowRaiser::Ptr const& raiser);
+  Controller(BaseWindowRaiser::Ptr const& raiser, AbstractModeller::Ptr const& modeller);
+  virtual ~Controller();
 
   bool Show();
   void Hide();
@@ -56,39 +56,40 @@ public:
 
   void SetAdjustment(int x, int y);
   void SetEnabled(bool enabled);
+  virtual void SetOpacity(double value);
 
 protected:
   // Introspectable
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
+  virtual nux::Point GetOffsetPerMonitor(int monitor);
 
 private:
   void ConstructView();
   void EnsureView();
   void OnBackgroundUpdate(GVariant* data);
-  void OnFadeInUpdated(double opacity);
-  void OnFadeInEnded();
-  void OnFadeOutUpdated(double opacity);
-  void OnFadeOutEnded();
+  void OnModelUpdated(Model::Ptr const&);
   bool OnShowTimer();
 
   View::Ptr view_;
-  Model::Ptr model_;
+  AbstractModeller::Ptr modeller_;
   BaseWindowRaiser::Ptr base_window_raiser_;
 
   nux::Geometry workarea_;
   nux::ObjectPtr<nux::BaseWindow> view_window_;
   nux::HLayout* main_layout_;
+  nux::Point adjustment_;
 
   bool visible_;
   bool enabled_;
   nux::Color bg_color_;
 
-  Animator fade_in_animator_;
-  Animator fade_out_animator_;
+  nux::animation::AnimateValue<double> fade_animator_;
 
   glib::Source::UniquePtr show_timer_;
   UBusManager ubus_manager_;
+
+  friend class TestShortcutController;
 };
 
 }

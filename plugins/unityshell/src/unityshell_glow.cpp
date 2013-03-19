@@ -243,7 +243,7 @@ glow::Quads UnityWindow::computeGlowQuads(nux::Geometry const& geo, GLTexture::L
   quadMatrix->y0 = 1.0f - (y1 * quadMatrix->yy);
 
   y1 = std::max<int>(geo.y + geo.height - glow_offset, geo.y + (geo.height / 2));
-  x2 = std::min<int>(geo.x + glow_offset, geo.x + (geo.width / 2));
+  x2 = std::min<int>(x2, geo.x + (geo.width / 2));
 
   box->setGeometry(x1, y1, x2 - x1, y2 - y1);
 

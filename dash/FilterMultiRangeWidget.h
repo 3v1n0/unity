@@ -39,12 +39,12 @@ namespace dash
 
 class FilterMultiRangeButton;
 
-class FilterMultiRange : public FilterExpanderLabel
+class FilterMultiRangeWidget : public FilterExpanderLabel
 {
-  NUX_DECLARE_OBJECT_TYPE(FilterMultiRange, FilterExpanderLabel);
+  NUX_DECLARE_OBJECT_TYPE(FilterMultiRangeWidget, FilterExpanderLabel);
+  typedef nux::ObjectPtr<FilterMultiRangeButton> FilterMultiRangeButtonPtr;
 public:
-  FilterMultiRange(NUX_FILE_LINE_PROTO);
-  virtual ~FilterMultiRange();
+  FilterMultiRangeWidget(NUX_FILE_LINE_PROTO);
 
   void SetFilter(Filter::Ptr const& filter);
   std::string GetFilterType();
@@ -52,17 +52,38 @@ public:
 protected:
   void InitTheme();
 
+  nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
+
+  void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+
+  void ClearRedirectedRenderChildArea();
+
 private:
   void OnAllActivated(nux::View* view);
   void OnOptionAdded(dash::FilterOption::Ptr const& new_filter);
   void OnOptionRemoved(dash::FilterOption::Ptr const& removed_filter);
   void OnActiveChanged(bool value);
 
+  void UpdateMouseFocus(nux::Point const& abs_cursor_position);
+  virtual void Click(FilterMultiRangeButtonPtr const& button);
+
+  bool CheckDrag();
+
   nux::HLayout* layout_;
   FilterAllButton* all_button_;
 
-  std::vector<FilterMultiRangeButton*> buttons_;
+  std::vector<FilterMultiRangeButtonPtr> buttons_;
   MultiRangeFilter::Ptr filter_;
+
+  FilterMultiRangeButtonPtr mouse_down_button_;
+  FilterMultiRangeButtonPtr mouse_down_left_active_button_;
+  FilterMultiRangeButtonPtr mouse_down_right_active_button_;
+  bool dragging_;
+
+  friend class TestFilterMultiRangeWidget;
 };
 
 } // unityshell dash

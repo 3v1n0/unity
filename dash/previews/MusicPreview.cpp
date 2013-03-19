@@ -24,17 +24,16 @@
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
 #include "unity-shared/IconTexture.h"
-#include "unity-shared/StaticCairoText.h"
 #include <UnityCore/MusicPreview.h>
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 #include <Nux/AbstractButton.h>
- 
+
 #include "MusicPreview.h"
 #include "ActionButton.h"
-#include "PreviewInfoHintWidget.h"
 #include "Tracks.h"
+#include "PreviewInfoHintWidget.h"
 
 namespace unity
 {
@@ -48,11 +47,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(MusicPreview);
 
 MusicPreview::MusicPreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
-, image_(nullptr)
-, title_(nullptr)
-, subtitle_(nullptr)
 {
-  SetupBackground();
   SetupViews();
 }
 
@@ -64,22 +59,8 @@ void MusicPreview::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
 
-  bool enable_bg_shadows = dash::previews::Style::Instance().GetShadowBackgroundEnabled();
-
   gfx_engine.PushClippingRectangle(base);
   nux::GetPainter().PaintBackground(gfx_engine, base);
-
-  if (enable_bg_shadows && full_data_layout_)
-  {
-    unsigned int alpha, src, dest = 0;
-    gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
-    gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-    details_bg_layer_->SetGeometry(full_data_layout_->GetGeometry());
-    nux::GetPainter().RenderSinglePaintLayer(gfx_engine, full_data_layout_->GetGeometry(), details_bg_layer_.get());
-
-    gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
-  }
 
   gfx_engine.PopClippingRectangle();
 }
@@ -89,11 +70,6 @@ void MusicPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
   nux::Geometry const& base = GetGeometry();
   gfx_engine.PushClippingRectangle(base);
 
-  bool enable_bg_shadows = dash::previews::Style::Instance().GetShadowBackgroundEnabled();
-
-  if (enable_bg_shadows && !IsFullRedraw())
-    nux::GetPainter().PushLayer(gfx_engine, details_bg_layer_->GetGeometry(), details_bg_layer_.get());
-
   unsigned int alpha, src, dest = 0;
   gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
   gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -102,9 +78,6 @@ void MusicPreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
     GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
 
   gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
-
-  if (enable_bg_shadows && !IsFullRedraw())
-    nux::GetPainter().PopBackground();
 
   gfx_engine.PopClippingRectangle();
 }
@@ -119,11 +92,6 @@ void MusicPreview::AddProperties(GVariantBuilder* builder)
   Preview::AddProperties(builder);
 }
 
-void MusicPreview::SetupBackground()
-{
-  details_bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
-}
-
 void MusicPreview::SetupViews()
 {
   dash::MusicPreview* music_preview_model = dynamic_cast<dash::MusicPreview*>(preview_model_.get());
@@ -133,6 +101,8 @@ void MusicPreview::SetupViews()
     return;
   }
   previews::Style& style = dash::previews::Style::Instance();
+
+  auto on_mouse_down = [&](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_->OnMouseDown(x, y, button_flags, key_flags); };
 
   nux::HLayout* image_data_layout = new nux::HLayout();
   image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
@@ -156,16 +126,20 @@ void MusicPreview::SetupViews()
       nux::VLayout* album_data_layout = new nux::VLayout();
       album_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
-      title_ = new nux::StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
+      title_ = new StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
+      AddChild(title_.GetPointer());
       title_->SetFont(style.title_font().c_str());
       title_->SetLines(-1);
+      title_->mouse_click.connect(on_mouse_down);
       album_data_layout->AddView(title_.GetPointer(), 1);
 
       if (!preview_model_->subtitle.Get().empty())
       {
-        subtitle_ = new nux::StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
+        subtitle_ = new StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
+        AddChild(subtitle_.GetPointer());
         subtitle_->SetFont(style.subtitle_size_font().c_str());
         subtitle_->SetLines(-1);
+        subtitle_->mouse_click.connect(on_mouse_down);
         album_data_layout->AddView(subtitle_.GetPointer(), 1);
       }
 
@@ -180,6 +154,7 @@ void MusicPreview::SetupViews()
         AddChild(tracks_.GetPointer());
         tracks_->play.connect(sigc::mem_fun(this, &MusicPreview::OnPlayTrack));
         tracks_->pause.connect(sigc::mem_fun(this, &MusicPreview::OnPauseTrack));
+        tracks_->mouse_click.connect(on_mouse_down);
       }
       /////////////////////
 
@@ -196,6 +171,7 @@ void MusicPreview::SetupViews()
         hints_layout->AddSpace(0, 1);
         preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
         AddChild(preview_info_hints_.GetPointer());
+        preview_info_hints_->request_close().connect([this]() { preview_container_->request_close.emit(); });
         hints_layout->AddView(preview_info_hints_.GetPointer(), 0);
 
         // If there are actions, we use a vertical layout
@@ -226,6 +202,8 @@ void MusicPreview::SetupViews()
   
   image_data_layout->AddView(image_.GetPointer(), 0);
   image_data_layout->AddLayout(full_data_layout_, 1);
+
+  mouse_click.connect(on_mouse_down);
 
   SetLayout(image_data_layout);
 }

@@ -53,7 +53,7 @@ public:
   nux::Property<bool> preview_active;
   nux::Property<int> left_results;
   nux::Property<int> right_results;
-  
+
   sigc::signal<void, Preview::Ptr> PreviewActivated;
 
 private:

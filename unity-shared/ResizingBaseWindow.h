@@ -19,36 +19,52 @@
 #ifndef RESIZEDINPUTWINDOW_BASEWINDOW_H
 #define RESIZEDINPUTWINDOW_BASEWINDOW_H
 
-#include <Nux/BaseWindow.h>
+#include "MockableBaseWindow.h"
 
 namespace unity
 {
 
-class ResizingBaseWindow : public nux::BaseWindow
+/**
+ * A base window with a separate input area overlay.
+ *
+ * This Unity class extends the base Nux class with a bound function to
+ * recalculate the input window geometry.
+ */
+class ResizingBaseWindow : public MockableBaseWindow
 {
 public:
-  ResizingBaseWindow(const char *WindowName, std::function<nux::Geometry (nux::Geometry const&)> geo_func)
-  : BaseWindow(WindowName, NUX_TRACKER_LOCATION)
-  {
-    geo_func_ = geo_func;
-  }
+  /**
+   * A function for adjusting the input window geometry relative to the
+   * displayed window geometry in some way.
+   */
+  typedef std::function<nux::Geometry (nux::Geometry const&)> GeometryAdjuster;
+  typedef nux::ObjectPtr<ResizingBaseWindow> Ptr;
 
-  void UpdateInputWindowGeometry()
-  {
-#ifdef USE_X11
-    if (m_input_window && m_input_window_enabled)
-      m_input_window->SetGeometry(geo_func_(GetGeometry()));
-#endif
-  }
+public:
+  /**
+   * Constructs display and input regions.
+   * @param[in] window_name       The name of the window.
+   * @param[in] input_adjustment  A bound function for adjusting the input area
+   *                              geometry.
+   */
+  ResizingBaseWindow(char const* window_name,
+                     GeometryAdjuster const& input_adjustment);
 
-  virtual void SetGeometry(const nux::Geometry &geo)
-  {
-     Area::SetGeometry(geo);
-     UpdateInputWindowGeometry();
-  }
+  /**
+   * Recalculates the input window geometry.
+   *
+   * Useful if the underlying base window geometry has changed.
+   */
+  void UpdateInputWindowGeometry();
+
+  /**
+   * Sets the base window and input window geometry.
+   * @param[in] geometry The new window geometry.
+   */
+  virtual void SetGeometry(const nux::Geometry &geometry);
 
 private:
-  std::function<nux::Geometry (nux::Geometry const&)> geo_func_;
+  GeometryAdjuster input_adjustment_;
 };
 
 }

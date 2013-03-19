@@ -14,15 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Nick Dedekind <nick.dedekind@canonical.com>
  */
 
 
 #include "DashView.h"
 #include "DashViewPrivate.h"
+#include "FilterExpanderLabel.h"
 
 #include <math.h>
 
-#include <gio/gdesktopappinfo.h>
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
 
@@ -30,12 +31,13 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/RadioOptionFilter.h>
 
-#include "FilterExpanderLabel.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/KeyboardUtil.h"
-#include "unity-shared/UnitySettings.h"
-#include "unity-shared/UBusMessages.h"
 #include "unity-shared/PreviewStyle.h"
+#include "unity-shared/PanelStyle.h"
+#include "unity-shared/UBusMessages.h"
+#include "unity-shared/UnitySettings.h"
+#include "unity-shared/WindowManager.h"
 
 namespace unity
 {
@@ -45,6 +47,15 @@ DECLARE_LOGGER(logger, "unity.dash.view");
 namespace
 {
 previews::Style preview_style;
+
+const int PREVIEW_ANIMATION_LENGTH = 250;
+
+const int DASH_TILE_HORIZONTAL_COUNT = 6;
+const int DASH_DEFAULT_CATEGORY_COUNT = 3;
+const int DASH_RESULT_RIGHT_PAD = 35;
+const int GROUP_HEADING_HEIGHT = 24;
+
+const int PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET = 10;
 }
 
 // This is so we can access some protected members in nux::VLayout and
@@ -75,23 +86,50 @@ private:
   nux::Area* area_;
 };
 
+class DashContentView : public nux::View
+{
+public:
+  DashContentView(NUX_FILE_LINE_DECL):View(NUX_FILE_LINE_PARAM)
+  {
+    SetRedirectRenderingToTexture(true);
+  }
+  ~DashContentView() {}
+
+  void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
+  {
+  }
+
+  void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
+  {
+    if (GetLayout())
+      GetLayout()->ProcessDraw(graphics_engine, force_draw);
+  }
+
+};
+
 NUX_IMPLEMENT_OBJECT_TYPE(DashView);
 
-DashView::DashView()
+DashView::DashView(Lenses::Ptr const& lenses, ApplicationStarter::Ptr const& application_starter)
   : nux::View(NUX_TRACKER_LOCATION)
-  , home_lens_(new HomeLens(_("Home"), _("Home screen"), _("Search")))
+  , lenses_(lenses)
+  , home_lens_(new HomeLens(_("Home"), _("Home screen"), _("Search your computer and online sources")))
+  , application_starter_(application_starter)
   , preview_container_(nullptr)
   , preview_displaying_(false)
   , preview_navigation_mode_(previews::Navigation::NONE)
-  , active_lens_view_(0)
   , last_activated_uri_("")
+  , last_activated_timestamp_(0)
   , search_in_progress_(false)
   , activate_on_finish_(false)
   , visible_(false)
-  , fade_out_value_(0.0f)
-  , fade_in_value_(0.0f)
+  , opening_column_x_(-1)
   , opening_row_y_(-1)
+  , opening_column_width_(0)
   , opening_row_height_(0)
+  , animate_split_value_(0.0)
+  , animate_preview_container_value_(0.0)
+  , animate_preview_value_(0.0)
+  , overlay_window_buttons_(new OverlayWindowButtons())
 {
   renderer_.SetOwner(this);
   renderer_.need_redraw.connect([this] () {
@@ -101,10 +139,13 @@ DashView::DashView()
   SetupViews();
   SetupUBusConnections();
 
-  lenses_.lens_added.connect(sigc::mem_fun(this, &DashView::OnLensAdded));
+  lenses_->lens_added.connect(sigc::mem_fun(this, &DashView::OnLensAdded));
   mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
   preview_state_machine_.PreviewActivated.connect(sigc::mem_fun(this, &DashView::BuildPreview));
   Relayout();
+
+  for (auto lens : lenses_->GetLenses())
+    lenses_->lens_added.emit(lens);
 
   home_lens_->AddLenses(lenses_);
   lens_bar_->Activate("home.lens");
@@ -145,62 +186,6 @@ void DashView::SetMonitorOffset(int x, int y)
   renderer_.y_offset = y;
 }
 
-void DashView::ClosePreview()
-{
-  if (preview_displaying_)
-  {
-    layout_->SetPresentRedirectedView(true);
-    animation_.Stop();
-    fade_out_connection_.disconnect();
-    fade_in_connection_.disconnect();
-    // Set fade animation
-    animation_.SetDuration(250);
-    animation_.SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::ExpoEaseIn));
-    fade_in_connection_ = animation_.updated.connect(sigc::mem_fun(this, &DashView::FadeInCallBack));
-
-    fade_in_value_ = 1.0f;
-    animation_.SetStartValue(fade_in_value_);
-    animation_.SetFinishValue(0.0f);
-    animation_.Start();
-  }
-
-  preview_navigation_mode_ = previews::Navigation::NONE;
-  preview_displaying_ = false;
-
-  // re-focus dash view component.
-  nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
-  QueueDraw();
-}
-
-void DashView::FadeOutCallBack(float const& fade_out_value)
-{
-  fade_out_value_ = fade_out_value;
-  QueueDraw();
-}
-
-void DashView::FadeInCallBack(float const& fade_in_value)
-{
-  fade_in_value_ = fade_in_value;
-  QueueDraw();
-
-  if (fade_in_value_ == 0.0f)
-  {
-    // sanity check
-    if (!preview_container_)
-    {
-      return;
-    }
-    RemoveChild(preview_container_.GetPointer());
-    preview_container_->UnParentObject();
-    preview_container_.Release(); // free resources
-    preview_state_machine_.ClosePreview();
-
-    // Closing the preview. Set  opening_row_y_ to -1;
-    // opening_row_y_ is updated once when the preview
-    opening_row_y_ = -1;
-  }
-}
-
 void DashView::OnUriActivated(ResultView::ActivateType type, std::string const& uri, GVariant* data, std::string const& unique_id) 
 {
   last_activated_uri_ = uri;
@@ -209,20 +194,21 @@ void DashView::OnUriActivated(ResultView::ActivateType type, std::string const& 
   if (data)
   {
     // Update positioning information.
-    int position = -1;
+    int column_x = -1;
+    int row_y = -1;
+    int column_width = 0;
     int row_height = 0;
     int results_to_the_left = 0;
     int results_to_the_right = 0;
-    g_variant_get(data, "(iiii)", &position, &row_height, &results_to_the_left, &results_to_the_right);
-    preview_state_machine_.SetSplitPosition(SplitPosition::CONTENT_AREA, position);
+    g_variant_get(data, "(tiiiiii)", &last_activated_timestamp_, &column_x, &row_y, &column_width, &row_height, &results_to_the_left, &results_to_the_right);
+
+    preview_state_machine_.SetSplitPosition(SplitPosition::CONTENT_AREA, row_y);
     preview_state_machine_.left_results = results_to_the_left;
     preview_state_machine_.right_results = results_to_the_right;
 
-    if (opening_row_y_ == -1)
-    {
-      // Update only when opening the previews
-      opening_row_y_ = position;
-    }
+    opening_column_x_ = column_x;
+    opening_row_y_ = row_y;
+    opening_column_width_ = column_width;
     opening_row_height_ = row_height;
   }
 
@@ -233,43 +219,33 @@ void DashView::OnUriActivated(ResultView::ActivateType type, std::string const& 
   }
 }
 
-
 void DashView::BuildPreview(Preview::Ptr model)
 {
   if (!preview_displaying_)
-  {
-    // Make a copy of this DashView backup texture.
-    if (layout_->RedirectRenderingToTexture())
+  {     
+    StartPreviewAnimation();
+
+    content_view_->SetPresentRedirectedView(false);
+    preview_lens_view_ = active_lens_view_;
+    if (preview_lens_view_)
     {
-      nux::TexCoordXForm texxform;
-      nux::ObjectPtr<nux::IOpenGLBaseTexture> src_texture;
-
-      layout_copy_ = src_texture = layout_->BackupTexture();
-
-      animation_.Stop();
-      fade_out_connection_.disconnect();
-      fade_in_connection_.disconnect();
-      // Set fade animation
-      animation_.SetDuration(250);
-      animation_.SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::ExpoEaseIn));
-      fade_out_connection_ = animation_.updated.connect(sigc::mem_fun(this, &DashView::FadeOutCallBack));
-
-      fade_out_value_ = 1.0f;
-      animation_.SetStartValue(fade_out_value_);
-      animation_.SetFinishValue(0.0f);
-      animation_.Start();
-
-      layout_->SetPresentRedirectedView(false);
+      preview_lens_view_->ForceCategoryExpansion(stored_activated_unique_id_, true);
+      preview_lens_view_->EnableResultTextures(true);
+      preview_lens_view_->PushFilterExpansion(false);
     }
 
-    preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
-    AddChild(preview_container_.GetPointer());
-    preview_container_->SetParentObject(this);
+    if (!preview_container_)
+    {
+      preview_container_ = previews::PreviewContainer::Ptr(new previews::PreviewContainer());
+      preview_container_->SetRedirectRenderingToTexture(true);
+      AddChild(preview_container_.GetPointer());
+      preview_container_->SetParentObject(this);
+    }
     preview_container_->Preview(model, previews::Navigation::NONE); // no swipe left or right
-    
-    preview_container_->SetGeometry(layout_->GetGeometry());
+
+    preview_container_->SetGeometry(lenses_layout_->GetGeometry());
     preview_displaying_ = true;
- 
+
     // connect to nav left/right signals to request nav left/right movement.
     preview_container_->navigate_left.connect([&] () {
       preview_navigation_mode_ = previews::Navigation::LEFT;
@@ -281,7 +257,7 @@ void DashView::BuildPreview(Preview::Ptr model)
 
     preview_container_->navigate_right.connect([&] () {
       preview_navigation_mode_ = previews::Navigation::RIGHT;
-      
+
       // sends a message to all result views, sending the the uri of the current preview result
       // and the unique id of the result view that should be handling the results
       ubus_manager_.SendMessage(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, g_variant_new("(iss)", 1, last_activated_uri_.c_str(), stored_activated_unique_id_.c_str()));
@@ -307,6 +283,185 @@ void DashView::BuildPreview(Preview::Ptr model)
   QueueDraw();
 }
 
+void DashView::ClosePreview()
+{
+  if (preview_displaying_)
+  {
+    EndPreviewAnimation();
+
+    preview_displaying_ = false;
+  }
+
+  preview_navigation_mode_ = previews::Navigation::NONE;
+
+  // re-focus dash view component.
+  nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
+  QueueDraw();
+}
+
+void DashView::StartPreviewAnimation()
+{
+  // We use linear animations so we can easily control when the next animation in the sequence starts.
+  // The animation curve is caluclated separately.
+
+  preview_animation_.reset();
+  preview_container_animation_.reset();
+
+  // Dash Split Open Animation
+  split_animation_.reset(new na::AnimateValue<float>());
+  split_animation_->SetDuration((1.0f - animate_split_value_) * PREVIEW_ANIMATION_LENGTH);
+  split_animation_->SetStartValue(animate_split_value_);
+  split_animation_->SetFinishValue(1.0f);
+  split_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
+  split_animation_->updated.connect([&](float const& linear_split_animate_value)
+  {
+    static na::EasingCurve split_animation_curve(na::EasingCurve::Type::InQuad);
+
+    animate_split_value_ = split_animation_curve.ValueForProgress(linear_split_animate_value);
+    QueueDraw();
+
+    // time to start the preview container animation?
+    if (linear_split_animate_value >= 0.5f && !preview_container_animation_)
+    {
+      // Preview Container Close Animation
+      preview_container_animation_.reset(new na::AnimateValue<float>());
+      preview_container_animation_->SetDuration((1.0f - animate_preview_container_value_) * PREVIEW_ANIMATION_LENGTH);
+      preview_container_animation_->SetStartValue(animate_preview_container_value_);
+      preview_container_animation_->SetFinishValue(1.0f);
+      preview_container_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
+      preview_container_animation_->updated.connect([&](float const& linear_preview_container_animate_value)
+      {
+        static na::EasingCurve preview_container_animation_curve(na::EasingCurve::Type::InQuad);
+
+        animate_preview_container_value_ = preview_container_animation_curve.ValueForProgress(linear_preview_container_animate_value);
+        QueueDraw();
+
+        // time to start the preview animation?
+        if (linear_preview_container_animate_value >= 0.9f && !preview_animation_)
+        {
+          // Preview Close Animation
+          preview_animation_.reset(new na::AnimateValue<float>());
+          preview_animation_->SetDuration((1.0f - animate_preview_value_) * PREVIEW_ANIMATION_LENGTH);
+          preview_animation_->SetStartValue(animate_preview_value_);
+          preview_animation_->SetFinishValue(1.0f);
+          preview_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
+          preview_animation_->updated.connect([&](float const& linear_preview_animate_value)
+          {
+            animate_preview_value_ = linear_preview_animate_value;
+            QueueDraw();
+          });
+
+          preview_animation_->finished.connect(sigc::mem_fun(this, &DashView::OnPreviewAnimationFinished));
+          preview_animation_->Start();
+        }
+      });
+
+      preview_container_animation_->finished.connect(sigc::mem_fun(this, &DashView::OnPreviewAnimationFinished));
+      preview_container_animation_->Start();
+    }
+
+    if (preview_lens_view_)
+      preview_lens_view_->SetResultsPreviewAnimationValue(animate_split_value_);
+  });
+
+  split_animation_->finished.connect(sigc::mem_fun(this, &DashView::OnPreviewAnimationFinished));
+  split_animation_->Start(); 
+}
+
+void DashView::EndPreviewAnimation()
+{
+  // We use linear animations so we can easily control when the next animation in the sequence starts.
+  // The animation curve is caluclated separately.
+
+  split_animation_.reset();
+  preview_container_animation_.reset();
+
+  // Preview Close Animation
+  preview_animation_.reset(new na::AnimateValue<float>());
+  preview_animation_->SetDuration(animate_preview_value_ * PREVIEW_ANIMATION_LENGTH);
+  preview_animation_->SetStartValue(1.0f - animate_preview_value_);
+  preview_animation_->SetFinishValue(1.0f);
+  preview_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
+  preview_animation_->updated.connect([&](float const& preview_value)
+  {
+    animate_preview_value_ = 1.0f - preview_value;
+    QueueDraw();
+
+    // time to stop the split?
+    if (preview_value >= 0.9f && !preview_container_animation_)
+    {
+      // Preview Container Close Animation
+      preview_container_animation_.reset(new na::AnimateValue<float>());
+      preview_container_animation_->SetDuration(animate_preview_container_value_ * PREVIEW_ANIMATION_LENGTH);
+      preview_container_animation_->SetStartValue(1.0f - animate_preview_container_value_);
+      preview_container_animation_->SetFinishValue(1.0f);
+      preview_container_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
+      preview_container_animation_->updated.connect([&](float const& linear_preview_container_animate_value)
+      {
+        static na::EasingCurve preview_container_animation_curve(na::EasingCurve::Type::InQuad);
+
+        animate_preview_container_value_ = 1.0f - preview_container_animation_curve.ValueForProgress(linear_preview_container_animate_value);
+        QueueDraw();
+
+        if (linear_preview_container_animate_value >= 0.5f && !split_animation_)
+        {
+          // Dash Split Close Animation
+          split_animation_.reset(new na::AnimateValue<float>());
+          split_animation_->SetDuration(animate_split_value_ * PREVIEW_ANIMATION_LENGTH);
+          split_animation_->SetStartValue(1.0f - animate_split_value_);
+          split_animation_->SetFinishValue(1.0f);
+          split_animation_->SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::Linear));
+          split_animation_->updated.connect([&](float const& linear_split_animate_value)
+          {
+            static na::EasingCurve split_animation_curve(na::EasingCurve::Type::InQuad);
+
+            animate_split_value_ = 1.0f - split_animation_curve.ValueForProgress(linear_split_animate_value);
+            QueueDraw();
+          });
+          split_animation_->finished.connect(sigc::mem_fun(this, &DashView::OnPreviewAnimationFinished));
+          split_animation_->Start();
+
+          // if (preview_lens_view_)
+          //   preview_lens_view_->PopFilterExpansion();
+        }
+      });
+
+      preview_container_animation_->finished.connect(sigc::mem_fun(this, &DashView::OnPreviewAnimationFinished));
+      preview_container_animation_->Start();
+    }
+  });
+
+  preview_animation_->finished.connect(sigc::mem_fun(this, &DashView::OnPreviewAnimationFinished));
+  preview_animation_->Start();
+}
+
+void DashView::OnPreviewAnimationFinished()
+{
+  if (animate_preview_value_ != 0.0f || animate_preview_container_value_ != 0.0f || animate_split_value_ != 0.0f)
+    return;
+
+  // preview close finished.
+  if (preview_container_)
+  {
+    RemoveChild(preview_container_.GetPointer());
+    preview_container_->UnParentObject();
+    preview_container_.Release(); // free resources
+    preview_state_machine_.ClosePreview();
+    QueueDraw();
+  }
+
+  // reset the saturation.
+  if (preview_lens_view_.IsValid())
+  {
+    preview_lens_view_->SetResultsPreviewAnimationValue(0.0);
+    preview_lens_view_->ForceCategoryExpansion(stored_activated_unique_id_, false);
+    preview_lens_view_->EnableResultTextures(false);
+    preview_lens_view_->PopFilterExpansion();
+  }
+  preview_lens_view_.Release();
+  content_view_->SetPresentRedirectedView(true);
+}
+
 void DashView::AboutToShow()
 {
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
@@ -315,34 +470,41 @@ void DashView::AboutToShow()
 
   /* Give the lenses a chance to prep data before we map them  */
   lens_bar_->Activate(active_lens_view_->lens()->id());
-  if (active_lens_view_->lens()->id() == "home.lens")
+  if (active_lens_view_)
   {
-    for (auto lens : lenses_.GetLenses())
-    {
-      lens->view_type = ViewType::HOME_VIEW;
-      LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HOME_VIEW
-                            << " on '" << lens->id() << "'";
-    }
+    active_lens_view_->SetVisible(true);
 
-    home_lens_->view_type = ViewType::LENS_VIEW;
-    LOG_DEBUG(logger) << "Setting ViewType " << ViewType::LENS_VIEW
-                                << " on '" << home_lens_->id() << "'";
-  }
-  else if (active_lens_view_)
-  {
-    // careful here, the lens_view's view_type doesn't get reset when the dash
-    // hides, but lens' view_type does, so we need to update the lens directly
-    active_lens_view_->lens()->view_type = ViewType::LENS_VIEW;
+    if (active_lens_view_->lens()->id() == "home.lens")
+    {
+      for (auto lens : lenses_->GetLenses())
+      {
+        lens->view_type = ViewType::HOME_VIEW;
+        LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HOME_VIEW
+                              << " on '" << lens->id() << "'";
+      }
+
+      home_lens_->view_type = ViewType::LENS_VIEW;
+      LOG_DEBUG(logger) << "Setting ViewType " << ViewType::LENS_VIEW
+                                  << " on '" << home_lens_->id() << "'";
+    }
+    else
+    {
+      // careful here, the lens_view's view_type doesn't get reset when the dash
+      // hides, but lens' view_type does, so we need to update the lens directly
+      active_lens_view_->lens()->view_type = ViewType::LENS_VIEW;
+    }
   }
 
   // this will make sure the spinner animates if the search takes a while
   search_bar_->ForceSearchChanged();
 
   // if a preview is open, close it
-  if (preview_displaying_) 
+  if (preview_displaying_)
   {
     ClosePreview();
   }
+
+  overlay_window_buttons_->Show();
 
   renderer_.AboutToShow();
 }
@@ -352,7 +514,7 @@ void DashView::AboutToHide()
   visible_ = false;
   renderer_.AboutToHide();
 
-  for (auto lens : lenses_.GetLenses())
+  for (auto lens : lenses_->GetLenses())
   {
     lens->view_type = ViewType::HIDDEN;
     LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HIDDEN
@@ -363,26 +525,35 @@ void DashView::AboutToHide()
   LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HIDDEN
                             << " on '" << home_lens_->id() << "'";
 
+  if (active_lens_view_.IsValid())
+    active_lens_view_->SetVisible(false);
+
   // if a preview is open, close it
-  if (preview_displaying_) 
+  if (preview_displaying_)
   {
     ClosePreview();
   }
+
+  overlay_window_buttons_->Hide();
 }
 
 void DashView::SetupViews()
 {
   dash::Style& style = dash::Style::Instance();
+  panel::Style &panel_style = panel::Style::Instance();
 
   layout_ = new nux::VLayout();
   layout_->SetLeftAndRightPadding(style.GetVSeparatorSize(), 0);
   layout_->SetTopAndBottomPadding(style.GetHSeparatorSize(), 0);
   SetLayout(layout_);
-  layout_->SetRedirectRenderingToTexture(true);
+  layout_->AddLayout(new nux::SpaceLayout(0, 0, panel_style.panel_height, panel_style.panel_height), 0);
 
   content_layout_ = new DashLayout(NUX_TRACKER_LOCATION);
   content_layout_->SetTopAndBottomPadding(style.GetDashViewTopPadding(), 0);
-  layout_->AddLayout(content_layout_, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
+
+  content_view_ = new DashContentView(NUX_TRACKER_LOCATION);
+  content_view_->SetLayout(content_layout_);
+  layout_->AddView(content_view_, 1, nux::MINOR_POSITION_START, nux::MINOR_SIZE_FULL);
 
   search_bar_layout_ = new nux::HLayout();
   search_bar_layout_->SetLeftAndRightPadding(style.GetSearchBarLeftPadding(), 0);
@@ -395,20 +566,27 @@ void DashView::SetupViews()
   search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
   search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
-  search_bar_->showing_filters.changed.connect([&] (bool showing) { if (active_lens_view_) active_lens_view_->filters_expanded = showing; QueueDraw(); });
+  search_bar_->showing_filters.changed.connect([&] (bool showing)
+  {
+    if (active_lens_view_)
+    {
+      active_lens_view_->filters_expanded = showing;
+      QueueDraw();
+    }
+  });
   search_bar_layout_->AddView(search_bar_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   content_layout_->SetSpecialArea(search_bar_->show_filters());
 
   lenses_layout_ = new nux::VLayout();
-  content_layout_->AddView(lenses_layout_, 1, nux::MINOR_POSITION_START);
+  content_layout_->AddLayout(lenses_layout_, 1, nux::MINOR_POSITION_START);
 
   home_view_ = new LensView(home_lens_, nullptr);
   home_view_->uri_activated.connect(sigc::mem_fun(this, &DashView::OnUriActivated));
 
-  AddChild(home_view_);
+  AddChild(home_view_.GetPointer());
   active_lens_view_ = home_view_;
   lens_views_[home_lens_->id] = home_view_;
-  lenses_layout_->AddView(home_view_);
+  lenses_layout_->AddView(home_view_.GetPointer());
 
   lens_bar_ = new LensBar();
   AddChild(lens_bar_);
@@ -434,19 +612,13 @@ void DashView::Relayout()
   content_geo_ = GetBestFitGeometry(geo);
   dash::Style& style = dash::Style::Instance();
 
-  if (style.always_maximised)
-  {
-    if (geo.width >= content_geo_.width && geo.height > content_geo_.height)
-      content_geo_ = geo;
-  }
-
   // kinda hacky, but it makes sure the content isn't so big that it throws
   // the bottom of the dash off the screen
   // not hugely happy with this, so FIXME
-  lenses_layout_->SetMaximumHeight (content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height - style.GetDashViewTopPadding());
-  lenses_layout_->SetMinimumHeight (content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height - style.GetDashViewTopPadding());
+  lenses_layout_->SetMaximumHeight (std::max(0, content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height - style.GetDashViewTopPadding()));
+  lenses_layout_->SetMinimumHeight (std::max(0, content_geo_.height - search_bar_->GetGeometry().height - lens_bar_->GetGeometry().height - style.GetDashViewTopPadding()));
 
-  layout_->SetMinMaxSize(content_geo_.width, content_geo_.height);
+  layout_->SetMinMaxSize(content_geo_.width, content_geo_.y + content_geo_.height);
 
   // Minus the padding that gets added to the left
   float tile_width = style.GetTileWidth();
@@ -466,321 +638,108 @@ void DashView::Relayout()
 nux::Geometry DashView::GetBestFitGeometry(nux::Geometry const& for_geo)
 {
   dash::Style& style = dash::Style::Instance();
+  panel::Style &panel_style = panel::Style::Instance();
 
   int width = 0, height = 0;
   int tile_width = style.GetTileWidth();
   int tile_height = style.GetTileHeight();
+  int category_height = (style.GetPlacesGroupTopSpace() + style.GetCategoryIconSize()  + style.GetPlacesGroupResultTopPadding() + tile_height);
   int half = for_geo.width / 2;
 
   // if default dash size is bigger than half a screens worth of items, go for that.
-  while ((width += tile_width) + (19 * 2) < half)
+  while ((width += tile_width) < half)
     ;
 
-  width = MAX(width, tile_width * 6);
+  width = std::max(width, tile_width * DASH_TILE_HORIZONTAL_COUNT);
+  width += style.GetVSeparatorSize();
+  width += style.GetPlacesGroupResultLeftPadding() + DASH_RESULT_RIGHT_PAD;
 
-  width += 20 + 40; // add the left padding and the group plugin padding
 
-  height = search_bar_->GetGeometry().height;
-  height += tile_height * 3;
-  height += (style.GetPlacesGroupTopSpace() - 2 + 24 + 2) * 3; // adding three group headers
-  height += 1*2; // hseparator height
+  height = style.GetHSeparatorSize();
   height += style.GetDashViewTopPadding();
+  height += search_bar_->GetGeometry().height;
+  height += category_height * DASH_DEFAULT_CATEGORY_COUNT; // adding three categories
   height += lens_bar_->GetGeometry().height;
 
-  if (for_geo.width > 800 && for_geo.height > 550)
-  {
-    width = MIN(width, for_geo.width-66);
-    height = MIN(height, for_geo.height-24);
-  }
+  // width/height shouldn't be bigger than the geo available.
+  width = std::min(width, for_geo.width); // launcher width is taken into account in for_geo.
+  height = std::min(height, for_geo.height - panel_style.panel_height); // panel height is not taken into account in for_geo.
 
-  return nux::Geometry(0, 0, width, height);
+  if (style.always_maximised)
+  {
+    width = std::max(0, for_geo.width);
+    height = std::max(0, for_geo.height - panel_style.panel_height);
+  }
+  return nux::Geometry(0, panel_style.panel_height, width, height);
 }
 
 void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  renderer_.DrawFull(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry(), true);
-}
+  panel::Style &panel_style = panel::Style::Instance();
 
-/**
- * Parametrically interpolates a value in one of two consecutive closed intervals.
- *
- * @param[in] p
- * @param[in] start The left (least) value of the closed interval.
- * @param[in] end1  The right (greatest) value of the closed interval,
- *                  if start <= end1
- * @param[in] end2  The right (greatest) value of the closed interval,
- *                  if start > end1
- *
- * @returns the linear interpolation at @p p of the interval [start, end] where end
- * is @p end1 if start <= @p end1, otherwise end is @end2.
- */
-static float Interpolate2(float p, int start, int end1, int end2)
-{
-  float result = end2;
-  if (start < end2)
-  {
-    int end = start > end1 ? end2 : end1;
-    result = start + p * (end - start);
-  }
+  nux::Geometry renderer_geo_abs(GetAbsoluteGeometry());
+  renderer_geo_abs.y += panel_style.panel_height;
+  renderer_geo_abs.height -= panel_style.panel_height;
 
-  return result;
+  nux::Geometry renderer_geo(GetGeometry());
+  renderer_geo.y += panel_style.panel_height;
+  renderer_geo.height += panel_style.panel_height;
+
+  renderer_.DrawFull(graphics_engine, content_geo_, renderer_geo_abs, renderer_geo, true);
 }
 
 void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  auto& style = dash::Style::Instance();
+  panel::Style& panel_style = panel::Style::Instance();
 
-  renderer_.DrawInner(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry());
-  
-  nux::Geometry clip_geo = layout_->GetGeometry();
-  clip_geo.x += style.GetVSeparatorSize();
+  nux::Geometry renderer_geo_abs(GetAbsoluteGeometry());
+  renderer_geo_abs.y += panel_style.panel_height;
+  renderer_geo_abs.height -= panel_style.panel_height;
+
+  nux::Geometry renderer_geo(GetGeometry());
+  renderer_geo.y += panel_style.panel_height;
+  renderer_geo.height += panel_style.panel_height;
+
+  renderer_.DrawInner(graphics_engine, content_geo_, renderer_geo_abs, renderer_geo);
+
+  nux::Geometry const& geo_layout(layout_->GetGeometry());
+
+  // See lp bug: 1125346 (The sharp white line between dash and launcher is missing)
+  nux::Geometry clip_geo = geo_layout;
+  clip_geo.x += 1;
   graphics_engine.PushClippingRectangle(clip_geo);
-
-  bool display_ghost = false;
-  bool preview_redraw = false;
-  if (preview_container_)
-  {
-    preview_redraw = preview_container_->IsRedrawNeeded();
-  }
-
-  if (!preview_displaying_ && layout_->RedirectRenderingToTexture() && (fade_in_value_ == 0.0f))
-  {
-    nux::Geometry layout_geo = layout_->GetGeometry();
-    graphics_engine.PushClippingRectangle(layout_geo);
-    nux::GetPainter().PaintBackground(graphics_engine, layout_geo);
-    graphics_engine.PopClippingRectangle();
-  }
-
-  if (preview_displaying_ && (IsFullRedraw() || force_draw || preview_redraw) && layout_->RedirectRenderingToTexture())
-  {
-    display_ghost = true;
-    nux::Geometry layout_geo = layout_->GetGeometry();
-    graphics_engine.PushClippingRectangle(layout_geo);
-    nux::GetPainter().PaintBackground(graphics_engine, layout_geo);
-    graphics_engine.PopClippingRectangle();
-  }
 
   if (IsFullRedraw())
   {
     nux::GetPainter().PushBackgroundStack();
   }
-
-
-  if (preview_displaying_)
+  else
   {
-    // Progressively reveal the preview.
-    nux::Geometry preview_clip_geo = preview_container_->GetGeometry();
-    preview_clip_geo.y = (preview_clip_geo.y + preview_clip_geo.height)/2.0f - 
-      (1.0f - fade_out_value_) * (preview_clip_geo.height)/2.0f;
-    preview_clip_geo.height = (1.0f - fade_out_value_) * (preview_clip_geo.height);
-
-    graphics_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(-preview_container_->GetWidth()/2.0f, -preview_container_->GetHeight()/2.0f, 0));
-    graphics_engine.PushModelViewMatrix(nux::Matrix4::SCALE(1.0f - fade_out_value_, 1.0f - fade_out_value_, 1.0f));
-    graphics_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(preview_container_->GetWidth()/2.0f, preview_container_->GetHeight()/2.0f, 0));
-
-    preview_container_->ProcessDraw(graphics_engine, (!force_draw) ? IsFullRedraw() : force_draw);
-
-    graphics_engine.PopModelViewMatrix();
-    graphics_engine.PopModelViewMatrix();
-    graphics_engine.PopModelViewMatrix();
+    nux::GetPainter().PaintBackground(graphics_engine, geo_layout);
   }
-  else if (fade_in_value_ > 0.0f && preview_container_ && preview_container_.IsValid())
+
+  if (preview_container_.IsValid())
   {
-    graphics_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(-preview_container_->GetWidth()/2.0f, -preview_container_->GetHeight()/2.0f, 0));
-    graphics_engine.PushModelViewMatrix(nux::Matrix4::SCALE(fade_in_value_, fade_in_value_, 1.0f));
-    graphics_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(preview_container_->GetWidth()/2.0f, preview_container_->GetHeight()/2.0f, 0));
+    nux::Geometry geo_split_clip;
+    DrawDashSplit(graphics_engine, geo_split_clip);
 
-    preview_container_->ProcessDraw(graphics_engine, (!force_draw) ? IsFullRedraw() : force_draw);
+    graphics_engine.PushClippingRectangle(geo_split_clip);
 
-    graphics_engine.PopModelViewMatrix();
-    graphics_engine.PopModelViewMatrix();
-    graphics_engine.PopModelViewMatrix();
+    if (preview_lens_view_.IsValid())
+    {    
+      DrawPreviewResultTextures(graphics_engine, force_draw);
+    }
+
+    DrawPreviewContainer(graphics_engine);
+
+    // preview always on top.
+    DrawPreview(graphics_engine, force_draw);
+
+    graphics_engine.PopClippingRectangle();
   }
-  else if (fade_in_value_ == 0.0f)
+  else
   {
     layout_->ProcessDraw(graphics_engine, force_draw);
-  }
-  
-  // Animation effect rendering
-  if (display_ghost || IsFullRedraw())
-  {
-    unsigned int current_alpha_blend;
-    unsigned int current_src_blend_factor;
-    unsigned int current_dest_blend_factor;
-    graphics_engine.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
-
-    float ghost_opacity = 0.25f;    
-    float tint_factor = 1.2f;
-    float saturation_ref = 0.4f;
-    nux::Color bg_color = background_color_;
-
-    int position_offset = 40;
-
-    if (preview_displaying_ && layout_ && layout_->RedirectRenderingToTexture())
-    {
-      if (layout_copy_.IsValid())
-      {
-        graphics_engine.PushClippingRectangle(layout_->GetGeometry());
-        graphics_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-        nux::TexCoordXForm texxform;
-
-        texxform.FlipVCoord(true);
-
-        int filter_width = 10;
-        if (active_lens_view_ && active_lens_view_->filters_expanded)
-        {
-          texxform.uoffset = (active_lens_view_->filter_bar()->GetX() -layout_->GetX())/(float)layout_->GetWidth();
-          texxform.voffset = (active_lens_view_->filter_bar()->GetY() -layout_->GetY())/(float)layout_->GetHeight();
-
-          texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-          graphics_engine.QRP_1Tex(
-            active_lens_view_->filter_bar()->GetX() + (1.0f - fade_out_value_)*(active_lens_view_->filter_bar()->GetWidth() + 10),
-            active_lens_view_->filter_bar()->GetY(),
-            active_lens_view_->filter_bar()->GetWidth(),
-            active_lens_view_->filter_bar()->GetHeight(),
-            layout_copy_, texxform,
-            nux::Color(fade_out_value_, fade_out_value_, fade_out_value_, fade_out_value_)
-            );
-          filter_width += active_lens_view_->filter_bar()->GetWidth();
-        }  
-
-        float saturation = fade_out_value_ + (1.0f - fade_out_value_) * saturation_ref;
-        float opacity = fade_out_value_ < ghost_opacity ? ghost_opacity : fade_out_value_;
-        nux::Color tint = nux::Color(
-          fade_out_value_ + (1.0f - fade_out_value_) * tint_factor*bg_color.red,
-          fade_out_value_ + (1.0f - fade_out_value_) * tint_factor*bg_color.green,
-          fade_out_value_ + (1.0f - fade_out_value_) * tint_factor*bg_color.blue,
-          1.0f);
-
-        // Ghost row of items above the preview
-        {
-          int final_x = layout_->GetX();
-          int final_y = layout_->GetY() - (opening_row_y_) - position_offset ;
-
-          texxform.uoffset = 0.0f;
-          texxform.voffset = 0.0f;
-          texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-          graphics_engine.QRP_TexDesaturate(
-            fade_out_value_ * layout_->GetX() + (1.0f - fade_out_value_) * final_x,
-            fade_out_value_ * layout_->GetY() + (1.0f - fade_out_value_) * final_y,
-            layout_->GetWidth() - filter_width,
-            opening_row_y_ + opening_row_height_,
-            layout_copy_, texxform,
-            nux::Color(tint.red, tint.green, tint.blue, opacity),
-            saturation
-            );
-        }
-
-        // Ghost row of items below the preview
-        {
-          int final_x = layout_->GetX();
-          int final_y = layout_->GetY() + layout_->GetHeight() - (position_offset*1.9);
-
-          texxform.uoffset = (layout_->GetX() - layout_->GetX())/(float)layout_->GetWidth();
-          texxform.voffset = (opening_row_y_ + opening_row_height_ - layout_->GetY())/(float)layout_->GetHeight();
-          texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-          graphics_engine.QRP_TexDesaturate(
-            fade_out_value_ * layout_->GetX() + (1 - fade_out_value_) * final_x,
-            Interpolate2(1.0f - fade_out_value_, opening_row_y_ + opening_row_height_, final_y, layout_->GetHeight()),
-            layout_->GetWidth() - filter_width,
-            layout_->GetHeight() - opening_row_y_ - opening_row_height_,
-            layout_copy_, texxform,
-            nux::Color(tint.red, tint.green, tint.blue, opacity),
-            saturation
-            );
-        }
-
-        graphics_engine.GetRenderStates().SetBlend(false);
-        graphics_engine.PopClippingRectangle();
-      }
-
-
-    }
-    else if (layout_ && layout_->RedirectRenderingToTexture() && fade_in_value_ != 0.0f)
-    {
-      if (layout_copy_.IsValid())
-      {
-        graphics_engine.PushClippingRectangle(layout_->GetGeometry());
-        graphics_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-        nux::TexCoordXForm texxform;
-
-        texxform.FlipVCoord(true);
-
-        int filter_width = 10;
-        if (active_lens_view_ && active_lens_view_->filters_expanded)
-        {
-          texxform.uoffset = (active_lens_view_->filter_bar()->GetX() -layout_->GetX())/(float)layout_->GetWidth();
-          texxform.voffset = (active_lens_view_->filter_bar()->GetY() -layout_->GetY())/(float)layout_->GetHeight();
-
-          texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-          graphics_engine.QRP_1Tex(
-            active_lens_view_->filter_bar()->GetX() + (fade_in_value_)*(active_lens_view_->filter_bar()->GetWidth() + 10),
-            active_lens_view_->filter_bar()->GetY(),
-            active_lens_view_->filter_bar()->GetWidth(),
-            active_lens_view_->filter_bar()->GetHeight(),
-            layout_copy_, texxform,
-            nux::Color(1.0f - fade_in_value_, 1.0f - fade_in_value_, 1.0f - fade_in_value_, 1.0f - fade_in_value_)
-            );
-          filter_width += active_lens_view_->filter_bar()->GetWidth();
-        }
-
-        float saturation = fade_in_value_ * saturation_ref + (1.0f - fade_in_value_);
-        float opacity = (1.0f - fade_in_value_) < ghost_opacity ? ghost_opacity : (1.0f - fade_in_value_);
-        nux::Color tint = nux::Color(
-          fade_in_value_ * tint_factor*bg_color.red + (1.0f - fade_in_value_),
-          fade_in_value_ * tint_factor*bg_color.green + (1.0f - fade_in_value_),
-          fade_in_value_ * tint_factor*bg_color.blue + (1.0f - fade_in_value_),
-          1.0f);
-
-        // Ghost row of items above the preview
-        {
-          int final_x = layout_->GetX();
-          int final_y = layout_->GetY() - (opening_row_y_) - position_offset;
-
-          texxform.uoffset = 0.0f;
-          texxform.voffset = 0.0f;
-          texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-          graphics_engine.QRP_TexDesaturate(
-            (1.0f - fade_in_value_) * layout_->GetX() + (fade_in_value_) * final_x,
-            (1.0f - fade_in_value_) * layout_->GetY() + (fade_in_value_) * final_y,
-            layout_->GetWidth() - filter_width,
-            opening_row_y_ + opening_row_height_,
-            layout_copy_, texxform,
-            nux::Color(tint.red, tint.green, tint.blue, opacity),
-            saturation
-            );
-        }
-
-        // Ghost row of items below the preview
-        {
-          int final_x = layout_->GetX();
-          int final_y = layout_->GetY() + layout_->GetHeight() -(position_offset*1.9);
-
-          texxform.uoffset = (layout_->GetX() - layout_->GetX())/(float)layout_->GetWidth();
-          texxform.voffset = (opening_row_y_ + opening_row_height_ - layout_->GetY())/(float)layout_->GetHeight();
-          texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-
-          graphics_engine.QRP_TexDesaturate(
-            (1.0f - fade_in_value_) * layout_->GetX() + (fade_in_value_) * final_x,
-            Interpolate2(fade_in_value_, opening_row_y_ + opening_row_height_, final_y, layout_->GetHeight()),
-            layout_->GetWidth() - filter_width,
-            layout_->GetHeight() - opening_row_y_ - opening_row_height_,
-            layout_copy_, texxform,
-            nux::Color(tint.red, tint.green, tint.blue, opacity),
-            saturation
-            );
-        }
-        graphics_engine.GetRenderStates().SetBlend(false);
-        graphics_engine.PopClippingRectangle();
-      }
-    }
-
-    graphics_engine.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
   }
 
   if (IsFullRedraw())
@@ -788,9 +747,357 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
     nux::GetPainter().PopBackgroundStack();
   }
 
+  overlay_window_buttons_->QueueDraw();
+
   graphics_engine.PopClippingRectangle();
 
-  renderer_.DrawInnerCleanup(graphics_engine, content_geo_, GetAbsoluteGeometry(), GetGeometry());
+  renderer_.DrawInnerCleanup(graphics_engine, content_geo_, renderer_geo_abs, renderer_geo);
+}
+
+void DashView::DrawDashSplit(nux::GraphicsEngine& graphics_engine, nux::Geometry& split_clip)
+{
+  nux::Geometry const& geo_layout(layout_->GetGeometry());
+  split_clip = geo_layout;
+
+  if (animate_split_value_ == 1.0)
+    return;
+
+  // if we're not presenting, then we must be manually rendering it's backup texture.
+  if (!content_view_->PresentRedirectedView() && content_view_->BackupTexture().IsValid())
+  {
+    unsigned int alpha, src, dest = 0;
+    graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
+    graphics_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    nux::TexCoordXForm texxform;
+    texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+    texxform.FlipVCoord(true);
+
+    // Lens Bar
+    texxform.uoffset = (lens_bar_->GetX() - content_view_->GetX())/(float)content_view_->GetWidth();
+    texxform.voffset = (lens_bar_->GetY() - content_view_->GetY())/(float)content_view_->GetHeight();
+
+    int start_y = lens_bar_->GetY();
+    int final_y = geo_layout.y + geo_layout.height + PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET;
+
+    int lens_y = (1.0f - animate_split_value_) * start_y + (animate_split_value_ * final_y);
+
+    graphics_engine.QRP_1Tex
+    (
+      lens_bar_->GetX(),
+      lens_y,
+      lens_bar_->GetWidth(),
+      lens_bar_->GetHeight(),
+      content_view_->BackupTexture(),
+      texxform,
+      nux::Color((1.0-animate_split_value_), (1.0-animate_split_value_), (1.0-animate_split_value_), (1.0-animate_split_value_))
+    );
+
+    split_clip.height = std::min(lens_y, geo_layout.height);
+
+    if (active_lens_view_ && active_lens_view_->GetPushedFilterExpansion())
+    {
+      // Search Bar
+      texxform.uoffset = (search_bar_->GetX() - content_view_->GetX())/(float)content_view_->GetWidth();
+      texxform.voffset = (search_bar_->GetY() - content_view_->GetY())/(float)content_view_->GetHeight();
+
+      start_y = search_bar_->GetY();
+      final_y = geo_layout.y - search_bar_->GetHeight() - PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET;
+
+      graphics_engine.QRP_1Tex
+      (
+        search_bar_->GetX(),
+        (1.0f - animate_split_value_) * start_y + (animate_split_value_ * final_y),
+        search_bar_->GetWidth() - active_lens_view_->filter_bar()->GetWidth(),
+        search_bar_->GetHeight(),
+        content_view_->BackupTexture(),
+        texxform,
+        nux::Color((1.0-animate_split_value_), (1.0-animate_split_value_), (1.0-animate_split_value_), (1.0-animate_split_value_))
+      );
+
+      // Filter Bar
+      texxform.uoffset = (active_lens_view_->filter_bar()->GetX() -content_view_->GetX())/(float)content_view_->GetWidth();
+      texxform.voffset = (search_bar_->GetY() - content_view_->GetY())/(float)content_view_->GetHeight();
+
+      int start_x = active_lens_view_->filter_bar()->GetX();
+      int final_x = content_view_->GetX() + content_view_->GetWidth() + PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET;
+
+      int filter_x = (1.0f - animate_split_value_) * start_x + (animate_split_value_ * final_x);
+
+      graphics_engine.QRP_1Tex
+      (
+        filter_x,
+        search_bar_->GetY(),
+        active_lens_view_->filter_bar()->GetWidth(),
+        active_lens_view_->filter_bar()->GetY() + active_lens_view_->filter_bar()->GetHeight(),
+        content_view_->BackupTexture(),
+        texxform,
+        nux::Color((1.0-animate_split_value_), (1.0-animate_split_value_), (1.0-animate_split_value_), (1.0-animate_split_value_))
+      );
+
+      split_clip.width = filter_x;
+    }
+    else
+    {
+      // Search Bar
+      texxform.uoffset = (search_bar_->GetX() - content_view_->GetX())/(float)content_view_->GetWidth();
+      texxform.voffset = (search_bar_->GetY() - content_view_->GetY())/(float)content_view_->GetHeight();
+
+      int start_y = search_bar_->GetY();
+      int final_y = geo_layout.y - search_bar_->GetHeight() - PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET;
+
+      graphics_engine.QRP_1Tex
+      (
+        search_bar_->GetX(),
+        (1.0f - animate_split_value_) * start_y + (animate_split_value_ * final_y),
+        search_bar_->GetWidth(),
+        search_bar_->GetHeight(),
+        content_view_->BackupTexture(),
+        texxform,
+        nux::Color((1.0-animate_split_value_), (1.0-animate_split_value_), (1.0-animate_split_value_), (1.0-animate_split_value_))
+      );
+    }
+
+    graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
+  }
+}
+
+void DashView::DrawPreviewContainer(nux::GraphicsEngine& graphics_engine)
+{
+  if (animate_preview_container_value_ == 0.0f)
+    return;
+
+  nux::Geometry const& geo_content = content_view_->GetGeometry();
+  nux::Geometry geo_abs = GetAbsoluteGeometry();
+  nux::Geometry geo_abs_preview = preview_container_->GetLayoutGeometry();
+
+  unsigned int alpha, src, dest = 0;
+  graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
+  graphics_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+  // Triangle pointed at preview item
+  if (opening_column_x_ != -1)
+  {
+    int final_width = 14;
+    int final_height = 12;
+
+    int x_center = geo_content.x + (opening_column_x_ - geo_abs.x) + opening_column_width_ / 2;
+    int start_y = geo_abs_preview.y - geo_abs.y;
+
+    int x1 = x_center - final_width/2;
+    int final_y1 = start_y;
+
+    int x2 = x_center + final_width/2;
+    int final_y2 = start_y;
+
+    int x3 = x_center;
+    int final_y3 = start_y - final_height;
+
+    graphics_engine.QRP_Triangle
+    (
+      x1,
+      (1.0f-animate_preview_container_value_) * start_y + (animate_preview_container_value_ * final_y1),
+
+      x2,
+      (1.0f-animate_preview_container_value_) * start_y + (animate_preview_container_value_ * final_y2),
+
+      x3,
+      (1.0f-animate_preview_container_value_) * start_y + (animate_preview_container_value_ * final_y3),
+
+      nux::Color(0.0f, 0.0f, 0.0f, 0.10f)
+    );
+  }
+
+  // Preview Background
+  int start_width = geo_content.width;
+  int start_x = geo_content.x;
+  int start_y = geo_abs_preview.y - geo_abs.y;
+
+  int final_x = geo_content.x;
+  int final_y = start_y;
+  int final_width = geo_content.width;
+  int final_height = geo_abs_preview.height;
+
+  graphics_engine.QRP_Color
+  (
+    (1.0f-animate_preview_container_value_) * start_x + (animate_preview_container_value_ * final_x),
+    (1.0f-animate_preview_container_value_) * start_y + (animate_preview_container_value_ * final_y),
+    (1.0f-animate_preview_container_value_) * start_width + (animate_preview_container_value_ * final_width),
+    (animate_preview_container_value_ * final_height),
+    nux::Color(0.0f, 0.0f, 0.0f, 0.10f)
+  );
+
+  graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
+}
+
+void DashView::DrawPreviewResultTextures(nux::GraphicsEngine& graphics_engine, bool /*force_draw*/)
+{
+  nux::Geometry const& geo_layout = layout_->GetGeometry();
+  nux::Geometry geo_abs = GetAbsoluteGeometry();
+  nux::Geometry geo_abs_preview = preview_container_->GetLayoutGeometry();
+
+  unsigned int alpha, src, dest = 0;
+  graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
+  graphics_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+  nux::TexCoordXForm texxform;
+  texxform.FlipVCoord(true);
+  texxform.uoffset = 0.0f;
+  texxform.voffset = 0.0f;
+  texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+
+  std::vector<ResultViewTexture::Ptr> result_textures = preview_lens_view_->GetResultTextureContainers();
+  std::vector<ResultViewTexture::Ptr> top_textures;
+  
+  int height_concat_below = 0;
+
+  // int i = 0;
+  for (auto it = result_textures.begin(); it != result_textures.end(); ++it)
+  {
+    ResultViewTexture::Ptr const& result_texture = *it;
+    if (!result_texture)
+      continue;
+
+    // split above.
+    if (result_texture->abs_geo.y <= opening_row_y_)
+    {
+      top_textures.push_back(result_texture);
+      continue;
+    }
+
+    // Bottom textures.
+    int start_x = result_texture->abs_geo.x - geo_abs.x;
+    int final_x = start_x;
+
+    int start_y = result_texture->abs_geo.y - geo_abs.y;
+    int final_y = geo_abs_preview.y + geo_abs_preview.height - geo_abs.y;
+    final_y += std::min(60, ((geo_layout.y + geo_layout.height) - final_y)/4);
+    final_y += height_concat_below;
+
+    nux::Geometry geo_tex_top((1.0f-animate_split_value_) * start_x + (animate_split_value_ * final_x),
+                       (1.0f-animate_split_value_) * start_y + (animate_split_value_ * final_y),
+                       result_texture->abs_geo.width,
+                       result_texture->abs_geo.height);
+
+    height_concat_below += geo_tex_top.height;
+
+    // off the bottom
+    if (geo_tex_top.y <= geo_layout.y + geo_layout.height)
+    {
+      preview_lens_view_->RenderResultTexture(result_texture);
+      // If we haven't got it now, we're not going to get it
+      if (!result_texture->texture.IsValid())
+        continue;
+
+      graphics_engine.QRP_1Tex
+      (
+        geo_tex_top.x,
+        geo_tex_top.y,
+        geo_tex_top.width,
+        geo_tex_top.height,
+        result_texture->texture,
+        texxform,
+        nux::Color(1.0f, 1.0f, 1.0f, 1.0f)
+      );
+    }
+  }
+
+  // Top Textures (in reverse)
+  int height_concat_above = 0;
+  for (auto it = top_textures.rbegin(); it != top_textures.rend(); ++it)
+  {
+    ResultViewTexture::Ptr const& result_texture = *it;
+
+    // each texture starts at a higher position.
+    height_concat_above += result_texture->abs_geo.height;
+
+    int start_x = result_texture->abs_geo.x - geo_abs.x;
+    int final_x = start_x;
+
+    int start_y = result_texture->abs_geo.y - geo_abs.y;
+    int final_y = -height_concat_above + (geo_abs_preview.y - geo_abs.y);
+
+    nux::Geometry geo_tex_top((1.0f-animate_split_value_) * start_x + (animate_split_value_ * final_x),
+                       (1.0f-animate_split_value_) * start_y + (animate_split_value_ * final_y),
+                       result_texture->abs_geo.width,
+                       result_texture->abs_geo.height);
+
+    // off the top
+    if (geo_tex_top.y + geo_tex_top.height >= geo_layout.y)
+    {
+      preview_lens_view_->RenderResultTexture(result_texture);
+      // If we haven't got it now, we're not going to get it
+      if (!result_texture->texture.IsValid())
+        continue;
+
+      graphics_engine.QRP_1Tex
+      (
+        geo_tex_top.x,
+        geo_tex_top.y,
+        geo_tex_top.width,
+        geo_tex_top.height,
+        result_texture->texture,
+        texxform,
+        nux::Color(1.0f, 1.0f, 1.0f, 1.0f)
+      );
+    }
+  }
+
+  graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
+}
+
+void DashView::DrawPreview(nux::GraphicsEngine& graphics_engine, bool force_draw)
+{
+  if (animate_preview_value_ > 0.0f)
+  {
+    bool animating = animate_split_value_ != 1.0f || animate_preview_value_ < 1.0f;
+    bool preview_force_draw = force_draw || animating || IsFullRedraw();
+
+    if (preview_force_draw)
+      nux::GetPainter().PushBackgroundStack();
+
+    if (animate_preview_value_ < 1.0f && preview_container_->RedirectRenderingToTexture())
+    {
+      preview_container_->SetPresentRedirectedView(false);
+      preview_container_->ProcessDraw(graphics_engine, preview_force_draw);
+
+      unsigned int alpha, src, dest = 0;
+      graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
+      graphics_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+      nux::ObjectPtr<nux::IOpenGLBaseTexture> preview_texture = preview_container_->BackupTexture();
+      if (preview_texture)
+      {
+        nux::TexCoordXForm texxform;
+        texxform.FlipVCoord(true);
+        texxform.uoffset = 0.0f;
+        texxform.voffset = 0.0f;
+        texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
+
+        nux::Geometry const& geo_preview = preview_container_->GetGeometry();
+        graphics_engine.QRP_1Tex
+        (
+          geo_preview.x,
+          geo_preview.y,
+          geo_preview.width,
+          geo_preview.height,
+          preview_texture,
+          texxform,
+          nux::Color(animate_preview_value_, animate_preview_value_, animate_preview_value_, animate_preview_value_)
+        );
+      }
+
+      preview_container_->SetPresentRedirectedView(true);
+  
+      graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
+    }
+    else
+    {
+      preview_container_->ProcessDraw(graphics_engine, preview_force_draw);        
+    }
+
+    if (preview_force_draw)
+      nux::GetPainter().PopBackgroundStack();
+  }
 }
 
 void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key)
@@ -802,11 +1109,6 @@ void DashView::OnMouseButtonDown(int x, int y, unsigned long button, unsigned lo
   {
     geo.width += style.GetDashRightTileWidth();
     geo.height += style.GetDashBottomTileHeight();
-  }
-
-  if (!geo.IsPointInside(x, y))
-  {
-    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
   }
 }
 
@@ -860,9 +1162,9 @@ std::string DashView::AnalyseLensURI(std::string const& uri)
 
 void DashView::UpdateLensFilter(std::string lens_id, std::string filter_name, std::string value)
 {
-  if (lenses_.GetLens(lens_id))
+  if (lenses_->GetLens(lens_id))
   {
-    Lens::Ptr lens = lenses_.GetLens(lens_id);
+    Lens::Ptr lens = lenses_->GetLens(lens_id);
 
     Filters::Ptr filters = lens->filters;
 
@@ -927,15 +1229,14 @@ void DashView::OnLiveSearchReached(std::string const& search_string)
 
 void DashView::OnLensAdded(Lens::Ptr& lens)
 {
-  std::string id = lens->id;
   lens_bar_->AddLens(lens);
 
-  LensView* view = new LensView(lens, search_bar_->show_filters());
-  AddChild(view);
+  nux::ObjectPtr<LensView> view(new LensView(lens, search_bar_->show_filters()));
+  AddChild(view.GetPointer());
   view->SetVisible(false);
   view->uri_activated.connect(sigc::mem_fun(this, &DashView::OnUriActivated));
 
-  lenses_layout_->AddView(view, 1);
+  lenses_layout_->AddView(view.GetPointer(), 1);
   lens_views_[lens->id] = view;
 
   lens->activated.connect(sigc::mem_fun(this, &DashView::OnUriActivatedReply));
@@ -967,8 +1268,13 @@ void DashView::OnLensBarActivated(std::string const& id)
     return;
   }
 
-  LensView* view = active_lens_view_ = lens_views_[id];
-  view->JumpToTop();
+  if (active_lens_view_.IsValid())
+    active_lens_view_->SetVisible(false);
+
+  nux::ObjectPtr<LensView> view = active_lens_view_ = lens_views_[id];
+
+  view->SetVisible(true);
+  view->AboutToShow();
 
   for (auto it: lens_views_)
   {
@@ -1007,7 +1313,7 @@ void DashView::OnSearchFinished(Lens::Hints const& hints, glib::Error const& err
 {
   hide_message_delay_.reset();
 
-  if (active_lens_view_ == NULL) return;
+  if (!active_lens_view_.IsValid()) return;
 
   // FIXME: bind the lens_view in PerformSearch
   active_lens_view_->CheckNoResults(hints);
@@ -1069,68 +1375,18 @@ bool DashView::DoFallbackActivation(std::string const& fake_uri)
 
   if (g_str_has_prefix(uri.c_str(), "application://"))
   {
-    std::string appname = uri.substr(14);
-    return LaunchApp(appname);
+    std::string const& appname = uri.substr(14);
+    return application_starter_->Launch(appname, last_activated_timestamp_);
   }
   else if (g_str_has_prefix(uri.c_str(), "unity-runner://"))
   {
-    std::string appname = uri.substr(15);
-    return LaunchApp(appname);
+    std::string const& appname = uri.substr(15);
+    return application_starter_->Launch(appname, last_activated_timestamp_);
   }
   else
-    return gtk_show_uri(NULL, uri.c_str(), CurrentTime, NULL);
+    return gtk_show_uri(NULL, uri.c_str(), last_activated_timestamp_, NULL);
 
   return false;
-}
-
-bool DashView::LaunchApp(std::string const& appname)
-{
-  GDesktopAppInfo* info;
-  bool ret = false;
-  char *id = g_strdup(appname.c_str());
-  int i = 0;
-
-  LOG_DEBUG(logger) << "Launching " << appname;
-
-  while (id != NULL)
-  {
-    info = g_desktop_app_info_new(id);
-    if (info != NULL)
-    {
-      GError* error = NULL;
-
-      g_app_info_launch(G_APP_INFO(info), NULL, NULL, &error);
-      if (error)
-      {
-        g_warning("Unable to launch %s: %s", id,  error->message);
-        g_error_free(error);
-      }
-      else
-        ret = true;
-      g_object_unref(info);
-      break;
-    }
-
-    /* Try to replace the next - with a / and do the lookup again.
-     * If we set id=NULL we'll exit the outer loop */
-    for (i = 0; ; i++)
-    {
-      if (id[i] == '-')
-      {
-        id[i] = '/';
-        break;
-      }
-      else if (id[i] == '\0')
-      {
-        g_free(id);
-        id = NULL;
-        break;
-      }
-    }
-  }
-
-  g_free(id);
-  return ret;
 }
 
 void DashView::DisableBlur()
@@ -1139,7 +1395,7 @@ void DashView::DisableBlur()
 }
 void DashView::OnEntryActivated()
 {
-  if (!search_in_progress_)
+  if (active_lens_view_.IsValid() && !search_in_progress_)
   {
     active_lens_view_->ActivateFirst();
   }
@@ -1155,7 +1411,7 @@ bool DashView::AcceptKeyNavFocus()
 
 std::string const DashView::GetIdForShortcutActivation(std::string const& shortcut) const
 {
-  Lens::Ptr lens = lenses_.GetLensForShortcut(shortcut);
+  Lens::Ptr lens = lenses_->GetLensForShortcut(shortcut);
   if (lens)
     return lens->id;
   return "";
@@ -1165,7 +1421,7 @@ std::vector<char> DashView::GetAllShortcuts()
 {
   std::vector<char> result;
 
-  for (Lens::Ptr lens: lenses_.GetLenses())
+  for (Lens::Ptr lens: lenses_->GetLenses())
   {
     std::string shortcut = lens->shortcut;
     if(shortcut.size() > 0)
@@ -1186,7 +1442,7 @@ bool DashView::InspectKeyEvent(unsigned int eventType,
       search_bar_->search_string = "";
     else
       ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
-    
+
     return true;
   }
   return false;
@@ -1208,7 +1464,7 @@ void DashView::AddProperties(GVariantBuilder* builder)
   dash::Style& style = dash::Style::Instance();
   int num_rows = 1; // The search bar
 
-  if (active_lens_view_)
+  if (active_lens_view_.IsValid())
     num_rows += active_lens_view_->GetNumRows();
 
   std::string form_factor("unknown");
@@ -1227,6 +1483,8 @@ void DashView::AddProperties(GVariantBuilder* builder)
   wrapper.add("right-border-width", style.GetDashRightTileWidth());
   wrapper.add("bottom-border-height", style.GetDashBottomTileHeight());
   wrapper.add("preview_displaying", preview_displaying_);
+  wrapper.add("dash_maximized", style.always_maximised());
+  wrapper.add("overlay_window_buttons_shown", overlay_window_buttons_->IsVisible());
 }
 
 nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
@@ -1235,7 +1493,7 @@ nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
   {
     return preview_container_->KeyNavIteration(direction);
   }
-  else if (direction == nux::KEY_NAV_DOWN && search_bar_ && active_lens_view_)
+  else if (direction == nux::KEY_NAV_DOWN && search_bar_ && active_lens_view_.IsValid())
   {
     auto show_filters = search_bar_->show_filters();
     auto fscroll_view = active_lens_view_->fscroll_view();
@@ -1298,15 +1556,15 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
     // Not sure if Enter should be a navigation key
     direction = KEY_NAV_ENTER;
     break;
-  case NUX_VK_F4:
-    // Maybe we should not do it here, but it needs to be checked where
-    // we are able to know if alt is pressed.
-    if (special_keys_state == NUX_STATE_ALT)
+  default:
+    auto const& close_key = WindowManager::Default().close_window_key();
+
+    if (close_key.first == special_keys_state && close_key.second == x11_key_code)
     {
       ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+      return nullptr;
     }
-    break;
-  default:
+
     direction = KEY_NAV_NONE;
   }
 
@@ -1323,10 +1581,13 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
   if (direction != KEY_NAV_NONE && key_symbol == nux::NUX_KEYDOWN && !search_bar_->im_preedit)
   {
     std::list<nux::Area*> tabs;
-    for (auto category : active_lens_view_->categories())
+    if (active_lens_view_.IsValid())
     {
-      if (category->IsVisible())
-        tabs.push_back(category);
+      for (auto category : active_lens_view_->categories())
+      {
+        if (category->IsVisible())
+          tabs.push_back(category);
+      }
     }
 
     if (search_bar_ && search_bar_->show_filters() &&
@@ -1335,7 +1596,8 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
       tabs.push_back(search_bar_->show_filters());
     }
 
-    if (active_lens_view_->filter_bar() && active_lens_view_->fscroll_view() &&
+    if (active_lens_view_.IsValid() &&
+        active_lens_view_->filter_bar() && active_lens_view_->fscroll_view() &&
         active_lens_view_->fscroll_view()->IsVisible())
     {
       for (auto child : active_lens_view_->filter_bar()->GetLayout()->GetChildren())
@@ -1424,7 +1686,12 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
 nux::Area* DashView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
 {
   nux::Area* view = nullptr;
-  if (preview_displaying_)
+
+  if (overlay_window_buttons_->GetGeometry().IsInside(mouse_position))
+  {
+    return overlay_window_buttons_->FindAreaUnderMouse(mouse_position, event_type);
+  }
+  else if (preview_displaying_)
   {
     nux::Point newpos = mouse_position;
     view = dynamic_cast<nux::Area*>(preview_container_.GetPointer())->FindAreaUnderMouse(newpos, event_type);
@@ -1439,7 +1706,7 @@ nux::Area* DashView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::N
 
 nux::Geometry const& DashView::GetContentGeometry() const
 {
-  return content_geo_;  
+  return content_geo_;
 }
 
 }

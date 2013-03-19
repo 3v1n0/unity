@@ -17,19 +17,7 @@
  * Authored by: Manuel de la Pena <manuel.delapena@canonical.com>
  */
 
-#include "config.h"
-
-#include <Nux/Nux.h>
-#include <Nux/HLayout.h>
-#include <Nux/VLayout.h>
-#include <NuxCore/Logger.h>
-
-#include <UnityCore/Variant.h>
-
-#include <glib/gi18n-lib.h>
-
 #include "TextInput.h"
-#include "CairoTexture.h"
 
 namespace
 {
@@ -51,49 +39,10 @@ const int PANGO_ENTRY_FONT_SIZE = 14;
 
 }
 
-DECLARE_LOGGER(logger, "unity.dash.textinput");
-namespace
-{
-class ExpanderView : public nux::View
-{
-public:
-  ExpanderView(NUX_FILE_LINE_DECL)
-   : nux::View(NUX_FILE_LINE_PARAM)
-  {
-    SetAcceptKeyNavFocusOnMouseDown(false);
-    SetAcceptKeyNavFocusOnMouseEnter(true);
-  }
-
-protected:
-  void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
-  {}
-
-  void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
-  {
-    if (GetLayout())
-      GetLayout()->ProcessDraw(graphics_engine, force_draw);
-  }
-
-  bool AcceptKeyNavFocus()
-  {
-    return true;
-  }
-
-  nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
-  {
-    bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
-
-    if (mouse_inside == false)
-      return nullptr;
-
-    return this;
-  }
-};
-
-}
-
 namespace unity
 {
+
+nux::logging::Logger logger("unity.dash.textinput");
 
 NUX_IMPLEMENT_OBJECT_TYPE(TextInput);
 
@@ -117,7 +66,7 @@ void TextInput::Init()
 
   nux::HLayout* hint_layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  hint_ = new nux::StaticCairoText(" ");
+  hint_ = new StaticCairoText(" ");
   hint_->SetTextColor(nux::Color(1.0f, 1.0f, 1.0f, 0.5f));
   hint_->SetFont(HINT_LABEL_DEFAULT_FONT.c_str());
   hint_layout->AddView(hint_,  0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);

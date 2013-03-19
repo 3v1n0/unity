@@ -29,20 +29,21 @@
 #include <libdbusmenu-glib/menuitem.h>
 
 #include "DndData.h"
+#include <unity-shared/ApplicationManager.h>
 #include "unity-shared/Introspectable.h"
-#include "LauncherEntryRemote.h"
 #include "unity-shared/IconTextureSource.h"
 #include "unity-shared/WindowManager.h"
+
+#include "LauncherEntryRemote.h"
 
 namespace unity
 {
 namespace launcher
 {
 
-class ActionArg
+struct ActionArg
 {
-public:
-  enum Source
+  enum class Source
   {
     LAUNCHER,
     SWITCHER,
@@ -50,23 +51,24 @@ public:
   };
 
   ActionArg()
-    : source(OTHER)
+    : source(Source::OTHER)
     , button(0)
+    , timestamp(0)
     , target(0)
     , monitor(-1)
-  {
-  }
+  {}
 
-  ActionArg(Source source, int button, Window target = 0, int monitor = -1)
+  ActionArg(Source source, int button, unsigned long timestamp = 0,  Window target = 0, int monitor = -1)
     : source(source)
     , button(button)
+    , timestamp(timestamp)
     , target(target)
     , monitor(monitor)
-  {
-  }
+  {}
 
   Source source;
   int button;
+  unsigned long timestamp;
   Window target;
   int monitor;
 };
@@ -103,6 +105,7 @@ public:
     RUNNING,
     URGENT,
     PRESENTED,
+    UNFOLDED,
     STARTING,
     SHIMMER,
     CENTER_SAVED,
@@ -123,12 +126,20 @@ public:
     END
   };
 
+  enum class ScrollDirection
+  {
+    UP,
+    DOWN
+  };
+
   virtual ~AbstractLauncherIcon() {}
 
   nux::Property<std::string> tooltip_text;
   nux::Property<bool> tooltip_enabled;
   nux::Property<Position> position;
+  nux::Property<bool> removed;
 
+  virtual void ShowTooltip() = 0;
   virtual void HideTooltip() = 0;
 
   virtual void    SetShortcut(guint64 shortcut) = 0;
@@ -154,13 +165,11 @@ public:
 
   virtual int SortPriority() = 0;
 
-  virtual std::vector<Window> Windows() = 0;
+  virtual WindowList Windows() = 0;
 
   virtual std::vector<Window> WindowsForMonitor(int monitor) = 0;
 
   virtual std::vector<Window> WindowsOnViewport() = 0;
-
-  virtual std::string NameForWindow(Window window) = 0;
 
   virtual const bool WindowVisibleOnMonitor(int monitor) = 0;
 
@@ -222,6 +231,8 @@ public:
     return static_cast<int>(type) * 1000;
   }
 
+  virtual void PerformScroll(ScrollDirection direction, Time timestamp) = 0;
+
   sigc::signal<void, int, int, unsigned long> mouse_down;
   sigc::signal<void, int, int, unsigned long> mouse_up;
   sigc::signal<void, int, int, unsigned long> mouse_click;
@@ -239,7 +250,6 @@ public:
   sigc::connection on_icon_added_connection;
   sigc::connection on_icon_removed_connection;
   sigc::connection on_order_changed_connection;
-  sigc::connection on_expo_terminated_connection;
 };
 
 }

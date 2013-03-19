@@ -11,10 +11,16 @@ DEB_VERSION := $(shell dpkg-parsechangelog | egrep '^Version:' | cut -f 2 -d ' '
 
 CFLAGS=$(shell echo $$CFLAGS | sed -e 's/\-Wall//')
 
+# http://ccache.samba.org/manual.html#_precompiled_headers
+CCACHE_SLOPPINESS=time_macros
+
 CORE_ABIVERSION := $(shell sed -rn 's/^\#define[[:space:]]+CORE_ABIVERSION[[:space:]]+//p' /usr/include/compiz/core/abiversion.h )
 NUX_ABIVERSION := $(shell sed -rn 's/^\#define[[:space:]]+NUX_ABIVERSION[[:space:]]+//p' /usr/include/Nux-4.0/Nux/ABI.h )
 
 LIBUNITY_PRIVATE := $(shell pkg-config --libs-only-L unity-protocol-private | sed -e 's/-L\(.*\)/\1/' )
+
+SCOPES_RECOMMENDS := $(shell perl debian/scopes-recommends-generator /usr/share/unity/client-scopes.json)
+
 
 override_dh_auto_configure:
 ifeq ($(DEB_HOST_ARCH),$(findstring $(DEB_HOST_ARCH), $(gles2_architectures)))
@@ -39,7 +45,7 @@ override_dh_install:
 	dh_install --fail-missing
 
 override_dh_gencontrol:
-	dh_gencontrol -- -Vcoreabiversion=$(CORE_ABIVERSION) -Vnuxabiversion=$(NUX_ABIVERSION)
+	dh_gencontrol -- -Vcoreabiversion=$(CORE_ABIVERSION) -Vnuxabiversion=$(NUX_ABIVERSION) -Vunity-default-masterscopes="$(SCOPES_RECOMMENDS)"
 
 override_dh_makeshlibs:
 	dh_makeshlibs -plibunity-core-6.0-5 -V 'libunity-core-6.0-5 (>= 4.14.2)'

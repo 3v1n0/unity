@@ -30,6 +30,8 @@ namespace graphics
 void PushOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
 void PopOffscreenRenderTarget();
 
+void ClearGeometry(nux::Geometry const& geo, nux::Color const& color = nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+
 }
 }
 

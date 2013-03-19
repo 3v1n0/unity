@@ -1,4 +1,3 @@
-find_package (PkgConfig)
 set(UNITY_CORE_DEPS
     glib-2.0
     gio-2.0
@@ -10,8 +9,6 @@ set(UNITY_CORE_DEPS
 )
 pkg_check_modules (CORE_DEPS REQUIRED ${UNITY_CORE_DEPS})
 pkg_check_modules (PRIVATE_CORE_DEPS REQUIRED unity-protocol-private)
-
-execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} unity --variable lensesdir OUTPUT_VARIABLE _lensesdir OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 #
 # Headers & Sources
@@ -29,11 +26,13 @@ set (CORE_HEADERS
      Filters.h
      GenericPreview.h
      GLibDBusProxy.h
+     GLibDBusServer.h
      GLibSignal.h
      GLibSignal-inl.h
      GLibSource.h
      GLibWrapper.h
      GLibWrapper-inl.h
+     GnomeSessionManager.h
      Hud.h
      HomeLens.h
      IndicatorEntry.h
@@ -55,6 +54,7 @@ set (CORE_HEADERS
      ResultIterator.h
      Results.h
      SeriesPreview.h
+     SessionManager.h
      SocialPreview.h
      Track.h
      Tracks.h
@@ -74,9 +74,11 @@ set (CORE_SOURCES
      Filters.cpp
      GenericPreview.cpp
      GLibDBusProxy.cpp
+     GLibDBusServer.cpp
      GLibSignal.cpp
      GLibSource.cpp
      GLibWrapper.cpp
+     GnomeSessionManager.cpp
      Hud.cpp
      HomeLens.cpp
      Indicator.cpp
@@ -103,18 +105,10 @@ set (CORE_SOURCES
 #
 # CFLAGS and LIBS
 #
-set (CFLAGS
-     "-I${CMAKE_BINARY_DIR}"
-     "-DGETTEXT_PACKAGE=\"unity\""
-     "-DLENSES_DIR=\"${_lensesdir}\""
-     )
-add_definitions (${CFLAGS})
 include_directories(${CORE_DEPS_INCLUDE_DIRS})
+include_directories(${CMAKE_BINARY_DIR})
 
-set (LIBS ${CORE_DEPS_LIBRARIES})
-
-set (LIB_PATHS ${CORE_DEPS_LIBRARY_DIRS})
-link_directories(${LIB_PATHS})
+set (LIBS ${CORE_DEPS_LDFLAGS} ${PRIVATE_CORE_DEPS_LDFLAGS})
 
 #
 # Library
@@ -139,6 +133,7 @@ set_target_properties(${CORE_LIB_NAME} PROPERTIES
                       VERSION ${CORE_LIB_LT_CURRENT}.${CORE_LIB_LT_REV}.${CORE_LIB_LT_AGE}
                       SOVERSION ${CORE_LIB_LT_CURRENT}
                       INSTALL_RPATH "${PRIVATE_CORE_DEPS_LIBRARY_DIRS}")
+add_pch(pch/unitycore_pch.hh ${CORE_LIB_NAME})
 
 install (TARGETS ${CORE_LIB_NAME}
          RUNTIME DESTINATION bin

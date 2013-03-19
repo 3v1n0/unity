@@ -61,6 +61,12 @@ public:
 
   void EnableLabelMarkup(bool enabled);
   bool IsMarkupEnabled() const;
+  void EnableLabelMarkupAccel(bool enabled);
+  bool IsMarkupAccelEnabled() const;
+
+  void SetMaxLabelWidth(int max_width);
+  int GetMaxLabelWidth() const;
+
   bool IsOverlayQuicklist() const;
 
   void Activate() const;
@@ -81,6 +87,8 @@ public:
   sigc::signal<void, QuicklistMenuItem*, int, int> sigMouseDrag;
 
   static const char* MARKUP_ENABLED_PROPERTY;
+  static const char* MARKUP_ACCEL_DISABLED_PROPERTY;
+  static const char* MAXIMUM_LABEL_WIDTH_PROPERTY;
   static const char* OVERLAY_MENU_ITEM_PROPERTY;
 
 protected:

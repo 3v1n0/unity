@@ -22,7 +22,6 @@
 #define MOCKLAUNCHERICON_H
 
 #include <Nux/Nux.h>
-#include <NuxCore/Math/MathInc.h>
 
 #include <Nux/BaseWindow.h>
 #include <Nux/View.h>
@@ -32,6 +31,7 @@
 #include <sigc++/sigc++.h>
 
 #include <libdbusmenu-glib/menuitem.h>
+#include "unity-shared/ApplicationManager.h"
 
 #include "AbstractLauncherIcon.h"
 
@@ -39,6 +39,24 @@ namespace unity
 {
 namespace launcher
 {
+class MockApplicationWindow : public ApplicationWindow
+{
+public:
+  MockApplicationWindow(Window xid) : xid_(xid) {}
+
+  std::string title() const { return "MockApplicationWindow"; }
+  virtual std::string icon() const { return ""; }
+  virtual std::string type() const { return "mock"; }
+
+  virtual Window window_id() const { return xid_; }
+  virtual int monitor() const { return -1; }
+  virtual ApplicationPtr application() const { return ApplicationPtr(); }
+  virtual bool Focus() const { return false; }
+  virtual void Quit() const {}
+private:
+  Window xid_;
+};
+
 
 class MockLauncherIcon : public AbstractLauncherIcon
 {
@@ -49,6 +67,7 @@ public:
     , type_(type)
     , sort_priority_(DefaultPriority(type))
     , remote_uri_("fake")
+    , is_tooltip_visible_(false)
   {
     tooltip_text = "Mock Icon";
     position = Position::FLOATING;
@@ -58,10 +77,12 @@ public:
   }
 
   std::string GetName() const { return "MockLauncherIcon"; }
-  
+
   void AddProperties(GVariantBuilder* builder) {}
 
-  void HideTooltip() {}
+  void ShowTooltip() { is_tooltip_visible_ = true; }
+  void HideTooltip() { is_tooltip_visible_ = false; }
+  bool IsTooltipVisible() { return is_tooltip_visible_; }
 
   void    SetShortcut(guint64 shortcut) {}
 
@@ -70,18 +91,18 @@ public:
     return 0;
   }
 
-  std::vector<Window> Windows ()
+  WindowList Windows ()
   {
-    std::vector<Window> result;
+    WindowList result;
 
-    result.push_back ((100 << 16) + 200);
-    result.push_back ((500 << 16) + 200);
-    result.push_back ((300 << 16) + 200);
-    result.push_back ((200 << 16) + 200);
-    result.push_back ((300 << 16) + 200);
-    result.push_back ((100 << 16) + 200);
-    result.push_back ((300 << 16) + 200);
-    result.push_back ((600 << 16) + 200);
+    result.push_back(std::make_shared<MockApplicationWindow>((100 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((500 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((300 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((200 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((300 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((100 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((300 << 16) + 200));
+    result.push_back(std::make_shared<MockApplicationWindow>((600 << 16) + 200));
 
     return result;
   }
@@ -116,11 +137,6 @@ public:
     result.push_back ((600 << 16) + 200);
 
     return result;
-  }
-
-  std::string NameForWindow (Window window)
-  {
-    return std::string();
   }
 
   void SetSortPriority(int priority) { sort_priority_ = priority; }
@@ -297,6 +313,8 @@ public:
   
   void UnStick() {}
 
+  void PerformScroll(ScrollDirection /*direction*/, Time /*timestamp*/) override {}
+
 private:
   nux::BaseTexture* TextureFromGtkTheme(const char* icon_name, int size)
   {
@@ -352,6 +370,7 @@ private:
   timespec quirk_times_[unsigned(Quirk::LAST)];
   std::map<int, nux::Point3> center_;
   std::string remote_uri_;
+  bool is_tooltip_visible_;
 };
 
 }

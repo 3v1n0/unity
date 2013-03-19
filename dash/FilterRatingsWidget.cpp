@@ -22,9 +22,11 @@
 
 #include <Nux/Nux.h>
 #include <glib.h>
+#include "config.h"
 #include <glib/gi18n-lib.h>
 
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/GraphicsUtils.h"
 #include "FilterGenreWidget.h"
 #include "FilterGenreButton.h"
 #include "FilterBasicButton.h"
@@ -82,6 +84,12 @@ void FilterRatingsWidget::SetFilter(Filter::Ptr const& filter)
 std::string FilterRatingsWidget::GetFilterType()
 {
   return "FilterRatingsWidget";
+}
+
+void FilterRatingsWidget::ClearRedirectedRenderChildArea()
+{
+  if (ratings_->IsRedrawNeeded())
+    graphics::ClearGeometry(ratings_->GetGeometry());
 }
 
 } // namespace dash

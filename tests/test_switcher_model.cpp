@@ -34,90 +34,104 @@ using unity::launcher::MockLauncherIcon;
 namespace
 {
 
-TEST(TestSwitcherModel, TestConstructor)
+/**
+ * An extension of the mock launcher icon class provided in the library to
+ * aid in tracking individually identified icons.
+ */
+class MockLauncherIcon2 : public unity::launcher::MockLauncherIcon
 {
-  AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
-  AbstractLauncherIcon::Ptr second(new MockLauncherIcon());
-  std::vector<AbstractLauncherIcon::Ptr> icons;
-  icons.push_back(first);
-  icons.push_back(second);
+public:
+  MockLauncherIcon2(int id)
+  : id_(id)
+  { }
 
-  SwitcherModel::Ptr model(new SwitcherModel(icons));
+  int id_;
+};
 
-  EXPECT_EQ(model->Size(), 2);
-  EXPECT_EQ(model->Selection(), first);
-  EXPECT_EQ(model->LastSelection(), first);
+/**
+ * A helper function for downcasting the mocked icon objects.
+ */
+inline int IdentityOf(AbstractLauncherIcon::Ptr const& p)
+{ return ((MockLauncherIcon2*)p.GetPointer())->id_; }
+
+
+class TestSwitcherModel : public testing::Test
+{
+public:
+  TestSwitcherModel()
+  {
+    for (int i = 0; i < 4; ++i)
+    {
+      icons_.push_back(AbstractLauncherIcon::Ptr(new MockLauncherIcon2(i)));
+    }
+  }
+
+protected:
+  std::vector<AbstractLauncherIcon::Ptr> icons_;
+};
+
+
+TEST_F(TestSwitcherModel, TestConstructor)
+{
+  SwitcherModel::Ptr model(new SwitcherModel(icons_));
+
+  EXPECT_EQ(model->Size(), icons_.size());
+  EXPECT_EQ(model->Selection(), icons_.front());
+  EXPECT_EQ(model->LastSelection(), icons_.front());
   EXPECT_EQ(model->SelectionIndex(), 0);
   EXPECT_EQ(model->LastSelectionIndex(), 0);
 }
 
-TEST(TestSwitcherModel, TestSelection)
+
+TEST_F(TestSwitcherModel, TestSelection)
 {
-  std::vector<AbstractLauncherIcon::Ptr> icons;
-  AbstractLauncherIcon::Ptr first(new MockLauncherIcon());
-  AbstractLauncherIcon::Ptr second(new MockLauncherIcon());
-  AbstractLauncherIcon::Ptr third(new MockLauncherIcon());
-  AbstractLauncherIcon::Ptr fourth(new MockLauncherIcon());
+  SwitcherModel::Ptr model(new SwitcherModel(icons_));
 
-  icons.push_back(first);
-  icons.push_back(second);
-  icons.push_back(third);
-  icons.push_back(fourth);
-
-  SwitcherModel::Ptr model(new SwitcherModel(icons));
-
-  EXPECT_EQ(model->Size(), 4);
-  EXPECT_EQ(model->Selection(), first);
+  EXPECT_EQ(IdentityOf(model->Selection()), 0);
 
   model->Next();
-  EXPECT_EQ(model->Selection(), second);
-  EXPECT_EQ(model->LastSelection(), first);
+  EXPECT_EQ(IdentityOf(model->Selection()), 1);
+  EXPECT_EQ(IdentityOf(model->LastSelection()), 0);
   model->Next();
-  EXPECT_EQ(model->Selection(), third);
-  EXPECT_EQ(model->LastSelection(), second);
+  EXPECT_EQ(IdentityOf(model->Selection()), 2);
+  EXPECT_EQ(IdentityOf(model->LastSelection()), 1);
   model->Next();
-  EXPECT_EQ(model->Selection(), fourth);
-  EXPECT_EQ(model->LastSelection(), third);
+  EXPECT_EQ(IdentityOf(model->Selection()), 3);
+  EXPECT_EQ(IdentityOf(model->LastSelection()), 2);
   model->Next();
-  EXPECT_EQ(model->Selection(), first);
-  EXPECT_EQ(model->LastSelection(), fourth);
+  EXPECT_EQ(IdentityOf(model->Selection()), 0);
+  EXPECT_EQ(IdentityOf(model->LastSelection()), 3);
   model->Next();
-  EXPECT_EQ(model->Selection(), second);
-  EXPECT_EQ(model->LastSelection(), first);
+  EXPECT_EQ(IdentityOf(model->Selection()), 1);
+  EXPECT_EQ(IdentityOf(model->LastSelection()), 0);
+
   model->Prev();
-  EXPECT_EQ(model->Selection(), first);
-  EXPECT_EQ(model->LastSelection(), second);
+  EXPECT_EQ(IdentityOf(model->Selection()), 0);
+  EXPECT_EQ(IdentityOf(model->LastSelection()), 1);
   model->Prev();
-  EXPECT_EQ(model->Selection(), fourth);
-  EXPECT_EQ(model->LastSelection(), first);
+  EXPECT_EQ(IdentityOf(model->Selection()), 3);
+  EXPECT_EQ(IdentityOf(model->LastSelection()), 0);
 
   model->Select(2);
-  EXPECT_EQ(model->Selection(), third);
-  EXPECT_EQ(model->LastSelection(), fourth);
+  EXPECT_EQ(IdentityOf(model->Selection()), 2);
+  EXPECT_EQ(IdentityOf(model->LastSelection()), 3);
 
-  model->Select(first);
-  EXPECT_EQ(model->Selection(), first);
-  EXPECT_EQ(model->LastSelection(), third);
+  model->Select(0);
+  EXPECT_EQ(IdentityOf(model->Selection()), 0);
+  EXPECT_EQ(IdentityOf(model->LastSelection()), 2);
 }
 
-TEST(TestSwitcherModel, TestActiveDetailWindowSort)
+
+TEST_F(TestSwitcherModel, TestActiveDetailWindowSort)
 {
-  std::vector<AbstractLauncherIcon::Ptr> detail_icons;
-  AbstractLauncherIcon::Ptr detail(new MockLauncherIcon());
-  detail->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
-  detail_icons.push_back(detail);
-
-  // Set up a list with out an active icon, so we can assert
-  // the first detail icon == to the last xid of detailed list
-  std::vector<AbstractLauncherIcon::Ptr> icons;
-  AbstractLauncherIcon::Ptr normal(new MockLauncherIcon());
-  icons.push_back(normal);
-
-  SwitcherModel::Ptr model_detail_active(new SwitcherModel(detail_icons));
-  model_detail_active->detail_selection = true;
-
-  SwitcherModel::Ptr model_detail(new SwitcherModel(icons));
+  // Create a base case for the null hypothesis.
+  SwitcherModel::Ptr model_detail(new SwitcherModel(icons_));
   model_detail->detail_selection = true;
+
+  // Create a test case with an active detail window.
+  icons_.front()->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
+  SwitcherModel::Ptr model_detail_active(new SwitcherModel(icons_));
+  model_detail_active->detail_selection = true;
 
   EXPECT_TRUE(model_detail_active->DetailXids().size() > 2);
   EXPECT_TRUE(model_detail_active->DetailSelectionWindow() != model_detail->DetailSelectionWindow());
@@ -131,6 +145,37 @@ TEST(TestSwitcherModel, TestActiveDetailWindowSort)
   unsorted = model_detail->DetailSelectionWindow();
 
   EXPECT_EQ(sorted, unsorted);
+}
+
+TEST_F(TestSwitcherModel, SelectionIsActive)
+{
+  SwitcherModel model(icons_);
+
+  model.Selection()->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, false);
+  EXPECT_FALSE(model.SelectionIsActive());
+
+  model.Selection()->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
+  EXPECT_TRUE(model.SelectionIsActive());
+}
+
+TEST_F(TestSwitcherModel, TestWebAppActive)
+{
+  // Create a base case
+  SwitcherModel::Ptr base_model(new SwitcherModel(icons_));
+
+  // Set the first icon as Active to simulate Firefox being active
+  icons_.front()->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
+
+  // Set the last icon as Active to simulate that it is a WebApp
+  icons_.back()->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
+
+  SwitcherModel::Ptr model(new SwitcherModel(icons_));
+
+  model->DetailXids();
+
+  // model's front Window should be different than the base case due to the
+  // re-sorting in DetailXids().
+  EXPECT_NE(model->DetailXids().front(), base_model->DetailXids().front());
 }
 
 }

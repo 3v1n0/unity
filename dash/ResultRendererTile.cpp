@@ -23,10 +23,10 @@
 #include "ResultRendererTile.h"
 
 #include <pango/pangocairo.h>
-#include <gtk/gtk.h>
 
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
+#include <NuxGraphics/GdkGraphics.h>
 
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/DashStyle.h"
@@ -34,17 +34,54 @@
 
 namespace
 {
-  bool neko;
+bool neko;
+#define DEFAULT_GICON ". GThemedIcon text-x-preview"
 }
 
 namespace unity
 {
 DECLARE_LOGGER(logger, "unity.dash.results");
+
 namespace
 {
 const int FONT_SIZE = 10;
 
 const float CORNER_HIGHTLIGHT_RADIUS = 2.0f;
+
+void RenderTexture(nux::GraphicsEngine& GfxContext, 
+                   int x,
+                   int y,
+                   int width,
+                   int height,
+                   nux::ObjectPtr<nux::IOpenGLBaseTexture> const& texture,
+                   nux::TexCoordXForm &texxform,
+                   const nux::Color &color,
+                   float saturate
+)
+{
+  if (saturate == 1.0)
+  {
+    GfxContext.QRP_1Tex(x,
+                        y,
+                        width,
+                        height,
+                        texture,
+                        texxform,
+                        color);
+  }
+  else
+  {
+    GfxContext.QRP_TexDesaturate(x,
+                                 y,
+                                 width,
+                                 height,
+                                 texture,
+                                 texxform,
+                                 color,
+                                 saturate);
+  }
+}
+
 }
 
 namespace dash
@@ -71,7 +108,9 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
                                 Result& row,
                                 ResultRendererState state,
                                 nux::Geometry const& geometry,
-                                int x_offset, int y_offset)
+                                int x_offset, int y_offset,
+                                nux::Color const& color,
+                                float saturate)
 {
   TextureContainer* container = row.renderer<TextureContainer*>();
   if (container == nullptr)
@@ -103,36 +142,42 @@ void ResultRendererTile::Render(nux::GraphicsEngine& GfxContext,
     int highlight_x =  (geometry.x + geometry.width/2) - style.GetTileIconHightlightWidth()/2;
     int highlight_y =  (geometry.y + padding + tile_icon_size / 2) - style.GetTileIconHightlightHeight()/2;
 
-    GfxContext.QRP_1Tex(highlight_x,
-                        highlight_y,
-                        container->prelight->GetWidth(),
-                        container->prelight->GetHeight(),
-                        container->prelight->GetDeviceTexture(),
-                        texxform,
-                        nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+    RenderTexture(GfxContext,
+                  highlight_x,
+                  highlight_y,
+                  container->prelight->GetWidth(),
+                  container->prelight->GetHeight(),
+                  container->prelight->GetDeviceTexture(),
+                  texxform,
+                  color,
+                  saturate);
   }
 
   // draw the icon
   if (container->icon)
   {
-    GfxContext.QRP_1Tex(icon_left_hand_side,
-                        icon_top_side,
-                        container->icon->GetWidth(),
-                        container->icon->GetHeight(),
-                        container->icon->GetDeviceTexture(),
-                        texxform,
-                        nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+    RenderTexture(GfxContext,
+                  icon_left_hand_side,
+                  icon_top_side,
+                  container->icon->GetWidth(),
+                  container->icon->GetHeight(),
+                  container->icon->GetDeviceTexture(),
+                  texxform,
+                  color,
+                  saturate);
   }
 
   if (container->text)
   {
-    GfxContext.QRP_1Tex(geometry.x + padding,
-                        geometry.y + tile_icon_size + spacing,
-                        style.GetTileWidth() - (padding * 2),
-                        style.GetTileHeight() - tile_icon_size - spacing,
-                        container->text->GetDeviceTexture(),
-                        texxform,
-                        nux::Color(1.0f, 1.0f, 1.0f, 1.0f));
+    RenderTexture(GfxContext,
+                  geometry.x + padding,
+                  geometry.y + tile_icon_size + spacing,
+                  style.GetTileWidth() - (padding * 2),
+                  style.GetTileHeight() - tile_icon_size - spacing,
+                  container->text->GetDeviceTexture(),
+                  texxform,
+                  color,
+                  saturate);
   }
 }
 
@@ -180,11 +225,24 @@ void ResultRendererTile::Unload(Result& row)
   row.set_renderer<TextureContainer*>(nullptr);
 }
 
+nux::NBitmapData* ResultRendererTile::GetDndImage(Result const& row) const
+{
+  TextureContainer* container = row.renderer<TextureContainer*>();
+  nux::NBitmapData* bitmap = nullptr;
+
+  if (container && container->drag_icon && container->drag_icon.IsType(GDK_TYPE_PIXBUF))
+  {
+    // Need to ref the drag icon because GdkGraphics will unref it.
+    nux::GdkGraphics graphics(GDK_PIXBUF(g_object_ref(container->drag_icon)));
+    bitmap = graphics.GetBitmap();
+  }
+  return bitmap ? bitmap : ResultRenderer::GetDndImage(row);
+}
+
 void ResultRendererTile::LoadIcon(Result& row)
 {
   Style& style = Style::Instance();
   std::string icon_hint(row.icon_hint);
-#define DEFAULT_GICON ". GThemedIcon text-x-preview"
   std::string icon_name;
   if (G_UNLIKELY(neko))
   {
@@ -289,9 +347,7 @@ nux::BaseTexture* ResultRendererTile::CreateTextureCallback(std::string const& t
 
     return texture_from_cairo_graphics(cairo_graphics);
   }
-
 }
-
 
 void ResultRendererTile::IconLoaded(std::string const& texid,
                                     int max_width,
@@ -314,6 +370,7 @@ void ResultRendererTile::IconLoaded(std::string const& texid,
 
     container->icon = texture;
     container->prelight = texture_prelight;
+    container->drag_icon = pixbuf;
 
     NeedsRedraw.emit();
 

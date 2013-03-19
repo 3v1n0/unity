@@ -19,9 +19,11 @@
  */
 
 #include <Nux/Nux.h>
+#include <Nux/NuxTimerTickSource.h>
 #include <Nux/VLayout.h>
 #include <Nux/HLayout.h>
 #include <Nux/WindowThread.h>
+#include <NuxCore/AnimationController.h>
 #include <NuxGraphics/GraphicsEngine.h>
 #include <NuxCore/Logger.h>
 #include <gtk/gtk.h>
@@ -30,33 +32,69 @@
 #include "unity-shared/PanelStyle.h"
 #include "PanelView.h"
 
-void ThreadWidgetInit(nux::NThread* thread, void* InitData)
+using namespace unity;
+
+struct PanelWindow
 {
-  nux::VLayout* layout = new nux::VLayout(TEXT(""), NUX_TRACKER_LOCATION);
-  unity::PanelView* view = new unity::PanelView();
+  PanelWindow()
+    : wt(nux::CreateGUIThread("Unity Panel", 1024, 24, 0, &PanelWindow::ThreadWidgetInit, this))
+    , animation_controller(tick_source)
+  {}
 
-  //view->SetMinMaxSize(1024, 24);
-  view->SetPrimary(true);
-  layout->AddView(view, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
-  layout->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
+  void Show()
+  {
+    wt->Run(nullptr);
+  }
 
-  nux::GetWindowThread()->SetLayout(layout);
-}
+private:
+  class StandalonePanelView : public PanelView
+  {
+    // Used to sync menu geometries
+    std::string GetName() const { return "StandalonePanel"; }
+  };
+
+  void Init()
+  {
+    PanelView* panel = new StandalonePanelView();
+    panel->SetPrimary(true);
+
+    nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+    layout->AddView(panel, 1);
+    layout->SetContentDistribution(nux::MAJOR_POSITION_START);
+
+    panel_window = new nux::BaseWindow("StandalonePanel");
+    panel_window->SetLayout(layout);
+    panel_window->SetBackgroundColor(nux::color::Transparent);
+    panel_window->ShowWindow(true);
+    panel_window->SetWidth(1024);
+    panel_window->SetXY(0, 0);
+    panel_window->SetMaximumHeight(panel_style.panel_height());
+
+    wt->window_configuration.connect([this] (int x, int y, int w, int h) {
+      panel_window->SetWidth(w);
+    });
+  }
+
+  static void ThreadWidgetInit(nux::NThread* thread, void* self)
+  {
+    static_cast<PanelWindow*>(self)->Init();
+  }
+
+  unity::Settings settings;
+  panel::Style panel_style;
+  std::shared_ptr<nux::WindowThread> wt;
+  nux::NuxTimerTickSource tick_source;
+  nux::animation::AnimationController animation_controller;
+  nux::ObjectPtr<nux::BaseWindow> panel_window;
+};
 
 int main(int argc, char** argv)
 {
-  g_type_init();
   gtk_init(&argc, &argv);
   nux::NuxInitialize(0);
   nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
-  
-  // The instances for the pseudo-singletons.
-  unity::Settings settings;
-  unity::panel::Style panel_style;
 
-  nux::WindowThread* wt = nux::CreateGUIThread(TEXT("Unity Panel"), 1024, 24, 0, &ThreadWidgetInit, 0);
+  PanelWindow().Show();
 
-  wt->Run(NULL);
-  delete wt;
   return 0;
 }

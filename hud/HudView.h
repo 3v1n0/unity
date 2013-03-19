@@ -28,8 +28,9 @@
 #include "HudIcon.h"
 #include "HudButton.h"
 #include "HudAbstractView.h"
-#include "unity-shared/SearchBar.h"
 #include "unity-shared/OverlayRenderer.h"
+#include "unity-shared/OverlayWindowButtons.h"
+#include "unity-shared/SearchBar.h"
 #include "unity-shared/UBusWrapper.h"
 
 namespace unity
@@ -121,6 +122,8 @@ private:
   bool show_embedded_icon_;
   bool activated_signal_sent_;
   bool keyboard_stole_focus_;
+
+  nux::ObjectPtr<OverlayWindowButtons> overlay_window_buttons_;
 };
 
 

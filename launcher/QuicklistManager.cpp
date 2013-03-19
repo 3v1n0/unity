@@ -19,7 +19,6 @@
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
-#include <Nux/VLayout.h>
 #include <Nux/WindowCompositor.h>
 
 #include "QuicklistView.h"
@@ -56,29 +55,29 @@ QuicklistManager::~QuicklistManager()
 {
 }
 
-QuicklistView* QuicklistManager::Current()
+nux::ObjectPtr<QuicklistView> QuicklistManager::Current()
 {
   return _current_quicklist;
 }
 
-void QuicklistManager::RegisterQuicklist(QuicklistView* quicklist)
+bool QuicklistManager::RegisterQuicklist(nux::ObjectPtr<QuicklistView> const& quicklist)
 {
-  std::list<QuicklistView*>::iterator it;
-
   if (std::find(_quicklist_list.begin(), _quicklist_list.end(), quicklist) != _quicklist_list.end())
   {
     // quicklist has already been registered
     g_warning("Attempted to register a quicklist that was previously registered");
-    return;
+    return false;
   }
 
   _quicklist_list.push_back(quicklist);
 
   quicklist->sigVisible.connect(sigc::mem_fun(this, &QuicklistManager::RecvShowQuicklist));
   quicklist->sigHidden.connect(sigc::mem_fun(this, &QuicklistManager::RecvHideQuicklist));
+
+  return true;
 }
 
-void QuicklistManager::ShowQuicklist(QuicklistView* quicklist, int tip_x,
+void QuicklistManager::ShowQuicklist(nux::ObjectPtr<QuicklistView> const& quicklist, int tip_x,
                                      int tip_y, bool hide_existing_if_open)
 {
   if (_current_quicklist == quicklist)
@@ -94,10 +93,10 @@ void QuicklistManager::ShowQuicklist(QuicklistView* quicklist, int tip_x,
   }
 
   quicklist->ShowQuicklistWithTipAt(tip_x, tip_y);
-  nux::GetWindowCompositor().SetKeyFocusArea(quicklist);
+  nux::GetWindowCompositor().SetKeyFocusArea(quicklist.GetPointer());
 }
 
-void QuicklistManager::HideQuicklist(QuicklistView* quicklist)
+void QuicklistManager::HideQuicklist(nux::ObjectPtr<QuicklistView> const& quicklist)
 {
   quicklist->Hide();
 }
@@ -108,7 +107,7 @@ void QuicklistManager::RecvShowQuicklist(nux::BaseWindow* window)
 
   _current_quicklist = quicklist;
 
-  quicklist_opened.emit(quicklist);
+  quicklist_opened.emit(nux::ObjectPtr<QuicklistView>(quicklist));
   UBusManager::SendMessage(UBUS_QUICKLIST_SHOWN);
 }
 
@@ -121,7 +120,7 @@ void QuicklistManager::RecvHideQuicklist(nux::BaseWindow* window)
     _current_quicklist = 0;
   }
 
-  quicklist_closed.emit(quicklist);
+  quicklist_closed.emit(nux::ObjectPtr<QuicklistView>(quicklist));
 }
 
 } // NAMESPACE

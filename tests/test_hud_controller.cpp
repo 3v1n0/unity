@@ -21,8 +21,10 @@
 
 #include <gmock/gmock.h>
 using namespace testing;
-
+#include <Nux/NuxTimerTickSource.h>
+#include <NuxCore/AnimationController.h>
 #include "HudController.h"
+#include "mock-base-window.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UnitySettings.h"
@@ -31,6 +33,9 @@ using namespace unity;
 
 namespace
 {
+
+const unsigned ANIMATION_DURATION = 90 * 1000; // in microseconds
+const unsigned TICK_DURATION = 10 * 1000;
 
 class MockHudView : public hud::AbstractView
 {
@@ -54,38 +59,86 @@ public:
   {
     return nux::Geometry();
   }
-
-
 };
+
 
 class TestHudController : public Test
 {
 public:
-  virtual void SetUp()
+  TestHudController()
+  : view_(new NiceMock<MockHudView>)
+  , base_window_(new NiceMock<testmocks::MockBaseWindow>())
   {
-    view = new MockHudView;
-    controller.reset(new hud::Controller([this]{ return view.GetPointer(); }));
+    ON_CALL(*base_window_, SetOpacity(_))
+      .WillByDefault(Invoke(base_window_.GetPointer(),
+                     &testmocks::MockBaseWindow::RealSetOpacity));
+
+    // Set expectations for creating the controller
+    EXPECT_CALL(*base_window_, SetOpacity(0.0f));
+
+    controller_.reset(new hud::Controller([&](){ return view_.GetPointer(); },
+                                          [&](){ return base_window_.GetPointer();}));
   }
 
-  Settings unity_settings;
-  dash::Style dash_style;
-  panel::Style panel_style;
+protected:
+  hud::Controller::Ptr controller_;
+  MockHudView::Ptr view_;
+  testmocks::MockBaseWindow::Ptr base_window_;
 
-  hud::Controller::Ptr controller;
-  MockHudView::Ptr view;
+  // required to create hidden secret global variables
+  Settings unity_settings_;
+  dash::Style dash_style_;
+  panel::Style panel_style_;
 };
 
-TEST_F(TestHudController, TestHideHud)
+
+TEST_F(TestHudController, TestShowAndHideHud)
 {
-  controller->ShowHud();
-  Utils::WaitForTimeout(1);
+  long long t;
+  long long global_tick = 0;
+  nux::NuxTimerTickSource tick_source;
+  nux::animation::AnimationController animation_controller(tick_source);
 
-  EXPECT_CALL(*view, ResetToDefault())
-    .Times(1);
+  // Verify initial conditions
+  EXPECT_EQ(base_window_->GetOpacity(), 0.0);
 
-  controller->HideHud();
-  // view->ResetToDefault should be called at the end of the fade out effect. So wait for it.
-  Utils::WaitForTimeout(2);
+  // Set expectations for showing the HUD
+  EXPECT_CALL(*view_, AboutToShow()).Times(1);
+  EXPECT_CALL(*view_, ResetToDefault()).Times(1);
+  {
+    InSequence showing;
+    EXPECT_CALL(*base_window_, SetOpacity(Eq(0.0f))).Times(AtLeast(1));
+    EXPECT_CALL(*base_window_, SetOpacity(AllOf(Gt(0.0f), Lt(1.0f))))
+      .Times(AtLeast(ANIMATION_DURATION/TICK_DURATION-1));
+    EXPECT_CALL(*base_window_, SetOpacity(Eq(1.0f))).Times(AtLeast(1));
+  }
+
+  controller_->ShowHud();
+  for (t = global_tick; t < global_tick + ANIMATION_DURATION+1; t += TICK_DURATION)
+    tick_source.tick(t);
+  global_tick += t;
+
+  EXPECT_EQ(base_window_->GetOpacity(), 1.0);
+
+  Mock::VerifyAndClearExpectations(view_.GetPointer());
+  Mock::VerifyAndClearExpectations(base_window_.GetPointer());
+
+  // Set expectations for hiding the HUD
+  EXPECT_CALL(*view_, AboutToHide()).Times(1);
+  {
+    InSequence hiding;
+    EXPECT_CALL(*base_window_, SetOpacity(Eq(1.0f))).Times(AtLeast(1));
+    EXPECT_CALL(*base_window_, SetOpacity(AllOf(Lt(1.0f), Gt(0.0f))))
+      .Times(AtLeast(ANIMATION_DURATION/TICK_DURATION-1));
+    EXPECT_CALL(*base_window_, SetOpacity(Eq(0.0f))).Times(AtLeast(1));
+  }
+
+  controller_->HideHud();
+  for (t = global_tick; t < global_tick + ANIMATION_DURATION+1; t += TICK_DURATION)
+    tick_source.tick(t);
+  global_tick += t;
+
+  EXPECT_EQ(base_window_->GetOpacity(), 0.0);
 }
 
 }

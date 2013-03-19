@@ -33,6 +33,7 @@
 #include "unity-shared/Timer.h"
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/GraphicsUtils.h"
 #include "ResultViewGrid.h"
 #include "math.h"
 
@@ -42,6 +43,16 @@ namespace unity
 {
 namespace dash
 {
+
+namespace
+{
+  const float UNFOCUSED_GHOST_ICON_OPACITY_REF = 0.3f;
+  const float UNFOCUSED_ICON_SATURATION_REF = 0.05f;
+
+  const float FOCUSED_GHOST_ICON_OPACITY_REF = 0.7f;
+  const float FOCUSED_ICON_SATURATION_REF = 0.5f;
+}
+
 NUX_IMPLEMENT_OBJECT_TYPE(ResultViewGrid);
 
 ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
@@ -56,6 +67,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , last_lazy_loaded_result_(0)
   , last_mouse_down_x_(-1)
   , last_mouse_down_y_(-1)
+  , drag_index_(~0)
   , recorded_dash_width_(-1)
   , recorded_dash_height_(-1)
   , mouse_last_x_(-1)
@@ -101,12 +113,22 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
     g_variant_get (data, "(ii)", &recorded_dash_width_, &recorded_dash_height_);
   });
 
+  // We are interested in the color of the desktop background.
+  ubus_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, [this] (GVariant* data) {
+    double red = 0.0f, green = 0.0f, blue = 0.0f, alpha = 0.0f;
+
+    g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
+    background_color_ = nux::Color(red, green, blue, alpha);
+    QueueDraw();
+  });
+  ubus_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
+
   ubus_.RegisterInterest(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, [&] (GVariant* data) {
     int nav_mode = 0;
     gchar* uri = NULL;
     gchar* proposed_unique_id = NULL;
     g_variant_get(data, "(iss)", &nav_mode, &uri, &proposed_unique_id);
-   
+
     if (std::string(proposed_unique_id) != unique_id())
       return;
 
@@ -128,7 +150,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
         LOG_ERROR(logger) << "requested to activated a result that does not exist: " << current_index;
         return;
       }
-      
+
       // closed
       if (nav_mode == 0)
       {
@@ -136,6 +158,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
       }
       else
       {
+        selected_index_ = active_index_ = current_index;
         activated_uri_ = GetUriForIndex(current_index);
         LOG_DEBUG(logger) << "activating preview for index: " 
                   << "(" << current_index << ")"
@@ -161,22 +184,32 @@ void ResultViewGrid::Activate(std::string const& uri, int index, ResultView::Act
   int right_results = num_results ? (num_results - index) - 1 : 0;
   //FIXME - just uses y right now, needs to use the absolute position of the bottom of the result 
   // (jay) Here is the fix: Compute the y position of the row where the item is located.
-  int row_y = padding + GetRootGeometry().y;
+  nux::Geometry abs_geo = GetAbsoluteGeometry();
+  int row_y = padding + abs_geo.y;
+  int column_x = padding + abs_geo.x;
   int row_height = renderer_->height + vertical_spacing;
+  int column_width = renderer_->width + horizontal_spacing;
 
   if (GetItemsPerRow())
   {
-    int num_row = GetNumResults() / GetItemsPerRow();
-    if (GetNumResults() % GetItemsPerRow())
+    int num_results = GetNumResults();
+    int items_per_row = GetItemsPerRow();
+
+    int num_row = num_results / items_per_row;
+    if (num_results % items_per_row)
     {
       ++num_row;
     }
-    int row_index = index / GetItemsPerRow();
+    int column_index = index % items_per_row;
+    int row_index = index / items_per_row;
 
+    column_x += column_index * column_width;
     row_y += row_index * row_height;
   }
 
-  glib::Variant data(g_variant_new("(iiii)", row_y, row_height, left_results, right_results));
+  active_index_ = index;
+  guint64 timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
+  glib::Variant data(g_variant_new("(tiiiiii)", timestamp, column_x, row_y, column_width, row_height, left_results, right_results));
   UriActivated.emit(uri, type, data);
 }
 
@@ -506,7 +539,7 @@ void ResultViewGrid::OnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::K
       focused_uri_ = (*first_iter).uri;
       selected_index_ = 0;
     }
-    
+
     int items_per_row = GetItemsPerRow();
     unsigned num_results = GetNumResults();
 
@@ -519,7 +552,7 @@ void ResultViewGrid::OnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::K
       int total_rows = std::ceil(num_results / (double)items_per_row);
       selected_index_ = items_per_row * (total_rows-1);
     }
-    
+
     if (direction != nux::KEY_NAV_NONE)
     {
       std::tuple<int, int> focused_coord = GetResultPosition(selected_index_);
@@ -607,84 +640,129 @@ void ResultViewGrid::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   unsigned num_results = GetNumResults();
   int total_rows = (!expanded) ? 0 : (num_results / items_per_row) + 1;
 
-  //find the row we start at
-  int absolute_y = GetAbsoluteY();
   int row_size = renderer_->height + vertical_spacing;
-
   int y_position = padding + GetGeometry().y;
 
   ResultListBounds visible_bounds = GetVisableResults();
 
+  nux::Geometry absolute_geometry(GetAbsoluteGeometry());
+
   for (int row_index = 0; row_index <= total_rows; row_index++)
   {
-    int row_lower_bound = row_index * items_per_row;
-    if (row_lower_bound >= std::get<0>(visible_bounds) &&
-        row_lower_bound <= std::get<1>(visible_bounds))
-    {
-      int x_position = padding + GetGeometry().x;
-      for (int column_index = 0; column_index < items_per_row; column_index++)
-      {
-        unsigned index = (row_index * items_per_row) + column_index;
-        if (index >= num_results)
-          break;
-
-        ResultRenderer::ResultRendererState state = ResultRenderer::RESULT_RENDERER_NORMAL;
-        if ((int)(index) == selected_index_)
-        {
-          state = ResultRenderer::RESULT_RENDERER_SELECTED;
-        }
-        else if ((int)(index) == active_index_)
-        {
-          state = ResultRenderer::RESULT_RENDERER_ACTIVE;
-        }
-
-        int half_width = recorded_dash_width_ / 2;
-        int half_height = recorded_dash_height_;
-
-        int offset_x, offset_y;
-
-        /* Guard against divide-by-zero. SIGFPEs are not mythological
-         * contrary to popular belief */
-        if (half_width >= 10)
-          offset_x = MAX(MIN((x_position - half_width) / (half_width / 10), 5), -5);
-        else
-          offset_x = 0;
-
-        if (half_height >= 10)
-          offset_y = MAX(MIN(((y_position + absolute_y) - half_height) / (half_height / 10), 5), -5);
-        else
-          offset_y = 0;
-
-        if (recorded_dash_width_ < 1 || recorded_dash_height_ < 1)
-        {
-          offset_x = 0;
-          offset_y = 0;
-        }
-        
-        nux::Geometry render_geo(x_position, y_position, renderer_->width, renderer_->height);
-        Result result(*GetIteratorAtRow(index));
-        renderer_->Render(GfxContext, result, state, render_geo, offset_x, offset_y);
-
-        x_position += renderer_->width + horizontal_spacing + extra_horizontal_spacing_;
-      }
-    }
+    DrawRow(GfxContext, visible_bounds, row_index, y_position, absolute_geometry);
 
     y_position += row_size;
   }
 }
 
-void ResultViewGrid::DrawContent(nux::GraphicsEngine& GfxContent, bool force_draw)
+void ResultViewGrid::DrawRow(nux::GraphicsEngine& GfxContext, ResultListBounds const& visible_bounds, int row_index, int y_position, nux::Geometry const& absolute_position)
+{
+  unsigned int current_alpha_blend;
+  unsigned int current_src_blend_factor;
+  unsigned int current_dest_blend_factor;
+  GfxContext.GetRenderStates().GetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+  GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+  int items_per_row = GetItemsPerRow();
+
+  int row_lower_bound = row_index * items_per_row;
+  if (row_lower_bound >= std::get<0>(visible_bounds) &&
+      row_lower_bound <= std::get<1>(visible_bounds))
+  {
+    float saturation_progress = 1.0 - desaturation_progress();
+    float saturation = 1.0;
+    float opacity = 1.0;
+    int x_position = padding + GetGeometry().x;
+    for (int column_index = 0; column_index < items_per_row; column_index++)
+    {
+      int index = (row_index * items_per_row) + column_index;
+      if (index < 0 || index >=  (int)GetNumResults())
+        break;
+
+      ResultRenderer::ResultRendererState state = ResultRenderer::RESULT_RENDERER_NORMAL;
+      
+      if (enable_texture_render() == false)
+      {
+        if (index == selected_index_)
+        {
+          state = ResultRenderer::RESULT_RENDERER_SELECTED;
+        }
+      }
+      else if (index == active_index_)
+      {
+        state = ResultRenderer::RESULT_RENDERER_SELECTED;
+      }
+
+      int half_width = recorded_dash_width_ / 2;
+      int half_height = recorded_dash_height_ / 2;
+
+      int offset_x, offset_y;
+
+      /* Guard against divide-by-zero. SIGFPEs are not mythological
+       * contrary to popular belief */
+      if (half_width >= 10)
+        offset_x = std::max(std::min((x_position - half_width) / (half_width / 10), 5), -5);
+      else
+        offset_x = 0;
+
+      if (half_height >= 10)
+        offset_y = std::max(std::min(((y_position + absolute_position.y) - half_height) / (half_height / 10), 5), -5);
+      else
+        offset_y = 0;
+
+      if (recorded_dash_width_ < 1 || recorded_dash_height_ < 1)
+      {
+        offset_x = 0;
+        offset_y = 0;
+      }
+
+      // Color and saturation
+      if (state == ResultRenderer::RESULT_RENDERER_SELECTED)
+      {
+        saturation = saturation_progress + (1.0-saturation_progress) * FOCUSED_ICON_SATURATION_REF;
+        opacity = saturation_progress + (1.0-saturation_progress) * FOCUSED_GHOST_ICON_OPACITY_REF;
+      }
+      else
+      {
+        saturation = saturation_progress + (1.0-saturation_progress) * UNFOCUSED_ICON_SATURATION_REF;
+        opacity = saturation_progress + (1.0-saturation_progress) * UNFOCUSED_GHOST_ICON_OPACITY_REF;
+      }
+      nux::Color tint(opacity + (1.0f-opacity) * background_color_.red,
+                     opacity + (1.0f-opacity) * background_color_.green,
+                     opacity + (1.0f-opacity) * background_color_.blue,
+                     opacity);
+
+      nux::Geometry render_geo(x_position, y_position, renderer_->width, renderer_->height);
+      Result result(*GetIteratorAtRow(index));
+      renderer_->Render(GfxContext,
+                        result,
+                        state,
+                        render_geo,
+                        offset_x,
+                        offset_y,
+                        tint,
+                        saturation);
+
+      x_position += renderer_->width + horizontal_spacing + extra_horizontal_spacing_;
+    }
+  }
+
+  GfxContext.GetRenderStates().SetBlend(current_alpha_blend, current_src_blend_factor, current_dest_blend_factor);
+}
+
+
+void ResultViewGrid::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
   nux::Geometry base = GetGeometry();
-  GfxContent.PushClippingRectangle(base);
+  GfxContext.PushClippingRectangle(base);
 
   if (GetCompositionLayout())
   {
     nux::Geometry geo = GetCompositionLayout()->GetGeometry();
-    GetCompositionLayout()->ProcessDraw(GfxContent, force_draw);
+    GetCompositionLayout()->ProcessDraw(GfxContext, force_draw);
   }
 
-  GfxContent.PopClippingRectangle();
+  GfxContext.PopClippingRectangle();
 }
 
 
@@ -707,7 +785,7 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
   unsigned num_results = GetNumResults();
   unsigned index = GetIndexAtPosition(x, y);
   mouse_over_index_ = index;
-  if (index >= 0 && index < num_results)
+  if (index < num_results)
   {
     // we got a click on a button so activate it
     ResultIterator it(GetIteratorAtRow(index));
@@ -764,7 +842,7 @@ std::tuple<int, int> ResultViewGrid::GetResultPosition(const unsigned int& index
   int items_per_row = GetItemsPerRow();
   int column_size = renderer_->width + horizontal_spacing + extra_horizontal_spacing_;
   int row_size = renderer_->height + vertical_spacing;
-  
+
   int y = row_size * (index / items_per_row) + padding;
   int x = column_size * (index % items_per_row) + padding;
 
@@ -778,27 +856,23 @@ std::tuple<int, int> ResultViewGrid::GetResultPosition(const unsigned int& index
 bool ResultViewGrid::DndSourceDragBegin()
 {
 #ifdef USE_X11
-  unsigned num_results = GetNumResults();
-  unsigned drag_index = GetIndexAtPosition(last_mouse_down_x_, last_mouse_down_y_);
+  drag_index_ = GetIndexAtPosition(last_mouse_down_x_, last_mouse_down_y_);
 
-  if (drag_index >= num_results)
+  if (drag_index_ >= GetNumResults())
     return false;
 
   Reference();
 
-  ResultIterator iter(GetIteratorAtRow(drag_index));
+  ResultIterator iter(GetIteratorAtRow(drag_index_));
   Result drag_result = *iter;
 
   current_drag_uri_ = drag_result.dnd_uri;
   if (current_drag_uri_ == "")
     current_drag_uri_ = drag_result.uri().substr(drag_result.uri().find(":") + 1);
 
-  current_drag_icon_name_ = drag_result.icon_hint;
-
   LOG_DEBUG (logger) << "Dnd begin at " <<
                      last_mouse_down_x_ << ", " << last_mouse_down_y_ << " - using; "
-                     << current_drag_uri_ << " - "
-                     << current_drag_icon_name_;
+                     << current_drag_uri_;
 
   return true;
 #else
@@ -806,101 +880,14 @@ bool ResultViewGrid::DndSourceDragBegin()
 #endif
 }
 
-GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint)
-{
-  GdkPixbuf *pbuf;
-  GtkIconTheme *theme;
-  GtkIconInfo *info;
-  GError *error = NULL;
-  GIcon *icon;
-  int size = 64;
-  if (icon_hint.empty())
-    icon_hint = "application-default-icon";
-  if (g_str_has_prefix(icon_hint.c_str(), "/"))
-  {
-    pbuf = gdk_pixbuf_new_from_file_at_scale (icon_hint.c_str(),
-                                              size, size, FALSE, &error);
-    if (error != NULL || !pbuf || !GDK_IS_PIXBUF (pbuf))
-    {
-      icon_hint = "application-default-icon";
-      g_error_free (error);
-      error = NULL;
-    }
-    else
-      return pbuf;
-  }
-  theme = gtk_icon_theme_get_default();
-  icon = g_icon_new_for_string(icon_hint.c_str(), NULL);
-
-  if (G_IS_ICON(icon))
-  {
-     if (UNITY_PROTOCOL_IS_ANNOTATED_ICON(icon))
-     {
-        UnityProtocolAnnotatedIcon *anno;
-        anno = UNITY_PROTOCOL_ANNOTATED_ICON(icon);
-
-        GIcon *base_icon = unity_protocol_annotated_icon_get_icon(anno);
-        info = gtk_icon_theme_lookup_by_gicon(theme, base_icon, size, (GtkIconLookupFlags)0);
-     }
-     else
-     {
-       info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
-     }
-     g_object_unref(icon);
-  }
-  else
-  {
-     info = gtk_icon_theme_lookup_icon(theme,
-                                        icon_hint.c_str(),
-                                        size,
-                                        (GtkIconLookupFlags) 0);
-  }
-
-  if (!info)
-  {
-      info = gtk_icon_theme_lookup_icon(theme,
-                                        "application-default-icon",
-                                        size,
-                                        (GtkIconLookupFlags) 0);
-  }
-
-  if (gtk_icon_info_get_filename(info) == NULL)
-  {
-      gtk_icon_info_free(info);
-      info = gtk_icon_theme_lookup_icon(theme,
-                                        "application-default-icon",
-                                        size,
-                                        (GtkIconLookupFlags) 0);
-  }
-
-  pbuf = gtk_icon_info_load_icon(info, &error);
-
-  if (error != NULL)
-  {
-    LOG_WARN (logger) << "could not find a pixbuf for " << icon_hint;
-    g_error_free (error);
-    pbuf = NULL;
-  }
-
-  gtk_icon_info_free(info);
-  return pbuf;
-}
-
 nux::NBitmapData*
 ResultViewGrid::DndSourceGetDragImage()
 {
-  nux::NBitmapData* result = 0;
-  GdkPixbuf* pbuf;
-  pbuf = _icon_hint_get_drag_pixbuf (current_drag_icon_name_);
+  if (drag_index_ >= GetNumResults())
+    return nullptr;
 
-  if (pbuf && GDK_IS_PIXBUF(pbuf))
-  {
-    // we don't free the pbuf as GdkGraphics will do it for us will do it for us
-    nux::GdkGraphics graphics(pbuf);
-    result = graphics.GetBitmap();
-  }
-
-  return result;
+  Result result(*GetIteratorAtRow(drag_index_));
+  return renderer_->GetDndImage(result);
 }
 
 std::list<const char*>
@@ -934,7 +921,7 @@ void ResultViewGrid::DndSourceDragFinished(nux::DndAction result)
   last_mouse_down_x_ = -1;
   last_mouse_down_y_ = -1;
   current_drag_uri_.clear();
-  current_drag_icon_name_.clear();
+  drag_index_ = ~0;
 
   // We need this because the drag can start in a ResultViewGrid and can
   // end in another ResultViewGrid
@@ -955,6 +942,93 @@ int
 ResultViewGrid::GetSelectedIndex()
 {
   return selected_index_;
+}
+
+void
+ResultViewGrid::UpdateRenderTextures()
+{
+  nux::Geometry root_geo(GetAbsoluteGeometry());
+
+  int items_per_row = GetItemsPerRow();
+  unsigned num_results = GetNumResults();
+
+  unsigned int total_rows = (!expanded) ? 1 : std::ceil(num_results / (double)items_per_row);
+  int row_height = renderer_->height + vertical_spacing;
+
+  int cumulative_height = 0;
+  unsigned int row_index = 0;
+  for (; row_index < total_rows; row_index++)
+  {
+    // only one texture for non-expanded.
+    if (!expanded && row_index > 0)
+      break;
+
+    if (row_index >= result_textures_.size())
+    {
+      ResultViewTexture::Ptr result_texture(new ResultViewTexture);
+      result_texture->abs_geo.x = root_geo.x;
+      result_texture->abs_geo.y = root_geo.y + cumulative_height;
+      result_texture->abs_geo.width = GetWidth();
+      result_texture->abs_geo.height = row_height;
+      result_texture->row_index = row_index;
+
+      result_textures_.push_back(result_texture);
+    }
+    else
+    {
+      ResultViewTexture::Ptr const& result_texture(result_textures_[row_index]);
+
+      result_texture->abs_geo.x = root_geo.x;
+      result_texture->abs_geo.y = root_geo.y + cumulative_height;
+      result_texture->abs_geo.width = GetWidth();
+      result_texture->abs_geo.height = row_height;
+      result_texture->row_index = row_index;
+    }
+
+    cumulative_height += row_height;
+  }
+
+  // get rid of old textures.
+  for (; row_index < result_textures_.size(); row_index++)
+  {
+    result_textures_.pop_back();
+  }
+}
+
+void ResultViewGrid::RenderResultTexture(ResultViewTexture::Ptr const& result_texture)
+{
+  int row_height = renderer_->height + vertical_spacing;
+
+  // Do we need to re-create the texture?
+  if (!result_texture->texture.IsValid() ||
+       result_texture->texture->GetWidth() != GetWidth() ||
+       result_texture->texture->GetHeight() != row_height)
+  {
+    result_texture->texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(GetWidth(),
+                                                                                                         row_height,
+                                                                                                         1,
+                                                                                                         nux::BITFMT_R8G8B8A8);
+    if (!result_texture->texture.IsValid())
+      return;
+  }
+
+  ResultListBounds visible_bounds(0, GetNumResults()-1);
+
+  graphics::PushOffscreenRenderTarget(result_texture->texture);
+
+    // clear the texture.
+  CHECKGL(glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
+  CHECKGL(glClear(GL_COLOR_BUFFER_BIT));
+
+  nux::GraphicsEngine& graphics_engine(nux::GetWindowThread()->GetGraphicsEngine());
+  nux::Geometry offset_rect = graphics_engine.ModelViewXFormRect(GetGeometry());
+  graphics_engine.PushModelViewMatrix(nux::Matrix4::TRANSLATE(-offset_rect.x, 0, 0));
+
+  DrawRow(graphics_engine, visible_bounds, result_texture->row_index, 0, GetAbsoluteGeometry());
+
+  graphics_engine.PopModelViewMatrix();
+
+  graphics::PopOffscreenRenderTarget();
 }
 
 debug::ResultWrapper* ResultViewGrid::CreateResultWrapper(Result const& result, int index)

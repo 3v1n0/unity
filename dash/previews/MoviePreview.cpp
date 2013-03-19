@@ -23,8 +23,7 @@
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
-#include "unity-shared/StaticCairoText.h"
-#include "unity-shared/PlacesVScrollBar.h"
+#include "unity-shared/PlacesOverlayVScrollBar.h"
 #include <UnityCore/MoviePreview.h>
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
@@ -50,7 +49,7 @@ public:
   DetailsScrollView(NUX_FILE_LINE_PROTO)
   : ScrollView(NUX_FILE_LINE_PARAM)
   {
-    SetVScrollBar(new dash::PlacesVScrollBar(NUX_TRACKER_LOCATION));
+    SetVScrollBar(new dash::PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION));
   }
 
 };
@@ -59,10 +58,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(MoviePreview);
 
 MoviePreview::MoviePreview(dash::Preview::Ptr preview_model)
 : Preview(preview_model)
-, full_data_layout_(nullptr)
 {
-  SetupBackground();
-  SetupView();
+  SetupViews();
 }
 
 MoviePreview::~MoviePreview()
@@ -83,22 +80,8 @@ void MoviePreview::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)
 {
   nux::Geometry const& base = GetGeometry();
 
-  bool enable_bg_shadows = dash::previews::Style::Instance().GetShadowBackgroundEnabled();
-
   gfx_engine.PushClippingRectangle(base);
   nux::GetPainter().PaintBackground(gfx_engine, base);
-
-  if (enable_bg_shadows && full_data_layout_)
-  {
-    unsigned int alpha, src, dest = 0;
-    gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
-    gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-    details_bg_layer_->SetGeometry(full_data_layout_->GetGeometry());
-    nux::GetPainter().RenderSinglePaintLayer(gfx_engine, full_data_layout_->GetGeometry(), details_bg_layer_.get());
-
-    gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
-  }
 
   gfx_engine.PopClippingRectangle(); 
 }
@@ -108,11 +91,6 @@ void MoviePreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
   nux::Geometry const& base = GetGeometry();
   gfx_engine.PushClippingRectangle(base);
 
-  bool enable_bg_shadows = dash::previews::Style::Instance().GetShadowBackgroundEnabled();
-  
-  if (enable_bg_shadows && !IsFullRedraw())
-    nux::GetPainter().PushLayer(gfx_engine, details_bg_layer_->GetGeometry(), details_bg_layer_.get());
-
   unsigned int alpha, src, dest = 0;
   gfx_engine.GetRenderStates().GetBlend(alpha, src, dest);
   gfx_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -121,9 +99,6 @@ void MoviePreview::DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
     GetCompositionLayout()->ProcessDraw(gfx_engine, force_draw);
 
   gfx_engine.GetRenderStates().SetBlend(alpha, src, dest);
-
-  if (enable_bg_shadows && !IsFullRedraw())
-    nux::GetPainter().PopBackground();
 
   gfx_engine.PopClippingRectangle();
 }
@@ -136,12 +111,7 @@ void MoviePreview::OnNavigateOut()
 {
 }
 
-void MoviePreview::SetupBackground()
-{
-  details_bg_layer_.reset(dash::previews::Style::Instance().GetBackgroundLayer());
-}
-
-void MoviePreview::SetupView()
+void MoviePreview::SetupViews()
 {
   dash::MoviePreview* movie_preview_model = dynamic_cast<dash::MoviePreview*>(preview_model_.get());
   if (!movie_preview_model)
@@ -150,6 +120,8 @@ void MoviePreview::SetupView()
     return;
   }
   previews::Style& style = dash::previews::Style::Instance();
+
+  auto on_mouse_down = [&](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_->OnMouseDown(x, y, button_flags, key_flags); };
 
   nux::HLayout* image_data_layout = new nux::HLayout();
   image_data_layout->SetSpaceBetweenChildren(style.GetPanelSplitWidth());
@@ -173,16 +145,20 @@ void MoviePreview::SetupView()
       nux::VLayout* app_data_layout = new nux::VLayout();
       app_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenTitleAndSubtitle());
 
-      title_ = new nux::StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
+      title_ = new StaticCairoText(preview_model_->title, true, NUX_TRACKER_LOCATION);
+      AddChild(title_.GetPointer());
       title_->SetLines(-1);
       title_->SetFont(style.title_font().c_str());
+      title_->mouse_click.connect(on_mouse_down);
       app_data_layout->AddView(title_.GetPointer(), 1);
 
       if (!preview_model_->subtitle.Get().empty())
       {
-        subtitle_ = new nux::StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
+        subtitle_ = new StaticCairoText(preview_model_->subtitle, true, NUX_TRACKER_LOCATION);
+        AddChild(subtitle_.GetPointer());
         subtitle_->SetLines(-1);
         subtitle_->SetFont(style.subtitle_size_font().c_str());
+        subtitle_->mouse_click.connect(on_mouse_down);
         app_data_layout->AddView(subtitle_.GetPointer(), 1);
       }
       /////////////////////
@@ -193,11 +169,13 @@ void MoviePreview::SetupView()
       rating_->SetMinimumHeight(style.GetRatingWidgetHeight());
       rating_->SetRating(movie_preview_model->rating);
       rating_->SetReviews(movie_preview_model->num_ratings);
+      rating_->request_close().connect([this]() { preview_container_->request_close.emit(); });
 
       /////////////////////
       // Description
       nux::ScrollView* preview_info = new DetailsScrollView(NUX_TRACKER_LOCATION);
       preview_info->EnableHorizontalScrollBar(false);
+      preview_info->mouse_click.connect(on_mouse_down);
 
       nux::VLayout* preview_info_layout = new nux::VLayout();
       preview_info_layout->SetSpaceBetweenChildren(12);
@@ -207,16 +185,19 @@ void MoviePreview::SetupView()
       {
         preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
         AddChild(preview_info_hints_.GetPointer());
+        preview_info_hints_->request_close().connect([this]() { preview_container_->request_close.emit(); });
         preview_info_layout->AddView(preview_info_hints_.GetPointer(), 0);
       }
 
       if (!preview_model_->description.Get().empty())
       {
-        description_ = new nux::StaticCairoText(preview_model_->description, false, NUX_TRACKER_LOCATION); // not escaped!
+        description_ = new StaticCairoText(preview_model_->description, false, NUX_TRACKER_LOCATION); // not escaped!
+        AddChild(description_.GetPointer());
         description_->SetFont(style.description_font().c_str());
-        description_->SetTextAlignment(nux::StaticCairoText::NUX_ALIGN_TOP);
+        description_->SetTextAlignment(StaticCairoText::NUX_ALIGN_TOP);
         description_->SetLines(-style.GetDescriptionLineCount());
         description_->SetLineSpacing(style.GetDescriptionLineSpacing());
+        description_->mouse_click.connect(on_mouse_down);
         preview_info_layout->AddView(description_.GetPointer());
       }
       /////////////////////
@@ -236,6 +217,8 @@ void MoviePreview::SetupView()
   
   image_data_layout->AddView(image_.GetPointer(), 0);
   image_data_layout->AddLayout(full_data_layout_, 1);
+
+  mouse_click.connect(on_mouse_down);
 
   SetLayout(image_data_layout);
 }

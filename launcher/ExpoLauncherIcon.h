@@ -32,11 +32,19 @@ class ExpoLauncherIcon : public SimpleLauncherIcon
 public:
   ExpoLauncherIcon();
   void Stick(bool save);
+  void AboutToRemove();
 
 protected:
   void ActivateLauncherIcon(ActionArg arg);
   std::string GetName() const;
   std::string GetRemoteUri();
+
+private:
+  void OnViewportLayoutChanged(int hsize, int vsize);
+  void UpdateIcon();
+
+  sigc::connection screen_viewport_switch_ended_connection_;
+  sigc::connection terminate_expo_connection_;
 };
 
 }

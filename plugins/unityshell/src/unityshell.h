@@ -43,7 +43,6 @@
 #include "FavoriteStoreGSettings.h"
 #include "FontSettings.h"
 #include "ShortcutController.h"
-#include "ShortcutHint.h"
 #include "LauncherController.h"
 #include "PanelController.h"
 #include "PanelStyle.h"
@@ -51,6 +50,7 @@
 #include "DebugDBusInterface.h"
 #include "ScreenIntrospection.h"
 #include "SwitcherController.h"
+#include "SessionController.h"
 #include "UBusWrapper.h"
 #include "UnityshellPrivate.h"
 #include "UnityShowdesktopHandler.h"
@@ -237,10 +237,7 @@ private:
   void OnInitiateSpread();
   void OnTerminateSpread();
 
-  void RestoreWindow(GVariant* data);
   bool SaveInputThenFocus(const guint xid);
-
-  void InitHints();
 
   void OnPanelStyleChanged();
 
@@ -249,6 +246,11 @@ private:
   void DrawTopPanelBackground();
   bool TopPanelBackgroundTextureNeedsUpdate() const;
   void UpdateTopPanelBackgroundTexture();
+
+  unsigned CompizModifiersToNux(unsigned input) const;
+  unsigned XModifiersToNux(unsigned input) const;
+
+  void UpdateCloseWindowKey(CompAction::KeyBinding const&);
 
   std::unique_ptr<na::TickSource> tick_source_;
   std::unique_ptr<na::AnimationController> animation_controller_;
@@ -267,13 +269,12 @@ private:
   launcher::Controller::Ptr launcher_controller_;
   dash::Controller::Ptr     dash_controller_;
   panel::Controller::Ptr    panel_controller_;
+  debug::Introspectable     *introspectable_switcher_controller_;
   switcher::Controller::Ptr switcher_controller_;
   hud::Controller::Ptr      hud_controller_;
   shortcut::Controller::Ptr shortcut_controller_;
+  session::Controller::Ptr  session_controller_;
   debug::DebugDBusInterface debugger_;
-
-  std::list<shortcut::AbstractHint::Ptr> hints_;
-  bool enable_shortcut_overlay_;
 
   /* Subscription for gestures that manipulate Unity launcher */
   std::unique_ptr<nux::GesturesSubscription> gestures_sub_launcher_;
@@ -291,6 +292,7 @@ private:
   typedef std::vector<CompActionPtr> ShortcutActions;
   ShortcutActions _shortcut_actions;
   std::map<CancelActionTarget, CompActionPtr> _escape_actions;
+  std::map<int, unsigned int> windows_for_monitor_;
 
   /* keyboard-nav mode */
   CompWindow* newFocusedWindow;
@@ -369,7 +371,7 @@ public:
 
   void minimize();
   void unminimize();
-  bool minimized();
+  bool minimized() const;
   bool focus();
   void activate();
 
@@ -392,7 +394,7 @@ public:
   CompPoint tryNotIntersectUI(CompPoint& pos);
   nux::Geometry GetScaledGeometry();
 
-  void paintThumbnail(nux::Geometry const& bounding, float alpha, float scale_ratio, unsigned deco_height, bool selected);
+  void paintThumbnail(nux::Geometry const& bounding, float parent_alpha, float alpha, float scale_ratio, unsigned deco_height, bool selected);
 
   void enterShowDesktop();
   void leaveShowDesktop();
@@ -482,6 +484,7 @@ private:
   panel::WindowState close_icon_state_;
   nux::Geometry close_button_geo_;
   bool middle_clicked_;
+  bool is_nux_window_;
   glib::Source::UniquePtr focus_desktop_timeout_;
 
   friend class UnityScreen;

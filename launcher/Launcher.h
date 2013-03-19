@@ -32,7 +32,6 @@
 #include "unity-shared/AbstractIconRenderer.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "DevicesSettings.h"
-#include "DNDCollectionWindow.h"
 #include "DndData.h"
 #include "unity-shared/Introspectable.h"
 #include "LauncherModel.h"
@@ -40,8 +39,10 @@
 #include "LauncherDragWindow.h"
 #include "LauncherHideMachine.h"
 #include "LauncherHoverMachine.h"
+#include "unity-shared/MockableBaseWindow.h"
 #include "unity-shared/UBusWrapper.h"
 #include "SoftwareCenterLauncherIcon.h"
+#include "TooltipManager.h"
 
 #ifdef USE_X11
 # include "PointerBarrier.h"
@@ -66,7 +67,7 @@ class Launcher : public unity::debug::Introspectable,
   NUX_DECLARE_OBJECT_TYPE(Launcher, nux::View);
 public:
 
-  Launcher(nux::BaseWindow* parent, nux::ObjectPtr<DNDCollectionWindow> const& collection_window, NUX_FILE_LINE_PROTO);
+  Launcher(MockableBaseWindow* parent, NUX_FILE_LINE_PROTO);
 
   nux::Property<Display*> display;
   nux::Property<int> monitor;
@@ -100,7 +101,7 @@ public:
   BacklightMode GetBacklightMode() const;
   bool IsBackLightModeToggles() const;
 
-  nux::BaseWindow* GetParent() const
+  MockableBaseWindow* GetParent() const
   {
     return _parent;
   };
@@ -116,8 +117,10 @@ public:
   virtual void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
 
-  virtual void RecvQuicklistOpened(QuicklistView* quicklist);
-  virtual void RecvQuicklistClosed(QuicklistView* quicklist);
+  virtual void RecvQuicklistOpened(nux::ObjectPtr<QuicklistView> const& quicklist);
+  virtual void RecvQuicklistClosed(nux::ObjectPtr<QuicklistView> const& quicklist);
+
+  void ScrollLauncher(int wheel_delta);
 
   int GetMouseX() const;
   int GetMouseY() const;
@@ -126,6 +129,11 @@ public:
 
   int GetDragDelta() const;
   void SetHover(bool hovered);
+
+  void DndStarted(std::string const& mimes);
+  void DndFinished();
+  void SetDndQuirk();
+  void UnsetDndQuirk();
 
   sigc::signal<void, std::string const&, AbstractLauncherIcon::Ptr const&> add_request;
   sigc::signal<void, AbstractLauncherIcon::Ptr const&> remove_request;
@@ -204,7 +212,7 @@ private:
 #endif
 
 #ifdef USE_X11
-  bool HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
+  ui::EdgeBarrierSubscriber::Result HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
 #endif
 
   void OnPluginStateChanged();
@@ -214,9 +222,9 @@ private:
   bool StrutHack();
   bool StartIconDragTimeout(int x, int y);
   bool OnScrollTimeout();
-  bool OnUpdateDragManagerTimeout();
 
   void SetMousePosition(int x, int y);
+  void SetIconUnderMouse(AbstractLauncherIcon::Ptr const& icon);
 
   void SetStateMouseOverLauncher(bool over_launcher);
 
@@ -235,10 +243,8 @@ private:
   void EnsureScrollTimer();
 
   bool MouseOverTopScrollArea();
-  bool MouseOverTopScrollExtrema();
 
   bool MouseOverBottomScrollArea();
-  bool MouseOverBottomScrollExtrema();
 
   float DnDStartProgress(struct timespec const& current) const;
   float DnDExitProgress(struct timespec const& current) const;
@@ -249,6 +255,7 @@ private:
   float DragOutProgress(struct timespec const& current) const;
   float IconDesatValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
   float IconPresentProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
+  float IconUnfoldProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
   float IconUrgentProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
   float IconShimmerProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
   float IconUrgentPulseValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
@@ -323,16 +330,12 @@ private:
 
   virtual long PostLayoutManagement(long LayoutResult);
 
-  void OnDisplayChanged(Display* display);
-  void OnDNDDataCollected(const std::list<char*>& mimes);
-
   void DndReset();
   void DndHoveredIconReset();
-  void DndTimeoutSetup();
   bool DndIsSpecialRequest(std::string const& uri) const;
 
   LauncherModel::Ptr _model;
-  nux::BaseWindow* _parent;
+  MockableBaseWindow* _parent;
   nux::ObjectPtr<nux::View> _active_tooltip;
   QuicklistView* _active_quicklist;
 
@@ -384,9 +387,9 @@ private:
   nux::Point2 _mouse_position;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
   nux::ObjectPtr<LauncherDragWindow> _drag_window;
-  nux::ObjectPtr<unity::DNDCollectionWindow> _collection_window;
   LauncherHideMachine _hide_machine;
   LauncherHoverMachine _hover_machine;
+  TooltipManager tooltip_manager_;
 
   unity::DndData _dnd_data;
   nux::DndAction _drag_action;

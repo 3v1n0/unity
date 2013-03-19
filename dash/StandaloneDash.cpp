@@ -28,11 +28,13 @@
 #include <NuxCore/AnimationController.h>
 #include <NuxCore/Logger.h>
 
+#include "ApplicationStarterImp.h"
 #include "unity-shared/BGHash.h"
 #include "unity-shared/FontSettings.h"
 #include "DashView.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/DashStyle.h"
+#include "unity-shared/PanelStyle.h"
 #include "unity-shared/ThumbnailGenerator.h"
 
 #define WIDTH 1024
@@ -63,7 +65,8 @@ void TestRunner::Init ()
 {
   layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  DashView* view = new DashView();
+  DashView* view = new DashView(std::make_shared<unity::dash::FilesystemLenses>(), 
+                                std::make_shared<unity::ApplicationStarterImp>());
   view->DisableBlur();
   view->SetMinMaxSize(WIDTH, HEIGHT);
   layout->AddView (view, 1, nux::MINOR_POSITION_CENTER);
@@ -95,6 +98,7 @@ int main(int argc, char **argv)
   unity::ThumbnailGenerator thumb_generator;
   unity::Settings settings;
   unity::dash::Style dash_style;
+  unity::panel::Style panel_style;
 
   TestRunner *test_runner = new TestRunner ();
   wt = nux::CreateGUIThread(TEXT("Unity Dash"),

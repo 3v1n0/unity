@@ -33,6 +33,8 @@ namespace unity
 {
 namespace dash
 {
+  
+NUX_IMPLEMENT_OBJECT_TYPE(FilterBasicButton);
 
 FilterBasicButton::FilterBasicButton(nux::TextureArea* image, NUX_FILE_LINE_DECL)
   : nux::ToggleButton(image, NUX_FILE_LINE_PARAM)
@@ -138,6 +140,7 @@ void FilterBasicButton::SetClearBeforeDraw(bool clear_before_draw)
 void FilterBasicButton::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
   nux::Geometry const& geo = GetGeometry();
+  graphics_engine.PushClippingRectangle(geo);
 
   // set up our texture mode
   nux::TexCoordXForm texxform;
@@ -147,13 +150,6 @@ void FilterBasicButton::Draw(nux::GraphicsEngine& graphics_engine, bool force_dr
   // clear what is behind us
   unsigned int alpha = 0, src = 0, dest = 0;
   graphics_engine.GetRenderStates().GetBlend(alpha, src, dest);
-  if (RedirectedAncestor() && clear_before_draw_)
-  {
-    // This is necessary when doing redirected rendering.
-    // Clean the area below this view before drawing anything.
-    graphics_engine.GetRenderStates().SetBlend(false);
-    graphics_engine.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
-  }
   graphics_engine.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
   nux::Color col = nux::color::Black;
@@ -192,6 +188,8 @@ void FilterBasicButton::Draw(nux::GraphicsEngine& graphics_engine, bool force_dr
   }
 
   graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
+
+  graphics_engine.PopClippingRectangle();
 }
 
 } // namespace dash

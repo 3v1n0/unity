@@ -202,7 +202,9 @@ struct IconRenderer::TexturesPool
   BaseTexturePtr progress_bar_trough;
   BaseTexturePtr progress_bar_fill;
   BaseTexturePtr pip_ltr;
+  BaseTexturePtr large_pip_ltr;
   // BaseTexturePtr pip_rtl;
+  // BaseTexturePtr large_pip_rtl;
   BaseTexturePtr arrow_ltr;
   BaseTexturePtr arrow_rtl;
   BaseTexturePtr arrow_empty_ltr;
@@ -430,9 +432,10 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
 
   nux::Color background_tile_color = arg.icon->BackgroundColor();
   nux::Color glow_color = arg.icon->GlowColor();
-  nux::Color edge_color(0x55555555);
+  nux::Color edge_color = nux::color::White;
   nux::Color colorify = arg.colorify;
   nux::Color background_tile_colorify = arg.colorify;
+  nux::Color edge_tile_colorify = nux::color::White;
   bool colorify_background = arg.colorify_background;
   float backlight_intensity = arg.backlight_intensity;
   float glow_intensity = arg.glow_intensity;
@@ -526,10 +529,10 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
                   backlight_intensity * arg.alpha,
                   force_filter,
                   tile_transform);
-  }
 
-  edge_color = edge_color + ((background_tile_color - edge_color) * backlight_intensity);
-  nux::Color edge_tile_colorify = background_tile_colorify;
+    edge_tile_colorify = background_tile_colorify * backlight_intensity;
+    edge_color = edge_color + ((background_tile_color - edge_color) * backlight_intensity);
+  }
 
   if (colorify_background && !arg.keyboard_nav_hl)
   {
@@ -682,14 +685,13 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
 nux::ObjectPtr<nux::BaseTexture> IconRenderer::TexturesPool::RenderLabelTexture(char label, int icon_size, nux::Color const& bg_color)
 {
   nux::CairoGraphics cg(CAIRO_FORMAT_ARGB32, icon_size, icon_size);
-  std::shared_ptr<cairo_t> cairo_context(cg.GetContext(), cairo_destroy);
-  cairo_t* cr = cairo_context.get();
+  cairo_t* cr = cg.GetInternalContext();
   glib::String font_name;
 
   const double label_ratio = 0.44f;
   const double label_size = icon_size * label_ratio;
-  const double label_x = (icon_size - label_size) / 2;
-  const double label_y = (icon_size - label_size) / 2;
+  const double label_x = (icon_size - label_size) / 2.0f;
+  const double label_y = (icon_size - label_size) / 2.0f;
   const double label_w = label_size;
   const double label_h = label_size;
   const double label_radius = 3.0f;
@@ -714,14 +716,13 @@ nux::ObjectPtr<nux::BaseTexture> IconRenderer::TexturesPool::RenderLabelTexture(
   pango_layout_set_font_description(layout, desc.get());
   pango_layout_set_text(layout, &label, 1);
 
-  PangoRectangle logRect;
-  PangoRectangle inkRect;
-  pango_layout_get_extents(layout, &inkRect, &logRect);
+  nux::Size extents;
+  pango_layout_get_pixel_size(layout, &extents.width, &extents.height);
 
   // position and paint text
   cairo_set_source_rgba(cr, 1.0f, 1.0f, 1.0f, 1.0f);
-  double x = label_x - ((logRect.width / PANGO_SCALE) - label_w) / 2.0f;
-  double y = label_y - ((logRect.height / PANGO_SCALE) - label_h) / 2.0f - 1;
+  double x = label_x - std::round((extents.width - label_w) / 2.0f);
+  double y = label_y - std::round((extents.height - label_h) / 2.0f);
   cairo_move_to(cr, x, y);
   pango_cairo_show_layout(cr, layout);
 
@@ -914,8 +915,8 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
   if (running > 0)
   {
     int scale = 1;
-
     int markerX;
+
     if (pip_style == OUTSIDE_TILE)
     {
       markerX = geo.x;
@@ -923,8 +924,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
     else
     {
       auto bounds = arg.icon->GetTransform(ui::IconTextureSource::TRANSFORM_TILE, monitor);
-      markerX = bounds[0].x + 2;
-      scale = 2;
+      markerX = bounds[0].x + 1;
     }
 
     nux::TexCoordXForm texxform;
@@ -945,28 +945,48 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
 
     if (!arg.running_on_viewport)
     {
+      scale = (pip_style == OUTSIDE_TILE) ? 1 : 2;
       markers[0] = markerCenter;
       texture = textures_->arrow_empty_ltr;
     }
     else if (running == 1)
     {
+      scale = (pip_style == OUTSIDE_TILE) ? 1 : 2;
       markers[0] = markerCenter;
       texture = textures_->arrow_ltr;
     }
     else if (running == 2)
     {
-      markers[0] = markerCenter - 2 * scale;
-      markers[1] = markerCenter + 2 * scale;
-      texture = textures_->pip_ltr;
+      if (pip_style == OUTSIDE_TILE)
+      {
+        texture = textures_->pip_ltr;
+        markers[0] = markerCenter - 2;
+        markers[1] = markerCenter + 2;
+      }
+      else
+      {
+        texture = textures_->large_pip_ltr;
+        markers[0] = markerCenter - 4;
+        markers[1] = markerCenter + 4;
+      }
     }
     else
     {
-      markers[0] = markerCenter - 4 * scale;
-      markers[1] = markerCenter;
-      markers[2] = markerCenter + 4 * scale;
-      texture = textures_->pip_ltr;
+      if (pip_style == OUTSIDE_TILE)
+      {
+        texture = textures_->pip_ltr;
+        markers[0] = markerCenter - 4;
+        markers[1] = markerCenter;
+        markers[2] = markerCenter + 4;
+      }
+      else
+      {
+        texture = textures_->large_pip_ltr;
+        markers[0] = markerCenter - 8;
+        markers[1] = markerCenter;
+        markers[2] = markerCenter + 8;
+      }
     }
-
 
     for (int i = 0; i < 3; i++)
     {
@@ -975,9 +995,9 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
         break;
 
       GfxContext.QRP_1Tex(markerX,
-                          center - ((texture->GetHeight() * scale) / 2) - 1,
-                          (float) texture->GetWidth() * scale,
-                          (float) texture->GetHeight() * scale,
+                          center - std::round((texture->GetHeight() * scale) / 2.0f),
+                          texture->GetWidth() * scale,
+                          texture->GetHeight() * scale,
                           texture->GetDeviceTexture(),
                           texxform,
                           color);
@@ -990,9 +1010,9 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
 
     nux::Color color = nux::color::LightGrey * alpha;
     GfxContext.QRP_1Tex((geo.x + geo.width) - textures_->arrow_rtl->GetWidth(),
-                        markerCenter - (textures_->arrow_rtl->GetHeight() / 2) - 1,
-                        (float) textures_->arrow_rtl->GetWidth(),
-                        (float) textures_->arrow_rtl->GetHeight(),
+                        markerCenter - std::round(textures_->arrow_rtl->GetHeight() / 2.0f),
+                        textures_->arrow_rtl->GetWidth(),
+                        textures_->arrow_rtl->GetHeight(),
                         textures_->arrow_rtl->GetDeviceTexture(),
                         texxform,
                         color);
@@ -1165,7 +1185,9 @@ IconRenderer::TexturesPool::TexturesPool()
   LoadTexture(progress_bar_trough, PKGDATADIR"/progress_bar_trough.png");
   LoadTexture(progress_bar_fill, PKGDATADIR"/progress_bar_fill.png");
   LoadTexture(pip_ltr, PKGDATADIR"/launcher_pip_ltr.png");
+  LoadTexture(large_pip_ltr, PKGDATADIR"/launcher_pip_large_ltr.png");
   // LoadTexture(pip_rtl, PKGDATADIR"/launcher_pip_rtl.png");
+  // LoadTexture(large_pip_rtl, PKGDATADIR"/launcher_pip_large_rtl.png");
   LoadTexture(arrow_ltr, PKGDATADIR"/launcher_arrow_ltr.png");
   LoadTexture(arrow_rtl, PKGDATADIR"/launcher_arrow_rtl.png");
   LoadTexture(arrow_empty_ltr, PKGDATADIR"/launcher_arrow_outline_ltr.png");

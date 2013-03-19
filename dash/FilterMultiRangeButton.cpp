@@ -21,6 +21,7 @@
 #include "config.h"
 
 #include <Nux/Nux.h>
+#include <Nux/Layout.h>
 
 #include "unity-shared/DashStyle.h"
 #include "FilterMultiRangeButton.h"
@@ -30,16 +31,19 @@ namespace unity
 namespace dash
 {
 
-FilterMultiRangeButton::FilterMultiRangeButton(std::string const& label, NUX_FILE_LINE_DECL)
-  : nux::ToggleButton(label, NUX_FILE_LINE_PARAM)
-  , has_arrow_(MultiRangeArrow::NONE)
-  , side_(MultiRangeSide::CENTER)
+namespace
 {
-  Init();
+const int kFontSizePx = 10;
+
+const int kLayoutPadLeftRight = 4;
+const int kLayoutPadtopBottom = 2;
 }
+
+NUX_IMPLEMENT_OBJECT_TYPE(FilterMultiRangeButton);
 
 FilterMultiRangeButton::FilterMultiRangeButton(NUX_FILE_LINE_DECL)
   : nux::ToggleButton(NUX_FILE_LINE_PARAM)
+  , theme_init_(false)
   , has_arrow_(MultiRangeArrow::NONE)
   , side_(MultiRangeSide::CENTER)
 {
@@ -53,8 +57,9 @@ FilterMultiRangeButton::~FilterMultiRangeButton()
 void FilterMultiRangeButton::Init()
 {
   InitTheme();
+  // Controlled by parent widget
   SetAcceptKeyNavFocusOnMouseDown(false);
-  SetAcceptKeyNavFocusOnMouseEnter(true);
+  SetAcceptKeyNavFocusOnMouseEnter(false);
 
   state_change.connect(sigc::mem_fun(this, &FilterMultiRangeButton::OnActivated));
   key_nav_focus_change.connect([&](nux::Area*, bool, nux::KeyNavDirection) { QueueDraw(); });
@@ -105,23 +110,22 @@ long FilterMultiRangeButton::ComputeContentSize()
 {
   long ret = nux::ToggleButton::ComputeContentSize();
   nux::Geometry const& geo = GetGeometry();
-  if (cached_geometry_ != geo)
+  if (theme_init_ && cached_geometry_ != geo)
   {
     cached_geometry_ = geo;
 
     std::vector<MultiRangeSide> sides = {MultiRangeSide::LEFT, MultiRangeSide::RIGHT, MultiRangeSide::CENTER};
     std::vector<MultiRangeArrow> arrows = {MultiRangeArrow::LEFT, MultiRangeArrow::RIGHT, MultiRangeArrow::BOTH, MultiRangeArrow::NONE};
 
-    for (auto arrow : arrows)
+    auto func_invalidate = [geo](std::pair<const MapKey, NuxCairoPtr>& pair)
     {
-      for (auto side : sides)
-      {
-        prelight_[MapKey(arrow, side)]->Invalidate(geo);
-        active_[MapKey(arrow, side)]->Invalidate(geo);
-        normal_[MapKey(arrow, side)]->Invalidate(geo);
-        focus_[MapKey(arrow, side)]->Invalidate(geo);
-      }
-    }
+      pair.second->Invalidate(geo);
+    };
+
+    for_each (prelight_.begin(), prelight_.end(), func_invalidate);
+    for_each (active_.begin(), active_.end(), func_invalidate);
+    for_each (normal_.begin(), normal_.end(), func_invalidate);
+    for_each (focus_.begin(), focus_.end(), func_invalidate);
   }
 
   return ret;
@@ -149,6 +153,7 @@ void FilterMultiRangeButton::InitTheme()
   }
 
   SetMinimumHeight(dash::Style::Instance().GetFilterButtonHeight() + 3);
+  theme_init_ = true;
 }
 
 void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom,
@@ -182,7 +187,7 @@ void FilterMultiRangeButton::RedrawTheme(nux::Geometry const& geom,
   else
     segment = Segment::RIGHT;
 
-  Style::Instance().MultiRangeSegment(cr, faked_state, name, arrow, segment);
+  Style::Instance().MultiRangeSegment(cr, faked_state, name, kFontSizePx, arrow, segment);
   NeedRedraw();
 }
 
@@ -226,13 +231,6 @@ void FilterMultiRangeButton::Draw(nux::GraphicsEngine& GfxContext, bool force_dr
   // clear what is behind us
   unsigned int alpha = 0, src = 0, dest = 0;
   GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
-  if (RedirectedAncestor())
-  {
-    // This is necessary when doing redirected rendering.
-    // Clean the area below this view before drawing anything.
-    GfxContext.GetRenderStates().SetBlend(false);
-    GfxContext.QRP_Color(GetX(), GetY(), GetWidth(), GetHeight(), nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
-  }
   GfxContext.GetRenderStates().SetBlend(true, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
   nux::Color col = nux::color::Black;

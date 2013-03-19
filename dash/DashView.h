@@ -28,17 +28,21 @@
 #include <UnityCore/HomeLens.h>
 #include <UnityCore/GLibSource.h>
 
-#include "unity-shared/BackgroundEffectHelper.h"
-#include "unity-shared/SearchBar.h"
-#include "unity-shared/Introspectable.h"
-#include "unity-shared/BGHash.h"
+#include "ApplicationStarter.h"
 #include "LensBar.h"
 #include "LensView.h"
-#include "unity-shared/UBusWrapper.h"
-#include "unity-shared/OverlayRenderer.h"
-#include "UnityCore/Preview.h"
 #include "previews/PreviewContainer.h"
 #include "PreviewStateMachine.h"
+#include "UnityCore/Preview.h"
+
+#include "unity-shared/BackgroundEffectHelper.h"
+#include "unity-shared/BGHash.h"
+#include "unity-shared/Introspectable.h"
+#include "unity-shared/OverlayRenderer.h"
+#include "unity-shared/SearchBar.h"
+#include "unity-shared/UBusWrapper.h"
+#include "unity-shared/OverlayWindowButtons.h"
+
 
 namespace na = nux::animation;
 
@@ -52,10 +56,10 @@ class DashLayout;
 class DashView : public nux::View, public unity::debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(DashView, nux::View);
-  typedef std::map<std::string, LensView*> LensViews;
+  typedef std::map<std::string, nux::ObjectPtr<LensView>> LensViews;
 
 public:
-  DashView();
+   DashView(Lenses::Ptr const& lenses, ApplicationStarter::Ptr const& application_starter);
   ~DashView();
 
   void AboutToShow();
@@ -64,9 +68,6 @@ public:
   void DisableBlur();
   void OnActivateRequest(GVariant* args);
   void SetMonitorOffset(int x, int y);
-
-  void SetPreview(Preview::Ptr preview);
-  void ClosePreview();
 
   std::string const GetIdForShortcutActivation(std::string const& shortcut) const;
   std::vector<char> GetAllShortcuts();
@@ -93,7 +94,17 @@ private:
   virtual long PostLayoutManagement (long LayoutResult);
   nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
 
+  // Dash animations
+  void DrawDashSplit(nux::GraphicsEngine& graphics_engine, nux::Geometry& split_clip);
+  void DrawPreviewContainer(nux::GraphicsEngine& graphics_engine);
+  void DrawPreviewResultTextures(nux::GraphicsEngine& gfx_context, bool force_draw);
+  void DrawPreview(nux::GraphicsEngine& gfx_context, bool force_draw);
+  void StartPreviewAnimation();
+  void EndPreviewAnimation();
+
   void BuildPreview(Preview::Ptr model);
+  void ClosePreview();
+  void OnPreviewAnimationFinished();
   void OnMouseButtonDown(int x, int y, unsigned long button, unsigned long key);
   void OnBackgroundColorChanged(GVariant* args);
   void OnSearchChanged(std::string const& search_string);
@@ -121,9 +132,11 @@ private:
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
   UBusManager ubus_manager_;
-  FilesystemLenses lenses_;
+  Lenses::Ptr lenses_;
   HomeLens::Ptr home_lens_;
   LensViews lens_views_;
+
+  ApplicationStarter::Ptr application_starter_;
 
   // View related
   PreviewStateMachine preview_state_machine_;
@@ -134,20 +147,22 @@ private:
 
   nux::VLayout* layout_;
   DashLayout* content_layout_;
+  nux::View* content_view_;
   nux::HLayout* search_bar_layout_;
   SearchBar* search_bar_;
   nux::VLayout* lenses_layout_;
   LensBar* lens_bar_;
 
-  LensView* home_view_;
-  LensView* active_lens_view_;
+  nux::ObjectPtr<LensView> home_view_;
+  nux::ObjectPtr<LensView> active_lens_view_;
+  nux::ObjectPtr<LensView> preview_lens_view_;
 
   // Drawing related
   nux::Geometry content_geo_;
   OverlayRenderer renderer_;
 
   std::string last_activated_uri_;
-  // we're passing this back to g_* functions, so we'll keep the g* type
+  guint64 last_activated_timestamp_;
   bool search_in_progress_;
   bool activate_on_finish_;
 
@@ -161,20 +176,23 @@ private:
   nux::ObjectPtr<nux::IOpenGLBaseTexture> filter_view_copy_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> layout_copy_;
 
-  float fade_out_value_;
-  float fade_in_value_;
-  na::AnimateValue<float> animation_;
-
-  void FadeOutCallBack(float const& fade_out_value);
-  void FadeInCallBack(float const& fade_out_value);
-
+  int opening_column_x_;
   int opening_row_y_;
+  int opening_column_width_;
   int opening_row_height_;
 
-  sigc::connection fade_in_connection_;
-  sigc::connection fade_out_connection_;
-
   nux::Color background_color_;
+
+  std::unique_ptr<na::AnimateValue<float>> split_animation_;
+  float animate_split_value_;
+
+  std::unique_ptr<na::AnimateValue<float>> preview_container_animation_;
+  float animate_preview_container_value_;
+
+  std::unique_ptr<na::AnimateValue<float>> preview_animation_;
+  float animate_preview_value_;
+
+  nux::ObjectPtr<OverlayWindowButtons> overlay_window_buttons_;
 };
 
 

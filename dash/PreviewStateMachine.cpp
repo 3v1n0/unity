@@ -30,6 +30,7 @@ PreviewStateMachine::PreviewStateMachine()
   , right_results(-1)
   , stored_preview_(nullptr)
   , requires_activation_(true)
+  , requires_new_position_(false)
 {
   for (int pos = SplitPosition::START; pos != SplitPosition::END; pos++)
   {
@@ -95,7 +96,7 @@ void PreviewStateMachine::CheckPreviewRequirementsFulfilled()
   if (GetSplitPosition(LENS_BAR) < 0) return;
   if (GetSplitPosition(SEARCH_BAR) < 0) return;
    */
- 
+
   if (left_results < 0 ||
       right_results < 0)
     return;

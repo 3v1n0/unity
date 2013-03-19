@@ -1,4 +1,475 @@
-unity (6.12.0-0ubuntu2) UNRELEASED; urgency=low
+unity (6.12.0daily13.03.13.1-0ubuntu1) raring; urgency=low
+
+  [ Sebastien Bacher ]
+  * Launcher - Update the icons used for the Software Centre, Nautilus,
+    and Software Updater (LP: #1081691)
+
+  [ Andrea Azzarone ]
+  * Nautilus windows don't get the the focus when opened via the dash.
+    (LP: #1152733)
+
+  [ Marco Trevisan (Treviño) ]
+  * New Shutdown view disables panel shadow (LP: #1152760)
+  * Shutdown goodbye text is sometimes partly missing (LP: #1152978)
+  * Shutdown view should be closable by escape-key (LP: #1152712)
+  * Press Alt+F1, panel’s shadow dissapear (LP: #942965)
+  * Long text in previews or dialogs is not properly aligned and/or
+    missing (LP: #1152980)
+  * Panel Shadow is not drawn properly during workspace switching (LP:
+    #1153699)
+  * QuicklistMenuItem's do not export the event timestamp on Activate
+    (LP: #1154082)
+  * [multimonitor] Dash - Opening dash or HUD on one screen removes
+    panel shadow on the other (LP: #892718)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Lenses shortcuts not working in singular cases (e.g. Super+A) (LP:
+    #1152517)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3211
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 13 Mar 2013 09:23:11 +0000
+
+unity (6.12.0daily13.03.11-0ubuntu1) raring; urgency=low
+
+  [ Marco Trevisan (Treviño) ]
+  * [FFe] Add Unity Style Shutdown Dialog  (LP: #1152374)
+  * New unity style shutdown dialogues (LP: #882041)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3202
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Mon, 11 Mar 2013 04:02:43 +0000
+
+unity (6.12.0daily13.03.08-0ubuntu1) raring; urgency=low
+
+  [ Andrea Azzarone ]
+  * Launcher, Window Management - More Effective window switching for
+    apps with multiple windows using the Launcher (LP: #1081843)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3199
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 08 Mar 2013 10:34:28 +0000
+
+unity (6.12.0daily13.03.07-0ubuntu1) raring; urgency=low
+
+  * Automatic snapshot from revision 3194
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Thu, 07 Mar 2013 04:02:28 +0000
+
+unity (6.12.0daily13.03.06.1-0ubuntu1) raring; urgency=low
+
+  [ Didier Roche ]
+  * Build-dep on libjson-perl to get debian/scopes-recommends-generator
+    parsing the libunity-common json file successfully (and so having
+    the recommended scopes… recommended)
+
+  [ Alexandre Abreu ]
+  * Web apps - After the user quits a web app that has just been
+    installed the icon doesn't stay in the launcher (LP: #1061056)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3190
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Wed, 06 Mar 2013 13:26:28 +0000
+
+unity (6.12.0daily13.03.05-0ubuntu1) raring; urgency=low
+
+  [ Didier Roche ]
+  * Need a .json file for having the list of default installed lens and
+    scopes (LP: #1137303)
+
+  [ Andrea Azzarone ]
+  * [regression] On start up the Hud draws the panel gradient
+    incorrectly (LP: #1136447)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3185
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Tue, 05 Mar 2013 04:02:33 +0000
+
+unity (6.12.0daily13.03.01-0ubuntu1) raring; urgency=low
+
+  [ Andrea Azzarone ]
+  * unity.tests.test_dash.DashVisualTests.test_dash_position_with_non_de
+    fault_launcher_width  randomly fails (LP: #1135628)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3179
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 01 Mar 2013 04:02:36 +0000
+
+unity (6.12.0daily13.02.28-0ubuntu1) raring; urgency=low
+
+  [ Stephen M. Webb ]
+  * unity watchfile is broken (LP: #1121754)
+
+  [ Andrea Azzarone ]
+  * Switcher does not focus the last active window in detail mode (using
+    alt+grave) (LP: #1133338)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3175
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Thu, 28 Feb 2013 04:02:34 +0000
+
+unity (6.12.0daily13.02.26-0ubuntu1) raring; urgency=low
+
+  [ Andrea Azzarone ]
+  * Multi-monitor - Panel and launcher visible on top of multimonitor
+    non-focused fullscreen apps (LP: #748539)
+  * unity.tests.launcher.test_icon_behavior.LauncherIconsTests.* fails
+    randomly (LP: #1131679)
+
+  [ Xiao-Long Chen ]
+  * Add timeout before removing launcher (LP: #1119801)
+
+  [ MC Return ]
+  * cppcheck reports true positives (LP: #1131152)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3171
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Tue, 26 Feb 2013 04:02:40 +0000
+
+unity (6.12.0daily13.02.19.1-0ubuntu1) raring; urgency=low
+
+  [ Brandon Schaefer ]
+  * Multi-monitor: Mousepointer hangs when passing between monitors,
+    although no Launcher is there (regression) (LP: #1120223)
+  * Sticky edges should only use horizontal mouse movement (LP: #982543)
+
+  [ Marco Trevisan (Treviño) ]
+  * Launcher - Workspace switcher should not be in the Launcher by
+    default (LP: #868423)
+  * [regression] Unlocking a running application, removes it from the
+    Launcher (LP: #1122311)
+  * Launcher, Workspaces - dragging and dropping the workspaces icon on
+    to the trash should switch Workspaces off (LP: #1118271)
+
+  [ Chris Townsend ]
+  * webapp: alt-tab gets "stucked" on the browser rather than going to
+    the next entry (LP: #1070715)
+
+  [ Nick Dedekind ]
+  * Dash - the "Decade" and "Size" dash filter category widgets are
+    broken (LP: #841899)
+  * Dash Places group is shining on quick mouse over (LP: #1119487)
+
+  [ Lukas Vacek ]
+  * Show window list when right clicking an icon in launcher - enables
+    quick window switching (LP: #1107866)
+
+  [ Marco Trevisan (Treviño) <mail@3v1n0.net>, Lukas Vacek ]
+  * Show window list when right clicking an icon in launcher - enables
+    quick window switching (LP: #1107866)
+
+  [ Andrea Azzarone ]
+  * unity launcher vanishes when switching to mirrored displays (LP:
+    #991637)
+  * Opening an app with super+num shorcut doesn't give focus to the app
+    (LP: #1125331)
+  * Alt+` and detail switcher broken after revision 3153 (LP: #1129372)
+
+  [ Sam Spilsbury ]
+  * Unity unnecessarily clears the ShapeBounding shape of windows on
+    minimize (LP: #1091600)
+  * Can't access minimized window after Unity restarts (LP: #851964)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3163
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Tue, 19 Feb 2013 14:26:14 +0000
+
+unity (6.12.0daily13.02.08-0ubuntu1) raring; urgency=low
+
+  [ Brandon Schaefer ]
+  * Multi-monitor - Add 'sticky edges deactivated for number of
+    milliseconds after the user breaks the barrier' variable that works
+    when the Launcher set to 'auto-hide' and sticky edges set to 'off'
+    (LP: #1064945)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * testapp is a bad name (LP: #1089561)
+
+  [ Marco Trevisan (Treviño) <mail@3v1n0.net>, Brandon Schaefer ]
+  * Multi-monitor - Add 'sticky edges deactivated for number of
+    milliseconds after the user breaks the barrier' variable that works
+    when the Launcher set to 'auto-hide' and sticky edges set to 'off'
+    (LP: #1064945)
+
+  [ Marco Trevisan (Treviño) ]
+  * Alt-Tab switcher should use a very fast fade-in/out effect when
+    showing/hiding (LP: #1105058)
+  * Multi-monitor - Add 'sticky edges deactivated for number of
+    milliseconds after the user breaks the barrier' variable that works
+    when the Launcher set to 'auto-hide' and sticky edges set to 'off'
+    (LP: #1064945)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3140
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 08 Feb 2013 04:02:00 +0000
+
+unity (6.12.0daily13.02.07-0ubuntu1) raring; urgency=low
+
+  [ Andrea Azzarone ]
+  * make check fails on test-unit (LP: #1117487)
+  * Notification area whitelist is obsolete (LP: #974480)
+
+  [ Marco Trevisan (Treviño) ]
+  * Switcher - when opening in detail mode (Alt+`) it should not use the
+    spread animation (LP: #1116927)
+  * Alt-tab sometimes focuses a window that is not in top of the app
+    stack (LP: #1115775)
+  * Switcher: Opening and closing the detail mode quickly makes unity
+    re-enable it (LP: #1116785)
+  * Exiting expo mode leaves the BFB quicklist open (LP: #1090565)
+
+  [ MC Return ]
+  * unmaximize_window_key instead of unmaximize_or_minimize_window_key
+    exposed in g-c-c (LP: #1115128)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3136
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Thu, 07 Feb 2013 06:20:12 +0000
+
+unity (6.12.0daily13.02.04.1-0ubuntu1) raring; urgency=low
+
+  * debian/control:
+    - recommends indicator-sync so it gets installed by default 
+      (lp: #1053482)
+    - recommends indicator-bluetooth as well (lp: #1111314)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * debian/control:
+    - bump compiz build-dep due to the last ABI break
+
+  [ Brandon Schaefer ]
+  * [regression] Clicking on the indicators when the Dash is open no
+    longer closes the Dash. (LP: #1109150)
+  * [staging][raring] Dash Maximise/Restore button depends on the
+    launcher icon size. (LP: #1101310)
+
+  [ Romain Perier ]
+  * The Dash closes when trying to switch to the Command lens (Alt+F2)
+    (LP: #1019457)
+
+  [ Marco Trevisan (Treviño) ]
+  * Launcher can have smaller size on monitor resolution change (LP:
+    #1105382)
+  * Dragging down a window from the panel on an external monitor,
+    restores it at wrong offset (LP: #1104043)
+  * [regression] Alt+Tab/Alt+grave brings other window to the front but
+    loses focus entirely.  (LP: #1111620)
+  * Quicklist items need a way to be ellipsized (LP: #1111471)
+
+  [ Charles Kerr <charles.kerr@canonical.com>, Andrea Azzarone ]
+  * the GObject subclasses in tests/ don't dispose() properly (LP:
+    #986875)
+
+  [ Nicolas d'Offay ]
+  * Speed up dash blur (LP: #1102410)
+
+  [ Manuel de la Pena ]
+  * API changes to FindKeyFocusArea in the Preview class stops more
+    complicated previous fom setting the correct focus (LP: #1102387)
+
+  [ MC Return ]
+  * Wrong description in Dconf key
+    com.canonical.unity.launcher.favorites (LP: #1112560)
+  * Keyboard shortcut overlay says Ctrl+Super+Down "minimises" the
+    current window, but it doesn't (LP: #966099)
+
+  [ Andrea Azzarone ]
+  * unmounting any gvfs-mounted device from unity menu crashes compiz
+    (LP: #1111389)
+  * compiz crashed with SIGSEGV in async_wrapper_callback() from
+    g_simple_async_result_complete() from
+    _g_simple_async_result_complete_with_cancellable() from
+    unmount_reply() (LP: #1102926)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * SwitcherControllerImpl autopilot test failures in unity -
+    6.12.0daily13.01.29.2-0ubuntu1 (LP: #1109192)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3117
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Mon, 04 Feb 2013 09:59:13 +0000
+
+unity (6.12.0daily13.01.25.1-0ubuntu1) raring; urgency=low
+
+  [ Romain Perier ]
+  * lp:unity FTBFS on quantal: error: ‘bamf_view_is_user_visible’ was
+    not declared in this scope  (LP: #1086276)
+
+  [ Brandon Schaefer ]
+  * TestOverlayVScrollBar.TestConnectorResetsDuringScrollAnimation
+    segfaults. (LP: #1102699)
+
+  [ Andrea Azzarone ]
+  * Removal of 21_correct_timestamp_.. patch  returns focus issues in
+    Unity session (LP: #1072566)
+
+  [ Marco Trevisan (Treviño) ]
+  * The workspace shortcuts listed in the overlay should be hidden when
+    workspaces are disabled (LP: #1103561)
+  * Shortcuts hints overlay hides a disabled shortcut without
+    relayouting (LP: #1102429)
+
+  [ Manuel de la Pena ]
+  * ActionLink does not highlight when selected via keyboard navigation
+    (LP: #1103048)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3072
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 25 Jan 2013 12:29:18 +0000
+
+unity (6.12.0daily13.01.21-0ubuntu1) raring; urgency=low
+
+  [ Marco Trevisan (Treviño) ]
+  * Switcher windows spread animation is broken on external monitors
+    (LP: #1100055)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3051
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Mon, 21 Jan 2013 04:01:56 +0000
+
+unity (6.12.0daily13.01.18-0ubuntu1) raring; urgency=low
+
+  [ Brandon Schaefer ]
+  * HUD does not save the current input focus correctly (LP: #1100962)
+
+  [ Andrea Azzarone ]
+  * Unity fails to build on raring: g_io_scheduler_push_job is
+    deprecated (LP: #1100658)
+
+  [ Marco Trevisan (Treviño) ]
+  * Launcher - Update BFB icon to use a new special asset (and no tile)
+    (LP: #1081697)
+  * Launcher - Update Launcher tile assets (LP: #1081687)
+
+  [ Daniel van Vugt ]
+  * Allow launcher icons smaller than 32px (LP: #930031)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3048
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 18 Jan 2013 04:02:06 +0000
+
+unity (6.12.0daily13.01.17-0ubuntu1) raring; urgency=low
+
+  [ Brandon Schaefer ]
+  * [regression] Scrollbar Overlay still appears after the dash has
+    closed. (LP: #1099999)
+
+  [ Christopher Townsend ]
+  * Dash - Users should be able to exit the Preview and return to the
+    results by right or middle clicking anywhere inside the preview (LP:
+    #1046315)
+
+  [ Andrea Azzarone ]
+  * Need some 'minimize' autopilot tests (LP: #1089981)
+  * TestLauncherController.* fails (LP: #1089900)
+  * Windows that start minimized cannot be opened (LP: #1087422)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3043
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Thu, 17 Jan 2013 07:03:58 +0000
+
+unity (6.12.0daily13.01.11.2-0ubuntu1) raring; urgency=low
+
+  [ Didier Roche ]
+  * debian/control:
+    - bump some missed build-deps
+    - bump compiz and nux build-deps for the API and ABI breakages
+      (LP: #1095981)
+  * debian/rules:
+    - disable pch for now as it's not working with -g -02 (LP: #1095978)
+
+  [ Brandon Schaefer ]
+  * Ported Compiz to 0.9.9
+  * debian/control:
+    - bump the build-deps
+  * Dash and HUD do not have X event focus, causing XIM to not work.
+    (LP: #1086988)
+  * Windows losing focus after the start/restart of Unity (LP: #1097368)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Dash - Update Dash nav bar icons (LP: #1089373)
+  * Autopilot tests failing in the test_hud suite due to locale
+    dependency (LP: #1076531)
+  * Super key not registered if held too long (LP: #1097189)
+  * Unity HUD uses wrong icon when switching from the Dash to HUD (LP:
+    #1089482)
+
+  [ Marco Trevisan (Treviño) ]
+  * Using bleeding edge Mesa drivers causes GL_INVALID_OPERATION error
+    in glDrawBuffer / glReadBuffer (LP: #1092550)
+  * [Regression] Window buttons / Title doesn't redraw correctly on
+    windows with no menus (LP: #1090439)
+
+  [ Nick Dedekind ]
+  * Dash - When the Dash preview is open, the ghost images should run
+    all the way to the top of the screen as shown in the design (LP:
+    #1060948)
+  * Dash - When the Dash preview opens, the category headers should be
+    expanded and the filters should hide (LP: #1060937)
+  * Dash - In the Dash preview, when a user moves to the next or
+    previous preview the highlighted ghost image should change (LP:
+    #1060941)
+  * Dash - As soon as a user starts dragging a .png file from the Dash,
+    the file icon changes size (LP: #863412)
+
+  [ Gord Allott <gord.allott@canonical.com>, Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>, Didier Roche ]
+  * "unitydashlegalseen" Causing back-up error (LP: #1066646)
+  * unity dash should show legal disclaimer (LP: #1065652)
+
+  [ Manuel de la Pena ]
+  * StaticCairoText makes NUX get into an infinte loop (LP: #1071327)
+
+  [ Daniel van Vugt ]
+  * Minimized windows don't restore, or restore as blank (LP: #1089779)
+
+  [ Andrea Azzarone ]
+  * TestOverlayScrollBar.TestScrollDownSignal segfaults  (LP: #1089888)
+  * Dash - Update Dash Launcher icon tooltip to say "Search your
+    computer and online sources"  (LP: #1090325)
+  * TestLauncherController.GetLastIconPriorityUnStickyWithNoIconsAndUri
+    segfaults (LP: #1089894)
+  * TestDashController.TestShowAndHideDash fails (LP: #1089904)
+  * [Regression] Tapping super key shows shortcuts overlay. (LP:
+    #1090388)
+  * [Regression] Unity fails to restore initially minimized windows.
+    (LP: #1097686)
+  * launcher does not show minimized update manager while clicked (LP:
+    #1003950)
+  *  Dash - Update Dash Home search box hint message to say "Search your
+    computer and online sources" (LP: #1090327)
+  * can't quit a minimized application (LP: #1086366)
+  * Unity daily-build (07.01.13) empty space between launcher and dash
+    in non default launcher size (LP: #1097184)
+
+  [ Sam Spilsbury ]
+  * Fonts get changed to Ubuntu Italic 11 when running make check (LP:
+    #1086762)
+
+  [ Gord Allott ]
+  * "unitydashlegalseen" Causing back-up error (LP: #1066646)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 3034
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 11 Jan 2013 13:05:11 +0000
+
+unity (6.12.0daily12.12.05-0ubuntu1) raring; urgency=low
 
   [ Michael Terry ]
   * debian/control:
@@ -33,7 +504,53 @@ unity (6.12.0-0ubuntu2) UNRELEASED; urgency=low
   [ Ricardo Salveti de Araujo ]
   * Doesn't need to depend on gcc 4.6 anymore (LP: #1044836)
 
- -- Michael Terry <mterry@ubuntu.com>  Tue, 06 Nov 2012 10:52:43 -0500
+  [ Nick Dedekind ]
+  * Previews loading more than 454 lines of description text crash Unity
+    (LP: #1066788)
+
+  [ Brandon Schaefer ]
+  * unity::TimeUtil::TimeDelta returns an int value which overflows
+    after 24 days of uptime (LP: #806248)
+  * Top panel "tooltip" is gone (regression) (LP: #1085045)
+  * Dash - Implement *overlay scrollbars* in Dash. Existing scrollbars
+    are too thin to grab on to. (LP: #608124)
+
+  [ Andrea Azzarone ]
+  * Dash - Regression: Clicking between filter label and 'All' button no
+    longer toggles filter label (LP: #1080534)
+
+  [ Didier Roche ]
+  * libunity-core fails without the schemas from unity-common (LP:
+    #1079132)
+
+  [ Manuel de la Pena ]
+  * There is no common ui element that behaves like a url link (LP:
+    #1067705)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 2956
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Wed, 05 Dec 2012 09:27:29 +0000
+
+unity (6.12.0-0ubuntu4) raring; urgency=low
+
+  * Really fix cmake now
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 22 Nov 2012 14:51:43 +0100
+
+unity (6.12.0-0ubuntu3) raring; urgency=low
+
+  * Apply 2 upstream patches to fix FTBFS on raring:
+    - gettext cmake support change with new cmake
+    - include directly iostream needed for std::cout
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 22 Nov 2012 12:31:58 +0100
+
+unity (6.12.0-0ubuntu2) raring; urgency=low
+
+  * debian/control.in: Recommends gnome-control-center-unity
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Wed, 21 Nov 2012 19:22:30 +0100
 
 unity (6.12.0-0ubuntu1) raring; urgency=low
 

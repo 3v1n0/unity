@@ -20,7 +20,6 @@
 #ifndef UNITY_TIMER_H
 #define UNITY_TIMER_H
 
-#include <iosfwd>
 #include <string>
 #include <glib.h>
 

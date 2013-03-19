@@ -22,6 +22,7 @@
 #define _GNU_SOURCE
 #endif
 
+#include <memory>
 #include <minimizedwindowhandler.h>
 #include <cstdio>
 #include <cstdlib>
@@ -63,7 +64,9 @@ X11WindowFakeMinimizable::GetInputRemover ()
   if (!input_remover_.expired ())
     return input_remover_.lock ();
 
-  compiz::WindowInputRemoverLock::Ptr ret (new compiz::WindowInputRemoverLock (new compiz::WindowInputRemover (mDpy, mXid)));
+  compiz::WindowInputRemoverLock::Ptr ret (
+    new compiz::WindowInputRemoverLock (
+      new compiz::WindowInputRemover (mDpy, mXid, mXid)));
   input_remover_ = ret;
   return ret;
 }
@@ -116,9 +119,9 @@ int main (int argc, char **argv)
 {
   Display                    *dpy;
   Window                     xid = 0;
-  X11WindowFakeMinimizable                  *window;
-  X11WindowFakeMinimizable                  *transient = NULL;
-  X11WindowFakeMinimizable                  *hasClientLeader = NULL;
+  std::unique_ptr <X11WindowFakeMinimizable> window;
+  std::unique_ptr <X11WindowFakeMinimizable> transient;
+  std::unique_ptr <X11WindowFakeMinimizable> hasClientLeader;
   std::string                option = "";
   bool                       shapeExt;
   int                        shapeEvent;
@@ -151,16 +154,16 @@ int main (int argc, char **argv)
   if (argc > 1)
     std::stringstream (argv[1]) >> std::hex >> xid;
 
-  window = new X11WindowFakeMinimizable (dpy, xid);
+  window.reset (new X11WindowFakeMinimizable (dpy, xid));
 
   if (!xid)
   {
-    transient = new X11WindowFakeMinimizable (dpy, 0);
-    hasClientLeader = new X11WindowFakeMinimizable (dpy, 0);
+    transient.reset (new X11WindowFakeMinimizable (dpy, 0));
+    hasClientLeader.reset (new X11WindowFakeMinimizable (dpy, 0));
 
-    transient->makeTransientFor (window);
-    window->setClientLeader (window);
-    hasClientLeader->setClientLeader (window);
+    transient->makeTransientFor (window.get ());
+    window->setClientLeader (window.get ());
+    hasClientLeader->setClientLeader (window.get ());
   }
 
   std::cout << "[m]inimize [u]nminimize [q]uit?" << std::endl;
@@ -212,8 +215,6 @@ int main (int argc, char **argv)
     }
 
   } while (!terminate);
-
-  delete window;
 
   XCloseDisplay (dpy);
 

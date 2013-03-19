@@ -18,8 +18,10 @@
  */
 
 #include <queue>
+#include <iostream>
 #include <fstream>
 #include <sstream>
+#include <iostream>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -33,7 +35,6 @@
 
 namespace unity
 {
-const std::string DBUS_BUS_NAME = "com.canonical.Unity";
 
 namespace debug
 {
@@ -54,9 +55,12 @@ void SetLogSeverity(std::string const& log_component,
 void LogMessage(std::string const& severity,
   std::string const& message);
 
-const char* DebugDBusInterface::DBUS_DEBUG_OBJECT_PATH = "/com/canonical/Unity/Debug";
+namespace dbus
+{
+const std::string BUS_NAME = "com.canonical.Unity";
+const std::string OBJECT_PATH = "/com/canonical/Unity/Debug";
 
-const gchar DebugDBusInterface::introspection_xml[] =
+const std::string INTROSPECTION_XML =
   " <node>"
   "   <interface name='com.canonical.Autopilot.Introspection'>"
   ""
@@ -88,135 +92,59 @@ const gchar DebugDBusInterface::introspection_xml[] =
   ""
   "   </interface>"
   " </node>";
-
-GDBusInterfaceVTable DebugDBusInterface::interface_vtable =
-{
-  DebugDBusInterface::HandleDBusMethodCall,
-  NULL,
-  NULL
-};
+}
 
 static Introspectable* _parent_introspectable;
 
 DebugDBusInterface::DebugDBusInterface(Introspectable* parent)
+  : server_(dbus::BUS_NAME)
 {
   _parent_introspectable = parent;
-  _owner_id = g_bus_own_name(G_BUS_TYPE_SESSION,
-                             unity::DBUS_BUS_NAME.c_str(),
-                             G_BUS_NAME_OWNER_FLAGS_NONE,
-                             &DebugDBusInterface::OnBusAcquired,
-                             &DebugDBusInterface::OnNameAcquired,
-                             &DebugDBusInterface::OnNameLost,
-                             this,
-                             NULL);
+
+  server_.AddObjects(dbus::INTROSPECTION_XML, dbus::OBJECT_PATH);
+
+  for (auto const& obj : server_.GetObjects())
+    obj->SetMethodsCallsHandler(&DebugDBusInterface::HandleDBusMethodCall);
 }
 
-DebugDBusInterface::~DebugDBusInterface()
+GVariant* DebugDBusInterface::HandleDBusMethodCall(std::string const& method, GVariant* parameters)
 {
-  g_bus_unown_name(_owner_id);
-}
-
-void
-DebugDBusInterface::OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer data)
-{
-  int i = 0;
-  GError* error;
-
-  GDBusNodeInfo* introspection_data = g_dbus_node_info_new_for_xml(introspection_xml, NULL);
-  if (!introspection_data)
+  if (method == "GetState")
   {
-    LOG_WARNING(logger) << "No dbus introspection data could be loaded. State introspection will not work";
-    return;
-  }
-
-  while (introspection_data->interfaces[i] != NULL)
-  {
-    error = NULL;
-    g_dbus_connection_register_object(connection,
-                                      DebugDBusInterface::DBUS_DEBUG_OBJECT_PATH,
-                                      introspection_data->interfaces[i],
-                                      &interface_vtable,
-                                      data,
-                                      NULL,
-                                      &error);
-    if (error != NULL)
-    {
-      g_warning("Could not register debug interface onto d-bus");
-      g_error_free(error);
-    }
-    i++;
-  }
-  g_dbus_node_info_unref(introspection_data);
-}
-
-void
-DebugDBusInterface::OnNameAcquired(GDBusConnection* connection, const gchar* name, gpointer data)
-{
-}
-
-void
-DebugDBusInterface::OnNameLost(GDBusConnection* connection, const gchar* name, gpointer data)
-{
-}
-
-void
-DebugDBusInterface::HandleDBusMethodCall(GDBusConnection* connection,
-                                         const gchar* sender,
-                                         const gchar* object_path,
-                                         const gchar* interface_name,
-                                         const gchar* method_name,
-                                         GVariant* parameters,
-                                         GDBusMethodInvocation* invocation,
-                                         gpointer user_data)
-{
-  if (g_strcmp0(method_name, "GetState") == 0)
-  {
-    GVariant* ret;
     const gchar* input;
     g_variant_get(parameters, "(&s)", &input);
 
-    ret = GetState(input);
-    // GetState returns a floating variant and
-    // g_dbus_method_invocation_return_value ref sinks it
-    g_dbus_method_invocation_return_value(invocation, ret);
+    return GetState(input);
   }
-  else if (g_strcmp0(method_name, "StartLogToFile") == 0)
+  else if (method == "StartLogToFile")
   {
     const gchar* log_path;
     g_variant_get(parameters, "(&s)", &log_path);
 
     StartLogToFile(log_path);
-    g_dbus_method_invocation_return_value(invocation, NULL);
   }
-  else if (g_strcmp0(method_name, "ResetLogging") == 0)
+  else if (method == "ResetLogging")
   {
     ResetLogging();
-    g_dbus_method_invocation_return_value(invocation, NULL);
   }
-  else if (g_strcmp0(method_name, "SetLogSeverity") == 0)
+  else if (method == "SetLogSeverity")
   {
     const gchar* component;
     const gchar* severity;
     g_variant_get(parameters, "(&s&s)", &component, &severity);
 
     SetLogSeverity(component, severity);
-    g_dbus_method_invocation_return_value(invocation, NULL);
   }
-  else if (g_strcmp0(method_name, "LogMessage") == 0)
+  else if (method == "LogMessage")
   {
     const gchar* severity;
     const gchar* message;
     g_variant_get(parameters, "(&s&s)", &severity, &message);
 
     LogMessage(severity, message);
-    g_dbus_method_invocation_return_value(invocation, NULL);
   }
-  else
-  {
-    g_dbus_method_invocation_return_dbus_error(invocation,
-                                               unity::DBUS_BUS_NAME.c_str(),
-                                               "Failed to find method");
-  }
+
+  return nullptr;
 }
 
 

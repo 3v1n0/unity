@@ -63,8 +63,7 @@ private:
   void Init()
   {
     SetupBackground();
-    controller.reset(new launcher::Controller());
-    controller->launcher().GetParent()->EnableInputWindow(false);
+    controller.reset(new launcher::Controller(std::make_shared<XdndManager>()));
 
     UScreen* uscreen = UScreen::GetDefault();
     std::vector<nux::Geometry> fake_monitor({nux::Geometry(0, 0, win_size.width, win_size.height)});
@@ -91,7 +90,6 @@ private:
 
 int main(int argc, char** argv)
 {
-  g_type_init();
   gtk_init(&argc, &argv);
   nux::NuxInitialize(0);
 
