@@ -47,7 +47,9 @@ NUX_IMPLEMENT_OBJECT_TYPE(View);
 
 View::View(Manager::Ptr const& manager)
   : mode(Mode::FULL)
+  , key_focus_area([this] { return key_focus_area_; })
   , manager_(manager)
+  , key_focus_area_(this)
 {
   closable = true;
   auto main_layout = new nux::VLayout();
@@ -170,6 +172,7 @@ void View::Populate()
 {
   debug::Introspectable::RemoveAllChildren();
   buttons_layout_->Clear();
+  key_focus_area_ = this;
 
   if (mode() == Mode::LOGOUT)
   {
@@ -179,6 +182,7 @@ void View::Populate()
 
     button = new Button(Button::Action::LOGOUT, NUX_TRACKER_LOCATION);
     button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Logout));
+    key_focus_area_ = button;
     AddButton(button);
   }
   else
@@ -212,6 +216,7 @@ void View::Populate()
 
       button = new Button(Button::Action::SHUTDOWN, NUX_TRACKER_LOCATION);
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Shutdown));
+      key_focus_area_ = (mode() == Mode::SHUTDOWN) ? button : key_focus_area_;
       AddButton(button);
     }
     else if (mode() == Mode::FULL)
