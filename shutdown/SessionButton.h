@@ -37,7 +37,17 @@ class Button : public nux::View, public debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(Button, nux::View);
 public:
-  Button(std::string const& label, std::string const& texture_name, NUX_FILE_LINE_PROTO);
+  enum class Action
+  {
+    LOCK,
+    LOGOUT,
+    SUSPEND,
+    HIBERNATE,
+    SHUTDOWN,
+    REBOOT
+  };
+
+  Button(Action, NUX_FILE_LINE_PROTO);
 
   nux::Property<bool> highlighted;
   nux::ROProperty<std::string> label;

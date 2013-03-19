@@ -31,7 +31,7 @@ struct TestSessionButton : testing::Test
 {
   struct ButtonWrap : Button
   {
-    ButtonWrap() : Button("ButtonLabel", "hibernate") {}
+    ButtonWrap() : Button(Action::LOCK) {}
 
     using Button::AcceptKeyNavFocusOnMouseEnter;
     using Button::AcceptKeyNavFocusOnMouseDown;
@@ -47,7 +47,7 @@ struct TestSessionButton : testing::Test
 TEST_F(TestSessionButton, Construct)
 {
   EXPECT_FALSE(button.highlighted());
-  EXPECT_EQ(button.label(), "ButtonLabel");
+  EXPECT_EQ(button.label(), "Lock");
   EXPECT_TRUE(button.AcceptKeyNavFocusOnMouseEnter());
   EXPECT_FALSE(button.AcceptKeyNavFocusOnMouseDown());
 }
