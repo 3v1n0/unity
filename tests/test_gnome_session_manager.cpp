@@ -65,10 +65,22 @@ R"(<node>
 const std::string LOGIND =
 R"(<node>
   <interface name="org.freedesktop.login1.Manager">
+    <method name="CanSuspend">
+      <arg type="s" name="result" direction="out"/>
+    </method>
+    <method name="CanHibernate">
+      <arg type="s" name="result" direction="out"/>
+    </method>
     <method name="PowerOff">
       <arg type="b" name="interactive" direction="in"/>
     </method>
     <method name="Reboot">
+      <arg type="b" name="interactive" direction="in"/>
+    </method>
+    <method name="Suspend">
+      <arg type="b" name="interactive" direction="in"/>
+    </method>
+    <method name="Hibernate">
       <arg type="b" name="interactive" direction="in"/>
     </method>
     <method name="TerminateSession">
@@ -151,6 +163,14 @@ struct TestGnomeSessionManager : testing::Test
 
     logind_ = std::make_shared<DBusServer>();
     logind_->AddObjects(introspection::LOGIND, LOGIND_PATH);
+    logind_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
+      if (method == "CanSuspend")
+        return g_variant_new("(s)", can_suspend_ ? "yes" : "no");
+      else if (method == "CanHibernate")
+        return g_variant_new("(s)", can_hibernate_ ? "yes" : "no");
+
+      return nullptr;
+    });
 
     console_kit_ = std::make_shared<DBusServer>();
     console_kit_->AddObjects(introspection::CONSOLE_KIT, CONSOLE_KIT_PATH);
@@ -302,13 +322,27 @@ TEST_F(TestGnomeSessionManager, CanShutdown)
   EXPECT_EQ(manager->CanShutdown(), can_shutdown_);
 }
 
-TEST_F(TestGnomeSessionManager, CanHibernate)
+TEST_F(TestGnomeSessionManager, CanHibernateUPower)
 {
+  g_unsetenv("XDG_SESSION_ID");
   EXPECT_EQ(manager->CanHibernate(), can_hibernate_);
 }
 
-TEST_F(TestGnomeSessionManager, CanSuspend)
+TEST_F(TestGnomeSessionManager, CanHibernateLogind)
 {
+  g_setenv("XDG_SESSION_ID", "logind-id0", TRUE);
+  EXPECT_EQ(manager->CanHibernate(), can_hibernate_);
+}
+
+TEST_F(TestGnomeSessionManager, CanSuspendUPower)
+{
+  g_unsetenv("XDG_SESSION_ID");
+  EXPECT_EQ(manager->CanSuspend(), can_suspend_);
+}
+
+TEST_F(TestGnomeSessionManager, CanSuspendLogind)
+{
+  g_setenv("XDG_SESSION_ID", "logind-id0", TRUE);
   EXPECT_EQ(manager->CanSuspend(), can_suspend_);
 }
 
@@ -548,9 +582,11 @@ TEST_F(TestGnomeSessionManager, ShutdownFallbackConsoleKit)
   EXPECT_TRUE(shutdown_called);
 }
 
-TEST_F(TestGnomeSessionManager, Suspend)
+TEST_F(TestGnomeSessionManager, SuspendUPower)
 {
   bool suspend_called = false;
+  g_setenv("XDG_SESSION_COOKIE", "ck-session-cookie", TRUE);
+  g_unsetenv("XDG_SESSION_ID");
 
   upower_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
     if (method == "Suspend")
@@ -565,11 +601,51 @@ TEST_F(TestGnomeSessionManager, Suspend)
   EXPECT_TRUE(suspend_called);
 }
 
-TEST_F(TestGnomeSessionManager, Hibernate)
+TEST_F(TestGnomeSessionManager, SuspendLogind)
+{
+  bool suspend_called = false;
+  g_setenv("XDG_SESSION_ID", "logind-id0", TRUE);
+  g_unsetenv("XDG_SESSION_COOKIE");
+
+  logind_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
+    if (method == "Suspend")
+      suspend_called = true;
+
+    return nullptr;
+  });
+
+  manager->Suspend();
+
+  Utils::WaitUntilMSec(suspend_called);
+  EXPECT_TRUE(suspend_called);
+}
+
+TEST_F(TestGnomeSessionManager, HibernateUPower)
 {
   bool hibernate_called = false;
+  g_setenv("XDG_SESSION_COOKIE", "ck-session-cookie", TRUE);
+  g_unsetenv("XDG_SESSION_ID");
 
   upower_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
+    if (method == "Hibernate")
+      hibernate_called = true;
+
+    return nullptr;
+  });
+
+  manager->Hibernate();
+
+  Utils::WaitUntilMSec(hibernate_called);
+  EXPECT_TRUE(hibernate_called);
+}
+
+TEST_F(TestGnomeSessionManager, HibernateLogind)
+{
+  bool hibernate_called = false;
+  g_setenv("XDG_SESSION_ID", "logind-id0", TRUE);
+  g_unsetenv("XDG_SESSION_COOKIE");
+
+  logind_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
     if (method == "Hibernate")
       hibernate_called = true;
 

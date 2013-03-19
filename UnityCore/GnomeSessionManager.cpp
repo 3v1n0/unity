@@ -87,15 +87,27 @@ GnomeManager::Impl::Impl(GnomeManager* manager, bool test_mode)
   shell_object_ = shell_server_.GetObject(shell::DBUS_INTERFACE);
   shell_object_->SetMethodsCallsHandler(sigc::mem_fun(this, &Impl::OnShellMethodCall));
 
-  CallUPowerMethod("HibernateAllowed", [this] (GVariant* variant) {
-    can_hibernate_ = glib::Variant(variant).GetBool();
-    LOG_INFO(logger) << "Can hibernate: " << can_hibernate_;
-  });
+  if (g_getenv("XDG_SESSION_ID") != NULL) {
+    CallLogindMethod("CanHibernate", nullptr, [this] (GVariant* variant) {
+      can_hibernate_ = glib::Variant(variant).GetString() == "yes";
+      LOG_INFO(logger) << "Can hibernate (logind): " << can_hibernate_;
+    });
 
-  CallUPowerMethod("SuspendAllowed", [this] (GVariant* variant) {
-    can_suspend_ = glib::Variant(variant).GetBool();
-    LOG_INFO(logger) << "Can suspend: " << can_suspend_;
-  });
+    CallLogindMethod("CanSuspend", nullptr, [this] (GVariant* variant) {
+      can_suspend_ = glib::Variant(variant).GetString() == "yes";
+      LOG_INFO(logger) << "Can suspend (logind): " << can_suspend_;
+    });
+  } else {
+    CallUPowerMethod("HibernateAllowed", [this] (GVariant* variant) {
+      can_hibernate_ = glib::Variant(variant).GetBool();
+      LOG_INFO(logger) << "Can hibernate (upower): " << can_hibernate_;
+    });
+
+    CallUPowerMethod("SuspendAllowed", [this] (GVariant* variant) {
+      can_suspend_ = glib::Variant(variant).GetBool();
+      LOG_INFO(logger) << "Can suspend (upower): " << can_suspend_;
+    });
+  }
 
   CallGnomeSessionMethod("CanShutdown", nullptr, [this] (GVariant* variant, glib::Error const& e) {
     if (!e)
@@ -298,7 +310,7 @@ void GnomeManager::Impl::CallUPowerMethod(std::string const& method, glib::DBusP
   });
 }
 
-void GnomeManager::Impl::CallLogindMethod(std::string const& method, GVariant* parameters)
+void GnomeManager::Impl::CallLogindMethod(std::string const& method, GVariant* parameters, glib::DBusProxy::ReplyCallback const& cb)
 {
   auto proxy = std::make_shared<glib::DBusProxy>(test_mode_ ? testing::DBUS_NAME : "org.freedesktop.login1",
                                                  "/org/freedesktop/login1",
@@ -306,10 +318,14 @@ void GnomeManager::Impl::CallLogindMethod(std::string const& method, GVariant* p
                                                  test_mode_ ? G_BUS_TYPE_SESSION : G_BUS_TYPE_SYSTEM);
 
   // By passing the proxy to the lambda we ensure that it will be smartly handled
-  proxy->CallBegin(method, parameters, [this, proxy] (GVariant*, glib::Error const& e) {
+  proxy->CallBegin(method, parameters, [proxy, cb] (GVariant* ret, glib::Error const& e) {
     if (e)
     {
       LOG_ERROR(logger) << "Fallback call failed: " << e.Message();
+    }
+    else if (cb)
+    {
+      cb(ret);
     }
   });
 }
@@ -457,13 +473,19 @@ void GnomeManager::Shutdown()
 void GnomeManager::Suspend()
 {
   impl_->EnsureCancelPendingAction();
-  impl_->CallUPowerMethod("Suspend");
+  if (g_getenv("XDG_SESSION_ID") != NULL)
+    impl_->CallLogindMethod("Suspend", g_variant_new("(b)", false));
+  else
+    impl_->CallUPowerMethod("Suspend");
 }
 
 void GnomeManager::Hibernate()
 {
   impl_->EnsureCancelPendingAction();
-  impl_->CallUPowerMethod("Hibernate");
+  if (g_getenv("XDG_SESSION_ID") != NULL)
+    impl_->CallLogindMethod("Hibernate", g_variant_new("(b)", false));
+  else
+    impl_->CallUPowerMethod("Hibernate");
 }
 
 bool GnomeManager::CanShutdown() const
