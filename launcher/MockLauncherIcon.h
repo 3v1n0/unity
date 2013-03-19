@@ -22,7 +22,6 @@
 #define MOCKLAUNCHERICON_H
 
 #include <Nux/Nux.h>
-#include <NuxCore/Math/MathInc.h>
 
 #include <Nux/BaseWindow.h>
 #include <Nux/View.h>

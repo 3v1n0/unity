@@ -484,7 +484,7 @@ void Controller::OnSearchChanged(std::string search_string)
 
 void Controller::OnSearchActivated(std::string search_string)
 {
-  unsigned int timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+  unsigned int timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
   hud_service_.ExecuteQueryBySearch(search_string, timestamp);
   ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
 }
@@ -492,7 +492,7 @@ void Controller::OnSearchActivated(std::string search_string)
 void Controller::OnQueryActivated(Query::Ptr query)
 {
   LOG_DEBUG(logger) << "Activating query, " << query->formatted_text;
-  unsigned int timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+  unsigned int timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
   hud_service_.ExecuteQuery(query, timestamp);
   ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
 }

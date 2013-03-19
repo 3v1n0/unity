@@ -303,7 +303,6 @@ void Launcher::SetIconUnderMouse(AbstractLauncherIcon::Ptr const& icon)
     icon->mouse_enter.emit(monitor);
 
   _icon_under_mouse = icon;
-  tooltip_manager_.SetIcon(icon);
 }
 
 bool Launcher::MouseBeyondDragThreshold() const
@@ -2224,7 +2223,7 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
 void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
   SetMousePosition(x, y);
-  tooltip_manager_.MouseMoved();
+  tooltip_manager_.MouseMoved(_icon_under_mouse);
 
   if (!_hidden)
     UpdateChangeInMousePosition(dx, dy);
@@ -2245,7 +2244,7 @@ void Launcher::RecvMouseWheel(int /*x*/, int /*y*/, int wheel_delta, unsigned lo
   }
   else if (_icon_under_mouse)
   {
-    auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp; 
+    auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
     auto scroll_direction = (wheel_delta < 0) ? AbstractLauncherIcon::ScrollDirection::DOWN : AbstractLauncherIcon::ScrollDirection::UP;
     _icon_under_mouse->PerformScroll(scroll_direction, timestamp);
   }

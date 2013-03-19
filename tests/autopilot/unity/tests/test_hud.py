@@ -459,6 +459,17 @@ class HudBehaviorTests(HudTestsBase):
 
         self.assertProperty(char_win, is_active=True)
 
+    def test_mouse_does_not_steal_button_focus(self):
+        """When typing in the hud the mouse must not steal button focus."""
+
+        self.unity.hud.ensure_visible()
+
+        (x,y,w,h) = self.unity.hud.view.geometry
+        self.mouse.move(w/4, h/4)
+
+        self.keyboard.type("a")
+        self.assertThat(self.unity.hud.view.selected_button, Eventually(Equals(1)))
+
 
 class HudLauncherInteractionsTests(HudTestsBase):
 
