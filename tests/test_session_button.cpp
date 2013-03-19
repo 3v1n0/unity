@@ -47,7 +47,6 @@ struct TestSessionButton : testing::Test
 TEST_F(TestSessionButton, Construct)
 {
   EXPECT_FALSE(button.highlighted());
-  EXPECT_EQ(button.label(), "Lock");
   EXPECT_TRUE(button.AcceptKeyNavFocusOnMouseEnter());
   EXPECT_FALSE(button.AcceptKeyNavFocusOnMouseDown());
 }
@@ -118,6 +117,44 @@ TEST_F(TestSessionButton, KeyFocusActivatesIt)
   button.activated.connect([&activated] { activated = true; });
   button.key_nav_focus_activate.emit(&button);
   EXPECT_TRUE(activated);
+}
+
+// Other tests
+
+TEST(TestSessionButtonLabel, Lock)
+{
+  Button button(Button::Action::LOCK);
+  EXPECT_EQ(button.label(), "Lock");
+}
+
+TEST(TestSessionButtonLabel, Logout)
+{
+  Button button(Button::Action::LOGOUT);
+  EXPECT_EQ(button.label(), "Log Out");
+}
+
+TEST(TestSessionButtonLabel, Suspend)
+{
+  Button button(Button::Action::SUSPEND);
+  EXPECT_EQ(button.label(), "Suspend");
+}
+
+TEST(TestSessionButtonLabel, Hibernate)
+{
+  Button button(Button::Action::HIBERNATE);
+  EXPECT_EQ(button.label(), "Hibernate");
+}
+
+TEST(TestSessionButtonLabel, Reboot)
+{
+  Button button(Button::Action::REBOOT);
+  EXPECT_EQ(button.label(), "Restart");
+}
+
+TEST(TestSessionButtonLabel, Shutdown)
+{
+  Button button(Button::Action::SHUTDOWN);
+  EXPECT_EQ(button.label(), "Shut Down");
 }
 
 } // session
