@@ -60,11 +60,11 @@ struct TestSessionView : testing::Test
       return buttons;
     }
 
-    Button* GetButtonByLabel(std::string const& label) const
+    Button* GetButtonByAction(Button::Action action) const
     {
       for (auto const& button : GetButtons())
       {
-        if (button->label() == label)
+        if (button->action() == action)
           return button;
       }
 
@@ -129,29 +129,29 @@ TEST_F(TestSessionView, FullModeButtons)
   ON_CALL(*manager, CanHibernate()).WillByDefault(testing::Return(true));
   view.mode.changed.emit(View::Mode::FULL);
 
-  EXPECT_EQ(view.GetButtonByLabel("Log Out"), nullptr);
-  EXPECT_NE(view.GetButtonByLabel("Lock"), nullptr);
-  EXPECT_NE(view.GetButtonByLabel("Suspend"), nullptr);
-  EXPECT_NE(view.GetButtonByLabel("Hibernate"), nullptr);
-  EXPECT_NE(view.GetButtonByLabel("Shut Down"), nullptr);
-  EXPECT_NE(view.GetButtonByLabel("Restart"), nullptr);
+  EXPECT_EQ(view.GetButtonByAction(Button::Action::LOGOUT), nullptr);
+  EXPECT_NE(view.GetButtonByAction(Button::Action::LOCK), nullptr);
+  EXPECT_NE(view.GetButtonByAction(Button::Action::SUSPEND), nullptr);
+  EXPECT_NE(view.GetButtonByAction(Button::Action::HIBERNATE), nullptr);
+  EXPECT_NE(view.GetButtonByAction(Button::Action::SHUTDOWN), nullptr);
+  EXPECT_NE(view.GetButtonByAction(Button::Action::REBOOT), nullptr);
 
   ON_CALL(*manager, CanShutdown()).WillByDefault(testing::Return(false));
   view.mode.changed.emit(View::Mode::FULL);
 
-  EXPECT_NE(view.GetButtonByLabel("Log Out"), nullptr);
-  EXPECT_EQ(view.GetButtonByLabel("Shut Down"), nullptr);
-  EXPECT_EQ(view.GetButtonByLabel("Restart"), nullptr);
+  EXPECT_NE(view.GetButtonByAction(Button::Action::LOGOUT), nullptr);
+  EXPECT_EQ(view.GetButtonByAction(Button::Action::SHUTDOWN), nullptr);
+  EXPECT_EQ(view.GetButtonByAction(Button::Action::REBOOT), nullptr);
 
   ON_CALL(*manager, CanSuspend()).WillByDefault(testing::Return(false));
   view.mode.changed.emit(View::Mode::FULL);
 
-  EXPECT_EQ(view.GetButtonByLabel("Suspend"), nullptr);
+  EXPECT_EQ(view.GetButtonByAction(Button::Action::SUSPEND), nullptr);
 
   ON_CALL(*manager, CanHibernate()).WillByDefault(testing::Return(false));
   view.mode.changed.emit(View::Mode::FULL);
 
-  EXPECT_EQ(view.GetButtonByLabel("Hibernate"), nullptr);
+  EXPECT_EQ(view.GetButtonByAction(Button::Action::HIBERNATE), nullptr);
 }
 
 TEST_F(TestSessionView, ShutdownModeButtons)
@@ -160,8 +160,8 @@ TEST_F(TestSessionView, ShutdownModeButtons)
   view.mode = View::Mode::SHUTDOWN;
 
   EXPECT_EQ(view.GetButtons().size(), 2);
-  EXPECT_NE(view.GetButtonByLabel("Shut Down"), nullptr);
-  EXPECT_NE(view.GetButtonByLabel("Restart"), nullptr);
+  EXPECT_NE(view.GetButtonByAction(Button::Action::SHUTDOWN), nullptr);
+  EXPECT_NE(view.GetButtonByAction(Button::Action::REBOOT), nullptr);
 }
 
 TEST_F(TestSessionView, LogoutModeButtons)
@@ -169,8 +169,8 @@ TEST_F(TestSessionView, LogoutModeButtons)
   view.mode = View::Mode::LOGOUT;
 
   EXPECT_EQ(view.GetButtons().size(), 2);
-  EXPECT_NE(view.GetButtonByLabel("Log Out"), nullptr);
-  EXPECT_NE(view.GetButtonByLabel("Lock"), nullptr);
+  EXPECT_NE(view.GetButtonByAction(Button::Action::LOGOUT), nullptr);
+  EXPECT_NE(view.GetButtonByAction(Button::Action::LOCK), nullptr);
 }
 
 TEST_F(TestSessionView, FullModeTitle)
@@ -198,7 +198,7 @@ TEST_F(TestSessionView, ButtonsActivateRequestsHide)
   bool request_hide = false;
   view.request_hide.connect([&request_hide] { request_hide = true; });
 
-  auto button = view.GetButtonByLabel("Lock");
+  auto button = view.GetButtonByAction(Button::Action::LOCK);
   ASSERT_NE(button, nullptr);
   button->activated.emit();
 
@@ -207,7 +207,7 @@ TEST_F(TestSessionView, ButtonsActivateRequestsHide)
 
 TEST_F(TestSessionView, ButtonsActivateDeselectButton)
 {
-  auto button = view.GetButtonByLabel("Lock");
+  auto button = view.GetButtonByAction(Button::Action::LOCK);
   ASSERT_NE(button, nullptr);
   button->highlighted = true;
   button->activated.emit();
@@ -218,7 +218,7 @@ TEST_F(TestSessionView, ButtonsActivateDeselectButton)
 TEST_F(TestSessionView, LockButtonActivateLocks)
 {
   EXPECT_CALL(*manager, LockScreen());
-  auto button = view.GetButtonByLabel("Lock");
+  auto button = view.GetButtonByAction(Button::Action::LOCK);
   ASSERT_NE(button, nullptr);
   button->activated.emit();
 }
@@ -227,7 +227,7 @@ TEST_F(TestSessionView, LogoutButtonActivateLogouts)
 {
   view.mode = View::Mode::LOGOUT;
   EXPECT_CALL(*manager, Logout());
-  auto button = view.GetButtonByLabel("Log Out");
+  auto button = view.GetButtonByAction(Button::Action::LOGOUT);
   ASSERT_NE(button, nullptr);
   button->activated.emit();
 }
@@ -238,7 +238,7 @@ TEST_F(TestSessionView, SuspendButtonActivateSuspends)
   view.mode.changed.emit(View::Mode::FULL);
 
   EXPECT_CALL(*manager, Suspend());
-  auto button = view.GetButtonByLabel("Suspend");
+  auto button = view.GetButtonByAction(Button::Action::SUSPEND);
   ASSERT_NE(button, nullptr);
   button->activated.emit();
 }
@@ -249,7 +249,7 @@ TEST_F(TestSessionView, HibernateButtonActivateHibernates)
   view.mode.changed.emit(View::Mode::FULL);
 
   EXPECT_CALL(*manager, Hibernate());
-  auto button = view.GetButtonByLabel("Hibernate");
+  auto button = view.GetButtonByAction(Button::Action::HIBERNATE);
   ASSERT_NE(button, nullptr);
   button->activated.emit();
 }
@@ -260,7 +260,7 @@ TEST_F(TestSessionView, ShutdownButtonActivateShutsdown)
   view.mode = View::Mode::SHUTDOWN;
 
   EXPECT_CALL(*manager, Shutdown());
-  auto button = view.GetButtonByLabel("Shut Down");
+  auto button = view.GetButtonByAction(Button::Action::SHUTDOWN);
   ASSERT_NE(button, nullptr);
   button->activated.emit();
 }
@@ -271,7 +271,7 @@ TEST_F(TestSessionView, RebootButtonActivateReboots)
   view.mode = View::Mode::SHUTDOWN;
 
   EXPECT_CALL(*manager, Reboot());
-  auto button = view.GetButtonByLabel("Restart");
+  auto button = view.GetButtonByAction(Button::Action::REBOOT);
   ASSERT_NE(button, nullptr);
   button->activated.emit();
 }
