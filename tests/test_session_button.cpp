@@ -46,6 +46,7 @@ struct TestSessionButton : testing::Test
 
 TEST_F(TestSessionButton, Construct)
 {
+  EXPECT_EQ(button.action(), Button::Action::LOCK);
   EXPECT_FALSE(button.highlighted());
   EXPECT_TRUE(button.AcceptKeyNavFocusOnMouseEnter());
   EXPECT_FALSE(button.AcceptKeyNavFocusOnMouseDown());
@@ -119,42 +120,49 @@ TEST_F(TestSessionButton, KeyFocusActivatesIt)
   EXPECT_TRUE(activated);
 }
 
-// Other tests
+// Action typed buttons tests
 
-TEST(TestSessionButtonLabel, Lock)
+struct ActionButton : public testing::TestWithParam<Button::Action> {
+  ActionButton()
+    : button(GetParam())
+  {}
+
+  std::string GetExpectedLabel()
+  {
+    switch (GetParam())
+    {
+      case Button::Action::LOCK:
+        return "Lock";
+      case Button::Action::LOGOUT:
+        return "Log Out";
+      case Button::Action::SUSPEND:
+        return "Suspend";
+      case Button::Action::HIBERNATE:
+        return "Hibernate";
+      case Button::Action::SHUTDOWN:
+        return "Shut Down";
+      case Button::Action::REBOOT:
+        return "Restart";
+    }
+
+    return "";
+  }
+
+  Button button;
+};
+
+INSTANTIATE_TEST_CASE_P(TestSessionButtonTypes, ActionButton,
+  testing::Values(Button::Action::LOCK, Button::Action::LOGOUT, Button::Action::SUSPEND,
+                  Button::Action::HIBERNATE, Button::Action::SHUTDOWN, Button::Action::REBOOT));
+
+TEST_P(/*TestSessionButtonTypes*/ActionButton, Label)
 {
-  Button button(Button::Action::LOCK);
-  EXPECT_EQ(button.label(), "Lock");
+  EXPECT_EQ(button.label(), GetExpectedLabel());
 }
 
-TEST(TestSessionButtonLabel, Logout)
+TEST_P(/*TestSessionButtonTypes*/ActionButton, Action)
 {
-  Button button(Button::Action::LOGOUT);
-  EXPECT_EQ(button.label(), "Log Out");
-}
-
-TEST(TestSessionButtonLabel, Suspend)
-{
-  Button button(Button::Action::SUSPEND);
-  EXPECT_EQ(button.label(), "Suspend");
-}
-
-TEST(TestSessionButtonLabel, Hibernate)
-{
-  Button button(Button::Action::HIBERNATE);
-  EXPECT_EQ(button.label(), "Hibernate");
-}
-
-TEST(TestSessionButtonLabel, Reboot)
-{
-  Button button(Button::Action::REBOOT);
-  EXPECT_EQ(button.label(), "Restart");
-}
-
-TEST(TestSessionButtonLabel, Shutdown)
-{
-  Button button(Button::Action::SHUTDOWN);
-  EXPECT_EQ(button.label(), "Shut Down");
+  EXPECT_EQ(button.action(), GetParam());
 }
 
 } // session

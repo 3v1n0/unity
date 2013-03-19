@@ -51,7 +51,7 @@ Button::Button(Action action, NUX_FILE_LINE_DECL)
   std::string texture_prefix = PKGDATADIR"/";
   std::string label;
 
-  switch (action)
+  switch (action_)
   {
     case Action::LOCK:
       texture_prefix += "lockscreen";
