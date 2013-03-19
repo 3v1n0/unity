@@ -49,7 +49,6 @@ public:
 
   void ResetToDefault();
 
-  void Relayout();
   nux::View* default_focus() const;
   std::list<HudButton::Ptr> const& buttons() const;
 

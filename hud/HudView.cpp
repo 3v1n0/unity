@@ -116,7 +116,7 @@ View::View()
 
   mouse_down.connect(sigc::mem_fun(this, &View::OnMouseButtonDown));
 
-  Relayout();
+  QueueDraw();
 }
 
 View::~View()
@@ -191,11 +191,6 @@ void View::ResetToDefault()
 
   search_bar_->search_string = "";
   search_bar_->search_hint = _("Type your command");
-}
-
-void View::Relayout()
-{
-  QueueDraw();
 }
 
 nux::View* View::default_focus() const
@@ -318,7 +313,7 @@ void View::ShowEmbeddedIcon(bool show)
   }
 
   UpdateLayoutGeometry();
-  Relayout();
+  QueueDraw();
 }
 
 // Gives us the width and height of the contents that will give us the best "fit",

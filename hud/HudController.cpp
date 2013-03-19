@@ -252,7 +252,7 @@ void Controller::Relayout(bool check_monitor)
   }
   nux::Geometry const& geo = GetIdealWindowGeometry();
 
-  view_->Relayout();
+  view_->QueueDraw();
   window_->SetGeometry(geo);
   panel::Style &panel_style = panel::Style::Instance();
   view_->SetMonitorOffset(launcher_width, panel_style.panel_height);
