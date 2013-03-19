@@ -494,7 +494,7 @@ class LauncherModel(UnityIntrospectionObject):
         looking for an icon. For example, to find an icon with a particular
         desktop_id, one might do this from within a test:
 
-        >>> self.launcher.model.get_icon(desktop_id="gnome-calculator.desktop")
+        >>> self.launcher.model.get_icon(desktop_id="gcalctool.desktop")
 
         This method returns only one icon. It is the callers responsibility to
         ensure that the filter matches only one icon.
