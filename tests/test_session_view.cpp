@@ -101,6 +101,7 @@ TEST_F(TestSessionView, Construct)
   EXPECT_TRUE(view.closable());
   EXPECT_FALSE(view.have_inhibitors());
   EXPECT_EQ(view.mode(), View::Mode::FULL);
+  EXPECT_EQ(view.key_focus_area(), &view);
 }
 
 TEST_F(TestSessionView, RequestCloseOnBoundingAreaClick)
@@ -149,6 +150,7 @@ TEST_F(TestSessionView, FullModeButtons)
   EXPECT_EQ(view.GetButtonPosition(Button::Action::HIBERNATE), 2);
   EXPECT_EQ(view.GetButtonPosition(Button::Action::REBOOT), 3);
   EXPECT_EQ(view.GetButtonPosition(Button::Action::SHUTDOWN), 4);
+  EXPECT_EQ(view.key_focus_area(), &view);
 
   ON_CALL(*manager, CanShutdown()).WillByDefault(testing::Return(false));
   view.mode.changed.emit(View::Mode::FULL);
@@ -176,6 +178,7 @@ TEST_F(TestSessionView, ShutdownModeButtons)
   EXPECT_EQ(view.GetButtons().size(), 2);
   EXPECT_EQ(view.GetButtonPosition(Button::Action::REBOOT), 0);
   EXPECT_EQ(view.GetButtonPosition(Button::Action::SHUTDOWN), 1);
+  EXPECT_EQ(view.key_focus_area(), view.GetButtonByAction(Button::Action::SHUTDOWN));
 }
 
 TEST_F(TestSessionView, LogoutModeButtons)
@@ -185,6 +188,7 @@ TEST_F(TestSessionView, LogoutModeButtons)
   EXPECT_EQ(view.GetButtons().size(), 2);
   EXPECT_EQ(view.GetButtonPosition(Button::Action::LOCK), 0);
   EXPECT_EQ(view.GetButtonPosition(Button::Action::LOGOUT), 1);
+  EXPECT_EQ(view.key_focus_area(), view.GetButtonByAction(Button::Action::LOGOUT));
 }
 
 TEST_F(TestSessionView, FullModeTitle)
