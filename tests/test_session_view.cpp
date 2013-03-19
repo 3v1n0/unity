@@ -70,6 +70,20 @@ struct TestSessionView : testing::Test
 
       return nullptr;
     }
+
+    int GetButtonPosition(Button::Action action) const
+    {
+      int pos = 0;
+      for (auto const& button : GetButtons())
+      {
+        if (button->action() == action)
+          return pos;
+
+        ++pos;
+      }
+
+      return -1;
+    }
   };
 
   void TearDown()
@@ -130,11 +144,11 @@ TEST_F(TestSessionView, FullModeButtons)
   view.mode.changed.emit(View::Mode::FULL);
 
   EXPECT_EQ(view.GetButtonByAction(Button::Action::LOGOUT), nullptr);
-  EXPECT_NE(view.GetButtonByAction(Button::Action::LOCK), nullptr);
-  EXPECT_NE(view.GetButtonByAction(Button::Action::SUSPEND), nullptr);
-  EXPECT_NE(view.GetButtonByAction(Button::Action::HIBERNATE), nullptr);
-  EXPECT_NE(view.GetButtonByAction(Button::Action::SHUTDOWN), nullptr);
-  EXPECT_NE(view.GetButtonByAction(Button::Action::REBOOT), nullptr);
+  EXPECT_EQ(view.GetButtonPosition(Button::Action::LOCK), 0);
+  EXPECT_EQ(view.GetButtonPosition(Button::Action::SUSPEND), 1);
+  EXPECT_EQ(view.GetButtonPosition(Button::Action::HIBERNATE), 2);
+  EXPECT_EQ(view.GetButtonPosition(Button::Action::REBOOT), 3);
+  EXPECT_EQ(view.GetButtonPosition(Button::Action::SHUTDOWN), 4);
 
   ON_CALL(*manager, CanShutdown()).WillByDefault(testing::Return(false));
   view.mode.changed.emit(View::Mode::FULL);
@@ -160,8 +174,8 @@ TEST_F(TestSessionView, ShutdownModeButtons)
   view.mode = View::Mode::SHUTDOWN;
 
   EXPECT_EQ(view.GetButtons().size(), 2);
-  EXPECT_NE(view.GetButtonByAction(Button::Action::SHUTDOWN), nullptr);
-  EXPECT_NE(view.GetButtonByAction(Button::Action::REBOOT), nullptr);
+  EXPECT_EQ(view.GetButtonPosition(Button::Action::REBOOT), 0);
+  EXPECT_EQ(view.GetButtonPosition(Button::Action::SHUTDOWN), 1);
 }
 
 TEST_F(TestSessionView, LogoutModeButtons)
@@ -169,8 +183,8 @@ TEST_F(TestSessionView, LogoutModeButtons)
   view.mode = View::Mode::LOGOUT;
 
   EXPECT_EQ(view.GetButtons().size(), 2);
-  EXPECT_NE(view.GetButtonByAction(Button::Action::LOGOUT), nullptr);
-  EXPECT_NE(view.GetButtonByAction(Button::Action::LOCK), nullptr);
+  EXPECT_EQ(view.GetButtonPosition(Button::Action::LOCK), 0);
+  EXPECT_EQ(view.GetButtonPosition(Button::Action::LOGOUT), 1);
 }
 
 TEST_F(TestSessionView, FullModeTitle)
