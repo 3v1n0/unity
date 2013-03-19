@@ -206,12 +206,12 @@ void View::Populate()
 
     if (manager_->CanShutdown())
     {
-      auto* button = new Button(Button::Action::SHUTDOWN, NUX_TRACKER_LOCATION);
-      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Shutdown));
+      auto *button = new Button(Button::Action::REBOOT, NUX_TRACKER_LOCATION);
+      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Reboot));
       AddButton(button);
 
-      button = new Button(Button::Action::REBOOT, NUX_TRACKER_LOCATION);
-      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Reboot));
+      button = new Button(Button::Action::SHUTDOWN, NUX_TRACKER_LOCATION);
+      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Shutdown));
       AddButton(button);
     }
     else if (mode() == Mode::FULL)
