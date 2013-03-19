@@ -208,21 +208,26 @@ nux::BaseTexture* ResultRendererTile::DrawHighlight(std::string const& texid, in
   return texture_from_cairo_graphics(cairo_graphics);
 }
 
-void ResultRendererTile::Preload(Result& row)
+void ResultRendererTile::Preload(Result const& row)
 {
   if (row.renderer<TextureContainer*>() == nullptr)
   {
-    row.set_renderer(new TextureContainer());
+    // Shouldn't really do this, but it's safe in this case and quicker than making a copy.
+    const_cast<Result&>(row).set_renderer(new TextureContainer());
     LoadIcon(row);
     LoadText(row);
   }
 }
 
-void ResultRendererTile::Unload(Result& row)
+void ResultRendererTile::Unload(Result const& row)
 {
   TextureContainer *container = row.renderer<TextureContainer*>();
-  delete container;
-  row.set_renderer<TextureContainer*>(nullptr);
+  if (container)
+  {
+    delete container;
+    // Shouldn't really do this, but it's safe in this case and quicker than making a copy.
+    const_cast<Result&>(row).set_renderer<TextureContainer*>(nullptr);
+  }
 }
 
 nux::NBitmapData* ResultRendererTile::GetDndImage(Result const& row) const
@@ -239,7 +244,7 @@ nux::NBitmapData* ResultRendererTile::GetDndImage(Result const& row) const
   return bitmap ? bitmap : ResultRenderer::GetDndImage(row);
 }
 
-void ResultRendererTile::LoadIcon(Result& row)
+void ResultRendererTile::LoadIcon(Result const& row)
 {
   Style& style = Style::Instance();
   std::string icon_hint(row.icon_hint);
@@ -354,7 +359,7 @@ void ResultRendererTile::IconLoaded(std::string const& texid,
                                     int max_height,
                                     glib::Object<GdkPixbuf> const& pixbuf,
                                     std::string icon_name,
-                                    Result& row)
+                                    Result const& row)
 {
   TextureContainer *container = row.renderer<TextureContainer*>();
 
@@ -386,7 +391,7 @@ void ResultRendererTile::IconLoaded(std::string const& texid,
 }
 
 
-void ResultRendererTile::LoadText(Result& row)
+void ResultRendererTile::LoadText(Result const& row)
 {
   Style& style = Style::Instance();
   nux::CairoGraphics _cairoGraphics(CAIRO_FORMAT_ARGB32,

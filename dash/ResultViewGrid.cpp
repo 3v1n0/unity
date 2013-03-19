@@ -63,7 +63,6 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , mouse_over_index_(-1)
   , active_index_(-1)
   , selected_index_(-1)
-  , activated_uri_("NULL")
   , last_lazy_loaded_result_(0)
   , last_mouse_down_x_(-1)
   , last_mouse_down_y_(-1)
@@ -83,9 +82,9 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   selected_index_.changed.connect(needredraw_lambda);
 
   key_nav_focus_change.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyNavFocusChange));
-  key_nav_focus_activate.connect([&] (nux::Area *area) 
-  { 
-    Activate(focused_uri_, selected_index_, ResultView::ActivateType::DIRECT);
+  key_nav_focus_activate.connect([&] (nux::Area *area)
+  {
+    Activate(focused_result_, selected_index_, ResultView::ActivateType::DIRECT);
   });
   key_down.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyDown));
   mouse_move.connect(sigc::mem_fun(this, &ResultViewGrid::MouseMove));
@@ -125,17 +124,19 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
 
   ubus_.RegisterInterest(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, [&] (GVariant* data) {
     int nav_mode = 0;
-    gchar* uri = NULL;
-    gchar* proposed_unique_id = NULL;
-    g_variant_get(data, "(iss)", &nav_mode, &uri, &proposed_unique_id);
+    GVariant* local_result_variant = NULL;
+    glib::String proposed_unique_id;
+    g_variant_get(data, "(ivs)", &nav_mode, &local_result_variant, &proposed_unique_id);
+    LocalResult local_result(LocalResult::FromVariant(local_result_variant));
+    g_variant_unref(local_result_variant);
 
-    if (std::string(proposed_unique_id) != unique_id())
+    if (proposed_unique_id.Str() != unique_id())
       return;
 
     unsigned num_results = GetNumResults();
-    if (std::string(uri) == activated_uri_)
+    if (local_result == activated_result_)
     {
-      int current_index = GetIndexForUri(activated_uri_);
+      int current_index = GetIndexForLocalResult(activated_result_);
       if (nav_mode == -1) // left
       {
         current_index--;  
@@ -154,29 +155,25 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
       // closed
       if (nav_mode == 0)
       {
-        activated_uri_ = "";
+        activated_result_.clear();
       }
       else
       {
         selected_index_ = active_index_ = current_index;
-        activated_uri_ = GetUriForIndex(current_index);
+        activated_result_ = GetLocalResultForIndex(current_index);
         LOG_DEBUG(logger) << "activating preview for index: " 
                   << "(" << current_index << ")"
-                  << " " << activated_uri_;
-        Activate(activated_uri_, current_index, ActivateType::PREVIEW);
+                  << " " << activated_result_.uri;
+        Activate(activated_result_, current_index, ActivateType::PREVIEW);
       }
-
     }
-
-    g_free(uri);
-    g_free(proposed_unique_id);
 
   });
 
   SetDndEnabled(true, false);
 }
 
-void ResultViewGrid::Activate(std::string const& uri, int index, ResultView::ActivateType type)
+void ResultViewGrid::Activate(LocalResult const& local_result, int index, ResultView::ActivateType type)
 {
   unsigned num_results = GetNumResults();
 
@@ -208,8 +205,9 @@ void ResultViewGrid::Activate(std::string const& uri, int index, ResultView::Act
   }
 
   active_index_ = index;
-  glib::Variant data(g_variant_new("(iiiiii)", column_x, row_y, column_width, row_height, left_results, right_results));
-  UriActivated.emit(uri, type, data);
+  guint64 timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
+  glib::Variant data(g_variant_new("(tiiiiii)", timestamp, column_x, row_y, column_width, row_height, left_results, right_results));
+  ResultActivated.emit(local_result, type, data);
 }
 
 void ResultViewGrid::QueueLazyLoad()
@@ -301,6 +299,12 @@ int ResultViewGrid::GetItemsPerRow()
 {
   int items_per_row = (GetGeometry().width - (padding * 2) + horizontal_spacing) / (renderer_->width + horizontal_spacing);
   return (items_per_row) ? items_per_row : 1; // always at least one item per row
+}
+
+void  ResultViewGrid::GetResultDimensions(int rows, int columns)
+{
+  columns = GetItemsPerRow();
+  rows = result_model_ ? ceil(static_cast<double>(result_model_->count()) / static_cast<double>(std::min<int>(1, results_per_row))) : 0.0;
 }
 
 void ResultViewGrid::SetModelRenderer(ResultRenderer* renderer)
@@ -460,8 +464,8 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
 
   // if we got this far, we definately got a keynav signal
 
-  if (focused_uri_.empty())
-    focused_uri_ = (*GetIteratorAtRow(0)).uri;
+  if (focused_result_.uri.empty())
+    focused_result_ = (*GetIteratorAtRow(0));
 
   int items_per_row = GetItemsPerRow();
   unsigned num_results = GetNumResults();
@@ -506,7 +510,7 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
   selected_index_ = std::max(0, selected_index_());
   selected_index_ = std::min(static_cast<int>(num_results - 1), selected_index_());
   ResultIterator iter(GetIteratorAtRow(selected_index_));
-  focused_uri_ = (*iter).uri;
+  focused_result_ = (*iter);
 
   std::tuple<int, int> focused_coord = GetResultPosition(selected_index_);
 
@@ -519,7 +523,7 @@ void ResultViewGrid::OnKeyDown (unsigned long event_type, unsigned long event_ke
 
   if (event_type == nux::NUX_KEYDOWN && event_keysym == XK_Menu)
   {
-    Activate(focused_uri_, selected_index_, ActivateType::PREVIEW);
+    Activate(focused_result_, selected_index_, ActivateType::PREVIEW);
   }
 }
 
@@ -532,10 +536,10 @@ void ResultViewGrid::OnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::K
 {
   if (HasKeyFocus())
   {
-    if (selected_index_ < 0 && GetNumResults())
+    if (result_model_ && selected_index_ < 0 && GetNumResults())
     {
-      ResultIterator first_iter(result_model_);
-      focused_uri_ = (*first_iter).uri;
+      ResultIterator first_iter(result_model_->model());
+      focused_result_ = (*first_iter);
       selected_index_ = 0;
     }
 
@@ -567,7 +571,7 @@ void ResultViewGrid::OnKeyNavFocusChange(nux::Area *area, bool has_focus, nux::K
   else
   {
     selected_index_ = -1;
-    focused_uri_.clear();
+    focused_result_.clear();
 
     selection_change.emit();
   }
@@ -790,13 +794,13 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
     ResultIterator it(GetIteratorAtRow(index));
     Result result = *it;
     selected_index_ = index;
-    focused_uri_ = result.uri;
+    focused_result_ = result;
 
     ActivateType type = nux::GetEventButton(button_flags) == nux::MouseButton::MOUSE_BUTTON3 ?  ResultView::ActivateType::PREVIEW :
                                                                                                 ResultView::ActivateType::DIRECT;
 
-    activated_uri_ = result.uri();
-    Activate(activated_uri_, index, type);
+    activated_result_ = result;
+    Activate(activated_result_, index, type);
   }
 }
 
@@ -824,9 +828,9 @@ unsigned ResultViewGrid::GetIndexAtPosition(int x, int y)
   return (row_number * items_per_row) + column_number;
 }
 
-std::tuple<int, int> ResultViewGrid::GetResultPosition(const std::string& uri)
+std::tuple<int, int> ResultViewGrid::GetResultPosition(LocalResult const& local_result)
 {
-  unsigned int index = GetIndexForUri(uri);
+  unsigned int index = GetIndexForLocalResult(local_result);
   return GetResultPosition(index);
 }
 
@@ -863,15 +867,13 @@ bool ResultViewGrid::DndSourceDragBegin()
   Reference();
 
   ResultIterator iter(GetIteratorAtRow(drag_index_));
-  Result drag_result = *iter;
-
-  current_drag_uri_ = drag_result.dnd_uri;
-  if (current_drag_uri_ == "")
-    current_drag_uri_ = drag_result.uri().substr(drag_result.uri().find(":") + 1);
+  current_drag_result_ = *iter;
+  if (current_drag_result_.empty())
+    current_drag_result_.uri = current_drag_result_.uri.substr(current_drag_result_.uri.find(":") + 1);
 
   LOG_DEBUG (logger) << "Dnd begin at " <<
                      last_mouse_down_x_ << ", " << last_mouse_down_y_ << " - using; "
-                     << current_drag_uri_;
+                     << current_drag_result_.uri;
 
   return true;
 #else
@@ -901,10 +903,10 @@ const char* ResultViewGrid::DndSourceGetDataForType(const char* type, int* size,
 {
   *format = 8;
 
-  if (!current_drag_uri_.empty())
+  if (!current_drag_result_.empty())
   {
-    *size = strlen(current_drag_uri_.c_str());
-    return current_drag_uri_.c_str();
+    *size = strlen(current_drag_result_.uri.c_str());
+    return current_drag_result_.uri.c_str();
   }
   else
   {
@@ -919,7 +921,7 @@ void ResultViewGrid::DndSourceDragFinished(nux::DndAction result)
   UnReference();
   last_mouse_down_x_ = -1;
   last_mouse_down_y_ = -1;
-  current_drag_uri_.clear();
+  current_drag_result_.clear();
   drag_index_ = ~0;
 
   // We need this because the drag can start in a ResultViewGrid and can

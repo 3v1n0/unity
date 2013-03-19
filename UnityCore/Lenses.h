@@ -20,6 +20,7 @@
 #ifndef UNITY_LENSES_H
 #define UNITY_LENSES_H
 
+#include <memory>
 #include <sigc++/trackable.h>
 #include <sigc++/signal.h>
 
@@ -33,6 +34,7 @@ namespace dash
 class Lenses : public sigc::trackable, boost::noncopyable
 {
 public:
+  typedef std::shared_ptr<Lenses> Ptr;
   typedef std::vector<Lens::Ptr> LensList;
 
   /**
@@ -45,6 +47,7 @@ public:
   virtual LensList GetLenses() const = 0;
   virtual Lens::Ptr GetLens(std::string const& lens_id) const = 0;
   virtual Lens::Ptr GetLensAtIndex(std::size_t index) const = 0;
+  virtual Lens::Ptr GetLensForShortcut(std::string const& lens_shortcut) const = 0;
 
   nux::ROProperty<std::size_t> count;
 

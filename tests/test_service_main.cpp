@@ -1,4 +1,3 @@
-#include "test_service_lens.h"
 #include "test_service_model.h"
 #include "test_service_hud.h"
 #include "test_service_panel.h"
@@ -37,7 +36,6 @@ int main(int argc, char** argv)
   service::Hud hud;
   service::GDBus gdbus;
   service::Panel panel;
-  service::Lens lens;
   service::Model model;
 
   g_main_loop_run(loop);

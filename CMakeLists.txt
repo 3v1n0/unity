@@ -129,7 +129,7 @@ add_dependencies (release post-distcheck)
 #
 set (PREFIXDIR "${CMAKE_INSTALL_PREFIX}")
 set (DATADIR "${CMAKE_INSTALL_PREFIX}/share")
-set (PKGDATADIR "${DATADIR}/unity/${UNITY_MAJOR}")
+set (PKGDATADIR "${DATADIR}/unity/icons")
 set (GETTEXT_PACKAGE "unity")
 set (LOCALE_DIR "${DATADIR}/locale")
 set (VERSION "${UNITY_VERSION}")

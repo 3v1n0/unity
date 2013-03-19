@@ -15,6 +15,11 @@ public:
   Model();
 
 private:
+  void PopulateTestModel();
+  void PopulateResultsModel();
+  void PopulateCategoriesModel();
+
+private:
   glib::Object<DeeModel> model_;
   glib::Object<DeeModel> results_model_;
   glib::Object<DeeModel> categories_model_;

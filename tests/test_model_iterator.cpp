@@ -42,19 +42,27 @@ public:
     : results(new Results(ModelType::LOCAL))
   {
     dee_model_set_schema (results->model(), 
-                          "s", "s", "u", "s", "s", "s", "s", NULL);
+                          "s", "s", "u", "u", "s", "s", "s", "s", "a{sv}", NULL);
   }
 
   void AddResult(std::string const& uri, std::string const& name)
   {
+    GVariantBuilder b;
+    g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
+    GVariant *hints = g_variant_builder_end(&b);
+
     dee_model_append(results->model(),
                      uri.c_str(),  // uri
                      "icon",       // icon-hint
                      0,            // category
+                     0,            // result-type
                      "text/plain", // mimetype
                      name.c_str(), // display name
                      "",           // comment
-                     uri.c_str()); // dnd-uri
+                     uri.c_str(),  // dnd-uri
+                     hints);       // hints
+
+    g_variant_unref(hints);
   }
 
   Results::Ptr results;
@@ -110,12 +118,12 @@ TEST_F(TestResultIterator, TestIncrement)
 
   ResultIterator it(results->model());
 
-  EXPECT_EQ((*it).uri, "file:///foo.txt");
-  EXPECT_EQ((*it).name, "Result #1");
+  EXPECT_EQ((*it).uri(), "file:///foo.txt");
+  EXPECT_EQ((*it).name(), "Result #1");
 
   it++;
-  EXPECT_EQ((*it).uri, "file:///qoo.txt");
-  EXPECT_EQ((*it).name, "Result #2");
+  EXPECT_EQ((*it).uri(), "file:///qoo.txt");
+  EXPECT_EQ((*it).name(), "Result #2");
 
   it++;
   EXPECT_TRUE(it.IsLast());

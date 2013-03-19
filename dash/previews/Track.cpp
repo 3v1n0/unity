@@ -125,7 +125,8 @@ private:
 
 Track::Track(NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
-  , play_state_(dash::STOPPED)
+  , play_state_(PlayerState::STOPPED)
+  , progress_(0.0)
   , mouse_over_(false)
 {
   SetupBackground();
@@ -134,6 +135,7 @@ Track::Track(NUX_FILE_LINE_DECL)
 
 Track::~Track()
 {
+  player_connection_.disconnect();
 }
 
 std::string Track::GetName() const
@@ -145,7 +147,7 @@ void Track::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
     .add("uri", uri_)
-    .add("play-state", play_state_)
+    .add("play-state", (int)play_state_)
     .add("progress", progress_)
     .add("playpause-x", track_status_layout_->GetAbsoluteX())
     .add("playpause-y", track_status_layout_->GetAbsoluteX())
@@ -156,8 +158,6 @@ void Track::AddProperties(GVariantBuilder* builder)
 void Track::Update(dash::Track const& track)
 {
   uri_ = track.uri;
-  progress_ = track.progress;
-
   title_->SetText(track.title, true);
 
   std::stringstream ss_track_number;
@@ -168,9 +168,25 @@ void Track::Update(dash::Track const& track)
   duration_->SetText(duration);
   g_free(duration);
 
-  play_state_ = track.play_state;
-  UpdateTrackState();
+  player_connection_.disconnect();
+  player_connection_ = player_.updated.connect([this](std::string const& uri, PlayerState player_state, double progress)
+  {
+    if (uri != uri_)
+    {
+      // If we're received an update for another track, we're obviously not playing this track anymore.
+      if (progress_ != 0.0 || play_state_ != PlayerState::STOPPED)
+      {
+        progress_ = 0.0;
+        play_state_ = PlayerState::STOPPED;
+        UpdateTrackState();
+      }
+      return;
+    }
 
+    progress_ = progress;
+    play_state_ = player_state;
+    UpdateTrackState();
+  });
   QueueDraw();
 }
 
@@ -264,13 +280,17 @@ void Track::SetupViews()
   {
     switch (play_state_)
     {
-      case dash::PLAYING:
-        pause.emit(uri_);
+      case PlayerState::PLAYING:
+        player_.Pause();
         break;
-      case dash::PAUSED:
-      case dash::STOPPED:
+
+      case PlayerState::PAUSED:
+        player_.Resume();
+        break;
+
+      case PlayerState::STOPPED:
       default:
-        play.emit(uri_);
+        player_.Play(uri_);
         break;
     }
   });
@@ -357,7 +377,7 @@ nux::Area* Track::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxE
 
 bool Track::HasStatusFocus() const
 {
-  return mouse_over_ || play_state_ == dash::PLAYING || play_state_ == dash::PAUSED;
+  return mouse_over_ || play_state_ == PlayerState::PLAYING || play_state_ == PlayerState::PAUSED;
 }
 
 void Track::OnTrackControlMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -382,11 +402,11 @@ void Track::UpdateTrackState()
   {
     switch (play_state_)
     {
-      case dash::PLAYING:
+      case PlayerState::PLAYING:
         track_status_layout_->SetActiveLayer(status_pause_layout_);
         break;
-      case dash::PAUSED:
-      case dash::STOPPED:
+      case PlayerState::PAUSED:
+      case PlayerState::STOPPED:
       default:
         track_status_layout_->SetActiveLayer(status_play_layout_);
         break;
@@ -396,18 +416,19 @@ void Track::UpdateTrackState()
   {
     switch (play_state_)
     {
-      case dash::PLAYING:
+      case PlayerState::PLAYING:
         track_status_layout_->SetActiveLayer(status_play_layout_);
         break;
-      case dash::PAUSED:
+      case PlayerState::PAUSED:
         track_status_layout_->SetActiveLayer(status_pause_layout_);
         break;
-      case dash::STOPPED:
+      case PlayerState::STOPPED:
       default:
         track_status_layout_->SetActiveLayer(track_number_layout_);
         break;
     }
   }
+  QueueDraw();
 }
 
 
@@ -425,8 +446,6 @@ void Track::PreLayoutManagement()
   View::PreLayoutManagement();
 }
 
-
-
-}
-}
-}
+} // namespace previews
+} // namespace dash
+} // namesapce unity

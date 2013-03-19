@@ -34,13 +34,14 @@
 #include "GLibWrapper.h"
 #include "GLibDBusProxy.h"
 #include "Variant.h"
+#include "Result.h"
 
 namespace unity
 {
 namespace dash
 {
 
-class Lens;
+class Scope;
 
 enum LayoutHint
 {
@@ -110,7 +111,7 @@ public:
 
   virtual ~Preview();
 
-  static Preview::Ptr PreviewForVariant(glib::Variant& properties);
+  static Preview::Ptr PreviewForVariant(glib::Variant const& properties);
   static Preview::Ptr PreviewForProtocolObject(glib::Object<GObject> const& proto_obj);
 
   nux::ROProperty<std::string> renderer_name;
@@ -120,25 +121,21 @@ public:
   nux::ROProperty<unity::glib::Object<GIcon>> image;
   nux::ROProperty<std::string> image_source_uri;
 
-  // can't use Lens::Ptr to avoid circular dependency
-  nux::RWProperty<Lens*> parent_lens;
-  nux::Property<std::string> preview_uri;
+  // can't use Scope::Ptr to avoid circular dependency
+  nux::RWProperty<Scope*> parent_scope;
+  LocalResult preview_result;
 
   ActionPtrList GetActions() const;
   InfoHintPtrList GetInfoHints() const;
 
   void PerformAction(std::string const& id,
-                     std::map<std::string, glib::Variant> const& hints =
-                     std::map<std::string, glib::Variant>()) const;
-  void EmitClosed() const;
+                     glib::HintsMap const& hints =
+                     glib::HintsMap()) const;
 
 protected:
   // this should be UnityProtocolPreview, but we want to keep the usage
   // of libunity-protocol-private private to unity-core
   Preview(glib::Object<GObject> const& proto_obj);
-  void Update(glib::Variant const& properties,
-              glib::DBusProxy::ReplyCallback reply_callback = nullptr) const;
-  static glib::Object<GIcon> IconForString(std::string const& icon_hint);
 
 private:
   class Impl;

@@ -41,10 +41,9 @@ namespace unity
 namespace launcher
 {
 
-class ActionArg
+struct ActionArg
 {
-public:
-  enum Source
+  enum class Source
   {
     LAUNCHER,
     SWITCHER,
@@ -52,25 +51,24 @@ public:
   };
 
   ActionArg()
-    : source(OTHER)
+    : source(Source::OTHER)
     , button(0)
+    , timestamp(0)
     , target(0)
     , monitor(-1)
-  {
-  }
+  {}
 
-  ActionArg(Source source, int button, Time timestamp = -1,  Window target = 0, int monitor = -1)
+  ActionArg(Source source, int button, unsigned long timestamp = 0,  Window target = 0, int monitor = -1)
     : source(source)
     , button(button)
     , timestamp(timestamp)
     , target(target)
     , monitor(monitor)
-  {
-  }
+  {}
 
   Source source;
   int button;
-  Time timestamp;
+  unsigned long timestamp;
   Window target;
   int monitor;
 };

@@ -59,10 +59,10 @@ public:
 
   // this is just to start preloading images and text that the renderer might
   // need - can be ignored
-  virtual void Preload(Result& row);
+  virtual void Preload(Result const& row);
 
   // unload any previous grabbed images
-  virtual void Unload(Result& row);
+  virtual void Unload(Result const& row);
 
   // get a image to drag
   virtual nux::NBitmapData* GetDndImage(Result const& row) const;

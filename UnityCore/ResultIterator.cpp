@@ -18,12 +18,11 @@
  */
 
 #include "ResultIterator.h"
-#include <NuxCore/Logger.h>
+ 
 namespace unity
 {
 namespace dash
 {
-DECLARE_LOGGER(logger, "unity.dash.resultiterator");
 
 ResultIterator::ResultIterator(glib::Object<DeeModel> model)
   : model_(model)

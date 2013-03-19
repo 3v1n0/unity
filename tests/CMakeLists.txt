@@ -93,7 +93,6 @@ if (GTEST_SRC_DIR AND
                  mock-application.cpp
                  test_service_gdbus_wrapper.cpp
                  test_service_hud.cpp
-                 test_service_lens.cpp
                  test_service_main.cpp
                  test_service_model.cpp
                  test_service_panel.cpp)
@@ -124,7 +123,6 @@ if (GTEST_SRC_DIR AND
        test_favorite_store.cpp
        test_favorite_store_gsettings.cpp
        test_favorite_store_private.cpp
-       test_home_lens.cpp
        test_launcher_entry_remote.cpp
        test_launcher_options.cpp
        test_layout_system.cpp
@@ -177,11 +175,9 @@ if (GTEST_SRC_DIR AND
   add_executable(test-gtest-dbus
                  test_categories.cpp
                  test_dbus_indicators.cpp
-                 test_filesystem_lenses.cpp
                  test_filter.cpp
                  test_gdbus_proxy.cpp
                  test_hud.cpp
-                 test_lens.cpp
                  test_main_dbus.cpp
                  test_model.cpp
                  test_utils.h
@@ -202,7 +198,6 @@ if (ENABLE_X_SUPPORT)
                  test_application_launcher_icon.cpp
                  test_bamf_application.cpp
                  test_bfb_launcher_icon.cpp
-                 test_dashview_impl.cpp
                  test_dash_controller.cpp
                  test_desktop_launcher_icon.cpp
                  test_device_launcher_section.cpp
@@ -226,7 +221,6 @@ if (ENABLE_X_SUPPORT)
                  test_launcher_icon.cpp
                  test_launcher_minimize_speed.cpp
                  test_launcher_tooltip.cpp
-                 test_lensview.cpp
                  test_keyboard_util.cpp
                  test_panel_indicators_view.cpp
                  test_panel_menu_view.cpp

@@ -187,7 +187,7 @@ void SearchBar::Init()
     show_filters_->SetFont(SHOW_FILTERS_LABEL_DEFAULT_FONT.c_str());
     show_filters_->SetTextColor(nux::color::White);
     show_filters_->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
-    show_filters_->SetLines(1);
+    show_filters_->SetLines(-1);
 
     nux::BaseTexture* arrow;
     arrow = style.GetGroupExpandIcon();
@@ -468,6 +468,7 @@ void SearchBar::ForceSearchChanged()
 void
 SearchBar::SearchFinished()
 {
+  LOG_DEBUG(logger) << "Search finished for '" << search_string() << "'";
   start_spinner_timeout_.reset();
 
   bool is_empty = pango_entry_->im_active() ?

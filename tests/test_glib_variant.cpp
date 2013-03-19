@@ -98,7 +98,7 @@ TEST(TestGLibVariant, KeepsRef)
 
   EXPECT_TRUE(IsVariant(v));
   EXPECT_FALSE(IsFloating(v));
-  EXPECT_EQ(v.GetInt(), 456);
+  EXPECT_EQ(v.GetInt32(), 456);
 }
 
 TEST(TestGLibVariant, UseGVariantMethod)
@@ -107,7 +107,7 @@ TEST(TestGLibVariant, UseGVariantMethod)
 
   EXPECT_TRUE(IsVariant(v));
   EXPECT_FALSE(IsFloating(v));
-  EXPECT_EQ(v.GetInt(), 123);
+  EXPECT_EQ(v.GetInt32(), 123);
 
   EXPECT_TRUE(g_variant_is_of_type (v, G_VARIANT_TYPE ("i")));
 }
@@ -133,7 +133,7 @@ TEST(TestGLibVariant, HintsMap)
   EXPECT_TRUE(dict.ASVToHints (hints));
 
   EXPECT_EQ(hints["string-key"].GetString(), "string-value");
-  EXPECT_EQ(hints["int-key"].GetInt(), 123);
+  EXPECT_EQ(hints["int-key"].GetInt32(), 123);
   EXPECT_EQ(hints["bool-key"].GetBool(), true);
   EXPECT_EQ(hints["last"].GetString(), "foo");
 
@@ -145,7 +145,7 @@ TEST(TestGLibVariant, HintsMap)
 
   // this has to still work
   EXPECT_EQ(hints["string-key"].GetString(), "string-value");
-  EXPECT_EQ(hints["int-key"].GetInt(), 123);
+  EXPECT_EQ(hints["int-key"].GetInt32(), 123);
   EXPECT_EQ(hints["bool-key"].GetBool(), true);
   EXPECT_EQ(hints["last"].GetString(), "foo");
 }
@@ -162,32 +162,32 @@ TEST(TestGLibVariant, GetString)
   EXPECT_EQ(v3.GetString(), "");
 }
 
-TEST(TestGLibVariant, GetInt)
+TEST(TestGLibVariant, GetInt32)
 {
   gint32 value = g_random_int_range(G_MININT, G_MAXINT);
   Variant v1(g_variant_new_int32(value));
-  EXPECT_EQ(v1.GetInt(), value);
+  EXPECT_EQ(v1.GetInt32(), value);
 
   value = g_random_int_range(G_MININT, G_MAXINT);
   Variant v2(g_variant_new("(i)", value));
-  EXPECT_EQ(v2.GetInt(), value);
+  EXPECT_EQ(v2.GetInt32(), value);
 
   Variant v3(g_variant_new("(is)", value, "fooostring"));
-  EXPECT_EQ(v3.GetInt(), 0);
+  EXPECT_EQ(v3.GetInt32(), 0);
 }
 
-TEST(TestGLibVariant, GetUInt)
+TEST(TestGLibVariant, GetUInt32)
 {
   guint32 value = g_random_int();
   Variant v1(g_variant_new_uint32(value));
-  EXPECT_EQ(v1.GetUInt(), value);
+  EXPECT_EQ(v1.GetUInt32(), value);
 
   value = g_random_int();
   Variant v2(g_variant_new("(u)", value));
-  EXPECT_EQ(v2.GetUInt(), value);
+  EXPECT_EQ(v2.GetUInt32(), value);
 
   Variant v3(g_variant_new("(ui)", value, G_MAXINT));
-  EXPECT_EQ(v3.GetUInt(), 0);
+  EXPECT_EQ(v3.GetUInt32(), 0);
 }
 
 TEST(TestGLibVariant, GetBool)

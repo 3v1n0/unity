@@ -105,6 +105,7 @@ private:
   GError* error_;
 };
 
+// wrapper for raw gcha*. auto-deleted.
 class String : boost::noncopyable
 {
 public:
@@ -124,6 +125,14 @@ public:
 private:
   gchar* string_;
 };
+
+inline std::string gchar_to_string(const gchar* str)
+{
+  if (!str)
+    return std::string("");
+  else
+    return std::string(str);
+}
 
 std::ostream& operator<<(std::ostream& o, Error const& e);
 std::ostream& operator<<(std::ostream& o, String const& s);

@@ -91,6 +91,9 @@ const int START_DRAGICON_DURATION = 250;
 const int MOUSE_DEADZONE = 15;
 const float DRAG_OUT_PIXELS = 300.0f;
 
+const int SCROLL_AREA_HEIGHT = 24;
+const int SCROLL_FPS = 30;
+
 const std::string START_DRAGICON_TIMEOUT = "start-dragicon-timeout";
 const std::string SCROLL_TIMEOUT = "scroll-timeout";
 const std::string ANIMATION_IDLE = "animation-idle";
@@ -300,7 +303,6 @@ void Launcher::SetIconUnderMouse(AbstractLauncherIcon::Ptr const& icon)
     icon->mouse_enter.emit(monitor);
 
   _icon_under_mouse = icon;
-  tooltip_manager_.SetIcon(icon);
 }
 
 bool Launcher::MouseBeyondDragThreshold() const
@@ -1503,27 +1505,18 @@ void Launcher::SetHover(bool hovered)
 
 bool Launcher::MouseOverTopScrollArea()
 {
-  return _mouse_position.y < panel::Style::Instance().panel_height;
-}
-
-bool Launcher::MouseOverTopScrollExtrema()
-{
-  return _mouse_position.y == 0;
+  return _mouse_position.y < SCROLL_AREA_HEIGHT;
 }
 
 bool Launcher::MouseOverBottomScrollArea()
 {
-  return _mouse_position.y > GetGeometry().height - panel::Style::Instance().panel_height;
-}
-
-bool Launcher::MouseOverBottomScrollExtrema()
-{
-  return _mouse_position.y == GetGeometry().height - 1;
+  return _mouse_position.y >= GetGeometry().height - SCROLL_AREA_HEIGHT;
 }
 
 bool Launcher::OnScrollTimeout()
 {
   bool continue_animation = true;
+  int speed = 0;
 
   if (IsInKeyNavMode() || !_hovered ||
       GetActionState() == ACTION_DRAG_LAUNCHER)
@@ -1534,19 +1527,21 @@ bool Launcher::OnScrollTimeout()
   {
     if (_launcher_drag_delta >= _launcher_drag_delta_max)
       continue_animation = false;
-    else if (MouseOverTopScrollExtrema())
-      _launcher_drag_delta += 6;
     else
-      _launcher_drag_delta += 3;
+    {
+        speed = (SCROLL_AREA_HEIGHT - _mouse_position.y) / SCROLL_AREA_HEIGHT * SCROLL_FPS;
+        _launcher_drag_delta += speed;
+    }
   }
   else if (MouseOverBottomScrollArea())
   {
     if (_launcher_drag_delta <= _launcher_drag_delta_min)
       continue_animation = false;
-    else if (MouseOverBottomScrollExtrema())
-      _launcher_drag_delta -= 6;
     else
-      _launcher_drag_delta -= 3;
+    {
+        speed = ((_mouse_position.y + 1) - (GetGeometry().height - SCROLL_AREA_HEIGHT)) / SCROLL_AREA_HEIGHT * SCROLL_FPS;
+        _launcher_drag_delta -= speed;
+    } 
   }
   else
   {
@@ -2228,7 +2223,7 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
 void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
   SetMousePosition(x, y);
-  tooltip_manager_.MouseMoved();
+  tooltip_manager_.MouseMoved(_icon_under_mouse);
 
   if (!_hidden)
     UpdateChangeInMousePosition(dx, dy);
@@ -2249,7 +2244,7 @@ void Launcher::RecvMouseWheel(int /*x*/, int /*y*/, int wheel_delta, unsigned lo
   }
   else if (_icon_under_mouse)
   {
-    auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp; 
+    auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
     auto scroll_direction = (wheel_delta < 0) ? AbstractLauncherIcon::ScrollDirection::DOWN : AbstractLauncherIcon::ScrollDirection::UP;
     _icon_under_mouse->PerformScroll(scroll_direction, timestamp);
   }
