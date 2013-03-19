@@ -112,6 +112,7 @@ public:
   glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> metadata_signal_;
   glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> optional_metadata_signal_;
   glib::Signal<void, UnityProtocolScopeProxy*, const gchar*, guint32*, int> category_order_signal_;
+  glib::Signal<void, UnityProtocolScopeProxy*, const gchar*, GVariant*> filter_settings_signal_;  
   /////////////////////////////////////////////////
 
 private:
@@ -127,6 +128,7 @@ private:
   void OnScopeMetadataChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
   void OnScopeOptionalMetadataChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
   void OnScopeCategoryOrderChanged(UnityProtocolScopeProxy* sender, const gchar* channel_id, guint32* new_order, int new_order_length1);
+  void OnScopeFilterSettingsChanged(UnityProtocolScopeProxy* sender, const gchar* channel_id, GVariant* filter_rows);
   /////////////////////////////////////////////////
 
   void WaitForProxyConnection(GCancellable* cancellable,
@@ -334,7 +336,8 @@ void ScopeProxy::Impl::OnNewScope(glib::Object<UnityProtocolScopeProxy> const& s
   categories_signal_.Disconnect();
   metadata_signal_.Disconnect();
   optional_metadata_signal_.Disconnect();
-
+  category_order_signal_.Disconnect();
+  filter_settings_signal_.Disconnect();
 
   if (error || !scope_proxy)
   {
@@ -362,6 +365,7 @@ void ScopeProxy::Impl::OnNewScope(glib::Object<UnityProtocolScopeProxy> const& s
   metadata_signal_.Connect(scope_proxy_, "notify::metadata", sigc::mem_fun(this, &Impl::OnScopeMetadataChanged));
   optional_metadata_signal_.Connect(scope_proxy_, "notify::optional-metadata", sigc::mem_fun(this, &Impl::OnScopeOptionalMetadataChanged));
   category_order_signal_.Connect(scope_proxy_, "category-order-changed", sigc::mem_fun(this, &Impl::OnScopeCategoryOrderChanged));
+  filter_settings_signal_.Connect(scope_proxy_, "filter-settings-changed", sigc::mem_fun(this, &Impl::OnScopeFilterSettingsChanged));
 
   scope_proxy_connected_ = unity_protocol_scope_proxy_get_connected(scope_proxy_);
   
@@ -624,7 +628,7 @@ void ScopeProxy::Impl::OnScopeViewTypeChanged(UnityProtocolScopeProxy* proxy, GP
 
 void ScopeProxy::Impl::OnScopeFiltersChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param)
 {
-  LOG_DEBUG(logger) << scope_data_->id() << " - Filter changed by server";
+  LOG_DEBUG(logger) << scope_data_->id() << " (" << channel() << ") - Filter changed by server";
   bool blocked = filters_change_connection.block(true);
 
   glib::Object<DeeModel> filters_dee_model(DEE_MODEL(unity_protocol_scope_proxy_get_filters_model(scope_proxy_)), glib::AddRef());
@@ -637,6 +641,8 @@ void ScopeProxy::Impl::OnScopeFiltersChanged(UnityProtocolScopeProxy* proxy, GPa
 
 void ScopeProxy::Impl::OnScopeCategoriesChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param)
 {
+  LOG_DEBUG(logger) << scope_data_->id() << " (" << channel() << ") - Category model changed";
+
   glib::Object<DeeModel> categories_dee_model(DEE_MODEL(unity_protocol_scope_proxy_get_categories_model(scope_proxy_)), glib::AddRef());
   categories_->SetModel(categories_dee_model);
 
@@ -656,6 +662,8 @@ void ScopeProxy::Impl::OnScopeCategoryOrderChanged(UnityProtocolScopeProxy* send
   if (channel() != glib::gchar_to_string(channel_id))
     return;
 
+  LOG_DEBUG(logger) << scope_data_->id() << " (" << channel() << ") - Category order changed";
+
   std::vector<unsigned int> order;
   for (int i = 0; i < new_order_length1; i++)
   {
@@ -663,6 +671,16 @@ void ScopeProxy::Impl::OnScopeCategoryOrderChanged(UnityProtocolScopeProxy* send
   }
 
   category_order = order;
+}
+
+void ScopeProxy::Impl::OnScopeFilterSettingsChanged(UnityProtocolScopeProxy* sender, const gchar* channel_id, GVariant* filter_rows)
+{
+  if (channel() != glib::gchar_to_string(channel_id))
+    return;
+
+  LOG_DEBUG(logger) << scope_data_->id() << " (" << channel() << ") - Filter settings changed";
+
+  filters_->ApplyStateChanges(filter_rows);
 }
 
 static void category_filter_map_func (DeeModel* orig_model,

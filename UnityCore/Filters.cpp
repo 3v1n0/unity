@@ -38,14 +38,72 @@ FilterAdaptor::FilterAdaptor(FilterAdaptor const& other)
   renderer_name.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 3));
 }
 
-DeeModel* FilterAdaptor::model() const
+std::string FilterAdaptor::get_id() const
 {
-  return model_;
+  if (model_ && iter_)
+    return dee_model_get_string(model_, iter_, FilterColumn::ID);
+  return "";
 }
 
-DeeModelIter* FilterAdaptor::iter() const
+std::string FilterAdaptor::get_name() const
 {
-  return iter_;
+  if (model_ && iter_)
+    return dee_model_get_string(model_, iter_, FilterColumn::NAME);
+  return "";
+}
+
+std::string FilterAdaptor::get_icon_hint() const
+{
+  if (model_ && iter_)
+    return dee_model_get_string(model_, iter_, FilterColumn::ICON_HINT);
+  return "";
+}
+
+std::string FilterAdaptor::get_renderer_name() const
+{
+  if (model_ && iter_)
+    return dee_model_get_string(model_, iter_, FilterColumn::RENDERER_NAME);
+  return "";
+}
+
+bool FilterAdaptor::get_visible() const
+{
+  if (model_ && iter_)
+    return dee_model_get_bool(model_, iter_, FilterColumn::VISIBLE);
+  return false;
+}
+
+bool FilterAdaptor::get_collapsed() const
+{
+  if (model_ && iter_)
+    return dee_model_get_bool(model_, iter_, FilterColumn::COLLAPSED);
+  return true;
+}
+
+bool FilterAdaptor::get_filtering() const
+{
+  if (model_ && iter_)
+    return dee_model_get_bool(model_, iter_, FilterColumn::FILTERING);
+  return false;
+}
+
+Filter::Ptr FilterAdaptor::create_filter() const
+{
+  return Filter::FilterFromIter(model_, iter_);
+}
+
+void FilterAdaptor::MergeState(glib::HintsMap const& hints)
+{
+  glib::HintsMap current_hints;
+  glib::Variant row_state_value(dee_model_get_value(model_, iter_, FilterColumn::RENDERER_STATE), glib::StealRef());
+  row_state_value.ASVToHints(current_hints);
+
+  for (auto iter = hints.begin(); iter != hints.end(); ++iter)
+  {
+    current_hints[iter->first] = iter->second;
+  }
+
+  dee_model_set_value(model_, iter_, FilterColumn::RENDERER_STATE, glib::Variant::FromHints(current_hints));
 }
 
 
@@ -68,31 +126,96 @@ Filters::~Filters()
 Filter::Ptr Filters::FilterAtIndex(std::size_t index)
 {
   FilterAdaptor adaptor = RowAtIndex(index);
-  if (filter_map_.find(adaptor.iter()) == filter_map_.end())
+  if (filter_map_.find(adaptor.get_id()) == filter_map_.end())
   {
     OnRowAdded(adaptor);
   }
-  return filter_map_[adaptor.iter()];
+  return filter_map_[adaptor.get_id()];
+}
+
+bool Filters::ApplyStateChanges(glib::Variant const& filter_rows)
+{
+  if (!filter_rows)
+    return false;
+
+  if (!g_variant_is_of_type (filter_rows, G_VARIANT_TYPE ("a(ssssa{sv}bbb)")))
+  {
+    return false;
+  }
+
+  glib::String id;
+  glib::String name;
+  glib::String icon_hint;
+  glib::String renderer_name;
+  GVariantIter* hints_iter = NULL;
+  gboolean visible;
+  gboolean collapsed;
+  gboolean filtering;
+  g_variant_get(filter_rows, g_variant_get_type_string(filter_rows), &hints_iter);
+
+  while (g_variant_iter_loop(hints_iter, "(ssssa{sv}bbb)", &id,
+                                                          &name,
+                                                          &icon_hint,
+                                                          &renderer_name,
+                                                          &hints_iter,
+                                                          &visible,
+                                                          &collapsed,
+                                                          &filtering))
+  {
+
+    for (FilterAdaptorIterator it(begin()); !it.IsLast(); ++it)
+    {
+      FilterAdaptor filter_adaptor = *it;
+
+      if (filter_adaptor.get_id() == id.Str())
+      {
+        glib::HintsMap hints;
+
+        char* key = NULL;
+        GVariant* value = NULL;
+        while (g_variant_iter_loop(hints_iter, "{sv}", &key, &value))
+        {
+          hints[key] = value;
+        }
+
+        filter_adaptor.MergeState(hints);
+      }
+    }
+  }
+
+  return true;
+}
+
+FilterAdaptorIterator Filters::begin() const
+{
+  return FilterAdaptorIterator(model(), dee_model_get_first_iter(model()), GetTag());
+
+}
+
+FilterAdaptorIterator Filters::end() const
+{
+  return FilterAdaptorIterator(model(), dee_model_get_last_iter(model()), GetTag());  
 }
 
 void Filters::OnRowAdded(FilterAdaptor& filter)
 {
-  Filter::Ptr ret = Filter::FilterFromIter(filter.model(), filter.iter());
+  Filter::Ptr ret = filter.create_filter();
 
-  filter_map_[filter.iter()] = ret;
+  filter_map_[filter.get_id()] = ret;
   filter_added(ret);
 }
 
 void Filters::OnRowChanged(FilterAdaptor& filter)
 {
-  filter_changed(filter_map_[filter.iter()]);
+  filter_changed(filter_map_[filter.get_id()]);
 }
 
 void Filters::OnRowRemoved(FilterAdaptor& filter)
 {
-  filter_removed(filter_map_[filter.iter()]);
-  filter_map_.erase(filter.iter());
+  filter_removed(filter_map_[filter.get_id()]);
+  filter_map_.erase(filter.get_id());
 }
+
 
 }
 }
