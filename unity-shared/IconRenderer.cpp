@@ -440,7 +440,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   nux::Color edge_tile_colorify = nux::color::White;
   bool colorify_background = arg.colorify_background;
   float backlight_intensity = arg.backlight_intensity;
-  float glow_intensity = arg.glow_intensity;
+  float glow_intensity = arg.glow_intensity * 3.0f;
   float shadow_intensity = 0.6f;
   const float edge_illumination_multiplier = 2.0f;
 
@@ -506,7 +506,11 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
 
   if (backlight_intensity > 0 && arg.draw_edge_only)
   {
-    glow_intensity = glow_intensity + backlight_intensity * edge_illumination_multiplier;
+    float edge_glow = backlight_intensity * edge_illumination_multiplier;
+    if (edge_glow > glow_intensity)
+    {
+      glow_intensity = edge_glow;
+    }
   }
 
   // draw shadow
