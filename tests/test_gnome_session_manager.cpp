@@ -165,9 +165,15 @@ struct TestGnomeSessionManager : testing::Test
     logind_->AddObjects(introspection::LOGIND, LOGIND_PATH);
     logind_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant*) -> GVariant* {
       if (method == "CanSuspend")
+      {
+        suspend_called = true;
         return g_variant_new("(s)", can_suspend_ ? "yes" : "no");
+      }
       else if (method == "CanHibernate")
+      {
+        hibernate_called = true;
         return g_variant_new("(s)", can_hibernate_ ? "yes" : "no");
+      }
 
       return nullptr;
     });
@@ -197,6 +203,9 @@ struct TestGnomeSessionManager : testing::Test
     Utils::WaitUntilMSec(hibernate_called);
     Utils::WaitUntilMSec(suspend_called);
     Utils::WaitUntilMSec(shutdown_called);
+    EXPECT_TRUE(hibernate_called);
+    EXPECT_TRUE(suspend_called);
+    EXPECT_TRUE(shutdown_called);
     Utils::WaitForTimeoutMSec(100);
   }
 
