@@ -121,7 +121,7 @@ void View::UpdateText()
     }
     else
     {
-      message = _("Goodbye %s! Are you sure you want to close all programs " \
+      message = _("Goodbye, %s! Are you sure you want to close all programs " \
                   "and shut down the computer?");
     }
   }
@@ -137,7 +137,7 @@ void View::UpdateText()
     }
     else
     {
-      message = _("Goodbye %s! Are you sure you want to close all programs " \
+      message = _("Goodbye, %s! Are you sure you want to close all programs " \
                   "and log out from your account?");
     }
   }
@@ -161,7 +161,7 @@ void View::UpdateText()
     }
     else
     {
-      message = _("Goodbye %s! Would you like to…");
+      message = _("Goodbye, %s! Would you like to…");
     }
   }
 
