@@ -143,42 +143,37 @@ bool Filters::ApplyStateChanges(glib::Variant const& filter_rows)
     return false;
   }
 
-  glib::String id;
-  glib::String name;
-  glib::String icon_hint;
-  glib::String renderer_name;
-  GVariantIter* hints_iter = NULL;
+  gchar* id = nullptr;
+  gchar* name = nullptr;
+  gchar* icon_hint = nullptr;
+  gchar* renderer_name = nullptr;
+  GVariant* hints = nullptr;
   gboolean visible;
   gboolean collapsed;
   gboolean filtering;
-  g_variant_get(filter_rows, g_variant_get_type_string(filter_rows), &hints_iter);
 
-  while (g_variant_iter_loop(hints_iter, "(ssssa{sv}bbb)", &id,
-                                                          &name,
-                                                          &icon_hint,
-                                                          &renderer_name,
-                                                          &hints_iter,
-                                                          &visible,
-                                                          &collapsed,
-                                                          &filtering))
+  GVariantIter iter;
+  g_variant_iter_init(&iter, filter_rows);
+  while (g_variant_iter_loop(&iter, "(ssss@a{sv}bbb)", &id,
+                                                       &name,
+                                                       &icon_hint,
+                                                       &renderer_name,
+                                                       &hints,
+                                                       &visible,
+                                                       &collapsed,
+                                                       &filtering))
   {
-
     for (FilterAdaptorIterator it(begin()); !it.IsLast(); ++it)
     {
       FilterAdaptor filter_adaptor = *it;
 
-      if (filter_adaptor.get_id() == id.Str())
+      if (id && filter_adaptor.get_id().compare(id) == 0)
       {
-        glib::HintsMap hints;
-
-        char* key = NULL;
-        GVariant* value = NULL;
-        while (g_variant_iter_loop(hints_iter, "{sv}", &key, &value))
+        glib::HintsMap hints_map;
+        if (glib::Variant(hints).ASVToHints(hints_map))
         {
-          hints[key] = value;
+          filter_adaptor.MergeState(hints_map);
         }
-
-        filter_adaptor.MergeState(hints);
       }
     }
   }
