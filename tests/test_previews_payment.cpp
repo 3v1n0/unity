@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2012 Canonical Ltd
+ * Copyright (C) 2012-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -18,8 +18,6 @@
  */
 #include <list>
 #include <gmock/gmock.h>
-using namespace testing;
-using ::testing::Return;
 
 #include <Nux/Nux.h>
 #include <Nux/Layout.h>
@@ -37,6 +35,9 @@ using ::testing::Return;
 #include "dash/previews/ActionButton.h"
 #include "dash/previews/ActionLink.h"
 #include "test_utils.h"
+
+using namespace testing;
+using ::testing::Return;
 
 namespace unity
 {

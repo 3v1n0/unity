@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright 2012 Canonical Ltd.
+ * Copyright 2012-2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -118,7 +118,7 @@ protected:
   std::string error_message_;
 
   // actions
-  std::map<std::string, nux::ObjectPtr<nux::AbstractButton>> sorted_buttons_;
+  std::map<std::string, nux::ObjectPtr<nux::AbstractButton>> buttons_map_;
 
   // lock texture
   nux::ObjectPtr<IconTexture> lock_texture_;

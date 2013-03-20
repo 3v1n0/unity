@@ -213,7 +213,6 @@ void DashView::OnResultActivated(ResultView::ActivateType type, LocalResult cons
 
 void DashView::BuildPreview(Preview::Ptr model)
 {
-
   if (!preview_displaying_)
   {     
     StartPreviewAnimation();
@@ -1219,7 +1218,6 @@ void DashView::OnScopeAdded(Scope::Ptr const& scope, int position)
   // Hook up to the new preview infrastructure
   scope->preview_ready.connect([&] (LocalResult const& result, Preview::Ptr model)
   {
-    LOG_DEBUG(logger) << "Got preview for: " << uri;
     // HACK: Atm we don't support well the fact that a preview can be sent from
     // an ActionResponse and therefore transition does not work, this hack allows
     // to set the navigation mode to ensure that we have a nice transition
