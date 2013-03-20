@@ -91,7 +91,7 @@ void Controller::Show(View::Mode mode, bool inhibitors)
   if (Visible() && mode == view_->mode())
     return;
 
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   WindowManager::Default().SaveInputFocus();
 
   if (nux::GetWindowThread()->IsEmbeddedWindow())

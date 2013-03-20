@@ -80,7 +80,7 @@ Controller::Controller(Controller::ViewCreator const& create_view,
   ubus.RegisterInterest(UBUS_HUD_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
 
   //!!FIXME!! - just hijacks the dash close request so we get some more requests than normal,
-  ubus.RegisterInterest(UBUS_PLACE_VIEW_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
+  ubus.RegisterInterest(UBUS_OVERLAY_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
 
   ubus.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant *data) {
     unity::glib::String overlay_identity;

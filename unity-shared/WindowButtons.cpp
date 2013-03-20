@@ -360,7 +360,7 @@ void WindowButtons::OnCloseClicked(nux::Button *button)
 
   if (win_button->overlay_mode())
   {
-    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+    ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   }
   else
   {

@@ -80,7 +80,7 @@ TEST_P(/*TestSessionController*/ShowMode, RequestsHideOverlay)
 {
   UBusManager ubus;
   bool request_hide = false;
-  ubus.RegisterInterest(UBUS_PLACE_VIEW_CLOSE_REQUEST, [&request_hide] (GVariant*) { request_hide = true; });
+  ubus.RegisterInterest(UBUS_OVERLAY_CLOSE_REQUEST, [&request_hide] (GVariant*) { request_hide = true; });
 
   controller.Show(GetParam());
   Utils::WaitUntilMSec(request_hide);
