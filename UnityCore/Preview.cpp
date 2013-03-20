@@ -75,10 +75,6 @@ Preview::Ptr Preview::PreviewForProtocolObject(glib::Object<GObject> const& prot
   {
     return std::make_shared<SocialPreview>(proto_obj);
   }
-  else if (renderer_name == "preview-series")
-  {
-    return std::make_shared<SeriesPreview>(proto_obj);
-  }
   else
   {
     LOG_WARN(logger) << "Unable to create Preview for renderer: " << renderer_name;
