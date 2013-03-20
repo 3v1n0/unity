@@ -140,7 +140,7 @@ void QuicklistMenuItem::Activate() const
   if (!IsOverlayQuicklist())
   {
     UBusManager manager;
-    manager.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+    manager.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   }
 }
 

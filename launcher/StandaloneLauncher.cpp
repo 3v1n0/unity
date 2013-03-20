@@ -18,7 +18,9 @@
  *
  */
 
-#include "Nux/Nux.h"
+#include <Nux/Nux.h>
+#include <Nux/NuxTimerTickSource.h>
+#include <NuxCore/AnimationController.h>
 #include <gtk/gtk.h>
 
 #include "unity-shared/BackgroundEffectHelper.h"
@@ -43,6 +45,7 @@ struct LauncherWindow
 {
   LauncherWindow()
     : wt(nux::CreateGUIThread("Unity Launcher", win_size.width, win_size.height, 0, &LauncherWindow::ThreadWidgetInit, this))
+    , animation_controller(tick_source)
   {}
 
   void Show()
@@ -85,6 +88,8 @@ private:
   unity::Settings settings;
   panel::Style panel_style;
   std::shared_ptr<nux::WindowThread> wt;
+  nux::NuxTimerTickSource tick_source;
+  nux::animation::AnimationController animation_controller;
   launcher::Controller::Ptr controller;
 };
 

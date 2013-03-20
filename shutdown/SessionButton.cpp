@@ -22,7 +22,7 @@
 
 #include <Nux/VLayout.h>
 #include <UnityCore/Variant.h>
-
+#include <glib/gi18n-lib.h>
 
 namespace unity
 {
@@ -38,15 +38,47 @@ namespace style
 
 NUX_IMPLEMENT_OBJECT_TYPE(Button);
 
-Button::Button(std::string const& label, std::string const& texture_name, NUX_FILE_LINE_DECL)
+Button::Button(Action action, NUX_FILE_LINE_DECL)
   : nux::View(NUX_FILE_LINE_PARAM)
   , highlighted(false)
+  , action([this] { return action_; })
   , label([this] { return label_view_->GetText(); })
+  , action_(action)
 {
   SetAcceptKeyNavFocusOnMouseDown(false);
   SetAcceptKeyNavFocusOnMouseEnter(true);
 
-  std::string texture_prefix = PKGDATADIR"/" + texture_name;
+  std::string texture_prefix = PKGDATADIR"/";
+  std::string label;
+
+  switch (action_)
+  {
+    case Action::LOCK:
+      texture_prefix += "lockscreen";
+      label = _("Lock");
+      break;
+    case Action::LOGOUT:
+      texture_prefix += "logout";
+      label = _("Log Out");
+      break;
+    case Action::SUSPEND:
+      texture_prefix += "suspend";
+      label = _("Suspend");
+      break;
+    case Action::HIBERNATE:
+      texture_prefix += "hibernate";
+      label = _("Hibernate");
+      break;
+    case Action::SHUTDOWN:
+      texture_prefix += "shutdown";
+      label = _("Shut Down");
+      break;
+    case Action::REBOOT:
+      texture_prefix += "restart";
+      label = _("Restart");
+      break;
+  }
+
   normal_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + ".png").c_str(), -1, true));
   highlight_tex_.Adopt(nux::CreateTexture2DFromFile((texture_prefix + "_highlight.png").c_str(), -1, true));
 
