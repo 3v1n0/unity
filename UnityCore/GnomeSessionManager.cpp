@@ -425,17 +425,24 @@ void GnomeManager::Logout()
         // fallback to logind
         const char* session_id = g_getenv("XDG_SESSION_ID");
 
-        if (session_id && session_id[0] != '\0')
-        {
-          impl_->CallLogindMethod("TerminateSession", g_variant_new("(s)", session_id));
-        }
-        else
-        {
+        auto call_consolekit_lambda = [this] {
           // fallback to ConsoleKit
           const char* cookie = g_getenv("XDG_SESSION_COOKIE");
 
           if (cookie && cookie[0] != '\0')
             impl_->CallConsoleKitMethod("CloseSession", g_variant_new("(s)", cookie));
+        };
+
+        if (session_id && session_id[0] != '\0')
+        {
+          impl_->CallLogindMethod("TerminateSession", g_variant_new("(s)", session_id), [call_consolekit_lambda] (GVariant*, glib::Error const& err) {
+            if (err)
+              call_consolekit_lambda();
+          });
+        }
+        else
+        {
+          call_consolekit_lambda();
         }
       }
   });

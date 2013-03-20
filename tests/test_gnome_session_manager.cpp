@@ -443,6 +443,34 @@ TEST_F(TestGnomeSessionManager, LogoutFallbackConsolekit)
 {
   // This makes the standard call to return an error.
   session_manager_->GetObjects().front()->SetMethodsCallsHandler(nullptr);
+  // disable logind
+  logind_->GetObjects().front()->SetMethodsCallsHandler(nullptr);
+
+  g_setenv("XDG_SESSION_COOKIE", "ck-session-cookie", TRUE);
+  g_setenv("XDG_SESSION_ID", "logind-id0", TRUE);
+
+  bool logout_called = false;
+
+  console_kit_->GetObjects().front()->SetMethodsCallsHandler([&] (std::string const& method, GVariant* par) -> GVariant* {
+    if (method == "CloseSession")
+    {
+      logout_called = true;
+      EXPECT_EQ(Variant(par).GetString(), "ck-session-cookie");
+    }
+
+    return nullptr;
+  });
+
+  manager->Logout();
+
+  Utils::WaitUntilMSec(logout_called);
+  EXPECT_TRUE(logout_called);
+}
+
+TEST_F(TestGnomeSessionManager, LogoutFallbackConsolekitOnNoID)
+{
+  // This makes the standard call to return an error.
+  session_manager_->GetObjects().front()->SetMethodsCallsHandler(nullptr);
   g_setenv("XDG_SESSION_COOKIE", "ck-session-cookie", TRUE);
   g_unsetenv("XDG_SESSION_ID");
 
