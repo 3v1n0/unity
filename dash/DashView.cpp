@@ -1222,7 +1222,7 @@ void DashView::OnScopeAdded(Scope::Ptr const& scope, int position)
   });
 
   if (!active_scope_view_)
-    OnScopeBarActivated(scope->id());
+    scope_bar_->Activate(scope->id);
 }
 
 void DashView::OnScopeBarActivated(std::string const& id)
@@ -1656,6 +1656,21 @@ nux::Area* DashView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::N
 nux::Geometry const& DashView::GetContentGeometry() const
 {
   return content_geo_;
+}
+
+bool DashView::SetParentObject(Area *parent)
+{
+  //This is a bit crap and should be fixed in nux.
+  //If you reparent, you need to fix up the focus tree.
+  if (View::SetParentObject(parent))
+  {
+    // Because the scopes are now created synchronously on construction, we wont be parented by the time the focus is updated.
+    InputArea* area = nux::GetWindowCompositor().GetKeyFocusArea();
+    if (area)
+      area->SetPathToKeyFocusArea();
+    return true;
+  }
+  return false;
 }
 
 }
