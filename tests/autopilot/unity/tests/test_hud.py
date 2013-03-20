@@ -22,6 +22,7 @@ from testtools.matchers import (
     LessThan,
     NotEquals,
     )
+from testtools.matchers import MismatchError
 from time import sleep
 
 from unity.emulators.icons import HudLauncherIcon
@@ -716,22 +717,36 @@ class HudVisualTests(HudTestsBase):
 
 class HudAlternativeKeybindingTests(HudTestsBase):
 
+    def alternateCheck(self, keybinding="Alt", hide=False):
+        """Nasty workaround for LP: #1157738"""
+        # So, since we have no way of making sure that after changing the unity option
+        # the change will be already 'applied' on the system, let's try the keybinding
+        # a few times before deciding that it does not work and we have a regression
+        # Seems better than a sleep(some_value_here)
+        for i in range(1, 4):
+            try:
+                self.keyboard.press_and_release(keybinding)
+                self.assertThat(self.unity.hud.visible, Eventually(Equals(True), timeout=3))
+                break
+            except MismatchError:
+                continue
+        if hide:
+            self.unity.hud.ensure_hidden()
+
     def test_super_h(self):
         """Test hud reveal on <Super>h."""
-        self.addCleanup(sleep, 2.0)
+        self.addCleanup(self.alternateCheck, hide=True)
         self.set_unity_option("show_hud", "<Super>h")
-        sleep(2.0)
         # Don't use reveal_hud, but be explicit in the keybindings.
-        self.keyboard.press_and_release("Super+h")
+        self.alternateCheck("Super+h")
         self.assertThat(self.unity.hud.visible, Eventually(Equals(True)))
 
     def test_ctrl_alt_h(self):
         """Test hud reveal on <Contrl><Alt>h."""
-        self.addCleanup(sleep, 2.0)
+        self.addCleanup(self.alternateCheck, hide=True)
         self.set_unity_option("show_hud", "<Control><Alt>h")
-        sleep(2.0)
         # Don't use reveal_hud, but be explicit in the keybindings.
-        self.keyboard.press_and_release("Ctrl+Alt+h")
+        self.alternateCheck("Ctrl+Alt+h")
         self.assertThat(self.unity.hud.visible, Eventually(Equals(True)))
 
 
