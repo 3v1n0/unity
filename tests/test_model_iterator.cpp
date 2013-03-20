@@ -22,7 +22,6 @@
 #include <gmock/gmock.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Results.h>
-#include <UnityCore/ResultIterator.h>
 
 #include <dee.h>
 

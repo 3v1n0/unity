@@ -149,17 +149,17 @@ void View::UpdateText()
       {
         // We have enough buttons to show the message without a new line.
         message = _("Hi %s, you have open files you might want to save. " \
-                    "Would you like to…");
+                    "Would you like to...");
       }
       else
       {
         message = _("Hi %s, you have open files you might want to save.\n" \
-                    "Would you like to…");
+                    "Would you like to...");
       }
     }
     else
     {
-      message = _("Goodbye %s! Would you like to…");
+      message = _("Goodbye %s! Would you like to...");
     }
   }
 
