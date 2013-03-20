@@ -88,7 +88,7 @@ void SimpleLauncherIcon::OnMouseLeave(int monitor)
 void SimpleLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   activate.emit();
-  UBusManager::SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST,
+  UBusManager::SendMessage(UBUS_OVERLAY_CLOSE_REQUEST,
                            g_variant_new_boolean(FALSE));
 }
 
