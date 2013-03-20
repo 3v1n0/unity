@@ -503,6 +503,11 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     glow_intensity = (arg.keyboard_nav_hl) ? 1.0f : 0.0f ;
   }
 
+  if (backlight_intensity > 0 && arg.draw_edge_only)
+  {
+    glow_intensity = backlight_intensity * 2.0f;
+  }
+
   // draw shadow
   if (shadow_intensity > 0)
   {
