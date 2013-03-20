@@ -9,7 +9,8 @@
 
 from __future__ import absolute_import
 
-from autopilot.emulators.X11 import Keyboard, Mouse
+
+from autopilot.emulators.input import get_keyboard, get_mouse
 from autopilot.keybindings import KeybindingsHelper
 from testtools.matchers import GreaterThan
 
@@ -22,6 +23,11 @@ logger = logging.getLogger(__name__)
 
 class DashController(UnityIntrospectionObject, KeybindingsHelper):
     """The main dash controller object."""
+
+    def __init__(self, *args, **kwargs):
+        super(DashController, self).__init__(*args, **kwargs)
+        self.keyboard = get_keyboard()
+        self.mouse = get_mouse()
 
     def get_dash_view(self):
         """Get the dash view that's attached to this controller."""
@@ -89,38 +95,38 @@ class DashController(UnityIntrospectionObject, KeybindingsHelper):
         Assumes dash is already visible, and search bar has keyboard focus.
 
         """
-        self._keyboard.press_and_release("Ctrl+a")
-        self._keyboard.press_and_release("Delete")
+        self.keyboard.press_and_release("Ctrl+a")
+        self.keyboard.press_and_release("Delete")
         self.search_string.wait_for("")
 
     def reveal_application_scope(self, clear_search=True):
         """Reveal the application scope."""
         logger.debug("Revealing application scope with Super+a.")
-        self._reveal_scope("scope_reveal/apps", clear_search)
+        self._reveal_scope("lens_reveal/apps", clear_search)
         return self.view.get_scopeview_by_name("applications.scope")
 
     def reveal_music_scope(self, clear_search=True):
         """Reveal the music scope."""
         logger.debug("Revealing music scope with Super+m.")
-        self._reveal_scope("scope_reveal/music", clear_search)
+        self._reveal_scope("lens_reveal/music", clear_search)
         return self.view.get_scopeview_by_name("music.scope")
 
     def reveal_file_scope(self, clear_search=True):
         """Reveal the file scope."""
         logger.debug("Revealing file scope with Super+f.")
-        self._reveal_scope("scope_reveal/files", clear_search)
+        self._reveal_scope("lens_reveal/files", clear_search)
         return self.view.get_scopeview_by_name("files.scope")
 
     def reveal_video_scope(self, clear_search=True):
         """Reveal the video scope"""
         logger.debug("Revealing video scope with Super+v.")
-        self._reveal_scope("scope_reveal/video", clear_search)
+        self._reveal_scope("lens_reveal/video", clear_search)
         return self.view.get_scopeview_by_name("video.scope")
 
     def reveal_command_scope(self, clear_search=True):
         """Reveal the 'run command' scope."""
         logger.debug("Revealing command scope with Alt+F2.")
-        self._reveal_scope("scope_reveal/command", clear_search)
+        self._reveal_scope("lens_reveal/command", clear_search)
         return self.view.get_scopeview_by_name("commands.scope")
 
     def _reveal_scope(self, binding_name, clear_search):
@@ -244,31 +250,36 @@ class ResultView(UnityIntrospectionObject):
 class Result(UnityIntrospectionObject):
     """A single result in the dash."""
 
+    def __init__(self, *args, **kwargs):
+        super(Result, self).__init__(*args, **kwargs)
+        self.mouse = get_mouse()
+        self.keyboard = get_keyboard()
+
     def activate(self):
         tx = self.x + (self.width / 2)
         ty = self.y + (self.height / 2)
-        m = Mouse()
-        m.move(tx, ty)
-        m.click(1)
+        self.mouse.move(tx, ty)
+        self.mouse.click(1)
 
     def preview(self):
         tx = self.x + (self.width / 2)
         ty = self.y + (self.height / 2)
-        m = Mouse()
-        m.move(tx, ty)
-        m.click(3)
+        self.mouse.move(tx, ty)
+        self.mouse.click(3)
 
     def preview_key(self):
         tx = self.x + (self.width / 2)
         ty = self.y + (self.height / 2)
-        m = Mouse()
-        m.move(tx, ty)
+        self.mouse.move(tx, ty)
 
-        k = Keyboard()
-        k.press_and_release('Menu')
+        self.keyboard.press_and_release('Menu')
 
 class FilterBar(UnityIntrospectionObject):
     """A filterbar, as shown inside a scope."""
+
+    def __init__(self, *args, **kwargs):
+        super(FilterBar, self).__init__(*args, **kwargs)
+        self.mouse = get_mouse()
 
     def get_num_filters(self):
         """Get the number of filters in this filter bar."""
@@ -296,9 +307,8 @@ class FilterBar(UnityIntrospectionObject):
             searchbar = self._get_searchbar()
             tx = searchbar.filter_label_x + (searchbar.filter_label_width / 2)
             ty = searchbar.filter_label_y + (searchbar.filter_label_height / 2)
-            m = Mouse()
-            m.move(tx, ty)
-            m.click()
+            self.mouse.move(tx, ty)
+            self.mouse.click()
             self.expanded.wait_for(True)
 
     def ensure_collapsed(self):
@@ -307,9 +317,8 @@ class FilterBar(UnityIntrospectionObject):
             searchbar = self._get_searchbar()
             tx = searchbar.filter_label_x + (searchbar.filter_label_width / 2)
             ty = searchbar.filter_label_y + (searchbar.filter_label_height / 2)
-            m = Mouse()
-            m.move(tx, ty)
-            m.click()
+            self.mouse.move(tx, ty)
+            self.mouse.click()
             self.expanded.wait_for(False)
 
     def _get_searchbar(self):
@@ -327,14 +336,17 @@ class FilterBar(UnityIntrospectionObject):
 class FilterExpanderLabel(UnityIntrospectionObject):
     """A label that expands into a filter within a filter bar."""
 
+    def __init__(self, *args, **kwargs):
+        super(FilterExpanderLabel, self).__init__(*args, **kwargs)
+        self.mouse = get_mouse()
+
     def ensure_expanded(self):
         """Expand the filter expander label, if it's not already"""
         if not self.expanded:
             tx = self.x + self.width / 2
             ty = self.y + self.height / 2
-            m = Mouse()
-            m.move(tx, ty)
-            m.click()
+            self.mouse.move(tx, ty)
+            self.mouse.click()
             self.expanded.wait_for(True)
 
     def ensure_collapsed(self):
@@ -342,9 +354,8 @@ class FilterExpanderLabel(UnityIntrospectionObject):
         if self.expanded:
             tx = self.x + self.width / 2
             ty = self.y + self.height / 2
-            m = Mouse()
-            m.move(tx, ty)
-            m.click()
+            self.mouse.move(tx, ty)
+            self.mouse.click()
             self.expanded.wait_for(False)
 
 
@@ -378,9 +389,8 @@ class Preview(UnityIntrospectionObject):
         if action:
             tx = action.x + (searchbar.width / 2)
             ty = action.y + (searchbar.height / 2)
-            m = Mouse()
-            m.move(tx, ty)
-            m.click()
+            self.mouse.move(tx, ty)
+            self.mouse.click()
 
     @property
     def cover_art(self):
@@ -428,6 +438,10 @@ class PreviewContent(UnityIntrospectionObject):
 class PreviewContainer(UnityIntrospectionObject):
     """A container view for the main dash preview widget."""
 
+    def __init__(self, *args, **kwargs):
+        super(PreviewContainer, self).__init__(*args, **kwargs)
+        self.mouse = get_mouse()
+
     @property
     def content(self):
         return self.get_content()
@@ -463,14 +477,13 @@ class PreviewContainer(UnityIntrospectionObject):
 
         tx = navigator.button_x + (navigator.button_width / 2)
         ty = navigator.button_y + (navigator.button_height / 2)
-        m = Mouse()
-        m.move(tx, ty)
+        self.mouse.move(tx, ty)
 
         old_preview_initiate_count = self.preview_initiate_count
 
         for i in range(count):
             self.navigate_left_enabled.wait_for(True)
-            m.click()
+            self.mouse.click()
             self.preview_initiate_count.wait_for(GreaterThan(old_preview_initiate_count))
             old_preview_initiate_count = self.preview_initiate_count
 
@@ -480,14 +493,13 @@ class PreviewContainer(UnityIntrospectionObject):
 
         tx = navigator.button_x + (navigator.button_width / 2)
         ty = navigator.button_y + (navigator.button_height / 2)
-        m = Mouse()
-        m.move(tx, ty)
+        self.mouse.move(tx, ty)
 
         old_preview_initiate_count = self.preview_initiate_count
 
         for i in range(count):
             self.navigate_right_enabled.wait_for(True)
-            m.click()
+            self.mouse.click()
             self.preview_initiate_count.wait_for(GreaterThan(old_preview_initiate_count))
             old_preview_initiate_count = self.preview_initiate_count
 
