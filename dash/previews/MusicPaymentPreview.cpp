@@ -375,12 +375,14 @@ nux::Layout* MusicPaymentPreview::GetFooter()
           nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
 
   buttons_data_layout->AddSpace(20, 1);
-  buttons_data_layout->AddView(buttons_map_[MusicPaymentPreview::CANCEL_PURCHASE_ACTION].GetPointer(),
-          1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
-          nux::NUX_LAYOUT_END);
-  buttons_data_layout->AddView(buttons_map_[MusicPaymentPreview::PURCHASE_ALBUM_ACTION].GetPointer(),
-          1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
-          nux::NUX_LAYOUT_END);
+  if(buttons_map_[MusicPaymentPreview::CANCEL_PURCHASE_ACTION].GetPointer())
+    buttons_data_layout->AddView(buttons_map_[MusicPaymentPreview::CANCEL_PURCHASE_ACTION].GetPointer(),
+            1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
+            nux::NUX_LAYOUT_END);
+  if(buttons_map_[MusicPaymentPreview::PURCHASE_ALBUM_ACTION].GetPointer())
+    buttons_data_layout->AddView(buttons_map_[MusicPaymentPreview::PURCHASE_ALBUM_ACTION].GetPointer(),
+            1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
+            nux::NUX_LAYOUT_END);
 
   return buttons_data_layout;
 }
@@ -433,19 +435,15 @@ void MusicPaymentPreview::SetupViews()
 
   dash::Preview::InfoHintPtrList hints = preview_model_->GetInfoHints();
   GVariant *preview_data = NULL;
-  dash::Preview::InfoHintPtr data_info_hint_ = NULL;
-  if (!hints.empty())
+  for (dash::Preview::InfoHintPtr info_hint : hints)
   {
-    for (dash::Preview::InfoHintPtr info_hint : hints)
+    if (info_hint->id == MusicPaymentPreview::DATA_INFOHINT_ID)
     {
-      if (info_hint->id == MusicPaymentPreview::DATA_INFOHINT_ID)
-      {
-        preview_data = info_hint->value;
-      }
-      if (preview_data != NULL)
-      {
-        error_message_ = GetErrorMessage(preview_data);
-      }
+      preview_data = info_hint->value;
+    }
+    if (preview_data != NULL)
+    {
+      error_message_ = GetErrorMessage(preview_data);
     }
   }
 

@@ -19,7 +19,6 @@
 
 #include <list>
 #include <gmock/gmock.h>
-using namespace testing;
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
@@ -33,6 +32,8 @@ using namespace testing;
 #include <unity-protocol.h>
 #include "dash/previews/MusicPaymentPreview.h"
 #include "test_utils.h"
+
+using namespace testing;
 
 namespace unity
 {

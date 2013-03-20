@@ -18,8 +18,6 @@
  */
 #include <list>
 #include <gmock/gmock.h>
-using namespace testing;
-using ::testing::Return;
 
 #include <Nux/Nux.h>
 #include <Nux/Layout.h>
@@ -37,6 +35,9 @@ using ::testing::Return;
 #include "dash/previews/ActionButton.h"
 #include "dash/previews/ActionLink.h"
 #include "test_utils.h"
+
+using namespace testing;
+using ::testing::Return;
 
 namespace unity
 {

@@ -221,5 +221,3 @@ int main(int argc, char **argv)
   delete wt;
   return 0;
 }
-
-
