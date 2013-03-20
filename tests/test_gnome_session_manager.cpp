@@ -331,26 +331,12 @@ TEST_F(TestGnomeSessionManager, CanShutdown)
   EXPECT_EQ(manager->CanShutdown(), can_shutdown_);
 }
 
-TEST_F(TestGnomeSessionManager, CanHibernateUPower)
-{
-  // disable logind
-  logind_->GetObjects().front()->SetMethodsCallsHandler(nullptr);
-  EXPECT_EQ(manager->CanHibernate(), can_hibernate_);
-}
-
-TEST_F(TestGnomeSessionManager, CanHibernateLogind)
+TEST_F(TestGnomeSessionManager, CanHibernate)
 {
   EXPECT_EQ(manager->CanHibernate(), can_hibernate_);
 }
 
-TEST_F(TestGnomeSessionManager, CanSuspendUPower)
-{
-  // disable logind
-  logind_->GetObjects().front()->SetMethodsCallsHandler(nullptr);
-  EXPECT_EQ(manager->CanSuspend(), can_suspend_);
-}
-
-TEST_F(TestGnomeSessionManager, CanSuspendLogind)
+TEST_F(TestGnomeSessionManager, CanSuspend)
 {
   EXPECT_EQ(manager->CanSuspend(), can_suspend_);
 }
