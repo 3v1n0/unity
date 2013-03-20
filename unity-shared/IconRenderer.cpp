@@ -442,6 +442,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   float backlight_intensity = arg.backlight_intensity;
   float glow_intensity = arg.glow_intensity;
   float shadow_intensity = 0.6f;
+  const float edge_illumination_multiplier = 2.0f;
 
   BaseTexturePtr background = textures_->icon_background[size];
   BaseTexturePtr const& edge = textures_->icon_edge[size];
@@ -505,7 +506,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
 
   if (backlight_intensity > 0 && arg.draw_edge_only)
   {
-    glow_intensity = backlight_intensity * 2.0f;
+    glow_intensity = glow_intensity + backlight_intensity * edge_illumination_multiplier;
   }
 
   // draw shadow
