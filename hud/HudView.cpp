@@ -121,7 +121,7 @@ View::View()
 
   mouse_down.connect(sigc::mem_fun(this, &View::OnMouseButtonDown));
 
-  Relayout();
+  QueueDraw();
 }
 
 View::~View()
@@ -192,20 +192,10 @@ void View::ResetToDefault()
   SetQueries(Hud::Queries());
   current_height_ = content_layout_->GetBaseHeight();;
 
+  UpdateLayoutGeometry();
+
   search_bar_->search_string = "";
   search_bar_->search_hint = _("Type your command");
-}
-
-void View::Relayout()
-{
-  nux::Geometry const& geo = GetGeometry();
-  content_geo_ = GetBestFitGeometry(geo);
-  LOG_DEBUG(logger) << "content_geo: " << content_geo_.width << "x" << content_geo_.height;
-
-  layout_->SetMinimumWidth(content_geo_.width);
-  layout_->SetMaximumSize(content_geo_.width, content_geo_.height);
-
-  QueueDraw();
 }
 
 nux::View* View::default_focus() const
@@ -328,7 +318,8 @@ void View::ShowEmbeddedIcon(bool show)
     RemoveChild(icon_.GetPointer());
   }
 
-  Relayout();
+  UpdateLayoutGeometry();
+  QueueDraw();
 }
 
 // Gives us the width and height of the contents that will give us the best "fit",
@@ -409,12 +400,22 @@ void View::SetupViews()
       }
     });
 
+    UpdateLayoutGeometry();
 
     layout_->AddLayout(content_layout_.GetPointer(), 1, nux::MINOR_POSITION_START);
   }
 
   super_layout->AddLayout(layout_.GetPointer(), 0);
   SetLayout(super_layout);
+}
+
+void View::UpdateLayoutGeometry()
+{
+  nux::Geometry const& geo = GetGeometry();
+  content_geo_ = GetBestFitGeometry(geo);
+
+  layout_->SetMinimumWidth(content_geo_.width);
+  layout_->SetMaximumSize(content_geo_.width, content_geo_.height);
 }
 
 void View::OnSearchChanged(std::string const& search_string)
