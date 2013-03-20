@@ -599,9 +599,9 @@ void ScopeProxy::Impl::OnScopeConnectedChanged(UnityProtocolScopeProxy* proxy, G
   bool tmp_scope_proxy_connected = unity_protocol_scope_proxy_get_connected(scope_proxy_);  
   if (tmp_scope_proxy_connected != scope_proxy_connected_)
   {
-    scope_proxy_connected_ = tmp_scope_proxy_connected;
-
     LOG_WARN(logger) << "Connection state changed for " << scope_data_->id() << " => " << (scope_proxy_connected_ ? "connected" : "disconnected");
+
+    scope_proxy_connected_ = tmp_scope_proxy_connected;
 
     CloseChannel();
     if (tmp_scope_proxy_connected)
@@ -629,6 +629,8 @@ void ScopeProxy::Impl::OnScopeViewTypeChanged(UnityProtocolScopeProxy* proxy, GP
 void ScopeProxy::Impl::OnScopeFiltersChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param)
 {
   LOG_DEBUG(logger) << scope_data_->id() << " (" << channel() << ") - Filter changed by server";
+  
+  // Block the filter change signal so that changes do not cause another search.
   bool blocked = filters_change_connection.block(true);
 
   glib::Object<DeeModel> filters_dee_model(DEE_MODEL(unity_protocol_scope_proxy_get_filters_model(scope_proxy_)), glib::AddRef());
@@ -680,7 +682,12 @@ void ScopeProxy::Impl::OnScopeFilterSettingsChanged(UnityProtocolScopeProxy* sen
 
   LOG_DEBUG(logger) << scope_data_->id() << " (" << channel() << ") - Filter settings changed";
 
+  // Block the filter change signal so that changes do not cause another search.
+  bool blocked = filters_change_connection.block(true);
+
   filters_->ApplyStateChanges(filter_rows);
+
+  filters_change_connection.block(blocked);
 }
 
 static void category_filter_map_func (DeeModel* orig_model,
