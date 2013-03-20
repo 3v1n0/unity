@@ -175,6 +175,9 @@ LRP temp, factor.x, color, desat;                             \n\
 MUL result.color.rgb, temp, colorify_color;                   \n\
 MOV result.color.a, color;                                    \n\
 END");
+
+const float edge_illumination_multiplier = 2.0f;
+const float glow_multiplier = 3.0f;
 } // anonymous namespace
 
 // The local namespace is purely for namespacing the file local variables below.
@@ -440,9 +443,8 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   nux::Color edge_tile_colorify = nux::color::White;
   bool colorify_background = arg.colorify_background;
   float backlight_intensity = arg.backlight_intensity;
-  float glow_intensity = arg.glow_intensity * 3.0f;
+  float glow_intensity = arg.glow_intensity * glow_multiplier;
   float shadow_intensity = 0.6f;
-  const float edge_illumination_multiplier = 2.0f;
 
   BaseTexturePtr background = textures_->icon_background[size];
   BaseTexturePtr const& edge = textures_->icon_edge[size];
