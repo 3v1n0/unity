@@ -47,7 +47,6 @@ namespace
 TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
   : SimpleLauncherIcon(IconType::TRASH)
   , file_manager_(fmo ? fmo : std::make_shared<GnomeFileManager>())
-  , cancellable_(g_cancellable_new())
 {
   tooltip_text = _("Trash");
   icon_name = "user-trash";
@@ -75,11 +74,6 @@ TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
   }
 
   UpdateTrashIcon();
-}
-
-TrashLauncherIcon::~TrashLauncherIcon()
-{
-  g_cancellable_cancel(cancellable_);
 }
 
 AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()

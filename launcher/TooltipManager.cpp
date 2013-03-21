@@ -41,19 +41,29 @@ void TooltipManager::MouseMoved(AbstractLauncherIcon::Ptr const& icon_under_mous
   StopTimer();
   if (icon_)
     icon_->HideTooltip();
-  
+
   icon_ = icon_under_mouse;
 
-  if (icon_ && !skip_timeout_)
+  if (!icon_)
+    return;
+
+  AbstractLauncherIcon::IconType type = icon_->GetIconType();
+  if ((type == AbstractLauncherIcon::IconType::HOME || type == AbstractLauncherIcon::IconType::HUD) &&
+      icon_->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
+  {
+    Reset();
+    return;
+  }
+  
+  if (!skip_timeout_)
     ResetTimer(icon_);
-  else if (icon_ && skip_timeout_)
+  else if (skip_timeout_)
     icon_->ShowTooltip();
 }
 
 void TooltipManager::IconClicked()
 {
-  if (icon_)
-    icon_->HideTooltip();
+  Reset();
 }
 
 void TooltipManager::SetHover(bool hovered)

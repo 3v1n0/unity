@@ -23,8 +23,10 @@
 
 #include <iosfwd>
 #include <string>
+#include <memory>
 
 #include <boost/utility.hpp>
+#include <gio/gio.h>
 #include <glib.h>
 #include <glib-object.h>
 
@@ -124,6 +126,35 @@ public:
 private:
   gchar* string_;
 };
+
+class Cancellable : boost::noncopyable
+{
+public:
+  typedef std::shared_ptr<Cancellable> Ptr;
+
+  Cancellable();
+  ~Cancellable();
+
+  operator GCancellable*();
+  operator Object<GCancellable>();
+
+  Object<GCancellable> Get() const;
+  bool IsCancelled() const;
+  bool IsCancelled(glib::Error &error) const;
+  void Cancel();
+  void Reset();
+  void Renew();
+
+private:
+  Object<GCancellable> cancellable_;
+};
+
+bool operator==(Cancellable const& lhs, Cancellable const& rhs);
+bool operator!=(Cancellable const& lhs, Cancellable const& rhs);
+bool operator==(GCancellable* lhs, Cancellable const& rhs);
+bool operator!=(GCancellable* lhs, Cancellable const& rhs);
+bool operator==(Object<GCancellable> const& lhs, Cancellable const& rhs);
+bool operator!=(Object<GCancellable> const& lhs, Cancellable const& rhs);
 
 std::ostream& operator<<(std::ostream& o, Error const& e);
 std::ostream& operator<<(std::ostream& o, String const& s);
