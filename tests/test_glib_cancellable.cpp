@@ -84,4 +84,37 @@ TEST(TestGLibCancellable, OperatorGCancellable)
   EXPECT_EQ(g_cancellable_is_cancelled(cancellable), cancellable.IsCancelled());
 }
 
+TEST(TestGLibCancellable, CopyConstructor)
+{
+  Cancellable cancellable1;
+  auto obj1 = cancellable1.Get();
+
+  Cancellable cancellable2(cancellable1);
+  auto obj2 = cancellable2.Get();
+
+  Cancellable cancellable3 = cancellable2;
+  auto obj3 = cancellable2.Get();
+
+  EXPECT_EQ(obj1, obj2);
+  EXPECT_EQ(obj1, obj3);
+}
+
+TEST(TestGLibCancellable, Assignment)
+{
+  Cancellable cancellable1;
+  auto obj1 = cancellable1.Get();
+
+  Cancellable cancellable2;
+  auto tmp_obj = cancellable2.Get();
+
+  cancellable2 = cancellable1;
+  auto obj2 = cancellable2.Get();
+
+  EXPECT_TRUE(g_cancellable_is_cancelled(tmp_obj));
+  ASSERT_EQ(obj1, obj2);
+
+  cancellable2 = cancellable1;
+  EXPECT_FALSE(obj1.IsCancelled());
+}
+
 } // Namespace
