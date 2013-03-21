@@ -105,6 +105,8 @@ if (GTEST_SRC_DIR AND
        logger_helper.cpp
        test_im_text_entry_slow.cpp
        test_im_text_entry_class.cpp
+       test_switcher_controller_slow.cpp
+       test_switcher_controller_class.cpp
        test_tooltip_manager.cpp
       )
 
@@ -112,7 +114,9 @@ if (GTEST_SRC_DIR AND
        gtest
        gmock
        launcher-lib
+       switcher-lib
        unity-shared
+       unity-shared-standalone
       )
 
   add_executable(test-gtest-slow ${GTEST_SLOW_SOURCES})
@@ -279,6 +283,7 @@ if (ENABLE_X_SUPPORT)
                  test_software_center_launcher_icon.cpp
                  test_static_cairo_text.cpp
                  test_switcher_controller.cpp
+                 test_switcher_controller_class.cpp
                  test_switcher_model.cpp
                  test_switcher_view.cpp
                  test_tabiterator.cpp
