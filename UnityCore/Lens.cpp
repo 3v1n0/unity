@@ -56,8 +56,6 @@ public:
        string const& shortcut,
        ModelType model_type);
 
-  ~Impl();
-
   void OnProxyConnectionChanged();
   void OnProxyDisconnected();
 
@@ -140,10 +138,10 @@ public:
   string last_search_string_;
   string last_global_search_string_;
 
-  glib::DBusProxy* proxy_;
-  glib::Object<GCancellable> search_cancellable_;
-  glib::Object<GCancellable> global_search_cancellable_;
-  glib::Object<GCancellable> preview_cancellable_;
+  glib::DBusProxy::Ptr proxy_;
+  glib::Cancellable search_cancellable_;
+  glib::Cancellable global_search_cancellable_;
+  glib::Cancellable preview_cancellable_;
 
   glib::Variant results_variant_;
   glib::Variant global_results_variant_;
@@ -177,11 +175,10 @@ Lens::Impl::Impl(Lens* owner,
   , filters_(new Filters(model_type))
   , connected_(false)
   , provides_personal_content_(false)
-  , proxy_(NULL)
 {
   if (model_type == ModelType::REMOTE)
   {
-    proxy_ = new glib::DBusProxy(dbus_name, dbus_path, "com.canonical.Unity.Lens");
+    proxy_ = std::make_shared<glib::DBusProxy>(dbus_name, dbus_path, "com.canonical.Unity.Lens");
     proxy_->connected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyConnectionChanged));
     proxy_->disconnected.connect(sigc::mem_fun(this, &Lens::Impl::OnProxyDisconnected));
     proxy_->Connect("Changed", sigc::mem_fun(this, &Lens::Impl::OnChanged));
@@ -207,21 +204,6 @@ Lens::Impl::Impl(Lens* owner,
   owner_->last_search_string.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::last_search_string));
   owner_->last_global_search_string.SetGetterFunction(sigc::mem_fun(this, &Lens::Impl::last_global_search_string));
   owner_->view_type.changed.connect(sigc::mem_fun(this, &Lens::Impl::OnViewTypeChanged));
-}
-
-Lens::Impl::~Impl()
-{
-  if (search_cancellable_)
-  {
-    g_cancellable_cancel (search_cancellable_);
-  }
-  if (global_search_cancellable_)
-  {
-    g_cancellable_cancel (global_search_cancellable_);
-  }
-
-  if (proxy_)
-    delete proxy_;
 }
 
 void Lens::Impl::OnProxyConnectionChanged()
@@ -457,9 +439,7 @@ void Lens::Impl::GlobalSearch(std::string const& search_string,
   GVariantBuilder b;
   g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
 
-  if (global_search_cancellable_)
-    g_cancellable_cancel (global_search_cancellable_);
-  global_search_cancellable_ = g_cancellable_new ();
+  global_search_cancellable_.Renew();
 
   last_global_search_string_ = search_string;
 
@@ -490,8 +470,7 @@ void Lens::Impl::Search(std::string const& search_string,
   GVariantBuilder b;
   g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
 
-  if (search_cancellable_) g_cancellable_cancel (search_cancellable_);
-  search_cancellable_ = g_cancellable_new ();
+  search_cancellable_.Renew();
 
   last_search_string_ = search_string;
 
@@ -571,11 +550,7 @@ void Lens::Impl::Preview(std::string const& uri)
       return;
     }
 
-  if (preview_cancellable_)
-  {
-    g_cancellable_cancel(preview_cancellable_);
-  }
-  preview_cancellable_ = g_cancellable_new ();
+  preview_cancellable_.Renew();
 
   proxy_->Call("Activate",
                g_variant_new("(su)", uri.c_str(),
