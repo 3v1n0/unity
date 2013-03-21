@@ -53,7 +53,7 @@ public:
   sigc::signal<void, std::string> error;
 
 private:
-  glib::Object<GCancellable> cancel_;
+  glib::Cancellable cancel_;
 };
 
 
