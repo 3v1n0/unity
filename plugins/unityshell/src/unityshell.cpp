@@ -425,7 +425,6 @@ UnityScreen::~UnityScreen()
   notify_uninit();
 
   unity_a11y_finalize();
-  ::unity::ui::IconRenderer::DestroyTextures();
   QuicklistManager::Destroy();
 
   reset_glib_logging();
@@ -1718,7 +1717,7 @@ void UnityScreen::handleCompizEvent(const char* plugin,
 
   if (launcher_controller_->IsOverlayOpen() && g_strcmp0(event, "start_viewport_switch") == 0)
   {
-    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+    ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   }
 
   if (adapter.IsScaleActive() && g_strcmp0(plugin, "scale") == 0 &&

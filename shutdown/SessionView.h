@@ -50,6 +50,7 @@ public:
 
   nux::Property<Mode> mode;
   nux::Property<bool> have_inhibitors;
+  nux::ROProperty<nux::InputArea*> key_focus_area;
 
   sigc::signal<void> request_hide;
 
@@ -76,6 +77,7 @@ private:
   StaticCairoText* title_;
   StaticCairoText* subtitle_;
   nux::HLayout* buttons_layout_;
+  nux::InputArea* key_focus_area_;
 };
 
 } // namespace session

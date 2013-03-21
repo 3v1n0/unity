@@ -533,4 +533,13 @@ TEST_F(TestVolumeLauncherIcon, Unstick)
   EXPECT_TRUE(forgot);
 }
 
+TEST_F(TestVolumeLauncherIcon, Activate)
+{
+  CreateIcon();
+
+  unsigned long long time = g_random_int();
+  EXPECT_CALL(*volume_, MountAndOpenInFileManager(time));
+  icon_->Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
+}
+
 }

@@ -99,6 +99,31 @@ if (GTEST_SRC_DIR AND
                  test_service_panel.cpp)
   target_link_libraries(test-gtest-service unity-shared ${LIBS})
 
+# gtest-slow, start moving things over that are slow running tests
+  set (GTEST_SLOW_SOURCES
+       test_main.cpp
+       logger_helper.cpp
+       test_im_text_entry_slow.cpp
+       test_im_text_entry_class.cpp
+       test_switcher_controller_slow.cpp
+       test_switcher_controller_class.cpp
+       test_tooltip_manager.cpp
+      )
+
+  set (GTEST_SLOW_LIBS
+       gtest
+       gmock
+       launcher-lib
+       switcher-lib
+       unity-shared
+       unity-shared-standalone
+      )
+
+  add_executable(test-gtest-slow ${GTEST_SLOW_SOURCES})
+
+  target_link_libraries(test-gtest-slow ${GTEST_SLOW_LIBS})
+
+  add_test(UnityGTestSlow test-gtest-slow)
 
 # The actual test executable (xless) - do not put anything that requires X in here
   set (GTEST_XLESS_SOURCES
@@ -218,6 +243,7 @@ if (ENABLE_X_SUPPORT)
                  test_hud_view.cpp
                  test_icon_loader.cpp
                  test_im_text_entry.cpp
+                 test_im_text_entry_class.cpp
                  test_launcher.cpp
                  test_launcher_controller.cpp
                  test_launcher_drag_window.cpp
@@ -257,13 +283,13 @@ if (ENABLE_X_SUPPORT)
                  test_software_center_launcher_icon.cpp
                  test_static_cairo_text.cpp
                  test_switcher_controller.cpp
+                 test_switcher_controller_class.cpp
                  test_switcher_model.cpp
                  test_switcher_view.cpp
                  test_tabiterator.cpp
                  test_texture_cache.cpp
                  test_text_input.cpp
                  test_thumbnail_generator.cpp
-                 test_tooltip_manager.cpp
                  test_trash_launcher_icon.cpp
                  test_unity_settings.cpp
                  test_unity_window_style.cpp
@@ -322,6 +348,7 @@ if (ENABLE_X_SUPPORT)
   set (GTEST_TEST_COMMAND_GESTURES ./test-gestures/test-gestures)
 endif (ENABLE_X_SUPPORT)
 set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless)
+set (GTEST_TEST_COMMAND_SLOW ./test-gtest-slow)
 set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --task ./test-gtest-service --task ./test-gtest-dbus)
 
 set (TEST_COMMAND
@@ -330,6 +357,7 @@ set (TEST_COMMAND
   && ${GTEST_TEST_COMMAND_XLESS} --gtest_output=xml:./
   && ${GTEST_TEST_COMMAND_GESTURES} --gtest_output=xml:./
   && ${GTEST_TEST_COMMAND_DBUS} --gtest_output=xml:./
+  && ${GTEST_TEST_COMMAND_SLOW} --gtest_output=xml:./
     )
 
 set (TEST_COMMAND_HEADLESS
@@ -340,7 +368,7 @@ set (TEST_COMMAND_HEADLESS
 
 if (GTEST_SRC_DIR)
   if (ENABLE_X_SUPPORT)
-    add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless test-gtest-dbus test-gestures)
+    add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-slow test-gtest-xless test-gtest-dbus test-gestures)
     add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus test-gestures)
     add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)
   else ()

@@ -49,7 +49,6 @@ public:
 
   void ResetToDefault();
 
-  void Relayout();
   nux::View* default_focus() const;
   std::list<HudButton::Ptr> const& buttons() const;
 
@@ -83,7 +82,9 @@ private:
   bool InspectKeyEvent(unsigned int eventType, unsigned int key_sym, const char* character);
   void OnSearchbarActivated();
   bool AcceptKeyNavFocus();
+
   nux::Geometry GetBestFitGeometry(nux::Geometry const& for_geo);
+  void UpdateLayoutGeometry();
 
   void ProcessGrowShrink();
 

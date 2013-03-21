@@ -419,6 +419,27 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         pin_item = quicklist.get_quicklist_item_by_text('Unlock from Launcher')
         quicklist.click_item(pin_item)
 
+    def autoscroll_to_icon(self, icon, autoscroll_offset=0):
+        """Moves the mouse to the autoscroll zone to scroll the Launcher to the icon
+           in question.
+
+           autoscroll_offet is the offset, in number of pixels, from the end of the
+           autoscroll zone where is the autoscroll zone is currently 24 pixels high.
+        """
+        (x, y, w, h) = self.geometry
+
+        while 1:
+            mouse_x = target_x = icon.center_x + self.x
+            mouse_y = target_y = icon.center_y
+            if target_y > h:
+                mouse_y = h + y - autoscroll_offset
+            elif target_y < 0:
+                mouse_y = y + autoscroll_offset
+            if self._mouse.x == target_x and self._mouse.y == target_y:
+                break
+            self._mouse.move(mouse_x, mouse_y)
+            sleep(0.5)
+
     @property
     def geometry(self):
         """Returns a tuple of (x,y,w,h) for the current launcher."""
@@ -473,7 +494,7 @@ class LauncherModel(UnityIntrospectionObject):
         looking for an icon. For example, to find an icon with a particular
         desktop_id, one might do this from within a test:
 
-        >>> self.launcher.model.get_icon(desktop_id="gnome-calculator.desktop")
+        >>> self.launcher.model.get_icon(desktop_id="gcalctool.desktop")
 
         This method returns only one icon. It is the callers responsibility to
         ensure that the filter matches only one icon.

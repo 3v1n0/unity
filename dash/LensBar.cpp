@@ -144,7 +144,7 @@ void LensBar::DoOpenLegalise()
 
   g_creat(legal_seen_file_path_.c_str(), S_IRWXU);
 
-  ubus_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  ubus_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
 }
 
 void LensBar::AddLens(Lens::Ptr& lens)
