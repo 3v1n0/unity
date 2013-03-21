@@ -70,8 +70,23 @@ TEST(TestGLibCancellable, Reset)
   cancellable.Cancel();
   ASSERT_TRUE(cancellable.IsCancelled());
 
+  auto obj = cancellable.Get();
   cancellable.Reset();
   EXPECT_FALSE(cancellable.IsCancelled());
+  EXPECT_EQ(obj, cancellable.Get());
+}
+
+TEST(TestGLibCancellable, Renew)
+{
+  Cancellable cancellable;
+
+  cancellable.Cancel();
+  ASSERT_TRUE(cancellable.IsCancelled());
+
+  auto obj = cancellable.Get();
+  cancellable.Renew();
+  EXPECT_FALSE(cancellable.IsCancelled());
+  EXPECT_NE(obj, cancellable.Get());
 }
 
 TEST(TestGLibCancellable, OperatorGCancellable)
@@ -84,47 +99,12 @@ TEST(TestGLibCancellable, OperatorGCancellable)
   EXPECT_EQ(g_cancellable_is_cancelled(cancellable), cancellable.IsCancelled());
 }
 
-TEST(TestGLibCancellable, CopyConstructor)
-{
-  Cancellable cancellable1;
-  auto obj1 = cancellable1.Get();
-
-  Cancellable cancellable2(cancellable1);
-  auto obj2 = cancellable2.Get();
-
-  Cancellable cancellable3 = cancellable2;
-  auto obj3 = cancellable2.Get();
-
-  EXPECT_EQ(obj1, obj2);
-  EXPECT_EQ(obj1, obj3);
-}
-
-TEST(TestGLibCancellable, Assignment)
-{
-  Cancellable cancellable1;
-  auto obj1 = cancellable1.Get();
-
-  Cancellable cancellable2;
-  auto tmp_obj = cancellable2.Get();
-
-  cancellable2 = cancellable1;
-  auto obj2 = cancellable2.Get();
-
-  EXPECT_TRUE(g_cancellable_is_cancelled(tmp_obj));
-  ASSERT_EQ(obj1, obj2);
-
-  cancellable2 = cancellable1;
-  EXPECT_FALSE(g_cancellable_is_cancelled(obj1));
-}
-
 TEST(TestGLibCancellable, Equality)
 {
-  Cancellable cancellable1;
-  Cancellable cancellable2 = cancellable1;
+  Cancellable cancellable;
 
-  ASSERT_EQ(cancellable1, cancellable2);
-  ASSERT_EQ(cancellable1.Get(), cancellable2);
-  ASSERT_EQ(cancellable1.Get().RawPtr(), cancellable2);
+  ASSERT_EQ(cancellable.Get(), cancellable);
+  ASSERT_EQ(cancellable.Get().RawPtr(), cancellable);
 }
 
 TEST(TestGLibCancellable, NotEquality)

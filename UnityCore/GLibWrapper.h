@@ -126,7 +126,7 @@ private:
   gchar* string_;
 };
 
-class Cancellable
+class Cancellable : boost::noncopyable
 {
 public:
   Cancellable();
@@ -134,13 +134,13 @@ public:
 
   operator GCancellable*();
   operator Object<GCancellable>();
-  Cancellable& operator=(Cancellable const& other);
 
   Object<GCancellable> Get() const;
   bool IsCancelled() const;
   bool IsCancelled(glib::Error &error) const;
   void Cancel();
   void Reset();
+  void Renew();
 
 private:
   Object<GCancellable> cancellable_;
