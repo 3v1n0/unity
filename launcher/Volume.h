@@ -20,7 +20,6 @@
 #ifndef UNITYSHELL_VOLUME_H
 #define UNITYSHELL_VOLUME_H
 
-#include <boost/noncopyable.hpp>
 #include <memory>
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
@@ -31,12 +30,13 @@ namespace unity
 namespace launcher
 {
 
-class Volume : private boost::noncopyable, public sigc::trackable
+class Volume : public sigc::trackable
 {
 public:
   typedef std::shared_ptr<Volume> Ptr;
 
-  virtual ~Volume() {}
+  Volume() = default;
+  virtual ~Volume() = default;
 
   virtual bool CanBeEjected() const = 0;
   virtual bool CanBeRemoved() const = 0;
@@ -48,12 +48,16 @@ public:
   virtual bool IsMounted() const = 0;
 
   virtual void EjectAndShowNotification() = 0;
-  virtual void MountAndOpenInFileManager() = 0;
+  virtual void MountAndOpenInFileManager(unsigned long long timestamp = 0) = 0;
   virtual void StopDrive() = 0;
   virtual void Unmount() = 0;
 
   sigc::signal<void> changed;
   sigc::signal<void> removed;
+
+private:
+  Volume(Volume const&) = delete;
+  Volume& operator=(Volume const&) = delete;
 };
 
 }

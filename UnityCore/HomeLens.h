@@ -63,11 +63,12 @@ public:
            MergeMode merge_mode = MergeMode::OWNER_LENS);
   virtual ~HomeLens();
 
-  void AddLenses(Lenses& lenses);
+  void AddLenses(Lenses::Ptr const& lenses);
 
-  Lenses::LensList GetLenses() const;
-  Lens::Ptr GetLens(std::string const& lens_id) const;
-  Lens::Ptr GetLensAtIndex(std::size_t index) const;
+  Lenses::LensList GetLenses() const override;
+  Lens::Ptr GetLens(std::string const& lens_id) const override;
+  Lens::Ptr GetLensAtIndex(std::size_t index) const override;
+  Lens::Ptr GetLensForShortcut(std::string const& lens_shortcut) const override;
 
   void GlobalSearch(std::string const& search_string, SearchFinishedCallback const& cb);
   void Search(std::string const& search_string, SearchFinishedCallback const& cb);

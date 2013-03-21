@@ -201,7 +201,7 @@ void Model<RowAdaptor>::OnTransactionEnd(DeeModel* model, guint64 begin_seqnum64
 }
 
 template<class RowAdaptor>
-const RowAdaptor Model<RowAdaptor>::RowAtIndex(std::size_t index)
+const RowAdaptor Model<RowAdaptor>::RowAtIndex(std::size_t index) const
 {
   RowAdaptor it(model_,
                 dee_model_get_iter_at_row(model_, index),
@@ -210,13 +210,13 @@ const RowAdaptor Model<RowAdaptor>::RowAtIndex(std::size_t index)
 }
 
 template<class RowAdaptor>
-DeeModelTag* Model<RowAdaptor>::GetTag()
+DeeModelTag* Model<RowAdaptor>::GetTag() const
 {
   return renderer_tag_;
 }
 
 template<class RowAdaptor>
-std::size_t Model<RowAdaptor>::get_count()
+std::size_t Model<RowAdaptor>::get_count() const
 {
   if (model_)
     return dee_model_get_n_rows(model_);
@@ -225,7 +225,7 @@ std::size_t Model<RowAdaptor>::get_count()
 }
 
 template<class RowAdaptor>
-unsigned long long Model<RowAdaptor>::get_seqnum()
+unsigned long long Model<RowAdaptor>::get_seqnum() const
 {
   if (model_ && DEE_IS_SERIALIZABLE_MODEL ((DeeModel*) model_))
     return dee_serializable_model_get_seqnum(model_);
@@ -234,7 +234,7 @@ unsigned long long Model<RowAdaptor>::get_seqnum()
 }
 
 template<class RowAdaptor>
-glib::Object<DeeModel> Model<RowAdaptor>::get_model()
+glib::Object<DeeModel> Model<RowAdaptor>::get_model() const
 {
   return model_;
 }

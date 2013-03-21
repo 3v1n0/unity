@@ -42,6 +42,7 @@ set (CORE_HEADERS
      MusicPreview.h
      Model.h
      Model-inl.h
+     ModelIterator.h
      ModelRowAdaptor.h
      ModelRowAdaptor-inl.h
      Preview.h
@@ -49,7 +50,6 @@ set (CORE_HEADERS
      RadioOptionFilter.h
      RatingsFilter.h
      Result.h
-     ResultIterator.h
      Results.h
      Scope.h
      ScopeData.h
@@ -94,7 +94,6 @@ set (CORE_SOURCES
      RatingsFilter.cpp
      RadioOptionFilter.cpp
      Result.cpp
-     ResultIterator.cpp
      Results.cpp
      Scope.cpp
      ScopeData.cpp

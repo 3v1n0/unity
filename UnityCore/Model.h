@@ -57,8 +57,8 @@ public:
   Model (ModelType model_type = ModelType::REMOTE_SHARED);
   virtual ~Model();
 
-  const RowAdaptor RowAtIndex(std::size_t index);
-  DeeModelTag*     GetTag();
+  const RowAdaptor RowAtIndex(std::size_t index) const;
+  DeeModelTag*     GetTag() const;
 
   nux::Property<std::string> swarm_name;
 
@@ -86,9 +86,9 @@ private:
   void OnTransactionBegin(DeeModel* model, guint64 begin_seq, guint64 end_seq);
   void OnTransactionEnd(DeeModel* model, guint64 begin_seq, guint64 end_seq);
   void OnSwarmNameChanged(std::string const& swarm_name);
-  std::size_t get_count();
-  unsigned long long get_seqnum();
-  glib::Object<DeeModel> get_model();
+  std::size_t get_count() const;
+  unsigned long long get_seqnum() const;
+  glib::Object<DeeModel> get_model() const;
 
 private:
   glib::Object<DeeModel> model_;

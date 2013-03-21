@@ -45,6 +45,7 @@ FilterAllButton::FilterAllButton(NUX_FILE_LINE_DECL)
 
 FilterAllButton::~FilterAllButton()
 {
+  filtering_connection_.disconnect();
 }
 
 void FilterAllButton::SetFilter(Filter::Ptr const& filter)

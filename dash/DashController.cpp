@@ -22,7 +22,9 @@
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <UnityCore/GLibWrapper.h>
+#include "UnityCore/GSettingsScopes.h"
 
+#include "ApplicationStarterImp.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusMessages.h"
@@ -139,7 +141,7 @@ void Controller::SetupWindow()
 
 void Controller::SetupDashView()
 {
-  view_ = new DashView();
+  view_ = new DashView(std::make_shared<GSettingsScopes>(), std::make_shared<ApplicationStarterImp>());
   AddChild(view_);
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -158,7 +160,7 @@ void Controller::RegisterUBusInterests()
 {
   ubus_manager_.RegisterInterest(UBUS_DASH_EXTERNAL_ACTIVATION,
                                  sigc::mem_fun(this, &Controller::OnExternalShowDash));
-  ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_CLOSE_REQUEST,
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_CLOSE_REQUEST,
                                  sigc::mem_fun(this, &Controller::OnExternalHideDash));
   place_entry_request_id_ =
     ubus_manager_.RegisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,

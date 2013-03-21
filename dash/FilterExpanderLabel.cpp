@@ -106,11 +106,18 @@ void FilterExpanderLabel::SetLabel(std::string const& label)
 void FilterExpanderLabel::SetRightHandView(nux::View* view)
 {
   dash::Style& style = dash::Style::Instance();
-
-  right_hand_contents_ = view;
-  right_hand_contents_->SetMinimumHeight(style.GetAllButtonHeight());
-  right_hand_contents_->SetMaximumHeight(style.GetAllButtonHeight());
-  top_bar_layout_->AddView(right_hand_contents_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  if (right_hand_contents_)
+  {
+    top_bar_layout_->RemoveChildObject(right_hand_contents_);
+    right_hand_contents_ = nullptr;    
+  }
+  if (view)
+  {
+    right_hand_contents_ = view;
+    right_hand_contents_->SetMinimumHeight(style.GetAllButtonHeight());
+    right_hand_contents_->SetMaximumHeight(style.GetAllButtonHeight());
+    top_bar_layout_->AddView(right_hand_contents_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FIX);
+  }
 }
 
 void FilterExpanderLabel::SetContents(nux::Layout* contents)

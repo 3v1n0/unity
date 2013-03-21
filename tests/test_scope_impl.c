@@ -277,14 +277,14 @@ enum  {
 };
 
 static UnityScopeSearchBase* test_scope_create_search_for_query(UnityAbstractScope* self, UnitySearchContext* search_context);
-static UnityResultPreviewer* test_scope_create_previewer(UnityAbstractScope* self, UnityScopeResult* _result_);
+static UnityResultPreviewer* test_scope_create_previewer(UnityAbstractScope* self, UnityScopeResult* _result_, UnitySearchMetadata* metadata);
 static UnityCategorySet* test_scope_get_categories(UnityAbstractScope* self);
 static UnityFilterSet* test_scope_get_filters(UnityAbstractScope* self);
 static UnitySchema* test_scope_get_schema(UnityAbstractScope* self);
 static gchar* test_scope_get_search_hint(UnityAbstractScope* self);
 static gchar* test_scope_get_group_name(UnityAbstractScope* self);
 static gchar* test_scope_get_unique_name(UnityAbstractScope* self);
-static UnityActivationResponse* test_scope_activate(UnityAbstractScope* self, UnityScopeResult* _result_);
+static UnityActivationResponse* test_scope_activate(UnityAbstractScope* self, UnityScopeResult* _result_, UnitySearchMetadata* metadata, const gchar* action_id);
 static void test_scope_set_dbus_path (TestScope* self, const gchar* value);
 static const gchar* test_scope_get_dbus_path (TestScope* self);
 
@@ -375,7 +375,7 @@ static UnityScopeSearchBase* test_scope_create_search_for_query(UnityAbstractSco
   return searcher;
 }
 
-static UnityResultPreviewer* test_scope_create_previewer(UnityAbstractScope* self, UnityScopeResult* result)
+static UnityResultPreviewer* test_scope_create_previewer(UnityAbstractScope* self, UnityScopeResult* result, UnitySearchMetadata* metadata)
 {
   UnityResultPreviewer* previewer;
   previewer = UNITY_RESULT_PREVIEWER (test_result_previewer_new());
@@ -427,10 +427,10 @@ static gchar* test_scope_get_unique_name(UnityAbstractScope* base)
   return g_strdup (self->priv->_dbus_path);
 }
 
-static UnityActivationResponse* test_scope_activate(UnityAbstractScope* self, UnityScopeResult* _result_)
+static UnityActivationResponse* test_scope_activate(UnityAbstractScope* self, UnityScopeResult* result, UnitySearchMetadata* metadata, const gchar* action_id)
 {
   UnityActivationResponse* response = NULL;
-  g_signal_emit_by_name (self, "activate-uri", _result_->uri, &response);
+  g_signal_emit_by_name (self, "activate-uri", result->uri, &response);
   return response;
 }
 

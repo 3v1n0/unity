@@ -243,10 +243,8 @@ private:
   void EnsureScrollTimer();
 
   bool MouseOverTopScrollArea();
-  bool MouseOverTopScrollExtrema();
 
   bool MouseOverBottomScrollArea();
-  bool MouseOverBottomScrollExtrema();
 
   float DnDStartProgress(struct timespec const& current) const;
   float DnDExitProgress(struct timespec const& current) const;

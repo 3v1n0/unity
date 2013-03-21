@@ -623,7 +623,7 @@ bool ScopeView::ReinitializeCategoryResultModels()
 
 ResultView* ScopeView::GetResultViewForCategory(unsigned int category_index)
 {  
-  if (category_views_.size() >= category_index)
+  if (category_views_.size() <= category_index)
     return nullptr;
 
   auto category_pos = category_views_.begin() + category_index;
@@ -719,42 +719,42 @@ void ScopeView::QueueCategoryCountsCheck()
 
 void ScopeView::CheckCategoryCounts()
 {
-    int number_of_displayed_categories = 0;
+  int number_of_displayed_categories = 0;
 
-    PlacesGroup::Ptr new_expanded_group;
+  PlacesGroup::Ptr new_expanded_group;
 
-    for (auto iter = category_order_.begin(); iter != category_order_.end(); ++iter)
+  for (auto iter = category_order_.begin(); iter != category_order_.end(); ++iter)
+  {
+    unsigned int category_index = *iter;
+    if (category_views_.size() <= category_index)
+     continue;
+
+    PlacesGroup::Ptr group = category_views_[category_index];
+
+    group->SetCounts(counts_[group]);
+    group->SetVisible(counts_[group] > 0);
+
+    if (counts_[group] > 0)
     {
-      unsigned int category_index = *iter;
-      if (category_views_.size() <= category_index)
-       continue;
-
-      PlacesGroup::Ptr group = category_views_[category_index];
-
-      group->SetCounts(counts_[group]);
-      group->SetVisible(counts_[group] > 0);
-
-      if (counts_[group] > 0)
-      {
-        number_of_displayed_categories++;
-        new_expanded_group = group;
-      }
+      number_of_displayed_categories++;
+      new_expanded_group = group;
     }
+  }
 
-    if (new_expanded_group)
-    {
-      // only expand the category if we have only one with results.
-      if (number_of_displayed_categories <= 2)
-        new_expanded_group->SetExpanded(true);
-      if (last_expanded_group_ && last_expanded_group_ != new_expanded_group)
-        last_expanded_group_->SetExpanded(false);
-    }
-    else if (last_expanded_group_)
-    {
+  if (new_expanded_group && get_search_string().empty())
+  {
+    // only expand the category if we have only one with results.
+    if (number_of_displayed_categories <= 2)
+      new_expanded_group->SetExpanded(true);
+    if (last_expanded_group_ && last_expanded_group_ != new_expanded_group)
       last_expanded_group_->SetExpanded(false);
-    }
+  }
+  else if (last_expanded_group_)
+  {
+    last_expanded_group_->SetExpanded(false);
+  }
 
-    last_expanded_group_ = new_expanded_group;
+  last_expanded_group_ = new_expanded_group;
 }
 
 void ScopeView::HideResultsMessage()

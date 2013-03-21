@@ -4,6 +4,92 @@ unity (6.12.0daily13.03.13-0ubuntu1) UNRELEASED; urgency=low
 
  -- Didier Roche <didrocks@ubuntu.com>  Wed, 13 Mar 2013 11:26:45 +0100
 
+unity (6.12.0daily13.03.20-0ubuntu1) raring; urgency=low
+
+  [ Stephen M. Webb ]
+  * ‘No Image Available’ in previews isn’t translatable (LP: #1106849)
+
+  [ Brandon Schaefer ]
+  * Unity unit tests take too long to finish (LP: #1053163)
+  * Unity FTBFS xgettext unicode TrashLauncherIcon.cpp:91 (LP: #1156931)
+  * HUD's item which is being mouse-hovered is selected, making fast
+    typing and clicking Enter unsafe (LP: #1066442)
+
+  [ Marco Trevisan (Treviño) ]
+  * Icons edges are not visible on the 13.04 unity launcher (LP:
+    #1156698)
+  * Clicking on a device (volume) icon doesn't always bring nautilus to
+    focus (LP: #1154792)
+  * [Regression] No "filter result" label in the dash. (LP: #1155550)
+  * Launcher icon edges become invisible when loading an application
+    (LP: #1157303)
+  * [regression] Tooltip label is not centered (LP: #1155553)
+  * Clicking on trash icon doesn't always bring nautilus to focus (LP:
+    #1154862)
+  * Shutdown dialogue should close the overlays when activated from
+    power button (LP: #1155610)
+  * New shutdown Dialogs, shutdown/restart should change order. (LP:
+    #1154578)
+  * Shut Down dialog spells "Shut Down" incorrectly (LP: #1156641)
+  * New shutdown dialog had no default option selected (LP: #1155562)
+  * alt-tab - the 'pips' the indicate a application has multiple windows
+    open look pixelated  (LP: #863331)
+  * Log Out dialog spells "Log Out" incorrectly (LP: #1156638)
+  * Launching an application from the "Appname" quicklist could not
+    bring it to focus (LP: #1155225)
+
+  [ Mathieu Trudel-Lapierre ]
+  * gcalctool desktop file got renamed (LP: #1156810)
+
+  [ Chris Townsend ]
+  * Launcher - auto-scroll needs to be more progressive (LP: #765732)
+
+  [ Andrea Azzarone ]
+  * Tooltip timeout should not be resetted on each mouse movement. (LP:
+    #1155659)
+  * The sharp white line between dash and launcher is missing (LP:
+    #1125346)
+  * Reduce launcher tooltip timeout. (LP: #1155665)
+  * Launcher tooltips need fade animation on show/hide. (LP: #1155672)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3239
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 20 Mar 2013 04:03:16 +0000
+
+unity (6.12.0daily13.03.13.1-0ubuntu1) raring; urgency=low
+
+  [ Sebastien Bacher ]
+  * Launcher - Update the icons used for the Software Centre, Nautilus,
+    and Software Updater (LP: #1081691)
+
+  [ Andrea Azzarone ]
+  * Nautilus windows don't get the the focus when opened via the dash.
+    (LP: #1152733)
+
+  [ Marco Trevisan (Treviño) ]
+  * New Shutdown view disables panel shadow (LP: #1152760)
+  * Shutdown goodbye text is sometimes partly missing (LP: #1152978)
+  * Shutdown view should be closable by escape-key (LP: #1152712)
+  * Press Alt+F1, panel’s shadow dissapear (LP: #942965)
+  * Long text in previews or dialogs is not properly aligned and/or
+    missing (LP: #1152980)
+  * Panel Shadow is not drawn properly during workspace switching (LP:
+    #1153699)
+  * QuicklistMenuItem's do not export the event timestamp on Activate
+    (LP: #1154082)
+  * [multimonitor] Dash - Opening dash or HUD on one screen removes
+    panel shadow on the other (LP: #892718)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Lenses shortcuts not working in singular cases (e.g. Super+A) (LP:
+    #1152517)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3211
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 13 Mar 2013 09:23:11 +0000
+
 unity (6.12.0daily13.03.11-0ubuntu1) raring; urgency=low
 
   [ Marco Trevisan (Treviño) ]

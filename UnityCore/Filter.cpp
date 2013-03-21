@@ -18,6 +18,7 @@
  */
 
 #include "Filter.h"
+#include "Filters.h"
 
 #include <NuxCore/Logger.h>
 
@@ -141,18 +142,8 @@ void Filter::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
 
 void Filter::HintsToMap(Hints& map)
 {
-  GVariant* row_value = dee_model_get_value(model_, iter_, FilterColumn::RENDERER_STATE);
-
-  GVariantIter iter;
-  g_variant_iter_init(&iter, row_value);
-
-  char* key = NULL;
-  GVariant* value = NULL;
-  while (g_variant_iter_loop(&iter, "{sv}", &key, &value))
-  {
-    map[key] = value;
-  }
-  g_variant_unref(row_value);
+  glib::Variant row_value(dee_model_get_value(model_, iter_, FilterColumn::RENDERER_STATE), glib::StealRef());
+  row_value.ASVToHints(map);
 }
 
 glib::Variant Filter::VariantValue() const
@@ -177,51 +168,37 @@ glib::Variant Filter::VariantValue() const
 
 std::string Filter::get_id() const
 {
-  if (IsValid())
-    return dee_model_get_string(model_, iter_, FilterColumn::ID);
-  return "";
+  return FilterAdaptor(model_, iter_, nullptr).get_id();
 }
 
 std::string Filter::get_name() const
 {
-  if (IsValid())
-    return dee_model_get_string(model_, iter_, FilterColumn::NAME);
-  return "";
+  return FilterAdaptor(model_, iter_, nullptr).get_name();
 }
 
 std::string Filter::get_icon_hint() const
 {
-  if (IsValid())
-    return dee_model_get_string(model_, iter_, FilterColumn::ICON_HINT);
-  return "";
+  return FilterAdaptor(model_, iter_, nullptr).get_icon_hint();
 }
 
 std::string Filter::get_renderer_name() const
 {
-  if (IsValid())
-    return dee_model_get_string(model_, iter_, FilterColumn::RENDERER_NAME);
-  return "";
+  return FilterAdaptor(model_, iter_, nullptr).get_renderer_name();
 }
 
 bool Filter::get_visible() const
 {
-  if (IsValid())
-    return dee_model_get_bool(model_, iter_, FilterColumn::VISIBLE);
-  return false;
+  return FilterAdaptor(model_, iter_, nullptr).get_visible();
 }
 
 bool Filter::get_collapsed() const
 {
-  if (IsValid())
-    return dee_model_get_bool(model_, iter_, FilterColumn::COLLAPSED);
-  return true;
+  return FilterAdaptor(model_, iter_, nullptr).get_collapsed();
 }
 
 bool Filter::get_filtering() const
 {
-  if (IsValid())
-    return dee_model_get_bool(model_, iter_, FilterColumn::FILTERING);
-  return false;
+  return FilterAdaptor(model_, iter_, nullptr).get_filtering();
 }
 
 }

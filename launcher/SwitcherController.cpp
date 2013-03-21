@@ -316,7 +316,7 @@ void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLa
     sources_.AddTimeout(obj_->initial_detail_timeout_length, cb_func, DETAIL_TIMEOUT);
   }
 
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN,
                             g_variant_new("(bi)", true, obj_->monitor_));
 }
@@ -426,8 +426,8 @@ void Controller::Impl::Hide(bool accept_state)
     Selection selection = GetCurrentSelection();
     if (selection.application_)
     {
-      Time timestamp = -1;
-      selection.application_->Activate(ActionArg(ActionArg::SWITCHER, 0,
+      Time timestamp = 0;
+      selection.application_->Activate(ActionArg(ActionArg::Source::SWITCHER, 0,
                                                  timestamp, selection.window_));
     }
   }
