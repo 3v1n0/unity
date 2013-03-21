@@ -468,6 +468,15 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     background_tile_color = nux::color::White;
   }
 
+  if (backlight_intensity > 0 && arg.draw_edge_only)
+  {
+    float edge_glow = backlight_intensity * edge_illumination_multiplier;
+    if (edge_glow > glow_intensity)
+    {
+      glow_intensity = edge_glow;
+    }
+  }
+
   if (arg.keyboard_nav_hl)
   {
     background_tile_color = nux::color::White;
@@ -476,7 +485,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     colorify = nux::color::White;
     background_tile_colorify = nux::color::White;
     backlight_intensity = 0.95f;
-    glow_intensity = 1.0f;
+    glow_intensity = glow_intensity + 1.0f;
     shadow_intensity = 0.0f;
 
     background = textures_->icon_selected_background[size];
@@ -504,15 +513,6 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     // 0.9f is BACKLIGHT_STRENGTH in Launcher.cpp
     backlight_intensity = (arg.keyboard_nav_hl) ? 0.95f : 0.9f;
     glow_intensity = (arg.keyboard_nav_hl) ? 1.0f : 0.0f ;
-  }
-
-  if (backlight_intensity > 0 && arg.draw_edge_only)
-  {
-    float edge_glow = backlight_intensity * edge_illumination_multiplier;
-    if (edge_glow > glow_intensity)
-    {
-      glow_intensity = edge_glow;
-    }
   }
 
   // draw shadow
