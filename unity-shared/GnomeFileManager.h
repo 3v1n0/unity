@@ -29,7 +29,11 @@ namespace unity
 class GnomeFileManager : public FileManager
 {
 public:
-  virtual void Open(std::string const& uri, unsigned long long timestamp);
+  void Open(std::string const& uri, unsigned long long timestamp);
+  void EmptyTrash(unsigned long long timestamp);
+
+private:
+  void Activate(unsigned long long timestamp);
 };
 
 }
