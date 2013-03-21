@@ -35,6 +35,7 @@ public:
   FileManager() = default;
   virtual ~FileManager() {}
   virtual void Open(std::string const& uri, unsigned long long timestamp = 0) = 0;
+  virtual void EmptyTrash(unsigned long long timestamp = 0) = 0;
 
 private:
   FileManager(FileManager const&) = delete;
