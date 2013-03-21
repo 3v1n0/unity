@@ -444,6 +444,7 @@ void MusicPaymentPreview::SetupViews()
     if (preview_data != NULL)
     {
       error_message_ = GetErrorMessage(preview_data);
+      break;
     }
   }
 
