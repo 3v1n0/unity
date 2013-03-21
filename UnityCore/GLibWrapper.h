@@ -134,6 +134,7 @@ public:
 
   operator GCancellable*();
   operator Object<GCancellable>();
+  Cancellable& operator=(Cancellable const& other);
 
   Object<GCancellable> Get() const;
   bool IsCancelled() const;
@@ -144,6 +145,11 @@ public:
 private:
   Object<GCancellable> cancellable_;
 };
+
+bool operator==(Cancellable const& lhs, Cancellable const& rhs);
+bool operator!=(Cancellable const& lhs, Cancellable const& rhs);
+bool operator!=(GCancellable* lhs, Cancellable const& rhs);
+bool operator!=(Object<GCancellable> const& lhs, Cancellable const& rhs);
 
 std::ostream& operator<<(std::ostream& o, Error const& e);
 std::ostream& operator<<(std::ostream& o, String const& s);

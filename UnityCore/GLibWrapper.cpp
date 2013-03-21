@@ -151,6 +151,17 @@ Cancellable::operator Object<GCancellable>()
   return cancellable_;
 }
 
+Cancellable& Cancellable::operator=(Cancellable const& other)
+{
+  if (cancellable_ != other.cancellable_)
+  {
+    Cancel();
+    cancellable_ = other.cancellable_;
+  }
+
+  return *this;
+}
+
 Object<GCancellable> Cancellable::Get() const
 {
   return cancellable_;
@@ -174,6 +185,26 @@ void Cancellable::Cancel()
 void Cancellable::Reset()
 {
   g_cancellable_reset(cancellable_);
+}
+
+bool operator==(Cancellable const& lhs, Cancellable const& rhs)
+{
+  return (lhs.Get() == rhs.Get());
+}
+
+bool operator!=(Cancellable const& lhs, Cancellable const& rhs)
+{
+  return !(lhs == rhs);
+}
+
+bool operator!=(GCancellable* lhs, Cancellable const& rhs)
+{
+  return !(lhs == rhs.Get());
+}
+
+bool operator!=(Object<GCancellable> const& lhs, Cancellable const& rhs)
+{
+  return !(lhs == rhs.Get());
 }
 
 
