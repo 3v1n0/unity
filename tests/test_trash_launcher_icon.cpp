@@ -51,4 +51,22 @@ TEST_F(TestTrashLauncherIcon, Activate)
   icon.Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
 }
 
+TEST_F(TestTrashLauncherIcon, Quicklist)
+{
+  auto const& menus = icon.Menus();
+  EXPECT_EQ(menus.size(), 1);
+}
+
+TEST_F(TestTrashLauncherIcon, QuicklistEmptyTrash)
+{
+  auto const& menus = icon.Menus();
+  ASSERT_EQ(icon.Menus().size(), 1);
+
+  auto const& empty_trash_menu = menus.front();
+
+  unsigned time = g_random_int();
+  EXPECT_CALL(*fm_, EmptyTrash(time));
+  dbusmenu_menuitem_handle_event(empty_trash_menu, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, time);
+}
+
 }
