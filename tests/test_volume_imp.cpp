@@ -26,18 +26,11 @@ using namespace testing;
 #include "gmockvolume.h"
 #include "launcher/VolumeImp.h"
 #include "test_utils.h"
+#include "test_mock_filemanager.h"
 using namespace unity;
 
 namespace
 {
-
-class MockFileManager : public FileManager
-{
-public:
-  typedef std::shared_ptr<MockFileManager> Ptr;
-
-  MOCK_METHOD2(Open, void(std::string const& uri, unsigned long long time));
-};
 
 class MockDeviceNotificationDisplay : public launcher::DeviceNotificationDisplay
 {

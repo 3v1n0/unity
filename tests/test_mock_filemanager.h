@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2013 Canonical Ltd.
+ * Copyright 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3, as published
@@ -17,38 +17,22 @@
  * Authored by: Marco Trevisan (Treviño) <marco.trevisan@canonical.com>
  */
 
-#include <gmock/gmock.h>
+#ifndef TEST_MOCK_FILEMANAGER_H
+#define TEST_MOCK_FILEMANAGER_H
 
-#include "TrashLauncherIcon.h"
-#include "test_mock_filemanager.h"
+#include "FileManager.h"
 
-using namespace unity;
-using namespace unity::launcher;
-
-namespace
+namespace unity
 {
 
-struct TestTrashLauncherIcon : testing::Test
+struct MockFileManager : FileManager
 {
-  TestTrashLauncherIcon()
-    : fm_(std::make_shared<MockFileManager>())
-    , icon(fm_)
-  {}
+  typedef std::shared_ptr<MockFileManager> Ptr;
 
-  MockFileManager::Ptr fm_;
-  TrashLauncherIcon icon;
+  MOCK_METHOD2(Open, void(std::string const& uri, unsigned long long time));
+  MOCK_METHOD1(EmptyTrash, void(unsigned long long time));
 };
 
-TEST_F(TestTrashLauncherIcon, Position)
-{
-  EXPECT_EQ(icon.position(), AbstractLauncherIcon::Position::END);
 }
 
-TEST_F(TestTrashLauncherIcon, Activate)
-{
-  unsigned long long time = g_random_int();
-  EXPECT_CALL(*fm_, Open("trash:", time));
-  icon.Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
-}
-
-}
+#endif
