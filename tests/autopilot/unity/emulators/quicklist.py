@@ -11,7 +11,7 @@ from __future__ import absolute_import
 
 import logging
 
-from autopilot.emulators.X11 import Mouse
+from autopilot.emulators.input import get_mouse
 
 from unity.emulators import UnityIntrospectionObject
 
@@ -20,6 +20,10 @@ logger = logging.getLogger(__name__)
 
 class Quicklist(UnityIntrospectionObject):
     """Represents a quicklist."""
+
+    def __init__(self, *args, **kwargs):
+        super(Quicklist, self).__init__(*args, **kwargs)
+        self._mouse = get_mouse()
 
     @property
     def items(self):
@@ -56,7 +60,7 @@ class Quicklist(UnityIntrospectionObject):
         logger.debug("Moving mouse outside the quicklist %r", self)
         target_x = self.x + self.width + 10
         target_y = self.y + self.height / 2
-        Mouse().move(target_x, target_y, animate=False)
+        self._mouse.move(target_x, target_y, animate=False)
 
     @property
     def selected_item(self):
@@ -75,7 +79,7 @@ class QuicklistMenuItem(UnityIntrospectionObject):
 
     def __init__(self, *args, **kwargs):
         super(QuicklistMenuItem, self).__init__(*args, **kwargs)
-        self._mouse = Mouse()
+        self._mouse = get_mouse()
 
     @property
     def geometry(self):

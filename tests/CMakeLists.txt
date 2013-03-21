@@ -16,16 +16,20 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/no-icon.desktop
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/kde4/afile.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/applications/kde4/afile.desktop)
 
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/lenses/social/social.lens
-                ${CMAKE_BINARY_DIR}/tests/data/lenses/social/social.lens)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/lenses/files/files.lens
-                ${CMAKE_BINARY_DIR}/tests/data/lenses/files/files.lens)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/lenses/applications/applications.lens
-                ${CMAKE_BINARY_DIR}/tests/data/lenses/applications/applications.lens)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/lenses/invalid-lens-file/invalid-lens-file.lens
-                ${CMAKE_BINARY_DIR}/tests/data/lenses/invalid-lens-file/invalid-lens-file.lens)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/lenses/invalid-lens-group/invalid-lens-group.lens
-                ${CMAKE_BINARY_DIR}/tests/data/lenses/invalid-lens-group/invalid-lens-group.lens)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope1.scope
+                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope1.scope)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope2.scope
+                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope2.scope)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope3.scope
+                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope3.scope)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope4.scope
+                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope4.scope)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/brownnoise.mp3
+                ${CMAKE_BINARY_DIR}/tests/data/unity/sounds/brownnoise.mp3 COPYONLY)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/pinknoise.mp3
+                ${CMAKE_BINARY_DIR}/tests/data/unity/sounds/pinknoise.mp3 COPYONLY)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/whitenoise.mp3
+                ${CMAKE_BINARY_DIR}/tests/data/unity/sounds/whitenoise.mp3 COPYONLY)
 
 #
 # Unit tests
@@ -95,8 +99,18 @@ if (GTEST_SRC_DIR AND
                  test_service_hud.cpp
                  test_service_main.cpp
                  test_service_model.cpp
-                 test_service_panel.cpp)
-  target_link_libraries(test-gtest-service unity-shared ${LIBS})
+                 test_service_panel.cpp
+                 test_service_scope.cpp)
+
+  # Build plain C files separately so they don't try to include the
+  # C++ pch.
+  add_library(test-gtest-service-plainc STATIC
+              test_scope_impl.c)
+
+  target_link_libraries(test-gtest-service
+                        test-gtest-service-plainc
+                        unity-shared
+                        ${LIBS})
 
 # gtest-slow, start moving things over that are slow running tests
   set (GTEST_SLOW_SOURCES
@@ -135,6 +149,7 @@ if (GTEST_SRC_DIR AND
        test_glib_source.cpp
        test_glib_variant.cpp
        test_grabhandle.cpp
+       test_gsettings_scopes.cpp
        test_desktop_utilities.cpp
        test_indicator.cpp
        test_indicator_appmenu.cpp
@@ -149,6 +164,7 @@ if (GTEST_SRC_DIR AND
        test_layout_system.cpp
        test_model_iterator.cpp
        test_previews.cpp
+       test_scope_data.cpp
        test_time_util.cpp
        test_ubus.cpp
        test_unityshell_private.cpp
@@ -204,10 +220,14 @@ if (GTEST_SRC_DIR AND
                  test_utils.h
                  test_ratings_filter.cpp
                  test_results.cpp
+                 test_scope.cpp
+                 test_scope_filter.cpp
+                 test_scope_proxy.cpp
+                 test_tracks.cpp
                 )
   target_link_libraries(test-gtest-dbus gtest unity-shared ${LIBS})
   add_test(UnityGTestDBus test-gtest-dbus)
-  add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} test-gtest-service gtest)
+  add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} unity-shared test-gtest-service gtest)
 
 if (ENABLE_X_SUPPORT)
 # Tests that require X
@@ -219,6 +239,8 @@ if (ENABLE_X_SUPPORT)
                  test_application_launcher_icon.cpp
                  test_bamf_application.cpp
                  test_bfb_launcher_icon.cpp
+                 test_dashview.cpp
+                 test_dashview_impl.cpp
                  test_dash_controller.cpp
                  test_desktop_launcher_icon.cpp
                  test_device_launcher_section.cpp
@@ -233,6 +255,7 @@ if (ENABLE_X_SUPPORT)
                  test_hud_view.cpp
                  test_icon_loader.cpp
                  test_im_text_entry.cpp
+                 test_keyboard_util.cpp
                  test_im_text_entry_class.cpp
                  test_launcher.cpp
                  test_launcher_controller.cpp
@@ -242,13 +265,13 @@ if (ENABLE_X_SUPPORT)
                  test_launcher_icon.cpp
                  test_launcher_minimize_speed.cpp
                  test_launcher_tooltip.cpp
-                 test_keyboard_util.cpp
                  test_panel_indicators_view.cpp
                  test_panel_menu_view.cpp
                  test_panel_style.cpp
                  test_panel_tray.cpp
                  test_panel_view.cpp
                  test_places_group.cpp
+                 test_preview_player.cpp
                  test_previews_application.cpp
                  test_previews_generic.cpp
                  test_previews_movie.cpp
@@ -260,6 +283,8 @@ if (ENABLE_X_SUPPORT)
                  test_quicklist_view.cpp
                  test_result_renderer.cpp
                  test_resultviewgrid.cpp
+                 test_scope_bar.cpp
+                 test_scopeview.cpp
                  test_searchbar.cpp
                  test_session_button.cpp
                  test_session_controller.cpp

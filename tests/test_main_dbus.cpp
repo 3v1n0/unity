@@ -4,8 +4,19 @@
 #include <Nux/Nux.h>
 #include "test_utils.h"
 
+#include "config.h"
+
 static bool wait_until_test_service_appears();
 static void tell_service_to_exit();
+
+static gboolean no_exit = FALSE;
+
+static GOptionEntry entries[] =
+{
+  { "no-exit", 'n', 0, G_OPTION_ARG_NONE, &no_exit, "Do not handle exit call", NULL },
+  { NULL }
+};
+
 
 int main(int argc, char** argv)
 {
@@ -14,7 +25,19 @@ int main(int argc, char** argv)
   g_type_init();
 #endif
 
+  GError *error = NULL;
+  GOptionContext *context;
+  context = g_option_context_new ("- DBus tests");
+  g_option_context_add_main_entries (context, entries, NULL);
+  if (!g_option_context_parse (context, &argc, &argv, &error))
+  {
+    g_print ("option parsing failed: %s\n", error->message);
+    return 1;
+  }
+  
   nux::NuxInitialize (0);
+
+  g_setenv("XDG_DATA_HOME", BUILDDIR"/tests/data", TRUE);
 
   // We need the service to be ready before we are
 
@@ -32,7 +55,8 @@ int main(int argc, char** argv)
 
   int ret = RUN_ALL_TESTS();
 
-  tell_service_to_exit();
+  if (!no_exit)
+    tell_service_to_exit();
 
   return ret;
 }

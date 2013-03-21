@@ -9,7 +9,7 @@
 
 from __future__ import absolute_import
 
-from autopilot.emulators.X11 import Keyboard
+from autopilot.emulators.input import get_keyboard
 from autopilot.keybindings import KeybindingsHelper
 from HTMLParser import HTMLParser
 import re
@@ -24,7 +24,7 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
 
     def __init__(self, *args, **kwargs):
         super(HudController, self).__init__(*args, **kwargs)
-        self.keyboard = Keyboard()
+        self.keyboard = get_keyboard()
 
     def get_hud_view(self):
         views = self.get_children_by_type(HudView)

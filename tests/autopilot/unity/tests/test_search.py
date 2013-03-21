@@ -20,8 +20,8 @@ import gettext
 
 # XXX: Ugly workaround for a really annoying bug (LP: #1152517) which breaks
 #  this test suite. So, to workaround, we toggle the dash once before doing any
-#  app lens search tests
-workaround_lenses_load_done = False
+#  app scope search tests
+workaround_scopes_load_done = False
 
 class SearchTestsBase(UnityTestCase):
     """Base class for testing searching in search fields.
@@ -59,28 +59,28 @@ class SearchTestsBase(UnityTestCase):
         self.input_and_check_result(self.input, self.result) 
 
 
-# Lens tests
+# Scope tests
 
-class ApplicationLensSearchTestBase(SearchTestsBase):
-    """Common class for all tests for searching in the application lens."""
+class ApplicationScopeSearchTestBase(SearchTestsBase):
+    """Common class for all tests for searching in the application scope."""
 
     def setUp(self):
-        super(ApplicationLensSearchTestBase, self).setUp()
+        super(ApplicationScopeSearchTestBase, self).setUp()
         # XXX: Temporary workaround for LP: #1152517
-        global workaround_lenses_load_done
-        if not workaround_lenses_load_done:
+        global workaround_scopes_load_done
+        if not workaround_scopes_load_done:
             self.unity.dash.ensure_visible()
             self.unity.dash.ensure_hidden()
-            workaround_lenses_load_done = True
+            workaround_scopes_load_done = True
 
-        self.app_lens = self.unity.dash.reveal_application_lens()
+        self.app_scope = self.unity.dash.reveal_application_scope()
         self.addCleanup(self.unity.dash.ensure_hidden)
         gettext.install("unity-lens-applications", unicode=True)
 
     def input_and_check_result(self, string, expected):
         self.keyboard.type(string)
         self.assertThat(self.unity.dash.search_string, Eventually(Equals(string)))
-        category = self.app_lens.get_category_by_name(_("Installed"))
+        category = self.app_scope.get_category_by_name(_("Installed"))
         refresh_results_fn = lambda: len(category.get_results())
         self.assertThat(refresh_results_fn, Eventually(GreaterThan(0)))
         results = category.get_results()
@@ -92,8 +92,8 @@ class ApplicationLensSearchTestBase(SearchTestsBase):
         self.assertTrue(found)
  
 
-class ApplicationLensSearchTests(ApplicationLensSearchTestBase):
-    """Simple search tests for the application lens."""
+class ApplicationScopeSearchTests(ApplicationScopeSearchTestBase):
+    """Simple search tests for the application scope."""
 
     scenarios = [
         ('basic', {'input': 'Window Mocker', 'result': 'Window Mocker'}),
@@ -104,15 +104,15 @@ class ApplicationLensSearchTests(ApplicationLensSearchTestBase):
     ]
 
     def setUp(self):
-        super(ApplicationLensSearchTests, self).setUp()
+        super(ApplicationScopeSearchTests, self).setUp()
 
-    def test_application_lens_search(self):
+    def test_application_scope_search(self):
         self.do_search_test()
 
 
-class ApplicationLensFuzzySearchTests(ApplicationLensSearchTestBase):
-    """Fuzzy, erroneous search tests for the application lens.
-    This checks if the application lens will find the searched application
+class ApplicationScopeFuzzySearchTests(ApplicationScopeSearchTestBase):
+    """Fuzzy, erroneous search tests for the application scope.
+    This checks if the application scope will find the searched application
     (windowmocker here, since we want some app that has the name 
     locale-independent) when small spelling errors are made.
     """
@@ -125,9 +125,9 @@ class ApplicationLensFuzzySearchTests(ApplicationLensSearchTestBase):
     ]       
 
     def setUp(self):
-        super(ApplicationLensFuzzySearchTests, self).setUp()
+        super(ApplicationScopeFuzzySearchTests, self).setUp()
 
-    def test_application_lens_fuzzy_search(self):
+    def test_application_scope_fuzzy_search(self):
         self.do_search_test()
 
 

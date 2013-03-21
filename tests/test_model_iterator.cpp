@@ -110,6 +110,20 @@ TEST_F(TestResultIterator, TestCopy)
   EXPECT_NE(one, two);
 }
 
+TEST_F(TestResultIterator, TestEqual)
+{
+  AddResult("mailto:nospam@example.org", "Email");
+
+  ResultIterator one(results->model());
+  ResultIterator two = one;
+
+  EXPECT_EQ(one, two);
+
+  ResultIterator const& original = two++;
+  EXPECT_EQ(original, one);
+  EXPECT_NE(one, two);
+}
+
 TEST_F(TestResultIterator, TestIncrement)
 {
   AddResult("file:///foo.txt", "Result #1");
@@ -129,5 +143,77 @@ TEST_F(TestResultIterator, TestIncrement)
   EXPECT_FALSE(it.IsFirst());
 }
 
+TEST_F(TestResultIterator, TestDecrement)
+{
+  AddResult("file:///foo.txt", "Result #1");
+  AddResult("file:///qoo.txt", "Result #2");
 
+  ResultIterator it(results->end());
+  EXPECT_TRUE(it.IsLast());
+
+  it--;
+  EXPECT_EQ((*it).uri, "file:///qoo.txt");
+  EXPECT_EQ((*it).name, "Result #2");
+
+  it--;
+  EXPECT_EQ((*it).uri, "file:///foo.txt");
+  EXPECT_EQ((*it).name, "Result #1");
+
+  EXPECT_TRUE(it.IsFirst());
+  EXPECT_FALSE(it.IsLast());
+}
+
+TEST_F(TestResultIterator, TestAdd)
+{
+  AddResult("file:///foo.txt", "Result #1");
+  AddResult("file:///qoo.txt", "Result #2");
+  AddResult("file:///bar.txt", "Result #3");
+
+  ResultIterator it(results->model());
+  EXPECT_EQ((*it).uri, "file:///foo.txt");
+  EXPECT_EQ((*it).name, "Result #1");
+
+  it+=2;
+  EXPECT_EQ((*it).uri, "file:///bar.txt");
+  EXPECT_EQ((*it).name, "Result #3");
+  EXPECT_FALSE(it.IsLast());
+
+  it+=1;
+  EXPECT_TRUE(it.IsLast());
+  EXPECT_FALSE(it.IsFirst());
+}
+
+TEST_F(TestResultIterator, TestSubtract)
+{
+  AddResult("file:///foo.txt", "Result #1");
+  AddResult("file:///qoo.txt", "Result #2");
+  AddResult("file:///bar.txt", "Result #3");
+
+  ResultIterator it(results->end());
+  EXPECT_TRUE(it.IsLast());
+
+  it--;
+  EXPECT_EQ((*it).uri, "file:///bar.txt");
+  EXPECT_EQ((*it).name, "Result #3");
+
+  it-=2;
+  EXPECT_EQ((*it).uri, "file:///foo.txt");
+  EXPECT_EQ((*it).name, "Result #1");
+  EXPECT_TRUE(it.IsFirst());
+  EXPECT_FALSE(it.IsLast());
+}
+
+TEST_F(TestResultIterator, TestOperatorAt)
+{
+  AddResult("file:///foo.txt", "Result #1");
+  AddResult("file:///qoo.txt", "Result #2");
+  AddResult("file:///bar.txt", "Result #3");
+
+  ResultIterator it(results->begin());
+  it = it[1];
+
+  EXPECT_EQ((*it).uri, "file:///qoo.txt");
+  EXPECT_EQ((*it).name, "Result #2");
 } // Namespace
+
+}

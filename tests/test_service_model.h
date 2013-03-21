@@ -3,6 +3,7 @@
 
 #include <dee.h>
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GLibSource.h>
 
 namespace unity
 {
@@ -18,11 +19,21 @@ private:
   void PopulateTestModel();
   void PopulateResultsModel();
   void PopulateCategoriesModel();
+  void PopulateCategoriesChangesModel();
+  void PopulateTracksModel();
+
+  bool OnCategoryChangeTimeout();
+  bool OnTrackChangeTimeout();
 
 private:
   glib::Object<DeeModel> model_;
   glib::Object<DeeModel> results_model_;
   glib::Object<DeeModel> categories_model_;
+  glib::Object<DeeModel> categories_changing_model_;
+  glib::Object<DeeModel> tracks_model_;
+
+  glib::Source::Ptr category_timeout_;
+  glib::Source::Ptr track_timeout_;
 };
 
 }
