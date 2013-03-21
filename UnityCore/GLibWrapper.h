@@ -23,6 +23,7 @@
 
 #include <iosfwd>
 #include <string>
+#include <memory>
 
 #include <boost/utility.hpp>
 #include <gio/gio.h>
@@ -129,6 +130,8 @@ private:
 class Cancellable : boost::noncopyable
 {
 public:
+  typedef std::shared_ptr<Cancellable> Ptr;
+
   Cancellable();
   ~Cancellable();
 
