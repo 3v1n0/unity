@@ -114,7 +114,27 @@ TEST(TestGLibCancellable, Assignment)
   ASSERT_EQ(obj1, obj2);
 
   cancellable2 = cancellable1;
-  EXPECT_FALSE(obj1.IsCancelled());
+  EXPECT_FALSE(g_cancellable_is_cancelled(obj1));
+}
+
+TEST(TestGLibCancellable, Equality)
+{
+  Cancellable cancellable1;
+  Cancellable cancellable2 = cancellable1;
+
+  ASSERT_EQ(cancellable1, cancellable2);
+  ASSERT_EQ(cancellable1.Get(), cancellable2);
+  ASSERT_EQ(cancellable1.Get().RawPtr(), cancellable2);
+}
+
+TEST(TestGLibCancellable, NotEquality)
+{
+  Cancellable cancellable1;
+  Cancellable cancellable2;
+
+  ASSERT_NE(cancellable1, cancellable2);
+  ASSERT_NE(cancellable1.Get(), cancellable2);
+  ASSERT_NE(cancellable1.Get().RawPtr(), cancellable2);
 }
 
 } // Namespace
