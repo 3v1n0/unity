@@ -512,7 +512,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   {
     // 0.9f is BACKLIGHT_STRENGTH in Launcher.cpp
     backlight_intensity = (arg.keyboard_nav_hl) ? 0.95f : 0.9f;
-    glow_intensity = (arg.keyboard_nav_hl) ? 1.0f : 0.0f ;
+    glow_intensity = glow_intensity + ((arg.keyboard_nav_hl) ? 1.0f : 0.0f) ;
   }
 
   // draw shadow
