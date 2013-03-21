@@ -411,7 +411,7 @@ TEST_F(TestApplicationLauncherIcon, WindowListMenusWithTwoWindows)
   ASSERT_NE(menu2_it, menus.end());
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu2_it, DBUSMENU_MENUITEM_PROP_ENABLED));
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu2_it, DBUSMENU_MENUITEM_PROP_VISIBLE));
-  EXPECT_EQ(g_strcmp0(dbusmenu_menuitem_property_get(*menu2_it, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE), DBUSMENU_MENUITEM_TOGGLE_RADIO), 0);
+  ASSERT_STREQ(DBUSMENU_MENUITEM_TOGGLE_RADIO, dbusmenu_menuitem_property_get(*menu2_it, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE));
   EXPECT_EQ(dbusmenu_menuitem_property_get_int(*menu2_it, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE), 
   	DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu2_it, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY));
