@@ -22,7 +22,9 @@
 #include <NuxCore/AnimationController.h>
 #include "test_mock_session_manager.h"
 #include "SessionController.h"
+#include "UBusMessages.h"
 #include "UnitySettings.h"
+#include "test_utils.h"
 
 namespace unity
 {
@@ -70,8 +72,18 @@ TEST_P(/*TestSessionController*/ShowMode, Show)
   controller.Show(GetParam());
   EXPECT_TRUE(controller.Visible());
   EXPECT_EQ(controller.view_->mode(), GetParam());
-  EXPECT_EQ(nux::GetWindowCompositor().GetKeyFocusArea(), controller.view_.GetPointer());
+  EXPECT_EQ(nux::GetWindowCompositor().GetKeyFocusArea(), controller.view_->key_focus_area());
   EXPECT_TRUE(controller.view_->live_background());
+}
+
+TEST_P(/*TestSessionController*/ShowMode, RequestsHideOverlay)
+{
+  UBusManager ubus;
+  bool request_hide = false;
+  ubus.RegisterInterest(UBUS_OVERLAY_CLOSE_REQUEST, [&request_hide] (GVariant*) { request_hide = true; });
+
+  controller.Show(GetParam());
+  Utils::WaitUntilMSec(request_hide);
 }
 
 TEST_F(TestSessionController, Hide)

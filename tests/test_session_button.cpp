@@ -31,7 +31,7 @@ struct TestSessionButton : testing::Test
 {
   struct ButtonWrap : Button
   {
-    ButtonWrap() : Button("ButtonLabel", "hibernate") {}
+    ButtonWrap() : Button(Action::LOCK) {}
 
     using Button::AcceptKeyNavFocusOnMouseEnter;
     using Button::AcceptKeyNavFocusOnMouseDown;
@@ -46,8 +46,8 @@ struct TestSessionButton : testing::Test
 
 TEST_F(TestSessionButton, Construct)
 {
+  EXPECT_EQ(button.action(), Button::Action::LOCK);
   EXPECT_FALSE(button.highlighted());
-  EXPECT_EQ(button.label(), "ButtonLabel");
   EXPECT_TRUE(button.AcceptKeyNavFocusOnMouseEnter());
   EXPECT_FALSE(button.AcceptKeyNavFocusOnMouseDown());
 }
@@ -118,6 +118,51 @@ TEST_F(TestSessionButton, KeyFocusActivatesIt)
   button.activated.connect([&activated] { activated = true; });
   button.key_nav_focus_activate.emit(&button);
   EXPECT_TRUE(activated);
+}
+
+// Action typed buttons tests
+
+struct ActionButton : public testing::TestWithParam<Button::Action> {
+  ActionButton()
+    : button(GetParam())
+  {}
+
+  std::string GetExpectedLabel()
+  {
+    switch (GetParam())
+    {
+      case Button::Action::LOCK:
+        return "Lock";
+      case Button::Action::LOGOUT:
+        return "Log Out";
+      case Button::Action::SUSPEND:
+        return "Suspend";
+      case Button::Action::HIBERNATE:
+        return "Hibernate";
+      case Button::Action::SHUTDOWN:
+        return "Shut Down";
+      case Button::Action::REBOOT:
+        return "Restart";
+    }
+
+    return "";
+  }
+
+  Button button;
+};
+
+INSTANTIATE_TEST_CASE_P(TestSessionButtonTypes, ActionButton,
+  testing::Values(Button::Action::LOCK, Button::Action::LOGOUT, Button::Action::SUSPEND,
+                  Button::Action::HIBERNATE, Button::Action::SHUTDOWN, Button::Action::REBOOT));
+
+TEST_P(/*TestSessionButtonTypes*/ActionButton, Label)
+{
+  EXPECT_EQ(button.label(), GetExpectedLabel());
+}
+
+TEST_P(/*TestSessionButtonTypes*/ActionButton, Action)
+{
+  EXPECT_EQ(button.action(), GetParam());
 }
 
 } // session

@@ -43,7 +43,6 @@ public:
 
   virtual void AboutToShow() = 0;
   virtual void AboutToHide() = 0;
-  virtual void Relayout() = 0;
   virtual void ResetToDefault() = 0;
   virtual void SearchFinished() = 0;
   virtual void SetIcon(std::string const& icon_name, unsigned int tile_size, unsigned int size, unsigned int padding) = 0;

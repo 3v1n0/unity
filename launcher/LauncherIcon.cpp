@@ -125,10 +125,7 @@ LauncherIcon::LauncherIcon(IconType type)
       _tooltip->SetOpacity(opacity);
 
       if (opacity == 0.0f && _tooltip_fade_animator.GetStartValue() > _tooltip_fade_animator.GetFinishValue())
-      {
         _tooltip->ShowWindow(false);
-        _tooltip->SetOpacity(0.0f);
-      }
     }
   });
 }
@@ -692,10 +689,15 @@ void LauncherIcon::HideTooltip()
 {
   if (_tooltip)
   {
-    if (_tooltip_fade_animator.CurrentState() == nux::animation::Animation::State::Running)
+    if (_tooltip_fade_animator.CurrentState() == nux::animation::Animation::State::Running &&
+        _tooltip_fade_animator.GetFinishValue() == 1.0)
+    {
       _tooltip_fade_animator.Reverse();
+    }
     else
+    {
       _tooltip_fade_animator.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
+    }
   }
 
   tooltip_visible.emit(nux::ObjectPtr<nux::View>(nullptr));
