@@ -690,7 +690,7 @@ void LauncherIcon::HideTooltip()
   if (_tooltip)
   {
     if (_tooltip_fade_animator.CurrentState() == nux::animation::Animation::State::Running &&
-        _tooltip_fade_animator.GetStartValue() < _tooltip_fade_animator.GetFinishValue())
+        _tooltip_fade_animator.GetFinishValue() == 1.0)
     {
       _tooltip_fade_animator.Reverse();
     }
