@@ -199,7 +199,7 @@ bool operator!=(Cancellable const& lhs, Cancellable const& rhs)
 
 bool operator==(GCancellable* lhs, Cancellable const& rhs)
 {
-  return !lhs == rhs.Get();
+  return lhs == rhs.Get();
 }
 
 bool operator!=(GCancellable* lhs, Cancellable const& rhs)
