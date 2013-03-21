@@ -131,6 +131,52 @@ std::ostream& operator<<(std::ostream& o, String const& s)
   return o;
 }
 
+
+Cancellable::Cancellable()
+  : cancellable_(g_cancellable_new())
+{}
+
+Cancellable::~Cancellable()
+{
+  Cancel();
+}
+
+Cancellable::operator GCancellable*()
+{
+  return cancellable_;
+}
+
+Cancellable::operator Object<GCancellable>()
+{
+  return cancellable_;
+}
+
+Object<GCancellable> Cancellable::Get() const
+{
+  return cancellable_;
+}
+
+bool Cancellable::IsCancelled() const
+{
+  return g_cancellable_is_cancelled(cancellable_) != FALSE;
+}
+
+bool Cancellable::IsCancelled(glib::Error &error) const
+{
+  return g_cancellable_set_error_if_cancelled(cancellable_, &error) != FALSE;
+}
+
+void Cancellable::Cancel()
+{
+  g_cancellable_cancel(cancellable_);
+}
+
+void Cancellable::Reset()
+{
+  g_cancellable_reset(cancellable_);
+}
+
+
 }
 }
 

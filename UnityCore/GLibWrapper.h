@@ -25,6 +25,7 @@
 #include <string>
 
 #include <boost/utility.hpp>
+#include <gio/gio.h>
 #include <glib.h>
 #include <glib-object.h>
 
@@ -123,6 +124,25 @@ public:
 
 private:
   gchar* string_;
+};
+
+class Cancellable
+{
+public:
+  Cancellable();
+  ~Cancellable();
+
+  operator GCancellable*();
+  operator Object<GCancellable>();
+
+  Object<GCancellable> Get() const;
+  bool IsCancelled() const;
+  bool IsCancelled(glib::Error &error) const;
+  void Cancel();
+  void Reset();
+
+private:
+  Object<GCancellable> cancellable_;
 };
 
 std::ostream& operator<<(std::ostream& o, Error const& e);
