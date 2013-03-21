@@ -599,9 +599,9 @@ void ScopeProxy::Impl::OnScopeConnectedChanged(UnityProtocolScopeProxy* proxy, G
   bool tmp_scope_proxy_connected = unity_protocol_scope_proxy_get_connected(scope_proxy_);  
   if (tmp_scope_proxy_connected != scope_proxy_connected_)
   {
-    LOG_WARN(logger) << "Connection state changed for " << scope_data_->id() << " => " << (scope_proxy_connected_ ? "connected" : "disconnected");
-
     scope_proxy_connected_ = tmp_scope_proxy_connected;
+
+    LOG_WARN(logger) << "Connection state changed for " << scope_data_->id() << " => " << (scope_proxy_connected_ ? "connected" : "disconnected");
 
     CloseChannel();
     if (tmp_scope_proxy_connected)
