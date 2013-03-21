@@ -16,12 +16,11 @@
  *
  * Authored by: Gordon Allott <gord.allott@canonical.com>
  */
-#ifndef UNITY_RESULT_ITERATOR_H
-#define UNITY_RESULT_ITERATOR_H
+#ifndef UNITY_MODEL_ITERATOR_H
+#define UNITY_MODEL_ITERATOR_H
 
 #include <dee.h>
 #include <iterator>
-#include "Result.h"
 #include "GLibWrapper.h"
 
 namespace unity
@@ -32,57 +31,58 @@ namespace dash
 // Provides an iterator that will iterate a DeeModel from a Results object
 // based on the category you give it
 
-class ResultIterator : public std::iterator<std::random_access_iterator_tag, Result>
+template<class Adaptor>
+class ModelIterator : public std::iterator<std::random_access_iterator_tag, Adaptor>
 {
 public:
-  ResultIterator(glib::Object<DeeModel> model);
-  ResultIterator(glib::Object<DeeModel> model, DeeModelIter* iter_, DeeModelTag* tag);
-  ResultIterator(ResultIterator const& copy) : model_(copy.model_), iter_(copy.iter_), tag_(copy.tag_), iter_result_(copy.iter_result_){};
+  ModelIterator(glib::Object<DeeModel> model);
+  ModelIterator(glib::Object<DeeModel> model, DeeModelIter* iter_, DeeModelTag* tag);
+  ModelIterator(ModelIterator const& copy) : model_(copy.model_), iter_(copy.iter_), tag_(copy.tag_), iter_result_(copy.iter_result_){};
 
-  ResultIterator& operator=(ResultIterator const& rhs);
+  ModelIterator& operator=(ModelIterator const& rhs);
 
   //Iterator methods
-  ResultIterator& operator++();
-  ResultIterator  operator++(int);
-  ResultIterator& operator+=(int value);
-  ResultIterator  operator+(int value) const;
+  ModelIterator& operator++();
+  ModelIterator  operator++(int);
+  ModelIterator& operator+=(int value);
+  ModelIterator  operator+(int value) const;
 
-  ResultIterator& operator--();
-  ResultIterator  operator--(int);
-  ResultIterator& operator-=(int value);
-  ResultIterator  operator-(int value) const;
+  ModelIterator& operator--();
+  ModelIterator  operator--(int);
+  ModelIterator& operator-=(int value);
+  ModelIterator  operator-(int value) const;
 
-  ResultIterator operator[](int value);
-  friend inline bool const operator<(const ResultIterator& lhs, const ResultIterator& rhs)
+  ModelIterator operator[](int value);
+  friend inline bool const operator<(const ModelIterator& lhs, const ModelIterator& rhs)
   {
     return (dee_model_get_position(lhs.model_, lhs.iter_) < dee_model_get_position(rhs.model_, rhs.iter_));
   }
 
-  friend inline bool const operator>(const ResultIterator& lhs, const ResultIterator& rhs)
+  friend inline bool const operator>(const ModelIterator& lhs, const ModelIterator& rhs)
   {
     return (dee_model_get_position(lhs.model_, lhs.iter_) > dee_model_get_position(rhs.model_, rhs.iter_));
   }
 
-  friend inline bool const operator<=(const ResultIterator& lhs, const ResultIterator& rhs)
+  friend inline bool const operator<=(const ModelIterator& lhs, const ModelIterator& rhs)
   {
     return (dee_model_get_position(lhs.model_, lhs.iter_) <= dee_model_get_position(rhs.model_, rhs.iter_));
   }
 
-  friend inline bool const operator>=(const ResultIterator& lhs, const ResultIterator& rhs)
+  friend inline bool const operator>=(const ModelIterator& lhs, const ModelIterator& rhs)
   {
     return (dee_model_get_position(lhs.model_, lhs.iter_) >= dee_model_get_position(rhs.model_, rhs.iter_));
   }
   
-  friend inline bool const operator==(const ResultIterator& lhs, const ResultIterator& rhs)
+  friend inline bool const operator==(const ModelIterator& lhs, const ModelIterator& rhs)
   {
     return (lhs.iter_ == rhs.iter_);
   }
 
-  friend inline bool operator!=(const ResultIterator& lhs, const ResultIterator& rhs)
+  friend inline bool operator!=(const ModelIterator& lhs, const ModelIterator& rhs)
   {
     return !(lhs == rhs);
   }
-  Result& operator*();
+  Adaptor& operator*();
 
   /* convenience methods */
   bool const IsLast();
@@ -92,11 +92,12 @@ private:
   glib::Object<DeeModel> model_;
   DeeModelIter* iter_;
   DeeModelTag* tag_;
-  Result iter_result_;  
+  Adaptor iter_result_;  
 };
 
 }
-
 }
+
+#include "ModelIterator-inl.h"
 
 #endif 

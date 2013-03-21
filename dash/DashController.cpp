@@ -160,7 +160,7 @@ void Controller::RegisterUBusInterests()
 {
   ubus_manager_.RegisterInterest(UBUS_DASH_EXTERNAL_ACTIVATION,
                                  sigc::mem_fun(this, &Controller::OnExternalShowDash));
-  ubus_manager_.RegisterInterest(UBUS_PLACE_VIEW_CLOSE_REQUEST,
+  ubus_manager_.RegisterInterest(UBUS_OVERLAY_CLOSE_REQUEST,
                                  sigc::mem_fun(this, &Controller::OnExternalHideDash));
   place_entry_request_id_ =
     ubus_manager_.RegisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,

@@ -70,6 +70,8 @@ public:
   template<typename T>
   T renderer() const;
 
+  DeeModel* model() { return model_; }
+
 protected:
   virtual void set_model_tag(gpointer value);
   virtual gpointer get_model_tag() const;

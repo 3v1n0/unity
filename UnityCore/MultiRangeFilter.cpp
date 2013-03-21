@@ -28,12 +28,14 @@ namespace dash
 DECLARE_LOGGER(logger, "unity.dash.filter.multirange");
 
 MultiRangeFilter::MultiRangeFilter(DeeModel* model, DeeModelIter* iter)
-  : Filter(model, iter)
-  , left_pos_(-1)
-  , right_pos_(-1)
-  , ignore_changes_(false)
+: Filter(model, iter)
+, show_all_button_(true)
+, left_pos_(-1)
+, right_pos_(-1)
+, ignore_changes_(false)
 {
   options.SetGetterFunction(sigc::mem_fun(this, &MultiRangeFilter::get_options));
+  show_all_button.SetGetterFunction(sigc::mem_fun(this, &MultiRangeFilter::get_show_all_button));
   Refresh();
 }
 
@@ -54,6 +56,15 @@ void MultiRangeFilter::Clear()
 
 void MultiRangeFilter::Update(Filter::Hints& hints)
 {
+  GVariant* show_all_button_variant = hints["show-all-button"];
+  if (show_all_button_variant)
+  {
+    bool tmp_show = show_all_button_;
+    g_variant_get(show_all_button_variant, "b", &show_all_button_);
+    if (tmp_show != show_all_button_)
+      show_all_button.EmitChanged(show_all_button_);
+  }
+
   GVariant* options_variant = hints["options"];
   GVariantIter* options_iter;
 
@@ -144,6 +155,11 @@ void MultiRangeFilter::OptionChanged(bool is_active, std::string const& id)
 MultiRangeFilter::Options const& MultiRangeFilter::get_options() const
 {
   return options_;
+}
+
+bool MultiRangeFilter::get_show_all_button() const
+{
+  return show_all_button_;
 }
 
 void MultiRangeFilter::UpdateState()
