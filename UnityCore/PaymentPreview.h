@@ -34,6 +34,8 @@ namespace dash
 class PaymentPreview : public Preview
 {
 public:
+  enum PreviewType { APPLICATION, MUSIC, ERROR };
+
   typedef std::shared_ptr<PaymentPreview> Ptr;
 
   PaymentPreview(unity::glib::Object<GObject> const& proto_obj);
@@ -47,6 +49,7 @@ public:
   nux::RWProperty<std::string> payment_method;
   nux::RWProperty<std::string> purchase_prize;
   nux::RWProperty<std::string> purchase_type;
+  nux::RWProperty<PaymentPreview::PreviewType> preview_type;
 
 private:
   class Impl;

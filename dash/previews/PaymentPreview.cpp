@@ -36,6 +36,7 @@ namespace previews
 
 namespace
 {
+
 nux::logging::Logger logger("unity.dash.previews.payment.preview");
 
 }

@@ -32,6 +32,7 @@
 
 #include "GenericPreview.h"
 #include "ApplicationPreview.h"
+#include "ErrorPreview.h"
 #include "MusicPreview.h"
 #include "MoviePreview.h"
 #include "MusicPaymentPreview.h"
@@ -60,7 +61,16 @@ previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
   }
   else if (model->renderer_name == "preview-payment")
   {
-    return Preview::Ptr(new MusicPaymentPreview(model));
+    dash::PaymentPreview* payment_preview_model = dynamic_cast<dash::PaymentPreview*>(
+      model.get());
+    if (payment_preview_model->preview_type.Get() == dash::PaymentPreview::MUSIC)
+    {
+      return Preview::Ptr(new MusicPaymentPreview(model));
+    }
+    else
+    {
+      return Preview::Ptr(new ErrorPreview(model));
+    }
   }
   else if (model->renderer_name == "preview-application")
   {

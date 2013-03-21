@@ -41,6 +41,7 @@ public:
   std::string get_payment_method() const { return payment_method_; };
   std::string get_purchase_prize() const { return purchase_prize_; };
   std::string get_purchase_type() const { return purchase_type_; };
+  PreviewType get_preview_type() const { return preview_type_; };
 
   // getters for the lables
 
@@ -52,6 +53,7 @@ public:
   std::string payment_method_;
   std::string purchase_prize_;
   std::string purchase_type_;
+  PaymentPreview::PreviewType preview_type_;
 
 };
 
@@ -73,7 +75,19 @@ PaymentPreview::Impl::Impl(PaymentPreview* owner, glib::Object<GObject> const& p
   if (s) purchase_prize_ = s;
   s = unity_protocol_payment_preview_get_purchase_type(preview);
   if (s) purchase_type_ = s;
-
+  UnityProtocolPreviewPaymentType t = unity_protocol_payment_preview_get_preview_type(preview);
+  switch(t)
+  {
+    case UNITY_PROTOCOL_PREVIEW_PAYMENT_TYPE_APPLICATION:
+      preview_type_ = PaymentPreview::APPLICATION;
+      break;
+    case UNITY_PROTOCOL_PREVIEW_PAYMENT_TYPE_MUSIC:
+      preview_type_ = PaymentPreview::MUSIC;
+      break;
+    case UNITY_PROTOCOL_PREVIEW_PAYMENT_TYPE_ERROR:
+      preview_type_ = PaymentPreview::ERROR;
+      break;
+  }
   SetupGetters();
 }
 
@@ -87,8 +101,8 @@ void PaymentPreview::Impl::SetupGetters()
             sigc::mem_fun(this, &PaymentPreview::Impl::get_payment_method));
   owner_->purchase_prize.SetGetterFunction(
             sigc::mem_fun(this, &PaymentPreview::Impl::get_purchase_prize));
-  owner_->purchase_type.SetGetterFunction(
-            sigc::mem_fun(this, &PaymentPreview::Impl::get_purchase_type));
+  owner_->preview_type.SetGetterFunction(
+            sigc::mem_fun(this, &PaymentPreview::Impl::get_preview_type));
 }
 
 PaymentPreview::PaymentPreview(unity::glib::Object<GObject> const& proto_obj)
