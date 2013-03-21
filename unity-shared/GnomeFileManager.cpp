@@ -18,19 +18,17 @@
  *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#include "FileManagerOpenerImp.h"
+#include "GnomeFileManager.h"
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 #include <gdk/gdk.h>
 
 namespace unity
 {
-namespace launcher
-{
 
-DECLARE_LOGGER(logger, "unity.launcher.filemanager.opener.imp");
+DECLARE_LOGGER(logger, "unity.filemanager.gnome");
 
-void FileManagerOpenerImp::Open(std::string const& uri, unsigned long long timestamp)
+void GnomeFileManager::Open(std::string const& uri, unsigned long long timestamp)
 {
   if (uri.empty())
   {
@@ -54,5 +52,4 @@ void FileManagerOpenerImp::Open(std::string const& uri, unsigned long long times
   }
 }
 
-}
 }

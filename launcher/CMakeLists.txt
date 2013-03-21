@@ -32,7 +32,6 @@ set (LAUNCHER_SOURCES
      FavoriteStore.cpp
      FavoriteStoreGSettings.cpp
      FavoriteStorePrivate.cpp
-     FileManagerOpenerImp.cpp
      HudLauncherIcon.cpp
      Launcher.cpp
      LauncherController.cpp

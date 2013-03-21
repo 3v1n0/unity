@@ -203,6 +203,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
   {
     float noise_factor = 1.1f;
     float gaussian_sigma = opengl_version >= 3 ? sigma_high : sigma_med;
+    int blur_passes = 1;
 
     nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture = gpu_device->backup_texture0_;
     nux::ObjectPtr<nux::CachedBaseTexture> noise_device_texture = graphics_engine->CacheResource(noise_texture_);
@@ -211,9 +212,9 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     unsigned int buffer_height = larger_blur_geometry.height;
 
     blur_fx_struct_.src_texture = device_texture;
-    graphics_engine->QRP_GLSL_GetLSBlurFx(0, 0, buffer_width, buffer_height,
+    graphics_engine->QRP_GLSL_GetHQBlurFx(0, 0, buffer_width, buffer_height,
                                                   &blur_fx_struct_, texxform__bg, nux::color::White,
-                                                 gaussian_sigma);
+                                                 gaussian_sigma, blur_passes);
 
     nux::TexCoordXForm texxform;
     nux::TexCoordXForm noise_texxform;

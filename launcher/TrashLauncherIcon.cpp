@@ -31,7 +31,7 @@
 #include "Launcher.h"
 #include "QuicklistManager.h"
 #include "QuicklistMenuItemLabel.h"
-#include "FileManagerOpenerImp.h"
+#include "unity-shared/GnomeFileManager.h"
 
 namespace unity
 {
@@ -44,9 +44,9 @@ namespace
   const std::string TRASH_URI = "trash:";
 }
 
-TrashLauncherIcon::TrashLauncherIcon(FileManagerOpener::Ptr const& fmo)
+TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
   : SimpleLauncherIcon(IconType::TRASH)
-  , file_manager_(fmo ? fmo : std::make_shared<FileManagerOpenerImp>())
+  , file_manager_(fmo ? fmo : std::make_shared<GnomeFileManager>())
   , cancellable_(g_cancellable_new())
 {
   tooltip_text = _("Trash");

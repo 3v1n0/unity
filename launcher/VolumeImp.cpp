@@ -36,14 +36,14 @@ class VolumeImp::Impl
 {
 public:
   Impl(glib::Object<GVolume> const& volume,
-       FileManagerOpener::Ptr const& file_manager_opener,
+       FileManager::Ptr const& file_manager,
        DeviceNotificationDisplay::Ptr const& device_notification_display,
        VolumeImp* parent)
     : parent_(parent)
     , open_timestamp_(0)
     , cancellable_(g_cancellable_new())
     , volume_(volume)
-    , file_manager_opener_(file_manager_opener)
+    , file_manager_(file_manager)
     , device_notification_display_(device_notification_display)
   {
     signal_volume_changed_.Connect(volume_, "changed", [this] (GVolume*) {
@@ -173,7 +173,7 @@ public:
 
   void OpenInFileManager()
   {
-    file_manager_opener_->Open(GetUri(), open_timestamp_);
+    file_manager_->Open(GetUri(), open_timestamp_);
   }
 
   std::string GetUri()
@@ -222,7 +222,7 @@ public:
   unsigned long long open_timestamp_;
   glib::Object<GCancellable> cancellable_;
   glib::Object<GVolume> volume_;
-  FileManagerOpener::Ptr file_manager_opener_;
+  FileManager::Ptr file_manager_;
   DeviceNotificationDisplay::Ptr device_notification_display_;
 
   glib::Signal<void, GVolume*> signal_volume_changed_;
@@ -234,9 +234,9 @@ public:
 //
 
 VolumeImp::VolumeImp(glib::Object<GVolume> const& volume,
-                     FileManagerOpener::Ptr const& file_manager_opener,
+                     FileManager::Ptr const& file_manager,
                      DeviceNotificationDisplay::Ptr const& device_notification_display)
-  : pimpl(new Impl(volume, file_manager_opener, device_notification_display, this))
+  : pimpl(new Impl(volume, file_manager, device_notification_display, this))
 {}
 
 VolumeImp::~VolumeImp()

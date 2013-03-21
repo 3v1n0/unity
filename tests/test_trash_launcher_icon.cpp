@@ -26,7 +26,7 @@ using namespace unity::launcher;
 
 namespace
 {
-struct MockFileManagerOpener : launcher::FileManagerOpener
+struct MockFileManager : FileManager
 {
   MOCK_METHOD2(Open, void(std::string const& uri, unsigned long long time));
 };
@@ -34,11 +34,11 @@ struct MockFileManagerOpener : launcher::FileManagerOpener
 struct TestTrashLauncherIcon : testing::Test
 {
   TestTrashLauncherIcon()
-    : fmo_(std::make_shared<MockFileManagerOpener>())
-    , icon(fmo_)
+    : fm_(std::make_shared<MockFileManager>())
+    , icon(fm_)
   {}
 
-  std::shared_ptr<MockFileManagerOpener> fmo_;
+  std::shared_ptr<MockFileManager> fm_;
   TrashLauncherIcon icon;
 };
 
@@ -50,7 +50,7 @@ TEST_F(TestTrashLauncherIcon, Position)
 TEST_F(TestTrashLauncherIcon, Activate)
 {
   unsigned long long time = g_random_int();
-  EXPECT_CALL(*fmo_, Open("trash:", time));
+  EXPECT_CALL(*fm_, Open("trash:", time));
   icon.Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
 }
 

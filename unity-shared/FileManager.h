@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2012 Canonical Ltd
+ * Copyright (C) 2012-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,34 +15,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#ifndef UNITYSHELL_FILEMANAGER_OPENER_H
-#define UNITYSHELL_FILEMANAGER_OPENER_H
+#ifndef UNITYSHELL_FILEMANAGER_H
+#define UNITYSHELL_FILEMANAGER_H
 
 #include <memory>
 #include <string>
 
 namespace unity
 {
-namespace launcher
-{
 
-class FileManagerOpener
+class FileManager
 {
 public:
-  typedef std::shared_ptr<FileManagerOpener> Ptr;
+  typedef std::shared_ptr<FileManager> Ptr;
 
-  FileManagerOpener() = default;
-  virtual ~FileManagerOpener() {}
+  FileManager() = default;
+  virtual ~FileManager() {}
   virtual void Open(std::string const& uri, unsigned long long timestamp = 0) = 0;
 
 private:
-  FileManagerOpener(FileManagerOpener const&) = delete;
-  FileManagerOpener& operator=(FileManagerOpener const&) = delete;
+  FileManager(FileManager const&) = delete;
+  FileManager& operator=(FileManager const&) = delete;
 };
 
-}
 }
 
 #endif

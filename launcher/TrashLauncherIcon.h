@@ -26,7 +26,7 @@
 
 #include "DndData.h"
 #include "SimpleLauncherIcon.h"
-#include "FileManagerOpener.h"
+#include "unity-shared/FileManager.h"
 
 namespace unity
 {
@@ -37,7 +37,7 @@ class TrashLauncherIcon : public SimpleLauncherIcon
 {
 
 public:
-  TrashLauncherIcon(FileManagerOpener::Ptr const& = nullptr);
+  TrashLauncherIcon(FileManager::Ptr const& = nullptr);
   ~TrashLauncherIcon();
 
 protected:
@@ -56,7 +56,7 @@ private:
   static void UpdateTrashIconCb(GObject* source, GAsyncResult* res, gpointer data);
 
   bool empty_;
-  FileManagerOpener::Ptr file_manager_;
+  FileManager::Ptr file_manager_;
   glib::Object<GCancellable> cancellable_;
   glib::Object<GFileMonitor> trash_monitor_;
   glib::Signal<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent> trash_changed_signal_;
