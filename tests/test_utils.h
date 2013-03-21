@@ -88,8 +88,8 @@ public:
 
   static void reset_gsettings_test_environment()
   {
-    g_setenv("GSETTINGS_SCHEMA_DIR", "", true);
-    g_setenv("GSETTINGS_BACKEND", "", true);
+    g_unsetenv("GSETTINGS_SCHEMA_DIR");
+    g_unsetenv("GSETTINGS_BACKEND");
   }
 
 private:
