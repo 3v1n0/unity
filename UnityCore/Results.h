@@ -24,12 +24,14 @@
 
 #include "Model.h"
 #include "Result.h"
-#include "ResultIterator.h"
+#include "ModelIterator.h"
 
 namespace unity
 {
 namespace dash
 {
+
+typedef ModelIterator<Result> ResultIterator;
 
 class Results : public Model<Result>
 {

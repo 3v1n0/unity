@@ -17,14 +17,14 @@
  * Authored by: Gordon Allott <gord.allott@canonical.com>
  */
 
-#include "ResultIterator.h"
  
 namespace unity
 {
 namespace dash
 {
 
-ResultIterator::ResultIterator(glib::Object<DeeModel> model)
+template<class Adaptor>
+ModelIterator<Adaptor>::ModelIterator(glib::Object<DeeModel> model)
   : model_(model)
   , iter_(model ? dee_model_get_first_iter(model) : NULL)
   , tag_(NULL)
@@ -32,7 +32,8 @@ ResultIterator::ResultIterator(glib::Object<DeeModel> model)
 {
 }
 
-ResultIterator::ResultIterator(glib::Object<DeeModel> model, DeeModelIter* iter, DeeModelTag* tag)
+template<class Adaptor>
+ModelIterator<Adaptor>::ModelIterator(glib::Object<DeeModel> model, DeeModelIter* iter, DeeModelTag* tag)
   : model_(model)
   , iter_(iter)
   , tag_(tag)
@@ -40,12 +41,14 @@ ResultIterator::ResultIterator(glib::Object<DeeModel> model, DeeModelIter* iter,
 {
 }
 
-ResultIterator ResultIterator::operator[](int value)
+template<class Adaptor>
+ModelIterator<Adaptor> ModelIterator<Adaptor>::operator[](int value)
 {
-  return ResultIterator(model_, dee_model_get_iter_at_row(model_, value), tag_);
+  return ModelIterator<Adaptor>(model_, dee_model_get_iter_at_row(model_, value), tag_);
 }
 
-ResultIterator& ResultIterator::operator=(ResultIterator const& rhs)
+template<class Adaptor>
+ModelIterator<Adaptor>& ModelIterator<Adaptor>::operator=(ModelIterator const& rhs)
 {
   model_ = rhs.model_;
   iter_ = rhs.iter_;
@@ -55,13 +58,15 @@ ResultIterator& ResultIterator::operator=(ResultIterator const& rhs)
   return *this;
 }
 
-ResultIterator& ResultIterator::operator++()
+template<class Adaptor>
+ModelIterator<Adaptor>& ModelIterator<Adaptor>::operator++()
 {
   iter_ = dee_model_next(model_, iter_);
   return *this;
 }
 
-ResultIterator& ResultIterator::operator+=(int count)
+template<class Adaptor>
+ModelIterator<Adaptor>& ModelIterator<Adaptor>::operator+=(int count)
 {
   if (dee_model_is_last(model_, iter_))
     return *this;
@@ -72,27 +77,31 @@ ResultIterator& ResultIterator::operator+=(int count)
   return *this;
 }
 
-ResultIterator ResultIterator::operator++(int)
+template<class Adaptor>
+ModelIterator<Adaptor> ModelIterator<Adaptor>::operator++(int)
 {
-  ResultIterator tmp(*this);
+  ModelIterator tmp(*this);
   operator++();
   return tmp;
 }
 
-ResultIterator ResultIterator::operator+(int count) const
+template<class Adaptor>
+ModelIterator<Adaptor> ModelIterator<Adaptor>::operator+(int count) const
 {
-  ResultIterator tmp(*this);
+  ModelIterator tmp(*this);
   tmp += count;
   return tmp;
 }
 
-ResultIterator& ResultIterator::operator--()
+template<class Adaptor>
+ModelIterator<Adaptor>& ModelIterator<Adaptor>::operator--()
 {
   iter_ = dee_model_prev(model_, iter_);
   return *this;
 }
 
-ResultIterator& ResultIterator::operator-=(int count)
+template<class Adaptor>
+ModelIterator<Adaptor>& ModelIterator<Adaptor>::operator-=(int count)
 {
   if (dee_model_is_first(model_, iter_))
     return *this;
@@ -103,33 +112,38 @@ ResultIterator& ResultIterator::operator-=(int count)
   return *this;
 }
 
-ResultIterator ResultIterator::operator--(int)
+template<class Adaptor>
+ModelIterator<Adaptor> ModelIterator<Adaptor>::operator--(int)
 {
-  ResultIterator tmp(*this);
+  ModelIterator<Adaptor> tmp(*this);
   operator--();
   return tmp;
 }
 
-ResultIterator ResultIterator::operator-(int count) const
+template<class Adaptor>
+ModelIterator<Adaptor> ModelIterator<Adaptor>::operator-(int count) const
 {
-  ResultIterator tmp(*this);
+  ModelIterator<Adaptor> tmp(*this);
   tmp -= count;
   return tmp;
 }
 
-Result& ResultIterator::operator*()
+template<class Adaptor>
+Adaptor& ModelIterator<Adaptor>::operator*()
 {
   iter_result_.SetTarget(model_, iter_, tag_);
   return iter_result_;
 }
 
-bool const ResultIterator::IsLast()
+template<class Adaptor>
+bool const ModelIterator<Adaptor>::IsLast()
 {
   if (!model_) return true;
   return (dee_model_is_last(model_, iter_));
 }
 
-bool const ResultIterator::IsFirst()
+template<class Adaptor>
+bool const ModelIterator<Adaptor>::IsFirst()
 {
   if (!model_) return true;
   return (dee_model_is_first(model_, iter_));

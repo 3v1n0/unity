@@ -1100,7 +1100,7 @@ void DashView::OnActivateRequest(GVariant* args)
   }
   else if (/* visible_ && */ handled_type == ScopeHandledType::NOT_HANDLED)
   {
-    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST, NULL,
+    ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST, NULL,
                               glib::Source::Priority::HIGH);
   }
   else if (/* visible_ && */ handled_type == ScopeHandledType::GOTO_DASH_URI)
@@ -1231,7 +1231,7 @@ void DashView::OnScopeAdded(Scope::Ptr const& scope, int position)
   });
 
   if (!active_scope_view_)
-    OnScopeBarActivated(scope->id());
+    scope_bar_->Activate(scope->id);
 }
 
 void DashView::OnScopeBarActivated(std::string const& id)
@@ -1323,7 +1323,7 @@ void DashView::OnResultActivatedReply(LocalResult const& local_result, ScopeHand
     return;
   }
 
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
 }
 
 bool DashView::DoFallbackActivation(std::string const& uri)
@@ -1399,7 +1399,7 @@ bool DashView::InspectKeyEvent(unsigned int eventType,
     else if (search_bar_->search_string != "")
       search_bar_->search_string = "";
     else
-      ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+      ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
 
     return true;
   }
@@ -1469,7 +1469,7 @@ nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
 
 void DashView::ProcessDndEnter()
 {
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
 }
 
 nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
@@ -1519,7 +1519,7 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
 
     if (close_key.first == special_keys_state && close_key.second == x11_key_code)
     {
-      ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+      ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
       return nullptr;
     }
 
@@ -1665,6 +1665,21 @@ nux::Area* DashView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::N
 nux::Geometry const& DashView::GetContentGeometry() const
 {
   return content_geo_;
+}
+
+bool DashView::SetParentObject(Area *parent)
+{
+  //This is a bit crap and should be fixed in nux.
+  //If you reparent, you need to fix up the focus tree.
+  if (View::SetParentObject(parent))
+  {
+    // Because the scopes are now created synchronously on construction, we wont be parented by the time the focus is updated.
+    InputArea* area = nux::GetWindowCompositor().GetKeyFocusArea();
+    if (area)
+      area->SetPathToKeyFocusArea();
+    return true;
+  }
+  return false;
 }
 
 }
