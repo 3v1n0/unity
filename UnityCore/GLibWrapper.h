@@ -148,7 +148,9 @@ private:
 
 bool operator==(Cancellable const& lhs, Cancellable const& rhs);
 bool operator!=(Cancellable const& lhs, Cancellable const& rhs);
+bool operator==(GCancellable* lhs, Cancellable const& rhs);
 bool operator!=(GCancellable* lhs, Cancellable const& rhs);
+bool operator==(Object<GCancellable> const& lhs, Cancellable const& rhs);
 bool operator!=(Object<GCancellable> const& lhs, Cancellable const& rhs);
 
 std::ostream& operator<<(std::ostream& o, Error const& e);

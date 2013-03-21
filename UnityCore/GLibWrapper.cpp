@@ -197,9 +197,19 @@ bool operator!=(Cancellable const& lhs, Cancellable const& rhs)
   return !(lhs == rhs);
 }
 
+bool operator==(GCancellable* lhs, Cancellable const& rhs)
+{
+  return !lhs == rhs.Get();
+}
+
 bool operator!=(GCancellable* lhs, Cancellable const& rhs)
 {
   return !(lhs == rhs.Get());
+}
+
+bool operator==(Object<GCancellable> const& lhs, Cancellable const& rhs)
+{
+  return lhs == rhs.Get();
 }
 
 bool operator!=(Object<GCancellable> const& lhs, Cancellable const& rhs)
