@@ -74,19 +74,16 @@ public:
 NUX_IMPLEMENT_OBJECT_TYPE(ThumbnailNotifier);
 
 ThumbnailNotifier::ThumbnailNotifier()
-: cancel_(g_cancellable_new())
-{
-
-}
+{}
 
 void ThumbnailNotifier::Cancel()
 {
-  g_cancellable_cancel(cancel_);
+  cancel_.Cancel();
 }
 
 bool ThumbnailNotifier::IsCancelled() const
 {
-  return g_cancellable_is_cancelled(cancel_);
+  return cancel_.IsCancelled();
 }
 
 class ThumbnailGeneratorImpl

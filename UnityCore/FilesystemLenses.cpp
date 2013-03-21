@@ -100,7 +100,7 @@ bool LensDirectoryReader::LensFileData::IsValid(GKeyFile* file, glib::Error& err
 class LensDirectoryReader::Impl
 {
 public:
-  typedef std::map<GFile*, glib::Object<GCancellable>> CancellableMap;
+  typedef std::map<GFile*, glib::Cancellable::Ptr> CancellableMap;
 
   Impl(LensDirectoryReader *owner, std::string const& directory)
     : owner_(owner)
@@ -110,23 +110,15 @@ public:
   {
     LOG_DEBUG(logger) << "Initialising lens reader for: " << directory;
 
-    glib::Object<GCancellable> cancellable(g_cancellable_new());
+    auto cancellable = std::make_shared<glib::Cancellable>();
     g_file_enumerate_children_async(directory_,
                                     G_FILE_ATTRIBUTE_STANDARD_NAME,
                                     G_FILE_QUERY_INFO_NONE,
                                     G_PRIORITY_DEFAULT,
-                                    cancellable,
+                                    *cancellable,
                                     (GAsyncReadyCallback)OnDirectoryEnumerated,
                                     this);
     cancel_map_[directory_] = cancellable;
-  }
-
-  ~Impl()
-  {
-    for (auto pair: cancel_map_)
-    {
-      g_cancellable_cancel(pair.second);
-    }
   }
 
   void EnumerateLensesDirectoryChildren(GFileEnumerator* enumerator);
@@ -165,11 +157,10 @@ void LensDirectoryReader::Impl::OnDirectoryEnumerated(GFile* source, GAsyncResul
 
 void LensDirectoryReader::Impl::EnumerateLensesDirectoryChildren(GFileEnumerator* in_enumerator)
 {
-  glib::Object<GCancellable> cancellable(g_cancellable_new());
-
+  auto cancellable = std::make_shared<glib::Cancellable>();
   cancel_map_[g_file_enumerator_get_container(in_enumerator)] = cancellable;
   g_file_enumerator_next_files_async (in_enumerator, 64, G_PRIORITY_DEFAULT,
-                                      cancellable,
+                                      *cancellable,
                                       [] (GObject *src, GAsyncResult *res,
                                           gpointer data) -> void {
     // async callback
@@ -209,13 +200,13 @@ void LensDirectoryReader::Impl::EnumerateLensesDirectoryChildren(GFileEnumerator
 void LensDirectoryReader::Impl::LoadLensFile(std::string const& lensfile_path)
 {
   glib::Object<GFile> file(g_file_new_for_path(lensfile_path.c_str()));
-  glib::Object<GCancellable> cancellable(g_cancellable_new());
+  auto cancellable = std::make_shared<glib::Cancellable>();
 
   // How many files are we waiting for to load
   children_waiting_to_load_++;
 
   g_file_load_contents_async(file,
-                             cancellable,
+                             *cancellable,
                              (GAsyncReadyCallback)(LensDirectoryReader::Impl::LoadFileContentCallback),
                              this);
   cancel_map_[file] = cancellable;

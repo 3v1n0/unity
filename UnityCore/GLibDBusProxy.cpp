@@ -54,7 +54,6 @@ public:
        string const& interface_name,
        GBusType bus_type,
        GDBusProxyFlags flags);
-  ~Impl();
 
   void StartReconnectionTimeout(unsigned timeout);
   void Connect();
@@ -100,7 +99,7 @@ public:
   GDBusProxyFlags flags_;
 
   glib::Object<GDBusProxy> proxy_;
-  glib::Object<GCancellable> cancellable_;
+  glib::Cancellable cancellable_;
   bool connected_;
   unsigned reconnection_attempts_;
 
@@ -124,16 +123,10 @@ DBusProxy::Impl::Impl(DBusProxy* owner,
   , interface_name_(interface_name)
   , bus_type_(bus_type)
   , flags_(flags)
-  , cancellable_(g_cancellable_new())
   , connected_(false)
   , reconnection_attempts_(0)
 {
   Connect();
-}
-
-DBusProxy::Impl::~Impl()
-{
-  g_cancellable_cancel(cancellable_);
 }
 
 void DBusProxy::Impl::StartReconnectionTimeout(unsigned timeout)

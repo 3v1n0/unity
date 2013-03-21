@@ -41,7 +41,6 @@ public:
        VolumeImp* parent)
     : parent_(parent)
     , open_timestamp_(0)
-    , cancellable_(g_cancellable_new())
     , volume_(volume)
     , file_manager_opener_(file_manager_opener)
     , device_notification_display_(device_notification_display)
@@ -53,11 +52,6 @@ public:
     signal_volume_removed_.Connect(volume_, "removed", [this] (GVolume*) {
           parent_->removed.emit();
     });
-  }
-
-  ~Impl()
-  {
-    g_cancellable_cancel(cancellable_);
   }
 
   bool CanBeEjected() const
@@ -220,7 +214,7 @@ public:
 
   VolumeImp* parent_;
   unsigned long long open_timestamp_;
-  glib::Object<GCancellable> cancellable_;
+  glib::Cancellable cancellable_;
   glib::Object<GVolume> volume_;
   FileManagerOpener::Ptr file_manager_opener_;
   DeviceNotificationDisplay::Ptr device_notification_display_;
