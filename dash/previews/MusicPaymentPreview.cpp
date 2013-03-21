@@ -440,7 +440,10 @@ void MusicPaymentPreview::SetupViews()
     if (info_hint->id == MusicPaymentPreview::DATA_INFOHINT_ID)
     {
       preview_data = info_hint->value;
-      error_message_ = GetErrorMessage(preview_data);
+      if (preview_data != NULL)
+      {
+        error_message_ = GetErrorMessage(preview_data);
+      }
       break;
     }
   }
