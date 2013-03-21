@@ -84,7 +84,7 @@ PaymentPreview::Impl::Impl(PaymentPreview* owner, glib::Object<GObject> const& p
     case UNITY_PROTOCOL_PREVIEW_PAYMENT_TYPE_MUSIC:
       preview_type_ = PaymentPreview::MUSIC;
       break;
-    default:
+    case UNITY_PROTOCOL_PREVIEW_PAYMENT_TYPE_ERROR:
       preview_type_ = PaymentPreview::ERROR;
       break;
   }

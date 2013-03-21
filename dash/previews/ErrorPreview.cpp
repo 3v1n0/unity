@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright 2012 Canonical Ltd.
+ * Copyright 2012-2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -79,9 +79,7 @@ nux::Area* ErrorPreview::FindKeyFocusArea(unsigned int key_symbol,
                                     unsigned long x11_key_code,
                                     unsigned long special_keys_state)
 {
-  nux::ObjectPtr<TextInput> area;
-  area = new TextInput();
-  return area->text_entry();
+  return Preview::FindKeyFocusArea(key_symbol, x11_key_code, special_keys_state); 
 }
 
 std::string ErrorPreview::GetName() const
