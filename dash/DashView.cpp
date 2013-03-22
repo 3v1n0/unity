@@ -537,6 +537,7 @@ void DashView::SetupViews()
   search_bar_->SetMinimumHeight(style.GetSearchBarHeight());
   search_bar_->SetMaximumHeight(style.GetSearchBarHeight());
   search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
+  search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
   search_bar_->showing_filters.changed.connect([&] (bool showing)
   {
@@ -1246,8 +1247,16 @@ void DashView::OnScopeBarActivated(std::string const& id)
   QueueDraw();
 }
 
+void DashView::OnSearchChanged(std::string const& search_string)
+{
+  search_in_progress_ = true;
+}
+
 void DashView::OnLiveSearchReached(std::string const& search_string)
 {
+  // reset and set it again once we're sure a search is happening
+  search_in_progress_ = false;
+
   LOG_DEBUG(logger) << "Live search reached: " << search_string;
   if (active_scope_view_)
   {

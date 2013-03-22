@@ -158,7 +158,7 @@ ScopeView::ScopeView(Scope::Ptr scope, nux::Area* show_filters)
 , no_results_active_(false)
 , last_good_filter_model_(-1)
 , filter_expansion_pushed_(false)
-, scope_connected_(false)
+, scope_connected_(scope ? scope->connected : false)
 , search_on_next_connect_(false)
 {
   SetupViews(show_filters);
@@ -180,15 +180,14 @@ ScopeView::ScopeView(Scope::Ptr scope, nux::Area* show_filters)
 
     scope_->connected.changed.connect([&](bool is_connected)
     {
-      if (!IsVisible())
-        return;
       // We need to search again if we were reconnected after being connected before.
       if (scope_connected_ && !is_connected)
         search_on_next_connect_ = true;
       else if (is_connected && search_on_next_connect_)
       {
         search_on_next_connect_ = false;
-        PerformSearch(search_string_, nullptr);
+        if (IsVisible())
+          PerformSearch(search_string_, nullptr);
       }
       scope_connected_ = is_connected;
     });
@@ -797,6 +796,12 @@ bool ScopeView::PerformSearch(std::string const& search_query, SearchCallback co
 
     scope_->Search(search_query, [this, callback] (std::string const& search_string, glib::HintsMap const& hints, glib::Error const& err)
     {
+      if (err && !scope_connected_)
+      {
+        // if we've failed a search due to connection issue, we need to try again when we re-connect
+        search_on_next_connect_ = true;
+      }
+
       CheckNoResults(hints);
       hide_message_delay_.reset();
       if (callback)

@@ -327,6 +327,7 @@ void SearchBar::OnSearchChanged(nux::TextEntry* text_entry)
   hint_->QueueDraw();
   QueueDraw();
 
+  search_changed.emit(pango_entry_->GetText());
   if (tmp_search_string_.empty())
     tmp_search_string_ = search_string;
 }
@@ -459,6 +460,7 @@ void SearchBar::ForceLiveSearch()
 
 void SearchBar::SetSearchStarted()
 {
+  search_changed.emit(pango_entry_->GetText());
   // Don't animate the spinner immediately, the searches are fast and
   // the spinner would just flicker
   start_spinner_timeout_.reset(new glib::Timeout(SPINNER_TIMEOUT * 2));
