@@ -1202,8 +1202,10 @@ void DashView::OnScopeSearchFinished(std::string const& scope_id, std::string co
   {
     search_bar_->SetSearchFinished();
     search_in_progress_ = false;
-    if (activate_on_finish_)
-      this->OnEntryActivated();
+    
+    if (activate_on_finish_ && !err)
+      OnEntryActivated();
+    activate_on_finish_= false;
   }
 }
 
