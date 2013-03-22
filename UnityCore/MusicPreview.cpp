@@ -47,18 +47,12 @@ MusicPreview::Impl::Impl(MusicPreview* owner,
   : owner_(owner)
   , tracks_model(new Tracks())
 {
-  const gchar* s;
   raw_preview_ = glib::object_cast<UnityProtocolMusicPreview>(proto_obj);
 
-  s = unity_protocol_music_preview_get_track_data_swarm_name(raw_preview_);
-  std::string swarm_name(s != NULL ? s : "");
-  s = unity_protocol_music_preview_get_track_data_address(raw_preview_);
-  std::string peer_address(s != NULL ? s : "");
-
-  // TODO: we're not using private connection yet
-  if (!swarm_name.empty())
+  if (raw_preview_)
   {
-    tracks_model->swarm_name = swarm_name;
+    glib::Object<DeeModel> track_dee_model(DEE_MODEL(unity_protocol_music_preview_get_track_model(raw_preview_)), glib::AddRef());
+    tracks_model->SetModel(track_dee_model);
   }
 }
 
