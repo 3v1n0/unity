@@ -17,6 +17,7 @@ private:
   glib::DBusServer server_;
   int ro_property_;
   int rw_property_;
+  int wo_property_;
 };
 
 }
