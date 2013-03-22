@@ -359,6 +359,7 @@ private:
   CompRegion buffered_compiz_damage_this_frame_;
   CompRegion buffered_compiz_damage_last_frame_;
   bool       ignore_redraw_request_;
+  bool       dirty_helpers_on_this_frame_;
 
   std::unique_ptr <GLFramebufferObject> directly_drawable_fbo_;
   GLFramebufferObject *previous_framebuffer_;
