@@ -72,13 +72,16 @@ ScopeData::Ptr ScopeData::ReadProtocolDataForId(std::string const& scope_id, gli
     data->query_pattern = glib::gchar_to_string(meta_data->query_pattern);
 
     std::vector<std::string> keywords;
-    for (GSList* v = meta_data->keywords; v; v = g_slist_next(v))
+    if (meta_data->keywords)
     {
-      std::string value(static_cast<gchar*>(v->data));
-      if (value.empty())
-        continue;
+      for (GSList* v = meta_data->keywords; v; v = g_slist_next(v))
+      {
+        std::string value = glib::gchar_to_string(static_cast<gchar*>(v->data));
+        if (value.empty())
+          continue;
 
-      keywords.push_back(value);
+        keywords.push_back(value);
+      }
     }
     data->keywords = keywords;
   }

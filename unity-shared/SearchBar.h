@@ -51,8 +51,9 @@ public:
   SearchBar(NUX_FILE_LINE_PROTO);
   SearchBar(bool show_filter_hint, NUX_FILE_LINE_PROTO);
 
-  void ForceSearchChanged();
-  void SearchFinished();
+  void ForceLiveSearch();
+  void SetSearchFinished();
+
   nux::TextEntry* text_entry() const;
   nux::View* show_filters() const;
 

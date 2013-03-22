@@ -112,7 +112,7 @@ private:
   void OnLiveSearchReached(std::string const& search_string);
   void OnScopeAdded(Scope::Ptr const& scope, int position);
   void OnScopeBarActivated(std::string const& id);
-  void OnSearchFinished(std::string const& search_string, glib::HintsMap const& hints, glib::Error const& error);
+  void OnScopeSearchFinished(std::string const& scope_id, std::string const& search_string, glib::Error const& err);
   void OnResultActivated(ResultView::ActivateType type, LocalResult const& local_result, GVariant* data, std::string const& unique_id);
   void OnResultActivatedReply(LocalResult const& local_result, ScopeHandledType type, glib::HintsMap const& hints);
   bool DoFallbackActivation(std::string const& uri);
@@ -164,9 +164,6 @@ private:
   bool activate_on_finish_;
 
   bool visible_;
-
-  glib::Source::UniquePtr searching_timeout_;
-  glib::Source::UniquePtr hide_message_delay_;
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> dash_view_copy_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> search_view_copy_;

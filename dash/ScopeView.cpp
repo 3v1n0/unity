@@ -157,6 +157,8 @@ ScopeView::ScopeView(Scope::Ptr scope, nux::Area* show_filters)
 , no_results_active_(false)
 , last_good_filter_model_(-1)
 , filter_expansion_pushed_(false)
+, scope_connected_(scope ? scope->connected : false)
+, search_on_next_connect_(false)
 {
   SetupViews(show_filters);
 
@@ -175,9 +177,18 @@ ScopeView::ScopeView(Scope::Ptr scope, nux::Area* show_filters)
     filters_updated = scope_->filters.changed.connect([this](Filters::Ptr const& filters) { SetupFilters(filters); });
     SetupFilters(scope->filters);
 
-    scope_->connected.changed.connect([&](bool is_connected) {
-      if (is_connected)
-        initial_activation_ = true;
+    scope_->connected.changed.connect([&](bool is_connected)
+    {
+      // We need to search again if we were reconnected after being connected before.
+      if (scope_connected_ && !is_connected)
+        search_on_next_connect_ = true;
+      else if (is_connected && search_on_next_connect_)
+      {
+        search_on_next_connect_ = false;
+        if (IsVisible())
+          PerformSearch(search_string_, nullptr);
+      }
+      scope_connected_ = is_connected;
     });
   }
 
@@ -767,17 +778,37 @@ void ScopeView::HideResultsMessage()
   }
 }
 
-void ScopeView::PerformSearch(std::string const& search_query, Scope::SearchCallback const& cb)
+bool ScopeView::PerformSearch(std::string const& search_query, SearchCallback const& callback)
 {
   search_string_ = search_query;
   if (scope_)
   {
+    // 150ms to hide the no reults message if its take a while to return results
+    hide_message_delay_.reset(new glib::Timeout(150, [&] () {
+      HideResultsMessage();
+      return false;
+    }));
+
     // cancel old search.
     if (search_cancellable_) g_cancellable_cancel (search_cancellable_);
     search_cancellable_ = g_cancellable_new ();
 
-    scope_->Search(search_query, cb, search_cancellable_);
+    scope_->Search(search_query, [this, callback] (std::string const& search_string, glib::HintsMap const& hints, glib::Error const& err)
+    {
+      if (err && !scope_connected_)
+      {
+        // if we've failed a search due to connection issue, we need to try again when we re-connect
+        search_on_next_connect_ = true;
+      }
+
+      CheckNoResults(hints);
+      hide_message_delay_.reset();
+      if (callback)
+        callback(scope_->id(), search_string, err);
+    }, search_cancellable_);
+    return true;
   }
+  return false;
 }
 
 std::string ScopeView::get_search_string() const
@@ -820,19 +851,6 @@ void ScopeView::OnViewTypeChanged(ScopeViewType view_type)
 {
   if (!scope_)
     return;
-
-  if (view_type != ScopeViewType::HIDDEN && initial_activation_)
-  {
-    /* We reset the scope for ourselves, in case this is a restart or something */
-    scope_->Search(search_string_, [this] (std::string const&, glib::HintsMap const&, glib::Error const& error)
-    {
-      if (error)
-      {
-        LOG_WARNING(logger) << "Search failed on " << scope_->id() << " => " << error;
-      }
-    });
-    initial_activation_ = false;
-  }
 
   scope_->view_type = view_type;
 }

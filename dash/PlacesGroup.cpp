@@ -330,7 +330,7 @@ PlacesGroup::RefreshLabel()
     }
     else
     {
-      LOG_DEBUG(logger) << _n_total_items << " - " << _n_visible_items_in_unexpand_mode;
+      LOG_TRACE(logger) << _n_total_items << " - " << _n_visible_items_in_unexpand_mode;
       result_string = glib::String(g_strdup_printf(g_dngettext(GETTEXT_PACKAGE,
                                                   "See one more result",
                                                   "See %d more results",

@@ -341,8 +341,9 @@ void ScopeProxy::Impl::OnNewScope(glib::Object<UnityProtocolScopeProxy> const& s
 
   if (error || !scope_proxy)
   {
+    proxy_created_ = false;
     scope_proxy_.Release();
-    LOG_ERROR(logger) << "Failed to create scope proxy for " << scope_data_->id();
+    LOG_ERROR(logger) << "Failed to create scope proxy for " << scope_data_->id() << " =>  " << error;
     return;
   }
 
@@ -419,12 +420,6 @@ void ScopeProxy::Impl::OnChannelOpened(glib::String const& opened_channel, glib:
   channel = opened_channel.Str();
   LOG_DEBUG(logger) << "Opened channel:" << channel() << " for " << scope_data_->id();
   connected = true;
-
-  if (!searching_)
-  {
-    // If a search hasn't initiated this channel opening, perform the search to get the results.
-    Search(last_search_, glib::HintsMap(), nullptr, cancel_scope_);
-  }
 }
 
 void ScopeProxy::Impl::CloseChannel()
@@ -528,6 +523,8 @@ void ScopeProxy::Impl::Search(std::string const& search_string, glib::HintsMap c
 
   GHashTable* hints_table = glib::hashtable_from_hintsmap(hints);
 
+  LOG_DEBUG(logger) << "Search '" << search_string << "' on " << scope_data_->id();
+
   last_search_ = search_string.c_str();
   unity_protocol_scope_proxy_search(scope_proxy_,
     channel().c_str(),
@@ -580,6 +577,8 @@ void ScopeProxy::Impl::Activate(LocalResult const& result, uint activate_type, g
   {
     variants[i] = columns[i];
   }
+
+  LOG_DEBUG(logger) << "Activate '" << result.uri << "' on " << scope_data_->id();
 
   unity_protocol_scope_proxy_activate(scope_proxy_,
                                       channel().c_str(),
