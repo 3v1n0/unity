@@ -264,4 +264,16 @@ TEST_F(TestGDBusProxy, TestSignalAfterConnectionAndDisconnect)
   EXPECT_TRUE(got_signal2);
 }
 
+TEST_F(TestGDBusProxy, GetROProperty)
+{
+  auto ROPropertyValue = [this] { return glib::Variant(proxy.GetProperty("ReadOnlyProperty")).GetInt(); };
+  EXPECT_EQ(ROPropertyValue(), 0);
+
+  int value = g_random_int();
+  proxy.Call("SetReadOnlyProperty", g_variant_new("(i)", value));
+
+  Utils::WaitUntilMSec([this, value, ROPropertyValue] { return ROPropertyValue() == value; });
+  EXPECT_EQ(ROPropertyValue(), value);
+}
+
 }
