@@ -44,6 +44,7 @@ const char * gdbus_wrapper_interface =
 
 GDBus::GDBus()
   : ro_property_(0)
+  , rw_property_(0)
 {
   auto object = glib::DBusObjectBuilder::GetObjectsForIntrospection(gdbus_wrapper_interface).front();
   object->SetMethodsCallsHandler([this, object] (std::string const& method, GVariant *parameters) -> GVariant* {
@@ -67,8 +68,20 @@ GDBus::GDBus()
   object->SetPropertyGetter([this] (std::string const& property) -> GVariant* {
     if (property == "ReadOnlyProperty")
       return g_variant_new("(i)", ro_property_);
+    else if (property == "ReadWriteProperty")
+      return g_variant_new("(i)", rw_property_);
 
     return nullptr;
+  });
+
+  object->SetPropertySetter([this] (std::string const& property, GVariant* value) {
+    if (property == "ReadWriteProperty")
+    {
+      g_variant_get(value, "(i)", &rw_property_);
+      return true;
+    }
+
+    return false;
   });
 
   server_.AddObject(object, "/com/canonical/gdbus_wrapper");
