@@ -46,9 +46,7 @@ GDBus::GDBus()
   : ro_property_(0)
 {
   auto object = glib::DBusObjectBuilder::GetObjectsForIntrospection(gdbus_wrapper_interface).front();
-  object->SetMethodsCallsHandler([this] (std::string const& method, GVariant *parameters) -> GVariant* {
-    auto const& object = server_.GetObjects().front();
-
+  object->SetMethodsCallsHandler([this, object] (std::string const& method, GVariant *parameters) -> GVariant* {
     if (method == "TestMethod")
     {
       glib::String query;
