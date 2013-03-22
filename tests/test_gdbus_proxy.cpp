@@ -227,4 +227,41 @@ TEST_F(TestGDBusProxy, TestDisconnectSignalAll)
   EXPECT_FALSE(got_signal);
 }
 
+TEST_F(TestGDBusProxy, TestSignalBeforeConnection)
+{
+  bool got_signal = false;
+  proxy.Connect("TestSignal", [&got_signal] (GVariant*) { got_signal = true; });
+  proxy.Call("TestMethod", g_variant_new("(s)", "Signal!"));
+  Utils::WaitUntilMSec(got_signal);
+  EXPECT_TRUE(got_signal);
+}
+
+TEST_F(TestGDBusProxy, TestSignalAfterConnection)
+{
+  Utils::WaitUntilMSec([this] { return proxy.IsConnected(); });
+
+  bool got_signal = false;
+  proxy.Connect("TestSignal", [&got_signal] (GVariant*) { got_signal = true; });
+  proxy.Call("TestMethod", g_variant_new("(s)", "Signal!"));
+  Utils::WaitUntilMSec(got_signal);
+  EXPECT_TRUE(got_signal);
+}
+
+TEST_F(TestGDBusProxy, TestSignalAfterConnectionAndDisconnect)
+{
+  Utils::WaitUntilMSec([this] { return proxy.IsConnected(); });
+
+  bool got_signal1 = false;
+  proxy.Connect("TestSignal", [&got_signal1] (GVariant*) { got_signal1 = true; });
+  proxy.DisconnectSignal();
+
+  bool got_signal2 = false;
+  proxy.Connect("TestSignal", [&got_signal2] (GVariant*) { got_signal2 = true; });
+  proxy.Call("TestMethod", g_variant_new("(s)", "Signal!"));
+
+  Utils::WaitUntilMSec(got_signal2);
+  ASSERT_FALSE(got_signal1);
+  EXPECT_TRUE(got_signal2);
+}
+
 }
