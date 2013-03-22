@@ -7,7 +7,7 @@
 # by the Free Software Foundation.
 
 from autopilot.matchers import Eventually
-from testtools.matchers import Equals
+from testtools.matchers import Equals, NotEquals
 from time import sleep
 
 from unity.tests.launcher import LauncherTestCase, _make_scenarios
@@ -37,8 +37,10 @@ class LauncherTooltipTests(LauncherTestCase):
         a, b = 0, 1
         while b < len(self.icons):
             self.mouse.move(self.icons[b].center_x, self.icons[b].center_y)
-            self.assertTrue(self.icons[b].get_tooltip().active)
-            self.assertFalse(self.icons[a].get_tooltip().active)
+            self.assertThat(lambda: self.icons[b].get_tooltip(), Eventually(NotEquals(None)))
+            self.assertThat(self.icons[b].get_tooltip().active, Eventually(Equals(True)))
+            self.assertThat(lambda: self.icons[a].get_tooltip(), Eventually(NotEquals(None)))
+            self.assertThat(self.icons[a].get_tooltip().active, Eventually(Equals(False)))
             a, b = a + 1, b + 1
         b -= 1
 
