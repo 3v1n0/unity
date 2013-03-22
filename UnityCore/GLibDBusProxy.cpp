@@ -75,7 +75,7 @@ public:
 
   void Connect(string const& signal_name, ReplyCallback const& callback);
   void DisconnectSignal(string const& signal_name);
-  bool IsConnected();
+  bool IsConnected() const;
 
   void OnProxyNameOwnerChanged(GDBusProxy*, GParamSpec*);
   void OnProxySignal(GDBusProxy* proxy, char* sender_name, char* signal_name,
@@ -157,7 +157,7 @@ void DBusProxy::Impl::Connect()
                            this);
 }
 
-bool DBusProxy::Impl::IsConnected()
+bool DBusProxy::Impl::IsConnected() const
 {
   return connected_;
 }
@@ -453,7 +453,10 @@ void DBusProxy::CallBegin(std::string const& method_name,
 
 glib::Variant DBusProxy::GetProperty(std::string const& name) const
 {
-  return Variant(g_dbus_proxy_get_cached_property(pimpl->proxy_, name.c_str()), StealRef());
+  if (IsConnected())
+    return Variant(g_dbus_proxy_get_cached_property(pimpl->proxy_, name.c_str()), StealRef());
+
+  return nullptr;
 }
 
 void DBusProxy::Connect(std::string const& signal_name, ReplyCallback const& callback)
@@ -466,7 +469,7 @@ void DBusProxy::DisconnectSignal(std::string const& signal_name)
   pimpl->DisconnectSignal(signal_name);
 }
 
-bool DBusProxy::IsConnected()
+bool DBusProxy::IsConnected() const
 {
   return pimpl->IsConnected();
 }

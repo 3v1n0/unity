@@ -64,10 +64,11 @@ public:
                  int timeout_msec = -1);
 
   Variant GetProperty(std::string const& property_name) const;
+  void SetProperty(std::string const& property_name, GVariant* value);
 
   void Connect(std::string const& signal_name, ReplyCallback const& callback);
   void DisconnectSignal(std::string const& signal_name = "");
-  bool IsConnected();
+  bool IsConnected() const;
 
   sigc::signal<void> connected;
   sigc::signal<void> disconnected;
