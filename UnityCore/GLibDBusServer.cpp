@@ -164,7 +164,7 @@ struct DBusObject::Impl
                            << interface_name << "' , to value: '"
                            << (value ? g_variant_print(value, TRUE) : "<null>") << "'";
 
-        if (!g_variant_equal(old_value, value))
+        if (old_value && !g_variant_equal(old_value, value))
           self->EmitPropertyChanged(property_name ? property_name : "");
       }
       else
@@ -362,8 +362,15 @@ struct DBusObject::Impl
       return;
     }
 
-    auto builder = g_variant_builder_new(G_VARIANT_TYPE_ARRAY);
     GVariant* value = property_get_cb_(property.c_str());
+
+    if (!value)
+    {
+      LOG_ERROR(logger_o) << "The property value is not valid";
+      return;
+    }
+
+    auto builder = g_variant_builder_new(G_VARIANT_TYPE_ARRAY);
     g_variant_builder_add(builder, "{sv}", property.c_str(), value);
     glib::Variant parameters(g_variant_new("(sa{sv}as)", InterfaceName().c_str(), builder, nullptr));
 
