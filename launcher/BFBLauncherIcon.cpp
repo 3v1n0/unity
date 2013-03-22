@@ -112,15 +112,6 @@ AbstractLauncherIcon::MenuItemsVector BFBLauncherIcon::GetMenus()
   typedef glib::Signal<void, DbusmenuMenuitem*, int> ItemSignal;
   auto callback = sigc::mem_fun(this, &BFBLauncherIcon::OnMenuitemActivated);
 
-  // Home dash
-  menu_item = dbusmenu_menuitem_new();
-  dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Dash Home"));
-  dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-  dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-  dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY, true);
-  signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, sigc::bind(callback, "home.scope")));
-  result.push_back(menu_item);
-
   // Other scopes..
   for (auto scope_data : reader_->GetScopesData())
   {
