@@ -32,7 +32,6 @@
 #include "ResultRendererHorizontalTile.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UBusWrapper.h"
-#include "unity-shared/PlacesVScrollBar.h"
 #include "unity-shared/PlacesOverlayVScrollBar.h"
 #include "unity-shared/GraphicsUtils.h"
 
@@ -260,7 +259,7 @@ void ScopeView::SetupViews(nux::Area* show_filters)
   no_results_->SetVisible(false);
   scroll_layout_->AddView(no_results_, 1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
 
-  fscroll_view_ = new ScopeScrollView(new PlacesVScrollBar(NUX_TRACKER_LOCATION), NUX_TRACKER_LOCATION);
+  fscroll_view_ = new ScopeScrollView(new PlacesOverlayVScrollBar(NUX_TRACKER_LOCATION), NUX_TRACKER_LOCATION);
   fscroll_view_->EnableVerticalScrollBar(true);
   fscroll_view_->EnableHorizontalScrollBar(false);
   fscroll_view_->SetVisible(false);
