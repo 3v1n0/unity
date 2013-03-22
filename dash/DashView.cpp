@@ -1087,31 +1087,30 @@ void DashView::OnActivateRequest(GVariant* args)
 
   std::string id(AnalyseScopeURI(uri.Str()));
 
+  LOG_DEBUG(logger) << "External activation request: " << id << " (uri: "<< uri.Str() << ")";
+
   // we got an activation request, we should probably close the preview
   if (preview_displaying_)
   {
     ClosePreview();
   }
 
-  if (!visible_)
-  {
-    scope_bar_->Activate(id);
-    ubus_manager_.SendMessage(UBUS_DASH_EXTERNAL_ACTIVATION);
-  }
-  else if (/* visible_ && */ handled_type == ScopeHandledType::NOT_HANDLED)
+  if (visible_ && handled_type == ScopeHandledType::NOT_HANDLED)
   {
     ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST, NULL,
-                              glib::Source::Priority::HIGH);
+                              glib::Source::Priority::HIGH);    
   }
-  else if (/* visible_ && */ handled_type == ScopeHandledType::GOTO_DASH_URI)
-  {
+  else if (!visible_ || handled_type == ScopeHandledType::GOTO_DASH_URI)
+  {    
     if (!scopes_->GetScope(id))
     {
       // should trigger the addition of the scope.
       scopes_->AppendScope(id);
     }
-
     scope_bar_->Activate(id);
+
+    if (!visible_)
+      ubus_manager_.SendMessage(UBUS_DASH_EXTERNAL_ACTIVATION);
   }
 }
 
