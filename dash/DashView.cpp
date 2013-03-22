@@ -467,7 +467,8 @@ void DashView::AboutToShow()
 
     active_scope_view_->SetVisible(true);
     active_scope_view_->scope()->view_type = ScopeViewType::SCOPE_VIEW;
-
+    
+    // this will make sure the spinner animates if the search takes a while
     search_bar_->ForceLiveSearch();
   }
 
@@ -1164,6 +1165,48 @@ void DashView::UpdateScopeFilterValue(Filter::Ptr filter, std::string value)
   }
 }
 
+void DashView::OnSearchChanged(std::string const& search_string)
+{
+  search_in_progress_ = true;
+}
+
+void DashView::OnLiveSearchReached(std::string const& search_string)
+{
+  // reset and set it again once we're sure a search is happening
+  search_in_progress_ = false;
+
+  LOG_DEBUG(logger) << "Live search reached: " << search_string;
+  if (active_scope_view_)
+  {
+    if (active_scope_view_->PerformSearch(search_string, sigc::mem_fun(this, &DashView::OnScopeSearchFinished)))
+    {
+      search_in_progress_ = true;
+      search_bar_->SetSearchStarted();
+    }
+  }
+}
+
+void DashView::OnScopeSearchFinished(std::string const& scope_id, std::string const& search_string, glib::Error const& err)
+{
+  // match active scope?
+  auto scope_pos = scope_views_.find(scope_id);
+  if (scope_pos == scope_views_.end() || scope_pos->second != active_scope_view_)
+    return;
+
+  if (err)
+  {
+    LOG_WARNING(logger) << "Search failed  => " << err;
+  }
+
+  if (search_string == search_bar_->search_string)
+  {
+    search_bar_->SetSearchFinished();
+    search_in_progress_ = false;
+    if (activate_on_finish_)
+      this->OnEntryActivated();
+  }
+}
+
 void DashView::OnScopeAdded(Scope::Ptr const& scope, int position)
 {
   LOG_DEBUG(logger) << "Scope Added: " << scope->id();
@@ -1245,48 +1288,6 @@ void DashView::OnScopeBarActivated(std::string const& id)
 
   view->QueueDraw();
   QueueDraw();
-}
-
-void DashView::OnSearchChanged(std::string const& search_string)
-{
-  search_in_progress_ = true;
-}
-
-void DashView::OnLiveSearchReached(std::string const& search_string)
-{
-  // reset and set it again once we're sure a search is happening
-  search_in_progress_ = false;
-
-  LOG_DEBUG(logger) << "Live search reached: " << search_string;
-  if (active_scope_view_)
-  {
-    if (active_scope_view_->PerformSearch(search_string, sigc::mem_fun(this, &DashView::OnScopeSearchFinished)))
-    {
-      search_in_progress_ = true;
-      search_bar_->SetSearchStarted();
-    }
-  }
-}
-
-void DashView::OnScopeSearchFinished(std::string const& scope_id, std::string const& search_string, glib::Error const& err)
-{
-  // match active scope?
-  auto scope_pos = scope_views_.find(scope_id);
-  if (scope_pos == scope_views_.end() || scope_pos->second != active_scope_view_)
-    return;
-
-  if (err)
-  {
-    LOG_WARNING(logger) << "Search failed  => " << err;
-  }
-
-  if (search_string == search_bar_->search_string)
-  {
-    search_bar_->SetSearchFinished();
-    search_in_progress_ = false;
-    if (activate_on_finish_)
-      this->OnEntryActivated();
-  }
 }
 
 void DashView::OnResultActivatedReply(LocalResult const& local_result, ScopeHandledType type, glib::HintsMap const&)
