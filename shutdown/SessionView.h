@@ -24,6 +24,7 @@
 #include <Nux/View.h>
 #include <Nux/HLayout.h>
 
+#include "UnityCore/SessionManager.h"
 #include "unity-shared/UnityWindowView.h"
 
 namespace unity
