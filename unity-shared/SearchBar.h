@@ -69,7 +69,6 @@ public:
   sigc::signal<void, std::string const&> search_changed;
   sigc::signal<void, std::string const&> live_search_reached;
 
-  
 private:
   void Init();
 
@@ -118,7 +117,6 @@ private:
   nux::SpaceLayout* arrow_top_space_;
   nux::SpaceLayout* arrow_bottom_space_;
   IconTexture* expand_icon_;
-  std::string tmp_search_string_;
 
   int last_width_;
   int last_height_;

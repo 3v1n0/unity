@@ -328,8 +328,6 @@ void SearchBar::OnSearchChanged(nux::TextEntry* text_entry)
   QueueDraw();
 
   search_changed.emit(pango_entry_->GetText());
-  if (tmp_search_string_.empty())
-    tmp_search_string_ = search_string;
 }
 
 bool SearchBar::OnLiveSearchTimeout()
