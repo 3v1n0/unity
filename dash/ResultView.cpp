@@ -269,7 +269,7 @@ std::string ResultView::GetName() const
   return "ResultView";
 }
 
-void ResultView::GetResultDimensions(int rows, int columns)
+void ResultView::GetResultDimensions(int& rows, int& columns)
 {
   columns = results_per_row;  
   rows = result_model_ ? ceil(static_cast<double>(result_model_->count()) / static_cast<double>(std::min(1, columns))) : 0.0;
