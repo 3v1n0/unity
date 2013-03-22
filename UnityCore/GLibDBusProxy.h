@@ -27,6 +27,7 @@
 #include <sigc++/trackable.h>
 
 #include "GLibWrapper.h"
+#include "Variant.h"
 
 namespace unity
 {
@@ -61,6 +62,8 @@ public:
                  GCancellable *cancellable = nullptr,
                  GDBusCallFlags flags = G_DBUS_CALL_FLAGS_NONE,
                  int timeout_msec = -1);
+
+  Variant GetProperty(std::string const& property_name) const;
 
   void Connect(std::string const& signal_name, ReplyCallback const& callback);
   void DisconnectSignal(std::string const& signal_name = "");

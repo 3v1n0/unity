@@ -27,7 +27,6 @@
 #include "GLibWrapper.h"
 #include "GLibSignal.h"
 #include "GLibSource.h"
-#include "Variant.h"
 
 namespace unity
 {
@@ -450,6 +449,11 @@ void DBusProxy::CallBegin(std::string const& method_name,
 {
   pimpl->Call(method_name, parameters, callback, cancellable, flags,
               timeout_msec);
+}
+
+glib::Variant DBusProxy::GetProperty(std::string const& name) const
+{
+  return Variant(g_dbus_proxy_get_cached_property(pimpl->proxy_, name.c_str()), StealRef());
 }
 
 void DBusProxy::Connect(std::string const& signal_name, ReplyCallback const& callback)
