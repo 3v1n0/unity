@@ -244,6 +244,7 @@ if (ENABLE_X_SUPPORT)
                  test_dash_controller.cpp
                  test_desktop_launcher_icon.cpp
                  test_device_launcher_section.cpp
+		 test_error_preview.cpp
                  test_edge_barrier_controller.cpp
                  test_expo_launcher_icon.cpp
                  test_filter_widgets.cpp
@@ -276,6 +277,8 @@ if (ENABLE_X_SUPPORT)
                  test_previews_generic.cpp
                  test_previews_movie.cpp
                  test_previews_music.cpp
+                 test_previews_music_payment.cpp
+                 test_previews_payment.cpp
                  test_previews_social.cpp
                  test_overlay_scrollbar.cpp
                  test_quicklist_manager.cpp

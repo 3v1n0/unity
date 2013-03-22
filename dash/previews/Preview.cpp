@@ -27,12 +27,15 @@
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
+#include <UnityCore/PaymentPreview.h>
 #include "ActionButton.h"
 
 #include "GenericPreview.h"
 #include "ApplicationPreview.h"
+#include "ErrorPreview.h"
 #include "MusicPreview.h"
 #include "MoviePreview.h"
+#include "MusicPaymentPreview.h"
 #include "SocialPreview.h"
 #include "PreviewInfoHintWidget.h"
 
@@ -55,6 +58,19 @@ previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
   if (model->renderer_name == "preview-generic")
   {
     return Preview::Ptr(new GenericPreview(model));
+  }
+  else if (model->renderer_name == "preview-payment")
+  {
+    dash::PaymentPreview* payment_preview_model = dynamic_cast<dash::PaymentPreview*>(
+      model.get());
+    if (payment_preview_model->preview_type.Get() == dash::PaymentPreview::MUSIC)
+    {
+      return Preview::Ptr(new MusicPaymentPreview(model));
+    }
+    else
+    {
+      return Preview::Ptr(new ErrorPreview(model));
+    }
   }
   else if (model->renderer_name == "preview-application")
   {
@@ -129,7 +145,7 @@ nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList action
   {
     nux::HLayout* actions_layout_h = new TabIteratorHLayout(tab_iterator_);
     actions_layout_h->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
- 
+
     for (uint j = 0; j < 2 && action_iter < actions.size(); j++, action_iter++)
     {
         dash::Preview::ActionPtr action = actions[action_iter];
@@ -181,7 +197,7 @@ void Preview::UpdateCoverArtImage(CoverArt* cover_art)
 {
   if (!preview_model_)
     return;
-  
+
   previews::Style& style = dash::previews::Style::Instance();
 
   auto on_mouse_down = [&](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_->OnMouseDown(x, y, button_flags, key_flags); };

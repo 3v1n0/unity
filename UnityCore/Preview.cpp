@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011-2012 Canonical Ltd
+ * Copyright (C) 2011-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,6 +16,7 @@
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  *              Michal Hruby <michal.hruby@canonical.com>
+ *              Manuel de la Pena <manuel.delapena@canonical.com>
  */
 
 #include <NuxCore/Logger.h>
@@ -28,6 +29,7 @@
 #include "GenericPreview.h"
 #include "MusicPreview.h"
 #include "MoviePreview.h"
+#include "PaymentPreview.h"
 #include "SocialPreview.h"
 
 namespace unity
@@ -50,23 +52,27 @@ Preview::Ptr Preview::PreviewForProtocolObject(glib::Object<GObject> const& prot
 
   if (renderer_name == "preview-generic")
   {
-    return Preview::Ptr(new GenericPreview(proto_obj));
+    return std::make_shared<GenericPreview>(proto_obj);
+  }
+  else if (renderer_name == "preview-payment")
+  {
+    return std::make_shared<PaymentPreview>(proto_obj);
   }
   else if (renderer_name == "preview-application")
   {
-    return Preview::Ptr(new ApplicationPreview(proto_obj));
+    return std::make_shared<ApplicationPreview>(proto_obj);
   }
   else if (renderer_name == "preview-music")
   {
-    return Preview::Ptr(new MusicPreview(proto_obj));
+    return std::make_shared<MusicPreview>(proto_obj);
   }
   else if (renderer_name == "preview-movie")
   {
-    return Preview::Ptr(new MoviePreview(proto_obj));
+    return std::make_shared<MoviePreview>(proto_obj);
   }
   else if (renderer_name == "preview-social")
   {
-    return Preview::Ptr(new SocialPreview(proto_obj));
+    return std::make_shared<SocialPreview>(proto_obj);
   }
   else
   {
@@ -166,7 +172,7 @@ Preview::Impl::Impl(Preview* owner, glib::Object<GObject> const& proto_obj)
             static_cast<LayoutHint>(raw_action->layout_hint),
             raw_action->hints));
     }
-    
+
     int info_hints_len;
     auto info_hints = unity_protocol_preview_get_info_hints(raw_preview_, &info_hints_len);
     for (int i = 0; i < info_hints_len; i++)
