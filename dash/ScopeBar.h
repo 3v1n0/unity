@@ -80,7 +80,6 @@ private:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
-  std::string GetActiveScopeId() const;
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
 
   ScopeIcons icons_;

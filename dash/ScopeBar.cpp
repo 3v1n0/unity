@@ -278,13 +278,6 @@ void ScopeBar::SetActive(ScopeBarIcon* activated)
 
 void ScopeBar::ActivateNext()
 {
-  // Special case when switching from the command scope.
-  if (GetActiveScopeId() == "commands.scope")
-  {
-    SetActive(icons_[0]);
-    return;
-  }
-
   bool activate_next = false;
   for (auto it = icons_.begin();
        it < icons_.end();
@@ -300,25 +293,27 @@ void ScopeBar::ActivateNext()
     if (icon->active)
       activate_next = true;
   }
-  SetActive(icons_[0]);
 
+  // fallback. select first visible icon.
+  for (auto it = icons_.begin(); it != icons_.end(); ++it)
+  {
+    ScopeBarIcon *icon = *it;
+    if (icon->IsVisible())
+    {
+      SetActive(icon);
+      break;
+    }
+  }
 }
 
 void ScopeBar::ActivatePrevious()
 {
-  // Special case when switching from the command scope.
-  if (GetActiveScopeId() == "commands.scope")
-  {
-    SetActive(icons_.back());
-    return;
-  }
-
   bool activate_previous = false;
-  for (auto it = icons_.rbegin();
-       it < icons_.rend();
-       ++it)
+  for (auto rit = icons_.rbegin();
+       rit < icons_.rend();
+       ++rit)
   {
-    ScopeBarIcon *icon = *it;
+    ScopeBarIcon *icon = *rit;
 
     if (activate_previous && icon->IsVisible())
     {
@@ -328,8 +323,17 @@ void ScopeBar::ActivatePrevious()
     if (icon->active)
       activate_previous = true;
   }
-  SetActive(icons_.back());
 
+  // fallback. select last visible icon.
+  for (auto rit = icons_.rbegin(); rit != icons_.rend(); ++rit)
+  {
+    ScopeBarIcon *icon = *rit;
+    if (icon->IsVisible())
+    {
+      SetActive(icon);
+      break;
+    }
+  }
 }
 
 // Keyboard navigation
@@ -358,16 +362,6 @@ void ScopeBar::AddProperties(GVariantBuilder* builder)
     if (icon->HasKeyFocus())
       wrapper.add("focused-scope-icon", icon->id.Get());
   }
-}
-
-std::string ScopeBar::GetActiveScopeId() const
-{
-  for (auto icon : icons_)
-  {
-    if (icon->active)
-      return icon->id;
-  }
-  return "";
 }
 
 }
