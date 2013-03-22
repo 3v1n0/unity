@@ -72,9 +72,8 @@ public:
 
   sigc::signal<void, ResultView::ActivateType, LocalResult const&, GVariant*, std::string const&> result_activated;
 
-  void PerformSearch(std::string const& search_query, Scope::SearchCallback const& cb);
-  void CheckNoResults(glib::HintsMap const& hints);
-  void HideResultsMessage();
+  typedef std::function<void(std::string const& scope_id, std::string const& search_query, glib::Error const& err)> SearchCallback;
+  bool PerformSearch(std::string const& search_query, SearchCallback const& callback);
 
   void ForceCategoryExpansion(std::string const& view_id, bool expand);
   void PushFilterExpansion(bool expand);
@@ -99,6 +98,8 @@ private:
 
   void OnResultAdded(Result const& result);
   void OnResultRemoved(Result const& result);
+
+  void OnSearchComplete(std::string const& search_string, glib::HintsMap const& hints, glib::Error const& err);
   
   void OnGroupExpanded(PlacesGroup* group);
   void CheckScrollBarState();
@@ -114,6 +115,9 @@ private:
 
   void QueueCategoryCountsCheck();
   void CheckCategoryCounts();
+
+  void CheckNoResults(glib::HintsMap const& hints);
+  void HideResultsMessage();
 
   ResultView* GetResultViewForCategory(unsigned int category_index);
 
@@ -154,6 +158,7 @@ private:
   glib::Source::UniquePtr model_updated_timeout_;
   int last_good_filter_model_;
   glib::Source::UniquePtr fix_filter_models_idle_;
+  glib::Source::UniquePtr hide_message_delay_;
 
   bool filter_expansion_pushed_;
 
@@ -169,6 +174,9 @@ private:
   sigc::connection filters_updated;
   sigc::connection filter_added_connection;
   sigc::connection filter_removed_connection;
+
+  bool scope_connected_;
+  bool search_on_next_connect_;
 
   friend class TestScopeView;
 };

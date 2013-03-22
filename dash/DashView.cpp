@@ -467,16 +467,16 @@ void DashView::AboutToShow()
 
     active_scope_view_->SetVisible(true);
     active_scope_view_->scope()->view_type = ScopeViewType::SCOPE_VIEW;
-  }
 
-  // this will make sure the spinner animates if the search takes a while
-  search_bar_->ForceSearchChanged();
+    search_bar_->ForceLiveSearch();
+  }
 
   // if a preview is open, close it
   if (preview_displaying_)
   {
     ClosePreview();
   }
+
 
   overlay_window_buttons_->Show();
 
@@ -537,7 +537,6 @@ void DashView::SetupViews()
   search_bar_->SetMinimumHeight(style.GetSearchBarHeight());
   search_bar_->SetMaximumHeight(style.GetSearchBarHeight());
   search_bar_->activated.connect(sigc::mem_fun(this, &DashView::OnEntryActivated));
-  search_bar_->search_changed.connect(sigc::mem_fun(this, &DashView::OnSearchChanged));
   search_bar_->live_search_reached.connect(sigc::mem_fun(this, &DashView::OnLiveSearchReached));
   search_bar_->showing_filters.changed.connect([&] (bool showing)
   {
@@ -1164,40 +1163,6 @@ void DashView::UpdateScopeFilterValue(Filter::Ptr filter, std::string value)
   }
 }
 
-void DashView::OnSearchChanged(std::string const& search_string)
-{
-  LOG_DEBUG(logger) << "Search changed: " << search_string;
-  if (active_scope_view_)
-  {
-    search_in_progress_ = true;
-    // it isn't guaranteed that we get a SearchFinished signal, so we need
-    //                                         FIXME: it is now actually!!
-    // to make sure this isn't set even though we aren't doing any search
-    // 250ms for the Search method call, rest for the actual search
-    searching_timeout_.reset(new glib::Timeout(500, [&] () {
-      search_in_progress_ = false;
-      activate_on_finish_ = false;
-      return false;
-    }));
-
-    // 150ms to hide the no reults message if its take a while to return results
-    hide_message_delay_.reset(new glib::Timeout(150, [&] () {
-      active_scope_view_->HideResultsMessage();
-      return false;
-    }));
-  }
-}
-
-void DashView::OnLiveSearchReached(std::string const& search_string)
-{
-  LOG_DEBUG(logger) << "Live search reached: " << search_string;
-  if (active_scope_view_)
-  {
-    active_scope_view_->PerformSearch(search_string,
-        sigc::mem_fun(this, &DashView::OnSearchFinished));
-  }
-}
-
 void DashView::OnScopeAdded(Scope::Ptr const& scope, int position)
 {
   LOG_DEBUG(logger) << "Scope Added: " << scope->id();
@@ -1266,44 +1231,49 @@ void DashView::OnScopeBarActivated(std::string const& id)
   QueueRelayout();
   search_bar_->search_string = view->search_string;
   search_bar_->search_hint = view->scope()->search_hint;
-  // scopes typically return immediately from Search() if the search query
-  // doesn't change, so SearchFinished will be called in a few ms
-  // FIXME: if we're forcing a search here, why don't we get rid of view types?
-  search_bar_->ForceSearchChanged();
-
-  bool expanded = view->filters_expanded;
-  search_bar_->showing_filters = expanded;
-
-  nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
+  search_bar_->showing_filters = view->filters_expanded();
+  search_bar_->ForceLiveSearch();
 
   search_bar_->text_entry()->SelectAll();
   search_bar_->can_refine_search = view->can_refine_search();
   scope_can_refine_connection_ = view->can_refine_search.changed.connect([this] (bool can_refine_search) {
     search_bar_->can_refine_search = can_refine_search;
   });
-  hide_message_delay_.reset();
+
+  nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
 
   view->QueueDraw();
   QueueDraw();
 }
 
-void DashView::OnSearchFinished(std::string const& search_string, glib::HintsMap const& hints, glib::Error const& err)
+void DashView::OnLiveSearchReached(std::string const& search_string)
 {
-  hide_message_delay_.reset();
+  LOG_DEBUG(logger) << "Live search reached: " << search_string;
+  if (active_scope_view_)
+  {
+    if (active_scope_view_->PerformSearch(search_string, sigc::mem_fun(this, &DashView::OnScopeSearchFinished)))
+    {
+      search_in_progress_ = true;
+      search_bar_->SetSearchStarted();
+    }
+  }
+}
+
+void DashView::OnScopeSearchFinished(std::string const& scope_id, std::string const& search_string, glib::Error const& err)
+{
+  // match active scope?
+  auto scope_pos = scope_views_.find(scope_id);
+  if (scope_pos == scope_views_.end() || scope_pos->second != active_scope_view_)
+    return;
 
   if (err)
   {
-    LOG_WARNING(logger) << "Search failed => " << err;
+    LOG_WARNING(logger) << "Search failed  => " << err;
   }
-
-  if (!active_scope_view_.IsValid()) return;
-
-  // FIXME: bind the scope_view in PerformSearch
-  active_scope_view_->CheckNoResults(hints);
 
   if (search_string == search_bar_->search_string)
   {
-    search_bar_->SearchFinished();
+    search_bar_->SetSearchFinished();
     search_in_progress_ = false;
     if (activate_on_finish_)
       this->OnEntryActivated();

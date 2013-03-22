@@ -327,7 +327,8 @@ void SearchBar::OnSearchChanged(nux::TextEntry* text_entry)
   hint_->QueueDraw();
   QueueDraw();
 
-  search_changed.emit(pango_entry_->GetText());
+  if (tmp_search_string_.empty())
+    tmp_search_string_ = search_string;
 }
 
 bool SearchBar::OnLiveSearchTimeout()
@@ -450,23 +451,21 @@ void SearchBar::OnEntryActivated()
   activated.emit();
 }
 
-void SearchBar::ForceSearchChanged()
+void SearchBar::ForceLiveSearch()
 {
-  // this method will emit search_changed (and live_search_reached after
-  // returning to mainloop) and starts animating the spinner
-  live_search_timeout_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
+  live_search_timeout_.reset(new glib::Timeout(LIVE_SEARCH_TIMEOUT));
   live_search_timeout_->Run(sigc::mem_fun(this, &SearchBar::OnLiveSearchTimeout));
+}
 
+void SearchBar::SetSearchStarted()
+{
   // Don't animate the spinner immediately, the searches are fast and
   // the spinner would just flicker
   start_spinner_timeout_.reset(new glib::Timeout(SPINNER_TIMEOUT * 2));
   start_spinner_timeout_->Run(sigc::mem_fun(this, &SearchBar::OnSpinnerStartCb));
-
-  search_changed.emit(pango_entry_->GetText());
 }
 
-void
-SearchBar::SearchFinished()
+void SearchBar::SetSearchFinished()
 {
   LOG_DEBUG(logger) << "Search finished for '" << search_string() << "'";
   start_spinner_timeout_.reset();
@@ -485,7 +484,7 @@ void SearchBar::UpdateBackground(bool force)
               GetAbsoluteX() +
               SEARCH_ENTRY_RIGHT_BORDER;
 
-  LOG_DEBUG(logger) << "height: "
+  LOG_TRACE(logger) << "height: "
   << geo.height << " - "
   << layered_layout_->GetGeometry().height << " - "
   << pango_entry_->GetGeometry().height;

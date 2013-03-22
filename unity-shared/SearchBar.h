@@ -51,8 +51,10 @@ public:
   SearchBar(NUX_FILE_LINE_PROTO);
   SearchBar(bool show_filter_hint, NUX_FILE_LINE_PROTO);
 
-  void ForceSearchChanged();
-  void SearchFinished();
+  void ForceLiveSearch();
+  void SetSearchStarted();
+  void SetSearchFinished();
+
   nux::TextEntry* text_entry() const;
   nux::View* show_filters() const;
 
@@ -67,6 +69,7 @@ public:
   sigc::signal<void, std::string const&> search_changed;
   sigc::signal<void, std::string const&> live_search_reached;
 
+  
 private:
   void Init();
 
@@ -115,6 +118,7 @@ private:
   nux::SpaceLayout* arrow_top_space_;
   nux::SpaceLayout* arrow_bottom_space_;
   IconTexture* expand_icon_;
+  std::string tmp_search_string_;
 
   int last_width_;
   int last_height_;
