@@ -343,7 +343,7 @@ void ScopeProxy::Impl::OnNewScope(glib::Object<UnityProtocolScopeProxy> const& s
   {
     proxy_created_ = false;
     scope_proxy_.Release();
-    LOG_ERROR(logger) << "Failed to create scope proxy for " << scope_data_->id();
+    LOG_ERROR(logger) << "Failed to create scope proxy for " << scope_data_->id() << " =>  " << error;
     return;
   }
 
