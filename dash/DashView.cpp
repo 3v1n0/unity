@@ -1181,7 +1181,6 @@ void DashView::OnLiveSearchReached(std::string const& search_string)
     if (active_scope_view_->PerformSearch(search_string, sigc::mem_fun(this, &DashView::OnScopeSearchFinished)))
     {
       search_in_progress_ = true;
-      search_bar_->SetSearchStarted();
     }
   }
 }
@@ -1193,13 +1192,13 @@ void DashView::OnScopeSearchFinished(std::string const& scope_id, std::string co
   if (scope_pos == scope_views_.end() || scope_pos->second != active_scope_view_)
     return;
 
-  if (err)
-  {
-    LOG_WARNING(logger) << "Search failed  => " << err;
-  }
-
   if (search_string == search_bar_->search_string)
   {
+    if (err)
+      LOG_WARNING(logger) << "Search failed  '"<< search_string <<"'=> " << err;
+    else
+      LOG_DEBUG(logger) << "Search completed: " << search_string;
+
     search_bar_->SetSearchFinished();
     search_in_progress_ = false;
     

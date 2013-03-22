@@ -454,18 +454,8 @@ void SearchBar::ForceLiveSearch()
   live_search_timeout_->Run(sigc::mem_fun(this, &SearchBar::OnLiveSearchTimeout));
 }
 
-void SearchBar::SetSearchStarted()
-{
-  search_changed.emit(pango_entry_->GetText());
-  // Don't animate the spinner immediately, the searches are fast and
-  // the spinner would just flicker
-  start_spinner_timeout_.reset(new glib::Timeout(SPINNER_TIMEOUT * 2));
-  start_spinner_timeout_->Run(sigc::mem_fun(this, &SearchBar::OnSpinnerStartCb));
-}
-
 void SearchBar::SetSearchFinished()
 {
-  LOG_DEBUG(logger) << "Search finished for '" << search_string() << "'";
   start_spinner_timeout_.reset();
 
   bool is_empty = pango_entry_->im_active() ?
