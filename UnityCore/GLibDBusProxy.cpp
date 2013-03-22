@@ -463,7 +463,19 @@ void DBusProxy::SetProperty(std::string const& name, GVariant* value)
 {
   if (IsConnected())
   {
-    g_dbus_proxy_set_cached_property(pimpl->proxy_, name.c_str(), value);
+    g_dbus_connection_call(g_dbus_proxy_get_connection(pimpl->proxy_),
+                           pimpl->name_.c_str(), pimpl->object_path_.c_str(),
+                           "org.freedesktop.DBus.Properties",
+                           "Set", g_variant_new ("(ssv)", pimpl->interface_name_.c_str(), name.c_str(), value),
+                           nullptr, G_DBUS_CALL_FLAGS_NONE, -1, pimpl->cancellable_,
+                           [] (GObject *source, GAsyncResult *res, gpointer user_data) {
+      glib::Error err;
+      Variant result(g_dbus_connection_call_finish(G_DBUS_CONNECTION(source), res, &err));
+      if (err)
+      {
+        LOG_ERROR(logger) << "Impossible to set property: " << err;
+      }
+    }, this);
   }
   else
   {
