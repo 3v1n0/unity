@@ -92,9 +92,7 @@ bool BackgroundEffectHelper::HasEnabledHelpers()
   for (BackgroundEffectHelper * bg_effect_helper : registered_list_)
   {
     if (bg_effect_helper->enabled)
-    {
       return true;
-    }
   }
 
   return false;
