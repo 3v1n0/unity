@@ -806,7 +806,7 @@ bool ScopeView::PerformSearch(std::string const& search_query, SearchCallback co
       hide_message_delay_.reset();
       if (callback)
         callback(scope_->id(), search_string, err);
-    });
+    }, search_cancellable_);
     return true;
   }
   return false;

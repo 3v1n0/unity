@@ -441,8 +441,6 @@ void SearchBar::OnClearClicked(int x, int y, unsigned long button_fags,
                                      unsigned long key_fags)
 {
   pango_entry_->SetText("");
-  start_spinner_timeout_.reset();
-  live_search_reached.emit("");
 }
 
 void SearchBar::OnEntryActivated()
