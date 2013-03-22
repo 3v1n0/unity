@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Michal Hruby <michal.hruby@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include "GLibDBusProxy.h"
@@ -459,6 +461,43 @@ glib::Variant DBusProxy::GetProperty(std::string const& name) const
   return nullptr;
 }
 
+void DBusProxy::GetProperty(std::string const& name, ReplyCallback const& callback)
+{
+  if (!callback)
+    return;
+
+  if (IsConnected())
+  {
+    g_dbus_connection_call(g_dbus_proxy_get_connection(pimpl->proxy_),
+                           pimpl->name_.c_str(), pimpl->object_path_.c_str(),
+                           "org.freedesktop.DBus.Properties",
+                           "Get", g_variant_new ("(ss)", pimpl->interface_name_.c_str(), name.c_str()),
+                            G_VARIANT_TYPE("(v)"), G_DBUS_CALL_FLAGS_NONE, -1, pimpl->cancellable_,
+                           [] (GObject *source, GAsyncResult *res, gpointer user_data) {
+      glib::Error err;
+      std::unique_ptr<ReplyCallback> callback(static_cast<ReplyCallback*>(user_data));
+      Variant result(g_dbus_connection_call_finish(G_DBUS_CONNECTION(source), res, &err));
+
+      if (err)
+      {
+        LOG_ERROR(logger) << "Impossible to get property: " << err;
+        return;
+      }
+
+      (*callback)(result);
+    }, new ReplyCallback(callback));
+  }
+  else
+  {
+    // This will get the property as soon as we have a connection
+    auto conn = std::make_shared<sigc::connection>();
+    *conn = connected.connect([this, conn, name, callback] {
+      GetProperty(name, callback);
+      conn->disconnect();
+    });
+  }
+}
+
 void DBusProxy::SetProperty(std::string const& name, GVariant* value)
 {
   if (IsConnected())
@@ -479,6 +518,7 @@ void DBusProxy::SetProperty(std::string const& name, GVariant* value)
   }
   else
   {
+    // This will set the property as soon as we have a connection
     auto conn = std::make_shared<sigc::connection>();
     *conn = connected.connect([this, conn, name, value] {
       SetProperty(name, value);

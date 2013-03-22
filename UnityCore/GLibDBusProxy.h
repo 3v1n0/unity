@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Michal Hruby <michal.hruby@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #ifndef UNITY_DBUS_PROXY_H
@@ -64,6 +66,7 @@ public:
                  int timeout_msec = -1);
 
   Variant GetProperty(std::string const& property_name) const;
+  void GetProperty(std::string const& property_name, ReplyCallback const&);
   void SetProperty(std::string const& property_name, GVariant* value);
 
   void Connect(std::string const& signal_name, ReplyCallback const& callback);
