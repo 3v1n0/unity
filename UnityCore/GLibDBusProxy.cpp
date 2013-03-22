@@ -198,10 +198,15 @@ void DBusProxy::Impl::OnProxyConnectCallback(GObject* source,
 
   self->reconnection_attempts_ = 0;
   self->proxy_ = proxy;
-  self->g_signal_connection_.Connect(self->proxy_, "g-signal",
-                                     sigc::mem_fun(self, &Impl::OnProxySignal));
   self->name_owner_signal_.Connect(self->proxy_, "notify::g-name-owner",
                                    sigc::mem_fun(self, &Impl::OnProxyNameOwnerChanged));
+
+  if (!self->handlers_.empty())
+  {
+    // Connecting to the signals only if we have handlers
+    if (glib::object_cast<GObject>(self->proxy_) != self->g_signal_connection_.object())
+      self->g_signal_connection_.Connect(self->proxy_, "g-signal", sigc::mem_fun(self, &Impl::OnProxySignal));
+  }
 
   // If a proxy cannot autostart a service, it doesn't throw an error, but
   // sets name_owner to NULL
@@ -387,8 +392,16 @@ void DBusProxy::Impl::OnCallCallback(GObject* source, GAsyncResult* res, gpointe
 
 void DBusProxy::Impl::Connect(std::string const& signal_name, ReplyCallback const& callback)
 {
-  if (callback)
-    handlers_[signal_name].push_back(callback);
+  if (!callback)
+    return;
+
+  if (proxy_ && glib::object_cast<GObject>(proxy_) != g_signal_connection_.object())
+  {
+    // It's the first time we connect to a signal so we need to setup the call handler
+    g_signal_connection_.Connect(proxy_, "g-signal", sigc::mem_fun(this, &Impl::OnProxySignal));
+  }
+
+  handlers_[signal_name].push_back(callback);
 }
 
 void DBusProxy::Impl::DisconnectSignal(std::string const& signal_name)
@@ -401,6 +414,9 @@ void DBusProxy::Impl::DisconnectSignal(std::string const& signal_name)
   {
     handlers_.erase(signal_name);
   }
+
+  if (handlers_.empty())
+    g_signal_connection_.Disconnect();
 }
 
 DBusProxy::DBusProxy(string const& name,
