@@ -62,6 +62,8 @@ const std::string UNITY_THEME_NAME = "unity-icon-theme";
 const std::string CENTER_STABILIZE_TIMEOUT = "center-stabilize-timeout";
 const std::string PRESENT_TIMEOUT = "present-timeout";
 const std::string QUIRK_DELAY_TIMEOUT = "quirk-delay-timeout";
+
+const unsigned TOOLTIP_FADE_DURATION = 80;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherIcon);
@@ -86,6 +88,7 @@ LauncherIcon::LauncherIcon(IconType type)
   , _parent_geo(max_num_monitors)
   , _saved_center(max_num_monitors)
   , _allow_quicklist_to_show(true)
+  , _tooltip_fade_animator(TOOLTIP_FADE_DURATION)
 {
   for (unsigned i = 0; i < unsigned(Quirk::LAST); ++i)
   {
@@ -115,6 +118,19 @@ LauncherIcon::LauncherIcon(IconType type)
   mouse_down.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseClick));
+
+  _tooltip_fade_animator.updated.connect([this] (double opacity) {
+    if (_tooltip)
+    {
+      _tooltip->SetOpacity(opacity);
+
+      if (opacity == 0.0f && _tooltip_fade_animator.GetStartValue() > _tooltip_fade_animator.GetFinishValue())
+      {
+        _tooltip->ShowWindow(false);
+        _tooltip->SetOpacity(0.0f);
+      }
+    }
+  });
 }
 
 LauncherIcon::~LauncherIcon()
@@ -143,6 +159,7 @@ LauncherIcon::~LauncherIcon()
 void LauncherIcon::LoadTooltip()
 {
   _tooltip = new Tooltip();
+  _tooltip->SetOpacity(0.0f);
   AddChild(_tooltip.GetPointer());
 
   _tooltip->text = tooltip_text();
@@ -522,29 +539,23 @@ LauncherIcon::ShowTooltip()
   _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
   _tooltip->ShowWindow(!tooltip_text().empty());
   tooltip_visible.emit(_tooltip);
+
+  if (_tooltip_fade_animator.CurrentState() == nux::animation::Animation::State::Running)
+    _tooltip_fade_animator.Reverse();
+  else
+    _tooltip_fade_animator.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
 }
 
 void
 LauncherIcon::RecvMouseEnter(int monitor)
 {
   _last_monitor = monitor;
-  if (QuicklistManager::Default()->Current())
-  {
-    // A quicklist is active
-    return;
-  }
-
-  ShowTooltip();
 }
 
 void LauncherIcon::RecvMouseLeave(int monitor)
 {
   _last_monitor = -1;
   _allow_quicklist_to_show = true;
-
-  if (_tooltip)
-    _tooltip->ShowWindow(false);
-  tooltip_visible.emit(nux::ObjectPtr<nux::View>(nullptr));
 }
 
 bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
@@ -662,9 +673,9 @@ void LauncherIcon::RecvMouseUp(int button, int monitor, unsigned long key_flags)
 
 void LauncherIcon::RecvMouseClick(int button, int monitor, unsigned long key_flags)
 {
-  auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+  auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
 
-  ActionArg arg(ActionArg::LAUNCHER, button, timestamp);
+  ActionArg arg(ActionArg::Source::LAUNCHER, button, timestamp);
   arg.monitor = monitor;
 
   bool shift_pressed = nux::GetKeyModifierState(key_flags, nux::NUX_STATE_SHIFT);
@@ -680,7 +691,13 @@ void LauncherIcon::RecvMouseClick(int button, int monitor, unsigned long key_fla
 void LauncherIcon::HideTooltip()
 {
   if (_tooltip)
-    _tooltip->ShowWindow(false);
+  {
+    if (_tooltip_fade_animator.CurrentState() == nux::animation::Animation::State::Running)
+      _tooltip_fade_animator.Reverse();
+    else
+      _tooltip_fade_animator.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
+  }
+
   tooltip_visible.emit(nux::ObjectPtr<nux::View>(nullptr));
 }
 
@@ -1216,6 +1233,9 @@ void LauncherIcon::UnStick()
 
   SetQuirk(Quirk::VISIBLE, false);
 }
+
+void LauncherIcon::PerformScroll(ScrollDirection direction, Time timestamp)
+{}
 
 
 } // namespace launcher

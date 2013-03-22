@@ -610,13 +610,16 @@ class DashVisualTests(DashTestCase):
         """"There should be no empty space between launcher and dash when the launcher
         has a non-default width.
         """
-        self.set_unity_option('icon_size', 60)
-        self.unity.dash.ensure_visible()
-
         monitor = self.unity.dash.monitor
         launcher = self.unity.launcher.get_launcher_for_monitor(monitor)
 
+        self.set_unity_option('icon_size', 60)
+        self.assertThat(launcher.icon_size, Eventually(Equals(66)))
+
+        self.unity.dash.ensure_visible()
+
         self.assertThat(self.unity.dash.geometry[0], Eventually(Equals(launcher.geometry[0] + launcher.geometry[2] - 1)))
+
 
     def test_see_more_result_alignment(self):
         """The see more results label should be baseline aligned
@@ -968,6 +971,12 @@ class PreviewNavigateTests(DashTestCase):
         self.keyboard.press_and_release("Escape")
 
         self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_overlay_text(self):
+        """Fallback overlay text is internationalized, should always be valid."""
+        cover_art = self.get_current_preview().cover_art[0]
+        self.assertThat(cover_art.overlay_text,
+                        Eventually(Equals("No Image Available")))
 
 
 class PreviewClickCancelTests(DashTestCase):

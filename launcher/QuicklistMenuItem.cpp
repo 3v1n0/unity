@@ -134,12 +134,13 @@ void QuicklistMenuItem::Activate() const
   if (!_menu_item || !GetSelectable())
     return;
 
-  dbusmenu_menuitem_handle_event(_menu_item, "clicked", nullptr, 0);
+  auto event_time = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
+  dbusmenu_menuitem_handle_event(_menu_item, "clicked", nullptr, event_time);
 
   if (!IsOverlayQuicklist())
   {
     UBusManager manager;
-    manager.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+    manager.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   }
 }
 

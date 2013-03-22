@@ -62,7 +62,7 @@ struct TestSoftwareCenterLauncherIcon : testing::Test
 public:
   TestSoftwareCenterLauncherIcon()
      : usc(ApplicationManager::Default().GetApplicationForDesktopFile(USC_DESKTOP))
-     , icon(usc, "", "")
+     , icon(usc, "/com/canonical/unity/test/object/path", "")
   {}
 
   ApplicationPtr usc;
@@ -73,7 +73,7 @@ TEST_F(TestSoftwareCenterLauncherIcon, Construction)
 {
   EXPECT_FALSE(icon.IsVisible());
   EXPECT_EQ(icon.position(), AbstractLauncherIcon::Position::FLOATING);
-  EXPECT_EQ(icon.tooltip_text(), usc->title());
+  EXPECT_EQ(icon.tooltip_text(), "Waiting to install");
 }
 
 TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformTrivial)
@@ -124,7 +124,7 @@ TEST_F(TestSoftwareCenterLauncherIcon, Animate)
 
   Settings settings;
   panel::Style panel;
-  nux::ObjectPtr<nux::BaseWindow> win(new nux::BaseWindow(""));
+  nux::ObjectPtr<MockableBaseWindow> win(new MockableBaseWindow(""));
   nux::ObjectPtr<Launcher> launcher(new Launcher(win.GetPointer()));
   launcher->options = Options::Ptr(new Options);
   launcher->SetModel(LauncherModel::Ptr(new LauncherModel));

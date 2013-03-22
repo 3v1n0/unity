@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Canonical Ltd.
+ * Copyright 2012-2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3, as
@@ -19,48 +19,11 @@
  *
  */
 
-#include <gmock/gmock.h>
-#include "unity-shared/IMTextEntry.h"
+#include "test_im_text_entry.h"
 
 using namespace testing;
 using namespace unity;
 using namespace nux;
-
-namespace
-{
-
-class TestEvent : public nux::Event
-{
-public:
-  TestEvent(nux::KeyModifier keymod, unsigned long keysym)
-  {
-    type = NUX_KEYDOWN;
-    key_modifiers = keymod;
-    x11_keysym = keysym;
-  }
-
-  TestEvent(unsigned long keysym)
-  {
-    type = NUX_KEYDOWN;
-    x11_keysym = keysym;
-  }
-};
-
-class MockTextEntry : public IMTextEntry
-{
-public:
-  MOCK_METHOD0(CutClipboard, void());
-  MOCK_METHOD0(CopyClipboard, void());
-  MOCK_METHOD0(PasteClipboard, void());
-  MOCK_METHOD0(PastePrimaryClipboard, void());
-
-  bool InspectKeyEvent(nux::Event const& event)
-  {
-    key_down.emit(event.type, event.GetKeySym(), event.GetKeyState(), nullptr, 0);
-    return IMTextEntry::InspectKeyEvent(event);
-  }
-};
-
 
 TEST(TestIMTextEntry, CopyCtrlC)
 {
@@ -172,28 +135,4 @@ TEST(TestIMTextEntry, CtrlKeybindings)
     TestEvent event(KEY_MODIFIER_CTRL, keysym);
     EXPECT_TRUE(text_entry.InspectKeyEvent(event));
   }
-}
-
-TEST(TestIMTextEntry, AltKeybindings)
-{
-  MockTextEntry text_entry;
-
-  for (unsigned long keysym = 0; keysym < XK_VoidSymbol; ++keysym)
-  {
-    TestEvent event(KEY_MODIFIER_ALT, keysym);
-    EXPECT_FALSE(text_entry.InspectKeyEvent(event));
-  }
-}
-
-TEST(TestIMTextEntry, SuperKeybindings)
-{
-  MockTextEntry text_entry;
-
-  for (unsigned long keysym = 0; keysym < XK_VoidSymbol; ++keysym)
-  {
-    TestEvent event(KEY_MODIFIER_SUPER, keysym);
-    EXPECT_FALSE(text_entry.InspectKeyEvent(event));
-  }
-}
-
 }

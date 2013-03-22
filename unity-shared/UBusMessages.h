@@ -26,7 +26,7 @@
 #define UBUS_AUTOPILOT_TEST_FINISHED "AUTOPILOT_TEST_FINISHED"
 
 #define UBUS_DASH_EXTERNAL_ACTIVATION "DASH_EXTERNAL_ACTIVATION"
-#define UBUS_PLACE_VIEW_CLOSE_REQUEST "PLACE_VIEW_CLOSE_REQUEST"
+#define UBUS_OVERLAY_CLOSE_REQUEST "OVERLAY_CLOSE_REQUEST"
 
 // Request a PlaceEntry to be shown.
 // Payload should be: (sus) = (id, section, search_string).
@@ -35,8 +35,8 @@
 #define UBUS_DASH_ABOUT_TO_SHOW "DASH_ABOUT_TO_SHOW"
 
 // Signal sent when an overlay interface is shown, includes a gvariant
-// gvariant format is (sb), (interface-name, can_maximize?)
-#define UBUS_OVERLAY_FORMAT_STRING "(sbi)"
+// gvariant format is (sb), (interface-name, can_maximize?, width, height)
+#define UBUS_OVERLAY_FORMAT_STRING "(sbiii)"
 #define UBUS_OVERLAY_HIDDEN "OVERLAY_HIDDEN"
 #define UBUS_OVERLAY_SHOWN "OVERLAY_SHOWN"
 

@@ -91,6 +91,9 @@ const int START_DRAGICON_DURATION = 250;
 const int MOUSE_DEADZONE = 15;
 const float DRAG_OUT_PIXELS = 300.0f;
 
+const int SCROLL_AREA_HEIGHT = 24;
+const int SCROLL_FPS = 30;
+
 const std::string START_DRAGICON_TIMEOUT = "start-dragicon-timeout";
 const std::string SCROLL_TIMEOUT = "scroll-timeout";
 const std::string ANIMATION_IDLE = "animation-idle";
@@ -101,7 +104,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(Launcher);
 
 const int Launcher::Launcher::ANIM_DURATION_SHORT = 125;
 
-Launcher::Launcher(nux::BaseWindow* parent,
+Launcher::Launcher(MockableBaseWindow* parent,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
 #ifdef USE_X11
@@ -286,6 +289,20 @@ void Launcher::SetStateMouseOverLauncher(bool over_launcher)
   _hide_machine.SetQuirk(LauncherHideMachine::MOUSE_OVER_LAUNCHER, over_launcher);
   _hide_machine.SetQuirk(LauncherHideMachine::REVEAL_PRESSURE_PASS, false);
   _hover_machine.SetQuirk(LauncherHoverMachine::MOUSE_OVER_LAUNCHER, over_launcher);
+  tooltip_manager_.SetHover(over_launcher);
+}
+
+void Launcher::SetIconUnderMouse(AbstractLauncherIcon::Ptr const& icon)
+{
+  if (_icon_under_mouse == icon)
+    return;
+
+  if (_icon_under_mouse)
+    _icon_under_mouse->mouse_leave.emit(monitor);
+  if (icon)
+    icon->mouse_enter.emit(monitor);
+
+  _icon_under_mouse = icon;
 }
 
 bool Launcher::MouseBeyondDragThreshold() const
@@ -1210,8 +1227,9 @@ void Launcher::OnOverlayShown(GVariant* data)
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
+  int width, height;
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
-                &overlay_identity, &can_maximise, &overlay_monitor);
+                &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
   std::string identity(overlay_identity.Str());
 
   LOG_DEBUG(logger) << "Overlay shown: " << identity
@@ -1251,8 +1269,9 @@ void Launcher::OnOverlayHidden(GVariant* data)
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
+  int width, height;
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
-                &overlay_identity, &can_maximise, &overlay_monitor);
+                &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
 
   std::string identity = overlay_identity.Str();
 
@@ -1316,7 +1335,8 @@ void Launcher::SetHidden(bool hide_launcher)
 
   TimeUtil::SetTimeStruct(&_times[TIME_AUTOHIDE], &_times[TIME_AUTOHIDE], ANIM_DURATION_SHORT);
 
-  _parent->EnableInputWindow(!hide_launcher, launcher::window_title, false, false);
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
+    _parent->EnableInputWindow(!hide_launcher, launcher::window_title, false, false);
 
   if (!hide_launcher && GetActionState() == ACTION_DRAG_EXTERNAL)
     DndReset();
@@ -1485,27 +1505,18 @@ void Launcher::SetHover(bool hovered)
 
 bool Launcher::MouseOverTopScrollArea()
 {
-  return _mouse_position.y < panel::Style::Instance().panel_height;
-}
-
-bool Launcher::MouseOverTopScrollExtrema()
-{
-  return _mouse_position.y == 0;
+  return _mouse_position.y < SCROLL_AREA_HEIGHT;
 }
 
 bool Launcher::MouseOverBottomScrollArea()
 {
-  return _mouse_position.y > GetGeometry().height - panel::Style::Instance().panel_height;
-}
-
-bool Launcher::MouseOverBottomScrollExtrema()
-{
-  return _mouse_position.y == GetGeometry().height - 1;
+  return _mouse_position.y >= GetGeometry().height - SCROLL_AREA_HEIGHT;
 }
 
 bool Launcher::OnScrollTimeout()
 {
   bool continue_animation = true;
+  int speed = 0;
 
   if (IsInKeyNavMode() || !_hovered ||
       GetActionState() == ACTION_DRAG_LAUNCHER)
@@ -1516,19 +1527,21 @@ bool Launcher::OnScrollTimeout()
   {
     if (_launcher_drag_delta >= _launcher_drag_delta_max)
       continue_animation = false;
-    else if (MouseOverTopScrollExtrema())
-      _launcher_drag_delta += 6;
     else
-      _launcher_drag_delta += 3;
+    {
+        speed = (SCROLL_AREA_HEIGHT - _mouse_position.y) / SCROLL_AREA_HEIGHT * SCROLL_FPS;
+        _launcher_drag_delta += speed;
+    }
   }
   else if (MouseOverBottomScrollArea())
   {
     if (_launcher_drag_delta <= _launcher_drag_delta_min)
       continue_animation = false;
-    else if (MouseOverBottomScrollExtrema())
-      _launcher_drag_delta -= 6;
     else
-      _launcher_drag_delta -= 3;
+    {
+        speed = ((_mouse_position.y + 1) - (GetGeometry().height - SCROLL_AREA_HEIGHT)) / SCROLL_AREA_HEIGHT * SCROLL_FPS;
+        _launcher_drag_delta -= speed;
+    } 
   }
   else
   {
@@ -1600,8 +1613,7 @@ void Launcher::OnIconRemoved(AbstractLauncherIcon::Ptr const& icon)
   if (icon->needs_redraw_connection.connected())
     icon->needs_redraw_connection.disconnect();
 
-  if (icon == _icon_under_mouse)
-    _icon_under_mouse = nullptr;
+  SetIconUnderMouse(AbstractLauncherIcon::Ptr());
   if (icon == _icon_mouse_down)
     _icon_mouse_down = nullptr;
   if (icon == _drag_icon)
@@ -1920,11 +1932,7 @@ bool Launcher::StartIconDragTimeout(int x, int y)
   // if we are still waiting…
   if (GetActionState() == ACTION_NONE)
   {
-    if (_icon_under_mouse)
-    {
-      _icon_under_mouse->mouse_leave.emit(monitor);
-      _icon_under_mouse = nullptr;
-    }
+    SetIconUnderMouse(AbstractLauncherIcon::Ptr());
     _initial_drag_animation = true;
     StartIconDragRequest(x, y);
   }
@@ -2163,11 +2171,7 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
       GetActionState() == ACTION_NONE)
     return;
 
-  if (_icon_under_mouse)
-  {
-    _icon_under_mouse->mouse_leave.emit(monitor);
-    _icon_under_mouse = nullptr;
-  }
+  SetIconUnderMouse(AbstractLauncherIcon::Ptr());
 
   if (GetActionState() == ACTION_NONE)
   {
@@ -2219,6 +2223,7 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
 void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
   SetMousePosition(x, y);
+  tooltip_manager_.MouseMoved(_icon_under_mouse);
 
   if (!_hidden)
     UpdateChangeInMousePosition(dx, dy);
@@ -2233,9 +2238,16 @@ void Launcher::RecvMouseWheel(int /*x*/, int /*y*/, int wheel_delta, unsigned lo
     return;
 
   bool alt_pressed = nux::GetKeyModifierState(key_flags, nux::NUX_STATE_ALT);
-
   if (alt_pressed)
+  {
     ScrollLauncher(wheel_delta);
+  }
+  else if (_icon_under_mouse)
+  {
+    auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
+    auto scroll_direction = (wheel_delta < 0) ? AbstractLauncherIcon::ScrollDirection::DOWN : AbstractLauncherIcon::ScrollDirection::UP;
+    _icon_under_mouse->PerformScroll(scroll_direction, timestamp);
+  }
 }
 
 void Launcher::ScrollLauncher(int wheel_delta)
@@ -2367,18 +2379,7 @@ void Launcher::EventLogic()
     launcher_icon = MouseIconIntersection(_mouse_position.x, _mouse_position.y);
   }
 
-
-  if (_icon_under_mouse && (_icon_under_mouse != launcher_icon))
-  {
-    _icon_under_mouse->mouse_leave.emit(monitor);
-    _icon_under_mouse = nullptr;
-  }
-
-  if (launcher_icon && (_icon_under_mouse != launcher_icon))
-  {
-    launcher_icon->mouse_enter.emit(monitor);
-    _icon_under_mouse = launcher_icon;
-  }
+  SetIconUnderMouse(launcher_icon);
 }
 
 void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -2393,6 +2394,7 @@ void Launcher::MouseDownLogic(int x, int y, unsigned long button_flags, unsigned
     sources_.AddTimeout(START_DRAGICON_DURATION, cb_func, START_DRAGICON_TIMEOUT);
 
     launcher_icon->mouse_down.emit(nux::GetEventButton(button_flags), monitor, key_flags);
+    tooltip_manager_.IconClicked();
   }
 }
 
@@ -2734,7 +2736,7 @@ void Launcher::ProcessDndDrop(int x, int y)
   else if (_dnd_hovered_icon && _drag_action != nux::DNDACTION_NONE)
   {
      if (IsOverlayOpen())
-       ubus_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+       ubus_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
 
     _dnd_hovered_icon->AcceptDrop(_dnd_data);
   }

@@ -27,8 +27,9 @@
 
 #include <opengl/framebufferobject.h>
 
-#include <UnityCore/Variant.h>
 #include <UnityCore/Lens.h>
+#include <UnityCore/GnomeSessionManager.h>
+#include <UnityCore/Variant.h>
 
 #include "BaseWindowRaiserImp.h"
 #include "IconRenderer.h"
@@ -399,8 +400,9 @@ UnityScreen::UnityScreen(CompScreen* screen)
        unity::glib::String overlay_identity;
        gboolean can_maximise = FALSE;
        gint32 overlay_monitor = 0;
+       int width, height;
        g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
-                    &overlay_identity, &can_maximise, &overlay_monitor);
+                    &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
 
        overlay_monitor_ = overlay_monitor;
 
@@ -426,8 +428,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
     AddChild(&screen_introspection_);
 
     /* Setup our render target for scraping the blur texture */
-    directly_drawable_fbo_.reset(cgl::createBlittableFramebufferObjectWithFallback(*screen,
-                                                                                   gScreen));
+    directly_drawable_fbo_.reset(new GLFramebufferObject ());
+    directly_drawable_fbo_->allocate (*screen);
+    //directly_drawable_fbo_.reset (cgl::createBlittableFramebufferObjectWithFallback(*screen,
+    //                                                                               gScreen));
 
     /* Track whole damage on the very first frame */
     cScreen->damageScreen();
@@ -439,7 +443,6 @@ UnityScreen::~UnityScreen()
   notify_uninit();
 
   unity_a11y_finalize();
-  ::unity::ui::IconRenderer::DestroyTextures();
   QuicklistManager::Destroy();
 
   reset_glib_logging();
@@ -616,7 +619,7 @@ void UnityScreen::nuxEpilogue()
   glDisable(GL_SCISSOR_TEST);
 }
 
-void UnityScreen::setPanelShadowMatrix(const GLMatrix& matrix)
+void UnityScreen::setPanelShadowMatrix(GLMatrix const& matrix)
 {
   panel_shadow_matrix_ = matrix;
 }
@@ -635,8 +638,12 @@ void UnityScreen::FillShadowRectForOutput(CompRect &shadowRect,
   shadowRect.setGeometry(shadowX, shadowY, shadowWidth, shadowHeight);
 }
 
-void UnityScreen::PaintPanelShadow(const CompRegion& clip)
+void UnityScreen::PaintPanelShadow(CompRegion const& clip)
 {
+  // You have no shadow texture. But how?
+  if (_shadow_texture.empty() || !_shadow_texture[0])
+    return;
+
   if (panel_controller_->opacity() == 0.0f)
     return;
 
@@ -651,12 +658,14 @@ void UnityScreen::PaintPanelShadow(const CompRegion& clip)
   if (fullscreenRegion.contains(*output))
     return;
 
-  // You have no shadow texture. But how?
-  if (_shadow_texture.empty() || !_shadow_texture[0])
-    return;
+  if (launcher_controller_->IsOverlayOpen())
+  {
+    auto const& uscreen = UScreen::GetDefault();
+    if (uscreen->GetMonitorAtPosition(output->x(), output->y()) == overlay_monitor_)
+      return;
+  }
 
   CompRect shadowRect;
-
   FillShadowRectForOutput(shadowRect, output);
 
   CompRegion redraw(clip);
@@ -668,31 +677,11 @@ void UnityScreen::PaintPanelShadow(const CompRegion& clip)
 
   panelShadowPainted |= redraw;
 
-  // compiz doesn't use the same method of tracking monitors as our toolkit
-  // we need to make sure we properly associate with the right monitor
-  int current_monitor = -1;
-  auto monitors = UScreen::GetDefault()->GetMonitors();
-  int i = 0;
-  for (auto monitor : monitors)
-  {
-    if (monitor.x == output->x() && monitor.y == output->y())
-    {
-      current_monitor = i;
-      break;
-    }
-    i++;
-  }
-
-  if (launcher_controller_->IsOverlayOpen() && current_monitor == overlay_monitor_)
-    return;
-
   nuxPrologue();
 
-  const CompRect::vector& rects = redraw.rects();
-
-  for (auto const& r : rects)
+  for (auto const& r : redraw.rects())
   {
-    foreach(GLTexture * tex, _shadow_texture)
+    for (GLTexture* tex : _shadow_texture)
     {
       std::vector<GLfloat>  vertexData;
       std::vector<GLfloat>  textureData;
@@ -783,50 +772,118 @@ void UnityScreen::OnPanelStyleChanged()
   }
 }
 
+namespace
+{
+void paintIntoPreviousFramebuffer(GLFramebufferObject *oldId,
+                                  CompRegion const&   buffered_compiz_damage_last_frame,
+                                  GLTexture*          oldTex,
+                                  CompOutput*         output)
+{
+  GLFramebufferObject::rebind(oldId);
+
+  CompRegion direct_draw_region =
+      CompRegionRef (output->region()) & buffered_compiz_damage_last_frame;
+  CompRect::vector direct_draw_rects (direct_draw_region.rects());
+
+  GLTexture::Matrix const& texmatrix = oldTex->matrix();
+  GLVertexBuffer *streaming_buffer = GLVertexBuffer::streamingBuffer ();
+
+  streaming_buffer->begin (GL_TRIANGLE_STRIP);
+
+  for (const CompRect &r : direct_draw_rects)
+  {
+    GLfloat rx1 = r.x ();
+    GLfloat ry1 = r.y ();
+    GLfloat rx2 = r.x2 ();
+    GLfloat ry2 = r.y2 ();
+
+    GLfloat vertices[] = { rx1, ry1, 0.0f,
+                           rx1, ry2, 0.0f,
+                           rx2, ry1, 0.0f,
+                           rx1, ry2, 0.0f,
+                           rx2, ry2, 0.0f,
+                           rx2, ry1, 0.0f };
+
+    GLfloat tx1 = COMP_TEX_COORD_X (texmatrix, rx1);
+    GLfloat tx2 = COMP_TEX_COORD_X (texmatrix, rx2);
+    GLfloat ty1 = 1.0 - COMP_TEX_COORD_Y (texmatrix, ry1);
+    GLfloat ty2 = 1.0 - COMP_TEX_COORD_Y (texmatrix, ry2);
+
+    /* Normalize the texcoords */
+    GLfloat texcoords[] = { tx1, ty1,
+                            tx1, ty2,
+                            tx2, ty1,
+                            tx1, ty2,
+                            tx2, ty2,
+                            tx2, ty1 };
+
+    streaming_buffer->addVertices(6, vertices);
+    streaming_buffer->addTexCoords(0, 6, texcoords);
+  }
+
+  if (streaming_buffer->end ())
+  {
+    /* Set viewport to fullscreen */
+    glViewport (0, 0, screen->width(), screen->height());
+
+    GLMatrix sTransform;
+    sTransform.toScreenSpace (&(screen->fullscreenOutput ()), -DEFAULT_Z_CAMERA);
+
+    oldTex->enable (GLTexture::Fast);
+    streaming_buffer->render (sTransform);
+    oldTex->disable ();
+
+    glViewport(output->x(),
+               screen->height () - output->y2(),
+               output->width(),
+               screen->height());
+  }
+}
+}
+
 void UnityScreen::paintDisplay()
 {
   CompOutput *output = _last_output;
 
   DrawTopPanelBackground();
 
-  if (previous_framebuffer_)
+  /* If the age is zero, it means that we drew into
+   * the fbo on this frame, so we should update both
+   * the backbuffer and nux */
+  if (directly_drawable_buffer_age_ == 0 &&
+      directly_drawable_fbo_)
   {
-    gScreen->bindFramebufferForDrawing(previous_framebuffer_);
+    GLTexture *fbo_tex = directly_drawable_fbo_->tex();
 
-    CompRegion direct_draw_region =
-        CompRegionRef (output->region()) & buffered_compiz_damage_last_frame_;
-    CompRect::vector direct_draw_rects (direct_draw_region.rects());
+    paintIntoPreviousFramebuffer(previous_framebuffer_,
+                                 buffered_compiz_damage_last_frame_,
+                                 fbo_tex,
+                                 output);
 
-    /* Set viewport to fullscreen */
-    glViewport (0, 0, screen->width(), screen->height());
-
-    for (const CompRect &r : direct_draw_rects)
+    if (directly_drawable_fbo_)
     {
-      /* For now we should invert the y co-ords */
-      directly_drawable_fbo_->directDraw (r,
-                                          r,
-                                          compiz::opengl::ColorData,
-                                          compiz::opengl::Fast);
+      nux::ObjectPtr<nux::IOpenGLTexture2D> bg_texture
+          (nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(fbo_tex->name(),
+                                             screen->width(), screen->height(),
+                                             0,
+                                             nux::BITFMT_R8G8B8A8));
+      nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = bg_texture;
+
+      previous_framebuffer_ = nullptr;
     }
-
-    glViewport(output->x(),
-               screen->height () - output->y2(),
-               output->width(),
-               screen->height());
-
-    nux::ObjectPtr<nux::IOpenGLTexture2D> bg_texture
-        (nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(directly_drawable_fbo_->tex()->name(),
-                                           screen->width(), screen->height(),
-                                           0,
-                                           nux::BITFMT_R8G8B8A8));
-    nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = bg_texture;
-    previous_framebuffer_ = nullptr;
   }
 
   /* Bind the currently bound draw framebuffer to the read framebuffer binding.
    * The reason being that we want to use the results of nux images being
    * drawn to this framebuffer in glCopyTexSubImage2D operations */
-  gScreen->bindFramebufferForReading(gScreen->drawFramebuffer());
+  GLint binding_to_be_read;
+#ifndef USE_GLES
+  glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING_EXT, &binding_to_be_read);
+  (*GL::bindFramebuffer) (GL_READ_FRAMEBUFFER_BINDING_EXT, binding_to_be_read);
+#else
+  glGetIntegerv(GL_FRAMEBUFFER_BINDING, &binding_to_be_read);
+  (*GL::bindFramebuffer) (GL_FRAMEBUFFER, binding_to_be_read);
+#endif
 
   nux::Geometry geo(0, 0, screen->width (), screen->height ());
   nux::Geometry outputGeo(output->x (), output->y (), output->width (), output->height ());
@@ -1364,8 +1421,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   // bind the framebuffer if we plan to paint nux on this frame
   if (doShellRepaint && BackgroundEffectHelper::HasDirtyHelpers())
   {
-    previous_framebuffer_ =
-        gScreen->bindFramebufferForDrawing(directly_drawable_fbo_.get());
+    previous_framebuffer_ = directly_drawable_fbo_->bind ();
     directly_drawable_buffer_age_ = 0;
   }
 
@@ -1857,7 +1913,7 @@ void UnityScreen::handleCompizEvent(const char* plugin,
 
   if (launcher_controller_->IsOverlayOpen() && g_strcmp0(event, "start_viewport_switch") == 0)
   {
-    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+    ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   }
 
   if (adapter.IsScaleActive() && g_strcmp0(plugin, "scale") == 0 &&
@@ -2580,7 +2636,7 @@ std::string UnityScreen::GetName() const
   return "Unity";
 }
 
-bool isNuxWindow (CompWindow* value)
+bool isNuxWindow(CompWindow* value)
 {
   std::vector<Window> const& xwns = nux::XInputWindow::NativeHandleList();
   auto id = value->id();
@@ -2629,13 +2685,23 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
    * fully covers the shell on its output. It does not include regular windows
    * stacked above the shell like DnD icons or Onboard etc.
    */
-  if (isNuxWindow(window))
+  if (G_UNLIKELY(is_nux_window_))
   {
     if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
     {
       uScreen->nuxRegion += window->geometry();
       uScreen->nuxRegion -= uScreen->fullscreenRegion;
     }
+
+    if (window->id() == screen->activeWindow() &&
+        !(mask & PAINT_WINDOW_ON_TRANSFORMED_SCREEN_MASK))
+    {
+      if (!mask)
+        uScreen->panelShadowPainted = CompRect();
+
+      uScreen->PaintPanelShadow(region);
+    }
+
     return false;  // Ensure nux windows are never painted by compiz
   }
   else if (mask & PAINT_WINDOW_OCCLUSION_DETECTION_MASK)
@@ -2702,6 +2768,12 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
     paintInnerGlow(scaled_geo, matrix, attrib, mask);
   }
 
+  if (uScreen->session_controller_ && uScreen->session_controller_->Visible())
+  {
+    // Let's darken the other windows if the session dialog is visible
+    wAttrib.brightness *= 0.75f;
+  }
+
   return gWindow->glPaint(wAttrib, matrix, region, mask);
 }
 
@@ -2740,8 +2812,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   if (uScreen->doShellRepaint &&
       !uScreen->forcePaintOnTop () &&
       window == uScreen->firstWindowAboveShell &&
-      !uScreen->fullscreenRegion.contains(window->geometry())
-     )
+      !uScreen->fullscreenRegion.contains(window->geometry()))
   {
     uScreen->paintDisplay();
   }
@@ -2752,6 +2823,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     uScreen->setPanelShadowMatrix(matrix);
 
   Window active_window = screen->activeWindow();
+
   if (!screen_transformed &&
       window->id() == active_window &&
       window->type() != CompWindowTypeDesktopMask)
@@ -3319,16 +3391,27 @@ void UnityScreen::outputChangeNotify()
 {
   screen->outputChangeNotify ();
 
-  /* Unbind and reallocate the directly drawable fbo */
-  cgl::BindableFramebuffer *old_read_buffer =
-      gScreen->bindFramebufferForReading(gScreen->backbuffer());
-  cgl::BindableFramebuffer *old_draw_buffer =
-      gScreen->bindFramebufferForDrawing(gScreen->backbuffer());
+  GLint dFBOID, rFBOID;
+  // Save old bindings and unbind
+#ifndef USE_GLES
+  glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING_EXT, &dFBOID);
+  glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING_EXT, &rFBOID);
+  (*GL::bindFramebuffer) (GL_DRAW_FRAMEBUFFER_EXT, 0);
+  (*GL::bindFramebuffer) (GL_READ_FRAMEBUFFER_EXT, 0);
+#else
+  glGetIntegerv(GL_FRAMEBUFFER_BINDING, &dFBOID);
+  (*GL::bindFramebuffer) (GL_FRAMEBUFFER, 0);
+  rFBOID = dFBOID;
+#endif
 
   directly_drawable_fbo_->allocate (*screen, NULL, GL_BGRA);
 
-  gScreen->bindFramebufferForReading(old_read_buffer);
-  gScreen->bindFramebufferForDrawing(old_draw_buffer);
+#ifndef USE_GLES
+  (*GL::bindFramebuffer) (GL_DRAW_FRAMEBUFFER_EXT, dFBOID);
+  (*GL::bindFramebuffer) (GL_READ_FRAMEBUFFER_EXT, rFBOID);
+#else
+  (*GL::bindFramebuffer) (GL_FRAMEBUFFER, dFBOID);
+#endif
 
   ScheduleRelayout(500);
 }
@@ -3396,6 +3479,11 @@ void UnityScreen::initLauncher()
   auto shortcuts_modeller = std::make_shared<shortcut::CompizModeller>();
   shortcut_controller_ = std::make_shared<shortcut::Controller>(base_window_raiser, shortcuts_modeller);
   AddChild(shortcut_controller_.get());
+
+  // Setup Session Controller
+  auto manager = std::make_shared<session::GnomeManager>();
+  session_controller_ = std::make_shared<session::Controller>(manager);
+  AddChild(session_controller_.get());
 
   launcher_controller_->launcher().size_changed.connect([this] (nux::Area*, int w, int h) {
     /* The launcher geometry includes 1px used to draw the right margin
@@ -3539,6 +3627,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
   , window(window)
   , gWindow(GLWindow::get(window))
+  , is_nux_window_(isNuxWindow(window))
 {
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);

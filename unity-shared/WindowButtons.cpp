@@ -360,7 +360,7 @@ void WindowButtons::OnCloseClicked(nux::Button *button)
 
   if (win_button->overlay_mode())
   {
-    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+    ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   }
   else
   {
@@ -429,8 +429,9 @@ void WindowButtons::OnOverlayShown(GVariant* data)
   glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
+  int width, height;
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
-                &overlay_identity, &can_maximise, &overlay_monitor);
+                &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
 
   if (overlay_monitor != monitor())
   {
@@ -500,8 +501,9 @@ void WindowButtons::OnOverlayHidden(GVariant* data)
   glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
+  int width, height;
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
-                &overlay_identity, &can_maximise, &overlay_monitor);
+                &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
 
   if (overlay_monitor != monitor())
   {

@@ -82,10 +82,10 @@ public:
 
   ~FilesystemLenses();
 
-  LensList GetLenses() const;
-  Lens::Ptr GetLens(std::string const& lens_id) const;
-  Lens::Ptr GetLensAtIndex(std::size_t index) const;
-  Lens::Ptr GetLensForShortcut(std::string const& lens_shortcut) const;
+  LensList GetLenses() const override;
+  Lens::Ptr GetLens(std::string const& lens_id) const override;
+  Lens::Ptr GetLensAtIndex(std::size_t index) const override;
+  Lens::Ptr GetLensForShortcut(std::string const& lens_shortcut) const override;
 
   sigc::signal<void> lenses_loaded;
 

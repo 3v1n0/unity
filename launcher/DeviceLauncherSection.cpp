@@ -32,8 +32,8 @@ DeviceLauncherSection::DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr v
                                              DevicesSettings::Ptr devices_settings)
   : monitor_(volume_monitor)
   , devices_settings_(devices_settings)
-  , file_manager_opener_(new FileManagerOpenerImp)
-  , device_notification_display_(new DeviceNotificationDisplayImp)
+  , file_manager_opener_(std::make_shared<FileManagerOpenerImp>())
+  , device_notification_display_(std::make_shared<DeviceNotificationDisplayImp>())
 {
   monitor_->volume_added.connect(sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeAdded));
   monitor_->volume_removed.connect(sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeRemoved));

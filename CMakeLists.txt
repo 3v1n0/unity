@@ -135,6 +135,7 @@ set (LOCALE_DIR "${DATADIR}/locale")
 set (VERSION "${UNITY_VERSION}")
 set (BUILDDIR "${CMAKE_BINARY_DIR}")
 set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
+set (INDICATOR_SERVICE_DIR "${CMAKE_INSTALL_PREFIX}/share/unity/indicators")
 
 find_package (PkgConfig)
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} unity --variable lensesdir OUTPUT_VARIABLE LENSES_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -152,7 +153,7 @@ find_package (Gettext REQUIRED)
 set (COMPIZ_I18N_DIR ${CMAKE_SOURCE_DIR}/po)
 
 add_custom_command (OUTPUT ${CMAKE_SOURCE_DIR}/po/unity.pot
-		COMMAND xgettext -c --files-from ${CMAKE_SOURCE_DIR}/po/POTFILES.in --keyword=_ -o ${CMAKE_SOURCE_DIR}/po/unity.pot --copyright-holder="Canonical Ltd" --msgid-bugs-address="ayatana-dev@lists.launchpad.net" --no-wrap --no-location
+		COMMAND xgettext -c --from-code=UTF-8 --files-from ${CMAKE_SOURCE_DIR}/po/POTFILES.in --keyword=_ -o ${CMAKE_SOURCE_DIR}/po/unity.pot --copyright-holder="Canonical Ltd" --msgid-bugs-address="ayatana-dev@lists.launchpad.net" --no-wrap --no-location
 		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 		)
 
@@ -234,6 +235,7 @@ if (ENABLE_X_SUPPORT)
   add_subdirectory(plugins/unitydialog)
   add_subdirectory(plugins/unity-mt-grab-handles)
   add_subdirectory(shortcuts)
+  add_subdirectory(shutdown)
   add_subdirectory(unity-standalone)
 endif ()
 

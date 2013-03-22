@@ -80,13 +80,14 @@ Controller::Controller(Controller::ViewCreator const& create_view,
   ubus.RegisterInterest(UBUS_HUD_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
 
   //!!FIXME!! - just hijacks the dash close request so we get some more requests than normal,
-  ubus.RegisterInterest(UBUS_PLACE_VIEW_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
+  ubus.RegisterInterest(UBUS_OVERLAY_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
 
   ubus.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant *data) {
     unity::glib::String overlay_identity;
     gboolean can_maximise = FALSE;
     gint32 overlay_monitor = 0;
-    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise, &overlay_monitor);
+    int width, height;
+    g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING, &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
 
     if (overlay_identity.Str() != "hud")
     {
@@ -119,14 +120,17 @@ void Controller::SetupWindow()
   window_->mouse_down_outside_pointer_grab_area.connect(
     sigc::mem_fun(this, &Controller::OnMouseDownOutsideWindow));
 
-  /* FIXME - first time we load our windows there is a race that causes the
-   * input window not to actually get input, this side steps that by causing
-   * an input window show and hide before we really need it. */
-  WindowManager& wm = WindowManager::Default();
-  wm.SaveInputFocus();
-  window_->EnableInputWindow(true, "Hud", true, false);
-  window_->EnableInputWindow(false, "Hud", true, false);
-  wm.RestoreInputFocus();
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
+  {
+    /* FIXME - first time we load our windows there is a race that causes the
+     * input window not to actually get input, this side steps that by causing
+     * an input window show and hide before we really need it. */
+    WindowManager& wm = WindowManager::Default();
+    wm.SaveInputFocus();
+    window_->EnableInputWindow(true, "Hud", true, false);
+    window_->EnableInputWindow(false, "Hud", true, false);
+    wm.RestoreInputFocus();
+  }
 }
 
 void Controller::SetupHudView()
@@ -248,7 +252,7 @@ void Controller::Relayout(bool check_monitor)
   }
   nux::Geometry const& geo = GetIdealWindowGeometry();
 
-  view_->Relayout();
+  view_->QueueDraw();
   window_->SetGeometry(geo);
   panel::Style &panel_style = panel::Style::Instance();
   view_->SetMonitorOffset(launcher_width, panel_style.panel_height);
@@ -372,7 +376,10 @@ void Controller::ShowHud()
   // hide the launcher
   GVariant* message_data = g_variant_new("(b)", TRUE);
   ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, message_data);
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, monitor_index_);
+
+  auto const& view_content_geometry = view_->GetContentGeometry();
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, monitor_index_,
+                                 view_content_geometry.width, view_content_geometry.height);
   ubus.SendMessage(UBUS_OVERLAY_SHOWN, info);
 
   nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
@@ -383,8 +390,13 @@ void Controller::FocusWindow()
 {
   window_->ShowWindow(true);
   window_->PushToFront();
-  window_->EnableInputWindow(true, "Hud", true, false);
-  window_->UpdateInputWindowGeometry();
+
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
+  {
+    window_->EnableInputWindow(true, "Hud", true, false);
+    window_->UpdateInputWindowGeometry();
+  }
+
   window_->SetInputFocus();
   window_->QueueDraw();
 }
@@ -416,7 +428,9 @@ void Controller::HideHud(bool restore)
   GVariant* message_data = g_variant_new("(b)", FALSE);
   ubus.SendMessage(UBUS_LAUNCHER_LOCK_HIDE, message_data);
 
-  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, monitor_index_);
+  auto const& view_content_geometry = view_->GetContentGeometry();
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", FALSE, monitor_index_,
+                                 view_content_geometry.width, view_content_geometry.height);
   ubus.SendMessage(UBUS_OVERLAY_HIDDEN, info);
 }
 
@@ -470,7 +484,7 @@ void Controller::OnSearchChanged(std::string search_string)
 
 void Controller::OnSearchActivated(std::string search_string)
 {
-  unsigned int timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+  unsigned int timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
   hud_service_.ExecuteQueryBySearch(search_string, timestamp);
   ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
 }
@@ -478,7 +492,7 @@ void Controller::OnSearchActivated(std::string search_string)
 void Controller::OnQueryActivated(Query::Ptr query)
 {
   LOG_DEBUG(logger) << "Activating query, " << query->formatted_text;
-  unsigned int timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+  unsigned int timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
   hud_service_.ExecuteQuery(query, timestamp);
   ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
 }

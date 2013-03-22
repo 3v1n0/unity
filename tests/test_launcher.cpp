@@ -52,6 +52,7 @@ public:
 
   MOCK_METHOD1(ShouldHighlightOnDrag, bool(DndData const&));
   MOCK_METHOD1(Stick, void(bool));
+  MOCK_METHOD2(PerformScroll, void(ScrollDirection, Time));
 };
 
 }
@@ -62,7 +63,7 @@ public:
   class MockLauncher : public Launcher
   {
   public:
-    MockLauncher(nux::BaseWindow* parent)
+    MockLauncher(MockableBaseWindow* parent)
       : Launcher(parent)
     {}
 
@@ -91,11 +92,12 @@ public:
     using Launcher::ProcessDndLeave;
     using Launcher::ProcessDndMove;
     using Launcher::ProcessDndDrop;
+    using Launcher::_drag_icon_position;
+    using Launcher::_icon_under_mouse;
     using Launcher::IconStartingBlinkValue;
     using Launcher::IconStartingPulseValue;
     using Launcher::HandleBarrierEvent;
     using Launcher::SetHidden;
-    using Launcher::_drag_icon_position;
 
 
     void FakeProcessDndMove(int x, int y, std::list<std::string> uris)
@@ -119,7 +121,7 @@ public:
   };
 
   TestLauncher()
-    : parent_window_(new nux::BaseWindow("TestLauncherWindow"))
+    : parent_window_(new MockableBaseWindow("TestLauncherWindow"))
     , model_(new LauncherModel)
     , options_(new Options)
     , launcher_(new MockLauncher(parent_window_.GetPointer()))
@@ -152,7 +154,7 @@ public:
   }
 
   MockUScreen uscreen;
-  nux::ObjectPtr<nux::BaseWindow> parent_window_;
+  nux::ObjectPtr<MockableBaseWindow> parent_window_;
   Settings settings;
   panel::Style panel_style;
   LauncherModel::Ptr model_;
@@ -198,6 +200,25 @@ TEST_F(TestLauncher, TestQuirksDuringDnd)
 
 TEST_F(TestLauncher, TestMouseWheelScroll)
 {
+  MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon);
+  model_->AddIcon(icon);
+
+  launcher_->SetHover(true);
+  launcher_->_icon_under_mouse = icon;
+
+  unsigned long key_flags = 0; 
+
+  EXPECT_CALL(*icon, PerformScroll(AbstractLauncherIcon::ScrollDirection::UP, _));
+  launcher_->RecvMouseWheel(0, 0, 20, 0, key_flags);
+
+  EXPECT_CALL(*icon, PerformScroll(AbstractLauncherIcon::ScrollDirection::DOWN, _));
+  launcher_->RecvMouseWheel(0, 0, -20, 0, key_flags);
+
+  launcher_->SetHover(false);
+}
+
+TEST_F(TestLauncher, TestMouseWheelScrollAltPressed)
+{
   int initial_scroll_delta;
 
   launcher_->SetHover(true);
@@ -210,11 +231,11 @@ TEST_F(TestLauncher, TestMouseWheelScroll)
 
   key_flags |= nux::NUX_STATE_ALT;
 
-  // scroll down
+  // scroll down 
   launcher_->RecvMouseWheel(0, 0, 20, 0, key_flags);
   EXPECT_EQ((launcher_->GetDragDelta() - initial_scroll_delta), 25);
 
-  // scroll up
+  // scroll up - alt pressed
   launcher_->RecvMouseWheel(0, 0, -20, 0, key_flags);
   EXPECT_EQ(launcher_->GetDragDelta(), initial_scroll_delta);
 

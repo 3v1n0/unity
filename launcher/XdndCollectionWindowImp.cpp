@@ -41,9 +41,14 @@ public:
     // We are not calling ShowWindow () as this window
     // isn't really visible
     PushToBack();
-    // Hack to create the X Window as soon as possible.
-    EnableInputWindow(true, "XdndCollectionWindowImp");
-    EnableInputWindow(false, "XdndCollectionWindowImp");
+
+    if (nux::GetWindowThread()->IsEmbeddedWindow())
+    {
+      // Hack to create the X Window as soon as possible.
+      EnableInputWindow(true, "XdndCollectionWindowImp");
+      EnableInputWindow(false, "XdndCollectionWindowImp");
+    }
+
     SetDndEnabled(false, true);
 
     uscreen->changed.connect(sigc::mem_fun(this, &PrivateWindow::OnScreenChanged));
@@ -101,13 +106,17 @@ void XdndCollectionWindowImp::Collect()
   // the launcher window and the dash window. Don't forget to call PushToBack as
   // soon as possible.
   window_->PushToFront();
-  window_->EnableInputWindow(true, "XdndCollectionWindowImp");
+
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
+    window_->EnableInputWindow(true, "XdndCollectionWindowImp");
 }
 
 void XdndCollectionWindowImp::Deactivate()
 {
   window_->PushToBack();
-  window_->EnableInputWindow(false, "XdndCollectionWindowImp");
+
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
+    window_->EnableInputWindow(false, "XdndCollectionWindowImp");
 }
   
 }

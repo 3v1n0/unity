@@ -50,6 +50,7 @@
 #include "DebugDBusInterface.h"
 #include "ScreenIntrospection.h"
 #include "SwitcherController.h"
+#include "SessionController.h"
 #include "UBusWrapper.h"
 #include "UnityshellPrivate.h"
 #include "UnityShowdesktopHandler.h"
@@ -96,7 +97,7 @@ public:
 
   /* nux draw wrapper */
   void paintDisplay();
-  void PaintPanelShadow(const CompRegion& clip);
+  void PaintPanelShadow(CompRegion const& clip);
   void setPanelShadowMatrix(const GLMatrix& matrix);
 
   void damageCutoff();
@@ -282,6 +283,7 @@ private:
   switcher::Controller::Ptr switcher_controller_;
   hud::Controller::Ptr      hud_controller_;
   shortcut::Controller::Ptr shortcut_controller_;
+  session::Controller::Ptr  session_controller_;
   debug::DebugDBusInterface debugger_;
 
   /* Subscription for gestures that manipulate Unity launcher */
@@ -358,8 +360,8 @@ private:
   CompRegion buffered_compiz_damage_last_frame_;
   bool       ignore_redraw_request_;
 
-  std::unique_ptr <compiz::opengl::DirectDrawObject> directly_drawable_fbo_;
-  compiz::opengl::BindableFramebuffer *previous_framebuffer_;
+  std::unique_ptr <GLFramebufferObject> directly_drawable_fbo_;
+  GLFramebufferObject *previous_framebuffer_;
   unsigned int directly_drawable_buffer_age_;
 
   friend class UnityWindow;
@@ -500,6 +502,7 @@ private:
   panel::WindowState close_icon_state_;
   nux::Geometry close_button_geo_;
   bool middle_clicked_;
+  bool is_nux_window_;
   glib::Source::UniquePtr focus_desktop_timeout_;
 
   friend class UnityScreen;

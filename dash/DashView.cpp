@@ -24,7 +24,6 @@
 
 #include <math.h>
 
-#include <gio/gdesktopappinfo.h>
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
 
@@ -110,13 +109,16 @@ public:
 
 NUX_IMPLEMENT_OBJECT_TYPE(DashView);
 
-DashView::DashView()
+DashView::DashView(Lenses::Ptr const& lenses, ApplicationStarter::Ptr const& application_starter)
   : nux::View(NUX_TRACKER_LOCATION)
+  , lenses_(lenses)
   , home_lens_(new HomeLens(_("Home"), _("Home screen"), _("Search your computer and online sources")))
+  , application_starter_(application_starter)
   , preview_container_(nullptr)
   , preview_displaying_(false)
   , preview_navigation_mode_(previews::Navigation::NONE)
   , last_activated_uri_("")
+  , last_activated_timestamp_(0)
   , search_in_progress_(false)
   , activate_on_finish_(false)
   , visible_(false)
@@ -137,10 +139,13 @@ DashView::DashView()
   SetupViews();
   SetupUBusConnections();
 
-  lenses_.lens_added.connect(sigc::mem_fun(this, &DashView::OnLensAdded));
+  lenses_->lens_added.connect(sigc::mem_fun(this, &DashView::OnLensAdded));
   mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
   preview_state_machine_.PreviewActivated.connect(sigc::mem_fun(this, &DashView::BuildPreview));
   Relayout();
+
+  for (auto lens : lenses_->GetLenses())
+    lenses_->lens_added.emit(lens);
 
   home_lens_->AddLenses(lenses_);
   lens_bar_->Activate("home.lens");
@@ -195,7 +200,8 @@ void DashView::OnUriActivated(ResultView::ActivateType type, std::string const& 
     int row_height = 0;
     int results_to_the_left = 0;
     int results_to_the_right = 0;
-    g_variant_get(data, "(iiiiii)", &column_x, &row_y, &column_width, &row_height, &results_to_the_left, &results_to_the_right);
+    g_variant_get(data, "(tiiiiii)", &last_activated_timestamp_, &column_x, &row_y, &column_width, &row_height, &results_to_the_left, &results_to_the_right);
+
     preview_state_machine_.SetSplitPosition(SplitPosition::CONTENT_AREA, row_y);
     preview_state_machine_.left_results = results_to_the_left;
     preview_state_machine_.right_results = results_to_the_right;
@@ -470,7 +476,7 @@ void DashView::AboutToShow()
 
     if (active_lens_view_->lens()->id() == "home.lens")
     {
-      for (auto lens : lenses_.GetLenses())
+      for (auto lens : lenses_->GetLenses())
       {
         lens->view_type = ViewType::HOME_VIEW;
         LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HOME_VIEW
@@ -508,7 +514,7 @@ void DashView::AboutToHide()
   visible_ = false;
   renderer_.AboutToHide();
 
-  for (auto lens : lenses_.GetLenses())
+  for (auto lens : lenses_->GetLenses())
   {
     lens->view_type = ViewType::HIDDEN;
     LOG_DEBUG(logger) << "Setting ViewType " << ViewType::HIDDEN
@@ -697,7 +703,11 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
   renderer_.DrawInner(graphics_engine, content_geo_, renderer_geo_abs, renderer_geo);
 
   nux::Geometry const& geo_layout(layout_->GetGeometry());
-  graphics_engine.PushClippingRectangle(geo_layout);
+
+  // See lp bug: 1125346 (The sharp white line between dash and launcher is missing)
+  nux::Geometry clip_geo = geo_layout;
+  clip_geo.x += 1;
+  graphics_engine.PushClippingRectangle(clip_geo);
 
   if (IsFullRedraw())
   {
@@ -1125,7 +1135,7 @@ void DashView::OnActivateRequest(GVariant* args)
   }
   else if (/* visible_ && */ handled_type == NOT_HANDLED)
   {
-    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST, NULL,
+    ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST, NULL,
                               glib::Source::Priority::HIGH);
   }
   else if (/* visible_ && */ handled_type == GOTO_DASH_URI)
@@ -1152,9 +1162,9 @@ std::string DashView::AnalyseLensURI(std::string const& uri)
 
 void DashView::UpdateLensFilter(std::string lens_id, std::string filter_name, std::string value)
 {
-  if (lenses_.GetLens(lens_id))
+  if (lenses_->GetLens(lens_id))
   {
-    Lens::Ptr lens = lenses_.GetLens(lens_id);
+    Lens::Ptr lens = lenses_->GetLens(lens_id);
 
     Filters::Ptr filters = lens->filters;
 
@@ -1219,7 +1229,6 @@ void DashView::OnLiveSearchReached(std::string const& search_string)
 
 void DashView::OnLensAdded(Lens::Ptr& lens)
 {
-  std::string id = lens->id;
   lens_bar_->AddLens(lens);
 
   nux::ObjectPtr<LensView> view(new LensView(lens, search_bar_->show_filters()));
@@ -1354,7 +1363,7 @@ void DashView::OnUriActivatedReply(std::string const& uri, HandledType type, Len
     return;
   }
 
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
 }
 
 bool DashView::DoFallbackActivation(std::string const& fake_uri)
@@ -1366,68 +1375,18 @@ bool DashView::DoFallbackActivation(std::string const& fake_uri)
 
   if (g_str_has_prefix(uri.c_str(), "application://"))
   {
-    std::string appname = uri.substr(14);
-    return LaunchApp(appname);
+    std::string const& appname = uri.substr(14);
+    return application_starter_->Launch(appname, last_activated_timestamp_);
   }
   else if (g_str_has_prefix(uri.c_str(), "unity-runner://"))
   {
-    std::string appname = uri.substr(15);
-    return LaunchApp(appname);
+    std::string const& appname = uri.substr(15);
+    return application_starter_->Launch(appname, last_activated_timestamp_);
   }
   else
-    return gtk_show_uri(NULL, uri.c_str(), CurrentTime, NULL);
+    return gtk_show_uri(NULL, uri.c_str(), last_activated_timestamp_, NULL);
 
   return false;
-}
-
-bool DashView::LaunchApp(std::string const& appname)
-{
-  GDesktopAppInfo* info;
-  bool ret = false;
-  char *id = g_strdup(appname.c_str());
-  int i = 0;
-
-  LOG_DEBUG(logger) << "Launching " << appname;
-
-  while (id != NULL)
-  {
-    info = g_desktop_app_info_new(id);
-    if (info != NULL)
-    {
-      GError* error = NULL;
-
-      g_app_info_launch(G_APP_INFO(info), NULL, NULL, &error);
-      if (error)
-      {
-        g_warning("Unable to launch %s: %s", id,  error->message);
-        g_error_free(error);
-      }
-      else
-        ret = true;
-      g_object_unref(info);
-      break;
-    }
-
-    /* Try to replace the next - with a / and do the lookup again.
-     * If we set id=NULL we'll exit the outer loop */
-    for (i = 0; ; i++)
-    {
-      if (id[i] == '-')
-      {
-        id[i] = '/';
-        break;
-      }
-      else if (id[i] == '\0')
-      {
-        g_free(id);
-        id = NULL;
-        break;
-      }
-    }
-  }
-
-  g_free(id);
-  return ret;
 }
 
 void DashView::DisableBlur()
@@ -1452,7 +1411,7 @@ bool DashView::AcceptKeyNavFocus()
 
 std::string const DashView::GetIdForShortcutActivation(std::string const& shortcut) const
 {
-  Lens::Ptr lens = lenses_.GetLensForShortcut(shortcut);
+  Lens::Ptr lens = lenses_->GetLensForShortcut(shortcut);
   if (lens)
     return lens->id;
   return "";
@@ -1462,7 +1421,7 @@ std::vector<char> DashView::GetAllShortcuts()
 {
   std::vector<char> result;
 
-  for (Lens::Ptr lens: lenses_.GetLenses())
+  for (Lens::Ptr lens: lenses_->GetLenses())
   {
     std::string shortcut = lens->shortcut;
     if(shortcut.size() > 0)
@@ -1482,7 +1441,7 @@ bool DashView::InspectKeyEvent(unsigned int eventType,
     else if (search_bar_->search_string != "")
       search_bar_->search_string = "";
     else
-      ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+      ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
 
     return true;
   }
@@ -1552,7 +1511,7 @@ nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
 
 void DashView::ProcessDndEnter()
 {
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
 }
 
 nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
@@ -1602,7 +1561,7 @@ nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
 
     if (close_key.first == special_keys_state && close_key.second == x11_key_code)
     {
-      ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+      ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
       return nullptr;
     }
 

@@ -30,7 +30,7 @@ namespace launcher
 class FileManagerOpenerImp : public FileManagerOpener
 {
 public:
-  virtual void Open(std::string const& uri);
+  virtual void Open(std::string const& uri, unsigned long long timestamp);
 };
 
 }

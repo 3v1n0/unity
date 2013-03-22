@@ -89,8 +89,9 @@ void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
   unity::glib::String overlay_identity;
   gboolean can_maximise = FALSE;
   gint32 overlay_monitor = 0;
+  int width, height;
   g_variant_get(data, UBUS_OVERLAY_FORMAT_STRING,
-                &overlay_identity, &can_maximise, &overlay_monitor);
+                &overlay_identity, &can_maximise, &overlay_monitor, &width, &height);
 
   // If the hud is open, we show the HUD button if we have a locked launcher
   if (overlay_identity.Str() == "hud" &&

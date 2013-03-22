@@ -24,7 +24,6 @@
 
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
-#include <Nux/BaseWindow.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/DesktopUtilities.h>
 
@@ -68,6 +67,11 @@ const std::string DBUS_INTROSPECTION =
   "      <arg type='s' name='aptdaemon_task' direction='in'/>"
   "    </method>"
   ""
+  "    <method name='UpdateLauncherIconFavoriteState'>"
+  "      <arg type='s' name='icon_uri' direction='in'/>"
+  "      <arg type='b' name='is_sticky' direction='in'/>"
+  "    </method>"
+  ""
   "  </interface>"
   "</node>";
 }
@@ -89,11 +93,16 @@ namespace
   const std::string RUNNING_APPS_URI = FavoriteStore::URI_PREFIX_UNITY + "running-apps";
   const std::string DEVICES_URI = FavoriteStore::URI_PREFIX_UNITY + "devices";
 }
+
+std::string CreateAppUriNameFromDesktopPath(const std::string &desktop_path)
+{
+  if (desktop_path.empty())
+    return "";
+
+  return FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(desktop_path);
 }
 
-GDBusInterfaceVTable Controller::Impl::interface_vtable =
-  { Controller::Impl::OnDBusMethodCall, NULL, NULL};
-
+}
 
 Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager)
   : parent_(parent)
@@ -111,10 +120,7 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager)
   , launcher_key_press_time_(0)
   , last_dnd_monitor_(-1)
   , super_tap_duration_(0)
-  , dbus_owner_(g_bus_own_name(G_BUS_TYPE_SESSION, DBUS_NAME.c_str(), G_BUS_NAME_OWNER_FLAGS_NONE,
-                               OnBusAcquired, nullptr, nullptr, this, nullptr))
-  , gdbus_connection_(nullptr)
-  , reg_id_(0)
+  , dbus_server_(DBUS_NAME)
 {
 #ifdef USE_X11
   edge_barriers_.options = parent_->options();
@@ -179,6 +185,10 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager)
   xdnd_manager_->dnd_started.connect(sigc::mem_fun(this, &Impl::OnDndStarted));
   xdnd_manager_->dnd_finished.connect(sigc::mem_fun(this, &Impl::OnDndFinished));
   xdnd_manager_->monitor_changed.connect(sigc::mem_fun(this, &Impl::OnDndMonitorChanged));
+
+  dbus_server_.AddObjects(DBUS_INTROSPECTION, DBUS_PATH);
+  for (auto const& obj : dbus_server_.GetObjects())
+    obj->SetMethodsCallsHandler(sigc::mem_fun(this, &Impl::OnDBusMethodCall));
 }
 
 Controller::Impl::~Impl()
@@ -191,11 +201,6 @@ Controller::Impl::~Impl()
     if (launcher_ptr)
       launcher_ptr->GetParent()->UnReference();
   }
-
-  if (gdbus_connection_ && reg_id_)
-    g_dbus_connection_unregister_object(gdbus_connection_, reg_id_);
-
-  g_bus_unown_name(dbus_owner_);
 }
 
 void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> const& monitors)
@@ -314,7 +319,7 @@ void Controller::Impl::OnDndMonitorChanged(int monitor)
 
 Launcher* Controller::Impl::CreateLauncher()
 {
-  nux::BaseWindow* launcher_window = new nux::BaseWindow(TEXT("LauncherWindow"));
+  auto* launcher_window = new MockableBaseWindow(TEXT("LauncherWindow"));
 
   Launcher* launcher = new Launcher(launcher_window);
   launcher->options = parent_->options();
@@ -329,7 +334,10 @@ Launcher* Controller::Impl::CreateLauncher()
   launcher_window->SetLayout(layout);
   launcher_window->SetBackgroundColor(nux::color::Transparent);
   launcher_window->ShowWindow(true);
-  launcher_window->EnableInputWindow(true, launcher::window_title, false, false);
+
+  if (nux::GetWindowThread()->IsEmbeddedWindow())
+    launcher_window->EnableInputWindow(true, launcher::window_title, false, false);
+
   launcher_window->InputWindowEnableStruts(parent_->options()->hide_mode == LAUNCHER_HIDE_NEVER);
   launcher_window->SetEnterFocusInputArea(launcher);
 
@@ -348,7 +356,7 @@ void Controller::Impl::OnLauncherAddRequest(std::string const& icon_uri, Abstrac
   if (icon_uri.find(FavoriteStore::URI_PREFIX_FILE) == 0)
   {
     auto const& desktop_path = icon_uri.substr(FavoriteStore::URI_PREFIX_FILE.length());
-    app_uri = FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(desktop_path);
+    app_uri = local::CreateAppUriNameFromDesktopPath(desktop_path);
   }
 
   auto const& icon = GetIconByUri(app_uri.empty() ? icon_uri : app_uri);
@@ -430,6 +438,62 @@ void Controller::Impl::SaveIconsOrder()
     AddFavoriteKeepingOldPosition(icons, local::DEVICES_URI);
 
   FavoriteStore::Instance().SetFavorites(icons);
+}
+
+void
+Controller::Impl::OnLauncherUpdateIconStickyState(std::string const& icon_uri, bool sticky)
+{
+  if (icon_uri.empty())
+    return;
+
+  std::string target_uri = icon_uri;
+  if (icon_uri.find(FavoriteStore::URI_PREFIX_FILE) == 0)
+  {
+    auto const& desktop_path =
+      icon_uri.substr(FavoriteStore::URI_PREFIX_FILE.length());
+
+    // app uri instead
+    target_uri = local::CreateAppUriNameFromDesktopPath(desktop_path);
+  }
+  auto const& existing_icon_entry =
+    GetIconByUri(target_uri);
+
+  if (existing_icon_entry)
+    {
+      // use the backgroung mechanism of model updates & propagation
+      bool should_update = (existing_icon_entry->IsSticky() != sticky);
+      if (should_update)
+        {
+          if (sticky)
+          {
+            existing_icon_entry->Stick(true);
+          }
+          else
+          {
+            existing_icon_entry->UnStick();
+          }
+
+          SortAndUpdate();
+        }
+    }
+    else
+    {
+      FavoriteStore& favorite_store = FavoriteStore::Instance();
+
+      bool should_update = (favorite_store.IsFavorite(target_uri) != sticky);
+      if (should_update)
+        {
+          if (sticky)
+            {
+              favorite_store.AddFavorite(target_uri, -1);
+              RegisterIcon(CreateFavoriteIcon(target_uri));
+            }
+          else
+            {
+              favorite_store.RemoveFavorite(target_uri);
+            }
+        }
+    }
 }
 
 void
@@ -1198,9 +1262,9 @@ bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, 
       if (TimeUtil::TimeDelta(&current, &last_action_time) > local::ignore_repeat_shortcut_duration)
       {
         if (g_ascii_isdigit((gchar)(*it)->GetShortcut()) && (key_state & ShiftMask))
-          (*it)->OpenInstance(ActionArg(ActionArg::LAUNCHER, 0, timestamp));
+          (*it)->OpenInstance(ActionArg(ActionArg::Source::LAUNCHER, 0, timestamp));
         else
-          (*it)->Activate(ActionArg(ActionArg::LAUNCHER, 0, timestamp));
+          (*it)->Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, timestamp));
       }
 
       // disable the "tap on super" check
@@ -1320,10 +1384,10 @@ void Controller::KeyNavTerminate(bool activate)
 
   if (activate)
   {
-    auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+    auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
 
     pimpl->sources_.AddIdle([this, timestamp] {
-      pimpl->model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0, timestamp));
+      pimpl->model_->Selection()->Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, timestamp));
       return false;
     });
   }
@@ -1424,8 +1488,8 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
       // <SPACE> (open a new instance)
     case NUX_VK_SPACE:
     {
-      auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
-      model_->Selection()->OpenInstance(ActionArg(ActionArg::LAUNCHER, 0, timestamp));
+      auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
+      model_->Selection()->OpenInstance(ActionArg(ActionArg::Source::LAUNCHER, 0, timestamp));
       parent_->KeyNavTerminate(false);
       break;
     }
@@ -1455,50 +1519,29 @@ void Controller::Impl::OpenQuicklist()
   }
 }
 
-void Controller::Impl::OnBusAcquired(GDBusConnection* connection, const gchar* name, gpointer user_data)
+GVariant* Controller::Impl::OnDBusMethodCall(std::string const& method, GVariant *parameters)
 {
-  GDBusNodeInfo* introspection_data = g_dbus_node_info_new_for_xml(DBUS_INTROSPECTION.c_str(), nullptr);
-
-  if (!introspection_data)
+  if (method == "AddLauncherItemFromPosition")
   {
-    LOG_WARNING(logger) << "No introspection data loaded. Won't get dynamic launcher addition.";
-    return;
-  }
-
-  auto self = static_cast<Controller::Impl*>(user_data);
-
-  self->gdbus_connection_ = connection;
-  self->reg_id_ = g_dbus_connection_register_object(connection, DBUS_PATH.c_str(),
-                                                    introspection_data->interfaces[0],
-                                                    &interface_vtable, user_data,
-                                                    nullptr, nullptr);
-  if (!self->reg_id_)
-  {
-    LOG_WARNING(logger) << "Object registration failed. Won't get dynamic launcher addition.";
-  }
-
-  g_dbus_node_info_unref(introspection_data);
-}
-
-void Controller::Impl::OnDBusMethodCall(GDBusConnection* connection, const gchar* sender,
-                                        const gchar* object_path, const gchar* interface_name,
-                                        const gchar* method_name, GVariant* parameters,
-                                        GDBusMethodInvocation* invocation, gpointer user_data)
-{
-  if (g_strcmp0(method_name, "AddLauncherItemFromPosition") == 0)
-  {
-    auto self = static_cast<Controller::Impl*>(user_data);
     glib::String icon, icon_title, desktop_file, aptdaemon_task;
     gint icon_x, icon_y, icon_size;
 
     g_variant_get(parameters, "(ssiiiss)", &icon_title, &icon, &icon_x, &icon_y,
                                            &icon_size, &desktop_file, &aptdaemon_task);
 
-    self->OnLauncherAddRequestSpecial(desktop_file.Str(), aptdaemon_task.Str(),
-                                      icon.Str(), icon_x, icon_y, icon_size);
-
-    g_dbus_method_invocation_return_value(invocation, nullptr);
+    OnLauncherAddRequestSpecial(desktop_file.Str(), aptdaemon_task.Str(),
+                                icon.Str(), icon_x, icon_y, icon_size);
   }
+  else if (method == "UpdateLauncherIconFavoriteState")
+  {
+    gboolean is_sticky;
+    glib::String icon_uri;
+    g_variant_get(parameters, "(sb)", &icon_uri, &is_sticky);
+
+    OnLauncherUpdateIconStickyState(icon_uri.Str(), is_sticky);
+  }
+
+  return nullptr;
 }
 
 } // namespace launcher
