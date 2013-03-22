@@ -459,6 +459,22 @@ glib::Variant DBusProxy::GetProperty(std::string const& name) const
   return nullptr;
 }
 
+void DBusProxy::SetProperty(std::string const& name, GVariant* value)
+{
+  if (IsConnected())
+  {
+    g_dbus_proxy_set_cached_property(pimpl->proxy_, name.c_str(), value);
+  }
+  else
+  {
+    auto conn = std::make_shared<sigc::connection>();
+    *conn = connected.connect([this, conn, name, value] {
+      SetProperty(name, value);
+      conn->disconnect();
+    });
+  }
+}
+
 void DBusProxy::Connect(std::string const& signal_name, ReplyCallback const& callback)
 {
   pimpl->Connect(signal_name, callback);
