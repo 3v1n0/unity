@@ -276,30 +276,58 @@ TEST_F(TestGDBusProxy, GetROProperty)
   EXPECT_EQ(ROPropertyValue(), value);
 }
 
-TEST_F(TestGDBusProxy, SetRWPropertyBeforeConnection)
+TEST_F(TestGDBusProxy, SetGetRWPropertyBeforeConnection)
 {
   auto RWPropertyValue = [this] { return glib::Variant(proxy.GetProperty("ReadWriteProperty")).GetInt(); };
-  EXPECT_EQ(RWPropertyValue(), 0);
 
   int value = g_random_int();
-  proxy.SetProperty("ReadWriteProperty", g_variant_new("(i)", value));
+  proxy.SetProperty("ReadWriteProperty", g_variant_new_int32(value));
 
   Utils::WaitUntilMSec([this, value, RWPropertyValue] { return RWPropertyValue() == value; });
   EXPECT_EQ(RWPropertyValue(), value);
 }
 
-TEST_F(TestGDBusProxy, SetRWPropertyAfterConnection)
+TEST_F(TestGDBusProxy, SetGetRWPropertyAfterConnection)
 {
   Utils::WaitUntilMSec([this] { return proxy.IsConnected(); });
 
   auto RWPropertyValue = [this] { return glib::Variant(proxy.GetProperty("ReadWriteProperty")).GetInt(); };
-  EXPECT_EQ(RWPropertyValue(), 0);
 
   int value = g_random_int();
-  proxy.SetProperty("ReadWriteProperty", g_variant_new("(i)", value));
+  proxy.SetProperty("ReadWriteProperty", g_variant_new_int32(value));
 
   Utils::WaitUntilMSec([this, value, RWPropertyValue] { return RWPropertyValue() == value; });
   EXPECT_EQ(RWPropertyValue(), value);
+}
+
+TEST_F(TestGDBusProxy, SetWOPropertyBeforeConnection)
+{
+  int value = g_random_int();
+  proxy.SetProperty("WriteOnlyProperty", g_variant_new_int32(value));
+
+  int wo_value = 0;
+  proxy.Call("GetWriteOnlyProperty", nullptr, [&wo_value] (GVariant* value) {
+    wo_value = glib::Variant(value).GetInt();
+  });
+
+  Utils::WaitUntilMSec([this, value, &wo_value] { return wo_value == value; });
+  EXPECT_EQ(wo_value, value);
+}
+
+TEST_F(TestGDBusProxy, SetWOPropertyAfterConnection)
+{
+  Utils::WaitUntilMSec([this] { return proxy.IsConnected(); });
+
+  int value = g_random_int();
+  proxy.SetProperty("WriteOnlyProperty", g_variant_new_int32(value));
+
+  int wo_value = 0;
+  proxy.Call("GetWriteOnlyProperty", nullptr, [&wo_value] (GVariant* value) {
+    wo_value = glib::Variant(value).GetInt();
+  });
+
+  Utils::WaitUntilMSec([this, value, &wo_value] { return wo_value == value; });
+  EXPECT_EQ(wo_value, value);
 }
 
 }
