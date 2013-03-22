@@ -276,4 +276,30 @@ TEST_F(TestGDBusProxy, GetROProperty)
   EXPECT_EQ(ROPropertyValue(), value);
 }
 
+TEST_F(TestGDBusProxy, SetRWPropertyBeforeConnection)
+{
+  auto RWPropertyValue = [this] { return glib::Variant(proxy.GetProperty("ReadWriteProperty")).GetInt(); };
+  EXPECT_EQ(RWPropertyValue(), 0);
+
+  int value = g_random_int();
+  proxy.SetProperty("ReadWriteProperty", g_variant_new("(i)", value));
+
+  Utils::WaitUntilMSec([this, value, RWPropertyValue] { return RWPropertyValue() == value; });
+  EXPECT_EQ(RWPropertyValue(), value);
+}
+
+TEST_F(TestGDBusProxy, SetRWPropertyAfterConnection)
+{
+  Utils::WaitUntilMSec([this] { return proxy.IsConnected(); });
+
+  auto RWPropertyValue = [this] { return glib::Variant(proxy.GetProperty("ReadWriteProperty")).GetInt(); };
+  EXPECT_EQ(RWPropertyValue(), 0);
+
+  int value = g_random_int();
+  proxy.SetProperty("ReadWriteProperty", g_variant_new("(i)", value));
+
+  Utils::WaitUntilMSec([this, value, RWPropertyValue] { return RWPropertyValue() == value; });
+  EXPECT_EQ(RWPropertyValue(), value);
+}
+
 }
