@@ -156,6 +156,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , big_tick_(0)
   , screen_introspection_(screen)
   , ignore_redraw_request_(false)
+  , dirty_helpers_on_this_frame_ (false)
   , previous_framebuffer_(nullptr)
   , directly_drawable_buffer_age_(0)
 {
@@ -1419,7 +1420,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   windows_for_monitor_.clear();
 
   // bind the framebuffer if we plan to paint nux on this frame
-  if (doShellRepaint && BackgroundEffectHelper::HasDirtyHelpers())
+  if (doShellRepaint && dirty_helpers_on_this_frame_)
   {
     previous_framebuffer_ = directly_drawable_fbo_->bind ();
     directly_drawable_buffer_age_ = 0;
@@ -1527,6 +1528,10 @@ void UnityScreen::damageCutoff()
   buffered_compiz_damage_this_frame_ = CompRegion();
 
   wt->ForeignFrameCutoff();
+
+  /* We need to track this per-frame to figure out whether or not
+   * to bind the contents fbo on each monitor pass */
+  dirty_helpers_on_this_frame_ = BackgroundEffectHelper::HasDirtyHelpers();
 }
 
 void UnityScreen::preparePaint(int ms)
