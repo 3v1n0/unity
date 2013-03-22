@@ -484,7 +484,10 @@ void DBusProxy::GetProperty(std::string const& name, ReplyCallback const& callba
         return;
       }
 
-      (*callback)(result);
+      Variant value;
+      g_variant_get(result, "(v)", &value);
+
+      (*callback)(value);
     }, new ReplyCallback(callback));
   }
   else
