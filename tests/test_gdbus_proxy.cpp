@@ -308,7 +308,8 @@ TEST_F(TestGDBusProxy, SetGetAsyncRWPropertyBeforeConnection)
   proxy.GetProperty("ReadWriteProperty", [&got_value] (GVariant* value) { got_value = g_variant_get_int32(value); });
 
   Utils::WaitUntilMSec([this, value, &got_value] { return got_value == value; });
-  EXPECT_EQ(got_value, value);
+  ASSERT_EQ(got_value, value);
+  EXPECT_EQ(got_value, glib::Variant(proxy.GetProperty("ReadWriteProperty")).GetInt());
 }
 
 TEST_F(TestGDBusProxy, SetGetAsyncRWPropertyAfterConnection)
@@ -322,7 +323,8 @@ TEST_F(TestGDBusProxy, SetGetAsyncRWPropertyAfterConnection)
   proxy.GetProperty("ReadWriteProperty", [&got_value] (GVariant* value) { got_value = g_variant_get_int32(value); });
 
   Utils::WaitUntilMSec([this, value, &got_value] { return got_value == value; });
-  EXPECT_EQ(got_value, value);
+  ASSERT_EQ(got_value, value);
+  EXPECT_EQ(got_value, glib::Variant(proxy.GetProperty("ReadWriteProperty")).GetInt());
 }
 
 TEST_F(TestGDBusProxy, SetWOPropertyBeforeConnection)
