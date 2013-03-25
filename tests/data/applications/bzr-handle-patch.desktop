@@ -2,7 +2,7 @@
 Name=Bazaar
 Comment=Apply Bazaar Bundle
 Icon=bzr-icon-64
-Exec=bzr-handle-patch %f
+Exec=/bin/true
 NoDisplay=true
 Terminal=false
 Type=Application
