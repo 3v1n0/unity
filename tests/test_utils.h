@@ -21,20 +21,27 @@ public:
     WaitUntilMSec(success, max_wait * 1000);
   }
 
-  static void WaitUntilMSec(std::function<bool()> const& check_function, bool result = true, unsigned max_wait = 500)
+  static void WaitUntilMSec(std::function<bool()> const& check_function, bool expected_result = true, unsigned max_wait = 500)
   {
     ASSERT_NE(check_function, nullptr);
 
     bool timeout_reached = false;
     guint32 timeout_id = ScheduleTimeout(&timeout_reached, max_wait);
+    bool result;
 
-    while (check_function() != result && !timeout_reached)
-      g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
+    while (!timeout_reached)
+    {
+      result = check_function();
+      if (result == expected_result)
+        break;
 
-    if (check_function() == result)
+      g_main_context_iteration(NULL, TRUE);
+    }
+
+    if (result == expected_result)
       g_source_remove(timeout_id);
 
-    EXPECT_EQ(check_function(), result);
+    EXPECT_EQ(result, expected_result);
   }
 
   static void WaitUntil(std::function<bool()> const& check_function, bool result = true, unsigned max_wait = 10)
@@ -58,7 +65,7 @@ public:
     guint32 timeout_id = ScheduleTimeout(&timeout_reached, timeout_duration);
 
     while (!timeout_reached)
-      g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
+      g_main_context_iteration(NULL, TRUE);
 
     g_source_remove(timeout_id);
   }
@@ -66,7 +73,7 @@ public:
 private:
   static gboolean TimeoutCallback(gpointer data)
   {
-    *(bool*)data = true;
+    *static_cast<bool*>(data) = true;
     return FALSE;
   };
 };
