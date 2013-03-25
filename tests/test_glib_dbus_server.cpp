@@ -279,6 +279,8 @@ struct TestGLibDBusServerInteractions : testing::Test
     object->SetMethodsCallsHandler(nullptr);
     object->SetPropertyGetter(nullptr);
     object->SetPropertySetter(nullptr);
+    proxy->DisconnectSignal();
+    proxy->DisconnectProperty();
   }
 
   static void TearDownTestCase()
@@ -431,10 +433,10 @@ TEST_F(TestGLibDBusServerInteractions, SignalWithParameterEmission)
   EXPECT_TRUE(signal_got);
 }
 
-struct RProperties : TestGLibDBusServerInteractions, testing::WithParamInterface<std::string> {};
-INSTANTIATE_TEST_CASE_P(TestGLibDBusServerInteractions, RProperties, testing::Values("ReadOnlyProperty", "ReadWriteProperty"));
+struct ReadableProperties : TestGLibDBusServerInteractions, testing::WithParamInterface<std::string> {};
+INSTANTIATE_TEST_CASE_P(TestGLibDBusServerInteractions, ReadableProperties, testing::Values("ReadOnlyProperty", "ReadWriteProperty"));
 
-TEST_P(/*TestGLibDBusServerInteractions*/RProperties, PropertyGetter)
+TEST_P(/*TestGLibDBusServerInteractions*/ReadableProperties, PropertyGetter)
 {
   int value = g_random_int();
   bool called = false;
@@ -459,10 +461,32 @@ TEST_P(/*TestGLibDBusServerInteractions*/RProperties, PropertyGetter)
   EXPECT_EQ(got_value, value);
 }
 
-struct WProperties : TestGLibDBusServerInteractions, testing::WithParamInterface<std::string> {};
-INSTANTIATE_TEST_CASE_P(TestGLibDBusServerInteractions, WProperties, testing::Values("WriteOnlyProperty", "ReadWriteProperty"));
+TEST_P(/*TestGLibDBusServerInteractions*/ReadableProperties, EmitPropertyChanged)
+{
+  int value = g_random_int();
+  object->SetPropertyGetter([this, value] (std::string const& property) -> GVariant* {
+    if (property == GetParam())
+      return g_variant_new_int32(value);
 
-TEST_P(/*TestGLibDBusServerInteractions*/WProperties, PropertySetter)
+    return nullptr;
+  });
+
+  bool got_signal = false;
+  proxy->ConnectProperty(GetParam(), [&got_signal, value] (GVariant* new_value) {
+    EXPECT_EQ(g_variant_get_int32(new_value), value);
+    got_signal = true;
+  });
+
+  object->EmitPropertyChanged(GetParam());
+
+  Utils::WaitUntilMSec(got_signal);
+  ASSERT_TRUE(got_signal);
+}
+
+struct WritableProperties : TestGLibDBusServerInteractions, testing::WithParamInterface<std::string> {};
+INSTANTIATE_TEST_CASE_P(TestGLibDBusServerInteractions, WritableProperties, testing::Values("WriteOnlyProperty", "ReadWriteProperty"));
+
+TEST_P(/*TestGLibDBusServerInteractions*/WritableProperties, PropertySetter)
 {
   int value = 0;
   bool called = false;
