@@ -6,6 +6,7 @@
 
 static bool wait_until_test_service_appears();
 static void tell_service_to_exit();
+static void signal_handler(int sig);
 
 int main(int argc, char** argv)
 {
@@ -14,6 +15,7 @@ int main(int argc, char** argv)
   g_type_init();
 #endif
 
+  signal(SIGINT, signal_handler);
   nux::NuxInitialize (0);
 
   // We need the service to be ready before we are
@@ -78,4 +80,10 @@ static void tell_service_to_exit()
                               -1,
                               NULL, NULL);
   g_object_unref(connection);
+}
+
+static void signal_handler(int sig)
+{
+  tell_service_to_exit();
+  exit(0);
 }
