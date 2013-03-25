@@ -2,7 +2,7 @@
 Name=Update Manager
 GenericName=Software Updates
 Comment=Show and install available updates
-Exec=/usr/bin/update-manager
+Exec=/bin/true
 Icon=update-manager
 Terminal=false
 Type=Application

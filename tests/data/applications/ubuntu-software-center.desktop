@@ -2,7 +2,7 @@
 Name=Ubuntu Software Center
 GenericName=Software Center
 Comment=Lets you choose from thousands of applications available for Ubuntu
-Exec=/usr/bin/software-center %u
+Exec=/bin/true
 Icon=softwarecenter
 Terminal=false
 Type=Application
