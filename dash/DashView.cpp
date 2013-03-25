@@ -138,6 +138,8 @@ DashView::DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& app
   SetupViews();
   SetupUBusConnections();
 
+  AddChild(overlay_window_buttons_.GetPointer());
+
   mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
   preview_state_machine_.PreviewActivated.connect(sigc::mem_fun(this, &DashView::BuildPreview));
   Relayout();
