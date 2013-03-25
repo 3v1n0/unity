@@ -103,10 +103,10 @@ private:
     GtkIconInfo* icon_info;
     bool no_cache;
     int helper_handle;
+    std::list<IconLoaderTask::Ptr> shadow_tasks;
     glib::Object<GdkPixbuf> result;
     glib::Error error;
-    std::list<IconLoaderTask::Ptr> shadow_tasks;
-    unsigned idle_id;
+    glib::Source::UniquePtr idle;
 
     IconLoaderTask(IconLoaderRequestType type_,
                    std::string const& data_,
@@ -119,7 +119,7 @@ private:
       : type(type_), data(data_), max_width(max_width_)
       , max_height(max_height_), key(key_)
       , slot(slot_), handle(handle_), impl(self_)
-      , icon_info(nullptr), no_cache(false), helper_handle(0), idle_id(0)
+      , icon_info(nullptr), no_cache(false), helper_handle(0)
       {}
 
     ~IconLoaderTask()
@@ -128,8 +128,6 @@ private:
         ::gtk_icon_info_free(icon_info);
       if (helper_handle != 0)
         impl->DisconnectHandle(helper_handle);
-      if (idle_id != 0)
-        g_source_remove(idle_id);
     }
 
     void InvokeSlot()
@@ -526,7 +524,7 @@ private:
                              255); // src_alpha
       }
 
-      idle_id = g_idle_add(LoadIconComplete, this);
+      idle.reset(new glib::Idle([this] { return LoadIconComplete(this) != FALSE; }));
     }
 
     void BaseIconLoaded(std::string const& base_icon_string,
@@ -628,7 +626,7 @@ private:
       else
       {
         result = nullptr;
-        idle_id = g_idle_add(LoadIconComplete, this);
+        idle.reset(new glib::Idle([this] { return LoadIconComplete(this) != FALSE; }));
       }
     }
 
