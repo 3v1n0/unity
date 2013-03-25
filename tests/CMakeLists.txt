@@ -205,7 +205,7 @@ if (GTEST_SRC_DIR AND
                  test_dbus_indicators.cpp
                  test_filesystem_lenses.cpp
                  test_filter.cpp
-                 test_gdbus_proxy.cpp
+                 test_glib_dbus_proxy.cpp
                  test_hud.cpp
                  test_lens.cpp
                  test_main_dbus.cpp
