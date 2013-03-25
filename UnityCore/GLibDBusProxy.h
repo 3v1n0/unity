@@ -65,13 +65,17 @@ public:
                  GDBusCallFlags flags = G_DBUS_CALL_FLAGS_NONE,
                  int timeout_msec = -1);
 
+  bool IsConnected() const;
+
   Variant GetProperty(std::string const& property_name) const;
   void GetProperty(std::string const& property_name, ReplyCallback const&);
   void SetProperty(std::string const& property_name, GVariant* value);
 
   void Connect(std::string const& signal_name, ReplyCallback const& callback);
   void DisconnectSignal(std::string const& signal_name = "");
-  bool IsConnected() const;
+
+  void ConnectProperty(std::string const& property_name, ReplyCallback const& callback);
+  void DisconnectProperty(std::string const& property_name = "");
 
   sigc::signal<void> connected;
   sigc::signal<void> disconnected;

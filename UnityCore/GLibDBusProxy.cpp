@@ -80,8 +80,8 @@ public:
   bool IsConnected() const;
 
   void OnProxyNameOwnerChanged(GDBusProxy*, GParamSpec*);
-  void OnProxySignal(GDBusProxy* proxy, char* sender_name, char* signal_name,
-                     GVariant* parameters);
+  void OnProxySignal(GDBusProxy* proxy, const char*, const char*, GVariant*);
+  void OnPropertyChanged(GDBusProxy*, GVariant*, GStrv*);
 
   static void OnProxyConnectCallback(GObject* source, GAsyncResult* res, gpointer impl);
   static void OnCallCallback(GObject* source, GAsyncResult* res, gpointer call_data);
@@ -104,12 +104,14 @@ public:
   bool connected_;
   unsigned reconnection_attempts_;
 
-  glib::Signal<void, GDBusProxy*, char*, char*, GVariant*> g_signal_connection_;
+  glib::Signal<void, GDBusProxy*, const char*, const char*, GVariant*> g_signal_connection_;
+  glib::Signal<void, GDBusProxy*, GVariant*, GStrv*> g_property_signal_;
   glib::Signal<void, GDBusProxy*, GParamSpec*> name_owner_signal_;
   glib::Source::UniquePtr reconnect_timeout_;
   sigc::signal<void> proxy_acquired;
 
-  SignalHandlers handlers_;
+  SignalHandlers signal_handlers_;
+  SignalHandlers property_handlers_;
 };
 
 DBusProxy::Impl::Impl(DBusProxy* owner,
@@ -202,11 +204,18 @@ void DBusProxy::Impl::OnProxyConnectCallback(GObject* source,
   self->name_owner_signal_.Connect(self->proxy_, "notify::g-name-owner",
                                    sigc::mem_fun(self, &Impl::OnProxyNameOwnerChanged));
 
-  if (!self->handlers_.empty())
+  if (!self->signal_handlers_.empty())
   {
     // Connecting to the signals only if we have handlers
     if (glib::object_cast<GObject>(self->proxy_) != self->g_signal_connection_.object())
       self->g_signal_connection_.Connect(self->proxy_, "g-signal", sigc::mem_fun(self, &Impl::OnProxySignal));
+  }
+
+  if (!self->property_handlers_.empty())
+  {
+    // Connecting to the property-changed only if we have handlers
+    if (glib::object_cast<GObject>(self->proxy_) != self->g_property_signal_.object())
+      self->g_property_signal_.Connect(self->proxy_, "g-properties-changed", sigc::mem_fun(self, &Impl::OnPropertyChanged));
   }
 
   // If a proxy cannot autostart a service, it doesn't throw an error, but
@@ -243,22 +252,48 @@ void DBusProxy::Impl::OnProxyNameOwnerChanged(GDBusProxy* proxy, GParamSpec* par
   }
 }
 
-void DBusProxy::Impl::OnProxySignal(GDBusProxy* proxy,
-                                    char* sender_name,
-                                    char* signal_name,
-                                    GVariant* parameters)
+void DBusProxy::Impl::OnProxySignal(GDBusProxy* proxy, const char* sender_name, const char* signal_name, GVariant* parameters)
 {
   LOG_DEBUG(logger) << "Signal Received for proxy (" << object_path_ << ") "
                     << "SenderName: " << sender_name << " "
                     << "SignalName: " << signal_name << " "
                     << "ParameterType: " << g_variant_get_type_string(parameters);
 
-  auto handler_it = handlers_.find(signal_name);
+  auto handler_it = signal_handlers_.find(signal_name);
 
-  if (handler_it != handlers_.end())
+  if (handler_it != signal_handlers_.end())
   {
     for (ReplyCallback const& callback : handler_it->second)
       callback(parameters);
+  }
+}
+
+void DBusProxy::Impl::OnPropertyChanged(GDBusProxy* proxy, GVariant* changed_props, GStrv* invalidated)
+{
+  LOG_DEBUG(logger) << "Properties changed for proxy (" << object_path_ << ")";
+
+  if (g_variant_n_children(changed_props) > 0)
+  {
+    GVariantIter *iter;
+    const gchar *property_name;
+    GVariant *value;
+
+    g_variant_get(changed_props, "a{sv}", &iter);
+    while (g_variant_iter_loop (iter, "{&sv}", &property_name, &value))
+    {
+      LOG_DEBUG(logger) << "Property: '" << property_name << "': "
+                        << glib::String(g_variant_print(value, TRUE));
+
+      auto handler_it = property_handlers_.find(property_name);
+
+      if (handler_it != property_handlers_.end())
+      {
+        for (ReplyCallback const& callback : handler_it->second)
+          callback(value);
+      }
+    }
+
+    g_variant_iter_free (iter);
   }
 }
 
@@ -402,21 +437,21 @@ void DBusProxy::Impl::Connect(std::string const& signal_name, ReplyCallback cons
     g_signal_connection_.Connect(proxy_, "g-signal", sigc::mem_fun(this, &Impl::OnProxySignal));
   }
 
-  handlers_[signal_name].push_back(callback);
+  signal_handlers_[signal_name].push_back(callback);
 }
 
 void DBusProxy::Impl::DisconnectSignal(std::string const& signal_name)
 {
   if (signal_name.empty())
   {
-    handlers_.clear();
+    signal_handlers_.clear();
   }
   else
   {
-    handlers_.erase(signal_name);
+    signal_handlers_.erase(signal_name);
   }
 
-  if (handlers_.empty())
+  if (signal_handlers_.empty())
     g_signal_connection_.Disconnect();
 }
 
@@ -528,6 +563,38 @@ void DBusProxy::SetProperty(std::string const& name, GVariant* value)
       conn->disconnect();
     });
   }
+}
+
+void DBusProxy::ConnectProperty(std::string const& name, ReplyCallback const& callback)
+{
+  if (!callback || name.empty())
+  {
+    LOG_WARN(logger) << "Impossible to connect to empty property or with invalid callback";
+    return;
+  }
+
+  if (pimpl->proxy_ && glib::object_cast<GObject>(pimpl->proxy_) != pimpl->g_property_signal_.object())
+  {
+    // It's the first time we connect to a property so we need to setup the call handler
+    pimpl->g_property_signal_.Connect(pimpl->proxy_, "g-properties-changed", sigc::mem_fun(pimpl.get(), &Impl::OnPropertyChanged));
+  }
+
+  pimpl->property_handlers_[name].push_back(callback);
+}
+
+void DBusProxy::DisconnectProperty(std::string const& name)
+{
+  if (name.empty())
+  {
+    pimpl->property_handlers_.clear();
+  }
+  else
+  {
+    pimpl->property_handlers_.erase(name);
+  }
+
+  if (pimpl->property_handlers_.empty())
+    pimpl->g_property_signal_.Disconnect();
 }
 
 void DBusProxy::Connect(std::string const& signal_name, ReplyCallback const& callback)
