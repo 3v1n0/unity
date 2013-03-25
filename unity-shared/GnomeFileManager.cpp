@@ -104,4 +104,9 @@ void GnomeFileManager::EmptyTrash(unsigned long long timestamp)
   proxy->CallBegin("EmptyTrash", nullptr, [proxy] (GVariant*, glib::Error const&) {});
 }
 
+std::vector<std::string> GnomeFileManager::OpenedLocations() const
+{
+  return std::vector<std::string>();
+}
+
 }

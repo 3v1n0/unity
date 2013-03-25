@@ -23,11 +23,12 @@
 
 #include <memory>
 #include <string>
+#include <sigc++/sigc++.h>
 
 namespace unity
 {
 
-class FileManager
+class FileManager : public sigc::trackable
 {
 public:
   typedef std::shared_ptr<FileManager> Ptr;
@@ -36,6 +37,9 @@ public:
   virtual ~FileManager() {}
   virtual void Open(std::string const& uri, unsigned long long timestamp = 0) = 0;
   virtual void EmptyTrash(unsigned long long timestamp = 0) = 0;
+  virtual std::vector<std::string> OpenedLocations() const;
+
+  sigc::signal<void> locations_changed;
 
 private:
   FileManager(FileManager const&) = delete;
