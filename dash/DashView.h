@@ -75,8 +75,6 @@ public:
 
   nux::Geometry const& GetContentGeometry() const;
 
-  virtual bool SetParentObject(Area *parent);
-
 protected:
   void ProcessDndEnter();
 
