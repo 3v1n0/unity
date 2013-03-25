@@ -357,4 +357,53 @@ TEST_F(TestGDBusProxy, SetWOPropertyAfterConnection)
   EXPECT_EQ(wo_value, value);
 }
 
+TEST_F(TestGDBusProxy, PropertyChangedSignalBeforeConnection)
+{
+  int value = g_random_int();
+  bool got_signal = false;
+  proxy.ConnectProperty("ReadWriteProperty", [&got_signal, value] (GVariant* new_value) {
+    got_signal = true;
+    EXPECT_EQ(g_variant_get_int32(new_value), value);
+  });
+
+  proxy.SetProperty("ReadWriteProperty", g_variant_new_int32(value));
+
+  Utils::WaitUntilMSec(got_signal);
+  EXPECT_TRUE(got_signal);
+}
+
+TEST_F(TestGDBusProxy, PropertyChangedSignalAfterConnection)
+{
+  Utils::WaitUntilMSec([this] { return proxy.IsConnected(); });
+
+  int value = g_random_int();
+  bool got_signal = false;
+  proxy.ConnectProperty("ReadOnlyProperty", [&got_signal, value] (GVariant* new_value) {
+    got_signal = true;
+    EXPECT_EQ(g_variant_get_int32(new_value), value);
+  });
+
+  proxy.Call("SetReadOnlyProperty", g_variant_new("(i)", value));
+
+  Utils::WaitUntilMSec(got_signal);
+  EXPECT_TRUE(got_signal);
+}
+
+TEST_F(TestGDBusProxy, PropertyChangedSignalAfterConnectionAndDisconnect)
+{
+  Utils::WaitUntilMSec([this] { return proxy.IsConnected(); });
+
+  bool got_signal1 = false;
+  proxy.ConnectProperty("ReadWriteProperty", [&got_signal1] (GVariant*) { got_signal1 = true; });
+  proxy.DisconnectProperty();
+
+  bool got_signal2 = false;
+  proxy.ConnectProperty("ReadWriteProperty", [&got_signal2] (GVariant*) { got_signal2 = true; });
+  proxy.SetProperty("ReadWriteProperty", g_variant_new_int32(g_random_int()));
+
+  Utils::WaitUntilMSec(got_signal2);
+  ASSERT_FALSE(got_signal1);
+  EXPECT_TRUE(got_signal2);
+}
+
 }
