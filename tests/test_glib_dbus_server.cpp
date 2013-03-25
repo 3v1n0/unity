@@ -434,7 +434,7 @@ TEST_F(TestGLibDBusServerInteractions, SignalWithParameterEmission)
 struct RProperties : TestGLibDBusServerInteractions, testing::WithParamInterface<std::string> {};
 INSTANTIATE_TEST_CASE_P(TestGLibDBusServerInteractions, RProperties, testing::Values("ReadOnlyProperty", "ReadWriteProperty"));
 
-TEST_P(/*TestGLibDBusServerInteractions*/RProperties, ROPropertyGetter)
+TEST_P(/*TestGLibDBusServerInteractions*/RProperties, PropertyGetter)
 {
   int value = g_random_int();
   bool called = false;
@@ -457,6 +457,33 @@ TEST_P(/*TestGLibDBusServerInteractions*/RProperties, ROPropertyGetter)
 
   Utils::WaitUntilMSec([&got_value, value] { return got_value == value; });
   EXPECT_EQ(got_value, value);
+}
+
+struct WProperties : TestGLibDBusServerInteractions, testing::WithParamInterface<std::string> {};
+INSTANTIATE_TEST_CASE_P(TestGLibDBusServerInteractions, WProperties, testing::Values("WriteOnlyProperty", "ReadWriteProperty"));
+
+TEST_P(/*TestGLibDBusServerInteractions*/WProperties, PropertySetter)
+{
+  int value = 0;
+  bool called = false;
+  object->SetPropertySetter([this, &called, &value] (std::string const& property, GVariant* new_value) {
+    EXPECT_EQ(property, GetParam());
+    if (property == GetParam())
+    {
+      value = g_variant_get_int32(new_value);
+      called = true;
+      return true;
+    }
+
+    return false;
+  });
+
+  int new_value = g_random_int();
+  proxy->SetProperty(GetParam(), g_variant_new_int32(new_value));
+
+  Utils::WaitUntilMSec(called);
+  ASSERT_TRUE(called);
+  EXPECT_EQ(value, new_value);
 }
 
 } // Namespace
