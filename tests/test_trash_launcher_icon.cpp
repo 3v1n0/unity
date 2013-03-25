@@ -60,7 +60,7 @@ TEST_F(TestTrashLauncherIcon, Quicklist)
 TEST_F(TestTrashLauncherIcon, QuicklistEmptyTrash)
 {
   auto const& menus = icon.Menus();
-  ASSERT_EQ(icon.Menus().size(), 1);
+  ASSERT_EQ(menus.size(), 1);
 
   auto const& empty_trash_menu = menus.front();
 
