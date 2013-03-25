@@ -26,18 +26,11 @@ using namespace testing;
 #include "gmockvolume.h"
 #include "launcher/VolumeImp.h"
 #include "test_utils.h"
+#include "test_mock_filemanager.h"
 using namespace unity;
 
 namespace
 {
-
-class MockFileManagerOpener : public launcher::FileManagerOpener
-{
-public:
-  typedef std::shared_ptr<MockFileManagerOpener> Ptr;
-
-  MOCK_METHOD2(Open, void(std::string const& uri, unsigned long long time));
-};
 
 class MockDeviceNotificationDisplay : public launcher::DeviceNotificationDisplay
 {
@@ -53,14 +46,14 @@ public:
   void SetUp()
   {
     gvolume_ = g_mock_volume_new();
-    file_manager_opener_.reset(new MockFileManagerOpener);
+    file_manager_.reset(new MockFileManager);
     device_notification_display_.reset(new MockDeviceNotificationDisplay);
     volume_.reset(new launcher::VolumeImp(glib::Object<GVolume>(G_VOLUME(gvolume_.RawPtr()), glib::AddRef()),
-                                          file_manager_opener_, device_notification_display_));
+                                          file_manager_, device_notification_display_));
   }
 
   glib::Object<GMockVolume> gvolume_;
-  MockFileManagerOpener::Ptr file_manager_opener_;
+  MockFileManager::Ptr file_manager_;
   MockDeviceNotificationDisplay::Ptr device_notification_display_;
   launcher::VolumeImp::Ptr volume_;
 };
@@ -129,14 +122,14 @@ TEST_F(TestVolumeImp, TestEjectAndShowNotification)
 TEST_F(TestVolumeImp, TestMountAndOpenInFileManager)
 {
   unsigned long long time = g_random_int();
-  EXPECT_CALL(*file_manager_opener_, Open(ROOT_FILE_URI, time));
+  EXPECT_CALL(*file_manager_, Open(ROOT_FILE_URI, time));
 
   volume_->MountAndOpenInFileManager(time);
   EXPECT_EQ(g_mock_volume_last_mount_had_mount_operation(gvolume_), TRUE);
   EXPECT_TRUE(volume_->IsMounted());
 
   time = g_random_int();
-  EXPECT_CALL(*file_manager_opener_, Open(ROOT_FILE_URI, time));
+  EXPECT_CALL(*file_manager_, Open(ROOT_FILE_URI, time));
 
   volume_->MountAndOpenInFileManager(time);
   EXPECT_EQ(g_mock_volume_last_mount_had_mount_operation(gvolume_), TRUE);
