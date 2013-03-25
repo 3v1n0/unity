@@ -35,6 +35,12 @@ class DashTestCase(UnityTestCase):
         self.assertThat(preview_fn, Eventually(NotEquals(None)))
         return preview_fn()
 
+    def wait_for_category(self, scope, group):
+        """Method to wait for a specific category"""
+        get_scope_fn = lambda: scope.get_category_by_name(group)
+        self.assertThat(get_scope_fn, Eventually(NotEquals(None)))
+        return get_scope_fn()
+
 
 class DashRevealTests(DashTestCase):
     """Test the Unity dash Reveal."""
@@ -335,8 +341,8 @@ class DashKeyNavTests(DashTestCase):
         scope = self.unity.dash.get_current_scope()
 
         # Test that tab cycles through the categories.
-        # + 1 is to cycle back to first header
-        for i in range(scope.get_num_visible_categories() + 1):
+        # + 1 is the filter bar
+        for i in range(scope.get_num_visible_categories()):
             self.keyboard.press_and_release('Tab')
             category = scope.get_focused_category()
             self.assertIsNot(category, None)
@@ -551,7 +557,11 @@ class DashScopeResultsTests(DashTestCase):
         scope = self.unity.dash.get_current_scope()
         self.keyboard.type(" ")
         self.assertThat(self.unity.dash.search_string, Eventually(Equals(" ")))
-        results_category = scope.get_category_by_name(_("Installed"))
+
+        # wait for "Installed" category
+        results_category = self.wait_for_category(scope, _("Installed"))
+
+        self.assertThat(lambda: len(results_category.get_results()), Eventually(GreaterThan(0)))
         old_results = results_category.get_results()
 
         # FIXME: This should be a method on the dash emulator perhaps, or
@@ -628,6 +638,8 @@ class DashVisualTests(DashTestCase):
         self.unity.dash.reveal_application_scope()
 
         scope = self.unity.dash.get_current_scope()
+        self.assertThat(lambda: len(scope.get_groups()), Eventually(GreaterThan(0)))
+
         groups = scope.get_groups()
 
         for group in groups:
@@ -707,7 +719,9 @@ class CategoryHeaderTests(DashTestCase):
         scope = self.unity.dash.reveal_application_scope()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        category = scope.get_category_by_name(_("Installed"))
+        # wait for "Installed" category
+        category = self.wait_for_category(scope, _("Installed"))
+
         is_expanded = category.is_expanded
 
         self.mouse.move(self.unity.dash.view.x + self.unity.dash.view.width / 2,
@@ -733,8 +747,13 @@ class PreviewInvocationTests(DashTestCase):
         scope = self.unity.dash.reveal_application_scope()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        category = scope.get_category_by_name(_("More suggestions"))
+        # wait for "More suggestions" category
+        category = self.wait_for_category(scope, _("Installed"))
+
+        # wait for some results
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0)))
         results = category.get_results()
+
         result = results[0]
         # result.preview handles finding xy co-ords and right mouse-click
         result.preview()
@@ -761,10 +780,13 @@ class PreviewInvocationTests(DashTestCase):
         scope = self.unity.dash.reveal_file_scope()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        category = scope.get_category_by_name(_("Recent"))
-        refresh_results_fn = lambda: len(category.get_results())
-        self.assertThat(refresh_results_fn, Eventually(GreaterThan(0)))
+        # wait for "Recent" category
+        category = self.wait_for_category(scope, _("Recent"))
+
+        # wait for some results
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0)))
         results = category.get_results()
+
         result = results[0]
         # result.preview handles finding xy co-ords and right mouse-click
         result.preview()
@@ -787,6 +809,8 @@ class PreviewInvocationTests(DashTestCase):
         if category is None or not category.is_visible:
             self.skipTest("This scope is probably empty")
 
+        # wait for some results
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0)))
         results = category.get_results()
 
         result = results[0]
@@ -818,9 +842,11 @@ class PreviewInvocationTests(DashTestCase):
         scope = self.unity.dash.reveal_video_scope()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        self.assertThat(lambda: get_category(scope), Eventually(NotEquals(None)))
+        # get category. might not be any.
         category = get_category(scope)
 
+        # wait for some results
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0)))
         results = category.get_results()
 
         result = results[0]
@@ -840,8 +866,13 @@ class PreviewInvocationTests(DashTestCase):
         scope = self.unity.dash.reveal_application_scope()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        category = scope.get_category_by_name(_("More suggestions"))
+        # wait for "More suggestions" category
+        category = self.wait_for_category(scope, _("More suggestions"))
+        
+        # wait for results
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0)))
         results = category.get_results()
+
         result = results[0]
         # result.preview_key() handles finding xy co-ords and key press
         result.preview_key()
@@ -858,12 +889,13 @@ class PreviewNavigateTests(DashTestCase):
         scope = self.unity.dash.reveal_application_scope()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        results_category = scope.get_category_by_name(_("More suggestions"))
-        # wait for results (we need 4 results to perorm the multi-navigation tests)
-        refresh_fn = lambda: len(results_category.get_results())
-        self.assertThat(refresh_fn, Eventually(GreaterThan(4)))
-        results = results_category.get_results()
+        # wait for "More suggestions" category
+        category = self.wait_for_category(scope, _("More suggestions"))
 
+        # wait for results (we need 4 results to perorm the multi-navigation tests)
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(4)))
+
+        results = category.get_results()
         result = results[2] # 2 so we can navigate left
         result.preview()
         self.assertThat(self.unity.dash.view.preview_displaying, Eventually(Equals(True)))
@@ -989,8 +1021,13 @@ class PreviewClickCancelTests(DashTestCase):
         self.addCleanup(self.unity.dash.ensure_hidden)
         # Only testing an application preview for this test.
         self.keyboard.type("Software Updater")
-        results_category = scope.get_category_by_name(_("Installed"))
-        results = results_category.get_results()
+
+        # wait for "Installed" category
+        category = self.wait_for_category(scope, _("Installed"))
+        
+        # wait for results
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0)))
+        results = category.get_results()
 
         result = results[0]
         result.preview()

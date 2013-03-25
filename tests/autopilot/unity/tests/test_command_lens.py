@@ -9,7 +9,7 @@
 from __future__ import absolute_import
 
 from autopilot.matchers import Eventually
-from testtools.matchers import Equals
+from testtools.matchers import Equals, NotEquals
 from time import sleep
 
 from unity.tests import UnityTestCase
@@ -27,6 +27,12 @@ class CommandScopeSearchTests(UnityTestCase):
         self.unity.dash.ensure_hidden()
         super(CommandScopeSearchTests, self).tearDown()
 
+    def wait_for_category(self, scope, group):
+        """Method to wait for a specific category"""
+        get_scope_fn = lambda: scope.get_category_by_name(group)
+        self.assertThat(get_scope_fn, Eventually(NotEquals(None)))
+        return get_scope_fn()
+
     def test_no_results(self):
         """An empty string should get no results."""
         self.unity.dash.reveal_command_scope()
@@ -36,7 +42,8 @@ class CommandScopeSearchTests(UnityTestCase):
             self.keyboard.press_and_release("Delete")
 
         self.assertThat(self.unity.dash.search_string, Eventually(Equals("")))
-        results_category = command_scope.get_category_by_name(_("Results"))
+
+        results_category = self.wait_for_category(command_scope, _("Results"))
         self.assertThat(results_category.is_visible, Eventually(Equals(False)))
 
     def test_results_category_appears(self):
@@ -46,7 +53,8 @@ class CommandScopeSearchTests(UnityTestCase):
         # lots of apps start with 'a'...
         self.keyboard.type("a")
         self.assertThat(self.unity.dash.search_string, Eventually(Equals("a")))
-        results_category = command_scope.get_category_by_name(_("Results"))
+
+        results_category = self.wait_for_category(command_scope, _("Results"))
         self.assertThat(results_category.is_visible, Eventually(Equals(True)))
 
     def test_result_category_actually_contains_results(self):
@@ -56,7 +64,8 @@ class CommandScopeSearchTests(UnityTestCase):
         # lots of apps start with 'a'...
         self.keyboard.type("a")
         self.assertThat(self.unity.dash.search_string, Eventually(Equals("a")))
-        results_category = command_scope.get_category_by_name(_("Results"))
+
+        results_category = self.wait_for_category(command_scope, _("Results"))
         results = results_category.get_results()
         self.assertTrue(results)
 
@@ -78,11 +87,11 @@ class CommandScopeSearchTests(UnityTestCase):
     def test_ctrl_tab_switching(self):
         """Pressing Ctrl+Tab after launching command scope must switch to Home scope."""
         self.unity.dash.reveal_command_scope()
-        self.keybinding("dash/scope/next")
+        self.keybinding("dash/lens/next")
         self.assertThat(self.unity.dash.active_scope, Eventually(Equals("home.scope")))
 
     def test_ctrl_shift_tab_switching(self):
         """Pressing Ctrl+Shift+Tab after launching command scope must switch to Video scope."""
         self.unity.dash.reveal_command_scope()
-        self.keybinding("dash/scope/prev")
-        self.assertThat(self.unity.dash.active_scope, Eventually(Equals("video.scope")))
+        self.keybinding("dash/lens/prev")
+        self.assertThat(self.unity.dash.active_scope, Eventually(Equals("photos.scope")))
