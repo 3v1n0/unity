@@ -106,7 +106,7 @@ private:
     std::list<IconLoaderTask::Ptr> shadow_tasks;
     glib::Object<GdkPixbuf> result;
     glib::Error error;
-    glib::Source::UniquePtr idle;
+    glib::SourceManager idles;
 
     IconLoaderTask(IconLoaderRequestType type_,
                    std::string const& data_,
@@ -524,7 +524,7 @@ private:
                              255); // src_alpha
       }
 
-      idle.reset(new glib::Idle([this] { return LoadIconComplete(this) != FALSE; }));
+      idles.AddIdle([this] { return LoadIconComplete(this) != FALSE; });
     }
 
     void BaseIconLoaded(std::string const& base_icon_string,
@@ -626,7 +626,7 @@ private:
       else
       {
         result = nullptr;
-        idle.reset(new glib::Idle([this] { return LoadIconComplete(this) != FALSE; }));
+        idles.AddIdle([this] { return LoadIconComplete(this) != FALSE; });
       }
     }
 
