@@ -38,7 +38,6 @@ class TrashLauncherIcon : public SimpleLauncherIcon
 
 public:
   TrashLauncherIcon(FileManagerOpener::Ptr const& = nullptr);
-  ~TrashLauncherIcon();
 
 protected:
   void UpdateTrashIcon();
@@ -57,7 +56,7 @@ private:
 
   bool empty_;
   FileManagerOpener::Ptr file_manager_;
-  glib::Object<GCancellable> cancellable_;
+  glib::Cancellable cancellable_;
   glib::Object<GFileMonitor> trash_monitor_;
   glib::Signal<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent> trash_changed_signal_;
   glib::Signal<void, DbusmenuMenuitem*, unsigned> empty_activated_signal_;

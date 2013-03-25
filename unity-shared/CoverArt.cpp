@@ -468,7 +468,7 @@ void CoverArt::SetFont(std::string const& font)
 void CoverArt::OnThumbnailGenerated(std::string const& uri)
 {
   SetImage(uri);
-  notifier_.Release();
+  notifier_.reset();
 }
 
 void CoverArt::OnThumbnailError(std::string const& error_hint)
@@ -478,7 +478,7 @@ void CoverArt::OnThumbnailError(std::string const& error_hint)
 
   texture_screenshot_.Release();
   SetNoImageAvailable();
-  notifier_.Release();
+  notifier_.reset();
 }
 
 

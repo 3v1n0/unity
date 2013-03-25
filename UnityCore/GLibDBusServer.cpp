@@ -525,7 +525,6 @@ struct DBusServer::Impl
   Impl(DBusServer* server, GBusType bus_type)
     : Impl(server)
   {
-    cancellable_ = g_cancellable_new();
     g_bus_get(bus_type, cancellable_, [] (GObject*, GAsyncResult* res, gpointer data) {
       auto self = static_cast<DBusServer::Impl*>(data);
       glib::Error error;
@@ -549,9 +548,6 @@ struct DBusServer::Impl
   {
     if (owner_name_)
       g_bus_unown_name(owner_name_);
-
-    if (cancellable_)
-      g_cancellable_cancel(cancellable_);
 
     LOG_INFO(logger_s) << "Removing dbus server";
   }
@@ -657,8 +653,8 @@ struct DBusServer::Impl
   std::string name_;
   bool name_owned_;
   guint owner_name_;
+  glib::Cancellable cancellable_;
   glib::Object<GDBusConnection> connection_;
-  glib::Object<GCancellable> cancellable_;
   std::vector<DBusObject::Ptr> objects_;
   std::vector<std::pair<DBusObject::Ptr, std::string>> pending_objects_;
 };
