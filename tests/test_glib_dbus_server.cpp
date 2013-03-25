@@ -431,4 +431,32 @@ TEST_F(TestGLibDBusServerInteractions, SignalWithParameterEmission)
   EXPECT_TRUE(signal_got);
 }
 
+struct RProperties : TestGLibDBusServerInteractions, testing::WithParamInterface<std::string> {};
+INSTANTIATE_TEST_CASE_P(TestGLibDBusServerInteractions, RProperties, testing::Values("ReadOnlyProperty", "ReadWriteProperty"));
+
+TEST_P(/*TestGLibDBusServerInteractions*/RProperties, ROPropertyGetter)
+{
+  int value = g_random_int();
+  bool called = false;
+  object->SetPropertyGetter([this, &called, value] (std::string const& property) -> GVariant* {
+    EXPECT_EQ(property, GetParam());
+    if (property == GetParam())
+    {
+      called = true;
+      return g_variant_new_int32(value);
+    }
+
+    return nullptr;
+  });
+
+  int got_value = 0;
+  proxy->GetProperty(GetParam(), [&got_value] (GVariant* value) { got_value = g_variant_get_int32(value); });
+
+  Utils::WaitUntilMSec(called);
+  ASSERT_TRUE(called);
+
+  Utils::WaitUntilMSec([&got_value, value] { return got_value == value; });
+  EXPECT_EQ(got_value, value);
+}
+
 } // Namespace
