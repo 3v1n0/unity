@@ -279,7 +279,7 @@ void DBusProxy::Impl::OnPropertyChanged(GDBusProxy* proxy, GVariant* changed_pro
     GVariant *value;
 
     g_variant_get(changed_props, "a{sv}", &iter);
-    while (g_variant_iter_loop (iter, "{&sv}", &property_name, &value))
+    while (g_variant_iter_loop(iter, "{&sv}", &property_name, &value))
     {
       LOG_DEBUG(logger) << "Property: '" << property_name << "': "
                         << glib::String(g_variant_print(value, TRUE));
