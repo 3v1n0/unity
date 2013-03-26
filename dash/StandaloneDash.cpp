@@ -76,6 +76,7 @@ void TestRunner::Init ()
   view->AboutToShow();
 
   nux::GetWindowThread()->SetLayout (layout);
+  nux::GetWindowCompositor().SetKeyFocusArea(view->default_focus());
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)
