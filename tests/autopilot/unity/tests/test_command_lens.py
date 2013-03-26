@@ -9,7 +9,7 @@
 from __future__ import absolute_import
 
 from autopilot.matchers import Eventually
-from testtools.matchers import Equals, NotEquals
+from testtools.matchers import Equals, NotEquals, GreaterThan
 from time import sleep
 
 from unity.tests import UnityTestCase
@@ -66,8 +66,7 @@ class CommandScopeSearchTests(UnityTestCase):
         self.assertThat(self.unity.dash.search_string, Eventually(Equals("a")))
 
         results_category = self.wait_for_category(command_scope, _("Results"))
-        results = results_category.get_results()
-        self.assertTrue(results)
+        self.assertThat(lambda: len(results_category.get_results()), Eventually(GreaterThan(0)))
 
     def test_run_before_refresh(self):
         """Hitting enter before view has updated results must run the correct command."""

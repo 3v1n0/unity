@@ -1284,6 +1284,12 @@ void DashView::OnScopeBarActivated(std::string const& id)
     search_bar_->can_refine_search = can_refine_search;
   });
 
+  // Fix for a nux quirk. Unparented objects cannot have focus because there will be a break in the
+  // parent tree and the compositor will not be able to walk the focus tree. This still needs to be here
+  // for when scopes switch via the scope bar and the focus nees to move away from the scope bar to the search bar..
+  if (GetParentObject())
+    nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
+
   view->QueueDraw();
   QueueDraw();
 }

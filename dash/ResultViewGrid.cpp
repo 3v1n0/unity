@@ -304,7 +304,7 @@ int ResultViewGrid::GetItemsPerRow()
 void  ResultViewGrid::GetResultDimensions(int& rows, int& columns)
 {
   columns = GetItemsPerRow();
-  rows = result_model_ ? ceil(static_cast<double>(result_model_->count()) / static_cast<double>(std::min<int>(1, results_per_row))) : 0.0;
+  rows = result_model_ ? ceil(static_cast<double>(result_model_->count()) / static_cast<double>(std::min<int>(1, columns))) : 0.0;
 }
 
 void ResultViewGrid::SetModelRenderer(ResultRenderer* renderer)
