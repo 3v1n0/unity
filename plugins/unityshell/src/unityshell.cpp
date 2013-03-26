@@ -431,8 +431,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
     /* Setup our render target for scraping the blur texture */
     directly_drawable_fbo_.reset(new GLFramebufferObject ());
     directly_drawable_fbo_->allocate (*screen);
-    //directly_drawable_fbo_.reset (cgl::createBlittableFramebufferObjectWithFallback(*screen,
-    //                                                                               gScreen));
 
     /* Track whole damage on the very first frame */
     cScreen->damageScreen();
@@ -513,9 +511,9 @@ void UnityScreen::DamagePanelShadow()
 {
   CompRect panelShadow;
 
-  for (CompOutput &output : screen->outputDevs())
+  for (CompOutput const& output : screen->outputDevs())
   {
-    FillShadowRectForOutput(panelShadow, &output);
+    FillShadowRectForOutput(panelShadow, output);
     cScreen->damageRegion(CompRegion(panelShadow));
   }
 }
@@ -528,10 +526,6 @@ void UnityScreen::OnViewHidden(nux::BaseWindow *bw)
                                     geometry.y,
                                     geometry.width,
                                     geometry.height));
-}
-
-void UnityScreen::OnViewShown(nux::BaseWindow *bw)
-{
 }
 
 void UnityScreen::EnsureSuperKeybindings()
@@ -625,16 +619,16 @@ void UnityScreen::setPanelShadowMatrix(GLMatrix const& matrix)
   panel_shadow_matrix_ = matrix;
 }
 
-void UnityScreen::FillShadowRectForOutput(CompRect &shadowRect,
-                                          CompOutput *output)
+void UnityScreen::FillShadowRectForOutput(CompRect         &shadowRect,
+                                          CompOutput const &output)
 {
   if (_shadow_texture.empty ())
     return;
 
   float panel_h = static_cast<float>(panel_style_.panel_height);
-  float shadowX = output->x();
-  float shadowY = output->y() + panel_h;
-  float shadowWidth = output->width();
+  float shadowX = output.x();
+  float shadowY = output.y() + panel_h;
+  float shadowWidth = output.width();
   float shadowHeight = _shadow_texture[0]->height();
   shadowRect.setGeometry(shadowX, shadowY, shadowWidth, shadowHeight);
 }
@@ -667,7 +661,7 @@ void UnityScreen::PaintPanelShadow(CompRegion const& clip)
   }
 
   CompRect shadowRect;
-  FillShadowRectForOutput(shadowRect, output);
+  FillShadowRectForOutput(shadowRect, *output);
 
   CompRegion redraw(clip);
   redraw &= shadowRect;
@@ -780,6 +774,7 @@ void paintIntoPreviousFramebuffer(GLFramebufferObject *oldId,
                                   GLTexture*          oldTex,
                                   CompOutput*         output)
 {
+  printf ("rebind!\n");
   GLFramebufferObject::rebind(oldId);
 
   CompRegion direct_draw_region =
@@ -1422,6 +1417,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   // bind the framebuffer if we plan to paint nux on this frame
   if (doShellRepaint && dirty_helpers_on_this_frame_)
   {
+    printf ("bind fbo\n");
     previous_framebuffer_ = directly_drawable_fbo_->bind ();
     directly_drawable_buffer_age_ = 0;
   }
@@ -1658,10 +1654,10 @@ void UnityScreen::determineNuxDamage(CompRegion &nux_damage)
 
     if (nux_damage.intersects(panel_rect))
     {
-      foreach (CompOutput &o, screen->outputDevs())
+      foreach (CompOutput const& o, screen->outputDevs())
       {
         CompRect shadowRect;
-        FillShadowRectForOutput(shadowRect, &o);
+        FillShadowRectForOutput(shadowRect, o);
         nux_damage += shadowRect;
       }
     }
@@ -3167,7 +3163,6 @@ void UnityScreen::initUnity(nux::NThread* thread, void* InitData)
   LOG_INFO(logger) << "UnityScreen::initUnity: " << timer.ElapsedSeconds() << "s";
 
   nux::GetWindowCompositor().sigHiddenViewWindow.connect (sigc::mem_fun(self, &UnityScreen::OnViewHidden));
-  nux::GetWindowCompositor().sigVisibleViewWindow.connect (sigc::mem_fun(self, &UnityScreen::OnViewShown));
 }
 
 void UnityScreen::onRedrawRequested()

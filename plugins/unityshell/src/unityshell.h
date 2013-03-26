@@ -241,7 +241,6 @@ private:
   void DamagePanelShadow();
 
   void OnViewHidden(nux::BaseWindow *bw);
-  void OnViewShown(nux::BaseWindow *bw);
 
   void RestoreWindow(GVariant* data);
 
@@ -256,7 +255,7 @@ private:
   void UpdateTopPanelBackgroundTexture();
 
   void FillShadowRectForOutput(CompRect &shadowRect,
-                               CompOutput *output);
+                               CompOutput const &output);
   unsigned CompizModifiersToNux(unsigned input) const;
   unsigned XModifiersToNux(unsigned input) const;
 
