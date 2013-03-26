@@ -108,13 +108,13 @@ TEST_F(TestGDBusProxy, TestCancelling)
   };
 
   EXPECT_FALSE(proxy.IsConnected()); // we shouldn't be connected yet
-  glib::Object<GCancellable> cancellable(g_cancellable_new());
+  glib::Cancellable cancellable;
   // but this has to work eitherway
   proxy.Call("TestMethod", g_variant_new("(s)", "TestStringTestString"),
              method_connection, cancellable);
 
   // this could mostly cause the next test to fail
-  g_cancellable_cancel(cancellable);
+  cancellable.Cancel();
   EXPECT_FALSE(got_result_return);
 }
 

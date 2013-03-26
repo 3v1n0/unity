@@ -29,29 +29,34 @@ public:
     WaitUntilMSec(success, max_wait * 1000, error_func);
   }
 
-  static void WaitUntilMSec(std::function<bool()> const& check_function, bool result = true, unsigned max_wait = 500, ErrorStringFunc const& error_func = &Utils::DefaultErrorString)
+  static void WaitUntilMSec(std::function<bool()> const& check_function, bool expected_result = true, unsigned max_wait = 500, ErrorStringFunc const& error_func = &Utils::DefaultErrorString)
   {
     ASSERT_NE(check_function, nullptr);
 
     bool timeout_reached = false;
     guint32 timeout_id = ScheduleTimeout(&timeout_reached, max_wait);
+    bool result;
 
-    bool check_function_result = false;
-    while ((check_function_result=check_function())!=result && !timeout_reached)
-      g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
+    while (!timeout_reached)
+    {
+      result = check_function();
+      if (result == expected_result)
+        break;
 
-    if (!timeout_reached)
+      g_main_context_iteration(NULL, TRUE);
+    }
+
+    if (result == expected_result)
       g_source_remove(timeout_id);
 
     glib::String error(error_func());
-
     if (error)
     {
-      EXPECT_EQ(check_function_result, result) << "Error: " << error;
+      EXPECT_EQ(result, expected_result) << "Error: " << error;
     }
     else
     {
-      EXPECT_EQ(check_function_result, result);
+      EXPECT_EQ(result, expected_result);
     }
   }
 

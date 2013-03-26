@@ -22,7 +22,7 @@
 #ifndef UNITYSHARED_THUMBNAILGENERATOR_H
 #define UNITYSHARED_THUMBNAILGENERATOR_H
 
-#include <Nux/Nux.h>
+#include <memory>
 #include "UnityCore/GLibWrapper.h"
 
 namespace unity
@@ -38,13 +38,10 @@ public:
   virtual bool Run(int size, std::string const& input_file, std::string& output_file, std::string& error_hint) = 0;
 };
 
-class ThumbnailNotifier : public nux::Object
+class ThumbnailNotifier
 {
 public:
-  typedef  nux::ObjectPtr<ThumbnailNotifier> Ptr;
-  NUX_DECLARE_OBJECT_TYPE(ThumbnailNotifier, Object);
-
-  ThumbnailNotifier();
+  typedef std::shared_ptr<ThumbnailNotifier> Ptr;
 
   void Cancel();
   bool IsCancelled() const;
@@ -53,7 +50,7 @@ public:
   sigc::signal<void, std::string> error;
 
 private:
-  glib::Object<GCancellable> cancel_;
+  glib::Cancellable cancel_;
 };
 
 
@@ -63,11 +60,11 @@ class ThumbnailGenerator
 {
 public:
   ThumbnailGenerator();
-  virtual ~ThumbnailGenerator();
+  ~ThumbnailGenerator();
 
   static ThumbnailGenerator& Instance();
 
-  static void RegisterThumbnailer(std::list<std::string> mime_types, Thumbnailer::Ptr thumbnailer);
+  static void RegisterThumbnailer(std::list<std::string> mime_types, Thumbnailer::Ptr const& thumbnailer);
 
   ThumbnailNotifier::Ptr GetThumbnail(std::string const& uri, int size);
 
