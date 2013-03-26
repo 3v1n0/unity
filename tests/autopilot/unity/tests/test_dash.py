@@ -43,7 +43,7 @@ class DashTestCase(UnityTestCase):
 
     def wait_for_result_settle(self):
         """wait for row count to settle"""
-        old_row_count = 0
+        old_row_count = -1
         new_row_count = self.unity.dash.get_num_rows()
         while(old_row_count != new_row_count):
             sleep(1)
