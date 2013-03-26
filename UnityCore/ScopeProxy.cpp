@@ -176,6 +176,7 @@ private:
   {
     std::unique_ptr<ActivateData> data(static_cast<ActivateData*>(user_data));
     UnityProtocolActivationReplyRaw result;
+    memset(&result, 0, sizeof(UnityProtocolActivationReplyRaw));
     glib::Error error;
     unity_protocol_scope_proxy_activate_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &result, &error);
     if (error && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
@@ -188,11 +189,12 @@ private:
     {
       ScopeHandledType handled = ScopeHandledType::NOT_HANDLED;
 
-      data->result.uri = result.uri;
+      data->result.uri = glib::gchar_to_string(result.uri);
       handled = static_cast<ScopeHandledType>(result.handled);
 
       glib::HintsMap hints;
-      glib::hintsmap_from_hashtable(result.hints, hints);
+      if (result.hints)
+        glib::hintsmap_from_hashtable(result.hints, hints);
 
       data->callback(data->result, handled, hints, error);
     }
