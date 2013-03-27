@@ -33,12 +33,15 @@ class DashTestCase(UnityTestCase):
         """Method to open the currently selected preview, if opened."""
         preview_fn = lambda: self.preview_container.current_preview
         self.assertThat(preview_fn, Eventually(NotEquals(None)))
+        self.assertThat(self.unity.dash.preview_animation, Eventually(Equals(1.0)))
+        self.assertThat(self.preview_container.animating, Eventually(Equals(False)))
+
         return preview_fn()
 
     def wait_for_category(self, scope, group):
         """Method to wait for a specific category"""
         get_scope_fn = lambda: scope.get_category_by_name(group)
-        self.assertThat(get_scope_fn, Eventually(NotEquals(None)))
+        self.assertThat(get_scope_fn, Eventually(NotEquals(None), timeout=20))
         return get_scope_fn()
 
     def wait_for_result_settle(self):
@@ -577,10 +580,10 @@ class DashScopeResultsTests(DashTestCase):
         self.assertThat(self.unity.dash.search_string, Eventually(Equals(" ")))
 
         # wait for "Installed" category
-        results_category = self.wait_for_category(scope, _("Installed"))
+        old_results_category = self.wait_for_category(scope, _("Installed"))
 
-        self.assertThat(lambda: len(results_category.get_results()), Eventually(GreaterThan(0)))
-        old_results = results_category.get_results()
+        self.assertThat(lambda: len(old_results_category.get_results()), Eventually(GreaterThan(0), timeout=20))
+        old_results = old_results_category.get_results()
 
         # FIXME: This should be a method on the dash emulator perhaps, or
         # maybe a proper method of this class. It should NOT be an inline
@@ -610,11 +613,14 @@ class DashScopeResultsTests(DashTestCase):
             self.keyboard.press_and_release("Down")
             # We should be on the Education category
             self.keyboard.press_and_release('Enter')
+            sleep(2)
 
         activate_filter(True)
         self.addCleanup(activate_filter)
 
-        results_category = scope.get_category_by_name(_("Installed"))
+        results_category = self.wait_for_category(scope, _("Installed"))
+        self.assertThat(lambda: len(results_category.get_results()), Eventually(GreaterThan(0), timeout=20))
+
         results = results_category.get_results()
         self.assertIsNot(results, old_results)
 
@@ -656,7 +662,7 @@ class DashVisualTests(DashTestCase):
         self.unity.dash.reveal_application_scope()
 
         scope = self.unity.dash.get_current_scope()
-        self.assertThat(lambda: len(scope.get_groups()), Eventually(GreaterThan(0)))
+        self.assertThat(lambda: len(scope.get_groups()), Eventually(GreaterThan(0), timeout=20))
 
         groups = scope.get_groups()
 
@@ -769,7 +775,7 @@ class PreviewInvocationTests(DashTestCase):
         category = self.wait_for_category(scope, _("Installed"))
 
         # wait for some results
-        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0)))
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0), timeout=20))
         results = category.get_results()
 
         result = results[0]
@@ -802,7 +808,7 @@ class PreviewInvocationTests(DashTestCase):
         category = self.wait_for_category(scope, _("Recent"))
 
         # wait for some results
-        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0)))
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0), timeout=20))
         results = category.get_results()
 
         result = results[0]
@@ -828,7 +834,7 @@ class PreviewInvocationTests(DashTestCase):
             self.skipTest("This scope is probably empty")
 
         # wait for some results
-        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0)))
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0), timeout=20))
         results = category.get_results()
 
         result = results[0]
@@ -864,7 +870,7 @@ class PreviewInvocationTests(DashTestCase):
         category = get_category(scope)
 
         # wait for some results
-        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0)))
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0), timeout=20))
         results = category.get_results()
 
         result = results[0]
@@ -888,7 +894,7 @@ class PreviewInvocationTests(DashTestCase):
         category = self.wait_for_category(scope, _("More suggestions"))
         
         # wait for results
-        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0)))
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0), timeout=20))
         results = category.get_results()
 
         result = results[0]
@@ -911,7 +917,7 @@ class PreviewNavigateTests(DashTestCase):
         category = self.wait_for_category(scope, _("More suggestions"))
 
         # wait for results (we need 4 results to perorm the multi-navigation tests)
-        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(4)))
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(4), timeout=20))
 
         results = category.get_results()
         result = results[2] # 2 so we can navigate left
@@ -1044,7 +1050,7 @@ class PreviewClickCancelTests(DashTestCase):
         category = self.wait_for_category(scope, _("Installed"))
         
         # wait for results
-        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0)))
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0), timeout=20))
         results = category.get_results()
 
         result = results[0]

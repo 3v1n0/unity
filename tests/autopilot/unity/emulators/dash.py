@@ -87,6 +87,11 @@ class DashController(UnityIntrospectionObject, KeybindingsHelper):
         """Returns true if the dash is currently displaying a preview"""
         return self.view.preview_displaying;
 
+    @property
+    def preview_animation(self):
+        """Returns the average progress of dash slip and animating a preview. Between 0.0 and 1.0"""
+        return self.view.preview_animation;
+
     def get_num_rows(self):
         """Returns the number of displayed rows in the dash."""
         return self.view.num_rows
