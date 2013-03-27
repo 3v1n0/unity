@@ -110,6 +110,7 @@ private:
   LocalResult activated_result_;
 
   unsigned last_lazy_loaded_result_;
+  bool all_results_preloaded_;
   int last_mouse_down_x_;
   int last_mouse_down_y_;
   LocalResult current_drag_result_;

@@ -64,6 +64,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , active_index_(-1)
   , selected_index_(-1)
   , last_lazy_loaded_result_(0)
+  , all_results_preloaded_(true)
   , last_mouse_down_x_(-1)
   , last_mouse_down_y_(-1)
   , drag_index_(~0)
@@ -80,6 +81,8 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   vertical_spacing.changed.connect(needredraw_lambda);
   padding.changed.connect(needredraw_lambda);
   selected_index_.changed.connect(needredraw_lambda);
+  expanded.changed.connect([&](bool value) { if (value) all_results_preloaded_ = false; });
+  results_per_row.changed.connect([&](int value) { if (value > 0) all_results_preloaded_ = false; });
 
   key_nav_focus_change.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyNavFocusChange));
   key_nav_focus_activate.connect([&] (nux::Area *area)
@@ -212,26 +215,41 @@ void ResultViewGrid::Activate(LocalResult const& local_result, int index, Result
 
 void ResultViewGrid::QueueLazyLoad()
 {
-  if (GetNumResults() == 0)
+  if (all_results_preloaded_ || GetNumResults() == 0)
     return;
-  
-  lazy_load_source_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
-  lazy_load_source_->Run(sigc::mem_fun(this, &ResultViewGrid::DoLazyLoad));
-  last_lazy_loaded_result_ = 0; // we always want to reset the lazy load index here
+
+  if (!lazy_load_source_ && !lazy_load_source_)
+  {
+    lazy_load_source_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
+    lazy_load_source_->Run([this] () {
+      lazy_load_source_.reset();
+
+      // dont need to reset the last start index as all the previous ones would have been preloaded already.
+      DoLazyLoad(); // also calls QueueDraw
+      return false;
+    });
+  }
 }
 
 void ResultViewGrid::QueueResultsChanged()
 {
+  // even if we're not going to run the lazy load, we need to reset the start in case it's running already.
+  last_lazy_loaded_result_ = 0;
+
   if (!results_changed_idle_)
   {
     // using glib::Source::Priority::HIGH because this needs to happen *before* next draw
     results_changed_idle_.reset(new glib::Idle(glib::Source::Priority::HIGH));
-    results_changed_idle_->Run([&] () {
+    results_changed_idle_->Run([this] () {
       SizeReallocate();
-      last_lazy_loaded_result_ = 0; // reset the lazy load index
-      DoLazyLoad(); // also calls QueueDraw
-
       results_changed_idle_.reset();
+      lazy_load_source_.reset(); // no point doing this one as well.
+      
+      if (!all_results_preloaded_)
+      {
+        last_lazy_loaded_result_ = 0; // reset the lazy load index in case we got an insert
+        DoLazyLoad(); // also calls QueueDraw
+      }
       return false;
     });
   }
@@ -250,8 +268,10 @@ bool ResultViewGrid::DoLazyLoad()
     if ((!expanded && index < items_per_row) || expanded)
     {
       renderer_->Preload(*it);
-      last_lazy_loaded_result_ = index;
     }
+
+    if (!expanded && index >= items_per_row)
+      break; //early exit
 
     if (timer.ElapsedSeconds() > 0.008)
     {
@@ -259,9 +279,7 @@ bool ResultViewGrid::DoLazyLoad()
       break;
     }
 
-    if (!expanded && index >= items_per_row)
-      break; //early exit
-
+    last_lazy_loaded_result_++;
     index++;
   }
 
@@ -270,6 +288,10 @@ bool ResultViewGrid::DoLazyLoad()
     //we didn't load all the results because we exceeded our time budget, so queue another lazy load
     lazy_load_source_.reset(new glib::Timeout(1000/60 - 8));
     lazy_load_source_->Run(sigc::mem_fun(this, &ResultViewGrid::DoLazyLoad));
+  }
+  else
+  {
+    all_results_preloaded_ = true;
   }
 
   QueueDraw();
@@ -298,6 +320,7 @@ void ResultViewGrid::SetModelRenderer(ResultRenderer* renderer)
 
 void ResultViewGrid::AddResult(Result const& result)
 {
+  all_results_preloaded_ = false;
   QueueResultsChanged();
 }
 
