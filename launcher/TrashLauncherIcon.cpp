@@ -72,6 +72,10 @@ TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
     });
   }
 
+  file_manager_->locations_changed.connect([this] {
+    SetQuirk(Quirk::RUNNING, file_manager_->IsPrefixOpened(TRASH_URI));
+  });
+
   UpdateTrashIcon();
 }
 
