@@ -218,16 +218,14 @@ void ResultViewGrid::QueueLazyLoad()
   if (all_results_preloaded_ || GetNumResults() == 0)
     return;
 
-  if (!lazy_load_source_ && !lazy_load_source_)
+  if (results_changed_idle_)
+    return;
+
+  if (!lazy_load_source_)
   {
     lazy_load_source_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
-    lazy_load_source_->Run([this] () {
-      lazy_load_source_.reset();
-
       // dont need to reset the last start index as all the previous ones would have been preloaded already.
-      DoLazyLoad(); // also calls QueueDraw
-      return false;
-    });
+    lazy_load_source_->Run(sigc::mem_fun(this, &ResultViewGrid::DoLazyLoad));
   }
 }
 
@@ -257,6 +255,7 @@ void ResultViewGrid::QueueResultsChanged()
 
 bool ResultViewGrid::DoLazyLoad()
 {
+  printf("lzy load %d\n", last_lazy_loaded_result_);
   util::Timer timer;
   bool queue_additional_load = false; // if this is set, we will return early and start loading more next frame
 
@@ -283,20 +282,19 @@ bool ResultViewGrid::DoLazyLoad()
     index++;
   }
 
-  if (queue_additional_load)
-  {
-    //we didn't load all the results because we exceeded our time budget, so queue another lazy load
-    lazy_load_source_.reset(new glib::Timeout(1000/60 - 8));
-    lazy_load_source_->Run(sigc::mem_fun(this, &ResultViewGrid::DoLazyLoad));
-  }
-  else
+  if (!queue_additional_load)
   {
     all_results_preloaded_ = true;
+    lazy_load_source_.reset();
   }
-
+  else if (!lazy_load_source_)
+  {
+    lazy_load_source_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
+    lazy_load_source_->Run(sigc::mem_fun(this, &ResultViewGrid::DoLazyLoad));   
+  }
   QueueDraw();
 
-  return false;
+  return queue_additional_load;
 }
 
 
