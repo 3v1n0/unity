@@ -882,15 +882,8 @@ void ScopeView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_dra
   graphics_engine.PushClippingRectangle(geo);
 
   if (!IsFullRedraw() && RedirectedAncestor())
-  {
-    for (PlacesGroup::Ptr const& group : category_views_)
-    {
-      if (group->IsRedrawNeeded() && group->IsVisible())
-        graphics::ClearGeometry(group->GetGeometry());  
-    }
     if (filter_bar_ && filter_bar_->IsVisible() && filter_bar_->IsRedrawNeeded())
-      graphics::ClearGeometry(filter_bar_->GetGeometry());  
-  }
+      graphics::ClearGeometry(filter_bar_->GetGeometry());
 
   layout_->ProcessDraw(graphics_engine, force_draw);
   graphics_engine.PopClippingRectangle();
