@@ -102,6 +102,9 @@ void Scope::Impl::Init()
 
 void Scope::Impl::Activate(LocalResult const& result, guint action_type, glib::HintsMap const& hints, ActivateCallback const& callback, GCancellable* cancellable)
 {
+  if (!proxy_)
+    return;
+
   proxy_->Activate(result,
                    action_type,
                    hints,
@@ -146,6 +149,9 @@ void Scope::Impl::OnActivateResultReply(LocalResult const& result, ScopeHandledT
 
 void Scope::Impl::Preview(LocalResult const& result, glib::HintsMap const& hints, PreviewCallback const& callback, GCancellable* cancellable)
 {
+  if (!proxy_)
+    return;
+  
   proxy_->Activate(result,
                    UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_RESULT,
                    hints,
@@ -218,6 +224,8 @@ void Scope::Init()
 
 void Scope::Connect()
 {
+  if (!pimpl->proxy_)
+    return;
   if (pimpl->proxy_->connected())
     return;
   
@@ -226,6 +234,9 @@ void Scope::Connect()
 
 void Scope::Search(std::string const& search_hint, SearchCallback const& callback, GCancellable* cancellable)
 {
+  if (!pimpl->proxy_)
+    return;
+  
   return pimpl->proxy_->Search(search_hint, callback, cancellable);
 }
 
@@ -253,12 +264,15 @@ void Scope::ActivatePreviewAction(Preview::ActionPtr const& action,
     LocalResult preview_result;
     preview_result.uri = action->activation_uri;
 
+    LOG_DEBUG(logger) << "Local Activation '" << result.uri;
+
     // Do the activation on idle.
     glib::Object<GCancellable> canc(cancellable, glib::AddRef());
     pimpl->sources_.AddIdle([this, preview_result, callback, canc] ()
     {
       if (!canc || !g_cancellable_is_cancelled(canc))
       {
+
         if (callback)
           callback(preview_result, ScopeHandledType::NOT_HANDLED, glib::Error());
         pimpl->OnActivateResultReply(preview_result, ScopeHandledType::NOT_HANDLED, glib::HintsMap(), glib::Error());
@@ -275,6 +289,9 @@ void Scope::ActivatePreviewAction(Preview::ActionPtr const& action,
 
 Results::Ptr Scope::GetResultsForCategory(unsigned category) const
 {
+  if (!pimpl->proxy_)
+    return Results::Ptr();
+
   return pimpl->proxy_->GetResultsForCategory(category);
 }
 
