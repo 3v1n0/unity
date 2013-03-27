@@ -34,7 +34,6 @@ public:
 
   void Open(std::string const& uri, unsigned long long timestamp);
   void EmptyTrash(unsigned long long timestamp);
-
   std::vector<std::string> OpenedLocations() const;
 
 private:

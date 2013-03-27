@@ -153,7 +153,7 @@ void GnomeFileManager::EmptyTrash(unsigned long long timestamp)
 
 std::vector<std::string> GnomeFileManager::OpenedLocations() const
 {
-  return std::vector<std::string>();
+  return impl_->opened_locations_;
 }
 
 }
