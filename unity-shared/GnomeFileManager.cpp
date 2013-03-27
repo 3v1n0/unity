@@ -56,16 +56,16 @@ struct GnomeFileManager::Impl
 
     opened_locations_.clear();
 
-    GVariantIter *iter;
+    GVariantIter iter;
     const char *str;
 
-    g_variant_get(value, "as", &iter);
-    while (g_variant_iter_loop(iter, "s", &str))
+    g_variant_iter_init(&iter, value);
+
+    while (g_variant_iter_loop(&iter, "s", &str))
     {
       LOG_DEBUG(logger) << "Opened location " << str;
       opened_locations_.push_back(str);
     }
-    g_variant_iter_free(iter);
 
     parent_->locations_changed.emit();
   }
@@ -154,6 +154,22 @@ void GnomeFileManager::EmptyTrash(unsigned long long timestamp)
 std::vector<std::string> GnomeFileManager::OpenedLocations() const
 {
   return impl_->opened_locations_;
+}
+
+bool GnomeFileManager::IsPrefixOpened(std::string const& uri) const
+{
+  glib::Object<GFile> uri_file(g_file_new_for_uri(uri.c_str()));
+
+  for (auto const& loc : impl_->opened_locations_)
+  {
+    glib::Object<GFile> loc_file(g_file_new_for_uri(loc.c_str()));
+    glib::String relative(g_file_get_relative_path(uri_file, loc_file));
+
+    if (relative)
+      return true;
+  }
+
+  return false;
 }
 
 }
