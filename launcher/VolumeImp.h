@@ -51,6 +51,7 @@ public:
   virtual std::string GetIdentifier() const;
   virtual bool HasSiblings() const;
   virtual bool IsMounted() const;
+  virtual bool IsOpened() const;
 
   virtual void EjectAndShowNotification();
   virtual void MountAndOpenInFileManager(unsigned long long timestamp);
