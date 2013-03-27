@@ -35,6 +35,53 @@ DECLARE_LOGGER(logger, "unity.filemanager.gnome");
 const std::string TRASH_URI = "trash:";
 }
 
+struct GnomeFileManager::Impl
+{
+  Impl(GnomeFileManager* parent)
+    : parent_(parent)
+    , filemanager_proxy_("org.freedesktop.FileManager1", "/org/freedesktop/FileManager1", "org.freedesktop.FileManager1")
+  {
+    auto callback = sigc::mem_fun(this, &Impl::OnOpenLocationsUpdated);
+    filemanager_proxy_.GetProperty("OpenLocations", callback);
+    filemanager_proxy_.ConnectProperty("OpenLocations", callback);
+  }
+
+  void OnOpenLocationsUpdated(GVariant* value)
+  {
+    if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING_ARRAY))
+    {
+      LOG_ERROR(logger) << "Locations value type is not matching the expected one!";
+      return;
+    }
+
+    opened_locations_.clear();
+
+    GVariantIter *iter;
+    const char *str;
+
+    g_variant_get(value, "as", &iter);
+    while (g_variant_iter_loop(iter, "s", &str))
+    {
+      LOG_DEBUG(logger) << "Opened location " << str;
+      opened_locations_.push_back(str);
+    }
+    g_variant_iter_free(iter);
+
+    parent_->locations_changed.emit();
+  }
+
+  GnomeFileManager* parent_;
+  glib::DBusProxy filemanager_proxy_;
+  std::vector<std::string> opened_locations_;
+};
+
+GnomeFileManager::GnomeFileManager()
+  : impl_(new Impl(this))
+{}
+
+GnomeFileManager::~GnomeFileManager()
+{}
+
 void GnomeFileManager::Open(std::string const& uri, unsigned long long timestamp)
 {
   if (uri.empty())
