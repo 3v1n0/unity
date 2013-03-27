@@ -75,6 +75,13 @@ struct GnomeFileManager::Impl
   std::vector<std::string> opened_locations_;
 };
 
+
+FileManager::Ptr GnomeFileManager::Get()
+{
+  static FileManager::Ptr instance(new GnomeFileManager());
+  return instance;
+}
+
 GnomeFileManager::GnomeFileManager()
   : impl_(new Impl(this))
 {}

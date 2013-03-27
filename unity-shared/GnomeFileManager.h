@@ -29,7 +29,7 @@ namespace unity
 class GnomeFileManager : public FileManager
 {
 public:
-  GnomeFileManager();
+  static FileManager::Ptr Get();
   ~GnomeFileManager();
 
   void Open(std::string const& uri, unsigned long long timestamp);
@@ -38,6 +38,7 @@ public:
   bool IsPrefixOpened(std::string const& uri) const;
 
 private:
+  GnomeFileManager();
   void Activate(unsigned long long timestamp);
 
   struct Impl;

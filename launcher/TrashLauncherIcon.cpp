@@ -45,13 +45,13 @@ namespace
 
 TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
   : SimpleLauncherIcon(IconType::TRASH)
-  , file_manager_(fmo ? fmo : std::make_shared<GnomeFileManager>())
+  , file_manager_(fmo ? fmo : GnomeFileManager::Get())
 {
   tooltip_text = _("Trash");
   icon_name = "user-trash";
   position = Position::END;
   SetQuirk(Quirk::VISIBLE, true);
-  SetQuirk(Quirk::RUNNING, false);
+  SetQuirk(Quirk::RUNNING, file_manager_->IsPrefixOpened(TRASH_URI));
   SetShortcut('t');
 
   glib::Object<GFile> location(g_file_new_for_uri(TRASH_URI.c_str()));
