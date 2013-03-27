@@ -212,23 +212,26 @@ void ResultViewGrid::Activate(LocalResult const& local_result, int index, Result
 
 void ResultViewGrid::QueueLazyLoad()
 {
+  if (GetNumResults() == 0)
+    return;
+  
   lazy_load_source_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
   lazy_load_source_->Run(sigc::mem_fun(this, &ResultViewGrid::DoLazyLoad));
   last_lazy_loaded_result_ = 0; // we always want to reset the lazy load index here
 }
 
-void ResultViewGrid::QueueViewChanged()
+void ResultViewGrid::QueueResultsChanged()
 {
-  if (!view_changed_idle_)
+  if (!results_changed_idle_)
   {
     // using glib::Source::Priority::HIGH because this needs to happen *before* next draw
-    view_changed_idle_.reset(new glib::Idle(glib::Source::Priority::HIGH));
-    view_changed_idle_->Run([&] () {
+    results_changed_idle_.reset(new glib::Idle(glib::Source::Priority::HIGH));
+    results_changed_idle_->Run([&] () {
       SizeReallocate();
       last_lazy_loaded_result_ = 0; // reset the lazy load index
       DoLazyLoad(); // also calls QueueDraw
 
-      view_changed_idle_.reset();
+      results_changed_idle_.reset();
       return false;
     });
   }
@@ -236,26 +239,6 @@ void ResultViewGrid::QueueViewChanged()
 
 bool ResultViewGrid::DoLazyLoad()
 {
-  // FIXME - so this code was nice, it would only load the visible entries on the screen
-  // however nux does not give us a good enough indicator right now that we are scrolling,
-  // thus if you scroll more than a screen in one frame, you will end up with at least one frame where
-  // no icons are displayed (they have not been preloaded yet) - it sucked. we should fix this next cycle when we can break api
-  //~ int index = 0;
-//~
-  //~ ResultListBounds visible_bounds = GetVisableResults();
-  //~ int lower_bound = std::get<0>(visible_bounds);
-  //~ int upper_bound = std::get<1>(visible_bounds);
-//~
-  //~ ResultList::iterator it;
-  //~ for (it = results_.begin(); it != results_.end(); it++)
-  //~ {
-    //~ if (index >= lower_bound && index <= upper_bound)
-    //~ {
-      //~ renderer_->Preload((*it));
-    //~ }
-    //~ index++;
-  //~ }
-
   util::Timer timer;
   bool queue_additional_load = false; // if this is set, we will return early and start loading more next frame
 
@@ -304,7 +287,7 @@ int ResultViewGrid::GetItemsPerRow()
 void  ResultViewGrid::GetResultDimensions(int& rows, int& columns)
 {
   columns = GetItemsPerRow();
-  rows = result_model_ ? ceil(static_cast<double>(result_model_->count()) / static_cast<double>(std::min<int>(1, columns))) : 0.0;
+  rows = result_model_ ? ceil(static_cast<double>(result_model_->count()) / static_cast<double>(std::max<int>(1, columns))) : 0.0;
 }
 
 void ResultViewGrid::SetModelRenderer(ResultRenderer* renderer)
@@ -313,15 +296,15 @@ void ResultViewGrid::SetModelRenderer(ResultRenderer* renderer)
   SizeReallocate();
 }
 
-void ResultViewGrid::AddResult(Result& result)
+void ResultViewGrid::AddResult(Result const& result)
 {
-  QueueViewChanged();
+  QueueResultsChanged();
 }
 
-void ResultViewGrid::RemoveResult(Result& result)
+void ResultViewGrid::RemoveResult(Result const& result)
 {
   ResultView::RemoveResult(result);
-  QueueViewChanged();
+  QueueResultsChanged();
 }
 
 void ResultViewGrid::SizeReallocate()

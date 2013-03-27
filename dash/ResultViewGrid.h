@@ -80,8 +80,8 @@ protected:
 
   virtual void UpdateRenderTextures();
 
-  void AddResult(Result& result);
-  void RemoveResult(Result& result);
+  virtual void AddResult(Result const& result);
+  virtual void RemoveResult(Result const& result);
 
   // This is overridden so we can include position of results.
   virtual debug::ResultWrapper* CreateResultWrapper(Result const& result, int index);
@@ -94,7 +94,7 @@ private:
   void DrawRow(nux::GraphicsEngine& GfxContext, ResultListBounds const& visible_bounds, int row_index, int y_position, nux::Geometry const& absolute_position);
 
   void QueueLazyLoad();
-  void QueueViewChanged();
+  void QueueResultsChanged();
   bool DoLazyLoad();
 
   int GetItemsPerRow();
@@ -125,7 +125,7 @@ private:
 
   UBusManager ubus_;
   glib::Source::UniquePtr lazy_load_source_;
-  glib::Source::UniquePtr view_changed_idle_;
+  glib::Source::UniquePtr results_changed_idle_;
   nux::Color background_color_;
 };
 
