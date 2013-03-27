@@ -164,7 +164,7 @@ bool GnomeFileManager::IsPrefixOpened(std::string const& uri) const
   {
     glib::Object<GFile> loc_file(g_file_new_for_uri(loc.c_str()));
 
-    if (g_file_has_prefix(loc_file, uri_file))
+    if (g_file_equal(loc_file, uri_file) || g_file_has_prefix(loc_file, uri_file))
       return true;
   }
 
