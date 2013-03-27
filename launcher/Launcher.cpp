@@ -851,6 +851,13 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr const& icon, struct time
       arg.window_indicators = std::max<int> (icon->WindowsOnViewport().size(), 1);
     else
       arg.window_indicators = std::max<int> (icon->WindowsForMonitor(monitor).size(), 1);
+
+    if (icon->GetIconType() == AbstractLauncherIcon::IconType::TRASH ||
+        icon->GetIconType() == AbstractLauncherIcon::IconType::DEVICE)
+    {
+      // TODO: also these icons should respect the actual windows they have
+      arg.window_indicators = 0;
+    }
   }
 
   arg.backlight_intensity = IconBackgroundIntensity(icon, current);
