@@ -1,3 +1,30 @@
+unity (6.12.0daily13.03.25.1-0ubuntu1) raring; urgency=low
+
+  [ Martin Pitt ]
+  * Add logind support (ConsoleKit and UPower suspend/resume are being
+    deprecated) (LP: #1155021)
+
+  [ Chris Townsend ]
+  * Urgent apps need higher glow intensity (LP: #1157866)
+  * Launcher: Icon Backlight Mode "Edge Illumination Toggles" broken
+    (regression) (LP: #1103742)
+
+  [ Paolo Rotolo ]
+  * Shutdown dialog should have correct punctuation (LP: #1157927)
+
+  [ Andrea Azzarone ]
+  * Launcher tooltips keeps hanging on Desktop (LP: #1158378)
+  * Launcher tooltips don't disappear when dash is open (LP: #1158021)
+  * Some tooltip AP tests fail (LP: #1158357)
+
+  [ Didier Roche ]
+  * Unity/Libunity unit tests broken by latest glib (LP: #1159677)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3252
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 25 Mar 2013 13:10:17 +0000
+
 unity (6.12.0daily13.03.20-0ubuntu1) raring; urgency=low
 
   [ Stephen M. Webb ]
