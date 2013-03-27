@@ -163,7 +163,9 @@ TEST_F(TestScope, ActivatePreviewAction)
   };
 
   LocalResult result; result.uri = "file:://test";
-  scope_->ActivatePreviewAction("play",
+  Preview::ActionPtr preview_action(new Preview::Action);
+  preview_action->id = "action1";
+  scope_->ActivatePreviewAction(preview_action,
                                 result,
                                 glib::HintsMap(),
                                 preview_action_callback);
@@ -220,8 +222,8 @@ TEST_F(TestScope, UpdateSearchCategoryWorkflow)
   // Results should be updated for fulter.
   Utils::WaitUntilMSec([results] { return results->count() == 4; },
                        true,
-                       2000,
-                       [results] { return g_strdup_printf("First search. Either search didn't finish, or result count is not as expected (%u != 4).", static_cast<int>(results->count())); });
+                       30000,
+                       [results] { return g_strdup_printf("Category activate. Result count is not as expected (%u != 4).", static_cast<int>(results->count())); });
 
   category_model0 = scope_->GetResultsForCategory(0);
   category_model1 = scope_->GetResultsForCategory(1);

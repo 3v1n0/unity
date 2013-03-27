@@ -61,6 +61,7 @@ public:
     std::string display_name;
     std::string icon_hint;
     std::string extra_text;
+    std::string activation_uri;
     LayoutHint layout_hint;
     // TODO: there's also a HashTable here (although unused atm)
 
@@ -82,6 +83,11 @@ public:
         {
           glib::Variant val(static_cast<GVariant*>(value));
           extra_text = val.GetString();
+        }
+        else if (g_strcmp0((gchar*)key, "activation-uri") == 0)
+        {
+          glib::Variant val(static_cast<GVariant*>(value));
+          activation_uri = val.GetString();                    
         }
       }
     };
@@ -125,8 +131,9 @@ public:
   nux::RWProperty<Scope*> parent_scope;
   LocalResult preview_result;
 
-  ActionPtrList GetActions() const;
-  InfoHintPtrList GetInfoHints() const;
+  ActionPtrList const& GetActions() const;
+  ActionPtr GetActionById(std::string const& id) const;
+  InfoHintPtrList const& GetInfoHints() const;
 
   void PerformAction(std::string const& id,
                      glib::HintsMap const& hints =

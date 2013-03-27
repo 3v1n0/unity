@@ -108,8 +108,8 @@ public:
   std::string get_description() const { return description_; };
   unity::glib::Object<GIcon> get_image() const { return image_; };
   std::string get_image_source_uri() const { return image_source_uri_; };
-  ActionPtrList get_actions() const { return actions_list_; };
-  InfoHintPtrList get_info_hints() const { return info_hint_list_; };
+  ActionPtrList const& get_actions() const { return actions_list_; };
+  InfoHintPtrList const& get_info_hints() const { return info_hint_list_; };
 
   Scope* get_parent_scope() const { return parent_scope_; };
   bool set_parent_scope(Scope* scope)
@@ -226,18 +226,30 @@ Preview::~Preview()
 {
 }
 
-Preview::ActionPtrList Preview::GetActions() const
+Preview::ActionPtrList const& Preview::GetActions() const
 {
   return pimpl->get_actions();
 }
 
-Preview::InfoHintPtrList Preview::GetInfoHints() const
+Preview::ActionPtr Preview::GetActionById(std::string const& _id) const
+{
+  for (Preview::ActionPtr const& action : GetActions())
+  {
+    if (action->id == _id)
+      return action;
+  }
+  return Preview::ActionPtr();
+}
+
+Preview::InfoHintPtrList const& Preview::GetInfoHints() const
 {
   return pimpl->get_info_hints();
 }
 
 void Preview::PerformAction(std::string const& id, glib::HintsMap const& hints) const
 {
+  ActionPtr action = GetActionById(id);
+
   if (pimpl->parent_scope_)
   {
     auto reply_func = [id] (LocalResult const&, ScopeHandledType, glib::Error const& error) 
@@ -248,7 +260,7 @@ void Preview::PerformAction(std::string const& id, glib::HintsMap const& hints) 
       }
     };
 
-    pimpl->parent_scope_->ActivatePreviewAction(id, preview_result, hints, reply_func);
+    pimpl->parent_scope_->ActivatePreviewAction(action, preview_result, hints, reply_func);
   }
   else
   {

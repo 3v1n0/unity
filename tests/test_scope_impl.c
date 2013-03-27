@@ -64,7 +64,6 @@ enum  {
 };
 
 static TestSearcher* test_searcher_new (TestScope* scope);
-static void test_searcher_run_async (UnityScopeSearchBase* self, UnityScopeSearchBaseCallback async_callback, void* async_callback_target);
 static void test_searcher_run (UnityScopeSearchBase* base);
 static TestScope* test_searcher_get_owner (TestSearcher* self);
 static void test_searcher_set_owner (TestSearcher* self, TestScope* value);
@@ -93,7 +92,6 @@ static void test_searcher_set_owner (TestSearcher* self, TestScope* value)
 static void test_searcher_class_init (TestSearcherClass * klass) 
 {
   g_type_class_add_private (klass, sizeof (TestSearcherPrivate));
-  UNITY_SCOPE_SEARCH_BASE_CLASS (klass)->run_async = test_searcher_run_async;
   UNITY_SCOPE_SEARCH_BASE_CLASS (klass)->run = test_searcher_run;
   G_OBJECT_CLASS (klass)->get_property = test_searcher_get_property;
   G_OBJECT_CLASS (klass)->set_property = test_searcher_set_property;
@@ -184,24 +182,6 @@ static gboolean test_searcher_main_loop_func (gpointer data)
   return FALSE;
 }
 
-static void test_searcher_run_async (UnityScopeSearchBase* base, UnityScopeSearchBaseCallback async_callback, void* async_callback_target)
-{
-  TestSearcher * self;
-  SearcherRunData* data;
-  self = TEST_SCOPE_SEARCHER (base);
-  data = g_slice_new (SearcherRunData);
-  data->_ref_count_ = 1;
-  data->self = g_object_ref (self);
-  data->ml = g_main_loop_new (NULL, FALSE);
-  data->async_callback = async_callback;
-  data->async_callback_target = async_callback_target;
-
-  g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, test_searcher_main_loop_func, run_data_ref (data), run_data_unref);
-  g_main_loop_run (data->ml);
-  run_data_unref (data);
-  data = NULL;
-}
-
 static void test_searcher_run (UnityScopeSearchBase* base)
 {
   TestSearcher* self;
@@ -235,10 +215,16 @@ G_DEFINE_TYPE(TestResultPreviewer, test_result_previewer, UNITY_TYPE_RESULT_PREV
 static UnityAbstractPreview* test_result_previewer_run(UnityResultPreviewer* self)
 {
   UnityAbstractPreview* preview;
+  UnityPreviewAction* action;
   preview = UNITY_ABSTRACT_PREVIEW (unity_generic_preview_new ("title", "description", NULL));
 
-  unity_preview_add_action(UNITY_PREVIEW (preview), unity_preview_action_new ("action1", "Action 1", NULL));
-  unity_preview_add_action(UNITY_PREVIEW (preview), unity_preview_action_new ("action2", "Action 2", NULL));
+  action = unity_preview_action_new ("action1", "Action 1", NULL);
+  unity_preview_add_action(UNITY_PREVIEW (preview), action);
+
+  action = unity_preview_action_new ("action2", "Action 2", NULL);
+  // GHashTable* hints = unity_preview_action_get_hints(action);
+
+  unity_preview_add_action(UNITY_PREVIEW (preview), action);
 
   return preview;
 }

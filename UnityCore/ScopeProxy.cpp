@@ -400,6 +400,8 @@ void ScopeProxy::Impl::OnChannelOpened(glib::String const& opened_channel, glib:
   filters_change_connection.disconnect();
   filters_change_connection = filters_->filter_changed.connect([this](Filter::Ptr const& filter)
   {
+    LOG_DEBUG(logger) << "Filters changed for " << scope_data_->id() << "- updating search results.";
+
     glib::HintsMap hints;
     hints["changed-filter-row"] = filter->VariantValue();
     Search(last_search_, hints, nullptr, cancel_scope_);

@@ -21,8 +21,9 @@
 #include "Scope.h"
 #include "MiscUtils.h"
 #include "ScopeProxy.h"
-#include <unity-protocol.h>
+#include "GLibSource.h"
 
+#include <unity-protocol.h>
 
 namespace unity
 {
@@ -52,6 +53,7 @@ public:
 
   typedef std::shared_ptr<sigc::connection> ConnectionPtr;
   std::vector<ConnectionPtr> property_connections;
+  glib::SourceManager sources_;
 };
 
 Scope::Impl::Impl(Scope* owner, ScopeData::Ptr const& scope_data)
@@ -237,14 +239,37 @@ void Scope::Preview(LocalResult const& result, PreviewCallback const& callback, 
   pimpl->Preview(result, glib::HintsMap(), callback, cancellable);
 }
 
-void Scope::ActivatePreviewAction(std::string const& action_id,
+void Scope::ActivatePreviewAction(Preview::ActionPtr const& action,
                                   LocalResult const& result,
                                   glib::HintsMap const& hints,
                                   ActivateCallback const& callback,
                                   GCancellable* cancellable)
 {
+  if (!action)
+    return;
+
+  if (!action->activation_uri.empty())
+  {
+    LocalResult preview_result;
+    preview_result.uri = action->activation_uri;
+
+    // Do the activation on idle.
+    glib::Object<GCancellable> canc(cancellable, glib::AddRef());
+    pimpl->sources_.AddIdle([this, preview_result, callback, canc] ()
+    {
+      if (canc && !g_cancellable_is_cancelled(canc))
+      {
+        if (callback)
+          callback(preview_result, ScopeHandledType::NOT_HANDLED, glib::Error());
+      }
+      pimpl->OnActivateResultReply(preview_result, ScopeHandledType::NOT_HANDLED, glib::HintsMap(), glib::Error());
+      return false;
+    });
+    return;
+  }
+
   glib::HintsMap tmp_hints = hints;
-  tmp_hints["preview-action-id"] = g_variant_new_string(action_id.c_str());
+  tmp_hints["preview-action-id"] = g_variant_new_string(action->id.c_str());
   pimpl->Activate(result, UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_ACTION, tmp_hints, callback, cancellable);
 }
 
