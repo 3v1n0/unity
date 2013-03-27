@@ -31,7 +31,7 @@ namespace
 struct TestTrashLauncherIcon : testing::Test
 {
   TestTrashLauncherIcon()
-    : fm_(std::make_shared<MockFileManager>())
+    : fm_(std::make_shared<testing::NiceMock<MockFileManager>>())
     , icon(fm_)
   {}
 
