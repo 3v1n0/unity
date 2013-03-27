@@ -30,7 +30,7 @@ class CommandScopeSearchTests(UnityTestCase):
     def wait_for_category(self, scope, group):
         """Method to wait for a specific category"""
         get_scope_fn = lambda: scope.get_category_by_name(group)
-        self.assertThat(get_scope_fn, Eventually(NotEquals(None)))
+        self.assertThat(get_scope_fn, Eventually(NotEquals(None), timeout=20))
         return get_scope_fn()
 
     def test_no_results(self):
@@ -66,7 +66,7 @@ class CommandScopeSearchTests(UnityTestCase):
         self.assertThat(self.unity.dash.search_string, Eventually(Equals("a")))
 
         results_category = self.wait_for_category(command_scope, _("Results"))
-        self.assertThat(lambda: len(results_category.get_results()), Eventually(GreaterThan(0)))
+        self.assertThat(lambda: len(results_category.get_results()), Eventually(GreaterThan(0), timeout=20))
 
     def test_run_before_refresh(self):
         """Hitting enter before view has updated results must run the correct command."""
@@ -93,4 +93,4 @@ class CommandScopeSearchTests(UnityTestCase):
         """Pressing Ctrl+Shift+Tab after launching command scope must switch to Video scope."""
         self.unity.dash.reveal_command_scope()
         self.keybinding("dash/lens/prev")
-        self.assertThat(self.unity.dash.active_scope, Eventually(Equals("photos.scope")))
+        self.assertThat(self.unity.dash.active_scope, Eventually(Equals("social.scope")))

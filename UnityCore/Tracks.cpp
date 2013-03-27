@@ -25,7 +25,7 @@ namespace dash
 {
 
 Tracks::Tracks()
-: Model<Track>::Model(ModelType::REMOTE_SHARED)
+: Model<Track>::Model(ModelType::REMOTE)
 {
   row_added.connect(sigc::mem_fun(this, &Tracks::OnRowAdded));
   row_changed.connect(sigc::mem_fun(this, &Tracks::OnRowChanged));
