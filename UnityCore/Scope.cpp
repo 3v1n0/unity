@@ -257,12 +257,12 @@ void Scope::ActivatePreviewAction(Preview::ActionPtr const& action,
     glib::Object<GCancellable> canc(cancellable, glib::AddRef());
     pimpl->sources_.AddIdle([this, preview_result, callback, canc] ()
     {
-      if (canc && !g_cancellable_is_cancelled(canc))
+      if (!canc || !g_cancellable_is_cancelled(canc))
       {
         if (callback)
           callback(preview_result, ScopeHandledType::NOT_HANDLED, glib::Error());
+        pimpl->OnActivateResultReply(preview_result, ScopeHandledType::NOT_HANDLED, glib::HintsMap(), glib::Error());
       }
-      pimpl->OnActivateResultReply(preview_result, ScopeHandledType::NOT_HANDLED, glib::HintsMap(), glib::Error());
       return false;
     });
     return;

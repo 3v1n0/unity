@@ -250,7 +250,7 @@ void Preview::PerformAction(std::string const& id, glib::HintsMap const& hints) 
 {
   ActionPtr action = GetActionById(id);
 
-  if (pimpl->parent_scope_)
+  if (action && pimpl->parent_scope_)
   {
     auto reply_func = [id] (LocalResult const&, ScopeHandledType, glib::Error const& error) 
     {

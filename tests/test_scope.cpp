@@ -175,6 +175,38 @@ TEST_F(TestScope, ActivatePreviewAction)
                        [] { return g_strdup("Failed to activate preview action"); });
 }
 
+TEST_F(TestScope, ActivatePreviewActionActivationUri)
+{
+  // Auto-connect on preview
+  bool preview_action_ok = false;
+  auto preview_action_callback = [&preview_action_ok] (LocalResult const&, ScopeHandledType, glib::Error const&) {
+    preview_action_ok = true;
+  };
+
+  std::string uri_activated;
+  scope_->activated.connect([&uri_activated] (LocalResult const& result, ScopeHandledType, glib::HintsMap const&) {
+    uri_activated = result.uri;
+  });
+
+  LocalResult result; result.uri = "file:://test";
+  Preview::ActionPtr preview_action(new Preview::Action);
+  preview_action->id = "action1";
+  preview_action->activation_uri = "uri://activation_uri";
+  scope_->ActivatePreviewAction(preview_action,
+                                result,
+                                glib::HintsMap(),
+                                preview_action_callback);
+
+  Utils::WaitUntilMSec(preview_action_ok,
+                       2000,
+                       [] { return g_strdup("Failed to activate preview action"); });
+  Utils::WaitUntilMSec([&uri_activated] () { return uri_activated == "uri://activation_uri"; },
+                       true,
+                       2000,
+                       [] { return g_strdup("Activation signal not emitted from scope."); });
+}
+
+
 TEST_F(TestScope, UpdateSearchCategoryWorkflow)
 {
   bool search_ok = false;
