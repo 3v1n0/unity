@@ -163,7 +163,9 @@ TEST_F(TestScope, ActivatePreviewAction)
   };
 
   LocalResult result; result.uri = "file:://test";
-  scope_->ActivatePreviewAction("play",
+  Preview::ActionPtr preview_action(new Preview::Action);
+  preview_action->id = "action1";
+  scope_->ActivatePreviewAction(preview_action,
                                 result,
                                 glib::HintsMap(),
                                 preview_action_callback);
@@ -172,6 +174,38 @@ TEST_F(TestScope, ActivatePreviewAction)
                        2000,
                        [] { return g_strdup("Failed to activate preview action"); });
 }
+
+TEST_F(TestScope, ActivatePreviewActionActivationUri)
+{
+  // Auto-connect on preview
+  bool preview_action_ok = false;
+  auto preview_action_callback = [&preview_action_ok] (LocalResult const&, ScopeHandledType, glib::Error const&) {
+    preview_action_ok = true;
+  };
+
+  std::string uri_activated;
+  scope_->activated.connect([&uri_activated] (LocalResult const& result, ScopeHandledType, glib::HintsMap const&) {
+    uri_activated = result.uri;
+  });
+
+  LocalResult result; result.uri = "file:://test";
+  Preview::ActionPtr preview_action(new Preview::Action);
+  preview_action->id = "action1";
+  preview_action->activation_uri = "uri://activation_uri";
+  scope_->ActivatePreviewAction(preview_action,
+                                result,
+                                glib::HintsMap(),
+                                preview_action_callback);
+
+  Utils::WaitUntilMSec(preview_action_ok,
+                       2000,
+                       [] { return g_strdup("Failed to activate preview action"); });
+  Utils::WaitUntilMSec([&uri_activated] () { return uri_activated == "uri://activation_uri"; },
+                       true,
+                       2000,
+                       [] { return g_strdup("Activation signal not emitted from scope."); });
+}
+
 
 TEST_F(TestScope, UpdateSearchCategoryWorkflow)
 {
@@ -220,8 +254,8 @@ TEST_F(TestScope, UpdateSearchCategoryWorkflow)
   // Results should be updated for fulter.
   Utils::WaitUntilMSec([results] { return results->count() == 4; },
                        true,
-                       2000,
-                       [results] { return g_strdup_printf("First search. Either search didn't finish, or result count is not as expected (%u != 4).", static_cast<int>(results->count())); });
+                       30000,
+                       [results] { return g_strdup_printf("Category activate. Result count is not as expected (%u != 4).", static_cast<int>(results->count())); });
 
   category_model0 = scope_->GetResultsForCategory(0);
   category_model1 = scope_->GetResultsForCategory(1);

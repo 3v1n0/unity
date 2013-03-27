@@ -91,7 +91,7 @@ public:
   typedef std::function<void(LocalResult const&, Preview::Ptr const&, glib::Error const&)> PreviewCallback;
   virtual void Preview(LocalResult const& result, PreviewCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
 
-  virtual void ActivatePreviewAction(std::string const& action_id,
+  virtual void ActivatePreviewAction(Preview::ActionPtr const& action,
                                      LocalResult const& result,
                                      glib::HintsMap const& hints,
                                      ActivateCallback const& callback = nullptr,
