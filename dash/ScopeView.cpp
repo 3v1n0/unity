@@ -352,6 +352,7 @@ void ScopeView::OnCategoryOrderChanged()
       scroll_layout_->AddView(category_views_[desired_category_index].GetPointer(), 0);       
     }
   }
+  QueueRelayout();
 }
 
 void ScopeView::SetupResults(Results::Ptr const& results)
