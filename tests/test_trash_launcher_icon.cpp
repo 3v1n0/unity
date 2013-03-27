@@ -69,4 +69,15 @@ TEST_F(TestTrashLauncherIcon, QuicklistEmptyTrash)
   dbusmenu_menuitem_handle_event(empty_trash_menu, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, time);
 }
 
+TEST_F(TestTrashLauncherIcon, RunningState)
+{
+  EXPECT_CALL(*fm_, IsPrefixOpened("trash:")).WillRepeatedly(testing::Return(true));
+  fm_->locations_changed.emit();
+  EXPECT_TRUE(icon.GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+
+  EXPECT_CALL(*fm_, IsPrefixOpened("trash:")).WillRepeatedly(testing::Return(false));
+  fm_->locations_changed.emit();
+  EXPECT_FALSE(icon.GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+}
+
 }
