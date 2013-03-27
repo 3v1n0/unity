@@ -916,8 +916,8 @@ int ScopeView::GetNumRows()
 
       if (group->GetExpanded())
       {
-        int result_columns = 0, result_rows = 0;
-        group->GetChildView()->GetResultDimensions(result_columns, result_rows);
+        int result_rows = 0, result_columns = 0;
+        group->GetChildView()->GetResultDimensions(result_rows, result_columns);
         num_rows += result_rows;
       }
       else

@@ -35,6 +35,21 @@ class DashTestCase(UnityTestCase):
         self.assertThat(preview_fn, Eventually(NotEquals(None)))
         return preview_fn()
 
+    def wait_for_category(self, scope, group):
+        """Method to wait for a specific category"""
+        get_scope_fn = lambda: scope.get_category_by_name(group)
+        self.assertThat(get_scope_fn, Eventually(NotEquals(None)))
+        return get_scope_fn()
+
+    def wait_for_result_settle(self):
+        """wait for row count to settle"""
+        old_row_count = -1
+        new_row_count = self.unity.dash.get_num_rows()
+        while(old_row_count != new_row_count):
+            sleep(1)
+            old_row_count = new_row_count
+            new_row_count = self.unity.dash.get_num_rows()
+
 
 class DashRevealTests(DashTestCase):
     """Test the Unity dash Reveal."""
@@ -234,6 +249,7 @@ class DashKeyNavTests(DashTestCase):
     def test_scopebar_gets_keyfocus(self):
         """Test that the scopebar gets key focus after using Down keypresses."""
         self.unity.dash.ensure_visible()
+        self.wait_for_result_settle()
 
         # Make sure that the scope bar can get the focus
         for i in range(self.unity.dash.get_num_rows()):
@@ -244,6 +260,7 @@ class DashKeyNavTests(DashTestCase):
     def test_scopebar_focus_changes(self):
         """Scopebar focused icon should change with Left and Right keypresses."""
         self.unity.dash.ensure_visible()
+        self.wait_for_result_settle()
 
         for i in range(self.unity.dash.get_num_rows()):
             self.keyboard.press_and_release("Down")
@@ -260,6 +277,7 @@ class DashKeyNavTests(DashTestCase):
     def test_scopebar_enter_activation(self):
         """Must be able to activate ScopeBar icons that have focus with an Enter keypress."""
         self.unity.dash.ensure_visible()
+        self.wait_for_result_settle()
 
         for i in range(self.unity.dash.get_num_rows()):
             self.keyboard.press_and_release("Down")
@@ -277,6 +295,7 @@ class DashKeyNavTests(DashTestCase):
         """This test makes sure that the focus is returned to the searchbar of the newly
         activated scope."""
         self.unity.dash.ensure_visible()
+        self.wait_for_result_settle()
 
         for i in range(self.unity.dash.get_num_rows()):
             self.keyboard.press_and_release("Down")
@@ -302,6 +321,7 @@ class DashKeyNavTests(DashTestCase):
         for a header other than the first to get focus.
         """
         self.unity.dash.ensure_visible()
+        self.wait_for_result_settle()
         # Make sure that a category have the focus.
         self.keyboard.press_and_release("Down")
         scope = self.unity.dash.get_current_scope()
@@ -313,6 +333,7 @@ class DashKeyNavTests(DashTestCase):
     def test_control_tab_scope_cycle(self):
         """This test makes sure that Ctrl+Tab cycles scopes."""
         self.unity.dash.ensure_visible()
+        self.wait_for_result_settle()
 
         self.keyboard.press('Control')
         self.keyboard.press_and_release('Tab')
@@ -332,11 +353,12 @@ class DashKeyNavTests(DashTestCase):
     def test_tab_cycle_category_headers(self):
         """ Makes sure that pressing tab cycles through the category headers"""
         self.unity.dash.ensure_visible()
+        self.wait_for_result_settle()
         scope = self.unity.dash.get_current_scope()
 
         # Test that tab cycles through the categories.
-        # + 1 is to cycle back to first header
-        for i in range(scope.get_num_visible_categories() + 1):
+        # + 1 is the filter bar
+        for i in range(scope.get_num_visible_categories()):
             self.keyboard.press_and_release('Tab')
             category = scope.get_focused_category()
             self.assertIsNot(category, None)
@@ -344,6 +366,7 @@ class DashKeyNavTests(DashTestCase):
     def test_tab_with_filter_bar(self):
         """ This test makes sure that Tab works well with the filter bara."""
         self.unity.dash.reveal_application_scope()
+        self.wait_for_result_settle()
         scope = self.unity.dash.get_current_scope()
 
         # Tabs to last category
@@ -374,6 +397,7 @@ class DashKeyNavTests(DashTestCase):
         in the dash filter bar.
         """
         self.unity.dash.reveal_application_scope()
+        self.wait_for_result_settle()
         scope = self.unity.dash.get_current_scope()
 
         filter_bar = scope.get_filterbar()
@@ -551,7 +575,11 @@ class DashScopeResultsTests(DashTestCase):
         scope = self.unity.dash.get_current_scope()
         self.keyboard.type(" ")
         self.assertThat(self.unity.dash.search_string, Eventually(Equals(" ")))
-        results_category = scope.get_category_by_name(_("Installed"))
+
+        # wait for "Installed" category
+        results_category = self.wait_for_category(scope, _("Installed"))
+
+        self.assertThat(lambda: len(results_category.get_results()), Eventually(GreaterThan(0)))
         old_results = results_category.get_results()
 
         # FIXME: This should be a method on the dash emulator perhaps, or
@@ -628,6 +656,8 @@ class DashVisualTests(DashTestCase):
         self.unity.dash.reveal_application_scope()
 
         scope = self.unity.dash.get_current_scope()
+        self.assertThat(lambda: len(scope.get_groups()), Eventually(GreaterThan(0)))
+
         groups = scope.get_groups()
 
         for group in groups:
@@ -707,7 +737,9 @@ class CategoryHeaderTests(DashTestCase):
         scope = self.unity.dash.reveal_application_scope()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        category = scope.get_category_by_name(_("Installed"))
+        # wait for "Installed" category
+        category = self.wait_for_category(scope, _("Installed"))
+
         is_expanded = category.is_expanded
 
         self.mouse.move(self.unity.dash.view.x + self.unity.dash.view.width / 2,
@@ -733,8 +765,13 @@ class PreviewInvocationTests(DashTestCase):
         scope = self.unity.dash.reveal_application_scope()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        category = scope.get_category_by_name(_("More suggestions"))
+        # wait for "More suggestions" category
+        category = self.wait_for_category(scope, _("Installed"))
+
+        # wait for some results
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0)))
         results = category.get_results()
+
         result = results[0]
         # result.preview handles finding xy co-ords and right mouse-click
         result.preview()
@@ -761,10 +798,13 @@ class PreviewInvocationTests(DashTestCase):
         scope = self.unity.dash.reveal_file_scope()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        category = scope.get_category_by_name(_("Recent"))
-        refresh_results_fn = lambda: len(category.get_results())
-        self.assertThat(refresh_results_fn, Eventually(GreaterThan(0)))
+        # wait for "Recent" category
+        category = self.wait_for_category(scope, _("Recent"))
+
+        # wait for some results
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0)))
         results = category.get_results()
+
         result = results[0]
         # result.preview handles finding xy co-ords and right mouse-click
         result.preview()
@@ -787,6 +827,8 @@ class PreviewInvocationTests(DashTestCase):
         if category is None or not category.is_visible:
             self.skipTest("This scope is probably empty")
 
+        # wait for some results
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0)))
         results = category.get_results()
 
         result = results[0]
@@ -818,9 +860,11 @@ class PreviewInvocationTests(DashTestCase):
         scope = self.unity.dash.reveal_video_scope()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        self.assertThat(lambda: get_category(scope), Eventually(NotEquals(None)))
+        # get category. might not be any.
         category = get_category(scope)
 
+        # wait for some results
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0)))
         results = category.get_results()
 
         result = results[0]
@@ -840,8 +884,13 @@ class PreviewInvocationTests(DashTestCase):
         scope = self.unity.dash.reveal_application_scope()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        category = scope.get_category_by_name(_("More suggestions"))
+        # wait for "More suggestions" category
+        category = self.wait_for_category(scope, _("More suggestions"))
+        
+        # wait for results
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0)))
         results = category.get_results()
+
         result = results[0]
         # result.preview_key() handles finding xy co-ords and key press
         result.preview_key()
@@ -858,12 +907,13 @@ class PreviewNavigateTests(DashTestCase):
         scope = self.unity.dash.reveal_application_scope()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        results_category = scope.get_category_by_name(_("More suggestions"))
-        # wait for results (we need 4 results to perorm the multi-navigation tests)
-        refresh_fn = lambda: len(results_category.get_results())
-        self.assertThat(refresh_fn, Eventually(GreaterThan(4)))
-        results = results_category.get_results()
+        # wait for "More suggestions" category
+        category = self.wait_for_category(scope, _("More suggestions"))
 
+        # wait for results (we need 4 results to perorm the multi-navigation tests)
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(4)))
+
+        results = category.get_results()
         result = results[2] # 2 so we can navigate left
         result.preview()
         self.assertThat(self.unity.dash.view.preview_displaying, Eventually(Equals(True)))
@@ -989,8 +1039,13 @@ class PreviewClickCancelTests(DashTestCase):
         self.addCleanup(self.unity.dash.ensure_hidden)
         # Only testing an application preview for this test.
         self.keyboard.type("Software Updater")
-        results_category = scope.get_category_by_name(_("Installed"))
-        results = results_category.get_results()
+
+        # wait for "Installed" category
+        category = self.wait_for_category(scope, _("Installed"))
+        
+        # wait for results
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0)))
+        results = category.get_results()
 
         result = results[0]
         result.preview()
@@ -1001,6 +1056,7 @@ class PreviewClickCancelTests(DashTestCase):
     def test_left_click_on_preview_icon_cancel_preview(self):
         """Left click on preview icon must close preview."""
         icon = self.get_current_preview().icon[0]
+        self.assertThat(icon, NotEquals(None))
 
         tx = icon.x + icon.width
         ty = icon.y + (icon.height / 2)
@@ -1012,6 +1068,7 @@ class PreviewClickCancelTests(DashTestCase):
     def test_middle_click_on_preview_icon_cancel_preview(self):
         """Middle click on preview icon must close preview."""
         icon = self.get_current_preview().icon[0]
+        self.assertThat(icon, NotEquals(None))
 
         tx = icon.x + icon.width
         ty = icon.y + (icon.height / 2)
@@ -1023,6 +1080,7 @@ class PreviewClickCancelTests(DashTestCase):
     def test_right_click_on_preview_icon_cancel_preview(self):
         """Right click on preview icon must close preview."""
         icon = self.get_current_preview().icon[0]
+        self.assertThat(icon, NotEquals(None))
 
         tx = icon.x + icon.width
         ty = icon.y + (icon.height / 2)
@@ -1034,6 +1092,7 @@ class PreviewClickCancelTests(DashTestCase):
     def test_left_click_on_preview_image_cancel_preview(self):
         """Left click on preview image must cancel the preview."""
         cover_art = self.get_current_preview().cover_art[0]
+        self.assertThat(cover_art, NotEquals(None))
 
         tx = cover_art.x + (cover_art.width / 2)
         ty = cover_art.y + (cover_art.height / 2)
@@ -1045,6 +1104,7 @@ class PreviewClickCancelTests(DashTestCase):
     def test_middle_click_on_preview_image_cancel_preview(self):
         """Middle click on preview image must cancel the preview."""
         cover_art = self.get_current_preview().cover_art[0]
+        self.assertThat(cover_art, NotEquals(None))
 
         tx = cover_art.x + (cover_art.width / 2)
         ty = cover_art.y + (cover_art.height / 2)
@@ -1056,6 +1116,7 @@ class PreviewClickCancelTests(DashTestCase):
     def test_right_click_on_preview_image_cancel_preview(self):
         """Right click on preview image must cancel the preview."""
         cover_art = self.get_current_preview().cover_art[0]
+        self.assertThat(cover_art, NotEquals(None))
 
         tx = cover_art.x + (cover_art.width / 2)
         ty = cover_art.y + (cover_art.height / 2)
@@ -1067,6 +1128,7 @@ class PreviewClickCancelTests(DashTestCase):
     def test_left_click_on_preview_text_cancel_preview(self):
         """Left click on some preview text must cancel the preview."""
         text = self.get_current_preview().text_boxes[0]
+        self.assertThat(text, NotEquals(None))
 
         tx = text.x + (text.width / 2)
         ty = text.y + (text.height / 2)
@@ -1078,6 +1140,7 @@ class PreviewClickCancelTests(DashTestCase):
     def test_middle_click_on_preview_text_cancel_preview(self):
         """Middle click on some preview text must cancel the preview."""
         text = self.get_current_preview().text_boxes[0]
+        self.assertThat(text, NotEquals(None))
 
         tx = text.x + (text.width / 2)
         ty = text.y + (text.height / 2)
@@ -1089,6 +1152,7 @@ class PreviewClickCancelTests(DashTestCase):
     def test_right_click_on_preview_text_cancel_preview(self):
         """Right click on some preview text must cancel the preview."""
         text = self.get_current_preview().text_boxes[0]
+        self.assertThat(text, NotEquals(None))
 
         tx = text.x + (text.width / 2)
         ty = text.y + (text.height / 2)
@@ -1100,6 +1164,7 @@ class PreviewClickCancelTests(DashTestCase):
     def test_left_click_on_preview_ratings_widget_cancel_preview(self):
         """Left click on the ratings widget must cancel the preview."""
         ratings_widget = self.get_current_preview().ratings_widget[0]
+        self.assertThat(ratings_widget, NotEquals(None))
 
         tx = ratings_widget.x + (ratings_widget.width / 2)
         ty = ratings_widget.y + (ratings_widget.height / 2)
@@ -1111,6 +1176,7 @@ class PreviewClickCancelTests(DashTestCase):
     def test_middle_click_on_preview_ratings_widget_cancel_preview(self):
         """Middle click on the ratings widget must cancel the preview."""
         ratings_widget = self.get_current_preview().ratings_widget[0]
+        self.assertThat(ratings_widget, NotEquals(None))
 
         tx = ratings_widget.x + (ratings_widget.width / 2)
         ty = ratings_widget.y + (ratings_widget.height / 2)
@@ -1122,6 +1188,7 @@ class PreviewClickCancelTests(DashTestCase):
     def test_right_click_on_preview_ratings_widget_cancel_preview(self):
         """Right click on the ratings widget must cancel the preview."""
         ratings_widget = self.get_current_preview().ratings_widget[0]
+        self.assertThat(ratings_widget, NotEquals(None))
 
         tx = ratings_widget.x + (ratings_widget.width / 2)
         ty = ratings_widget.y + (ratings_widget.height / 2)
@@ -1133,6 +1200,7 @@ class PreviewClickCancelTests(DashTestCase):
     def test_left_click_on_preview_info_hint_cancel_preview(self):
         """Left click on the info hint must cancel the preview."""
         info_hint = self.get_current_preview().info_hint_widget[0]
+        self.assertThat(info_hint, NotEquals(None))
 
         tx = info_hint.x + (info_hint.width / 2)
         ty = info_hint.y + (info_hint.height / 8)
@@ -1144,6 +1212,7 @@ class PreviewClickCancelTests(DashTestCase):
     def test_middle_click_on_preview_info_hint_cancel_preview(self):
         """Middle click on the info hint must cancel the preview."""
         info_hint = self.get_current_preview().info_hint_widget[0]
+        self.assertThat(info_hint, NotEquals(None))
 
         tx = info_hint.x + (info_hint.width / 2)
         ty = info_hint.y + (info_hint.height / 8)
@@ -1155,6 +1224,7 @@ class PreviewClickCancelTests(DashTestCase):
     def test_right_click_on_preview_info_hint_cancel_preview(self):
         """Right click on the info hint must cancel the preview."""
         info_hint = self.get_current_preview().info_hint_widget[0]
+        self.assertThat(info_hint, NotEquals(None))
 
         tx = info_hint.x + (info_hint.width / 2)
         ty = info_hint.y + (info_hint.height / 8)

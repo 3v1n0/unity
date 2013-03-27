@@ -50,7 +50,7 @@ class ShoppingScopeTests(UnityTestCase):
         results_category = scope.get_category_by_name(_("More suggestions"))
 
         refresh_results_fn = lambda: len(results_category.get_results())
-        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1)))
+        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1), timeout=25))
 
     def test_application_scope_has_shopping_results(self):
         """Test that the application scope contains results."""
@@ -61,7 +61,7 @@ class ShoppingScopeTests(UnityTestCase):
         results_category = scope.get_category_by_name(_("More suggestions"))
 
         refresh_results_fn = lambda: len(results_category.get_results())
-        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1)))
+        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1), timeout=25))
 
     def test_music_scope_has_shopping_results(self):
         """Test that the music scope contains results."""
@@ -69,10 +69,10 @@ class ShoppingScopeTests(UnityTestCase):
         scope = self.unity.dash.get_current_scope()
 
         self.keyboard.type("megadeth")
-        results_category = scope.get_category_by_name(_("More suggestions"))
+        results_category = scope.get_category_by_name(_("Albums"))
 
         refresh_results_fn = lambda: len(results_category.get_results())
-        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1)))
+        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1), timeout=25))
 
     def test_preview_works_with_shopping_scope(self):
         """This test shows the dash preview works with shopping scope results."""
@@ -83,7 +83,7 @@ class ShoppingScopeTests(UnityTestCase):
         results_category = scope.get_category_by_name(_("More suggestions"))
 
         refresh_results_fn = lambda: len(results_category.get_results())
-        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1)))
+        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1), timeout=25))
 
         results = results_category.get_results()
         results[0].preview()
@@ -101,7 +101,7 @@ class ShoppingScopeTests(UnityTestCase):
         results_category = scope.get_category_by_name(_("More suggestions"))
 
         refresh_results_fn = lambda: len(results_category.get_results())
-        self.assertThat(refresh_results_fn, Eventually(GreaterThan(2)))
+        self.assertThat(refresh_results_fn, Eventually(GreaterThan(2), timeout=25))
 
         results = results_category.get_results()
         results[0].preview()

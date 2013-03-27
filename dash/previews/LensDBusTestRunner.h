@@ -120,8 +120,7 @@ public:
     GVariantBuilder b;
     g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
 
-    if (search_cancellable_) g_cancellable_cancel (search_cancellable_);
-    search_cancellable_ = g_cancellable_new ();
+    search_cancellable_.Renew();
 
     proxy_->Call("Search",
                  g_variant_new("(sa{sv})",
@@ -180,11 +179,7 @@ public:
       return;
     }
 
-    if (preview_cancellable_)
-    {
-      g_cancellable_cancel(preview_cancellable_);
-    }
-    preview_cancellable_ = g_cancellable_new ();
+    preview_cancellable_.Renew();
 
     proxy_->Call("Activate",
                  g_variant_new("(su)", uri.c_str(),
@@ -253,8 +248,8 @@ protected:
   }
 
 
-  glib::Object<GCancellable> preview_cancellable_;
-  glib::Object<GCancellable> search_cancellable_;
+  glib::Cancellable preview_cancellable_;
+  glib::Cancellable search_cancellable_;
   Results::Ptr results_;
   GVariant *results_variant_;
 };

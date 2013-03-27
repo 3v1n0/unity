@@ -147,6 +147,9 @@ private:
 
   static void OnScopeSearchCallback(GObject *source_object, GAsyncResult *res, gpointer user_data)
   {
+    if (!UNITY_PROTOCOL_IS_SCOPE_PROXY(source_object))
+      return;
+
     std::unique_ptr<SearchData> data(static_cast<SearchData*>(user_data));
     glib::Error error;
     std::unique_ptr<GHashTable, void(*)(GHashTable*)> hint_ret(unity_protocol_scope_proxy_search_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &error),
@@ -174,26 +177,34 @@ private:
   };
   static void OnScopeActivateCallback(GObject *source_object, GAsyncResult *res, gpointer user_data)
   {
+    if (!UNITY_PROTOCOL_IS_SCOPE_PROXY(source_object))
+      return;
+
     std::unique_ptr<ActivateData> data(static_cast<ActivateData*>(user_data));
     UnityProtocolActivationReplyRaw result;
+    memset(&result, 0, sizeof(UnityProtocolActivationReplyRaw));
     glib::Error error;
     unity_protocol_scope_proxy_activate_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &result, &error);
-    if (error && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+
+    if (error)
     {
-      LOG_DEBUG(logger) << "Activate cancelled.";
-      return;
+      if (g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+      {
+        LOG_DEBUG(logger) << "Activate cancelled.";
+        return;
+      }
+      if (data && data->callback)
+        data->callback(LocalResult(), ScopeHandledType::NOT_HANDLED, glib::HintsMap(), error);
     }
-
-    if (data && data->callback)
+    else if (data && data->callback)
     {
-      ScopeHandledType handled = ScopeHandledType::NOT_HANDLED;
-
-      data->result.uri = result.uri;
-      handled = static_cast<ScopeHandledType>(result.handled);
+      ScopeHandledType handled = static_cast<ScopeHandledType>(result.handled);
 
       glib::HintsMap hints;
-      glib::hintsmap_from_hashtable(result.hints, hints);
+      if (result.hints)
+        glib::hintsmap_from_hashtable(result.hints, hints);
 
+      data->result.uri = glib::gchar_to_string(result.uri);
       data->callback(data->result, handled, hints, error);
     }
   }
@@ -224,10 +235,10 @@ private:
     if (!UNITY_PROTOCOL_IS_SCOPE_PROXY(source_object))
       return;
 
-    glib::Object<UnityProtocolScopeProxy> scope_proxy;
     glib::Error error;
     DeeSerializableModel* serialisable_model = nullptr;
     glib::String tmp_channel(unity_protocol_scope_proxy_open_channel_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &serialisable_model, &error));
+
     if (error && g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
     {
       LOG_DEBUG(logger) << "Open channel cancelled.";

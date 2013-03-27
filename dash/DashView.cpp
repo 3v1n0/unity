@@ -138,6 +138,8 @@ DashView::DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& app
   SetupViews();
   SetupUBusConnections();
 
+  AddChild(overlay_window_buttons_.GetPointer());
+
   mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
   preview_state_machine_.PreviewActivated.connect(sigc::mem_fun(this, &DashView::BuildPreview));
   Relayout();
@@ -1284,7 +1286,11 @@ void DashView::OnScopeBarActivated(std::string const& id)
     search_bar_->can_refine_search = can_refine_search;
   });
 
-  nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
+  // Fix for a nux quirk. Unparented objects cannot have focus because there will be a break in the
+  // parent tree and the compositor will not be able to walk the focus tree. This still needs to be here
+  // for when scopes switch via the scope bar and the focus nees to move away from the scope bar to the search bar..
+  if (GetParentObject())
+    nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
 
   view->QueueDraw();
   QueueDraw();
@@ -1645,21 +1651,6 @@ nux::Area* DashView::FindAreaUnderMouse(const nux::Point& mouse_position, nux::N
 nux::Geometry const& DashView::GetContentGeometry() const
 {
   return content_geo_;
-}
-
-bool DashView::SetParentObject(Area *parent)
-{
-  //This is a bit crap and should be fixed in nux.
-  //If you reparent, you need to fix up the focus tree.
-  if (View::SetParentObject(parent))
-  {
-    // Because the scopes are now created synchronously on construction, we wont be parented by the time the focus is updated.
-    InputArea* area = nux::GetWindowCompositor().GetKeyFocusArea();
-    if (area)
-      area->SetPathToKeyFocusArea();
-    return true;
-  }
-  return false;
 }
 
 }

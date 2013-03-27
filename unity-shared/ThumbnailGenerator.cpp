@@ -60,9 +60,7 @@ class Thumbnail
 public:
   typedef std::shared_ptr<Thumbnail> Ptr;
 
-  Thumbnail(std::string const& uri, unsigned int size, ThumbnailNotifier::Ptr notifier);
-  
-  virtual ~Thumbnail();
+  Thumbnail(std::string const& uri, unsigned int size, ThumbnailNotifier::Ptr const& notifier);
 
   std::string Generate(std::string& error_hint);
 
@@ -71,22 +69,14 @@ public:
   ThumbnailNotifier::Ptr notifier_;
 };
 
-NUX_IMPLEMENT_OBJECT_TYPE(ThumbnailNotifier);
-
-ThumbnailNotifier::ThumbnailNotifier()
-: cancel_(g_cancellable_new())
-{
-
-}
-
 void ThumbnailNotifier::Cancel()
 {
-  g_cancellable_cancel(cancel_);
+  cancel_.Cancel();
 }
 
 bool ThumbnailNotifier::IsCancelled() const
 {
-  return g_cancellable_is_cancelled(cancel_);
+  return cancel_.IsCancelled();
 }
 
 class ThumbnailGeneratorImpl
@@ -158,10 +148,8 @@ static void* thumbnail_thread_start (void* data)
 bool CheckCache(std::string const& uri_in, std::string& filename_out)
 {
   // Check Cache.
-  std::hash<std::string> hash_fn;
-  std::stringstream ss_chache_thum;
-  ss_chache_thum << get_preview_dir()  << "/" << hash_fn(uri_in) << ".png";
-  filename_out = ss_chache_thum.str();
+  filename_out = get_preview_dir() + "/";
+  filename_out += std::to_string(std::hash<std::string>()(uri_in)) + ".png";
 
   glib::Object<GFile> cache_file(g_file_new_for_path(filename_out.c_str()));
   return g_file_query_exists(cache_file, NULL);
@@ -176,7 +164,7 @@ ThumbnailNotifier::Ptr ThumbnailGeneratorImpl::GetThumbnail(std::string const& u
 
     CompleteThumbnail complete_thumb;
     complete_thumb.thubnail_uri = cache_filename;
-    complete_thumb.notifier = new ThumbnailNotifier();
+    complete_thumb.notifier = std::make_shared<ThumbnailNotifier>();
     complete_thumbnails_.push_back(complete_thumb);
 
     // Delay the thumbnail update until after this method has returned with the notifier
@@ -208,8 +196,8 @@ ThumbnailNotifier::Ptr ThumbnailGeneratorImpl::GetThumbnail(std::string const& u
     }, glib::Source::Priority::LOW));
   }
 
-  ThumbnailNotifier::Ptr notifier(new ThumbnailNotifier());
-  Thumbnail::Ptr thumb(new Thumbnail(uri, size, notifier));
+  auto notifier = std::make_shared<ThumbnailNotifier>();
+  auto thumb = std::make_shared<Thumbnail>(uri, size, notifier);
   thumbnails_.push(thumb);
 
   pthread_mutex_unlock (&thumbnails_mutex_);
@@ -233,7 +221,7 @@ void ThumbnailGeneratorImpl::StartCleanupTimer()
 void ThumbnailGeneratorImpl::RunGenerate()
 {
   for (;;)
-  {  
+  {
     /*********************************
      * MUTEX LOCKED
      *********************************/
@@ -246,10 +234,10 @@ void ThumbnailGeneratorImpl::RunGenerate()
       pthread_exit (NULL);
     }
 
-    Thumbnail::Ptr thumb(thumbnails_.front());
+    Thumbnail::Ptr thumb = thumbnails_.front();
     thumbnails_.pop();
 
-    pthread_mutex_unlock (&thumbnails_mutex_);  
+    pthread_mutex_unlock (&thumbnails_mutex_);
     /*********************************
      * MUTEX UNLOCKED
      *********************************/
@@ -304,7 +292,7 @@ bool ThumbnailGeneratorImpl::OnThumbnailComplete()
     if (complete_thumbnail.notifier->IsCancelled())
       continue;
 
-    if (complete_thumbnail.error_hint == "")
+    if (complete_thumbnail.error_hint.empty())
       complete_thumbnail.notifier->ready.emit(complete_thumbnail.thubnail_uri);
     else
       complete_thumbnail.notifier->error.emit(complete_thumbnail.error_hint);
@@ -339,7 +327,7 @@ std::list<Thumbnailer::Ptr> ThumbnailGeneratorImpl::GetThumbnailers(std::string 
     }
 
     if (content_last == 0)
-      ss_content_type << "*";      
+      ss_content_type << "*";
     else if (content_last < content_list.size())
       ss_content_type << "/*";
 
@@ -347,7 +335,7 @@ std::list<Thumbnailer::Ptr> ThumbnailGeneratorImpl::GetThumbnailers(std::string 
 
     /*********************************
      * FIND THUMBNAILER
-     *********************************/  
+     *********************************/
     pthread_mutex_lock (&thumbnailers_mutex_);
 
     // have already got this content type?
@@ -390,10 +378,13 @@ void ThumbnailGeneratorImpl::RunManagement()
   guint64 time = std::time(NULL) - CLEANUP_PREVIEW_AGE;
   std::string thumbnail_folder_name = get_preview_dir();
 
-  GError* err = NULL;
+  glib::Error err;
   GDir* thumbnailer_dir = g_dir_open(thumbnail_folder_name.c_str(), 0, &err);
-  if (err != NULL)
+  if (err)
+  {
+    LOG_ERROR(logger) << "Impossible to open directory: " << err;
     return;
+  }
 
   const gchar* file_basename = NULL;;
   while ((file_basename = g_dir_read_name(thumbnailer_dir)) != NULL)
@@ -402,11 +393,11 @@ void ThumbnailGeneratorImpl::RunManagement()
 
     glib::Object<GFile> file(g_file_new_for_path(filename.c_str()));
 
-    GError *err = NULL;
+    glib::Error err;
     glib::Object<GFileInfo> file_info(g_file_query_info(file, G_FILE_ATTRIBUTE_TIME_CREATED, G_FILE_QUERY_INFO_NONE, NULL, &err));
-    if (err != NULL)
+    if (err)
     {
-      g_error_free (err);
+      LOG_ERROR(logger) << "Impossible to get file info: " << err;
       return;
     }
 
@@ -431,7 +422,7 @@ ThumbnailGenerator::ThumbnailGenerator()
   else
   {
     thumbnail_instance = this;
-    
+
     UserThumbnailProvider::Initialise();
     TextureThumbnailProvider::Initialise();
     DefaultThumbnailProvider::Initialise();
@@ -458,12 +449,12 @@ ThumbnailGenerator& ThumbnailGenerator::Instance()
 ThumbnailNotifier::Ptr ThumbnailGenerator::GetThumbnail(std::string const& uri, int size)
 {
   if (uri.empty())
-    return ThumbnailNotifier::Ptr();
+    return nullptr;
 
   return pimpl->GetThumbnail(uri, size);
 }
 
-void ThumbnailGenerator::RegisterThumbnailer(std::list<std::string> mime_types, Thumbnailer::Ptr thumbnailer)
+void ThumbnailGenerator::RegisterThumbnailer(std::list<std::string> mime_types, Thumbnailer::Ptr const& thumbnailer)
 {
   pthread_mutex_lock (&thumbnailers_mutex_);
 
@@ -479,32 +470,25 @@ void ThumbnailGenerator::RegisterThumbnailer(std::list<std::string> mime_types, 
 
 void ThumbnailGenerator::DoCleanup()
 {
-  pimpl->DoCleanup();  
+  pimpl->DoCleanup();
 }
 
-Thumbnail::Thumbnail(std::string const& uri, unsigned int size, ThumbnailNotifier::Ptr notifier)
+Thumbnail::Thumbnail(std::string const& uri, unsigned int size, ThumbnailNotifier::Ptr const& notifier)
 : uri_(uri)
 , size_(size)
 , notifier_(notifier)
-{
-}
-
-Thumbnail::~Thumbnail()
-{
-}
+{}
 
 std::string Thumbnail::Generate(std::string& error_hint)
 {
   glib::Object<GFile> file(::g_file_new_for_uri(uri_.c_str()));
 
-  GError *err = NULL;
+  glib::Error err;
   glib::Object<GFileInfo> file_info(g_file_query_info(file, G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE, G_FILE_QUERY_INFO_NONE, NULL, &err));
-  if (err != NULL)
+  if (err)
   {
-    std::stringstream error_stream;
-    error_stream << "Could not retrieve file info for '" << uri_ << "'";
-    error_hint = error_stream.str();
-    g_error_free (err);
+    LOG_ERROR(logger) << "Could not retrieve file info for '" << uri_ << "': " << err;
+    error_hint = err.Message();
     return "";
   }
 
@@ -512,18 +496,13 @@ std::string Thumbnail::Generate(std::string& error_hint)
 
   std::string file_type = g_file_info_get_attribute_string(file_info, G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE);
 
-  std::list<Thumbnailer::Ptr> thumbnailers = ThumbnailGeneratorImpl::GetThumbnailers(file_type, error_hint);
+  std::list<Thumbnailer::Ptr> const& thumbnailers = ThumbnailGeneratorImpl::GetThumbnailers(file_type, error_hint);
 
-  std::hash<std::string> hash_fn;
-  std::stringstream ss_output;
-  ss_output << get_preview_dir() << "/";
-  ss_output << hash_fn(uri_) << ".png";
+  std::string output_file = get_preview_dir() + "/";
+  output_file += std::to_string(std::hash<std::string>()(uri_)) + ".png";
 
-  std::string output_file;
   for (Thumbnailer::Ptr const& thumbnailer : thumbnailers)
   {
-    output_file = ss_output.str();
-
     LOG_TRACE(logger) << "Attempting to generate thumbnail using '" << thumbnailer->GetName() << "' thumbnail provider";
 
     if (thumbnailer->Run(size_, uri_, output_file, error_hint))
@@ -532,7 +511,7 @@ std::string Thumbnail::Generate(std::string& error_hint)
       return output_file;
     }
   }
-  if (error_hint == "")
+  if (error_hint.empty())
     error_hint = "Could not find thumbnailer";
   return "";
 }
