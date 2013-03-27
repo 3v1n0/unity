@@ -255,7 +255,6 @@ void ResultViewGrid::QueueResultsChanged()
 
 bool ResultViewGrid::DoLazyLoad()
 {
-  printf("lzy load %d\n", last_lazy_loaded_result_);
   util::Timer timer;
   bool queue_additional_load = false; // if this is set, we will return early and start loading more next frame
 
