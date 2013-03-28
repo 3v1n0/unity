@@ -55,8 +55,6 @@ public:
   void grabNotify(int x, int y, unsigned int state, unsigned int mask) {}
   void ungrabNotify() {}
 
-  void syncPosition() {}
-
   compiz::window::Geometry &serverGeometry() {return server_geometry_;}
 
   unsigned int actions_;
