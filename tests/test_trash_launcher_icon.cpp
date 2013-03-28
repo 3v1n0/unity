@@ -20,25 +20,22 @@
 #include <gmock/gmock.h>
 
 #include "TrashLauncherIcon.h"
+#include "test_mock_filemanager.h"
 
 using namespace unity;
 using namespace unity::launcher;
 
 namespace
 {
-struct MockFileManagerOpener : launcher::FileManagerOpener
-{
-  MOCK_METHOD2(Open, void(std::string const& uri, unsigned long long time));
-};
 
 struct TestTrashLauncherIcon : testing::Test
 {
   TestTrashLauncherIcon()
-    : fmo_(std::make_shared<MockFileManagerOpener>())
-    , icon(fmo_)
+    : fm_(std::make_shared<MockFileManager>())
+    , icon(fm_)
   {}
 
-  std::shared_ptr<MockFileManagerOpener> fmo_;
+  MockFileManager::Ptr fm_;
   TrashLauncherIcon icon;
 };
 
@@ -50,8 +47,26 @@ TEST_F(TestTrashLauncherIcon, Position)
 TEST_F(TestTrashLauncherIcon, Activate)
 {
   unsigned long long time = g_random_int();
-  EXPECT_CALL(*fmo_, Open("trash:///", time));
+  EXPECT_CALL(*fm_, Open("trash:", time));
   icon.Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
+}
+
+TEST_F(TestTrashLauncherIcon, Quicklist)
+{
+  auto const& menus = icon.Menus();
+  EXPECT_EQ(menus.size(), 1);
+}
+
+TEST_F(TestTrashLauncherIcon, QuicklistEmptyTrash)
+{
+  auto const& menus = icon.Menus();
+  ASSERT_EQ(menus.size(), 1);
+
+  auto const& empty_trash_menu = menus.front();
+
+  unsigned time = g_random_int();
+  EXPECT_CALL(*fm_, EmptyTrash(time));
+  dbusmenu_menuitem_handle_event(empty_trash_menu, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, time);
 }
 
 }

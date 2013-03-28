@@ -25,8 +25,6 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
 
-#include <opengl/framebufferobject.h>
-
 #include <UnityCore/Lens.h>
 #include <UnityCore/GnomeSessionManager.h>
 #include <UnityCore/Variant.h>
@@ -157,8 +155,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , screen_introspection_(screen)
   , ignore_redraw_request_(false)
   , dirty_helpers_on_this_frame_ (false)
-  , previous_framebuffer_(nullptr)
-  , directly_drawable_buffer_age_(0)
 {
   Timer timer;
 #ifndef USE_GLES
@@ -428,10 +424,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
     AddChild(&screen_introspection_);
 
-    /* Setup our render target for scraping the blur texture */
-    directly_drawable_fbo_.reset(new GLFramebufferObject ());
-    directly_drawable_fbo_->allocate (*screen);
-
     /* Track whole damage on the very first frame */
     cScreen->damageScreen();
   }
@@ -489,6 +481,7 @@ void UnityScreen::initAltTabNextWindow()
   {
     LOG_WARN(logger) << "Could not find key above tab!";
   }
+
 }
 
 void UnityScreen::OnInitiateSpread()
@@ -767,133 +760,46 @@ void UnityScreen::OnPanelStyleChanged()
   }
 }
 
-namespace
-{
-void paintIntoPreviousFramebuffer(GLFramebufferObject *oldId,
-                                  CompRegion const&   buffered_compiz_damage_last_frame,
-                                  GLTexture*          oldTex,
-                                  CompOutput*         output)
-{
-  GLFramebufferObject::rebind(oldId);
-
-  CompRegion direct_draw_region =
-      CompRegionRef (output->region()) & buffered_compiz_damage_last_frame;
-  CompRect::vector direct_draw_rects (direct_draw_region.rects());
-
-  GLTexture::Matrix const& texmatrix = oldTex->matrix();
-  GLVertexBuffer *streaming_buffer = GLVertexBuffer::streamingBuffer ();
-
-  streaming_buffer->begin (GL_TRIANGLE_STRIP);
-
-  for (const CompRect &r : direct_draw_rects)
-  {
-    GLfloat rx1 = r.x ();
-    GLfloat ry1 = r.y ();
-    GLfloat rx2 = r.x2 ();
-    GLfloat ry2 = r.y2 ();
-
-    GLfloat vertices[] = { rx1, ry1, 0.0f,
-                           rx1, ry2, 0.0f,
-                           rx2, ry1, 0.0f,
-                           rx1, ry2, 0.0f,
-                           rx2, ry2, 0.0f,
-                           rx2, ry1, 0.0f };
-
-    GLfloat tx1 = COMP_TEX_COORD_X (texmatrix, rx1);
-    GLfloat tx2 = COMP_TEX_COORD_X (texmatrix, rx2);
-    GLfloat ty1 = 1.0 - COMP_TEX_COORD_Y (texmatrix, ry1);
-    GLfloat ty2 = 1.0 - COMP_TEX_COORD_Y (texmatrix, ry2);
-
-    /* Normalize the texcoords */
-    GLfloat texcoords[] = { tx1, ty1,
-                            tx1, ty2,
-                            tx2, ty1,
-                            tx1, ty2,
-                            tx2, ty2,
-                            tx2, ty1 };
-
-    streaming_buffer->addVertices(6, vertices);
-    streaming_buffer->addTexCoords(0, 6, texcoords);
-  }
-
-  if (streaming_buffer->end ())
-  {
-    /* Set viewport to fullscreen */
-    glViewport (0, 0, screen->width(), screen->height());
-
-    GLMatrix sTransform;
-    sTransform.toScreenSpace (&(screen->fullscreenOutput ()), -DEFAULT_Z_CAMERA);
-
-    oldTex->enable (GLTexture::Fast);
-    streaming_buffer->render (sTransform);
-    oldTex->disable ();
-
-    glViewport(output->x(),
-               screen->height () - output->y2(),
-               output->width(),
-               screen->height());
-  }
-}
-}
-
 void UnityScreen::paintDisplay()
 {
   CompOutput *output = _last_output;
 
   DrawTopPanelBackground();
 
-  /* If the age is zero, it means that we drew into
-   * the fbo on this frame, so we should update both
-   * the backbuffer and nux */
-  if (directly_drawable_buffer_age_ == 0 &&
-      directly_drawable_fbo_)
-  {
-    GLTexture *fbo_tex = directly_drawable_fbo_->tex();
-
-    paintIntoPreviousFramebuffer(previous_framebuffer_,
-                                 buffered_compiz_damage_last_frame_,
-                                 fbo_tex,
-                                 output);
-
-    if (directly_drawable_fbo_)
-    {
-      nux::ObjectPtr<nux::IOpenGLTexture2D> bg_texture
-          (nux::GetGraphicsDisplay()->GetGpuDevice()->CreateTexture2DFromID(fbo_tex->name(),
-                                             screen->width(), screen->height(),
-                                             0,
-                                             nux::BITFMT_R8G8B8A8));
-      nux::GetGraphicsDisplay()->GetGpuDevice()->backup_texture0_ = bg_texture;
-
-      previous_framebuffer_ = nullptr;
-    }
-  }
-
   /* Bind the currently bound draw framebuffer to the read framebuffer binding.
    * The reason being that we want to use the results of nux images being
    * drawn to this framebuffer in glCopyTexSubImage2D operations */
-  GLint binding_to_be_read;
+  GLint current_draw_binding, old_read_binding;
 #ifndef USE_GLES
-  glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING_EXT, &binding_to_be_read);
-  (*GL::bindFramebuffer) (GL_READ_FRAMEBUFFER_BINDING_EXT, binding_to_be_read);
+  glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING_EXT, &old_read_binding);
+  glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING_EXT, &current_draw_binding);
+  (*GL::bindFramebuffer) (GL_READ_FRAMEBUFFER_BINDING_EXT, current_draw_binding);
 #else
-  glGetIntegerv(GL_FRAMEBUFFER_BINDING, &binding_to_be_read);
-  (*GL::bindFramebuffer) (GL_FRAMEBUFFER, binding_to_be_read);
+  glGetIntegerv(GL_FRAMEBUFFER_BINDING, &current_draw_binding);
+  (*GL::bindFramebuffer) (GL_FRAMEBUFFER, current_draw_binding);
 #endif
+
+  /* If we have dirty helpers re-copy the backbuffer
+   * into a texture
+   *
+   * TODO: Make this faster by only copying the bits we
+   * need as opposed to the whole readbuffer */
+  if (dirty_helpers_on_this_frame_)
+  {
+    auto graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
+    auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
+    gpu_device->backup_texture0_ =
+      graphics_engine->CreateTextureFromBackBuffer(0, 0, screen->width(), screen->height());
+    directly_drawable_buffer_age_ = 0;
+  }
 
   nux::Geometry geo(0, 0, screen->width (), screen->height ());
   nux::Geometry outputGeo(output->x (), output->y (), output->width (), output->height ());
   BackgroundEffectHelper::monitor_rect_ = geo;
 
-  GLint dFBOID, rFBOID;
-  // Nux renders to the referenceFramebuffer when it's embedded.
-#ifndef USE_GLES
-  glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING_EXT, &dFBOID);
-  glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING_EXT, &rFBOID);
-#else
-  glGetIntegerv(GL_FRAMEBUFFER_BINDING, &dFBOID);
-  rFBOID = dFBOID;
-#endif
-  wt->GetWindowCompositor().SetReferenceFramebuffer(dFBOID, rFBOID, outputGeo);
+  wt->GetWindowCompositor().SetReferenceFramebuffer(current_draw_binding,
+                                                    old_read_binding,
+                                                    outputGeo);
 
   nuxPrologue();
   _in_paint = true;
@@ -1412,13 +1318,6 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   fullscreenRegion = CompRegion();
   nuxRegion = CompRegion();
   windows_for_monitor_.clear();
-
-  // bind the framebuffer if we plan to paint nux on this frame
-  if (doShellRepaint && dirty_helpers_on_this_frame_)
-  {
-    previous_framebuffer_ = directly_drawable_fbo_->bind ();
-    directly_drawable_buffer_age_ = 0;
-  }
 
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
@@ -3388,28 +3287,6 @@ bool UnityScreen::setOptionForPlugin(const char* plugin, const char* name,
 void UnityScreen::outputChangeNotify()
 {
   screen->outputChangeNotify ();
-
-  GLint dFBOID, rFBOID;
-  // Save old bindings and unbind
-#ifndef USE_GLES
-  glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING_EXT, &dFBOID);
-  glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING_EXT, &rFBOID);
-  (*GL::bindFramebuffer) (GL_DRAW_FRAMEBUFFER_EXT, 0);
-  (*GL::bindFramebuffer) (GL_READ_FRAMEBUFFER_EXT, 0);
-#else
-  glGetIntegerv(GL_FRAMEBUFFER_BINDING, &dFBOID);
-  (*GL::bindFramebuffer) (GL_FRAMEBUFFER, 0);
-  rFBOID = dFBOID;
-#endif
-
-  directly_drawable_fbo_->allocate (*screen, NULL, GL_BGRA);
-
-#ifndef USE_GLES
-  (*GL::bindFramebuffer) (GL_DRAW_FRAMEBUFFER_EXT, dFBOID);
-  (*GL::bindFramebuffer) (GL_READ_FRAMEBUFFER_EXT, rFBOID);
-#else
-  (*GL::bindFramebuffer) (GL_FRAMEBUFFER, dFBOID);
-#endif
 
   ScheduleRelayout(500);
 }

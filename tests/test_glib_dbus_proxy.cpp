@@ -227,4 +227,183 @@ TEST_F(TestGDBusProxy, TestDisconnectSignalAll)
   EXPECT_FALSE(got_signal);
 }
 
+TEST_F(TestGDBusProxy, TestSignalBeforeConnection)
+{
+  bool got_signal = false;
+  proxy.Connect("TestSignal", [&got_signal] (GVariant*) { got_signal = true; });
+  proxy.Call("TestMethod", g_variant_new("(s)", "Signal!"));
+  Utils::WaitUntilMSec(got_signal);
+  EXPECT_TRUE(got_signal);
+}
+
+TEST_F(TestGDBusProxy, TestSignalAfterConnection)
+{
+  Utils::WaitUntilMSec([this] { return proxy.IsConnected(); });
+
+  bool got_signal = false;
+  proxy.Connect("TestSignal", [&got_signal] (GVariant*) { got_signal = true; });
+  proxy.Call("TestMethod", g_variant_new("(s)", "Signal!"));
+  Utils::WaitUntilMSec(got_signal);
+  EXPECT_TRUE(got_signal);
+}
+
+TEST_F(TestGDBusProxy, TestSignalAfterConnectionAndDisconnect)
+{
+  Utils::WaitUntilMSec([this] { return proxy.IsConnected(); });
+
+  bool got_signal1 = false;
+  proxy.Connect("TestSignal", [&got_signal1] (GVariant*) { got_signal1 = true; });
+  proxy.DisconnectSignal();
+
+  bool got_signal2 = false;
+  proxy.Connect("TestSignal", [&got_signal2] (GVariant*) { got_signal2 = true; });
+  proxy.Call("TestMethod", g_variant_new("(s)", "Signal!"));
+
+  Utils::WaitUntilMSec(got_signal2);
+  ASSERT_FALSE(got_signal1);
+  EXPECT_TRUE(got_signal2);
+}
+
+TEST_F(TestGDBusProxy, GetROProperty)
+{
+  auto ROPropertyValue = [this] { return glib::Variant(proxy.GetProperty("ReadOnlyProperty")).GetInt(); };
+  EXPECT_EQ(ROPropertyValue(), 0);
+
+  int value = g_random_int();
+  proxy.Call("SetReadOnlyProperty", g_variant_new("(i)", value));
+
+  Utils::WaitUntilMSec([this, value, ROPropertyValue] { return ROPropertyValue() == value; });
+  EXPECT_EQ(ROPropertyValue(), value);
+}
+
+TEST_F(TestGDBusProxy, SetGetRWPropertyBeforeConnection)
+{
+  int value = g_random_int();
+  proxy.SetProperty("ReadWriteProperty", g_variant_new_int32(value));
+
+  auto RWPropertyValue = [this] { return glib::Variant(proxy.GetProperty("ReadWriteProperty")).GetInt(); };
+  Utils::WaitUntilMSec([this, value, RWPropertyValue] { return RWPropertyValue() == value; });
+  EXPECT_EQ(RWPropertyValue(), value);
+}
+
+TEST_F(TestGDBusProxy, SetGetRWPropertyAfterConnection)
+{
+  Utils::WaitUntilMSec([this] { return proxy.IsConnected(); });
+
+  auto RWPropertyValue = [this] { return glib::Variant(proxy.GetProperty("ReadWriteProperty")).GetInt(); };
+
+  int value = g_random_int();
+  proxy.SetProperty("ReadWriteProperty", g_variant_new_int32(value));
+
+  Utils::WaitUntilMSec([this, value, RWPropertyValue] { return RWPropertyValue() == value; });
+  EXPECT_EQ(RWPropertyValue(), value);
+}
+
+TEST_F(TestGDBusProxy, SetGetAsyncRWPropertyBeforeConnection)
+{
+  int value = g_random_int();
+  proxy.SetProperty("ReadWriteProperty", g_variant_new_int32(value));
+
+  int got_value = 0;
+  proxy.GetProperty("ReadWriteProperty", [&got_value] (GVariant* value) { got_value = g_variant_get_int32(value); });
+
+  Utils::WaitUntilMSec([this, value, &got_value] { return got_value == value; });
+  ASSERT_EQ(got_value, value);
+  EXPECT_EQ(got_value, glib::Variant(proxy.GetProperty("ReadWriteProperty")).GetInt());
+}
+
+TEST_F(TestGDBusProxy, SetGetAsyncRWPropertyAfterConnection)
+{
+  Utils::WaitUntilMSec([this] { return proxy.IsConnected(); });
+
+  int value = g_random_int();
+  proxy.SetProperty("ReadWriteProperty", g_variant_new_int32(value));
+
+  int got_value = 0;
+  proxy.GetProperty("ReadWriteProperty", [&got_value] (GVariant* value) { got_value = g_variant_get_int32(value); });
+
+  Utils::WaitUntilMSec([this, value, &got_value] { return got_value == value; });
+  ASSERT_EQ(got_value, value);
+  EXPECT_EQ(got_value, glib::Variant(proxy.GetProperty("ReadWriteProperty")).GetInt());
+}
+
+TEST_F(TestGDBusProxy, SetWOPropertyBeforeConnection)
+{
+  int value = g_random_int();
+  proxy.SetProperty("WriteOnlyProperty", g_variant_new_int32(value));
+
+  int wo_value = 0;
+  proxy.Call("GetWriteOnlyProperty", nullptr, [&wo_value] (GVariant* value) {
+    wo_value = glib::Variant(value).GetInt();
+  });
+
+  Utils::WaitUntilMSec([this, value, &wo_value] { return wo_value == value; });
+  EXPECT_EQ(wo_value, value);
+}
+
+TEST_F(TestGDBusProxy, SetWOPropertyAfterConnection)
+{
+  Utils::WaitUntilMSec([this] { return proxy.IsConnected(); });
+
+  int value = g_random_int();
+  proxy.SetProperty("WriteOnlyProperty", g_variant_new_int32(value));
+
+  int wo_value = 0;
+  proxy.Call("GetWriteOnlyProperty", nullptr, [&wo_value] (GVariant* value) {
+    wo_value = glib::Variant(value).GetInt();
+  });
+
+  Utils::WaitUntilMSec([this, value, &wo_value] { return wo_value == value; });
+  EXPECT_EQ(wo_value, value);
+}
+
+TEST_F(TestGDBusProxy, PropertyChangedSignalBeforeConnection)
+{
+  int value = g_random_int();
+  bool got_signal = false;
+  proxy.ConnectProperty("ReadWriteProperty", [&got_signal, value] (GVariant* new_value) {
+    got_signal = true;
+    EXPECT_EQ(g_variant_get_int32(new_value), value);
+  });
+
+  proxy.SetProperty("ReadWriteProperty", g_variant_new_int32(value));
+
+  Utils::WaitUntilMSec(got_signal);
+  EXPECT_TRUE(got_signal);
+}
+
+TEST_F(TestGDBusProxy, PropertyChangedSignalAfterConnection)
+{
+  Utils::WaitUntilMSec([this] { return proxy.IsConnected(); });
+
+  int value = g_random_int();
+  bool got_signal = false;
+  proxy.ConnectProperty("ReadOnlyProperty", [&got_signal, value] (GVariant* new_value) {
+    got_signal = true;
+    EXPECT_EQ(g_variant_get_int32(new_value), value);
+  });
+
+  proxy.Call("SetReadOnlyProperty", g_variant_new("(i)", value));
+
+  Utils::WaitUntilMSec(got_signal);
+  EXPECT_TRUE(got_signal);
+}
+
+TEST_F(TestGDBusProxy, PropertyChangedSignalAfterConnectionAndDisconnect)
+{
+  Utils::WaitUntilMSec([this] { return proxy.IsConnected(); });
+
+  bool got_signal1 = false;
+  proxy.ConnectProperty("ReadWriteProperty", [&got_signal1] (GVariant*) { got_signal1 = true; });
+  proxy.DisconnectProperty();
+
+  bool got_signal2 = false;
+  proxy.ConnectProperty("ReadWriteProperty", [&got_signal2] (GVariant*) { got_signal2 = true; });
+  proxy.SetProperty("ReadWriteProperty", g_variant_new_int32(g_random_int()));
+
+  Utils::WaitUntilMSec(got_signal2);
+  ASSERT_FALSE(got_signal1);
+  EXPECT_TRUE(got_signal2);
+}
+
 }
