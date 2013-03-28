@@ -774,7 +774,6 @@ void paintIntoPreviousFramebuffer(GLFramebufferObject *oldId,
                                   GLTexture*          oldTex,
                                   CompOutput*         output)
 {
-  printf ("rebind!\n");
   GLFramebufferObject::rebind(oldId);
 
   CompRegion direct_draw_region =
@@ -1417,7 +1416,6 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   // bind the framebuffer if we plan to paint nux on this frame
   if (doShellRepaint && dirty_helpers_on_this_frame_)
   {
-    printf ("bind fbo\n");
     previous_framebuffer_ = directly_drawable_fbo_->bind ();
     directly_drawable_buffer_age_ = 0;
   }
