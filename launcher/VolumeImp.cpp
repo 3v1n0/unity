@@ -55,7 +55,7 @@ public:
     });
 
     file_manager_->locations_changed.connect([this] {
-      bool opened = IsOpened();
+      bool opened = file_manager_->IsPrefixOpened(GetUri());
 
       if (opened_ != opened)
       {
@@ -125,7 +125,7 @@ public:
 
   bool IsOpened() const
   {
-    return file_manager_->IsPrefixOpened(GetUri());
+    return opened_;
   }
 
   void EjectAndShowNotification()
