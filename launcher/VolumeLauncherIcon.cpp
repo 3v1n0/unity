@@ -71,8 +71,7 @@ public:
   {
     parent_->tooltip_text = volume_->GetName();
     parent_->icon_name = volume_->GetIconName();
-
-    parent_->SetQuirk(Quirk::RUNNING, false);
+    parent_->SetQuirk(Quirk::RUNNING, volume_->IsOpened());
   }
 
   void UpdateVisibility()
@@ -92,6 +91,7 @@ public:
     volume_changed_conn_ = volume_->changed.connect(sigc::mem_fun(this, &Impl::OnVolumeChanged));
     volume_removed_conn_ = volume_->removed.connect(sigc::mem_fun(this, &Impl::OnVolumeRemoved));
     settings_changed_conn_ = devices_settings_->changed.connect(sigc::mem_fun(this, &Impl::OnSettingsChanged));
+    volume_->opened.connect(sigc::hide(sigc::mem_fun(this, &Impl::UpdateIcon)));
   }
 
   void OnVolumeChanged()

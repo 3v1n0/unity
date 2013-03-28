@@ -35,6 +35,75 @@ DECLARE_LOGGER(logger, "unity.filemanager.gnome");
 const std::string TRASH_URI = "trash:";
 }
 
+struct GnomeFileManager::Impl
+{
+  Impl(GnomeFileManager* parent)
+    : parent_(parent)
+    , filemanager_proxy_("org.freedesktop.FileManager1", "/org/freedesktop/FileManager1", "org.freedesktop.FileManager1")
+  {
+    auto callback = sigc::mem_fun(this, &Impl::OnOpenLocationsUpdated);
+    filemanager_proxy_.GetProperty("OpenLocations", callback);
+    filemanager_proxy_.ConnectProperty("OpenLocations", callback);
+  }
+
+  void OnOpenLocationsUpdated(GVariant* value)
+  {
+    if (!g_variant_is_of_type(value, G_VARIANT_TYPE_STRING_ARRAY))
+    {
+      LOG_ERROR(logger) << "Locations value type is not matching the expected one!";
+      return;
+    }
+
+    opened_locations_.clear();
+
+    GVariantIter iter;
+    const char *str;
+
+    g_variant_iter_init(&iter, value);
+
+    while (g_variant_iter_loop(&iter, "s", &str))
+    {
+      LOG_DEBUG(logger) << "Opened location " << str;
+      opened_locations_.push_back(str);
+    }
+
+    parent_->locations_changed.emit();
+  }
+
+  std::string GetOpenedPrefix(std::string const& uri)
+  {
+    glib::Object<GFile> uri_file(g_file_new_for_uri(uri.c_str()));
+
+    for (auto const& loc : opened_locations_)
+    {
+      glib::Object<GFile> loc_file(g_file_new_for_uri(loc.c_str()));
+
+      if (g_file_equal(loc_file, uri_file) || g_file_has_prefix(loc_file, uri_file))
+        return loc;
+    }
+
+    return "";
+  }
+
+  GnomeFileManager* parent_;
+  glib::DBusProxy filemanager_proxy_;
+  std::vector<std::string> opened_locations_;
+};
+
+
+FileManager::Ptr GnomeFileManager::Get()
+{
+  static FileManager::Ptr instance(new GnomeFileManager());
+  return instance;
+}
+
+GnomeFileManager::GnomeFileManager()
+  : impl_(new Impl(this))
+{}
+
+GnomeFileManager::~GnomeFileManager()
+{}
+
 void GnomeFileManager::Open(std::string const& uri, unsigned long long timestamp)
 {
   if (uri.empty())
@@ -57,6 +126,13 @@ void GnomeFileManager::Open(std::string const& uri, unsigned long long timestamp
   {
     LOG_ERROR(logger) << "Impossible to open the location: " << error.Message();
   }
+}
+
+void GnomeFileManager::OpenActiveChild(std::string const& uri, unsigned long long timestamp)
+{
+  auto const& opened = impl_->GetOpenedPrefix(uri);
+
+  Open(opened.empty() ? uri : opened, timestamp);
 }
 
 void GnomeFileManager::Activate(unsigned long long timestamp)
@@ -102,6 +178,16 @@ void GnomeFileManager::EmptyTrash(unsigned long long timestamp)
 
   // Passing the proxy to the lambda we ensure that it will be destroyed when needed
   proxy->CallBegin("EmptyTrash", nullptr, [proxy] (GVariant*, glib::Error const&) {});
+}
+
+std::vector<std::string> GnomeFileManager::OpenedLocations() const
+{
+  return impl_->opened_locations_;
+}
+
+bool GnomeFileManager::IsPrefixOpened(std::string const& uri) const
+{
+  return !impl_->GetOpenedPrefix(uri).empty();
 }
 
 }

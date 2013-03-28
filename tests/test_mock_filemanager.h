@@ -30,7 +30,10 @@ struct MockFileManager : FileManager
   typedef std::shared_ptr<MockFileManager> Ptr;
 
   MOCK_METHOD2(Open, void(std::string const& uri, unsigned long long time));
+  MOCK_METHOD2(OpenActiveChild, void(std::string const& uri, unsigned long long time));
   MOCK_METHOD1(EmptyTrash, void(unsigned long long time));
+  MOCK_CONST_METHOD0(OpenedLocations, std::vector<std::string>());
+  MOCK_CONST_METHOD1(IsPrefixOpened, bool(std::string const& uri));
 };
 
 }
