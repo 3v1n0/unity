@@ -37,9 +37,10 @@ public:
   virtual ~FileManager() {}
 
   virtual void Open(std::string const& uri, unsigned long long timestamp = 0) = 0;
-  virtual void EmptyTrash(unsigned long long timestamp = 0) = 0;
+  virtual void OpenActiveChild(std::string const& uri, unsigned long long timestamp = 0) = 0;
   virtual std::vector<std::string> OpenedLocations() const = 0;
   virtual bool IsPrefixOpened(std::string const& uri) const = 0;
+  virtual void EmptyTrash(unsigned long long timestamp = 0) = 0;
 
   sigc::signal<void> locations_changed;
 

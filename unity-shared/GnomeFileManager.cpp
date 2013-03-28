@@ -70,6 +70,21 @@ struct GnomeFileManager::Impl
     parent_->locations_changed.emit();
   }
 
+  std::string GetOpenedPrefix(std::string const& uri)
+  {
+    glib::Object<GFile> uri_file(g_file_new_for_uri(uri.c_str()));
+
+    for (auto const& loc : opened_locations_)
+    {
+      glib::Object<GFile> loc_file(g_file_new_for_uri(loc.c_str()));
+
+      if (g_file_equal(loc_file, uri_file) || g_file_has_prefix(loc_file, uri_file))
+        return loc;
+    }
+
+    return "";
+  }
+
   GnomeFileManager* parent_;
   glib::DBusProxy filemanager_proxy_;
   std::vector<std::string> opened_locations_;
@@ -111,6 +126,13 @@ void GnomeFileManager::Open(std::string const& uri, unsigned long long timestamp
   {
     LOG_ERROR(logger) << "Impossible to open the location: " << error.Message();
   }
+}
+
+void GnomeFileManager::OpenActiveChild(std::string const& uri, unsigned long long timestamp)
+{
+  auto const& opened = impl_->GetOpenedPrefix(uri);
+
+  Open(opened.empty() ? uri : opened, timestamp);
 }
 
 void GnomeFileManager::Activate(unsigned long long timestamp)
@@ -165,17 +187,7 @@ std::vector<std::string> GnomeFileManager::OpenedLocations() const
 
 bool GnomeFileManager::IsPrefixOpened(std::string const& uri) const
 {
-  glib::Object<GFile> uri_file(g_file_new_for_uri(uri.c_str()));
-
-  for (auto const& loc : impl_->opened_locations_)
-  {
-    glib::Object<GFile> loc_file(g_file_new_for_uri(loc.c_str()));
-
-    if (g_file_equal(loc_file, uri_file) || g_file_has_prefix(loc_file, uri_file))
-      return true;
-  }
-
-  return false;
+  return !impl_->GetOpenedPrefix(uri).empty();
 }
 
 }
