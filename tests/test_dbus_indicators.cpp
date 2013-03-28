@@ -88,7 +88,7 @@ TEST_F(TestDBusIndicators, TestSync)
   Utils::WaitUntil(sigc::mem_fun(this, &TestDBusIndicators::TriggerResync1Sent));
   // We know the resync has been sent, but it may have not been processed
   // so do one interation of the main loop more
-  g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
+  g_main_context_iteration(NULL, TRUE);
 
   EXPECT_EQ(dbus_indicators->GetIndicators().size(), 1);
   EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().size(), 2);

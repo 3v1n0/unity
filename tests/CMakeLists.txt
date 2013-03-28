@@ -131,6 +131,7 @@ if (GTEST_SRC_DIR AND
        test_abstract_interface_generator.cpp
        test_launcher_model.cpp
        test_glib_dbus_object.cpp
+       test_glib_cancellable.cpp
        test_glib_object.cpp
        test_glib_object_utils.cpp
        test_glib_object_utils.h
@@ -204,7 +205,7 @@ if (GTEST_SRC_DIR AND
                  test_dbus_indicators.cpp
                  test_filesystem_lenses.cpp
                  test_filter.cpp
-                 test_gdbus_proxy.cpp
+                 test_glib_dbus_proxy.cpp
                  test_hud.cpp
                  test_lens.cpp
                  test_main_dbus.cpp

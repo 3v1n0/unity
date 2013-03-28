@@ -70,6 +70,7 @@ class LauncherIconsTests(LauncherTestCase):
         bfb = self.unity.launcher.model.get_bfb_icon()
         self.mouse.move(bfb.center_x, bfb.center_y)
 
+        self.assertThat(lambda: bfb.get_tooltip(), Eventually(NotEquals(None)))
         self.assertThat(bfb.get_tooltip().active, Eventually(Equals(True)))
         self.unity.dash.ensure_visible()
         self.addCleanup(self.unity.dash.ensure_hidden)

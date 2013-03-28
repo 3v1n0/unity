@@ -25,29 +25,27 @@
 #include <glib/gi18n-lib.h>
 #include <Nux/WindowCompositor.h>
 #include <NuxCore/Logger.h>
-#include <UnityCore/GLibDBusProxy.h>
 #include <zeitgeist.h>
 
 #include "Launcher.h"
 #include "QuicklistManager.h"
 #include "QuicklistMenuItemLabel.h"
-#include "FileManagerOpenerImp.h"
+#include "unity-shared/GnomeFileManager.h"
 
 namespace unity
 {
 namespace launcher
 {
-DECLARE_LOGGER(logger, "unity.launcher.icon");
+DECLARE_LOGGER(logger, "unity.launcher.icon.trash");
 namespace
 {
   const std::string ZEITGEIST_UNITY_ACTOR = "application://compiz.desktop";
-  const std::string TRASH_URI = "trash:///";
+  const std::string TRASH_URI = "trash:";
 }
 
-TrashLauncherIcon::TrashLauncherIcon(FileManagerOpener::Ptr const& fmo)
+TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
   : SimpleLauncherIcon(IconType::TRASH)
-  , file_manager_(fmo ? fmo : std::make_shared<FileManagerOpenerImp>())
-  , cancellable_(g_cancellable_new())
+  , file_manager_(fmo ? fmo : std::make_shared<GnomeFileManager>())
 {
   tooltip_text = _("Trash");
   icon_name = "user-trash";
@@ -77,11 +75,6 @@ TrashLauncherIcon::TrashLauncherIcon(FileManagerOpener::Ptr const& fmo)
   UpdateTrashIcon();
 }
 
-TrashLauncherIcon::~TrashLauncherIcon()
-{
-  g_cancellable_cancel(cancellable_);
-}
-
 AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()
 {
   MenuItemsVector result;
@@ -92,12 +85,8 @@ AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, !empty_);
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
   empty_activated_signal_.Connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-  [this] (DbusmenuMenuitem*, unsigned) {
-    auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.Nautilus", "/org/gnome/Nautilus",
-                                                   "org.gnome.Nautilus.FileOperations");
-
-    // Passing the proxy to the lambda we ensure that it will be destroyed when needed
-    proxy->CallBegin("EmptyTrash", nullptr, [proxy] (GVariant*, glib::Error const&) {});
+  [this] (DbusmenuMenuitem*, unsigned timestamp) {
+    file_manager_->EmptyTrash(timestamp);
   });
 
   result.push_back(menu_item);

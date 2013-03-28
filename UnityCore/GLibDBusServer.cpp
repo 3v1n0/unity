@@ -83,10 +83,10 @@ struct DBusObject::Impl
         ret = self->method_cb_(method_name ? method_name : "", parameters);
 
         LOG_INFO(logger_o) << "Called method: '" << method_name << " "
-                           << (parameters ? g_variant_print(parameters, TRUE) : "()")
+                           << (parameters ? String(g_variant_print(parameters, TRUE)) : "()")
                            << "' on object '" << object_path << "' with interface '"
                            << interface_name << "' , returning: '"
-                           << (ret ? g_variant_print(ret, TRUE) : "()") << "'";
+                           << (ret ? String(g_variant_print(ret, TRUE)) : "()") << "'";
 
         const GDBusMethodInfo* info = g_dbus_method_invocation_get_method_info(invocation);
 
@@ -110,7 +110,7 @@ struct DBusObject::Impl
       else
       {
         LOG_WARN(logger_o) << "Called method: '" << method_name << " "
-                           << (parameters ? g_variant_print(parameters, TRUE) : "()")
+                           << (parameters ? String(g_variant_print(parameters, TRUE)) : "()")
                            << "' on object '" << object_path << "' with interface '"
                            << interface_name << "', but no methods handler is set";
 
@@ -131,7 +131,7 @@ struct DBusObject::Impl
 
       LOG_INFO(logger_o) << "Getting property '" << property_name << "' on '"
                          << interface_name << "' , returning: '"
-                         << (value ? g_variant_print(value, TRUE) : "()") << "'";
+                         << (value ? String(g_variant_print(value, TRUE)) : "()") << "'";
 
       return value;
     };
@@ -162,9 +162,9 @@ struct DBusObject::Impl
       {
         LOG_INFO(logger_o) << "Setting property '" << property_name << "' on '"
                            << interface_name << "' , to value: '"
-                           << (value ? g_variant_print(value, TRUE) : "<null>") << "'";
+                           << (value ? String(g_variant_print(value, TRUE)) : "<null>") << "'";
 
-        if (!g_variant_equal(old_value, value))
+        if (old_value && !g_variant_equal(old_value, value))
           self->EmitPropertyChanged(property_name ? property_name : "");
       }
       else
@@ -172,7 +172,7 @@ struct DBusObject::Impl
         LOG_WARN(logger_o) << "It was impossible to set the property '"
                            << property_name << "' on '" << interface_name
                            << "' , to value: '"
-                           << (value ? g_variant_print(value, TRUE) : "()")
+                           << (value ? String(g_variant_print(value, TRUE)) : "()")
                            << "'";
       }
 
@@ -362,8 +362,15 @@ struct DBusObject::Impl
       return;
     }
 
-    auto builder = g_variant_builder_new(G_VARIANT_TYPE_ARRAY);
     GVariant* value = property_get_cb_(property.c_str());
+
+    if (!value)
+    {
+      LOG_ERROR(logger_o) << "The property value is not valid";
+      return;
+    }
+
+    auto builder = g_variant_builder_new(G_VARIANT_TYPE_ARRAY);
     g_variant_builder_add(builder, "{sv}", property.c_str(), value);
     glib::Variant parameters(g_variant_new("(sa{sv}as)", InterfaceName().c_str(), builder, nullptr));
 
@@ -525,7 +532,6 @@ struct DBusServer::Impl
   Impl(DBusServer* server, GBusType bus_type)
     : Impl(server)
   {
-    cancellable_ = g_cancellable_new();
     g_bus_get(bus_type, cancellable_, [] (GObject*, GAsyncResult* res, gpointer data) {
       auto self = static_cast<DBusServer::Impl*>(data);
       glib::Error error;
@@ -549,9 +555,6 @@ struct DBusServer::Impl
   {
     if (owner_name_)
       g_bus_unown_name(owner_name_);
-
-    if (cancellable_)
-      g_cancellable_cancel(cancellable_);
 
     LOG_INFO(logger_s) << "Removing dbus server";
   }
@@ -657,8 +660,8 @@ struct DBusServer::Impl
   std::string name_;
   bool name_owned_;
   guint owner_name_;
+  glib::Cancellable cancellable_;
   glib::Object<GDBusConnection> connection_;
-  glib::Object<GCancellable> cancellable_;
   std::vector<DBusObject::Ptr> objects_;
   std::vector<std::pair<DBusObject::Ptr, std::string>> pending_objects_;
 };

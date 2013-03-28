@@ -26,8 +26,8 @@
 #include "AbstractVolumeMonitorWrapper.h"
 #include "DevicesSettings.h"
 #include "DeviceNotificationDisplay.h"
-#include "FileManagerOpener.h"
 #include "VolumeLauncherIcon.h"
+#include "unity-shared/FileManager.h"
 
 namespace unity
 {
@@ -53,7 +53,7 @@ private:
   std::map<GVolume*, VolumeLauncherIcon::Ptr> map_;
   AbstractVolumeMonitorWrapper::Ptr monitor_;
   DevicesSettings::Ptr devices_settings_;
-  FileManagerOpener::Ptr file_manager_opener_;
+  FileManager::Ptr file_manager_;
   DeviceNotificationDisplay::Ptr device_notification_display_;
 };
 

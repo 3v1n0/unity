@@ -26,6 +26,7 @@ set (UNITY_SHARED_SOURCES
      DebugDBusInterface.cpp
      DefaultThumbnailProvider.cpp
      DeltaRestrainment.cpp
+     GnomeFileManager.cpp
      FontSettings.cpp
      GraphicsUtils.cpp
      IMTextEntry.cpp
