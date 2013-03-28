@@ -154,7 +154,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , big_tick_(0)
   , screen_introspection_(screen)
   , ignore_redraw_request_(false)
-  , dirty_helpers_on_this_frame_ (false)
+  , dirty_helpers_on_this_frame_(false)
+  , directly_drawable_buffer_age_(0)
 {
   Timer timer;
 #ifndef USE_GLES
