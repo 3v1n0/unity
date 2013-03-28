@@ -186,7 +186,6 @@ void WindowGestureTarget::EndWindowMove(const nux::GestureEvent &event)
 {
   window_->ungrabNotify();
   RemoveDragGrab();
-  window_->syncPosition();
 }
 
 void WindowGestureTarget::RemoveDragGrab()
