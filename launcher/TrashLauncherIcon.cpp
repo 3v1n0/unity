@@ -23,12 +23,10 @@
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
-#include <Nux/WindowCompositor.h>
 #include <NuxCore/Logger.h>
 #include <zeitgeist.h>
+#include <UnityCore/DesktopUtilities.h>
 
-#include "Launcher.h"
-#include "QuicklistManager.h"
 #include "QuicklistMenuItemLabel.h"
 #include "unity-shared/GnomeFileManager.h"
 
@@ -41,6 +39,7 @@ namespace
 {
   const std::string ZEITGEIST_UNITY_ACTOR = "application://compiz.desktop";
   const std::string TRASH_URI = "trash:";
+  const std::string TRASH_PATH = "file://" + DesktopUtilities::GetUserDataDirectory() + "/Trash/files";
 }
 
 TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
@@ -51,7 +50,7 @@ TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
   icon_name = "user-trash";
   position = Position::END;
   SetQuirk(Quirk::VISIBLE, true);
-  SetQuirk(Quirk::RUNNING, file_manager_->IsPrefixOpened(TRASH_URI));
+  SetQuirk(Quirk::RUNNING, IsOpened());
   SetShortcut('t');
 
   glib::Object<GFile> location(g_file_new_for_uri(TRASH_URI.c_str()));
@@ -73,7 +72,7 @@ TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
   }
 
   file_manager_->locations_changed.connect([this] {
-    SetQuirk(Quirk::RUNNING, file_manager_->IsPrefixOpened(TRASH_URI));
+    SetQuirk(Quirk::RUNNING, IsOpened());
   });
 
   UpdateTrashIcon();
@@ -98,11 +97,23 @@ AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()
   return result;
 }
 
+bool TrashLauncherIcon::IsOpened() const
+{
+  return (file_manager_->IsPrefixOpened(TRASH_URI) || file_manager_->IsPrefixOpened(TRASH_PATH));
+}
+
 void TrashLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
 
-  file_manager_->OpenActiveChild(TRASH_URI.c_str(), arg.timestamp);
+  if (file_manager_->IsPrefixOpened(TRASH_PATH))
+  {
+    file_manager_->OpenActiveChild(TRASH_PATH.c_str(), arg.timestamp);
+  }
+  else
+  {
+    file_manager_->OpenActiveChild(TRASH_URI.c_str(), arg.timestamp);
+  }
 }
 
 void TrashLauncherIcon::UpdateTrashIcon()
