@@ -183,7 +183,7 @@ public:
 
   void OpenInFileManager()
   {
-    file_manager_->Open(GetUri(), open_timestamp_);
+    file_manager_->OpenActiveChild(GetUri(), open_timestamp_);
   }
 
   std::string GetUri() const

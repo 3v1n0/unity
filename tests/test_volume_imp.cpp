@@ -153,7 +153,7 @@ TEST_F(TestVolumeImp, TestEjectAndShowNotification)
 TEST_F(TestVolumeImp, TestMountAndOpenInFileManager)
 {
   unsigned long long time = g_random_int();
-  EXPECT_CALL(*file_manager_, Open(ROOT_FILE_URI, time));
+  EXPECT_CALL(*file_manager_, OpenActiveChild(ROOT_FILE_URI, time));
 
   volume_->MountAndOpenInFileManager(time);
   EXPECT_EQ(g_mock_volume_last_mount_had_mount_operation(gvolume_), TRUE);

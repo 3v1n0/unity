@@ -102,7 +102,7 @@ void TrashLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
 
-  file_manager_->Open(TRASH_URI.c_str(), arg.timestamp);
+  file_manager_->OpenActiveChild(TRASH_URI.c_str(), arg.timestamp);
 }
 
 void TrashLauncherIcon::UpdateTrashIcon()

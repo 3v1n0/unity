@@ -47,7 +47,7 @@ TEST_F(TestTrashLauncherIcon, Position)
 TEST_F(TestTrashLauncherIcon, Activate)
 {
   unsigned long long time = g_random_int();
-  EXPECT_CALL(*fm_, Open("trash:", time));
+  EXPECT_CALL(*fm_, OpenActiveChild("trash:", time));
   icon.Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
 }
 
