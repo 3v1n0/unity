@@ -61,6 +61,7 @@ public:
 TEST_F(TestVolumeImp, TestCtor)
 {
   EXPECT_FALSE(volume_->IsMounted());
+  EXPECT_FALSE(volume_->IsOpened());
 }
 
 TEST_F(TestVolumeImp, TestCanBeEjected)
@@ -115,10 +116,12 @@ TEST_F(TestVolumeImp, TestIsOpened)
 
   EXPECT_CALL(*file_manager_, IsPrefixOpened(ROOT_FILE_URI));
   ON_CALL(*file_manager_, IsPrefixOpened(_)).WillByDefault(Return(true));
+  file_manager_->locations_changed.emit();
   EXPECT_TRUE(volume_->IsOpened());
 
   EXPECT_CALL(*file_manager_, IsPrefixOpened(ROOT_FILE_URI));
   ON_CALL(*file_manager_, IsPrefixOpened(_)).WillByDefault(Return(false));
+  file_manager_->locations_changed.emit();
   EXPECT_FALSE(volume_->IsOpened());
 }
 
@@ -150,13 +153,6 @@ TEST_F(TestVolumeImp, TestEjectAndShowNotification)
 TEST_F(TestVolumeImp, TestMountAndOpenInFileManager)
 {
   unsigned long long time = g_random_int();
-  EXPECT_CALL(*file_manager_, Open(ROOT_FILE_URI, time));
-
-  volume_->MountAndOpenInFileManager(time);
-  EXPECT_EQ(g_mock_volume_last_mount_had_mount_operation(gvolume_), TRUE);
-  EXPECT_TRUE(volume_->IsMounted());
-
-  time = g_random_int();
   EXPECT_CALL(*file_manager_, Open(ROOT_FILE_URI, time));
 
   volume_->MountAndOpenInFileManager(time);
