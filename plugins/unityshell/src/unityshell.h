@@ -360,8 +360,6 @@ private:
   bool       ignore_redraw_request_;
   bool       dirty_helpers_on_this_frame_;
 
-  std::unique_ptr <GLFramebufferObject> directly_drawable_fbo_;
-  GLFramebufferObject *previous_framebuffer_;
   unsigned int directly_drawable_buffer_age_;
 
   friend class UnityWindow;
