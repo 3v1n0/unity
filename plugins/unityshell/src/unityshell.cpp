@@ -154,7 +154,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , big_tick_(0)
   , screen_introspection_(screen)
   , ignore_redraw_request_(false)
-  , dirty_helpers_on_this_frame_ (false)
+  , dirty_helpers_on_this_frame_(false)
+  , back_buffer_age_(0)
 {
   Timer timer;
 #ifndef USE_GLES
@@ -790,7 +791,7 @@ void UnityScreen::paintDisplay()
     auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
     gpu_device->backup_texture0_ =
       graphics_engine->CreateTextureFromBackBuffer(0, 0, screen->width(), screen->height());
-    directly_drawable_buffer_age_ = 0;
+    back_buffer_age_ = 0;
   }
 
   nux::Geometry geo(0, 0, screen->width (), screen->height ());
@@ -1389,7 +1390,7 @@ void UnityScreen::damageCutoff()
    * of geometry clipping. That damage will feed back to us on the next frame.
    */
   if (BackgroundEffectHelper::HasEnabledHelpers())
-    cScreen->applyDamageForFrameAge (directly_drawable_buffer_age_);
+    cScreen->applyDamageForFrameAge (back_buffer_age_);
 
   /* Determine nux region damage last */
   cScreen->damageCutoff();
@@ -1457,8 +1458,8 @@ void UnityScreen::donePaint()
   /* To prevent any potential overflow problems, we are assuming here
    * that compiz caps the maximum number of frames tracked at 10, so
    * don't increment the age any more than 11 */
-  if (directly_drawable_buffer_age_ < 11)
-    ++directly_drawable_buffer_age_;
+  if (back_buffer_age_ < 11)
+    ++back_buffer_age_;
 
   if (didShellRepaint)
     wt->ClearDrawList();
