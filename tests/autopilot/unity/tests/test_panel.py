@@ -516,72 +516,71 @@ class PanelWindowButtonsTests(PanelTestsBase):
         sleep(5)
         self.assertThat(self.unity.dash.visible, Eventually(Equals(True)))
 
-    def test_window_buttons_maximization_buttons_works_for_dash(self):
-        """'Maximize' and 'Restore' buttons (when both enabled) must work as expected."""
-        # Mega-TODO:
-        #
-        # This test is terrible. The docstring is terrible. The test id is terrible.
-        # Someone needs to split this into several smaller tests. However, I'm
-        # not doing that in this branch. Consider this an invitation to split
-        # this test out and make it suck less.
-        #
-        # For your sanity I have annotated it with comments.
+    def test_window_buttons_maximize_or_restore_dash(self):
+        """Tests that the Maximize/Restore button works for the dash."""
+
         self.unity.dash.ensure_visible()
-        self.addCleanup(self.panel.window_buttons.close.mouse_click)
+        self.addCleanup(self.unity.dash.ensure_hidden)
 
-        unmaximize = self.panel.window_buttons.unmaximize
-        maximize = self.panel.window_buttons.maximize
-
-        # "netbook" means "dash is maximised"
-        dash_maximised = (self.unity.dash.view.form_factor == "netbook")
-
-        # this if statement will trigger only when we're on very small screens,
-        # where it doesn't make sense to have the dash anything other than
-        # maximised.
-        if dash_maximised and not unmaximize.enabled:
-            unmaximize.mouse_click()
-            # nice long sleep to make sure that any changes have time to process.
-            sleep(5)
-            self.assertThat(self.unity.dash.view.form_factor, Equals("netbook"))
+        desired_max = not self.unity.dash.view.dash_maximized
+        if desired_max:
+            self.panel.window_buttons.maximize.mouse_click()
         else:
-            # we are able to resize the dash.
-            # maximise and unmaximise (restore) buttons are shown in the same place
-            # but only one is shown at once:
-            if maximize.visible:
-                active_button = maximize
-                inactive_button = unmaximize
-            else:
-                active_button = unmaximize
-                inactive_button = maximize
+            self.panel.window_buttons.unmaximize.mouse_click()
 
-            self.assertThat(active_button.visible, Eventually(Equals(True)))
-            self.assertThat(active_button.sensitive, Eventually(Equals(True)))
-            self.assertThat(active_button.enabled, Eventually(Equals(True)))
-            self.assertThat(inactive_button.visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.dash.view.dash_maximized, Eventually(Equals(desired_max)))
 
-            self.addCleanup(inactive_button.mouse_click)
-            active_button.mouse_click()
+    def test_window_buttons_active_inactive_states(self):
+        """Tests that the maximized/restore buttons are in the correct state when the
+        dash is open. Asserting states: visible, sensitive, enabled.
+        """
 
-            self.assertThat(inactive_button.visible, Eventually(Equals(True)))
-            self.assertThat(inactive_button.sensitive, Eventually(Equals(True)))
-            self.assertThat(inactive_button.enabled, Eventually(Equals(True)))
-            self.assertThat(active_button.visible, Eventually(Equals(False)))
+        self.unity.dash.ensure_visible()
+        self.addCleanup(self.unity.dash.ensure_hidden)
 
-            if dash_maximised:
-                self.assertThat(self.unity.dash.view.form_factor, Eventually(Equals("desktop")))
-            else:
-                self.assertThat(self.unity.dash.view.form_factor, Eventually(Equals("netbook")))
+        unmaximize = self.unity.dash.view.window_buttons.unmaximize
+        maximize = self.unity.dash.view.window_buttons.maximize
 
-            self.addCleanup(active_button.mouse_click)
-            inactive_button.mouse_click()
+        desired_max = not self.unity.dash.view.dash_maximized
+        if desired_max:
+            active   = maximize
+            inactive = unmaximize
+        else:
+            active   = unmaximize
+            inactive = maximize
 
-            self.assertThat(active_button.visible, Eventually(Equals(True)))
-            self.assertThat(inactive_button.visible, Eventually(Equals(False)))
+        self.assertThat(active.visible, Eventually(Equals(True)))
+        self.assertThat(active.sensitive, Eventually(Equals(True)))
+        self.assertThat(active.enabled, Eventually(Equals(True)))
+        self.assertThat(inactive.visible, Eventually(Equals(False)))
 
-            if dash_maximised:
-                self.assertThat(self.unity.dash.view.form_factor, Eventually(Equals("netbook")))
-            else:
-                self.assertThat(self.unity.dash.view.form_factor, Eventually(Equals("desktop")))
+    def test_window_buttons_state_switch_on_click(self):
+        """Tests that when clicking the maximize/restore window button it
+        switchs its state from either maximize to restore, or restore to
+        maximize.
+        """
+
+        self.unity.dash.ensure_visible()
+        self.addCleanup(self.unity.dash.ensure_hidden)
+
+        unmaximize = self.unity.dash.view.window_buttons.unmaximize
+        maximize = self.unity.dash.view.window_buttons.maximize
+
+        desired_max = not self.unity.dash.view.dash_maximized
+        if desired_max:
+            active   = maximize
+            inactive = unmaximize
+        else:
+            active   = unmaximize
+            inactive = maximize
+
+        active.mouse_click()
+
+        self.assertThat(inactive.visible, Eventually(Equals(True)))
+        self.assertThat(inactive.sensitive, Eventually(Equals(True)))
+        self.assertThat(inactive.enabled, Eventually(Equals(True)))
+        self.assertThat(active.visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.dash.view.dash_maximized, Eventually(Equals(desired_max)))
 
     def test_minimize_button_disabled_for_non_minimizable_windows(self):
         """Minimize button must be disabled for windows that don't support minimization."""
