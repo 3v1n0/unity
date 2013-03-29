@@ -1,3 +1,14 @@
+unity (6.12.0daily13.03.29.1-0ubuntu1) raring; urgency=low
+
+  [ Brandon Schaefer ]
+  * launcher - drag and drop of gedit text windows leaves launcher in
+    drop state (LP: #1121045)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3260
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 29 Mar 2013 16:26:36 +0000
+
 unity (6.12.0daily13.03.29-0ubuntu1) raring; urgency=low
 
   [ Marco Trevisan (Treviño) ]
