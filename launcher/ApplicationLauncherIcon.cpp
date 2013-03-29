@@ -312,6 +312,15 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       if (any_on_monitor && arg.monitor >= 0 && active_monitor != arg.monitor)
         active = false;
     }
+
+    if (user_visible && IsSticky() && IsFileManager())
+    {
+      // See bug #753938
+      if (GetWindows(WindowFilter::USER_VISIBLE|WindowFilter::MAPPED).size() == 1)
+      {
+        user_visible = !GnomeFileManager::Get()->IsPrefixOpened("trash:");
+      }
+    }
   }
 
   /* Behaviour:
