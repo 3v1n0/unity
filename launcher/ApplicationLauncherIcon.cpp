@@ -32,6 +32,7 @@
 #include "FavoriteStore.h"
 #include "Launcher.h"
 #include "MultiMonitor.h"
+#include "unity-shared/GnomeFileManager.h"
 #include "unity-shared/UBusMessages.h"
 
 #include <glib/gi18n-lib.h>
@@ -453,7 +454,7 @@ void ApplicationLauncherIcon::OnWindowMoved(guint32 moved_win)
 
 void ApplicationLauncherIcon::UpdateDesktopFile()
 {
-  std::string filename = app_->desktop_file();
+  std::string const& filename = app_->desktop_file();
 
   if (!filename.empty() && _desktop_file != filename)
   {
@@ -1114,12 +1115,18 @@ void ApplicationLauncherIcon::OnDndLeave()
   */
 }
 
+bool ApplicationLauncherIcon::IsFileManager()
+{
+  auto const& desktop_file = DesktopFile();
+
+  return boost::algorithm::ends_with(desktop_file, "nautilus.desktop") ||
+         boost::algorithm::ends_with(desktop_file, "nautilus-folder-handler.desktop") ||
+         boost::algorithm::ends_with(desktop_file, "nautilus-home.desktop");
+}
+
 bool ApplicationLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
 {
-  bool is_home_launcher = boost::algorithm::ends_with(DesktopFile(), "nautilus-home.desktop") ||
-                          boost::algorithm::ends_with(DesktopFile(), "nautilus.desktop");
-
-  if (is_home_launcher)
+  if (IsFileManager())
   {
     return true;
   }
