@@ -319,16 +319,19 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       unsigned minimum_windows = 0;
       auto const& file_manager = GnomeFileManager::Get();
 
-      if (file_manager->IsPrefixOpened("trash:"))
+      if (file_manager->IsTrashOpened())
         ++minimum_windows;
 
-      if (file_manager->IsPrefixOpened("file:///media"))
+      if (file_manager->IsDeviceOpened())
         ++minimum_windows;
 
       if (minimum_windows > 0)
       {
-        if (GetWindows(WindowFilter::USER_VISIBLE|WindowFilter::MAPPED).size() == minimum_windows)
+        if (file_manager->OpenedLocations().size() == minimum_windows &&
+            GetWindows(WindowFilter::USER_VISIBLE|WindowFilter::MAPPED).size() == minimum_windows)
+        {
           user_visible = false;
+        }
       }
     }
   }
