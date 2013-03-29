@@ -1,3 +1,19 @@
+unity (6.12.0daily13.03.29-0ubuntu1) raring; urgency=low
+
+  [ Marco Trevisan (Treviño) ]
+  * Empty trash dialog sometimes dont have the focus (LP: #807808)
+  * Launcher - Trash and Storage device icons in the Launcher should be
+    illuminated if folder is being viewed in Nautilus (LP: #1063830)
+
+  [ MC Return ]
+  * CompWindow::syncPosition () function is deprecated and was removed
+    in lp:compiz, r3639 (LP: #1161285)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3257
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 29 Mar 2013 07:24:06 +0000
+
 unity (6.12.0daily13.03.25.1-0ubuntu1) raring; urgency=low
 
   [ Martin Pitt ]
