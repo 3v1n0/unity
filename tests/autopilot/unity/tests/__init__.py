@@ -218,3 +218,9 @@ class UnityTestCase(AutopilotTestCase):
             return self.start_app_window('Window Mocker', [file_path])
         else:
             return self.start_app_window('Window Mocker')
+
+    def close_all_windows(self, application_name):
+        for w in self.get_open_windows_by_application(application_name):
+            w.close()
+
+        self.assertThat(lambda: len(self.get_open_windows_by_application(application_name)), Eventually(Equals(0)))
