@@ -3076,7 +3076,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       PluginAdapter::Default().SetCoverageAreaBeforeAutomaximize(optionGetAutomaximizeValue() / 100.0f);
       break;
     case UnityshellOptions::DashTapDuration:
-      launcher_controller_->UpdateSuperTapDuration(optionGetDashTapDuration());
+      launcher_options->super_tap_duration = optionGetDashTapDuration();
       break;
     case UnityshellOptions::AltTabTimeout:
       switcher_controller_->SetDetailOnTimeout(optionGetAltTabTimeout());
@@ -3216,7 +3216,6 @@ void UnityScreen::initLauncher()
   auto xdnd_manager = std::make_shared<XdndManagerImp>(xdnd_start_stop_notifier, xdnd_collection_window);
 
   launcher_controller_ = std::make_shared<launcher::Controller>(xdnd_manager);
-  launcher_controller_->UpdateSuperTapDuration(optionGetDashTapDuration());
   AddChild(launcher_controller_.get());
 
   switcher_controller_ = std::make_shared<switcher::Controller>();
