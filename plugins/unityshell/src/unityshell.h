@@ -100,6 +100,7 @@ public:
   void PaintPanelShadow(CompRegion const& clip);
   void setPanelShadowMatrix(const GLMatrix& matrix);
 
+  void updateBlurDamage();
   void damageCutoff();
   void preparePaint (int ms);
   void paintFboForOutput (CompOutput *output);
