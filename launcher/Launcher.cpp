@@ -2593,6 +2593,9 @@ void Launcher::ProcessDndLeave()
 #ifdef USE_X11
   SetStateMouseOverLauncher(false);
 
+  if (GetActionState() == ACTION_DRAG_EXTERNAL)
+    DndReset();
+
   DndHoveredIconReset();
 #endif
 }
