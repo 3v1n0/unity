@@ -49,7 +49,6 @@ protected:
 
 private:
   void ActivateLauncherIcon(ActionArg arg);
-  bool IsOpened() const;
   MenuItemsVector GetMenus();
 
   static void UpdateTrashIconCb(GObject* source, GAsyncResult* res, gpointer data);
