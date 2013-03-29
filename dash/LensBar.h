@@ -61,6 +61,8 @@ public:
   void Activate(std::string id);
   void ActivateNext();
   void ActivatePrevious();
+  
+  std::string GetActiveLensId() const;
 
   sigc::signal<void, std::string const&> lens_activated;
 
@@ -81,7 +83,6 @@ private:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
-  std::string GetActiveLensId() const;
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
 
   LensIcons icons_;

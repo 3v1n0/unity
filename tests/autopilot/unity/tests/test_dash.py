@@ -75,6 +75,14 @@ class DashRevealTests(DashTestCase):
         self.unity.dash.reveal_command_lens()
         self.assertThat(self.unity.dash.active_lens, Eventually(Equals('commands.lens')))
 
+    def test_can_go_from_command_lens_to_dash(self):
+        """We must be able to go from the command lens to the dash (home lens)."""
+        self.unity.dash.reveal_command_lens()
+
+        # Since the dash is visible we can't use ensure_visible().
+        self.keyboard.press_and_release("Super")
+        self.assertThat(self.unity.dash.active_lens, Eventually(Equals('home.lens')))
+
     def test_alt_f4_close_dash(self):
         """Dash must close on alt+F4."""
         self.unity.dash.ensure_visible()
