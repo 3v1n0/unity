@@ -360,7 +360,7 @@ private:
   bool       ignore_redraw_request_;
   bool       dirty_helpers_on_this_frame_;
 
-  unsigned int directly_drawable_buffer_age_;
+  unsigned int back_buffer_age_;
 
   friend class UnityWindow;
 };
