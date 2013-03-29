@@ -774,10 +774,8 @@ void UnityScreen::paintDisplay()
 #ifndef USE_GLES
   glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING_EXT, &old_read_binding);
   glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING_EXT, &current_draw_binding);
-  (*GL::bindFramebuffer) (GL_READ_FRAMEBUFFER_BINDING_EXT, current_draw_binding);
-#else
-  glGetIntegerv(GL_FRAMEBUFFER_BINDING, &current_draw_binding);
-  (*GL::bindFramebuffer) (GL_FRAMEBUFFER, current_draw_binding);
+  if (old_read_binding != current_draw_binding)
+    (*GL::bindFramebuffer) (GL_READ_FRAMEBUFFER_BINDING_EXT, current_draw_binding);
 #endif
 
   /* If we have dirty helpers re-copy the backbuffer
@@ -1367,6 +1365,8 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
     compizDamageNux(CompRegionRef(output->region()));
     ignore_redraw_request_ = false;
 
+    /* Fetch all the presentation list geometries - this will have the side
+     * effect of clearing any built-up damage state */
     std::vector<nux::Geometry> dirty = wt->GetPresentationListGeometries();
   }
 
@@ -1374,9 +1374,7 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
   PaintPanelShadow(region);
 }
 
-
-
-void UnityScreen::damageCutoff()
+void UnityScreen::updateBlurDamage()
 {
   /* If there are enabled helpers, we want to apply damage
    * based on how old our tracking fbo is since we may need
@@ -1390,7 +1388,36 @@ void UnityScreen::damageCutoff()
    * of geometry clipping. That damage will feed back to us on the next frame.
    */
   if (BackgroundEffectHelper::HasEnabledHelpers())
+  {
     cScreen->applyDamageForFrameAge (back_buffer_age_);
+
+    /*
+     * Prioritise user interaction over active blur updates. So the general
+     * slowness of the active blur doesn't affect the UI interaction performance.
+     *
+     * Also, BackgroundEffectHelper::ProcessDamage() is causing a feedback loop
+     * while the dash is open. Calling it results in the NEXT frame (and the
+     * current one?) to get some damage. This GetDrawList().empty() check avoids
+     * that feedback loop and allows us to idle correctly.
+     *
+     * We are doing damage processing for the blurs here, as this represents
+     * the most up to date compiz damage under the nux windows.
+     */
+    if (wt->GetDrawList().empty())
+    {
+      CompRect::vector const& rects(buffered_compiz_damage_this_frame_.rects());
+      for (CompRect const& r : rects)
+      {
+        nux::Geometry geo(r.x(), r.y(), r.width(), r.height());
+        BackgroundEffectHelper::ProcessDamage(geo);
+      }
+    }
+  }
+}
+
+void UnityScreen::damageCutoff()
+{
+  updateBlurDamage();
 
   /* Determine nux region damage last */
   cScreen->damageCutoff();
@@ -1493,25 +1520,6 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
 {
   if (!launcher_controller_)
     return;
-
-  /*
-   * Prioritise user interaction over active blur updates. So the general
-   * slowness of the active blur doesn't affect the UI interaction performance.
-   *
-   * Also, BackgroundEffectHelper::ProcessDamage() is causing a feedback loop
-   * while the dash is open. Calling it results in the NEXT frame (and the
-   * current one?) to get some damage. This GetDrawList().empty() check avoids
-   * that feedback loop and allows us to idle correctly.
-   */
-  if (wt->GetDrawList().empty())
-  {
-    CompRect::vector const& rects(damage.rects());
-    for (CompRect const& r : rects)
-    {
-      nux::Geometry geo(r.x(), r.y(), r.width(), r.height());
-      BackgroundEffectHelper::ProcessDamage(geo);
-    }
-  }
 
   /* Ask nux to present anything in our damage region
    *
