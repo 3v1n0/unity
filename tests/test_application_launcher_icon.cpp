@@ -50,6 +50,8 @@ struct MockApplicationLauncherIcon : ApplicationLauncherIcon
   {}
 
   MOCK_METHOD1(ActivateLauncherIcon, void(ActionArg));
+
+  using ApplicationLauncherIcon::IsFileManager;
 };
 
 MATCHER_P(AreArgsEqual, a, "")
@@ -485,6 +487,25 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemForAppName)
 
   Utils::WaitUntilMSec(method_called);
   EXPECT_TRUE(method_called);
+}
+
+TEST_F(TestApplicationLauncherIcon, IsFileManager)
+{
+  EXPECT_FALSE(usc_icon->IsFileManager());
+  EXPECT_FALSE(empty_icon->IsFileManager());
+  EXPECT_FALSE(mock_icon->IsFileManager());
+
+  auto app = std::make_shared<MockApplication>("/any/path/nautilus.desktop", "Nautilus");
+  nux::ObjectPtr<MockApplicationLauncherIcon> icon(new NiceMock<MockApplicationLauncherIcon>(app));
+  EXPECT_TRUE(icon->IsFileManager());
+
+  app = std::make_shared<MockApplication>("/any/path/nautilus-folder-handler.desktop", "Nautilus");
+  icon = new NiceMock<MockApplicationLauncherIcon>(app);
+  EXPECT_TRUE(icon->IsFileManager());
+
+  app = std::make_shared<MockApplication>("/any/path/nautilus-home.desktop", "Nautilus");
+  icon = new NiceMock<MockApplicationLauncherIcon>(app);
+  EXPECT_TRUE(icon->IsFileManager());
 }
 
 }
