@@ -20,6 +20,7 @@
 
 #include "GnomeFileManager.h"
 #include <NuxCore/Logger.h>
+#include <UnityCore/DesktopUtilities.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibDBusProxy.h>
 #include <gdk/gdk.h>
@@ -33,6 +34,8 @@ namespace
 DECLARE_LOGGER(logger, "unity.filemanager.gnome");
 
 const std::string TRASH_URI = "trash:";
+const std::string TRASH_PATH = "file://" + DesktopUtilities::GetUserDataDirectory() + "/Trash/files";
+const std::string DEVICES_PREFIX = "file:///media/" + std::string(g_get_user_name());
 }
 
 struct GnomeFileManager::Impl
@@ -70,15 +73,20 @@ struct GnomeFileManager::Impl
     parent_->locations_changed.emit();
   }
 
-  std::string GetOpenedPrefix(std::string const& uri)
+  std::string GetOpenedPrefix(std::string const& uri, bool allow_equal = true)
   {
     glib::Object<GFile> uri_file(g_file_new_for_uri(uri.c_str()));
 
     for (auto const& loc : opened_locations_)
     {
+      bool equal = false;
+
       glib::Object<GFile> loc_file(g_file_new_for_uri(loc.c_str()));
 
-      if (g_file_equal(loc_file, uri_file) || g_file_has_prefix(loc_file, uri_file))
+      if (allow_equal && g_file_equal(loc_file, uri_file))
+        equal = true;
+
+      if (equal || g_file_has_prefix(loc_file, uri_file))
         return loc;
     }
 
@@ -135,6 +143,18 @@ void GnomeFileManager::OpenActiveChild(std::string const& uri, unsigned long lon
   Open(opened.empty() ? uri : opened, timestamp);
 }
 
+void GnomeFileManager::OpenTrash(unsigned long long timestamp)
+{
+  if (IsPrefixOpened(TRASH_PATH))
+  {
+    OpenActiveChild(TRASH_PATH, timestamp);
+  }
+  else
+  {
+    OpenActiveChild(TRASH_URI, timestamp);
+  }
+}
+
 void GnomeFileManager::Activate(unsigned long long timestamp)
 {
   glib::Cancellable cancellable;
@@ -189,5 +209,16 @@ bool GnomeFileManager::IsPrefixOpened(std::string const& uri) const
 {
   return !impl_->GetOpenedPrefix(uri).empty();
 }
+
+bool GnomeFileManager::IsTrashOpened() const
+{
+  return (IsPrefixOpened(TRASH_URI) || IsPrefixOpened(TRASH_PATH));
+}
+
+bool GnomeFileManager::IsDeviceOpened() const
+{
+  return !impl_->GetOpenedPrefix(DEVICES_PREFIX, false).empty();
+}
+
 
 }
