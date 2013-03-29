@@ -34,9 +34,12 @@ public:
 
   void Open(std::string const& uri, unsigned long long timestamp);
   void OpenActiveChild(std::string const& uri, unsigned long long timestamp);
+  void OpenTrash(unsigned long long timestamp);
   void EmptyTrash(unsigned long long timestamp);
   std::vector<std::string> OpenedLocations() const;
   bool IsPrefixOpened(std::string const& uri) const;
+  bool IsTrashOpened() const;
+  bool IsDeviceOpened() const;
 
 private:
   GnomeFileManager();

@@ -30,8 +30,6 @@ using namespace testing;
 namespace
 {
 
-const std::string FALLBACK_TRASH_URI = "file://" + DesktopUtilities::GetUserDataDirectory() + "/Trash/files";
-
 struct TestTrashLauncherIcon : Test
 {
   TestTrashLauncherIcon()
@@ -51,15 +49,7 @@ TEST_F(TestTrashLauncherIcon, Position)
 TEST_F(TestTrashLauncherIcon, Activate)
 {
   unsigned long long time = g_random_int();
-  EXPECT_CALL(*fm_, OpenActiveChild("trash:", time));
-  icon.Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
-}
-
-TEST_F(TestTrashLauncherIcon, ActivateFallback)
-{
-  ON_CALL(*fm_, IsPrefixOpened(FALLBACK_TRASH_URI)).WillByDefault(Return(true));
-  unsigned long long time = g_random_int();
-  EXPECT_CALL(*fm_, OpenActiveChild(FALLBACK_TRASH_URI, time));
+  EXPECT_CALL(*fm_, OpenTrash(time));
   icon.Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
 }
 
@@ -83,26 +73,11 @@ TEST_F(TestTrashLauncherIcon, QuicklistEmptyTrash)
 
 TEST_F(TestTrashLauncherIcon, RunningState)
 {
-  EXPECT_CALL(*fm_, IsPrefixOpened("trash:")).WillRepeatedly(Return(true));
-  EXPECT_CALL(*fm_, IsPrefixOpened(FALLBACK_TRASH_URI)).WillRepeatedly(Return(false));
+  EXPECT_CALL(*fm_, IsTrashOpened()).WillRepeatedly(Return(true));
   fm_->locations_changed.emit();
   EXPECT_TRUE(icon.GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
 
-  EXPECT_CALL(*fm_, IsPrefixOpened("trash:")).WillRepeatedly(Return(false));
-  EXPECT_CALL(*fm_, IsPrefixOpened(FALLBACK_TRASH_URI)).WillRepeatedly(Return(false));
-  fm_->locations_changed.emit();
-  EXPECT_FALSE(icon.GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
-}
-
-TEST_F(TestTrashLauncherIcon, RunningStateFallBack)
-{
-  EXPECT_CALL(*fm_, IsPrefixOpened("trash:")).WillRepeatedly(Return(false));
-  EXPECT_CALL(*fm_, IsPrefixOpened(FALLBACK_TRASH_URI)).WillRepeatedly(Return(true));
-  fm_->locations_changed.emit();
-  EXPECT_TRUE(icon.GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
-
-  EXPECT_CALL(*fm_, IsPrefixOpened("trash:")).WillRepeatedly(Return(false));
-  EXPECT_CALL(*fm_, IsPrefixOpened(FALLBACK_TRASH_URI)).WillRepeatedly(Return(false));
+  EXPECT_CALL(*fm_, IsTrashOpened()).WillRepeatedly(Return(false));
   fm_->locations_changed.emit();
   EXPECT_FALSE(icon.GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
 }

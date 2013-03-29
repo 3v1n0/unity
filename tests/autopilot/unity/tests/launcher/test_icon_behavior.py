@@ -150,6 +150,41 @@ class LauncherIconsTests(LauncherTestCase):
 
         self.assertThat(lambda: self.get_startup_notification_timestamp(calc_window), Eventually(Equals(calc_icon.startup_notification_timestamp)))
 
+    def test_trash_icon_refocus_opened_instance(self):
+        """Tests that when the trash is opened, clicking on the icon re-focus the trash again"""
+        self.register_known_application("Nautilus", "nautilus.desktop", "nautilus")
+        self.addCleanup(self.close_all_windows, "Nautilus")
+        self.addCleanup(self.close_all_app, "Calculator")
+        self.close_all_windows("Nautilus")
+
+        trash_icon = self.unity.launcher.model.get_trash_icon()
+        self.launcher_instance.click_launcher_icon(trash_icon)
+        self.assertThat(lambda: len(self.get_open_windows_by_application("Nautilus")), Eventually(Equals(1)))
+        [trash_window] = self.get_open_windows_by_application("Nautilus")
+        self.assertThat(lambda: trash_window.is_focused, Eventually(Equals(True)))
+
+        calc_win = self.start_app_window("Calculator")
+        self.assertThat(lambda: calc_win.is_focused, Eventually(Equals(True)))
+        self.assertThat(lambda: trash_window.is_focused, Eventually(Equals(False)))
+
+        self.launcher_instance.click_launcher_icon(trash_icon)
+        self.assertThat(lambda: trash_window.is_focused, Eventually(Equals(True)))
+
+    def test_trash_open_does_not_prevent_nautilus_to_run(self):
+        """Tests that when the trash is opened, launching still opens a new window"""
+        self.register_known_application("Nautilus", "nautilus.desktop", "nautilus")
+        self.addCleanup(self.close_all_windows, "Nautilus")
+        self.close_all_windows("Nautilus")
+
+        trash_icon = self.unity.launcher.model.get_trash_icon()
+        self.launcher_instance.click_launcher_icon(trash_icon)
+        self.assertThat(lambda: len(self.get_open_windows_by_application("Nautilus")), Eventually(Equals(1)))
+
+        nautilus_app = self.get_app_instances("Nautilus")
+        nautilus_icon = self.unity.launcher.model.get_icon(desktop_id="nautilus.desktop")
+        self.launcher_instance.click_launcher_icon(nautilus_icon)
+        self.assertThat(lambda: len(self.get_open_windows_by_application("Nautilus")), Eventually(Equals(2)))
+
     def test_super_number_shortcut_focuses_new_windows(self):
         """Windows launched using super+number must have
         keyboard focus.
