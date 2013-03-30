@@ -54,6 +54,13 @@ public:
   void AboutToHide();
   
   /*
+   * Call this whenever the interface size changes
+   */
+  void UpdateBlurBackgroundSize (nux::Geometry const& content_geo,
+                                 nux::Geometry const& absolute_geo,
+                                 bool                 force_edges);
+
+  /*
    * Disables the blur, if you need it disabled. can not re-enable it.
    */
   void DisableBlur();
