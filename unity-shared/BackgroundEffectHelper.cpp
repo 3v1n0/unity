@@ -45,7 +45,6 @@ nux::Property<float> BackgroundEffectHelper::sigma_med (3.0f);
 nux::Property<float> BackgroundEffectHelper::sigma_low (1.0f);
 nux::Property<bool> BackgroundEffectHelper::updates_enabled (true);
 nux::Property<bool> BackgroundEffectHelper::detecting_occlusions (false);
-sigc::signal<void, nux::Geometry const&> BackgroundEffectHelper::blur_region_needs_update_;
 
 BackgroundEffectHelper::BackgroundEffectHelper()
 {
@@ -101,38 +100,6 @@ bool BackgroundEffectHelper::HasEnabledHelpers()
   return false;
 }
 
-void BackgroundEffectHelper::ExpandByRadius(nux::Geometry &geo)
-{
-  nux::GpuDevice* gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
-  int opengl_version = gpu_device->GetOpenGLMajorVersion();
-  int sigma = opengl_version >= 3 ? sigma_high : sigma_med;
-  int radius = 3 * sigma;
-
-  geo.x -= radius;
-  geo.y -= radius;
-  geo.width += 2 * radius;
-  geo.height += 2 * radius;
-}
-
-std::vector <nux::Geometry> BackgroundEffectHelper::GetBlurGeometries()
-{
-  std::vector <nux::Geometry> geometries;
-  for (BackgroundEffectHelper * bg_effect_helper : registered_list_)
-  {
-    if (bg_effect_helper->enabled)
-    {
-      /* Use the last requested region. The real region is clipped to the
-       * monitor geometry, but that is done at paint time */
-      nux::Geometry geo (bg_effect_helper->requested_blur_geometry_);
-
-      ExpandByRadius(geo);
-      geometries.push_back(geo);
-    }
-  }
-
-  return geometries;
-}
-
 bool BackgroundEffectHelper::HasDirtyHelpers()
 {
   for (BackgroundEffectHelper * bg_effect_helper : registered_list_)
@@ -160,18 +127,16 @@ void BackgroundEffectHelper::DirtyCache ()
   cache_dirty = true;
   if (owner)
     owner()->QueueDraw();
-
-  blur_region_needs_update_.emit(blur_geometry_);
 }
 
-nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(bool force_update)
+nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nux::Geometry const& geo, bool force_update)
 {
   bool should_update = force_update || cache_dirty;
 
   /* Static blur: only update when the size changed */
   if ((blur_type != BLUR_ACTIVE || !should_update)
       && blur_texture_.IsValid()
-      && (requested_blur_geometry_ == blur_geometry_))
+      && (geo == blur_geometry_))
   {
     return blur_texture_;
   }
@@ -181,7 +146,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(bo
   int monitor_width = BackgroundEffectHelper::monitor_rect_.width;
   int monitor_height = BackgroundEffectHelper::monitor_rect_.height;
 
-  nux::Geometry temp = requested_blur_geometry_;
+  nux::Geometry temp = geo;
   temp.OffsetPosition(-monitor_rect_.x, -monitor_rect_.y);
   blur_geometry_ =  nux::Geometry(0, 0, monitor_width, monitor_height).Intersect(temp);
 
@@ -361,14 +326,14 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(bo
   return blur_texture_;
 }
 
-nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetRegion(bool force_update)
+nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetRegion(nux::Geometry const& geo, bool force_update)
 {
   bool should_update = force_update || cache_dirty;
 
   /* Static blur: only update when the size changed */
   if ((!should_update)
       && blur_texture_.IsValid()
-      && (requested_blur_geometry_ == blur_geometry_))
+      && (geo == blur_geometry_))
   {
     return blur_texture_;
   }
@@ -378,7 +343,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetRegion(bool f
   int monitor_width = BackgroundEffectHelper::monitor_rect_.width;
   int monitor_height = BackgroundEffectHelper::monitor_rect_.height;
 
-  nux::Geometry temp = requested_blur_geometry_;
+  nux::Geometry temp = geo;
   temp.OffsetPosition(-monitor_rect_.x, -monitor_rect_.y);
 
   blur_geometry_ =  nux::Geometry(0, 0, monitor_width, monitor_height).Intersect(temp);
@@ -446,15 +411,3 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetRegion(bool f
   return blur_texture_;
 }
 
-void BackgroundEffectHelper::SetBackbufferRegion(const nux::Geometry &geo)
-{
-  if (requested_blur_geometry_ != geo)
-  {
-    requested_blur_geometry_ = geo;
-    DirtyCache();
-
-    nux::Geometry emit_geometry (geo);
-    ExpandByRadius(emit_geometry);
-    blur_region_needs_update_.emit(emit_geometry);
-  }
-}
