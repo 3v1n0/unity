@@ -1,4 +1,4 @@
-// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
+// -*- Mode: C++; indent-tabs-mode: nil; tab-width: 4 -*-
 /*
  * Copyright 2012-2013 Canonical Ltd.
  *

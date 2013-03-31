@@ -92,6 +92,7 @@ std::string ErrorPreview::GetName() const
 
 void ErrorPreview::OnActionActivated(ActionButton* button, std::string const& id)
 {
+  Preview::OnActionActivated(button, id);
 }
 
 void ErrorPreview::OnActionLinkActivated(ActionLink *link, std::string const& id)
@@ -233,7 +234,7 @@ void ErrorPreview::PreLayoutManagement()
 
   if(full_data_layout_) { full_data_layout_->SetMaximumWidth(width); }
   if(header_layout_) { header_layout_->SetMaximumWidth(width); }
-  if(intro_) { intro_->SetMaximumWidth(width - 30); }
+  if(intro_) { intro_->SetMaximumWidth(width - 40); }
   if(footer_layout_) { footer_layout_->SetMaximumWidth(width); }
 
   Preview::PreLayoutManagement();
