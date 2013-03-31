@@ -48,7 +48,7 @@ class SwitcherView : public ui::UnityWindowView
 public:
   typedef nux::ObjectPtr<SwitcherView> Ptr;
 
-  SwitcherView();
+  SwitcherView(nux::BaseWindow *parent);
 
   ui::LayoutWindow::Vector ExternalTargets();
 

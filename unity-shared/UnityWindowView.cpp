@@ -29,7 +29,8 @@ namespace ui {
 
 NUX_IMPLEMENT_OBJECT_TYPE(UnityWindowView);
 
-UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
+UnityWindowView::UnityWindowView(nux::BaseWindow *parent,
+                                 NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
   , style(UnityWindowStyle::Get())
   , closable(false)
@@ -42,12 +43,26 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
     if (bg_helper_.enabled() != e)
     {
       bg_helper_.enabled = e;
+      bg_helper_.SetBackbufferRegion(GetAbsoluteGeometry());
       return true;
     }
     return false;
   });
 
   live_background = false;
+
+  auto update_backbuffer_region = [this] (nux::Area*, nux::Geometry const& g) {
+    nux::Geometry const& geo_abs (GetAbsoluteGeometry());
+    nux::Geometry const& geo (GetGeometry());
+    nux::Geometry blur_geo (geo_abs.x, geo_abs.y, geo.width, geo.height);
+    bg_helper_.SetBackbufferRegion(blur_geo);
+  };
+
+  geometry_changed.connect(update_backbuffer_region);
+  if (parent)
+    parent->geometry_changed.connect(update_backbuffer_region);
+
+  update_backbuffer_region(this, GetAbsoluteGeometry());
 
   closable.changed.connect(sigc::mem_fun(this, &UnityWindowView::OnClosableChanged));
 }
@@ -189,7 +204,9 @@ nux::ObjectPtr<nux::InputArea> UnityWindowView::GetBoundingArea()
     bounding_area_ = new nux::InputArea();
     bounding_area_->SetParentObject(this);
     bounding_area_->SetGeometry(GetGeometry());
-    geometry_changed.connect([this] (nux::Area*, nux::Geometry const& g) { bounding_area_->SetGeometry(g); });
+    geometry_changed.connect([this] (nux::Area*, nux::Geometry const& g) {
+      bounding_area_->SetGeometry(g);
+    });
   }
 
   return bounding_area_;
@@ -213,11 +230,11 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (BackgroundEffectHelper::blur_type != BLUR_NONE)
   {
-    bg_texture_ = bg_helper_.GetBlurRegion(blur_geo);
+    bg_texture_ = bg_helper_.GetBlurRegion();
   }
   else
   {
-    bg_texture_ = bg_helper_.GetRegion(blur_geo);
+    bg_texture_ = bg_helper_.GetRegion();
   }
 
   if (bg_texture_.IsValid())

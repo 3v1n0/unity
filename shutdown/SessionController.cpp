@@ -137,7 +137,8 @@ nux::Point Controller::GetOffsetPerMonitor(int monitor)
 
 void Controller::ConstructView()
 {
-  view_ = View::Ptr(new View(manager_));
+  view_window_ = new nux::BaseWindow("SessionManager");
+  view_ = View::Ptr(new View(view_window_.GetPointer(), manager_));
   view_->background_color = bg_color_;
   debug::Introspectable::AddChild(view_.GetPointer());
 
@@ -146,7 +147,6 @@ void Controller::ConstructView()
   layout->SetHorizontalExternalMargin(0);
   layout->AddView(view_.GetPointer());
 
-  view_window_ = new nux::BaseWindow("SessionManager");
   view_window_->SetLayout(layout);
   view_window_->SetBackgroundColor(nux::color::Transparent);
   view_window_->SetWindowSizeMatchLayout(true);

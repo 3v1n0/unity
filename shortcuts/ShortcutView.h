@@ -44,7 +44,7 @@ public:
   typedef nux::ObjectPtr<View> Ptr;
 
   // Ctor
-  View();
+  View(nux::BaseWindow *parent);
 
   // Public methods
   void SetModel(Model::Ptr model);
