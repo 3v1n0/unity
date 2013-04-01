@@ -109,7 +109,7 @@ protected:
   // actions
   std::map<std::string, nux::ObjectPtr<nux::AbstractButton>> buttons_map_;
 
-  // lock texture
+  // warning texture
   nux::ObjectPtr<IconTexture> warning_texture_;
 
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
