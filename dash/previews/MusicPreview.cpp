@@ -229,6 +229,7 @@ void MusicPreview::SetupViews()
         warning_msg_->SetLineSpacing(10);
         warning_msg_->SetLines(-style.GetDescriptionLineCount());
         warning_msg_->SetMinimumHeight(50);
+        warning_msg_->SetMaximumWidth(300);
 
         actions_layout->AddView(warning_msg_.GetPointer(), 0, nux::MINOR_POSITION_CENTER);
 
