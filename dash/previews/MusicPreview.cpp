@@ -221,7 +221,16 @@ void MusicPreview::SetupViews()
       {
         // let the user know he needs to connect
         previews::Style& style = dash::previews::Style::Instance();
-	actions_layout = new  nux::HLayout();
+	actions_layout = new nux::HLayout();
+	nux::VLayout* icon_layout = new nux::VLayout();
+  	icon_layout->SetLeftAndRightPadding(10);
+
+        warning_texture_ = new IconTexture(style.GetWarningIcon(), style.GetPaymentLockWidth(),
+          style.GetPaymentLockHeight());
+        icon_layout->AddView(warning_texture_.GetPointer(), 0, nux::MINOR_POSITION_START,
+          nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
+        actions_layout->AddLayout(icon_layout, 0, nux::MINOR_POSITION_CENTER);
+
         warning_msg_ = new StaticCairoText(
                      no_credentials_message_, true,
                      NUX_TRACKER_LOCATION);
@@ -232,11 +241,6 @@ void MusicPreview::SetupViews()
         warning_msg_->SetMaximumWidth(300);
 
         actions_layout->AddView(warning_msg_.GetPointer(), 0, nux::MINOR_POSITION_CENTER);
-
-        warning_texture_ = new IconTexture(style.GetWarningIcon(), style.GetPaymentLockWidth(),
-          style.GetPaymentLockHeight());
-        actions_layout->AddView(warning_texture_.GetPointer(), 0, nux::MINOR_POSITION_START,
-          nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
 
       }
       

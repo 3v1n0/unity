@@ -176,8 +176,11 @@ nux::Layout* ErrorPreview::GetPrice()
 nux::Layout* ErrorPreview::GetBody()
 {
   previews::Style& style = dash::previews::Style::Instance();
-  nux::VLayout *body_layout = new  nux::VLayout();
+  nux::HLayout *body_layout = new  nux::HLayout();
   nux::HLayout *intro_layout = new  nux::HLayout();
+  nux::HLayout *icon_layout = new  nux::HLayout();
+
+  icon_layout->SetTopAndBottomPadding(90);
   intro_layout->SetTopAndBottomPadding(75);
   intro_layout->SetSpaceBetweenChildren(5);
 
@@ -193,9 +196,10 @@ nux::Layout* ErrorPreview::GetBody()
 
   warning_texture_ = new IconTexture(style.GetWarningIcon(), style.GetPaymentLockWidth(),
           style.GetPaymentLockHeight());
-  intro_layout->AddView(warning_texture_.GetPointer(), 0, nux::MINOR_POSITION_START,
+  icon_layout->AddView(warning_texture_.GetPointer(), 0, nux::MINOR_POSITION_START,
           nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
 
+  body_layout->AddLayout(icon_layout, 1);
   body_layout->AddLayout(intro_layout, 1);
 
   return body_layout;
