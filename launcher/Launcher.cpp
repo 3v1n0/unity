@@ -2593,9 +2593,6 @@ void Launcher::ProcessDndLeave()
 #ifdef USE_X11
   SetStateMouseOverLauncher(false);
 
-  if (_dnd_data.Uris().empty())
-    SaturateIcons();
-
   DndHoveredIconReset();
 #endif
 }
@@ -2620,33 +2617,26 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
       break;
     }
 
-    if (_dnd_data.Uris().empty())
+    // see if the launcher wants this one
+    auto const& uris = _dnd_data.Uris();
+    if (std::find_if(uris.begin(), uris.end(), [this] (std::string const& uri)
+                     {return DndIsSpecialRequest(uri);}) != uris.end())
     {
-      DesaturateIcons();
+      _steal_drag = true;
     }
-    else
+
+    // only set hover once we know our first x/y
+    SetActionState(ACTION_DRAG_EXTERNAL);
+    SetStateMouseOverLauncher(true);
+
+    if (!_steal_drag && !_dnd_data.Uris().empty())
     {
-      // see if the launcher wants this one
-      auto const& uris = _dnd_data.Uris();
-      if (std::find_if(uris.begin(), uris.end(), [this] (std::string const& uri)
-                       {return DndIsSpecialRequest(uri);}) != uris.end())
+      for (auto const& it : *_model)
       {
-        _steal_drag = true;
-      }
-
-      // only set hover once we know our first x/y
-      SetActionState(ACTION_DRAG_EXTERNAL);
-      SetStateMouseOverLauncher(true);
-
-      if (!_steal_drag)
-      {
-        for (auto const& it : *_model)
-        {
-          if (it->ShouldHighlightOnDrag(_dnd_data))
-            it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, false);
-          else
-            it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, true);
-        }
+        if (it->ShouldHighlightOnDrag(_dnd_data))
+          it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, false);
+        else
+          it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, true);
       }
     }
   }
