@@ -367,4 +367,13 @@ TEST_F(TestEdgeBarrierController, BarrierBreaksInYBreakZone)
   ProcessBarrierEvent(&owner, firstEvent);
 }
 
+TEST_F(TestEdgeBarrierController, BarrierReleaseIfNoSubscriberForMonitor)
+{
+  MockPointerBarrier owner(max_num_monitors);
+  auto firstEvent = std::make_shared<BarrierEvent>(0, 50, 1, 10);
+
+  EXPECT_CALL(owner, ReleaseBarrier(_)).Times(1);
+  ProcessBarrierEvent(&owner, firstEvent);
+}
+
 }
