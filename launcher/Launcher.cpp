@@ -2593,9 +2593,6 @@ void Launcher::ProcessDndLeave()
 #ifdef USE_X11
   SetStateMouseOverLauncher(false);
 
-  if (GetActionState() == ACTION_DRAG_EXTERNAL)
-    DndReset();
-
   DndHoveredIconReset();
 #endif
 }
@@ -2632,7 +2629,7 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     SetActionState(ACTION_DRAG_EXTERNAL);
     SetStateMouseOverLauncher(true);
 
-    if (!_steal_drag)
+    if (!_steal_drag && !_dnd_data.Uris().empty())
     {
       for (auto const& it : *_model)
       {
