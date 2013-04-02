@@ -30,6 +30,7 @@
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/RadioOptionFilter.h>
+#include <UnityCore/PaymentPreview.h>
 
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/KeyboardUtil.h"
@@ -1255,7 +1256,15 @@ void DashView::OnLensAdded(Lens::Ptr& lens)
   // Hook up to the new preview infrastructure
   lens->preview_ready.connect([&] (std::string const& uri, Preview::Ptr model)
   {
-    LOG_DEBUG(logger) << "Got preview for: " << uri;
+    // HACK: Atm we don't support well the fact that a preview can be sent from
+    // an ActionResponse and therefore transition does not work, this hack allows
+    // to set the navigation mode to ensure that we have a nice transition
+    if (dynamic_cast<PaymentPreview*>(model.get()) != NULL)
+    {
+      preview_state_machine_.left_results.Set(0);
+      preview_state_machine_.right_results.Set(0);
+      preview_navigation_mode_ = previews::Navigation::RIGHT;
+    }
     preview_state_machine_.ActivatePreview(model); // this does not immediately display a preview - we now wait.
   });
 }
