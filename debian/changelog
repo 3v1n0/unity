@@ -1,3 +1,9 @@
+unity (7.0.0-0ubuntu1) UNRELEASED; urgency=low
+
+  * Bumped released version to 7.0.0
+
+ -- Stephen M. Webb <stephen.webb@canonical.com>  Tue, 02 Apr 2013 12:51:28 -0400
+
 unity (6.12.0daily13.04.01-0ubuntu1) raring; urgency=low
 
   [ Marco Trevisan (Treviño) ]
