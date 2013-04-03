@@ -140,6 +140,14 @@ TEST_F(TestVolumeImp, TestIsOpenedSignal)
   EXPECT_TRUE(opened);
 }
 
+TEST_F(TestVolumeImp, TestFilemanagerSignalDisconnection)
+{
+  ASSERT_FALSE(file_manager_->locations_changed.empty());
+  volume_.reset();
+
+  EXPECT_TRUE(file_manager_->locations_changed.empty());
+}
+
 TEST_F(TestVolumeImp, TestEjectAndShowNotification)
 {
   g_mock_volume_set_can_eject(gvolume_, TRUE);
