@@ -153,7 +153,8 @@ TEST(TestIconLoader, TestGetOneIconManyTimes)
   CheckResults(results);
 }
 
-TEST(TestIconLoader, TestGetManyIcons)
+// Disabled until we have the new thread safe lp:fontconfig
+TEST(TestIconLoader, DISABLED_TestGetManyIcons)
 {
   std::vector<LoadResult> results;
   IconLoader& icon_loader = IconLoader::GetDefault();
