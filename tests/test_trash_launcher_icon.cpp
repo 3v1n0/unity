@@ -82,4 +82,15 @@ TEST_F(TestTrashLauncherIcon, RunningState)
   EXPECT_FALSE(icon.GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
 }
 
+TEST_F(TestTrashLauncherIcon, FilemanagerSignalDisconnection)
+{
+  auto file_manager = std::make_shared<NiceMock<MockFileManager>>();
+  {
+    TrashLauncherIcon trash_icon(file_manager);
+    ASSERT_FALSE(file_manager->locations_changed.empty());
+  }
+
+  EXPECT_TRUE(file_manager->locations_changed.empty());
+}
+
 }
