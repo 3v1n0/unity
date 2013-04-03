@@ -32,7 +32,7 @@ namespace launcher
 // Start private implementation
 //
 
-class VolumeImp::Impl
+class VolumeImp::Impl : public sigc::trackable
 {
 public:
   Impl(glib::Object<GVolume> const& volume,
@@ -54,15 +54,18 @@ public:
       parent_->removed.emit();
     });
 
-    file_manager_->locations_changed.connect([this] {
-      bool opened = file_manager_->IsPrefixOpened(GetUri());
+    file_manager_->locations_changed.connect(sigc::mem_fun(this, &Impl::OnLocationChanged));
+  }
 
-      if (opened_ != opened)
-      {
-        opened_ = opened;
-        parent_->opened.emit(opened_);
-      }
-    });
+  void OnLocationChanged()
+  {
+    bool opened = file_manager_->IsPrefixOpened(GetUri());
+
+    if (opened_ != opened)
+    {
+      opened_ = opened;
+      parent_->opened.emit(opened_);
+    }
   }
 
   bool CanBeEjected() const

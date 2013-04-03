@@ -49,6 +49,7 @@ protected:
 
 private:
   void ActivateLauncherIcon(ActionArg arg);
+  void OnOpenedLocationsChanged();
   MenuItemsVector GetMenus();
 
   static void UpdateTrashIconCb(GObject* source, GAsyncResult* res, gpointer data);

@@ -69,11 +69,14 @@ TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
     });
   }
 
-  file_manager_->locations_changed.connect([this] {
-    SetQuirk(Quirk::RUNNING, file_manager_->IsTrashOpened());
-  });
+  file_manager_->locations_changed.connect(sigc::mem_fun(this, &TrashLauncherIcon::OnOpenedLocationsChanged));
 
   UpdateTrashIcon();
+}
+
+void TrashLauncherIcon::OnOpenedLocationsChanged()
+{
+  SetQuirk(Quirk::RUNNING, file_manager_->IsTrashOpened());
 }
 
 AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()
