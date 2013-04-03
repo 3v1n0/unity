@@ -4,8 +4,10 @@
  alanbell@ubuntu.com
  Albert Astals <albert.astals@canonical.com>
  Albert Astals <albert.astals@canonical.com>, Christopher Lee <chris.lee@canonical.com>, Christopher Lee <veebers@gmail.com>
+ Albert Astals <albert.astals@canonical.com>, Timo Jyrinki <timo.jyrinki@canonical.com>, Brandon Schaefer <brandon.schaefer@canonical.com>, Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>, MC Return <mc.return@gmx.net>, Didier Roche <didier.roche@canonical.com>, Andrea Azzarone <azzaronea@gmail.com>
  Alejandro Piñeiro <apinheiro@igalia.com>
  Alejandro Piñeiro <apinheiro@igalia.com>, Andrea Azzarone <azzaronea@gmail.com>
+ Alexandre Abreu <alexandre.abreu@canonical.com>
  Alexandros Frantzis <alexandros.frantzis@linaro.org>
  Alexandros Frantzis <alexandros.frantzis@linaro.org>, Marc Ordinas i Llopis <marc.ordinasillopis@linaro.org>, Jay Taoko <jay.taoko@canonical.com>
  Alex Launi <alex.launi@canonical.com>
@@ -16,11 +18,14 @@
  Andrea Cimitan <andrea.cimitan@canonical.com>
  Andrey Logvinov <Andrey.Logvinov.81@gmail.com
  Aurélien Gâteau <aurelien.gateau@canonical.com>
+ Automatic PS uploader <ps-jenkins@lists.canonical.com>
  Benjamin Kerensa <bkerensa@ubuntu.com>
  Bilal Akhtar <bilalakhtar@ubuntu.com>
  Bilal Akhtar <bilalakhtar@ubuntu.com>, Thomi Richards <thomi.richards@canonical.com>
  Brandon Schaefer <brandon.schaefer@canonical.com>
  Brandon Schaefer <brandon.schaefer@canonical.com>, Brandon Schaefer <brandontschaefer@gmail.com>
+ Brandon Schaefer <brandon.schaefer@canonical.com>, MC Return <mc.return@gmx.net>
+ Brandon Schaefer <brandon.schaefer@canonical.com>, Nick Dedekind <nicholas.dedekind@gmail.com>
  Brandon Schaefer <brandontschaefer@gmail.com
  Brandon Schaefer <brandontschaefer@gmail.com>
  Brandon Schaefer <brandontschaefer@gmail.com, Brandon Schaefer <brandontschaefer@gmail.com>
@@ -28,23 +33,31 @@
  Brandon Schaefer <brandontschaefer@gmail.com>, Thomi Richards <thomi.richards@canonical.com>
  Brandon Schaefer <schbra02@evergreen.edu>
  Charles Kerr <charles.kerr@canonical.com>
+ Charles Kerr <charles.kerr@canonical.com>, Andrea Azzarone <azzaronea@gmail.com>
  Chase Douglas <chase.douglas@canonical.com>
  Chris Coulson <chris.coulson@canonical.com>
  Christopher James Halse Rogers <raof@ubuntu.com>
  Christopher Lee <chris.lee@canonical.com>
  Christopher Lee <veebers@gmail.com>
+ Christopher Townsend <christopher.townsend@canonical.com>
+ Chris Townsend <Christopher.Townsend@canonical.com>
  Daniel d'Andrada <daniel.dandrada@canonical.com>
  Daniel van Vugt <vanvugt@gmail.com>
  David Barth <david.barth@canonical.com>
  David Gomes <davidrafagomes@gmail.com>
  David Planella <david.planella@ubuntu.com>
  Didier Roche <didier.roche@canonical.com>
+ Didier Roche <didier.roche@canonical.com>, Sebastien Bacher <seb128@ubuntu.com>, Marco Trevisan (Treviño) <mail@3v1n0.net>, Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>, Didier Roche <didrocks@ubuntu.com>, Neil Jagdish Patel <neil.patel@canonical.com>
  Didier Roche <didrocks@ubuntu.com>
+ Eleni Maria Stea <elene.mst@gmail.com>
  foxoman <foxoman.u@gmail.com>
+ Francis Ginther <francis.ginther@canonical.com>
  Gabor Kelemen <kelemeng@ubuntu.com>
  Gary Lasker <gary.lasker@canonical.com>
  Gordon Allott <gord.allott@canonical.com>
  Henri De Veene <henri.deveene@gmail.com>
+ Iain Lane <iain.lane@canonical.com>
+ Jacob Edwards
  Jani Monoses <jani.monoses@canonical.com>
  Jani Monoses <jani@ubuntu.com>
  Jason Conti <jason.conti@gmail.com>
@@ -63,6 +76,7 @@
  Jay Taoko <jay.taoko@canonical.com>, Robert Carr <racarr@canonical.com>
  Jeremy Bicha <jbicha@ubuntu.com>
  jokerdino@bvm128.zdom.org
+ Jussi Pakkanen <jussi.pakkanen@canonical.com>
  Ken VanDine <ken.vandine@canonical.com>
  Ken VanDine <ken.vandine@canonical.com>, Nick Dedekind <nicholas.dedekind@gmail.com>
  Kevin DuBois <kevin.dubois@canonical.com>
@@ -72,6 +86,7 @@
  Lorenzo Mattei <lore.mattei@gmail.com>
  Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>
  Luke Yelavich <luke.yelavich@canonical.com>
+ Manuel de la Pena <manuel@canonical.com>
  Marco Biscaro <marcobiscaro2112@gmail.com>
  Marco Biscaro <marcobiscaro2112@gmail.com>, Rick Spencer <rick.spencer@canonical.com>
  Marco Mariani <dfly720@gmail.com>, Thomi Richards <thomi.richards@canonical.com>
@@ -81,13 +96,19 @@
  Marco Trevisan (Treviño) <mail@3v1n0.net>
  Marco Trevisan (Treviño) <mail@3v1n0.net>, 3v1n0 <mail@3v1n0.net>
  Marco Trevisan (Treviño) <mail@3v1n0.net>, Andrea Cimitan <andrea.cimitan@canonical.com>
+ Marco Trevisan (Treviño) <mail@3v1n0.net>, Brandon Schaefer <brandon.schaefer@canonical.com>
  Marco Trevisan (Treviño) <mail@3v1n0.net>, Brandon Schaefer <brandontschaefer@gmail.com>, Tim Penhey <tim.penhey@canonical.com>
+ Marco Trevisan (Treviño) <mail@3v1n0.net>, Lukas Vacek <lucas.vacek@gmail.com>
  Marco Trevisan (Treviño) <mail@3v1n0.net>, Michal Hruby <michal.mhr@gmail.com>
  Marco Trevisan (Treviño) <mail@3v1n0.net>, Thomi Richards <thomi.richards@canonical.com>
  Marius Gedminas <marius@gedmin.as>
  Martin Albisetti <argentina@gmail.com>
  Martin Mrazik <martin.mrazik@canonical.com>
  Martin Mrazik <mrazik@gmail.com>
+ Martin Pitt <martin.pitt@canonical.com>
+ Mathieu Trudel-Lapierre <mathieu.trudel-lapierre@canonical.com>
+ Matthias Alles
+ Maxim Ermilov <maxim.ermilov@canonical.com>
  MC Return <mc.return@gmx.net>
  Michael Rawson <michaelrawson76@gmail.com>
  Michael Terry <michael.terry@canonical.com>
@@ -104,10 +125,14 @@
  Nick Dedekind <nicholas.dedekind@gmail.com>, Michal Hruby <michal.mhr@gmail.com>
  Nick Dedekind <nick.dedekind@canonical.com>
  Nick Dedekind <nick.dedekind@canonical.com>, Christopher Lee <chris.lee@canonical.com>
+ Nicolas Delvaux <contact@nicolas-delvaux.org>
+ Nicolas d'Offay <nicolas.doffay@canonical.com>
+ Nicolas d'Offay <nicolas.doffay@canonical.com>, Nic d'Offay <nicolas.doffay@canonical.com>, Neil Jagdish Patel <neil.patel@canonical.com>
  Nico van der Walt <nico@kimburu.co.za>
  Oliver Sauder <os@esite.ch>
  Omer Akram <om26er@ubuntu.com>
  Omer Akram <omer.akram@canonical.com>
+ Paolo Rotolo <paolorotolo@ubuntu.com>
  Paolo Rotolo <paolorotolo@ubuntu-it.org>
  Paul Sladen <sladen@canonical.com>
  Paul Sladen <sladen@canonical.com>, Andrea Cimitan <andrea.cimitan@canonical.com>
@@ -115,10 +140,13 @@
  Rafał Cieślak <rafalcieslak256@gmail.com>
  Renato Araujo Oliveira Filho <renato.filho@canonical.com>
  Ricardo Mendoza <ricardo.mendoza@canonical.com>
+ Ricardo Salveti de Araujo <ricardo.salveti@canonical.com>
+ Robert Ancell <robert.ancell@canonical.com>
  Robert Carr <racarr@canonical.com>
  Robert Carr <racarr@canonical.com>, Ken VanDine <ken.vandine@canonical.com>
  Robert Carr <robert.carr@canonical.com>
  Rodrigo Moya <rodrigo.moya@canonical.com>
+ Romain Perier <rperier@ubuntu.com>
  Ryan Lortie <desrt@desrt.ca>
  Sam Spilsbury <sam.spilsbury@canonical.com>
  Sam Spilsbury <sam.spilsbury@canonical.com>, Daniel van Vugt <vanvugt@gmail.com>
@@ -128,6 +156,7 @@
  smspillaz <sam.spilsbury@canonical.com>
  smspillaz <sam.spilsbury@canonical.com>, Daniel van Vugt <vanvugt@gmail.com>
  smspillaz <sam.spilsbury@canonical.com>, Sam Spilsbury <sam.spilsbury@canonical.com>
+ Stephen M. Webb <stephen.webb@canonical.com>
  Sven Baars <svenb.linux@gmail.com>
  Tarmac
  Ted Gould <ted@gould.cx>
@@ -138,7 +167,9 @@
  Thomi Richards <thomi.richards@canonical.com>
  Thomi Richards <thomi.richards@canonical.com>, Albert Astals <albert.astals@canonical.com>
  Thomi Richards <thomi.richards@canonical.com>, Alex Launi <alex.launi@canonical.com>
+ Thomi Richards <thomi.richards@canonical.com>, Brandon Schaefer <brandon.schaefer@canonical.com>
  Thomi Richards <thomi.richards@canonical.com>, Brandon Schaefer <brandontschaefer@gmail.com>
+ Thomi Richards <thomi.richards@canonical.com>, Christopher Lee <chris.lee@canonical.com>
  Thomi Richards <thomi.richards@canonical.com>, Gordon Allott <gord.allott@canonical.com>
  Thomi Richards <thomi.richards@canonical.com>, Jason Smith <jason.smith@canonical.com>
  Thomi Richards <thomi.richards@canonical.com>, Miklos Juhasz <juhasz.miklos.1@gmail.com>
@@ -146,6 +177,7 @@
  Thomi Richards <thomi.richards@canonical.com>, Thomi Richards <thomir@gmail.com>
  Thomi Richards <thomi.richards@canonical.com>, Tim Penhey <tim.penhey@canonical.com>
  timo.jyrinki@canonical.com
+ Timo Jyrinki <timo.jyrinki@canonical.com>
  Tim Penhey <tim.penhey@canonical.com>
  Tim Penhey <tim.penhey@canonical.com>, Bowmore <bowmores@telia.com>
  Tim Penhey <tim.penhey@canonical.com>, Gordon Allott <gord.allott@canonical.com>
@@ -156,4 +188,5 @@
  Ugo Riboni <ugo.riboni@canonical.com>
  Unity Merger <unity.merger@gmail.com>
  Victor Eduardo <victormartinez79@gmail.com>
+ Xiao-Long Chen <chenxiaolong@cxl.epac.to>
  Zaid Yeganeh <zaid.yeganeh@gmail.com>
