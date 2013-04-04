@@ -1490,6 +1490,7 @@ void DashView::AddProperties(GVariantBuilder* builder)
   wrapper.add("right-border-width", style.GetDashRightTileWidth());
   wrapper.add("bottom-border-height", style.GetDashBottomTileHeight());
   wrapper.add("preview_displaying", preview_displaying_);
+  wrapper.add("preview_animation", animate_split_value_ * animate_preview_container_value_ * animate_preview_value_);
   wrapper.add("dash_maximized", style.always_maximised());
   wrapper.add("overlay_window_buttons_shown", overlay_window_buttons_->IsVisible());
 }
