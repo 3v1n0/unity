@@ -116,10 +116,7 @@ TEST_F(GestureBrokerTest, ThreeFingersTouchHitsCorrectWindow)
   ASSERT_EQ(0, target_mock->events_received.size());
 
   fake_event.type = nux::EVENT_GESTURE_UPDATE;
-  fake_event.delta.x += 10.0f;
-  fake_event.delta.y += 20.0f;
-  fake_event.focus.x += fake_event.delta.x;
-  fake_event.focus.y += fake_event.delta.y;
+  fake_event.touches.push_back(nux::TouchPoint(4, 132.0f, 142.0f));
   fake_event.is_construction_finished = true;
   gesture_broker.ProcessGestureUpdate(fake_event.ToGestureEvent());
 
