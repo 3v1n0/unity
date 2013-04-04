@@ -33,6 +33,9 @@ class DashTestCase(UnityTestCase):
         """Method to open the currently selected preview, if opened."""
         preview_fn = lambda: self.preview_container.current_preview
         self.assertThat(preview_fn, Eventually(NotEquals(None)))
+        self.assertThat(self.unity.dash.preview_animation, Eventually(Equals(1.0)))
+        self.assertThat(self.preview_container.animating, Eventually(Equals(False)))
+
         return preview_fn()
 
 
