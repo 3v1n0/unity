@@ -36,7 +36,6 @@ OverlayWindowButtons::OverlayWindowButtons()
   : nux::BaseWindow("OverlayWindowButtons")
   , window_buttons_(new WindowButtons())
 {
-  AddChild(window_buttons_.GetPointer());
   UpdateGeometry();
   SetBackgroundColor(nux::color::Transparent);
 }
@@ -86,15 +85,5 @@ void OverlayWindowButtons::Draw(nux::GraphicsEngine& gfx_context, bool force_dra
 {
   window_buttons_->ProcessDraw(gfx_context, true);
 }
-
-
-// Introspection
-std::string OverlayWindowButtons::GetName() const
-{
-  return "OverlayWindowButtons";
-}
-
-void OverlayWindowButtons::AddProperties(GVariantBuilder* builder)
-{}
 
 } // namespace unity

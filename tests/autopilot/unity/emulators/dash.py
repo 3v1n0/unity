@@ -13,8 +13,6 @@ from autopilot.emulators.X11 import Keyboard, Mouse
 from autopilot.keybindings import KeybindingsHelper
 from testtools.matchers import GreaterThan
 
-from unity.emulators.panel import WindowButtons
-
 from unity.emulators import UnityIntrospectionObject
 import logging
 import dbus
@@ -158,12 +156,6 @@ class DashController(UnityIntrospectionObject, KeybindingsHelper):
 class DashView(UnityIntrospectionObject):
     """The dash view."""
 
-    def __get_window_buttons(self):
-        """Return the overlay window buttons view."""
-        buttons = self.get_children_by_type(OverlayWindowButtons)
-        assert(len(buttons) == 1)
-        return buttons[0]
-
     def get_searchbar(self):
         """Get the search bar attached to this dash view."""
         return self.get_children_by_type(SearchBar)[0]
@@ -186,18 +178,6 @@ class DashView(UnityIntrospectionObject):
             return preview_container
         return None
 
-    @property
-    def window_buttons(self):
-        return self.__get_window_buttons().window_buttons()
-
-
-class OverlayWindowButtons(UnityIntrospectionObject):
-    """The Overlay window buttons class"""
-
-    def window_buttons(self):
-        buttons = self.get_children_by_type(WindowButtons)
-        assert(len(buttons) == 1)
-        return buttons[0]
 
 class SearchBar(UnityIntrospectionObject):
     """The search bar for the dash view."""
