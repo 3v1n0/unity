@@ -14,7 +14,7 @@
  * version 3 along with this program.  If not, see
  * <http://www.gnu.org/licenses/>
  *
- * Authored by: Andrea Azzarone <azzarone@gmail.com>
+ * Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
  *              Brandon Schaefer <brandon.schaefer@canonical.com>
  *              Marco Trevisan <marco.trevisan@canonical.com>
  */
@@ -101,6 +101,17 @@ struct TestApplicationLauncherIcon : Test
   nux::ObjectPtr<MockApplicationLauncherIcon> empty_icon;
   nux::ObjectPtr<MockApplicationLauncherIcon> mock_icon;
 };
+
+TEST_F(TestApplicationLauncherIcon, ApplicationSignalDisconnection)
+{
+  std::shared_ptr<MockApplication> app = std::make_shared<MockApplication>(USC_DESKTOP);
+  {
+    nux::ObjectPtr<MockApplicationLauncherIcon> icon(new NiceMock<MockApplicationLauncherIcon>(app));
+    EXPECT_FALSE(app->closed.empty());
+  }
+
+  EXPECT_TRUE(app->closed.empty());
+}
 
 TEST_F(TestApplicationLauncherIcon, Position)
 {

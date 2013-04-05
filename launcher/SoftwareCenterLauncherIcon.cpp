@@ -205,7 +205,7 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
       std::string new_desktop_path = GetActualDesktopFileAfterInstall();
 
       // exchange the temp Application with the real one
-      app_ = ApplicationManager::Default().GetApplicationForDesktopFile(new_desktop_path);
+      SetApplication(ApplicationManager::Default().GetApplicationForDesktopFile(new_desktop_path));
 
       UpdateDesktopFile();
       UpdateRemoteUri();
