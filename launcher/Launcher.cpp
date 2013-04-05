@@ -837,13 +837,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr const& icon, struct time
   // we dont need to show strays
   if (!icon->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING))
   {
-    if (icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT))
-    {
-      arg.running_arrow = true;
-      arg.window_indicators = 1;
-    }
-    else
-      arg.window_indicators = 0;
+    arg.window_indicators = 0;
   }
   else
   {
