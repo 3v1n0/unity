@@ -224,3 +224,7 @@ class UnityTestCase(AutopilotTestCase):
             w.close()
 
         self.assertThat(lambda: len(self.get_open_windows_by_application(application_name)), Eventually(Equals(0)))
+
+    def register_nautilus(self):
+        self.addCleanup(self.unregister_known_application, "Nautilus")
+        self.register_known_application("Nautilus", "nautilus.desktop", "nautilus")
