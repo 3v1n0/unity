@@ -28,7 +28,7 @@
 namespace unity
 {
 
-class OverlayWindowButtons : public nux::BaseWindow, public debug::Introspectable
+class OverlayWindowButtons : public nux::BaseWindow
 {
   NUX_DECLARE_OBJECT_TYPE(OverlayWindowButtons, nux::BaseWindow);
 public:
@@ -43,9 +43,6 @@ public:
 protected:
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
 
-  std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
-  
 private:
   void UpdateGeometry();
 
