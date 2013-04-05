@@ -152,7 +152,7 @@ class LauncherIconsTests(LauncherTestCase):
 
     def test_trash_icon_refocus_opened_instance(self):
         """Tests that when the trash is opened, clicking on the icon re-focus the trash again"""
-        self.register_known_application("Nautilus", "nautilus.desktop", "nautilus")
+        self.register_nautilus()
         self.addCleanup(self.close_all_windows, "Nautilus")
         self.addCleanup(self.close_all_app, "Calculator")
         self.close_all_windows("Nautilus")
@@ -172,7 +172,7 @@ class LauncherIconsTests(LauncherTestCase):
 
     def test_trash_open_does_not_prevent_nautilus_to_run(self):
         """Tests that when the trash is opened, launching still opens a new window"""
-        self.register_known_application("Nautilus", "nautilus.desktop", "nautilus")
+        self.register_nautilus()
         self.addCleanup(self.close_all_windows, "Nautilus")
         self.close_all_windows("Nautilus")
 
