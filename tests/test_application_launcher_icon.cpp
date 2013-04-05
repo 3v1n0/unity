@@ -418,6 +418,9 @@ TEST_F(TestApplicationLauncherIcon, WindowListMenusWithTwoWindows)
   ASSERT_NE(menu1_it, menus.end());
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu1_it, DBUSMENU_MENUITEM_PROP_ENABLED));
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu1_it, DBUSMENU_MENUITEM_PROP_VISIBLE));
+  ASSERT_STREQ(NULL, dbusmenu_menuitem_property_get(*menu1_it, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE));
+  EXPECT_EQ(dbusmenu_menuitem_property_get_int(*menu1_it, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE), 
+  	DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu1_it, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY));
   EXPECT_EQ(dbusmenu_menuitem_property_get_int(*menu1_it, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY), 300);
 
@@ -429,6 +432,9 @@ TEST_F(TestApplicationLauncherIcon, WindowListMenusWithTwoWindows)
   ASSERT_NE(menu2_it, menus.end());
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu2_it, DBUSMENU_MENUITEM_PROP_ENABLED));
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu2_it, DBUSMENU_MENUITEM_PROP_VISIBLE));
+  ASSERT_STREQ(DBUSMENU_MENUITEM_TOGGLE_RADIO, dbusmenu_menuitem_property_get(*menu2_it, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE));
+  EXPECT_EQ(dbusmenu_menuitem_property_get_int(*menu2_it, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE), 
+  	DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu2_it, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY));
   EXPECT_EQ(dbusmenu_menuitem_property_get_int(*menu2_it, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY), 300);
 
