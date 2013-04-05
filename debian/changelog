@@ -1,4 +1,4 @@
-unity (7.0.0-0ubuntu1) UNRELEASED; urgency=low
+unity (7.0.0daily13.04.05.2-0ubuntu1) raring; urgency=low
 
   * Revert r3266 "Don't close the dash when switching from the command lens 
     to the home lens.", it's breaking dash closing for individual lens,
@@ -8,7 +8,31 @@ unity (7.0.0-0ubuntu1) UNRELEASED; urgency=low
   * Bumped released version to 7.0.0
 
 
- -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 05 Apr 2013 11:46:59 +0200
+  [ Brandon Schaefer ]
+  * Invalid Dnd is not being ingored in the launcher. (LP: #1163473)
+  * Dash Overlay scrollbars should allow dragging, until the scrollbars
+    themselfs hit the top/end of the track. (LP: #1163616)
+  * [regession] Multi-monitor: Mousepointer hangs when passing between
+    monitors, although no Launcher is there. (LP: #1161726)
+  * The dash closes when trying to switch from Command lens to home lens
+    (LP: #1108956)
+
+  [ Chris Townsend ]
+  * Need to tweak the icon glow for urgent apps (LP: #1163944)
+
+  [ Andrea Azzarone ]
+  * Window management - grab icons appear when using touchpad (LP:
+    #1026712)
+
+  [ Marco Trevisan (Treviño) ]
+  * compiz crashed with SIGSEGV in
+    sigc::internal::slot_call0<unity::launcher::VolumeImp::Impl::Impl()
+    (LP: #1161916)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3279
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 05 Apr 2013 14:51:53 +0000
 
 unity (6.12.0daily13.04.01-0ubuntu1) raring; urgency=low
 
