@@ -811,22 +811,26 @@ void UnityScreen::paintDisplay()
 
 void UnityScreen::DrawTopPanelBackground()
 {
-  auto graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
 
   if (!graphics_engine->UsingGLSLCodePath() || !launcher_controller_->IsOverlayOpen() || !paint_panel_)
-   return;
+    return;
+
+  if (_last_output->id() != screen->currentOutputDev().id())
+    return;
 
   if (TopPanelBackgroundTextureNeedsUpdate())
     UpdateTopPanelBackgroundTexture();
 
   if (panel_texture_.IsValid())
   {
+    auto& graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
     graphics_engine->ResetModelViewMatrixStack();
     graphics_engine->Push2DTranslationModelViewMatrix(0.0f, 0.0f, 0.0f);
     graphics_engine->ResetProjectionMatrix();
     graphics_engine->SetOrthographicProjectionMatrix(screen->width (), screen->height());
 
     nux::TexCoordXForm texxform;
+    texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_CLAMP);
     int panel_height = panel_style_.panel_height;
     graphics_engine->QRP_GLSL_1Tex(0, 0, screen->width (), panel_height, panel_texture_, texxform, nux::color::White);
   }
@@ -842,7 +846,7 @@ void UnityScreen::UpdateTopPanelBackgroundTexture()
   auto &panel_style = panel::Style::Instance();
 
   panel_texture_.Release();
-  auto texture = panel_style.GetBackground(screen->width(), screen->height(), 1.0f);
+  auto texture = panel_style.GetBackground();
 
   if (texture)
     panel_texture_ = texture->GetDeviceTexture();
@@ -2599,17 +2603,15 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
 {
   if (uScreen->doShellRepaint && !uScreen->paint_panel_ && window->type() == CompWindowTypeNormalMask)
   {
-    guint32 id = window->id();
-    bool maximized = WindowManager::Default().IsWindowMaximized(id);
-    bool on_current = window->onCurrentDesktop();
-    bool override_redirect = window->overrideRedirect();
-    bool managed = window->managed();
-    CompPoint viewport = window->defaultViewport();
-    int output = window->outputDevice();
-
-    if (maximized && on_current && !override_redirect && managed && viewport == uScreen->screen->vp() && output == (int)uScreen->screen->currentOutputDev().id())
+    if ((window->state() & MAXIMIZE_STATE) && window->onCurrentDesktop() && !window->overrideRedirect() && window->managed())
     {
-      uScreen->paint_panel_ = true;
+      CompPoint const& viewport = window->defaultViewport();
+      unsigned output = window->outputDevice();
+
+      if (viewport == uScreen->screen->vp() && output == uScreen->screen->currentOutputDev().id())
+      {
+        uScreen->paint_panel_ = true;
+      }
     }
   }
 
