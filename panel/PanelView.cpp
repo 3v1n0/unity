@@ -25,7 +25,6 @@
 #include <Nux/WindowCompositor.h>
 
 #include <NuxGraphics/CairoGraphics.h>
-#include <NuxGraphics/ImageSurface.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 
@@ -35,6 +34,7 @@
 #include <glib.h>
 
 #include "unity-shared/PanelStyle.h"
+#include "unity-shared/TextureCache.h"
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/UBusMessages.h"
 #include <UnityCore/Variant.h>
@@ -128,9 +128,10 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   bg_effect_helper_.owner = this;
 
   //FIXME (gord)- replace with async loading
-  panel_sheen_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dash_sheen.png", -1, true));
-  bg_refine_tex_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/refine_gradient_panel.png", -1, true));
-  bg_refine_single_column_tex_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/refine_gradient_panel_single_column.png", -1, true));
+  TextureCache& cache = TextureCache::GetDefault();
+  panel_sheen_ = cache.FindTexture("dash_sheen.png");
+  bg_refine_tex_ = cache.FindTexture("refine_gradient_panel.png");
+  bg_refine_single_column_tex_ = cache.FindTexture("refine_gradient_panel_single_column.png");
 
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
