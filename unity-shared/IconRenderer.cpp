@@ -485,7 +485,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     colorify = nux::color::White;
     background_tile_colorify = nux::color::White;
     backlight_intensity = 0.95f;
-    glow_intensity = 1.3f;
+    glow_intensity = 1.0f;
     shadow_intensity = 0.0f;
 
     background = textures_->icon_selected_background[size];
