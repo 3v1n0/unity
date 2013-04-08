@@ -195,7 +195,7 @@ TEST(TestGLibVariant, GetInt32)
   EXPECT_EQ(v3.GetInt32(), 0);
 
   Variant v4;
-  EXPECT_EQ(v4.GetInt(), 0);
+  EXPECT_EQ(v4.GetInt32(), 0);
 }
 
 TEST(TestGLibVariant, GetUInt32)
