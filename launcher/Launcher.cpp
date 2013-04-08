@@ -198,12 +198,8 @@ Launcher::Launcher(MockableBaseWindow* parent,
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 
   TextureCache& cache = TextureCache::GetDefault();
-  TextureCache::CreateTextureCallback cb = [&](std::string const& name, int width, int height) {
-    return nux::CreateTexture2DFromFile((PKGDATADIR"/" + name + ".png").c_str(), -1, true);
-  };
-
-  launcher_sheen_ = cache.FindTexture("dash_sheen", 0, 0, cb);
-  launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect", 0, 0, cb);
+  launcher_sheen_ = cache.FindTexture("dash_sheen.png");
+  launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect.png");
 
   options.changed.connect(sigc::mem_fun(this, &Launcher::OnOptionsChanged));
   monitor.changed.connect(sigc::mem_fun(this, &Launcher::OnMonitorChanged));
