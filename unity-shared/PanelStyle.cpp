@@ -168,8 +168,11 @@ GtkStyleContext* Style::GetStyleContext()
   return _style_context;
 }
 
-BaseTexturePtr Style::GetBackground(int width, int height, float opacity)
+BaseTexturePtr Style::GetBackground()
 {
+  int width = 1;
+  int height = panel_height();
+
   nux::CairoGraphics context(CAIRO_FORMAT_ARGB32, width, height);
 
   // Use the internal context as we know it is good and shiny new.
@@ -178,7 +181,7 @@ BaseTexturePtr Style::GetBackground(int width, int height, float opacity)
   gtk_render_background(_style_context, cr, 0, 0, width, height);
   gtk_render_frame(_style_context, cr, 0, 0, width, height);
   cairo_pop_group_to_source(cr);
-  cairo_paint_with_alpha(cr, opacity);
+  cairo_paint(cr);
 
   return texture_ptr_from_cairo_graphics(context);
 }
