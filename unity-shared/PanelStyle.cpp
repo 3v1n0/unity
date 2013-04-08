@@ -34,6 +34,7 @@
 #include "PanelStyle.h"
 
 #include <UnityCore/GLibWrapper.h>
+#include "unity-shared/TextureCache.h"
 #include "unity-shared/UnitySettings.h"
 
 namespace unity
@@ -222,20 +223,30 @@ std::vector<std::string> Style::GetWindowButtonFileNames(WindowButtonType type, 
 
 BaseTexturePtr Style::GetWindowButton(WindowButtonType type, WindowState state)
 {
-  BaseTexturePtr texture;
+  auto texture_factory = [this, type, state] (std::string const&, int, int) {
+    nux::BaseTexture* texture = nullptr;
 
-  for (auto const& file : GetWindowButtonFileNames(type, state))
-  {
-    texture.Adopt(nux::CreateTexture2DFromFile(file.c_str(), -1, true));
+    for (auto const& file : GetWindowButtonFileNames(type, state))
+    {
+      texture = nux::CreateTexture2DFromFile(file.c_str(), -1, true);
 
-    if (texture)
-      break;
-  }
+      if (texture)
+        return texture;
+    }
 
-  if (!texture)
-    texture = GetFallbackWindowButton(type, state);
+    auto const& fallback = GetFallbackWindowButton(type, state);
+    texture = fallback.GetPointer();
+    texture->Reference();
 
-  return texture;
+    return texture;
+  };
+
+  auto& cache = TextureCache::GetDefault();
+  std::string texture_id = "window-button-";
+  texture_id += std::to_string(static_cast<int>(type));
+  texture_id += std::to_string(static_cast<int>(state));
+
+  return cache.FindTexture(texture_id, 0, 0, texture_factory);
 }
 
 BaseTexturePtr Style::GetFallbackWindowButton(WindowButtonType type,
