@@ -1,3 +1,19 @@
+unity (7.0.0daily13.04.08-0ubuntu1) raring; urgency=low
+
+  [ Tigran Gabrielyan ]
+  * [UIFe] Window list in right click context menu should indicate the
+    focused window (LP: #1152477)
+
+  [ Andrea Azzarone ]
+  * Launcher - When a app is automatically placed in the Launcher after
+    being installed from the Software Center, it should be in the 'non-
+    running' state (LP: #987727)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3283
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 08 Apr 2013 04:02:51 +0000
+
 unity (7.0.0daily13.04.05.2-0ubuntu1) raring; urgency=low
 
   * Revert r3266 "Don't close the dash when switching from the command lens 
