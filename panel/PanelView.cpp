@@ -513,10 +513,10 @@ PanelView::UpdateBackground()
         opacity = 1.0f;
     }
 
-    auto tex = panel::Style::Instance().GetBackground(geo.width, geo.height, opacity);
+    auto tex = panel::Style::Instance().GetBackground(1, geo.height, opacity);
     nux::TexCoordXForm texxform;
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-    texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+    texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_CLAMP);
 
     bg_layer_.reset(new nux::TextureLayer(tex->GetDeviceTexture(), texxform,
                                           nux::color::White, true, rop));
