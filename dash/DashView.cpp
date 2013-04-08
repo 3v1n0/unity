@@ -139,6 +139,8 @@ DashView::DashView(Lenses::Ptr const& lenses, ApplicationStarter::Ptr const& app
   SetupViews();
   SetupUBusConnections();
 
+  AddChild(overlay_window_buttons_.GetPointer());
+
   lenses_->lens_added.connect(sigc::mem_fun(this, &DashView::OnLensAdded));
   mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
   preview_state_machine_.PreviewActivated.connect(sigc::mem_fun(this, &DashView::BuildPreview));
