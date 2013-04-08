@@ -81,6 +81,7 @@ protected:
   void OnDndLeave();
   void OpenInstanceLauncherIcon(Time timestamp) override;
   void ToggleSticky();
+  bool IsFileManager();
 
   bool OnShouldHighlightOnDrag(DndData const& dnd_data);
   nux::DndAction OnQueryAcceptDrop(DndData const& dnd_data);
@@ -93,7 +94,6 @@ protected:
   bool HandlesSpread() { return true; }
   std::string GetName() const;
 
-protected:
   void UpdateDesktopFile();
   void UpdateRemoteUri();
   std::string _desktop_file;

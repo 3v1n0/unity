@@ -177,7 +177,7 @@ MOV result.color.a, color;                                    \n\
 END");
 
 const float edge_illumination_multiplier = 2.0f;
-const float glow_multiplier = 3.0f;
+const float glow_multiplier = 2.3f;
 } // anonymous namespace
 
 // The local namespace is purely for namespacing the file local variables below.
@@ -485,7 +485,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     colorify = nux::color::White;
     background_tile_colorify = nux::color::White;
     backlight_intensity = 0.95f;
-    glow_intensity = glow_intensity + 1.0f;
+    glow_intensity = 1.3f;
     shadow_intensity = 0.0f;
 
     background = textures_->icon_selected_background[size];
@@ -512,7 +512,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   {
     // 0.9f is BACKLIGHT_STRENGTH in Launcher.cpp
     backlight_intensity = (arg.keyboard_nav_hl) ? 0.95f : 0.9f;
-    glow_intensity = glow_intensity + ((arg.keyboard_nav_hl) ? 1.0f : 0.0f) ;
+    glow_intensity = (arg.keyboard_nav_hl) ? glow_intensity : 0.0f ;
   }
 
   // draw shadow

@@ -176,6 +176,9 @@ TEST(TestGLibVariant, GetString)
 
   Variant v3(g_variant_new("(si)", "!!!", G_MININT));
   EXPECT_EQ(v3.GetString(), "");
+
+  Variant v4;
+  EXPECT_EQ(v4.GetString(), "");
 }
 
 TEST(TestGLibVariant, GetInt32)
@@ -190,6 +193,9 @@ TEST(TestGLibVariant, GetInt32)
 
   Variant v3(g_variant_new("(is)", value, "fooostring"));
   EXPECT_EQ(v3.GetInt32(), 0);
+
+  Variant v4;
+  EXPECT_EQ(v4.GetInt(), 0);
 }
 
 TEST(TestGLibVariant, GetUInt32)
@@ -204,6 +210,9 @@ TEST(TestGLibVariant, GetUInt32)
 
   Variant v3(g_variant_new("(ui)", value, G_MAXINT));
   EXPECT_EQ(v3.GetUInt32(), 0);
+
+  Variant v4;
+  EXPECT_EQ(v4.GetUInt32(), 0);
 }
 
 TEST(TestGLibVariant, GetBool)
@@ -218,6 +227,9 @@ TEST(TestGLibVariant, GetBool)
 
   Variant v3(g_variant_new("(bs)", value, "fooostring"));
   EXPECT_EQ(v3.GetBool(), false);
+
+  Variant v4;
+  EXPECT_EQ(v4.GetBool(), false);
 }
 
 

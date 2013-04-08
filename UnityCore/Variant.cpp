@@ -78,6 +78,9 @@ int32_t Variant::GetInt32() const
 {  
   gint32 value = 0;
 
+  if (!variant_)
+    return static_cast<int>(value);
+
   if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_INT32))
   {
     value = g_variant_get_int32(variant_);
@@ -98,6 +101,9 @@ int32_t Variant::GetInt32() const
 uint32_t Variant::GetUInt32() const
 {
   guint32 value = 0;
+
+  if (!variant_)
+    return static_cast<unsigned>(value);
 
   if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_UINT32))
   {
@@ -160,6 +166,9 @@ uint64_t Variant::GetUInt64() const
 bool Variant::GetBool() const
 {
   gboolean value = FALSE;
+
+  if (!variant_)
+    return (value != FALSE);
 
   if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_BOOLEAN))
   {
