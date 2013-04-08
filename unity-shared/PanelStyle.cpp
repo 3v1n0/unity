@@ -139,7 +139,7 @@ void Style::Refresh()
   GdkRGBA rgba_text_color;
   glib::String theme_name;
   bool updated = false;
-  
+
   GtkSettings* settings = gtk_settings_get_default();
   g_object_get(settings, "gtk-theme-name", &theme_name, nullptr);
 
@@ -160,7 +160,10 @@ void Style::Refresh()
   }
 
   if (updated)
+  {
+    _bg_texture.Release();
     changed.emit();
+  }
 }
 
 GtkStyleContext* Style::GetStyleContext()
@@ -170,6 +173,9 @@ GtkStyleContext* Style::GetStyleContext()
 
 BaseTexturePtr Style::GetBackground()
 {
+  if (_bg_texture)
+    return _bg_texture;
+
   int width = 1;
   int height = panel_height();
 
@@ -183,7 +189,9 @@ BaseTexturePtr Style::GetBackground()
   cairo_pop_group_to_source(cr);
   cairo_paint(cr);
 
-  return texture_ptr_from_cairo_graphics(context);
+  _bg_texture = texture_ptr_from_cairo_graphics(context);
+
+  return _bg_texture;
 }
 
 /*!
