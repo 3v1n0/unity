@@ -189,7 +189,8 @@ void PanelView::OnBackgroundUpdate(GVariant *data)
   bg_color_.blue = blue;
   bg_color_.alpha = alpha;
 
-  ForceUpdateBackground();
+  if (overlay_is_open_)
+    ForceUpdateBackground();
 }
 
 void PanelView::OnOverlayHidden(GVariant* data)
@@ -268,7 +269,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(geo);
 
-  if ((overlay_is_open_ || (opacity_ != 1.0f && opacity_ != 0.0f)))
+  if (IsTransparent())
   {
     nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
     nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, geo.width, geo.height);
@@ -282,7 +283,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       bg_blur_texture_ = bg_effect_helper_.GetRegion(blur_geo);
     }
 
-    if (bg_blur_texture_.IsValid() && (overlay_is_open_ || opacity_ != 1.0f))
+    if (bg_blur_texture_.IsValid())
     {
       nux::TexCoordXForm texxform_blur_bg;
       texxform_blur_bg.flip_v_coord = true;
@@ -372,8 +373,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates().SetBlend(true);
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-  if (bg_blur_texture_.IsValid() &&
-      (overlay_is_open_ || (opacity_ != 1.0f && opacity_ != 0.0f)))
+  if (bg_blur_texture_.IsValid() && IsTransparent())
   {
     nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
     nux::TexCoordXForm texxform_blur_bg;
@@ -483,12 +483,9 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 void
 PanelView::UpdateBackground()
 {
-  nux::Geometry const& geo = GetGeometry();
-
-  if (!is_dirty_ && geo == last_geo_)
+  if (!is_dirty_)
     return;
 
-  last_geo_ = geo;
   is_dirty_ = false;
 
   nux::ROPConfig rop;
@@ -513,13 +510,13 @@ PanelView::UpdateBackground()
         opacity = 1.0f;
     }
 
-    auto tex = panel::Style::Instance().GetBackground(1, geo.height, opacity);
+    auto const& tex = panel::Style::Instance().GetBackground();
     nux::TexCoordXForm texxform;
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
     texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_CLAMP);
 
     bg_layer_.reset(new nux::TextureLayer(tex->GetDeviceTexture(), texxform,
-                                          nux::color::White, true, rop));
+                                          nux::color::White * opacity, true, rop));
   }
 }
 
@@ -527,12 +524,6 @@ void PanelView::ForceUpdateBackground()
 {
   is_dirty_ = true;
   UpdateBackground();
-
-  indicators_->QueueDraw();
-  tray_->QueueDraw();
-
-  if (!overlay_is_open_)
-    menu_view_->QueueDraw();
 
   QueueDraw();
 }
@@ -704,10 +695,15 @@ void PanelView::SetOpacity(float opacity)
   if (opacity_ == opacity)
     return;
 
-  opacity_ = opacity;
-  bg_effect_helper_.enabled = (opacity_ < 1.0f || overlay_is_open_);
+  opacity_ = (opacity <= 0.0f ? 0.0001f : opacity); // Not to get a black menu area
+  bg_effect_helper_.enabled = IsTransparent();
 
   ForceUpdateBackground();
+}
+
+bool PanelView::IsTransparent()
+{
+  return (opacity_ < 1.0f || overlay_is_open_);
 }
 
 void PanelView::SetMenuShowTimings(int fadein, int fadeout, int discovery,
