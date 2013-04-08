@@ -146,8 +146,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , last_scroll_event_(0)
   , hud_keypress_time_(0)
   , first_menu_keypress_time_(0)
-  , panel_texture_has_changed_(true)
-  , paint_panel_(false)
+  , paint_panel_under_dash_(false)
   , scale_just_activated_(false)
   , big_tick_(0)
   , screen_introspection_(screen)
@@ -705,8 +704,6 @@ UnityWindow::updateIconPos (int   &wx,
 
 void UnityScreen::OnPanelStyleChanged()
 {
-  panel_texture_has_changed_ = true;
-
   // Reload the windows themed textures
   UnityWindow::CleanupSharedTextures();
 
@@ -723,7 +720,7 @@ void UnityScreen::paintDisplay()
 {
   CompOutput *output = _last_output;
 
-  DrawTopPanelBackground();
+  DrawPanelUnderDash();
 
   auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
 
@@ -809,49 +806,29 @@ void UnityScreen::paintDisplay()
   didShellRepaint = true;
 }
 
-void UnityScreen::DrawTopPanelBackground()
+void UnityScreen::DrawPanelUnderDash()
 {
-
-  if (!graphics_engine->UsingGLSLCodePath() || !launcher_controller_->IsOverlayOpen() || !paint_panel_)
+  if (!paint_panel_under_dash_ || !launcher_controller_->IsOverlayOpen())
     return;
 
   if (_last_output->id() != screen->currentOutputDev().id())
     return;
 
-  if (TopPanelBackgroundTextureNeedsUpdate())
-    UpdateTopPanelBackgroundTexture();
+  auto graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
 
-  if (panel_texture_.IsValid())
-  {
-    auto& graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
-    graphics_engine->ResetModelViewMatrixStack();
-    graphics_engine->Push2DTranslationModelViewMatrix(0.0f, 0.0f, 0.0f);
-    graphics_engine->ResetProjectionMatrix();
-    graphics_engine->SetOrthographicProjectionMatrix(screen->width (), screen->height());
+  if (!graphics_engine->UsingGLSLCodePath())
+    return;
 
-    nux::TexCoordXForm texxform;
-    texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_CLAMP);
-    int panel_height = panel_style_.panel_height;
-    graphics_engine->QRP_GLSL_1Tex(0, 0, screen->width (), panel_height, panel_texture_, texxform, nux::color::White);
-  }
-}
+  graphics_engine->ResetModelViewMatrixStack();
+  graphics_engine->Push2DTranslationModelViewMatrix(0.0f, 0.0f, 0.0f);
+  graphics_engine->ResetProjectionMatrix();
+  graphics_engine->SetOrthographicProjectionMatrix(screen->width(), screen->height());
 
-bool UnityScreen::TopPanelBackgroundTextureNeedsUpdate() const
-{
-  return panel_texture_has_changed_ || !panel_texture_.IsValid();
-}
-
-void UnityScreen::UpdateTopPanelBackgroundTexture()
-{
-  auto &panel_style = panel::Style::Instance();
-
-  panel_texture_.Release();
-  auto texture = panel_style.GetBackground();
-
-  if (texture)
-    panel_texture_ = texture->GetDeviceTexture();
-
-  panel_texture_has_changed_ = false;
+  nux::TexCoordXForm texxform;
+  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_CLAMP);
+  int panel_height = panel_style_.panel_height;
+  auto const& texture = panel_style_.GetBackground()->GetDeviceTexture();
+  graphics_engine->QRP_GLSL_1Tex(0, 0, screen->width(), panel_height, texture, texxform, nux::color::White);
 }
 
 bool UnityScreen::forcePaintOnTop ()
@@ -1260,7 +1237,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 
   allowWindowPaint = true;
   _last_output = output;
-  paint_panel_ = false;
+  paint_panel_under_dash_ = false;
 
   // CompRegion has no clear() method. So this is the fastest alternative.
   fullscreenRegion = CompRegion();
@@ -2601,7 +2578,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
                          const CompRegion& region,
                          unsigned int mask)
 {
-  if (uScreen->doShellRepaint && !uScreen->paint_panel_ && window->type() == CompWindowTypeNormalMask)
+  if (uScreen->doShellRepaint && !uScreen->paint_panel_under_dash_ && window->type() == CompWindowTypeNormalMask)
   {
     if ((window->state() & MAXIMIZE_STATE) && window->onCurrentDesktop() && !window->overrideRedirect() && window->managed())
     {
@@ -2610,7 +2587,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
 
       if (viewport == uScreen->screen->vp() && output == uScreen->screen->currentOutputDev().id())
       {
-        uScreen->paint_panel_ = true;
+        uScreen->paint_panel_under_dash_ = true;
       }
     }
   }
