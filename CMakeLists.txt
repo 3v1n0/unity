@@ -8,11 +8,12 @@ include (cmake/pch.cmake)
 # Base bits
 #
 set (PROJECT_NAME "unity")
-set (UNITY_MAJOR 6)
-set (UNITY_MINOR 6)
+set (UNITY_MAJOR 7)
+set (UNITY_MINOR 0)
 set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "6.0")
+set (UNITY_COMPONENTS_VERSION "6")
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive")
 set (CMAKE_CXX_FLAGS_DEBUG "-g3")
@@ -100,7 +101,7 @@ add_custom_target (pre-distcheck
        && echo "• Generating AUTHORS"
        && bzr log --long --levels=0 | grep -e "^\\s*author:" -e "^\\s*committer:" | cut -d ":" -f 2 | sed -r -f AUTHOR-glue | sort -u > AUTHORS
        && echo "• Committing Release"
-       && bzr commit -m"Release ${UNITY_VERSION}" --unchanged
+       && bzr commit -m\"Release ${UNITY_VERSION}\" --unchanged
        && echo "• Tagging Release"
        && bzr tag ${UNITY_VERSION}
        && echo "• Running Distcheck"

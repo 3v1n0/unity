@@ -309,7 +309,7 @@ public:
   void    moveTransientsToRect(CompWindow* skip, CompRect rect, bool);
   void    moveParentToRect(CompWindow* requestor, CompRect rect, bool);
 
-  void      moveToRect(CompRect currentRect, bool sync);
+  void      moveToRect(CompRect currentRect);
 
   void    grabTransients(CompWindow* skip, int x, int y,
                          unsigned int state, unsigned int mask, bool);

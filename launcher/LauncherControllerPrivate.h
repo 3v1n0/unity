@@ -145,7 +145,6 @@ public:
   bool keynav_restore_window_;
   int launcher_key_press_time_;
   int last_dnd_monitor_;
-  int super_tap_duration_;
 
   glib::DBusServer dbus_server_;
   glib::SourceManager sources_;

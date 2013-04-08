@@ -1,3 +1,5 @@
+#include <Nux/Nux.h>
+#include <NuxCore/Logger.h>
 
 #include "test_service_scope.h"
 #include "test_service_model.h"
@@ -43,6 +45,13 @@ int main(int argc, char** argv)
   }
 
   auto loop = g_main_loop_new(NULL, FALSE);
+
+  nux::NuxInitialize(0);
+  // Slightly higher as we're more likely to test things we know will fail
+  nux::logging::configure_logging("<root>=error");
+
+  // but you can still change it if you're debugging ;)
+  nux::logging::configure_logging(::getenv("UNITY_TEST_LOG_SEVERITY"));
 
   glib::DBusServer controller("com.canonical.Unity.Test");
   controller.AddObjects(introspection_xml, "/com/canonical/unity/test/controller");

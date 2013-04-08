@@ -32,6 +32,7 @@
 #include "FavoriteStore.h"
 #include "Launcher.h"
 #include "MultiMonitor.h"
+#include "unity-shared/GnomeFileManager.h"
 #include "unity-shared/UBusMessages.h"
 
 #include <glib/gi18n-lib.h>
@@ -311,6 +312,28 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       if (any_on_monitor && arg.monitor >= 0 && active_monitor != arg.monitor)
         active = false;
     }
+
+    if (user_visible && IsSticky() && IsFileManager())
+    {
+      // See bug #753938
+      unsigned minimum_windows = 0;
+      auto const& file_manager = GnomeFileManager::Get();
+
+      if (file_manager->IsTrashOpened())
+        ++minimum_windows;
+
+      if (file_manager->IsDeviceOpened())
+        ++minimum_windows;
+
+      if (minimum_windows > 0)
+      {
+        if (file_manager->OpenedLocations().size() == minimum_windows &&
+            GetWindows(WindowFilter::USER_VISIBLE|WindowFilter::MAPPED).size() == minimum_windows)
+        {
+          user_visible = false;
+        }
+      }
+    }
   }
 
   /* Behaviour:
@@ -453,7 +476,7 @@ void ApplicationLauncherIcon::OnWindowMoved(guint32 moved_win)
 
 void ApplicationLauncherIcon::UpdateDesktopFile()
 {
-  std::string filename = app_->desktop_file();
+  std::string const& filename = app_->desktop_file();
 
   if (!filename.empty() && _desktop_file != filename)
   {
@@ -712,6 +735,8 @@ void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
   // We only add quicklist menu-items for windows if we have more than one window
   if (windows.size() < 2)
     return;
+   
+  Window active = WindowManager::Default().GetActiveWindow();
 
   // add menu items for all open windows
   for (auto const& w : windows)
@@ -733,6 +758,12 @@ void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
         wm.Activate(xid);
         wm.Raise(xid);
     });
+    
+    if (xid == active)
+    {
+      dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_RADIO);
+      dbusmenu_menuitem_property_set_int(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
+    }
 
     _menu_items_windows.push_back(menu_item);
   }
@@ -1114,12 +1145,18 @@ void ApplicationLauncherIcon::OnDndLeave()
   */
 }
 
+bool ApplicationLauncherIcon::IsFileManager()
+{
+  auto const& desktop_file = DesktopFile();
+
+  return boost::algorithm::ends_with(desktop_file, "nautilus.desktop") ||
+         boost::algorithm::ends_with(desktop_file, "nautilus-folder-handler.desktop") ||
+         boost::algorithm::ends_with(desktop_file, "nautilus-home.desktop");
+}
+
 bool ApplicationLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
 {
-  bool is_home_launcher = boost::algorithm::ends_with(DesktopFile(), "nautilus-home.desktop") ||
-                          boost::algorithm::ends_with(DesktopFile(), "nautilus.desktop");
-
-  if (is_home_launcher)
+  if (IsFileManager())
   {
     return true;
   }

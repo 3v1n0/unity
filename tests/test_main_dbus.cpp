@@ -8,6 +8,7 @@
 
 static bool wait_until_test_service_appears();
 static void tell_service_to_exit();
+static void signal_handler(int sig);
 
 static gboolean no_exit = FALSE;
 
@@ -35,6 +36,7 @@ int main(int argc, char** argv)
     return 1;
   }
   
+  signal(SIGINT, signal_handler);
   nux::NuxInitialize (0);
 
   g_setenv("XDG_DATA_HOME", BUILDDIR"/tests/data", TRUE);
@@ -102,4 +104,10 @@ static void tell_service_to_exit()
                               -1,
                               NULL, NULL);
   g_object_unref(connection);
+}
+
+static void signal_handler(int sig)
+{
+  tell_service_to_exit();
+  exit(0);
 }
