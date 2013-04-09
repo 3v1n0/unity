@@ -55,8 +55,9 @@ namespace unity
 
 NUX_IMPLEMENT_OBJECT_TYPE(PanelView);
 
-PanelView::PanelView(NUX_FILE_LINE_DECL)
+PanelView::PanelView(indicator::DBusIndicators::Ptr const& remote, NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
+  , remote_(remote)
   , is_dirty_(true)
   , opacity_maximized_toggle_(false)
   , needs_geo_sync_(false)
@@ -105,7 +106,9 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   indicators_ = new PanelIndicatorsView();
   AddPanelView(indicators_, 0);
 
-  remote_ = indicator::DBusIndicators::Ptr(new indicator::DBusIndicators());
+  for (auto const& object : remote_->GetIndicators())
+    OnObjectAdded(object);
+
   remote_->on_object_added.connect(sigc::mem_fun(this, &PanelView::OnObjectAdded));
   remote_->on_object_removed.connect(sigc::mem_fun(this, &PanelView::OnObjectRemoved));
   remote_->on_entry_activate_request.connect(sigc::mem_fun(this, &PanelView::OnEntryActivateRequest));
