@@ -39,6 +39,7 @@ QuicklistMenuItem::QuicklistMenuItem(QuicklistMenuItemType type, glib::Object<Db
   : nux::View(NUX_FILE_LINE_PARAM)
   , _item_type(type)
   , _menu_item(item)
+  , _activate_timestamp(0)
   , _prelight(false)
 {
   mouse_up.connect(sigc::mem_fun(this, &QuicklistMenuItem::RecvMouseUp));
@@ -134,8 +135,8 @@ void QuicklistMenuItem::Activate() const
   if (!_menu_item || !GetSelectable())
     return;
 
-  auto event_time = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
-  dbusmenu_menuitem_handle_event(_menu_item, "clicked", nullptr, event_time);
+  _activate_timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
+  dbusmenu_menuitem_handle_event(_menu_item, "clicked", nullptr, _activate_timestamp);
 
   if (!IsOverlayQuicklist())
   {
@@ -434,7 +435,8 @@ void QuicklistMenuItem::AddProperties(GVariantBuilder* builder)
   .add("active", GetActive())
   .add("visible", GetVisible())
   .add("selectable", GetSelectable())
-  .add("selected", _prelight);
+  .add("selected", _prelight)
+  .add("activate_timestamp", _activate_timestamp);
 }
 
 } //NAMESPACE
