@@ -22,23 +22,21 @@
 
 #include <sstream>
 #include <NuxCore/Logger.h>
+#include "config.h"
 
 namespace unity
 {
 DECLARE_LOGGER(logger, "unity.internal.texturecache");
 
-TextureCache::TextureCache()
-{
-}
-
-TextureCache::~TextureCache()
-{
-}
-
 TextureCache& TextureCache::GetDefault()
 {
   static TextureCache instance;
   return instance;
+}
+
+nux::BaseTexture* TextureCache::DefaultTexturesLoader(std::string const& name, int w, int h)
+{
+  return nux::CreateTexture2DFromFile((PKGDATADIR"/" + name).c_str(), -1, true);
 }
 
 std::string TextureCache::Hash(std::string const& id, int width, int height)
@@ -50,17 +48,22 @@ std::string TextureCache::Hash(std::string const& id, int width, int height)
 
 TextureCache::BaseTexturePtr TextureCache::FindTexture(std::string const& texture_id,
                                                        int width, int height,
-                                                       CreateTextureCallback slot)
+                                                       CreateTextureCallback factory)
 {
-  if (!slot)
+  if (!factory)
     return BaseTexturePtr();
 
-  std::string key = Hash(texture_id, width, height);
-  BaseTexturePtr texture(cache_[key]);
+  std::string const& key = Hash(texture_id, width, height);
+  auto texture_it = cache_.find(key);
+
+  BaseTexturePtr texture(texture_it != cache_.end() ? texture_it->second : nullptr);
 
   if (!texture)
   {
-    texture = slot(texture_id, width, height);
+    texture.Adopt(factory(texture_id, width, height));
+
+    if (!texture)
+      return texture;
 
     // Now here is the magic.
     //
@@ -79,10 +82,6 @@ TextureCache::BaseTexturePtr TextureCache::FindTexture(std::string const& textur
     // are destroyed first, then the sigc::trackable disconnects all methods
     // created using mem_fun.
 
-    // Reduce the internal reference count of the texture, so the smart
-    // pointer is the sole owner of the object.
-    texture->UnReference();
-
     cache_[key] = texture.GetPointer();
 
     auto on_destroy = sigc::mem_fun(this, &TextureCache::OnDestroyNotify);
@@ -92,7 +91,7 @@ TextureCache::BaseTexturePtr TextureCache::FindTexture(std::string const& textur
   return texture;
 }
 
-void TextureCache::OnDestroyNotify(nux::Trackable* Object, std::string key)
+void TextureCache::OnDestroyNotify(nux::Trackable* Object, std::string const& key)
 {
   cache_.erase(key);
 }

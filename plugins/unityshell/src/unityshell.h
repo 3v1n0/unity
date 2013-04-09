@@ -243,9 +243,7 @@ private:
 
   void InitGesturesSupport();
 
-  void DrawTopPanelBackground();
-  bool TopPanelBackgroundTextureNeedsUpdate() const;
-  void UpdateTopPanelBackgroundTexture();
+  void DrawPanelUnderDash();
 
   unsigned CompizModifiersToNux(unsigned input) const;
   unsigned XModifiersToNux(unsigned input) const;
@@ -331,9 +329,7 @@ private:
 
   GLMatrix panel_shadow_matrix_;
 
-  bool panel_texture_has_changed_;
-  bool paint_panel_;
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> panel_texture_;
+  bool paint_panel_under_dash_;
   std::set<UnityWindow*> fake_decorated_windows_;
 
   bool scale_just_activated_;
