@@ -1422,8 +1422,6 @@ void Launcher::UpdateOptions(Options::Ptr options)
 
 void Launcher::ConfigureBarrier()
 {
-  nux::Geometry geo = GetAbsoluteGeometry();
-
   float decay_responsiveness_mult = ((options()->edge_responsiveness() - 1) * .3f) + 1;
   float reveal_responsiveness_mult = ((options()->edge_responsiveness() - 1) * .025f) + 1;
 
