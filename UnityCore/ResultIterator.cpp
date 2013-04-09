@@ -124,13 +124,13 @@ Result& ResultIterator::operator*()
   return iter_result_;
 }
 
-bool const ResultIterator::IsLast()
+bool ResultIterator::IsLast()
 {
   if (!model_) return true;
   return (dee_model_is_last(model_, iter_));
 }
 
-bool const ResultIterator::IsFirst()
+bool ResultIterator::IsFirst()
 {
   if (!model_) return true;
   return (dee_model_is_first(model_, iter_));
