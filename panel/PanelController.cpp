@@ -79,6 +79,7 @@ private:
   int menus_discovery_;
   int menus_discovery_fadein_;
   int menus_discovery_fadeout_;
+  indicator::DBusIndicators::Ptr dbus_indicators_;
 };
 
 
@@ -90,8 +91,8 @@ Controller::Impl::Impl()
   , menus_discovery_(0)
   , menus_discovery_fadein_(0)
   , menus_discovery_fadeout_(0)
-{
-}
+  , dbus_indicators_(std::make_shared<indicator::DBusIndicators>())
+{}
 
 std::vector<Window> Controller::Impl::GetTrayXids() const
 {
@@ -243,7 +244,7 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
     {
       nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-      PanelView* view = new PanelView();
+      PanelView* view = new PanelView(dbus_indicators_);
       view->SetMaximumHeight(panel::Style::Instance().panel_height);
       view->SetOpacity(opacity_);
       view->SetOpacityMaximizedToggle(opacity_maximized_toggle_);

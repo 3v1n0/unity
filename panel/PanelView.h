@@ -46,7 +46,7 @@ class PanelView : public unity::debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(PanelView, nux::View);
 public:
-  PanelView(NUX_FILE_LINE_PROTO);
+  PanelView(indicator::DBusIndicators::Ptr const&, NUX_FILE_LINE_PROTO);
   ~PanelView();
 
   void SetPrimary(bool primary);
