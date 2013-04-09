@@ -731,8 +731,12 @@ void ApplicationLauncherIcon::UpdateDesktopQuickList()
     std::string nick(nicks[index]);
 
     _gsignals.Add<void, DbusmenuMenuitem*, gint>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-    [this, nick] (DbusmenuMenuitem* item, unsigned) {
-      indicator_desktop_shortcuts_nick_exec(_desktop_shortcuts, nick.c_str());
+    [this, nick] (DbusmenuMenuitem* item, unsigned timestamp) {
+      GdkDisplay* display = gdk_display_get_default();
+      glib::Object<GdkAppLaunchContext> context(gdk_display_get_app_launch_context(display));
+      gdk_app_launch_context_set_timestamp(context, timestamp);
+      auto gcontext = glib::object_cast<GAppLaunchContext>(context);
+      indicator_desktop_shortcuts_nick_exec_with_context(_desktop_shortcuts, nick.c_str(), gcontext);
     });
 
     dbusmenu_menuitem_child_append(_menu_desktop_shortcuts, item);
