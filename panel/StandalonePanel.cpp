@@ -47,9 +47,13 @@ struct PanelWindow
   }
 
 private:
-  class StandalonePanelView : public PanelView
+  struct StandalonePanelView : public PanelView
   {
     // Used to sync menu geometries
+    StandalonePanelView()
+      : PanelView(std::make_shared<indicator::DBusIndicators>())
+    {}
+
     std::string GetName() const { return "StandalonePanel"; }
   };
 
