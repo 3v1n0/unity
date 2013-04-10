@@ -291,8 +291,17 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
   int i;
   for (it = args.begin(), i = 0; it != args.end(); ++it, ++i)
   {
-
     IconTextureSource* launcher_icon = it->icon;
+
+    if (it->render_center == launcher_icon->LastRenderCenter(monitor) &&
+        it->logical_center == launcher_icon->LastLogicalCenter(monitor) &&
+        it->rotation == launcher_icon->LastRotation(monitor))
+    {
+      continue;
+    }
+
+    launcher_icon->RememberCenters(monitor, it->render_center, it->logical_center);
+    launcher_icon->RememberRotation(monitor, it->rotation);
 
     float w = icon_size;
     float h = icon_size;
