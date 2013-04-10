@@ -309,9 +309,9 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
     }
 
     ObjectMatrix = nux::Matrix4::TRANSLATE(geo.width / 2.0f, geo.height / 2.0f, z) * // Translate the icon to the center of the viewport
-                   nux::Matrix4::ROTATEX(it->x_rotation) *              // rotate the icon
-                   nux::Matrix4::ROTATEY(it->y_rotation) *
-                   nux::Matrix4::ROTATEZ(it->z_rotation) *
+                   nux::Matrix4::ROTATEX(it->rotation.x) *              // rotate the icon
+                   nux::Matrix4::ROTATEY(it->rotation.y) *
+                   nux::Matrix4::ROTATEZ(it->rotation.z) *
                    nux::Matrix4::TRANSLATE(-x - w / 2.0f, -y - h / 2.0f, -z); // Put the center the icon to (0, 0)
 
     ViewProjectionMatrix = PremultMatrix * ObjectMatrix;
@@ -369,9 +369,9 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
       z = it->render_center.z;
 
       ObjectMatrix = nux::Matrix4::TRANSLATE(geo.width / 2.0f, geo.height / 2.0f, z) * // Translate the icon to the center of the viewport
-                     nux::Matrix4::ROTATEX(it->x_rotation) *              // rotate the icon
-                     nux::Matrix4::ROTATEY(it->y_rotation) *
-                     nux::Matrix4::ROTATEZ(it->z_rotation) *
+                     nux::Matrix4::ROTATEX(it->rotation.x) *              // rotate the icon
+                     nux::Matrix4::ROTATEY(it->rotation.y) *
+                     nux::Matrix4::ROTATEZ(it->rotation.z) *
                      nux::Matrix4::TRANSLATE(-(it->render_center.x - w / 2.0f) - w / 2.0f, -(it->render_center.y - h / 2.0f) - h / 2.0f, -z); // Put the center the icon to (0, 0)
 
       ViewProjectionMatrix = PremultMatrix * ObjectMatrix;
@@ -754,9 +754,9 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
   if (icon.IsNull())
     return;
 
-  if (std::abs(arg.x_rotation) < 0.01f &&
-      std::abs(arg.y_rotation) < 0.01f &&
-      std::abs(arg.z_rotation) < 0.01f &&
+  if (std::abs(arg.rotation.x) < 0.01f &&
+      std::abs(arg.rotation.y) < 0.01f &&
+      std::abs(arg.rotation.z) < 0.01f &&
       !force_filter)
   {
     icon->SetFiltering(GL_NEAREST, GL_NEAREST);
@@ -922,7 +922,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
                                     nux::Geometry const& geo)
 {
   int markerCenter = (int) arg.render_center.y;
-  markerCenter -= (int)(arg.x_rotation / (2 * M_PI) * icon_size);
+  markerCenter -= (int)(arg.rotation.x / (2 * M_PI) * icon_size);
 
 
   if (running > 0)
