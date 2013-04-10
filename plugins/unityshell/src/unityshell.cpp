@@ -1839,11 +1839,18 @@ void UnityScreen::SendExecuteCommand()
     adapter.TerminateScale();
   }
 
-  ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL, glib::Source::Priority::HIGH);
+  if (dash_controller_->IsCommandLensOpen())
+  {
+    ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
+  }
+  else
+  {
+    ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL, glib::Source::Priority::HIGH);
 
-  ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                            g_variant_new("(sus)", "commands.lens", dash::GOTO_DASH_URI, ""),
-                            glib::Source::Priority::LOW);
+    ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                              g_variant_new("(sus)", "commands.lens", dash::GOTO_DASH_URI, ""),
+                              glib::Source::Priority::LOW);
+  }
 }
 
 bool UnityScreen::executeCommand(CompAction* action,

@@ -188,6 +188,11 @@ void DashView::SetMonitorOffset(int x, int y)
   renderer_.y_offset = y;
 }
 
+bool DashView::IsCommandLensOpen() const
+{
+  return (lens_bar_->GetActiveLensId() == "commands.lens");
+}
+
 void DashView::OnUriActivated(ResultView::ActivateType type, std::string const& uri, GVariant* data, std::string const& unique_id) 
 {
   last_activated_uri_ = uri;
