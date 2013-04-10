@@ -1,8 +1,13 @@
-unity (6.12.0daily13.03.13-0ubuntu1) UNRELEASED; urgency=low
+unity (7.0.0daily13.04.10ubuntu.unity.experimental.certified-0ubuntu1) raring; urgency=low
 
+  [ Didier Roche ]
   * bump build-dep on libunity-dev
 
- -- Didier Roche <didrocks@ubuntu.com>  Wed, 13 Mar 2013 11:26:45 +0100
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3113 (ubuntu-unity/experimental-
+    certified)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 10 Apr 2013 07:16:02 +0000
 
 unity (7.0.0daily13.04.05.2-0ubuntu1) raring; urgency=low
 
