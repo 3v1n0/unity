@@ -32,7 +32,8 @@ namespace
 }
 
 IconTextureSource::IconTextureSource()
-  : last_render_center_(RENDERERS_SIZE)
+  : skip_(RENDERERS_SIZE, false)
+  , last_render_center_(RENDERERS_SIZE)
   , last_logical_center_(RENDERERS_SIZE)
   , last_rotation_(RENDERERS_SIZE)
   , transformations_(RENDERERS_SIZE, decltype(transformations_)::value_type(TRANSFORM_SIZE, std::vector<nux::Vector4>(4)))
@@ -67,6 +68,16 @@ nux::Point3 const& IconTextureSource::LastLogicalCenter(int monitor) const
 nux::Point3 const& IconTextureSource::LastRotation(int monitor) const
 {
   return last_rotation_[monitor];
+}
+
+void IconTextureSource::RememberSkip(int monitor, bool skip)
+{
+  skip_[monitor] = skip;
+}
+
+bool IconTextureSource::WasSkipping(int monitor) const
+{
+  return skip_[monitor];
 }
 
 }

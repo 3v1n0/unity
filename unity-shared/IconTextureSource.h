@@ -55,6 +55,9 @@ public:
   void RememberCenters(int monitor, nux::Point3 const& render, nux::Point3 const& logical);
   void RememberRotation(int monitor, nux::Point3 const& rotation);
 
+  void RememberSkip(int monitor, bool skip);
+  bool WasSkipping(int monitor) const;
+
   virtual nux::Color BackgroundColor() const = 0;
 
   virtual nux::Color GlowColor() = 0;
@@ -64,6 +67,7 @@ public:
   virtual nux::BaseTexture* Emblem() = 0;
 
 private:
+  std::vector<bool> skip_;
   std::vector<nux::Point3> last_render_center_;
   std::vector<nux::Point3> last_logical_center_;
   std::vector<nux::Point3> last_rotation_;
