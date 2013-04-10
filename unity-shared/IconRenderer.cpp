@@ -235,6 +235,13 @@ struct IconRenderer::TexturesPool
   nux::ObjectPtr<nux::IOpenGLAsmShaderProgram> asm_shader;
 #endif
 
+  int VertexLocation;
+  int VPMatrixLocation;
+  int TextureCoord0Location;
+  int FragmentColor;
+  int ColorifyColor;
+  int DesatFactor;
+
   std::map<char, BaseTexturePtr> labels;
 
 private:
@@ -832,20 +839,15 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
   {
     textures_->shader_program_uv_persp_correction->Begin();
 
-    int TextureObjectLocation = textures_->shader_program_uv_persp_correction->GetUniformLocationARB("TextureObject0");
-    VertexLocation            = textures_->shader_program_uv_persp_correction->GetAttributeLocation("iVertex");
-    TextureCoord0Location     = textures_->shader_program_uv_persp_correction->GetAttributeLocation("iTexCoord0");
-    FragmentColor             = textures_->shader_program_uv_persp_correction->GetUniformLocationARB("color0");
-    ColorifyColor             = textures_->shader_program_uv_persp_correction->GetUniformLocationARB("colorify_color");
-    DesatFactor               = textures_->shader_program_uv_persp_correction->GetUniformLocationARB("desat_factor");
+    VertexLocation = textures_->VertexLocation;
+    TextureCoord0Location = textures_->TextureCoord0Location;
+    FragmentColor = textures_->FragmentColor;
+    ColorifyColor = textures_->ColorifyColor;
+    DesatFactor = textures_->DesatFactor;
 
-    if (TextureObjectLocation != -1)
-      CHECKGL(glUniform1iARB(TextureObjectLocation, 0));
-
-    int VPMatrixLocation = textures_->shader_program_uv_persp_correction->GetUniformLocationARB("ViewProjectionMatrix");
-    if (VPMatrixLocation != -1)
+    if (textures_->VPMatrixLocation != -1)
     {
-      textures_->shader_program_uv_persp_correction->SetUniformLocMatrix4fv((GLint)VPMatrixLocation, 1, false, (GLfloat*) & (stored_projection_matrix_.m));
+      textures_->shader_program_uv_persp_correction->SetUniformLocMatrix4fv((GLint)textures_->VPMatrixLocation, 1, false, (GLfloat*) & (stored_projection_matrix_.m));
     }
   }
 #ifndef USE_GLES
@@ -1203,6 +1205,12 @@ void IconRenderer::GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, n
 
 IconRenderer::TexturesPool::TexturesPool()
   : offscreen_progress_texture(nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8))
+  , VertexLocation(-1)
+  , VPMatrixLocation(0)
+  , TextureCoord0Location(-1)
+  , FragmentColor(0)
+  , ColorifyColor(0)
+  , DesatFactor(0)
 {
   LoadTexture(progress_bar_trough, PKGDATADIR"/progress_bar_trough.png");
   LoadTexture(progress_bar_fill, PKGDATADIR"/progress_bar_fill.png");
@@ -1258,6 +1266,22 @@ void IconRenderer::TexturesPool::SetupShaders()
     shader_program_uv_persp_correction = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateShaderProgram();
     shader_program_uv_persp_correction->LoadIShader(gPerspectiveCorrectShader.c_str());
     shader_program_uv_persp_correction->Link();
+
+    shader_program_uv_persp_correction->Begin();
+
+    int TextureObjectLocation = shader_program_uv_persp_correction->GetUniformLocationARB("TextureObject0");
+    VertexLocation            = shader_program_uv_persp_correction->GetAttributeLocation("iVertex");
+    TextureCoord0Location     = shader_program_uv_persp_correction->GetAttributeLocation("iTexCoord0");
+    FragmentColor             = shader_program_uv_persp_correction->GetUniformLocationARB("color0");
+    ColorifyColor             = shader_program_uv_persp_correction->GetUniformLocationARB("colorify_color");
+    DesatFactor               = shader_program_uv_persp_correction->GetUniformLocationARB("desat_factor");
+
+    if (TextureObjectLocation != -1)
+      CHECKGL(glUniform1iARB(TextureObjectLocation, 0));
+
+    VPMatrixLocation = shader_program_uv_persp_correction->GetUniformLocationARB("ViewProjectionMatrix");
+
+    shader_program_uv_persp_correction->End();
   }
   else
   {
