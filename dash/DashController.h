@@ -65,6 +65,7 @@ public:
   void ReFocusKeyInput();
 
   bool IsVisible() const;
+  bool IsCommandLensOpen() const;
   nux::Geometry GetInputWindowGeometry();
 
 protected:

@@ -464,6 +464,11 @@ bool Controller::IsVisible() const
   return visible_;
 }
 
+bool Controller::IsCommandLensOpen() const
+{
+  return visible_ && view_->IsCommandLensOpen();
+}
+
 nux::Geometry Controller::GetInputWindowGeometry()
 {
   EnsureDash();
