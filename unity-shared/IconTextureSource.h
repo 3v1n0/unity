@@ -37,12 +37,12 @@ public:
 
   enum TransformIndex
   {
-    TRANSFORM_TILE,
+    TRANSFORM_TILE = 0,
     TRANSFORM_IMAGE,
     TRANSFORM_HIT_AREA,
     TRANSFORM_GLOW,
     TRANSFORM_EMBLEM,
-    TRANSFORM_LAST
+    TRANSFORM_SIZE
   };
 
   IconTextureSource();
@@ -67,7 +67,7 @@ private:
   std::vector<nux::Point3> last_render_center_;
   std::vector<nux::Point3> last_logical_center_;
   std::vector<nux::Point3> last_rotation_;
-  std::vector<std::map<TransformIndex, std::vector<nux::Vector4>>> transform_map;
+  std::vector<std::vector<std::vector<nux::Vector4>>> transformations_;
 };
 
 }

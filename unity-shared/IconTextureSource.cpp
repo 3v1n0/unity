@@ -35,19 +35,12 @@ IconTextureSource::IconTextureSource()
   : last_render_center_(RENDERERS_SIZE)
   , last_logical_center_(RENDERERS_SIZE)
   , last_rotation_(RENDERERS_SIZE)
-  , transform_map(RENDERERS_SIZE)
+  , transformations_(RENDERERS_SIZE, decltype(transformations_)::value_type(TRANSFORM_SIZE, std::vector<nux::Vector4>(4)))
 {}
 
 std::vector<nux::Vector4> & IconTextureSource::GetTransform(TransformIndex index, int monitor)
 {
-  auto iter = transform_map[monitor].find(index);
-  if (iter == transform_map[monitor].end())
-  {
-    auto iter2 = transform_map[monitor].insert(std::make_pair(index, std::vector<nux::Vector4>(4)));
-    return iter2.first->second;
-  }
-
-  return iter->second;
+  return transformations_[monitor][index];
 }
 
 void IconTextureSource::RememberCenters(int monitor, nux::Point3 const& render, nux::Point3 const& logical)
