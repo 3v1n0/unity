@@ -22,7 +22,6 @@
 #define ICONTEXTURESOURCE_H
 
 #include <Nux/Nux.h>
-#include <NuxCore/Property.h>
 #include <NuxCore/Math/MathInc.h>
 
 namespace unity
@@ -43,11 +42,18 @@ public:
     TRANSFORM_HIT_AREA,
     TRANSFORM_GLOW,
     TRANSFORM_EMBLEM,
+    TRANSFORM_LAST
   };
 
   IconTextureSource();
 
   std::vector<nux::Vector4> & GetTransform(TransformIndex index, int monitor);
+
+  nux::Point3 const& LastRenderCenter(int monitor) const;
+  nux::Point3 const& LastLogicalCenter(int monitor) const;
+  nux::Point3 const& LastRotation(int monitor) const;
+  void RememberCenters(int monitor, nux::Point3 const& render, nux::Point3 const& logical);
+  void RememberRotation(int monitor, nux::Point3 const& rotation);
 
   virtual nux::Color BackgroundColor() const = 0;
 
@@ -58,7 +64,10 @@ public:
   virtual nux::BaseTexture* Emblem() = 0;
 
 private:
-  std::vector<std::map<TransformIndex, std::vector<nux::Vector4> > > transform_map;
+  std::vector<nux::Point3> last_render_center_;
+  std::vector<nux::Point3> last_logical_center_;
+  std::vector<nux::Point3> last_rotation_;
+  std::vector<std::map<TransformIndex, std::vector<nux::Vector4>>> transform_map;
 };
 
 }
