@@ -123,6 +123,7 @@ protected:
   nux::ObjectPtr<nux::BaseTexture> _prelightTexture[2];
   QuicklistMenuItemType _item_type;
   glib::Object<DbusmenuMenuitem> _menu_item;
+  mutable Time _activate_timestamp;
   bool _prelight;
   int _pre_layout_width;
   int _pre_layout_height;
