@@ -105,7 +105,6 @@ private:
   DashView* view_;
 
   sigc::connection screen_ungrabbed_slot_;
-  unsigned place_entry_request_id_;
   glib::DBusServer dbus_server_;
   glib::TimeoutSeconds ensure_timeout_;
   nux::animation::AnimateValue<double> timeline_animator_;
