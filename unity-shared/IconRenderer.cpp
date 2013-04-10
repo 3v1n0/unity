@@ -271,9 +271,6 @@ IconRenderer::IconRenderer()
   pip_style = OUTSIDE_TILE;
 }
 
-IconRenderer::~IconRenderer()
-{}
-
 void IconRenderer::SetTargetSize(int tile_size, int image_size_, int spacing_)
 {
   icon_size = tile_size;
@@ -302,13 +299,15 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
 
     if (it->render_center == launcher_icon->LastRenderCenter(monitor) &&
         it->logical_center == launcher_icon->LastLogicalCenter(monitor) &&
-        it->rotation == launcher_icon->LastRotation(monitor))
+        it->rotation == launcher_icon->LastRotation(monitor) &&
+        it->skip == launcher_icon->WasSkipping(monitor))
     {
       continue;
     }
 
     launcher_icon->RememberCenters(monitor, it->render_center, it->logical_center);
     launcher_icon->RememberRotation(monitor, it->rotation);
+    launcher_icon->RememberSkip(monitor, it->skip);
 
     float w = icon_size;
     float h = icon_size;
