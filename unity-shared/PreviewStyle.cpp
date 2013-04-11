@@ -292,6 +292,21 @@ int Style::GetStatusIconSize() const
   return 12;
 }
 
+std::string Style::u1_warning_font() const
+{
+  return "Ubuntu Bold 11.5";
+}
+
+int Style::GetPaymentWarningWidth() const
+{
+  return 22;
+}
+
+int Style::GetPaymentWarningHeight() const
+{
+  return 22;
+}
+
 float Style::GetVideoImageAspectRatio() const
 {
   return float(540)/380;
@@ -399,6 +414,12 @@ nux::BaseTexture* Style::GetPlayIcon()
 nux::BaseTexture* Style::GetPauseIcon()
 {
   return pimpl->preview_pause_texture_.texture();
+}
+
+nux::BaseTexture* Style::GetWarningIcon()
+{
+  return nux::CreateTexture2DFromFile(
+              PKGDATADIR"/warning_icon.png", -1, true);
 }
 
 nux::BaseTexture* Style::GetSearchSpinIcon(int size)
