@@ -14,7 +14,7 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-* Authored by: Andrea Azzarone <azzaronea@gmail.com>
+* Authored by: Andrea Azzarone <andrea.azzarone@canonical.com>
 */
 
 #include "XdndCollectionWindowImp.h"
@@ -37,9 +37,6 @@ public:
     // ... and as big as the whole screen.
     auto uscreen = UScreen::GetDefault();
     SetGeometry(uscreen->GetScreenGeometry());
-
-    ShowWindow(true);
-    PushToBack();
 
     if (nux::GetWindowThread()->IsEmbeddedWindow())
     {
@@ -104,6 +101,7 @@ void XdndCollectionWindowImp::Collect()
   // Using PushToFront we're sure that the window is shown over the panel window,
   // the launcher window and the dash window. Don't forget to call PushToBack as
   // soon as possible.
+  window_->ShowWindow(true);
   window_->PushToFront();
 
   if (nux::GetWindowThread()->IsEmbeddedWindow())
@@ -112,6 +110,7 @@ void XdndCollectionWindowImp::Collect()
 
 void XdndCollectionWindowImp::Deactivate()
 {
+  window_->ShowWindow(false);
   window_->PushToBack();
 
   if (nux::GetWindowThread()->IsEmbeddedWindow())
