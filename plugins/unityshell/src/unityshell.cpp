@@ -722,11 +722,11 @@ void UnityScreen::paintDisplay()
 
   DrawPanelUnderDash();
 
-  auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
-
   if (BackgroundEffectHelper::HasDirtyHelpers())
   {
+    auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
     auto graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
+
     nux::ObjectPtr<nux::IOpenGLTexture2D> bg_texture =
       graphics_engine->CreateTextureFromBackBuffer(0, 0,
                                                    screen->width(),
@@ -734,9 +734,8 @@ void UnityScreen::paintDisplay()
     gpu_device->backup_texture0_ = bg_texture;
   }
 
-  nux::Geometry geo(0, 0, screen->width (), screen->height ());
   nux::Geometry outputGeo(output->x (), output->y (), output->width (), output->height ());
-  BackgroundEffectHelper::monitor_rect_ = geo;
+  BackgroundEffectHelper::monitor_rect_.Set(0, 0, screen->width(), screen->height());
 
   GLint fboID;
   // Nux renders to the referenceFramebuffer when it's embedded.
