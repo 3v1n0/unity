@@ -133,7 +133,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , gScreen(GLScreen::get(screen))
   , debugger_(this)
   , needsRelayout(false)
-  , _in_paint(false)
   , super_keypressed_(false)
   , newFocusedWindow(nullptr)
   , doShellRepaint(false)
@@ -281,7 +280,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      wt->Run(NULL);
      uScreen = this;
-     _in_paint = false;
 
      optionSetShowHudInitiate(boost::bind(&UnityScreen::ShowHudInitiate, this, _1, _2, _3));
      optionSetShowHudTerminate(boost::bind(&UnityScreen::ShowHudTerminate, this, _1, _2, _3));
@@ -743,9 +741,7 @@ void UnityScreen::paintDisplay()
   wt->GetWindowCompositor().SetReferenceFramebuffer(fboID, outputGeo);
 
   nuxPrologue();
-  _in_paint = true;
   wt->RenderInterfaceFromForeignCmd (&outputGeo);
-  _in_paint = false;
   nuxEpilogue();
 
   for (Window tray_xid : panel_controller_->GetTrayXids())
