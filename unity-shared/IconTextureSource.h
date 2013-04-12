@@ -51,9 +51,9 @@ public:
 
   nux::Point3 const& LastRenderCenter(int monitor) const;
   nux::Point3 const& LastLogicalCenter(int monitor) const;
-  nux::Point3 const& LastRotation(int monitor) const;
+  nux::Vector3 const& LastRotation(int monitor) const;
   void RememberCenters(int monitor, nux::Point3 const& render, nux::Point3 const& logical);
-  void RememberRotation(int monitor, nux::Point3 const& rotation);
+  void RememberRotation(int monitor, nux::Vector3 const& rotation);
 
   void RememberSkip(int monitor, bool skip);
   bool WasSkipping(int monitor) const;
@@ -70,7 +70,7 @@ private:
   std::vector<bool> skip_;
   std::vector<nux::Point3> last_render_center_;
   std::vector<nux::Point3> last_logical_center_;
-  std::vector<nux::Point3> last_rotation_;
+  std::vector<nux::Vector3> last_rotation_;
   std::vector<std::vector<std::vector<nux::Vector4>>> transformations_;
 };
 

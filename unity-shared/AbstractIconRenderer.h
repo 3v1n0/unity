@@ -68,7 +68,7 @@ public:
   IconTextureSource* icon;
   nux::Point3   render_center;
   nux::Point3   logical_center;
-  nux::Point3   rotation;
+  nux::Vector3  rotation;
   nux::Color    colorify;
   float         alpha;
   float         saturation;

@@ -50,7 +50,7 @@ void IconTextureSource::RememberCenters(int monitor, nux::Point3 const& render, 
   last_logical_center_[monitor] = logical;
 }
 
-void IconTextureSource::RememberRotation(int monitor, nux::Point3 const& rotation)
+void IconTextureSource::RememberRotation(int monitor, nux::Vector3 const& rotation)
 {
   last_rotation_[monitor] = rotation;
 }
@@ -65,7 +65,7 @@ nux::Point3 const& IconTextureSource::LastLogicalCenter(int monitor) const
   return last_logical_center_[monitor];
 }
 
-nux::Point3 const& IconTextureSource::LastRotation(int monitor) const
+nux::Vector3 const& IconTextureSource::LastRotation(int monitor) const
 {
   return last_rotation_[monitor];
 }
