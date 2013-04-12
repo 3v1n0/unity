@@ -692,7 +692,7 @@ void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
   renderer_geo.y += panel_style.panel_height;
   renderer_geo.height += panel_style.panel_height;
 
-  renderer_.DrawFull(graphics_engine, content_geo_, renderer_geo_abs, renderer_geo, true);
+  renderer_.DrawFull(graphics_engine, content_geo_, renderer_geo_abs, renderer_geo, false);
 }
 
 void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
