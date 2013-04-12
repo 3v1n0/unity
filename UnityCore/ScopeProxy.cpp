@@ -437,7 +437,7 @@ void ScopeProxy::Impl::OnChannelOpened(glib::String const& opened_channel, glib:
 
 void ScopeProxy::Impl::CloseChannel()
 {
-  if (channel != "")
+  if (channel != "" && scope_proxy_connected_)
   {
     LOG_DEBUG(logger) << "Closing channel open for " << scope_data_->id();
 
@@ -447,14 +447,19 @@ void ScopeProxy::Impl::CloseChannel()
                                              nullptr,
                                              OnCloseChannel,
                                              nullptr);
-    channel = "";
   }
+  channel = "";
 }
 
 void ScopeProxy::Impl::OnCloseChannel(GObject *source_object, GAsyncResult *res, gpointer user_data)
 {
   glib::Error err;
   unity_protocol_scope_proxy_close_channel_finish(UNITY_PROTOCOL_SCOPE_PROXY(source_object), res, &err);
+
+  if (err)
+  {
+    LOG_WARNING(logger) << "Unable to close channel: " << err;
+  }
 }
 
 void ScopeProxy::Impl::WaitForProxyConnection(GCancellable* cancellable,
@@ -608,7 +613,7 @@ void ScopeProxy::Impl::Activate(LocalResult const& result, uint activate_type, g
 
 void ScopeProxy::Impl::OnScopeConnectedChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param)
 {
-  bool tmp_scope_proxy_connected = unity_protocol_scope_proxy_get_connected(scope_proxy_);  
+  bool tmp_scope_proxy_connected = unity_protocol_scope_proxy_get_connected(scope_proxy_);
   if (tmp_scope_proxy_connected != scope_proxy_connected_)
   {
     scope_proxy_connected_ = tmp_scope_proxy_connected;
