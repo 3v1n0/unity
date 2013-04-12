@@ -27,7 +27,7 @@ namespace graphics
 
 std::stack<nux::ObjectPtr<nux::IOpenGLBaseTexture>> rendering_stack;
 
-void PushOffscreenRenderTarget_(nux::ObjectPtr<nux::IOpenGLBaseTexture>  const& texture)
+void PushOffscreenRenderTarget_(nux::ObjectPtr<nux::IOpenGLBaseTexture> const& texture)
 {  
   int width = texture->GetWidth();
   int height = texture->GetHeight();
