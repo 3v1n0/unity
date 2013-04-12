@@ -1,3 +1,24 @@
+unity (7.0.0daily13.04.10-0ubuntu1) raring; urgency=low
+
+  [ Andrea Azzarone ]
+  * Launcher icons automatically placed in the launcher by USC (or apps
+    lens) fail to have running 'pips'. (LP: #1165097)
+
+  [ Marco Trevisan (Treviño) ]
+  * Unity wastes some memory by allocating multiple times the same
+    texture (LP: #1166532)
+  * Unity is creating multiple instances of DBusIndicators per each
+    monitor (LP: #1166550)
+
+  [ Michi Henning ]
+  * ResultIterator.h defines functions that return const values (LP:
+    #1163705)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3290
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 10 Apr 2013 04:03:19 +0000
+
 unity (7.0.0daily13.04.08-0ubuntu1) raring; urgency=low
 
   [ Tigran Gabrielyan ]

@@ -139,6 +139,8 @@ DashView::DashView(Lenses::Ptr const& lenses, ApplicationStarter::Ptr const& app
   SetupViews();
   SetupUBusConnections();
 
+  AddChild(overlay_window_buttons_.GetPointer());
+
   lenses_->lens_added.connect(sigc::mem_fun(this, &DashView::OnLensAdded));
   mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
   preview_state_machine_.PreviewActivated.connect(sigc::mem_fun(this, &DashView::BuildPreview));
@@ -184,6 +186,11 @@ void DashView::SetMonitorOffset(int x, int y)
 {
   renderer_.x_offset = x;
   renderer_.y_offset = y;
+}
+
+bool DashView::IsCommandLensOpen() const
+{
+  return (lens_bar_->GetActiveLensId() == "commands.lens");
 }
 
 void DashView::OnUriActivated(ResultView::ActivateType type, std::string const& uri, GVariant* data, std::string const& unique_id) 

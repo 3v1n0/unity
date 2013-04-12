@@ -284,7 +284,6 @@ private:
   std::unique_ptr<nux::GesturesSubscription> gestures_sub_windows_;
 
   bool                                  needsRelayout;
-  bool                                  _in_paint;
   bool                                  super_keypressed_;
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;

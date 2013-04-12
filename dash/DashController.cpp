@@ -151,8 +151,6 @@ void Controller::SetupDashView()
   window_->SetLayout(layout);
 
   window_->UpdateInputWindowGeometry();
-
-  ubus_manager_.UnregisterInterest(place_entry_request_id_);
 }
 
 void Controller::RegisterUBusInterests()
@@ -161,9 +159,6 @@ void Controller::RegisterUBusInterests()
                                  sigc::mem_fun(this, &Controller::OnExternalShowDash));
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_CLOSE_REQUEST,
                                  sigc::mem_fun(this, &Controller::OnExternalHideDash));
-  place_entry_request_id_ =
-    ubus_manager_.RegisterInterest(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                                   sigc::mem_fun(this, &Controller::OnActivateRequest));
   ubus_manager_.RegisterInterest(UBUS_DASH_ABOUT_TO_SHOW,
                                  [&] (GVariant*) { EnsureDash(); });
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant *data)
@@ -462,6 +457,11 @@ void Controller::ReFocusKeyInput()
 bool Controller::IsVisible() const
 {
   return visible_;
+}
+
+bool Controller::IsCommandLensOpen() const
+{
+  return visible_ && view_->IsCommandLensOpen();
 }
 
 nux::Geometry Controller::GetInputWindowGeometry()

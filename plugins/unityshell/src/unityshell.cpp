@@ -133,7 +133,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , gScreen(GLScreen::get(screen))
   , debugger_(this)
   , needsRelayout(false)
-  , _in_paint(false)
   , super_keypressed_(false)
   , newFocusedWindow(nullptr)
   , doShellRepaint(false)
@@ -281,7 +280,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      wt->Run(NULL);
      uScreen = this;
-     _in_paint = false;
 
      optionSetShowHudInitiate(boost::bind(&UnityScreen::ShowHudInitiate, this, _1, _2, _3));
      optionSetShowHudTerminate(boost::bind(&UnityScreen::ShowHudTerminate, this, _1, _2, _3));
@@ -719,11 +717,11 @@ void UnityScreen::paintDisplay()
 
   DrawPanelUnderDash();
 
-  auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
-
   if (BackgroundEffectHelper::HasDirtyHelpers())
   {
+    auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
     auto graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
+
     nux::ObjectPtr<nux::IOpenGLTexture2D> bg_texture =
       graphics_engine->CreateTextureFromBackBuffer(0, 0,
                                                    screen->width(),
@@ -731,9 +729,8 @@ void UnityScreen::paintDisplay()
     gpu_device->backup_texture0_ = bg_texture;
   }
 
-  nux::Geometry geo(0, 0, screen->width (), screen->height ());
   nux::Geometry outputGeo(output->x (), output->y (), output->width (), output->height ());
-  BackgroundEffectHelper::monitor_rect_ = geo;
+  BackgroundEffectHelper::monitor_rect_.Set(0, 0, screen->width(), screen->height());
 
   GLint fboID;
   // Nux renders to the referenceFramebuffer when it's embedded.
@@ -741,9 +738,7 @@ void UnityScreen::paintDisplay()
   wt->GetWindowCompositor().SetReferenceFramebuffer(fboID, outputGeo);
 
   nuxPrologue();
-  _in_paint = true;
   wt->RenderInterfaceFromForeignCmd (&outputGeo);
-  _in_paint = false;
   nuxEpilogue();
 
   for (Window tray_xid : panel_controller_->GetTrayXids())
@@ -1835,11 +1830,18 @@ void UnityScreen::SendExecuteCommand()
     adapter.TerminateScale();
   }
 
-  ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL, glib::Source::Priority::HIGH);
+  if (dash_controller_->IsCommandLensOpen())
+  {
+    ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
+  }
+  else
+  {
+    ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL, glib::Source::Priority::HIGH);
 
-  ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                            g_variant_new("(sus)", "commands.lens", dash::GOTO_DASH_URI, ""),
-                            glib::Source::Priority::LOW);
+    ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                              g_variant_new("(sus)", "commands.lens", dash::GOTO_DASH_URI, ""),
+                              glib::Source::Priority::LOW);
+  }
 }
 
 bool UnityScreen::executeCommand(CompAction* action,
