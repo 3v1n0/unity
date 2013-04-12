@@ -491,7 +491,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
 
       x += (half_size + flat_spacing) * scalar;
 
-      arg.rotation.y = (1.0f - MIN (1.0f, scalar));
+      arg.rotation.y = (1.0f - std::min<float>(1.0f, scalar));
 
       if (!should_flat && overflow > 0 && i != selection)
       {
