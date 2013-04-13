@@ -54,9 +54,10 @@ public:
 
   void DirtyCache();
 
-  static void ProcessDamage(nux::Geometry geo);
+  static void ProcessDamage(nux::Geometry const& geo);
   static bool HasDirtyHelpers();
   static bool HasEnabledHelpers();
+  static bool HasDamageableHelpers();
 
   static nux::Property<unity::BlurType> blur_type;
   static nux::Property<float> sigma_high;
@@ -77,7 +78,7 @@ protected:
 private:
   void OnEnabledChanged (bool value);
 
-  nux::BaseTexture*                       noise_texture_;
+  nux::ObjectPtr<nux::BaseTexture> noise_texture_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> blur_texture_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> resize_tmp_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> noisy_tmp_;
