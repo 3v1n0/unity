@@ -37,6 +37,7 @@ Options::Options()
   , background_alpha(0.6667)
   , icon_size(48)
   , tile_size(54)
+  , super_tap_duration(250)
   , edge_decay_rate(1500)
   , edge_overcome_pressure(2000)
   , edge_stop_velocity(6500)
@@ -47,7 +48,8 @@ Options::Options()
   , show_for_all(false)
 {
   auto changed_lambda = [this] {
-    changed_idle_.reset(new glib::Idle([this] { option_changed.emit(); return false; }));
+    changed_idle_.reset(new glib::Idle(glib::Source::Priority::HIGH));
+    changed_idle_->Run([this] { option_changed.emit(); return false; });
   };
 
   auto_hide_animation.changed.connect(sigc::hide(changed_lambda));
@@ -65,6 +67,7 @@ Options::Options()
   launch_animation.changed.connect(sigc::hide(changed_lambda));
   reveal_trigger.changed.connect(sigc::hide(changed_lambda));
   tile_size.changed.connect(sigc::hide(changed_lambda));
+  super_tap_duration.changed.connect(sigc::hide(changed_lambda));
   urgent_animation.changed.connect(sigc::hide(changed_lambda));
   edge_resist.changed.connect(sigc::hide(changed_lambda));
 }

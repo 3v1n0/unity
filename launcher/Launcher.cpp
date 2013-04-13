@@ -198,12 +198,8 @@ Launcher::Launcher(MockableBaseWindow* parent,
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 
   TextureCache& cache = TextureCache::GetDefault();
-  TextureCache::CreateTextureCallback cb = [&](std::string const& name, int width, int height) {
-    return nux::CreateTexture2DFromFile((PKGDATADIR"/" + name + ".png").c_str(), -1, true);
-  };
-
-  launcher_sheen_ = cache.FindTexture("dash_sheen", 0, 0, cb);
-  launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect", 0, 0, cb);
+  launcher_sheen_ = cache.FindTexture("dash_sheen.png");
+  launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect.png");
 
   options.changed.connect(sigc::mem_fun(this, &Launcher::OnOptionsChanged));
   monitor.changed.connect(sigc::mem_fun(this, &Launcher::OnMonitorChanged));
@@ -837,13 +833,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr const& icon, struct time
   // we dont need to show strays
   if (!icon->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING))
   {
-    if (icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT))
-    {
-      arg.running_arrow = true;
-      arg.window_indicators = 1;
-    }
-    else
-      arg.window_indicators = 0;
+    arg.window_indicators = 0;
   }
   else
   {
@@ -851,6 +841,13 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr const& icon, struct time
       arg.window_indicators = std::max<int> (icon->WindowsOnViewport().size(), 1);
     else
       arg.window_indicators = std::max<int> (icon->WindowsForMonitor(monitor).size(), 1);
+
+    if (icon->GetIconType() == AbstractLauncherIcon::IconType::TRASH ||
+        icon->GetIconType() == AbstractLauncherIcon::IconType::DEVICE)
+    {
+      // TODO: also these icons should respect the actual windows they have
+      arg.window_indicators = 0;
+    }
   }
 
   arg.backlight_intensity = IconBackgroundIntensity(icon, current);
@@ -1415,8 +1412,6 @@ void Launcher::UpdateOptions(Options::Ptr options)
 
 void Launcher::ConfigureBarrier()
 {
-  nux::Geometry geo = GetAbsoluteGeometry();
-
   float decay_responsiveness_mult = ((options()->edge_responsiveness() - 1) * .3f) + 1;
   float reveal_responsiveness_mult = ((options()->edge_responsiveness() - 1) * .025f) + 1;
 
@@ -2622,7 +2617,7 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     SetActionState(ACTION_DRAG_EXTERNAL);
     SetStateMouseOverLauncher(true);
 
-    if (!_steal_drag)
+    if (!_steal_drag && !_dnd_data.Uris().empty())
     {
       for (auto const& it : *_model)
       {

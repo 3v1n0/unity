@@ -29,11 +29,24 @@ namespace unity
 class GnomeFileManager : public FileManager
 {
 public:
+  static FileManager::Ptr Get();
+  ~GnomeFileManager();
+
   void Open(std::string const& uri, unsigned long long timestamp);
+  void OpenActiveChild(std::string const& uri, unsigned long long timestamp);
+  void OpenTrash(unsigned long long timestamp);
   void EmptyTrash(unsigned long long timestamp);
+  std::vector<std::string> OpenedLocations() const;
+  bool IsPrefixOpened(std::string const& uri) const;
+  bool IsTrashOpened() const;
+  bool IsDeviceOpened() const;
 
 private:
+  GnomeFileManager();
   void Activate(unsigned long long timestamp);
+
+  struct Impl;
+  std::unique_ptr<Impl> impl_;
 };
 
 }

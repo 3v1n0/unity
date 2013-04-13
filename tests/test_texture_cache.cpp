@@ -50,7 +50,7 @@ struct TextureCallbackValues
   }
 };
 
-TEST(TestTextureCache, DISABLED_TestCallsCreateTextureCallback)
+TEST(TestTextureCache, TestCallsCreateTextureCallback)
 {
   // Another lambda issue.  If the lambda takes a reference to any other
   // variables, it seems incapable of assigning the function to the
@@ -80,7 +80,7 @@ struct TextureCallbackCounter
   }
 };
 
-TEST(TestTextureCache, DISABLED_TestCallbackOnlyCalledOnce)
+TEST(TestTextureCache, TestCallbackOnlyCalledOnce)
 {
   TextureCallbackCounter counter;
   TextureCache::CreateTextureCallback callback(sigc::mem_fun(counter, &TextureCallbackCounter::callback));
@@ -95,7 +95,7 @@ TEST(TestTextureCache, DISABLED_TestCallbackOnlyCalledOnce)
   EXPECT_TRUE(t1 == t2);
 }
 
-TEST(TestTextureCache, DISABLED_TestCacheRemovesDeletedObject)
+TEST(TestTextureCache, TestCacheRemovesDeletedObject)
 {
   // Note for others, if just using the lambda function, the return value is
   // lost in the type deduction that sigc uses.  So we have the typedef

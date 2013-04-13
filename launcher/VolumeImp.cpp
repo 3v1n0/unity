@@ -32,7 +32,7 @@ namespace launcher
 // Start private implementation
 //
 
-class VolumeImp::Impl
+class VolumeImp::Impl : public sigc::trackable
 {
 public:
   Impl(glib::Object<GVolume> const& volume,
@@ -40,6 +40,7 @@ public:
        DeviceNotificationDisplay::Ptr const& device_notification_display,
        VolumeImp* parent)
     : parent_(parent)
+    , opened_(false)
     , open_timestamp_(0)
     , volume_(volume)
     , file_manager_(file_manager)
@@ -50,8 +51,21 @@ public:
     });
 
     signal_volume_removed_.Connect(volume_, "removed", [this] (GVolume*) {
-          parent_->removed.emit();
+      parent_->removed.emit();
     });
+
+    file_manager_->locations_changed.connect(sigc::mem_fun(this, &Impl::OnLocationChanged));
+  }
+
+  void OnLocationChanged()
+  {
+    bool opened = file_manager_->IsPrefixOpened(GetUri());
+
+    if (opened_ != opened)
+    {
+      opened_ = opened;
+      parent_->opened.emit(opened_);
+    }
   }
 
   bool CanBeEjected() const
@@ -112,6 +126,11 @@ public:
     return static_cast<bool>(mount);
   }
 
+  bool IsOpened() const
+  {
+    return opened_;
+  }
+
   void EjectAndShowNotification()
   {
     if (!CanBeEjected())
@@ -167,18 +186,22 @@ public:
 
   void OpenInFileManager()
   {
-    file_manager_->Open(GetUri(), open_timestamp_);
+    file_manager_->OpenActiveChild(GetUri(), open_timestamp_);
   }
 
-  std::string GetUri()
+  std::string GetUri() const
   {
     glib::Object<GMount> mount(g_volume_get_mount(volume_));
+
+    if (!mount.IsType(G_TYPE_MOUNT))
+      return std::string();
+
     glib::Object<GFile> root(g_mount_get_root(mount));
 
-    if (root.IsType(G_TYPE_FILE))
-      return glib::String(g_file_get_uri(root)).Str();
-    else
-     return std::string();
+    if (!root.IsType(G_TYPE_FILE))
+      return std::string();
+
+    return glib::String(g_file_get_uri(root)).Str();
   }
 
   void StopDrive()
@@ -213,6 +236,7 @@ public:
   }
 
   VolumeImp* parent_;
+  bool opened_;
   unsigned long long open_timestamp_;
   glib::Cancellable cancellable_;
   glib::Object<GVolume> volume_;
@@ -274,6 +298,11 @@ bool VolumeImp::HasSiblings() const
 bool VolumeImp::IsMounted() const
 {
   return pimpl->IsMounted();
+}
+
+bool VolumeImp::IsOpened() const
+{
+  return pimpl->IsOpened();
 }
 
 void VolumeImp::MountAndOpenInFileManager(unsigned long long timestamp)

@@ -166,7 +166,7 @@ void EdgeBarrierController::Impl::OnPointerBarrierEvent(PointerBarrierWrapper* o
   }
 
   unsigned int monitor = owner->index;
-  auto result = EdgeBarrierSubscriber::Result::IGNORED;
+  auto result = EdgeBarrierSubscriber::Result::NEEDS_RELEASE;
 
   if (monitor < subscribers_.size())
   {

@@ -18,20 +18,22 @@
  */
 
 #include <gmock/gmock.h>
+#include <UnityCore/DesktopUtilities.h>
 
 #include "TrashLauncherIcon.h"
 #include "test_mock_filemanager.h"
 
 using namespace unity;
 using namespace unity::launcher;
+using namespace testing;
 
 namespace
 {
 
-struct TestTrashLauncherIcon : testing::Test
+struct TestTrashLauncherIcon : Test
 {
   TestTrashLauncherIcon()
-    : fm_(std::make_shared<MockFileManager>())
+    : fm_(std::make_shared<NiceMock<MockFileManager>>())
     , icon(fm_)
   {}
 
@@ -47,7 +49,7 @@ TEST_F(TestTrashLauncherIcon, Position)
 TEST_F(TestTrashLauncherIcon, Activate)
 {
   unsigned long long time = g_random_int();
-  EXPECT_CALL(*fm_, Open("trash:", time));
+  EXPECT_CALL(*fm_, OpenTrash(time));
   icon.Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
 }
 
@@ -67,6 +69,28 @@ TEST_F(TestTrashLauncherIcon, QuicklistEmptyTrash)
   unsigned time = g_random_int();
   EXPECT_CALL(*fm_, EmptyTrash(time));
   dbusmenu_menuitem_handle_event(empty_trash_menu, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, time);
+}
+
+TEST_F(TestTrashLauncherIcon, RunningState)
+{
+  EXPECT_CALL(*fm_, IsTrashOpened()).WillRepeatedly(Return(true));
+  fm_->locations_changed.emit();
+  EXPECT_TRUE(icon.GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+
+  EXPECT_CALL(*fm_, IsTrashOpened()).WillRepeatedly(Return(false));
+  fm_->locations_changed.emit();
+  EXPECT_FALSE(icon.GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+}
+
+TEST_F(TestTrashLauncherIcon, FilemanagerSignalDisconnection)
+{
+  auto file_manager = std::make_shared<NiceMock<MockFileManager>>();
+  {
+    TrashLauncherIcon trash_icon(file_manager);
+    ASSERT_FALSE(file_manager->locations_changed.empty());
+  }
+
+  EXPECT_TRUE(file_manager->locations_changed.empty());
 }
 
 }

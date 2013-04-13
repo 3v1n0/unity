@@ -34,6 +34,7 @@
 #include "PanelStyle.h"
 
 #include <UnityCore/GLibWrapper.h>
+#include "unity-shared/TextureCache.h"
 #include "unity-shared/UnitySettings.h"
 
 namespace unity
@@ -138,7 +139,7 @@ void Style::Refresh()
   GdkRGBA rgba_text_color;
   glib::String theme_name;
   bool updated = false;
-  
+
   GtkSettings* settings = gtk_settings_get_default();
   g_object_get(settings, "gtk-theme-name", &theme_name, nullptr);
 
@@ -159,7 +160,10 @@ void Style::Refresh()
   }
 
   if (updated)
+  {
+    _bg_texture.Release();
     changed.emit();
+  }
 }
 
 GtkStyleContext* Style::GetStyleContext()
@@ -167,8 +171,14 @@ GtkStyleContext* Style::GetStyleContext()
   return _style_context;
 }
 
-BaseTexturePtr Style::GetBackground(int width, int height, float opacity)
+BaseTexturePtr Style::GetBackground()
 {
+  if (_bg_texture)
+    return _bg_texture;
+
+  int width = 1;
+  int height = panel_height();
+
   nux::CairoGraphics context(CAIRO_FORMAT_ARGB32, width, height);
 
   // Use the internal context as we know it is good and shiny new.
@@ -177,9 +187,11 @@ BaseTexturePtr Style::GetBackground(int width, int height, float opacity)
   gtk_render_background(_style_context, cr, 0, 0, width, height);
   gtk_render_frame(_style_context, cr, 0, 0, width, height);
   cairo_pop_group_to_source(cr);
-  cairo_paint_with_alpha(cr, opacity);
+  cairo_paint(cr);
 
-  return texture_ptr_from_cairo_graphics(context);
+  _bg_texture = texture_ptr_from_cairo_graphics(context);
+
+  return _bg_texture;
 }
 
 /*!
@@ -222,20 +234,30 @@ std::vector<std::string> Style::GetWindowButtonFileNames(WindowButtonType type, 
 
 BaseTexturePtr Style::GetWindowButton(WindowButtonType type, WindowState state)
 {
-  BaseTexturePtr texture;
+  auto texture_factory = [this, type, state] (std::string const&, int, int) {
+    nux::BaseTexture* texture = nullptr;
 
-  for (auto const& file : GetWindowButtonFileNames(type, state))
-  {
-    texture.Adopt(nux::CreateTexture2DFromFile(file.c_str(), -1, true));
+    for (auto const& file : GetWindowButtonFileNames(type, state))
+    {
+      texture = nux::CreateTexture2DFromFile(file.c_str(), -1, true);
 
-    if (texture)
-      break;
-  }
+      if (texture)
+        return texture;
+    }
 
-  if (!texture)
-    texture = GetFallbackWindowButton(type, state);
+    auto const& fallback = GetFallbackWindowButton(type, state);
+    texture = fallback.GetPointer();
+    texture->Reference();
 
-  return texture;
+    return texture;
+  };
+
+  auto& cache = TextureCache::GetDefault();
+  std::string texture_id = "window-button-";
+  texture_id += std::to_string(static_cast<int>(type));
+  texture_id += std::to_string(static_cast<int>(state));
+
+  return cache.FindTexture(texture_id, 0, 0, texture_factory);
 }
 
 BaseTexturePtr Style::GetFallbackWindowButton(WindowButtonType type,

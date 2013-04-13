@@ -83,6 +83,7 @@ public:
   MOCK_CONST_METHOD0(HasSiblings, bool(void));
   MOCK_CONST_METHOD0(CanBeEjected, bool(void));
   MOCK_CONST_METHOD0(IsMounted, bool(void));
+  MOCK_CONST_METHOD0(IsOpened, bool(void));
 
   MOCK_METHOD0(EjectAndShowNotification, void(void));
   MOCK_METHOD1(MountAndOpenInFileManager, void(unsigned long long));

@@ -23,12 +23,9 @@
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
-#include <Nux/WindowCompositor.h>
 #include <NuxCore/Logger.h>
 #include <zeitgeist.h>
 
-#include "Launcher.h"
-#include "QuicklistManager.h"
 #include "QuicklistMenuItemLabel.h"
 #include "unity-shared/GnomeFileManager.h"
 
@@ -45,13 +42,13 @@ namespace
 
 TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
   : SimpleLauncherIcon(IconType::TRASH)
-  , file_manager_(fmo ? fmo : std::make_shared<GnomeFileManager>())
+  , file_manager_(fmo ? fmo : GnomeFileManager::Get())
 {
   tooltip_text = _("Trash");
   icon_name = "user-trash";
   position = Position::END;
   SetQuirk(Quirk::VISIBLE, true);
-  SetQuirk(Quirk::RUNNING, false);
+  SetQuirk(Quirk::RUNNING, file_manager_->IsTrashOpened());
   SetShortcut('t');
 
   glib::Object<GFile> location(g_file_new_for_uri(TRASH_URI.c_str()));
@@ -72,7 +69,14 @@ TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
     });
   }
 
+  file_manager_->locations_changed.connect(sigc::mem_fun(this, &TrashLauncherIcon::OnOpenedLocationsChanged));
+
   UpdateTrashIcon();
+}
+
+void TrashLauncherIcon::OnOpenedLocationsChanged()
+{
+  SetQuirk(Quirk::RUNNING, file_manager_->IsTrashOpened());
 }
 
 AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()
@@ -97,8 +101,7 @@ AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()
 void TrashLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
-
-  file_manager_->Open(TRASH_URI.c_str(), arg.timestamp);
+  file_manager_->OpenTrash(arg.timestamp);
 }
 
 void TrashLauncherIcon::UpdateTrashIcon()

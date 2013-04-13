@@ -135,7 +135,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , gScreen(GLScreen::get(screen))
   , debugger_(this)
   , needsRelayout(false)
-  , _in_paint(false)
   , super_keypressed_(false)
   , newFocusedWindow(nullptr)
   , doShellRepaint(false)
@@ -148,8 +147,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , last_scroll_event_(0)
   , hud_keypress_time_(0)
   , first_menu_keypress_time_(0)
-  , panel_texture_has_changed_(true)
-  , paint_panel_(false)
+  , paint_panel_under_dash_(false)
   , scale_just_activated_(false)
   , big_tick_(0)
   , screen_introspection_(screen)
@@ -287,7 +285,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      wt->Run(NULL);
      uScreen = this;
-     _in_paint = false;
 
      optionSetShowHudInitiate(boost::bind(&UnityScreen::ShowHudInitiate, this, _1, _2, _3));
      optionSetShowHudTerminate(boost::bind(&UnityScreen::ShowHudTerminate, this, _1, _2, _3));
@@ -747,8 +744,6 @@ UnityWindow::updateIconPos (int   &wx,
 
 void UnityScreen::OnPanelStyleChanged()
 {
-  panel_texture_has_changed_ = true;
-
   // Reload the windows themed textures
   UnityWindow::CleanupSharedTextures();
 
@@ -765,7 +760,7 @@ void UnityScreen::paintDisplay()
 {
   CompOutput *output = _last_output;
 
-  DrawTopPanelBackground();
+  DrawPanelUnderDash();
 
   /* Bind the currently bound draw framebuffer to the read framebuffer binding.
    * The reason being that we want to use the results of nux images being
@@ -785,25 +780,22 @@ void UnityScreen::paintDisplay()
    * need as opposed to the whole readbuffer */
   if (dirty_helpers_on_this_frame_)
   {
-    auto graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
     auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
+    auto graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
     gpu_device->backup_texture0_ =
       graphics_engine->CreateTextureFromBackBuffer(0, 0, screen->width(), screen->height());
     back_buffer_age_ = 0;
   }
 
-  nux::Geometry geo(0, 0, screen->width (), screen->height ());
   nux::Geometry outputGeo(output->x (), output->y (), output->width (), output->height ());
-  BackgroundEffectHelper::monitor_rect_ = geo;
+  BackgroundEffectHelper::monitor_rect_.Set(0, 0, screen->width(), screen->height());
 
   wt->GetWindowCompositor().SetReferenceFramebuffer(current_draw_binding,
                                                     old_read_binding,
                                                     outputGeo);
 
   nuxPrologue();
-  _in_paint = true;
   wt->RenderInterfaceFromForeignCmd (&outputGeo);
-  _in_paint = false;
   nuxEpilogue();
 
   for (Window tray_xid : panel_controller_->GetTrayXids())
@@ -863,45 +855,29 @@ void UnityScreen::paintDisplay()
   didShellRepaint = true;
 }
 
-void UnityScreen::DrawTopPanelBackground()
+void UnityScreen::DrawPanelUnderDash()
 {
+  if (!paint_panel_under_dash_ || !launcher_controller_->IsOverlayOpen())
+    return;
+
+  if (_last_output->id() != screen->currentOutputDev().id())
+    return;
+
   auto graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
 
-  if (!graphics_engine->UsingGLSLCodePath() || !launcher_controller_->IsOverlayOpen() || !paint_panel_)
-   return;
+  if (!graphics_engine->UsingGLSLCodePath())
+    return;
 
-  if (TopPanelBackgroundTextureNeedsUpdate())
-    UpdateTopPanelBackgroundTexture();
+  graphics_engine->ResetModelViewMatrixStack();
+  graphics_engine->Push2DTranslationModelViewMatrix(0.0f, 0.0f, 0.0f);
+  graphics_engine->ResetProjectionMatrix();
+  graphics_engine->SetOrthographicProjectionMatrix(screen->width(), screen->height());
 
-  if (panel_texture_.IsValid())
-  {
-    graphics_engine->ResetModelViewMatrixStack();
-    graphics_engine->Push2DTranslationModelViewMatrix(0.0f, 0.0f, 0.0f);
-    graphics_engine->ResetProjectionMatrix();
-    graphics_engine->SetOrthographicProjectionMatrix(screen->width (), screen->height());
-
-    nux::TexCoordXForm texxform;
-    int panel_height = panel_style_.panel_height;
-    graphics_engine->QRP_GLSL_1Tex(0, 0, screen->width (), panel_height, panel_texture_, texxform, nux::color::White);
-  }
-}
-
-bool UnityScreen::TopPanelBackgroundTextureNeedsUpdate() const
-{
-  return panel_texture_has_changed_ || !panel_texture_.IsValid();
-}
-
-void UnityScreen::UpdateTopPanelBackgroundTexture()
-{
-  auto &panel_style = panel::Style::Instance();
-
-  panel_texture_.Release();
-  auto texture = panel_style.GetBackground(screen->width(), screen->height(), 1.0f);
-
-  if (texture)
-    panel_texture_ = texture->GetDeviceTexture();
-
-  panel_texture_has_changed_ = false;
+  nux::TexCoordXForm texxform;
+  texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_CLAMP);
+  int panel_height = panel_style_.panel_height;
+  auto const& texture = panel_style_.GetBackground()->GetDeviceTexture();
+  graphics_engine->QRP_GLSL_1Tex(0, 0, screen->width(), panel_height, texture, texxform, nux::color::White);
 }
 
 bool UnityScreen::forcePaintOnTop ()
@@ -1311,7 +1287,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
 
   allowWindowPaint = true;
   _last_output = output;
-  paint_panel_ = false;
+  paint_panel_under_dash_ = false;
 
   // CompRegion has no clear() method. So this is the fastest alternative.
   fullscreenRegion = CompRegion();
@@ -1961,11 +1937,18 @@ void UnityScreen::SendExecuteCommand()
     adapter.TerminateScale();
   }
 
-  ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL, glib::Source::Priority::HIGH);
+  if (dash_controller_->IsCommandLensOpen())
+  {
+    ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
+  }
+  else
+  {
+    ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL, glib::Source::Priority::HIGH);
 
-  ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                            g_variant_new("(sus)", "commands.lens", dash::GOTO_DASH_URI, ""),
-                            glib::Source::Priority::LOW);
+    ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
+                              g_variant_new("(sus)", "commands.lens", dash::GOTO_DASH_URI, ""),
+                              glib::Source::Priority::LOW);
+  }
 }
 
 bool UnityScreen::executeCommand(CompAction* action,
@@ -2700,19 +2683,17 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
                          const CompRegion& region,
                          unsigned int mask)
 {
-  if (uScreen->doShellRepaint && !uScreen->paint_panel_ && window->type() == CompWindowTypeNormalMask)
+  if (uScreen->doShellRepaint && !uScreen->paint_panel_under_dash_ && window->type() == CompWindowTypeNormalMask)
   {
-    guint32 id = window->id();
-    bool maximized = WindowManager::Default().IsWindowMaximized(id);
-    bool on_current = window->onCurrentDesktop();
-    bool override_redirect = window->overrideRedirect();
-    bool managed = window->managed();
-    CompPoint viewport = window->defaultViewport();
-    int output = window->outputDevice();
-
-    if (maximized && on_current && !override_redirect && managed && viewport == uScreen->screen->vp() && output == (int)uScreen->screen->currentOutputDev().id())
+    if ((window->state() & MAXIMIZE_STATE) && window->onCurrentDesktop() && !window->overrideRedirect() && window->managed())
     {
-      uScreen->paint_panel_ = true;
+      CompPoint const& viewport = window->defaultViewport();
+      unsigned output = window->outputDevice();
+
+      if (viewport == uScreen->screen->vp() && output == uScreen->screen->currentOutputDev().id())
+      {
+        uScreen->paint_panel_under_dash_ = true;
+      }
     }
   }
 
@@ -3182,7 +3163,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       PluginAdapter::Default().SetCoverageAreaBeforeAutomaximize(optionGetAutomaximizeValue() / 100.0f);
       break;
     case UnityshellOptions::DashTapDuration:
-      launcher_controller_->UpdateSuperTapDuration(optionGetDashTapDuration());
+      launcher_options->super_tap_duration = optionGetDashTapDuration();
       break;
     case UnityshellOptions::AltTabTimeout:
       switcher_controller_->SetDetailOnTimeout(optionGetAltTabTimeout());
@@ -3324,7 +3305,6 @@ void UnityScreen::initLauncher()
   auto xdnd_manager = std::make_shared<XdndManagerImp>(xdnd_start_stop_notifier, xdnd_collection_window);
 
   launcher_controller_ = std::make_shared<launcher::Controller>(xdnd_manager);
-  launcher_controller_->UpdateSuperTapDuration(optionGetDashTapDuration());
   AddChild(launcher_controller_.get());
 
   switcher_controller_ = std::make_shared<switcher::Controller>();
