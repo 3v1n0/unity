@@ -1330,7 +1330,7 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
    * current one?) to get some damage. This GetDrawList().empty() check avoids
    * that feedback loop and allows us to idle correctly.
    */
-  if (wt->GetDrawList().empty())
+  if (wt->GetDrawList().empty() && BackgroundEffectHelper::HasDamageableHelpers())
   {
     CompRect::vector const& rects(damage.rects());
     for (CompRect const& r : rects)
