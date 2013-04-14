@@ -40,7 +40,7 @@ public:
   void FirstMenuShow();
   void QueueRedraw();
 
-  std::vector<Window> GetTrayXids() const;
+  std::vector<Window> const& GetTrayXids() const;
   std::vector<nux::View*> GetPanelViews() const;
   std::vector<nux::Geometry> GetGeometries() const;
 

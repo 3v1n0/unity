@@ -37,7 +37,6 @@ class IconRenderer : public AbstractIconRenderer
 {
 public:
   IconRenderer();
-  virtual ~IconRenderer();
 
   void PreprocessIcons(std::list<RenderArg>& args, nux::Geometry const& target_window);
 

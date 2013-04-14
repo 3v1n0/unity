@@ -97,7 +97,7 @@ private:
   void OnCategoryOrderChanged();
   void OnResultAdded(Result const& result);
   void OnResultRemoved(Result const& result);
-  void UpdateCounts(PlacesGroup* group);
+  void UpdateCounts(PlacesGroup* group, unsigned int);
   void OnGroupExpanded(PlacesGroup* group);
   void CheckScrollBarState();
   void OnColumnsChanged();

@@ -621,8 +621,6 @@ void UnityScreen::paintPanelShadow(CompRegion const& clip)
 
   panelShadowPainted |= redraw;
 
-  nuxPrologue();
-
   for (auto const& r : redraw.rects())
   {
     for (GLTexture* tex : _shadow_texture)
@@ -685,7 +683,6 @@ void UnityScreen::paintPanelShadow(CompRegion const& clip)
         glDisable(GL_BLEND);
     }
   }
-  nuxEpilogue();
 }
 
 void
@@ -1434,8 +1431,7 @@ void UnityScreen::nuxDamageCompiz()
    *       redraw even though the launcher's geometry is not in DrawList, and
    *       stop it. Then maybe we can revert back to the old code below #else.
    */
-  std::vector<nux::Geometry> const& dirty = wt->GetDrawList();
-  if (!dirty.empty() || animation_controller_->HasRunningAnimations())
+  if (!wt->GetDrawList().empty() || animation_controller_->HasRunningAnimations())
   {
     cScreen->damageRegionSetEnabled(this, false);
     cScreen->damageScreen();

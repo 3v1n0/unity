@@ -150,6 +150,7 @@ Launcher::Launcher(MockableBaseWindow* parent,
   , icon_renderer(std::make_shared<ui::IconRenderer>())
 {
   m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+  icon_renderer->monitor = monitor();
 
   bg_effect_helper_.owner = this;
   bg_effect_helper_.enabled = false;
@@ -783,9 +784,6 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr const& icon, struct time
   arg.running_colored     = icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT);
   arg.draw_edge_only      = IconDrawEdgeOnly(icon);
   arg.active_colored      = false;
-  arg.x_rotation          = 0.0f;
-  arg.y_rotation          = 0.0f;
-  arg.z_rotation          = 0.0f;
   arg.skip                = false;
   arg.stick_thingy        = false;
   arg.keyboard_nav_hl     = false;
@@ -863,7 +861,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr const& icon, struct time
 
   if (icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT) && options()->urgent_animation() == URGENT_ANIMATION_WIGGLE)
   {
-    arg.z_rotation = IconUrgentWiggleValue(icon, current);
+    arg.rotation.z = IconUrgentWiggleValue(icon, current);
   }
 
   if (IsInKeyNavMode())
@@ -941,7 +939,7 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr const& icon,
 
   // icon is crossing threshold, start folding
   center.z += folded_z_distance * folding_progress;
-  arg.x_rotation = animation_neg_rads * folding_progress;
+  arg.rotation.x = animation_neg_rads * folding_progress;
 
   float spacing_overlap = CLAMP((float)(center.y + (2.0f * half_size * size_modifier) + (_space_between_icons * size_modifier) - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
   float spacing = (_space_between_icons * (1.0f - spacing_overlap) + folded_spacing * spacing_overlap) * size_modifier;
@@ -1399,6 +1397,7 @@ void Launcher::OnMonitorChanged(int new_monitor)
   unity::panel::Style &panel_style = panel::Style::Instance();
   Resize(nux::Point(monitor_geo.x, monitor_geo.y + panel_style.panel_height),
          monitor_geo.height - panel_style.panel_height);
+  icon_renderer->monitor = new_monitor;
 }
 
 void Launcher::UpdateOptions(Options::Ptr options)
@@ -1688,8 +1687,6 @@ void Launcher::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  icon_renderer->monitor = monitor();
-
   nux::Geometry const& base = GetGeometry();
   nux::Geometry bkg_box;
   std::list<RenderArg> args;
@@ -2458,7 +2455,7 @@ void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLaun
   SetupRenderArg(icon, current, arg);
   arg.render_center = nux::Point3(roundf(texture->GetWidth() / 2.0f), roundf(texture->GetHeight() / 2.0f), 0.0f);
   arg.logical_center = arg.render_center;
-  arg.x_rotation = 0.0f;
+  arg.rotation.x = 0.0f;
   arg.running_arrow = false;
   arg.active_arrow = false;
   arg.skip = false;
