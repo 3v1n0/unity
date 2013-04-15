@@ -69,8 +69,9 @@ class UnityTestCase(AutopilotTestCase):
 
         # For the length of the test, disable screen locking
         self._desktop_settings = Gio.Settings.new("org.gnome.desktop.lockdown")
+        lock_state = self._desktop_settings.get_boolean("disable-lock-screen")
         self._desktop_settings.set_boolean("disable-lock-screen", True)
-        self.addCleanup(self._desktop_settings.set_boolean, "disable-lock-screen", False)
+        self.addCleanup(self._desktop_settings.set_boolean, "disable-lock-screen", lock_state)
 
     def check_test_behavior(self):
         """Fail the test if it did something naughty.
