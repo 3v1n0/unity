@@ -225,11 +225,6 @@ void LensView::SetupViews(nux::Area* show_filters)
   scroll_view_->EnableHorizontalScrollBar(false);
   layout_->AddView(scroll_view_);
 
-  scroll_view_->geometry_changed.connect([this] (nux::Area *area, nux::Geometry& geo)
-  {
-    CheckScrollBarState();
-  });
-
   scroll_layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   scroll_view_->SetLayout(scroll_layout_);
   scroll_view_->SetRightArea(show_filters);
@@ -510,8 +505,7 @@ void LensView::OnResultAdded(Result const& result)
     std::string uri = result.uri;
     LOG_TRACE(logger) << "Result added: " << uri;
 
-    counts_[group]++;
-    UpdateCounts(group);
+    UpdateCounts(group, ++counts_[group]);
     // make sure we don't display the no-results-hint if we do have results
     if (G_UNLIKELY (no_results_active_))
     {
@@ -543,8 +537,7 @@ void LensView::OnResultRemoved(Result const& result)
     std::string uri = result.uri;
     LOG_TRACE(logger) << "Result removed: " << uri;
 
-    counts_[group]--;
-    UpdateCounts(group);
+    UpdateCounts(group, --counts_[group]);
   } catch (std::out_of_range& oor) {
     LOG_WARN(logger) << "Result does not have a valid category index: "
                      << boost::lexical_cast<unsigned int>(result.category_index)
@@ -552,13 +545,13 @@ void LensView::OnResultRemoved(Result const& result)
   }
 }
 
-void LensView::UpdateCounts(PlacesGroup* group)
+void LensView::UpdateCounts(PlacesGroup* group, unsigned int new_counts)
 {
   unsigned int columns = dash::Style::Instance().GetDefaultNColumns();
   columns -= filters_expanded ? 2 : 0;
 
-  group->SetCounts(columns, counts_[group]);
-  group->SetVisible(counts_[group]);
+  group->SetCounts(columns, new_counts);
+  group->SetVisible(new_counts);
 }
 
 void LensView::CheckNoResults(Lens::Hints const& hints)
@@ -663,13 +656,13 @@ void LensView::OnGroupExpanded(PlacesGroup* group)
 
 void LensView::CheckScrollBarState()
 {
-  if (scroll_layout_->GetGeometry().height > scroll_view_->GetGeometry().height)
+  if (scroll_layout_->GetHeight() > scroll_view_->GetHeight())
   {
-    scroll_view_->EnableVerticalScrollBar(true); 
+    scroll_view_->EnableVerticalScrollBar(true);
   }
   else
   {
-    scroll_view_->EnableVerticalScrollBar(false); 
+    scroll_view_->EnableVerticalScrollBar(false);
   }
 }
 
@@ -735,6 +728,7 @@ void LensView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
 {
   nux::Geometry const& geo(GetGeometry());
   graphics_engine.PushClippingRectangle(geo);
+  CheckScrollBarState();
 
   if (!IsFullRedraw() && RedirectedAncestor())
   {

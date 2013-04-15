@@ -663,8 +663,6 @@ void UnityScreen::PaintPanelShadow(CompRegion const& clip)
 
   panelShadowPainted |= redraw;
 
-  nuxPrologue();
-
   for (auto const& r : redraw.rects())
   {
     for (GLTexture* tex : _shadow_texture)
@@ -727,7 +725,6 @@ void UnityScreen::PaintPanelShadow(CompRegion const& clip)
         glDisable(GL_BLEND);
     }
   }
-  nuxEpilogue();
 }
 
 void

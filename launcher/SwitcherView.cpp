@@ -17,6 +17,7 @@
  */
 
 #include "config.h"
+#include "MultiMonitor.h"
 #include "SwitcherView.h"
 #include "unity-shared/IconRenderer.h"
 #include "unity-shared/TimeUtil.h"
@@ -57,6 +58,7 @@ SwitcherView::SwitcherView()
   , target_sizes_set_(false)
 {
   icon_renderer_->pip_style = OVER_TILE;
+  icon_renderer_->monitor = max_num_monitors;
 
   text_view_->SetMaximumWidth(tile_size * spread_size);
   text_view_->SetLines(1);
@@ -224,9 +226,9 @@ RenderArg SwitcherView::InterpolateRenderArgs(RenderArg const& start, RenderArg 
 
   RenderArg result = end;
 
-  result.x_rotation = start.x_rotation + (end.x_rotation - start.x_rotation) * progress;
-  result.y_rotation = start.y_rotation + (end.y_rotation - start.y_rotation) * progress;
-  result.z_rotation = start.z_rotation + (end.z_rotation - start.z_rotation) * progress;
+  result.rotation.x = start.rotation.x + (end.rotation.x - start.rotation.x) * progress;
+  result.rotation.y = start.rotation.y + (end.rotation.y - start.rotation.y) * progress;
+  result.rotation.z = start.rotation.z + (end.rotation.z - start.rotation.z) * progress;
 
   result.render_center.x = start.render_center.x + (end.render_center.x - start.render_center.x) * progress;
   result.render_center.y = start.render_center.y + (end.render_center.y - start.render_center.y) * progress;
@@ -489,7 +491,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
 
       x += (half_size + flat_spacing) * scalar;
 
-      arg.y_rotation = (1.0f - MIN (1.0f, scalar));
+      arg.rotation.y = (1.0f - std::min<float>(1.0f, scalar));
 
       if (!should_flat && overflow > 0 && i != selection)
       {
@@ -500,11 +502,11 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
         else
         {
           arg.render_center.x += 20;
-          arg.y_rotation = -arg.y_rotation;
+          arg.rotation.y = -arg.rotation.y;
         }
       }
 
-      arg.render_center.z = abs(80.0f * arg.y_rotation);
+      arg.render_center.z = abs(80.0f * arg.rotation.y);
       arg.logical_center = arg.render_center;
 
       if (i == selection && detail_selection)
@@ -588,13 +590,13 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
       text_view_->SetBaseX(start_x);
     }
 
-    if (arg.y_rotation < 0)
+    if (arg.rotation.y < 0)
       icon_renderer_->RenderIcon(GfxContext, arg, base, base);
   }
 
   for (auto rit = last_args_.rbegin(); rit != last_args_.rend(); ++rit)
   {
-    if (rit->y_rotation >= 0)
+    if (rit->rotation.y >= 0)
       icon_renderer_->RenderIcon(GfxContext, *rit, base, base);
   }
 
