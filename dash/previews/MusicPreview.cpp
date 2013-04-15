@@ -96,7 +96,7 @@ bool MusicPreview::HasUbuntuOneCredentials()
 {
   dash::Preview::InfoHintPtrList hints = preview_model_->GetInfoHints();
   GVariant *preview_data = NULL;
-  for (dash::Preview::InfoHintPtr info_hint : hints)
+  for (dash::Preview::InfoHintPtr const& info_hint : hints)
   {
     if (info_hint->id == "music_preview")
     {
