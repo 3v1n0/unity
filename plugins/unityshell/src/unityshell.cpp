@@ -2622,14 +2622,10 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     {
       if (window->id() == active_window)
       {
-        if (window->state() & MAXIMIZE_STATE)
-        {
-          draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
-        }
-        else
-        {
-          draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
+        draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
 
+        if (!(window->state() & MAXIMIZE_STATE))
+        {
           auto const& output = uScreen->screen->currentOutputDev();
 
           if (window->y() - window->border().top < output.y() + uScreen->panel_style_.panel_height)
