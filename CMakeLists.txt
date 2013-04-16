@@ -8,11 +8,12 @@ include (cmake/pch.cmake)
 # Base bits
 #
 set (PROJECT_NAME "unity")
-set (UNITY_MAJOR 6)
-set (UNITY_MINOR 6)
+set (UNITY_MAJOR 7)
+set (UNITY_MINOR 0)
 set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "6.0")
+set (UNITY_COMPONENTS_VERSION "6")
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive")
 set (CMAKE_CXX_FLAGS_DEBUG "-g3")
@@ -129,7 +130,7 @@ add_dependencies (release post-distcheck)
 #
 set (PREFIXDIR "${CMAKE_INSTALL_PREFIX}")
 set (DATADIR "${CMAKE_INSTALL_PREFIX}/share")
-set (PKGDATADIR "${DATADIR}/unity/${UNITY_MAJOR}")
+set (PKGDATADIR "${DATADIR}/unity/${UNITY_COMPONENTS_VERSION}")
 set (GETTEXT_PACKAGE "unity")
 set (LOCALE_DIR "${DATADIR}/locale")
 set (VERSION "${UNITY_VERSION}")

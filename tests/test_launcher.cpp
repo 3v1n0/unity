@@ -609,13 +609,13 @@ TEST_F(TestLauncher, IconStartingBlinkValue)
   EXPECT_EQ(launcher_->IconStartingBlinkValue(icon, current), 0.0);
 }
 
-TEST_F(TestLauncher, ExternalDragLeaveResetLauncherState)
+TEST_F(TestLauncher, HighlightingEmptyUrisOnDragMoveIsIgnored)
 {
-  launcher_->SetExternalDragState();
-  EXPECT_TRUE(launcher_->IsExternalDragState());
+  MockMockLauncherIcon::Ptr first(new MockMockLauncherIcon);
+  model_->AddIcon(first);
 
-  launcher_->ProcessDndLeave();
-  EXPECT_FALSE(launcher_->IsExternalDragState());
+  EXPECT_CALL(*first, ShouldHighlightOnDrag(_)).Times(0);
+  launcher_->ProcessDndMove(0,0,{});
 }
 
 }

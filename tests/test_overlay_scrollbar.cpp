@@ -64,6 +64,7 @@ class MockScrollBar : public unity::dash::PlacesOverlayVScrollBar
     : PlacesOverlayVScrollBar(NUX_FILE_LINE_PARAM)
     , scroll_tick_(1000 * 401)
     , scroll_dy_(0)
+    , thumbs_height_(overlay_window_->GetThumbGeometry().height)
     , scroll_up_signal_(false)
     , scroll_down_signal_(false)
     {
@@ -182,6 +183,11 @@ class MockScrollBar : public unity::dash::PlacesOverlayVScrollBar
       tick_source_.tick(scroll_tick_);
     }
 
+    void FakeDragDown()
+    {
+      OnMouseDrag(0, overlay_window_->GetThumbOffsetY() + 1, 0, 5, 0, 0);
+    }
+
     nux::NuxTimerTickSource tick_source_;
 
     using PlacesOverlayVScrollBar::connector_height_;
@@ -189,6 +195,7 @@ class MockScrollBar : public unity::dash::PlacesOverlayVScrollBar
 
     int scroll_tick_;
     int scroll_dy_;
+    int thumbs_height_;
     bool scroll_up_signal_;
     bool scroll_down_signal_;
 };
@@ -417,6 +424,18 @@ TEST_F(TestOverlayVScrollBar, TestConnectorResetsDuringScrollAnimation)
 
   connector_height = scroll_view_->scroll_bar_->connector_height_;
   EXPECT_EQ(connector_height, 0);
+}
+
+
+TEST_F(TestOverlayVScrollBar, TestAllowDragIfOverlayIsAtMaximum)
+{
+  // Offset that sets the thumb at the bottom of the scrollbar
+  int thumb_offset = scroll_view_->scroll_bar_->GetHeight() -
+                     scroll_view_->scroll_bar_->thumbs_height_;
+
+  scroll_view_->scroll_bar_->SetThumbOffset(thumb_offset);
+  scroll_view_->scroll_bar_->FakeDragDown();
+  EXPECT_TRUE(scroll_view_->scroll_bar_->scroll_down_signal_);
 }
 
 }

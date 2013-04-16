@@ -1,3 +1,22 @@
+unity (7.0.0-0ubuntu1) UNRELEASED; urgency=low
+
+  * Bumped released version to 7.0.0
+
+ -- Stephen M. Webb <stephen.webb@canonical.com>  Tue, 02 Apr 2013 12:51:28 -0400
+
+unity (6.12.0daily13.04.01-0ubuntu1) raring; urgency=low
+
+  [ Marco Trevisan (Treviño) ]
+  * Launcher starts with default size then jumps to configured one on
+    login (LP: #1099815)
+  * Launcher - Open Trash window prevents Nautilus being launched when a
+    user clicks on the Nautilus Launcher icon (LP: #753938)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3263
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 01 Apr 2013 04:02:55 +0000
+
 unity (6.12.0daily13.03.29.1-0ubuntu1) raring; urgency=low
 
   [ Brandon Schaefer ]
