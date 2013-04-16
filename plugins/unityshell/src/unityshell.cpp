@@ -2598,28 +2598,52 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     uScreen->paintDisplay();
   }
 
-  bool screen_transformed = (mask & PAINT_WINDOW_ON_TRANSFORMED_SCREEN_MASK);
-
-  if (window->type() == CompWindowTypeDesktopMask && !screen_transformed)
-    uScreen->setPanelShadowMatrix(matrix);
-
-  Window active_window = screen->activeWindow();
-
-  if (!screen_transformed &&
-      window->id() == active_window &&
-      window->type() != CompWindowTypeDesktopMask)
+  enum class DrawPanelShadow
   {
-    uScreen->paintPanelShadow(region);
+    NO,
+    BELOW_WINDOW,
+    OVER_WINDOW,
+  };
+
+  auto draw_panel_shadow = DrawPanelShadow::NO;
+
+  if (!(mask & PAINT_WINDOW_ON_TRANSFORMED_SCREEN_MASK))
+  {
+    Window active_window = screen->activeWindow();
+
+    if (G_UNLIKELY(window->type() == CompWindowTypeDesktopMask))
+    {
+      uScreen->setPanelShadowMatrix(matrix);
+
+      if (active_window == 0 || active_window == window->id())
+        draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
+    }
+    else
+    {
+      if (window->id() == active_window)
+      {
+        draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
+
+        if (!(window->state() & MAXIMIZE_STATE))
+        {
+          auto const& output = uScreen->screen->currentOutputDev();
+
+          if (window->y() - window->border().top < output.y() + uScreen->panel_style_.panel_height)
+          {
+            draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
+          }
+        }
+      }
+    }
   }
+
+  if (draw_panel_shadow == DrawPanelShadow::BELOW_WINDOW)
+    uScreen->paintPanelShadow(region);
 
   bool ret = gWindow->glDraw(matrix, attrib, region, mask);
 
-  if (!screen_transformed &&
-      (active_window == 0 || active_window == window->id()) &&
-      (window->type() == CompWindowTypeDesktopMask))
-  {
+  if (draw_panel_shadow == DrawPanelShadow::OVER_WINDOW)
     uScreen->paintPanelShadow(region);
-  }
 
   return ret;
 }
