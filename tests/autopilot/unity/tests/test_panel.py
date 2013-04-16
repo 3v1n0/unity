@@ -626,6 +626,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
             maximized=True,
             move_to_monitor=True)
 
+        self.sleep_menu_settle_period()
         self.assertThat(self.panel.window_buttons_shown, Eventually(Equals(False)))
 
         self.keybinding_hold("panel/show_menus")
