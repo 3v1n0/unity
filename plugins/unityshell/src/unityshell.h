@@ -314,6 +314,12 @@ private:
   bool    _key_nav_mode_requested;
   CompOutput* _last_output;
 
+  /* a small count-down work-a-around
+   * to force full redraws of the shell
+   * a certain number of frames after a
+   * suspend / resume cycle */
+  unsigned int force_draw_countdown_;
+
   CompRegion panelShadowPainted;
   CompRegion nuxRegion;
   CompRegion fullscreenRegion;

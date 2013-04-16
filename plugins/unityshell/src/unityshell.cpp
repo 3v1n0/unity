@@ -142,6 +142,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , allowWindowPaint(false)
   , _key_nav_mode_requested(false)
   , _last_output(nullptr)
+  , force_draw_countdown_ (0)
   , grab_index_ (0)
   , painting_tray_ (false)
   , last_scroll_event_(0)
@@ -407,6 +408,11 @@ UnityScreen::UnityScreen(CompScreen* screen)
     Display* display = gdk_x11_display_get_xdisplay(gdk_display_get_default());;
     XSelectInput(display, GDK_ROOT_WINDOW(), PropertyChangeMask);
     LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
+
+    UScreen::GetDefault()->resuming.connect([this]() {
+      /* Force paint 10 frames on resume */
+      this->force_draw_countdown_ += 10;
+    });
 
     panel::Style::Instance().changed.connect(sigc::mem_fun(this, &UnityScreen::OnPanelStyleChanged));
 
@@ -1390,6 +1396,21 @@ void UnityScreen::updateBlurDamage()
 
 void UnityScreen::damageCutoff()
 {
+  if (force_draw_countdown_)
+  {
+    typedef nux::WindowCompositor::WeakBaseWindowPtr WeakBaseWindowPtr;
+
+    /* We have to force-redraw the whole scene because
+     * if a bug in the nvidia driver that causes framebuffers
+     * to be trashed on resume for a few swaps */
+    wt->GetWindowCompositor ()
+        .OnAllBaseWindows ([](WeakBaseWindowPtr const &w) {
+      w->QueueDraw ();
+    });
+
+    force_draw_countdown_--;
+  }
+
   updateBlurDamage();
 
   /* Determine nux region damage last */
