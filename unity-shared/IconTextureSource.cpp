@@ -26,21 +26,58 @@ namespace ui
 {
 NUX_IMPLEMENT_OBJECT_TYPE(IconTextureSource);
 
-IconTextureSource::IconTextureSource()
+namespace
 {
-  transform_map.resize(max_num_monitors);
+  const unsigned RENDERERS_SIZE = max_num_monitors + 1; // +1 for the switcher
 }
+
+IconTextureSource::IconTextureSource()
+  : skip_(RENDERERS_SIZE, false)
+  , last_render_center_(RENDERERS_SIZE)
+  , last_logical_center_(RENDERERS_SIZE)
+  , last_rotation_(RENDERERS_SIZE)
+  , transformations_(RENDERERS_SIZE, decltype(transformations_)::value_type(TRANSFORM_SIZE, std::vector<nux::Vector4>(4)))
+{}
 
 std::vector<nux::Vector4> & IconTextureSource::GetTransform(TransformIndex index, int monitor)
 {
-  auto iter = transform_map[monitor].find(index);
-  if (iter == transform_map[monitor].end())
-  {
-    auto iter2 = transform_map[monitor].insert(std::map<TransformIndex, std::vector<nux::Vector4> >::value_type(index, std::vector<nux::Vector4>(4)));
-    return iter2.first->second;
-  }
+  return transformations_[monitor][index];
+}
 
-  return iter->second;
+void IconTextureSource::RememberCenters(int monitor, nux::Point3 const& render, nux::Point3 const& logical)
+{
+  last_render_center_[monitor] = render;
+  last_logical_center_[monitor] = logical;
+}
+
+void IconTextureSource::RememberRotation(int monitor, nux::Vector3 const& rotation)
+{
+  last_rotation_[monitor] = rotation;
+}
+
+nux::Point3 const& IconTextureSource::LastRenderCenter(int monitor) const
+{
+  return last_render_center_[monitor];
+}
+
+nux::Point3 const& IconTextureSource::LastLogicalCenter(int monitor) const
+{
+  return last_logical_center_[monitor];
+}
+
+nux::Vector3 const& IconTextureSource::LastRotation(int monitor) const
+{
+  return last_rotation_[monitor];
+}
+
+void IconTextureSource::RememberSkip(int monitor, bool skip)
+{
+  skip_[monitor] = skip;
+}
+
+bool IconTextureSource::WasSkipping(int monitor) const
+{
+  return skip_[monitor];
 }
 
 }

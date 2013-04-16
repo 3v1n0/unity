@@ -38,31 +38,59 @@ class QuicklistActionTests(UnityTestCase):
         self.assertThat(launcher_icon.get_quicklist, Eventually(NotEquals(None)))
         return launcher_icon.get_quicklist()
 
+    def get_desktop_entry(self, application):
+        # load the desktop file from disk:
+        desktop_id = self.KNOWN_APPS[application]['desktop-file']
+        desktop_file = os.path.join('/usr/share/applications', desktop_id)
+        return DesktopEntry(desktop_file)
+
     def test_quicklist_actions(self):
         """Test that all actions present in the destop file are shown in the quicklist."""
-        self.start_app(self.app_name)
+        app = self.start_app(self.app_name)
 
-        # load the desktop file from disk:
-        desktop_id = self.KNOWN_APPS[self.app_name]['desktop-file']
-        desktop_file = os.path.join('/usr/share/applications', desktop_id)
-        de = DesktopEntry(desktop_file)
         # get the launcher icon from the launcher:
-        launcher_icon = self.unity.launcher.model.get_icon(desktop_id=desktop_id)
+        launcher_icon = self.unity.launcher.model.get_icon(desktop_id=app.desktop_file)
         self.assertThat(launcher_icon, NotEquals(None))
 
         # open the icon quicklist, and get all the text labels:
+        de = self.get_desktop_entry(self.app_name)
         ql = self.open_quicklist_for_icon(launcher_icon)
         ql_item_texts = [i.text for i in ql.items if type(i) is QuicklistMenuItemLabel]
 
         # iterate over all the actions from the desktop file, make sure they're
         # present in the quicklist texts.
-        # FIXME, this doesn't work using a locale other than English.
-        actions = de.getActions()
-        for action in actions:
+        for action in de.getActions():
             key = 'Desktop Action ' + action
             self.assertThat(de.content, Contains(key))
-            name = de.content[key]['Name']
+            name = de.get('Name', group=key, locale=True)
             self.assertThat(ql_item_texts, Contains(name))
+
+    def test_quicklist_action_uses_startup_notification(self):
+        """Tests that quicklist uses startup notification protocol."""
+        self.register_nautilus()
+        self.addCleanup(self.close_all_windows, "Nautilus")
+
+        self.start_app_window("Calculator")
+        self.start_app(self.app_name)
+
+        nautilus_icon = self.unity.launcher.model.get_icon(desktop_id="nautilus.desktop")
+        ql = self.open_quicklist_for_icon(nautilus_icon)
+        de = self.get_desktop_entry("Nautilus")
+
+        new_window_action_name = de.get("Name", group="Desktop Action Window", locale=True)
+        self.assertThat(new_window_action_name, NotEquals(None))
+        new_win_ql_item_fn = lambda : ql.get_quicklist_item_by_text(new_window_action_name)
+        self.assertThat(new_win_ql_item_fn, Eventually(NotEquals(None)))
+        new_win_ql_item = new_win_ql_item_fn()
+
+        ql.click_item(new_win_ql_item)
+
+        nautilus_windows_fn = lambda: self.get_open_windows_by_application("Nautilus")
+        self.assertThat(lambda: len(nautilus_windows_fn()), Eventually(Equals(1)))
+        [nautilus_window] = nautilus_windows_fn()
+
+        self.assertThat(lambda: self.get_startup_notification_timestamp(nautilus_window),
+                        Eventually(Equals(new_win_ql_item.activate_timestamp)))
 
     def test_quicklist_application_item_focus_last_active_window(self):
         """This tests shows that when you activate a quicklist application item

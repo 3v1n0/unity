@@ -61,7 +61,7 @@ UnityGestureBroker::FindGestureTargets(const nux::GestureEvent &event)
     targets.push_back(gestural_window_switcher_);
 
     CompWindow *window = FindWindowHitByGesture(event);
-    if (window)
+    if (window && event.IsDirectTouch())
     {
       targets.push_back(nux::ShPtGestureTarget(new WindowGestureTarget(window)));
     }

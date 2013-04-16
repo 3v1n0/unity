@@ -22,6 +22,7 @@
 #define UNITYSHELL_FILEMANAGER_H
 
 #include <memory>
+#include <vector>
 #include <string>
 #include <sigc++/sigc++.h>
 

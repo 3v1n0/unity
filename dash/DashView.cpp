@@ -140,6 +140,8 @@ DashView::DashView(Lenses::Ptr const& lenses, ApplicationStarter::Ptr const& app
   SetupViews();
   SetupUBusConnections();
 
+  AddChild(overlay_window_buttons_.GetPointer());
+
   lenses_->lens_added.connect(sigc::mem_fun(this, &DashView::OnLensAdded));
   mouse_down.connect(sigc::mem_fun(this, &DashView::OnMouseButtonDown));
   preview_state_machine_.PreviewActivated.connect(sigc::mem_fun(this, &DashView::BuildPreview));
@@ -185,6 +187,11 @@ void DashView::SetMonitorOffset(int x, int y)
 {
   renderer_.x_offset = x;
   renderer_.y_offset = y;
+}
+
+bool DashView::IsCommandLensOpen() const
+{
+  return (lens_bar_->GetActiveLensId() == "commands.lens");
 }
 
 void DashView::OnUriActivated(ResultView::ActivateType type, std::string const& uri, GVariant* data, std::string const& unique_id) 
@@ -686,7 +693,7 @@ void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
   renderer_geo.y += panel_style.panel_height;
   renderer_geo.height += panel_style.panel_height;
 
-  renderer_.DrawFull(graphics_engine, content_geo_, renderer_geo_abs, renderer_geo, true);
+  renderer_.DrawFull(graphics_engine, content_geo_, renderer_geo_abs, renderer_geo, false);
 }
 
 void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
@@ -1136,15 +1143,8 @@ void DashView::OnActivateRequest(GVariant* args)
   }
   else if (/* visible_ && */ handled_type == NOT_HANDLED)
   {
-    if (lens_bar_->GetActiveLensId() != id)
-    {
-      lens_bar_->Activate(id);
-    }
-    else
-    {
-      ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST, NULL,
-                                glib::Source::Priority::HIGH);
-    }
+    ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST, NULL,
+                              glib::Source::Priority::HIGH);
   }
   else if (/* visible_ && */ handled_type == GOTO_DASH_URI)
   {
@@ -1499,6 +1499,7 @@ void DashView::AddProperties(GVariantBuilder* builder)
   wrapper.add("right-border-width", style.GetDashRightTileWidth());
   wrapper.add("bottom-border-height", style.GetDashBottomTileHeight());
   wrapper.add("preview_displaying", preview_displaying_);
+  wrapper.add("preview_animation", animate_split_value_ * animate_preview_container_value_ * animate_preview_value_);
   wrapper.add("dash_maximized", style.always_maximised());
   wrapper.add("overlay_window_buttons_shown", overlay_window_buttons_->IsVisible());
 }

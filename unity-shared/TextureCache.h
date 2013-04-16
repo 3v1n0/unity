@@ -40,24 +40,26 @@ class TextureCache : public sigc::trackable
 public:
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
+  ~TextureCache() = default;
+
   // id, width, height -> texture
   typedef std::function<nux::BaseTexture*(std::string const&, int, int)> CreateTextureCallback;
 
   static TextureCache& GetDefault();
+  static nux::BaseTexture* DefaultTexturesLoader(std::string const&, int, int);
 
-  BaseTexturePtr FindTexture(std::string const& texture_id, int width, int height, CreateTextureCallback callback);
+  BaseTexturePtr FindTexture(std::string const& texture_id, int width = 0, int height = 0, CreateTextureCallback callback = DefaultTexturesLoader);
 
   // Return the current size of the cache.
   std::size_t Size() const;
 
 private:
-  TextureCache();
-  ~TextureCache();
+  TextureCache() = default;
 
   std::string Hash(std::string const& , int width, int height);
   // Have the key passed by value not referece, as the key will be a bound
   // parameter in the slot passed to the texture on_destroy signal.
-  void OnDestroyNotify(nux::Trackable* Object, std::string key);
+  void OnDestroyNotify(nux::Trackable* Object, std::string const& key);
 
   std::map<std::string, nux::BaseTexture*> cache_;
 };
