@@ -95,7 +95,7 @@ class UnityTestCase(AutopilotTestCase):
             well_behaved = False
             reasons.append("The test left the hud open.")
             log.warning("Test left the hud open, closing it...")
-            self.hud.ensure_hidden()
+            self.unity.hud.ensure_hidden()
         # Are we in show desktop mode?
         if not self.well_behaved(self.unity.window_manager, showdesktop_active=False):
             well_behaved = False
