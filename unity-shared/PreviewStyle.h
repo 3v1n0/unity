@@ -25,7 +25,7 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
- 
+
 #include <string>
 #include <memory>
 
@@ -54,12 +54,12 @@ class Style
 public:
   Style();
   ~Style();
-  
+
   static Style& Instance();
 
   int GetNavigatorWidth() const;
   int GetNavigatorIconSize() const;
-  
+
   int GetPreviewWidth() const;
   int GetPreviewHeight() const;
   int GetPreviewTopPadding() const;
@@ -120,10 +120,12 @@ public:
   ////////////////////////////////
   // Music Preview
   std::string track_font() const;
+  std::string u1_warning_font() const;
+  nux::BaseTexture* GetWarningIcon();
 
   int GetTrackHeight() const;
   ////////////////////////////////
-  
+
   ////////////////////////////////
   // Movie Preview
   float GetVideoImageAspectRatio() const;
