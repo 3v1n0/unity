@@ -60,6 +60,7 @@ public:
   virtual void UnStick();
 
   virtual bool ShowInSwitcher(bool current);
+  virtual bool AllowDetailViewInSwitcher() const override;
   virtual unsigned long long SwitcherPriority();
 
   virtual nux::Color BackgroundColor() const;

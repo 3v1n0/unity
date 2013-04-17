@@ -525,4 +525,13 @@ TEST_F(TestApplicationLauncherIcon, IsFileManager)
   EXPECT_TRUE(icon->IsFileManager());
 }
 
+TEST_F(TestApplicationLauncherIcon, AllowDetailViewInSwitcher)
+{
+  mock_app->type_ = "mock";
+  EXPECT_TRUE(mock_icon->AllowDetailViewInSwitcher());
+
+  mock_app->type_ = "webapp";
+  EXPECT_FALSE(mock_icon->AllowDetailViewInSwitcher());
+}
+
 }

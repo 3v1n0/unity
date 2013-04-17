@@ -533,13 +533,13 @@ bool Controller::Impl::IsDetailViewShown()
 
 void Controller::Impl::SetDetail(bool value, unsigned int min_windows)
 {
-  if (value && model_->DetailXids().size() >= min_windows)
+  if (value && model_->Selection()->AllowDetailViewInSwitcher() &&  model_->DetailXids().size() >= min_windows)
   {
     model_->detail_selection = true;
     obj_->detail_mode_ = DetailMode::TAB_NEXT_WINDOW;
   }
   else
-  {
+  { 
     model_->detail_selection = false;
   }
 }
