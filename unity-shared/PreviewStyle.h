@@ -121,8 +121,6 @@ public:
   // Music Preview
   std::string track_font() const;
   std::string u1_warning_font() const;
-  int GetPaymentWarningWidth() const;
-  int GetPaymentWarningHeight() const;
   nux::BaseTexture* GetWarningIcon();
 
   int GetTrackHeight() const;

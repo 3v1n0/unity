@@ -299,16 +299,6 @@ std::string Style::u1_warning_font() const
   return "Ubuntu Bold 11.5";
 }
 
-int Style::GetPaymentWarningWidth() const
-{
-  return 22;
-}
-
-int Style::GetPaymentWarningHeight() const
-{
-  return 22;
-}
-
 float Style::GetVideoImageAspectRatio() const
 {
   return float(540)/380;

@@ -225,8 +225,7 @@ void MusicPreview::SetupViews()
 	nux::VLayout* icon_layout = new nux::VLayout();
   	icon_layout->SetLeftAndRightPadding(10);
 
-        warning_texture_ = new IconTexture(style.GetWarningIcon(), style.GetPaymentWarningWidth(),
-          style.GetPaymentWarningHeight());
+        warning_texture_ = new IconTexture(style.GetWarningIcon());
         icon_layout->AddView(warning_texture_.GetPointer(), 0, nux::MINOR_POSITION_START,
           nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
         actions_layout->AddLayout(icon_layout, 0, nux::MINOR_POSITION_CENTER);
