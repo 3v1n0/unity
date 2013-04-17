@@ -44,7 +44,6 @@ public:
   void FirstMenuShow();
   void QueueRedraw();
 
-  std::vector<Window> GetTrayXids() const;
   std::vector<nux::View*> GetPanelViews() const;
   std::vector<nux::Geometry> GetGeometries() const;
 
@@ -60,7 +59,6 @@ public:
 
   void OnScreenChanged(unsigned int primary_monitor, std::vector<nux::Geometry>& monitors, Introspectable *iobj);
 
-private:
   typedef nux::ObjectPtr<nux::BaseWindow> BaseWindowPtr;
 
   unity::PanelView* ViewForWindow(BaseWindowPtr const& window) const;
@@ -70,8 +68,8 @@ private:
                                       nux::Geometry& geo,
                                       void*          user_data);
 
-private:
   std::vector<BaseWindowPtr> windows_;
+  std::vector<Window> tray_xids_;
   float opacity_;
   bool opacity_maximized_toggle_;
   int menus_fadein_;
@@ -79,6 +77,7 @@ private:
   int menus_discovery_;
   int menus_discovery_fadein_;
   int menus_discovery_fadeout_;
+  indicator::DBusIndicators::Ptr dbus_indicators_;
 };
 
 
@@ -90,26 +89,14 @@ Controller::Impl::Impl()
   , menus_discovery_(0)
   , menus_discovery_fadein_(0)
   , menus_discovery_fadeout_(0)
-{
-}
-
-std::vector<Window> Controller::Impl::GetTrayXids() const
-{
-  std::vector<Window> xids;
-
-  for (auto window: windows_)
-  {
-    xids.push_back(ViewForWindow(window)->GetTrayXid());
-  }
-
-  return xids;
-}
+  , dbus_indicators_(std::make_shared<indicator::DBusIndicators>())
+{}
 
 std::vector<nux::View*> Controller::Impl::GetPanelViews() const
 {
   std::vector<nux::View*> views;
   views.reserve(windows_.size());
-  for (auto window: windows_)
+  for (auto const& window: windows_)
     views.push_back(ViewForWindow(window));
   return views;
 }
@@ -118,7 +105,7 @@ std::vector<nux::Geometry> Controller::Impl::GetGeometries() const
 {
   std::vector<nux::Geometry> geometries;
 
-  for (auto window : windows_)
+  for (auto const& window : windows_)
   {
     geometries.push_back(window->GetAbsoluteGeometry());
   }
@@ -128,7 +115,7 @@ std::vector<nux::Geometry> Controller::Impl::GetGeometries() const
 
 void Controller::Impl::FirstMenuShow()
 {
-  for (auto window: windows_)
+  for (auto const& window: windows_)
   {
     if (ViewForWindow(window)->FirstMenuShow())
       break;
@@ -139,7 +126,7 @@ void Controller::Impl::SetOpacity(float opacity)
 {
   opacity_ = opacity;
 
-  for (auto window: windows_)
+  for (auto const& window: windows_)
   {
     ViewForWindow(window)->SetOpacity(opacity_);
   }
@@ -157,7 +144,7 @@ void Controller::Impl::SetOpacityMaximizedToggle(bool enabled)
 {
   opacity_maximized_toggle_ = enabled;
 
-  for (auto window: windows_)
+  for (auto const& window: windows_)
   {
     ViewForWindow(window)->SetOpacityMaximizedToggle(opacity_maximized_toggle_);
   }
@@ -172,7 +159,7 @@ void Controller::Impl::SetMenuShowTimings(int fadein, int fadeout, int discovery
   menus_discovery_fadein_ = discovery_fadein;
   menus_discovery_fadeout_ = discovery_fadeout;
 
-  for (auto window: windows_)
+  for (auto const& window: windows_)
   {
     ViewForWindow(window)->SetMenuShowTimings(fadein, fadeout, discovery,
                                               discovery_fadein, discovery_fadeout);
@@ -181,7 +168,7 @@ void Controller::Impl::SetMenuShowTimings(int fadein, int fadeout, int discovery
 
 void Controller::Impl::QueueRedraw()
 {
-  for (auto window: windows_)
+  for (auto const& window: windows_)
   {
     window->QueueDraw();
   }
@@ -204,6 +191,8 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
   unsigned n_monitors = monitors.size();
   unsigned int i = 0;
 
+  tray_xids_.resize(n_monitors);
+
   for (it = windows_.begin(); it != windows_.end(); ++it)
   {
     if (i < n_monitors)
@@ -221,6 +210,7 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
       view = ViewForWindow(*it);
       view->SetPrimary(i == primary_monitor);
       view->SetMonitor(i);
+      tray_xids_[i] = view->GetTrayXid();
 
       if (nux::GetWindowThread()->IsEmbeddedWindow())
       {
@@ -243,7 +233,7 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
     {
       nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-      PanelView* view = new PanelView();
+      PanelView* view = new PanelView(dbus_indicators_);
       view->SetMaximumHeight(panel::Style::Instance().panel_height);
       view->SetOpacity(opacity_);
       view->SetOpacityMaximizedToggle(opacity_maximized_toggle_);
@@ -251,6 +241,7 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
                                menus_discovery_fadein_, menus_discovery_fadeout_);
       view->SetPrimary(i == primary_monitor);
       view->SetMonitor(i);
+      tray_xids_[i] = view->GetTrayXid();
 
       layout->AddView(view, 1);
       layout->SetContentDistribution(nux::MAJOR_POSITION_START);
@@ -361,9 +352,9 @@ void Controller::QueueRedraw()
   pimpl->QueueRedraw();
 }
 
-std::vector<Window> Controller::GetTrayXids() const
+std::vector<Window> const& Controller::GetTrayXids() const
 {
-  return pimpl->GetTrayXids();
+  return pimpl->tray_xids_;
 }
 
 std::vector<nux::View*> Controller::GetPanelViews() const

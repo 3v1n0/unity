@@ -764,7 +764,6 @@ void ResultViewGrid::DrawContent(nux::GraphicsEngine& GfxContext, bool force_dra
 
   if (GetCompositionLayout())
   {
-    nux::Geometry geo = GetCompositionLayout()->GetGeometry();
     GetCompositionLayout()->ProcessDraw(GfxContext, force_draw);
   }
 

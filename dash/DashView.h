@@ -68,6 +68,8 @@ public:
   void OnActivateRequest(GVariant* args);
   void SetMonitorOffset(int x, int y);
 
+  bool IsCommandLensOpen() const;
+
   std::string const GetIdForShortcutActivation(std::string const& shortcut) const;
   std::vector<char> GetAllShortcuts();
 

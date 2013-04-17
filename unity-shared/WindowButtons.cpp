@@ -29,6 +29,7 @@
 #include "WindowButtons.h"
 #include "WindowButtonPriv.h"
 
+#include "unity-shared/TextureCache.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/WindowManager.h"
 
@@ -176,8 +177,8 @@ nux::ObjectPtr<nux::BaseTexture> WindowButton::GetDashWindowButton(panel::Window
 
   std::string subpath = names[static_cast<int>(type)] + states[static_cast<int>(state)] + ".png";
 
-  glib::String filename(g_build_filename(PKGDATADIR, subpath.c_str(), NULL));
-  texture.Adopt(nux::CreateTexture2DFromFile(filename, -1, true));
+  auto& cache = TextureCache::GetDefault();
+  texture = cache.FindTexture(subpath);
 
   if (!texture)
     texture = panel::Style::Instance().GetFallbackWindowButton(type, state);

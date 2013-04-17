@@ -251,11 +251,10 @@ void CoverflowResultView::DrawContent(nux::GraphicsEngine& GfxContext, bool forc
   GfxContext.PushClippingRectangle(base);
 
   if (RedirectedAncestor())
-    graphics::ClearGeometry(GetGeometry());
+    graphics::ClearGeometry(base);
 
   if (GetCompositionLayout())
   {
-    nux::Geometry geo = GetCompositionLayout()->GetGeometry();
     GetCompositionLayout()->ProcessDraw(GfxContext, force_draw);
   }
 

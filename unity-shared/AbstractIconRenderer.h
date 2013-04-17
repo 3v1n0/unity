@@ -41,9 +41,6 @@ public:
   RenderArg()
     : icon(0)
     , colorify(nux::color::White)
-    , x_rotation(0)
-    , y_rotation(0)
-    , z_rotation(0)
     , alpha(1.0f)
     , saturation(1.0f)
     , backlight_intensity(0.0f)
@@ -71,10 +68,8 @@ public:
   IconTextureSource* icon;
   nux::Point3   render_center;
   nux::Point3   logical_center;
+  nux::Vector3  rotation;
   nux::Color    colorify;
-  float         x_rotation;
-  float         y_rotation;
-  float         z_rotation;
   float         alpha;
   float         saturation;
   float         backlight_intensity;

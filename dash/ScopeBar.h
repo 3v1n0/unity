@@ -62,6 +62,8 @@ public:
   void ActivateNext();
   void ActivatePrevious();
 
+  std::string GetActiveScopeId() const;
+
   sigc::signal<void, std::string const&> scope_activated;
 
 private:

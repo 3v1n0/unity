@@ -25,7 +25,6 @@
 #include <Nux/WindowCompositor.h>
 
 #include <NuxGraphics/CairoGraphics.h>
-#include <NuxGraphics/ImageSurface.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
 
@@ -35,6 +34,7 @@
 #include <glib.h>
 
 #include "unity-shared/PanelStyle.h"
+#include "unity-shared/TextureCache.h"
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/UBusMessages.h"
 #include <UnityCore/Variant.h>
@@ -55,8 +55,9 @@ namespace unity
 
 NUX_IMPLEMENT_OBJECT_TYPE(PanelView);
 
-PanelView::PanelView(NUX_FILE_LINE_DECL)
+PanelView::PanelView(indicator::DBusIndicators::Ptr const& remote, NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
+  , remote_(remote)
   , is_dirty_(true)
   , opacity_maximized_toggle_(false)
   , needs_geo_sync_(false)
@@ -105,7 +106,9 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   indicators_ = new PanelIndicatorsView();
   AddPanelView(indicators_, 0);
 
-  remote_ = indicator::DBusIndicators::Ptr(new indicator::DBusIndicators());
+  for (auto const& object : remote_->GetIndicators())
+    OnObjectAdded(object);
+
   remote_->on_object_added.connect(sigc::mem_fun(this, &PanelView::OnObjectAdded));
   remote_->on_object_removed.connect(sigc::mem_fun(this, &PanelView::OnObjectRemoved));
   remote_->on_entry_activate_request.connect(sigc::mem_fun(this, &PanelView::OnEntryActivateRequest));
@@ -128,9 +131,10 @@ PanelView::PanelView(NUX_FILE_LINE_DECL)
   bg_effect_helper_.owner = this;
 
   //FIXME (gord)- replace with async loading
-  panel_sheen_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/dash_sheen.png", -1, true));
-  bg_refine_tex_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/refine_gradient_panel.png", -1, true));
-  bg_refine_single_column_tex_.Adopt(nux::CreateTexture2DFromFile(PKGDATADIR"/refine_gradient_panel_single_column.png", -1, true));
+  TextureCache& cache = TextureCache::GetDefault();
+  panel_sheen_ = cache.FindTexture("dash_sheen.png");
+  bg_refine_tex_ = cache.FindTexture("refine_gradient_panel.png");
+  bg_refine_single_column_tex_ = cache.FindTexture("refine_gradient_panel_single_column.png");
 
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
@@ -188,7 +192,8 @@ void PanelView::OnBackgroundUpdate(GVariant *data)
   bg_color_.blue = blue;
   bg_color_.alpha = alpha;
 
-  ForceUpdateBackground();
+  if (overlay_is_open_)
+    ForceUpdateBackground();
 }
 
 void PanelView::OnOverlayHidden(GVariant* data)
@@ -267,7 +272,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   GfxContext.PushClippingRectangle(geo);
 
-  if ((overlay_is_open_ || (opacity_ != 1.0f && opacity_ != 0.0f)))
+  if (IsTransparent())
   {
     nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
     nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, geo.width, geo.height);
@@ -281,7 +286,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
       bg_blur_texture_ = bg_effect_helper_.GetRegion(blur_geo);
     }
 
-    if (bg_blur_texture_.IsValid() && (overlay_is_open_ || opacity_ != 1.0f))
+    if (bg_blur_texture_.IsValid())
     {
       nux::TexCoordXForm texxform_blur_bg;
       texxform_blur_bg.flip_v_coord = true;
@@ -371,8 +376,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   GfxContext.GetRenderStates().SetBlend(true);
   GfxContext.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
-  if (bg_blur_texture_.IsValid() &&
-      (overlay_is_open_ || (opacity_ != 1.0f && opacity_ != 0.0f)))
+  if (bg_blur_texture_.IsValid() && IsTransparent())
   {
     nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
     nux::TexCoordXForm texxform_blur_bg;
@@ -482,12 +486,9 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 void
 PanelView::UpdateBackground()
 {
-  nux::Geometry const& geo = GetGeometry();
-
-  if (!is_dirty_ && geo == last_geo_)
+  if (!is_dirty_)
     return;
 
-  last_geo_ = geo;
   is_dirty_ = false;
 
   nux::ROPConfig rop;
@@ -512,13 +513,13 @@ PanelView::UpdateBackground()
         opacity = 1.0f;
     }
 
-    auto tex = panel::Style::Instance().GetBackground(geo.width, geo.height, opacity);
+    auto const& tex = panel::Style::Instance().GetBackground();
     nux::TexCoordXForm texxform;
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-    texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_REPEAT);
+    texxform.SetWrap(nux::TEXWRAP_REPEAT, nux::TEXWRAP_CLAMP);
 
     bg_layer_.reset(new nux::TextureLayer(tex->GetDeviceTexture(), texxform,
-                                          nux::color::White, true, rop));
+                                          nux::color::White * opacity, true, rop));
   }
 }
 
@@ -526,12 +527,6 @@ void PanelView::ForceUpdateBackground()
 {
   is_dirty_ = true;
   UpdateBackground();
-
-  indicators_->QueueDraw();
-  tray_->QueueDraw();
-
-  if (!overlay_is_open_)
-    menu_view_->QueueDraw();
 
   QueueDraw();
 }
@@ -703,10 +698,15 @@ void PanelView::SetOpacity(float opacity)
   if (opacity_ == opacity)
     return;
 
-  opacity_ = opacity;
-  bg_effect_helper_.enabled = (opacity_ < 1.0f || overlay_is_open_);
+  opacity_ = (opacity <= 0.0f ? 0.0001f : opacity); // Not to get a black menu area
+  bg_effect_helper_.enabled = IsTransparent();
 
   ForceUpdateBackground();
+}
+
+bool PanelView::IsTransparent()
+{
+  return (opacity_ < 1.0f || overlay_is_open_);
 }
 
 void PanelView::SetMenuShowTimings(int fadein, int fadeout, int discovery,

@@ -53,27 +53,27 @@ public:
   ModelIterator  operator-(int value) const;
 
   ModelIterator operator[](int value);
-  friend inline bool const operator<(const ModelIterator& lhs, const ModelIterator& rhs)
+  friend inline bool operator<(const ModelIterator& lhs, const ModelIterator& rhs)
   {
     return (dee_model_get_position(lhs.model_, lhs.iter_) < dee_model_get_position(rhs.model_, rhs.iter_));
   }
 
-  friend inline bool const operator>(const ModelIterator& lhs, const ModelIterator& rhs)
+  friend inline bool operator>(const ModelIterator& lhs, const ModelIterator& rhs)
   {
     return (dee_model_get_position(lhs.model_, lhs.iter_) > dee_model_get_position(rhs.model_, rhs.iter_));
   }
 
-  friend inline bool const operator<=(const ModelIterator& lhs, const ModelIterator& rhs)
+  friend inline bool operator<=(const ModelIterator& lhs, const ModelIterator& rhs)
   {
     return (dee_model_get_position(lhs.model_, lhs.iter_) <= dee_model_get_position(rhs.model_, rhs.iter_));
   }
 
-  friend inline bool const operator>=(const ModelIterator& lhs, const ModelIterator& rhs)
+  friend inline bool operator>=(const ModelIterator& lhs, const ModelIterator& rhs)
   {
     return (dee_model_get_position(lhs.model_, lhs.iter_) >= dee_model_get_position(rhs.model_, rhs.iter_));
   }
   
-  friend inline bool const operator==(const ModelIterator& lhs, const ModelIterator& rhs)
+  friend inline bool operator==(const ModelIterator& lhs, const ModelIterator& rhs)
   {
     return (lhs.iter_ == rhs.iter_);
   }
@@ -85,8 +85,8 @@ public:
   Adaptor& operator*();
 
   /* convenience methods */
-  bool const IsLast();
-  bool const IsFirst();
+  bool IsLast();
+  bool IsFirst();
 
 private:
   glib::Object<DeeModel> model_;

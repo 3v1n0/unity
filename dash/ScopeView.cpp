@@ -256,11 +256,6 @@ void ScopeView::SetupViews(nux::Area* show_filters)
   scroll_view_->EnableHorizontalScrollBar(false);
   layout_->AddView(scroll_view_);
 
-  scroll_view_->geometry_changed.connect([this] (nux::Area *area, nux::Geometry& geo)
-  {
-    CheckScrollBarState();
-  });
-
   scroll_layout_ = new nux::VLayout(NUX_TRACKER_LOCATION);
   scroll_view_->SetLayout(scroll_layout_);
   scroll_view_->SetRightArea(show_filters);
@@ -827,13 +822,13 @@ void ScopeView::OnGroupExpanded(PlacesGroup* group)
 
 void ScopeView::CheckScrollBarState()
 {
-  if (scroll_layout_->GetGeometry().height > scroll_view_->GetGeometry().height)
+  if (scroll_layout_->GetHeight() > scroll_view_->GetHeight())
   {
-    scroll_view_->EnableVerticalScrollBar(true); 
+    scroll_view_->EnableVerticalScrollBar(true);
   }
   else
   {
-    scroll_view_->EnableVerticalScrollBar(false); 
+    scroll_view_->EnableVerticalScrollBar(false);
   }
 }
 
@@ -880,6 +875,7 @@ void ScopeView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_dra
 {
   nux::Geometry const& geo(GetGeometry());
   graphics_engine.PushClippingRectangle(geo);
+  CheckScrollBarState();
 
   if (!IsFullRedraw() && RedirectedAncestor())
   {

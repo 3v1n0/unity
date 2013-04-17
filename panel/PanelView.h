@@ -46,7 +46,7 @@ class PanelView : public unity::debug::Introspectable, public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(PanelView, nux::View);
 public:
-  PanelView(NUX_FILE_LINE_PROTO);
+  PanelView(indicator::DBusIndicators::Ptr const&, NUX_FILE_LINE_PROTO);
   ~PanelView();
 
   void SetPrimary(bool primary);
@@ -91,6 +91,7 @@ private:
   void OnOverlayShown(GVariant *data);
   void OnOverlayHidden(GVariant *data);
 
+  bool IsTransparent();
   void UpdateBackground();
   void ForceUpdateBackground();
   bool TrackMenuPointer();
@@ -116,7 +117,6 @@ private:
   BaseTexturePtr bg_refine_single_column_tex_;
   std::unique_ptr<nux::AbstractPaintLayer> bg_refine_single_column_layer_;
 
-  nux::Geometry last_geo_;
   nux::Color bg_color_;
   std::string active_overlay_;
   nux::Point  tracked_pointer_pos_;
