@@ -65,6 +65,9 @@ void PanelIndicatorsView::AddIndicator(Indicator::Ptr const& indicator)
 
   std::vector<sigc::connection> connections;
 
+  for (auto const& entry : indicator->GetEntries())
+    AddEntry(entry);
+
   auto entry_added_conn = indicator->on_entry_added.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryAdded));
   connections.push_back(entry_added_conn);
 

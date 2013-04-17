@@ -19,7 +19,6 @@ from unity.emulators.icons import ApplicationLauncherIcon, ExpoLauncherIcon
 from unity.emulators.launcher import IconDragType
 from unity.tests.launcher import LauncherTestCase, _make_scenarios
 
-from Xlib import display
 from Xlib import Xutil
 
 logger = logging.getLogger(__name__)
@@ -59,11 +58,6 @@ class LauncherIconsTests(LauncherTestCase):
         self.close_all_app("Calculator")
         self.assertThat(lambda: self.app_is_running("Calculator"), Eventually(Equals(False)))
         return calc_icon
-
-    def get_startup_notification_timestamp(self, bamf_window):
-        atom = display.Display().intern_atom('_NET_WM_USER_TIME')
-        atom_type = display.Display().intern_atom('CARDINAL')
-        return bamf_window.x_win.get_property(atom, atom_type, 0, 1024).value[0]
 
     def test_bfb_tooltip_disappear_when_dash_is_opened(self):
         """Tests that the bfb tooltip disappear when the dash is opened."""
@@ -152,7 +146,7 @@ class LauncherIconsTests(LauncherTestCase):
 
     def test_trash_icon_refocus_opened_instance(self):
         """Tests that when the trash is opened, clicking on the icon re-focus the trash again"""
-        self.register_known_application("Nautilus", "nautilus.desktop", "nautilus")
+        self.register_nautilus()
         self.addCleanup(self.close_all_windows, "Nautilus")
         self.addCleanup(self.close_all_app, "Calculator")
         self.close_all_windows("Nautilus")
@@ -172,7 +166,7 @@ class LauncherIconsTests(LauncherTestCase):
 
     def test_trash_open_does_not_prevent_nautilus_to_run(self):
         """Tests that when the trash is opened, launching still opens a new window"""
-        self.register_known_application("Nautilus", "nautilus.desktop", "nautilus")
+        self.register_nautilus()
         self.addCleanup(self.close_all_windows, "Nautilus")
         self.close_all_windows("Nautilus")
 

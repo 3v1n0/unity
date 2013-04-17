@@ -59,7 +59,6 @@ NUX_IMPLEMENT_OBJECT_TYPE(ApplicationLauncherIcon);
 
 ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   : SimpleLauncherIcon(IconType::APPLICATION)
-  , app_(app)
   , _startup_notification_timestamp(0)
   , _last_scroll_timestamp(0)
   , _last_scroll_direction(ScrollDirection::DOWN)
@@ -88,25 +87,68 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
     << ", active: " << (app->active() ? "yes" : "no")
     << ", running: " << (app->running() ? "yes" : "no");
 
+  SetApplication(app);
+
+  WindowManager& wm = WindowManager::Default();
+  wm.window_minimized.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::OnWindowMinimized));
+  wm.window_moved.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::OnWindowMoved));
+  wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
+  wm.terminate_expo.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
+
+  EnsureWindowState();
+  UpdateMenus();
+  UpdateDesktopFile();
+  UpdateBackgroundColor();
+
+  // hack
+  SetProgress(0.0f);
+}
+
+ApplicationLauncherIcon::~ApplicationLauncherIcon()
+{
+  if (app_)
+  {
+    app_->sticky = false;
+    app_->seen = false;
+  }
+
+  DisconnectApplicationSignalsConnections();
+}
+
+void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
+{
+  if (app_ == app)
+    return;
+
+  app_ = app;
+  DisconnectApplicationSignalsConnections();
+  SetupApplicationSignalsConnections();
+}
+
+void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
+{
   // Lambda functions should be fine here because when the application the icon
   // is only ever removed when the application is closed.
-  app->window_opened.connect([this](ApplicationWindow const&) {
+  window_opened_connection_ = app_->window_opened.connect([this](ApplicationWindow const&) {
     EnsureWindowState();
     UpdateMenus();
     UpdateIconGeometries(GetCenters());
   });
-  app->window_closed.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
-  app->window_moved.connect(sigc::hide(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState)));
 
-  app->urgent.changed.connect([this](bool const& urgent) {
+  window_closed_connection_ = app_->window_closed.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
+  window_moved_connection_ = app_->window_moved.connect(sigc::hide(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState)));
+
+  urgent_changed_connection_ = app_->urgent.changed.connect([this](bool const& urgent) {
     LOG_DEBUG(logger) << tooltip_text() << " urgent now " << (urgent ? "true" : "false");
     SetQuirk(Quirk::URGENT, urgent);
   });
-  app->active.changed.connect([this](bool const& active) {
+
+  active_changed_connection_ = app_->active.changed.connect([this](bool const& active) {
     LOG_DEBUG(logger) << tooltip_text() << " active now " << (active ? "true" : "false");
     SetQuirk(Quirk::ACTIVE, active);
   });
-  app->running.changed.connect([this](bool const& running) {
+
+  running_changed_connection_ = app_->running.changed.connect([this](bool const& running) {
     LOG_DEBUG(logger) << tooltip_text() << " running now " << (running ? "true" : "false");
     SetQuirk(Quirk::RUNNING, running);
 
@@ -131,12 +173,13 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
       UpdateIconGeometries(GetCenters());
     }
   });
-  app->visible.changed.connect([this](bool const& visible) {
+
+  visible_changed_connection_ = app_->visible.changed.connect([this](bool const& visible) {
     if (!IsSticky())
       SetQuirk(Quirk::VISIBLE, visible);
   });
 
-  app->closed.connect([this]() {
+  closed_changed_connection_ = app_->closed.connect([this]() {
     if (!IsSticky())
     {
       SetQuirk(Quirk::VISIBLE, false);
@@ -153,29 +196,18 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
       }, ICON_REMOVE_TIMEOUT);
     }
   });
-
-  WindowManager& wm = WindowManager::Default();
-  wm.window_minimized.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::OnWindowMinimized));
-  wm.window_moved.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::OnWindowMoved));
-  wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
-  wm.terminate_expo.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
-
-  EnsureWindowState();
-  UpdateMenus();
-  UpdateDesktopFile();
-  UpdateBackgroundColor();
-
-  // hack
-  SetProgress(0.0f);
 }
 
-ApplicationLauncherIcon::~ApplicationLauncherIcon()
+void ApplicationLauncherIcon::DisconnectApplicationSignalsConnections()
 {
-  if (app_)
-  {
-    app_->sticky = false;
-    app_->seen = false;
-  }
+  window_opened_connection_.disconnect();
+  window_closed_connection_.disconnect();
+  window_moved_connection_.disconnect();
+  urgent_changed_connection_.disconnect();
+  active_changed_connection_.disconnect();
+  running_changed_connection_.disconnect();
+  visible_changed_connection_.disconnect();
+  closed_changed_connection_.disconnect();
 }
 
 bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk) const
@@ -699,8 +731,12 @@ void ApplicationLauncherIcon::UpdateDesktopQuickList()
     std::string nick(nicks[index]);
 
     _gsignals.Add<void, DbusmenuMenuitem*, gint>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-    [this, nick] (DbusmenuMenuitem* item, unsigned) {
-      indicator_desktop_shortcuts_nick_exec(_desktop_shortcuts, nick.c_str());
+    [this, nick] (DbusmenuMenuitem* item, unsigned timestamp) {
+      GdkDisplay* display = gdk_display_get_default();
+      glib::Object<GdkAppLaunchContext> context(gdk_display_get_app_launch_context(display));
+      gdk_app_launch_context_set_timestamp(context, timestamp);
+      auto gcontext = glib::object_cast<GAppLaunchContext>(context);
+      indicator_desktop_shortcuts_nick_exec_with_context(_desktop_shortcuts, nick.c_str(), gcontext);
     });
 
     dbusmenu_menuitem_child_append(_menu_desktop_shortcuts, item);
@@ -735,6 +771,8 @@ void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
   // We only add quicklist menu-items for windows if we have more than one window
   if (windows.size() < 2)
     return;
+   
+  Window active = WindowManager::Default().GetActiveWindow();
 
   // add menu items for all open windows
   for (auto const& w : windows)
@@ -756,6 +794,12 @@ void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
         wm.Activate(xid);
         wm.Raise(xid);
     });
+    
+    if (xid == active)
+    {
+      dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_RADIO);
+      dbusmenu_menuitem_property_set_int(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
+    }
 
     _menu_items_windows.push_back(menu_item);
   }

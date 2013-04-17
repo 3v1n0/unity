@@ -39,7 +39,7 @@ public:
   nux::ObjectPtr<unity::PanelView> panel_view_;
 
   TestPanelView()
-    : panel_view_(new unity::PanelView())
+    : panel_view_(new unity::PanelView(std::make_shared<unity::indicator::DBusIndicators>()))
   {}
 
 };

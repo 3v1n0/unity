@@ -61,9 +61,8 @@ public:
   void Activate(std::string id);
   void ActivateNext();
   void ActivatePrevious();
-  
-  std::string GetActiveLensId() const;
 
+  std::string GetActiveLensId() const;
   sigc::signal<void, std::string const&> lens_activated;
 
 private:

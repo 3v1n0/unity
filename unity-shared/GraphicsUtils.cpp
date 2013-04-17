@@ -27,7 +27,7 @@ namespace graphics
 
 std::stack<nux::ObjectPtr<nux::IOpenGLBaseTexture>> rendering_stack;
 
-void PushOffscreenRenderTarget_(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
+void PushOffscreenRenderTarget_(nux::ObjectPtr<nux::IOpenGLBaseTexture> const& texture)
 {  
   int width = texture->GetWidth();
   int height = texture->GetHeight();
@@ -45,7 +45,7 @@ void PushOffscreenRenderTarget_(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
   graphics_engine->EmptyClippingRegion();
 }
 
-void PushOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
+void PushOffscreenRenderTarget(nux::ObjectPtr<nux::IOpenGLBaseTexture> const& texture)
 {
   PushOffscreenRenderTarget_(texture);
   rendering_stack.push(texture);

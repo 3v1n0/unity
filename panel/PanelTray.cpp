@@ -89,7 +89,7 @@ PanelTray::~PanelTray()
 
 Window PanelTray::xid()
 {
-  if (!window_)
+  if (!window_ || !gtk_widget_get_realized(window_))
     return 0;
 
   return gdk_x11_window_get_xid(gtk_widget_get_window(window_));

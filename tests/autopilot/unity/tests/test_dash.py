@@ -33,6 +33,9 @@ class DashTestCase(UnityTestCase):
         """Method to open the currently selected preview, if opened."""
         preview_fn = lambda: self.preview_container.current_preview
         self.assertThat(preview_fn, Eventually(NotEquals(None)))
+        self.assertThat(self.unity.dash.preview_animation, Eventually(Equals(1.0)))
+        self.assertThat(self.preview_container.animating, Eventually(Equals(False)))
+
         return preview_fn()
 
 
@@ -73,17 +76,15 @@ class DashRevealTests(DashTestCase):
         """Switch to command lens without closing the dash."""
         self.unity.dash.ensure_visible()
         self.unity.dash.reveal_command_lens()
-        self.assertThat(self.unity.dash.visible, Eventually(Equals(True)))
         self.assertThat(self.unity.dash.active_lens, Eventually(Equals('commands.lens')))
 
-    def test_can_go_from_command_lens_to_dash(self):
-        """We must be able to go from the command lens to the dash (home lens)."""
+    def test_command_lens_can_close_itself(self):
+        """We must be able to close the Command lens with Alt+F2"""
         self.unity.dash.reveal_command_lens()
-
-        # Since the dash is visible we can't use ensure_visible().
-        self.keybinding("dash/reveal", 0.1)
         self.assertThat(self.unity.dash.visible, Eventually(Equals(True)))
-        self.assertThat(self.unity.dash.active_lens, Eventually(Equals('home.lens')))
+
+        self.keybinding("lens_reveal/command")
+        self.assertThat(self.unity.dash.visible, Eventually(Equals(False)))
 
     def test_alt_f4_close_dash(self):
         """Dash must close on alt+F4."""

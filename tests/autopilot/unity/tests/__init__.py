@@ -40,6 +40,10 @@ from unity.emulators.unity import (
     Unity
     )
 
+from Xlib import display
+from Xlib import Xutil
+
+from gi.repository import Gio
 
 log = getLogger(__name__)
 
@@ -62,6 +66,12 @@ class UnityTestCase(AutopilotTestCase):
         # Setting this here since the show desktop feature seems to be a bit
         # ropey. Once it's been proven to work reliably we can remove this line:
         self.set_unity_log_level("unity.wm.compiz", "DEBUG")
+
+        # For the length of the test, disable screen locking
+        self._desktop_settings = Gio.Settings.new("org.gnome.desktop.lockdown")
+        lock_state = self._desktop_settings.get_boolean("disable-lock-screen")
+        self._desktop_settings.set_boolean("disable-lock-screen", True)
+        self.addCleanup(self._desktop_settings.set_boolean, "disable-lock-screen", lock_state)
 
     def check_test_behavior(self):
         """Fail the test if it did something naughty.
@@ -92,7 +102,7 @@ class UnityTestCase(AutopilotTestCase):
             well_behaved = False
             reasons.append("The test left the hud open.")
             log.warning("Test left the hud open, closing it...")
-            self.hud.ensure_hidden()
+            self.unity.hud.ensure_hidden()
         # Are we in show desktop mode?
         if not self.well_behaved(self.unity.window_manager, showdesktop_active=False):
             well_behaved = False
@@ -224,3 +234,12 @@ class UnityTestCase(AutopilotTestCase):
             w.close()
 
         self.assertThat(lambda: len(self.get_open_windows_by_application(application_name)), Eventually(Equals(0)))
+
+    def register_nautilus(self):
+        self.addCleanup(self.unregister_known_application, "Nautilus")
+        self.register_known_application("Nautilus", "nautilus.desktop", "nautilus")
+
+    def get_startup_notification_timestamp(self, bamf_window):
+        atom = display.Display().intern_atom('_NET_WM_USER_TIME')
+        atom_type = display.Display().intern_atom('CARDINAL')
+        return bamf_window.x_win.get_property(atom, atom_type, 0, 1024).value[0]
