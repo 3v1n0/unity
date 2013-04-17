@@ -1411,6 +1411,11 @@ void UnityScreen::damageCutoff()
     force_draw_countdown_--;
   }
 
+  /* At this point we want to take all of the compiz damage
+   * for this frame and use it to determine which blur regions
+   * need to be redrawn. We don't want to do this any later because
+   * the nux damage is logically on top of the blurs and doesn't
+   * affect them */
   updateBlurDamage();
 
   /* Determine nux region damage last */
@@ -1442,6 +1447,8 @@ void UnityScreen::damageCutoff()
   buffered_compiz_damage_last_frame_ = buffered_compiz_damage_this_frame_;
   buffered_compiz_damage_this_frame_ = CompRegion();
 
+  /* Tell nux that any damaged windows should be redrawn on the next
+   * frame and not this one */
   wt->ForeignFrameCutoff();
 
   /* We need to track this per-frame to figure out whether or not
@@ -1485,6 +1492,8 @@ void UnityScreen::donePaint()
   if (didShellRepaint)
     wt->ClearDrawList();
 
+  /* Tell nux that a new frame is now beginning and any damaged windows should
+   * now be painted on this frame */
   wt->ForeignFrameEnded();
 
   if (animation_controller_->HasRunningAnimations())
@@ -1512,9 +1521,6 @@ void UnityScreen::donePaint()
 
 void UnityScreen::compizDamageNux(CompRegion const& damage)
 {
-  if (!launcher_controller_)
-    return;
-
   /* Ask nux to present anything in our damage region
    *
    * Note: This is using a new nux API, to "present" windows
@@ -1536,9 +1542,7 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
 /* Grab changed nux regions and add damage rects for them */
 void UnityScreen::determineNuxDamage(CompRegion &nux_damage)
 {
-  if (!launcher_controller_ || !dash_controller_)
-    return;
-
+  /* Fetch all the dirty geometry from nux and aggregate it */
   std::vector<nux::Geometry> dirty = wt->GetPresentationListGeometries();
 
   for (auto const& geo : dirty)
