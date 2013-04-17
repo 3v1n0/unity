@@ -104,7 +104,7 @@ bool MusicPreview::HasUbuntuOneCredentials()
       if (preview_data != NULL)
       {
         glib::Variant data(g_variant_lookup_value(preview_data,
-	  "no_credentials_label", G_VARIANT_TYPE_ANY));
+	  "no_credentials_label", G_VARIANT_TYPE_STRING));
 
         if (!data)
           no_credentials_message_ = "";
