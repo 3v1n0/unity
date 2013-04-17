@@ -93,6 +93,14 @@ class DashRevealTests(DashTestCase):
         self.unity.dash.reveal_command_scope()
         self.assertThat(self.unity.dash.active_scope, Eventually(Equals('commands.scope')))
 
+    def test_command_lens_can_close_itself(self):
+        """We must be able to close the Command lens with Alt+F2"""
+        self.unity.dash.reveal_command_lens()
+        self.assertThat(self.unity.dash.visible, Eventually(Equals(True)))
+
+        self.keybinding("lens_reveal/command")
+        self.assertThat(self.unity.dash.visible, Eventually(Equals(False)))
+
     def test_alt_f4_close_dash(self):
         """Dash must close on alt+F4."""
         self.unity.dash.ensure_visible()

@@ -136,14 +136,14 @@ Adaptor& ModelIterator<Adaptor>::operator*()
 }
 
 template<class Adaptor>
-bool const ModelIterator<Adaptor>::IsLast()
+bool ModelIterator<Adaptor>::IsLast()
 {
   if (!model_) return true;
   return (dee_model_is_last(model_, iter_));
 }
 
 template<class Adaptor>
-bool const ModelIterator<Adaptor>::IsFirst()
+bool ModelIterator<Adaptor>::IsFirst()
 {
   if (!model_) return true;
   return (dee_model_is_first(model_, iter_));

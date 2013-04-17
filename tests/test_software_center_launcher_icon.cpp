@@ -24,13 +24,14 @@
 #include <config.h>
 #include <gmock/gmock.h>
 
-#include "ApplicationManager.h"
+#include "mock-application.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "Launcher.h"
 #include "PanelStyle.h"
 #include "UnitySettings.h"
 #include "test_utils.h"
 
+using namespace testmocks;
 using namespace unity;
 using namespace unity::launcher;
 
@@ -40,6 +41,7 @@ namespace launcher
 {
 const std::string LOCAL_DATA_DIR = BUILDDIR"/tests/data";
 const std::string USC_DESKTOP = LOCAL_DATA_DIR+"/applications/ubuntu-software-center.desktop";
+const std::string USC_APP_INSTALL_DESKTOP = "/usr/share/app-install/desktop/software-center:ubuntu-software-center.desktop";
 
 class MockSoftwareCenterLauncherIcon : public SoftwareCenterLauncherIcon
 {
@@ -54,14 +56,13 @@ public:
    using SoftwareCenterLauncherIcon::_desktop_file;
    using SoftwareCenterLauncherIcon::GetRemoteUri;
    using SoftwareCenterLauncherIcon::OnFinished;
-
 };
 
 struct TestSoftwareCenterLauncherIcon : testing::Test
 {
 public:
   TestSoftwareCenterLauncherIcon()
-     : usc(ApplicationManager::Default().GetApplicationForDesktopFile(USC_DESKTOP))
+     : usc(std::make_shared<MockApplication>(USC_APP_INSTALL_DESKTOP, "softwarecenter"))
      , icon(usc, "/com/canonical/unity/test/object/path", "")
   {}
 
@@ -79,7 +80,8 @@ TEST_F(TestSoftwareCenterLauncherIcon, Construction)
 TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformTrivial)
 {
    // no transformation needed
-   EXPECT_EQ(icon.GetActualDesktopFileAfterInstall(), USC_DESKTOP);
+  icon._desktop_file = USC_DESKTOP;
+  EXPECT_EQ(icon.GetActualDesktopFileAfterInstall(), USC_DESKTOP);
 }
 
 TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformAppInstall)
@@ -101,19 +103,16 @@ TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformSCAgent)
 // and ensure that the remote uri is updated from temp location to
 // the real location
 TEST_F(TestSoftwareCenterLauncherIcon, OnFinished)
-{
-
-   // simulate desktop file from app-install-data
-   icon._desktop_file = "/usr/share/app-install/desktop/software-center:ubuntu-software-center.desktop";
-   
+{   
    // now simulate that the install was successful
    GVariant *params = g_variant_new("(s)", "exit-success");
    icon.OnFinished(params);
 
    // and verify that both the desktop file and the remote uri gets updated
+
    EXPECT_EQ(icon._desktop_file, USC_DESKTOP);
-   EXPECT_EQ(icon.GetRemoteUri(), 
-             "application://ubuntu-software-center.desktop");
+   EXPECT_EQ(icon.GetRemoteUri(), "application://ubuntu-software-center.desktop");
+   EXPECT_TRUE(usc->closed.empty());
 
    g_variant_unref(params);
 }

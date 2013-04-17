@@ -9,6 +9,67 @@ unity (7.0.0daily13.04.10ubuntu.unity.experimental.certified-0ubuntu1) raring; u
 
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 10 Apr 2013 07:16:02 +0000
 
+unity (7.0.0daily13.04.15-0ubuntu1) raring; urgency=low
+
+  [ Brandon Schaefer ]
+  * Command lens does not close when pressing Alt+F2 (LP: #1167466)
+
+  [ Andrea Azzarone ]
+  * dash preview animation is slow on high resolution screens (also
+    fullscreen mode) (LP: #1055126)
+
+  [ Marco Trevisan (Treviño) ]
+  * Unity makes unneeded copies of Nux DrawList (LP: #1167605)
+  * Unityshell uses much of his CPU time only to get tray XIDs from
+    PanelController (LP: #1167894)
+  * Adding Lens results is more expensive than needed (LP: #1168569)
+  * Opening new-window from quicklist static action does not focus the
+    newly opened window (LP: #1164483)
+  * Launcher pre-processes icons also when the icons have not been
+    changed since last draw cycle (LP: #1168556)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3300
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 15 Apr 2013 04:17:42 +0000
+
+unity (7.0.0daily13.04.10-0ubuntu1) raring; urgency=low
+
+  [ Andrea Azzarone ]
+  * Launcher icons automatically placed in the launcher by USC (or apps
+    lens) fail to have running 'pips'. (LP: #1165097)
+
+  [ Marco Trevisan (Treviño) ]
+  * Unity wastes some memory by allocating multiple times the same
+    texture (LP: #1166532)
+  * Unity is creating multiple instances of DBusIndicators per each
+    monitor (LP: #1166550)
+
+  [ Michi Henning ]
+  * ResultIterator.h defines functions that return const values (LP:
+    #1163705)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3290
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 10 Apr 2013 04:03:19 +0000
+
+unity (7.0.0daily13.04.08-0ubuntu1) raring; urgency=low
+
+  [ Tigran Gabrielyan ]
+  * [UIFe] Window list in right click context menu should indicate the
+    focused window (LP: #1152477)
+
+  [ Andrea Azzarone ]
+  * Launcher - When a app is automatically placed in the Launcher after
+    being installed from the Software Center, it should be in the 'non-
+    running' state (LP: #987727)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3283
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 08 Apr 2013 04:02:51 +0000
+
 unity (7.0.0daily13.04.05.2-0ubuntu1) raring; urgency=low
 
   * Revert r3266 "Don't close the dash when switching from the command lens 

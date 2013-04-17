@@ -42,6 +42,7 @@
 
 #include "CairoTexture.h"
 #include "JSONParser.h"
+#include "TextureCache.h"
 #include "UnitySettings.h"
 #include "config.h"
 
@@ -2547,19 +2548,8 @@ nux::BaseTexture* LazyLoadTexture::texture()
 
 void LazyLoadTexture::LoadTexture()
 {
-  std::string full_path = PKGDATADIR + filename_;
-  glib::Object<GdkPixbuf> pixbuf;
-  glib::Error error;
-
-  pixbuf = ::gdk_pixbuf_new_from_file_at_size(full_path.c_str(), size_, size_, &error);
-  if (error)
-  {
-    LOG_WARN(logger) << "Unable to texture " << full_path << ": " << error;
-  }
-  else
-  {
-    texture_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
-  }
+  TextureCache& cache = TextureCache::GetDefault();
+  texture_ = cache.FindTexture(filename_, size_, size_);
 }
 
 } // anon namespace

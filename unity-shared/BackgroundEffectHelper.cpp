@@ -18,18 +18,8 @@
  */
 
 #include "BackgroundEffectHelper.h"
-#include "TimeUtil.h"
 
-#include <time.h>
-#ifdef TRUE
-#undef TRUE
-#endif
-
-#ifdef FALSE
-#undef FALSE
-#endif
-
-#include <boost/utility.hpp>
+#include "TextureCache.h"
 #include "UnitySettings.h"
 
 
@@ -47,51 +37,68 @@ nux::Property<bool> BackgroundEffectHelper::updates_enabled (true);
 nux::Property<bool> BackgroundEffectHelper::detecting_occlusions (false);
 
 BackgroundEffectHelper::BackgroundEffectHelper()
+  : enabled(false)
+  , cache_dirty(true)
 {
-  enabled = false;
-  cache_dirty = true;
-  enabled.changed.connect (sigc::mem_fun(this, &BackgroundEffectHelper::OnEnabledChanged));
-  noise_texture_ = nux::CreateTextureFromFile(PKGDATADIR"/dash_noise.png");
-  
+  enabled.changed.connect(sigc::mem_fun(this, &BackgroundEffectHelper::OnEnabledChanged));
+  noise_texture_ = TextureCache::GetDefault().FindTexture("dash_noise.png");
+
   if (Settings::Instance().GetLowGfxMode())
   {
     blur_type(BLUR_NONE);
   }
-
-  Register(this);
 }
 
 BackgroundEffectHelper::~BackgroundEffectHelper()
 {
-  noise_texture_->UnReference();
   Unregister(this);
 }
 
-void BackgroundEffectHelper::OnEnabledChanged(bool value)
+void BackgroundEffectHelper::OnEnabledChanged(bool enabled)
 {
-  if (value)
+  if (enabled)
+  {
+    Register(this);
     DirtyCache();
+  }
+  else
+  {
+    Unregister(this);
+  }
 }
 
-void BackgroundEffectHelper::ProcessDamage(nux::Geometry geo)
+void BackgroundEffectHelper::ProcessDamage(nux::Geometry const& geo)
 {
   for (BackgroundEffectHelper * bg_effect_helper : registered_list_)
   {
     if (bg_effect_helper->cache_dirty || !bg_effect_helper->owner || !bg_effect_helper->enabled)
       continue;
 
-    if (!geo.Intersect (bg_effect_helper->blur_geometry_).IsNull())
+    if (!geo.Intersect(bg_effect_helper->blur_geometry_).IsNull())
     {
       bg_effect_helper->DirtyCache();
     }
   }
 }
 
+bool BackgroundEffectHelper::HasDamageableHelpers()
+{
+  for (BackgroundEffectHelper * bg_effect_helper : registered_list_)
+  {
+    if (bg_effect_helper->owner && bg_effect_helper->enabled && !bg_effect_helper->cache_dirty)
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 bool BackgroundEffectHelper::HasEnabledHelpers()
 {
   for (BackgroundEffectHelper * bg_effect_helper : registered_list_)
   {
-    if (bg_effect_helper->enabled)
+    if (bg_effect_helper->owner && bg_effect_helper->enabled)
     {
       return true;
     }
@@ -205,7 +212,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     float gaussian_sigma = opengl_version >= 3 ? sigma_high : sigma_med;
 
     nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture = gpu_device->backup_texture0_;
-    nux::ObjectPtr<nux::CachedBaseTexture> noise_device_texture = graphics_engine->CacheResource(noise_texture_);
+    nux::ObjectPtr<nux::CachedBaseTexture> noise_device_texture = graphics_engine->CacheResource(noise_texture_.GetPointer());
 
     unsigned int buffer_width = larger_blur_geometry.width;
     unsigned int buffer_height = larger_blur_geometry.height;
@@ -249,7 +256,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(nu
     int blur_passes = 1;
 
     nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture = gpu_device->backup_texture0_;
-    nux::ObjectPtr<nux::CachedBaseTexture> noise_device_texture = graphics_engine->CacheResource(noise_texture_);
+    nux::ObjectPtr<nux::CachedBaseTexture> noise_device_texture = graphics_engine->CacheResource(noise_texture_.GetPointer());
 
     unsigned int offset = 0;
     int quad_width = larger_blur_geometry.width;

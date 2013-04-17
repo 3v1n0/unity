@@ -180,6 +180,12 @@ void DashView::SetMonitorOffset(int x, int y)
   renderer_.y_offset = y;
 }
 
+bool DashView::IsCommandLensOpen() const
+{
+  return (scope_bar_->GetActiveScopeId() == "commands.scope");
+}
+
+
 void DashView::OnResultActivated(ResultView::ActivateType type, LocalResult const& local_result, GVariant* data, std::string const& unique_id) 
 {
   last_activated_result_ = local_result;
@@ -653,7 +659,7 @@ void DashView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
   renderer_geo.y += panel_style.panel_height;
   renderer_geo.height += panel_style.panel_height;
 
-  renderer_.DrawFull(graphics_engine, content_geo_, renderer_geo_abs, renderer_geo, true);
+  renderer_.DrawFull(graphics_engine, content_geo_, renderer_geo_abs, renderer_geo, false);
 }
 
 void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)

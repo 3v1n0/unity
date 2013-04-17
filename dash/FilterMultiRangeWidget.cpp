@@ -279,11 +279,6 @@ void FilterMultiRangeWidget::RecvMouseDrag(int x, int y, int dx, int dy, unsigne
     return;
   dragging_ = true;
 
-  nux::Geometry mouse_down_button_geometry = mouse_down_button_->GetAbsoluteGeometry();
-
-  nux::Geometry left_active_button_geometry = mouse_down_left_active_button_->GetAbsoluteGeometry();
-  nux::Geometry right_active_button_geometry = mouse_down_right_active_button_->GetAbsoluteGeometry();
-
   auto end = buttons_.end();
   int found_buttons = 0;
   for (auto iter = buttons_.begin(); iter != end; ++iter)

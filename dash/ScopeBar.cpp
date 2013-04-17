@@ -364,5 +364,15 @@ void ScopeBar::AddProperties(GVariantBuilder* builder)
   }
 }
 
+std::string ScopeBar::GetActiveScopeId() const
+{
+  for (auto icon : icons_)
+  {
+    if (icon->active)
+      return icon->id;
+  }
+  return "";
+}
+
 }
 }

@@ -235,6 +235,13 @@ struct IconRenderer::TexturesPool
   nux::ObjectPtr<nux::IOpenGLAsmShaderProgram> asm_shader;
 #endif
 
+  int VertexLocation;
+  int VPMatrixLocation;
+  int TextureCoord0Location;
+  int FragmentColor;
+  int ColorifyColor;
+  int DesatFactor;
+
   std::map<char, BaseTexturePtr> labels;
 
 private:
@@ -264,9 +271,6 @@ IconRenderer::IconRenderer()
   pip_style = OUTSIDE_TILE;
 }
 
-IconRenderer::~IconRenderer()
-{}
-
 void IconRenderer::SetTargetSize(int tile_size, int image_size_, int spacing_)
 {
   icon_size = tile_size;
@@ -291,8 +295,19 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
   int i;
   for (it = args.begin(), i = 0; it != args.end(); ++it, ++i)
   {
-
     IconTextureSource* launcher_icon = it->icon;
+
+    if (it->render_center == launcher_icon->LastRenderCenter(monitor) &&
+        it->logical_center == launcher_icon->LastLogicalCenter(monitor) &&
+        it->rotation == launcher_icon->LastRotation(monitor) &&
+        it->skip == launcher_icon->WasSkipping(monitor))
+    {
+      continue;
+    }
+
+    launcher_icon->RememberCenters(monitor, it->render_center, it->logical_center);
+    launcher_icon->RememberRotation(monitor, it->rotation);
+    launcher_icon->RememberSkip(monitor, it->skip);
 
     float w = icon_size;
     float h = icon_size;
@@ -309,9 +324,9 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
     }
 
     ObjectMatrix = nux::Matrix4::TRANSLATE(geo.width / 2.0f, geo.height / 2.0f, z) * // Translate the icon to the center of the viewport
-                   nux::Matrix4::ROTATEX(it->x_rotation) *              // rotate the icon
-                   nux::Matrix4::ROTATEY(it->y_rotation) *
-                   nux::Matrix4::ROTATEZ(it->z_rotation) *
+                   nux::Matrix4::ROTATEX(it->rotation.x) *              // rotate the icon
+                   nux::Matrix4::ROTATEY(it->rotation.y) *
+                   nux::Matrix4::ROTATEZ(it->rotation.z) *
                    nux::Matrix4::TRANSLATE(-x - w / 2.0f, -y - h / 2.0f, -z); // Put the center the icon to (0, 0)
 
     ViewProjectionMatrix = PremultMatrix * ObjectMatrix;
@@ -369,9 +384,9 @@ void IconRenderer::PreprocessIcons(std::list<RenderArg>& args, nux::Geometry con
       z = it->render_center.z;
 
       ObjectMatrix = nux::Matrix4::TRANSLATE(geo.width / 2.0f, geo.height / 2.0f, z) * // Translate the icon to the center of the viewport
-                     nux::Matrix4::ROTATEX(it->x_rotation) *              // rotate the icon
-                     nux::Matrix4::ROTATEY(it->y_rotation) *
-                     nux::Matrix4::ROTATEZ(it->z_rotation) *
+                     nux::Matrix4::ROTATEX(it->rotation.x) *              // rotate the icon
+                     nux::Matrix4::ROTATEY(it->rotation.y) *
+                     nux::Matrix4::ROTATEZ(it->rotation.z) *
                      nux::Matrix4::TRANSLATE(-(it->render_center.x - w / 2.0f) - w / 2.0f, -(it->render_center.y - h / 2.0f) - h / 2.0f, -z); // Put the center the icon to (0, 0)
 
       ViewProjectionMatrix = PremultMatrix * ObjectMatrix;
@@ -485,7 +500,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
     colorify = nux::color::White;
     background_tile_colorify = nux::color::White;
     backlight_intensity = 0.95f;
-    glow_intensity = 1.3f;
+    glow_intensity = 1.0f;
     shadow_intensity = 0.0f;
 
     background = textures_->icon_selected_background[size];
@@ -754,9 +769,9 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
   if (icon.IsNull())
     return;
 
-  if (std::abs(arg.x_rotation) < 0.01f &&
-      std::abs(arg.y_rotation) < 0.01f &&
-      std::abs(arg.z_rotation) < 0.01f &&
+  if (std::abs(arg.rotation.x) < 0.01f &&
+      std::abs(arg.rotation.y) < 0.01f &&
+      std::abs(arg.rotation.z) < 0.01f &&
       !force_filter)
   {
     icon->SetFiltering(GL_NEAREST, GL_NEAREST);
@@ -823,20 +838,15 @@ void IconRenderer::RenderElement(nux::GraphicsEngine& GfxContext,
   {
     textures_->shader_program_uv_persp_correction->Begin();
 
-    int TextureObjectLocation = textures_->shader_program_uv_persp_correction->GetUniformLocationARB("TextureObject0");
-    VertexLocation            = textures_->shader_program_uv_persp_correction->GetAttributeLocation("iVertex");
-    TextureCoord0Location     = textures_->shader_program_uv_persp_correction->GetAttributeLocation("iTexCoord0");
-    FragmentColor             = textures_->shader_program_uv_persp_correction->GetUniformLocationARB("color0");
-    ColorifyColor             = textures_->shader_program_uv_persp_correction->GetUniformLocationARB("colorify_color");
-    DesatFactor               = textures_->shader_program_uv_persp_correction->GetUniformLocationARB("desat_factor");
+    VertexLocation = textures_->VertexLocation;
+    TextureCoord0Location = textures_->TextureCoord0Location;
+    FragmentColor = textures_->FragmentColor;
+    ColorifyColor = textures_->ColorifyColor;
+    DesatFactor = textures_->DesatFactor;
 
-    if (TextureObjectLocation != -1)
-      CHECKGL(glUniform1iARB(TextureObjectLocation, 0));
-
-    int VPMatrixLocation = textures_->shader_program_uv_persp_correction->GetUniformLocationARB("ViewProjectionMatrix");
-    if (VPMatrixLocation != -1)
+    if (textures_->VPMatrixLocation != -1)
     {
-      textures_->shader_program_uv_persp_correction->SetUniformLocMatrix4fv((GLint)VPMatrixLocation, 1, false, (GLfloat*) & (stored_projection_matrix_.m));
+      textures_->shader_program_uv_persp_correction->SetUniformLocMatrix4fv((GLint)textures_->VPMatrixLocation, 1, false, (GLfloat*) & (stored_projection_matrix_.m));
     }
   }
 #ifndef USE_GLES
@@ -922,7 +932,7 @@ void IconRenderer::RenderIndicators(nux::GraphicsEngine& GfxContext,
                                     nux::Geometry const& geo)
 {
   int markerCenter = (int) arg.render_center.y;
-  markerCenter -= (int)(arg.x_rotation / (2 * M_PI) * icon_size);
+  markerCenter -= (int)(arg.rotation.x / (2 * M_PI) * icon_size);
 
 
   if (running > 0)
@@ -1194,6 +1204,12 @@ void IconRenderer::GetInverseScreenPerspectiveMatrix(nux::Matrix4& ViewMatrix, n
 
 IconRenderer::TexturesPool::TexturesPool()
   : offscreen_progress_texture(nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(2, 2, 1, nux::BITFMT_R8G8B8A8))
+  , VertexLocation(-1)
+  , VPMatrixLocation(0)
+  , TextureCoord0Location(-1)
+  , FragmentColor(0)
+  , ColorifyColor(0)
+  , DesatFactor(0)
 {
   LoadTexture(progress_bar_trough, PKGDATADIR"/progress_bar_trough.png");
   LoadTexture(progress_bar_fill, PKGDATADIR"/progress_bar_fill.png");
@@ -1249,6 +1265,22 @@ void IconRenderer::TexturesPool::SetupShaders()
     shader_program_uv_persp_correction = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateShaderProgram();
     shader_program_uv_persp_correction->LoadIShader(gPerspectiveCorrectShader.c_str());
     shader_program_uv_persp_correction->Link();
+
+    shader_program_uv_persp_correction->Begin();
+
+    int TextureObjectLocation = shader_program_uv_persp_correction->GetUniformLocationARB("TextureObject0");
+    VertexLocation            = shader_program_uv_persp_correction->GetAttributeLocation("iVertex");
+    TextureCoord0Location     = shader_program_uv_persp_correction->GetAttributeLocation("iTexCoord0");
+    FragmentColor             = shader_program_uv_persp_correction->GetUniformLocationARB("color0");
+    ColorifyColor             = shader_program_uv_persp_correction->GetUniformLocationARB("colorify_color");
+    DesatFactor               = shader_program_uv_persp_correction->GetUniformLocationARB("desat_factor");
+
+    if (TextureObjectLocation != -1)
+      CHECKGL(glUniform1iARB(TextureObjectLocation, 0));
+
+    VPMatrixLocation = shader_program_uv_persp_correction->GetUniformLocationARB("ViewProjectionMatrix");
+
+    shader_program_uv_persp_correction->End();
   }
   else
   {
