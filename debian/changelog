@@ -1,3 +1,19 @@
+unity (7.0.0daily13.04.17~13.04-0ubuntu1) raring; urgency=low
+
+  [ Marco Trevisan (Treviño) ]
+  * Top Bar, window managment - top bar shadow not falling on restored
+    windows that are partially off the top edge of the screen (LP:
+    #871758)
+
+  [ Matthieu James ]
+  * [UIFe] BFB icon swirl should run clockwise not anti-clockwise (LP:
+    #1169238)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3305
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 17 Apr 2013 04:07:04 +0000
+
 unity (7.0.0daily13.04.15-0ubuntu1) raring; urgency=low
 
   [ Brandon Schaefer ]
