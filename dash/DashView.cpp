@@ -1462,7 +1462,11 @@ nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)
 
 void DashView::ProcessDndEnter()
 {
-  ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
+  auto const& event = nux::GetGraphicsDisplay()->GetCurrentEvent();
+
+  // Don't close the dash if the mouse is over the vertical line between the dash and the launcher.
+  if (event.x != GetAbsoluteX())
+    ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
 }
 
 nux::Area* DashView::FindKeyFocusArea(unsigned int key_symbol,
