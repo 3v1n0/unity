@@ -721,8 +721,6 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
     nux::GetPainter().PopBackgroundStack();
   }
 
-  overlay_window_buttons_->QueueDraw();
-
   graphics_engine.PopClippingRectangle();
 
   renderer_.DrawInnerCleanup(graphics_engine, content_geo_, renderer_geo_abs, renderer_geo);

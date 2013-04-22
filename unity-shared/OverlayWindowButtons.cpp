@@ -36,6 +36,10 @@ OverlayWindowButtons::OverlayWindowButtons()
   : nux::BaseWindow("OverlayWindowButtons")
   , window_buttons_(new WindowButtons())
 {
+  window_buttons_->queue_draw.connect([&] (nux::Layout* /*layout*/) {
+    QueueDraw();
+  });
+
   AddChild(window_buttons_.GetPointer());
   UpdateGeometry();
   SetBackgroundColor(nux::color::Transparent);
