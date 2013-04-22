@@ -96,7 +96,6 @@ bool MusicPreview::HasUbuntuOneCredentials()
 {
   dash::Preview::InfoHintPtrList hints = preview_model_->GetInfoHints();
   GVariant *preview_data = NULL;
-
   for (dash::Preview::InfoHintPtr const& info_hint : hints)
   {
     if (info_hint->id == "music_preview")
@@ -105,7 +104,7 @@ bool MusicPreview::HasUbuntuOneCredentials()
       if (preview_data != NULL)
       {
         glib::Variant data(g_variant_lookup_value(preview_data,
-	  "no_credentials_label", G_VARIANT_TYPE_ANY));
+	  "no_credentials_label", G_VARIANT_TYPE_STRING));
 
         if (!data)
           no_credentials_message_ = "";
@@ -226,8 +225,7 @@ void MusicPreview::SetupViews()
 	nux::VLayout* icon_layout = new nux::VLayout();
   	icon_layout->SetLeftAndRightPadding(10);
 
-        warning_texture_ = new IconTexture(style.GetWarningIcon(), style.GetPaymentWarningWidth(),
-          style.GetPaymentWarningHeight());
+        warning_texture_ = new IconTexture(style.GetWarningIcon());
         icon_layout->AddView(warning_texture_.GetPointer(), 0, nux::MINOR_POSITION_START,
           nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
         actions_layout->AddLayout(icon_layout, 0, nux::MINOR_POSITION_CENTER);
