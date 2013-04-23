@@ -54,6 +54,7 @@ struct _PanelServicePrivate
   GHashTable *panel2entries_hash;
 
   guint  initial_sync_id;
+  guint  ready_signal_id;
   gint32 timeouts[N_TIMEOUT_SLOTS];
 
   IndicatorObjectEntry *last_entry;
@@ -177,6 +178,12 @@ panel_service_class_dispose (GObject *self)
     {
       g_source_remove (priv->initial_sync_id);
       priv->initial_sync_id = 0;
+    }
+
+  if (priv->ready_signal_id)
+    {
+      g_source_remove (priv->ready_signal_id);
+      priv->ready_signal_id = 0;
     }
 
   for (i = 0; i < N_TIMEOUT_SLOTS; i++)
@@ -473,6 +480,17 @@ initial_resync (PanelService *self)
   return FALSE;
 }
 
+static gboolean
+ready_signal (PanelService *self)
+{
+  if (PANEL_IS_SERVICE (self))
+    {
+	  /* TODO: Upstart */
+      self->priv->ready_signal = 0;
+    }
+  return FALSE;
+}
+
 static void
 panel_service_update_menu_keybinding (PanelService *self)
 {
@@ -570,6 +588,7 @@ panel_service_init (PanelService *self)
   panel_service_update_menu_keybinding (self);
 
   priv->initial_sync_id = g_idle_add ((GSourceFunc)initial_resync, self);
+  priv->ready_signal_id = g_idle_add ((GSourceFunc)ready_signal, self);
 }
 
 static gboolean
