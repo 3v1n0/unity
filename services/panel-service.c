@@ -491,7 +491,7 @@ ready_signal (PanelService *self)
         "--session",
         "--user",
         "emit",
-        "--no-wait"
+        "--no-wait",
         "indicators-loaded",
         NULL,
       };
