@@ -513,7 +513,7 @@ ready_signal (PanelService *self)
           g_error_free(error);
         }
 
-      self->priv->ready_signal = 0;
+      self->priv->ready_signal_id = 0;
     }
 
   return FALSE;
