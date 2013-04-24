@@ -2431,8 +2431,6 @@ bool UnityScreen::initPluginActions()
 
   if (p)
   {
-    MultiActionList expoActions;
-
     for (CompOption& option : p->vTable->getOptions())
     {
       if (option.name() == "close_window_key")
@@ -2727,6 +2725,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     uScreen->paintDisplay();
   }
 
+<<<<<<< TREE
   bool screen_transformed = (mask & PAINT_WINDOW_ON_TRANSFORMED_SCREEN_MASK);
 
   if (window->type() == CompWindowTypeDesktopMask && !screen_transformed)
@@ -2739,16 +2738,68 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       window->type() != CompWindowTypeDesktopMask)
   {
     uScreen->PaintPanelShadow(region);
+=======
+  enum class DrawPanelShadow
+  {
+    NO,
+    BELOW_WINDOW,
+    OVER_WINDOW,
+  };
+
+  auto draw_panel_shadow = DrawPanelShadow::NO;
+
+  if (!(mask & PAINT_WINDOW_ON_TRANSFORMED_SCREEN_MASK))
+  {
+    Window active_window = screen->activeWindow();
+
+    if (G_UNLIKELY(window->type() == CompWindowTypeDesktopMask))
+    {
+      uScreen->setPanelShadowMatrix(matrix);
+
+      if (active_window == 0 || active_window == window->id())
+        draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
+    }
+    else
+    {
+      if (window->id() == active_window)
+      {
+        draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
+
+        if (!(window->state() & CompWindowStateMaximizedVertMask) &&
+            !(window->state() & CompWindowStateFullscreenMask) &&
+            !(window->type() & CompWindowTypeFullscreenMask))
+        {
+          auto const& output = uScreen->screen->currentOutputDev();
+
+          if (window->y() - window->border().top < output.y() + uScreen->panel_style_.panel_height)
+          {
+            draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
+          }
+        }
+      }
+    }
+>>>>>>> MERGE-SOURCE
   }
+<<<<<<< TREE
+=======
+
+  if (draw_panel_shadow == DrawPanelShadow::BELOW_WINDOW)
+    uScreen->paintPanelShadow(region);
+>>>>>>> MERGE-SOURCE
 
   bool ret = gWindow->glDraw(matrix, attrib, region, mask);
 
+<<<<<<< TREE
   if (!screen_transformed &&
       (active_window == 0 || active_window == window->id()) &&
       (window->type() == CompWindowTypeDesktopMask))
   {
     uScreen->PaintPanelShadow(region);
   }
+=======
+  if (draw_panel_shadow == DrawPanelShadow::OVER_WINDOW)
+    uScreen->paintPanelShadow(region);
+>>>>>>> MERGE-SOURCE
 
   return ret;
 }

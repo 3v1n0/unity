@@ -9,6 +9,7 @@ dash/LensView.cpp
 dash/PlacesGroup.cpp
 dash/ResultViewGrid.cpp
 dash/previews/ApplicationPreview.cpp
+dash/previews/PreviewInfoHintWidget.cpp
 dash/previews/SocialPreview.cpp
 hud/HudController.cpp
 hud/HudView.cpp
