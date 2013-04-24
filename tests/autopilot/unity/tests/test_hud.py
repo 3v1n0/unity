@@ -215,7 +215,7 @@ class HudBehaviorTests(HudTestsBase):
         # XXX: with the new HUD, command and description is separated by '\u2002' and
         #  not a regular space ' '. Is that correct? (LP: #1172237)
         self.assertThat(hud_query_check,
-                        Eventually(Equals("Undo\u2002(Edit)")))
+                        Eventually(Equals(u'Undo\u2002(Edit)')))
         self.keyboard.press_and_release('Return')
         self.assertThat(self.unity.hud.visible, Eventually(Equals(False)))
 
@@ -324,6 +324,9 @@ class HudBehaviorTests(HudTestsBase):
 
         self.keyboard.type("Quit")
         self.assertThat(self.unity.hud.search_string, Eventually(Equals("Quit")))
+        hud_query_check = lambda: self.unity.hud.selected_hud_button.label_no_formatting
+        self.assertThat(hud_query_check,
+                        Eventually(Equals(u'Quit\u2002(File)')))
 
         self.keyboard.press_and_release("Enter")
 
