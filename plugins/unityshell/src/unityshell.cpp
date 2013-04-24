@@ -630,7 +630,7 @@ void UnityScreen::FillShadowRectForOutput(CompRect         &shadowRect,
   shadowRect.setGeometry(shadowX, shadowY, shadowWidth, shadowHeight);
 }
 
-void UnityScreen::PaintPanelShadow(CompRegion const& clip)
+void UnityScreen::paintPanelShadow(CompRegion const& clip)
 {
   // You have no shadow texture. But how?
   if (_shadow_texture.empty() || !_shadow_texture[0])
@@ -1350,7 +1350,7 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
   }
 
   gScreen->glPaintTransformedOutput(attrib, transform, region, output, mask);
-  PaintPanelShadow(region);
+  paintPanelShadow(region);
 }
 
 void UnityScreen::updateBlurDamage()
@@ -2609,7 +2609,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
       if (!mask)
         uScreen->panelShadowPainted = CompRect();
 
-      uScreen->PaintPanelShadow(region);
+      uScreen->paintPanelShadow(region);
     }
 
     return false;  // Ensure nux windows are never painted by compiz
@@ -2725,20 +2725,6 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
     uScreen->paintDisplay();
   }
 
-<<<<<<< TREE
-  bool screen_transformed = (mask & PAINT_WINDOW_ON_TRANSFORMED_SCREEN_MASK);
-
-  if (window->type() == CompWindowTypeDesktopMask && !screen_transformed)
-    uScreen->setPanelShadowMatrix(matrix);
-
-  Window active_window = screen->activeWindow();
-
-  if (!screen_transformed &&
-      window->id() == active_window &&
-      window->type() != CompWindowTypeDesktopMask)
-  {
-    uScreen->PaintPanelShadow(region);
-=======
   enum class DrawPanelShadow
   {
     NO,
@@ -2778,28 +2764,15 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
         }
       }
     }
->>>>>>> MERGE-SOURCE
   }
-<<<<<<< TREE
-=======
 
   if (draw_panel_shadow == DrawPanelShadow::BELOW_WINDOW)
     uScreen->paintPanelShadow(region);
->>>>>>> MERGE-SOURCE
 
   bool ret = gWindow->glDraw(matrix, attrib, region, mask);
 
-<<<<<<< TREE
-  if (!screen_transformed &&
-      (active_window == 0 || active_window == window->id()) &&
-      (window->type() == CompWindowTypeDesktopMask))
-  {
-    uScreen->PaintPanelShadow(region);
-  }
-=======
   if (draw_panel_shadow == DrawPanelShadow::OVER_WINDOW)
     uScreen->paintPanelShadow(region);
->>>>>>> MERGE-SOURCE
 
   return ret;
 }

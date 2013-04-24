@@ -97,7 +97,7 @@ public:
 
   /* nux draw wrapper */
   void paintDisplay();
-  void PaintPanelShadow(CompRegion const& clip);
+  void paintPanelShadow(CompRegion const& clip);
   void setPanelShadowMatrix(const GLMatrix& matrix);
 
   void updateBlurDamage();
