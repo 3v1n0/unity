@@ -103,6 +103,8 @@ class HudBehaviorTests(HudTestsBase):
         self.unity.hud.ensure_visible()
         self.keyboard.type('e')
         self.assertThat(self.unity.hud.search_string, Eventually(Equals('e')))
+        self.assertThat(self.unity.hud.num_buttons, Eventually(Equals(5)))
+
         self.keyboard.press_and_release('Down')
         self.assertThat(self.unity.hud.selected_button, Eventually(Equals(2)))
         self.keyboard.press_and_release('Down')
@@ -386,6 +388,7 @@ class HudBehaviorTests(HudTestsBase):
         self.unity.hud.ensure_visible()
 
         self.keyboard.type("e")
+        self.assertThat(self.unity.hud.num_buttons, Eventually(Equals(5)))
         (x,y,w,h) = self.unity.hud.view.geometry
 
         # Specify a slower rate so that HUD can register the mouse movement properly
@@ -403,6 +406,7 @@ class HudBehaviorTests(HudTestsBase):
         self.unity.hud.ensure_visible()
 
         self.keyboard.type("e")
+        self.assertThat(self.unity.hud.num_buttons, Eventually(Equals(5)))
         (x,y,w,h) = self.unity.hud.view.geometry
 
         self.mouse.move(w/2, 0)
