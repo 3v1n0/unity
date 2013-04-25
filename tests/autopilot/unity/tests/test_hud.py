@@ -66,6 +66,14 @@ class HudTestsBase(UnityTestCase):
         }
         self.launch_test_window(window_spec)
 
+    def start_menu_app(self):
+        window_spec = {
+            "Title": "Test menu application",
+            "Menu": ["Entry 1", "Entry 2", "Entry 3", "Entry 4", "Entry 5", "Quit"],
+        }
+        self.launch_test_window(window_spec)
+
+
 
 class HudBehaviorTests(HudTestsBase):
 
@@ -83,16 +91,20 @@ class HudBehaviorTests(HudTestsBase):
         self.assertThat(self.unity.hud.selected_button, Equals(0))
 
     def test_check_a_values(self):
+        self.start_menu_app()
         self.unity.hud.ensure_visible()
-        self.keyboard.type('a')
-        self.assertThat(self.unity.hud.search_string, Eventually(Equals('a')))
+        self.keyboard.type('e')
+        self.assertThat(self.unity.hud.search_string, Eventually(Equals('e')))
         self.assertThat(self.unity.hud.num_buttons, Eventually(Equals(5)))
         self.assertThat(self.unity.hud.selected_button, Eventually(Equals(1)))
 
     def test_up_down_arrows(self):
+        self.start_menu_app()
         self.unity.hud.ensure_visible()
-        self.keyboard.type('a')
-        self.assertThat(self.unity.hud.search_string, Eventually(Equals('a')))
+        self.keyboard.type('e')
+        self.assertThat(self.unity.hud.search_string, Eventually(Equals('e')))
+        self.assertThat(self.unity.hud.num_buttons, Eventually(Equals(5)))
+
         self.keyboard.press_and_release('Down')
         self.assertThat(self.unity.hud.selected_button, Eventually(Equals(2)))
         self.keyboard.press_and_release('Down')
@@ -120,6 +132,8 @@ class HudBehaviorTests(HudTestsBase):
         """Hud must not change selected button when results update over time."""
         # TODO - this test doesn't test anything. Onmy system the results never update.
         # ideally we'd send artificial results to the hud from the test.
+        self.skipTest("This test makes no sense in its current state, needs reworking.")
+
         self.unity.hud.ensure_visible()
         self.keyboard.type('is')
         self.assertThat(self.unity.hud.search_string, Eventually(Equals('is')))
@@ -198,8 +212,10 @@ class HudBehaviorTests(HudTestsBase):
 
         self.keyboard.type("undo")
         hud_query_check = lambda: self.unity.hud.selected_hud_button.label_no_formatting
+        # XXX: with the new HUD, command and description is separated by '\u2002' and
+        #  not a regular space ' '. Is that correct? (LP: #1172237)
         self.assertThat(hud_query_check,
-                        Eventually(Equals("Edit > Undo")))
+                        Eventually(Equals(u'Undo\u2002(Edit)')))
         self.keyboard.press_and_release('Return')
         self.assertThat(self.unity.hud.visible, Eventually(Equals(False)))
 
@@ -306,8 +322,11 @@ class HudBehaviorTests(HudTestsBase):
 
         self.unity.hud.ensure_visible()
 
-        self.keyboard.type("File > Quit")
-        self.assertThat(self.unity.hud.search_string, Eventually(Equals("File > Quit")))
+        self.keyboard.type("Quit")
+        self.assertThat(self.unity.hud.search_string, Eventually(Equals("Quit")))
+        hud_query_check = lambda: self.unity.hud.selected_hud_button.label_no_formatting
+        self.assertThat(hud_query_check,
+                        Eventually(Equals(u'Quit\u2002(File)')))
 
         self.keyboard.press_and_release("Enter")
 
@@ -368,10 +387,11 @@ class HudBehaviorTests(HudTestsBase):
         """This tests moves the mouse from the top of the screen to the bottom, this must
         change the selected button from 1 to 5.
         """
-
+        self.start_menu_app()
         self.unity.hud.ensure_visible()
 
-        self.keyboard.type("a")
+        self.keyboard.type("e")
+        self.assertThat(self.unity.hud.num_buttons, Eventually(Equals(5)))
         (x,y,w,h) = self.unity.hud.view.geometry
 
         # Specify a slower rate so that HUD can register the mouse movement properly
@@ -385,10 +405,11 @@ class HudBehaviorTests(HudTestsBase):
         """This tests moves the mouse from the top of the screen to the bottom,
         then it presses the keyboard up 5 times, this must change the selected button from 5 to 1.
         """
-
+        self.start_menu_app()
         self.unity.hud.ensure_visible()
 
-        self.keyboard.type("a")
+        self.keyboard.type("e")
+        self.assertThat(self.unity.hud.num_buttons, Eventually(Equals(5)))
         (x,y,w,h) = self.unity.hud.view.geometry
 
         self.mouse.move(w/2, 0)
@@ -462,13 +483,13 @@ class HudBehaviorTests(HudTestsBase):
 
     def test_mouse_does_not_steal_button_focus(self):
         """When typing in the hud the mouse must not steal button focus."""
-
+        self.start_menu_app()
         self.unity.hud.ensure_visible()
 
         (x,y,w,h) = self.unity.hud.view.geometry
         self.mouse.move(w/4, h/4)
 
-        self.keyboard.type("a")
+        self.keyboard.type("e")
         self.assertThat(self.unity.hud.view.selected_button, Eventually(Equals(1)))
 
 
