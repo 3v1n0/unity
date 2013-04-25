@@ -141,7 +141,6 @@ private:
   glib::Object<GCancellable> search_cancellable_;
   std::vector<unsigned int> category_order_;
   ResultCounts counts_;
-  bool initial_activation_;
   bool no_results_active_;
   std::string search_string_;
   PlacesGroup::Ptr last_expanded_group_;
