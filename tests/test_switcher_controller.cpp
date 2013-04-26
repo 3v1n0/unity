@@ -63,6 +63,21 @@ TEST_F(TestSwitcherController, InitiateDetail)
   EXPECT_LT(model->detail_selection.changed.size(), prev_size);
 }
 
+TEST_F(TestSwitcherController, InitiateDetailWebapps)
+{
+  controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
+
+  controller_->Select(3);
+  controller_->InitiateDetail();
+
+  auto const& view = controller_->GetView();
+  auto const& model = view->GetModel();
+  EXPECT_EQ(controller_->detail_mode(), DetailMode::TAB_NEXT_TILE);
+  EXPECT_FALSE(view->animate());
+  EXPECT_FALSE(model->detail_selection());
+}
+
+
 TEST_F(TestSwitcherController, ShowSwitcher)
 {
   EXPECT_FALSE(controller_->Visible());

@@ -1254,6 +1254,11 @@ bool ApplicationLauncherIcon::ShowInSwitcher(bool current)
   return result;
 }
 
+bool ApplicationLauncherIcon::AllowDetailViewInSwitcher() const
+{
+  return app_->type() != "webapp";
+}
+
 unsigned long long ApplicationLauncherIcon::SwitcherPriority()
 {
   unsigned long long result = 0;
