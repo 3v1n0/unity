@@ -618,8 +618,7 @@ class DashScopeResultsTests(DashTestCase):
 
             self.keyboard.press_and_release("Down")
             self.keyboard.press_and_release("Down")
-            self.keyboard.press_and_release("Down")
-            # We should be on the Education category
+            # We should be on the Customization category
             self.keyboard.press_and_release('Enter')
             sleep(2)
 
