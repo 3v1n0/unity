@@ -119,6 +119,9 @@ private:
   void CheckNoResults(glib::HintsMap const& hints);
   void HideResultsMessage();
 
+  void PushResultFocus();
+  void PopResultFocus();
+
   ResultView* GetResultViewForCategory(unsigned int category_index);
 
   virtual PlacesGroup::Ptr CreatePlacesGroup(Category const& category);
