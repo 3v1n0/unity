@@ -253,7 +253,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
 
     def open_quicklist_with_keyboard(self):
         """Opens a quicklist using the keyboard."""
-        self.screen_geo.move_mouse_to_monitor(0)
+        self.display.move_mouse_to_screen(0)
         self.ql_launcher.key_nav_start()
         self.addCleanup(self.ql_launcher.key_nav_cancel)
 

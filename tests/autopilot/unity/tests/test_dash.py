@@ -8,7 +8,7 @@
 
 from __future__ import absolute_import
 
-from autopilot.emulators.clipboard import get_clipboard_contents
+from autopilot.clipboard import get_clipboard_contents
 from autopilot.matchers import Eventually
 from testtools.matchers import Equals, NotEquals, GreaterThan
 from time import sleep
@@ -108,7 +108,7 @@ class DashRevealTests(DashTestCase):
         current_monitor = self.unity.dash.monitor
 
         (x,y,w,h) = self.unity.dash.geometry
-        (screen_x,screen_y,screen_w,screen_h) = self.screen_geo.get_monitor_geometry(current_monitor)
+        (screen_x,screen_y,screen_w,screen_h) = self.display.get_screen_geometry(current_monitor)
 
         self.mouse.move(x + w + (screen_w-((screen_x-x)+w))/2, y + h + (screen_h-((screen_y-y)+h))/2)
         self.mouse.click()
@@ -127,8 +127,8 @@ class DashRevealTests(DashTestCase):
         self.unity.dash.ensure_visible()
 
         #Click bottom right of the screen
-        w = self.screen_geo.get_screen_width()
-        h = self.screen_geo.get_screen_height()
+        w = self.display.get_screen_width()
+        h = self.display.get_screen_height()
         self.mouse.move(w,h)
         self.mouse.click()
 
@@ -618,8 +618,9 @@ class DashVisualTests(DashTestCase):
         self.assertThat(lens.visible, Eventually(Equals(False)))
 
     def test_dash_position_with_non_default_launcher_width(self):
-        """"There should be no empty space between launcher and dash when the launcher
+        """There should be no empty space between launcher and dash when the launcher
         has a non-default width.
+
         """
         monitor = self.unity.dash.monitor
         launcher = self.unity.launcher.get_launcher_for_monitor(monitor)
@@ -1191,7 +1192,7 @@ class DashCrossMonitorsTests(DashTestCase):
 
     def setUp(self):
         super(DashCrossMonitorsTests, self).setUp()
-        if self.screen_geo.get_num_monitors() < 2:
+        if self.display.get_num_screens() < 2:
             self.skipTest("This test requires more than 1 monitor.")
 
     def test_dash_stays_on_same_monitor(self):
@@ -1203,7 +1204,7 @@ class DashCrossMonitorsTests(DashTestCase):
         self.unity.dash.ensure_visible()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        self.screen_geo.move_mouse_to_monitor((current_monitor + 1) % self.screen_geo.get_num_monitors())
+        self.display.move_mouse_to_screen((current_monitor + 1) % self.display.get_num_screens())
         self.keyboard.type("abc")
 
         self.assertThat(self.unity.dash.ideal_monitor, Eventually(Equals(current_monitor)))
@@ -1213,11 +1214,11 @@ class DashCrossMonitorsTests(DashTestCase):
 
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        for monitor in range(self.screen_geo.get_num_monitors()-1):
-            self.screen_geo.move_mouse_to_monitor(monitor)
+        for monitor in range(self.display.get_num_screens()-1):
+            self.display.move_mouse_to_screen(monitor)
             self.unity.dash.ensure_visible()
 
-            self.screen_geo.move_mouse_to_monitor(monitor+1)
+            self.display.move_mouse_to_screen(monitor+1)
             sleep(.5)
             self.mouse.click()
 

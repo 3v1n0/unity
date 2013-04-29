@@ -221,14 +221,14 @@ class SwitcherTests(SwitcherTestCase):
         # TODO - this test fails in multi-monitor setups. You can't use addCleanup
         # a better way would be to have a scenario'd class for multi-monitor
         # switcher tests.
-        num_monitors = self.screen_geo.get_num_monitors()
+        num_monitors = self.display.get_num_screens()
         if num_monitors == 1:
             self.skip("No point testing this on one monitor")
 
         charmap, calc, mahjongg = self.start_applications()
 
         for monitor in range(num_monitors):
-            self.screen_geo.move_mouse_to_monitor(monitor)
+            self.display.move_mouse_to_screen(monitor)
             self.unity.switcher.initiate()
             self.addCleanup(self.unity.switcher.terminate)
             self.assertThat(self.unity.switcher.monitor, Eventually(Equals(monitor)))

@@ -10,7 +10,7 @@
 from __future__ import absolute_import
 
 from autopilot.matchers import Eventually
-from autopilot.emulators.X11 import ScreenGeometry
+from autopilot.display import Display
 from autopilot.testcase import multiply_scenarios
 from os import remove, environ
 from os.path import exists
@@ -30,7 +30,7 @@ from unity.tests import UnityTestCase
 
 
 def _make_monitor_scenarios():
-    num_monitors = ScreenGeometry().get_num_monitors()
+    num_monitors = Display.create().get_num_screens()
     scenarios = []
 
     if num_monitors == 1:
@@ -82,8 +82,8 @@ class HudBehaviorTests(HudTestsBase):
 
         if not environ.get('UBUNTU_MENUPROXY', ''):
             self.patch_environment('UBUNTU_MENUPROXY', 'libappmenu.so')
-        self.hud_monitor = self.screen_geo.get_primary_monitor()
-        self.screen_geo.move_mouse_to_monitor(self.hud_monitor)
+        self.hud_monitor = self.display.get_primary_screen()
+        self.display.move_mouse_to_screen(self.hud_monitor)
 
     def test_no_initial_values(self):
         self.unity.hud.ensure_visible()
@@ -440,7 +440,7 @@ class HudBehaviorTests(HudTestsBase):
         current_monitor = self.unity.hud.monitor
 
         (x,y,w,h) = self.unity.hud.geometry
-        (screen_x,screen_y,screen_w,screen_h) = self.screen_geo.get_monitor_geometry(current_monitor)
+        (screen_x,screen_y,screen_w,screen_h) = self.display.get_screen_geometry(current_monitor)
 
         self.mouse.move(x + w + (screen_w-((screen_x-x)+w))/2, y + h + (screen_h-((screen_y-y)+h))/2)
         self.mouse.click()
@@ -460,8 +460,8 @@ class HudBehaviorTests(HudTestsBase):
         self.unity.hud.ensure_visible()
 
         #Click bottom right of the screen
-        w = self.screen_geo.get_screen_width()
-        h = self.screen_geo.get_screen_height()
+        w = self.display.get_screen_width()
+        h = self.display.get_screen_height()
         self.mouse.move(w,h)
         self.mouse.click()
 
@@ -506,7 +506,7 @@ class HudLauncherInteractionsTests(HudTestsBase):
         self.set_unity_option('num_launchers', 0)
         self.set_unity_option('launcher_hide_mode', int(self.launcher_autohide))
 
-        self.screen_geo.move_mouse_to_monitor(self.hud_monitor)
+        self.display.move_mouse_to_screen(self.hud_monitor)
         sleep(0.5)
 
     def test_multiple_hud_reveal_does_not_break_launcher(self):
@@ -560,7 +560,7 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
         self.set_unity_option('num_launchers', 0)
         self.set_unity_option('launcher_hide_mode', 0)
 
-        self.screen_geo.move_mouse_to_monitor(self.hud_monitor)
+        self.display.move_mouse_to_screen(self.hud_monitor)
         sleep(0.5)
 
     def test_hud_launcher_icon_hides_bfb(self):
@@ -616,10 +616,10 @@ class HudVisualTests(HudTestsBase):
 
     def setUp(self):
         super(HudVisualTests, self).setUp()
-        self.screen_geo.move_mouse_to_monitor(self.hud_monitor)
+        self.display.move_mouse_to_screen(self.hud_monitor)
         self.set_unity_option('launcher_hide_mode', int(self.launcher_autohide))
         self.set_unity_option('num_launchers', int(self.launcher_primary_only))
-        self.hud_monitor_is_primary = (self.screen_geo.get_primary_monitor() == self.hud_monitor)
+        self.hud_monitor_is_primary = (self.display.get_primary_screen() == self.hud_monitor)
         self.hud_locked = (not self.launcher_autohide and (not self.launcher_primary_only or self.hud_monitor_is_primary))
         sleep(0.5)
 
@@ -630,12 +630,12 @@ class HudVisualTests(HudTestsBase):
         """HUD must be drawn on the monitor where the mouse is."""
         self.unity.hud.ensure_visible()
         self.assertThat(self.unity.hud.monitor, Eventually(Equals(self.hud_monitor)))
-        self.assertTrue(self.screen_geo.is_rect_on_monitor(self.unity.hud.monitor, self.unity.hud.geometry))
+        self.assertTrue(self.display.is_rect_on_screen(self.unity.hud.monitor, self.unity.hud.geometry))
 
     def test_hud_geometries(self):
         """Tests the HUD geometries for the given monitor and status."""
         self.unity.hud.ensure_visible()
-        monitor_geo = self.screen_geo.get_monitor_geometry(self.hud_monitor)
+        monitor_geo = self.display.get_screen_geometry(self.hud_monitor)
         monitor_x = monitor_geo[0]
         monitor_w = monitor_geo[2]
         hud_x = self.unity.hud.geometry[0]
@@ -776,7 +776,7 @@ class HudCrossMonitorsTests(HudTestsBase):
 
     def setUp(self):
         super(HudCrossMonitorsTests, self).setUp()
-        if self.screen_geo.get_num_monitors() < 2:
+        if self.display.get_num_screens() < 2:
             self.skipTest("This test requires more than 1 monitor.")
 
     def test_hud_stays_on_same_monitor(self):
@@ -789,7 +789,7 @@ class HudCrossMonitorsTests(HudTestsBase):
         self.unity.hud.ensure_visible()
         self.addCleanup(self.unity.hud.ensure_hidden)
 
-        self.screen_geo.move_mouse_to_monitor((current_monitor + 1) % self.screen_geo.get_num_monitors())
+        self.display.move_mouse_to_screen((current_monitor + 1) % self.display.get_num_screens())
         self.keyboard.type("abc")
 
         self.assertThat(self.unity.hud.ideal_monitor, Eventually(Equals(current_monitor)))
@@ -799,11 +799,11 @@ class HudCrossMonitorsTests(HudTestsBase):
 
         self.addCleanup(self.unity.hud.ensure_hidden)
 
-        for monitor in range(self.screen_geo.get_num_monitors()-1):
-            self.screen_geo.move_mouse_to_monitor(monitor)
+        for monitor in range(self.display.get_num_screens()-1):
+            self.display.move_mouse_to_screen(monitor)
             self.unity.hud.ensure_visible()
 
-            self.screen_geo.move_mouse_to_monitor(monitor+1)
+            self.display.move_mouse_to_screen(monitor+1)
             sleep(.5)
             self.mouse.click()
 

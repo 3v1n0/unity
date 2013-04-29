@@ -10,9 +10,8 @@
 from __future__ import absolute_import
 
 from autopilot.input import Mouse
-ScreenGeometry
+from autopilot.display import Display
 from autopilot.keybindings import KeybindingsHelper
-from autopilot.utilities import get_compiz_option
 import logging
 from testtools.matchers import NotEquals
 from time import sleep
@@ -25,6 +24,8 @@ from unity.emulators.icons import (
     SimpleLauncherIcon,
     TrashLauncherIcon,
     )
+
+from unity.emulators.compiz import get_compiz_option
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +70,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         self.in_switcher_mode = False
 
         self._mouse = Mouse.create()
-        self._screen = ScreenGeometry()
+        self._display = Display.create()
 
     def _perform_key_nav_binding(self, keybinding):
         if not self.in_keynav_mode:
@@ -101,7 +102,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
     def move_mouse_to_right_of_launcher(self):
         """Places the mouse to the right of this launcher."""
-        self._screen.move_mouse_to_monitor(self.monitor)
+        self._display.move_mouse_to_screen(self.monitor)
         (x, y, w, h) = self.geometry
         target_x = x + w + 10
         target_y = y + h / 2
@@ -112,7 +113,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
     def move_mouse_over_launcher(self):
         """Move the mouse over this launcher."""
-        self._screen.move_mouse_to_monitor(self.monitor)
+        self._display.move_mouse_to_screen(self.monitor)
         (x, y, w, h) = self.geometry
         target_x = x + w / 2
         target_y = y + h / 2
@@ -137,7 +138,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         """
         if self.is_showing:
             return
-        self._screen.move_mouse_to_monitor(self.monitor)
+        self._display.move_mouse_to_screen(self.monitor)
         (x, y, w, h) = self.geometry
 
         target_x = x - 920 # this is the pressure we need to reveal the launcher.
@@ -148,14 +149,14 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
     def keyboard_reveal_launcher(self):
         """Reveal this launcher using the keyboard."""
-        self._screen.move_mouse_to_monitor(self.monitor)
+        self._display.move_mouse_to_screen(self.monitor)
         logger.debug("Revealing launcher with keyboard.")
         self.keybinding_hold("launcher/reveal")
         self.is_showing.wait_for(True)
 
     def keyboard_unreveal_launcher(self):
         """Un-reveal this launcher using the keyboard."""
-        self._screen.move_mouse_to_monitor(self.monitor)
+        self._display.move_mouse_to_screen(self.monitor)
         logger.debug("Un-revealing launcher with keyboard.")
         self.keybinding_release("launcher/reveal")
         # only wait if the launcher is set to autohide
@@ -210,7 +211,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
     def key_nav_start(self):
         """Start keyboard navigation mode by pressing Alt+F1."""
-        self._screen.move_mouse_to_monitor(self.monitor)
+        self._display.move_mouse_to_screen(self.monitor)
         logger.debug("Initiating launcher keyboard navigation with Alt+F1.")
         self.keybinding("launcher/keynav")
         self._get_controller().key_nav_is_active.wait_for(True)
@@ -255,7 +256,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
     def switcher_start(self):
         """Start the super+Tab switcher on this launcher."""
-        self._screen.move_mouse_to_monitor(self.monitor)
+        self._display.move_mouse_to_screen(self.monitor)
         logger.debug("Starting Super+Tab switcher.")
         self.keybinding_hold_part_then_tap("launcher/switcher")
         self._get_controller().key_nav_is_active.wait_for(True)

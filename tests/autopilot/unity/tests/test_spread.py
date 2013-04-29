@@ -44,7 +44,7 @@ class SpreadTests(UnityTestCase):
         """Initiate the Spread for windows of the given app"""
         icon = self.unity.launcher.model.get_icon(desktop_id=desktop_id)
         self.assertThat(icon, NotEquals(None))
-        launcher = self.unity.launcher.get_launcher_for_monitor(self.screen_geo.get_primary_monitor())
+        launcher = self.unity.launcher.get_launcher_for_monitor(self.display.get_primary_screen())
 
         self.addCleanup(self.keybinding, "spread/cancel")
         launcher.click_launcher_icon(icon)
