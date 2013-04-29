@@ -159,6 +159,8 @@ ScopeView::ScopeView(Scope::Ptr scope, nux::Area* show_filters)
 , filter_expansion_pushed_(false)
 , scope_connected_(scope ? scope->connected : false)
 , search_on_next_connect_(false)
+, current_focus_category_position_(-1)
+, current_focus_result_index_(-1)
 {
   SetupViews(show_filters);
 
@@ -330,6 +332,31 @@ void ScopeView::OnCategoryOrderChanged()
     scroll_layout_->RemoveChildObject(group.GetPointer());
   }
 
+  //////////////////////////////////////////////////
+  // Find the current focus category position && result index
+  // This is to keep the focus in the same place if categories are being added/removed/reordered
+  int current_category_position = 0;
+  for (auto iter = category_order_.begin(); iter != category_order_.end(); ++iter)
+  {
+    unsigned category_index = *iter;
+    if (category_views_.size() <= category_index)
+      continue;
+    PlacesGroup::Ptr group = category_views_[category_index];
+    if (!group || !group->IsVisible())
+      continue;
+
+    ResultView* result_view = group->GetChildView();
+    if (result_view && result_view->GetSelectedIndex() != -1)
+    {
+      current_focus_result_index_ = result_view->GetSelectedIndex();
+      current_focus_category_position_ = current_category_position;
+      printf("Found focus for %d , %d\n", current_focus_category_position_, current_focus_result_index_); 
+      break;
+    }
+    current_category_position++;
+  }
+  //////////////////////////////////////////////////
+
   if (scope_)
   {
     Categories::Ptr category_model = scope_->categories();
@@ -347,6 +374,36 @@ void ScopeView::OnCategoryOrderChanged()
       scroll_layout_->AddView(category_views_[desired_category_index].GetPointer(), 0);       
     }
   }
+
+  //////////////////////////////////////////////////
+  // Update current focus category position && result index
+  // This is to keep the focus in the same place if categories are being added/removed/reordered
+  if (current_focus_category_position_ != -1 && current_focus_result_index_ != -1 &&
+      category_views_.size() > (unsigned)current_focus_category_position_)
+  {
+    while (category_order_.size() > (unsigned)current_focus_category_position_)
+    {
+      int tmp_current_focus_category_position = current_focus_category_position_;
+      unsigned focused_category_index = category_order_[tmp_current_focus_category_position];
+      if (category_views_.size() > focused_category_index)
+      {
+        PlacesGroup::Ptr group = category_views_[tmp_current_focus_category_position];
+        if (group->IsVisible())
+        {
+          ResultView* result_view = group->GetChildView();
+          if (result_view)    
+          {
+            result_view->SetSelectedIndex(current_focus_result_index_);
+            printf("Updating focus to %d on reorder\n", tmp_current_focus_category_position);
+            break;
+          }
+        }
+      }
+      tmp_current_focus_category_position++;
+    }
+  }
+  //////////////////////////////////////////////////
+
   QueueRelayout();
 }
 
@@ -434,7 +491,34 @@ void ScopeView::OnCategoryAdded(Category const& category)
     category_order_.push_back(index);
   }
   else
+  {
     view_index = find_view_index - category_order_.begin();
+  }
+
+  //////////////////////////////////////////////////
+  // Find the current focus category position && result index
+  // This is to keep the focus in the same place if categories are being added/removed/reordered
+  int current_category_position = 0;
+  for (auto iter = category_order_.begin(); iter != category_order_.end(); ++iter)
+  {
+    unsigned category_index = *iter;
+    if (category_views_.size() <= category_index)
+      continue;
+    PlacesGroup::Ptr group = category_views_[category_index];
+    if (!group || !group->IsVisible())
+      continue;
+
+    ResultView* result_view = group->GetChildView();
+    if (result_view && result_view->GetSelectedIndex() != -1)
+    {
+      current_focus_result_index_ = result_view->GetSelectedIndex();
+      current_focus_category_position_ = current_category_position;
+      printf("Found focus for %d , %d\n", current_focus_category_position_, current_focus_result_index_); 
+      break;
+    }
+    current_category_position++;
+  }
+  //////////////////////////////////////////////////
 
   category_views_.insert(category_views_.begin() + index, group);
 
@@ -495,6 +579,35 @@ void ScopeView::OnCategoryAdded(Category const& category)
                           nux::MinorDimensionSize::MINOR_SIZE_FULL, 100.0f,
                           (nux::LayoutPosition)view_index);
 
+  //////////////////////////////////////////////////
+  // Update current focus category position && result index
+  // This is to keep the focus in the same place if categories are being added/removed/reordered
+  if (current_focus_category_position_ != -1 && current_focus_result_index_ != -1 &&
+      category_views_.size() > (unsigned)current_focus_category_position_)
+  {
+    while (category_order_.size() > (unsigned)current_focus_category_position_)
+    {
+      int tmp_current_focus_category_position = current_focus_category_position_;
+      unsigned focused_category_index = category_order_[tmp_current_focus_category_position];
+      if (category_views_.size() > focused_category_index)
+      {
+        PlacesGroup::Ptr group = category_views_[tmp_current_focus_category_position];
+        if (group->IsVisible())
+        {
+          ResultView* result_view = group->GetChildView();
+          if (result_view)    
+          {
+            result_view->SetSelectedIndex(current_focus_result_index_);
+            printf("Updating focus to %d on reorder\n", tmp_current_focus_category_position);
+            break;
+          }
+        }
+      }
+      tmp_current_focus_category_position++;
+    }
+  }
+  //////////////////////////////////////////////////
+
   if (reset_filter_models)
   {
     QueueReinitializeFilterCategoryModels(index);
@@ -538,6 +651,32 @@ void ScopeView::OnCategoryRemoved(Category const& category)
   if (last_expanded_group_ == group)
     last_expanded_group_.Release();
 
+
+  //////////////////////////////////////////////////
+  // Find the current focus category position && result index
+  // This is to keep the focus in the same place if categories are being added/removed/reordered
+  int current_category_position = 0;
+  for (auto iter = category_order_.begin(); iter != category_order_.end(); ++iter)
+  {
+    unsigned category_index = *iter;
+    if (category_views_.size() <= category_index)
+      continue;
+    PlacesGroup::Ptr group = category_views_[category_index];
+    if (!group || !group->IsVisible())
+      continue;
+
+    ResultView* result_view = group->GetChildView();
+    if (result_view && result_view->GetSelectedIndex() != -1)
+    {
+      current_focus_result_index_ = result_view->GetSelectedIndex();
+      current_focus_category_position_ = current_category_position;
+      printf("Found focus for %d , %d\n", current_focus_category_position_, current_focus_result_index_); 
+      break;
+    }
+    current_category_position++;
+  }
+  //////////////////////////////////////////////////
+
   counts_.erase(group);
   category_views_.erase(category_pos);
 
@@ -548,8 +687,37 @@ void ScopeView::OnCategoryRemoved(Category const& category)
  
   scroll_layout_->RemoveChildObject(group.GetPointer());
   RemoveChild(group.GetPointer());
-  QueueRelayout();
 
+  //////////////////////////////////////////////////
+  // Update current focus category position && result index
+  // This is to keep the focus in the same place if categories are being added/removed/reordered
+  if (current_focus_category_position_ != -1 && current_focus_result_index_ != -1 &&
+      category_views_.size() > (unsigned)current_focus_category_position_)
+  {
+    while (category_order_.size() > (unsigned)current_focus_category_position_)
+    {
+      int tmp_current_focus_category_position = current_focus_category_position_;
+      unsigned focused_category_index = category_order_[tmp_current_focus_category_position];
+      if (category_views_.size() > focused_category_index)
+      {
+        PlacesGroup::Ptr group = category_views_[tmp_current_focus_category_position];
+        if (group->IsVisible())
+        {
+          ResultView* result_view = group->GetChildView();
+          if (result_view)    
+          {
+            result_view->SetSelectedIndex(current_focus_result_index_);
+            printf("Updating focus to %d on reorder\n", tmp_current_focus_category_position);
+            break;
+          }
+        }
+      }
+      tmp_current_focus_category_position++;
+    }
+  }
+  //////////////////////////////////////////////////
+
+  QueueRelayout();
   if (reset_filter_models)
   {
     QueueReinitializeFilterCategoryModels(index);

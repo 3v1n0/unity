@@ -86,6 +86,9 @@ public:
   void AddProperties(GVariantBuilder* builder);
   IntrospectableList GetIntrospectableChildren();
 
+  virtual int GetSelectedIndex() const;
+  virtual void SetSelectedIndex(int index);
+
   virtual void Activate(LocalResult const& local_result, int index, ActivateType type) = 0;
 
   std::vector<ResultViewTexture::Ptr> const& GetResultTextureContainers();

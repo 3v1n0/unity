@@ -178,6 +178,9 @@ private:
   bool scope_connected_;
   bool search_on_next_connect_;
 
+  int current_focus_category_position_;
+  int current_focus_result_index_;
+
   friend class TestScopeView;
 };
 
