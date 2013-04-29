@@ -145,6 +145,7 @@ nux::Layout* ErrorPreview::GetPrice()
   nux::VLayout *prize_data_layout = new nux::VLayout();
   prize_data_layout->SetMaximumHeight(76);
   prize_data_layout->SetSpaceBetweenChildren(5);
+  prize_data_layout->SetPadding(0, 10, 0, 0);
 
   purchase_prize_ = new StaticCairoText(
           error_preview_model_->purchase_prize.Get(), true,
@@ -169,19 +170,18 @@ nux::Layout* ErrorPreview::GetPrice()
   purchase_type_->SetFont(style.payment_prize_subtitle_font());
   prize_data_layout->AddView(purchase_type_.GetPointer(), 1,
           nux::MINOR_POSITION_END);
-  prize_data_layout->SetLeftAndRightPadding(10);
   return prize_data_layout;
 }
 
 nux::Layout* ErrorPreview::GetBody()
 {
   previews::Style& style = dash::previews::Style::Instance();
-  nux::HLayout *body_layout = new  nux::HLayout();
-  nux::HLayout *intro_layout = new  nux::HLayout();
-  nux::HLayout *icon_layout = new  nux::HLayout();
+  nux::HLayout *body_layout = new nux::HLayout();
+  nux::HLayout *intro_layout = new nux::HLayout();
+  nux::VLayout *icon_layout = new nux::VLayout();
 
-  icon_layout->SetTopAndBottomPadding(90);
-  intro_layout->SetTopAndBottomPadding(75);
+  icon_layout->SetPadding(78, 10, 90, 43);
+  intro_layout->SetPadding(75, 20, 75, 0);
   intro_layout->SetSpaceBetweenChildren(5);
 
   intro_ = new StaticCairoText(
@@ -195,8 +195,8 @@ nux::Layout* ErrorPreview::GetBody()
   intro_layout->AddView(intro_.GetPointer(), 0, nux::MINOR_POSITION_CENTER);
 
   warning_texture_ = new IconTexture(style.GetWarningIcon());
-  icon_layout->AddView(warning_texture_.GetPointer(), 0, nux::MINOR_POSITION_START,
-          nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
+  icon_layout->AddView(warning_texture_.GetPointer(),
+    0, nux::MINOR_POSITION_END);
 
   body_layout->AddLayout(icon_layout, 1);
   body_layout->AddLayout(intro_layout, 1);
@@ -237,7 +237,7 @@ void ErrorPreview::PreLayoutManagement()
 
   if(full_data_layout_) { full_data_layout_->SetMaximumWidth(width); }
   if(header_layout_) { header_layout_->SetMaximumWidth(width); }
-  if(intro_) { intro_->SetMaximumWidth(width - 40); }
+  if(intro_) { intro_->SetMaximumWidth(width - 60); }
   if(footer_layout_) { footer_layout_->SetMaximumWidth(width); }
 
   Preview::PreLayoutManagement();
