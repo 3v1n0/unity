@@ -37,8 +37,9 @@ ApplicationPtr FakeApplicationWindow::application() const { return ApplicationPt
 bool FakeApplicationWindow::Focus() const { return false; }
 void FakeApplicationWindow::Quit() const {}
 
-FakeLauncherIcon::FakeLauncherIcon(std::string const& app_name, unsigned priority)
+FakeLauncherIcon::FakeLauncherIcon(std::string const& app_name, bool allow_detail_view, unsigned priority)
   : launcher::SimpleLauncherIcon(IconType::APPLICATION)
+  , allow_detail_view_(allow_detail_view)
   , priority_(priority)
   , window_list{ std::make_shared<FakeApplicationWindow>(priority_ | 0x0001),
                  std::make_shared<FakeApplicationWindow>(priority_ | 0x0002) }
@@ -49,6 +50,11 @@ FakeLauncherIcon::FakeLauncherIcon(std::string const& app_name, unsigned priorit
 WindowList FakeLauncherIcon::Windows()
 {
   return window_list;
+}
+
+bool FakeLauncherIcon::AllowDetailViewInSwitcher() const
+{
+  return allow_detail_view_;
 }
 
 unsigned long long FakeLauncherIcon::SwitcherPriority()
@@ -74,8 +80,10 @@ TestSwitcherController::TestSwitcherController()
 
   icons_.push_back(launcher::AbstractLauncherIcon::Ptr(new launcher::DesktopLauncherIcon()));
 
-  FakeLauncherIcon* first_app = new FakeLauncherIcon("First", 0x0100);
+  FakeLauncherIcon* first_app = new FakeLauncherIcon("First", true, 0x0100);
   icons_.push_back(launcher::AbstractLauncherIcon::Ptr(first_app));
-  FakeLauncherIcon* second_app = new FakeLauncherIcon("Second", 0x0200);
+  FakeLauncherIcon* second_app = new FakeLauncherIcon("Second", true, 0x0200);
   icons_.push_back(launcher::AbstractLauncherIcon::Ptr(second_app));
+  FakeLauncherIcon* third_app = new FakeLauncherIcon("Third", false, 0x0300);
+  icons_.push_back(launcher::AbstractLauncherIcon::Ptr(third_app));
 }
