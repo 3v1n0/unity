@@ -188,8 +188,9 @@ nux::Layout* ErrorPreview::GetBody()
               error_preview_model_->header.Get(), true,
           NUX_TRACKER_LOCATION);
   intro_->SetFont(style.payment_intro_font().c_str());
-  intro_->SetLines(-5);
+  intro_->SetLines(-3);
   intro_->SetLineSpacing(10);
+  intro_->SetTextEllipsize(StaticCairoText::EllipsizeState::NUX_ELLIPSIZE_END);
 
   intro_layout->AddView(intro_.GetPointer());//, 0, nux::MINOR_POSITION_CENTER);
 
@@ -237,7 +238,7 @@ void ErrorPreview::PreLayoutManagement()
 
   if(full_data_layout_) { full_data_layout_->SetMaximumWidth(width); }
   if(header_layout_) { header_layout_->SetMaximumWidth(width); }
-  if(intro_) { intro_->SetMaximumWidth(width - 100); }
+  if(intro_) { intro_->SetMaximumWidth(width - 110); }
   if(footer_layout_) { footer_layout_->SetMaximumWidth(width); }
 
   Preview::PreLayoutManagement();
