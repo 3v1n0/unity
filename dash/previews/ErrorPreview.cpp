@@ -194,8 +194,7 @@ nux::Layout* ErrorPreview::GetBody()
 
   intro_layout->AddView(intro_.GetPointer(), 0, nux::MINOR_POSITION_CENTER);
 
-  warning_texture_ = new IconTexture(style.GetWarningIcon(), style.GetPaymentLockWidth(),
-          style.GetPaymentLockHeight());
+  warning_texture_ = new IconTexture(style.GetWarningIcon());
   icon_layout->AddView(warning_texture_.GetPointer(), 0, nux::MINOR_POSITION_START,
           nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
 

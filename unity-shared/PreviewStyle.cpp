@@ -111,7 +111,7 @@ public:
   LazyLoadTexture<32> preview_play_texture_;
   LazyLoadTexture<32> preview_pause_texture_;
   LazyLoadTexture<32> preview_spin_texture_;
-  LazyLoadTexture<22> warning_icon_texture_;
+  LazyLoadTexture<20> warning_icon_texture_;
 };
 
 
@@ -316,7 +316,7 @@ std::string Style::payment_prize_subtitle_font() const
 
 std::string Style::payment_intro_font() const
 {
-  return "Ubuntu 11.5";
+  return "Ubuntu 11.7";
 }
 
 std::string Style::payment_form_labels_font() const
