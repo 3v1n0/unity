@@ -12,7 +12,7 @@ from __future__ import absolute_import
 import logging
 from time import sleep
 
-from autopilot.emulators.X11 import Mouse
+from autopilot.input import Mouse
 from autopilot.keybindings import KeybindingsHelper
 
 from unity.emulators import UnityIntrospectionObject
@@ -53,7 +53,7 @@ class UnityPanel(UnityIntrospectionObject, KeybindingsHelper):
 
     def __init__(self, *args, **kwargs):
         super(UnityPanel, self).__init__(*args, **kwargs)
-        self._mouse = Mouse()
+        self._mouse = Mouse().create()
 
     def __get_menu_view(self):
         """Return the menu view."""
@@ -261,7 +261,7 @@ class WindowButton(UnityIntrospectionObject):
 
     def __init__(self, *args, **kwargs):
         super(WindowButton, self).__init__(*args, **kwargs)
-        self._mouse = Mouse()
+        self._mouse = Mouse().create()
 
     def mouse_move_to(self):
         target_x = self.x + self.width / 2
@@ -319,7 +319,7 @@ class IndicatorEntry(UnityIntrospectionObject):
 
     def __init__(self, *args, **kwargs):
         super(IndicatorEntry, self).__init__(*args, **kwargs)
-        self._mouse = Mouse()
+        self._mouse = Mouse().create()
 
     def mouse_move_to(self):
         target_x = self.x + self.width / 2

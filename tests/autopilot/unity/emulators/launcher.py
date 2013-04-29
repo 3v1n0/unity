@@ -9,7 +9,8 @@
 
 from __future__ import absolute_import
 
-from autopilot.emulators.X11 import Mouse, ScreenGeometry
+from autopilot.input import Mouse
+ScreenGeometry
 from autopilot.keybindings import KeybindingsHelper
 from autopilot.utilities import get_compiz_option
 import logging
@@ -67,7 +68,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         self.in_keynav_mode = False
         self.in_switcher_mode = False
 
-        self._mouse = Mouse()
+        self._mouse = Mouse.create()
         self._screen = ScreenGeometry()
 
     def _perform_key_nav_binding(self, keybinding):

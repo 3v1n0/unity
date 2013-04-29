@@ -9,11 +9,13 @@
 
 from __future__ import absolute_import
 
-
 from autopilot.keybindings import KeybindingsHelper
-from autopilot.utilities import (
+
+from unity.emulators.compiz import (
     get_compiz_option,
-    get_desktop_geometry,
+    )
+
+from unity.emulators.X11 import (
     get_desktop_viewport,
     )
 
@@ -40,9 +42,12 @@ class WorkspaceManager(KeybindingsHelper):
         """Re-read information about available workspaces from compiz and X11."""
         self._workspaces_wide = get_compiz_option("core", "hsize")
         self._workspaces_high = get_compiz_option("core", "vsize")
-        self._desktop_width, self.desktop_height = get_desktop_geometry()
-        self._viewport_width = self._desktop_width / self._workspaces_wide
-        self._viewport_height = self.desktop_height / self._workspaces_high
+        # self._desktop_width, self.desktop_height = get_desktop_geometry()
+        # i.e. 1440x900
+        # Note: only gets the viewport for the first monitor.
+        _, _, self._viewport_width, self._viewport_height = display.Create().get_screen_geometry(0)
+        # self._viewport_width = self._desktop_width / self._workspaces_wide
+        # self._viewport_height = self.desktop_height / self._workspaces_high
 
     def switch_to(self, workspace_num):
         """Switch to the workspace specified.
