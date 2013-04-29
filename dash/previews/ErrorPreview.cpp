@@ -241,6 +241,9 @@ void ErrorPreview::PreLayoutManagement()
   if(intro_) { intro_->SetMaximumWidth(width - 110); }
   if(footer_layout_) { footer_layout_->SetMaximumWidth(width); }
 
+  SetFirstInTabOrder(buttons_map_[ErrorPreview::GO_TO_U1_ACTION].GetPointer());
+  SetLastInTabOrder(buttons_map_[ErrorPreview::CANCEL_ACTION].GetPointer());
+
   Preview::PreLayoutManagement();
 }
 
