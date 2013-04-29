@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from autopilot.utilities import Silence
 from autopilot.display import Display
 from autopilot.input import Mouse, Keyboard
+from autopilot.process import Window
 
 import logging
 import subprocess
@@ -37,13 +38,13 @@ def get_desktop_viewport():
 def drag_window_to_screen(window, screen):
     """Drags *window* to *screen*
 
-    :param BamfWindow window: The window to drag
+    :param autopilot.process.Window window: The window to drag
     :param integer screen: The screen to drag the *window* to
-    :raises: **TypeError** if *window* is not a BamfWindow
+    :raises: **TypeError** if *window* is not a autopilot.process.Window
 
     """
-    if not isinstance(window, BamfWindow):
-        raise TypeError("Window must be a BamfWindow")
+    if not isinstance(window, Window):
+        raise TypeError("Window must be a autopilot.process.Window")
 
     if window.monitor == screen:
         logger.debug("Window %r is already on screen %d." % (window.x_id, screen))

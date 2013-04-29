@@ -139,7 +139,7 @@ class LauncherIconsTests(LauncherTestCase):
         self.addCleanup(self.close_all_app, "Calculator")
         self.launcher_instance.click_launcher_icon(calc_icon)
 
-        calc_app = self.bamf.get_running_applications_by_desktop_file(calc_icon.desktop_id)[0]
+        calc_app = self.process_manager.get_running_applications_by_desktop_file(calc_icon.desktop_id)[0]
         calc_window = calc_app.get_windows()[0]
 
         self.assertThat(lambda: self.get_startup_notification_timestamp(calc_window), Eventually(Equals(calc_icon.startup_notification_timestamp)))
@@ -197,7 +197,7 @@ class LauncherIconsTests(LauncherTestCase):
         self.addCleanup(self.launcher_instance.keyboard_unreveal_launcher)
         self.keyboard.press_and_release("1");
 
-        calc_app = self.bamf.get_running_applications_by_desktop_file(calc_icon.desktop_id)[0]
+        calc_app = self.process_manager.get_running_applications_by_desktop_file(calc_icon.desktop_id)[0]
         calc_window = calc_app.get_windows()[0]
 
         self.assertThat(lambda: calc_window.is_focused, Eventually(Equals(True)))

@@ -57,7 +57,7 @@ class SpreadTests(UnityTestCase):
 
     def assertWindowIsClosed(self, xid):
         """Assert that a window is not in the list of the open windows"""
-        refresh_fn = lambda: xid in [w.x_id for w in self.bamf.get_open_windows()]
+        refresh_fn = lambda: xid in [w.x_id for w in self.process_manager.get_open_windows()]
         self.assertThat(refresh_fn, Eventually(Equals(False)))
 
     def test_scale_application_windows(self):

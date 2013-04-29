@@ -9,7 +9,8 @@
 from __future__ import absolute_import
 
 from autopilot.display import Display
-from autopilot.emulators.bamf import BamfWindow
+#from autopilot.emulators.bamf import BamfWindow
+from autopilot.process import Window
 from autopilot.matchers import Eventually
 import logging
 import os
@@ -17,7 +18,7 @@ from testtools.matchers import Equals,  GreaterThan, NotEquals
 from time import sleep
 
 from unity.emulators.panel import IndicatorEntry
-from unity.emulators.X11 import drag_window_to_monitor
+from unity.emulators.X11 import drag_window_to_screen
 from unity.tests import UnityTestCase
 
 import gettext
@@ -83,8 +84,8 @@ class PanelTestsBase(UnityTestCase):
 
     def move_window_to_panel_monitor(self, window, restore_position=False):
         """Drags a window to another monitor, eventually restoring it before"""
-        if not isinstance(window, BamfWindow):
-            raise TypeError("Window must be a BamfWindow")
+        if not isinstance(window, Window):
+            raise TypeError("Window must be a autopilot.process.Window")
 
         if window.monitor == self.panel_monitor:
             return
@@ -95,9 +96,9 @@ class PanelTestsBase(UnityTestCase):
             sleep(.1)
 
         if restore_position:
-            self.addCleanup(drag_window_to_monitor, window, window.monitor)
+            self.addCleanup(drag_window_to_screen, window, window.monitor)
 
-        drag_window_to_monitor(window, self.panel_monitor)
+        drag_window_to_screen(window, self.panel_monitor)
         sleep(.25)
         self.assertThat(window.monitor, Equals(self.panel_monitor))
 
@@ -131,7 +132,7 @@ class PanelTestsBase(UnityTestCase):
         """Assert that Bamf doesn't know of any open windows with the given xid."""
         # We can't check text_win.closed since we've just destroyed the window.
         # Instead we make sure no window with it's x_id exists.
-        refresh_fn = lambda: [w for w in self.bamf.get_open_windows() if w.x_id == x_id]
+        refresh_fn = lambda: [w for w in self.process_manager.get_open_windows() if w.x_id == x_id]
         self.assertThat(refresh_fn, Eventually(Equals([])))
 
     def sleep_menu_settle_period(self):
@@ -1156,7 +1157,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         prev_monitor = None
         for monitor in range(0, self.display.get_num_screens()):
             if calc_win.monitor != monitor:
-                drag_window_to_monitor(calc_win, monitor)
+                drag_window_to_screen(calc_win, monitor)
 
             if prev_monitor:
                 prev_panel = self.unity.panels.get_panel_for_monitor(prev_monitor)

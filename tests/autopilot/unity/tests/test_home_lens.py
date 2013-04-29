@@ -41,5 +41,5 @@ class HomeLensSearchTests(UnityTestCase):
         kb.type("edit", 0.1)
         kb.press_and_release("Enter", 0.1)
         self.addCleanup(self.close_all_app,  "Text Editor")
-        app_found = self.bamf.wait_until_application_is_running("gedit.desktop", 5)
+        app_found = self.process_manager.wait_until_application_is_running("gedit.desktop", 5)
         self.assertTrue(app_found)
