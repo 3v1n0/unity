@@ -181,25 +181,25 @@ nux::Layout* ErrorPreview::GetBody()
   nux::VLayout *icon_layout = new nux::VLayout();
 
   icon_layout->SetPadding(78, 10, 90, 43);
-  intro_layout->SetPadding(75, 20, 75, 0);
+  intro_layout->SetPadding(75, 20, 0, 0);
   intro_layout->SetSpaceBetweenChildren(5);
 
   intro_ = new StaticCairoText(
               error_preview_model_->header.Get(), true,
           NUX_TRACKER_LOCATION);
   intro_->SetFont(style.payment_intro_font().c_str());
+  intro_->SetLines(-5);
   intro_->SetLineSpacing(10);
-  intro_->SetLines(-style.GetDescriptionLineCount());
-  intro_->SetMinimumHeight(50);
 
-  intro_layout->AddView(intro_.GetPointer(), 0, nux::MINOR_POSITION_CENTER);
+  intro_layout->AddView(intro_.GetPointer());//, 0, nux::MINOR_POSITION_CENTER);
 
   warning_texture_ = new IconTexture(style.GetWarningIcon());
   icon_layout->AddView(warning_texture_.GetPointer(),
     0, nux::MINOR_POSITION_END);
 
-  body_layout->AddLayout(icon_layout, 1);
-  body_layout->AddLayout(intro_layout, 1);
+  body_layout->AddLayout(icon_layout, 0);
+  body_layout->AddLayout(intro_layout, 0);
+  body_layout->AddSpace(1, 1);
 
   return body_layout;
 }
@@ -237,7 +237,7 @@ void ErrorPreview::PreLayoutManagement()
 
   if(full_data_layout_) { full_data_layout_->SetMaximumWidth(width); }
   if(header_layout_) { header_layout_->SetMaximumWidth(width); }
-  if(intro_) { intro_->SetMaximumWidth(width - 60); }
+  if(intro_) { intro_->SetMaximumWidth(width - 100); }
   if(footer_layout_) { footer_layout_->SetMaximumWidth(width); }
 
   Preview::PreLayoutManagement();
