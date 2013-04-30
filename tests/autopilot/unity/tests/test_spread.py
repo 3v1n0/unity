@@ -24,7 +24,7 @@ class SpreadTests(UnityTestCase):
         windows = []
 
         for i in range(num_windows):
-            win = self.start_app_window(app_name)
+            win = self.process_manager.start_app_window(app_name)
             if windows:
                 self.assertThat(win.application, Equals(windows[-1].application))
 

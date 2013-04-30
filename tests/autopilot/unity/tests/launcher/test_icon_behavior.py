@@ -51,7 +51,7 @@ class LauncherIconsTests(LauncherTestCase):
         return icon
 
     def ensure_calculator_in_launcher_and_not_running(self):
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         calc_icon = self.unity.launcher.model.get_icon(desktop_id=calc.desktop_file)
         self.addCleanup(self.launcher_instance.unlock_from_launcher, calc_icon)
         self.launcher_instance.lock_to_launcher(calc_icon)
@@ -88,7 +88,7 @@ class LauncherIconsTests(LauncherTestCase):
 
     def test_shift_click_opens_new_application_instance(self):
         """Shift+Clicking MUST open a new instance of an already-running application."""
-        app = self.start_app("Calculator")
+        app = self.process_manager.start_app("Calculator")
         icon = self.unity.launcher.model.get_icon(desktop_id=app.desktop_file)
         launcher_instance = self.unity.launcher.get_launcher_for_monitor(0)
 
@@ -103,9 +103,9 @@ class LauncherIconsTests(LauncherTestCase):
         of that application.
 
         """
-        char_win1 = self.start_app_window("Character Map")
-        calc_win = self.start_app_window("Calculator")
-        char_win2 = self.start_app_window("Character Map")
+        char_win1 = self.process_manager.start_app_window("Character Map")
+        calc_win = self.process_manager.start_app_window("Calculator")
+        char_win2 = self.process_manager.start_app_window("Character Map")
 
         self.assertVisibleWindowStack([char_win2, calc_win, char_win1])
 
@@ -157,7 +157,7 @@ class LauncherIconsTests(LauncherTestCase):
         [trash_window] = self.get_open_windows_by_application("Nautilus")
         self.assertThat(lambda: trash_window.is_focused, Eventually(Equals(True)))
 
-        calc_win = self.start_app_window("Calculator")
+        calc_win = self.process_manager.start_app_window("Calculator")
         self.assertThat(lambda: calc_win.is_focused, Eventually(Equals(True)))
         self.assertThat(lambda: trash_window.is_focused, Eventually(Equals(False)))
 
@@ -206,8 +206,8 @@ class LauncherIconsTests(LauncherTestCase):
         """This tests shows that when you click on a launcher icon twice,
         when an application window is focused, the spread is initiated.
         """
-        char_win1 = self.start_app_window("Character Map")
-        char_win2 = self.start_app_window("Character Map")
+        char_win1 = self.process_manager.start_app_window("Character Map")
+        char_win2 = self.process_manager.start_app_window("Character Map")
         char_app = char_win1.application
 
         self.assertVisibleWindowStack([char_win2, char_win1])
@@ -224,8 +224,8 @@ class LauncherIconsTests(LauncherTestCase):
         """If scale is initiated through the laucher pressing super must close
         scale and open the dash.
         """
-        char_win1 = self.start_app_window("Character Map")
-        char_win2 = self.start_app_window("Character Map")
+        char_win1 = self.process_manager.start_app_window("Character Map")
+        char_win2 = self.process_manager.start_app_window("Character Map")
         char_app = char_win1.application
 
         self.assertVisibleWindowStack([char_win2, char_win1])
@@ -243,13 +243,13 @@ class LauncherIconsTests(LauncherTestCase):
 
     def test_icon_shows_on_quick_application_reopen(self):
         """Icons must stay on launcher when an application is quickly closed/reopened."""
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         desktop_file = calc.desktop_file
         calc_icon = self.unity.launcher.model.get_icon(desktop_id=desktop_file)
         self.assertThat(calc_icon.visible, Eventually(Equals(True)))
 
         self.close_all_app("Calculator")
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         sleep(2)
 
         calc_icon = self.unity.launcher.model.get_icon(desktop_id=desktop_file)
@@ -356,7 +356,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
         """Application icons must be draggable to below the BFB."""
 
         self.ensure_calc_icon_not_in_launcher()
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         calc_icon = self.unity.launcher.model.get_icon(desktop_id=calc.desktop_file)
         bfb_icon = self.unity.launcher.model.get_bfb_icon()
 
@@ -373,7 +373,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
         """Application icons must be dragable to below the workspace switcher icon."""
 
         self.ensure_calc_icon_not_in_launcher()
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         calc_icon = self.unity.launcher.model.get_icon(desktop_id=calc.desktop_file)
         bfb_icon = self.unity.launcher.model.get_bfb_icon()
         trash_icon = self.unity.launcher.model.get_trash_icon()

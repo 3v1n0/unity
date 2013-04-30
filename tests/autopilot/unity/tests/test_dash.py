@@ -120,9 +120,9 @@ class DashRevealTests(DashTestCase):
         focused. Then from the Dash clicking on the maximized window
         must focus that window and close the dash.
         """
-        char_win = self.start_app("Character Map")
+        char_win = self.process_manager.start_app("Character Map")
         self.keybinding("window/maximize")
-        self.start_app("Calculator")
+        self.process_manager.start_app("Calculator")
 
         self.unity.dash.ensure_visible()
 
@@ -482,7 +482,7 @@ class DashClipboardTests(DashTestCase):
     def test_middle_click_paste(self):
         """Tests if Middle mouse button pastes into searchbar"""
 
-        self.start_app_window("Calculator", locale='C')
+        self.process_manager.start_app_window("Calculator", locale='C')
 
         self.keyboard.type("ThirdButtonPaste")
         self.keyboard.press_and_release("Ctrl+a")
@@ -523,7 +523,7 @@ class DashKeyboardFocusTests(DashTestCase):
         self.unity.dash.ensure_visible()
         self.addCleanup(self.unity.hud.ensure_hidden)
 
-        self.start_app_window("Calculator")
+        self.process_manager.start_app_window("Calculator")
         sleep(1)
 
         self.keyboard.type("HasFocus")
@@ -766,7 +766,7 @@ class PreviewInvocationTests(DashTestCase):
         # make sure the lens result is non-empty
         (file_handle, file_path) = mkstemp()
         self.addCleanup(remove, file_path)
-        gedit_win = self.start_app_window('Text Editor', files=[file_path], locale='C')
+        gedit_win = self.process_manager.start_app_window('Text Editor', files=[file_path], locale='C')
         self.addCleanup(self.close_all_app, 'Text Editor')
         self.assertProperty(gedit_win, is_focused=True)
 

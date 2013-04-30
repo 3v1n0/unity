@@ -75,8 +75,8 @@ class LauncherRevealTests(LauncherTestCase):
 
     def test_launcher_stays_open_after_spread(self):
         """Clicking on the launcher to close an active spread must not hide the launcher."""
-        char_win1 = self.start_app_window("Character Map")
-        char_win2 = self.start_app_window("Character Map")
+        char_win1 = self.process_manager.start_app_window("Character Map")
+        char_win2 = self.process_manager.start_app_window("Character Map")
         char_app = char_win1.application
 
         char_icon = self.unity.launcher.model.get_icon(desktop_id=char_app.desktop_file)
@@ -90,7 +90,7 @@ class LauncherRevealTests(LauncherTestCase):
 
     def test_launcher_stays_open_after_icon_click(self):
         """Clicking on a launcher icon must not hide the launcher."""
-        char_win = self.start_app_window("Character Map")
+        char_win = self.process_manager.start_app_window("Character Map")
         char_app = char_win.application
 
         char_icon = self.unity.launcher.model.get_icon(desktop_id=char_app.desktop_file)
@@ -110,6 +110,6 @@ class LauncherRevealTests(LauncherTestCase):
          if self.unity.launcher.model.get_icon(desktop_id=desktop_file) != None:
              self.skip("Calculator icon is already on the launcher.")
 
-         self.start_app('Calculator')
+         self.process_manager.start_app('Calculator')
          icon = self.unity.launcher.model.get_icon(desktop_id=desktop_file)
          self.assertThat(icon.shortcut, GreaterThan(0))

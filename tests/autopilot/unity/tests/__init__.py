@@ -115,7 +115,7 @@ class UnityTestCase(AutopilotTestCase):
             #
             # In the event that this doesn't work, wait_for will throw an
             # exception.
-            win = self.start_app_window('Calculator', locale='C')
+            win = self.process_manager.start_app_window('Calculator', locale='C')
             count = 1
             while self.unity.window_manager.showdesktop_active:
                 self.keybinding("window/show_desktop")
@@ -225,9 +225,9 @@ class UnityTestCase(AutopilotTestCase):
             file_path = tempfile.mktemp()
             json.dump(window_spec, open(file_path, 'w'))
             self.addCleanup(os.remove, file_path)
-            return self.start_app_window('Window Mocker', [file_path])
+            return self.process_manager.start_app_window('Window Mocker', [file_path])
         else:
-            return self.start_app_window('Window Mocker')
+            return self.process_manager.start_app_window('Window Mocker')
 
     def close_all_windows(self, application_name):
         for w in self.get_open_windows_by_application(application_name):

@@ -46,7 +46,7 @@ class QuicklistActionTests(UnityTestCase):
 
     def test_quicklist_actions(self):
         """Test that all actions present in the destop file are shown in the quicklist."""
-        app = self.start_app(self.app_name)
+        app = self.process_manager.start_app(self.app_name)
 
         # get the launcher icon from the launcher:
         launcher_icon = self.unity.launcher.model.get_icon(desktop_id=app.desktop_file)
@@ -70,8 +70,8 @@ class QuicklistActionTests(UnityTestCase):
         self.register_nautilus()
         self.addCleanup(self.close_all_windows, "Nautilus")
 
-        self.start_app_window("Calculator")
-        self.start_app(self.app_name)
+        self.process_manager.start_app_window("Calculator")
+        self.process_manager.start_app(self.app_name)
 
         nautilus_icon = self.unity.launcher.model.get_icon(desktop_id="nautilus.desktop")
         ql = self.open_quicklist_for_icon(nautilus_icon)
@@ -100,9 +100,9 @@ class QuicklistActionTests(UnityTestCase):
         Then we activate the Calculator quicklist item.
         Then we actiavte the Mahjongg launcher icon.
         """
-        char_win1 = self.start_app_window("Character Map")
-        calc_win = self.start_app_window("Calculator")
-        char_win2 = self.start_app_window("Character Map")
+        char_win1 = self.process_manager.start_app_window("Character Map")
+        calc_win = self.process_manager.start_app_window("Calculator")
+        char_win2 = self.process_manager.start_app_window("Character Map")
 
         self.assertVisibleWindowStack([char_win2, calc_win, char_win1])
 
@@ -127,8 +127,8 @@ class QuicklistActionTests(UnityTestCase):
         """This tests shows that when you activate a quicklist application item
         when an application window is focused, the spread is initiated.
         """
-        char_win1 = self.start_app_window("Character Map")
-        char_win2 = self.start_app_window("Character Map")
+        char_win1 = self.process_manager.start_app_window("Character Map")
+        char_win2 = self.process_manager.start_app_window("Character Map")
         char_app = char_win1.application
 
         self.assertVisibleWindowStack([char_win2, char_win1])
@@ -147,7 +147,7 @@ class QuicklistActionTests(UnityTestCase):
     def test_quicklist_item_triggered_closes_dash(self):
         """When any quicklist item is triggered it must close the dash."""
 
-        calc_win = self.start_app_window("Calculator")
+        calc_win = self.process_manager.start_app_window("Calculator")
         self.assertProperty(calc_win, is_focused=True)
 
         self.unity.dash.ensure_visible()
@@ -163,7 +163,7 @@ class QuicklistActionTests(UnityTestCase):
 
     def test_quicklist_closes_when_hud_opens(self):
         """When a quicklist is open you must still be able to open the Hud."""
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
 
         calc_icon = self.unity.launcher.model.get_icon(desktop_id=calc.desktop_file)
         self.open_quicklist_for_icon(calc_icon)
@@ -174,7 +174,7 @@ class QuicklistActionTests(UnityTestCase):
 
     def test_quicklist_closes_when_dash_opens(self):
         """When the quicklist is open you must still be able to open the dash."""
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
 
         calc_icon = self.unity.launcher.model.get_icon(desktop_id=calc.desktop_file)
         self.open_quicklist_for_icon(calc_icon)
@@ -190,8 +190,8 @@ class QuicklistActionTests(UnityTestCase):
         lp:890991
         """
 
-        calc_win = self.start_app_window("Calculator")
-        mahj_win = self.start_app_window("Mahjongg")
+        calc_win = self.process_manager.start_app_window("Calculator")
+        mahj_win = self.process_manager.start_app_window("Mahjongg")
 
         calc_icon = self.unity.launcher.model.get_icon(
             desktop_id=calc_win.application.desktop_file)
@@ -210,7 +210,7 @@ class QuicklistActionTests(UnityTestCase):
         not re-open the quicklist if already open. It must hide.
         """
 
-        calc_win = self.start_app_window("Calculator")
+        calc_win = self.process_manager.start_app_window("Calculator")
 
         calc_icon = self.unity.launcher.model.get_icon(
             desktop_id=calc_win.application.desktop_file)
@@ -233,7 +233,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
             desktop_id=desktop_file)
 
         self.assertThat(icon_refresh_fn, Eventually(Equals(None)))
-        self.ql_app = self.start_app("Text Editor")
+        self.ql_app = self.process_manager.start_app("Text Editor")
 
         self.assertThat(icon_refresh_fn, Eventually(NotEquals(None)))
         self.ql_launcher_icon = icon_refresh_fn()

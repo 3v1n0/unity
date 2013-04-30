@@ -27,8 +27,8 @@ class ShowDesktopTests(UnityTestCase):
 
     def launch_test_apps(self):
         """Launch character map and calculator apps, and return their windows."""
-        char_win = self.start_app_window('Character Map', locale='C')
-        calc_win = self.start_app_window('Calculator', locale='C')
+        char_win = self.process_manager.start_app_window('Character Map', locale='C')
+        calc_win = self.process_manager.start_app_window('Calculator', locale='C')
         return (char_win, calc_win)
 
     def test_showdesktop_hides_apps(self):

@@ -57,7 +57,7 @@ class PanelTestsBase(UnityTestCase):
 
         """
         self.close_all_app(app_name)
-        app_win = self.start_app_window(app_name, locale="C")
+        app_win = self.process_manager.start_app_window(app_name, locale="C")
         app = app_win.application
 
         app_win.set_focus()
@@ -867,7 +867,7 @@ class PanelMenuTests(PanelTestsBase):
         self.open_new_application_window("Character Map")
         self.sleep_menu_settle_period()
 
-        self.start_app("Character Map")
+        self.process_manager.start_app("Character Map")
         sleep(self.panel.menus.fadein_duration / 1000.0)
         # Not using Eventually here since this is time-critical. Need to work
         # out a better way to do this.

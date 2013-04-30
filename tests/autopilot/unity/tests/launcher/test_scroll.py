@@ -25,7 +25,7 @@ class LauncherScrollTests(LauncherTestCase):
         apps = ("Calculator", "Mahjongg", "Text Editor", "Character Map", "Terminal", "Remmina")
         
         for app in apps:
-            self.start_app_window(app)
+            self.process_manager.start_app_window(app)
    
     def test_autoscrolling_from_bottom(self):
         """Tests the autoscrolling from the bottom of the Launcher"""

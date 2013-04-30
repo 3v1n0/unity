@@ -152,7 +152,7 @@ class HudBehaviorTests(HudTestsBase):
         self.assertThat(self.unity.hud.visible, Equals(False))
 
     def test_alt_f4_doesnt_show_hud(self):
-        self.start_app('Calculator')
+        self.process_manager.start_app('Calculator')
         sleep(1)
         # Do a very fast Alt+F4
         self.keyboard.press_and_release("Alt+F4", 0.05)
@@ -176,7 +176,7 @@ class HudBehaviorTests(HudTestsBase):
         """Ensures that once the hud is dismissed, the same application
         that was focused before hud invocation is refocused.
         """
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
 
         # first ensure that the application has started and is focused
         self.assertEqual(calc.is_active, True)
@@ -200,7 +200,7 @@ class HudBehaviorTests(HudTestsBase):
 
         file_path = mktemp()
         self.addCleanup(remove, file_path)
-        gedit_win = self.start_app_window('Text Editor', files=[file_path], locale='C')
+        gedit_win = self.process_manager.start_app_window('Text Editor', files=[file_path], locale='C')
         self.addCleanup(self.close_all_app, 'Text Editor')
         self.assertProperty(gedit_win, is_focused=True)
 
@@ -254,7 +254,7 @@ class HudBehaviorTests(HudTestsBase):
     def test_hud_closes_on_spread(self):
         """This test shows that when the spread is initiated, the hud closes."""
         # Need at least one application open for the spread to work.
-        self.start_app_window("Calculator")
+        self.process_manager.start_app_window("Calculator")
         self.unity.hud.ensure_visible()
         self.addCleanup(self.keybinding, "spread/cancel")
         self.keybinding("spread/start")
@@ -317,7 +317,7 @@ class HudBehaviorTests(HudTestsBase):
 
     def test_app_activate_on_enter(self):
         """Hud must close after activating a search item with Enter."""
-        self.start_app('Text Editor', locale='C')
+        self.process_manager.start_app('Text Editor', locale='C')
         self.addCleanup(self.close_all_app, "Text Editor")
 
         self.unity.hud.ensure_visible()
@@ -355,7 +355,7 @@ class HudBehaviorTests(HudTestsBase):
         """Tests that Alt+ArrowKey events are correctly passed to the
         active window when Unity is not responding to them."""
 
-        term_win = self.start_app_window("Terminal")
+        term_win = self.process_manager.start_app_window("Terminal")
         self.assertProperty(term_win, is_focused=True)
 
         # Here we anyway need a sleep, since even though the terminal can have
@@ -427,7 +427,7 @@ class HudBehaviorTests(HudTestsBase):
         self.unity.hud.ensure_visible()
         self.addCleanup(self.unity.hud.ensure_hidden)
 
-        self.start_app_window("Calculator")
+        self.process_manager.start_app_window("Calculator")
         sleep(1)
 
         self.keyboard.type("HasFocus")
@@ -452,10 +452,10 @@ class HudBehaviorTests(HudTestsBase):
         focused. Then from the Hud clicking on the maximized window
         must focus that window and close the hud.
         """
-        char_win = self.start_app("Character Map")
+        char_win = self.process_manager.start_app("Character Map")
         self.assertProperty(char_win, is_active=True)
         self.keybinding("window/maximize")
-        self.start_app("Calculator")
+        self.process_manager.start_app("Calculator")
 
         self.unity.hud.ensure_visible()
 
@@ -470,8 +470,8 @@ class HudBehaviorTests(HudTestsBase):
     def test_hud_does_not_focus_wrong_window_after_alt_tab(self):
         """Test the Hud focuses the correct window after an Alt+Tab."""
 
-        char_win = self.start_app('Character Map')
-        self.start_app('Calculator')
+        char_win = self.process_manager.start_app('Character Map')
+        self.process_manager.start_app('Calculator')
 
         self.keybinding("switcher/reveal_normal")
         self.assertProperty(char_win, is_active=True)
@@ -517,9 +517,9 @@ class HudLauncherInteractionsTests(HudTestsBase):
         launcher = self.unity.launcher.get_launcher_for_monitor(self.hud_monitor)
 
         # We need an app to switch to:
-        self.start_app('Character Map')
+        self.process_manager.start_app('Character Map')
         # We need an application to play with - I'll use the calculator.
-        self.start_app('Calculator')
+        self.process_manager.start_app('Calculator')
         sleep(1)
 
         # before we start, make sure there's zero or one active icon:
@@ -676,7 +676,7 @@ class HudVisualTests(HudTestsBase):
     def test_hud_icon_shows_the_focused_application_emblem(self):
         """Tests that the correct HUD icon is shown."""
         self.close_all_app("Calculator")
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         self.assertTrue(calc.is_active)
         self.unity.hud.ensure_visible()
 
@@ -694,7 +694,7 @@ class HudVisualTests(HudTestsBase):
     def test_switch_dash_hud_does_not_break_the_focused_application_emblem(self):
         """Switching from Dash to HUD must still show the correct HUD icon."""
         self.close_all_app("Calculator")
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         self.assertTrue(calc.is_active)
 
         self.unity.dash.ensure_visible()
@@ -705,7 +705,7 @@ class HudVisualTests(HudTestsBase):
     def test_switch_hud_dash_does_not_break_the_focused_application_emblem(self):
         """Switching from HUD to Dash and back must still show the correct HUD icon."""
         self.close_all_app("Calculator")
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         self.assertTrue(calc.is_active)
 
         self.unity.hud.ensure_visible()
@@ -727,7 +727,7 @@ class HudVisualTests(HudTestsBase):
         self.unity.window_manager.enter_show_desktop()
         self.addCleanup(self.unity.window_manager.leave_show_desktop)
 
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         self.assertTrue(calc.is_active)
         self.workspace.switch_to((initial_workspace + 1) % self.workspace.num_workspaces)
         self.unity.dash.ensure_visible()
