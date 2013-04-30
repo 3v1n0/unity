@@ -108,3 +108,7 @@ def set_primary_monitor(monitor):
 
     if ret != 0:
         raise RuntimeError('Xrandr can\'t set the primary monitor. error code: %d' % (ret))
+
+def reset_display():
+    from autopilot.input._X11 import reset_display
+    reset_display()

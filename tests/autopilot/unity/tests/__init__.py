@@ -26,6 +26,8 @@ try:
     HAVE_WINDOWMOCKER=True
 except ImportError:
     HAVE_WINDOWMOCKER=False
+from subprocess import check_output
+import time
 import tempfile
 from testtools.content import text_content
 from testtools.matchers import Equals
@@ -39,6 +41,7 @@ from unity.emulators.unity import (
     reset_logging,
     Unity
     )
+from unity.emulators.X11 import reset_display
 
 from Xlib import display
 from Xlib import Xutil
@@ -204,8 +207,8 @@ class UnityTestCase(AutopilotTestCase):
 
         This uses the 'window-mocker' application, which is not part of the
         python-autopilot or unity-autopilot packages. To use this method, you
-        must have python-windowmocker installed. If the package is not installed, 
-        this method will raise a SkipTest exception, causing the calling test 
+        must have python-windowmocker installed. If the package is not installed,
+        this method will raise a SkipTest exception, causing the calling test
         to be silently skipped.
 
         window_spec is a list or dictionary that conforms to the window-mocker
@@ -215,8 +218,8 @@ class UnityTestCase(AutopilotTestCase):
         if not HAVE_WINDOWMOCKER:
             raise SkipTest("The python-windowmocker package is required to run this test.")
 
-        if 'Window Mocker' not in self.KNOWN_APPS:
-            self.register_known_application(
+        if 'Window Mocker' not in self.process_manager.KNOWN_APPS:
+            self.process_manager.register_known_application(
                 'Window Mocker',
                 'window-mocker.desktop',
                 'window-mocker'
@@ -243,3 +246,18 @@ class UnityTestCase(AutopilotTestCase):
         atom = display.Display().intern_atom('_NET_WM_USER_TIME')
         atom_type = display.Display().intern_atom('CARDINAL')
         return bamf_window.x_win.get_property(atom, atom_type, 0, 1024).value[0]
+
+    def call_gsettings_cmd(self, command, schema, *args):
+        """Set a desktop wide gsettings option
+
+        Using the gsettings command because there is a bug with importing
+        from gobject introspection and pygtk2 simultaneously, and the Xlib
+        keyboard layout bits are very unwieldy. This seems like the best
+        solution, even a little bit brutish.
+        """
+        cmd = ['gsettings', command, schema] + list(args)
+        # strip to remove the trailing \n.
+        ret = check_output(cmd).strip()
+        time.sleep(5)
+        reset_display()
+        return ret
