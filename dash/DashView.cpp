@@ -153,6 +153,12 @@ DashView::DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& app
     scopes_->scope_added.connect(sigc::mem_fun(this, &DashView::OnScopeAdded));
     scopes_->LoadScopes();
   }
+
+  // If nux resets the focus, we need to set it back to the default focus item.
+  nux::GetWindowCompositor().key_nav_focus_change.connect([this](nux::Area *area, bool has_focus, nux::KeyNavDirection direction) {
+    if (visible_ && !area)
+      nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
+  });
 }
 
 DashView::~DashView()
