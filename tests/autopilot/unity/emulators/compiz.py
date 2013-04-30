@@ -60,3 +60,4 @@ def get_compiz_option(plugin_name, setting_name):
 
     """
     return get_compiz_setting(plugin_name, setting_name).Value
+

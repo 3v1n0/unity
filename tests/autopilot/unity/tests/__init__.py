@@ -35,6 +35,7 @@ from unittest.case import SkipTest
 
 from unity.emulators import ensure_unity_is_running
 from unity.emulators.workspace import WorkspaceManager
+from unity.emulators.compiz import get_compiz_setting, get_global_context
 from unity.emulators.unity import (
     set_log_severity,
     start_log_to_file,
@@ -261,3 +262,46 @@ class UnityTestCase(AutopilotTestCase):
         time.sleep(5)
         reset_display()
         return ret
+
+    def set_unity_option(self, option_name, option_value):
+        """Set an option in the unity compiz plugin options.
+
+        .. note:: The value will be set for the current test only, and
+         automatically undone when the test ends.
+
+        :param option_name: The name of the unity option.
+        :param option_value: The value you want to set.
+        :raises: **KeyError** if the option named does not exist.
+
+        """
+        self.set_compiz_option("unityshell", option_name, option_value)
+
+    def set_compiz_option(self, plugin_name, option_name, option_value):
+        """Set a compiz option for the duration of this test only.
+
+        .. note:: The value will be set for the current test only, and
+         automatically undone when the test ends.
+
+        :param plugin_name: The name of the compiz plugin where the option is
+         registered. If the option is not in a plugin, the string "core" should
+         be used as the plugin name.
+        :param option_name: The name of the unity option.
+        :param option_value: The value you want to set.
+        :raises: **KeyError** if the option named does not exist.
+
+        """
+        old_value = self._set_compiz_option(plugin_name, option_name, option_value)
+        # Cleanup is LIFO, during clean-up also allow unity to respond
+        self.addCleanup(time.sleep, 0.5)
+        self.addCleanup(self._set_compiz_option, plugin_name, option_name, old_value)
+        # Allow unity time to respond to the new setting.
+        time.sleep(0.5)
+
+    def _set_compiz_option(self, plugin_name, option_name, option_value):
+        log.info("Setting compiz option '%s' in plugin '%s' to %r",
+            option_name, plugin_name, option_value)
+        setting = get_compiz_setting(plugin_name, option_name)
+        old_value = setting.Value
+        setting.Value = option_value
+        get_global_context().Write()
+        return old_value

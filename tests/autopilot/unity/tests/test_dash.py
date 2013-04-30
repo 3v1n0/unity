@@ -767,7 +767,6 @@ class PreviewInvocationTests(DashTestCase):
         (file_handle, file_path) = mkstemp()
         self.addCleanup(remove, file_path)
         gedit_win = self.process_manager.start_app_window('Text Editor', files=[file_path], locale='C')
-        self.addCleanup(self.close_all_app, 'Text Editor')
         self.assertProperty(gedit_win, is_focused=True)
 
         lens = self.unity.dash.reveal_file_lens()
