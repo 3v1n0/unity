@@ -10,14 +10,10 @@
 from __future__ import absolute_import
 
 from autopilot.keybindings import KeybindingsHelper
+from autopilot.display import Display
 
-from unity.emulators.compiz import (
-    get_compiz_option,
-    )
-
-from unity.emulators.X11 import (
-    get_desktop_viewport,
-    )
+from unity.emulators.compiz import get_compiz_option
+from unity.emulators.X11 import get_desktop_viewport
 
 
 class WorkspaceManager(KeybindingsHelper):
@@ -45,7 +41,7 @@ class WorkspaceManager(KeybindingsHelper):
         # self._desktop_width, self.desktop_height = get_desktop_geometry()
         # i.e. 1440x900
         # Note: only gets the viewport for the first monitor.
-        _, _, self._viewport_width, self._viewport_height = display.Create().get_screen_geometry(0)
+        _, _, self._viewport_width, self._viewport_height = Display.create().get_screen_geometry(0)
         # self._viewport_width = self._desktop_width / self._workspaces_wide
         # self._viewport_height = self.desktop_height / self._workspaces_high
 
