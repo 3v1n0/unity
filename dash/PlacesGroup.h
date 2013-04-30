@@ -92,6 +92,9 @@ public:
 
   sigc::signal<void, PlacesGroup*> expanded;
 
+  glib::Variant GetCurrentFocus() const;
+  void SetCurrentFocus(glib::Variant const& variant);
+
 protected:
   long ComputeContentSize();
 
