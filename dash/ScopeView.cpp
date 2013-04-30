@@ -153,7 +153,6 @@ ScopeView::ScopeView(Scope::Ptr scope, nux::Area* show_filters)
 , can_refine_search(false)
 , scope_(scope)
 , cancellable_(g_cancellable_new())
-, initial_activation_(true)
 , no_results_active_(false)
 , last_good_filter_model_(-1)
 , filter_expansion_pushed_(false)
@@ -905,10 +904,8 @@ void ScopeView::OnScopeFilterExpanded(bool expanded)
     QueueRelayout();
   }
 
-  for (auto it = category_views_.begin(); it != category_views_.end(); ++it)
-  {
-    (*it)->SetFiltersExpanded(expanded);
-  }
+  for (auto category_view : category_views_)
+    category_view->SetFiltersExpanded(expanded);
 }
 
 void ScopeView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
