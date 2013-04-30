@@ -66,7 +66,6 @@ Scope::Impl::Impl(Scope* owner, ScopeData::Ptr const& scope_data)
 Scope::Impl::~Impl()
 {
   for_each(property_connections.begin(), property_connections.end(), [](ConnectionPtr const& con) { con->disconnect(); });
-  property_connections.clear();
 }
 
 void Scope::Impl::Init()
@@ -93,10 +92,6 @@ void Scope::Impl::Init()
     property_connections.push_back(utils::ConnectProperties(owner_->query_pattern, proxy_->query_pattern));
     property_connections.push_back(utils::ConnectProperties(owner_->shortcut, proxy_->shortcut));
     property_connections.push_back(utils::ConnectProperties(owner_->visible, proxy_->visible));
-
-    property_connections.push_back(utils::ConnectProperties(owner_->results, proxy_->results));
-    property_connections.push_back(utils::ConnectProperties(owner_->filters, proxy_->filters));
-    property_connections.push_back(utils::ConnectProperties(owner_->categories, proxy_->categories));
   }
 }
 
