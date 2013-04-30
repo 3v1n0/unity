@@ -119,6 +119,11 @@ public:
     return false;
   };
 
+  virtual bool AllowDetailViewInSwitcher() const override
+  {
+    return false;
+  }
+
   virtual unsigned long long SwitcherPriority()
   {
     return 0;
