@@ -1,3 +1,8 @@
+unity (7.0.0daily13.04.19~13.04-0ubuntu1) raring; urgency=low
+
+  [ Manuel de la Pena ]
+  * Fixed the navigation of the payment previews (LP: #1171413) 
+
 unity (7.0.0daily13.04.18~13.04-0ubuntu1) raring; urgency=low
 
   [ Manuel de la Pena ]
