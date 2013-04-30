@@ -36,7 +36,6 @@
 
 #include <Nux/Nux.h>
 #include <Nux/AbstractButton.h>
-#include <UnityCore/Lens.h>
 #include "ActionButton.h"
 #include "ActionLink.h"
 #include "PaymentPreview.h"

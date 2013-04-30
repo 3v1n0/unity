@@ -94,11 +94,9 @@ public:
   {
     SetRedirectRenderingToTexture(true);
   }
-  ~DashContentView() {}
 
   void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
-  {
-  }
+  {}
 
   void DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
   {
