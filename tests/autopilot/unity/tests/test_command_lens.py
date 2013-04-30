@@ -9,7 +9,7 @@
 from __future__ import absolute_import
 
 from autopilot.matchers import Eventually
-from testtools.matchers import Equals, NotEquals, GreaterThan
+from testtools.matchers import Equals, NotEquals, GreaterThan, MatchesPredicate
 from time import sleep
 
 from unity.tests import UnityTestCase
@@ -90,7 +90,7 @@ class CommandScopeSearchTests(UnityTestCase):
         self.assertThat(self.unity.dash.active_scope, Eventually(Equals("home.scope")))
 
     def test_ctrl_shift_tab_switching(self):
-        """Pressing Ctrl+Shift+Tab after launching command scope must switch to Video scope."""
+        """Pressing Ctrl+Shift+Tab after launching command scope must switch to Photos or Social scope (Social can be hidden by default)."""
         self.unity.dash.reveal_command_scope()
         self.keybinding("dash/lens/prev")
-        self.assertThat(self.unity.dash.active_scope, Eventually(Equals("social.scope")))
+        self.assertThat(self.unity.dash.active_scope, Eventually(MatchesPredicate(lambda x: x in ["photos.scope", "social.scope"], '%s is not last scope')))

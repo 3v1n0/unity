@@ -153,14 +153,16 @@ void ApplicationPreview::SetupViews()
         app_icon_->mouse_click.connect(on_mouse_down);
         icon_layout->AddView(app_icon_.GetPointer(), 0);
 
-        app_rating_ = new PreviewRatingsWidget();
-        AddChild(app_rating_.GetPointer());
-        app_rating_->SetMaximumHeight(style.GetRatingWidgetHeight());
-        app_rating_->SetMinimumHeight(style.GetRatingWidgetHeight());
-        app_rating_->SetRating(app_preview_model->rating);
-        app_rating_->SetReviews(app_preview_model->num_ratings);
-        app_rating_->request_close().connect([this]() { preview_container_->request_close.emit(); });
-        icon_layout->AddView(app_rating_.GetPointer(), 0);
+        if (app_preview_model->rating >= 0) {
+          app_rating_ = new PreviewRatingsWidget();
+          AddChild(app_rating_.GetPointer());
+          app_rating_->SetMaximumHeight(style.GetRatingWidgetHeight());
+          app_rating_->SetMinimumHeight(style.GetRatingWidgetHeight());
+          app_rating_->SetRating(app_preview_model->rating);
+          app_rating_->SetReviews(app_preview_model->num_ratings);
+          app_rating_->request_close().connect([this]() { preview_container_->request_close.emit(); });
+          icon_layout->AddView(app_rating_.GetPointer(), 0);
+        }
 
         /////////////////////
 

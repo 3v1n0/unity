@@ -180,6 +180,7 @@ public:
   virtual float GetProgress() = 0;
 
   virtual bool ShowInSwitcher(bool current) = 0;
+  virtual bool AllowDetailViewInSwitcher() const = 0;
 
   virtual unsigned long long SwitcherPriority() = 0;
 

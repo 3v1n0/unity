@@ -178,15 +178,8 @@ LocalResult ResultView::GetLocalResultForIndex(unsigned int index)
   return LocalResult(*GetIteratorAtRow(index));
 }
 
-long ResultView::ComputeContentSize()
-{
-  return View::ComputeContentSize();
-}
-
 void ResultView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-
-}
+{}
 
 void ResultView::DrawContent(nux::GraphicsEngine& GfxContent, bool force_draw)
 {

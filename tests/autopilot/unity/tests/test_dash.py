@@ -95,7 +95,7 @@ class DashRevealTests(DashTestCase):
 
     def test_command_lens_can_close_itself(self):
         """We must be able to close the Command lens with Alt+F2"""
-        self.unity.dash.reveal_command_lens()
+        self.unity.dash.reveal_command_scope()
         self.assertThat(self.unity.dash.visible, Eventually(Equals(True)))
 
         self.keybinding("lens_reveal/command")
@@ -618,8 +618,7 @@ class DashScopeResultsTests(DashTestCase):
 
             self.keyboard.press_and_release("Down")
             self.keyboard.press_and_release("Down")
-            self.keyboard.press_and_release("Down")
-            # We should be on the Education category
+            # We should be on the Customization category
             self.keyboard.press_and_release('Enter')
             sleep(2)
 

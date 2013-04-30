@@ -109,6 +109,8 @@ void FilterGenre::OnOptionAdded(FilterOption::Ptr const& new_filter)
   button->SetFilter(new_filter);
   genre_layout_->AddView(button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   buttons_.push_back(button);
+
+  QueueRelayout();
 }
 
 void FilterGenre::OnOptionRemoved(FilterOption::Ptr const& removed_filter)
@@ -119,6 +121,8 @@ void FilterGenre::OnOptionRemoved(FilterOption::Ptr const& removed_filter)
     {
       genre_layout_->RemoveChildObject(*it);
       buttons_.erase(it);
+      
+      QueueRelayout();
       break;
     }
   }

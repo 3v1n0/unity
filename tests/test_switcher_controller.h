@@ -72,12 +72,14 @@ private:
 class FakeLauncherIcon : public unity::launcher::SimpleLauncherIcon
 {
 public:
-  FakeLauncherIcon(std::string const& app_name, unsigned priority);
+  FakeLauncherIcon(std::string const& app_name, bool allow_detail_view, unsigned priority);
 
-  unity::WindowList Windows();
-  unsigned long long SwitcherPriority();
+  unity::WindowList Windows()override;
+  bool AllowDetailViewInSwitcher() const override;
+  unsigned long long SwitcherPriority() override;
 
 private:
+  bool allow_detail_view_;
   unsigned   priority_;
   unity::WindowList window_list;
 };
