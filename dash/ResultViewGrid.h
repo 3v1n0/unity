@@ -61,6 +61,7 @@ public:
 protected:
   void MouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
   void MouseClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void MouseDoubleClick(int x, int y, unsigned long button_flags, unsigned long key_flags);
 
   virtual bool                    DndSourceDragBegin();
   virtual nux::NBitmapData*       DndSourceGetDragImage();
@@ -128,6 +129,8 @@ private:
   glib::Source::UniquePtr lazy_load_source_;
   glib::Source::UniquePtr results_changed_idle_;
   nux::Color background_color_;
+
+  glib::Source::UniquePtr activate_timer_;
 };
 
 } // namespace dash

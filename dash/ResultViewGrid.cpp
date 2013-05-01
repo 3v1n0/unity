@@ -51,6 +51,8 @@ namespace
 
   const float FOCUSED_GHOST_ICON_OPACITY_REF = 0.7f;
   const float FOCUSED_ICON_SATURATION_REF = 0.5f;
+
+  const int DOUBLE_CLICK_SPEED = 500; //500 ms (double-click speed hardcoded to 400 ms in nux)
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(ResultViewGrid);
@@ -74,6 +76,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   , mouse_last_y_(-1)
   , extra_horizontal_spacing_(0)
 {
+  EnableDoubleClick(true);
   SetAcceptKeyNavFocusOnMouseDown(false);
 
   auto needredraw_lambda = [&](int value) { NeedRedraw(); };
@@ -92,6 +95,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
   key_down.connect(sigc::mem_fun(this, &ResultViewGrid::OnKeyDown));
   mouse_move.connect(sigc::mem_fun(this, &ResultViewGrid::MouseMove));
   mouse_click.connect(sigc::mem_fun(this, &ResultViewGrid::MouseClick));
+  mouse_double_click.connect(sigc::mem_fun(this, &ResultViewGrid::MouseDoubleClick));
 
   mouse_down.connect([&](int x, int y, unsigned long mouse_state, unsigned long button_state)
   {
@@ -178,6 +182,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
 
 void ResultViewGrid::Activate(LocalResult const& local_result, int index, ResultView::ActivateType type)
 {
+  activate_timer_.reset();
   unsigned num_results = GetNumResults();
 
   int left_results = index;
@@ -797,12 +802,38 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
     Result result = *it;
     selected_index_ = index;
     focused_result_ = result;
+    activated_result_ = result;
 
-    ActivateType type = nux::GetEventButton(button_flags) == nux::MouseButton::MOUSE_BUTTON3 ?  ResultView::ActivateType::PREVIEW :
-                                                                                                ResultView::ActivateType::DIRECT;
+    if (nux::GetEventButton(button_flags) == nux::NUX_MOUSE_BUTTON1)
+    {
+      // delay activate for single left click. (for double click check)
+      activate_timer_.reset(new glib::Timeout(DOUBLE_CLICK_SPEED, [this, index]() {
+        Activate(activated_result_, index, ResultView::ActivateType::PREVIEW);
+        return false;
+      }));
+    }
+    else
+    {
+       Activate(activated_result_, index, ResultView::ActivateType::PREVIEW);
+    }
+  }
+}
+
+void ResultViewGrid::MouseDoubleClick(int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  unsigned num_results = GetNumResults();
+  unsigned index = GetIndexAtPosition(x, y);
+  mouse_over_index_ = index;
+  if (index < num_results && nux::GetEventButton(button_flags) == nux::NUX_MOUSE_BUTTON1)
+  {
+    // we got a click on a button so activate it
+    ResultIterator it(GetIteratorAtRow(index));
+    Result result = *it;
+    selected_index_ = index;
+    focused_result_ = result;
 
     activated_result_ = result;
-    Activate(activated_result_, index, type);
+    Activate(activated_result_, index, ResultView::ActivateType::DIRECT);
   }
 }
 
