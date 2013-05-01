@@ -283,17 +283,19 @@ class Result(UnityIntrospectionObject):
         self.mouse = get_mouse()
         self.keyboard = get_keyboard()
 
-    def activate(self):
+    def activate(self, double_click=true):
         tx = self.x + (self.width / 2)
         ty = self.y + (self.height / 2)
         self.mouse.move(tx, ty)
         self.mouse.click(1)
+        if double_click:
+            self.mouse.click(1)
 
-    def preview(self):
+    def preview(self, button=1):
         tx = self.x + (self.width / 2)
         ty = self.y + (self.height / 2)
         self.mouse.move(tx, ty)
-        self.mouse.click(3)
+        self.mouse.click(button)
 
     def preview_key(self):
         tx = self.x + (self.width / 2)
