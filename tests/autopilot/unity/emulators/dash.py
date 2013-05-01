@@ -283,7 +283,7 @@ class Result(UnityIntrospectionObject):
         self.mouse = get_mouse()
         self.keyboard = get_keyboard()
 
-    def activate(self, double_click=true):
+    def activate(self, double_click=True):
         tx = self.x + (self.width / 2)
         ty = self.y + (self.height / 2)
         self.mouse.move(tx, ty)
