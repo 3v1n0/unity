@@ -106,7 +106,9 @@ TEST_F(TestScopeView, TestCategoryExpansion_OneCategory_EmptySearchString)
 {
   MockCategories::Ptr categories = std::make_shared<MockCategories>(1);
   scope_view_->search_string_ = "";
+
   scope_->categories.changed.emit(categories);
+  Utils::WaitForTimeoutMSec(500);
 
   EXPECT_EQ(scope_view_->fake_groups_.size(), 1);
   Utils::WaitUntil([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
@@ -115,8 +117,10 @@ TEST_F(TestScopeView, TestCategoryExpansion_OneCategory_EmptySearchString)
 TEST_F(TestScopeView, TestCategoryExpansion_OneCategory_FilledSearchString)
 {
   MockCategories::Ptr categories = std::make_shared<MockCategories>(1);
-  scope_view_->search_string_ = "Mumford & Sons";
+  scope_view_->search_string_ = "Ubuntu";
+
   scope_->categories.changed.emit(categories);
+  Utils::WaitForTimeoutMSec(500);
 
   EXPECT_EQ(scope_view_->fake_groups_.size(), 1);
   Utils::WaitUntil([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
@@ -126,7 +130,9 @@ TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_EmptySearchString)
 {
   MockCategories::Ptr categories = std::make_shared<MockCategories>(2);
   scope_view_->search_string_ = "";
+
   scope_->categories.changed.emit(categories);
+  Utils::WaitForTimeoutMSec(500);
 
   EXPECT_EQ(scope_view_->fake_groups_.size(), 2);
   Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
@@ -136,8 +142,10 @@ TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_EmptySearchString)
 TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_FilledSearchString)
 {
   MockCategories::Ptr categories = std::make_shared<MockCategories>(2);
-  scope_view_->search_string_ = "Mumford & Sons";
+  scope_view_->search_string_ = "Ubuntu";
+
   scope_->categories.changed.emit(categories);
+  Utils::WaitForTimeoutMSec(500);
 
   EXPECT_EQ(scope_view_->fake_groups_.size(), 2);
   Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
@@ -148,7 +156,9 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_EmptySearchString)
 {
   MockCategories::Ptr categories = std::make_shared<MockCategories>(3);
   scope_view_->search_string_ = "";
+
   scope_->categories.changed.emit(categories);
+  Utils::WaitForTimeoutMSec(500);
 
   EXPECT_EQ(scope_view_->fake_groups_.size(), 3);
   Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
@@ -159,8 +169,10 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_EmptySearchString)
 TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_FilledSearchString)
 {
   MockCategories::Ptr categories = std::make_shared<MockCategories>(3);
-  scope_view_->search_string_ = "Mumford & Sons";
+  scope_view_->search_string_ = "Ubuntu";
+
   scope_->categories.changed.emit(categories);
+  Utils::WaitForTimeoutMSec(500);
 
   EXPECT_EQ(scope_view_->fake_groups_.size(), 3);
   Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
@@ -171,8 +183,9 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_FilledSearchString)
 TEST_F(TestScopeView, TestCategoryExpansion_OneCategory_OnResultAdded_EmptySearchString)
 {
   MockCategories::Ptr categories = std::make_shared<MockCategories>(1);
-  // scope_view_->search_string_ = "Mumford & Sons";
+
   scope_->categories.changed.emit(categories);
+  Utils::WaitForTimeoutMSec(500);
 
   EXPECT_EQ(scope_view_->fake_groups_.size(), 1);
   Utils::WaitUntil([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
@@ -196,8 +209,10 @@ TEST_F(TestScopeView, TestCategoryExpansion_OneCategory_OnResultAdded_EmptySearc
 TEST_F(TestScopeView, TestCategoryExpansion_OneCategory_OnResultAdded_FilledSearchString)
 {
   MockCategories::Ptr categories = std::make_shared<MockCategories>(1);
-  scope_view_->search_string_ = "Mumford & Sons";
+  scope_view_->search_string_ = "Ubuntu";
+
   scope_->categories.changed.emit(categories);
+  Utils::WaitForTimeoutMSec(500);
 
   EXPECT_EQ(scope_view_->fake_groups_.size(), 1);
   Utils::WaitUntil([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
@@ -221,8 +236,9 @@ TEST_F(TestScopeView, TestCategoryExpansion_OneCategory_OnResultAdded_FilledSear
 TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_OnResultAdded_EmptySearchString)
 {
   MockCategories::Ptr categories = std::make_shared<MockCategories>(2);
-  // scope_view_->search_string_ = "Mumford & Sons";
+
   scope_->categories.changed.emit(categories);
+  Utils::WaitForTimeoutMSec(500);
 
   EXPECT_EQ(scope_view_->fake_groups_.size(), 2);
   Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
@@ -248,8 +264,9 @@ TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_OnResultAdded_EmptySearc
 TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_OnResultAdded_FilledSearchString)
 {
   MockCategories::Ptr categories = std::make_shared<MockCategories>(2);
-  scope_view_->search_string_ = "Mumford & Sons";
+
   scope_->categories.changed.emit(categories);
+  Utils::WaitForTimeoutMSec(500);
 
   EXPECT_EQ(scope_view_->fake_groups_.size(), 2);
   Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
@@ -275,7 +292,9 @@ TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_OnResultAdded_FilledSear
 TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_OnResultAdded_EmptySearchString)
 {
   MockCategories::Ptr categories = std::make_shared<MockCategories>(3);
+
   scope_->categories.changed.emit(categories);
+  Utils::WaitForTimeoutMSec(500);
 
   EXPECT_EQ(scope_view_->fake_groups_.size(), 3);
   Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
@@ -304,8 +323,10 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_OnResultAdded_EmptySea
 TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_OnResultAdded_FilledSearchString)
 {
   MockCategories::Ptr categories = std::make_shared<MockCategories>(3);
-  scope_view_->search_string_ = "Mumford & Sons";
+  scope_view_->search_string_ = "Ubuntu";
+
   scope_->categories.changed.emit(categories);
+  Utils::WaitForTimeoutMSec(500);
 
   EXPECT_EQ(scope_view_->fake_groups_.size(), 3);
   Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
