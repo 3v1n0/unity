@@ -47,7 +47,7 @@ class LauncherSwitcherTests(LauncherTestCase):
 
     def test_launcher_switcher_cancel_resume_focus(self):
         """Test that ending the launcher switcher resume the focus."""
-        self.close_all_app("Calculator")
+        self.process_manager.close_all_app("Calculator")
         calc = self.process_manager.start_app("Calculator")
         self.assertTrue(calc.is_active)
 

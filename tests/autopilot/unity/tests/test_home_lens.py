@@ -30,8 +30,8 @@ class HomeLensSearchTests(UnityTestCase):
         finished yet.
 
         """
-        if self.app_is_running("Text Editor"):
-            self.close_all_app("Text Editor")
+        if self.process_manager.app_is_running("Text Editor"):
+            self.process_manager.close_all_app("Text Editor")
             sleep(1)
 
         kb = self.keyboard
@@ -40,6 +40,6 @@ class HomeLensSearchTests(UnityTestCase):
         self.assertThat(self.unity.dash.search_string, Eventually(Equals("g")))
         kb.type("edit", 0.1)
         kb.press_and_release("Enter", 0.1)
-        self.addCleanup(self.close_all_app,  "Text Editor")
+        self.addCleanup(self.process_manager.close_all_app,  "Text Editor")
         app_found = self.process_manager.wait_until_application_is_running("gedit.desktop", 5)
         self.assertTrue(app_found)

@@ -55,8 +55,8 @@ class LauncherIconsTests(LauncherTestCase):
         calc_icon = self.unity.launcher.model.get_icon(desktop_id=calc.desktop_file)
         self.addCleanup(self.launcher_instance.unlock_from_launcher, calc_icon)
         self.launcher_instance.lock_to_launcher(calc_icon)
-        self.close_all_app("Calculator")
-        self.assertThat(lambda: self.app_is_running("Calculator"), Eventually(Equals(False)))
+        self.process_manager.close_all_app("Calculator")
+        self.assertThat(lambda: self.process_manager.app_is_running("Calculator"), Eventually(Equals(False)))
         return calc_icon
 
     def test_bfb_tooltip_disappear_when_dash_is_opened(self):
@@ -136,7 +136,7 @@ class LauncherIconsTests(LauncherTestCase):
     def test_launcher_uses_startup_notification(self):
         """Tests that unity uses startup notification protocol."""
         calc_icon = self.ensure_calculator_in_launcher_and_not_running()
-        self.addCleanup(self.close_all_app, "Calculator")
+        self.addCleanup(self.process_manager.close_all_app, "Calculator")
         self.launcher_instance.click_launcher_icon(calc_icon)
 
         calc_app = self.process_manager.get_running_applications_by_desktop_file(calc_icon.desktop_id)[0]
@@ -148,7 +148,7 @@ class LauncherIconsTests(LauncherTestCase):
         """Tests that when the trash is opened, clicking on the icon re-focus the trash again"""
         self.register_nautilus()
         self.addCleanup(self.close_all_windows, "Nautilus")
-        self.addCleanup(self.close_all_app, "Calculator")
+        self.addCleanup(self.process_manager.close_all_app, "Calculator")
         self.close_all_windows("Nautilus")
 
         trash_icon = self.unity.launcher.model.get_trash_icon()
@@ -186,7 +186,7 @@ class LauncherIconsTests(LauncherTestCase):
         """
         bfb_icon = self.unity.launcher.model.get_bfb_icon()
         calc_icon = self.ensure_calculator_in_launcher_and_not_running()
-        self.addCleanup(self.close_all_app, "Calculator")
+        self.addCleanup(self.process_manager.close_all_app, "Calculator")
 
         self.launcher_instance.drag_icon_to_position(
             calc_icon,
@@ -248,7 +248,7 @@ class LauncherIconsTests(LauncherTestCase):
         calc_icon = self.unity.launcher.model.get_icon(desktop_id=desktop_file)
         self.assertThat(calc_icon.visible, Eventually(Equals(True)))
 
-        self.close_all_app("Calculator")
+        self.process_manager.close_all_app("Calculator")
         calc = self.process_manager.start_app("Calculator")
         sleep(2)
 

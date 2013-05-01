@@ -201,7 +201,7 @@ class HudBehaviorTests(HudTestsBase):
         file_path = mktemp()
         self.addCleanup(remove, file_path)
         gedit_win = self.process_manager.start_app_window('Text Editor', files=[file_path], locale='C')
-        self.addCleanup(self.close_all_app, 'Text Editor')
+        self.addCleanup(self.process_manager.close_all_app, 'Text Editor')
         self.assertProperty(gedit_win, is_focused=True)
 
         self.keyboard.type("0")
@@ -318,7 +318,7 @@ class HudBehaviorTests(HudTestsBase):
     def test_app_activate_on_enter(self):
         """Hud must close after activating a search item with Enter."""
         self.process_manager.start_app('Text Editor', locale='C')
-        self.addCleanup(self.close_all_app, "Text Editor")
+        self.addCleanup(self.process_manager.close_all_app, "Text Editor")
 
         self.unity.hud.ensure_visible()
 
@@ -330,7 +330,7 @@ class HudBehaviorTests(HudTestsBase):
 
         self.keyboard.press_and_release("Enter")
 
-        self.assertFalse(self.app_is_running("Text Editor"))
+        self.assertFalse(self.process_manager.app_is_running("Text Editor"))
 
         self.assertThat(self.unity.hud.visible, Eventually(Equals(False)))
 
@@ -675,7 +675,7 @@ class HudVisualTests(HudTestsBase):
 
     def test_hud_icon_shows_the_focused_application_emblem(self):
         """Tests that the correct HUD icon is shown."""
-        self.close_all_app("Calculator")
+        self.process_manager.close_all_app("Calculator")
         calc = self.process_manager.start_app("Calculator")
         self.assertTrue(calc.is_active)
         self.unity.hud.ensure_visible()
@@ -693,7 +693,7 @@ class HudVisualTests(HudTestsBase):
 
     def test_switch_dash_hud_does_not_break_the_focused_application_emblem(self):
         """Switching from Dash to HUD must still show the correct HUD icon."""
-        self.close_all_app("Calculator")
+        self.process_manager.close_all_app("Calculator")
         calc = self.process_manager.start_app("Calculator")
         self.assertTrue(calc.is_active)
 
@@ -704,7 +704,7 @@ class HudVisualTests(HudTestsBase):
 
     def test_switch_hud_dash_does_not_break_the_focused_application_emblem(self):
         """Switching from HUD to Dash and back must still show the correct HUD icon."""
-        self.close_all_app("Calculator")
+        self.process_manager.close_all_app("Calculator")
         calc = self.process_manager.start_app("Calculator")
         self.assertTrue(calc.is_active)
 

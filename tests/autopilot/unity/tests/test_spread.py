@@ -20,7 +20,7 @@ class SpreadTests(UnityTestCase):
 
     def start_test_application_windows(self, app_name, num_windows=2):
         """Start a given number of windows of the requested application"""
-        self.close_all_app(app_name)
+        self.process_manager.close_all_app(app_name)
         windows = []
 
         for i in range(num_windows):

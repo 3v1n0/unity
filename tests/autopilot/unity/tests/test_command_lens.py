@@ -62,8 +62,8 @@ class CommandLensSearchTests(UnityTestCase):
 
     def test_run_before_refresh(self):
         """Hitting enter before view has updated results must run the correct command."""
-        if self.app_is_running("Text Editor"):
-            self.close_all_app("Text Editor")
+        if self.process_manager.app_is_running("Text Editor"):
+            self.process_manager.close_all_app("Text Editor")
             sleep(1)
 
         self.unity.dash.reveal_command_lens()
@@ -71,7 +71,7 @@ class CommandLensSearchTests(UnityTestCase):
         sleep(1)
         self.keyboard.type("edit", 0.1)
         self.keyboard.press_and_release("Enter", 0.1)
-        self.addCleanup(self.close_all_app,  "Text Editor")
+        self.addCleanup(self.process_manager.close_all_app,  "Text Editor")
         app_found = self.process_manager.wait_until_application_is_running("gedit.desktop", 5)
         self.assertTrue(app_found)
 

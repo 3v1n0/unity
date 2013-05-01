@@ -56,7 +56,7 @@ class PanelTestsBase(UnityTestCase):
         Returns the opened BamfWindow
 
         """
-        self.close_all_app(app_name)
+        self.process_manager.close_all_app(app_name)
         app_win = self.process_manager.start_app_window(app_name, locale="C")
         app = app_win.application
 
