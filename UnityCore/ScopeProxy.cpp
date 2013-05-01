@@ -651,7 +651,7 @@ void ScopeProxy::Impl::OnScopeFiltersChanged(UnityProtocolScopeProxy* proxy, GPa
   bool blocked = filters_change_connection.block(true);
 
   glib::Object<DeeModel> filters_dee_model(DEE_MODEL(unity_protocol_scope_proxy_get_filters_model(scope_proxy_)), glib::AddRef());
-  categories_->SetModel(filters_dee_model);
+  filters_->SetModel(filters_dee_model);
 
   filters_change_connection.block(blocked);
 
