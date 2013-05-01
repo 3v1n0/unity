@@ -30,8 +30,6 @@
 #include "RadioOptionFilter.h"
 
 using namespace std;
-using namespace unity;
-using namespace unity::dash;
 
 namespace unity
 {

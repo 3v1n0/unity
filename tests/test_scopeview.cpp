@@ -26,35 +26,32 @@
 #include <UnityCore/Category.h>
 
 #include "MockCategories.h"
-
-using namespace unity;
-using namespace unity::dash;
+#include "test_mock_scope.h"
+#include "test_utils.h"
 
 namespace unity
 {
 namespace dash
 {
 
-class TestScopeView : public ::testing::Test
+struct TestScopeView : public ::testing::Test
 {
-public:
-
-  class FakePlacesGroup : public PlacesGroup
+  struct FakePlacesGroup : public PlacesGroup
   {
-  public:
     FakePlacesGroup():PlacesGroup(dash::Style::Instance()) {}
 
     using PlacesGroup::_using_filters_background;
   };
 
-  class FakeScopeView : public ScopeView
+  struct FakeScopeView : public ScopeView
   {
-  public:
-    FakeScopeView():ScopeView(Scope::Ptr(), nullptr) {}
+    FakeScopeView(MockScope::Ptr const& scope)
+      : ScopeView(scope, nullptr)
+    {}
 
     using ScopeView::OnCategoryAdded;
 
-    virtual PlacesGroup::Ptr CreatePlacesGroup(Category const& category)
+    PlacesGroup::Ptr CreatePlacesGroup(Category const& category) override
     {
       FakePlacesGroup* group = new FakePlacesGroup();
       fake_groups_.push_back(group);
@@ -65,39 +62,47 @@ public:
   };
 
   TestScopeView()
-    : scope_view_(new FakeScopeView())
-    , categories_(5)
-  {
-  }
+    : scope_data_(std::make_shared<MockScopeData>(""))
+    , scope_(std::make_shared<MockScope>(scope_data_, "", "", 10))
+    , scope_view_(new FakeScopeView(scope_))
+  {}
 
   unity::Settings settings;
   dash::Style style;
+  MockScopeData::Ptr scope_data_;
+  MockScope::Ptr scope_;
   std::unique_ptr<FakeScopeView> scope_view_;
-  MockCategories categories_;
 };
 
 TEST_F(TestScopeView, TestCategoryInsert)
 {
-  scope_view_->OnCategoryAdded(categories_.RowAtIndex(0));
-  scope_view_->OnCategoryAdded(categories_.RowAtIndex(1));
+  MockCategories::Ptr categories = std::make_shared<MockCategories>(2);
+  scope_->categories.changed.emit(categories);
 
   EXPECT_EQ(scope_view_->GetOrderedCategoryViews().size(), 2);
 }
 
 TEST_F(TestScopeView, TestFilterExpansion)
 {
-  scope_view_->OnCategoryAdded(categories_.RowAtIndex(0));
-  scope_view_->OnCategoryAdded(categories_.RowAtIndex(1));
-  scope_view_->OnCategoryAdded(categories_.RowAtIndex(2));
-  scope_view_->OnCategoryAdded(categories_.RowAtIndex(3));
+  MockCategories::Ptr categories = std::make_shared<MockCategories>(4);
+  scope_->categories.changed.emit(categories);
 
   EXPECT_EQ(scope_view_->fake_groups_.size(), 4);
 
   scope_view_->filters_expanded = true;
-  for (unsigned i = 0; i < scope_view_->fake_groups_.size(); i++)
-  {
+  for (unsigned i = 0; i < scope_view_->fake_groups_.size(); ++i)
     EXPECT_EQ(scope_view_->fake_groups_[i]->_using_filters_background, true);
-  }
+}
+
+TEST_F(TestScopeView, TestCategoryExpansion)
+{
+  MockCategories::Ptr categories = std::make_shared<MockCategories>(1);
+  scope_->categories.changed.emit(categories);
+
+  EXPECT_EQ(scope_view_->fake_groups_.size(), 1);
+  Utils::WaitUntil([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
+
+  //Utils::WaitUntil([this] () { return scope_view_->fake_groups_[1]->GetExpanded(); });
 }
 
 }

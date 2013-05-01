@@ -298,6 +298,8 @@ void ScopeView::SetupCategories(Categories::Ptr const& categories)
   if (!categories)
     return;
 
+  QueueCategoryCountsCheck();
+
   category_added_connection = categories->category_added.connect(sigc::mem_fun(this, &ScopeView::OnCategoryAdded));
   category_changed_connection = categories->category_changed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryChanged));
   category_removed_connection = categories->category_removed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryRemoved));
@@ -724,6 +726,7 @@ void ScopeView::QueueCategoryCountsCheck()
 
 void ScopeView::CheckCategoryCounts()
 {
+  std::cout << "CheckCategoryCounts" << std::endl;
   int number_of_displayed_categories = 0;
 
   PlacesGroup::Ptr new_expanded_group;
