@@ -966,7 +966,6 @@ ResultViewGrid::SetSelectedIndex(int index)
   }
 
   selected_index_ = index;
-  nux::GetWindowCompositor().SetKeyFocusArea(this);
 }
 
 void
