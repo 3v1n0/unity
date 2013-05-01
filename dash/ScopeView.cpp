@@ -43,6 +43,8 @@ namespace unity
 namespace dash
 {
 DECLARE_LOGGER(logger, "unity.dash.scopeview");
+DECLARE_LOGGER(focus_logger, "unity.dash.scopeview.focus");
+
 namespace
 {
 const int CARD_VIEW_GAP_VERT  = 24; // pixels
@@ -768,45 +770,37 @@ void ScopeView::QueueCategoryCountsCheck()
 
 void ScopeView::CheckCategoryCounts()
 {
-  std::cout << "CheckCategoryCounts" << std::endl;
   int number_of_displayed_categories = 0;
 
   PlacesGroup::Ptr new_expanded_group;
 
   PushResultFocus("count check");
 
-  for (auto iter = category_order_.begin(); iter != category_order_.end(); ++iter)
+  for (auto category_index : category_order_)
   {
-    unsigned int category_index = *iter;
     if (category_views_.size() <= category_index)
      continue;
 
-    PlacesGroup::Ptr group = category_views_[category_index];
+    PlacesGroup::Ptr const& group = category_views_[category_index];
 
     group->SetCounts(counts_[group]);
     group->SetVisible(counts_[group] > 0);
 
     if (counts_[group] > 0)
     {
-      number_of_displayed_categories++;
+      ++number_of_displayed_categories;
       new_expanded_group = group;
     }
   }
 
-  if (new_expanded_group && get_search_string().empty())
-  {
-    // only expand the category if we have only one with results.
-    if (number_of_displayed_categories <= 2)
-      new_expanded_group->SetExpanded(true);
-    if (last_expanded_group_ && last_expanded_group_ != new_expanded_group)
-      last_expanded_group_->SetExpanded(false);
-  }
-  else if (last_expanded_group_)
-  {
+  if (last_expanded_group_ and last_expanded_group_ != new_expanded_group)
     last_expanded_group_->SetExpanded(false);
-  }
 
-  last_expanded_group_ = new_expanded_group;
+  if (new_expanded_group)
+  {
+    new_expanded_group->SetExpanded(true);
+    last_expanded_group_ = new_expanded_group;
+  }
 
   PopResultFocus("count check");
 }
@@ -824,6 +818,10 @@ void ScopeView::HideResultsMessage()
 
 bool ScopeView::PerformSearch(std::string const& search_query, SearchCallback const& callback)
 {
+  if (search_string_ != search_query)
+    for (auto const& group : category_views_)
+      group->SetExpanded(false);
+
   search_string_ = search_query;
   if (scope_)
   {
@@ -1159,6 +1157,8 @@ void ScopeView::OnCompositorKeyNavFocusChanged(nux::Area* area, bool has_focus, 
   if (!IsVisible())
     return;
 
+  LOG_DEBUG(focus_logger) << "Global focus changed to  " << (area ? area->Type().name : "NULL");
+
   if (area && has_focus)
   {
     // If we've change the focus to a places group child, then we need to update it's focus.
@@ -1176,8 +1176,9 @@ void ScopeView::OnCompositorKeyNavFocusChanged(nux::Area* area, bool has_focus, 
       area = area->GetParentObject();
     }
 
-    if (!found_group)
+    if (!found_group && current_focus_category_position_ != -1)
     {
+      LOG_DEBUG(focus_logger) << "Resetting focus for position " << current_focus_category_position_;
       current_focus_category_position_ = -1;
       current_focus_variant_ = nullptr;
     }
@@ -1203,7 +1204,7 @@ void ScopeView::PushResultFocus(const char* reason)
       {
         current_focus_category_position_ = current_category_position;
         current_focus_variant_ = group->GetCurrentFocus();
-        LOG_TRACE(logger) << "Saving focus for position " << current_focus_category_position_ << " due to '" << reason << "'";
+        LOG_DEBUG(focus_logger) << "Saving focus for position " << current_focus_category_position_ << " due to '" << reason << "'";
         break;
       }
       // opimise to break out if we reach this level as it will never be a group.
@@ -1217,25 +1218,23 @@ void ScopeView::PushResultFocus(const char* reason)
 
 void ScopeView::PopResultFocus(const char* reason)
 {
-  if (current_focus_category_position_ != -1 && current_focus_variant_ != -1 &&
-      category_views_.size() > (unsigned)current_focus_category_position_)
+  int current_category_position = 0;
+  for (auto iter = category_order_.begin(); iter != category_order_.end(); ++iter)
   {
-    int tmp_current_focus_category_position = current_focus_category_position_;
-    while (category_order_.size() > (unsigned)tmp_current_focus_category_position)
+    unsigned category_index = *iter;
+    if (category_views_.size() <= category_index)
+      continue;
+    PlacesGroup::Ptr group = category_views_[category_index];
+    if (!group || !group->IsVisible())
+      continue;
+
+    if (current_category_position == current_focus_category_position_)
     {
-      unsigned focused_category_index = category_order_[tmp_current_focus_category_position];
-      if (category_views_.size() > focused_category_index)
-      {
-        PlacesGroup::Ptr group = category_views_[focused_category_index];
-        if (group->IsVisible())
-        {
-          group->SetCurrentFocus(current_focus_variant_);
-          LOG_TRACE(logger) << "Restoring focus for position " << current_focus_category_position_ << " due to '" << reason << "'";
-          break;
-        }
-      }
-      tmp_current_focus_category_position++;
+      group->SetCurrentFocus(current_focus_variant_);
+      LOG_DEBUG(focus_logger) << "Restoring focus for position " << current_focus_category_position_ << " due to '" << reason << "'";
+      break;
     }
+    current_category_position++;
   }
 }
 

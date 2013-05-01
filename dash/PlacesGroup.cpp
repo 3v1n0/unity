@@ -691,6 +691,7 @@ void PlacesGroup::SetCurrentFocus(glib::Variant const& variant)
     if (str.Str() == "ResultView" && _child_view)
     {
       _child_view->SetSelectedIndex(index);
+      nux::GetWindowCompositor().SetKeyFocusArea(_child_view);
     }
   }
 }
