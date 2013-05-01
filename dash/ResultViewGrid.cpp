@@ -942,9 +942,31 @@ void ResultViewGrid::DndSourceDragFinished(nux::DndAction result)
 }
 
 int
-ResultViewGrid::GetSelectedIndex()
+ResultViewGrid::GetSelectedIndex() const
 {
   return selected_index_;
+}
+
+void
+ResultViewGrid::SetSelectedIndex(int index)
+{
+  unsigned num_results = GetNumResults();
+  if (num_results == 0)
+  {
+    focused_result_ = LocalResult();
+    index = -1;
+  }
+  else
+  {
+    if (index >= 0 && (unsigned)index >= num_results)
+      index = num_results-1;
+
+    ResultIterator iter(GetIteratorAtRow(index));
+    focused_result_ = (*iter);
+  }
+
+  selected_index_ = index;
+  nux::GetWindowCompositor().SetKeyFocusArea(this);
 }
 
 void

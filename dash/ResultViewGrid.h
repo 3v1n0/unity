@@ -49,7 +49,9 @@ public:
 
   sigc::signal<void> selection_change;
 
-  int GetSelectedIndex();
+  virtual int GetSelectedIndex() const;
+  virtual void SetSelectedIndex(int index);
+  
   virtual unsigned GetIndexAtPosition(int x, int y);
 
   virtual void Activate(LocalResult const& local_result, int index, ActivateType type);

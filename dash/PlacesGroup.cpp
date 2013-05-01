@@ -661,5 +661,39 @@ void PlacesGroup::AddProperties(GVariantBuilder* builder)
   wrapper.add("name-label-baseline", _name->GetBaseline());
 }
 
+glib::Variant PlacesGroup::GetCurrentFocus() const
+{
+  if (_header_view && _header_view->HasKeyFocus())
+  {
+    return g_variant_new_string("HeaderView");
+  }
+  else if (_child_view && _child_view->HasKeyFocus())
+  {
+    return g_variant_new("(si)", "ResultView", _child_view->GetSelectedIndex());
+  }
+  return glib::Variant();
+}
+
+void PlacesGroup::SetCurrentFocus(glib::Variant const& variant)
+{
+  if (g_variant_is_of_type(variant, G_VARIANT_TYPE_STRING))
+  {
+    std::string str = glib::gchar_to_string(g_variant_get_string(variant, NULL));
+    if (str == "HeaderView" && _header_view)
+      nux::GetWindowCompositor().SetKeyFocusArea(_header_view);
+  }
+  else if (g_variant_is_of_type(variant, G_VARIANT_TYPE("(si)")))
+  {
+    glib::String str;
+
+    gint32 index;
+    g_variant_get(variant, "(si)", &str, &index);
+    if (str.Str() == "ResultView" && _child_view)
+    {
+      _child_view->SetSelectedIndex(index);
+    }
+  }
+}
+
 } // namespace dash
 } // namespace unity
