@@ -1194,7 +1194,12 @@ bool ApplicationLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
 {
   if (IsFileManager())
   {
-    return true;
+    for (auto uri : dnd_data.Uris())
+    {
+      if (boost::algorithm::starts_with(uri, "file://"))
+        return true;
+    }
+    return false;
   }
 
   for (auto type : dnd_data.Types())
