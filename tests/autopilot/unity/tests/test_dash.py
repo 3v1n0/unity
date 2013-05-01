@@ -9,6 +9,7 @@
 from __future__ import absolute_import
 
 from autopilot.clipboard import get_clipboard_contents
+from autopilot.display import move_mouse_to_screen
 from autopilot.matchers import Eventually
 from testtools.matchers import Equals, NotEquals, GreaterThan
 from time import sleep
@@ -1203,7 +1204,7 @@ class DashCrossMonitorsTests(DashTestCase):
         self.unity.dash.ensure_visible()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        self.display.move_mouse_to_screen((current_monitor + 1) % self.display.get_num_screens())
+        move_mouse_to_screen((current_monitor + 1) % self.display.get_num_screens())
         self.keyboard.type("abc")
 
         self.assertThat(self.unity.dash.ideal_monitor, Eventually(Equals(current_monitor)))
@@ -1214,10 +1215,10 @@ class DashCrossMonitorsTests(DashTestCase):
         self.addCleanup(self.unity.dash.ensure_hidden)
 
         for monitor in range(self.display.get_num_screens()-1):
-            self.display.move_mouse_to_screen(monitor)
+            move_mouse_to_screen(monitor)
             self.unity.dash.ensure_visible()
 
-            self.display.move_mouse_to_screen(monitor+1)
+            move_mouse_to_screen(monitor+1)
             sleep(.5)
             self.mouse.click()
 

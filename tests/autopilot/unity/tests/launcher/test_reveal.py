@@ -106,7 +106,7 @@ class LauncherRevealTests(LauncherTestCase):
          if self.unity.launcher.model.num_bamf_launcher_icons() >= 10:
              self.skip("There are already more than 9 icons in the launcher")
 
-         desktop_file = self.KNOWN_APPS['Calculator']['desktop-file']
+         desktop_file = self.process_manager.KNOWN_APPS['Calculator']['desktop-file']
          if self.unity.launcher.model.get_icon(desktop_id=desktop_file) != None:
              self.skip("Calculator icon is already on the launcher.")
 

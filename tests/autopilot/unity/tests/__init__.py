@@ -234,14 +234,14 @@ class UnityTestCase(AutopilotTestCase):
             return self.process_manager.start_app_window('Window Mocker')
 
     def close_all_windows(self, application_name):
-        for w in self.get_open_windows_by_application(application_name):
+        for w in self.process_manager.get_open_windows_by_application(application_name):
             w.close()
 
-        self.assertThat(lambda: len(self.get_open_windows_by_application(application_name)), Eventually(Equals(0)))
+        self.assertThat(lambda: len(self.process_manager.get_open_windows_by_application(application_name)), Eventually(Equals(0)))
 
     def register_nautilus(self):
-        self.addCleanup(self.unregister_known_application, "Nautilus")
-        self.register_known_application("Nautilus", "nautilus.desktop", "nautilus")
+        self.addCleanup(self.process_manager.unregister_known_application, "Nautilus")
+        self.process_manager.register_known_application("Nautilus", "nautilus.desktop", "nautilus")
 
     def get_startup_notification_timestamp(self, bamf_window):
         atom = display.Display().intern_atom('_NET_WM_USER_TIME')

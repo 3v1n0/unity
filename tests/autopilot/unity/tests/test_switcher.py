@@ -8,6 +8,7 @@
 
 from __future__ import absolute_import
 
+from autopilot.display import move_mouse_to_screen
 from autopilot.matchers import Eventually
 from autopilot.testcase import multiply_scenarios
 import logging
@@ -228,7 +229,7 @@ class SwitcherTests(SwitcherTestCase):
         charmap, calc, mahjongg = self.start_applications()
 
         for monitor in range(num_monitors):
-            self.display.move_mouse_to_screen(monitor)
+            move_mouse_to_screen(monitor)
             self.unity.switcher.initiate()
             self.addCleanup(self.unity.switcher.terminate)
             self.assertThat(self.unity.switcher.monitor, Eventually(Equals(monitor)))

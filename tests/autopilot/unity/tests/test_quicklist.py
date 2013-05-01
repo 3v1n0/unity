@@ -9,6 +9,7 @@
 
 from __future__ import absolute_import
 
+from autopilot.display import move_mouse_to_screen
 from autopilot.matchers import Eventually
 import os.path
 from testtools.matchers import Contains, Equals, NotEquals
@@ -40,7 +41,7 @@ class QuicklistActionTests(UnityTestCase):
 
     def get_desktop_entry(self, application):
         # load the desktop file from disk:
-        desktop_id = self.KNOWN_APPS[application]['desktop-file']
+        desktop_id = self.process_manager.KNOWN_APPS[application]['desktop-file']
         desktop_file = os.path.join('/usr/share/applications', desktop_id)
         return DesktopEntry(desktop_file)
 
@@ -85,7 +86,7 @@ class QuicklistActionTests(UnityTestCase):
 
         ql.click_item(new_win_ql_item)
 
-        nautilus_windows_fn = lambda: self.get_open_windows_by_application("Nautilus")
+        nautilus_windows_fn = lambda: self.process_manager.get_open_windows_by_application("Nautilus")
         self.assertThat(lambda: len(nautilus_windows_fn()), Eventually(Equals(1)))
         [nautilus_window] = nautilus_windows_fn()
 
@@ -228,7 +229,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
     def setUp(self):
         super(QuicklistKeyNavigationTests, self).setUp()
 
-        desktop_file = self.KNOWN_APPS["Text Editor"]["desktop-file"]
+        desktop_file = self.process_manager.KNOWN_APPS["Text Editor"]["desktop-file"]
         icon_refresh_fn = lambda : self.unity.launcher.model.get_icon(
             desktop_id=desktop_file)
 
@@ -253,7 +254,7 @@ class QuicklistKeyNavigationTests(UnityTestCase):
 
     def open_quicklist_with_keyboard(self):
         """Opens a quicklist using the keyboard."""
-        self.display.move_mouse_to_screen(0)
+        move_mouse_to_screen(0)
         self.ql_launcher.key_nav_start()
         self.addCleanup(self.ql_launcher.key_nav_cancel)
 

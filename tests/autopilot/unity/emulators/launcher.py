@@ -10,7 +10,7 @@
 from __future__ import absolute_import
 
 from autopilot.input import Mouse
-from autopilot.display import Display
+from autopilot.display import Display, move_mouse_to_screen
 from autopilot.keybindings import KeybindingsHelper
 import logging
 from testtools.matchers import NotEquals
@@ -102,7 +102,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
     def move_mouse_to_right_of_launcher(self):
         """Places the mouse to the right of this launcher."""
-        self._display.move_mouse_to_screen(self.monitor)
+        move_mouse_to_screen(self.monitor)
         (x, y, w, h) = self.geometry
         target_x = x + w + 10
         target_y = y + h / 2
@@ -113,7 +113,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
     def move_mouse_over_launcher(self):
         """Move the mouse over this launcher."""
-        self._display.move_mouse_to_screen(self.monitor)
+        move_mouse_to_screen(self.monitor)
         (x, y, w, h) = self.geometry
         target_x = x + w / 2
         target_y = y + h / 2
@@ -138,7 +138,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         """
         if self.is_showing:
             return
-        self._display.move_mouse_to_screen(self.monitor)
+        move_mouse_to_screen(self.monitor)
         (x, y, w, h) = self.geometry
 
         target_x = x - 920 # this is the pressure we need to reveal the launcher.
@@ -149,14 +149,14 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
     def keyboard_reveal_launcher(self):
         """Reveal this launcher using the keyboard."""
-        self._display.move_mouse_to_screen(self.monitor)
+        move_mouse_to_screen(self.monitor)
         logger.debug("Revealing launcher with keyboard.")
         self.keybinding_hold("launcher/reveal")
         self.is_showing.wait_for(True)
 
     def keyboard_unreveal_launcher(self):
         """Un-reveal this launcher using the keyboard."""
-        self._display.move_mouse_to_screen(self.monitor)
+        move_mouse_to_screen(self.monitor)
         logger.debug("Un-revealing launcher with keyboard.")
         self.keybinding_release("launcher/reveal")
         # only wait if the launcher is set to autohide
@@ -211,7 +211,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
     def key_nav_start(self):
         """Start keyboard navigation mode by pressing Alt+F1."""
-        self._display.move_mouse_to_screen(self.monitor)
+        move_mouse_to_screen(self.monitor)
         logger.debug("Initiating launcher keyboard navigation with Alt+F1.")
         self.keybinding("launcher/keynav")
         self._get_controller().key_nav_is_active.wait_for(True)
@@ -256,7 +256,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
     def switcher_start(self):
         """Start the super+Tab switcher on this launcher."""
-        self._display.move_mouse_to_screen(self.monitor)
+        move_mouse_to_screen(self.monitor)
         logger.debug("Starting Super+Tab switcher.")
         self.keybinding_hold_part_then_tap("launcher/switcher")
         self._get_controller().key_nav_is_active.wait_for(True)

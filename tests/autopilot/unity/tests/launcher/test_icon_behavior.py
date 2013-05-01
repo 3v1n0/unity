@@ -153,8 +153,8 @@ class LauncherIconsTests(LauncherTestCase):
 
         trash_icon = self.unity.launcher.model.get_trash_icon()
         self.launcher_instance.click_launcher_icon(trash_icon)
-        self.assertThat(lambda: len(self.get_open_windows_by_application("Nautilus")), Eventually(Equals(1)))
-        [trash_window] = self.get_open_windows_by_application("Nautilus")
+        self.assertThat(lambda: len(self.process_manager.get_open_windows_by_application("Nautilus")), Eventually(Equals(1)))
+        [trash_window] = self.process_manager.get_open_windows_by_application("Nautilus")
         self.assertThat(lambda: trash_window.is_focused, Eventually(Equals(True)))
 
         calc_win = self.process_manager.start_app_window("Calculator")
@@ -172,12 +172,12 @@ class LauncherIconsTests(LauncherTestCase):
 
         trash_icon = self.unity.launcher.model.get_trash_icon()
         self.launcher_instance.click_launcher_icon(trash_icon)
-        self.assertThat(lambda: len(self.get_open_windows_by_application("Nautilus")), Eventually(Equals(1)))
+        self.assertThat(lambda: len(self.process_manager.get_open_windows_by_application("Nautilus")), Eventually(Equals(1)))
 
         nautilus_app = self.get_app_instances("Nautilus")
         nautilus_icon = self.unity.launcher.model.get_icon(desktop_id="nautilus.desktop")
         self.launcher_instance.click_launcher_icon(nautilus_icon)
-        self.assertThat(lambda: len(self.get_open_windows_by_application("Nautilus")), Eventually(Equals(2)))
+        self.assertThat(lambda: len(self.process_manager.get_open_windows_by_application("Nautilus")), Eventually(Equals(2)))
 
     def test_super_number_shortcut_focuses_new_windows(self):
         """Windows launched using super+number must have

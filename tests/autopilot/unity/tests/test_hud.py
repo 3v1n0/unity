@@ -10,7 +10,7 @@
 from __future__ import absolute_import
 
 from autopilot.matchers import Eventually
-from autopilot.display import Display
+from autopilot.display import Display, move_mouse_to_screen
 from autopilot.testcase import multiply_scenarios
 from os import remove, environ
 from os.path import exists
@@ -83,7 +83,7 @@ class HudBehaviorTests(HudTestsBase):
         if not environ.get('UBUNTU_MENUPROXY', ''):
             self.patch_environment('UBUNTU_MENUPROXY', 'libappmenu.so')
         self.hud_monitor = self.display.get_primary_screen()
-        self.display.move_mouse_to_screen(self.hud_monitor)
+        move_mouse_to_screen(self.hud_monitor)
 
     def test_no_initial_values(self):
         self.unity.hud.ensure_visible()
@@ -506,7 +506,7 @@ class HudLauncherInteractionsTests(HudTestsBase):
         self.set_unity_option('num_launchers', 0)
         self.set_unity_option('launcher_hide_mode', int(self.launcher_autohide))
 
-        self.display.move_mouse_to_screen(self.hud_monitor)
+        move_mouse_to_screen(self.hud_monitor)
         sleep(0.5)
 
     def test_multiple_hud_reveal_does_not_break_launcher(self):
@@ -560,7 +560,7 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
         self.set_unity_option('num_launchers', 0)
         self.set_unity_option('launcher_hide_mode', 0)
 
-        self.display.move_mouse_to_screen(self.hud_monitor)
+        move_mouse_to_screen(self.hud_monitor)
         sleep(0.5)
 
     def test_hud_launcher_icon_hides_bfb(self):
@@ -616,7 +616,7 @@ class HudVisualTests(HudTestsBase):
 
     def setUp(self):
         super(HudVisualTests, self).setUp()
-        self.display.move_mouse_to_screen(self.hud_monitor)
+        move_mouse_to_screen(self.hud_monitor)
         self.set_unity_option('launcher_hide_mode', int(self.launcher_autohide))
         self.set_unity_option('num_launchers', int(self.launcher_primary_only))
         self.hud_monitor_is_primary = (self.display.get_primary_screen() == self.hud_monitor)
@@ -789,7 +789,7 @@ class HudCrossMonitorsTests(HudTestsBase):
         self.unity.hud.ensure_visible()
         self.addCleanup(self.unity.hud.ensure_hidden)
 
-        self.display.move_mouse_to_screen((current_monitor + 1) % self.display.get_num_screens())
+        move_mouse_to_screen((current_monitor + 1) % self.display.get_num_screens())
         self.keyboard.type("abc")
 
         self.assertThat(self.unity.hud.ideal_monitor, Eventually(Equals(current_monitor)))
@@ -800,10 +800,10 @@ class HudCrossMonitorsTests(HudTestsBase):
         self.addCleanup(self.unity.hud.ensure_hidden)
 
         for monitor in range(self.display.get_num_screens()-1):
-            self.display.move_mouse_to_screen(monitor)
+            move_mouse_to_screen(monitor)
             self.unity.hud.ensure_visible()
 
-            self.display.move_mouse_to_screen(monitor+1)
+            move_mouse_to_screen(monitor+1)
             sleep(.5)
             self.mouse.click()
 
