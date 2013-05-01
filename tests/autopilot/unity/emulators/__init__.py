@@ -12,12 +12,15 @@
 from time import sleep
 
 from autopilot.introspection.dbus import DBusIntrospectionObject
+from autopilot.introspection.backends import DBusAddress
 
 
 class UnityIntrospectionObject(DBusIntrospectionObject):
 
     DBUS_SERVICE = "com.canonical.Unity"
     DBUS_OBJECT = "/com/canonical/Unity/Debug"
+
+    _Backend = DBusAddress.SessionBus(DBUS_SERVICE, DBUS_OBJECT)
 
 
 def ensure_unity_is_running(timeout=300):
