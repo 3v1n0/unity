@@ -44,7 +44,7 @@ struct TestScopeView : public ::testing::Test
     {}
 
     bool GetExpanded() const override { return is_expanded_; }
-    void SetExpanded(bool is_expanded) override { is_expanded_ = is_expanded; }
+    void SetExpanded(bool is_expanded) override { is_expanded_ = is_expanded; expanded.emit(this); }
 
     using PlacesGroup::_using_filters_background;
     bool is_expanded_;
@@ -180,59 +180,6 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_FilledSearchString)
   Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[2]->GetExpanded(); });
 }
 
-TEST_F(TestScopeView, TestCategoryExpansion_OneCategory_OnResultAdded_EmptySearchString)
-{
-  MockCategories::Ptr categories = std::make_shared<MockCategories>(1);
-
-  scope_->categories.changed.emit(categories);
-  Utils::WaitForTimeoutMSec(500);
-
-  EXPECT_EQ(scope_view_->fake_groups_.size(), 1);
-  Utils::WaitUntil([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
-
-  scope_view_->fake_groups_[0]->SetExpanded(false);
-  Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
-
-  /* XXX: we should emit the signal not call the callback */
-  MockResults added_results(2);
-  scope_view_->OnResultAdded(added_results.RowAtIndex(0));
-
-  Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
-
-  scope_view_->fake_groups_[0]->SetExpanded(true);
-  Utils::WaitUntil([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
-
-  scope_view_->OnResultAdded(added_results.RowAtIndex(1));
-  Utils::WaitUntil([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
-}
-
-TEST_F(TestScopeView, TestCategoryExpansion_OneCategory_OnResultAdded_FilledSearchString)
-{
-  MockCategories::Ptr categories = std::make_shared<MockCategories>(1);
-  scope_view_->search_string_ = "Ubuntu";
-
-  scope_->categories.changed.emit(categories);
-  Utils::WaitForTimeoutMSec(500);
-
-  EXPECT_EQ(scope_view_->fake_groups_.size(), 1);
-  Utils::WaitUntil([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
-
-  scope_view_->fake_groups_[0]->SetExpanded(false);
-  Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
-
-  /* XXX: we should emit the signal not call the callback */
-  MockResults added_results(2);
-  scope_view_->OnResultAdded(added_results.RowAtIndex(0));
-
-  Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
-
-  scope_view_->fake_groups_[0]->SetExpanded(true);
-  Utils::WaitUntil([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
-
-  scope_view_->OnResultAdded(added_results.RowAtIndex(1));
-  Utils::WaitUntil([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
-}
-
 TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_OnResultAdded_EmptySearchString)
 {
   MockCategories::Ptr categories = std::make_shared<MockCategories>(2);
@@ -246,24 +193,22 @@ TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_OnResultAdded_EmptySearc
 
   /* XXX: we should emit the signal not call the callback */
   MockResults added_results(2);
-  scope_view_->OnResultAdded(added_results.RowAtIndex(0));
-
-  Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
-  Utils::WaitUntil([this] () { return scope_view_->fake_groups_[1]->GetExpanded(); });
 
   scope_view_->fake_groups_[0]->SetExpanded(true);
-  scope_view_->fake_groups_[1]->SetExpanded(false);
   Utils::WaitUntil([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
-  Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[1]->GetExpanded(); });
+  Utils::WaitUntil([this] () { return scope_view_->fake_groups_[1]->GetExpanded(); });
 
-  scope_view_->OnResultAdded(added_results.RowAtIndex(1));
+  scope_view_->OnResultAdded(added_results.RowAtIndex(0));
+  Utils::WaitForTimeoutMSec(500);
+
   Utils::WaitUntil([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
-  Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[1]->GetExpanded(); });
+  Utils::WaitUntil([this] () { return scope_view_->fake_groups_[1]->GetExpanded(); });
 }
 
 TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_OnResultAdded_FilledSearchString)
 {
   MockCategories::Ptr categories = std::make_shared<MockCategories>(2);
+  scope_view_->search_string_ = "Ubuntu";
 
   scope_->categories.changed.emit(categories);
   Utils::WaitForTimeoutMSec(500);
@@ -274,19 +219,16 @@ TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_OnResultAdded_FilledSear
 
   /* XXX: we should emit the signal not call the callback */
   MockResults added_results(2);
-  scope_view_->OnResultAdded(added_results.RowAtIndex(0));
-
-  Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
-  Utils::WaitUntil([this] () { return scope_view_->fake_groups_[1]->GetExpanded(); });
 
   scope_view_->fake_groups_[0]->SetExpanded(true);
-  scope_view_->fake_groups_[1]->SetExpanded(false);
   Utils::WaitUntil([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
-  Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[1]->GetExpanded(); });
+  Utils::WaitUntil([this] () { return scope_view_->fake_groups_[1]->GetExpanded(); });
 
-  scope_view_->OnResultAdded(added_results.RowAtIndex(1));
+  scope_view_->OnResultAdded(added_results.RowAtIndex(0));
+  Utils::WaitForTimeoutMSec(500);
+
   Utils::WaitUntil([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
-  Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[1]->GetExpanded(); });
+  Utils::WaitUntil([this] () { return scope_view_->fake_groups_[1]->GetExpanded(); });
 }
 
 TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_OnResultAdded_EmptySearchString)
@@ -304,6 +246,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_OnResultAdded_EmptySea
   /* XXX: we should emit the signal not call the callback */
   MockResults added_results(2);
   scope_view_->OnResultAdded(added_results.RowAtIndex(0));
+  Utils::WaitForTimeoutMSec(500);
 
   Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[1]->GetExpanded(); });
@@ -315,6 +258,8 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_OnResultAdded_EmptySea
   Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[2]->GetExpanded(); });
 
   scope_view_->OnResultAdded(added_results.RowAtIndex(1));
+  Utils::WaitForTimeoutMSec(500);
+
   Utils::WaitUntil([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[1]->GetExpanded(); });
   Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[2]->GetExpanded(); });
@@ -336,6 +281,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_OnResultAdded_FilledSe
   /* XXX: we should emit the signal not call the callback */
   MockResults added_results(2);
   scope_view_->OnResultAdded(added_results.RowAtIndex(0));
+  Utils::WaitForTimeoutMSec(500);
 
   Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[1]->GetExpanded(); });
@@ -347,6 +293,8 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_OnResultAdded_FilledSe
   Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[2]->GetExpanded(); });
 
   scope_view_->OnResultAdded(added_results.RowAtIndex(1));
+  Utils::WaitForTimeoutMSec(500);
+
   Utils::WaitUntil([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[1]->GetExpanded(); });
   Utils::WaitUntil([this] () { return not scope_view_->fake_groups_[2]->GetExpanded(); });

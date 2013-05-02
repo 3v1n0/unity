@@ -716,7 +716,7 @@ void ScopeView::OnResultRemoved(Result const& result)
 
 void ScopeView::CheckNoResults(glib::HintsMap const& hints)
 {
-  gint count = scope_->results()->count();
+  gint count = scope_->results() ? scope_->results()->count() : 0;
 
   if (count == 0 && !no_results_active_ && !search_string_.empty())
   {
@@ -793,11 +793,14 @@ void ScopeView::CheckCategoryCounts()
     }
   }
 
-  if (last_expanded_group_ and last_expanded_group_ != new_expanded_group)
-    last_expanded_group_->SetExpanded(false);
+  if (last_expanded_group_ and last_expanded_group_ != new_expanded_group) {
+    last_expanded_group_->PopExpanded();
+    last_expanded_group_ = nullptr;
+  }
 
-  if (new_expanded_group)
+  if (new_expanded_group and number_of_displayed_categories <= 2)
   {
+    new_expanded_group->PushExpanded();
     new_expanded_group->SetExpanded(true);
     last_expanded_group_ = new_expanded_group;
   }
