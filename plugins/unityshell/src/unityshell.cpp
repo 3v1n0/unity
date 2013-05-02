@@ -1212,6 +1212,8 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
                                 unsigned int mask)
 {
   bool ret;
+  bool isFullscreenMinimized = false,
+       foundFullscreen = false;
 
   /*
    * Very important!
@@ -1239,7 +1241,29 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   /* glPaintOutput is part of the opengl plugin, so we need the GLScreen base class. */
   ret = gScreen->glPaintOutput(attrib, transform, region, output, mask);
 
-  if (doShellRepaint && !force && fullscreenRegion.contains(*output))
+  /*
+   *  Need to repaint the shell if we are minimizing a full screen window, otherwise
+   *  the Launcher and Panel is visually missing.
+   *  Also account for multiple full screen windows in the same workspace as well
+   *  as full screen windows in different workspaces.
+   */
+  for (auto window : fullscreen_windows_)
+  {
+    if (screen->vp() == window->defaultViewport())
+    {
+      if (window->minimized() && !foundFullscreen)
+      {
+        isFullscreenMinimized = true;
+      }
+      else
+      {
+        foundFullscreen = true;
+        isFullscreenMinimized = false;
+      }
+    }
+  }
+    
+  if (doShellRepaint && !force && fullscreenRegion.contains(*output) && !isFullscreenMinimized)
     doShellRepaint = false;
 
   if (doShellRepaint)
