@@ -9,6 +9,7 @@
 
 from __future__ import absolute_import
 
+from autopilot.display import move_mouse_to_screen
 from autopilot.matchers import Eventually
 import logging
 from testtools.matchers import Equals, GreaterThan
@@ -63,7 +64,7 @@ class LauncherRevealTests(LauncherTestCase):
 
     def test_launcher_does_not_reveal_with_mouse_down(self):
         """Launcher must not reveal if have mouse button 1 down."""
-        self.display.move_mouse_to_display(self.launcher_instance.monitor)
+        move_mouse_to_screen(self.launcher_instance.monitor)
         self.mouse.press(1)
         self.addCleanup(self.mouse.release, 1)
         #FIXME: This is really bad API. it says reveal but it's expected to fail. bad bad bad!!

@@ -174,7 +174,7 @@ class LauncherIconsTests(LauncherTestCase):
         self.launcher_instance.click_launcher_icon(trash_icon)
         self.assertThat(lambda: len(self.process_manager.get_open_windows_by_application("Nautilus")), Eventually(Equals(1)))
 
-        nautilus_app = self.get_app_instances("Nautilus")
+        nautilus_app = self.process_manager.get_app_instances("Nautilus")
         nautilus_icon = self.unity.launcher.model.get_icon(desktop_id="nautilus.desktop")
         self.launcher_instance.click_launcher_icon(nautilus_icon)
         self.assertThat(lambda: len(self.process_manager.get_open_windows_by_application("Nautilus")), Eventually(Equals(2)))

@@ -39,7 +39,6 @@ class LauncherTestCase(UnityTestCase):
 
     def setUp(self):
         super(LauncherTestCase, self).setUp()
-        self.display = Display.create()
         self.set_unity_log_level("unity.launcher", "DEBUG")
         self.addCleanup(self.set_unity_log_level, "unity.launcher", "INFO")
 
