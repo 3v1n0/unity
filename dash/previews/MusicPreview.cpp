@@ -233,6 +233,7 @@ void MusicPreview::SetupViews()
         warning_msg_ = new StaticCairoText(
                      no_credentials_message_, true,
                      NUX_TRACKER_LOCATION);
+  	AddChild(warning_msg_.GetPointer());
         warning_msg_->SetFont(style.u1_warning_font().c_str());
         warning_msg_->SetLines(-2);
         warning_msg_->SetMinimumHeight(50);
