@@ -56,7 +56,7 @@ class Quicklist(UnityIntrospectionObject):
         logger.debug("Moving mouse outside the quicklist %r", self)
         target_x = self.x + self.width + 10
         target_y = self.y + self.height / 2
-        Mouse().create().move(target_x, target_y, animate=False)
+        Mouse.create().move(target_x, target_y, animate=False)
 
     @property
     def selected_item(self):

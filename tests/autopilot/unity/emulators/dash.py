@@ -276,24 +276,24 @@ class Result(UnityIntrospectionObject):
     def activate(self):
         tx = self.x + (self.width / 2)
         ty = self.y + (self.height / 2)
-        m = Mouse().create()
+        m = Mouse.create()
         m.move(tx, ty)
         m.click(1)
 
     def preview(self):
         tx = self.x + (self.width / 2)
         ty = self.y + (self.height / 2)
-        m = Mouse().create()
+        m = Mouse.create()
         m.move(tx, ty)
         m.click(3)
 
     def preview_key(self):
         tx = self.x + (self.width / 2)
         ty = self.y + (self.height / 2)
-        m = Mouse().create()
+        m = Mouse.create()
         m.move(tx, ty)
 
-        k = Keyboard().create()
+        k = Keyboard.create()
         k.press_and_release('Menu')
 
 class FilterBar(UnityIntrospectionObject):
@@ -325,7 +325,7 @@ class FilterBar(UnityIntrospectionObject):
             searchbar = self._get_searchbar()
             tx = searchbar.filter_label_x + (searchbar.filter_label_width / 2)
             ty = searchbar.filter_label_y + (searchbar.filter_label_height / 2)
-            m = Mouse().create()
+            m = Mouse.create()
             m.move(tx, ty)
             m.click()
             self.expanded.wait_for(True)
@@ -336,7 +336,7 @@ class FilterBar(UnityIntrospectionObject):
             searchbar = self._get_searchbar()
             tx = searchbar.filter_label_x + (searchbar.filter_label_width / 2)
             ty = searchbar.filter_label_y + (searchbar.filter_label_height / 2)
-            m = Mouse().create()
+            m = Mouse.create()
             m.move(tx, ty)
             m.click()
             self.expanded.wait_for(False)
@@ -361,7 +361,7 @@ class FilterExpanderLabel(UnityIntrospectionObject):
         if not self.expanded:
             tx = self.x + self.width / 2
             ty = self.y + self.height / 2
-            m = Mouse().create()
+            m = Mouse.create()
             m.move(tx, ty)
             m.click()
             self.expanded.wait_for(True)
@@ -371,7 +371,7 @@ class FilterExpanderLabel(UnityIntrospectionObject):
         if self.expanded:
             tx = self.x + self.width / 2
             ty = self.y + self.height / 2
-            m = Mouse().create()
+            m = Mouse.create()
             m.move(tx, ty)
             m.click()
             self.expanded.wait_for(False)
@@ -407,7 +407,7 @@ class Preview(UnityIntrospectionObject):
         if action:
             tx = action.x + (searchbar.width / 2)
             ty = action.y + (searchbar.height / 2)
-            m = Mouse().create()
+            m = Mouse.create()
             m.move(tx, ty)
             m.click()
 
@@ -492,7 +492,7 @@ class PreviewContainer(UnityIntrospectionObject):
 
         tx = navigator.button_x + (navigator.button_width / 2)
         ty = navigator.button_y + (navigator.button_height / 2)
-        m = Mouse().create()
+        m = Mouse.create()
         m.move(tx, ty)
 
         old_preview_initiate_count = self.preview_initiate_count
@@ -509,7 +509,7 @@ class PreviewContainer(UnityIntrospectionObject):
 
         tx = navigator.button_x + (navigator.button_width / 2)
         ty = navigator.button_y + (navigator.button_height / 2)
-        m = Mouse().create()
+        m = Mouse.create()
         m.move(tx, ty)
 
         old_preview_initiate_count = self.preview_initiate_count

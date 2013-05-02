@@ -24,7 +24,7 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
 
     def __init__(self, *args, **kwargs):
         super(HudController, self).__init__(*args, **kwargs)
-        self.keyboard = Keyboard().create()
+        self.keyboard = Keyboard.create()
 
     def get_hud_view(self):
         views = self.get_children_by_type(HudView)
