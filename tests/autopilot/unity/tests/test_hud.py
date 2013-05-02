@@ -10,7 +10,7 @@
 from __future__ import absolute_import
 
 from autopilot.matchers import Eventually
-from autopilot.display import Display, move_mouse_to_screen
+from autopilot.display import Display, move_mouse_to_screen, is_rect_on_screen
 from autopilot.testcase import multiply_scenarios
 from os import remove, environ
 from os.path import exists
@@ -630,7 +630,7 @@ class HudVisualTests(HudTestsBase):
         """HUD must be drawn on the monitor where the mouse is."""
         self.unity.hud.ensure_visible()
         self.assertThat(self.unity.hud.monitor, Eventually(Equals(self.hud_monitor)))
-        self.assertTrue(self.display.is_rect_on_screen(self.unity.hud.monitor, self.unity.hud.geometry))
+        self.assertTrue(is_rect_on_screen(self.unity.hud.monitor, self.unity.hud.geometry))
 
     def test_hud_geometries(self):
         """Tests the HUD geometries for the given monitor and status."""
