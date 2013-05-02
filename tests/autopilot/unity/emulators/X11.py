@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 
 _display = None
 
+_blacklisted_drivers = ["NVIDIA"]
+
 def _get_display():
     """Get a Xlib display object. Creating the display prints garbage to stdout."""
     global _display
@@ -89,10 +91,9 @@ def set_primary_monitor(monitor):
     except OSError, e:
         raise OSError("Failed to run glxinfo: %s. (do you have mesa-utils installed?)" % e)
 
-    # Veebers: Re-do what this needs.
-    # for dri in self._blacklisted_drivers:
-    #     if dri in glxinfo_out:
-    #         raise ScreenGeometry.BlacklistedDriverError('Impossible change the primary monitor for the given driver')
+    for dri in _blacklisted_drivers:
+        if dri in glxinfo_out:
+            raise Display.BlacklistedDriverError('Impossible change the primary monitor for the given driver')
 
     num_monitors = Display.create().get_num_screens()
     if monitor < 0 or monitor >= num_monitors:
