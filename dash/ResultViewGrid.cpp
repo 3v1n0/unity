@@ -34,6 +34,7 @@
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/GraphicsUtils.h"
+#include "unity-shared/UnitySettings.h"
 #include "ResultViewGrid.h"
 #include "math.h"
 
@@ -146,7 +147,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
       int current_index = GetIndexForLocalResult(activated_result_);
       if (nav_mode == -1) // left
       {
-        current_index--;  
+        current_index--;
       }
       else if (nav_mode == 1) // right
       {
@@ -168,7 +169,7 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
       {
         selected_index_ = active_index_ = current_index;
         activated_result_ = GetLocalResultForIndex(current_index);
-        LOG_DEBUG(logger) << "activating preview for index: " 
+        LOG_DEBUG(logger) << "activating preview for index: "
                   << "(" << current_index << ")"
                   << " " << activated_result_.uri;
         Activate(activated_result_, current_index, ActivateType::PREVIEW);
@@ -187,7 +188,7 @@ void ResultViewGrid::Activate(LocalResult const& local_result, int index, Result
 
   int left_results = index;
   int right_results = num_results ? (num_results - index) - 1 : 0;
-  //FIXME - just uses y right now, needs to use the absolute position of the bottom of the result 
+  //FIXME - just uses y right now, needs to use the absolute position of the bottom of the result
   // (jay) Here is the fix: Compute the y position of the row where the item is located.
   nux::Geometry abs_geo = GetAbsoluteGeometry();
   int row_y = padding + abs_geo.y;
@@ -247,7 +248,7 @@ void ResultViewGrid::QueueResultsChanged()
       SizeReallocate();
       results_changed_idle_.reset();
       lazy_load_source_.reset(); // no point doing this one as well.
-      
+
       if (!all_results_preloaded_)
       {
         last_lazy_loaded_result_ = 0; // reset the lazy load index in case we got an insert
@@ -294,7 +295,7 @@ bool ResultViewGrid::DoLazyLoad()
   else if (!lazy_load_source_)
   {
     lazy_load_source_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
-    lazy_load_source_->Run(sigc::mem_fun(this, &ResultViewGrid::DoLazyLoad));   
+    lazy_load_source_->Run(sigc::mem_fun(this, &ResultViewGrid::DoLazyLoad));
   }
   QueueDraw();
 
@@ -691,7 +692,7 @@ void ResultViewGrid::DrawRow(nux::GraphicsEngine& GfxContext, ResultListBounds c
         break;
 
       ResultRenderer::ResultRendererState state = ResultRenderer::RESULT_RENDERER_NORMAL;
-      
+
       if (enable_texture_render() == false)
       {
         if (index == selected_index_)
@@ -804,13 +805,21 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
     focused_result_ = result;
     activated_result_ = result;
 
+
     if (nux::GetEventButton(button_flags) == nux::NUX_MOUSE_BUTTON1)
     {
-      // delay activate for single left click. (for double click check)
-      activate_timer_.reset(new glib::Timeout(DOUBLE_CLICK_SPEED, [this, index]() {
-        Activate(activated_result_, index, ResultView::ActivateType::PREVIEW);
-        return false;
-      }));
+      if (unity::Settings::Instance().double_click_activate)
+      {
+        // delay activate for single left click. (for double click check)
+        activate_timer_.reset(new glib::Timeout(DOUBLE_CLICK_SPEED, [this, index]() {
+          Activate(activated_result_, index, ResultView::ActivateType::PREVIEW);
+          return false;
+        }));
+      }
+      else
+      {
+        Activate(activated_result_, index, ResultView::ActivateType::DIRECT);
+      }
     }
     else
     {
@@ -821,6 +830,9 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
 
 void ResultViewGrid::MouseDoubleClick(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
+  if (unity::Settings::Instance().double_click_activate == false)
+    return;
+
   unsigned num_results = GetNumResults();
   unsigned index = GetIndexAtPosition(x, y);
   mouse_over_index_ = index;
@@ -839,8 +851,8 @@ void ResultViewGrid::MouseDoubleClick(int x, int y, unsigned long button_flags, 
 
 unsigned ResultViewGrid::GetIndexAtPosition(int x, int y)
 {
-  if (x < 0 || y < 0) 
-     return -1; 
+  if (x < 0 || y < 0)
+     return -1;
 
   unsigned items_per_row = GetItemsPerRow();
 
@@ -872,8 +884,8 @@ std::tuple<int, int> ResultViewGrid::GetResultPosition(const unsigned int& index
   if (G_UNLIKELY(index >= static_cast<unsigned>(GetNumResults()) || index < 0))
   {
     LOG_ERROR(logger) << "index (" << index << ") does not exist in this category";
-    return std::tuple<int, int>(0,0); 
-  } // out of bounds. 
+    return std::tuple<int, int>(0,0);
+  } // out of bounds.
 
   int items_per_row = GetItemsPerRow();
   int column_size = renderer_->width + horizontal_spacing + extra_horizontal_spacing_;
