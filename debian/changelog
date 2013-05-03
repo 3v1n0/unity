@@ -1,3 +1,23 @@
+unity (7.0.0daily13.05.01.1ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  [ Sebastien Bacher ]
+  * Some untranslatable and wrong strings in the previews (LP: #1074038)
+
+  [ Andrea Azzarone ]
+  * [alt-tab] Disable detail view for webapp icons. (LP: #1169340)
+
+  [ Marco Trevisan (Treviño) ]
+  * Launcher - count label pops out in auto-hide mode (LP: #1171476)
+  * Panel shadow is drawn above full-screen windows when notifications
+    are shown (LP: #1171934)
+  * [regression] Icon count is not shown if the icon is not transformed
+    (LP: #1171663)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3315 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 01 May 2013 21:59:17 +0000
+
 unity (7.0.0daily13.04.18~13.04-0ubuntu1) raring; urgency=low
 
   [ Manuel de la Pena ]

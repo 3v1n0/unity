@@ -215,6 +215,11 @@ public:
     return true;
   }
 
+  bool AllowDetailViewInSwitcher() const override
+  {
+    return true;
+  }
+
   void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote) {}
 
   void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote) {}
