@@ -69,6 +69,10 @@ const std::string INTROSPECTION_XML =
   "       <arg type='a(sv)' name='state' direction='out' />"
   "     </method>"
   ""
+  "     <method name='GetVersion'>"
+  "       <arg type='s' name='version' direction='out' />"
+  "     </method>"
+  ""
   "   </interface>"
   ""
   "   <interface name='com.canonical.Unity.Debug.Logging'>"
@@ -115,6 +119,10 @@ GVariant* DebugDBusInterface::HandleDBusMethodCall(std::string const& method, GV
     g_variant_get(parameters, "(&s)", &input);
 
     return GetState(input);
+  }
+  else if (method == "GetVersion")
+  {
+    return g_variant_new("(s)", "1.2");
   }
   else if (method == "StartLogToFile")
   {
