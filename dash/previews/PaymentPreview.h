@@ -28,7 +28,6 @@
 #include <Nux/HLayout.h>
 #include <Nux/LayeredLayout.h>
 #include <Nux/AbstractButton.h>
-#include <UnityCore/Lens.h>
 #include <UnityCore/PaymentPreview.h>
 #include "ActionButton.h"
 #include "ActionLink.h"

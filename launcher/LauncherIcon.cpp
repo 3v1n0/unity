@@ -1144,14 +1144,13 @@ LauncherIcon::OnRemoteCountChanged(LauncherEntryRemote* remote)
   if (!remote->CountVisible())
     return;
 
-  if (remote->Count() / 10000 != 0)
-  {
-    SetEmblemText("****");
-  }
+  std::string text;
+  if (remote->Count() > 9999)
+    text = "****";
   else
-  {
-    SetEmblemText(std::to_string(remote->Count()));
-  }
+    text = std::to_string((long long)remote->Count());
+
+  SetEmblemText(text);
 }
 
 void
@@ -1183,7 +1182,7 @@ LauncherIcon::OnRemoteCountVisibleChanged(LauncherEntryRemote* remote)
 {
   if (remote->CountVisible())
   {
-    SetEmblemText(std::to_string(remote->Count()));
+    SetEmblemText(std::to_string((long long)remote->Count()));
   }
   else
   {

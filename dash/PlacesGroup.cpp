@@ -122,7 +122,6 @@ PlacesGroup::PlacesGroup(dash::StyleInterface& style)
     _is_expanded_pushed(false),
     _n_visible_items_in_unexpand_mode(0),
     _n_total_items(0),
-    _category_index(0),
     _coverflow_enabled(false),
     disabled_header_count_(false)
 {
@@ -244,17 +243,6 @@ PlacesGroup::SetName(std::string const& name)
   }
 }
 
-void
-PlacesGroup::SetRendererName(const char *renderer_name)
-{
-  _renderer_name = renderer_name;
-
-  if (g_strcmp0(renderer_name, "tile-horizontal") == 0)
-    (static_cast<dash::ResultView*>(_child_view))->SetModelRenderer(new dash::ResultRendererHorizontalTile(NUX_TRACKER_LOCATION));
-  else if (g_strcmp0(renderer_name, "tile-vertical") == 0)
-    (static_cast<dash::ResultView*>(_child_view))->SetModelRenderer(new dash::ResultRendererTile(NUX_TRACKER_LOCATION));
-}
-
 void PlacesGroup::SetHeaderCountVisible(bool disable)
 {
   disabled_header_count_ = !disable;
@@ -342,7 +330,7 @@ PlacesGroup::RefreshLabel()
     }
     else
     {
-      LOG_DEBUG(logger) << _n_total_items << " - " << _n_visible_items_in_unexpand_mode;
+      LOG_TRACE(logger) << _n_total_items << " - " << _n_visible_items_in_unexpand_mode;
       result_string = glib::String(g_strdup_printf(g_dngettext(GETTEXT_PACKAGE,
                                                   "See one more result",
                                                   "See %d more results",
@@ -353,7 +341,7 @@ PlacesGroup::RefreshLabel()
 
   bool visible = !(_n_visible_items_in_unexpand_mode >= _n_total_items && _n_total_items != 0);
 
-  _expand_icon->SetVisible(visible);;
+  _expand_icon->SetVisible(visible);
   SetName(_cached_name);
 
   _expand_label->SetText(result_string);
@@ -511,20 +499,7 @@ PlacesGroup::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 }
 
 void
-PlacesGroup::SetCategoryIndex(unsigned index)
-{
-  _category_index = index;
-}
-
-unsigned
-PlacesGroup::GetCategoryIndex() const
-{
-  return _category_index;
-}
-
-void
-PlacesGroup::SetCounts(unsigned n_visible_items_in_unexpand_mode,
-                       unsigned n_total_items)
+PlacesGroup::SetCounts(unsigned n_total_items)
 {
   _n_total_items = n_total_items;
 

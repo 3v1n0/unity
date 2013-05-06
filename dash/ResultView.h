@@ -29,7 +29,6 @@
 
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/Results.h>
-#include <UnityCore/ResultIterator.h>
 
 #include "unity-shared/Introspectable.h"
 #include "ResultRenderer.h"
@@ -70,37 +69,38 @@ public:
   virtual ~ResultView();
 
   void SetModelRenderer(ResultRenderer* renderer);
-  void SetModel(glib::Object<DeeModel> const& model, DeeModelTag* tag);
+  void SetResultsModel(Results::Ptr const& results);
 
-  unsigned int GetIndexForUri(const std::string& uri);
-  std::string GetUriForIndex(unsigned int);
+  unsigned int GetIndexForLocalResult(LocalResult const& local_result);
+  LocalResult GetLocalResultForIndex(unsigned int);
 
   nux::Property<bool> expanded;
   nux::Property<int> results_per_row;
   nux::Property<std::string> unique_id;
   nux::Property<float> desaturation_progress;
   nux::Property<bool> enable_texture_render;
-  sigc::signal<void, std::string const&, ActivateType, GVariant*> UriActivated;
+  sigc::signal<void, LocalResult const&, ActivateType, GVariant*> ResultActivated;
 
   std::string GetName() const;
   ResultIterator GetIteratorAtRow(unsigned row);
   void AddProperties(GVariantBuilder* builder);
   IntrospectableList GetIntrospectableChildren();
 
-  virtual void Activate(std::string const& uri, int index, ActivateType type) = 0;
+  virtual void Activate(LocalResult const& local_result, int index, ActivateType type) = 0;
 
   std::vector<ResultViewTexture::Ptr> const& GetResultTextureContainers();
   virtual void RenderResultTexture(ResultViewTexture::Ptr const& result_texture);
 
+  virtual void GetResultDimensions(int& rows, int& columns);
+
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual long ComputeContentSize();
 
   virtual void UpdateRenderTextures();
 
-  virtual void AddResult(Result& result);
-  virtual void RemoveResult(Result& result);
+  virtual void AddResult(Result const& result);
+  virtual void RemoveResult(Result const& result);
 
   unsigned GetNumResults();
 
@@ -111,9 +111,7 @@ protected:
 
   // properties
   ResultRenderer* renderer_;
-  glib::Object<DeeModel> result_model_;
-  DeeModelTag* renderer_tag_;
-  glib::SignalManager sig_manager_;
+  Results::Ptr result_model_;
   std::map<std::string, debug::ResultWrapper*> introspectable_children_;
 
   std::vector<ResultViewTexture::Ptr> result_textures_;
@@ -123,6 +121,8 @@ private:
   void OnRowRemoved(DeeModel* model, DeeModelIter* iter);
 
   Result cached_result_;
+  sigc::connection result_added_connection_;
+  sigc::connection result_removed_connection_;
 };
 
 }

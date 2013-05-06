@@ -436,7 +436,7 @@ void QuicklistMenuItem::AddProperties(GVariantBuilder* builder)
   .add("visible", GetVisible())
   .add("selectable", GetSelectable())
   .add("selected", _prelight)
-  .add("activate_timestamp", _activate_timestamp);
+  .add("activate_timestamp", (uint32_t) _activate_timestamp);
 }
 
 } //NAMESPACE

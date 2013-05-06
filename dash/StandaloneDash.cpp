@@ -36,6 +36,7 @@
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/ThumbnailGenerator.h"
+#include "UnityCore/GSettingsScopes.h"
 
 #define WIDTH 1024
 #define HEIGHT 768
@@ -65,7 +66,7 @@ void TestRunner::Init ()
 {
   layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  DashView* view = new DashView(std::make_shared<unity::dash::FilesystemLenses>(), 
+  DashView* view = new DashView(std::make_shared<unity::dash::GSettingsScopes>(), 
                                 std::make_shared<unity::ApplicationStarterImp>());
   view->DisableBlur();
   view->SetMinMaxSize(WIDTH, HEIGHT);
@@ -75,6 +76,7 @@ void TestRunner::Init ()
   view->AboutToShow();
 
   nux::GetWindowThread()->SetLayout (layout);
+  nux::GetWindowCompositor().SetKeyFocusArea(view->default_focus());
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)

@@ -34,6 +34,7 @@
 #include "ActionButton.h"
 #include "Tracks.h"
 #include "PreviewInfoHintWidget.h"
+#include "PreviewPlayer.h"
 
 namespace unity
 {
@@ -177,8 +178,6 @@ void MusicPreview::SetupViews()
       {
         tracks_ = new previews::Tracks(tracks_model, NUX_TRACKER_LOCATION);
         AddChild(tracks_.GetPointer());
-        tracks_->play.connect(sigc::mem_fun(this, &MusicPreview::OnPlayTrack));
-        tracks_->pause.connect(sigc::mem_fun(this, &MusicPreview::OnPauseTrack));
         tracks_->mouse_click.connect(on_mouse_down);
       }
       /////////////////////
@@ -264,30 +263,6 @@ void MusicPreview::SetupViews()
   SetLayout(image_data_layout);
 }
 
-void MusicPreview::OnPlayTrack(std::string const& uri)
-{ 
-  dash::MusicPreview* music_preview_model = dynamic_cast<dash::MusicPreview*>(preview_model_.get());
-  if (!music_preview_model)
-  {
-    LOG_ERROR(logger) << "Play failed. No preview found";
-    return;
-  }
-
-  music_preview_model->PlayUri(uri);
-}
-
-void MusicPreview::OnPauseTrack(std::string const& uri)
-{
-  dash::MusicPreview* music_preview_model = dynamic_cast<dash::MusicPreview*>(preview_model_.get());
-  if (!music_preview_model)
-  {
-    LOG_ERROR(logger) << "Pause failed. No preview found";
-    return;
-  }
-
-  music_preview_model->PauseUri(uri);
-}
-
 void MusicPreview::PreLayoutManagement()
 {
   nux::Geometry geo = GetGeometry();
@@ -314,6 +289,12 @@ void MusicPreview::PreLayoutManagement()
   Preview::PreLayoutManagement();
 }
 
+void MusicPreview::OnNavigateOut()
+{
+  PreviewPlayer player;
+  player.Stop();
 }
-}
-}
+
+} // namespace previews
+} // namespace dash
+} // namespace unity

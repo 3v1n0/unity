@@ -316,7 +316,11 @@ std::string Style::payment_prize_subtitle_font() const
 
 std::string Style::payment_intro_font() const
 {
+<<<<<<< TREE
   return "Ubuntu 11.7";
+=======
+  return "Ubuntu 11.5";
+>>>>>>> MERGE-SOURCE
 }
 
 std::string Style::payment_form_labels_font() const
@@ -379,11 +383,14 @@ int Style::GetPaymentFormSpace() const
   return 5;
 }
 
+<<<<<<< TREE
 std::string Style::u1_warning_font() const
 {
   return "Ubuntu Bold 11.5";
 }
 
+=======
+>>>>>>> MERGE-SOURCE
 float Style::GetVideoImageAspectRatio() const
 {
   return float(540)/380;
@@ -499,11 +506,14 @@ nux::BaseTexture* Style::GetLockIcon()
               PKGDATADIR"/lock_icon.png", -1, true);
 }
 
+<<<<<<< TREE
 nux::BaseTexture* Style::GetWarningIcon()
 {
   return pimpl->warning_icon_texture_.texture();
 }
 
+=======
+>>>>>>> MERGE-SOURCE
 nux::BaseTexture* Style::GetSearchSpinIcon(int size)
 {
   return pimpl->preview_spin_texture_.texture(size);
