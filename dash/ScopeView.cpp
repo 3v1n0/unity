@@ -303,6 +303,8 @@ void ScopeView::SetupCategories(Categories::Ptr const& categories)
   if (!categories)
     return;
 
+  QueueCategoryCountsCheck();
+
   category_added_connection = categories->category_added.connect(sigc::mem_fun(this, &ScopeView::OnCategoryAdded));
   category_changed_connection = categories->category_changed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryChanged));
   category_removed_connection = categories->category_removed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryRemoved));
@@ -714,7 +716,7 @@ void ScopeView::OnResultRemoved(Result const& result)
 
 void ScopeView::CheckNoResults(glib::HintsMap const& hints)
 {
-  gint const count = scope_->results()->count();
+  gint count = scope_->results() ? scope_->results()->count() : 0;
 
   if (count == 0)
   {
@@ -771,38 +773,34 @@ void ScopeView::CheckCategoryCounts()
 
   PushResultFocus("count check");
 
-  for (auto iter = category_order_.begin(); iter != category_order_.end(); ++iter)
+  for (auto category_index : category_order_)
   {
-    unsigned int category_index = *iter;
     if (category_views_.size() <= category_index)
      continue;
 
-    PlacesGroup::Ptr group = category_views_[category_index];
+    PlacesGroup::Ptr const& group = category_views_[category_index];
 
     group->SetCounts(counts_[group]);
     group->SetVisible(counts_[group] > 0);
 
     if (counts_[group] > 0)
     {
-      number_of_displayed_categories++;
+      ++number_of_displayed_categories;
       new_expanded_group = group;
     }
   }
 
-  if (new_expanded_group && get_search_string().empty())
-  {
-    // only expand the category if we have only one with results.
-    if (number_of_displayed_categories <= 2)
-      new_expanded_group->SetExpanded(true);
-    if (last_expanded_group_ && last_expanded_group_ != new_expanded_group)
-      last_expanded_group_->SetExpanded(false);
-  }
-  else if (last_expanded_group_)
-  {
-    last_expanded_group_->SetExpanded(false);
+  if (last_expanded_group_ and last_expanded_group_ != new_expanded_group) {
+    last_expanded_group_->PopExpanded();
+    last_expanded_group_ = nullptr;
   }
 
-  last_expanded_group_ = new_expanded_group;
+  if (new_expanded_group and number_of_displayed_categories <= 2)
+  {
+    new_expanded_group->PushExpanded();
+    new_expanded_group->SetExpanded(true);
+    last_expanded_group_ = new_expanded_group;
+  }
 
   PopResultFocus("count check");
 }
@@ -820,6 +818,10 @@ void ScopeView::HideResultsMessage()
 
 bool ScopeView::PerformSearch(std::string const& search_query, SearchCallback const& callback)
 {
+  if (search_string_ != search_query)
+    for (auto const& group : category_views_)
+      group->SetExpanded(false);
+
   search_string_ = search_query;
   if (scope_)
   {

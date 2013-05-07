@@ -25,9 +25,6 @@
 #include "unity-shared/UnitySettings.h"
 #include "test_mock_scope.h"
 
-using namespace unity;
-using namespace unity::dash;
-
 namespace unity
 {
 namespace dash
