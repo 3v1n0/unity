@@ -62,12 +62,10 @@ protected:
 
   nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
   {
-    bool mouse_inside = TestMousePointerInclusionFilterMouseWheel(mouse_position, event_type);
-
-    if (mouse_inside == false)
+    if (event_type != nux::EVENT_MOUSE_WHEEL && TestMousePointerInclusion(mouse_position, event_type))
+      return this;
+    else
       return nullptr;
-
-    return this;
   }
 };
 

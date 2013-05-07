@@ -718,7 +718,7 @@ void ScopeView::CheckNoResults(glib::HintsMap const& hints)
 {
   gint count = scope_->results() ? scope_->results()->count() : 0;
 
-  if (count == 0 && !no_results_active_ && !search_string_.empty())
+  if (count == 0)
   {
     std::stringstream markup;
     glib::HintsMap::const_iterator it;
@@ -727,13 +727,10 @@ void ScopeView::CheckNoResults(glib::HintsMap const& hints)
     markup << "<span size='larger' weight='bold'>";
 
     if (it != hints.end())
-    {
       markup << it->second.GetString();
-    }
     else
-    {
       markup << _("Sorry, there is nothing that matches your search.");
-    }
+
     markup << "</span>";
 
     LOG_DEBUG(logger) << "The no-result-hint is: " << markup.str();
@@ -920,16 +917,16 @@ void ScopeView::Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
 
 void ScopeView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw)
 {
-  nux::Geometry const& geo(GetGeometry());
+  nux::Geometry const& geo = GetGeometry();
   graphics_engine.PushClippingRectangle(geo);
   CheckScrollBarState();
 
   if (!IsFullRedraw() && RedirectedAncestor())
   {
     if (filter_bar_ && filter_bar_->IsVisible() && filter_bar_->IsRedrawNeeded())
-    {
       graphics::ClearGeometry(filter_bar_->GetGeometry());
-    }
+    else if (no_results_ && no_results_->IsVisible() && no_results_->IsRedrawNeeded())
+      graphics::ClearGeometry(no_results_->GetGeometry());
   }
 
   layout_->ProcessDraw(graphics_engine, force_draw);

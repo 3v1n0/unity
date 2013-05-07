@@ -452,6 +452,9 @@ void SearchBar::ForceLiveSearch()
 {
   live_search_timeout_.reset(new glib::Timeout(LIVE_SEARCH_TIMEOUT));
   live_search_timeout_->Run(sigc::mem_fun(this, &SearchBar::OnLiveSearchTimeout));
+
+  start_spinner_timeout_.reset(new glib::Timeout(SPINNER_TIMEOUT));
+  start_spinner_timeout_->Run(sigc::mem_fun(this, &SearchBar::OnSpinnerStartCb));
 }
 
 void SearchBar::SetSearchFinished()
