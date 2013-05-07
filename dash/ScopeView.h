@@ -111,13 +111,16 @@ private:
   void QueueReinitializeFilterCategoryModels(unsigned int index);
   bool ReinitializeCategoryResultModels();
   void ClearCategories();
-  void OnCategoryOrderChanged();
+  void OnCategoryOrderChanged(std::vector<unsigned int> const& order);
 
   void QueueCategoryCountsCheck();
   void CheckCategoryCounts();
 
   void CheckNoResults(glib::HintsMap const& hints);
   void HideResultsMessage();
+
+  void PushResultFocus(const char* reason);
+  void PopResultFocus(const char* reason);
 
   ResultView* GetResultViewForCategory(unsigned int category_index);
 
@@ -131,6 +134,8 @@ private:
   virtual bool AcceptKeyNavFocus();
   virtual std::string GetName() const;
   virtual void AddProperties(GVariantBuilder* builder);
+
+  void OnCompositorKeyNavFocusChanged(nux::Area*, bool, nux::KeyNavDirection);
 
   std::string get_search_string() const;
 
@@ -176,6 +181,10 @@ private:
 
   bool scope_connected_;
   bool search_on_next_connect_;
+
+  int current_focus_category_position_;
+  glib::Variant current_focus_variant_;
+  sigc::connection key_nav_focus_connection_;
 
   friend class TestScopeView;
 };

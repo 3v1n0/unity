@@ -267,6 +267,14 @@ void ResultRendererTile::LoadIcon(Result const& row)
   glib::Object<GIcon> icon(g_icon_new_for_string(icon_name.c_str(), NULL));
   TextureContainer* container = row.renderer<TextureContainer*>();
 
+  if (container)
+  {
+    TextureCache& cache = TextureCache::GetDefault();
+    
+    BaseTexturePtr texture_prelight(cache.FindTexture("resultview_prelight", style.GetTileIconHightlightWidth(), style.GetTileIconHightlightHeight(),  sigc::mem_fun(this, &ResultRendererTile::DrawHighlight)));
+    container->prelight = texture_prelight;
+  }
+
   IconLoader::IconLoaderCallback slot = sigc::bind(sigc::mem_fun(this, &ResultRendererTile::IconLoaded), icon_hint, row);
 
   if (icon.IsType(G_TYPE_ICON))
@@ -363,18 +371,13 @@ void ResultRendererTile::IconLoaded(std::string const& texid,
 {
   TextureContainer *container = row.renderer<TextureContainer*>();
 
-  dash::Style& style = dash::Style::Instance();
-
   if (pixbuf && container)
   {
     TextureCache& cache = TextureCache::GetDefault();
     BaseTexturePtr texture(cache.FindTexture(icon_name, max_width, max_height,
                            sigc::bind(sigc::mem_fun(this, &ResultRendererTile::CreateTextureCallback), pixbuf)));
 
-    BaseTexturePtr texture_prelight(cache.FindTexture("resultview_prelight", style.GetTileIconHightlightWidth(), style.GetTileIconHightlightHeight(),  sigc::mem_fun(this, &ResultRendererTile::DrawHighlight)));
-
     container->icon = texture;
-    container->prelight = texture_prelight;
     container->drag_icon = pixbuf;
 
     NeedsRedraw.emit();

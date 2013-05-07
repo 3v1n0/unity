@@ -123,6 +123,15 @@ void ResultView::SetResultsModel(Results::Ptr const& result_model)
   }
 }
 
+int ResultView::GetSelectedIndex() const
+{
+  return -1;
+}
+
+void ResultView::SetSelectedIndex(int index)
+{  
+}
+
 unsigned ResultView::GetNumResults()
 {
   if (result_model_)
