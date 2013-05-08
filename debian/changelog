@@ -1,3 +1,16 @@
+unity (7.0.0daily13.05.08ubuntu.unity.experimental.certified-0ubuntu1) raring; urgency=low
+
+  [ Nick Dedekind ]
+  * Keyboard focus lost if trying to navigate while search is ongoing
+    (LP: #1170709)
+  * Occasional loss of focus in the input text field (LP: #1174488)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3137 (ubuntu-unity/experimental-
+    certified)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 08 May 2013 07:03:04 +0000
+
 unity (7.0.0daily13.05.07ubuntu.unity.experimental.certified-0ubuntu1) raring; urgency=low
 
   [ Andrea Azzarone ]
