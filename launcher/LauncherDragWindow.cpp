@@ -41,8 +41,11 @@ namespace
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherDragWindow);
 
-LauncherDragWindow::LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
+LauncherDragWindow::LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture,
+                                       std::function<void(nux::GraphicsEngine &)> const &deferred_icon_render_func)
   : nux::BaseWindow("")
+  , icon_rendered_ (false)
+  , deferred_icon_render_func_ (deferred_icon_render_func)
   , animation_speed_(QUICK_ANIMATION_SPEED)
   , cancelled_(false)
   , texture_(texture)
@@ -149,6 +152,13 @@ LauncherDragWindow::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
   geo.SetY(0);
 
   GfxContext.PushClippingRectangle(geo);
+
+  // Render the icon if we haven't already
+  if (!icon_rendered_)
+  {
+    deferred_icon_render_func_ (GfxContext);
+    icon_rendered_ = true;
+  }
 
   nux::TexCoordXForm texxform;
   texxform.FlipVCoord(true);

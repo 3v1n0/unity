@@ -38,7 +38,11 @@ namespace launcher
 struct TestLauncherDragWindow : public testing::Test
 {
   TestLauncherDragWindow()
-    : drag_window(new LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture>(new nux::IOpenGLBaseTexture(nux::RTTEXTURE, ICON_WIDTH, ICON_HEIGHT, 24, 1, nux::BITFMT_B8G8R8A8))))
+    : drag_window(new LauncherDragWindow(
+                    nux::ObjectPtr<nux::IOpenGLBaseTexture>(
+                      new nux::IOpenGLBaseTexture(nux::RTTEXTURE, ICON_WIDTH, ICON_HEIGHT, 24, 1, nux::BITFMT_B8G8R8A8)),
+                    [](nux::GraphicsEngine &){
+                    }))
   {}
 
   nux::ObjectPtr<LauncherDragWindow> drag_window;
