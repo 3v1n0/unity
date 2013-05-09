@@ -58,6 +58,9 @@ public:
   void RememberSkip(int monitor, bool skip);
   bool WasSkipping(int monitor) const;
 
+  void RememberEmblem(bool has_emblem);
+  bool HadEmblem() const;
+
   virtual nux::Color BackgroundColor() const = 0;
 
   virtual nux::Color GlowColor() = 0;
@@ -67,6 +70,7 @@ public:
   virtual nux::BaseTexture* Emblem() = 0;
 
 private:
+  bool had_emblem_;
   std::vector<bool> skip_;
   std::vector<nux::Point3> last_render_center_;
   std::vector<nux::Point3> last_logical_center_;

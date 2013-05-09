@@ -196,7 +196,7 @@ TEST(TestGLibTimeout, Running)
   callback_called = false;
   callback_call_count = 0;
 
-  Timeout timeout(300);
+  Timeout timeout(300, Source::Priority::HIGH);
   EXPECT_FALSE(timeout.IsRunning());
 
   timeout.Run(&OnSourceCallbackStop);

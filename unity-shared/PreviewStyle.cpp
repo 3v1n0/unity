@@ -99,6 +99,7 @@ public:
   , preview_play_texture_("/preview_play.svg")
   , preview_pause_texture_("/preview_pause.svg")
   , preview_spin_texture_("/search_spin.svg")
+  , warning_icon_texture_("/warning_icon.png")
   {
   }
   ~Impl() {}
@@ -110,6 +111,7 @@ public:
   LazyLoadTexture<32> preview_play_texture_;
   LazyLoadTexture<32> preview_pause_texture_;
   LazyLoadTexture<32> preview_spin_texture_;
+  LazyLoadTexture<22> warning_icon_texture_;
 };
 
 
@@ -376,6 +378,10 @@ int Style::GetPaymentFormSpace() const
 {
   return 5;
 }
+std::string Style::u1_warning_font() const
+{
+  return "Ubuntu Bold 11.5";
+}
 
 float Style::GetVideoImageAspectRatio() const
 {
@@ -490,6 +496,11 @@ nux::BaseTexture* Style::GetLockIcon()
 {
   return nux::CreateTexture2DFromFile(
               PKGDATADIR"/lock_icon.png", -1, true);
+}
+
+nux::BaseTexture* Style::GetWarningIcon()
+{
+  return pimpl->warning_icon_texture_.texture();
 }
 
 nux::BaseTexture* Style::GetSearchSpinIcon(int size)
