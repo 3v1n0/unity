@@ -273,7 +273,7 @@ GVariant* DebugDBusInterface::HandleDBusMethodCall(std::string const& method, GV
   }
   else if (method == "GetVersion")
   {
-    return g_variant_new("(s)", "1.2");
+    return g_variant_new("(s)", "1.3");
   }
   else if (method == "StartLogToFile")
   {
