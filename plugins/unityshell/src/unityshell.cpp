@@ -2302,8 +2302,6 @@ bool UnityScreen::initPluginActions()
 
   if (p)
   {
-    MultiActionList expoActions;
-
     for (CompOption& option : p->vTable->getOptions())
     {
       if (option.name() == "close_window_key")
@@ -2624,7 +2622,9 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       {
         draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
 
-        if (!(window->state() & MAXIMIZE_STATE))
+        if (!(window->state() & CompWindowStateMaximizedVertMask) &&
+            !(window->state() & CompWindowStateFullscreenMask) &&
+            !(window->type() & CompWindowTypeFullscreenMask))
         {
           auto const& output = uScreen->screen->currentOutputDev();
 

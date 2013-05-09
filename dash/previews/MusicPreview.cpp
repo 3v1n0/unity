@@ -93,6 +93,31 @@ void MusicPreview::AddProperties(GVariantBuilder* builder)
   Preview::AddProperties(builder);
 }
 
+bool MusicPreview::HasUbuntuOneCredentials()
+{
+  dash::Preview::InfoHintPtrList hints = preview_model_->GetInfoHints();
+  GVariant *preview_data = NULL;
+  for (dash::Preview::InfoHintPtr const& info_hint : hints)
+  {
+    if (info_hint->id == "music_preview")
+    {
+      preview_data = info_hint->value;
+      if (preview_data != NULL)
+      {
+        glib::Variant data(g_variant_lookup_value(preview_data,
+	  "no_credentials_label", G_VARIANT_TYPE_STRING));
+
+        if (!data)
+          no_credentials_message_ = "";
+        else
+          no_credentials_message_ = data.GetString();
+      }
+      break;
+    }
+  }
+  return no_credentials_message_.empty(); 
+}
+
 void MusicPreview::SetupViews()
 {
   dash::MusicPreview* music_preview_model = dynamic_cast<dash::MusicPreview*>(preview_model_.get());
@@ -163,29 +188,60 @@ void MusicPreview::SetupViews()
       // Hints && Actions
       nux::VLayout* hints_layout = NULL;
       nux::Layout* actions_layout = NULL;
-      if (!preview_model_->GetInfoHints().empty())
-      {
-        hints_layout = new nux::VLayout();
-        hints_layout->SetSpaceBetweenChildren(0);
-        hints_layout->AddSpace(0, 1);
-        preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
-        AddChild(preview_info_hints_.GetPointer());
-        preview_info_hints_->request_close().connect([this]() { preview_container_->request_close.emit(); });
-        hints_layout->AddView(preview_info_hints_.GetPointer(), 0);
+      bool has_u1_creds = HasUbuntuOneCredentials();
 
-        // If there are actions, we use a vertical layout
-        action_buttons_.clear();
-        actions_layout = BuildVerticalActionsLayout(preview_model_->GetActions(), action_buttons_);
-        actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
-      }
-      else // otherwise we add a grid layout.
+      if (has_u1_creds)
       {
-        action_buttons_.clear();
-        actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), action_buttons_);
-        if (action_buttons_.size() < 2)
-          hint_actions_layout->AddSpace(0, 1);
-        actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
+        if (!preview_model_->GetInfoHints().empty())
+        {
+          hints_layout = new nux::VLayout();
+          hints_layout->SetSpaceBetweenChildren(0);
+          hints_layout->AddSpace(0, 1);
+          preview_info_hints_ = new PreviewInfoHintWidget(preview_model_, style.GetInfoHintIconSizeWidth());
+          AddChild(preview_info_hints_.GetPointer());
+          preview_info_hints_->request_close().connect([this]() { preview_container_->request_close.emit(); });
+          hints_layout->AddView(preview_info_hints_.GetPointer(), 0);
+
+          // If there are actions, we use a vertical layout
+          action_buttons_.clear();
+          actions_layout = BuildVerticalActionsLayout(preview_model_->GetActions(), action_buttons_);
+          actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
+        }
+        else // otherwise we add a grid layout.
+        {
+          action_buttons_.clear();
+          actions_layout = BuildGridActionsLayout(preview_model_->GetActions(), action_buttons_);
+          if (action_buttons_.size() < 2)
+            hint_actions_layout->AddSpace(0, 1);
+          actions_layout->SetLeftAndRightPadding(0, style.GetDetailsRightMargin());
+        }
       }
+      else
+      {
+        // let the user know he needs to connect
+        previews::Style& style = dash::previews::Style::Instance();
+	actions_layout = new nux::HLayout();
+	nux::VLayout* icon_layout = new nux::VLayout();
+  	icon_layout->SetLeftAndRightPadding(10);
+
+        warning_texture_ = new IconTexture(style.GetWarningIcon());
+        icon_layout->AddView(warning_texture_.GetPointer(), 0, nux::MINOR_POSITION_START,
+          nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
+        actions_layout->AddLayout(icon_layout, 0, nux::MINOR_POSITION_CENTER);
+
+        warning_msg_ = new StaticCairoText(
+                     no_credentials_message_, true,
+                     NUX_TRACKER_LOCATION);
+        warning_msg_->SetFont(style.u1_warning_font().c_str());
+        warning_msg_->SetLines(-2);
+        warning_msg_->SetMinimumHeight(50);
+        warning_msg_->SetMaximumWidth(300);
+
+        actions_layout->AddView(warning_msg_.GetPointer(), 0, nux::MINOR_POSITION_CENTER);
+
+      }
+     
+
         /////////////////////
 
       if (hints_layout) hint_actions_layout->AddView(hints_layout, 1);
