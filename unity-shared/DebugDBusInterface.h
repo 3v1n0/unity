@@ -33,7 +33,6 @@ extern const std::string DBUS_BUS_NAME;
 namespace debug
 {
 class Introspectable;
-std::list<Introspectable*> GetIntrospectableNodesFromQuery(std::string const& query, Introspectable *tree_root);
 
 class DebugDBusInterface
 {
