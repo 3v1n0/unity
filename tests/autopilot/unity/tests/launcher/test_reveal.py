@@ -9,6 +9,7 @@
 
 from __future__ import absolute_import
 
+from autopilot.display import move_mouse_to_screen
 from autopilot.matchers import Eventually
 import logging
 from testtools.matchers import Equals, GreaterThan
@@ -63,7 +64,7 @@ class LauncherRevealTests(LauncherTestCase):
 
     def test_launcher_does_not_reveal_with_mouse_down(self):
         """Launcher must not reveal if have mouse button 1 down."""
-        self.screen_geo.move_mouse_to_monitor(self.launcher_instance.monitor)
+        move_mouse_to_screen(self.launcher_instance.monitor)
         self.mouse.press(1)
         self.addCleanup(self.mouse.release, 1)
         #FIXME: This is really bad API. it says reveal but it's expected to fail. bad bad bad!!
@@ -75,8 +76,8 @@ class LauncherRevealTests(LauncherTestCase):
 
     def test_launcher_stays_open_after_spread(self):
         """Clicking on the launcher to close an active spread must not hide the launcher."""
-        char_win1 = self.start_app_window("Character Map")
-        char_win2 = self.start_app_window("Character Map")
+        char_win1 = self.process_manager.start_app_window("Character Map")
+        char_win2 = self.process_manager.start_app_window("Character Map")
         char_app = char_win1.application
 
         char_icon = self.unity.launcher.model.get_icon(desktop_id=char_app.desktop_file)
@@ -90,7 +91,7 @@ class LauncherRevealTests(LauncherTestCase):
 
     def test_launcher_stays_open_after_icon_click(self):
         """Clicking on a launcher icon must not hide the launcher."""
-        char_win = self.start_app_window("Character Map")
+        char_win = self.process_manager.start_app_window("Character Map")
         char_app = char_win.application
 
         char_icon = self.unity.launcher.model.get_icon(desktop_id=char_app.desktop_file)
@@ -106,10 +107,10 @@ class LauncherRevealTests(LauncherTestCase):
          if self.unity.launcher.model.num_bamf_launcher_icons() >= 10:
              self.skip("There are already more than 9 icons in the launcher")
 
-         desktop_file = self.KNOWN_APPS['Calculator']['desktop-file']
+         desktop_file = self.process_manager.KNOWN_APPS['Calculator']['desktop-file']
          if self.unity.launcher.model.get_icon(desktop_id=desktop_file) != None:
              self.skip("Calculator icon is already on the launcher.")
 
-         self.start_app('Calculator')
+         self.process_manager.start_app('Calculator')
          icon = self.unity.launcher.model.get_icon(desktop_id=desktop_file)
          self.assertThat(icon.shortcut, GreaterThan(0))

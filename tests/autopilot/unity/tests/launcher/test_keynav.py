@@ -51,7 +51,7 @@ class LauncherKeyNavTests(LauncherTestCase):
 
     def test_launcher_keynav_cancel_resume_focus(self):
         """Test that ending the launcher keynav resume the focus."""
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         self.assertTrue(calc.is_active)
 
         self.start_keynav_with_cleanup_cancel()
@@ -127,8 +127,8 @@ class LauncherKeyNavTests(LauncherTestCase):
 
     def test_launcher_keynav_activate_keep_focus(self):
         """Activating a running launcher icon must focus it."""
-        calc = self.start_app("Calculator")
-        mahjongg = self.start_app("Mahjongg")
+        calc = self.process_manager.start_app("Calculator")
+        mahjongg = self.process_manager.start_app("Mahjongg")
         self.assertTrue(mahjongg.is_active)
         self.assertFalse(calc.is_active)
 
@@ -215,7 +215,7 @@ class LauncherKeyNavTests(LauncherTestCase):
 
     def test_launcher_keynav_cancel_on_click_icon(self):
         """A single click on a launcher icon must cancel keynav."""
-        calc_win = self.start_app_window('Calculator', locale = 'C')
+        calc_win = self.process_manager.start_app_window('Calculator', locale = 'C')
         calc_app = calc_win.application
         calc_icon = self.unity.launcher.model.get_icon(desktop_id=calc_app.desktop_file)
 

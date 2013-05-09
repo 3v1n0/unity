@@ -10,7 +10,7 @@
 
 from __future__ import absolute_import
 
-from autopilot.emulators.ibus import (
+from autopilot.ibus import (
     get_active_input_engines,
     set_active_engines,
     get_available_input_engines,
