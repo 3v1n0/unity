@@ -8,6 +8,7 @@
 
 from __future__ import absolute_import
 
+from autopilot.display import move_mouse_to_screen
 from autopilot.matchers import Eventually
 from autopilot.testcase import multiply_scenarios
 import logging
@@ -60,7 +61,7 @@ class SwitcherTestCase(UnityTestCase):
             args = ('Calculator', 'Character Map', 'Character Map')
         windows = []
         for app in args:
-            windows.append(self.start_app_window(app))
+            windows.append(self.process_manager.start_app_window(app))
 
         return windows
 
@@ -77,7 +78,7 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_switcher_starts_in_normal_mode(self):
         """Switcher must start in normal (i.e.- not details) mode."""
-        self.start_app("Character Map")
+        self.process_manager.start_app("Character Map")
 
         self.unity.switcher.initiate()
         self.addCleanup(self.unity.switcher.terminate)
@@ -97,7 +98,7 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_application_window_is_fake_decorated(self):
         """When the switcher is in details mode must not show the focused window title."""
-        window = self.start_app_window("Text Editor")
+        window = self.process_manager.start_app_window("Text Editor")
         self.unity.switcher.initiate()
         self.addCleanup(self.unity.switcher.terminate)
 
@@ -109,7 +110,7 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_application_window_is_fake_decorated_in_detail_mode(self):
         """Starting switcher in details mode must not show the focused window title."""
-        window = self.start_app_window("Text Editor")
+        window = self.process_manager.start_app_window("Text Editor")
         self.unity.switcher.initiate(SwitcherMode.DETAIL)
         self.addCleanup(self.unity.switcher.terminate)
 
@@ -178,7 +179,7 @@ class SwitcherTests(SwitcherTestCase):
         open the switcher.
 
         """
-        self.start_app("Character Map")
+        self.process_manager.start_app("Character Map")
 
         self.keybinding_hold("switcher/reveal_normal")
         self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
@@ -190,7 +191,7 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_switcher_cancel(self):
         """Pressing the switcher cancel keystroke must cancel the switcher."""
-        self.start_app("Character Map")
+        self.process_manager.start_app("Character Map")
 
         self.unity.switcher.initiate()
         self.addCleanup(self.unity.switcher.terminate)
@@ -201,7 +202,7 @@ class SwitcherTests(SwitcherTestCase):
 
     def test_lazy_switcher_cancel(self):
         """Must be able to cancel the switcher after a 'lazy' initiation."""
-        self.start_app("Character Map")
+        self.process_manager.start_app("Character Map")
 
         self.keybinding_hold("switcher/reveal_normal")
         self.addCleanup(self.keybinding_release, "switcher/reveal_normal")
@@ -221,14 +222,14 @@ class SwitcherTests(SwitcherTestCase):
         # TODO - this test fails in multi-monitor setups. You can't use addCleanup
         # a better way would be to have a scenario'd class for multi-monitor
         # switcher tests.
-        num_monitors = self.screen_geo.get_num_monitors()
+        num_monitors = self.display.get_num_screens()
         if num_monitors == 1:
             self.skip("No point testing this on one monitor")
 
         charmap, calc, mahjongg = self.start_applications()
 
         for monitor in range(num_monitors):
-            self.screen_geo.move_mouse_to_monitor(monitor)
+            move_mouse_to_screen(monitor)
             self.unity.switcher.initiate()
             self.addCleanup(self.unity.switcher.terminate)
             self.assertThat(self.unity.switcher.monitor, Eventually(Equals(monitor)))
@@ -236,7 +237,7 @@ class SwitcherTests(SwitcherTestCase):
     def test_switcher_alt_f4_is_disabled(self):
         """Tests that alt+f4 does not work while switcher is active."""
 
-        win = self.start_app_window("Text Editor")
+        win = self.process_manager.start_app_window("Text Editor")
 
         self.unity.switcher.initiate()
         self.addCleanup(self.unity.switcher.terminate)
@@ -333,7 +334,7 @@ class SwitcherDetailsTests(SwitcherTestCase):
             self.skipTest("This test requires enabled more than one workspace.")
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
-        self.start_app_window("Character Map")
+        self.process_manager.start_app_window("Character Map")
         self.workspace.switch_to((initial_workspace + 1) % self.workspace.num_workspaces)
         self.start_applications("Character Map", "Mahjongg")
 
@@ -366,7 +367,7 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
         """Must be able to switch to details mode using selected scenario keycode.
 
         """
-        self.start_app_window("Character Map")
+        self.process_manager.start_app_window("Character Map")
         self.unity.switcher.initiate()
         self.addCleanup(self.unity.switcher.terminate)
 
@@ -379,7 +380,7 @@ class SwitcherDetailsModeTests(SwitcherTestCase):
         must select first item in the model in non-details mode.
 
         """
-        self.start_app("Character Map")
+        self.process_manager.start_app("Character Map")
         self.unity.switcher.initiate()
         self.addCleanup(self.unity.switcher.terminate)
         while self.unity.switcher.selection_index < len(self.unity.switcher.icons) - 1:
@@ -437,9 +438,9 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
 
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         self.workspace.switch_to((initial_workspace + 1) % self.workspace.num_workspaces)
-        char_map = self.start_app("Character Map")
+        char_map = self.process_manager.start_app("Character Map")
 
         self.unity.switcher.initiate()
         self.addCleanup(self.unity.switcher.terminate)
@@ -453,9 +454,9 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         initial_workspace = self.workspace.current_workspace
         self.addCleanup(self.workspace.switch_to, initial_workspace)
 
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         self.workspace.switch_to((initial_workspace + 1) % self.workspace.num_workspaces)
-        char_map = self.start_app("Character Map")
+        char_map = self.process_manager.start_app("Character Map")
 
         self.unity.switcher.initiate(SwitcherMode.ALL)
         self.addCleanup(self.unity.switcher.terminate)
@@ -477,14 +478,14 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         # it harder to write the tests.
         self.set_unity_option("alt_tab_timeout", False)
 
-        self.start_app("Character Map")
+        self.process_manager.start_app("Character Map")
 
         self.workspace.switch_to((initial_workspace + 1) % self.workspace.num_workspaces)
-        char_win2 = self.start_app_window("Character Map")
+        char_win2 = self.process_manager.start_app_window("Character Map")
         self.keybinding("window/minimize")
         self.assertProperty(char_win2, is_hidden=True)
 
-        self.start_app("Calculator")
+        self.process_manager.start_app("Calculator")
 
         self.unity.switcher.initiate()
         while self.unity.switcher.current_icon.tooltip_text != char_win2.application.name:

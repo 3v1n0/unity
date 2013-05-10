@@ -9,8 +9,8 @@
 
 from __future__ import absolute_import
 
+from autopilot.input import Keyboard, Mouse
 
-from autopilot.emulators.input import get_keyboard, get_mouse
 from autopilot.keybindings import KeybindingsHelper
 from testtools.matchers import GreaterThan
 
@@ -28,8 +28,8 @@ class DashController(UnityIntrospectionObject, KeybindingsHelper):
 
     def __init__(self, *args, **kwargs):
         super(DashController, self).__init__(*args, **kwargs)
-        self.keyboard = get_keyboard()
-        self.mouse = get_mouse()
+        self.keyboard = Keyboard.create()
+        self.mouse = Mouse.create()
 
     def get_dash_view(self):
         """Get the dash view that's attached to this controller."""
@@ -91,7 +91,7 @@ class DashController(UnityIntrospectionObject, KeybindingsHelper):
     def preview_animation(self):
         """Returns the average progress of dash slip and animating a preview.
         Between 0.0 and 1.0.
-        
+
         """
         return self.view.preview_animation;
 
@@ -278,36 +278,31 @@ class ResultView(UnityIntrospectionObject):
 class Result(UnityIntrospectionObject):
     """A single result in the dash."""
 
-    def __init__(self, *args, **kwargs):
-        super(Result, self).__init__(*args, **kwargs)
-        self.mouse = get_mouse()
-        self.keyboard = get_keyboard()
-
     def activate(self):
         tx = self.x + (self.width / 2)
         ty = self.y + (self.height / 2)
-        self.mouse.move(tx, ty)
-        self.mouse.click(1)
+        m = Mouse.create()
+        m.move(tx, ty)
+        m.click(1)
 
     def preview(self):
         tx = self.x + (self.width / 2)
         ty = self.y + (self.height / 2)
-        self.mouse.move(tx, ty)
-        self.mouse.click(3)
+        m = Mouse.create()
+        m.move(tx, ty)
+        m.click(3)
 
     def preview_key(self):
         tx = self.x + (self.width / 2)
         ty = self.y + (self.height / 2)
-        self.mouse.move(tx, ty)
+        m = Mouse.create()
+        m.move(tx, ty)
 
-        self.keyboard.press_and_release('Menu')
+        k = Keyboard.create()
+        k.press_and_release('Menu')
 
 class FilterBar(UnityIntrospectionObject):
-    """A filterbar, as shown inside a scope."""
-
-    def __init__(self, *args, **kwargs):
-        super(FilterBar, self).__init__(*args, **kwargs)
-        self.mouse = get_mouse()
+    """A filterbar, as shown inside a lens."""
 
     def get_num_filters(self):
         """Get the number of filters in this filter bar."""
@@ -335,8 +330,9 @@ class FilterBar(UnityIntrospectionObject):
             searchbar = self._get_searchbar()
             tx = searchbar.filter_label_x + (searchbar.filter_label_width / 2)
             ty = searchbar.filter_label_y + (searchbar.filter_label_height / 2)
-            self.mouse.move(tx, ty)
-            self.mouse.click()
+            m = Mouse.create()
+            m.move(tx, ty)
+            m.click()
             self.expanded.wait_for(True)
 
     def ensure_collapsed(self):
@@ -345,8 +341,9 @@ class FilterBar(UnityIntrospectionObject):
             searchbar = self._get_searchbar()
             tx = searchbar.filter_label_x + (searchbar.filter_label_width / 2)
             ty = searchbar.filter_label_y + (searchbar.filter_label_height / 2)
-            self.mouse.move(tx, ty)
-            self.mouse.click()
+            m = Mouse.create()
+            m.move(tx, ty)
+            m.click()
             self.expanded.wait_for(False)
 
     def _get_searchbar(self):
@@ -364,17 +361,14 @@ class FilterBar(UnityIntrospectionObject):
 class FilterExpanderLabel(UnityIntrospectionObject):
     """A label that expands into a filter within a filter bar."""
 
-    def __init__(self, *args, **kwargs):
-        super(FilterExpanderLabel, self).__init__(*args, **kwargs)
-        self.mouse = get_mouse()
-
     def ensure_expanded(self):
         """Expand the filter expander label, if it's not already"""
         if not self.expanded:
             tx = self.x + self.width / 2
             ty = self.y + self.height / 2
-            self.mouse.move(tx, ty)
-            self.mouse.click()
+            m = Mouse.create()
+            m.move(tx, ty)
+            m.click()
             self.expanded.wait_for(True)
 
     def ensure_collapsed(self):
@@ -382,8 +376,9 @@ class FilterExpanderLabel(UnityIntrospectionObject):
         if self.expanded:
             tx = self.x + self.width / 2
             ty = self.y + self.height / 2
-            self.mouse.move(tx, ty)
-            self.mouse.click()
+            m = Mouse.create()
+            m.move(tx, ty)
+            m.click()
             self.expanded.wait_for(False)
 
 
@@ -417,8 +412,9 @@ class Preview(UnityIntrospectionObject):
         if action:
             tx = action.x + (searchbar.width / 2)
             ty = action.y + (searchbar.height / 2)
-            self.mouse.move(tx, ty)
-            self.mouse.click()
+            m = Mouse.create()
+            m.move(tx, ty)
+            m.click()
 
     @property
     def cover_art(self):
@@ -466,10 +462,6 @@ class PreviewContent(UnityIntrospectionObject):
 class PreviewContainer(UnityIntrospectionObject):
     """A container view for the main dash preview widget."""
 
-    def __init__(self, *args, **kwargs):
-        super(PreviewContainer, self).__init__(*args, **kwargs)
-        self.mouse = get_mouse()
-
     @property
     def content(self):
         return self.get_content()
@@ -505,13 +497,14 @@ class PreviewContainer(UnityIntrospectionObject):
 
         tx = navigator.button_x + (navigator.button_width / 2)
         ty = navigator.button_y + (navigator.button_height / 2)
-        self.mouse.move(tx, ty)
+        m = Mouse.create()
+        m.move(tx, ty)
 
         old_preview_initiate_count = self.preview_initiate_count
 
         for i in range(count):
             self.navigate_left_enabled.wait_for(True)
-            self.mouse.click()
+            m.click()
             self.preview_initiate_count.wait_for(GreaterThan(old_preview_initiate_count))
             old_preview_initiate_count = self.preview_initiate_count
 
@@ -521,13 +514,14 @@ class PreviewContainer(UnityIntrospectionObject):
 
         tx = navigator.button_x + (navigator.button_width / 2)
         ty = navigator.button_y + (navigator.button_height / 2)
-        self.mouse.move(tx, ty)
+        m = Mouse.create()
+        m.move(tx, ty)
 
         old_preview_initiate_count = self.preview_initiate_count
 
         for i in range(count):
             self.navigate_right_enabled.wait_for(True)
-            self.mouse.click()
+            m.click()
             self.preview_initiate_count.wait_for(GreaterThan(old_preview_initiate_count))
             old_preview_initiate_count = self.preview_initiate_count
 
