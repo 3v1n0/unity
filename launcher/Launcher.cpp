@@ -94,9 +94,14 @@ const float DRAG_OUT_PIXELS = 300.0f;
 const int SCROLL_AREA_HEIGHT = 24;
 const int SCROLL_FPS = 30;
 
+const int BASE_URGENT_WIGGLE_PERIOD = 60; // In seconds
+const int MAX_URGENT_WIGGLE_DURATION = 1920; // In seconds (32 minutes)
+const int DOUBLE_TIME = 2;
+
 const std::string START_DRAGICON_TIMEOUT = "start-dragicon-timeout";
 const std::string SCROLL_TIMEOUT = "scroll-timeout";
 const std::string ANIMATION_IDLE = "animation-idle";
+const std::string URGENT_TIMEOUT = "urgent-timeout";
 }
 
 
@@ -143,6 +148,7 @@ Launcher::Launcher(MockableBaseWindow* parent,
   , _launcher_drag_delta_min(0)
   , _enter_y(0)
   , _last_button_press(0)
+  , _urgent_wiggle_time(BASE_URGENT_WIGGLE_PERIOD)
   , _drag_out_delta_x(0.0f)
   , _drag_gesture_ongoing(false)
   , _last_reveal_progress(0.0f)
@@ -191,6 +197,9 @@ Launcher::Launcher(MockableBaseWindow* parent,
     _times[i].tv_sec = 0;
     _times[i].tv_nsec = 0;
   }
+
+  _urgent_finished_time.tv_sec = 0;
+  _urgent_finished_time.tv_nsec = 0;
 
   ubus_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &Launcher::OnOverlayShown));
   ubus_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &Launcher::OnOverlayHidden));
@@ -1131,6 +1140,48 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   {
     RenderArg arg;
     AbstractLauncherIcon::Ptr const& icon = *it;
+
+    // See if any icons are urgent in order to handle incremental wiggle notification if the Launcher
+    // is hidden.
+    if (icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT))
+    {
+      struct timespec urgent_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::URGENT);
+      DeltaTime urgent_delta = unity::TimeUtil::TimeDelta(&_urgent_finished_time, &urgent_time);
+
+      // If the Launcher is hidden, then add a timer to wiggle the urgent icons at 
+      // certain intervals (1m, 2m, 4m, 8m, 16m, & 32m).
+      if (_hidden && urgent_delta < 0)
+      {
+        sources_.AddTimeoutSeconds(_urgent_wiggle_time, sigc::mem_fun(this, &Launcher::OnUrgentTimeout), URGENT_TIMEOUT);
+      }
+      // If the Launcher is no longer hidden, then after the Launcher is fully reveled, wiggle the 
+      // urgent icons and then stop the timer.
+      else if (!_hidden && options()->hide_mode == LAUNCHER_HIDE_AUTOHIDE && urgent_delta < 0)
+      {
+        if (_last_reveal_progress > 0)
+        {
+          _urgent_acked = false;
+        }
+        else
+        {
+          if (!_urgent_acked && IconUrgentProgress(icon, current) == 1.0f)
+          {
+            icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, false);
+            icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
+          }
+          else if (IconUrgentProgress(icon, current) < 1.0f)
+          {
+            _urgent_acked = true;
+          } 
+          else
+          {
+            sources_.Remove(URGENT_TIMEOUT);
+            _urgent_wiggle_time = BASE_URGENT_WIGGLE_PERIOD;
+            _urgent_finished_time = current;
+          }
+        }
+      }
+    }
     FillRenderArg(icon, arg, center, parent_abs_geo, folding_threshold, folded_size, folded_spacing,
                   autohide_offset, folded_z_distance, animation_neg_rads, current);
     arg.colorify = colorify;
@@ -1562,6 +1613,37 @@ void Launcher::EnsureScrollTimer()
   {
     sources_.Remove(SCROLL_TIMEOUT);
   }
+}
+
+bool Launcher::OnUrgentTimeout ()
+{
+  bool foundUrgent = false,
+       continue_urgent = true;
+  LauncherModel::iterator it;
+
+  // Look for any icons that are still urgent and wiggle them
+  for (it = _model->main_begin(); it != _model->main_end(); ++it)
+  {
+    LauncherIcon::Ptr const& icon = *it;
+    if (icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT) && 
+        options()->urgent_animation() == URGENT_ANIMATION_WIGGLE &&
+        _hidden)
+    {
+      icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, false);
+      icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
+
+      foundUrgent = true;
+    }
+  }
+  _urgent_wiggle_time = _urgent_wiggle_time * DOUBLE_TIME;
+
+  if (!foundUrgent || (_urgent_wiggle_time > MAX_URGENT_WIGGLE_DURATION))
+  {
+    continue_urgent = false;
+    _urgent_wiggle_time = BASE_URGENT_WIGGLE_PERIOD;
+    sources_.Remove(URGENT_TIMEOUT);
+  }
+  return continue_urgent;
 }
 
 void Launcher::SetIconSize(int tile_size, int icon_size)

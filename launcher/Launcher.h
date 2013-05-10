@@ -223,6 +223,8 @@ private:
   bool StartIconDragTimeout(int x, int y);
   bool OnScrollTimeout();
 
+  bool OnUrgentTimeout();
+
   void SetMousePosition(int x, int y);
   void SetIconUnderMouse(AbstractLauncherIcon::Ptr const& icon);
 
@@ -380,6 +382,8 @@ private:
   int _enter_y;
   int _last_button_press;
   int _drag_icon_position;
+  int _urgent_wiggle_time;
+  bool _urgent_acked;
   float _drag_out_delta_x;
   bool _drag_gesture_ongoing;
   float _last_reveal_progress;
@@ -396,6 +400,7 @@ private:
   Atom _selection_atom;
 
   struct timespec  _times[TIME_LAST];
+  struct timespec _urgent_finished_time;
 
   BaseTexturePtr launcher_sheen_;
   BaseTexturePtr launcher_pressure_effect_;
