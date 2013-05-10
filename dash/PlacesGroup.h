@@ -76,8 +76,8 @@ public:
 
   void SetCounts(unsigned n_total_items);
 
-  void SetExpanded(bool is_expanded);
-  bool GetExpanded() const;
+  virtual void SetExpanded(bool is_expanded);
+  virtual bool GetExpanded() const;
 
   void PushExpanded();
   void PopExpanded();
@@ -91,6 +91,9 @@ public:
   void SetFiltersExpanded(bool filters_expanded);
 
   sigc::signal<void, PlacesGroup*> expanded;
+
+  glib::Variant GetCurrentFocus() const;
+  void SetCurrentFocus(glib::Variant const& variant);
 
 protected:
   long ComputeContentSize();

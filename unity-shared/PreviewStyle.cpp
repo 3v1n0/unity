@@ -111,7 +111,7 @@ public:
   LazyLoadTexture<32> preview_play_texture_;
   LazyLoadTexture<32> preview_pause_texture_;
   LazyLoadTexture<32> preview_spin_texture_;
-  LazyLoadTexture<20> warning_icon_texture_;
+  LazyLoadTexture<22> warning_icon_texture_;
 };
 
 

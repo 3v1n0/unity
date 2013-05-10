@@ -1,3 +1,55 @@
+unity (7.0.0daily13.05.08ubuntu.unity.experimental.certified-0ubuntu1) raring; urgency=low
+
+  [ Nick Dedekind ]
+  * Keyboard focus lost if trying to navigate while search is ongoing
+    (LP: #1170709)
+  * Occasional loss of focus in the input text field (LP: #1174488)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3137 (ubuntu-unity/experimental-
+    certified)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 08 May 2013 07:03:04 +0000
+
+unity (7.0.0daily13.05.07ubuntu.unity.experimental.certified-0ubuntu1) raring; urgency=low
+
+  [ Andrea Azzarone ]
+  * Search Plugins previews in the apps lens should not display any
+    ‘review stars’ (LP: #1170715)
+  * [alt-tab] Disable detail view for webapp icons. (LP: #1169340)
+  * 'There is no content...' message is missing if there no results when
+    opening some lenses (LP: #1170728)
+
+  [ Nick Dedekind ]
+  * Nautilus incorrectly highlighted as valid target DND target for lots
+    of results (LP: #1170721)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3134 (ubuntu-unity/experimental-
+    certified)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 07 May 2013 07:04:19 +0000
+
+unity (7.0.0daily13.05.01.1ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  [ Sebastien Bacher ]
+  * Some untranslatable and wrong strings in the previews (LP: #1074038)
+
+  [ Andrea Azzarone ]
+  * [alt-tab] Disable detail view for webapp icons. (LP: #1169340)
+
+  [ Marco Trevisan (Treviño) ]
+  * Launcher - count label pops out in auto-hide mode (LP: #1171476)
+  * Panel shadow is drawn above full-screen windows when notifications
+    are shown (LP: #1171934)
+  * [regression] Icon count is not shown if the icon is not transformed
+    (LP: #1171663)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3315 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 01 May 2013 21:59:17 +0000
+
 unity (7.0.0daily13.04.23ubuntu.unity.experimental.certified-0ubuntu1) raring; urgency=low
 
   [ Michal Hruby ]
@@ -48,6 +100,32 @@ unity (7.0.0daily13.04.23ubuntu.unity.experimental.certified-0ubuntu1) raring; u
     certified)
 
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 23 Apr 2013 07:05:10 +0000
+
+unity (7.0.0daily13.04.18~13.04-0ubuntu1) raring; urgency=low
+
+  [ Manuel de la Pena ]
+  * Purchased songs won't download when not logged to U1 (LP: #1168674)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3309
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 18 Apr 2013 05:43:34 +0000
+
+unity (7.0.0daily13.04.17~13.04-0ubuntu1) raring; urgency=low
+
+  [ Marco Trevisan (Treviño) ]
+  * Top Bar, window managment - top bar shadow not falling on restored
+    windows that are partially off the top edge of the screen (LP:
+    #871758)
+
+  [ Matthieu James ]
+  * [UIFe] BFB icon swirl should run clockwise not anti-clockwise (LP:
+    #1169238)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3305
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 17 Apr 2013 04:07:04 +0000
 
 unity (7.0.0daily13.04.10ubuntu.unity.experimental.certified-0ubuntu1) raring; urgency=low
 

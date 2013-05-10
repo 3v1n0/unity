@@ -29,6 +29,8 @@
 
 #include <unity-protocol.h>
 
+#include "MockResults.h"
+
 namespace unity
 {
 namespace dash
@@ -44,8 +46,9 @@ const gchar* SCOPES_SETTINGS_KEY = "scopes";
 class MockScopeProxy : public ScopeProxyInterface
 {
 public:
-  MockScopeProxy(std::string const& _name, std::string const& _icon_hint)
-  : connected_(true)
+  MockScopeProxy(std::string const& _name, std::string const& _icon_hint, unsigned count_results)
+    : connected_(true)
+    , results_(std::make_shared<MockResults>(count_results))
   {
     connected.SetGetterFunction([this] () { return connected_; });
     name.SetGetterFunction([_name] () { return _name; });
@@ -96,12 +99,13 @@ public:
 
   virtual Results::Ptr GetResultsForCategory(unsigned category) const
   {
-    return Results::Ptr();
+    return results_;
   }
 
 protected:
   glib::SourceManager source_manager;
   bool connected_;
+  MockResults::Ptr results_;
 };
 
 class MockScopeData : public ScopeData
@@ -124,12 +128,13 @@ public:
 
   MockScope(ScopeData::Ptr const& scope_data,
             std::string const& name = "",
-            std::string const& icon_hint = "")
+            std::string const& icon_hint = "",
+            unsigned result_count = 0)
   : Scope(scope_data)
   {
-    proxy_func = [name, icon_hint]()
+    proxy_func = [name, icon_hint, result_count]()
     {
-      return ScopeProxyInterface::Ptr(new MockScopeProxy(name, icon_hint));
+      return ScopeProxyInterface::Ptr(new MockScopeProxy(name, icon_hint, result_count));
     };
     
     Init();
