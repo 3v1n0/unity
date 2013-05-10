@@ -56,6 +56,8 @@ protected:
 
   virtual void OnNavigateOut();
 
+  bool HasUbuntuOneCredentials();
+
 protected:
   nux::ObjectPtr<Tracks> tracks_;
   nux::ObjectPtr<StaticCairoText> warning_msg_;
