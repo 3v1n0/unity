@@ -163,13 +163,15 @@ void MoviePreview::SetupViews()
       }
       /////////////////////
       
-      rating_ = new PreviewRatingsWidget();
-      AddChild(rating_.GetPointer());
-      rating_->SetMaximumHeight(style.GetRatingWidgetHeight());
-      rating_->SetMinimumHeight(style.GetRatingWidgetHeight());
-      rating_->SetRating(movie_preview_model->rating);
-      rating_->SetReviews(movie_preview_model->num_ratings);
-      rating_->request_close().connect([this]() { preview_container_->request_close.emit(); });
+      if (movie_preview_model->rating >= 0) {
+        rating_ = new PreviewRatingsWidget();
+        AddChild(rating_.GetPointer());
+        rating_->SetMaximumHeight(style.GetRatingWidgetHeight());
+        rating_->SetMinimumHeight(style.GetRatingWidgetHeight());
+        rating_->SetRating(movie_preview_model->rating);
+        rating_->SetReviews(movie_preview_model->num_ratings);
+        rating_->request_close().connect([this]() { preview_container_->request_close.emit(); });
+      }
 
       /////////////////////
       // Description
@@ -210,7 +212,8 @@ void MoviePreview::SetupViews()
       ///////////////////
 
     full_data_layout_->AddLayout(app_data_layout, 0);
-    full_data_layout_->AddView(rating_.GetPointer(), 0);
+    if (rating_ != NULL)
+      full_data_layout_->AddView(rating_.GetPointer(), 0);
     full_data_layout_->AddView(preview_info, 1);
     full_data_layout_->AddView(actions_layout, 0);
     /////////////////////
