@@ -190,7 +190,7 @@ bool DashView::IsCommandLensOpen() const
 }
 
 
-void DashView::OnResultActivated(ResultView::ActivateType type, LocalResult const& local_result, GVariant* data, std::string const& unique_id) 
+void DashView::OnResultActivated(ResultView::ActivateType type, LocalResult const& local_result, GVariant* data, std::string const& unique_id)
 {
   last_activated_result_ = local_result;
   stored_activated_unique_id_ = unique_id;
@@ -226,7 +226,7 @@ void DashView::OnResultActivated(ResultView::ActivateType type, LocalResult cons
 void DashView::BuildPreview(Preview::Ptr model)
 {
   if (!preview_displaying_)
-  {     
+  {
     StartPreviewAnimation();
 
     content_view_->SetPresentRedirectedView(false);
@@ -369,7 +369,7 @@ void DashView::StartPreviewAnimation()
   });
 
   split_animation_->finished.connect(sigc::mem_fun(this, &DashView::OnPreviewAnimationFinished));
-  split_animation_->Start(); 
+  split_animation_->Start();
 }
 
 void DashView::EndPreviewAnimation()
@@ -474,12 +474,12 @@ void DashView::AboutToShow()
 
   /* Give the scopes a chance to prep data before we map them  */
   if (active_scope_view_)
-  { 
+  {
     scope_bar_->Activate(active_scope_view_->scope()->id());
 
     active_scope_view_->SetVisible(true);
     active_scope_view_->scope()->view_type = ScopeViewType::SCOPE_VIEW;
-    
+
     // this will make sure the spinner animates if the search takes a while
     search_bar_->ForceLiveSearch();
   }
@@ -704,7 +704,7 @@ void DashView::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
     graphics_engine.PushClippingRectangle(geo_split_clip);
 
     if (preview_scope_view_.IsValid())
-    {    
+    {
       DrawPreviewResultTextures(graphics_engine, force_draw);
     }
 
@@ -923,7 +923,7 @@ void DashView::DrawPreviewResultTextures(nux::GraphicsEngine& graphics_engine, b
 
   std::vector<ResultViewTexture::Ptr> result_textures = preview_scope_view_->GetResultTextureContainers();
   std::vector<ResultViewTexture::Ptr> top_textures;
-  
+
   int height_concat_below = 0;
 
   // int i = 0;
@@ -1063,12 +1063,12 @@ void DashView::DrawPreview(nux::GraphicsEngine& graphics_engine, bool force_draw
       }
 
       preview_container_->SetPresentRedirectedView(true);
-  
+
       graphics_engine.GetRenderStates().SetBlend(alpha, src, dest);
     }
     else
     {
-      preview_container_->ProcessDraw(graphics_engine, preview_force_draw);        
+      preview_container_->ProcessDraw(graphics_engine, preview_force_draw);
     }
 
     if (preview_force_draw)
@@ -1109,10 +1109,10 @@ void DashView::OnActivateRequest(GVariant* args)
   if (visible_ && handled_type == ScopeHandledType::NOT_HANDLED)
   {
     ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST, NULL,
-                              glib::Source::Priority::HIGH);    
+                              glib::Source::Priority::HIGH);
   }
   else if (!visible_ || handled_type == ScopeHandledType::GOTO_DASH_URI)
-  {    
+  {
     if (!scopes_->GetScope(id))
     {
       // should trigger the addition of the scope.
@@ -1210,7 +1210,8 @@ void DashView::OnScopeSearchFinished(std::string const& scope_id, std::string co
 
     search_bar_->SetSearchFinished();
     search_in_progress_ = false;
-    
+
+    activate_timeout_.reset();
     if (activate_on_finish_ && !err)
       OnEntryActivated();
     activate_on_finish_= false;
@@ -1350,6 +1351,12 @@ void DashView::OnEntryActivated()
   }
   // delay the activation until we get the SearchFinished signal
   activate_on_finish_ = search_in_progress_;
+
+  activate_timeout_.reset(new glib::Timeout(1000, [this] {
+    activate_on_finish_ = false;
+    active_scope_view_->ActivateFirst();
+    return FALSE;
+  }));
 }
 
 // Keyboard navigation
