@@ -57,6 +57,8 @@ const int DASH_RESULT_RIGHT_PAD = 35;
 const int GROUP_HEADING_HEIGHT = 24;
 
 const int PREVIEW_ICON_SPLIT_OFFSCREEN_OFFSET = 10;
+
+const int MAX_ENTRY_ACTIVATE_WAIT_TIMEOUT = 1000;
 }
 
 // This is so we can access some protected members in nux::VLayout and
@@ -1352,7 +1354,7 @@ void DashView::OnEntryActivated()
   // delay the activation until we get the SearchFinished signal
   activate_on_finish_ = search_in_progress_;
 
-  activate_timeout_.reset(new glib::Timeout(1000, [this] {
+  activate_timeout_.reset(new glib::Timeout(MAX_ENTRY_ACTIVATE_WAIT_TIMEOUT, [this] {
     activate_on_finish_ = false;
     active_scope_view_->ActivateFirst();
     return FALSE;
