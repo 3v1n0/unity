@@ -63,9 +63,7 @@ class TestPreviewMovie : public Test
 {
 public:
   TestPreviewMovie()
-  : parent_window_(new nux::BaseWindow("TestPreviewMovie"))
-  {
-  }
+  : parent_window_(new nux::BaseWindow("TestPreviewMovie")) {}
 
   void create_preview_model(double rating)
   {
