@@ -14,6 +14,8 @@ from time import sleep
 from autopilot.introspection.dbus import DBusIntrospectionObject
 from autopilot.introspection.backends import DBusAddress
 
+from dbus import DBusException
+
 
 class UnityIntrospectionObject(DBusIntrospectionObject):
 
@@ -39,6 +41,6 @@ def ensure_unity_is_running(timeout=300):
         try:
             UnityIntrospectionObject.get_state_by_path("/")
             return True
-        except:
+        except DBusException:
             sleep(sleep_period)
     raise RuntimeError("Unity debug interface is down after %d seconds of polling." % (timeout))
