@@ -165,6 +165,15 @@ Architecture: all
 Depends: ${misc:Depends},
          ${python:Depends},
          python-windowmocker,
+         gir1.2-appindicator3-0.1,
+         gir1.2-dee-1.0,
+         gir1.2-glib-2.0,
+         gir1.2-ibus-1.0,
+         gir1.2-unity-5.0,
+         python-dbus,
+         python-testtools,
+         python-xdg,
+         python-xlib,
 Description: Autopiloted tests for Unity
  We test Unity automatically through autopilot, a framework which enables us
  to trigger keyboard and mouse events on the fly as well as introspecting
