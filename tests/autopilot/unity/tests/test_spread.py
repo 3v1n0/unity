@@ -20,11 +20,11 @@ class SpreadTests(UnityTestCase):
 
     def start_test_application_windows(self, app_name, num_windows=2):
         """Start a given number of windows of the requested application"""
-        self.close_all_app(app_name)
+        self.process_manager.close_all_app(app_name)
         windows = []
 
         for i in range(num_windows):
-            win = self.start_app_window(app_name)
+            win = self.process_manager.start_app_window(app_name)
             if windows:
                 self.assertThat(win.application, Equals(windows[-1].application))
 
@@ -44,7 +44,7 @@ class SpreadTests(UnityTestCase):
         """Initiate the Spread for windows of the given app"""
         icon = self.unity.launcher.model.get_icon(desktop_id=desktop_id)
         self.assertThat(icon, NotEquals(None))
-        launcher = self.unity.launcher.get_launcher_for_monitor(self.screen_geo.get_primary_monitor())
+        launcher = self.unity.launcher.get_launcher_for_monitor(self.display.get_primary_screen())
 
         self.addCleanup(self.keybinding, "spread/cancel")
         launcher.click_launcher_icon(icon)
@@ -57,7 +57,7 @@ class SpreadTests(UnityTestCase):
 
     def assertWindowIsClosed(self, xid):
         """Assert that a window is not in the list of the open windows"""
-        refresh_fn = lambda: xid in [w.x_id for w in self.bamf.get_open_windows()]
+        refresh_fn = lambda: xid in [w.x_id for w in self.process_manager.get_open_windows()]
         self.assertThat(refresh_fn, Eventually(Equals(False)))
 
     def test_scale_application_windows(self):
