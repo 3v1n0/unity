@@ -127,7 +127,7 @@ nux::Layout* ErrorPreview::GetTitle()
   title_->SetFont(style.payment_title_font());
   title_->SetLines(-1);
   title_->SetFont(style.title_font());
-  title_->SetMaximumWidth(500);
+  title_->SetMaximumWidth(480);
   title_->SetTextEllipsize(StaticCairoText::EllipsizeState::NUX_ELLIPSIZE_END);
   title_data_layout->AddView(title_.GetPointer(), 1);
 
@@ -225,7 +225,6 @@ nux::Layout* ErrorPreview::GetFooter()
     buttons_data_layout->AddView(buttons_map_[ErrorPreview::GO_TO_U1_ACTION].GetPointer(),
             1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
             nux::NUX_LAYOUT_END);
-
   return buttons_data_layout;
 }
 
