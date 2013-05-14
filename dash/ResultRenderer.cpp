@@ -94,7 +94,7 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
 
   if (gtk_icon_info_get_filename(info) == NULL)
   {
-      gtk_icon_info_free(info);
+      g_object_unref(G_OBJECT(info));
       info = gtk_icon_theme_lookup_icon(theme,
                                         "application-default-icon",
                                         size,
@@ -109,7 +109,7 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
     pbuf = NULL;
   }
 
-  gtk_icon_info_free(info);
+  g_object_unref(G_OBJECT(info));
   return pbuf;
 }
 
