@@ -384,6 +384,8 @@ private:
   int _drag_icon_position;
   int _urgent_wiggle_time;
   bool _urgent_acked;
+  bool _urgent_timer_running;
+  bool _urgent_ack_needed;
   float _drag_out_delta_x;
   bool _drag_gesture_ongoing;
   float _last_reveal_progress;

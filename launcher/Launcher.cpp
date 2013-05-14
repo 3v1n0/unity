@@ -95,7 +95,7 @@ const int SCROLL_AREA_HEIGHT = 24;
 const int SCROLL_FPS = 30;
 
 const int BASE_URGENT_WIGGLE_PERIOD = 60; // In seconds
-const int MAX_URGENT_WIGGLE_DURATION = 1920; // In seconds (32 minutes)
+const int MAX_URGENT_WIGGLE_DELTA = 960;  // In seconds
 const int DOUBLE_TIME = 2;
 
 const std::string START_DRAGICON_TIMEOUT = "start-dragicon-timeout";
@@ -148,7 +148,9 @@ Launcher::Launcher(MockableBaseWindow* parent,
   , _launcher_drag_delta_min(0)
   , _enter_y(0)
   , _last_button_press(0)
-  , _urgent_wiggle_time(BASE_URGENT_WIGGLE_PERIOD)
+  , _urgent_wiggle_time(0)
+  , _urgent_timer_running(false)
+  , _urgent_ack_needed(false)
   , _drag_out_delta_x(0.0f)
   , _drag_gesture_ongoing(false)
   , _last_reveal_progress(0.0f)
@@ -1146,17 +1148,27 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
     if (icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT))
     {
       struct timespec urgent_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::URGENT);
-      DeltaTime urgent_delta = unity::TimeUtil::TimeDelta(&_urgent_finished_time, &urgent_time);
+      DeltaTime urgent_delta = unity::TimeUtil::TimeDelta(&urgent_time, &_urgent_finished_time);
 
       // If the Launcher is hidden, then add a timer to wiggle the urgent icons at 
       // certain intervals (1m, 2m, 4m, 8m, 16m, & 32m).
-      if (_hidden && urgent_delta < 0)
+      if (_hidden && !_urgent_timer_running && urgent_delta > 0)
       {
-        sources_.AddTimeoutSeconds(_urgent_wiggle_time, sigc::mem_fun(this, &Launcher::OnUrgentTimeout), URGENT_TIMEOUT);
+        _urgent_timer_running = true;
+        _urgent_ack_needed = true;
+        sources_.AddTimeoutSeconds(BASE_URGENT_WIGGLE_PERIOD, sigc::mem_fun(this, &Launcher::OnUrgentTimeout), URGENT_TIMEOUT);
+      }
+      // If the Launcher is hidden, the timer is running, an urgent icon is newer than the last time
+      // icons were wiggled, and the timer did not just start, then reset the timer since a new
+      // urgent icon just showed up.
+      else if (_hidden && _urgent_timer_running && urgent_delta > 0 && _urgent_wiggle_time != 0)
+      {
+        _urgent_wiggle_time = 0;
+        sources_.AddTimeoutSeconds(BASE_URGENT_WIGGLE_PERIOD, sigc::mem_fun(this, &Launcher::OnUrgentTimeout), URGENT_TIMEOUT);
       }
       // If the Launcher is no longer hidden, then after the Launcher is fully reveled, wiggle the 
-      // urgent icons and then stop the timer.
-      else if (!_hidden && options()->hide_mode == LAUNCHER_HIDE_AUTOHIDE && urgent_delta < 0)
+      // urgent icons and then stop the timer (if it's running).
+      else if (!_hidden && options()->hide_mode == LAUNCHER_HIDE_AUTOHIDE && _urgent_ack_needed)
       {
         if (_last_reveal_progress > 0)
         {
@@ -1168,17 +1180,18 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
           {
             icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, false);
             icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
+            clock_gettime(CLOCK_MONOTONIC, &_urgent_finished_time);
           }
           else if (IconUrgentProgress(icon, current) < 1.0f)
           {
+            if (_urgent_timer_running)
+            {
+              sources_.Remove(URGENT_TIMEOUT);
+              _urgent_timer_running = false;
+            }
             _urgent_acked = true;
+            _urgent_ack_needed = false;
           } 
-          else
-          {
-            sources_.Remove(URGENT_TIMEOUT);
-            _urgent_wiggle_time = BASE_URGENT_WIGGLE_PERIOD;
-            _urgent_finished_time = current;
-          }
         }
       }
     }
@@ -1633,15 +1646,31 @@ bool Launcher::OnUrgentTimeout ()
       icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
 
       foundUrgent = true;
+      clock_gettime(CLOCK_MONOTONIC, &_urgent_finished_time);
     }
   }
-  _urgent_wiggle_time = _urgent_wiggle_time * DOUBLE_TIME;
+  // Update the time for when the next wiggle will occur.
+  if (_urgent_wiggle_time == 0)
+  {
+    _urgent_wiggle_time = BASE_URGENT_WIGGLE_PERIOD;
+  }
+  else
+  {
+    _urgent_wiggle_time = _urgent_wiggle_time * DOUBLE_TIME;
+  }
 
-  if (!foundUrgent || (_urgent_wiggle_time > MAX_URGENT_WIGGLE_DURATION))
+  // If no urgent icons were found or we have reached the time threshold,
+  // then let's stop the timer.  Otherwise, start a new timer with the
+  // updated wiggle time.
+  if (!foundUrgent || (_urgent_wiggle_time > MAX_URGENT_WIGGLE_DELTA))
   {
     continue_urgent = false;
-    _urgent_wiggle_time = BASE_URGENT_WIGGLE_PERIOD;
+    _urgent_timer_running = false;
     sources_.Remove(URGENT_TIMEOUT);
+  }
+  else
+  {
+    sources_.AddTimeoutSeconds(_urgent_wiggle_time, sigc::mem_fun(this, &Launcher::OnUrgentTimeout), URGENT_TIMEOUT);
   }
   return continue_urgent;
 }
