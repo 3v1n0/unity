@@ -127,6 +127,8 @@ nux::Layout* ErrorPreview::GetTitle()
   title_->SetFont(style.payment_title_font());
   title_->SetLines(-1);
   title_->SetFont(style.title_font());
+  title_->SetMaximumWidth(500);
+  title_->SetTextEllipsize(StaticCairoText::EllipsizeState::NUX_ELLIPSIZE_END);
   title_data_layout->AddView(title_.GetPointer(), 1);
 
   subtitle_ = new StaticCairoText(
