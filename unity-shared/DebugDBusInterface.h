@@ -38,6 +38,7 @@ class DebugDBusInterface
 {
 public:
   DebugDBusInterface(Introspectable* introspectable);
+  ~DebugDBusInterface();
 
 private:
   static GVariant* HandleDBusMethodCall(std::string const&, GVariant*);

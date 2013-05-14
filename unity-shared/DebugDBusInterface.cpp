@@ -46,6 +46,7 @@ namespace
 namespace local
 {
   std::ofstream output_file;
+  void* xpathselect_driver_ = NULL;
 
   class IntrospectableAdapter: public xpathselect::Node
   {
@@ -194,6 +195,44 @@ namespace local
   private:
     std::string full_path_;
   };
+
+  xpathselect::NodeList select_nodes(local::IntrospectableAdapter::Ptr root,
+                                     std::string const& query)
+  {
+    if (xpathselect_driver_ == NULL)
+      xpathselect_driver_ = dlopen("libxpathselect.so.1.3", RTLD_LAZY);
+
+    if (xpathselect_driver_)
+    {
+      typedef decltype(&xpathselect::SelectNodes) entry_t;
+      dlerror();
+      entry_t entry_point = (entry_t) dlsym(xpathselect_driver_, "SelectNodes");
+      const char* err = dlerror();
+      if (err)
+      {
+        LOG_ERROR(logger) << "Unable to load entry point in libxpathselect: " << err;
+      }
+      else
+      {
+        return entry_point(root, query);
+      }
+    }
+    else
+    {
+      LOG_WARNING(logger) << "Cannot complete introspection request because libxpathselect is not installed.";
+    }
+
+    // Fallen through here as we've hit an error
+    return xpathselect::NodeList();
+  }
+
+  // This needs to be called at destruction to cleanup the dlopen
+  void cleanup_xpathselect()
+  {
+    if (xpathselect_driver_)
+      dlclose(xpathselect_driver_);
+  }
+
 }
 }
 
@@ -262,6 +301,11 @@ DebugDBusInterface::DebugDBusInterface(Introspectable* parent)
     obj->SetMethodsCallsHandler(&DebugDBusInterface::HandleDBusMethodCall);
 }
 
+DebugDBusInterface::~DebugDBusInterface()
+{
+  local::cleanup_xpathselect();
+}
+
 GVariant* DebugDBusInterface::HandleDBusMethodCall(std::string const& method, GVariant* parameters)
 {
   if (method == "GetState")
@@ -311,35 +355,13 @@ GVariant* GetState(std::string const& query)
   GVariantBuilder  builder;
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a(sv)"));
 
-  // try load the xpathselect library:
-  void* driver = dlopen("libxpathselect.so", RTLD_LAZY);
-  if (driver)
+  local::IntrospectableAdapter::Ptr root_node = std::make_shared<local::IntrospectableAdapter>(_parent_introspectable, std::string());
+  auto nodes = local::select_nodes(root_node, query);
+  for (auto n : nodes)
   {
-    typedef decltype(&xpathselect::SelectNodes) entry_t;
-    // clear errors:
-    dlerror();
-    entry_t entry_point = (entry_t) dlsym(driver, "SelectNodes");
-    const char* err = dlerror();
-    if (err)
-    {
-      LOG_ERROR(logger) << "Unable to load entry point in libxpathselect: " << err;
-    }
-    else
-    {
-      // process the XPath query:
-      local::IntrospectableAdapter::Ptr root_node = std::make_shared<local::IntrospectableAdapter>(_parent_introspectable, std::string());
-      auto nodes = entry_point(root_node, query);
-      for (auto n : nodes)
-      {
-        auto p = std::static_pointer_cast<local::IntrospectableAdapter>(n);
-        if (p)
-          g_variant_builder_add(&builder, "(sv)", p->GetPath().c_str(), p->node_->Introspect());
-      }
-    }
-  }
-  else
-  {
-    LOG_WARNING(logger) << "Cannot complete introspection request because libxpathselect is not installed.";
+    auto p = std::static_pointer_cast<local::IntrospectableAdapter>(n);
+    if (p)
+      g_variant_builder_add(&builder, "(sv)", p->GetPath().c_str(), p->node_->Introspect());
   }
 
   return g_variant_new("(a(sv))", &builder);
