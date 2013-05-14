@@ -350,7 +350,7 @@ private:
       return NULL;
 
     pbuf = gtk_icon_info_load_icon(info, &error);
-    gtk_icon_info_free(info);
+    g_object_unref(G_OBJECT(info));
 
     if (GDK_IS_PIXBUF(pbuf))
     {
