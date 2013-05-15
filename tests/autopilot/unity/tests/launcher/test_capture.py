@@ -9,7 +9,6 @@
 
 from __future__ import absolute_import
 
-from autopilot.emulators.X11 import ScreenGeometry
 from autopilot.matchers import Eventually
 import logging
 from testtools.matchers import Equals, LessThan, GreaterThan
@@ -23,12 +22,10 @@ logger = logging.getLogger(__name__)
 class LauncherCaptureTests(UnityTestCase):
     """Test the launchers ability to capture/not capture the mouse."""
 
-    screen_geo = ScreenGeometry()
-
     def setUp(self):
         super(LauncherCaptureTests, self).setUp()
 
-        if self.screen_geo.get_num_monitors() <= 1:
+        if self.display.get_num_screens() <= 1:
             self.skipTest("This test requires two or more monitors.")
 
         self.set_unity_option('launcher_capture_mouse', True)
@@ -41,8 +38,8 @@ class LauncherCaptureTests(UnityTestCase):
         self.assertThat(launcher.hidemode, Eventually(Equals(mode)))
 
     def leftMostMonitor(self):
-        x1, y1, width, height = self.screen_geo.get_monitor_geometry(0)
-        x2, y2, width, height = self.screen_geo.get_monitor_geometry(1)
+        x1, y1, width, height = self.display.get_screen_geometry(0)
+        x2, y2, width, height = self.display.get_screen_geometry(1)
 
         if x1 < x2:
             return 0
@@ -57,7 +54,7 @@ class LauncherCaptureTests(UnityTestCase):
         """Tests that the launcher captures the mouse when moving between monitors
         while revealed.
         """
-        x, y, width, height = self.screen_geo.get_monitor_geometry(self.rightMostMonitor())
+        x, y, width, height = self.display.get_screen_geometry(self.rightMostMonitor())
         self.mouse.move(x + width / 2, y + height / 2, False)
         self.mouse.move(x - width / 2, y + height / 2, True, 5, .002)
 
@@ -72,7 +69,7 @@ class LauncherCaptureTests(UnityTestCase):
 
         self.set_unity_option('launcher_capture_mouse', False)
 
-        x, y, width, height = self.screen_geo.get_monitor_geometry(self.rightMostMonitor())
+        x, y, width, height = self.display.get_screen_geometry(self.rightMostMonitor())
         self.mouse.move(x + width / 2, y + height / 2, False)
         self.mouse.move(x - width / 2, y + height / 2, True, 5, .002)
 
@@ -88,7 +85,7 @@ class LauncherCaptureTests(UnityTestCase):
         self.set_unity_option('launcher_capture_mouse', False)
         self.setHideMode(1)
 
-        x, y, width, height = self.screen_geo.get_monitor_geometry(self.rightMostMonitor())
+        x, y, width, height = self.display.get_screen_geometry(self.rightMostMonitor())
         self.mouse.move(x + width / 2, y + height / 2, False)
         self.mouse.move(x - width / 2, y + height / 2, True, 5, .002)
 
@@ -104,7 +101,7 @@ class LauncherCaptureTests(UnityTestCase):
         self.set_unity_option('launcher_capture_mouse', False)
         self.setHideMode(1)
 
-        x, y, width, height = self.screen_geo.get_monitor_geometry(self.leftMostMonitor())
+        x, y, width, height = self.display.get_screen_geometry(self.leftMostMonitor())
         self.mouse.move(x + width / 2, y + height / 2, False)
         sleep(1.5)
         self.mouse.move(x + width * 1.5, y + height / 2, True, 5, .002)
@@ -119,7 +116,7 @@ class LauncherCaptureTests(UnityTestCase):
         """
         self.setHideMode(1)
 
-        x, y, width, height = self.screen_geo.get_monitor_geometry(self.leftMostMonitor())
+        x, y, width, height = self.display.get_screen_geometry(self.leftMostMonitor())
         self.mouse.move(x + width / 2, y + height / 2, False)
         sleep(1.5)
         self.mouse.move(x + width * 1.5, y + height / 2, True, 5, .002)
