@@ -278,19 +278,21 @@ class ResultView(UnityIntrospectionObject):
 class Result(UnityIntrospectionObject):
     """A single result in the dash."""
 
-    def activate(self):
+    def activate(self, double_click=True):
         tx = self.x + (self.width / 2)
         ty = self.y + (self.height / 2)
         m = Mouse.create()
         m.move(tx, ty)
         m.click(1)
+        if double_click:
+            m.click(1)
 
-    def preview(self):
+    def preview(self, button=1):
         tx = self.x + (self.width / 2)
         ty = self.y + (self.height / 2)
         m = Mouse.create()
         m.move(tx, ty)
-        m.click(3)
+        m.click(button)
 
     def preview_key(self):
         tx = self.x + (self.width / 2)

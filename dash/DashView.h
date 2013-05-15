@@ -162,6 +162,7 @@ private:
   guint64 last_activated_timestamp_;
   bool search_in_progress_;
   bool activate_on_finish_;
+  glib::Source::UniquePtr activate_timeout_;
 
   bool visible_;
 
