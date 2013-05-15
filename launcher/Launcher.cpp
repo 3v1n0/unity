@@ -1980,9 +1980,9 @@ void Launcher::StartIconDrag(AbstractLauncherIcon::Ptr const& icon)
   HideDragWindow();
   _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(GetWidth(), GetWidth(), 1, nux::BITFMT_R8G8B8A8);
   _drag_window = new LauncherDragWindow(_offscreen_drag_texture,
-                                        std::bind (&Launcher::RenderIconToTexture, this,
-                                                   _1,
-                                                   _drag_icon, _offscreen_drag_texture));
+                                        std::bind(&Launcher::RenderIconToTexture, this,
+                                                  _1,
+                                                  _drag_icon, _offscreen_drag_texture));
   ShowDragWindow();
 
   ubus_.SendMessage(UBUS_LAUNCHER_ICON_START_DND);

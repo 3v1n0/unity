@@ -44,8 +44,8 @@ NUX_IMPLEMENT_OBJECT_TYPE(LauncherDragWindow);
 LauncherDragWindow::LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture,
                                        std::function<void(nux::GraphicsEngine &)> const &deferred_icon_render_func)
   : nux::BaseWindow("")
-  , icon_rendered_ (false)
-  , deferred_icon_render_func_ (deferred_icon_render_func)
+  , icon_rendered_(false)
+  , deferred_icon_render_func_(deferred_icon_render_func)
   , animation_speed_(QUICK_ANIMATION_SPEED)
   , cancelled_(false)
   , texture_(texture)
