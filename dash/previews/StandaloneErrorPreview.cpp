@@ -177,7 +177,7 @@ void TestRunner::Init ()
     UNITY_PROTOCOL_PREVIEW_PAYMENT_TYPE_ERROR);
 
   // set the diff actions
-  unity_protocol_preview_add_action(proto_obj, "go_to_u1", "Go to Ubuntu One", NULL, 0);
+  unity_protocol_preview_add_action(proto_obj, "open_u1_link", "Go to Ubuntu One", NULL, 0);
   unity_protocol_preview_add_action(proto_obj, "cancel", "Cancel", NULL, 0);
 
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),

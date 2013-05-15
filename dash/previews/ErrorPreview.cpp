@@ -52,7 +52,7 @@ nux::logging::Logger logger("unity.dash.previews.ErrorPreview");
 }
 
 const std::string ErrorPreview::CANCEL_ACTION = "cancel";
-const std::string ErrorPreview::GO_TO_U1_ACTION = "go_to_u1";
+const std::string ErrorPreview::GO_TO_U1_ACTION = "open_u1_link";
 
 class DetailsScrollView : public nux::ScrollView
 {
