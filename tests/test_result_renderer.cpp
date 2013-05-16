@@ -59,7 +59,7 @@ GdkPixbuf* GetIconData(std::string icon_hint, int size)
       g_error_free (error);
       pbuf = NULL;
     }
-    g_object_unref(G_OBJECT(info));
+    gtk_icon_info_free(info);
   }
 
   return pbuf;
