@@ -11,7 +11,7 @@ from __future__ import absolute_import
 
 import logging
 
-from autopilot.emulators.X11 import Mouse
+from autopilot.input import Mouse
 from autopilot.keybindings import KeybindingsHelper
 
 from unity.emulators import UnityIntrospectionObject
@@ -45,7 +45,7 @@ class SwitcherController(UnityIntrospectionObject, KeybindingsHelper):
 
     def __init__(self, *args, **kwargs):
         super(SwitcherController, self).__init__(*args, **kwargs)
-        self._mouse = Mouse()
+        self._mouse = Mouse.create()
 
     def get_switcher_view(self):
         views = self.get_children_by_type(SwitcherView)

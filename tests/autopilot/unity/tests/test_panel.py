@@ -8,8 +8,9 @@
 
 from __future__ import absolute_import
 
-from autopilot.emulators.X11 import ScreenGeometry
-from autopilot.emulators.bamf import BamfWindow
+from autopilot.display import Display
+#from autopilot.emulators.bamf import BamfWindow
+from autopilot.process import Window
 from autopilot.matchers import Eventually
 import logging
 import os
@@ -17,6 +18,7 @@ from testtools.matchers import Equals,  GreaterThan, NotEquals
 from time import sleep
 
 from unity.emulators.panel import IndicatorEntry
+from unity.emulators.X11 import drag_window_to_screen
 from unity.tests import UnityTestCase
 
 import gettext
@@ -25,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 def _make_monitor_scenarios():
-    num_monitors = ScreenGeometry().get_num_monitors()
+    num_monitors = Display.create().get_num_screens()
     scenarios = []
 
     if num_monitors == 1:
@@ -54,8 +56,8 @@ class PanelTestsBase(UnityTestCase):
         Returns the opened BamfWindow
 
         """
-        self.close_all_app(app_name)
-        app_win = self.start_app_window(app_name, locale="C")
+        self.process_manager.close_all_app(app_name)
+        app_win = self.process_manager.start_app_window(app_name, locale="C")
         app = app_win.application
 
         app_win.set_focus()
@@ -82,8 +84,8 @@ class PanelTestsBase(UnityTestCase):
 
     def move_window_to_panel_monitor(self, window, restore_position=False):
         """Drags a window to another monitor, eventually restoring it before"""
-        if not isinstance(window, BamfWindow):
-            raise TypeError("Window must be a BamfWindow")
+        if not isinstance(window, Window):
+            raise TypeError("Window must be a autopilot.process.Window")
 
         if window.monitor == self.panel_monitor:
             return
@@ -94,9 +96,9 @@ class PanelTestsBase(UnityTestCase):
             sleep(.1)
 
         if restore_position:
-            self.addCleanup(self.screen_geo.drag_window_to_monitor, window, window.monitor)
+            self.addCleanup(drag_window_to_screen, window, window.monitor)
 
-        self.screen_geo.drag_window_to_monitor(window, self.panel_monitor)
+        drag_window_to_screen(window, self.panel_monitor)
         sleep(.25)
         self.assertThat(window.monitor, Equals(self.panel_monitor))
 
@@ -130,7 +132,7 @@ class PanelTestsBase(UnityTestCase):
         """Assert that Bamf doesn't know of any open windows with the given xid."""
         # We can't check text_win.closed since we've just destroyed the window.
         # Instead we make sure no window with it's x_id exists.
-        refresh_fn = lambda: [w for w in self.bamf.get_open_windows() if w.x_id == x_id]
+        refresh_fn = lambda: [w for w in self.process_manager.get_open_windows() if w.x_id == x_id]
         self.assertThat(refresh_fn, Eventually(Equals([])))
 
     def sleep_menu_settle_period(self):
@@ -372,7 +374,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         win_xid = text_win.x_id
 
         self.panel.move_mouse_over_window_buttons()
-        screen_x, screen_y = self.screen_geo.get_monitor_geometry(self.panel_monitor)[:2]
+        screen_x, screen_y = self.display.get_screen_geometry(self.panel_monitor)[:2]
         self.mouse.move(screen_x, screen_y)
         self.mouse.click()
 
@@ -400,7 +402,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         self.panel.move_mouse_over_window_buttons()
         button = self.panel.window_buttons.minimize
         target_x = button.x + button.width / 2
-        target_y = self.screen_geo.get_monitor_geometry(self.panel_monitor)[1]
+        target_y = self.display.get_screen_geometry(self.panel_monitor)[1]
         self.mouse.move(target_x, target_y)
         self.mouse.click()
 
@@ -429,7 +431,7 @@ class PanelWindowButtonsTests(PanelTestsBase):
         button = self.panel.window_buttons.unmaximize
         button.mouse_move_to()
         target_x = button.x + button.width / 2
-        target_y = self.screen_geo.get_monitor_geometry(self.panel_monitor)[1]
+        target_y = self.display.get_screen_geometry(self.panel_monitor)[1]
         self.mouse.move(target_x, target_y)
         sleep(1)
         self.mouse.click()
@@ -865,7 +867,7 @@ class PanelMenuTests(PanelTestsBase):
         self.open_new_application_window("Character Map")
         self.sleep_menu_settle_period()
 
-        self.start_app("Character Map")
+        self.process_manager.start_app("Character Map")
         sleep(self.panel.menus.fadein_duration / 1000.0)
         # Not using Eventually here since this is time-critical. Need to work
         # out a better way to do this.
@@ -1145,7 +1147,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
 
     def setUp(self):
         super(PanelCrossMonitorsTests, self).setUp()
-        if self.screen_geo.get_num_monitors() < 2:
+        if self.display.get_num_screens() < 2:
             self.skipTest("This test requires a multimonitor setup")
 
     def test_panel_title_updates_moving_window(self):
@@ -1153,9 +1155,9 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         calc_win = self.open_new_application_window("Calculator")
 
         prev_monitor = None
-        for monitor in range(0, self.screen_geo.get_num_monitors()):
+        for monitor in range(0, self.display.get_num_screens()):
             if calc_win.monitor != monitor:
-                self.screen_geo.drag_window_to_monitor(calc_win, monitor)
+                drag_window_to_screen(calc_win, monitor)
 
             if prev_monitor:
                 prev_panel = self.unity.panels.get_panel_for_monitor(prev_monitor)
@@ -1174,7 +1176,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         self.open_new_application_window("Text Editor", maximized=True)
         self.sleep_menu_settle_period()
 
-        for monitor in range(0, self.screen_geo.get_num_monitors()):
+        for monitor in range(0, self.display.get_num_screens()):
             panel = self.unity.panels.get_panel_for_monitor(monitor)
             panel.move_mouse_over_window_buttons()
 
@@ -1192,7 +1194,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         self.unity.dash.ensure_visible()
         self.addCleanup(self.unity.dash.ensure_hidden)
 
-        for monitor in range(0, self.screen_geo.get_num_monitors()):
+        for monitor in range(0, self.display.get_num_screens()):
             panel = self.unity.panels.get_panel_for_monitor(monitor)
 
             if self.unity.dash.monitor == monitor:
@@ -1207,7 +1209,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         self.unity.hud.ensure_visible()
         self.addCleanup(self.unity.hud.ensure_hidden)
 
-        for monitor in range(0, self.screen_geo.get_num_monitors()):
+        for monitor in range(0, self.display.get_num_screens()):
             panel = self.unity.panels.get_panel_for_monitor(monitor)
 
             if self.unity.hud.monitor == monitor:
@@ -1223,7 +1225,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         """
         text_win = self.open_new_application_window("Text Editor", maximized=True)
 
-        for monitor in range(self.screen_geo.get_num_monitors()):
+        for monitor in range(self.display.get_num_screens()):
             panel = self.unity.panels.get_panel_for_monitor(monitor)
 
             if monitor != text_win.monitor:
@@ -1239,7 +1241,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         """
         text_win = self.open_new_application_window("Text Editor", maximized=True)
 
-        for monitor in range(self.screen_geo.get_num_monitors()):
+        for monitor in range(self.display.get_num_screens()):
             panel = self.unity.panels.get_panel_for_monitor(monitor)
 
             if monitor != text_win.monitor:
@@ -1254,7 +1256,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         """
         text_win = self.open_new_application_window("Text Editor", maximized=True)
 
-        for monitor in range(0, self.screen_geo.get_num_monitors()):
+        for monitor in range(0, self.display.get_num_screens()):
             panel = self.unity.panels.get_panel_for_monitor(monitor)
 
             if monitor != text_win.monitor:
@@ -1268,7 +1270,7 @@ class PanelCrossMonitorsTests(PanelTestsBase):
         indicator = panel.indicators.get_indicator_by_name_hint("indicator-session")
         self.mouse_open_indicator(indicator)
 
-        for monitor in range(0, self.screen_geo.get_num_monitors()):
+        for monitor in range(0, self.display.get_num_screens()):
             panel = self.unity.panels.get_panel_for_monitor(monitor)
 
             entries = panel.get_indicator_entries(include_hidden_menus=True)

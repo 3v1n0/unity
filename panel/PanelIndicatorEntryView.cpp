@@ -214,7 +214,7 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf()
     if (info)
     {
       pixbuf = gtk_icon_info_load_icon(info, nullptr);
-      gtk_icon_info_free(info);
+      g_object_unref(G_OBJECT(info));
     }
   }
 

@@ -10,7 +10,7 @@
 from __future__ import absolute_import
 
 from autopilot.matchers import Eventually
-from autopilot.emulators.X11 import ScreenGeometry
+from autopilot.display import Display, move_mouse_to_screen, is_rect_on_screen
 from autopilot.testcase import multiply_scenarios
 from os import remove, environ
 from os.path import exists
@@ -30,7 +30,7 @@ from unity.tests import UnityTestCase
 
 
 def _make_monitor_scenarios():
-    num_monitors = ScreenGeometry().get_num_monitors()
+    num_monitors = Display.create().get_num_screens()
     scenarios = []
 
     if num_monitors == 1:
@@ -82,8 +82,8 @@ class HudBehaviorTests(HudTestsBase):
 
         if not environ.get('UBUNTU_MENUPROXY', ''):
             self.patch_environment('UBUNTU_MENUPROXY', 'libappmenu.so')
-        self.hud_monitor = self.screen_geo.get_primary_monitor()
-        self.screen_geo.move_mouse_to_monitor(self.hud_monitor)
+        self.hud_monitor = self.display.get_primary_screen()
+        move_mouse_to_screen(self.hud_monitor)
 
     def test_no_initial_values(self):
         self.unity.hud.ensure_visible()
@@ -152,7 +152,7 @@ class HudBehaviorTests(HudTestsBase):
         self.assertThat(self.unity.hud.visible, Equals(False))
 
     def test_alt_f4_doesnt_show_hud(self):
-        self.start_app('Calculator')
+        self.process_manager.start_app('Calculator')
         sleep(1)
         # Do a very fast Alt+F4
         self.keyboard.press_and_release("Alt+F4", 0.05)
@@ -176,7 +176,7 @@ class HudBehaviorTests(HudTestsBase):
         """Ensures that once the hud is dismissed, the same application
         that was focused before hud invocation is refocused.
         """
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
 
         # first ensure that the application has started and is focused
         self.assertEqual(calc.is_active, True)
@@ -200,8 +200,8 @@ class HudBehaviorTests(HudTestsBase):
 
         file_path = mktemp()
         self.addCleanup(remove, file_path)
-        gedit_win = self.start_app_window('Text Editor', files=[file_path], locale='C')
-        self.addCleanup(self.close_all_app, 'Text Editor')
+        gedit_win = self.process_manager.start_app_window('Text Editor', files=[file_path], locale='C')
+        self.addCleanup(self.process_manager.close_all_app, 'Text Editor')
         self.assertProperty(gedit_win, is_focused=True)
 
         self.keyboard.type("0")
@@ -254,7 +254,7 @@ class HudBehaviorTests(HudTestsBase):
     def test_hud_closes_on_spread(self):
         """This test shows that when the spread is initiated, the hud closes."""
         # Need at least one application open for the spread to work.
-        self.start_app_window("Calculator")
+        self.process_manager.start_app_window("Calculator")
         self.unity.hud.ensure_visible()
         self.addCleanup(self.keybinding, "spread/cancel")
         self.keybinding("spread/start")
@@ -317,8 +317,8 @@ class HudBehaviorTests(HudTestsBase):
 
     def test_app_activate_on_enter(self):
         """Hud must close after activating a search item with Enter."""
-        self.start_app('Text Editor', locale='C')
-        self.addCleanup(self.close_all_app, "Text Editor")
+        self.process_manager.start_app('Text Editor', locale='C')
+        self.addCleanup(self.process_manager.close_all_app, "Text Editor")
 
         self.unity.hud.ensure_visible()
 
@@ -330,7 +330,7 @@ class HudBehaviorTests(HudTestsBase):
 
         self.keyboard.press_and_release("Enter")
 
-        self.assertFalse(self.app_is_running("Text Editor"))
+        self.assertFalse(self.process_manager.app_is_running("Text Editor"))
 
         self.assertThat(self.unity.hud.visible, Eventually(Equals(False)))
 
@@ -355,7 +355,7 @@ class HudBehaviorTests(HudTestsBase):
         """Tests that Alt+ArrowKey events are correctly passed to the
         active window when Unity is not responding to them."""
 
-        term_win = self.start_app_window("Terminal")
+        term_win = self.process_manager.start_app_window("Terminal")
         self.assertProperty(term_win, is_focused=True)
 
         # Here we anyway need a sleep, since even though the terminal can have
@@ -427,7 +427,7 @@ class HudBehaviorTests(HudTestsBase):
         self.unity.hud.ensure_visible()
         self.addCleanup(self.unity.hud.ensure_hidden)
 
-        self.start_app_window("Calculator")
+        self.process_manager.start_app_window("Calculator")
         sleep(1)
 
         self.keyboard.type("HasFocus")
@@ -440,7 +440,7 @@ class HudBehaviorTests(HudTestsBase):
         current_monitor = self.unity.hud.monitor
 
         (x,y,w,h) = self.unity.hud.geometry
-        (screen_x,screen_y,screen_w,screen_h) = self.screen_geo.get_monitor_geometry(current_monitor)
+        (screen_x,screen_y,screen_w,screen_h) = self.display.get_screen_geometry(current_monitor)
 
         self.mouse.move(x + w + (screen_w-((screen_x-x)+w))/2, y + h + (screen_h-((screen_y-y)+h))/2)
         self.mouse.click()
@@ -452,16 +452,16 @@ class HudBehaviorTests(HudTestsBase):
         focused. Then from the Hud clicking on the maximized window
         must focus that window and close the hud.
         """
-        char_win = self.start_app("Character Map")
+        char_win = self.process_manager.start_app("Character Map")
         self.assertProperty(char_win, is_active=True)
         self.keybinding("window/maximize")
-        self.start_app("Calculator")
+        self.process_manager.start_app("Calculator")
 
         self.unity.hud.ensure_visible()
 
         #Click bottom right of the screen
-        w = self.screen_geo.get_screen_width()
-        h = self.screen_geo.get_screen_height()
+        w = self.display.get_screen_width()
+        h = self.display.get_screen_height()
         self.mouse.move(w,h)
         self.mouse.click()
 
@@ -470,8 +470,8 @@ class HudBehaviorTests(HudTestsBase):
     def test_hud_does_not_focus_wrong_window_after_alt_tab(self):
         """Test the Hud focuses the correct window after an Alt+Tab."""
 
-        char_win = self.start_app('Character Map')
-        self.start_app('Calculator')
+        char_win = self.process_manager.start_app('Character Map')
+        self.process_manager.start_app('Calculator')
 
         self.keybinding("switcher/reveal_normal")
         self.assertProperty(char_win, is_active=True)
@@ -506,7 +506,7 @@ class HudLauncherInteractionsTests(HudTestsBase):
         self.set_unity_option('num_launchers', 0)
         self.set_unity_option('launcher_hide_mode', int(self.launcher_autohide))
 
-        self.screen_geo.move_mouse_to_monitor(self.hud_monitor)
+        move_mouse_to_screen(self.hud_monitor)
         sleep(0.5)
 
     def test_multiple_hud_reveal_does_not_break_launcher(self):
@@ -517,9 +517,9 @@ class HudLauncherInteractionsTests(HudTestsBase):
         launcher = self.unity.launcher.get_launcher_for_monitor(self.hud_monitor)
 
         # We need an app to switch to:
-        self.start_app('Character Map')
+        self.process_manager.start_app('Character Map')
         # We need an application to play with - I'll use the calculator.
-        self.start_app('Calculator')
+        self.process_manager.start_app('Calculator')
         sleep(1)
 
         # before we start, make sure there's zero or one active icon:
@@ -560,7 +560,7 @@ class HudLockedLauncherInteractionsTests(HudTestsBase):
         self.set_unity_option('num_launchers', 0)
         self.set_unity_option('launcher_hide_mode', 0)
 
-        self.screen_geo.move_mouse_to_monitor(self.hud_monitor)
+        move_mouse_to_screen(self.hud_monitor)
         sleep(0.5)
 
     def test_hud_launcher_icon_hides_bfb(self):
@@ -616,10 +616,10 @@ class HudVisualTests(HudTestsBase):
 
     def setUp(self):
         super(HudVisualTests, self).setUp()
-        self.screen_geo.move_mouse_to_monitor(self.hud_monitor)
+        move_mouse_to_screen(self.hud_monitor)
         self.set_unity_option('launcher_hide_mode', int(self.launcher_autohide))
         self.set_unity_option('num_launchers', int(self.launcher_primary_only))
-        self.hud_monitor_is_primary = (self.screen_geo.get_primary_monitor() == self.hud_monitor)
+        self.hud_monitor_is_primary = (self.display.get_primary_screen() == self.hud_monitor)
         self.hud_locked = (not self.launcher_autohide and (not self.launcher_primary_only or self.hud_monitor_is_primary))
         sleep(0.5)
 
@@ -630,12 +630,12 @@ class HudVisualTests(HudTestsBase):
         """HUD must be drawn on the monitor where the mouse is."""
         self.unity.hud.ensure_visible()
         self.assertThat(self.unity.hud.monitor, Eventually(Equals(self.hud_monitor)))
-        self.assertTrue(self.screen_geo.is_rect_on_monitor(self.unity.hud.monitor, self.unity.hud.geometry))
+        self.assertTrue(is_rect_on_screen(self.unity.hud.monitor, self.unity.hud.geometry))
 
     def test_hud_geometries(self):
         """Tests the HUD geometries for the given monitor and status."""
         self.unity.hud.ensure_visible()
-        monitor_geo = self.screen_geo.get_monitor_geometry(self.hud_monitor)
+        monitor_geo = self.display.get_screen_geometry(self.hud_monitor)
         monitor_x = monitor_geo[0]
         monitor_w = monitor_geo[2]
         hud_x = self.unity.hud.geometry[0]
@@ -675,8 +675,8 @@ class HudVisualTests(HudTestsBase):
 
     def test_hud_icon_shows_the_focused_application_emblem(self):
         """Tests that the correct HUD icon is shown."""
-        self.close_all_app("Calculator")
-        calc = self.start_app("Calculator")
+        self.process_manager.close_all_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         self.assertTrue(calc.is_active)
         self.unity.hud.ensure_visible()
 
@@ -693,8 +693,8 @@ class HudVisualTests(HudTestsBase):
 
     def test_switch_dash_hud_does_not_break_the_focused_application_emblem(self):
         """Switching from Dash to HUD must still show the correct HUD icon."""
-        self.close_all_app("Calculator")
-        calc = self.start_app("Calculator")
+        self.process_manager.close_all_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         self.assertTrue(calc.is_active)
 
         self.unity.dash.ensure_visible()
@@ -704,8 +704,8 @@ class HudVisualTests(HudTestsBase):
 
     def test_switch_hud_dash_does_not_break_the_focused_application_emblem(self):
         """Switching from HUD to Dash and back must still show the correct HUD icon."""
-        self.close_all_app("Calculator")
-        calc = self.start_app("Calculator")
+        self.process_manager.close_all_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         self.assertTrue(calc.is_active)
 
         self.unity.hud.ensure_visible()
@@ -727,7 +727,7 @@ class HudVisualTests(HudTestsBase):
         self.unity.window_manager.enter_show_desktop()
         self.addCleanup(self.unity.window_manager.leave_show_desktop)
 
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         self.assertTrue(calc.is_active)
         self.workspace.switch_to((initial_workspace + 1) % self.workspace.num_workspaces)
         self.unity.dash.ensure_visible()
@@ -776,7 +776,7 @@ class HudCrossMonitorsTests(HudTestsBase):
 
     def setUp(self):
         super(HudCrossMonitorsTests, self).setUp()
-        if self.screen_geo.get_num_monitors() < 2:
+        if self.display.get_num_screens() < 2:
             self.skipTest("This test requires more than 1 monitor.")
 
     def test_hud_stays_on_same_monitor(self):
@@ -789,7 +789,7 @@ class HudCrossMonitorsTests(HudTestsBase):
         self.unity.hud.ensure_visible()
         self.addCleanup(self.unity.hud.ensure_hidden)
 
-        self.screen_geo.move_mouse_to_monitor((current_monitor + 1) % self.screen_geo.get_num_monitors())
+        move_mouse_to_screen((current_monitor + 1) % self.display.get_num_screens())
         self.keyboard.type("abc")
 
         self.assertThat(self.unity.hud.ideal_monitor, Eventually(Equals(current_monitor)))
@@ -799,11 +799,11 @@ class HudCrossMonitorsTests(HudTestsBase):
 
         self.addCleanup(self.unity.hud.ensure_hidden)
 
-        for monitor in range(self.screen_geo.get_num_monitors()-1):
-            self.screen_geo.move_mouse_to_monitor(monitor)
+        for monitor in range(self.display.get_num_screens()-1):
+            move_mouse_to_screen(monitor)
             self.unity.hud.ensure_visible()
 
-            self.screen_geo.move_mouse_to_monitor(monitor+1)
+            move_mouse_to_screen(monitor+1)
             sleep(.5)
             self.mouse.click()
 
