@@ -146,7 +146,7 @@ Depends: ${misc:Depends},
          libunity-core-6.0-5 (= ${binary:Version}),
          libglib2.0-dev,
          libsigc++-2.0-dev,
-         libnux-4.0-dev (>= 4.0.0),
+         libnux-4.0-dev (>= 4.0.1),
          libunity-dev (>= 7.0.0~),
          libdee-dev,
 Description: Core library for the Unity interface - development files
