@@ -20,8 +20,6 @@
 #ifndef LAUNCHERDRAGWINDOW_H
 #define LAUNCHERDRAGWINDOW_H
 
-#include <functional>
-
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
 #include <NuxGraphics/GraphicsEngine.h>
@@ -38,8 +36,7 @@ class LauncherDragWindow : public nux::BaseWindow
 {
   NUX_DECLARE_OBJECT_TYPE(LauncherDragWindow, nux::BaseWindow);
 public:
-  LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture,
-                     std::function <void (nux::GraphicsEngine &)> const &deferred_icon_render_func);
+  LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
   ~LauncherDragWindow();
 
   void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
@@ -64,9 +61,6 @@ private:
   bool OnAnimationTimeout();
   void CancelDrag();
   
-  bool icon_rendered_;
-  std::function <void (nux::GraphicsEngine &)> deferred_icon_render_func_;
-
   float animation_speed_;
   bool cancelled_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> texture_;
