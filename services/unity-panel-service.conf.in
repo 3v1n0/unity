@@ -1,0 +1,5 @@
+
+start on started unity
+
+respawn
+exec ${CMAKE_INSTALL_PREFIX}/lib/unity/unity-panel-service
