@@ -109,7 +109,7 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
     pbuf = NULL;
   }
 
-  g_object_unref(G_OBJECT(info));
+  gtk_icon_info_free(info);
   return pbuf;
 }
 

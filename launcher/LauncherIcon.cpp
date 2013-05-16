@@ -341,7 +341,7 @@ bool LauncherIcon::IsMonoDefaultTheme()
   if (g_strrstr(gtk_icon_info_get_filename(info), "ubuntu-mono") != NULL)
     _current_theme_is_mono = (int)true;
 
-  g_object_unref(G_OBJECT(info));
+  gtk_icon_info_free(info);
   return (bool)_current_theme_is_mono;
 
 }
@@ -396,7 +396,7 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
                                                             bool update_glow_colors,
                                                             bool is_default_theme)
 {
-  GtkIconInfo* info;
+  GtkIconInfo* info = NULL;
   nux::BaseTexture* result = NULL;
   GIcon* icon;
   GtkIconLookupFlags flags = (GtkIconLookupFlags) 0;
@@ -429,7 +429,7 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
 
   glib::Error error;
   glib::Object<GdkPixbuf> pbuf(gtk_icon_info_load_icon(info, &error));
-  g_object_unref(G_OBJECT(info));
+  gtk_icon_info_free(info);
 
   if (GDK_IS_PIXBUF(pbuf.RawPtr()))
   {
