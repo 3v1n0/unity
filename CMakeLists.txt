@@ -54,8 +54,9 @@ endif ()
 
 if (CMAKE_BUILD_TYPE MATCHES coverage)
   set (COVERAGE_XML_FILE "${CMAKE_BINARY_DIR}/coverage.xml")
-  set (COVERAGE_INFO_FILE "${CMAKE_BINARY_DIR}/coverage-html.info")
-  set (COVERAGE_HTML_DIR "${CMAKE_BINARY_DIR}/coverage-html")
+# FIXME: Read below
+#  set (COVERAGE_INFO_FILE "${CMAKE_BINARY_DIR}/coverage-html.info")
+#  set (COVERAGE_HTML_DIR "${CMAKE_BINARY_DIR}/coverage-html")
 
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage" )
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage" )
@@ -71,18 +72,19 @@ if (CMAKE_BUILD_TYPE MATCHES coverage)
           COMMAND  "${GCOVR_EXECUTABLE}" --exclude="tests.*" --exclude="obj-.*" -x -r "${CMAKE_SOURCE_DIR}" -o "${COVERAGE_XML_FILE}")
   endif()
 
-  find_program(LCOV_EXECUTABLE lcov HINTS ${LCOV_ROOT} "${LCOV_ROOT}/bin")
-  find_program(GENHTML_EXECUTABLE genhtml HINTS ${GENHTML_ROOT} "${GENHTML_ROOT}/bin")
-  if (NOT LCOV_EXECUTABLE)
-      message(FATAL_ERROR "Cannot enable coverage targets because gcovr was not found.")
-  elseif (NOT GENHTML_EXECUTABLE)
-      message(FATAL_ERROR "Cannot enable coverage targets because genhtml was not found.")
-  else ()
-      message (STATUS "Enabling HTML coverage report")
-      add_custom_target (coverage-html 
-          COMMAND "${LCOV_EXECUTABLE}" --directory "${CMAKE_BINARY_DIR}" --capture --output-file "${COVERAGE_INFO_FILE}"
-          COMMAND "${GENHTML_EXECUTABLE}" --output-directory "${COVERAGE_HTML_DIR}" "${COVERAGE_INFO_FILE}")
-  endif()
+# FIXME: This got commented out, as it forces a strict dependency on lcov
+#  find_program(LCOV_EXECUTABLE lcov HINTS ${LCOV_ROOT} "${LCOV_ROOT}/bin")
+#  find_program(GENHTML_EXECUTABLE genhtml HINTS ${GENHTML_ROOT} "${GENHTML_ROOT}/bin")
+#  if (NOT LCOV_EXECUTABLE)
+#      message(FATAL_ERROR "Cannot enable coverage targets because gcovr was not found.")
+#  elseif (NOT GENHTML_EXECUTABLE)
+#      message(FATAL_ERROR "Cannot enable coverage targets because genhtml was not found.")
+#  else ()
+#      message (STATUS "Enabling HTML coverage report")
+#      add_custom_target (coverage-html 
+#          COMMAND "${LCOV_EXECUTABLE}" --directory "${CMAKE_BINARY_DIR}" --capture --output-file "${COVERAGE_INFO_FILE}"
+#          COMMAND "${GENHTML_EXECUTABLE}" --output-directory "${COVERAGE_HTML_DIR}" "${COVERAGE_INFO_FILE}")
+#  endif()
 
 endif (CMAKE_BUILD_TYPE MATCHES coverage)
 
