@@ -38,10 +38,11 @@ public:
   Category(Category const& other);
   Category& operator=(Category const& other);
   
+  nux::ROProperty<std::string> id;
   nux::ROProperty<std::string> name;
   nux::ROProperty<std::string> icon_hint;
-  nux::ROProperty<std::size_t> index;
   nux::ROProperty<std::string> renderer_name;
+  nux::ROProperty<std::size_t> index;
 
 private:
   void SetupGetters();

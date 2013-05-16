@@ -598,7 +598,7 @@ bool View::InspectKeyEvent(unsigned int eventType,
 
 void View::SearchFinished()
 {
-  search_bar_->SearchFinished();
+  search_bar_->SetSearchFinished();
 }
 
 void View::OnSearchbarActivated()

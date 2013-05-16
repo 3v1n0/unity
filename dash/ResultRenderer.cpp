@@ -133,12 +133,12 @@ void ResultRenderer::Render(nux::GraphicsEngine& GfxContext,
   nux::GetPainter().PushDrawSliceScaledTextureLayer(GfxContext, geometry, nux::eBUTTON_NORMAL, nux::color::White, nux::eAllCorners);
 }
 
-void ResultRenderer::Preload(Result& row)
+void ResultRenderer::Preload(Result const& row)
 {
   // pre-load the given row
 }
 
-void ResultRenderer::Unload(Result& row)
+void ResultRenderer::Unload(Result const& row)
 {
   // unload any resources
 }

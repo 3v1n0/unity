@@ -659,7 +659,7 @@ void WindowButtons::AddProperties(GVariantBuilder* builder)
                                   .add("visible", opacity() != 0.0f)
                                   .add("sensitive", GetInputEventSensitivity())
                                   .add("focused", focused())
-                                  .add("controlled_window", controlled_window());
+                                  .add("controlled_window", (guint64)controlled_window());
 }
 
 } // unity namespace

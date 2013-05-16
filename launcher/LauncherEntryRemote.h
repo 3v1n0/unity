@@ -49,7 +49,7 @@ public:
   std::string const& AppUri() const;
   std::string const& DBusName() const;
   std::string const& Emblem() const;
-  long long Count() const;
+  int64_t Count() const;
   double Progress() const;
   glib::Object<DbusmenuClient> const& Quicklist() const;
 
@@ -97,7 +97,7 @@ private:
   bool _urgent;
 
   void SetEmblem(std::string const& emblem);
-  void SetCount(long long count);
+  void SetCount(int64_t count);
   void SetProgress(double progress);
   void SetQuicklistPath(std::string const& dbus_path);
   void SetQuicklist(DbusmenuClient* quicklist);

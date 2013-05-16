@@ -402,7 +402,7 @@ TEST_F(TestGnomeSessionManager, Logout)
     if (method == "Logout")
     {
       logout_called = true;
-      EXPECT_EQ(Variant(par).GetUInt(), 1);
+      EXPECT_EQ(Variant(par).GetUInt32(), 1);
     }
 
     return nullptr;

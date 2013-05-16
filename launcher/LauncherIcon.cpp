@@ -1183,7 +1183,7 @@ LauncherIcon::OnRemoteCountVisibleChanged(LauncherEntryRemote* remote)
 {
   if (remote->CountVisible())
   {
-    SetEmblemText(std::to_string(remote->Count()));
+    SetEmblemText(std::to_string((long long)remote->Count()));
   }
   else
   {

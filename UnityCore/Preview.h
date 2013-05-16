@@ -34,13 +34,14 @@
 #include "GLibWrapper.h"
 #include "GLibDBusProxy.h"
 #include "Variant.h"
+#include "Result.h"
 
 namespace unity
 {
 namespace dash
 {
 
-class Lens;
+class Scope;
 
 enum LayoutHint
 {
@@ -60,6 +61,7 @@ public:
     std::string display_name;
     std::string icon_hint;
     std::string extra_text;
+    std::string activation_uri;
     LayoutHint layout_hint;
     // TODO: there's also a HashTable here (although unused atm)
 
@@ -82,6 +84,11 @@ public:
           glib::Variant val(static_cast<GVariant*>(value));
           extra_text = val.GetString();
         }
+        else if (g_strcmp0((gchar*)key, "activation-uri") == 0)
+        {
+          glib::Variant val(static_cast<GVariant*>(value));
+          activation_uri = val.GetString();                    
+        }
       }
     };
   };
@@ -94,7 +101,7 @@ public:
     unity::glib::Variant value;
 
     InfoHint() {};
-    InfoHint(const gchar* id_, const gchar* display_name_, 
+    InfoHint(const gchar* id_, const gchar* display_name_,
              const gchar* icon_hint_, GVariant* value_)
       : id(id_ != NULL ? id_ : "")
       , display_name(display_name_ != NULL ? display_name_ : "")
@@ -110,7 +117,7 @@ public:
 
   virtual ~Preview();
 
-  static Preview::Ptr PreviewForVariant(glib::Variant& properties);
+  static Preview::Ptr PreviewForVariant(glib::Variant const& properties);
   static Preview::Ptr PreviewForProtocolObject(glib::Object<GObject> const& proto_obj);
 
   nux::ROProperty<std::string> renderer_name;
@@ -120,25 +127,22 @@ public:
   nux::ROProperty<unity::glib::Object<GIcon>> image;
   nux::ROProperty<std::string> image_source_uri;
 
-  // can't use Lens::Ptr to avoid circular dependency
-  nux::RWProperty<Lens*> parent_lens;
-  nux::Property<std::string> preview_uri;
+  // can't use Scope::Ptr to avoid circular dependency
+  nux::RWProperty<Scope*> parent_scope;
+  LocalResult preview_result;
 
-  ActionPtrList GetActions() const;
-  InfoHintPtrList GetInfoHints() const;
+  ActionPtrList const& GetActions() const;
+  ActionPtr GetActionById(std::string const& id) const;
+  InfoHintPtrList const& GetInfoHints() const;
 
   void PerformAction(std::string const& id,
-                     std::map<std::string, glib::Variant> const& hints =
-                     std::map<std::string, glib::Variant>()) const;
-  void EmitClosed() const;
+                     glib::HintsMap const& hints =
+                     glib::HintsMap()) const;
 
 protected:
   // this should be UnityProtocolPreview, but we want to keep the usage
   // of libunity-protocol-private private to unity-core
   Preview(glib::Object<GObject> const& proto_obj);
-  void Update(glib::Variant const& properties,
-              glib::DBusProxy::ReplyCallback reply_callback = nullptr) const;
-  static glib::Object<GIcon> IconForString(std::string const& icon_hint);
 
 private:
   class Impl;

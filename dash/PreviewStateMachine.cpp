@@ -93,7 +93,7 @@ void PreviewStateMachine::CheckPreviewRequirementsFulfilled()
    *
   if (GetSplitPosition(CONTENT_AREA) < 0) return;
   if (GetSplitPosition(FILTER_BAR) < 0) return;
-  if (GetSplitPosition(LENS_BAR) < 0) return;
+  if (GetSplitPosition(SCOPE_BAR) < 0) return;
   if (GetSplitPosition(SEARCH_BAR) < 0) return;
    */
 

@@ -238,7 +238,7 @@ public:
   int GetFilterButtonHeight() const;
   int GetFilterViewRightPadding() const;
 
-  int GetSpaceBetweenLensAndFilters() const;
+  int GetSpaceBetweenScopeAndFilters() const;
 
   // Scrollbars
   int GetScrollbarWidth() const;

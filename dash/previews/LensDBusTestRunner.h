@@ -23,6 +23,7 @@
 
 
 #include "DBusTestRunner.h"
+#include "UnityCore/ScopeProxyInterface.h"
 
 namespace unity
 {
@@ -31,18 +32,18 @@ namespace dash
 namespace previews
 {
 
-class LensDBusTestRunner : public DBusTestRunner
+class ScopeDBusTestRunner : public DBusTestRunner
 {
 public:
   typedef std::map<std::string, unity::glib::Variant> Hints;
 
-  LensDBusTestRunner(std::string const& dbus_name, std::string const& dbus_path, std::string const& interface_name)
+  ScopeDBusTestRunner(std::string const& dbus_name, std::string const& dbus_path, std::string const& interface_name)
   : DBusTestRunner(dbus_name, dbus_path, interface_name)
   , results_(new Results(ModelType::REMOTE))
   , results_variant_(NULL)
   {
-    proxy_->Connect("Changed", sigc::mem_fun(this, &LensDBusTestRunner::OnChanged));
-    results_->end_transaction.connect(sigc::mem_fun(this, &LensDBusTestRunner::ResultsModelUpdated));
+    proxy_->Connect("Changed", sigc::mem_fun(this, &ScopeDBusTestRunner::OnChanged));
+    results_->end_transaction.connect(sigc::mem_fun(this, &ScopeDBusTestRunner::ResultsModelUpdated));
   }
 
   void OnProxyConnectionChanged()
@@ -52,7 +53,7 @@ public:
     if (proxy_->IsConnected())
     {
       proxy_->Call("InfoRequest");
-      proxy_->Call("SetViewType", g_variant_new("(u)", LENS_VIEW));
+      proxy_->Call("SetViewType", g_variant_new("(u)", ScopeViewType::SCOPE_VIEW));
     }
   }
 
@@ -81,7 +82,7 @@ public:
                   &filters_model_name,
                   &hints_iter);
 
-    LOG_DEBUG(logger) << "Lens info changed for " << dbus_name_ << "\n"
+    LOG_DEBUG(logger) << "Scope info changed for " << dbus_name_ << "\n"
                       << "  Path: " << dbus_path << "\n"
                       << "  SearchInGlobal: " << search_in_global << "\n"
                       << "  Visible: " << visible << "\n"
@@ -125,7 +126,7 @@ public:
                  g_variant_new("(sa{sv})",
                                search_string.c_str(),
                                &b),
-                 sigc::mem_fun(this, &LensDBusTestRunner::OnSearchFinished),
+                 sigc::mem_fun(this, &ScopeDBusTestRunner::OnSearchFinished),
                  search_cancellable_);
 
     g_variant_builder_clear(&b);
@@ -183,7 +184,7 @@ public:
     proxy_->Call("Activate",
                  g_variant_new("(su)", uri.c_str(),
                                UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_RESULT),
-                 sigc::mem_fun(this, &LensDBusTestRunner::ActivationReply),
+                 sigc::mem_fun(this, &ScopeDBusTestRunner::ActivationReply),
                  preview_cancellable_);
   }
 
@@ -208,7 +209,7 @@ public:
       {
         dash::Preview::Ptr preview(dash::Preview::PreviewForVariant(iter->second));
 
-        // would be nice to make parent_lens a shared_ptr,
+        // would be nice to make parent_scope a shared_ptr,
         // but that's not really doable from here
         preview_ready.emit(uri.Str(), preview);
         return;
