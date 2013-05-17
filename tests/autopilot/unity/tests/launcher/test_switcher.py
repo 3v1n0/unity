@@ -47,8 +47,8 @@ class LauncherSwitcherTests(LauncherTestCase):
 
     def test_launcher_switcher_cancel_resume_focus(self):
         """Test that ending the launcher switcher resume the focus."""
-        self.close_all_app("Calculator")
-        calc = self.start_app("Calculator")
+        self.process_manager.close_all_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         self.assertTrue(calc.is_active)
 
         self.start_switcher_with_cleanup_cancel()
@@ -145,8 +145,8 @@ class LauncherSwitcherTests(LauncherTestCase):
 
     def test_launcher_switcher_activate_keep_focus(self):
         """Activating a running launcher icon should focus the application."""
-        calc = self.start_app("Calculator")
-        mahjongg = self.start_app("Mahjongg")
+        calc = self.process_manager.start_app("Calculator")
+        mahjongg = self.process_manager.start_app("Mahjongg")
         self.assertTrue(mahjongg.is_active)
         self.assertFalse(calc.is_active)
 

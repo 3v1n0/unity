@@ -27,12 +27,15 @@
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
+#include <UnityCore/PaymentPreview.h>
 #include "ActionButton.h"
 
 #include "GenericPreview.h"
 #include "ApplicationPreview.h"
+#include "ErrorPreview.h"
 #include "MusicPreview.h"
 #include "MoviePreview.h"
+#include "MusicPaymentPreview.h"
 #include "SocialPreview.h"
 #include "PreviewInfoHintWidget.h"
 
@@ -56,6 +59,19 @@ previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
   {
     return Preview::Ptr(new GenericPreview(model));
   }
+  else if (model->renderer_name == "preview-payment")
+  {
+    dash::PaymentPreview* payment_preview_model = dynamic_cast<dash::PaymentPreview*>(
+      model.get());
+    if (payment_preview_model->preview_type.Get() == dash::PaymentPreview::MUSIC)
+    {
+      return Preview::Ptr(new MusicPaymentPreview(model));
+    }
+    else
+    {
+      return Preview::Ptr(new ErrorPreview(model));
+    }
+  }
   else if (model->renderer_name == "preview-application")
   {
     return Preview::Ptr(new ApplicationPreview(model));
@@ -72,10 +88,6 @@ previews::Preview::Ptr Preview::PreviewForModel(dash::Preview::Ptr model)
   {
     return Preview::Ptr(new SocialPreview(model));
   }
-  // else if (renderer_name == "preview-series")
-  // {
-  //   return Preview::Ptr(new SeriesPreview(model));
-  // }
   else
   {
     LOG_WARN(logger) << "Unable to create Preview for renderer: " << model->renderer_name.Get() << "; using generic";
@@ -100,9 +112,6 @@ Preview::Preview(dash::Preview::Ptr preview_model)
 
 Preview::~Preview()
 {
-  if (preview_model_)
-    preview_model_->EmitClosed();
-
   delete tab_iterator_;
 }
 
@@ -115,7 +124,7 @@ void Preview::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
     .add(GetAbsoluteGeometry())
-    .add("uri", preview_model_->preview_uri.Get());
+    .add("uri", preview_model_->preview_result.uri);
 }
 
 void Preview::OnActionActivated(ActionButton* button, std::string const& id)
@@ -136,7 +145,7 @@ nux::Layout* Preview::BuildGridActionsLayout(dash::Preview::ActionPtrList action
   {
     nux::HLayout* actions_layout_h = new TabIteratorHLayout(tab_iterator_);
     actions_layout_h->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
- 
+
     for (uint j = 0; j < 2 && action_iter < actions.size(); j++, action_iter++)
     {
         dash::Preview::ActionPtr action = actions[action_iter];
@@ -188,7 +197,7 @@ void Preview::UpdateCoverArtImage(CoverArt* cover_art)
 {
   if (!preview_model_)
     return;
-  
+
   previews::Style& style = dash::previews::Style::Instance();
 
   auto on_mouse_down = [&](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_->OnMouseDown(x, y, button_flags, key_flags); };

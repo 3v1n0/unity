@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2012-11-08 12:05+0000\n"
+"POT-Creation-Date: 2013-04-17 16:00+0100\n"
 "PO-Revision-Date: 2010-03-02 12:36-0500\n"
 "Last-Translator: Canonical OEM\n"
 "Language-Team: Hungarian\n"
@@ -38,6 +38,9 @@ msgstr ""
 msgid " or Right"
 msgstr ""
 
+msgid "Activate"
+msgstr ""
+
 msgid "All"
 msgstr ""
 
@@ -59,11 +62,7 @@ msgstr ""
 msgid "Cursor Left or Right"
 msgstr ""
 
-#. Dash...
 msgid "Dash"
-msgstr ""
-
-msgid "Dash Home"
 msgstr ""
 
 msgid "Drop To Add Application"
@@ -84,29 +83,75 @@ msgstr ""
 msgid "Filter results"
 msgstr ""
 
-#. Menu Bar
+#, c-format
+msgid ""
+"Goodbye, %s. Are you sure you want to close all programs and log out from "
+"your account?"
+msgstr ""
+
+#, c-format
+msgid ""
+"Goodbye, %s. Are you sure you want to close all programs and shut down the "
+"computer?"
+msgstr ""
+
+#, c-format
+msgid "Goodbye, %s. Would you like to…"
+msgstr ""
+
+msgid "HUD"
+msgstr ""
+
 msgid "HUD & Menu Bar"
 msgstr ""
 
-msgid "Home"
+#, c-format
+msgid ""
+"Hi %s, you have open files that you might want to save before logging out. "
+"Are you sure you want to continue?"
 msgstr ""
 
-msgid "Home screen"
+#, c-format
+msgid ""
+"Hi %s, you have open files that you might want to save before shutting down. "
+"Are you sure you want to continue?"
+msgstr ""
+
+#, c-format
+msgid ""
+"Hi %s, you have open files you might want to save.\n"
+"Would you like to…"
+msgstr ""
+
+#. We have enough buttons to show the message without a new line.
+#, c-format
+msgid "Hi %s, you have open files you might want to save. Would you like to…"
+msgstr ""
+
+msgid "Hibernate"
 msgstr ""
 
 msgid "Keyboard Shortcuts"
 msgstr ""
 
-#. Launcher...
+msgid "Last Updated"
+msgstr ""
+
 msgid "Launcher"
 msgstr ""
 
 msgid "Left Mouse"
 msgstr ""
 
+msgid "Lock"
+msgstr ""
+
 #, fuzzy
 msgid "Lock to Launcher"
 msgstr "Eltávolítás a Launcherből"
+
+msgid "Log Out"
+msgstr ""
 
 msgid "Maximises the current window."
 msgstr ""
@@ -130,6 +175,9 @@ msgid "Moves the window."
 msgstr ""
 
 msgid "Multi-range"
+msgstr ""
+
+msgid "No Image Available"
 msgstr ""
 
 msgid "Open"
@@ -189,6 +237,9 @@ msgstr ""
 msgid "Resizes the window."
 msgstr ""
 
+msgid "Restart"
+msgstr ""
+
 msgid "Restores or minimises the current window."
 msgstr ""
 
@@ -207,7 +258,7 @@ msgstr ""
 msgid "Same as clicking on a Launcher icon."
 msgstr ""
 
-msgid "Search"
+msgid "Search your computer and online sources"
 msgstr ""
 
 msgid "See fewer results"
@@ -219,10 +270,16 @@ msgstr ""
 msgid "Show Desktop"
 msgstr ""
 
+msgid "Shut Down"
+msgstr ""
+
 msgid "Sorry, there is nothing that matches your search."
 msgstr ""
 
 msgid "Spreads all windows in the current workspace."
+msgstr ""
+
+msgid "Suspend"
 msgstr ""
 
 msgid "Switcher"
@@ -246,7 +303,6 @@ msgstr ""
 msgid "Switches workspaces."
 msgstr ""
 
-#. Switching
 msgid "Switching"
 msgstr ""
 
@@ -273,17 +329,23 @@ msgstr ""
 msgid "Waiting to install"
 msgstr ""
 
-#. Windows
 msgid "Windows"
 msgstr ""
 
 msgid "Workspace Switcher"
 msgstr ""
 
-#. Workspaces
 msgid "Workspaces"
 msgstr ""
 
 #, fuzzy
+#~ msgid "Hide Launcher"
+#~ msgstr "Eltávolítás a Launcherből"
+
+#, fuzzy
 #~ msgid "Keep in launcher"
 #~ msgstr "Megtartás a Launcherben"
+
+#, fuzzy
+#~ msgid "Launchers"
+#~ msgstr "Eltávolítás a Launcherből"

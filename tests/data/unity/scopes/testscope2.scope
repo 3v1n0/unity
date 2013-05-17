@@ -1,0 +1,13 @@
+[Scope]
+DBusName=com.canonical.Unity.Test.Scope
+DBusPath=/com/canonical/unity/scope/testscope2
+Icon=/usr/share/unity/6/icon-sub2.svg
+RequiredMetadata=
+OptionalMetadata=
+Keywords=misc;
+Type=varia
+QueryPattern=^@
+Name=TestScope2
+Description=Find various stuff 2
+SearchHint=Search stuff 2
+Shortcut=w

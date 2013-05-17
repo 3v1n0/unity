@@ -15,23 +15,23 @@ from time import sleep
 from unity.tests import UnityTestCase
 
 
-class HomeLensSearchTests(UnityTestCase):
-    """Test the command lense search bahavior."""
+class HomeScopeSearchTests(UnityTestCase):
+    """Test the command scope search bahavior."""
 
     def setUp(self):
-        super(HomeLensSearchTests, self).setUp()
+        super(HomeScopeSearchTests, self).setUp()
 
     def tearDown(self):
         self.unity.dash.ensure_hidden()
-        super(HomeLensSearchTests, self).tearDown()
+        super(HomeScopeSearchTests, self).tearDown()
 
     def test_quick_run_app(self):
         """Hitting enter runs an application even though a search might not have fully
         finished yet.
 
         """
-        if self.app_is_running("Text Editor"):
-            self.close_all_app("Text Editor")
+        if self.process_manager.app_is_running("Text Editor"):
+            self.process_manager.close_all_app("Text Editor")
             sleep(1)
 
         kb = self.keyboard
@@ -40,6 +40,6 @@ class HomeLensSearchTests(UnityTestCase):
         self.assertThat(self.unity.dash.search_string, Eventually(Equals("g")))
         kb.type("edit", 0.1)
         kb.press_and_release("Enter", 0.1)
-        self.addCleanup(self.close_all_app,  "Text Editor")
-        app_found = self.bamf.wait_until_application_is_running("gedit.desktop", 5)
+        self.addCleanup(self.process_manager.close_all_app,  "Text Editor")
+        app_found = self.process_manager.wait_until_application_is_running("gedit.desktop", 5)
         self.assertTrue(app_found)

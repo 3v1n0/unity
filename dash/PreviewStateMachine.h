@@ -32,7 +32,7 @@ typedef enum
   START,
   CONTENT_AREA,
   FILTER_BAR,
-  LENS_BAR,
+  SCOPE_BAR,
   SEARCH_BAR,
   END
 } SplitPosition;

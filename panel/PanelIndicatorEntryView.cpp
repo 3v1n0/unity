@@ -213,9 +213,7 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf()
     gtk::IconInfo info(gtk_icon_theme_lookup_by_gicon(theme, icon, 22,
                                                       (GtkIconLookupFlags)0));
     if (info)
-    {
       pixbuf = gtk_icon_info_load_icon(info, nullptr);
-    }
   }
 
   return pixbuf;

@@ -92,7 +92,7 @@ public:
 
   MOCK_CONST_METHOD0(GetURI, std::string());
   MOCK_CONST_METHOD0(GetIconHint, std::string());
-  MOCK_CONST_METHOD0(GetCategoryIndex, std::size_t());
+  MOCK_CONST_METHOD0(GetCategoryIndex, unsigned());
   MOCK_CONST_METHOD0(GetMimeType, std::string());
   MOCK_CONST_METHOD0(GetName, std::string());
   MOCK_CONST_METHOD0(GetComment, std::string());

@@ -32,8 +32,8 @@ class BaseShortcutHintTests(UnityTestCase):
         sleep(1)
 
     def skip_if_monitor_too_small(self):
-        monitor = self.screen_geo.get_primary_monitor()
-        monitor_geo = self.screen_geo.get_monitor_geometry(monitor)
+        monitor = self.display.get_primary_screen()
+        monitor_geo = self.display.get_screen_geometry(monitor)
         monitor_w = monitor_geo[2]
         monitor_h = monitor_geo[3]
         launcher_width = self.unity.launcher.get_launcher_for_monitor(monitor).geometry[2]
@@ -51,7 +51,7 @@ class BaseShortcutHintTests(UnityTestCase):
     def get_launcher(self):
         # We could parameterise this so all tests run on both monitors (if MM is
         # set up), but I think it's fine to just always use monitor primary monitor:
-        monitor = self.screen_geo.get_primary_monitor()
+        monitor = self.display.get_primary_screen()
         return self.unity.launcher.get_launcher_for_monitor(monitor)
 
 

@@ -25,6 +25,7 @@ namespace dash
 {
 
 Tracks::Tracks()
+: Model<Track>::Model(ModelType::REMOTE)
 {
   row_added.connect(sigc::mem_fun(this, &Tracks::OnRowAdded));
   row_changed.connect(sigc::mem_fun(this, &Tracks::OnRowChanged));
@@ -32,7 +33,7 @@ Tracks::Tracks()
 }
 
 Tracks::Tracks(ModelType model_type)
-  : Model<Track>::Model(model_type)
+: Model<Track>::Model(model_type)
 {
   row_added.connect(sigc::mem_fun(this, &Tracks::OnRowAdded));
   row_changed.connect(sigc::mem_fun(this, &Tracks::OnRowChanged));

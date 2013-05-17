@@ -24,6 +24,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <vector>
 #include <sigc++/sigc++.h>
 
 namespace unity

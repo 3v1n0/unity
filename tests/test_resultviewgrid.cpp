@@ -49,7 +49,7 @@ class TestResultViewGrid : public Test
 public:
   virtual void SetUp()
   {
-    view.Adopt(new MockResultViewGrid(NUX_TRACKER_LOCATION));
+    view.Adopt(new NiceMock<MockResultViewGrid>(NUX_TRACKER_LOCATION));
     renderer.Adopt(new dash::ResultRenderer(NUX_TRACKER_LOCATION));
 
     view->SetModelRenderer(renderer.GetPointer());

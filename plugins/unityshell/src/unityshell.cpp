@@ -25,7 +25,7 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
 
-#include <UnityCore/Lens.h>
+#include <UnityCore/ScopeProxyInterface.h>
 #include <UnityCore/GnomeSessionManager.h>
 #include <UnityCore/Variant.h>
 
@@ -1839,7 +1839,7 @@ void UnityScreen::SendExecuteCommand()
     ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL, glib::Source::Priority::HIGH);
 
     ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                              g_variant_new("(sus)", "commands.lens", dash::GOTO_DASH_URI, ""),
+                              g_variant_new("(sus)", "commands.scope", dash::ScopeHandledType::GOTO_DASH_URI, ""),
                               glib::Source::Priority::LOW);
   }
 }
@@ -2302,8 +2302,6 @@ bool UnityScreen::initPluginActions()
 
   if (p)
   {
-    MultiActionList expoActions;
-
     for (CompOption& option : p->vTable->getOptions())
     {
       if (option.name() == "close_window_key")
@@ -2507,7 +2505,7 @@ bool UnityWindow::glPaint(const GLWindowPaintAttrib& attrib,
         uScreen->windows_for_monitor_[monitor] = 1;
 
       if (!(mask & nonOcclusionBits) &&
-          (window->state() & CompWindowStateFullscreenMask) &&
+          (window->state() & CompWindowStateFullscreenMask && !window->minimized()) &&
           uScreen->windows_for_monitor_[monitor] == 1)
           // And I've been advised to test other things, but they don't work:
           // && (attrib.opacity == OPAQUE)) <-- Doesn't work; Only set in glDraw
@@ -2624,7 +2622,9 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       {
         draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
 
-        if (!(window->state() & MAXIMIZE_STATE))
+        if (!(window->state() & CompWindowStateMaximizedVertMask) &&
+            !(window->state() & CompWindowStateFullscreenMask) &&
+            !(window->type() & CompWindowTypeFullscreenMask))
         {
           auto const& output = uScreen->screen->currentOutputDev();
 
@@ -3470,7 +3470,7 @@ void UnityWindow::AddProperties(GVariantBuilder* builder)
 
   variant::BuilderWrapper(builder)
     .add(scaled ? GetScaledGeometry() : wm.GetWindowGeometry(xid))
-    .add("xid", xid)
+    .add("xid", (uint64_t)xid)
     .add("title", wm.GetWindowName(xid))
     .add("fake_decorated", uScreen->fake_decorated_windows_.find(this) != uScreen->fake_decorated_windows_.end())
     .add("scaled", scaled)

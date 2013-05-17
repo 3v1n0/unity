@@ -69,8 +69,8 @@ public:
                       nux::Color const& color,
                       float saturate);
 
-  virtual void Preload(Result& row);
-  virtual void Unload(Result& row);
+  virtual void Preload(Result const& row);
+  virtual void Unload(Result const& row);
   
   virtual nux::NBitmapData* GetDndImage(Result const& row) const;
 
@@ -78,15 +78,15 @@ public:
   int padding;
 
 protected:
-  virtual void LoadText(Result& row);
-  void LoadIcon(Result& row);
+  virtual void LoadText(Result const& row);
+  void LoadIcon(Result const& row);
   nux::ObjectPtr<nux::BaseTexture> prelight_cache_;
   nux::ObjectPtr<nux::BaseTexture> normal_cache_;
 private:
   //icon loading callbacks
   void IconLoaded(std::string const& texid, int max_width, int max_height,
                   glib::Object<GdkPixbuf> const& pixbuf,
-                  std::string icon_name, Result& row);
+                  std::string icon_name, Result const& row);
   nux::BaseTexture* CreateTextureCallback(std::string const& texid,
                                           int width, int height,
                                           glib::Object<GdkPixbuf> const& pixbuf);
