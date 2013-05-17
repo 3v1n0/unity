@@ -24,6 +24,7 @@
 
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/UnitySettings.h"
+#include "UnityCore/GTKWrapper.h"
 #include "UnityCore/Result.h"
 #include "dash/ResultRendererTile.h"
 
@@ -52,14 +53,13 @@ GdkPixbuf* GetIconData(std::string icon_hint, int size)
 
   if (icon.IsType(G_TYPE_ICON))
   {
-    GtkIconInfo *info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
+    gtk::IconInfo info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
     pbuf = gtk_icon_info_load_icon(info, &error);
     if (error != NULL)
     {
       g_error_free (error);
       pbuf = NULL;
     }
-    gtk_icon_info_free(info);
   }
 
   return pbuf;

@@ -25,6 +25,7 @@
 #include <gtk/gtk.h>
 #include <unity-protocol.h>
 #include <NuxGraphics/GdkGraphics.h>
+#include <UnityCore/GTKWrapper.h>
 
 namespace unity
 {
@@ -39,7 +40,7 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
 {
   GdkPixbuf *pbuf;
   GtkIconTheme *theme;
-  GtkIconInfo *info;
+  gtk::IconInfo info;
   GError *error = NULL;
   GIcon *icon;
   if (icon_hint.empty())
@@ -51,8 +52,7 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
     if (error != NULL || !pbuf || !GDK_IS_PIXBUF (pbuf))
     {
       icon_hint = "application-default-icon";
-      g_error_free (error);
-      error = NULL;
+      g_clear_error (&error);
     }
     else
       return pbuf;
@@ -92,9 +92,8 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
                                         (GtkIconLookupFlags) 0);
   }
 
-  if (gtk_icon_info_get_filename(info) == NULL)
+  if (!gtk_icon_info_get_filename(info))
   {
-      gtk_icon_info_free(info);
       info = gtk_icon_theme_lookup_icon(theme,
                                         "application-default-icon",
                                         size,
@@ -109,7 +108,6 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
     pbuf = NULL;
   }
 
-  gtk_icon_info_free(info);
   return pbuf;
 }
 

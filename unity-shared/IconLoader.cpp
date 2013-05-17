@@ -32,6 +32,7 @@
 #include <NuxGraphics/CairoGraphics.h>
 #include <UnityCore/GLibSource.h>
 #include <UnityCore/GLibSignal.h>
+#include <UnityCore/GTKWrapper.h>
 
 #include "unity-shared/Timer.h"
 
@@ -100,7 +101,7 @@ private:
     IconLoaderCallback slot;
     Handle handle;
     Impl* impl;
-    GtkIconInfo* icon_info;
+    gtk::IconInfo icon_info;
     bool no_cache;
     int helper_handle;
     std::list<IconLoaderTask::Ptr> shadow_tasks;
@@ -119,13 +120,11 @@ private:
       : type(type_), data(data_), max_width(max_width_)
       , max_height(max_height_), key(key_)
       , slot(slot_), handle(handle_), impl(self_)
-      , icon_info(nullptr), no_cache(false), helper_handle(0)
+      , no_cache(false), helper_handle(0)
       {}
 
     ~IconLoaderTask()
     {
-      if (icon_info)
-        ::gtk_icon_info_free(icon_info);
       if (helper_handle != 0)
         impl->DisconnectHandle(helper_handle);
     }
@@ -181,7 +180,7 @@ private:
     bool ProcessIconNameTask()
     {
       int size = max_height < 0 ? max_width : (max_width < 0 ? max_height : MIN(max_height, max_width));
-      GtkIconInfo* info = ::gtk_icon_theme_lookup_icon(impl->theme_, data.c_str(),
+      GtkIconInfo *info = ::gtk_icon_theme_lookup_icon(impl->theme_, data.c_str(),
                                                        size, static_cast<GtkIconLookupFlags>(0));
       if (info)
       {
@@ -251,7 +250,7 @@ private:
       }
       else if (icon.IsType(G_TYPE_ICON))
       {
-        GtkIconInfo* info = ::gtk_icon_theme_lookup_by_gicon(impl->theme_, icon, size,
+        GtkIconInfo *info = ::gtk_icon_theme_lookup_by_gicon(impl->theme_, icon, size,
                                                              static_cast<GtkIconLookupFlags>(0));
         if (info)
         {
