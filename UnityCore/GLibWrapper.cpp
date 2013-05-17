@@ -25,7 +25,7 @@ namespace glib
 {
 
 Error::Error()
-  : error_(0)
+  : error_(nullptr)
 {}
 
 Error::~Error()
@@ -36,11 +36,13 @@ Error::~Error()
 
 GError** Error::AsOutParam()
 {
+  g_clear_error(&error_);
   return &error_;
 }
 
 GError** Error::operator&()
 {
+  g_clear_error(&error_);
   return &error_;
 }
 
@@ -51,7 +53,7 @@ Error::operator bool() const
 
 Error::operator GError* ()
 {
-    return error_;
+  return error_;
 }
 
 std::string Error::Message() const
@@ -68,7 +70,6 @@ std::ostream& operator<<(std::ostream& o, Error const& e)
     o << e.Message();
   return o;
 }
-
 
 String::String()
   : string_(0)
@@ -116,10 +117,7 @@ String::operator bool() const
 
 std::string String::Str() const
 {
-  if (string_)
-    return std::string(string_);
-  else
-    return std::string("");
+  return gchar_to_string(string_);
 }
 
 std::ostream& operator<<(std::ostream& o, String const& s)

@@ -130,10 +130,7 @@ private:
 
 inline std::string gchar_to_string(const gchar* str)
 {
-  if (!str)
-    return std::string("");
-  else
-    return std::string(str);
+  return str ? str : "";
 }
 
 class Cancellable : boost::noncopyable
