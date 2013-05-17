@@ -135,7 +135,7 @@ public:
   void OnSearchFinished(GVariant* parameters)
   {
     Hints hints;
-    unsigned long long reply_seqnum;
+    uint64_t reply_seqnum;
     reply_seqnum = ExtractModelSeqnum (parameters);
     if (results_->seqnum < reply_seqnum)
     {
@@ -152,8 +152,7 @@ public:
     search_finished.emit(hints);
   }
 
-  void ResultsModelUpdated(unsigned long long begin_seqnum,
-                                       unsigned long long end_seqnum)
+  void ResultsModelUpdated(uint64_t begin_seqnum, uint64_t end_seqnum)
   {
     if (results_variant_ != NULL &&
         end_seqnum >= ExtractModelSeqnum (results_variant_))
@@ -227,18 +226,18 @@ public:
   sigc::signal<void, Hints const&> search_finished;
 
 protected:
-  unsigned long long ExtractModelSeqnum(GVariant *parameters)
+  uint64_t ExtractModelSeqnum(GVariant *parameters)
   {
     GVariant *dict;
     guint64 seqnum64;
-    unsigned long long seqnum = 0;
+    uint64_t seqnum = 0;
 
     dict = g_variant_get_child_value (parameters, 0);
     if (dict)
     {
       if (g_variant_lookup (dict, "model-seqnum", "t", &seqnum64))
       {
-        seqnum = static_cast<unsigned long long> (seqnum64);
+        seqnum = static_cast<uint64_t> (seqnum64);
       }
 
       g_variant_unref (dict);

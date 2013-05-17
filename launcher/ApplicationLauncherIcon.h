@@ -61,7 +61,7 @@ public:
 
   virtual bool ShowInSwitcher(bool current);
   virtual bool AllowDetailViewInSwitcher() const override;
-  virtual unsigned long long SwitcherPriority();
+  virtual uint64_t SwitcherPriority();
 
   virtual nux::Color BackgroundColor() const;
 

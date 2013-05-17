@@ -112,7 +112,7 @@ GnomeFileManager::GnomeFileManager()
 GnomeFileManager::~GnomeFileManager()
 {}
 
-void GnomeFileManager::Open(std::string const& uri, unsigned long long timestamp)
+void GnomeFileManager::Open(std::string const& uri, uint64_t timestamp)
 {
   if (uri.empty())
   {
@@ -136,14 +136,14 @@ void GnomeFileManager::Open(std::string const& uri, unsigned long long timestamp
   }
 }
 
-void GnomeFileManager::OpenActiveChild(std::string const& uri, unsigned long long timestamp)
+void GnomeFileManager::OpenActiveChild(std::string const& uri, uint64_t timestamp)
 {
   auto const& opened = impl_->GetOpenedPrefix(uri);
 
   Open(opened.empty() ? uri : opened, timestamp);
 }
 
-void GnomeFileManager::OpenTrash(unsigned long long timestamp)
+void GnomeFileManager::OpenTrash(uint64_t timestamp)
 {
   if (IsPrefixOpened(TRASH_PATH))
   {
@@ -155,7 +155,7 @@ void GnomeFileManager::OpenTrash(unsigned long long timestamp)
   }
 }
 
-void GnomeFileManager::Activate(unsigned long long timestamp)
+void GnomeFileManager::Activate(uint64_t timestamp)
 {
   glib::Cancellable cancellable;
   glib::Object<GFile> file(g_file_new_for_uri(TRASH_URI.c_str()));
@@ -189,7 +189,7 @@ void GnomeFileManager::Activate(unsigned long long timestamp)
   }
 }
 
-void GnomeFileManager::EmptyTrash(unsigned long long timestamp)
+void GnomeFileManager::EmptyTrash(uint64_t timestamp)
 {
   Activate(timestamp);
 

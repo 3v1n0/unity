@@ -163,7 +163,7 @@ public:
   bool IsScreenGrabbed() const;
   bool IsViewPortSwitchStarted() const;
 
-  unsigned long long GetWindowActiveNumber(Window window_id) const;
+  uint64_t GetWindowActiveNumber(Window window_id) const;
 
   bool MaximizeIfBigEnough(CompWindow* window) const;
 

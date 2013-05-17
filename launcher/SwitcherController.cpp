@@ -649,15 +649,15 @@ void Controller::Impl::SelectFirstItem()
     return;
   }
 
-  unsigned long long first_highest = 0;
-  unsigned long long first_second = 0; // first icons second highest active
-  unsigned long long second_first = 0; // second icons first highest active
+  uint64_t first_highest = 0;
+  uint64_t first_second = 0; // first icons second highest active
+  uint64_t second_first = 0; // second icons first highest active
 
   WindowManager& wm = WindowManager::Default();
   for (auto& window : first->Windows())
   {
     Window xid = window->window_id();
-    unsigned long long num = wm.GetWindowActiveNumber(xid);
+    uint64_t num = wm.GetWindowActiveNumber(xid);
 
     if (num > first_highest)
     {
