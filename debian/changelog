@@ -1,17 +1,9 @@
-unity (7.0.0daily13.05.08ubuntu.unity.experimental.certified-0ubuntu1) raring; urgency=low
+unity (7.0.0daily13.05.08ubuntu.unity.next-0ubuntu1) UNRELEASED; urgency=low
 
   [ Nick Dedekind ]
   * Keyboard focus lost if trying to navigate while search is ongoing
     (LP: #1170709)
   * Occasional loss of focus in the input text field (LP: #1174488)
-
-  [ Ubuntu daily release ]
-  * Automatic snapshot from revision 3137 (ubuntu-unity/experimental-
-    certified)
-
- -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 08 May 2013 07:03:04 +0000
-
-unity (7.0.0daily13.05.07ubuntu.unity.experimental.certified-0ubuntu1) raring; urgency=low
 
   [ Andrea Azzarone ]
   * Search Plugins previews in the apps lens should not display any
@@ -24,11 +16,7 @@ unity (7.0.0daily13.05.07ubuntu.unity.experimental.certified-0ubuntu1) raring; u
   * Nautilus incorrectly highlighted as valid target DND target for lots
     of results (LP: #1170721)
 
-  [ Ubuntu daily release ]
-  * Automatic snapshot from revision 3134 (ubuntu-unity/experimental-
-    certified)
-
- -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 07 May 2013 07:04:19 +0000
+ -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Fri, 17 May 2013 21:57:05 +0200
 
 unity (7.0.0daily13.05.01.1ubuntu.unity.next-0ubuntu1) raring; urgency=low
 
