@@ -143,6 +143,14 @@ execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} unity --variable lensesdir OUT
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator3-0.4 --variable indicatordir OUTPUT_VARIABLE INDICATORDIR OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator3-0.4 --variable iconsdir OUTPUT_VARIABLE INDICATORICONDIR OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+pkg_check_modules (GTK_3_8 gtk+-3.0>=3.8)
+
+if (GTK_3_8_FOUND)
+    set (HAVE_GTK_3_8 TRUE)
+else (GTK_3_8_FOUND)
+    set (HAVE_GTK_3_8 FALSE)
+endif (GTK_3_8_FOUND)
+
 configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 
 #

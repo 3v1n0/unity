@@ -34,6 +34,7 @@
 #include <UnityCore/GLibSignal.h>
 
 #include "unity-shared/Timer.h"
+#include "unity-shared/GtkUtil.h"
 
 namespace unity
 {
@@ -124,8 +125,7 @@ private:
 
     ~IconLoaderTask()
     {
-      if (icon_info)
-        ::gtk_icon_info_free(icon_info);
+      gtk::UnreferenceIconInfo(icon_info);
       if (helper_handle != 0)
         impl->DisconnectHandle(helper_handle);
     }

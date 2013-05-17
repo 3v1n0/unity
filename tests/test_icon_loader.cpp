@@ -21,6 +21,7 @@
 #include <sigc++/sigc++.h>
 
 #include "IconLoader.h"
+#include "unity-shared/GtkUtil.h"
 #include "test_utils.h"
 
 using namespace testing;
@@ -208,6 +209,32 @@ TEST(TestIconLoader, TestCancelSome)
   }
 
   CheckResults(results);
+}
+
+TEST(GtkIconUtilDeathTest, NoDeathOnUnreference)
+{
+  GList *icons = gtk_icon_theme_list_icons(gtk_icon_theme_get_default(), "Emblems");
+
+  // Get the first icon name
+  if (icons)
+  {
+    const char *icon_name = static_cast <const char *>(icons->data);
+    GtkIconInfo *info = gtk_icon_theme_lookup_icon(gtk_icon_theme_get_default(), icon_name, 32, (GtkIconLookupFlags) 0);
+    ASSERT_THAT(info, NotNull());
+    EXPECT_EXIT({
+        unity::gtk::UnreferenceIconInfo(info);
+        fprintf(stderr, "Success\n");
+        exit(0);
+    }, ExitedWithCode(0), "Success");
+
+    unity::gtk::UnreferenceIconInfo(info);
+  }
+
+  // Free all the icons
+  for (GList *it = icons; it != NULL; it = it->next)
+    g_free (it->data);
+
+  g_list_free (icons);
 }
 
 
