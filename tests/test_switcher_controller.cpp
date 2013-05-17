@@ -84,7 +84,7 @@ TEST_F(TestSwitcherController, ShowSwitcher)
   EXPECT_CALL(*mock_window_, ShowWindow(true, _)).Times(AtLeast(1));
 
   controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
-  Utils::WaitForTimeoutMSec(200);
+  Utils::WaitUntilMSec([this] { return controller_->Visible(); });
   EXPECT_TRUE(controller_->Visible());
   EXPECT_TRUE(controller_->StartIndex() == 1);
 }
@@ -97,7 +97,7 @@ TEST_F(TestSwitcherController, ShowSwitcherNoShowDeskop)
   ASSERT_TRUE(controller_->IsShowDesktopDisabled());
 
   controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
-  Utils::WaitForTimeoutMSec(200);
+  Utils::WaitUntilMSec([this] { return controller_->Visible(); });
   ASSERT_TRUE(controller_->StartIndex() == 0);
   Selection selection = controller_->GetCurrentSelection();
   EXPECT_NE(selection.application_->tooltip_text(), "Show Desktop");
@@ -118,6 +118,31 @@ TEST_F(TestSwitcherController, ShowSwitcherNoResults)
   ASSERT_FALSE(controller_->Visible());
   Selection selection = controller_->GetCurrentSelection();
   EXPECT_FALSE(selection.application_);
+}
+
+TEST_F(TestSwitcherController, ShowSwitcherSelectsWindowOfActiveApp)
+{
+  // Making the first application active
+  auto const& first_app = icons_[1];
+  first_app->SetQuirk(launcher::AbstractLauncherIcon::Quirk::ACTIVE, true);
+
+  // Raising the priority of the second window of the first app
+  auto first_app_windows = first_app->Windows();
+  auto first_app_last_window = first_app_windows.back();
+  auto standalone = WM->GetWindowByXid(first_app_last_window->window_id());
+  standalone->active_number = WM->GetWindowActiveNumber(first_app_windows.front()->window_id()) - 1;
+
+  // Setting the active number of the first window of the second app to max uint
+  auto second_app_first_window = icons_[2]->Windows().front();
+  standalone = WM->GetWindowByXid(second_app_first_window->window_id());
+  standalone->active_number = std::numeric_limits<unsigned>::max();
+
+  controller_->Show(ShowMode::CURRENT_VIEWPORT, SortMode::FOCUS_ORDER, icons_);
+  Utils::WaitUntilMSec([this] { return controller_->Visible(); });
+
+  Selection selection = controller_->GetCurrentSelection();
+  ASSERT_EQ(selection.application_, first_app);
+  EXPECT_EQ(selection.window_, first_app_last_window->window_id());
 }
 
 TEST_F(TestSwitcherController, Opacity)

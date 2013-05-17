@@ -29,7 +29,6 @@
 #include "FavoriteStore.h"
 #include "StandaloneWindowManager.h"
 #include "mock-application.h"
-#include "StandaloneWindowManager.h"
 #include "test_utils.h"
 
 using namespace testing;
