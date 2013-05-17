@@ -125,7 +125,7 @@ private:
     ~IconLoaderTask()
     {
       if (icon_info)
-        ::gtk_icon_info_free(icon_info);
+        ::g_object_unref(G_OBJECT(icon_info));
       if (helper_handle != 0)
         impl->DisconnectHandle(helper_handle);
     }

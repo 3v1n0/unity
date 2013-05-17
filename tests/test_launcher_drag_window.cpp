@@ -17,6 +17,8 @@
  * Authored by: Marco Trevisan (Treviño) <marco.trevisan@canonical.com>
  */
 
+#include <functional>
+
 #include <gmock/gmock.h>
 
 #include "LauncherDragWindow.h"
@@ -35,13 +37,38 @@ namespace unity
 {
 namespace launcher
 {
+class StubLauncherDragWindow : public LauncherDragWindow
+{
+  public:
+
+    StubLauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> const &texture,
+                           std::function<void(nux::GraphicsEngine&)> const &callback)
+     : LauncherDragWindow(texture, callback)
+    {}
+
+  protected:
+
+    bool DrawContentOnNuxLayer() const { return false; }
+};
+
 struct TestLauncherDragWindow : public testing::Test
 {
   TestLauncherDragWindow()
-    : drag_window(new LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture>(new nux::IOpenGLBaseTexture(nux::RTTEXTURE, ICON_WIDTH, ICON_HEIGHT, 24, 1, nux::BITFMT_B8G8R8A8))))
+    : texture(new nux::IOpenGLBaseTexture(nux::RTTEXTURE, ICON_WIDTH, ICON_HEIGHT, 24, 1, nux::BITFMT_R8G8B8A8))
+    , drag_window(new LauncherDragWindow(texture,
+                                         [](nux::GraphicsEngine &){
+                                         }))
   {}
 
+  nux::ObjectPtr<nux::IOpenGLBaseTexture> texture;
   nux::ObjectPtr<LauncherDragWindow> drag_window;
+};
+
+class DrawCallback
+{
+  public:
+
+    MOCK_METHOD0(callback, void());
 };
 }
 
@@ -51,6 +78,44 @@ TEST_F(TestLauncherDragWindow, Construction)
   EXPECT_EQ(drag_window->GetBaseHeight(), ICON_HEIGHT);
   EXPECT_FALSE(drag_window->Animating());
   EXPECT_FALSE(drag_window->Cancelled());
+}
+
+TEST_F(TestLauncherDragWindow, NoDrawOnConstruction)
+{
+  DrawCallback cb;
+
+  EXPECT_CALL(cb, callback()).Times(0);
+
+  drag_window.Adopt(new StubLauncherDragWindow (texture,
+                                                std::bind(&DrawCallback::callback,
+                                                          &cb)));
+}
+
+TEST_F(TestLauncherDragWindow, DrawOnFirstPaint)
+{
+  DrawCallback cb;
+
+  drag_window.Adopt(new StubLauncherDragWindow (texture,
+                                                std::bind(&DrawCallback::callback,
+                                                          &cb)));
+
+  EXPECT_CALL(cb, callback()).Times(1);
+
+  drag_window->DrawContent(*(nux::GetGraphicsDisplay()->GetGraphicsEngine()), false);
+}
+
+TEST_F(TestLauncherDragWindow, NoDrawOnSecondPaint)
+{
+  DrawCallback cb;
+
+  drag_window.Adopt(new StubLauncherDragWindow (texture,
+                                                std::bind(&DrawCallback::callback,
+                                                          &cb)));
+
+  EXPECT_CALL(cb, callback()).Times(1);
+
+  drag_window->DrawContent(*(nux::GetGraphicsDisplay()->GetGraphicsEngine()), false);
+  drag_window->DrawContent(*(nux::GetGraphicsDisplay()->GetGraphicsEngine()), false);
 }
 
 TEST_F(TestLauncherDragWindow, EscapeRequestsCancellation)

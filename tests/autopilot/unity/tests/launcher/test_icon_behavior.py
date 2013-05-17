@@ -51,12 +51,12 @@ class LauncherIconsTests(LauncherTestCase):
         return icon
 
     def ensure_calculator_in_launcher_and_not_running(self):
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         calc_icon = self.unity.launcher.model.get_icon(desktop_id=calc.desktop_file)
         self.addCleanup(self.launcher_instance.unlock_from_launcher, calc_icon)
         self.launcher_instance.lock_to_launcher(calc_icon)
-        self.close_all_app("Calculator")
-        self.assertThat(lambda: self.app_is_running("Calculator"), Eventually(Equals(False)))
+        self.process_manager.close_all_app("Calculator")
+        self.assertThat(lambda: self.process_manager.app_is_running("Calculator"), Eventually(Equals(False)))
         return calc_icon
 
     def test_bfb_tooltip_disappear_when_dash_is_opened(self):
@@ -88,7 +88,7 @@ class LauncherIconsTests(LauncherTestCase):
 
     def test_shift_click_opens_new_application_instance(self):
         """Shift+Clicking MUST open a new instance of an already-running application."""
-        app = self.start_app("Calculator")
+        app = self.process_manager.start_app("Calculator")
         icon = self.unity.launcher.model.get_icon(desktop_id=app.desktop_file)
         launcher_instance = self.unity.launcher.get_launcher_for_monitor(0)
 
@@ -103,9 +103,9 @@ class LauncherIconsTests(LauncherTestCase):
         of that application.
 
         """
-        char_win1 = self.start_app_window("Character Map")
-        calc_win = self.start_app_window("Calculator")
-        char_win2 = self.start_app_window("Character Map")
+        char_win1 = self.process_manager.start_app_window("Character Map")
+        calc_win = self.process_manager.start_app_window("Calculator")
+        char_win2 = self.process_manager.start_app_window("Character Map")
 
         self.assertVisibleWindowStack([char_win2, calc_win, char_win1])
 
@@ -136,10 +136,10 @@ class LauncherIconsTests(LauncherTestCase):
     def test_launcher_uses_startup_notification(self):
         """Tests that unity uses startup notification protocol."""
         calc_icon = self.ensure_calculator_in_launcher_and_not_running()
-        self.addCleanup(self.close_all_app, "Calculator")
+        self.addCleanup(self.process_manager.close_all_app, "Calculator")
         self.launcher_instance.click_launcher_icon(calc_icon)
 
-        calc_app = self.bamf.get_running_applications_by_desktop_file(calc_icon.desktop_id)[0]
+        calc_app = self.process_manager.get_running_applications_by_desktop_file(calc_icon.desktop_id)[0]
         calc_window = calc_app.get_windows()[0]
 
         self.assertThat(lambda: self.get_startup_notification_timestamp(calc_window), Eventually(Equals(calc_icon.startup_notification_timestamp)))
@@ -148,16 +148,16 @@ class LauncherIconsTests(LauncherTestCase):
         """Tests that when the trash is opened, clicking on the icon re-focus the trash again"""
         self.register_nautilus()
         self.addCleanup(self.close_all_windows, "Nautilus")
-        self.addCleanup(self.close_all_app, "Calculator")
+        self.addCleanup(self.process_manager.close_all_app, "Calculator")
         self.close_all_windows("Nautilus")
 
         trash_icon = self.unity.launcher.model.get_trash_icon()
         self.launcher_instance.click_launcher_icon(trash_icon)
-        self.assertThat(lambda: len(self.get_open_windows_by_application("Nautilus")), Eventually(Equals(1)))
-        [trash_window] = self.get_open_windows_by_application("Nautilus")
+        self.assertThat(lambda: len(self.process_manager.get_open_windows_by_application("Nautilus")), Eventually(Equals(1)))
+        [trash_window] = self.process_manager.get_open_windows_by_application("Nautilus")
         self.assertThat(lambda: trash_window.is_focused, Eventually(Equals(True)))
 
-        calc_win = self.start_app_window("Calculator")
+        calc_win = self.process_manager.start_app_window("Calculator")
         self.assertThat(lambda: calc_win.is_focused, Eventually(Equals(True)))
         self.assertThat(lambda: trash_window.is_focused, Eventually(Equals(False)))
 
@@ -172,12 +172,12 @@ class LauncherIconsTests(LauncherTestCase):
 
         trash_icon = self.unity.launcher.model.get_trash_icon()
         self.launcher_instance.click_launcher_icon(trash_icon)
-        self.assertThat(lambda: len(self.get_open_windows_by_application("Nautilus")), Eventually(Equals(1)))
+        self.assertThat(lambda: len(self.process_manager.get_open_windows_by_application("Nautilus")), Eventually(Equals(1)))
 
-        nautilus_app = self.get_app_instances("Nautilus")
+        nautilus_app = self.process_manager.get_app_instances("Nautilus")
         nautilus_icon = self.unity.launcher.model.get_icon(desktop_id="nautilus.desktop")
         self.launcher_instance.click_launcher_icon(nautilus_icon)
-        self.assertThat(lambda: len(self.get_open_windows_by_application("Nautilus")), Eventually(Equals(2)))
+        self.assertThat(lambda: len(self.process_manager.get_open_windows_by_application("Nautilus")), Eventually(Equals(2)))
 
     def test_super_number_shortcut_focuses_new_windows(self):
         """Windows launched using super+number must have
@@ -186,7 +186,7 @@ class LauncherIconsTests(LauncherTestCase):
         """
         bfb_icon = self.unity.launcher.model.get_bfb_icon()
         calc_icon = self.ensure_calculator_in_launcher_and_not_running()
-        self.addCleanup(self.close_all_app, "Calculator")
+        self.addCleanup(self.process_manager.close_all_app, "Calculator")
 
         self.launcher_instance.drag_icon_to_position(
             calc_icon,
@@ -197,7 +197,7 @@ class LauncherIconsTests(LauncherTestCase):
         self.addCleanup(self.launcher_instance.keyboard_unreveal_launcher)
         self.keyboard.press_and_release("1");
 
-        calc_app = self.bamf.get_running_applications_by_desktop_file(calc_icon.desktop_id)[0]
+        calc_app = self.process_manager.get_running_applications_by_desktop_file(calc_icon.desktop_id)[0]
         calc_window = calc_app.get_windows()[0]
 
         self.assertThat(lambda: calc_window.is_focused, Eventually(Equals(True)))
@@ -206,8 +206,8 @@ class LauncherIconsTests(LauncherTestCase):
         """This tests shows that when you click on a launcher icon twice,
         when an application window is focused, the spread is initiated.
         """
-        char_win1 = self.start_app_window("Character Map")
-        char_win2 = self.start_app_window("Character Map")
+        char_win1 = self.process_manager.start_app_window("Character Map")
+        char_win2 = self.process_manager.start_app_window("Character Map")
         char_app = char_win1.application
 
         self.assertVisibleWindowStack([char_win2, char_win1])
@@ -224,8 +224,8 @@ class LauncherIconsTests(LauncherTestCase):
         """If scale is initiated through the laucher pressing super must close
         scale and open the dash.
         """
-        char_win1 = self.start_app_window("Character Map")
-        char_win2 = self.start_app_window("Character Map")
+        char_win1 = self.process_manager.start_app_window("Character Map")
+        char_win2 = self.process_manager.start_app_window("Character Map")
         char_app = char_win1.application
 
         self.assertVisibleWindowStack([char_win2, char_win1])
@@ -243,13 +243,13 @@ class LauncherIconsTests(LauncherTestCase):
 
     def test_icon_shows_on_quick_application_reopen(self):
         """Icons must stay on launcher when an application is quickly closed/reopened."""
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         desktop_file = calc.desktop_file
         calc_icon = self.unity.launcher.model.get_icon(desktop_id=desktop_file)
         self.assertThat(calc_icon.visible, Eventually(Equals(True)))
 
-        self.close_all_app("Calculator")
-        calc = self.start_app("Calculator")
+        self.process_manager.close_all_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         sleep(2)
 
         calc_icon = self.unity.launcher.model.get_icon(desktop_id=desktop_file)
@@ -356,7 +356,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
         """Application icons must be draggable to below the BFB."""
 
         self.ensure_calc_icon_not_in_launcher()
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         calc_icon = self.unity.launcher.model.get_icon(desktop_id=calc.desktop_file)
         bfb_icon = self.unity.launcher.model.get_bfb_icon()
 
@@ -373,7 +373,7 @@ class LauncherDragIconsBehavior(LauncherTestCase):
         """Application icons must be dragable to below the workspace switcher icon."""
 
         self.ensure_calc_icon_not_in_launcher()
-        calc = self.start_app("Calculator")
+        calc = self.process_manager.start_app("Calculator")
         calc_icon = self.unity.launcher.model.get_icon(desktop_id=calc.desktop_file)
         bfb_icon = self.unity.launcher.model.get_bfb_icon()
         trash_icon = self.unity.launcher.model.get_trash_icon()
