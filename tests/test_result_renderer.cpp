@@ -24,6 +24,7 @@
 
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/UnitySettings.h"
+#include "unity-shared/GtkUtil.h"
 #include "UnityCore/Result.h"
 #include "dash/ResultRendererTile.h"
 
@@ -59,7 +60,7 @@ GdkPixbuf* GetIconData(std::string icon_hint, int size)
       g_error_free (error);
       pbuf = NULL;
     }
-    gtk_icon_info_free(info);
+    gtk::UnreferenceIconInfo(info);
   }
 
   return pbuf;
