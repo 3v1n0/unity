@@ -94,6 +94,10 @@ DBusIndicators::Impl::Impl(std::string const& dbus_name, DBusIndicators* owner)
   gproxy_.disconnected.connect(sigc::mem_fun(this, &DBusIndicators::Impl::OnDisconnected));
 
   CheckLocalService();
+
+  if (gproxy_.IsConnected()) {
+    RequestSyncAll();
+  }
 }
 
 void DBusIndicators::Impl::CheckLocalService()
