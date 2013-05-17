@@ -41,7 +41,7 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
   GdkPixbuf *pbuf;
   GtkIconTheme *theme;
   gtk::IconInfo info;
-  GError *error = NULL;
+  glib::Error error;
   glib::Object<GIcon> icon;
 
   if (icon_hint.empty())
@@ -51,10 +51,9 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
   {
     pbuf = gdk_pixbuf_new_from_file_at_scale (icon_hint.c_str(),
                                               size, size, TRUE, &error);
-    if (error != NULL || !pbuf || !GDK_IS_PIXBUF (pbuf))
+    if (error || !pbuf || !GDK_IS_PIXBUF (pbuf))
     {
       icon_hint = "application-default-icon";
-      g_clear_error (&error);
     }
     else
       return pbuf;
@@ -101,10 +100,9 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
 
   pbuf = gtk_icon_info_load_icon(info, &error);
 
-  if (error != NULL)
+  if (error)
   {
-    g_error_free (error);
-    pbuf = NULL;
+    pbuf = nullptr;
   }
 
   return pbuf;

@@ -46,7 +46,7 @@ GdkPixbuf* GetIconData(std::string icon_hint, int size)
 {
   GdkPixbuf *pbuf;
   GtkIconTheme *theme;
-  GError *error = NULL;
+  glib::Error error;
 
   theme = gtk_icon_theme_get_default();
   glib::Object<GIcon> icon(g_icon_new_for_string(icon_hint.c_str(), NULL));
@@ -55,9 +55,9 @@ GdkPixbuf* GetIconData(std::string icon_hint, int size)
   {
     gtk::IconInfo info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
     pbuf = gtk_icon_info_load_icon(info, &error);
-    if (error != NULL)
+
+    if (error)
     {
-      g_error_free (error);
       pbuf = NULL;
     }
   }
