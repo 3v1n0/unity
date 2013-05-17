@@ -53,7 +53,7 @@ GdkPixbuf* GetIconData(std::string icon_hint, int size)
 
   if (icon.IsType(G_TYPE_ICON))
   {
-    gtk::IconInfo info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
+    gtk::IconInfo info(gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0));
     pbuf = gtk_icon_info_load_icon(info, &error);
 
     if (error)
