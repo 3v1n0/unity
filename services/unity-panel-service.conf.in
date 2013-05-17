@@ -4,5 +4,7 @@ author "Ted Gould <ted@ubuntu.com>"
 start on started unity
 stop on stopping unity
 
+emits indicators-loaded
+
 respawn
 exec ${CMAKE_INSTALL_PREFIX}/lib/unity/unity-panel-service
