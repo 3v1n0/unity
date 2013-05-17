@@ -217,11 +217,11 @@ class HudBehaviorTests(HudTestsBase):
         self.assertThat(hud_query_check,
                         Eventually(Equals(u'Undo\u2002(Edit)')))
         self.keyboard.press_and_release('Return')
-        self.assertThat(self.unity.hud.visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.hud.visible, Eventually(Equals(False), timeout=30))
 
         self.assertProperty(gedit_win, is_focused=True)
         self.keyboard.press_and_release("Ctrl+s")
-        self.assertThat(lambda: exists(file_path), Eventually(Equals(True)))
+        self.assertThat(lambda: exists(file_path), Eventually(Equals(True), timeout=30))
 
         contents = open(file_path).read().strip('\n')
         self.assertEqual("0 ", contents)
@@ -326,13 +326,13 @@ class HudBehaviorTests(HudTestsBase):
         self.assertThat(self.unity.hud.search_string, Eventually(Equals("Quit")))
         hud_query_check = lambda: self.unity.hud.selected_hud_button.label_no_formatting
         self.assertThat(hud_query_check,
-                        Eventually(Equals(u'Quit\u2002(File)')))
+                        Eventually(Equals(u'Quit\u2002(File)'), timeout=30))
 
         self.keyboard.press_and_release("Enter")
 
         self.assertFalse(self.process_manager.app_is_running("Text Editor"))
 
-        self.assertThat(self.unity.hud.visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.hud.visible, Eventually(Equals(False), timeout=30))
 
     def test_hud_closes_on_escape(self):
         """Hud must close on escape after searchbox is cleared"""
