@@ -48,6 +48,7 @@ public:
 
   void AddFilter(Filter::Ptr const& filter);
   void RemoveFilter(Filter::Ptr const& filter);
+  void ClearFilters();
 
 protected:
   virtual bool AcceptKeyNavFocus();

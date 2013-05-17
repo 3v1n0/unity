@@ -95,6 +95,13 @@ float RowAdaptorBase::GetFloatAt(int position) const
   return static_cast<float>(dee_model_get_double(model_, iter_, position));
 }
 
+glib::Variant RowAdaptorBase::GetVariantAt(int position) const
+{
+  if (!model_ || !iter_)
+    return nullptr;
+  return dee_model_get_value(model_, iter_, position);
+}
+
 void RowAdaptorBase::set_model_tag(gpointer value)
 {
   dee_model_set_tag(model_, iter_, tag_, value);

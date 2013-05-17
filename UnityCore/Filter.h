@@ -77,6 +77,8 @@ public:
   virtual void Clear() = 0;
   bool IsValid() const;
 
+  glib::Variant VariantValue() const;
+
   nux::ROProperty<std::string> id;
   nux::ROProperty<std::string> name;
   nux::ROProperty<std::string> icon_hint;

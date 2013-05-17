@@ -37,6 +37,7 @@ public:
   void Clear();
 
   nux::Property<float> rating;
+  nux::ROProperty<bool> show_all_button;
 
 protected:
   void Update(Filter::Hints& hints);
@@ -44,6 +45,9 @@ protected:
 private:
   void OnRatingChanged(float new_value);
   void UpdateState(float new_rating);
+
+  bool get_show_all_button() const;
+  bool show_all_button_;
 };
 
 }

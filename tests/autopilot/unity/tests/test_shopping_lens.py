@@ -17,91 +17,91 @@ import gettext
 from unity.tests import UnityTestCase
 
 
-class ShoppingLensTests(UnityTestCase):
-    """Test the shopping lens bahavior."""
+class ShoppingScopeTests(UnityTestCase):
+    """Test the shopping scope bahavior."""
 
     def setUp(self):
-        super(ShoppingLensTests, self).setUp()
+        super(ShoppingScopeTests, self).setUp()
         try:
             urllib2.urlopen("http://www.google.com", timeout=2)
         except urllib2.URLError, e:
             self.skip("Skipping test, no internet connection")
-        gettext.install("unity-lens-shopping")
+        gettext.install("unity-scope-shopping")
 
     def tearDown(self):
         self.unity.dash.ensure_hidden()
-        super(ShoppingLensTests, self).tearDown()
+        super(ShoppingScopeTests, self).tearDown()
 
-    def test_no_results_in_home_lens_if_empty_search(self):
-        """Test that the home lens contains no results if the search bar is empty."""
+    def test_no_results_in_home_scope_if_empty_search(self):
+        """Test that the home scope contains no results if the search bar is empty."""
         self.unity.dash.ensure_visible()
-        lens = self.unity.dash.get_current_lens()
+        scope = self.unity.dash.get_current_scope()
 
-        results_category = lens.get_category_by_name(_("More suggestions"))
+        results_category = scope.get_category_by_name(_("More suggestions"))
         refresh_results_fn = lambda: len(results_category.get_results())
         self.assertThat(refresh_results_fn, Eventually(Equals(0)))
 
-    def test_home_lens_has_shopping_results(self):
-        """Test that the home lens contains results."""
+    def test_home_scope_has_shopping_results(self):
+        """Test that the home scope contains results."""
         self.unity.dash.ensure_visible()
-        lens = self.unity.dash.get_current_lens()
+        scope = self.unity.dash.get_current_scope()
 
         self.keyboard.type("playstation")
-        results_category = lens.get_category_by_name(_("More suggestions"))
+        results_category = scope.get_category_by_name(_("More suggestions"))
 
         refresh_results_fn = lambda: len(results_category.get_results())
-        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1)))
+        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1), timeout=25))
 
-    def test_application_lens_has_shopping_results(self):
-        """Test that the application lens contains results."""
-        self.unity.dash.reveal_application_lens()
-        lens = self.unity.dash.get_current_lens()
+    def test_application_scope_has_shopping_results(self):
+        """Test that the application scope contains results."""
+        self.unity.dash.reveal_application_scope()
+        scope = self.unity.dash.get_current_scope()
 
         self.keyboard.type("Text Editor")
-        results_category = lens.get_category_by_name(_("More suggestions"))
+        results_category = scope.get_category_by_name(_("More suggestions"))
 
         refresh_results_fn = lambda: len(results_category.get_results())
-        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1)))
+        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1), timeout=25))
 
-    def test_music_lens_has_shopping_results(self):
-        """Test that the music lens contains results."""
-        self.unity.dash.reveal_music_lens()
-        lens = self.unity.dash.get_current_lens()
+    def test_music_scope_has_shopping_results(self):
+        """Test that the music scope contains results."""
+        self.unity.dash.reveal_music_scope()
+        scope = self.unity.dash.get_current_scope()
 
         self.keyboard.type("megadeth")
-        results_category = lens.get_category_by_name(_("More suggestions"))
+        results_category = scope.get_category_by_name(_("Albums"))
 
         refresh_results_fn = lambda: len(results_category.get_results())
-        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1)))
+        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1), timeout=25))
 
-    def test_preview_works_with_shopping_lens(self):
-        """This test shows the dash preview works with shopping lens results."""
+    def test_preview_works_with_shopping_scope(self):
+        """This test shows the dash preview works with shopping scope results."""
         self.unity.dash.ensure_visible()
-        lens = self.unity.dash.get_current_lens()
+        scope = self.unity.dash.get_current_scope()
 
         self.keyboard.type("playstation")
-        results_category = lens.get_category_by_name(_("More suggestions"))
+        results_category = scope.get_category_by_name(_("More suggestions"))
 
         refresh_results_fn = lambda: len(results_category.get_results())
-        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1)))
+        self.assertThat(refresh_results_fn, Eventually(GreaterThan(1), timeout=25))
 
         results = results_category.get_results()
         results[0].preview()
 
         self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(True)))
 
-    def test_shopping_lens_preview_navigate_right(self):
-        """This test shows that shopping lens results can open previews,
+    def test_shopping_scope_preview_navigate_right(self):
+        """This test shows that shopping scope results can open previews,
         then move to the next shopping result.
         """
         self.unity.dash.ensure_visible()
-        lens = self.unity.dash.get_current_lens()
+        scope = self.unity.dash.get_current_scope()
 
         self.keyboard.type("playstation")
-        results_category = lens.get_category_by_name(_("More suggestions"))
+        results_category = scope.get_category_by_name(_("More suggestions"))
 
         refresh_results_fn = lambda: len(results_category.get_results())
-        self.assertThat(refresh_results_fn, Eventually(GreaterThan(2)))
+        self.assertThat(refresh_results_fn, Eventually(GreaterThan(2), timeout=25))
 
         results = results_category.get_results()
         results[0].preview()

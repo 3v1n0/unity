@@ -437,7 +437,7 @@ TEST(TestGLibIdle, Running)
   idle.Run(&OnSourceCallbackStop);
   EXPECT_TRUE(idle.IsRunning());
 
-  Utils::WaitUntilMSec([&idle] {return idle.IsRunning();}, false, 300);
+  Utils::WaitUntilMSec([&idle] {return idle.IsRunning();}, false, 20000);
   EXPECT_TRUE(callback_called);
   EXPECT_EQ(callback_call_count, 1);
 }

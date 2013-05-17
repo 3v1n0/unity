@@ -600,7 +600,7 @@ void StandaloneWindowManager::AddProperties(GVariantBuilder* builder)
   unity::variant::BuilderWrapper wrapper(builder);
   wrapper.add(GetScreenGeometry())
          .add("workspace_count", WorkspaceCount())
-         .add("active_window", GetActiveWindow())
+         .add("active_window", (uint64_t)GetActiveWindow())
          .add("screen_grabbed", IsScreenGrabbed())
          .add("scale_active", IsScaleActive())
          .add("scale_active_for_group", IsScaleActiveForGroup())

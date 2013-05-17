@@ -18,6 +18,7 @@
  */
 
 #include "Filter.h"
+#include "Filters.h"
 
 #include <NuxCore/Logger.h>
 
@@ -25,6 +26,7 @@
 #include "MultiRangeFilter.h"
 #include "RadioOptionFilter.h"
 #include "RatingsFilter.h"
+#include "GLibWrapper.h"
 
 namespace unity
 {
@@ -41,7 +43,7 @@ Filter::Filter(DeeModel* model, DeeModelIter* iter)
 {
   typedef Signal<void, DeeModel*, DeeModelIter*> RowSignalType;
 
-  // If the model is destroyed (say if the lens restarts) then we should handle
+  // If the model is destroyed (say if the scope restarts) then we should handle
   // that gracefully
   g_object_weak_ref(reinterpret_cast<GObject*>(model_),
                     (GWeakNotify)Filter::OnModelDestroyed, this);
@@ -140,67 +142,63 @@ void Filter::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
 
 void Filter::HintsToMap(Hints& map)
 {
-  GVariant* row_value = dee_model_get_value(model_, iter_, FilterColumn::RENDERER_STATE);
+  glib::Variant row_value(dee_model_get_value(model_, iter_, FilterColumn::RENDERER_STATE), glib::StealRef());
+  row_value.ASVToHints(map);
+}
 
-  GVariantIter iter;
-  g_variant_iter_init(&iter, row_value);
+glib::Variant Filter::VariantValue() const
+{
+  if (!IsValid())
+    return glib::Variant();
 
-  char* key = NULL;
-  GVariant* value = NULL;
-  while (g_variant_iter_loop(&iter, "{sv}", &key, &value))
-  {
-    map[key] = value;
-  }
-  g_variant_unref(row_value);
+  GVariantBuilder hints;
+  g_variant_builder_init  (&hints, G_VARIANT_TYPE("(ssssa{sv}bbb)"));
+
+  g_variant_builder_add(&hints, "s", id().c_str(), NULL);
+  g_variant_builder_add(&hints, "s", name().c_str(), NULL);
+  g_variant_builder_add(&hints, "s", icon_hint().c_str(), NULL);
+  g_variant_builder_add(&hints, "s", renderer_name().c_str(), NULL);
+  g_variant_builder_add(&hints, "@a{sv}", dee_model_get_value(model_, iter_, FilterColumn::RENDERER_STATE), NULL);
+  g_variant_builder_add(&hints, "b", visible(), NULL);
+  g_variant_builder_add(&hints, "b", collapsed(), NULL);
+  g_variant_builder_add(&hints, "b", filtering(), NULL);
+
+  return glib::Variant(g_variant_builder_end(&hints));
 }
 
 std::string Filter::get_id() const
 {
-  if (IsValid())
-    return dee_model_get_string(model_, iter_, FilterColumn::ID);
-  return "";
+  return FilterAdaptor(model_, iter_, nullptr).get_id();
 }
 
 std::string Filter::get_name() const
 {
-  if (IsValid())
-    return dee_model_get_string(model_, iter_, FilterColumn::NAME);
-  return "";
+  return FilterAdaptor(model_, iter_, nullptr).get_name();
 }
 
 std::string Filter::get_icon_hint() const
 {
-  if (IsValid())
-    return dee_model_get_string(model_, iter_, FilterColumn::ICON_HINT);
-  return "";
+  return FilterAdaptor(model_, iter_, nullptr).get_icon_hint();
 }
 
 std::string Filter::get_renderer_name() const
 {
-  if (IsValid())
-    return dee_model_get_string(model_, iter_, FilterColumn::RENDERER_NAME);
-  return "";
+  return FilterAdaptor(model_, iter_, nullptr).get_renderer_name();
 }
 
 bool Filter::get_visible() const
 {
-  if (IsValid())
-    return dee_model_get_bool(model_, iter_, FilterColumn::VISIBLE);
-  return false;
+  return FilterAdaptor(model_, iter_, nullptr).get_visible();
 }
 
 bool Filter::get_collapsed() const
 {
-  if (IsValid())
-    return dee_model_get_bool(model_, iter_, FilterColumn::COLLAPSED);
-  return true;
+  return FilterAdaptor(model_, iter_, nullptr).get_collapsed();
 }
 
 bool Filter::get_filtering() const
 {
-  if (IsValid())
-    return dee_model_get_bool(model_, iter_, FilterColumn::FILTERING);
-  return false;
+  return FilterAdaptor(model_, iter_, nullptr).get_filtering();
 }
 
 }

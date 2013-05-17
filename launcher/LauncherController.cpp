@@ -1050,7 +1050,7 @@ void Controller::Impl::SetupIcons()
 void Controller::Impl::SendHomeActivationRequest()
 {
   ubus.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                   g_variant_new("(sus)", "home.lens", dash::NOT_HANDLED, ""));
+                   g_variant_new("(sus)", "home.scope", dash::NOT_HANDLED, ""));
 }
 
 Controller::Controller(XdndManager::Ptr const& xdnd_manager)

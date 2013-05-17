@@ -6,6 +6,11 @@
 #include <config.h>
 
 #include "logger_helper.h"
+#include "test_utils.h"
+
+
+const gchar* LOCAL_DATA_DIR = BUILDDIR"/tests/data:/usr/share";
+const gchar* SCHEMA_DIRECTORY = BUILDDIR"/settings";
 
 int main(int argc, char** argv)
 {
@@ -16,6 +21,7 @@ int main(int argc, char** argv)
   const std::string LOCAL_DATA_DIR = BUILDDIR"/tests/data:/usr/share";
   g_setenv("XDG_DATA_DIRS", LOCAL_DATA_DIR.c_str(), TRUE);
   g_setenv("LC_ALL", "C", TRUE);
+  Utils::init_gsettings_test_environment();
 
   gtk_init(&argc, &argv);
   setlocale(LC_ALL, "C");
@@ -32,6 +38,8 @@ int main(int argc, char** argv)
 
   // StandaloneWindowManager brought in at link time.
   int ret = RUN_ALL_TESTS();
+
+  Utils::reset_gsettings_test_environment();
 
   return ret;
 }
