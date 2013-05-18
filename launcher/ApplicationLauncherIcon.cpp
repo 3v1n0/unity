@@ -573,7 +573,7 @@ void ApplicationLauncherIcon::AddProperties(GVariantBuilder* builder)
     .add("desktop_id", GetDesktopID())
     .add("xids", g_variant_builder_end(&xids_builder))
     .add("sticky", IsSticky())
-    .add("startup_notification_timestamp", _startup_notification_timestamp);
+    .add("startup_notification_timestamp", (uint64_t)_startup_notification_timestamp);
 }
 
 void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& uris, Time timestamp)
@@ -1194,7 +1194,12 @@ bool ApplicationLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
 {
   if (IsFileManager())
   {
-    return true;
+    for (auto uri : dnd_data.Uris())
+    {
+      if (boost::algorithm::starts_with(uri, "file://"))
+        return true;
+    }
+    return false;
   }
 
   for (auto type : dnd_data.Types())

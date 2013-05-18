@@ -23,6 +23,7 @@
 #include <string>
 
 #include <dee.h>
+#include "Variant.h"
 
 namespace unity
 {
@@ -59,6 +60,7 @@ public:
   virtual int GetIntAt(int position) const;
   virtual unsigned int GetUIntAt(int position) const;
   virtual float GetFloatAt(int position) const;
+  virtual glib::Variant GetVariantAt(int position) const;
 
   void SetTarget(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag);
 
@@ -67,6 +69,8 @@ public:
 
   template<typename T>
   T renderer() const;
+
+  DeeModel* model() { return model_; }
 
 protected:
   virtual void set_model_tag(gpointer value);

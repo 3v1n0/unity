@@ -56,9 +56,6 @@ public:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);  
 
-  sigc::signal<void, std::string const&> play;
-  sigc::signal<void, std::string const&> pause;
-
 protected:
   virtual bool AcceptKeyNavFocus() { return false; }
 
@@ -68,15 +65,14 @@ protected:
   void OnTrackAdded(dash::Track const& track);
   void OnTrackRemoved(dash::Track const&track);
 
-  void onPlayTrack(std::string const& uri);
-  void onPauseTrack(std::string const& uri);
-
 protected:
   dash::Tracks::Ptr tracks_;
 
   nux::VLayout* layout_;
   std::map<std::string, previews::Track::Ptr> m_tracks;
-  int track_count_;
+  sigc::connection add_track_;
+  sigc::connection change_track_;
+  sigc::connection remove_track_;
 };
 
 }

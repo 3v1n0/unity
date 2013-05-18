@@ -66,8 +66,6 @@ public:
   ~Impl();
 
   void ComputeFlatIcons();
-  int GetIndexForUri(std::string uri);
-  std::string GetUriForIndex(int index);
 
   CoverflowResultView *parent_;
   nux::Coverflow *coverflow_;
@@ -133,10 +131,10 @@ void CoverflowResultItem::Activate(int button)
 
   //Left and right click take you to previews.
   if (button == 1 || button == 3)
-    parent_->Activate(result_.uri, index, ResultView::ActivateType::PREVIEW);
+    parent_->Activate(LocalResult(result_), index, ResultView::ActivateType::PREVIEW);
   //Scroll click opens up music player.
   else if (button == 2)
-    parent_->Activate(result_.uri, index, ResultView::ActivateType::DIRECT);
+    parent_->Activate(LocalResult(result_), index, ResultView::ActivateType::DIRECT);
 
 }
 
@@ -165,16 +163,18 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
 
   ubus_.RegisterInterest(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, [&] (GVariant* data) {
     int nav_mode = 0;
-    glib::String uri;
+    GVariant* local_result_variant = nullptr;
     glib::String proposed_unique_id;
 
-    g_variant_get(data, "(iss)", &nav_mode, &uri, &proposed_unique_id);
+    g_variant_get(data, "(ivs)", &nav_mode, &local_result_variant, &proposed_unique_id);
+    LocalResult local_result(LocalResult::FromVariant(local_result_variant));
+    g_variant_unref(local_result_variant);
 
     if (proposed_unique_id.Str() != parent_->unique_id())
       return;
 
     unsigned num_results = coverflow_->model()->Items().size();
-    int current_index = GetIndexForUri(uri);
+    int current_index = parent->GetIndexForLocalResult(local_result);
     if (nav_mode == -1) // left
     {
       current_index--;
@@ -191,8 +191,7 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
 
     if (nav_mode)
     {
-      std::string uri = GetUriForIndex(current_index);
-      parent_->Activate(uri, current_index, ActivateType::PREVIEW);
+      parent_->Activate(parent_->GetLocalResultForIndex(current_index), current_index, ActivateType::PREVIEW);
     }
   });
 }
@@ -200,23 +199,6 @@ CoverflowResultView::Impl::Impl(CoverflowResultView *parent)
 CoverflowResultView::Impl::~Impl()
 {
 
-}
-
-int CoverflowResultView::Impl::GetIndexForUri(std::string uri)
-{
-  int i = 0;
-  for (auto item : coverflow_->model()->Items())
-  {
-    if (uri == static_cast<CoverflowResultItem*>(item.GetPointer())->Uri())
-      return i;
-    i++;
-  }
-  return -1;
-}
-
-std::string CoverflowResultView::Impl::GetUriForIndex(int index)
-{
-  return static_cast<CoverflowResultItem*>(coverflow_->model()->Items()[index].GetPointer())->Uri();
 }
 
 CoverflowResultView::CoverflowResultView(NUX_FILE_LINE_DECL)
@@ -296,7 +278,7 @@ long CoverflowResultView::ComputeContentSize()
 }
 
 
-void CoverflowResultView::Activate(std::string const& uri, int index, ResultView::ActivateType type)
+void CoverflowResultView::Activate(LocalResult const& local_result, int index, ResultView::ActivateType type)
 {
   unsigned num_results = pimpl->coverflow_->model()->Items().size();
 
@@ -308,7 +290,7 @@ void CoverflowResultView::Activate(std::string const& uri, int index, ResultView
   int column_width = GetWidth();
 
   glib::Variant data(g_variant_new("(iiii)", column_x, row_y, column_width, row_height, left_results, right_results));
-  UriActivated.emit(uri, type, data);
+  ResultActivated.emit(local_result, type, data);
 }
 
 

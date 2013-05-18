@@ -20,7 +20,7 @@
 #ifndef UNITYSHELL_BFBLAUNCHERICON_H
 #define UNITYSHELL_BFBLAUNCHERICON_H
 
-#include <UnityCore/FilesystemLenses.h>
+#include <UnityCore/GSettingsScopes.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
 
@@ -51,10 +51,10 @@ protected:
 
 private:
   void OnOverlayShown(GVariant *data, bool visible);
-  void OnMenuitemActivated(DbusmenuMenuitem* item, int time, std::string const& lens);
+  void OnMenuitemActivated(DbusmenuMenuitem* item, int time, std::string const& scope_id);
 
   nux::Color background_color_;
-  dash::LensDirectoryReader::Ptr reader_;
+  dash::GSettingsScopesReader::Ptr reader_;
   LauncherHideMode launcher_hide_mode_;
   UBusManager ubus_manager_;
   glib::SignalManager signals_;

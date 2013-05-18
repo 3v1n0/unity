@@ -4,10 +4,10 @@ dash/FilterExpanderLabel.cpp
 dash/FilterGenreWidget.cpp
 dash/FilterMultiRangeWidget.cpp
 dash/FilterRatingsWidget.cpp
-dash/LensBar.cpp
-dash/LensView.cpp
 dash/PlacesGroup.cpp
 dash/ResultViewGrid.cpp
+dash/ScopeBar.cpp
+dash/ScopeView.cpp
 dash/previews/ApplicationPreview.cpp
 dash/previews/PreviewInfoHintWidget.cpp
 dash/previews/SocialPreview.cpp
