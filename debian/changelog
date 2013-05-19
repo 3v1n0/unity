@@ -1,4 +1,4 @@
-unity (7.0.0daily13.05.19ubuntu.unity.next-0ubuntu1) UNRELEASED; urgency=low
+unity (7.0.0daily13.05.08ubuntu.unity.next-0ubuntu2) UNRELEASED; urgency=low
 
   [ Nick Dedekind ]
   * Keyboard focus lost if trying to navigate while search is ongoing
