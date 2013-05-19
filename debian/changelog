@@ -1,4 +1,4 @@
-unity (7.0.0daily13.05.18ubuntu.unity.next-0ubuntu1) UNRELEASED; urgency=low
+unity (7.0.0daily13.05.20ubuntu.unity.next-0ubuntu1) UNRELEASED; urgency=low
 
   [ Nick Dedekind ]
   * Keyboard focus lost if trying to navigate while search is ongoing
@@ -17,6 +17,12 @@ unity (7.0.0daily13.05.18ubuntu.unity.next-0ubuntu1) UNRELEASED; urgency=low
     of results (LP: #1170721)
 
  -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Fri, 17 May 2013 21:57:05 +0200
+
+unity (7.0.0daily13.05.08ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  * Automatic snapshot from revision 3317 (ubuntu-unity/next)
+ 
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>   Wed, 08 May 2013 04:57:49 +0000
 
 unity (7.0.0daily13.05.01.1ubuntu.unity.next-0ubuntu1) raring; urgency=low
 
