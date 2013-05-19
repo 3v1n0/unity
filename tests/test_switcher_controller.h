@@ -28,6 +28,7 @@
 #include "test_utils.h"
 #include "DesktopLauncherIcon.h"
 #include "SimpleLauncherIcon.h"
+#include "StandaloneWindowManager.h"
 #include "SwitcherController.h"
 #include "SwitcherView.h"
 #include "TimeUtil.h"
@@ -51,7 +52,7 @@ const unsigned TICK_DURATION = 10 * 1000;
 class FakeApplicationWindow : public unity::ApplicationWindow
 {
 public:
-  FakeApplicationWindow(Window xid);
+  FakeApplicationWindow(Window xid, unsigned long long active_number = 0);
 
   std::string title() const;
   virtual std::string icon() const;
@@ -62,6 +63,7 @@ public:
   virtual unity::ApplicationPtr application() const;
   virtual bool Focus() const;
   virtual void Quit() const;
+
 private:
   Window xid_;
 };
@@ -69,18 +71,16 @@ private:
 /**
  * A fake LauncherIcon for verifying selection operations of the switcher.
  */
-class FakeLauncherIcon : public unity::launcher::SimpleLauncherIcon
+struct FakeLauncherIcon : unity::launcher::SimpleLauncherIcon
 {
-public:
-  FakeLauncherIcon(std::string const& app_name, bool allow_detail_view, unsigned priority);
+  FakeLauncherIcon(std::string const& app_name, bool allow_detail_view, unsigned long long priority);
 
-  unity::WindowList Windows()override;
+  unity::WindowList Windows() override;
   bool AllowDetailViewInSwitcher() const override;
   unsigned long long SwitcherPriority() override;
 
-private:
   bool allow_detail_view_;
-  unsigned   priority_;
+  unsigned long long priority_;
   unity::WindowList window_list;
 };
 
@@ -96,6 +96,7 @@ protected:
   // required to create hidden secret global variables before test objects
   unity::Settings unity_settings_;
 
+  unity::StandaloneWindowManager* WM;
   nux::animation::TickSource tick_source_;
   nux::animation::AnimationController animation_controller_;
   unity::testmocks::MockBaseWindow::Ptr mock_window_;

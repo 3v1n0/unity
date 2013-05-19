@@ -25,7 +25,14 @@ using namespace unity;
 using namespace unity::switcher;
 using namespace std::chrono;
 
-FakeApplicationWindow::FakeApplicationWindow(Window xid) : xid_(xid) {}
+FakeApplicationWindow::FakeApplicationWindow(Window xid, unsigned long long active_number)
+  : xid_(xid)
+{
+  auto WM = dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default());
+  auto standalone_window = std::make_shared<StandaloneWindow>(xid_);
+  standalone_window->active_number = active_number;
+  WM->AddStandaloneWindow(standalone_window);
+}
 
 std::string FakeApplicationWindow::title() const { return "FakeApplicationWindow"; }
 std::string FakeApplicationWindow::icon() const { return ""; }
@@ -35,14 +42,14 @@ Window FakeApplicationWindow::window_id() const { return xid_; }
 int FakeApplicationWindow::monitor() const { return -1; }
 ApplicationPtr FakeApplicationWindow::application() const { return ApplicationPtr(); }
 bool FakeApplicationWindow::Focus() const { return false; }
-void FakeApplicationWindow::Quit() const {}
+void FakeApplicationWindow::Quit() const { WindowManager::Default().Close(xid_); }
 
-FakeLauncherIcon::FakeLauncherIcon(std::string const& app_name, bool allow_detail_view, unsigned priority)
+FakeLauncherIcon::FakeLauncherIcon(std::string const& app_name, bool allow_detail_view, unsigned long long priority)
   : launcher::SimpleLauncherIcon(IconType::APPLICATION)
   , allow_detail_view_(allow_detail_view)
   , priority_(priority)
-  , window_list{ std::make_shared<FakeApplicationWindow>(priority_ | 0x0001),
-                 std::make_shared<FakeApplicationWindow>(priority_ | 0x0002) }
+  , window_list{ std::make_shared<FakeApplicationWindow>(priority_ | 0x0001, SwitcherPriority()),
+                 std::make_shared<FakeApplicationWindow>(priority_ | 0x0002, priority_) }
 {
   tooltip_text = app_name;
 }
@@ -59,7 +66,7 @@ bool FakeLauncherIcon::AllowDetailViewInSwitcher() const
 
 unsigned long long FakeLauncherIcon::SwitcherPriority()
 {
-  return 0xffffffff - priority_;
+  return std::numeric_limits<unsigned long long>::max() - priority_;
 }
 
 /**
@@ -67,7 +74,8 @@ unsigned long long FakeLauncherIcon::SwitcherPriority()
  */
 //class TestSwitcherController : public testing::Test
 TestSwitcherController::TestSwitcherController()
-  : animation_controller_(tick_source_)
+  : WM(dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default()))
+  , animation_controller_(tick_source_)
   , mock_window_(new NiceMock<testmocks::MockBaseWindow>())
 {
   ON_CALL(*mock_window_, SetOpacity(_))
