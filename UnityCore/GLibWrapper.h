@@ -107,6 +107,7 @@ private:
   GError* error_;
 };
 
+// wrapper for raw gcha*. auto-deleted.
 class String : boost::noncopyable
 {
 public:
@@ -126,6 +127,11 @@ public:
 private:
   gchar* string_;
 };
+
+inline std::string gchar_to_string(const gchar* str)
+{
+  return str ? str : "";
+}
 
 class Cancellable : boost::noncopyable
 {

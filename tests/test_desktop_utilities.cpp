@@ -106,61 +106,73 @@ TEST(TestDesktopUtilitiesDesktopID, TestSubdirectory)
               Eq("subdir1-subdir2-to.desktop"));
 }
 
-TEST(TestDesktopUtilitiesDataDirectories, TestGetUserDataDirectory)
-{
-  const gchar* env = g_getenv("XDG_DATA_HOME");
-  std::string old_home = env ? env : "";
+// We can't test this. GetUserDataDirectory uses g_get_user_data_dir which caches data dir.
+// If we perform a DesktopUtilities::GetUserDataDirectory(); before running this test, the test will fail, because setting the XDG_DATA_HOME
+// will not change the cached value.
 
-  g_setenv("XDG_DATA_HOME", "UnityUserConfig", TRUE);
+// TEST(TestDesktopUtilitiesDataDirectories, TestGetUserDataDirectory)
+// {
+//   const gchar* env = g_getenv("XDG_DATA_HOME");
+//   std::string old_home = env ? env : "";
 
-  std::string const& user_data_dir = DesktopUtilities::GetUserDataDirectory();
+//   g_setenv("XDG_DATA_HOME", "UnityUserConfig", TRUE);
 
-  g_setenv("XDG_DATA_HOME", old_home.c_str(), TRUE);
+//   std::string const& user_data_dir = DesktopUtilities::GetUserDataDirectory();
 
-  EXPECT_THAT(user_data_dir, Eq("UnityUserConfig"));
-}
+//   g_setenv("XDG_DATA_HOME", old_home.c_str(), TRUE);
 
-TEST(TestDesktopUtilitiesDataDirectories, TestGetSystemDataDirectory)
-{
-  const gchar* env = g_getenv("XDG_DATA_DIRS");
-  std::string old_dirs = env ? env : "";
-  g_setenv("XDG_DATA_DIRS", ("dir1:dir2::dir3:dir4:"+LOCAL_DATA_DIR).c_str(), TRUE);
+//   EXPECT_THAT(user_data_dir, Eq("UnityUserConfig"));
+// }
 
-  std::vector<std::string> const& system_dirs = DesktopUtilities::GetSystemDataDirectories();
+// We can't test this. GetSystemDataDirectories uses g_get_system_data_dirs which caches the values.
+// If we perform a DesktopUtilities::GetSystemDataDirectories(); before running this test, the test will fail, because setting the XDG_DATA_DIRS
+// will not change the cached value.
 
-  g_setenv("XDG_DATA_DIRS", old_dirs.c_str(), TRUE);
+// TEST(TestDesktopUtilitiesDataDirectories, TestGetSystemDataDirectory)
+// {
+//   const gchar* env = g_getenv("XDG_DATA_DIRS");
+//   std::string old_dirs = env ? env : "";
+//   g_setenv("XDG_DATA_DIRS", ("dir1:dir2::dir3:dir4:"+LOCAL_DATA_DIR).c_str(), TRUE);
 
-  ASSERT_THAT(system_dirs.size(), Eq(5));
-  EXPECT_THAT(system_dirs[0], Eq("dir1"));
-  EXPECT_THAT(system_dirs[1], Eq("dir2"));
-  EXPECT_THAT(system_dirs[2], Eq("dir3"));
-  EXPECT_THAT(system_dirs[3], Eq("dir4"));
-  EXPECT_THAT(system_dirs[4], Eq(LOCAL_DATA_DIR));
-}
+//   std::vector<std::string> const& system_dirs = DesktopUtilities::GetSystemDataDirectories();
 
-TEST(TestDesktopUtilitiesDataDirectories, TestGetDataDirectory)
-{
-  const gchar* env = g_getenv("XDG_DATA_DIRS");
-  std::string old_dirs = env ? env : "";
-  env = g_getenv("XDG_DATA_HOME");
-  std::string old_home = env ? env : "";
+//   g_setenv("XDG_DATA_DIRS", old_dirs.c_str(), TRUE);
 
-  g_setenv("XDG_DATA_DIRS", ("dir1:dir2::dir3:dir4:"+LOCAL_DATA_DIR).c_str(), TRUE);
-  g_setenv("XDG_DATA_HOME", "UnityUserConfig", TRUE);
+//   ASSERT_THAT(system_dirs.size(), Eq(5));
+//   EXPECT_THAT(system_dirs[0], Eq("dir1"));
+//   EXPECT_THAT(system_dirs[1], Eq("dir2"));
+//   EXPECT_THAT(system_dirs[2], Eq("dir3"));
+//   EXPECT_THAT(system_dirs[3], Eq("dir4"));
+//   EXPECT_THAT(system_dirs[4], Eq(LOCAL_DATA_DIR));
+// }
 
-  std::vector<std::string> const& data_dirs = DesktopUtilities::GetDataDirectories();
+// We can't test this. TestGetDataDirectory uses g_get_system_data_dirs which caches the values.
+// If we perform a DesktopUtilities::TestGetDataDirectory(); before running this test, the test will fail, because setting the XDG_DATA_DIRS or XDG_DATA_HOME
+// will not change the cached value.
 
-  g_setenv("XDG_DATA_DIRS", old_dirs.c_str(), TRUE);
-  g_setenv("XDG_DATA_HOME", old_home.c_str(), TRUE);
+// TEST(TestDesktopUtilitiesDataDirectories, TestGetDataDirectory)
+// {
+//   const gchar* env = g_getenv("XDG_DATA_DIRS");
+//   std::string old_dirs = env ? env : "";
+//   env = g_getenv("XDG_DATA_HOME");
+//   std::string old_home = env ? env : "";
 
-  ASSERT_THAT(data_dirs.size(), Eq(6));
-  EXPECT_THAT(data_dirs[0], Eq("dir1"));
-  EXPECT_THAT(data_dirs[1], Eq("dir2"));
-  EXPECT_THAT(data_dirs[2], Eq("dir3"));
-  EXPECT_THAT(data_dirs[3], Eq("dir4"));
-  EXPECT_THAT(data_dirs[4], Eq(LOCAL_DATA_DIR));
-  EXPECT_THAT(data_dirs[5], Eq("UnityUserConfig"));
-}
+//   g_setenv("XDG_DATA_DIRS", ("dir1:dir2::dir3:dir4:"+LOCAL_DATA_DIR).c_str(), TRUE);
+//   g_setenv("XDG_DATA_HOME", "UnityUserConfig", TRUE);
+
+//   std::vector<std::string> const& data_dirs = DesktopUtilities::GetDataDirectories();
+
+//   g_setenv("XDG_DATA_DIRS", old_dirs.c_str(), TRUE);
+//   g_setenv("XDG_DATA_HOME", old_home.c_str(), TRUE);
+
+//   ASSERT_THAT(data_dirs.size(), Eq(6));
+//   EXPECT_THAT(data_dirs[0], Eq("dir1"));
+//   EXPECT_THAT(data_dirs[1], Eq("dir2"));
+//   EXPECT_THAT(data_dirs[2], Eq("dir3"));
+//   EXPECT_THAT(data_dirs[3], Eq("dir4"));
+//   EXPECT_THAT(data_dirs[4], Eq(LOCAL_DATA_DIR));
+//   EXPECT_THAT(data_dirs[5], Eq("UnityUserConfig"));
+// }
 
 TEST(TestDesktopUtilities, TestGetDesktopPathById)
 {

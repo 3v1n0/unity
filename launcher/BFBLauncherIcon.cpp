@@ -32,7 +32,7 @@ namespace launcher
 
 BFBLauncherIcon::BFBLauncherIcon(LauncherHideMode hide_mode)
  : SimpleLauncherIcon(IconType::HOME)
- , reader_(dash::LensDirectoryReader::GetDefault())
+ , reader_(dash::GSettingsScopesReader::GetDefault())
  , launcher_hide_mode_(hide_mode)
 {
   tooltip_text = _("Search your computer and online sources");
@@ -91,17 +91,17 @@ nux::Color BFBLauncherIcon::GlowColor()
 
 void BFBLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-  ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.lens", dash::NOT_HANDLED, ""));
+  ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", "home.scope", dash::NOT_HANDLED, ""));
 
   // dont chain down to avoid random dash close events
 }
 
-void BFBLauncherIcon::OnMenuitemActivated(DbusmenuMenuitem* item, int time, std::string const& lens)
+void BFBLauncherIcon::OnMenuitemActivated(DbusmenuMenuitem* item, int time, std::string const& scope_id)
 {
-  if (lens.empty())
+  if (scope_id.empty())
     return;
 
-  ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", lens.c_str(), dash::GOTO_DASH_URI, ""));
+  ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST, g_variant_new("(sus)", scope_id.c_str(), dash::GOTO_DASH_URI, ""));
 }
 
 AbstractLauncherIcon::MenuItemsVector BFBLauncherIcon::GetMenus()
@@ -112,27 +112,18 @@ AbstractLauncherIcon::MenuItemsVector BFBLauncherIcon::GetMenus()
   typedef glib::Signal<void, DbusmenuMenuitem*, int> ItemSignal;
   auto callback = sigc::mem_fun(this, &BFBLauncherIcon::OnMenuitemActivated);
 
-  // Home dash
-  menu_item = dbusmenu_menuitem_new();
-  dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Dash Home"));
-  dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
-  dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
-  dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY, true);
-  signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, sigc::bind(callback, "home.lens")));
-  result.push_back(menu_item);
-
-  // Other lenses..
-  for (auto lens : reader_->GetLensData())
+  // Other scopes..
+  for (auto scope_data : reader_->GetScopesData())
   {
-    if (!lens->visible)
+    if (!scope_data->visible)
       continue;
 
     menu_item = dbusmenu_menuitem_new();
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, lens->name);
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, scope_data->name().c_str());
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
     dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY, true);
-    signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, sigc::bind(callback, lens->id.Str())));
+    signals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, sigc::bind(callback, scope_data->id())));
     result.push_back(menu_item);
   }
 

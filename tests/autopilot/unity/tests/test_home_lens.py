@@ -15,15 +15,15 @@ from time import sleep
 from unity.tests import UnityTestCase
 
 
-class HomeLensSearchTests(UnityTestCase):
-    """Test the command lense search bahavior."""
+class HomeScopeSearchTests(UnityTestCase):
+    """Test the command scope search bahavior."""
 
     def setUp(self):
-        super(HomeLensSearchTests, self).setUp()
+        super(HomeScopeSearchTests, self).setUp()
 
     def tearDown(self):
         self.unity.dash.ensure_hidden()
-        super(HomeLensSearchTests, self).tearDown()
+        super(HomeScopeSearchTests, self).tearDown()
 
     def test_quick_run_app(self):
         """Hitting enter runs an application even though a search might not have fully

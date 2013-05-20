@@ -26,6 +26,7 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
 #include <UnityCore/Variant.h>
+#include <UnityCore/GTKWrapper.h>
 
 #include <glib.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
@@ -209,13 +210,10 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf()
   {
     glib::Object<GIcon> icon(g_icon_new_for_string(proxy_->image_data().c_str(), nullptr));
 
-    GtkIconInfo* info = gtk_icon_theme_lookup_by_gicon(theme, icon, 22,
-                                                       (GtkIconLookupFlags)0);
+    gtk::IconInfo info(gtk_icon_theme_lookup_by_gicon(theme, icon, 22,
+                                                      (GtkIconLookupFlags)0));
     if (info)
-    {
       pixbuf = gtk_icon_info_load_icon(info, nullptr);
-      gtk_icon_info_free(info);
-    }
   }
 
   return pixbuf;

@@ -25,7 +25,7 @@
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
 
-#include <UnityCore/Lens.h>
+#include <UnityCore/ScopeProxyInterface.h>
 #include <UnityCore/GnomeSessionManager.h>
 #include <UnityCore/Variant.h>
 
@@ -1839,7 +1839,7 @@ void UnityScreen::SendExecuteCommand()
     ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW, NULL, glib::Source::Priority::HIGH);
 
     ubus_manager_.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                              g_variant_new("(sus)", "commands.lens", dash::GOTO_DASH_URI, ""),
+                              g_variant_new("(sus)", "commands.scope", dash::ScopeHandledType::GOTO_DASH_URI, ""),
                               glib::Source::Priority::LOW);
   }
 }
@@ -3470,7 +3470,7 @@ void UnityWindow::AddProperties(GVariantBuilder* builder)
 
   variant::BuilderWrapper(builder)
     .add(scaled ? GetScaledGeometry() : wm.GetWindowGeometry(xid))
-    .add("xid", xid)
+    .add("xid", (uint64_t)xid)
     .add("title", wm.GetWindowName(xid))
     .add("fake_decorated", uScreen->fake_decorated_windows_.find(this) != uScreen->fake_decorated_windows_.end())
     .add("scaled", scaled)

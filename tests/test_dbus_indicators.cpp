@@ -39,7 +39,7 @@ public:
     dbus_indicators.reset(new DBusIndicatorsTest ());
 
     // wait until the dbus indicator has connected to the panel service
-    Utils::WaitUntil(sigc::mem_fun(*dbus_indicators, &DBusIndicatorsTest::IsConnected));
+    Utils::WaitUntil(sigc::mem_fun(*dbus_indicators, &DBusIndicatorsTest::IsConnected), true, 5);
   }
 
   bool TriggerResync1Sent() const
@@ -75,7 +75,7 @@ TEST_F(TestDBusIndicators, TestConstruction)
 TEST_F(TestDBusIndicators, TestSync)
 {
   // wait until the dbus indicator gets any indicator from the panel service
-  Utils::WaitUntil(sigc::mem_fun(*dbus_indicators, &DBusIndicatorsTest::HasIndicators));
+  Utils::WaitUntil(sigc::mem_fun(*dbus_indicators, &DBusIndicatorsTest::HasIndicators), true, 5);
 
   EXPECT_EQ(dbus_indicators->GetIndicators().size(), 1);
   EXPECT_EQ(dbus_indicators->GetIndicators().front()->GetEntries().size(), 2);
@@ -85,7 +85,7 @@ TEST_F(TestDBusIndicators, TestSync)
   // Tell the service to trigger a resync and to send the entries in the reverse order
   CallPanelMethod("TriggerResync1");
 
-  Utils::WaitUntil(sigc::mem_fun(this, &TestDBusIndicators::TriggerResync1Sent));
+  Utils::WaitUntil(sigc::mem_fun(this, &TestDBusIndicators::TriggerResync1Sent), true, 5);
   // We know the resync has been sent, but it may have not been processed
   // so do one interation of the main loop more
   g_main_context_iteration(NULL, TRUE);

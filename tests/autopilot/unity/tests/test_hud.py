@@ -212,14 +212,15 @@ class HudBehaviorTests(HudTestsBase):
 
         self.keyboard.type("undo")
         hud_query_check = lambda: self.unity.hud.selected_hud_button.label_no_formatting
-        # XXX: with the new HUD, command and description is separated by '\u2002' and
-        #  not a regular space ' '. Is that correct? (LP: #1172237)
         self.assertThat(hud_query_check,
                         Eventually(Equals(u'Undo\u2002(Edit)')))
         self.keyboard.press_and_release('Return')
         self.assertThat(self.unity.hud.visible, Eventually(Equals(False)))
 
         self.assertProperty(gedit_win, is_focused=True)
+        # XXX: Because of LP: #1180903, we need to give HUD some time after activating
+        #   any entry, because it takes some time
+        sleep(1.5)
         self.keyboard.press_and_release("Ctrl+s")
         self.assertThat(lambda: exists(file_path), Eventually(Equals(True)))
 
@@ -330,7 +331,8 @@ class HudBehaviorTests(HudTestsBase):
 
         self.keyboard.press_and_release("Enter")
 
-        self.assertFalse(self.process_manager.app_is_running("Text Editor"))
+        is_running = lambda: self.process_manager.app_is_running("Text Editor")
+        self.assertThat(is_running, Eventually(Equals(False)))
 
         self.assertThat(self.unity.hud.visible, Eventually(Equals(False)))
 

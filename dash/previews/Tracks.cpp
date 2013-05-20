@@ -47,9 +47,9 @@ Tracks::Tracks(dash::Tracks::Ptr tracks, NUX_FILE_LINE_DECL)
 
   if (tracks_)
   {
-    tracks_->track_added.connect(sigc::mem_fun(this, &Tracks::OnTrackAdded));
-    tracks_->track_changed.connect(sigc::mem_fun(this, &Tracks::OnTrackUpdated));
-    tracks_->track_removed.connect(sigc::mem_fun(this, &Tracks::OnTrackRemoved));
+    add_track_ = tracks_->track_added.connect(sigc::mem_fun(this, &Tracks::OnTrackAdded));
+    change_track_ = tracks_->track_changed.connect(sigc::mem_fun(this, &Tracks::OnTrackUpdated));
+    remove_track_ = tracks_->track_removed.connect(sigc::mem_fun(this, &Tracks::OnTrackRemoved));
 
     // Add what we've got.
     for (std::size_t i = 0; i < tracks_->count.Get(); i++)
@@ -61,6 +61,9 @@ Tracks::Tracks(dash::Tracks::Ptr tracks, NUX_FILE_LINE_DECL)
 
 Tracks::~Tracks()
 {
+  add_track_.disconnect();
+  change_track_.disconnect();
+  remove_track_.disconnect();
 }
 
 std::string Tracks::GetName() const
@@ -105,8 +108,6 @@ void Tracks::OnTrackAdded(dash::Track const& track_row)
 
   previews::Track::Ptr track_view(new previews::Track(NUX_TRACKER_LOCATION));
   AddChild(track_view.GetPointer());
-  track_view->play.connect([&](std::string const& uri) { play.emit(uri); });
-  track_view->pause.connect([&](std::string const& uri) { pause.emit(uri); });
 
   track_view->Update(track_row);
   track_view->SetMinimumHeight(style.GetTrackHeight());

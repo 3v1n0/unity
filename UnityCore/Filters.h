@@ -24,6 +24,7 @@
 #include <map>
 
 #include "Model.h"
+#include "ModelIterator.h"
 #include "Filter.h"
 
 namespace unity
@@ -39,16 +40,26 @@ public:
 
   nux::ROProperty<std::string> renderer_name;
 
-  DeeModel* model() const;
-  DeeModelIter* iter() const;
+  std::string get_id() const;
+  std::string get_name() const;
+  std::string get_icon_hint() const;
+  std::string get_renderer_name() const;
+  bool get_visible() const;
+  bool get_collapsed() const;
+  bool get_filtering() const;
+
+  Filter::Ptr create_filter() const;
+
+  void MergeState(glib::HintsMap const& hints);
 };
 
+typedef ModelIterator<FilterAdaptor> FilterAdaptorIterator;
 
 class Filters : public Model<FilterAdaptor>
 {
 public:
   typedef std::shared_ptr<Filters> Ptr;
-  typedef std::map<DeeModelIter*, Filter::Ptr> FilterMap;
+  typedef std::map<std::string, Filter::Ptr> FilterMap;
 
   Filters();
   Filters(ModelType model_type);
@@ -59,6 +70,11 @@ public:
   sigc::signal<void, Filter::Ptr> filter_added;
   sigc::signal<void, Filter::Ptr> filter_changed;
   sigc::signal<void, Filter::Ptr> filter_removed;
+
+  bool ApplyStateChanges(glib::Variant const& filter_rows);
+
+  FilterAdaptorIterator begin() const;
+  FilterAdaptorIterator end() const;
 
   /* There will be added/changed/removed signals here when we have that working */
 private:
