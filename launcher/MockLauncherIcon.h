@@ -32,7 +32,6 @@
 
 #include <libdbusmenu-glib/menuitem.h>
 #include "unity-shared/ApplicationManager.h"
-#include "unity-shared/GtkUtil.h"
 
 #include "AbstractLauncherIcon.h"
 
@@ -366,7 +365,7 @@ private:
       g_error_free(error);
     }
 
-    gtk::UnreferenceIconInfo(info);
+    gtk_icon_info_free(info);
 
     return result;
   }

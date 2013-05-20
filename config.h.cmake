@@ -20,6 +20,5 @@
 #ifndef INDICATOR_SERVICE_DIR
 #cmakedefine INDICATOR_SERVICE_DIR "@INDICATOR_SERVICE_DIR@"
 #endif
-#cmakedefine HAVE_GTK_3_8
 
 #endif // CONFIG_H

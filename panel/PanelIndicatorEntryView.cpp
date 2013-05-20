@@ -36,7 +36,7 @@
 #include "PanelIndicatorEntryView.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/WindowManager.h"
-#include "unity-shared/GtkUtil.h"
+
 
 namespace unity
 {
@@ -214,7 +214,7 @@ glib::Object<GdkPixbuf> PanelIndicatorEntryView::MakePixbuf()
     if (info)
     {
       pixbuf = gtk_icon_info_load_icon(info, nullptr);
-      gtk::UnreferenceIconInfo(info);
+      gtk_icon_info_free(info);
     }
   }
 

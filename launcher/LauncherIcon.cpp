@@ -32,7 +32,6 @@
 #include "LauncherIcon.h"
 #include "Launcher.h"
 #include "unity-shared/TimeUtil.h"
-#include "unity-shared/GtkUtil.h"
 
 #include "QuicklistManager.h"
 #include "QuicklistMenuItem.h"
@@ -342,7 +341,7 @@ bool LauncherIcon::IsMonoDefaultTheme()
   if (g_strrstr(gtk_icon_info_get_filename(info), "ubuntu-mono") != NULL)
     _current_theme_is_mono = (int)true;
 
-  gtk::UnreferenceIconInfo(info);
+  gtk_icon_info_free(info);
   return (bool)_current_theme_is_mono;
 
 }
@@ -430,7 +429,7 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
 
   glib::Error error;
   glib::Object<GdkPixbuf> pbuf(gtk_icon_info_load_icon(info, &error));
-  gtk::UnreferenceIconInfo(info);
+  gtk_icon_info_free(info);
 
   if (GDK_IS_PIXBUF(pbuf.RawPtr()))
   {

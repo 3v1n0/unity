@@ -26,8 +26,6 @@
 #include <unity-protocol.h>
 #include <NuxGraphics/GdkGraphics.h>
 
-#include "unity-shared/GtkUtil.h"
-
 namespace unity
 {
 namespace dash
@@ -111,7 +109,7 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
     pbuf = NULL;
   }
 
-  gtk::UnreferenceIconInfo(info);
+  gtk_icon_info_free(info);
   return pbuf;
 }
 
