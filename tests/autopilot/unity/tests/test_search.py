@@ -145,9 +145,9 @@ class HudSearchTestBase(SearchTestsBase):
 
     def input_and_check_result(self, string, expected):
         self.keyboard.type(string)
-        self.assertThat(self.unity.hud.search_string, Eventually(Equals(string)))
+        self.assertThat(self.unity.hud.search_string, Eventually(Equals(string), timeout=30))
         hud_query_check = lambda: self.unity.hud.selected_hud_button.label_no_formatting
-        self.assertThat(hud_query_check, Eventually(Equals(expected)))
+        self.assertThat(hud_query_check, Eventually(Equals(expected), timeout=30))
 
 
 class HudSearchTests(HudSearchTestBase):
