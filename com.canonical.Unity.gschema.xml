@@ -41,6 +41,11 @@
       <summary>The number of minimizations required to reach maximum speed.</summary>
       <description>The speed of the minimize animation will progressively get faster as minimize-count approaches this value.</description>
     </key>
+    <key type="b" name="double-click-activate">
+      <default>true</default>
+      <summary>Enable/Disable dash result double-click activation.</summary>
+      <description>This is used to enable/disable double-click result activation in the dash. Double-click to activate, single click preview</description>
+    </key>
   </schema>
   <schema path="/com/canonical/unity/launcher/" id="com.canonical.Unity.Launcher" gettext-domain="unity">
     <key type="as" name="favorites">
@@ -62,10 +67,10 @@
     </key>
   </schema>
   <schema path="/com/canonical/unity/dash/" id="com.canonical.Unity.Dash" gettext-domain="unity">
-    <key type="as" name="home-lens-ordering">
-      <default>[ 'applications.lens', 'files.lens', 'music.lens' ]</default>
-      <summary>List of lens ids specifying how lenses should be ordered in the Dash home screen.</summary>
-      <description>The categories listed on the Dash home screen will be ordered according to this list. Lenses not appearing in this list will not have any particular ordering and will always sort after lenses specified in this list.</description>
+    <key type="as" name="scopes">
+      <default>[ 'home.scope', 'applications.scope', 'files.scope', 'video.scope', 'music.scope', 'photos.scope', 'social.scope' ]</default>
+      <summary>List of scope ids specifying which scopes should be created and the order to display them in.</summary>
+      <description>The scopes listed in the scope bar will be ordered according to this list.</description>
     </key>
   </schema>
 </schemalist>

@@ -28,9 +28,9 @@ namespace dash
 namespace impl
 {
 
-LensFilter parse_lens_uri(std::string const& uri)
+ScopeFilter parse_scope_uri(std::string const& uri)
 {
-  LensFilter filter;
+  ScopeFilter filter;
 
   filter.id = uri;
   std::size_t pos = uri.find("?");

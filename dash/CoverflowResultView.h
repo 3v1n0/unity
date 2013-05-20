@@ -40,7 +40,7 @@ public:
   virtual void AddResult(Result& result);
   virtual void RemoveResult(Result& result);
 
-  virtual void Activate(std::string const& uri, int index, ActivateType type);
+  virtual void Activate(LocalResult const& local_result, int index, ActivateType type);
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);

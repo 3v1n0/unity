@@ -26,7 +26,6 @@
 #include <UnityCore/ApplicationPreview.h>
 #include <UnityCore/MoviePreview.h>
 #include <UnityCore/MusicPreview.h>
-#include <UnityCore/SeriesPreview.h>
 #include <unity-protocol.h>
 
 using namespace std;
@@ -122,7 +121,7 @@ TEST(TestPreviews, DeserializeGenericWithMeta)
   EXPECT_EQ(hint1->id, "hint1");
   EXPECT_EQ(hint1->display_name, "Hint 1");
   EXPECT_EQ(hint1->icon_hint, "");
-  EXPECT_EQ(hint1->value.GetInt(), 34);
+  EXPECT_EQ(hint1->value.GetInt32(), 34);
   auto hint2 = info_hints[1];
   EXPECT_EQ(hint2->id, "hint2");
   EXPECT_EQ(hint2->display_name, "Hint 2");
@@ -221,51 +220,6 @@ TEST(TestPreviews, DeserializeMusic)
   EXPECT_EQ(preview->subtitle, "Subtitle");
   EXPECT_EQ(preview->description, "Description");
   EXPECT_TRUE(g_icon_equal(preview->image(), icon) != FALSE);
-}
-
-TEST(TestPreviews, DeserializeSeries)
-{
-  Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_series_preview_new()));
-  auto series_proto_obj = glib::object_cast<UnityProtocolSeriesPreview>(proto_obj);
-  unity_protocol_series_preview_add_series_item(
-      series_proto_obj, "#1", "scheme://path/0", NULL);
-  unity_protocol_series_preview_add_series_item(
-      series_proto_obj, "#2", "scheme://path/1", NULL);
-  unity_protocol_series_preview_set_selected_item(series_proto_obj, 1);
-
-  Object<GIcon> icon(g_icon_new_for_string("accessories", NULL));
-  Object<UnityProtocolPreview> child_proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_generic_preview_new()));
-  unity_protocol_preview_set_title(child_proto_obj, "Title");
-  unity_protocol_preview_set_subtitle(child_proto_obj, "Subtitle");
-  unity_protocol_preview_set_description(child_proto_obj, "Description");
-  unity_protocol_preview_set_image(child_proto_obj, icon);
-
-  unity_protocol_series_preview_set_child_preview(series_proto_obj,
-      child_proto_obj);
-
-  Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
-            glib::StealRef());
-  EXPECT_TRUE(IsVariant(v));
-
-  Preview::Ptr base_preview = Preview::PreviewForVariant(v);
-  SeriesPreview::Ptr preview = std::dynamic_pointer_cast<SeriesPreview>(base_preview);
-  EXPECT_TRUE(preview != nullptr);
-
-  EXPECT_EQ(preview->renderer_name, "preview-series");
-
-  auto items = preview->GetItems();
-  EXPECT_EQ(items.size(), 2);
-
-  auto item1 = preview->GetItems()[1];
-  EXPECT_EQ(item1->uri, "scheme://path/1");
-  EXPECT_EQ(item1->title, "#2");
-
-  auto child_preview = preview->GetChildPreview();
-  EXPECT_EQ(child_preview->renderer_name, "preview-generic");
-  EXPECT_EQ(child_preview->title, "Title");
-  EXPECT_EQ(child_preview->subtitle, "Subtitle");
-  EXPECT_EQ(child_preview->description, "Description");
-  EXPECT_TRUE(g_icon_equal(child_preview->image(), icon) != FALSE);
 }
 
 } // Namespace

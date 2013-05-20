@@ -22,6 +22,7 @@
 #include <NuxCore/Logger.h>
 #include <Nux/HLayout.h>
 #include <UnityCore/GLibWrapper.h>
+#include "UnityCore/GSettingsScopes.h"
 
 #include "ApplicationStarterImp.h"
 #include "unity-shared/DashStyle.h"
@@ -140,7 +141,7 @@ void Controller::SetupWindow()
 
 void Controller::SetupDashView()
 {
-  view_ = new DashView(std::make_shared<FilesystemLenses>(), std::make_shared<ApplicationStarterImp>());
+  view_ = new DashView(std::make_shared<GSettingsScopes>(), std::make_shared<ApplicationStarterImp>());
   AddChild(view_);
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -411,14 +412,14 @@ void Controller::OnActivateRequest(GVariant* variant)
 gboolean Controller::CheckShortcutActivation(const char* key_string)
 {
   EnsureDash();
-  std::string lens_id = view_->GetIdForShortcutActivation(std::string(key_string));
-  if (lens_id != "")
+  std::string scope_id = view_->GetIdForShortcutActivation(std::string(key_string));
+  if (scope_id != "")
   {
     WindowManager& wm = WindowManager::Default();
     if (wm.IsScaleActive())
       wm.TerminateScale();
 
-    GVariant* args = g_variant_new("(sus)", lens_id.c_str(), dash::GOTO_DASH_URI, "");
+    GVariant* args = g_variant_new("(sus)", scope_id.c_str(), dash::GOTO_DASH_URI, "");
     OnActivateRequest(args);
     g_variant_unref(args);
     return true;

@@ -39,6 +39,7 @@ public:
   void Clear();
 
   nux::ROProperty<CheckOptions> options;
+  nux::ROProperty<bool> show_all_button;
 
   sigc::signal<void, FilterOption::Ptr> option_added;
   sigc::signal<void, FilterOption::Ptr> option_removed;
@@ -49,10 +50,12 @@ protected:
 private:
   void UpdateState();
   CheckOptions const& get_options() const;
+  bool get_show_all_button() const;
   void OptionChanged(bool is_active, std::string const& id);
 
 private:
   CheckOptions options_;
+  bool show_all_button_;
 
 };
 
