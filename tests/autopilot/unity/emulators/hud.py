@@ -9,7 +9,10 @@
 
 from __future__ import absolute_import
 
+from logging import getLogger
+
 from autopilot.input import Keyboard
+from autopilot.introspection.dbus import StateNotFoundError
 from autopilot.keybindings import KeybindingsHelper
 from HTMLParser import HTMLParser
 import re
@@ -18,6 +21,7 @@ from unity.emulators import UnityIntrospectionObject
 from unity.emulators.dash import SearchBar
 from unity.emulators.icons import HudEmbeddedIcon, HudLauncherIcon
 
+log = getLogger(__name__)
 
 class HudController(UnityIntrospectionObject, KeybindingsHelper):
     """Proxy object for the Unity Hud Controller."""
@@ -124,6 +128,9 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
             return button
         except IndexError:
             raise RuntimeError("No HUD buttons found, is hud active?")
+        except StateNotFoundError:
+            log.warning("StateNotFoundError has been raised by HudController")
+            return 0
 
     @property
     def num_buttons(self):
