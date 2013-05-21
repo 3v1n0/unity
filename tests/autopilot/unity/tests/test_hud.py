@@ -12,6 +12,7 @@ from __future__ import absolute_import
 from autopilot.matchers import Eventually
 from autopilot.display import Display, move_mouse_to_screen, is_rect_on_screen
 from autopilot.testcase import multiply_scenarios
+from autopilot.introspection.dbus import StateNotFoundError
 from os import remove, environ
 from os.path import exists
 from tempfile import mktemp
@@ -73,6 +74,14 @@ class HudTestsBase(UnityTestCase):
         }
         self.launch_test_window(window_spec)
 
+    def hud_query_check(self):
+        try:
+            button = self.unity.hud.selected_hud_button
+            if not button:
+                return
+            return button.label_no_formatting
+        except StateNotFoundError:
+            return
 
 
 class HudBehaviorTests(HudTestsBase):
@@ -210,13 +219,7 @@ class HudBehaviorTests(HudTestsBase):
 
         self.keyboard.type("save")
 
-        def hud_query_check():
-            button = self.unity.hud.selected_hud_button
-            if not button:
-                return
-            return button.label_no_formatting
-
-        self.assertThat(hud_query_check,
+        self.assertThat(self.hud_query_check,
                         Eventually(Equals(u'Save\u2002(File)')))
         self.keyboard.press_and_release('Return')
         self.addCleanup(self.keyboard.press_and_release, "Ctrl+s")
@@ -323,14 +326,7 @@ class HudBehaviorTests(HudTestsBase):
 
         self.keyboard.type("Quit")
         self.assertThat(self.unity.hud.search_string, Eventually(Equals("Quit")))
-
-        def hud_query_check():
-            button = self.unity.hud.selected_hud_button
-            if not button:
-                return
-            return button.label_no_formatting
-
-        self.assertThat(hud_query_check,
+        self.assertThat(self.hud_query_check,
                         Eventually(Equals(u'Quit\u2002(File)'), timeout=30))
 
         self.keyboard.press_and_release("Enter")

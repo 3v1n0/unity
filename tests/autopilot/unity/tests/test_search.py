@@ -147,10 +147,13 @@ class HudSearchTestBase(SearchTestsBase):
         self.keyboard.type(string)
         self.assertThat(self.unity.hud.search_string, Eventually(Equals(string), timeout=30))
         def hud_query_check():
-            button = self.unity.hud.selected_hud_button
-            if not button:
+            try:
+                button = self.unity.hud.selected_hud_button
+                if not button:
+                   return
+                return button.label_no_formatting
+            except StateNotFoundError:
                 return
-            return button.label_no_formatting
 
         self.assertThat(hud_query_check, Eventually(Equals(expected), timeout=30))
 
