@@ -160,7 +160,6 @@ if (GTEST_SRC_DIR AND
        test_indicator_appmenu.cpp
        test_indicator_entry.cpp
        test_indicators.cpp
-       test_introspection.cpp
        test_favorite_store.cpp
        test_favorite_store_gsettings.cpp
        test_favorite_store_private.cpp
