@@ -211,16 +211,22 @@ class HudBehaviorTests(HudTestsBase):
         self.unity.hud.ensure_visible()
 
         self.keyboard.type("undo")
-        hud_query_check = lambda: self.unity.hud.selected_hud_button.label_no_formatting
+
+        def hud_query_check():
+            button = self.unity.hud.selected_hud_button
+            if not button:
+                return
+            return button.label_no_formatting
+
         self.assertThat(hud_query_check,
                         Eventually(Equals(u'Undo\u2002(Edit)')))
         self.keyboard.press_and_release('Return')
         self.assertThat(self.unity.hud.visible, Eventually(Equals(False), timeout=30))
 
         self.assertProperty(gedit_win, is_focused=True)
-        # XXX: Because of LP: #1180903, we need to give HUD some time after activating
+        # FIXME: Because of LP: #1180903, we need to give HUD some time after activating
         #   any entry, because it takes some time
-        sleep(1.5)
+        sleep(2)
         self.keyboard.press_and_release("Ctrl+s")
         self.assertThat(lambda: exists(file_path), Eventually(Equals(True), timeout=30))
 

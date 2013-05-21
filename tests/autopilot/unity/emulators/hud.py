@@ -118,6 +118,8 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
     @property
     def selected_hud_button(self):
         try:
+            if len(self.hud_buttons) is 0:
+                return 0
             [button] = filter(lambda x: x.focused, self.hud_buttons)
             return button
         except IndexError:
