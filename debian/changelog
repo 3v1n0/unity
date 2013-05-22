@@ -16,6 +16,9 @@ unity (7.0.0daily13.05.19ubuntu.unity.next-0ubuntu1) UNRELEASED; urgency=low
   * Nautilus incorrectly highlighted as valid target DND target for lots
     of results (LP: #1170721)
 
+  [ Brandon Schaefer ]
+  * Bump libnux to new version 
+
  -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Fri, 17 May 2013 21:57:05 +0200
 
 unity (7.0.0daily13.05.08ubuntu.unity.next-0ubuntu1) raring; urgency=low
