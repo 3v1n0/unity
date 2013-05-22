@@ -195,8 +195,8 @@ class HudBehaviorTests(HudTestsBase):
 
         self.assertEqual(calc.is_active, True)
 
-    def test_gedit_undo(self):
-        """Test that the 'undo' action in the Hud works with GEdit."""
+    def test_gedit_save(self):
+        """Test that the 'save' action in the Hud works with GEdit."""
 
         file_path = mktemp()
         self.addCleanup(remove, file_path)
@@ -204,28 +204,26 @@ class HudBehaviorTests(HudTestsBase):
         self.addCleanup(self.process_manager.close_all_app, 'Text Editor')
         self.assertProperty(gedit_win, is_focused=True)
 
-        self.keyboard.type("0")
-        self.keyboard.type(" ")
-        self.keyboard.type("1")
+        self.keyboard.type("Test")
 
         self.unity.hud.ensure_visible()
 
-        self.keyboard.type("undo")
-        hud_query_check = lambda: self.unity.hud.selected_hud_button.label_no_formatting
+        self.keyboard.type("save")
+
+        def hud_query_check():
+            button = self.unity.hud.selected_hud_button
+            if not button:
+                return
+            return button.label_no_formatting
+
         self.assertThat(hud_query_check,
-                        Eventually(Equals(u'Undo\u2002(Edit)')))
+                        Eventually(Equals(u'Save\u2002(File)')))
         self.keyboard.press_and_release('Return')
+        self.addCleanup(self.keyboard.press_and_release, "Ctrl+s")
         self.assertThat(self.unity.hud.visible, Eventually(Equals(False), timeout=30))
 
         self.assertProperty(gedit_win, is_focused=True)
-        # XXX: Because of LP: #1180903, we need to give HUD some time after activating
-        #   any entry, because it takes some time
-        sleep(1.5)
-        self.keyboard.press_and_release("Ctrl+s")
         self.assertThat(lambda: exists(file_path), Eventually(Equals(True), timeout=30))
-
-        contents = open(file_path).read().strip('\n')
-        self.assertEqual("0 ", contents)
 
     def test_hud_to_dash_has_key_focus(self):
         """When switching from the hud to the dash you don't lose key focus."""
@@ -325,7 +323,13 @@ class HudBehaviorTests(HudTestsBase):
 
         self.keyboard.type("Quit")
         self.assertThat(self.unity.hud.search_string, Eventually(Equals("Quit")))
-        hud_query_check = lambda: self.unity.hud.selected_hud_button.label_no_formatting
+
+        def hud_query_check():
+            button = self.unity.hud.selected_hud_button
+            if not button:
+                return
+            return button.label_no_formatting
+
         self.assertThat(hud_query_check,
                         Eventually(Equals(u'Quit\u2002(File)'), timeout=30))
 
