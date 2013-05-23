@@ -87,7 +87,7 @@ class MockWindowManager : public WindowManager
     MOCK_CONST_METHOD0(GetScreenGeometry, nux::Geometry());
     MOCK_CONST_METHOD1(GetWorkAreaGeometry, nux::Geometry(Window));
 
-    MOCK_CONST_METHOD1(GetWindowActiveNumber, unsigned long long(Window));
+    MOCK_CONST_METHOD1(GetWindowActiveNumber, uint64_t(Window));
 
     MOCK_METHOD2(SetWindowIconGeometry, void(Window, nux::Geometry const&));
 

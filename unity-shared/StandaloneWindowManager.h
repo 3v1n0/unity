@@ -44,7 +44,7 @@ public:
   nux::Size deco_sizes[4];
   unsigned current_desktop;
   unsigned monitor;
-  unsigned long long active_number;
+  uint64_t active_number;
   nux::Property<bool> active;
   nux::Property<bool> mapped;
   nux::Property<bool> visible;
@@ -128,7 +128,7 @@ public:
   virtual nux::Geometry GetScreenGeometry() const;
   virtual nux::Geometry GetWorkAreaGeometry(Window window_id) const;
 
-  virtual unsigned long long GetWindowActiveNumber(Window window_id) const;
+  virtual uint64_t GetWindowActiveNumber(Window window_id) const;
 
   virtual void SetWindowIconGeometry(Window window, nux::Geometry const& geo);
 

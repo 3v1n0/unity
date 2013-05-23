@@ -356,21 +356,33 @@ BuilderWrapper& BuilderWrapper::add(char const* name, std::string const& value)
   return *this;
 }
 
+BuilderWrapper& BuilderWrapper::add(char const* name, int16_t value)
+{
+  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int16(value));
+  return *this;
+}
+
 BuilderWrapper& BuilderWrapper::add(char const* name, int32_t value)
 {
   g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int32(value));
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, uint32_t value)
-{
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint32(value));
-  return *this;
-}
-
 BuilderWrapper& BuilderWrapper::add(char const* name, int64_t value)
 {
   g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int64(value));
+  return *this;
+}
+
+BuilderWrapper& BuilderWrapper::add(char const* name, uint16_t value)
+{
+  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint16(value));
+  return *this;
+}
+
+BuilderWrapper& BuilderWrapper::add(char const* name, uint32_t value)
+{
+  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint32(value));
   return *this;
 }
 

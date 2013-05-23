@@ -32,10 +32,10 @@ public:
   static FileManager::Ptr Get();
   ~GnomeFileManager();
 
-  void Open(std::string const& uri, unsigned long long timestamp);
-  void OpenActiveChild(std::string const& uri, unsigned long long timestamp);
-  void OpenTrash(unsigned long long timestamp);
-  void EmptyTrash(unsigned long long timestamp);
+  void Open(std::string const& uri, uint64_t timestamp);
+  void OpenActiveChild(std::string const& uri, uint64_t timestamp);
+  void OpenTrash(uint64_t timestamp);
+  void EmptyTrash(uint64_t timestamp);
   std::vector<std::string> OpenedLocations() const;
   bool IsPrefixOpened(std::string const& uri) const;
   bool IsTrashOpened() const;
@@ -43,7 +43,7 @@ public:
 
 private:
   GnomeFileManager();
-  void Activate(unsigned long long timestamp);
+  void Activate(uint64_t timestamp);
 
   struct Impl;
   std::unique_ptr<Impl> impl_;

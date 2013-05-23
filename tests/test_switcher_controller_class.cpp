@@ -25,7 +25,7 @@ using namespace unity;
 using namespace unity::switcher;
 using namespace std::chrono;
 
-FakeApplicationWindow::FakeApplicationWindow(Window xid, unsigned long long active_number)
+FakeApplicationWindow::FakeApplicationWindow(Window xid, uint64_t active_number)
   : xid_(xid)
 {
   auto WM = dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default());
@@ -44,7 +44,7 @@ ApplicationPtr FakeApplicationWindow::application() const { return ApplicationPt
 bool FakeApplicationWindow::Focus() const { return false; }
 void FakeApplicationWindow::Quit() const { WindowManager::Default().Close(xid_); }
 
-FakeLauncherIcon::FakeLauncherIcon(std::string const& app_name, bool allow_detail_view, unsigned long long priority)
+FakeLauncherIcon::FakeLauncherIcon(std::string const& app_name, bool allow_detail_view, uint64_t priority)
   : launcher::SimpleLauncherIcon(IconType::APPLICATION)
   , allow_detail_view_(allow_detail_view)
   , priority_(priority)
@@ -64,9 +64,9 @@ bool FakeLauncherIcon::AllowDetailViewInSwitcher() const
   return allow_detail_view_;
 }
 
-unsigned long long FakeLauncherIcon::SwitcherPriority()
+uint64_t FakeLauncherIcon::SwitcherPriority()
 {
-  return std::numeric_limits<unsigned long long>::max() - priority_;
+  return std::numeric_limits<uint64_t>::max() - priority_;
 }
 
 /**

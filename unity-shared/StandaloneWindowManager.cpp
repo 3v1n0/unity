@@ -479,7 +479,7 @@ nux::Size StandaloneWindowManager::GetWindowDecorationSize(Window window_id, Win
   return nux::Size();
 }
 
-unsigned long long StandaloneWindowManager::GetWindowActiveNumber(Window window_id) const
+uint64_t StandaloneWindowManager::GetWindowActiveNumber(Window window_id) const
 {
   auto window = GetWindowByXid(window_id);
   if (window)

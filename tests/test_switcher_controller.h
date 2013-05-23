@@ -52,7 +52,7 @@ const unsigned TICK_DURATION = 10 * 1000;
 class FakeApplicationWindow : public unity::ApplicationWindow
 {
 public:
-  FakeApplicationWindow(Window xid, unsigned long long active_number = 0);
+  FakeApplicationWindow(Window xid, uint64_t active_number = 0);
 
   std::string title() const;
   virtual std::string icon() const;
@@ -73,14 +73,14 @@ private:
  */
 struct FakeLauncherIcon : unity::launcher::SimpleLauncherIcon
 {
-  FakeLauncherIcon(std::string const& app_name, bool allow_detail_view, unsigned long long priority);
+  FakeLauncherIcon(std::string const& app_name, bool allow_detail_view, uint64_t priority);
 
   unity::WindowList Windows() override;
   bool AllowDetailViewInSwitcher() const override;
-  unsigned long long SwitcherPriority() override;
+  uint64_t SwitcherPriority() override;
 
   bool allow_detail_view_;
-  unsigned long long priority_;
+  uint64_t priority_;
   unity::WindowList window_list;
 };
 
