@@ -20,24 +20,31 @@
 #ifndef UNITYSHELL_HSEPARATOR_H
 #define UNITYSHELL_HSEPARATOR_H
 
-#include "AbstractSeparator.h"
+#include <Nux/Nux.h>
+#include <Nux/View.h>
 
 namespace unity
 {
 
-class HSeparator: public AbstractSeparator
+class HSeparator: public nux::View
 {
 public:
-  HSeparator();
-  HSeparator(nux::Color const& color, float alpha0, float alpha1, int border);
+  HSeparator(NUX_FILE_LINE_PROTO);
+  HSeparator(nux::Color const& color, float alpha0, float alpha1, int border, NUX_FILE_LINE_PROTO);
 
-  ~HSeparator();
+  void SetColor(nux::Color const& color);
+  void SetAlpha(float alpha0, float alpha1);
+  void SetBorderSize(int border);
 
 protected:
-  virtual bool AcceptKeyNavFocus() { return false; }
-  virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
-  virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) {};
+  bool AcceptKeyNavFocus() override { return false; }
+  void Draw(nux::GraphicsEngine& GfxContext, bool force_draw) override;
+  void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw) override {};
 
+  nux::Color color_;
+  float alpha0_;
+  float alpha1_;
+  int border_size_;
 };
 
 } // namespace unity
