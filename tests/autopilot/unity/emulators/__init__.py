@@ -11,13 +11,13 @@
 
 from time import sleep
 
-from autopilot.introspection.dbus import DBusIntrospectionObject
+from autopilot.introspection.dbus import CustomEmulatorBase
 from autopilot.introspection.backends import DBusAddress
 
 from dbus import DBusException
 
 
-class UnityIntrospectionObject(DBusIntrospectionObject):
+class UnityIntrospectionObject(CustomEmulatorBase):
 
     DBUS_SERVICE = "com.canonical.Unity"
     DBUS_OBJECT = "/com/canonical/Unity/Debug"
