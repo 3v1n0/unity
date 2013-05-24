@@ -69,7 +69,7 @@ class ShoppingScopeTests(UnityTestCase):
         scope = self.unity.dash.get_current_scope()
 
         self.keyboard.type("megadeth")
-        results_category = scope.get_category_by_name(_("Albums"))
+        results_category = scope.get_category_by_name(_("More suggestions"))
 
         refresh_results_fn = lambda: len(results_category.get_results())
         self.assertThat(refresh_results_fn, Eventually(GreaterThan(1), timeout=25))
