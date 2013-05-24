@@ -83,9 +83,11 @@ public:
   BuilderWrapper& add(char const* name, bool value);
   BuilderWrapper& add(char const* name, char const* value);
   BuilderWrapper& add(char const* name, std::string const& value);
+  BuilderWrapper& add(char const* name, int16_t value);
   BuilderWrapper& add(char const* name, int32_t value);
-  BuilderWrapper& add(char const* name, uint32_t value);
   BuilderWrapper& add(char const* name, int64_t value);
+  BuilderWrapper& add(char const* name, uint16_t value);
+  BuilderWrapper& add(char const* name, uint32_t value);
   BuilderWrapper& add(char const* name, uint64_t value);
   BuilderWrapper& add(char const* name, float value);
   BuilderWrapper& add(char const* name, double value);

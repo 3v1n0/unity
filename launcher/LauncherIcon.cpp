@@ -45,6 +45,7 @@
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GTKWrapper.h>
 #include <UnityCore/Variant.h>
 
 namespace unity
@@ -326,7 +327,7 @@ bool LauncherIcon::IsMonoDefaultTheme()
     return (bool)_current_theme_is_mono;
 
   GtkIconTheme* default_theme;
-  GtkIconInfo* info;
+  gtk::IconInfo info;
   int size = 48;
 
   default_theme = gtk_icon_theme_get_default();
@@ -341,9 +342,7 @@ bool LauncherIcon::IsMonoDefaultTheme()
   if (g_strrstr(gtk_icon_info_get_filename(info), "ubuntu-mono") != NULL)
     _current_theme_is_mono = (int)true;
 
-  g_object_unref(G_OBJECT(info));
   return (bool)_current_theme_is_mono;
-
 }
 
 GtkIconTheme* LauncherIcon::GetUnityTheme()
@@ -396,17 +395,14 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
                                                             bool update_glow_colors,
                                                             bool is_default_theme)
 {
-  GtkIconInfo* info;
-  nux::BaseTexture* result = NULL;
-  GIcon* icon;
-  GtkIconLookupFlags flags = (GtkIconLookupFlags) 0;
+  nux::BaseTexture* result = nullptr;
+  glib::Object<GIcon> icon(g_icon_new_for_string(icon_name.c_str(), nullptr));
+  gtk::IconInfo info;
+  auto flags = static_cast<GtkIconLookupFlags>(0);
 
-  icon = g_icon_new_for_string(icon_name.c_str(), NULL);
-
-  if (G_IS_ICON(icon))
+  if (icon.IsType(G_TYPE_ICON))
   {
     info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, flags);
-    g_object_unref(icon);
   }
   else
   {
@@ -414,24 +410,22 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
   }
 
   if (!info && !is_default_theme)
-    return NULL;
+    return nullptr;
 
   if (!info)
   {
     info = gtk_icon_theme_lookup_icon(theme, DEFAULT_ICON.c_str(), size, flags);
   }
 
-  if (gtk_icon_info_get_filename(info) == NULL)
+  if (!gtk_icon_info_get_filename(info))
   {
-    g_object_unref(G_OBJECT(info));
     info = gtk_icon_theme_lookup_icon(theme, DEFAULT_ICON.c_str(), size, flags);
   }
 
   glib::Error error;
   glib::Object<GdkPixbuf> pbuf(gtk_icon_info_load_icon(info, &error));
-  g_object_unref(G_OBJECT(info));
 
-  if (GDK_IS_PIXBUF(pbuf.RawPtr()))
+  if (pbuf.IsType(GDK_TYPE_PIXBUF))
   {
     result = nux::CreateTexture2DFromPixbuf(pbuf, true);
 
@@ -1183,7 +1177,7 @@ LauncherIcon::OnRemoteCountVisibleChanged(LauncherEntryRemote* remote)
 {
   if (remote->CountVisible())
   {
-    SetEmblemText(std::to_string((long long)remote->Count()));
+    SetEmblemText(std::to_string(remote->Count()));
   }
   else
   {

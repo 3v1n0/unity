@@ -160,7 +160,7 @@ TEST_F(TestVolumeImp, TestEjectAndShowNotification)
 
 TEST_F(TestVolumeImp, TestMountAndOpenInFileManager)
 {
-  unsigned long long time = g_random_int();
+  uint64_t time = g_random_int();
   EXPECT_CALL(*file_manager_, OpenActiveChild(ROOT_FILE_URI, time));
 
   volume_->MountAndOpenInFileManager(time);

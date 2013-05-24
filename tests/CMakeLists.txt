@@ -160,7 +160,6 @@ if (GTEST_SRC_DIR AND
        test_indicator_appmenu.cpp
        test_indicator_entry.cpp
        test_indicators.cpp
-       test_introspection.cpp
        test_favorite_store.cpp
        test_favorite_store_gsettings.cpp
        test_favorite_store_private.cpp
@@ -249,12 +248,13 @@ if (ENABLE_X_SUPPORT)
                  test_dash_controller.cpp
                  test_desktop_launcher_icon.cpp
                  test_device_launcher_section.cpp
-		 test_error_preview.cpp
+                 test_error_preview.cpp
                  test_edge_barrier_controller.cpp
                  test_expo_launcher_icon.cpp
                  test_filter_widgets.cpp
                  test_glib_dbus_server.cpp
                  test_gnome_session_manager.cpp
+                 test_gtk_wrapper.cpp
                  test_hud_button.cpp
                  test_hud_controller.cpp
                  test_hud_launcher_icon.cpp

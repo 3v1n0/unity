@@ -44,6 +44,7 @@ public:
   nux::Size deco_sizes[4];
   unsigned current_desktop;
   unsigned monitor;
+  uint64_t active_number;
   nux::Property<bool> active;
   nux::Property<bool> mapped;
   nux::Property<bool> visible;
@@ -127,7 +128,7 @@ public:
   virtual nux::Geometry GetScreenGeometry() const;
   virtual nux::Geometry GetWorkAreaGeometry(Window window_id) const;
 
-  virtual unsigned long long GetWindowActiveNumber(Window window_id) const;
+  virtual uint64_t GetWindowActiveNumber(Window window_id) const;
 
   virtual void SetWindowIconGeometry(Window window, nux::Geometry const& geo);
 
@@ -146,6 +147,7 @@ public:
   virtual std::string GetWindowName(Window window_id) const;
 
   // Mock functions
+  StandaloneWindow::Ptr GetWindowByXid(Window window_id) const;
   void AddStandaloneWindow(StandaloneWindow::Ptr const& window);
   std::list<StandaloneWindow::Ptr> GetStandaloneWindows() const;
 
@@ -160,8 +162,6 @@ protected:
   virtual void AddProperties(GVariantBuilder* builder);
 
 private:
-  StandaloneWindow::Ptr GetWindowByXid(Window window_id) const;
-
   bool expo_state_;
   bool in_show_desktop_;
   bool scale_active_;

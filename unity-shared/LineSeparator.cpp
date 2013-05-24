@@ -19,27 +19,24 @@
 
 #include "LineSeparator.h"
 
-#include "Nux/Nux.h"
-
 namespace unity
 {
 
-HSeparator::HSeparator()
+
+HSeparator::HSeparator(nux::Color const& color, float alpha0, float alpha1, int border, NUX_FILE_LINE_DECL)
+  : nux::View(NUX_FILE_LINE_PARAM)
+  , color_(color)
+  , alpha0_(alpha0)
+  , alpha1_(alpha1)
+  , border_size_(border)
 {
   SetMinimumHeight(1);
   SetMaximumHeight(1);
 }
 
-HSeparator::HSeparator(nux::Color const& color, float alpha0, float alpha1, int border)
-  : AbstractSeparator(color, alpha0, alpha1, border)
-{
-  SetMinimumHeight(1);
-  SetMaximumHeight(1);
-}
-
-HSeparator::~HSeparator()
-{
-}
+HSeparator::HSeparator(NUX_FILE_LINE_DECL)
+  : HSeparator(nux::color::White, 0.0f, 0.10f, 0)
+{}
 
 void HSeparator::Draw(nux::GraphicsEngine &GfxContext, bool force_draw)
 {
@@ -66,5 +63,22 @@ void HSeparator::Draw(nux::GraphicsEngine &GfxContext, bool force_draw)
 
   GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
 }
+
+void HSeparator::SetColor(nux::Color const &color)
+{
+  color_ = color;
+}
+
+void HSeparator::SetAlpha(float alpha0, float alpha1)
+{
+  alpha0_ = alpha0;
+  alpha1_ = alpha1;
+}
+
+void HSeparator::SetBorderSize(int border)
+{
+  border_size_ = border;
+}
+
 
 } // namespace unity

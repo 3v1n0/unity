@@ -157,7 +157,7 @@ DashView::DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& app
   }
 
   // If nux resets the focus, we need to set it back to the default focus item.
-  nux::GetWindowCompositor().key_nav_focus_change.connect([this](nux::Area *area, bool has_focus, nux::KeyNavDirection direction) {
+  key_nav_focus_change_connection_ = nux::GetWindowCompositor().key_nav_focus_change.connect([this](nux::Area *area, bool has_focus, nux::KeyNavDirection direction) {
     if (visible_ && !area)
       nux::GetWindowCompositor().SetKeyFocusArea(default_focus());
   });
@@ -166,6 +166,8 @@ DashView::DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& app
 DashView::~DashView()
 {
   scope_can_refine_connection_.disconnect();
+  key_nav_focus_change_connection_.disconnect();
+
   // Do this explicitely, otherwise dee will complain about invalid access
   // to the scope models
   RemoveLayout();

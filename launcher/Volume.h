@@ -49,7 +49,7 @@ public:
   virtual bool IsOpened() const = 0;
 
   virtual void EjectAndShowNotification() = 0;
-  virtual void MountAndOpenInFileManager(unsigned long long timestamp = 0) = 0;
+  virtual void MountAndOpenInFileManager(uint64_t timestamp = 0) = 0;
   virtual void StopDrive() = 0;
   virtual void Unmount() = 0;
 
