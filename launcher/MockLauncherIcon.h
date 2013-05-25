@@ -225,7 +225,7 @@ public:
 
   void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote) {}
 
-  unsigned long long SwitcherPriority()
+  uint64_t SwitcherPriority()
   {
     return 0;
   }

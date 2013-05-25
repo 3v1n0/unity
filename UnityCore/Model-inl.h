@@ -183,20 +183,20 @@ void Model<RowAdaptor>::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
 template<class RowAdaptor>
 void Model<RowAdaptor>::OnTransactionBegin(DeeModel* model, guint64 begin_seqnum64, guint64 end_seqnum64)
 {
-  unsigned long long begin_seqnum, end_seqnum;
+  uint64_t begin_seqnum, end_seqnum;
 
-  begin_seqnum = static_cast<unsigned long long> (begin_seqnum64);
-  end_seqnum = static_cast<unsigned long long> (end_seqnum64);
+  begin_seqnum = static_cast<uint64_t> (begin_seqnum64);
+  end_seqnum = static_cast<uint64_t> (end_seqnum64);
   begin_transaction.emit(begin_seqnum, end_seqnum);
 }
 
 template<class RowAdaptor>
 void Model<RowAdaptor>::OnTransactionEnd(DeeModel* model, guint64 begin_seqnum64, guint64 end_seqnum64)
 {
-  unsigned long long begin_seqnum, end_seqnum;
+  uint64_t begin_seqnum, end_seqnum;
 
-  begin_seqnum = static_cast<unsigned long long> (begin_seqnum64);
-  end_seqnum = static_cast<unsigned long long> (end_seqnum64);
+  begin_seqnum = static_cast<uint64_t> (begin_seqnum64);
+  end_seqnum = static_cast<uint64_t> (end_seqnum64);
   end_transaction.emit(begin_seqnum, end_seqnum);
 }
 
@@ -225,7 +225,7 @@ std::size_t Model<RowAdaptor>::get_count() const
 }
 
 template<class RowAdaptor>
-unsigned long long Model<RowAdaptor>::get_seqnum() const
+uint64_t Model<RowAdaptor>::get_seqnum() const
 {
   if (model_ && DEE_IS_SERIALIZABLE_MODEL ((DeeModel*) model_))
     return dee_serializable_model_get_seqnum(model_);

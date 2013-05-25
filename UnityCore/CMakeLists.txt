@@ -43,6 +43,7 @@ set (CORE_HEADERS
      Model.h
      Model-inl.h
      ModelIterator.h
+     ModelIterator-inl.h
      ModelRowAdaptor.h
      ModelRowAdaptor-inl.h
      PaymentPreview.h

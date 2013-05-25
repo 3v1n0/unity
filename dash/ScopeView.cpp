@@ -26,7 +26,6 @@
 #include <Nux/VScrollBar.h>
 
 #include "unity-shared/DashStyle.h"
-#include "CoverflowResultView.h"
 
 #include "ResultRendererTile.h"
 #include "ResultRendererHorizontalTile.h"

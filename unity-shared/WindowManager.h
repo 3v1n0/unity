@@ -136,7 +136,7 @@ public:
   virtual nux::Geometry GetScreenGeometry() const = 0;
   virtual nux::Geometry GetWorkAreaGeometry(Window window_id = 0) const = 0;
 
-  virtual unsigned long long GetWindowActiveNumber(Window window_id) const = 0;
+  virtual uint64_t GetWindowActiveNumber(Window window_id) const = 0;
 
   virtual void SetWindowIconGeometry(Window window, nux::Geometry const& geo) = 0;
 

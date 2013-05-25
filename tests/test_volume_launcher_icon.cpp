@@ -281,7 +281,7 @@ TEST_F(TestVolumeLauncherIcon, TestOpenMenuItem)
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
-  unsigned long long time = g_random_int();
+  uint64_t time = g_random_int();
   EXPECT_CALL(*volume_, MountAndOpenInFileManager(time));
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, time);
@@ -298,7 +298,7 @@ TEST_F(TestVolumeLauncherIcon, TestNameMenuItem)
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY));
 
-  unsigned long long time = g_random_int();
+  uint64_t time = g_random_int();
   EXPECT_CALL(*volume_, MountAndOpenInFileManager(time));
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, time);
@@ -536,7 +536,7 @@ TEST_F(TestVolumeLauncherIcon, Activate)
 {
   CreateIcon();
 
-  unsigned long long time = g_random_int();
+  uint64_t time = g_random_int();
   EXPECT_CALL(*volume_, MountAndOpenInFileManager(time));
   icon_->Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
 }

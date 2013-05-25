@@ -69,17 +69,22 @@ TEST_F(TestSwitcherController, DetailTimeoutRemoval)
 
   controller_->Next();
   selection = controller_->GetCurrentSelection();
-  EXPECT_EQ(selection.application_->tooltip_text(), "Show Desktop");
+  ASSERT_EQ(selection.application_->tooltip_text(), "Third");
   EXPECT_EQ(selection.window_, 0);
 
   controller_->Next();
   selection = controller_->GetCurrentSelection();
-  EXPECT_EQ(selection.application_->tooltip_text(), "First");
+  ASSERT_EQ(selection.application_->tooltip_text(), "Show Desktop");
+  EXPECT_EQ(selection.window_, 0);
+
+  controller_->Next();
+  selection = controller_->GetCurrentSelection();
+  ASSERT_EQ(selection.application_->tooltip_text(), "First");
   EXPECT_EQ(selection.window_, 0);
 
   Utils::WaitForTimeoutMSec(details_timeout * 1.1);
   selection = controller_->GetCurrentSelection();
-  EXPECT_EQ(selection.application_->tooltip_text(), "First");
+  ASSERT_EQ(selection.application_->tooltip_text(), "First");
   EXPECT_EQ(selection.window_, 0x0101);
 
 

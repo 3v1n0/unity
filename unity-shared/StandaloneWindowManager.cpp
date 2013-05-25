@@ -39,6 +39,7 @@ StandaloneWindow::StandaloneWindow(Window xid)
   , geo(nux::Geometry(0, 0, 10, 10))
   , current_desktop(0)
   , monitor(0)
+  , active_number(0)
   , active(false)
   , mapped(true)
   , visible(true)
@@ -478,8 +479,12 @@ nux::Size StandaloneWindowManager::GetWindowDecorationSize(Window window_id, Win
   return nux::Size();
 }
 
-unsigned long long StandaloneWindowManager::GetWindowActiveNumber(Window window_id) const
+uint64_t StandaloneWindowManager::GetWindowActiveNumber(Window window_id) const
 {
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->active_number;
+
   return 0;
 }
 

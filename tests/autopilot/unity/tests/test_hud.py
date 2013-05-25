@@ -12,6 +12,7 @@ from __future__ import absolute_import
 from autopilot.matchers import Eventually
 from autopilot.display import Display, move_mouse_to_screen, is_rect_on_screen
 from autopilot.testcase import multiply_scenarios
+from autopilot.introspection.dbus import StateNotFoundError
 from os import remove, environ
 from os.path import exists
 from tempfile import mktemp
@@ -73,6 +74,14 @@ class HudTestsBase(UnityTestCase):
         }
         self.launch_test_window(window_spec)
 
+    def hud_query_check(self):
+        try:
+            button = self.unity.hud.selected_hud_button
+            if not button:
+                return
+            return button.label_no_formatting
+        except StateNotFoundError:
+            return
 
 
 class HudBehaviorTests(HudTestsBase):
@@ -195,8 +204,8 @@ class HudBehaviorTests(HudTestsBase):
 
         self.assertEqual(calc.is_active, True)
 
-    def test_gedit_undo(self):
-        """Test that the 'undo' action in the Hud works with GEdit."""
+    def test_gedit_save(self):
+        """Test that the 'save' action in the Hud works with GEdit."""
 
         file_path = mktemp()
         self.addCleanup(remove, file_path)
@@ -204,27 +213,20 @@ class HudBehaviorTests(HudTestsBase):
         self.addCleanup(self.process_manager.close_all_app, 'Text Editor')
         self.assertProperty(gedit_win, is_focused=True)
 
-        self.keyboard.type("0")
-        self.keyboard.type(" ")
-        self.keyboard.type("1")
+        self.keyboard.type("Test")
 
         self.unity.hud.ensure_visible()
 
-        self.keyboard.type("undo")
-        hud_query_check = lambda: self.unity.hud.selected_hud_button.label_no_formatting
-        # XXX: with the new HUD, command and description is separated by '\u2002' and
-        #  not a regular space ' '. Is that correct? (LP: #1172237)
-        self.assertThat(hud_query_check,
-                        Eventually(Equals(u'Undo\u2002(Edit)')))
+        self.keyboard.type("save")
+
+        self.assertThat(self.hud_query_check,
+                        Eventually(Equals(u'Save\u2002(File)')))
         self.keyboard.press_and_release('Return')
-        self.assertThat(self.unity.hud.visible, Eventually(Equals(False)))
+        self.addCleanup(self.keyboard.press_and_release, "Ctrl+s")
+        self.assertThat(self.unity.hud.visible, Eventually(Equals(False), timeout=30))
 
         self.assertProperty(gedit_win, is_focused=True)
-        self.keyboard.press_and_release("Ctrl+s")
-        self.assertThat(lambda: exists(file_path), Eventually(Equals(True)))
-
-        contents = open(file_path).read().strip('\n')
-        self.assertEqual("0 ", contents)
+        self.assertThat(lambda: exists(file_path), Eventually(Equals(True), timeout=30))
 
     def test_hud_to_dash_has_key_focus(self):
         """When switching from the hud to the dash you don't lose key focus."""
@@ -324,15 +326,15 @@ class HudBehaviorTests(HudTestsBase):
 
         self.keyboard.type("Quit")
         self.assertThat(self.unity.hud.search_string, Eventually(Equals("Quit")))
-        hud_query_check = lambda: self.unity.hud.selected_hud_button.label_no_formatting
-        self.assertThat(hud_query_check,
-                        Eventually(Equals(u'Quit\u2002(File)')))
+        self.assertThat(self.hud_query_check,
+                        Eventually(Equals(u'Quit\u2002(File)'), timeout=30))
 
         self.keyboard.press_and_release("Enter")
 
-        self.assertFalse(self.process_manager.app_is_running("Text Editor"))
+        is_running = lambda: self.process_manager.app_is_running("Text Editor")
+        self.assertThat(is_running, Eventually(Equals(False)))
 
-        self.assertThat(self.unity.hud.visible, Eventually(Equals(False)))
+        self.assertThat(self.unity.hud.visible, Eventually(Equals(False), timeout=30))
 
     def test_hud_closes_on_escape(self):
         """Hud must close on escape after searchbox is cleared"""

@@ -649,15 +649,15 @@ void Controller::Impl::SelectFirstItem()
     return;
   }
 
-  unsigned int first_highest = 0;
-  unsigned int first_second = 0; // first icons second highest active
-  unsigned int second_first = 0; // second icons first highest active
+  uint64_t first_highest = 0;
+  uint64_t first_second = 0; // first icons second highest active
+  uint64_t second_first = 0; // second icons first highest active
 
   WindowManager& wm = WindowManager::Default();
   for (auto& window : first->Windows())
   {
-    guint32 xid = window->window_id();
-    unsigned int num = wm.GetWindowActiveNumber(xid);
+    Window xid = window->window_id();
+    uint64_t num = wm.GetWindowActiveNumber(xid);
 
     if (num > first_highest)
     {
@@ -670,11 +670,7 @@ void Controller::Impl::SelectFirstItem()
     }
   }
 
-  for (auto& window : second->Windows())
-  {
-    guint32 xid = window->window_id();
-    second_first = std::max<unsigned long long>(wm.GetWindowActiveNumber(xid), second_first);
-  }
+  second_first = second->SwitcherPriority();
 
   if (first_second > second_first)
     model_->Select(first);

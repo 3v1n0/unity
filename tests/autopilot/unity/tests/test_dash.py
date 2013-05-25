@@ -809,6 +809,11 @@ class PreviewInvocationTests(DashTestCase):
         gedit_win = self.process_manager.start_app_window('Text Editor', files=[file_path], locale='C')
         self.assertProperty(gedit_win, is_focused=True)
 
+        # immediately close gedit since we're only interested in getting ZG event when opening temp file.
+        # this way we avoid an issue with gedit popup dialog when temporary file gets removed by AP
+        # before closing gedit by AP cleanup code.
+        gedit_win.close()
+
         scope = self.unity.dash.reveal_file_scope()
         self.addCleanup(self.unity.dash.ensure_hidden)
 

@@ -1264,9 +1264,9 @@ bool ApplicationLauncherIcon::AllowDetailViewInSwitcher() const
   return app_->type() != "webapp";
 }
 
-unsigned long long ApplicationLauncherIcon::SwitcherPriority()
+uint64_t ApplicationLauncherIcon::SwitcherPriority()
 {
-  unsigned long long result = 0;
+  uint64_t result = 0;
   // Webapps always go at the back.
   if (app_->type() == "webapp")
     return result;
