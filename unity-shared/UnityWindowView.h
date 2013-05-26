@@ -42,7 +42,7 @@ public:
   nux::Property<UnityWindowStyle::Ptr> style;
   nux::Property<bool> closable;
 
-  UnityWindowView(NUX_FILE_LINE_PROTO);
+  UnityWindowView(nux::BaseWindow *parent, NUX_FILE_LINE_PROTO);
   virtual ~UnityWindowView();
 
   bool SetLayout(nux::Layout* layout) override;

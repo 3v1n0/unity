@@ -436,15 +436,13 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   texxform_absolute_bg.voffset = 0.0f;
   texxform_absolute_bg.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
 
-  nux::Geometry blur_geo(larger_absolute_geo.x, larger_absolute_geo.y, larger_content_geo.width, larger_content_geo.height);
-
   if (BackgroundEffectHelper::blur_type != BLUR_NONE)
   {
-    bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
+    bg_blur_texture_ = bg_effect_helper_.GetBlurRegion();
   }
   else
   {
-    bg_blur_texture_ = bg_effect_helper_.GetRegion(blur_geo); 
+    bg_blur_texture_ = bg_effect_helper_.GetRegion();
   }
 
   if (bg_blur_texture_.IsValid())
@@ -942,6 +940,24 @@ void OverlayRenderer::AboutToHide()
   pimpl_->visible = false;
   pimpl_->bg_effect_helper_.enabled = false;
   need_redraw.emit();
+}
+
+void OverlayRenderer::UpdateBlurBackgroundSize (nux::Geometry const& content_geo,
+                                                nux::Geometry const& absolute_geo,
+                                                bool                 force_edges)
+{
+  int excess_border = (Settings::Instance().form_factor() != FormFactor::NETBOOK || force_edges) ? EXCESS_BORDER : 0;
+
+  nux::Geometry larger_absolute_geo = absolute_geo;
+  larger_absolute_geo.OffsetSize(excess_border, excess_border);
+
+  nux::Geometry larger_content_geo = content_geo;
+  larger_content_geo.OffsetSize(excess_border, excess_border);
+
+  nux::Geometry blur_geo(larger_absolute_geo.x, larger_absolute_geo.y,
+                         larger_content_geo.width, larger_content_geo.height);
+
+  pimpl_->bg_effect_helper_.SetBackbufferRegion(blur_geo);
 }
 
 void OverlayRenderer::AboutToShow()

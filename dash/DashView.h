@@ -127,6 +127,9 @@ private:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
+  nux::Geometry GetRenderAbsoluteGeometry() const;
+
+
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
   UBusManager ubus_manager_;

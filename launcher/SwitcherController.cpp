@@ -405,13 +405,13 @@ void Controller::Impl::ConstructView()
 
   sources_.Remove(VIEW_CONSTRUCT_IDLE);
 
-  view_ = SwitcherView::Ptr(new SwitcherView());
+  ConstructWindow();
+  view_ = SwitcherView::Ptr(new SwitcherView(view_window_.GetPointer()));
   obj_->AddChild(view_.GetPointer());
   view_->SetModel(model_);
   view_->background_color = bg_color_;
   view_->monitor = obj_->monitor_;
 
-  ConstructWindow();
   main_layout_->AddView(view_.GetPointer(), 1);
   view_window_->SetEnterFocusInputArea(view_.GetPointer());
   view_window_->SetGeometry(workarea_);

@@ -149,6 +149,17 @@ PanelView::PanelView(indicator::DBusIndicators::Ptr const& remote, NUX_FILE_LINE
 
   bg_refine_single_column_layer_.reset(new nux::TextureLayer(bg_refine_single_column_tex_->GetDeviceTexture(),
                                        nux::TexCoordXForm(), nux::color::White, false, rop));
+
+  auto update_blur_geometry = [this](nux::Area*, nux::Geometry const& g) {
+    nux::Geometry const& geo = GetGeometry();
+    nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
+    nux::Geometry blur_geo (geo_absolute.x, geo_absolute.y, geo.width, geo.height);
+    bg_effect_helper_.SetBackbufferRegion(blur_geo);
+  };
+
+  geometry_changed.connect(update_blur_geometry);
+
+  update_blur_geometry(this, GetGeometry());
 }
 
 PanelView::~PanelView()
@@ -275,15 +286,14 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   if (IsTransparent())
   {
     nux::Geometry const& geo_absolute = GetAbsoluteGeometry();
-    nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, geo.width, geo.height);
 
     if (BackgroundEffectHelper::blur_type != BLUR_NONE)
     {
-      bg_blur_texture_ = bg_effect_helper_.GetBlurRegion(blur_geo);
+      bg_blur_texture_ = bg_effect_helper_.GetBlurRegion();
     }
     else
     {
-      bg_blur_texture_ = bg_effect_helper_.GetRegion(blur_geo);
+      bg_blur_texture_ = bg_effect_helper_.GetRegion();
     }
 
     if (bg_blur_texture_.IsValid())

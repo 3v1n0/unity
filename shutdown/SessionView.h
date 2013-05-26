@@ -47,7 +47,7 @@ public:
     LOGOUT
   };
 
-  View(Manager::Ptr const& manager);
+  View(nux::BaseWindow *parent, Manager::Ptr const& manager);
 
   nux::Property<Mode> mode;
   nux::Property<bool> have_inhibitors;

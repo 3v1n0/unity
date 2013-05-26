@@ -37,7 +37,7 @@ struct TestSessionView : testing::Test
 
   struct ViewWrap : View
   {
-    ViewWrap(Manager::Ptr const& manager) : View(manager) {}
+    ViewWrap(Manager::Ptr const& manager) : View(nullptr, manager) {}
 
     std::string GetTitle() const { return title_->IsVisible() ? title_->GetText() : ""; }
     std::string GetSubTitle() const { return subtitle_->GetText(); }

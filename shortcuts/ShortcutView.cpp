@@ -69,8 +69,8 @@ namespace
 
 NUX_IMPLEMENT_OBJECT_TYPE(View);
 
-View::View()
-  : ui::UnityWindowView()
+View::View(nux::BaseWindow *parent)
+  : ui::UnityWindowView(parent)
 {
   auto main_layout = new nux::VLayout();
   main_layout->SetPadding(30, 18);
