@@ -365,6 +365,8 @@ private:
       g_error_free(error);
     }
 
+    gtk_icon_info_free(info);
+
     return result;
   }
 

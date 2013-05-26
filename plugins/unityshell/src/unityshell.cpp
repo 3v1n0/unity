@@ -79,6 +79,8 @@
 /* Set up vtable symbols */
 COMPIZ_PLUGIN_20090315(unityshell, unity::UnityPluginVTable);
 
+namespace cgl = compiz::opengl;
+
 namespace unity
 {
 using namespace launcher;
@@ -140,6 +142,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , allowWindowPaint(false)
   , _key_nav_mode_requested(false)
   , _last_output(nullptr)
+  , force_draw_countdown_ (0)
   , grab_index_ (0)
   , painting_tray_ (false)
   , last_scroll_event_(0)
@@ -149,6 +152,9 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , scale_just_activated_(false)
   , big_tick_(0)
   , screen_introspection_(screen)
+  , ignore_redraw_request_(false)
+  , dirty_helpers_on_this_frame_(false)
+  , back_buffer_age_(0)
 {
   Timer timer;
 #ifndef USE_GLES
@@ -403,6 +409,11 @@ UnityScreen::UnityScreen(CompScreen* screen)
     XSelectInput(display, GDK_ROOT_WINDOW(), PropertyChangeMask);
     LOG_INFO(logger) << "UnityScreen constructed: " << timer.ElapsedSeconds() << "s";
 
+    UScreen::GetDefault()->resuming.connect([this]() {
+      /* Force paint 10 frames on resume */
+      this->force_draw_countdown_ += 10;
+    });
+
     panel::Style::Instance().changed.connect(sigc::mem_fun(this, &UnityScreen::OnPanelStyleChanged));
 
     minimize_speed_controller_.DurationChanged.connect(
@@ -412,8 +423,13 @@ UnityScreen::UnityScreen(CompScreen* screen)
     WindowManager& wm = WindowManager::Default();
     wm.initiate_spread.connect(sigc::mem_fun(this, &UnityScreen::OnInitiateSpread));
     wm.terminate_spread.connect(sigc::mem_fun(this, &UnityScreen::OnTerminateSpread));
+    wm.initiate_expo.connect(sigc::mem_fun(this, &UnityScreen::DamagePanelShadow));
+    wm.terminate_expo.connect(sigc::mem_fun(this, &UnityScreen::DamagePanelShadow));
 
     AddChild(&screen_introspection_);
+
+    /* Track whole damage on the very first frame */
+    cScreen->damageScreen();
   }
 }
 
@@ -486,6 +502,27 @@ void UnityScreen::OnTerminateSpread()
     UnityWindow::get(swin->window)->OnTerminateSpread();
 
   UnityWindow::CleanupSharedTextures();
+}
+
+void UnityScreen::DamagePanelShadow()
+{
+  CompRect panelShadow;
+
+  for (CompOutput const& output : screen->outputDevs())
+  {
+    FillShadowRectForOutput(panelShadow, output);
+    cScreen->damageRegion(CompRegion(panelShadow));
+  }
+}
+
+void UnityScreen::OnViewHidden(nux::BaseWindow *bw)
+{
+  /* Count this as regular damage */
+  nux::Geometry geometry(bw->GetAbsoluteGeometry());
+  cScreen->damageRegion(CompRegion (geometry.x,
+                                    geometry.y,
+                                    geometry.width,
+                                    geometry.height));
 }
 
 void UnityScreen::EnsureSuperKeybindings()
@@ -579,6 +616,20 @@ void UnityScreen::setPanelShadowMatrix(GLMatrix const& matrix)
   panel_shadow_matrix_ = matrix;
 }
 
+void UnityScreen::FillShadowRectForOutput(CompRect         &shadowRect,
+                                          CompOutput const &output)
+{
+  if (_shadow_texture.empty ())
+    return;
+
+  float panel_h = static_cast<float>(panel_style_.panel_height);
+  float shadowX = output.x();
+  float shadowY = output.y() + panel_h;
+  float shadowWidth = output.width();
+  float shadowHeight = _shadow_texture[0]->height();
+  shadowRect.setGeometry(shadowX, shadowY, shadowWidth, shadowHeight);
+}
+
 void UnityScreen::paintPanelShadow(CompRegion const& clip)
 {
   // You have no shadow texture. But how?
@@ -606,11 +657,8 @@ void UnityScreen::paintPanelShadow(CompRegion const& clip)
       return;
   }
 
-  int shadowX = output->x();
-  int shadowY = output->y() + panel_style_.panel_height;
-  int shadowWidth = output->width();
-  int shadowHeight = _shadow_texture[0]->height();
-  CompRect shadowRect(shadowX, shadowY, shadowWidth, shadowHeight);
+  CompRect shadowRect;
+  FillShadowRectForOutput(shadowRect, *output);
 
   CompRegion redraw(clip);
   redraw &= shadowRect;
@@ -650,10 +698,10 @@ void UnityScreen::paintPanelShadow(CompRegion const& clip)
       float y2 = r.y2();
 
       // Texture coordinates of the above rectangle:
-      float tx1 = (x1 - shadowX) / shadowWidth;
-      float ty1 = (y1 - shadowY) / shadowHeight;
-      float tx2 = (x2 - shadowX) / shadowWidth;
-      float ty2 = (y2 - shadowY) / shadowHeight;
+      float tx1 = (x1 - shadowRect.x()) / shadowRect.width();
+      float ty1 = (y1 - shadowRect.y()) / shadowRect.height();
+      float tx2 = (x2 - shadowRect.x()) / shadowRect.width();
+      float ty2 = (y2 - shadowRect.y()) / shadowRect.height();
 
       vertexData = {
         x1, y1, 0,
@@ -717,25 +765,37 @@ void UnityScreen::paintDisplay()
 
   DrawPanelUnderDash();
 
-  if (BackgroundEffectHelper::HasDirtyHelpers())
+  /* Bind the currently bound draw framebuffer to the read framebuffer binding.
+   * The reason being that we want to use the results of nux images being
+   * drawn to this framebuffer in glCopyTexSubImage2D operations */
+  GLint current_draw_binding, old_read_binding;
+#ifndef USE_GLES
+  glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING_EXT, &old_read_binding);
+  glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING_EXT, &current_draw_binding);
+  if (old_read_binding != current_draw_binding)
+    (*GL::bindFramebuffer) (GL_READ_FRAMEBUFFER_BINDING_EXT, current_draw_binding);
+#endif
+
+  /* If we have dirty helpers re-copy the backbuffer
+   * into a texture
+   *
+   * TODO: Make this faster by only copying the bits we
+   * need as opposed to the whole readbuffer */
+  if (dirty_helpers_on_this_frame_)
   {
     auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
     auto graphics_engine = nux::GetGraphicsDisplay()->GetGraphicsEngine();
-
-    nux::ObjectPtr<nux::IOpenGLTexture2D> bg_texture =
-      graphics_engine->CreateTextureFromBackBuffer(0, 0,
-                                                   screen->width(),
-                                                   screen->height());
-    gpu_device->backup_texture0_ = bg_texture;
+    gpu_device->backup_texture0_ =
+      graphics_engine->CreateTextureFromBackBuffer(0, 0, screen->width(), screen->height());
+    back_buffer_age_ = 0;
   }
 
   nux::Geometry outputGeo(output->x (), output->y (), output->width (), output->height ());
   BackgroundEffectHelper::monitor_rect_.Set(0, 0, screen->width(), screen->height());
 
-  GLint fboID;
-  // Nux renders to the referenceFramebuffer when it's embedded.
-  glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fboID);
-  wt->GetWindowCompositor().SetReferenceFramebuffer(fboID, outputGeo);
+  wt->GetWindowCompositor().SetReferenceFramebuffer(current_draw_binding,
+                                                    old_read_binding,
+                                                    outputGeo);
 
   nuxPrologue();
   wt->RenderInterfaceFromForeignCmd (&outputGeo);
@@ -1223,6 +1283,7 @@ bool UnityScreen::glPaintOutput(const GLScreenPaintAttrib& attrib,
   doShellRepaint = force ||
                    ( !region.isEmpty() &&
                      ( !wt->GetDrawList().empty() ||
+                       !wt->GetPresentationListGeometries().empty() ||
                        (mask & PAINT_SCREEN_FULL_MASK)
                      )
                    );
@@ -1258,8 +1319,141 @@ void UnityScreen::glPaintTransformedOutput(const GLScreenPaintAttrib& attrib,
                                            unsigned int mask)
 {
   allowWindowPaint = false;
+
+  /* PAINT_SCREEN_FULL_MASK means that we are ignoring the damage
+   * region and redrawing the whole screen, so we should make all
+   * nux windows be added to the presentation list that intersect
+   * this output.
+   *
+   * However, damaging nux has a side effect of notifying compiz
+   * through onRedrawRequested that we need to queue another frame.
+   * In most cases that would be desirable, and in the case where
+   * we did that in damageCutoff, it would not be a problem as compiz
+   * does not queue up new frames for damage that can be processed
+   * on the current frame. However, we're now past damage cutoff, but
+   * a change in circumstances has required that we redraw all the nux
+   * windows on this frame. As such, we need to ensure that damagePending
+   * is not called as a result of queuing windows for redraw, as that
+   * would effectively result in a damage feedback loop in plugins that
+   * require screen transformations (eg, new frame -> plugin redraws full
+   * screen -> we reach this point and request another redraw implicitly)
+   */
+  if (mask & PAINT_SCREEN_FULL_MASK)
+  {
+    ignore_redraw_request_ = true;
+    compizDamageNux(CompRegionRef(output->region()));
+    ignore_redraw_request_ = false;
+
+    /* Fetch all the presentation list geometries - this will have the side
+     * effect of clearing any built-up damage state */
+    std::vector<nux::Geometry> dirty = wt->GetPresentationListGeometries();
+  }
+
   gScreen->glPaintTransformedOutput(attrib, transform, region, output, mask);
   paintPanelShadow(region);
+}
+
+void UnityScreen::updateBlurDamage()
+{
+  /* If there are enabled helpers, we want to apply damage
+   * based on how old our tracking fbo is since we may need
+   * to redraw some of the blur regions if there has been
+   * damage since we last bound it
+   *
+   * XXX: Unfortunately there's a nasty feedback loop here, and not
+   * a whole lot we can do about it. If part of the damage from any frame
+   * intersects a nux window, we have to mark the entire region that the
+   * nux window covers as damaged, because nux does not have any concept
+   * of geometry clipping. That damage will feed back to us on the next frame.
+   */
+  if (BackgroundEffectHelper::HasEnabledHelpers())
+  {
+    cScreen->applyDamageForFrameAge (back_buffer_age_);
+
+    /*
+     * Prioritise user interaction over active blur updates. So the general
+     * slowness of the active blur doesn't affect the UI interaction performance.
+     *
+     * Also, BackgroundEffectHelper::ProcessDamage() is causing a feedback loop
+     * while the dash is open. Calling it results in the NEXT frame (and the
+     * current one?) to get some damage. This GetDrawList().empty() check avoids
+     * that feedback loop and allows us to idle correctly.
+     *
+     * We are doing damage processing for the blurs here, as this represents
+     * the most up to date compiz damage under the nux windows.
+     */
+    if (wt->GetDrawList().empty())
+    {
+      CompRect::vector const& rects(buffered_compiz_damage_this_frame_.rects());
+      for (CompRect const& r : rects)
+      {
+        nux::Geometry geo(r.x(), r.y(), r.width(), r.height());
+        BackgroundEffectHelper::ProcessDamage(geo);
+      }
+    }
+  }
+}
+
+void UnityScreen::damageCutoff()
+{
+  if (force_draw_countdown_)
+  {
+    typedef nux::WindowCompositor::WeakBaseWindowPtr WeakBaseWindowPtr;
+
+    /* We have to force-redraw the whole scene because
+     * if a bug in the nvidia driver that causes framebuffers
+     * to be trashed on resume for a few swaps */
+    wt->GetWindowCompositor ()
+        .OnAllBaseWindows ([](WeakBaseWindowPtr const &w) {
+      w->QueueDraw ();
+    });
+
+    force_draw_countdown_--;
+  }
+
+  /* At this point we want to take all of the compiz damage
+   * for this frame and use it to determine which blur regions
+   * need to be redrawn. We don't want to do this any later because
+   * the nux damage is logically on top of the blurs and doesn't
+   * affect them */
+  updateBlurDamage();
+
+  /* Determine nux region damage last */
+  cScreen->damageCutoff();
+
+  CompRegion damage_buffer, last_damage_buffer;
+
+  do
+  {
+    last_damage_buffer = damage_buffer;
+
+    /* First apply any damage accumulated to nux to see
+     * what windows need to be redrawn there */
+    compizDamageNux(buffered_compiz_damage_this_frame_);
+
+    /* Apply the redraw regions to compiz so that we can
+     * draw this frame with that region included */
+    determineNuxDamage(damage_buffer);
+
+    /* We want to track the nux damage here as we will use it to
+     * determine if we need to present other nux windows too */
+    cScreen->damageRegion(damage_buffer);
+
+    /* If we had to put more damage into the damage buffer then
+     * damage compiz with it and keep going */
+  } while (last_damage_buffer != damage_buffer);
+
+  /* Clear damage buffer */
+  buffered_compiz_damage_last_frame_ = buffered_compiz_damage_this_frame_;
+  buffered_compiz_damage_this_frame_ = CompRegion();
+
+  /* Tell nux that any damaged windows should be redrawn on the next
+   * frame and not this one */
+  wt->ForeignFrameCutoff();
+
+  /* We need to track this per-frame to figure out whether or not
+   * to bind the contents fbo on each monitor pass */
+  dirty_helpers_on_this_frame_ = BackgroundEffectHelper::HasDirtyHelpers();
 }
 
 void UnityScreen::preparePaint(int ms)
@@ -1275,8 +1469,6 @@ void UnityScreen::preparePaint(int ms)
   didShellRepaint = false;
   panelShadowPainted = CompRegion();
   firstWindowAboveShell = NULL;
-
-  compizDamageNux(cScreen->currentDamage());
 }
 
 void UnityScreen::donePaint()
@@ -1290,11 +1482,22 @@ void UnityScreen::donePaint()
    * I think this is a Nux bug. ClearDrawList should ideally also mark all
    * the queued views as draw_cmd_queued_=false.
    */
+
+  /* To prevent any potential overflow problems, we are assuming here
+   * that compiz caps the maximum number of frames tracked at 10, so
+   * don't increment the age any more than 11 */
+  if (back_buffer_age_ < 11)
+    ++back_buffer_age_;
+
   if (didShellRepaint)
     wt->ClearDrawList();
 
+  /* Tell nux that a new frame is now beginning and any damaged windows should
+   * now be painted on this frame */
+  wt->ForeignFrameEnded();
+
   if (animation_controller_->HasRunningAnimations())
-    nuxDamageCompiz();
+    onRedrawRequested();
 
   std::list <ShowdesktopHandlerWindowInterface *> remove_windows;
 
@@ -1318,124 +1521,50 @@ void UnityScreen::donePaint()
 
 void UnityScreen::compizDamageNux(CompRegion const& damage)
 {
-  if (!launcher_controller_)
-    return;
-
-  /*
-   * Prioritise user interaction over active blur updates. So the general
-   * slowness of the active blur doesn't affect the UI interaction performance.
+  /* Ask nux to present anything in our damage region
    *
-   * Also, BackgroundEffectHelper::ProcessDamage() is causing a feedback loop
-   * while the dash is open. Calling it results in the NEXT frame (and the
-   * current one?) to get some damage. This GetDrawList().empty() check avoids
-   * that feedback loop and allows us to idle correctly.
+   * Note: This is using a new nux API, to "present" windows
+   * to the screen, as opposed to drawing them. The difference is
+   * important. The former will just draw the window backing texture
+   * directly to the screen, the latter will re-draw the entire window.
+   *
+   * The former is a lot faster, do not use QueueDraw unless the contents
+   * of the window need to be re-drawn.
    */
-  if (wt->GetDrawList().empty() && BackgroundEffectHelper::HasDamageableHelpers())
+  CompRect::vector rects (damage.rects());
+  for (const CompRect &r : rects)
   {
-    CompRect::vector const& rects(damage.rects());
-    for (CompRect const& r : rects)
-    {
-      nux::Geometry geo(r.x(), r.y(), r.width(), r.height());
-      BackgroundEffectHelper::ProcessDamage(geo);
-    }
-  }
-
-  auto const& launchers = launcher_controller_->launchers();
-  for (auto const& launcher : launchers)
-  {
-    if (!launcher->Hidden())
-    {
-      nux::Geometry const& geo = launcher->GetAbsoluteGeometry();
-      CompRegion launcher_region(geo.x, geo.y, geo.width, geo.height);
-
-      if (damage.intersects(launcher_region))
-        launcher->QueueDraw();
-
-      nux::ObjectPtr<nux::View> const& tooltip = launcher->GetActiveTooltip();
-
-      if (tooltip)
-      {
-        nux::Geometry const& g = tooltip->GetAbsoluteGeometry();
-        CompRegion tip_region(g.x, g.y, g.width, g.height);
-
-        if (damage.intersects(tip_region))
-          tooltip->QueueDraw();
-      }
-
-      nux::ObjectPtr<LauncherDragWindow> const& dragged_icon = launcher->GetDraggedIcon();
-
-      if (dragged_icon)
-      {
-        nux::Geometry const& g = dragged_icon->GetAbsoluteGeometry();
-        CompRegion icon_region(g.x, g.y, g.width, g.height);
-
-        if (damage.intersects(icon_region))
-          dragged_icon->QueueDraw();
-      }
-    }
-  }
-
-  std::vector<nux::View*> const& panels(panel_controller_->GetPanelViews());
-  for (nux::View* view : panels)
-  {
-    nux::Geometry const& geo = view->GetAbsoluteGeometry();
-
-    CompRegion panel_region(geo.x, geo.y, geo.width, geo.height);
-
-    if (damage.intersects(panel_region))
-      view->QueueDraw();
-  }
-
-  QuicklistManager* qm = QuicklistManager::Default();
-  if (qm)
-  {
-    auto const& view = qm->Current();
-
-    if (view)
-    {
-      nux::Geometry const& geo = view->GetAbsoluteGeometry();
-      CompRegion quicklist_region(geo.x, geo.y, geo.width, geo.height);
-
-      if (damage.intersects(quicklist_region))
-        view->QueueDraw();
-    }
-  }
-
-  if (switcher_controller_ && switcher_controller_->Visible())
-  {
-    auto const& view = switcher_controller_->GetView();
-
-    if (G_LIKELY(view))
-    {
-      nux::Geometry const& geo = view->GetAbsoluteGeometry();
-      CompRegion switcher_region(geo.x, geo.y, geo.width, geo.height);
-
-      if (damage.intersects(switcher_region))
-        view->QueueDraw();
-    }
+    nux::Geometry g (r.x(), r.y(), r.width(), r.height());
+    wt->PresentWindowsIntersectingGeometryOnThisFrame(g);
   }
 }
 
 /* Grab changed nux regions and add damage rects for them */
-void UnityScreen::nuxDamageCompiz()
+void UnityScreen::determineNuxDamage(CompRegion &nux_damage)
 {
-  /*
-   * If Nux is going to redraw anything then we have to tell Compiz to
-   * redraw everything. This is because Nux has a bad habit (bug??) of drawing
-   * more than just the regions of its DrawList. (LP: #1036519)
-   *
-   * Forunately, this does not happen on most frames. Only when the Unity
-   * Shell needs to redraw something.
-   *
-   * TODO: Try to figure out why redrawing the panel makes the launcher also
-   *       redraw even though the launcher's geometry is not in DrawList, and
-   *       stop it. Then maybe we can revert back to the old code below #else.
-   */
-  if (!wt->GetDrawList().empty() || animation_controller_->HasRunningAnimations())
+  /* Fetch all the dirty geometry from nux and aggregate it */
+  std::vector<nux::Geometry> dirty = wt->GetPresentationListGeometries();
+
+  for (auto const& geo : dirty)
+    nux_damage += CompRegion(geo.x, geo.y, geo.width, geo.height);
+
+  /* Special case, we need to redraw the panel shadow on panel updates */
+  for (auto const& panel_geo : panel_controller_->GetGeometries())
   {
-    cScreen->damageRegionSetEnabled(this, false);
-    cScreen->damageScreen();
-    cScreen->damageRegionSetEnabled(this, true);
+    CompRect panel_rect (panel_geo.x,
+                         panel_geo.y,
+                         panel_geo.width,
+                         panel_geo.height);
+
+    if (nux_damage.intersects(panel_rect))
+    {
+      foreach (CompOutput const& o, screen->outputDevs())
+      {
+        CompRect shadowRect;
+        FillShadowRectForOutput(shadowRect, o);
+        nux_damage += shadowRect;
+      }
+    }
   }
 }
 
@@ -1675,7 +1804,7 @@ void UnityScreen::handleEvent(XEvent* event)
 
 void UnityScreen::damageRegion(const CompRegion &region)
 {
-  compizDamageNux(region);
+  buffered_compiz_damage_this_frame_ += region;
   cScreen->damageRegion(region);
 }
 
@@ -2965,11 +3094,14 @@ void UnityScreen::initUnity(nux::NThread* thread, void* InitData)
   nux::ColorLayer background(nux::color::Transparent);
   static_cast<nux::WindowThread*>(thread)->SetWindowBackgroundPaintLayer(&background);
   LOG_INFO(logger) << "UnityScreen::initUnity: " << timer.ElapsedSeconds() << "s";
+
+  nux::GetWindowCompositor().sigHiddenViewWindow.connect (sigc::mem_fun(self, &UnityScreen::OnViewHidden));
 }
 
 void UnityScreen::onRedrawRequested()
 {
-  nuxDamageCompiz();
+  if (!ignore_redraw_request_)
+    cScreen->damagePending();
 }
 
 /* Handle option changes and plug that into nux windows */
@@ -3159,6 +3291,8 @@ void UnityScreen::Relayout()
                     << " h=" << primary_monitor_().height;
 
   needsRelayout = false;
+
+  DamagePanelShadow ();
 }
 
 /* Handle changes in the number of workspaces by showing the switcher

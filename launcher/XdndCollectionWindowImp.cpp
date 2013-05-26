@@ -38,6 +38,10 @@ public:
     auto uscreen = UScreen::GetDefault();
     SetGeometry(uscreen->GetScreenGeometry());
 
+    // We are not calling ShowWindow () as this window
+    // isn't really visible
+    PushToBack();
+
     if (nux::GetWindowThread()->IsEmbeddedWindow())
     {
       // Hack to create the X Window as soon as possible.
