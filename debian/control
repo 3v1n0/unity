@@ -165,6 +165,7 @@ Section: python
 Architecture: all
 Depends: ${misc:Depends},
          ${python:Depends},
+         autopilot-desktop,
          python-windowmocker,
          gir1.2-appindicator3-0.1,
          gir1.2-dee-1.0,
