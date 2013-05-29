@@ -8,11 +8,12 @@ include (cmake/pch.cmake)
 # Base bits
 #
 set (PROJECT_NAME "unity")
-set (UNITY_MAJOR 6)
-set (UNITY_MINOR 6)
+set (UNITY_MAJOR 7)
+set (UNITY_MINOR 0)
 set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "6.0")
+set (UNITY_COMPONENTS_VERSION "6")
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGNOME_DESKTOP_USE_UNSTABLE_API -std=c++0x -fno-permissive")
 set (CMAKE_CXX_FLAGS_DEBUG "-g3")
@@ -53,6 +54,9 @@ endif ()
 
 if (CMAKE_BUILD_TYPE MATCHES coverage)
   set (COVERAGE_XML_FILE "${CMAKE_BINARY_DIR}/coverage.xml")
+# FIXME: Read below
+#  set (COVERAGE_INFO_FILE "${CMAKE_BINARY_DIR}/coverage-html.info")
+#  set (COVERAGE_HTML_DIR "${CMAKE_BINARY_DIR}/coverage-html")
 
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage" )
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage" )
@@ -67,6 +71,21 @@ if (CMAKE_BUILD_TYPE MATCHES coverage)
       add_custom_target (coverage-xml 
           COMMAND  "${GCOVR_EXECUTABLE}" --exclude="tests.*" --exclude="obj-.*" -x -r "${CMAKE_SOURCE_DIR}" -o "${COVERAGE_XML_FILE}")
   endif()
+
+# FIXME: This got commented out, as it forces a strict dependency on lcov
+#  find_program(LCOV_EXECUTABLE lcov HINTS ${LCOV_ROOT} "${LCOV_ROOT}/bin")
+#  find_program(GENHTML_EXECUTABLE genhtml HINTS ${GENHTML_ROOT} "${GENHTML_ROOT}/bin")
+#  if (NOT LCOV_EXECUTABLE)
+#      message(FATAL_ERROR "Cannot enable coverage targets because gcovr was not found.")
+#  elseif (NOT GENHTML_EXECUTABLE)
+#      message(FATAL_ERROR "Cannot enable coverage targets because genhtml was not found.")
+#  else ()
+#      message (STATUS "Enabling HTML coverage report")
+#      add_custom_target (coverage-html 
+#          COMMAND "${LCOV_EXECUTABLE}" --directory "${CMAKE_BINARY_DIR}" --capture --output-file "${COVERAGE_INFO_FILE}"
+#          COMMAND "${GENHTML_EXECUTABLE}" --output-directory "${COVERAGE_HTML_DIR}" "${COVERAGE_INFO_FILE}")
+#  endif()
+
 endif (CMAKE_BUILD_TYPE MATCHES coverage)
 
 
@@ -84,7 +103,7 @@ add_custom_target (pre-distcheck
        && echo "• Generating AUTHORS"
        && bzr log --long --levels=0 | grep -e "^\\s*author:" -e "^\\s*committer:" | cut -d ":" -f 2 | sed -r -f AUTHOR-glue | sort -u > AUTHORS
        && echo "• Committing Release"
-       && bzr commit -m"Release ${UNITY_VERSION}" --unchanged
+       && bzr commit -m\"Release ${UNITY_VERSION}\" --unchanged
        && echo "• Tagging Release"
        && bzr tag ${UNITY_VERSION}
        && echo "• Running Distcheck"
@@ -129,7 +148,7 @@ add_dependencies (release post-distcheck)
 #
 set (PREFIXDIR "${CMAKE_INSTALL_PREFIX}")
 set (DATADIR "${CMAKE_INSTALL_PREFIX}/share")
-set (PKGDATADIR "${DATADIR}/unity/${UNITY_MAJOR}")
+set (PKGDATADIR "${DATADIR}/unity/icons")
 set (GETTEXT_PACKAGE "unity")
 set (LOCALE_DIR "${DATADIR}/locale")
 set (VERSION "${UNITY_VERSION}")
@@ -186,7 +205,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MAINTAINER_CXXFLAGS}")
 #
 # Compiz Plugins
 #
-set(UNITY_PROTOCOL_PRIVATE_DEPS unity-protocol-private>=5.95.1)
+set(UNITY_PROTOCOL_PRIVATE_DEPS unity-protocol-private>=7.0.0)
 set(UNITY_PLUGIN_SHARED_DEPS
     ${UNITY_PROTOCOL_PRIVATE_DEPS}
     atk
@@ -203,7 +222,7 @@ set(UNITY_PLUGIN_SHARED_DEPS
     libbamf3>=0.4.0
     libnotify
     libstartup-notification-1.0
-    nux-4.0>=4.0.0
+    nux-4.0>=4.0.1
     sigc++-2.0
     unity-misc>=0.4.0
     zeitgeist-1.0>=0.3.18

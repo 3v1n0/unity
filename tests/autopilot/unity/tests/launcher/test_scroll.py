@@ -22,10 +22,17 @@ class LauncherScrollTests(LauncherTestCase):
 
     def open_apps_in_launcher(self):
         """Opens some apps in order to get icon stacking in the Launcher"""
-        apps = ("Calculator", "Mahjongg", "Text Editor", "Character Map", "Terminal", "Remmina")
+
+        # Add some additional applications, since we need a lot of those on big screens
+        if "System Monitor" not in self.process_manager.KNOWN_APPS:
+            self.process_manager.register_known_application("System Monitor", "gnome-system-monitor.desktop", "gnome-system-monitor")
+        if "Archive Manager" not in self.process_manager.KNOWN_APPS:
+            self.process_manager.register_known_application("Archive Manager", "file-roller.desktop", "file-roller")
+
+        apps = ("Calculator", "Mahjongg", "Text Editor", "Character Map", "Terminal", "Remmina", "System Monitor", "Archive Manager")
         
         for app in apps:
-            self.start_app_window(app)
+            self.process_manager.start_app_window(app)
    
     def test_autoscrolling_from_bottom(self):
         """Tests the autoscrolling from the bottom of the Launcher"""

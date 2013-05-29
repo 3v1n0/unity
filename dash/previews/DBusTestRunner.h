@@ -24,7 +24,6 @@
  #include <UnityCore/GLibDBusProxy.h>
 
 #include <UnityCore/Preview.h>
-#include <UnityCore/Lens.h>
 #include <UnityCore/Results.h>
 #include <NuxCore/Logger.h>
 

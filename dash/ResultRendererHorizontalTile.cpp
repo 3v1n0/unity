@@ -268,7 +268,7 @@ nux::BaseTexture* ResultRendererHorizontalTile::DrawNormal(std::string const& te
   return texture_from_cairo_graphics(cairo_graphics);
 }
 
-void ResultRendererHorizontalTile::LoadText(Result& row)
+void ResultRendererHorizontalTile::LoadText(Result const& row)
 {
   std::stringstream final_text;
   char *name = g_markup_escape_text(row.name().c_str()  , -1);

@@ -180,8 +180,9 @@ public:
   virtual float GetProgress() = 0;
 
   virtual bool ShowInSwitcher(bool current) = 0;
+  virtual bool AllowDetailViewInSwitcher() const = 0;
 
-  virtual unsigned long long SwitcherPriority() = 0;
+  virtual uint64_t SwitcherPriority() = 0;
 
   virtual bool GetQuirk(Quirk quirk) const = 0;
 

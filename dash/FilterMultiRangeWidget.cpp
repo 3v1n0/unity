@@ -41,6 +41,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(FilterMultiRangeWidget);
 
 FilterMultiRangeWidget::FilterMultiRangeWidget(NUX_FILE_LINE_DECL)
   : FilterExpanderLabel(_("Multi-range"), NUX_FILE_LINE_PARAM)
+  , all_button_(nullptr)
   , dragging_(false)
 {
   InitTheme();
@@ -51,13 +52,10 @@ FilterMultiRangeWidget::FilterMultiRangeWidget(NUX_FILE_LINE_DECL)
   const int top_padding = style.GetSpaceBetweenFilterWidgets() - style.GetFilterHighlightPadding() - 2;
   const int bottom_padding = style.GetFilterHighlightPadding() - 1;
 
-  all_button_ = new FilterAllButton(NUX_TRACKER_LOCATION);
-
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout_->SetLeftAndRightPadding(left_padding, right_padding);
   layout_->SetTopAndBottomPadding(top_padding, bottom_padding);
 
-  SetRightHandView(all_button_);
   SetContents(layout_);
   OnActiveChanged(false);
 
@@ -79,7 +77,17 @@ void FilterMultiRangeWidget::SetFilter(Filter::Ptr const& filter)
 
   filter_ = std::static_pointer_cast<MultiRangeFilter>(filter);
 
-  all_button_->SetFilter(filter_);
+  // all button
+  auto show_button_func = [this] (bool show_all_button)
+  {
+    all_button_ = show_all_button ? new FilterAllButton(NUX_TRACKER_LOCATION) : nullptr;
+    SetRightHandView(all_button_);
+    if (all_button_)
+      all_button_->SetFilter(filter_);
+  };
+  show_button_func(filter_->show_all_button);
+  filter_->show_all_button.changed.connect(show_button_func);
+  
   expanded = !filter_->collapsed();
 
   filter_->option_added.connect(sigc::mem_fun(this, &FilterMultiRangeWidget::OnOptionAdded));
@@ -270,11 +278,6 @@ void FilterMultiRangeWidget::RecvMouseDrag(int x, int y, int dx, int dy, unsigne
   if (!drag_over_button.IsValid())
     return;
   dragging_ = true;
-
-  nux::Geometry mouse_down_button_geometry = mouse_down_button_->GetAbsoluteGeometry();
-
-  nux::Geometry left_active_button_geometry = mouse_down_left_active_button_->GetAbsoluteGeometry();
-  nux::Geometry right_active_button_geometry = mouse_down_right_active_button_->GetAbsoluteGeometry();
 
   auto end = buttons_.end();
   int found_buttons = 0;

@@ -32,6 +32,7 @@
 
 #include <libdbusmenu-glib/menuitem.h>
 #include "unity-shared/ApplicationManager.h"
+#include <UnityCore/GTKWrapper.h>
 
 #include "AbstractLauncherIcon.h"
 
@@ -215,11 +216,16 @@ public:
     return true;
   }
 
+  bool AllowDetailViewInSwitcher() const override
+  {
+    return true;
+  }
+
   void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote) {}
 
   void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote) {}
 
-  unsigned long long SwitcherPriority()
+  uint64_t SwitcherPriority()
   {
     return 0;
   }
@@ -319,7 +325,7 @@ private:
   nux::BaseTexture* TextureFromGtkTheme(const char* icon_name, int size)
   {
     GdkPixbuf* pbuf;
-    GtkIconInfo* info;
+    gtk::IconInfo info;
     nux::BaseTexture* result = NULL;
     GError* error = NULL;
     GIcon* icon;
@@ -345,7 +351,6 @@ private:
       return NULL;
 
     pbuf = gtk_icon_info_load_icon(info, &error);
-    gtk_icon_info_free(info);
 
     if (GDK_IS_PIXBUF(pbuf))
     {

@@ -5,41 +5,64 @@
 #include <functional>
 #include <gtest/gtest.h>
 
+#include "GLibWrapper.h"
+#include "config.h"
+
 namespace
 {
 
+using namespace unity;
+
 class Utils
 {
-public:
-  static void WaitUntilMSec(bool& success, unsigned int max_wait = 500)
+public:  
+  typedef std::function<gchar*()> ErrorStringFunc;
+  static gchar* DefaultErrorString() { return nullptr; }
+
+  static void WaitUntilMSec(bool& success, unsigned max_wait = 500, ErrorStringFunc const& error_func = &Utils::DefaultErrorString)
   {
-    WaitUntilMSec([&success] {return success;}, true, max_wait);
+    WaitUntilMSec([&success] {return success;}, true, max_wait, error_func);
   }
 
-  static void WaitUntil(bool& success, unsigned max_wait = 1)
+  static void WaitUntil(bool& success, unsigned max_wait = 1, ErrorStringFunc const& error_func = &Utils::DefaultErrorString)
   {
-    WaitUntilMSec(success, max_wait * 1000);
+    WaitUntilMSec(success, max_wait * 1000, error_func);
   }
 
-  static void WaitUntilMSec(std::function<bool()> const& check_function, bool result = true, unsigned max_wait = 500)
+  static void WaitUntilMSec(std::function<bool()> const& check_function, bool expected_result = true, unsigned max_wait = 500, ErrorStringFunc const& error_func = &Utils::DefaultErrorString)
   {
     ASSERT_NE(check_function, nullptr);
 
     bool timeout_reached = false;
     guint32 timeout_id = ScheduleTimeout(&timeout_reached, max_wait);
+    bool result;
 
-    while (check_function() != result && !timeout_reached)
-      g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
+    while (!timeout_reached)
+    {
+      result = check_function();
+      if (result == expected_result)
+        break;
 
-    if (check_function() == result)
+      g_main_context_iteration(NULL, TRUE);
+    }
+
+    if (result == expected_result)
       g_source_remove(timeout_id);
 
-    EXPECT_EQ(check_function(), result);
+    glib::String error(error_func());
+    if (error)
+    {
+      EXPECT_EQ(result, expected_result) << "Error: " << error;
+    }
+    else
+    {
+      EXPECT_EQ(result, expected_result);
+    }
   }
 
-  static void WaitUntil(std::function<bool()> const& check_function, bool result = true, unsigned max_wait = 10)
+  static void WaitUntil(std::function<bool()> const& check_function, bool result = true, unsigned max_wait = 1, ErrorStringFunc const& error_func = &Utils::DefaultErrorString)
   {
-    WaitUntilMSec(check_function, result, max_wait * 1000);
+    WaitUntilMSec(check_function, result, max_wait * 1000, error_func);
   }
 
   static guint32 ScheduleTimeout(bool* timeout_reached, unsigned timeout_duration = 10)
@@ -55,12 +78,23 @@ public:
   static void WaitForTimeoutMSec(unsigned timeout_duration = 500)
   {
     bool timeout_reached = false;
-    guint32 timeout_id = ScheduleTimeout(&timeout_reached, timeout_duration);
+    ScheduleTimeout(&timeout_reached, timeout_duration);
 
     while (!timeout_reached)
       g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
+  }
 
-    g_source_remove(timeout_id);
+  static void init_gsettings_test_environment()
+  {
+    // set the data directory so gsettings can find the schema
+    g_setenv("GSETTINGS_SCHEMA_DIR", BUILDDIR"/settings", true);
+    g_setenv("GSETTINGS_BACKEND", "memory", true);
+  }
+
+  static void reset_gsettings_test_environment()
+  {
+    g_unsetenv("GSETTINGS_SCHEMA_DIR");
+    g_unsetenv("GSETTINGS_BACKEND");
   }
 
 private:

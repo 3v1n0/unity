@@ -35,8 +35,8 @@ struct TestVolumeLauncherIcon : public Test
 {
   virtual void SetUp()
   {
-    volume_.reset(new MockVolume);
-    settings_.reset(new MockDevicesSettings);
+    volume_.reset(new NiceMock<MockVolume>);
+    settings_.reset(new NiceMock<MockDevicesSettings>);
 
     SetupVolumeDefaultBehavior();
     SetupSettingsDefaultBehavior();
@@ -44,40 +44,25 @@ struct TestVolumeLauncherIcon : public Test
 
   void CreateIcon()
   {
-    icon_ = new VolumeLauncherIcon(volume_, settings_);
+    icon_ = new NiceMock<VolumeLauncherIcon>(volume_, settings_);
   }
 
   void SetupSettingsDefaultBehavior()
   {
-    EXPECT_CALL(*settings_, IsABlacklistedDevice(_))
-      .WillRepeatedly(Return(false));
+    ON_CALL(*settings_, IsABlacklistedDevice(_)).WillByDefault(Return(false));
   }
 
   void SetupVolumeDefaultBehavior()
   {
-    EXPECT_CALL(*volume_, CanBeRemoved())
-      .WillRepeatedly(Return(false));
-
-    EXPECT_CALL(*volume_, CanBeStopped())
-      .WillRepeatedly(Return(false));
-
-    EXPECT_CALL(*volume_, GetName())
-      .WillRepeatedly(Return("Test Name"));
-
-    EXPECT_CALL(*volume_, GetIconName())
-      .WillRepeatedly(Return("Test Icon Name"));
-
-    EXPECT_CALL(*volume_, GetIdentifier())
-      .WillRepeatedly(Return("Test Identifier"));
-
-    EXPECT_CALL(*volume_, HasSiblings())
-      .WillRepeatedly(Return(false));
-
-    EXPECT_CALL(*volume_, CanBeEjected())
-      .WillRepeatedly(Return(false));
-
-    EXPECT_CALL(*volume_, IsMounted())
-      .WillRepeatedly(Return(true));
+    ON_CALL(*volume_, CanBeRemoved()).WillByDefault(Return(false));
+    ON_CALL(*volume_, CanBeStopped()).WillByDefault(Return(false));
+    ON_CALL(*volume_, GetName()).WillByDefault(Return("Test Name"));
+    ON_CALL(*volume_, GetIconName()).WillByDefault(Return("Test Icon Name"));
+    ON_CALL(*volume_, GetIdentifier()).WillByDefault(Return("Test Identifier"));
+    ON_CALL(*volume_, HasSiblings()).WillByDefault(Return(false));
+    ON_CALL(*volume_, CanBeEjected()).WillByDefault(Return(false));
+    ON_CALL(*volume_, IsMounted()).WillByDefault(Return(true));
+    ON_CALL(*volume_, IsOpened()) .WillByDefault(Return(true));
   }
 
   glib::Object<DbusmenuMenuitem> GetMenuItemAtIndex(int index)
@@ -105,8 +90,22 @@ TEST_F(TestVolumeLauncherIcon, TestQuirks)
 {
   CreateIcon();
 
-  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+  EXPECT_EQ(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING), volume_->IsOpened());
 }
+
+TEST_F(TestVolumeLauncherIcon, TestRunningStateUpdatesOnOpenedState)
+{
+  CreateIcon();
+
+  ON_CALL(*volume_, IsOpened()).WillByDefault(Return(false));
+  volume_->opened.emit(volume_->IsOpened());
+  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+
+  ON_CALL(*volume_, IsOpened()).WillByDefault(Return(true));
+  volume_->opened.emit(volume_->IsOpened());
+  EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+}
+
 
 TEST_F(TestVolumeLauncherIcon, TestPosition)
 {
@@ -282,7 +281,7 @@ TEST_F(TestVolumeLauncherIcon, TestOpenMenuItem)
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
-  unsigned long long time = g_random_int();
+  uint64_t time = g_random_int();
   EXPECT_CALL(*volume_, MountAndOpenInFileManager(time));
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, time);
@@ -299,7 +298,7 @@ TEST_F(TestVolumeLauncherIcon, TestNameMenuItem)
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY));
 
-  unsigned long long time = g_random_int();
+  uint64_t time = g_random_int();
   EXPECT_CALL(*volume_, MountAndOpenInFileManager(time));
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, time);
@@ -537,7 +536,7 @@ TEST_F(TestVolumeLauncherIcon, Activate)
 {
   CreateIcon();
 
-  unsigned long long time = g_random_int();
+  uint64_t time = g_random_int();
   EXPECT_CALL(*volume_, MountAndOpenInFileManager(time));
   icon_->Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
 }

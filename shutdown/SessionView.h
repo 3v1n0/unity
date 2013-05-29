@@ -24,6 +24,7 @@
 #include <Nux/View.h>
 #include <Nux/HLayout.h>
 
+#include "UnityCore/SessionManager.h"
 #include "unity-shared/UnityWindowView.h"
 
 namespace unity
@@ -50,6 +51,7 @@ public:
 
   nux::Property<Mode> mode;
   nux::Property<bool> have_inhibitors;
+  nux::ROProperty<nux::InputArea*> key_focus_area;
 
   sigc::signal<void> request_hide;
 
@@ -76,6 +78,7 @@ private:
   StaticCairoText* title_;
   StaticCairoText* subtitle_;
   nux::HLayout* buttons_layout_;
+  nux::InputArea* key_focus_area_;
 };
 
 } // namespace session

@@ -26,6 +26,8 @@ try:
     HAVE_WINDOWMOCKER=True
 except ImportError:
     HAVE_WINDOWMOCKER=False
+from subprocess import check_output
+import time
 import tempfile
 from testtools.content import text_content
 from testtools.matchers import Equals
@@ -33,13 +35,19 @@ from unittest.case import SkipTest
 
 from unity.emulators import ensure_unity_is_running
 from unity.emulators.workspace import WorkspaceManager
+from unity.emulators.compiz import get_compiz_setting, get_global_context
 from unity.emulators.unity import (
     set_log_severity,
     start_log_to_file,
     reset_logging,
     Unity
     )
+from unity.emulators.X11 import reset_display
 
+from Xlib import display
+from Xlib import Xutil
+
+from gi.repository import Gio
 
 log = getLogger(__name__)
 
@@ -62,6 +70,12 @@ class UnityTestCase(AutopilotTestCase):
         # Setting this here since the show desktop feature seems to be a bit
         # ropey. Once it's been proven to work reliably we can remove this line:
         self.set_unity_log_level("unity.wm.compiz", "DEBUG")
+
+        # For the length of the test, disable screen locking
+        self._desktop_settings = Gio.Settings.new("org.gnome.desktop.lockdown")
+        lock_state = self._desktop_settings.get_boolean("disable-lock-screen")
+        self._desktop_settings.set_boolean("disable-lock-screen", True)
+        self.addCleanup(self._desktop_settings.set_boolean, "disable-lock-screen", lock_state)
 
     def check_test_behavior(self):
         """Fail the test if it did something naughty.
@@ -92,7 +106,7 @@ class UnityTestCase(AutopilotTestCase):
             well_behaved = False
             reasons.append("The test left the hud open.")
             log.warning("Test left the hud open, closing it...")
-            self.hud.ensure_hidden()
+            self.unity.hud.ensure_hidden()
         # Are we in show desktop mode?
         if not self.well_behaved(self.unity.window_manager, showdesktop_active=False):
             well_behaved = False
@@ -105,7 +119,7 @@ class UnityTestCase(AutopilotTestCase):
             #
             # In the event that this doesn't work, wait_for will throw an
             # exception.
-            win = self.start_app_window('Calculator', locale='C')
+            win = self.process_manager.start_app_window('Calculator', locale='C')
             count = 1
             while self.unity.window_manager.showdesktop_active:
                 self.keybinding("window/show_desktop")
@@ -194,8 +208,8 @@ class UnityTestCase(AutopilotTestCase):
 
         This uses the 'window-mocker' application, which is not part of the
         python-autopilot or unity-autopilot packages. To use this method, you
-        must have python-windowmocker installed. If the package is not installed, 
-        this method will raise a SkipTest exception, causing the calling test 
+        must have python-windowmocker installed. If the package is not installed,
+        this method will raise a SkipTest exception, causing the calling test
         to be silently skipped.
 
         window_spec is a list or dictionary that conforms to the window-mocker
@@ -205,8 +219,8 @@ class UnityTestCase(AutopilotTestCase):
         if not HAVE_WINDOWMOCKER:
             raise SkipTest("The python-windowmocker package is required to run this test.")
 
-        if 'Window Mocker' not in self.KNOWN_APPS:
-            self.register_known_application(
+        if 'Window Mocker' not in self.process_manager.KNOWN_APPS:
+            self.process_manager.register_known_application(
                 'Window Mocker',
                 'window-mocker.desktop',
                 'window-mocker'
@@ -215,6 +229,79 @@ class UnityTestCase(AutopilotTestCase):
             file_path = tempfile.mktemp()
             json.dump(window_spec, open(file_path, 'w'))
             self.addCleanup(os.remove, file_path)
-            return self.start_app_window('Window Mocker', [file_path])
+            return self.process_manager.start_app_window('Window Mocker', [file_path])
         else:
-            return self.start_app_window('Window Mocker')
+            return self.process_manager.start_app_window('Window Mocker')
+
+    def close_all_windows(self, application_name):
+        for w in self.process_manager.get_open_windows_by_application(application_name):
+            w.close()
+
+        self.assertThat(lambda: len(self.process_manager.get_open_windows_by_application(application_name)), Eventually(Equals(0)))
+
+    def register_nautilus(self):
+        self.addCleanup(self.process_manager.unregister_known_application, "Nautilus")
+        self.process_manager.register_known_application("Nautilus", "nautilus.desktop", "nautilus")
+
+    def get_startup_notification_timestamp(self, bamf_window):
+        atom = display.Display().intern_atom('_NET_WM_USER_TIME')
+        atom_type = display.Display().intern_atom('CARDINAL')
+        return bamf_window.x_win.get_property(atom, atom_type, 0, 1024).value[0]
+
+    def call_gsettings_cmd(self, command, schema, *args):
+        """Set a desktop wide gsettings option
+
+        Using the gsettings command because there is a bug with importing
+        from gobject introspection and pygtk2 simultaneously, and the Xlib
+        keyboard layout bits are very unwieldy. This seems like the best
+        solution, even a little bit brutish.
+        """
+        cmd = ['gsettings', command, schema] + list(args)
+        # strip to remove the trailing \n.
+        ret = check_output(cmd).strip()
+        time.sleep(5)
+        reset_display()
+        return ret
+
+    def set_unity_option(self, option_name, option_value):
+        """Set an option in the unity compiz plugin options.
+
+        .. note:: The value will be set for the current test only, and
+         automatically undone when the test ends.
+
+        :param option_name: The name of the unity option.
+        :param option_value: The value you want to set.
+        :raises: **KeyError** if the option named does not exist.
+
+        """
+        self.set_compiz_option("unityshell", option_name, option_value)
+
+    def set_compiz_option(self, plugin_name, option_name, option_value):
+        """Set a compiz option for the duration of this test only.
+
+        .. note:: The value will be set for the current test only, and
+         automatically undone when the test ends.
+
+        :param plugin_name: The name of the compiz plugin where the option is
+         registered. If the option is not in a plugin, the string "core" should
+         be used as the plugin name.
+        :param option_name: The name of the unity option.
+        :param option_value: The value you want to set.
+        :raises: **KeyError** if the option named does not exist.
+
+        """
+        old_value = self._set_compiz_option(plugin_name, option_name, option_value)
+        # Cleanup is LIFO, during clean-up also allow unity to respond
+        self.addCleanup(time.sleep, 0.5)
+        self.addCleanup(self._set_compiz_option, plugin_name, option_name, old_value)
+        # Allow unity time to respond to the new setting.
+        time.sleep(0.5)
+
+    def _set_compiz_option(self, plugin_name, option_name, option_value):
+        log.info("Setting compiz option '%s' in plugin '%s' to %r",
+            option_name, plugin_name, option_value)
+        setting = get_compiz_setting(plugin_name, option_name)
+        old_value = setting.Value
+        setting.Value = option_value
+        get_global_context().Write()
+        return old_value

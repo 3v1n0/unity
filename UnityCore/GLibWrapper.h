@@ -23,8 +23,10 @@
 
 #include <iosfwd>
 #include <string>
+#include <memory>
 
 #include <boost/utility.hpp>
+#include <gio/gio.h>
 #include <glib.h>
 #include <glib-object.h>
 
@@ -105,6 +107,7 @@ private:
   GError* error_;
 };
 
+// wrapper for raw gcha*. auto-deleted.
 class String : boost::noncopyable
 {
 public:
@@ -124,6 +127,40 @@ public:
 private:
   gchar* string_;
 };
+
+inline std::string gchar_to_string(const gchar* str)
+{
+  return str ? str : "";
+}
+
+class Cancellable : boost::noncopyable
+{
+public:
+  typedef std::shared_ptr<Cancellable> Ptr;
+
+  Cancellable();
+  ~Cancellable();
+
+  operator GCancellable*();
+  operator Object<GCancellable>();
+
+  Object<GCancellable> Get() const;
+  bool IsCancelled() const;
+  bool IsCancelled(glib::Error &error) const;
+  void Cancel();
+  void Reset();
+  void Renew();
+
+private:
+  Object<GCancellable> cancellable_;
+};
+
+bool operator==(Cancellable const& lhs, Cancellable const& rhs);
+bool operator!=(Cancellable const& lhs, Cancellable const& rhs);
+bool operator==(GCancellable* lhs, Cancellable const& rhs);
+bool operator!=(GCancellable* lhs, Cancellable const& rhs);
+bool operator==(Object<GCancellable> const& lhs, Cancellable const& rhs);
+bool operator!=(Object<GCancellable> const& lhs, Cancellable const& rhs);
 
 std::ostream& operator<<(std::ostream& o, Error const& e);
 std::ostream& operator<<(std::ostream& o, String const& s);

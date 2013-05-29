@@ -20,8 +20,8 @@
 #include "DeviceLauncherSection.h"
 #include "DeviceNotificationDisplayImp.h"
 #include "DevicesSettings.h"
-#include "FileManagerOpenerImp.h"
 #include "VolumeImp.h"
+#include "unity-shared/GnomeFileManager.h"
 
 namespace unity
 {
@@ -32,7 +32,7 @@ DeviceLauncherSection::DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr v
                                              DevicesSettings::Ptr devices_settings)
   : monitor_(volume_monitor)
   , devices_settings_(devices_settings)
-  , file_manager_opener_(std::make_shared<FileManagerOpenerImp>())
+  , file_manager_(GnomeFileManager::Get())
   , device_notification_display_(std::make_shared<DeviceNotificationDisplayImp>())
 {
   monitor_->volume_added.connect(sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeAdded));
@@ -57,7 +57,7 @@ void DeviceLauncherSection::TryToCreateAndAddIcon(glib::Object<GVolume> volume)
   if (map_.find(volume) != map_.end())
     return;
 
-  auto vol = std::make_shared<VolumeImp>(volume, file_manager_opener_, device_notification_display_);
+  auto vol = std::make_shared<VolumeImp>(volume, file_manager_, device_notification_display_);
   VolumeLauncherIcon::Ptr icon(new VolumeLauncherIcon(vol, devices_settings_));
 
   map_[volume] = icon;

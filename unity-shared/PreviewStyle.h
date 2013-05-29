@@ -25,7 +25,7 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
- 
+
 #include <string>
 #include <memory>
 
@@ -54,12 +54,12 @@ class Style
 public:
   Style();
   ~Style();
-  
+
   static Style& Instance();
 
   int GetNavigatorWidth() const;
   int GetNavigatorIconSize() const;
-  
+
   int GetPreviewWidth() const;
   int GetPreviewHeight() const;
   int GetPreviewTopPadding() const;
@@ -120,10 +120,12 @@ public:
   ////////////////////////////////
   // Music Preview
   std::string track_font() const;
+  std::string u1_warning_font() const;
+  nux::BaseTexture* GetWarningIcon();
 
   int GetTrackHeight() const;
   ////////////////////////////////
-  
+
   ////////////////////////////////
   // Movie Preview
   float GetVideoImageAspectRatio() const;
@@ -146,8 +148,33 @@ public:
   nux::BaseTexture* GetNavRightIcon();
   nux::BaseTexture* GetPlayIcon();
   nux::BaseTexture* GetPauseIcon();
+  nux::BaseTexture* GetLockIcon();
   nux::BaseTexture* GetSearchSpinIcon(int size = -1);
- 
+
+  ////////////////////////////////
+  // Payment Preview
+  std::string payment_title_font() const;
+  std::string payment_subtitle_font() const;
+  std::string payment_prize_title_font() const;
+  std::string payment_prize_subtitle_font() const;
+  std::string payment_intro_font() const;
+  std::string payment_form_labels_font() const;
+  std::string payment_form_data_font() const;
+  std::string payment_form_actions_font() const;
+  std::string payment_text_input_font() const;
+  nux::Color payment_error_color() const;
+
+
+  int GetPaymentIconAreaWidth() const;
+  int GetPaymentTextInputHeight() const;
+  int GetPaymentLockWidth() const;
+  int GetPaymentLockHeight() const;
+  int GetPaymentHeaderWidth() const;
+  int GetPaymentHeaderSpace() const;
+  int GetPaymentFormSpace() const;
+
+  /////////////////////////////////
+
 protected:
   class Impl;
   std::unique_ptr<Impl> pimpl;

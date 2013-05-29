@@ -119,7 +119,12 @@ public:
     return false;
   };
 
-  virtual unsigned long long SwitcherPriority()
+  virtual bool AllowDetailViewInSwitcher() const override
+  {
+    return false;
+  }
+
+  virtual uint64_t SwitcherPriority()
   {
     return 0;
   }

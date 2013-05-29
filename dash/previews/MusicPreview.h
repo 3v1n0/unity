@@ -24,6 +24,7 @@
 #define MUSICPREVIEW_H
 
 #include "Preview.h"
+#include "unity-shared/IconTexture.h"
 
 namespace unity
 {
@@ -53,11 +54,18 @@ protected:
 
   virtual void SetupViews();
 
+  virtual void OnNavigateOut();
+
   void OnPlayTrack(std::string const& uri);
   void OnPauseTrack(std::string const& uri);
+  bool HasUbuntuOneCredentials();
 
 protected:
   nux::ObjectPtr<Tracks> tracks_;
+  nux::ObjectPtr<StaticCairoText> warning_msg_;
+  nux::ObjectPtr<IconTexture> warning_texture_;
+  std::string no_credentials_message_;
+
  };
 
 }

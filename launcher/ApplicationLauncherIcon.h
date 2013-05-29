@@ -60,7 +60,8 @@ public:
   virtual void UnStick();
 
   virtual bool ShowInSwitcher(bool current);
-  virtual unsigned long long SwitcherPriority();
+  virtual bool AllowDetailViewInSwitcher() const override;
+  virtual uint64_t SwitcherPriority();
 
   virtual nux::Color BackgroundColor() const;
 
@@ -71,6 +72,7 @@ public:
   void PerformScroll(ScrollDirection direction, Time timestamp) override;
 
 protected:
+  void SetApplication(ApplicationPtr const& app);
   void Remove();
   void UpdateIconGeometries(std::vector<nux::Point3> center);
   void OnCenterStabilized(std::vector<nux::Point3> center);
@@ -81,6 +83,7 @@ protected:
   void OnDndLeave();
   void OpenInstanceLauncherIcon(Time timestamp) override;
   void ToggleSticky();
+  bool IsFileManager();
 
   bool OnShouldHighlightOnDrag(DndData const& dnd_data);
   nux::DndAction OnQueryAcceptDrop(DndData const& dnd_data);
@@ -93,11 +96,9 @@ protected:
   bool HandlesSpread() { return true; }
   std::string GetName() const;
 
-protected:
   void UpdateDesktopFile();
   void UpdateRemoteUri();
   std::string _desktop_file;
-  ApplicationPtr app_;
 
 private:
   typedef unsigned long int WindowFilterMask;
@@ -109,6 +110,8 @@ private:
     ON_ALL_MONITORS = (1 << 3),
   };
 
+  void SetupApplicationSignalsConnections();
+  void DisconnectApplicationSignalsConnections();
   void EnsureWindowState();
   void EnsureMenuItemsWindowsReady();
   void EnsureMenuItemsReady();
@@ -128,6 +131,7 @@ private:
   std::string GetDesktopID();
   WindowList GetWindowsOnCurrentDesktopInStackingOrder();
 
+  ApplicationPtr app_;
   std::string _remote_uri;
   Time _startup_notification_timestamp;
   Time _last_scroll_timestamp;
@@ -145,6 +149,15 @@ private:
 
   bool use_custom_bg_color_;
   nux::Color bg_color_;
+
+  sigc::connection window_opened_connection_;
+  sigc::connection window_closed_connection_;
+  sigc::connection window_moved_connection_;
+  sigc::connection urgent_changed_connection_;
+  sigc::connection active_changed_connection_;
+  sigc::connection running_changed_connection_;
+  sigc::connection visible_changed_connection_;
+  sigc::connection closed_changed_connection_;
 };
 
 }

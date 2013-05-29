@@ -9,9 +9,12 @@
 
 from __future__ import absolute_import
 
-from autopilot.emulators.X11 import Keyboard, Mouse
+from autopilot.input import Keyboard, Mouse
+
 from autopilot.keybindings import KeybindingsHelper
 from testtools.matchers import GreaterThan
+
+from unity.emulators.panel import WindowButtons
 
 from unity.emulators import UnityIntrospectionObject
 import logging
@@ -22,6 +25,11 @@ logger = logging.getLogger(__name__)
 
 class DashController(UnityIntrospectionObject, KeybindingsHelper):
     """The main dash controller object."""
+
+    def __init__(self, *args, **kwargs):
+        super(DashController, self).__init__(*args, **kwargs)
+        self.keyboard = Keyboard.create()
+        self.mouse = Mouse.create()
 
     def get_dash_view(self):
         """Get the dash view that's attached to this controller."""
@@ -79,6 +87,14 @@ class DashController(UnityIntrospectionObject, KeybindingsHelper):
         """Returns true if the dash is currently displaying a preview"""
         return self.view.preview_displaying;
 
+    @property
+    def preview_animation(self):
+        """Returns the average progress of dash slip and animating a preview.
+        Between 0.0 and 1.0.
+
+        """
+        return self.view.preview_animation;
+
     def get_num_rows(self):
         """Returns the number of displayed rows in the dash."""
         return self.view.num_rows
@@ -89,41 +105,41 @@ class DashController(UnityIntrospectionObject, KeybindingsHelper):
         Assumes dash is already visible, and search bar has keyboard focus.
 
         """
-        self._keyboard.press_and_release("Ctrl+a")
-        self._keyboard.press_and_release("Delete")
+        self.keyboard.press_and_release("Ctrl+a")
+        self.keyboard.press_and_release("Delete")
         self.search_string.wait_for("")
 
-    def reveal_application_lens(self, clear_search=True):
-        """Reveal the application lense."""
-        logger.debug("Revealing application lens with Super+a.")
-        self._reveal_lens("lens_reveal/apps", clear_search)
-        return self.view.get_lensview_by_name("applications.lens")
+    def reveal_application_scope(self, clear_search=True):
+        """Reveal the application scope."""
+        logger.debug("Revealing application scope with Super+a.")
+        self._reveal_scope("lens_reveal/apps", clear_search)
+        return self.view.get_scopeview_by_name("applications.scope")
 
-    def reveal_music_lens(self, clear_search=True):
-        """Reveal the music lense."""
-        logger.debug("Revealing music lens with Super+m.")
-        self._reveal_lens("lens_reveal/music", clear_search)
-        return self.view.get_lensview_by_name("music.lens")
+    def reveal_music_scope(self, clear_search=True):
+        """Reveal the music scope."""
+        logger.debug("Revealing music scope with Super+m.")
+        self._reveal_scope("lens_reveal/music", clear_search)
+        return self.view.get_scopeview_by_name("music.scope")
 
-    def reveal_file_lens(self, clear_search=True):
-        """Reveal the file lense."""
-        logger.debug("Revealing file lens with Super+f.")
-        self._reveal_lens("lens_reveal/files", clear_search)
-        return self.view.get_lensview_by_name("files.lens")
+    def reveal_file_scope(self, clear_search=True):
+        """Reveal the file scope."""
+        logger.debug("Revealing file scope with Super+f.")
+        self._reveal_scope("lens_reveal/files", clear_search)
+        return self.view.get_scopeview_by_name("files.scope")
 
-    def reveal_video_lens(self, clear_search=True):
-        """Reveal the video lens"""
-        logger.debug("Revealing video lens with Super+v.")
-        self._reveal_lens("lens_reveal/video", clear_search)
-        return self.view.get_lensview_by_name("video.lens")
+    def reveal_video_scope(self, clear_search=True):
+        """Reveal the video scope"""
+        logger.debug("Revealing video scope with Super+v.")
+        self._reveal_scope("lens_reveal/video", clear_search)
+        return self.view.get_scopeview_by_name("video.scope")
 
-    def reveal_command_lens(self, clear_search=True):
-        """Reveal the 'run command' lens."""
-        logger.debug("Revealing command lens with Alt+F2.")
-        self._reveal_lens("lens_reveal/command", clear_search)
-        return self.view.get_lensview_by_name("commands.lens")
+    def reveal_command_scope(self, clear_search=True):
+        """Reveal the 'run command' scope."""
+        logger.debug("Revealing command scope with Alt+F2.")
+        self._reveal_scope("lens_reveal/command", clear_search)
+        return self.view.get_scopeview_by_name("commands.scope")
 
-    def _reveal_lens(self, binding_name, clear_search):
+    def _reveal_scope(self, binding_name, clear_search):
         self.keybinding_hold(binding_name)
         self.keybinding_tap(binding_name)
         self.keybinding_release(binding_name)
@@ -132,13 +148,13 @@ class DashController(UnityIntrospectionObject, KeybindingsHelper):
             self.clear_search()
 
     @property
-    def active_lens(self):
-        return self.view.get_lensbar().active_lens
+    def active_scope(self):
+        return self.view.get_scopebar().active_scope
 
-    def get_current_lens(self):
-        """Get the currently-active LensView object."""
-        active_lens_name = self.view.get_lensbar().active_lens
-        return self.view.get_lensview_by_name(active_lens_name)
+    def get_current_scope(self):
+        """Get the currently-active ScopeView object."""
+        active_scope_name = self.view.get_scopebar().active_scope
+        return self.view.get_scopeview_by_name(active_scope_name)
 
     @property
     def geometry(self):
@@ -148,20 +164,26 @@ class DashController(UnityIntrospectionObject, KeybindingsHelper):
 class DashView(UnityIntrospectionObject):
     """The dash view."""
 
+    def __get_window_buttons(self):
+        """Return the overlay window buttons view."""
+        buttons = self.get_children_by_type(OverlayWindowButtons)
+        assert(len(buttons) == 1)
+        return buttons[0]
+
     def get_searchbar(self):
         """Get the search bar attached to this dash view."""
         return self.get_children_by_type(SearchBar)[0]
 
-    def get_lensbar(self):
-        """Get the lensbar attached to this dash view."""
-        return self.get_children_by_type(LensBar)[0]
+    def get_scopebar(self):
+        """Get the scopebar attached to this dash view."""
+        return self.get_children_by_type(ScopeBar)[0]
 
-    def get_lensview_by_name(self, lens_name):
-        """Get a LensView child object by it's name. For example, "home.lens"."""
-        lenses = self.get_children_by_type(LensView)
-        for lens in lenses:
-            if lens.name == lens_name:
-                return lens
+    def get_scopeview_by_name(self, scope_name):
+        """Get a ScopeView child object by it's name. For example, "home.scope"."""
+        scopes = self.get_children_by_type(ScopeView)
+        for scope in scopes:
+            if scope.name == scope_name:
+                return scope
 
     def get_preview_container(self):
         """Get the preview container attached to this dash view."""
@@ -170,29 +192,41 @@ class DashView(UnityIntrospectionObject):
             return preview_container
         return None
 
+    @property
+    def window_buttons(self):
+        return self.__get_window_buttons().window_buttons()
+
+
+class OverlayWindowButtons(UnityIntrospectionObject):
+    """The Overlay window buttons class"""
+
+    def window_buttons(self):
+        buttons = self.get_children_by_type(WindowButtons)
+        assert(len(buttons) == 1)
+        return buttons[0]
 
 class SearchBar(UnityIntrospectionObject):
     """The search bar for the dash view."""
 
 
-class LensBar(UnityIntrospectionObject):
-    """The bar of lens icons at the bottom of the dash."""
+class ScopeBar(UnityIntrospectionObject):
+    """The bar of scope icons at the bottom of the dash."""
     def get_icon_by_name(self, name):
-        """Get a LensBarIcon child object by it's name. For example, 'home.lens'."""
-        icons = self.get_children_by_type(LensBarIcon)
+        """Get a ScopeBarIcon child object by it's name. For example, 'home.scope'."""
+        icons = self.get_children_by_type(ScopeBarIcon)
         for icon in icons:
             if icon.name == name:
                 return icon
 
-class LensBarIcon(UnityIntrospectionObject):
-    """A lens icon at the bottom of the dash."""
+class ScopeBarIcon(UnityIntrospectionObject):
+    """A scope icon at the bottom of the dash."""
 
 
-class LensView(UnityIntrospectionObject):
-    """A Lens View."""
+class ScopeView(UnityIntrospectionObject):
+    """A Scope View."""
 
     def get_groups(self):
-        """Get a list of all groups within this lensview. May return an empty list."""
+        """Get a list of all groups within this scopeview. May return an empty list."""
         groups = self.get_children_by_type(PlacesGroup)
         return groups
 
@@ -217,11 +251,11 @@ class LensView(UnityIntrospectionObject):
         return None
 
     def get_num_visible_categories(self):
-        """Get the number of visible categories in this lens."""
+        """Get the number of visible categories in this scope."""
         return len([c for c in self.get_children_by_type(PlacesGroup) if c.is_visible])
 
     def get_filterbar(self):
-        """Get the filter bar for the current lense, or None if it doesn't have one."""
+        """Get the filter bar for the current scope, or None if it doesn't have one."""
         bars = self.get_children_by_type(FilterBar)
         if bars:
             return bars[0]
@@ -229,7 +263,7 @@ class LensView(UnityIntrospectionObject):
 
 
 class PlacesGroup(UnityIntrospectionObject):
-    """A category in the lense view."""
+    """A category in the scope view."""
 
     def get_results(self):
         """Get a list of all results within this category. May return an empty list."""
@@ -244,27 +278,29 @@ class ResultView(UnityIntrospectionObject):
 class Result(UnityIntrospectionObject):
     """A single result in the dash."""
 
-    def activate(self):
+    def activate(self, double_click=True):
         tx = self.x + (self.width / 2)
         ty = self.y + (self.height / 2)
-        m = Mouse()
+        m = Mouse.create()
         m.move(tx, ty)
         m.click(1)
+        if double_click:
+            m.click(1)
 
-    def preview(self):
+    def preview(self, button=1):
         tx = self.x + (self.width / 2)
         ty = self.y + (self.height / 2)
-        m = Mouse()
+        m = Mouse.create()
         m.move(tx, ty)
-        m.click(3)
+        m.click(button)
 
     def preview_key(self):
         tx = self.x + (self.width / 2)
         ty = self.y + (self.height / 2)
-        m = Mouse()
+        m = Mouse.create()
         m.move(tx, ty)
 
-        k = Keyboard()
+        k = Keyboard.create()
         k.press_and_release('Menu')
 
 class FilterBar(UnityIntrospectionObject):
@@ -285,7 +321,7 @@ class FilterBar(UnityIntrospectionObject):
 
     @property
     def expanded(self):
-        """Return True if the filterbar on this lens is expanded, False otherwise.
+        """Return True if the filterbar on this scope is expanded, False otherwise.
         """
         searchbar = self._get_searchbar()
         return searchbar.showing_filters
@@ -296,7 +332,7 @@ class FilterBar(UnityIntrospectionObject):
             searchbar = self._get_searchbar()
             tx = searchbar.filter_label_x + (searchbar.filter_label_width / 2)
             ty = searchbar.filter_label_y + (searchbar.filter_label_height / 2)
-            m = Mouse()
+            m = Mouse.create()
             m.move(tx, ty)
             m.click()
             self.expanded.wait_for(True)
@@ -307,7 +343,7 @@ class FilterBar(UnityIntrospectionObject):
             searchbar = self._get_searchbar()
             tx = searchbar.filter_label_x + (searchbar.filter_label_width / 2)
             ty = searchbar.filter_label_y + (searchbar.filter_label_height / 2)
-            m = Mouse()
+            m = Mouse.create()
             m.move(tx, ty)
             m.click()
             self.expanded.wait_for(False)
@@ -332,7 +368,7 @@ class FilterExpanderLabel(UnityIntrospectionObject):
         if not self.expanded:
             tx = self.x + self.width / 2
             ty = self.y + self.height / 2
-            m = Mouse()
+            m = Mouse.create()
             m.move(tx, ty)
             m.click()
             self.expanded.wait_for(True)
@@ -342,7 +378,7 @@ class FilterExpanderLabel(UnityIntrospectionObject):
         if self.expanded:
             tx = self.x + self.width / 2
             ty = self.y + self.height / 2
-            m = Mouse()
+            m = Mouse.create()
             m.move(tx, ty)
             m.click()
             self.expanded.wait_for(False)
@@ -357,7 +393,7 @@ class RatingsButton(UnityIntrospectionObject):
 
 
 class Preview(UnityIntrospectionObject):
-    """A preview of a dash lens result."""
+    """A preview of a dash scope result."""
 
     def get_num_actions(self):
         """Get the number of actions for the preview."""
@@ -372,13 +408,13 @@ class Preview(UnityIntrospectionObject):
                 return action
         return None
 
-    def execute_action_by_id(action_id, action):
+    def execute_action_by_id(self, action_id):
         """Executes an action given by the id."""
         action = self.get_action_by_id(action_id)
         if action:
-            tx = action.x + (searchbar.width / 2)
-            ty = action.y + (searchbar.height / 2)
-            m = Mouse()
+            tx = action.x + (action.width / 2)
+            ty = action.y + (action.height / 2)
+            m = Mouse.create()
             m.move(tx, ty)
             m.click()
 
@@ -404,16 +440,16 @@ class Preview(UnityIntrospectionObject):
 
 
 class ApplicationPreview(Preview):
-    """A application preview of a dash lens result."""
+    """A application preview of a dash scope result."""
 
 class GenericPreview(Preview):
-    """A generic preview of a dash lens result."""
+    """A generic preview of a dash scope result."""
 
 class MusicPreview(Preview):
-    """A music preview of a dash lens result."""
+    """A music preview of a dash scope result."""
 
 class MoviePreview(Preview):
-    """A movie preview of a dash lens result."""
+    """A movie preview of a dash scope result."""
 
 class PreviewContent(UnityIntrospectionObject):
     """A preview content layout for the dash previews."""
@@ -463,7 +499,7 @@ class PreviewContainer(UnityIntrospectionObject):
 
         tx = navigator.button_x + (navigator.button_width / 2)
         ty = navigator.button_y + (navigator.button_height / 2)
-        m = Mouse()
+        m = Mouse.create()
         m.move(tx, ty)
 
         old_preview_initiate_count = self.preview_initiate_count
@@ -480,7 +516,7 @@ class PreviewContainer(UnityIntrospectionObject):
 
         tx = navigator.button_x + (navigator.button_width / 2)
         ty = navigator.button_y + (navigator.button_height / 2)
-        m = Mouse()
+        m = Mouse.create()
         m.move(tx, ty)
 
         old_preview_initiate_count = self.preview_initiate_count

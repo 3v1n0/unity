@@ -28,10 +28,12 @@
 #include <boost/bind.hpp>
 #include <NuxCore/Logger.h>
 #include <NuxCore/LoggingWriter.h>
+#include <xpathselect/node.h>
+#include <xpathselect/xpathselect.h>
+#include <dlfcn.h>
 
 #include "DebugDBusInterface.h"
 #include "Introspectable.h"
-#include "XPathQueryPart.h"
 
 namespace unity
 {
@@ -44,9 +46,197 @@ namespace
 namespace local
 {
   std::ofstream output_file;
+  void* xpathselect_driver_ = NULL;
+
+  class IntrospectableAdapter: public xpathselect::Node
+  {
+  public:
+    typedef std::shared_ptr<IntrospectableAdapter> Ptr;
+    IntrospectableAdapter(Introspectable* node, std::string const& parent_path)
+    : node_(node)
+    {
+      full_path_ = parent_path + "/" + GetName();
+    }
+
+    std::string GetName() const
+    {
+      return node_->GetName();
+    }
+
+    std::string GetPath() const
+    {
+      return full_path_;
+    }
+
+    bool MatchProperty(const std::string& name, const std::string& value) const
+    {
+      bool matches = false;
+
+      GVariantBuilder  child_builder;
+      g_variant_builder_init(&child_builder, G_VARIANT_TYPE("a{sv}"));
+      g_variant_builder_add(&child_builder, "{sv}", "id", g_variant_new_uint64(node_->GetIntrospectionId()));
+      node_->AddProperties(&child_builder);
+      GVariant* prop_dict = g_variant_builder_end(&child_builder);
+      GVariant *prop_value = g_variant_lookup_value(prop_dict, name.c_str(), NULL);
+
+      if (prop_value != NULL)
+      {
+        GVariantClass prop_val_type = g_variant_classify(prop_value);
+        // it'd be nice to be able to do all this with one method. However, the booleans need
+        // special treatment, and I can't figure out how to group all the integer types together
+        // without resorting to template functions.... and we all know what happens when you
+        // start doing that...
+        switch (prop_val_type)
+        {
+          case G_VARIANT_CLASS_STRING:
+          {
+            const gchar* prop_val = g_variant_get_string(prop_value, NULL);
+            if (g_strcmp0(prop_val, value.c_str()) == 0)
+            {
+              matches = true;
+            }
+          }
+          break;
+          case G_VARIANT_CLASS_BOOLEAN:
+          {
+            std::string value = boost::to_upper_copy(value);
+            bool p = value == "TRUE" ||
+                      value == "ON" ||
+                      value == "YES" ||
+                      value == "1";
+            matches = (g_variant_get_boolean(prop_value) == p);
+          }
+          break;
+          case G_VARIANT_CLASS_BYTE:
+          {
+            // It would be nice if I could do all the integer types together, but I couldn't see how...
+            std::stringstream stream(value);
+            int val; // changing this to guchar causes problems.
+            stream >> val;
+            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
+                      val == g_variant_get_byte(prop_value);
+          }
+          break;
+          case G_VARIANT_CLASS_INT16:
+          {
+            std::stringstream stream(value);
+            gint16 val;
+            stream >> val;
+            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
+                      val == g_variant_get_int16(prop_value);
+          }
+          break;
+          case G_VARIANT_CLASS_UINT16:
+          {
+            std::stringstream stream(value);
+            guint16 val;
+            stream >> val;
+            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
+                      val == g_variant_get_uint16(prop_value);
+          }
+          break;
+          case G_VARIANT_CLASS_INT32:
+          {
+            std::stringstream stream(value);
+            gint32 val;
+            stream >> val;
+            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
+                      val == g_variant_get_int32(prop_value);
+          }
+          break;
+          case G_VARIANT_CLASS_UINT32:
+          {
+            std::stringstream stream(value);
+            guint32 val;
+            stream >> val;
+            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
+                      val == g_variant_get_uint32(prop_value);
+          }
+          break;
+          case G_VARIANT_CLASS_INT64:
+          {
+            std::stringstream stream(value);
+            gint64 val;
+            stream >> val;
+            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
+                      val == g_variant_get_int64(prop_value);
+          }
+          break;
+          case G_VARIANT_CLASS_UINT64:
+          {
+            std::stringstream stream(value);
+            guint64 val;
+            stream >> val;
+            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
+                      val == g_variant_get_uint64(prop_value);
+          }
+          break;
+        default:
+          LOG_WARNING(logger) << "Unable to match against property of unknown type.";
+        };
+      }
+      g_variant_unref(prop_value);
+      g_variant_unref(prop_dict);
+      return matches;
+    }
+
+    std::vector<xpathselect::Node::Ptr> Children() const
+    {
+      std::vector<xpathselect::Node::Ptr> children;
+      for(auto child: node_->GetIntrospectableChildren())
+      {
+        children.push_back(std::make_shared<IntrospectableAdapter>(child, GetPath() ));
+      }
+      return children;
+
+    }
+
+    Introspectable* node_;
+  private:
+    std::string full_path_;
+  };
+
+  xpathselect::NodeList select_nodes(local::IntrospectableAdapter::Ptr root,
+                                     std::string const& query)
+  {
+    if (xpathselect_driver_ == NULL)
+      xpathselect_driver_ = dlopen("libxpathselect.so.1.3", RTLD_LAZY);
+
+    if (xpathselect_driver_)
+    {
+      typedef decltype(&xpathselect::SelectNodes) entry_t;
+      dlerror();
+      entry_t entry_point = (entry_t) dlsym(xpathselect_driver_, "SelectNodes");
+      const char* err = dlerror();
+      if (err)
+      {
+        LOG_ERROR(logger) << "Unable to load entry point in libxpathselect: " << err;
+      }
+      else
+      {
+        return entry_point(root, query);
+      }
+    }
+    else
+    {
+      LOG_WARNING(logger) << "Cannot complete introspection request because libxpathselect is not installed.";
+    }
+
+    // Fallen through here as we've hit an error
+    return xpathselect::NodeList();
+  }
+
+  // This needs to be called at destruction to cleanup the dlopen
+  void cleanup_xpathselect()
+  {
+    if (xpathselect_driver_)
+      dlclose(xpathselect_driver_);
+  }
+
 }
 }
 
+bool TryLoadXPathImplementation();
 GVariant* GetState(std::string const& query);
 void StartLogToFile(std::string const& file_path);
 void ResetLogging();
@@ -67,6 +257,10 @@ const std::string INTROSPECTION_XML =
   "     <method name='GetState'>"
   "       <arg type='s' name='piece' direction='in' />"
   "       <arg type='a(sv)' name='state' direction='out' />"
+  "     </method>"
+  ""
+  "     <method name='GetVersion'>"
+  "       <arg type='s' name='version' direction='out' />"
   "     </method>"
   ""
   "   </interface>"
@@ -107,6 +301,11 @@ DebugDBusInterface::DebugDBusInterface(Introspectable* parent)
     obj->SetMethodsCallsHandler(&DebugDBusInterface::HandleDBusMethodCall);
 }
 
+DebugDBusInterface::~DebugDBusInterface()
+{
+  local::cleanup_xpathselect();
+}
+
 GVariant* DebugDBusInterface::HandleDBusMethodCall(std::string const& method, GVariant* parameters)
 {
   if (method == "GetState")
@@ -115,6 +314,10 @@ GVariant* DebugDBusInterface::HandleDBusMethodCall(std::string const& method, GV
     g_variant_get(parameters, "(&s)", &input);
 
     return GetState(input);
+  }
+  else if (method == "GetVersion")
+  {
+    return g_variant_new("(s)", "1.3");
   }
   else if (method == "StartLogToFile")
   {
@@ -147,20 +350,18 @@ GVariant* DebugDBusInterface::HandleDBusMethodCall(std::string const& method, GV
   return nullptr;
 }
 
-
 GVariant* GetState(std::string const& query)
 {
-  // process the XPath query:
-  std::list<Introspectable*> parts = GetIntrospectableNodesFromQuery(query, _parent_introspectable);
   GVariantBuilder  builder;
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a(sv)"));
-  if (parts.empty())
+
+  local::IntrospectableAdapter::Ptr root_node = std::make_shared<local::IntrospectableAdapter>(_parent_introspectable, std::string());
+  auto nodes = local::select_nodes(root_node, query);
+  for (auto n : nodes)
   {
-    LOG_WARNING(logger) << "Query '" << query << "' Did not match anything.";
-  }
-  for (Introspectable *node : parts)
-  {
-    g_variant_builder_add(&builder, "(sv)", node->GetName().c_str(), node->Introspect());
+    auto p = std::static_pointer_cast<local::IntrospectableAdapter>(n);
+    if (p)
+      g_variant_builder_add(&builder, "(sv)", p->GetPath().c_str(), p->node_->Introspect());
   }
 
   return g_variant_new("(a(sv))", &builder);
@@ -200,122 +401,5 @@ void LogMessage(std::string const& severity,
   }
 }
 
-/*
- * Do a breadth-first search of the introspection tree and find all nodes that match the
- * query.
- */
-std::list<Introspectable*> GetIntrospectableNodesFromQuery(std::string const& query, Introspectable* tree_root)
-{
-  std::list<Introspectable*> start_points;
-  std::string sanitised_query;
-  // Allow user to be lazy when specifying root node.
-  if (query == "" || query == "/")
-  {
-    sanitised_query = "/" + tree_root->GetName();
-  }
-  else
-  {
-    sanitised_query = query;
-  }
-  // split query into parts
-  std::list<XPathQueryPart> query_parts;
-
-  {
-    std::list<std::string> query_strings;
-    boost::algorithm::split(query_strings, sanitised_query, boost::algorithm::is_any_of("/"));
-    // Boost's split() implementation does not match it's documentation! According to the
-    // docs, it's not supposed to add empty strings, but it does, which is a PITA. This
-    // next line removes them:
-    query_strings.erase( std::remove_if( query_strings.begin(),
-                                        query_strings.end(),
-                                        boost::bind( &std::string::empty, _1 ) ),
-                      query_strings.end());
-    for (auto part : query_strings)
-    {
-      query_parts.push_back(XPathQueryPart(part));
-    }
-  }
-
-  // absolute or relative query string?
-  if (sanitised_query.at(0) == '/' && sanitised_query.at(1) != '/')
-  {
-    // absolute query - start point is tree root node.
-    if (query_parts.front().Matches(tree_root))
-    {
-      start_points.push_back(tree_root);
-    }
-  }
-  else
-  {
-    // relative - need to do a depth first tree search for all nodes that match the
-    // first node in the query.
-
-    // warn about malformed queries (all queries must start with '/')
-    if (sanitised_query.at(0) != '/')
-    {
-      LOG_WARNING(logger) << "Malformed relative introspection query: '" << query << "'.";
-    }
-
-    // non-recursive BFS traversal to find starting points:
-    std::queue<Introspectable*> queue;
-    queue.push(tree_root);
-    while (!queue.empty())
-    {
-      Introspectable *node = queue.front();
-      queue.pop();
-      if (query_parts.front().Matches(node))
-      {
-        // found one. We keep going deeper, as there may be another node beneath this one
-        // with the same node name.
-        start_points.push_back(node);
-      }
-      // Add all children of current node to queue.
-      for (Introspectable* child : node->GetIntrospectableChildren())
-      {
-        queue.push(child);
-      }
-    }
-  }
-
-  // now we have the tree start points, process them:
-  query_parts.pop_front();
-  typedef std::pair<Introspectable*, std::list<XPathQueryPart>::iterator> node_match_pair;
-
-  std::queue<node_match_pair> traverse_queue;
-  for (Introspectable *node : start_points)
-  {
-    traverse_queue.push(node_match_pair(node, query_parts.begin()));
-  }
-  start_points.clear();
-
-  while (!traverse_queue.empty())
-  {
-    node_match_pair p = traverse_queue.front();
-    traverse_queue.pop();
-
-    Introspectable *node = p.first;
-    auto query_it = p.second;
-
-    if (query_it == query_parts.end())
-    {
-      // found a match:
-      start_points.push_back(node);
-    }
-    else
-    {
-      // push all children of current node to start of queue, advance search iterator, and loop again.
-      for (Introspectable* child : node->GetIntrospectableChildren())
-      {
-        if (query_it->Matches(child))
-        {
-          auto it_copy(query_it);
-          ++it_copy;
-          traverse_queue.push(node_match_pair(child, it_copy));
-        }
-      }
-    }
-  }
-  return start_points;
-}
 }
 }

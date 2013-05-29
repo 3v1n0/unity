@@ -8,23 +8,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2012-12-05 10:41+0100\n"
+"POT-Creation-Date: 2013-04-17 16:00+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-msgid "Home"
-msgstr ""
-
-msgid "Home screen"
-msgstr ""
-
-msgid "Search"
-msgstr ""
 
 msgid "All"
 msgstr ""
@@ -38,10 +29,13 @@ msgstr ""
 msgid "Rating"
 msgstr ""
 
+msgid "See fewer results"
+msgstr ""
+
 msgid "Sorry, there is nothing that matches your search."
 msgstr ""
 
-msgid "See fewer results"
+msgid "Last Updated"
 msgstr ""
 
 msgid "Type your command"
@@ -56,7 +50,7 @@ msgstr ""
 msgid "Quit"
 msgstr ""
 
-msgid "Dash Home"
+msgid "Search your computer and online sources"
 msgstr ""
 
 msgid "Show Desktop"
@@ -66,6 +60,9 @@ msgid "The drive has been successfully ejected"
 msgstr ""
 
 msgid "Workspace Switcher"
+msgstr ""
+
+msgid "HUD"
 msgstr ""
 
 #. Application is being installed, or hasn't been installed yet
@@ -102,11 +99,9 @@ msgstr ""
 msgid "Ubuntu Desktop"
 msgstr ""
 
-#. Dash...
 msgid "Dash"
 msgstr ""
 
-#. Launcher...
 msgid "Launcher"
 msgstr ""
 
@@ -114,6 +109,18 @@ msgid "Quicklist"
 msgstr ""
 
 msgid "Switcher"
+msgstr ""
+
+msgid "Left Mouse"
+msgstr ""
+
+msgid "Middle Mouse"
+msgstr ""
+
+msgid "Right Mouse"
+msgstr ""
+
+msgid "Keyboard Shortcuts"
 msgstr ""
 
 msgid " (Hold)"
@@ -179,7 +186,6 @@ msgstr ""
 msgid "Enter"
 msgstr ""
 
-#. Menu Bar
 msgid "HUD & Menu Bar"
 msgstr ""
 
@@ -198,7 +204,6 @@ msgstr ""
 msgid "Cursor Left or Right"
 msgstr ""
 
-#. Switching
 msgid "Switching"
 msgstr ""
 
@@ -208,7 +213,6 @@ msgstr ""
 msgid "Switches windows of current applications."
 msgstr ""
 
-#. Workspaces
 msgid "Workspaces"
 msgstr ""
 
@@ -224,7 +228,6 @@ msgstr ""
 msgid "Moves focused window to another workspace."
 msgstr ""
 
-#. Windows
 msgid "Windows"
 msgstr ""
 
@@ -267,16 +270,59 @@ msgstr ""
 msgid "Resizes the window."
 msgstr ""
 
-msgid "Left Mouse"
+msgid "Shut Down"
 msgstr ""
 
-msgid "Middle Mouse"
+#, c-format
+msgid "Hi %s, you have open files that you might want to save before shutting down. Are you sure you want to continue?"
 msgstr ""
 
-msgid "Right Mouse"
+#, c-format
+msgid "Goodbye, %s. Are you sure you want to close all programs and shut down the computer?"
 msgstr ""
 
-msgid "Keyboard Shortcuts"
+msgid "Log Out"
+msgstr ""
+
+#, c-format
+msgid "Hi %s, you have open files that you might want to save before logging out. Are you sure you want to continue?"
+msgstr ""
+
+#, c-format
+msgid "Goodbye, %s. Are you sure you want to close all programs and log out from your account?"
+msgstr ""
+
+#. We have enough buttons to show the message without a new line.
+#, c-format
+msgid "Hi %s, you have open files you might want to save. Would you like to…"
+msgstr ""
+
+#, c-format
+msgid ""
+"Hi %s, you have open files you might want to save.\n"
+"Would you like to…"
+msgstr ""
+
+#, c-format
+msgid "Goodbye, %s. Would you like to…"
+msgstr ""
+
+msgid "Lock"
+msgstr ""
+
+msgid "Suspend"
+msgstr ""
+
+msgid "Hibernate"
+msgstr ""
+
+msgid "Restart"
+msgstr ""
+
+msgid "Activate"
+msgstr ""
+
+msgid "No Image Available"
 msgstr ""
 
 msgid "Filter results"

@@ -339,14 +339,14 @@ void MultiActionList::TerminateAll(CompOption::Vector const& extra_args) const
   }
 }
 
-unsigned long long PluginAdapter::GetWindowActiveNumber(Window window_id) const
+uint64_t PluginAdapter::GetWindowActiveNumber(Window window_id) const
 {
   CompWindow* window = m_Screen->findWindow(window_id);
 
   if (window)
   {
     // result is actually an unsigned int (32 bits)
-    unsigned long long result = window->activeNum ();
+    uint64_t result = window->activeNum ();
     if (bias_active_to_viewport() && window->defaultViewport() == m_Screen->vp())
       result = result << 32;
 
@@ -1436,7 +1436,7 @@ void PluginAdapter::AddProperties(GVariantBuilder* builder)
   unity::variant::BuilderWrapper wrapper(builder);
   wrapper.add(GetScreenGeometry())
          .add("workspace_count", WorkspaceCount())
-         .add("active_window", GetActiveWindow())
+         .add("active_window", (uint64_t)GetActiveWindow())
          .add("screen_grabbed", IsScreenGrabbed())
          .add("scale_active", IsScaleActive())
          .add("scale_active_for_group", IsScaleActiveForGroup())

@@ -67,6 +67,16 @@ public:
       : Launcher(parent)
     {}
 
+    void SetExternalDragState()
+    {
+      SetActionState(Launcher::LauncherActionState::ACTION_DRAG_EXTERNAL);
+    }
+
+    bool IsExternalDragState()
+    {
+      return GetActionState() == Launcher::LauncherActionState::ACTION_DRAG_EXTERNAL;
+    }
+
     AbstractLauncherIcon::Ptr MouseIconIntersection(int x, int y) const
     {
       for (auto const& icon : *_model)
@@ -98,7 +108,6 @@ public:
     using Launcher::IconStartingPulseValue;
     using Launcher::HandleBarrierEvent;
     using Launcher::SetHidden;
-
 
     void FakeProcessDndMove(int x, int y, std::list<std::string> uris)
     {
@@ -598,6 +607,15 @@ TEST_F(TestLauncher, IconStartingBlinkValue)
 
   // Pulse value should start at 0.
   EXPECT_EQ(launcher_->IconStartingBlinkValue(icon, current), 0.0);
+}
+
+TEST_F(TestLauncher, HighlightingEmptyUrisOnDragMoveIsIgnored)
+{
+  MockMockLauncherIcon::Ptr first(new MockMockLauncherIcon);
+  model_->AddIcon(first);
+
+  EXPECT_CALL(*first, ShouldHighlightOnDrag(_)).Times(0);
+  launcher_->ProcessDndMove(0,0,{});
 }
 
 }

@@ -46,20 +46,20 @@ Track& Track::operator=(Track const& other)
   return *this;
 }
 
-PlayState Track::GetPlayState(int position)
-{
-  unsigned state = GetUIntAt(position);
-  return static_cast<PlayState>(state);
-}
-
 void Track::SetupGetters()
 {
   uri.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 0));
   track_number.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetIntAt), 1));
   title.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 2));
   length.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetUIntAt), 3));
-  play_state.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &Track::GetPlayState), 4));
-  progress.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetFloatAt), 5));
+  index.SetGetterFunction(sigc::mem_fun(this, &Track::get_index));
+}
+
+std::size_t Track::get_index() const
+{
+  if (!model_)
+    return unsigned(-1);
+  return dee_model_get_position(model_, iter_);
 }
 
 }

@@ -20,6 +20,9 @@
  *
  */
 
+#include "config.h"
+#include <glib/gi18n-lib.h>
+
 #include "PreviewInfoHintWidget.h"
 #include "unity-shared/IntrospectableWrappers.h"
 #include <NuxCore/Logger.h>
@@ -158,8 +161,8 @@ void PreviewInfoHintWidget::SetupViews()
     StaticCairoTextPtr info_name;
     if (!info_hint->display_name.empty())
     {
-      std::string tmp_display_name = info_hint->display_name;
-      tmp_display_name += ":";
+      // The "%s" is used in the dash preview to display the "<hint>: <value>" infos
+      std::string tmp_display_name = glib::String(g_strdup_printf (_("%s:"), info_hint->display_name.c_str())).Str();
 
       info_name = new StaticCairoText(tmp_display_name, true, NUX_TRACKER_LOCATION);
       info_name->SetFont(style.info_hint_bold_font());

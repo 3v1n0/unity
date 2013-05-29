@@ -114,9 +114,14 @@ View::View()
     }
   });
 
+  mouse_move.connect([this] (int x, int y, int dx, int dy, unsigned long mouse_button, unsigned long special_key) {
+    for (auto button : buttons_)
+      button->SetInputEventSensitivity(true);
+  });
+
   mouse_down.connect(sigc::mem_fun(this, &View::OnMouseButtonDown));
 
-  Relayout();
+  QueueDraw();
 }
 
 View::~View()
@@ -182,26 +187,15 @@ void View::ProcessGrowShrink()
   }
 }
 
-
 void View::ResetToDefault()
 {
   SetQueries(Hud::Queries());
   current_height_ = content_layout_->GetBaseHeight();;
 
+  UpdateLayoutGeometry();
+
   search_bar_->search_string = "";
   search_bar_->search_hint = _("Type your command");
-}
-
-void View::Relayout()
-{
-  nux::Geometry const& geo = GetGeometry();
-  content_geo_ = GetBestFitGeometry(geo);
-  LOG_DEBUG(logger) << "content_geo: " << content_geo_.width << "x" << content_geo_.height;
-
-  layout_->SetMinimumWidth(content_geo_.width);
-  layout_->SetMaximumSize(content_geo_.width, content_geo_.height);
-
-  QueueDraw();
 }
 
 nux::View* View::default_focus() const
@@ -238,6 +232,7 @@ void View::SetQueries(Hud::Queries queries)
 
     HudButton::Ptr button(new HudButton());
     buttons_.push_front(button);
+    button->SetInputEventSensitivity(false);
     button->SetMinimumWidth(content_width);
     button->SetMaximumWidth(content_width);
     button->SetQuery(query);
@@ -248,7 +243,7 @@ void View::SetQueries(Hud::Queries queries)
       query_activated.emit(dynamic_cast<HudButton*>(view)->GetQuery());
     });
 
-    button->mouse_move.connect([&](int x, int y, int dx, int dy, unsigned long mouse_button, unsigned long special_key) {
+    button->mouse_move.connect([this](int x, int y, int dx, int dy, unsigned long mouse_button, unsigned long special_key) {
       if (keyboard_stole_focus_)
       {
         MouseStealsHudButtonFocus();
@@ -256,19 +251,19 @@ void View::SetQueries(Hud::Queries queries)
       }
     });
 
-    button->mouse_enter.connect([&](int x, int y, unsigned long mouse_button, unsigned long special_key) {
+    button->mouse_enter.connect([this](int x, int y, unsigned long mouse_button, unsigned long special_key) {
       MouseStealsHudButtonFocus();
     });
 
-    button->mouse_leave.connect([&](int x, int y, unsigned long mouse_button, unsigned long special_key) {
+    button->mouse_leave.connect([this](int x, int y, unsigned long mouse_button, unsigned long special_key) {
       SelectLastFocusedButton();
     });
 
-    button->key_nav_focus_activate.connect([&](nux::Area* area) {
+    button->key_nav_focus_activate.connect([this](nux::Area* area) {
       query_activated.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
 
-    button->key_nav_focus_change.connect([&](nux::Area* area, bool recieving, nux::KeyNavDirection direction){
+    button->key_nav_focus_change.connect([this](nux::Area* area, bool recieving, nux::KeyNavDirection direction){
       if (recieving)
         query_selected.emit(dynamic_cast<HudButton*>(area)->GetQuery());
     });
@@ -323,7 +318,8 @@ void View::ShowEmbeddedIcon(bool show)
     RemoveChild(icon_.GetPointer());
   }
 
-  Relayout();
+  UpdateLayoutGeometry();
+  QueueDraw();
 }
 
 // Gives us the width and height of the contents that will give us the best "fit",
@@ -404,6 +400,7 @@ void View::SetupViews()
       }
     });
 
+    UpdateLayoutGeometry();
 
     layout_->AddLayout(content_layout_.GetPointer(), 1, nux::MINOR_POSITION_START);
   }
@@ -412,15 +409,22 @@ void View::SetupViews()
   SetLayout(super_layout);
 }
 
+void View::UpdateLayoutGeometry()
+{
+  nux::Geometry const& geo = GetGeometry();
+  content_geo_ = GetBestFitGeometry(geo);
+
+  layout_->SetMinimumWidth(content_geo_.width);
+  layout_->SetMaximumSize(content_geo_.width, content_geo_.height);
+}
+
 void View::OnSearchChanged(std::string const& search_string)
 {
   LOG_DEBUG(logger) << "got search change";
   search_changed.emit(search_string);
 
   for(auto button : buttons_)
-  {
     button->fake_focused = false;
-  }
 
   if (!buttons_.empty())
     buttons_.back()->fake_focused = true;
@@ -594,7 +598,7 @@ bool View::InspectKeyEvent(unsigned int eventType,
 
 void View::SearchFinished()
 {
-  search_bar_->SearchFinished();
+  search_bar_->SetSearchFinished();
 }
 
 void View::OnSearchbarActivated()

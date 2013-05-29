@@ -21,6 +21,8 @@
 
 #include "config.h"
 
+#include <functional>
+
 #include <NuxCore/Logger.h>
 #include <glib.h>
 #include <glib/gi18n-lib.h>
@@ -71,6 +73,8 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(ApplicationPtr const& app
 
 void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launcher, int start_x, int start_y)
 {
+  using namespace std::placeholders;
+
   launcher_ = launcher;
 
   // FIXME: this needs testing, if there is no useful coordinates 
@@ -87,12 +91,14 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launche
     1,
     nux::BITFMT_R8G8B8A8);
 
-  drag_window_ = new LauncherDragWindow(icon_texture_);
+  drag_window_ = new LauncherDragWindow(icon_texture_,
+                                        std::bind (&Launcher::RenderIconToTexture,
+                                                   launcher.GetPointer(),
+                                                   _1,
+                                                   AbstractLauncherIcon::Ptr(this),
+                                                   icon_texture_));
 
   launcher->ForceReveal(true);
-  launcher->RenderIconToTexture(nux::GetWindowThread()->GetGraphicsEngine(),
-                                AbstractLauncherIcon::Ptr(this),
-                                icon_texture_);
 
   auto const& icon_center = GetCenter(launcher->monitor());
   drag_window_->SetBaseXY(start_x, start_y);
@@ -205,7 +211,7 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
       std::string new_desktop_path = GetActualDesktopFileAfterInstall();
 
       // exchange the temp Application with the real one
-      app_ = ApplicationManager::Default().GetApplicationForDesktopFile(new_desktop_path);
+      SetApplication(ApplicationManager::Default().GetApplicationForDesktopFile(new_desktop_path));
 
       UpdateDesktopFile();
       UpdateRemoteUri();

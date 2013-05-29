@@ -56,6 +56,7 @@ struct GnomeManager::Impl
   void CallGnomeSessionMethod(std::string const& method, GVariant* parameters = nullptr,
                               glib::DBusProxy::CallFinishedCallback const& cb = nullptr);
   void CallUPowerMethod(std::string const& method, glib::DBusProxy::ReplyCallback const& cb = nullptr);
+  void CallLogindMethod(std::string const& method, GVariant* parameters = nullptr, glib::DBusProxy::CallFinishedCallback const& cb = nullptr);
   void CallConsoleKitMethod(std::string const& method, GVariant* parameters = nullptr);
   bool InteractiveMode();
 

@@ -119,7 +119,6 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager)
   , keynav_restore_window_(true)
   , launcher_key_press_time_(0)
   , last_dnd_monitor_(-1)
-  , super_tap_duration_(0)
   , dbus_server_(DBUS_NAME)
 {
 #ifdef USE_X11
@@ -1051,11 +1050,11 @@ void Controller::Impl::SetupIcons()
 void Controller::Impl::SendHomeActivationRequest()
 {
   ubus.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                   g_variant_new("(sus)", "home.lens", dash::NOT_HANDLED, ""));
+                   g_variant_new("(sus)", "home.scope", dash::NOT_HANDLED, ""));
 }
 
 Controller::Controller(XdndManager::Ptr const& xdnd_manager)
- : options(Options::Ptr(new Options()))
+ : options(std::make_shared<Options>())
  , multiple_launchers(true)
  , pimpl(new Impl(this, xdnd_manager))
 {
@@ -1169,7 +1168,7 @@ void Controller::HandleLauncherKeyPress(int when)
 
     return false;
   };
-  pimpl->sources_.AddTimeout(pimpl->super_tap_duration_, show_launcher, local::KEYPRESS_TIMEOUT);
+  pimpl->sources_.AddTimeout(options()->super_tap_duration, show_launcher, local::KEYPRESS_TIMEOUT);
 
   auto show_shortcuts = [&]()
   {
@@ -1189,7 +1188,7 @@ void Controller::HandleLauncherKeyPress(int when)
 
 bool Controller::AboutToShowDash(int was_tap, int when) const
 {
-  if ((when - pimpl->launcher_key_press_time_) < pimpl->super_tap_duration_ && was_tap)
+  if ((when - pimpl->launcher_key_press_time_) < options()->super_tap_duration && was_tap)
     return true;
   return false;
 }
@@ -1197,7 +1196,7 @@ bool Controller::AboutToShowDash(int was_tap, int when) const
 void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
 {
   int tap_duration = when - pimpl->launcher_key_press_time_;
-  if (tap_duration < pimpl->super_tap_duration_ && was_tap)
+  if (tap_duration < options()->super_tap_duration && was_tap)
   {
     LOG_DEBUG(logger) << "Quick tap, sending activation request.";
     pimpl->SendHomeActivationRequest();
@@ -1410,11 +1409,6 @@ bool Controller::IsOverlayOpen() const
       return true;
   }
   return false;
-}
-
-void Controller::UpdateSuperTapDuration(int const super_tap_duration)
-{
-  pimpl->super_tap_duration_ = super_tap_duration;
 }
 
 std::string

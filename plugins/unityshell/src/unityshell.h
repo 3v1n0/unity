@@ -243,9 +243,7 @@ private:
 
   void InitGesturesSupport();
 
-  void DrawTopPanelBackground();
-  bool TopPanelBackgroundTextureNeedsUpdate() const;
-  void UpdateTopPanelBackgroundTexture();
+  void DrawPanelUnderDash();
 
   unsigned CompizModifiersToNux(unsigned input) const;
   unsigned XModifiersToNux(unsigned input) const;
@@ -286,7 +284,6 @@ private:
   std::unique_ptr<nux::GesturesSubscription> gestures_sub_windows_;
 
   bool                                  needsRelayout;
-  bool                                  _in_paint;
   bool                                  super_keypressed_;
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;
@@ -331,15 +328,13 @@ private:
 
   GLMatrix panel_shadow_matrix_;
 
-  bool panel_texture_has_changed_;
-  bool paint_panel_;
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> panel_texture_;
+  bool paint_panel_under_dash_;
   std::set<UnityWindow*> fake_decorated_windows_;
 
   bool scale_just_activated_;
   WindowMinimizeSpeedController minimize_speed_controller_;
 
-  long long big_tick_;
+  uint64_t big_tick_;
 
   debug::ScreenIntrospection screen_introspection_;
 

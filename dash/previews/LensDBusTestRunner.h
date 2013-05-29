@@ -23,6 +23,7 @@
 
 
 #include "DBusTestRunner.h"
+#include "UnityCore/ScopeProxyInterface.h"
 
 namespace unity
 {
@@ -31,18 +32,18 @@ namespace dash
 namespace previews
 {
 
-class LensDBusTestRunner : public DBusTestRunner
+class ScopeDBusTestRunner : public DBusTestRunner
 {
 public:
   typedef std::map<std::string, unity::glib::Variant> Hints;
 
-  LensDBusTestRunner(std::string const& dbus_name, std::string const& dbus_path, std::string const& interface_name)
+  ScopeDBusTestRunner(std::string const& dbus_name, std::string const& dbus_path, std::string const& interface_name)
   : DBusTestRunner(dbus_name, dbus_path, interface_name)
   , results_(new Results(ModelType::REMOTE))
   , results_variant_(NULL)
   {
-    proxy_->Connect("Changed", sigc::mem_fun(this, &LensDBusTestRunner::OnChanged));
-    results_->end_transaction.connect(sigc::mem_fun(this, &LensDBusTestRunner::ResultsModelUpdated));
+    proxy_->Connect("Changed", sigc::mem_fun(this, &ScopeDBusTestRunner::OnChanged));
+    results_->end_transaction.connect(sigc::mem_fun(this, &ScopeDBusTestRunner::ResultsModelUpdated));
   }
 
   void OnProxyConnectionChanged()
@@ -52,7 +53,7 @@ public:
     if (proxy_->IsConnected())
     {
       proxy_->Call("InfoRequest");
-      proxy_->Call("SetViewType", g_variant_new("(u)", LENS_VIEW));
+      proxy_->Call("SetViewType", g_variant_new("(u)", ScopeViewType::SCOPE_VIEW));
     }
   }
 
@@ -81,7 +82,7 @@ public:
                   &filters_model_name,
                   &hints_iter);
 
-    LOG_DEBUG(logger) << "Lens info changed for " << dbus_name_ << "\n"
+    LOG_DEBUG(logger) << "Scope info changed for " << dbus_name_ << "\n"
                       << "  Path: " << dbus_path << "\n"
                       << "  SearchInGlobal: " << search_in_global << "\n"
                       << "  Visible: " << visible << "\n"
@@ -119,14 +120,13 @@ public:
     GVariantBuilder b;
     g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
 
-    if (search_cancellable_) g_cancellable_cancel (search_cancellable_);
-    search_cancellable_ = g_cancellable_new ();
+    search_cancellable_.Renew();
 
     proxy_->Call("Search",
                  g_variant_new("(sa{sv})",
                                search_string.c_str(),
                                &b),
-                 sigc::mem_fun(this, &LensDBusTestRunner::OnSearchFinished),
+                 sigc::mem_fun(this, &ScopeDBusTestRunner::OnSearchFinished),
                  search_cancellable_);
 
     g_variant_builder_clear(&b);
@@ -135,7 +135,7 @@ public:
   void OnSearchFinished(GVariant* parameters)
   {
     Hints hints;
-    unsigned long long reply_seqnum;
+    uint64_t reply_seqnum;
     reply_seqnum = ExtractModelSeqnum (parameters);
     if (results_->seqnum < reply_seqnum)
     {
@@ -152,8 +152,7 @@ public:
     search_finished.emit(hints);
   }
 
-  void ResultsModelUpdated(unsigned long long begin_seqnum,
-                                       unsigned long long end_seqnum)
+  void ResultsModelUpdated(uint64_t begin_seqnum, uint64_t end_seqnum)
   {
     if (results_variant_ != NULL &&
         end_seqnum >= ExtractModelSeqnum (results_variant_))
@@ -179,16 +178,12 @@ public:
       return;
     }
 
-    if (preview_cancellable_)
-    {
-      g_cancellable_cancel(preview_cancellable_);
-    }
-    preview_cancellable_ = g_cancellable_new ();
+    preview_cancellable_.Renew();
 
     proxy_->Call("Activate",
                  g_variant_new("(su)", uri.c_str(),
                                UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_RESULT),
-                 sigc::mem_fun(this, &LensDBusTestRunner::ActivationReply),
+                 sigc::mem_fun(this, &ScopeDBusTestRunner::ActivationReply),
                  preview_cancellable_);
   }
 
@@ -213,7 +208,7 @@ public:
       {
         dash::Preview::Ptr preview(dash::Preview::PreviewForVariant(iter->second));
 
-        // would be nice to make parent_lens a shared_ptr,
+        // would be nice to make parent_scope a shared_ptr,
         // but that's not really doable from here
         preview_ready.emit(uri.Str(), preview);
         return;
@@ -231,18 +226,18 @@ public:
   sigc::signal<void, Hints const&> search_finished;
 
 protected:
-  unsigned long long ExtractModelSeqnum(GVariant *parameters)
+  uint64_t ExtractModelSeqnum(GVariant *parameters)
   {
     GVariant *dict;
     guint64 seqnum64;
-    unsigned long long seqnum = 0;
+    uint64_t seqnum = 0;
 
     dict = g_variant_get_child_value (parameters, 0);
     if (dict)
     {
       if (g_variant_lookup (dict, "model-seqnum", "t", &seqnum64))
       {
-        seqnum = static_cast<unsigned long long> (seqnum64);
+        seqnum = static_cast<uint64_t> (seqnum64);
       }
 
       g_variant_unref (dict);
@@ -252,8 +247,8 @@ protected:
   }
 
 
-  glib::Object<GCancellable> preview_cancellable_;
-  glib::Object<GCancellable> search_cancellable_;
+  glib::Cancellable preview_cancellable_;
+  glib::Cancellable search_cancellable_;
   Results::Ptr results_;
   GVariant *results_variant_;
 };

@@ -28,16 +28,6 @@ namespace dash
 {
 
 template<class RowAdaptor>
-Model<RowAdaptor>::Model()
-  : model_type_(ModelType::REMOTE)
-  , cached_adaptor1_(nullptr, nullptr, nullptr)
-  , cached_adaptor2_(nullptr, nullptr, nullptr)
-  , cached_adaptor3_(nullptr, nullptr, nullptr)
-{
-  Init();
-}
-
-template<class RowAdaptor>
 Model<RowAdaptor>::Model (ModelType model_type)
   : model_type_(model_type)
   , cached_adaptor1_(nullptr, nullptr, nullptr)
@@ -63,26 +53,66 @@ template<class RowAdaptor>
 void Model<RowAdaptor>::OnSwarmNameChanged(std::string const& swarm_name)
 {
   static nux::logging::Logger local_logger("unity.dash.model");
-
-  typedef glib::Signal<void, DeeModel*, DeeModelIter*> RowSignalType;
-  typedef glib::Signal<void, DeeModel*, guint64, guint64> TransactionSignalType;
-
   LOG_DEBUG(local_logger) << "New swarm name: " << swarm_name;
+
+  glib::Object<DeeModel> new_model;
+
+  switch(model_type_)
+  {
+    case ModelType::LOCAL:
+      new_model = dee_sequence_model_new();
+      break;
+
+    case ModelType::REMOTE:
+    case ModelType::REMOTE_SHARED:
+      new_model = dee_shared_model_new(swarm_name.c_str());
+      break;
+
+    case ModelType::UNATTACHED:
+      break;
+
+    default:
+      LOG_ERROR(local_logger) <<  "Unexpected ModelType " << model_type_;
+      break;
+  }
+
+  SetModel(new_model);
+}
+
+template<class RowAdaptor>
+void Model<RowAdaptor>::SetModel(glib::Object<DeeModel> const& new_model)
+{
+  GetDeeTagFunc func = [](glib::Object<DeeModel> const& model) {
+    return dee_model_register_tag(model, NULL); 
+  };
+  SetModel(new_model, func);
+}
+
+template<class RowAdaptor>
+void Model<RowAdaptor>::SetModel(glib::Object<DeeModel> const& new_model, GetDeeTagFunc const& get_dee_tag_func)
+{
+  typedef glib::Signal<void, DeeModel*, guint64, guint64> TransactionSignalType;
+  typedef glib::Signal<void, DeeModel*, DeeModelIter*> RowSignalType;
+
+  // Check if it's the same as the current model.
+  if (new_model == model_)
+    return;
 
   // Let the views clean up properly
   if (model_)
   {
     dee_model_clear(model_);
     sig_manager_.Disconnect(model_);
+    model_.Release();
   }
+  model_ = new_model;
+
+  if (!model_)
+    return;
 
   switch(model_type_)
   {
-    case ModelType::LOCAL:
-      model_ = dee_sequence_model_new();
-      break;
-    case ModelType::REMOTE:
-      model_ = dee_shared_model_new(swarm_name.c_str());
+    case ModelType::REMOTE_SHARED:
       sig_manager_.Add(new TransactionSignalType(model_,
                                                  "begin-transaction",
                                                  sigc::mem_fun(this, &Model<RowAdaptor>::OnTransactionBegin)));
@@ -91,15 +121,15 @@ void Model<RowAdaptor>::OnSwarmNameChanged(std::string const& swarm_name)
                                                  "end-transaction",
                                                  sigc::mem_fun(this, &Model<RowAdaptor>::OnTransactionEnd)));
       break;
+
+    case ModelType::REMOTE:
+    case ModelType::LOCAL:
+    case ModelType::UNATTACHED:
     default:
-      LOG_ERROR(local_logger) <<  "Unexpected ModelType " << model_type_;
       break;
   }
 
-  model.EmitChanged(model_);
-
-
-  renderer_tag_ = dee_model_register_tag(model_, NULL);
+  renderer_tag_ = get_dee_tag_func(model_);
 
   sig_manager_.Add(new RowSignalType(model_,
                                      "row-added",
@@ -112,6 +142,8 @@ void Model<RowAdaptor>::OnSwarmNameChanged(std::string const& swarm_name)
   sig_manager_.Add(new RowSignalType(model_,
                                      "row-removed",
                                      sigc::mem_fun(this, &Model<RowAdaptor>::OnRowRemoved)));
+
+  model.EmitChanged(model_);
 }
 
 template<class RowAdaptor>
@@ -151,25 +183,25 @@ void Model<RowAdaptor>::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
 template<class RowAdaptor>
 void Model<RowAdaptor>::OnTransactionBegin(DeeModel* model, guint64 begin_seqnum64, guint64 end_seqnum64)
 {
-  unsigned long long begin_seqnum, end_seqnum;
+  uint64_t begin_seqnum, end_seqnum;
 
-  begin_seqnum = static_cast<unsigned long long> (begin_seqnum64);
-  end_seqnum = static_cast<unsigned long long> (end_seqnum64);
+  begin_seqnum = static_cast<uint64_t> (begin_seqnum64);
+  end_seqnum = static_cast<uint64_t> (end_seqnum64);
   begin_transaction.emit(begin_seqnum, end_seqnum);
 }
 
 template<class RowAdaptor>
 void Model<RowAdaptor>::OnTransactionEnd(DeeModel* model, guint64 begin_seqnum64, guint64 end_seqnum64)
 {
-  unsigned long long begin_seqnum, end_seqnum;
+  uint64_t begin_seqnum, end_seqnum;
 
-  begin_seqnum = static_cast<unsigned long long> (begin_seqnum64);
-  end_seqnum = static_cast<unsigned long long> (end_seqnum64);
+  begin_seqnum = static_cast<uint64_t> (begin_seqnum64);
+  end_seqnum = static_cast<uint64_t> (end_seqnum64);
   end_transaction.emit(begin_seqnum, end_seqnum);
 }
 
 template<class RowAdaptor>
-const RowAdaptor Model<RowAdaptor>::RowAtIndex(std::size_t index)
+const RowAdaptor Model<RowAdaptor>::RowAtIndex(std::size_t index) const
 {
   RowAdaptor it(model_,
                 dee_model_get_iter_at_row(model_, index),
@@ -178,13 +210,13 @@ const RowAdaptor Model<RowAdaptor>::RowAtIndex(std::size_t index)
 }
 
 template<class RowAdaptor>
-DeeModelTag* Model<RowAdaptor>::GetTag()
+DeeModelTag* Model<RowAdaptor>::GetTag() const
 {
   return renderer_tag_;
 }
 
 template<class RowAdaptor>
-std::size_t Model<RowAdaptor>::get_count()
+std::size_t Model<RowAdaptor>::get_count() const
 {
   if (model_)
     return dee_model_get_n_rows(model_);
@@ -193,7 +225,7 @@ std::size_t Model<RowAdaptor>::get_count()
 }
 
 template<class RowAdaptor>
-unsigned long long Model<RowAdaptor>::get_seqnum()
+uint64_t Model<RowAdaptor>::get_seqnum() const
 {
   if (model_ && DEE_IS_SERIALIZABLE_MODEL ((DeeModel*) model_))
     return dee_serializable_model_get_seqnum(model_);
@@ -202,7 +234,7 @@ unsigned long long Model<RowAdaptor>::get_seqnum()
 }
 
 template<class RowAdaptor>
-glib::Object<DeeModel> Model<RowAdaptor>::get_model()
+glib::Object<DeeModel> Model<RowAdaptor>::get_model() const
 {
   return model_;
 }

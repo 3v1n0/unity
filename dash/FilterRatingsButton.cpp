@@ -90,7 +90,7 @@ void FilterRatingsButton::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
   // FIXME: 9/26/2011
   // We should probably support an API for saying whether the ratings
   // should or shouldn't support half stars...but our only consumer at
-  // the moment is the applications lens which according to design
+  // the moment is the applications scope which according to design
   // (Bug #839759) shouldn't. So for now just force rounding.
   //    int total_half_stars = rating % 2;
   //    int total_full_stars = rating / 2;

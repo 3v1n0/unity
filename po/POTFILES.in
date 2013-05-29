@@ -4,8 +4,13 @@ dash/FilterExpanderLabel.cpp
 dash/FilterGenreWidget.cpp
 dash/FilterMultiRangeWidget.cpp
 dash/FilterRatingsWidget.cpp
-dash/LensView.cpp
 dash/PlacesGroup.cpp
+dash/ResultViewGrid.cpp
+dash/ScopeBar.cpp
+dash/ScopeView.cpp
+dash/previews/ApplicationPreview.cpp
+dash/previews/PreviewInfoHintWidget.cpp
+dash/previews/SocialPreview.cpp
 hud/HudController.cpp
 hud/HudView.cpp
 launcher/ApplicationLauncherIcon.cpp
@@ -13,6 +18,7 @@ launcher/BFBLauncherIcon.cpp
 launcher/DesktopLauncherIcon.cpp
 launcher/DeviceNotificationDisplayImp.cpp
 launcher/ExpoLauncherIcon.cpp
+launcher/HudLauncherIcon.cpp
 launcher/LauncherController.cpp
 launcher/SoftwareCenterLauncherIcon.cpp
 launcher/SpacerLauncherIcon.cpp
@@ -35,6 +41,9 @@ shortcuts/CompizShortcutModeller.cpp
 shutdown/SessionView.cpp
 shutdown/SessionButton.cpp
 services/panel-service.c
+unity-shared/CoverArt.cpp
 unity-shared/DashStyle.cpp
+unity-shared/PreviewStyle.cpp
 unity-shared/SearchBar.cpp
+unity-shared/UScreen.cpp
 gnome/50-unity-launchers.xml.in

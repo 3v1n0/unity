@@ -84,6 +84,7 @@ struct MockApplication : unity::Application
     , active_(false)
     , running_(false)
     , urgent_(false)
+    , type_("mock")
     {
       seen.SetGetterFunction(sigc::mem_fun(this, &MockApplication::GetSeen));
       seen.SetSetterFunction(sigc::mem_fun(this, &MockApplication::SetSeen));
@@ -105,12 +106,13 @@ struct MockApplication : unity::Application
   bool running_;
   bool urgent_;
   unity::WindowList windows_;
+  std::string type_;
 
 
   virtual std::string icon() const { return icon_; }
   virtual std::string title() const { return title_; }
   virtual std::string desktop_file() const { return desktop_file_; }
-  virtual std::string type() const { return "mock"; }
+  virtual std::string type() const { return type_; }
   virtual std::string repr() const { return "MockApplication"; }
 
   virtual unity::WindowList GetWindows() const { return windows_; }

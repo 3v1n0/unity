@@ -32,18 +32,18 @@ namespace launcher
 // Start private implementation
 //
 
-class VolumeImp::Impl
+class VolumeImp::Impl : public sigc::trackable
 {
 public:
   Impl(glib::Object<GVolume> const& volume,
-       FileManagerOpener::Ptr const& file_manager_opener,
+       FileManager::Ptr const& file_manager,
        DeviceNotificationDisplay::Ptr const& device_notification_display,
        VolumeImp* parent)
     : parent_(parent)
+    , opened_(false)
     , open_timestamp_(0)
-    , cancellable_(g_cancellable_new())
     , volume_(volume)
-    , file_manager_opener_(file_manager_opener)
+    , file_manager_(file_manager)
     , device_notification_display_(device_notification_display)
   {
     signal_volume_changed_.Connect(volume_, "changed", [this] (GVolume*) {
@@ -51,13 +51,21 @@ public:
     });
 
     signal_volume_removed_.Connect(volume_, "removed", [this] (GVolume*) {
-          parent_->removed.emit();
+      parent_->removed.emit();
     });
+
+    file_manager_->locations_changed.connect(sigc::mem_fun(this, &Impl::OnLocationChanged));
   }
 
-  ~Impl()
+  void OnLocationChanged()
   {
-    g_cancellable_cancel(cancellable_);
+    bool opened = file_manager_->IsPrefixOpened(GetUri());
+
+    if (opened_ != opened)
+    {
+      opened_ = opened;
+      parent_->opened.emit(opened_);
+    }
   }
 
   bool CanBeEjected() const
@@ -118,6 +126,11 @@ public:
     return static_cast<bool>(mount);
   }
 
+  bool IsOpened() const
+  {
+    return opened_;
+  }
+
   void EjectAndShowNotification()
   {
     if (!CanBeEjected())
@@ -141,7 +154,7 @@ public:
     }
   }
 
-  void MountAndOpenInFileManager(unsigned long long timestamp)
+  void MountAndOpenInFileManager(uint64_t timestamp)
   {
     open_timestamp_ = timestamp;
 
@@ -173,18 +186,22 @@ public:
 
   void OpenInFileManager()
   {
-    file_manager_opener_->Open(GetUri(), open_timestamp_);
+    file_manager_->OpenActiveChild(GetUri(), open_timestamp_);
   }
 
-  std::string GetUri()
+  std::string GetUri() const
   {
     glib::Object<GMount> mount(g_volume_get_mount(volume_));
+
+    if (!mount.IsType(G_TYPE_MOUNT))
+      return std::string();
+
     glib::Object<GFile> root(g_mount_get_root(mount));
 
-    if (root.IsType(G_TYPE_FILE))
-      return glib::String(g_file_get_uri(root)).Str();
-    else
-     return std::string();
+    if (!root.IsType(G_TYPE_FILE))
+      return std::string();
+
+    return glib::String(g_file_get_uri(root)).Str();
   }
 
   void StopDrive()
@@ -219,10 +236,11 @@ public:
   }
 
   VolumeImp* parent_;
-  unsigned long long open_timestamp_;
-  glib::Object<GCancellable> cancellable_;
+  bool opened_;
+  uint64_t open_timestamp_;
+  glib::Cancellable cancellable_;
   glib::Object<GVolume> volume_;
-  FileManagerOpener::Ptr file_manager_opener_;
+  FileManager::Ptr file_manager_;
   DeviceNotificationDisplay::Ptr device_notification_display_;
 
   glib::Signal<void, GVolume*> signal_volume_changed_;
@@ -234,9 +252,9 @@ public:
 //
 
 VolumeImp::VolumeImp(glib::Object<GVolume> const& volume,
-                     FileManagerOpener::Ptr const& file_manager_opener,
+                     FileManager::Ptr const& file_manager,
                      DeviceNotificationDisplay::Ptr const& device_notification_display)
-  : pimpl(new Impl(volume, file_manager_opener, device_notification_display, this))
+  : pimpl(new Impl(volume, file_manager, device_notification_display, this))
 {}
 
 VolumeImp::~VolumeImp()
@@ -282,7 +300,12 @@ bool VolumeImp::IsMounted() const
   return pimpl->IsMounted();
 }
 
-void VolumeImp::MountAndOpenInFileManager(unsigned long long timestamp)
+bool VolumeImp::IsOpened() const
+{
+  return pimpl->IsOpened();
+}
+
+void VolumeImp::MountAndOpenInFileManager(uint64_t timestamp)
 {
   pimpl->MountAndOpenInFileManager(timestamp);
 }

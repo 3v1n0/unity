@@ -39,13 +39,13 @@ namespace dash
 NUX_IMPLEMENT_OBJECT_TYPE(FilterGenre);
 
 FilterGenre::FilterGenre(int columns, NUX_FILE_LINE_DECL)
- : FilterExpanderLabel(_("Categories"), NUX_FILE_LINE_PARAM)
+: FilterExpanderLabel(_("Categories"), NUX_FILE_LINE_PARAM)
+, all_button_(nullptr)
 {
   dash::Style& style = dash::Style::Instance();
 
   InitTheme();
 
-  all_button_ = new FilterAllButton(NUX_TRACKER_LOCATION);
 
   genre_layout_ = new nux::GridHLayout(NUX_TRACKER_LOCATION);
   genre_layout_->ForceChildrenSize(true);
@@ -64,7 +64,6 @@ FilterGenre::FilterGenre(int columns, NUX_FILE_LINE_DECL)
     genre_layout_->SetSpaceBetweenChildren (10, 12);
   }
 
-  SetRightHandView(all_button_);
   SetContents(genre_layout_);
 }
 
@@ -76,7 +75,17 @@ void FilterGenre::SetFilter(Filter::Ptr const& filter)
 {
   filter_ = std::static_pointer_cast<CheckOptionFilter>(filter);
 
-  all_button_->SetFilter(filter_);
+  // all button
+  auto show_button_func = [this] (bool show_all_button)
+  {
+    all_button_ = show_all_button ? new FilterAllButton(NUX_TRACKER_LOCATION) : nullptr;
+    SetRightHandView(all_button_);
+    if (all_button_)
+      all_button_->SetFilter(filter_);
+  };
+  show_button_func(filter_->show_all_button);
+  filter_->show_all_button.changed.connect(show_button_func);
+  
   expanded = !filter_->collapsed();
 
   filter_->option_added.connect(sigc::mem_fun(this, &FilterGenre::OnOptionAdded));
@@ -100,6 +109,8 @@ void FilterGenre::OnOptionAdded(FilterOption::Ptr const& new_filter)
   button->SetFilter(new_filter);
   genre_layout_->AddView(button, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   buttons_.push_back(button);
+
+  QueueRelayout();
 }
 
 void FilterGenre::OnOptionRemoved(FilterOption::Ptr const& removed_filter)
@@ -110,6 +121,8 @@ void FilterGenre::OnOptionRemoved(FilterOption::Ptr const& removed_filter)
     {
       genre_layout_->RemoveChildObject(*it);
       buttons_.erase(it);
+      
+      QueueRelayout();
       break;
     }
   }

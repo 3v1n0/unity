@@ -8,18 +8,18 @@
 
 """Autopilot test case class for all Launcher tests"""
 
-from autopilot.emulators.X11 import ScreenGeometry
+from autopilot.display import Display
 from autopilot.testcase import multiply_scenarios
 
 from unity.tests import UnityTestCase
+from unity.emulators.X11 import set_primary_monitor
 
 
 def _make_scenarios():
     """Make scenarios for launcher test cases based on the number of configured
     monitors.
     """
-    screen_geometry = ScreenGeometry()
-    num_monitors = screen_geometry.get_num_monitors()
+    num_monitors = Display.create().get_num_screens()
 
     # it doesn't make sense to set only_primary when we're running in a single-monitor setup.
     if num_monitors == 1:
@@ -39,7 +39,6 @@ class LauncherTestCase(UnityTestCase):
 
     def setUp(self):
         super(LauncherTestCase, self).setUp()
-        self.screen_geo = ScreenGeometry()
         self.set_unity_log_level("unity.launcher", "DEBUG")
         self.addCleanup(self.set_unity_log_level, "unity.launcher", "INFO")
 
@@ -48,10 +47,10 @@ class LauncherTestCase(UnityTestCase):
 
         if self.only_primary:
             try:
-                old_primary_screen = self.screen_geo.get_primary_monitor()
-                self.screen_geo.set_primary_monitor(self.launcher_monitor)
-                self.addCleanup(self.screen_geo.set_primary_monitor, old_primary_screen)
-            except ScreenGeometry.BlacklistedDriverError:
+                old_primary_screen = self.display.get_primary_screen()
+                set_primary_monitor(self.launcher_monitor)
+                self.addCleanup(set_primary_monitor, old_primary_screen)
+            except autopilot.display.BlacklistedDriverError:
                 self.skipTest("Impossible to set the monitor %d as primary" % self.launcher_monitor)
 
     def get_launcher(self):

@@ -23,37 +23,32 @@
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
-#include <Nux/WindowCompositor.h>
 #include <NuxCore/Logger.h>
-#include <UnityCore/GLibDBusProxy.h>
 #include <zeitgeist.h>
 
-#include "Launcher.h"
-#include "QuicklistManager.h"
 #include "QuicklistMenuItemLabel.h"
-#include "FileManagerOpenerImp.h"
+#include "unity-shared/GnomeFileManager.h"
 
 namespace unity
 {
 namespace launcher
 {
-DECLARE_LOGGER(logger, "unity.launcher.icon");
+DECLARE_LOGGER(logger, "unity.launcher.icon.trash");
 namespace
 {
   const std::string ZEITGEIST_UNITY_ACTOR = "application://compiz.desktop";
-  const std::string TRASH_URI = "trash:///";
+  const std::string TRASH_URI = "trash:";
 }
 
-TrashLauncherIcon::TrashLauncherIcon(FileManagerOpener::Ptr const& fmo)
+TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
   : SimpleLauncherIcon(IconType::TRASH)
-  , file_manager_(fmo ? fmo : std::make_shared<FileManagerOpenerImp>())
-  , cancellable_(g_cancellable_new())
+  , file_manager_(fmo ? fmo : GnomeFileManager::Get())
 {
   tooltip_text = _("Trash");
   icon_name = "user-trash";
   position = Position::END;
   SetQuirk(Quirk::VISIBLE, true);
-  SetQuirk(Quirk::RUNNING, false);
+  SetQuirk(Quirk::RUNNING, file_manager_->IsTrashOpened());
   SetShortcut('t');
 
   glib::Object<GFile> location(g_file_new_for_uri(TRASH_URI.c_str()));
@@ -74,12 +69,14 @@ TrashLauncherIcon::TrashLauncherIcon(FileManagerOpener::Ptr const& fmo)
     });
   }
 
+  file_manager_->locations_changed.connect(sigc::mem_fun(this, &TrashLauncherIcon::OnOpenedLocationsChanged));
+
   UpdateTrashIcon();
 }
 
-TrashLauncherIcon::~TrashLauncherIcon()
+void TrashLauncherIcon::OnOpenedLocationsChanged()
 {
-  g_cancellable_cancel(cancellable_);
+  SetQuirk(Quirk::RUNNING, file_manager_->IsTrashOpened());
 }
 
 AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()
@@ -88,16 +85,12 @@ AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()
 
   /* Empty Trash */
   glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
-  dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Empty Trash…"));
+  dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Empty Trash..."));
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, !empty_);
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
   empty_activated_signal_.Connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-  [this] (DbusmenuMenuitem*, unsigned) {
-    auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.Nautilus", "/org/gnome/Nautilus",
-                                                   "org.gnome.Nautilus.FileOperations");
-
-    // Passing the proxy to the lambda we ensure that it will be destroyed when needed
-    proxy->CallBegin("EmptyTrash", nullptr, [proxy] (GVariant*, glib::Error const&) {});
+  [this] (DbusmenuMenuitem*, unsigned timestamp) {
+    file_manager_->EmptyTrash(timestamp);
   });
 
   result.push_back(menu_item);
@@ -108,8 +101,7 @@ AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()
 void TrashLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
   SimpleLauncherIcon::ActivateLauncherIcon(arg);
-
-  file_manager_->Open(TRASH_URI.c_str(), arg.timestamp);
+  file_manager_->OpenTrash(arg.timestamp);
 }
 
 void TrashLauncherIcon::UpdateTrashIcon()
@@ -163,7 +155,7 @@ void TrashLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
   {
     glib::Object<GFile> file(g_file_new_for_uri(uri.c_str()));
 
-    /* Log ZG event when moving file to trash; this is requred by File Lens.
+    /* Log ZG event when moving file to trash; this is requred by File Scope.
        See https://bugs.launchpad.net/unity/+bug/870150  */
     if (g_file_trash(file, NULL, NULL))
     {

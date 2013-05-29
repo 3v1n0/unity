@@ -196,7 +196,7 @@ TEST_F(TestQuicklistMenuItem, ItemActivateClosesDash)
 
   bool closes_dash = false;
   UBusManager manager;
-  manager.RegisterInterest(UBUS_PLACE_VIEW_CLOSE_REQUEST, [&] (GVariant*) { closes_dash = true; });
+  manager.RegisterInterest(UBUS_OVERLAY_CLOSE_REQUEST, [&] (GVariant*) { closes_dash = true; });
 
   qlitem->Activate();
   Utils::WaitUntil(closes_dash);
@@ -214,7 +214,7 @@ TEST_F(TestQuicklistMenuItem, OverlayItemActivateDoesNotCloseDash)
 
   bool closes_dash = false;
   UBusManager manager;
-  manager.RegisterInterest(UBUS_PLACE_VIEW_CLOSE_REQUEST, [&] (GVariant*) { closes_dash = true; });
+  manager.RegisterInterest(UBUS_OVERLAY_CLOSE_REQUEST, [&] (GVariant*) { closes_dash = true; });
 
   qlitem->Activate();
   Utils::WaitForTimeoutMSec(100);

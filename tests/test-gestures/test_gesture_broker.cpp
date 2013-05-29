@@ -99,14 +99,10 @@ TEST_F(GestureBrokerTest, ThreeFingersTouchHitsCorrectWindow)
   /* prepare and send the fake event  */
   fake_event.type = nux::EVENT_GESTURE_BEGIN;
   fake_event.gesture_id = 0;
-  fake_event.is_direct_touch = false;
-  fake_event.focus.x = 100.0f; // hits the middle window
-  fake_event.focus.y = 100.0f;
-  // in touch device's coordinate system (because it's not a direct device).
-  // Thus not used by WindowCompositor
-  fake_event.touches.push_back(nux::TouchPoint(0, 10.0f, 10.0f));
-  fake_event.touches.push_back(nux::TouchPoint(1, 20.0f, 20.0f));
-  fake_event.touches.push_back(nux::TouchPoint(2, 22.0f, 22.0f));
+  fake_event.is_direct_touch = true;
+  fake_event.touches.push_back(nux::TouchPoint(0, 100.0f, 100.0f)); // hits the middle window
+  fake_event.touches.push_back(nux::TouchPoint(1, 120.0f, 120.0f));
+  fake_event.touches.push_back(nux::TouchPoint(2, 122.0f, 122.0f));
   fake_event.is_construction_finished = false;
   gesture_broker.ProcessGestureBegin(fake_event.ToGestureEvent());
 
@@ -120,10 +116,7 @@ TEST_F(GestureBrokerTest, ThreeFingersTouchHitsCorrectWindow)
   ASSERT_EQ(0, target_mock->events_received.size());
 
   fake_event.type = nux::EVENT_GESTURE_UPDATE;
-  fake_event.delta.x += 10.0f;
-  fake_event.delta.y += 20.0f;
-  fake_event.focus.x += fake_event.delta.x;
-  fake_event.focus.y += fake_event.delta.y;
+  fake_event.touches.push_back(nux::TouchPoint(4, 132.0f, 142.0f));
   fake_event.is_construction_finished = true;
   gesture_broker.ProcessGestureUpdate(fake_event.ToGestureEvent());
 

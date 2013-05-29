@@ -18,118 +18,12 @@
  *
  */
 
-#include <NuxCore/AnimationController.h>
-#include <gmock/gmock.h>
-#include <chrono>
-
-#include "test_utils.h"
-#include "DesktopLauncherIcon.h"
-#include "SimpleLauncherIcon.h"
-#include "SwitcherController.h"
-#include "SwitcherView.h"
-#include "TimeUtil.h"
-#include "unity-shared/UnitySettings.h"
-#include "mock-base-window.h"
+#include "test_switcher_controller.h"
 
 using namespace testing;
 using namespace unity;
 using namespace unity::switcher;
 using namespace std::chrono;
-
-namespace
-{
-typedef std::chrono::high_resolution_clock Clock;
-
-#ifdef ENABLE_DELAYED_TWO_PHASE_CONSTRUCTION_TESTS
-unsigned int DEFAULT_LAZY_CONSTRUCT_TIMEOUT = 20;
-#endif
-
-const unsigned FADE_DURATION = 80 * 1000; // in microseconds
-const unsigned TICK_DURATION = 10 * 1000;
-
-
-/**
- * A fake ApplicationWindow for verifying selection of the switcher.
- */
-class FakeApplicationWindow : public ApplicationWindow
-{
-public:
-  FakeApplicationWindow(Window xid) : xid_(xid) {}
-
-  std::string title() const { return "FakeApplicationWindow"; }
-  virtual std::string icon() const { return ""; }
-  virtual std::string type() const { return "mock"; }
-
-  virtual Window window_id() const { return xid_; }
-  virtual int monitor() const { return -1; }
-  virtual ApplicationPtr application() const { return ApplicationPtr(); }
-  virtual bool Focus() const { return false; }
-  virtual void Quit() const {}
-private:
-  Window xid_;
-};
-
-/**
- * A fake LauncherIcon for verifying selection operations of the switcher.
- */
-class FakeLauncherIcon : public launcher::SimpleLauncherIcon
-{
-public:
-  FakeLauncherIcon(std::string const& app_name, unsigned priority)
-    : launcher::SimpleLauncherIcon(IconType::APPLICATION)
-    , priority_(priority)
-    , window_list{ std::make_shared<FakeApplicationWindow>(priority_ | 0x0001),
-                   std::make_shared<FakeApplicationWindow>(priority_ | 0x0002) }
-  { tooltip_text = app_name; }
-
-  WindowList Windows()
-  { return window_list; }
-
-  unsigned long long SwitcherPriority()
-  { return 0xffffffff - priority_; }
-
-private:
-  unsigned   priority_;
-  WindowList window_list;
-};
-
-
-/**
- * The base test fixture for verifying the Switcher interface.
- */
-class TestSwitcherController : public testing::Test
-{
-protected:
-  TestSwitcherController()
-    : animation_controller_(tick_source_)
-    , mock_window_(new NiceMock<testmocks::MockBaseWindow>())
-  {
-    ON_CALL(*mock_window_, SetOpacity(_))
-      .WillByDefault(Invoke(mock_window_.GetPointer(),
-                     &testmocks::MockBaseWindow::RealSetOpacity));
-
-    auto create_window = [this] { return mock_window_; };
-    controller_.reset(new Controller(create_window));
-    controller_->timeout_length = 0;
-
-    icons_.push_back(launcher::AbstractLauncherIcon::Ptr(new launcher::DesktopLauncherIcon()));
-
-    FakeLauncherIcon* first_app = new FakeLauncherIcon("First", 0x0100);
-    icons_.push_back(launcher::AbstractLauncherIcon::Ptr(first_app));
-    FakeLauncherIcon* second_app = new FakeLauncherIcon("Second", 0x0200);
-    icons_.push_back(launcher::AbstractLauncherIcon::Ptr(second_app));
-  }
-
-  // required to create hidden secret global variables before test objects
-  Settings unity_settings_;
-
-  nux::animation::TickSource tick_source_;
-  nux::animation::AnimationController animation_controller_;
-  testmocks::MockBaseWindow::Ptr mock_window_;
-  Controller::Ptr controller_;
-  std::vector<unity::launcher::AbstractLauncherIcon::Ptr> icons_;
-};
-
 
 #ifdef ENABLE_DELAYED_TWO_PHASE_CONSTRUCTION_TESTS
 TEST_F(TestSwitcherController, LazyConstructionTimeoutLength)
@@ -152,89 +46,6 @@ TEST_F(TestSwitcherController, LazyWindowConstruction)
 }
 #endif
 
-TEST_F(TestSwitcherController, InitialDetailTimeout)
-{
-  Clock::time_point start_time = Clock::now();
-  static const int initial_details_timeout = 500;
-  static const int details_timeout = 10 * initial_details_timeout;
-
-  controller_->detail_on_timeout = true;
-  controller_->initial_detail_timeout_length = initial_details_timeout;
-  controller_->detail_timeout_length = details_timeout;
-
-  controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
-  Selection selection = controller_->GetCurrentSelection();
-  EXPECT_EQ(selection.application_->tooltip_text(), "Second");
-  EXPECT_EQ(selection.window_, 0);
-
-  Utils::WaitForTimeoutMSec(initial_details_timeout * 1.1);
-  selection = controller_->GetCurrentSelection();
-  EXPECT_EQ(selection.application_->tooltip_text(), "Second");
-  EXPECT_EQ(selection.window_, 0x0201);
-
-  auto elapsed_time = Clock::now() - start_time;
-  auto time_diff = duration_cast<milliseconds>(elapsed_time).count();
-  EXPECT_TRUE(initial_details_timeout < time_diff);
-  EXPECT_TRUE(time_diff < details_timeout);
-}
-
-TEST_F(TestSwitcherController, DetailTimeoutRemoval)
-{
-  Clock::time_point start_time = Clock::now();
-  static const int details_timeout = 500;
-  static const int initial_details_timeout = 10 * details_timeout;
-
-  controller_->detail_on_timeout = true;
-  controller_->detail_timeout_length = details_timeout;
-  controller_->initial_detail_timeout_length = initial_details_timeout;
-
-  controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
-  Selection selection = controller_->GetCurrentSelection();
-  EXPECT_EQ(selection.application_->tooltip_text(), "Second");
-  EXPECT_EQ(selection.window_, 0);
-
-  controller_->Next();
-  selection = controller_->GetCurrentSelection();
-  EXPECT_EQ(selection.application_->tooltip_text(), "Show Desktop");
-  EXPECT_EQ(selection.window_, 0);
-
-  controller_->Next();
-  selection = controller_->GetCurrentSelection();
-  EXPECT_EQ(selection.application_->tooltip_text(), "First");
-  EXPECT_EQ(selection.window_, 0);
-
-  Utils::WaitForTimeoutMSec(details_timeout * 1.1);
-  selection = controller_->GetCurrentSelection();
-  EXPECT_EQ(selection.application_->tooltip_text(), "First");
-  EXPECT_EQ(selection.window_, 0x0101);
-
-
-  auto elapsed_time = Clock::now() - start_time;
-  auto time_diff = duration_cast<milliseconds>(elapsed_time).count();
-  EXPECT_TRUE(details_timeout < time_diff);
-  EXPECT_TRUE(time_diff < initial_details_timeout);
-}
-
-TEST_F(TestSwitcherController, DetailTimeoutOnDetailActivate)
-{
-  static const int initial_details_timeout = 500;
-  static const int details_timeout = 10 * initial_details_timeout;
-
-  controller_->detail_on_timeout = true;
-  controller_->initial_detail_timeout_length = initial_details_timeout;
-  controller_->detail_timeout_length = details_timeout;
-
-  controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
-  EXPECT_EQ(controller_->GetCurrentSelection().window_, 0);
-
-  // Manually open-close the detail mode before that the timeout has occurred
-  controller_->SetDetail(true);
-  controller_->SetDetail(false);
-
-  Utils::WaitForTimeoutMSec(initial_details_timeout * 1.1);
-  EXPECT_EQ(controller_->GetCurrentSelection().window_, 0);
-}
-
 TEST_F(TestSwitcherController, InitiateDetail)
 {
   controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
@@ -252,13 +63,28 @@ TEST_F(TestSwitcherController, InitiateDetail)
   EXPECT_LT(model->detail_selection.changed.size(), prev_size);
 }
 
+TEST_F(TestSwitcherController, InitiateDetailWebapps)
+{
+  controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
+
+  controller_->Select(3);
+  controller_->InitiateDetail();
+
+  auto const& view = controller_->GetView();
+  auto const& model = view->GetModel();
+  EXPECT_EQ(controller_->detail_mode(), DetailMode::TAB_NEXT_TILE);
+  EXPECT_FALSE(view->animate());
+  EXPECT_FALSE(model->detail_selection());
+}
+
+
 TEST_F(TestSwitcherController, ShowSwitcher)
 {
   EXPECT_FALSE(controller_->Visible());
   EXPECT_CALL(*mock_window_, ShowWindow(true, _)).Times(AtLeast(1));
 
   controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
-  Utils::WaitForTimeoutMSec(200);
+  Utils::WaitUntilMSec([this] { return controller_->Visible(); });
   EXPECT_TRUE(controller_->Visible());
   EXPECT_TRUE(controller_->StartIndex() == 1);
 }
@@ -271,7 +97,7 @@ TEST_F(TestSwitcherController, ShowSwitcherNoShowDeskop)
   ASSERT_TRUE(controller_->IsShowDesktopDisabled());
 
   controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
-  Utils::WaitForTimeoutMSec(200);
+  Utils::WaitUntilMSec([this] { return controller_->Visible(); });
   ASSERT_TRUE(controller_->StartIndex() == 0);
   Selection selection = controller_->GetCurrentSelection();
   EXPECT_NE(selection.application_->tooltip_text(), "Show Desktop");
@@ -292,6 +118,31 @@ TEST_F(TestSwitcherController, ShowSwitcherNoResults)
   ASSERT_FALSE(controller_->Visible());
   Selection selection = controller_->GetCurrentSelection();
   EXPECT_FALSE(selection.application_);
+}
+
+TEST_F(TestSwitcherController, ShowSwitcherSelectsWindowOfActiveApp)
+{
+  // Making the first application active
+  auto const& first_app = icons_[1];
+  first_app->SetQuirk(launcher::AbstractLauncherIcon::Quirk::ACTIVE, true);
+
+  // Raising the priority of the second window of the first app
+  auto first_app_windows = first_app->Windows();
+  auto first_app_last_window = first_app_windows.back();
+  auto standalone = WM->GetWindowByXid(first_app_last_window->window_id());
+  standalone->active_number = WM->GetWindowActiveNumber(first_app_windows.front()->window_id()) - 1;
+
+  // Setting the active number of the first window of the second app to max uint
+  auto second_app_first_window = icons_[2]->Windows().front();
+  standalone = WM->GetWindowByXid(second_app_first_window->window_id());
+  standalone->active_number = std::numeric_limits<unsigned>::max();
+
+  controller_->Show(ShowMode::CURRENT_VIEWPORT, SortMode::FOCUS_ORDER, icons_);
+  Utils::WaitUntilMSec([this] { return controller_->Visible(); });
+
+  Selection selection = controller_->GetCurrentSelection();
+  ASSERT_EQ(selection.application_, first_app);
+  EXPECT_EQ(selection.window_, first_app_last_window->window_id());
 }
 
 TEST_F(TestSwitcherController, Opacity)
@@ -349,6 +200,4 @@ TEST_F(TestSwitcherController, ShowHideSwitcherFading)
 
   EXPECT_EQ(mock_window_->GetOpacity(), 0.0f);
   Mock::VerifyAndClearExpectations(mock_window_.GetPointer());
-}
-
 }
