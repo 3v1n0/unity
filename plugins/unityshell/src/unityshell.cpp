@@ -1865,8 +1865,6 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
 {
   if (!grab_index_)
     grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
-  if (!grab_index_)
-    return false;
 
   screen->addAction(&optionGetAltTabRight());
   screen->addAction(&optionGetAltTabDetailStart());
@@ -1927,23 +1925,23 @@ bool UnityScreen::altTabTerminateCommon(CompAction* action,
     // remove grab before calling hide so workspace switcher doesn't fail
     screen->removeGrab(grab_index_, NULL);
     grab_index_ = 0;
-
-    screen->removeAction(&optionGetAltTabRight ());
-    screen->removeAction(&optionGetAltTabDetailStart ());
-    screen->removeAction(&optionGetAltTabDetailStop ());
-    screen->removeAction(&optionGetAltTabLeft ());
-
-    /* Removing the scroll actions */
-    CompAction scroll_up;
-    CompAction scroll_down;
-    scroll_up.setButton(CompAction::ButtonBinding(local::SCROLL_UP_BUTTON, action->key().modifiers()));
-    scroll_down.setButton(CompAction::ButtonBinding(local::SCROLL_DOWN_BUTTON, action->key().modifiers()));
-    screen->removeAction(&scroll_up);
-    screen->removeAction(&scroll_down);
-
-    bool accept_state = (state & CompAction::StateCancel) == 0;
-    switcher_controller_->Hide(accept_state);
   }
+
+  screen->removeAction(&optionGetAltTabRight ());
+  screen->removeAction(&optionGetAltTabDetailStart ());
+  screen->removeAction(&optionGetAltTabDetailStop ());
+  screen->removeAction(&optionGetAltTabLeft ());
+
+  /* Removing the scroll actions */
+  CompAction scroll_up;
+  CompAction scroll_down;
+  scroll_up.setButton(CompAction::ButtonBinding(local::SCROLL_UP_BUTTON, action->key().modifiers()));
+  scroll_down.setButton(CompAction::ButtonBinding(local::SCROLL_DOWN_BUTTON, action->key().modifiers()));
+  screen->removeAction(&scroll_up);
+  screen->removeAction(&scroll_down);
+
+  bool accept_state = (state & CompAction::StateCancel) == 0;
+  switcher_controller_->Hide(accept_state);
 
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
   return true;
