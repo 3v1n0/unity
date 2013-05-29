@@ -98,6 +98,7 @@ Package: unity-services
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
+         upstart,
 Description: Services for the Unity interface
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
  community, Unity is all about the combination of familiarity and the future. We
