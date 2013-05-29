@@ -178,6 +178,8 @@ END");
 
 const float edge_illumination_multiplier = 2.0f;
 const float glow_multiplier = 2.3f;
+
+const float fill_offset_ratio = 0.125f;
 } // anonymous namespace
 
 // The local namespace is purely for namespacing the file local variables below.
@@ -1058,7 +1060,7 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   int fill_width = image_size - (icon_size - image_size);
   int fill_height = textures_->progress_bar_fill->GetHeight();
 
-  int fill_offset = (progress_width - fill_width) / 2;
+  int fill_offset = (int)((float)image_size * fill_offset_ratio);;
 
   // We need to perform a barn doors effect to acheive the slide in and out
 
