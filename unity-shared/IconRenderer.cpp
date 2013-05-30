@@ -178,7 +178,6 @@ END");
 
 const float edge_illumination_multiplier = 2.0f;
 const float glow_multiplier = 2.3f;
-
 const float fill_offset_ratio = 0.125f;
 } // anonymous namespace
 
@@ -1060,7 +1059,7 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   int fill_width = image_size - (icon_size - image_size);
   int fill_height = textures_->progress_bar_fill->GetHeight();
 
-  int fill_offset = (int)((float)image_size * fill_offset_ratio);;
+  int fill_offset = static_cast<float>(image_size) * fill_offset_ratio;
 
   // We need to perform a barn doors effect to acheive the slide in and out
 
@@ -1070,12 +1069,12 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   if (bias < 0.0f)
   {
     // pulls the right edge in
-    right_edge -= (int)(-bias * (float) progress_width);
+    right_edge -= -bias * static_cast<float>(progress_width);
   }
   else if (bias > 0.0f)
   {
     // pulls the left edge in
-    left_edge += (int)(bias * progress_width);
+    left_edge += bias * progress_width;
   }
 
   int fill_y = (height - fill_height) / 2;
