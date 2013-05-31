@@ -1145,57 +1145,9 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
     RenderArg arg;
     AbstractLauncherIcon::Ptr const& icon = *it;
 
-    // See if any icons are urgent in order to handle incremental wiggle notification if the Launcher
-    // is hidden.
     if (icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT))
     {
-      struct timespec urgent_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::URGENT);
-      DeltaTime urgent_delta = unity::TimeUtil::TimeDelta(&urgent_time, &_urgent_finished_time);
-
-      // If the Launcher is hidden, then add a timer to wiggle the urgent icons at 
-      // certain intervals (1m, 2m, 4m, 8m, 16m, & 32m).
-      if (_hidden && !_urgent_timer_running && urgent_delta > 0)
-      {
-        _urgent_timer_running = true;
-        _urgent_ack_needed = true;
-        sources_.AddTimeoutSeconds(BASE_URGENT_WIGGLE_PERIOD, sigc::mem_fun(this, &Launcher::OnUrgentTimeout), URGENT_TIMEOUT);
-      }
-      // If the Launcher is hidden, the timer is running, an urgent icon is newer than the last time
-      // icons were wiggled, and the timer did not just start, then reset the timer since a new
-      // urgent icon just showed up.
-      else if (_hidden && _urgent_timer_running && urgent_delta > 0 && _urgent_wiggle_time != 0)
-      {
-        _urgent_wiggle_time = 0;
-        sources_.AddTimeoutSeconds(BASE_URGENT_WIGGLE_PERIOD, sigc::mem_fun(this, &Launcher::OnUrgentTimeout), URGENT_TIMEOUT);
-      }
-      // If the Launcher is no longer hidden, then after the Launcher is fully reveled, wiggle the 
-      // urgent icons and then stop the timer (if it's running).
-      else if (!_hidden && options()->hide_mode == LAUNCHER_HIDE_AUTOHIDE && _urgent_ack_needed)
-      {
-        if (_last_reveal_progress > 0)
-        {
-          _urgent_acked = false;
-        }
-        else
-        {
-          if (!_urgent_acked && IconUrgentProgress(icon, current) == 1.0f)
-          {
-            icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, false);
-            icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
-            clock_gettime(CLOCK_MONOTONIC, &_urgent_finished_time);
-          }
-          else if (IconUrgentProgress(icon, current) < 1.0f)
-          {
-            if (_urgent_timer_running)
-            {
-              sources_.Remove(URGENT_TIMEOUT);
-              _urgent_timer_running = false;
-            }
-            _urgent_acked = true;
-            _urgent_ack_needed = false;
-          } 
-        }
-      }
+      HandleUrgentIcon(icon, current);
     }
     FillRenderArg(icon, arg, center, parent_abs_geo, folding_threshold, folded_size, folded_spacing,
                   autohide_offset, folded_z_distance, animation_neg_rads, current);
@@ -1630,7 +1582,68 @@ void Launcher::EnsureScrollTimer()
   }
 }
 
-bool Launcher::OnUrgentTimeout ()
+void Launcher::SetUrgentTimer(int urgent_wiggle_period)
+{
+  sources_.AddTimeoutSeconds(urgent_wiggle_period, sigc::mem_fun(this, &Launcher::OnUrgentTimeout), URGENT_TIMEOUT);
+}
+
+void Launcher::WiggleUrgentIcon(AbstractLauncherIcon::Ptr const& icon)
+{
+  icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, false);
+  icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
+}
+
+void Launcher::HandleUrgentIcon(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current)
+{
+  struct timespec urgent_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::URGENT);
+  DeltaTime urgent_delta = unity::TimeUtil::TimeDelta(&urgent_time, &_urgent_finished_time);
+
+  // If the Launcher is hidden, then add a timer to wiggle the urgent icons at 
+  // certain intervals (1m, 2m, 4m, 8m, 16m, & 32m).
+  if (_hidden && !_urgent_timer_running && urgent_delta > 0)
+  {
+    _urgent_timer_running = true;
+    _urgent_ack_needed = true;
+    SetUrgentTimer(BASE_URGENT_WIGGLE_PERIOD);
+  }
+  // If the Launcher is hidden, the timer is running, an urgent icon is newer than the last time
+  // icons were wiggled, and the timer did not just start, then reset the timer since a new
+  // urgent icon just showed up.
+  else if (_hidden && _urgent_timer_running && urgent_delta > 0 && _urgent_wiggle_time != 0)
+  {
+    _urgent_wiggle_time = 0;
+    SetUrgentTimer(BASE_URGENT_WIGGLE_PERIOD);
+  }
+  // If the Launcher is no longer hidden, then after the Launcher is fully revealed, wiggle the 
+  // urgent icon and then stop the timer (if it's running).
+  else if (!_hidden && options()->hide_mode == LAUNCHER_HIDE_AUTOHIDE && _urgent_ack_needed)
+  {
+    if (_last_reveal_progress > 0)
+    {
+      _urgent_acked = false;
+    }
+    else
+    {
+      if (!_urgent_acked && IconUrgentProgress(icon, current) == 1.0f)
+      {
+        WiggleUrgentIcon(icon);
+        clock_gettime(CLOCK_MONOTONIC, &_urgent_finished_time);
+      }
+      else if (IconUrgentProgress(icon, current) < 1.0f)
+      {
+        if (_urgent_timer_running)
+        {
+          sources_.Remove(URGENT_TIMEOUT);
+          _urgent_timer_running = false;
+        }
+        _urgent_acked = true;
+        _urgent_ack_needed = false;
+      }
+    }
+  }
+}
+
+bool Launcher::OnUrgentTimeout()
 {
   bool foundUrgent = false,
        continue_urgent = true;
@@ -1644,8 +1657,7 @@ bool Launcher::OnUrgentTimeout ()
         options()->urgent_animation() == URGENT_ANIMATION_WIGGLE &&
         _hidden)
     {
-      icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, false);
-      icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
+      WiggleUrgentIcon(icon);
 
       foundUrgent = true;
       clock_gettime(CLOCK_MONOTONIC, &_urgent_finished_time);
@@ -1672,7 +1684,7 @@ bool Launcher::OnUrgentTimeout ()
   }
   else
   {
-    sources_.AddTimeoutSeconds(_urgent_wiggle_time, sigc::mem_fun(this, &Launcher::OnUrgentTimeout), URGENT_TIMEOUT);
+    SetUrgentTimer(_urgent_wiggle_time);
   }
   return continue_urgent;
 }

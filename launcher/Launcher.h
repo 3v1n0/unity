@@ -223,6 +223,9 @@ private:
   bool StartIconDragTimeout(int x, int y);
   bool OnScrollTimeout();
 
+  void SetUrgentTimer(int urgent_wiggle_period);
+  void WiggleUrgentIcon(AbstractLauncherIcon::Ptr const& icon);
+  void HandleUrgentIcon(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current);
   bool OnUrgentTimeout();
 
   void SetMousePosition(int x, int y);
