@@ -1591,6 +1591,8 @@ void Launcher::WiggleUrgentIcon(AbstractLauncherIcon::Ptr const& icon)
 {
   icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, false);
   icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
+
+  clock_gettime(CLOCK_MONOTONIC, &_urgent_finished_time);
 }
 
 void Launcher::HandleUrgentIcon(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current)
@@ -1627,7 +1629,6 @@ void Launcher::HandleUrgentIcon(AbstractLauncherIcon::Ptr const& icon, struct ti
       if (!_urgent_acked && IconUrgentProgress(icon, current) == 1.0f)
       {
         WiggleUrgentIcon(icon);
-        clock_gettime(CLOCK_MONOTONIC, &_urgent_finished_time);
       }
       else if (IconUrgentProgress(icon, current) < 1.0f)
       {
@@ -1660,7 +1661,6 @@ bool Launcher::OnUrgentTimeout()
       WiggleUrgentIcon(icon);
 
       foundUrgent = true;
-      clock_gettime(CLOCK_MONOTONIC, &_urgent_finished_time);
     }
   }
   // Update the time for when the next wiggle will occur.
@@ -1686,6 +1686,7 @@ bool Launcher::OnUrgentTimeout()
   {
     SetUrgentTimer(_urgent_wiggle_time);
   }
+
   return continue_urgent;
 }
 
