@@ -1,8 +1,111 @@
+unity (7.0.0daily13.05.31ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  [ Nick Dedekind ]
+  * Keyboard focus lost if trying to navigate while search is ongoing
+    (LP: #1170709)
+  * Occasional loss of focus in the input text field (LP: #1174488)
+
+  [ Andrea Azzarone ]
+  * Search Plugins previews in the apps lens should not display any
+    ‘review stars’ (LP: #1170715)
+  * [alt-tab] Disable detail view for webapp icons. (LP: #1169340)
+  * 'There is no content...' message is missing if there no results when
+    opening some lenses (LP: #1170728)
+
+  [ Nick Dedekind ]
+  * Nautilus incorrectly highlighted as valid target DND target for lots
+    of results (LP: #1170721)
+
+  [ Brandon Schaefer ]
+  * Bump libnux to new version 
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Re-bumped libnux to 4.0.2
+
+  [ Ted Gould ]
+  * gtk_icon_info_free() is deprecated for g_object_unref().
+  * Upstart event for when the indicators are loaded by the panel
+    service.
+
+  [ Marco Trevisan (Treviño) ]
+  * UnityCore: add GtkWrapper to handle GtkIconInfo correctly for
+    different GTK versions Fix a memory leak in LauncherIcon. (LP:
+    #1180790)
+  * SwitcherController: use proper long long types for
+    WindowActiveNumber Otherwise an overflow can cause bad window
+    selection after long uptime.
+  * Unity: "s/unsigned long long/uint64_t/g".
+
+  [ Francis Ginther ]
+  * Handle StateNotFoundError when querying the label of a hud button.
+
+  [ Chris Townsend ]
+  * Fixes issue where minimizing a full screen window would not draw the
+    Launcher and Panel after minimization. (LP: #1064155)
+  * Fixes issue where source files for test-gestures would always be
+    compiled even if the original source files did not change. (LP:
+    #1039367)
+
+  [ Didier Roche ]
+  * add dep on autopilot-desktop.
+
+  [ Leo Arias ]
+  * Fixed the execute_action_by_id on the dash emulator. (LP: #1181677)
+
+  [ Christopher Lee ]
+  * Updating Unity autopilot tests to work with the new version of
+    autopilot (1.3).
+  * Update unity autopilot tests depends.
+  * Missed a package depends for unity-autopilot.
+  * Updating the dbus introspection to use the new xpathselect
+    1.3.libxpathselect-dev.
+
+  [ Thomi Richards ]
+  * Updating the dbus introspection to use the new xpathselect
+    1.3.libxpathselect-dev.
+  * Update the unity autopilot test suite to be compatible with the new
+    autopilot API for custom emulators.
+
+  [ Pawel Stolowski ]
+  * Add ModelIterator-inl.h to the list of installed headers (as it's
+    included by ModelIterator.h).
+  * Fixes for two autopilot tests.
+
+  [ Mathieu Trudel-Lapierre ]
+  * Increase timeouts for hud functional and search tests.
+
+  [ Andrea Azzarone ]
+  * Don't build CoverflowResultView.cpp.
+  * Fix crashing tests. (LP: #1182585)
+  * Remove AbstractSeparator.cpp (it does not make sense :).
+  * Allow alt-tabbing during a dnd operation. (LP: #111939)
+
+  [ Sam Spilsbury ]
+  * LauncherDragWindow: defer icon paint until DrawContent rather than
+    doing so immediately (LP: #1180174). (LP: #1180174)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Fix two HUD failures related to HUD slow action activation.
+  * Fix some autopilot test failures, some related to test_shortcut_hint
+    and some to test_scroll in launcher.
+  * Modify all the hud_query_check lambdas to be more smart and error-
+    checking. Same for the selected_hud_button method in the HUD
+    emulator. Also, get rid of the troublesome test_gedit_undo and
+    change it into test_gedit_save, which is easier to test and anyway
+    tests what we want. Besides that we also now try to handle the
+    StateNotFoundError exception in the HUD emulator, another cause of
+    some AP failures.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3352 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 31 May 2013 04:06:11 +0000
+
 unity (7.0.0daily13.05.08ubuntu.unity.next-0ubuntu1) raring; urgency=low
 
   * Automatic snapshot from revision 3317 (ubuntu-unity/next)
-
- -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 08 May 2013 04:57:49 +0000
+ 
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>   Wed, 08 May 2013 04:57:49 +0000
 
 unity (7.0.0daily13.05.01.1ubuntu.unity.next-0ubuntu1) raring; urgency=low
 
@@ -23,6 +126,57 @@ unity (7.0.0daily13.05.01.1ubuntu.unity.next-0ubuntu1) raring; urgency=low
   * Automatic snapshot from revision 3315 (ubuntu-unity/next)
 
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 01 May 2013 21:59:17 +0000
+
+unity (7.0.0daily13.04.23ubuntu.unity.experimental.certified-0ubuntu1) raring; urgency=low
+
+  [ Michal Hruby ]
+  * HORIZONTAL_TILE results aren't displaying "comment" (LP: #1158840)
+
+  [ Brandon Schaefer ]
+  * Command lens does not close when pressing Alt+F2 (LP: #1167466)
+
+  [ Nick Dedekind ]
+  * Filters are disappearing and impacting already displayed results
+    (LP: #1159814)
+
+  [ Marco Trevisan (Treviño) ]
+  * Adding Lens results is more expensive than needed (LP: #1168569)
+  * Top Bar, window managment - top bar shadow not falling on restored
+    windows that are partially off the top edge of the screen (LP:
+    #871758)
+  * Opening new-window from quicklist static action does not focus the
+    newly opened window (LP: #1164483)
+  * Unity makes unneeded copies of Nux DrawList (LP: #1167605)
+  * Unityshell uses much of his CPU time only to get tray XIDs from
+    PanelController (LP: #1167894)
+  * Unity wastes some memory by allocating multiple times the same
+    texture (LP: #1166532)
+  * Launcher pre-processes icons also when the icons have not been
+    changed since last draw cycle (LP: #1168556)
+  * Unity is creating multiple instances of DBusIndicators per each
+    monitor (LP: #1166550)
+
+  [ Andrea Azzarone ]
+  * Dash should only close when a icon is dragged outside of the
+    Dash/Launcher area (LP: #1170720)
+  * Launcher icons automatically placed in the launcher by USC (or apps
+    lens) fail to have running 'pips'. (LP: #1165097)
+  * dash preview animation is slow on high resolution screens (also
+    fullscreen mode) (LP: #1055126)
+
+  [ Michi Henning ]
+  * ResultIterator.h defines functions that return const values (LP:
+    #1163705)
+
+  [ Matthieu James ]
+  * [UIFe] BFB icon swirl should run clockwise not anti-clockwise (LP:
+    #1169238)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3121 (ubuntu-unity/experimental-
+    certified)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 23 Apr 2013 07:05:10 +0000
 
 unity (7.0.0daily13.04.18~13.04-0ubuntu1) raring; urgency=low
 
@@ -49,6 +203,17 @@ unity (7.0.0daily13.04.17~13.04-0ubuntu1) raring; urgency=low
   * Automatic snapshot from revision 3305
 
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 17 Apr 2013 04:07:04 +0000
+
+unity (7.0.0daily13.04.10ubuntu.unity.experimental.certified-0ubuntu1) raring; urgency=low
+
+  [ Didier Roche ]
+  * bump build-dep on libunity-dev
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3113 (ubuntu-unity/experimental-
+    certified)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 10 Apr 2013 07:16:02 +0000
 
 unity (7.0.0daily13.04.15-0ubuntu1) raring; urgency=low
 

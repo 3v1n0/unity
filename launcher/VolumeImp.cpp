@@ -154,7 +154,7 @@ public:
     }
   }
 
-  void MountAndOpenInFileManager(unsigned long long timestamp)
+  void MountAndOpenInFileManager(uint64_t timestamp)
   {
     open_timestamp_ = timestamp;
 
@@ -237,7 +237,7 @@ public:
 
   VolumeImp* parent_;
   bool opened_;
-  unsigned long long open_timestamp_;
+  uint64_t open_timestamp_;
   glib::Cancellable cancellable_;
   glib::Object<GVolume> volume_;
   FileManager::Ptr file_manager_;
@@ -305,7 +305,7 @@ bool VolumeImp::IsOpened() const
   return pimpl->IsOpened();
 }
 
-void VolumeImp::MountAndOpenInFileManager(unsigned long long timestamp)
+void VolumeImp::MountAndOpenInFileManager(uint64_t timestamp)
 {
   pimpl->MountAndOpenInFileManager(timestamp);
 }

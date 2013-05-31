@@ -334,7 +334,7 @@ private:
   bool scale_just_activated_;
   WindowMinimizeSpeedController minimize_speed_controller_;
 
-  long long big_tick_;
+  uint64_t big_tick_;
 
   debug::ScreenIntrospection screen_introspection_;
 

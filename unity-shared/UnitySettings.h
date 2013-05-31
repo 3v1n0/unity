@@ -47,6 +47,7 @@ public:
 
   nux::RWProperty<FormFactor> form_factor;
   nux::Property<bool> is_standalone;
+  nux::ROProperty<bool> double_click_activate;
 
 private:
   class Impl;

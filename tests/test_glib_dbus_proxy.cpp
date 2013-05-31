@@ -266,7 +266,7 @@ TEST_F(TestGDBusProxy, TestSignalAfterConnectionAndDisconnect)
 
 TEST_F(TestGDBusProxy, GetROProperty)
 {
-  auto ROPropertyValue = [this] { return glib::Variant(proxy.GetProperty("ReadOnlyProperty")).GetInt(); };
+  auto ROPropertyValue = [this] { return glib::Variant(proxy.GetProperty("ReadOnlyProperty")).GetInt32(); };
   EXPECT_EQ(ROPropertyValue(), 0);
 
   int value = g_random_int();
@@ -281,7 +281,7 @@ TEST_F(TestGDBusProxy, SetGetRWPropertyBeforeConnection)
   int value = g_random_int();
   proxy.SetProperty("ReadWriteProperty", g_variant_new_int32(value));
 
-  auto RWPropertyValue = [this] { return glib::Variant(proxy.GetProperty("ReadWriteProperty")).GetInt(); };
+  auto RWPropertyValue = [this] { return glib::Variant(proxy.GetProperty("ReadWriteProperty")).GetInt32(); };
   Utils::WaitUntilMSec([this, value, RWPropertyValue] { return RWPropertyValue() == value; });
   EXPECT_EQ(RWPropertyValue(), value);
 }
@@ -290,7 +290,7 @@ TEST_F(TestGDBusProxy, SetGetRWPropertyAfterConnection)
 {
   Utils::WaitUntilMSec([this] { return proxy.IsConnected(); });
 
-  auto RWPropertyValue = [this] { return glib::Variant(proxy.GetProperty("ReadWriteProperty")).GetInt(); };
+  auto RWPropertyValue = [this] { return glib::Variant(proxy.GetProperty("ReadWriteProperty")).GetInt32(); };
 
   int value = g_random_int();
   proxy.SetProperty("ReadWriteProperty", g_variant_new_int32(value));
@@ -309,7 +309,7 @@ TEST_F(TestGDBusProxy, SetGetAsyncRWPropertyBeforeConnection)
 
   Utils::WaitUntilMSec([this, value, &got_value] { return got_value == value; });
   ASSERT_EQ(got_value, value);
-  EXPECT_EQ(got_value, glib::Variant(proxy.GetProperty("ReadWriteProperty")).GetInt());
+  EXPECT_EQ(got_value, glib::Variant(proxy.GetProperty("ReadWriteProperty")).GetInt32());
 }
 
 TEST_F(TestGDBusProxy, SetGetAsyncRWPropertyAfterConnection)
@@ -324,7 +324,7 @@ TEST_F(TestGDBusProxy, SetGetAsyncRWPropertyAfterConnection)
 
   Utils::WaitUntilMSec([this, value, &got_value] { return got_value == value; });
   ASSERT_EQ(got_value, value);
-  EXPECT_EQ(got_value, glib::Variant(proxy.GetProperty("ReadWriteProperty")).GetInt());
+  EXPECT_EQ(got_value, glib::Variant(proxy.GetProperty("ReadWriteProperty")).GetInt32());
 }
 
 TEST_F(TestGDBusProxy, SetWOPropertyBeforeConnection)
@@ -334,7 +334,7 @@ TEST_F(TestGDBusProxy, SetWOPropertyBeforeConnection)
 
   int wo_value = 0;
   proxy.Call("GetWriteOnlyProperty", nullptr, [&wo_value] (GVariant* value) {
-    wo_value = glib::Variant(value).GetInt();
+    wo_value = glib::Variant(value).GetInt32();
   });
 
   Utils::WaitUntilMSec([this, value, &wo_value] { return wo_value == value; });
@@ -350,7 +350,7 @@ TEST_F(TestGDBusProxy, SetWOPropertyAfterConnection)
 
   int wo_value = 0;
   proxy.Call("GetWriteOnlyProperty", nullptr, [&wo_value] (GVariant* value) {
-    wo_value = glib::Variant(value).GetInt();
+    wo_value = glib::Variant(value).GetInt32();
   });
 
   Utils::WaitUntilMSec([this, value, &wo_value] { return wo_value == value; });

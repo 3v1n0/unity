@@ -43,9 +43,6 @@ public:
 
   Tracks::Ptr GetTracksModel() const;
 
-  void PlayUri(std::string const& uri) const;
-  void PauseUri(std::string const& uri) const;
-
 private:
   class Impl;
   std::unique_ptr<Impl> pimpl;

@@ -85,7 +85,7 @@ AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()
 
   /* Empty Trash */
   glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
-  dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Empty Trash…"));
+  dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Empty Trash..."));
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, !empty_);
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
   empty_activated_signal_.Connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
@@ -155,7 +155,7 @@ void TrashLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
   {
     glib::Object<GFile> file(g_file_new_for_uri(uri.c_str()));
 
-    /* Log ZG event when moving file to trash; this is requred by File Lens.
+    /* Log ZG event when moving file to trash; this is requred by File Scope.
        See https://bugs.launchpad.net/unity/+bug/870150  */
     if (g_file_trash(file, NULL, NULL))
     {

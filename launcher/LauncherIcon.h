@@ -124,7 +124,7 @@ public:
     return false;
   }
 
-  virtual unsigned long long SwitcherPriority()
+  virtual uint64_t SwitcherPriority()
   {
     return 0;
   }

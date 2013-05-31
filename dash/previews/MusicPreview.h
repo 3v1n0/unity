@@ -54,6 +54,8 @@ protected:
 
   virtual void SetupViews();
 
+  virtual void OnNavigateOut();
+
   void OnPlayTrack(std::string const& uri);
   void OnPauseTrack(std::string const& uri);
   bool HasUbuntuOneCredentials();

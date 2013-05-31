@@ -38,7 +38,9 @@ namespace dash
 enum ModelType
 {
   REMOTE,
-  LOCAL
+  REMOTE_SHARED,
+  LOCAL,
+  UNATTACHED
 };
 
 /* This template class encapsulates the basics of talking to a DeeSharedModel,
@@ -52,24 +54,29 @@ class Model : public sigc::trackable, boost::noncopyable
 public:
   typedef std::shared_ptr<Model> Ptr;
 
-  Model();
-  Model (ModelType model_type);
+  Model (ModelType model_type = ModelType::REMOTE_SHARED);
   virtual ~Model();
 
-  const RowAdaptor RowAtIndex(std::size_t index);
-  DeeModelTag*     GetTag();
+  const RowAdaptor RowAtIndex(std::size_t index) const;
+  DeeModelTag*     GetTag() const;
 
   nux::Property<std::string> swarm_name;
+
   nux::ROProperty<std::size_t> count;
-  nux::ROProperty<unsigned long long> seqnum;
+  nux::ROProperty<uint64_t> seqnum;
   nux::ROProperty<glib::Object<DeeModel>> model;
 
   sigc::signal<void, RowAdaptor&> row_added;
   sigc::signal<void, RowAdaptor&> row_changed;
   sigc::signal<void, RowAdaptor&> row_removed;
 
-  sigc::signal<void, unsigned long long, unsigned long long> begin_transaction;
-  sigc::signal<void, unsigned long long, unsigned long long> end_transaction;
+  sigc::signal<void, uint64_t, uint64_t> begin_transaction;
+  sigc::signal<void, uint64_t, uint64_t> end_transaction;
+
+  typedef std::function<DeeModelTag*(glib::Object<DeeModel> const& model)> GetDeeTagFunc;
+
+  void SetModel(glib::Object<DeeModel> const& model);
+  void SetModel(glib::Object<DeeModel> const& model, GetDeeTagFunc const& func);
 
 private:
   void Init();
@@ -79,9 +86,9 @@ private:
   void OnTransactionBegin(DeeModel* model, guint64 begin_seq, guint64 end_seq);
   void OnTransactionEnd(DeeModel* model, guint64 begin_seq, guint64 end_seq);
   void OnSwarmNameChanged(std::string const& swarm_name);
-  std::size_t get_count();
-  unsigned long long get_seqnum();
-  glib::Object<DeeModel> get_model();
+  std::size_t get_count() const;
+  uint64_t get_seqnum() const;
+  glib::Object<DeeModel> get_model() const;
 
 private:
   glib::Object<DeeModel> model_;
@@ -94,8 +101,8 @@ private:
   RowAdaptor cached_adaptor3_;
 };
 
-}
-}
+} // namespace dash
+} // namespace unity
 
 #include "Model-inl.h"
 

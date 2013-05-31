@@ -17,7 +17,6 @@ include_directories (.. ../services ../UnityCore ${UNITY_SRC} ${CMAKE_BINARY_DIR
 # Headers & Sources
 #
 set (UNITY_SHARED_SOURCES
-     AbstractSeparator.cpp
      ApplicationManager.cpp
      BGHash.cpp
      CoverArt.cpp
@@ -65,7 +64,6 @@ set (UNITY_SHARED_SOURCES
      VScrollBarOverlayWindow.cpp
      WindowButtons.cpp
      WindowManager.cpp
-     XPathQueryPart.cpp
 )
 
 if(ENABLE_X_SUPPORT)

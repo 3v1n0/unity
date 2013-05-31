@@ -349,6 +349,7 @@ void StaticCairoText::SetText(std::string const& text, bool escape_text)
     pimpl->text_ = tmp_text;
     pimpl->need_new_extent_cache_ = true;
     pimpl->UpdateTexture();
+    QueueDraw();
     sigTextChanged.emit(this);
   }
 }
