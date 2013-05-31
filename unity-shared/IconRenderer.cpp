@@ -1074,7 +1074,7 @@ void IconRenderer::RenderProgressToTexture(nux::GraphicsEngine& GfxContext,
   else if (bias > 0.0f)
   {
     // pulls the left edge in
-    left_edge += bias * progress_width;
+    left_edge += bias * static_cast<float>(progress_width);
   }
 
   int fill_y = (height - fill_height) / 2;
