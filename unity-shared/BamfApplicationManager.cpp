@@ -612,7 +612,7 @@ ApplicationList Manager::GetRunningApplications()
       continue;
     }
 
-    glib::Object<BamfApplication> bamf_app(static_cast<BamfApplication*>(l->data));
+    glib::Object<BamfApplication> bamf_app(static_cast<BamfApplication*>(l->data), glib::AddRef());
     ApplicationPtr app(new Application(*this, bamf_app));
     result.push_back(app);
     LOG_DEBUG(logger) << "Running app: " << app->title();
