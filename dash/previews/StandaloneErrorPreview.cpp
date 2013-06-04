@@ -172,7 +172,6 @@ void TestRunner::Init ()
           UNITY_PROTOCOL_PAYMENT_PREVIEW(proto_obj.RawPtr()),
           "Digital CD");
 
-  unity_protocol_preview_set_image(proto_obj.RawPtr(), g_icon_new_for_string("/home/mandel/Pictures/Work/the-wombats-this-modern-glitch.jpg", NULL));
   unity_protocol_payment_preview_set_preview_type(UNITY_PROTOCOL_PAYMENT_PREVIEW(proto_obj.RawPtr()),
     UNITY_PROTOCOL_PREVIEW_PAYMENT_TYPE_ERROR);
 
