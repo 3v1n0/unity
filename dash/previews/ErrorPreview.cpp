@@ -217,14 +217,18 @@ nux::Layout* ErrorPreview::GetFooter()
   buttons_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
 
   buttons_data_layout->AddSpace(20, 1);
-  if(buttons_map_[ErrorPreview::CANCEL_ACTION].GetPointer())
+  if(buttons_map_[ErrorPreview::CANCEL_ACTION].GetPointer()){
     buttons_data_layout->AddView(buttons_map_[ErrorPreview::CANCEL_ACTION].GetPointer(),
            1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
             nux::NUX_LAYOUT_END);
-  if(buttons_map_[ErrorPreview::GO_TO_U1_ACTION].GetPointer())
+    buttons_data_layout->AddChild(buttons_map_[ErrorPreview::CANCEL_ACTION].GetPointer());
+  }
+  if(buttons_map_[ErrorPreview::GO_TO_U1_ACTION].GetPointer()){
     buttons_data_layout->AddView(buttons_map_[ErrorPreview::GO_TO_U1_ACTION].GetPointer(),
             1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
             nux::NUX_LAYOUT_END);
+    buttons_data_layout->AddChild(buttons_map_[ErrorPreview::GO_TO_U1_ACTION].GetPointer());
+  }
   return buttons_data_layout;
 }
 
