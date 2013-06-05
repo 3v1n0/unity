@@ -408,12 +408,12 @@ class Preview(UnityIntrospectionObject):
                 return action
         return None
 
-    def execute_action_by_id(action_id, action):
+    def execute_action_by_id(self, action_id):
         """Executes an action given by the id."""
         action = self.get_action_by_id(action_id)
         if action:
-            tx = action.x + (searchbar.width / 2)
-            ty = action.y + (searchbar.height / 2)
+            tx = action.x + (action.width / 2)
+            ty = action.y + (action.height / 2)
             m = Mouse.create()
             m.move(tx, ty)
             m.click()
