@@ -21,6 +21,7 @@
  *
  */
 
+#include "TabIterator.h"
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
@@ -213,7 +214,7 @@ nux::Layout* ErrorPreview::GetFooter()
   nux::HLayout* actions_buffer_h = new nux::HLayout();
   actions_buffer_h->AddSpace(0, 1);
 
-  nux::HLayout* buttons_data_layout = new nux::HLayout();
+  nux::HLayout* buttons_data_layout = new TabIteratorHLayout(tab_iterator_);
   buttons_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
 
   buttons_data_layout->AddSpace(20, 1);
@@ -221,13 +222,13 @@ nux::Layout* ErrorPreview::GetFooter()
     buttons_data_layout->AddView(buttons_map_[ErrorPreview::CANCEL_ACTION].GetPointer(),
            1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
             nux::NUX_LAYOUT_END);
-    buttons_data_layout->AddChild(buttons_map_[ErrorPreview::CANCEL_ACTION].GetPointer());
+    AddChild((ActionButton*)buttons_map_[ErrorPreview::CANCEL_ACTION].GetPointer());
   }
   if(buttons_map_[ErrorPreview::GO_TO_U1_ACTION].GetPointer()){
     buttons_data_layout->AddView(buttons_map_[ErrorPreview::GO_TO_U1_ACTION].GetPointer(),
             1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
             nux::NUX_LAYOUT_END);
-    buttons_data_layout->AddChild(buttons_map_[ErrorPreview::GO_TO_U1_ACTION].GetPointer());
+    AddChild((ActionButton*)buttons_map_[ErrorPreview::GO_TO_U1_ACTION].GetPointer());
   }
   return buttons_data_layout;
 }
@@ -245,9 +246,6 @@ void ErrorPreview::PreLayoutManagement()
   if(header_layout_) { header_layout_->SetMaximumWidth(width); }
   if(intro_) { intro_->SetMaximumWidth(width - 110); }
   if(footer_layout_) { footer_layout_->SetMaximumWidth(width); }
-
-  SetFirstInTabOrder(buttons_map_[ErrorPreview::GO_TO_U1_ACTION].GetPointer());
-  SetLastInTabOrder(buttons_map_[ErrorPreview::CANCEL_ACTION].GetPointer());
 
   Preview::PreLayoutManagement();
 }
