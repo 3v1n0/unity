@@ -194,6 +194,12 @@ if (BOOT_LOGGER)
 endif (BOOT_LOGGER)
 
 SET (MAINTAINER_CXXFLAGS "-Werror -Wall -Wcast-align -Wempty-body -Wformat-security -Winit-self -Warray-bounds")
+
+option (DISABLE_ERROR_ON_LOCAL_TYPEDEFS_WARNINGS "Disable errors when local typedefs are unused" ON)
+if (DISABLE_ERROR_ON_LOCAL_TYPEDEFS_WARNINGS)
+  SET (MAINTAINER_CXXFLAGS "${MAINTAINER_CXXFLAGS} -Wno-error=unused-local-typedefs")
+endif (DISABLE_ERROR_ON_LOCAL_TYPEDEFS_WARNINGS)
+
 option (DISABLE_MAINTAINER_CXXFLAGS "Disable maintainer CXXFlags" OFF)
 if (DISABLE_MAINTAINER_CXXFLAGS)
   SET (MAINTAINER_CXXFLAGS "")
