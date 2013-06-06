@@ -154,6 +154,8 @@ nux::Layout* MusicPaymentPreview::GetTitle()
   title_->SetFont(style.payment_title_font());
   title_->SetLines(-1);
   title_->SetFont(style.title_font());
+  title_->SetMaximumWidth(480);
+  title_->SetTextEllipsize(StaticCairoText::EllipsizeState::NUX_ELLIPSIZE_END);
   title_data_layout->AddView(title_.GetPointer(), 1);
 
   subtitle_ = new StaticCairoText(
@@ -172,6 +174,7 @@ nux::Layout* MusicPaymentPreview::GetPrice()
   nux::VLayout *prize_data_layout = new nux::VLayout();
   prize_data_layout->SetMaximumHeight(76);
   prize_data_layout->SetSpaceBetweenChildren(5);
+  prize_data_layout->SetPadding(0, 10, 0, 0);
 
   purchase_prize_ = new StaticCairoText(
           payment_preview_model_->purchase_prize.Get(), true,
@@ -259,7 +262,7 @@ nux::Layout* MusicPaymentPreview::GetFormLabels()
   labels_layout->AddView(payment_label_.GetPointer(), 0, nux::MINOR_POSITION_END);
 
   password_label_ = new StaticCairoText(
-          _("Ubuntu One Password:"), true,
+          _("Ubuntu One password:"), true,
           NUX_TRACKER_LOCATION);
   password_label_->SetLines(-1);
   password_label_->SetFont(style.payment_form_labels_font());

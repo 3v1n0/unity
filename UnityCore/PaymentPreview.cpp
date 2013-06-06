@@ -101,6 +101,8 @@ void PaymentPreview::Impl::SetupGetters()
             sigc::mem_fun(this, &PaymentPreview::Impl::get_payment_method));
   owner_->purchase_prize.SetGetterFunction(
             sigc::mem_fun(this, &PaymentPreview::Impl::get_purchase_prize));
+  owner_->purchase_type.SetGetterFunction(
+            sigc::mem_fun(this, &PaymentPreview::Impl::get_purchase_type));
   owner_->preview_type.SetGetterFunction(
             sigc::mem_fun(this, &PaymentPreview::Impl::get_preview_type));
 }

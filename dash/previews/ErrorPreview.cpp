@@ -21,6 +21,7 @@
  *
  */
 
+#include "TabIterator.h"
 #include "unity-shared/IntrospectableWrappers.h"
 #include "unity-shared/PreviewStyle.h"
 #include "unity-shared/CoverArt.h"
@@ -50,6 +51,9 @@ namespace
 nux::logging::Logger logger("unity.dash.previews.ErrorPreview");
 
 }
+
+const std::string ErrorPreview::CANCEL_ACTION = "cancel";
+const std::string ErrorPreview::GO_TO_U1_ACTION = "open_u1_link";
 
 class DetailsScrollView : public nux::ScrollView
 {
@@ -89,6 +93,7 @@ std::string ErrorPreview::GetName() const
 
 void ErrorPreview::OnActionActivated(ActionButton* button, std::string const& id)
 {
+  Preview::OnActionActivated(button, id);
 }
 
 void ErrorPreview::OnActionLinkActivated(ActionLink *link, std::string const& id)
@@ -103,17 +108,9 @@ void ErrorPreview::LoadActions()
   // this is not efficient but is the only way we have atm
   for (dash::Preview::ActionPtr action : preview_model_->GetActions())
   {
-      const char *action_id = action->id.c_str();
-      if(strcmp(OPEN_U1_LINK_ACTION, action_id) == 0)
-      {
-        nux::ObjectPtr<ActionLink> link = this->CreateLink(action);
-        link->activate.connect(sigc::mem_fun(this,
-                    &ErrorPreview::OnActionLinkActivated));
-
-        std::pair<std::string, nux::ObjectPtr<nux::AbstractButton>> data (action->id, link);
-        sorted_buttons_.insert(data);
-      }
-      LOG_DEBUG(logger) << "added button for action with id '" << action->id << "'";
+    nux::ObjectPtr<ActionButton> button = this->CreateButton(action);
+    button->activate.connect(sigc::mem_fun(this, &ErrorPreview::OnActionActivated));
+    buttons_map_.insert(std::make_pair(action->id, button));
   }
 }
 
@@ -128,16 +125,18 @@ nux::Layout* ErrorPreview::GetTitle()
           preview_model_->title.Get(), true,
           NUX_TRACKER_LOCATION);
 
-  title_->SetFont(style.payment_title_font().c_str());
+  title_->SetFont(style.payment_title_font());
   title_->SetLines(-1);
-  title_->SetFont(style.title_font().c_str());
+  title_->SetFont(style.title_font());
+  title_->SetMaximumWidth(480);
+  title_->SetTextEllipsize(StaticCairoText::EllipsizeState::NUX_ELLIPSIZE_END);
   title_data_layout->AddView(title_.GetPointer(), 1);
 
   subtitle_ = new StaticCairoText(
           preview_model_->subtitle.Get(), true,
           NUX_TRACKER_LOCATION);
   subtitle_->SetLines(-1);
-  subtitle_->SetFont(style.payment_subtitle_font().c_str());
+  subtitle_->SetFont(style.payment_subtitle_font());
   title_data_layout->AddView(subtitle_.GetPointer(), 1);
   title_data_layout->AddSpace(1, 1);
   return title_data_layout;
@@ -149,12 +148,13 @@ nux::Layout* ErrorPreview::GetPrice()
   nux::VLayout *prize_data_layout = new nux::VLayout();
   prize_data_layout->SetMaximumHeight(76);
   prize_data_layout->SetSpaceBetweenChildren(5);
+  prize_data_layout->SetPadding(0, 10, 0, 0);
 
   purchase_prize_ = new StaticCairoText(
           error_preview_model_->purchase_prize.Get(), true,
           NUX_TRACKER_LOCATION);
   purchase_prize_->SetLines(-1);
-  purchase_prize_->SetFont(style.payment_prize_title_font().c_str());
+  purchase_prize_->SetFont(style.payment_prize_title_font());
   prize_data_layout->AddView(purchase_prize_.GetPointer(), 1,
           nux::MINOR_POSITION_END);
 
@@ -162,7 +162,7 @@ nux::Layout* ErrorPreview::GetPrice()
           _("Ubuntu One best offer"),
           true, NUX_TRACKER_LOCATION);
   purchase_hint_->SetLines(-1);
-  purchase_hint_->SetFont(style.payment_prize_subtitle_font().c_str());
+  purchase_hint_->SetFont(style.payment_prize_subtitle_font());
   prize_data_layout->AddView(purchase_hint_.GetPointer(), 1,
           nux::MINOR_POSITION_END);
 
@@ -170,7 +170,7 @@ nux::Layout* ErrorPreview::GetPrice()
           error_preview_model_->purchase_type.Get(), true,
           NUX_TRACKER_LOCATION);
   purchase_type_->SetLines(-1);
-  purchase_type_->SetFont(style.payment_prize_subtitle_font().c_str());
+  purchase_type_->SetFont(style.payment_prize_subtitle_font());
   prize_data_layout->AddView(purchase_type_.GetPointer(), 1,
           nux::MINOR_POSITION_END);
   return prize_data_layout;
@@ -179,31 +179,61 @@ nux::Layout* ErrorPreview::GetPrice()
 nux::Layout* ErrorPreview::GetBody()
 {
   previews::Style& style = dash::previews::Style::Instance();
-  nux::HLayout *body_layout = new  nux::HLayout();
+  nux::HLayout *body_layout = new nux::HLayout();
+  nux::HLayout *intro_layout = new nux::HLayout();
+  nux::VLayout *icon_layout = new nux::VLayout();
 
-  lock_texture_ = new IconTexture(style.GetLockIcon(), style.GetPaymentLockWidth(),
-          style.GetPaymentLockHeight());
+  icon_layout->SetPadding(78, 10, 90, 43);
+  intro_layout->SetPadding(75, 20, 0, 0);
+  intro_layout->SetSpaceBetweenChildren(5);
 
   intro_ = new StaticCairoText(
               error_preview_model_->header.Get(), true,
           NUX_TRACKER_LOCATION);
-  intro_->SetMaximumWidth(style.GetPaymentHeaderWidth());
   intro_->SetFont(style.payment_intro_font().c_str());
+  intro_->SetLines(-3);
   intro_->SetLineSpacing(10);
-  intro_->SetLines(-style.GetDescriptionLineCount());
-  intro_->SetMinimumHeight(50);
-  body_layout->AddView(sorted_buttons_[OPEN_U1_LINK_ACTION].GetPointer(),
-          0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
-          nux::NUX_LAYOUT_END);
-  body_layout->AddView(lock_texture_, 0, nux::MINOR_POSITION_CENTER,
-          nux::MINOR_SIZE_FULL, 100.0f, nux::NUX_LAYOUT_BEGIN);
-  body_layout->AddView(intro_.GetPointer(), 1);
+  intro_->SetTextEllipsize(StaticCairoText::EllipsizeState::NUX_ELLIPSIZE_END);
+
+  intro_layout->AddView(intro_.GetPointer());//, 0, nux::MINOR_POSITION_CENTER);
+
+  warning_texture_ = new IconTexture(style.GetWarningIcon());
+  icon_layout->AddView(warning_texture_.GetPointer(),
+    0, nux::MINOR_POSITION_END);
+
+  body_layout->AddLayout(icon_layout, 0);
+  body_layout->AddLayout(intro_layout, 0);
+  body_layout->AddSpace(1, 1);
+
   return body_layout;
 }
 
 nux::Layout* ErrorPreview::GetFooter()
 {
-  nux::HLayout* buttons_data_layout = new nux::HLayout();
+  previews::Style& style = dash::previews::Style::Instance();
+  nux::HLayout* actions_buffer_h = new nux::HLayout();
+  actions_buffer_h->AddSpace(0, 1);
+
+  nux::HLayout* buttons_data_layout = new TabIteratorHLayout(tab_iterator_);
+  buttons_data_layout->SetSpaceBetweenChildren(style.GetSpaceBetweenActions());
+
+  buttons_data_layout->AddSpace(20, 1);
+  if(buttons_map_[ErrorPreview::CANCEL_ACTION].GetPointer()){
+    ActionButton* button = (ActionButton*)buttons_map_[ErrorPreview::CANCEL_ACTION].GetPointer();
+    buttons_data_layout->AddView(buttons_map_[ErrorPreview::CANCEL_ACTION].GetPointer(),
+           1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
+            nux::NUX_LAYOUT_END);
+    AddChild(button);
+    tab_iterator_->Append(button);
+  }
+  if(buttons_map_[ErrorPreview::GO_TO_U1_ACTION].GetPointer()){
+    ActionButton* button = (ActionButton*)buttons_map_[ErrorPreview::GO_TO_U1_ACTION].GetPointer();
+    buttons_data_layout->AddView(buttons_map_[ErrorPreview::GO_TO_U1_ACTION].GetPointer(),
+            1, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL, 100.0f,
+            nux::NUX_LAYOUT_END);
+    AddChild(button);
+    tab_iterator_->Prepend(button);
+  }
   return buttons_data_layout;
 }
 
@@ -218,8 +248,7 @@ void ErrorPreview::PreLayoutManagement()
 
   if(full_data_layout_) { full_data_layout_->SetMaximumWidth(width); }
   if(header_layout_) { header_layout_->SetMaximumWidth(width); }
-  if(intro_) { intro_->SetMaximumWidth(width); }
-  if(form_layout_) { form_layout_->SetMaximumWidth(width); }
+  if(intro_) { intro_->SetMaximumWidth(width - 110); }
   if(footer_layout_) { footer_layout_->SetMaximumWidth(width); }
 
   Preview::PreLayoutManagement();
