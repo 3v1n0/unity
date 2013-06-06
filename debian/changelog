@@ -1,3 +1,18 @@
+unity (7.0.0daily13.06.03ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  [ Chris Townsend ]
+  * Fixes the issue where the filling in of the progress bar over
+    Launcher icons does not scale when using smaller or larger icon
+    sizes than the default size of 48. (LP: #968680)
+
+  [ Andrea Azzarone ]
+  * Reference BamfApplication in GetRunningApplications. (LP: #1181717)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3355 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 03 Jun 2013 04:04:11 +0000
+
 unity (7.0.0daily13.05.31ubuntu.unity.next-0ubuntu1) raring; urgency=low
 
   [ Nick Dedekind ]

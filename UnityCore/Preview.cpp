@@ -58,6 +58,10 @@ Preview::Ptr Preview::PreviewForProtocolObject(glib::Object<GObject> const& prot
   {
     return std::make_shared<PaymentPreview>(proto_obj);
   }
+  else if (renderer_name == "preview-payment")
+  {
+    return std::make_shared<PaymentPreview>(proto_obj);
+  }
   else if (renderer_name == "preview-application")
   {
     return std::make_shared<ApplicationPreview>(proto_obj);

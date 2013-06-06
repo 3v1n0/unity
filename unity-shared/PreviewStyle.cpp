@@ -316,7 +316,7 @@ std::string Style::payment_prize_subtitle_font() const
 
 std::string Style::payment_intro_font() const
 {
-  return "Ubuntu 11.5";
+  return "Ubuntu 11.7";
 }
 
 std::string Style::payment_form_labels_font() const
@@ -378,6 +378,7 @@ int Style::GetPaymentFormSpace() const
 {
   return 5;
 }
+
 std::string Style::u1_warning_font() const
 {
   return "Ubuntu Bold 11.5";
