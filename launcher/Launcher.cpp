@@ -151,6 +151,7 @@ Launcher::Launcher(MockableBaseWindow* parent,
   , _enter_y(0)
   , _last_button_press(0)
   , _urgent_wiggle_time(0)
+  , _urgent_acked(false)
   , _urgent_timer_running(false)
   , _urgent_ack_needed(false)
   , _drag_out_delta_x(0.0f)
@@ -1145,7 +1146,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
     RenderArg arg;
     AbstractLauncherIcon::Ptr const& icon = *it;
 
-    if (icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT))
+    if (icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT) && options()->hide_mode == LAUNCHER_HIDE_AUTOHIDE)
     {
       HandleUrgentIcon(icon, current);
     }
@@ -1618,7 +1619,7 @@ void Launcher::HandleUrgentIcon(AbstractLauncherIcon::Ptr const& icon, struct ti
   }
   // If the Launcher is no longer hidden, then after the Launcher is fully revealed, wiggle the 
   // urgent icon and then stop the timer (if it's running).
-  else if (!_hidden && options()->hide_mode == LAUNCHER_HIDE_AUTOHIDE && _urgent_ack_needed)
+  else if (!_hidden && _urgent_ack_needed)
   {
     if (_last_reveal_progress > 0)
     {
@@ -1648,13 +1649,11 @@ bool Launcher::OnUrgentTimeout()
 {
   bool foundUrgent = false,
        continue_urgent = true;
-  LauncherModel::iterator it;
 
   // Look for any icons that are still urgent and wiggle them
-  for (it = _model->main_begin(); it != _model->main_end(); ++it)
+  for (auto icon : *_model)
   {
-    LauncherIcon::Ptr const& icon = *it;
-    if (icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT) && 
+    if (icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT) &&
         options()->urgent_animation() == URGENT_ANIMATION_WIGGLE &&
         _hidden)
     {
@@ -1680,7 +1679,6 @@ bool Launcher::OnUrgentTimeout()
   {
     continue_urgent = false;
     _urgent_timer_running = false;
-    sources_.Remove(URGENT_TIMEOUT);
   }
   else
   {
