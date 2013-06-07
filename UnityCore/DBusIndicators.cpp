@@ -94,10 +94,6 @@ DBusIndicators::Impl::Impl(std::string const& dbus_name, DBusIndicators* owner)
   gproxy_.disconnected.connect(sigc::mem_fun(this, &DBusIndicators::Impl::OnDisconnected));
 
   CheckLocalService();
-
-  if (gproxy_.IsConnected()) {
-    RequestSyncAll();
-  }
 }
 
 void DBusIndicators::Impl::CheckLocalService()
@@ -140,6 +136,17 @@ void DBusIndicators::Impl::OnDisconnected()
   cached_locations_.clear();
 
   CheckLocalService();
+  RequestSyncAll();
+
+  reconnect_timeout_.reset(new glib::TimeoutSeconds(1, [&] {
+    if (!gproxy_.IsConnected())
+    {
+      RequestSyncAll();
+      return true;
+    }
+
+    return false;
+  }));
 }
 
 void DBusIndicators::Impl::OnReSync(GVariant* parameters)
