@@ -108,6 +108,11 @@ public:
     using Launcher::IconStartingPulseValue;
     using Launcher::HandleBarrierEvent;
     using Launcher::SetHidden;
+    using Launcher::HandleUrgentIcon;
+    using Launcher::SetUrgentTimer;
+    using Launcher::_urgent_timer_running;
+    using Launcher::_urgent_finished_time;
+    using Launcher::_urgent_wiggle_time;
 
     void FakeProcessDndMove(int x, int y, std::list<std::string> uris)
     {
@@ -616,6 +621,45 @@ TEST_F(TestLauncher, HighlightingEmptyUrisOnDragMoveIsIgnored)
 
   EXPECT_CALL(*first, ShouldHighlightOnDrag(_)).Times(0);
   launcher_->ProcessDndMove(0,0,{});
+}
+
+TEST_F(TestLauncher, UrgentIconWiggleTimerStart)
+{
+  MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon);
+  timespec current;
+
+  launcher_->SetHidden(true);
+  icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
+
+  clock_gettime(CLOCK_MONOTONIC, &current);
+
+  EXPECT_FALSE(launcher_->_urgent_timer_running);
+
+  launcher_->HandleUrgentIcon(icon, current);
+
+  EXPECT_TRUE(launcher_->_urgent_timer_running);
+}
+
+TEST_F(TestLauncher, UrgentIconWiggleTimerTimeout)
+{
+  MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon);
+
+  model_->AddIcon(icon);
+  launcher_->SetHidden(true);
+  icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
+
+  EXPECT_EQ(launcher_->_urgent_wiggle_time, 0);
+  EXPECT_EQ(launcher_->_urgent_finished_time.tv_sec, 0);
+  EXPECT_EQ(launcher_->_urgent_finished_time.tv_nsec, 0);
+  
+  launcher_->SetUrgentTimer(1);
+
+  // Make the Urgent Timer expires before checking
+  Utils::WaitForTimeout(2);
+  
+  EXPECT_THAT(launcher_->_urgent_wiggle_time, Gt(0));
+  EXPECT_THAT(launcher_->_urgent_finished_time.tv_sec, Gt(0));
+  EXPECT_THAT(launcher_->_urgent_finished_time.tv_nsec, Gt(0));
 }
 
 }
