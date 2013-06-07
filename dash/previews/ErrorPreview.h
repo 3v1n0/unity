@@ -81,6 +81,11 @@ private:
   void LoadActions();
 
 protected:
+
+  // ids for the diff actions to have
+  static const std::string CANCEL_ACTION;
+  static const std::string GO_TO_U1_ACTION;
+
   void OnActionActivated(ActionButton* button, std::string const& id);
   void OnActionLinkActivated(ActionLink* link, std::string const& id);
 
@@ -95,17 +100,16 @@ protected:
   nux::ObjectPtr<StaticCairoText> purchase_hint_;
   nux::ObjectPtr<StaticCairoText> purchase_prize_;
   nux::ObjectPtr<StaticCairoText> purchase_type_;
-  nux::ObjectPtr<nux::HLayout> form_layout_;
 
   dash::PaymentPreview* error_preview_model_;
   // do we want to type?
   bool entry_selected_;
 
   // actions
-  std::map<std::string, nux::ObjectPtr<nux::AbstractButton>> sorted_buttons_;
+  std::map<std::string, nux::ObjectPtr<nux::AbstractButton>> buttons_map_;
 
-  // lock texture
-  IconTexture* lock_texture_;
+  // warning texture
+  nux::ObjectPtr<IconTexture> warning_texture_;
 
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
   LayerPtr details_bg_layer_;

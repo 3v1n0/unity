@@ -1356,11 +1356,14 @@ void DashView::OnEntryActivated()
   // delay the activation until we get the SearchFinished signal
   activate_on_finish_ = search_in_progress_;
 
-  activate_timeout_.reset(new glib::Timeout(MAX_ENTRY_ACTIVATE_WAIT_TIMEOUT, [this] {
-    activate_on_finish_ = false;
-    active_scope_view_->ActivateFirst();
-    return FALSE;
-  }));
+  if (activate_on_finish_)
+  {
+    activate_timeout_.reset(new glib::Timeout(MAX_ENTRY_ACTIVATE_WAIT_TIMEOUT, [this] {
+      activate_on_finish_ = false;
+      active_scope_view_->ActivateFirst();
+      return FALSE;
+    }));
+  }
 }
 
 // Keyboard navigation

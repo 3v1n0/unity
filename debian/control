@@ -39,7 +39,7 @@ Build-Depends: cmake,
                libatk1.0-dev,
                libjson-glib-dev,
                libgeis-dev (>= 2.0.10),
-               libunity-dev (>= 7.0.0),
+               libunity-dev (>= 7.0.2),
                libunity-common,
                libzeitgeist-dev (>= 0.3.18),
                libxfixes-dev (>= 1:5.0-4ubuntu4),
@@ -98,6 +98,7 @@ Package: unity-services
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
+         upstart,
 Description: Services for the Unity interface
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
  community, Unity is all about the combination of familiarity and the future. We
@@ -148,7 +149,7 @@ Depends: ${misc:Depends},
          libglib2.0-dev,
          libsigc++-2.0-dev,
          libnux-4.0-dev (>= 4.0.2),
-         libunity-dev (>= 7.0.0~),
+         libunity-dev (>= 7.0.2~),
          libdee-dev,
 Description: Core library for the Unity interface - development files
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
@@ -165,6 +166,7 @@ Section: python
 Architecture: all
 Depends: ${misc:Depends},
          ${python:Depends},
+         autopilot-desktop,
          python-windowmocker,
          gir1.2-appindicator3-0.1,
          gir1.2-dee-1.0,
