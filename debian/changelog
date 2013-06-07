@@ -1,4 +1,147 @@
-unity (7.0.0daily13.05.19ubuntu.unity.next-0ubuntu1) UNRELEASED; urgency=low
+unity (7.0.0daily13.06.07-0ubuntu1) saucy; urgency=low
+
+  [ Ted Gould ]
+  * gtk_icon_info_free() is deprecated for g_object_unref().
+  * Upstart event for when the indicators are loaded by the panel
+    service.
+  * Add an upstart job to unity-common.
+  * Manage Unity Panel Service's lifecycle with Upstart.
+
+  [ Didier Roche ]
+  * add dep on autopilot-desktop.
+  * Revert the panel on upstart from ted, it doesn't respawn as expected
+    when another service try to communicate with the panel service and
+    the consequence is a lot of tests failing
+
+  [ Nick Dedekind ]
+  * Uses a gobject weak ref to test for object deletion in the
+    GLibObject tests. Previously was checking with G_IS_OBJECT on an
+    invalid pointer, which was causing a segfault
+
+  [ Manuel de la Pena ]
+  * Adds support for payment previews that will allow users to buy music
+    from within the dash. .
+
+  [ Mathieu Trudel-Lapierre ]
+  * Increase timeouts for hud functional and search tests.
+
+  [ Francis Ginther ]
+  * Handle StateNotFoundError when querying the label of a hud button.
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Now that we're using the new HUD, there have been some changes that
+    typically cause test_hud tests to fail. Fix the tests to fit the new
+    model. The first one is that generally we do not have indicator
+    entries visible in the HUD anymore. Only application menu entries
+    are in it now. The second one - the way the results are displayed is
+    different. Now, instead of "Menu > Entry" we have "Entry (Menu)"
+    etc.
+  * Fix two HUD failures related to HUD slow action activation.
+  * Fix some autopilot test failures, some related to test_shortcut_hint
+    and some to test_scroll in launcher.
+  * Modify all the hud_query_check lambdas to be more smart and error-
+    checking. Same for the selected_hud_button method in the HUD
+    emulator. Also, get rid of the troublesome test_gedit_undo and
+    change it into test_gedit_save, which is easier to test and anyway
+    tests what we want. Besides that we also now try to handle the
+    StateNotFoundError exception in the HUD emulator, another cause of
+    some AP failures.
+  * Add a flag for -Wno-error=unused-local-typedefs, since this causes a
+    FTBFS on ARM
+
+  [ Michal Hruby ]
+  * Don't activate a result twice after pressing Enter. (LP: #1188191)
+
+  [ Sebastien Bacher ]
+  * Use '%s:' string for preview hints, rather than just appending ':'.
+    (LP: #1074038)
+
+  [ Marco Trevisan (Treviño) ]
+  * IconRenderer: preprocess an icon if its emblem has been shown/hidden
+    In that way we can update its transformation. (LP: #1171476,
+    #1171663)
+  * UnityWindow: don't draw the panel shadow above a fullscreen window.
+    (LP: #1171934)
+  * UnityCore: add GtkWrapper to handle GtkIconInfo correctly for
+    different GTK versions Fix a memory leak in LauncherIcon. (LP:
+    #1180790)
+  * SwitcherController: use proper long long types for
+    WindowActiveNumber Otherwise an overflow can cause bad window
+    selection after long uptime.
+  * Unity: "s/unsigned long long/uint64_t/g".
+
+  [ Chris Townsend ]
+  * Fixes issue where minimizing a full screen window would not draw the
+    Launcher and Panel after minimization. (LP: #1064155)
+  * Fixes issue where source files for test-gestures would always be
+    compiled even if the original source files did not change. (LP:
+    #1039367)
+  * Fixes the issue where the filling in of the progress bar over
+    Launcher icons does not scale when using smaller or larger icon
+    sizes than the default size of 48. (LP: #968680)
+
+  [ Sam Spilsbury ]
+  * LauncherDragWindow: defer icon paint until DrawContent rather than
+    doing so immediately (LP: #1180174). (LP: #1180174)
+  * Add a pkg-config dependency on xpathselect>=1.2 Technically we
+    depend on xpathselect>=1.3 in debian/control, however the latest -
+    dev package in the distro claims the version is 1.2 and it builds
+    just fine with that. (LP: #1185226). (LP: #1185226)
+
+  [ Leo Arias ]
+  * Fixed the execute_action_by_id on the dash emulator. (LP: #1181677)
+
+  [ Christopher Lee ]
+  * Attempt to fix sporadic failure of TestGLibSource.Running for arm
+    builds.
+  * Updating Unity autopilot tests to work with the new version of
+    autopilot (1.3).
+  * Update unity autopilot tests depends.
+  * Missed a package depends for unity-autopilot.
+  * Updating the dbus introspection to use the new xpathselect
+    1.3.libxpathselect-dev.
+
+  [ Pawel Stolowski ]
+  * Add ModelIterator-inl.h to the list of installed headers (as it's
+    included by ModelIterator.h).
+  * Fixes for two autopilot tests.
+  * Bumped required version of libunity.
+
+  [ Andrea Azzarone ]
+  * Disable detail view for webapp icons. (LP: #1169340)
+  * Don't build CoverflowResultView.cpp.
+  * Fix crashing tests. (LP: #1182585)
+  * Remove AbstractSeparator.cpp (it does not make sense :).
+  * Allow alt-tabbing during a dnd operation. (LP: #111939)
+  * Reference BamfApplication in GetRunningApplications. (LP: #1181717)
+
+  [ Thomi Richards ]
+  * Updating the dbus introspection to use the new xpathselect
+    1.3.libxpathselect-dev.
+  * Update the unity autopilot test suite to be compatible with the new
+    autopilot API for custom emulators.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3365
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 07 Jun 2013 06:43:22 +0000
+
+unity (7.0.0daily13.06.03ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  [ Chris Townsend ]
+  * Fixes the issue where the filling in of the progress bar over
+    Launcher icons does not scale when using smaller or larger icon
+    sizes than the default size of 48. (LP: #968680)
+
+  [ Andrea Azzarone ]
+  * Reference BamfApplication in GetRunningApplications. (LP: #1181717)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3355 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 03 Jun 2013 04:04:11 +0000
+
+unity (7.0.0daily13.05.31ubuntu.unity.next-0ubuntu1) raring; urgency=low
 
   [ Nick Dedekind ]
   * Keyboard focus lost if trying to navigate while search is ongoing
@@ -22,7 +165,84 @@ unity (7.0.0daily13.05.19ubuntu.unity.next-0ubuntu1) UNRELEASED; urgency=low
   [ Łukasz 'sil2100' Zemczak ]
   * Re-bumped libnux to 4.0.2
 
- -- Łukasz 'sil2100' Zemczak <lukasz.zemczak@canonical.com>  Fri, 17 May 2013 21:57:05 +0200
+  [ Ted Gould ]
+  * gtk_icon_info_free() is deprecated for g_object_unref().
+  * Upstart event for when the indicators are loaded by the panel
+    service.
+
+  [ Marco Trevisan (Treviño) ]
+  * UnityCore: add GtkWrapper to handle GtkIconInfo correctly for
+    different GTK versions Fix a memory leak in LauncherIcon. (LP:
+    #1180790)
+  * SwitcherController: use proper long long types for
+    WindowActiveNumber Otherwise an overflow can cause bad window
+    selection after long uptime.
+  * Unity: "s/unsigned long long/uint64_t/g".
+
+  [ Francis Ginther ]
+  * Handle StateNotFoundError when querying the label of a hud button.
+
+  [ Chris Townsend ]
+  * Fixes issue where minimizing a full screen window would not draw the
+    Launcher and Panel after minimization. (LP: #1064155)
+  * Fixes issue where source files for test-gestures would always be
+    compiled even if the original source files did not change. (LP:
+    #1039367)
+
+  [ Didier Roche ]
+  * add dep on autopilot-desktop.
+
+  [ Leo Arias ]
+  * Fixed the execute_action_by_id on the dash emulator. (LP: #1181677)
+
+  [ Christopher Lee ]
+  * Updating Unity autopilot tests to work with the new version of
+    autopilot (1.3).
+  * Update unity autopilot tests depends.
+  * Missed a package depends for unity-autopilot.
+  * Updating the dbus introspection to use the new xpathselect
+    1.3.libxpathselect-dev.
+
+  [ Thomi Richards ]
+  * Updating the dbus introspection to use the new xpathselect
+    1.3.libxpathselect-dev.
+  * Update the unity autopilot test suite to be compatible with the new
+    autopilot API for custom emulators.
+
+  [ Pawel Stolowski ]
+  * Add ModelIterator-inl.h to the list of installed headers (as it's
+    included by ModelIterator.h).
+  * Fixes for two autopilot tests.
+
+  [ Mathieu Trudel-Lapierre ]
+  * Increase timeouts for hud functional and search tests.
+
+  [ Andrea Azzarone ]
+  * Don't build CoverflowResultView.cpp.
+  * Fix crashing tests. (LP: #1182585)
+  * Remove AbstractSeparator.cpp (it does not make sense :).
+  * Allow alt-tabbing during a dnd operation. (LP: #111939)
+
+  [ Sam Spilsbury ]
+  * LauncherDragWindow: defer icon paint until DrawContent rather than
+    doing so immediately (LP: #1180174). (LP: #1180174)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Fix two HUD failures related to HUD slow action activation.
+  * Fix some autopilot test failures, some related to test_shortcut_hint
+    and some to test_scroll in launcher.
+  * Modify all the hud_query_check lambdas to be more smart and error-
+    checking. Same for the selected_hud_button method in the HUD
+    emulator. Also, get rid of the troublesome test_gedit_undo and
+    change it into test_gedit_save, which is easier to test and anyway
+    tests what we want. Besides that we also now try to handle the
+    StateNotFoundError exception in the HUD emulator, another cause of
+    some AP failures.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3352 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 31 May 2013 04:06:11 +0000
 
 unity (7.0.0daily13.05.08ubuntu.unity.next-0ubuntu1) raring; urgency=low
 

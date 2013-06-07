@@ -164,18 +164,20 @@ void TestRunner::Init ()
           proto_obj, "The Wombats");
   unity_protocol_payment_preview_set_header(
           UNITY_PROTOCOL_PAYMENT_PREVIEW(proto_obj.RawPtr()),
-          "A horrible error ocurred!!!");
+          "It seems that you haven't set your preferred metod for Ubuntu One. To add a pereferred method visist Ubuntu One.");
   unity_protocol_payment_preview_set_purchase_prize(
           UNITY_PROTOCOL_PAYMENT_PREVIEW(proto_obj.RawPtr()),
           "10 eur");
   unity_protocol_payment_preview_set_purchase_type(
           UNITY_PROTOCOL_PAYMENT_PREVIEW(proto_obj.RawPtr()),
           "Digital CD");
+
   unity_protocol_payment_preview_set_preview_type(UNITY_PROTOCOL_PAYMENT_PREVIEW(proto_obj.RawPtr()),
     UNITY_PROTOCOL_PREVIEW_PAYMENT_TYPE_ERROR);
 
   // set the diff actions
-  unity_protocol_preview_add_action(proto_obj, "open_u1_link", "Go to u1 page", NULL, 0);
+  unity_protocol_preview_add_action(proto_obj, "open_u1_link", "Go to Ubuntu One", NULL, 0);
+  unity_protocol_preview_add_action(proto_obj, "cancel", "Cancel", NULL, 0);
 
   glib::Variant v(dee_serializable_serialize(DEE_SERIALIZABLE(proto_obj.RawPtr())),
               glib::StealRef());

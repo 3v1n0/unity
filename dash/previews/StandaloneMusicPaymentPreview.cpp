@@ -177,6 +177,7 @@ void TestRunner::Init ()
           UNITY_PROTOCOL_PAYMENT_PREVIEW(proto_obj.RawPtr()),
           "Digital CD");
 
+
   // set the diff actions
   unity_protocol_preview_add_action(proto_obj, "purchase_album", "Buy Now", NULL, 0);
   unity_protocol_preview_add_action(proto_obj, "cancel_purchase", "Cancel", NULL, 0);

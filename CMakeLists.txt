@@ -194,6 +194,12 @@ if (BOOT_LOGGER)
 endif (BOOT_LOGGER)
 
 SET (MAINTAINER_CXXFLAGS "-Werror -Wall -Wcast-align -Wempty-body -Wformat-security -Winit-self -Warray-bounds")
+
+option (DISABLE_ERROR_ON_LOCAL_TYPEDEFS_WARNINGS "Disable errors when local typedefs are unused" ON)
+if (DISABLE_ERROR_ON_LOCAL_TYPEDEFS_WARNINGS)
+  SET (MAINTAINER_CXXFLAGS "${MAINTAINER_CXXFLAGS} -Wno-error=unused-local-typedefs")
+endif (DISABLE_ERROR_ON_LOCAL_TYPEDEFS_WARNINGS)
+
 option (DISABLE_MAINTAINER_CXXFLAGS "Disable maintainer CXXFlags" OFF)
 if (DISABLE_MAINTAINER_CXXFLAGS)
   SET (MAINTAINER_CXXFLAGS "")
@@ -205,7 +211,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MAINTAINER_CXXFLAGS}")
 #
 # Compiz Plugins
 #
-set(UNITY_PROTOCOL_PRIVATE_DEPS unity-protocol-private>=7.0.0)
+set(UNITY_PROTOCOL_PRIVATE_DEPS unity-protocol-private>=7.0.2)
 set(UNITY_PLUGIN_SHARED_DEPS
     ${UNITY_PROTOCOL_PRIVATE_DEPS}
     atk
@@ -225,6 +231,7 @@ set(UNITY_PLUGIN_SHARED_DEPS
     nux-4.0>=4.0.1
     sigc++-2.0
     unity-misc>=0.4.0
+    xpathselect>=1.2
     zeitgeist-1.0>=0.3.18
 )
 
