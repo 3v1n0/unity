@@ -633,7 +633,7 @@ TEST_F(TestLauncher, UrgentIconWiggleTimerStart)
 
   clock_gettime(CLOCK_MONOTONIC, &current);
 
-  EXPECT_FALSE(launcher_->_urgent_timer_running);
+  ASSERT_FALSE(launcher_->_urgent_timer_running);
 
   launcher_->HandleUrgentIcon(icon, current);
 
@@ -648,19 +648,46 @@ TEST_F(TestLauncher, UrgentIconWiggleTimerTimeout)
   launcher_->SetHidden(true);
   icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
 
-  EXPECT_EQ(launcher_->_urgent_wiggle_time, 0);
-  EXPECT_EQ(launcher_->_urgent_finished_time.tv_sec, 0);
-  EXPECT_EQ(launcher_->_urgent_finished_time.tv_nsec, 0);
+  ASSERT_EQ(launcher_->_urgent_wiggle_time, 0);
+  ASSERT_EQ(launcher_->_urgent_finished_time.tv_sec, 0);
+  ASSERT_EQ(launcher_->_urgent_finished_time.tv_nsec, 0);
   
   launcher_->SetUrgentTimer(1);
 
-  // Make the Urgent Timer expires before checking
+  // Make sure the Urgent Timer expires before checking
   Utils::WaitForTimeout(2);
   
   EXPECT_THAT(launcher_->_urgent_wiggle_time, Gt(0));
   EXPECT_THAT(launcher_->_urgent_finished_time.tv_sec, Gt(0));
   EXPECT_THAT(launcher_->_urgent_finished_time.tv_nsec, Gt(0));
 }
+
+TEST_F(TestLauncher, WiggleUrgentIconAfterLauncherIsRevealed)
+{
+  MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon);
+  timespec current;
+
+  model_->AddIcon(icon);
+  launcher_->SetHidden(true);
+  icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
+
+  // Wait a bit to simulate the icon's initial wiggle
+  Utils::WaitForTimeout(1);
+
+  clock_gettime(CLOCK_MONOTONIC, &current);
+  launcher_->HandleUrgentIcon(icon, current);
+
+  ASSERT_EQ(launcher_->_urgent_finished_time.tv_sec, 0);
+  ASSERT_EQ(launcher_->_urgent_finished_time.tv_nsec, 0);
+
+  launcher_->SetHidden(false);
+
+  clock_gettime(CLOCK_MONOTONIC, &current);
+  launcher_->HandleUrgentIcon(icon, current);
+
+  EXPECT_THAT(launcher_->_urgent_finished_time.tv_sec, Gt(0));
+  EXPECT_THAT(launcher_->_urgent_finished_time.tv_nsec, Gt(0));  
+}  
 
 }
 }
