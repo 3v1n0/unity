@@ -1650,16 +1650,17 @@ bool Launcher::OnUrgentTimeout()
   bool foundUrgent = false,
        continue_urgent = true;
 
-  // Look for any icons that are still urgent and wiggle them
-  for (auto icon : *_model)
+  if (options()->urgent_animation() == URGENT_ANIMATION_WIGGLE && _hidden)
   {
-    if (icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT) &&
-        options()->urgent_animation() == URGENT_ANIMATION_WIGGLE &&
-        _hidden)
+    // Look for any icons that are still urgent and wiggle them
+    for (auto icon : *_model)
     {
-      WiggleUrgentIcon(icon);
+      if (icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT))
+      {
+        WiggleUrgentIcon(icon);
 
-      foundUrgent = true;
+        foundUrgent = true;
+      }
     }
   }
   // Update the time for when the next wiggle will occur.
