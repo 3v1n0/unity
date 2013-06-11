@@ -854,7 +854,6 @@ void UnityScreen::paintDisplay()
     back_buffer_age_ = 0;
   }
 
-  nux::Geometry outputGeo(output->x (), output->y (), output->width (), output->height ());
   BackgroundEffectHelper::monitor_rect_.Set(0, 0, screen->width(), screen->height());
 
   wt->GetWindowCompositor().SetReferenceFramebuffer(current_draw_binding,
