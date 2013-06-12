@@ -132,6 +132,7 @@ void SocialPreview::SetupViews()
   if (social_preview_model->description.Get().length() > 0)
   {
     content_ = new SocialPreviewContent(social_preview_model->description, NUX_TRACKER_LOCATION);
+    content_->request_close().connect([this]() { preview_container_->request_close.emit(); });
     social_content_layout->AddView(content_.GetPointer(), 1);
   } else {
     image_ = new CoverArt();
