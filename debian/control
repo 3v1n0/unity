@@ -57,7 +57,7 @@ Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          ${python:Depends},
-         libunity-core-6.0-5 (= ${binary:Version}),
+         libunity-core-6.0-6 (= ${binary:Version}),
          unity-common (= ${source:Version}),
          compiz,
          compiz-core, compiz-core-abiversion-${coreabiversion},
@@ -124,7 +124,7 @@ Description: Common files for the Unity interface.
  .
  This package contains commons file that are architecture independent.
 
-Package: libunity-core-6.0-5
+Package: libunity-core-6.0-6
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends},
@@ -145,7 +145,7 @@ Package: libunity-core-6.0-dev
 Section: libdevel
 Architecture: any
 Depends: ${misc:Depends},
-         libunity-core-6.0-5 (= ${binary:Version}),
+         libunity-core-6.0-6 (= ${binary:Version}),
          libglib2.0-dev,
          libsigc++-2.0-dev,
          libnux-4.0-dev (>= 4.0.2),
