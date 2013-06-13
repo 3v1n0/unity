@@ -68,6 +68,7 @@ Depends: ${shlibs:Depends},
          nux-tools,
          dconf-tools,
          unity-asset-pool (>= 0.8.18),
+         bamfdaemon,
 Provides: indicator-renderer
 Recommends: gnome-control-center-unity,
             ${unity-default-masterscopes}
