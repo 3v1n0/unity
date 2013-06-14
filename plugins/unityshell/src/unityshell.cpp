@@ -2001,7 +2001,15 @@ bool UnityScreen::altTabDetailStartInitiate(CompAction* action, CompAction::Stat
 {
   if (switcher_controller_->Visible())
   {
-    switcher_controller_->SetDetail(true);
+    if (switcher_controller_->IsDetailViewShown() &&
+        switcher_controller_->HasNextDetailRow())
+    {
+      switcher_controller_->NextDetailRow();
+    }
+    else
+    {
+      switcher_controller_->SetDetail(true);
+    }
     return true;
   }
 
@@ -2012,7 +2020,15 @@ bool UnityScreen::altTabDetailStopInitiate(CompAction* action, CompAction::State
 {
   if (switcher_controller_->Visible())
   {
-    switcher_controller_->SetDetail(false);
+    if (switcher_controller_->IsDetailViewShown() &&
+        switcher_controller_->HasPrevDetailRow())
+    {
+      switcher_controller_->PrevDetailRow();
+    }
+    else
+    {
+      switcher_controller_->SetDetail(false);
+    }
     return true;
   }
 

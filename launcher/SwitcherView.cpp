@@ -277,6 +277,7 @@ nux::Geometry SwitcherView::UpdateRenderTargets(float progress)
 
   nux::Geometry layout_geo;
   layout_system_.LayoutWindows(render_targets_, max_bounds, layout_geo);
+  model_->SetRowSizes(layout_system_.GetRowSizes(render_targets_, max_bounds));
 
   return layout_geo;
 }

@@ -178,4 +178,127 @@ TEST_F(TestSwitcherModel, TestWebAppActive)
   EXPECT_NE(model->DetailXids().front(), base_model->DetailXids().front());
 }
 
+TEST_F(TestSwitcherModel, TestHasNextDetailRow)
+{
+  SwitcherModel::Ptr model(new SwitcherModel(icons_));
+  model->detail_selection = true;
+  model->SetRowSizes({2,2});
+
+  EXPECT_TRUE(model->HasNextDetailRow());
+
+  model->NextDetailRow();
+  EXPECT_FALSE(model->HasNextDetailRow());
+}
+
+TEST_F(TestSwitcherModel, TestHasPrevDetailRow)
+{
+  SwitcherModel::Ptr model(new SwitcherModel(icons_));
+  model->detail_selection = true;
+  model->SetRowSizes({2,2});
+
+  model->NextDetail();
+  EXPECT_TRUE(model->HasPrevDetailRow());
+
+  model->PrevDetailRow();
+  EXPECT_FALSE(model->HasPrevDetailRow());
+}
+
+TEST_F(TestSwitcherModel, TestHasNextThenPrevDetailRow)
+{
+  SwitcherModel::Ptr model(new SwitcherModel(icons_));
+  model->detail_selection = true;
+  model->SetRowSizes({2,2});
+
+  EXPECT_TRUE(model->HasNextDetailRow());
+
+  model->NextDetailRow();
+  EXPECT_FALSE(model->HasNextDetailRow());
+
+  EXPECT_TRUE(model->HasPrevDetailRow());
+  model->PrevDetailRow();
+  EXPECT_FALSE(model->HasPrevDetailRow());
+}
+
+TEST_F(TestSwitcherModel, TestNextDetailRow)
+{
+  SwitcherModel::Ptr model(new SwitcherModel(icons_));
+  model->detail_selection = true;
+  model->SetRowSizes({2,2});
+
+  model->NextDetailRow();
+  EXPECT_TRUE(model->detail_selection_index == 2);
+}
+
+TEST_F(TestSwitcherModel, TestNextDetailThenNextDetailRow)
+{
+  SwitcherModel::Ptr model(new SwitcherModel(icons_));
+  model->detail_selection = true;
+  model->SetRowSizes({2,2});
+
+  model->NextDetail();
+  model->NextDetailRow();
+  EXPECT_TRUE(model->detail_selection_index == 3);
+}
+
+TEST_F(TestSwitcherModel, TestPrevDetailRow)
+{
+  SwitcherModel::Ptr model(new SwitcherModel(icons_));
+  model->detail_selection = true;
+  model->SetRowSizes({2,2});
+
+  model->NextDetailRow();
+  model->PrevDetailRow();
+
+  EXPECT_TRUE(model->detail_selection_index == 0);
+}
+
+TEST_F(TestSwitcherModel, TestNextDetailThenPrevDetailRow)
+{
+  SwitcherModel::Ptr model(new SwitcherModel(icons_));
+  model->detail_selection = true;
+  model->SetRowSizes({2,2});
+
+  model->NextDetail();
+  model->NextDetailRow();
+
+  model->PrevDetailRow();
+  EXPECT_TRUE(model->detail_selection_index == 1);
+}
+
+TEST_F(TestSwitcherModel, TestUnEvenNextDetailRow)
+{
+  SwitcherModel::Ptr model(new SwitcherModel(icons_));
+  model->detail_selection = true;
+  model->SetRowSizes({3,2});
+
+  model->NextDetailRow();
+  EXPECT_TRUE(model->detail_selection_index == 3);
+}
+
+TEST_F(TestSwitcherModel, TestUnEvenPrevDetailRow)
+{
+  SwitcherModel::Ptr model(new SwitcherModel(icons_));
+  model->detail_selection = true;
+  model->SetRowSizes({3,2});
+
+  model->NextDetailRow();
+  model->PrevDetailRow();
+
+  EXPECT_TRUE(model->detail_selection_index == 0);
+}
+
+TEST_F(TestSwitcherModel, TestNextPrevDetailRowMovesLeftInTopRow)
+{
+  SwitcherModel::Ptr model(new SwitcherModel(icons_));
+  model->detail_selection = true;
+  model->SetRowSizes({3,2});
+
+  model->NextDetail();
+  model->NextDetail();
+  model->PrevDetailRow();
+  model->PrevDetailRow();
+
+  EXPECT_TRUE(model->detail_selection_index == 0);
+}
+
 }

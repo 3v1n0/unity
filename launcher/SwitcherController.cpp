@@ -164,6 +164,26 @@ void Controller::PrevDetail()
   impl_->PrevDetail();
 }
 
+bool Controller::HasNextDetailRow() const
+{
+  return impl_->HasNextDetailRow();
+}
+
+bool Controller::HasPrevDetailRow() const
+{
+  return impl_->HasPrevDetailRow();
+}
+
+void Controller::NextDetailRow()
+{
+  impl_->NextDetailRow();
+}
+
+void Controller::PrevDetailRow()
+{
+  impl_->PrevDetailRow();
+}
+
 LayoutWindow::Vector Controller::ExternalRenderTargets()
 {
   return impl_->ExternalRenderTargets();
@@ -585,6 +605,38 @@ void Controller::Impl::PrevDetail()
 
   InitiateDetail(true);
   model_->PrevDetail();
+}
+
+void Controller::Impl::NextDetailRow()
+{
+  if (!model_)
+    return;
+
+  model_->NextDetailRow();
+}
+
+void Controller::Impl::PrevDetailRow()
+{
+  if (!model_)
+    return;
+
+  model_->PrevDetailRow();
+}
+
+bool Controller::Impl::HasNextDetailRow() const
+{
+  if (!model_)
+    return false;
+
+  return model_->HasNextDetailRow();
+}
+
+bool Controller::Impl::HasPrevDetailRow() const
+{
+  if (!model_)
+    return false;
+
+  return model_->HasPrevDetailRow();
 }
 
 LayoutWindow::Vector Controller::Impl::ExternalRenderTargets()

@@ -96,6 +96,11 @@ public:
   void NextDetail();
   void PrevDetail();
 
+  void NextDetailRow();
+  void PrevDetailRow();
+  bool HasNextDetailRow() const;
+  bool HasPrevDetailRow() const;
+
   void Select(int index);
 
   bool IsDetailViewShown();

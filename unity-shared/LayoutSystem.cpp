@@ -35,7 +35,7 @@ void LayoutSystem::LayoutWindows(LayoutWindow::Vector const& windows, nux::Geome
   LayoutGridWindows(windows, max_bounds, final_bounds);
 }
 
-nux::Size LayoutSystem::GridSizeForWindows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds)
+nux::Size LayoutSystem::GridSizeForWindows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds) const
 {
   unsigned count = windows.size();
 
@@ -138,7 +138,18 @@ nux::Geometry LayoutSystem::LayoutRow(LayoutWindow::Vector const& row, nux::Geom
   return CompressAndPadRow (row, row_bounds);
 }
 
-std::vector<LayoutWindow::Vector> LayoutSystem::GetRows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds)
+std::vector<int> LayoutSystem::GetRowSizes(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds) const
+{
+  std::vector<LayoutWindow::Vector> rows = GetRows(windows, max_bounds);
+  std::vector<int> row_sizes;
+
+  for (auto r : rows)
+    row_sizes.push_back(r.size());
+
+  return row_sizes;
+}
+
+std::vector<LayoutWindow::Vector> LayoutSystem::GetRows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds) const
 {
   std::vector<LayoutWindow::Vector> rows;
 
