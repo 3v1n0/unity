@@ -122,7 +122,7 @@ public:
 
   void EnableScrolling(bool enable_scrolling)
   {
-    _vscrollbar->SetInputEventSensitivity(enable_scrolling);    
+    _vscrollbar->SetInputEventSensitivity(enable_scrolling);
   }
 
 protected:
@@ -232,7 +232,7 @@ ScopeView::~ScopeView()
   results_updated.disconnect();
   result_added_connection.disconnect();
   result_removed_connection.disconnect();
-  
+
   categories_updated.disconnect();
   category_added_connection.disconnect();
   category_changed_connection.disconnect();
@@ -351,7 +351,7 @@ void ScopeView::OnCategoryOrderChanged(std::vector<unsigned int> const& order)
       if (category_views_.size() <= desired_category_index)
         continue;
 
-      scroll_layout_->AddView(category_views_[desired_category_index].GetPointer(), 0);       
+      scroll_layout_->AddView(category_views_[desired_category_index].GetPointer(), 0);
     }
   }
 
@@ -486,9 +486,12 @@ void ScopeView::OnCategoryAdded(Category const& category)
     results_view->unique_id = unique_id;
     results_view->expanded = false;
 
-    results_view->ResultActivated.connect([this, unique_id] (LocalResult const& local_result, ResultView::ActivateType type, GVariant* data) 
+    results_view->ResultActivated.connect([this, unique_id] (LocalResult const& local_result, ResultView::ActivateType type, GVariant* data)
     {
-      result_activated.emit(type, local_result, data, unique_id); 
+      if (g_str_has_prefix(local_result.uri.c_str(), "x-unity-no-preview"))
+        type = ResultView::ActivateType::DIRECT;
+
+      result_activated.emit(type, local_result, data, unique_id);
       switch (type)
       {
         case ResultView::ActivateType::DIRECT:
@@ -582,7 +585,7 @@ void ScopeView::OnCategoryRemoved(Category const& category)
   auto order_pos = std::find(category_order_.begin(), category_order_.end(), index);
   if (order_pos != category_order_.end())
     category_order_.erase(order_pos);
- 
+
   scroll_layout_->RemoveChildObject(group.GetPointer());
   RemoveChild(group.GetPointer());
 
@@ -672,7 +675,7 @@ bool ScopeView::ReinitializeCategoryResultModels()
 }
 
 ResultView* ScopeView::GetResultViewForCategory(unsigned int category_index)
-{  
+{
   if (category_views_.size() <= category_index)
     return nullptr;
 
@@ -702,7 +705,7 @@ void ScopeView::OnResultRemoved(Result const& result)
   // category not added yet.
   if (category_views_.size() <= result.category_index)
     return;
-  
+
   std::string uri = result.uri;
   LOG_TRACE(logger) << "Result removed '" << (scope_ ? scope_->name() : "unknown") << "': " << uri;
 
@@ -1026,7 +1029,7 @@ void ScopeView::ForceCategoryExpansion(std::string const& view_id, bool expand)
   {
     PlacesGroup::Ptr group = *iter;
     if (group->GetChildView()->unique_id == view_id)
-    {  
+    {
       if (expand)
       {
         group->PushExpanded();
@@ -1058,8 +1061,8 @@ void ScopeView::EnableResultTextures(bool enable_result_textures)
     if (result_view)
     {
       result_view->enable_texture_render = enable_result_textures;
-    }  
-  } 
+    }
+  }
 }
 
 std::vector<ResultViewTexture::Ptr> ScopeView::GetResultTextureContainers()
@@ -1185,7 +1188,7 @@ void ScopeView::OnCompositorKeyNavFocusChanged(nux::Area* area, bool has_focus, 
 }
 
 void ScopeView::PushResultFocus(const char* reason)
-{  
+{
   int current_category_position = 0;
   for (auto iter = category_order_.begin(); iter != category_order_.end(); ++iter)
   {

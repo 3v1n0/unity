@@ -51,7 +51,7 @@ UnityWindowView::UnityWindowView(nux::BaseWindow *parent,
 
   live_background = false;
 
-  auto update_backbuffer_region = [this] (nux::Area*, nux::Geometry const& g) {
+  auto update_backbuffer_region = [this](nux::Area*, nux::Geometry const& g) {
     nux::Geometry const& geo_abs (GetAbsoluteGeometry());
     nux::Geometry const& geo (GetGeometry());
     nux::Geometry blur_geo (geo_abs.x, geo_abs.y, geo.width, geo.height);
@@ -204,7 +204,7 @@ nux::ObjectPtr<nux::InputArea> UnityWindowView::GetBoundingArea()
     bounding_area_ = new nux::InputArea();
     bounding_area_->SetParentObject(this);
     bounding_area_->SetGeometry(GetGeometry());
-    geometry_changed.connect([this] (nux::Area*, nux::Geometry const& g) {
+    geometry_changed.connect([this](nux::Area*, nux::Geometry const& g) {
       bounding_area_->SetGeometry(g);
     });
   }

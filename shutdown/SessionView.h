@@ -26,6 +26,7 @@
 
 #include "UnityCore/SessionManager.h"
 #include "unity-shared/UnityWindowView.h"
+#include "UnityCore/SessionManager.h"
 
 namespace unity
 {

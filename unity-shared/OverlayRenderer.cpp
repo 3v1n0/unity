@@ -942,9 +942,9 @@ void OverlayRenderer::AboutToHide()
   need_redraw.emit();
 }
 
-void OverlayRenderer::UpdateBlurBackgroundSize (nux::Geometry const& content_geo,
-                                                nux::Geometry const& absolute_geo,
-                                                bool                 force_edges)
+void OverlayRenderer::UpdateBlurBackgroundSize(nux::Geometry const& content_geo,
+                                               nux::Geometry const& absolute_geo,
+                                               bool                 force_edges)
 {
   int excess_border = (Settings::Instance().form_factor() != FormFactor::NETBOOK || force_edges) ? EXCESS_BORDER : 0;
 

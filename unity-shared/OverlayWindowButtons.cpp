@@ -43,10 +43,6 @@ OverlayWindowButtons::OverlayWindowButtons()
   AddChild(window_buttons_.GetPointer());
   UpdateGeometry();
   SetBackgroundColor(nux::color::Transparent);
-
-  window_buttons_->queue_draw.connect([&] (nux::Layout* /*layout*/) {
-    QueueDraw();
-  });
 }
 
 void OverlayWindowButtons::UpdateGeometry()

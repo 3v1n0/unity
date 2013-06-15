@@ -47,7 +47,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(View);
 
 View::View(nux::BaseWindow *parent,
            Manager::Ptr const& manager)
-  : UnityWindowView (parent)
+  : UnityWindowView(parent)
   , mode(Mode::FULL)
   , key_focus_area([this] { return key_focus_area_; })
   , manager_(manager)

@@ -554,7 +554,6 @@ void Controller::Impl::InitiateDetail(bool animate)
     view_->animate = animate;
 
     SetDetail(true);
-    obj_->detail_mode_ = DetailMode::TAB_NEXT_TILE;
 
     if (!view_->animate())
     {

@@ -130,7 +130,7 @@ std::vector <nux::Geometry> BackgroundEffectHelper::GetBlurGeometries()
     {
       /* Use the last requested region. The real region is clipped to the
        * monitor geometry, but that is done at paint time */
-      nux::Geometry geo (bg_effect_helper->requested_blur_geometry_);
+      nux::Geometry geo(bg_effect_helper->requested_blur_geometry_);
 
       ExpandByRadius(geo);
       geometries.push_back(geo);
@@ -460,7 +460,7 @@ void BackgroundEffectHelper::SetBackbufferRegion(const nux::Geometry &geo)
     requested_blur_geometry_ = geo;
     DirtyCache();
 
-    nux::Geometry emit_geometry (geo);
+    nux::Geometry emit_geometry(geo);
     ExpandByRadius(emit_geometry);
     blur_region_needs_update_.emit(emit_geometry);
   }

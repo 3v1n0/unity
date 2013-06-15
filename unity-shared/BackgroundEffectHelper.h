@@ -59,7 +59,7 @@ public:
   static bool HasDirtyHelpers();
   static bool HasEnabledHelpers();
   static bool HasDamageableHelpers();
-  static std::vector <nux::Geometry> GetBlurGeometries ();
+  static std::vector <nux::Geometry> GetBlurGeometries();
 
   static nux::Property<unity::BlurType> blur_type;
   static nux::Property<float> sigma_high;

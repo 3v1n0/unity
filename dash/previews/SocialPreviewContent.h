@@ -30,6 +30,7 @@
 #include <NuxCore/ObjectPtr.h>
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/Introspectable.h"
+#include "PreviewContainer.h"
 
 namespace unity
 {
@@ -48,6 +49,8 @@ public:
   virtual ~SocialPreviewContent();
 
   void SetText(std::string const& text);
+
+  sigc::signal<void> request_close() const { return preview_container_.request_close; }
 
 protected:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
@@ -77,6 +80,8 @@ private:
 
   typedef std::unique_ptr<nux::CairoWrapper> NuxCairoPtr;
   NuxCairoPtr cr_bubble_;
+
+  PreviewContainer preview_container_;
 };
 
 }

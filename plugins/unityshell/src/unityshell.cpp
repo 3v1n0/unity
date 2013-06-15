@@ -430,13 +430,15 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
     /* Create blur backup texture */
     auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
-    gpu_device->backup_texture0_ = gpu_device->CreateSystemCapableDeviceTexture(screen->width (),
-                                                                                screen->height (),
-                                                                                1,
-                                                                                nux::BITFMT_R8G8B8A8,
-                                                                                NUX_TRACKER_LOCATION);
+    gpu_device->backup_texture0_ =
+        gpu_device->CreateSystemCapableDeviceTexture(screen->width(),
+                                                     screen->height(),
+                                                     1,
+                                                     nux::BITFMT_R8G8B8A8,
+                                                     NUX_TRACKER_LOCATION);
 
-    BackgroundEffectHelper::blur_region_needs_update_.connect(sigc::mem_fun(this, &UnityScreen::DamageBlurUpdateRegion));
+    BackgroundEffectHelper::blur_region_needs_update_
+      .connect(sigc::mem_fun(this, &UnityScreen::DamageBlurUpdateRegion));
 
     /* Track whole damage on the very first frame */
     cScreen->damageScreen();
@@ -771,10 +773,10 @@ void UnityScreen::OnPanelStyleChanged()
 
 void UnityScreen::DamageBlurUpdateRegion(const nux::Geometry &blur_update)
 {
-  cScreen->damageRegion (CompRegion (blur_update.x,
-                                     blur_update.y,
-                                     blur_update.width,
-                                     blur_update.height));
+  cScreen->damageRegion (CompRegion(blur_update.x,
+                                    blur_update.y,
+                                    blur_update.width,
+                                    blur_update.height));
 }
 
 void UnityScreen::paintDisplay()
@@ -797,8 +799,8 @@ void UnityScreen::paintDisplay()
   current_draw_binding = old_read_binding;
 #endif
 
-  nux::Geometry geo(0, 0, screen->width (), screen->height ());
-  nux::Geometry outputGeo(output->x (), output->y (), output->width (), output->height ());
+  nux::Geometry geo(0, 0, screen->width(), screen->height());
+  nux::Geometry outputGeo(output->x(), output->y(), output->width(), output->height());
   BackgroundEffectHelper::monitor_rect_ = geo;
 
   /* If we have dirty helpers re-copy the backbuffer
@@ -811,7 +813,7 @@ void UnityScreen::paintDisplay()
     /* We are using a CompRegion here so that we can combine rectangles
      * where it might make sense to. Saves calls into OpenGL */
     CompRegion blur_region;
-    std::vector <nux::Geometry> blur_geometries (BackgroundEffectHelper::GetBlurGeometries ());
+    std::vector <nux::Geometry> blur_geometries(BackgroundEffectHelper::GetBlurGeometries());
 
     for (nux::Geometry const& blur_geometry : blur_geometries)
     {
@@ -820,41 +822,42 @@ void UnityScreen::paintDisplay()
       int width = blur_geometry.width;
       int height = blur_geometry.height;
 
-      y = screen->height () - (y + height);
+      y = screen->height() - (y + height);
 
-      blur_region += CompRegion (x, y, width, height) & CompRegionRef (output->region ());
+      blur_region += CompRegion(x, y, width, height) & CompRegionRef(output->region());
     }
 
-    GLuint backup_texture_id = gpu_device->backup_texture0_->GetOpenGLID ();
+    GLuint backup_texture_id = gpu_device->backup_texture0_->GetOpenGLID();
     GLuint surface_target = gpu_device->backup_texture0_->GetSurfaceLevel(0)->GetSurfaceTarget();
 
     /* Copy from the read buffer into the backup texture */
-    CompRect::vector rects (blur_region.rects ());
+    CompRect::vector rects (blur_region.rects());
 
-    CHECKGL (glEnable (surface_target));
-    CHECKGL (glBindTexture (surface_target, backup_texture_id));
+    CHECKGL(glEnable(surface_target));
+    CHECKGL(glBindTexture(surface_target, backup_texture_id));
 
     for (CompRect &rect : rects)
     {
-      int x = nux::Clamp<int> (rect.x (), 0, screen->width ());
-      int y = nux::Clamp<int> (rect.y (), 0, screen->height ());
-      int width = nux::Min<int> (screen->width () - rect.x (), rect.width ());
-      int height = nux::Min<int> (screen->height () - rect.y (), rect.height ());
+      int x = nux::Clamp<int> (rect.x(), 0, screen->width());
+      int y = nux::Clamp<int> (rect.y(), 0, screen->height());
+      int width = nux::Min<int> (screen->width() - rect.x(), rect.width());
+      int height = nux::Min<int> (screen->height() - rect.y(), rect.height());
 
-      CHECKGL (glCopyTexSubImage2D (surface_target,
-                                    0,
-                                    x,
-                                    y,
-                                    x,
-                                    y,
-                                    width,
-                                    height));
+      CHECKGL (glCopyTexSubImage2D(surface_target,
+                                   0,
+                                   x,
+                                   y,
+                                   x,
+                                   y,
+                                   width,
+                                   height));
     }
 
     back_buffer_age_ = 0;
   }
 
-  BackgroundEffectHelper::monitor_rect_.Set(0, 0, screen->width(), screen->height());
+  BackgroundEffectHelper::monitor_rect_.Set(0, 0,
+                                            screen->width(), screen->height());
 
   wt->GetWindowCompositor().SetReferenceFramebuffer(current_draw_binding,
                                                     old_read_binding,
@@ -1431,7 +1434,7 @@ void UnityScreen::updateBlurDamage()
    */
   if (BackgroundEffectHelper::HasEnabledHelpers())
   {
-    cScreen->applyDamageForFrameAge (back_buffer_age_);
+    cScreen->applyDamageForFrameAge(back_buffer_age_);
 
     /*
      * Prioritise user interaction over active blur updates. So the general
@@ -1464,11 +1467,11 @@ void UnityScreen::damageCutoff()
     typedef nux::WindowCompositor::WeakBaseWindowPtr WeakBaseWindowPtr;
 
     /* We have to force-redraw the whole scene because
-     * if a bug in the nvidia driver that causes framebuffers
+     * of a bug in the nvidia driver that causes framebuffers
      * to be trashed on resume for a few swaps */
-    wt->GetWindowCompositor ()
-        .OnAllBaseWindows ([](WeakBaseWindowPtr const &w) {
-      w->QueueDraw ();
+    wt->GetWindowCompositor()
+        .OnAllBaseWindows([](WeakBaseWindowPtr const &w) {
+      w->QueueDraw();
     });
 
     force_draw_countdown_--;
@@ -1597,7 +1600,7 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
   CompRect::vector rects (damage.rects());
   for (const CompRect &r : rects)
   {
-    nux::Geometry g (r.x(), r.y(), r.width(), r.height());
+    nux::Geometry g(r.x(), r.y(), r.width(), r.height());
     wt->PresentWindowsIntersectingGeometryOnThisFrame(g);
   }
 }
@@ -1614,10 +1617,10 @@ void UnityScreen::determineNuxDamage(CompRegion &nux_damage)
   /* Special case, we need to redraw the panel shadow on panel updates */
   for (auto const& panel_geo : panel_controller_->GetGeometries())
   {
-    CompRect panel_rect (panel_geo.x,
-                         panel_geo.y,
-                         panel_geo.width,
-                         panel_geo.height);
+    CompRect panel_rect(panel_geo.x,
+                        panel_geo.y,
+                        panel_geo.width,
+                        panel_geo.height);
 
     if (nux_damage.intersects(panel_rect))
     {
@@ -3156,7 +3159,9 @@ void UnityScreen::initUnity(nux::NThread* thread, void* InitData)
   static_cast<nux::WindowThread*>(thread)->SetWindowBackgroundPaintLayer(&background);
   LOG_INFO(logger) << "UnityScreen::initUnity: " << timer.ElapsedSeconds() << "s";
 
-  nux::GetWindowCompositor().sigHiddenViewWindow.connect (sigc::mem_fun(self, &UnityScreen::OnViewHidden));
+  nux::GetWindowCompositor()
+    .sigHiddenViewWindow.connect(sigc::mem_fun(self,
+                                               &UnityScreen::OnViewHidden));
 }
 
 void UnityScreen::onRedrawRequested()
@@ -3353,7 +3358,7 @@ void UnityScreen::Relayout()
 
   needsRelayout = false;
 
-  DamagePanelShadow ();
+  DamagePanelShadow();
 }
 
 /* Handle changes in the number of workspaces by showing the switcher
@@ -3386,11 +3391,12 @@ void UnityScreen::outputChangeNotify()
   screen->outputChangeNotify ();
 
   auto gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
-  gpu_device->backup_texture0_ = gpu_device->CreateSystemCapableDeviceTexture(screen->width (),
-                                                                              screen->height (),
-                                                                              1,
-                                                                              nux::BITFMT_R8G8B8A8,
-                                                                              NUX_TRACKER_LOCATION);
+  gpu_device->backup_texture0_ =
+      gpu_device->CreateSystemCapableDeviceTexture(screen->width(),
+                                                   screen->height(),
+                                                   1,
+                                                   nux::BITFMT_R8G8B8A8,
+                                                   NUX_TRACKER_LOCATION);
 
   ScheduleRelayout(500);
 }
