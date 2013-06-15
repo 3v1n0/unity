@@ -1368,7 +1368,7 @@ void UnityScreen::updateBlurDamage()
    */
   if (BackgroundEffectHelper::HasEnabledHelpers())
   {
-    cScreen->applyDamageForFrameAge (back_buffer_age_);
+    cScreen->applyDamageForFrameAge(back_buffer_age_);
 
     /*
      * Prioritise user interaction over active blur updates. So the general
@@ -1401,11 +1401,11 @@ void UnityScreen::damageCutoff()
     typedef nux::WindowCompositor::WeakBaseWindowPtr WeakBaseWindowPtr;
 
     /* We have to force-redraw the whole scene because
-     * if a bug in the nvidia driver that causes framebuffers
+     * of a bug in the nvidia driver that causes framebuffers
      * to be trashed on resume for a few swaps */
-    wt->GetWindowCompositor ()
-        .OnAllBaseWindows ([](WeakBaseWindowPtr const &w) {
-      w->QueueDraw ();
+    wt->GetWindowCompositor()
+        .OnAllBaseWindows([](WeakBaseWindowPtr const &w) {
+      w->QueueDraw();
     });
 
     force_draw_countdown_--;
@@ -1534,7 +1534,7 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
   CompRect::vector rects (damage.rects());
   for (const CompRect &r : rects)
   {
-    nux::Geometry g (r.x(), r.y(), r.width(), r.height());
+    nux::Geometry g(r.x(), r.y(), r.width(), r.height());
     wt->PresentWindowsIntersectingGeometryOnThisFrame(g);
   }
 }
@@ -1551,10 +1551,10 @@ void UnityScreen::determineNuxDamage(CompRegion &nux_damage)
   /* Special case, we need to redraw the panel shadow on panel updates */
   for (auto const& panel_geo : panel_controller_->GetGeometries())
   {
-    CompRect panel_rect (panel_geo.x,
-                         panel_geo.y,
-                         panel_geo.width,
-                         panel_geo.height);
+    CompRect panel_rect(panel_geo.x,
+                        panel_geo.y,
+                        panel_geo.width,
+                        panel_geo.height);
 
     if (nux_damage.intersects(panel_rect))
     {
@@ -3093,7 +3093,9 @@ void UnityScreen::initUnity(nux::NThread* thread, void* InitData)
   static_cast<nux::WindowThread*>(thread)->SetWindowBackgroundPaintLayer(&background);
   LOG_INFO(logger) << "UnityScreen::initUnity: " << timer.ElapsedSeconds() << "s";
 
-  nux::GetWindowCompositor().sigHiddenViewWindow.connect (sigc::mem_fun(self, &UnityScreen::OnViewHidden));
+  nux::GetWindowCompositor()
+    .sigHiddenViewWindow.connect(sigc::mem_fun(self,
+                                               &UnityScreen::OnViewHidden));
 }
 
 void UnityScreen::onRedrawRequested()
@@ -3290,7 +3292,7 @@ void UnityScreen::Relayout()
 
   needsRelayout = false;
 
-  DamagePanelShadow ();
+  DamagePanelShadow();
 }
 
 /* Handle changes in the number of workspaces by showing the switcher
