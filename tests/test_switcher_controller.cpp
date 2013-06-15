@@ -53,7 +53,7 @@ TEST_F(TestSwitcherController, InitiateDetail)
 
   auto const& view = controller_->GetView();
   auto const& model = view->GetModel();
-  EXPECT_EQ(controller_->detail_mode(), DetailMode::TAB_NEXT_TILE);
+  EXPECT_EQ(controller_->detail_mode(), DetailMode::TAB_NEXT_WINDOW);
   EXPECT_FALSE(view->animate());
   EXPECT_TRUE(model->detail_selection());
 
@@ -72,7 +72,7 @@ TEST_F(TestSwitcherController, InitiateDetailWebapps)
 
   auto const& view = controller_->GetView();
   auto const& model = view->GetModel();
-  EXPECT_EQ(controller_->detail_mode(), DetailMode::TAB_NEXT_TILE);
+  EXPECT_EQ(controller_->detail_mode(), DetailMode::TAB_NEXT_WINDOW);
   EXPECT_FALSE(view->animate());
   EXPECT_FALSE(model->detail_selection());
 }

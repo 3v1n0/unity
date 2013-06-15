@@ -138,8 +138,10 @@ class SwitcherTests(SwitcherTestCase):
 
         start = self.unity.switcher.selection_index
         self.unity.switcher.previous_icon()
+        # Allow for wrap-around to last icon in switcher
+        prev_index = (start - 1) % len(self.unity.switcher.icons)
 
-        self.assertThat(self.unity.switcher.selection_index, Eventually(Equals(start - 1)))
+        self.assertThat(self.unity.switcher.selection_index, Eventually(Equals(prev_index)))
 
     def test_switcher_scroll_next(self):
         """Test that scrolling the mouse wheel down moves to the next icon"""
@@ -162,8 +164,10 @@ class SwitcherTests(SwitcherTestCase):
 
         start = self.unity.switcher.selection_index
         self.unity.switcher.previous_via_mouse()
+        # Allow for wrap-around to last icon in switcher
+        prev_index = (start - 1) % len(self.unity.switcher.icons)
 
-        self.assertThat(self.unity.switcher.selection_index, Eventually(Equals(start - 1)))
+        self.assertThat(self.unity.switcher.selection_index, Eventually(Equals(prev_index)))
 
     def test_switcher_arrow_key_does_not_init(self):
         """Ensure that Alt+Right does not initiate switcher.
