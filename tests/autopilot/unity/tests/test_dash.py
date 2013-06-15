@@ -119,6 +119,8 @@ class DashRevealTests(DashTestCase):
 
     def test_closes_mouse_down_outside(self):
         """Test that a mouse down outside of the dash closes the dash."""
+        if (self.unity.dash.view.form_factor != "desktop"):
+          self.skip("Not in desktop form-factor.")
 
         self.unity.dash.ensure_visible()
         current_monitor = self.unity.dash.monitor
@@ -136,6 +138,9 @@ class DashRevealTests(DashTestCase):
         focused. Then from the Dash clicking on the maximized window
         must focus that window and close the dash.
         """
+        if (self.unity.dash.view.form_factor != "desktop"):
+          self.skip("Not in desktop form-factor.")
+
         char_win = self.process_manager.start_app("Character Map")
         self.keybinding("window/maximize")
         self.process_manager.start_app("Calculator")
