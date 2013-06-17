@@ -140,7 +140,7 @@ nux::Geometry LayoutSystem::LayoutRow(LayoutWindow::Vector const& row, nux::Geom
 
 std::vector<int> LayoutSystem::GetRowSizes(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds) const
 {
-  std::vector<LayoutWindow::Vector> rows = GetRows(windows, max_bounds);
+  std::vector<LayoutWindow::Vector> const& rows = GetRows(windows, max_bounds);
   std::vector<int> row_sizes;
 
   for (auto r : rows)

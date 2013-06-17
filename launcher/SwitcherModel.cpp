@@ -251,8 +251,10 @@ void SwitcherModel::UpdateRowIndex()
 unsigned int SwitcherModel::SumNRows(unsigned int n) const
 {
   unsigned int total = 0;
-  for (unsigned int i = 0; i <= n; i++)
-    total += row_sizes_[i];
+
+  if (n < row_sizes_.size())
+    for (unsigned int i = 0; i <= n; ++i)
+      total += row_sizes_[i];
 
   return total;
 }
@@ -309,10 +311,10 @@ bool SwitcherModel::HasNextDetailRow() const
 
 bool SwitcherModel::HasPrevDetailRow() const
 {
-  return (detail_selection_index > 0);
+  return (detail_selection_index > (unsigned int) 0);
 }
 
-void SwitcherModel::SetRowSizes(std::vector<int> row_sizes)
+void SwitcherModel::SetRowSizes(std::vector<int> const& row_sizes)
 {
   row_sizes_ = row_sizes;
 }

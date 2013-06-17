@@ -80,6 +80,7 @@ TEST_F(TestSwitcherModel, TestConstructor)
   EXPECT_EQ(model->LastSelection(), icons_.front());
   EXPECT_EQ(model->SelectionIndex(), 0);
   EXPECT_EQ(model->LastSelectionIndex(), 0);
+  EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 0);
 }
 
 
@@ -226,7 +227,7 @@ TEST_F(TestSwitcherModel, TestNextDetailRow)
   model->SetRowSizes({2,2});
 
   model->NextDetailRow();
-  EXPECT_TRUE(model->detail_selection_index == 2);
+  EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 2);
 }
 
 TEST_F(TestSwitcherModel, TestNextDetailThenNextDetailRow)
@@ -237,7 +238,7 @@ TEST_F(TestSwitcherModel, TestNextDetailThenNextDetailRow)
 
   model->NextDetail();
   model->NextDetailRow();
-  EXPECT_TRUE(model->detail_selection_index == 3);
+  EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 3);
 }
 
 TEST_F(TestSwitcherModel, TestPrevDetailRow)
@@ -249,7 +250,7 @@ TEST_F(TestSwitcherModel, TestPrevDetailRow)
   model->NextDetailRow();
   model->PrevDetailRow();
 
-  EXPECT_TRUE(model->detail_selection_index == 0);
+  EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 0);
 }
 
 TEST_F(TestSwitcherModel, TestNextDetailThenPrevDetailRow)
@@ -262,7 +263,7 @@ TEST_F(TestSwitcherModel, TestNextDetailThenPrevDetailRow)
   model->NextDetailRow();
 
   model->PrevDetailRow();
-  EXPECT_TRUE(model->detail_selection_index == 1);
+  EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 1);
 }
 
 TEST_F(TestSwitcherModel, TestUnEvenNextDetailRow)
@@ -272,7 +273,7 @@ TEST_F(TestSwitcherModel, TestUnEvenNextDetailRow)
   model->SetRowSizes({3,2});
 
   model->NextDetailRow();
-  EXPECT_TRUE(model->detail_selection_index == 3);
+  EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 3);
 }
 
 TEST_F(TestSwitcherModel, TestUnEvenPrevDetailRow)
@@ -284,7 +285,7 @@ TEST_F(TestSwitcherModel, TestUnEvenPrevDetailRow)
   model->NextDetailRow();
   model->PrevDetailRow();
 
-  EXPECT_TRUE(model->detail_selection_index == 0);
+  EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 0);
 }
 
 TEST_F(TestSwitcherModel, TestNextPrevDetailRowMovesLeftInTopRow)
@@ -298,7 +299,7 @@ TEST_F(TestSwitcherModel, TestNextPrevDetailRowMovesLeftInTopRow)
   model->PrevDetailRow();
   model->PrevDetailRow();
 
-  EXPECT_TRUE(model->detail_selection_index == 0);
+  EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 0);
 }
 
 }

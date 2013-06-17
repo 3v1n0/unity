@@ -95,7 +95,7 @@ public:
   bool HasNextDetailRow() const;
   bool HasPrevDetailRow() const;
 
-  void SetRowSizes(std::vector<int> row_sizes);
+  void SetRowSizes(std::vector<int> const& row_sizes);
 
   void Select(launcher::AbstractLauncherIcon::Ptr const& selection);
   void Select(unsigned int index);
