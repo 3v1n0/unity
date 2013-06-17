@@ -1,8 +1,8 @@
 description "Backing Service for the Unity Panel"
 author "Ted Gould <ted@ubuntu.com>"
 
-start on started unity
-stop on stopping unity
+start on desktop-start DESKTOP_SESSION=ubuntu
+stop on desktop-end
 
 emits indicators-loaded
 
