@@ -857,9 +857,11 @@ void UnityScreen::enterShowDesktopMode ()
 {
   for (CompWindow *w : screen->windows ())
   {
+    CompPoint const& viewport = w->defaultViewport();
     UnityWindow *uw = UnityWindow::get (w);
 
-    if (ShowdesktopHandler::ShouldHide (static_cast <ShowdesktopHandlerWindowInterface *> (uw)))
+    if (viewport == uScreen->screen->vp() &&
+        ShowdesktopHandler::ShouldHide (static_cast <ShowdesktopHandlerWindowInterface *> (uw)))
     {
       UnityWindow::get (w)->enterShowDesktop ();
       // the animation plugin does strange things here ...
@@ -977,6 +979,8 @@ void UnityWindow::activate ()
   ShowdesktopHandler::InhibitLeaveShowdesktopMode (window->id ());
   window->activate ();
   ShowdesktopHandler::AllowLeaveShowdesktopMode (window->id ());
+
+  PluginAdapter::Default().OnLeaveDesktop();
 }
 
 void UnityWindow::DoEnableFocus ()
@@ -1689,6 +1693,7 @@ void UnityScreen::handleCompizEvent(const char* plugin,
 
   if (launcher_controller_->IsOverlayOpen() && g_strcmp0(event, "start_viewport_switch") == 0)
   {
+    PluginAdapter::Default().OnLeaveDesktop();
     ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   }
 
@@ -3406,6 +3411,8 @@ UnityWindow::UnityWindow(CompWindow* window)
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
   ScaleWindowInterface::setHandler (ScaleWindow::get (window));
+
+  PluginAdapter::Default().OnLeaveDesktop();
 
   /* This needs to happen before we set our wrapable functions, since we
    * need to ask core (and not ourselves) whether or not the window is
