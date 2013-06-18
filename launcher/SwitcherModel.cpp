@@ -306,7 +306,7 @@ void SwitcherModel::PrevDetailRow()
 
 bool SwitcherModel::HasNextDetailRow() const
 {
-  return (row_index_ < row_sizes_.size() - 1);
+  return (row_sizes_.size() && row_index_ < row_sizes_.size() - 1);
 }
 
 bool SwitcherModel::HasPrevDetailRow() const

@@ -124,6 +124,44 @@ bool Controller::Visible()
   return visible_;
 }
 
+bool Controller::HandleStartInitiateEvent()
+{
+  if (visible_)
+  {
+    if (IsDetailViewShown() && HasNextDetailRow())
+    {
+      NextDetailRow();
+    }
+    else
+    {
+      SetDetail(true);
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+bool Controller::HandleStopInitiateEvent()
+{
+  if (visible_)
+  {
+    if (IsDetailViewShown() && HasPrevDetailRow())
+    {
+      PrevDetailRow();
+    }
+    else
+    {
+      SetDetail(false);
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
 void Controller::Next()
 {
   impl_->Next();

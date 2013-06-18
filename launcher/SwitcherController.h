@@ -89,6 +89,9 @@ public:
 
   bool Visible();
 
+  bool HandleStartInitiateEvent();
+  bool HandleStopInitiateEvent();
+
   void Next();
   void Prev();
 

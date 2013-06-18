@@ -1999,40 +1999,12 @@ bool UnityScreen::altTabPrevInitiate(CompAction* action, CompAction::State state
 
 bool UnityScreen::altTabDetailStartInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  if (switcher_controller_->Visible())
-  {
-    if (switcher_controller_->IsDetailViewShown() &&
-        switcher_controller_->HasNextDetailRow())
-    {
-      switcher_controller_->NextDetailRow();
-    }
-    else
-    {
-      switcher_controller_->SetDetail(true);
-    }
-    return true;
-  }
-
-  return false;
+  return switcher_controller_->HandleStartInitiateEvent();
 }
 
 bool UnityScreen::altTabDetailStopInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  if (switcher_controller_->Visible())
-  {
-    if (switcher_controller_->IsDetailViewShown() &&
-        switcher_controller_->HasPrevDetailRow())
-    {
-      switcher_controller_->PrevDetailRow();
-    }
-    else
-    {
-      switcher_controller_->SetDetail(false);
-    }
-    return true;
-  }
-
-  return false;
+  return switcher_controller_->HandleStopInitiateEvent();
 }
 
 bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
