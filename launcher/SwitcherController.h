@@ -89,6 +89,9 @@ public:
 
   bool Visible();
 
+  bool StartDetailMode();
+  bool StopDetailMode();
+
   void Next();
   void Prev();
 

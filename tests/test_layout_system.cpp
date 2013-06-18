@@ -21,6 +21,8 @@
 #include "LayoutSystem.h"
 #include "StandaloneWindowManager.h"
 
+#include <vector>
+
 namespace unity
 {
 namespace ui
@@ -151,6 +153,52 @@ TEST_F(TestLayoutSystem, LayoutWindows)
   nux::Geometry windows_area(min_start_x, min_start_y, max_last_x - min_start_x, max_last_y - min_start_y);
 
   EXPECT_EQ(final_bounds.Intersect(windows_area), windows_area);
+}
+
+TEST_F(TestLayoutSystem, GetRowSizesEven)
+{
+  nux::Geometry max_bounds(0, 0, 200, 100);
+  nux::Geometry final_bounds;
+
+  Window xid = 3;
+  AddFakeWindowToWM(xid, nux::Geometry(4, 5, 200, 200));
+  lwindows.push_back(std::make_shared<LayoutWindow>(xid));
+
+  xid = 4;
+  AddFakeWindowToWM(xid, nux::Geometry(10, 20, 200, 200));
+  lwindows.push_back(std::make_shared<LayoutWindow>(xid));
+
+  ls.LayoutWindows(lwindows, max_bounds, final_bounds);
+
+  std::vector<int> const& row_sizes = ls.GetRowSizes(lwindows, max_bounds);
+  EXPECT_EQ(row_sizes.size(), 2);
+  EXPECT_EQ(row_sizes[0], 2);
+  EXPECT_EQ(row_sizes[1], 2);
+}
+
+TEST_F(TestLayoutSystem, GetRowSizesUnEven)
+{
+  nux::Geometry max_bounds(0, 0, 200, 100);
+  nux::Geometry final_bounds;
+
+  Window xid = 3;
+  AddFakeWindowToWM(xid, nux::Geometry(4, 5, 200, 200));
+  lwindows.push_back(std::make_shared<LayoutWindow>(xid));
+
+  xid = 4;
+  AddFakeWindowToWM(xid, nux::Geometry(10, 20, 200, 200));
+  lwindows.push_back(std::make_shared<LayoutWindow>(xid));
+
+  xid = 5;
+  AddFakeWindowToWM(xid, nux::Geometry(10, 20, 200, 200));
+  lwindows.push_back(std::make_shared<LayoutWindow>(xid));
+
+  ls.LayoutWindows(lwindows, max_bounds, final_bounds);
+
+  std::vector<int> const& row_sizes = ls.GetRowSizes(lwindows, max_bounds);
+  EXPECT_EQ(row_sizes.size(), 2);
+  EXPECT_EQ(row_sizes[0], 2);
+  EXPECT_EQ(row_sizes[1], 3);
 }
 
 }

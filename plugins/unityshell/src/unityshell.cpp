@@ -321,8 +321,8 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAltTabPrevAllInitiate(boost::bind(&UnityScreen::altTabPrevAllInitiate, this, _1, _2, _3));
      optionSetAltTabPrevInitiate(boost::bind(&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
 
-     optionSetAltTabDetailStartInitiate(boost::bind(&UnityScreen::altTabDetailStartInitiate, this, _1, _2, _3));
-     optionSetAltTabDetailStopInitiate(boost::bind(&UnityScreen::altTabDetailStopInitiate, this, _1, _2, _3));
+     optionSetAltTabDetailStartInitiate(boost::bind(&UnityScreen::altTabDetailStart, this, _1, _2, _3));
+     optionSetAltTabDetailStopInitiate(boost::bind(&UnityScreen::altTabDetailStop, this, _1, _2, _3));
 
      optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
      optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
@@ -1997,26 +1997,14 @@ bool UnityScreen::altTabPrevInitiate(CompAction* action, CompAction::State state
   return false;
 }
 
-bool UnityScreen::altTabDetailStartInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+bool UnityScreen::altTabDetailStart(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  if (switcher_controller_->Visible())
-  {
-    switcher_controller_->SetDetail(true);
-    return true;
-  }
-
-  return false;
+  return switcher_controller_->StartDetailMode();
 }
 
-bool UnityScreen::altTabDetailStopInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+bool UnityScreen::altTabDetailStop(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
-  if (switcher_controller_->Visible())
-  {
-    switcher_controller_->SetDetail(false);
-    return true;
-  }
-
-  return false;
+  return switcher_controller_->StopDetailMode();
 }
 
 bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
