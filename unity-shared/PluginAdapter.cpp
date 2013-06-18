@@ -217,6 +217,11 @@ void PluginAdapter::NotifyCompizEvent(const char* plugin,
   }
   else if (g_strcmp0(event, "end_viewport_switch") == 0)
   {
+    if (!IsCurrentViewportEmpty())
+      OnLeaveDesktop();
+    else
+      OnShowDesktop();
+
     _vp_switch_started = false;
     screen_viewport_switch_ended.emit();
   }
@@ -608,6 +613,20 @@ Window PluginAdapter::GetTopMostValidWindowInViewport() const
     }
   }
   return 0;
+}
+
+bool PluginAdapter::IsCurrentViewportEmpty() const
+{
+  Window win = GetTopMostValidWindowInViewport();
+
+  if (win)
+  {
+    CompWindow* cwin = m_Screen->findWindow(win);
+    if (!(cwin->type() & NO_FOCUS_MASK))
+      return false;
+  }
+
+  return true;
 }
 
 Window PluginAdapter::GetTopWindowAbove(Window xid) const

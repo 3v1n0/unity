@@ -206,6 +206,7 @@ private:
   unsigned long GetMwnDecorations(Window xid) const;
 
   Window GetTopMostValidWindowInViewport() const;
+  bool IsCurrentViewportEmpty() const;
 
   std::string GetTextProperty(Window xid, Atom atom) const;
   std::string GetUtf8Property(Window xid, Atom atom) const;

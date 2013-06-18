@@ -1693,7 +1693,6 @@ void UnityScreen::handleCompizEvent(const char* plugin,
 
   if (launcher_controller_->IsOverlayOpen() && g_strcmp0(event, "start_viewport_switch") == 0)
   {
-    PluginAdapter::Default().OnLeaveDesktop();
     ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   }
 
