@@ -124,13 +124,14 @@ bool Controller::Visible()
   return visible_;
 }
 
-bool Controller::HandleStartInitiateEvent()
+bool Controller::StartDetailMode()
 {
   if (visible_)
   {
-    if (IsDetailViewShown() && HasNextDetailRow())
+    if (IsDetailViewShown() &&
+        impl_->HasNextDetailRow())
     {
-      NextDetailRow();
+      impl_->NextDetailRow();
     }
     else
     {
@@ -143,13 +144,14 @@ bool Controller::HandleStartInitiateEvent()
   return false;
 }
 
-bool Controller::HandleStopInitiateEvent()
+bool Controller::StopDetailMode()
 {
   if (visible_)
   {
-    if (IsDetailViewShown() && HasPrevDetailRow())
+    if (IsDetailViewShown() &&
+        impl_->HasPrevDetailRow())
     {
-      PrevDetailRow();
+      impl_->PrevDetailRow();
     }
     else
     {
@@ -200,26 +202,6 @@ void Controller::NextDetail()
 void Controller::PrevDetail()
 {
   impl_->PrevDetail();
-}
-
-bool Controller::HasNextDetailRow() const
-{
-  return impl_->HasNextDetailRow();
-}
-
-bool Controller::HasPrevDetailRow() const
-{
-  return impl_->HasPrevDetailRow();
-}
-
-void Controller::NextDetailRow()
-{
-  impl_->NextDetailRow();
-}
-
-void Controller::PrevDetailRow()
-{
-  impl_->PrevDetailRow();
 }
 
 LayoutWindow::Vector Controller::ExternalRenderTargets()

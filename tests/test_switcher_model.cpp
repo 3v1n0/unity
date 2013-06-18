@@ -227,6 +227,10 @@ TEST_F(TestSwitcherModel, TestNextDetailRow)
   model->SetRowSizes({2,2});
 
   model->NextDetailRow();
+
+  // Expect going form index 0 -> 2
+  // 0, 1
+  // 2, 3
   EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 2);
 }
 
@@ -238,6 +242,10 @@ TEST_F(TestSwitcherModel, TestNextDetailThenNextDetailRow)
 
   model->NextDetail();
   model->NextDetailRow();
+
+  // Expect going form index 1 -> 3
+  // 0, 1
+  // 2, 3
   EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 3);
 }
 
@@ -250,6 +258,9 @@ TEST_F(TestSwitcherModel, TestPrevDetailRow)
   model->NextDetailRow();
   model->PrevDetailRow();
 
+  // Expect going form index 0 -> 2, then index 2 -> 0
+  // 0, 1
+  // 2, 3
   EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 0);
 }
 
@@ -263,6 +274,10 @@ TEST_F(TestSwitcherModel, TestNextDetailThenPrevDetailRow)
   model->NextDetailRow();
 
   model->PrevDetailRow();
+
+  // Expect going form index 1 -> 3, then index 3 -> 1
+  // 0, 1
+  // 2, 3
   EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 1);
 }
 
@@ -273,6 +288,10 @@ TEST_F(TestSwitcherModel, TestUnEvenNextDetailRow)
   model->SetRowSizes({3,2});
 
   model->NextDetailRow();
+
+  // Expect going form index 0 -> 3
+  // 0, 1, 2,
+  //   3, 4
   EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 3);
 }
 
@@ -285,6 +304,9 @@ TEST_F(TestSwitcherModel, TestUnEvenPrevDetailRow)
   model->NextDetailRow();
   model->PrevDetailRow();
 
+  // Expect going form index 0 -> 3, then 3 -> 0
+  // 0, 1, 2,
+  //   3, 4
   EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 0);
 }
 
@@ -299,6 +321,10 @@ TEST_F(TestSwitcherModel, TestNextPrevDetailRowMovesLeftInTopRow)
   model->PrevDetailRow();
   model->PrevDetailRow();
 
+  // Expect going form index 0 -> 1, then 1 -> 2, then 2 -> 1, 1 -> 0
+  // since PrevDetailRow must go to the index 0 of at the top of the row
+  // 0, 1, 2,
+  //   3, 4
   EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 0);
 }
 

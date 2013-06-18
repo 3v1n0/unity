@@ -89,8 +89,8 @@ public:
 
   bool Visible();
 
-  bool HandleStartInitiateEvent();
-  bool HandleStopInitiateEvent();
+  bool StartDetailMode();
+  bool StopDetailMode();
 
   void Next();
   void Prev();
@@ -98,11 +98,6 @@ public:
   void InitiateDetail();
   void NextDetail();
   void PrevDetail();
-
-  void NextDetailRow();
-  void PrevDetailRow();
-  bool HasNextDetailRow() const;
-  bool HasPrevDetailRow() const;
 
   void Select(int index);
 
