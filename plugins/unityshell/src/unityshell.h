@@ -250,6 +250,8 @@ private:
 
   void UpdateCloseWindowKey(CompAction::KeyBinding const&);
 
+  CompWindow * GetTopVisibleWindow();
+
   std::unique_ptr<na::TickSource> tick_source_;
   std::unique_ptr<na::AnimationController> animation_controller_;
 
@@ -340,6 +342,8 @@ private:
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
+
+  bool is_desktop_active_;
 
   friend class UnityWindow;
 };

@@ -149,6 +149,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , scale_just_activated_(false)
   , big_tick_(0)
   , screen_introspection_(screen)
+  , is_desktop_active_(false)
 {
   Timer timer;
 #ifndef USE_GLES
@@ -953,6 +954,21 @@ bool UnityScreen::DoesPointIntersectUnityGeos(nux::Point const& pt)
   return false;
 }
 
+CompWindow * GetTopVisibleWindow()
+{
+  CompWindow *top_visible_window = NULL;
+
+  for (CompWindow *w : screen->windows ())
+  {
+    if (w->isViewable())
+    {
+      top_visible_window = w;
+    }
+  }
+
+  return top_visible_window;
+}
+  
 void UnityWindow::enterShowDesktop ()
 {
   if (!mShowdesktopHandler)
@@ -2600,13 +2616,14 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       uScreen->setPanelShadowMatrix(matrix);
 
       if (active_window == 0 || active_window == window->id())
-        draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
+        uScreen->is_desktop_active_ = true;
     }
     else
     {
       if (window->id() == active_window)
       {
         draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
+        uScreen->is_desktop_active_ = false;
 
         if (!(window->state() & CompWindowStateMaximizedVertMask) &&
             !(window->state() & CompWindowStateFullscreenMask) &&
@@ -2617,6 +2634,22 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
           if (window->y() - window->border().top < output.y() + uScreen->panel_style_.panel_height)
           {
             draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
+          }
+        }
+      }
+      else
+      {
+        if (uScreen->is_desktop_active_)
+        {
+          CompWindow *top_visible_window = GetTopVisibleWindow();
+
+          if (top_visible_window)
+          {
+            if (window->id() == top_visible_window->id())
+            {
+              draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
+              uScreen->panelShadowPainted = CompRegion();
+            }
           }
         }
       }
