@@ -1,3 +1,45 @@
+unity (7.0.0daily13.06.19-0ubuntu1) saucy; urgency=low
+
+  [ Michal Hruby ]
+  * Bump libunity-core SONAME and adjust debian.
+
+  [ Ted Gould ]
+  * Make Unity depend on bamfdaemon.
+
+  [ Iain Lane ]
+  * Start unity-panel-service using upstart user session jobs.
+
+  [ Brandon Schaefer ]
+  * Fixes the use of Alt+` and Right arrow when in detail mode. Now it
+    goes to the next window instead of closing detail mode. (LP:
+    #1190798)
+  * When in detail mode, you are now allowed to use UP/DOWN keys to move
+    around. (LP: #1131646)
+
+  [ Chris Townsend ]
+  * Add functionality to wiggle urgent icons at certain time intervals
+    when the Launcher is hidden. (LP: #893196)
+  * Add support to close social previews by clicking anywhere in the
+    preview bubble. (LP: #1190007)
+
+  [ Nick Dedekind ]
+  * Added check for x-unity-no-preview. Do not preview; send direct
+    activation to scope. (LP: #1188705)
+
+  [ Xiao-Long Chen ]
+  * SessionView: Fix build when building without precompiled headers.
+    (LP: #1191097)
+
+  [ Andrea Azzarone ]
+  * Fix failing AP test. (LP: #1191039)
+  * Fix failing test. (LP: #1191059)
+  * Skip tests if not in desktop mode. (LP: #1191053)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3378
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 19 Jun 2013 04:29:36 +0000
+
 unity (7.0.0daily13.06.07-0ubuntu1) saucy; urgency=low
 
   [ Ted Gould ]
