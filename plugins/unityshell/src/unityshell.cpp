@@ -902,7 +902,10 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
   {
     for (CompWindow *cw : screen->windows ())
     {
-      if (cw->inShowDesktopMode ())
+      CompPoint const& viewport = cw->defaultViewport();
+
+      if (viewport == uScreen->screen->vp() &&
+          cw->inShowDesktopMode ())
       {
         UnityWindow::get (cw)->leaveShowDesktop ();
         // the animation plugin does strange things here ...
@@ -913,7 +916,13 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
 
     PluginAdapter::Default().OnLeaveDesktop();
 
-    screen->leaveShowDesktopMode (w);
+    if (w)
+    {
+      CompPoint const& viewport = w->defaultViewport();
+
+      if (viewport == uScreen->screen->vp())
+        screen->leaveShowDesktopMode (w);
+    }
   }
   else
   {
