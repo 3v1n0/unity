@@ -2810,6 +2810,8 @@ void UnityWindow::windowNotify(CompWindowNotify n)
         window->unminimizeSetEnabled (this, false);
         window->minimizedSetEnabled (this, false);
       }
+
+      PluginAdapter::Default().UpdateShowDesktopState();
         break;
       case CompWindowNotifyBeforeDestroy:
         being_destroyed.emit();

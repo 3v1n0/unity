@@ -217,10 +217,7 @@ void PluginAdapter::NotifyCompizEvent(const char* plugin,
   }
   else if (g_strcmp0(event, "end_viewport_switch") == 0)
   {
-    if (!IsCurrentViewportEmpty())
-      OnLeaveDesktop();
-    else
-      OnShowDesktop();
+    UpdateShowDesktopState();
 
     _vp_switch_started = false;
     screen_viewport_switch_ended.emit();
@@ -947,6 +944,14 @@ void PluginAdapter::OnLeaveDesktop()
 {
   LOG_DEBUG(logger) << "No longer in show desktop mode.";
   _in_show_desktop = false;
+}
+
+void PluginAdapter::UpdateShowDesktopState()
+{
+  if (!IsCurrentViewportEmpty())
+    OnLeaveDesktop();
+  else
+    OnShowDesktop();
 }
 
 int PluginAdapter::GetWindowMonitor(Window window_id) const

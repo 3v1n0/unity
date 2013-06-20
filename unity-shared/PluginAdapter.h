@@ -97,6 +97,7 @@ public:
 
   void OnShowDesktop ();
   void OnLeaveDesktop ();
+  void UpdateShowDesktopState();
 
   void TerminateScale();
   bool IsScaleActive() const;
