@@ -923,6 +923,10 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
       if (viewport == uScreen->screen->vp())
         screen->leaveShowDesktopMode (w);
     }
+    else
+    {
+      screen->focusDefaultWindow();
+    }
   }
   else
   {
