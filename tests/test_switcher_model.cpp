@@ -186,9 +186,6 @@ TEST_F(TestSwitcherModel, TestHasNextDetailRow)
   model->SetRowSizes({2,2});
 
   EXPECT_TRUE(model->HasNextDetailRow());
-
-  model->NextDetailRow();
-  EXPECT_FALSE(model->HasNextDetailRow());
 }
 
 TEST_F(TestSwitcherModel, TestHasPrevDetailRow)
@@ -213,7 +210,6 @@ TEST_F(TestSwitcherModel, TestHasNextThenPrevDetailRow)
   EXPECT_TRUE(model->HasNextDetailRow());
 
   model->NextDetailRow();
-  EXPECT_FALSE(model->HasNextDetailRow());
 
   EXPECT_TRUE(model->HasPrevDetailRow());
   model->PrevDetailRow();
