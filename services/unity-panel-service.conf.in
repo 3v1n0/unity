@@ -2,7 +2,7 @@ description "Backing Service for the Unity Panel"
 author "Ted Gould <ted@ubuntu.com>"
 
 start on started unity
-stop on desktop-end
+stop on stopped unity
 
 emits indicators-loaded
 
