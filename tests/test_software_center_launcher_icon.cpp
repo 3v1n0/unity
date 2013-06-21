@@ -56,6 +56,7 @@ public:
    using SoftwareCenterLauncherIcon::_desktop_file;
    using SoftwareCenterLauncherIcon::GetRemoteUri;
    using SoftwareCenterLauncherIcon::OnFinished;
+   using SoftwareCenterLauncherIcon::OnPropertyChanged;
 };
 
 struct TestSoftwareCenterLauncherIcon : testing::Test
@@ -132,6 +133,20 @@ TEST_F(TestSoftwareCenterLauncherIcon, Animate)
   Utils::WaitForTimeoutMSec(500);
 
   EXPECT_TRUE(icon.IsVisible());
+}
+
+TEST_F(TestSoftwareCenterLauncherIcon, TooltipStatusUpdate)
+{
+  ASSERT_EQ(icon.tooltip_text(), "Waiting to install");
+
+  GVariant *status = g_variant_new("s", "Downloading");
+  GVariant *params = g_variant_new("(sv)", "StatusDetails", status); 
+
+  icon.OnPropertyChanged(params);
+
+  EXPECT_EQ(icon.tooltip_text(), "Downloading");
+
+  g_variant_unref(params);
 }
 
 }
