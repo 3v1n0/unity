@@ -81,8 +81,12 @@ TEST_F(TestSwitcherController, StartDetailMode)
 {
   controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
   controller_->InitiateDetail();
-  controller_->StartDetailMode();
+  EXPECT_TRUE(controller_->IsDetailViewShown());
 
+  controller_->StopDetailMode();
+  EXPECT_FALSE(controller_->IsDetailViewShown());
+
+  controller_->StartDetailMode();
   EXPECT_TRUE(controller_->IsDetailViewShown());
 }
 
@@ -90,11 +94,8 @@ TEST_F(TestSwitcherController, StopDetailMode)
 {
   controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
   controller_->InitiateDetail();
-
-  controller_->StartDetailMode();
   EXPECT_TRUE(controller_->IsDetailViewShown());
 
-  controller_->StopDetailMode();
   controller_->StopDetailMode();
   EXPECT_FALSE(controller_->IsDetailViewShown());
 }
