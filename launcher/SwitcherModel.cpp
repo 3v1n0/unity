@@ -270,7 +270,7 @@ bool SwitcherModel::DetailIndexInLeftHalfOfRow() const
 
 void SwitcherModel::NextDetailRow()
 {
-  if (HasNextDetailRow())
+  if (row_sizes_.size() && row_index_ < row_sizes_.size() - 1)
   {
     unsigned int current_row = row_sizes_[row_index_];
     unsigned int next_row    = row_sizes_[row_index_ + 1];
@@ -281,6 +281,10 @@ void SwitcherModel::NextDetailRow()
 
     detail_selection_index = detail_selection_index + increment;
     row_index_++;
+  }
+  else
+  {
+    detail_selection_index = detail_selection_index + 1;
   }
 }
 
@@ -306,7 +310,7 @@ void SwitcherModel::PrevDetailRow()
 
 bool SwitcherModel::HasNextDetailRow() const
 {
-  return (row_sizes_.size() && row_index_ < row_sizes_.size() - 1);
+  return (detail_selection_index < DetailXids().size() - 1);
 }
 
 bool SwitcherModel::HasPrevDetailRow() const
