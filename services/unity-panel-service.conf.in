@@ -1,6 +1,13 @@
 description "Backing Service for the Unity Panel"
 author "Ted Gould <ted@ubuntu.com>"
 
+# These should be used when we have Unity full under upstart, but while
+# we have the pre-start work around for gnome-session starting it we're
+# going to comment them out.
+#
+# start on started unity7
+# stop on stopped unity7
+
 start on desktop-start DESKTOP_SESSION=ubuntu
 stop on desktop-end
 
