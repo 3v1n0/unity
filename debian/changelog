@@ -1,3 +1,24 @@
+unity (7.0.0daily13.06.24-0ubuntu1) saucy; urgency=low
+
+  [ Brandon Schaefer ]
+  * Show desktop now only works for individual workspaces. Also if any
+    new windows are opened, or one is restored on that workspace then
+    the next Show desktop will minimize those. The only time windows are
+    restored are when no new windows have been mapped, and no windows
+    have been restored for that workspace only. (LP: #966030)
+  * When on the bottom row and you press down, the detail index now
+    moves right until it hits the last icon in the row.
+
+  [ Chris Townsend ]
+  * Draw the full panel shadow when there are windows docked on the
+    panel and no focused windows on the screen such as when the desktop
+    has been clicked. (LP: #1036614)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3382
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 24 Jun 2013 05:42:36 +0000
+
 unity (7.0.0daily13.06.19-0ubuntu1) saucy; urgency=low
 
   [ Michal Hruby ]
