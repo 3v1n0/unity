@@ -78,6 +78,7 @@ void Scope::Impl::Init()
     property_connections.push_back(utils::ConnectProperties(owner_->is_master, proxy_->is_master));
     property_connections.push_back(utils::ConnectProperties(owner_->search_hint, proxy_->search_hint));
     property_connections.push_back(utils::ConnectProperties(owner_->view_type, proxy_->view_type));
+    property_connections.push_back(utils::ConnectProperties(owner_->form_factor, proxy_->form_factor));
     property_connections.push_back(utils::ConnectProperties(owner_->results, proxy_->results));
     property_connections.push_back(utils::ConnectProperties(owner_->filters, proxy_->filters));
     property_connections.push_back(utils::ConnectProperties(owner_->categories, proxy_->categories));
@@ -229,10 +230,15 @@ void Scope::Connect()
 
 void Scope::Search(std::string const& search_hint, SearchCallback const& callback, GCancellable* cancellable)
 {
+  Search(search_hint, glib::HintsMap(), callback, cancellable);
+}
+
+void Scope::Search(std::string const& search_hint, glib::HintsMap const& hints, SearchCallback const& callback, GCancellable* cancellable)
+{
   if (!pimpl->proxy_)
     return;
-  
-  return pimpl->proxy_->Search(search_hint, callback, cancellable);
+
+  return pimpl->proxy_->Search(search_hint, hints, callback, cancellable);
 }
 
 void Scope::Activate(LocalResult const& result, ActivateCallback const& callback, GCancellable* cancellable)
