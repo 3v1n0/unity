@@ -69,7 +69,7 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   app->seen = true;
 
   tooltip_text = app->title();
-  std::string icon = app->icon();
+  std::string const& icon = app->icon();
   icon_name = (icon.empty() ? DEFAULT_ICON : icon);
 
   SetQuirk(Quirk::VISIBLE, app->visible());
@@ -148,6 +148,16 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
     SetQuirk(Quirk::ACTIVE, active);
   });
 
+  title_changed_connection_ = app_->title.changed.connect([this](std::string const& name) {
+    LOG_DEBUG(logger) << tooltip_text() << " name now " << name;
+    tooltip_text = name;
+  });
+
+  icon_changed_connection_ = app_->icon.changed.connect([this](std::string const& icon) {
+    LOG_DEBUG(logger) << tooltip_text() << " icon now " << icon;
+    icon_name = (icon.empty() ? DEFAULT_ICON : icon);
+  });
+
   running_changed_connection_ = app_->running.changed.connect([this](bool const& running) {
     LOG_DEBUG(logger) << tooltip_text() << " running now " << (running ? "true" : "false");
     SetQuirk(Quirk::RUNNING, running);
@@ -207,6 +217,8 @@ void ApplicationLauncherIcon::DisconnectApplicationSignalsConnections()
   active_changed_connection_.disconnect();
   running_changed_connection_.disconnect();
   visible_changed_connection_.disconnect();
+  title_changed_connection_.disconnect();
+  icon_changed_connection_.disconnect();
   closed_changed_connection_.disconnect();
 }
 
