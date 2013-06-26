@@ -166,19 +166,6 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
     {
       _source_manager.Remove(ICON_REMOVE_TIMEOUT);
 
-      /* It can happen that these values are not set
-       * during initialization if the view is closed
-       * very early, so we need to make sure that they
-       * are updated as soon as the view is re-opened. */
-      if (tooltip_text().empty())
-        tooltip_text = app_->title();
-
-      if (icon_name == DEFAULT_ICON)
-      {
-        std::string icon = app_->icon();
-        icon_name = (icon.empty() ? DEFAULT_ICON : icon);
-      }
-
       EnsureWindowState();
       UpdateIconGeometries(GetCenters());
     }
