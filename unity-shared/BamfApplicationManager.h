@@ -37,8 +37,8 @@ public:
   View(ApplicationManager const& manager,
        glib::Object<BamfView> const& view);
 
-  std::string title() const;
-  std::string icon() const;
+  std::string GetTitle() const;
+  std::string GetIcon() const;
   std::string type() const;
 
   bool GetVisible() const;
@@ -59,8 +59,6 @@ protected:
              glib::Object<BamfView> const& window);
 
 public:
-  virtual std::string title() const;
-  virtual std::string icon() const;
   virtual std::string type() const; // 'window' or 'tab'
 
   virtual bool Focus() const;
@@ -110,8 +108,6 @@ public:
   Application(ApplicationManager const& manager,
               glib::Object<BamfApplication> const& app);
 
-  virtual std::string title() const;
-  virtual std::string icon() const;
   virtual std::string desktop_file() const;
   virtual std::string type() const;
 

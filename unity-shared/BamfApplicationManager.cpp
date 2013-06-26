@@ -44,12 +44,12 @@ View::View(ApplicationManager const& manager, glib::Object<BamfView> const& view
 {
 }
 
-std::string View::title() const
+std::string View::GetTitle() const
 {
   return glib::String(bamf_view_get_name(bamf_view_)).Str();
 }
 
-std::string View::icon() const
+std::string View::GetIcon() const
 {
   return glib::String(bamf_view_get_icon(bamf_view_)).Str();
 }
@@ -81,15 +81,33 @@ bool View::GetUrgent() const
 }
 
 
+std::string WindowBase::type() const
+{
+  return View::type();
+}
+
 WindowBase::WindowBase(ApplicationManager const& manager,
                        glib::Object<BamfView> const& window)
   : View(manager, window)
 {
+  title.SetGetterFunction(sigc::mem_fun(this, &View::GetTitle));
+  icon.SetGetterFunction(sigc::mem_fun(this, &View::GetIcon));
   visible.SetGetterFunction(sigc::mem_fun(this, &View::GetVisible));
   active.SetGetterFunction(sigc::mem_fun(this, &View::GetActive));
   urgent.SetGetterFunction(sigc::mem_fun(this, &View::GetUrgent));
 
   glib::SignalBase* sig;
+  sig = new glib::Signal<void, BamfView*, const char*, const char*>(bamf_view_, "name-changed",
+                          [this] (BamfView*, const char*, const char* new_name) {
+                            this->title.changed.emit(glib::gchar_to_string(new_name));
+                          });
+  signals_.Add(sig);
+  sig = new glib::Signal<void, BamfView*, const char*>(bamf_view_, "icon-changed",
+                          [this] (BamfView*, const char* icon) {
+                            g_print("View %p, icon changed to %s\n",this,icon);
+                            this->icon.changed.emit(glib::gchar_to_string(icon));
+                          });
+  signals_.Add(sig);
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "user-visible-changed",
                           [this] (BamfView*, gboolean visible) {
                             this->visible.changed.emit(visible);
@@ -105,21 +123,6 @@ WindowBase::WindowBase(ApplicationManager const& manager,
                             this->urgent.changed.emit(urgent);
                           });
   signals_.Add(sig);
-}
-
-std::string WindowBase::title() const
-{
-  return View::title();
-}
-
-std::string WindowBase::icon() const
-{
-  return View::icon();
-}
-
-std::string WindowBase::type() const
-{
-  return View::type();
 }
 
 bool WindowBase::Focus() const
@@ -238,6 +241,8 @@ Application::Application(ApplicationManager const& manager, glib::Object<BamfApp
 void Application::HookUpEvents()
 {
   // Hook up the property set/get functions
+  title.SetGetterFunction(sigc::mem_fun(this, &View::GetTitle));
+  icon.SetGetterFunction(sigc::mem_fun(this, &View::GetIcon));
   seen.SetGetterFunction(sigc::mem_fun(this, &Application::GetSeen));
   seen.SetSetterFunction(sigc::mem_fun(this, &Application::SetSeen));
   sticky.SetGetterFunction(sigc::mem_fun(this, &Application::GetSticky));
@@ -247,7 +252,18 @@ void Application::HookUpEvents()
   running.SetGetterFunction(sigc::mem_fun(this, &View::GetRunning));
   urgent.SetGetterFunction(sigc::mem_fun(this, &View::GetUrgent));
 
+  // Use signals_.Add....
   glib::SignalBase* sig;
+  sig = new glib::Signal<void, BamfView*, const char*, const char*>(bamf_view_, "name-changed",
+                          [this] (BamfView*, const char*, const char* new_name) {
+                            this->title.changed.emit(glib::gchar_to_string(new_name));
+                          });
+  signals_.Add(sig);
+  sig = new glib::Signal<void, BamfView*, const char*>(bamf_view_, "icon-changed",
+                          [this] (BamfView*, const char* icon) {
+                            this->icon.changed.emit(glib::gchar_to_string(icon));
+                          });
+  signals_.Add(sig);
   sig = new glib::Signal<void, BamfView*, gboolean>(bamf_view_, "user-visible-changed",
                           [this] (BamfView*, gboolean visible) {
                             LOG_TRACE(logger) << "user-visible-changed " << visible;
@@ -303,16 +319,6 @@ void Application::HookUpEvents()
                               this->window_moved.emit(*win);
                           });
   signals_.Add(sig);
-}
-
-std::string Application::title() const
-{
-  return View::title();
-}
-
-std::string Application::icon() const
-{
-  return View::icon();
 }
 
 std::string Application::desktop_file() const
