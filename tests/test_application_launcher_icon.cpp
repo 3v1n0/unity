@@ -76,22 +76,22 @@ struct TestApplicationLauncherIcon : Test
   virtual void SetUp()
   {
     WM = dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default());
-    usc_app = std::make_shared<MockApplication>(USC_DESKTOP, "softwarecenter");
+    usc_app = std::make_shared<NiceMock<MockApplication>>(USC_DESKTOP, "softwarecenter");
     usc_icon = new NiceMock<MockApplicationLauncherIcon>(usc_app);
     ASSERT_EQ(usc_icon->DesktopFile(), USC_DESKTOP);
 
-    empty_app = std::make_shared<MockApplication>(NO_ICON_DESKTOP);
+    empty_app = std::make_shared<NiceMock<MockApplication>>(NO_ICON_DESKTOP);
     empty_icon = new NiceMock<MockApplicationLauncherIcon>(empty_app);
     ASSERT_EQ(empty_icon->DesktopFile(), NO_ICON_DESKTOP);
 
-    mock_app = std::make_shared<MockApplication>("");
+    mock_app = std::make_shared<NiceMock<MockApplication>>("");
     mock_icon = new NiceMock<MockApplicationLauncherIcon>(mock_app);
     ASSERT_TRUE(mock_icon->DesktopFile().empty());
   }
 
   void AddMockWindow(Window xid, int monitor, int desktop)
   {
-    auto app_window = std::make_shared<MockApplicationWindow>(xid);
+    auto app_window = std::make_shared<NiceMock<MockApplicationWindow>>(xid);
     app_window->monitor_ =  monitor;
     mock_app->windows_.push_back(app_window);
 
@@ -143,7 +143,7 @@ struct TestApplicationLauncherIcon : Test
 
 TEST_F(TestApplicationLauncherIcon, ApplicationSignalDisconnection)
 {
-  std::shared_ptr<MockApplication> app = std::make_shared<MockApplication>(USC_DESKTOP);
+  std::shared_ptr<MockApplication> app = std::make_shared<NiceMock<MockApplication>>(USC_DESKTOP);
   {
     MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
     EXPECT_FALSE(app->closed.empty());
@@ -417,7 +417,7 @@ TEST_F(TestApplicationLauncherIcon, PerformScrollInitiallyUnfocusedWindow)
 
 TEST_F(TestApplicationLauncherIcon, ActiveQuirkWMCrossCheck)
 {
-  auto win = std::make_shared<MockApplicationWindow>(g_random_int());
+  auto win = std::make_shared<NiceMock<MockApplicationWindow>>(g_random_int());
   mock_app->windows_ = { win };
   ASSERT_FALSE(mock_icon->IsActive());
 
@@ -430,16 +430,16 @@ TEST_F(TestApplicationLauncherIcon, ActiveQuirkWMCrossCheck)
 
 TEST_F(TestApplicationLauncherIcon, NoWindowListMenusWithOneWindow)
 {
-  auto win = std::make_shared<MockApplicationWindow>(g_random_int());
+  auto win = std::make_shared<NiceMock<MockApplicationWindow>>(g_random_int());
   mock_app->windows_ = { win };
   EXPECT_FALSE(HasMenuItemWithLabel(mock_icon, win->title()));
 }
 
 TEST_F(TestApplicationLauncherIcon, WindowListMenusWithTwoWindows)
 {
-  auto win1 = std::make_shared<MockApplicationWindow>(1);
+  auto win1 = std::make_shared<NiceMock<MockApplicationWindow>>(1);
   auto wm_win1 = std::make_shared<StandaloneWindow>(win1->window_id());
-  auto win2 = std::make_shared<MockApplicationWindow>(2);
+  auto win2 = std::make_shared<NiceMock<MockApplicationWindow>>(2);
   auto wm_win2 = std::make_shared<StandaloneWindow>(win2->window_id());
 
   mock_app->windows_ = { win1, win2 };
@@ -487,8 +487,8 @@ TEST_F(TestApplicationLauncherIcon, WindowListMenusWithTwoWindows)
 
 TEST_F(TestApplicationLauncherIcon, WindowListMenusWithEmptyTitles)
 {
-  auto win1 = std::make_shared<MockApplicationWindow>(1);
-  auto win2 = std::make_shared<MockApplicationWindow>(2);
+  auto win1 = std::make_shared<NiceMock<MockApplicationWindow>>(1);
+  auto win2 = std::make_shared<NiceMock<MockApplicationWindow>>(2);
   win1->SetTitle("");
 
   mock_app->windows_ = { win1, win2 };
@@ -596,15 +596,15 @@ TEST_F(TestApplicationLauncherIcon, IsFileManager)
   EXPECT_FALSE(empty_icon->IsFileManager());
   EXPECT_FALSE(mock_icon->IsFileManager());
 
-  auto app = std::make_shared<MockApplication>("/any/path/nautilus.desktop", "Nautilus");
+  auto app = std::make_shared<NiceMock<MockApplication>>("/any/path/nautilus.desktop", "Nautilus");
   MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
   EXPECT_TRUE(icon->IsFileManager());
 
-  app = std::make_shared<MockApplication>("/any/path/nautilus-folder-handler.desktop", "Nautilus");
+  app = std::make_shared<NiceMock<MockApplication>>("/any/path/nautilus-folder-handler.desktop", "Nautilus");
   icon = new NiceMock<MockApplicationLauncherIcon>(app);
   EXPECT_TRUE(icon->IsFileManager());
 
-  app = std::make_shared<MockApplication>("/any/path/nautilus-home.desktop", "Nautilus");
+  app = std::make_shared<NiceMock<MockApplication>>("/any/path/nautilus-home.desktop", "Nautilus");
   icon = new NiceMock<MockApplicationLauncherIcon>(app);
   EXPECT_TRUE(icon->IsFileManager());
 }
