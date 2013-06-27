@@ -54,10 +54,12 @@ const std::string ICON_REMOVE_TIMEOUT = "bamf-icon-remove";
 const std::string DEFAULT_ICON = "application-default-icon";
 const int MAXIMUM_QUICKLIST_WIDTH = 300;
 
-enum MenuItemControl
+enum MenuItemType
 {
   STICK = 0,
   QUIT,
+  APP_NAME,
+  SEPARATOR,
   SIZE
 };
 }
@@ -157,6 +159,8 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
 
   title_changed_connection_ = app_->title.changed.connect([this](std::string const& name) {
     LOG_DEBUG(logger) << tooltip_text() << " name now " << name;
+    if (_menu_items.size() == MenuItemType::SIZE)
+      _menu_items[MenuItemType::APP_NAME] = nullptr;
     tooltip_text = name;
   });
 
@@ -869,15 +873,10 @@ void ApplicationLauncherIcon::ToggleSticky()
 
 void ApplicationLauncherIcon::EnsureMenuItemsControlReady()
 {
-  if (_menu_items_control.size() == MenuItemControl::SIZE)
-  {
-    const char* label = !IsSticky() ? _("Lock to Launcher") : _("Unlock from Launcher");
-    auto const& item = _menu_items_control[MenuItemControl::STICK];
-    dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, label);
+  if (_menu_items.size() == MenuItemType::SIZE)
     return;
-  }
 
-  _menu_items_control.resize(MenuItemControl::SIZE);
+  _menu_items.resize(MenuItemType::SIZE);
 
   /* (Un)Stick to Launcher */
   glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
@@ -891,8 +890,7 @@ void ApplicationLauncherIcon::EnsureMenuItemsControlReady()
       ToggleSticky();
   });
 
-  _menu_items_control[MenuItemControl::STICK] = menu_item;
-
+  _menu_items[MenuItemType::STICK] = menu_item;
 
   /* Quit */
   menu_item = dbusmenu_menuitem_new();
@@ -905,15 +903,20 @@ void ApplicationLauncherIcon::EnsureMenuItemsControlReady()
       Quit();
   });
 
-  _menu_items_control[MenuItemControl::QUIT] = menu_item;
+  _menu_items[MenuItemType::QUIT] = menu_item;
+
+  /* Separator */
+  menu_item = dbusmenu_menuitem_new();
+  dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_TYPE, DBUSMENU_CLIENT_TYPES_SEPARATOR);
+  _menu_items[MenuItemType::SEPARATOR] = menu_item;
 }
 
 AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
 {
   MenuItemsVector result;
-  bool first_separator_needed = false;
+  bool separator_needed = false;
 
-  // FIXME for O: hack around the wrong abstraction
+  EnsureMenuItemsControlReady();
   UpdateMenus();
 
   std::vector<glib::Object<DbusmenuClient>> menu_clients = { _menuclient_dynamic_quicklist };
@@ -928,16 +931,16 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
     if (!root || !dbusmenu_menuitem_property_get_bool(root, DBUSMENU_MENUITEM_PROP_VISIBLE))
       continue;
 
-    for (GList* child = dbusmenu_menuitem_get_children(root); child; child = child->next)
+    for (GList* l = dbusmenu_menuitem_get_children(root); l; l = l->next)
     {
-      glib::Object<DbusmenuMenuitem> item(static_cast<DbusmenuMenuitem*>(child->data), glib::AddRef());
+      glib::Object<DbusmenuMenuitem> item(static_cast<DbusmenuMenuitem*>(l->data), glib::AddRef());
 
-      if (!item || !item.IsType(DBUSMENU_TYPE_MENUITEM))
+      if (!item.IsType(DBUSMENU_TYPE_MENUITEM))
         continue;
 
       if (dbusmenu_menuitem_property_get_bool(item, DBUSMENU_MENUITEM_PROP_VISIBLE))
       {
-        first_separator_needed = true;
+        separator_needed = true;
         dbusmenu_menuitem_property_set_bool(item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY, FALSE);
 
         result.push_back(item);
@@ -948,53 +951,30 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
   // FIXME: this should totally be added as a _menu_client
   if (DBUSMENU_IS_MENUITEM(_menu_desktop_shortcuts.RawPtr()))
   {
-    GList* child = nullptr;
-
-    for (child = dbusmenu_menuitem_get_children(_menu_desktop_shortcuts); child; child = child->next)
+    for (GList* l = dbusmenu_menuitem_get_children(_menu_desktop_shortcuts); l; l = l->next)
     {
-      glib::Object<DbusmenuMenuitem> item(static_cast<DbusmenuMenuitem*>(child->data), glib::AddRef());
+      glib::Object<DbusmenuMenuitem> item(static_cast<DbusmenuMenuitem*>(l->data), glib::AddRef());
 
-      if (!item || !item.IsType(DBUSMENU_TYPE_MENUITEM))
+      if (!item.IsType(DBUSMENU_TYPE_MENUITEM))
         continue;
 
-      first_separator_needed = true;
-
+      separator_needed = true;
       result.push_back(item);
     }
   }
 
-  glib::Object<DbusmenuMenuitem> item;
-
-  if (first_separator_needed)
+  if (separator_needed)
   {
-    auto first_sep = _menu_items_extra.find("FirstSeparator");
-
-    if (first_sep != _menu_items_extra.end())
-    {
-      item = first_sep->second;
-    }
-    else
-    {
-      item = dbusmenu_menuitem_new();
-      dbusmenu_menuitem_property_set(item,
-                                     DBUSMENU_MENUITEM_PROP_TYPE,
-                                     DBUSMENU_CLIENT_TYPES_SEPARATOR);
-      _menu_items_extra["FirstSeparator"] = item;
-    }
-    result.push_back(item);
+    result.push_back(_menu_items[MenuItemType::SEPARATOR]);
+    separator_needed = false;
   }
 
-  auto app_name_item = _menu_items_extra.find("AppName");
-  if (app_name_item != _menu_items_extra.end())
-  {
-    item = app_name_item->second;
-  }
-  else
+  if (!_menu_items[MenuItemType::APP_NAME])
   {
     glib::String app_name(g_markup_escape_text(app_->title().c_str(), -1));
     std::string bold_app_name("<b>"+app_name.Str()+"</b>");
 
-    item = dbusmenu_menuitem_new();
+    glib::Object<DbusmenuMenuitem> item(dbusmenu_menuitem_new());
     dbusmenu_menuitem_property_set(item,
                                    DBUSMENU_MENUITEM_PROP_LABEL,
                                    bold_app_name.c_str());
@@ -1009,24 +989,11 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
         });
     });
 
-    _menu_items_extra["AppName"] = glib::Object<DbusmenuMenuitem>(item);
+    _menu_items[MenuItemType::APP_NAME] = item;
   }
-  result.push_back(item);
 
-  auto second_sep = _menu_items_extra.find("SecondSeparator");
-  if (second_sep != _menu_items_extra.end())
-  {
-    item = second_sep->second;
-  }
-  else
-  {
-    item = dbusmenu_menuitem_new();
-    dbusmenu_menuitem_property_set(item,
-                                   DBUSMENU_MENUITEM_PROP_TYPE,
-                                   DBUSMENU_CLIENT_TYPES_SEPARATOR);
-    _menu_items_extra["SecondSeparator"] = glib::Object<DbusmenuMenuitem>(item);
-  }
-  result.push_back(item);
+  result.push_back(_menu_items[MenuItemType::APP_NAME]);
+  result.push_back(_menu_items[MenuItemType::SEPARATOR]);
 
   EnsureMenuItemsWindowsReady();
 
@@ -1035,30 +1002,19 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
     for (auto const& it : _menu_items_windows)
       result.push_back(it);
 
-    auto third_sep = _menu_items_extra.find("ThirdSeparator");
-    if (third_sep != _menu_items_extra.end())
-    {
-      item = third_sep->second;
-    }
-    else
-    {
-      item = dbusmenu_menuitem_new();
-      dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_TYPE, DBUSMENU_CLIENT_TYPES_SEPARATOR);
-      _menu_items_extra["ThirdSeparator"] = glib::Object<DbusmenuMenuitem>(item);
-    }
-
-    result.push_back(item);
+    result.push_back(_menu_items[MenuItemType::SEPARATOR]);
   }
 
-  EnsureMenuItemsControlReady();
+  const char* label = !IsSticky() ? _("Lock to Launcher") : _("Unlock from Launcher");
+  dbusmenu_menuitem_property_set(_menu_items[MenuItemType::STICK], DBUSMENU_MENUITEM_PROP_LABEL, label);
+  result.push_back(_menu_items[MenuItemType::STICK]);
 
-  for (auto it : _menu_items_control)
+  if (IsRunning())
   {
-    if (it == _menu_items_control[MenuItemControl::QUIT] && !IsRunning())
-      continue;
-
     bool exists = false;
-    std::string label_default(dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL));
+    auto const& it = _menu_items[MenuItemType::QUIT];
+    const gchar* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
+    auto const& label_default = glib::gchar_to_string(label);
 
     for (auto menu_item : result)
     {
@@ -1066,9 +1022,9 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
 
       if (!type)//(g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
       {
-        const gchar* label = dbusmenu_menuitem_property_get(menu_item, DBUSMENU_MENUITEM_PROP_LABEL);
+        label = dbusmenu_menuitem_property_get(menu_item, DBUSMENU_MENUITEM_PROP_LABEL);
 
-        if (label && std::string(label) == label_default)
+        if (glib::gchar_to_string(label) == label_default)
         {
           exists = true;
           break;
