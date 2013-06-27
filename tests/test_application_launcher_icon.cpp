@@ -478,6 +478,27 @@ TEST_F(TestApplicationLauncherIcon, WindowListMenusWithEmptyTitles)
   ASSERT_EQ(menu1_it, menus.end());
 }
 
+TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemUpdatesWithAppName)
+{
+  mock_app->title_ = "MockApplicationTitle";
+
+  auto menus = mock_icon->Menus();
+  auto app_it = std::find_if(menus.begin(), menus.end(), [this] (glib::Object<DbusmenuMenuitem> it) {
+    auto* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
+    return (label && std::string(label) == ("<b>"+mock_app->title_+"</b>"));
+  });
+  ASSERT_NE(app_it, menus.end());
+
+  mock_app->title_ = "MockApplicationNewTitle";
+  mock_app->title.changed(mock_app->title_);
+  menus = mock_icon->Menus();
+  app_it = std::find_if(menus.begin(), menus.end(), [this] (glib::Object<DbusmenuMenuitem> it) {
+    auto* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
+    return (label && std::string(label) == ("<b>"+mock_app->title_+"</b>"));
+  });
+  ASSERT_NE(app_it, menus.end());
+}
+
 TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemForAppName)
 {
   mock_app->title_ = "MockApplicationTitle";
