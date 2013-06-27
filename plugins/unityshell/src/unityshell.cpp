@@ -975,7 +975,11 @@ CompWindow * GetTopVisibleWindow()
 
   for (CompWindow *w : screen->windows ())
   {
-    if (w->isViewable())
+    if (w->isViewable() && 
+        !w->minimized() && 
+        !w->resName().empty() && 
+        (w->resName() != "unity-panel-service") &&
+        (w->resName() != "notify-osd"))
     {
       top_visible_window = w;
     }
@@ -2628,12 +2632,22 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   {
     Window active_window = screen->activeWindow();
 
+    CompWindow *top_visible_window;
+
     if (G_UNLIKELY(window->type() == CompWindowTypeDesktopMask))
     {
       uScreen->setPanelShadowMatrix(matrix);
 
       if (active_window == 0 || active_window == window->id())
+      {
+        top_visible_window = GetTopVisibleWindow();
+
+        if (top_visible_window && (window->id() == top_visible_window->id()))
+        {
+          draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
+        }
         uScreen->is_desktop_active_ = true;
+      } 
     }
     else
     {
@@ -2658,15 +2672,12 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       {
         if (uScreen->is_desktop_active_)
         {
-          CompWindow *top_visible_window = GetTopVisibleWindow();
+          top_visible_window = GetTopVisibleWindow();
 
-          if (top_visible_window)
+          if (top_visible_window && (window->id() == top_visible_window->id()))
           {
-            if (window->id() == top_visible_window->id())
-            {
-              draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
-              uScreen->panelShadowPainted = CompRegion();
-            }
+            draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
+            uScreen->panelShadowPainted = CompRegion();
           }
         }
       }
