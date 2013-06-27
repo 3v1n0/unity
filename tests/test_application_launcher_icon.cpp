@@ -44,6 +44,8 @@ const std::string NO_ICON_DESKTOP = BUILDDIR"/tests/data/applications/no-icon.de
 
 struct MockApplicationLauncherIcon : ApplicationLauncherIcon
 {
+  typedef nux::ObjectPtr<MockApplicationLauncherIcon> Ptr;
+
   MockApplicationLauncherIcon(ApplicationPtr const& app)
     : ApplicationLauncherIcon(app)
   {}
@@ -92,20 +94,51 @@ struct TestApplicationLauncherIcon : Test
     WM->AddStandaloneWindow(standalone_window);
   }
 
+  glib::Object<DbusmenuMenuitem> GetMenuItemWithLabel(AbstractLauncherIcon::MenuItemsVector const& menus,
+                                                      std::string const& label)
+  {
+    auto menu_it = std::find_if(menus.begin(), menus.end(), [label] (glib::Object<DbusmenuMenuitem> it) {
+      if (glib::gchar_to_string(dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_TYPE)) == DBUSMENU_CLIENT_TYPES_SEPARATOR)
+        return false;
+
+      auto* menu_label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
+      return (glib::gchar_to_string(menu_label) == label);
+    });
+
+    return (menu_it != menus.end()) ? *menu_it : glib::Object<DbusmenuMenuitem>();
+  }
+
+  glib::Object<DbusmenuMenuitem> GetMenuItemWithLabel(MockApplicationLauncherIcon::Ptr const& icon,
+                                                      std::string const& label)
+  {
+    return GetMenuItemWithLabel(icon->Menus(), label);
+  }
+
+  bool HasMenuItemWithLabel(AbstractLauncherIcon::MenuItemsVector const& menus,
+                            std::string const& label)
+  {
+    return GetMenuItemWithLabel(menus, label) != nullptr;
+  }
+
+  bool HasMenuItemWithLabel(MockApplicationLauncherIcon::Ptr const& icon, std::string const& label)
+  {
+    return HasMenuItemWithLabel(icon->Menus(), label);
+  }
+
   StandaloneWindowManager* WM;
   std::shared_ptr<MockApplication> usc_app;
   std::shared_ptr<MockApplication> empty_app;
   std::shared_ptr<MockApplication> mock_app;
-  nux::ObjectPtr<MockApplicationLauncherIcon> usc_icon;
-  nux::ObjectPtr<MockApplicationLauncherIcon> empty_icon;
-  nux::ObjectPtr<MockApplicationLauncherIcon> mock_icon;
+  MockApplicationLauncherIcon::Ptr usc_icon;
+  MockApplicationLauncherIcon::Ptr empty_icon;
+  MockApplicationLauncherIcon::Ptr mock_icon;
 };
 
 TEST_F(TestApplicationLauncherIcon, ApplicationSignalDisconnection)
 {
   std::shared_ptr<MockApplication> app = std::make_shared<MockApplication>(USC_DESKTOP);
   {
-    nux::ObjectPtr<MockApplicationLauncherIcon> icon(new NiceMock<MockApplicationLauncherIcon>(app));
+    MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
     EXPECT_FALSE(app->closed.empty());
   }
 
@@ -392,14 +425,7 @@ TEST_F(TestApplicationLauncherIcon, NoWindowListMenusWithOneWindow)
 {
   auto win = std::make_shared<MockApplicationWindow>(g_random_int());
   mock_app->windows_ = { win };
-
-  auto const& menus = mock_icon->Menus();
-  auto menu_it = std::find_if(menus.begin(), menus.end(), [win] (glib::Object<DbusmenuMenuitem> it) {
-    auto* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
-    return (label && std::string(label) == win->title());
-  });
-
-  EXPECT_EQ(menu_it, menus.end());
+  EXPECT_FALSE(HasMenuItemWithLabel(mock_icon, win->title()));
 }
 
 TEST_F(TestApplicationLauncherIcon, WindowListMenusWithTwoWindows)
@@ -415,45 +441,38 @@ TEST_F(TestApplicationLauncherIcon, WindowListMenusWithTwoWindows)
   ASSERT_TRUE(wm_win2->active());
 
   auto const& menus = mock_icon->Menus();
+  auto const& menu1 = GetMenuItemWithLabel(menus, win1->title());
+  ASSERT_NE(menu1, nullptr);
 
-  auto menu1_it = std::find_if(menus.begin(), menus.end(), [win1] (glib::Object<DbusmenuMenuitem> it) {
-    auto* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
-    return (label && std::string(label) == win1->title());
-  });
-
-  ASSERT_NE(menu1_it, menus.end());
-  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu1_it, DBUSMENU_MENUITEM_PROP_ENABLED));
-  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu1_it, DBUSMENU_MENUITEM_PROP_VISIBLE));
-  ASSERT_STREQ(NULL, dbusmenu_menuitem_property_get(*menu1_it, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE));
-  EXPECT_EQ(dbusmenu_menuitem_property_get_int(*menu1_it, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE), 
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menu1, DBUSMENU_MENUITEM_PROP_ENABLED));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menu1, DBUSMENU_MENUITEM_PROP_VISIBLE));
+  ASSERT_STREQ(NULL, dbusmenu_menuitem_property_get(menu1, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE));
+  EXPECT_EQ(dbusmenu_menuitem_property_get_int(menu1, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE),
   	DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
-  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu1_it, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY));
-  EXPECT_EQ(dbusmenu_menuitem_property_get_int(*menu1_it, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY), 300);
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menu1, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY));
+  EXPECT_EQ(dbusmenu_menuitem_property_get_int(menu1, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY), 300);
 
-  auto menu2_it = std::find_if(menus.begin(), menus.end(), [win2] (glib::Object<DbusmenuMenuitem> it) {
-    auto* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
-    return (label && std::string(label) == win2->title());
-  });
+  auto const& menu2 = GetMenuItemWithLabel(menus, win2->title());
+  ASSERT_NE(menu2, nullptr);
 
-  ASSERT_NE(menu2_it, menus.end());
-  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu2_it, DBUSMENU_MENUITEM_PROP_ENABLED));
-  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu2_it, DBUSMENU_MENUITEM_PROP_VISIBLE));
-  ASSERT_STREQ(DBUSMENU_MENUITEM_TOGGLE_RADIO, dbusmenu_menuitem_property_get(*menu2_it, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE));
-  EXPECT_EQ(dbusmenu_menuitem_property_get_int(*menu2_it, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE), 
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menu2, DBUSMENU_MENUITEM_PROP_ENABLED));
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menu2, DBUSMENU_MENUITEM_PROP_VISIBLE));
+  ASSERT_STREQ(DBUSMENU_MENUITEM_TOGGLE_RADIO, dbusmenu_menuitem_property_get(menu2, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE));
+  EXPECT_EQ(dbusmenu_menuitem_property_get_int(menu2, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE),
   	DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
-  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(*menu2_it, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY));
-  EXPECT_EQ(dbusmenu_menuitem_property_get_int(*menu2_it, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY), 300);
+  EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menu2, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY));
+  EXPECT_EQ(dbusmenu_menuitem_property_get_int(menu2, QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY), 300);
 
   bool activated = false;
   wm_win1->active.changed.connect([&activated] (bool a) { activated = a; });
-  g_signal_emit_by_name(*menu1_it, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, 0);
+  g_signal_emit_by_name(menu1, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, 0);
 
   EXPECT_TRUE(wm_win1->active());
   EXPECT_TRUE(activated);
 
   activated = false;
   wm_win2->active.changed.connect([&activated] (bool a) { activated = a; });
-  g_signal_emit_by_name(*menu2_it, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, 0);
+  g_signal_emit_by_name(menu2, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, 0);
 
   EXPECT_TRUE(wm_win2->active());
   EXPECT_TRUE(activated);
@@ -463,50 +482,27 @@ TEST_F(TestApplicationLauncherIcon, WindowListMenusWithEmptyTitles)
 {
   auto win1 = std::make_shared<MockApplicationWindow>(1);
   auto win2 = std::make_shared<MockApplicationWindow>(2);
-  win1->title_.clear();
+  win1->SetTitle("");
 
   mock_app->windows_ = { win1, win2 };
-  auto const& menus = mock_icon->Menus();
 
-  auto menu1_it = std::find_if(menus.begin(), menus.end(), [win1] (glib::Object<DbusmenuMenuitem> it) {
-    auto* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
-    return (label && std::string(label) == win1->title());
-  });
-
-  ASSERT_EQ(menu1_it, menus.end());
+  EXPECT_FALSE(HasMenuItemWithLabel(mock_icon, win1->title()));
 }
 
 TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemUpdatesWithAppName)
 {
   mock_app->SetTitle("MockApplicationTitle");
-
-  auto menus = mock_icon->Menus();
-  auto app_it = std::find_if(menus.begin(), menus.end(), [this] (glib::Object<DbusmenuMenuitem> it) {
-    auto* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
-    return (label && std::string(label) == ("<b>"+mock_app->title_+"</b>"));
-  });
-  ASSERT_NE(app_it, menus.end());
+  EXPECT_TRUE(HasMenuItemWithLabel(mock_icon, "<b>"+mock_app->title()+"</b>"));
 
   mock_app->SetTitle("MockApplicationNewTitle");
-  menus = mock_icon->Menus();
-  app_it = std::find_if(menus.begin(), menus.end(), [this] (glib::Object<DbusmenuMenuitem> it) {
-    auto* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
-    return (label && std::string(label) == ("<b>"+mock_app->title_+"</b>"));
-  });
-  ASSERT_NE(app_it, menus.end());
+  EXPECT_TRUE(HasMenuItemWithLabel(mock_icon, "<b>"+mock_app->title()+"</b>"));
 }
 
 TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemForAppName)
 {
   mock_app->SetTitle("MockApplicationTitle");
-
-  auto const& menus = mock_icon->Menus();
-  auto app_it = std::find_if(menus.begin(), menus.end(), [this] (glib::Object<DbusmenuMenuitem> it) {
-    auto* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
-    return (label && std::string(label) == ("<b>"+mock_app->title_+"</b>"));
-  });
-
-  ASSERT_NE(app_it, menus.end());
+  auto app_menu = GetMenuItemWithLabel(mock_icon, "<b>"+mock_app->title_+"</b>");
+  ASSERT_NE(app_menu, nullptr);
 
   bool method_called = false;
   ON_CALL(*mock_icon, ActivateLauncherIcon(_)).WillByDefault(Invoke([&method_called] (ActionArg arg) {
@@ -515,7 +511,7 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemForAppName)
 
   unsigned time = g_random_int();
   EXPECT_CALL(*mock_icon, ActivateLauncherIcon(AreArgsEqual(ActionArg(ActionArg::Source::LAUNCHER, 0, time))));
-  dbusmenu_menuitem_handle_event(*app_it, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, time);
+  dbusmenu_menuitem_handle_event(app_menu, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, time);
 
   Utils::WaitUntilMSec(method_called);
   EXPECT_TRUE(method_called);
@@ -528,7 +524,7 @@ TEST_F(TestApplicationLauncherIcon, IsFileManager)
   EXPECT_FALSE(mock_icon->IsFileManager());
 
   auto app = std::make_shared<MockApplication>("/any/path/nautilus.desktop", "Nautilus");
-  nux::ObjectPtr<MockApplicationLauncherIcon> icon(new NiceMock<MockApplicationLauncherIcon>(app));
+  MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
   EXPECT_TRUE(icon->IsFileManager());
 
   app = std::make_shared<MockApplication>("/any/path/nautilus-folder-handler.desktop", "Nautilus");
