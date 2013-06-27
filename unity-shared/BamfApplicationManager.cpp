@@ -90,11 +90,11 @@ WindowBase::WindowBase(ApplicationManager const& manager,
                        glib::Object<BamfView> const& window)
   : View(manager, window)
 {
-  title.SetGetterFunction(std::mem_fun(this, &View::GetTitle));
-  icon.SetGetterFunction(sigc::mem_fun(this, &View::GetIcon));
-  visible.SetGetterFunction(sigc::mem_fun(this, &View::GetVisible));
-  active.SetGetterFunction(sigc::mem_fun(this, &View::GetActive));
-  urgent.SetGetterFunction(sigc::mem_fun(this, &View::GetUrgent));
+  title.SetGetterFunction(std::bind(&View::GetTitle, this));
+  icon.SetGetterFunction(std::bind(&View::GetIcon, this));
+  visible.SetGetterFunction(std::bind(&View::GetVisible, this));
+  active.SetGetterFunction(std::bind(&View::GetActive, this));
+  urgent.SetGetterFunction(std::bind(&View::GetUrgent, this));
 
   glib::SignalBase* sig;
   sig = new glib::Signal<void, BamfView*, const char*, const char*>(bamf_view_, "name-changed",
@@ -247,16 +247,17 @@ Application::Application(ApplicationManager const& manager, glib::Object<BamfApp
 void Application::HookUpEvents()
 {
   // Hook up the property set/get functions
-  title.SetGetterFunction(sigc::mem_fun(this, &View::GetTitle));
-  icon.SetGetterFunction(sigc::mem_fun(this, &View::GetIcon));
-  seen.SetGetterFunction(sigc::mem_fun(this, &Application::GetSeen));
-  seen.SetSetterFunction(sigc::mem_fun(this, &Application::SetSeen));
-  sticky.SetGetterFunction(sigc::mem_fun(this, &Application::GetSticky));
-  sticky.SetSetterFunction(sigc::mem_fun(this, &Application::SetSticky));
-  visible.SetGetterFunction(sigc::mem_fun(this, &View::GetVisible));
-  active.SetGetterFunction(sigc::mem_fun(this, &View::GetActive));
-  running.SetGetterFunction(sigc::mem_fun(this, &View::GetRunning));
-  urgent.SetGetterFunction(sigc::mem_fun(this, &View::GetUrgent));
+  using namespace std::placeholders;
+  title.SetGetterFunction(std::bind(&View::GetTitle, this));
+  icon.SetGetterFunction(std::bind(&View::GetIcon, this));
+  seen.SetGetterFunction(std::bind(&Application::GetSeen, this));
+  seen.SetSetterFunction(std::bind(&Application::SetSeen, this, _1));
+  sticky.SetGetterFunction(std::bind(&Application::GetSticky, this));
+  sticky.SetSetterFunction(std::bind(&Application::SetSticky, this, _1));
+  visible.SetGetterFunction(std::bind(&View::GetVisible, this));
+  active.SetGetterFunction(std::bind(&View::GetActive, this));
+  running.SetGetterFunction(std::bind(&View::GetRunning, this));
+  urgent.SetGetterFunction(std::bind(&View::GetUrgent, this));
 
   // Use signals_.Add....
   glib::SignalBase* sig;
