@@ -97,7 +97,6 @@ public:
 
   void OnShowDesktop ();
   void OnLeaveDesktop ();
-  void UpdateShowDesktopState();
 
   void TerminateScale();
   bool IsScaleActive() const;
@@ -207,7 +206,6 @@ private:
   unsigned long GetMwnDecorations(Window xid) const;
 
   Window GetTopMostValidWindowInViewport() const;
-  bool IsCurrentViewportEmpty() const;
 
   std::string GetTextProperty(Window xid, Atom atom) const;
   std::string GetUtf8Property(Window xid, Atom atom) const;
