@@ -90,7 +90,7 @@ WindowBase::WindowBase(ApplicationManager const& manager,
                        glib::Object<BamfView> const& window)
   : View(manager, window)
 {
-  title.SetGetterFunction(sigc::mem_fun(this, &View::GetTitle));
+  title.SetGetterFunction(std::mem_fun(this, &View::GetTitle));
   icon.SetGetterFunction(sigc::mem_fun(this, &View::GetIcon));
   visible.SetGetterFunction(sigc::mem_fun(this, &View::GetVisible));
   active.SetGetterFunction(sigc::mem_fun(this, &View::GetActive));
@@ -142,12 +142,15 @@ bool WindowBase::Focus() const
 }
 
 
+AppWindow::AppWindow(ApplicationManager const& manager, glib::Object<BamfWindow> const& window)
+  : WindowBase(manager, glib::object_cast<BamfView>(window))
+  , bamf_window_(window)
+{}
+
 AppWindow::AppWindow(ApplicationManager const& manager, glib::Object<BamfView> const& window)
   : WindowBase(manager, window)
   , bamf_window_(glib::object_cast<BamfWindow>(window))
-{
-}
-
+{}
 
 Window AppWindow::window_id() const
 {
@@ -175,6 +178,11 @@ void AppWindow::Quit() const
 Tab::Tab(ApplicationManager const& manager, glib::Object<BamfView> const& tab)
   : WindowBase(manager, tab)
   , bamf_tab_(glib::object_cast<BamfTab>(tab))
+{}
+
+Tab::Tab(ApplicationManager const& manager, glib::Object<BamfTab> const& tab)
+  : WindowBase(manager, glib::object_cast<BamfView>(tab))
+  , bamf_tab_(tab)
 {}
 
 Window Tab::window_id() const
@@ -210,17 +218,16 @@ void Tab::Quit() const
 // Being brutal with this function.
 ApplicationWindowPtr create_window(ApplicationManager const& manager, glib::Object<BamfView> const& view)
 {
-  ApplicationWindowPtr result;
-  if (view.IsType(BAMF_TYPE_TAB))
+  if (view.IsType(BAMF_TYPE_WINDOW))
   {
-    result.reset(new Tab(manager, view));
+    return std::make_shared<AppWindow>(manager, view);
   }
-  else if (view.IsType(BAMF_TYPE_WINDOW))
+  else if (view.IsType(BAMF_TYPE_TAB))
   {
-    result.reset(new AppWindow(manager, view));
+    return std::make_shared<Tab>(manager, view);
   }
-  // We don't handle applications nor indicators here.
-  return result;
+  // We don't handle applications here.
+  return nullptr;
 }
 
 Application::Application(ApplicationManager const& manager, glib::Object<BamfView> const& app)
@@ -465,7 +472,7 @@ void Application::Quit() const
 
 bool Application::GetSeen() const
 {
-  return g_object_get_qdata(G_OBJECT(bamf_app_.RawPtr()),
+  return g_object_get_qdata(glib::object_cast<GObject>(bamf_app_),
                             g_quark_from_string(UNSEEN_QUARK));
 }
 
@@ -476,7 +483,7 @@ bool Application::SetSeen(bool const& param)
     return false; // unchanged
 
   void* data = param ? reinterpret_cast<void*>(1) : nullptr;
-  g_object_set_qdata(G_OBJECT(bamf_app_.RawPtr()),
+  g_object_set_qdata(glib::object_cast<GObject>(bamf_app_),
                      g_quark_from_string(UNSEEN_QUARK),
                      data);
   return true; // value updated
@@ -522,11 +529,17 @@ Manager::Manager()
   sig = new glib::Signal<void, BamfMatcher*, BamfApplication*, BamfApplication*>
       (matcher_, "active-application-changed",
        [this](BamfMatcher*, BamfApplication* /* from */, BamfApplication* to) {
-          // Ownership is not passed on signals
-          glib::Object<BamfApplication> app(to, glib::AddRef());
-          ApplicationPtr active_app;
-          if (app) active_app.reset(new Application(*this, app));
-          this->active_application_changed.emit(active_app);
+          if (to)
+          {
+            // Ownership is not passed on signals
+            glib::Object<BamfApplication> bamf_app(to, glib::AddRef());
+            auto app = std::make_shared<Application>(*this, bamf_app);
+            this->active_application_changed.emit(app);
+          }
+          else
+          {
+            this->active_application_changed.emit(nullptr);
+          }
        });
   signals_.Add(sig);
 }
@@ -538,12 +551,11 @@ Manager::~Manager()
 
 ApplicationWindowPtr Manager::GetActiveWindow()
 {
-  ApplicationWindowPtr result;
   // No transfer of ownership for bamf_matcher_get_active_window.
   BamfWindow* active_win = bamf_matcher_get_active_window(matcher_);
 
   if (!active_win)
-    return result;
+    return nullptr;
 
   // If the active window is a dock type, then we want the first visible, non-dock type.
   if (bamf_window_get_window_type(active_win) == BAMF_WINDOW_DOCK)
@@ -576,32 +588,34 @@ ApplicationWindowPtr Manager::GetActiveWindow()
     }
   }
 
-  auto view = reinterpret_cast<BamfView*>(active_win);
   if (active_win)
-    result.reset(new AppWindow(*this, glib::Object<BamfView>(view, glib::AddRef())));
-  return result;
+  {
+    glib::Object<BamfWindow> win(active_win, glib::AddRef());
+    return std::make_shared<AppWindow>(*this, win);
+  }
+
+  return nullptr;
 }
 
 ApplicationPtr Manager::GetApplicationForDesktopFile(std::string const& desktop_file)
 {
-  ApplicationPtr result;
   glib::Object<BamfApplication> app(bamf_matcher_get_application_for_desktop_file(
-    matcher_, desktop_file.c_str(), true), glib::AddRef());
+    matcher_, desktop_file.c_str(), TRUE), glib::AddRef());
 
   if (app)
-    result.reset(new Application(*this, app));
+    return std::make_shared<Application>(*this, app);
 
-  return result;
+  return nullptr;
 }
 
 ApplicationPtr Manager::GetApplicationForWindow(Window xid)
 {
-  ApplicationPtr result;
   glib::Object<BamfApplication> app(bamf_matcher_get_application_for_xid(matcher_, xid),
                                     glib::AddRef());
   if (app)
-    result.reset(new Application(*this, app));
-  return result;
+    return std::make_shared<Application>(*this, app);
+
+  return nullptr;
 }
 
 ApplicationList Manager::GetRunningApplications()
@@ -618,7 +632,7 @@ ApplicationList Manager::GetRunningApplications()
     }
 
     glib::Object<BamfApplication> bamf_app(static_cast<BamfApplication*>(l->data), glib::AddRef());
-    ApplicationPtr app(new Application(*this, bamf_app));
+    auto app = std::make_shared<Application>(*this, bamf_app);
     result.push_back(app);
     LOG_DEBUG(logger) << "Running app: " << app->title();
   }
@@ -635,8 +649,8 @@ void Manager::OnViewOpened(BamfMatcher* matcher, BamfView* view)
     return;
   }
 
-  glib::Object<BamfApplication> app(reinterpret_cast<BamfApplication*>(view), glib::AddRef());
-  application_started.emit(ApplicationPtr(new Application(*this, app)));
+  glib::Object<BamfView> app(view, glib::AddRef());
+  application_started.emit(std::make_shared<Application>(*this, app));
 }
 
 } // namespace bamf
