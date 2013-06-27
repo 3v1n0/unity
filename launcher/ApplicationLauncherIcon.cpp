@@ -806,20 +806,6 @@ void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
 
 void ApplicationLauncherIcon::UpdateMenus()
 {
-  // add dynamic quicklist
-  if (_menuclient_dynamic_quicklist && _menuclient_dynamic_quicklist.IsType(DBUSMENU_TYPE_CLIENT))
-  {
-    if (_menu_clients["dynamicquicklist"] != _menuclient_dynamic_quicklist)
-    {
-      _menu_clients["dynamicquicklist"] = _menuclient_dynamic_quicklist;
-    }
-  }
-  else if (_menu_clients["dynamicquicklist"])
-  {
-    _menu_clients.erase("dynamicquicklist");
-    _menuclient_dynamic_quicklist = nullptr;
-  }
-
   // make a client for desktop file actions
   if (!_menu_desktop_shortcuts.IsType(DBUSMENU_TYPE_MENUITEM))
   {
@@ -923,11 +909,10 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
   // FIXME for O: hack around the wrong abstraction
   UpdateMenus();
 
-  for (auto const& cli : _menu_clients)
-  {
-    GList* child = nullptr;
-    auto const& client = cli.second;
+  std::vector<glib::Object<DbusmenuClient>> menu_clients = { _menuclient_dynamic_quicklist };
 
+  for (auto const& client : menu_clients)
+  {
     if (!client || !client.IsType(DBUSMENU_TYPE_CLIENT))
       continue;
 
@@ -936,7 +921,7 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
     if (!root || !dbusmenu_menuitem_property_get_bool(root, DBUSMENU_MENUITEM_PROP_VISIBLE))
       continue;
 
-    for (child = dbusmenu_menuitem_get_children(root); child; child = child->next)
+    for (GList* child = dbusmenu_menuitem_get_children(root); child; child = child->next)
     {
       glib::Object<DbusmenuMenuitem> item(static_cast<DbusmenuMenuitem*>(child->data), glib::AddRef());
 
