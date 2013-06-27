@@ -562,6 +562,16 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuHasQuit)
   EXPECT_TRUE(HasMenuItemWithLabel(mock_icon, "Quit"));
 }
 
+TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemQuit)
+{
+  mock_app->SetRunState(true);
+  auto const& menu_item = GetMenuItemWithLabel(mock_icon, "Quit");
+  EXPECT_NE(menu_item, nullptr);
+
+  EXPECT_CALL(*mock_app, Quit());
+  dbusmenu_menuitem_handle_event(menu_item, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
+}
+
 TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemUpdatesWithAppName)
 {
   mock_app->SetTitle("MockApplicationTitle");
