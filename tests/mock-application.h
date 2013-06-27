@@ -32,6 +32,8 @@ namespace testmocks
 {
 struct MockApplicationWindow : unity::ApplicationWindow
 {
+  typedef NiceMock<MockApplicationWindow> Nice;
+
   MockApplicationWindow(Window xid)
     : xid_(xid)
     , monitor_(0)
@@ -99,6 +101,8 @@ struct MockApplicationWindow : unity::ApplicationWindow
 
 struct MockApplication : unity::Application
 {
+  typedef NiceMock<MockApplication> Nice;
+
   MockApplication(std::string const& desktop_file,
                   std::string const& icon_name = "",
                   std::string const& title_str = "")
@@ -211,6 +215,8 @@ struct MockApplication : unity::Application
 
 struct MockApplicationManager : public unity::ApplicationManager
 {
+  typedef NiceMock<MockApplicationManager> Nice;
+
   MockApplicationManager()
   {
     ON_CALL(*this, GetApplicationForDesktopFile(_)).WillByDefault(Invoke(this, &MockApplicationManager::LocalGetApplicationForDesktopFile));
