@@ -48,9 +48,17 @@ struct MockApplicationLauncherIcon : ApplicationLauncherIcon
 
   MockApplicationLauncherIcon(ApplicationPtr const& app)
     : ApplicationLauncherIcon(app)
-  {}
+  {
+    ON_CALL(*this, Stick(_)).WillByDefault(Invoke(this, &MockApplicationLauncherIcon::RealStickAndSave));
+    ON_CALL(*this, Stick()).WillByDefault(Invoke(this, &MockApplicationLauncherIcon::RealStick));
+  }
+
+  void RealStick() { ApplicationLauncherIcon::Stick(); }
+  void RealStickAndSave(bool save) { ApplicationLauncherIcon::Stick(save); }
 
   MOCK_METHOD1(ActivateLauncherIcon, void(ActionArg));
+  MOCK_METHOD1(Stick, void(bool));
+  MOCK_METHOD0(Stick, void());
 
   using ApplicationLauncherIcon::IsFileManager;
 };
@@ -500,6 +508,23 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuHasLockToLauncher)
   mock_app->sticky = false;
   EXPECT_TRUE(HasMenuItemWithLabel(mock_icon, "Lock to Launcher"));
   EXPECT_FALSE(HasMenuItemWithLabel(mock_icon, "Unlock from Launcher"));
+}
+
+TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemLockToLauncher)
+{
+  bool saved = false;
+  mock_app->sticky = false;
+  mock_icon->position_saved.connect([&saved] {saved = true;});
+
+  auto const& menu_item = GetMenuItemWithLabel(mock_icon, "Lock to Launcher");
+  ASSERT_NE(menu_item, nullptr);
+
+  EXPECT_CALL(*mock_icon, Stick(true));
+  dbusmenu_menuitem_handle_event(menu_item, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
+
+  EXPECT_TRUE(saved);
+  EXPECT_TRUE(mock_app->sticky());
+  EXPECT_TRUE(mock_icon->IsSticky());
 }
 
 TEST_F(TestApplicationLauncherIcon, QuicklistMenuHasUnLockToLauncher)
