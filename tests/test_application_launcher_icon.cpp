@@ -195,35 +195,33 @@ TEST_F(TestApplicationLauncherIcon, RemoteUri)
   EXPECT_TRUE(mock_icon->RemoteUri().empty());
 }
 
-TEST_F(TestApplicationLauncherIcon, EmptyTooltipUpdatesOnRunning)
+TEST_F(TestApplicationLauncherIcon, TooltipUpdates)
 {
   ASSERT_TRUE(mock_icon->tooltip_text().empty());
   mock_app->title_ = "Got Name";
   ASSERT_TRUE(mock_icon->tooltip_text().empty());
 
-  mock_app->SetRunState(true);
+  mock_app->title.changed.emit(mock_app->title_);
   EXPECT_EQ(mock_icon->tooltip_text(), "Got Name");
 
-  mock_app->SetRunState(false);
   mock_app->title_ = "New Name";
-  mock_app->SetRunState(true);
-  EXPECT_EQ(mock_icon->tooltip_text(), "Got Name");
+  mock_app->title.changed.emit(mock_app->title_);
+  EXPECT_EQ(mock_icon->tooltip_text(), "New Name");
 }
 
-TEST_F(TestApplicationLauncherIcon, InvalidIconUpdatesOnRunning)
+TEST_F(TestApplicationLauncherIcon, IconUpdates)
 {
   ASSERT_EQ(mock_icon->icon_name(), DEFAULT_EMPTY_ICON);
   mock_app->icon_ = "icon-name";
 
   ASSERT_EQ(mock_icon->icon_name(), DEFAULT_EMPTY_ICON);
 
-  mock_app->SetRunState(true);
+  mock_app->icon.changed.emit(mock_app->icon_);
   EXPECT_EQ(mock_icon->icon_name(), "icon-name");
 
-  mock_app->SetRunState(false);
   mock_app->icon_ = "new-icon-name";
-  mock_app->SetRunState(true);
-  EXPECT_EQ(mock_icon->icon_name(), "icon-name");
+  mock_app->icon.changed.emit(mock_app->icon_);
+  EXPECT_EQ(mock_icon->icon_name(), "new-icon-name");
 }
 
 TEST_F(TestApplicationLauncherIcon, PerformScrollTowardsTheUser)

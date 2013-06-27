@@ -43,10 +43,12 @@ namespace launcher
 class MockApplicationWindow : public ApplicationWindow
 {
 public:
-  MockApplicationWindow(Window xid) : xid_(xid) {}
+  MockApplicationWindow(Window xid) : xid_(xid)
+  {
+    title.SetGetterFunction([this] { return "MockApplicationWindow"; });
+    icon.SetGetterFunction([this] { return ""; });
+  }
 
-  std::string title() const { return "MockApplicationWindow"; }
-  virtual std::string icon() const { return ""; }
   virtual std::string type() const { return "mock"; }
 
   virtual Window window_id() const { return xid_; }

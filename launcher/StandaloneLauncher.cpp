@@ -21,6 +21,7 @@
 #include <Nux/Nux.h>
 #include <Nux/NuxTimerTickSource.h>
 #include <NuxCore/AnimationController.h>
+#include <NuxCore/Logger.h>
 #include <gtk/gtk.h>
 
 #include "unity-shared/BackgroundEffectHelper.h"
@@ -96,6 +97,7 @@ private:
 int main(int argc, char** argv)
 {
   gtk_init(&argc, &argv);
+  nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
   nux::NuxInitialize(0);
 
   LauncherWindow lc;
