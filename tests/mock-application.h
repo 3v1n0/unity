@@ -68,6 +68,24 @@ struct MockApplicationWindow : unity::ApplicationWindow
     return true;
   }
   virtual void Quit() const {}
+
+  void SetTitle(std::string const& new_title)
+  {
+    if (new_title == title())
+      return;
+
+    title_ = new_title;
+    title.changed(title_);
+  }
+
+  void SetIcon(std::string const& new_icon)
+  {
+    if (new_icon == icon())
+      return;
+
+    icon_ = new_icon;
+    icon.changed(icon_);
+  }
 };
 
 struct MockApplication : unity::Application
@@ -155,6 +173,24 @@ struct MockApplication : unity::Application
       return;
     active_ = state;
     active.changed.emit(state);
+  }
+
+  void SetTitle(std::string const& new_title)
+  {
+    if (new_title == title())
+      return;
+
+    title_ = new_title;
+    title.changed(title_);
+  }
+
+  void SetIcon(std::string const& new_icon)
+  {
+    if (new_icon == icon())
+      return;
+
+    icon_ = new_icon;
+    icon.changed(icon_);
   }
 };
 

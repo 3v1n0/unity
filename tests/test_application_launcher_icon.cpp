@@ -204,8 +204,7 @@ TEST_F(TestApplicationLauncherIcon, TooltipUpdates)
   mock_app->title.changed.emit(mock_app->title_);
   EXPECT_EQ(mock_icon->tooltip_text(), "Got Name");
 
-  mock_app->title_ = "New Name";
-  mock_app->title.changed.emit(mock_app->title_);
+  mock_app->SetTitle("New Name");
   EXPECT_EQ(mock_icon->tooltip_text(), "New Name");
 }
 
@@ -219,8 +218,7 @@ TEST_F(TestApplicationLauncherIcon, IconUpdates)
   mock_app->icon.changed.emit(mock_app->icon_);
   EXPECT_EQ(mock_icon->icon_name(), "icon-name");
 
-  mock_app->icon_ = "new-icon-name";
-  mock_app->icon.changed.emit(mock_app->icon_);
+  mock_app->SetIcon("new-icon-name");
   EXPECT_EQ(mock_icon->icon_name(), "new-icon-name");
 }
 
@@ -480,7 +478,7 @@ TEST_F(TestApplicationLauncherIcon, WindowListMenusWithEmptyTitles)
 
 TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemUpdatesWithAppName)
 {
-  mock_app->title_ = "MockApplicationTitle";
+  mock_app->SetTitle("MockApplicationTitle");
 
   auto menus = mock_icon->Menus();
   auto app_it = std::find_if(menus.begin(), menus.end(), [this] (glib::Object<DbusmenuMenuitem> it) {
@@ -489,8 +487,7 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemUpdatesWithAppName)
   });
   ASSERT_NE(app_it, menus.end());
 
-  mock_app->title_ = "MockApplicationNewTitle";
-  mock_app->title.changed(mock_app->title_);
+  mock_app->SetTitle("MockApplicationNewTitle");
   menus = mock_icon->Menus();
   app_it = std::find_if(menus.begin(), menus.end(), [this] (glib::Object<DbusmenuMenuitem> it) {
     auto* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
@@ -501,7 +498,7 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemUpdatesWithAppName)
 
 TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemForAppName)
 {
-  mock_app->title_ = "MockApplicationTitle";
+  mock_app->SetTitle("MockApplicationTitle");
 
   auto const& menus = mock_icon->Menus();
   auto app_it = std::find_if(menus.begin(), menus.end(), [this] (glib::Object<DbusmenuMenuitem> it) {
