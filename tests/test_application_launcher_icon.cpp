@@ -489,10 +489,42 @@ TEST_F(TestApplicationLauncherIcon, WindowListMenusWithEmptyTitles)
   EXPECT_FALSE(HasMenuItemWithLabel(mock_icon, win1->title()));
 }
 
-TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemUpdatesWithAppName)
+TEST_F(TestApplicationLauncherIcon, QuicklistMenuHasAppName)
 {
   mock_app->SetTitle("MockApplicationTitle");
   EXPECT_TRUE(HasMenuItemWithLabel(mock_icon, "<b>"+mock_app->title()+"</b>"));
+}
+
+TEST_F(TestApplicationLauncherIcon, QuicklistMenuHasLockToLauncher)
+{
+  mock_app->sticky = false;
+  EXPECT_TRUE(HasMenuItemWithLabel(mock_icon, "Lock to Launcher"));
+  EXPECT_FALSE(HasMenuItemWithLabel(mock_icon, "Unlock from Launcher"));
+}
+
+TEST_F(TestApplicationLauncherIcon, QuicklistMenuHasUnLockToLauncher)
+{
+  mock_app->sticky = true;
+  EXPECT_TRUE(HasMenuItemWithLabel(mock_icon, "Unlock from Launcher"));
+  EXPECT_FALSE(HasMenuItemWithLabel(mock_icon, "Lock to Launcher"));
+}
+
+TEST_F(TestApplicationLauncherIcon, QuicklistMenuHasNotQuit)
+{
+  mock_app->SetRunState(false);
+  EXPECT_FALSE(HasMenuItemWithLabel(mock_icon, "Quit"));
+}
+
+TEST_F(TestApplicationLauncherIcon, QuicklistMenuHasQuit)
+{
+  mock_app->SetRunState(true);
+  EXPECT_TRUE(HasMenuItemWithLabel(mock_icon, "Quit"));
+}
+
+TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemUpdatesWithAppName)
+{
+  mock_app->SetTitle("MockApplicationTitle");
+  ASSERT_TRUE(HasMenuItemWithLabel(mock_icon, "<b>"+mock_app->title()+"</b>"));
 
   mock_app->SetTitle("MockApplicationNewTitle");
   EXPECT_TRUE(HasMenuItemWithLabel(mock_icon, "<b>"+mock_app->title()+"</b>"));
