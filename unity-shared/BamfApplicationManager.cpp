@@ -104,7 +104,6 @@ WindowBase::WindowBase(ApplicationManager const& manager,
   signals_.Add(sig);
   sig = new glib::Signal<void, BamfView*, const char*>(bamf_view_, "icon-changed",
                           [this] (BamfView*, const char* icon) {
-                            g_print("View %p, icon changed to %s\n",this,icon);
                             this->icon.changed.emit(glib::gchar_to_string(icon));
                           });
   signals_.Add(sig);
