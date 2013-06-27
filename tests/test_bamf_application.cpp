@@ -23,19 +23,12 @@
 #include "BamfApplicationManager.h"
 #include "bamf-mock-application.h"
 #include "bamf-mock-window.h"
+#include "mock-application.h"
 #include "StandaloneWindowManager.h"
 
 #include <UnityCore/GLibWrapper.h>
 
 namespace {
-
-struct MockApplicationManager : public unity::ApplicationManager
-{
-  MOCK_METHOD0(GetActiveWindow, unity::ApplicationWindowPtr());
-  MOCK_METHOD1(GetApplicationForDesktopFile, unity::ApplicationPtr(std::string const&));
-  MOCK_METHOD0(GetRunningApplications, unity::ApplicationList());
-  MOCK_METHOD1(GetApplicationForWindow, unity::ApplicationPtr(Window));
-};
 
 unity::StandaloneWindow::Ptr AddFakeWindowToWM(Window xid, bool mapped)
 {
@@ -55,7 +48,7 @@ struct TestBamfApplication : public testing::Test
     , application_(mock_manager_, unity::glib::object_cast<BamfApplication>(bamf_mock_application_))
   {}
 
-  MockApplicationManager mock_manager_;
+  testmocks::MockApplicationManager mock_manager_;
   unity::glib::Object<BamfMockApplication> bamf_mock_application_;
   unity::bamf::Application application_;
 };

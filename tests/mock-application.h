@@ -15,14 +15,18 @@
  * <http://www.gnu.org/licenses/>
  *
  * Authored by: Tim Penhey  <tim.penhey@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 #ifndef TESTS_MOCK_APPLICATION_H
 #define TESTS_MOCK_APPLICATION_H
 
 #include <map>
+#include <gmock/gmock.h>
 
 #include "unity-shared/ApplicationManager.h"
 #include "unity-shared/WindowManager.h"
+
+using namespace testing;
 
 namespace testmocks
 {
@@ -194,23 +198,28 @@ struct MockApplication : unity::Application
   }
 };
 
-class MockApplicationManager : public unity::ApplicationManager
+struct MockApplicationManager : public unity::ApplicationManager
 {
-public:
+  MockApplicationManager()
+  {
+    ON_CALL(*this, GetApplicationForDesktopFile(_)).WillByDefault(Invoke(this, &MockApplicationManager::RealGetApplicationForDesktopFile));
+  }
+
   static void StartApp(std::string const& desktop_file)
   {
-      // We know the application manager is a mock one so we can cast it.
-      auto self = dynamic_cast<MockApplicationManager&>(unity::ApplicationManager::Default());
-      auto app = self.GetApplicationForDesktopFile(desktop_file);
-      self.application_started.emit(app);
+    // We know the application manager is a mock one so we can cast it.
+    auto& app_manager = unity::ApplicationManager::Default();
+    auto self = dynamic_cast<MockApplicationManager*>(&app_manager);
+    auto app = self->RealGetApplicationForDesktopFile(desktop_file);
+    app_manager.application_started.emit(app);
   }
 
-  virtual unity::ApplicationWindowPtr GetActiveWindow()
-  {
-      return unity::ApplicationWindowPtr();
-  }
+  MOCK_METHOD0(GetActiveWindow, unity::ApplicationWindowPtr());
+  MOCK_METHOD1(GetApplicationForDesktopFile, unity::ApplicationPtr(std::string const&));
+  MOCK_METHOD0(GetRunningApplications, unity::ApplicationList());
+  MOCK_METHOD1(GetApplicationForWindow, unity::ApplicationPtr(Window));
 
-  unity::ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file)
+  unity::ApplicationPtr RealGetApplicationForDesktopFile(std::string const& desktop_file)
   {
     AppMap::iterator iter = app_map_.find(desktop_file);
     if (iter == app_map_.end())
@@ -223,16 +232,6 @@ public:
     {
       return iter->second;
     }
-  }
-
-  unity::ApplicationList GetRunningApplications()
-  {
-      return unity::ApplicationList();
-  }
-
-  unity::ApplicationPtr GetApplicationForWindow(Window xid)
-  {
-    return unity::ApplicationPtr();
   }
 
 private:
