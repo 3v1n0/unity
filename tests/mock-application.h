@@ -40,6 +40,8 @@ struct MockApplicationWindow : unity::ApplicationWindow
     visible.SetGetterFunction([this] { return visible_; });
     active.SetGetterFunction([this] { return active_; });
     urgent.SetGetterFunction([this] { return urgent_; });
+    title.SetGetterFunction([this] { return title_; });
+    icon.SetGetterFunction([this] { return icon_; });
   }
 
   Window xid_;
@@ -52,8 +54,6 @@ struct MockApplicationWindow : unity::ApplicationWindow
   bool active_;
   bool urgent_;
 
-  virtual std::string title() const { return title_; }
-  virtual std::string icon() const { return icon_; }
   virtual std::string type() const { return type_; }
 
   virtual Window window_id() const { return xid_; }
@@ -73,11 +73,11 @@ struct MockApplicationWindow : unity::ApplicationWindow
 struct MockApplication : unity::Application
 {
   MockApplication(std::string const& desktop_file,
-                  std::string const& icon = "",
-                  std::string const& title = "")
+                  std::string const& icon_name = "",
+                  std::string const& title_str = "")
     : desktop_file_(desktop_file)
-    , icon_(icon)
-    , title_(title)
+    , icon_(icon_name)
+    , title_(title_str)
     , seen_(false)
     , sticky_(false)
     , visible_(false)
@@ -86,14 +86,17 @@ struct MockApplication : unity::Application
     , urgent_(false)
     , type_("mock")
     {
-      seen.SetGetterFunction(sigc::mem_fun(this, &MockApplication::GetSeen));
       seen.SetSetterFunction(sigc::mem_fun(this, &MockApplication::SetSeen));
-      sticky.SetGetterFunction(sigc::mem_fun(this, &MockApplication::GetSticky));
       sticky.SetSetterFunction(sigc::mem_fun(this, &MockApplication::SetSticky));
-      visible.SetGetterFunction(sigc::mem_fun(this, &MockApplication::GetVisible));
-      active.SetGetterFunction(sigc::mem_fun(this, &MockApplication::GetActive));
-      running.SetGetterFunction(sigc::mem_fun(this, &MockApplication::GetRunning));
-      urgent.SetGetterFunction(sigc::mem_fun(this, &MockApplication::GetUrgent));
+
+      seen.SetGetterFunction([this] { return seen_; });
+      sticky.SetGetterFunction([this] { return sticky_; });
+      visible.SetGetterFunction([this] { return visible_; });
+      active.SetGetterFunction([this] { return active_; });
+      running.SetGetterFunction([this] { return running_; });
+      urgent.SetGetterFunction([this] { return urgent_; });
+      title.SetGetterFunction([this] { return title_; });
+      icon.SetGetterFunction([this] { return icon_; });
     }
 
   std::string desktop_file_;
@@ -108,9 +111,6 @@ struct MockApplication : unity::Application
   unity::WindowList windows_;
   std::string type_;
 
-
-  virtual std::string icon() const { return icon_; }
-  virtual std::string title() const { return title_; }
   virtual std::string desktop_file() const { return desktop_file_; }
   virtual std::string type() const { return type_; }
   virtual std::string repr() const { return "MockApplication"; }
@@ -133,7 +133,6 @@ struct MockApplication : unity::Application
     running.changed.emit(state);
     }
 
-  bool GetSeen() const { return seen_; }
   bool SetSeen(bool const& param) {
     if (param != seen_) {
       seen_ = param;
@@ -142,7 +141,6 @@ struct MockApplication : unity::Application
     return false;
   }
 
-  bool GetSticky() const { return sticky_; }
   bool SetSticky(bool const& param) {
     if (param != sticky_) {
       sticky_ = param;
@@ -158,11 +156,6 @@ struct MockApplication : unity::Application
     active_ = state;
     active.changed.emit(state);
   }
-
-  bool GetVisible() const { return visible_; }
-  bool GetActive() const { return active_; }
-  bool GetRunning() const { return running_; }
-  bool GetUrgent() const { return urgent_; }
 };
 
 class MockApplicationManager : public unity::ApplicationManager
