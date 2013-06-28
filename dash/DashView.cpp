@@ -1236,6 +1236,8 @@ void DashView::OnScopeAdded(Scope::Ptr const& scope, int position)
   scopes_layout_->AddView(view.GetPointer(), 1);
   scope_views_[scope->id] = view;
 
+  // set form factor used for the searches
+  scope->form_factor = "desktop";
   scope->activated.connect(sigc::mem_fun(this, &DashView::OnResultActivatedReply));
   scope->connected.changed.connect([&] (bool value) { });
 

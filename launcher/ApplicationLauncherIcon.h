@@ -153,6 +153,8 @@ private:
   sigc::connection window_opened_connection_;
   sigc::connection window_closed_connection_;
   sigc::connection window_moved_connection_;
+  sigc::connection icon_changed_connection_;
+  sigc::connection title_changed_connection_;
   sigc::connection urgent_changed_connection_;
   sigc::connection active_changed_connection_;
   sigc::connection running_changed_connection_;

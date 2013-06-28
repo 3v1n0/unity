@@ -32,10 +32,11 @@ FakeApplicationWindow::FakeApplicationWindow(Window xid, uint64_t active_number)
   auto standalone_window = std::make_shared<StandaloneWindow>(xid_);
   standalone_window->active_number = active_number;
   WM->AddStandaloneWindow(standalone_window);
+
+  title.SetGetterFunction([this] { return "FakeApplicationWindow"; });
+  icon.SetGetterFunction([this] { return ""; });
 }
 
-std::string FakeApplicationWindow::title() const { return "FakeApplicationWindow"; }
-std::string FakeApplicationWindow::icon() const { return ""; }
 std::string FakeApplicationWindow::type() const { return "mock"; }
 
 Window FakeApplicationWindow::window_id() const { return xid_; }

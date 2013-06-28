@@ -143,7 +143,7 @@ TEST(TestScopeProxy, Search)
     search_finished = true;
   };
 
-  scope_proxy->Search("12:cat", search_callback, nullptr);
+  scope_proxy->Search("12:cat", glib::HintsMap(), search_callback, nullptr);
 
   Results::Ptr results = scope_proxy->results();
   Utils::WaitUntilMSec([&search_finished, results] { return search_finished == true && results->count() == 12; },
@@ -167,7 +167,7 @@ TEST(TestScopeProxy, MultiSearch)
   };
 
   // First Search
-  scope_proxy->Search("12:cat", search_callback, nullptr);
+  scope_proxy->Search("12:cat", glib::HintsMap(), search_callback, nullptr);
 
   Results::Ptr results = scope_proxy->results();
   Utils::WaitUntilMSec([&search_finished, results] { return search_finished == true && results->count() == 12; },
@@ -179,7 +179,7 @@ TEST(TestScopeProxy, MultiSearch)
   // Second Search
   search_ok = false;
   search_finished = false;
-  scope_proxy->Search("5:cat", search_callback, nullptr);
+  scope_proxy->Search("5:cat", glib::HintsMap(), search_callback, nullptr);
   
   Utils::WaitUntilMSec([&search_finished, results] { return search_finished == true && results->count() == 5; },
                        true,
@@ -200,7 +200,7 @@ TEST(TestScopeProxy, SearchFail)
     search_finished = true;
   };
 
-  scope_proxy->Search("12:cat", search_callback, nullptr);
+  scope_proxy->Search("12:cat", glib::HintsMap(), search_callback, nullptr);
   Utils::WaitUntilMSec(search_finished,
                        3000,
                        [] { return g_strdup("Search did not finish."); });
@@ -220,7 +220,7 @@ TEST(TestScopeProxy, SearchCancelled)
   };
 
   glib::Object<GCancellable> cancel_search(g_cancellable_new());
-  scope_proxy->Search("12:cat", search_callback, cancel_search);
+  scope_proxy->Search("12:cat", glib::HintsMap(), search_callback, cancel_search);
   g_cancellable_cancel(cancel_search);
 
   Utils::WaitForTimeoutMSec(1000);
@@ -232,7 +232,7 @@ TEST(TestScopeProxy, SearchCategories)
   ScopeProxyInterface::Ptr scope_proxy(new ScopeProxy(ScopeData::Ptr(new MockScopeData("testscope1", scope_name, scope_path))));
   // Auto-connect on search
 
-  scope_proxy->Search("12:cat", nullptr, nullptr);
+  scope_proxy->Search("12:cat", glib::HintsMap(), nullptr, nullptr);
 
   Results::Ptr results = scope_proxy->results();
   Utils::WaitUntilMSec([results] { return results->count() == 12; },
