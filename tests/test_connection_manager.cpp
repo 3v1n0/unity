@@ -97,13 +97,30 @@ TEST(TestConnectionManager, RemoveAvailable)
   EXPECT_TRUE(manager.Empty());
 }
 
+TEST(TestConnectionManager, RemoveAndClearAvailable)
+{
+  connection::Manager manager;
+  SignalerObject signaler;
+
+  sigc::connection conn = signaler.awesome_signal.connect([] {/* Awesome callback! */});
+  auto handle = manager.Add(conn);
+  ASSERT_TRUE(conn.connected());
+  ASSERT_FALSE(manager.Empty());
+
+  EXPECT_TRUE(manager.RemoveAndClear(&handle));
+  EXPECT_FALSE(conn.connected());
+  EXPECT_TRUE(manager.Empty());
+  EXPECT_EQ(handle, 0);
+}
+
 TEST(TestConnectionManager, RemoveUnavailable)
 {
   connection::Manager manager;
 
-  EXPECT_FALSE(manager.Remove(0));
-  EXPECT_FALSE(manager.Remove(g_random_int()));
+  connection::handle handle = 5;
+  EXPECT_FALSE(manager.RemoveAndClear(&handle));
   EXPECT_TRUE(manager.Empty());
+  EXPECT_EQ(handle, 5);
 }
 
 TEST(TestConnectionManager, ReplaceOnEmpty)
