@@ -574,7 +574,7 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemQuit)
 {
   mock_app->SetRunState(true);
   auto const& menu_item = GetMenuItemWithLabel(mock_icon, "Quit");
-  EXPECT_NE(menu_item, nullptr);
+  ASSERT_NE(menu_item, nullptr);
 
   EXPECT_CALL(*mock_app, Quit());
   dbusmenu_menuitem_handle_event(menu_item, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
@@ -613,11 +613,18 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemDesktopAction)
   EXPECT_TRUE(HasMenuItemWithLabel(usc_icon, "Test Action"));
 }
 
-TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemDesktopActionOverridesQuit)
+TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemDesktopActionOverridesQuitNotRunning)
 {
+  mock_app->SetRunState(false);
+  EXPECT_FALSE(HasMenuItemWithLabel(usc_icon, "Quit"));
+}
+
+TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemDesktopActionOverridesQuitRunning)
+{
+  usc_app->SetRunState(true);
   auto const& item = GetMenuItemWithLabel(usc_icon, "Quit");
-  EXPECT_NE(item, nullptr);
-  EXPECT_CALL(*mock_app, Quit()).Times(0);
+  ASSERT_NE(item, nullptr);
+  EXPECT_CALL(*usc_app, Quit()).Times(0);
 
   dbusmenu_menuitem_handle_event(item, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
 }
@@ -660,6 +667,7 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemoteDisablesMarkup)
   ON_CALL(*mock_icon, GetRemoteMenus()).WillByDefault(Invoke([&root] { return root; }));
 
   item = GetMenuItemWithLabel(mock_icon, "RemoteLabel");
+  ASSERT_NE(item, nullptr);
   EXPECT_FALSE(dbusmenu_menuitem_property_get_bool(item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY));
 }
 
@@ -676,6 +684,20 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemoteIgnoresInvisible)
   ON_CALL(*mock_icon, GetRemoteMenus()).WillByDefault(Invoke([&root] { return root; }));
 
   EXPECT_FALSE(HasMenuItemWithLabel(mock_icon, "InvisibleLabel"));
+}
+
+TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemoteOverridesQuitByLabelNotRunning)
+{
+  mock_app->SetRunState(false);
+  glib::Object<DbusmenuMenuitem> root(dbusmenu_menuitem_new());
+  glib::Object<DbusmenuMenuitem> item(dbusmenu_menuitem_new());
+  dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, "Quit");
+  dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
+  dbusmenu_menuitem_child_append(root, item);
+
+  ON_CALL(*mock_icon, GetRemoteMenus()).WillByDefault(Invoke([&root] { return root; }));
+
+  EXPECT_FALSE(HasMenuItemWithLabel(mock_icon, "Quit"));
 }
 
 TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemoteOverridesQuitByLabel)
@@ -699,7 +721,7 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemoteOverridesQuitByLabel)
   ON_CALL(*mock_icon, GetRemoteMenus()).WillByDefault(Invoke([&root] { return root; }));
 
   item = GetMenuItemWithLabel(mock_icon, "Quit");
-  EXPECT_NE(item, nullptr);
+  ASSERT_NE(item, nullptr);
   EXPECT_CALL(*mock_app, Quit()).Times(0);
 
   dbusmenu_menuitem_handle_event(item, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, time);
