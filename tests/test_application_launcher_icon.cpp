@@ -608,6 +608,20 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemForAppName)
   EXPECT_TRUE(method_called);
 }
 
+TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemDesktopAction)
+{
+  EXPECT_TRUE(HasMenuItemWithLabel(usc_icon, "Test Action"));
+}
+
+TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemDesktopActionOverridesQuit)
+{
+  auto const& item = GetMenuItemWithLabel(usc_icon, "Quit");
+  EXPECT_NE(item, nullptr);
+  EXPECT_CALL(*mock_app, Quit()).Times(0);
+
+  dbusmenu_menuitem_handle_event(item, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
+}
+
 TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemote)
 {
   unsigned time = g_random_int();
