@@ -871,7 +871,7 @@ void ApplicationLauncherIcon::ToggleSticky()
   }
 }
 
-void ApplicationLauncherIcon::EnsureMenuItemsControlReady()
+void ApplicationLauncherIcon::EnsureMenuItemsDefaultReady()
 {
   if (_menu_items.size() == MenuItemType::SIZE)
     return;
@@ -916,7 +916,7 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
   MenuItemsVector result;
   bool separator_needed = false;
 
-  EnsureMenuItemsControlReady();
+  EnsureMenuItemsDefaultReady();
   UpdateMenus();
 
   std::vector<glib::Object<DbusmenuClient>> menu_clients = { _menuclient_dynamic_quicklist };
