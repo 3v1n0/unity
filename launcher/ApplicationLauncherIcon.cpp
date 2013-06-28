@@ -940,6 +940,12 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
 
         if (!type) // (g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
         {
+          if (dbusmenu_menuitem_property_get_bool(item, QuicklistMenuItem::QUIT_ACTION_PROPERTY))
+          {
+            quit_item = item;
+            continue;
+          }
+
           const gchar* l = dbusmenu_menuitem_property_get(item, DBUSMENU_MENUITEM_PROP_LABEL);
           auto const& label = glib::gchar_to_string(l);
 
