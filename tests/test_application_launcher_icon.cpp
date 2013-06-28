@@ -73,7 +73,7 @@ MATCHER_P(AreArgsEqual, a, "")
 
 struct TestApplicationLauncherIcon : Test
 {
-  virtual void SetUp()
+  virtual void SetUp() override
   {
     WM = dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default());
     usc_app = std::make_shared<MockApplication::Nice>(USC_DESKTOP, "softwarecenter");
@@ -87,6 +87,12 @@ struct TestApplicationLauncherIcon : Test
     mock_app = std::make_shared<MockApplication::Nice>("");
     mock_icon = new NiceMock<MockApplicationLauncherIcon>(mock_app);
     ASSERT_TRUE(mock_icon->DesktopFile().empty());
+  }
+
+  virtual void TearDown() override
+  {
+    for (auto const& win : WM->GetStandaloneWindows())
+      WM->Close(win->Xid());
   }
 
   void AddMockWindow(Window xid, int monitor, int desktop)
