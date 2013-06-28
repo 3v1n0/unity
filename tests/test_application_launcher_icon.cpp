@@ -633,7 +633,23 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemote)
   EXPECT_TRUE(cb_called);
 }
 
-TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemoteOverrideQuitByLabel)
+TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemoteDisablesMarkup)
+{
+  glib::Object<DbusmenuMenuitem> root(dbusmenu_menuitem_new());
+  glib::Object<DbusmenuMenuitem> item(dbusmenu_menuitem_new());
+  dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, "RemoteLabel");
+  dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
+  dbusmenu_menuitem_property_set_bool(item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY, TRUE);
+  ASSERT_TRUE(dbusmenu_menuitem_property_get_bool(item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY));
+  dbusmenu_menuitem_child_append(root, item);
+
+  ON_CALL(*mock_icon, GetRemoteMenus()).WillByDefault(Invoke([&root] { return root; }));
+
+  item = GetMenuItemWithLabel(mock_icon, "RemoteLabel");
+  EXPECT_FALSE(dbusmenu_menuitem_property_get_bool(item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY));
+}
+
+TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemoteOverridesQuitByLabel)
 {
   mock_app->SetRunState(true);
   unsigned time = g_random_int();
