@@ -649,6 +649,21 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemoteDisablesMarkup)
   EXPECT_FALSE(dbusmenu_menuitem_property_get_bool(item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY));
 }
 
+TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemoteIgnoresInvisible)
+{
+  glib::Object<DbusmenuMenuitem> root(dbusmenu_menuitem_new());
+  glib::Object<DbusmenuMenuitem> item(dbusmenu_menuitem_new());
+  dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, "InvisibleLabel");
+  dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
+  dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_VISIBLE, FALSE);
+  ASSERT_FALSE(dbusmenu_menuitem_property_get_bool(item, DBUSMENU_MENUITEM_PROP_VISIBLE));
+  dbusmenu_menuitem_child_append(root, item);
+
+  ON_CALL(*mock_icon, GetRemoteMenus()).WillByDefault(Invoke([&root] { return root; }));
+
+  EXPECT_FALSE(HasMenuItemWithLabel(mock_icon, "InvisibleLabel"));
+}
+
 TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemoteOverridesQuitByLabel)
 {
   mock_app->SetRunState(true);
