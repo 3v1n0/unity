@@ -919,19 +919,11 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
   EnsureMenuItemsDefaultReady();
   UpdateMenus();
 
-  std::vector<glib::Object<DbusmenuClient>> menu_clients = { _menuclient_dynamic_quicklist };
+  auto const& remote_menus = GetRemoteMenus();
 
-  for (auto const& client : menu_clients)
+  if (remote_menus.IsType(DBUSMENU_TYPE_MENUITEM))
   {
-    if (!client || !client.IsType(DBUSMENU_TYPE_CLIENT))
-      continue;
-
-    DbusmenuMenuitem* root = dbusmenu_client_get_root(client);
-
-    if (!root || !dbusmenu_menuitem_property_get_bool(root, DBUSMENU_MENUITEM_PROP_VISIBLE))
-      continue;
-
-    for (GList* l = dbusmenu_menuitem_get_children(root); l; l = l->next)
+    for (GList* l = dbusmenu_menuitem_get_children(remote_menus); l; l = l->next)
     {
       glib::Object<DbusmenuMenuitem> item(static_cast<DbusmenuMenuitem*>(l->data), glib::AddRef());
 
@@ -948,8 +940,7 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
     }
   }
 
-  // FIXME: this should totally be added as a _menu_client
-  if (DBUSMENU_IS_MENUITEM(_menu_desktop_shortcuts.RawPtr()))
+  if (_menu_desktop_shortcuts.IsType(DBUSMENU_TYPE_MENUITEM))
   {
     for (GList* l = dbusmenu_menuitem_get_children(_menu_desktop_shortcuts); l; l = l->next)
     {
@@ -975,9 +966,7 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
     std::string bold_app_name("<b>"+app_name.Str()+"</b>");
 
     glib::Object<DbusmenuMenuitem> item(dbusmenu_menuitem_new());
-    dbusmenu_menuitem_property_set(item,
-                                   DBUSMENU_MENUITEM_PROP_LABEL,
-                                   bold_app_name.c_str());
+    dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, bold_app_name.c_str());
     dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
     dbusmenu_menuitem_property_set_bool(item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY, TRUE);
 
