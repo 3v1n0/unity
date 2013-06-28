@@ -723,7 +723,10 @@ TEST_P(/*TestApplicationLauncherIcon*/QuitLabel, QuicklistMenuItemRemoteOverride
 
   ON_CALL(*mock_icon, GetRemoteMenus()).WillByDefault(Invoke([&root] { return root; }));
 
-  item = GetMenuItemWithLabel(mock_icon, GetParam());
+  if (GetParam() != "Quit")
+    ASSERT_FALSE(HasMenuItemWithLabel(mock_icon, GetParam()));
+
+  item = GetMenuItemWithLabel(mock_icon, "Quit");
   ASSERT_NE(item, nullptr);
   EXPECT_CALL(*mock_app, Quit()).Times(0);
 
@@ -759,8 +762,12 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemoteOverridesQuitByProper
 
   ON_CALL(*mock_icon, GetRemoteMenus()).WillByDefault(Invoke([&root] { return root; }));
 
-  ASSERT_TRUE(HasMenuItemWithLabel(mock_icon, "Custom Quit Label"));
-  EXPECT_FALSE(HasMenuItemWithLabel(mock_icon, "Quit"));
+  EXPECT_FALSE(HasMenuItemWithLabel(mock_icon, "Custom Quit Label"));
+  auto new_item = GetMenuItemWithLabel(mock_icon, "Quit");
+  ASSERT_EQ(new_item, item);
+
+  EXPECT_CALL(*mock_app, Quit()).Times(0);
+  dbusmenu_menuitem_handle_event(item, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
 }
 
 TEST_F(TestApplicationLauncherIcon, IsFileManager)

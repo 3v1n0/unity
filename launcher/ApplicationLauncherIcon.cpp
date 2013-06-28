@@ -949,8 +949,8 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
           const gchar* l = dbusmenu_menuitem_property_get(item, DBUSMENU_MENUITEM_PROP_LABEL);
           auto const& label = glib::gchar_to_string(l);
 
-          if (label == _("Quit")  || label == "Quit" ||
-              label == _("Exit")  || label == "Exit" ||
+          if (label == _("Quit")  || label == "Quit"  ||
+              label == _("Exit")  || label == "Exit"  ||
               label == _("Close") || label == "Close")
           {
             quit_item = item;
@@ -1013,6 +1013,7 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
     if (!quit_item)
       quit_item = _menu_items[MenuItemType::QUIT];
 
+    dbusmenu_menuitem_property_set(quit_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Quit"));
     result.push_back(quit_item);
   }
 
