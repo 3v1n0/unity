@@ -164,6 +164,35 @@ TEST(TestConnectionManager, ReplaceAvailable)
   EXPECT_TRUE(second_conn.connected());
 }
 
+TEST(TestConnectionManager, GetAvailable)
+{
+  connection::Manager manager;
+  SignalerObject signaler;
+
+  sigc::connection first_conn = signaler.awesome_signal.connect([] {/* Awesome callback! */});
+  auto handle = manager.Add(first_conn);
+  ASSERT_FALSE(manager.Empty());
+
+  auto second_conn = manager.Get(handle);
+  EXPECT_TRUE(second_conn.connected());
+
+  second_conn.disconnect();
+  EXPECT_FALSE(first_conn.connected());
+}
+
+TEST(TestConnectionManager, GetUnavailable)
+{
+  connection::Manager manager;
+
+  auto conn = manager.Get(0);
+  EXPECT_FALSE(conn.connected());
+  EXPECT_TRUE(conn.empty());
+
+  conn = manager.Get(g_random_int());
+  EXPECT_FALSE(conn.connected());
+  EXPECT_TRUE(conn.empty());
+}
+
 TEST(TestConnectionManager, DisconnectOnDestruction)
 {
   SignalerObject signaler;
