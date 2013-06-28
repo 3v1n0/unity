@@ -48,7 +48,7 @@ struct TestBamfApplication : public testing::Test
     , application_(mock_manager_, unity::glib::object_cast<BamfApplication>(bamf_mock_application_))
   {}
 
-  testmocks::MockApplicationManager mock_manager_;
+  testmocks::MockApplicationManager::Nice mock_manager_;
   unity::glib::Object<BamfMockApplication> bamf_mock_application_;
   unity::bamf::Application application_;
 };
