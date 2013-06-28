@@ -38,6 +38,7 @@ public:
 
   handle Add(sigc::connection const&);
   bool Remove(handle);
+  bool RemoveAndClear(handle*);
   handle Replace(handle, sigc::connection const&);
 
   bool Empty() const;

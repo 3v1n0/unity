@@ -49,14 +49,20 @@ handle Manager::Add(sigc::connection const& conn)
 
 bool Manager::Remove(handle id)
 {
-  if (id != 0)
+  return RemoveAndClear(&id);
+}
+
+bool Manager::RemoveAndClear(handle *id)
+{
+  if (*id != 0)
   {
-    auto it = connections_.find(id);
+    auto it = connections_.find(*id);
 
     if (it != connections_.end())
     {
       it->second.disconnect();
-      connections_.erase(id);
+      connections_.erase(*id);
+      *id = 0;
       return true;
     }
   }
