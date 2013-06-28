@@ -9,7 +9,7 @@ set(UNITY_PANEL_SERVICE_DEPS
     gobject-2.0
     gthread-2.0
     gtk+-3.0>=3.3
-    indicator3-0.4>=0.4.90
+    indicator3-0.4>=12.10.2
     x11
     libido3-0.1>=13.0.0
 )
