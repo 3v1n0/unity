@@ -686,27 +686,30 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemoteIgnoresInvisible)
   EXPECT_FALSE(HasMenuItemWithLabel(mock_icon, "InvisibleLabel"));
 }
 
-TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemoteOverridesQuitByLabelNotRunning)
+struct QuitLabel : TestApplicationLauncherIcon, testing::WithParamInterface<std::string> {};
+INSTANTIATE_TEST_CASE_P(TestApplicationLauncherIcon, QuitLabel, testing::Values("Quit", "Exit", "Close"));
+
+TEST_P(/*TestApplicationLauncherIcon*/QuitLabel, QuicklistMenuItemRemoteOverridesQuitByLabelNotRunning)
 {
   mock_app->SetRunState(false);
   glib::Object<DbusmenuMenuitem> root(dbusmenu_menuitem_new());
   glib::Object<DbusmenuMenuitem> item(dbusmenu_menuitem_new());
-  dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, "Quit");
+  dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, GetParam().c_str());
   dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
   dbusmenu_menuitem_child_append(root, item);
 
   ON_CALL(*mock_icon, GetRemoteMenus()).WillByDefault(Invoke([&root] { return root; }));
 
-  EXPECT_FALSE(HasMenuItemWithLabel(mock_icon, "Quit"));
+  EXPECT_FALSE(HasMenuItemWithLabel(mock_icon, GetParam()));
 }
 
-TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemoteOverridesQuitByLabel)
+TEST_P(/*TestApplicationLauncherIcon*/QuitLabel, QuicklistMenuItemRemoteOverridesQuitByLabel)
 {
   mock_app->SetRunState(true);
   unsigned time = g_random_int();
   glib::Object<DbusmenuMenuitem> root(dbusmenu_menuitem_new());
   glib::Object<DbusmenuMenuitem> item(dbusmenu_menuitem_new());
-  dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, "Quit");
+  dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, GetParam().c_str());
   dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
   dbusmenu_menuitem_child_append(root, item);
 
@@ -720,7 +723,7 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemoteOverridesQuitByLabel)
 
   ON_CALL(*mock_icon, GetRemoteMenus()).WillByDefault(Invoke([&root] { return root; }));
 
-  item = GetMenuItemWithLabel(mock_icon, "Quit");
+  item = GetMenuItemWithLabel(mock_icon, GetParam());
   ASSERT_NE(item, nullptr);
   EXPECT_CALL(*mock_app, Quit()).Times(0);
 
