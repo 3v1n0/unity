@@ -52,12 +52,14 @@ struct MockApplicationLauncherIcon : ApplicationLauncherIcon
     ON_CALL(*this, Stick(_)).WillByDefault(Invoke([this] (bool save) { ApplicationLauncherIcon::Stick(save); }));
     ON_CALL(*this, Stick()).WillByDefault(Invoke([this] { ApplicationLauncherIcon::Stick(); }));
     ON_CALL(*this, UnStick()).WillByDefault(Invoke([this] { ApplicationLauncherIcon::UnStick(); }));
+    ON_CALL(*this, GetRemoteMenus()).WillByDefault(Invoke([] { return glib::Object<DbusmenuMenuitem>(); }));
   }
 
   MOCK_METHOD1(ActivateLauncherIcon, void(ActionArg));
   MOCK_METHOD1(Stick, void(bool));
   MOCK_METHOD0(Stick, void());
   MOCK_METHOD0(UnStick, void());
+  MOCK_CONST_METHOD0(GetRemoteMenus, glib::Object<DbusmenuMenuitem>());
 
   using ApplicationLauncherIcon::IsFileManager;
 };
@@ -604,6 +606,31 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemForAppName)
 
   Utils::WaitUntilMSec(method_called);
   EXPECT_TRUE(method_called);
+}
+
+TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemRemote)
+{
+  unsigned time = g_random_int();
+  glib::Object<DbusmenuMenuitem> root(dbusmenu_menuitem_new());
+  glib::Object<DbusmenuMenuitem> item(dbusmenu_menuitem_new());
+  dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, "RemoteLabel");
+  dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
+  dbusmenu_menuitem_child_append(root, item);
+
+  bool cb_called = false;
+  glib::Signal<void, DbusmenuMenuitem*, unsigned> signal(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+  [&cb_called, item, time] (DbusmenuMenuitem* menu, unsigned timestamp) {
+    cb_called = true;
+    EXPECT_EQ(menu, item);
+    EXPECT_EQ(timestamp, time);
+  });
+
+  ON_CALL(*mock_icon, GetRemoteMenus()).WillByDefault(Invoke([&root] { return root; }));
+  EXPECT_CALL(*mock_icon, GetRemoteMenus());
+  EXPECT_TRUE(HasMenuItemWithLabel(mock_icon, "RemoteLabel"));
+
+  dbusmenu_menuitem_handle_event(item, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, time);
+  EXPECT_TRUE(cb_called);
 }
 
 TEST_F(TestApplicationLauncherIcon, IsFileManager)
