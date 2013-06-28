@@ -53,6 +53,7 @@ struct MockApplicationWindow : unity::ApplicationWindow
     ON_CALL(*this, window_id()).WillByDefault(Invoke([this] { return xid_; }));
     ON_CALL(*this, monitor()).WillByDefault(Invoke([this] { return monitor_; }));
     ON_CALL(*this, Focus()).WillByDefault(Invoke([this] { return LocalFocus(); }));
+    ON_CALL(*this, application()).WillByDefault(Invoke([this] { return unity::ApplicationPtr(); }));
   }
 
   Window xid_;
@@ -102,6 +103,10 @@ struct MockApplicationWindow : unity::ApplicationWindow
 struct MockApplication : unity::Application
 {
   typedef NiceMock<MockApplication> Nice;
+
+  MockApplication()
+    : MockApplication("")
+  {}
 
   MockApplication(std::string const& desktop_file,
                   std::string const& icon_name = "",
@@ -220,6 +225,9 @@ struct MockApplicationManager : public unity::ApplicationManager
   MockApplicationManager()
   {
     ON_CALL(*this, GetApplicationForDesktopFile(_)).WillByDefault(Invoke(this, &MockApplicationManager::LocalGetApplicationForDesktopFile));
+    ON_CALL(*this, GetActiveWindow()).WillByDefault(Invoke([this] { return unity::ApplicationWindowPtr(); } ));
+    ON_CALL(*this, GetRunningApplications()).WillByDefault(Invoke([this] { return unity::ApplicationList(); } ));
+    ON_CALL(*this, GetApplicationForWindow(_)).WillByDefault(Invoke([this] (Window) { return unity::ApplicationPtr(); } ));
   }
 
   static void StartApp(std::string const& desktop_file)
