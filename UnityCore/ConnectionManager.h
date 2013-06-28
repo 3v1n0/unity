@@ -40,6 +40,7 @@ public:
   bool Remove(handle);
   bool RemoveAndClear(handle*);
   handle Replace(handle, sigc::connection const&);
+  sigc::connection Get(handle) const;
 
   bool Empty() const;
   size_t Size() const;

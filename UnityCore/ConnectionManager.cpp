@@ -81,6 +81,19 @@ handle Manager::Replace(handle id, sigc::connection const& conn)
   return Add(conn);
 }
 
+sigc::connection Manager::Get(handle id) const
+{
+  if (id > 0)
+  {
+    auto it = connections_.find(id);
+
+    if (it != connections_.end())
+      return it->second;
+  }
+
+  return sigc::connection();
+}
+
 bool Manager::Empty() const
 {
   return connections_.empty();
