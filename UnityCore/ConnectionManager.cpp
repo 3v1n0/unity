@@ -70,7 +70,7 @@ bool Manager::RemoveAndClear(handle *id)
   return false;
 }
 
-handle Manager::Replace(handle id, sigc::connection const& conn)
+handle Manager::Replace(handle const& id, sigc::connection const& conn)
 {
   if (Remove(id) && !conn.empty())
   {
@@ -81,7 +81,7 @@ handle Manager::Replace(handle id, sigc::connection const& conn)
   return Add(conn);
 }
 
-sigc::connection Manager::Get(handle id) const
+sigc::connection Manager::Get(handle const& id) const
 {
   if (id > 0)
   {

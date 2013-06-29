@@ -20,15 +20,37 @@
 #ifndef UNITY_CONNECTION_MANAGER
 #define UNITY_CONNECTION_MANAGER
 
-#include <sigc++/sigc++.h>
-#include <memory>
 #include <unordered_map>
+#include <sigc++/sigc++.h>
 
 namespace unity
 {
 namespace connection
 {
-typedef uint64_t handle;
+struct handle
+{
+  handle() : handle_(0) {}
+  handle(uint64_t val) : handle_(val) {}
+  operator uint64_t() const { return handle_; }
+  handle& operator++() { ++handle_; return *this; }
+  handle operator++(int) { auto tmp = *this; ++handle_; return tmp; }
+
+private:
+  uint64_t handle_;
+};
+} // connection namespace
+} // unity namespace
+
+namespace std
+{
+// Template specialization, needed for unordered_map
+template<> struct hash<unity::connection::handle> : hash<uint64_t> {};
+}
+
+namespace unity
+{
+namespace connection
+{
 
 class Manager
 {
@@ -39,8 +61,8 @@ public:
   handle Add(sigc::connection const&);
   bool Remove(handle);
   bool RemoveAndClear(handle*);
-  handle Replace(handle, sigc::connection const&);
-  sigc::connection Get(handle) const;
+  handle Replace(handle const&, sigc::connection const&);
+  sigc::connection Get(handle const&) const;
 
   bool Empty() const;
   size_t Size() const;
@@ -51,7 +73,8 @@ private:
 
   std::unordered_map<handle, sigc::connection> connections_;
 };
-}
+
+} // connection namespace
 } // unity namespace
 
 #endif
