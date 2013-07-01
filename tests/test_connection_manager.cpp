@@ -25,6 +25,87 @@ using namespace unity;
 
 namespace
 {
+
+TEST(TestConnectionHandle, Initialization)
+{
+  connection::handle handle;
+  EXPECT_EQ(handle, 0);
+
+  uint64_t val = g_random_int();
+  connection::handle random = val;
+  EXPECT_EQ(random, val);
+}
+
+TEST(TestConnectionHandle, Assignment)
+{
+  connection::handle handle;
+  ASSERT_EQ(handle, 0);
+
+  uint64_t val = g_random_int();
+  handle = val;
+  EXPECT_EQ(handle, val);
+}
+
+TEST(TestConnectionHandle, CastToScalarType)
+{
+  connection::handle handle = 5;
+  ASSERT_EQ(handle, 5);
+
+  int int_handle = handle;
+  EXPECT_EQ(int_handle, 5);
+
+  unsigned uint_handle = handle;
+  EXPECT_EQ(uint_handle, 5);
+}
+
+TEST(TestConnectionHandle, PrefixIncrementOperator)
+{
+  connection::handle handle;
+  ASSERT_EQ(handle, 0);
+
+  for (auto i = 1; i <= 10; ++i)
+  {
+    ASSERT_EQ(++handle, i);
+    ASSERT_EQ(handle, i);
+  }
+}
+
+TEST(TestConnectionHandle, PostfixIncrementOperator)
+{
+  connection::handle handle;
+  ASSERT_EQ(handle, 0);
+
+  for (auto i = 1; i <= 10; ++i)
+  {
+    ASSERT_EQ(handle++, i-1);
+    ASSERT_EQ(handle, i);
+  }
+}
+
+TEST(TestConnectionHandle, PrefixDecrementOperator)
+{
+  connection::handle handle(10);
+  ASSERT_EQ(handle, 10);
+
+  for (auto i = 10; i > 0; --i)
+  {
+    ASSERT_EQ(--handle, i-1);
+    ASSERT_EQ(handle, i-1);
+  }
+}
+
+TEST(TestConnectionHandle, PostfixDecrementOperator)
+{
+  connection::handle handle(10);
+  ASSERT_EQ(handle, 10);
+
+  for (auto i = 10; i > 0; --i)
+  {
+    ASSERT_EQ(handle--, i);
+    ASSERT_EQ(handle, i-1);
+  }
+}
+
 connection::handle global_handle = 0;
 
 struct SignalerObject
