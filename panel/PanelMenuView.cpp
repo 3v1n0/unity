@@ -1019,6 +1019,10 @@ void PanelMenuView::OnActiveAppChanged(BamfMatcher *matcher,
 {
   if (BAMF_IS_APPLICATION(new_app))
   {
+    app_name_changed_signal_.Disconnect();
+    app_name_changed_signal_.Connect(BAMF_VIEW(new_app), "name-changed",
+                                     sigc::mem_fun(this, &PanelMenuView::OnNameChanged));
+
     if (std::find(new_apps_.begin(), new_apps_.end(), new_app) != new_apps_.end())
     {
       if (new_application_ != new_app)
@@ -1087,7 +1091,6 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
 
     // first see if we need to remove and old callback
     view_name_changed_signal_.Disconnect();
-
     // register callback for new view
     view_name_changed_signal_.Connect(new_view, "name-changed",
                                       sigc::mem_fun(this, &PanelMenuView::OnNameChanged));

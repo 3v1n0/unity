@@ -38,6 +38,7 @@ SwitcherModel::SwitcherModel(std::vector<AbstractLauncherIcon::Ptr> const& icons
   , applications_(icons)
   , index_(0)
   , last_index_(0)
+  , row_index_(0)
 {
   // When using Webapps, there are more than one active icon, so let's just pick
   // up the first one found which is the web browser.
@@ -183,6 +184,7 @@ void SwitcherModel::Next()
 
   detail_selection = false;
   detail_selection_index = 0;
+  row_index_ = 0;
   selection_changed.emit(Selection());
 }
 
@@ -197,6 +199,7 @@ void SwitcherModel::Prev()
 
   detail_selection = false;
   detail_selection_index = 0;
+  row_index_ = 0;
   selection_changed.emit(Selection());
 }
 
@@ -209,6 +212,8 @@ void SwitcherModel::NextDetail()
     detail_selection_index = detail_selection_index + 1;
   else
     detail_selection_index = 0;
+
+  UpdateRowIndex();
 }
 
 void SwitcherModel::PrevDetail()
@@ -220,6 +225,102 @@ void SwitcherModel::PrevDetail()
     detail_selection_index = detail_selection_index - 1;
   else
     detail_selection_index = DetailXids().size() - 1;
+
+  UpdateRowIndex();
+}
+
+void SwitcherModel::UpdateRowIndex()
+{
+  int current_index = detail_selection_index;
+  unsigned int current_row = 0;
+
+  for (auto r : row_sizes_)
+  {
+    current_index -= r;
+
+    if (current_index < 0)
+    {
+      row_index_ = current_row;
+      return;
+    }
+
+    current_row++;
+  }
+}
+
+unsigned int SwitcherModel::SumNRows(unsigned int n) const
+{
+  unsigned int total = 0;
+
+  if (n < row_sizes_.size())
+    for (unsigned int i = 0; i <= n; ++i)
+      total += row_sizes_[i];
+
+  return total;
+}
+
+bool SwitcherModel::DetailIndexInLeftHalfOfRow() const
+{
+  unsigned int half = row_sizes_[row_index_]/2;
+  unsigned int total_above = (row_index_ > 0 ? SumNRows(row_index_ - 1) : 0);
+  unsigned int diff = detail_selection_index - total_above;
+
+  return (diff < half);
+}
+
+void SwitcherModel::NextDetailRow()
+{
+  if (row_sizes_.size() && row_index_ < row_sizes_.size() - 1)
+  {
+    unsigned int current_row = row_sizes_[row_index_];
+    unsigned int next_row    = row_sizes_[row_index_ + 1];
+    unsigned int increment   = current_row;
+
+    if (!DetailIndexInLeftHalfOfRow())
+      increment = next_row;
+
+    detail_selection_index = detail_selection_index + increment;
+    row_index_++;
+  }
+  else
+  {
+    detail_selection_index = detail_selection_index + 1;
+  }
+}
+
+void SwitcherModel::PrevDetailRow()
+{
+  if (row_index_ > 0)
+  {
+    unsigned int current_row = row_sizes_[row_index_];
+    unsigned int prev_row    = row_sizes_[row_index_ - 1];
+    unsigned int decrement   = current_row;
+
+    if (DetailIndexInLeftHalfOfRow())
+      decrement = prev_row;
+
+    detail_selection_index = detail_selection_index - decrement;
+    row_index_--;
+  }
+  else
+  {
+    detail_selection_index = detail_selection_index - 1;
+  }
+}
+
+bool SwitcherModel::HasNextDetailRow() const
+{
+  return (detail_selection_index < DetailXids().size() - 1);
+}
+
+bool SwitcherModel::HasPrevDetailRow() const
+{
+  return (detail_selection_index > (unsigned int) 0);
+}
+
+void SwitcherModel::SetRowSizes(std::vector<int> const& row_sizes)
+{
+  row_sizes_ = row_sizes;
 }
 
 void SwitcherModel::Select(AbstractLauncherIcon::Ptr const& selection)

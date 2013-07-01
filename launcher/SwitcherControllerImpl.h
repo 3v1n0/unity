@@ -56,6 +56,11 @@ struct Controller::Impl
   void NextDetail();
   void PrevDetail();
 
+  void NextDetailRow();
+  void PrevDetailRow();
+  bool HasNextDetailRow() const;
+  bool HasPrevDetailRow() const;
+
   bool IsDetailViewShown();
   void SetDetail(bool detail, unsigned int min_windows = 1);
 

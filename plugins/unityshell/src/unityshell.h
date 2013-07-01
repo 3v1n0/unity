@@ -152,8 +152,8 @@ public:
   bool altTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabForwardAllInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevAllInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabDetailStartInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabDetailStopInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabDetailStart(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabDetailStop(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
@@ -250,6 +250,8 @@ private:
 
   void UpdateCloseWindowKey(CompAction::KeyBinding const&);
 
+  CompWindow * GetTopVisibleWindow();
+
   std::unique_ptr<na::TickSource> tick_source_;
   std::unique_ptr<na::AnimationController> animation_controller_;
 
@@ -340,6 +342,8 @@ private:
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
+
+  bool is_desktop_active_;
 
   friend class UnityWindow;
 };

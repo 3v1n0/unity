@@ -414,6 +414,10 @@ void ScopeProxy::Impl::OnChannelOpened(glib::String const& opened_channel, glib:
     LOG_DEBUG(logger) << "Filters changed for " << scope_data_->id() << "- updating search results.";
 
     glib::HintsMap hints;
+    if (!owner_->form_factor().empty())
+    {
+      hints["form-factor"] = g_variant_new_string(owner_->form_factor().c_str());
+    }
     hints["changed-filter-row"] = filter->VariantValue();
     Search(last_search_, hints, nullptr, cancel_scope_);
   });
@@ -774,9 +778,14 @@ void ScopeProxy::DisconnectProxy()
   pimpl->DestroyProxy();
 }
 
-void ScopeProxy::Search(std::string const& search_string, SearchCallback const& callback, GCancellable* cancellable)
+void ScopeProxy::Search(std::string const& search_string, glib::HintsMap const& user_hints, SearchCallback const& callback, GCancellable* cancellable)
 {
-  pimpl->Search(search_string, glib::HintsMap(), callback, cancellable);
+  glib::HintsMap hints = user_hints;
+  if (!form_factor.Get().empty() && hints.find("form-factor") == hints.end())
+  {
+    hints["form-factor"] = g_variant_new_string(form_factor().c_str());
+  }
+  pimpl->Search(search_string, hints, callback, cancellable);
 }
 
 void ScopeProxy::Activate(LocalResult const& result, uint activate_type, glib::HintsMap const& hints, ScopeProxy::ActivateCallback const& callback, GCancellable* cancellable)
@@ -801,7 +810,6 @@ Results::Ptr ScopeProxy::GetResultsForCategory(unsigned category) const
   results_category_model->SetModel(filter_model, func);
   return results_category_model;
 }
-
 
 } // namespace dash
 } // namespace unity
