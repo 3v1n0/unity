@@ -4,6 +4,15 @@ unity (7.0.1-0ubuntu1) UNRELEASED; urgency=low
 
  -- Michal Hruby <michal.hruby@canonical.com>  Wed, 26 Jun 2013 15:21:22 +0100
 
+unity (7.0.0daily13.06.24-0ubuntu2) saucy; urgency=low
+
+  * services/panel-main.c: manually backport lp:~larsu/unity/call-ido-init
+    to unbreak custom indicators (like indicator-datetime), the order
+    in the panel is still wrong but that fix can wait for next week
+  * debian/control: build-depends on libido3-0.1-dev
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 28 Jun 2013 19:36:49 +0200
+
 unity (7.0.0daily13.06.24-0ubuntu1) saucy; urgency=low
 
   [ Brandon Schaefer ]
