@@ -274,6 +274,31 @@ TEST(TestConnectionManager, GetUnavailable)
   EXPECT_TRUE(conn.empty());
 }
 
+TEST(TestConnectionManager, Clear)
+{
+  SignalerObject signaler;
+  std::vector<sigc::connection> connections;
+  connection::Manager manager;
+
+  for (int i = 1; i <= 10; ++i)
+  {
+    auto const& conn = signaler.awesome_signal.connect([] {/* Awesome callback! */});
+    connections.push_back(conn);
+    ASSERT_TRUE(connections.back().connected());
+    manager.Add(conn);
+  }
+
+  ASSERT_FALSE(manager.Empty());
+  ASSERT_EQ(manager.Size(), connections.size());
+
+  manager.Clear();
+
+  for (auto const& conn : connections)
+    ASSERT_FALSE(conn.connected());
+
+  EXPECT_TRUE(manager.Empty());
+}
+
 TEST(TestConnectionManager, DisconnectOnDestruction)
 {
   SignalerObject signaler;
