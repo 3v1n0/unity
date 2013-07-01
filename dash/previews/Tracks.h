@@ -51,7 +51,6 @@ public:
   NUX_DECLARE_OBJECT_TYPE(Tracks, nux::View);
 
   Tracks(dash::Tracks::Ptr tracks, NUX_FILE_LINE_PROTO);
-  virtual ~Tracks();
 
   // From debug::Introspectable
   std::string GetName() const;
