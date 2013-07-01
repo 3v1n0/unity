@@ -20,6 +20,7 @@
 #ifndef UNITY_CONNECTION_MANAGER
 #define UNITY_CONNECTION_MANAGER
 
+#include <memory>
 #include <unordered_map>
 #include <sigc++/sigc++.h>
 

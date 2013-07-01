@@ -113,6 +113,133 @@ struct SignalerObject
   sigc::signal<void> awesome_signal;
 };
 
+// connection::Wrapper tests
+
+TEST(TestConnectionWrapper, InitializationEmpty)
+{
+  connection::Wrapper wrapper;
+  EXPECT_FALSE(wrapper.Get().connected());
+}
+
+TEST(TestConnectionWrapper, InitializationFromConnection)
+{
+  SignalerObject signaler;
+  sigc::connection conn = signaler.awesome_signal.connect([] {/* Awesome callback! */});
+
+  connection::Wrapper wrapper(conn);
+  EXPECT_TRUE(conn.connected());
+}
+
+TEST(TestConnectionWrapper, Get)
+{
+  SignalerObject signaler;
+  sigc::connection conn = signaler.awesome_signal.connect([] {/* Awesome callback! */});
+
+  connection::Wrapper wrapper(conn);
+  EXPECT_TRUE(wrapper.Get().connected());
+}
+
+TEST(TestConnectionWrapper, DisconnectOnDestruction)
+{
+  SignalerObject signaler;
+  sigc::connection conn = signaler.awesome_signal.connect([] {/* Awesome callback! */});
+
+  {
+    connection::Wrapper wrapper(conn);
+    ASSERT_TRUE(conn.connected());
+  }
+
+  EXPECT_FALSE(conn.connected());
+}
+
+TEST(TestConnectionWrapper, CastToConnection)
+{
+  SignalerObject signaler;
+  sigc::connection conn = signaler.awesome_signal.connect([] {/* Awesome callback! */});
+
+  connection::Wrapper wrapper(conn);
+  conn.block(true);
+
+  sigc::connection conn2 = wrapper;
+  EXPECT_TRUE(conn2.blocked());
+}
+
+TEST(TestConnectionWrapper, CastToBool)
+{
+  SignalerObject signaler;
+
+  connection::Wrapper wrapper;
+  EXPECT_FALSE(wrapper);
+
+  sigc::connection conn = signaler.awesome_signal.connect([] {/* Awesome callback! */});
+  wrapper = conn;
+  EXPECT_TRUE(wrapper);
+}
+
+TEST(TestConnectionWrapper, PointerConstOperator)
+{
+  SignalerObject signaler;
+  sigc::connection conn = signaler.awesome_signal.connect([] {/* Awesome callback! */});
+
+  connection::Wrapper wrapper(conn);
+  conn.block(true);
+
+  EXPECT_TRUE(wrapper->blocked());
+  EXPECT_TRUE(wrapper->connected());
+}
+
+TEST(TestConnectionWrapper, PointerOperator)
+{
+  SignalerObject signaler;
+  sigc::connection conn = signaler.awesome_signal.connect([] {/* Awesome callback! */});
+  connection::Wrapper wrapper(conn);
+
+  wrapper->disconnect();
+  EXPECT_FALSE(conn.connected());
+}
+
+TEST(TestConnectionWrapper, StarConstOperator)
+{
+  SignalerObject signaler;
+  sigc::connection conn = signaler.awesome_signal.connect([] {/* Awesome callback! */});
+
+  connection::Wrapper wrapper(conn);
+  conn.block(true);
+
+  EXPECT_TRUE((*wrapper).blocked());
+  EXPECT_TRUE((*wrapper).connected());
+}
+
+TEST(TestConnectionWrapper, StarOperator)
+{
+  SignalerObject signaler;
+  sigc::connection conn = signaler.awesome_signal.connect([] {/* Awesome callback! */});
+
+  connection::Wrapper wrapper(conn);
+
+  (*wrapper).disconnect();
+  EXPECT_FALSE(conn.connected());
+}
+
+TEST(TestConnectionWrapper, AssignmentOperator)
+{
+  SignalerObject signaler;
+  sigc::connection conn1 = signaler.awesome_signal.connect([] {/* Awesome callback! */});
+
+  connection::Wrapper wrapper(conn1);
+  conn1.block(true);
+
+  ASSERT_TRUE(conn1.connected());
+
+  sigc::connection conn2 = signaler.awesome_signal.connect([] {/* Awesome callback! */});
+  wrapper = conn2;
+
+  EXPECT_FALSE(conn1.connected());
+  EXPECT_TRUE(conn2.connected());
+}
+
+// connection::Manager tests
+
 TEST(TestConnectionManager, Initialization)
 {
   connection::Manager manager;
