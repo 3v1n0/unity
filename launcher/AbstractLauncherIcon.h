@@ -24,6 +24,7 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Property.h>
 #include <NuxCore/Math/MathInc.h>
+#include <UnityCore/ConnectionManager.h>
 
 #include <sigc++/sigc++.h>
 #include <libdbusmenu-glib/menuitem.h>
@@ -247,7 +248,7 @@ public:
   sigc::signal<void> position_saved;
   sigc::signal<void> position_forgot;
 
-  sigc::connection on_icon_removed_connection;
+  connection::Wrapper on_icon_removed_connection;
 };
 
 }

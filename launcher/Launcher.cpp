@@ -2134,9 +2134,7 @@ void Launcher::EndIconDrag()
         _model->Save();
       }
 
-      if (_drag_window->on_anim_completed.connected())
-        _drag_window->on_anim_completed.disconnect();
-      _drag_window->on_anim_completed = _drag_window->anim_completed.connect(sigc::mem_fun(this, &Launcher::OnDragWindowAnimCompleted));
+      _drag_window->on_anim_completed_conn_ = _drag_window->anim_completed.connect(sigc::mem_fun(this, &Launcher::OnDragWindowAnimCompleted));
 
       auto const& icon_center = _drag_icon->GetCenter(monitor);
       _drag_window->SetAnimationTarget(icon_center.x, icon_center.y),

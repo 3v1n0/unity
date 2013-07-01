@@ -49,19 +49,18 @@ void ExpoLauncherIcon::OnViewportLayoutChanged(int hsize, int vsize)
   if (hsize != 2 || vsize != 2)
   {
     icon_name = "workspace-switcher-top-left";
-    screen_viewport_switch_ended_connection_.disconnect();
-    terminate_expo_connection_.disconnect();
+    viewport_changes_connections_.Clear();
   }
   else
   {
     UpdateIcon();
 
-    if (!terminate_expo_connection_)
+    if (viewport_changes_connections_.Empty())
     {
       auto& wm = WindowManager::Default();
       auto cb = sigc::mem_fun(this, &ExpoLauncherIcon::UpdateIcon);
-      screen_viewport_switch_ended_connection_ = wm.screen_viewport_switch_ended.connect(cb);
-      terminate_expo_connection_ = wm.terminate_expo.connect(cb);
+      viewport_changes_connections_.Add(wm.screen_viewport_switch_ended.connect(cb));
+      viewport_changes_connections_.Add(wm.terminate_expo.connect(cb));
     }
   }
 }
