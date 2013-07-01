@@ -1113,48 +1113,29 @@ name2order (const gchar * name, const gchar * hint)
   return -1;
 }
 
-static gint
-name2priority (const gchar * name, const gchar * hint)
-{
-  gint order = name2order (name, hint);
-  if (order > -1)
-    return order * MAX_INDICATOR_ENTRIES;
-
-  return order;
-}
-
-static int
-indicator_compare_func (IndicatorObject *o1, IndicatorObject *o2)
-{
-  gchar *s1;
-  gchar *s2;
-  int    i1;
-  int    i2;
-
-  s1 = g_object_get_data (G_OBJECT (o1), "id");
-  s2 = g_object_get_data (G_OBJECT (o2), "id");
-
-  i1 = name2order (s1, NULL);
-  i2 = name2order (s2, NULL);
-
-  return i1 - i2;
-}
-
 static void
 sort_indicators (PanelService *self)
 {
   GSList *i;
   int     k = 0;
-  int     prio = 0;
-
-  self->priv->indicators = g_slist_sort (self->priv->indicators,
-                                         (GCompareFunc)indicator_compare_func);
 
   for (i = self->priv->indicators; i; i = i->next)
     {
-      prio = name2priority(g_object_get_data (G_OBJECT (i->data), "id"), NULL);
-      if (prio < 0) continue;
-      g_object_set_data (G_OBJECT (i->data), "priority", GINT_TO_POINTER (prio));
+      IndicatorObject *io = i->data;
+      gint pos;
+
+      pos = indicator_object_get_position (io);
+
+      /* Continue using the state ordering as long as there are still
+       * plugins statically defined in this file. Give them a much
+       * higher position though, so that they appear to the right of the
+       * indicators that return a proper position */
+      if (pos < 0)
+        pos = 1000 - name2order (g_object_get_data (G_OBJECT (io), "id"), NULL);
+
+      /* unity's concept of priorities is inverse to ours right now */
+      g_object_set_data (G_OBJECT (i->data), "priority", GINT_TO_POINTER (1000 - pos));
+
       g_object_set_data (G_OBJECT (i->data), "position", GINT_TO_POINTER (k));
       self->priv->timeouts[k] = SYNC_NEUTRAL;
       k++;
@@ -1277,16 +1258,8 @@ indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id,
           IndicatorObjectEntry *entry = e->data;
           gchar *id = get_indicator_entry_id_by_entry (entry);
 
-          if (entry->name_hint)
-            {
-              prio = name2priority(indicator_id, entry->name_hint);
-            }
-
-          if (prio == -1)
-            {
-              prio = parent_prio + index;
-              index++;
-            }
+          prio = parent_prio + index;
+          index++;
 
           indicator_entry_to_variant (entry, id, indicator_id, b, prio);
           g_free (id);
@@ -1583,7 +1556,6 @@ activate_next_prev_menu (PanelService         *self,
 
   for (l = indicators; l; l = l->next)
     {
-      const gchar *indicator_id = g_object_get_data (G_OBJECT (l->data), "id");
       gint parent_priority = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (l->data), "priority"));
       entries = indicator_object_get_entries (l->data);
       if (entries)
@@ -1598,16 +1570,8 @@ activate_next_prev_menu (PanelService         *self,
               if (!panel_service_entry_is_visible (self, new_entry))
                 continue;
 
-              if (new_entry->name_hint)
-                {
-                  prio = name2priority(indicator_id, new_entry->name_hint);
-                }
-
-              if (prio == -1)
-                {
-                  prio = parent_priority + index;
-                  index++;
-                }
+              prio = parent_priority + index;
+              index++;
 
               gpointer *values = g_new (gpointer, 2);
               values[0] = new_entry;
