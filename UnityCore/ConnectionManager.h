@@ -46,7 +46,13 @@ private:
 namespace std
 {
 // Template specialization, needed for unordered_map
-template<> struct hash<unity::connection::handle> : hash<uint64_t> {};
+template<> struct hash<unity::connection::handle>
+{
+  std::size_t operator()(unity::connection::handle const& h) const
+  {
+    return std::hash<uint64_t>()(h);
+  }
+};
 }
 
 namespace unity
