@@ -107,7 +107,6 @@ PanelMenuView::PanelMenuView()
 
 PanelMenuView::~PanelMenuView()
 {
-  style_changed_connection_.disconnect();
   window_buttons_->UnParentObject();
   titlebar_grab_area_->UnParentObject();
 }
