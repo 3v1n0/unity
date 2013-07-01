@@ -301,7 +301,6 @@ void Controller::ShowDash()
   // for the screen to be available again before honouring the request.
   if (wm.IsScreenGrabbed())
   {
-    screen_ungrabbed_slot_.disconnect();
     screen_ungrabbed_slot_ = wm.screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
     need_show_ = true;
     return;
@@ -353,7 +352,7 @@ void Controller::HideDash(bool restore)
   if (!visible_)
    return;
 
-  screen_ungrabbed_slot_.disconnect();
+  screen_ungrabbed_slot_->disconnect();
 
   EnsureDash();
 

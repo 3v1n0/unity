@@ -24,6 +24,7 @@
 #define UNITYSHELL_FILTERALLBUTTON_H
 
 #include <sigc++/connection.h>
+#include <UnityCore/ConnectionManager.h>
 #include <UnityCore/Filter.h>
 
 #include "FilterBasicButton.h"
@@ -38,7 +39,6 @@ class FilterAllButton : public FilterBasicButton
   NUX_DECLARE_OBJECT_TYPE(FilterAllButton, FilterBasicButton);
 public:
    FilterAllButton(NUX_FILE_LINE_PROTO);
-   ~FilterAllButton();
 
    void SetFilter(Filter::Ptr const& filter);
 
@@ -47,7 +47,7 @@ private:
   void OnStateChanged(nux::View* view);
 
   Filter::Ptr filter_;
-  sigc::connection filtering_connection_;
+  connection::Wrapper filtering_connection_;
 };
 
 } // namespace dash
