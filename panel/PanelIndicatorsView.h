@@ -37,7 +37,6 @@ class PanelIndicatorsView : public nux::View, public unity::debug::Introspectabl
   NUX_DECLARE_OBJECT_TYPE(PanelIndicatorsView, nux::View);
 public:
   PanelIndicatorsView();
-  ~PanelIndicatorsView();
 
   void AddIndicator(indicator::Indicator::Ptr const& indicator);
   void RemoveIndicator(indicator::Indicator::Ptr const& indicator);
@@ -96,7 +95,7 @@ private:
   bool SetOpacity(double& target, double const& new_value);
 
   Indicators indicators_;
-  std::map<indicator::Indicator::Ptr, std::vector<sigc::connection>> indicators_connections_;
+  std::unordered_map<indicator::Indicator::Ptr, connection::Manager> indicators_connections_;
 };
 
 }

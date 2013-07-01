@@ -1729,9 +1729,6 @@ void Launcher::OnIconAdded(AbstractLauncherIcon::Ptr const& icon)
 
 void Launcher::OnIconRemoved(AbstractLauncherIcon::Ptr const& icon)
 {
-  if (icon->needs_redraw_connection.connected())
-    icon->needs_redraw_connection.disconnect();
-
   SetIconUnderMouse(AbstractLauncherIcon::Ptr());
   if (icon == _icon_mouse_down)
     _icon_mouse_down = nullptr;
