@@ -25,7 +25,7 @@ namespace connection
 {
 namespace
 {
-handle ID = 0;
+handle GLOBAL_HANDLE = 0;
 }
 
 Manager::~Manager()
@@ -40,7 +40,7 @@ handle Manager::Add(sigc::connection const& conn)
 
   if (!conn.empty())
   {
-    id = ++ID;
+    id = ++GLOBAL_HANDLE;
     connections_.insert({id, conn});
   }
 

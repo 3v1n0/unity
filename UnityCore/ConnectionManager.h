@@ -34,6 +34,8 @@ struct handle
   operator uint64_t() const { return handle_; }
   handle& operator++() { ++handle_; return *this; }
   handle operator++(int) { auto tmp = *this; ++handle_; return tmp; }
+  handle& operator--() { --handle_; return *this; }
+  handle operator--(int) { auto tmp = *this; --handle_; return tmp; }
 
 private:
   uint64_t handle_;
