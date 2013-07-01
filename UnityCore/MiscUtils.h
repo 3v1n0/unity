@@ -28,25 +28,23 @@ namespace utils
 {
 
 template <typename TYPE>
-std::shared_ptr<sigc::connection> ConnectProperties(nux::ROProperty<TYPE>& local_property, nux::Property<TYPE>& remote_property)
+sigc::connection ConnectProperties(nux::ROProperty<TYPE>& local_property, nux::Property<TYPE>& remote_property)
 {
-  auto change_connection = std::make_shared<sigc::connection>();
   local_property.SetGetterFunction([&remote_property]() { return remote_property.Get(); });
-  *change_connection = remote_property.changed.connect([&local_property, &remote_property](TYPE const& value) { local_property.EmitChanged(value); });
+  auto change_connection = remote_property.changed.connect([&local_property, &remote_property](TYPE const& value) { local_property.EmitChanged(value); });
   return change_connection;
 }
 
 template <typename TYPE>
-std::shared_ptr<sigc::connection> ConnectProperties(nux::ROProperty<TYPE>& local_property, nux::ROProperty<TYPE>& remote_property)
+sigc::connection ConnectProperties(nux::ROProperty<TYPE>& local_property, nux::ROProperty<TYPE>& remote_property)
 {
-  auto change_connection = std::make_shared<sigc::connection>();
   local_property.SetGetterFunction([&remote_property]() { return remote_property.Get(); });
-  *change_connection = remote_property.changed.connect([&local_property, &remote_property](TYPE const& value) { local_property.EmitChanged(value); });
+  auto change_connection = remote_property.changed.connect([&local_property, &remote_property](TYPE const& value) { local_property.EmitChanged(value); });
   return change_connection;
 }
 
 template <typename TYPE>
-std::shared_ptr<sigc::connection> ConnectProperties(nux::RWProperty<TYPE>& local_property, nux::Property<TYPE>& remote_property)
+sigc::connection ConnectProperties(nux::RWProperty<TYPE>& local_property, nux::Property<TYPE>& remote_property)
 {  
   auto change_connection = std::make_shared<sigc::connection>();
   *change_connection = remote_property.changed.connect([&local_property, &remote_property](TYPE const& value)
@@ -65,11 +63,11 @@ std::shared_ptr<sigc::connection> ConnectProperties(nux::RWProperty<TYPE>& local
     change_connection->block(blocked);
     return ret;
   });
-  return change_connection;
+  return *change_connection;
 }
 
 template <typename TYPE>
-std::shared_ptr<sigc::connection> ConnectProperties(nux::RWProperty<TYPE>& local_property, nux::RWProperty<TYPE>& remote_property)
+sigc::connection ConnectProperties(nux::RWProperty<TYPE>& local_property, nux::RWProperty<TYPE>& remote_property)
 {  
   auto change_connection = std::make_shared<sigc::connection>();
   *change_connection = remote_property.changed.connect([&local_property, &remote_property](TYPE const& value)
@@ -88,7 +86,7 @@ std::shared_ptr<sigc::connection> ConnectProperties(nux::RWProperty<TYPE>& local
     change_connection->block(blocked);
     return ret;
   });
-  return change_connection;
+  return *change_connection;
 }
 
 template <class TYPE>

@@ -247,10 +247,7 @@ public:
   sigc::signal<void> position_saved;
   sigc::signal<void> position_forgot;
 
-  sigc::connection needs_redraw_connection;
-  sigc::connection on_icon_added_connection;
   sigc::connection on_icon_removed_connection;
-  sigc::connection on_order_changed_connection;
 };
 
 }

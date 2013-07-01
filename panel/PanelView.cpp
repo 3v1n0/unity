@@ -153,12 +153,6 @@ PanelView::PanelView(indicator::DBusIndicators::Ptr const& remote, NUX_FILE_LINE
 
 PanelView::~PanelView()
 {
-  for (auto conn : on_indicator_updated_connections_)
-    conn.disconnect();
-
-  for (auto conn : maximized_opacity_toggle_connections_)
-    conn.disconnect();
-
   indicator::EntryLocationMap locations;
   remote_->SyncGeometries(GetName() + boost::lexical_cast<std::string>(monitor_), locations);
 }
@@ -246,7 +240,7 @@ void PanelView::AddPanelView(PanelIndicatorsView* child,
 {
   layout_->AddView(child, stretchFactor, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_FULL);
   auto conn = child->on_indicator_updated.connect(sigc::mem_fun(this, &PanelView::OnIndicatorViewUpdated));
-  on_indicator_updated_connections_.push_back(conn);
+  on_indicator_updated_connections_.Add(conn);
   AddChild(child);
 }
 
@@ -725,25 +719,22 @@ void PanelView::SetOpacityMaximizedToggle(bool enabled)
       auto update_bg_lambda = [&](guint32) { ForceUpdateBackground(); };
       auto conn = &maximized_opacity_toggle_connections_;
 
-      conn->push_back(win_manager.window_minimized.connect(update_bg_lambda));
-      conn->push_back(win_manager.window_unminimized.connect(update_bg_lambda));
-      conn->push_back(win_manager.window_maximized.connect(update_bg_lambda));
-      conn->push_back(win_manager.window_restored.connect(update_bg_lambda));
-      conn->push_back(win_manager.window_mapped.connect(update_bg_lambda));
-      conn->push_back(win_manager.window_unmapped.connect(update_bg_lambda));
-      conn->push_back(win_manager.initiate_expo.connect(
+      conn->Add(win_manager.window_minimized.connect(update_bg_lambda));
+      conn->Add(win_manager.window_unminimized.connect(update_bg_lambda));
+      conn->Add(win_manager.window_maximized.connect(update_bg_lambda));
+      conn->Add(win_manager.window_restored.connect(update_bg_lambda));
+      conn->Add(win_manager.window_mapped.connect(update_bg_lambda));
+      conn->Add(win_manager.window_unmapped.connect(update_bg_lambda));
+      conn->Add(win_manager.initiate_expo.connect(
         sigc::mem_fun(this, &PanelView::ForceUpdateBackground)));
-      conn->push_back(win_manager.terminate_expo.connect(
+      conn->Add(win_manager.terminate_expo.connect(
         sigc::mem_fun(this, &PanelView::ForceUpdateBackground)));
-      conn->push_back(win_manager.screen_viewport_switch_ended.connect(
+      conn->Add(win_manager.screen_viewport_switch_ended.connect(
         sigc::mem_fun(this, &PanelView::ForceUpdateBackground)));
     }
     else
     {
-      for (auto conn : maximized_opacity_toggle_connections_)
-        conn.disconnect();
-
-      maximized_opacity_toggle_connections_.clear();
+      maximized_opacity_toggle_connections_.Clear();
     }
 
     opacity_maximized_toggle_ = enabled;
