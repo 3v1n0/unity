@@ -270,25 +270,25 @@ ScopeProxy::Impl::Impl(ScopeProxy*const owner, ScopeData::Ptr const& scope_data)
 , categories_(new Categories())
 {
   // remote properties
-  signals_conn_.Add(*utils::ConnectProperties(owner_->connected, connected));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->channel, channel));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->category_order, category_order));
+  signals_conn_.Add(utils::ConnectProperties(owner_->connected, connected));
+  signals_conn_.Add(utils::ConnectProperties(owner_->channel, channel));
+  signals_conn_.Add(utils::ConnectProperties(owner_->category_order, category_order));
 
   // shared properties
-  signals_conn_.Add(*utils::ConnectProperties(owner_->is_master, scope_data_->is_master));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->search_hint, scope_data_->search_hint));
+  signals_conn_.Add(utils::ConnectProperties(owner_->is_master, scope_data_->is_master));
+  signals_conn_.Add(utils::ConnectProperties(owner_->search_hint, scope_data_->search_hint));
   // local properties
-  signals_conn_.Add(*utils::ConnectProperties(owner_->dbus_name, scope_data_->dbus_name));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->dbus_path, scope_data_->dbus_path));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->name, scope_data_->name));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->description, scope_data_->description));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->shortcut, scope_data_->shortcut));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->icon_hint, scope_data_->icon_hint));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->category_icon_hint, scope_data_->category_icon_hint));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->keywords, scope_data_->keywords));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->type, scope_data_->type));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->query_pattern, scope_data_->query_pattern));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->visible, scope_data_->visible));
+  signals_conn_.Add(utils::ConnectProperties(owner_->dbus_name, scope_data_->dbus_name));
+  signals_conn_.Add(utils::ConnectProperties(owner_->dbus_path, scope_data_->dbus_path));
+  signals_conn_.Add(utils::ConnectProperties(owner_->name, scope_data_->name));
+  signals_conn_.Add(utils::ConnectProperties(owner_->description, scope_data_->description));
+  signals_conn_.Add(utils::ConnectProperties(owner_->shortcut, scope_data_->shortcut));
+  signals_conn_.Add(utils::ConnectProperties(owner_->icon_hint, scope_data_->icon_hint));
+  signals_conn_.Add(utils::ConnectProperties(owner_->category_icon_hint, scope_data_->category_icon_hint));
+  signals_conn_.Add(utils::ConnectProperties(owner_->keywords, scope_data_->keywords));
+  signals_conn_.Add(utils::ConnectProperties(owner_->type, scope_data_->type));
+  signals_conn_.Add(utils::ConnectProperties(owner_->query_pattern, scope_data_->query_pattern));
+  signals_conn_.Add(utils::ConnectProperties(owner_->visible, scope_data_->visible));
   // Writable properties.
   owner_->view_type.SetGetterFunction([this]() { return view_type.Get(); });
   owner_->view_type.SetSetterFunction(sigc::mem_fun(this, &Impl::set_view_type));

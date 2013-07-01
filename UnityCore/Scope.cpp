@@ -58,7 +58,7 @@ Scope::Impl::Impl(Scope* owner, ScopeData::Ptr const& scope_data)
 : owner_(owner)
 , scope_data_(scope_data)
 {
-  signals_conn_.Add(*utils::ConnectProperties(owner_->id, scope_data_->id));
+  signals_conn_.Add(utils::ConnectProperties(owner_->id, scope_data_->id));
 }
 
 void Scope::Impl::Init()
@@ -68,25 +68,25 @@ void Scope::Impl::Init()
   if (!proxy_)
     return;
 
-  signals_conn_.Add(*utils::ConnectProperties(owner_->connected, proxy_->connected));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->is_master, proxy_->is_master));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->search_hint, proxy_->search_hint));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->view_type, proxy_->view_type));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->form_factor, proxy_->form_factor));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->results, proxy_->results));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->filters, proxy_->filters));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->categories, proxy_->categories));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->category_order, proxy_->category_order));
+  signals_conn_.Add(utils::ConnectProperties(owner_->connected, proxy_->connected));
+  signals_conn_.Add(utils::ConnectProperties(owner_->is_master, proxy_->is_master));
+  signals_conn_.Add(utils::ConnectProperties(owner_->search_hint, proxy_->search_hint));
+  signals_conn_.Add(utils::ConnectProperties(owner_->view_type, proxy_->view_type));
+  signals_conn_.Add(utils::ConnectProperties(owner_->form_factor, proxy_->form_factor));
+  signals_conn_.Add(utils::ConnectProperties(owner_->results, proxy_->results));
+  signals_conn_.Add(utils::ConnectProperties(owner_->filters, proxy_->filters));
+  signals_conn_.Add(utils::ConnectProperties(owner_->categories, proxy_->categories));
+  signals_conn_.Add(utils::ConnectProperties(owner_->category_order, proxy_->category_order));
 
-  signals_conn_.Add(*utils::ConnectProperties(owner_->name, proxy_->name));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->description, proxy_->description));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->icon_hint, proxy_->icon_hint));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->category_icon_hint, proxy_->category_icon_hint));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->keywords, proxy_->keywords));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->type, proxy_->type));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->query_pattern, proxy_->query_pattern));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->shortcut, proxy_->shortcut));
-  signals_conn_.Add(*utils::ConnectProperties(owner_->visible, proxy_->visible));
+  signals_conn_.Add(utils::ConnectProperties(owner_->name, proxy_->name));
+  signals_conn_.Add(utils::ConnectProperties(owner_->description, proxy_->description));
+  signals_conn_.Add(utils::ConnectProperties(owner_->icon_hint, proxy_->icon_hint));
+  signals_conn_.Add(utils::ConnectProperties(owner_->category_icon_hint, proxy_->category_icon_hint));
+  signals_conn_.Add(utils::ConnectProperties(owner_->keywords, proxy_->keywords));
+  signals_conn_.Add(utils::ConnectProperties(owner_->type, proxy_->type));
+  signals_conn_.Add(utils::ConnectProperties(owner_->query_pattern, proxy_->query_pattern));
+  signals_conn_.Add(utils::ConnectProperties(owner_->shortcut, proxy_->shortcut));
+  signals_conn_.Add(utils::ConnectProperties(owner_->visible, proxy_->visible));
 }
 
 void Scope::Impl::Activate(LocalResult const& result, guint action_type, glib::HintsMap const& hints, ActivateCallback const& callback, GCancellable* cancellable)
