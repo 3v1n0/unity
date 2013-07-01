@@ -24,6 +24,7 @@
 #define WINDOW_GESTURE_TARGET_H
 
 #include <Nux/Gesture.h>
+#include <UnityCore/ConnectionManager.h>
 
 #include <core/core.h> // compiz stuff
 
@@ -51,7 +52,7 @@ class WindowGestureTarget : public nux::GestureTarget
     CompScreen::GrabHandle drag_grab_;
     bool started_window_move_;
     bool window_restored_by_pinch_;
-    sigc::connection connection_window_destruction;
+    unity::connection::Wrapper window_destruction_conn_;
 };
 
 #endif // WINDOW_GESTURE_TARGET_H
