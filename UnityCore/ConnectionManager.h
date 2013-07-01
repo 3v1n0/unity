@@ -90,7 +90,6 @@ class Manager
 {
 public:
   Manager() = default;
-  ~Manager();
 
   handle Add(sigc::connection const&);
   bool Remove(handle);
@@ -106,7 +105,7 @@ private:
   Manager(Manager const&) = delete;
   Manager& operator=(Manager const&) = delete;
 
-  std::unordered_map<handle, sigc::connection> connections_;
+  std::unordered_map<handle, Wrapper::Ptr> connections_;
 };
 
 } // connection namespace

@@ -66,7 +66,7 @@ if (GTEST_SRC_DIR)
                  ubus-server-mock.cpp
                  UnityGestureTargetMock.h
                 )
-  target_link_libraries(test-gestures gtest ${TEST_GESTURES_DEPS_LIBRARIES} compiz_core)
+  target_link_libraries(test-gestures gtest ${TEST_GESTURES_DEPS_LIBRARIES} compiz_core unity-core-${UNITY_API_VERSION})
   add_test(UnityGTestGestures test-gestures)
   add_dependencies(test-gestures gtest unity-core-${UNITY_API_VERSION})
 
