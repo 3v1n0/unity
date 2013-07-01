@@ -72,6 +72,7 @@ public:
   handle Replace(handle const&, sigc::connection const&);
   sigc::connection Get(handle const&) const;
 
+  void Clear();
   bool Empty() const;
   size_t Size() const;
 

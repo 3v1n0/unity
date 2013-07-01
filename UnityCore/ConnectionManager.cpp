@@ -30,8 +30,15 @@ handle GLOBAL_HANDLE = 0;
 
 Manager::~Manager()
 {
+  Clear();
+}
+
+void Manager::Clear()
+{
   for (auto& pair : connections_)
     pair.second.disconnect();
+
+  connections_.clear();
 }
 
 handle Manager::Add(sigc::connection const& conn)
