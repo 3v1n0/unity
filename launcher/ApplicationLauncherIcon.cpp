@@ -111,8 +111,6 @@ ApplicationLauncherIcon::~ApplicationLauncherIcon()
     app_->sticky = false;
     app_->seen = false;
   }
-
-  DisconnectApplicationSignalsConnections();
 }
 
 void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
@@ -121,7 +119,7 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
     return;
 
   app_ = app;
-  DisconnectApplicationSignalsConnections();
+  signals_conn_.Clear();
   SetupApplicationSignalsConnections();
 }
 
@@ -129,36 +127,36 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
 {
   // Lambda functions should be fine here because when the application the icon
   // is only ever removed when the application is closed.
-  window_opened_connection_ = app_->window_opened.connect([this](ApplicationWindow const&) {
+  signals_conn_.Add(app_->window_opened.connect([this](ApplicationWindow const&) {
     EnsureWindowState();
     UpdateMenus();
     UpdateIconGeometries(GetCenters());
-  });
+  }));
 
-  window_closed_connection_ = app_->window_closed.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
-  window_moved_connection_ = app_->window_moved.connect(sigc::hide(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState)));
+  signals_conn_.Add(app_->window_closed.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState)));
+  signals_conn_.Add(app_->window_moved.connect(sigc::hide(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState))));
 
-  urgent_changed_connection_ = app_->urgent.changed.connect([this](bool const& urgent) {
+  signals_conn_.Add(app_->urgent.changed.connect([this](bool const& urgent) {
     LOG_DEBUG(logger) << tooltip_text() << " urgent now " << (urgent ? "true" : "false");
     SetQuirk(Quirk::URGENT, urgent);
-  });
+  }));
 
-  active_changed_connection_ = app_->active.changed.connect([this](bool const& active) {
+  signals_conn_.Add(app_->active.changed.connect([this](bool const& active) {
     LOG_DEBUG(logger) << tooltip_text() << " active now " << (active ? "true" : "false");
     SetQuirk(Quirk::ACTIVE, active);
-  });
+  }));
 
-  title_changed_connection_ = app_->title.changed.connect([this](std::string const& name) {
+  signals_conn_.Add(app_->title.changed.connect([this](std::string const& name) {
     LOG_DEBUG(logger) << tooltip_text() << " name now " << name;
     tooltip_text = name;
-  });
+  }));
 
-  icon_changed_connection_ = app_->icon.changed.connect([this](std::string const& icon) {
+  signals_conn_.Add(app_->icon.changed.connect([this](std::string const& icon) {
     LOG_DEBUG(logger) << tooltip_text() << " icon now " << icon;
     icon_name = (icon.empty() ? DEFAULT_ICON : icon);
-  });
+  }));
 
-  running_changed_connection_ = app_->running.changed.connect([this](bool const& running) {
+  signals_conn_.Add(app_->running.changed.connect([this](bool const& running) {
     LOG_DEBUG(logger) << tooltip_text() << " running now " << (running ? "true" : "false");
     SetQuirk(Quirk::RUNNING, running);
 
@@ -169,14 +167,14 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
       EnsureWindowState();
       UpdateIconGeometries(GetCenters());
     }
-  });
+  }));
 
-  visible_changed_connection_ = app_->visible.changed.connect([this](bool const& visible) {
+  signals_conn_.Add(app_->visible.changed.connect([this](bool const& visible) {
     if (!IsSticky())
       SetQuirk(Quirk::VISIBLE, visible);
-  });
+  }));
 
-  closed_changed_connection_ = app_->closed.connect([this]() {
+  signals_conn_.Add(app_->closed.connect([this]() {
     if (!IsSticky())
     {
       SetQuirk(Quirk::VISIBLE, false);
@@ -192,21 +190,7 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
         return false;
       }, ICON_REMOVE_TIMEOUT);
     }
-  });
-}
-
-void ApplicationLauncherIcon::DisconnectApplicationSignalsConnections()
-{
-  window_opened_connection_.disconnect();
-  window_closed_connection_.disconnect();
-  window_moved_connection_.disconnect();
-  urgent_changed_connection_.disconnect();
-  active_changed_connection_.disconnect();
-  running_changed_connection_.disconnect();
-  visible_changed_connection_.disconnect();
-  title_changed_connection_.disconnect();
-  icon_changed_connection_.disconnect();
-  closed_changed_connection_.disconnect();
+  }));
 }
 
 bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk) const
