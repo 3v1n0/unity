@@ -60,6 +60,31 @@ namespace unity
 namespace connection
 {
 
+class Wrapper
+{
+public:
+  typedef std::shared_ptr<Wrapper> Ptr;
+
+  Wrapper() {};
+  Wrapper(sigc::connection const& conn) : conn_(conn) {}
+  ~Wrapper() { conn_.disconnect(); };
+
+  operator sigc::connection() const { return conn_; }
+  operator bool() const { return conn_.connected(); }
+  Wrapper& operator=(sigc::connection const& conn) { conn_.disconnect(); conn_ = conn; return *this; }
+  const sigc::connection* operator->() const { return &conn_; }
+  sigc::connection* operator->() { return &conn_; }
+  sigc::connection const& operator*() const { return conn_; }
+  sigc::connection& operator*() { return conn_; }
+  sigc::connection const& Get() const { return conn_; }
+
+private:
+  Wrapper(Wrapper const&) = delete;
+  Wrapper& operator=(Wrapper const&) = delete;
+
+  sigc::connection conn_;
+};
+
 class Manager
 {
 public:
