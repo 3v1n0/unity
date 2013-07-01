@@ -94,7 +94,6 @@ if (GTEST_SRC_DIR AND
 
 # The service that provides DBus services to test against
   add_executable(test-gtest-service
-                 mock-application.cpp
                  test_service_gdbus_wrapper.cpp
                  test_service_hud.cpp
                  test_service_main.cpp

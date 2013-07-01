@@ -114,7 +114,7 @@ private:
   void DisconnectApplicationSignalsConnections();
   void EnsureWindowState();
   void EnsureMenuItemsWindowsReady();
-  void EnsureMenuItemsReady();
+  void EnsureMenuItemsControlReady();
   void UpdateBackgroundColor();
   void UpdateMenus();
   void UpdateDesktopQuickList();
@@ -138,9 +138,7 @@ private:
   ScrollDirection _last_scroll_direction;
   unsigned int _progressive_scroll;
   std::set<std::string> _supported_types;
-  std::map<std::string, glib::Object<DbusmenuClient>> _menu_clients;
-  std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items;
-  std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items_extra;
+  std::vector<glib::Object<DbusmenuMenuitem>> _menu_items;
   std::vector<glib::Object<DbusmenuMenuitem>> _menu_items_windows;
   glib::Object<IndicatorDesktopShortcuts> _desktop_shortcuts;
   glib::Object<DbusmenuMenuitem> _menu_desktop_shortcuts;
