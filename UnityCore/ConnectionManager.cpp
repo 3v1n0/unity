@@ -53,17 +53,10 @@ bool Manager::Remove(handle id)
 
 bool Manager::RemoveAndClear(handle *id)
 {
-  if (*id != 0)
+  if (*id != 0 && connections_.erase(*id))
   {
-    auto it = connections_.find(*id);
-
-    if (it != connections_.end())
-    {
-      (*it->second)->disconnect();
-      connections_.erase(*id);
-      *id = 0;
-      return true;
-    }
+    *id = 0;
+    return true;
   }
 
   return false;
