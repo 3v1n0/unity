@@ -167,17 +167,18 @@ ScopeView::ScopeView(Scope::Ptr scope, nux::Area* show_filters)
   filters_expanded.changed.connect(sigc::mem_fun(this, &ScopeView::OnScopeFilterExpanded));
   view_type.changed.connect(sigc::mem_fun(this, &ScopeView::OnViewTypeChanged));
 
-  key_nav_focus_connection_ = nux::GetWindowCompositor().key_nav_focus_change.connect(sigc::mem_fun(this, &ScopeView::OnCompositorKeyNavFocusChanged));
+  auto conn = nux::GetWindowCompositor().key_nav_focus_change.connect(sigc::mem_fun(this, &ScopeView::OnCompositorKeyNavFocusChanged));
+  key_nav_focus_connection_ = conn_manager_.Add(conn);
 
   if (scope_)
   {
-    categories_updated = scope_->categories.changed.connect([this](Categories::Ptr const& categories) { SetupCategories(categories); });
+    conn_manager_.Add(scope_->categories.changed.connect([this](Categories::Ptr const& categories) { SetupCategories(categories); }));
     SetupCategories(scope->categories);
 
-    results_updated = scope_->results.changed.connect([this](Results::Ptr const& results) { SetupResults(results); });
+    conn_manager_.Add(scope_->results.changed.connect([this](Results::Ptr const& results) { SetupResults(results); }));
     SetupResults(scope->results);
 
-    filters_updated = scope_->filters.changed.connect([this](Filters::Ptr const& filters) { SetupFilters(filters); });
+    conn_manager_.Add(scope_->filters.changed.connect([this](Filters::Ptr const& filters) { SetupFilters(filters); }));
     SetupFilters(scope->filters);
 
     scope_->connected.changed.connect([&](bool is_connected)
@@ -229,19 +230,6 @@ ScopeView::ScopeView(Scope::Ptr scope, nux::Area* show_filters)
 
 ScopeView::~ScopeView()
 {
-  results_updated.disconnect();
-  result_added_connection.disconnect();
-  result_removed_connection.disconnect();
-
-  categories_updated.disconnect();
-  category_added_connection.disconnect();
-  category_changed_connection.disconnect();
-  category_removed_connection.disconnect();
-
-  filters_updated.disconnect();
-  filter_added_connection.disconnect();
-  filter_removed_connection.disconnect();
-
   g_cancellable_cancel(cancellable_);
   if (search_cancellable_) g_cancellable_cancel(search_cancellable_);
 }
@@ -295,18 +283,21 @@ void ScopeView::SetupViews(nux::Area* show_filters)
 
 void ScopeView::SetupCategories(Categories::Ptr const& categories)
 {
-  category_added_connection.disconnect();
-  category_changed_connection.disconnect();
-  category_removed_connection.disconnect();
+  conn_manager_.RemoveAndClear(&category_added_connection_);
+  conn_manager_.RemoveAndClear(&category_changed_connection_);
+  conn_manager_.RemoveAndClear(&category_removed_connection_);
 
   if (!categories)
     return;
 
   QueueCategoryCountsCheck();
 
-  category_added_connection = categories->category_added.connect(sigc::mem_fun(this, &ScopeView::OnCategoryAdded));
-  category_changed_connection = categories->category_changed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryChanged));
-  category_removed_connection = categories->category_removed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryRemoved));
+  auto conn = categories->category_added.connect(sigc::mem_fun(this, &ScopeView::OnCategoryAdded));
+  category_added_connection_ = conn_manager_.Add(conn);
+  conn = categories->category_changed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryChanged));
+  category_changed_connection_ = conn_manager_.Add(conn);
+  conn = categories->category_removed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryRemoved));
+  category_removed_connection_ = conn_manager_.Add(conn);
 
   auto resync_categories = [categories, this] (glib::Object<DeeModel> model)
   {
@@ -330,7 +321,8 @@ void ScopeView::OnCategoryOrderChanged(std::vector<unsigned int> const& order)
   // Find the current focus category position && result index
   // This is to keep the focus in the same place if categories are being added/removed/reordered
   PushResultFocus("reorder");
-  key_nav_focus_connection_.block(true);
+  auto key_nav_focus_conn = conn_manager_.Get(key_nav_focus_connection_);
+  key_nav_focus_conn.block(true);
   //////////////////////////////////////////////////
 
   category_order_ = order;
@@ -359,7 +351,7 @@ void ScopeView::OnCategoryOrderChanged(std::vector<unsigned int> const& order)
   // Update current focus category position && result index
   // This is to keep the focus in the same place if categories are being added/removed/reordered
   PopResultFocus("reorder");
-  key_nav_focus_connection_.block(false);
+  key_nav_focus_conn.block(false);
   //////////////////////////////////////////////////
 
   QueueRelayout();
@@ -367,14 +359,16 @@ void ScopeView::OnCategoryOrderChanged(std::vector<unsigned int> const& order)
 
 void ScopeView::SetupResults(Results::Ptr const& results)
 {
-  result_added_connection.disconnect();
-  result_removed_connection.disconnect();
+  conn_manager_.RemoveAndClear(&result_added_connection_);
+  conn_manager_.RemoveAndClear(&result_removed_connection_);
 
   if (!results)
     return;
 
-  result_added_connection = results->result_added.connect(sigc::mem_fun(this, &ScopeView::OnResultAdded));
-  result_added_connection = results->result_removed.connect(sigc::mem_fun(this, &ScopeView::OnResultRemoved));
+  auto conn = results->result_added.connect(sigc::mem_fun(this, &ScopeView::OnResultAdded));
+  result_added_connection_ = conn_manager_.Add(conn);
+  conn = results->result_removed.connect(sigc::mem_fun(this, &ScopeView::OnResultRemoved));
+  result_removed_connection_ = conn_manager_.Add(conn);
 
   results->model.changed.connect([this] (glib::Object<DeeModel> model)
   {
@@ -394,24 +388,27 @@ void ScopeView::SetupResults(Results::Ptr const& results)
 
 void ScopeView::SetupFilters(Filters::Ptr const& filters)
 {
-  filter_added_connection.disconnect();
-  filter_removed_connection.disconnect();
+  conn_manager_.RemoveAndClear(&filter_added_connection_);
+  conn_manager_.RemoveAndClear(&filter_removed_connection_);
 
   if (!filters)
     return;
 
-  filter_added_connection = filters->filter_added.connect(sigc::mem_fun(this, &ScopeView::OnFilterAdded));
-  filter_removed_connection = filters->filter_removed.connect(sigc::mem_fun(this, &ScopeView::OnFilterRemoved));
+  auto conn = filters->filter_added.connect(sigc::mem_fun(this, &ScopeView::OnFilterAdded));
+  filter_added_connection_ = conn_manager_.Add(conn);
+  conn = filters->filter_removed.connect(sigc::mem_fun(this, &ScopeView::OnFilterRemoved));
+  filter_removed_connection_ = conn_manager_.Add(conn);
 
   auto resync_filters = [filters, this] (glib::Object<DeeModel> model)
   {
-    bool blocked = filter_added_connection.block(true);
+    auto conn = conn_manager_.Get(filter_removed_connection_);
+    bool blocked = conn.block(true);
 
     filter_bar_->ClearFilters();
     for (unsigned int i = 0; i < filters->count(); ++i)
       OnFilterAdded(filters->FilterAtIndex(i));
 
-    filter_added_connection.block(blocked);
+    conn.block(blocked);
   };
 
   filters->model.changed.connect(resync_filters);
@@ -438,7 +435,8 @@ void ScopeView::OnCategoryAdded(Category const& category)
   // Find the current focus category position && result index
   // This is to keep the focus in the same place if categories are being added/removed/reordered
   PushResultFocus("add");
-  key_nav_focus_connection_.block(true);
+  auto key_nav_focus_conn = conn_manager_.Get(key_nav_focus_connection_);
+  key_nav_focus_conn.block(true);
   //////////////////////////////////////////////////
 
   PlacesGroup::Ptr group(CreatePlacesGroup(category));
@@ -525,7 +523,7 @@ void ScopeView::OnCategoryAdded(Category const& category)
   // Update current focus category position && result index
   // This is to keep the focus in the same place if categories are being added/removed/reordered
   PopResultFocus("add");
-  key_nav_focus_connection_.block(false);
+  key_nav_focus_conn.block(false);
   //////////////////////////////////////////////////
 
   if (reset_filter_models)
@@ -575,7 +573,8 @@ void ScopeView::OnCategoryRemoved(Category const& category)
   // Find the current focus category position && result index
   // This is to keep the focus in the same place if categories are being added/removed/reordered
   PushResultFocus("remove");
-  key_nav_focus_connection_.block(true);
+  auto key_nav_focus_conn = conn_manager_.Get(key_nav_focus_connection_);
+  key_nav_focus_conn.block(true);
   //////////////////////////////////////////////////
 
   counts_.erase(group);
@@ -593,7 +592,7 @@ void ScopeView::OnCategoryRemoved(Category const& category)
   // Update current focus category position && result index
   // This is to keep the focus in the same place if categories are being added/removed/reordered
   PopResultFocus("remove");
-  key_nav_focus_connection_.block(false);
+  key_nav_focus_conn.block(false);
   //////////////////////////////////////////////////
 
   QueueRelayout();

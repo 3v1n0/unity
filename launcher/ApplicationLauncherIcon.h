@@ -23,6 +23,7 @@
 
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/ConnectionManager.h>
 
 #include <libindicator/indicator-desktop-shortcuts.h>
 
@@ -111,7 +112,6 @@ private:
   };
 
   void SetupApplicationSignalsConnections();
-  void DisconnectApplicationSignalsConnections();
   void EnsureWindowState();
   void EnsureMenuItemsWindowsReady();
   void EnsureMenuItemsDefaultReady();
@@ -148,16 +148,7 @@ private:
   bool use_custom_bg_color_;
   nux::Color bg_color_;
 
-  sigc::connection window_opened_connection_;
-  sigc::connection window_closed_connection_;
-  sigc::connection window_moved_connection_;
-  sigc::connection icon_changed_connection_;
-  sigc::connection title_changed_connection_;
-  sigc::connection urgent_changed_connection_;
-  sigc::connection active_changed_connection_;
-  sigc::connection running_changed_connection_;
-  sigc::connection visible_changed_connection_;
-  sigc::connection closed_changed_connection_;
+  connection::Manager signals_conn_;
 };
 
 }

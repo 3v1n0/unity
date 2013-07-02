@@ -133,25 +133,8 @@ LauncherIcon::LauncherIcon(IconType type)
 
 LauncherIcon::~LauncherIcon()
 {
+  on_icon_removed_connection.disconnect();
   SetQuirk(Quirk::URGENT, false);
-
-  // clean up the whole signal-callback mess
-  if (needs_redraw_connection.connected())
-    needs_redraw_connection.disconnect();
-
-  if (on_icon_added_connection.connected())
-    on_icon_added_connection.disconnect();
-
-  if (on_icon_removed_connection.connected())
-    on_icon_removed_connection.disconnect();
-
-  if (on_order_changed_connection.connected())
-    on_order_changed_connection.disconnect();
-
-  if (_unity_theme)
-  {
-    _unity_theme = NULL;
-  }
 }
 
 void LauncherIcon::LoadTooltip()
@@ -349,9 +332,9 @@ GtkIconTheme* LauncherIcon::GetUnityTheme()
 {
   // The theme object is invalid as soon as you add a new icon to change the theme.
   // invalidate the cache then and rebuild the theme the first time after a icon theme update.
-  if (!GTK_IS_ICON_THEME(_unity_theme.RawPtr()))
+  if (!_unity_theme.IsType(GTK_TYPE_ICON_THEME))
   {
-    _unity_theme =  gtk_icon_theme_new();
+    _unity_theme = gtk_icon_theme_new();
     gtk_icon_theme_set_custom_theme(_unity_theme, UNITY_THEME_NAME.c_str());
   }
   return _unity_theme;
