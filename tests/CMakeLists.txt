@@ -141,7 +141,7 @@ if (GTEST_SRC_DIR AND
   set (GTEST_XLESS_SOURCES
        test_main_xless.cpp
        test_abstract_interface_generator.cpp
-       test_launcher_model.cpp
+       test_connection_manager.cpp
        test_glib_dbus_object.cpp
        test_glib_cancellable.cpp
        test_glib_object.cpp
@@ -163,6 +163,7 @@ if (GTEST_SRC_DIR AND
        test_favorite_store_gsettings.cpp
        test_favorite_store_private.cpp
        test_launcher_entry_remote.cpp
+       test_launcher_model.cpp
        test_launcher_options.cpp
        test_layout_system.cpp
        test_model_iterator.cpp
