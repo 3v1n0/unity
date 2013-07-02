@@ -67,7 +67,7 @@ Depends: ${shlibs:Depends},
          libglib2.0-bin,
          python-gconf,
          nux-tools,
-         dconf-tools,
+         dconf-cli,
          unity-asset-pool (>= 0.8.18),
          bamfdaemon,
 Provides: indicator-renderer
