@@ -233,7 +233,6 @@ class QuicklistKeyNavigationTests(UnityTestCase):
         icon_refresh_fn = lambda : self.unity.launcher.model.get_icon(
             desktop_id=desktop_file)
 
-        self.assertThat(icon_refresh_fn, Eventually(Equals(None)))
         self.ql_app = self.process_manager.start_app("Text Editor")
 
         self.assertThat(icon_refresh_fn, Eventually(NotEquals(None)))
