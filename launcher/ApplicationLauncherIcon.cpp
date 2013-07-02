@@ -871,7 +871,7 @@ void ApplicationLauncherIcon::ToggleSticky()
   }
 }
 
-void ApplicationLauncherIcon::EnsureMenuItemsControlReady()
+void ApplicationLauncherIcon::EnsureMenuItemsDefaultReady()
 {
   if (_menu_items.size() == MenuItemType::SIZE)
     return;
@@ -914,24 +914,18 @@ void ApplicationLauncherIcon::EnsureMenuItemsControlReady()
 AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
 {
   MenuItemsVector result;
+  glib::Object<DbusmenuMenuitem> quit_item;
   bool separator_needed = false;
 
-  EnsureMenuItemsControlReady();
+  EnsureMenuItemsDefaultReady();
   UpdateMenus();
 
-  std::vector<glib::Object<DbusmenuClient>> menu_clients = { _menuclient_dynamic_quicklist };
-
-  for (auto const& client : menu_clients)
+  for (auto const& menus : {GetRemoteMenus(), _menu_desktop_shortcuts})
   {
-    if (!client || !client.IsType(DBUSMENU_TYPE_CLIENT))
+    if (!menus.IsType(DBUSMENU_TYPE_MENUITEM))
       continue;
 
-    DbusmenuMenuitem* root = dbusmenu_client_get_root(client);
-
-    if (!root || !dbusmenu_menuitem_property_get_bool(root, DBUSMENU_MENUITEM_PROP_VISIBLE))
-      continue;
-
-    for (GList* l = dbusmenu_menuitem_get_children(root); l; l = l->next)
+    for (GList* l = dbusmenu_menuitem_get_children(menus); l; l = l->next)
     {
       glib::Object<DbusmenuMenuitem> item(static_cast<DbusmenuMenuitem*>(l->data), glib::AddRef());
 
@@ -940,26 +934,33 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
 
       if (dbusmenu_menuitem_property_get_bool(item, DBUSMENU_MENUITEM_PROP_VISIBLE))
       {
-        separator_needed = true;
         dbusmenu_menuitem_property_set_bool(item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY, FALSE);
 
+        const gchar* type = dbusmenu_menuitem_property_get(item, DBUSMENU_MENUITEM_PROP_TYPE);
+
+        if (!type) // (g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
+        {
+          if (dbusmenu_menuitem_property_get_bool(item, QuicklistMenuItem::QUIT_ACTION_PROPERTY))
+          {
+            quit_item = item;
+            continue;
+          }
+
+          const gchar* l = dbusmenu_menuitem_property_get(item, DBUSMENU_MENUITEM_PROP_LABEL);
+          auto const& label = glib::gchar_to_string(l);
+
+          if (label == _("Quit")  || label == "Quit"  ||
+              label == _("Exit")  || label == "Exit"  ||
+              label == _("Close") || label == "Close")
+          {
+            quit_item = item;
+            continue;
+          }
+        }
+
+        separator_needed = true;
         result.push_back(item);
       }
-    }
-  }
-
-  // FIXME: this should totally be added as a _menu_client
-  if (DBUSMENU_IS_MENUITEM(_menu_desktop_shortcuts.RawPtr()))
-  {
-    for (GList* l = dbusmenu_menuitem_get_children(_menu_desktop_shortcuts); l; l = l->next)
-    {
-      glib::Object<DbusmenuMenuitem> item(static_cast<DbusmenuMenuitem*>(l->data), glib::AddRef());
-
-      if (!item.IsType(DBUSMENU_TYPE_MENUITEM))
-        continue;
-
-      separator_needed = true;
-      result.push_back(item);
     }
   }
 
@@ -975,9 +976,7 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
     std::string bold_app_name("<b>"+app_name.Str()+"</b>");
 
     glib::Object<DbusmenuMenuitem> item(dbusmenu_menuitem_new());
-    dbusmenu_menuitem_property_set(item,
-                                   DBUSMENU_MENUITEM_PROP_LABEL,
-                                   bold_app_name.c_str());
+    dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, bold_app_name.c_str());
     dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
     dbusmenu_menuitem_property_set_bool(item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY, TRUE);
 
@@ -1011,29 +1010,11 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
 
   if (IsRunning())
   {
-    bool exists = false;
-    auto const& it = _menu_items[MenuItemType::QUIT];
-    const gchar* label = dbusmenu_menuitem_property_get(it, DBUSMENU_MENUITEM_PROP_LABEL);
-    auto const& label_default = glib::gchar_to_string(label);
+    if (!quit_item)
+      quit_item = _menu_items[MenuItemType::QUIT];
 
-    for (auto menu_item : result)
-    {
-      const gchar* type = dbusmenu_menuitem_property_get(menu_item, DBUSMENU_MENUITEM_PROP_TYPE);
-
-      if (!type)//(g_strcmp0 (type, DBUSMENU_MENUITEM_PROP_LABEL) == 0)
-      {
-        label = dbusmenu_menuitem_property_get(menu_item, DBUSMENU_MENUITEM_PROP_LABEL);
-
-        if (glib::gchar_to_string(label) == label_default)
-        {
-          exists = true;
-          break;
-        }
-      }
-    }
-
-    if (!exists)
-      result.push_back(it);
+    dbusmenu_menuitem_property_set(quit_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Quit"));
+    result.push_back(quit_item);
   }
 
   return result;

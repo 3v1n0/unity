@@ -32,6 +32,7 @@ const char* QuicklistMenuItem::MARKUP_ENABLED_PROPERTY = "unity-use-markup";
 const char* QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY = "unity-disable-accel";
 const char* QuicklistMenuItem::MAXIMUM_LABEL_WIDTH_PROPERTY = "unity-max-label-width";
 const char* QuicklistMenuItem::OVERLAY_MENU_ITEM_PROPERTY = "unity-overlay-item";
+const char* QuicklistMenuItem::QUIT_ACTION_PROPERTY = "unity-quit-action";
 
 NUX_IMPLEMENT_OBJECT_TYPE(QuicklistMenuItem);
 

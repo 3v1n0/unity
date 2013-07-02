@@ -1113,7 +1113,7 @@ LauncherIcon::RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote)
   if (_remote_urgent)
     SetQuirk(Quirk::URGENT, false);
 
-  _menuclient_dynamic_quicklist = nullptr;
+  _remote_menus = nullptr;
 }
 
 void
@@ -1160,7 +1160,7 @@ LauncherIcon::OnRemoteProgressChanged(LauncherEntryRemote* remote)
 void
 LauncherIcon::OnRemoteQuicklistChanged(LauncherEntryRemote* remote)
 {
-  _menuclient_dynamic_quicklist = remote->Quicklist();
+  _remote_menus = remote->Quicklist();
 }
 
 void
@@ -1192,6 +1192,22 @@ LauncherIcon::OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote)
 
   if (remote->ProgressVisible())
     SetProgress(remote->Progress());
+}
+
+glib::Object<DbusmenuMenuitem> LauncherIcon::GetRemoteMenus() const
+{
+  if (!_remote_menus.IsType(DBUSMENU_TYPE_CLIENT))
+    return glib::Object<DbusmenuMenuitem>();
+
+  glib::Object<DbusmenuMenuitem> root(dbusmenu_client_get_root(_remote_menus), glib::AddRef());
+
+  if (!root.IsType(DBUSMENU_TYPE_MENUITEM) ||
+      !dbusmenu_menuitem_property_get_bool(root, DBUSMENU_MENUITEM_PROP_VISIBLE))
+  {
+    return glib::Object<DbusmenuMenuitem>();
+  }
+
+  return root;
 }
 
 void LauncherIcon::EmitNeedsRedraw()
