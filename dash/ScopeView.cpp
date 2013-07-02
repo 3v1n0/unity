@@ -482,15 +482,23 @@ void ScopeView::OnCategoryAdded(Category const& category)
 
   if (scope_)
   {
+    const std::string category_id = category.id();
     std::string unique_id = category.name() + scope_->name();
     results_view->unique_id = unique_id;
     results_view->expanded = false;
 
-    results_view->ResultActivated.connect([this, unique_id] (LocalResult const& local_result, ResultView::ActivateType type, GVariant* data)
+    results_view->ResultActivated.connect([this, unique_id, category_id] (LocalResult const& local_result, ResultView::ActivateType type, GVariant* data)
     {
       if (g_str_has_prefix(local_result.uri.c_str(), "x-unity-no-preview"))
         type = ResultView::ActivateType::DIRECT;
 
+      // Applications scope results should be activated on left-click (instead of preview). Note that app scope can still
+      // respond with preview for activation request (the case for uninstalled apps).
+      bool is_app_scope_result = (scope_->id() == "applications.scope" || (scope_->id() == "home.scope" && category_id == "applications.scope"));
+
+      if (is_app_scope_result && type == ResultView::ActivateType::PREVIEW_LEFT_BUTTON)
+        type = ResultView::ActivateType::DIRECT;
+      
       result_activated.emit(type, local_result, data, unique_id);
       switch (type)
       {
@@ -498,6 +506,7 @@ void ScopeView::OnCategoryAdded(Category const& category)
         {
           scope_->Activate(local_result, nullptr, cancellable_);
         } break;
+        case ResultView::ActivateType::PREVIEW_LEFT_BUTTON:
         case ResultView::ActivateType::PREVIEW:
         {
           scope_->Preview(local_result, nullptr, cancellable_);

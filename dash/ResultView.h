@@ -60,6 +60,7 @@ public:
   typedef enum ActivateType_
   {
     DIRECT,
+    PREVIEW_LEFT_BUTTON,
     PREVIEW
   } ActivateType;
 
