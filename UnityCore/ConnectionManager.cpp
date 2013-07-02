@@ -28,16 +28,8 @@ namespace
 handle GLOBAL_HANDLE = 0;
 }
 
-Manager::~Manager()
-{
-  Clear();
-}
-
 void Manager::Clear()
 {
-  for (auto& pair : connections_)
-    pair.second.disconnect();
-
   connections_.clear();
 }
 
@@ -48,7 +40,7 @@ handle Manager::Add(sigc::connection const& conn)
   if (!conn.empty())
   {
     id = ++GLOBAL_HANDLE;
-    connections_.insert({id, conn});
+    connections_.insert({id, std::make_shared<Wrapper>(conn)});
   }
 
   return id;
@@ -61,17 +53,10 @@ bool Manager::Remove(handle id)
 
 bool Manager::RemoveAndClear(handle *id)
 {
-  if (*id != 0)
+  if (*id != 0 && connections_.erase(*id))
   {
-    auto it = connections_.find(*id);
-
-    if (it != connections_.end())
-    {
-      it->second.disconnect();
-      connections_.erase(*id);
-      *id = 0;
-      return true;
-    }
+    *id = 0;
+    return true;
   }
 
   return false;
@@ -81,7 +66,7 @@ handle Manager::Replace(handle const& id, sigc::connection const& conn)
 {
   if (Remove(id) && !conn.empty())
   {
-    connections_.insert({id, conn});
+    connections_.insert({id, std::make_shared<Wrapper>(conn)});
     return id;
   }
 
@@ -95,7 +80,7 @@ sigc::connection Manager::Get(handle const& id) const
     auto it = connections_.find(id);
 
     if (it != connections_.end())
-      return it->second;
+      return *(it->second);
   }
 
   return sigc::connection();
