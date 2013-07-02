@@ -195,7 +195,7 @@ private:
   glib::Signal<void, BamfMatcher*, BamfApplication*, BamfApplication*> active_app_changed_signal_;
   glib::Signal<void, BamfView*, gchar*, gchar*> view_name_changed_signal_;
   glib::Signal<void, BamfView*, gchar*, gchar*> app_name_changed_signal_;
-  sigc::connection style_changed_connection_;
+  connection::Wrapper style_changed_connection_;
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;

@@ -133,7 +133,6 @@ LauncherIcon::LauncherIcon(IconType type)
 
 LauncherIcon::~LauncherIcon()
 {
-  on_icon_removed_connection.disconnect();
   SetQuirk(Quirk::URGENT, false);
 }
 

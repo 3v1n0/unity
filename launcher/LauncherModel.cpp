@@ -116,9 +116,6 @@ void LauncherModel::AddIcon(AbstractLauncherIcon::Ptr const& icon)
   Sort();
 
   icon_added.emit(icon);
-
-  if (icon->on_icon_removed_connection.connected())
-    icon->on_icon_removed_connection.disconnect();
   icon->on_icon_removed_connection = icon->remove.connect(sigc::mem_fun(this, &LauncherModel::OnIconRemove));
 }
 
