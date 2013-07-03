@@ -1,3 +1,31 @@
+unity (7.0.1+13.10.20130703-0ubuntu1) saucy; urgency=low
+
+  [ Sebastien Bacher ]
+  * Depends on the new dconf-cli, we only need the command line tool,
+    not the gtk editor.
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationLauncherIcon: improve the way we override the Quit
+    quicklist item If a quit action is defined in static (desktop file
+    action) or dynamic way we use it to override the default one,
+    placing it to the proper position. Also override more labels by
+    default and if a quicklist item has the
+    QuicklistMenuItem::QUIT_ACTION_PROPERTY (defined as "unity-quit-
+    action") property set to TRUE, then we use this item as the quit
+    quicklist item. Factorized the code we use to generate both static
+    and dynamic ql items. (LP: #876421)
+  * Use connection::Manager to handle the sigc::connection disconnection
+    on parent removal.
+  * ConnectionManager: add connection::Wrapper to wrap a
+    sigc::connection disconnecting it on destruction.
+  * Unity: use connection::Wrapper to hold the connections to signals
+    and disconnect from them.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3402
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 03 Jul 2013 04:03:31 +0000
+
 unity (7.0.1+13.10.20130702-0ubuntu1) saucy; urgency=low
 
   [ Michal Hruby ]
