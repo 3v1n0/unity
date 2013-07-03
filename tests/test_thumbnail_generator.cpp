@@ -101,7 +101,7 @@ TEST(TestThumbnailGenerator, TestGetOneFileThumbnail)
   ThumbnailGenerator thumbnail_generator;
 
   LoadResult load_result;
-  ThumbnailNotifier::Ptr thumb = thumbnail_generator.GetThumbnail("file://" PKGDATADIR "/switcher_background.png", 256);
+  ThumbnailNotifier::Ptr thumb = thumbnail_generator.GetThumbnail("file://" SOURCEDATADIR "/switcher_background.png", 256);
   EXPECT_TRUE(thumb != nullptr);
 
   thumb->ready.connect(sigc::mem_fun(load_result, &LoadResult::ThumbnailReady));
@@ -120,10 +120,10 @@ TEST(TestThumbnailGenerator, TestGetManyFileThumbnail)
   srand ( time(NULL) );
   ThumbnailGenerator thumbnail_generator;
 
-  const char* thumbs[] = { "file://" PKGDATADIR "/switcher_background.png" , "file://" PKGDATADIR "/star_highlight.png",
-                          "file://" PKGDATADIR "/launcher_bfb.png", "file://" PKGDATADIR "/switcher_corner.png",
-                          "file://" PKGDATADIR "/switcher_top.png", "file://" PKGDATADIR "/switcher_left.png",
-                          "file://" PKGDATADIR "/dash_bottom_left_corner.png", "file://" PKGDATADIR "/dash_bottom_right_corner.png"};
+  const char* thumbs[] = { "file://" SOURCEDATADIR "/switcher_background.png" , "file://" SOURCEDATADIR "/star_highlight.png",
+                          "file://" SOURCEDATADIR "/launcher_bfb.png", "file://" SOURCEDATADIR "/switcher_corner.png",
+                          "file://" SOURCEDATADIR "/switcher_top.png", "file://" SOURCEDATADIR "/switcher_left.png",
+                          "file://" SOURCEDATADIR "/dash_bottom_left_corner.png", "file://" SOURCEDATADIR "/dash_bottom_right_corner.png"};
 
   std::vector<LoadResult> results;
   std::vector<ThumbnailNotifier::Ptr> notifiers;
