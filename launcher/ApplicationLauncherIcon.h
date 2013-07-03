@@ -114,7 +114,7 @@ private:
   void SetupApplicationSignalsConnections();
   void EnsureWindowState();
   void EnsureMenuItemsWindowsReady();
-  void EnsureMenuItemsControlReady();
+  void EnsureMenuItemsDefaultReady();
   void UpdateBackgroundColor();
   void UpdateMenus();
   void UpdateDesktopQuickList();
