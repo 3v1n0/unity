@@ -26,6 +26,7 @@
 #include <sigc++/connection.h>
 
 #include "IndicatorEntry.h"
+#include "ConnectionManager.h"
 
 
 namespace unity
@@ -65,7 +66,7 @@ protected:
 
   Entries entries_;
   std::string name_;
-  std::map<Entry::Ptr, std::vector<sigc::connection>> entries_connections_;
+  std::map<Entry::Ptr, connection::Manager> entries_connections_;
 
   friend std::ostream& operator<<(std::ostream& out, Indicator const& i);
 };

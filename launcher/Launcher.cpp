@@ -96,9 +96,14 @@ const float DRAG_OUT_PIXELS = 300.0f;
 const int SCROLL_AREA_HEIGHT = 24;
 const int SCROLL_FPS = 30;
 
+const int BASE_URGENT_WIGGLE_PERIOD = 60; // In seconds
+const int MAX_URGENT_WIGGLE_DELTA = 960;  // In seconds
+const int DOUBLE_TIME = 2;
+
 const std::string START_DRAGICON_TIMEOUT = "start-dragicon-timeout";
 const std::string SCROLL_TIMEOUT = "scroll-timeout";
 const std::string ANIMATION_IDLE = "animation-idle";
+const std::string URGENT_TIMEOUT = "urgent-timeout";
 }
 
 
@@ -145,6 +150,10 @@ Launcher::Launcher(MockableBaseWindow* parent,
   , _launcher_drag_delta_min(0)
   , _enter_y(0)
   , _last_button_press(0)
+  , _urgent_wiggle_time(0)
+  , _urgent_acked(false)
+  , _urgent_timer_running(false)
+  , _urgent_ack_needed(false)
   , _drag_out_delta_x(0.0f)
   , _drag_gesture_ongoing(false)
   , _last_reveal_progress(0.0f)
@@ -193,6 +202,9 @@ Launcher::Launcher(MockableBaseWindow* parent,
     _times[i].tv_sec = 0;
     _times[i].tv_nsec = 0;
   }
+
+  _urgent_finished_time.tv_sec = 0;
+  _urgent_finished_time.tv_nsec = 0;
 
   ubus_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &Launcher::OnOverlayShown));
   ubus_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &Launcher::OnOverlayHidden));
@@ -1133,6 +1145,11 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   {
     RenderArg arg;
     AbstractLauncherIcon::Ptr const& icon = *it;
+
+    if (icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT) && options()->hide_mode == LAUNCHER_HIDE_AUTOHIDE)
+    {
+      HandleUrgentIcon(icon, current);
+    }
     FillRenderArg(icon, arg, center, parent_abs_geo, folding_threshold, folded_size, folded_spacing,
                   autohide_offset, folded_z_distance, animation_neg_rads, current);
     arg.colorify = colorify;
@@ -1566,6 +1583,112 @@ void Launcher::EnsureScrollTimer()
   }
 }
 
+void Launcher::SetUrgentTimer(int urgent_wiggle_period)
+{
+  sources_.AddTimeoutSeconds(urgent_wiggle_period, sigc::mem_fun(this, &Launcher::OnUrgentTimeout), URGENT_TIMEOUT);
+}
+
+void Launcher::WiggleUrgentIcon(AbstractLauncherIcon::Ptr const& icon)
+{
+  icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, false);
+  icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
+
+  clock_gettime(CLOCK_MONOTONIC, &_urgent_finished_time);
+}
+
+void Launcher::HandleUrgentIcon(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current)
+{
+  struct timespec urgent_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::URGENT);
+  DeltaTime urgent_delta = unity::TimeUtil::TimeDelta(&urgent_time, &_urgent_finished_time);
+
+  // If the Launcher is hidden, then add a timer to wiggle the urgent icons at 
+  // certain intervals (1m, 2m, 4m, 8m, 16m, & 32m).
+  if (_hidden && !_urgent_timer_running && urgent_delta > 0)
+  {
+    _urgent_timer_running = true;
+    _urgent_ack_needed = true;
+    SetUrgentTimer(BASE_URGENT_WIGGLE_PERIOD);
+  }
+  // If the Launcher is hidden, the timer is running, an urgent icon is newer than the last time
+  // icons were wiggled, and the timer did not just start, then reset the timer since a new
+  // urgent icon just showed up.
+  else if (_hidden && _urgent_timer_running && urgent_delta > 0 && _urgent_wiggle_time != 0)
+  {
+    _urgent_wiggle_time = 0;
+    SetUrgentTimer(BASE_URGENT_WIGGLE_PERIOD);
+  }
+  // If the Launcher is no longer hidden, then after the Launcher is fully revealed, wiggle the 
+  // urgent icon and then stop the timer (if it's running).
+  else if (!_hidden && _urgent_ack_needed)
+  {
+    if (_last_reveal_progress > 0)
+    {
+      _urgent_acked = false;
+    }
+    else
+    {
+      if (!_urgent_acked && IconUrgentProgress(icon, current) == 1.0f)
+      {
+        WiggleUrgentIcon(icon);
+      }
+      else if (IconUrgentProgress(icon, current) < 1.0f)
+      {
+        if (_urgent_timer_running)
+        {
+          sources_.Remove(URGENT_TIMEOUT);
+          _urgent_timer_running = false;
+        }
+        _urgent_acked = true;
+        _urgent_ack_needed = false;
+      }
+    }
+  }
+}
+
+bool Launcher::OnUrgentTimeout()
+{
+  bool foundUrgent = false,
+       continue_urgent = true;
+
+  if (options()->urgent_animation() == URGENT_ANIMATION_WIGGLE && _hidden)
+  {
+    // Look for any icons that are still urgent and wiggle them
+    for (auto icon : *_model)
+    {
+      if (icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT))
+      {
+        WiggleUrgentIcon(icon);
+
+        foundUrgent = true;
+      }
+    }
+  }
+  // Update the time for when the next wiggle will occur.
+  if (_urgent_wiggle_time == 0)
+  {
+    _urgent_wiggle_time = BASE_URGENT_WIGGLE_PERIOD;
+  }
+  else
+  {
+    _urgent_wiggle_time = _urgent_wiggle_time * DOUBLE_TIME;
+  }
+
+  // If no urgent icons were found or we have reached the time threshold,
+  // then let's stop the timer.  Otherwise, start a new timer with the
+  // updated wiggle time.
+  if (!foundUrgent || (_urgent_wiggle_time > MAX_URGENT_WIGGLE_DELTA))
+  {
+    continue_urgent = false;
+    _urgent_timer_running = false;
+  }
+  else
+  {
+    SetUrgentTimer(_urgent_wiggle_time);
+  }
+
+  return continue_urgent;
+}
+
 void Launcher::SetIconSize(int tile_size, int icon_size)
 {
   ui::IconRenderer::DestroyShortcutTextures();
@@ -1606,9 +1729,6 @@ void Launcher::OnIconAdded(AbstractLauncherIcon::Ptr const& icon)
 
 void Launcher::OnIconRemoved(AbstractLauncherIcon::Ptr const& icon)
 {
-  if (icon->needs_redraw_connection.connected())
-    icon->needs_redraw_connection.disconnect();
-
   SetIconUnderMouse(AbstractLauncherIcon::Ptr());
   if (icon == _icon_mouse_down)
     _icon_mouse_down = nullptr;
@@ -2014,9 +2134,7 @@ void Launcher::EndIconDrag()
         _model->Save();
       }
 
-      if (_drag_window->on_anim_completed.connected())
-        _drag_window->on_anim_completed.disconnect();
-      _drag_window->on_anim_completed = _drag_window->anim_completed.connect(sigc::mem_fun(this, &Launcher::OnDragWindowAnimCompleted));
+      _drag_window->on_anim_completed_conn_ = _drag_window->anim_completed.connect(sigc::mem_fun(this, &Launcher::OnDragWindowAnimCompleted));
 
       auto const& icon_center = _drag_icon->GetCenter(monitor);
       _drag_window->SetAnimationTarget(icon_center.x, icon_center.y),

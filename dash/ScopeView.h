@@ -29,6 +29,7 @@
 #include <Nux/VLayout.h>
 #include <UnityCore/Scope.h>
 #include <UnityCore/GLibSource.h>
+#include <UnityCore/ConnectionManager.h>
 
 #include "FilterBar.h"
 #include "unity-shared/Introspectable.h"
@@ -166,25 +167,25 @@ private:
 
   bool filter_expansion_pushed_;
 
-  sigc::connection results_updated;
-  sigc::connection result_added_connection;
-  sigc::connection result_removed_connection;
+  connection::handle result_added_connection_;
+  connection::handle result_removed_connection_;
 
-  sigc::connection categories_updated;
-  sigc::connection category_added_connection;
-  sigc::connection category_changed_connection;
-  sigc::connection category_removed_connection;
+  connection::handle category_added_connection_;
+  connection::handle category_changed_connection_;
+  connection::handle category_removed_connection_;
 
-  sigc::connection filters_updated;
-  sigc::connection filter_added_connection;
-  sigc::connection filter_removed_connection;
+  connection::handle filter_added_connection_;
+  connection::handle filter_removed_connection_;
+
+  connection::handle key_nav_focus_connection_;
+
+  connection::Manager conn_manager_;
 
   bool scope_connected_;
   bool search_on_next_connect_;
 
   int current_focus_category_position_;
   glib::Variant current_focus_variant_;
-  sigc::connection key_nav_focus_connection_;
 
   friend class TestScopeView;
 };

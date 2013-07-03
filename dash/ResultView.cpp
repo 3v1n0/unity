@@ -106,20 +106,18 @@ void ResultView::SetResultsModel(Results::Ptr const& result_model)
   // cleanup
   if (result_model_)
   {
-    result_added_connection_.disconnect();
-    result_removed_connection_.disconnect();
+    result_connections_.Clear();
+
     for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
-    {
       RemoveResult(*it);
-    }
   }
 
   result_model_ = result_model;
 
   if (result_model_)
   {
-    result_added_connection_ = result_model_->result_added.connect(sigc::mem_fun(this, &ResultView::AddResult));
-    result_removed_connection_ = result_model_->result_removed.connect(sigc::mem_fun(this, &ResultView::RemoveResult));
+    result_connections_.Add(result_model_->result_added.connect(sigc::mem_fun(this, &ResultView::AddResult)));
+    result_connections_.Add(result_model_->result_removed.connect(sigc::mem_fun(this, &ResultView::RemoveResult)));
   }
 }
 

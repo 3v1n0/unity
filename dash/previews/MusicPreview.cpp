@@ -232,6 +232,7 @@ void MusicPreview::SetupViews()
         warning_msg_ = new StaticCairoText(
                      no_credentials_message_, true,
                      NUX_TRACKER_LOCATION);
+  	AddChild(warning_msg_.GetPointer());
         warning_msg_->SetFont(style.u1_warning_font().c_str());
         warning_msg_->SetLines(-2);
         warning_msg_->SetMinimumHeight(50);
@@ -241,7 +242,6 @@ void MusicPreview::SetupViews()
 
       }
      
-
         /////////////////////
 
       if (hints_layout) hint_actions_layout->AddView(hints_layout, 1);
@@ -283,7 +283,12 @@ void MusicPreview::PreLayoutManagement()
 
   for (nux::AbstractButton* button : action_buttons_)
   {
-    button->SetMinMaxSize(CLAMP((details_width - style.GetSpaceBetweenActions()) / 2, 0, style.GetActionButtonMaximumWidth()), style.GetActionButtonHeight());
+    int action_width = CLAMP((details_width - style.GetSpaceBetweenActions()) /
+      2, 0, style.GetActionButtonMaximumWidth());
+    // do not use SetMinMax because width has to be able to grow
+    button->SetMinimumWidth(action_width);
+    button->SetMinimumHeight(style.GetActionButtonHeight());
+    button->SetMaximumHeight(style.GetActionButtonHeight());
   }
 
   Preview::PreLayoutManagement();

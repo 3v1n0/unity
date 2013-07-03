@@ -54,8 +54,6 @@ class FakeApplicationWindow : public unity::ApplicationWindow
 public:
   FakeApplicationWindow(Window xid, uint64_t active_number = 0);
 
-  std::string title() const;
-  virtual std::string icon() const;
   virtual std::string type() const;
 
   virtual Window window_id() const;

@@ -37,8 +37,8 @@ public:
   View(ApplicationManager const& manager,
        glib::Object<BamfView> const& view);
 
-  std::string title() const;
-  std::string icon() const;
+  std::string GetTitle() const;
+  std::string GetIcon() const;
   std::string type() const;
 
   bool GetVisible() const;
@@ -59,8 +59,6 @@ protected:
              glib::Object<BamfView> const& window);
 
 public:
-  virtual std::string title() const;
-  virtual std::string icon() const;
   virtual std::string type() const; // 'window' or 'tab'
 
   virtual bool Focus() const;
@@ -73,6 +71,8 @@ private:
 class AppWindow: public WindowBase
 {
 public:
+  AppWindow(ApplicationManager const& manager,
+            glib::Object<BamfWindow> const& window);
   AppWindow(ApplicationManager const& manager,
             glib::Object<BamfView> const& window);
 
@@ -88,6 +88,8 @@ private:
 class Tab: public WindowBase
 {
 public:
+  Tab(ApplicationManager const& manager,
+      glib::Object<BamfTab> const& tab);
   Tab(ApplicationManager const& manager,
       glib::Object<BamfView> const& tab);
 
@@ -106,12 +108,10 @@ class Application : public ::unity::Application, public View
 {
 public:
   Application(ApplicationManager const& manager,
-              glib::Object<BamfView> const& app);
-  Application(ApplicationManager const& manager,
               glib::Object<BamfApplication> const& app);
+  Application(ApplicationManager const& manager,
+              glib::Object<BamfView> const& app);
 
-  virtual std::string title() const;
-  virtual std::string icon() const;
   virtual std::string desktop_file() const;
   virtual std::string type() const;
 

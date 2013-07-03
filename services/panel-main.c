@@ -21,6 +21,7 @@
 #include <glib.h>
 #include <gio/gio.h>
 #include <gtk/gtk.h>
+#include <libido/libido.h>
 
 #include "config.h"
 #include "panel-a11y.h"
@@ -388,6 +389,7 @@ main (gint argc, gchar **argv)
   gtk_init (&argc, &argv);
   gtk_icon_theme_append_search_path (gtk_icon_theme_get_default(),
 				     INDICATORICONDIR);
+  ido_init ();
 
   if (g_getenv ("SILENT_PANEL_SERVICE") != NULL)
   {

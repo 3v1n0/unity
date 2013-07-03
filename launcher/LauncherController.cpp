@@ -1369,8 +1369,8 @@ void Controller::KeyNavTerminate(bool activate)
   if (pimpl->launcher_grabbed)
   {
     pimpl->keyboard_launcher_->UnGrabKeyboard();
-    pimpl->launcher_key_press_connection_.disconnect();
-    pimpl->launcher_event_outside_connection_.disconnect();
+    pimpl->launcher_key_press_connection_->disconnect();
+    pimpl->launcher_event_outside_connection_->disconnect();
     pimpl->launcher_grabbed = false;
     pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV,
                             g_variant_new_boolean(pimpl->keynav_restore_window_));

@@ -53,7 +53,7 @@ TEST_F(TestSwitcherController, InitiateDetail)
 
   auto const& view = controller_->GetView();
   auto const& model = view->GetModel();
-  EXPECT_EQ(controller_->detail_mode(), DetailMode::TAB_NEXT_TILE);
+  EXPECT_EQ(controller_->detail_mode(), DetailMode::TAB_NEXT_WINDOW);
   EXPECT_FALSE(view->animate());
   EXPECT_TRUE(model->detail_selection());
 
@@ -72,11 +72,82 @@ TEST_F(TestSwitcherController, InitiateDetailWebapps)
 
   auto const& view = controller_->GetView();
   auto const& model = view->GetModel();
-  EXPECT_EQ(controller_->detail_mode(), DetailMode::TAB_NEXT_TILE);
+  EXPECT_EQ(controller_->detail_mode(), DetailMode::TAB_NEXT_WINDOW);
   EXPECT_FALSE(view->animate());
   EXPECT_FALSE(model->detail_selection());
 }
 
+TEST_F(TestSwitcherController, StartDetailMode)
+{
+  controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
+  controller_->InitiateDetail();
+  EXPECT_TRUE(controller_->IsDetailViewShown());
+
+  controller_->StopDetailMode();
+  EXPECT_FALSE(controller_->IsDetailViewShown());
+
+  controller_->StartDetailMode();
+  EXPECT_TRUE(controller_->IsDetailViewShown());
+}
+
+TEST_F(TestSwitcherController, StopDetailMode)
+{
+  controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
+  controller_->InitiateDetail();
+  EXPECT_TRUE(controller_->IsDetailViewShown());
+
+  controller_->StopDetailMode();
+  EXPECT_FALSE(controller_->IsDetailViewShown());
+}
+
+TEST_F(TestSwitcherController, StartDetailModeMovesNextRows)
+{
+  controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
+  controller_->Select(2);
+  controller_->InitiateDetail();
+
+  auto view = controller_->GetView();
+  auto model = view->GetModel();
+  model->SetRowSizes({2,2});
+
+  controller_->StartDetailMode();
+  EXPECT_TRUE(controller_->IsDetailViewShown());
+
+  controller_->StartDetailMode();
+
+  // Grid: Assert we have gone down a row from index 0 -> 2
+  //  0, 1,
+  //  2, 3
+  EXPECT_TRUE(model->HasPrevDetailRow());
+  EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 2);
+}
+
+TEST_F(TestSwitcherController, StopDetailModeMovesPrevRows)
+{
+  controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
+  controller_->Select(2);
+  controller_->InitiateDetail();
+
+  controller_->StartDetailMode();
+  EXPECT_TRUE(controller_->IsDetailViewShown());
+
+  auto view = controller_->GetView();
+  auto model = view->GetModel();
+  model->SetRowSizes({2,2});
+
+  controller_->StartDetailMode();
+  controller_->StopDetailMode();
+
+  // Assert we have gone up a row from index 2 -> 0
+  //  0, 1,
+  //  2, 3
+  EXPECT_FALSE(model->HasPrevDetailRow());
+  EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 0);
+
+  // Now we are in index 0, stoping detail mode must exit detail mode
+  controller_->StopDetailMode();
+  EXPECT_FALSE(controller_->IsDetailViewShown());
+}
 
 TEST_F(TestSwitcherController, ShowSwitcher)
 {

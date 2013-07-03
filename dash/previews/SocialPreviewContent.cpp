@@ -130,14 +130,20 @@ void SocialPreviewContent::SetupViews()
 {
   dash::previews::Style const& style = dash::previews::Style::Instance();
 
+  auto on_mouse_down = [&](int x, int y, unsigned long button_flags, unsigned long key_flags) { this->preview_container_.OnMouseDown(x, y, button_flags, key_flags); };
+
   text_ = new StaticCairoText("", false, NUX_TRACKER_LOCATION);
   text_->SetLines(-8);
   text_->SetFont(style.content_font());
   text_->SetLineSpacing(5);
   text_->SetTextEllipsize(StaticCairoText::NUX_ELLIPSIZE_MIDDLE);
+  text_->mouse_click.connect(on_mouse_down);
 
   nux::Layout* layout = new nux::Layout();
   layout->AddView(text_.GetPointer(), 1);
+
+  mouse_click.connect(on_mouse_down);
+
   SetLayout(layout);
 
   cr_bubble_.reset(new nux::CairoWrapper(GetGeometry(), sigc::bind(sigc::mem_fun(this, &SocialPreviewContent::RedrawBubble), nux::ButtonVisualState::VISUAL_STATE_PRELIGHT)));

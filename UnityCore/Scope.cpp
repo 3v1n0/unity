@@ -19,6 +19,7 @@
  */
 
 #include "Scope.h"
+#include "ConnectionManager.h"
 #include "MiscUtils.h"
 #include "ScopeProxy.h"
 #include "GLibSource.h"
@@ -35,7 +36,6 @@ class Scope::Impl
 {
 public:
   Impl(Scope* owner, ScopeData::Ptr const& scope_data);
-  ~Impl();
 
   void Init();
 
@@ -50,9 +50,7 @@ public:
   Scope* owner_;
   ScopeData::Ptr scope_data_;
   ScopeProxyInterface::Ptr proxy_;
-
-  typedef std::shared_ptr<sigc::connection> ConnectionPtr;
-  std::vector<ConnectionPtr> property_connections;
+  connection::Manager signals_conn_;
   glib::SourceManager sources_;
 };
 
@@ -60,39 +58,35 @@ Scope::Impl::Impl(Scope* owner, ScopeData::Ptr const& scope_data)
 : owner_(owner)
 , scope_data_(scope_data)
 {
-  property_connections.push_back(utils::ConnectProperties(owner_->id, scope_data_->id));
-}
-
-Scope::Impl::~Impl()
-{
-  for_each(property_connections.begin(), property_connections.end(), [](ConnectionPtr const& con) { con->disconnect(); });
+  signals_conn_.Add(utils::ConnectProperties(owner_->id, scope_data_->id));
 }
 
 void Scope::Impl::Init()
 {
   proxy_ = owner_->CreateProxyInterface();
 
-  if (proxy_)
-  {
-    property_connections.push_back(utils::ConnectProperties(owner_->connected, proxy_->connected));
-    property_connections.push_back(utils::ConnectProperties(owner_->is_master, proxy_->is_master));
-    property_connections.push_back(utils::ConnectProperties(owner_->search_hint, proxy_->search_hint));
-    property_connections.push_back(utils::ConnectProperties(owner_->view_type, proxy_->view_type));
-    property_connections.push_back(utils::ConnectProperties(owner_->results, proxy_->results));
-    property_connections.push_back(utils::ConnectProperties(owner_->filters, proxy_->filters));
-    property_connections.push_back(utils::ConnectProperties(owner_->categories, proxy_->categories));
-    property_connections.push_back(utils::ConnectProperties(owner_->category_order, proxy_->category_order));
+  if (!proxy_)
+    return;
 
-    property_connections.push_back(utils::ConnectProperties(owner_->name, proxy_->name));
-    property_connections.push_back(utils::ConnectProperties(owner_->description, proxy_->description));
-    property_connections.push_back(utils::ConnectProperties(owner_->icon_hint, proxy_->icon_hint));
-    property_connections.push_back(utils::ConnectProperties(owner_->category_icon_hint, proxy_->category_icon_hint));
-    property_connections.push_back(utils::ConnectProperties(owner_->keywords, proxy_->keywords));
-    property_connections.push_back(utils::ConnectProperties(owner_->type, proxy_->type));
-    property_connections.push_back(utils::ConnectProperties(owner_->query_pattern, proxy_->query_pattern));
-    property_connections.push_back(utils::ConnectProperties(owner_->shortcut, proxy_->shortcut));
-    property_connections.push_back(utils::ConnectProperties(owner_->visible, proxy_->visible));
-  }
+  signals_conn_.Add(utils::ConnectProperties(owner_->connected, proxy_->connected));
+  signals_conn_.Add(utils::ConnectProperties(owner_->is_master, proxy_->is_master));
+  signals_conn_.Add(utils::ConnectProperties(owner_->search_hint, proxy_->search_hint));
+  signals_conn_.Add(utils::ConnectProperties(owner_->view_type, proxy_->view_type));
+  signals_conn_.Add(utils::ConnectProperties(owner_->form_factor, proxy_->form_factor));
+  signals_conn_.Add(utils::ConnectProperties(owner_->results, proxy_->results));
+  signals_conn_.Add(utils::ConnectProperties(owner_->filters, proxy_->filters));
+  signals_conn_.Add(utils::ConnectProperties(owner_->categories, proxy_->categories));
+  signals_conn_.Add(utils::ConnectProperties(owner_->category_order, proxy_->category_order));
+
+  signals_conn_.Add(utils::ConnectProperties(owner_->name, proxy_->name));
+  signals_conn_.Add(utils::ConnectProperties(owner_->description, proxy_->description));
+  signals_conn_.Add(utils::ConnectProperties(owner_->icon_hint, proxy_->icon_hint));
+  signals_conn_.Add(utils::ConnectProperties(owner_->category_icon_hint, proxy_->category_icon_hint));
+  signals_conn_.Add(utils::ConnectProperties(owner_->keywords, proxy_->keywords));
+  signals_conn_.Add(utils::ConnectProperties(owner_->type, proxy_->type));
+  signals_conn_.Add(utils::ConnectProperties(owner_->query_pattern, proxy_->query_pattern));
+  signals_conn_.Add(utils::ConnectProperties(owner_->shortcut, proxy_->shortcut));
+  signals_conn_.Add(utils::ConnectProperties(owner_->visible, proxy_->visible));
 }
 
 void Scope::Impl::Activate(LocalResult const& result, guint action_type, glib::HintsMap const& hints, ActivateCallback const& callback, GCancellable* cancellable)
@@ -229,10 +223,15 @@ void Scope::Connect()
 
 void Scope::Search(std::string const& search_hint, SearchCallback const& callback, GCancellable* cancellable)
 {
+  Search(search_hint, glib::HintsMap(), callback, cancellable);
+}
+
+void Scope::Search(std::string const& search_hint, glib::HintsMap const& hints, SearchCallback const& callback, GCancellable* cancellable)
+{
   if (!pimpl->proxy_)
     return;
-  
-  return pimpl->proxy_->Search(search_hint, callback, cancellable);
+
+  return pimpl->proxy_->Search(search_hint, hints, callback, cancellable);
 }
 
 void Scope::Activate(LocalResult const& result, ActivateCallback const& callback, GCancellable* cancellable)

@@ -36,7 +36,7 @@ public:
   virtual void ConnectProxy();
   virtual void DisconnectProxy();
 
-  virtual void Search(std::string const& search_hint, SearchCallback const& callback, GCancellable* cancellable);
+  virtual void Search(std::string const& search_hint, glib::HintsMap const& hints, SearchCallback const& callback, GCancellable* cancellable);
 
   virtual void Activate(LocalResult const& result, uint activate_type, glib::HintsMap const& hints, ActivateCallback const& callback, GCancellable* cancellable);
 

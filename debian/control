@@ -15,7 +15,7 @@ Build-Depends: cmake,
                libsigc++-2.0-dev,
                libgee-dev (>= 0.5.0),
                libunique-dev,
-               libbamf3-dev (>= 0.4),
+               libbamf3-dev (>= 0.5.0+13.10.20130626),
                gsettings-desktop-schemas-dev,
                libglib2.0-dev (>= 2.30),
                libdbusmenu-glib-dev (>= 0.3.91),
@@ -23,8 +23,9 @@ Build-Depends: cmake,
                libcairo2-dev,
                libpango1.0-dev,
                libdee-dev (>= 1.0.0),
-               libindicator-dev (>= 0.4.90),
-               libindicator3-dev (>= 0.4.90),
+               libindicator-dev (>= 0.12.2),
+               libindicator3-dev (>= 0.12.2),
+               libido3-0.1-dev (>= 13.10.0),
                libunity-misc-dev (>= 4.0.4),
                libgrail-dev (>= 1.0.20),
                libxcb-icccm4-dev,
@@ -39,8 +40,8 @@ Build-Depends: cmake,
                libatk1.0-dev,
                libjson-glib-dev,
                libgeis-dev (>= 2.0.10),
-               libunity-dev (>= 7.0.0),
-               libunity-common,
+               libunity-dev (>= 7.0.2),
+               libunity-scopes-json-def-desktop,
                libzeitgeist-dev (>= 0.3.18),
                libxfixes-dev (>= 1:5.0-4ubuntu4),
                libxi-dev (>= 1.6.99.1),
@@ -58,7 +59,7 @@ Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          ${python:Depends},
-         libunity-core-6.0-5 (= ${binary:Version}),
+         libunity-core-6.0-7 (= ${binary:Version}),
          unity-common (= ${source:Version}),
          compiz,
          compiz-core, compiz-core-abiversion-${coreabiversion},
@@ -67,8 +68,9 @@ Depends: ${shlibs:Depends},
          libglib2.0-bin,
          python-gconf,
          nux-tools,
-         dconf-tools,
+         dconf-cli,
          unity-asset-pool (>= 0.8.18),
+         bamfdaemon,
 Provides: indicator-renderer
 Recommends: gnome-control-center-unity,
             ${unity-default-masterscopes}
@@ -125,7 +127,7 @@ Description: Common files for the Unity interface.
  .
  This package contains commons file that are architecture independent.
 
-Package: libunity-core-6.0-5
+Package: libunity-core-6.0-7
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends},
@@ -146,11 +148,11 @@ Package: libunity-core-6.0-dev
 Section: libdevel
 Architecture: any
 Depends: ${misc:Depends},
-         libunity-core-6.0-5 (= ${binary:Version}),
+         libunity-core-6.0-7 (= ${binary:Version}),
          libglib2.0-dev,
          libsigc++-2.0-dev,
          libnux-4.0-dev (>= 4.0.2),
-         libunity-dev (>= 7.0.0~),
+         libunity-dev (>= 7.0.2~),
          libdee-dev,
 Description: Core library for the Unity interface - development files
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana

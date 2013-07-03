@@ -64,9 +64,6 @@ LauncherDragWindow::LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> t
 
 LauncherDragWindow::~LauncherDragWindow()
 {
-  if (on_anim_completed.connected())
-    on_anim_completed.disconnect();
-
   UnGrabKeyboard();
 }
 

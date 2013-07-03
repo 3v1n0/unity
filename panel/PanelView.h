@@ -132,8 +132,8 @@ private:
   int launcher_width_;
   bool refine_is_open_;
 
-  std::vector<sigc::connection> on_indicator_updated_connections_;
-  std::vector<sigc::connection> maximized_opacity_toggle_connections_;
+  connection::Manager on_indicator_updated_connections_;
+  connection::Manager maximized_opacity_toggle_connections_;
   BackgroundEffectHelper bg_effect_helper_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> bg_blur_texture_;
   UBusManager ubus_manager_;

@@ -37,16 +37,6 @@ Indicator::~Indicator()
 {
   for (auto const& entry : entries_)
     on_entry_removed.emit(entry->id());
-
-  entries_.clear();
-
-  for (auto& it : entries_connections_)
-  {
-    for (auto& conn : it.second)
-      conn.disconnect();
-
-    it.second.clear();
-  }
 }
 
 std::string const& Indicator::name() const
@@ -74,11 +64,7 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
 
   for (auto const& entry : to_rm)
   {
-    for (auto& conn : entries_connections_[entry])
-      conn.disconnect();
-
-    entries_connections_[entry].clear();
-
+    entries_connections_.erase(entry);
     on_entry_removed.emit(entry->id());
     entries_.remove(entry);
   }
@@ -90,18 +76,18 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
 
     // Just add the new entry, and connect it up.
     sigc::connection conn;
-    std::vector<sigc::connection>& new_entry_connections = entries_connections_[new_entry];
+    connection::Manager& new_entry_connections = entries_connections_[new_entry];
 
     conn = new_entry->on_show_menu.connect(sigc::mem_fun(this, &Indicator::OnEntryShowMenu));
-    new_entry_connections.push_back(conn);
+    new_entry_connections.Add(conn);
 
     conn = new_entry->on_secondary_activate.connect(sigc::mem_fun(this, &Indicator::OnEntrySecondaryActivate));
-    new_entry_connections.push_back(conn);
+    new_entry_connections.Add(conn);
 
     conn = new_entry->on_scroll.connect(sigc::mem_fun(this, &Indicator::OnEntryScroll));
-    entries_.push_back(new_entry);
-    new_entry_connections.push_back(conn);
+    new_entry_connections.Add(conn);
 
+    entries_.push_back(new_entry);
     on_entry_added.emit(new_entry);
   }
 }

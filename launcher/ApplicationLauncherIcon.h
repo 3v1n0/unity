@@ -23,6 +23,7 @@
 
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/ConnectionManager.h>
 
 #include <libindicator/indicator-desktop-shortcuts.h>
 
@@ -111,10 +112,9 @@ private:
   };
 
   void SetupApplicationSignalsConnections();
-  void DisconnectApplicationSignalsConnections();
   void EnsureWindowState();
   void EnsureMenuItemsWindowsReady();
-  void EnsureMenuItemsReady();
+  void EnsureMenuItemsDefaultReady();
   void UpdateBackgroundColor();
   void UpdateMenus();
   void UpdateDesktopQuickList();
@@ -138,9 +138,7 @@ private:
   ScrollDirection _last_scroll_direction;
   unsigned int _progressive_scroll;
   std::set<std::string> _supported_types;
-  std::map<std::string, glib::Object<DbusmenuClient>> _menu_clients;
-  std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items;
-  std::map<std::string, glib::Object<DbusmenuMenuitem>> _menu_items_extra;
+  std::vector<glib::Object<DbusmenuMenuitem>> _menu_items;
   std::vector<glib::Object<DbusmenuMenuitem>> _menu_items_windows;
   glib::Object<IndicatorDesktopShortcuts> _desktop_shortcuts;
   glib::Object<DbusmenuMenuitem> _menu_desktop_shortcuts;
@@ -150,14 +148,7 @@ private:
   bool use_custom_bg_color_;
   nux::Color bg_color_;
 
-  sigc::connection window_opened_connection_;
-  sigc::connection window_closed_connection_;
-  sigc::connection window_moved_connection_;
-  sigc::connection urgent_changed_connection_;
-  sigc::connection active_changed_connection_;
-  sigc::connection running_changed_connection_;
-  sigc::connection visible_changed_connection_;
-  sigc::connection closed_changed_connection_;
+  connection::Manager signals_conn_;
 };
 
 }

@@ -140,7 +140,6 @@ public:
   sigc::signal<void> selection_change;
   sigc::signal<void> hidden_changed;
   sigc::signal<void> sc_launcher_icon_animation;
-  sigc::connection sc_launcher_icon_animation_connection;
 
   virtual bool InspectKeyEvent(unsigned int eventType,
                                unsigned int keysym,
@@ -222,6 +221,11 @@ private:
   bool StrutHack();
   bool StartIconDragTimeout(int x, int y);
   bool OnScrollTimeout();
+
+  void SetUrgentTimer(int urgent_wiggle_period);
+  void WiggleUrgentIcon(AbstractLauncherIcon::Ptr const& icon);
+  void HandleUrgentIcon(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current);
+  bool OnUrgentTimeout();
 
   void SetMousePosition(int x, int y);
   void SetIconUnderMouse(AbstractLauncherIcon::Ptr const& icon);
@@ -380,6 +384,10 @@ private:
   int _enter_y;
   int _last_button_press;
   int _drag_icon_position;
+  int _urgent_wiggle_time;
+  bool _urgent_acked;
+  bool _urgent_timer_running;
+  bool _urgent_ack_needed;
   float _drag_out_delta_x;
   bool _drag_gesture_ongoing;
   float _last_reveal_progress;
@@ -396,6 +404,7 @@ private:
   Atom _selection_atom;
 
   struct timespec  _times[TIME_LAST];
+  struct timespec _urgent_finished_time;
 
   BaseTexturePtr launcher_sheen_;
   BaseTexturePtr launcher_pressure_effect_;
