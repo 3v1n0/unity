@@ -1,6 +1,10 @@
 unity (7.0.1-0ubuntu1) UNRELEASED; urgency=low
 
+  [ Michal Hruby ]
   * A few changes to unity-core API/ABI.
+
+  [ Marco Trevisan (Treviño) ]
+  * debian/control: build-depends on xserver-xorg-video-dummy
 
  -- Michal Hruby <michal.hruby@canonical.com>  Wed, 26 Jun 2013 15:21:22 +0100
 
