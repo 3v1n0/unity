@@ -382,20 +382,30 @@ set (TEST_COMMAND
   && ${GTEST_TEST_COMMAND_SLOW} --gtest_output=xml:./
     )
 
-set (TEST_COMMAND_HEADLESS
+set (TEST_COMMAND_XLESS
      ${GTEST_TEST_COMMAND_XLESS} --gtest_output=xml:./
   && ${GTEST_TEST_COMMAND_GESTURES} --gtest_output=xml:./
   #&& ${GTEST_TEST_COMMAND_DBUS} --gtest_output=xml:./
   && echo "Warning, DBus test cases are disabled!!")
 
+set (DUMMY_XORG_TEST_RUNNER ${CMAKE_CURRENT_SOURCE_DIR}/dummy-xorg-test-runner.sh)
+
+set (TEST_COMMAND_HEADLESS
+  export NUX_FALLBACK_TEXTURE=TRUE
+  && ${DUMMY_XORG_TEST_RUNNER} ${GTEST_TEST_COMMAND} --gtest_output=xml:./
+  && ${DUMMY_XORG_TEST_RUNNER} ${GTEST_TEST_COMMAND_SLOW} --gtest_output=xml:./
+  && ${TEST_COMMAND_XLESS})
+
+# Check test-unit!
+
 if (GTEST_SRC_DIR)
   if (ENABLE_X_SUPPORT)
     add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-slow test-gtest-xless test-gtest-dbus test-gestures)
-    add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus test-gestures)
+    add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest test-gtest-slow test-gtest-xless test-gtest-dbus test-gestures)
     add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)
   else ()
     add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest-xless test-gtest-dbus)
-    add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus)
+    add_custom_target (check-headless COMMAND ${TEST_COMMAND_XLESS} DEPENDS test-gtest-xless test-gtest-dbus)
     add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest-xless)
   endif ()
   add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
