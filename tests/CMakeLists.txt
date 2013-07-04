@@ -396,8 +396,6 @@ set (TEST_COMMAND_HEADLESS
   && ${DUMMY_XORG_TEST_RUNNER} ${GTEST_TEST_COMMAND_SLOW} --gtest_output=xml:./
   && ${TEST_COMMAND_XLESS})
 
-# Check test-unit!
-
 if (GTEST_SRC_DIR)
   if (ENABLE_X_SUPPORT)
     add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-slow test-gtest-xless test-gtest-dbus test-gestures)
