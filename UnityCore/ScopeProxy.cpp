@@ -101,19 +101,8 @@ public:
   connection::handle filters_change_connection_;
   connection::Manager signals_conn_;
 
-  /////////////////////////////////////////////////
-  // DBus property signals.
-  glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> connected_signal_;
-  glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> is_master_signal_;
-  glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> search_hint_signal_;
-  glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> view_type_signal_;
-  glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> filters_signal_;
-  glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> categories_signal_;
-  glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> metadata_signal_;
-  glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> optional_metadata_signal_;
-  glib::Signal<void, UnityProtocolScopeProxy*, const gchar*, guint32*, int> category_order_signal_;
-  glib::Signal<void, UnityProtocolScopeProxy*, const gchar*, GVariant*> filter_settings_signal_;  
-  /////////////////////////////////////////////////
+  typedef glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> ScopePropertySignal;
+  glib::SignalManager gsignals_;
 
 private:
   /////////////////////////////////////////////////
@@ -335,16 +324,8 @@ void ScopeProxy::Impl::CreateProxy()
 }
 
 void ScopeProxy::Impl::OnNewScope(glib::Object<UnityProtocolScopeProxy> const& scope_proxy, glib::Error const& error)
-{ 
-  is_master_signal_.Disconnect();
-  search_hint_signal_.Disconnect();
-  view_type_signal_.Disconnect();
-  filters_signal_.Disconnect();
-  categories_signal_.Disconnect();
-  metadata_signal_.Disconnect();
-  optional_metadata_signal_.Disconnect();
-  category_order_signal_.Disconnect();
-  filter_settings_signal_.Disconnect();
+{
+  gsignals_.Disconnect(scope_proxy_);
 
   if (error || !scope_proxy)
   {
@@ -364,19 +345,30 @@ void ScopeProxy::Impl::OnNewScope(glib::Object<UnityProtocolScopeProxy> const& s
   // remote properties
   view_type = static_cast<ScopeViewType>(unity_protocol_scope_proxy_get_view_type(scope_proxy_));
 
-  connected_signal_.Connect(scope_proxy_, "notify::connected", sigc::mem_fun(this, &Impl::OnScopeConnectedChanged));
-  is_master_signal_.Connect(scope_proxy_, "notify::is-master", sigc::mem_fun(this, &Impl::OnScopeIsMasterChanged));
-  search_hint_signal_.Connect(scope_proxy_, "notify::search-hint", sigc::mem_fun(this, &Impl::OnScopeSearchHintChanged));
-  view_type_signal_.Connect(scope_proxy_, "notify::view-type", sigc::mem_fun(this, &Impl::OnScopeViewTypeChanged));
-  filters_signal_.Connect(scope_proxy_, "notify::filters-model", sigc::mem_fun(this, &Impl::OnScopeFiltersChanged));
-  categories_signal_.Connect(scope_proxy_, "notify::categories-model", sigc::mem_fun(this, &Impl::OnScopeCategoriesChanged));
-  metadata_signal_.Connect(scope_proxy_, "notify::metadata", sigc::mem_fun(this, &Impl::OnScopeMetadataChanged));
-  optional_metadata_signal_.Connect(scope_proxy_, "notify::optional-metadata", sigc::mem_fun(this, &Impl::OnScopeOptionalMetadataChanged));
-  category_order_signal_.Connect(scope_proxy_, "category-order-changed", sigc::mem_fun(this, &Impl::OnScopeCategoryOrderChanged));
-  filter_settings_signal_.Connect(scope_proxy_, "filter-settings-changed", sigc::mem_fun(this, &Impl::OnScopeFilterSettingsChanged));
+  auto sig = std::make_shared<ScopePropertySignal>(scope_proxy_, "notify::connected", sigc::mem_fun(this, &Impl::OnScopeConnectedChanged));
+  gsignals_.Add(sig);
+  sig = std::make_shared<ScopePropertySignal>(scope_proxy_, "notify::connected", sigc::mem_fun(this, &Impl::OnScopeConnectedChanged));
+  gsignals_.Add(sig);
+  sig = std::make_shared<ScopePropertySignal>(scope_proxy_, "notify::is-master", sigc::mem_fun(this, &Impl::OnScopeIsMasterChanged));
+  gsignals_.Add(sig);
+  sig = std::make_shared<ScopePropertySignal>(scope_proxy_, "notify::search-hint", sigc::mem_fun(this, &Impl::OnScopeSearchHintChanged));
+  gsignals_.Add(sig);
+  sig = std::make_shared<ScopePropertySignal>(scope_proxy_, "notify::view-type", sigc::mem_fun(this, &Impl::OnScopeViewTypeChanged));
+  gsignals_.Add(sig);
+  sig = std::make_shared<ScopePropertySignal>(scope_proxy_, "notify::filters-model", sigc::mem_fun(this, &Impl::OnScopeFiltersChanged));
+  gsignals_.Add(sig);
+  sig = std::make_shared<ScopePropertySignal>(scope_proxy_, "notify::categories-model", sigc::mem_fun(this, &Impl::OnScopeCategoriesChanged));
+  gsignals_.Add(sig);
+  sig = std::make_shared<ScopePropertySignal>(scope_proxy_, "notify::metadata", sigc::mem_fun(this, &Impl::OnScopeMetadataChanged));
+  gsignals_.Add(sig);
+  sig = std::make_shared<ScopePropertySignal>(scope_proxy_, "notify::optional-metadata", sigc::mem_fun(this, &Impl::OnScopeOptionalMetadataChanged));
+  gsignals_.Add(sig);
+
+  gsignals_.Add<void, UnityProtocolScopeProxy*, const gchar*, guint32*, int>(scope_proxy_, "category-order-changed", sigc::mem_fun(this, &Impl::OnScopeCategoryOrderChanged));
+  gsignals_.Add<void, UnityProtocolScopeProxy*, const gchar*, GVariant*>(scope_proxy_, "filter-settings-changed", sigc::mem_fun(this, &Impl::OnScopeFilterSettingsChanged));
 
   scope_proxy_connected_ = unity_protocol_scope_proxy_get_connected(scope_proxy_);
-  
+
   if (scope_proxy_connected_)
     OpenChannel();
   else
