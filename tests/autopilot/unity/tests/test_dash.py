@@ -834,7 +834,7 @@ class PreviewInvocationTests(DashTestCase):
         """
         gettext.install("unity-scope-applications", unicode=True)
         self.unity.dash.ensure_visible()
-        scope = self.unity.dash.view.get_scope  view_by_name("home.scope")
+        scope = self.unity.dash.view.get_scopeview_by_name("home.scope")
         
         self.addCleanup(self.process_manager.close_all_app, "Character Map")
         self.addCleanup(self.unity.dash.ensure_hidden)
