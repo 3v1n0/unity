@@ -76,10 +76,9 @@ add_subdirectory (test-get-transients)
 #
 
 enable_testing()
-# :(
-find_library (GMOCK_LIB gmock)
-find_library (GMOCK_MAIN_LIB gmock_main)
-find_path(GTEST_SRC_DIR gtest.cc PATHS /usr/src/gtest/src)
+set(GMOCK_LIB gmock)
+set(GMOCK_MAIN_LIB gmock_main)
+find_path(GTEST_SRC_DIR gtest.cc PATHS "${GTEST_ROOT_DIR}/src")
 
 if (GTEST_SRC_DIR AND
     GMOCK_LIB AND

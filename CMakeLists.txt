@@ -269,9 +269,25 @@ endif ()
 add_subdirectory(doc)
 
 # Check for google test and build it locally
+set (
+  GMOCK_ROOT_DIR
+  "/usr/src/gmock"
+  CACHE
+  PATH
+  "Path to Google mock srcs"
+)
+
+set (
+  GMOCK_INCLUDE_DIR
+  "/usr/include/gmock/include"
+  CACHE
+  PATH
+  "Path to Google mock include"
+)
+
 set(
   GTEST_ROOT_DIR
-  "/usr/src/gtest" # Default value, adjustable by user with e.g., ccmake
+  "${GMOCK_ROOT_DIR}/gtest" # Default value, adjustable by user with e.g., ccmake
   CACHE
   PATH
   "Path to Google test srcs"
@@ -279,20 +295,31 @@ set(
 
 set(
   GTEST_INCLUDE_DIR
-  "/usr/include/gtest"
+  "${GMOCK_ROOT_DIR}/gtest/include"
   CACHE
   PATH
   "Path to Google tests include"
 )
 
 find_path(GTEST_INCLUDE_DIR gtest/gtest.h)
-if (GTEST_INCLUDE_DIR)
-  #FIXME - hardcoded is bad!
+if (GTEST_INCLUDE_DIR AND GMOCK_INCLUDE_DIR)
+  include_directories (
+    ${GMOCK_INCLUDE_DIR}
+    ${GTEST_INCLUDE_DIR}
+  )
+  add_subdirectory(
+    ${GMOCK_ROOT_DIR}
+    "${CMAKE_CURRENT_BINARY_DIR}/gmock"
+  )
+elseif (GTEST_INCLUDE_DIR AND NOT GMOCK_INCLUDE_DIR)
+  include_directories (
+    ${GTEST_INCLUDE_DIR}
+  )
   add_subdirectory(
     ${GTEST_ROOT_DIR}
-    gtest
+    "${CMAKE_CURRENT_BINARY_DIR}/gtest"
   )
-endif(GTEST_INCLUDE_DIR)
+endif(GTEST_INCLUDE_DIR AND GMOCK_INCLUDE_DIR)
 
 add_subdirectory(services)
 add_subdirectory(tests)
