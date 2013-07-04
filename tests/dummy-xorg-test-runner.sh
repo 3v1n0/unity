@@ -44,11 +44,12 @@ END_OF_CONFIG
 export DISPLAY=:`for id in $(seq 100 150); do test -e /tmp/.X$id-lock || { echo $id; exit 0; }; done; exit 1`
 Xorg $DISPLAY -config $conffile -logfile $logfile &> /dev/null &
 x_pid=$!
+sleep 1
 
 $binary $@
 ret_val=$?
 
-kill $x_pid
+if (kill -0 $x_pid &> /dev/null); then kill $x_pid; fi
 rm $conffile
 rm $logfile*
 
