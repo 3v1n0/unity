@@ -1,4 +1,4 @@
-unity (7.0.1+13.10.20130703-0ubuntu1) saucy; urgency=low
+unity (7.0.2-0ubuntu1) UNRELEASED; urgency=low
 
   [ Sebastien Bacher ]
   * Depends on the new dconf-cli, we only need the command line tool,
