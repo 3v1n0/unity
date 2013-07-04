@@ -52,8 +52,7 @@ class ScopeView : public nux::View, public unity::debug::Introspectable
   typedef std::map<PlacesGroup::Ptr, unsigned int> ResultCounts;
 
 public:
-  ScopeView(Scope::Ptr scope, nux::Area* show_filters);
-  ~ScopeView();
+  ScopeView(Scope::Ptr const& scope, nux::Area* show_filters);
 
   CategoryGroups GetOrderedCategoryViews() const;
   FilterBar* filter_bar() const { return filter_bar_; }
@@ -143,8 +142,8 @@ private:
   CategoryGroups category_views_;
 
   Scope::Ptr scope_;
-  glib::Object<GCancellable> cancellable_;
-  glib::Object<GCancellable> search_cancellable_;
+  glib::Cancellable cancellable_;
+  glib::Cancellable search_cancellable_;
   std::vector<unsigned int> category_order_;
   ResultCounts counts_;
   bool no_results_active_;

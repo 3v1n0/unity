@@ -148,12 +148,11 @@ private:
 
 NUX_IMPLEMENT_OBJECT_TYPE(ScopeView);
 
-ScopeView::ScopeView(Scope::Ptr scope, nux::Area* show_filters)
+ScopeView::ScopeView(Scope::Ptr const& scope, nux::Area* show_filters)
 : nux::View(NUX_TRACKER_LOCATION)
 , filters_expanded(false)
 , can_refine_search(false)
 , scope_(scope)
-, cancellable_(g_cancellable_new())
 , no_results_active_(false)
 , last_good_filter_model_(-1)
 , filter_expansion_pushed_(false)
@@ -227,12 +226,6 @@ ScopeView::ScopeView(Scope::Ptr scope, nux::Area* show_filters)
     scroll_view_->SetVisible(visible);
     fscroll_view_->SetVisible(visible);
   });
-}
-
-ScopeView::~ScopeView()
-{
-  g_cancellable_cancel(cancellable_);
-  if (search_cancellable_) g_cancellable_cancel(search_cancellable_);
 }
 
 void ScopeView::SetupViews(nux::Area* show_filters)
@@ -834,8 +827,7 @@ bool ScopeView::PerformSearch(std::string const& search_query, SearchCallback co
     }));
 
     // cancel old search.
-    if (search_cancellable_) g_cancellable_cancel (search_cancellable_);
-    search_cancellable_ = g_cancellable_new ();
+    search_cancellable_.Renew();
 
     scope_->Search(search_query, [this, callback] (std::string const& search_string, glib::HintsMap const& hints, glib::Error const& err)
     {

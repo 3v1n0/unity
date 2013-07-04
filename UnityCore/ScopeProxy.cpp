@@ -89,7 +89,7 @@ public:
   std::string last_search_;
 
   glib::Object<UnityProtocolScopeProxy> scope_proxy_;
-  glib::Object<GCancellable> cancel_scope_;
+  glib::Cancellable cancel_scope_;
   bool proxy_created_;
   bool scope_proxy_connected_;
   bool searching_;
@@ -250,7 +250,6 @@ ScopeProxy::Impl::Impl(ScopeProxy*const owner, ScopeData::Ptr const& scope_data)
 , scope_data_(scope_data)
 , view_type(ScopeViewType::HIDDEN)
 , connected(false)
-, cancel_scope_(g_cancellable_new())
 , proxy_created_(false)
 , scope_proxy_connected_(false)
 , searching_(false)
@@ -289,9 +288,6 @@ ScopeProxy::Impl::Impl(ScopeProxy*const owner, ScopeData::Ptr const& scope_data)
 
 ScopeProxy::Impl::~Impl()
 {
-  if (cancel_scope_ && !g_cancellable_is_cancelled(cancel_scope_))
-    g_cancellable_cancel(cancel_scope_);
-
   if (scope_proxy_ && connected)
     unity_protocol_scope_proxy_close_channel(scope_proxy_, channel().c_str(), nullptr, Impl::OnCloseChannel, nullptr);
 }
@@ -299,12 +295,9 @@ ScopeProxy::Impl::~Impl()
 void ScopeProxy::Impl::DestroyProxy()
 {
   CloseChannel();
-  
+
   scope_proxy_.Release();
-  if (cancel_scope_ && !g_cancellable_is_cancelled(cancel_scope_))
-    g_cancellable_cancel(cancel_scope_);
-  
-  cancel_scope_ = g_cancellable_new(); 
+  cancel_scope_.Renew();
   connected = false;
   proxy_created_ = false;
   scope_proxy_connected_ = false;
