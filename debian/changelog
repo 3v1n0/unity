@@ -1,5 +1,11 @@
 unity (7.0.2-0ubuntu1) UNRELEASED; urgency=low
 
+  * Bump version number to go with X.org update
+
+ -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Thu, 04 Jul 2013 15:11:51 +0300
+
+unity (7.0.1+13.10.20130703-0ubuntu1) saucy; urgency=low
+
   [ Sebastien Bacher ]
   * Depends on the new dconf-cli, we only need the command line tool,
     not the gtk editor.
