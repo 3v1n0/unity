@@ -224,6 +224,9 @@ ScopeView::ScopeView(Scope::Ptr const& scope, nux::Area* show_filters)
 
   OnVisibleChanged.connect([&] (nux::Area* area, bool visible) {
     scroll_view_->SetVisible(visible);
+
+    if ((filters_expanded && visible) || !visible)
+      fscroll_view_->SetVisible(visible);
   });
 }
 
