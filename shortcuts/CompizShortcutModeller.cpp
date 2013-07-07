@@ -184,6 +184,12 @@ void CompizModeller::AddDashHints(std::list<shortcut::AbstractHint::Ptr> &hints)
                                                    UNITYSHELL_PLUGIN_NAME,
                                                    UNITYSHELL_OPTION_SHOW_LAUNCHER));
 
+  hints.push_back(std::make_shared<shortcut::Hint>(dash, "", " + C",
+                                                   _("Opens the Dash Photo Lens."),
+                                                   shortcut::OptionType::COMPIZ_KEY,
+                                                   UNITYSHELL_PLUGIN_NAME,
+                                                   UNITYSHELL_OPTION_SHOW_LAUNCHER));
+
   hints.push_back(std::make_shared<shortcut::Hint>(dash, "", " + V",
                                                    _("Opens the Dash Video Lens."),
                                                    shortcut::OptionType::COMPIZ_KEY,
