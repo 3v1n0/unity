@@ -1,8 +1,31 @@
-unity (7.0.2-0ubuntu1) UNRELEASED; urgency=low
+unity (7.0.2+13.10.20130705.1-0ubuntu1) saucy; urgency=low
 
+  [ Timo Jyrinki ]
   * Bump version number to go with X.org update
 
- -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Thu, 04 Jul 2013 15:11:51 +0300
+  [ Brandon Schaefer ]
+  * When the ScopeView changes visibility make sure we update the filter
+    scroll view as well. This way we don't get random overlay scroll
+    bars appearing when it shouldn't!. (LP: #1175666)
+
+  [ Timo Jyrinki ]
+  * Move unity to the new libxi changes, along with the new 1.14
+    xserver. Manual merge to be able to migrate together with Xorg from
+    -proposed.
+
+  [ Didier Roche ]
+  * Revert rev 3404, makes autopilot tests failing as well as keep weird
+    filters artefacts in the preview
+
+  [ Marco Trevisan (Treviño) ]
+  * ScopeProxy: use glib::SignalManager to manage connections and
+    disconnections.
+  * Use again glib::Cancellable wrapper in scopes code.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3410
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 05 Jul 2013 12:40:50 +0000
 
 unity (7.0.1+13.10.20130703-0ubuntu1) saucy; urgency=low
 
