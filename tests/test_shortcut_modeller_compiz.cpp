@@ -110,23 +110,23 @@ TEST_F(TestShortcutCompizModeller, WorkspacesDisabled)
 }
 
 
-boolean DashHintsContains(std::list<AbstractHint::Ptr> const& hint_list, std::string const& s)
+bool DashHintsContains(std::list<AbstractHint::Ptr> const& hint_list,
+                       std::string const& s)
 {
-  return std::find(dash_hints.begin(), dash_hints.end(),
-                   [](AbstractHint::Ptr const& hint){ hint->description.Get().find(s) != std::string::npos; })
-         == dash_hinst.end();
+  return std::find_if(hint_list.begin(), hint_list.end(),
+      [s](AbstractHint::Ptr const& hint) {
+        return hint->description.Get().find(s) != std::string::npos;
+      }) == hint_list.end();
 }
 
 TEST_F(TestShortcutCompizModeller, BasicLensHintsArePresent)
 {
-  for (auto const& dash_hints: modeller->GetCurrentModel()->hints().at("Dash"))
-  {
-    EXPECT_TRUE(DashHintsContains(dash_hints, "App Lens"));
-    EXPECT_TRUE(DashHintsContains(dash_hints, "File Lens"));
-    EXPECT_TRUE(DashHintsContains(dash_hints, "Music Lens"));
-    EXPECT_TRUE(DashHintsContains(dash_hints, "Photo Lens"));
-    EXPECT_TRUE(DashHintsContains(dash_hints, "Video Lens"));
-  }
+  auto const& dash_hints = modeller->GetCurrentModel()->hints().at("Dash");
+  EXPECT_TRUE(DashHintsContains(dash_hints, "App Lens"));
+  EXPECT_TRUE(DashHintsContains(dash_hints, "File Lens"));
+  EXPECT_TRUE(DashHintsContains(dash_hints, "Music Lens"));
+  EXPECT_TRUE(DashHintsContains(dash_hints, "Photo Lens"));
+  EXPECT_TRUE(DashHintsContains(dash_hints, "Video Lens"));
 }
 
 }
