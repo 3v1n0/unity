@@ -33,6 +33,11 @@ if (GTEST_SRC_DIR)
   remove_definitions(${CFLAGS})
   set_directory_properties(PROPERTY INCLUDE_DIRECTORIES "")
 
+  include_directories (
+    ${GMOCK_INCLUDE_DIR}
+    ${GTEST_INCLUDE_DIR}
+  )
+
   include_directories (${CMAKE_SOURCE_DIR})
   include_directories (${CMAKE_SOURCE_DIR}/unity-shared)
 

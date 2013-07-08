@@ -301,7 +301,6 @@ set(
   "Path to Google tests include"
 )
 
-find_path(GTEST_INCLUDE_DIR gtest/gtest.h)
 if (GTEST_INCLUDE_DIR AND GMOCK_INCLUDE_DIR)
   include_directories (
     ${GMOCK_INCLUDE_DIR}
@@ -314,10 +313,6 @@ if (GTEST_INCLUDE_DIR AND GMOCK_INCLUDE_DIR)
 elseif (GTEST_INCLUDE_DIR AND NOT GMOCK_INCLUDE_DIR)
   include_directories (
     ${GTEST_INCLUDE_DIR}
-  )
-  add_subdirectory(
-    ${GTEST_ROOT_DIR}
-    "${CMAKE_CURRENT_BINARY_DIR}/gtest"
   )
 endif(GTEST_INCLUDE_DIR AND GMOCK_INCLUDE_DIR)
 
