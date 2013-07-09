@@ -1095,6 +1095,8 @@ load_indicators_from_indicator_files (PanelService *self)
 
       g_free (filename);
     }
+
+  g_dir_close (dir);
 }
 
 static gint
