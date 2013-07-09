@@ -32,9 +32,9 @@ Categories::Categories()
 Categories::Categories(ModelType model_type)
  : Model<Category>::Model(model_type)
 {
-  row_added.connect(sigc::mem_fun(&category_added, &sigc::signal<void, Category const&>::emit));
-  row_changed.connect(sigc::mem_fun(&category_changed, &sigc::signal<void, Category const&>::emit));
-  row_removed.connect(sigc::mem_fun(&category_removed, &sigc::signal<void, Category const&>::emit));
+  row_added.connect(sigc::mem_fun(&category_added, &decltype(category_added)::emit));
+  row_changed.connect(sigc::mem_fun(&category_changed, &decltype(category_changed)::emit));
+  row_removed.connect(sigc::mem_fun(&category_removed, &decltype(category_removed)::emit));
 }
 
 }
