@@ -86,6 +86,7 @@ TEST_F(TestScopeView, TestCategoryInsert)
 {
   MockCategories::Ptr categories = std::make_shared<MockCategories>(2);
   scope_->categories.changed.emit(categories);
+  Utils::WaitUntilMSec([this] { return scope_view_->GetOrderedCategoryViews().size() == 2; });
   ASSERT_EQ(scope_view_->GetOrderedCategoryViews().size(), 2);
 }
 
