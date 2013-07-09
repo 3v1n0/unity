@@ -292,7 +292,7 @@ if (ENABLE_X_SUPPORT)
                  test_result_renderer.cpp
                  test_resultviewgrid.cpp
                  test_scope_bar.cpp
-                 test_scopeview.cpp
+                 test_scope_view.cpp
                  test_searchbar.cpp
                  test_session_button.cpp
                  test_session_controller.cpp
