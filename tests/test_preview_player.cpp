@@ -18,19 +18,18 @@
  */
 
 #include <gmock/gmock.h>
-#include "UnityCore/PreviewPlayer.h"
+#include <UnityCore/PreviewPlayer.h>
+#include <UnityCore/ConnectionManager.h>
 #include "test_utils.h"
 #include "config.h"
-#include "sigc++/connection.h"
 
 namespace unity
 {
 
-const gchar* WHITE_NOISE = "file://" BUILDDIR "/tests/data/unity/sounds/whitenoise.mp3";
-
-
 namespace
 {
+  const gchar* WHITE_NOISE = "file://" BUILDDIR "/tests/data/unity/sounds/whitenoise.mp3";
+
   void PlayAndWait(PreviewPlayer* player, std::string const& uri)
   {
     bool play_returned = false;
@@ -46,11 +45,10 @@ namespace
       EXPECT_EQ((int)state, (int)PlayerState::PLAYING) << "Incorrect state returned on PLAY.";
     };
 
-    sigc::connection conn = player->updated.connect(updated_callback);
+    connection::Wrapper conn(player->updated.connect(updated_callback));
     player->Play(uri, play_callback);
     ::Utils::WaitUntilMSec(play_returned, 3000, []() { return g_strdup("PLAY did not return"); });
     ::Utils::WaitUntilMSec(updated_called, 5000, []() { return g_strdup("Update not called on PLAY"); });
-    conn.disconnect();
   }
 
   void PauseAndWait(PreviewPlayer* player)
@@ -67,11 +65,10 @@ namespace
       EXPECT_EQ((int)state, (int)PlayerState::PAUSED) << "Incorrect state returned on PAUSE.";
     };
 
-    sigc::connection conn = player->updated.connect(updated_callback);
+    connection::Wrapper conn(player->updated.connect(updated_callback));
     player->Pause(callback);
     ::Utils::WaitUntilMSec(pause_returned, 3000, []() { return g_strdup("PAUSE did not return"); });
     ::Utils::WaitUntilMSec(updated_called, 5000, []() { return g_strdup("Update not called om PAUSE"); });
-    conn.disconnect();
   }
 
   void ResumeAndWait(PreviewPlayer* player)
@@ -88,11 +85,10 @@ namespace
       EXPECT_EQ((int)state, (int)PlayerState::PLAYING) << "Incorrect state returned on RESUME.";
     };
 
-    sigc::connection conn = player->updated.connect(updated_callback);
+    connection::Wrapper conn(player->updated.connect(updated_callback));
     player->Resume(callback);
     ::Utils::WaitUntilMSec(resume_returned, 3000, []() { return g_strdup("RESUME did not return"); });
     ::Utils::WaitUntilMSec(updated_called, 5000, []() { return g_strdup("Update not called on RESUME"); });
-    conn.disconnect();
   }
 
   void StopAndWait(PreviewPlayer* player)
@@ -109,24 +105,25 @@ namespace
       EXPECT_EQ((int)state, (int)PlayerState::STOPPED) << "Incorrect state returned on STOP.";
     };
 
-    sigc::connection conn = player->updated.connect(updated_callback);
+    connection::Wrapper conn(player->updated.connect(updated_callback));
     player->Stop(callback);
     ::Utils::WaitUntilMSec(stop_returned, 3000, []() { return g_strdup("STOP did not return"); });
     ::Utils::WaitUntilMSec(updated_called, 5000, []() { return g_strdup("Update not called on STOP"); });
-    conn.disconnect();
   }
 }
 
-TEST(TestPreviewPlayer, TestConstruct)
-{
-  PreviewPlayer player1;
-  PreviewPlayer player2;
-}
-
-TEST(TestPreviewPlayer, TestPlayerControl)
+struct TestPreviewPlayer : testing::Test
 {
   PreviewPlayer player;
+};
 
+TEST_F(TestPreviewPlayer, TestConstruct)
+{
+  PreviewPlayer player1;
+}
+
+TEST_F(TestPreviewPlayer, TestPlayerControl)
+{
   PlayAndWait(&player, WHITE_NOISE);
 
   PauseAndWait(&player);
@@ -136,15 +133,14 @@ TEST(TestPreviewPlayer, TestPlayerControl)
   StopAndWait(&player);
 }
 
-TEST(TestPreviewPlayer, TestMultiPlayer)
+TEST_F(TestPreviewPlayer, TestMultiPlayer)
 {
-  PreviewPlayer player1;
   {
     PreviewPlayer player2;
     PlayAndWait(&player2, WHITE_NOISE);
   }
 
-  StopAndWait(&player1);
+  StopAndWait(&player);
 }
 
 
