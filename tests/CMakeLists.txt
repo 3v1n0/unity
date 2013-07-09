@@ -237,6 +237,7 @@ if (ENABLE_X_SUPPORT)
 # Tests that require X
   add_executable(test-gtest
                  mock-application.cpp
+                 mock_results.cpp
                  logger_helper.cpp
                  test_main.cpp
                  test_action_link.cpp
