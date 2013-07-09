@@ -79,8 +79,8 @@ namespace
 
     connection::Wrapper conn(player->updated.connect(updated_callback));
     player->Play(uri, play_callback);
-    ::Utils::WaitUntilMSec(play_returned, 3000, []() { return g_strdup("PLAY did not return"); });
-    ::Utils::WaitUntilMSec(updated_called, 5000, []() { return g_strdup("Update not called on PLAY"); });
+    ::Utils::WaitUntilMSec(play_returned, 3000, "PLAY did not return");
+    ::Utils::WaitUntilMSec(updated_called, 5000, "Update not called on PLAY");
   }
 
   void PauseAndWait(PreviewPlayer* player)
@@ -99,8 +99,8 @@ namespace
 
     connection::Wrapper conn(player->updated.connect(updated_callback));
     player->Pause(callback);
-    ::Utils::WaitUntilMSec(pause_returned, 3000, []() { return g_strdup("PAUSE did not return"); });
-    ::Utils::WaitUntilMSec(updated_called, 5000, []() { return g_strdup("Update not called on PAUSE"); });
+    ::Utils::WaitUntilMSec(pause_returned, 3000, "PAUSE did not return");
+    ::Utils::WaitUntilMSec(updated_called, 5000, "Update not called on PAUSE");
   }
 
   void ResumeAndWait(PreviewPlayer* player)
@@ -119,8 +119,8 @@ namespace
 
     connection::Wrapper conn(player->updated.connect(updated_callback));
     player->Resume(callback);
-    ::Utils::WaitUntilMSec(resume_returned, 3000, []() { return g_strdup("RESUME did not return"); });
-    ::Utils::WaitUntilMSec(updated_called, 5000, []() { return g_strdup("Update not called on RESUME"); });
+    ::Utils::WaitUntilMSec(resume_returned, 3000, "RESUME did not return");
+    ::Utils::WaitUntilMSec(updated_called, 5000, "Update not called on RESUME");
   }
 
   void StopAndWait(PreviewPlayer* player)
@@ -139,8 +139,8 @@ namespace
 
     connection::Wrapper conn(player->updated.connect(updated_callback));
     player->Stop(callback);
-    ::Utils::WaitUntilMSec(stop_returned, 3000, []() { return g_strdup("STOP did not return"); });
-    ::Utils::WaitUntilMSec(updated_called, 5000, []() { return g_strdup("Update not called on STOP"); });
+    ::Utils::WaitUntilMSec(stop_returned, 3000, "STOP did not return");
+    ::Utils::WaitUntilMSec(updated_called, 5000, "Update not called on STOP");
   }
 
   struct FakeRemotePlayer
