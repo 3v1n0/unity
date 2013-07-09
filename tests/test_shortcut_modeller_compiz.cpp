@@ -110,13 +110,14 @@ TEST_F(TestShortcutCompizModeller, WorkspacesDisabled)
 }
 
 
-bool DashHintsContains(std::list<AbstractHint::Ptr> const& hint_list,
+bool DashHintsContains(std::list<AbstractHint::Ptr> const& hints,
                        std::string const& s)
 {
-  return std::find_if(hint_list.begin(), hint_list.end(),
-      [s](AbstractHint::Ptr const& hint) {
+  auto match_descriptions = [s](AbstractHint::Ptr const& hint) {
         return hint->description.Get().find(s) != std::string::npos;
-      }) == hint_list.end();
+  };
+  auto hint = std::find_if(hints.begin(), hints.end(), match_descriptions);
+  return hint != hints.end();
 }
 
 TEST_F(TestShortcutCompizModeller, BasicLensHintsArePresent)
