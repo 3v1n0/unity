@@ -37,7 +37,6 @@ namespace {
 // Constant
 const gchar* SETTINGS_NAME = "com.canonical.Unity.Launcher";
 const gchar* SETTINGS_KEY = "favorites";
-const gchar* SCHEMA_DIRECTORY = BUILDDIR"/settings";
 
 const char* base_store_favs[] = { BUILDDIR"/tests/data/applications/ubuntuone-installer.desktop",
                                   "file://" BUILDDIR "/tests/data/applications/ubuntu-software-center.desktop",
