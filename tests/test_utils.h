@@ -15,7 +15,7 @@ using namespace unity;
 
 class Utils
 {
-public:  
+public:
   typedef std::function<gchar*()> ErrorStringFunc;
   static gchar* DefaultErrorString() { return nullptr; }
 
@@ -95,6 +95,17 @@ public:
   {
     g_unsetenv("GSETTINGS_SCHEMA_DIR");
     g_unsetenv("GSETTINGS_BACKEND");
+  }
+
+  static void WaitPendingEvents(unsigned max_wait_ms = 5000)
+  {
+    gint64 start_time = g_get_monotonic_time();
+
+    while (g_main_context_pending(nullptr) &&
+           (g_get_monotonic_time() - start_time) / 1000 < max_wait_ms)
+    {
+      g_main_context_iteration(nullptr, TRUE);
+    }
   }
 
 private:
