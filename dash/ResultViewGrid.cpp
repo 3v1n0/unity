@@ -812,7 +812,7 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
       {
         // delay activate for single left click. (for double click check)
         activate_timer_.reset(new glib::Timeout(DOUBLE_CLICK_SPEED, [this, index]() {
-          Activate(activated_result_, index, ResultView::ActivateType::PREVIEW);
+          Activate(activated_result_, index, ResultView::ActivateType::PREVIEW_LEFT_BUTTON);
           return false;
         }));
       }

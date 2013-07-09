@@ -15,6 +15,7 @@
  * <http://www.gnu.org/licenses/>
  *
  * Authored by: Marco Trevisan (Treviño) <marco.trevisan@canonical.com>
+ *              Brandon Schaefer <brandon.schaefer@canonical.com>
  *
  */
 
@@ -32,20 +33,21 @@ namespace
 class MockPointerBarrier : public PointerBarrierWrapper
 {
 public:
-  bool HandleEvent(XEvent ev) { return PointerBarrierWrapper::HandleEvent(ev); }
+  bool HandleBarrierEvent(XIBarrierEvent* b_ev) { return PointerBarrierWrapper::HandleBarrierEvent(b_ev); }
 };
 
-XFixesBarrierNotifyEvent GetGenericEvent (unsigned int id)
+XIBarrierEvent GetGenericEvent (unsigned int id)
 {
-  XFixesBarrierNotifyEvent ev;
+  XIBarrierEvent ev;
 
-  ev.type = XFixesBarrierNotify;
-  ev.subtype = XFixesBarrierHitNotify;
+  ev.evtype = GenericEvent;
   ev.barrier = 0;
-  ev.event_id = id;
-  ev.x = 555;
-  ev.y = 333;
-  ev.velocity = std::numeric_limits<int>::max();
+  ev.eventid = id;
+  ev.root_x = 555;
+  ev.root_y = 333;
+  ev.dx = 10;
+  ev.dy = 10;
+  ev.dtime = 15;
 
   return ev;
 }
@@ -70,29 +72,11 @@ TEST(TestPointerBarrier, EventConstruction)
   EXPECT_EQ(bev.event_id, 4);
 }
 
-TEST(TestPointerBarrier, HandleInvalidEvents)
-{
-  MockPointerBarrier pb;
-  XFixesBarrierNotifyEvent ev;
-  auto xev = reinterpret_cast<XEvent*>(&ev);
-
-  ev.type = XFixesBarrierNotify + 1;
-  EXPECT_FALSE(pb.HandleEvent(*xev));
-
-  ev.type = XFixesBarrierNotify;
-  ev.subtype = XFixesBarrierHitNotify + 1;
-  ev.barrier = 1;
-  EXPECT_FALSE(pb.HandleEvent(*xev));
-
-  ev.barrier = 0;
-  EXPECT_TRUE(pb.HandleEvent(*xev));
-}
-
 TEST(TestPointerBarrier, HandleHitNotifyEvents)
 {
   MockPointerBarrier pb;
-  XFixesBarrierNotifyEvent ev = GetGenericEvent(0xdeadbeef);
-  auto xev = reinterpret_cast<XEvent*>(&ev);
+  pb.threshold = 1000;
+  XIBarrierEvent ev = GetGenericEvent(0xdeadbeef);
 
   bool got_event = false;
 
@@ -102,14 +86,14 @@ TEST(TestPointerBarrier, HandleHitNotifyEvents)
       got_event = true;
 
       EXPECT_EQ(pbw, &pb);
-      EXPECT_EQ(bev->x, ev.x);
-      EXPECT_EQ(bev->y, ev.y);
+      EXPECT_EQ(bev->x, ev.root_x);
+      EXPECT_EQ(bev->y, ev.root_y);
       EXPECT_EQ(bev->velocity, 600 * pb.max_velocity_multiplier);
-      EXPECT_EQ(bev->event_id, ev.event_id);
+      EXPECT_EQ(bev->event_id, ev.eventid);
      }
   });
 
-  EXPECT_TRUE(pb.HandleEvent(*xev));
+  EXPECT_TRUE(pb.HandleBarrierEvent(&ev));
   EXPECT_FALSE(got_event);
 
   Utils::WaitForTimeoutMSec(pb.smoothing());
@@ -120,30 +104,30 @@ TEST(TestPointerBarrier, HandleHitNotifyEvents)
 TEST(TestPointerBarrier, HandleHitNotifyReleasedEvents)
 {
   MockPointerBarrier pb;
-  XFixesBarrierNotifyEvent ev = GetGenericEvent(0xabba);
-  auto xev = reinterpret_cast<XEvent*>(&ev);
+  pb.threshold = 1000;
+  XIBarrierEvent ev = GetGenericEvent(0xabba);
   bool got_event = false;
 
   pb.barrier_event.connect([&] (PointerBarrierWrapper* pbw, BarrierEvent::Ptr bev) {
     got_event = true;
 
     EXPECT_EQ(pbw, &pb);
-    EXPECT_EQ(bev->x, ev.x);
-    EXPECT_EQ(bev->y, ev.y);
-    EXPECT_EQ(bev->velocity, ev.velocity);
-    EXPECT_EQ(bev->event_id, ev.event_id);
+    EXPECT_EQ(bev->x, ev.root_x);
+    EXPECT_EQ(bev->y, ev.root_y);
+    EXPECT_GT(bev->velocity, 0);
+    EXPECT_EQ(bev->event_id, ev.eventid);
   });
 
   pb.released = true;
-  EXPECT_TRUE(pb.HandleEvent(*xev));
+  EXPECT_TRUE(pb.HandleBarrierEvent(&ev));
   EXPECT_TRUE(got_event);
 }
 
 TEST(TestPointerBarrier, ReciveFirstEvent)
 {
   MockPointerBarrier pb;
-  XFixesBarrierNotifyEvent ev = GetGenericEvent(0xabba);
-  auto xev = reinterpret_cast<XEvent*>(&ev);
+  pb.threshold = 1000;
+  XIBarrierEvent ev = GetGenericEvent(0xabba);
 
   bool first_is_true = false;
 
@@ -151,15 +135,15 @@ TEST(TestPointerBarrier, ReciveFirstEvent)
     first_is_true = true;
   });
 
-  EXPECT_TRUE(pb.HandleEvent(*xev));
+  EXPECT_TRUE(pb.HandleBarrierEvent(&ev));
   EXPECT_TRUE(first_is_true);
 }
 
 TEST(TestPointerBarrier, ReciveSecondEventFirstFalse)
 {
   MockPointerBarrier pb;
-  XFixesBarrierNotifyEvent ev = GetGenericEvent(0xabba);
-  auto xev = reinterpret_cast<XEvent*>(&ev);
+  pb.threshold = 1000;
+  XIBarrierEvent ev = GetGenericEvent(0xabba);
   int events_recived = 0;
 
   pb.barrier_event.connect([&] (PointerBarrierWrapper* pbw, BarrierEvent::Ptr bev) {
@@ -171,7 +155,7 @@ TEST(TestPointerBarrier, ReciveSecondEventFirstFalse)
         EXPECT_FALSE(pbw->IsFirstEvent());
   });
 
-  EXPECT_TRUE(pb.HandleEvent(*xev));
+  EXPECT_TRUE(pb.HandleBarrierEvent(&ev));
 
   Utils::WaitForTimeoutMSec(pb.smoothing());
 
