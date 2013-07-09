@@ -10,7 +10,7 @@ include (cmake/pch.cmake)
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 7)
 set (UNITY_MINOR 0)
-set (UNITY_MICRO 1)
+set (UNITY_MICRO 2)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "6.0")
 set (UNITY_COMPONENTS_VERSION "6")
@@ -245,6 +245,7 @@ if(ENABLE_X_SUPPORT)
       libgeis
       x11
       xfixes
+      xi>=1.6.99.1
       xrender>=0.9
   )
 endif ()
