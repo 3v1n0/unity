@@ -19,8 +19,6 @@
 
 #include "ScopeView.h"
 
-#include <boost/lexical_cast.hpp>
-
 #include <NuxCore/Logger.h>
 #include <Nux/HScrollBar.h>
 #include <Nux/VScrollBar.h>
@@ -413,11 +411,12 @@ void ScopeView::SetupFilters(Filters::Ptr const& filters)
 
 void ScopeView::OnCategoryAdded(Category const& category)
 {
-  std::string name = category.name;
-  std::string icon_hint = category.icon_hint;
-  std::string renderer_name = category.renderer_name;
-  if (category.index == unsigned(-1))
+  if (category.index == static_cast<unsigned>(-1))
     return;
+
+  std::string const& name = category.name;
+  std::string const& icon_hint = category.icon_hint;
+  std::string const& renderer_name = category.renderer_name;
   unsigned index = category.index;
   bool reset_filter_models = index < category_views_.size();
 
@@ -425,7 +424,7 @@ void ScopeView::OnCategoryAdded(Category const& category)
                     << name
                     << "(" << icon_hint
                     << ", " << renderer_name
-                    << ", " << boost::lexical_cast<int>(index) << ")";
+                    << ", " << index << ")";
 
   //////////////////////////////////////////////////
   // Find the current focus category position && result index
@@ -566,7 +565,7 @@ void ScopeView::OnCategoryRemoved(Category const& category)
                     << name
                     << "(" << icon_hint
                     << ", " << renderer_name
-                    << ", " << boost::lexical_cast<int>(index) << ")";
+                    << ", " << index << ")";
 
   auto category_pos = category_views_.begin() + index;
   PlacesGroup::Ptr group = *category_pos;
