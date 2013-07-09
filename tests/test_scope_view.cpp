@@ -110,7 +110,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_OneCategory_EmptySearchString)
 
   scope_->categories.changed.emit(categories);
   ASSERT_EQ(scope_view_->fake_groups_.size(), 1);
-  Utils::WaitForTimeoutMSec(100);
+  Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
 }
 
@@ -121,7 +121,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_OneCategory_FilledSearchString)
 
   scope_->categories.changed.emit(categories);
   ASSERT_EQ(scope_view_->fake_groups_.size(), 1);
-  Utils::WaitForTimeoutMSec(100);
+  Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
 }
 
@@ -132,7 +132,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_EmptySearchString)
 
   scope_->categories.changed.emit(categories);
   ASSERT_EQ(scope_view_->fake_groups_.size(), 2);
-  Utils::WaitForTimeoutMSec(100);
+  Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return scope_view_->fake_groups_[1]->GetExpanded(); });
 }
@@ -144,7 +144,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_FilledSearchString)
 
   scope_->categories.changed.emit(categories);
   ASSERT_EQ(scope_view_->fake_groups_.size(), 2);
-  Utils::WaitForTimeoutMSec(100);
+  Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return scope_view_->fake_groups_[1]->GetExpanded(); });
 }
@@ -156,7 +156,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_EmptySearchString)
 
   scope_->categories.changed.emit(categories);
   ASSERT_EQ(scope_view_->fake_groups_.size(), 3);
-  Utils::WaitForTimeoutMSec(100);
+  Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[1]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[2]->GetExpanded(); });
@@ -169,7 +169,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_FilledSearchString)
 
   scope_->categories.changed.emit(categories);
   ASSERT_EQ(scope_view_->fake_groups_.size(), 3);
-  Utils::WaitForTimeoutMSec(100);
+  Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[1]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[2]->GetExpanded(); });
@@ -181,7 +181,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_OnResultAdded_EmptySearc
 
   scope_->categories.changed.emit(categories);
   ASSERT_EQ(scope_view_->fake_groups_.size(), 2);
-  Utils::WaitForTimeoutMSec(100);
+  Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return scope_view_->fake_groups_[1]->GetExpanded(); });
 
@@ -193,7 +193,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_OnResultAdded_EmptySearc
   Utils::WaitUntilMSec([this] () { return scope_view_->fake_groups_[1]->GetExpanded(); });
 
   scope_view_->OnResultAdded(added_results.RowAtIndex(0));
-  Utils::WaitForTimeoutMSec(100);
+  Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return scope_view_->fake_groups_[1]->GetExpanded(); });
 }
@@ -205,7 +205,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_OnResultAdded_FilledSear
 
   scope_->categories.changed.emit(categories);
   ASSERT_EQ(scope_view_->fake_groups_.size(), 2);
-  Utils::WaitForTimeoutMSec(100);
+  Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return scope_view_->fake_groups_[1]->GetExpanded(); });
 
@@ -217,7 +217,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_TwoCategory_OnResultAdded_FilledSear
   Utils::WaitUntilMSec([this] () { return scope_view_->fake_groups_[1]->GetExpanded(); });
 
   scope_view_->OnResultAdded(added_results.RowAtIndex(0));
-  Utils::WaitForTimeoutMSec(100);
+  Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return scope_view_->fake_groups_[1]->GetExpanded(); });
 }
@@ -228,7 +228,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_OnResultAdded_EmptySea
 
   scope_->categories.changed.emit(categories);
   ASSERT_EQ(scope_view_->fake_groups_.size(), 3);
-  Utils::WaitForTimeoutMSec(100);
+  Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[1]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[2]->GetExpanded(); });
@@ -236,7 +236,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_OnResultAdded_EmptySea
   /* XXX: we should emit the signal not call the callback */
   MockResults added_results(2);
   scope_view_->OnResultAdded(added_results.RowAtIndex(0));
-  Utils::WaitForTimeoutMSec(100);
+  Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[1]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[2]->GetExpanded(); });
@@ -247,7 +247,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_OnResultAdded_EmptySea
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[2]->GetExpanded(); });
 
   scope_view_->OnResultAdded(added_results.RowAtIndex(1));
-  Utils::WaitForTimeoutMSec(100);
+  Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[1]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[2]->GetExpanded(); });
@@ -260,7 +260,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_OnResultAdded_FilledSe
 
   scope_->categories.changed.emit(categories);
   ASSERT_EQ(scope_view_->fake_groups_.size(), 3);
-  Utils::WaitForTimeoutMSec(100);
+  Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[1]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[2]->GetExpanded(); });
@@ -268,7 +268,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_OnResultAdded_FilledSe
   /* XXX: we should emit the signal not call the callback */
   MockResults added_results(2);
   scope_view_->OnResultAdded(added_results.RowAtIndex(0));
-  Utils::WaitForTimeoutMSec(100);
+  Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[1]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[2]->GetExpanded(); });
@@ -279,7 +279,7 @@ TEST_F(TestScopeView, TestCategoryExpansion_ThreeCategory_OnResultAdded_FilledSe
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[2]->GetExpanded(); });
 
   scope_view_->OnResultAdded(added_results.RowAtIndex(1));
-  Utils::WaitForTimeoutMSec(100);
+  Utils::WaitPendingEvents();
   Utils::WaitUntilMSec([this] () { return scope_view_->fake_groups_[0]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[1]->GetExpanded(); });
   Utils::WaitUntilMSec([this] () { return not scope_view_->fake_groups_[2]->GetExpanded(); });
