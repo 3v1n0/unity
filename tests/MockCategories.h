@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2012 Canonical Ltd
+ * Copyright (C) 2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,51 +15,40 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Nick Dedekind <nick.dedekind@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #ifndef _UNITY_MOCK_CATEGORIES_H
 #define _UNITY_MOCK_CATEGORIES_H
 
-#include <dee.h>
+#include <UnityCore/Categories.h>
 
 namespace unity
 {
 namespace dash
 {
 
-class MockCategories : public Categories
+struct MockCategories : public Categories
 {
-public:
-MockCategories(unsigned count)
-: Categories(LOCAL)
-, model_(dee_sequence_model_new())
-{
-  dee_model_set_schema(model_, "s", "s", "s", "s", "a{sv}", nullptr);
-  AddResults(count);
-
-  SetModel(model_);
-}
-
-void AddResults(unsigned count)
-{
-  GVariantBuilder b;
-  g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
-  GVariant *hints = g_variant_builder_end(&b);
-
-  for(unsigned i = 0; i < count; ++i)
+  MockCategories(unsigned count_)
+    : Categories(LOCAL)
   {
-    dee_model_append(model_,
-                     ("cat"+std::to_string(i)).c_str(),
-                     ("Category "+std::to_string(i)).c_str(),
-                     "gtk-apply",
-                     "grid",
-                     hints);
+    count.SetGetterFunction([count_] { return count_; });
   }
-  g_variant_unref(hints);
-}
-
-glib::Object<DeeModel> model_;
 };
+
+// Template specialization for Category in tests
+template<>
+const Category Model<Category>::RowAtIndex(std::size_t index) const
+{
+  Category mock_category(nullptr, nullptr, nullptr);
+  mock_category.id.SetGetterFunction([index] { return "cat"+std::to_string(index); });
+  mock_category.name.SetGetterFunction([index] { return "Category "+std::to_string(index); });
+  mock_category.icon_hint.SetGetterFunction([] { return "cmake"; });
+  mock_category.renderer_name.SetGetterFunction([] { return "grid"; });
+  mock_category.index.SetGetterFunction([index] { return index; });
+  return mock_category;
+}
 
 }
 }
