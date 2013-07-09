@@ -38,6 +38,8 @@ struct TestScopeView : public ::testing::Test
 {
   struct FakePlacesGroup : public PlacesGroup
   {
+    typedef nux::ObjectPtr<FakePlacesGroup> Ptr;
+
     FakePlacesGroup()
       : PlacesGroup(dash::Style::Instance())
       , is_expanded_(false)
@@ -61,12 +63,12 @@ struct TestScopeView : public ::testing::Test
 
     PlacesGroup::Ptr CreatePlacesGroup(Category const& category) override
     {
-      FakePlacesGroup* group = new FakePlacesGroup();
+      FakePlacesGroup::Ptr group(new FakePlacesGroup());
       fake_groups_.push_back(group);
-      return PlacesGroup::Ptr(group);
+      return group;
     }
 
-    std::vector<FakePlacesGroup*> fake_groups_;
+    std::vector<FakePlacesGroup::Ptr> fake_groups_;
   };
 
   TestScopeView()
