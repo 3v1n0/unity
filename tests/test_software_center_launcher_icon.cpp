@@ -62,7 +62,7 @@ struct TestSoftwareCenterLauncherIcon : testing::Test
 {
 public:
   TestSoftwareCenterLauncherIcon()
-     : usc(std::make_shared<MockApplication>(USC_APP_INSTALL_DESKTOP, "softwarecenter"))
+     : usc(std::make_shared<MockApplication::Nice>(USC_APP_INSTALL_DESKTOP, "softwarecenter"))
      , icon(usc, "/com/canonical/unity/test/object/path", "")
   {}
 
