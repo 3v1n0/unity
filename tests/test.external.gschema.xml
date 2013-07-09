@@ -1,0 +1,13 @@
+<!-- Include here the external schemas we depend and need for testing -->
+
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema path="/apps/indicator-session/" id="com.canonical.indicator.session">
+    <key type="b" name="suppress-logout-restart-shutdown">
+      <default>false</default>
+      <summary>Suppress the dialog to confirm logout, restart and shutdown action</summary>
+      <description>Whether or not to show confirmation dialogs for logout, restart and shutdown actions.</description>
+    </key>
+  </schema>
+  
+</schemalist>

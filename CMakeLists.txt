@@ -308,6 +308,7 @@ add_subdirectory(gnome)
 # GSettings Schema
 #
 SET (UNITY_SCHEMAS "com.canonical.Unity.gschema.xml")
+SET (UNITY_TEST_SCHEMAS "test.external.gschema.xml")
 
 # Have an option to not install the schema into where GLib is
 option (GSETTINGS_LOCALINSTALL "Install GSettings Schemas locally instead of to the GLib prefix" OFF)
@@ -340,6 +341,7 @@ install (FILES ${_datafiles} DESTINATION ${PKGDATADIR})
 
 # For testing
 configure_file (${CMAKE_SOURCE_DIR}/${UNITY_SCHEMAS} ${CMAKE_BINARY_DIR}/settings/${UNITY_SCHEMAS})
+configure_file (${CMAKE_SOURCE_DIR}/tests/${UNITY_TEST_SCHEMAS} ${CMAKE_BINARY_DIR}/settings/${UNITY_TEST_SCHEMAS})
 execute_process (COMMAND ${_glib_comple_schemas} ${CMAKE_BINARY_DIR}/settings)
 
 #
