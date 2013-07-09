@@ -71,7 +71,7 @@ void CheckResults(std::vector<LoadResult> const& results)
     }
 
     return got_all;
-  });
+  }, true, 3500);
 
   for (auto const& result : results)
   {
