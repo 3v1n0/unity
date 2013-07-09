@@ -97,9 +97,7 @@ TEST(TestCategories, TestOnRowChanged)
 
   bool changed = false;
   model.category_changed.connect([&changed] (Category const&) { changed = true;});
-  Utils::WaitUntilMSec(changed,
-                       2000,
-                       []() { return g_strdup_printf("Did not detect row change from %s.", swarm_name_changing.c_str()); });
+  Utils::WaitUntilMSec(changed, 2000, "Did not detect row change from "+swarm_name_changing+".");
 }
 
 
@@ -112,9 +110,7 @@ TEST(TestCategories, TestOnRowAdded)
 
   bool added = false;
   model.category_added.connect([&added] (Category const&) { added = true;});
-  Utils::WaitUntilMSec(added,
-                       2000,
-                       []() { return g_strdup_printf("Did not detect row add %s.", swarm_name_changing.c_str()); });
+  Utils::WaitUntilMSec(added, 2000, "Did not detect row add "+swarm_name_changing+".");
 }
 
 // We're testing the model's ability to store and retrieve random pointers
@@ -126,9 +122,7 @@ TEST(TestCategories, TestOnRowRemoved)
 
   bool removed = false;
   model.category_removed.connect([&removed] (Category const&) { removed = true;});
-  Utils::WaitUntilMSec(removed,
-                       2000,
-                       []() { return g_strdup_printf("Did not detect row remove %s.", swarm_name_changing.c_str()); });
+  Utils::WaitUntilMSec(removed, 2000, "Did not detect row removal "+swarm_name_changing+".");
 }
 
 TEST(TestCategories, TestCategoryCopy)

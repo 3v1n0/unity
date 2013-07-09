@@ -17,11 +17,8 @@ namespace
 {
 
 static void WaitForConnect(Hud::Ptr hud)
-{  
-  ::Utils::WaitUntil([hud]() { return hud->connected(); },
-                     true,
-                     10,
-                     []() { return g_strdup("Timed out waiting for hud connection"); });   
+{
+  ::Utils::WaitUntil([hud]() { return hud->connected(); }, true, 10, "Timed out waiting for hud connection");
 }
 
 }
@@ -53,9 +50,7 @@ TEST(TestHud, TestQueryReturn)
   hud->RequestQuery("Request30Queries");
 
   ::Utils::WaitUntil([&queries, &query_return_result]() { return query_return_result && queries.size() > 0; },
-                    true,
-                    10,
-                    []() { return g_strdup("Timed out waiting for hud queries"); });
+                     true, 10, "Timed out waiting for hud queries");
 
   // finally close the connection - Nothing to check for here
   hud->CloseQuery();
@@ -85,9 +80,7 @@ TEST(TestHud, TestSigEmission)
   hud->RequestQuery("Request30Queries");
 
   ::Utils::WaitUntil([&number_signals_found]() { return number_signals_found > 1; },
-                    true,
-                    10,
-                    []() { return g_strdup("Timed out waiting for hud signals"); });
+                     true, 10, "Timed out waiting for hud signals");
 
   // finally close the connection - Nothing to check for here
   hud->CloseQuery();

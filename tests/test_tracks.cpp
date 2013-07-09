@@ -63,9 +63,7 @@ TEST(TestTracks, TestOnRowChanged)
 
   bool changed = false;
   model.track_changed.connect([&changed] (Track const&) { changed = true;});
-  Utils::WaitUntilMSec(changed,
-                       2000,
-                       []() { return g_strdup_printf("Did not detect track change from %s.", swarm_name.c_str()); });
+  Utils::WaitUntil(changed, 2, "Did not detect track change from "+swarm_name+".");
 }
 
 
@@ -78,9 +76,7 @@ TEST(TestTracks, TestOnRowAdded)
 
   bool added = false;
   model.track_added.connect([&added] (Track const&) { added = true;});
-  Utils::WaitUntilMSec(added,
-                       2000,
-                       []() { return g_strdup_printf("Did not detect track add %s.", swarm_name.c_str()); });
+  Utils::WaitUntil(added, 2, "Did not detect track add "+swarm_name+".");
 }
 
 // We're testing the model's ability to store and retrieve random pointers
@@ -92,9 +88,7 @@ TEST(TestTracks, TestOnRowRemoved)
 
   bool removed = false;
   model.track_removed.connect([&removed] (Track const&) { removed = true;});
-  Utils::WaitUntilMSec(removed,
-                       2000,
-                       []() { return g_strdup_printf("Did not detect track remove %s.", swarm_name.c_str()); });
+  Utils::WaitUntil(removed, 2, "Did not detect track removal "+swarm_name+".");
 }
 
 TEST(TestTracks, TestTrackCopy)
