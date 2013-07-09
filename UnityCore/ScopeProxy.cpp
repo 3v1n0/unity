@@ -377,7 +377,7 @@ void ScopeProxy::Impl::OpenChannel()
 
   unity_protocol_scope_proxy_open_channel(scope_proxy_,
                                           UNITY_PROTOCOL_CHANNEL_TYPE_DEFAULT,
-                                          UNITY_PROTOCOL_CHANNEL_FLAGS_NONE,
+                                          UNITY_PROTOCOL_CHANNEL_FLAGS_DIFF_CHANGES,
                                           cancel_scope_,
                                           OnOpenChannelCallback,
                                           this);
