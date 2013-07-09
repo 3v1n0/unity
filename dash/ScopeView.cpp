@@ -200,7 +200,7 @@ ScopeView::ScopeView(Scope::Ptr const& scope, nux::Area* show_filters)
     nux::Geometry focused_pos;
     g_variant_get (data, "(iiii)", &focused_pos.x, &focused_pos.y, &focused_pos.width, &focused_pos.height);
 
-    for (auto group : category_views_)
+    for (auto const& group : category_views_)
     {
       if (group->GetLayout() != nullptr)
       {
@@ -321,11 +321,8 @@ void ScopeView::OnCategoryOrderChanged(std::vector<unsigned int> const& order)
 
   category_order_ = order;
 
-  for (auto iter = category_views_.begin(); iter != category_views_.end(); ++iter)
-  {
-    PlacesGroup::Ptr group = *iter;
+  for (auto const& group : category_views_)
     scroll_layout_->RemoveChildObject(group.GetPointer());
-  }
 
   if (scope_)
   {
@@ -543,7 +540,7 @@ void ScopeView::OnCategoryChanged(Category const& category)
   if (category_views_.size() <= category.index)
     return;
 
-  PlacesGroup::Ptr group = category_views_[category.index];
+  PlacesGroup::Ptr const& group = category_views_[category.index];
 
   group->SetName(category.name);
   group->SetIcon(category.icon_hint);
@@ -553,12 +550,14 @@ void ScopeView::OnCategoryChanged(Category const& category)
 
 void ScopeView::OnCategoryRemoved(Category const& category)
 {
-  std::string name = category.name;
-  std::string icon_hint = category.icon_hint;
-  std::string renderer_name = category.renderer_name;
   unsigned index = category.index;
+
   if (index == unsigned(-1) || category_views_.size() <= index)
     return;
+
+  std::string const& name = category.name;
+  std::string const& icon_hint = category.icon_hint;
+  std::string const&renderer_name = category.renderer_name;
   bool reset_filter_models = index < category_views_.size()-1;
 
   LOG_DEBUG(logger) << "Category removed '" << (scope_ ? scope_->name() : "unknown") << "': "
@@ -608,12 +607,12 @@ void ScopeView::OnCategoryRemoved(Category const& category)
 
 void ScopeView::ClearCategories()
 {
-  for (auto iter = category_views_.begin(), end = category_views_.end(); iter != end; ++iter)
+  for (auto const& group : category_views_)
   {
-    PlacesGroup::Ptr group = *iter;
     RemoveChild(group.GetPointer());
     scroll_layout_->RemoveChildObject(group.GetPointer());
   }
+
   counts_.clear();
   category_views_.clear();
   last_expanded_group_.Release();
@@ -824,8 +823,10 @@ void ScopeView::HideResultsMessage()
 bool ScopeView::PerformSearch(std::string const& search_query, SearchCallback const& callback)
 {
   if (search_string_ != search_query)
+  {
     for (auto const& group : category_views_)
       group->SetExpanded(false);
+  }
 
   search_string_ = search_query;
   if (scope_)
@@ -909,7 +910,7 @@ void ScopeView::OnScopeFilterExpanded(bool expanded)
     QueueRelayout();
   }
 
-  for (auto category_view : category_views_)
+  for (auto const& category_view : category_views_)
     category_view->SetFiltersExpanded(expanded);
 }
 
@@ -1027,9 +1028,8 @@ bool ScopeView::AcceptKeyNavFocus()
 
 void ScopeView::ForceCategoryExpansion(std::string const& view_id, bool expand)
 {
-  for (auto iter = category_views_.begin(); iter != category_views_.end(); ++iter)
+  for (auto const& group : category_views_)
   {
-    PlacesGroup::Ptr group = *iter;
     if (group->GetChildView()->unique_id == view_id)
     {
       if (expand)
@@ -1047,19 +1047,17 @@ void ScopeView::ForceCategoryExpansion(std::string const& view_id, bool expand)
 
 void ScopeView::SetResultsPreviewAnimationValue(float preview_animation)
 {
-  for (auto it = category_views_.begin(); it != category_views_.end(); ++it)
-  {
-    (*it)->SetResultsPreviewAnimationValue(preview_animation);
-  }
+  for (auto const& group : category_views_)
+    group->SetResultsPreviewAnimationValue(preview_animation);
 }
 
 void ScopeView::EnableResultTextures(bool enable_result_textures)
 {
   scroll_view_->EnableScrolling(!enable_result_textures);
 
-  for (auto it = category_views_.begin(); it != category_views_.end(); ++it)
+  for (auto const& group : category_views_)
   {
-    ResultView* result_view = (*it)->GetChildView();
+    ResultView* result_view = group->GetChildView();
     if (result_view)
     {
       result_view->enable_texture_render = enable_result_textures;
@@ -1129,13 +1127,12 @@ PlacesGroup::Ptr ScopeView::CreatePlacesGroup(Category const& category)
 ScopeView::CategoryGroups ScopeView::GetOrderedCategoryViews() const
 {
   CategoryGroups category_view_ordered;
-  for (auto iter = category_order_.begin(); iter != category_order_.end(); ++iter)
+  for (auto const& category_index : category_order_)
   {
-    unsigned int category_index = *iter;
     if (category_views_.size() <= category_index)
-     continue;
+      continue;
 
-    PlacesGroup::Ptr group = category_views_[category_index];
+    PlacesGroup::Ptr const& group = category_views_[category_index];
     category_view_ordered.push_back(group);
   }
   return category_view_ordered;
