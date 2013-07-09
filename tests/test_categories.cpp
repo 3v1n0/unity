@@ -25,6 +25,9 @@ TEST(TestCategories, TestConstruction)
 {
   Categories model;
   model.swarm_name = swarm_name;
+  EXPECT_EQ(model.row_added.size(), 1);
+  EXPECT_EQ(model.row_changed.size(), 1);
+  EXPECT_EQ(model.row_removed.size(), 1);
 }
 
 TEST(TestCategories, TestSynchronization)
@@ -95,9 +98,9 @@ TEST(TestCategories, TestOnRowChanged)
   model.swarm_name = swarm_name_changing;
   WaitForSynchronize(model);
 
-  bool changed = false;
-  model.category_changed.connect([&changed] (Category const&) { changed = true;});
-  Utils::WaitUntilMSec(changed, 2000, "Did not detect row change from "+swarm_name_changing+".");
+  unsigned changed = 0;
+  model.category_changed.connect([&changed] (Category const&) { ++changed; });
+  Utils::WaitUntil([&changed] { return changed == 1; }, true, 2, "Did not detect row change from "+swarm_name_changing+".");
 }
 
 
@@ -108,9 +111,9 @@ TEST(TestCategories, TestOnRowAdded)
   model.swarm_name = swarm_name_changing;
   WaitForSynchronize(model);
 
-  bool added = false;
-  model.category_added.connect([&added] (Category const&) { added = true;});
-  Utils::WaitUntilMSec(added, 2000, "Did not detect row add "+swarm_name_changing+".");
+  unsigned added = 0;
+  model.category_added.connect([&added] (Category const&) { ++added;});
+  Utils::WaitUntil([&added] { return added == 1; }, true, 2, "Did not detect row add "+swarm_name_changing+".");
 }
 
 // We're testing the model's ability to store and retrieve random pointers
@@ -120,9 +123,9 @@ TEST(TestCategories, TestOnRowRemoved)
   model.swarm_name = swarm_name_changing;
   WaitForSynchronize(model);
 
-  bool removed = false;
-  model.category_removed.connect([&removed] (Category const&) { removed = true;});
-  Utils::WaitUntilMSec(removed, 2000, "Did not detect row removal "+swarm_name_changing+".");
+  unsigned removed = 0;
+  model.category_removed.connect([&removed] (Category const&) { ++removed; });
+  Utils::WaitUntil([&removed] { return removed == 1; }, true, 2, "Did not detect row removal "+swarm_name_changing+".");
 }
 
 TEST(TestCategories, TestCategoryCopy)
