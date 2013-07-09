@@ -171,13 +171,13 @@ ScopeView::ScopeView(Scope::Ptr const& scope, nux::Area* show_filters)
 
   if (scope_)
   {
-    conn_manager_.Add(scope_->categories.changed.connect([this](Categories::Ptr const& categories) { SetupCategories(categories); }));
+    conn_manager_.Add(scope_->categories.changed.connect(sigc::mem_fun(this, &ScopeView::SetupCategories)));
     SetupCategories(scope->categories);
 
-    conn_manager_.Add(scope_->results.changed.connect([this](Results::Ptr const& results) { SetupResults(results); }));
+    conn_manager_.Add(scope_->results.changed.connect(sigc::mem_fun(this, &ScopeView::SetupResults)));
     SetupResults(scope->results);
 
-    conn_manager_.Add(scope_->filters.changed.connect([this](Filters::Ptr const& filters) { SetupFilters(filters); }));
+    conn_manager_.Add(scope_->filters.changed.connect(sigc::mem_fun(this, &ScopeView::SetupFilters)));
     SetupFilters(scope->filters);
 
     scope_->connected.changed.connect([&](bool is_connected)
