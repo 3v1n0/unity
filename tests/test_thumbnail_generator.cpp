@@ -180,7 +180,7 @@ TEST(TestThumbnailGenerator, TestGetManyGIcon)
   const char* thumbs[] = { "file:///home",
                           "file:///usr",
                           "file:///bin/bash",
-                          "file:///usr/bin/unity"};
+                          "file:///usr/bin/cmake"};
 
   std::vector<LoadResult> results;
   std::vector< ThumbnailNotifier::Ptr> notifiers;
