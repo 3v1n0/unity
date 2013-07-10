@@ -50,6 +50,17 @@ Section "Screen"
 EndSection
 END_OF_CONFIG
 
+function do_cleanup()
+{
+  if [ -n "$x_pid" ] && (kill -0 $x_pid &> /dev/null); then kill $x_pid; fi
+  rm $conffile
+  rm $logfile*
+
+  exit $ret_val
+}
+
+trap "do_cleanup" SIGHUP SIGINT SIGSEGV SIGTERM
+
 dpy=$((RANDOM+1))
 export DISPLAY=:`for id in $(seq $dpy $((dpy+50))); do test -e /tmp/.X$id-lock || { echo $id; exit 0; }; done; exit 1`
 Xorg $DISPLAY -config $conffile -logfile $logfile &> /dev/null &
@@ -62,19 +73,16 @@ done
 
 if [ $(($(date +%s) - start_time)) -gt $MAX_WAIT ]; then
   echo "The X server was not able to run in time"
-  if [ -f $logfile ]; then
+  if [ -s $logfile ]; then
     echo "Xorg Log:"
     cat $logfile
   fi
   ret_val=1
-else
-  shift
-  $binary $@
-  ret_val=$?
+  do_cleanup
 fi
 
-if (kill -0 $x_pid &> /dev/null); then kill $x_pid; fi
-rm $conffile
-rm $logfile*
+shift
+$binary $@
+ret_val=$?
 
-exit $ret_val
+do_cleanup
