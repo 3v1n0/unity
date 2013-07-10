@@ -293,15 +293,15 @@ void ScopeView::SetupCategories(Categories::Ptr const& categories)
   conn = categories->category_removed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryRemoved));
   category_removed_connection_ = conn_manager_.Add(conn);
 
-  auto resync_categories = [categories, this] (glib::Object<DeeModel> model)
+  auto resync_categories = [this, categories] ()
   {
     ClearCategories();
     for (unsigned int i = 0; i < categories->count(); ++i)
       OnCategoryAdded(categories->RowAtIndex(i));
   };
 
-  categories->model.changed.connect(resync_categories);
-  resync_categories(categories->model());
+  categories->model.changed.connect(sigc::hide(resync_categories));
+  resync_categories();
 
   scope_->category_order.changed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryOrderChanged));
 }
@@ -390,7 +390,7 @@ void ScopeView::SetupFilters(Filters::Ptr const& filters)
   conn = filters->filter_removed.connect(sigc::mem_fun(this, &ScopeView::OnFilterRemoved));
   filter_removed_connection_ = conn_manager_.Add(conn);
 
-  auto resync_filters = [filters, this] (glib::Object<DeeModel> model)
+  auto resync_filters = [this, filters] ()
   {
     auto conn = conn_manager_.Get(filter_removed_connection_);
     bool blocked = conn.block(true);
@@ -402,8 +402,8 @@ void ScopeView::SetupFilters(Filters::Ptr const& filters)
     conn.block(blocked);
   };
 
-  filters->model.changed.connect(resync_filters);
-  resync_filters(filters->model());
+  filters->model.changed.connect(sigc::hide(resync_filters));
+  resync_filters();
 }
 
 void ScopeView::OnCategoryAdded(Category const& category)
