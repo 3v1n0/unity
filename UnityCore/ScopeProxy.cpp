@@ -609,6 +609,10 @@ void ScopeProxy::Impl::OnScopeConnectedChanged(UnityProtocolScopeProxy* proxy, G
     {
       OpenChannel();
     }
+    else
+    {
+      connected = false;
+    }
   }
 }
 
