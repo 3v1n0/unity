@@ -1,5 +1,6 @@
 #include "test_service_model.h"
 #include <dee.h>
+#include <UnityCore/Variant.h>
 #include "config.h"
 
 namespace unity
@@ -36,8 +37,7 @@ void Model::PopulateResultsModel()
   GVariantBuilder b;
   g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
   g_variant_builder_add(&b, "{sv}", "key", g_variant_new_string("value"));
-  GVariant *hints = g_variant_builder_end(&b);
-  g_variant_ref_sink(hints);
+  glib::Variant hints(g_variant_builder_end(&b));
 
   for(unsigned i = 0; i < 200; ++i)
   {
@@ -51,10 +51,9 @@ void Model::PopulateResultsModel()
                      name,
                      name,
                      name,
-                     hints);
+                     static_cast<GVariant*>(hints));
     g_free(name);
   }
-  g_variant_unref(hints);
 }
 
 void Model::PopulateCategoriesModel()
@@ -63,8 +62,7 @@ void Model::PopulateCategoriesModel()
 
   GVariantBuilder b;
   g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
-  GVariant *hints = g_variant_builder_end(&b);
-  g_variant_ref_sink(hints);
+  glib::Variant hints(g_variant_builder_end(&b));
 
   guint i;
   for(i = 0; i < 5; i++)
@@ -76,11 +74,10 @@ void Model::PopulateCategoriesModel()
                      name,
                      "gtk-apply",
                      "grid",
-                     hints);
+                     static_cast<GVariant*>(hints));
     g_free(id);
     g_free(name);
   }
-  g_variant_unref(hints);
 }
 
 void Model::PopulateCategoriesChangesModel()
@@ -89,8 +86,7 @@ void Model::PopulateCategoriesChangesModel()
 
   GVariantBuilder b;
   g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
-  GVariant *hints = g_variant_builder_end(&b);
-  g_variant_ref_sink(hints);
+  glib::Variant hints(g_variant_builder_end(&b));
 
   guint i;
   for(i = 0; i < 5; i++)
@@ -102,11 +98,10 @@ void Model::PopulateCategoriesChangesModel()
                      name,
                      "gtk-apply",
                      "grid",
-                     hints);
+                     static_cast<GVariant*>(hints));
     g_free(id);
     g_free(name);
   }
-  g_variant_unref(hints);
 
   category_timeout_.reset(new glib::Timeout(200, sigc::mem_fun(this, &Model::OnCategoryChangeTimeout)));
 }
@@ -128,8 +123,7 @@ bool Model::OnCategoryChangeTimeout()
   {
     GVariantBuilder b;
     g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
-    GVariant *hints = g_variant_builder_end(&b);
-    g_variant_ref_sink(hints);
+    glib::Variant hints(g_variant_builder_end(&b));
 
     gchar* id = g_strdup_printf("cat%u", new_category);
     gchar* name = g_strdup_printf("Category %u", new_category);
@@ -139,10 +133,9 @@ bool Model::OnCategoryChangeTimeout()
                   name,
                   "gtk-apply",
                   "grid",
-                  hints);
+                  static_cast<GVariant*>(hints));
     g_free(id);
     g_free(name);
-    g_variant_unref(hints);
 
     new_category++;
   }
@@ -151,8 +144,7 @@ bool Model::OnCategoryChangeTimeout()
   {
     GVariantBuilder b;
     g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
-    GVariant *hints = g_variant_builder_end(&b);
-    g_variant_ref_sink(hints);
+    glib::Variant hints(g_variant_builder_end(&b));
 
     gchar* id = g_strdup_printf("cat%u", new_category);
     gchar* name = g_strdup_printf("Category %u", new_category);
@@ -161,10 +153,9 @@ bool Model::OnCategoryChangeTimeout()
                      name,
                      "gtk-apply",
                      "grid",
-                     hints);
+                     static_cast<GVariant*>(hints));
     g_free(id);
     g_free(name);
-    g_variant_unref(hints);
 
     new_category++;
   }
