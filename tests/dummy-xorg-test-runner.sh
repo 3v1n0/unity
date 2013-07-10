@@ -15,7 +15,7 @@
 #
 # Authored by: Marco Trevisan <marco.trevisan@canonical.com>
 
-binary=$1
+binary=$(which $1)
 if [ -z "$binary" ]; then echo "Empty command submitted"; exit 1; fi
 if [ ! -x "$binary" ]; then echo "The provided $binary is not executable"; exit 1; fi
 
