@@ -364,22 +364,22 @@ if (ENABLE_X_SUPPORT)
 endif (ENABLE_X_SUPPORT)
 set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless --gtest_output=xml:./test-gtest-xless.xml)
 set (GTEST_TEST_COMMAND_SLOW ./test-gtest-slow --gtest_output=xml:./test-gtest-slow.xml)
-set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --task ./test-gtest-service --task ./test-gtest-dbus --gtest_output=xml:./test-gtest-dbus.xml)
+set (GTEST_TEST_COMMAND_DBUS dbus-test-runner -t ./test-gtest-service -t ./test-gtest-dbus -p --gtest_output=xml:./test-gtest-dbus.xml)
 
 set (TEST_COMMAND
      gtester --verbose -k -o=${TEST_RESULT_XML} ./test-unit
   && ${GTEST_TEST_COMMAND}
   && ${GTEST_TEST_COMMAND_XLESS}
   && ${GTEST_TEST_COMMAND_GESTURES}
-  && ${GTEST_TEST_COMMAND_DBUS}
+  && ${GTEST_TEST_COMMAND_DBUS} -p --gtest_filter=-TestScope*
   && ${GTEST_TEST_COMMAND_SLOW}
     )
 
 set (TEST_COMMAND_XLESS
      ${GTEST_TEST_COMMAND_XLESS}
   && ${GTEST_TEST_COMMAND_GESTURES}
-  #&& ${GTEST_TEST_COMMAND_DBUS}
-  && echo "Warning, DBus test cases are disabled!!")
+  && ${GTEST_TEST_COMMAND_DBUS} -p --gtest_filter=-TestScope*
+  && echo "Warning, TestScope* DBus test cases are disabled!!")
 
 set (DUMMY_XORG_TEST_RUNNER ${CMAKE_CURRENT_SOURCE_DIR}/dummy-xorg-test-runner.sh)
 
