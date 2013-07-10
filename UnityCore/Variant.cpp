@@ -55,6 +55,9 @@ std::string Variant::GetString() const
 {
   const gchar *result = nullptr;
 
+  if (!variant_)
+    return "";
+
   if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_STRING))
   {
     // g_variant_get_string doesn't duplicate the string
@@ -75,7 +78,7 @@ std::string Variant::GetString() const
 }
 
 int32_t Variant::GetInt32() const
-{  
+{
   gint32 value = 0;
 
   if (!variant_)
@@ -125,6 +128,9 @@ int64_t Variant::GetInt64() const
 {
   gint64 value = 0;
 
+  if (!variant_)
+    return static_cast<int64_t>(value);
+
   if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_INT64))
   {
     value = g_variant_get_int64(variant_);
@@ -145,6 +151,9 @@ int64_t Variant::GetInt64() const
 uint64_t Variant::GetUInt64() const
 {
   guint64 value = 0;
+
+  if (!variant_)
+    return static_cast<uint64_t>(value);
 
   if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_UINT64))
   {
@@ -191,6 +200,9 @@ double Variant::GetDouble() const
 {
   double value = 0.0;
 
+  if (!variant_)
+    return value;
+
   if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_DOUBLE))
   {
     value = g_variant_get_double(variant_);
@@ -235,7 +247,7 @@ bool Variant::ASVToHints(HintsMap& hints) const
     hints[key] = value;
   }
 
-  g_variant_iter_free (hints_iter);
+  g_variant_iter_free(hints_iter);
 
   return true;
 }
@@ -286,7 +298,7 @@ Variant::operator bool() const
   return bool(variant_);
 }
 
-static void g_variant_unref0 (gpointer var)
+static void g_variant_unref0(gpointer var)
 {
   if (var)
     g_variant_unref((GVariant*)var);
@@ -299,10 +311,14 @@ GHashTable* hashtable_from_hintsmap(glib::HintsMap const& hints)
   if (!hash_table)
     return nullptr;
 
-  for (glib::HintsMap::const_iterator it = hints.begin(); it != hints.end(); ++it)
+  for (auto const& hint : hints)
   {
-    g_hash_table_insert(hash_table, g_strdup(it->first.c_str()), g_variant_ref(it->second));
+    if (!hint.second)
+      continue;
+
+    g_hash_table_insert(hash_table, g_strdup(hint.first.c_str()), g_variant_ref(hint.second));
   }
+
   return hash_table;
 }
 
@@ -313,13 +329,13 @@ HintsMap const& hintsmap_from_hashtable(GHashTable* hashtable, HintsMap& hints)
 
   GHashTableIter hints_iter;
   gpointer key, value;
-  g_hash_table_iter_init (&hints_iter, hashtable);
-  while (g_hash_table_iter_next (&hints_iter, &key, &value))
+  g_hash_table_iter_init(&hints_iter, hashtable);
+  while (g_hash_table_iter_next(&hints_iter, &key, &value))
   {
     std::string hint_key(static_cast<gchar*>(key));
     glib::Variant hint_value(static_cast<GVariant*>(value));
 
-    hints[hint_key] = hint_value;
+    hints.insert({hint_key, hint_value});
   }
   return hints;
 }
