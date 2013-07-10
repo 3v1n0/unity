@@ -395,7 +395,7 @@ set (TEST_COMMAND_HEADLESS
   export NUX_FALLBACK_TEXTURE=TRUE
   && ${DUMMY_XORG_TEST_RUNNER} ${GTEST_TEST_COMMAND} --gtest_output=xml:./
   && ${DUMMY_XORG_TEST_RUNNER} ${GTEST_TEST_COMMAND_SLOW} --gtest_output=xml:./
-  && ${TEST_COMMAND_XLESS})
+  && ${TEST_COMMAND_XLESS} --gtest_output=xml:./)
 
 if (GTEST_SRC_DIR)
   if (ENABLE_X_SUPPORT)
