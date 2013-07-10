@@ -36,6 +36,39 @@ TEST_F(TestResults, TestConstruction)
   EXPECT_EQ(model.swarm_name(), swarm_name);
 }
 
+TEST_F(TestResults, TestSignalProxyAdded)
+{
+  Result res(nullptr, nullptr, nullptr);
+
+  bool added = false;
+  ASSERT_EQ(model.row_added.size(), 1);
+  model.result_added.connect([&added] (Result const&) { added = true; });
+  model.row_added.emit(res);
+  EXPECT_TRUE(added);
+}
+
+TEST_F(TestResults, TestSignalProxyChanged)
+{
+  Result res(nullptr, nullptr, nullptr);
+
+  bool changed = false;
+  ASSERT_EQ(model.row_changed.size(), 1);
+  model.result_changed.connect([&changed] (Result const&) { changed = true; });
+  model.row_changed.emit(res);
+  EXPECT_TRUE(changed);
+}
+
+TEST_F(TestResults, TestSignalProxyRemoved)
+{
+  Result res(nullptr, nullptr, nullptr);
+
+  bool removed = false;
+  ASSERT_EQ(model.row_removed.size(), 1);
+  model.result_removed.connect([&removed] (Result const&) { removed = true; });
+  model.row_removed.emit(res);
+  EXPECT_TRUE(removed);
+}
+
 TEST_F(TestResults, TestSynchronization)
 {
   WaitForSynchronize(model);
