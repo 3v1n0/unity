@@ -149,7 +149,7 @@ TEST(TestThumbnailGenerator, TestGetManyFileThumbnail)
     results[i].cancelled = true;
   }
 
-  CheckResults(results, 5500);
+  CheckResults(results, 15000);
 }
 
 
