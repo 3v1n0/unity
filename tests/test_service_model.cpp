@@ -41,18 +41,17 @@ void Model::PopulateResultsModel()
 
   for(unsigned i = 0; i < 200; ++i)
   {
-    gchar* name = g_strdup_printf("Result%u", i);
+    std::string name = "Result"+std::to_string(i);
     dee_model_append(results_model_,
-                     name,
-                     name,
+                     name.c_str(),
+                     name.c_str(),
                      i/50, // new category every 50 results
                      0,
-                     name,
-                     name,
-                     name,
-                     name,
+                     name.c_str(),
+                     name.c_str(),
+                     name.c_str(),
+                     name.c_str(),
                      static_cast<GVariant*>(hints));
-    g_free(name);
   }
 }
 
@@ -67,16 +66,14 @@ void Model::PopulateCategoriesModel()
   guint i;
   for(i = 0; i < 5; i++)
   {
-    gchar* id = g_strdup_printf("cat%u", i);
-    gchar* name = g_strdup_printf("Category %u", i);
+    std::string id = "cat"+std::to_string(i);
+    std::string name = "Category "+std::to_string(i);
     dee_model_append(categories_model_,
-                     id,
-                     name,
+                     id.c_str(),
+                     name.c_str(),
                      "gtk-apply",
                      "grid",
                      static_cast<GVariant*>(hints));
-    g_free(id);
-    g_free(name);
   }
 }
 
@@ -91,16 +88,14 @@ void Model::PopulateCategoriesChangesModel()
   guint i;
   for(i = 0; i < 5; i++)
   {
-    gchar* id = g_strdup_printf("cat%u", i);
-    gchar* name = g_strdup_printf("Category %u", i);
+    std::string id = "cat"+std::to_string(i);
+    std::string name = "Category "+std::to_string(i);
     dee_model_append(categories_changing_model_,
-                     id,
-                     name,
+                     id.c_str(),
+                     name.c_str(),
                      "gtk-apply",
                      "grid",
                      static_cast<GVariant*>(hints));
-    g_free(id);
-    g_free(name);
   }
 
   category_timeout_.reset(new glib::Timeout(200, sigc::mem_fun(this, &Model::OnCategoryChangeTimeout)));
@@ -125,17 +120,15 @@ bool Model::OnCategoryChangeTimeout()
     g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
     glib::Variant hints(g_variant_builder_end(&b));
 
-    gchar* id = g_strdup_printf("cat%u", new_category);
-    gchar* name = g_strdup_printf("Category %u", new_category);
+    std::string id = "cat"+std::to_string(new_category);
+    std::string name = "Category "+std::to_string(new_category);
     dee_model_set(categories_changing_model_,
                   iter,
-                  id,
-                  name,
+                  id.c_str(),
+                  name.c_str(),
                   "gtk-apply",
                   "grid",
                   static_cast<GVariant*>(hints));
-    g_free(id);
-    g_free(name);
 
     new_category++;
   }
@@ -146,16 +139,14 @@ bool Model::OnCategoryChangeTimeout()
     g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
     glib::Variant hints(g_variant_builder_end(&b));
 
-    gchar* id = g_strdup_printf("cat%u", new_category);
-    gchar* name = g_strdup_printf("Category %u", new_category);
+    std::string id = "cat"+std::to_string(new_category);
+    std::string name = "Category "+std::to_string(new_category);
     dee_model_append(categories_changing_model_,
-                     id,
-                     name,
+                     id.c_str(),
+                     name.c_str(),
                      "gtk-apply",
                      "grid",
                      static_cast<GVariant*>(hints));
-    g_free(id);
-    g_free(name);
 
     new_category++;
   }
@@ -170,16 +161,14 @@ void Model::PopulateTracksModel()
   guint i;
   for(i = 0; i < 5; i++)
   {
-    gchar* uri = g_strdup_printf("uri://track%u", i);
-    gchar* title = g_strdup_printf("Track %u", i);
+    std::string uri = "uri://track"+std::to_string(i);
+    std::string title = "Track "+std::to_string(i);
 
     dee_model_append(tracks_model_,
-                     uri,
+                     uri.c_str(),
                      i+1,
-                     title,
+                     title.c_str(),
                      (unsigned)10);
-    g_free(uri);
-    g_free(title);
   }
 
   track_timeout_.reset(new glib::Timeout(200, sigc::mem_fun(this, &Model::OnTrackChangeTimeout)));
@@ -200,33 +189,29 @@ bool Model::OnTrackChangeTimeout()
   iter = dee_model_get_first_iter(tracks_model_);
   if (iter)
   {
-    gchar* uri = g_strdup_printf("uri://track%u", new_track);
-    gchar* title = g_strdup_printf("Track %u", new_track);
+    std::string uri = "uri://track"+std::to_string(new_track);
+    std::string title = "Track "+std::to_string(new_track);
 
     dee_model_set(tracks_model_,
                   iter,
-                  uri,
+                  uri.c_str(),
                   new_track+1,
-                  title,
+                  title.c_str(),
                   (unsigned)10);
-    g_free(uri);
-    g_free(title);
 
     new_track++;
   }
 
   // append new,
   {
-    gchar* uri = g_strdup_printf("uri://track%u", new_track);
-    gchar* title = g_strdup_printf("Track %u", new_track);
+    std::string uri = "uri://track"+std::to_string(new_track);
+    std::string title = "Track "+std::to_string(new_track);
 
     dee_model_append(tracks_model_,
-                     uri,
+                     uri.c_str(),
                      new_track+1,
-                     title,
+                     title.c_str(),
                      (unsigned)10);
-    g_free(uri);
-    g_free(title);
 
     new_track++;
   }
