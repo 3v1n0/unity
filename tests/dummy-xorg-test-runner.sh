@@ -18,8 +18,16 @@
 MAX_WAIT=5
 
 binary=$(which $1)
-if [ -z "$binary" ]; then echo "Empty command submitted"; exit 1; fi
-if [ ! -x "$binary" ]; then echo "The provided $binary is not executable"; exit 1; fi
+
+if [ -z "$binary" ]; then
+  if [ -z "$1" ]; then
+    echo "Empty command submitted"
+  elif [ ! -x "$1" ]; then
+    echo "The provided $1 is not executable"
+  fi
+
+  exit 1
+fi
 
 logfile=$(mktemp -t dummy.Xorg.log.XXXXXXXX)
 conffile=$(mktemp -t dummy.Xorg.conf.XXXXXXXX)
