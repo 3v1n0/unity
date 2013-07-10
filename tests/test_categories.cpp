@@ -21,15 +21,23 @@ static void WaitForSynchronize(Categories& model)
   Utils::WaitUntil([&model] { return model.count == n_rows; });
 }
 
-TEST(TestCategories, TestConstruction)
+struct TestCategories : testing::Test
 {
+  TestCategories()
+  {
+    model.swarm_name = swarm_name;
+  }
+
   Categories model;
-  model.swarm_name = swarm_name;
+};
+
+TEST_F(TestCategories, TestConstruction)
+{
+  EXPECT_EQ(model.swarm_name(), swarm_name);
 }
 
-TEST(TestCategories, TestSignalProxyAdded)
+TEST_F(TestCategories, TestSignalProxyAdded)
 {
-  Categories model;
   Category cat(nullptr, nullptr, nullptr);
 
   bool added = false;
@@ -39,9 +47,8 @@ TEST(TestCategories, TestSignalProxyAdded)
   EXPECT_TRUE(added);
 }
 
-TEST(TestCategories, TestSignalProxyChanged)
+TEST_F(TestCategories, TestSignalProxyChanged)
 {
-  Categories model;
   Category cat(nullptr, nullptr, nullptr);
 
   bool changed = false;
@@ -51,9 +58,8 @@ TEST(TestCategories, TestSignalProxyChanged)
   EXPECT_TRUE(changed);
 }
 
-TEST(TestCategories, TestSignalProxyRemoved)
+TEST_F(TestCategories, TestSignalProxyRemoved)
 {
-  Categories model;
   Category cat(nullptr, nullptr, nullptr);
 
   bool removed = false;
@@ -63,20 +69,14 @@ TEST(TestCategories, TestSignalProxyRemoved)
   EXPECT_TRUE(removed);
 }
 
-TEST(TestCategories, TestSynchronization)
+TEST_F(TestCategories, TestSynchronization)
 {
-  Categories model;
-  model.swarm_name = swarm_name;
-
   WaitForSynchronize(model);
   EXPECT_EQ(model.count, n_rows);
 }
 
-TEST(TestCategories, TestRowsValid)
+TEST_F(TestCategories, TestRowsValid)
 {
-  Categories model;
-  model.swarm_name = swarm_name;
-
   WaitForSynchronize(model);
 
   for (unsigned int i = 0; i < n_rows; i++)
@@ -98,11 +98,8 @@ TEST(TestCategories, TestRowsValid)
 }
 
 // We're testing the model's ability to store and retrieve random pointers
-TEST(TestCategories, TestSetGetRenderer)
+TEST_F(TestCategories, TestSetGetRenderer)
 {
-  Categories model;
-  model.swarm_name = swarm_name;
-
   WaitForSynchronize(model);
 
   for (unsigned int i = 0; i < n_rows; i++)
@@ -125,9 +122,8 @@ TEST(TestCategories, TestSetGetRenderer)
 }
 
 // We're testing the model's ability to store and retrieve random pointers
-TEST(TestCategories, TestOnRowChanged)
+TEST_F(TestCategories, TestOnRowChanged)
 {
-  Categories model;
   model.swarm_name = swarm_name_changing;
   WaitForSynchronize(model);
 
@@ -138,9 +134,8 @@ TEST(TestCategories, TestOnRowChanged)
 
 
 // We're testing the model's ability to store and retrieve random pointers
-TEST(TestCategories, TestOnRowAdded)
+TEST_F(TestCategories, TestOnRowAdded)
 {
-  Categories model;
   model.swarm_name = swarm_name_changing;
   WaitForSynchronize(model);
 
@@ -150,9 +145,8 @@ TEST(TestCategories, TestOnRowAdded)
 }
 
 // We're testing the model's ability to store and retrieve random pointers
-TEST(TestCategories, TestOnRowRemoved)
+TEST_F(TestCategories, TestOnRowRemoved)
 {
-  Categories model;
   model.swarm_name = swarm_name_changing;
   WaitForSynchronize(model);
 
@@ -161,9 +155,8 @@ TEST(TestCategories, TestOnRowRemoved)
   Utils::WaitUntil([&removed] { return removed == 1; }, true, 2, "Did not detect row removal "+swarm_name_changing+".");
 }
 
-TEST(TestCategories, TestCategoryCopy)
+TEST_F(TestCategories, TestCategoryCopy)
 {
-  Categories model;
   model.swarm_name = swarm_name_changing;
   WaitForSynchronize(model);
   
@@ -177,9 +170,8 @@ TEST(TestCategories, TestCategoryCopy)
   EXPECT_EQ(category.index(), category_2.index());
 }
 
-TEST(TestCategories, TestCategoryEqual)
+TEST_F(TestCategories, TestCategoryEqual)
 {
-  Categories model;
   model.swarm_name = swarm_name_changing;
   WaitForSynchronize(model);
 
