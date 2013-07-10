@@ -37,7 +37,8 @@ void Model::PopulateResultsModel()
   g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
   g_variant_builder_add(&b, "{sv}", "key", g_variant_new_string("value"));
   GVariant *hints = g_variant_builder_end(&b);
-  
+  g_variant_ref_sink(hints);
+
   for(unsigned i = 0; i < 200; ++i)
   {
     gchar* name = g_strdup_printf("Result%u", i);
@@ -54,7 +55,6 @@ void Model::PopulateResultsModel()
     g_free(name);
   }
   g_variant_unref(hints);
-  hints = NULL;
 }
 
 void Model::PopulateCategoriesModel()
