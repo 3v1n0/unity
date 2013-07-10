@@ -20,6 +20,9 @@
  */
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
+using namespace testing;
+
 #include <limits>
 
 #include "test_utils.h"
@@ -34,6 +37,8 @@ class MockPointerBarrier : public PointerBarrierWrapper
 {
 public:
   bool HandleBarrierEvent(XIBarrierEvent* b_ev) { return PointerBarrierWrapper::HandleBarrierEvent(b_ev); }
+
+  MOCK_METHOD1(ReleaseBarrier, void(int));
 };
 
 XIBarrierEvent GetGenericEvent (unsigned int id)
@@ -160,6 +165,39 @@ TEST(TestPointerBarrier, ReciveSecondEventFirstFalse)
   Utils::WaitForTimeoutMSec(pb.smoothing());
 
   EXPECT_EQ(events_recived, 2);
+}
+
+TEST(TestPointerBarrier, DontReleaseBarrierOnEmptyDTime)
+{
+  MockPointerBarrier pb;
+  pb.threshold = 1000;
+  XIBarrierEvent ev = GetGenericEvent(0xabba);
+  ev.dtime = 0;
+
+  {
+    InSequence sequence;
+    EXPECT_CALL(pb, ReleaseBarrier(0xabba)).Times(0);
+  }
+
+  EXPECT_TRUE(pb.HandleBarrierEvent(&ev));
+
+  Utils::WaitForTimeoutMSec(pb.smoothing());
+}
+
+TEST(TestPointerBarrier, ReleaseBarrierIfOverThreshold)
+{
+  MockPointerBarrier pb;
+  pb.threshold = 500;
+  XIBarrierEvent ev = GetGenericEvent(0xabba);
+
+  {
+    InSequence sequence;
+    EXPECT_CALL(pb, ReleaseBarrier(0xabba)).Times(1);
+  }
+
+  EXPECT_TRUE(pb.HandleBarrierEvent(&ev));
+
+  Utils::WaitForTimeoutMSec(pb.smoothing());
 }
 
 }

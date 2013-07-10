@@ -76,13 +76,10 @@ add_subdirectory (test-get-transients)
 #
 
 enable_testing()
-# :(
-find_library (GMOCK_LIB gmock)
-find_library (GMOCK_MAIN_LIB gmock_main)
-find_path(GTEST_SRC_DIR gtest.cc PATHS /usr/src/gtest/src)
+set(GMOCK_LIB gmock)
+set(GMOCK_MAIN_LIB gmock_main)
 
-if (GTEST_SRC_DIR AND
-    GMOCK_LIB AND
+if (GMOCK_LIB AND
     GMOCK_MAIN_LIB)
 
   # MockWindowManager
@@ -348,8 +345,7 @@ if (ENABLE_X_SUPPORT)
                         panel-lib)
   add_test(UnityGTest test-gtest)
 endif (ENABLE_X_SUPPORT)
-endif (GTEST_SRC_DIR AND
-       GMOCK_LIB AND
+endif (GMOCK_LIB AND
        GMOCK_MAIN_LIB)
 
 if(ENABLE_X_SUPPORT)
@@ -393,7 +389,7 @@ set (TEST_COMMAND_HEADLESS
   && ${DUMMY_XORG_TEST_RUNNER} ${GTEST_TEST_COMMAND_SLOW}
   && ${TEST_COMMAND_XLESS})
 
-if (GTEST_SRC_DIR)
+if (GTEST_ROOT_DIR)
   if (ENABLE_X_SUPPORT)
     add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-slow test-gtest-xless test-gtest-dbus test-gestures)
     add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest test-gtest-slow test-gtest-xless test-gtest-dbus test-gestures)
@@ -404,9 +400,9 @@ if (GTEST_SRC_DIR)
     add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest-xless)
   endif ()
   add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
-else (GTEST_SRC_DIR)
+else (GTEST_ROOT_DIR)
   add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit)
-endif (GTEST_SRC_DIR)
+endif (GTEST_ROOT_DIR)
 # make target to allow devs to run "make autopilot" from build dir:
 set (AUTOPILOTDIR "${CMAKE_CURRENT_SOURCE_DIR}/autopilot")
 # Rules to install autopilot files and executable script:

@@ -117,8 +117,11 @@ int GetEventVelocity(XIBarrierEvent* event)
   dx = event->dx;
   dy = event->dy;
 
+  millis = event->dtime;
+
   // Sometimes dtime is 0, if so we don't want to divide by zero!
-  millis = event->dtime ?: 1;
+  if (!millis)
+    return 1;
 
   speed = sqrt(dx * dx + dy * dy) / millis * 1000;
 
