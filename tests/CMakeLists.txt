@@ -76,13 +76,10 @@ add_subdirectory (test-get-transients)
 #
 
 enable_testing()
-# :(
-find_library (GMOCK_LIB gmock)
-find_library (GMOCK_MAIN_LIB gmock_main)
-find_path(GTEST_SRC_DIR gtest.cc PATHS /usr/src/gtest/src)
+set(GMOCK_LIB gmock)
+set(GMOCK_MAIN_LIB gmock_main)
 
-if (GTEST_SRC_DIR AND
-    GMOCK_LIB AND
+if (GMOCK_LIB AND
     GMOCK_MAIN_LIB)
 
   # MockWindowManager
@@ -94,7 +91,6 @@ if (GTEST_SRC_DIR AND
 
 # The service that provides DBus services to test against
   add_executable(test-gtest-service
-                 mock-application.cpp
                  test_service_gdbus_wrapper.cpp
                  test_service_hud.cpp
                  test_service_main.cpp
@@ -142,7 +138,7 @@ if (GTEST_SRC_DIR AND
   set (GTEST_XLESS_SOURCES
        test_main_xless.cpp
        test_abstract_interface_generator.cpp
-       test_launcher_model.cpp
+       test_connection_manager.cpp
        test_glib_dbus_object.cpp
        test_glib_cancellable.cpp
        test_glib_object.cpp
@@ -164,6 +160,7 @@ if (GTEST_SRC_DIR AND
        test_favorite_store_gsettings.cpp
        test_favorite_store_private.cpp
        test_launcher_entry_remote.cpp
+       test_launcher_model.cpp
        test_launcher_options.cpp
        test_layout_system.cpp
        test_model_iterator.cpp
@@ -351,8 +348,7 @@ if (ENABLE_X_SUPPORT)
                         panel-lib)
   add_test(UnityGTest test-gtest)
 endif (ENABLE_X_SUPPORT)
-endif (GTEST_SRC_DIR AND
-       GMOCK_LIB AND
+endif (GMOCK_LIB AND
        GMOCK_MAIN_LIB)
 
 if(ENABLE_X_SUPPORT)
@@ -388,7 +384,7 @@ set (TEST_COMMAND_HEADLESS
   #&& ${GTEST_TEST_COMMAND_DBUS} --gtest_output=xml:./
   && echo "Warning, DBus test cases are disabled!!")
 
-if (GTEST_SRC_DIR)
+if (GTEST_ROOT_DIR)
   if (ENABLE_X_SUPPORT)
     add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-slow test-gtest-xless test-gtest-dbus test-gestures)
     add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus test-gestures)
@@ -399,9 +395,9 @@ if (GTEST_SRC_DIR)
     add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest-xless)
   endif ()
   add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
-else (GTEST_SRC_DIR)
+else (GTEST_ROOT_DIR)
   add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit)
-endif (GTEST_SRC_DIR)
+endif (GTEST_ROOT_DIR)
 # make target to allow devs to run "make autopilot" from build dir:
 set (AUTOPILOTDIR "${CMAKE_CURRENT_SOURCE_DIR}/autopilot")
 # Rules to install autopilot files and executable script:

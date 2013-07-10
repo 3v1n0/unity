@@ -1,8 +1,122 @@
-unity (7.0.1-0ubuntu1) UNRELEASED; urgency=low
+unity (7.0.2+13.10.20130705.1-0ubuntu1) saucy; urgency=low
 
+  [ Timo Jyrinki ]
+  * Bump version number to go with X.org update
+
+  [ Brandon Schaefer ]
+  * When the ScopeView changes visibility make sure we update the filter
+    scroll view as well. This way we don't get random overlay scroll
+    bars appearing when it shouldn't!. (LP: #1175666)
+
+  [ Timo Jyrinki ]
+  * Move unity to the new libxi changes, along with the new 1.14
+    xserver. Manual merge to be able to migrate together with Xorg from
+    -proposed.
+
+  [ Didier Roche ]
+  * Revert rev 3404, makes autopilot tests failing as well as keep weird
+    filters artefacts in the preview
+
+  [ Marco Trevisan (Treviño) ]
+  * ScopeProxy: use glib::SignalManager to manage connections and
+    disconnections.
+  * Use again glib::Cancellable wrapper in scopes code.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3410
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 05 Jul 2013 12:40:50 +0000
+
+unity (7.0.1+13.10.20130703-0ubuntu1) saucy; urgency=low
+
+  [ Sebastien Bacher ]
+  * Depends on the new dconf-cli, we only need the command line tool,
+    not the gtk editor.
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationLauncherIcon: improve the way we override the Quit
+    quicklist item If a quit action is defined in static (desktop file
+    action) or dynamic way we use it to override the default one,
+    placing it to the proper position. Also override more labels by
+    default and if a quicklist item has the
+    QuicklistMenuItem::QUIT_ACTION_PROPERTY (defined as "unity-quit-
+    action") property set to TRUE, then we use this item as the quit
+    quicklist item. Factorized the code we use to generate both static
+    and dynamic ql items. (LP: #876421)
+  * Use connection::Manager to handle the sigc::connection disconnection
+    on parent removal.
+  * ConnectionManager: add connection::Wrapper to wrap a
+    sigc::connection disconnecting it on destruction.
+  * Unity: use connection::Wrapper to hold the connections to signals
+    and disconnect from them.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3402
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 03 Jul 2013 04:03:31 +0000
+
+unity (7.0.1+13.10.20130702-0ubuntu1) saucy; urgency=low
+
+  [ Michal Hruby ]
   * A few changes to unity-core API/ABI.
 
- -- Michal Hruby <michal.hruby@canonical.com>  Wed, 26 Jun 2013 15:21:22 +0100
+  [ Ted Gould ]
+  * Fix upstart job to handle legacy case and not duplicate events.
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationManager: Use nux::ROProperty for Window and Application
+    title and icon So BamfApplicationManager connect to {name,icon}-
+    changed signals, set getters for properties and
+    ApplicationLauncherIcon update icon tooltip_text and icon when App
+    title/icon changes. (LP: #751909)
+  * BamfApplicationManager: always use std::make_shared and use
+    glib::SignalManager::Add Also add some helper constructors.
+  * ApplicationLauncherIcon: only use a simple std::vector to cache the
+    quicklist entries Remove the ugly std::string indexed std::map.
+  * ConnectionManager: add a class container of sigc::connection that
+    takes care of disconnection Connections added will be disconnected
+    on class destruction on on explicit removal or replacement request.
+
+  [ Lars Uebernickel ]
+  * unity-panel-service: call ido_init() and honor indicator's position
+    requests.
+
+  [ Chris Townsend ]
+  * Fixes some panel shadow regressions caused by rev. 3381. - No panel
+    shadow when logging in, ie, no windows are opened. - Indicator drop
+    down menus have the panel shadow painted over them. - Notification
+    bubbles cause the panel shadow to be drawn on top of everything. -
+    Minimizing all windows caused the panel shadow to not be drawn. (LP:
+    #1194865)
+
+  [ Didier Roche ]
+  * now build-depends on the desktop definition for scopes as libunity-
+    common is dead.
+
+  [ Sebastien Bacher ]
+  * use correct ellipses.
+
+  [ Andrea Azzarone ]
+  * Remove not necessary assert. (LP: #1192503)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Revert revision 3380. This caused regression of all autopilot tests
+    as show_desktop was invalidly detected every time there are no
+    visible windows on screen.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3396
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 02 Jul 2013 05:32:40 +0000
+
+unity (7.0.0daily13.06.24-0ubuntu2) saucy; urgency=low
+
+  * services/panel-main.c: manually backport lp:~larsu/unity/call-ido-init
+    to unbreak custom indicators (like indicator-datetime), the order
+    in the panel is still wrong but that fix can wait for next week
+  * debian/control: build-depends on libido3-0.1-dev
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 28 Jun 2013 19:36:49 +0200
 
 unity (7.0.0daily13.06.24-0ubuntu1) saucy; urgency=low
 

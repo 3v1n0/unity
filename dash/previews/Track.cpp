@@ -133,11 +133,6 @@ Track::Track(NUX_FILE_LINE_DECL)
   SetupViews();
 }
 
-Track::~Track()
-{
-  player_connection_.disconnect();
-}
-
 std::string Track::GetName() const
 {
   return "Track";
@@ -164,11 +159,9 @@ void Track::Update(dash::Track const& track)
   ss_track_number << track.track_number;
   track_number_->SetText(ss_track_number.str());
 
-  gchar* duration = g_strdup_printf("%d:%.2d", track.length/60, (track.length) % 60);
+  glib::String duration(g_strdup_printf("%d:%.2d", track.length/60, (track.length) % 60));
   duration_->SetText(duration);
-  g_free(duration);
 
-  player_connection_.disconnect();
   player_connection_ = player_.updated.connect([this](std::string const& uri, PlayerState player_state, double progress)
   {
     if (uri != uri_)

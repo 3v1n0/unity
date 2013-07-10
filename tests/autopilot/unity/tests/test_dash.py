@@ -794,10 +794,65 @@ class PreviewInvocationTests(DashTestCase):
 
         result = results[0]
         # result.preview handles finding xy co-ords and right mouse-click
-        result.preview()
+        result.preview(button=2)
         self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(True)))
 
         self.keyboard.press_and_release("Escape")
+
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_app_scope_lmb_installed_app(self):
+        """Left-clicking on an application scope result in 'Installed' category
+        must activate it.
+        """
+        gettext.install("unity-scope-applications", unicode=True)
+        scope = self.unity.dash.reveal_application_scope()
+        
+        self.addCleanup(self.process_manager.close_all_app, "Character Map")
+        self.addCleanup(self.unity.dash.ensure_hidden)
+
+        self.keyboard.type("Character")
+        # wait for "Installed" category
+        category = self.wait_for_category(scope, _("Installed"))
+
+        # wait for some results
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0), timeout=20))
+        results = category.get_results()
+
+        result = results[0]
+        # result.preview handles finding xy co-ords and right mouse-click
+        result.activate(double_click=False)
+
+        # make sure it started
+        self.assertThat(lambda: len(self.process_manager.get_open_windows_by_application("Character Map")), Eventually(Equals(1), timeout=10))
+
+        self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
+
+    def test_home_scope_lmb_app(self):
+        """Left-clicking on an application scope result in 'Application' category of Home
+        must activate it.
+        """
+        gettext.install("unity-scope-applications", unicode=True)
+        self.unity.dash.ensure_visible()
+        scope = self.unity.dash.view.get_scopeview_by_name("home.scope")
+        
+        self.addCleanup(self.process_manager.close_all_app, "Character Map")
+        self.addCleanup(self.unity.dash.ensure_hidden)
+
+        self.keyboard.type("Character Map")
+        # wait for "Applications" category
+        category = self.wait_for_category(scope, _("Applications"))
+
+        # wait for some results
+        self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0), timeout=20))
+        results = category.get_results()
+
+        result = results[0]
+        # result.preview handles finding xy co-ords and right mouse-click
+        result.activate(double_click=False)
+
+        # make sure it started
+        self.assertThat(lambda: len(self.process_manager.get_open_windows_by_application("Character Map")), Eventually(Equals(1), timeout=10))
 
         self.assertThat(self.unity.dash.preview_displaying, Eventually(Equals(False)))
 

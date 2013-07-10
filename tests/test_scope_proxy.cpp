@@ -219,9 +219,9 @@ TEST(TestScopeProxy, SearchCancelled)
     search_finished = true;
   };
 
-  glib::Object<GCancellable> cancel_search(g_cancellable_new());
+  glib::Cancellable cancel_search;
   scope_proxy->Search("12:cat", glib::HintsMap(), search_callback, cancel_search);
-  g_cancellable_cancel(cancel_search);
+  cancel_search.Cancel();
 
   Utils::WaitForTimeoutMSec(1000);
   EXPECT_EQ(search_finished, false);

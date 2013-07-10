@@ -13,12 +13,14 @@
 *
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*
+* Authored by: Jason Smith <jason.smith@canonical.com>
+*              Brandon Schaefer <brandon.schaefer@canonical.com>
+*
 */
 
 #include <unistd.h>
 #include <stdlib.h>
-#include <stdio.h>
-#include <X11/extensions/Xfixes.h>
 
 #include "PointerBarrier.h"
 
@@ -27,14 +29,6 @@ namespace unity
 namespace ui
 {
 
-namespace local
-{
-namespace
-{
-  bool is_selected_for = false;
-}
-}
-
 PointerBarrierWrapper::PointerBarrierWrapper()
   : active(false)
   , released(false)
@@ -42,10 +36,11 @@ PointerBarrierWrapper::PointerBarrierWrapper()
   , smoothing(75)
   , max_velocity_multiplier(1.0f)
   , direction(BOTH)
-  , event_base_(0)
+  , xi2_opcode_(0)
   , last_event_(0)
+  , current_device_(0)
   , first_event_(false)
-  , barrier(0)
+  , barrier_(0)
   , smoothing_count_(0)
   , smoothing_accum_(0)
 {}
@@ -62,34 +57,14 @@ void PointerBarrierWrapper::ConstructBarrier()
 
   Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
 
-  int error_base;
-  XFixesQueryExtension(dpy, &event_base_, &error_base);
-
-  int maj,min;
-  XFixesQueryVersion(dpy, &maj, &min);
-
-  barrier = XFixesCreatePointerBarrierVelocity(dpy,
-                                               DefaultRootWindow(dpy),
-                                               x1, y1,
-                                               x2, y2,
-                                               static_cast<int>(direction),
-                                               threshold,
-                                               0,
-                                               NULL);
-
-  if (!local::is_selected_for)
-  {
-    XFixesSelectBarrierInput(dpy, DefaultRootWindow(dpy), 0xdeadbeef);
-    local::is_selected_for = true;
-  }
+  barrier_ = XFixesCreatePointerBarrier(dpy,
+                                        DefaultRootWindow(dpy),
+                                        x1, y1,
+                                        x2, y2,
+                                        static_cast<int>(direction),
+                                        0, NULL);
 
   active = true;
-
-  nux::GraphicsDisplay::EventFilterArg event_filter;
-  event_filter.filter = &PointerBarrierWrapper::HandleEventWrapper;
-  event_filter.data = this;
-
-  nux::GetGraphicsDisplay()->AddEventFilter(event_filter);
 }
 
 void PointerBarrierWrapper::DestroyBarrier()
@@ -100,14 +75,13 @@ void PointerBarrierWrapper::DestroyBarrier()
   active = false;
 
   Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
-  XFixesDestroyPointerBarrier(dpy, barrier);
-
-  nux::GetGraphicsDisplay()->RemoveEventFilter(this);
+  XFixesDestroyPointerBarrier(dpy, barrier_);
 }
 
 void PointerBarrierWrapper::ReleaseBarrier(int event_id)
 {
-  XFixesBarrierReleasePointer(nux::GetGraphicsDisplay()->GetX11Display(), barrier, event_id);
+  Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
+  XIBarrierReleasePointer(dpy, current_device_, barrier_, event_id);
 }
 
 void PointerBarrierWrapper::EmitCurrentData(int event_id, int x, int y)
@@ -134,63 +108,80 @@ bool PointerBarrierWrapper::IsFirstEvent() const
   return first_event_;
 }
 
-bool PointerBarrierWrapper::HandleEvent(XEvent xevent)
+int GetEventVelocity(XIBarrierEvent* event)
 {
-  if (xevent.type - event_base_ == XFixesBarrierNotify)
-  {
-    auto notify_event = reinterpret_cast<XFixesBarrierNotifyEvent*>(&xevent);
+  double dx, dy;
+  double speed;
+  unsigned int millis;
 
-    if (notify_event->barrier == barrier && notify_event->subtype == XFixesBarrierHitNotify)
-    {
-      smoothing_accum_ += notify_event->velocity;
-      smoothing_count_++;
+  dx = event->dx;
+  dy = event->dy;
 
-      if (released)
-      {
-        /* If the barrier is released, just emit the current event without
-         * waiting, so there won't be any delay on releasing the barrier. */
-        smoothing_timeout_.reset();
+  millis = event->dtime;
 
-        SendBarrierEvent(notify_event->x, notify_event->y,
-                         notify_event->velocity, notify_event->event_id);
-      }
-      else if (!smoothing_timeout_)
-      {
-        int x = notify_event->x;
-        int y = notify_event->y;
-        int event = notify_event->event_id;
+  // Sometimes dtime is 0, if so we don't want to divide by zero!
+  if (!millis)
+    return 1;
 
-        // If we are a new event, don't delay sending the first event
-        if (last_event_ != event)
-        {
-          first_event_ = true;
-          last_event_ = event;
+  speed = sqrt(dx * dx + dy * dy) / millis * 1000;
 
-          SendBarrierEvent(notify_event->x, notify_event->y,
-                           notify_event->velocity, notify_event->event_id);
-
-          first_event_ = false;
-        }
-
-        smoothing_timeout_.reset(new glib::Timeout(smoothing, [this, event, x, y] () {
-          EmitCurrentData(event, x, y);
-
-          smoothing_timeout_.reset();
-          return false;
-        }));
-      }
-    }
-
-    return notify_event->barrier == barrier;
-  }
-
-  return false;
+  return speed;
 }
 
-bool PointerBarrierWrapper::HandleEventWrapper(XEvent event, void* data)
+bool PointerBarrierWrapper::OwnsBarrierEvent(PointerBarrier const barrier) const
 {
-  PointerBarrierWrapper* wrapper = (PointerBarrierWrapper*)data;
-  return wrapper->HandleEvent(event);
+  return barrier_ == barrier;
+}
+
+bool PointerBarrierWrapper::HandleBarrierEvent(XIBarrierEvent* barrier_event)
+{
+  int velocity = GetEventVelocity(barrier_event);
+  smoothing_accum_ += velocity;
+  smoothing_count_++;
+
+  current_device_ = barrier_event->deviceid;
+
+  if (velocity > threshold)
+  {
+    smoothing_timeout_.reset();
+    ReleaseBarrier(barrier_event->eventid);
+  }
+  else if (released)
+  {
+     /* If the barrier is released, just emit the current event without
+     * waiting, so there won't be any delay on releasing the barrier. */
+    smoothing_timeout_.reset();
+
+    SendBarrierEvent(barrier_event->root_x, barrier_event->root_y,
+                     velocity, barrier_event->eventid);
+  }
+  else if (!smoothing_timeout_)
+  {
+    int x = barrier_event->root_x;
+    int y = barrier_event->root_y;
+    int event = barrier_event->eventid;
+
+    // If we are a new event, don't delay sending the first event
+    if (last_event_ != event)
+    {
+      first_event_ = true;
+      last_event_ = event;
+
+      SendBarrierEvent(barrier_event->root_x, barrier_event->root_y,
+                       velocity, barrier_event->eventid);
+
+      first_event_ = false;
+    }
+
+    smoothing_timeout_.reset(new glib::Timeout(smoothing, [this, event, x, y] () {
+      EmitCurrentData(event, x, y);
+
+      smoothing_timeout_.reset();
+      return false;
+    }));
+  }
+
+  return true;
 }
 
 }

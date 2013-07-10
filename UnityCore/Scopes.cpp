@@ -18,6 +18,7 @@
  */
 
 #include "Scopes.h"
+#include "ConnectionManager.h"
 #include <stdexcept>
 
 namespace unity
@@ -30,7 +31,6 @@ class Scopes::Impl
 {
 public:
   Impl(Scopes* owner, ScopesReader::Ptr scopes_reader);
-  ~Impl();
 
   void LoadScopes();
   void InsertScope(ScopeData::Ptr const& data, unsigned index);
@@ -44,7 +44,7 @@ public:
   Scopes* owner_;
   ScopesReader::Ptr scopes_reader_;
   ScopeList scopes_;
-  sigc::connection scope_changed_signal;
+  connection::Wrapper scope_changed_connection_;
 
   std::size_t get_count() const { return scopes_.size(); }
 
@@ -55,11 +55,6 @@ Scopes::Impl::Impl(Scopes* owner, ScopesReader::Ptr scopes_reader)
 : owner_(owner)
 , scopes_reader_(scopes_reader)
 {
-}
-
-Scopes::Impl::~Impl()
-{
-  scope_changed_signal.disconnect();
 }
 
 void Scopes::Impl::UpdateScopes(ScopeDataList const& scopes_list)
@@ -94,8 +89,7 @@ void Scopes::Impl::LoadScopes()
   if (!scopes_reader_)
     return;
 
-  scope_changed_signal.disconnect();
-  scope_changed_signal = scopes_reader_->scopes_changed.connect(sigc::mem_fun(this, &Impl::UpdateScopes));
+  scope_changed_connection_ = scopes_reader_->scopes_changed.connect(sigc::mem_fun(this, &Impl::UpdateScopes));
   UpdateScopes(scopes_reader_->GetScopesData());
 }
 

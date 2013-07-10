@@ -1729,9 +1729,6 @@ void Launcher::OnIconAdded(AbstractLauncherIcon::Ptr const& icon)
 
 void Launcher::OnIconRemoved(AbstractLauncherIcon::Ptr const& icon)
 {
-  if (icon->needs_redraw_connection.connected())
-    icon->needs_redraw_connection.disconnect();
-
   SetIconUnderMouse(AbstractLauncherIcon::Ptr());
   if (icon == _icon_mouse_down)
     _icon_mouse_down = nullptr;
@@ -2137,9 +2134,7 @@ void Launcher::EndIconDrag()
         _model->Save();
       }
 
-      if (_drag_window->on_anim_completed.connected())
-        _drag_window->on_anim_completed.disconnect();
-      _drag_window->on_anim_completed = _drag_window->anim_completed.connect(sigc::mem_fun(this, &Launcher::OnDragWindowAnimCompleted));
+      _drag_window->on_anim_completed_conn_ = _drag_window->anim_completed.connect(sigc::mem_fun(this, &Launcher::OnDragWindowAnimCompleted));
 
       auto const& icon_center = _drag_icon->GetCenter(monitor);
       _drag_window->SetAnimationTarget(icon_center.x, icon_center.y),

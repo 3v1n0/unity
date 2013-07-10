@@ -10,7 +10,7 @@ include (cmake/pch.cmake)
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 7)
 set (UNITY_MINOR 0)
-set (UNITY_MICRO 1)
+set (UNITY_MICRO 2)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "6.0")
 set (UNITY_COMPONENTS_VERSION "6")
@@ -211,7 +211,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MAINTAINER_CXXFLAGS}")
 #
 # Compiz Plugins
 #
-set(UNITY_PROTOCOL_PRIVATE_DEPS unity-protocol-private>=7.0.2)
+set(UNITY_PROTOCOL_PRIVATE_DEPS unity-protocol-private>=7.0.8)
 set(UNITY_PLUGIN_SHARED_DEPS
     ${UNITY_PROTOCOL_PRIVATE_DEPS}
     atk
@@ -244,6 +244,7 @@ if(ENABLE_X_SUPPORT)
       libgeis
       x11
       xfixes
+      xi>=1.6.99.1
       xrender>=0.9
   )
 endif ()
@@ -269,9 +270,25 @@ endif ()
 add_subdirectory(doc)
 
 # Check for google test and build it locally
+set (
+  GMOCK_ROOT_DIR
+  "/usr/src/gmock"
+  CACHE
+  PATH
+  "Path to Google mock srcs"
+)
+
+set (
+  GMOCK_INCLUDE_DIR
+  "/usr/include/gmock/include"
+  CACHE
+  PATH
+  "Path to Google mock include"
+)
+
 set(
   GTEST_ROOT_DIR
-  "/usr/src/gtest" # Default value, adjustable by user with e.g., ccmake
+  "${GMOCK_ROOT_DIR}/gtest" # Default value, adjustable by user with e.g., ccmake
   CACHE
   PATH
   "Path to Google test srcs"
@@ -279,20 +296,26 @@ set(
 
 set(
   GTEST_INCLUDE_DIR
-  "/usr/include/gtest"
+  "${GMOCK_ROOT_DIR}/gtest/include"
   CACHE
   PATH
   "Path to Google tests include"
 )
 
-find_path(GTEST_INCLUDE_DIR gtest/gtest.h)
-if (GTEST_INCLUDE_DIR)
-  #FIXME - hardcoded is bad!
-  add_subdirectory(
-    ${GTEST_ROOT_DIR}
-    gtest
+if (GTEST_INCLUDE_DIR AND GMOCK_INCLUDE_DIR)
+  include_directories (
+    ${GMOCK_INCLUDE_DIR}
+    ${GTEST_INCLUDE_DIR}
   )
-endif(GTEST_INCLUDE_DIR)
+  add_subdirectory(
+    ${GMOCK_ROOT_DIR}
+    "${CMAKE_CURRENT_BINARY_DIR}/gmock"
+  )
+elseif (GTEST_INCLUDE_DIR AND NOT GMOCK_INCLUDE_DIR)
+  include_directories (
+    ${GTEST_INCLUDE_DIR}
+  )
+endif(GTEST_INCLUDE_DIR AND GMOCK_INCLUDE_DIR)
 
 add_subdirectory(services)
 add_subdirectory(tests)

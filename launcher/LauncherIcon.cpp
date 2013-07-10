@@ -134,24 +134,6 @@ LauncherIcon::LauncherIcon(IconType type)
 LauncherIcon::~LauncherIcon()
 {
   SetQuirk(Quirk::URGENT, false);
-
-  // clean up the whole signal-callback mess
-  if (needs_redraw_connection.connected())
-    needs_redraw_connection.disconnect();
-
-  if (on_icon_added_connection.connected())
-    on_icon_added_connection.disconnect();
-
-  if (on_icon_removed_connection.connected())
-    on_icon_removed_connection.disconnect();
-
-  if (on_order_changed_connection.connected())
-    on_order_changed_connection.disconnect();
-
-  if (_unity_theme)
-  {
-    _unity_theme = NULL;
-  }
 }
 
 void LauncherIcon::LoadTooltip()
@@ -349,9 +331,9 @@ GtkIconTheme* LauncherIcon::GetUnityTheme()
 {
   // The theme object is invalid as soon as you add a new icon to change the theme.
   // invalidate the cache then and rebuild the theme the first time after a icon theme update.
-  if (!GTK_IS_ICON_THEME(_unity_theme.RawPtr()))
+  if (!_unity_theme.IsType(GTK_TYPE_ICON_THEME))
   {
-    _unity_theme =  gtk_icon_theme_new();
+    _unity_theme = gtk_icon_theme_new();
     gtk_icon_theme_set_custom_theme(_unity_theme, UNITY_THEME_NAME.c_str());
   }
   return _unity_theme;
@@ -1113,7 +1095,7 @@ LauncherIcon::RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote)
   if (_remote_urgent)
     SetQuirk(Quirk::URGENT, false);
 
-  _menuclient_dynamic_quicklist = nullptr;
+  _remote_menus = nullptr;
 }
 
 void
@@ -1160,7 +1142,7 @@ LauncherIcon::OnRemoteProgressChanged(LauncherEntryRemote* remote)
 void
 LauncherIcon::OnRemoteQuicklistChanged(LauncherEntryRemote* remote)
 {
-  _menuclient_dynamic_quicklist = remote->Quicklist();
+  _remote_menus = remote->Quicklist();
 }
 
 void
@@ -1192,6 +1174,22 @@ LauncherIcon::OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote)
 
   if (remote->ProgressVisible())
     SetProgress(remote->Progress());
+}
+
+glib::Object<DbusmenuMenuitem> LauncherIcon::GetRemoteMenus() const
+{
+  if (!_remote_menus.IsType(DBUSMENU_TYPE_CLIENT))
+    return glib::Object<DbusmenuMenuitem>();
+
+  glib::Object<DbusmenuMenuitem> root(dbusmenu_client_get_root(_remote_menus), glib::AddRef());
+
+  if (!root.IsType(DBUSMENU_TYPE_MENUITEM) ||
+      !dbusmenu_menuitem_property_get_bool(root, DBUSMENU_MENUITEM_PROP_VISIBLE))
+  {
+    return glib::Object<DbusmenuMenuitem>();
+  }
+
+  return root;
 }
 
 void LauncherIcon::EmitNeedsRedraw()

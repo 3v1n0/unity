@@ -15,19 +15,25 @@
  * <http://www.gnu.org/licenses/>
  *
  * Authored by: Tim Penhey  <tim.penhey@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 #ifndef TESTS_MOCK_APPLICATION_H
 #define TESTS_MOCK_APPLICATION_H
 
 #include <map>
+#include <gmock/gmock.h>
 
 #include "unity-shared/ApplicationManager.h"
 #include "unity-shared/WindowManager.h"
+
+using namespace testing;
 
 namespace testmocks
 {
 struct MockApplicationWindow : unity::ApplicationWindow
 {
+  typedef NiceMock<MockApplicationWindow> Nice;
+
   MockApplicationWindow(Window xid)
     : xid_(xid)
     , monitor_(0)
@@ -42,6 +48,12 @@ struct MockApplicationWindow : unity::ApplicationWindow
     urgent.SetGetterFunction([this] { return urgent_; });
     title.SetGetterFunction([this] { return title_; });
     icon.SetGetterFunction([this] { return icon_; });
+
+    ON_CALL(*this, type()).WillByDefault(Invoke([this] { return type_; }));
+    ON_CALL(*this, window_id()).WillByDefault(Invoke([this] { return xid_; }));
+    ON_CALL(*this, monitor()).WillByDefault(Invoke([this] { return monitor_; }));
+    ON_CALL(*this, Focus()).WillByDefault(Invoke([this] { return LocalFocus(); }));
+    ON_CALL(*this, application()).WillByDefault(Invoke([this] { return unity::ApplicationPtr(); }));
   }
 
   Window xid_;
@@ -54,24 +66,48 @@ struct MockApplicationWindow : unity::ApplicationWindow
   bool active_;
   bool urgent_;
 
-  virtual std::string type() const { return type_; }
+  MOCK_CONST_METHOD0(type, std::string());
+  MOCK_CONST_METHOD0(window_id, Window());
+  MOCK_CONST_METHOD0(monitor, int());
+  MOCK_CONST_METHOD0(application, unity::ApplicationPtr());
+  MOCK_CONST_METHOD0(Focus, bool());
+  MOCK_CONST_METHOD0(Quit, void());
 
-  virtual Window window_id() const { return xid_; }
-  virtual int monitor() const { return monitor_; }
-
-  virtual unity::ApplicationPtr application() const { return unity::ApplicationPtr(); }
-  virtual bool Focus() const
+  virtual bool LocalFocus() const
   {
     auto& wm = unity::WindowManager::Default();
     wm.Raise(xid_);
     wm.Activate(xid_);
     return true;
   }
-  virtual void Quit() const {}
+
+  void SetTitle(std::string const& new_title)
+  {
+    if (new_title == title())
+      return;
+
+    title_ = new_title;
+    title.changed(title_);
+  }
+
+  void SetIcon(std::string const& new_icon)
+  {
+    if (new_icon == icon())
+      return;
+
+    icon_ = new_icon;
+    icon.changed(icon_);
+  }
 };
 
 struct MockApplication : unity::Application
 {
+  typedef NiceMock<MockApplication> Nice;
+
+  MockApplication()
+    : MockApplication("")
+  {}
+
   MockApplication(std::string const& desktop_file,
                   std::string const& icon_name = "",
                   std::string const& title_str = "")
@@ -97,6 +133,12 @@ struct MockApplication : unity::Application
       urgent.SetGetterFunction([this] { return urgent_; });
       title.SetGetterFunction([this] { return title_; });
       icon.SetGetterFunction([this] { return icon_; });
+
+      ON_CALL(*this, desktop_file()).WillByDefault(Invoke([this] { return desktop_file_; }));
+      ON_CALL(*this, type()).WillByDefault(Invoke([this] { return type_; }));
+      ON_CALL(*this, repr()).WillByDefault(Invoke([this] { return "MockApplication"; }));
+      ON_CALL(*this, GetWindows()).WillByDefault(Invoke([this] { return windows_; }));
+      ON_CALL(*this, OwnsWindow(_)).WillByDefault(Invoke([this] (Window xid) { return LocalOwnsWindow(xid); }));
     }
 
   std::string desktop_file_;
@@ -111,23 +153,23 @@ struct MockApplication : unity::Application
   unity::WindowList windows_;
   std::string type_;
 
-  virtual std::string desktop_file() const { return desktop_file_; }
-  virtual std::string type() const { return type_; }
-  virtual std::string repr() const { return "MockApplication"; }
+  MOCK_CONST_METHOD0(desktop_file, std::string());
+  MOCK_CONST_METHOD0(type, std::string());
+  MOCK_CONST_METHOD0(repr, std::string());
+  MOCK_CONST_METHOD0(GetWindows, unity::WindowList());
+  MOCK_CONST_METHOD1(OwnsWindow, bool(Window));
+  MOCK_CONST_METHOD0(GetSupportedMimeTypes, std::vector<std::string>());
+  MOCK_CONST_METHOD0(GetFocusableWindow, unity::ApplicationWindowPtr());
+  MOCK_CONST_METHOD2(Focus, void(bool, int));
+  MOCK_CONST_METHOD0(Quit, void());
 
-  virtual unity::WindowList GetWindows() const { return windows_; }
-  virtual bool OwnsWindow(Window window_id) const {
+  bool LocalOwnsWindow(Window window_id) const {
     auto end = std::end(windows_);
     return std::find_if(std::begin(windows_), end, [window_id] (unity::ApplicationWindowPtr window) {
       return window->window_id() == window_id;
     }) != end;
   }
 
-  virtual std::vector<std::string> GetSupportedMimeTypes() const { return {}; }
-
-  virtual unity::ApplicationWindowPtr GetFocusableWindow() const { return unity::ApplicationWindowPtr(); }
-  virtual void Focus(bool show_on_visible, int monitor) const  {}
-  virtual void Quit() const {}
   void SetRunState(bool state) {
     running_ = state;
     running.changed.emit(state);
@@ -156,30 +198,58 @@ struct MockApplication : unity::Application
     active_ = state;
     active.changed.emit(state);
   }
+
+  void SetTitle(std::string const& new_title)
+  {
+    if (new_title == title())
+      return;
+
+    title_ = new_title;
+    title.changed(title_);
+  }
+
+  void SetIcon(std::string const& new_icon)
+  {
+    if (new_icon == icon())
+      return;
+
+    icon_ = new_icon;
+    icon.changed(icon_);
+  }
 };
 
-class MockApplicationManager : public unity::ApplicationManager
+struct MockApplicationManager : public unity::ApplicationManager
 {
-public:
+  typedef NiceMock<MockApplicationManager> Nice;
+
+  MockApplicationManager()
+  {
+    ON_CALL(*this, GetApplicationForDesktopFile(_)).WillByDefault(Invoke(this, &MockApplicationManager::LocalGetApplicationForDesktopFile));
+    ON_CALL(*this, GetActiveWindow()).WillByDefault(Invoke([this] { return unity::ApplicationWindowPtr(); } ));
+    ON_CALL(*this, GetRunningApplications()).WillByDefault(Invoke([this] { return unity::ApplicationList(); } ));
+    ON_CALL(*this, GetApplicationForWindow(_)).WillByDefault(Invoke([this] (Window) { return unity::ApplicationPtr(); } ));
+  }
+
   static void StartApp(std::string const& desktop_file)
   {
-      // We know the application manager is a mock one so we can cast it.
-      auto self = dynamic_cast<MockApplicationManager&>(unity::ApplicationManager::Default());
-      auto app = self.GetApplicationForDesktopFile(desktop_file);
-      self.application_started.emit(app);
+    // We know the application manager is a mock one so we can cast it.
+    auto& app_manager = unity::ApplicationManager::Default();
+    auto self = dynamic_cast<MockApplicationManager*>(&app_manager);
+    auto app = self->LocalGetApplicationForDesktopFile(desktop_file);
+    app_manager.application_started.emit(app);
   }
 
-  virtual unity::ApplicationWindowPtr GetActiveWindow()
-  {
-      return unity::ApplicationWindowPtr();
-  }
+  MOCK_METHOD0(GetActiveWindow, unity::ApplicationWindowPtr());
+  MOCK_METHOD1(GetApplicationForDesktopFile, unity::ApplicationPtr(std::string const&));
+  MOCK_METHOD0(GetRunningApplications, unity::ApplicationList());
+  MOCK_METHOD1(GetApplicationForWindow, unity::ApplicationPtr(Window));
 
-  unity::ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file)
+  unity::ApplicationPtr LocalGetApplicationForDesktopFile(std::string const& desktop_file)
   {
     AppMap::iterator iter = app_map_.find(desktop_file);
     if (iter == app_map_.end())
     {
-      unity::ApplicationPtr app(new MockApplication(desktop_file));
+      auto app = std::make_shared<NiceMock<MockApplication>>(desktop_file);
       app_map_.insert(AppMap::value_type(desktop_file, app));
       return app;
     }
@@ -187,16 +257,6 @@ public:
     {
       return iter->second;
     }
-  }
-
-  unity::ApplicationList GetRunningApplications()
-  {
-      return unity::ApplicationList();
-  }
-
-  unity::ApplicationPtr GetApplicationForWindow(Window xid)
-  {
-    return unity::ApplicationPtr();
   }
 
 private:

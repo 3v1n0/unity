@@ -26,7 +26,7 @@ namespace unity
 // class, and uses link time to make sure there is a function available.
 std::shared_ptr<ApplicationManager> create_application_manager()
 {
-  return std::shared_ptr<ApplicationManager>(new testmocks::MockApplicationManager());
+  return std::make_shared<testmocks::MockApplicationManager::Nice>();
 }
 
 }

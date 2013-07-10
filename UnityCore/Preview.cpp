@@ -103,7 +103,6 @@ class Preview::Impl
 {
 public:
   Impl(Preview* owner, glib::Object<GObject> const& proto_obj);
-  ~Impl();
 
   void SetupGetters();
   std::string get_renderer_name() const { return renderer_name_; };
@@ -135,13 +134,11 @@ public:
   InfoHintPtrList info_hint_list_;
 
   Scope* parent_scope_;
-  glib::Object<GCancellable> cancel_scope_;
 };
 
 Preview::Impl::Impl(Preview* owner, glib::Object<GObject> const& proto_obj)
   : owner_(owner)
   , parent_scope_(nullptr)
-  , cancel_scope_(g_cancellable_new())
 {
   if (!proto_obj)
   {
@@ -193,11 +190,6 @@ Preview::Impl::Impl(Preview* owner, glib::Object<GObject> const& proto_obj)
   }
 
   SetupGetters();
-}
-
-Preview::Impl::~Impl()
-{
-  g_cancellable_cancel(cancel_scope_);
 }
 
 void Preview::Impl::SetupGetters()
