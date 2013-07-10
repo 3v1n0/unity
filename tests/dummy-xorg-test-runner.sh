@@ -50,7 +50,8 @@ Section "Screen"
 EndSection
 END_OF_CONFIG
 
-export DISPLAY=:`for id in $(seq 100 150); do test -e /tmp/.X$id-lock || { echo $id; exit 0; }; done; exit 1`
+dpy=$((RANDOM+1))
+export DISPLAY=:`for id in $(seq $dpy $((dpy+50))); do test -e /tmp/.X$id-lock || { echo $id; exit 0; }; done; exit 1`
 Xorg $DISPLAY -config $conffile -logfile $logfile &> /dev/null &
 x_pid=$!
 
