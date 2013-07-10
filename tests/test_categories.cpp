@@ -25,9 +25,30 @@ TEST(TestCategories, TestConstruction)
 {
   Categories model;
   model.swarm_name = swarm_name;
-  EXPECT_EQ(model.row_added.size(), 1);
-  EXPECT_EQ(model.row_changed.size(), 1);
-  EXPECT_EQ(model.row_removed.size(), 1);
+}
+
+TEST(TestCategories, TestSignalProxies)
+{
+  Categories model;
+  Category cat(nullptr, nullptr, nullptr);
+
+  bool added = false;
+  ASSERT_EQ(model.row_added.size(), 1);
+  model.category_added.connect([&added] (Category const&) { added = true; });
+  model.row_added.emit(cat);
+  EXPECT_TRUE(added);
+
+  bool changed = false;
+  ASSERT_EQ(model.row_changed.size(), 1);
+  model.category_changed.connect([&changed] (Category const&) { changed = true; });
+  model.row_changed.emit(cat);
+  EXPECT_TRUE(changed);
+
+  bool removed = false;
+  ASSERT_EQ(model.row_removed.size(), 1);
+  model.category_removed.connect([&removed] (Category const&) { removed = true; });
+  model.row_removed.emit(cat);
+  EXPECT_TRUE(removed);
 }
 
 TEST(TestCategories, TestSynchronization)
