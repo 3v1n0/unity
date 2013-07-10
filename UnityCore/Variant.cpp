@@ -275,8 +275,8 @@ void Variant::swap(Variant& other)
 
 Variant& Variant::operator=(GVariant* val)
 {
-  if (variant_) g_variant_unref(variant_);
-  variant_ = val ? g_variant_ref_sink(val) : val;
+  Variant copy(val);
+  swap(copy);
 
   return *this;
 }
