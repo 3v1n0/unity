@@ -61,6 +61,10 @@ done
 
 if [ $(($(date +%s) - start_time)) -gt $MAX_WAIT ]; then
   echo "The X server was not able to run in time"
+  if [ -f $logfile ]; then
+    echo "Xorg Log:"
+    cat $logfile
+  fi
   ret_val=1
 else
   shift
