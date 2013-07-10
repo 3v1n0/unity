@@ -15,11 +15,12 @@
 #
 # Authored by: Marco Trevisan <marco.trevisan@canonical.com>
 
+MAX_WAIT=5
+
 binary=$(which $1)
 if [ -z "$binary" ]; then echo "Empty command submitted"; exit 1; fi
 if [ ! -x "$binary" ]; then echo "The provided $binary is not executable"; exit 1; fi
 
-shift
 logfile=$(mktemp -t dummy.Xorg.log.XXXXXXXX)
 conffile=$(mktemp -t dummy.Xorg.conf.XXXXXXXX)
 
@@ -44,8 +45,13 @@ END_OF_CONFIG
 export DISPLAY=:`for id in $(seq 100 150); do test -e /tmp/.X$id-lock || { echo $id; exit 0; }; done; exit 1`
 Xorg $DISPLAY -config $conffile -logfile $logfile &> /dev/null &
 x_pid=$!
-sleep 1
 
+start_time=$(date +%s)
+while [ ! -e /tmp/.X${DISPLAY:1}-lock ] && [ $(($(date +%s) - start_time)) -lt $MAX_WAIT ]; do
+  sleep 0.1
+done
+
+shift
 $binary $@
 ret_val=$?
 
