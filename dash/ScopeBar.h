@@ -69,9 +69,12 @@ public:
 private:
   void SetupBackground();
   void SetupLayout();
+  void DoOpenLegalise();
 
   void Draw(nux::GraphicsEngine& gfx_context, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_context, bool force_draw);
+
+  nux::Area* FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type);
 
   void SetActive(ScopeBarIcon* icon);
 
@@ -83,8 +86,17 @@ private:
 
   ScopeIcons icons_;
 
+  UBusManager ubus_;
+
+  nux::LayeredLayout* layered_layout_;
+  nux::HLayout *legal_layout_;
+  unity::StaticCairoText *legal_;
   nux::HLayout* layout_;
   LayerPtr bg_layer_;
+  IconTexture* info_icon_;
+
+  bool info_previously_shown_;
+  std::string legal_seen_file_path_;
 
   friend class TestScopeBar;
 };

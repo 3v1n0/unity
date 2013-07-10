@@ -46,7 +46,12 @@ NUX_IMPLEMENT_OBJECT_TYPE(ScopeBar);
 
 ScopeBar::ScopeBar()
   : nux::View(NUX_TRACKER_LOCATION)
+  , info_previously_shown_(false)
 {
+  glib::String cachedir(g_strdup(g_get_user_cache_dir())); 
+  legal_seen_file_path_ = cachedir.Str() + "/unitydashlegalseen";
+  info_previously_shown_ = (g_file_test(legal_seen_file_path_.c_str(), G_FILE_TEST_EXISTS)) ? true : false;
+
   SetupBackground();
   SetupLayout();
 }
@@ -62,12 +67,69 @@ void ScopeBar::SetupBackground()
 
 void ScopeBar::SetupLayout()
 {
+  legal_layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
+  std::string legal_text("<span underline='single'>");
+  legal_text.append(g_dgettext("credentials-control-center", "Legal notice"));
+  legal_text.append("</span>");
+  legal_ = new StaticCairoText(legal_text);
+  legal_->SetFont("Ubuntu 14px");
+  legal_layout_->AddSpace(1, 1);
+  legal_layout_->SetLeftAndRightPadding(0, 10);
+  info_icon_ = new IconTexture(Style::Instance().GetInformationTexture(), 22, 22); 
+  legal_layout_->AddView(info_icon_, 0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+  legal_layout_->AddView(legal_,  0, nux::MINOR_POSITION_CENTER, nux::MINOR_SIZE_MATCHCONTENT);
+  
+  info_icon_->SetVisible(info_previously_shown_);
+  legal_->SetVisible(!info_previously_shown_);
+  
+  info_icon_->mouse_click.connect([&] (int a, int b, unsigned long c, unsigned long d) 
+  {
+    DoOpenLegalise();
+  });
+
+  legal_->mouse_click.connect([&] (int a, int b, unsigned long c, unsigned long d) 
+  {
+    info_previously_shown_ = true;
+
+    info_icon_->SetVisible(info_previously_shown_);
+    legal_->SetVisible(!info_previously_shown_);
+
+    DoOpenLegalise();
+    QueueRelayout();
+    QueueDraw();
+  });
+
+
   layout_ = new nux::HLayout(NUX_TRACKER_LOCATION);
   layout_->SetContentDistribution(nux::MAJOR_POSITION_CENTER);
-  SetLayout(layout_);
+  
+  layered_layout_ = new nux::LayeredLayout();
+  layered_layout_->AddLayer(layout_);
+  layered_layout_->AddLayout(legal_layout_);
+  layered_layout_->SetPaintAll(true);
+  layered_layout_->SetInputMode(nux::LayeredLayout::InputMode::INPUT_MODE_COMPOSITE);
 
+  SetLayout(layered_layout_);
+  
   SetMinimumHeight(SCOPEBAR_HEIGHT);
   SetMaximumHeight(SCOPEBAR_HEIGHT);
+}
+
+void ScopeBar::DoOpenLegalise()
+{
+  glib::Error error;
+  std::string legal_file_path = "file://";
+  legal_file_path.append(PKGDATADIR);
+  legal_file_path.append("/searchingthedashlegalnotice.html");
+  g_app_info_launch_default_for_uri(legal_file_path.c_str(), NULL, &error);
+  if (error)
+  {
+    LOG_ERROR(logger) << "Could not open legal uri: " << error.Message();
+  }
+
+  g_creat(legal_seen_file_path_.c_str(), S_IRWXU);
+
+  ubus_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
 }
 
 void ScopeBar::AddScope(Scope::Ptr const& scope)
@@ -124,12 +186,9 @@ void ScopeBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
   if (!IsFullRedraw())
   {
     if (RedirectedAncestor())
-    {
-      for (auto icon: icons_)
-      {
-        if (icon->IsVisible() && icon->IsRedrawNeeded())
-          graphics::ClearGeometry(icon->GetGeometry());
-      }
+    { 
+      // Whole Scope bar needs to be cleared because the PaintAll forces redraw.
+      graphics::ClearGeometry(base);
     }
 
     if (bg_layer_)
@@ -140,14 +199,14 @@ void ScopeBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
   }
   else
   {
-    nux::GetPainter().PushPaintLayerStack();
+    nux::GetPainter().PushPaintLayerStack();    
   }
 
-  GetLayout()->ProcessDraw(graphics_engine, force_draw);
+  GetLayout()->ProcessDraw(graphics_engine, true);
 
   if (IsFullRedraw())
   {
-    nux::GetPainter().PopPaintLayerStack();
+    nux::GetPainter().PopPaintLayerStack();      
   }
   else if (pushed_paint_layers > 0)
   {
@@ -176,6 +235,27 @@ void ScopeBar::DrawContent(nux::GraphicsEngine& graphics_engine, bool force_draw
   }
 
   graphics_engine.PopClippingRectangle();
+}
+
+nux::Area* ScopeBar::FindAreaUnderMouse(const nux::Point& mouse_position, nux::NuxEventType event_type)
+{
+  //LayeredLayout is acting a little screwy, events are not passing past the first layout like instructed,
+  //so we manually override if the cursor is on the right hand side of the scopebar 
+  auto geo = GetAbsoluteGeometry();
+  int info_width = (info_previously_shown_) ? info_icon_->GetGeometry().width : legal_->GetGeometry().width;
+  
+  if (mouse_position.x - geo.x < geo.width - info_width - 10)
+  {
+    return nux::View::FindAreaUnderMouse(mouse_position, event_type);
+  }
+  else
+  {
+    if (info_previously_shown_)
+      return dynamic_cast<nux::Area*>(info_icon_);
+    else
+      return dynamic_cast<nux::Area*>(legal_);
+  }
+  
 }
 
 void ScopeBar::SetActive(ScopeBarIcon* activated)
