@@ -132,9 +132,7 @@ if (GTEST_SRC_DIR AND
       )
 
   add_executable(test-gtest-slow ${GTEST_SLOW_SOURCES})
-
   target_link_libraries(test-gtest-slow ${GTEST_SLOW_LIBS})
-
   add_test(UnityGTestSlow test-gtest-slow)
 
 # The actual test executable (xless) - do not put anything that requires X in here
@@ -207,9 +205,7 @@ if (GTEST_SRC_DIR AND
   endif ()
 
   add_executable(test-gtest-xless ${GTEST_XLESS_SOURCES})
-
   target_link_libraries(test-gtest-xless ${GTEST_XLESS_LIBS})
-
   add_test(UnityGTestXless test-gtest-xless)
 
 # tests that require dbus, must not require X
