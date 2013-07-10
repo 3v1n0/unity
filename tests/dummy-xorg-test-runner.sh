@@ -55,11 +55,9 @@ function do_cleanup()
   if [ -n "$x_pid" ] && (kill -0 $x_pid &> /dev/null); then kill $x_pid; fi
   rm $conffile
   rm $logfile*
-
-  exit $ret_val
 }
 
-trap "do_cleanup" SIGHUP SIGINT SIGSEGV SIGTERM
+trap "do_cleanup; exit 1" SIGHUP SIGINT SIGSEGV SIGTERM
 
 dpy=$((RANDOM+1))
 export DISPLAY=:`for id in $(seq $dpy $((dpy+50))); do test -e /tmp/.X$id-lock || { echo $id; exit 0; }; done; exit 1`
@@ -77,8 +75,8 @@ if [ $(($(date +%s) - start_time)) -gt $MAX_WAIT ]; then
     echo "Xorg Log:"
     cat $logfile
   fi
-  ret_val=1
   do_cleanup
+  exit 1
 fi
 
 shift
@@ -86,3 +84,4 @@ $binary $@
 ret_val=$?
 
 do_cleanup
+exit $ret_val
