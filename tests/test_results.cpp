@@ -21,27 +21,31 @@ static void WaitForSynchronize(Results& model)
   Utils::WaitUntil([&model] { return model.count == n_rows; });
 }
 
-TEST(TestResults, TestConstruction)
+struct TestResults : testing::Test
 {
+  TestResults()
+  {
+    model.swarm_name = swarm_name;
+  }
+
   Results model;
-  model.swarm_name = swarm_name;
+};
+
+TEST_F(TestResults, TestConstruction)
+{
+  EXPECT_EQ(model.swarm_name(), swarm_name);
 }
 
-TEST(TestResults, TestSynchronization)
+TEST_F(TestResults, TestSynchronization)
 {
-  Results model;
-  model.swarm_name = swarm_name;
-
   WaitForSynchronize(model);
   EXPECT_EQ(model.count, n_rows);
 }
 
-TEST(TestResults, TestFilterValid)
+TEST_F(TestResults, TestFilterValid)
 {
-  Results model;
   DeeFilter filter;
 
-  model.swarm_name = swarm_name;
   WaitForSynchronize(model);
 
   dee_filter_new_for_any_column(2, g_variant_new_uint32(1), &filter);
@@ -57,13 +61,10 @@ TEST(TestResults, TestFilterValid)
   EXPECT_EQ(i, 50);
 }
 
-TEST(TestResults, TestRowsValid)
+TEST_F(TestResults, TestRowsValid)
 {
-  Results model;
-  model.swarm_name = swarm_name;
-
   WaitForSynchronize(model);
- 
+
   ResultIterator iter(model.model);
   unsigned int i = 0;
   for (Result result : model)
@@ -141,11 +142,8 @@ TEST(TestResults, TestRowsValid)
 }
 
 // We're testing the model's ability to store and retrieve random pointers
-TEST(TestResults, TestSetGetRenderer)
+TEST_F(TestResults, TestSetGetRenderer)
 {
-  Results model;
-  model.swarm_name = swarm_name;
-
   WaitForSynchronize(model);
 
   for (unsigned int i = 0; i < n_rows; i++)
@@ -168,11 +166,8 @@ TEST(TestResults, TestSetGetRenderer)
 }
 
 // We're testing the model's ability to store and retrieve random pointers
-TEST(TestResults, TestResultEqual)
+TEST_F(TestResults, TestResultEqual)
 {
-  Results model;
-  model.swarm_name = swarm_name;
-
   WaitForSynchronize(model);
 
   Result result_1(*model.begin());
@@ -190,11 +185,8 @@ TEST(TestResults, TestResultEqual)
 }
 
 // We're testing the model's ability to store and retrieve random pointers
-TEST(TestResults, LocalResult_Construct)
+TEST_F(TestResults, LocalResult_Construct)
 {
-  Results model;
-  model.swarm_name = swarm_name;
-
   WaitForSynchronize(model);
 
   ResultIterator iter(model.model);
@@ -225,11 +217,8 @@ TEST(TestResults, LocalResult_Construct)
 
 
 // We're testing the model's ability to store and retrieve random pointers
-TEST(TestResults, LocalResult_OperatorEqual)
+TEST_F(TestResults, LocalResult_OperatorEqual)
 {
-  Results model;
-  model.swarm_name = swarm_name;
-
   WaitForSynchronize(model);
 
   ResultIterator iter(model.model);
@@ -245,7 +234,7 @@ TEST(TestResults, LocalResult_OperatorEqual)
 
 
 // We're testing the model's ability to store and retrieve random pointers
-TEST(TestResults, LocalResult_FromToVariant)
+TEST_F(TestResults, LocalResult_FromToVariant)
 {
   LocalResult local_result_1;
   local_result_1.uri = "uri";
@@ -290,7 +279,7 @@ TEST(TestResults, LocalResult_FromToVariant)
 
 
 // We're testing the model's ability to store and retrieve random pointers
-TEST(TestResults, LocalResult_Variants)
+TEST_F(TestResults, LocalResult_Variants)
 {
   LocalResult local_result;
   EXPECT_EQ(local_result.Variants().size(), 9);
