@@ -32,23 +32,23 @@ fi
 logfile=$(mktemp -t dummy.Xorg.log.XXXXXXXX)
 conffile=$(mktemp -t dummy.Xorg.conf.XXXXXXXX)
 
-cat << 'END_OF_CONFIG' > $conffile
+cat << 'END_DUMMY_XORG_CONF' > $conffile
 Section "Monitor"
-        Identifier "Dummy Monitor"
+  Identifier "Dummy Monitor"
 EndSection
 
 Section "Device"
-        Identifier "Dummy Card"
-        Driver "dummy"
+  Identifier "Dummy Card"
+  Driver "dummy"
 EndSection
 
 Section "Screen"
-        DefaultDepth 24
-        Identifier "Dummy Screen"
-        Device "Dummy Card"
-        Monitor "Dummy Monitor"
+  DefaultDepth 24
+  Identifier "Dummy Screen"
+  Device "Dummy Card"
+  Monitor "Dummy Monitor"
 EndSection
-END_OF_CONFIG
+END_DUMMY_XORG_CONF
 
 function do_cleanup()
 {
