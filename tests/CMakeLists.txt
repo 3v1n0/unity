@@ -367,35 +367,35 @@ set (TEST_RESULT_DIR ${CMAKE_BINARY_DIR}/tests)
 set (TEST_RESULT_XML ${TEST_RESULT_DIR}/test-results.xml)
 set (TEST_RESULT_HTML ${TEST_RESULT_DIR}/test-results.html)
 if (ENABLE_X_SUPPORT)
-  set (GTEST_TEST_COMMAND ./test-gtest)
-  set (GTEST_TEST_COMMAND_GESTURES ./test-gestures/test-gestures)
+  set (GTEST_TEST_COMMAND ./test-gtest --gtest_output=xml:./test-gtest.xml)
+  set (GTEST_TEST_COMMAND_GESTURES ./test-gestures/test-gestures --gtest_output=xml:./test-gestures.xml)
 endif (ENABLE_X_SUPPORT)
-set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless)
-set (GTEST_TEST_COMMAND_SLOW ./test-gtest-slow)
-set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --task ./test-gtest-service --task ./test-gtest-dbus)
+set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless --gtest_output=xml:./test-gtest-xless.xml)
+set (GTEST_TEST_COMMAND_SLOW ./test-gtest-slow --gtest_output=xml:./test-gtest-slow.xml)
+set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --task ./test-gtest-service --task ./test-gtest-dbus --gtest_output=xml:./test-gtest-dbus.xml)
 
 set (TEST_COMMAND
      gtester --verbose -k -o=${TEST_RESULT_XML} ./test-unit
-  && ${GTEST_TEST_COMMAND} --gtest_output=xml:./
-  && ${GTEST_TEST_COMMAND_XLESS} --gtest_output=xml:./
-  && ${GTEST_TEST_COMMAND_GESTURES} --gtest_output=xml:./
-  && ${GTEST_TEST_COMMAND_DBUS} --gtest_output=xml:./
-  && ${GTEST_TEST_COMMAND_SLOW} --gtest_output=xml:./
+  && ${GTEST_TEST_COMMAND}
+  && ${GTEST_TEST_COMMAND_XLESS}
+  && ${GTEST_TEST_COMMAND_GESTURES}
+  && ${GTEST_TEST_COMMAND_DBUS}
+  && ${GTEST_TEST_COMMAND_SLOW}
     )
 
 set (TEST_COMMAND_XLESS
-     ${GTEST_TEST_COMMAND_XLESS} --gtest_output=xml:./
-  && ${GTEST_TEST_COMMAND_GESTURES} --gtest_output=xml:./
-  #&& ${GTEST_TEST_COMMAND_DBUS} --gtest_output=xml:./
+     ${GTEST_TEST_COMMAND_XLESS}
+  && ${GTEST_TEST_COMMAND_GESTURES}
+  #&& ${GTEST_TEST_COMMAND_DBUS}
   && echo "Warning, DBus test cases are disabled!!")
 
 set (DUMMY_XORG_TEST_RUNNER ${CMAKE_CURRENT_SOURCE_DIR}/dummy-xorg-test-runner.sh)
 
 set (TEST_COMMAND_HEADLESS
-  export NUX_FALLBACK_TEXTURE=TRUE
-  && ${DUMMY_XORG_TEST_RUNNER} ${GTEST_TEST_COMMAND} --gtest_output=xml:./
-  && ${DUMMY_XORG_TEST_RUNNER} ${GTEST_TEST_COMMAND_SLOW} --gtest_output=xml:./
-  && ${TEST_COMMAND_XLESS} --gtest_output=xml:./)
+     export NUX_FALLBACK_TEXTURE=TRUE
+  && ${DUMMY_XORG_TEST_RUNNER} ${GTEST_TEST_COMMAND}
+  && ${DUMMY_XORG_TEST_RUNNER} ${GTEST_TEST_COMMAND_SLOW}
+  && ${TEST_COMMAND_XLESS})
 
 if (GTEST_SRC_DIR)
   if (ENABLE_X_SUPPORT)
