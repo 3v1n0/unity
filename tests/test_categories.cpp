@@ -27,7 +27,7 @@ TEST(TestCategories, TestConstruction)
   model.swarm_name = swarm_name;
 }
 
-TEST(TestCategories, TestSignalProxies)
+TEST(TestCategories, TestSignalProxyAdded)
 {
   Categories model;
   Category cat(nullptr, nullptr, nullptr);
@@ -37,12 +37,24 @@ TEST(TestCategories, TestSignalProxies)
   model.category_added.connect([&added] (Category const&) { added = true; });
   model.row_added.emit(cat);
   EXPECT_TRUE(added);
+}
+
+TEST(TestCategories, TestSignalProxyChanged)
+{
+  Categories model;
+  Category cat(nullptr, nullptr, nullptr);
 
   bool changed = false;
   ASSERT_EQ(model.row_changed.size(), 1);
   model.category_changed.connect([&changed] (Category const&) { changed = true; });
   model.row_changed.emit(cat);
   EXPECT_TRUE(changed);
+}
+
+TEST(TestCategories, TestSignalProxyRemoved)
+{
+  Categories model;
+  Category cat(nullptr, nullptr, nullptr);
 
   bool removed = false;
   ASSERT_EQ(model.row_removed.size(), 1);
