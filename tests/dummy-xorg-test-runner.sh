@@ -15,7 +15,7 @@
 #
 # Authored by: Marco Trevisan <marco.trevisan@canonical.com>
 
-MAX_WAIT=5
+MAX_WAIT=10
 
 binary=$(which $1)
 
@@ -55,13 +55,18 @@ Xorg $DISPLAY -config $conffile -logfile $logfile &> /dev/null &
 x_pid=$!
 
 start_time=$(date +%s)
-while [ ! -e /tmp/.X${DISPLAY:1}-lock ] && [ $(($(date +%s) - start_time)) -lt $MAX_WAIT ]; do
+while [ ! -e /tmp/.X${DISPLAY:1}-lock ] && [ $(($(date +%s) - start_time)) -le $MAX_WAIT ]; do
   sleep 0.1
 done
 
-shift
-$binary $@
-ret_val=$?
+if [ $(($(date +%s) - start_time)) -gt $MAX_WAIT ]; then
+  echo "The X server was not able to run in time"
+  ret_val=1
+else
+  shift
+  $binary $@
+  ret_val=$?
+fi
 
 if (kill -0 $x_pid &> /dev/null); then kill $x_pid; fi
 rm $conffile
