@@ -936,13 +936,11 @@ bool PluginAdapter::InShowDesktop() const
 
 void PluginAdapter::OnShowDesktop()
 {
-  LOG_DEBUG(logger) << "Now in show desktop mode.";
   _in_show_desktop = true;
 }
 
 void PluginAdapter::OnLeaveDesktop()
 {
-  LOG_DEBUG(logger) << "No longer in show desktop mode.";
   _in_show_desktop = false;
 }
 
