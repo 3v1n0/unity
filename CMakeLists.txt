@@ -124,7 +124,7 @@ add_custom_target (distcheck
        && cmake -DCMAKE_INSTALL_PREFIX=../install -DGSETTINGS_LOCALINSTALL=ON .. -DCMAKE_MODULE_PATH=/usr/share/cmake
        && make -j4
        && make -j4 install
-       && make check
+       && make check-headless
   )
 add_dependencies(distcheck dist)
 
