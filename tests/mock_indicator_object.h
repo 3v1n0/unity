@@ -73,6 +73,7 @@ mock_indicator_object_dispose(GObject* object)
 {
   MockIndicatorObject* self = MOCK_INDICATOR_OBJECT(object);
   g_list_free_full(self->entries, g_free);
+  self->entries = NULL;
   G_OBJECT_CLASS(mock_indicator_object_parent_class)->dispose(object);
 }
 
