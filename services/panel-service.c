@@ -714,7 +714,7 @@ initial_load_default_or_custom_indicators (PanelService *self, GList *indicators
           IndicatorObject *object = l->data;
 
           if (INDICATOR_IS_OBJECT (object))
-            load_indicator (self, object, NULL);
+            panel_service_add_indicator (self, object);
         }
     }
 
@@ -792,6 +792,7 @@ panel_service_add_indicator (PanelService *self, IndicatorObject *indicator)
   g_return_if_fail (PANEL_IS_SERVICE (self));
   g_return_if_fail (INDICATOR_IS_OBJECT (indicator));
 
+  g_object_ref (indicator);
   load_indicator (self, indicator, NULL);
 }
 
