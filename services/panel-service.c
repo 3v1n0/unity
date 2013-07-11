@@ -496,21 +496,21 @@ ready_signal (PanelService *self)
         NULL,
       };
 
-      g_spawn_async(NULL, /* Working Directory */
-                    argv,
-                    NULL, /* environment */
-                    G_SPAWN_SEARCH_PATH,
-                    NULL, NULL, /* child setup function */
-                    NULL, /* Pid */
-                    &error);
+      g_spawn_async (NULL, /* Working Directory */
+                     argv,
+                     NULL, /* environment */
+                     G_SPAWN_SEARCH_PATH,
+                     NULL, NULL, /* child setup function */
+                     NULL, /* Pid */
+                     &error);
 
-      if (error != NULL)
-	    {
+      if (error)
+	      {
           /* NOTE: When we get to the point where we can start
              assuming upstart user sessions this can be escillated
              to a warning or higher */
-          g_debug("Unable to signal indicators-loaded to upstart: %s", error->message);
-          g_error_free(error);
+          g_debug ("Unable to signal indicators-loaded to upstart: %s", error->message);
+          g_error_free (error);
         }
 
       self->priv->ready_signal_id = 0;
@@ -603,20 +603,11 @@ panel_service_init (PanelService *self)
                                                     g_free,
                                                     (GDestroyNotify) g_hash_table_destroy);
 
-  suppress_signals = TRUE;
-  load_indicators (self);
-  load_indicators_from_indicator_files (self);
-  sort_indicators (self);
-  suppress_signals = FALSE;
-
   priv->gsettings = g_settings_new_with_path (COMPIZ_OPTION_SCHEMA, COMPIZ_OPTION_PATH);
   g_signal_connect (priv->gsettings, "changed::"MENU_TOGGLE_KEYBINDING_KEY,
                     G_CALLBACK(on_keybinding_changed), self);
 
   panel_service_update_menu_keybinding (self);
-
-  priv->initial_sync_id = g_idle_add ((GSourceFunc)initial_resync, self);
-  priv->ready_signal_id = g_idle_add ((GSourceFunc)ready_signal, self);
 }
 
 static gboolean
@@ -689,30 +680,78 @@ panel_service_indicator_remove_timeout (IndicatorObject *indicator)
   return FALSE;
 }
 
+static PanelService *
+get_or_init_static_service (gboolean* is_new)
+{
+  if (is_new) *is_new = FALSE;
+
+  if (!PANEL_IS_SERVICE (static_service))
+    {
+      static_service = g_object_new (PANEL_TYPE_SERVICE, NULL);
+      if (is_new) *is_new = TRUE;
+    }
+
+  return static_service;
+}
+
+static void
+initial_load_default_or_custom_indicators (PanelService *self, GList *indicators)
+{
+  GList *l;
+
+  suppress_signals = TRUE;
+
+  if (!indicators)
+    {
+      load_indicators (self);
+      load_indicators_from_indicator_files (self);
+      sort_indicators (self);
+    }
+  else
+    {
+      for (l = indicators; l; l = l->next)
+        {
+          IndicatorObject *object = l->data;
+
+          if (INDICATOR_IS_OBJECT (object))
+            load_indicator (self, object, NULL);
+        }
+    }
+
+  suppress_signals = FALSE;
+
+  self->priv->initial_sync_id = g_idle_add ((GSourceFunc)initial_resync, self);
+  self->priv->ready_signal_id = g_idle_add ((GSourceFunc)ready_signal, self);
+}
+
 PanelService *
 panel_service_get_default ()
 {
-  if (static_service == NULL || !PANEL_IS_SERVICE (static_service))
-    static_service = g_object_new (PANEL_TYPE_SERVICE, NULL);
+  gboolean is_new;
+  PanelService *self = get_or_init_static_service (&is_new);
 
-  return static_service;
+  if (is_new)
+    {
+      initial_load_default_or_custom_indicators (self, NULL);
+    }
+
+  return self;
 }
 
 PanelService *
 panel_service_get_default_with_indicators (GList *indicators)
 {
-  PanelService *service = panel_service_get_default ();
-  GList        *i;
+  gboolean is_new;
+  PanelService *self = get_or_init_static_service (&is_new);
 
-  for (i = indicators; i; i = i->next)
+  if (is_new && indicators)
     {
-      IndicatorObject *object = i->data;
-      if (INDICATOR_IS_OBJECT (object))
-          load_indicator (service, object, NULL);
+      initial_load_default_or_custom_indicators (self, indicators);
     }
 
-  return service;
+  return self;
 }
+
 guint
 panel_service_get_n_indicators (PanelService *self)
 {
