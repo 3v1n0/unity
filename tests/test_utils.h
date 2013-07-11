@@ -56,7 +56,7 @@ public:
 
   static guint32 ScheduleTimeout(bool* timeout_reached, unsigned timeout_duration = 10)
   {
-    return g_timeout_add(timeout_duration, TimeoutCallback, timeout_reached);
+    return g_timeout_add_full(G_PRIORITY_DEFAULT+10, timeout_duration, TimeoutCallback, timeout_reached, nullptr);
   }
 
   static void WaitForTimeout(unsigned timeout_duration = 1)
