@@ -19,6 +19,7 @@
 
 #include <gmock/gmock.h>
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/Variant.h>
 #include "panel-service.h"
 #include "mock_indicator_object.h"
 
@@ -68,6 +69,15 @@ TEST_F(TestPanelService, IndicatorLoading)
   ASSERT_EQ(1, panel_service_get_n_indicators(service));
 
   EXPECT_EQ(object, panel_service_get_indicator_nth(service, 0));
+}
+
+TEST_F(TestPanelService, EmptyIndicatorObject)
+{
+  glib::Object<IndicatorObject> object(mock_indicator_object_new());
+  panel_service_add_indicator(service, object);
+
+  glib::Variant result(panel_service_sync(service));
+  EXPECT_TRUE(result);
 }
 
 } // anonymous namespace
