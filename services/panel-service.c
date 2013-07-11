@@ -629,11 +629,22 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
 
   GList *entries, *l;
   gpointer timeout;
+  gint position;
 
   g_signal_handlers_disconnect_by_data (indicator, self);
 
+  position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (indicator), "position"));
+  if (position > 0)
+    {
+      g_source_remove (self->priv->timeouts[position]);
+      self->priv->timeouts[position] = SYNC_NEUTRAL;
+    }
+
   timeout = g_object_get_data (G_OBJECT (indicator), "remove-timeout");
-  if (timeout) g_source_remove (GPOINTER_TO_UINT (timeout));
+  if (timeout)
+    {
+      g_source_remove (GPOINTER_TO_UINT (timeout));
+    }
 
   entries = indicator_object_get_entries (indicator);
 
@@ -647,6 +658,17 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
           gpointer key, value;
 
           entry = l->data;
+
+          if (entry->label)
+            {
+              g_signal_handlers_disconnect_by_data (entry->label, indicator);
+            }
+
+          if (entry->image)
+            {
+              g_signal_handlers_disconnect_by_data (entry->image, indicator);
+            }
+
           entry_id = get_indicator_entry_id_by_entry (entry);
           g_hash_table_remove (self->priv->id2entry_hash, entry_id);
           g_free (entry_id);
@@ -1395,20 +1417,25 @@ GVariant *
 panel_service_sync (PanelService *self)
 {
   GVariantBuilder b;
+  IndicatorObject *indicator;
   GSList *i;
+  gint position;
 
   g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssssbbusbbi))"));
   g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssssbbusbbi)"));
 
-  for (i = self->priv->indicators; i; i = i->next)
+  for (i = self->priv->indicators; i;)
     {
-      const gchar *indicator_id = g_object_get_data (G_OBJECT (i->data), "id");
-      gint position;
+      /* An indicator could be removed during this cycle, so we should be safe */
+      indicator = i->data;
+      i = i->next;
+
+      const gchar *indicator_id = g_object_get_data (G_OBJECT (indicator), "id");
+      position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (indicator), "position"));
+      indicator_object_to_variant (indicator, indicator_id, &b);
 
       /* Set the sync back to neutral */
-      position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (i->data), "position"));
       self->priv->timeouts[position] = SYNC_NEUTRAL;
-      indicator_object_to_variant (i->data, indicator_id, &b);
     }
 
   g_variant_builder_close (&b);
@@ -1429,12 +1456,11 @@ panel_service_sync_one (PanelService *self, const gchar *indicator_id)
       if (g_strcmp0 (indicator_id,
                      g_object_get_data (G_OBJECT (i->data), "id")) == 0)
         {
-          gint position;
+          gint position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (i->data), "position"));
+          indicator_object_to_variant (i->data, indicator_id, &b);
 
           /* Set the sync back to neutral */
-          position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (i->data), "position"));
           self->priv->timeouts[position] = SYNC_NEUTRAL;
-          indicator_object_to_variant (i->data, indicator_id, &b);
 
           break;
         }
