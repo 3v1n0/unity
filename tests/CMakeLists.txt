@@ -267,6 +267,7 @@ if (ENABLE_X_SUPPORT)
                  test_launcher_tooltip.cpp
                  test_panel_indicators_view.cpp
                  test_panel_menu_view.cpp
+                 test_panel_service.cpp
                  test_panel_style.cpp
                  test_panel_tray.cpp
                  test_panel_view.cpp
@@ -317,6 +318,7 @@ if (ENABLE_X_SUPPORT)
                  test_xdnd_start_stop_notifier_imp.cpp
                  ${UNITY_SRC}/UnityShowdesktopHandler.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unityshell/src/WindowMinimizeSpeedController.cpp
+                 ${CMAKE_SOURCE_DIR}/services/panel-service.c
                 )
 
   # Build plain C files separately so they don't try to include the
