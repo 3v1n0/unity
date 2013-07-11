@@ -824,24 +824,37 @@ panel_service_add_indicator (PanelService *self, IndicatorObject *indicator)
   load_indicator (self, indicator, NULL);
 }
 
+static void
+panel_service_prepare_indicator_removal (PanelService *self,
+                                         IndicatorObject *indicator,
+                                         gboolean notify)
+{
+  g_object_set_data (G_OBJECT (indicator), "remove", GINT_TO_POINTER (TRUE));
+  gpointer timeout = g_object_get_data (G_OBJECT (indicator), "remove-timeout");
+
+  if (timeout)
+    {
+      g_source_remove (GPOINTER_TO_UINT (timeout));
+    }
+
+  if (notify)
+    {
+      notify_object (indicator);
+    }
+
+  guint id = g_timeout_add_seconds (1,
+                                    (GSourceFunc) panel_service_indicator_remove_timeout,
+                                    indicator);
+  g_object_set_data (G_OBJECT (indicator), "remove-timeout", GUINT_TO_POINTER (id));
+}
+
 void
 panel_service_remove_indicator (PanelService *self, IndicatorObject *indicator)
 {
   g_return_if_fail (PANEL_IS_SERVICE (self));
   g_return_if_fail (INDICATOR_IS_OBJECT (indicator));
 
-  gpointer timeout = g_object_get_data (G_OBJECT (indicator), "remove-timeout");
-
-  if (timeout)
-    g_source_remove (GPOINTER_TO_UINT (timeout));
-
-  g_object_set_data (G_OBJECT (indicator), "remove", GINT_TO_POINTER (TRUE));
-  notify_object (indicator);
-
-  guint id = g_timeout_add_seconds (1,
-                                    (GSourceFunc) panel_service_indicator_remove_timeout,
-                                    indicator);
-  g_object_set_data (G_OBJECT (indicator), "remove-timeout", GUINT_TO_POINTER (id));
+  panel_service_prepare_indicator_removal (self, indicator, TRUE);
 }
 
 void
@@ -854,9 +867,10 @@ panel_service_clear_indicators (PanelService *self)
     {
       IndicatorObject *ind = l->data;
       l = l->next;
-      panel_service_remove_indicator (self, ind);
+      panel_service_prepare_indicator_removal (self, ind, FALSE);
     }
 
+  g_signal_emit (self, _service_signals[RE_SYNC], 0, "");
   g_idle_add ((GSourceFunc)panel_service_check_cleared, self);
 }
 
