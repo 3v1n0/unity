@@ -95,8 +95,7 @@ mock_indicator_object_get_location(IndicatorObject* io, IndicatorObjectEntry* en
 
 void
 mock_indicator_object_entry_activate(IndicatorObject* io, IndicatorObjectEntry* entry, guint timestamp)
-{
-}
+{}
 
 void
 mock_indicator_object_class_init(MockIndicatorObjectClass* klass)

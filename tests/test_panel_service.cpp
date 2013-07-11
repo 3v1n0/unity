@@ -278,6 +278,23 @@ TEST_F(TestPanelService, ManyEntriesIndicatorObjectRemoval)
   EXPECT_EQ(0, GetEntriesInResult(result));
 }
 
+TEST_F(TestPanelService, ManyEntriesIndicatorsObjectAddition)
+{
+  for (unsigned i = 0; i < 20; ++i)
+  {
+    glib::Object<IndicatorObject> object(mock_indicator_object_new());
+    auto mock_object = glib::object_cast<MockIndicatorObject>(object);
+    panel_service_add_indicator(service, object);
+
+    for (unsigned j = 0; j < 20; ++j)
+      mock_indicator_object_add_entry(mock_object, ("Entry"+std::to_string(j)).c_str(), "");
+  }
+
+  glib::Variant result(panel_service_sync(service));
+  EXPECT_EQ(20, GetIndicatorsInResult(result));
+  EXPECT_EQ(400, GetEntriesInResult(result));
+}
+
 TEST_F(TestPanelService, ActivateRequest)
 {
   glib::Object<IndicatorObject> object(mock_indicator_object_new());
