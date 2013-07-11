@@ -28,12 +28,102 @@ using namespace unity;
 
 namespace
 {
+const std::string SYNC_ENTRY_VARIANT_FORMAT = "(ssssbbusbbi)";
+const std::string SYNC_ENTRIES_VARIANT_FORMAT = "(a"+SYNC_ENTRY_VARIANT_FORMAT+")";
 
 struct TestPanelService : Test
 {
   TestPanelService()
     : service(panel_service_get_default_with_indicators(nullptr))
   {}
+
+  std::size_t GetIndicatorsInResult(glib::Variant const& result) const
+  {
+    EXPECT_TRUE(result);
+    if (!result)
+      return 0;
+
+    std::set<std::string> objects;
+    GVariantIter* iter;
+    gchar* indicator_id;
+    gchar* entry_id;
+    gchar* entry_name_hint;
+    gchar* label;
+    gboolean label_sensitive;
+    gboolean label_visible;
+    guint32 image_type;
+    gchar* image_data;
+    gboolean image_sensitive;
+    gboolean image_visible;
+    gboolean priority;
+
+    g_variant_get(result, SYNC_ENTRIES_VARIANT_FORMAT.c_str(), &iter);
+    while (g_variant_iter_loop(iter, SYNC_ENTRY_VARIANT_FORMAT.c_str(),
+                               &indicator_id,
+                               &entry_id,
+                               &entry_name_hint,
+                               &label,
+                               &label_sensitive,
+                               &label_visible,
+                               &image_type,
+                               &image_data,
+                               &image_sensitive,
+                               &image_visible,
+                               &priority))
+    {
+      auto const& id = glib::gchar_to_string(indicator_id);
+
+      if (!id.empty())
+        objects.insert(id);
+    }
+    g_variant_iter_free(iter);
+
+    return objects.size();
+  }
+
+  std::size_t GetEntriesInResult(glib::Variant const& result) const
+  {
+    EXPECT_TRUE(result);
+    if (!result)
+      return 0;
+
+    std::set<std::string> entries;
+    GVariantIter* iter;
+    gchar* indicator_id;
+    gchar* entry_id;
+    gchar* entry_name_hint;
+    gchar* label;
+    gboolean label_sensitive;
+    gboolean label_visible;
+    guint32 image_type;
+    gchar* image_data;
+    gboolean image_sensitive;
+    gboolean image_visible;
+    gboolean priority;
+
+    g_variant_get(result, SYNC_ENTRIES_VARIANT_FORMAT.c_str(), &iter);
+    while (g_variant_iter_loop(iter, SYNC_ENTRY_VARIANT_FORMAT.c_str(),
+                               &indicator_id,
+                               &entry_id,
+                               &entry_name_hint,
+                               &label,
+                               &label_sensitive,
+                               &label_visible,
+                               &image_type,
+                               &image_data,
+                               &image_sensitive,
+                               &image_visible,
+                               &priority))
+    {
+      auto const& entry = glib::gchar_to_string(entry_id);
+
+      if (!entry.empty())
+        entries.insert(entry);
+    }
+    g_variant_iter_free(iter);
+
+    return entries.size();
+  }
 
   glib::Object<PanelService> service;
 };
@@ -71,13 +161,74 @@ TEST_F(TestPanelService, IndicatorLoading)
   EXPECT_EQ(object, panel_service_get_indicator_nth(service, 0));
 }
 
+TEST_F(TestPanelService, ManyIndicatorsLoading)
+{
+  glib::Object<IndicatorObject> object;
+
+  for (unsigned i = 0; i < 20; ++i)
+  {
+    object = mock_indicator_object_new();
+    panel_service_add_indicator(service, object);
+
+    ASSERT_EQ(i+1, panel_service_get_n_indicators(service));
+    ASSERT_EQ(object, panel_service_get_indicator_nth(service, i));
+  }
+}
+
 TEST_F(TestPanelService, EmptyIndicatorObject)
 {
   glib::Object<IndicatorObject> object(mock_indicator_object_new());
   panel_service_add_indicator(service, object);
 
   glib::Variant result(panel_service_sync(service));
-  EXPECT_TRUE(result);
+  ASSERT_TRUE(result);
+
+  EXPECT_EQ(1, GetIndicatorsInResult(result));
+  EXPECT_EQ(0, GetEntriesInResult(result));
+}
+
+TEST_F(TestPanelService, ManyEmptyIndicatorObjects)
+{
+  glib::Object<IndicatorObject> object;
+
+  for (unsigned i = 0; i < 20; ++i)
+  {
+    object = mock_indicator_object_new();
+    panel_service_add_indicator(service, object);
+    glib::Variant result(panel_service_sync(service));
+    ASSERT_TRUE(result);
+
+    ASSERT_EQ(i+1, GetIndicatorsInResult(result));
+    ASSERT_EQ(0, GetEntriesInResult(result));
+  }
+}
+
+TEST_F(TestPanelService, EntryAddition)
+{
+  glib::Object<IndicatorObject> object(mock_indicator_object_new());
+  auto mock_object = glib::object_cast<MockIndicatorObject>(object);
+
+  mock_indicator_object_add_entry(mock_object, "Hello", "gtk-apply");
+  panel_service_add_indicator(service, object);
+
+  glib::Variant result(panel_service_sync(service));
+  EXPECT_EQ(1, GetIndicatorsInResult(result));
+  EXPECT_EQ(1, GetEntriesInResult(result));
+}
+
+TEST_F(TestPanelService, ManyEntriesAddition)
+{
+  glib::Object<IndicatorObject> object(mock_indicator_object_new());
+  auto mock_object = glib::object_cast<MockIndicatorObject>(object);
+  panel_service_add_indicator(service, object);
+
+  for (unsigned i = 0; i < 20; ++i)
+  {
+    mock_indicator_object_add_entry(mock_object, ("Entry"+std::to_string(i)).c_str(), "gtk-forward");
+    glib::Variant result(panel_service_sync(service));
+    ASSERT_EQ(1, GetIndicatorsInResult(result));
+    ASSERT_EQ(i+1, GetEntriesInResult(result));
+  }
 }
 
 } // anonymous namespace
