@@ -457,7 +457,7 @@ void ScopeView::OnCategoryAdded(Category const& category)
   counts_[group] = 0;
 
   ResultView* results_view = nullptr;
-  if (category.renderer_name == "tile-horizontal")
+  if (category.GetContentType() == "social" && category.renderer_name == "default")
   {
     results_view = new ResultViewGrid(NUX_TRACKER_LOCATION);
     results_view->SetModelRenderer(new ResultRendererHorizontalTile(NUX_TRACKER_LOCATION));
