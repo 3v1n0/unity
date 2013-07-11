@@ -18,6 +18,7 @@
  */
 
 #include <gmock/gmock.h>
+#include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 #include "panel-service.h"
@@ -216,7 +217,8 @@ TEST_F(TestPanelService, EntryAddition)
   glib::Object<IndicatorObject> object(mock_indicator_object_new());
   auto mock_object = glib::object_cast<MockIndicatorObject>(object);
 
-  mock_indicator_object_add_entry(mock_object, "Hello", "gtk-apply");
+  auto* entry = mock_indicator_object_add_entry(mock_object, "Hello", "gtk-apply");
+  ASSERT_THAT(entry, NotNull());
   panel_service_add_indicator(service, object);
 
   glib::Variant result(panel_service_sync(service));
@@ -237,6 +239,29 @@ TEST_F(TestPanelService, ManyEntriesAddition)
     ASSERT_EQ(1, GetIndicatorsInResult(result));
     ASSERT_EQ(i+1, GetEntriesInResult(result));
   }
+}
+
+TEST_F(TestPanelService, ActivateRequest)
+{
+  glib::Object<IndicatorObject> object(mock_indicator_object_new());
+  auto mock_object = glib::object_cast<MockIndicatorObject>(object);
+
+  auto* entry = mock_indicator_object_add_entry(mock_object, "Entry", "cmake");
+  panel_service_add_indicator(service, object);
+
+  bool called = false;
+  std::string const& id = glib::String(g_strdup_printf("%p", entry)).Str();
+
+  glib::Signal<void, PanelService*, const gchar*> activation_signal;
+  activation_signal.Connect(service, "entry-activate-request",
+  [this, id, &called] (PanelService* srv, const gchar* entry_id) {
+    EXPECT_EQ(service, srv);
+    EXPECT_EQ(id, entry_id);
+    called = true;
+  });
+
+  mock_indicator_object_show_entry(mock_object, entry, 1234);
+  EXPECT_TRUE(called);
 }
 
 } // anonymous namespace
