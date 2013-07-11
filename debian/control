@@ -4,7 +4,6 @@ Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: cmake,
                compiz-dev (>= 1:0.9.9~daily13.01.25bzr3586),
-               dbus-test-runner,
                debhelper (>= 9.0.0~),
                dh-migrations,
                dh-translations (>= 94),
