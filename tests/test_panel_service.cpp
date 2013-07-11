@@ -37,13 +37,24 @@ struct TestPanelService : Test
     : service(panel_service_get_default_with_indicators(nullptr))
   {}
 
-  std::size_t GetIndicatorsInResult(glib::Variant const& result) const
+  struct SyncResult
   {
-    EXPECT_TRUE(result);
-    if (!result)
-      return 0;
+    std::string indicator_id;
+    std::string entry_id;
+    std::string entry_name_hint;
+    std::string label;
+    bool label_sensitive;
+    bool label_visible;
+    uint32_t image_type;
+    std::string image_data;
+    bool image_sensitive;
+    bool image_visible;
+    int32_t priority;
+  };
 
-    std::set<std::string> objects;
+  std::vector<SyncResult> GetResults(glib::Variant const& result) const
+  {
+    std::vector<SyncResult> results;
     GVariantIter* iter;
     gchar* indicator_id;
     gchar* entry_id;
@@ -55,7 +66,7 @@ struct TestPanelService : Test
     gchar* image_data;
     gboolean image_sensitive;
     gboolean image_visible;
-    gboolean priority;
+    gint32 priority;
 
     g_variant_get(result, SYNC_ENTRIES_VARIANT_FORMAT.c_str(), &iter);
     while (g_variant_iter_loop(iter, SYNC_ENTRY_VARIANT_FORMAT.c_str(),
@@ -71,12 +82,36 @@ struct TestPanelService : Test
                                &image_visible,
                                &priority))
     {
-      auto const& id = glib::gchar_to_string(indicator_id);
-
-      if (!id.empty())
-        objects.insert(id);
+      results.push_back({ glib::gchar_to_string(indicator_id),
+                          glib::gchar_to_string(entry_id),
+                          glib::gchar_to_string(entry_name_hint),
+                          glib::gchar_to_string(label),
+                          label_sensitive != FALSE,
+                          label_visible != FALSE,
+                          image_type,
+                          glib::gchar_to_string(image_data),
+                          image_sensitive != FALSE,
+                          image_visible != FALSE,
+                          priority });
     }
     g_variant_iter_free(iter);
+
+    return results;
+  }
+
+  std::size_t GetIndicatorsInResult(glib::Variant const& result) const
+  {
+    EXPECT_TRUE(result);
+    if (!result)
+      return 0;
+
+    std::set<std::string> objects;
+
+    for (auto const& res : GetResults(result))
+    {
+      if (!res.indicator_id.empty())
+        objects.insert(res.indicator_id);
+    }
 
     return objects.size();
   }
@@ -88,39 +123,12 @@ struct TestPanelService : Test
       return 0;
 
     std::set<std::string> entries;
-    GVariantIter* iter;
-    gchar* indicator_id;
-    gchar* entry_id;
-    gchar* entry_name_hint;
-    gchar* label;
-    gboolean label_sensitive;
-    gboolean label_visible;
-    guint32 image_type;
-    gchar* image_data;
-    gboolean image_sensitive;
-    gboolean image_visible;
-    gboolean priority;
 
-    g_variant_get(result, SYNC_ENTRIES_VARIANT_FORMAT.c_str(), &iter);
-    while (g_variant_iter_loop(iter, SYNC_ENTRY_VARIANT_FORMAT.c_str(),
-                               &indicator_id,
-                               &entry_id,
-                               &entry_name_hint,
-                               &label,
-                               &label_sensitive,
-                               &label_visible,
-                               &image_type,
-                               &image_data,
-                               &image_sensitive,
-                               &image_visible,
-                               &priority))
+    for (auto const& res : GetResults(result))
     {
-      auto const& entry = glib::gchar_to_string(entry_id);
-
-      if (!entry.empty())
-        entries.insert(entry);
+      if (!res.entry_id.empty())
+        entries.insert(res.entry_id);
     }
-    g_variant_iter_free(iter);
 
     return entries.size();
   }
