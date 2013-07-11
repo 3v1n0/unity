@@ -787,6 +787,15 @@ panel_service_get_indicator (PanelService *self, const gchar *indicator_id)
 }
 
 void
+panel_service_add_indicator (PanelService *self, IndicatorObject *indicator)
+{
+  g_return_if_fail (PANEL_IS_SERVICE (self));
+  g_return_if_fail (INDICATOR_IS_OBJECT (indicator));
+
+  load_indicator (self, indicator, NULL);
+}
+
+void
 panel_service_remove_indicator (PanelService *self, IndicatorObject *indicator)
 {
   g_return_if_fail (PANEL_IS_SERVICE (self));
@@ -1028,7 +1037,7 @@ load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
   gchar *name;
   GList *entries, *entry;
 
-  indicator_object_set_environment(object, (GStrv)indicator_environment);
+  indicator_object_set_environment (object, (GStrv)indicator_environment);
 
   if (_name != NULL)
     name = g_strdup (_name);
