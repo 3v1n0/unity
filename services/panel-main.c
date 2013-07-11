@@ -382,7 +382,7 @@ main (gint argc, gchar **argv)
   PanelService *service;
   guint         owner_id;
 
-  g_unsetenv("UBUNTU_MENUPROXY");
+  g_unsetenv ("UBUNTU_MENUPROXY");
   g_setenv ("NO_AT_BRIDGE", "1", TRUE);
   g_unsetenv ("NO_GAIL");
 

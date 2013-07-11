@@ -634,7 +634,7 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
   g_signal_handlers_disconnect_by_data (indicator, self);
 
   position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (indicator), "position"));
-  if (position > 0)
+  if (self->priv->timeouts[position] > 0)
     {
       g_source_remove (self->priv->timeouts[position]);
       self->priv->timeouts[position] = SYNC_NEUTRAL;
