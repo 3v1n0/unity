@@ -644,6 +644,7 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
   if (timeout)
     {
       g_source_remove (GPOINTER_TO_UINT (timeout));
+      g_object_set_data (G_OBJECT (indicator), "remove-timeout", GUINT_TO_POINTER (0));
     }
 
   entries = indicator_object_get_entries (indicator);
