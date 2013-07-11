@@ -184,7 +184,7 @@ TEST_F(TestPanelService, ManyIndicatorsLoading)
   }
 }
 
-TEST_F(TestPanelService, EmptyIndicatorObject)
+TEST_F(TestPanelService, EmptyIndicatorObjectAddition)
 {
   glib::Object<IndicatorObject> object(mock_indicator_object_new());
   panel_service_add_indicator(service, object);
@@ -196,7 +196,7 @@ TEST_F(TestPanelService, EmptyIndicatorObject)
   EXPECT_EQ(0, GetEntriesInResult(result));
 }
 
-TEST_F(TestPanelService, ManyEmptyIndicatorObjects)
+TEST_F(TestPanelService, ManyEmptyIndicatorObjectsAddition)
 {
   glib::Object<IndicatorObject> object;
 
@@ -212,7 +212,7 @@ TEST_F(TestPanelService, ManyEmptyIndicatorObjects)
   }
 }
 
-TEST_F(TestPanelService, EntryAddition)
+TEST_F(TestPanelService, EntryIndicatorObjectAddition)
 {
   glib::Object<IndicatorObject> object(mock_indicator_object_new());
   auto mock_object = glib::object_cast<MockIndicatorObject>(object);
@@ -226,7 +226,7 @@ TEST_F(TestPanelService, EntryAddition)
   EXPECT_EQ(1, GetEntriesInResult(result));
 }
 
-TEST_F(TestPanelService, ManyEntriesAddition)
+TEST_F(TestPanelService, ManyEntriesIndicatorObjectAddition)
 {
   glib::Object<IndicatorObject> object(mock_indicator_object_new());
   auto mock_object = glib::object_cast<MockIndicatorObject>(object);
@@ -239,6 +239,24 @@ TEST_F(TestPanelService, ManyEntriesAddition)
     ASSERT_EQ(1, GetIndicatorsInResult(result));
     ASSERT_EQ(i+1, GetEntriesInResult(result));
   }
+}
+
+TEST_F(TestPanelService, EntryIndicatorObjectRemoval)
+{
+  glib::Object<IndicatorObject> object(mock_indicator_object_new());
+  auto mock_object = glib::object_cast<MockIndicatorObject>(object);
+
+  mock_indicator_object_add_entry(mock_object, "Hello", "gtk-apply");
+  panel_service_add_indicator(service, object);
+
+  glib::Variant result(panel_service_sync(service));
+  ASSERT_EQ(1, GetIndicatorsInResult(result));
+  ASSERT_EQ(1, GetEntriesInResult(result));
+
+  panel_service_remove_indicator(service, object);
+  result = panel_service_sync(service);
+  EXPECT_EQ(1, GetIndicatorsInResult(result));
+  EXPECT_EQ(0, GetEntriesInResult(result));
 }
 
 TEST_F(TestPanelService, ActivateRequest)
