@@ -247,13 +247,13 @@ panel_service_class_init (PanelServiceClass *klass)
 
  _service_signals[GEOMETRIES_CHANGED] =
     g_signal_new ("geometries-changed",
-      G_OBJECT_CLASS_TYPE (obj_class),
-      G_SIGNAL_RUN_LAST,
-      0,
-      NULL, NULL, NULL,
-      G_TYPE_NONE, 6,
-      G_TYPE_OBJECT, G_TYPE_POINTER,
-      G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
+                  G_OBJECT_CLASS_TYPE (obj_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL, NULL,
+                  G_TYPE_NONE, 6,
+                  G_TYPE_OBJECT, G_TYPE_POINTER,
+                  G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
 
  _service_signals[ENTRY_SHOW_NOW_CHANGED] =
     g_signal_new ("entry-show-now-changed",
@@ -270,7 +270,6 @@ panel_service_class_init (PanelServiceClass *klass)
                   0,
                   NULL, NULL, NULL,
                   G_TYPE_NONE, 0);
-
 
   g_type_class_add_private (obj_class, sizeof (PanelServicePrivate));
 }
@@ -629,6 +628,12 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
   g_return_if_fail (INDICATOR_IS_OBJECT (indicator));
 
   GList *entries, *l;
+  gpointer timeout;
+
+  g_signal_handlers_disconnect_by_data (indicator, self);
+
+  timeout = g_object_get_data (G_OBJECT (indicator), "remove-timeout");
+  if (timeout) g_source_remove (GPOINTER_TO_UINT (timeout));
 
   entries = indicator_object_get_entries (indicator);
 
@@ -1294,7 +1299,7 @@ indicator_entry_null_to_variant (const gchar     *indicator_id,
 }
 
 static void
-indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id, GVariantBuilder *b)
+indicator_object_full_to_variant (IndicatorObject *object, const gchar *indicator_id, GVariantBuilder *b)
 {
   GList *entries, *e;
   gint parent_prio = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (object), "priority"));
@@ -1322,6 +1327,21 @@ indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id,
     {
       /* Add a null entry to indicate that there is an indicator here, it's just empty */
       indicator_entry_null_to_variant (indicator_id, b);
+    }
+}
+
+static void
+indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id, GVariantBuilder *b)
+{
+  if (!GPOINTER_TO_INT (g_object_get_data (G_OBJECT (object), "remove")))
+    {
+      indicator_object_full_to_variant (object, indicator_id, b);
+    }
+  else
+    {
+      PanelService *self = panel_service_get_default ();
+      indicator_entry_null_to_variant (indicator_id, b);
+      panel_service_actually_remove_indicator (self, object);
     }
 }
 
@@ -1366,6 +1386,7 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
 
   g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, "", 0, 0, 0, 0);
 }
+
 
 /*
  * Public Methods
@@ -1413,16 +1434,7 @@ panel_service_sync_one (PanelService *self, const gchar *indicator_id)
           /* Set the sync back to neutral */
           position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (i->data), "position"));
           self->priv->timeouts[position] = SYNC_NEUTRAL;
-
-          if (GPOINTER_TO_INT (g_object_get_data (G_OBJECT (i->data), "remove")) != TRUE)
-            {
-              indicator_object_to_variant (i->data, indicator_id, &b);
-            }
-          else
-            {
-              indicator_entry_null_to_variant (indicator_id, &b);
-              panel_service_actually_remove_indicator (self, i->data);
-            }
+          indicator_object_to_variant (i->data, indicator_id, &b);
 
           break;
         }
