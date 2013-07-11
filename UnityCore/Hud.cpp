@@ -75,6 +75,9 @@ public:
 
 void HudImpl::ExecuteByKey(GVariant* key, unsigned int timestamp)
 {
+  if (!key)
+    return;
+
   LOG_DEBUG(logger) << "Executing by Key";
 
   GVariantBuilder tuple;

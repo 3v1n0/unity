@@ -20,10 +20,10 @@
  */
 
 #include <config.h>
-
 #include <gmock/gmock.h>
 #include <glib.h>
 
+#include "test_utils.h"
 #include "FavoriteStore.h"
 #include "FavoriteStoreGSettings.h"
 
@@ -37,7 +37,6 @@ namespace {
 // Constant
 const gchar* SETTINGS_NAME = "com.canonical.Unity.Launcher";
 const gchar* SETTINGS_KEY = "favorites";
-const gchar* SCHEMA_DIRECTORY = BUILDDIR"/settings";
 
 const char* base_store_favs[] = { BUILDDIR"/tests/data/applications/ubuntuone-installer.desktop",
                                   "file://" BUILDDIR "/tests/data/applications/ubuntu-software-center.desktop",
@@ -77,8 +76,7 @@ public:
   virtual void SetUp()
   {
     // set the data directory so gsettings can find the schema
-    g_setenv("GSETTINGS_SCHEMA_DIR", SCHEMA_DIRECTORY, true);
-    g_setenv("GSETTINGS_BACKEND", "memory", true);
+    Utils::init_gsettings_test_environment();
 
     favorite_store.reset(new internal::FavoriteStoreGSettings());
 
@@ -89,8 +87,7 @@ public:
 
   virtual void TearDown()
   {
-    g_setenv("GSETTINGS_SCHEMA_DIR", "", true);
-    g_setenv("GSETTINGS_BACKEND", "", true);
+    Utils::reset_gsettings_test_environment();
   }
 };
 

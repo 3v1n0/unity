@@ -37,8 +37,7 @@ public:
 
   void SetUp()
   {
-    g_setenv("GSETTINGS_BACKEND", "memory", TRUE);
-
+    Utils::init_gsettings_test_environment();
     gsettings = g_settings_new("com.canonical.Unity");
     g_settings_set_enum(gsettings, "form-factor", static_cast<int>(unity::FormFactor::DESKTOP));
 
@@ -47,7 +46,7 @@ public:
 
   void TearDown()
   {
-    g_setenv("GSETTINGS_BACKEND", "", TRUE);
+    Utils::reset_gsettings_test_environment();
   }
 };
 

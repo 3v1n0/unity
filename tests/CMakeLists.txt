@@ -129,9 +129,7 @@ if (GMOCK_LIB AND
       )
 
   add_executable(test-gtest-slow ${GTEST_SLOW_SOURCES})
-
   target_link_libraries(test-gtest-slow ${GTEST_SLOW_LIBS})
-
   add_test(UnityGTestSlow test-gtest-slow)
 
 # The actual test executable (xless) - do not put anything that requires X in here
@@ -204,9 +202,7 @@ if (GMOCK_LIB AND
   endif ()
 
   add_executable(test-gtest-xless ${GTEST_XLESS_SOURCES})
-
   target_link_libraries(test-gtest-xless ${GTEST_XLESS_LIBS})
-
   add_test(UnityGTestXless test-gtest-xless)
 
 # tests that require dbus, must not require X
@@ -234,6 +230,7 @@ if (ENABLE_X_SUPPORT)
 # Tests that require X
   add_executable(test-gtest
                  mock-application.cpp
+                 mock_results.cpp
                  logger_helper.cpp
                  test_main.cpp
                  test_action_link.cpp
@@ -289,7 +286,7 @@ if (ENABLE_X_SUPPORT)
                  test_result_renderer.cpp
                  test_resultviewgrid.cpp
                  test_scope_bar.cpp
-                 test_scopeview.cpp
+                 test_scope_view.cpp
                  test_searchbar.cpp
                  test_session_button.cpp
                  test_session_controller.cpp
@@ -362,36 +359,44 @@ set (TEST_RESULT_DIR ${CMAKE_BINARY_DIR}/tests)
 set (TEST_RESULT_XML ${TEST_RESULT_DIR}/test-results.xml)
 set (TEST_RESULT_HTML ${TEST_RESULT_DIR}/test-results.html)
 if (ENABLE_X_SUPPORT)
-  set (GTEST_TEST_COMMAND ./test-gtest)
-  set (GTEST_TEST_COMMAND_GESTURES ./test-gestures/test-gestures)
+  set (GTEST_TEST_COMMAND ./test-gtest --gtest_output=xml:./test-gtest.xml)
+  set (GTEST_TEST_COMMAND_GESTURES ./test-gestures/test-gestures --gtest_output=xml:./test-gestures.xml)
 endif (ENABLE_X_SUPPORT)
-set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless)
-set (GTEST_TEST_COMMAND_SLOW ./test-gtest-slow)
-set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --task ./test-gtest-service --task ./test-gtest-dbus)
+set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless --gtest_output=xml:./test-gtest-xless.xml)
+set (GTEST_TEST_COMMAND_SLOW ./test-gtest-slow --gtest_output=xml:./test-gtest-slow.xml)
+set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --task ./test-gtest-service --task ./test-gtest-dbus --gtest_output=xml:./test-gtest-dbus.xml)
 
 set (TEST_COMMAND
      gtester --verbose -k -o=${TEST_RESULT_XML} ./test-unit
-  && ${GTEST_TEST_COMMAND} --gtest_output=xml:./
-  && ${GTEST_TEST_COMMAND_XLESS} --gtest_output=xml:./
-  && ${GTEST_TEST_COMMAND_GESTURES} --gtest_output=xml:./
-  && ${GTEST_TEST_COMMAND_DBUS} --gtest_output=xml:./
-  && ${GTEST_TEST_COMMAND_SLOW} --gtest_output=xml:./
+  && ${GTEST_TEST_COMMAND}
+  && ${GTEST_TEST_COMMAND_XLESS}
+  && ${GTEST_TEST_COMMAND_GESTURES}
+  && ${GTEST_TEST_COMMAND_DBUS}
+  && ${GTEST_TEST_COMMAND_SLOW}
     )
 
-set (TEST_COMMAND_HEADLESS
-     ${GTEST_TEST_COMMAND_XLESS} --gtest_output=xml:./
-  && ${GTEST_TEST_COMMAND_GESTURES} --gtest_output=xml:./
-  #&& ${GTEST_TEST_COMMAND_DBUS} --gtest_output=xml:./
+set (TEST_COMMAND_XLESS
+     ${GTEST_TEST_COMMAND_XLESS}
+  && ${GTEST_TEST_COMMAND_GESTURES}
+  #&& ${GTEST_TEST_COMMAND_DBUS}
   && echo "Warning, DBus test cases are disabled!!")
+
+set (DUMMY_XORG_TEST_RUNNER ${CMAKE_CURRENT_SOURCE_DIR}/dummy-xorg-test-runner.sh)
+
+set (TEST_COMMAND_HEADLESS
+     export NUX_FALLBACK_TEXTURE=TRUE
+  && ${DUMMY_XORG_TEST_RUNNER} ${GTEST_TEST_COMMAND}
+  && ${DUMMY_XORG_TEST_RUNNER} ${GTEST_TEST_COMMAND_SLOW}
+  && ${TEST_COMMAND_XLESS})
 
 if (GTEST_ROOT_DIR)
   if (ENABLE_X_SUPPORT)
     add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-slow test-gtest-xless test-gtest-dbus test-gestures)
-    add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus test-gestures)
+    add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest test-gtest-slow test-gtest-xless test-gtest-dbus test-gestures)
     add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)
   else ()
     add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest-xless test-gtest-dbus)
-    add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus)
+    add_custom_target (check-headless COMMAND ${TEST_COMMAND_XLESS} DEPENDS test-gtest-xless test-gtest-dbus)
     add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest-xless)
   endif ()
   add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})

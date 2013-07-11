@@ -102,7 +102,7 @@ TEST(TestIconLoader, TestGetOneIcon)
   LoadResult load_result;
   IconLoader& icon_loader = IconLoader::GetDefault();
 
-  icon_loader.LoadFromIconName("gedit-icon", -1, 48, sigc::mem_fun(load_result,
+  icon_loader.LoadFromIconName("python", -1, 48, sigc::mem_fun(load_result,
         &LoadResult::IconLoaded));
 
   Utils::WaitUntilMSec(load_result.got_callback);
@@ -115,7 +115,7 @@ TEST(TestIconLoader, TestGetAnnotatedIcon)
   LoadResult load_result;
   IconLoader& icon_loader = IconLoader::GetDefault();
 
-  icon_loader.LoadFromGIconString(". UnityProtocolAnnotatedIcon %7B'base-icon':%20%3C'gedit-icon'%3E,%20'ribbon':%20%3C'foo'%3E%7D", -1, 48, sigc::mem_fun(load_result,
+  icon_loader.LoadFromGIconString(". UnityProtocolAnnotatedIcon %7B'base-icon':%20%3C'cmake'%3E,%20'ribbon':%20%3C'foo'%3E%7D", -1, 48, sigc::mem_fun(load_result,
         &LoadResult::IconLoaded));
 
   Utils::WaitUntilMSec(load_result.got_callback);
@@ -139,7 +139,7 @@ TEST(TestIconLoader, TestGetOneIconManyTimes)
   // be cached already!
   for (int i = 0; i < load_count; i++)
   {
-    handles[i] = icon_loader.LoadFromIconName("web-browser", -1, 48,
+    handles[i] = icon_loader.LoadFromIconName("debian-logo", -1, 48,
         sigc::mem_fun(results[i], &LoadResult::IconLoaded));
   }
 

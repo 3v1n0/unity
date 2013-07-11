@@ -18,19 +18,50 @@
  */
 
 #include <gmock/gmock.h>
-#include "UnityCore/PreviewPlayer.h"
+#include <UnityCore/PreviewPlayer.h>
+#include <UnityCore/ConnectionManager.h>
+#include <UnityCore/GLibDBusServer.h>
+#include <UnityCore/Variant.h>
 #include "test_utils.h"
 #include "config.h"
-#include "sigc++/connection.h"
 
 namespace unity
 {
 
-const gchar* WHITE_NOISE = "file://" BUILDDIR "/tests/data/unity/sounds/whitenoise.mp3";
-
-
 namespace
 {
+  const std::string WHITE_NOISE = "file://" BUILDDIR "/tests/data/unity/sounds/whitenoise.mp3";
+
+  const std::string PLAYER_NAME = "com.canonical.Unity.Lens.Music.PreviewPlayer";
+  const std::string PLAYER_PATH = "/com/canonical/Unity/Lens/Music/PreviewPlayer";
+  const std::string PLAYER_INTERFACE =
+  R"(<node>
+    <interface name="com.canonical.Unity.Lens.Music.PreviewPlayer">
+      <method name="Play">
+        <arg type="s" name="uri" direction="in"/>
+      </method>
+      <method name="Pause">
+      </method>
+      <method name="Resume">
+      </method>
+      <method name="PauseResume">
+      </method>
+      <method name="Stop">
+      </method>
+      <method name="Close">
+      </method>
+      <method name="VideoProperties">
+        <arg type="s" name="uri" direction="in"/>
+        <arg type="a{sv}" name="result" direction="out"/>
+      </method>
+      <signal name="Progress">
+        <arg type="s" name="uri"/>
+        <arg type="u" name="state"/>
+        <arg type="d" name="value"/>
+      </signal>
+    </interface>
+  </node>)";
+
   void PlayAndWait(PreviewPlayer* player, std::string const& uri)
   {
     bool play_returned = false;
@@ -46,11 +77,10 @@ namespace
       EXPECT_EQ((int)state, (int)PlayerState::PLAYING) << "Incorrect state returned on PLAY.";
     };
 
-    sigc::connection conn = player->updated.connect(updated_callback);
+    connection::Wrapper conn(player->updated.connect(updated_callback));
     player->Play(uri, play_callback);
-    ::Utils::WaitUntilMSec(play_returned, 3000, []() { return g_strdup("PLAY did not return"); });
-    ::Utils::WaitUntilMSec(updated_called, 5000, []() { return g_strdup("Update not called on PLAY"); });
-    conn.disconnect();
+    ::Utils::WaitUntilMSec(play_returned, 3000, "PLAY did not return");
+    ::Utils::WaitUntilMSec(updated_called, 5000, "Update not called on PLAY");
   }
 
   void PauseAndWait(PreviewPlayer* player)
@@ -67,11 +97,10 @@ namespace
       EXPECT_EQ((int)state, (int)PlayerState::PAUSED) << "Incorrect state returned on PAUSE.";
     };
 
-    sigc::connection conn = player->updated.connect(updated_callback);
+    connection::Wrapper conn(player->updated.connect(updated_callback));
     player->Pause(callback);
-    ::Utils::WaitUntilMSec(pause_returned, 3000, []() { return g_strdup("PAUSE did not return"); });
-    ::Utils::WaitUntilMSec(updated_called, 5000, []() { return g_strdup("Update not called om PAUSE"); });
-    conn.disconnect();
+    ::Utils::WaitUntilMSec(pause_returned, 3000, "PAUSE did not return");
+    ::Utils::WaitUntilMSec(updated_called, 5000, "Update not called on PAUSE");
   }
 
   void ResumeAndWait(PreviewPlayer* player)
@@ -88,11 +117,10 @@ namespace
       EXPECT_EQ((int)state, (int)PlayerState::PLAYING) << "Incorrect state returned on RESUME.";
     };
 
-    sigc::connection conn = player->updated.connect(updated_callback);
+    connection::Wrapper conn(player->updated.connect(updated_callback));
     player->Resume(callback);
-    ::Utils::WaitUntilMSec(resume_returned, 3000, []() { return g_strdup("RESUME did not return"); });
-    ::Utils::WaitUntilMSec(updated_called, 5000, []() { return g_strdup("Update not called on RESUME"); });
-    conn.disconnect();
+    ::Utils::WaitUntilMSec(resume_returned, 3000, "RESUME did not return");
+    ::Utils::WaitUntilMSec(updated_called, 5000, "Update not called on RESUME");
   }
 
   void StopAndWait(PreviewPlayer* player)
@@ -109,24 +137,76 @@ namespace
       EXPECT_EQ((int)state, (int)PlayerState::STOPPED) << "Incorrect state returned on STOP.";
     };
 
-    sigc::connection conn = player->updated.connect(updated_callback);
+    connection::Wrapper conn(player->updated.connect(updated_callback));
     player->Stop(callback);
-    ::Utils::WaitUntilMSec(stop_returned, 3000, []() { return g_strdup("STOP did not return"); });
-    ::Utils::WaitUntilMSec(updated_called, 5000, []() { return g_strdup("Update not called on STOP"); });
-    conn.disconnect();
+    ::Utils::WaitUntilMSec(stop_returned, 3000, "STOP did not return");
+    ::Utils::WaitUntilMSec(updated_called, 5000, "Update not called on STOP");
   }
+
+  struct FakeRemotePlayer
+  {
+    typedef std::shared_ptr<FakeRemotePlayer> Ptr;
+    FakeRemotePlayer()
+      : server_(PLAYER_NAME)
+    {
+      server_.AddObjects(PLAYER_INTERFACE, PLAYER_PATH);
+      auto const& object = server_.GetObjects().front();
+
+      object->SetMethodsCallsHandler([this, object] (std::string const& method, GVariant* parameters) {
+        if (method == "Play")
+        {
+          current_uri_ = glib::Variant(parameters).GetString();
+          object->EmitSignal("Progress", g_variant_new("(sud)", current_uri_.c_str(), PlayerState::PLAYING, 0));
+        }
+        else if (method == "Pause")
+        {
+          object->EmitSignal("Progress", g_variant_new("(sud)", current_uri_.c_str(), PlayerState::PAUSED, 0));
+        }
+        else if (method == "Resume")
+        {
+          object->EmitSignal("Progress", g_variant_new("(sud)", current_uri_.c_str(), PlayerState::PLAYING, 0));
+        }
+        else if (method == "Stop")
+        {
+          object->EmitSignal("Progress", g_variant_new("(sud)", current_uri_.c_str(), PlayerState::STOPPED, 0));
+          current_uri_ = "";
+        }
+
+        return static_cast<GVariant*>(nullptr);
+      });
+    }
+
+  private:
+    glib::DBusServer server_;
+    std::string current_uri_;
+  };
 }
 
-TEST(TestPreviewPlayer, TestConstruct)
+struct TestPreviewPlayer : testing::Test
+{
+  static void SetUpTestCase()
+  {
+    remote_player_ = std::make_shared<FakeRemotePlayer>();
+  }
+
+  static void TearDownTestCase()
+  {
+    remote_player_.reset();
+  }
+
+  static FakeRemotePlayer::Ptr remote_player_;
+  PreviewPlayer player;
+};
+
+FakeRemotePlayer::Ptr TestPreviewPlayer::remote_player_;
+
+TEST_F(TestPreviewPlayer, TestConstruct)
 {
   PreviewPlayer player1;
-  PreviewPlayer player2;
 }
 
-TEST(TestPreviewPlayer, TestPlayerControl)
+TEST_F(TestPreviewPlayer, TestPlayerControl)
 {
-  PreviewPlayer player;
-
   PlayAndWait(&player, WHITE_NOISE);
 
   PauseAndWait(&player);
@@ -136,15 +216,14 @@ TEST(TestPreviewPlayer, TestPlayerControl)
   StopAndWait(&player);
 }
 
-TEST(TestPreviewPlayer, TestMultiPlayer)
+TEST_F(TestPreviewPlayer, TestMultiPlayer)
 {
-  PreviewPlayer player1;
   {
     PreviewPlayer player2;
     PlayAndWait(&player2, WHITE_NOISE);
   }
 
-  StopAndWait(&player1);
+  StopAndWait(&player);
 }
 
 

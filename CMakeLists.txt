@@ -124,7 +124,7 @@ add_custom_target (distcheck
        && cmake -DCMAKE_INSTALL_PREFIX=../install -DGSETTINGS_LOCALINSTALL=ON .. -DCMAKE_MODULE_PATH=/usr/share/cmake
        && make -j4
        && make -j4 install
-       && make check
+       && make check-headless
   )
 add_dependencies(distcheck dist)
 
@@ -149,6 +149,7 @@ add_dependencies (release post-distcheck)
 set (PREFIXDIR "${CMAKE_INSTALL_PREFIX}")
 set (DATADIR "${CMAKE_INSTALL_PREFIX}/share")
 set (PKGDATADIR "${DATADIR}/unity/icons")
+set (SOURCEDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/resources")
 set (GETTEXT_PACKAGE "unity")
 set (LOCALE_DIR "${DATADIR}/locale")
 set (VERSION "${UNITY_VERSION}")
@@ -329,6 +330,7 @@ add_subdirectory(gnome)
 # GSettings Schema
 #
 SET (UNITY_SCHEMAS "com.canonical.Unity.gschema.xml")
+SET (UNITY_TEST_SCHEMAS "external.gschema.xml")
 
 # Have an option to not install the schema into where GLib is
 option (GSETTINGS_LOCALINSTALL "Install GSettings Schemas locally instead of to the GLib prefix" OFF)
@@ -361,6 +363,7 @@ install (FILES ${_datafiles} DESTINATION ${PKGDATADIR})
 
 # For testing
 configure_file (${CMAKE_SOURCE_DIR}/${UNITY_SCHEMAS} ${CMAKE_BINARY_DIR}/settings/${UNITY_SCHEMAS})
+configure_file (${CMAKE_SOURCE_DIR}/tests/data/${UNITY_TEST_SCHEMAS} ${CMAKE_BINARY_DIR}/settings/${UNITY_TEST_SCHEMAS})
 execute_process (COMMAND ${_glib_comple_schemas} ${CMAKE_BINARY_DIR}/settings)
 
 #
