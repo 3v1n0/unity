@@ -53,8 +53,6 @@ struct _PanelServicePrivate
   GHashTable *id2entry_hash;
   GHashTable *panel2entries_hash;
 
-  guint  initial_sync_id;
-  guint  ready_signal_id;
   gint32 timeouts[N_TIMEOUT_SLOTS];
 
   IndicatorObjectEntry *last_entry;
@@ -148,9 +146,7 @@ panel_service_class_dispose (GObject *self)
   PanelServicePrivate *priv = PANEL_SERVICE (self)->priv;
   gint i;
 
-  g_hash_table_destroy (priv->id2entry_hash);
-  g_hash_table_destroy (priv->panel2entries_hash);
-
+  g_idle_remove_by_data (self);
   gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, self);
 
   if (GTK_IS_WIDGET (priv->menubar) &&
@@ -172,18 +168,6 @@ panel_service_class_dispose (GObject *self)
     {
       g_object_unref (priv->last_menu);
       priv->last_menu = NULL;
-    }
-
-  if (priv->initial_sync_id)
-    {
-      g_source_remove (priv->initial_sync_id);
-      priv->initial_sync_id = 0;
-    }
-
-  if (priv->ready_signal_id)
-    {
-      g_source_remove (priv->ready_signal_id);
-      priv->ready_signal_id = 0;
     }
 
   for (i = 0; i < N_TIMEOUT_SLOTS; i++)
@@ -208,6 +192,11 @@ panel_service_class_dispose (GObject *self)
 static void
 panel_service_class_finalize (GObject *object)
 {
+  PanelServicePrivate *priv = PANEL_SERVICE (object)->priv;
+
+  g_hash_table_destroy (priv->id2entry_hash);
+  g_hash_table_destroy (priv->panel2entries_hash);
+
   static_service = NULL;
 }
 
@@ -471,11 +460,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 static gboolean
 initial_resync (PanelService *self)
 {
-  if (PANEL_IS_SERVICE (self))
-    {
-      g_signal_emit (self, _service_signals[RE_SYNC], 0, "");
-      self->priv->initial_sync_id = 0;
-    }
+  g_signal_emit (self, _service_signals[RE_SYNC], 0, "");
   return FALSE;
 }
 
@@ -511,8 +496,6 @@ ready_signal (PanelService *self)
           g_debug ("Unable to signal indicators-loaded to upstart: %s", error->message);
           g_error_free (error);
         }
-
-      self->priv->ready_signal_id = 0;
     }
 
   return FALSE;
@@ -748,8 +731,8 @@ initial_load_default_or_custom_indicators (PanelService *self, GList *indicators
 
   suppress_signals = FALSE;
 
-  self->priv->initial_sync_id = g_idle_add ((GSourceFunc)initial_resync, self);
-  self->priv->ready_signal_id = g_idle_add ((GSourceFunc)ready_signal, self);
+  g_idle_add ((GSourceFunc)initial_resync, self);
+  g_idle_add ((GSourceFunc)ready_signal, self);
 }
 
 PanelService *
