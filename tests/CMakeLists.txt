@@ -373,15 +373,14 @@ set (TEST_COMMAND
   && ${GTEST_TEST_COMMAND}
   && ${GTEST_TEST_COMMAND_XLESS}
   && ${GTEST_TEST_COMMAND_GESTURES}
-  && ${GTEST_TEST_COMMAND_DBUS} --gtest_filter=-TestScope*
+  && ${GTEST_TEST_COMMAND_DBUS}
   && ${GTEST_TEST_COMMAND_SLOW}
     )
 
 set (TEST_COMMAND_XLESS
      ${GTEST_TEST_COMMAND_XLESS}
   && ${GTEST_TEST_COMMAND_GESTURES}
-  && ${GTEST_TEST_COMMAND_DBUS} --gtest_filter=-TestScope*
-  && echo "Warning, TestScope* DBus test cases are disabled!!")
+  && ${GTEST_TEST_COMMAND_DBUS})
 
 set (TEST_COMMAND_HEADLESS
      export NUX_FALLBACK_TEXTURE=TRUE
