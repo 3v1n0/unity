@@ -173,7 +173,7 @@ TEST_P(AnimationProgress, UpdateRenderTargets)
     auto const& layout_win = *win_it;
     bool should_be_selected = (xid == model->DetailSelectionWindow());
     ASSERT_EQ(layout_win->selected, should_be_selected);
-    ASSERT_EQ(layout_win->alpha, (should_be_selected ? 1.0f : 0.9f) * progress);
+    ASSERT_DOUBLE_EQ(layout_win->alpha, (should_be_selected ? 1.0f : 0.9f) * progress);
   }
 }
 
