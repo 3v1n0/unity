@@ -43,21 +43,20 @@ const gchar* category_ids[] = { "cat0",
                                 "cat1",
                                 "cat2" };
 
-static UnityActivationResponse* on_activate_uri(TestScope* scope, const char* uri, Scope* self);
-static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_ctx, Scope* self);
+static void on_scope_search (UnityScopeSearchBase* search_ctx, gpointer user_data);
 
 Scope::Scope(std::string const& scope_id)
-: scope_(test_scope_new (("/com/canonical/unity/scope/"+scope_id).c_str()))
 {
-  AddCategories();
-  AddFilters();
-
-  g_signal_connect(scope_, "activate-uri", G_CALLBACK(on_activate_uri), this);
-  g_signal_connect(scope_, "search", G_CALLBACK(on_scope_search), this);
+  scope_ = test_scope_new (("/com/canonical/unity/scope/"+scope_id).c_str(),
+                           CreateCategories(),
+                           CreateFilters(),
+                           on_scope_search,
+                           NULL);
 
   /* Export */
   GError* error = NULL;
-  test_scope_export(scope_, &error);
+  connector_ = unity_scope_dbus_connector_new (scope_);
+  unity_scope_dbus_connector_export (connector_, &error);
   if (error)
   {
     g_error ("Unable to export Scope: %s", error->message);
@@ -70,7 +69,7 @@ Scope::~Scope()
   g_signal_handlers_disconnect_by_data(scope_, this);
 }
 
-void Scope::AddCategories()
+UnityCategorySet* Scope::CreateCategories()
 {
   UnityCategorySet* categories;
   GIcon *icon;
@@ -96,11 +95,10 @@ void Scope::AddCategories()
     g_free(title);
   }
 
-  test_scope_set_categories(scope_, categories);
-  g_object_unref (categories);
+  return categories;
 }
 
-void Scope::AddFilters()
+UnityFilterSet* Scope::CreateFilters()
 {
   UnityFilterSet *filters = NULL;
   UnityFilter *filter;
@@ -159,20 +157,14 @@ void Scope::AddFilters()
   unity_filter_set_add (filters, filter);
   g_object_unref(filter); 
 
-  test_scope_set_filters(scope_, filters);
-  g_object_unref (filters);
-}
-
-static UnityActivationResponse* on_activate_uri(TestScope* scope, const char* uri, Scope* self)
-{
-  return unity_activation_response_new(UNITY_HANDLED_TYPE_HIDE_DASH, "");
+  return filters;
 }
 
 static void _g_variant_unref0_ (gpointer var) {
   if (var) g_variant_unref ((GVariant*)var);
 }
 
-static void on_scope_search (TestScope* scope, UnityScopeSearchBase* search_base, Scope* self)
+static void on_scope_search (UnityScopeSearchBase* search_base, gpointer self)
 {
   UnitySearchContext* search_ctx;
   search_ctx = search_base->search_context;

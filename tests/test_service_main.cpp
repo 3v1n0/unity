@@ -1,5 +1,6 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
+#include <unity.h>
 
 #include "test_service_scope.h"
 #include "test_service_model.h"
@@ -44,8 +45,6 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  auto loop = g_main_loop_new(NULL, FALSE);
-
   nux::NuxInitialize(0);
   // Slightly higher as we're more likely to test things we know will fail
   nux::logging::configure_logging("<root>=error");
@@ -56,9 +55,9 @@ int main(int argc, char** argv)
   glib::DBusServer controller("com.canonical.Unity.Test");
   controller.AddObjects(introspection_xml, "/com/canonical/unity/test/controller");
   auto const& obj = controller.GetObjects().front();
-  obj->SetMethodsCallsHandler([loop] (std::string const& method, GVariant*) {
+  obj->SetMethodsCallsHandler([] (std::string const& method, GVariant*) {
     if (method == "Exit")
-      g_main_loop_quit(loop);
+      unity_scope_dbus_connector_quit();
 
     return static_cast<GVariant*>(nullptr);
   });
@@ -69,8 +68,7 @@ int main(int argc, char** argv)
   service::Model model;
   service::Scope scope(scope_id ? scope_id: "testscope1");
 
-  g_main_loop_run(loop);
-  g_main_loop_unref(loop);
+  unity_scope_dbus_connector_run();
 
   if (scope_id) g_free(scope_id);
 
