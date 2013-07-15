@@ -1,8 +1,26 @@
-unity (7.0.2+13.10.20130705.1-0ubuntu2) UNRELEASED; urgency=low
+unity (7.0.2+13.10.20130705.1-0ubuntu4) UNRELEASED; urgency=low
 
   * debian/control: build-depends on xserver-xorg-video-dummy and libgl1-mesa-dri
 
  -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Tue, 09 Jul 2013 03:55:14 +0200
+
+unity (7.0.2+13.10.20130705.1-0ubuntu3) saucy; urgency=low
+
+  * Add a Provides: unity-common-7.0, for packages that depend on particular
+    schema interfaces (e.g., unity-lens-applications).
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Sun, 14 Jul 2013 20:32:12 +0000
+
+unity (7.0.2+13.10.20130705.1-0ubuntu2) saucy; urgency=low
+
+  * Drop unity-common, which is not common at all across versions; instead,
+    merge the contents into the shared library package and use
+    Conflicts/Replaces against previous sonames of the package.
+    LP: #1193120.
+  * Cherry pick revision 3419 from trunk: Adjust CMake setup to account for
+    new GMock version. LP: #1185265.
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Fri, 12 Jul 2013 07:23:43 +0000
 
 unity (7.0.2+13.10.20130705.1-0ubuntu1) saucy; urgency=low
 
