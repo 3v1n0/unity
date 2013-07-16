@@ -1127,7 +1127,7 @@ class PreviewClickCancelTests(DashTestCase):
         results = category.get_results()
 
         result = results[0]
-        result.preview()
+        result.preview(button=2)
         self.assertThat(self.unity.dash.view.preview_displaying, Eventually(Equals(True)))
 
         self.preview_container = self.unity.dash.view.get_preview_container()
