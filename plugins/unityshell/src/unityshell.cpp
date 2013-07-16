@@ -1703,8 +1703,9 @@ void UnityScreen::handleEvent(XEvent* event)
       break;
   }
 
-  if (!skip_other_plugins &&
-      screen->otherGrabExist("deco", "move", "switcher", "resize", "unity-switcher", nullptr))
+  if ((!skip_other_plugins &&
+      screen->otherGrabExist("deco", "move", "switcher", "resize", "unity-switcher", nullptr)) ||
+      switcher_controller_->Visible())
   {
     wt->ProcessForeignEvent(event, nullptr);
   }
@@ -1901,7 +1902,7 @@ bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
 bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode show_mode)
 {
   if (!grab_index_)
-    grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
+    grab_index_ = screen->pushGrab (screen->normalCursor(), "unity-switcher");
 
   screen->addAction(&optionGetAltTabRight());
   screen->addAction(&optionGetAltTabDetailStart());

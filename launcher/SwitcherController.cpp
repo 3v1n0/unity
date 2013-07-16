@@ -78,7 +78,6 @@ Controller::Controller(WindowCreator const& create_window)
   , impl_(new Controller::Impl(this, 20, create_window))
 {}
 
-
 Controller::~Controller()
 {}
 
@@ -350,17 +349,21 @@ void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLa
     ShowView();
   }
 
-  if (obj_->detail_on_timeout)
-  {
-    auto cb_func = sigc::mem_fun(this, &Controller::Impl::OnDetailTimer);
-    sources_.AddTimeout(obj_->initial_detail_timeout_length, cb_func, DETAIL_TIMEOUT);
-  }
+  ResetDetailTimer();
 
   ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN,
                             g_variant_new("(bi)", true, obj_->monitor_));
 }
 
+void Controller::Impl::ResetDetailTimer()
+{
+  if (obj_->detail_on_timeout)
+  {
+    auto cb_func = sigc::mem_fun(this, &Controller::Impl::OnDetailTimer);
+    sources_.AddTimeout(obj_->detail_timeout_length, cb_func, DETAIL_TIMEOUT);
+  }
+}
 
 bool Controller::Impl::OnDetailTimer()
 {
@@ -375,11 +378,7 @@ bool Controller::Impl::OnDetailTimer()
 
 void Controller::Impl::OnModelSelectionChanged(AbstractLauncherIcon::Ptr const& icon)
 {
-  if (obj_->detail_on_timeout)
-  {
-    auto cb_func = sigc::mem_fun(this, &Controller::Impl::OnDetailTimer);
-    sources_.AddTimeout(obj_->detail_timeout_length, cb_func, DETAIL_TIMEOUT);
-  }
+  ResetDetailTimer();
 
   if (icon)
   {
@@ -431,6 +430,7 @@ void Controller::Impl::ConstructWindow()
     main_layout_->SetHorizontalExternalMargin(0);
 
     view_window_ = create_window_();
+
     view_window_->SetOpacity(0.0f);
     view_window_->SetLayout(main_layout_);
     view_window_->SetBackgroundColor(nux::color::Transparent);
@@ -451,12 +451,42 @@ void Controller::Impl::ConstructView()
   view_->background_color = bg_color_;
   view_->monitor = obj_->monitor_;
 
+  view_->mouse_move.connect([&] (int x, int y, int dx, int dy, unsigned long k, unsigned long b) {
+    int icon_index = view_->IconIndexAt(x,y);
+
+    if (icon_index >= 0 && !model_->detail_selection)
+    {
+      if (icon_index != model_->SelectionIndex())
+      {
+        model_->Select(icon_index);
+      }
+      else
+      {
+        ResetDetailTimer();
+      }
+    }
+    else if (model_->detail_selection)
+    {
+    }
+  });
+
+  view_->mouse_up.connect([&] (int x, int y, unsigned long k, unsigned long b) {
+    int icon_index = view_->IconIndexAt(x,y);
+
+    if (icon_index >= 0 || model_->detail_selection)
+    {
+      model_->Select(icon_index);
+      Hide(true);
+    }
+  });
+
   ConstructWindow();
   main_layout_->AddView(view_.GetPointer(), 1);
   view_window_->SetEnterFocusInputArea(view_.GetPointer());
   view_window_->SetGeometry(workarea_);
 
   view_built.emit();
+
 }
 
 void Controller::Impl::Hide(bool accept_state)

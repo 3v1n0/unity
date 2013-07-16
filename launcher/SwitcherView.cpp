@@ -36,6 +36,7 @@ namespace switcher
 namespace
 {
   const unsigned int VERTICAL_PADDING = 45;
+  const unsigned int SPREAD_OFFSET = 100;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(SwitcherView);
@@ -80,6 +81,19 @@ SwitcherView::SwitcherView()
     else
     {
       ResetTimer();
+    }
+  });
+
+  mouse_move.connect([&] (int x, int y, int dx, int dy, unsigned long k, unsigned long b) {
+    int index = 0;
+    for (LayoutWindow::Ptr const& target : render_targets_)
+    {
+      if (target->result.IsPointInside(x + SPREAD_OFFSET, y + SPREAD_OFFSET))
+      {
+        model_->detail_selection_index = index;
+      }
+
+      index++;
     }
   });
 }
@@ -307,6 +321,7 @@ void SwitcherView::OffsetRenderTargets(int x, int y)
   {
     target->result.x += x;
     target->result.y += y;
+    //printf("GEO: %i %i %i %i\n", target->result.x, target->result.y, target->result.width, target->result.height);
   }
 }
 
@@ -420,7 +435,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
       nux::Geometry const& spread_bounds = UpdateRenderTargets(progress);
       ResizeRenderTargets(spread_bounds, progress);
       // remove extra space consumed by spread
-      spread_padded_width = spread_bounds.width + 100;
+      spread_padded_width = spread_bounds.width + SPREAD_OFFSET;
       max_width -= spread_padded_width - tile_size;
 
       int expansion = std::max(0, spread_bounds.height - icon_size);
