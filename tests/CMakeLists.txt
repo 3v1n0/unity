@@ -59,13 +59,6 @@ include_directories (${CMAKE_SOURCE_DIR}/unity-shared)
 # Please keep actual test files alphabetically at top and then files
 # from ../${UNITY_SRC} or ../../services in alphabetically after that
 
-add_executable (test-unit
-                unit/TestMain.cpp
-                unit/TestPanelService.cpp
-                unit/TestStaticCairoText.cpp
-                ../services/panel-service.c
-                )
-target_link_libraries (test-unit unity-shared ${LIBS})
 add_subdirectory (test-input-remover)
 add_subdirectory (test-minimize-window-handler)
 add_subdirectory (test-get-transients)
@@ -267,6 +260,7 @@ if (ENABLE_X_SUPPORT)
                  test_launcher_tooltip.cpp
                  test_panel_indicators_view.cpp
                  test_panel_menu_view.cpp
+                 test_panel_service.cpp
                  test_panel_style.cpp
                  test_panel_tray.cpp
                  test_panel_view.cpp
@@ -317,6 +311,7 @@ if (ENABLE_X_SUPPORT)
                  test_xdnd_start_stop_notifier_imp.cpp
                  ${UNITY_SRC}/UnityShowdesktopHandler.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unityshell/src/WindowMinimizeSpeedController.cpp
+                 ${CMAKE_SOURCE_DIR}/services/panel-service.c
                 )
 
   # Build plain C files separately so they don't try to include the
@@ -368,20 +363,16 @@ set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless --gtest_output=xml:./test-gtest
 set (GTEST_TEST_COMMAND_SLOW ./test-gtest-slow --gtest_output=xml:./test-gtest-slow.xml)
 set (GTEST_TEST_COMMAND_DBUS ${DUMMY_DBUS_TEST_RUNNER} ./test-gtest-service ./test-gtest-dbus --gtest_output=xml:./test-gtest-dbus.xml)
 
-set (TEST_COMMAND
-     gtester --verbose -k -o=${TEST_RESULT_XML} ./test-unit
-  && ${GTEST_TEST_COMMAND}
-  && ${GTEST_TEST_COMMAND_XLESS}
-  && ${GTEST_TEST_COMMAND_GESTURES}
-  && ${GTEST_TEST_COMMAND_DBUS} --gtest_filter=-TestScope*
-  && ${GTEST_TEST_COMMAND_SLOW}
-    )
-
 set (TEST_COMMAND_XLESS
      ${GTEST_TEST_COMMAND_XLESS}
   && ${GTEST_TEST_COMMAND_GESTURES}
   && ${GTEST_TEST_COMMAND_DBUS} --gtest_filter=-TestScope*
   && echo "Warning, TestScope* DBus test cases are disabled!!")
+
+set (TEST_COMMAND
+     ${GTEST_TEST_COMMAND}
+  && ${GTEST_TEST_COMMAND_SLOW}
+  && ${TEST_COMMAND_XLESS})
 
 set (TEST_COMMAND_HEADLESS
      export NUX_FALLBACK_TEXTURE=TRUE
@@ -391,17 +382,15 @@ set (TEST_COMMAND_HEADLESS
 
 if (GTEST_ROOT_DIR)
   if (ENABLE_X_SUPPORT)
-    add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-slow test-gtest-xless test-gtest-dbus test-gestures)
+    add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-gtest test-gtest-slow test-gtest-xless test-gtest-dbus test-gestures)
     add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest test-gtest-slow test-gtest-xless test-gtest-dbus test-gestures)
     add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)
   else ()
-    add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest-xless test-gtest-dbus)
+    add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-gtest-xless test-gtest-dbus)
     add_custom_target (check-headless COMMAND ${TEST_COMMAND_XLESS} DEPENDS test-gtest-xless test-gtest-dbus)
     add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest-xless)
   endif ()
   add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
-else (GTEST_ROOT_DIR)
-  add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit)
 endif (GTEST_ROOT_DIR)
 # make target to allow devs to run "make autopilot" from build dir:
 set (AUTOPILOTDIR "${CMAKE_CURRENT_SOURCE_DIR}/autopilot")

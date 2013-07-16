@@ -9,5 +9,11 @@
       <description>Whether or not to show confirmation dialogs for logout, restart and shutdown actions.</description>
     </key>
   </schema>
-  
+  <schema id="org.compiz.unityshell" gettext-domain="compiz">
+    <key type="s" name="panel-first-menu">
+      <default>'&lt;Alt&gt;F10'</default>
+      <summary>Key to open the first panel menu</summary>
+      <description>Opens the first indicator menu of the Panel, allowing keyboard navigation thereafter.</description>
+    </key>
+   </schema>
 </schemalist>
