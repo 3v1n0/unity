@@ -70,8 +70,8 @@ public:
 
   // Returns the index of the icon at the given position, in window coordinates.
   // If there's no icon there, -1 is returned.
-  int IconIndexAt(int x, int y);
-
+  int IconIndexAt(int x, int y) const;
+  int DetailIconIdexAt(int x, int y) const;
 
 protected:
   // Introspectable methods
@@ -89,6 +89,7 @@ protected:
 
   ui::RenderArg CreateBaseArgForIcon(launcher::AbstractLauncherIcon::Ptr const& icon);
 private:
+
   void OnSelectionChanged(launcher::AbstractLauncherIcon::Ptr const& selection);
   void OnDetailSelectionChanged (bool detail);
   void OnDetailSelectionIndexChanged (unsigned int index);

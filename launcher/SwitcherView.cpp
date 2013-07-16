@@ -83,19 +83,6 @@ SwitcherView::SwitcherView()
       ResetTimer();
     }
   });
-
-  mouse_move.connect([&] (int x, int y, int dx, int dy, unsigned long k, unsigned long b) {
-    int index = 0;
-    for (LayoutWindow::Ptr const& target : render_targets_)
-    {
-      if (target->result.IsPointInside(x + SPREAD_OFFSET, y + SPREAD_OFFSET))
-      {
-        model_->detail_selection_index = index;
-      }
-
-      index++;
-    }
-  });
 }
 
 std::string SwitcherView::GetName() const
@@ -321,7 +308,6 @@ void SwitcherView::OffsetRenderTargets(int x, int y)
   {
     target->result.x += x;
     target->result.y += y;
-    //printf("GEO: %i %i %i %i\n", target->result.x, target->result.y, target->result.width, target->result.height);
   }
 }
 
@@ -655,9 +641,9 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
   }
 }
 
-int SwitcherView::IconIndexAt(int x, int y)
+int SwitcherView::IconIndexAt(int x, int y) const
 {
-  int half_size = icon_size.Get() / 2;
+  int half_size = icon_size.Get() / 2 + 10;
   int icon_index = -1;
 
   // Taking icon rotation into consideration will make selection more
@@ -686,6 +672,19 @@ int SwitcherView::IconIndexAt(int x, int y)
   }
 
   return icon_index;
+}
+
+int SwitcherView::DetailIconIdexAt(int x, int y) const
+{
+  int index = -1;
+
+  for (unsigned int i = 0; i < render_targets_.size(); ++i)
+  {
+    if (render_targets_[i]->result.IsPointInside(x + SPREAD_OFFSET, y + SPREAD_OFFSET))
+      return i;
+  }
+
+  return index;
 }
 
 }
