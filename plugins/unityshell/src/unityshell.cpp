@@ -858,9 +858,11 @@ void UnityScreen::enterShowDesktopMode ()
 {
   for (CompWindow *w : screen->windows ())
   {
+    CompPoint const& viewport = w->defaultViewport();
     UnityWindow *uw = UnityWindow::get (w);
 
-    if (ShowdesktopHandler::ShouldHide (static_cast <ShowdesktopHandlerWindowInterface *> (uw)))
+    if (viewport == uScreen->screen->vp() &&
+        ShowdesktopHandler::ShouldHide (static_cast <ShowdesktopHandlerWindowInterface *> (uw)))
     {
       UnityWindow::get (w)->enterShowDesktop ();
       // the animation plugin does strange things here ...
@@ -901,7 +903,10 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
   {
     for (CompWindow *cw : screen->windows ())
     {
-      if (cw->inShowDesktopMode ())
+      CompPoint const& viewport = cw->defaultViewport();
+
+      if (viewport == uScreen->screen->vp() &&
+          cw->inShowDesktopMode ())
       {
         UnityWindow::get (cw)->leaveShowDesktop ();
         // the animation plugin does strange things here ...
@@ -912,7 +917,17 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
 
     PluginAdapter::Default().OnLeaveDesktop();
 
-    screen->leaveShowDesktopMode (w);
+    if (w)
+    {
+      CompPoint const& viewport = w->defaultViewport();
+
+      if (viewport == uScreen->screen->vp())
+        screen->leaveShowDesktopMode (w);
+    }
+    else
+    {
+      screen->focusDefaultWindow();
+    }
   }
   else
   {
@@ -997,6 +1012,8 @@ void UnityWindow::activate ()
   ShowdesktopHandler::InhibitLeaveShowdesktopMode (window->id ());
   window->activate ();
   ShowdesktopHandler::AllowLeaveShowdesktopMode (window->id ());
+
+  PluginAdapter::Default().OnLeaveDesktop();
 }
 
 void UnityWindow::DoEnableFocus ()
@@ -2825,6 +2842,8 @@ void UnityWindow::windowNotify(CompWindowNotify n)
         window->unminimizeSetEnabled (this, false);
         window->minimizedSetEnabled (this, false);
       }
+
+      PluginAdapter::Default().UpdateShowDesktopState();
         break;
       case CompWindowNotifyBeforeDestroy:
         being_destroyed.emit();
@@ -3438,6 +3457,8 @@ UnityWindow::UnityWindow(CompWindow* window)
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
   ScaleWindowInterface::setHandler (ScaleWindow::get (window));
+
+  PluginAdapter::Default().OnLeaveDesktop();
 
   /* This needs to happen before we set our wrapable functions, since we
    * need to ask core (and not ourselves) whether or not the window is

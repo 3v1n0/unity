@@ -76,17 +76,13 @@ bool RefCountIs(TestGObject* t_obj, unsigned int expected_ref)
 
 
 std::unordered_map<void*, bool> weak_destroyed;
-static void weak_ref_function(gpointer data, GObject* where_the_object_was)
-{
-  weak_destroyed[data] = true;
-}
 
 void ResetWeakObjectDestruction() { weak_destroyed.clear(); }
 
 void AddWeakObjectDestruction(GObject* obj)
 {
-  g_object_weak_ref(obj, weak_ref_function, obj);
-  weak_destroyed[(void*)obj] = false;
+  g_object_weak_ref(obj, [] (gpointer data, GObject*) { weak_destroyed[data] = true; }, obj);
+  weak_destroyed[static_cast<void*>(obj)] = false;
 }
 
 bool IsObjectDestroyed(void* obj)
