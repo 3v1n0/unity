@@ -271,7 +271,8 @@ TEST_F(TestTabIterator, KeyNavIterationWithNoCurrentSelectionAndPreviousMove)
   unity::IMTextEntry* result = (unity::IMTextEntry*) tab_iterator->KeyNavIteration(
     nux::KEY_NAV_TAB_PREVIOUS);
 
-  EXPECT_EQ(result, *tab_iterator->areas_.end());
+  EXPECT_EQ(result, *tab_iterator->areas_.rbegin());
+  EXPECT_EQ(result, second_entry);
 }
 
 TEST_F(TestTabIterator, KeyNavIterationNoCurrentSelectionAndNextMove)
@@ -300,7 +301,8 @@ TEST_F(TestTabIterator, KeyNavIterationWithPreviousSelectionIsFirstArea)
   unity::IMTextEntry* result = (unity::IMTextEntry*) tab_iterator->KeyNavIteration(
     nux::KEY_NAV_TAB_PREVIOUS);
 
-  EXPECT_EQ(result, *tab_iterator->areas_.end());
+  EXPECT_EQ(result, *tab_iterator->areas_.rbegin());
+  EXPECT_EQ(result, second_entry);
 }
 
 TEST_F(TestTabIterator, KeyNavIterationWithPreviousSelectionIsNotFirst)
