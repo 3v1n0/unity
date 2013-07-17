@@ -41,7 +41,7 @@ public:
 
   void Prepend(nux::InputArea* area);
   void Append(nux::InputArea* area);
-  void Insert(nux::InputArea* area, int index);
+  void Insert(nux::InputArea* area, unsigned index);
   void InsertBefore(nux::InputArea* area, nux::InputArea* after);
   void InsertAfter(nux::InputArea* area, nux::InputArea* before);
   void Remove(nux::InputArea* area);

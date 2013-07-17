@@ -32,10 +32,7 @@ namespace previews
 
 void TabIterator::Remove(nux::InputArea* area)
 {
-  std::list<nux::InputArea*>::iterator it = std::find(areas_.begin(), areas_.end(),
-    area);
-  if (it != areas_.end())
-    areas_.erase(it);
+  areas_.remove(area);
 }
 
 void TabIterator::Prepend(nux::InputArea* area)
@@ -50,11 +47,11 @@ void TabIterator::Append(nux::InputArea* area)
   areas_.push_back(area);
 }
 
-void TabIterator::Insert(nux::InputArea* area, int index)
+void TabIterator::Insert(nux::InputArea* area, unsigned index)
 {
   Remove(area);
   std::list<nux::InputArea*>::iterator it = areas_.begin();
-  if ((uint)index < areas_.size())
+  if (index < areas_.size())
   {
     std::advance(it, index);
     areas_.insert(it, area);
@@ -152,7 +149,7 @@ nux::Area* TabIterator::KeyNavIteration(nux::KeyNavDirection direction)
       }
     }
   }
-  else if (!areas_.empty())
+  else
   {
     if (direction == nux::KEY_NAV_TAB_PREVIOUS)
     {
