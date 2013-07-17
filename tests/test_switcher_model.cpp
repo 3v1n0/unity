@@ -186,8 +186,18 @@ TEST_F(TestSwitcherModel, TestHasNextDetailRow)
   model->SetRowSizes({2,2});
 
   EXPECT_TRUE(model->HasNextDetailRow());
+}
 
-  model->NextDetailRow();
+TEST_F(TestSwitcherModel, TestHasNextDetailRowStopsAtTheEnd)
+{
+  SwitcherModel::Ptr model(new SwitcherModel(icons_));
+  model->detail_selection = true;
+  for (unsigned int i = 0; i < model->DetailXids().size() - 1 &&
+       model->HasNextDetailRow(); i++)
+  {
+    model->NextDetailRow();
+  }
+
   EXPECT_FALSE(model->HasNextDetailRow());
 }
 
@@ -213,7 +223,6 @@ TEST_F(TestSwitcherModel, TestHasNextThenPrevDetailRow)
   EXPECT_TRUE(model->HasNextDetailRow());
 
   model->NextDetailRow();
-  EXPECT_FALSE(model->HasNextDetailRow());
 
   EXPECT_TRUE(model->HasPrevDetailRow());
   model->PrevDetailRow();

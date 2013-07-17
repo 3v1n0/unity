@@ -44,10 +44,7 @@ static const string scope_path = "/com/canonical/unity/scope/testscope1";
 static void ConnectAndWait(ScopeProxyInterface::Ptr const proxy)
 {
   proxy->ConnectProxy();
-  Utils::WaitUntilMSec([proxy] { return proxy->connected == true; },
-                       true,
-                       3000,
-                       [] { return g_strdup("Could not connect to proxy"); });
+  Utils::WaitUntil([proxy] { return proxy->connected == true; }, 3, true, "Could not connect to proxy");
 }
 
 };
@@ -101,10 +98,7 @@ TEST(TestScopeProxy, FilterSync)
   bool filter_changed = false;
   scope_proxy->filters.changed.connect([&filter_changed] (Filters::Ptr const& filters) { filter_changed = true; });
   Filters::Ptr filters = scope_proxy->filters();
-  Utils::WaitUntilMSec([filters] { return filters->count() > 0; },
-                       true,
-                       3000,
-                       [] { return g_strdup("Filters coutn = 0"); });
+  Utils::WaitUntil([filters] { return filters->count() > 0; }, true, 3, "Filters count = 0");
 
   FilterAdaptor adaptor = filters->RowAtIndex(0);
 
@@ -123,10 +117,7 @@ TEST(TestScopeProxy, CategorySync)
   ConnectAndWait(scope_proxy);
 
   Categories::Ptr categories = scope_proxy->categories();
-  Utils::WaitUntilMSec([categories] { return categories->count() > 0; },
-                       true,
-                       3000,
-                       [] { return g_strdup("Cateogry count = 0"); });
+  Utils::WaitUntil([categories] { return categories->count() > 0; }, true, 3, "Category count = 0");
 }
 
 TEST(TestScopeProxy, Search)
@@ -143,13 +134,12 @@ TEST(TestScopeProxy, Search)
     search_finished = true;
   };
 
-  scope_proxy->Search("12:cat", search_callback, nullptr);
+  scope_proxy->Search("12:cat", glib::HintsMap(), search_callback, nullptr);
 
   Results::Ptr results = scope_proxy->results();
-  Utils::WaitUntilMSec([&search_finished, results] { return search_finished == true && results->count() == 12; },
-                       true,
-                       3000,
-                       [results] { return g_strdup_printf("Either search didn't finish, or result count is not as expected (%u != 12).", static_cast<unsigned>(results->count())); });
+  Utils::WaitUntil([&search_finished, results] { return search_finished == true && results->count() == 12; },
+                   true, 3, "Either search didn't finish, or result count is not " \
+                   "as expected ("+std::to_string(results->count())+" != 12).");
   EXPECT_EQ(search_ok, true);
 }
 
@@ -167,24 +157,24 @@ TEST(TestScopeProxy, MultiSearch)
   };
 
   // First Search
-  scope_proxy->Search("12:cat", search_callback, nullptr);
+  scope_proxy->Search("12:cat", glib::HintsMap(), search_callback, nullptr);
 
   Results::Ptr results = scope_proxy->results();
-  Utils::WaitUntilMSec([&search_finished, results] { return search_finished == true && results->count() == 12; },
-                       true,
-                       3000,
-                       [results] { return g_strdup_printf("First search. Either search didn't finish, or result count is not as expected (%u != 12).", static_cast<int>(results->count())); });
+  Utils::WaitUntil([&search_finished, results] { return search_finished == true && results->count() == 12; },
+                   true, 3, "First search. Either search didn't finish, or " \
+                   "result count is not as expected ("+
+                    std::to_string(results->count())+" != 12).");
   EXPECT_EQ(search_ok, true);
 
   // Second Search
   search_ok = false;
   search_finished = false;
-  scope_proxy->Search("5:cat", search_callback, nullptr);
+  scope_proxy->Search("5:cat", glib::HintsMap(), search_callback, nullptr);
   
-  Utils::WaitUntilMSec([&search_finished, results] { return search_finished == true && results->count() == 5; },
-                       true,
-                       3000,
-                       [results] { return g_strdup_printf("Second search. Either search didn't finish, or result count is not as expected (%u != 5).", static_cast<unsigned>(results->count())); });
+  Utils::WaitUntil([&search_finished, results] { return search_finished == true && results->count() == 5; },
+                   true, 3, "Second search. Either search didn't finish, or " \
+                   "result count is not as expected ("+
+                   std::to_string(results->count())+" != 5).");
   EXPECT_EQ(search_ok, true);
 }
 
@@ -200,10 +190,8 @@ TEST(TestScopeProxy, SearchFail)
     search_finished = true;
   };
 
-  scope_proxy->Search("12:cat", search_callback, nullptr);
-  Utils::WaitUntilMSec(search_finished,
-                       3000,
-                       [] { return g_strdup("Search did not finish."); });
+  scope_proxy->Search("12:cat", glib::HintsMap(), search_callback, nullptr);
+  Utils::WaitUntil(search_finished, 3, "Search did not finish.");
   EXPECT_EQ(search_ok, false);
 }
 
@@ -219,9 +207,9 @@ TEST(TestScopeProxy, SearchCancelled)
     search_finished = true;
   };
 
-  glib::Object<GCancellable> cancel_search(g_cancellable_new());
-  scope_proxy->Search("12:cat", search_callback, cancel_search);
-  g_cancellable_cancel(cancel_search);
+  glib::Cancellable cancel_search;
+  scope_proxy->Search("12:cat", glib::HintsMap(), search_callback, cancel_search);
+  cancel_search.Cancel();
 
   Utils::WaitForTimeoutMSec(1000);
   EXPECT_EQ(search_finished, false);
@@ -232,13 +220,12 @@ TEST(TestScopeProxy, SearchCategories)
   ScopeProxyInterface::Ptr scope_proxy(new ScopeProxy(ScopeData::Ptr(new MockScopeData("testscope1", scope_name, scope_path))));
   // Auto-connect on search
 
-  scope_proxy->Search("12:cat", nullptr, nullptr);
+  scope_proxy->Search("12:cat", glib::HintsMap(), nullptr, nullptr);
 
   Results::Ptr results = scope_proxy->results();
-  Utils::WaitUntilMSec([results] { return results->count() == 12; },
-                       true,
-                       3000,
-                       [results] { return g_strdup_printf("Result count is not as expected (%u != 12).", static_cast<unsigned>(results->count())); });
+  Utils::WaitUntil([results] { return results->count() == 12; }, true, 3,
+                   "Result count is not as expected ("+
+                   std::to_string(results->count())+" != 12).");
 
   Results::Ptr category_model0 = scope_proxy->GetResultsForCategory(0);
   ASSERT_TRUE(category_model0 ? true : false);
@@ -275,9 +262,7 @@ TEST(TestScopeProxy, ActivateUri)
                           activate_callback,
                           nullptr);
 
-  Utils::WaitUntilMSec(activated_return,
-                       3000,
-                       [] { return g_strdup("Failed to activate"); });
+  Utils::WaitUntilMSec(activated_return, 3, "Failed to activate");
 }
 
 TEST(TestScopeProxy, Preview)
@@ -301,9 +286,7 @@ TEST(TestScopeProxy, Preview)
                           activate_callback,
                           nullptr);
 
-  Utils::WaitUntilMSec(prevew_returned,
-                       3000,
-                       [] { return g_strdup("Failed to preview"); });
+  Utils::WaitUntil(prevew_returned, 3, "Failed to preview");
 }
 
 } // namespace dash

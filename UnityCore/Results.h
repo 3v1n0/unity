@@ -47,11 +47,6 @@ public:
   sigc::signal<void, Result const&> result_added;
   sigc::signal<void, Result const&> result_changed;
   sigc::signal<void, Result const&> result_removed;
-
-private:
-  void OnRowAdded(Result& result);
-  void OnRowChanged(Result& result);
-  void OnRowRemoved(Result& result);
 };
 
 }

@@ -49,44 +49,22 @@ PanelIndicatorsView::PanelIndicatorsView()
   LOG_DEBUG(logger) << "Indicators View Added: ";
 }
 
-PanelIndicatorsView::~PanelIndicatorsView()
-{
-  for (auto const& ind : indicators_connections_)
-  {
-    for (auto conn : ind.second)
-      conn.disconnect();
-  }
-}
-
 void PanelIndicatorsView::AddIndicator(Indicator::Ptr const& indicator)
 {
   LOG_DEBUG(logger) << "IndicatorAdded: " << indicator->name();
   indicators_.push_back(indicator);
 
-  std::vector<sigc::connection> connections;
-
   for (auto const& entry : indicator->GetEntries())
     AddEntry(entry);
 
-  auto entry_added_conn = indicator->on_entry_added.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryAdded));
-  connections.push_back(entry_added_conn);
-
-  auto entry_removed_conn = indicator->on_entry_removed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRemoved));
-  connections.push_back(entry_removed_conn);
-
-  indicators_connections_[indicator] = connections;
+  auto& conn_manager = indicators_connections_[indicator];
+  conn_manager.Add(indicator->on_entry_added.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryAdded)));
+  conn_manager.Add(indicator->on_entry_removed.connect(sigc::mem_fun(this, &PanelIndicatorsView::OnEntryRemoved)));
 }
 
 void PanelIndicatorsView::RemoveIndicator(Indicator::Ptr const& indicator)
 {
-  auto connections = indicators_connections_.find(indicator);
-
-  if (connections != indicators_connections_.end()) {
-    for (auto& conn : connections->second)
-      conn.disconnect();
-
-    indicators_connections_.erase(indicator);
-  }
+  indicators_connections_.erase(indicator);
 
   for (auto const& entry : indicator->GetEntries())
     OnEntryRemoved(entry->id());

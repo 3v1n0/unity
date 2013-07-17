@@ -25,6 +25,7 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
+#include <UnityCore/ConnectionManager.h>
 #include <UnityCore/Tracks.h>
 #include "unity-shared/Introspectable.h"
 #include "PreviewPlayer.h"
@@ -51,7 +52,6 @@ public:
   NUX_DECLARE_OBJECT_TYPE(Track, nux::View);
 
   Track(NUX_FILE_LINE_PROTO);
-  virtual ~Track();
 
   void Update(dash::Track const& track_row);
 
@@ -82,8 +82,7 @@ protected:
   PlayerState play_state_;
   float progress_;
   PreviewPlayer player_;
-  sigc::connection player_connection_;
-  
+
   unity::StaticCairoText* track_number_;
   unity::StaticCairoText* title_;
   unity::StaticCairoText* duration_;
@@ -100,6 +99,7 @@ protected:
   nux::LayeredLayout* track_status_layout_;
 
   bool mouse_over_;
+  connection::Wrapper player_connection_;
 };
 
 }

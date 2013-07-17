@@ -81,8 +81,12 @@ TEST_F(TestSwitcherController, StartDetailMode)
 {
   controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
   controller_->InitiateDetail();
-  controller_->StartDetailMode();
+  EXPECT_TRUE(controller_->IsDetailViewShown());
 
+  controller_->StopDetailMode();
+  EXPECT_FALSE(controller_->IsDetailViewShown());
+
+  controller_->StartDetailMode();
   EXPECT_TRUE(controller_->IsDetailViewShown());
 }
 
@@ -90,8 +94,6 @@ TEST_F(TestSwitcherController, StopDetailMode)
 {
   controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
   controller_->InitiateDetail();
-
-  controller_->StartDetailMode();
   EXPECT_TRUE(controller_->IsDetailViewShown());
 
   controller_->StopDetailMode();
@@ -104,19 +106,18 @@ TEST_F(TestSwitcherController, StartDetailModeMovesNextRows)
   controller_->Select(2);
   controller_->InitiateDetail();
 
-  controller_->StartDetailMode();
-  EXPECT_TRUE(controller_->IsDetailViewShown());
-
   auto view = controller_->GetView();
   auto model = view->GetModel();
   model->SetRowSizes({2,2});
+
+  controller_->StartDetailMode();
+  EXPECT_TRUE(controller_->IsDetailViewShown());
 
   controller_->StartDetailMode();
 
   // Grid: Assert we have gone down a row from index 0 -> 2
   //  0, 1,
   //  2, 3
-  EXPECT_FALSE(model->HasNextDetailRow());
   EXPECT_TRUE(model->HasPrevDetailRow());
   EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 2);
 }
@@ -140,7 +141,6 @@ TEST_F(TestSwitcherController, StopDetailModeMovesPrevRows)
   // Assert we have gone up a row from index 2 -> 0
   //  0, 1,
   //  2, 3
-  EXPECT_TRUE(model->HasNextDetailRow());
   EXPECT_FALSE(model->HasPrevDetailRow());
   EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 0);
 

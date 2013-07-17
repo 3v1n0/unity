@@ -22,6 +22,7 @@
 #include <gmock/gmock.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Results.h>
+#include <UnityCore/Variant.h>
 
 #include <dee.h>
 
@@ -40,7 +41,7 @@ public:
   TestResultIterator()
     : results(new Results(ModelType::LOCAL))
   {
-    dee_model_set_schema (results->model(), 
+    dee_model_set_schema (results->model(),
                           "s", "s", "u", "u", "s", "s", "s", "s", "a{sv}", NULL);
   }
 
@@ -48,7 +49,7 @@ public:
   {
     GVariantBuilder b;
     g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
-    GVariant *hints = g_variant_builder_end(&b);
+    glib::Variant hints = g_variant_builder_end(&b);
 
     dee_model_append(results->model(),
                      uri.c_str(),  // uri
@@ -59,9 +60,7 @@ public:
                      name.c_str(), // display name
                      "",           // comment
                      uri.c_str(),  // dnd-uri
-                     hints);       // hints
-
-    g_variant_unref(hints);
+                     static_cast<GVariant*>(hints));       // hints
   }
 
   Results::Ptr results;

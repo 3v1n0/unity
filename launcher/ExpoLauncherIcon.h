@@ -43,8 +43,7 @@ private:
   void OnViewportLayoutChanged(int hsize, int vsize);
   void UpdateIcon();
 
-  sigc::connection screen_viewport_switch_ended_connection_;
-  sigc::connection terminate_expo_connection_;
+  connection::Manager viewport_changes_connections_;
 };
 
 }

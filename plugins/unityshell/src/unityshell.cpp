@@ -149,6 +149,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , scale_just_activated_(false)
   , big_tick_(0)
   , screen_introspection_(screen)
+  , is_desktop_active_(false)
 {
   Timer timer;
 #ifndef USE_GLES
@@ -857,9 +858,11 @@ void UnityScreen::enterShowDesktopMode ()
 {
   for (CompWindow *w : screen->windows ())
   {
+    CompPoint const& viewport = w->defaultViewport();
     UnityWindow *uw = UnityWindow::get (w);
 
-    if (ShowdesktopHandler::ShouldHide (static_cast <ShowdesktopHandlerWindowInterface *> (uw)))
+    if (viewport == uScreen->screen->vp() &&
+        ShowdesktopHandler::ShouldHide (static_cast <ShowdesktopHandlerWindowInterface *> (uw)))
     {
       UnityWindow::get (w)->enterShowDesktop ();
       // the animation plugin does strange things here ...
@@ -900,7 +903,10 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
   {
     for (CompWindow *cw : screen->windows ())
     {
-      if (cw->inShowDesktopMode ())
+      CompPoint const& viewport = cw->defaultViewport();
+
+      if (viewport == uScreen->screen->vp() &&
+          cw->inShowDesktopMode ())
       {
         UnityWindow::get (cw)->leaveShowDesktop ();
         // the animation plugin does strange things here ...
@@ -911,7 +917,17 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
 
     PluginAdapter::Default().OnLeaveDesktop();
 
-    screen->leaveShowDesktopMode (w);
+    if (w)
+    {
+      CompPoint const& viewport = w->defaultViewport();
+
+      if (viewport == uScreen->screen->vp())
+        screen->leaveShowDesktopMode (w);
+    }
+    else
+    {
+      screen->focusDefaultWindow();
+    }
   }
   else
   {
@@ -953,6 +969,25 @@ bool UnityScreen::DoesPointIntersectUnityGeos(nux::Point const& pt)
   return false;
 }
 
+CompWindow * GetTopVisibleWindow()
+{
+  CompWindow *top_visible_window = NULL;
+
+  for (CompWindow *w : screen->windows ())
+  {
+    if (w->isViewable() && 
+        !w->minimized() && 
+        !w->resName().empty() && 
+        (w->resName() != "unity-panel-service") &&
+        (w->resName() != "notify-osd"))
+    {
+      top_visible_window = w;
+    }
+  }
+
+  return top_visible_window;
+}
+  
 void UnityWindow::enterShowDesktop ()
 {
   if (!mShowdesktopHandler)
@@ -977,6 +1012,8 @@ void UnityWindow::activate ()
   ShowdesktopHandler::InhibitLeaveShowdesktopMode (window->id ());
   window->activate ();
   ShowdesktopHandler::AllowLeaveShowdesktopMode (window->id ());
+
+  PluginAdapter::Default().OnLeaveDesktop();
 }
 
 void UnityWindow::DoEnableFocus ()
@@ -2595,18 +2632,29 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   {
     Window active_window = screen->activeWindow();
 
+    CompWindow *top_visible_window;
+
     if (G_UNLIKELY(window->type() == CompWindowTypeDesktopMask))
     {
       uScreen->setPanelShadowMatrix(matrix);
 
       if (active_window == 0 || active_window == window->id())
-        draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
+      {
+        top_visible_window = GetTopVisibleWindow();
+
+        if (top_visible_window && (window->id() == top_visible_window->id()))
+        {
+          draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
+        }
+        uScreen->is_desktop_active_ = true;
+      } 
     }
     else
     {
       if (window->id() == active_window)
       {
         draw_panel_shadow = DrawPanelShadow::BELOW_WINDOW;
+        uScreen->is_desktop_active_ = false;
 
         if (!(window->state() & CompWindowStateMaximizedVertMask) &&
             !(window->state() & CompWindowStateFullscreenMask) &&
@@ -2617,6 +2665,19 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
           if (window->y() - window->border().top < output.y() + uScreen->panel_style_.panel_height)
           {
             draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
+          }
+        }
+      }
+      else
+      {
+        if (uScreen->is_desktop_active_)
+        {
+          top_visible_window = GetTopVisibleWindow();
+
+          if (top_visible_window && (window->id() == top_visible_window->id()))
+          {
+            draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
+            uScreen->panelShadowPainted = CompRegion();
           }
         }
       }
@@ -2781,6 +2842,8 @@ void UnityWindow::windowNotify(CompWindowNotify n)
         window->unminimizeSetEnabled (this, false);
         window->minimizedSetEnabled (this, false);
       }
+
+      PluginAdapter::Default().UpdateShowDesktopState();
         break;
       case CompWindowNotifyBeforeDestroy:
         being_destroyed.emit();
@@ -3394,6 +3457,8 @@ UnityWindow::UnityWindow(CompWindow* window)
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
   ScaleWindowInterface::setHandler (ScaleWindow::get (window));
+
+  PluginAdapter::Default().OnLeaveDesktop();
 
   /* This needs to happen before we set our wrapable functions, since we
    * need to ask core (and not ourselves) whether or not the window is

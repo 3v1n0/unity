@@ -18,12 +18,13 @@
  */
 
 #include "ScopeProxy.h"
+#include "ConnectionManager.h"
 #include "GLibSignal.h"
+#include "GLibSource.h"
 #include "MiscUtils.h"
 
 #include <unity-protocol.h>
 #include <NuxCore/Logger.h>
-#include "GLibSource.h"
 
 namespace unity
 {
@@ -88,7 +89,7 @@ public:
   std::string last_search_;
 
   glib::Object<UnityProtocolScopeProxy> scope_proxy_;
-  glib::Object<GCancellable> cancel_scope_;
+  glib::Cancellable cancel_scope_;
   bool proxy_created_;
   bool scope_proxy_connected_;
   bool searching_;
@@ -97,23 +98,11 @@ public:
   Filters::Ptr filters_;
   Categories::Ptr categories_;
 
-  typedef std::shared_ptr<sigc::connection> ConnectionPtr;
-  std::vector<ConnectionPtr> property_connections;
-  sigc::connection filters_change_connection;
+  connection::handle filters_change_connection_;
+  connection::Manager signals_conn_;
 
-  /////////////////////////////////////////////////
-  // DBus property signals.
-  glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> connected_signal_;
-  glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> is_master_signal_;
-  glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> search_hint_signal_;
-  glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> view_type_signal_;
-  glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> filters_signal_;
-  glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> categories_signal_;
-  glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> metadata_signal_;
-  glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> optional_metadata_signal_;
-  glib::Signal<void, UnityProtocolScopeProxy*, const gchar*, guint32*, int> category_order_signal_;
-  glib::Signal<void, UnityProtocolScopeProxy*, const gchar*, GVariant*> filter_settings_signal_;  
-  /////////////////////////////////////////////////
+  typedef glib::Signal<void, UnityProtocolScopeProxy*, GParamSpec*> ScopePropertySignal;
+  glib::SignalManager gsignals_;
 
 private:
   /////////////////////////////////////////////////
@@ -261,7 +250,6 @@ ScopeProxy::Impl::Impl(ScopeProxy*const owner, ScopeData::Ptr const& scope_data)
 , scope_data_(scope_data)
 , view_type(ScopeViewType::HIDDEN)
 , connected(false)
-, cancel_scope_(g_cancellable_new())
 , proxy_created_(false)
 , scope_proxy_connected_(false)
 , searching_(false)
@@ -270,25 +258,25 @@ ScopeProxy::Impl::Impl(ScopeProxy*const owner, ScopeData::Ptr const& scope_data)
 , categories_(new Categories())
 {
   // remote properties
-  property_connections.push_back(utils::ConnectProperties(owner_->connected, connected));
-  property_connections.push_back(utils::ConnectProperties(owner_->channel, channel));
-  property_connections.push_back(utils::ConnectProperties(owner_->category_order, category_order));
+  signals_conn_.Add(utils::ConnectProperties(owner_->connected, connected));
+  signals_conn_.Add(utils::ConnectProperties(owner_->channel, channel));
+  signals_conn_.Add(utils::ConnectProperties(owner_->category_order, category_order));
 
   // shared properties
-  property_connections.push_back(utils::ConnectProperties(owner_->is_master, scope_data_->is_master));
-  property_connections.push_back(utils::ConnectProperties(owner_->search_hint, scope_data_->search_hint));
+  signals_conn_.Add(utils::ConnectProperties(owner_->is_master, scope_data_->is_master));
+  signals_conn_.Add(utils::ConnectProperties(owner_->search_hint, scope_data_->search_hint));
   // local properties
-  property_connections.push_back(utils::ConnectProperties(owner_->dbus_name, scope_data_->dbus_name));
-  property_connections.push_back(utils::ConnectProperties(owner_->dbus_path, scope_data_->dbus_path));
-  property_connections.push_back(utils::ConnectProperties(owner_->name, scope_data_->name));
-  property_connections.push_back(utils::ConnectProperties(owner_->description, scope_data_->description));
-  property_connections.push_back(utils::ConnectProperties(owner_->shortcut, scope_data_->shortcut));
-  property_connections.push_back(utils::ConnectProperties(owner_->icon_hint, scope_data_->icon_hint));
-  property_connections.push_back(utils::ConnectProperties(owner_->category_icon_hint, scope_data_->category_icon_hint));
-  property_connections.push_back(utils::ConnectProperties(owner_->keywords, scope_data_->keywords));
-  property_connections.push_back(utils::ConnectProperties(owner_->type, scope_data_->type));
-  property_connections.push_back(utils::ConnectProperties(owner_->query_pattern, scope_data_->query_pattern));
-  property_connections.push_back(utils::ConnectProperties(owner_->visible, scope_data_->visible));
+  signals_conn_.Add(utils::ConnectProperties(owner_->dbus_name, scope_data_->dbus_name));
+  signals_conn_.Add(utils::ConnectProperties(owner_->dbus_path, scope_data_->dbus_path));
+  signals_conn_.Add(utils::ConnectProperties(owner_->name, scope_data_->name));
+  signals_conn_.Add(utils::ConnectProperties(owner_->description, scope_data_->description));
+  signals_conn_.Add(utils::ConnectProperties(owner_->shortcut, scope_data_->shortcut));
+  signals_conn_.Add(utils::ConnectProperties(owner_->icon_hint, scope_data_->icon_hint));
+  signals_conn_.Add(utils::ConnectProperties(owner_->category_icon_hint, scope_data_->category_icon_hint));
+  signals_conn_.Add(utils::ConnectProperties(owner_->keywords, scope_data_->keywords));
+  signals_conn_.Add(utils::ConnectProperties(owner_->type, scope_data_->type));
+  signals_conn_.Add(utils::ConnectProperties(owner_->query_pattern, scope_data_->query_pattern));
+  signals_conn_.Add(utils::ConnectProperties(owner_->visible, scope_data_->visible));
   // Writable properties.
   owner_->view_type.SetGetterFunction([this]() { return view_type.Get(); });
   owner_->view_type.SetSetterFunction(sigc::mem_fun(this, &Impl::set_view_type));
@@ -300,13 +288,6 @@ ScopeProxy::Impl::Impl(ScopeProxy*const owner, ScopeData::Ptr const& scope_data)
 
 ScopeProxy::Impl::~Impl()
 {
-  filters_change_connection.disconnect();
-  for_each(property_connections.begin(), property_connections.end(), [](ConnectionPtr const& con) { con->disconnect(); });
-  property_connections.clear();
-
-  if (cancel_scope_ && !g_cancellable_is_cancelled(cancel_scope_))
-    g_cancellable_cancel(cancel_scope_);
-
   if (scope_proxy_ && connected)
     unity_protocol_scope_proxy_close_channel(scope_proxy_, channel().c_str(), nullptr, Impl::OnCloseChannel, nullptr);
 }
@@ -314,12 +295,9 @@ ScopeProxy::Impl::~Impl()
 void ScopeProxy::Impl::DestroyProxy()
 {
   CloseChannel();
-  
+
   scope_proxy_.Release();
-  if (cancel_scope_ && !g_cancellable_is_cancelled(cancel_scope_))
-    g_cancellable_cancel(cancel_scope_);
-  
-  cancel_scope_ = g_cancellable_new(); 
+  cancel_scope_.Renew();
   connected = false;
   proxy_created_ = false;
   scope_proxy_connected_ = false;
@@ -339,16 +317,8 @@ void ScopeProxy::Impl::CreateProxy()
 }
 
 void ScopeProxy::Impl::OnNewScope(glib::Object<UnityProtocolScopeProxy> const& scope_proxy, glib::Error const& error)
-{ 
-  is_master_signal_.Disconnect();
-  search_hint_signal_.Disconnect();
-  view_type_signal_.Disconnect();
-  filters_signal_.Disconnect();
-  categories_signal_.Disconnect();
-  metadata_signal_.Disconnect();
-  optional_metadata_signal_.Disconnect();
-  category_order_signal_.Disconnect();
-  filter_settings_signal_.Disconnect();
+{
+  gsignals_.Disconnect(scope_proxy_);
 
   if (error || !scope_proxy)
   {
@@ -368,19 +338,30 @@ void ScopeProxy::Impl::OnNewScope(glib::Object<UnityProtocolScopeProxy> const& s
   // remote properties
   view_type = static_cast<ScopeViewType>(unity_protocol_scope_proxy_get_view_type(scope_proxy_));
 
-  connected_signal_.Connect(scope_proxy_, "notify::connected", sigc::mem_fun(this, &Impl::OnScopeConnectedChanged));
-  is_master_signal_.Connect(scope_proxy_, "notify::is-master", sigc::mem_fun(this, &Impl::OnScopeIsMasterChanged));
-  search_hint_signal_.Connect(scope_proxy_, "notify::search-hint", sigc::mem_fun(this, &Impl::OnScopeSearchHintChanged));
-  view_type_signal_.Connect(scope_proxy_, "notify::view-type", sigc::mem_fun(this, &Impl::OnScopeViewTypeChanged));
-  filters_signal_.Connect(scope_proxy_, "notify::filters-model", sigc::mem_fun(this, &Impl::OnScopeFiltersChanged));
-  categories_signal_.Connect(scope_proxy_, "notify::categories-model", sigc::mem_fun(this, &Impl::OnScopeCategoriesChanged));
-  metadata_signal_.Connect(scope_proxy_, "notify::metadata", sigc::mem_fun(this, &Impl::OnScopeMetadataChanged));
-  optional_metadata_signal_.Connect(scope_proxy_, "notify::optional-metadata", sigc::mem_fun(this, &Impl::OnScopeOptionalMetadataChanged));
-  category_order_signal_.Connect(scope_proxy_, "category-order-changed", sigc::mem_fun(this, &Impl::OnScopeCategoryOrderChanged));
-  filter_settings_signal_.Connect(scope_proxy_, "filter-settings-changed", sigc::mem_fun(this, &Impl::OnScopeFilterSettingsChanged));
+  auto sig = std::make_shared<ScopePropertySignal>(scope_proxy_, "notify::connected", sigc::mem_fun(this, &Impl::OnScopeConnectedChanged));
+  gsignals_.Add(sig);
+  sig = std::make_shared<ScopePropertySignal>(scope_proxy_, "notify::connected", sigc::mem_fun(this, &Impl::OnScopeConnectedChanged));
+  gsignals_.Add(sig);
+  sig = std::make_shared<ScopePropertySignal>(scope_proxy_, "notify::is-master", sigc::mem_fun(this, &Impl::OnScopeIsMasterChanged));
+  gsignals_.Add(sig);
+  sig = std::make_shared<ScopePropertySignal>(scope_proxy_, "notify::search-hint", sigc::mem_fun(this, &Impl::OnScopeSearchHintChanged));
+  gsignals_.Add(sig);
+  sig = std::make_shared<ScopePropertySignal>(scope_proxy_, "notify::view-type", sigc::mem_fun(this, &Impl::OnScopeViewTypeChanged));
+  gsignals_.Add(sig);
+  sig = std::make_shared<ScopePropertySignal>(scope_proxy_, "notify::filters-model", sigc::mem_fun(this, &Impl::OnScopeFiltersChanged));
+  gsignals_.Add(sig);
+  sig = std::make_shared<ScopePropertySignal>(scope_proxy_, "notify::categories-model", sigc::mem_fun(this, &Impl::OnScopeCategoriesChanged));
+  gsignals_.Add(sig);
+  sig = std::make_shared<ScopePropertySignal>(scope_proxy_, "notify::metadata", sigc::mem_fun(this, &Impl::OnScopeMetadataChanged));
+  gsignals_.Add(sig);
+  sig = std::make_shared<ScopePropertySignal>(scope_proxy_, "notify::optional-metadata", sigc::mem_fun(this, &Impl::OnScopeOptionalMetadataChanged));
+  gsignals_.Add(sig);
+
+  gsignals_.Add<void, UnityProtocolScopeProxy*, const gchar*, guint32*, int>(scope_proxy_, "category-order-changed", sigc::mem_fun(this, &Impl::OnScopeCategoryOrderChanged));
+  gsignals_.Add<void, UnityProtocolScopeProxy*, const gchar*, GVariant*>(scope_proxy_, "filter-settings-changed", sigc::mem_fun(this, &Impl::OnScopeFilterSettingsChanged));
 
   scope_proxy_connected_ = unity_protocol_scope_proxy_get_connected(scope_proxy_);
-  
+
   if (scope_proxy_connected_)
     OpenChannel();
   else
@@ -396,7 +377,7 @@ void ScopeProxy::Impl::OpenChannel()
 
   unity_protocol_scope_proxy_open_channel(scope_proxy_,
                                           UNITY_PROTOCOL_CHANNEL_TYPE_DEFAULT,
-                                          UNITY_PROTOCOL_CHANNEL_FLAGS_NONE,
+                                          UNITY_PROTOCOL_CHANNEL_FLAGS_DIFF_CHANGES,
                                           cancel_scope_,
                                           OnOpenChannelCallback,
                                           this);
@@ -408,15 +389,18 @@ void ScopeProxy::Impl::OnChannelOpened(glib::String const& opened_channel, glib:
 
   glib::Object<DeeModel> filters_dee_model(DEE_MODEL(unity_protocol_scope_proxy_get_filters_model(scope_proxy_)), glib::AddRef());
   filters_->SetModel(filters_dee_model);
-  filters_change_connection.disconnect();
-  filters_change_connection = filters_->filter_changed.connect([this](Filter::Ptr const& filter)
+  filters_change_connection_ = signals_conn_.Replace(filters_change_connection_, filters_->filter_changed.connect([this](Filter::Ptr const& filter)
   {
     LOG_DEBUG(logger) << "Filters changed for " << scope_data_->id() << "- updating search results.";
 
     glib::HintsMap hints;
+    if (!owner_->form_factor().empty())
+    {
+      hints["form-factor"] = g_variant_new_string(owner_->form_factor().c_str());
+    }
     hints["changed-filter-row"] = filter->VariantValue();
     Search(last_search_, hints, nullptr, cancel_scope_);
-  });
+  }));
 
   glib::Object<DeeModel> categories_dee_model(DEE_MODEL(unity_protocol_scope_proxy_get_categories_model(scope_proxy_)), glib::AddRef());
   categories_->SetModel(categories_dee_model);
@@ -625,6 +609,10 @@ void ScopeProxy::Impl::OnScopeConnectedChanged(UnityProtocolScopeProxy* proxy, G
     {
       OpenChannel();
     }
+    else
+    {
+      connected = false;
+    }
   }
 }
 
@@ -646,8 +634,9 @@ void ScopeProxy::Impl::OnScopeViewTypeChanged(UnityProtocolScopeProxy* proxy, GP
 void ScopeProxy::Impl::OnScopeFiltersChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param)
 {
   LOG_DEBUG(logger) << scope_data_->id() << " (" << channel() << ") - Filter changed by server";
-  
+
   // Block the filter change signal so that changes do not cause another search.
+  auto filters_change_connection = signals_conn_.Get(filters_change_connection_);
   bool blocked = filters_change_connection.block(true);
 
   glib::Object<DeeModel> filters_dee_model(DEE_MODEL(unity_protocol_scope_proxy_get_filters_model(scope_proxy_)), glib::AddRef());
@@ -700,6 +689,7 @@ void ScopeProxy::Impl::OnScopeFilterSettingsChanged(UnityProtocolScopeProxy* sen
   LOG_DEBUG(logger) << scope_data_->id() << " (" << channel() << ") - Filter settings changed";
 
   // Block the filter change signal so that changes do not cause another search.
+  auto filters_change_connection = signals_conn_.Get(filters_change_connection_);
   bool blocked = filters_change_connection.block(true);
 
   filters_->ApplyStateChanges(filter_rows);
@@ -774,9 +764,14 @@ void ScopeProxy::DisconnectProxy()
   pimpl->DestroyProxy();
 }
 
-void ScopeProxy::Search(std::string const& search_string, SearchCallback const& callback, GCancellable* cancellable)
+void ScopeProxy::Search(std::string const& search_string, glib::HintsMap const& user_hints, SearchCallback const& callback, GCancellable* cancellable)
 {
-  pimpl->Search(search_string, glib::HintsMap(), callback, cancellable);
+  glib::HintsMap hints = user_hints;
+  if (!form_factor.Get().empty() && hints.find("form-factor") == hints.end())
+  {
+    hints["form-factor"] = g_variant_new_string(form_factor().c_str());
+  }
+  pimpl->Search(search_string, hints, callback, cancellable);
 }
 
 void ScopeProxy::Activate(LocalResult const& result, uint activate_type, glib::HintsMap const& hints, ScopeProxy::ActivateCallback const& callback, GCancellable* cancellable)
@@ -801,7 +796,6 @@ Results::Ptr ScopeProxy::GetResultsForCategory(unsigned category) const
   results_category_model->SetModel(filter_model, func);
   return results_category_model;
 }
-
 
 } // namespace dash
 } // namespace unity

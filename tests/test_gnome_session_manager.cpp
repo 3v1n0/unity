@@ -134,7 +134,7 @@ struct TestGnomeSessionManager : testing::Test
 {
   static void SetUpTestCase()
   {
-    g_setenv("GSETTINGS_BACKEND", "memory", TRUE);
+    Utils::init_gsettings_test_environment();
 
     can_shutdown_ = (g_random_int() % 2) ? true : false;
     can_suspend_ = (g_random_int() % 2) ? true : false;
@@ -249,7 +249,7 @@ struct TestGnomeSessionManager : testing::Test
 
   static void TearDownTestCase()
   {
-    g_setenv("GSETTINGS_BACKEND", "", TRUE);
+    Utils::reset_gsettings_test_environment();
 
     bool cancelled = false;
     bool closed = false;

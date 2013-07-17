@@ -332,7 +332,7 @@ TEST(TestGLibTimeoutSeconds, MultipleShotsRun)
   bool removed_called = false;
 
   {
-  auto check_function = []() { return (callback_call_count > 1) ? true : false; };
+  auto check_function = []() { return (callback_call_count > 1); };
   TimeoutSeconds timeout(1, &OnSourceCallbackContinue);
   timeout.removed.connect([&] (unsigned int id) { removed_called = true; });
   Utils::WaitUntil(check_function, true, 4);

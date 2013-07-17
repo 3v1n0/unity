@@ -28,6 +28,7 @@
 #include <dee.h>
 
 #include <UnityCore/GLibSignal.h>
+#include <UnityCore/ConnectionManager.h>
 #include <UnityCore/Results.h>
 
 #include "unity-shared/Introspectable.h"
@@ -60,6 +61,7 @@ public:
   typedef enum ActivateType_
   {
     DIRECT,
+    PREVIEW_LEFT_BUTTON,
     PREVIEW
   } ActivateType;
 
@@ -124,8 +126,7 @@ private:
   void OnRowRemoved(DeeModel* model, DeeModelIter* iter);
 
   Result cached_result_;
-  sigc::connection result_added_connection_;
-  sigc::connection result_removed_connection_;
+  connection::Manager result_connections_;
 };
 
 }

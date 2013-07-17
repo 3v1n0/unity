@@ -67,6 +67,7 @@ public:
   nux::ROProperty<bool> is_master;
   nux::ROProperty<std::string> search_hint;
   nux::RWProperty<ScopeViewType> view_type;
+  nux::RWProperty<std::string> form_factor;
 
   nux::ROProperty<Results::Ptr> results;
   nux::ROProperty<Filters::Ptr> filters;
@@ -84,6 +85,7 @@ public:
 
   typedef std::function<void(std::string const&, glib::HintsMap const&, glib::Error const&)> SearchCallback;
   virtual void Search(std::string const& search_hint, SearchCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
+  virtual void Search(std::string const& search_hint, glib::HintsMap const&, SearchCallback const& callback = nullptr, GCancellable* cancellable = nullptr);
 
   typedef std::function<void(LocalResult const&, ScopeHandledType, glib::Error const&)> ActivateCallback;
   virtual void Activate(LocalResult const& result, ActivateCallback const& callback = nullptr, GCancellable* cancellable = nullptr);

@@ -40,7 +40,7 @@ namespace unity
 namespace
 {
 
-#define DEFAULT_GICON ". GThemedIcon text-x-preview"
+#define DEFAULT_GICON ". GThemedIcon cmake"
 
 GdkPixbuf* GetIconData(std::string icon_hint, int size)
 {

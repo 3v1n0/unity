@@ -149,8 +149,8 @@ TEST_F(TestSwitcherView, Animate)
 }
 
 
-struct AnimationProgress : TestSwitcherView, testing::WithParamInterface<double> {};
-INSTANTIATE_TEST_CASE_P(TestSwitcherView, AnimationProgress, testing::Range(0.0, 1.0, 0.1));
+struct AnimationProgress : TestSwitcherView, testing::WithParamInterface<float> {};
+INSTANTIATE_TEST_CASE_P(TestSwitcherView, AnimationProgress, testing::Range<float>(0.0, 1.0, 0.1));
 
 TEST_P(AnimationProgress, UpdateRenderTargets)
 {
@@ -173,7 +173,7 @@ TEST_P(AnimationProgress, UpdateRenderTargets)
     auto const& layout_win = *win_it;
     bool should_be_selected = (xid == model->DetailSelectionWindow());
     ASSERT_EQ(layout_win->selected, should_be_selected);
-    ASSERT_EQ(layout_win->alpha, (should_be_selected ? 1.0f : 0.9f) * progress);
+    ASSERT_FLOAT_EQ(layout_win->alpha, (should_be_selected ? 1.0f : 0.9f) * progress);
   }
 }
 
