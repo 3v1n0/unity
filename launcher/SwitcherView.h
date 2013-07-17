@@ -25,6 +25,7 @@
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/LayoutSystem.h"
 #include "unity-shared/BackgroundEffectHelper.h"
+#include "unity-shared/Introspectable.h"
 #include "unity-shared/UnityWindowView.h"
 
 #include <Nux/View.h>
@@ -73,10 +74,15 @@ public:
   int IconIndexAt(int x, int y) const;
   int DetailIconIdexAt(int x, int y) const;
 
+  sigc::signal<void, int> right_clicked_icon;
+  sigc::signal<void, int> mouse_moving_over_icon;
+  sigc::signal<void, bool> hide_request;
+
 protected:
   // Introspectable methods
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
+  IntrospectableList GetIntrospectableChildren();
 
   void PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw, nux::Geometry const& clip);
@@ -88,7 +94,15 @@ protected:
   std::list<ui::RenderArg> RenderArgsFlat(nux::Geometry& background_geo, int selection, float progress);
 
   ui::RenderArg CreateBaseArgForIcon(launcher::AbstractLauncherIcon::Ptr const& icon);
+
 private:
+  void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
+  void HandleDetailMouseMove(int x, int y);
+  void HandleMouseMove(int x, int y);
+
+  void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void HandleDetailMouseUp(int x, int y, int button);
+  void HandleMouseUp(int x, int y, int button);
 
   void OnSelectionChanged(launcher::AbstractLauncherIcon::Ptr const& selection);
   void OnDetailSelectionChanged (bool detail);
@@ -111,6 +125,8 @@ private:
   void SaveTime();
   void ResetTimer();
   void SaveLast();
+
+  std::list<unity::debug::Introspectable*> introspection_results_;
 
   SwitcherModel::Ptr model_;
   ui::LayoutSystem layout_system_;

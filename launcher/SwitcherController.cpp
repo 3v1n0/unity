@@ -430,7 +430,6 @@ void Controller::Impl::ConstructWindow()
     main_layout_->SetHorizontalExternalMargin(0);
 
     view_window_ = create_window_();
-
     view_window_->SetOpacity(0.0f);
     view_window_->SetLayout(main_layout_);
     view_window_->SetBackgroundColor(nux::color::Transparent);
@@ -451,8 +450,9 @@ void Controller::Impl::ConstructView()
   view_->background_color = bg_color_;
   view_->monitor = obj_->monitor_;
 
-  view_->mouse_move.connect(sigc::mem_fun(this, &Controller::Impl::RecvMouseMove));
-  view_->mouse_up.connect(sigc::mem_fun(this, &Controller::Impl::RecvMouseUp));
+  view_->hide_request.connect          ([this] (bool activate)      { Hide(activate); });
+  view_->right_clicked_icon.connect    ([this] (int /*icon_index*/) { InitiateDetail(true); });
+  view_->mouse_moving_over_icon.connect([this] (int /*icon_index*/) { ResetDetailTimer(); });
 
   ConstructWindow();
   main_layout_->AddView(view_.GetPointer(), 1);
@@ -460,102 +460,6 @@ void Controller::Impl::ConstructView()
   view_window_->SetGeometry(workarea_);
 
   view_built.emit();
-
-}
-
-void Controller::Impl::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
-{
-  if (model_->detail_selection)
-  {
-    HandleDetailMouseMove(x, y);
-  }
-  else
-  {
-    HandleMouseMove(x, y);
-  }
-}
-
-void Controller::Impl::HandleDetailMouseMove(int x, int y)
-{
-  int detail_icon_index = view_->DetailIconIdexAt(x, y);
-  int icon_index = view_->IconIndexAt(x, y);
-
-  // We are over a different application icon
-  if (icon_index != model_->SelectionIndex() && icon_index >= 0)
-  {
-    model_->detail_selection = false;
-  }
-  else if (detail_icon_index >= 0)
-  {
-    model_->detail_selection_index = detail_icon_index;
-  }
-}
-
-void Controller::Impl::HandleMouseMove(int x, int y)
-{
-  int icon_index = view_->IconIndexAt(x, y);
-
-  if (icon_index >= 0)
-  {
-    if (icon_index != model_->SelectionIndex())
-    {
-      model_->Select(icon_index);
-    }
-    else
-    {
-      ResetDetailTimer();
-    }
-  }
-}
-
-void Controller::Impl::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags)
-{
-  int button = nux::GetEventButton(button_flags);
-
-  if (model_->detail_selection)
-  {
-    HandleDetailMouseUp(x, y, button);
-  }
-  else
-  {
-    HandleMouseUp(x, y, button);
-  }
-}
-
-void Controller::Impl::HandleDetailMouseUp(int x, int y, int button)
-{
-  int detail_icon_index = view_->DetailIconIdexAt(x, y);
-
-  if (button == 1)
-  {
-    if (detail_icon_index >= 0)
-    {
-      model_->detail_selection_index = detail_icon_index;
-      Hide(true);
-    }
-  }
-  else if (button == 3)
-  {
-    model_->detail_selection = false;
-  }
-}
-
-void Controller::Impl::HandleMouseUp(int x, int y, int button)
-{
-  int icon_index = view_->IconIndexAt(x,y);
-
-  if (button == 1)
-  {
-    if (icon_index >= 0)
-    {
-      model_->Select(icon_index);
-      Hide(true);
-    }
-  }
-  else if (button == 3)
-  {
-    InitiateDetail(true);
-  }
 }
 
 void Controller::Impl::Hide(bool accept_state)
@@ -678,7 +582,7 @@ void Controller::Impl::SetDetail(bool value, unsigned int min_windows)
     obj_->detail_mode_ = DetailMode::TAB_NEXT_WINDOW;
   }
   else
-  { 
+  {
     model_->detail_selection = false;
   }
 }

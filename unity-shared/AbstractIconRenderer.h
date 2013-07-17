@@ -22,7 +22,10 @@
 
 #include <Nux/Nux.h>
 
+#include "Introspectable.h"
 #include "IconTextureSource.h"
+
+#include <UnityCore/Variant.h>
 
 namespace unity
 {
@@ -35,7 +38,7 @@ enum PipRenderStyle
   OVER_TILE,
 };
 
-class RenderArg
+class RenderArg : public debug::Introspectable
 {
 public:
   RenderArg()
@@ -91,6 +94,17 @@ public:
   bool          colorify_background;
   int           window_indicators;
   char          shortcut_label;
+
+protected:
+  // Introspectable methods
+  std::string GetName() const { return "RenderArgs"; }
+  void AddProperties(GVariantBuilder* builder)
+  {
+    unity::variant::BuilderWrapper(builder)
+        .add("logical_center_x", logical_center.x)
+        .add("logical_center_y", logical_center.y)
+        .add("logical_center_z", logical_center.z);
+  }
 };
 
 class AbstractIconRenderer

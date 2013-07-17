@@ -69,6 +69,9 @@ SwitcherView::SwitcherView()
   icon_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnIconSizeChanged));
   tile_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnTileSizeChanged));
 
+  mouse_move.connect(sigc::mem_fun(this, &SwitcherView::RecvMouseMove));
+  mouse_up.connect  (sigc::mem_fun(this, &SwitcherView::RecvMouseUp));
+
   CaptureMouseDownAnyWhereElse(true);
   ResetTimer();
 
@@ -104,7 +107,31 @@ void SwitcherView::AddProperties(GVariantBuilder* builder)
   .add("animation-length", animation_length)
   .add("spread-size", (float)spread_size)
   .add("label", text_view_->GetText())
+  .add("spread_offset", SPREAD_OFFSET)
   .add("label_visible", text_view_->IsVisible());
+}
+
+debug::Introspectable::IntrospectableList SwitcherView::GetIntrospectableChildren()
+{
+  introspection_results_.clear();
+
+  if (model_->detail_selection)
+  {
+    for (auto target : render_targets_)
+    {
+      // FIXME When a LayoutWindow is introspectable, it no longer renders :(
+      //introspection_results_.push_back(target.get());
+    }
+  }
+  else if (!last_args_.empty())
+  {
+    for (auto& args : last_args_)
+    {
+      introspection_results_.push_back(&args);
+    }
+  }
+
+  return introspection_results_;
 }
 
 LayoutWindow::Vector SwitcherView::ExternalTargets ()
@@ -185,6 +212,97 @@ void SwitcherView::OnSelectionChanged(AbstractLauncherIcon::Ptr const& selection
 
   SaveLast();
   QueueDraw();
+}
+
+void SwitcherView::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
+{
+  if (model_->detail_selection)
+  {
+    HandleDetailMouseMove(x, y);
+  }
+  else
+  {
+    HandleMouseMove(x, y);
+  }
+}
+
+void SwitcherView::HandleDetailMouseMove(int x, int y)
+{
+  static int last_selected_icon = -1;
+  int detail_icon_index = DetailIconIdexAt(x, y);
+
+  if (detail_icon_index >= 0 && detail_icon_index != last_selected_icon)
+  {
+    model_->detail_selection_index = detail_icon_index;
+    last_selected_icon = detail_icon_index;
+  }
+}
+
+void SwitcherView::HandleMouseMove(int x, int y)
+{
+  static int last_selected_icon = -1;
+  int icon_index = IconIndexAt(x, y);
+
+  if (icon_index >= 0 && icon_index != last_selected_icon)
+  {
+    if (icon_index != model_->SelectionIndex())
+    {
+      model_->Select(icon_index);
+    }
+
+    mouse_moving_over_icon.emit(icon_index);
+    last_selected_icon = icon_index;
+  }
+}
+
+void SwitcherView::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags)
+{
+  int button = nux::GetEventButton(button_flags);
+
+  if (model_->detail_selection)
+  {
+    HandleDetailMouseUp(x, y, button);
+  }
+  else
+  {
+    HandleMouseUp(x, y, button);
+  }
+}
+
+void SwitcherView::HandleDetailMouseUp(int x, int y, int button)
+{
+  int detail_icon_index = DetailIconIdexAt(x, y);
+
+  if (button == 1)
+  {
+    if (detail_icon_index >= 0)
+    {
+      model_->detail_selection_index = detail_icon_index;
+      hide_request.emit(true);
+    }
+  }
+  else if (button == 3)
+  {
+    model_->detail_selection = false;
+  }
+}
+
+void SwitcherView::HandleMouseUp(int x, int y, int button)
+{
+  int icon_index = IconIndexAt(x,y);
+
+  if (button == 1)
+  {
+    if (icon_index >= 0)
+    {
+      model_->Select(icon_index);
+      hide_request.emit(true);
+    }
+  }
+  else if (button == 3)
+  {
+    right_clicked_icon.emit(icon_index);
+  }
 }
 
 SwitcherModel::Ptr SwitcherView::GetModel()

@@ -290,5 +290,15 @@ LayoutWindow::LayoutWindow(Window xid)
   }
 }
 
+// Introspectable methods
+std::string LayoutWindow::GetName() const
+{
+  return "LayoutSystem";
+}
+
+void LayoutWindow::AddProperties(GVariantBuilder* builder)
+{
+}
+
 }
 }

@@ -87,15 +87,6 @@ struct Controller::Impl
   void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr const& icon);
   void OnBackgroundUpdate(GVariant* data);
 
-
-  void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
-  void HandleDetailMouseMove(int x, int y);
-  void HandleMouseMove(int x, int y);
-
-  void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
-  void HandleDetailMouseUp(int x, int y, int button);
-  void HandleMouseUp(int x, int y, int button);
-
   unsigned int construct_timeout_;
 
   Controller* obj_;

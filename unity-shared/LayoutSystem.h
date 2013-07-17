@@ -24,13 +24,15 @@
 #include <sigc++/sigc++.h>
 #include <Nux/Nux.h>
 
+#include "unity-shared/Introspectable.h"
 #include "unity-shared/WindowManager.h"
 
 namespace unity {
 namespace ui {
 
-struct LayoutWindow
+class LayoutWindow //: public debug::Introspectable//: public ui::UnityWindowView
 {
+public:
   typedef std::shared_ptr<LayoutWindow> Ptr;
   typedef std::vector<LayoutWindow::Ptr> Vector;
 
@@ -45,6 +47,11 @@ struct LayoutWindow
   bool selected;
   float aspect_ratio;
   float alpha;
+
+protected:
+  // Introspectable methods
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 };
 
 class LayoutSystem

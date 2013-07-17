@@ -512,3 +512,70 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         self.addCleanup(self.unity.switcher.terminate)
 
         self.assertThat(self.unity.switcher.visible, Eventually(Equals(False)))
+
+class SwitcherDetailsMouseTests(SwitcherTestCase):
+    """ Test the interactions with the mouse and the switcher. """
+
+    def setUp(self):
+        super(SwitcherDetailsMouseTests, self).setUp()
+        self.set_timeout_setting(False)
+
+    def test_mouse_highlights_switcher_icons(self):
+        """ Tests that the mouse can hightlight all the switcher icons. """
+
+        self.process_manager.start_app("Character Map")
+
+        self.unity.switcher.initiate()
+        self.addCleanup(self.unity.switcher.terminate)
+
+        icon_args = self.unity.switcher.view.icon_args
+        offset = self.unity.switcher.view.spread_offset
+        icon_cords = []
+
+        # Must collect the cords before moving mouse
+        for args in icon_args:
+            x = args.logical_center_x + offset
+            y = args.logical_center_y + offset
+            icon_cords.append((x,y))
+
+        index = 0;
+        for cords in icon_cords:
+            self.mouse.move(cords[0], cords[1])
+            self.assertThat(index, Equals(self.unity.switcher.selection_index))
+            index += 1
+
+    def test_mouse_clicks_activate_icon(self):
+        """
+        Opens 2 different applications, CharMap being opened before TextEditor.
+        Then we get the index of the CharMap, and click on it, asserting CharMap is focused.
+        """
+
+        char_win1, char_win2 = self.start_applications("Character Map", "Text Editor")
+        self.assertVisibleWindowStack([char_win2, char_win1])
+        self.assertProperty(char_win1, is_focused=False)
+
+        self.unity.switcher.initiate()
+        self.addCleanup(self.unity.switcher.terminate)
+
+        index = self.unity.switcher.selection_index
+        offset = self.unity.switcher.view.spread_offset
+
+        icon_arg = self.unity.switcher.view.icon_args[index]
+        x = icon_arg.logical_center_x + offset
+        y = icon_arg.logical_center_y + offset
+        self.mouse.move(x, y)
+        self.mouse.click()
+
+        self.assertProperty(char_win1, is_focused=True)
+
+    def test_mouse_highlights_switcher_deatil_icons_motion(self):
+        """ """
+
+        self.start_applications("Character Map", "Character Map", "Character Map")
+
+        self.unity.switcher.initiate(SwitcherMode.DETAIL)
+        self.addCleanup(self.unity.switcher.terminate)
+        print self.unity.switcher.view.detail_icons
+
+
+
