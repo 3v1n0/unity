@@ -38,21 +38,18 @@ namespace dash
 namespace previews
 {
 
-class MockedTabIterator : public TabIterator
+struct TestTabIterator : ::testing::Test
 {
-public:
-  using TabIterator::areas_;
-};
+  TestTabIterator()
+    : tab_iterator(new MockedTabIterator())
+  {}
 
-class TestTabIterator : public ::testing::Test
-{
-  protected:
-    TestTabIterator() : Test(),
-      tab_iterator(new MockedTabIterator())
-    {}
+  struct MockedTabIterator : public TabIterator
+  {
+    using TabIterator::areas_;
+  };
 
-
-    std::unique_ptr<MockedTabIterator> tab_iterator;
+  std::unique_ptr<MockedTabIterator> tab_iterator;
 };
 
 TEST_F(TestTabIterator, DoRemove)

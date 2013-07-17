@@ -53,7 +53,8 @@ public:
                                    unsigned long special_keys_state);
   nux::Area* KeyNavIteration(nux::KeyNavDirection direction);
 
-protected:
+private:
+  friend class TestTabIterator;
   std::list<nux::InputArea*> areas_;
 };
 
