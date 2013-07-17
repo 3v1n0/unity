@@ -126,12 +126,12 @@ nux::Area* TabIterator::KeyNavIteration(nux::KeyNavDirection direction)
     if (direction == nux::KEY_NAV_TAB_PREVIOUS)
     {
       if (it == areas_.begin())
-        return *areas_.end();
+        return *areas_.rbegin();
       else
       {
         it--;
         if (it == areas_.begin())
-          return *areas_.end();
+          return *areas_.rbegin();
         return *it;
       }
     }
@@ -152,11 +152,11 @@ nux::Area* TabIterator::KeyNavIteration(nux::KeyNavDirection direction)
       }
     }
   }
-  else
+  else if (!areas_.empty())
   {
     if (direction == nux::KEY_NAV_TAB_PREVIOUS)
     {
-      return *areas_.end();
+      return *areas_.rbegin();
     }
     else if (direction == nux::KEY_NAV_TAB_NEXT)
     {
