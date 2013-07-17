@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 
   glib::DBusServer controller("com.canonical.Unity.Test");
   controller.AddObjects(introspection_xml, "/com/canonical/unity/test/controller");
-  auto const& obj = controller.GetObjects().front();
+  auto obj = controller.GetObjects().front();
   obj->SetMethodsCallsHandler([loop] (std::string const& method, GVariant*) {
     if (method == "Exit")
       g_main_loop_quit(loop);
