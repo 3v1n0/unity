@@ -5,6 +5,7 @@ Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: cmake,
                compiz-dev (>= 1:0.9.9~daily13.01.25bzr3586),
                debhelper (>= 9.0.0~),
+               dbus-test-runner,
                dh-migrations,
                dh-translations (>= 94),
                google-mock (>= 1.6.0+svn437),

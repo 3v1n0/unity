@@ -52,6 +52,16 @@ int main(int argc, char** argv)
   // but you can still change it if you're debugging ;)
   nux::logging::configure_logging(::getenv("UNITY_TEST_LOG_SEVERITY"));
 
+  service::Hud hud;
+  service::GDBus gdbus;
+  service::Panel panel;
+  service::Model model;
+  service::Scope scope(scope_id ? scope_id: "testscope1");
+
+  // all the services might have requested dbus names, let's consider
+  // the controller name a "primary" name and we'll wait for it before running
+  // the actual dbus tests (since the other names were requested before this
+  // one they should be acquired before this one)
   glib::DBusServer controller("com.canonical.Unity.Test");
   controller.AddObjects(introspection_xml, "/com/canonical/unity/test/controller");
   auto const& obj = controller.GetObjects().front();
@@ -62,12 +72,8 @@ int main(int argc, char** argv)
     return static_cast<GVariant*>(nullptr);
   });
 
-  service::Hud hud;
-  service::GDBus gdbus;
-  service::Panel panel;
-  service::Model model;
-  service::Scope scope(scope_id ? scope_id: "testscope1");
-
+  // scope equivalent of running the main loop, needed as this also requests
+  // a dbus name the scope uses
   unity_scope_dbus_connector_run();
 
   if (scope_id) g_free(scope_id);
