@@ -56,6 +56,8 @@ SwitcherView::SwitcherView()
   , spread_size(3.5f)
   , icon_renderer_(std::make_shared<IconRenderer>())
   , text_view_(new StaticCairoText(""))
+  , last_icon_selected_(-1)
+  , last_detail_icon_selected_(-1)
   , target_sizes_set_(false)
 {
   icon_renderer_->pip_style = OVER_TILE;
@@ -146,6 +148,8 @@ void SwitcherView::SetModel(SwitcherModel::Ptr model)
   model->detail_selection.changed.connect (sigc::mem_fun (this, &SwitcherView::OnDetailSelectionChanged));
   model->detail_selection_index.changed.connect (sigc::mem_fun (this, &SwitcherView::OnDetailSelectionIndexChanged));
 
+  last_icon_selected_ = -1;
+
   if (!model->Selection())
     return;
 
@@ -195,6 +199,8 @@ void SwitcherView::OnDetailSelectionChanged(bool detail)
 {
   text_view_->SetVisible(!detail);
 
+  last_detail_icon_selected_ = -1;
+
   if (!detail)
   {
     text_view_->SetText(model_->Selection()->tooltip_text());
@@ -228,22 +234,20 @@ void SwitcherView::RecvMouseMove(int x, int y, int dx, int dy, unsigned long but
 
 void SwitcherView::HandleDetailMouseMove(int x, int y)
 {
-  static int last_selected_icon = -1;
   int detail_icon_index = DetailIconIdexAt(x, y);
 
-  if (detail_icon_index >= 0 && detail_icon_index != last_selected_icon)
+  if (detail_icon_index >= 0 && detail_icon_index != last_detail_icon_selected_)
   {
     model_->detail_selection_index = detail_icon_index;
-    last_selected_icon = detail_icon_index;
+    last_detail_icon_selected_ = detail_icon_index;
   }
 }
 
 void SwitcherView::HandleMouseMove(int x, int y)
 {
-  static int last_selected_icon = -1;
   int icon_index = IconIndexAt(x, y);
 
-  if (icon_index >= 0 && icon_index != last_selected_icon)
+  if (icon_index >= 0 && icon_index != last_icon_selected_)
   {
     if (icon_index != model_->SelectionIndex())
     {
@@ -251,7 +255,7 @@ void SwitcherView::HandleMouseMove(int x, int y)
     }
 
     mouse_moving_over_icon.emit(icon_index);
-    last_selected_icon = icon_index;
+    last_icon_selected_ = icon_index;
   }
 }
 

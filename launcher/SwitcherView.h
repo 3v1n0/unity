@@ -74,8 +74,8 @@ public:
   int IconIndexAt(int x, int y) const;
   int DetailIconIdexAt(int x, int y) const;
 
-  sigc::signal<void, int> right_clicked_icon;
-  sigc::signal<void, int> mouse_moving_over_icon;
+  sigc::signal<void, int>  right_clicked_icon;
+  sigc::signal<void, int>  mouse_moving_over_icon;
   sigc::signal<void, bool> hide_request;
 
 protected:
@@ -133,8 +133,9 @@ private:
   ui::AbstractIconRenderer::Ptr icon_renderer_;
   nux::ObjectPtr<StaticCairoText> text_view_;
 
+  int last_icon_selected_;
+  int last_detail_icon_selected_;
   bool target_sizes_set_;
-
 
   std::list<ui::RenderArg> last_args_;
   std::list<ui::RenderArg> saved_args_;
