@@ -31,6 +31,7 @@ namespace
 GDBusInterfaceInfo* safe_interface_info_ref(GDBusInterfaceInfo* info)
 {
   if (info) ::g_dbus_interface_info_ref(info);
+
   return info;
 }
 
