@@ -43,37 +43,33 @@ typedef nux::ObjectPtr<IMTextEntry> IMTextEntryPtr;
 
 struct TestTabIterator : ::testing::Test
 {
-  TestTabIterator()
-    : tab_iterator(new MockedTabIterator())
-  {}
-
   struct MockedTabIterator : public TabIterator
   {
     using TabIterator::areas_;
   };
 
-  std::unique_ptr<MockedTabIterator> tab_iterator;
+  MockedTabIterator tab_iterator;
 };
 
 TEST_F(TestTabIterator, DoRemove)
 {
   auto entry = IMTextEntryPtr(new IMTextEntry);
-  tab_iterator->areas_.push_front(entry.GetPointer());
-  tab_iterator->Remove(entry.GetPointer());
+  tab_iterator.areas_.push_front(entry.GetPointer());
+  tab_iterator.Remove(entry.GetPointer());
 
-  std::list<nux::InputArea*>::iterator it = std::find(tab_iterator->areas_.begin(),
-    tab_iterator->areas_.end(), entry.GetPointer());
-  EXPECT_EQ(it, tab_iterator->areas_.end());
+  std::list<nux::InputArea*>::iterator it = std::find(tab_iterator.areas_.begin(),
+    tab_iterator.areas_.end(), entry.GetPointer());
+  EXPECT_EQ(it, tab_iterator.areas_.end());
 }
 
 TEST_F(TestTabIterator, DoRemoveMissing)
 {
   auto entry = IMTextEntryPtr(new IMTextEntry);
-  tab_iterator->Remove(entry.GetPointer());
+  tab_iterator.Remove(entry.GetPointer());
 
-  std::list<nux::InputArea*>::iterator it = std::find(tab_iterator->areas_.begin(),
-    tab_iterator->areas_.end(), entry.GetPointer());
-  EXPECT_EQ(it, tab_iterator->areas_.end());
+  std::list<nux::InputArea*>::iterator it = std::find(tab_iterator.areas_.begin(),
+    tab_iterator.areas_.end(), entry.GetPointer());
+  EXPECT_EQ(it, tab_iterator.areas_.end());
 }
 
 TEST_F(TestTabIterator, Prepend)
@@ -83,16 +79,16 @@ TEST_F(TestTabIterator, Prepend)
   for(int index=0; index < 10; ++index)
   {
     local_areas.push_back(IMTextEntryPtr(new IMTextEntry));
-    tab_iterator->areas_.push_front(local_areas.back().GetPointer());
+    tab_iterator.areas_.push_front(local_areas.back().GetPointer());
   }
 
   auto entry = IMTextEntryPtr(new IMTextEntry);
-  tab_iterator->Prepend(entry.GetPointer());
+  tab_iterator.Prepend(entry.GetPointer());
 
-  std::list<nux::InputArea*>::iterator it = std::find(tab_iterator->areas_.begin(),
-    tab_iterator->areas_.end(), entry.GetPointer());
+  std::list<nux::InputArea*>::iterator it = std::find(tab_iterator.areas_.begin(),
+    tab_iterator.areas_.end(), entry.GetPointer());
 
-  EXPECT_EQ(it, tab_iterator->areas_.begin());
+  EXPECT_EQ(it, tab_iterator.areas_.begin());
 }
 
 TEST_F(TestTabIterator, Append)
@@ -102,12 +98,12 @@ TEST_F(TestTabIterator, Append)
   for(int index=0; index < 10; ++index)
   {
     local_areas.push_back(IMTextEntryPtr(new IMTextEntry));
-    tab_iterator->areas_.push_front(local_areas.back().GetPointer());
+    tab_iterator.areas_.push_front(local_areas.back().GetPointer());
   }
 
   auto entry = IMTextEntryPtr(new IMTextEntry);
-  tab_iterator->Append(entry.GetPointer());
-  nux::InputArea* last = tab_iterator->areas_.back();
+  tab_iterator.Append(entry.GetPointer());
+  nux::InputArea* last = tab_iterator.areas_.back();
 
   EXPECT_EQ(entry.GetPointer(), last);  // compare pointers
 }
@@ -119,16 +115,16 @@ TEST_F(TestTabIterator, InsertIndex)
   for(int index=0; index < 10; ++index)
   {
     local_areas.push_back(IMTextEntryPtr(new IMTextEntry));
-    tab_iterator->areas_.push_front(local_areas.back().GetPointer());
+    tab_iterator.areas_.push_front(local_areas.back().GetPointer());
   }
 
   auto entry = IMTextEntryPtr(new IMTextEntry);
-  tab_iterator->Insert(entry.GetPointer(), 5);
+  tab_iterator.Insert(entry.GetPointer(), 5);
 
-  std::list<nux::InputArea*>::iterator it = tab_iterator->areas_.begin();
+  std::list<nux::InputArea*>::iterator it = tab_iterator.areas_.begin();
   std::advance(it, 5);
 
-  EXPECT_NE(tab_iterator->areas_.end(), it);
+  EXPECT_NE(tab_iterator.areas_.end(), it);
   EXPECT_EQ(entry.GetPointer(), *it);
 }
 
@@ -139,13 +135,13 @@ TEST_F(TestTabIterator, InsertIndexTooLarge)
   for(int index=0; index < 5; ++index)
   {
     local_areas.push_back(IMTextEntryPtr(new IMTextEntry));
-    tab_iterator->areas_.push_front(local_areas.back().GetPointer());
+    tab_iterator.areas_.push_front(local_areas.back().GetPointer());
   }
 
   auto entry = IMTextEntryPtr(new IMTextEntry);
-  tab_iterator->Insert(entry.GetPointer(), 7);
+  tab_iterator.Insert(entry.GetPointer(), 7);
 
-  nux::InputArea* last = tab_iterator->areas_.back();
+  nux::InputArea* last = tab_iterator.areas_.back();
 
   EXPECT_EQ(entry.GetPointer(), last);  // compare pointers
 }
@@ -153,12 +149,12 @@ TEST_F(TestTabIterator, InsertIndexTooLarge)
 TEST_F(TestTabIterator, InsertBefore)
 {
   auto first_entry = IMTextEntryPtr(new IMTextEntry);
-  tab_iterator->areas_.push_front(first_entry.GetPointer());
+  tab_iterator.areas_.push_front(first_entry.GetPointer());
 
   auto second_entry = IMTextEntryPtr(new IMTextEntry);
-  tab_iterator->InsertBefore(second_entry.GetPointer(), first_entry.GetPointer());
+  tab_iterator.InsertBefore(second_entry.GetPointer(), first_entry.GetPointer());
 
-  EXPECT_EQ(second_entry.GetPointer(), *tab_iterator->areas_.begin());
+  EXPECT_EQ(second_entry.GetPointer(), *tab_iterator.areas_.begin());
 }
 
 TEST_F(TestTabIterator, InsertBeforeMissing)
@@ -168,17 +164,17 @@ TEST_F(TestTabIterator, InsertBeforeMissing)
   for(int index=0; index < 5; ++index)
   {
     local_areas.push_back(IMTextEntryPtr(new IMTextEntry));
-    tab_iterator->areas_.push_front(local_areas.back().GetPointer());
+    tab_iterator.areas_.push_front(local_areas.back().GetPointer());
   }
 
   auto first_entry = IMTextEntryPtr(new IMTextEntry);
   auto second_entry = IMTextEntryPtr(new IMTextEntry);
-  tab_iterator->InsertBefore(second_entry.GetPointer(), first_entry.GetPointer());
+  tab_iterator.InsertBefore(second_entry.GetPointer(), first_entry.GetPointer());
 
-  std::list<nux::InputArea*>::iterator it = std::find(tab_iterator->areas_.begin(),
-    tab_iterator->areas_.end(), second_entry.GetPointer());
+  std::list<nux::InputArea*>::iterator it = std::find(tab_iterator.areas_.begin(),
+    tab_iterator.areas_.end(), second_entry.GetPointer());
 
-  nux::InputArea* last = tab_iterator->areas_.back();
+  nux::InputArea* last = tab_iterator.areas_.back();
 
   EXPECT_EQ(second_entry.GetPointer(), last);
 }
@@ -186,12 +182,12 @@ TEST_F(TestTabIterator, InsertBeforeMissing)
 TEST_F(TestTabIterator, InsertAfter)
 {
   auto first_entry = IMTextEntryPtr(new IMTextEntry);
-  tab_iterator->areas_.push_front(first_entry.GetPointer());
+  tab_iterator.areas_.push_front(first_entry.GetPointer());
 
   auto second_entry = IMTextEntryPtr(new IMTextEntry);
-  tab_iterator->InsertAfter(second_entry.GetPointer(), first_entry.GetPointer());
+  tab_iterator.InsertAfter(second_entry.GetPointer(), first_entry.GetPointer());
 
-  nux::InputArea* last = tab_iterator->areas_.back();
+  nux::InputArea* last = tab_iterator.areas_.back();
 
   EXPECT_EQ(second_entry.GetPointer(), last);
 }
@@ -203,17 +199,17 @@ TEST_F(TestTabIterator, InsertAfterMissing)
   for(int index=0; index < 5; ++index)
   {
     local_areas.push_back(IMTextEntryPtr(new IMTextEntry));
-    tab_iterator->areas_.push_front(local_areas.back().GetPointer());
+    tab_iterator.areas_.push_front(local_areas.back().GetPointer());
   }
 
   auto first_entry = IMTextEntryPtr(new IMTextEntry);
   auto second_entry = IMTextEntryPtr(new IMTextEntry);
-  tab_iterator->InsertAfter(second_entry.GetPointer(), first_entry.GetPointer());
+  tab_iterator.InsertAfter(second_entry.GetPointer(), first_entry.GetPointer());
 
-  std::list<nux::InputArea*>::iterator it = std::find(tab_iterator->areas_.begin(),
-    tab_iterator->areas_.end(), second_entry.GetPointer());
+  std::list<nux::InputArea*>::iterator it = std::find(tab_iterator.areas_.begin(),
+    tab_iterator.areas_.end(), second_entry.GetPointer());
 
-  nux::InputArea* last = tab_iterator->areas_.back();
+  nux::InputArea* last = tab_iterator.areas_.back();
 
   EXPECT_EQ(second_entry.GetPointer(), last);
 }
@@ -225,27 +221,27 @@ TEST_F(TestTabIterator, GetDefaultFocus)
   for(int index=0; index < 10; ++index)
   {
     local_areas.push_back(IMTextEntryPtr(new IMTextEntry));
-    tab_iterator->areas_.push_front(local_areas.back().GetPointer());
+    tab_iterator.areas_.push_front(local_areas.back().GetPointer());
   }
 
   auto entry = IMTextEntryPtr(new IMTextEntry);
-  tab_iterator->Prepend(entry.GetPointer());
+  tab_iterator.Prepend(entry.GetPointer());
 
-  EXPECT_EQ(tab_iterator->DefaultFocus(), entry.GetPointer());
+  EXPECT_EQ(tab_iterator.DefaultFocus(), entry.GetPointer());
 }
 
 TEST_F(TestTabIterator, GetDefaultFocusEmpty)
 {
-  EXPECT_EQ(tab_iterator->DefaultFocus(), nullptr);
+  EXPECT_EQ(tab_iterator.DefaultFocus(), nullptr);
 }
 
 TEST_F(TestTabIterator, FindKeyFocusAreaFromWindow)
 {
   nux::InputArea* current_focus_area = nux::GetWindowCompositor().GetKeyFocusArea();
   // add the area to the iterator
-  tab_iterator->Prepend(current_focus_area);
+  tab_iterator.Prepend(current_focus_area);
 
-  EXPECT_EQ(tab_iterator->FindKeyFocusArea(0, 0, 0), current_focus_area);
+  EXPECT_EQ(tab_iterator.FindKeyFocusArea(0, 0, 0), current_focus_area);
 }
 
 TEST_F(TestTabIterator, FindKeyFocusFromIterator)
@@ -255,29 +251,29 @@ TEST_F(TestTabIterator, FindKeyFocusFromIterator)
   for(int index=0; index < 10; ++index)
   {
     local_areas.push_back(IMTextEntryPtr(new IMTextEntry));
-    tab_iterator->areas_.push_front(local_areas.back().GetPointer());
+    tab_iterator.areas_.push_front(local_areas.back().GetPointer());
   }
 
   auto entry = IMTextEntryPtr(new IMTextEntry);
-  tab_iterator->Prepend(entry.GetPointer());
+  tab_iterator.Prepend(entry.GetPointer());
 
-  EXPECT_EQ(tab_iterator->FindKeyFocusArea(0, 0, 0), entry.GetPointer());
+  EXPECT_EQ(tab_iterator.FindKeyFocusArea(0, 0, 0), entry.GetPointer());
 }
 
 TEST_F(TestTabIterator, FindKeyFocusAreaEmpty)
 {
-  EXPECT_EQ(tab_iterator->FindKeyFocusArea(0, 0, 0), nullptr);
+  EXPECT_EQ(tab_iterator.FindKeyFocusArea(0, 0, 0), nullptr);
 }
 
 TEST_F(TestTabIterator, KeyNavIterationEmpty)
 {
-  nux::Area* area = tab_iterator->KeyNavIteration(nux::KEY_NAV_TAB_PREVIOUS);
+  nux::Area* area = tab_iterator.KeyNavIteration(nux::KEY_NAV_TAB_PREVIOUS);
   EXPECT_EQ(area, nullptr);
 }
 
 TEST_F(TestTabIterator, KeyNavIterationWrongDirection)
 {
-  nux::Area* area = tab_iterator->KeyNavIteration(nux::KEY_NAV_NONE);
+  nux::Area* area = tab_iterator.KeyNavIteration(nux::KEY_NAV_NONE);
   EXPECT_EQ(area, nullptr);
 }
 
@@ -285,13 +281,13 @@ TEST_F(TestTabIterator, KeyNavIterationWithNoCurrentSelectionAndPreviousMove)
 {
   auto first_entry = IMTextEntryPtr(new IMTextEntry);
   auto second_entry = IMTextEntryPtr(new IMTextEntry);
-  tab_iterator->areas_.push_front(second_entry.GetPointer());
-  tab_iterator->areas_.push_front(first_entry.GetPointer());
+  tab_iterator.areas_.push_front(second_entry.GetPointer());
+  tab_iterator.areas_.push_front(first_entry.GetPointer());
 
-  IMTextEntry* result = (IMTextEntry*) tab_iterator->KeyNavIteration(
+  IMTextEntry* result = (IMTextEntry*) tab_iterator.KeyNavIteration(
     nux::KEY_NAV_TAB_PREVIOUS);
 
-  EXPECT_EQ(result, *tab_iterator->areas_.rbegin());
+  EXPECT_EQ(result, *tab_iterator.areas_.rbegin());
   EXPECT_EQ(result, second_entry.GetPointer());
 }
 
@@ -299,13 +295,13 @@ TEST_F(TestTabIterator, KeyNavIterationNoCurrentSelectionAndNextMove)
 {
   auto first_entry = IMTextEntryPtr(new IMTextEntry);
   auto second_entry = IMTextEntryPtr(new IMTextEntry);
-  tab_iterator->areas_.push_front(second_entry.GetPointer());
-  tab_iterator->areas_.push_front(first_entry.GetPointer());
+  tab_iterator.areas_.push_front(second_entry.GetPointer());
+  tab_iterator.areas_.push_front(first_entry.GetPointer());
 
-  IMTextEntry* result = (IMTextEntry*) tab_iterator->KeyNavIteration(
+  IMTextEntry* result = (IMTextEntry*) tab_iterator.KeyNavIteration(
     nux::KEY_NAV_TAB_NEXT);
 
-  EXPECT_EQ(result, *tab_iterator->areas_.begin());
+  EXPECT_EQ(result, *tab_iterator.areas_.begin());
   EXPECT_EQ(result, first_entry.GetPointer());
 }
 
@@ -313,15 +309,15 @@ TEST_F(TestTabIterator, KeyNavIterationWithPreviousSelectionIsFirstArea)
 {
   auto first_entry = IMTextEntryPtr(new IMTextEntry);
   auto second_entry = IMTextEntryPtr(new IMTextEntry);
-  tab_iterator->areas_.push_front(second_entry.GetPointer());
-  tab_iterator->areas_.push_front(first_entry.GetPointer());
+  tab_iterator.areas_.push_front(second_entry.GetPointer());
+  tab_iterator.areas_.push_front(first_entry.GetPointer());
 
   nux::GetWindowCompositor().SetKeyFocusArea(first_entry.GetPointer());
 
-  IMTextEntry* result = (IMTextEntry*) tab_iterator->KeyNavIteration(
+  IMTextEntry* result = (IMTextEntry*) tab_iterator.KeyNavIteration(
     nux::KEY_NAV_TAB_PREVIOUS);
 
-  EXPECT_EQ(result, *tab_iterator->areas_.rbegin());
+  EXPECT_EQ(result, *tab_iterator.areas_.rbegin());
   EXPECT_EQ(result, second_entry.GetPointer());
 }
 
@@ -332,23 +328,23 @@ TEST_F(TestTabIterator, KeyNavIterationWithPreviousSelectionIsNotFirst)
   for(int index=0; index < 10; ++index)
   {
     local_areas.push_back(IMTextEntryPtr(new IMTextEntry));
-    tab_iterator->areas_.push_front(local_areas.back().GetPointer());
+    tab_iterator.areas_.push_front(local_areas.back().GetPointer());
   }
 
   auto first_entry = IMTextEntryPtr(new IMTextEntry);
   auto second_entry = IMTextEntryPtr(new IMTextEntry);
-  tab_iterator->areas_.push_front(second_entry.GetPointer());
-  tab_iterator->areas_.push_front(first_entry.GetPointer());
+  tab_iterator.areas_.push_front(second_entry.GetPointer());
+  tab_iterator.areas_.push_front(first_entry.GetPointer());
 
   for(int index=0; index < 10; ++index)
   {
     local_areas.push_back(IMTextEntryPtr(new IMTextEntry));
-    tab_iterator->areas_.push_front(local_areas.back().GetPointer());
+    tab_iterator.areas_.push_front(local_areas.back().GetPointer());
   }
 
   nux::GetWindowCompositor().SetKeyFocusArea(second_entry.GetPointer());
 
-  IMTextEntry* result = (IMTextEntry*) tab_iterator->KeyNavIteration(
+  IMTextEntry* result = (IMTextEntry*) tab_iterator.KeyNavIteration(
     nux::KEY_NAV_TAB_PREVIOUS);
   EXPECT_EQ(result, first_entry.GetPointer());
 }
@@ -359,15 +355,15 @@ TEST_F(TestTabIterator, KeyNavIterationWithNextSelectionIsLast)
   auto second_entry = IMTextEntryPtr(new IMTextEntry);
   auto not_in_areas = IMTextEntryPtr(new IMTextEntry);
 
-  tab_iterator->areas_.push_front(second_entry.GetPointer());
-  tab_iterator->areas_.push_front(first_entry.GetPointer());
+  tab_iterator.areas_.push_front(second_entry.GetPointer());
+  tab_iterator.areas_.push_front(first_entry.GetPointer());
 
   nux::GetWindowCompositor().SetKeyFocusArea(not_in_areas.GetPointer());
 
-  IMTextEntry* result = (IMTextEntry*) tab_iterator->KeyNavIteration(
+  IMTextEntry* result = (IMTextEntry*) tab_iterator.KeyNavIteration(
     nux::KEY_NAV_TAB_NEXT);
 
-  EXPECT_EQ(result, *tab_iterator->areas_.begin());
+  EXPECT_EQ(result, *tab_iterator.areas_.begin());
   EXPECT_EQ(result, first_entry.GetPointer());
 }
 
@@ -378,22 +374,22 @@ TEST_F(TestTabIterator, KeyNavIterationWithNextSelectionIsNotLast)
   for(int index=0; index < 10; ++index)
   {
     local_areas.push_back(IMTextEntryPtr(new IMTextEntry));
-    tab_iterator->areas_.push_front(local_areas.back().GetPointer());
+    tab_iterator.areas_.push_front(local_areas.back().GetPointer());
   }
 
   auto first_entry = IMTextEntryPtr(new IMTextEntry);
   auto second_entry = IMTextEntryPtr(new IMTextEntry);
-  tab_iterator->areas_.push_front(second_entry.GetPointer());
-  tab_iterator->areas_.push_front(first_entry.GetPointer());
+  tab_iterator.areas_.push_front(second_entry.GetPointer());
+  tab_iterator.areas_.push_front(first_entry.GetPointer());
 
   for(int index=0; index < 10; ++index)
   {
     local_areas.push_back(IMTextEntryPtr(new IMTextEntry));
-    tab_iterator->areas_.push_front(local_areas.back().GetPointer());
+    tab_iterator.areas_.push_front(local_areas.back().GetPointer());
   }
   nux::GetWindowCompositor().SetKeyFocusArea(first_entry.GetPointer());
 
-  IMTextEntry* result = (IMTextEntry*) tab_iterator->KeyNavIteration(
+  IMTextEntry* result = (IMTextEntry*) tab_iterator.KeyNavIteration(
     nux::KEY_NAV_TAB_NEXT);
   EXPECT_EQ(result, second_entry.GetPointer());
 }
