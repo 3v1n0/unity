@@ -106,7 +106,7 @@ TEST_F(TestTabIterator, Append)
   tab_iterator->Append(entry);
   nux::InputArea* last = tab_iterator->areas_.back();
 
-  EXPECT_TRUE(entry == last);  // compare pointers
+  EXPECT_EQ(entry, last);  // compare pointers
 }
 
 TEST_F(TestTabIterator, InsertIndex)
@@ -123,7 +123,7 @@ TEST_F(TestTabIterator, InsertIndex)
   std::advance(it, 5);
 
   EXPECT_NE(tab_iterator->areas_.end(), it);
-  EXPECT_TRUE(entry == (unity::IMTextEntry*)*it);
+  EXPECT_EQ(entry, (unity::IMTextEntry*)*it);
 }
 
 TEST_F(TestTabIterator, InsertIndexTooLarge)
@@ -139,7 +139,7 @@ TEST_F(TestTabIterator, InsertIndexTooLarge)
 
   nux::InputArea* last = tab_iterator->areas_.back();
 
-  EXPECT_TRUE(entry == last);  // compare pointers
+  EXPECT_EQ(entry, last);  // compare pointers
 }
 
 TEST_F(TestTabIterator, InsertBefore)
@@ -150,7 +150,7 @@ TEST_F(TestTabIterator, InsertBefore)
   unity::IMTextEntry* second_entry = new unity::IMTextEntry();
   tab_iterator->InsertBefore(second_entry, first_entry);
 
-  EXPECT_TRUE(second_entry == *tab_iterator->areas_.begin());
+  EXPECT_EQ(second_entry, *tab_iterator->areas_.begin());
 }
 
 TEST_F(TestTabIterator, InsertBeforeMissing)
@@ -170,7 +170,7 @@ TEST_F(TestTabIterator, InsertBeforeMissing)
 
   nux::InputArea* last = tab_iterator->areas_.back();
 
-  EXPECT_TRUE(second_entry == last);
+  EXPECT_EQ(second_entry, last);
 }
 
 TEST_F(TestTabIterator, InsertAfter)
@@ -183,7 +183,7 @@ TEST_F(TestTabIterator, InsertAfter)
 
   nux::InputArea* last = tab_iterator->areas_.back();
 
-  EXPECT_TRUE(second_entry == last);
+  EXPECT_EQ(second_entry, last);
 }
 
 TEST_F(TestTabIterator, InsertAfterMissing)
@@ -203,7 +203,7 @@ TEST_F(TestTabIterator, InsertAfterMissing)
 
   nux::InputArea* last = tab_iterator->areas_.back();
 
-  EXPECT_TRUE(second_entry == last);
+  EXPECT_EQ(second_entry, last);
 }
 
 TEST_F(TestTabIterator, GetDefaultFocus)
@@ -217,12 +217,12 @@ TEST_F(TestTabIterator, GetDefaultFocus)
   unity::IMTextEntry* entry = new unity::IMTextEntry();
   tab_iterator->Prepend(entry);
 
-  EXPECT_TRUE(tab_iterator->DefaultFocus() == entry);
+  EXPECT_EQ(tab_iterator->DefaultFocus(), entry);
 }
 
 TEST_F(TestTabIterator, GetDefaultFocusEmpty)
 {
-  EXPECT_TRUE(tab_iterator->DefaultFocus() == nullptr);
+  EXPECT_EQ(tab_iterator->DefaultFocus(), nullptr);
 }
 
 TEST_F(TestTabIterator, FindKeyFocusAreaFromWindow)
@@ -256,13 +256,13 @@ TEST_F(TestTabIterator, FindKeyFocusAreaEmpty)
 TEST_F(TestTabIterator, KeyNavIterationEmpty)
 {
   nux::Area* area = tab_iterator->KeyNavIteration(nux::KEY_NAV_TAB_PREVIOUS);
-  EXPECT_TRUE(area == nullptr);
+  EXPECT_EQ(area, nullptr);
 }
 
 TEST_F(TestTabIterator, KeyNavIterationWrongDirection)
 {
   nux::Area* area = tab_iterator->KeyNavIteration(nux::KEY_NAV_NONE);
-  EXPECT_TRUE(area == nullptr);
+  EXPECT_EQ(area, nullptr);
 }
 
 TEST_F(TestTabIterator, KeyNavIterationWithNoCurrentSelectionAndPreviousMove)
@@ -275,7 +275,7 @@ TEST_F(TestTabIterator, KeyNavIterationWithNoCurrentSelectionAndPreviousMove)
   unity::IMTextEntry* result = (unity::IMTextEntry*) tab_iterator->KeyNavIteration(
     nux::KEY_NAV_TAB_PREVIOUS);
 
-  EXPECT_TRUE(result == *tab_iterator->areas_.end());
+  EXPECT_EQ(result, *tab_iterator->areas_.end());
 }
 
 TEST_F(TestTabIterator, KeyNavIterationNoCurrentSelectionAndNextMove)
@@ -288,7 +288,7 @@ TEST_F(TestTabIterator, KeyNavIterationNoCurrentSelectionAndNextMove)
   unity::IMTextEntry* result = (unity::IMTextEntry*) tab_iterator->KeyNavIteration(
     nux::KEY_NAV_TAB_NEXT);
 
-  EXPECT_TRUE(result == *tab_iterator->areas_.begin());
+  EXPECT_EQ(result, *tab_iterator->areas_.begin());
 }
 
 TEST_F(TestTabIterator, KeyNavIterationWithPreviousSelectionIsFirstArea)
@@ -303,7 +303,7 @@ TEST_F(TestTabIterator, KeyNavIterationWithPreviousSelectionIsFirstArea)
   unity::IMTextEntry* result = (unity::IMTextEntry*) tab_iterator->KeyNavIteration(
     nux::KEY_NAV_TAB_PREVIOUS);
 
-  EXPECT_TRUE(result == *tab_iterator->areas_.end());
+  EXPECT_EQ(result, *tab_iterator->areas_.end());
 }
 
 TEST_F(TestTabIterator, KeyNavIterationWithPreviousSelectionIsNotFirst)
@@ -329,7 +329,7 @@ TEST_F(TestTabIterator, KeyNavIterationWithPreviousSelectionIsNotFirst)
 
   unity::IMTextEntry* result = (unity::IMTextEntry*) tab_iterator->KeyNavIteration(
     nux::KEY_NAV_TAB_PREVIOUS);
-  EXPECT_TRUE(result == first_entry);
+  EXPECT_EQ(result, first_entry);
 }
 
 TEST_F(TestTabIterator, KeyNavIterationWithNextSelectionIsLast)
@@ -346,7 +346,7 @@ TEST_F(TestTabIterator, KeyNavIterationWithNextSelectionIsLast)
   unity::IMTextEntry* result = (unity::IMTextEntry*) tab_iterator->KeyNavIteration(
     nux::KEY_NAV_TAB_NEXT);
 
-  EXPECT_TRUE(result == *tab_iterator->areas_.begin());
+  EXPECT_EQ(result, *tab_iterator->areas_.begin());
 }
 
 TEST_F(TestTabIterator, KeyNavIterationWithNextSelectionIsNotLast)
@@ -372,7 +372,7 @@ TEST_F(TestTabIterator, KeyNavIterationWithNextSelectionIsNotLast)
 
   unity::IMTextEntry* result = (unity::IMTextEntry*) tab_iterator->KeyNavIteration(
     nux::KEY_NAV_TAB_NEXT);
-  EXPECT_TRUE(result == second_entry);
+  EXPECT_EQ(result, second_entry);
 }
 
 } // previews
