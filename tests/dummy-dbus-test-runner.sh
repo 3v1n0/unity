@@ -51,7 +51,7 @@ function do_cleanup()
 
 trap "do_cleanup; exit 1" SIGHUP SIGINT SIGSEGV SIGTERM
 
-$service &> /dev/null &
+$service &
 service_pid=$!
 
 shift
