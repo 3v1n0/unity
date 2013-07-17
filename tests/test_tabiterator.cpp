@@ -49,8 +49,7 @@ class TestTabIterator : public ::testing::Test
   protected:
     TestTabIterator() : Test(),
       tab_iterator(new MockedTabIterator())
-    {
-    }
+    {}
 
 
     std::unique_ptr<MockedTabIterator> tab_iterator;
@@ -289,6 +288,7 @@ TEST_F(TestTabIterator, KeyNavIterationNoCurrentSelectionAndNextMove)
     nux::KEY_NAV_TAB_NEXT);
 
   EXPECT_EQ(result, *tab_iterator->areas_.begin());
+  EXPECT_EQ(result, first_entry);
 }
 
 TEST_F(TestTabIterator, KeyNavIterationWithPreviousSelectionIsFirstArea)
@@ -298,7 +298,7 @@ TEST_F(TestTabIterator, KeyNavIterationWithPreviousSelectionIsFirstArea)
   tab_iterator->areas_.push_front(second_entry);
   tab_iterator->areas_.push_front(first_entry);
 
-  nux::GetWindowCompositor().SetKeyFocusArea(*tab_iterator->areas_.begin());
+  nux::GetWindowCompositor().SetKeyFocusArea(first_entry);
 
   unity::IMTextEntry* result = (unity::IMTextEntry*) tab_iterator->KeyNavIteration(
     nux::KEY_NAV_TAB_PREVIOUS);
@@ -347,6 +347,7 @@ TEST_F(TestTabIterator, KeyNavIterationWithNextSelectionIsLast)
     nux::KEY_NAV_TAB_NEXT);
 
   EXPECT_EQ(result, *tab_iterator->areas_.begin());
+  EXPECT_EQ(result, first_entry);
 }
 
 TEST_F(TestTabIterator, KeyNavIterationWithNextSelectionIsNotLast)
