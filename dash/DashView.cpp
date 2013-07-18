@@ -1252,9 +1252,6 @@ void DashView::OnScopeAdded(Scope::Ptr const& scope, int position)
     }
     preview_state_machine_.ActivatePreview(model); // this does not immediately display a preview - we now wait.
   });
-
-  if (!active_scope_view_)
-    scope_bar_->Activate(scope->id);
 }
 
 void DashView::OnScopeBarActivated(std::string const& id)
