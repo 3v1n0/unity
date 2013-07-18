@@ -44,9 +44,9 @@ template<class RowAdaptor>
 void Model<RowAdaptor>::Init ()
 {
   swarm_name.changed.connect(sigc::mem_fun(this, &Model<RowAdaptor>::OnSwarmNameChanged));
-  count.SetGetterFunction(sigc::mem_fun(this, &Model<RowAdaptor>::get_count));
-  seqnum.SetGetterFunction(sigc::mem_fun(this, &Model<RowAdaptor>::get_seqnum));
-  model.SetGetterFunction(sigc::mem_fun(this, &Model<RowAdaptor>::get_model));
+  count.SetGetterFunction(std::bind(&Model<RowAdaptor>::get_count, this));
+  seqnum.SetGetterFunction(std::bind(&Model<RowAdaptor>::get_seqnum, this));
+  model.SetGetterFunction(std::bind(&Model<RowAdaptor>::get_model, this));
 }
 
 template<class RowAdaptor>
