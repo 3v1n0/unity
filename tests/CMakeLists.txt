@@ -360,7 +360,7 @@ if (ENABLE_X_SUPPORT)
 endif (ENABLE_X_SUPPORT)
 set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless --gtest_output=xml:./test-gtest-xless.xml)
 set (GTEST_TEST_COMMAND_SLOW ./test-gtest-slow --gtest_output=xml:./test-gtest-slow.xml)
-set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --max-wait=180 --task ./test-gtest-service --task-name test-service --task=./test-gtest-dbus --task-name=test-dbus --wait-for=com.canonical.Unity.Test.Scope --parameter=--gtest_output=xml:./test-gtest-dbus.xml)
+set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --max-wait=180 --task ./test-gtest-service --task-name test-service --task=./test-gtest-dbus --task-name=test-dbus --wait-for=com.canonical.Unity.Test.Scope --parameter=--gtest_output=xml:./test-gtest-dbus.xml --parameter=--gtest_filter=-TestCategoriesChanging*)
 
 set (TEST_COMMAND_XLESS
      ${GTEST_TEST_COMMAND_XLESS}
