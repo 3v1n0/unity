@@ -1,7 +1,9 @@
 unity (7.0.2+13.10.20130705.1-0ubuntu4) UNRELEASED; urgency=low
 
-  * debian/control: build-depends on xserver-xorg-video-dummy and libgl1-mesa-dri
-
+  * debian/control:
+    - build-depend on xserver-xorg-video-dummy and libgl1-mesa-dri
+    - build-depend on libnux-4.0-dev (>= 4.0.2+13.10.20130718.1)
+ 
  -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Tue, 09 Jul 2013 03:55:14 +0200
 
 unity (7.0.2+13.10.20130705.1-0ubuntu3) saucy; urgency=low
