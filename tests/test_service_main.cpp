@@ -64,7 +64,7 @@ int main(int argc, char** argv)
   // one they should be acquired before this one)
   glib::DBusServer controller("com.canonical.Unity.Test");
   controller.AddObjects(introspection_xml, "/com/canonical/unity/test/controller");
-  auto const& obj = controller.GetObjects().front();
+  auto obj = controller.GetObjects().front();
   obj->SetMethodsCallsHandler([] (std::string const& method, GVariant*) {
     if (method == "Exit")
       unity_scope_dbus_connector_quit();
