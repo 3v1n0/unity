@@ -1510,6 +1510,14 @@ void UnityScreen::handleEvent(XEvent* event)
         if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
+      else if (switcher_controller_->IsDetailViewShown())
+      {
+        Window win = switcher_controller_->GetCurrentSelection().window_;
+        CompWindow* w = screen->findWindow(win);
+
+        if (w)
+          skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
+      }
       break;
     case ButtonPress:
       if (super_keypressed_)
@@ -1521,6 +1529,14 @@ void UnityScreen::handleEvent(XEvent* event)
       {
         ScaleScreen* ss = ScaleScreen::get(screen);
         if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
+          skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
+      }
+      else if (switcher_controller_->IsDetailViewShown())
+      {
+        Window win = switcher_controller_->GetCurrentSelection().window_;
+        CompWindow* w = screen->findWindow(win);
+
+        if (w)
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
 
@@ -1567,22 +1583,14 @@ void UnityScreen::handleEvent(XEvent* event)
       }
       break;
     case ButtonRelease:
-      if (switcher_controller_ && switcher_controller_->Visible())
+
+      if (switcher_controller_->IsDetailViewShown())
       {
-        XButtonEvent *bev = reinterpret_cast<XButtonEvent*>(event);
-        if (bev->time - last_scroll_event_ > 150)
-        {
-          if (bev->button == Button4 || bev->button == local::SCROLL_UP_BUTTON)
-          {
-            switcher_controller_->Prev();
-            last_scroll_event_ = bev->time;
-          }
-          else if (bev->button == Button5 || bev->button == local::SCROLL_DOWN_BUTTON)
-          {
-            switcher_controller_->Next();
-            last_scroll_event_ = bev->time;
-          }
-        }
+        Window win = switcher_controller_->GetCurrentSelection().window_;
+        CompWindow* w = screen->findWindow(win);
+
+        if (w)
+          skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
       else if (wm.IsScaleActive())
       {

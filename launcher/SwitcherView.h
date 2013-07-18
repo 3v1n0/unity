@@ -104,6 +104,11 @@ private:
   void HandleDetailMouseUp(int x, int y, int button);
   void HandleMouseUp(int x, int y, int button);
 
+  void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
+  void HandleDetailMouseWheel(int wheel_delta);
+  void HandleMouseWheel(int wheel_delta);
+
+
   void OnSelectionChanged(launcher::AbstractLauncherIcon::Ptr const& selection);
   void OnDetailSelectionChanged (bool detail);
   void OnDetailSelectionIndexChanged (unsigned int index);

@@ -71,8 +71,9 @@ SwitcherView::SwitcherView()
   icon_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnIconSizeChanged));
   tile_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnTileSizeChanged));
 
-  mouse_move.connect(sigc::mem_fun(this, &SwitcherView::RecvMouseMove));
-  mouse_up.connect  (sigc::mem_fun(this, &SwitcherView::RecvMouseUp));
+  mouse_move.connect (sigc::mem_fun(this, &SwitcherView::RecvMouseMove));
+  mouse_up.connect   (sigc::mem_fun(this, &SwitcherView::RecvMouseUp));
+  mouse_wheel.connect(sigc::mem_fun(this, &SwitcherView::RecvMouseWheel));
 
   CaptureMouseDownAnyWhereElse(true);
   ResetTimer();
@@ -220,7 +221,7 @@ void SwitcherView::OnSelectionChanged(AbstractLauncherIcon::Ptr const& selection
   QueueDraw();
 }
 
-void SwitcherView::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
+void SwitcherView::RecvMouseMove(int x, int y, int /*dx*/, int /*dy*/, unsigned long /*button_flags*/, unsigned long /*key_flags*/)
 {
   if (model_->detail_selection)
   {
@@ -259,7 +260,7 @@ void SwitcherView::HandleMouseMove(int x, int y)
   }
 }
 
-void SwitcherView::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags)
+void SwitcherView::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long /*key_flags*/)
 {
   int button = nux::GetEventButton(button_flags);
 
@@ -306,6 +307,42 @@ void SwitcherView::HandleMouseUp(int x, int y, int button)
   else if (button == 3)
   {
     right_clicked_icon.emit(icon_index);
+  }
+}
+
+void SwitcherView::RecvMouseWheel(int /*x*/, int /*y*/, int wheel_delta, unsigned long /*button_flags*/, unsigned long /*key_flags*/)
+{
+  if (model_->detail_selection)
+  {
+    HandleDetailMouseWheel(wheel_delta);
+  }
+  else
+  {
+    HandleMouseWheel(wheel_delta);
+  }
+}
+
+void SwitcherView::HandleDetailMouseWheel(int wheel_delta)
+{
+  if (wheel_delta > 0)
+  {
+    model_->NextDetail();
+  }
+  else
+  {
+    model_->PrevDetail();
+  }
+}
+
+void SwitcherView::HandleMouseWheel(int wheel_delta)
+{
+  if (wheel_delta > 0)
+  {
+    model_->Next();
+  }
+  else
+  {
+    model_->Prev();
   }
 }
 
