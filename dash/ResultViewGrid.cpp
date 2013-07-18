@@ -330,6 +330,8 @@ void ResultViewGrid::AddResult(Result const& result)
 void ResultViewGrid::RemoveResult(Result const& result)
 {
   ResultView::RemoveResult(result);
+  // removing a result might make a non-preloaded one visible
+  all_results_preloaded_ = false;
   QueueResultsChanged();
 }
 
