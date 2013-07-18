@@ -30,7 +30,7 @@
 namespace unity {
 namespace ui {
 
-class LayoutWindow //: public debug::Introspectable//: public ui::UnityWindowView
+class LayoutWindow : public debug::Introspectable
 {
 public:
   typedef std::shared_ptr<LayoutWindow> Ptr;

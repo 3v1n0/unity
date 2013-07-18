@@ -122,7 +122,7 @@ debug::Introspectable::IntrospectableList SwitcherView::GetIntrospectableChildre
     for (auto target : render_targets_)
     {
       // FIXME When a LayoutWindow is introspectable, it no longer renders :(
-      //introspection_results_.push_back(target.get());
+      introspection_results_.push_back(target.get());
     }
   }
   else if (!last_args_.empty())

@@ -19,6 +19,8 @@
 
 #include "LayoutSystem.h"
 
+#include <UnityCore/Variant.h>
+
 namespace unity {
 namespace ui {
 
@@ -293,11 +295,13 @@ LayoutWindow::LayoutWindow(Window xid)
 // Introspectable methods
 std::string LayoutWindow::GetName() const
 {
-  return "LayoutSystem";
+  return "LayoutWindow";
 }
 
 void LayoutWindow::AddProperties(GVariantBuilder* builder)
 {
+  unity::variant::BuilderWrapper(builder)
+    .add(result);
 }
 
 }
