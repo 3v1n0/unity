@@ -91,7 +91,7 @@ void PlacesOverlayVScrollBar::OnSensitivityChanged(nux::Area* /*area*/, bool sen
 
 void PlacesOverlayVScrollBar::SetupAnimation(int start, int stop, int milliseconds)
 {
-  tweening_connection_.disconnect();
+  tweening_connection_->disconnect();
   delta_update_ = 0;
 
   animation_.SetDuration(milliseconds);
