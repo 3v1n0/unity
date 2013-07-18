@@ -349,19 +349,19 @@ void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLa
     ShowView();
   }
 
-  ResetDetailTimer();
+  ResetDetailTimer(obj_->initial_detail_timeout_length);
 
   ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN,
                             g_variant_new("(bi)", true, obj_->monitor_));
 }
 
-void Controller::Impl::ResetDetailTimer()
+void Controller::Impl::ResetDetailTimer(int timeout_length)
 {
   if (obj_->detail_on_timeout)
   {
     auto cb_func = sigc::mem_fun(this, &Controller::Impl::OnDetailTimer);
-    sources_.AddTimeout(obj_->detail_timeout_length, cb_func, DETAIL_TIMEOUT);
+    sources_.AddTimeout(timeout_length, cb_func, DETAIL_TIMEOUT);
   }
 }
 
@@ -378,7 +378,7 @@ bool Controller::Impl::OnDetailTimer()
 
 void Controller::Impl::OnModelSelectionChanged(AbstractLauncherIcon::Ptr const& icon)
 {
-  ResetDetailTimer();
+  ResetDetailTimer(obj_->detail_timeout_length);
 
   if (icon)
   {
@@ -452,7 +452,10 @@ void Controller::Impl::ConstructView()
 
   view_->hide_request.connect          ([this] (bool activate)      { Hide(activate); });
   view_->right_clicked_icon.connect    ([this] (int /*icon_index*/) { InitiateDetail(true); });
-  view_->mouse_moving_over_icon.connect([this] (int /*icon_index*/) { ResetDetailTimer(); });
+
+  view_->mouse_moving_over_icon.connect([this] (int /*icon_index*/) {
+      ResetDetailTimer(obj_->detail_timeout_length);
+  });
 
   ConstructWindow();
   main_layout_->AddView(view_.GetPointer(), 1);

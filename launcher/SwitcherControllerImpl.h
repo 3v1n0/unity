@@ -82,7 +82,7 @@ struct Controller::Impl
   void ShowView();
   void HideWindow();
 
-  void ResetDetailTimer();
+  void ResetDetailTimer(int timeout_length);
   bool OnDetailTimer();
   void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr const& icon);
   void OnBackgroundUpdate(GVariant* data);
