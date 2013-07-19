@@ -74,6 +74,7 @@ protected:
 
   // From debug::Introspectable
   std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 
   nux::Layout* GetTitle();
   nux::Layout* GetPrice();

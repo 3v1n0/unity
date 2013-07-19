@@ -194,9 +194,13 @@ PaymentPreview::PaymentPreview(dash::Preview::Ptr preview_model)
 
 std::string PaymentPreview::GetName() const
 {
-  return "";
+  return "PaymentPreview";
 }
 
+void PaymentPreview::AddProperties(GVariantBuilder* builder)
+{
+  Preview::AddProperties(builder);
+}
 
 nux::Layout* PaymentPreview::GetHeader()
 {

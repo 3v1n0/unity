@@ -84,6 +84,11 @@ std::string MusicPaymentPreview::GetName() const
   return "MusicPaymentPreview";
 }
 
+void MusicPaymentPreview::AddProperties(GVariantBuilder* builder)
+{
+  PaymentPreview::AddProperties(builder);
+}
+
 void MusicPaymentPreview::OnActionActivated(ActionButton* button, std::string const& id)
 {
   // Check the action id and send the password only when we

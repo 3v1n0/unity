@@ -72,6 +72,8 @@ public:
                               unsigned long special_keys_state);
   // From debug::Introspectable
   std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
+
   nux::Layout* GetTitle();
   nux::Layout* GetPrice();
   nux::Layout* GetBody();
