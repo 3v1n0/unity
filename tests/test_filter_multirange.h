@@ -42,26 +42,22 @@ GVariantBuilder* AddFilterHint(GVariantBuilder* builder, const char* name, GVari
 
 GVariant* AddFilterOptions(std::vector<bool> option_active)
 {
-  GVariantBuilder* builder;
-  builder = g_variant_builder_new (G_VARIANT_TYPE_ARRAY);
+  GVariantBuilder builder;
+  g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
 
-  int i = 0;
-  for (auto iter = option_active.begin(), end = option_active.end(); iter != end; ++iter)
+  for (unsigned i = 1; i <= option_active.size(); ++i)
   {
-    std::stringstream name;
-    name << i++;
+    auto pstr_name = std::to_string(i);
 
-    const char* pstr_name = name.str().c_str();
-
-    g_variant_builder_add (builder, "(sssb)", pstr_name, pstr_name, "", FALSE);
+    g_variant_builder_add(&builder, "(sssb)", pstr_name.c_str(), pstr_name.c_str(), "", FALSE);
   }
-  return g_variant_builder_end (builder);
+  return g_variant_builder_end(&builder);
 }
 
 void ExpectFilterRange(unity::dash::MultiRangeFilter::Ptr const& filter, int first, int last)
 {
   int i = 0;
-  for (auto option : filter->options())
+  for (auto const& option : filter->options())
   {
     bool should_be_active = i >= first && i <= last;
     EXPECT_EQ(option->active, should_be_active);

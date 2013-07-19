@@ -23,6 +23,7 @@
 #include <Nux/Nux.h>
 #include <Nux/InputAreaProximity.h>
 #include <NuxCore/Animation.h>
+#include <UnityCore/ConnectionManager.h>
 #include <memory>
 
 #include "unity-shared/PlacesVScrollBar.h"
@@ -94,7 +95,7 @@ private:
   nux::InputAreaProximity area_prox_;
 
   nux::animation::AnimateValue<int> animation_;
-  sigc::connection tweening_connection_;
+  connection::Wrapper tweening_connection_;
 
   nux::ObjectPtr<nux::BaseTexture> connector_texture_;
   

@@ -18,7 +18,7 @@
  */
 
 #include <boost/lexical_cast.hpp>
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <glib-object.h>
 #include <unity-protocol.h>
 
@@ -43,7 +43,9 @@ namespace
 const std::string SCOPE_NAME = "testscope1.scope";
 }
 
-class TestScope : public ::testing::Test
+using namespace testing;
+
+class TestScope : public Test
 {
 public:
   TestScope() { }
@@ -215,6 +217,10 @@ TEST_F(TestScope, UpdateSearchCategoryWorkflow)
   Results::Ptr category_model0 = scope_->GetResultsForCategory(0);
   Results::Ptr category_model1 = scope_->GetResultsForCategory(1);
   Results::Ptr category_model2 = scope_->GetResultsForCategory(2);
+
+  ASSERT_THAT(category_model0, NotNull());
+  ASSERT_THAT(category_model1, NotNull());
+  ASSERT_THAT(category_model2, NotNull());
 
   EXPECT_EQ(category_model0->count(), 5) << "Category 0 result count not as expected (" << category_model0->count() << " != 5)";
   EXPECT_EQ(category_model1->count(), 4) << "Category 1 result count not as expected (" << category_model1->count() << " != 4)";

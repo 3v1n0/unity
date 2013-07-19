@@ -157,6 +157,7 @@ Launcher::Launcher(MockableBaseWindow* parent,
   , _drag_out_delta_x(0.0f)
   , _drag_gesture_ongoing(false)
   , _last_reveal_progress(0.0f)
+  , _drag_action(nux::DNDACTION_NONE)
   , _selection_atom(0)
   , icon_renderer(std::make_shared<ui::IconRenderer>())
 {
