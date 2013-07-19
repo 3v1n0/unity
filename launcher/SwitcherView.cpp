@@ -76,6 +76,7 @@ SwitcherView::SwitcherView()
   mouse_wheel.connect(sigc::mem_fun(this, &SwitcherView::RecvMouseWheel));
 
   CaptureMouseDownAnyWhereElse(true);
+  SetAcceptMouseWheelEvent(true);
   ResetTimer();
 
   animate.changed.connect([this] (bool enabled) {
