@@ -254,6 +254,7 @@ void SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
     {
       SetQuirk(Quirk::PROGRESS, true);
       finished_ = false;
+      tooltip_text = _("Installing..."); 
     }
 
     SetProgress(progress/100.0f);
