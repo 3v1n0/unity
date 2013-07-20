@@ -3451,6 +3451,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   : BaseSwitchWindow (dynamic_cast<BaseSwitchScreen *> (UnityScreen::get (screen)), window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
   , window(window)
+  , cWindow(CompositeWindow::get(window))
   , gWindow(GLWindow::get(window))
   , is_nux_window_(isNuxWindow(window))
 {

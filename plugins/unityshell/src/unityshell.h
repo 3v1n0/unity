@@ -364,6 +364,7 @@ public:
   ~UnityWindow();
 
   CompWindow* window;
+  CompositeWindow* cWindow;
   GLWindow* gWindow;
 
   nux::Geometry last_bound;
