@@ -353,7 +353,6 @@ endif()
 set (TEST_RESULT_DIR ${CMAKE_BINARY_DIR}/tests)
 set (TEST_RESULT_XML ${TEST_RESULT_DIR}/test-results.xml)
 set (TEST_RESULT_HTML ${TEST_RESULT_DIR}/test-results.html)
-set (DUMMY_DBUS_TEST_RUNNER ${CMAKE_CURRENT_SOURCE_DIR}/dummy-dbus-test-runner.sh)
 set (DUMMY_XORG_TEST_RUNNER ${CMAKE_CURRENT_SOURCE_DIR}/dummy-xorg-test-runner.sh)
 if (ENABLE_X_SUPPORT)
   set (GTEST_TEST_COMMAND ./test-gtest --gtest_output=xml:./test-gtest.xml)
@@ -361,13 +360,12 @@ if (ENABLE_X_SUPPORT)
 endif (ENABLE_X_SUPPORT)
 set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless --gtest_output=xml:./test-gtest-xless.xml)
 set (GTEST_TEST_COMMAND_SLOW ./test-gtest-slow --gtest_output=xml:./test-gtest-slow.xml)
-set (GTEST_TEST_COMMAND_DBUS ${DUMMY_DBUS_TEST_RUNNER} ./test-gtest-service ./test-gtest-dbus --gtest_output=xml:./test-gtest-dbus.xml)
+set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --max-wait=300 --task ./test-gtest-service --task-name test-service --task=./test-gtest-dbus --task-name=test-dbus --wait-for=com.canonical.Unity.Test.Scope --parameter=--gtest_output=xml:./test-gtest-dbus.xml --parameter=--gtest_filter=-TestCategoriesChanging*)
 
 set (TEST_COMMAND_XLESS
      ${GTEST_TEST_COMMAND_XLESS}
   && ${GTEST_TEST_COMMAND_GESTURES}
-  && ${GTEST_TEST_COMMAND_DBUS} --gtest_filter=-TestScope*
-  && echo "Warning, TestScope* DBus test cases are disabled!!")
+  && ${GTEST_TEST_COMMAND_DBUS})
 
 set (TEST_COMMAND
      ${GTEST_TEST_COMMAND}
