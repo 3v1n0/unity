@@ -59,6 +59,7 @@ public:
     xevent.type = ClientMessage;
     xevent.xany.display = nux::GetGraphicsDisplay()->GetX11Display();
     xevent.xclient.message_type = XInternAtom(xevent.xany.display, "XdndEnter", false);
+    xevent.xclient.format = 0;
     xevent.xclient.data.l[1] = 5 >> 24;
 
     nux::GetGraphicsDisplay()->ProcessXEvent(xevent, true);

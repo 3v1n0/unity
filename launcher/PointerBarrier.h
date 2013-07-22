@@ -23,6 +23,7 @@
 #include <Nux/Nux.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/Xfixes.h>
+#include <X11/extensions/XInput2.h>
 #include <UnityCore/GLibSource.h>
 
 namespace unity
@@ -88,19 +89,20 @@ public:
 
   bool IsFirstEvent() const;
 
+  bool OwnsBarrierEvent(PointerBarrier const barrier) const;
+  bool HandleBarrierEvent(XIBarrierEvent* barrier_event);
+
 protected:
   void EmitCurrentData(int event_id, int x, int y);
-  bool HandleEvent(XEvent event);
 
 private:
-  static bool HandleEventWrapper(XEvent event, void* data);
-
   void SendBarrierEvent(int x, int y, int velocity, int event_id);
 
-  int event_base_;
+  int xi2_opcode_;
   int last_event_;
+  int current_device_;
   bool first_event_;
-  PointerBarrier barrier;
+  PointerBarrier barrier_;
 
   int smoothing_count_;
   int smoothing_accum_;

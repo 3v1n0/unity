@@ -150,8 +150,8 @@ public:
   glib::SourceManager sources_;
   UBusManager ubus;
 
-  sigc::connection launcher_key_press_connection_;
-  sigc::connection launcher_event_outside_connection_;
+  connection::Wrapper launcher_key_press_connection_;
+  connection::Wrapper launcher_event_outside_connection_;
 };
 
 } // launcher namespace

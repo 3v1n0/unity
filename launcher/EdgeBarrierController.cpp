@@ -21,6 +21,7 @@
 #include "EdgeBarrierController.h"
 #include "EdgeBarrierControllerPrivate.h"
 #include "Decaymulator.h"
+#include <NuxCore/Logger.h>
 #include "unity-shared/UScreen.h"
 #include "UnityCore/GLibSource.h"
 
@@ -32,11 +33,50 @@ namespace ui
 namespace
 {
   int const Y_BREAK_BUFFER = 20;
+  int const MAJOR = 2;
+  int const MINOR = 3;
 }
 
+DECLARE_LOGGER(logger, "unity.edge_barrier_controller");
+
+int GetXI2OpCode()
+{
+  Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
+
+  int opcode, event_base, error_base;
+  if (!XQueryExtension(dpy, "XFIXES",
+                       &opcode,
+                       &event_base,
+                       &error_base))
+  {
+    LOG_ERROR(logger) << "Missing XFixes";
+    return -1;
+  }
+
+  if (!XQueryExtension (dpy, "XInputExtension",
+                        &opcode,
+                        &event_base,
+                        &error_base))
+  {
+    LOG_ERROR(logger) << "Missing XInput";
+    return -1;
+  }
+
+  int maj = MAJOR;
+  int min = MINOR;
+
+  if (XIQueryVersion(dpy, &maj, &min) == BadRequest)
+  {
+    LOG_ERROR(logger) << "Need XInput version 2.3";
+    return -1;
+  }
+
+  return opcode;
+}
 
 EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
-  : edge_overcome_pressure_(0)
+  : xi2_opcode_(-1)
+  , edge_overcome_pressure_(0)
   , parent_(parent)
 {
   UScreen *uscreen = UScreen::GetDefault();
@@ -68,6 +108,13 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
     });
     SetupBarriers(UScreen::GetDefault()->GetMonitors());
   });
+
+  xi2_opcode_ = GetXI2OpCode();
+}
+
+EdgeBarrierController::Impl::~Impl()
+{
+  nux::GetGraphicsDisplay()->RemoveEventFilter(this);
 }
 
 void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry> const& layout)
@@ -84,6 +131,18 @@ void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry> c
     barrier->barrier_event.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnPointerBarrierEvent));
     barriers_.push_back(barrier);
   }
+}
+
+void SetupXI2Events()
+{
+  Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
+
+  unsigned char mask_bits[XIMaskLen (XI_LASTEVENT)] = { 0 };
+  XIEventMask mask = { XIAllMasterDevices, sizeof (mask_bits), mask_bits };
+
+  XISetMask(mask.mask, XI_BarrierHit);
+  XISetMask(mask.mask, XI_BarrierLeave);
+  XISelectEvents (dpy, DefaultRootWindow(dpy), &mask, 1);
 }
 
 void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const& layout)
@@ -112,11 +171,75 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
     barrier->ConstructBarrier();
   }
 
+  SetupXI2Events();
+  AddEventFilter();
+
   float decay_responsiveness_mult = ((parent_->options()->edge_responsiveness() - 1) * .3f) + 1;
   decaymulator_.rate_of_decay = parent_->options()->edge_decay_rate() * decay_responsiveness_mult;
 
   float overcome_responsiveness_mult = ((parent_->options()->edge_responsiveness() - 1) * 1.0f) + 1;
   edge_overcome_pressure_ = parent_->options()->edge_overcome_pressure() * overcome_responsiveness_mult;
+}
+
+void EdgeBarrierController::Impl::AddEventFilter()
+{
+  // Remove an old one, if it exists
+  nux::GetGraphicsDisplay()->RemoveEventFilter(this);
+
+  nux::GraphicsDisplay::EventFilterArg event_filter;
+  event_filter.filter = &HandleEventCB;
+  event_filter.data = this;
+
+  nux::GetGraphicsDisplay()->AddEventFilter(event_filter);
+}
+
+bool EdgeBarrierController::Impl::HandleEvent(XEvent xevent)
+{
+  Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
+  XGenericEventCookie *cookie = &xevent.xcookie;
+  bool ret = false;
+
+  switch (cookie->evtype)
+  {
+    case (XI_BarrierHit):
+    {
+      if (XGetEventData(dpy, cookie))
+      {
+        XIBarrierEvent* barrier_event = (XIBarrierEvent*)cookie->data;
+        PointerBarrierWrapper::Ptr wrapper = FindBarrierEventOwner(barrier_event);
+
+        if (wrapper)
+          ret = wrapper->HandleBarrierEvent(barrier_event);
+      }
+
+      XFreeEventData(dpy, cookie);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return ret;
+}
+
+bool EdgeBarrierController::Impl::HandleEventCB(XEvent xevent, void* data)
+{
+  auto edge_barrier_controller = static_cast<EdgeBarrierController::Impl*>(data);
+  int const xi2_opcode = edge_barrier_controller->xi2_opcode_;
+
+  if (xevent.type != GenericEvent || xevent.xcookie.extension != xi2_opcode)
+    return false;
+
+  return edge_barrier_controller->HandleEvent(xevent);
+}
+
+PointerBarrierWrapper::Ptr EdgeBarrierController::Impl::FindBarrierEventOwner(XIBarrierEvent* barrier_event)
+{
+  for (auto barrier : barriers_)
+    if (barrier->OwnsBarrierEvent(barrier_event->barrier))
+      return barrier;
+
+  return nullptr;
 }
 
 void EdgeBarrierController::Impl::BarrierReset()

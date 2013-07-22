@@ -18,6 +18,7 @@ set (CORE_HEADERS
      Categories.h
      Category.h
      CheckOptionFilter.h
+     ConnectionManager.h
      DBusIndicators.h
      DesktopUtilities.h
      Filter.h
@@ -70,6 +71,7 @@ set (CORE_SOURCES
      AppmenuIndicator.cpp
      Categories.cpp
      Category.cpp
+     ConnectionManager.cpp
      CheckOptionFilter.cpp
      DBusIndicators.cpp
      DesktopUtilities.cpp

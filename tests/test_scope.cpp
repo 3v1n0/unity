@@ -18,7 +18,7 @@
  */
 
 #include <boost/lexical_cast.hpp>
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <glib-object.h>
 #include <unity-protocol.h>
 
@@ -43,7 +43,9 @@ namespace
 const std::string SCOPE_NAME = "testscope1.scope";
 }
 
-class TestScope : public ::testing::Test
+using namespace testing;
+
+class TestScope : public Test
 {
 public:
   TestScope() { }
@@ -61,7 +63,7 @@ public:
   void ConnectAndWait()
   {
     scope_->Connect();
-    Utils::WaitUntilMSec([this] { return scope_->connected() == true; }, true, 2000);
+    Utils::WaitUntil([this] { return scope_->connected() == true; }, true, 2);
   }
 
   Filter::Ptr WaitForFilter(std::string const& filter_to_wait_for)
@@ -81,9 +83,7 @@ public:
                            }
                            return false;
                          },
-                         true,
-                         2000,
-                         [filter_to_wait_for] { return g_strdup_printf("Filter '%s' not found", filter_to_wait_for.c_str()); });
+                         true, 2000, "Filter '"+filter_to_wait_for+"' not found");
     return filter_ret;
   }
 
@@ -105,9 +105,7 @@ TEST_F(TestScope, Search)
   };
 
   scope_->Search("12:test_search", search_callback, nullptr);
-  Utils::WaitUntilMSec(search_ok,
-                       2000,
-                       [] { return g_strdup("Search did not finish sucessfully"); });
+  Utils::WaitUntil(search_ok, 2, "Search did not finish sucessfully");
 }
 
 TEST_F(TestScope, ActivateUri)
@@ -122,9 +120,7 @@ TEST_F(TestScope, ActivateUri)
   scope_->Activate(result,
                    activate_callback);
 
-  Utils::WaitUntilMSec(activated_return,
-                       2000,
-                       [] { return g_strdup("Failed to activate"); });
+  Utils::WaitUntil(activated_return, 2, "Failed to activate");
 }
 
 TEST_F(TestScope, PreviewPerformAction)
@@ -141,9 +137,7 @@ TEST_F(TestScope, PreviewPerformAction)
   scope_->Preview(result,
                   preview_callback);
 
-  Utils::WaitUntilMSec(preview_ok,
-                       2000,
-                       [] { return g_strdup("Failed to preview"); });
+  Utils::WaitUntil(preview_ok, 2, "Failed to preview");
   EXPECT_TRUE(preview ? true : false);
   if (preview)
   {
@@ -170,9 +164,7 @@ TEST_F(TestScope, ActivatePreviewAction)
                                 glib::HintsMap(),
                                 preview_action_callback);
 
-  Utils::WaitUntilMSec(preview_action_ok,
-                       2000,
-                       [] { return g_strdup("Failed to activate preview action"); });
+  Utils::WaitUntil(preview_action_ok, 2, "Failed to activate preview action");
 }
 
 TEST_F(TestScope, ActivatePreviewActionActivationUri)
@@ -197,13 +189,9 @@ TEST_F(TestScope, ActivatePreviewActionActivationUri)
                                 glib::HintsMap(),
                                 preview_action_callback);
 
-  Utils::WaitUntilMSec(preview_action_ok,
-                       2000,
-                       [] { return g_strdup("Failed to activate preview action"); });
-  Utils::WaitUntilMSec([&uri_activated] () { return uri_activated == "uri://activation_uri"; },
-                       true,
-                       2000,
-                       [] { return g_strdup("Activation signal not emitted from scope."); });
+  Utils::WaitUntil(preview_action_ok, 2, "Failed to activate preview action");
+  Utils::WaitUntil([&uri_activated] () { return uri_activated == "uri://activation_uri"; },
+                   true, 2, "Activation signal not emitted from scope.");
 }
 
 
@@ -220,16 +208,19 @@ TEST_F(TestScope, UpdateSearchCategoryWorkflow)
   scope_->Search("13:cat", search_callback);
 
   Results::Ptr results = scope_->results();
-  Utils::WaitUntilMSec(search_ok, 2000, [] { return g_strdup("First search failed."); });
-  Utils::WaitUntilMSec([results] { return results->count() == 13; },
-                       true,
-                       2000,
-                       [results] { return g_strdup_printf("First search. Either search didn't finish, or result count is not as expected (%u != 13).", static_cast<int>(results->count())); });
+  Utils::WaitUntil(search_ok, 2, "First search failed.");
+  Utils::WaitUntil([results] { return results->count() == 13; }, true, 2,
+                   "First search. Either search didn't finish, or result count " \
+                   "is not as expected ("+std::to_string(results->count())+" != 13).");
   EXPECT_EQ(search_ok, true);
 
   Results::Ptr category_model0 = scope_->GetResultsForCategory(0);
   Results::Ptr category_model1 = scope_->GetResultsForCategory(1);
   Results::Ptr category_model2 = scope_->GetResultsForCategory(2);
+
+  ASSERT_THAT(category_model0, NotNull());
+  ASSERT_THAT(category_model1, NotNull());
+  ASSERT_THAT(category_model2, NotNull());
 
   EXPECT_EQ(category_model0->count(), 5) << "Category 0 result count not as expected (" << category_model0->count() << " != 5)";
   EXPECT_EQ(category_model1->count(), 4) << "Category 1 result count not as expected (" << category_model1->count() << " != 4)";
@@ -252,10 +243,9 @@ TEST_F(TestScope, UpdateSearchCategoryWorkflow)
   EXPECT_TRUE(filter_updated) << "Could not update filter opiton 'cat1' of filter 'categories'";
 
   // Results should be updated for fulter.
-  Utils::WaitUntilMSec([results] { return results->count() == 4; },
-                       true,
-                       30000,
-                       [results] { return g_strdup_printf("Category activate. Result count is not as expected (%u != 4).", static_cast<int>(results->count())); });
+  Utils::WaitUntil([results] { return results->count() == 4; }, true, 30,
+                   "Category activate. Result count is not as expected ("+
+                    std::to_string(results->count())+" != 4).");
 
   category_model0 = scope_->GetResultsForCategory(0);
   category_model1 = scope_->GetResultsForCategory(1);

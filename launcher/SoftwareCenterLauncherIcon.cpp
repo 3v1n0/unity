@@ -104,7 +104,7 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launche
   drag_window_->SetBaseXY(start_x, start_y);
   drag_window_->ShowWindow(true);
   drag_window_->SetAnimationTarget(icon_center.x, icon_center.y + (launcher->GetIconSize() / 2));
-  drag_window_->on_anim_completed = drag_window_->anim_completed.connect(sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnDragAnimationFinished));
+  drag_window_->on_anim_completed_conn_ = drag_window_->anim_completed.connect(sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnDragAnimationFinished));
   drag_window_->StartSlowAnimation();
 }
 
@@ -254,6 +254,7 @@ void SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
     {
       SetQuirk(Quirk::PROGRESS, true);
       finished_ = false;
+      tooltip_text = _("Installing..."); 
     }
 
     SetProgress(progress/100.0f);

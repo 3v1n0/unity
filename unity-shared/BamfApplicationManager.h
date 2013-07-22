@@ -72,6 +72,8 @@ class AppWindow: public WindowBase
 {
 public:
   AppWindow(ApplicationManager const& manager,
+            glib::Object<BamfWindow> const& window);
+  AppWindow(ApplicationManager const& manager,
             glib::Object<BamfView> const& window);
 
   virtual Window window_id() const;
@@ -86,6 +88,8 @@ private:
 class Tab: public WindowBase
 {
 public:
+  Tab(ApplicationManager const& manager,
+      glib::Object<BamfTab> const& tab);
   Tab(ApplicationManager const& manager,
       glib::Object<BamfView> const& tab);
 
@@ -104,9 +108,9 @@ class Application : public ::unity::Application, public View
 {
 public:
   Application(ApplicationManager const& manager,
-              glib::Object<BamfView> const& app);
-  Application(ApplicationManager const& manager,
               glib::Object<BamfApplication> const& app);
+  Application(ApplicationManager const& manager,
+              glib::Object<BamfView> const& app);
 
   virtual std::string desktop_file() const;
   virtual std::string type() const;

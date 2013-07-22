@@ -72,6 +72,7 @@ function(add_pch_linux header_filename target_name pch_suffix)
   # Add the PCH to every source file's include list.
   # This is the only way that is supported by both GCC and Clang.
   set_property(TARGET ${target_name} APPEND_STRING PROPERTY COMPILE_FLAGS " -include ${header_basename} ")
+  set_property(TARGET ${target_name} APPEND_STRING PROPERTY COMPILE_FLAGS " -fpch-preprocess ")
   set_property(TARGET ${target_name} APPEND_STRING PROPERTY COMPILE_FLAGS " -Winvalid-pch ")
   set_property(TARGET ${target_name} APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
   

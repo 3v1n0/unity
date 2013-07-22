@@ -53,7 +53,7 @@ public:
 
   sigc::signal<void> anim_completed;
   sigc::signal<void> drag_cancel_request;
-  sigc::connection on_anim_completed;
+  connection::Wrapper on_anim_completed_conn_;
 
 protected:
   bool InspectKeyEvent(unsigned int event_type, unsigned int keysym, const char* character);

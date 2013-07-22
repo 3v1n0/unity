@@ -53,8 +53,6 @@ struct _PanelServicePrivate
   GHashTable *id2entry_hash;
   GHashTable *panel2entries_hash;
 
-  guint  initial_sync_id;
-  guint  ready_signal_id;
   gint32 timeouts[N_TIMEOUT_SLOTS];
 
   IndicatorObjectEntry *last_entry;
@@ -148,9 +146,7 @@ panel_service_class_dispose (GObject *self)
   PanelServicePrivate *priv = PANEL_SERVICE (self)->priv;
   gint i;
 
-  g_hash_table_destroy (priv->id2entry_hash);
-  g_hash_table_destroy (priv->panel2entries_hash);
-
+  g_idle_remove_by_data (self);
   gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, self);
 
   if (GTK_IS_WIDGET (priv->menubar) &&
@@ -172,18 +168,6 @@ panel_service_class_dispose (GObject *self)
     {
       g_object_unref (priv->last_menu);
       priv->last_menu = NULL;
-    }
-
-  if (priv->initial_sync_id)
-    {
-      g_source_remove (priv->initial_sync_id);
-      priv->initial_sync_id = 0;
-    }
-
-  if (priv->ready_signal_id)
-    {
-      g_source_remove (priv->ready_signal_id);
-      priv->ready_signal_id = 0;
     }
 
   for (i = 0; i < N_TIMEOUT_SLOTS; i++)
@@ -208,6 +192,11 @@ panel_service_class_dispose (GObject *self)
 static void
 panel_service_class_finalize (GObject *object)
 {
+  PanelServicePrivate *priv = PANEL_SERVICE (object)->priv;
+
+  g_hash_table_destroy (priv->id2entry_hash);
+  g_hash_table_destroy (priv->panel2entries_hash);
+
   static_service = NULL;
 }
 
@@ -247,13 +236,13 @@ panel_service_class_init (PanelServiceClass *klass)
 
  _service_signals[GEOMETRIES_CHANGED] =
     g_signal_new ("geometries-changed",
-      G_OBJECT_CLASS_TYPE (obj_class),
-      G_SIGNAL_RUN_LAST,
-      0,
-      NULL, NULL, NULL,
-      G_TYPE_NONE, 6,
-      G_TYPE_OBJECT, G_TYPE_POINTER,
-      G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
+                  G_OBJECT_CLASS_TYPE (obj_class),
+                  G_SIGNAL_RUN_LAST,
+                  0,
+                  NULL, NULL, NULL,
+                  G_TYPE_NONE, 6,
+                  G_TYPE_OBJECT, G_TYPE_POINTER,
+                  G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
 
  _service_signals[ENTRY_SHOW_NOW_CHANGED] =
     g_signal_new ("entry-show-now-changed",
@@ -270,7 +259,6 @@ panel_service_class_init (PanelServiceClass *klass)
                   0,
                   NULL, NULL, NULL,
                   G_TYPE_NONE, 0);
-
 
   g_type_class_add_private (obj_class, sizeof (PanelServicePrivate));
 }
@@ -472,11 +460,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 static gboolean
 initial_resync (PanelService *self)
 {
-  if (PANEL_IS_SERVICE (self))
-    {
-      g_signal_emit (self, _service_signals[RE_SYNC], 0, "");
-      self->priv->initial_sync_id = 0;
-    }
+  g_signal_emit (self, _service_signals[RE_SYNC], 0, "");
   return FALSE;
 }
 
@@ -496,24 +480,22 @@ ready_signal (PanelService *self)
         NULL,
       };
 
-      g_spawn_async(NULL, /* Working Directory */
-                    argv,
-                    NULL, /* environment */
-                    G_SPAWN_SEARCH_PATH,
-                    NULL, NULL, /* child setup function */
-                    NULL, /* Pid */
-                    &error);
+      g_spawn_async (NULL, /* Working Directory */
+                     argv,
+                     NULL, /* environment */
+                     G_SPAWN_SEARCH_PATH,
+                     NULL, NULL, /* child setup function */
+                     NULL, /* Pid */
+                     &error);
 
-      if (error != NULL)
-	    {
+      if (error)
+	      {
           /* NOTE: When we get to the point where we can start
              assuming upstart user sessions this can be escillated
              to a warning or higher */
-          g_debug("Unable to signal indicators-loaded to upstart: %s", error->message);
-          g_error_free(error);
+          g_debug ("Unable to signal indicators-loaded to upstart: %s", error->message);
+          g_error_free (error);
         }
-
-      self->priv->ready_signal_id = 0;
     }
 
   return FALSE;
@@ -603,20 +585,11 @@ panel_service_init (PanelService *self)
                                                     g_free,
                                                     (GDestroyNotify) g_hash_table_destroy);
 
-  suppress_signals = TRUE;
-  load_indicators (self);
-  load_indicators_from_indicator_files (self);
-  sort_indicators (self);
-  suppress_signals = FALSE;
-
   priv->gsettings = g_settings_new_with_path (COMPIZ_OPTION_SCHEMA, COMPIZ_OPTION_PATH);
   g_signal_connect (priv->gsettings, "changed::"MENU_TOGGLE_KEYBINDING_KEY,
                     G_CALLBACK(on_keybinding_changed), self);
 
   panel_service_update_menu_keybinding (self);
-
-  priv->initial_sync_id = g_idle_add ((GSourceFunc)initial_resync, self);
-  priv->ready_signal_id = g_idle_add ((GSourceFunc)ready_signal, self);
 }
 
 static gboolean
@@ -638,6 +611,24 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
   g_return_if_fail (INDICATOR_IS_OBJECT (indicator));
 
   GList *entries, *l;
+  gpointer timeout;
+  gint position;
+
+  g_signal_handlers_disconnect_by_data (indicator, self);
+
+  position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (indicator), "position"));
+  if (self->priv->timeouts[position] > 0)
+    {
+      g_source_remove (self->priv->timeouts[position]);
+      self->priv->timeouts[position] = SYNC_NEUTRAL;
+    }
+
+  timeout = g_object_get_data (G_OBJECT (indicator), "remove-timeout");
+  if (timeout)
+    {
+      g_source_remove (GPOINTER_TO_UINT (timeout));
+      g_object_set_data (G_OBJECT (indicator), "remove-timeout", GUINT_TO_POINTER (0));
+    }
 
   entries = indicator_object_get_entries (indicator);
 
@@ -651,6 +642,17 @@ panel_service_actually_remove_indicator (PanelService *self, IndicatorObject *in
           gpointer key, value;
 
           entry = l->data;
+
+          if (entry->label)
+            {
+              g_signal_handlers_disconnect_by_data (entry->label, indicator);
+            }
+
+          if (entry->image)
+            {
+              g_signal_handlers_disconnect_by_data (entry->image, indicator);
+            }
+
           entry_id = get_indicator_entry_id_by_entry (entry);
           g_hash_table_remove (self->priv->id2entry_hash, entry_id);
           g_free (entry_id);
@@ -689,30 +691,78 @@ panel_service_indicator_remove_timeout (IndicatorObject *indicator)
   return FALSE;
 }
 
+static PanelService *
+get_or_init_static_service (gboolean* is_new)
+{
+  if (is_new) *is_new = FALSE;
+
+  if (!PANEL_IS_SERVICE (static_service))
+    {
+      static_service = g_object_new (PANEL_TYPE_SERVICE, NULL);
+      if (is_new) *is_new = TRUE;
+    }
+
+  return static_service;
+}
+
+static void
+initial_load_default_or_custom_indicators (PanelService *self, GList *indicators)
+{
+  GList *l;
+
+  suppress_signals = TRUE;
+
+  if (!indicators)
+    {
+      load_indicators (self);
+      load_indicators_from_indicator_files (self);
+      sort_indicators (self);
+    }
+  else
+    {
+      for (l = indicators; l; l = l->next)
+        {
+          IndicatorObject *object = l->data;
+
+          if (INDICATOR_IS_OBJECT (object))
+            panel_service_add_indicator (self, object);
+        }
+    }
+
+  suppress_signals = FALSE;
+
+  g_idle_add ((GSourceFunc)initial_resync, self);
+  g_idle_add ((GSourceFunc)ready_signal, self);
+}
+
 PanelService *
 panel_service_get_default ()
 {
-  if (static_service == NULL || !PANEL_IS_SERVICE (static_service))
-    static_service = g_object_new (PANEL_TYPE_SERVICE, NULL);
+  gboolean is_new;
+  PanelService *self = get_or_init_static_service (&is_new);
 
-  return static_service;
+  if (is_new)
+    {
+      initial_load_default_or_custom_indicators (self, NULL);
+    }
+
+  return self;
 }
 
 PanelService *
 panel_service_get_default_with_indicators (GList *indicators)
 {
-  PanelService *service = panel_service_get_default ();
-  GList        *i;
+  gboolean is_new;
+  PanelService *self = get_or_init_static_service (&is_new);
 
-  for (i = indicators; i; i = i->next)
+  if (is_new && indicators)
     {
-      IndicatorObject *object = i->data;
-      if (INDICATOR_IS_OBJECT (object))
-          load_indicator (service, object, NULL);
+      initial_load_default_or_custom_indicators (self, indicators);
     }
 
-  return service;
+  return self;
 }
+
 guint
 panel_service_get_n_indicators (PanelService *self)
 {
@@ -748,23 +798,46 @@ panel_service_get_indicator (PanelService *self, const gchar *indicator_id)
 }
 
 void
-panel_service_remove_indicator (PanelService *self, IndicatorObject *indicator)
+panel_service_add_indicator (PanelService *self, IndicatorObject *indicator)
 {
   g_return_if_fail (PANEL_IS_SERVICE (self));
   g_return_if_fail (INDICATOR_IS_OBJECT (indicator));
 
+  g_object_ref (indicator);
+  load_indicator (self, indicator, NULL);
+}
+
+static void
+panel_service_prepare_indicator_removal (PanelService *self,
+                                         IndicatorObject *indicator,
+                                         gboolean notify)
+{
+  g_object_set_data (G_OBJECT (indicator), "remove", GINT_TO_POINTER (TRUE));
   gpointer timeout = g_object_get_data (G_OBJECT (indicator), "remove-timeout");
 
   if (timeout)
-    g_source_remove (GPOINTER_TO_UINT (timeout));
+    {
+      g_source_remove (GPOINTER_TO_UINT (timeout));
+    }
 
-  g_object_set_data (G_OBJECT (indicator), "remove", GINT_TO_POINTER (TRUE));
-  notify_object (indicator);
+  if (notify)
+    {
+      notify_object (indicator);
+    }
 
   guint id = g_timeout_add_seconds (1,
                                     (GSourceFunc) panel_service_indicator_remove_timeout,
                                     indicator);
   g_object_set_data (G_OBJECT (indicator), "remove-timeout", GUINT_TO_POINTER (id));
+}
+
+void
+panel_service_remove_indicator (PanelService *self, IndicatorObject *indicator)
+{
+  g_return_if_fail (PANEL_IS_SERVICE (self));
+  g_return_if_fail (INDICATOR_IS_OBJECT (indicator));
+
+  panel_service_prepare_indicator_removal (self, indicator, TRUE);
 }
 
 void
@@ -777,9 +850,10 @@ panel_service_clear_indicators (PanelService *self)
     {
       IndicatorObject *ind = l->data;
       l = l->next;
-      panel_service_remove_indicator (self, ind);
+      panel_service_prepare_indicator_removal (self, ind, FALSE);
     }
 
+  g_signal_emit (self, _service_signals[RE_SYNC], 0, "");
   g_idle_add ((GSourceFunc)panel_service_check_cleared, self);
 }
 
@@ -989,7 +1063,7 @@ load_indicator (PanelService *self, IndicatorObject *object, const gchar *_name)
   gchar *name;
   GList *entries, *entry;
 
-  indicator_object_set_environment(object, (GStrv)indicator_environment);
+  indicator_object_set_environment (object, (GStrv)indicator_environment);
 
   if (_name != NULL)
     name = g_strdup (_name);
@@ -1095,6 +1169,8 @@ load_indicators_from_indicator_files (PanelService *self)
 
       g_free (filename);
     }
+
+  g_dir_close (dir);
 }
 
 static gint
@@ -1113,48 +1189,29 @@ name2order (const gchar * name, const gchar * hint)
   return -1;
 }
 
-static gint
-name2priority (const gchar * name, const gchar * hint)
-{
-  gint order = name2order (name, hint);
-  if (order > -1)
-    return order * MAX_INDICATOR_ENTRIES;
-
-  return order;
-}
-
-static int
-indicator_compare_func (IndicatorObject *o1, IndicatorObject *o2)
-{
-  gchar *s1;
-  gchar *s2;
-  int    i1;
-  int    i2;
-
-  s1 = g_object_get_data (G_OBJECT (o1), "id");
-  s2 = g_object_get_data (G_OBJECT (o2), "id");
-
-  i1 = name2order (s1, NULL);
-  i2 = name2order (s2, NULL);
-
-  return i1 - i2;
-}
-
 static void
 sort_indicators (PanelService *self)
 {
   GSList *i;
   int     k = 0;
-  int     prio = 0;
-
-  self->priv->indicators = g_slist_sort (self->priv->indicators,
-                                         (GCompareFunc)indicator_compare_func);
 
   for (i = self->priv->indicators; i; i = i->next)
     {
-      prio = name2priority(g_object_get_data (G_OBJECT (i->data), "id"), NULL);
-      if (prio < 0) continue;
-      g_object_set_data (G_OBJECT (i->data), "priority", GINT_TO_POINTER (prio));
+      IndicatorObject *io = i->data;
+      gint pos;
+
+      pos = indicator_object_get_position (io);
+
+      /* Continue using the state ordering as long as there are still
+       * plugins statically defined in this file. Give them a much
+       * higher position though, so that they appear to the right of the
+       * indicators that return a proper position */
+      if (pos < 0)
+        pos = 1000 - name2order (g_object_get_data (G_OBJECT (io), "id"), NULL);
+
+      /* unity's concept of priorities is inverse to ours right now */
+      g_object_set_data (G_OBJECT (i->data), "priority", GINT_TO_POINTER (1000 - pos));
+
       g_object_set_data (G_OBJECT (i->data), "position", GINT_TO_POINTER (k));
       self->priv->timeouts[k] = SYNC_NEUTRAL;
       k++;
@@ -1262,7 +1319,7 @@ indicator_entry_null_to_variant (const gchar     *indicator_id,
 }
 
 static void
-indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id, GVariantBuilder *b)
+indicator_object_full_to_variant (IndicatorObject *object, const gchar *indicator_id, GVariantBuilder *b)
 {
   GList *entries, *e;
   gint parent_prio = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (object), "priority"));
@@ -1277,16 +1334,8 @@ indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id,
           IndicatorObjectEntry *entry = e->data;
           gchar *id = get_indicator_entry_id_by_entry (entry);
 
-          if (entry->name_hint)
-            {
-              prio = name2priority(indicator_id, entry->name_hint);
-            }
-
-          if (prio == -1)
-            {
-              prio = parent_prio + index;
-              index++;
-            }
+          prio = parent_prio + index;
+          index++;
 
           indicator_entry_to_variant (entry, id, indicator_id, b, prio);
           g_free (id);
@@ -1298,6 +1347,21 @@ indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id,
     {
       /* Add a null entry to indicate that there is an indicator here, it's just empty */
       indicator_entry_null_to_variant (indicator_id, b);
+    }
+}
+
+static void
+indicator_object_to_variant (IndicatorObject *object, const gchar *indicator_id, GVariantBuilder *b)
+{
+  if (!GPOINTER_TO_INT (g_object_get_data (G_OBJECT (object), "remove")))
+    {
+      indicator_object_full_to_variant (object, indicator_id, b);
+    }
+  else
+    {
+      PanelService *self = panel_service_get_default ();
+      indicator_entry_null_to_variant (indicator_id, b);
+      panel_service_actually_remove_indicator (self, object);
     }
 }
 
@@ -1343,6 +1407,7 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
   g_signal_emit (self, _service_signals[ENTRY_ACTIVATED], 0, "", 0, 0, 0, 0);
 }
 
+
 /*
  * Public Methods
  */
@@ -1350,20 +1415,25 @@ GVariant *
 panel_service_sync (PanelService *self)
 {
   GVariantBuilder b;
+  IndicatorObject *indicator;
   GSList *i;
+  gint position;
 
   g_variant_builder_init (&b, G_VARIANT_TYPE ("(a(ssssbbusbbi))"));
   g_variant_builder_open (&b, G_VARIANT_TYPE ("a(ssssbbusbbi)"));
 
-  for (i = self->priv->indicators; i; i = i->next)
+  for (i = self->priv->indicators; i;)
     {
-      const gchar *indicator_id = g_object_get_data (G_OBJECT (i->data), "id");
-      gint position;
+      /* An indicator could be removed during this cycle, so we should be safe */
+      indicator = i->data;
+      i = i->next;
+
+      const gchar *indicator_id = g_object_get_data (G_OBJECT (indicator), "id");
+      position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (indicator), "position"));
+      indicator_object_to_variant (indicator, indicator_id, &b);
 
       /* Set the sync back to neutral */
-      position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (i->data), "position"));
       self->priv->timeouts[position] = SYNC_NEUTRAL;
-      indicator_object_to_variant (i->data, indicator_id, &b);
     }
 
   g_variant_builder_close (&b);
@@ -1384,21 +1454,11 @@ panel_service_sync_one (PanelService *self, const gchar *indicator_id)
       if (g_strcmp0 (indicator_id,
                      g_object_get_data (G_OBJECT (i->data), "id")) == 0)
         {
-          gint position;
+          gint position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (i->data), "position"));
+          indicator_object_to_variant (i->data, indicator_id, &b);
 
           /* Set the sync back to neutral */
-          position = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (i->data), "position"));
           self->priv->timeouts[position] = SYNC_NEUTRAL;
-
-          if (GPOINTER_TO_INT (g_object_get_data (G_OBJECT (i->data), "remove")) != TRUE)
-            {
-              indicator_object_to_variant (i->data, indicator_id, &b);
-            }
-          else
-            {
-              indicator_entry_null_to_variant (indicator_id, &b);
-              panel_service_actually_remove_indicator (self, i->data);
-            }
 
           break;
         }
@@ -1583,7 +1643,6 @@ activate_next_prev_menu (PanelService         *self,
 
   for (l = indicators; l; l = l->next)
     {
-      const gchar *indicator_id = g_object_get_data (G_OBJECT (l->data), "id");
       gint parent_priority = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (l->data), "priority"));
       entries = indicator_object_get_entries (l->data);
       if (entries)
@@ -1598,16 +1657,8 @@ activate_next_prev_menu (PanelService         *self,
               if (!panel_service_entry_is_visible (self, new_entry))
                 continue;
 
-              if (new_entry->name_hint)
-                {
-                  prio = name2priority(indicator_id, new_entry->name_hint);
-                }
-
-              if (prio == -1)
-                {
-                  prio = parent_priority + index;
-                  index++;
-                }
+              prio = parent_priority + index;
+              index++;
 
               gpointer *values = g_new (gpointer, 2);
               values[0] = new_entry;

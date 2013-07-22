@@ -139,7 +139,7 @@ struct MockApplicationLauncherIcon : public ApplicationLauncherIcon
   typedef bool Fake;
 
   MockApplicationLauncherIcon(Fake = true, std::string const& remote_uri = "")
-    : ApplicationLauncherIcon(std::make_shared<MockApplication>(""))
+    : ApplicationLauncherIcon(std::make_shared<MockApplication::Nice>())
     , remote_uri_(remote_uri)
   {
     InitMock();
@@ -153,14 +153,14 @@ struct MockApplicationLauncherIcon : public ApplicationLauncherIcon
   }
 
   MockApplicationLauncherIcon(std::string const& desktop_file)
-    : ApplicationLauncherIcon(std::make_shared<MockApplication>(desktop_file))
+    : ApplicationLauncherIcon(std::make_shared<MockApplication::Nice>(desktop_file))
   {
     InitMock();
   }
 
   void InitMock()
   {
-    ON_CALL(*this, Stick(_)).WillByDefault(Invoke(this, &MockApplicationLauncherIcon::ReallyStick));
+    ON_CALL(*this, Stick(_)).WillByDefault(Invoke([this] (bool save) { ApplicationLauncherIcon::Stick(save); }));
   }
 
   std::string GetRemoteUri()
@@ -170,8 +170,6 @@ struct MockApplicationLauncherIcon : public ApplicationLauncherIcon
     else
       return FavoriteStore::URI_PREFIX_APP + remote_uri_;
   }
-
-  void ReallyStick(bool save) { ApplicationLauncherIcon::Stick(save); }
 
   MOCK_METHOD1(Stick, void(bool));
   MOCK_METHOD0(UnStick, void());

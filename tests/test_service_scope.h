@@ -35,11 +35,12 @@ public:
   ~Scope();
 
 private:
-  void AddCategories();
-  void AddFilters();
+  UnityCategorySet* CreateCategories();
+  UnityFilterSet* CreateFilters();
 
 private:
-  glib::Object<TestScope> scope_;
+  glib::Object<UnityAbstractScope> scope_;
+  glib::Object<UnityScopeDBusConnector> connector_;
 };
 
 }

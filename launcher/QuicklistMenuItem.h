@@ -90,6 +90,7 @@ public:
   static const char* MARKUP_ACCEL_DISABLED_PROPERTY;
   static const char* MAXIMUM_LABEL_WIDTH_PROPERTY;
   static const char* OVERLAY_MENU_ITEM_PROPERTY;
+  static const char* QUIT_ACTION_PROPERTY;
 
 protected:
   // Introspection

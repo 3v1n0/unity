@@ -36,9 +36,7 @@ class MockDashStyle : public dash::StyleInterface
 public:
   MockDashStyle()
   {
-    std::string full_path = PKGDATADIR "/album_missing.png";
-    glib::Object<GdkPixbuf> pixbuf(gdk_pixbuf_new_from_file_at_size(full_path.c_str(), 20, 20, nullptr));
-    base_texture_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
+    base_texture_.Adopt(nux::CreateTexture2DFromFile(SOURCEDATADIR "/album_missing.png", true, -1));
   }
 
   MOCK_METHOD2(FocusOverlay, nux::AbstractPaintLayer*(int width, int height));
@@ -104,7 +102,7 @@ TEST_F(TestPlacesGroup, Constructor)
     .Times(1);
 
   EXPECT_CALL(dash_style_, GetGroupUnexpandIcon())
-      .Times(0);
+    .Times(0);
 
   PlacesGroup places_group(dash_style_);
 

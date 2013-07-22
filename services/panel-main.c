@@ -21,6 +21,7 @@
 #include <glib.h>
 #include <gio/gio.h>
 #include <gtk/gtk.h>
+#include <libido/libido.h>
 
 #include "config.h"
 #include "panel-a11y.h"
@@ -381,13 +382,14 @@ main (gint argc, gchar **argv)
   PanelService *service;
   guint         owner_id;
 
-  g_unsetenv("UBUNTU_MENUPROXY");
+  g_unsetenv ("UBUNTU_MENUPROXY");
   g_setenv ("NO_AT_BRIDGE", "1", TRUE);
   g_unsetenv ("NO_GAIL");
 
   gtk_init (&argc, &argv);
   gtk_icon_theme_append_search_path (gtk_icon_theme_get_default(),
 				     INDICATORICONDIR);
+  ido_init ();
 
   if (g_getenv ("SILENT_PANEL_SERVICE") != NULL)
   {

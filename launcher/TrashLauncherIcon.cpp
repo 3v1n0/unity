@@ -42,6 +42,7 @@ namespace
 
 TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
   : SimpleLauncherIcon(IconType::TRASH)
+  , empty_(true)
   , file_manager_(fmo ? fmo : GnomeFileManager::Get())
 {
   tooltip_text = _("Trash");
@@ -85,7 +86,7 @@ AbstractLauncherIcon::MenuItemsVector TrashLauncherIcon::GetMenus()
 
   /* Empty Trash */
   glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
-  dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Empty Trash..."));
+  dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, _("Empty Trash…"));
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, !empty_);
   dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
   empty_activated_signal_.Connect(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,

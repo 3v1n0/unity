@@ -18,6 +18,7 @@
  */
 
 #include "Category.h"
+#include "Variant.h"
 
 #include <sigc++/bind.h>
 
@@ -70,6 +71,21 @@ std::size_t Category::get_index() const
   if (!model_)
     return unsigned(-1);
   return dee_model_get_position(model_, iter_);
+}
+
+std::string Category::GetContentType() const
+{
+  if (!model_ || !iter_)
+    return "";
+
+  glib::HintsMap hints;
+  glib::Variant v(dee_model_get_value(model_, iter_, CategoryColumn::HINTS),
+                  glib::StealRef());
+  v.ASVToHints(hints);
+  auto iter = hints.find("content-type");
+  if (iter == hints.end())
+    return "";
+  return iter->second.GetString();
 }
 
 }

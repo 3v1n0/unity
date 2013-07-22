@@ -87,47 +87,57 @@ void CheckResults(std::vector<LoadResult> const& results)
   }
 }
 
-
-TEST(TestIconLoader, TestGetDefault)
+struct TestIconLoader : testing::Test
 {
-  // we need to initialize gtk
-  int args_cnt = 0;
-  gtk_init (&args_cnt, NULL);
+  TestIconLoader()
+    : icon_loader(IconLoader::GetDefault())
+  {}
 
-  IconLoader::GetDefault();
+  void TearDown() override
+  {
+    for (int handle : handles_)
+      icon_loader.DisconnectHandle(handle);
+  }
+
+  IconLoader& icon_loader;
+  std::vector<int> handles_;
+};
+
+TEST_F(TestIconLoader, TestGetDefault)
+{
+  EXPECT_EQ(&icon_loader, &IconLoader::GetDefault());
 }
 
-TEST(TestIconLoader, TestGetOneIcon)
+TEST_F(TestIconLoader, TestGetOneIcon)
 {
   LoadResult load_result;
-  IconLoader& icon_loader = IconLoader::GetDefault();
 
-  icon_loader.LoadFromIconName("gedit-icon", -1, 48, sigc::mem_fun(load_result,
+  int handle = icon_loader.LoadFromIconName("python", -1, 48, sigc::mem_fun(load_result,
         &LoadResult::IconLoaded));
+  handles_.push_back(handle);
 
   Utils::WaitUntilMSec(load_result.got_callback);
   EXPECT_TRUE(load_result.got_callback);
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
 }
 
-TEST(TestIconLoader, TestGetAnnotatedIcon)
+TEST_F(TestIconLoader, TestGetAnnotatedIcon)
 {
   LoadResult load_result;
-  IconLoader& icon_loader = IconLoader::GetDefault();
 
-  icon_loader.LoadFromGIconString(". UnityProtocolAnnotatedIcon %7B'base-icon':%20%3C'gedit-icon'%3E,%20'ribbon':%20%3C'foo'%3E%7D", -1, 48, sigc::mem_fun(load_result,
+  int handle = icon_loader.LoadFromGIconString(". UnityProtocolAnnotatedIcon %7B'base-icon':%20%3C'cmake'%3E,%20'ribbon':%20%3C'foo'%3E%7D", -1, 48, sigc::mem_fun(load_result,
         &LoadResult::IconLoaded));
+  handles_.push_back(handle);
 
   Utils::WaitUntilMSec(load_result.got_callback);
   EXPECT_TRUE(load_result.got_callback);
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
 }
 
-TEST(TestIconLoader, TestGetOneIconManyTimes)
+TEST_F(TestIconLoader, TestGetOneIconManyTimes)
 {
   std::vector<LoadResult> results;
   std::vector<int> handles;
-  IconLoader& icon_loader = IconLoader::GetDefault();
   int i, load_count;
 
   // 100 times should be good
@@ -139,8 +149,9 @@ TEST(TestIconLoader, TestGetOneIconManyTimes)
   // be cached already!
   for (int i = 0; i < load_count; i++)
   {
-    handles[i] = icon_loader.LoadFromIconName("web-browser", -1, 48,
+    handles[i] = icon_loader.LoadFromIconName("debian-logo", -1, 48,
         sigc::mem_fun(results[i], &LoadResult::IconLoaded));
+    handles_.push_back(handles[i]);
   }
 
   // disconnect every other handler (and especially the first one)
@@ -154,10 +165,9 @@ TEST(TestIconLoader, TestGetOneIconManyTimes)
 }
 
 // Disabled until we have the new thread safe lp:fontconfig
-TEST(TestIconLoader, DISABLED_TestGetManyIcons)
+TEST_F(TestIconLoader, DISABLED_TestGetManyIcons)
 {
   std::vector<LoadResult> results;
-  IconLoader& icon_loader = IconLoader::GetDefault();
   int i = 0;
   int icon_count;
 
@@ -169,19 +179,18 @@ TEST(TestIconLoader, DISABLED_TestGetManyIcons)
   for (GList *it = icons; it != NULL; it = it->next)
   {
     const char *icon_name = static_cast<char*>(it->data);
-    icon_loader.LoadFromIconName(icon_name, -1, 48, sigc::mem_fun(results[i++],
-        &LoadResult::IconLoaded));
+    int handle = icon_loader.LoadFromIconName(icon_name, -1, 48, sigc::mem_fun(results[i++], &LoadResult::IconLoaded));
+    handles_.push_back(handle);
     if (i >= icon_count) break;
   }
 
   CheckResults(results);
 }
 
-TEST(TestIconLoader, TestCancelSome)
+TEST_F(TestIconLoader, TestCancelSome)
 {
   std::vector<LoadResult> results;
   std::vector<int> handles;
-  IconLoader& icon_loader = IconLoader::GetDefault();
   int i = 0;
   int icon_count;
 
@@ -197,6 +206,7 @@ TEST(TestIconLoader, TestCancelSome)
     int handle = icon_loader.LoadFromIconName(icon_name, -1, 48, sigc::mem_fun(
           results[i], &LoadResult::IconLoaded));
     handles[i++] = handle;
+    handles_.push_back(handle);
     if (i >= icon_count) break;
   }
 

@@ -28,6 +28,13 @@ namespace glib
 {
 namespace
 {
+GDBusInterfaceInfo* safe_interface_info_ref(GDBusInterfaceInfo* info)
+{
+  if (info) ::g_dbus_interface_info_ref(info);
+
+  return info;
+}
+
 void safe_interface_info_unref(GDBusInterfaceInfo* info)
 {
   if (info) ::g_dbus_interface_info_unref(info);
@@ -45,7 +52,6 @@ struct DBusObject::Impl
 {
   Impl(DBusObject* obj, std::string const& introspection_xml, std::string const& interface_name)
     : object_(obj)
-    , interface_info_(nullptr, safe_interface_info_unref)
   {
     glib::Error error;
     auto xml_int = g_dbus_node_info_new_for_xml(introspection_xml.c_str(), &error);
@@ -60,7 +66,8 @@ struct DBusObject::Impl
     if (!node_info)
       return;
 
-    interface_info_.reset(g_dbus_node_info_lookup_interface(node_info.get(), interface_name.c_str()));
+    auto* iface_info = g_dbus_node_info_lookup_interface(node_info.get(), interface_name.c_str());
+    interface_info_.reset(safe_interface_info_ref(iface_info), safe_interface_info_unref);
 
     if (!interface_info_)
     {
@@ -69,7 +76,6 @@ struct DBusObject::Impl
       return;
     }
 
-    g_dbus_interface_info_ref(interface_info_.get());
 
     interface_vtable_.method_call = [] (GDBusConnection* connection, const gchar* sender,
                                         const gchar* object_path, const gchar* interface_name,

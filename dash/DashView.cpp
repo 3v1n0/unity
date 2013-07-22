@@ -165,9 +165,6 @@ DashView::DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& app
 
 DashView::~DashView()
 {
-  scope_can_refine_connection_.disconnect();
-  key_nav_focus_change_connection_.disconnect();
-
   // Do this explicitely, otherwise dee will complain about invalid access
   // to the scope models
   RemoveLayout();
@@ -1270,7 +1267,6 @@ void DashView::OnScopeBarActivated(std::string const& id)
 
   if (active_scope_view_.IsValid())
     active_scope_view_->SetVisible(false);
-  scope_can_refine_connection_.disconnect();
 
   nux::ObjectPtr<ScopeView> view = active_scope_view_ = scope_views_[id];
 

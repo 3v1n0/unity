@@ -47,23 +47,14 @@ Tracks::Tracks(dash::Tracks::Ptr tracks, NUX_FILE_LINE_DECL)
 
   if (tracks_)
   {
-    add_track_ = tracks_->track_added.connect(sigc::mem_fun(this, &Tracks::OnTrackAdded));
-    change_track_ = tracks_->track_changed.connect(sigc::mem_fun(this, &Tracks::OnTrackUpdated));
-    remove_track_ = tracks_->track_removed.connect(sigc::mem_fun(this, &Tracks::OnTrackRemoved));
+    sig_conn_.Add(tracks_->track_added.connect(sigc::mem_fun(this, &Tracks::OnTrackAdded)));
+    sig_conn_.Add(tracks_->track_changed.connect(sigc::mem_fun(this, &Tracks::OnTrackUpdated)));
+    sig_conn_.Add(tracks_->track_removed.connect(sigc::mem_fun(this, &Tracks::OnTrackRemoved)));
 
     // Add what we've got.
-    for (std::size_t i = 0; i < tracks_->count.Get(); i++)
-    {
+    for (std::size_t i = 0; i < tracks_->count.Get(); ++i)
       OnTrackAdded(tracks_->RowAtIndex(i));
-    }
   }
-}
-
-Tracks::~Tracks()
-{
-  add_track_.disconnect();
-  change_track_.disconnect();
-  remove_track_.disconnect();
 }
 
 std::string Tracks::GetName() const

@@ -26,6 +26,7 @@
 #include <Nux/Nux.h>
 #include <Nux/ScrollView.h>
 #include <UnityCore/Tracks.h>
+#include <UnityCore/ConnectionManager.h>
 #include "unity-shared/Introspectable.h"
 #include "Track.h"
 
@@ -50,7 +51,6 @@ public:
   NUX_DECLARE_OBJECT_TYPE(Tracks, nux::View);
 
   Tracks(dash::Tracks::Ptr tracks, NUX_FILE_LINE_PROTO);
-  virtual ~Tracks();
 
   // From debug::Introspectable
   std::string GetName() const;
@@ -70,9 +70,7 @@ protected:
 
   nux::VLayout* layout_;
   std::map<std::string, previews::Track::Ptr> m_tracks;
-  sigc::connection add_track_;
-  sigc::connection change_track_;
-  sigc::connection remove_track_;
+  connection::Manager sig_conn_;
 };
 
 }

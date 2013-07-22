@@ -22,6 +22,7 @@
 #include "config.h"
 #include <glib/gi18n-lib.h>
 #include <NuxCore/Logger.h>
+#include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibSignal.h>
 
 #include "DevicesSettings.h"
@@ -60,13 +61,6 @@ public:
     ConnectSignals();
   }
 
-  ~Impl()
-  {
-    volume_changed_conn_.disconnect();
-    volume_removed_conn_.disconnect();
-    settings_changed_conn_.disconnect();
-  }
-
   void UpdateIcon()
   {
     parent_->tooltip_text = volume_->GetName();
@@ -88,10 +82,10 @@ public:
 
   void ConnectSignals()
   {
-    volume_changed_conn_ = volume_->changed.connect(sigc::mem_fun(this, &Impl::OnVolumeChanged));
-    volume_removed_conn_ = volume_->removed.connect(sigc::mem_fun(this, &Impl::OnVolumeRemoved));
-    settings_changed_conn_ = devices_settings_->changed.connect(sigc::mem_fun(this, &Impl::OnSettingsChanged));
-    volume_->opened.connect(sigc::hide(sigc::mem_fun(this, &Impl::UpdateIcon)));
+    connections_.Add(volume_->changed.connect(sigc::mem_fun(this, &Impl::OnVolumeChanged)));
+    connections_.Add(volume_->removed.connect(sigc::mem_fun(this, &Impl::OnVolumeRemoved)));
+    connections_.Add(devices_settings_->changed.connect(sigc::mem_fun(this, &Impl::OnSettingsChanged)));
+    connections_.Add(volume_->opened.connect(sigc::hide(sigc::mem_fun(this, &Impl::UpdateIcon))));
   }
 
   void OnVolumeChanged()
@@ -286,9 +280,7 @@ public:
   DevicesSettings::Ptr devices_settings_;
 
   glib::SignalManager gsignals_;
-  sigc::connection settings_changed_conn_;
-  sigc::connection volume_changed_conn_;
-  sigc::connection volume_removed_conn_;
+  connection::Manager connections_;
 };
 
 //

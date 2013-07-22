@@ -1,4 +1,4 @@
-if (GTEST_SRC_DIR)
+if (GTEST_ROOT_DIR)
   set(UNITY_SRC ${CMAKE_SOURCE_DIR}/plugins/unityshell/src)
 
   add_custom_command(OUTPUT CompoundGestureRecognizer.cpp
@@ -33,6 +33,11 @@ if (GTEST_SRC_DIR)
   remove_definitions(${CFLAGS})
   set_directory_properties(PROPERTY INCLUDE_DIRECTORIES "")
 
+  include_directories (
+    ${GMOCK_INCLUDE_DIR}
+    ${GTEST_INCLUDE_DIR}
+  )
+
   include_directories (${CMAKE_SOURCE_DIR})
   include_directories (${CMAKE_SOURCE_DIR}/unity-shared)
 
@@ -66,9 +71,9 @@ if (GTEST_SRC_DIR)
                  ubus-server-mock.cpp
                  UnityGestureTargetMock.h
                 )
-  target_link_libraries(test-gestures gtest ${TEST_GESTURES_DEPS_LIBRARIES} compiz_core)
+  target_link_libraries(test-gestures gtest ${TEST_GESTURES_DEPS_LIBRARIES} compiz_core unity-core-${UNITY_API_VERSION})
   add_test(UnityGTestGestures test-gestures)
   add_dependencies(test-gestures gtest unity-core-${UNITY_API_VERSION})
 
   add_custom_target (check-gestures COMMAND ./test-gestures DEPENDS test-gestures)
-endif (GTEST_SRC_DIR)
+endif (GTEST_ROOT_DIR)
