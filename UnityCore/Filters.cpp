@@ -109,8 +109,7 @@ void FilterAdaptor::MergeState(glib::HintsMap const& hints)
 
 Filters::Filters()
 : Filters(ModelType::REMOTE)
-{
-}
+{}
 
 Filters::Filters(ModelType model_type)
 : Model<FilterAdaptor>::Model(model_type)

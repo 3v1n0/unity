@@ -57,7 +57,7 @@ TEST(TestGLibVariant, Construct)
 {
   Variant v (g_variant_new_string ("foo"));
 
-  EXPECT_TRUE(IsVariant(v));
+  ASSERT_TRUE(IsVariant(v));
   EXPECT_FALSE(IsFloating(v));
 }
 
@@ -67,7 +67,7 @@ TEST(TestGLibVariant, ConstructSteal)
   g_variant_ref_sink (gv);
   Variant v (gv, StealRef());
 
-  EXPECT_TRUE(IsVariant(v));
+  ASSERT_TRUE(IsVariant(v));
   EXPECT_FALSE(IsFloating(v));
 }
 
@@ -76,12 +76,36 @@ TEST(TestGLibVariant, Copy)
   Variant v1 (g_variant_new_string ("bar"));
   Variant v2 (v1);
 
-  EXPECT_TRUE(IsVariant(v1));
-  EXPECT_TRUE(IsVariant(v2));
+  ASSERT_TRUE(IsVariant(v1));
+  ASSERT_TRUE(IsVariant(v2));
   EXPECT_FALSE(IsFloating(v1));
   EXPECT_FALSE(IsFloating(v2));
   EXPECT_TRUE(IsSameVariant(v1, v2));
   EXPECT_TRUE(ValuesEqual(v1, v2));
+}
+
+TEST(TestGLibVariant, Assign)
+{
+  Variant v;
+  GVariant *raw_variant = g_variant_new_string("bar");
+  v = raw_variant;
+
+  ASSERT_TRUE(IsVariant(v));
+  EXPECT_FALSE(IsFloating(v));
+  EXPECT_TRUE(IsSameVariant(v, raw_variant));
+  EXPECT_TRUE(ValuesEqual(v, raw_variant));
+}
+
+TEST(TestGLibVariant, AssignSame)
+{
+  GVariant *raw_variant = g_variant_new_string("bar");
+  Variant v(raw_variant);
+  v = raw_variant;
+
+  ASSERT_TRUE(IsVariant(v));
+  EXPECT_FALSE(IsFloating(v));
+  EXPECT_TRUE(IsSameVariant(v, raw_variant));
+  EXPECT_TRUE(ValuesEqual(v, raw_variant));
 }
 
 TEST(TestGLibVariant, KeepsRef)
@@ -91,12 +115,12 @@ TEST(TestGLibVariant, KeepsRef)
 
   Variant v (gv);
 
-  EXPECT_TRUE(IsVariant(v));
+  ASSERT_TRUE(IsVariant(v));
   EXPECT_FALSE(IsFloating(v));
 
   g_variant_unref (gv);
 
-  EXPECT_TRUE(IsVariant(v));
+  ASSERT_TRUE(IsVariant(v));
   EXPECT_FALSE(IsFloating(v));
   EXPECT_EQ(v.GetInt32(), 456);
 }
@@ -105,7 +129,7 @@ TEST(TestGLibVariant, UseGVariantMethod)
 {
   Variant v (g_variant_new_int32 (123));
 
-  EXPECT_TRUE(IsVariant(v));
+  ASSERT_TRUE(IsVariant(v));
   EXPECT_FALSE(IsFloating(v));
   EXPECT_EQ(v.GetInt32(), 123);
 
@@ -132,7 +156,7 @@ TEST(TestGLibVariant, HintsMap)
   GVariant *dict_variant = g_variant_builder_end (&b);
   Variant dict (g_variant_new_tuple (&dict_variant, 1));
 
-  EXPECT_TRUE(IsVariant(dict));
+  ASSERT_TRUE(IsVariant(dict));
   EXPECT_FALSE(IsFloating(dict));
 
   HintsMap hints;
@@ -150,7 +174,7 @@ TEST(TestGLibVariant, HintsMap)
 
   // throw away all references to the original variant
   dict = g_variant_new_string ("bar");
-  EXPECT_TRUE(IsVariant(dict));
+  ASSERT_TRUE(IsVariant(dict));
   EXPECT_FALSE(IsFloating(dict));
   EXPECT_EQ(dict.GetString(), "bar");
 

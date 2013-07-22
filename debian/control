@@ -3,49 +3,55 @@ Section: gnome
 Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: cmake,
+               compiz-dev (>= 1:0.9.9~daily13.01.25bzr3586),
                debhelper (>= 9.0.0~),
-               dh-translations (>= 94),
+               dbus-test-runner,
                dh-migrations,
+               dh-translations (>= 94),
+               google-mock (>= 1.6.0+svn437),
+               google-mock,
+               gsettings-desktop-schemas-dev,
+               intltool (>= 0.35.0),
+               libatk1.0-dev,
+               libbamf3-dev (>= 0.5.0+13.10.20130626),
+               libboost-dev,
+               libboost-serialization-dev,
+               libcairo2-dev,
+               libcompizconfig0-dev (>= 1:0.9.9~daily12.12.05-0ubuntu2),
+               libdbusmenu-glib-dev (>= 0.3.91),
+               libdee-dev (>= 1.2.6),
+               libgee-dev (>= 0.5.0),
+               libgeis-dev (>= 2.0.10),
+               libgl1-mesa-dri,
+               libglib2.0-dev (>= 2.30),
+               libgrail-dev (>= 1.0.20),
+               libgtest-dev,
+               libgtk-3-dev (>= 3.1),
+               libido3-0.1-dev (>= 13.10.0),
+               libindicator-dev (>= 0.12.2),
+               libindicator3-dev (>= 0.12.2),
+               libjson-glib-dev,
+               libjson-perl,
+               libnotify-dev,
+               libnux-4.0-dev (>= 4.0.2+13.10.20130718.1),
+               libpango1.0-dev,
+               libsigc++-2.0-dev,
+               libstartup-notification0-dev,
+               libunique-dev,
+               libunity-dev (>= 7.0.8),
+               libunity-misc-dev (>= 4.0.4),
+               libunity-scopes-json-def-desktop,
+               libxcb-icccm4-dev,
+               libxfixes-dev (>= 1:5.0.1-1),
+               libxi-dev (>= 2:1.7.1.901),
+               libxpathselect-dev (>=1.3),
+               libzeitgeist-dev (>= 0.3.18),
                pkg-config,
                python (>= 2.7),
                python-setuptools,
-               libjson-perl,
                quilt,
-               intltool (>= 0.35.0),
-               libsigc++-2.0-dev,
-               libgee-dev (>= 0.5.0),
-               libunique-dev,
-               libbamf3-dev (>= 0.5.0+13.10.20130626),
-               gsettings-desktop-schemas-dev,
-               libglib2.0-dev (>= 2.30),
-               libdbusmenu-glib-dev (>= 0.3.91),
-               libgtk-3-dev (>= 3.1),
-               libcairo2-dev,
-               libpango1.0-dev,
-               libdee-dev (>= 1.0.0),
-               libindicator-dev (>= 0.4.90),
-               libindicator3-dev (>= 0.4.90),
-               libunity-misc-dev (>= 4.0.4),
-               libgrail-dev (>= 1.0.20),
-               libxcb-icccm4-dev,
-               libnux-4.0-dev (>= 4.0.2),
-               compiz-dev (>= 1:0.9.9~daily13.01.25bzr3586),
-               libcompizconfig0-dev (>= 1:0.9.9~daily12.12.05-0ubuntu2),
+               xserver-xorg-video-dummy,
                xsltproc,
-               libboost-dev,
-               libboost-serialization-dev,
-               libnotify-dev,
-               libstartup-notification0-dev,
-               libatk1.0-dev,
-               libjson-glib-dev,
-               libgeis-dev (>= 2.0.10),
-               libunity-dev (>= 7.0.2),
-               libunity-common,
-               libzeitgeist-dev (>= 0.3.18),
-               libxfixes-dev (>= 1:5.0-4ubuntu4),
-               libxpathselect-dev (>=1.3),
-               libgtest-dev,
-               google-mock,
 Standards-Version: 3.9.3
 Homepage: https://launchpad.net/unity
 # If you aren't a member of ~unity-team but need to upload packaging changes,
@@ -58,17 +64,17 @@ Depends: ${shlibs:Depends},
          ${misc:Depends},
          ${python:Depends},
          libunity-core-6.0-7 (= ${binary:Version}),
-         unity-common (= ${source:Version}),
          compiz,
          compiz-core, compiz-core-abiversion-${coreabiversion},
          libnux-abiversion-${nuxabiversion},
          compiz-plugins-default,
          libglib2.0-bin,
-         python-gconf,
          nux-tools,
-         dconf-tools,
+         dconf-cli,
          unity-asset-pool (>= 0.8.18),
          bamfdaemon,
+         libxfixes3 (>= 1:5.0.1-1),
+         libxi6 (>= 2:1.7.1.901),
 Provides: indicator-renderer
 Recommends: gnome-control-center-unity,
             ${unity-default-masterscopes}
@@ -110,28 +116,15 @@ Description: Services for the Unity interface
  .
  This package contains the dbus service used for unity.
 
-Package: unity-common
-Architecture: all
-Pre-Depends: ${misc:Pre-Depends},
-Depends: ${misc:Depends},
-         ${python:Depends},
-Description: Common files for the Unity interface.
- Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
- community, Unity is all about the combination of familiarity and the future. We
- bring together visual design, analysis of user experience testing, modern
- graphics technologies and a deep understanding of the free software landscape
- to produce what we hope will be the lightest, most elegant and most delightful
- way to use your PC.
- .
- This package contains commons file that are architecture independent.
-
 Package: libunity-core-6.0-7
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          unity-services (= ${binary:Version}),
-         unity-common (= ${source:Version}),
+Conflicts: unity-common, libunity-core-6.0-6
+Replaces: unity-common, libunity-core-6.0-6
+Provides: unity-common, unity-common-7.0
 Description: Core library for the Unity interface.
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
  community, Unity is all about the combination of familiarity and the future. We

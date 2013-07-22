@@ -330,6 +330,8 @@ void ResultViewGrid::AddResult(Result const& result)
 void ResultViewGrid::RemoveResult(Result const& result)
 {
   ResultView::RemoveResult(result);
+  // removing a result might make a non-preloaded one visible
+  all_results_preloaded_ = false;
   QueueResultsChanged();
 }
 
@@ -812,7 +814,7 @@ void ResultViewGrid::MouseClick(int x, int y, unsigned long button_flags, unsign
       {
         // delay activate for single left click. (for double click check)
         activate_timer_.reset(new glib::Timeout(DOUBLE_CLICK_SPEED, [this, index]() {
-          Activate(activated_result_, index, ResultView::ActivateType::PREVIEW);
+          Activate(activated_result_, index, ResultView::ActivateType::PREVIEW_LEFT_BUTTON);
           return false;
         }));
       }

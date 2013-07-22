@@ -25,6 +25,7 @@
 
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UnitySettings.h"
+#include "test_utils.h"
 
 using namespace unity;
 using namespace testing;
@@ -43,7 +44,7 @@ public:
 
   /* override */ void SetUp()
   {
-    g_setenv ("GSETTINGS_BACKEND", "memory", 1);
+    Utils::init_gsettings_test_environment();
 
     gsettings = g_settings_new("org.gnome.desktop.wm.preferences");
     g_settings_set_string(gsettings, "titlebar-font", TITLEBAR_FONT.c_str());
@@ -53,7 +54,7 @@ public:
 
   /* override */ void TearDown()
   {
-    g_unsetenv ("GSETTINGS_BACKEND");
+    Utils::reset_gsettings_test_environment();
   }
 };
 

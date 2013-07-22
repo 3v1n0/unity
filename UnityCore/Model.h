@@ -57,8 +57,8 @@ public:
   Model (ModelType model_type = ModelType::REMOTE_SHARED);
   virtual ~Model();
 
-  const RowAdaptor RowAtIndex(std::size_t index) const;
-  DeeModelTag*     GetTag() const;
+  virtual const RowAdaptor RowAtIndex(std::size_t index) const;
+  DeeModelTag* GetTag() const;
 
   nux::Property<std::string> swarm_name;
 

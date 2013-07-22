@@ -44,6 +44,8 @@ public:
   nux::ROProperty<std::string> renderer_name;
   nux::ROProperty<std::size_t> index;
 
+  std::string GetContentType() const;
+
 private:
   void SetupGetters();
   std::size_t get_index() const;

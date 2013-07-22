@@ -21,6 +21,7 @@
 #include "ShortcutView.h"
 
 #include <glib/gi18n-lib.h>
+#include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibWrapper.h>
 
 #include "unity-shared/LineSeparator.h"
@@ -47,12 +48,7 @@ namespace
         : nux::View(NUX_FILE_LINE_PARAM)
       {}
 
-      ~SectionView()
-      {
-        key_changed_conn.disconnect();
-      }
-
-      sigc::connection key_changed_conn;
+      connection::Wrapper key_changed_conn_;
 
     protected:
       void Draw(nux::GraphicsEngine& graphics_engine, bool force_draw)
@@ -166,7 +162,7 @@ nux::View* View::CreateShortKeyEntryView(AbstractHint::Ptr const& hint)
   layout->SetSpaceBetweenChildren(INTER_SPACE_SHORTKEY_DESCRIPTION);
   description_layout->SetContentDistribution(nux::MAJOR_POSITION_START);
 
-  view->key_changed_conn = hint->shortkey.changed.connect([this, view, shortkey_view] (std::string const& new_key) {
+  view->key_changed_conn_ = hint->shortkey.changed.connect([this, view, shortkey_view] (std::string const& new_key) {
     bool enabled = !new_key.empty();
     shortkey_view->SetText(enabled ? "<b>"+new_key+"</b>" : "");
     view->SetVisible(enabled);

@@ -15,21 +15,18 @@ using namespace unity;
 
 class Utils
 {
-public:  
-  typedef std::function<gchar*()> ErrorStringFunc;
-  static gchar* DefaultErrorString() { return nullptr; }
-
-  static void WaitUntilMSec(bool& success, unsigned max_wait = 500, ErrorStringFunc const& error_func = &Utils::DefaultErrorString)
+public:
+  static void WaitUntilMSec(bool& success, unsigned max_wait = 500, std::string const& error_msg = "")
   {
-    WaitUntilMSec([&success] {return success;}, true, max_wait, error_func);
+    WaitUntilMSec([&success] {return success;}, true, max_wait, error_msg);
   }
 
-  static void WaitUntil(bool& success, unsigned max_wait = 1, ErrorStringFunc const& error_func = &Utils::DefaultErrorString)
+  static void WaitUntil(bool& success, unsigned max_wait = 1, std::string const& error_msg = "")
   {
-    WaitUntilMSec(success, max_wait * 1000, error_func);
+    WaitUntilMSec(success, max_wait * 1000, error_msg);
   }
 
-  static void WaitUntilMSec(std::function<bool()> const& check_function, bool expected_result = true, unsigned max_wait = 500, ErrorStringFunc const& error_func = &Utils::DefaultErrorString)
+  static void WaitUntilMSec(std::function<bool()> const& check_function, bool expected_result = true, unsigned max_wait = 500, std::string const& error_msg = "")
   {
     ASSERT_NE(check_function, nullptr);
 
@@ -49,25 +46,17 @@ public:
     if (result == expected_result)
       g_source_remove(timeout_id);
 
-    glib::String error(error_func());
-    if (error)
-    {
-      EXPECT_EQ(result, expected_result) << "Error: " << error;
-    }
-    else
-    {
-      EXPECT_EQ(result, expected_result);
-    }
+    EXPECT_EQ(result, expected_result) << (error_msg.empty() ? "" : ("Error: " + error_msg));
   }
 
-  static void WaitUntil(std::function<bool()> const& check_function, bool result = true, unsigned max_wait = 1, ErrorStringFunc const& error_func = &Utils::DefaultErrorString)
+  static void WaitUntil(std::function<bool()> const& check_function, bool result = true, unsigned max_wait = 1, std::string const& error_msg = "")
   {
-    WaitUntilMSec(check_function, result, max_wait * 1000, error_func);
+    WaitUntilMSec(check_function, result, max_wait * 1000, error_msg);
   }
 
   static guint32 ScheduleTimeout(bool* timeout_reached, unsigned timeout_duration = 10)
   {
-    return g_timeout_add(timeout_duration, TimeoutCallback, timeout_reached);
+    return g_timeout_add_full(G_PRIORITY_DEFAULT+10, timeout_duration, TimeoutCallback, timeout_reached, nullptr);
   }
 
   static void WaitForTimeout(unsigned timeout_duration = 1)
@@ -81,7 +70,7 @@ public:
     ScheduleTimeout(&timeout_reached, timeout_duration);
 
     while (!timeout_reached)
-      g_main_context_iteration(g_main_context_get_thread_default(), TRUE);
+      g_main_context_iteration(nullptr, TRUE);
   }
 
   static void init_gsettings_test_environment()
@@ -95,6 +84,17 @@ public:
   {
     g_unsetenv("GSETTINGS_SCHEMA_DIR");
     g_unsetenv("GSETTINGS_BACKEND");
+  }
+
+  static void WaitPendingEvents(unsigned max_wait_ms = 5000)
+  {
+    gint64 start_time = g_get_monotonic_time();
+
+    while (g_main_context_pending(nullptr) &&
+           (g_get_monotonic_time() - start_time) / 1000 < max_wait_ms)
+    {
+      g_main_context_iteration(nullptr, TRUE);
+    }
   }
 
 private:

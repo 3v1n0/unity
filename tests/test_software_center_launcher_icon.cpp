@@ -56,13 +56,14 @@ public:
    using SoftwareCenterLauncherIcon::_desktop_file;
    using SoftwareCenterLauncherIcon::GetRemoteUri;
    using SoftwareCenterLauncherIcon::OnFinished;
+   using SoftwareCenterLauncherIcon::OnPropertyChanged;
 };
 
 struct TestSoftwareCenterLauncherIcon : testing::Test
 {
 public:
   TestSoftwareCenterLauncherIcon()
-     : usc(std::make_shared<MockApplication>(USC_APP_INSTALL_DESKTOP, "softwarecenter"))
+     : usc(std::make_shared<MockApplication::Nice>(USC_APP_INSTALL_DESKTOP, "softwarecenter"))
      , icon(usc, "/com/canonical/unity/test/object/path", "")
   {}
 
@@ -132,6 +133,20 @@ TEST_F(TestSoftwareCenterLauncherIcon, Animate)
   Utils::WaitForTimeoutMSec(500);
 
   EXPECT_TRUE(icon.IsVisible());
+}
+
+TEST_F(TestSoftwareCenterLauncherIcon, TooltipInstalling)
+{
+  ASSERT_EQ(icon.tooltip_text(), "Waiting to install");
+
+  GVariant *progress = g_variant_new("i", 10);
+  GVariant *params = g_variant_new("(sv)", "Progress", progress);
+
+  icon.OnPropertyChanged(params);
+
+  EXPECT_EQ(icon.tooltip_text(), "Installing...");
+
+  g_variant_unref(params);
 }
 
 }

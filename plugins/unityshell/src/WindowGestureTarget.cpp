@@ -39,14 +39,13 @@ WindowGestureTarget::WindowGestureTarget(CompWindow *window)
   // A workaround for the lack of weak pointers.
   unity::UnityWindow *unity_window = unity::UnityWindow::get(window);
 
-  connection_window_destruction =
+  window_destruction_conn_ =
     unity_window->being_destroyed.connect(
         sigc::mem_fun(this, &WindowGestureTarget::NullifyWindowPointer));
 }
 
 WindowGestureTarget::~WindowGestureTarget()
 {
-  connection_window_destruction.disconnect();
   if (drag_grab_)
   {
     if (window_)

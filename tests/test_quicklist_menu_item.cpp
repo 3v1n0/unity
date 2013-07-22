@@ -167,7 +167,9 @@ TEST_F(TestQuicklistMenuItem, ItemActivate)
   XEvent xevent;
   xevent.type = ButtonPress;
   xevent.xany.display = nux::GetGraphicsDisplay()->GetX11Display();
+  xevent.xany.window = nux::GetGraphicsDisplay()->GetWindowHandle();
   xevent.xbutton.time = g_random_int();
+  xevent.xbutton.button = Button1;
   nux::GetGraphicsDisplay()->ProcessXEvent(xevent, true);
 
   auto event_time = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;

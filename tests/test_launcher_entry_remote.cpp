@@ -153,6 +153,7 @@ TEST(TestLauncherEntryRemote, UpdateFromVariantIter)
   g_variant_get(parameters, "(&sa{sv})", &app_uri, &prop_iter);
   entry1.Update(prop_iter);
   g_variant_iter_free(prop_iter);
+  g_variant_unref(parameters);
 
   EXPECT_EQ(entry1.DBusName(), "Entry1");
   EXPECT_EQ(entry1.AppUri(), "AppURI1");

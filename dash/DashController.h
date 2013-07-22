@@ -22,6 +22,7 @@
 #include <memory>
 
 #include <gdk/gdk.h>
+#include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibDBusServer.h>
 #include <UnityCore/GLibSignal.h>
 
@@ -104,7 +105,7 @@ private:
   bool need_show_;
   DashView* view_;
 
-  sigc::connection screen_ungrabbed_slot_;
+  connection::Wrapper screen_ungrabbed_slot_;
   glib::DBusServer dbus_server_;
   glib::TimeoutSeconds ensure_timeout_;
   nux::animation::AnimateValue<double> timeline_animator_;

@@ -53,7 +53,7 @@ struct TestDeviceLauncherSection : Test
 {
   TestDeviceLauncherSection()
     : monitor_(new MockVolumeMonitorWrapper)
-    , devices_settings_(new MockDevicesSettings)
+    , devices_settings_(new NiceMock<MockDevicesSettings>())
     , section_(monitor_, devices_settings_)
   {}
 

@@ -198,6 +198,8 @@ public:
 
   virtual void UnStick();
 
+  virtual glib::Object<DbusmenuMenuitem> GetRemoteMenus() const;
+
   void PerformScroll(ScrollDirection direction, Time timestamp) override;
 
 protected:
@@ -291,8 +293,6 @@ protected:
   // This looks like a case for boost::logical::tribool
   static int _current_theme_is_mono;
 
-  glib::Object<DbusmenuClient> _menuclient_dynamic_quicklist;
-
 private:
   IconType _icon_type;
 
@@ -339,6 +339,7 @@ private:
   bool             _allow_quicklist_to_show;
 
   std::list<LauncherEntryRemote::Ptr> _entry_list;
+  glib::Object<DbusmenuClient> _remote_menus;
 
   nux::animation::AnimateValue<double> _tooltip_fade_animator;
 
