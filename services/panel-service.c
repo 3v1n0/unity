@@ -994,6 +994,15 @@ on_entry_removed (IndicatorObject      *object,
    * FIXME this in libappmenu.so to avoid to send an "entry-removed" signal
    * when switching the focus from a window to one of its dialog children */
 
+  if (GTK_IS_LABEL (entry->label))
+    {
+      g_signal_handlers_disconnect_by_data (entry->label, object);
+    }
+  if (GTK_IS_IMAGE (entry->image))
+    {
+      g_signal_handlers_disconnect_by_data (entry->image, object);
+    }
+
   gchar *entry_id = get_indicator_entry_id_by_entry (entry);
   g_hash_table_remove (self->priv->id2entry_hash, entry_id);
   g_free (entry_id);
