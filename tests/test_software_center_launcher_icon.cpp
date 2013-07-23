@@ -144,7 +144,7 @@ TEST_F(TestSoftwareCenterLauncherIcon, TooltipInstalling)
 
   icon.OnPropertyChanged(params);
 
-  EXPECT_EQ(icon.tooltip_text(), "Installing...");
+  EXPECT_EQ(icon.tooltip_text(), "Installing…");
 
   g_variant_unref(params);
 }
