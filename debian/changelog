@@ -1,10 +1,86 @@
-unity (7.0.2+13.10.20130705.1-0ubuntu4) UNRELEASED; urgency=low
+unity (7.0.2+13.10.20130723.1-0ubuntu1) saucy; urgency=low
 
+  [ Marco Trevisan (Treviño) ]
   * debian/control:
     - build-depend on xserver-xorg-video-dummy and libgl1-mesa-dri
     - build-depend on libnux-4.0-dev (>= 4.0.2+13.10.20130718.1)
  
- -- Marco Trevisan (Treviño) <marco@ubuntu.com>  Tue, 09 Jul 2013 03:55:14 +0200
+  [ Michal Hruby ]
+  * When requesting a channel from scopes, use the DIFF flag, which will
+    cause scopes machinery to do a diff between the old and new model
+    states, so results that didn't change will stay in the model -
+    previously they would be removed and re-added.
+  * Reset the connected property when scope disappears.
+  * Added getter for content-type property to Category class.
+  * Manually merged lp:~mhr3/unity/fix-ap-preview-tests
+  * Preload results after removal, as they might got moved into a
+    visible position.
+  * Fix scope-related tests. (LP: #1199961)
+
+  [ Brandon Schaefer ]
+  * Correctly set back the filter scroll views state when
+    leaving/entering the scope view. (LP: #1175666)
+  * Don't calculate the velocity if dtime is 0. This way we don't get a
+    huge velocity on the initial barrier hit. (LP: #1199050)
+  * Show desktop now only works for individual workspaces. Also if any
+    new windows are opened, or one is restored on that workspace then
+    the next Show desktop will minimize those. The only time windows are
+    restored are when no new windows have been mapped, and no windows
+    have been restored for that workspace only. (LP: #966030)
+
+  [ Marco Trevisan (Treviño) ]
+  * CMake: re-enable DBus Tests, excluding TestScope* This exclusion is
+    due to lp:1199961 to be fixed ASAP. (LP: #1199961, #1199962)
+  * TestGtest: Addedd TestPanelService and new tests to
+    TestStaticCairoText, removed test-unit Improved the u-p-s stability
+    and refactored a little its initialization to allow testing with
+    only mock indicators. (LP: #1200748)
+  * GLibDBusServer: set the proper destroy function when resetting the
+    InterfaceInfo ptr.
+
+  [ Didier Roche ]
+  * Adjust CMake setup to account for new GMock version. . (LP:
+    #1185265)
+
+  [ Chris Townsend ]
+  * Modify the Launcher icon of an installing app to display
+    "Installing..." instead of always saying "Waiting to install". (LP:
+    #966189)
+
+  [ Thomas Voß ]
+  * Adjust CMake setup to account for new GMock version. . (LP:
+    #1185265)
+
+  [ Nick Dedekind ]
+  * Removed the legal link and icon from the dash. .
+  * Reverted r3415 "remove legal link" -
+  * Removed the legal icon, again.
+
+  [ Manuel de la Pena ]
+  * Fix the introspection so that QA can work with autopilot. (LP:
+    #1185486)
+
+  [ Charles Kerr ]
+  * in panel-service.c's load_indicators_from_indicator_files(), plug a
+    GDir leak.
+
+  [ Pawel Stolowski ]
+  * Activate (installed) applications on single left-click in Home and
+    Applications scopes view. (LP: #1189088)
+
+  [ Andrea Azzarone ]
+  * Define/Init UnityWindow::cWindow. (LP: #1203129)
+
+  [ Jeremy Bicha ]
+  * Drop unnecessary python-gconf dependency.
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Disable the TestAnimationOpacity test, as it's failing on powerpc.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3437
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 23 Jul 2013 13:59:34 +0000
 
 unity (7.0.2+13.10.20130705.1-0ubuntu3) saucy; urgency=low
 
