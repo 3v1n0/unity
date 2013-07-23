@@ -171,6 +171,13 @@ void SearchBar::Init()
   pango_entry_->cursor_moved.connect([&](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &SearchBar::OnMouseButtonDown));
   pango_entry_->end_key_focus.connect(sigc::mem_fun(this, &SearchBar::OnEndKeyFocus));
+  pango_entry_->key_up.connect([&] (unsigned int, unsigned long, unsigned long) {
+      if (get_im_preedit())
+      {
+        hint_->SetVisible(false);
+        hint_->QueueDraw();
+      }
+  });
 
   layered_layout_ = new nux::LayeredLayout();
   layered_layout_->AddLayout(hint_layout);
