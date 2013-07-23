@@ -344,6 +344,7 @@ private:
   glib::SourceManager sources_;
 
   bool is_desktop_active_;
+  bool in_show_desktop_;
 
   friend class UnityWindow;
 };
