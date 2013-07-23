@@ -74,8 +74,13 @@ public:
   int IconIndexAt(int x, int y) const;
   int DetailIconIdexAt(int x, int y) const;
 
-  sigc::signal<void, int>  right_clicked_icon;
-  sigc::signal<void, int>  mouse_moving_over_icon;
+  /* void; int icon_index, int button */
+  sigc::signal<void, int, int>  mouse_clicked;
+
+  /* void; int icon_index */
+  sigc::signal<void, int>  mouse_moving;
+
+  /* void; bool visible */
   sigc::signal<void, bool> hide_request;
 
 protected:
@@ -100,6 +105,10 @@ private:
   void HandleDetailMouseMove(int x, int y);
   void HandleMouseMove(int x, int y);
 
+  void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
+  void HandleDetailMouseDown(int x, int y, int button);
+  void HandleMouseDown(int x, int y, int button);
+
   void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
   void HandleDetailMouseUp(int x, int y, int button);
   void HandleMouseUp(int x, int y, int button);
@@ -107,7 +116,6 @@ private:
   void RecvMouseWheel(int x, int y, int wheel_delta, unsigned long button_flags, unsigned long key_flags);
   void HandleDetailMouseWheel(int wheel_delta);
   void HandleMouseWheel(int wheel_delta);
-
 
   void OnSelectionChanged(launcher::AbstractLauncherIcon::Ptr const& selection);
   void OnDetailSelectionChanged (bool detail);
@@ -130,8 +138,6 @@ private:
   void SaveTime();
   void ResetTimer();
   void SaveLast();
-
-  std::list<unity::debug::Introspectable*> introspection_results_;
 
   SwitcherModel::Ptr model_;
   ui::LayoutSystem layout_system_;

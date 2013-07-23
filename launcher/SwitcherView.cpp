@@ -21,6 +21,7 @@
 #include "SwitcherView.h"
 #include "unity-shared/IconRenderer.h"
 #include "unity-shared/TimeUtil.h"
+#include "unity-shared/UScreen.h"
 
 #include <Nux/Nux.h>
 #include <UnityCore/Variant.h>
@@ -37,6 +38,7 @@ namespace
 {
   const unsigned int VERTICAL_PADDING = 45;
   const unsigned int SPREAD_OFFSET = 100;
+  const unsigned int EXTRA_ICON_SPACE = 10;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(SwitcherView);
@@ -72,6 +74,7 @@ SwitcherView::SwitcherView()
   tile_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnTileSizeChanged));
 
   mouse_move.connect (sigc::mem_fun(this, &SwitcherView::RecvMouseMove));
+  mouse_down.connect (sigc::mem_fun(this, &SwitcherView::RecvMouseDown));
   mouse_up.connect   (sigc::mem_fun(this, &SwitcherView::RecvMouseUp));
   mouse_wheel.connect(sigc::mem_fun(this, &SwitcherView::RecvMouseWheel));
 
@@ -117,25 +120,24 @@ void SwitcherView::AddProperties(GVariantBuilder* builder)
 
 debug::Introspectable::IntrospectableList SwitcherView::GetIntrospectableChildren()
 {
-  introspection_results_.clear();
+  std::list<unity::debug::Introspectable*> introspection_results;
 
   if (model_->detail_selection)
   {
-    for (auto target : render_targets_)
+    for (auto const& target : render_targets_)
     {
-      // FIXME When a LayoutWindow is introspectable, it no longer renders :(
-      introspection_results_.push_back(target.get());
+      introspection_results.push_back(target.get());
     }
   }
   else if (!last_args_.empty())
   {
     for (auto& args : last_args_)
     {
-      introspection_results_.push_back(&args);
+      introspection_results.push_back(&args);
     }
   }
 
-  return introspection_results_;
+  return introspection_results;
 }
 
 LayoutWindow::Vector SwitcherView::ExternalTargets ()
@@ -163,12 +165,12 @@ void SwitcherView::SetModel(SwitcherModel::Ptr model)
 
 void SwitcherView::OnIconSizeChanged (int size)
 {
-  icon_renderer_->SetTargetSize(tile_size, icon_size, 10);
+  icon_renderer_->SetTargetSize(tile_size, icon_size, minimum_spacing);
 }
 
 void SwitcherView::OnTileSizeChanged (int size)
 {
-  icon_renderer_->SetTargetSize(tile_size, icon_size, 10);
+  icon_renderer_->SetTargetSize(tile_size, icon_size, minimum_spacing);
   vertical_size = tile_size + VERTICAL_PADDING * 2;
 }
 
@@ -222,6 +224,14 @@ void SwitcherView::OnSelectionChanged(AbstractLauncherIcon::Ptr const& selection
   QueueDraw();
 }
 
+nux::Point CalculateMouseMonitorOffset(int x, int y)
+{
+  int monitor = unity::UScreen::GetDefault()->GetMonitorWithMouse();
+  nux::Geometry const& geo = unity::UScreen::GetDefault()->GetMonitorGeometry(monitor);
+
+  return {geo.x + x, geo.y + y};
+}
+
 void SwitcherView::RecvMouseMove(int x, int y, int /*dx*/, int /*dy*/, unsigned long /*button_flags*/, unsigned long /*key_flags*/)
 {
   if (model_->detail_selection)
@@ -236,7 +246,8 @@ void SwitcherView::RecvMouseMove(int x, int y, int /*dx*/, int /*dy*/, unsigned 
 
 void SwitcherView::HandleDetailMouseMove(int x, int y)
 {
-  int detail_icon_index = DetailIconIdexAt(x, y);
+  nux::Point const& mouse_pos = CalculateMouseMonitorOffset(x, y);
+  int detail_icon_index = DetailIconIdexAt(mouse_pos.x, mouse_pos.y);
 
   if (detail_icon_index >= 0 && detail_icon_index != last_detail_icon_selected_)
   {
@@ -249,16 +260,50 @@ void SwitcherView::HandleMouseMove(int x, int y)
 {
   int icon_index = IconIndexAt(x, y);
 
-  if (icon_index >= 0 && icon_index != last_icon_selected_)
+  if (icon_index >= 0)
   {
-    if (icon_index != model_->SelectionIndex())
+    if (icon_index != last_icon_selected_)
     {
-      model_->Select(icon_index);
+      if (icon_index != model_->SelectionIndex())
+      {
+        model_->Select(icon_index);
+      }
+
+      last_icon_selected_ = icon_index;
     }
 
-    mouse_moving_over_icon.emit(icon_index);
-    last_icon_selected_ = icon_index;
+    mouse_moving.emit(icon_index);
   }
+}
+
+void SwitcherView::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long /*key_flags*/)
+{
+  int button = nux::GetEventButton(button_flags);
+
+  if (model_->detail_selection)
+  {
+    HandleDetailMouseDown(x, y, button);
+  }
+  else
+  {
+    HandleMouseDown(x, y, button);
+  }
+}
+
+void SwitcherView::HandleDetailMouseDown(int x, int y, int button)
+{
+  nux::Point const& mouse_pos = CalculateMouseMonitorOffset(x, y);
+  int detail_icon_index = DetailIconIdexAt(mouse_pos.x, mouse_pos.y);
+
+  last_detail_icon_selected_ = detail_icon_index;
+
+}
+
+void SwitcherView::HandleMouseDown(int x, int y, int button)
+{
+  int icon_index = IconIndexAt(x,y);
+
+  last_icon_selected_ = icon_index;
 }
 
 void SwitcherView::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long /*key_flags*/)
@@ -277,11 +322,14 @@ void SwitcherView::RecvMouseUp(int x, int y, unsigned long button_flags, unsigne
 
 void SwitcherView::HandleDetailMouseUp(int x, int y, int button)
 {
-  int detail_icon_index = DetailIconIdexAt(x, y);
+  nux::Point const& mouse_pos = CalculateMouseMonitorOffset(x, y);
+  int detail_icon_index = DetailIconIdexAt(mouse_pos.x, mouse_pos.y);
+
+  mouse_clicked.emit(detail_icon_index, button);
 
   if (button == 1)
   {
-    if (detail_icon_index >= 0)
+    if (detail_icon_index >= 0 && detail_icon_index == last_detail_icon_selected_)
     {
       model_->detail_selection_index = detail_icon_index;
       hide_request.emit(true);
@@ -297,17 +345,15 @@ void SwitcherView::HandleMouseUp(int x, int y, int button)
 {
   int icon_index = IconIndexAt(x,y);
 
+  mouse_clicked.emit(icon_index, button);
+
   if (button == 1)
   {
-    if (icon_index >= 0)
+    if (icon_index >= 0 && icon_index == last_icon_selected_)
     {
       model_->Select(icon_index);
       hide_request.emit(true);
     }
-  }
-  else if (button == 3)
-  {
-    right_clicked_icon.emit(icon_index);
   }
 }
 
@@ -327,11 +373,11 @@ void SwitcherView::HandleDetailMouseWheel(int wheel_delta)
 {
   if (wheel_delta > 0)
   {
-    model_->NextDetail();
+    model_->PrevDetail();
   }
   else
   {
-    model_->PrevDetail();
+    model_->NextDetail();
   }
 }
 
@@ -339,11 +385,11 @@ void SwitcherView::HandleMouseWheel(int wheel_delta)
 {
   if (wheel_delta > 0)
   {
-    model_->Next();
+    model_->Prev();
   }
   else
   {
-    model_->Prev();
+    model_->Next();
   }
 }
 
@@ -712,7 +758,7 @@ void SwitcherView::PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (!target_sizes_set_)
   {
-    icon_renderer_->SetTargetSize(tile_size, icon_size, 10);
+    icon_renderer_->SetTargetSize(tile_size, icon_size, minimum_spacing);
     target_sizes_set_ = true;
   }
 
@@ -803,7 +849,7 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
 
 int SwitcherView::IconIndexAt(int x, int y) const
 {
-  int half_size = icon_size.Get() / 2 + 10;
+  int half_size = icon_size.Get() / 2 + EXTRA_ICON_SPACE;
   int icon_index = -1;
 
   // Taking icon rotation into consideration will make selection more

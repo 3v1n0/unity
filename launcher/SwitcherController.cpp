@@ -23,6 +23,7 @@
 
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/WindowManager.h"
+#include "unity-shared/UScreen.h"
 
 #include "SwitcherController.h"
 #include "SwitcherControllerImpl.h"
@@ -41,6 +42,8 @@ const std::string SHOW_TIMEOUT = "show-timeout";
 const std::string DETAIL_TIMEOUT = "detail-timeout";
 const std::string VIEW_CONSTRUCT_IDLE = "view-construct-idle";
 const unsigned FADE_DURATION = 80;
+const int XY_OFFSET = 100;
+const int WH_OFFSET = 200;
 
 /**
  * Helper comparison functor for sorting application icons.
@@ -92,6 +95,9 @@ void Controller::Show(ShowMode show,
                       SortMode sort,
                       std::vector<AbstractLauncherIcon::Ptr> results)
 {
+  auto uscreen = UScreen::GetDefault();
+  monitor_     = uscreen->GetMonitorWithMouse();
+
   impl_->Show(show, sort, results);
 }
 
@@ -99,15 +105,6 @@ void Controller::Select(int index)
 {
   if (Visible())
     impl_->model_->Select(index);
-}
-
-void Controller::SetWorkspace(nux::Geometry geo, int monitor)
-{
-  monitor_ = monitor;
-  impl_->workarea_ = geo;
-
-  if (impl_->view_)
-    impl_->view_->monitor = monitor_;
 }
 
 void Controller::Hide(bool accept_state)
@@ -121,6 +118,14 @@ void Controller::Hide(bool accept_state)
 bool Controller::Visible()
 {
   return visible_;
+}
+
+nux::Geometry Controller::GetInputWindowGeometry() const
+{
+  if (impl_->view_window_)
+    return impl_->view_window_->GetGeometry();
+
+  return {0, 0, 0, 0};
 }
 
 bool Controller::StartDetailMode()
@@ -433,8 +438,21 @@ void Controller::Impl::ConstructWindow()
     view_window_->SetOpacity(0.0f);
     view_window_->SetLayout(main_layout_);
     view_window_->SetBackgroundColor(nux::color::Transparent);
-    view_window_->SetGeometry(workarea_);
   }
+}
+
+nux::Geometry GetSwitcherViewsGeometry()
+{
+  auto uscreen     = UScreen::GetDefault();
+  int monitor      = uscreen->GetMonitorWithMouse();
+  auto monitor_geo = uscreen->GetMonitorGeometry(monitor);
+
+  monitor_geo.x      += XY_OFFSET;
+  monitor_geo.y      += XY_OFFSET;
+  monitor_geo.width  -= WH_OFFSET;
+  monitor_geo.height -= WH_OFFSET;
+
+  return monitor_geo;
 }
 
 void Controller::Impl::ConstructView()
@@ -450,17 +468,24 @@ void Controller::Impl::ConstructView()
   view_->background_color = bg_color_;
   view_->monitor = obj_->monitor_;
 
-  view_->hide_request.connect          ([this] (bool activate)      { Hide(activate); });
-  view_->right_clicked_icon.connect    ([this] (int /*icon_index*/) { InitiateDetail(true); });
+  view_->hide_request.connect ([this] (bool activate) { Hide(activate); });
 
-  view_->mouse_moving_over_icon.connect([this] (int /*icon_index*/) {
-      ResetDetailTimer(obj_->detail_timeout_length);
+  view_->mouse_clicked.connect([this] (int icon_index, int button) {
+      if (button == 3)
+        InitiateDetail(true);
+      else if (icon_index <= 0)
+        Hide(false);
+  });
+
+  view_->mouse_moving.connect ([this] (int icon_index) {
+      if (icon_index >= 0)
+        ResetDetailTimer(obj_->detail_timeout_length);
   });
 
   ConstructWindow();
   main_layout_->AddView(view_.GetPointer(), 1);
   view_window_->SetEnterFocusInputArea(view_.GetPointer());
-  view_window_->SetGeometry(workarea_);
+  view_window_->SetGeometry(GetSwitcherViewsGeometry());
 
   view_built.emit();
 }

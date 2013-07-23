@@ -95,7 +95,6 @@ struct Controller::Impl
   SwitcherView::Ptr view_;
 
   // @todo move these view data into the SwitcherView class
-  nux::Geometry workarea_;
   Controller::WindowCreator create_window_;
   MockableBaseWindow::Ptr view_window_;
   nux::HLayout* main_layout_;
