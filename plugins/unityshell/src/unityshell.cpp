@@ -307,6 +307,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetKeyboardFocusInitiate(boost::bind(&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
      //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
      optionSetExecuteCommandInitiate(boost::bind(&UnityScreen::executeCommand, this, _1, _2, _3));
+     optionSetShowDesktopKeyInitiate(boost::bind(&UnityScreen::showDesktopKeyInitiate, this, _1, _2, _3));
      optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
      optionSetPanelFirstMenuTerminate(boost::bind(&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
      optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -1889,6 +1890,13 @@ bool UnityScreen::executeCommand(CompAction* action,
   return true;
 }
 
+bool UnityScreen::showDesktopKeyInitiate(CompAction* action,
+                                         CompAction::State state,
+                                         CompOption::Vector& options)
+{
+  WindowManager::Default().ShowDesktop();
+  return true;
+}
 
 bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
                                               CompAction::State state,
