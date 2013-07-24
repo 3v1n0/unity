@@ -59,7 +59,7 @@
                 <option name="show_desktop_key" type="key">
                     <_short>Show Desktop</_short>
                     <_long>Hide all windows and focus desktop.</_long>
-                    <default>&lt;Control&gt;&lt;Alt&gt;d</default>
+                    <default>&lt;Control&gt;&lt;Super&gt;d</default>
                 </option>
 
                 <option name="panel_first_menu" type="key">
