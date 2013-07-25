@@ -272,6 +272,35 @@ TEST_F(TestPanelService, EntryRemovalIndicatorObject)
   EXPECT_FALSE(IsGObjectConectedTo(icon, object));
 }
 
+TEST_F(TestPanelService, ManyEntriesRemovalIndicatorObject)
+{
+  std::vector<EntryObjects> entries_objs;
+  glib::Object<IndicatorObject> object(mock_indicator_object_new());
+  auto mock_object = glib::object_cast<MockIndicatorObject>(object);
+  panel_service_add_indicator(service, object);
+
+  for (unsigned i = 0; i < 20; ++i)
+  {
+    auto* entry = mock_indicator_object_add_entry(mock_object, ("Entry"+std::to_string(i)).c_str(), "gtk-forward");
+    glib::Object<GtkLabel> label(entry->label, glib::AddRef());
+    glib::Object<GtkImage> icon(entry->image, glib::AddRef());
+    entries_objs.push_back(std::make_tuple(label, icon));
+
+    mock_indicator_object_remove_entry(mock_object, entry);
+  }
+
+  glib::Variant result(panel_service_sync(service));
+
+  ASSERT_EQ(1, GetIndicatorsInResult(result));
+  ASSERT_EQ(0, GetEntriesInResult(result));
+
+  for (auto const& entry_objs : entries_objs)
+  {
+    ASSERT_FALSE(IsGObjectConectedTo(std::get<0>(entry_objs), object));
+    ASSERT_FALSE(IsGObjectConectedTo(std::get<1>(entry_objs), object));
+  }
+}
+
 TEST_F(TestPanelService, EntryIndicatorObjectRemoval)
 {
   glib::Object<IndicatorObject> object(mock_indicator_object_new());
@@ -298,11 +327,10 @@ TEST_F(TestPanelService, EntryIndicatorObjectRemoval)
 
 TEST_F(TestPanelService, ManyEntriesIndicatorObjectRemoval)
 {
+  std::vector<EntryObjects> entries_objs;
   glib::Object<IndicatorObject> object(mock_indicator_object_new());
   auto mock_object = glib::object_cast<MockIndicatorObject>(object);
   panel_service_add_indicator(service, object);
-
-  std::vector<EntryObjects> entries_objs;
 
   for (unsigned i = 0; i < 20; ++i)
   {
