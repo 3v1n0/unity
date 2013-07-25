@@ -29,6 +29,8 @@ using namespace unity;
 
 namespace
 {
+typedef std::tuple<glib::Object<GtkLabel>, glib::Object<GtkImage>> EntryObjects;
+
 const std::string SYNC_ENTRY_VARIANT_FORMAT = "(ssssbbusbbi)";
 const std::string SYNC_ENTRIES_VARIANT_FORMAT = "(a"+SYNC_ENTRY_VARIANT_FORMAT+")";
 
@@ -134,6 +136,11 @@ struct TestPanelService : Test
     return entries.size();
   }
 
+  bool IsGObjectConectedTo(gpointer object, gpointer data)
+  {
+    return g_signal_handler_find(object, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, data) != 0;
+  }
+
   glib::Object<PanelService> service;
 };
 
@@ -212,7 +219,7 @@ TEST_F(TestPanelService, ManyEmptyIndicatorObjectsAddition)
   }
 }
 
-TEST_F(TestPanelService, EntryIndicatorObjectAddition)
+TEST_F(TestPanelService, EntryIndicatorObjectEntryAddition)
 {
   glib::Object<IndicatorObject> object(mock_indicator_object_new());
   auto mock_object = glib::object_cast<MockIndicatorObject>(object);
@@ -226,7 +233,7 @@ TEST_F(TestPanelService, EntryIndicatorObjectAddition)
   EXPECT_EQ(1, GetEntriesInResult(result));
 }
 
-TEST_F(TestPanelService, ManyEntriesIndicatorObjectAddition)
+TEST_F(TestPanelService, ManyEntriesIndicatorObjectEntryAddition)
 {
   glib::Object<IndicatorObject> object(mock_indicator_object_new());
   auto mock_object = glib::object_cast<MockIndicatorObject>(object);
@@ -241,32 +248,97 @@ TEST_F(TestPanelService, ManyEntriesIndicatorObjectAddition)
   }
 }
 
-TEST_F(TestPanelService, EntryIndicatorObjectRemoval)
+TEST_F(TestPanelService, EntryRemovalIndicatorObject)
 {
   glib::Object<IndicatorObject> object(mock_indicator_object_new());
   auto mock_object = glib::object_cast<MockIndicatorObject>(object);
 
-  mock_indicator_object_add_entry(mock_object, "Hello", "gtk-apply");
+  auto* entry = mock_indicator_object_add_entry(mock_object, "Hello", "gtk-apply");
   panel_service_add_indicator(service, object);
 
   glib::Variant result(panel_service_sync(service));
   ASSERT_EQ(1, GetIndicatorsInResult(result));
   ASSERT_EQ(1, GetEntriesInResult(result));
 
-  panel_service_remove_indicator(service, object);
+  glib::Object<GtkLabel> label(entry->label, glib::AddRef());
+  glib::Object<GtkImage> icon(entry->image, glib::AddRef());
+  mock_indicator_object_remove_entry(mock_object, entry);
+
   result = panel_service_sync(service);
   EXPECT_EQ(1, GetIndicatorsInResult(result));
   EXPECT_EQ(0, GetEntriesInResult(result));
+
+  EXPECT_FALSE(IsGObjectConectedTo(label, object));
+  EXPECT_FALSE(IsGObjectConectedTo(icon, object));
 }
 
-TEST_F(TestPanelService, ManyEntriesIndicatorObjectRemoval)
+TEST_F(TestPanelService, ManyEntriesRemovalIndicatorObject)
 {
+  std::vector<EntryObjects> entries_objs;
   glib::Object<IndicatorObject> object(mock_indicator_object_new());
   auto mock_object = glib::object_cast<MockIndicatorObject>(object);
   panel_service_add_indicator(service, object);
 
   for (unsigned i = 0; i < 20; ++i)
-    mock_indicator_object_add_entry(mock_object, ("Entry"+std::to_string(i)).c_str(), "");
+  {
+    auto* entry = mock_indicator_object_add_entry(mock_object, ("Entry"+std::to_string(i)).c_str(), "gtk-forward");
+    glib::Object<GtkLabel> label(entry->label, glib::AddRef());
+    glib::Object<GtkImage> icon(entry->image, glib::AddRef());
+    entries_objs.push_back(std::make_tuple(label, icon));
+
+    mock_indicator_object_remove_entry(mock_object, entry);
+  }
+
+  glib::Variant result(panel_service_sync(service));
+
+  ASSERT_EQ(1, GetIndicatorsInResult(result));
+  ASSERT_EQ(0, GetEntriesInResult(result));
+
+  for (auto const& entry_objs : entries_objs)
+  {
+    ASSERT_FALSE(IsGObjectConectedTo(std::get<0>(entry_objs), object));
+    ASSERT_FALSE(IsGObjectConectedTo(std::get<1>(entry_objs), object));
+  }
+}
+
+TEST_F(TestPanelService, EntryIndicatorObjectRemoval)
+{
+  glib::Object<IndicatorObject> object(mock_indicator_object_new());
+  auto mock_object = glib::object_cast<MockIndicatorObject>(object);
+
+  auto* entry = mock_indicator_object_add_entry(mock_object, "Hello", "gtk-apply");
+  panel_service_add_indicator(service, object);
+
+  glib::Variant result(panel_service_sync(service));
+  ASSERT_EQ(1, GetIndicatorsInResult(result));
+  ASSERT_EQ(1, GetEntriesInResult(result));
+
+  glib::Object<GtkLabel> label(entry->label, glib::AddRef());
+  glib::Object<GtkImage> icon(entry->image, glib::AddRef());
+
+  panel_service_remove_indicator(service, object);
+  result = panel_service_sync(service);
+  EXPECT_EQ(1, GetIndicatorsInResult(result));
+  EXPECT_EQ(0, GetEntriesInResult(result));
+
+  EXPECT_FALSE(IsGObjectConectedTo(label, object));
+  EXPECT_FALSE(IsGObjectConectedTo(icon, object));
+}
+
+TEST_F(TestPanelService, ManyEntriesIndicatorObjectRemoval)
+{
+  std::vector<EntryObjects> entries_objs;
+  glib::Object<IndicatorObject> object(mock_indicator_object_new());
+  auto mock_object = glib::object_cast<MockIndicatorObject>(object);
+  panel_service_add_indicator(service, object);
+
+  for (unsigned i = 0; i < 20; ++i)
+  {
+    auto* entry = mock_indicator_object_add_entry(mock_object, ("Entry"+std::to_string(i)).c_str(), "");
+    glib::Object<GtkLabel> label(entry->label, glib::AddRef());
+    glib::Object<GtkImage> icon(entry->image, glib::AddRef());
+    entries_objs.push_back(std::make_tuple(label, icon));
+  }
 
   glib::Variant result(panel_service_sync(service));
   ASSERT_EQ(1, GetIndicatorsInResult(result));
@@ -276,6 +348,12 @@ TEST_F(TestPanelService, ManyEntriesIndicatorObjectRemoval)
   result = panel_service_sync(service);
   EXPECT_EQ(1, GetIndicatorsInResult(result));
   EXPECT_EQ(0, GetEntriesInResult(result));
+
+  for (auto const& entry_objs : entries_objs)
+  {
+    ASSERT_FALSE(IsGObjectConectedTo(std::get<0>(entry_objs), object));
+    ASSERT_FALSE(IsGObjectConectedTo(std::get<1>(entry_objs), object));
+  }
 }
 
 TEST_F(TestPanelService, ManyEntriesIndicatorsObjectAddition)
