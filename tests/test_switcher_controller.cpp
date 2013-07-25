@@ -282,7 +282,7 @@ TEST_F(TestSwitcherController, TestRightClickedReceived)
 
   ASSERT_FALSE(model->detail_selection());
 
-  view->right_clicked_icon.emit(-1);
+  view->mouse_clicked.emit(-1, 3);
 
   ASSERT_TRUE(model->detail_selection());
 }

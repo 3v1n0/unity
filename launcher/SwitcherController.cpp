@@ -43,7 +43,7 @@ const std::string DETAIL_TIMEOUT = "detail-timeout";
 const std::string VIEW_CONSTRUCT_IDLE = "view-construct-idle";
 const unsigned FADE_DURATION = 80;
 const int XY_OFFSET = 100;
-const int WH_OFFSET = 200;
+const int WH_OFFSET = -200;
 
 /**
  * Helper comparison functor for sorting application icons.
@@ -447,10 +447,8 @@ nux::Geometry GetSwitcherViewsGeometry()
   int monitor      = uscreen->GetMonitorWithMouse();
   auto monitor_geo = uscreen->GetMonitorGeometry(monitor);
 
-  monitor_geo.x      += XY_OFFSET;
-  monitor_geo.y      += XY_OFFSET;
-  monitor_geo.width  -= WH_OFFSET;
-  monitor_geo.height -= WH_OFFSET;
+  monitor_geo.OffsetPosition(XY_OFFSET, XY_OFFSET);
+  monitor_geo.OffsetSize(WH_OFFSET, WH_OFFSET);
 
   return monitor_geo;
 }
@@ -468,12 +466,12 @@ void Controller::Impl::ConstructView()
   view_->background_color = bg_color_;
   view_->monitor = obj_->monitor_;
 
-  view_->hide_request.connect ([this] (bool activate) { Hide(activate); });
+  view_->hide_request.connect(sigc::mem_fun(this, &Controller::Impl::Hide));
 
   view_->mouse_clicked.connect([this] (int icon_index, int button) {
       if (button == 3)
         InitiateDetail(true);
-      else if (icon_index <= 0)
+      else if (icon_index < 0)
         Hide(false);
   });
 

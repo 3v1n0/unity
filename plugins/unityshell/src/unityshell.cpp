@@ -991,18 +991,14 @@ CompWindow * GetTopVisibleWindow()
 LayoutWindow::Ptr UnityScreen::GetSwitcherDetailLayoutWindow(Window window) const
 {
   LayoutWindow::Vector const& targets = switcher_controller_->ExternalRenderTargets();
-  LayoutWindow::Ptr layout_window(0);
 
   for (LayoutWindow::Ptr const& target : targets)
   {
     if (target->xid == window)
-    {
-      layout_window = target;
-      break;
-    }
+      return target;
   }
 
-  return layout_window;
+  return nullptr;
 }
 
 void UnityWindow::enterShowDesktop ()
@@ -1202,21 +1198,12 @@ bool UnityWindow::handleEvent(XEvent *event)
         cWindow->addDamageRect(CompRect(g.x, g.y, g.width, g.height));
         handled = true;
       }
-      else if (event->xbutton.button == Button2)
+      else if (event->xbutton.button == Button2 &&
+              (GetScaledGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root) ||
+               GetLayoutWindowGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root)))
       {
-        if (UnityScreen::get (screen)->switcher_controller_->Visible())
-        {
-          if (GetLayoutWindowGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
-          {
-            middle_clicked_ = true;
-            handled = true;
-          }
-        }
-        else if (GetScaledGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
-        {
-          middle_clicked_ = true;
-          handled = true;
-        }
+        middle_clicked_ = true;
+        handled = true;
       }
       break;
 
@@ -1241,19 +1228,11 @@ bool UnityWindow::handleEvent(XEvent *event)
 
         if (middle_clicked_)
         {
-          if (event->xbutton.button == Button2)
+          if (event->xbutton.button == Button2 &&
+             (GetScaledGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root) ||
+              GetLayoutWindowGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root)))
           {
-            if (UnityScreen::get (screen)->switcher_controller_->Visible())
-            {
-              if (GetLayoutWindowGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
-              {
-                window->close(0);
-              }
-            }
-            else if (GetScaledGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
-            {
-              window->close(0);
-            }
+            window->close(0);
           }
 
           middle_clicked_ = false;
@@ -3876,23 +3855,40 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   if (state != ScaleScreen::Wait && state != ScaleScreen::Out)
     return;
 
-  auto const& scaled_geo = GetScaledGeometry();
+  WindowManager& wm = WindowManager::Default();
+
+  nux::Geometry geo;
+
+  // The layout window is not really a compiz window...
+  // so this is a cheap way to draw the decor
+  if (!wm.IsScaleActive())
+    geo = GetLayoutWindowGeometry();
+  else if (UnityScreen::get(screen)->switcher_controller_->Visible())
+    geo = GetScaledGeometry();
+
   auto const& pos = scale_win->getCurrentPosition();
 
   bool highlighted = (ss->getSelectedWindow() == window->id());
-  paintFakeDecoration(scaled_geo, attrib, transform, mask, highlighted, pos.scale);
+  paintFakeDecoration(geo, attrib, transform, mask, highlighted, pos.scale);
 }
 
 nux::Geometry UnityWindow::GetLayoutWindowGeometry()
 {
-  LayoutWindow::Ptr const &layout_window = UnityScreen::get(screen)->
-                                             GetSwitcherDetailLayoutWindow(window->id());
+  auto const& layout_window = UnityScreen::get(screen)->GetSwitcherDetailLayoutWindow(window->id());
 
-  return layout_window->result;
+  if (layout_window)
+    return layout_window->result;
+
+  return nux::Geometry();
 }
 
 nux::Geometry UnityWindow::GetScaledGeometry()
 {
+  WindowManager& wm = WindowManager::Default();
+
+  if (!wm.IsScaleActive())
+    return nux::Geometry();
+
   ScaleWindow* scale_win = ScaleWindow::get(window);
 
   ScalePosition const& pos = scale_win->getCurrentPosition();
