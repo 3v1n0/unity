@@ -134,6 +134,11 @@ struct TestPanelService : Test
     return entries.size();
   }
 
+  bool IsGObjectConectedTo(gpointer object, gpointer data)
+  {
+    return g_signal_handler_find(object, G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, data) != 0;
+  }
+
   glib::Object<PanelService> service;
 };
 
@@ -212,7 +217,7 @@ TEST_F(TestPanelService, ManyEmptyIndicatorObjectsAddition)
   }
 }
 
-TEST_F(TestPanelService, EntryIndicatorObjectAddition)
+TEST_F(TestPanelService, EntryIndicatorObjectEntryAddition)
 {
   glib::Object<IndicatorObject> object(mock_indicator_object_new());
   auto mock_object = glib::object_cast<MockIndicatorObject>(object);
@@ -226,7 +231,7 @@ TEST_F(TestPanelService, EntryIndicatorObjectAddition)
   EXPECT_EQ(1, GetEntriesInResult(result));
 }
 
-TEST_F(TestPanelService, ManyEntriesIndicatorObjectAddition)
+TEST_F(TestPanelService, ManyEntriesIndicatorObjectEntryAddition)
 {
   glib::Object<IndicatorObject> object(mock_indicator_object_new());
   auto mock_object = glib::object_cast<MockIndicatorObject>(object);
@@ -239,6 +244,30 @@ TEST_F(TestPanelService, ManyEntriesIndicatorObjectAddition)
     ASSERT_EQ(1, GetIndicatorsInResult(result));
     ASSERT_EQ(i+1, GetEntriesInResult(result));
   }
+}
+
+TEST_F(TestPanelService, EntryIndicatorObjectEntryRemoval)
+{
+  glib::Object<IndicatorObject> object(mock_indicator_object_new());
+  auto mock_object = glib::object_cast<MockIndicatorObject>(object);
+
+  auto* entry = mock_indicator_object_add_entry(mock_object, "Hello", "gtk-apply");
+  panel_service_add_indicator(service, object);
+
+  glib::Variant result(panel_service_sync(service));
+  ASSERT_EQ(1, GetIndicatorsInResult(result));
+  ASSERT_EQ(1, GetEntriesInResult(result));
+
+  glib::Object<GtkLabel> label(entry->label, glib::AddRef());
+  glib::Object<GtkImage> icon(entry->image, glib::AddRef());
+  mock_indicator_object_remove_entry(mock_object, entry);
+
+  result = panel_service_sync(service);
+  EXPECT_EQ(1, GetIndicatorsInResult(result));
+  EXPECT_EQ(0, GetEntriesInResult(result));
+
+  EXPECT_FALSE(IsGObjectConectedTo(label, object));
+  EXPECT_FALSE(IsGObjectConectedTo(icon, object));
 }
 
 TEST_F(TestPanelService, EntryIndicatorObjectRemoval)
