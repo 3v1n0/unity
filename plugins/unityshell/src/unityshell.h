@@ -250,8 +250,6 @@ private:
 
   void UpdateCloseWindowKey(CompAction::KeyBinding const&);
 
-  CompWindow * GetTopVisibleWindow();
-
   std::unique_ptr<na::TickSource> tick_source_;
   std::unique_ptr<na::AnimationController> animation_controller_;
 

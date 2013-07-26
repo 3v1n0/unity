@@ -973,25 +973,6 @@ bool UnityScreen::DoesPointIntersectUnityGeos(nux::Point const& pt)
   return false;
 }
 
-CompWindow * GetTopVisibleWindow()
-{
-  CompWindow *top_visible_window = NULL;
-
-  for (CompWindow *w : screen->windows ())
-  {
-    if (w->isViewable() && 
-        !w->minimized() && 
-        !w->resName().empty() && 
-        (w->resName() != "unity-panel-service") &&
-        (w->resName() != "notify-osd"))
-    {
-      top_visible_window = w;
-    }
-  }
-
-  return top_visible_window;
-}
-  
 void UnityWindow::enterShowDesktop ()
 {
   if (!mShowdesktopHandler)
@@ -2636,18 +2617,13 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   {
     Window active_window = screen->activeWindow();
 
-    CompWindow *top_visible_window;
-
     if (G_UNLIKELY(window->type() == CompWindowTypeDesktopMask))
     {
       uScreen->setPanelShadowMatrix(matrix);
 
       if (active_window == 0 || active_window == window->id())
       {
-        top_visible_window = GetTopVisibleWindow();
-
-        if ((top_visible_window && (window->id() == top_visible_window->id())) ||
-            uScreen->in_show_desktop_)
+        if (PluginAdapter::Default().IsWindowOnTop(window->id()))
         {
           draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
         }
@@ -2677,9 +2653,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       {
         if (uScreen->is_desktop_active_ && !uScreen->in_show_desktop_)
         {
-          top_visible_window = GetTopVisibleWindow();
-
-          if (top_visible_window && (window->id() == top_visible_window->id()))
+          if (PluginAdapter::Default().IsWindowOnTop(window->id()))
           {
             draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
             uScreen->panelShadowPainted = CompRegion();
