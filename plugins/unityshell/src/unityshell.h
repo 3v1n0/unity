@@ -141,6 +141,7 @@ public:
   bool showPanelFirstMenuKeyTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   bool executeCommand(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool showDesktopKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool setKeyboardFocusKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   bool altTabInitiateCommon(CompAction* action, switcher::ShowMode mode);
