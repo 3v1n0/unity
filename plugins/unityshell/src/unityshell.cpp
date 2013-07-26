@@ -150,7 +150,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , big_tick_(0)
   , screen_introspection_(screen)
   , is_desktop_active_(false)
-  , in_show_desktop_(false)
 {
   Timer timer;
 #ifndef USE_GLES
@@ -857,8 +856,6 @@ void UnityScreen::EnableCancelAction(CancelActionTarget target, bool enabled, in
 
 void UnityScreen::enterShowDesktopMode ()
 {
-  in_show_desktop_ = true;
-
   for (CompWindow *w : screen->windows ())
   {
     CompPoint const& viewport = w->defaultViewport();
@@ -943,7 +940,6 @@ void UnityScreen::leaveShowDesktopMode (CompWindow *w)
       }
     }
   }
-  in_show_desktop_ = false;
 }
 
 bool UnityScreen::DoesPointIntersectUnityGeos(nux::Point const& pt)
@@ -2651,7 +2647,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       }
       else
       {
-        if (uScreen->is_desktop_active_ && !uScreen->in_show_desktop_)
+        if (uScreen->is_desktop_active_)
         {
           if (PluginAdapter::Default().IsWindowOnTop(window->id()))
           {
