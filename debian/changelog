@@ -1,3 +1,9 @@
+unity (7.1.0-0ubuntu1) UNRELEASED; urgency=low
+
+  * upstream release 7.1.0
+
+ -- Stephen M. Webb <stephen.webb@bregmasoft.ca>  Wed, 24 Jul 2013 14:39:01 -0400
+
 unity (7.0.2+13.10.20130723.1-0ubuntu1) saucy; urgency=low
 
   [ Marco Trevisan (Treviño) ]
