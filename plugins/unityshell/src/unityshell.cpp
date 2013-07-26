@@ -1221,7 +1221,9 @@ bool UnityWindow::handleEvent(XEvent *event)
         if (was_pressed)
         {
           if (close_button_geo_.IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
+          {
             window->close(0);
+          }
 
           handled = true;
         }

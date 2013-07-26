@@ -149,6 +149,12 @@ std::vector<Window> SwitcherModel::DetailXids() const
       results.push_back(xid);
   }
 
+  if (results.empty())
+  {
+    request_detail_hide.emit();
+    return results;
+  }
+
   std::sort(results.begin(), results.end(), [&wm](Window first, Window second) {
       return wm.GetWindowActiveNumber(first) > wm.GetWindowActiveNumber(second);
   });

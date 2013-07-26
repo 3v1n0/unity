@@ -48,6 +48,7 @@ struct Controller::Impl
 
   void Show(ShowMode show, SortMode sort, std::vector<launcher::AbstractLauncherIcon::Ptr> results);
   void Hide(bool accept_state);
+  void DetailHide();
 
   void Next();
   void Prev();

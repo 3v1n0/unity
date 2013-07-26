@@ -337,6 +337,7 @@ void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLa
   obj_->AddChild(model_.get());
   model_->selection_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnModelSelectionChanged));
   model_->detail_selection.changed.connect([this] (bool) { sources_.Remove(DETAIL_TIMEOUT); });
+  model_->request_detail_hide.connect(sigc::mem_fun(this, &Controller::Impl::DetailHide));
   model_->only_detail_on_viewport = (show == ShowMode::CURRENT_VIEWPORT);
 
   SelectFirstItem();
@@ -518,6 +519,14 @@ void Controller::Impl::Hide(bool accept_state)
   {
     fade_animator_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
   }
+}
+
+void Controller::Impl::DetailHide()
+{
+  // FIXME We need to refactor SwitcherModel so we can add/remove icons without causing
+  // a crash. If you remove the last application in the list it crashes.
+  model_->detail_selection = false;
+  Hide(false);
 }
 
 void Controller::Impl::HideWindow()

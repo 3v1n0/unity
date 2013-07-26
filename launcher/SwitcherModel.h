@@ -101,6 +101,7 @@ public:
   void Select(unsigned int index);
 
   sigc::signal<void, launcher::AbstractLauncherIcon::Ptr const&> selection_changed;
+  sigc::signal<void> request_detail_hide;
 
 protected:
   // Introspectable methods
