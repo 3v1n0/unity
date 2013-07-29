@@ -260,11 +260,11 @@ protected:
 
   virtual bool HandlesSpread () { return false; }
 
-  nux::BaseTexture* TextureFromGtkTheme(std::string name, int size, bool update_glow_colors = true);
+  BaseTexturePtr TextureFromGtkTheme(std::string name, int size, bool update_glow_colors = true);
 
-  nux::BaseTexture* TextureFromSpecificGtkTheme(GtkIconTheme* theme, std::string const& name, int size, bool update_glow_colors = true, bool is_default_theme = false);
+  BaseTexturePtr TextureFromSpecificGtkTheme(GtkIconTheme* theme, std::string const& name, int size, bool update_glow_colors = true, bool is_default_theme = false);
 
-  nux::BaseTexture* TextureFromPath(std::string const& name, int size, bool update_glow_colors = true);
+  BaseTexturePtr TextureFromPath(std::string const& name, int size, bool update_glow_colors = true);
 
   static bool        IsMonoDefaultTheme();
 

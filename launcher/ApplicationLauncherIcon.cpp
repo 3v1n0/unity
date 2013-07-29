@@ -1265,7 +1265,7 @@ void ApplicationLauncherIcon::PerformScroll(ScrollDirection direction, Time time
   }
 
   if (windows.size() <= 1)
-    return; 
+    return;
 
   ++_progressive_scroll;
   _progressive_scroll %= windows.size();

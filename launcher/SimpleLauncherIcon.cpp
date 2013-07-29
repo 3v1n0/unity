@@ -66,9 +66,9 @@ nux::BaseTexture* SimpleLauncherIcon::GetTextureForSize(int size)
   BaseTexturePtr texture;
 
   if (icon_string[0] == '/')
-    texture.Adopt(TextureFromPath(icon_string, size));
+    texture = TextureFromPath(icon_string, size);
   else
-    texture.Adopt(TextureFromGtkTheme(icon_string, size));
+    texture = TextureFromGtkTheme(icon_string, size);
 
   if (!texture)
     return nullptr;
