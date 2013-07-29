@@ -1,8 +1,27 @@
-unity (7.1.0-0ubuntu1) UNRELEASED; urgency=low
+unity (7.1.0+13.10.20130729-0ubuntu1) saucy; urgency=low
 
+  [ Stephen M. Webb ]
   * upstream release 7.1.0
 
- -- Stephen M. Webb <stephen.webb@bregmasoft.ca>  Wed, 24 Jul 2013 14:39:01 -0400
+  [ Andrew Gaul ]
+  * PanelService: Disconnect signals connected in panel-
+    service.c:on_entry_added. (LP: #1203607)
+
+  [ Chris Townsend ]
+  * Change to using ellipsis instead of three dots for the "Installing"
+    tooltip. (LP: #1203092)
+
+  [ Andrea Azzarone ]
+  * Add show_desktop_key film in unityshell plugin. (LP: #1204664)
+
+  [ Marco Trevisan (Treviño) ]
+  * TestPanelService: verify that the entry's label and icon are
+    disconnected on removal.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3443
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 29 Jul 2013 04:04:13 +0000
 
 unity (7.0.2+13.10.20130723.1-0ubuntu1) saucy; urgency=low
 
