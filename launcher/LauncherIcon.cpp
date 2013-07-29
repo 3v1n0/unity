@@ -84,7 +84,8 @@ LauncherIcon::LauncherIcon(IconType type)
   , _glow_color(nux::color::White)
   , _shortcut(0)
   , _center(max_num_monitors)
-  , _has_visible_window(max_num_monitors)
+  , _has_visible_window(max_num_monitors, false)
+  , _is_visible_on_monitor(max_num_monitors, true)
   , _last_stable(max_num_monitors)
   , _parent_geo(max_num_monitors)
   , _saved_center(max_num_monitors)
@@ -97,11 +98,6 @@ LauncherIcon::LauncherIcon(IconType type)
     _quirk_times[i].tv_sec = 0;
     _quirk_times[i].tv_nsec = 0;
   }
-
-  _is_visible_on_monitor.resize(max_num_monitors);
-
-  for (int i = 0; i < max_num_monitors; ++i)
-    _is_visible_on_monitor[i] = true;
 
   tooltip_enabled = true;
   tooltip_enabled.changed.connect(sigc::mem_fun(this, &LauncherIcon::OnTooltipEnabledChanged));
@@ -129,11 +125,6 @@ LauncherIcon::LauncherIcon(IconType type)
         _tooltip->ShowWindow(false);
     }
   });
-}
-
-LauncherIcon::~LauncherIcon()
-{
-  SetQuirk(Quirk::URGENT, false);
 }
 
 void LauncherIcon::LoadTooltip()

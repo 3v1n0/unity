@@ -53,8 +53,6 @@ public:
 
   LauncherIcon(IconType type);
 
-  virtual ~LauncherIcon();
-
   bool SetTooltipText(std::string& target, std::string const& value);
 
   void    SetShortcut(guint64 shortcut);
