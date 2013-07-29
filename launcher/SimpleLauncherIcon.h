@@ -51,7 +51,7 @@ private:
   bool SetIconName(std::string& target, std::string const& value);
 
 private:
-  std::map<int, BaseTexturePtr> texture_map_;
+  std::unordered_map<int, BaseTexturePtr> texture_map_;
   glib::Signal<void, GtkIconTheme*> theme_changed_signal_;
 };
 
