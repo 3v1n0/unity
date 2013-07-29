@@ -41,7 +41,7 @@ TEST(TestSingleMonitorLauncherIcon, MonitorVisibility)
 {
   SingleMonitorLauncherIcon icon(AbstractLauncherIcon::IconType::NONE, 2);
 
-  for (int i = 0; i < max_num_monitors; ++i)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
   {
     bool icon_visible = icon.IsVisibleOnMonitor(i);
 

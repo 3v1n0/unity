@@ -28,7 +28,7 @@ NUX_IMPLEMENT_OBJECT_TYPE(IconTextureSource);
 
 namespace
 {
-  const unsigned RENDERERS_SIZE = max_num_monitors + 1; // +1 for the switcher
+  const unsigned RENDERERS_SIZE = monitors::MAX + 1; // +1 for the switcher
 }
 
 IconTextureSource::IconTextureSource()
