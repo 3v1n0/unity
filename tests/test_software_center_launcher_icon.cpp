@@ -46,17 +46,16 @@ const std::string USC_APP_INSTALL_DESKTOP = "/usr/share/app-install/desktop/soft
 class MockSoftwareCenterLauncherIcon : public SoftwareCenterLauncherIcon
 {
 public:
-   MockSoftwareCenterLauncherIcon(ApplicationPtr const& app,
-                                  std::string const& aptdaemon_trans_id,
-                                  std::string const& icon_path)
-      : SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path)
-   {}
+  MockSoftwareCenterLauncherIcon(ApplicationPtr const& app,
+                                std::string const& aptdaemon_trans_id,
+                                std::string const& icon_path)
+    : SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path)
+  {}
 
-   using SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall;
-   using SoftwareCenterLauncherIcon::_desktop_file;
-   using SoftwareCenterLauncherIcon::GetRemoteUri;
-   using SoftwareCenterLauncherIcon::OnFinished;
-   using SoftwareCenterLauncherIcon::OnPropertyChanged;
+  using SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall;
+  using SoftwareCenterLauncherIcon::GetRemoteUri;
+  using SoftwareCenterLauncherIcon::OnFinished;
+  using SoftwareCenterLauncherIcon::OnPropertyChanged;
 };
 
 struct TestSoftwareCenterLauncherIcon : testing::Test
@@ -67,7 +66,7 @@ public:
      , icon(usc, "/com/canonical/unity/test/object/path", "")
   {}
 
-  ApplicationPtr usc;
+  MockApplication::Ptr usc;
   MockSoftwareCenterLauncherIcon icon;
 };
 
@@ -80,24 +79,24 @@ TEST_F(TestSoftwareCenterLauncherIcon, Construction)
 
 TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformTrivial)
 {
-   // no transformation needed
-  icon._desktop_file = USC_DESKTOP;
+  // no transformation needed
+  usc->desktop_file_ = USC_DESKTOP;
   EXPECT_EQ(icon.GetActualDesktopFileAfterInstall(), USC_DESKTOP);
 }
 
 TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformAppInstall)
 {
-   // ensure that tranformation from app-install data desktop files works
-   icon._desktop_file = "/usr/share/app-install/desktop/pkgname:kde4__afile.desktop";
-   EXPECT_EQ(icon.GetActualDesktopFileAfterInstall(), 
-             BUILDDIR"/tests/data/applications/kde4/afile.desktop");
+  // ensure that tranformation from app-install data desktop files works
+  usc->desktop_file_ = "/usr/share/app-install/desktop/pkgname:kde4__afile.desktop";
+   EXPECT_EQ(icon.GetActualDesktopFileAfterInstall(),
+             LOCAL_DATA_DIR+"/applications/kde4/afile.desktop");
 }
 
 TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformSCAgent)
 {
-   // now simualte data coming from the sc-agent
-   icon._desktop_file = "/tmp/software-center-agent:VP2W9M:ubuntu-software-center.desktop";
-   EXPECT_EQ(icon.GetActualDesktopFileAfterInstall(), USC_DESKTOP);
+  // now simualte data coming from the sc-agent
+  usc->desktop_file_ = "/tmp/software-center-agent:VP2W9M:ubuntu-software-center.desktop";
+  EXPECT_EQ(icon.GetActualDesktopFileAfterInstall(), USC_DESKTOP);
 }
 
 // simulate a OnFinished signal from a /usr/share/app-install location
@@ -113,8 +112,7 @@ TEST_F(TestSoftwareCenterLauncherIcon, OnFinished)
   icon.OnFinished(params);
 
   // and verify that both the desktop file and the remote uri gets updated
-
-  EXPECT_EQ(USC_DESKTOP, icon._desktop_file);
+  EXPECT_EQ(USC_DESKTOP, icon.DesktopFile());
   EXPECT_EQ("application://ubuntu-software-center.desktop", icon.GetRemoteUri());
   EXPECT_TRUE(usc->closed.empty());
   EXPECT_TRUE(icon.IsSticky());
