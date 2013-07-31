@@ -224,7 +224,6 @@ class IBusTestsPinyin(IBusWidgetScenariodTests):
     scenarios = multiply_scenarios(
         IBusWidgetScenariodTests.scenarios,
         [
-            ('basic', {'input': 'abc1', 'result' : u'\u963f\u5e03\u4ece' }),
             ('photo', {'input': 'zhaopian ', 'result' : u'\u7167\u7247' }),
             ('internet', {'input': 'hulianwang ', 'result' : u'\u4e92\u8054\u7f51'}),
             ('disk', {'input': 'cipan ', 'result' : u'\u78c1\u76d8' }),
