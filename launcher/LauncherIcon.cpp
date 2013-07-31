@@ -83,12 +83,12 @@ LauncherIcon::LauncherIcon(IconType type)
   , _background_color(nux::color::White)
   , _glow_color(nux::color::White)
   , _shortcut(0)
-  , _center(max_num_monitors)
-  , _has_visible_window(max_num_monitors, false)
-  , _is_visible_on_monitor(max_num_monitors, true)
-  , _last_stable(max_num_monitors)
-  , _parent_geo(max_num_monitors)
-  , _saved_center(max_num_monitors)
+  , _center(monitors::MAX)
+  , _has_visible_window(monitors::MAX, false)
+  , _is_visible_on_monitor(monitors::MAX, true)
+  , _last_stable(monitors::MAX)
+  , _parent_geo(monitors::MAX)
+  , _saved_center(monitors::MAX)
   , _allow_quicklist_to_show(true)
   , _tooltip_fade_animator(TOOLTIP_FADE_DURATION)
 {
@@ -157,7 +157,7 @@ LauncherIcon::WindowVisibleOnMonitor(int monitor)
 
 const bool LauncherIcon::WindowVisibleOnViewport()
 {
-  for (int i = 0; i < max_num_monitors; ++i)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
     if (_has_visible_window[i])
       return true;
 
@@ -176,7 +176,7 @@ LauncherIcon::AddProperties(GVariantBuilder* builder)
   GVariantBuilder monitors_builder;
   g_variant_builder_init(&monitors_builder, G_VARIANT_TYPE ("ab"));
 
-  for (int i = 0; i < max_num_monitors; ++i)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
     g_variant_builder_add(&monitors_builder, "b", IsVisibleOnMonitor(i));
 
   unity::variant::BuilderWrapper(builder)

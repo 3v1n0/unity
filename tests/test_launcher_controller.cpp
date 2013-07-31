@@ -324,9 +324,9 @@ TEST_F(TestLauncherController, MultimonitorMultipleLaunchers)
   lc.multiple_launchers = true;
   uscreen.SetupFakeMultiMonitor();
 
-  ASSERT_EQ(lc.launchers().size(), max_num_monitors);
+  ASSERT_EQ(lc.launchers().size(), monitors::MAX);
 
-  for (int i = 0; i < max_num_monitors; ++i)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
   {
     ASSERT_EQ(lc.launchers()[i]->monitor(), i);
   }
@@ -337,7 +337,7 @@ TEST_F(TestLauncherController, MultimonitorSingleLauncher)
   lc.multiple_launchers = false;
   uscreen.SetupFakeMultiMonitor(0, false);
 
-  for (int i = 0; i < max_num_monitors; ++i)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
   {
     uscreen.SetPrimary(i);
     ASSERT_EQ(lc.launchers().size(), 1);
@@ -363,7 +363,7 @@ TEST_F(TestLauncherController, MultimonitorSwitchToMultipleLaunchers)
   ASSERT_EQ(lc.launchers().size(), 1);
 
   lc.multiple_launchers = true;
-  EXPECT_EQ(lc.launchers().size(), max_num_monitors);
+  EXPECT_EQ(lc.launchers().size(), monitors::MAX);
 }
 
 TEST_F(TestLauncherController, MultimonitorSwitchToSingleLauncher)
@@ -372,7 +372,7 @@ TEST_F(TestLauncherController, MultimonitorSwitchToSingleLauncher)
   int primary = 3;
   uscreen.SetupFakeMultiMonitor(primary);
 
-  ASSERT_EQ(lc.launchers().size(), max_num_monitors);
+  ASSERT_EQ(lc.launchers().size(), monitors::MAX);
 
   lc.multiple_launchers = false;
   EXPECT_EQ(lc.launchers().size(), 1);
@@ -382,7 +382,7 @@ TEST_F(TestLauncherController, MultimonitorSwitchToSingleLauncher)
 TEST_F(TestLauncherController, MultimonitorSwitchToSingleMonitor)
 {
   uscreen.SetupFakeMultiMonitor();
-  ASSERT_EQ(lc.launchers().size(), max_num_monitors);
+  ASSERT_EQ(lc.launchers().size(), monitors::MAX);
 
   uscreen.Reset();
   EXPECT_EQ(lc.launchers().size(), 1);
@@ -392,14 +392,14 @@ TEST_F(TestLauncherController, MultimonitorSwitchToSingleMonitor)
 TEST_F(TestLauncherController, MultimonitorRemoveMiddleMonitor)
 {
   uscreen.SetupFakeMultiMonitor();
-  ASSERT_EQ(lc.launchers().size(), max_num_monitors);
+  ASSERT_EQ(lc.launchers().size(), monitors::MAX);
 
   std::vector<nux::Geometry> &monitors = uscreen.GetMonitors();
   monitors.erase(monitors.begin() + monitors.size()/2);
   uscreen.changed.emit(uscreen.GetPrimaryMonitor(), uscreen.GetMonitors());
-  ASSERT_EQ(lc.launchers().size(), max_num_monitors - 1);
+  ASSERT_EQ(lc.launchers().size(), monitors::MAX - 1);
 
-  for (int i = 0; i < max_num_monitors - 1; ++i)
+  for (unsigned i = 0; i < monitors::MAX - 1; ++i)
     ASSERT_EQ(lc.launchers()[i]->monitor(), i);
 }
 
@@ -409,7 +409,7 @@ TEST_F(TestLauncherController, SingleMonitorSwitchToMultimonitor)
 
   uscreen.SetupFakeMultiMonitor();
 
-  EXPECT_EQ(lc.launchers().size(), max_num_monitors);
+  EXPECT_EQ(lc.launchers().size(), monitors::MAX);
 }
 
 #ifdef USE_X11
@@ -418,7 +418,7 @@ TEST_F(TestLauncherController, MultiMonitorEdgeBarrierSubscriptions)
 {
   uscreen.SetupFakeMultiMonitor();
 
-  for (int i = 0; i < max_num_monitors; ++i)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
     ASSERT_EQ(lc.Impl()->edge_barriers_.GetSubscriber(i), lc.launchers()[i].GetPointer());
 }
 
@@ -427,11 +427,11 @@ TEST_F(TestLauncherController, SingleMonitorEdgeBarrierSubscriptionsUpdates)
   lc.multiple_launchers = false;
   uscreen.SetupFakeMultiMonitor(0, false);
 
-  for (int i = 0; i < max_num_monitors; ++i)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
   {
     uscreen.SetPrimary(i);
 
-    for (int j = 0; j < max_num_monitors; ++j)
+    for (unsigned j = 0; j < monitors::MAX; ++j)
     {
       if (j == i)
       {
@@ -451,7 +451,7 @@ TEST_F(TestLauncherController, MultimonitorGeometries)
 {
   uscreen.SetupFakeMultiMonitor();
 
-  for (int i = 0; i < max_num_monitors; ++i)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
   {
     auto const& monitor_geo = uscreen.GetMonitorGeometry(i);
     auto const& launcher_geo = lc.launchers()[i]->GetAbsoluteGeometry();
@@ -507,7 +507,7 @@ TEST_F(TestLauncherController, EnabledStrutsOnNeverHide)
     return lc.launchers()[index]->GetParent()->InputWindowStrutsEnabled();
   };
 
-  for (int i = 0; i < max_num_monitors; ++i)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
     Utils::WaitUntilMSec(std::bind(check_fn, i));
 }
 
@@ -521,7 +521,7 @@ TEST_F(TestLauncherController, DisabledStrutsOnAutoHide)
     return lc.launchers()[index]->GetParent()->InputWindowStrutsEnabled();
   };
 
-  for (int i = 0; i < max_num_monitors; ++i)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
     Utils::WaitUntilMSec(std::bind(check_fn, i), false);
 }
 
@@ -542,7 +542,7 @@ TEST_F(TestLauncherController, EnabledStrutsAddingNewLaunchersOnAutoHide)
     return lc.launchers()[index]->GetParent()->InputWindowStrutsEnabled();
   };
 
-  for (int i = 0; i < max_num_monitors; ++i)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
     Utils::WaitUntilMSec(std::bind(check_fn, i));
 }
 
@@ -563,7 +563,7 @@ TEST_F(TestLauncherController, DisabledStrutsAddingNewLaunchersOnNeverHide)
     return lc.launchers()[index]->GetParent()->InputWindowStrutsEnabled();
   };
 
-  for (int i = 0; i < max_num_monitors; ++i)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
     Utils::WaitUntilMSec(std::bind(check_fn, i), false);
 }
 
@@ -1657,17 +1657,17 @@ TEST_F(TestLauncherController, DISABLED_DragAndDrop_MultipleLaunchers)
 
   xdnd_manager_->dnd_started.emit("my_awesome_file", 0);
 
-  for (int i = 0; i < max_num_monitors; ++i)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
     Utils::WaitUntilMSec(std::bind(check_fn, i), i != 0);
 
   xdnd_manager_->monitor_changed.emit(3);
 
-  for (int i = 0; i < max_num_monitors; ++i)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
     Utils::WaitUntilMSec(std::bind(check_fn, i), i != 3);
 
   xdnd_manager_->dnd_finished.emit();
 
-  for (int i = 0; i < max_num_monitors; ++i)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
     Utils::WaitUntilMSec(std::bind(check_fn, i), true);
 }
 

@@ -55,7 +55,7 @@ struct MockUScreen : UScreen
     SetPrimary(primary, false);
     monitors_.clear();
 
-    for (int i = 0, total_width = 0; i < max_num_monitors; ++i)
+    for (unsigned i = 0, total_width = 0; i < monitors::MAX; ++i)
     {
       monitors_.push_back(nux::Geometry(total_width, 0, MONITOR_WIDTH, MONITOR_HEIGHT));
       total_width += MONITOR_WIDTH;
