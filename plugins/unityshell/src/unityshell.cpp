@@ -3857,21 +3857,12 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   if (state != ScaleScreen::Wait && state != ScaleScreen::Out)
     return;
 
-  WindowManager& wm = WindowManager::Default();
-
-  nux::Geometry geo;
-
-  // The layout window is not really a compiz window...
-  // so this is a cheap way to draw the decor
-  if (!wm.IsScaleActive())
-    geo = GetLayoutWindowGeometry();
-  else if (UnityScreen::get(screen)->switcher_controller_->Visible())
-    geo = GetScaledGeometry();
+  nux::Geometry const& scale_geo = GetScaledGeometry();
 
   auto const& pos = scale_win->getCurrentPosition();
 
   bool highlighted = (ss->getSelectedWindow() == window->id());
-  paintFakeDecoration(geo, attrib, transform, mask, highlighted, pos.scale);
+  paintFakeDecoration(scale_geo, attrib, transform, mask, highlighted, pos.scale);
 }
 
 nux::Geometry UnityWindow::GetLayoutWindowGeometry()

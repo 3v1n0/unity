@@ -469,14 +469,17 @@ void Controller::Impl::ConstructView()
 
   view_->hide_request.connect(sigc::mem_fun(this, &Controller::Impl::Hide));
 
-  view_->mouse_clicked.connect([this] (int icon_index, int button) {
-      if (button == 3)
-        InitiateDetail(true);
-      else if (icon_index < 0)
+  view_->switcher_mouse_down.connect([this] (int icon_index, int button) {
+      if (icon_index < 0)
         Hide(false);
   });
 
-  view_->mouse_moving.connect ([this] (int icon_index) {
+  view_->switcher_mouse_up.connect([this] (int icon_index, int button) {
+      if (button == 3)
+        InitiateDetail(true);
+  });
+
+  view_->switcher_mouse_move.connect([this] (int icon_index) {
       if (icon_index >= 0)
         ResetDetailTimer(obj_->detail_timeout_length);
   });
