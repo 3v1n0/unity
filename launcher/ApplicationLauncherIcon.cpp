@@ -108,9 +108,6 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   UpdateMenus();
   UpdateDesktopFile();
   UpdateBackgroundColor();
-
-  // hack
-  SetProgress(0.0f);
 }
 
 ApplicationLauncherIcon::~ApplicationLauncherIcon()
@@ -127,8 +124,9 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
   if (app_ == app)
     return;
 
-  app_ = app;
   signals_conn_.Clear();
+
+  app_ = app;
   SetupApplicationSignalsConnections();
 }
 
@@ -217,13 +215,7 @@ bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk) const
     // Sometimes BAMF is not fast enough to update the active application
     // while quickly switching between apps, so we double check that the
     // real active window is part of the selection (see bug #1111620)
-    Window active = WindowManager::Default().GetActiveWindow();
-
-    for (auto& window : app_->GetWindows())
-      if (window->window_id() == active)
-        return true;
-
-    return false;
+    return app_->OwnsWindow(WindowManager::Default().GetActiveWindow());
   }
 
   return SimpleLauncherIcon::GetQuirk(quirk);
