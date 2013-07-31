@@ -74,7 +74,6 @@ class Application
 public:
   virtual ~Application() {}
 
-  virtual std::string desktop_file() const = 0;
   virtual std::string type() const = 0;
 
   // A string representation of the object.
@@ -90,6 +89,7 @@ public:
   // Calls quit on all the Windows for this application.
   virtual void Quit() const = 0;
 
+  nux::ROProperty<std::string> desktop_file;
   nux::ROProperty<std::string> title;
   nux::ROProperty<std::string> icon;
 

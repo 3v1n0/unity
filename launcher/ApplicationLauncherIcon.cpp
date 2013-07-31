@@ -764,7 +764,7 @@ void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
   // We only add quicklist menu-items for windows if we have more than one window
   if (windows.size() < 2)
     return;
-   
+
   Window active = WindowManager::Default().GetActiveWindow();
 
   // add menu items for all open windows
@@ -787,7 +787,7 @@ void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
         wm.Activate(xid);
         wm.Raise(xid);
     });
-    
+
     if (xid == active)
     {
       dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_RADIO);
@@ -1041,19 +1041,19 @@ std::string ApplicationLauncherIcon::GetDesktopID()
 
 void ApplicationLauncherIcon::UpdateRemoteUri()
 {
-    std::string const& desktop_id = GetDesktopID();
+  std::string const& desktop_id = GetDesktopID();
 
-    if (!desktop_id.empty())
-    {
-      _remote_uri = FavoriteStore::URI_PREFIX_APP + desktop_id;
-    }
+  if (!desktop_id.empty())
+  {
+    _remote_uri = FavoriteStore::URI_PREFIX_APP + desktop_id;
+  }
 }
 
 std::string ApplicationLauncherIcon::GetRemoteUri()
 {
   if (_remote_uri.empty())
   {
-     UpdateRemoteUri();
+    UpdateRemoteUri();
   }
 
   return _remote_uri;

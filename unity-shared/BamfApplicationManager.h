@@ -112,7 +112,6 @@ public:
   Application(ApplicationManager const& manager,
               glib::Object<BamfView> const& app);
 
-  virtual std::string desktop_file() const;
   virtual std::string type() const;
 
   virtual WindowList GetWindows() const;
@@ -130,6 +129,8 @@ public:
 private: // Property getters and setters
   void HookUpEvents();
 
+  std::string GetDesktopFile() const;
+
   bool GetSeen() const;
   bool SetSeen(bool const& param);
 
@@ -137,7 +138,7 @@ private: // Property getters and setters
   bool SetSticky(bool const& param);
 
 private:
-  glib::Object< ::BamfApplication> bamf_app_;
+  glib::Object<::BamfApplication> bamf_app_;
   glib::SignalManager signals_;
   std::string type_;
 };
