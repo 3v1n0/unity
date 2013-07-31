@@ -32,6 +32,7 @@ namespace testmocks
 {
 struct MockApplicationWindow : unity::ApplicationWindow
 {
+  typedef std::shared_ptr<MockApplicationWindow> Ptr;
   typedef NiceMock<MockApplicationWindow> Nice;
 
   MockApplicationWindow(Window xid)
@@ -102,6 +103,7 @@ struct MockApplicationWindow : unity::ApplicationWindow
 
 struct MockApplication : unity::Application
 {
+  typedef std::shared_ptr<MockApplication> Ptr;
   typedef NiceMock<MockApplication> Nice;
 
   MockApplication()
