@@ -84,7 +84,8 @@ LauncherIcon::LauncherIcon(IconType type)
   , _glow_color(nux::color::White)
   , _shortcut(0)
   , _center(max_num_monitors)
-  , _has_visible_window(max_num_monitors)
+  , _has_visible_window(max_num_monitors, false)
+  , _is_visible_on_monitor(max_num_monitors, true)
   , _last_stable(max_num_monitors)
   , _parent_geo(max_num_monitors)
   , _saved_center(max_num_monitors)
@@ -97,11 +98,6 @@ LauncherIcon::LauncherIcon(IconType type)
     _quirk_times[i].tv_sec = 0;
     _quirk_times[i].tv_nsec = 0;
   }
-
-  _is_visible_on_monitor.resize(max_num_monitors);
-
-  for (int i = 0; i < max_num_monitors; ++i)
-    _is_visible_on_monitor[i] = true;
 
   tooltip_enabled = true;
   tooltip_enabled.changed.connect(sigc::mem_fun(this, &LauncherIcon::OnTooltipEnabledChanged));
@@ -129,11 +125,6 @@ LauncherIcon::LauncherIcon(IconType type)
         _tooltip->ShowWindow(false);
     }
   });
-}
-
-LauncherIcon::~LauncherIcon()
-{
-  SetQuirk(Quirk::URGENT, false);
 }
 
 void LauncherIcon::LoadTooltip()
@@ -339,15 +330,13 @@ GtkIconTheme* LauncherIcon::GetUnityTheme()
   return _unity_theme;
 }
 
-nux::BaseTexture* LauncherIcon::TextureFromGtkTheme(std::string icon_name, int size, bool update_glow_colors)
+BaseTexturePtr LauncherIcon::TextureFromGtkTheme(std::string icon_name, int size, bool update_glow_colors)
 {
   GtkIconTheme* default_theme;
-  nux::BaseTexture* result = NULL;
+  BaseTexturePtr result;
 
   if (icon_name.empty())
-  {
     icon_name = DEFAULT_ICON;
-  }
 
   default_theme = gtk_icon_theme_get_default();
 
@@ -361,23 +350,19 @@ nux::BaseTexture* LauncherIcon::TextureFromGtkTheme(std::string icon_name, int s
 
   if (!result)
   {
-    if (icon_name == "folder")
-      result = NULL;
-    else
+    if (icon_name != "folder")
       result = TextureFromSpecificGtkTheme(default_theme, "folder", size, update_glow_colors);
   }
 
   return result;
-
 }
 
-nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
-                                                            std::string const& icon_name,
-                                                            int size,
-                                                            bool update_glow_colors,
-                                                            bool is_default_theme)
+BaseTexturePtr LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
+                                                         std::string const& icon_name,
+                                                         int size,
+                                                         bool update_glow_colors,
+                                                         bool is_default_theme)
 {
-  nux::BaseTexture* result = nullptr;
   glib::Object<GIcon> icon(g_icon_new_for_string(icon_name.c_str(), nullptr));
   gtk::IconInfo info;
   auto flags = static_cast<GtkIconLookupFlags>(0);
@@ -392,7 +377,7 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
   }
 
   if (!info && !is_default_theme)
-    return nullptr;
+    return BaseTexturePtr();
 
   if (!info)
   {
@@ -409,10 +394,13 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
 
   if (pbuf.IsType(GDK_TYPE_PIXBUF))
   {
-    result = nux::CreateTexture2DFromPixbuf(pbuf, true);
-
     if (update_glow_colors)
       ColorForIcon(pbuf, _background_color, _glow_color);
+
+    BaseTexturePtr result;
+    result.Adopt(nux::CreateTexture2DFromPixbuf(pbuf, true));
+
+    return result;
   }
   else
   {
@@ -420,13 +408,11 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
                      <<  "' from icon theme: " << error;
   }
 
-  return result;
+  return BaseTexturePtr();
 }
 
-nux::BaseTexture* LauncherIcon::TextureFromPath(std::string const& icon_name, int size, bool update_glow_colors)
+BaseTexturePtr LauncherIcon::TextureFromPath(std::string const& icon_name, int size, bool update_glow_colors)
 {
-  nux::BaseTexture* result;
-
   if (icon_name.empty())
     return TextureFromGtkTheme(DEFAULT_ICON, size, update_glow_colors);
 
@@ -435,20 +421,22 @@ nux::BaseTexture* LauncherIcon::TextureFromPath(std::string const& icon_name, in
 
   if (GDK_IS_PIXBUF(pbuf.RawPtr()))
   {
-    result = nux::CreateTexture2DFromPixbuf(pbuf, true);
-
     if (update_glow_colors)
       ColorForIcon(pbuf, _background_color, _glow_color);
+
+    BaseTexturePtr result;
+    result.Adopt(nux::CreateTexture2DFromPixbuf(pbuf, true));
+    return result;
   }
   else
   {
     LOG_WARN(logger) << "Unable to load '" << icon_name
                      <<  "' icon: " << error;
 
-    result = TextureFromGtkTheme(DEFAULT_ICON, size, update_glow_colors);
+    return TextureFromGtkTheme(DEFAULT_ICON, size, update_glow_colors);
   }
 
-  return result;
+  return BaseTexturePtr();
 }
 
 bool LauncherIcon::SetTooltipText(std::string& target, std::string const& value)
