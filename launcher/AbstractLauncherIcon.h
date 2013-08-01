@@ -133,7 +133,7 @@ public:
     DOWN
   };
 
-  virtual ~AbstractLauncherIcon() {}
+  virtual ~AbstractLauncherIcon() = default;
 
   nux::Property<std::string> tooltip_text;
   nux::Property<bool> tooltip_enabled;

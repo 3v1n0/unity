@@ -657,8 +657,7 @@ bool ApplicationLauncherIcon::Spread(bool current_desktop, int state, bool force
 
 void ApplicationLauncherIcon::EnsureWindowState()
 {
-  std::vector<bool> monitors;
-  monitors.resize(max_num_monitors);
+  std::vector<bool> monitors(monitors::MAX);
 
   for (auto& window: app_->GetWindows())
   {
@@ -670,7 +669,7 @@ void ApplicationLauncherIcon::EnsureWindowState()
       // If monitor is -1 (or negative), show on all monitors.
       if (monitor < 0)
       {
-        for (int j = 0; j < max_num_monitors; j++)
+        for (unsigned j = 0; j < monitors::MAX; j++)
           monitors[j] = true;
       }
       else
@@ -678,7 +677,7 @@ void ApplicationLauncherIcon::EnsureWindowState()
     }
   }
 
-  for (int i = 0; i < max_num_monitors; i++)
+  for (unsigned i = 0; i < monitors::MAX; i++)
     SetWindowVisibleOnMonitor(monitors[i], i);
 
   EmitNeedsRedraw();
@@ -1158,7 +1157,7 @@ bool ApplicationLauncherIcon::ShowInSwitcher(bool current)
     }
     else
     {
-      for (int i = 0; i < max_num_monitors; ++i)
+      for (unsigned i = 0; i < monitors::MAX; ++i)
       {
         if (WindowVisibleOnMonitor(i))
         {
@@ -1265,7 +1264,7 @@ void ApplicationLauncherIcon::PerformScroll(ScrollDirection direction, Time time
   }
 
   if (windows.size() <= 1)
-    return; 
+    return;
 
   ++_progressive_scroll;
   _progressive_scroll %= windows.size();

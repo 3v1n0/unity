@@ -20,6 +20,7 @@
 #include <gmock/gmock.h>
 
 #include "LauncherIcon.h"
+#include "MultiMonitor.h"
 
 using namespace unity;
 using namespace unity::launcher;
@@ -54,6 +55,9 @@ TEST_F(TestLauncherIcon, Construction)
 
   for (unsigned i = 0; i < unsigned(AbstractLauncherIcon::Quirk::LAST); ++i)
     ASSERT_FALSE(icon.GetQuirk(static_cast<AbstractLauncherIcon::Quirk>(i)));
+
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+    ASSERT_TRUE(icon.IsVisibleOnMonitor(i));
 }
 
 TEST_F(TestLauncherIcon, Visibility)

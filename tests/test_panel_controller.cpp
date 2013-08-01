@@ -55,9 +55,9 @@ TEST_F(TestPanelController, Multimonitor)
 
   {
     unity::panel::Controller pc;
-    ASSERT_EQ(pc.panels().size(), max_num_monitors);
+    ASSERT_EQ(pc.panels().size(), unity::monitors::MAX);
 
-    for (int i = 0; i < max_num_monitors; ++i)
+    for (unsigned int i = 0; i < unity::monitors::MAX; ++i)
     {
       ASSERT_EQ(pc.panels()[i]->GetMonitor(), i);
       panel_ptrs.push_back(pc.panels()[i]);
@@ -76,7 +76,7 @@ TEST_F(TestPanelController, MultimonitorSwitchToSingleMonitor)
 
   {
     unity::panel::Controller pc;
-    ASSERT_EQ(pc.panels().size(), max_num_monitors);
+    ASSERT_EQ(pc.panels().size(), unity::monitors::MAX);
 
     uscreen.Reset();
     EXPECT_EQ(pc.panels().size(), 1);
@@ -90,14 +90,14 @@ TEST_F(TestPanelController, MultimonitorRemoveMiddleMonitor)
 
   {
     unity::panel::Controller pc;
-    ASSERT_EQ(pc.panels().size(), max_num_monitors);
+    ASSERT_EQ(pc.panels().size(), unity::monitors::MAX);
 
     std::vector<nux::Geometry> &monitors = uscreen.GetMonitors();
     monitors.erase(monitors.begin() + monitors.size()/2);
     uscreen.changed.emit(uscreen.GetPrimaryMonitor(), uscreen.GetMonitors());
-    ASSERT_EQ(pc.panels().size(), max_num_monitors - 1);
+    ASSERT_EQ(pc.panels().size(), unity::monitors::MAX - 1);
 
-    for (int i = 0; i < max_num_monitors - 1; ++i)
+    for (unsigned int i = 0; i < unity::monitors::MAX - 1; ++i)
       ASSERT_EQ(pc.panels()[i]->GetMonitor(), i);
   }
 }
@@ -109,7 +109,7 @@ TEST_F(TestPanelController, SingleMonitorSwitchToMultimonitor)
     ASSERT_EQ(pc.panels().size(), 1);
 
     uscreen.SetupFakeMultiMonitor();
-    EXPECT_EQ(pc.panels().size(), max_num_monitors);
+    EXPECT_EQ(pc.panels().size(), unity::monitors::MAX);
   }
 }
 
@@ -119,7 +119,7 @@ TEST_F(TestPanelController, MultimonitorGeometries)
 
   {
     unity::panel::Controller pc;  
-    for (int i = 0; i < max_num_monitors; ++i)
+    for (unsigned int i = 0; i < unity::monitors::MAX; ++i)
     {
       auto const& monitor_geo = uscreen.GetMonitorGeometry(i);
       auto const& panel_geo = pc.panels()[i]->GetAbsoluteGeometry();
