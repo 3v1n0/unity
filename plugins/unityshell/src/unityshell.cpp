@@ -36,6 +36,7 @@
 #include "LauncherController.h"
 #include "SwitcherController.h"
 #include "SwitcherView.h"
+#include "PanelView.h"
 #include "PluginAdapter.h"
 #include "QuicklistManager.h"
 #include "StartupNotifyService.h"
@@ -1413,15 +1414,14 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
     }
   }
 
-  std::vector<nux::View*> const& panels(panel_controller_->GetPanelViews());
-  for (nux::View* view : panels)
+  for (auto const& panel : panel_controller_->panels())
   {
-    nux::Geometry const& geo = view->GetAbsoluteGeometry();
+    nux::Geometry const& geo = panel->GetAbsoluteGeometry();
 
     CompRegion panel_region(geo.x, geo.y, geo.width, geo.height);
 
     if (damage.intersects(panel_region))
-      view->QueueDraw();
+      panel->QueueDraw();
   }
 
   QuicklistManager* qm = QuicklistManager::Default();

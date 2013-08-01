@@ -258,6 +258,7 @@ if (ENABLE_X_SUPPORT)
                  test_launcher_icon.cpp
                  test_launcher_minimize_speed.cpp
                  test_launcher_tooltip.cpp
+                 test_panel_controller.cpp
                  test_panel_indicators_view.cpp
                  test_panel_menu_view.cpp
                  test_panel_service.cpp
