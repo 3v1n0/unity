@@ -210,12 +210,13 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
     finished_ = true;
     needs_urgent_ = true;
 
-    // find and update to  the real desktop file
-    std::string new_desktop_path = GetActualDesktopFileAfterInstall();
+    // find and update to the real desktop file
+    std::string const& new_desktop_path = GetActualDesktopFileAfterInstall();
 
     // exchange the temp Application with the real one
     auto& app_manager = ApplicationManager::Default();
     auto const& new_app = app_manager.GetApplicationForDesktopFile(new_desktop_path);
+    new_app->sticky = IsSticky();
     SetApplication(new_app);
     Stick();
 
