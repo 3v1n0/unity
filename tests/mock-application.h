@@ -22,6 +22,8 @@
 
 #include <map>
 #include <gmock/gmock.h>
+#include <gio/gdesktopappinfo.h>
+#include <UnityCore/GLibWrapper.h>
 
 #include "unity-shared/ApplicationManager.h"
 #include "unity-shared/WindowManager.h"
@@ -250,7 +252,17 @@ struct MockApplicationManager : public unity::ApplicationManager
     AppMap::iterator iter = app_map_.find(desktop_file);
     if (iter == app_map_.end())
     {
-      auto app = std::make_shared<NiceMock<MockApplication>>(desktop_file);
+      std::string title;
+      std::string icon;
+      std::shared_ptr<GKeyFile> key_file(g_key_file_new(), g_key_file_free);
+
+      if (g_key_file_load_from_file(key_file.get(), desktop_file.c_str(), G_KEY_FILE_NONE, nullptr))
+      {
+        title = unity::glib::String(g_key_file_get_string(key_file.get(), G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_NAME, nullptr)).Str();
+        icon = unity::glib::String(g_key_file_get_string(key_file.get(), G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_ICON, nullptr)).Str();
+      }
+
+      auto app = std::make_shared<MockApplication::Nice>(desktop_file, icon, title);
       app_map_.insert(AppMap::value_type(desktop_file, app));
       return app;
     }
