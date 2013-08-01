@@ -120,17 +120,9 @@ class IBusTests(UnityTestCase):
         This method adds a cleanUp to reset the old keys once the test is done.
 
         """
-        # get the existing keys:
-        trigger_hotkey_path = '/desktop/ibus/general/hotkey/trigger'
-        old_keys = get_gconf_option(trigger_hotkey_path)
-
+        # FIXME Need to set this using gsettings...removed old gconf code for now
         self.activate_binding = 'Control+space'
         activate_release_binding_option = 'Alt+Release+Control_L'
-        new_keys = [self.activate_binding, activate_release_binding_option]
-
-        if new_keys != old_keys:
-            set_gconf_option(trigger_hotkey_path, new_keys)
-            self.addCleanup(set_gconf_option, trigger_hotkey_path, old_keys)
         self.activate_release_binding = 'Alt+Control_L'
 
     @classmethod
