@@ -63,7 +63,6 @@ PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr 
   , is_dirty_(true)
   , opacity_maximized_toggle_(false)
   , needs_geo_sync_(false)
-  , is_primary_(false)
   , overlay_is_open_(false)
   , opacity_(1.0f)
   , monitor_(0)
@@ -742,16 +741,6 @@ void PanelView::SetOpacityMaximizedToggle(bool enabled)
     opacity_maximized_toggle_ = enabled;
     ForceUpdateBackground();
   }
-}
-
-bool PanelView::GetPrimary() const
-{
-  return is_primary_;
-}
-
-void PanelView::SetPrimary(bool primary)
-{
-  is_primary_ = primary;
 }
 
 void PanelView::SyncGeometries()

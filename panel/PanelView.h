@@ -55,9 +55,6 @@ public:
     return parent_;
   };
 
-  void SetPrimary(bool primary);
-  bool GetPrimary() const;
-
   void SetMonitor(int monitor);
   int GetMonitor() const;
 
@@ -132,7 +129,6 @@ private:
   bool is_dirty_;
   bool opacity_maximized_toggle_;
   bool needs_geo_sync_;
-  bool is_primary_;
   bool overlay_is_open_;
   float opacity_;
   int monitor_;

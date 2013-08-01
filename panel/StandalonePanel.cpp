@@ -63,7 +63,6 @@ private:
     panel_window = new MockableBaseWindow("StandalonePanel");
 
     PanelView* panel = new StandalonePanelView(panel_window.GetPointer());
-    panel->SetPrimary(true);
 
     nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
     layout->AddView(panel, 1);
