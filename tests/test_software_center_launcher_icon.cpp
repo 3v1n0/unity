@@ -23,8 +23,10 @@
 
 #include <config.h>
 #include <gmock/gmock.h>
+#include <UnityCore/Variant.h>
 
 #include "mock-application.h"
+#include "FavoriteStore.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "Launcher.h"
 #include "PanelStyle.h"
@@ -102,23 +104,66 @@ TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformSCAgent)
 // simulate a OnFinished signal from a /usr/share/app-install location
 // and ensure that the remote uri is updated from temp location to
 // the real location
-TEST_F(TestSoftwareCenterLauncherIcon, OnFinished)
+TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedReplacesDesktopFile)
+{
+  icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
+
+  EXPECT_EQ(USC_DESKTOP, icon.DesktopFile());
+}
+
+TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedUpdatesRemoteURI)
+{
+  icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
+
+  ASSERT_EQ(USC_DESKTOP, icon.DesktopFile());
+  EXPECT_EQ(FavoriteStore::URI_PREFIX_APP + "ubuntu-software-center.desktop", icon.GetRemoteUri());
+}
+
+TEST_F(TestSoftwareCenterLauncherIcon, DisconnectsOldAppSignals)
+{
+  ASSERT_FALSE(usc->closed.empty());
+
+  icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
+
+  EXPECT_TRUE(usc->closed.empty());
+  EXPECT_TRUE(usc->window_opened.empty());
+  EXPECT_TRUE(usc->window_moved.empty());
+  EXPECT_TRUE(usc->window_closed.empty());
+  EXPECT_TRUE(usc->visible.changed.empty());
+  EXPECT_TRUE(usc->active.changed.empty());
+  EXPECT_TRUE(usc->running.changed.empty());
+  EXPECT_TRUE(usc->urgent.changed.empty());
+  EXPECT_TRUE(usc->desktop_file.changed.empty());
+  EXPECT_TRUE(usc->title.changed.empty());
+  EXPECT_TRUE(usc->icon.changed.empty());
+}
+
+TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedSticksIcon)
+{
+  ASSERT_FALSE(icon.IsSticky());
+  icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
+  EXPECT_TRUE(icon.IsSticky());
+}
+
+TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedSavesIconPosition)
 {
   bool saved = false;
   icon.position_saved.connect([&saved] {saved = true;});
-
-  // now simulate that the install was successful
-  GVariant *params = g_variant_new("(s)", "exit-success");
-  icon.OnFinished(params);
-
-  // and verify that both the desktop file and the remote uri gets updated
-  EXPECT_EQ(USC_DESKTOP, icon.DesktopFile());
-  EXPECT_EQ("application://ubuntu-software-center.desktop", icon.GetRemoteUri());
-  EXPECT_TRUE(usc->closed.empty());
-  EXPECT_TRUE(icon.IsSticky());
+  icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
+  ASSERT_TRUE(icon.IsSticky());
   EXPECT_TRUE(saved);
+}
 
-  g_variant_unref(params);
+TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedKeepsStickyStatus)
+{
+  bool saved = false;
+  usc->sticky = true;
+  icon.position_saved.connect([&saved] {saved = true;});
+  ASSERT_TRUE(icon.IsSticky());
+
+  icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
+  ASSERT_TRUE(icon.IsSticky());
+  EXPECT_TRUE(saved);
 }
 
 TEST_F(TestSoftwareCenterLauncherIcon, Animate)
