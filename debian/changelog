@@ -1,3 +1,26 @@
+unity (7.1.0+13.10.20130802-0ubuntu1) saucy; urgency=low
+
+  [ Stephen M. Webb ]
+  * Remove incorrect last check in test_unhide_single_app AP test. (LP:
+    #1204188)
+
+  [ Brandon Schaefer ]
+  * Fix AP tests for IBus 1.5 Fix search bar hint when using preedit.
+    (LP: #1203106, #1204215)
+  * Remove setting hotkey for ibus using gconf, as ibus 1.5 no longer
+    uses gconf.
+
+  [ Marco Trevisan (Treviño) ]
+  * SimpleLauncherIcon: remove useless methods and signals, use smarter
+    allocation.
+  * MultiMonitor: remove the ugly max_num_monitors var, put it inside
+    proper namespace.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3449
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 02 Aug 2013 04:04:04 +0000
+
 unity (7.1.0+13.10.20130729-0ubuntu1) saucy; urgency=low
 
   [ Stephen M. Webb ]
