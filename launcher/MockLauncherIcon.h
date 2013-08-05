@@ -265,7 +265,7 @@ public:
     return nux::Color(0xFFAAAAAA);
   }
 
-  std::string RemoteUri()
+  std::string RemoteUri() const
   {
     return remote_uri_;
   }
@@ -309,7 +309,7 @@ public:
 
   void SendDndLeave() {}
 
-  std::string DesktopFile() { return std::string(""); }
+  std::string DesktopFile() const { return std::string(""); }
 
   bool IsSticky() const { return false; }
 

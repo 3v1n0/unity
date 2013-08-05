@@ -163,7 +163,7 @@ struct MockApplicationLauncherIcon : public ApplicationLauncherIcon
     ON_CALL(*this, Stick(_)).WillByDefault(Invoke([this] (bool save) { ApplicationLauncherIcon::Stick(save); }));
   }
 
-  std::string GetRemoteUri()
+  std::string GetRemoteUri() const
   {
     if (remote_uri_.empty())
       return ApplicationLauncherIcon::GetRemoteUri();

@@ -45,7 +45,7 @@ public:
 
   virtual void ActivateLauncherIcon(ActionArg arg);
 
-  std::string DesktopFile();
+  std::string DesktopFile() const;
 
   bool IsSticky() const;
   bool IsActive() const;
@@ -92,7 +92,7 @@ protected:
   MenuItemsVector GetMenus();
   std::set<std::string> ValidateUrisForLaunch(DndData const& dnd_data);
 
-  std::string GetRemoteUri();
+  std::string GetRemoteUri() const;
 
   bool HandlesSpread() { return true; }
   std::string GetName() const;

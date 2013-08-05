@@ -106,7 +106,7 @@ std::string ExpoLauncherIcon::GetName() const
   return "ExpoLauncherIcon";
 }
 
-std::string ExpoLauncherIcon::GetRemoteUri()
+std::string ExpoLauncherIcon::GetRemoteUri() const
 {
   return FavoriteStore::URI_PREFIX_UNITY + "expo-icon";
 }

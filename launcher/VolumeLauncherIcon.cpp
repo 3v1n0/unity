@@ -264,7 +264,7 @@ public:
     menu.push_back(menu_item);
   }
 
-  std::string GetRemoteUri()
+  std::string GetRemoteUri() const
   {
     auto const& identifier = volume_->GetIdentifier();
 
@@ -334,7 +334,7 @@ AbstractLauncherIcon::MenuItemsVector VolumeLauncherIcon::GetMenus()
   return pimpl_->GetMenus();
 }
 
-std::string VolumeLauncherIcon::GetRemoteUri()
+std::string VolumeLauncherIcon::GetRemoteUri() const
 {
   return pimpl_->GetRemoteUri();
 }

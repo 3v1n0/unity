@@ -533,7 +533,7 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
     }
     else
     {
-      result->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true); 
+      result->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true);
     }
   }
 }

@@ -557,7 +557,7 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
   }
 }
 
-std::string ApplicationLauncherIcon::DesktopFile()
+std::string ApplicationLauncherIcon::DesktopFile() const
 {
   return app_->desktop_file();
 }
@@ -1068,7 +1068,7 @@ void ApplicationLauncherIcon::UpdateRemoteUri()
   }
 }
 
-std::string ApplicationLauncherIcon::GetRemoteUri()
+std::string ApplicationLauncherIcon::GetRemoteUri() const
 {
   return _remote_uri;
 }

@@ -38,7 +38,7 @@ public:
 protected:
   void ActivateLauncherIcon(ActionArg arg);
   std::string GetName() const;
-  std::string GetRemoteUri();
+  std::string GetRemoteUri() const;
 
 private:
   bool show_in_switcher_;
