@@ -128,6 +128,12 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
 
   app_ = app;
   SetupApplicationSignalsConnections();
+
+  // It's very likely that application desktop file has been changed, we need to
+  // inform the icon to make sure that it reloads the informations from it.
+  app_->desktop_file.changed.emit(app_->desktop_file());
+  app_->title.changed.emit(app_->title());
+  app_->icon.changed.emit(app_->icon());
 }
 
 void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
