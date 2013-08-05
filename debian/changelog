@@ -1,3 +1,14 @@
+unity (7.1.0+13.10.20130805-0ubuntu1) saucy; urgency=low
+
+  [ Andrea Azzarone ]
+  * Add tests for unity::panel::Controller. These test are quite similar
+    to the ones for unity::launcher::Controller. (LP: #1207170)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3451
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 05 Aug 2013 04:03:56 +0000
+
 unity (7.1.0+13.10.20130802-0ubuntu1) saucy; urgency=low
 
   [ Stephen M. Webb ]
