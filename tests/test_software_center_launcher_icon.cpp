@@ -62,9 +62,8 @@ public:
 
 struct TestSoftwareCenterLauncherIcon : testing::Test
 {
-public:
   TestSoftwareCenterLauncherIcon()
-     : usc(std::make_shared<MockApplication::Nice>(USC_APP_INSTALL_DESKTOP, "softwarecenter"))
+     : usc(std::make_shared<MockApplication::Nice>(USC_APP_INSTALL_DESKTOP, "softwarecenter", "Ubuntu Software Center"))
      , icon(usc, "/com/canonical/unity/test/object/path", "")
   {}
 
@@ -164,6 +163,20 @@ TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedKeepsStickyStatus)
   icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
   ASSERT_TRUE(icon.IsSticky());
   EXPECT_TRUE(saved);
+}
+
+TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedUpdatesTooltip)
+{
+  icon.tooltip_text = "FooText";
+  icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
+  EXPECT_EQ("Ubuntu Software Center", icon.tooltip_text());
+}
+
+TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedUpdatesIcon)
+{
+  icon.icon_name = "foo-icon";
+  icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
+  EXPECT_EQ("softwarecenter", icon.icon_name());
 }
 
 TEST_F(TestSoftwareCenterLauncherIcon, Animate)
