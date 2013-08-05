@@ -115,8 +115,8 @@ private:
   void EnsureWindowState();
   void EnsureMenuItemsWindowsReady();
   void EnsureMenuItemsDefaultReady();
+  void EnsureMenuItemsStaticQuicklist();
   void UpdateBackgroundColor();
-  void UpdateMenus();
   void UpdateDesktopQuickList();
 
   void OpenInstanceWithUris(std::set<std::string> const& uris, Time timestamp);
