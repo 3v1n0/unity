@@ -10,12 +10,10 @@
 
 from __future__ import absolute_import
 
-from autopilot.ibus import (
+from unity.emulators.ibus import (
     get_active_input_engines,
     set_active_engines,
     get_available_input_engines,
-    get_gconf_option,
-    set_gconf_option,
     get_ibus_bus,
     )
 from autopilot.matchers import Eventually
