@@ -61,6 +61,8 @@ struct MockApplicationLauncherIcon : ApplicationLauncherIcon
   MOCK_METHOD0(UnStick, void());
   MOCK_CONST_METHOD0(GetRemoteMenus, glib::Object<DbusmenuMenuitem>());
 
+  bool GetLauncherIconIsSticky() const { return LauncherIcon::IsSticky(); }
+
   using ApplicationLauncherIcon::IsFileManager;
 };
 
@@ -207,6 +209,15 @@ TEST_F(TestApplicationLauncherIcon, StickAndSave)
   EXPECT_TRUE(mock_icon->IsSticky());
   EXPECT_TRUE(mock_icon->IsVisible());
   EXPECT_TRUE(saved);
+}
+
+TEST_F(TestApplicationLauncherIcon, StickStickedApplication)
+{
+  auto app = std::make_shared<MockApplication::Nice>(USC_DESKTOP);
+  app->sticky = true;
+  MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
+  ASSERT_TRUE(icon->IsSticky());
+  EXPECT_TRUE(icon->GetLauncherIconIsSticky());
 }
 
 TEST_F(TestApplicationLauncherIcon, UnstickNotRunning)
