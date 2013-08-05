@@ -58,7 +58,6 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(ApplicationPtr const& app
   , finished_(true)
   , needs_urgent_(false)
   , aptdaemon_trans_id_(aptdaemon_trans_id)
-  , app_title_(app->title())
 {
   SetQuirk(Quirk::VISIBLE, false);
   aptdaemon_trans_.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
@@ -203,7 +202,6 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
 
   if (exit_state.Str() == "exit-success")
   {
-    tooltip_text = app_title_;
     SetQuirk(Quirk::PROGRESS, false);
     SetQuirk(Quirk::URGENT, true);
     SetProgress(0.0f);
