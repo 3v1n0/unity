@@ -217,6 +217,7 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
     new_app->sticky = IsSticky();
     SetApplication(new_app);
     Stick();
+    position_saved.emit();
 
     _source_manager.AddIdle([this] {
       ShowTooltip();
