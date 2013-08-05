@@ -140,9 +140,8 @@ struct MockApplicationLauncherIcon : ApplicationLauncherIcon
   typedef bool Fake;
 
   MockApplicationLauncherIcon(Fake = true, std::string const& remote_uri = "")
-    : ApplicationLauncherIcon(std::make_shared<MockApplication::Nice>())
+    : MockApplicationLauncherIcon(std::make_shared<MockApplication::Nice>())
   {
-    InitMock();
     SetQuirk(Quirk::VISIBLE, true);
 
     if (!remote_uri.empty())
@@ -156,20 +155,13 @@ struct MockApplicationLauncherIcon : ApplicationLauncherIcon
   explicit MockApplicationLauncherIcon(ApplicationPtr const& app)
     : ApplicationLauncherIcon(app)
   {
-    InitMock();
-  }
-
-  MockApplicationLauncherIcon(std::string const& desktop_file)
-    : ApplicationLauncherIcon(std::make_shared<MockApplication::Nice>(desktop_file))
-  {
-    InitMock();
-  }
-
-  void InitMock()
-  {
     ON_CALL(*this, Stick(_)).WillByDefault(Invoke([this] (bool save) { ApplicationLauncherIcon::Stick(save); }));
     ON_CALL(*this, GetRemoteUri()).WillByDefault(Invoke([this] { return ReallyGetRemoteUri();}));
   }
+
+  MockApplicationLauncherIcon(std::string const& desktop_file)
+    : MockApplicationLauncherIcon(std::make_shared<MockApplication::Nice>(desktop_file))
+  {}
 
   std::string ReallyGetRemoteUri() const { return ApplicationLauncherIcon::GetRemoteUri(); }
 
@@ -721,7 +713,7 @@ TEST_F(TestLauncherController, RegisterIconDevice)
 
 TEST_F(TestLauncherController, RegisteredIconSavesPosition)
 {
-  MockApplicationLauncherIcon::Ptr app_icon(new NiceMock<MockApplicationLauncherIcon>(true, "normal-icon.desktop"));
+  MockApplicationLauncherIcon::Ptr app_icon(new MockApplicationLauncherIcon::Nice(true, "normal-icon.desktop"));
   lc.Impl()->RegisterIcon(app_icon);
   ASSERT_FALSE(favorite_store.IsFavorite(app_icon->RemoteUri()));
 
@@ -1253,11 +1245,11 @@ TEST_F(TestLauncherController, SaveIconsOrder)
   lc.DisconnectSignals();
   int priority = 0;
 
-  MockApplicationLauncherIcon::Ptr sticky_app(new NiceMock<MockApplicationLauncherIcon>(true, "sticky-app"));
+  MockApplicationLauncherIcon::Ptr sticky_app(new MockApplicationLauncherIcon::Nice(true, "sticky-app"));
   sticky_app->Stick(false);
   lc.Impl()->RegisterIcon(sticky_app, ++priority);
 
-  MockApplicationLauncherIcon::Ptr invisible_app(new NiceMock<MockApplicationLauncherIcon>(true, "invisible-app"));
+  MockApplicationLauncherIcon::Ptr invisible_app(new MockApplicationLauncherIcon::Nice(true, "invisible-app"));
   invisible_app->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, false);
   lc.Impl()->RegisterIcon(invisible_app, ++priority);
 
@@ -1288,7 +1280,7 @@ TEST_F(TestLauncherController, SaveIconsOrderWithOnlyStickyIcons)
   lc.ClearModel();
   int priority = 0;
 
-  MockApplicationLauncherIcon::Ptr sticky_app(new NiceMock<MockApplicationLauncherIcon>(true, "sticky-app"));
+  MockApplicationLauncherIcon::Ptr sticky_app(new MockApplicationLauncherIcon::Nice(true, "sticky-app"));
   sticky_app->Stick(false);
   lc.Impl()->RegisterIcon(sticky_app, ++priority);
 
@@ -1317,7 +1309,7 @@ TEST_F(TestLauncherController, SaveIconsOrderTriesToKeepIconProvidersOrder)
                                FavoriteStore::URI_PREFIX_APP + "bar.desktop", places::APPS_URI,
                                FavoriteStore::URI_PREFIX_APP + "foobar.desktop"});
 
-  MockApplicationLauncherIcon::Ptr sticky_app(new NiceMock<MockApplicationLauncherIcon>(true, "sticky-app"));
+  MockApplicationLauncherIcon::Ptr sticky_app(new MockApplicationLauncherIcon::Nice(true, "sticky-app"));
   sticky_app->Stick(false);
   lc.Impl()->RegisterIcon(sticky_app, ++priority);
 
@@ -1342,7 +1334,7 @@ TEST_F(TestLauncherController, SaveIconsOrderTriesToKeepIconProvidersOrder2)
   lc.ClearModel();
   int priority = 0;
 
-  MockApplicationLauncherIcon::Ptr sticky_app(new NiceMock<MockApplicationLauncherIcon>(true, "sticky-app"));
+  MockApplicationLauncherIcon::Ptr sticky_app(new MockApplicationLauncherIcon::Nice(true, "sticky-app"));
   sticky_app->Stick(false);
   lc.Impl()->RegisterIcon(sticky_app, ++priority);
 
@@ -1517,7 +1509,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedDeviceSection)
 
 TEST_F(TestLauncherController, OnFavoriteStoreFavoriteRemovedApplication)
 {
-  MockApplicationLauncherIcon::Ptr app_icon(new NiceMock<MockApplicationLauncherIcon>(true, "sticky-icon"));
+  MockApplicationLauncherIcon::Ptr app_icon(new MockApplicationLauncherIcon::Nice(true, "sticky-icon"));
   lc.Impl()->RegisterIcon(app_icon);
   app_icon->Stick(false);
 
@@ -1696,7 +1688,7 @@ TEST_F(TestLauncherController, SetExistingLauncherIconAsFavorite)
 {
   const char * desktop_file = "normal-icon.desktop";
   MockApplicationLauncherIcon::Ptr
-    app_icon(new NiceMock<MockApplicationLauncherIcon>(true, desktop_file));
+    app_icon(new MockApplicationLauncherIcon::Nice(true, desktop_file));
   lc.Impl()->RegisterIcon(app_icon);
   ASSERT_FALSE(favorite_store.IsFavorite(app_icon->RemoteUri()));
 
@@ -1711,7 +1703,7 @@ TEST_F(TestLauncherController, SetExistingLauncherIconAsNonFavorite)
 {
   const char * desktop_file = "normal-icon.desktop";
   MockApplicationLauncherIcon::Ptr
-    app_icon(new NiceMock<MockApplicationLauncherIcon>(true, desktop_file));
+    app_icon(new MockApplicationLauncherIcon::Nice(true, desktop_file));
   lc.Impl()->RegisterIcon(app_icon);
   ASSERT_FALSE(favorite_store.IsFavorite(app_icon->RemoteUri()));
   app_icon->Stick(true);
