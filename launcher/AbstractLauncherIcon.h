@@ -247,6 +247,7 @@ public:
   sigc::signal<void> visibility_changed;
   sigc::signal<void> position_saved;
   sigc::signal<void> position_forgot;
+  sigc::signal<void, std::string const&> uri_changed;
 
   connection::Wrapper on_icon_removed_connection;
 };
