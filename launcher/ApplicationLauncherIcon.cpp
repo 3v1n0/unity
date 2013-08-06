@@ -507,6 +507,7 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
   if (_desktop_file_monitor)
     _gsignals.Disconnect(_desktop_file_monitor, "changed");
 
+  auto old_uri = RemoteUri();
   UpdateRemoteUri();
   UpdateDesktopQuickList();
   UpdateBackgroundColor();
@@ -548,6 +549,7 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
 
     if (IsSticky())
     {
+      position_forgot.emit();
       position_saved.emit();
     }
   }
@@ -555,6 +557,11 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
   {
     UnStick();
   }
+
+  auto const& new_uri = RemoteUri();
+
+  if (old_uri != new_uri)
+    uri_changed.emit(new_uri);
 }
 
 std::string ApplicationLauncherIcon::DesktopFile() const
