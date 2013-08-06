@@ -156,7 +156,8 @@ struct MockApplicationLauncherIcon : ApplicationLauncherIcon
     : ApplicationLauncherIcon(app)
   {
     ON_CALL(*this, Stick(_)).WillByDefault(Invoke([this] (bool save) { ApplicationLauncherIcon::Stick(save); }));
-    ON_CALL(*this, GetRemoteUri()).WillByDefault(Invoke([this] { return ReallyGetRemoteUri();}));
+    ON_CALL(*this, UnStick()).WillByDefault(Invoke([this] { ApplicationLauncherIcon::UnStick(); }));
+    ON_CALL(*this, GetRemoteUri()).WillByDefault(Invoke([this] { return ReallyGetRemoteUri(); }));
   }
 
   MockApplicationLauncherIcon(std::string const& desktop_file)
@@ -722,6 +723,23 @@ TEST_F(TestLauncherController, RegisteredIconSavesPosition)
   EXPECT_TRUE(favorite_store.IsFavorite(app_icon->RemoteUri()));
 }
 
+TEST_F(TestLauncherController, RegisteredIconWithNoDesktopSavesPositionOnDesktopUpdated)
+{
+  auto app = std::make_shared<MockApplication::Nice>();
+  MockApplicationLauncherIcon::Ptr app_icon(new MockApplicationLauncherIcon::Nice(app));
+  lc.Impl()->RegisterIcon(app_icon);
+  app_icon->Stick(true);
+
+  ASSERT_TRUE(app_icon->RemoteUri().empty());
+  ASSERT_FALSE(favorite_store.IsFavorite(app_icon->RemoteUri()));
+
+  app->desktop_file_ = "brand-new-desktop-file.desktop";
+  app->desktop_file.changed.emit(app->desktop_file_);
+
+  EXPECT_FALSE(app_icon->RemoteUri().empty());
+  EXPECT_TRUE(favorite_store.IsFavorite(app_icon->RemoteUri()));
+}
+
 TEST_F(TestLauncherController, RegisteredIconForgetsPosition)
 {
   auto const& fav = lc.Impl()->GetIconByUri(favorite_store.GetFavorites().front());
@@ -729,6 +747,41 @@ TEST_F(TestLauncherController, RegisteredIconForgetsPosition)
 
   fav->UnStick();
   EXPECT_FALSE(favorite_store.IsFavorite(fav->RemoteUri()));
+}
+
+TEST_F(TestLauncherController, RegisteredIconWithNoDesktopForgetsPositionOnDesktopUpdated)
+{
+  auto app = std::make_shared<MockApplication::Nice>();
+  MockApplicationLauncherIcon::Ptr app_icon(new MockApplicationLauncherIcon::Nice(app));
+  lc.Impl()->RegisterIcon(app_icon);
+  app_icon->Stick(true);
+
+  app->desktop_file_ = "brand-new-desktop-file.desktop";
+  app->desktop_file.changed.emit(app->desktop_file_);
+  ASSERT_TRUE(favorite_store.IsFavorite(app_icon->RemoteUri()));
+
+  app_icon->UnStick();
+  EXPECT_FALSE(favorite_store.IsFavorite(app_icon->RemoteUri()));
+}
+
+TEST_F(TestLauncherController, RegisteredIconUpdatesPositionOnDesktopUpdated)
+{
+  auto app = std::make_shared<MockApplication::Nice>("awesome-app.desktop");
+  MockApplicationLauncherIcon::Ptr app_icon(new MockApplicationLauncherIcon::Nice(app));
+  lc.Impl()->RegisterIcon(app_icon);
+  auto old_uri = app_icon->RemoteUri();
+  app_icon->Stick(true);
+  ASSERT_TRUE(favorite_store.IsFavorite(old_uri));
+
+  app->desktop_file_ = "even_more_awesome_app.desktop";
+  app->desktop_file.changed.emit(app->desktop_file_);
+  ASSERT_NE(app_icon->RemoteUri(), old_uri);
+
+  EXPECT_FALSE(favorite_store.IsFavorite(old_uri));
+  ASSERT_TRUE(favorite_store.IsFavorite(app_icon->RemoteUri()));
+
+  app_icon->UnStick();
+  EXPECT_FALSE(favorite_store.IsFavorite(app_icon->RemoteUri()));
 }
 
 TEST_F(TestLauncherController, GetIconByUriDesktop)
