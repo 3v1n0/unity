@@ -310,6 +310,34 @@ TEST_F(TestApplicationLauncherIcon, UpdateDesktopEmptyForgetsIconPosition)
   EXPECT_TRUE(forgot);
 }
 
+TEST_F(TestApplicationLauncherIcon, UpdateDesktopUpdatesIconUri)
+{
+  bool updated = false;
+  usc_icon->uri_changed.connect([this, &updated] (std::string const& new_uri) {
+    updated = true;
+    EXPECT_EQ(usc_icon->RemoteUri(), new_uri);
+  });
+
+  usc_app->desktop_file_ = "";
+  usc_app->desktop_file.changed.emit(usc_app->desktop_file_);
+  EXPECT_TRUE(updated);
+
+  updated = false;
+  usc_app->desktop_file_ = UM_DESKTOP;
+  usc_app->desktop_file.changed.emit(usc_app->desktop_file_);
+  EXPECT_TRUE(updated);
+}
+
+
+TEST_F(TestApplicationLauncherIcon, UpdateDesktopDoesntUpdatesIconUri)
+{
+  bool updated = false;
+  usc_icon->uri_changed.connect([&updated] (std::string const& new_uri) { updated = true; });
+  usc_app->desktop_file.changed.emit(usc_app->desktop_file_);
+
+  EXPECT_FALSE(updated);
+}
+
 TEST_F(TestApplicationLauncherIcon, RemoteUri)
 {
   EXPECT_EQ(usc_icon->RemoteUri(), FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(USC_DESKTOP));
