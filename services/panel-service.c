@@ -32,6 +32,9 @@
 #include <X11/extensions/XInput2.h>
 #include <X11/XKBlib.h>
 
+#include <upstart.h>
+#include <nih/alloc.h>
+
 G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 
 #define GET_PRIVATE(o) \
@@ -75,6 +78,8 @@ struct _PanelServicePrivate
 
   IndicatorObjectEntry *pressed_entry;
   gboolean use_event;
+
+  NihDBusProxy * upstart;
 };
 
 /* Globals */
@@ -148,6 +153,12 @@ panel_service_class_dispose (GObject *self)
 
   g_idle_remove_by_data (self);
   gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, self);
+
+  if (priv->upstart != NULL) 
+    {
+      nih_unref(priv->upstart, NULL);
+      priv->upstart = NULL;
+    }
 
   if (GTK_IS_WIDGET (priv->menubar) &&
       gtk_widget_get_realized (GTK_WIDGET (priv->menubar)))
@@ -489,7 +500,7 @@ ready_signal (PanelService *self)
                      &error);
 
       if (error)
-	      {
+        {
           /* NOTE: When we get to the point where we can start
              assuming upstart user sessions this can be escillated
              to a warning or higher */
@@ -590,6 +601,25 @@ panel_service_init (PanelService *self)
                     G_CALLBACK(on_keybinding_changed), self);
 
   panel_service_update_menu_keybinding (self);
+
+  const gchar * upstartsession = g_getenv("UPSTART_SESSION");
+  if (upstartsession != NULL)
+    {
+      DBusConnection * conn = NULL;
+      conn = dbus_connection_open(upstartsession, NULL);
+      if (conn != NULL)
+    {
+          priv->upstart = nih_dbus_proxy_new(NULL, conn,
+                                             NULL,
+                                             DBUS_PATH_UPSTART,
+                                             NULL, NULL);
+          dbus_connection_unref(conn);
+        }
+    }
+
+  if (priv->upstart != NULL)
+    priv->upstart->auto_start = FALSE;
+
 }
 
 static gboolean
