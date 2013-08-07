@@ -129,7 +129,7 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
 
   // Make sure we set the LauncherIcon stick bit too...
   if (app_->sticky())
-    SimpleLauncherIcon::Stick(false); // don't emit the signal
+    Stick(false); // don't emit the signal
 }
 
 void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
@@ -242,7 +242,8 @@ void ApplicationLauncherIcon::Remove()
 bool ApplicationLauncherIcon::IsSticky() const
 {
   if (app_)
-    return app_->sticky();
+    return app_->sticky() && SimpleLauncherIcon::IsSticky();
+
   return false;
 }
 
@@ -508,6 +509,7 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
   UpdateRemoteUri();
   UpdateDesktopQuickList();
   UpdateBackgroundColor();
+  auto const& new_uri = RemoteUri();
 
   if (!filename.empty())
   {
@@ -544,18 +546,16 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
       }
     });
 
-    if (IsSticky())
+    if (app_->sticky() && old_uri != new_uri)
     {
-      position_forgot.emit();
-      position_saved.emit();
+      UnStick();
+      Stick();
     }
   }
-  else if (IsSticky())
+  else if (app_->sticky())
   {
     UnStick();
   }
-
-  auto const& new_uri = RemoteUri();
 
   if (old_uri != new_uri)
     uri_changed.emit(new_uri);
@@ -843,18 +843,20 @@ void ApplicationLauncherIcon::Stick(bool save)
     return;
 
   app_->sticky = true;
-  SimpleLauncherIcon::Stick(save);
+
+  if (RemoteUri().empty())
+    app_->CreateLocalDesktopFile();
+  else
+    SimpleLauncherIcon::Stick(save);
 }
 
 void ApplicationLauncherIcon::UnStick()
 {
-  SimpleLauncherIcon::UnStick();
-
   if (!IsSticky())
     return;
 
+  SimpleLauncherIcon::UnStick();
   SetQuirk(Quirk::VISIBLE, app_->running());
-
   app_->sticky = false;
 
   if (!app_->running())
