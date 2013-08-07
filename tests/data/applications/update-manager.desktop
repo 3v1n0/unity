@@ -8,3 +8,9 @@ Terminal=false
 Type=Application
 Categories=System;Settings;
 X-Ubuntu-Gettext-Domain=update-manager
+Actions=UpdateAction;
+
+[Desktop Action UpdateAction]
+Name=Update Action
+Exec=/bin/true
+OnlyShowIn=Unity

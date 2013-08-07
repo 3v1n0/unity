@@ -139,7 +139,7 @@ public:
 
   virtual nux::Color GlowColor();
 
-  std::string RemoteUri()
+  std::string RemoteUri() const
   {
     return GetRemoteUri();
   }
@@ -180,7 +180,7 @@ public:
     OnDndLeave();
   }
 
-  virtual std::string DesktopFile() { return std::string(""); }
+  virtual std::string DesktopFile() const { return std::string(); }
 
   virtual bool IsSticky() const { return _sticky; }
 
@@ -231,7 +231,7 @@ protected:
 
   virtual void OnCenterStabilized(std::vector<nux::Point3> center) {}
 
-  virtual std::string GetRemoteUri()
+  virtual std::string GetRemoteUri() const
   {
     return "";
   }

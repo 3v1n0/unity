@@ -63,7 +63,6 @@ private:
   bool finished_;
   bool needs_urgent_;
   std::string aptdaemon_trans_id_;
-  std::string app_title_;
 };
 
 }

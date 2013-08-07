@@ -40,6 +40,7 @@ namespace
 {
 const std::string DEFAULT_EMPTY_ICON = "application-default-icon";
 const std::string USC_DESKTOP = BUILDDIR"/tests/data/applications/ubuntu-software-center.desktop";
+const std::string UM_DESKTOP = BUILDDIR"/tests/data/applications/update-manager.desktop";
 const std::string NO_ICON_DESKTOP = BUILDDIR"/tests/data/applications/no-icon.desktop";
 
 struct MockApplicationLauncherIcon : ApplicationLauncherIcon
@@ -60,6 +61,8 @@ struct MockApplicationLauncherIcon : ApplicationLauncherIcon
   MOCK_METHOD0(Stick, void());
   MOCK_METHOD0(UnStick, void());
   MOCK_CONST_METHOD0(GetRemoteMenus, glib::Object<DbusmenuMenuitem>());
+
+  bool LauncherIconIsSticky() const { return LauncherIcon::IsSticky(); }
 
   using ApplicationLauncherIcon::IsFileManager;
 };
@@ -209,6 +212,15 @@ TEST_F(TestApplicationLauncherIcon, StickAndSave)
   EXPECT_TRUE(saved);
 }
 
+TEST_F(TestApplicationLauncherIcon, StickStickedApplication)
+{
+  auto app = std::make_shared<MockApplication::Nice>(USC_DESKTOP);
+  app->sticky = true;
+  MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
+  ASSERT_TRUE(icon->IsSticky());
+  EXPECT_TRUE(icon->LauncherIconIsSticky());
+}
+
 TEST_F(TestApplicationLauncherIcon, UnstickNotRunning)
 {
   bool forgot = false;
@@ -235,6 +247,95 @@ TEST_F(TestApplicationLauncherIcon, UnstickRunning)
   EXPECT_FALSE(mock_icon->IsSticky());
   EXPECT_TRUE(mock_icon->IsVisible());
   EXPECT_TRUE(forgot);
+}
+
+TEST_F(TestApplicationLauncherIcon, UpdateDesktopFile)
+{
+  usc_app->desktop_file_ = UM_DESKTOP;
+  usc_app->desktop_file.changed.emit(usc_app->desktop_file_);
+
+  EXPECT_EQ(UM_DESKTOP, usc_icon->DesktopFile());
+}
+
+TEST_F(TestApplicationLauncherIcon, UpdateDesktopFileRemoteUri)
+{
+  usc_app->desktop_file_ = UM_DESKTOP;
+  usc_app->desktop_file.changed.emit(usc_app->desktop_file_);
+
+  EXPECT_EQ(FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(UM_DESKTOP), usc_icon->RemoteUri());
+}
+
+TEST_F(TestApplicationLauncherIcon, UpdateDesktopStaticQuicklistEmpty)
+{
+  usc_app->desktop_file_ = NO_ICON_DESKTOP;
+  usc_app->desktop_file.changed.emit(usc_app->desktop_file_);
+
+  EXPECT_FALSE(HasMenuItemWithLabel(usc_icon, "Test Action"));
+}
+
+TEST_F(TestApplicationLauncherIcon, UpdateDesktopStaticQuicklist)
+{
+  usc_app->desktop_file_ = UM_DESKTOP;
+  usc_app->desktop_file.changed.emit(usc_app->desktop_file_);
+
+  EXPECT_FALSE(HasMenuItemWithLabel(usc_icon, "Test Action"));
+  EXPECT_TRUE(HasMenuItemWithLabel(usc_icon, "Update Action"));
+}
+
+TEST_F(TestApplicationLauncherIcon, UpdateDesktopReSavesIconPosition)
+{
+  mock_icon->Stick(true);
+
+  bool saved = false;
+  mock_icon->position_saved.connect([&saved] {saved = true;});
+  mock_app->desktop_file_ = UM_DESKTOP;
+  mock_app->desktop_file.changed.emit(usc_app->desktop_file_);
+
+  EXPECT_TRUE(mock_app->sticky());
+  EXPECT_TRUE(mock_icon->IsSticky());
+  EXPECT_TRUE(saved);
+}
+
+TEST_F(TestApplicationLauncherIcon, UpdateDesktopEmptyForgetsIconPosition)
+{
+  usc_icon->Stick(true);
+
+  bool forgot = false;
+  usc_icon->position_forgot.connect([&forgot] {forgot = true;});
+  usc_app->desktop_file_ = "";
+  usc_app->desktop_file.changed.emit(usc_app->desktop_file_);
+
+  EXPECT_FALSE(mock_app->sticky());
+  EXPECT_FALSE(mock_icon->IsSticky());
+  EXPECT_TRUE(forgot);
+}
+
+TEST_F(TestApplicationLauncherIcon, UpdateDesktopUpdatesIconUri)
+{
+  bool updated = false;
+  usc_icon->uri_changed.connect([this, &updated] (std::string const& new_uri) {
+    updated = true;
+    EXPECT_EQ(usc_icon->RemoteUri(), new_uri);
+  });
+
+  usc_app->desktop_file_ = "";
+  usc_app->desktop_file.changed.emit(usc_app->desktop_file_);
+  EXPECT_TRUE(updated);
+
+  updated = false;
+  usc_app->desktop_file_ = UM_DESKTOP;
+  usc_app->desktop_file.changed.emit(usc_app->desktop_file_);
+  EXPECT_TRUE(updated);
+}
+
+
+TEST_F(TestApplicationLauncherIcon, UpdateDesktopDoesntUpdatesIconUri)
+{
+  bool updated = false;
+  usc_icon->uri_changed.connect([&updated] (std::string const& new_uri) { updated = true; });
+  usc_app->desktop_file.changed.emit(usc_app->desktop_file_);
+
+  EXPECT_FALSE(updated);
 }
 
 TEST_F(TestApplicationLauncherIcon, RemoteUri)

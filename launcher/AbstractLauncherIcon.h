@@ -195,7 +195,7 @@ public:
 
   virtual IconType GetIconType() const = 0;
 
-  virtual std::string RemoteUri() = 0;
+  virtual std::string RemoteUri() const = 0;
 
   virtual MenuItemsVector Menus() = 0;
 
@@ -212,7 +212,7 @@ public:
   virtual void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote) = 0;
   virtual void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote) = 0;
 
-  virtual std::string DesktopFile() = 0;
+  virtual std::string DesktopFile() const = 0;
 
   virtual bool IsSticky() const = 0;
 
@@ -247,6 +247,7 @@ public:
   sigc::signal<void> visibility_changed;
   sigc::signal<void> position_saved;
   sigc::signal<void> position_forgot;
+  sigc::signal<void, std::string const&> uri_changed;
 
   connection::Wrapper on_icon_removed_connection;
 };

@@ -51,7 +51,7 @@ std::string DesktopLauncherIcon::GetName() const
   return "DesktopLauncherIcon";
 }
 
-std::string DesktopLauncherIcon::GetRemoteUri()
+std::string DesktopLauncherIcon::GetRemoteUri() const
 {
   return FavoriteStore::URI_PREFIX_UNITY + "desktop-icon";
 }
