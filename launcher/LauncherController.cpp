@@ -225,7 +225,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
     if (launchers[i]->monitor() != monitor)
     {
 #ifdef USE_X11
-      edge_barriers_.Unsubscribe(launchers[i].GetPointer(), launchers[i]->monitor);
+      edge_barriers_.RemoveVerticalSubscriber(launchers[i].GetPointer(), launchers[i]->monitor);
 #endif
       launchers[i]->monitor = monitor;
     }
@@ -235,7 +235,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
     }
 
 #ifdef USE_X11
-    edge_barriers_.Subscribe(launchers[i].GetPointer(), launchers[i]->monitor);
+    edge_barriers_.AddVerticalSubscriber(launchers[i].GetPointer(), launchers[i]->monitor);
 #endif
   }
 
@@ -247,7 +247,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
       parent_->RemoveChild(launcher.GetPointer());
       launcher->GetParent()->UnReference();
 #ifdef USE_X11
-      edge_barriers_.Unsubscribe(launcher.GetPointer(), launcher->monitor);
+      edge_barriers_.RemoveVerticalSubscriber(launcher.GetPointer(), launcher->monitor);
 #endif
     }
   }

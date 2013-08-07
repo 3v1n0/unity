@@ -413,7 +413,7 @@ TEST_F(TestLauncherController, MultiMonitorEdgeBarrierSubscriptions)
   uscreen.SetupFakeMultiMonitor();
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
-    ASSERT_EQ(lc.Impl()->edge_barriers_.GetSubscriber(i), lc.launchers()[i].GetPointer());
+    ASSERT_EQ(lc.Impl()->edge_barriers_.GetVerticalSubscriber(i), lc.launchers()[i].GetPointer());
 }
 
 TEST_F(TestLauncherController, SingleMonitorEdgeBarrierSubscriptionsUpdates)
@@ -429,11 +429,11 @@ TEST_F(TestLauncherController, SingleMonitorEdgeBarrierSubscriptionsUpdates)
     {
       if (j == i)
       {
-        ASSERT_EQ(lc.Impl()->edge_barriers_.GetSubscriber(j), &lc.launcher());
+        ASSERT_EQ(lc.Impl()->edge_barriers_.GetVerticalSubscriber(j), &lc.launcher());
       }
       else
       {
-        ASSERT_EQ(lc.Impl()->edge_barriers_.GetSubscriber(j), nullptr);
+        ASSERT_EQ(lc.Impl()->edge_barriers_.GetVerticalSubscriber(j), nullptr);
       }
     }
   }

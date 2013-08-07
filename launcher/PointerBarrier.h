@@ -51,7 +51,15 @@ enum BarrierDirection
 {
   BOTH = 0,
   LEFT = 1,
+  UP = 2, // FIXME
   RIGHT = 4,
+  DOWN =  8 // FIXME
+};
+
+enum BarrierOrientation
+{
+  VERTICAL = 0,
+  HORIZONTAL
 };
 
 class PointerBarrierWrapper : public sigc::trackable
@@ -80,6 +88,7 @@ public:
   nux::Property<int> index;
 
   nux::Property<BarrierDirection> direction;
+  nux::Property<BarrierOrientation> orientation;
 
   virtual void ConstructBarrier();
   virtual void DestroyBarrier();
