@@ -89,6 +89,8 @@ public:
   // Calls quit on all the Windows for this application.
   virtual void Quit() const = 0;
 
+  virtual bool CreateLocalDesktopFile() const = 0;
+
   nux::ROProperty<std::string> desktop_file;
   nux::ROProperty<std::string> title;
   nux::ROProperty<std::string> icon;
