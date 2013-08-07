@@ -156,6 +156,11 @@ panel_service_class_dispose (GObject *self)
 
   if (priv->upstart != NULL) 
     {
+      int event_sent = 0;
+	  event_sent = upstart_emit_event_sync(NULL, priv->upstart, "indicator-services-end", NULL, 0);
+	  if (event_sent != 0)
+	     g_warning("Unable to signal for indicator services to start");
+
       nih_unref(priv->upstart, NULL);
       priv->upstart = NULL;
     }
