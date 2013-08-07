@@ -89,7 +89,7 @@ struct TestApplicationLauncherIcon : Test
     empty_icon = new NiceMock<MockApplicationLauncherIcon>(empty_app);
     ASSERT_EQ(empty_icon->DesktopFile(), NO_ICON_DESKTOP);
 
-    mock_app = std::make_shared<MockApplication::Nice>("");
+    mock_app = std::make_shared<MockApplication::Nice>();
     mock_icon = new NiceMock<MockApplicationLauncherIcon>(mock_app);
     ASSERT_TRUE(mock_icon->DesktopFile().empty());
   }
@@ -185,7 +185,7 @@ TEST_F(TestApplicationLauncherIcon, TestDefaultIcon)
   EXPECT_EQ(mock_icon->icon_name(), DEFAULT_EMPTY_ICON);
 }
 
-TEST_F(TestApplicationLauncherIcon, Stick)
+TEST_F(TestApplicationLauncherIcon, StickDesktopApp)
 {
   bool saved = false;
   usc_icon->position_saved.connect([&saved] {saved = true;});
@@ -200,76 +200,133 @@ TEST_F(TestApplicationLauncherIcon, Stick)
   EXPECT_FALSE(saved);
 }
 
-TEST_F(TestApplicationLauncherIcon, StickAndSave)
+TEST_F(TestApplicationLauncherIcon, StickDesktopLessApp)
+{
+  bool saved = false;
+  mock_icon->position_saved.connect([&saved] {saved = true;});
+
+  mock_icon->Stick(false);
+  EXPECT_TRUE(mock_app->sticky());
+  EXPECT_FALSE(mock_icon->IsSticky());
+  EXPECT_FALSE(mock_icon->IsVisible());
+  EXPECT_FALSE(saved);
+
+  mock_icon->Stick(true);
+  EXPECT_FALSE(saved);
+}
+
+TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopApp)
+{
+  bool saved = false;
+  usc_icon->position_saved.connect([&saved] {saved = true;});
+
+  usc_icon->Stick(true);
+  EXPECT_TRUE(usc_app->sticky());
+  EXPECT_TRUE(usc_icon->IsSticky());
+  EXPECT_TRUE(usc_icon->IsVisible());
+  EXPECT_TRUE(saved);
+}
+
+TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopLessApp)
 {
   bool saved = false;
   mock_icon->position_saved.connect([&saved] {saved = true;});
 
   mock_icon->Stick(true);
   EXPECT_TRUE(mock_app->sticky());
-  EXPECT_TRUE(mock_icon->IsSticky());
-  EXPECT_TRUE(mock_icon->IsVisible());
-  EXPECT_TRUE(saved);
+  EXPECT_FALSE(mock_icon->IsSticky());
+  EXPECT_FALSE(mock_icon->IsVisible());
+  EXPECT_FALSE(saved);
 }
 
-TEST_F(TestApplicationLauncherIcon, StickStickedApplication)
+TEST_F(TestApplicationLauncherIcon, StickStickedDesktopApp)
 {
   auto app = std::make_shared<MockApplication::Nice>(USC_DESKTOP);
   app->sticky = true;
+  app->desktop_file_ = UM_DESKTOP;
   MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
   ASSERT_TRUE(icon->IsSticky());
   EXPECT_TRUE(icon->LauncherIconIsSticky());
 }
 
+TEST_F(TestApplicationLauncherIcon, StickStickedDesktopLessApp)
+{
+  auto app = std::make_shared<MockApplication::Nice>();
+  app->sticky = true;
+  MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
+  ASSERT_FALSE(icon->IsSticky());
+  EXPECT_FALSE(icon->LauncherIconIsSticky());
+}
+
+TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopApplication)
+{
+  EXPECT_CALL(*usc_app, CreateLocalDesktopFile()).Times(0);
+  usc_icon->Stick(true);
+
+  EXPECT_TRUE(usc_icon->IsSticky());
+}
+
+TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopLessApplication)
+{
+  auto app = std::make_shared<MockApplication::Nice>();
+  MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
+
+  EXPECT_CALL(*app, CreateLocalDesktopFile());
+  icon->Stick(true);
+
+  EXPECT_TRUE(app->sticky());
+  EXPECT_FALSE(icon->IsSticky());
+}
+
 TEST_F(TestApplicationLauncherIcon, UnstickNotRunning)
 {
   bool forgot = false;
-  mock_app->running_ = false;
-  mock_icon->position_forgot.connect([&forgot] {forgot = true;});
+  usc_app->running_ = false;
+  usc_icon->position_forgot.connect([&forgot] {forgot = true;});
 
-  mock_icon->Stick();
-  mock_icon->UnStick();
-  EXPECT_FALSE(mock_app->sticky());
-  EXPECT_FALSE(mock_icon->IsSticky());
-  EXPECT_FALSE(mock_icon->IsVisible());
+  usc_icon->Stick();
+  usc_icon->UnStick();
+  EXPECT_FALSE(usc_app->sticky());
+  EXPECT_FALSE(usc_icon->IsSticky());
+  EXPECT_FALSE(usc_icon->IsVisible());
   EXPECT_TRUE(forgot);
 }
 
 TEST_F(TestApplicationLauncherIcon, UnstickRunning)
 {
   bool forgot = false;
-  mock_app->running_ = true;
-  mock_icon->position_forgot.connect([&forgot] {forgot = true;});
+  usc_app->running_ = true;
+  usc_icon->position_forgot.connect([&forgot] {forgot = true;});
 
-  mock_icon->Stick();
-  mock_icon->UnStick();
-  EXPECT_FALSE(mock_app->sticky());
-  EXPECT_FALSE(mock_icon->IsSticky());
-  EXPECT_TRUE(mock_icon->IsVisible());
+  usc_icon->Stick();
+  usc_icon->UnStick();
+  EXPECT_FALSE(usc_app->sticky());
+  EXPECT_FALSE(usc_icon->IsSticky());
+  EXPECT_TRUE(usc_icon->IsVisible());
   EXPECT_TRUE(forgot);
 }
 
 TEST_F(TestApplicationLauncherIcon, VisibleChanged)
 {
-  mock_app->visible_ = true;
-  mock_app->visible.changed(mock_app->visible_);
-  ASSERT_TRUE(mock_icon->IsVisible());
+  usc_app->visible_ = true;
+  usc_app->visible.changed(usc_app->visible_);
+  ASSERT_TRUE(usc_icon->IsVisible());
 
-  mock_app->visible_ = false;
-  mock_app->visible.changed(mock_app->visible_);
-  EXPECT_FALSE(mock_icon->IsVisible());
+  usc_app->visible_ = false;
+  usc_app->visible.changed(usc_app->visible_);
+  EXPECT_FALSE(usc_icon->IsVisible());
 }
 
 TEST_F(TestApplicationLauncherIcon, VisibleChangedSticky)
 {
-  mock_icon->Stick();
-  mock_app->visible_ = true;
-  mock_app->visible.changed(mock_app->visible_);
-  ASSERT_TRUE(mock_icon->IsVisible());
+  usc_icon->Stick();
+  usc_app->visible_ = true;
+  usc_app->visible.changed(usc_app->visible_);
+  ASSERT_TRUE(usc_icon->IsVisible());
 
-  mock_app->visible_ = false;
-  mock_app->visible.changed(mock_app->visible_);
-  EXPECT_TRUE(mock_icon->IsVisible());
+  usc_app->visible_ = false;
+  usc_app->visible.changed(usc_app->visible_);
+  EXPECT_TRUE(usc_icon->IsVisible());
 }
 
 TEST_F(TestApplicationLauncherIcon, UpdateDesktopFile)
@@ -636,50 +693,49 @@ TEST_F(TestApplicationLauncherIcon, QuicklistMenuHasAppName)
 
 TEST_F(TestApplicationLauncherIcon, QuicklistMenuHasLockToLauncher)
 {
-  mock_app->sticky = false;
-  EXPECT_TRUE(HasMenuItemWithLabel(mock_icon, "Lock to Launcher"));
-  EXPECT_FALSE(HasMenuItemWithLabel(mock_icon, "Unlock from Launcher"));
+  usc_app->sticky = false;
+  EXPECT_TRUE(HasMenuItemWithLabel(usc_icon, "Lock to Launcher"));
+  EXPECT_FALSE(HasMenuItemWithLabel(usc_icon, "Unlock from Launcher"));
 }
 
 TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemLockToLauncher)
 {
   bool saved = false;
-  mock_app->sticky = false;
-  mock_icon->position_saved.connect([&saved] {saved = true;});
+  usc_icon->position_saved.connect([&saved] {saved = true;});
 
-  auto const& menu_item = GetMenuItemWithLabel(mock_icon, "Lock to Launcher");
+  auto const& menu_item = GetMenuItemWithLabel(usc_icon, "Lock to Launcher");
   ASSERT_NE(menu_item, nullptr);
 
-  EXPECT_CALL(*mock_icon, Stick(true));
+  EXPECT_CALL(*usc_icon, Stick(true));
   dbusmenu_menuitem_handle_event(menu_item, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
 
   EXPECT_TRUE(saved);
-  EXPECT_TRUE(mock_app->sticky());
-  EXPECT_TRUE(mock_icon->IsSticky());
+  EXPECT_TRUE(usc_app->sticky());
+  EXPECT_TRUE(usc_icon->IsSticky());
 }
 
 TEST_F(TestApplicationLauncherIcon, QuicklistMenuHasUnLockToLauncher)
 {
-  mock_app->sticky = true;
-  EXPECT_TRUE(HasMenuItemWithLabel(mock_icon, "Unlock from Launcher"));
-  EXPECT_FALSE(HasMenuItemWithLabel(mock_icon, "Lock to Launcher"));
+  usc_icon->Stick();
+  EXPECT_TRUE(HasMenuItemWithLabel(usc_icon, "Unlock from Launcher"));
+  EXPECT_FALSE(HasMenuItemWithLabel(usc_icon, "Lock to Launcher"));
 }
 
 TEST_F(TestApplicationLauncherIcon, QuicklistMenuItemUnLockFromLauncher)
 {
   bool forgot = false;
-  mock_icon->position_forgot.connect([&forgot] {forgot = true;});
-  mock_icon->Stick();
+  usc_icon->position_forgot.connect([&forgot] {forgot = true;});
+  usc_icon->Stick();
 
-  auto const& menu_item = GetMenuItemWithLabel(mock_icon, "Unlock from Launcher");
+  auto const& menu_item = GetMenuItemWithLabel(usc_icon, "Unlock from Launcher");
   ASSERT_NE(menu_item, nullptr);
 
-  EXPECT_CALL(*mock_icon, UnStick());
+  EXPECT_CALL(*usc_icon, UnStick());
   dbusmenu_menuitem_handle_event(menu_item, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, 0);
 
   EXPECT_TRUE(forgot);
-  EXPECT_FALSE(mock_app->sticky());
-  EXPECT_FALSE(mock_icon->IsSticky());
+  EXPECT_FALSE(usc_app->sticky());
+  EXPECT_FALSE(usc_icon->IsSticky());
 }
 
 TEST_F(TestApplicationLauncherIcon, QuicklistMenuHasNotQuit)
