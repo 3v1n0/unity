@@ -478,35 +478,12 @@ initial_resync (PanelService *self)
 static gboolean
 ready_signal (PanelService *self)
 {
-  if (PANEL_IS_SERVICE (self))
+  if (PANEL_IS_SERVICE (self) && self->priv->upstart != NULL)
     {
-      GError * error = NULL;
-      gchar * argv[] = {
-        "initctl",
-        "--session",
-        "--user",
-        "emit",
-        "--no-wait",
-        "indicators-loaded",
-        NULL,
-      };
-
-      g_spawn_async (NULL, /* Working Directory */
-                     argv,
-                     NULL, /* environment */
-                     G_SPAWN_SEARCH_PATH,
-                     NULL, NULL, /* child setup function */
-                     NULL, /* Pid */
-                     &error);
-
-      if (error)
-        {
-          /* NOTE: When we get to the point where we can start
-             assuming upstart user sessions this can be escillated
-             to a warning or higher */
-          g_debug ("Unable to signal indicators-loaded to upstart: %s", error->message);
-          g_error_free (error);
-        }
+      int event_sent = 0;
+	  event_sent = upstart_emit_event_sync(NULL, self->priv->upstart, "indicator-services-start", NULL, 0);
+	  if (event_sent != 0)
+	     g_warning("Unable to signal for indicator services to start");
     }
 
   return FALSE;
