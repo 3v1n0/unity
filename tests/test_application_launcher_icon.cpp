@@ -249,6 +249,29 @@ TEST_F(TestApplicationLauncherIcon, UnstickRunning)
   EXPECT_TRUE(forgot);
 }
 
+TEST_F(TestApplicationLauncherIcon, VisibleChanged)
+{
+  mock_app->visible_ = true;
+  mock_app->visible.changed(mock_app->visible_);
+  ASSERT_TRUE(mock_icon->IsVisible());
+
+  mock_app->visible_ = false;
+  mock_app->visible.changed(mock_app->visible_);
+  EXPECT_FALSE(mock_icon->IsVisible());
+}
+
+TEST_F(TestApplicationLauncherIcon, VisibleChangedSticky)
+{
+  mock_icon->Stick();
+  mock_app->visible_ = true;
+  mock_app->visible.changed(mock_app->visible_);
+  ASSERT_TRUE(mock_icon->IsVisible());
+
+  mock_app->visible_ = false;
+  mock_app->visible.changed(mock_app->visible_);
+  EXPECT_TRUE(mock_icon->IsVisible());
+}
+
 TEST_F(TestApplicationLauncherIcon, UpdateDesktopFile)
 {
   usc_app->desktop_file_ = UM_DESKTOP;
