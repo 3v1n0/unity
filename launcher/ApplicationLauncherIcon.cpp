@@ -75,16 +75,6 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   , use_custom_bg_color_(false)
   , bg_color_(nux::color::White)
 {
-  app->seen = true;
-
-  tooltip_text = app->title();
-  std::string const& icon = app->icon();
-  icon_name = (icon.empty() ? DEFAULT_ICON : icon);
-
-  SetQuirk(Quirk::VISIBLE, app->visible());
-  SetQuirk(Quirk::ACTIVE, app->active());
-  SetQuirk(Quirk::RUNNING, app->running());
-
   LOG_INFO(logger) << "Created ApplicationLauncherIcon: "
     << tooltip_text()
     << ", icon: " << icon_name()
@@ -94,10 +84,6 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
     << ", running: " << (app->running() ? "yes" : "no");
 
   SetApplication(app);
-
-  // Make sure we set the LauncherIcon stick bit too...
-  if (app->sticky())
-    SimpleLauncherIcon::Stick(false); // don't emit the signal
 
   WindowManager& wm = WindowManager::Default();
   wm.window_minimized.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::OnWindowMinimized));
@@ -110,11 +96,7 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
 
 ApplicationLauncherIcon::~ApplicationLauncherIcon()
 {
-  if (app_)
-  {
-    app_->sticky = false;
-    app_->seen = false;
-  }
+  SetApplication(nullptr);
 }
 
 void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
@@ -122,16 +104,32 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
   if (app_ == app)
     return;
 
+  if (app_)
+  {
+    app_->sticky = false;
+    app_->seen = false;
+  }
+
   signals_conn_.Clear();
 
+  if (!app)
+    return;
+
   app_ = app;
+  app_->seen = true;
   SetupApplicationSignalsConnections();
 
-  // It's very likely that application desktop file has been changed, we need to
-  // inform the icon to make sure that it reloads the informations from it.
+  // Let's update the icon properties to match the new application ones
   app_->desktop_file.changed.emit(app_->desktop_file());
   app_->title.changed.emit(app_->title());
   app_->icon.changed.emit(app_->icon());
+  app_->visible.changed.emit(app_->visible());
+  app_->active.changed.emit(app_->active());
+  app_->running.changed.emit(app_->running());
+
+  // Make sure we set the LauncherIcon stick bit too...
+  if (app_->sticky())
+    SimpleLauncherIcon::Stick(false); // don't emit the signal
 }
 
 void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
@@ -187,8 +185,7 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
   }));
 
   signals_conn_.Add(app_->visible.changed.connect([this](bool const& visible) {
-    if (!IsSticky())
-      SetQuirk(Quirk::VISIBLE, visible);
+    SetQuirk(Quirk::VISIBLE, IsSticky() ? true : visible);
   }));
 
   signals_conn_.Add(app_->closed.connect([this]() {
