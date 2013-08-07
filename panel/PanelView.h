@@ -32,6 +32,7 @@
 
 #include <UnityCore/DBusIndicators.h>
 
+#include "launcher/EdgeBarrierController.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/Introspectable.h"
 #include "unity-shared/MockableBaseWindow.h"
@@ -43,7 +44,9 @@
 namespace unity
 {
 
-class PanelView : public unity::debug::Introspectable, public nux::View
+class PanelView : public unity::debug::Introspectable, 
+                  public ui::EdgeBarrierSubscriber,
+                  public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(PanelView, nux::View);
 public:
@@ -72,6 +75,8 @@ public:
   void SetLauncherWidth(int width);
 
   bool IsMouseInsideIndicator(nux::Point const& mouse_position) const;
+
+  ui::EdgeBarrierSubscriber::Result HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event) override;
 
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);

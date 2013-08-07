@@ -42,6 +42,8 @@ struct EdgeBarrierSubscriber
 class EdgeBarrierController : public sigc::trackable
 {
 public:
+  typedef std::shared_ptr<EdgeBarrierController> Ptr;
+
   EdgeBarrierController();
   ~EdgeBarrierController();
 

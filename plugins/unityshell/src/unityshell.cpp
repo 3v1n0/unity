@@ -46,6 +46,7 @@
 #include "unityshell.h"
 #include "BackgroundEffectHelper.h"
 #include "UnityGestureBroker.h"
+#include "launcher/EdgeBarrierController.h"
 #include "launcher/XdndCollectionWindowImp.h"
 #include "launcher/XdndManagerImp.h"
 #include "launcher/XdndStartStopNotifierImp.h"
@@ -3247,8 +3248,9 @@ void UnityScreen::initLauncher()
   auto xdnd_collection_window = std::make_shared<XdndCollectionWindowImp>();
   auto xdnd_start_stop_notifier = std::make_shared<XdndStartStopNotifierImp>();
   auto xdnd_manager = std::make_shared<XdndManagerImp>(xdnd_start_stop_notifier, xdnd_collection_window);
+  auto edge_barriers = std::make_shared<ui::EdgeBarrierController>();
 
-  launcher_controller_ = std::make_shared<launcher::Controller>(xdnd_manager);
+  launcher_controller_ = std::make_shared<launcher::Controller>(xdnd_manager, edge_barriers);
   AddChild(launcher_controller_.get());
 
   switcher_controller_ = std::make_shared<switcher::Controller>();

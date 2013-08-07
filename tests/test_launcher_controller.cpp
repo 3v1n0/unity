@@ -201,7 +201,8 @@ struct TestLauncherController : public testing::Test
   TestLauncherController()
     : logger_output_(std::make_shared<helper::CaptureLogOutput>())
     , xdnd_manager_(std::make_shared<XdndManager>())
-    , lc(xdnd_manager_)
+    , edge_barriers_(std::make_shared<ui::EdgeBarrierController>())
+    , lc(xdnd_manager_, edge_barriers_)
   {}
 
   virtual void SetUp()
@@ -221,8 +222,8 @@ struct TestLauncherController : public testing::Test
 protected:
   struct MockLauncherController : Controller
   {
-    MockLauncherController(XdndManager::Ptr const& xdnd_manager)
-      : Controller(xdnd_manager)
+    MockLauncherController(XdndManager::Ptr const& xdnd_manager, ui::EdgeBarrierController::Ptr const& edge_barriers)
+      : Controller(xdnd_manager, edge_barriers)
     {}
 
     Controller::Impl* Impl() const { return pimpl.get(); }
@@ -269,6 +270,7 @@ protected:
   panel::Style panel_style;
   MockFavoriteStore favorite_store;
   XdndManager::Ptr xdnd_manager_;
+  ui::EdgeBarrierController::Ptr edge_barriers_;
   MockLauncherController lc;
 };
 }
@@ -413,7 +415,7 @@ TEST_F(TestLauncherController, MultiMonitorEdgeBarrierSubscriptions)
   uscreen.SetupFakeMultiMonitor();
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
-    ASSERT_EQ(lc.Impl()->edge_barriers_.GetVerticalSubscriber(i), lc.launchers()[i].GetPointer());
+    ASSERT_EQ(edge_barriers_->GetVerticalSubscriber(i), lc.launchers()[i].GetPointer());
 }
 
 TEST_F(TestLauncherController, SingleMonitorEdgeBarrierSubscriptionsUpdates)
@@ -429,11 +431,11 @@ TEST_F(TestLauncherController, SingleMonitorEdgeBarrierSubscriptionsUpdates)
     {
       if (j == i)
       {
-        ASSERT_EQ(lc.Impl()->edge_barriers_.GetVerticalSubscriber(j), &lc.launcher());
+        ASSERT_EQ(edge_barriers_->GetVerticalSubscriber(j), &lc.launcher());
       }
       else
       {
-        ASSERT_EQ(lc.Impl()->edge_barriers_.GetVerticalSubscriber(j), nullptr);
+        ASSERT_EQ(edge_barriers_->GetVerticalSubscriber(j), nullptr);
       }
     }
   }
