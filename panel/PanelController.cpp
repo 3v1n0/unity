@@ -40,7 +40,7 @@ const char* window_title = "unity-panel";
 class Controller::Impl
 {
 public:
-  Impl();
+  Impl(ui::EdgeBarrierController::Ptr const& edge_barriers);
   ~Impl();
 
   void FirstMenuShow();
@@ -65,6 +65,7 @@ public:
 
   unity::PanelView* ViewForWindow(BaseWindowPtr const& window) const;
 
+  ui::EdgeBarrierController::Ptr edge_barriers_;
   PanelVector panels_;
   std::vector<Window> tray_xids_;
   float opacity_;
@@ -78,8 +79,9 @@ public:
 };
 
 
-Controller::Impl::Impl()
-  : opacity_(1.0f)
+Controller::Impl::Impl(ui::EdgeBarrierController::Ptr const& edge_barriers)
+  : edge_barriers_(edge_barriers)
+  , opacity_(1.0f)
   , opacity_maximized_toggle_(false)
   , menus_fadein_(0)
   , menus_fadeout_(0)
@@ -205,8 +207,15 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
       panels_[i] = CreatePanel(iobj);
     }
 
+    if (panels_[i]->GetMonitor() != static_cast<int>(i))
+    {
+      edge_barriers_->RemoveHorizontalSubscriber(panels_[i].GetPointer(), panels_[i]->GetMonitor());
+    }
+
     panels_[i]->SetMonitor(i);
     tray_xids_[i] = panels_[i]->GetTrayXid();
+
+    edge_barriers_->AddHorizontalSubscriber(panels_[i].GetPointer(), panels_[i]->GetMonitor());
   }
     
   for (unsigned int i = last_panel; i < panels_size; ++i)
@@ -216,6 +225,7 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
     {
       iobj->RemoveChild(panel.GetPointer());
       panel->GetParent()->UnReference();
+      edge_barriers_->RemoveHorizontalSubscriber(panel.GetPointer(), panel->GetMonitor());
     }
   }
 
@@ -270,9 +280,9 @@ float Controller::Impl::opacity() const
   return opacity_;
 }
 
-Controller::Controller()
+Controller::Controller(ui::EdgeBarrierController::Ptr const& edge_barriers)
   : launcher_width(64)
-  , pimpl(new Impl())
+  , pimpl(new Impl(edge_barriers))
 {
   UScreen* screen = UScreen::GetDefault();
   screen->changed.connect(sigc::mem_fun(this, &Controller::OnScreenChanged));

@@ -51,9 +51,9 @@ enum BarrierDirection
 {
   BOTH = 0,
   LEFT = 1,
-  UP = 2, // FIXME
+  UP = 2,
   RIGHT = 4,
-  DOWN =  8 // FIXME
+  DOWN =  8
 };
 
 enum BarrierOrientation

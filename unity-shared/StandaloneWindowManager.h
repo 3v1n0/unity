@@ -110,6 +110,9 @@ public:
 
   virtual bool IsWallActive() const;
 
+  void SetIsAnyWindowMoving(bool is_any_window_moving);
+  virtual bool IsAnyWindowMoving() const override;
+
   virtual void FocusWindowGroup(std::vector<Window> const& windows,
                                 FocusVisibility, int monitor = -1, bool only_top_win = true);
   virtual bool ScaleWindowGroup(std::vector<Window> const& windows,
@@ -166,6 +169,7 @@ private:
   bool in_show_desktop_;
   bool scale_active_;
   bool scale_active_for_group_;
+  bool is_any_window_moving_;
   unsigned current_desktop_;
   nux::Size viewport_size_;
   nux::Point current_vp_;
