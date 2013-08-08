@@ -8,12 +8,26 @@ namespace unity
 namespace service
 {
 
+static DeeModel* create_read_only_model(const char* name)
+{
+  // A shared model with the LEADER_WRITABLE flag will ignore any change 
+  // requests from the peers
+  glib::Object<DeePeer> peer(dee_peer_new(name));
+  glib::Object<DeeModel> backend(dee_sequence_model_new());
+  auto access_mode = DEE_SHARED_MODEL_ACCESS_MODE_LEADER_WRITABLE;
+  return DEE_MODEL (g_object_new (DEE_TYPE_SHARED_MODEL,
+                                  "peer", peer.RawPtr(),
+                                  "back-end", backend.RawPtr(),
+                                  "access-mode", access_mode,
+                                  NULL));
+}
+
 Model::Model()
-  : model_(dee_shared_model_new("com.canonical.test.model"))
-  , results_model_(dee_shared_model_new("com.canonical.test.resultsmodel"))
-  , categories_model_(dee_shared_model_new("com.canonical.test.categoriesmodel"))
-  , categories_changing_model_(dee_shared_model_new("com.canonical.test.categoriesmodel_changing"))
-  , tracks_model_(dee_shared_model_new("com.canonical.test.tracks"))
+  : model_(create_read_only_model("com.canonical.test.model"))
+  , results_model_(create_read_only_model("com.canonical.test.resultsmodel"))
+  , categories_model_(create_read_only_model("com.canonical.test.categoriesmodel"))
+  , categories_changing_model_(create_read_only_model("com.canonical.test.categoriesmodel_changing"))
+  , tracks_model_(create_read_only_model("com.canonical.test.tracks"))
 {
   PopulateTestModel();
   PopulateResultsModel();

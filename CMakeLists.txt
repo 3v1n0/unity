@@ -9,8 +9,8 @@ include (cmake/pch.cmake)
 #
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 7)
-set (UNITY_MINOR 0)
-set (UNITY_MICRO 2)
+set (UNITY_MINOR 1)
+set (UNITY_MICRO 0)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "6.0")
 set (UNITY_COMPONENTS_VERSION "6")
@@ -226,7 +226,7 @@ set(UNITY_PLUGIN_SHARED_DEPS
     gtk+-3.0>=3.1
     indicator3-0.4>=0.4.90
     json-glib-1.0
-    libbamf3>=0.4.0
+    libbamf3>=0.5.0
     libnotify
     libstartup-notification-1.0
     nux-4.0>=4.0.1

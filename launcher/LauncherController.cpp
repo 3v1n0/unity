@@ -533,7 +533,7 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
     }
     else
     {
-      result->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true); 
+      result->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true);
     }
   }
 }
@@ -760,8 +760,13 @@ void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr const& icon, int p
     ResetIconPriorities();
   });
 
-  icon->position_forgot.connect([this, icon_uri] {
-    FavoriteStore::Instance().RemoveFavorite(icon_uri);
+  auto uri_ptr = std::make_shared<std::string>(icon_uri);
+  icon->position_forgot.connect([this, uri_ptr] {
+    FavoriteStore::Instance().RemoveFavorite(*uri_ptr);
+  });
+
+  icon->uri_changed.connect([this, uri_ptr] (std::string const& new_uri) {
+    *uri_ptr = new_uri;
   });
 
   if (icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION)

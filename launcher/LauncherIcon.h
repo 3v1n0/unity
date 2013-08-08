@@ -53,8 +53,6 @@ public:
 
   LauncherIcon(IconType type);
 
-  virtual ~LauncherIcon();
-
   bool SetTooltipText(std::string& target, std::string const& value);
 
   void    SetShortcut(guint64 shortcut);
@@ -141,7 +139,7 @@ public:
 
   virtual nux::Color GlowColor();
 
-  std::string RemoteUri()
+  std::string RemoteUri() const
   {
     return GetRemoteUri();
   }
@@ -182,7 +180,7 @@ public:
     OnDndLeave();
   }
 
-  virtual std::string DesktopFile() { return std::string(""); }
+  virtual std::string DesktopFile() const { return std::string(); }
 
   virtual bool IsSticky() const { return _sticky; }
 
@@ -233,7 +231,7 @@ protected:
 
   virtual void OnCenterStabilized(std::vector<nux::Point3> center) {}
 
-  virtual std::string GetRemoteUri()
+  virtual std::string GetRemoteUri() const
   {
     return "";
   }
@@ -260,11 +258,11 @@ protected:
 
   virtual bool HandlesSpread () { return false; }
 
-  nux::BaseTexture* TextureFromGtkTheme(std::string name, int size, bool update_glow_colors = true);
+  BaseTexturePtr TextureFromGtkTheme(std::string name, int size, bool update_glow_colors = true);
 
-  nux::BaseTexture* TextureFromSpecificGtkTheme(GtkIconTheme* theme, std::string const& name, int size, bool update_glow_colors = true, bool is_default_theme = false);
+  BaseTexturePtr TextureFromSpecificGtkTheme(GtkIconTheme* theme, std::string const& name, int size, bool update_glow_colors = true, bool is_default_theme = false);
 
-  nux::BaseTexture* TextureFromPath(std::string const& name, int size, bool update_glow_colors = true);
+  BaseTexturePtr TextureFromPath(std::string const& name, int size, bool update_glow_colors = true);
 
   static bool        IsMonoDefaultTheme();
 

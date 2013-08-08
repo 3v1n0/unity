@@ -12,8 +12,6 @@ using namespace unity::dash;
 namespace
 {
 
-static const string swarm_name = "com.canonical.test.categoriesmodel";
-static const string swarm_name_changing = "com.canonical.test.categoriesmodel_changing";
 static const unsigned int n_rows = 5;
 
 static void WaitForSynchronize(Categories& model)
@@ -25,7 +23,17 @@ struct TestCategories : testing::Test
 {
   TestCategories()
   {
-    model.swarm_name = swarm_name;
+    model.swarm_name = "com.canonical.test.categoriesmodel";
+  }
+
+  Categories model;
+};
+
+struct TestCategoriesChanging : testing::Test
+{
+  TestCategoriesChanging()
+  {
+    model.swarm_name = "com.canonical.test.categoriesmodel_changing";
   }
 
   Categories model;
@@ -33,7 +41,7 @@ struct TestCategories : testing::Test
 
 TEST_F(TestCategories, TestConstruction)
 {
-  EXPECT_EQ(model.swarm_name(), swarm_name);
+  EXPECT_EQ(model.swarm_name(), "com.canonical.test.categoriesmodel");
 }
 
 TEST_F(TestCategories, TestSignalProxyAdded)
@@ -122,42 +130,38 @@ TEST_F(TestCategories, TestSetGetRenderer)
 }
 
 // We're testing the model's ability to store and retrieve random pointers
-TEST_F(TestCategories, TestOnRowChanged)
+TEST_F(TestCategoriesChanging, TestOnRowChanged)
 {
-  model.swarm_name = swarm_name_changing;
   WaitForSynchronize(model);
 
   unsigned changed = 0;
   model.category_changed.connect([&changed] (Category const&) { ++changed; });
-  Utils::WaitUntil([&changed] { return changed == 1; }, true, 2, "Did not detect row change from "+swarm_name_changing+".");
+  Utils::WaitUntil([&changed] { return changed == 1; }, true, 2, "Did not detect row change.");
 }
 
 
 // We're testing the model's ability to store and retrieve random pointers
-TEST_F(TestCategories, TestOnRowAdded)
+TEST_F(TestCategoriesChanging, TestOnRowAdded)
 {
-  model.swarm_name = swarm_name_changing;
   WaitForSynchronize(model);
 
   unsigned added = 0;
   model.category_added.connect([&added] (Category const&) { ++added;});
-  Utils::WaitUntil([&added] { return added == 1; }, true, 2, "Did not detect row add "+swarm_name_changing+".");
+  Utils::WaitUntil([&added] { return added == 1; }, true, 2, "Did not detect row add.");
 }
 
 // We're testing the model's ability to store and retrieve random pointers
-TEST_F(TestCategories, TestOnRowRemoved)
+TEST_F(TestCategoriesChanging, TestOnRowRemoved)
 {
-  model.swarm_name = swarm_name_changing;
   WaitForSynchronize(model);
 
   unsigned removed = 0;
   model.category_removed.connect([&removed] (Category const&) { ++removed; });
-  Utils::WaitUntil([&removed] { return removed == 1; }, true, 2, "Did not detect row removal "+swarm_name_changing+".");
+  Utils::WaitUntil([&removed] { return removed == 1; }, true, 2, "Did not detect row removal.");
 }
 
-TEST_F(TestCategories, TestCategoryCopy)
+TEST_F(TestCategoriesChanging, TestCategoryCopy)
 {
-  model.swarm_name = swarm_name_changing;
   WaitForSynchronize(model);
   
   Category category = model.RowAtIndex(0);
@@ -170,9 +174,8 @@ TEST_F(TestCategories, TestCategoryCopy)
   EXPECT_EQ(category.index(), category_2.index());
 }
 
-TEST_F(TestCategories, TestCategoryEqual)
+TEST_F(TestCategoriesChanging, TestCategoryEqual)
 {
-  model.swarm_name = swarm_name_changing;
   WaitForSynchronize(model);
 
   Category category = model.RowAtIndex(0);

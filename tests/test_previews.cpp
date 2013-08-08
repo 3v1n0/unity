@@ -42,6 +42,11 @@ bool IsVariant(Variant const& variant)
   return g_variant_get_type_string(variant) != NULL;
 }
 
+static void g_variant_unref0(gpointer var)
+{
+  if (var) g_variant_unref((GVariant*)var);
+}
+
 TEST(TestPreviews, DeserializeGeneric)
 {
   Object<GIcon> icon(g_icon_new_for_string("accessories", NULL));
@@ -77,7 +82,7 @@ TEST(TestPreviews, DeserializeGenericWithMeta)
   unity_protocol_preview_set_image(proto_obj, icon);
   unity_protocol_preview_set_image_source_uri(proto_obj, "Source");
 
-  GHashTable* hints = g_hash_table_new(g_str_hash, g_str_equal);
+  GHashTable* hints = g_hash_table_new_full(g_str_hash, g_direct_equal, g_free, g_variant_unref0);
   g_hash_table_insert(hints, g_strdup("extra-text"), g_variant_new_string("Foo"));
   unity_protocol_preview_add_action(proto_obj, "action1", "Action #1", NULL, 0);
   unity_protocol_preview_add_action_with_hints(proto_obj, "action2", "Action #2", NULL, 0, hints);

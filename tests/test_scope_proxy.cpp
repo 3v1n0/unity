@@ -59,7 +59,7 @@ TEST(TestScopeProxy, Connection)
 
 TEST(TestScopeProxy, ConnectionFail)
 {
-  ScopeProxyInterface::Ptr scope_proxy(new ScopeProxy(ScopeData::Ptr(new MockScopeData("fail", "this.is.a.fail.test", "this/is/a/fail/test"))));
+  ScopeProxyInterface::Ptr scope_proxy(new ScopeProxy(ScopeData::Ptr(new MockScopeData("fail", "this.is.a.fail.test", "/this/is/a/fail/test"))));
   scope_proxy->ConnectProxy();
 
   Utils::WaitForTimeoutMSec(1000);
@@ -180,7 +180,7 @@ TEST(TestScopeProxy, MultiSearch)
 
 TEST(TestScopeProxy, SearchFail)
 {
-  ScopeProxyInterface::Ptr scope_proxy(new ScopeProxy(ScopeData::Ptr(new MockScopeData("fail", "this.is.a.fail.test", "this/is/a/fail/test"))));
+  ScopeProxyInterface::Ptr scope_proxy(new ScopeProxy(ScopeData::Ptr(new MockScopeData("fail", "this.is.a.fail.test", "/this/is/a/fail/test"))));
   // Auto-connect on search
 
   bool search_ok = false;
@@ -262,7 +262,7 @@ TEST(TestScopeProxy, ActivateUri)
                           activate_callback,
                           nullptr);
 
-  Utils::WaitUntilMSec(activated_return, 3, "Failed to activate");
+  Utils::WaitUntil(activated_return, 3, "Failed to activate");
 }
 
 TEST(TestScopeProxy, Preview)

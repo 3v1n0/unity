@@ -443,8 +443,13 @@ void IconRenderer::UpdateIconSectionTransform(ui::IconTextureSource* icon, nux::
 
 void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& arg, nux::Geometry const& geo, nux::Geometry const& owner_geo)
 {
+  if (arg.skip)
+    return;
+
   // This check avoids a crash when the icon is not available on the system.
-  if (arg.icon->TextureForSize(image_size) == 0 || arg.skip)
+  auto* texture_for_size = arg.icon->TextureForSize(image_size);
+
+  if (!texture_for_size)
     return;
 
   local::IconSize size = icon_size > 100 ? local::IconSize::BIG : local::IconSize::SMALL;
@@ -589,7 +594,7 @@ void IconRenderer::RenderIcon(nux::GraphicsEngine& GfxContext, RenderArg const& 
   // draw icon
   RenderElement(GfxContext,
                 arg,
-                arg.icon->TextureForSize(image_size)->GetDeviceTexture(),
+                texture_for_size->GetDeviceTexture(),
                 nux::color::White,
                 colorify,
                 arg.alpha,

@@ -150,7 +150,7 @@ namespace
       : server_(PLAYER_NAME)
     {
       server_.AddObjects(PLAYER_INTERFACE, PLAYER_PATH);
-      auto const& object = server_.GetObjects().front();
+      auto object = server_.GetObjects().front();
 
       object->SetMethodsCallsHandler([this, object] (std::string const& method, GVariant* parameters) {
         if (method == "Play")

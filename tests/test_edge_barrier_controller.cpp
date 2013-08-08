@@ -77,7 +77,7 @@ public:
 
     uscreen.SetupFakeMultiMonitor();
 
-    for (int i = 0; i < max_num_monitors; ++i)
+    for (unsigned i = 0; i < monitors::MAX; ++i)
     {
       // By default we assume that no subscriber handles the events!!!
       bc.Subscribe(&subscribers_[i], i);
@@ -101,7 +101,7 @@ public:
   }
 
 
-  TestBarrierSubscriber subscribers_[max_num_monitors];
+  TestBarrierSubscriber subscribers_[monitors::MAX];
   MockUScreen uscreen;
   EdgeBarrierController bc;
 };
@@ -115,13 +115,13 @@ TEST_F(TestEdgeBarrierController, Construction)
 {
   EXPECT_TRUE(bc.sticky_edges);
 
-  for (int i = 0; i < max_num_monitors; ++i)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
     ASSERT_EQ(bc.GetSubscriber(i), &subscribers_[i]);
 }
 
 TEST_F(TestEdgeBarrierController, Unsubscribe)
 {
-  for (int i = 0; i < max_num_monitors; ++i)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
   {
     bc.Unsubscribe(&subscribers_[i], i);
     ASSERT_EQ(bc.GetSubscriber(i), nullptr);
@@ -158,7 +158,7 @@ TEST_F(TestEdgeBarrierController, ProcessHandledEvent)
 
 TEST_F(TestEdgeBarrierController, ProcessHandledEventOnReleasedBarrier)
 {
-  int monitor = max_num_monitors-1;
+  int monitor = monitors::MAX-1;
 
   TestBarrierSubscriber handling_subscriber(EdgeBarrierSubscriber::Result::HANDLED);
   bc.Subscribe(&handling_subscriber, monitor);
@@ -184,7 +184,7 @@ TEST_F(TestEdgeBarrierController, ProcessUnHandledEventBreakingBarrier)
 
 TEST_F(TestEdgeBarrierController, ProcessUnHandledEventBreakingBarrierOnMaxMonitor)
 {
-  int monitor = max_num_monitors;
+  int monitor = monitors::MAX;
 
   MockPointerBarrier owner(monitor);
   auto breaking_barrier_event = MakeBarrierEvent(0, true);
@@ -219,7 +219,7 @@ TEST_F(TestEdgeBarrierController, ProcessUnHandledEventOnReleasedBarrier)
 
 TEST_F(TestEdgeBarrierController, ProcessAlreadyHandledEvent)
 {
-  int monitor = g_random_int_range(0, max_num_monitors);
+  int monitor = g_random_int_range(0, monitors::MAX);
 
   MockPointerBarrier owner(monitor);
   subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::ALREADY_HANDLED;
@@ -233,7 +233,7 @@ TEST_F(TestEdgeBarrierController, ProcessAlreadyHandledEvent)
 
 TEST_F(TestEdgeBarrierController, ProcessIgnoredEventWithStickyEdges)
 {
-  int monitor = g_random_int_range(0, max_num_monitors);
+  int monitor = g_random_int_range(0, monitors::MAX);
 
   bc.sticky_edges = true;
   MockPointerBarrier owner(monitor);
@@ -250,7 +250,7 @@ TEST_F(TestEdgeBarrierController, ProcessIgnoredEventWithStickyEdges)
 
 TEST_F(TestEdgeBarrierController, ProcessIgnoredEventWithOutStickyEdges)
 {
-  int monitor = g_random_int_range(0, max_num_monitors);
+  int monitor = g_random_int_range(0, monitors::MAX);
 
   bc.sticky_edges = false;
   MockPointerBarrier owner(monitor);
@@ -267,7 +267,7 @@ TEST_F(TestEdgeBarrierController, ProcessIgnoredEventWithOutStickyEdges)
 
 TEST_F(TestEdgeBarrierController, ProcessNeedsReleaseEvent)
 {
-  int monitor = g_random_int_range(0, max_num_monitors);
+  int monitor = g_random_int_range(0, monitors::MAX);
 
   MockPointerBarrier owner(monitor);
   subscribers_[monitor].handle_result_ = EdgeBarrierSubscriber::Result::NEEDS_RELEASE;
@@ -369,7 +369,7 @@ TEST_F(TestEdgeBarrierController, BarrierBreaksInYBreakZone)
 
 TEST_F(TestEdgeBarrierController, BarrierReleaseIfNoSubscriberForMonitor)
 {
-  MockPointerBarrier owner(max_num_monitors);
+  MockPointerBarrier owner(monitors::MAX);
   auto firstEvent = std::make_shared<BarrierEvent>(0, 50, 1, 10);
 
   EXPECT_CALL(owner, ReleaseBarrier(_)).Times(1);

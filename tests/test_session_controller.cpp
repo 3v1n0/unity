@@ -54,7 +54,7 @@ struct TestSessionController : testing::Test
   nux::NuxTimerTickSource tick_source;
   nux::animation::AnimationController animation_controller;
   unity::Settings settings;
-  MockManager::Ptr manager;
+  MockManager::Ptr manager ;
   ControllerWrap controller;
 };
 

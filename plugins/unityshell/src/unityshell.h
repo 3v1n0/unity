@@ -141,6 +141,7 @@ public:
   bool showPanelFirstMenuKeyTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   bool executeCommand(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool showDesktopKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool setKeyboardFocusKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   bool altTabInitiateCommon(CompAction* action, switcher::ShowMode mode);
@@ -251,8 +252,6 @@ private:
   unsigned XModifiersToNux(unsigned input) const;
 
   void UpdateCloseWindowKey(CompAction::KeyBinding const&);
-
-  CompWindow * GetTopVisibleWindow();
 
   std::unique_ptr<na::TickSource> tick_source_;
   std::unique_ptr<na::AnimationController> animation_controller_;
@@ -366,6 +365,7 @@ public:
   ~UnityWindow();
 
   CompWindow* window;
+  CompositeWindow* cWindow;
   GLWindow* gWindow;
 
   nux::Geometry last_bound;

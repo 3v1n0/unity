@@ -37,7 +37,7 @@ public:
 protected:
   void ActivateLauncherIcon(ActionArg arg);
   std::string GetName() const;
-  std::string GetRemoteUri();
+  std::string GetRemoteUri() const;
 
 private:
   void OnViewportLayoutChanged(int hsize, int vsize);

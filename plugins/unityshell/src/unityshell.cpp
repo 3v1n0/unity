@@ -36,6 +36,7 @@
 #include "LauncherController.h"
 #include "SwitcherController.h"
 #include "SwitcherView.h"
+#include "PanelView.h"
 #include "PluginAdapter.h"
 #include "QuicklistManager.h"
 #include "StartupNotifyService.h"
@@ -307,6 +308,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetKeyboardFocusInitiate(boost::bind(&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
      //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
      optionSetExecuteCommandInitiate(boost::bind(&UnityScreen::executeCommand, this, _1, _2, _3));
+     optionSetShowDesktopKeyInitiate(boost::bind(&UnityScreen::showDesktopKeyInitiate, this, _1, _2, _3));
      optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
      optionSetPanelFirstMenuTerminate(boost::bind(&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
      optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -969,25 +971,6 @@ bool UnityScreen::DoesPointIntersectUnityGeos(nux::Point const& pt)
   return false;
 }
 
-CompWindow * GetTopVisibleWindow()
-{
-  CompWindow *top_visible_window = NULL;
-
-  for (CompWindow *w : screen->windows ())
-  {
-    if (w->isViewable() && 
-        !w->minimized() && 
-        !w->resName().empty() && 
-        (w->resName() != "unity-panel-service") &&
-        (w->resName() != "notify-osd"))
-    {
-      top_visible_window = w;
-    }
-  }
-
-  return top_visible_window;
-}
-
 LayoutWindow::Ptr UnityScreen::GetSwitcherDetailLayoutWindow(Window window) const
 {
   LayoutWindow::Vector const& targets = switcher_controller_->ExternalRenderTargets();
@@ -1429,15 +1412,14 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
     }
   }
 
-  std::vector<nux::View*> const& panels(panel_controller_->GetPanelViews());
-  for (nux::View* view : panels)
+  for (auto const& panel : panel_controller_->panels())
   {
-    nux::Geometry const& geo = view->GetAbsoluteGeometry();
+    nux::Geometry const& geo = panel->GetAbsoluteGeometry();
 
     CompRegion panel_region(geo.x, geo.y, geo.width, geo.height);
 
     if (damage.intersects(panel_region))
-      view->QueueDraw();
+      panel->QueueDraw();
   }
 
   QuicklistManager* qm = QuicklistManager::Default();
@@ -1923,6 +1905,13 @@ bool UnityScreen::executeCommand(CompAction* action,
   return true;
 }
 
+bool UnityScreen::showDesktopKeyInitiate(CompAction* action,
+                                         CompAction::State state,
+                                         CompOption::Vector& options)
+{
+  WindowManager::Default().ShowDesktop();
+  return true;
+}
 
 bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
                                               CompAction::State state,
@@ -2654,17 +2643,13 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   {
     Window active_window = screen->activeWindow();
 
-    CompWindow *top_visible_window;
-
     if (G_UNLIKELY(window->type() == CompWindowTypeDesktopMask))
     {
       uScreen->setPanelShadowMatrix(matrix);
 
       if (active_window == 0 || active_window == window->id())
       {
-        top_visible_window = GetTopVisibleWindow();
-
-        if (top_visible_window && (window->id() == top_visible_window->id()))
+        if (PluginAdapter::Default().IsWindowOnTop(window->id()))
         {
           draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
         }
@@ -2694,9 +2679,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       {
         if (uScreen->is_desktop_active_)
         {
-          top_visible_window = GetTopVisibleWindow();
-
-          if (top_visible_window && (window->id() == top_visible_window->id()))
+          if (PluginAdapter::Default().IsWindowOnTop(window->id()))
           {
             draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
             uScreen->panelShadowPainted = CompRegion();
@@ -3473,6 +3456,7 @@ UnityWindow::UnityWindow(CompWindow* window)
   : BaseSwitchWindow (dynamic_cast<BaseSwitchScreen *> (UnityScreen::get (screen)), window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
   , window(window)
+  , cWindow(CompositeWindow::get(window))
   , gWindow(GLWindow::get(window))
   , is_nux_window_(isNuxWindow(window))
 {

@@ -1,5 +1,6 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
+#include <unity.h>
 
 #include "test_service_scope.h"
 #include "test_service_model.h"
@@ -44,8 +45,6 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  auto loop = g_main_loop_new(NULL, FALSE);
-
   nux::NuxInitialize(0);
   // Slightly higher as we're more likely to test things we know will fail
   nux::logging::configure_logging("<root>=error");
@@ -53,24 +52,29 @@ int main(int argc, char** argv)
   // but you can still change it if you're debugging ;)
   nux::logging::configure_logging(::getenv("UNITY_TEST_LOG_SEVERITY"));
 
-  glib::DBusServer controller("com.canonical.Unity.Test");
-  controller.AddObjects(introspection_xml, "/com/canonical/unity/test/controller");
-  auto const& obj = controller.GetObjects().front();
-  obj->SetMethodsCallsHandler([loop] (std::string const& method, GVariant*) {
-    if (method == "Exit")
-      g_main_loop_quit(loop);
-
-    return static_cast<GVariant*>(nullptr);
-  });
-
   service::Hud hud;
   service::GDBus gdbus;
   service::Panel panel;
   service::Model model;
   service::Scope scope(scope_id ? scope_id: "testscope1");
 
-  g_main_loop_run(loop);
-  g_main_loop_unref(loop);
+  // all the services might have requested dbus names, let's consider
+  // the controller name a "primary" name and we'll wait for it before running
+  // the actual dbus tests (since the other names were requested before this
+  // one they should be acquired before this one)
+  glib::DBusServer controller("com.canonical.Unity.Test");
+  controller.AddObjects(introspection_xml, "/com/canonical/unity/test/controller");
+  auto obj = controller.GetObjects().front();
+  obj->SetMethodsCallsHandler([] (std::string const& method, GVariant*) {
+    if (method == "Exit")
+      unity_scope_dbus_connector_quit();
+
+    return static_cast<GVariant*>(nullptr);
+  });
+
+  // scope equivalent of running the main loop, needed as this also requests
+  // a dbus name the scope uses
+  unity_scope_dbus_connector_run();
 
   if (scope_id) g_free(scope_id);
 

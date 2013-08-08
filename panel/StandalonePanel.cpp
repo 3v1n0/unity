@@ -28,6 +28,7 @@
 #include <NuxCore/Logger.h>
 #include <gtk/gtk.h>
 
+#include "unity-shared/MockableBaseWindow.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/PanelStyle.h"
 #include "PanelView.h"
@@ -50,8 +51,8 @@ private:
   struct StandalonePanelView : public PanelView
   {
     // Used to sync menu geometries
-    StandalonePanelView()
-      : PanelView(std::make_shared<indicator::DBusIndicators>())
+    StandalonePanelView(MockableBaseWindow* window)
+      : PanelView(window, std::make_shared<indicator::DBusIndicators>())
     {}
 
     std::string GetName() const { return "StandalonePanel"; }
@@ -59,14 +60,14 @@ private:
 
   void Init()
   {
-    PanelView* panel = new StandalonePanelView();
-    panel->SetPrimary(true);
+    panel_window = new MockableBaseWindow("StandalonePanel");
+
+    PanelView* panel = new StandalonePanelView(panel_window.GetPointer());
 
     nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
     layout->AddView(panel, 1);
     layout->SetContentDistribution(nux::MAJOR_POSITION_START);
 
-    panel_window = new nux::BaseWindow("StandalonePanel");
     panel_window->SetLayout(layout);
     panel_window->SetBackgroundColor(nux::color::Transparent);
     panel_window->ShowWindow(true);
@@ -89,7 +90,7 @@ private:
   std::shared_ptr<nux::WindowThread> wt;
   nux::NuxTimerTickSource tick_source;
   nux::animation::AnimationController animation_controller;
-  nux::ObjectPtr<nux::BaseWindow> panel_window;
+  nux::ObjectPtr<MockableBaseWindow> panel_window;
 };
 
 int main(int argc, char** argv)

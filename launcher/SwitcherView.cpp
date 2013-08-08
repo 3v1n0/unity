@@ -64,7 +64,7 @@ SwitcherView::SwitcherView()
   , mouse_inside_(false)
 {
   icon_renderer_->pip_style = OVER_TILE;
-  icon_renderer_->monitor = max_num_monitors;
+  icon_renderer_->monitor = monitors::MAX;
 
   text_view_->SetMaximumWidth(tile_size * spread_size);
   text_view_->SetLines(1);

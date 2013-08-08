@@ -513,7 +513,12 @@ void ScopeProxy::Impl::Search(std::string const& search_string, glib::HintsMap c
       }
       else
       {
-        Search(search_string, hints, callback, canc);
+        glib::HintsMap updated_hints(hints);
+        if (!owner_->form_factor().empty())
+        {
+          updated_hints["form-factor"] = g_variant_new_string(owner_->form_factor().c_str());
+        }
+        Search(search_string, updated_hints, callback, canc);
       }
     });
     return;

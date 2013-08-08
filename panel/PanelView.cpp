@@ -37,6 +37,7 @@
 #include "unity-shared/TextureCache.h"
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UScreen.h"
 #include <UnityCore/Variant.h>
 
 #include "PanelIndicatorsView.h"
@@ -55,13 +56,13 @@ namespace unity
 
 NUX_IMPLEMENT_OBJECT_TYPE(PanelView);
 
-PanelView::PanelView(indicator::DBusIndicators::Ptr const& remote, NUX_FILE_LINE_DECL)
+PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr const& remote, NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
+  , parent_(parent)
   , remote_(remote)
   , is_dirty_(true)
   , opacity_maximized_toggle_(false)
   , needs_geo_sync_(false)
-  , is_primary_(false)
   , overlay_is_open_(false)
   , opacity_(1.0f)
   , monitor_(0)
@@ -742,16 +743,6 @@ void PanelView::SetOpacityMaximizedToggle(bool enabled)
   }
 }
 
-bool PanelView::GetPrimary() const
-{
-  return is_primary_;
-}
-
-void PanelView::SetPrimary(bool primary)
-{
-  is_primary_ = primary;
-}
-
 void PanelView::SyncGeometries()
 {
   indicator::EntryLocationMap locations;
@@ -768,6 +759,18 @@ void PanelView::SetMonitor(int monitor)
 {
   monitor_ = monitor;
   menu_view_->SetMonitor(monitor);
+
+  UScreen* uscreen = UScreen::GetDefault();
+  auto monitor_geo = uscreen->GetMonitorGeometry(monitor);
+  Resize(nux::Point(monitor_geo.x, monitor_geo.y), monitor_geo.width);
+}
+
+void PanelView::Resize(nux::Point const& offset, int width)
+{
+  unity::panel::Style &panel_style = panel::Style::Instance();
+  SetMaximumWidth(width);
+  SetGeometry(nux::Geometry(0, 0, width, panel_style.panel_height));
+  parent_->SetGeometry(nux::Geometry(offset.x, offset.y, width, panel_style.panel_height));
 }
 
 int PanelView::GetMonitor() const

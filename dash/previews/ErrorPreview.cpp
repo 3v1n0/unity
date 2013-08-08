@@ -91,6 +91,11 @@ std::string ErrorPreview::GetName() const
   return "ErrorPreview";
 }
 
+void ErrorPreview::AddProperties(GVariantBuilder* builder)
+{
+  PaymentPreview::AddProperties(builder);
+}
+
 void ErrorPreview::OnActionActivated(ActionButton* button, std::string const& id)
 {
   Preview::OnActionActivated(button, id);

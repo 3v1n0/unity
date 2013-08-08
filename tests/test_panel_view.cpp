@@ -21,6 +21,7 @@
 #include <gtest/gtest.h>
 
 #include "PanelView.h"
+#include "unity-shared/MockableBaseWindow.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UBusWrapper.h"
@@ -36,10 +37,12 @@ public:
   unity::Settings unity_settings_;
   unity::panel::Style panel_style_;
   unity::UBusManager ubus_manager_;
+  nux::ObjectPtr<unity::MockableBaseWindow> window_;
   nux::ObjectPtr<unity::PanelView> panel_view_;
 
   TestPanelView()
-    : panel_view_(new unity::PanelView(std::make_shared<unity::indicator::DBusIndicators>()))
+    : window_(new unity::MockableBaseWindow())
+    , panel_view_(new unity::PanelView(window_.GetPointer(), std::make_shared<unity::indicator::DBusIndicators>()))
   {}
 
 };
