@@ -282,8 +282,8 @@ TEST_F(TestSwitcherController, TestRightClickedReceived)
 
   ASSERT_FALSE(model->detail_selection());
 
-  view->switcher_mouse_up.emit(-1, 3);
-  view->switcher_mouse_down.emit(-1, 3);
+  view->switcher_mouse_up.emit(-1, 3, false);
+  view->switcher_mouse_down.emit(-1, 3, false);
 
   ASSERT_TRUE(model->detail_selection());
 }
