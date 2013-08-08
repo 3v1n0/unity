@@ -149,7 +149,7 @@ std::vector<Window> SwitcherModel::DetailXids() const
       results.push_back(xid);
   }
 
-  if (results.empty())
+  if (results.empty() && detail_selection)
   {
     request_detail_hide.emit();
     return results;

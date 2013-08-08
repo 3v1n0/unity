@@ -376,11 +376,11 @@ void SwitcherView::HandleDetailMouseWheel(int wheel_delta)
 {
   if (wheel_delta > 0)
   {
-    model_->PrevDetail();
+    model_->NextDetail();
   }
   else
   {
-    model_->NextDetail();
+    model_->PrevDetail();
   }
 }
 
@@ -388,11 +388,11 @@ void SwitcherView::HandleMouseWheel(int wheel_delta)
 {
   if (wheel_delta > 0)
   {
-    model_->Prev();
+    model_->Next();
   }
   else
   {
-    model_->Next();
+    model_->Prev();
   }
 }
 
