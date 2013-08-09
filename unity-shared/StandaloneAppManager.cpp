@@ -75,28 +75,38 @@ void connect_events(ApplicationPtr const& app)
     return;
   }
   std::string app_name = app->title();
-  app->visible.changed.connect([app_name](bool const& value) {
+  app->title.changed.connect([&app_name](std::string const& value) {
+    cout << app_name << " changed name to: " << value << endl;
+    app_name = value;
+  });
+  app->icon.changed.connect([&app_name](std::string const& value) {
+    cout << app_name << " icon changed: " << value << endl;
+  });
+  app->desktop_file.changed.connect([&app_name](std::string const& value) {
+    cout << app_name << " desktop file changed: " << value << endl;
+  });
+  app->visible.changed.connect([&app_name](bool value) {
     cout << app_name << " visibility changed: " << (value ? "yes" : "no") << endl;
   });
-  app->running.changed.connect([app_name](bool const& value) {
+  app->running.changed.connect([&app_name](bool value) {
     cout << app_name << " running changed: " << (value ? "yes" : "no") << endl;
   });
-  app->active.changed.connect([app_name](bool const& value) {
+  app->active.changed.connect([&app_name](bool value) {
     cout << app_name << " active changed: " << (value ? "yes" : "no") << endl;
   });
-  app->urgent.changed.connect([app_name](bool const& value) {
+  app->urgent.changed.connect([&app_name](bool value) {
     cout << app_name << " urgent changed: " << (value ? "yes" : "no") << endl;
   });
-  app->closed.connect([app_name]() {
+  app->closed.connect([&app_name]() {
     cout << app_name << " closed." << endl;
   });
-  app->window_opened.connect([app_name](ApplicationWindow const& window) {
+  app->window_opened.connect([&app_name](ApplicationWindow const& window) {
     cout << "** " << app_name << " window opened: " << window.title() << endl;
   });
-  app->window_closed.connect([app_name]() {
+  app->window_closed.connect([&app_name]() {
     cout << "** " << app_name << " window closed" << endl;
   });
-  app->window_moved.connect([app_name](ApplicationWindow const& window) {
+  app->window_moved.connect([&app_name](ApplicationWindow const& window) {
     cout << "** " << app_name << " window moved: " << window.title() << endl;
   });
   app->seen = true;
@@ -195,7 +205,7 @@ int main(int argc, char* argv[])
 
   ApplicationList apps = manager.GetRunningApplications();
 
-  for (auto app : apps)
+  for (auto const& app : apps)
   {
     dump_app(app);
     connect_events(app);
