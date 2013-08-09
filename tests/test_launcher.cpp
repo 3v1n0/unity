@@ -367,7 +367,7 @@ TEST_F(TestLauncher, DragLauncherIconSavesIconOrderIfPositionHasChanged)
   EXPECT_TRUE(model_saved);
 
   // Let's wait the drag icon animation to be completed
-  Utils::WaitPendingEvents();
+  Utils::WaitUntilMSec([this] { return launcher_->GetDraggedIcon(); }, false, 2000);
   EXPECT_EQ(launcher_->GetDraggedIcon(), nullptr);
 }
 
@@ -411,7 +411,7 @@ TEST_F(TestLauncher, DragLauncherIconSavesIconOrderIfPositionHasNotChanged)
   EXPECT_FALSE(model_saved);
 
   // Let's wait the drag icon animation to be completed
-  Utils::WaitPendingEvents();
+  Utils::WaitUntilMSec([this] { return launcher_->GetDraggedIcon(); }, false, 2000);
   EXPECT_EQ(launcher_->GetDraggedIcon(), nullptr);
 }
 
