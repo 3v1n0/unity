@@ -119,6 +119,28 @@ EdgeBarrierController::Impl::~Impl()
   nux::GetGraphicsDisplay()->RemoveEventFilter(this);
 }
 
+void EdgeBarrierController::Impl::AddSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor, std::vector<EdgeBarrierSubscriber*>& subscribers)
+{
+  if (monitor >= subscribers.size())
+    subscribers.resize(monitor + 1);
+
+  auto const& monitors = UScreen::GetDefault()->GetMonitors();
+  subscribers[monitor] = subscriber;
+  ResizeBarrierList(monitors);
+  SetupBarriers(monitors);
+}
+
+void EdgeBarrierController::Impl::RemoveSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor, std::vector<EdgeBarrierSubscriber*>& subscribers)
+{
+  if (monitor >= subscribers.size() || subscribers[monitor] != subscriber)
+    return;
+
+  auto const& monitors = UScreen::GetDefault()->GetMonitors();
+  subscribers[monitor] = nullptr;
+  ResizeBarrierList(monitors);
+  SetupBarriers(monitors);
+}
+
 void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry> const& layout)
 {
   auto num_monitors = layout.size();
@@ -408,46 +430,22 @@ EdgeBarrierController::~EdgeBarrierController()
 
 void EdgeBarrierController::AddVerticalSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor)
 {
-  if (monitor >= pimpl->vertical_subscribers_.size())
-    pimpl->vertical_subscribers_.resize(monitor + 1);
-
-  auto const& monitors = UScreen::GetDefault()->GetMonitors();
-  pimpl->vertical_subscribers_[monitor] = subscriber;
-  pimpl->ResizeBarrierList(monitors);
-  pimpl->SetupBarriers(monitors);
+  pimpl->AddSubscriber(subscriber, monitor, pimpl->vertical_subscribers_);
 }
 
 void EdgeBarrierController::RemoveVerticalSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor)
 {
-  if (monitor >= pimpl->vertical_subscribers_.size() || pimpl->vertical_subscribers_[monitor] != subscriber)
-    return;
-
-  auto const& monitors = UScreen::GetDefault()->GetMonitors();
-  pimpl->vertical_subscribers_[monitor] = nullptr;
-  pimpl->ResizeBarrierList(monitors);
-  pimpl->SetupBarriers(monitors);
+  pimpl->RemoveSubscriber(subscriber, monitor, pimpl->vertical_subscribers_);
 }
 
 void EdgeBarrierController::AddHorizontalSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor)
 {
-  if (monitor >= pimpl->horizontal_subscribers_.size())
-    pimpl->horizontal_subscribers_.resize(monitor + 1);
-
-  auto const& monitors = UScreen::GetDefault()->GetMonitors();
-  pimpl->horizontal_subscribers_[monitor] = subscriber;
-  pimpl->ResizeBarrierList(monitors);
-  pimpl->SetupBarriers(monitors);
+  pimpl->AddSubscriber(subscriber, monitor, pimpl->horizontal_subscribers_);
 }
 
 void EdgeBarrierController::RemoveHorizontalSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor)
 {
-  if (monitor >= pimpl->horizontal_subscribers_.size() || pimpl->horizontal_subscribers_[monitor] != subscriber)
-    return;
-
-  auto const& monitors = UScreen::GetDefault()->GetMonitors();
-  pimpl->horizontal_subscribers_[monitor] = nullptr;
-  pimpl->ResizeBarrierList(monitors);
-  pimpl->SetupBarriers(monitors);
+  pimpl->RemoveSubscriber(subscriber, monitor, pimpl->horizontal_subscribers_);
 }
 
 EdgeBarrierSubscriber* EdgeBarrierController::GetVerticalSubscriber(unsigned int monitor)
