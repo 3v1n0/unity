@@ -61,7 +61,6 @@ SwitcherView::SwitcherView()
   , last_icon_selected_(-1)
   , last_detail_icon_selected_(-1)
   , target_sizes_set_(false)
-  , mouse_inside_(false)
 {
   icon_renderer_->pip_style = OVER_TILE;
   icon_renderer_->monitor = monitors::MAX;
@@ -280,7 +279,9 @@ void SwitcherView::HandleMouseMove(int x, int y)
 void SwitcherView::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long /*key_flags*/)
 {
   int button = nux::GetEventButton(button_flags);
-  CheckMouseInsideBackground(x, y);
+
+  if (!CheckMouseInsideBackground(x, y))
+    hide_request.emit(false);
 
   if (model_->detail_selection)
   {
@@ -299,7 +300,7 @@ void SwitcherView::HandleDetailMouseDown(int x, int y, int button)
 
   last_detail_icon_selected_ = detail_icon_index;
 
-  switcher_mouse_down.emit(detail_icon_index, button, mouse_inside_);
+  switcher_mouse_down.emit(detail_icon_index, button);
 }
 
 void SwitcherView::HandleMouseDown(int x, int y, int button)
@@ -308,13 +309,12 @@ void SwitcherView::HandleMouseDown(int x, int y, int button)
 
   last_icon_selected_ = icon_index;
 
-  switcher_mouse_down.emit(icon_index, button, mouse_inside_);
+  switcher_mouse_down.emit(icon_index, button);
 }
 
 void SwitcherView::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long /*key_flags*/)
 {
   int button = nux::GetEventButton(button_flags);
-  CheckMouseInsideBackground(x, y);
 
   if (model_->detail_selection)
   {
@@ -331,7 +331,7 @@ void SwitcherView::HandleDetailMouseUp(int x, int y, int button)
   nux::Point const& mouse_pos = CalculateMouseMonitorOffset(x, y);
   int detail_icon_index = DetailIconIdexAt(mouse_pos.x, mouse_pos.y);
 
-  switcher_mouse_up.emit(detail_icon_index, button, mouse_inside_);
+  switcher_mouse_up.emit(detail_icon_index, button);
 
   if (button == 1)
   {
@@ -351,7 +351,7 @@ void SwitcherView::HandleMouseUp(int x, int y, int button)
 {
   int icon_index = IconIndexAt(x,y);
 
-  switcher_mouse_up.emit(icon_index, button, mouse_inside_);
+  switcher_mouse_up.emit(icon_index, button);
 
   if (button == 1)
   {
@@ -899,17 +899,13 @@ int SwitcherView::DetailIconIdexAt(int x, int y) const
   return index;
 }
 
-void SwitcherView::CheckMouseInsideBackground(int x, int y)
+bool SwitcherView::CheckMouseInsideBackground(int x, int y) const
 {
   nux::Point p(x,y);
   if (last_background_.IsInside(p))
-  {
-    mouse_inside_ = true;
-  }
-  else
-  {
-    mouse_inside_ = false;
-  }
+    return true;
+
+  return false;
 }
 
 }

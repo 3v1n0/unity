@@ -74,9 +74,9 @@ public:
   int IconIndexAt(int x, int y) const;
   int DetailIconIdexAt(int x, int y) const;
 
-  /* void; int icon_index, int button, bool inside */
-  sigc::signal<void, int, int, bool>  switcher_mouse_down;
-  sigc::signal<void, int, int, bool>  switcher_mouse_up;
+  /* void; int icon_index, int button*/
+  sigc::signal<void, int, int>  switcher_mouse_down;
+  sigc::signal<void, int, int>  switcher_mouse_up;
 
   /* void; int icon_index */
   sigc::signal<void, int>  switcher_mouse_move;
@@ -140,7 +140,7 @@ private:
   void ResetTimer();
   void SaveLast();
 
-  void CheckMouseInsideBackground(int x, int y);
+  bool CheckMouseInsideBackground(int x, int y) const;
 
   SwitcherModel::Ptr model_;
   ui::LayoutSystem layout_system_;
@@ -150,7 +150,6 @@ private:
   int last_icon_selected_;
   int last_detail_icon_selected_;
   bool target_sizes_set_;
-  bool mouse_inside_;
 
   std::list<ui::RenderArg> last_args_;
   std::list<ui::RenderArg> saved_args_;
