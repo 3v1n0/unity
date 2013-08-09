@@ -1,3 +1,29 @@
+unity (7.1.0+13.10.20130809.1-0ubuntu1) saucy; urgency=low
+
+  [ Michal Hruby ]
+  * Send up-to-date form_factor also after waiting for proxy connection.
+
+  [ Chris Townsend ]
+  * Fix yet another regression in revno. 3381 where the Panel shadow is
+    not drawn when in Show Desktop mode by using
+    PluginAdapter::IsWindowOnTop() instead of the new
+    GetTopVisibleWindow(). Remove GetTopVisibleWindow() to get rid of
+    code duplication. (LP: #1203097)
+
+  [ Jeremy Bicha ]
+  * Adjust to rename of ubiquity-gtkui.desktop to ubiquity.desktop.
+
+  [ Marco Trevisan (Treviño) ]
+  * BamfApplicationManager: add support for desktop-file-updated signal
+    and use in AppIcon Now an ApplicationLauncherIcon can have its
+    .desktop file updated and when this happens it reloads the infos it
+    needs and updates the FavoriteStore accordingly.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3456
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 09 Aug 2013 11:50:47 +0000
+
 unity (7.1.0+13.10.20130805-0ubuntu1) saucy; urgency=low
 
   [ Andrea Azzarone ]
