@@ -25,6 +25,7 @@
 #include <gtk/gtk.h>
 
 #include "unity-shared/BackgroundEffectHelper.h"
+#include "EdgeBarrierController.h"
 #include "FavoriteStoreGSettings.h"
 #include "LauncherController.h"
 #include "Launcher.h"
@@ -67,7 +68,7 @@ private:
   void Init()
   {
     SetupBackground();
-    controller.reset(new launcher::Controller(std::make_shared<XdndManager>()));
+    controller.reset(new launcher::Controller(std::make_shared<XdndManager>(), std::make_shared<ui::EdgeBarrierController>()));
 
     UScreen* uscreen = UScreen::GetDefault();
     std::vector<nux::Geometry> fake_monitor({nux::Geometry(0, 0, win_size.width, win_size.height)});

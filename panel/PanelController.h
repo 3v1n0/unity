@@ -23,6 +23,7 @@
 #include <memory>
 #include <Nux/Nux.h>
 
+#include "launcher/EdgeBarrierController.h"
 #include "unity-shared/Introspectable.h"
 namespace unity
 {
@@ -38,7 +39,7 @@ public:
   typedef std::shared_ptr<Controller> Ptr;
   typedef std::vector<nux::ObjectPtr<PanelView>> PanelVector;
 
-  Controller();
+  Controller(ui::EdgeBarrierController::Ptr const& barrier_controller);
   ~Controller();
 
   void FirstMenuShow();

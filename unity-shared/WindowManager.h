@@ -114,6 +114,8 @@ public:
 
   virtual bool IsWallActive() const = 0;
 
+  virtual bool IsAnyWindowMoving() const = 0;
+
   virtual void FocusWindowGroup(std::vector<Window> const& windows,
                                 FocusVisibility, int monitor = -1,
                                 bool only_top_win = true) = 0;

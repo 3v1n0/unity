@@ -79,6 +79,7 @@ StandaloneWindowManager::StandaloneWindowManager()
   , in_show_desktop_(false)
   , scale_active_(false)
   , scale_active_for_group_(false)
+  , is_any_window_moving_(false)
   , current_desktop_(0)
   , viewport_size_(2, 2)
 {}
@@ -391,6 +392,16 @@ bool StandaloneWindowManager::IsExpoActive() const
 bool StandaloneWindowManager::IsWallActive() const
 {
   return false;
+}
+
+void StandaloneWindowManager::SetIsAnyWindowMoving(bool is_any_window_moving)
+{
+  is_any_window_moving_ = is_any_window_moving;
+}
+
+bool StandaloneWindowManager::IsAnyWindowMoving() const
+{
+  return is_any_window_moving_;
 }
 
 void StandaloneWindowManager::FocusWindowGroup(std::vector<Window> const& windows,

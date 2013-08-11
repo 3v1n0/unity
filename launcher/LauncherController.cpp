@@ -104,13 +104,14 @@ std::string CreateAppUriNameFromDesktopPath(const std::string &desktop_path)
 
 }
 
-Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager)
+Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager, ui::EdgeBarrierController::Ptr const& edge_barriers)
   : parent_(parent)
   , model_(std::make_shared<LauncherModel>())
   , xdnd_manager_(xdnd_manager)
   , device_section_(std::make_shared<VolumeMonitorWrapper>(), std::make_shared<DevicesSettingsImp>())
   , expo_icon_(new ExpoLauncherIcon())
   , desktop_icon_(new DesktopLauncherIcon())
+  , edge_barriers_(edge_barriers)
   , sort_priority_(AbstractLauncherIcon::DefaultPriority(AbstractLauncherIcon::IconType::APPLICATION))
   , launcher_open(false)
   , launcher_keynav(false)
@@ -122,7 +123,7 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager)
   , dbus_server_(DBUS_NAME)
 {
 #ifdef USE_X11
-  edge_barriers_.options = parent_->options();
+  edge_barriers_->options = parent_->options();
 #endif
 
   ubus.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, [this](GVariant * data) {
@@ -225,7 +226,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
     if (launchers[i]->monitor() != monitor)
     {
 #ifdef USE_X11
-      edge_barriers_.Unsubscribe(launchers[i].GetPointer(), launchers[i]->monitor);
+      edge_barriers_->RemoveVerticalSubscriber(launchers[i].GetPointer(), launchers[i]->monitor);
 #endif
       launchers[i]->monitor = monitor;
     }
@@ -235,7 +236,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
     }
 
 #ifdef USE_X11
-    edge_barriers_.Subscribe(launchers[i].GetPointer(), launchers[i]->monitor);
+    edge_barriers_->AddVerticalSubscriber(launchers[i].GetPointer(), launchers[i]->monitor);
 #endif
   }
 
@@ -247,7 +248,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
       parent_->RemoveChild(launcher.GetPointer());
       launcher->GetParent()->UnReference();
 #ifdef USE_X11
-      edge_barriers_.Unsubscribe(launcher.GetPointer(), launcher->monitor);
+      edge_barriers_->RemoveVerticalSubscriber(launcher.GetPointer(), launcher->monitor);
 #endif
     }
   }
@@ -1058,10 +1059,10 @@ void Controller::Impl::SendHomeActivationRequest()
                    g_variant_new("(sus)", "home.scope", dash::NOT_HANDLED, ""));
 }
 
-Controller::Controller(XdndManager::Ptr const& xdnd_manager)
+Controller::Controller(XdndManager::Ptr const& xdnd_manager, ui::EdgeBarrierController::Ptr const& edge_barriers)
  : options(std::make_shared<Options>())
  , multiple_launchers(true)
- , pimpl(new Impl(this, xdnd_manager))
+ , pimpl(new Impl(this, xdnd_manager, edge_barriers))
 {
   multiple_launchers.changed.connect([&](bool value) -> void {
     UScreen* uscreen = UScreen::GetDefault();

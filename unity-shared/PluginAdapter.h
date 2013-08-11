@@ -109,6 +109,8 @@ public:
 
   bool IsWallActive() const;
 
+  bool IsAnyWindowMoving() const override;
+
   void ShowGrabHandles(CompWindow* window, bool use_timer);
   void HideGrabHandles(CompWindow* window);
   void ToggleGrabHandles(CompWindow* window);
