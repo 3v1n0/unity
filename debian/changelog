@@ -1,3 +1,27 @@
+unity (7.1.0+13.10.20130812.1-0ubuntu1) saucy; urgency=low
+
+  [ Brandon Schaefer ]
+  * Add ibus.py to the tests/autopilot/unity/emulators from
+    lp:autopilot. (LP: #1210661)
+  * Don't make the ScopeView/DashView/ScrollView Visible on start up
+    (bool wise, causing things to think its ok to render). (LP:
+    #1201631)
+  * Adds the ability to use the mouse in the switcher. (LP: #824965)
+
+  [ Andrea Azzarone ]
+  * Add edge barriers to unity::panel::PanelView. (LP: #931384)
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationLauncherIcon: Create a local desktop file when sticking
+    an app that has not Also make icon sticky only if both the icon
+    itself and the inner app is sticky as well. (LP: #1209320, #753305,
+    #765466, #754334, #704046)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3462
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 12 Aug 2013 06:49:01 +0000
+
 unity (7.1.0+13.10.20130809.1-0ubuntu1) saucy; urgency=low
 
   [ Michal Hruby ]
