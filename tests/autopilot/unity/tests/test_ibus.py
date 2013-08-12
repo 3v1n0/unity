@@ -264,7 +264,6 @@ class IBusTestsAnthy(IBusWidgetScenariodTests):
             ('user', {'input': 'yu-za- ', 'result' : u'\u30e6\u30fc\u30b6\u30fc' }),
         ],
         [
-            ('commit_j', {'commit_key': 'Ctrl+j'}),
             ('commit_enter', {'commit_key': 'Enter'}),
         ]
         )
@@ -327,7 +326,7 @@ class IBusTestsAnthyIgnore(IBusTests):
         self.activate_ibus(self.unity.dash.searchbar)
         self.keyboard.type("shisutemu ")
         self.keyboard.press_and_release("Tab")
-        self.keyboard.press_and_release("Ctrl+j")
+        self.keyboard.press_and_release("Enter")
         self.deactivate_ibus(self.unity.dash.searchbar)
         dash_search_string = self.unity.dash.search_string
 
