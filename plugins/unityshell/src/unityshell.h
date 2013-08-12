@@ -193,6 +193,8 @@ public:
 
   bool DoesPointIntersectUnityGeos(nux::Point const& pt);
 
+  ui::LayoutWindow::Ptr GetSwitcherDetailLayoutWindow(Window window) const;
+
 protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
@@ -392,6 +394,7 @@ public:
   bool place(CompPoint& pos);
   CompPoint tryNotIntersectUI(CompPoint& pos);
   nux::Geometry GetScaledGeometry();
+  nux::Geometry GetLayoutWindowGeometry();
 
   void paintThumbnail(nux::Geometry const& bounding, float parent_alpha, float alpha, float scale_ratio, unsigned deco_height, bool selected);
 

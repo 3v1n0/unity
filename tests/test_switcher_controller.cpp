@@ -272,3 +272,31 @@ TEST_F(TestSwitcherController, ShowHideSwitcherFading)
   EXPECT_EQ(mock_window_->GetOpacity(), 0.0f);
   Mock::VerifyAndClearExpectations(mock_window_.GetPointer());
 }
+
+TEST_F(TestSwitcherController, TestRightClickedReceived)
+{
+  controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
+
+  auto const& view = controller_->GetView();
+  auto const& model = view->GetModel();
+
+  ASSERT_FALSE(model->detail_selection());
+
+  view->switcher_mouse_up.emit(-1, 3);
+  view->switcher_mouse_down.emit(-1, 3);
+
+  ASSERT_TRUE(model->detail_selection());
+}
+
+TEST_F(TestSwitcherController, TestHideRequest)
+{
+  controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
+
+  auto const& view = controller_->GetView();
+
+  ASSERT_TRUE(controller_->Visible());
+
+  view->hide_request.emit(false);
+
+  ASSERT_FALSE(controller_->Visible());
+}

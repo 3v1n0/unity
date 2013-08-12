@@ -972,6 +972,19 @@ bool UnityScreen::DoesPointIntersectUnityGeos(nux::Point const& pt)
   return false;
 }
 
+LayoutWindow::Ptr UnityScreen::GetSwitcherDetailLayoutWindow(Window window) const
+{
+  LayoutWindow::Vector const& targets = switcher_controller_->ExternalRenderTargets();
+
+  for (LayoutWindow::Ptr const& target : targets)
+  {
+    if (target->xid == window)
+      return target;
+  }
+
+  return nullptr;
+}
+
 void UnityWindow::enterShowDesktop ()
 {
   if (!mShowdesktopHandler)
@@ -1170,7 +1183,8 @@ bool UnityWindow::handleEvent(XEvent *event)
         handled = true;
       }
       else if (event->xbutton.button == Button2 &&
-               GetScaledGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
+              (GetScaledGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root) ||
+               GetLayoutWindowGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root)))
       {
         middle_clicked_ = true;
         handled = true;
@@ -1191,7 +1205,9 @@ bool UnityWindow::handleEvent(XEvent *event)
         if (was_pressed)
         {
           if (close_button_geo_.IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
+          {
             window->close(0);
+          }
 
           handled = true;
         }
@@ -1199,7 +1215,8 @@ bool UnityWindow::handleEvent(XEvent *event)
         if (middle_clicked_)
         {
           if (event->xbutton.button == Button2 &&
-              GetScaledGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
+             (GetScaledGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root) ||
+              GetLayoutWindowGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root)))
           {
             window->close(0);
           }
@@ -1493,6 +1510,14 @@ void UnityScreen::handleEvent(XEvent* event)
         if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
+      else if (switcher_controller_->IsDetailViewShown())
+      {
+        Window win = switcher_controller_->GetCurrentSelection().window_;
+        CompWindow* w = screen->findWindow(win);
+
+        if (w)
+          skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
+      }
       break;
     case ButtonPress:
       if (super_keypressed_)
@@ -1504,6 +1529,14 @@ void UnityScreen::handleEvent(XEvent* event)
       {
         ScaleScreen* ss = ScaleScreen::get(screen);
         if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
+          skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
+      }
+      else if (switcher_controller_->IsDetailViewShown())
+      {
+        Window win = switcher_controller_->GetCurrentSelection().window_;
+        CompWindow* w = screen->findWindow(win);
+
+        if (w)
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
 
@@ -1533,8 +1566,7 @@ void UnityScreen::handleEvent(XEvent* event)
           }
         }
       }
-
-      if (hud_controller_->IsVisible())
+      else if (hud_controller_->IsVisible())
       {
         nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
         nux::Geometry const& hud_geo = hud_controller_->GetInputWindowGeometry();
@@ -1548,24 +1580,26 @@ void UnityScreen::handleEvent(XEvent* event)
           hud_controller_->HideHud(false);
         }
       }
+      else if (switcher_controller_->Visible())
+      {
+        nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
+        nux::Geometry const& switcher_geo = switcher_controller_->GetInputWindowGeometry();
+
+        if (!switcher_geo.IsInside(pt))
+        {
+          switcher_controller_->Hide(false);
+        }
+      }
       break;
     case ButtonRelease:
-      if (switcher_controller_ && switcher_controller_->Visible())
+
+      if (switcher_controller_->IsDetailViewShown())
       {
-        XButtonEvent *bev = reinterpret_cast<XButtonEvent*>(event);
-        if (bev->time - last_scroll_event_ > 150)
-        {
-          if (bev->button == Button4 || bev->button == local::SCROLL_UP_BUTTON)
-          {
-            switcher_controller_->Prev();
-            last_scroll_event_ = bev->time;
-          }
-          else if (bev->button == Button5 || bev->button == local::SCROLL_DOWN_BUTTON)
-          {
-            switcher_controller_->Next();
-            last_scroll_event_ = bev->time;
-          }
-        }
+        Window win = switcher_controller_->GetCurrentSelection().window_;
+        CompWindow* w = screen->findWindow(win);
+
+        if (w)
+          skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
       else if (wm.IsScaleActive())
       {
@@ -1687,7 +1721,7 @@ void UnityScreen::handleEvent(XEvent* event)
   }
 
   if (!skip_other_plugins &&
-      screen->otherGrabExist("deco", "move", "switcher", "resize", "unity-switcher", nullptr))
+      screen->otherGrabExist("deco", "move", "switcher", "resize", nullptr))
   {
     wt->ProcessForeignEvent(event, nullptr);
   }
@@ -1891,7 +1925,7 @@ bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
 bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode show_mode)
 {
   if (!grab_index_)
-    grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
+    grab_index_ = screen->pushGrab (screen->normalCursor(), "unity-switcher");
 
   screen->addAction(&optionGetAltTabRight());
   screen->addAction(&optionGetAltTabDetailStart());
@@ -1922,18 +1956,6 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
 
 void UnityScreen::SetUpAndShowSwitcher(switcher::ShowMode show_mode)
 {
-  // maybe check launcher position/hide state?
-
-  auto uscreen = UScreen::GetDefault();
-  int monitor = uscreen->GetMonitorWithMouse();
-  auto monitor_geo = uscreen->GetMonitorGeometry(monitor);
-
-  monitor_geo.x += 100;
-  monitor_geo.y += 100;
-  monitor_geo.width -= 200;
-  monitor_geo.height -= 200;
-  switcher_controller_->SetWorkspace(monitor_geo, monitor);
-
   RaiseInputWindows();
 
   auto results = launcher_controller_->GetAltTabIcons(show_mode == switcher::ShowMode::CURRENT_VIEWPORT,
@@ -3821,15 +3843,31 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   if (state != ScaleScreen::Wait && state != ScaleScreen::Out)
     return;
 
-  auto const& scaled_geo = GetScaledGeometry();
+  nux::Geometry const& scale_geo = GetScaledGeometry();
+
   auto const& pos = scale_win->getCurrentPosition();
 
   bool highlighted = (ss->getSelectedWindow() == window->id());
-  paintFakeDecoration(scaled_geo, attrib, transform, mask, highlighted, pos.scale);
+  paintFakeDecoration(scale_geo, attrib, transform, mask, highlighted, pos.scale);
+}
+
+nux::Geometry UnityWindow::GetLayoutWindowGeometry()
+{
+  auto const& layout_window = UnityScreen::get(screen)->GetSwitcherDetailLayoutWindow(window->id());
+
+  if (layout_window)
+    return layout_window->result;
+
+  return nux::Geometry();
 }
 
 nux::Geometry UnityWindow::GetScaledGeometry()
 {
+  WindowManager& wm = WindowManager::Default();
+
+  if (!wm.IsScaleActive())
+    return nux::Geometry();
+
   ScaleWindow* scale_win = ScaleWindow::get(window);
 
   ScalePosition const& pos = scale_win->getCurrentPosition();

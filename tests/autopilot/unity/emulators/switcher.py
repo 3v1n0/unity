@@ -234,6 +234,20 @@ class SwitcherController(UnityIntrospectionObject, KeybindingsHelper):
 class SwitcherView(UnityIntrospectionObject):
     """An emulator class for interacting with with SwitcherView."""
 
+    @property
+    def icon_args(self):
+        return self.get_children_by_type(RenderArgs);
+
+    @property
+    def detail_icons(self):
+        return self.get_children_by_type(LayoutWindow);
+
+
+class RenderArgs(UnityIntrospectionObject):
+  """An emulator class for interacting with the RenderArgs class."""
+
+class LayoutWindow(UnityIntrospectionObject):
+  """An emulator class for interacting with the LayoutWindows class."""
 
 class SwitcherModel(UnityIntrospectionObject):
     """An emulator class for interacting with the SwitcherModel."""
