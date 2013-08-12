@@ -216,8 +216,8 @@ class IBusTestsPinyin(IBusWidgetScenariodTests):
         [
             ('photo', {'input': 'zhaopian ', 'result' : u'\u7167\u7247' }),
             ('internet', {'input': 'hulianwang ', 'result' : u'\u4e92\u8054\u7f51'}),
-            ('disk', {'input': 'cipan ', 'result' : u'\u78c1\u76d8' }),
-            ('disk_management', {'input': 'cipan guanli ', 'result' : u'\u78c1\u76d8\u7ba1\u7406' }),
+            ('hello', {'input': 'ninhao ', 'result' : u'\u60a8\u597d' }),
+            ('management', {'input': 'guanli ', 'result' : u'\u7ba1\u7406' }),
         ]
     )
 
