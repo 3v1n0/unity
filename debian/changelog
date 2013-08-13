@@ -1,3 +1,20 @@
+unity (7.1.0+13.10.20130813.1-0ubuntu1) saucy; urgency=low
+
+  [ Michal Hruby ]
+  * Fix a leak in scope activation. Pass the original result if the
+    activation fails.
+
+  [ Brandon Schaefer ]
+  * Fix ibus-anthy AP tests, due to a failing commit key Ctrl+J being
+    changed to now turn off/on the ibus-anthy engine. (LP: #1211464)
+  * Attempt to use more canonical words for the ibus AP tests, so we end
+    up with a more used word, vs one the might change. (LP: #1211501)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3466
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 13 Aug 2013 06:18:39 +0000
+
 unity (7.1.0+13.10.20130812.1-0ubuntu1) saucy; urgency=low
 
   [ Brandon Schaefer ]
