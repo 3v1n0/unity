@@ -124,7 +124,7 @@ TEST_F(TestShortcutCompizModeller, BasicLensHintsArePresent)
 {
   auto const& dash_hints = modeller->GetCurrentModel()->hints().at("Dash");
   EXPECT_TRUE(DashHintsContains(dash_hints, "App Lens"));
-  EXPECT_TRUE(DashHintsContains(dash_hints, "File Lens"));
+  EXPECT_TRUE(DashHintsContains(dash_hints, "Files Lens"));
   EXPECT_TRUE(DashHintsContains(dash_hints, "Music Lens"));
   EXPECT_TRUE(DashHintsContains(dash_hints, "Photo Lens"));
   EXPECT_TRUE(DashHintsContains(dash_hints, "Video Lens"));
