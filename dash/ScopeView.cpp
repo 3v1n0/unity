@@ -293,15 +293,18 @@ void ScopeView::SetupCategories(Categories::Ptr const& categories)
   conn = categories->category_removed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryRemoved));
   category_removed_connection_ = conn_manager_.Add(conn);
 
-  auto resync_categories = [this, categories] ()
+  auto resync_categories = [this, categories] (bool add)
   {
     ClearCategories();
-    for (unsigned int i = 0; i < categories->count(); ++i)
-      OnCategoryAdded(categories->RowAtIndex(i));
+    if (add)
+    {
+      for (unsigned int i = 0; i < categories->count(); ++i)
+        OnCategoryAdded(categories->RowAtIndex(i));
+    }
   };
 
-  categories->model.changed.connect(sigc::hide(resync_categories));
-  resync_categories();
+  categories->model.changed.connect(sigc::bind(sigc::hide(resync_categories), false));
+  resync_categories(true);
 
   scope_->category_order.changed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryOrderChanged));
 }
@@ -390,20 +393,23 @@ void ScopeView::SetupFilters(Filters::Ptr const& filters)
   conn = filters->filter_removed.connect(sigc::mem_fun(this, &ScopeView::OnFilterRemoved));
   filter_removed_connection_ = conn_manager_.Add(conn);
 
-  auto resync_filters = [this, filters] ()
+  auto resync_filters = [this, filters] (bool add)
   {
     auto conn = conn_manager_.Get(filter_removed_connection_);
     bool blocked = conn.block(true);
 
     filter_bar_->ClearFilters();
-    for (unsigned int i = 0; i < filters->count(); ++i)
-      OnFilterAdded(filters->FilterAtIndex(i));
+    if (add)
+    {
+      for (unsigned int i = 0; i < filters->count(); ++i)
+        OnFilterAdded(filters->FilterAtIndex(i));
+    }
 
     conn.block(blocked);
   };
 
-  filters->model.changed.connect(sigc::hide(resync_filters));
-  resync_filters();
+  filters->model.changed.connect(sigc::bind(sigc::hide(resync_filters), false));
+  resync_filters(true);
 }
 
 void ScopeView::OnCategoryAdded(Category const& category)
@@ -488,7 +494,7 @@ void ScopeView::OnCategoryAdded(Category const& category)
 
       if (is_app_scope_result && type == ResultView::ActivateType::PREVIEW_LEFT_BUTTON)
         type = ResultView::ActivateType::DIRECT;
-      
+
       result_activated.emit(type, local_result, data, unique_id);
       switch (type)
       {
