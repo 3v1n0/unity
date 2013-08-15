@@ -453,6 +453,24 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         self.assertThat(get_icon_names, Eventually(Contains(char_map.name)))
         self.assertThat(get_icon_names, Eventually(Not(Contains(calc.name))))
 
+    def test_switcher_switch_current_workspace_same_apps_diff_workspace(self):
+        initial_workspace = self.workspace.current_workspace
+        self.addCleanup(self.workspace.switch_to, initial_workspace)
+
+        char_map = self.process_manager.start_app_window("Character Map")
+        calc1 = self.process_manager.start_app_window("Calculator")
+
+        self.workspace.switch_to((initial_workspace + 1) % self.workspace.num_workspaces)
+
+        calc2 = self.process_manager.start_app_window("Calculator")
+
+        self.workspace.switch_to(initial_workspace);
+
+        self.unity.switcher.initiate()
+        self.unity.switcher.select()
+
+        self.assertProperty(char_map, is_focused=True)
+
     def test_switcher_all_mode_shows_all_apps(self):
         """Test switcher 'show_all' mode shows apps from all workspaces."""
         initial_workspace = self.workspace.current_workspace

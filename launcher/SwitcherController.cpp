@@ -764,6 +764,10 @@ void Controller::Impl::SelectFirstItem()
   for (auto& window : first->Windows())
   {
     Window xid = window->window_id();
+    
+    if (model_->only_detail_on_viewport && !wm.IsWindowOnCurrentDesktop(xid))
+      continue;
+
     uint64_t num = wm.GetWindowActiveNumber(xid);
 
     if (num > first_highest)
