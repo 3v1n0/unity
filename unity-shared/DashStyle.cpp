@@ -1653,7 +1653,6 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
 
   // blur and blend overlay onto initial image-surface
   Blur(blurred_cr, blurSize);
-  //cairo_surface_write_to_png(surface, "/tmp/overlay-surface.png");
   cairo_set_source_surface(cr, surface, 0.0, 0.0);
   old = SetBlendMode(cr, mode);
   cairo_paint_with_alpha(cr, opacity);
@@ -1873,8 +1872,6 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
               font_px_size,
               42.0 + 10.0,
               alignment);
-
-  cairo_surface_write_to_png(cairo_get_target(cr), "/tmp/wut.png");
 
   return true;
 }
