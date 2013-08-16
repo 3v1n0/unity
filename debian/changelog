@@ -1,3 +1,35 @@
+unity (7.1.0+13.10.20130816.3-0ubuntu1) saucy; urgency=low
+
+  [ Michal Hruby ]
+  * Make sure we emit row_added signals for all rows present in a model
+    when changing a model Model::SetModel(). (LP: #1212580)
+
+  [ Andrew McCarthy ]
+  * added photo lens shortcut to the shortcuts hint window (lp:
+    #1069644). (LP: #1069644)
+
+  [ Stephen M. Webb ]
+  * added photo lens shortcut to the shortcuts hint window (lp:
+    #1069644). (LP: #1069644)
+  * removed debug output thatcould cause a potential security problem
+    (lp: #1051921). (LP: #1051921)
+
+  [ Nick Dedekind ]
+  * Don't re-add the rows for filters and categories if the model
+    changes.
+  * Fixed duplicate categories in scope caused by full resync on model
+    change. (LP: #1212945)
+
+  [ Chris Townsend ]
+  * Fix issue where the same app on different workspaces would not allow
+    alt-tab to work properly when trying to switch to the last used app
+    on the same workspace. (LP: #1211261)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3473
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 16 Aug 2013 11:47:59 +0000
+
 unity (7.1.0+13.10.20130813.1-0ubuntu1) saucy; urgency=low
 
   [ Michal Hruby ]
