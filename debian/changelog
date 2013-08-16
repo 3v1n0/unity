@@ -1,3 +1,9 @@
+unity (7.1.0+13.10.20130813.1-0ubuntu2ppa1~saucy) UNRELEASED; urgency=low
+
+  * Support DO_SEARCH activation response.
+
+ -- Pawel Stolowski <pawel.stolowski@ubuntu.com>  Fri, 16 Aug 2013 17:00:52 +0200
+
 unity (7.1.0+13.10.20130813.1-0ubuntu1) saucy; urgency=low
 
   [ Michal Hruby ]
