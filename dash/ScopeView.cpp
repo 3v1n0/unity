@@ -293,7 +293,7 @@ void ScopeView::SetupCategories(Categories::Ptr const& categories)
   conn = categories->category_removed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryRemoved));
   category_removed_connection_ = conn_manager_.Add(conn);
 
-  auto resync_categories = [this, categories] (bool add)
+  auto resync_categories = [this, categories] (bool add = false)
   {
     ClearCategories();
     if (add)
@@ -303,7 +303,7 @@ void ScopeView::SetupCategories(Categories::Ptr const& categories)
     }
   };
 
-  categories->model.changed.connect(sigc::bind(sigc::hide(resync_categories), false));
+  categories->model.changed.connect(sigc::hide(resync_categories));
   resync_categories(true);
 
   scope_->category_order.changed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryOrderChanged));
@@ -393,7 +393,7 @@ void ScopeView::SetupFilters(Filters::Ptr const& filters)
   conn = filters->filter_removed.connect(sigc::mem_fun(this, &ScopeView::OnFilterRemoved));
   filter_removed_connection_ = conn_manager_.Add(conn);
 
-  auto resync_filters = [this, filters] (bool add)
+  auto resync_filters = [this, filters] (bool add = false)
   {
     auto conn = conn_manager_.Get(filter_removed_connection_);
     bool blocked = conn.block(true);
@@ -408,7 +408,7 @@ void ScopeView::SetupFilters(Filters::Ptr const& filters)
     conn.block(blocked);
   };
 
-  filters->model.changed.connect(sigc::bind(sigc::hide(resync_filters), false));
+  filters->model.changed.connect(sigc::hide(resync_filters));
   resync_filters(true);
 }
 
@@ -425,6 +425,7 @@ void ScopeView::OnCategoryAdded(Category const& category)
 
   LOG_DEBUG(logger) << "Category added '" << (scope_ ? scope_->name() : "unknown") << "': "
                     << name
+                    << "[" << category.id() << "] "
                     << "(" << icon_hint
                     << ", " << renderer_name
                     << ", " << index << ")";
