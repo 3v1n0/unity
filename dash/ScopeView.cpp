@@ -386,7 +386,7 @@ void ScopeView::SetupFilters(Filters::Ptr const& filters)
   conn = filters->filter_removed.connect(sigc::mem_fun(this, &ScopeView::OnFilterRemoved));
   filter_removed_connection_ = conn_manager_.Add(conn);
 
-  auto clear_filters = [this, filters] ()
+  auto clear_filters = [this] ()
   {
     auto conn = conn_manager_.Get(filter_removed_connection_);
     bool blocked = conn.block(true);
