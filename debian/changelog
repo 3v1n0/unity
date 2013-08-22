@@ -1,3 +1,15 @@
+unity (7.1.0+13.10.20130822-0ubuntu1) saucy; urgency=low
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Bump the build dependency on compiz to 0.9.10
+  * We now have indicator-keyboard - recommend it along other
+    indicators.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3476
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 22 Aug 2013 06:57:29 +0000
+
 unity (7.1.0+13.10.20130816.3-0ubuntu1) saucy; urgency=low
 
   [ Michal Hruby ]
