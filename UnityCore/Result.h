@@ -23,6 +23,7 @@
 #include <NuxCore/Property.h>
 
 #include "ModelRowAdaptor.h"
+#include "Variant.h"
 
 namespace unity
 {
@@ -45,23 +46,58 @@ public:
 
   nux::ROProperty<std::string> uri;
   nux::ROProperty<std::string> icon_hint;
-  nux::ROProperty<std::size_t> category_index;
+  nux::ROProperty<unsigned> category_index;
+  nux::ROProperty<unsigned> result_type;
   nux::ROProperty<std::string> mimetype;
   nux::ROProperty<std::string> name;
   nux::ROProperty<std::string> comment;
   nux::ROProperty<std::string> dnd_uri;
+  nux::ROProperty<glib::HintsMap> hints;
 
 protected:
   virtual std::string GetURI() const;
   virtual std::string GetIconHint() const;
-  virtual std::size_t GetCategoryIndex() const;
+  virtual unsigned GetCategoryIndex() const;
+  virtual unsigned GetResultType() const;
   virtual std::string GetMimeType() const;
   virtual std::string GetName() const;
   virtual std::string GetComment() const;
   virtual std::string GetDndURI() const;
+  virtual glib::HintsMap GetHints() const;
 
 private:
   void SetupGetters();
+};
+
+class LocalResult
+{
+public:
+  LocalResult();
+  LocalResult(LocalResult const& other);
+  LocalResult(Result const& other);
+
+  LocalResult& operator=(LocalResult const& rhs);
+  bool operator==(LocalResult const& rhs) const;
+  bool operator!=(LocalResult const& rhs) const;
+
+  LocalResult& operator=(Result const& rhs);
+  
+  std::string uri;
+  std::string icon_hint;
+  unsigned category_index;
+  unsigned result_type;
+  std::string mimetype;
+  std::string name;
+  std::string comment;
+  std::string dnd_uri;
+  glib::HintsMap hints;
+
+  void clear();
+  bool empty() const;
+
+  std::vector<glib::Variant> Variants() const;
+  glib::Variant Variant() const;
+  static LocalResult FromVariant(glib::Variant const& v);
 };
 
 }

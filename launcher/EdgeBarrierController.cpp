@@ -16,11 +16,13 @@
  *
  * Authored by: Jason Smith <jason.smith@canonical.com>
  *              Marco Trevisan <marco.trevisan@canonical.com>
+ *              Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
 #include "EdgeBarrierController.h"
 #include "EdgeBarrierControllerPrivate.h"
 #include "Decaymulator.h"
+#include <NuxCore/Logger.h>
 #include "unity-shared/UScreen.h"
 #include "UnityCore/GLibSource.h"
 
@@ -32,11 +34,51 @@ namespace ui
 namespace
 {
   int const Y_BREAK_BUFFER = 20;
+  int const X_BREAK_BUFFER = 20;
+  int const MAJOR = 2;
+  int const MINOR = 3;
 }
 
+DECLARE_LOGGER(logger, "unity.edge_barrier_controller");
+
+int GetXI2OpCode()
+{
+  Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
+
+  int opcode, event_base, error_base;
+  if (!XQueryExtension(dpy, "XFIXES",
+                       &opcode,
+                       &event_base,
+                       &error_base))
+  {
+    LOG_ERROR(logger) << "Missing XFixes";
+    return -1;
+  }
+
+  if (!XQueryExtension (dpy, "XInputExtension",
+                        &opcode,
+                        &event_base,
+                        &error_base))
+  {
+    LOG_ERROR(logger) << "Missing XInput";
+    return -1;
+  }
+
+  int maj = MAJOR;
+  int min = MINOR;
+
+  if (XIQueryVersion(dpy, &maj, &min) == BadRequest)
+  {
+    LOG_ERROR(logger) << "Need XInput version 2.3";
+    return -1;
+  }
+
+  return opcode;
+}
 
 EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
-  : edge_overcome_pressure_(0)
+  : xi2_opcode_(-1)
+  , edge_overcome_pressure_(0)
   , parent_(parent)
 {
   UScreen *uscreen = UScreen::GetDefault();
@@ -68,22 +110,74 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
     });
     SetupBarriers(UScreen::GetDefault()->GetMonitors());
   });
+
+  xi2_opcode_ = GetXI2OpCode();
+}
+
+EdgeBarrierController::Impl::~Impl()
+{
+  nux::GetGraphicsDisplay()->RemoveEventFilter(this);
+}
+
+void EdgeBarrierController::Impl::AddSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor, std::vector<EdgeBarrierSubscriber*>& subscribers)
+{
+  if (monitor >= subscribers.size())
+    subscribers.resize(monitor + 1);
+
+  auto const& monitors = UScreen::GetDefault()->GetMonitors();
+  subscribers[monitor] = subscriber;
+  ResizeBarrierList(monitors);
+  SetupBarriers(monitors);
+}
+
+void EdgeBarrierController::Impl::RemoveSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor, std::vector<EdgeBarrierSubscriber*>& subscribers)
+{
+  if (monitor >= subscribers.size() || subscribers[monitor] != subscriber)
+    return;
+
+  auto const& monitors = UScreen::GetDefault()->GetMonitors();
+  subscribers[monitor] = nullptr;
+  ResizeBarrierList(monitors);
+  SetupBarriers(monitors);
 }
 
 void EdgeBarrierController::Impl::ResizeBarrierList(std::vector<nux::Geometry> const& layout)
 {
   auto num_monitors = layout.size();
-  if (barriers_.size() > num_monitors)
-  {
-    barriers_.resize(num_monitors);
-  }
 
-  while (barriers_.size() < num_monitors)
+  if (vertical_barriers_.size() > num_monitors)
+    vertical_barriers_.resize(num_monitors);
+
+  if (horizontal_barriers_.size() > num_monitors)
+    horizontal_barriers_.resize(num_monitors);
+
+  while (vertical_barriers_.size() < num_monitors)
   {
     auto barrier = std::make_shared<PointerBarrierWrapper>();
+    barrier->orientation = VERTICAL;
     barrier->barrier_event.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnPointerBarrierEvent));
-    barriers_.push_back(barrier);
+    vertical_barriers_.push_back(barrier);
   }
+
+  while (horizontal_barriers_.size() < num_monitors)
+  {
+    auto barrier = std::make_shared<PointerBarrierWrapper>();
+    barrier->orientation = HORIZONTAL;
+    barrier->barrier_event.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnPointerBarrierEvent));
+    horizontal_barriers_.push_back(barrier);
+  }
+}
+
+void SetupXI2Events()
+{
+  Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
+
+  unsigned char mask_bits[XIMaskLen (XI_LASTEVENT)] = { 0 };
+  XIEventMask mask = { XIAllMasterDevices, sizeof (mask_bits), mask_bits };
+
+  XISetMask(mask.mask, XI_BarrierHit);
+  XISetMask(mask.mask, XI_BarrierLeave);
+  XISelectEvents (dpy, DefaultRootWindow(dpy), &mask, 1);
 }
 
 void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const& layout)
@@ -92,31 +186,116 @@ void EdgeBarrierController::Impl::SetupBarriers(std::vector<nux::Geometry> const
 
   for (unsigned i = 0; i < layout.size(); i++)
   {
-    auto barrier = barriers_[i];
+    auto vertical_barrier = vertical_barriers_[i];
+    auto horizontal_barrier = horizontal_barriers_[i];
     auto monitor = layout[i];
 
-    barrier->DestroyBarrier();
+    vertical_barrier->DestroyBarrier();
+    horizontal_barrier->DestroyBarrier();
+
+    if (edge_resist)
+    {
+      horizontal_barrier->x1 = monitor.x;
+      horizontal_barrier->x2 = monitor.x + monitor.width;
+      horizontal_barrier->y1 = monitor.y;
+      horizontal_barrier->y2 = monitor.y;
+      horizontal_barrier->index = i;
+      horizontal_barrier->direction = UP;
+
+      horizontal_barrier->threshold = parent_->options()->edge_stop_velocity();
+      horizontal_barrier->max_velocity_multiplier = parent_->options()->edge_responsiveness();
+
+      horizontal_barrier->ConstructBarrier();
+    }
 
     if (!edge_resist && parent_->options()->hide_mode() == launcher::LauncherHideMode::LAUNCHER_HIDE_NEVER)
       continue;
 
-    barrier->x1 = monitor.x;
-    barrier->x2 = monitor.x;
-    barrier->y1 = monitor.y;
-    barrier->y2 = monitor.y + monitor.height;
-    barrier->index = i;
+    vertical_barrier->x1 = monitor.x;
+    vertical_barrier->x2 = monitor.x;
+    vertical_barrier->y1 = monitor.y;
+    vertical_barrier->y2 = monitor.y + monitor.height;
+    vertical_barrier->index = i;
 
-    barrier->threshold = parent_->options()->edge_stop_velocity();
-    barrier->max_velocity_multiplier = parent_->options()->edge_responsiveness();
+    vertical_barrier->threshold = parent_->options()->edge_stop_velocity();
+    vertical_barrier->max_velocity_multiplier = parent_->options()->edge_responsiveness();
 
-    barrier->ConstructBarrier();
+    vertical_barrier->ConstructBarrier();
   }
+
+  SetupXI2Events();
+  AddEventFilter();
 
   float decay_responsiveness_mult = ((parent_->options()->edge_responsiveness() - 1) * .3f) + 1;
   decaymulator_.rate_of_decay = parent_->options()->edge_decay_rate() * decay_responsiveness_mult;
 
   float overcome_responsiveness_mult = ((parent_->options()->edge_responsiveness() - 1) * 1.0f) + 1;
   edge_overcome_pressure_ = parent_->options()->edge_overcome_pressure() * overcome_responsiveness_mult;
+}
+
+void EdgeBarrierController::Impl::AddEventFilter()
+{
+  // Remove an old one, if it exists
+  nux::GetGraphicsDisplay()->RemoveEventFilter(this);
+
+  nux::GraphicsDisplay::EventFilterArg event_filter;
+  event_filter.filter = &HandleEventCB;
+  event_filter.data = this;
+
+  nux::GetGraphicsDisplay()->AddEventFilter(event_filter);
+}
+
+bool EdgeBarrierController::Impl::HandleEvent(XEvent xevent)
+{
+  Display *dpy = nux::GetGraphicsDisplay()->GetX11Display();
+  XGenericEventCookie *cookie = &xevent.xcookie;
+  bool ret = false;
+
+  switch (cookie->evtype)
+  {
+    case (XI_BarrierHit):
+    {
+      if (XGetEventData(dpy, cookie))
+      {
+        XIBarrierEvent* barrier_event = (XIBarrierEvent*)cookie->data;
+        PointerBarrierWrapper::Ptr wrapper = FindBarrierEventOwner(barrier_event);
+
+        if (wrapper)
+          ret = wrapper->HandleBarrierEvent(barrier_event);
+      }
+
+      XFreeEventData(dpy, cookie);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return ret;
+}
+
+bool EdgeBarrierController::Impl::HandleEventCB(XEvent xevent, void* data)
+{
+  auto edge_barrier_controller = static_cast<EdgeBarrierController::Impl*>(data);
+  int const xi2_opcode = edge_barrier_controller->xi2_opcode_;
+
+  if (xevent.type != GenericEvent || xevent.xcookie.extension != xi2_opcode)
+    return false;
+
+  return edge_barrier_controller->HandleEvent(xevent);
+}
+
+PointerBarrierWrapper::Ptr EdgeBarrierController::Impl::FindBarrierEventOwner(XIBarrierEvent* barrier_event)
+{
+  for (auto barrier : vertical_barriers_)
+    if (barrier->OwnsBarrierEvent(barrier_event->barrier))
+      return barrier;
+
+  for (auto barrier : horizontal_barriers_)
+    if (barrier->OwnsBarrierEvent(barrier_event->barrier))
+      return barrier;
+
+  return nullptr;
 }
 
 void EdgeBarrierController::Impl::BarrierReset()
@@ -126,7 +305,8 @@ void EdgeBarrierController::Impl::BarrierReset()
 
 void EdgeBarrierController::Impl::BarrierPush(PointerBarrierWrapper* owner, BarrierEvent::Ptr const& event)
 {
-  if (EventIsInsideYBreakZone(event))
+  if ((owner->orientation == VERTICAL and EventIsInsideYBreakZone(event)) or
+      (owner->orientation == HORIZONTAL and EventIsInsideXBreakZone(event)))
   {
     decaymulator_.value = decaymulator_.value + event->velocity;
   }
@@ -157,6 +337,22 @@ bool EdgeBarrierController::Impl::EventIsInsideYBreakZone(BarrierEvent::Ptr cons
   return false;
 }
 
+bool EdgeBarrierController::Impl::EventIsInsideXBreakZone(BarrierEvent::Ptr const& event)
+{
+  static int x_break_zone = event->y;
+
+  if (decaymulator_.value <= 0)
+    x_break_zone = event->x;
+
+  if (event->x <= x_break_zone + X_BREAK_BUFFER &&
+      event->x >= x_break_zone - X_BREAK_BUFFER)
+  {
+    return true;
+  }
+
+  return false;
+}
+
 void EdgeBarrierController::Impl::OnPointerBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr const& event)
 {
   if (owner->released)
@@ -166,11 +362,14 @@ void EdgeBarrierController::Impl::OnPointerBarrierEvent(PointerBarrierWrapper* o
   }
 
   unsigned int monitor = owner->index;
-  auto result = EdgeBarrierSubscriber::Result::IGNORED;
+  auto orientation = owner->orientation();
+  auto result = EdgeBarrierSubscriber::Result::NEEDS_RELEASE;
 
-  if (monitor < subscribers_.size())
+  auto subscribers = orientation == VERTICAL ? vertical_subscribers_ : horizontal_subscribers_ ;
+
+  if (monitor < subscribers.size())
   {
-    auto subscriber = subscribers_[monitor];
+    auto subscriber = subscribers[monitor];
 
     if (subscriber)
       result = subscriber->HandleBarrierEvent(owner, event);
@@ -229,34 +428,40 @@ EdgeBarrierController::EdgeBarrierController()
 EdgeBarrierController::~EdgeBarrierController()
 {}
 
-void EdgeBarrierController::Subscribe(EdgeBarrierSubscriber* subscriber, unsigned int monitor)
+void EdgeBarrierController::AddVerticalSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor)
 {
-  if (monitor >= pimpl->subscribers_.size())
-    pimpl->subscribers_.resize(monitor + 1);
-
-  auto const& monitors = UScreen::GetDefault()->GetMonitors();
-  pimpl->subscribers_[monitor] = subscriber;
-  pimpl->ResizeBarrierList(monitors);
-  pimpl->SetupBarriers(monitors);
+  pimpl->AddSubscriber(subscriber, monitor, pimpl->vertical_subscribers_);
 }
 
-void EdgeBarrierController::Unsubscribe(EdgeBarrierSubscriber* subscriber, unsigned int monitor)
+void EdgeBarrierController::RemoveVerticalSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor)
 {
-  if (monitor >= pimpl->subscribers_.size() || pimpl->subscribers_[monitor] != subscriber)
-    return;
-
-  auto const& monitors = UScreen::GetDefault()->GetMonitors();
-  pimpl->subscribers_[monitor] = nullptr;
-  pimpl->ResizeBarrierList(monitors);
-  pimpl->SetupBarriers(monitors);
+  pimpl->RemoveSubscriber(subscriber, monitor, pimpl->vertical_subscribers_);
 }
 
-EdgeBarrierSubscriber* EdgeBarrierController::GetSubscriber(unsigned int monitor)
+void EdgeBarrierController::AddHorizontalSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor)
 {
-  if (monitor >= pimpl->subscribers_.size())
+  pimpl->AddSubscriber(subscriber, monitor, pimpl->horizontal_subscribers_);
+}
+
+void EdgeBarrierController::RemoveHorizontalSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor)
+{
+  pimpl->RemoveSubscriber(subscriber, monitor, pimpl->horizontal_subscribers_);
+}
+
+EdgeBarrierSubscriber* EdgeBarrierController::GetVerticalSubscriber(unsigned int monitor)
+{
+  if (monitor >= pimpl->vertical_subscribers_.size())
     return nullptr;
 
-  return pimpl->subscribers_[monitor];
+  return pimpl->vertical_subscribers_[monitor];
+}
+
+EdgeBarrierSubscriber* EdgeBarrierController::GetHorizontalSubscriber(unsigned int monitor)
+{
+  if (monitor >= pimpl->horizontal_subscribers_.size())
+    return nullptr;
+
+  return pimpl->horizontal_subscribers_[monitor];
 }
 
 }

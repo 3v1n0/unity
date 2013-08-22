@@ -71,7 +71,7 @@ public:
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
   GtkStyleContext* GetStyleContext();
-  BaseTexturePtr GetBackground(int width, int height, float opacity);
+  BaseTexturePtr GetBackground();
   BaseTexturePtr GetWindowButton(WindowButtonType type, WindowState state);
   BaseTexturePtr GetFallbackWindowButton(WindowButtonType type, WindowState state);
   std::vector<std::string> GetWindowButtonFileNames(WindowButtonType type, WindowState state);
@@ -88,6 +88,7 @@ private:
 
   glib::Object<GtkStyleContext> _style_context;
   glib::Object<GSettings> _gsettings;
+  BaseTexturePtr _bg_texture;
   std::string _theme_name;
   nux::Color _text_color;
 

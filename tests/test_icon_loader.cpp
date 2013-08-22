@@ -21,6 +21,7 @@
 #include <sigc++/sigc++.h>
 
 #include "IconLoader.h"
+#include "test_utils.h"
 
 using namespace testing;
 using namespace unity;
@@ -45,8 +46,9 @@ struct LoadResult
 {
   glib::Object<GdkPixbuf> pixbuf;
   bool got_callback;
+  bool disconnected;
 
-  LoadResult() : pixbuf(NULL), got_callback(false) {}
+  LoadResult() : pixbuf(NULL), got_callback(false), disconnected(false) {}
   void IconLoaded(std::string const& icon_name, int max_width, int max_height,
                   glib::Object<GdkPixbuf> const& buf)
   {
@@ -56,64 +58,86 @@ struct LoadResult
   }
 };
 
-TEST(TestIconLoader, TestGetDefault)
+void CheckResults(std::vector<LoadResult> const& results)
 {
-  // we need to initialize gtk
-  int args_cnt = 0;
-  gtk_init (&args_cnt, NULL);
+  Utils::WaitUntilMSec([&results] {
+    bool got_all = true;
+    for (auto const& result : results)
+    {
+      got_all = (result.got_callback == !result.disconnected);
 
-  IconLoader::GetDefault();
+      if (!got_all)
+        break;
+    }
+
+    return got_all;
+  });
+
+  for (auto const& result : results)
+  {
+    if (!result.disconnected)
+    {
+      ASSERT_TRUE(result.got_callback);
+      ASSERT_TRUE(IsValidPixbuf(result.pixbuf));
+    }
+    else
+    {
+      ASSERT_FALSE(result.got_callback);
+    }
+  }
 }
 
-TEST(TestIconLoader, TestGetOneIcon)
+struct TestIconLoader : testing::Test
 {
-  LoadResult load_result;
-  IconLoader& icon_loader = IconLoader::GetDefault();
-  volatile bool timeout_reached = false;
+  TestIconLoader()
+    : icon_loader(IconLoader::GetDefault())
+  {}
 
-  icon_loader.LoadFromIconName("gedit-icon", -1, 48, sigc::mem_fun(load_result,
-        &LoadResult::IconLoaded));
-
-  guint tid = g_timeout_add (10000, TimeoutReached, (gpointer)(&timeout_reached));
-  while (!timeout_reached && !load_result.got_callback)
+  void TearDown() override
   {
-    g_main_context_iteration (NULL, TRUE);
+    for (int handle : handles_)
+      icon_loader.DisconnectHandle(handle);
   }
 
-  EXPECT_TRUE(load_result.got_callback);
-  EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
+  IconLoader& icon_loader;
+  std::vector<int> handles_;
+};
 
-  g_source_remove (tid);
+TEST_F(TestIconLoader, TestGetDefault)
+{
+  EXPECT_EQ(&icon_loader, &IconLoader::GetDefault());
 }
 
-TEST(TestIconLoader, TestGetAnnotatedIcon)
+TEST_F(TestIconLoader, TestGetOneIcon)
 {
   LoadResult load_result;
-  IconLoader& icon_loader = IconLoader::GetDefault();
-  volatile bool timeout_reached = false;
 
-  
-  icon_loader.LoadFromGIconString(". UnityProtocolAnnotatedIcon %7B'base-icon':%20%3C'gedit-icon'%3E,%20'ribbon':%20%3C'foo'%3E%7D", -1, 48, sigc::mem_fun(load_result,
+  int handle = icon_loader.LoadFromIconName("python", -1, 48, sigc::mem_fun(load_result,
         &LoadResult::IconLoaded));
+  handles_.push_back(handle);
 
-  guint tid = g_timeout_add (10000, TimeoutReached, (gpointer)(&timeout_reached));
-  while (!timeout_reached && !load_result.got_callback)
-  {
-    g_main_context_iteration (NULL, TRUE);
-  }
-
+  Utils::WaitUntilMSec(load_result.got_callback);
   EXPECT_TRUE(load_result.got_callback);
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
-
-  g_source_remove (tid);
 }
 
-TEST(TestIconLoader, TestGetOneIconManyTimes)
+TEST_F(TestIconLoader, TestGetAnnotatedIcon)
+{
+  LoadResult load_result;
+
+  int handle = icon_loader.LoadFromGIconString(". UnityProtocolAnnotatedIcon %7B'base-icon':%20%3C'cmake'%3E,%20'ribbon':%20%3C'foo'%3E%7D", -1, 48, sigc::mem_fun(load_result,
+        &LoadResult::IconLoaded));
+  handles_.push_back(handle);
+
+  Utils::WaitUntilMSec(load_result.got_callback);
+  EXPECT_TRUE(load_result.got_callback);
+  EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
+}
+
+TEST_F(TestIconLoader, TestGetOneIconManyTimes)
 {
   std::vector<LoadResult> results;
   std::vector<int> handles;
-  IconLoader& icon_loader = IconLoader::GetDefault();
-  volatile bool timeout_reached = false;
   int i, load_count;
 
   // 100 times should be good
@@ -125,60 +149,25 @@ TEST(TestIconLoader, TestGetOneIconManyTimes)
   // be cached already!
   for (int i = 0; i < load_count; i++)
   {
-    handles[i] = icon_loader.LoadFromIconName("web-browser", -1, 48,
+    handles[i] = icon_loader.LoadFromIconName("debian-logo", -1, 48,
         sigc::mem_fun(results[i], &LoadResult::IconLoaded));
+    handles_.push_back(handles[i]);
   }
 
   // disconnect every other handler (and especially the first one)
   for (i = 0; i < load_count; i += 2)
   {
     icon_loader.DisconnectHandle(handles[i]);
+    results[i].disconnected = true;
   }
 
-  guint tid = g_timeout_add (10000, TimeoutReached, (gpointer)(&timeout_reached));
-  int iterations = 0;
-  while (!timeout_reached)
-  {
-    g_main_context_iteration (NULL, TRUE);
-    bool all_loaded = true;
-    bool any_loaded = false;
-    for (i = 1; i < load_count; i += 2)
-    {
-      all_loaded &= results[i].got_callback;
-      any_loaded |= results[i].got_callback;
-      if (!all_loaded) break;
-    }
-    // count the number of iterations where we got some results
-    if (any_loaded) iterations++;
-    if (all_loaded) break;
-  }
-
-  EXPECT_FALSE(timeout_reached);
-  // it's all loading the same icon, the results had to come in the same
-  // main loop iteration (that's the desired behaviour)
-  EXPECT_EQ(iterations, 1);
-
-  for (i = 0; i < load_count; i++)
-  {
-    if (i % 2)
-    {
-      EXPECT_TRUE(results[i].got_callback);
-      EXPECT_TRUE(IsValidPixbuf(results[i].pixbuf));
-    }
-    else
-    {
-      EXPECT_FALSE(results[i].got_callback);
-    }
-  }
-
-  g_source_remove (tid);
+  CheckResults(results);
 }
 
-TEST(TestIconLoader, TestGetManyIcons)
+// Disabled until we have the new thread safe lp:fontconfig
+TEST_F(TestIconLoader, DISABLED_TestGetManyIcons)
 {
   std::vector<LoadResult> results;
-  IconLoader& icon_loader = IconLoader::GetDefault();
-  volatile bool timeout_reached = false;
   int i = 0;
   int icon_count;
 
@@ -190,39 +179,18 @@ TEST(TestIconLoader, TestGetManyIcons)
   for (GList *it = icons; it != NULL; it = it->next)
   {
     const char *icon_name = static_cast<char*>(it->data);
-    icon_loader.LoadFromIconName(icon_name, -1, 48, sigc::mem_fun(results[i++],
-        &LoadResult::IconLoaded));
+    int handle = icon_loader.LoadFromIconName(icon_name, -1, 48, sigc::mem_fun(results[i++], &LoadResult::IconLoaded));
+    handles_.push_back(handle);
     if (i >= icon_count) break;
   }
 
-  guint tid = g_timeout_add (30000, TimeoutReached, (gpointer)(&timeout_reached));
-  while (!timeout_reached)
-  {
-    g_main_context_iteration (NULL, TRUE);
-    bool all_loaded = true;
-    for (auto loader: results)
-    {
-      all_loaded &= loader.got_callback;
-      if (!all_loaded) break;
-    }
-    if (all_loaded) break;
-  }
-
-  for (auto load_result: results)
-  {
-    EXPECT_TRUE(load_result.got_callback);
-    EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
-  }
-
-  g_source_remove (tid);
+  CheckResults(results);
 }
 
-TEST(TestIconLoader, TestCancelSome)
+TEST_F(TestIconLoader, TestCancelSome)
 {
   std::vector<LoadResult> results;
   std::vector<int> handles;
-  IconLoader& icon_loader = IconLoader::GetDefault();
-  volatile bool timeout_reached = false;
   int i = 0;
   int icon_count;
 
@@ -238,6 +206,7 @@ TEST(TestIconLoader, TestCancelSome)
     int handle = icon_loader.LoadFromIconName(icon_name, -1, 48, sigc::mem_fun(
           results[i], &LoadResult::IconLoaded));
     handles[i++] = handle;
+    handles_.push_back(handle);
     if (i >= icon_count) break;
   }
 
@@ -245,35 +214,10 @@ TEST(TestIconLoader, TestCancelSome)
   for (i = 0; i < icon_count; i += 2)
   {
     icon_loader.DisconnectHandle(handles[i]);
+    results[i].disconnected = true;
   }
 
-  guint tid = g_timeout_add (30000, TimeoutReached, (gpointer)(&timeout_reached));
-  while (!timeout_reached)
-  {
-    g_main_context_iteration (NULL, TRUE);
-    bool all_loaded = true;
-    for (int i = 1; i < icon_count; i += 2)
-    {
-      all_loaded &= results[i].got_callback;
-      if (!all_loaded) break;
-    }
-    if (all_loaded) break;
-  }
-
-  for (i = 0; i < icon_count; i++)
-  {
-    if (i % 2)
-    {
-      EXPECT_TRUE(results[i].got_callback);
-      EXPECT_TRUE(IsValidPixbuf(results[i].pixbuf));
-    }
-    else
-    {
-      EXPECT_FALSE(results[i].got_callback);
-    }
-  }
-
-  g_source_remove (tid);
+  CheckResults(results);
 }
 
 

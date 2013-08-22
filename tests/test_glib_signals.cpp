@@ -34,8 +34,7 @@ public:
 
   virtual ~TestGLibSignals()
   {
-    if (G_IS_OBJECT(test_signals_))
-      g_object_unref(test_signals_);
+    g_object_unref(test_signals_);
   }
 
   void Signal0Callback(TestSignals* signals)
@@ -274,7 +273,7 @@ TEST_F(TestGLibSignals, TestCleanDestruction)
   Signal<void, TestSignals*> signal;
   signal.Connect(test_signals_, "signal0",
                  sigc::mem_fun(this, &TestGLibSignals::Signal0Callback));
-  g_object_unref(test_signals_);
+  g_clear_object(&test_signals_);
   EXPECT_EQ(signal.object(), nullptr);
 }
 
@@ -438,7 +437,7 @@ TEST_F(TestGLibSignals, TestManagerUnreffingObjectDeletesConnections)
                                                                              sigc::mem_fun(this, &TestGLibSignals::Signal5Callback));
   manager.Add<gboolean, TestSignals*, const char*, int, float, double, gboolean, char>(test_signals_, "signal6", sigc::mem_fun(this, &TestGLibSignals::Signal6Callback));
 
-  g_object_unref(test_signals_);
+  g_clear_object(&test_signals_);
   EXPECT_TRUE(manager.GetConnections().empty());
 }
 

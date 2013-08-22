@@ -164,12 +164,24 @@ TEST_F(TestQuicklistMenuItem, ItemActivate)
   dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, "Label");
   dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
 
+  XEvent xevent;
+  xevent.type = ButtonPress;
+  xevent.xany.display = nux::GetGraphicsDisplay()->GetX11Display();
+  xevent.xany.window = nux::GetGraphicsDisplay()->GetWindowHandle();
+  xevent.xbutton.time = g_random_int();
+  xevent.xbutton.button = Button1;
+  nux::GetGraphicsDisplay()->ProcessXEvent(xevent, true);
+
+  auto event_time = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
+  ASSERT_EQ(xevent.xbutton.time, event_time);
+
   nux::ObjectPtr<QuicklistMenuItemLabel> qlitem(new QuicklistMenuItemLabel(item));
 
   bool item_activated = false;
-  glib::Signal<void, DbusmenuMenuitem*, int> signal(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
-  [&] (DbusmenuMenuitem* menu_item, int time) {
+  glib::Signal<void, DbusmenuMenuitem*, unsigned> signal(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
+  [this, event_time, &item_activated] (DbusmenuMenuitem* menu_item, unsigned time) {
     EXPECT_EQ(menu_item, item);
+    EXPECT_EQ(time, event_time);
     item_activated = true;
   });
 
@@ -186,7 +198,7 @@ TEST_F(TestQuicklistMenuItem, ItemActivateClosesDash)
 
   bool closes_dash = false;
   UBusManager manager;
-  manager.RegisterInterest(UBUS_PLACE_VIEW_CLOSE_REQUEST, [&] (GVariant*) { closes_dash = true; });
+  manager.RegisterInterest(UBUS_OVERLAY_CLOSE_REQUEST, [&] (GVariant*) { closes_dash = true; });
 
   qlitem->Activate();
   Utils::WaitUntil(closes_dash);
@@ -204,7 +216,7 @@ TEST_F(TestQuicklistMenuItem, OverlayItemActivateDoesNotCloseDash)
 
   bool closes_dash = false;
   UBusManager manager;
-  manager.RegisterInterest(UBUS_PLACE_VIEW_CLOSE_REQUEST, [&] (GVariant*) { closes_dash = true; });
+  manager.RegisterInterest(UBUS_OVERLAY_CLOSE_REQUEST, [&] (GVariant*) { closes_dash = true; });
 
   qlitem->Activate();
   Utils::WaitForTimeoutMSec(100);

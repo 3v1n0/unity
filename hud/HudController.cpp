@@ -80,7 +80,7 @@ Controller::Controller(Controller::ViewCreator const& create_view,
   ubus.RegisterInterest(UBUS_HUD_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
 
   //!!FIXME!! - just hijacks the dash close request so we get some more requests than normal,
-  ubus.RegisterInterest(UBUS_PLACE_VIEW_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
+  ubus.RegisterInterest(UBUS_OVERLAY_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
 
   ubus.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant *data) {
     unity::glib::String overlay_identity;
@@ -252,7 +252,7 @@ void Controller::Relayout(bool check_monitor)
   }
   nux::Geometry const& geo = GetIdealWindowGeometry();
 
-  view_->Relayout();
+  view_->QueueDraw();
   window_->SetGeometry(geo);
   panel::Style &panel_style = panel::Style::Instance();
   view_->SetMonitorOffset(launcher_width, panel_style.panel_height);
@@ -484,7 +484,7 @@ void Controller::OnSearchChanged(std::string search_string)
 
 void Controller::OnSearchActivated(std::string search_string)
 {
-  unsigned int timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+  unsigned int timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
   hud_service_.ExecuteQueryBySearch(search_string, timestamp);
   ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
 }
@@ -492,7 +492,7 @@ void Controller::OnSearchActivated(std::string search_string)
 void Controller::OnQueryActivated(Query::Ptr query)
 {
   LOG_DEBUG(logger) << "Activating query, " << query->formatted_text;
-  unsigned int timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+  unsigned int timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
   hud_service_.ExecuteQuery(query, timestamp);
   ubus.SendMessage(UBUS_HUD_CLOSE_REQUEST);
 }

@@ -29,6 +29,7 @@
 #include "WindowButtons.h"
 #include "WindowButtonPriv.h"
 
+#include "unity-shared/TextureCache.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/WindowManager.h"
 
@@ -176,8 +177,8 @@ nux::ObjectPtr<nux::BaseTexture> WindowButton::GetDashWindowButton(panel::Window
 
   std::string subpath = names[static_cast<int>(type)] + states[static_cast<int>(state)] + ".png";
 
-  glib::String filename(g_build_filename(PKGDATADIR, subpath.c_str(), NULL));
-  texture.Adopt(nux::CreateTexture2DFromFile(filename, -1, true));
+  auto& cache = TextureCache::GetDefault();
+  texture = cache.FindTexture(subpath);
 
   if (!texture)
     texture = panel::Style::Instance().GetFallbackWindowButton(type, state);
@@ -360,7 +361,7 @@ void WindowButtons::OnCloseClicked(nux::Button *button)
 
   if (win_button->overlay_mode())
   {
-    ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+    ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   }
   else
   {
@@ -658,7 +659,7 @@ void WindowButtons::AddProperties(GVariantBuilder* builder)
                                   .add("visible", opacity() != 0.0f)
                                   .add("sensitive", GetInputEventSensitivity())
                                   .add("focused", focused())
-                                  .add("controlled_window", controlled_window());
+                                  .add("controlled_window", (guint64)controlled_window());
 }
 
 } // unity namespace

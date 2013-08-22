@@ -90,6 +90,7 @@ public:
   static const char* MARKUP_ACCEL_DISABLED_PROPERTY;
   static const char* MAXIMUM_LABEL_WIDTH_PROPERTY;
   static const char* OVERLAY_MENU_ITEM_PROPERTY;
+  static const char* QUIT_ACTION_PROPERTY;
 
 protected:
   // Introspection
@@ -123,6 +124,7 @@ protected:
   nux::ObjectPtr<nux::BaseTexture> _prelightTexture[2];
   QuicklistMenuItemType _item_type;
   glib::Object<DbusmenuMenuitem> _menu_item;
+  mutable Time _activate_timestamp;
   bool _prelight;
   int _pre_layout_width;
   int _pre_layout_height;

@@ -465,7 +465,7 @@ unity_launcher_icon_accessible_do_action(AtkAction *action,
 
   icon = dynamic_cast<LauncherIcon*>(nux_object);
 
-  icon->Activate(ActionArg(ActionArg::LAUNCHER, 0));
+  icon->Activate(ActionArg(ActionArg::Source::LAUNCHER, 0));
 
   return TRUE;
 }

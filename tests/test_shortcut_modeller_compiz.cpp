@@ -109,4 +109,25 @@ TEST_F(TestShortcutCompizModeller, WorkspacesDisabled)
   EXPECT_TRUE(changed);
 }
 
+
+bool DashHintsContains(std::list<AbstractHint::Ptr> const& hints,
+                       std::string const& s)
+{
+  auto match_descriptions = [s](AbstractHint::Ptr const& hint) {
+        return hint->description.Get().find(s) != std::string::npos;
+  };
+  auto hint = std::find_if(hints.begin(), hints.end(), match_descriptions);
+  return hint != hints.end();
+}
+
+TEST_F(TestShortcutCompizModeller, BasicLensHintsArePresent)
+{
+  auto const& dash_hints = modeller->GetCurrentModel()->hints().at("Dash");
+  EXPECT_TRUE(DashHintsContains(dash_hints, "App Lens"));
+  EXPECT_TRUE(DashHintsContains(dash_hints, "Files Lens"));
+  EXPECT_TRUE(DashHintsContains(dash_hints, "Music Lens"));
+  EXPECT_TRUE(DashHintsContains(dash_hints, "Photo Lens"));
+  EXPECT_TRUE(DashHintsContains(dash_hints, "Video Lens"));
+}
+
 }

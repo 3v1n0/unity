@@ -21,6 +21,8 @@
 #include "config.h"
 #include <math.h>
 
+#include <functional>
+
 #include <Nux/Nux.h>
 #include <Nux/VScrollBar.h>
 #include <Nux/HLayout.h>
@@ -91,9 +93,17 @@ const int START_DRAGICON_DURATION = 250;
 const int MOUSE_DEADZONE = 15;
 const float DRAG_OUT_PIXELS = 300.0f;
 
+const int SCROLL_AREA_HEIGHT = 24;
+const int SCROLL_FPS = 30;
+
+const int BASE_URGENT_WIGGLE_PERIOD = 60; // In seconds
+const int MAX_URGENT_WIGGLE_DELTA = 960;  // In seconds
+const int DOUBLE_TIME = 2;
+
 const std::string START_DRAGICON_TIMEOUT = "start-dragicon-timeout";
 const std::string SCROLL_TIMEOUT = "scroll-timeout";
 const std::string ANIMATION_IDLE = "animation-idle";
+const std::string URGENT_TIMEOUT = "urgent-timeout";
 }
 
 
@@ -140,13 +150,19 @@ Launcher::Launcher(MockableBaseWindow* parent,
   , _launcher_drag_delta_min(0)
   , _enter_y(0)
   , _last_button_press(0)
+  , _urgent_wiggle_time(0)
+  , _urgent_acked(false)
+  , _urgent_timer_running(false)
+  , _urgent_ack_needed(false)
   , _drag_out_delta_x(0.0f)
   , _drag_gesture_ongoing(false)
   , _last_reveal_progress(0.0f)
+  , _drag_action(nux::DNDACTION_NONE)
   , _selection_atom(0)
   , icon_renderer(std::make_shared<ui::IconRenderer>())
 {
   m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
+  icon_renderer->monitor = monitor();
 
   bg_effect_helper_.owner = this;
   bg_effect_helper_.enabled = false;
@@ -188,6 +204,9 @@ Launcher::Launcher(MockableBaseWindow* parent,
     _times[i].tv_nsec = 0;
   }
 
+  _urgent_finished_time.tv_sec = 0;
+  _urgent_finished_time.tv_nsec = 0;
+
   ubus_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &Launcher::OnOverlayShown));
   ubus_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &Launcher::OnOverlayHidden));
   ubus_.RegisterInterest(UBUS_LAUNCHER_LOCK_HIDE, sigc::mem_fun(this, &Launcher::OnLockHideChanged));
@@ -195,12 +214,8 @@ Launcher::Launcher(MockableBaseWindow* parent,
   icon_renderer->SetTargetSize(_icon_size, _icon_image_size, _space_between_icons);
 
   TextureCache& cache = TextureCache::GetDefault();
-  TextureCache::CreateTextureCallback cb = [&](std::string const& name, int width, int height) {
-    return nux::CreateTexture2DFromFile((PKGDATADIR"/" + name + ".png").c_str(), -1, true);
-  };
-
-  launcher_sheen_ = cache.FindTexture("dash_sheen", 0, 0, cb);
-  launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect", 0, 0, cb);
+  launcher_sheen_ = cache.FindTexture("dash_sheen.png");
+  launcher_pressure_effect_ = cache.FindTexture("launcher_pressure_effect.png");
 
   options.changed.connect(sigc::mem_fun(this, &Launcher::OnOptionsChanged));
   monitor.changed.connect(sigc::mem_fun(this, &Launcher::OnMonitorChanged));
@@ -300,7 +315,6 @@ void Launcher::SetIconUnderMouse(AbstractLauncherIcon::Ptr const& icon)
     icon->mouse_enter.emit(monitor);
 
   _icon_under_mouse = icon;
-  tooltip_manager_.SetIcon(icon);
 }
 
 bool Launcher::MouseBeyondDragThreshold() const
@@ -785,9 +799,6 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr const& icon, struct time
   arg.running_colored     = icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT);
   arg.draw_edge_only      = IconDrawEdgeOnly(icon);
   arg.active_colored      = false;
-  arg.x_rotation          = 0.0f;
-  arg.y_rotation          = 0.0f;
-  arg.z_rotation          = 0.0f;
   arg.skip                = false;
   arg.stick_thingy        = false;
   arg.keyboard_nav_hl     = false;
@@ -835,13 +846,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr const& icon, struct time
   // we dont need to show strays
   if (!icon->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING))
   {
-    if (icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT))
-    {
-      arg.running_arrow = true;
-      arg.window_indicators = 1;
-    }
-    else
-      arg.window_indicators = 0;
+    arg.window_indicators = 0;
   }
   else
   {
@@ -849,6 +854,13 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr const& icon, struct time
       arg.window_indicators = std::max<int> (icon->WindowsOnViewport().size(), 1);
     else
       arg.window_indicators = std::max<int> (icon->WindowsForMonitor(monitor).size(), 1);
+
+    if (icon->GetIconType() == AbstractLauncherIcon::IconType::TRASH ||
+        icon->GetIconType() == AbstractLauncherIcon::IconType::DEVICE)
+    {
+      // TODO: also these icons should respect the actual windows they have
+      arg.window_indicators = 0;
+    }
   }
 
   arg.backlight_intensity = IconBackgroundIntensity(icon, current);
@@ -864,7 +876,7 @@ void Launcher::SetupRenderArg(AbstractLauncherIcon::Ptr const& icon, struct time
 
   if (icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT) && options()->urgent_animation() == URGENT_ANIMATION_WIGGLE)
   {
-    arg.z_rotation = IconUrgentWiggleValue(icon, current);
+    arg.rotation.z = IconUrgentWiggleValue(icon, current);
   }
 
   if (IsInKeyNavMode())
@@ -942,7 +954,7 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr const& icon,
 
   // icon is crossing threshold, start folding
   center.z += folded_z_distance * folding_progress;
-  arg.x_rotation = animation_neg_rads * folding_progress;
+  arg.rotation.x = animation_neg_rads * folding_progress;
 
   float spacing_overlap = CLAMP((float)(center.y + (2.0f * half_size * size_modifier) + (_space_between_icons * size_modifier) - folding_threshold) / (float) _icon_size, 0.0f, 1.0f);
   float spacing = (_space_between_icons * (1.0f - spacing_overlap) + folded_spacing * spacing_overlap) * size_modifier;
@@ -1134,6 +1146,11 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   {
     RenderArg arg;
     AbstractLauncherIcon::Ptr const& icon = *it;
+
+    if (icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT) && options()->hide_mode == LAUNCHER_HIDE_AUTOHIDE)
+    {
+      HandleUrgentIcon(icon, current);
+    }
     FillRenderArg(icon, arg, center, parent_abs_geo, folding_threshold, folded_size, folded_spacing,
                   autohide_offset, folded_z_distance, animation_neg_rads, current);
     arg.colorify = colorify;
@@ -1400,6 +1417,7 @@ void Launcher::OnMonitorChanged(int new_monitor)
   unity::panel::Style &panel_style = panel::Style::Instance();
   Resize(nux::Point(monitor_geo.x, monitor_geo.y + panel_style.panel_height),
          monitor_geo.height - panel_style.panel_height);
+  icon_renderer->monitor = new_monitor;
 }
 
 void Launcher::UpdateOptions(Options::Ptr options)
@@ -1413,8 +1431,6 @@ void Launcher::UpdateOptions(Options::Ptr options)
 
 void Launcher::ConfigureBarrier()
 {
-  nux::Geometry geo = GetAbsoluteGeometry();
-
   float decay_responsiveness_mult = ((options()->edge_responsiveness() - 1) * .3f) + 1;
   float reveal_responsiveness_mult = ((options()->edge_responsiveness() - 1) * .025f) + 1;
 
@@ -1503,27 +1519,18 @@ void Launcher::SetHover(bool hovered)
 
 bool Launcher::MouseOverTopScrollArea()
 {
-  return _mouse_position.y < panel::Style::Instance().panel_height;
-}
-
-bool Launcher::MouseOverTopScrollExtrema()
-{
-  return _mouse_position.y == 0;
+  return _mouse_position.y < SCROLL_AREA_HEIGHT;
 }
 
 bool Launcher::MouseOverBottomScrollArea()
 {
-  return _mouse_position.y > GetGeometry().height - panel::Style::Instance().panel_height;
-}
-
-bool Launcher::MouseOverBottomScrollExtrema()
-{
-  return _mouse_position.y == GetGeometry().height - 1;
+  return _mouse_position.y >= GetGeometry().height - SCROLL_AREA_HEIGHT;
 }
 
 bool Launcher::OnScrollTimeout()
 {
   bool continue_animation = true;
+  int speed = 0;
 
   if (IsInKeyNavMode() || !_hovered ||
       GetActionState() == ACTION_DRAG_LAUNCHER)
@@ -1534,19 +1541,21 @@ bool Launcher::OnScrollTimeout()
   {
     if (_launcher_drag_delta >= _launcher_drag_delta_max)
       continue_animation = false;
-    else if (MouseOverTopScrollExtrema())
-      _launcher_drag_delta += 6;
     else
-      _launcher_drag_delta += 3;
+    {
+        speed = (SCROLL_AREA_HEIGHT - _mouse_position.y) / SCROLL_AREA_HEIGHT * SCROLL_FPS;
+        _launcher_drag_delta += speed;
+    }
   }
   else if (MouseOverBottomScrollArea())
   {
     if (_launcher_drag_delta <= _launcher_drag_delta_min)
       continue_animation = false;
-    else if (MouseOverBottomScrollExtrema())
-      _launcher_drag_delta -= 6;
     else
-      _launcher_drag_delta -= 3;
+    {
+        speed = ((_mouse_position.y + 1) - (GetGeometry().height - SCROLL_AREA_HEIGHT)) / SCROLL_AREA_HEIGHT * SCROLL_FPS;
+        _launcher_drag_delta -= speed;
+    } 
   }
   else
   {
@@ -1573,6 +1582,112 @@ void Launcher::EnsureScrollTimer()
   {
     sources_.Remove(SCROLL_TIMEOUT);
   }
+}
+
+void Launcher::SetUrgentTimer(int urgent_wiggle_period)
+{
+  sources_.AddTimeoutSeconds(urgent_wiggle_period, sigc::mem_fun(this, &Launcher::OnUrgentTimeout), URGENT_TIMEOUT);
+}
+
+void Launcher::WiggleUrgentIcon(AbstractLauncherIcon::Ptr const& icon)
+{
+  icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, false);
+  icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
+
+  clock_gettime(CLOCK_MONOTONIC, &_urgent_finished_time);
+}
+
+void Launcher::HandleUrgentIcon(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current)
+{
+  struct timespec urgent_time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::URGENT);
+  DeltaTime urgent_delta = unity::TimeUtil::TimeDelta(&urgent_time, &_urgent_finished_time);
+
+  // If the Launcher is hidden, then add a timer to wiggle the urgent icons at 
+  // certain intervals (1m, 2m, 4m, 8m, 16m, & 32m).
+  if (_hidden && !_urgent_timer_running && urgent_delta > 0)
+  {
+    _urgent_timer_running = true;
+    _urgent_ack_needed = true;
+    SetUrgentTimer(BASE_URGENT_WIGGLE_PERIOD);
+  }
+  // If the Launcher is hidden, the timer is running, an urgent icon is newer than the last time
+  // icons were wiggled, and the timer did not just start, then reset the timer since a new
+  // urgent icon just showed up.
+  else if (_hidden && _urgent_timer_running && urgent_delta > 0 && _urgent_wiggle_time != 0)
+  {
+    _urgent_wiggle_time = 0;
+    SetUrgentTimer(BASE_URGENT_WIGGLE_PERIOD);
+  }
+  // If the Launcher is no longer hidden, then after the Launcher is fully revealed, wiggle the 
+  // urgent icon and then stop the timer (if it's running).
+  else if (!_hidden && _urgent_ack_needed)
+  {
+    if (_last_reveal_progress > 0)
+    {
+      _urgent_acked = false;
+    }
+    else
+    {
+      if (!_urgent_acked && IconUrgentProgress(icon, current) == 1.0f)
+      {
+        WiggleUrgentIcon(icon);
+      }
+      else if (IconUrgentProgress(icon, current) < 1.0f)
+      {
+        if (_urgent_timer_running)
+        {
+          sources_.Remove(URGENT_TIMEOUT);
+          _urgent_timer_running = false;
+        }
+        _urgent_acked = true;
+        _urgent_ack_needed = false;
+      }
+    }
+  }
+}
+
+bool Launcher::OnUrgentTimeout()
+{
+  bool foundUrgent = false,
+       continue_urgent = true;
+
+  if (options()->urgent_animation() == URGENT_ANIMATION_WIGGLE && _hidden)
+  {
+    // Look for any icons that are still urgent and wiggle them
+    for (auto icon : *_model)
+    {
+      if (icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT))
+      {
+        WiggleUrgentIcon(icon);
+
+        foundUrgent = true;
+      }
+    }
+  }
+  // Update the time for when the next wiggle will occur.
+  if (_urgent_wiggle_time == 0)
+  {
+    _urgent_wiggle_time = BASE_URGENT_WIGGLE_PERIOD;
+  }
+  else
+  {
+    _urgent_wiggle_time = _urgent_wiggle_time * DOUBLE_TIME;
+  }
+
+  // If no urgent icons were found or we have reached the time threshold,
+  // then let's stop the timer.  Otherwise, start a new timer with the
+  // updated wiggle time.
+  if (!foundUrgent || (_urgent_wiggle_time > MAX_URGENT_WIGGLE_DELTA))
+  {
+    continue_urgent = false;
+    _urgent_timer_running = false;
+  }
+  else
+  {
+    SetUrgentTimer(_urgent_wiggle_time);
+  }
+
+  return continue_urgent;
 }
 
 void Launcher::SetIconSize(int tile_size, int icon_size)
@@ -1615,9 +1730,6 @@ void Launcher::OnIconAdded(AbstractLauncherIcon::Ptr const& icon)
 
 void Launcher::OnIconRemoved(AbstractLauncherIcon::Ptr const& icon)
 {
-  if (icon->needs_redraw_connection.connected())
-    icon->needs_redraw_connection.disconnect();
-
   SetIconUnderMouse(AbstractLauncherIcon::Ptr());
   if (icon == _icon_mouse_down)
     _icon_mouse_down = nullptr;
@@ -1698,8 +1810,6 @@ void Launcher::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
 void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
 {
-  icon_renderer->monitor = monitor();
-
   nux::Geometry const& base = GetGeometry();
   nux::Geometry bkg_box;
   std::list<RenderArg> args;
@@ -1979,6 +2089,8 @@ void Launcher::StartIconDragRequest(int x, int y)
 
 void Launcher::StartIconDrag(AbstractLauncherIcon::Ptr const& icon)
 {
+  using namespace std::placeholders;
+
   if (!icon)
     return;
 
@@ -1988,8 +2100,10 @@ void Launcher::StartIconDrag(AbstractLauncherIcon::Ptr const& icon)
 
   HideDragWindow();
   _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(GetWidth(), GetWidth(), 1, nux::BITFMT_R8G8B8A8);
-  _drag_window = new LauncherDragWindow(_offscreen_drag_texture);
-  RenderIconToTexture(nux::GetWindowThread()->GetGraphicsEngine(), _drag_icon, _offscreen_drag_texture);
+  _drag_window = new LauncherDragWindow(_offscreen_drag_texture,
+                                        std::bind(&Launcher::RenderIconToTexture, this,
+                                                  _1,
+                                                  _drag_icon, _offscreen_drag_texture));
   ShowDragWindow();
 
   ubus_.SendMessage(UBUS_LAUNCHER_ICON_START_DND);
@@ -2021,9 +2135,7 @@ void Launcher::EndIconDrag()
         _model->Save();
       }
 
-      if (_drag_window->on_anim_completed.connected())
-        _drag_window->on_anim_completed.disconnect();
-      _drag_window->on_anim_completed = _drag_window->anim_completed.connect(sigc::mem_fun(this, &Launcher::OnDragWindowAnimCompleted));
+      _drag_window->on_anim_completed_conn_ = _drag_window->anim_completed.connect(sigc::mem_fun(this, &Launcher::OnDragWindowAnimCompleted));
 
       auto const& icon_center = _drag_icon->GetCenter(monitor);
       _drag_window->SetAnimationTarget(icon_center.x, icon_center.y),
@@ -2228,7 +2340,7 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
 void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
   SetMousePosition(x, y);
-  tooltip_manager_.MouseMoved();
+  tooltip_manager_.MouseMoved(_icon_under_mouse);
 
   if (!_hidden)
     UpdateChangeInMousePosition(dx, dy);
@@ -2249,7 +2361,7 @@ void Launcher::RecvMouseWheel(int /*x*/, int /*y*/, int wheel_delta, unsigned lo
   }
   else if (_icon_under_mouse)
   {
-    auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp; 
+    auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
     auto scroll_direction = (wheel_delta < 0) ? AbstractLauncherIcon::ScrollDirection::DOWN : AbstractLauncherIcon::ScrollDirection::UP;
     _icon_under_mouse->PerformScroll(scroll_direction, timestamp);
   }
@@ -2468,7 +2580,7 @@ void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLaun
   SetupRenderArg(icon, current, arg);
   arg.render_center = nux::Point3(roundf(texture->GetWidth() / 2.0f), roundf(texture->GetHeight() / 2.0f), 0.0f);
   arg.logical_center = arg.render_center;
-  arg.x_rotation = 0.0f;
+  arg.rotation.x = 0.0f;
   arg.running_arrow = false;
   arg.active_arrow = false;
   arg.skip = false;
@@ -2627,7 +2739,7 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     SetActionState(ACTION_DRAG_EXTERNAL);
     SetStateMouseOverLauncher(true);
 
-    if (!_steal_drag)
+    if (!_steal_drag && !_dnd_data.Uris().empty())
     {
       for (auto const& it : *_model)
       {
@@ -2741,7 +2853,7 @@ void Launcher::ProcessDndDrop(int x, int y)
   else if (_dnd_hovered_icon && _drag_action != nux::DNDACTION_NONE)
   {
      if (IsOverlayOpen())
-       ubus_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+       ubus_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
 
     _dnd_hovered_icon->AcceptDrop(_dnd_data);
   }

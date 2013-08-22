@@ -18,10 +18,14 @@
  *
  */
 
-#include "Nux/Nux.h"
+#include <Nux/Nux.h>
+#include <Nux/NuxTimerTickSource.h>
+#include <NuxCore/AnimationController.h>
+#include <NuxCore/Logger.h>
 #include <gtk/gtk.h>
 
 #include "unity-shared/BackgroundEffectHelper.h"
+#include "EdgeBarrierController.h"
 #include "FavoriteStoreGSettings.h"
 #include "LauncherController.h"
 #include "Launcher.h"
@@ -43,6 +47,7 @@ struct LauncherWindow
 {
   LauncherWindow()
     : wt(nux::CreateGUIThread("Unity Launcher", win_size.width, win_size.height, 0, &LauncherWindow::ThreadWidgetInit, this))
+    , animation_controller(tick_source)
   {}
 
   void Show()
@@ -63,7 +68,7 @@ private:
   void Init()
   {
     SetupBackground();
-    controller.reset(new launcher::Controller(std::make_shared<XdndManager>()));
+    controller.reset(new launcher::Controller(std::make_shared<XdndManager>(), std::make_shared<ui::EdgeBarrierController>()));
 
     UScreen* uscreen = UScreen::GetDefault();
     std::vector<nux::Geometry> fake_monitor({nux::Geometry(0, 0, win_size.width, win_size.height)});
@@ -85,12 +90,15 @@ private:
   unity::Settings settings;
   panel::Style panel_style;
   std::shared_ptr<nux::WindowThread> wt;
+  nux::NuxTimerTickSource tick_source;
+  nux::animation::AnimationController animation_controller;
   launcher::Controller::Ptr controller;
 };
 
 int main(int argc, char** argv)
 {
   gtk_init(&argc, &argv);
+  nux::logging::configure_logging(::getenv("UNITY_LOG_SEVERITY"));
   nux::NuxInitialize(0);
 
   LauncherWindow lc;

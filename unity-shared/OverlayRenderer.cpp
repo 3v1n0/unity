@@ -800,18 +800,19 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
                              texxform,
                              nux::color::White);
       }
-
-      gfx_context.GetRenderStates().SetBlend(false);
     }
     
     gfx_context.PopClippingRectangle();
   }
 
+  gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
+  gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
+  gfx_context.GetRenderStates().SetBlend(false);
+
 }
 
 void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geometry)
 {
-  nux::Geometry geo = geometry;
   bgs = 0;
 
   int excess_border = (Settings::Instance().form_factor() != FormFactor::NETBOOK) ? EXCESS_BORDER : 0;

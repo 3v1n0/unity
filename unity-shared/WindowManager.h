@@ -114,6 +114,8 @@ public:
 
   virtual bool IsWallActive() const = 0;
 
+  virtual bool IsAnyWindowMoving() const = 0;
+
   virtual void FocusWindowGroup(std::vector<Window> const& windows,
                                 FocusVisibility, int monitor = -1,
                                 bool only_top_win = true) = 0;
@@ -136,7 +138,7 @@ public:
   virtual nux::Geometry GetScreenGeometry() const = 0;
   virtual nux::Geometry GetWorkAreaGeometry(Window window_id = 0) const = 0;
 
-  virtual unsigned long long GetWindowActiveNumber(Window window_id) const = 0;
+  virtual uint64_t GetWindowActiveNumber(Window window_id) const = 0;
 
   virtual void SetWindowIconGeometry(Window window, nux::Geometry const& geo) = 0;
 

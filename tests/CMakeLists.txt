@@ -16,16 +16,20 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/no-icon.desktop
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/applications/kde4/afile.desktop
                 ${CMAKE_BINARY_DIR}/tests/data/applications/kde4/afile.desktop)
 
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/lenses/social/social.lens
-                ${CMAKE_BINARY_DIR}/tests/data/lenses/social/social.lens)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/lenses/files/files.lens
-                ${CMAKE_BINARY_DIR}/tests/data/lenses/files/files.lens)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/lenses/applications/applications.lens
-                ${CMAKE_BINARY_DIR}/tests/data/lenses/applications/applications.lens)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/lenses/invalid-lens-file/invalid-lens-file.lens
-                ${CMAKE_BINARY_DIR}/tests/data/lenses/invalid-lens-file/invalid-lens-file.lens)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/lenses/invalid-lens-group/invalid-lens-group.lens
-                ${CMAKE_BINARY_DIR}/tests/data/lenses/invalid-lens-group/invalid-lens-group.lens)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope1.scope
+                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope1.scope)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope2.scope
+                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope2.scope)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope3.scope
+                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope3.scope)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope4.scope
+                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope4.scope)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/brownnoise.mp3
+                ${CMAKE_BINARY_DIR}/tests/data/unity/sounds/brownnoise.mp3 COPYONLY)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/pinknoise.mp3
+                ${CMAKE_BINARY_DIR}/tests/data/unity/sounds/pinknoise.mp3 COPYONLY)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/whitenoise.mp3
+                ${CMAKE_BINARY_DIR}/tests/data/unity/sounds/whitenoise.mp3 COPYONLY)
 
 #
 # Unit tests
@@ -55,13 +59,6 @@ include_directories (${CMAKE_SOURCE_DIR}/unity-shared)
 # Please keep actual test files alphabetically at top and then files
 # from ../${UNITY_SRC} or ../../services in alphabetically after that
 
-add_executable (test-unit
-                unit/TestMain.cpp
-                unit/TestPanelService.cpp
-                unit/TestStaticCairoText.cpp
-                ../services/panel-service.c
-                )
-target_link_libraries (test-unit unity-shared ${LIBS})
 add_subdirectory (test-input-remover)
 add_subdirectory (test-minimize-window-handler)
 add_subdirectory (test-get-transients)
@@ -72,13 +69,10 @@ add_subdirectory (test-get-transients)
 #
 
 enable_testing()
-# :(
-find_library (GMOCK_LIB gmock)
-find_library (GMOCK_MAIN_LIB gmock_main)
-find_path(GTEST_SRC_DIR gtest.cc PATHS /usr/src/gtest/src)
+set(GMOCK_LIB gmock)
+set(GMOCK_MAIN_LIB gmock_main)
 
-if (GTEST_SRC_DIR AND
-    GMOCK_LIB AND
+if (GMOCK_LIB AND
     GMOCK_MAIN_LIB)
 
   # MockWindowManager
@@ -90,22 +84,54 @@ if (GTEST_SRC_DIR AND
 
 # The service that provides DBus services to test against
   add_executable(test-gtest-service
-                 mock-application.cpp
                  test_service_gdbus_wrapper.cpp
                  test_service_hud.cpp
-                 test_service_lens.cpp
                  test_service_main.cpp
                  test_service_model.cpp
-                 test_service_panel.cpp)
-  target_link_libraries(test-gtest-service unity-shared ${LIBS})
+                 test_service_panel.cpp
+                 test_service_scope.cpp)
 
+  # Build plain C files separately so they don't try to include the
+  # C++ pch.
+  add_library(test-gtest-service-plainc STATIC
+              test_scope_impl.c)
+
+  target_link_libraries(test-gtest-service
+                        test-gtest-service-plainc
+                        unity-shared
+                        ${LIBS})
+
+# gtest-slow, start moving things over that are slow running tests
+  set (GTEST_SLOW_SOURCES
+       test_main.cpp
+       logger_helper.cpp
+       test_im_text_entry_slow.cpp
+       test_im_text_entry_class.cpp
+       test_switcher_controller_slow.cpp
+       test_switcher_controller_class.cpp
+       test_tooltip_manager.cpp
+      )
+
+  set (GTEST_SLOW_LIBS
+       gtest
+       gmock
+       launcher-lib
+       switcher-lib
+       unity-shared
+       unity-shared-standalone
+      )
+
+  add_executable(test-gtest-slow ${GTEST_SLOW_SOURCES})
+  target_link_libraries(test-gtest-slow ${GTEST_SLOW_LIBS})
+  add_test(UnityGTestSlow test-gtest-slow)
 
 # The actual test executable (xless) - do not put anything that requires X in here
   set (GTEST_XLESS_SOURCES
        test_main_xless.cpp
        test_abstract_interface_generator.cpp
-       test_launcher_model.cpp
+       test_connection_manager.cpp
        test_glib_dbus_object.cpp
+       test_glib_cancellable.cpp
        test_glib_object.cpp
        test_glib_object_utils.cpp
        test_glib_object_utils.h
@@ -115,21 +141,22 @@ if (GTEST_SRC_DIR AND
        test_glib_source.cpp
        test_glib_variant.cpp
        test_grabhandle.cpp
+       test_gsettings_scopes.cpp
        test_desktop_utilities.cpp
        test_indicator.cpp
        test_indicator_appmenu.cpp
        test_indicator_entry.cpp
        test_indicators.cpp
-       test_introspection.cpp
        test_favorite_store.cpp
        test_favorite_store_gsettings.cpp
        test_favorite_store_private.cpp
-       test_home_lens.cpp
        test_launcher_entry_remote.cpp
+       test_launcher_model.cpp
        test_launcher_options.cpp
        test_layout_system.cpp
        test_model_iterator.cpp
        test_previews.cpp
+       test_scope_data.cpp
        test_time_util.cpp
        test_ubus.cpp
        test_unityshell_private.cpp
@@ -168,55 +195,61 @@ if (GTEST_SRC_DIR AND
   endif ()
 
   add_executable(test-gtest-xless ${GTEST_XLESS_SOURCES})
-
   target_link_libraries(test-gtest-xless ${GTEST_XLESS_LIBS})
-
   add_test(UnityGTestXless test-gtest-xless)
 
 # tests that require dbus, must not require X
   add_executable(test-gtest-dbus
                  test_categories.cpp
                  test_dbus_indicators.cpp
-                 test_filesystem_lenses.cpp
                  test_filter.cpp
-                 test_gdbus_proxy.cpp
+                 test_glib_dbus_proxy.cpp
                  test_hud.cpp
-                 test_lens.cpp
                  test_main_dbus.cpp
                  test_model.cpp
                  test_utils.h
                  test_ratings_filter.cpp
                  test_results.cpp
+                 test_scope.cpp
+                 test_scope_filter.cpp
+                 test_scope_proxy.cpp
+                 test_tracks.cpp
                 )
   target_link_libraries(test-gtest-dbus gtest unity-shared ${LIBS})
   add_test(UnityGTestDBus test-gtest-dbus)
-  add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} test-gtest-service gtest)
+  add_dependencies(test-gtest-dbus unity-core-${UNITY_API_VERSION} unity-shared test-gtest-service gtest)
 
 if (ENABLE_X_SUPPORT)
 # Tests that require X
   add_executable(test-gtest
                  mock-application.cpp
+                 mock_results.cpp
                  logger_helper.cpp
                  test_main.cpp
                  test_action_link.cpp
                  test_application_launcher_icon.cpp
                  test_bamf_application.cpp
                  test_bfb_launcher_icon.cpp
+                 test_dashview.cpp
                  test_dashview_impl.cpp
                  test_dash_controller.cpp
                  test_desktop_launcher_icon.cpp
                  test_device_launcher_section.cpp
+                 test_error_preview.cpp
                  test_edge_barrier_controller.cpp
                  test_expo_launcher_icon.cpp
                  test_filter_widgets.cpp
                  test_glib_dbus_server.cpp
                  test_gnome_session_manager.cpp
+                 test_gtk_wrapper.cpp
                  test_hud_button.cpp
                  test_hud_controller.cpp
                  test_hud_launcher_icon.cpp
                  test_hud_view.cpp
                  test_icon_loader.cpp
                  test_im_text_entry.cpp
+                 test_keyboard_util.cpp
+                 test_im_text_entry_class.cpp
                  test_launcher.cpp
                  test_launcher_controller.cpp
                  test_launcher_drag_window.cpp
@@ -225,18 +258,21 @@ if (ENABLE_X_SUPPORT)
                  test_launcher_icon.cpp
                  test_launcher_minimize_speed.cpp
                  test_launcher_tooltip.cpp
-                 test_lensview.cpp
-                 test_keyboard_util.cpp
+                 test_panel_controller.cpp
                  test_panel_indicators_view.cpp
                  test_panel_menu_view.cpp
+                 test_panel_service.cpp
                  test_panel_style.cpp
                  test_panel_tray.cpp
                  test_panel_view.cpp
                  test_places_group.cpp
+                 test_preview_player.cpp
                  test_previews_application.cpp
                  test_previews_generic.cpp
                  test_previews_movie.cpp
                  test_previews_music.cpp
+                 test_previews_music_payment.cpp
+                 test_previews_payment.cpp
                  test_previews_social.cpp
                  test_overlay_scrollbar.cpp
                  test_quicklist_manager.cpp
@@ -244,6 +280,8 @@ if (ENABLE_X_SUPPORT)
                  test_quicklist_view.cpp
                  test_result_renderer.cpp
                  test_resultviewgrid.cpp
+                 test_scope_bar.cpp
+                 test_scope_view.cpp
                  test_searchbar.cpp
                  test_session_button.cpp
                  test_session_controller.cpp
@@ -256,13 +294,13 @@ if (ENABLE_X_SUPPORT)
                  test_software_center_launcher_icon.cpp
                  test_static_cairo_text.cpp
                  test_switcher_controller.cpp
+                 test_switcher_controller_class.cpp
                  test_switcher_model.cpp
                  test_switcher_view.cpp
                  test_tabiterator.cpp
                  test_texture_cache.cpp
                  test_text_input.cpp
                  test_thumbnail_generator.cpp
-                 test_tooltip_manager.cpp
                  test_trash_launcher_icon.cpp
                  test_unity_settings.cpp
                  test_unity_window_style.cpp
@@ -274,6 +312,7 @@ if (ENABLE_X_SUPPORT)
                  test_xdnd_start_stop_notifier_imp.cpp
                  ${UNITY_SRC}/UnityShowdesktopHandler.cpp
                  ${CMAKE_SOURCE_DIR}/plugins/unityshell/src/WindowMinimizeSpeedController.cpp
+                 ${CMAKE_SOURCE_DIR}/services/panel-service.c
                 )
 
   # Build plain C files separately so they don't try to include the
@@ -302,8 +341,7 @@ if (ENABLE_X_SUPPORT)
                         panel-lib)
   add_test(UnityGTest test-gtest)
 endif (ENABLE_X_SUPPORT)
-endif (GTEST_SRC_DIR AND
-       GMOCK_LIB AND
+endif (GMOCK_LIB AND
        GMOCK_MAIN_LIB)
 
 if(ENABLE_X_SUPPORT)
@@ -316,41 +354,43 @@ endif()
 set (TEST_RESULT_DIR ${CMAKE_BINARY_DIR}/tests)
 set (TEST_RESULT_XML ${TEST_RESULT_DIR}/test-results.xml)
 set (TEST_RESULT_HTML ${TEST_RESULT_DIR}/test-results.html)
+set (DUMMY_XORG_TEST_RUNNER ${CMAKE_CURRENT_SOURCE_DIR}/dummy-xorg-test-runner.sh)
 if (ENABLE_X_SUPPORT)
-  set (GTEST_TEST_COMMAND ./test-gtest)
-  set (GTEST_TEST_COMMAND_GESTURES ./test-gestures/test-gestures)
+  set (GTEST_TEST_COMMAND ./test-gtest --gtest_output=xml:./test-gtest.xml)
+  set (GTEST_TEST_COMMAND_GESTURES ./test-gestures/test-gestures --gtest_output=xml:./test-gestures.xml)
 endif (ENABLE_X_SUPPORT)
-set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless)
-set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --task ./test-gtest-service --task ./test-gtest-dbus)
+set (GTEST_TEST_COMMAND_XLESS ./test-gtest-xless --gtest_output=xml:./test-gtest-xless.xml)
+set (GTEST_TEST_COMMAND_SLOW ./test-gtest-slow --gtest_output=xml:./test-gtest-slow.xml)
+set (GTEST_TEST_COMMAND_DBUS dbus-test-runner --max-wait=300 --task ./test-gtest-service --task-name test-service --task=./test-gtest-dbus --task-name=test-dbus --wait-for=com.canonical.Unity.Test.Scope --parameter=--gtest_output=xml:./test-gtest-dbus.xml --parameter=--gtest_filter=-TestCategoriesChanging*)
+
+set (TEST_COMMAND_XLESS
+     ${GTEST_TEST_COMMAND_XLESS}
+  && ${GTEST_TEST_COMMAND_GESTURES}
+  && ${GTEST_TEST_COMMAND_DBUS})
 
 set (TEST_COMMAND
-     gtester --verbose -k -o=${TEST_RESULT_XML} ./test-unit
-  && ${GTEST_TEST_COMMAND} --gtest_output=xml:./
-  && ${GTEST_TEST_COMMAND_XLESS} --gtest_output=xml:./
-  && ${GTEST_TEST_COMMAND_GESTURES} --gtest_output=xml:./
-  && ${GTEST_TEST_COMMAND_DBUS} --gtest_output=xml:./
-    )
+     ${GTEST_TEST_COMMAND}
+  && ${GTEST_TEST_COMMAND_SLOW}
+  && ${TEST_COMMAND_XLESS})
 
 set (TEST_COMMAND_HEADLESS
-     ${GTEST_TEST_COMMAND_XLESS} --gtest_output=xml:./
-  && ${GTEST_TEST_COMMAND_GESTURES} --gtest_output=xml:./
-  #&& ${GTEST_TEST_COMMAND_DBUS} --gtest_output=xml:./
-  && echo "Warning, DBus test cases are disabled!!")
+     export NUX_FALLBACK_TEXTURE=TRUE
+  && ${DUMMY_XORG_TEST_RUNNER} ${GTEST_TEST_COMMAND}
+  && ${DUMMY_XORG_TEST_RUNNER} ${GTEST_TEST_COMMAND_SLOW}
+  && ${TEST_COMMAND_XLESS})
 
-if (GTEST_SRC_DIR)
+if (GTEST_ROOT_DIR)
   if (ENABLE_X_SUPPORT)
-    add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest test-gtest-xless test-gtest-dbus test-gestures)
-    add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus test-gestures)
+    add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-gtest test-gtest-slow test-gtest-xless test-gtest-dbus test-gestures)
+    add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest test-gtest-slow test-gtest-xless test-gtest-dbus test-gestures)
     add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest test-gtest-xless)
   else ()
-    add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit test-gtest-xless test-gtest-dbus)
-    add_custom_target (check-headless COMMAND ${TEST_COMMAND_HEADLESS} DEPENDS test-gtest-xless test-gtest-dbus)
+    add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-gtest-xless test-gtest-dbus)
+    add_custom_target (check-headless COMMAND ${TEST_COMMAND_XLESS} DEPENDS test-gtest-xless test-gtest-dbus)
     add_custom_target (gcheck COMMAND  ${DBUS_TEST_COMMAND} DEPENDS test-gtest-xless)
   endif ()
   add_custom_target (check-report COMMAND ${TEST_UNIT_COMMAND} && gtester-report ${TEST_RESULT_XML} > ${TEST_RESULT_HTML})
-else (GTEST_SRC_DIR)
-  add_custom_target (check COMMAND  ${TEST_COMMAND} DEPENDS test-unit)
-endif (GTEST_SRC_DIR)
+endif (GTEST_ROOT_DIR)
 # make target to allow devs to run "make autopilot" from build dir:
 set (AUTOPILOTDIR "${CMAKE_CURRENT_SOURCE_DIR}/autopilot")
 # Rules to install autopilot files and executable script:

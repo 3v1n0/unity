@@ -147,14 +147,11 @@ class UnityMTGrabHandleTest : public ::testing::Test {
 protected:
 
   UnityMTGrabHandleTest() :
-    handlesMask (0),
-    window (new MockGrabHandleWindow)
-  {
-
-  }
+    handlesMask(0)
+  {}
 
   unsigned int handlesMask;
-  MockGrabHandleWindow *window;
+  MockGrabHandleWindow window;
 };
 
 TEST_F(UnityMTGrabHandleTest, TestLayoutMasks) {
@@ -209,7 +206,7 @@ TEST_F(UnityMTGrabHandleTest, TestLayouts)
   for (unsigned int i = 0; i < unity::MT::NUM_HANDLES; i++)
     textures.push_back (TextureSize (MockGrabHandleTextureFactory::Default ()->create (), nux::Geometry (0, 0, 100, 100)));
 
-  GrabHandleGroup::Ptr group = GrabHandleGroup::create (window, textures);
+  GrabHandleGroup::Ptr group = GrabHandleGroup::create (&window, textures);
 
   group->relayout (nux::Geometry (250, 250, 1000, 1000), true);
 
@@ -253,7 +250,7 @@ TEST_F(UnityMTGrabHandleTest, TestShowHide)
   for (unsigned int i = 0; i < unity::MT::NUM_HANDLES; i++)
     textures.push_back (TextureSize (MockGrabHandleTextureFactory::Default ()->create (), nux::Geometry (0, 0, 100, 100)));
 
-  GrabHandleGroup::Ptr group = GrabHandleGroup::create (window, textures);
+  GrabHandleGroup::Ptr group = GrabHandleGroup::create (&window, textures);
 
   group->show (0);
   group->show (TopLeftHandle | TopHandle | TopRightHandle);
@@ -280,7 +277,7 @@ TEST_F(UnityMTGrabHandleTest, TestAnimations)
   for (unsigned int i = 0; i < unity::MT::NUM_HANDLES; i++)
     textures.push_back (TextureSize (MockGrabHandleTextureFactory::Default ()->create (), nux::Geometry (0, 0, 100, 100)));
 
-  GrabHandleGroup::Ptr group = GrabHandleGroup::create (window, textures);
+  GrabHandleGroup::Ptr group = GrabHandleGroup::create (&window, textures);
 
   group->show ();
   for (unsigned int i = 0; i < unity::MT::FADE_MSEC; i++)

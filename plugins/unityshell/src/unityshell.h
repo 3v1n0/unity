@@ -141,6 +141,7 @@ public:
   bool showPanelFirstMenuKeyTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   bool executeCommand(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool showDesktopKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool setKeyboardFocusKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   bool altTabInitiateCommon(CompAction* action, switcher::ShowMode mode);
@@ -152,8 +153,8 @@ public:
   bool altTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabForwardAllInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevAllInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabDetailStartInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabDetailStopInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabDetailStart(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool altTabDetailStop(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
@@ -191,6 +192,8 @@ public:
   launcher::Controller::Ptr launcher_controller();
 
   bool DoesPointIntersectUnityGeos(nux::Point const& pt);
+
+  ui::LayoutWindow::Ptr GetSwitcherDetailLayoutWindow(Window window) const;
 
 protected:
   std::string GetName() const;
@@ -243,9 +246,7 @@ private:
 
   void InitGesturesSupport();
 
-  void DrawTopPanelBackground();
-  bool TopPanelBackgroundTextureNeedsUpdate() const;
-  void UpdateTopPanelBackgroundTexture();
+  void DrawPanelUnderDash();
 
   unsigned CompizModifiersToNux(unsigned input) const;
   unsigned XModifiersToNux(unsigned input) const;
@@ -286,7 +287,6 @@ private:
   std::unique_ptr<nux::GesturesSubscription> gestures_sub_windows_;
 
   bool                                  needsRelayout;
-  bool                                  _in_paint;
   bool                                  super_keypressed_;
   typedef std::shared_ptr<CompAction> CompActionPtr;
   typedef std::vector<CompActionPtr> ShortcutActions;
@@ -331,20 +331,20 @@ private:
 
   GLMatrix panel_shadow_matrix_;
 
-  bool panel_texture_has_changed_;
-  bool paint_panel_;
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> panel_texture_;
+  bool paint_panel_under_dash_;
   std::set<UnityWindow*> fake_decorated_windows_;
 
   bool scale_just_activated_;
   WindowMinimizeSpeedController minimize_speed_controller_;
 
-  long long big_tick_;
+  uint64_t big_tick_;
 
   debug::ScreenIntrospection screen_introspection_;
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
+
+  bool is_desktop_active_;
 
   friend class UnityWindow;
 };
@@ -365,6 +365,7 @@ public:
   ~UnityWindow();
 
   CompWindow* window;
+  CompositeWindow* cWindow;
   GLWindow* gWindow;
 
   nux::Geometry last_bound;
@@ -393,6 +394,7 @@ public:
   bool place(CompPoint& pos);
   CompPoint tryNotIntersectUI(CompPoint& pos);
   nux::Geometry GetScaledGeometry();
+  nux::Geometry GetLayoutWindowGeometry();
 
   void paintThumbnail(nux::Geometry const& bounding, float parent_alpha, float alpha, float scale_ratio, unsigned deco_height, bool selected);
 
@@ -484,6 +486,7 @@ private:
   panel::WindowState close_icon_state_;
   nux::Geometry close_button_geo_;
   bool middle_clicked_;
+  bool is_nux_window_;
   glib::Source::UniquePtr focus_desktop_timeout_;
 
   friend class UnityScreen;

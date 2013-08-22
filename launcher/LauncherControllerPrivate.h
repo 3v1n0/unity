@@ -50,7 +50,7 @@ namespace launcher
 class Controller::Impl : public sigc::trackable
 {
 public:
-  Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager);
+  Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager, ui::EdgeBarrierController::Ptr const& edge_barriers);
   ~Impl();
 
   void UpdateNumWorkspaces(int workspaces);
@@ -131,7 +131,7 @@ public:
   AbstractLauncherIcon::Ptr desktop_icon_;
 
 #ifdef USE_X11
-  ui::EdgeBarrierController edge_barriers_;
+  ui::EdgeBarrierController::Ptr edge_barriers_;
 #endif
 
   LauncherList launchers;
@@ -145,14 +145,13 @@ public:
   bool keynav_restore_window_;
   int launcher_key_press_time_;
   int last_dnd_monitor_;
-  int super_tap_duration_;
 
   glib::DBusServer dbus_server_;
   glib::SourceManager sources_;
   UBusManager ubus;
 
-  sigc::connection launcher_key_press_connection_;
-  sigc::connection launcher_event_outside_connection_;
+  connection::Wrapper launcher_key_press_connection_;
+  connection::Wrapper launcher_event_outside_connection_;
 };
 
 } // launcher namespace

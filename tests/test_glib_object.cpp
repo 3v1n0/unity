@@ -19,6 +19,7 @@
 
 #include <list>
 #include <algorithm>
+#include <unordered_map>
 #include <gmock/gmock.h>
 #include <UnityCore/GLibWrapper.h>
 
@@ -73,6 +74,25 @@ bool RefCountIs(TestGObject* t_obj, unsigned int expected_ref)
   return (RefCount(t_obj) == expected_ref);
 }
 
+
+std::unordered_map<void*, bool> weak_destroyed;
+
+void ResetWeakObjectDestruction() { weak_destroyed.clear(); }
+
+void AddWeakObjectDestruction(GObject* obj)
+{
+  g_object_weak_ref(obj, [] (gpointer data, GObject*) { weak_destroyed[data] = true; }, obj);
+  weak_destroyed[static_cast<void*>(obj)] = false;
+}
+
+bool IsObjectDestroyed(void* obj)
+{
+  auto iter = weak_destroyed.find(obj);
+  if (iter != weak_destroyed.end())
+    return iter->second;
+  return false;
+}
+
 TEST(TestGLibObject, ConstructEmpty)
 {
   TestObjectWrapper empty_obj;
@@ -125,6 +145,7 @@ TEST(TestGLibObject, ConstructCopy)
 TEST(TestGLibObject, AssignmentOperators)
 {
   TestGObject *t_obj = test_gobject_new();
+  AddWeakObjectDestruction(G_OBJECT(t_obj));
 
   {
     TestObjectWrapper g_obj1;
@@ -142,7 +163,9 @@ TEST(TestGLibObject, AssignmentOperators)
     EXPECT_TRUE(RefCountIs(t_obj, 2));
   }
 
-  EXPECT_FALSE(IsGOBject(t_obj));
+  EXPECT_TRUE(IsObjectDestroyed(t_obj));
+
+  ResetWeakObjectDestruction();
 }
 
 TEST(TestGLibObject, AssignmentOperatorOnEqualObject)
@@ -275,7 +298,10 @@ TEST(TestGLibObject, ReleaseObject)
 TEST(TestGLibObject, SwapObjects)
 {
   TestGObject *t_obj1 = test_gobject_new();
+  AddWeakObjectDestruction(G_OBJECT(t_obj1));
+  
   TestGObject *t_obj2 = test_gobject_new();
+  AddWeakObjectDestruction(G_OBJECT(t_obj2));
 
   {
     TestObjectWrapper g_obj1(t_obj1);
@@ -298,8 +324,10 @@ TEST(TestGLibObject, SwapObjects)
     EXPECT_EQ(RefCount(g_obj2), 1);
   }
 
-  EXPECT_FALSE(G_IS_OBJECT(t_obj1));
-  EXPECT_FALSE(G_IS_OBJECT(t_obj2));
+  EXPECT_TRUE(IsObjectDestroyed(t_obj1));
+  EXPECT_TRUE(IsObjectDestroyed(t_obj2));
+
+  ResetWeakObjectDestruction();
 }
 
 TEST(TestGLibObject, ListOperations)

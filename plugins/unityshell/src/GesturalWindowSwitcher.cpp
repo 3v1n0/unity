@@ -24,6 +24,7 @@
 #include <core/timer.h>
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
+#include <UnityCore/ConnectionManager.h>
 #include "SwitcherView.h"
 #include "unityshell.h"
 
@@ -41,7 +42,6 @@ namespace unity
   {
    public:
     GesturalWindowSwitcherPrivate();
-    virtual ~GesturalWindowSwitcherPrivate();
 
     void CloseSwitcherAfterTimeout(int timeout);
     bool OnCloseSwitcherTimeout();
@@ -91,10 +91,7 @@ namespace unity
     float accumulated_horizontal_drag;
     int index_icon_hit;
 
-    sigc::connection view_built_connection;
-    sigc::connection mouse_down_connection;
-    sigc::connection mouse_up_connection;
-    sigc::connection mouse_drag_connection;
+    connection::Manager connections_;
   };
 }
 
@@ -112,16 +109,8 @@ GesturalWindowSwitcherPrivate::GesturalWindowSwitcherPrivate()
   timer_close_switcher.setCallback(
       boost::bind(&GesturalWindowSwitcherPrivate::OnCloseSwitcherTimeout, this));
 
-  view_built_connection = switcher_controller->ConnectToViewBuilt(
-        sigc::mem_fun(this, &GesturalWindowSwitcherPrivate::ConnectToSwitcherViewMouseEvents));
-}
-
-GesturalWindowSwitcherPrivate::~GesturalWindowSwitcherPrivate()
-{
-  view_built_connection.disconnect();
-  mouse_down_connection.disconnect();
-  mouse_up_connection.disconnect();
-  mouse_drag_connection.disconnect();
+  connections_.Add(switcher_controller->ConnectToViewBuilt(
+        sigc::mem_fun(this, &GesturalWindowSwitcherPrivate::ConnectToSwitcherViewMouseEvents)));
 }
 
 GestureDeliveryRequest GesturalWindowSwitcherPrivate::GestureEvent(nux::GestureEvent const& event)
@@ -419,14 +408,14 @@ void GesturalWindowSwitcherPrivate::ConnectToSwitcherViewMouseEvents()
   auto switcher_view = switcher_controller->GetView();
   g_assert(switcher_view);
 
-  mouse_down_connection = switcher_view->mouse_down.connect(
-      sigc::mem_fun(this, &GesturalWindowSwitcherPrivate::ProcessSwitcherViewMouseDown));
+  connections_.Add(switcher_view->mouse_down.connect(
+      sigc::mem_fun(this, &GesturalWindowSwitcherPrivate::ProcessSwitcherViewMouseDown)));
 
-  mouse_up_connection = switcher_view->mouse_up.connect(
-      sigc::mem_fun(this, &GesturalWindowSwitcherPrivate::ProcessSwitcherViewMouseUp));
+  connections_.Add(switcher_view->mouse_up.connect(
+      sigc::mem_fun(this, &GesturalWindowSwitcherPrivate::ProcessSwitcherViewMouseUp)));
 
-  mouse_drag_connection = switcher_view->mouse_drag.connect(
-      sigc::mem_fun(this, &GesturalWindowSwitcherPrivate::ProcessSwitcherViewMouseDrag));
+  connections_.Add(switcher_view->mouse_drag.connect(
+      sigc::mem_fun(this, &GesturalWindowSwitcherPrivate::ProcessSwitcherViewMouseDrag)));
 }
 
 ///////////////////////////////////////////

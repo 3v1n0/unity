@@ -22,7 +22,6 @@
 #define MOCKLAUNCHERICON_H
 
 #include <Nux/Nux.h>
-#include <NuxCore/Math/MathInc.h>
 
 #include <Nux/BaseWindow.h>
 #include <Nux/View.h>
@@ -33,6 +32,7 @@
 
 #include <libdbusmenu-glib/menuitem.h>
 #include "unity-shared/ApplicationManager.h"
+#include <UnityCore/GTKWrapper.h>
 
 #include "AbstractLauncherIcon.h"
 
@@ -43,10 +43,12 @@ namespace launcher
 class MockApplicationWindow : public ApplicationWindow
 {
 public:
-  MockApplicationWindow(Window xid) : xid_(xid) {}
+  MockApplicationWindow(Window xid) : xid_(xid)
+  {
+    title.SetGetterFunction([this] { return "MockApplicationWindow"; });
+    icon.SetGetterFunction([this] { return ""; });
+  }
 
-  std::string title() const { return "MockApplicationWindow"; }
-  virtual std::string icon() const { return ""; }
   virtual std::string type() const { return "mock"; }
 
   virtual Window window_id() const { return xid_; }
@@ -216,11 +218,16 @@ public:
     return true;
   }
 
+  bool AllowDetailViewInSwitcher() const override
+  {
+    return true;
+  }
+
   void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote) {}
 
   void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote) {}
 
-  unsigned long long SwitcherPriority()
+  uint64_t SwitcherPriority()
   {
     return 0;
   }
@@ -258,7 +265,7 @@ public:
     return nux::Color(0xFFAAAAAA);
   }
 
-  std::string RemoteUri()
+  std::string RemoteUri() const
   {
     return remote_uri_;
   }
@@ -302,7 +309,7 @@ public:
 
   void SendDndLeave() {}
 
-  std::string DesktopFile() { return std::string(""); }
+  std::string DesktopFile() const { return std::string(""); }
 
   bool IsSticky() const { return false; }
 
@@ -320,7 +327,7 @@ private:
   nux::BaseTexture* TextureFromGtkTheme(const char* icon_name, int size)
   {
     GdkPixbuf* pbuf;
-    GtkIconInfo* info;
+    gtk::IconInfo info;
     nux::BaseTexture* result = NULL;
     GError* error = NULL;
     GIcon* icon;
@@ -346,7 +353,6 @@ private:
       return NULL;
 
     pbuf = gtk_icon_info_load_icon(info, &error);
-    gtk_icon_info_free(info);
 
     if (GDK_IS_PIXBUF(pbuf))
     {

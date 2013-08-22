@@ -93,6 +93,7 @@ public:
   nux::Property<float> background_alpha;
   nux::Property<int> icon_size;
   nux::Property<int> tile_size;
+  nux::Property<int> super_tap_duration;
   nux::Property<int> edge_decay_rate;
   nux::Property<int> edge_overcome_pressure;
   nux::Property<int> edge_stop_velocity;

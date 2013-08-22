@@ -89,68 +89,51 @@ void ResultView::SetModelRenderer(ResultRenderer* renderer)
   NeedRedraw();
 }
 
-void ResultView::AddResult(Result& result)
+void ResultView::AddResult(Result const& result)
 {
   renderer_->Preload(result);
 
   NeedRedraw();
 }
 
-void ResultView::RemoveResult(Result& result)
+void ResultView::RemoveResult(Result const& result)
 {
   renderer_->Unload(result);
 }
 
-void ResultView::OnRowAdded(DeeModel* model, DeeModelIter* iter)
-{
-  cached_result_.SetTarget(model, iter, renderer_tag_);
-  AddResult(cached_result_);
-}
-
-void ResultView::OnRowRemoved(DeeModel* model, DeeModelIter* iter)
-{
-  cached_result_.SetTarget(model, iter, renderer_tag_);
-  RemoveResult(cached_result_);
-}
-
-void ResultView::SetModel(glib::Object<DeeModel> const& model, DeeModelTag* tag)
+void ResultView::SetResultsModel(Results::Ptr const& result_model)
 {
   // cleanup
   if (result_model_)
   {
-    sig_manager_.Disconnect(result_model_);
+    result_connections_.Clear();
 
     for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
-    {
       RemoveResult(*it);
-    }
   }
 
-  result_model_ = model;
-  renderer_tag_ = tag;
+  result_model_ = result_model;
 
-  if (model)
+  if (result_model_)
   {
-    typedef glib::Signal<void, DeeModel*, DeeModelIter*> RowSignalType;
-
-    sig_manager_.Add(new RowSignalType(model,
-                                       "row-added",
-                                       sigc::mem_fun(this, &ResultView::OnRowAdded)));
-    sig_manager_.Add(new RowSignalType(model,
-                                       "row-removed",
-                                       sigc::mem_fun(this, &ResultView::OnRowRemoved)));
-
-    for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
-    {
-      AddResult(*it);
-    }
+    result_connections_.Add(result_model_->result_added.connect(sigc::mem_fun(this, &ResultView::AddResult)));
+    result_connections_.Add(result_model_->result_removed.connect(sigc::mem_fun(this, &ResultView::RemoveResult)));
   }
+}
+
+int ResultView::GetSelectedIndex() const
+{
+  return -1;
+}
+
+void ResultView::SetSelectedIndex(int index)
+{  
 }
 
 unsigned ResultView::GetNumResults()
 {
   if (result_model_)
-    return dee_model_get_n_rows(result_model_);
+    return result_model_->count();
 
   return 0;
 }
@@ -160,20 +143,23 @@ ResultIterator ResultView::GetIteratorAtRow(unsigned row)
   DeeModelIter* iter = NULL;
   if (result_model_)
   {
-    iter = row > 0 ? dee_model_get_iter_at_row(result_model_, row) :
-      dee_model_get_first_iter(result_model_);
+    if (result_model_->model())
+    {
+      iter = row > 0 ? dee_model_get_iter_at_row(result_model_->model(), row) :
+        dee_model_get_first_iter(result_model_->model());
+      
+      return ResultIterator(result_model_->model(), iter, result_model_->GetTag());
+    }
   }
-  return ResultIterator(result_model_, iter, renderer_tag_);
+  return ResultIterator(glib::Object<DeeModel>());
 }
 
-// it would be nice to return a result here, but c++ does not have a good mechanism
-// for indicating out of bounds errors. so i return the index
-unsigned int ResultView::GetIndexForUri(const std::string& uri)
+unsigned int ResultView::GetIndexForLocalResult(LocalResult const& local_result)
 {
   unsigned int index = 0;
   for (ResultIterator it(GetIteratorAtRow(0)); !it.IsLast(); ++it)
   {
-    if ((*it).uri == uri)
+    if ((*it).uri == local_result.uri)
       break;
 
     index++;
@@ -182,23 +168,16 @@ unsigned int ResultView::GetIndexForUri(const std::string& uri)
   return index;
 }
 
-std::string ResultView::GetUriForIndex(unsigned int index)
+LocalResult ResultView::GetLocalResultForIndex(unsigned int index)
 {
   if (index >= GetNumResults())
-    return "";
+    return LocalResult();
 
-  return (*GetIteratorAtRow(index)).uri();
-}
-
-long ResultView::ComputeContentSize()
-{
-  return View::ComputeContentSize();
+  return LocalResult(*GetIteratorAtRow(index));
 }
 
 void ResultView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
-{
-
-}
+{}
 
 void ResultView::DrawContent(nux::GraphicsEngine& GfxContent, bool force_draw)
 {
@@ -290,6 +269,12 @@ std::string ResultView::GetName() const
   return "ResultView";
 }
 
+void ResultView::GetResultDimensions(int& rows, int& columns)
+{
+  columns = results_per_row;  
+  rows = result_model_ ? ceil(static_cast<double>(result_model_->count()) / static_cast<double>(std::max(1, columns))) : 0.0;
+}
+
 void ResultView::AddProperties(GVariantBuilder* builder)
 {
   unity::variant::BuilderWrapper(builder)
@@ -310,7 +295,7 @@ debug::Introspectable::IntrospectableList ResultView::GetIntrospectableChildren(
   int index = 0;
   if (result_model_)
   {
-    for (ResultIterator iter(result_model_); !iter.IsLast(); ++iter)
+    for (ResultIterator iter(result_model_->model()); !iter.IsLast(); ++iter)
     {
       Result const& result = *iter;
 

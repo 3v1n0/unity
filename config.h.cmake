@@ -7,7 +7,7 @@
 #cmakedefine LOCALE_DIR "@LOCALE_DIR@"
 #cmakedefine VERSION "@VERSION@"
 #cmakedefine BUILDDIR "@BUILDDIR@"
-#cmakedefine TESTVALADIR "@TESTVALADIR@"
+#cmakedefine SOURCEDATADIR "@SOURCEDATADIR@"
 #cmakedefine TESTDATADIR "@TESTDIRDIR@"
 #cmakedefine GETTEXT_PACKAGE "@GETTEXT_PACKAGE@"
 #cmakedefine LENSES_DIR "@LENSES_DIR@"

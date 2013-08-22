@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Jacob Edwards <j.johan.edwards@gmail.com>
+ *              Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
 #include "TooltipManager.h"
@@ -23,104 +24,79 @@ namespace unity
 {
 namespace launcher
 {
-
 namespace
 {
-const unsigned int TOOLTIPS_SHOW_TIMEOUT_LENGTH = 1000;
+const unsigned int TOOLTIPS_SHOW_TIMEOUT_LENGTH = 500;
 }
 
 TooltipManager::TooltipManager()
-  : show_tooltips_(false)
-  , hovered_(false)
-  , timer_locked_(false)
+  : skip_timeout_(false)
 {}
 
-void TooltipManager::SetIcon(AbstractLauncherIcon::Ptr const& newIcon)
-{ 
-  if (icon_ == newIcon)
-    return;
-
-  // Unlock hover timer, in case the previous icon had no valid tooltip
-  timer_locked_ = false;
- 
-  if (show_tooltips_)
-  {
-    // Show new tooltip, get rid of the old olne
-    if (icon_)
-      icon_->HideTooltip();
-    if (newIcon)
-      newIcon->ShowTooltip();
-  }
-  else if (!newIcon)
-  {
-    // Stop the hover timer for null launcher space
-    StopTimer();
-  }
-  else
-  { 
-    AbstractLauncherIcon::IconType type = newIcon->GetIconType();
-    if ((type == AbstractLauncherIcon::IconType::HOME ||
-         type == AbstractLauncherIcon::IconType::HUD) &&
-         newIcon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
-    {
-      // Lock the hover timer for no valid tooltip cases
-      timer_locked_ = true;
-      StopTimer();
-    }
-  }
-
-  icon_ = newIcon;
-}
-
-void TooltipManager::SetHover(bool on_launcher)
-{ 
-  if (hovered_ == on_launcher)
-    return;
-  hovered_ = on_launcher;
-
-  if (show_tooltips_ && !hovered_)
-  {
-    show_tooltips_ = false;
-    if (icon_)
-      icon_->HideTooltip();
-  }
-}
-
-void TooltipManager::MouseMoved()
+void TooltipManager::MouseMoved(AbstractLauncherIcon::Ptr const& icon_under_mouse)
 {
-  if (!icon_ || show_tooltips_)
+  if (icon_ == icon_under_mouse)
     return;
 
-  ResetTimer();
+  StopTimer();
+  if (icon_)
+    icon_->HideTooltip();
+
+  icon_ = icon_under_mouse;
+
+  if (!icon_)
+    return;
+
+  AbstractLauncherIcon::IconType type = icon_->GetIconType();
+  if ((type == AbstractLauncherIcon::IconType::HOME || type == AbstractLauncherIcon::IconType::HUD) &&
+      icon_->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
+  {
+    Reset();
+    return;
+  }
+  
+  if (!skip_timeout_)
+    ResetTimer(icon_);
+  else if (skip_timeout_)
+    icon_->ShowTooltip();
 }
 
 void TooltipManager::IconClicked()
 {
+  Reset();
+}
+
+void TooltipManager::SetHover(bool hovered)
+{
+  if (!hovered)
+    Reset();
+}
+
+void TooltipManager::Reset()
+{
   StopTimer();
-  if (show_tooltips_ && icon_)
+
+  if (icon_)
     icon_->HideTooltip();
 
-  show_tooltips_ = false;
-  timer_locked_ = true;
+  icon_ = AbstractLauncherIcon::Ptr();
+  skip_timeout_ = false;
 }
 
-void TooltipManager::ResetTimer()
+void TooltipManager::ResetTimer(AbstractLauncherIcon::Ptr const& icon_under_mouse)
 {
-  if (timer_locked_)
-    return;
-
   hover_timer_.reset(new glib::Timeout(TOOLTIPS_SHOW_TIMEOUT_LENGTH));
   hover_timer_->Run([&] () {
-    show_tooltips_ = true;
-    icon_->ShowTooltip();
+    skip_timeout_ = true;
+    icon_under_mouse->ShowTooltip();
     return false;
   });
-}
-
+ }
+ 
 void TooltipManager::StopTimer()
 {
-  hover_timer_.reset();
+  hover_timer_.reset(); 
 }
 
-} // namespace launcher
-} // namespace unity
+}
+}

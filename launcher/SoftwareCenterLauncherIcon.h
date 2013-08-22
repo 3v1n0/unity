@@ -50,9 +50,9 @@ protected:
   std::string GetActualDesktopFileAfterInstall();
   void ActivateLauncherIcon(ActionArg arg);
   void OnFinished(GVariant *params);
+  void OnPropertyChanged(GVariant* params);
 
 private:
-  void OnPropertyChanged(GVariant* params);
   void OnDragAnimationFinished();
 
   glib::DBusProxy aptdaemon_trans_;
@@ -63,7 +63,6 @@ private:
   bool finished_;
   bool needs_urgent_;
   std::string aptdaemon_trans_id_;
-  std::string app_title_;
 };
 
 }

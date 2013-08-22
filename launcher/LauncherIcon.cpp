@@ -45,6 +45,7 @@
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 #include <UnityCore/GLibWrapper.h>
+#include <UnityCore/GTKWrapper.h>
 #include <UnityCore/Variant.h>
 
 namespace unity
@@ -62,6 +63,8 @@ const std::string UNITY_THEME_NAME = "unity-icon-theme";
 const std::string CENTER_STABILIZE_TIMEOUT = "center-stabilize-timeout";
 const std::string PRESENT_TIMEOUT = "present-timeout";
 const std::string QUIRK_DELAY_TIMEOUT = "quirk-delay-timeout";
+
+const unsigned TOOLTIP_FADE_DURATION = 80;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherIcon);
@@ -74,18 +77,20 @@ LauncherIcon::LauncherIcon(IconType type)
   , _sticky(false)
   , _remote_urgent(false)
   , _present_urgency(0)
-  , _progress(0)
+  , _progress(0.0f)
   , _sort_priority(DefaultPriority(type))
   , _last_monitor(0)
   , _background_color(nux::color::White)
   , _glow_color(nux::color::White)
   , _shortcut(0)
-  , _center(max_num_monitors)
-  , _has_visible_window(max_num_monitors)
-  , _last_stable(max_num_monitors)
-  , _parent_geo(max_num_monitors)
-  , _saved_center(max_num_monitors)
+  , _center(monitors::MAX)
+  , _has_visible_window(monitors::MAX, false)
+  , _is_visible_on_monitor(monitors::MAX, true)
+  , _last_stable(monitors::MAX)
+  , _parent_geo(monitors::MAX)
+  , _saved_center(monitors::MAX)
   , _allow_quicklist_to_show(true)
+  , _tooltip_fade_animator(TOOLTIP_FADE_DURATION)
 {
   for (unsigned i = 0; i < unsigned(Quirk::LAST); ++i)
   {
@@ -93,11 +98,6 @@ LauncherIcon::LauncherIcon(IconType type)
     _quirk_times[i].tv_sec = 0;
     _quirk_times[i].tv_nsec = 0;
   }
-
-  _is_visible_on_monitor.resize(max_num_monitors);
-
-  for (int i = 0; i < max_num_monitors; ++i)
-    _is_visible_on_monitor[i] = true;
 
   tooltip_enabled = true;
   tooltip_enabled.changed.connect(sigc::mem_fun(this, &LauncherIcon::OnTooltipEnabledChanged));
@@ -115,34 +115,22 @@ LauncherIcon::LauncherIcon(IconType type)
   mouse_down.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseClick));
-}
 
-LauncherIcon::~LauncherIcon()
-{
-  SetQuirk(Quirk::URGENT, false);
+  _tooltip_fade_animator.updated.connect([this] (double opacity) {
+    if (_tooltip)
+    {
+      _tooltip->SetOpacity(opacity);
 
-  // clean up the whole signal-callback mess
-  if (needs_redraw_connection.connected())
-    needs_redraw_connection.disconnect();
-
-  if (on_icon_added_connection.connected())
-    on_icon_added_connection.disconnect();
-
-  if (on_icon_removed_connection.connected())
-    on_icon_removed_connection.disconnect();
-
-  if (on_order_changed_connection.connected())
-    on_order_changed_connection.disconnect();
-
-  if (_unity_theme)
-  {
-    _unity_theme = NULL;
-  }
+      if (opacity == 0.0f && _tooltip_fade_animator.GetStartValue() > _tooltip_fade_animator.GetFinishValue())
+        _tooltip->ShowWindow(false);
+    }
+  });
 }
 
 void LauncherIcon::LoadTooltip()
 {
   _tooltip = new Tooltip();
+  _tooltip->SetOpacity(0.0f);
   AddChild(_tooltip.GetPointer());
 
   _tooltip->text = tooltip_text();
@@ -169,7 +157,7 @@ LauncherIcon::WindowVisibleOnMonitor(int monitor)
 
 const bool LauncherIcon::WindowVisibleOnViewport()
 {
-  for (int i = 0; i < max_num_monitors; ++i)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
     if (_has_visible_window[i])
       return true;
 
@@ -188,7 +176,7 @@ LauncherIcon::AddProperties(GVariantBuilder* builder)
   GVariantBuilder monitors_builder;
   g_variant_builder_init(&monitors_builder, G_VARIANT_TYPE ("ab"));
 
-  for (int i = 0; i < max_num_monitors; ++i)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
     g_variant_builder_add(&monitors_builder, "b", IsVisibleOnMonitor(i));
 
   unity::variant::BuilderWrapper(builder)
@@ -312,7 +300,7 @@ bool LauncherIcon::IsMonoDefaultTheme()
     return (bool)_current_theme_is_mono;
 
   GtkIconTheme* default_theme;
-  GtkIconInfo* info;
+  gtk::IconInfo info;
   int size = 48;
 
   default_theme = gtk_icon_theme_get_default();
@@ -327,32 +315,28 @@ bool LauncherIcon::IsMonoDefaultTheme()
   if (g_strrstr(gtk_icon_info_get_filename(info), "ubuntu-mono") != NULL)
     _current_theme_is_mono = (int)true;
 
-  gtk_icon_info_free(info);
   return (bool)_current_theme_is_mono;
-
 }
 
 GtkIconTheme* LauncherIcon::GetUnityTheme()
 {
   // The theme object is invalid as soon as you add a new icon to change the theme.
   // invalidate the cache then and rebuild the theme the first time after a icon theme update.
-  if (!GTK_IS_ICON_THEME(_unity_theme.RawPtr()))
+  if (!_unity_theme.IsType(GTK_TYPE_ICON_THEME))
   {
-    _unity_theme =  gtk_icon_theme_new();
+    _unity_theme = gtk_icon_theme_new();
     gtk_icon_theme_set_custom_theme(_unity_theme, UNITY_THEME_NAME.c_str());
   }
   return _unity_theme;
 }
 
-nux::BaseTexture* LauncherIcon::TextureFromGtkTheme(std::string icon_name, int size, bool update_glow_colors)
+BaseTexturePtr LauncherIcon::TextureFromGtkTheme(std::string icon_name, int size, bool update_glow_colors)
 {
   GtkIconTheme* default_theme;
-  nux::BaseTexture* result = NULL;
+  BaseTexturePtr result;
 
   if (icon_name.empty())
-  {
     icon_name = DEFAULT_ICON;
-  }
 
   default_theme = gtk_icon_theme_get_default();
 
@@ -366,33 +350,26 @@ nux::BaseTexture* LauncherIcon::TextureFromGtkTheme(std::string icon_name, int s
 
   if (!result)
   {
-    if (icon_name == "folder")
-      result = NULL;
-    else
+    if (icon_name != "folder")
       result = TextureFromSpecificGtkTheme(default_theme, "folder", size, update_glow_colors);
   }
 
   return result;
-
 }
 
-nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
-                                                            std::string const& icon_name,
-                                                            int size,
-                                                            bool update_glow_colors,
-                                                            bool is_default_theme)
+BaseTexturePtr LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
+                                                         std::string const& icon_name,
+                                                         int size,
+                                                         bool update_glow_colors,
+                                                         bool is_default_theme)
 {
-  GtkIconInfo* info;
-  nux::BaseTexture* result = NULL;
-  GIcon* icon;
-  GtkIconLookupFlags flags = (GtkIconLookupFlags) 0;
+  glib::Object<GIcon> icon(g_icon_new_for_string(icon_name.c_str(), nullptr));
+  gtk::IconInfo info;
+  auto flags = static_cast<GtkIconLookupFlags>(0);
 
-  icon = g_icon_new_for_string(icon_name.c_str(), NULL);
-
-  if (G_IS_ICON(icon))
+  if (icon.IsType(G_TYPE_ICON))
   {
     info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, flags);
-    g_object_unref(icon);
   }
   else
   {
@@ -400,29 +377,30 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
   }
 
   if (!info && !is_default_theme)
-    return NULL;
+    return BaseTexturePtr();
 
   if (!info)
   {
     info = gtk_icon_theme_lookup_icon(theme, DEFAULT_ICON.c_str(), size, flags);
   }
 
-  if (gtk_icon_info_get_filename(info) == NULL)
+  if (!gtk_icon_info_get_filename(info))
   {
-    gtk_icon_info_free(info);
     info = gtk_icon_theme_lookup_icon(theme, DEFAULT_ICON.c_str(), size, flags);
   }
 
   glib::Error error;
   glib::Object<GdkPixbuf> pbuf(gtk_icon_info_load_icon(info, &error));
-  gtk_icon_info_free(info);
 
-  if (GDK_IS_PIXBUF(pbuf.RawPtr()))
+  if (pbuf.IsType(GDK_TYPE_PIXBUF))
   {
-    result = nux::CreateTexture2DFromPixbuf(pbuf, true);
-
     if (update_glow_colors)
       ColorForIcon(pbuf, _background_color, _glow_color);
+
+    BaseTexturePtr result;
+    result.Adopt(nux::CreateTexture2DFromPixbuf(pbuf, true));
+
+    return result;
   }
   else
   {
@@ -430,13 +408,11 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
                      <<  "' from icon theme: " << error;
   }
 
-  return result;
+  return BaseTexturePtr();
 }
 
-nux::BaseTexture* LauncherIcon::TextureFromPath(std::string const& icon_name, int size, bool update_glow_colors)
+BaseTexturePtr LauncherIcon::TextureFromPath(std::string const& icon_name, int size, bool update_glow_colors)
 {
-  nux::BaseTexture* result;
-
   if (icon_name.empty())
     return TextureFromGtkTheme(DEFAULT_ICON, size, update_glow_colors);
 
@@ -445,20 +421,22 @@ nux::BaseTexture* LauncherIcon::TextureFromPath(std::string const& icon_name, in
 
   if (GDK_IS_PIXBUF(pbuf.RawPtr()))
   {
-    result = nux::CreateTexture2DFromPixbuf(pbuf, true);
-
     if (update_glow_colors)
       ColorForIcon(pbuf, _background_color, _glow_color);
+
+    BaseTexturePtr result;
+    result.Adopt(nux::CreateTexture2DFromPixbuf(pbuf, true));
+    return result;
   }
   else
   {
     LOG_WARN(logger) << "Unable to load '" << icon_name
                      <<  "' icon: " << error;
 
-    result = TextureFromGtkTheme(DEFAULT_ICON, size, update_glow_colors);
+    return TextureFromGtkTheme(DEFAULT_ICON, size, update_glow_colors);
   }
 
-  return result;
+  return BaseTexturePtr();
 }
 
 bool LauncherIcon::SetTooltipText(std::string& target, std::string const& value)
@@ -522,6 +500,11 @@ LauncherIcon::ShowTooltip()
   _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
   _tooltip->ShowWindow(!tooltip_text().empty());
   tooltip_visible.emit(_tooltip);
+
+  if (_tooltip_fade_animator.CurrentState() == nux::animation::Animation::State::Running)
+    _tooltip_fade_animator.Reverse();
+  else
+    _tooltip_fade_animator.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
 }
 
 void
@@ -651,9 +634,9 @@ void LauncherIcon::RecvMouseUp(int button, int monitor, unsigned long key_flags)
 
 void LauncherIcon::RecvMouseClick(int button, int monitor, unsigned long key_flags)
 {
-  auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+  auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
 
-  ActionArg arg(ActionArg::LAUNCHER, button, timestamp);
+  ActionArg arg(ActionArg::Source::LAUNCHER, button, timestamp);
   arg.monitor = monitor;
 
   bool shift_pressed = nux::GetKeyModifierState(key_flags, nux::NUX_STATE_SHIFT);
@@ -669,7 +652,18 @@ void LauncherIcon::RecvMouseClick(int button, int monitor, unsigned long key_fla
 void LauncherIcon::HideTooltip()
 {
   if (_tooltip)
-    _tooltip->ShowWindow(false);
+  {
+    if (_tooltip_fade_animator.CurrentState() == nux::animation::Animation::State::Running &&
+        _tooltip_fade_animator.GetFinishValue() == 1.0)
+    {
+      _tooltip_fade_animator.Reverse();
+    }
+    else
+    {
+      _tooltip_fade_animator.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
+    }
+  }
+
   tooltip_visible.emit(nux::ObjectPtr<nux::View>(nullptr));
 }
 
@@ -1089,7 +1083,7 @@ LauncherIcon::RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote)
   if (_remote_urgent)
     SetQuirk(Quirk::URGENT, false);
 
-  _menuclient_dynamic_quicklist = nullptr;
+  _remote_menus = nullptr;
 }
 
 void
@@ -1114,13 +1108,14 @@ LauncherIcon::OnRemoteCountChanged(LauncherEntryRemote* remote)
   if (!remote->CountVisible())
     return;
 
-  std::string text;
-  if (remote->Count() > 9999)
-    text = "****";
+  if (remote->Count() / 10000 != 0)
+  {
+    SetEmblemText("****");
+  }
   else
-    text = std::to_string(remote->Count());
-
-  SetEmblemText(text);
+  {
+    SetEmblemText(std::to_string(remote->Count()));
+  }
 }
 
 void
@@ -1135,7 +1130,7 @@ LauncherIcon::OnRemoteProgressChanged(LauncherEntryRemote* remote)
 void
 LauncherIcon::OnRemoteQuicklistChanged(LauncherEntryRemote* remote)
 {
-  _menuclient_dynamic_quicklist = remote->Quicklist();
+  _remote_menus = remote->Quicklist();
 }
 
 void
@@ -1167,6 +1162,22 @@ LauncherIcon::OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote)
 
   if (remote->ProgressVisible())
     SetProgress(remote->Progress());
+}
+
+glib::Object<DbusmenuMenuitem> LauncherIcon::GetRemoteMenus() const
+{
+  if (!_remote_menus.IsType(DBUSMENU_TYPE_CLIENT))
+    return glib::Object<DbusmenuMenuitem>();
+
+  glib::Object<DbusmenuMenuitem> root(dbusmenu_client_get_root(_remote_menus), glib::AddRef());
+
+  if (!root.IsType(DBUSMENU_TYPE_MENUITEM) ||
+      !dbusmenu_menuitem_property_get_bool(root, DBUSMENU_MENUITEM_PROP_VISIBLE))
+  {
+    return glib::Object<DbusmenuMenuitem>();
+  }
+
+  return root;
 }
 
 void LauncherIcon::EmitNeedsRedraw()

@@ -1,5 +1,13 @@
+hud/StandaloneHud.cpp
+launcher/MockLauncherIcon.h
+shortcuts/StandaloneShortcuts.cpp
 standalone-clients/StandaloneHud.cpp
 standalone-clients/TestShortcut.cpp
 tests/test_glib_signals.cpp
-tests/test_home_lens.cpp
+tests/autopilot/unity/tests/test_command_lens.py
+tests/autopilot/unity/tests/test_dash.py
+tests/autopilot/unity/tests/test_panel.py
+tests/autopilot/unity/tests/test_search.py
+tests/autopilot/unity/tests/test_shopping_lens.py
+tests/mock-application.h
 

@@ -31,10 +31,10 @@ class SingleMonitorLauncherIcon : public SimpleLauncherIcon
 {
 
 public:
-  SingleMonitorLauncherIcon(IconType type, int monitor);
+  SingleMonitorLauncherIcon(IconType type, unsigned monitor);
 
-void SetMonitor(int monitor);
-int GetMonitor();
+void SetMonitor(unsigned monitor);
+unsigned GetMonitor() const;
 
 protected:
   std::string GetName() const;
@@ -43,7 +43,7 @@ protected:
 private:
   void UpdateMonitor();
 
-  int monitor_;
+  unsigned monitor_;
 };
 
 }

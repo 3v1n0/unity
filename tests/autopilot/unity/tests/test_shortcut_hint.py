@@ -32,8 +32,8 @@ class BaseShortcutHintTests(UnityTestCase):
         sleep(1)
 
     def skip_if_monitor_too_small(self):
-        monitor = self.screen_geo.get_primary_monitor()
-        monitor_geo = self.screen_geo.get_monitor_geometry(monitor)
+        monitor = self.display.get_primary_screen()
+        monitor_geo = self.display.get_screen_geometry(monitor)
         monitor_w = monitor_geo[2]
         monitor_h = monitor_geo[3]
         launcher_width = self.unity.launcher.get_launcher_for_monitor(monitor).geometry[2]
@@ -51,7 +51,7 @@ class BaseShortcutHintTests(UnityTestCase):
     def get_launcher(self):
         # We could parameterise this so all tests run on both monitors (if MM is
         # set up), but I think it's fine to just always use monitor primary monitor:
-        monitor = self.screen_geo.get_primary_monitor()
+        monitor = self.display.get_primary_screen()
         return self.unity.launcher.get_launcher_for_monitor(monitor)
 
 
@@ -119,28 +119,35 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         """Super+Tab switcher cycling forward must not show shortcut hint."""
         switcher_timeout = self.unity.shortcut_hint.get_show_timeout()
         self.unity.shortcut_hint.show()
+        self.addCleanup(self.unity.dash.ensure_hidden)
         self.addCleanup(self.unity.shortcut_hint.ensure_hidden)
 
-        self.keybinding("launcher/switcher/next")
-        self.keybinding("launcher/switcher/next")
         self.addCleanup(self.keyboard.press_and_release, "Escape")
+        self.keybinding("launcher/switcher/next")
+        self.keybinding("launcher/switcher/next")
+            
         sleep(switcher_timeout * 2)
 
         self.assertThat(self.unity.shortcut_hint.visible, Equals(False))
+        
+        self.keybinding("launcher/switcher/prev")
 
     def test_launcher_switcher_prev_doesnt_show_shortcut_hint(self):
         """Super+Tab switcher cycling backwards must not show shortcut hint."""
         switcher_timeout = self.unity.shortcut_hint.get_show_timeout()
         self.unity.shortcut_hint.show()
+        self.addCleanup(self.unity.dash.ensure_hidden)
         self.addCleanup(self.unity.shortcut_hint.ensure_hidden)
 
-        self.keybinding("launcher/switcher/next")
         self.addCleanup(self.keyboard.press_and_release, "Escape")
-        self.keybinding("launcher/switcher/next")
         self.keybinding("launcher/switcher/prev")
+        self.keybinding("launcher/switcher/prev")
+
         sleep(switcher_timeout * 2)
 
         self.assertThat(self.unity.shortcut_hint.visible, Equals(False))
+
+        self.keybinding("launcher/switcher/next")
 
     def test_launcher_icons_hints_show_with_shortcut_hint(self):
         """When the shortcut hint is shown also the launcer's icons hints should

@@ -22,6 +22,7 @@
 #include <memory>
 
 #include <gdk/gdk.h>
+#include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibDBusServer.h>
 #include <UnityCore/GLibSignal.h>
 
@@ -65,6 +66,7 @@ public:
   void ReFocusKeyInput();
 
   bool IsVisible() const;
+  bool IsCommandLensOpen() const;
   nux::Geometry GetInputWindowGeometry();
 
 protected:
@@ -103,8 +105,7 @@ private:
   bool need_show_;
   DashView* view_;
 
-  sigc::connection screen_ungrabbed_slot_;
-  unsigned place_entry_request_id_;
+  connection::Wrapper screen_ungrabbed_slot_;
   glib::DBusServer dbus_server_;
   glib::TimeoutSeconds ensure_timeout_;
   nux::animation::AnimateValue<double> timeline_animator_;

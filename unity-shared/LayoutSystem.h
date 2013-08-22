@@ -24,13 +24,15 @@
 #include <sigc++/sigc++.h>
 #include <Nux/Nux.h>
 
+#include "unity-shared/Introspectable.h"
 #include "unity-shared/WindowManager.h"
 
 namespace unity {
 namespace ui {
 
-struct LayoutWindow
+class LayoutWindow : public debug::Introspectable
 {
+public:
   typedef std::shared_ptr<LayoutWindow> Ptr;
   typedef std::vector<LayoutWindow::Ptr> Vector;
 
@@ -45,6 +47,11 @@ struct LayoutWindow
   bool selected;
   float aspect_ratio;
   float alpha;
+
+protected:
+  // Introspectable methods
+  std::string GetName() const;
+  void AddProperties(GVariantBuilder* builder);
 };
 
 class LayoutSystem
@@ -56,6 +63,7 @@ public:
   LayoutSystem();
 
   void LayoutWindows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
+  std::vector<int> GetRowSizes(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds) const;
 
 protected:
   void LayoutGridWindows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds, nux::Geometry& final_bounds);
@@ -63,9 +71,9 @@ protected:
   nux::Geometry LayoutRow(LayoutWindow::Vector const& row, nux::Geometry const& row_bounds);
   nux::Geometry CompressAndPadRow(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds);
 
-  std::vector<LayoutWindow::Vector> GetRows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds);
+  nux::Size GridSizeForWindows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds) const;
 
-  nux::Size GridSizeForWindows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds);
+  std::vector<LayoutWindow::Vector> GetRows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds) const;
 
   nux::Geometry ScaleBoxIntoBox(nux::Geometry const& bounds, nux::Geometry const& box);
 };

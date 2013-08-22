@@ -26,6 +26,7 @@
 #include <Nux/Nux.h>
 #include <Nux/ScrollView.h>
 #include <UnityCore/Tracks.h>
+#include <UnityCore/ConnectionManager.h>
 #include "unity-shared/Introspectable.h"
 #include "Track.h"
 
@@ -50,14 +51,10 @@ public:
   NUX_DECLARE_OBJECT_TYPE(Tracks, nux::View);
 
   Tracks(dash::Tracks::Ptr tracks, NUX_FILE_LINE_PROTO);
-  virtual ~Tracks();
 
   // From debug::Introspectable
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);  
-
-  sigc::signal<void, std::string const&> play;
-  sigc::signal<void, std::string const&> pause;
 
 protected:
   virtual bool AcceptKeyNavFocus() { return false; }
@@ -68,15 +65,12 @@ protected:
   void OnTrackAdded(dash::Track const& track);
   void OnTrackRemoved(dash::Track const&track);
 
-  void onPlayTrack(std::string const& uri);
-  void onPauseTrack(std::string const& uri);
-
 protected:
   dash::Tracks::Ptr tracks_;
 
   nux::VLayout* layout_;
   std::map<std::string, previews::Track::Ptr> m_tracks;
-  int track_count_;
+  connection::Manager sig_conn_;
 };
 
 }

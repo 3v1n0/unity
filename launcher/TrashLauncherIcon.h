@@ -21,12 +21,12 @@
 #define TRASHLAUNCHERICON_H
 
 #include <gio/gio.h>
-#include <UnityCore/GLibDBusProxy.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
 
 #include "DndData.h"
 #include "SimpleLauncherIcon.h"
+#include "unity-shared/FileManager.h"
 
 namespace unity
 {
@@ -35,10 +35,8 @@ namespace launcher
 
 class TrashLauncherIcon : public SimpleLauncherIcon
 {
-
 public:
-  TrashLauncherIcon();
-  ~TrashLauncherIcon();
+  TrashLauncherIcon(FileManager::Ptr const& = nullptr);
 
 protected:
   void UpdateTrashIcon();
@@ -51,16 +49,17 @@ protected:
 
 private:
   void ActivateLauncherIcon(ActionArg arg);
+  void OnOpenedLocationsChanged();
   MenuItemsVector GetMenus();
 
   static void UpdateTrashIconCb(GObject* source, GAsyncResult* res, gpointer data);
 
-  gboolean empty_;
-  glib::DBusProxy proxy_;
-  glib::Object<GCancellable> cancellable_;
+  bool empty_;
+  FileManager::Ptr file_manager_;
+  glib::Cancellable cancellable_;
   glib::Object<GFileMonitor> trash_monitor_;
   glib::Signal<void, GFileMonitor*, GFile*, GFile*, GFileMonitorEvent> trash_changed_signal_;
-  glib::Signal<void, DbusmenuMenuitem*, int> empty_activated_signal_;
+  glib::Signal<void, DbusmenuMenuitem*, unsigned> empty_activated_signal_;
 };
 
 }

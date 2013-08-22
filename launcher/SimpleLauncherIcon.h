@@ -20,6 +20,7 @@
 #ifndef UNITYSHELL_SIMPLELAUNCHERICON_H
 #define UNITYSHELL_SIMPLELAUNCHERICON_H
 
+#include <UnityCore/GLibSignal.h>
 #include "LauncherIcon.h"
 
 namespace unity
@@ -34,38 +35,24 @@ class SimpleLauncherIcon : public LauncherIcon
   NUX_DECLARE_OBJECT_TYPE(SimpleLauncherIcon, LauncherIcon);
 public:
   SimpleLauncherIcon(IconType type);
-  virtual ~SimpleLauncherIcon();
-
-  // override
-  nux::BaseTexture* GetTextureForSize(int size);
 
   // Properties
   nux::Property<std::string> icon_name;
-
-  // Signals
-  sigc::signal<void> activate;
 
 protected:
   std::string GetName() const;
   void AddProperties(GVariantBuilder* builder);
 
-  virtual void OnMouseDown(int button, int monitor, unsigned long key_flags = 0);
-  virtual void OnMouseUp(int button, int monitor, unsigned long key_flags = 0);
-  virtual void OnMouseClick(int button, int monitor, unsigned long key_flags = 0);
-  virtual void OnMouseEnter(int monitor);
-  virtual void OnMouseLeave(int monitor);
+  nux::BaseTexture* GetTextureForSize(int size) override;
   virtual void ActivateLauncherIcon(ActionArg arg);
 
 private:
   void ReloadIcon();
-  static void OnIconThemeChanged(GtkIconTheme* icon_theme, gpointer data);
   bool SetIconName(std::string& target, std::string const& value);
 
 private:
-  guint32 theme_changed_id_;
-
-  std::map<int, nux::BaseTexture*> texture_map;
-  int last_size_;
+  std::unordered_map<int, BaseTexturePtr> texture_map_;
+  glib::Signal<void, GtkIconTheme*> theme_changed_signal_;
 };
 
 }

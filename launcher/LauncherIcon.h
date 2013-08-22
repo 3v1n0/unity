@@ -21,12 +21,9 @@
 #ifndef LAUNCHERICON_H
 #define LAUNCHERICON_H
 
-#include <set>
-#include <boost/unordered_map.hpp>
-
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
-#include <NuxCore/Math/MathInc.h>
+#include <NuxCore/Animation.h>
 
 #include <gtk/gtk.h>
 #include <libdbusmenu-glib/client.h>
@@ -55,8 +52,6 @@ public:
   typedef nux::ObjectPtr<nux::BaseTexture> BaseTexturePtr;
 
   LauncherIcon(IconType type);
-
-  virtual ~LauncherIcon();
 
   bool SetTooltipText(std::string& target, std::string const& value);
 
@@ -122,7 +117,12 @@ public:
     return false;
   };
 
-  virtual unsigned long long SwitcherPriority()
+  virtual bool AllowDetailViewInSwitcher() const override
+  {
+    return false;
+  }
+
+  virtual uint64_t SwitcherPriority()
   {
     return 0;
   }
@@ -139,7 +139,7 @@ public:
 
   virtual nux::Color GlowColor();
 
-  std::string RemoteUri()
+  std::string RemoteUri() const
   {
     return GetRemoteUri();
   }
@@ -180,7 +180,7 @@ public:
     OnDndLeave();
   }
 
-  virtual std::string DesktopFile() { return std::string(""); }
+  virtual std::string DesktopFile() const { return std::string(); }
 
   virtual bool IsSticky() const { return _sticky; }
 
@@ -195,6 +195,8 @@ public:
   virtual void Stick(bool save = true);
 
   virtual void UnStick();
+
+  virtual glib::Object<DbusmenuMenuitem> GetRemoteMenus() const;
 
   void PerformScroll(ScrollDirection direction, Time timestamp) override;
 
@@ -229,7 +231,7 @@ protected:
 
   virtual void OnCenterStabilized(std::vector<nux::Point3> center) {}
 
-  virtual std::string GetRemoteUri()
+  virtual std::string GetRemoteUri() const
   {
     return "";
   }
@@ -256,11 +258,11 @@ protected:
 
   virtual bool HandlesSpread () { return false; }
 
-  nux::BaseTexture* TextureFromGtkTheme(std::string name, int size, bool update_glow_colors = true);
+  BaseTexturePtr TextureFromGtkTheme(std::string name, int size, bool update_glow_colors = true);
 
-  nux::BaseTexture* TextureFromSpecificGtkTheme(GtkIconTheme* theme, std::string const& name, int size, bool update_glow_colors = true, bool is_default_theme = false);
+  BaseTexturePtr TextureFromSpecificGtkTheme(GtkIconTheme* theme, std::string const& name, int size, bool update_glow_colors = true, bool is_default_theme = false);
 
-  nux::BaseTexture* TextureFromPath(std::string const& name, int size, bool update_glow_colors = true);
+  BaseTexturePtr TextureFromPath(std::string const& name, int size, bool update_glow_colors = true);
 
   static bool        IsMonoDefaultTheme();
 
@@ -288,8 +290,6 @@ protected:
 
   // This looks like a case for boost::logical::tribool
   static int _current_theme_is_mono;
-
-  glib::Object<DbusmenuClient> _menuclient_dynamic_quicklist;
 
 private:
   IconType _icon_type;
@@ -337,6 +337,9 @@ private:
   bool             _allow_quicklist_to_show;
 
   std::list<LauncherEntryRemote::Ptr> _entry_list;
+  glib::Object<DbusmenuClient> _remote_menus;
+
+  nux::animation::AnimateValue<double> _tooltip_fade_animator;
 
 protected:
   glib::SourceManager _source_manager;

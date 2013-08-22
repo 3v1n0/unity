@@ -43,15 +43,8 @@ FilterAllButton::FilterAllButton(NUX_FILE_LINE_DECL)
   state_change.connect(sigc::mem_fun(this, &FilterAllButton::OnStateChanged));
 }
 
-FilterAllButton::~FilterAllButton()
-{
-}
-
 void FilterAllButton::SetFilter(Filter::Ptr const& filter)
 {
-  if (filtering_connection_.connected())
-    filtering_connection_.disconnect();
-
   filter_ = filter;
   OnFilteringChanged(filter_->filtering); // Evil hack ;)
 

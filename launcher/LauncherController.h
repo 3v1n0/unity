@@ -25,6 +25,7 @@
 #include <vector>
 #include <sigc++/sigc++.h>
 
+#include "EdgeBarrierController.h"
 #include "LauncherOptions.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "XdndManager.h"
@@ -48,7 +49,7 @@ public:
   nux::Property<Options::Ptr> options;
   nux::Property<bool> multiple_launchers;
 
-  Controller(XdndManager::Ptr const& xdnd_manager);
+  Controller(XdndManager::Ptr const& xdnd_manager, ui::EdgeBarrierController::Ptr const& edge_barriers);
   ~Controller();
 
   Launcher& launcher() const;
@@ -81,8 +82,6 @@ public:
   bool KeyNavIsActive() const;
 
   bool IsOverlayOpen() const;
-
-  void UpdateSuperTapDuration(int const super_tap_duration);
 
 protected:
   // Introspectable methods

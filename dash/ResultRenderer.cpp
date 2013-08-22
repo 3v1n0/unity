@@ -25,6 +25,7 @@
 #include <gtk/gtk.h>
 #include <unity-protocol.h>
 #include <NuxGraphics/GdkGraphics.h>
+#include <UnityCore/GTKWrapper.h>
 
 namespace unity
 {
@@ -39,20 +40,20 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
 {
   GdkPixbuf *pbuf;
   GtkIconTheme *theme;
-  GtkIconInfo *info;
-  GError *error = NULL;
-  GIcon *icon;
+  gtk::IconInfo info;
+  glib::Error error;
+  glib::Object<GIcon> icon;
+
   if (icon_hint.empty())
     icon_hint = DEFAULT_GICON;
+
   if (g_str_has_prefix(icon_hint.c_str(), "/"))
   {
     pbuf = gdk_pixbuf_new_from_file_at_scale (icon_hint.c_str(),
                                               size, size, TRUE, &error);
-    if (error != NULL || !pbuf || !GDK_IS_PIXBUF (pbuf))
+    if (error || !pbuf || !GDK_IS_PIXBUF (pbuf))
     {
       icon_hint = "application-default-icon";
-      g_error_free (error);
-      error = NULL;
     }
     else
       return pbuf;
@@ -60,13 +61,11 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
   theme = gtk_icon_theme_get_default();
   icon = g_icon_new_for_string(icon_hint.c_str(), NULL);
 
-  if (G_IS_ICON(icon))
+  if (icon.IsType(G_TYPE_ICON))
   {
-     if (UNITY_PROTOCOL_IS_ANNOTATED_ICON(icon))
+     if (icon.IsType(UNITY_PROTOCOL_TYPE_ANNOTATED_ICON))
      {
-        UnityProtocolAnnotatedIcon *anno;
-        anno = UNITY_PROTOCOL_ANNOTATED_ICON(icon);
-
+        auto anno = glib::object_cast<UnityProtocolAnnotatedIcon>(icon);
         GIcon *base_icon = unity_protocol_annotated_icon_get_icon(anno);
         info = gtk_icon_theme_lookup_by_gicon(theme, base_icon, size, (GtkIconLookupFlags)0);
      }
@@ -74,7 +73,6 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
      {
        info = gtk_icon_theme_lookup_by_gicon(theme, icon, size, (GtkIconLookupFlags)0);
      }
-     g_object_unref(icon);
   }
   else
   {
@@ -92,9 +90,8 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
                                         (GtkIconLookupFlags) 0);
   }
 
-  if (gtk_icon_info_get_filename(info) == NULL)
+  if (!gtk_icon_info_get_filename(info))
   {
-      gtk_icon_info_free(info);
       info = gtk_icon_theme_lookup_icon(theme,
                                         "application-default-icon",
                                         size,
@@ -103,13 +100,11 @@ GdkPixbuf* _icon_hint_get_drag_pixbuf(std::string icon_hint, int size)
 
   pbuf = gtk_icon_info_load_icon(info, &error);
 
-  if (error != NULL)
+  if (error)
   {
-    g_error_free (error);
-    pbuf = NULL;
+    pbuf = nullptr;
   }
 
-  gtk_icon_info_free(info);
   return pbuf;
 }
 
@@ -133,12 +128,12 @@ void ResultRenderer::Render(nux::GraphicsEngine& GfxContext,
   nux::GetPainter().PushDrawSliceScaledTextureLayer(GfxContext, geometry, nux::eBUTTON_NORMAL, nux::color::White, nux::eAllCorners);
 }
 
-void ResultRenderer::Preload(Result& row)
+void ResultRenderer::Preload(Result const& row)
 {
   // pre-load the given row
 }
 
-void ResultRenderer::Unload(Result& row)
+void ResultRenderer::Unload(Result const& row)
 {
   // unload any resources
 }

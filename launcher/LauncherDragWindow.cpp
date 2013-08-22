@@ -41,8 +41,11 @@ namespace
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherDragWindow);
 
-LauncherDragWindow::LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
+LauncherDragWindow::LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture,
+                                       std::function<void(nux::GraphicsEngine &)> const &deferred_icon_render_func)
   : nux::BaseWindow("")
+  , icon_rendered_(false)
+  , deferred_icon_render_func_(deferred_icon_render_func)
   , animation_speed_(QUICK_ANIMATION_SPEED)
   , cancelled_(false)
   , texture_(texture)
@@ -61,10 +64,12 @@ LauncherDragWindow::LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> t
 
 LauncherDragWindow::~LauncherDragWindow()
 {
-  if (on_anim_completed.connected())
-    on_anim_completed.disconnect();
-
   UnGrabKeyboard();
+}
+
+bool LauncherDragWindow::DrawContentOnNuxLayer() const
+{
+  return true;
 }
 
 bool LauncherDragWindow::Animating() const
@@ -110,7 +115,7 @@ void LauncherDragWindow::StartAnimation()
 }
 
 bool LauncherDragWindow::OnAnimationTimeout()
-{ 
+{
   nux::Geometry const& geo = GetGeometry();
 
   int half_size = geo.width / 2;
@@ -149,6 +154,19 @@ LauncherDragWindow::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
   geo.SetY(0);
 
   GfxContext.PushClippingRectangle(geo);
+
+  // Render the icon if we haven't already
+  if (!icon_rendered_)
+  {
+    deferred_icon_render_func_ (GfxContext);
+    icon_rendered_ = true;
+  }
+
+  if (!DrawContentOnNuxLayer())
+  {
+    GfxContext.PopClippingRectangle();
+    return;
+  }
 
   nux::TexCoordXForm texxform;
   texxform.FlipVCoord(true);

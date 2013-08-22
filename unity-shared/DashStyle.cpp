@@ -42,6 +42,7 @@
 
 #include "CairoTexture.h"
 #include "JSONParser.h"
+#include "TextureCache.h"
 #include "UnitySettings.h"
 #include "config.h"
 
@@ -1557,11 +1558,11 @@ void Style::Impl::Text(cairo_t*    cr,
   cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
   cairo_set_source_rgba(cr, color);
   pango_layout_context_changed(layout);
-  PangoRectangle ink = {0, 0, 0, 0};
-  PangoRectangle log = {0, 0, 0, 0};
-  pango_layout_get_extents(layout, &ink, &log);
+  int layout_w = 0;
+  int layout_h = 0;
+  pango_layout_get_pixel_size(layout, &layout_w, &layout_h);
   x = horizMargin; // let pango alignment handle the x position
-  y = ((double) h - pango_units_to_double(log.height)) / 2.0;
+  y = (h - layout_h) / 2.0f;
 
   cairo_move_to(cr, x, y);
   pango_cairo_show_layout(cr, layout);
@@ -1652,7 +1653,6 @@ void Style::Impl::DrawOverlay(cairo_t*  cr,
 
   // blur and blend overlay onto initial image-surface
   Blur(blurred_cr, blurSize);
-  //cairo_surface_write_to_png(surface, "/tmp/overlay-surface.png");
   cairo_set_source_surface(cr, surface, 0.0, 0.0);
   old = SetBlendMode(cr, mode);
   cairo_paint_with_alpha(cr, opacity);
@@ -1872,8 +1872,6 @@ bool Style::SquareButton(cairo_t* cr, nux::ButtonVisualState state,
               font_px_size,
               42.0 + 10.0,
               alignment);
-
-  cairo_surface_write_to_png(cairo_get_target(cr), "/tmp/wut.png");
 
   return true;
 }
@@ -2474,7 +2472,7 @@ int Style::GetFilterButtonHeight() const
   return 30;
 }
 
-int Style::GetSpaceBetweenLensAndFilters() const
+int Style::GetSpaceBetweenScopeAndFilters() const
 {
   return 10;
 }
@@ -2547,19 +2545,8 @@ nux::BaseTexture* LazyLoadTexture::texture()
 
 void LazyLoadTexture::LoadTexture()
 {
-  std::string full_path = PKGDATADIR + filename_;
-  glib::Object<GdkPixbuf> pixbuf;
-  glib::Error error;
-
-  pixbuf = ::gdk_pixbuf_new_from_file_at_size(full_path.c_str(), size_, size_, &error);
-  if (error)
-  {
-    LOG_WARN(logger) << "Unable to texture " << full_path << ": " << error;
-  }
-  else
-  {
-    texture_.Adopt(nux::CreateTexture2DFromPixbuf(pixbuf, true));
-  }
+  TextureCache& cache = TextureCache::GetDefault();
+  texture_ = cache.FindTexture(filename_, size_, size_);
 }
 
 } // anon namespace

@@ -22,6 +22,7 @@
 #include "config.h"
 #include <glib/gi18n-lib.h>
 #include <NuxCore/Logger.h>
+#include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibSignal.h>
 
 #include "DevicesSettings.h"
@@ -46,7 +47,7 @@ const unsigned int volume_changed_timeout = 500;
 class VolumeLauncherIcon::Impl
 {
 public:
-  typedef glib::Signal<void, DbusmenuMenuitem*, int> ItemSignal;
+  typedef glib::Signal<void, DbusmenuMenuitem*, unsigned> ItemSignal;
 
   Impl(Volume::Ptr const& volume,
        DevicesSettings::Ptr const& devices_settings,
@@ -60,19 +61,11 @@ public:
     ConnectSignals();
   }
 
-  ~Impl()
-  {
-    volume_changed_conn_.disconnect();
-    volume_removed_conn_.disconnect();
-    settings_changed_conn_.disconnect();
-  }
-
   void UpdateIcon()
   {
     parent_->tooltip_text = volume_->GetName();
     parent_->icon_name = volume_->GetIconName();
-
-    parent_->SetQuirk(Quirk::RUNNING, false);
+    parent_->SetQuirk(Quirk::RUNNING, volume_->IsOpened());
   }
 
   void UpdateVisibility()
@@ -89,9 +82,10 @@ public:
 
   void ConnectSignals()
   {
-    volume_changed_conn_ = volume_->changed.connect(sigc::mem_fun(this, &Impl::OnVolumeChanged));
-    volume_removed_conn_ = volume_->removed.connect(sigc::mem_fun(this, &Impl::OnVolumeRemoved));
-    settings_changed_conn_ = devices_settings_->changed.connect(sigc::mem_fun(this, &Impl::OnSettingsChanged));
+    connections_.Add(volume_->changed.connect(sigc::mem_fun(this, &Impl::OnVolumeChanged)));
+    connections_.Add(volume_->removed.connect(sigc::mem_fun(this, &Impl::OnVolumeRemoved)));
+    connections_.Add(devices_settings_->changed.connect(sigc::mem_fun(this, &Impl::OnSettingsChanged)));
+    connections_.Add(volume_->opened.connect(sigc::hide(sigc::mem_fun(this, &Impl::UpdateIcon))));
   }
 
   void OnVolumeChanged()
@@ -136,7 +130,7 @@ public:
   void ActivateLauncherIcon(ActionArg arg)
   {
     parent_->SimpleLauncherIcon::ActivateLauncherIcon(arg);
-    volume_->MountAndOpenInFileManager();
+    volume_->MountAndOpenInFileManager(arg.timestamp);
   }
 
   MenuItemsVector GetMenus()
@@ -194,8 +188,8 @@ public:
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
     dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY, true);
 
-    gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
-        volume_->MountAndOpenInFileManager();
+    gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, unsigned timestamp) {
+        volume_->MountAndOpenInFileManager(timestamp);
     }));
 
     menu.push_back(menu_item);
@@ -209,8 +203,8 @@ public:
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
-    gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
-        volume_->MountAndOpenInFileManager();
+    gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, unsigned timestamp) {
+        volume_->MountAndOpenInFileManager(timestamp);
     }));
 
     menu.push_back(menu_item);
@@ -270,7 +264,7 @@ public:
     menu.push_back(menu_item);
   }
 
-  std::string GetRemoteUri()
+  std::string GetRemoteUri() const
   {
     auto const& identifier = volume_->GetIdentifier();
 
@@ -286,9 +280,7 @@ public:
   DevicesSettings::Ptr devices_settings_;
 
   glib::SignalManager gsignals_;
-  sigc::connection settings_changed_conn_;
-  sigc::connection volume_changed_conn_;
-  sigc::connection volume_removed_conn_;
+  connection::Manager connections_;
 };
 
 //
@@ -342,7 +334,7 @@ AbstractLauncherIcon::MenuItemsVector VolumeLauncherIcon::GetMenus()
   return pimpl_->GetMenus();
 }
 
-std::string VolumeLauncherIcon::GetRemoteUri()
+std::string VolumeLauncherIcon::GetRemoteUri() const
 {
   return pimpl_->GetRemoteUri();
 }

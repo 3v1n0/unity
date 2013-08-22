@@ -22,7 +22,7 @@
 #include <gmock/gmock.h>
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Results.h>
-#include <UnityCore/ResultIterator.h>
+#include <UnityCore/Variant.h>
 
 #include <dee.h>
 
@@ -41,20 +41,26 @@ public:
   TestResultIterator()
     : results(new Results(ModelType::LOCAL))
   {
-    dee_model_set_schema (results->model(), 
-                          "s", "s", "u", "s", "s", "s", "s", NULL);
+    dee_model_set_schema (results->model(),
+                          "s", "s", "u", "u", "s", "s", "s", "s", "a{sv}", NULL);
   }
 
   void AddResult(std::string const& uri, std::string const& name)
   {
+    GVariantBuilder b;
+    g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
+    glib::Variant hints = g_variant_builder_end(&b);
+
     dee_model_append(results->model(),
                      uri.c_str(),  // uri
                      "icon",       // icon-hint
                      0,            // category
+                     0,            // result-type
                      "text/plain", // mimetype
                      name.c_str(), // display name
                      "",           // comment
-                     uri.c_str()); // dnd-uri
+                     uri.c_str(),  // dnd-uri
+                     static_cast<GVariant*>(hints));       // hints
   }
 
   Results::Ptr results;
@@ -103,6 +109,20 @@ TEST_F(TestResultIterator, TestCopy)
   EXPECT_NE(one, two);
 }
 
+TEST_F(TestResultIterator, TestEqual)
+{
+  AddResult("mailto:nospam@example.org", "Email");
+
+  ResultIterator one(results->model());
+  ResultIterator two = one;
+
+  EXPECT_EQ(one, two);
+
+  ResultIterator const& original = two++;
+  EXPECT_EQ(original, one);
+  EXPECT_NE(one, two);
+}
+
 TEST_F(TestResultIterator, TestIncrement)
 {
   AddResult("file:///foo.txt", "Result #1");
@@ -110,17 +130,89 @@ TEST_F(TestResultIterator, TestIncrement)
 
   ResultIterator it(results->model());
 
-  EXPECT_EQ((*it).uri, "file:///foo.txt");
-  EXPECT_EQ((*it).name, "Result #1");
+  EXPECT_EQ((*it).uri(), "file:///foo.txt");
+  EXPECT_EQ((*it).name(), "Result #1");
 
   it++;
-  EXPECT_EQ((*it).uri, "file:///qoo.txt");
-  EXPECT_EQ((*it).name, "Result #2");
+  EXPECT_EQ((*it).uri(), "file:///qoo.txt");
+  EXPECT_EQ((*it).name(), "Result #2");
 
   it++;
   EXPECT_TRUE(it.IsLast());
   EXPECT_FALSE(it.IsFirst());
 }
 
+TEST_F(TestResultIterator, TestDecrement)
+{
+  AddResult("file:///foo.txt", "Result #1");
+  AddResult("file:///qoo.txt", "Result #2");
 
+  ResultIterator it(results->end());
+  EXPECT_TRUE(it.IsLast());
+
+  it--;
+  EXPECT_EQ((*it).uri, "file:///qoo.txt");
+  EXPECT_EQ((*it).name, "Result #2");
+
+  it--;
+  EXPECT_EQ((*it).uri, "file:///foo.txt");
+  EXPECT_EQ((*it).name, "Result #1");
+
+  EXPECT_TRUE(it.IsFirst());
+  EXPECT_FALSE(it.IsLast());
+}
+
+TEST_F(TestResultIterator, TestAdd)
+{
+  AddResult("file:///foo.txt", "Result #1");
+  AddResult("file:///qoo.txt", "Result #2");
+  AddResult("file:///bar.txt", "Result #3");
+
+  ResultIterator it(results->model());
+  EXPECT_EQ((*it).uri, "file:///foo.txt");
+  EXPECT_EQ((*it).name, "Result #1");
+
+  it+=2;
+  EXPECT_EQ((*it).uri, "file:///bar.txt");
+  EXPECT_EQ((*it).name, "Result #3");
+  EXPECT_FALSE(it.IsLast());
+
+  it+=1;
+  EXPECT_TRUE(it.IsLast());
+  EXPECT_FALSE(it.IsFirst());
+}
+
+TEST_F(TestResultIterator, TestSubtract)
+{
+  AddResult("file:///foo.txt", "Result #1");
+  AddResult("file:///qoo.txt", "Result #2");
+  AddResult("file:///bar.txt", "Result #3");
+
+  ResultIterator it(results->end());
+  EXPECT_TRUE(it.IsLast());
+
+  it--;
+  EXPECT_EQ((*it).uri, "file:///bar.txt");
+  EXPECT_EQ((*it).name, "Result #3");
+
+  it-=2;
+  EXPECT_EQ((*it).uri, "file:///foo.txt");
+  EXPECT_EQ((*it).name, "Result #1");
+  EXPECT_TRUE(it.IsFirst());
+  EXPECT_FALSE(it.IsLast());
+}
+
+TEST_F(TestResultIterator, TestOperatorAt)
+{
+  AddResult("file:///foo.txt", "Result #1");
+  AddResult("file:///qoo.txt", "Result #2");
+  AddResult("file:///bar.txt", "Result #3");
+
+  ResultIterator it(results->begin());
+  it = it[1];
+
+  EXPECT_EQ((*it).uri, "file:///qoo.txt");
+  EXPECT_EQ((*it).name, "Result #2");
 } // Namespace
+
+}

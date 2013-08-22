@@ -104,13 +104,14 @@ std::string CreateAppUriNameFromDesktopPath(const std::string &desktop_path)
 
 }
 
-Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager)
+Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager, ui::EdgeBarrierController::Ptr const& edge_barriers)
   : parent_(parent)
   , model_(std::make_shared<LauncherModel>())
   , xdnd_manager_(xdnd_manager)
   , device_section_(std::make_shared<VolumeMonitorWrapper>(), std::make_shared<DevicesSettingsImp>())
   , expo_icon_(new ExpoLauncherIcon())
   , desktop_icon_(new DesktopLauncherIcon())
+  , edge_barriers_(edge_barriers)
   , sort_priority_(AbstractLauncherIcon::DefaultPriority(AbstractLauncherIcon::IconType::APPLICATION))
   , launcher_open(false)
   , launcher_keynav(false)
@@ -119,11 +120,10 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager)
   , keynav_restore_window_(true)
   , launcher_key_press_time_(0)
   , last_dnd_monitor_(-1)
-  , super_tap_duration_(0)
   , dbus_server_(DBUS_NAME)
 {
 #ifdef USE_X11
-  edge_barriers_.options = parent_->options();
+  edge_barriers_->options = parent_->options();
 #endif
 
   ubus.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, [this](GVariant * data) {
@@ -226,7 +226,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
     if (launchers[i]->monitor() != monitor)
     {
 #ifdef USE_X11
-      edge_barriers_.Unsubscribe(launchers[i].GetPointer(), launchers[i]->monitor);
+      edge_barriers_->RemoveVerticalSubscriber(launchers[i].GetPointer(), launchers[i]->monitor);
 #endif
       launchers[i]->monitor = monitor;
     }
@@ -236,7 +236,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
     }
 
 #ifdef USE_X11
-    edge_barriers_.Subscribe(launchers[i].GetPointer(), launchers[i]->monitor);
+    edge_barriers_->AddVerticalSubscriber(launchers[i].GetPointer(), launchers[i]->monitor);
 #endif
   }
 
@@ -248,7 +248,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
       parent_->RemoveChild(launcher.GetPointer());
       launcher->GetParent()->UnReference();
 #ifdef USE_X11
-      edge_barriers_.Unsubscribe(launcher.GetPointer(), launcher->monitor);
+      edge_barriers_->RemoveVerticalSubscriber(launcher.GetPointer(), launcher->monitor);
 #endif
     }
   }
@@ -534,7 +534,7 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
     }
     else
     {
-      result->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true); 
+      result->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true);
     }
   }
 }
@@ -761,8 +761,13 @@ void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr const& icon, int p
     ResetIconPriorities();
   });
 
-  icon->position_forgot.connect([this, icon_uri] {
-    FavoriteStore::Instance().RemoveFavorite(icon_uri);
+  auto uri_ptr = std::make_shared<std::string>(icon_uri);
+  icon->position_forgot.connect([this, uri_ptr] {
+    FavoriteStore::Instance().RemoveFavorite(*uri_ptr);
+  });
+
+  icon->uri_changed.connect([this, uri_ptr] (std::string const& new_uri) {
+    *uri_ptr = new_uri;
   });
 
   if (icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION)
@@ -1051,13 +1056,13 @@ void Controller::Impl::SetupIcons()
 void Controller::Impl::SendHomeActivationRequest()
 {
   ubus.SendMessage(UBUS_PLACE_ENTRY_ACTIVATE_REQUEST,
-                   g_variant_new("(sus)", "home.lens", dash::NOT_HANDLED, ""));
+                   g_variant_new("(sus)", "home.scope", dash::NOT_HANDLED, ""));
 }
 
-Controller::Controller(XdndManager::Ptr const& xdnd_manager)
- : options(Options::Ptr(new Options()))
+Controller::Controller(XdndManager::Ptr const& xdnd_manager, ui::EdgeBarrierController::Ptr const& edge_barriers)
+ : options(std::make_shared<Options>())
  , multiple_launchers(true)
- , pimpl(new Impl(this, xdnd_manager))
+ , pimpl(new Impl(this, xdnd_manager, edge_barriers))
 {
   multiple_launchers.changed.connect([&](bool value) -> void {
     UScreen* uscreen = UScreen::GetDefault();
@@ -1169,7 +1174,7 @@ void Controller::HandleLauncherKeyPress(int when)
 
     return false;
   };
-  pimpl->sources_.AddTimeout(pimpl->super_tap_duration_, show_launcher, local::KEYPRESS_TIMEOUT);
+  pimpl->sources_.AddTimeout(options()->super_tap_duration, show_launcher, local::KEYPRESS_TIMEOUT);
 
   auto show_shortcuts = [&]()
   {
@@ -1189,7 +1194,7 @@ void Controller::HandleLauncherKeyPress(int when)
 
 bool Controller::AboutToShowDash(int was_tap, int when) const
 {
-  if ((when - pimpl->launcher_key_press_time_) < pimpl->super_tap_duration_ && was_tap)
+  if ((when - pimpl->launcher_key_press_time_) < options()->super_tap_duration && was_tap)
     return true;
   return false;
 }
@@ -1197,7 +1202,7 @@ bool Controller::AboutToShowDash(int was_tap, int when) const
 void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
 {
   int tap_duration = when - pimpl->launcher_key_press_time_;
-  if (tap_duration < pimpl->super_tap_duration_ && was_tap)
+  if (tap_duration < options()->super_tap_duration && was_tap)
   {
     LOG_DEBUG(logger) << "Quick tap, sending activation request.";
     pimpl->SendHomeActivationRequest();
@@ -1262,9 +1267,9 @@ bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, 
       if (TimeUtil::TimeDelta(&current, &last_action_time) > local::ignore_repeat_shortcut_duration)
       {
         if (g_ascii_isdigit((gchar)(*it)->GetShortcut()) && (key_state & ShiftMask))
-          (*it)->OpenInstance(ActionArg(ActionArg::LAUNCHER, 0, timestamp));
+          (*it)->OpenInstance(ActionArg(ActionArg::Source::LAUNCHER, 0, timestamp));
         else
-          (*it)->Activate(ActionArg(ActionArg::LAUNCHER, 0, timestamp));
+          (*it)->Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, timestamp));
       }
 
       // disable the "tap on super" check
@@ -1370,8 +1375,8 @@ void Controller::KeyNavTerminate(bool activate)
   if (pimpl->launcher_grabbed)
   {
     pimpl->keyboard_launcher_->UnGrabKeyboard();
-    pimpl->launcher_key_press_connection_.disconnect();
-    pimpl->launcher_event_outside_connection_.disconnect();
+    pimpl->launcher_key_press_connection_->disconnect();
+    pimpl->launcher_event_outside_connection_->disconnect();
     pimpl->launcher_grabbed = false;
     pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV,
                             g_variant_new_boolean(pimpl->keynav_restore_window_));
@@ -1384,10 +1389,10 @@ void Controller::KeyNavTerminate(bool activate)
 
   if (activate)
   {
-    auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
+    auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
 
     pimpl->sources_.AddIdle([this, timestamp] {
-      pimpl->model_->Selection()->Activate(ActionArg(ActionArg::LAUNCHER, 0, timestamp));
+      pimpl->model_->Selection()->Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, timestamp));
       return false;
     });
   }
@@ -1410,11 +1415,6 @@ bool Controller::IsOverlayOpen() const
       return true;
   }
   return false;
-}
-
-void Controller::UpdateSuperTapDuration(int const super_tap_duration)
-{
-  pimpl->super_tap_duration_ = super_tap_duration;
 }
 
 std::string
@@ -1488,8 +1488,8 @@ void Controller::Impl::ReceiveLauncherKeyPress(unsigned long eventType,
       // <SPACE> (open a new instance)
     case NUX_VK_SPACE:
     {
-      auto timestamp = nux::GetWindowThread()->GetGraphicsDisplay().GetCurrentEvent().x11_timestamp;
-      model_->Selection()->OpenInstance(ActionArg(ActionArg::LAUNCHER, 0, timestamp));
+      auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
+      model_->Selection()->OpenInstance(ActionArg(ActionArg::Source::LAUNCHER, 0, timestamp));
       parent_->KeyNavTerminate(false);
       break;
     }

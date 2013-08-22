@@ -46,8 +46,6 @@ class ApplicationWindow
 public:
   virtual ~ApplicationWindow() {}
 
-  virtual std::string title() const = 0;
-  virtual std::string icon() const = 0;
   virtual std::string type() const = 0; // 'window' or 'tab'
 
   virtual Window window_id() const = 0;
@@ -62,6 +60,9 @@ public:
   // Closes the window, or the browser tab if a webapp.
   virtual void Quit() const = 0;
 
+  nux::ROProperty<std::string> title;
+  nux::ROProperty<std::string> icon;
+
   nux::ROProperty<bool> visible;
   nux::ROProperty<bool> active;
   nux::ROProperty<bool> urgent;
@@ -73,9 +74,6 @@ class Application
 public:
   virtual ~Application() {}
 
-  virtual std::string icon() const = 0;
-  virtual std::string title() const = 0;
-  virtual std::string desktop_file() const = 0;
   virtual std::string type() const = 0;
 
   // A string representation of the object.
@@ -90,6 +88,12 @@ public:
   virtual void Focus(bool show_on_visible, int monitor) const = 0;
   // Calls quit on all the Windows for this application.
   virtual void Quit() const = 0;
+
+  virtual bool CreateLocalDesktopFile() const = 0;
+
+  nux::ROProperty<std::string> desktop_file;
+  nux::ROProperty<std::string> title;
+  nux::ROProperty<std::string> icon;
 
   // Considering using a property for the "unity-seen" quark
   nux::RWProperty<bool> seen;

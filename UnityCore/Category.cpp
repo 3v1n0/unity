@@ -18,6 +18,7 @@
  */
 
 #include "Category.h"
+#include "Variant.h"
 
 #include <sigc++/bind.h>
 
@@ -25,6 +26,15 @@ namespace unity
 {
 namespace dash
 {
+
+enum CategoryColumn
+{
+  ID = 0,
+  DISPLAY_NAME,
+  ICON_HINT,
+  RENDERER_NAME,
+  HINTS
+};
 
 Category::Category(DeeModel* model,
                    DeeModelIter* iter,
@@ -49,10 +59,11 @@ Category& Category::operator=(Category const& other)
 
 void Category::SetupGetters()
 {
-  name.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 0));
-  icon_hint.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 1));
+  id.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), CategoryColumn::ID));
+  name.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), CategoryColumn::DISPLAY_NAME));
+  icon_hint.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), CategoryColumn::ICON_HINT));
+  renderer_name.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), CategoryColumn::RENDERER_NAME));
   index.SetGetterFunction(sigc::mem_fun(this, &Category::get_index));
-  renderer_name.SetGetterFunction(sigc::bind(sigc::mem_fun(this, &RowAdaptorBase::GetStringAt), 2));
 }
 
 std::size_t Category::get_index() const
@@ -60,6 +71,21 @@ std::size_t Category::get_index() const
   if (!model_)
     return unsigned(-1);
   return dee_model_get_position(model_, iter_);
+}
+
+std::string Category::GetContentType() const
+{
+  if (!model_ || !iter_)
+    return "";
+
+  glib::HintsMap hints;
+  glib::Variant v(dee_model_get_value(model_, iter_, CategoryColumn::HINTS),
+                  glib::StealRef());
+  v.ASVToHints(hints);
+  auto iter = hints.find("content-type");
+  if (iter == hints.end())
+    return "";
+  return iter->second.GetString();
 }
 
 }

@@ -26,8 +26,11 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <unordered_map>
 
+#include <boost/utility.hpp>
 #include <dee.h>
+#include <glib.h>
+#include <gio/gio.h>
 #include <NuxCore/Property.h>
 #include <sigc++/sigc++.h>
-#include <boost/utility.hpp>

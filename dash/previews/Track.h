@@ -25,8 +25,10 @@
 
 #include <Nux/Nux.h>
 #include <Nux/View.h>
+#include <UnityCore/ConnectionManager.h>
 #include <UnityCore/Tracks.h>
 #include "unity-shared/Introspectable.h"
+#include "PreviewPlayer.h"
 
 namespace nux
 {
@@ -50,12 +52,8 @@ public:
   NUX_DECLARE_OBJECT_TYPE(Track, nux::View);
 
   Track(NUX_FILE_LINE_PROTO);
-  virtual ~Track();
 
   void Update(dash::Track const& track_row);
-
-  sigc::signal<void, std::string const&> play;
-  sigc::signal<void, std::string const&> pause;
 
 protected:
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw);
@@ -81,7 +79,10 @@ protected:
 
 protected:
   std::string uri_;
+  PlayerState play_state_;
   float progress_;
+  PreviewPlayer player_;
+
   unity::StaticCairoText* track_number_;
   unity::StaticCairoText* title_;
   unity::StaticCairoText* duration_;
@@ -97,8 +98,8 @@ protected:
   nux::View* track_number_layout_;
   nux::LayeredLayout* track_status_layout_;
 
-  dash::PlayState play_state_;
   bool mouse_over_;
+  connection::Wrapper player_connection_;
 };
 
 }

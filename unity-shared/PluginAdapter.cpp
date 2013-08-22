@@ -217,6 +217,8 @@ void PluginAdapter::NotifyCompizEvent(const char* plugin,
   }
   else if (g_strcmp0(event, "end_viewport_switch") == 0)
   {
+    UpdateShowDesktopState();
+
     _vp_switch_started = false;
     screen_viewport_switch_ended.emit();
   }
@@ -339,14 +341,14 @@ void MultiActionList::TerminateAll(CompOption::Vector const& extra_args) const
   }
 }
 
-unsigned long long PluginAdapter::GetWindowActiveNumber(Window window_id) const
+uint64_t PluginAdapter::GetWindowActiveNumber(Window window_id) const
 {
   CompWindow* window = m_Screen->findWindow(window_id);
 
   if (window)
   {
     // result is actually an unsigned int (32 bits)
-    unsigned long long result = window->activeNum ();
+    uint64_t result = window->activeNum ();
     if (bias_active_to_viewport() && window->defaultViewport() == m_Screen->vp())
       result = result << 32;
 
@@ -413,6 +415,11 @@ bool PluginAdapter::IsExpoActive() const
 bool PluginAdapter::IsWallActive() const
 {
   return m_Screen->grabExist("wall");
+}
+
+bool PluginAdapter::IsAnyWindowMoving() const
+{
+    return m_Screen->grabExist("move");
 }
 
 void PluginAdapter::InitiateExpo()
@@ -608,6 +615,20 @@ Window PluginAdapter::GetTopMostValidWindowInViewport() const
     }
   }
   return 0;
+}
+
+bool PluginAdapter::IsCurrentViewportEmpty() const
+{
+  Window win = GetTopMostValidWindowInViewport();
+
+  if (win)
+  {
+    CompWindow* cwin = m_Screen->findWindow(win);
+    if (!(cwin->type() & NO_FOCUS_MASK))
+      return false;
+  }
+
+  return true;
 }
 
 Window PluginAdapter::GetTopWindowAbove(Window xid) const
@@ -920,14 +941,37 @@ bool PluginAdapter::InShowDesktop() const
 
 void PluginAdapter::OnShowDesktop()
 {
-  LOG_DEBUG(logger) << "Now in show desktop mode.";
   _in_show_desktop = true;
 }
 
 void PluginAdapter::OnLeaveDesktop()
 {
-  LOG_DEBUG(logger) << "No longer in show desktop mode.";
   _in_show_desktop = false;
+}
+
+void PluginAdapter::UpdateShowDesktopState()
+{
+  if (!IsCurrentViewportEmpty())
+  {
+    OnLeaveDesktop();
+  }
+  else
+  {
+    CompWindow* window;
+    CompPoint screen_vp = m_Screen->vp();
+
+    auto const& windows = m_Screen->windows();
+    for (auto it = windows.rbegin(); it != windows.rend(); ++it)
+    {
+      window = *it;
+      if (window->defaultViewport() == screen_vp &&
+          window->inShowDesktopMode())
+      {
+        OnShowDesktop();
+        break;
+      }
+    }
+  }
 }
 
 int PluginAdapter::GetWindowMonitor(Window window_id) const
@@ -1436,7 +1480,7 @@ void PluginAdapter::AddProperties(GVariantBuilder* builder)
   unity::variant::BuilderWrapper wrapper(builder);
   wrapper.add(GetScreenGeometry())
          .add("workspace_count", WorkspaceCount())
-         .add("active_window", GetActiveWindow())
+         .add("active_window", (uint64_t)GetActiveWindow())
          .add("screen_grabbed", IsScreenGrabbed())
          .add("scale_active", IsScaleActive())
          .add("scale_active_for_group", IsScaleActiveForGroup())

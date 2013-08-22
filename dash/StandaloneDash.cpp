@@ -28,6 +28,7 @@
 #include <NuxCore/AnimationController.h>
 #include <NuxCore/Logger.h>
 
+#include "ApplicationStarterImp.h"
 #include "unity-shared/BGHash.h"
 #include "unity-shared/FontSettings.h"
 #include "DashView.h"
@@ -35,6 +36,7 @@
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/ThumbnailGenerator.h"
+#include "UnityCore/GSettingsScopes.h"
 
 #define WIDTH 1024
 #define HEIGHT 768
@@ -64,7 +66,8 @@ void TestRunner::Init ()
 {
   layout = new nux::HLayout(NUX_TRACKER_LOCATION);
 
-  DashView* view = new DashView();
+  DashView* view = new DashView(std::make_shared<unity::dash::GSettingsScopes>(), 
+                                std::make_shared<unity::ApplicationStarterImp>());
   view->DisableBlur();
   view->SetMinMaxSize(WIDTH, HEIGHT);
   layout->AddView (view, 1, nux::MINOR_POSITION_CENTER);
@@ -73,6 +76,7 @@ void TestRunner::Init ()
   view->AboutToShow();
 
   nux::GetWindowThread()->SetLayout (layout);
+  nux::GetWindowCompositor().SetKeyFocusArea(view->default_focus());
 }
 
 void TestRunner::InitWindowThread(nux::NThread* thread, void* InitData)

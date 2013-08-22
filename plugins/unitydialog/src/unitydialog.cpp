@@ -72,16 +72,13 @@ UnityDialogScreen::matchExpHandlerChanged()
 }
 
 void
-UnityDialogWindow::moveToRect(CompRect currentRect, bool sync)
+UnityDialogWindow::moveToRect(CompRect currentRect)
 {
   CompPoint pos = getChildCenteredPositionForRect(currentRect);
 
   mSkipNotify = true;
   window->move(pos.x() - window->borderRect().x(),
                pos.y() - window->borderRect().y(), true);
-
-  if (sync)
-    window->syncPosition();
 
   setMaxConstrainingAreas();
   mSkipNotify = false;
@@ -826,7 +823,6 @@ UnityDialogWindow::removeTransient(CompWindow* w)
 
     cWindow->addDamage();
     window->move(-mOffset.x() - mDiffXWC.x, -mOffset.y() - mDiffXWC.y, true);
-    window->syncPosition();
     cWindow->addDamage();
 
     memset(&mDiffXWC, 0, sizeof(XWindowChanges));
@@ -903,7 +899,7 @@ UnityDialogWindow::windowNotify(CompWindowNotify n)
     case CompWindowNotifyFrameUpdate:
 
       if (mParent)
-        moveToRect(mParent->serverBorderRect(), true);
+	moveToRect(mParent->serverBorderRect());
 
     default:
       break;
@@ -977,7 +973,7 @@ UnityDialogWindow::moveNotify(int dx, int dy, bool immediate)
     }
     else if (mParent)
     {
-      moveToRect(mParent->serverBorderRect(), true);
+      moveToRect(mParent->serverBorderRect());
     }
     else
       moveTransientsToRect(window, window->serverBorderRect(), true);
@@ -1200,7 +1196,7 @@ UnityDialogWindow::moveTransientsToRect(CompWindow* skip, CompRect currentRect, 
     if (cw == skip)
       return;
 
-    UnityDialogWindow::get(cw)->moveToRect(currentRect, sync);
+    UnityDialogWindow::get(cw)->moveToRect(currentRect);
 
     /* Sync all of this window's transients */
     if (UnityDialogWindow::get(cw)->mTransients.size())
@@ -1224,9 +1220,6 @@ UnityDialogWindow::moveParentToRect(CompWindow*      requestor,
       /* Move the parent window to the requested position */
       mParent->move(centeredPos.x() - mParent->borderRect().x(),
                     centeredPos.y() - mParent->borderRect().y(), true);
-
-      if (sync)
-        mParent->syncPosition();
 
       UnityDialogWindow::get(mParent)->mSkipNotify = false;
 

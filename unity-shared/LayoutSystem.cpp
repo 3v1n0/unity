@@ -19,6 +19,8 @@
 
 #include "LayoutSystem.h"
 
+#include <UnityCore/Variant.h>
+
 namespace unity {
 namespace ui {
 
@@ -35,7 +37,7 @@ void LayoutSystem::LayoutWindows(LayoutWindow::Vector const& windows, nux::Geome
   LayoutGridWindows(windows, max_bounds, final_bounds);
 }
 
-nux::Size LayoutSystem::GridSizeForWindows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds)
+nux::Size LayoutSystem::GridSizeForWindows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds) const
 {
   unsigned count = windows.size();
 
@@ -138,7 +140,18 @@ nux::Geometry LayoutSystem::LayoutRow(LayoutWindow::Vector const& row, nux::Geom
   return CompressAndPadRow (row, row_bounds);
 }
 
-std::vector<LayoutWindow::Vector> LayoutSystem::GetRows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds)
+std::vector<int> LayoutSystem::GetRowSizes(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds) const
+{
+  std::vector<LayoutWindow::Vector> const& rows = GetRows(windows, max_bounds);
+  std::vector<int> row_sizes;
+
+  for (auto r : rows)
+    row_sizes.push_back(r.size());
+
+  return row_sizes;
+}
+
+std::vector<LayoutWindow::Vector> LayoutSystem::GetRows(LayoutWindow::Vector const& windows, nux::Geometry const& max_bounds) const
 {
   std::vector<LayoutWindow::Vector> rows;
 
@@ -277,6 +290,18 @@ LayoutWindow::LayoutWindow(Window xid)
     geo.height += decoration_height;
     aspect_ratio = geo.width / static_cast<float>(geo.height);
   }
+}
+
+// Introspectable methods
+std::string LayoutWindow::GetName() const
+{
+  return "LayoutWindow";
+}
+
+void LayoutWindow::AddProperties(GVariantBuilder* builder)
+{
+  unity::variant::BuilderWrapper(builder)
+    .add(result);
 }
 
 }

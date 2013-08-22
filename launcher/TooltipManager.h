@@ -15,10 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Jacob Edwards <j.johan.edwards@gmail.com>
+ *              Andrea Azzarone <andrea.azzarone@canonical.com>
  */
 
-#ifndef TOOLTIPMANAGER
-#define TOOLTIPMANAGER
+#ifndef LAUNCHER_TOOLTIP_MANAGER_H
+#define LAUNCHER_TOOLTIP_MANAGER_H
 
 #include <boost/noncopyable.hpp>
 #include <UnityCore/GLibSource.h>
@@ -35,23 +36,21 @@ class TooltipManager : public boost::noncopyable
 public:
   TooltipManager();
 
-  void SetHover(bool on_launcher);
-  void SetIcon(AbstractLauncherIcon::Ptr const& newIcon);
-  void MouseMoved();
+  void SetHover(bool hovered);
+  void MouseMoved(AbstractLauncherIcon::Ptr const& icon_under_mouse);
   void IconClicked();
 
 private:
-  void ResetTimer();
+  void Reset();
+  void ResetTimer(AbstractLauncherIcon::Ptr const& icon_under_mouse);
   void StopTimer();
 
-  bool                      show_tooltips_;
-  bool                      hovered_;
+  bool skip_timeout_;
   AbstractLauncherIcon::Ptr icon_;
-  glib::Source::UniquePtr   hover_timer_;
-  bool                      timer_locked_;
+  glib::Source::UniquePtr hover_timer_;
 };
 
-} // namespace launcher
-} // namespace unity 
+}
+}
 
 #endif

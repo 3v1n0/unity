@@ -90,7 +90,7 @@ std::string const& LauncherEntryRemote::Emblem() const
   return _emblem;
 }
 
-long long LauncherEntryRemote::Count() const
+int32_t LauncherEntryRemote::Count() const
 {
   return _count;
 }
@@ -161,7 +161,7 @@ void LauncherEntryRemote::SetEmblem(std::string const& emblem)
   emblem_changed.emit(this);
 }
 
-void LauncherEntryRemote::SetCount(long long count)
+void LauncherEntryRemote::SetCount(int32_t count)
 {
   if (_count == count)
     return;

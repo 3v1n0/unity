@@ -26,7 +26,7 @@ using namespace testing;
 
 TEST(TestTimeUtil, Testin32BufferOverflow)
 {
-  struct timespec start, end;
+  struct timespec start {0, 0}, end {0, 0};
   unity::TimeUtil::SetTimeStruct(&start, &end);
 
   end.tv_sec = start.tv_sec + INT32_MAX;

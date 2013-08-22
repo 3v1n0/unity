@@ -22,6 +22,7 @@
 
 #include <gio/gio.h>
 #include <gtest/gtest.h>
+#include "test_utils.h"
 
 #include "plugins/unityshell/src/WindowMinimizeSpeedController.h"
 
@@ -31,8 +32,6 @@ using namespace testing;
 namespace
 {
 
-const gchar* SCHEMA_DIRECTORY = BUILDDIR"/settings";
-
 class TestLauncherMinimizeSpeed : public Test
 {
 public:
@@ -41,16 +40,14 @@ public:
   
   /* override */ void SetUp()
   {
-    g_setenv("GSETTINGS_SCHEMA_DIR", SCHEMA_DIRECTORY, true);
-    g_setenv("GSETTINGS_BACKEND", "memory", TRUE);
+    Utils::init_gsettings_test_environment();
     mSettings = g_settings_new("com.canonical.Unity");
     mController = new WindowMinimizeSpeedController();
   }
 
   /* override */ void TearDown()
   {
-    g_setenv("GSETTINGS_SCHEMA_DIR", "", true);
-    g_unsetenv("GSETTINGS_BACKEND");
+    Utils::reset_gsettings_test_environment();
     delete mController;
   }
 };

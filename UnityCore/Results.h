@@ -24,12 +24,14 @@
 
 #include "Model.h"
 #include "Result.h"
-#include "ResultIterator.h"
+#include "ModelIterator.h"
 
 namespace unity
 {
 namespace dash
 {
+
+typedef ModelIterator<Result> ResultIterator;
 
 class Results : public Model<Result>
 {
@@ -45,11 +47,6 @@ public:
   sigc::signal<void, Result const&> result_added;
   sigc::signal<void, Result const&> result_changed;
   sigc::signal<void, Result const&> result_removed;
-
-private:
-  void OnRowAdded(Result& result);
-  void OnRowChanged(Result& result);
-  void OnRowRemoved(Result& result);
 };
 
 }

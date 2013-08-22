@@ -47,7 +47,9 @@ NUX_IMPLEMENT_OBJECT_TYPE(View);
 
 View::View(Manager::Ptr const& manager)
   : mode(Mode::FULL)
+  , key_focus_area([this] { return key_focus_area_; })
   , manager_(manager)
+  , key_focus_area_(this)
 {
   closable = true;
   auto main_layout = new nux::VLayout();
@@ -119,7 +121,7 @@ void View::UpdateText()
     }
     else
     {
-      message = _("Goodbye %s! Are you sure you want to close all programs " \
+      message = _("Goodbye, %s. Are you sure you want to close all programs " \
                   "and shut down the computer?");
     }
   }
@@ -135,7 +137,7 @@ void View::UpdateText()
     }
     else
     {
-      message = _("Goodbye %s! Are you sure you want to close all programs " \
+      message = _("Goodbye, %s. Are you sure you want to close all programs " \
                   "and log out from your account?");
     }
   }
@@ -159,7 +161,7 @@ void View::UpdateText()
     }
     else
     {
-      message = _("Goodbye %s! Would you like to…");
+      message = _("Goodbye, %s. Would you like to…");
     }
   }
 
@@ -170,35 +172,37 @@ void View::Populate()
 {
   debug::Introspectable::RemoveAllChildren();
   buttons_layout_->Clear();
+  key_focus_area_ = this;
 
   if (mode() == Mode::LOGOUT)
   {
-    auto* button = new Button(_("Lock"), "lockscreen", NUX_TRACKER_LOCATION);
+    auto* button = new Button(Button::Action::LOCK, NUX_TRACKER_LOCATION);
     button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
     AddButton(button);
 
-    button = new Button(_("Logout"), "logout", NUX_TRACKER_LOCATION);
+    button = new Button(Button::Action::LOGOUT, NUX_TRACKER_LOCATION);
     button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Logout));
+    key_focus_area_ = button;
     AddButton(button);
   }
   else
   {
     if (mode() == Mode::FULL)
     {
-      auto* button = new Button(_("Lock"), "lockscreen", NUX_TRACKER_LOCATION);
+      auto* button = new Button(Button::Action::LOCK, NUX_TRACKER_LOCATION);
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::LockScreen));
       AddButton(button);
 
       if (manager_->CanSuspend())
       {
-        button = new Button(_("Suspend"), "suspend", NUX_TRACKER_LOCATION);
+        button = new Button(Button::Action::SUSPEND, NUX_TRACKER_LOCATION);
         button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Suspend));
         AddButton(button);
       }
 
       if (manager_->CanHibernate())
       {
-        button = new Button(_("Hibernate"), "hibernate", NUX_TRACKER_LOCATION);
+        button = new Button(Button::Action::HIBERNATE, NUX_TRACKER_LOCATION);
         button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Hibernate));
         AddButton(button);
       }
@@ -206,17 +210,18 @@ void View::Populate()
 
     if (manager_->CanShutdown())
     {
-      auto* button = new Button(_("Shutdown"), "shutdown", NUX_TRACKER_LOCATION);
-      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Shutdown));
+      auto *button = new Button(Button::Action::REBOOT, NUX_TRACKER_LOCATION);
+      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Reboot));
       AddButton(button);
 
-      button = new Button(_("Restart"), "restart", NUX_TRACKER_LOCATION);
-      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Reboot));
+      button = new Button(Button::Action::SHUTDOWN, NUX_TRACKER_LOCATION);
+      button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Shutdown));
+      key_focus_area_ = (mode() == Mode::SHUTDOWN) ? button : key_focus_area_;
       AddButton(button);
     }
     else if (mode() == Mode::FULL)
     {
-      auto* button = new Button(_("Logout"), "logout", NUX_TRACKER_LOCATION);
+      auto* button = new Button(Button::Action::LOGOUT, NUX_TRACKER_LOCATION);
       button->activated.connect(sigc::mem_fun(manager_.get(), &Manager::Logout));
       AddButton(button);
     }

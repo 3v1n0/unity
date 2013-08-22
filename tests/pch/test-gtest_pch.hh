@@ -38,5 +38,9 @@
 #include <sigc++/sigc++.h>
 #include <gtk/gtk.h>
 
+#include <UnityCore/GLibSource.h>
+#include <UnityCore/GLibWrapper.h>
+#include <UnityCore/Variant.h>
+
 #endif
 

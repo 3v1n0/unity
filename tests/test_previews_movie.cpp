@@ -63,14 +63,16 @@ class TestPreviewMovie : public Test
 {
 public:
   TestPreviewMovie()
-  : parent_window_(new nux::BaseWindow("TestPreviewMovie"))
+  : parent_window_(new nux::BaseWindow("TestPreviewMovie")) {}
+
+  void create_preview_model(double rating)
   {
     glib::Object<UnityProtocolPreview> proto_obj(UNITY_PROTOCOL_PREVIEW(unity_protocol_movie_preview_new()));
 
     GHashTable* action_hints1(g_hash_table_new(g_direct_hash, g_direct_equal));
     g_hash_table_insert (action_hints1, g_strdup ("extra-text"), g_variant_new_string("£1.00"));
 
-    unity_protocol_movie_preview_set_rating(UNITY_PROTOCOL_MOVIE_PREVIEW(proto_obj.RawPtr()), 0.8);
+    unity_protocol_movie_preview_set_rating(UNITY_PROTOCOL_MOVIE_PREVIEW(proto_obj.RawPtr()), rating);
     unity_protocol_movie_preview_set_num_ratings(UNITY_PROTOCOL_MOVIE_PREVIEW(proto_obj.RawPtr()), 12);
 
     unity_protocol_preview_set_image_source_uri(proto_obj, "http://ia.media-imdb.com/images/M/MV5BMTM3NDM5MzY5Ml5BMl5BanBnXkFtZTcwNjExMDUwOA@@._V1._SY317_.jpg");
@@ -100,6 +102,7 @@ public:
 
 TEST_F(TestPreviewMovie, TestCreate)
 {
+  create_preview_model(0.8);
   previews::Preview::Ptr preview_view = previews::Preview::PreviewForModel(preview_model_);
 
   EXPECT_TRUE(dynamic_cast<previews::MoviePreview*>(preview_view.GetPointer()) != NULL);
@@ -107,6 +110,7 @@ TEST_F(TestPreviewMovie, TestCreate)
 
 TEST_F(TestPreviewMovie, TestUIValues)
 {
+  create_preview_model(0.8);
   MockMoviePreview::Ptr preview_view(new MockMoviePreview(preview_model_));
 
   EXPECT_EQ(preview_view->title_->GetText(), "Movie Title &amp; special char");
@@ -134,5 +138,14 @@ TEST_F(TestPreviewMovie, TestUIValues)
     }
   }
 }
+
+TEST_F(TestPreviewMovie, TestHideRatings)
+{
+  create_preview_model(-1);
+  MockMoviePreview::Ptr preview_view(new MockMoviePreview(preview_model_));
+
+  EXPECT_EQ(preview_view->rating_, NULL);
+}
+
 
 }

@@ -88,6 +88,10 @@ public:
   bool CanShowSwitcher(const std::vector<launcher::AbstractLauncherIcon::Ptr>& resutls) const;
 
   bool Visible();
+  nux::Geometry GetInputWindowGeometry() const;
+
+  bool StartDetailMode();
+  bool StopDetailMode();
 
   void Next();
   void Prev();
@@ -103,8 +107,6 @@ public:
                  unsigned int min_windows = 1);
 
   void SelectFirstItem();
-
-  void SetWorkspace(nux::Geometry geo, int monitor);
 
   nux::ObjectPtr<SwitcherView> GetView() const;
 

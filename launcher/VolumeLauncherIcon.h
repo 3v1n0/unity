@@ -48,7 +48,7 @@ public:
   void Stick(bool save = true);
   void UnStick();
   MenuItemsVector GetMenus();
-  std::string GetRemoteUri();
+  std::string GetRemoteUri() const;
 
 protected:
   virtual void ActivateLauncherIcon(ActionArg arg);

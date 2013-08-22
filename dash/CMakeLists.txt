@@ -19,7 +19,7 @@ add_subdirectory(previews)
 # Headers & Sources
 #
 set (DASH_SOURCES
-     CoverflowResultView.cpp
+     ApplicationStarterImp.cpp
      DashController.cpp
      DashView.cpp
      DashViewPrivate.cpp
@@ -34,9 +34,9 @@ set (DASH_SOURCES
      FilterMultiRangeWidget.cpp
      FilterRatingsButton.cpp
      FilterRatingsWidget.cpp
-     LensBar.cpp
-     LensBarIcon.cpp
-     LensView.cpp
+     ScopeBar.cpp
+     ScopeBarIcon.cpp
+     ScopeView.cpp
      PlacesGroup.cpp
      PreviewStateMachine.cpp
      ResultRenderer.cpp

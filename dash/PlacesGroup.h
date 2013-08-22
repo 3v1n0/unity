@@ -55,12 +55,12 @@ class PlacesGroup : public nux::View, public debug::Introspectable
 {
   NUX_DECLARE_OBJECT_TYPE(PlacesGroup, nux::View);
 public:
+  typedef nux::ObjectPtr<PlacesGroup> Ptr;
 
   PlacesGroup(dash::StyleInterface& style);
 
   void SetIcon(std::string const& icon);
   void SetName(std::string const& name);
-  void SetRendererName(const char *renderer_name);
   void SetHeaderCountVisible(bool disable);
 
   StaticCairoText* GetLabel();
@@ -69,18 +69,15 @@ public:
   void SetChildView(dash::ResultView* view);
   dash::ResultView* GetChildView();
 
+
   void SetChildLayout(nux::Layout* layout);
 
   void Relayout();
 
-  void SetCategoryIndex(unsigned index);
-  unsigned GetCategoryIndex() const;
+  void SetCounts(unsigned n_total_items);
 
-  void SetCounts(unsigned n_visible_items_in_unexpand_mode,
-                 unsigned n_total_items);
-
-  void SetExpanded(bool is_expanded);
-  bool GetExpanded() const;
+  virtual void SetExpanded(bool is_expanded);
+  virtual bool GetExpanded() const;
 
   void PushExpanded();
   void PopExpanded();
@@ -94,7 +91,9 @@ public:
   void SetFiltersExpanded(bool filters_expanded);
 
   sigc::signal<void, PlacesGroup*> expanded;
-  sigc::signal<void, std::string const&> UriActivated;
+
+  glib::Variant GetCurrentFocus() const;
+  void SetCurrentFocus(glib::Variant const& variant);
 
 protected:
   long ComputeContentSize();
@@ -125,6 +124,7 @@ private:
   void RefreshLabel();
 
 private:
+  std::string _category_id;
   dash::StyleInterface& _style;
 
   nux::VLayout* _group_layout;
@@ -151,11 +151,9 @@ private:
   bool  _is_expanded_pushed;
   unsigned _n_visible_items_in_unexpand_mode;
   unsigned _n_total_items;
-  unsigned _category_index;
   std::string _cached_name;
   nux::Geometry _cached_geometry;
 
-  std::string _renderer_name;
   bool _coverflow_enabled;
 
   bool disabled_header_count_;
@@ -163,7 +161,7 @@ private:
   glib::Source::UniquePtr _relayout_idle;
   UBusManager _ubus;
 
-  friend class TestLensView;
+  friend class TestScopeView;
 };
 
 } // namespace dash

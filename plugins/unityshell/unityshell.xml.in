@@ -56,6 +56,12 @@
                     <default>&lt;Alt&gt;F2</default>
                 </option>
 
+                <option name="show_desktop_key" type="key">
+                    <_short>Show Desktop</_short>
+                    <_long>Hide all windows and focus desktop.</_long>
+                    <default>&lt;Control&gt;&lt;Super&gt;d</default>
+                </option>
+
                 <option name="panel_first_menu" type="key">
                     <_short>Key to open the first panel menu</_short>
                     <_long>Opens the first indicator menu of the Panel, allowing keyboard navigation thereafter.</_long>

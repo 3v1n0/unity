@@ -97,6 +97,7 @@ public:
 
   void OnShowDesktop ();
   void OnLeaveDesktop ();
+  void UpdateShowDesktopState();
 
   void TerminateScale();
   bool IsScaleActive() const;
@@ -107,6 +108,8 @@ public:
   bool IsExpoActive() const;
 
   bool IsWallActive() const;
+
+  bool IsAnyWindowMoving() const override;
 
   void ShowGrabHandles(CompWindow* window, bool use_timer);
   void HideGrabHandles(CompWindow* window);
@@ -163,7 +166,7 @@ public:
   bool IsScreenGrabbed() const;
   bool IsViewPortSwitchStarted() const;
 
-  unsigned long long GetWindowActiveNumber(Window window_id) const;
+  uint64_t GetWindowActiveNumber(Window window_id) const;
 
   bool MaximizeIfBigEnough(CompWindow* window) const;
 
@@ -206,6 +209,7 @@ private:
   unsigned long GetMwnDecorations(Window xid) const;
 
   Window GetTopMostValidWindowInViewport() const;
+  bool IsCurrentViewportEmpty() const;
 
   std::string GetTextProperty(Window xid, Atom atom) const;
   std::string GetUtf8Property(Window xid, Atom atom) const;

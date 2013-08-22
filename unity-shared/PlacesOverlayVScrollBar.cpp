@@ -85,13 +85,13 @@ void PlacesOverlayVScrollBar::OnSensitivityChanged(nux::Area* /*area*/, bool sen
   if (!sensitive)
   {
     overlay_window_->ResetStates();
-    ResetConnector();    
+    ResetConnector();
   }
 }
 
 void PlacesOverlayVScrollBar::SetupAnimation(int start, int stop, int milliseconds)
 {
-  tweening_connection_.disconnect();
+  tweening_connection_->disconnect();
   delta_update_ = 0;
 
   animation_.SetDuration(milliseconds);
@@ -353,17 +353,15 @@ void PlacesOverlayVScrollBar::OnMouseDrag(int /*x*/, int y, int /*dx*/, int dy, 
   MouseDraggingOverlay(y, dy);
 }
 
-void PlacesOverlayVScrollBar::MouseDraggingOverlay(int y, int dys)
+void PlacesOverlayVScrollBar::MouseDraggingOverlay(int y, int dy)
 {
-  int const dy = y - overlay_window_->GetThumbOffsetY() - mouse_down_offset_;
-  int const at_min = overlay_window_->GetThumbOffsetY() <= 0;
-  int const at_max = overlay_window_->GetThumbOffsetY() + overlay_window_->GetThumbHeight() >= _track->GetBaseHeight();
+  int const thumb_offset = overlay_window_->GetThumbOffsetY() + mouse_down_offset_;
 
-  if (dy < 0 && !at_min)
+  if (dy < 0 && !AtMinimum() && y <= thumb_offset)
   {
     OnScrollUp.emit(stepY, abs(dy));
   }
-  else if (dy > 0 && !at_max)
+  else if (dy > 0 && !AtMaximum() && y >= thumb_offset)
   {
     OnScrollDown.emit(stepY, dy);
   }

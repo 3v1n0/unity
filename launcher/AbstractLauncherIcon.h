@@ -24,6 +24,7 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Property.h>
 #include <NuxCore/Math/MathInc.h>
+#include <UnityCore/ConnectionManager.h>
 
 #include <sigc++/sigc++.h>
 #include <libdbusmenu-glib/menuitem.h>
@@ -41,10 +42,9 @@ namespace unity
 namespace launcher
 {
 
-class ActionArg
+struct ActionArg
 {
-public:
-  enum Source
+  enum class Source
   {
     LAUNCHER,
     SWITCHER,
@@ -52,25 +52,24 @@ public:
   };
 
   ActionArg()
-    : source(OTHER)
+    : source(Source::OTHER)
     , button(0)
+    , timestamp(0)
     , target(0)
     , monitor(-1)
-  {
-  }
+  {}
 
-  ActionArg(Source source, int button, Time timestamp = -1,  Window target = 0, int monitor = -1)
+  ActionArg(Source source, int button, unsigned long timestamp = 0,  Window target = 0, int monitor = -1)
     : source(source)
     , button(button)
     , timestamp(timestamp)
     , target(target)
     , monitor(monitor)
-  {
-  }
+  {}
 
   Source source;
   int button;
-  Time timestamp;
+  unsigned long timestamp;
   Window target;
   int monitor;
 };
@@ -134,7 +133,7 @@ public:
     DOWN
   };
 
-  virtual ~AbstractLauncherIcon() {}
+  virtual ~AbstractLauncherIcon() = default;
 
   nux::Property<std::string> tooltip_text;
   nux::Property<bool> tooltip_enabled;
@@ -182,8 +181,9 @@ public:
   virtual float GetProgress() = 0;
 
   virtual bool ShowInSwitcher(bool current) = 0;
+  virtual bool AllowDetailViewInSwitcher() const = 0;
 
-  virtual unsigned long long SwitcherPriority() = 0;
+  virtual uint64_t SwitcherPriority() = 0;
 
   virtual bool GetQuirk(Quirk quirk) const = 0;
 
@@ -195,7 +195,7 @@ public:
 
   virtual IconType GetIconType() const = 0;
 
-  virtual std::string RemoteUri() = 0;
+  virtual std::string RemoteUri() const = 0;
 
   virtual MenuItemsVector Menus() = 0;
 
@@ -212,7 +212,7 @@ public:
   virtual void InsertEntryRemote(LauncherEntryRemote::Ptr const& remote) = 0;
   virtual void RemoveEntryRemote(LauncherEntryRemote::Ptr const& remote) = 0;
 
-  virtual std::string DesktopFile() = 0;
+  virtual std::string DesktopFile() const = 0;
 
   virtual bool IsSticky() const = 0;
 
@@ -247,11 +247,9 @@ public:
   sigc::signal<void> visibility_changed;
   sigc::signal<void> position_saved;
   sigc::signal<void> position_forgot;
+  sigc::signal<void, std::string const&> uri_changed;
 
-  sigc::connection needs_redraw_connection;
-  sigc::connection on_icon_added_connection;
-  sigc::connection on_icon_removed_connection;
-  sigc::connection on_order_changed_connection;
+  connection::Wrapper on_icon_removed_connection;
 };
 
 }

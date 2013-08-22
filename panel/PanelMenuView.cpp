@@ -107,7 +107,6 @@ PanelMenuView::PanelMenuView()
 
 PanelMenuView::~PanelMenuView()
 {
-  style_changed_connection_.disconnect();
   window_buttons_->UnParentObject();
   titlebar_grab_area_->UnParentObject();
 }
@@ -1019,6 +1018,10 @@ void PanelMenuView::OnActiveAppChanged(BamfMatcher *matcher,
 {
   if (BAMF_IS_APPLICATION(new_app))
   {
+    app_name_changed_signal_.Disconnect();
+    app_name_changed_signal_.Connect(BAMF_VIEW(new_app), "name-changed",
+                                     sigc::mem_fun(this, &PanelMenuView::OnNameChanged));
+
     if (std::find(new_apps_.begin(), new_apps_.end(), new_app) != new_apps_.end())
     {
       if (new_application_ != new_app)
@@ -1087,7 +1090,6 @@ void PanelMenuView::OnActiveWindowChanged(BamfMatcher *matcher,
 
     // first see if we need to remove and old callback
     view_name_changed_signal_.Disconnect();
-
     // register callback for new view
     view_name_changed_signal_.Connect(new_view, "name-changed",
                                       sigc::mem_fun(this, &PanelMenuView::OnNameChanged));
@@ -1528,7 +1530,7 @@ void PanelMenuView::AddProperties(GVariantBuilder* builder)
   .add("panel_title", panel_title_)
   .add("desktop_active", (panel_title_ == desktop_name_))
   .add("monitor", monitor_)
-  .add("active_window", active_xid_)
+  .add("active_window", (uint64_t)active_xid_)
   .add("draw_menus", ShouldDrawMenus())
   .add("draw_window_buttons", ShouldDrawButtons())
   .add("controls_active_window", we_control_active_)

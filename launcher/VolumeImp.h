@@ -25,8 +25,8 @@
 #include <UnityCore/GLibWrapper.h>
 
 #include "DeviceNotificationDisplay.h"
-#include "FileManagerOpener.h"
 #include "Volume.h"
+#include "unity-shared/FileManager.h"
 
 namespace unity
 {
@@ -39,7 +39,7 @@ public:
   typedef std::shared_ptr<VolumeImp> Ptr;
 
   VolumeImp(glib::Object<GVolume> const& volume,
-            FileManagerOpener::Ptr const& file_manager_opener,
+            FileManager::Ptr const& file_manager,
             DeviceNotificationDisplay::Ptr const& device_notification_display);
   virtual ~VolumeImp();
 
@@ -51,9 +51,10 @@ public:
   virtual std::string GetIdentifier() const;
   virtual bool HasSiblings() const;
   virtual bool IsMounted() const;
+  virtual bool IsOpened() const;
 
   virtual void EjectAndShowNotification();
-  virtual void MountAndOpenInFileManager();
+  virtual void MountAndOpenInFileManager(uint64_t timestamp);
   virtual void StopDrive();
   virtual void Unmount();
 

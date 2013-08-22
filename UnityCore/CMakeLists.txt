@@ -4,7 +4,6 @@ set(UNITY_CORE_DEPS
     dee-1.0
     sigc++-2.0
     nux-core-4.0
-    gdk-pixbuf-2.0
     unity-protocol-private
 )
 pkg_check_modules (CORE_DEPS REQUIRED ${UNITY_CORE_DEPS})
@@ -19,9 +18,9 @@ set (CORE_HEADERS
      Categories.h
      Category.h
      CheckOptionFilter.h
+     ConnectionManager.h
      DBusIndicators.h
      DesktopUtilities.h
-     FilesystemLenses.h
      Filter.h
      Filters.h
      GenericPreview.h
@@ -33,27 +32,33 @@ set (CORE_HEADERS
      GLibWrapper.h
      GLibWrapper-inl.h
      GnomeSessionManager.h
+     GSettingsScopes.h
      Hud.h
-     HomeLens.h
      IndicatorEntry.h
      Indicator.h
      Indicators.h
-     Lens.h
-     Lenses.h
+     MiscUtils.h
      MoviePreview.h
      MultiRangeFilter.h
      MusicPreview.h
      Model.h
      Model-inl.h
+     ModelIterator.h
+     ModelIterator-inl.h
      ModelRowAdaptor.h
      ModelRowAdaptor-inl.h
+     PaymentPreview.h
      Preview.h
+     PreviewPlayer.h
      RadioOptionFilter.h
      RatingsFilter.h
      Result.h
-     ResultIterator.h
      Results.h
-     SeriesPreview.h
+     Scope.h
+     ScopeData.h
+     Scopes.h
+     ScopeProxy.h
+     ScopeProxyInterface.h
      SessionManager.h
      SocialPreview.h
      Track.h
@@ -66,10 +71,10 @@ set (CORE_SOURCES
      AppmenuIndicator.cpp
      Categories.cpp
      Category.cpp
+     ConnectionManager.cpp
      CheckOptionFilter.cpp
      DBusIndicators.cpp
      DesktopUtilities.cpp
-     FilesystemLenses.cpp
      Filter.cpp
      Filters.cpp
      GenericPreview.cpp
@@ -79,23 +84,26 @@ set (CORE_SOURCES
      GLibSource.cpp
      GLibWrapper.cpp
      GnomeSessionManager.cpp
+     GSettingsScopes.cpp
      Hud.cpp
-     HomeLens.cpp
      Indicator.cpp
      IndicatorEntry.cpp
      Indicators.cpp
-     Lens.cpp
      MoviePreview.cpp
      MultiRangeFilter.cpp
      MusicPreview.cpp
      ModelRowAdaptor.cpp
+     PaymentPreview.cpp
      Preview.cpp
+     PreviewPlayer.cpp
      RatingsFilter.cpp
      RadioOptionFilter.cpp
      Result.cpp
-     ResultIterator.cpp
      Results.cpp
-     SeriesPreview.cpp
+     Scope.cpp
+     ScopeData.cpp
+     Scopes.cpp
+     ScopeProxy.cpp
      SocialPreview.cpp
      Track.cpp
      Tracks.cpp
@@ -120,7 +128,7 @@ set (LIBS ${CORE_DEPS_LDFLAGS} ${PRIVATE_CORE_DEPS_LDFLAGS})
 # - If binary compatibility has been broken (eg removed or changed interfaces)
 #   change to C+1:0:0
 # - If the interface is the same as the previous version, change to C:R+1:A
-set (CORE_LIB_LT_CURRENT 5)
+set (CORE_LIB_LT_CURRENT 7)
 set (CORE_LIB_LT_REV 0)
 set (CORE_LIB_LT_AGE 0)
 set (CORE_LIB_LT_VERSION "${CORE_LIB_LT_CURRENT}:${CORE_LIB_LT_REV}:${CORE_LIB_LT_AGE}")

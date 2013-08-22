@@ -171,6 +171,13 @@ void SearchBar::Init()
   pango_entry_->cursor_moved.connect([&](int i) { QueueDraw(); });
   pango_entry_->mouse_down.connect(sigc::mem_fun(this, &SearchBar::OnMouseButtonDown));
   pango_entry_->end_key_focus.connect(sigc::mem_fun(this, &SearchBar::OnEndKeyFocus));
+  pango_entry_->key_up.connect([this] (unsigned int, unsigned long, unsigned long) {
+      if (get_im_preedit())
+      {
+        hint_->SetVisible(false);
+        hint_->QueueDraw();
+      }
+  });
 
   layered_layout_ = new nux::LayeredLayout();
   layered_layout_->AddLayout(hint_layout);
@@ -187,7 +194,7 @@ void SearchBar::Init()
     show_filters_->SetFont(SHOW_FILTERS_LABEL_DEFAULT_FONT.c_str());
     show_filters_->SetTextColor(nux::color::White);
     show_filters_->SetTextAlignment(StaticCairoText::NUX_ALIGN_RIGHT);
-    show_filters_->SetLines(1);
+    show_filters_->SetLines(-1);
 
     nux::BaseTexture* arrow;
     arrow = style.GetGroupExpandIcon();
@@ -441,8 +448,6 @@ void SearchBar::OnClearClicked(int x, int y, unsigned long button_fags,
                                      unsigned long key_fags)
 {
   pango_entry_->SetText("");
-  start_spinner_timeout_.reset();
-  live_search_reached.emit("");
 }
 
 void SearchBar::OnEntryActivated()
@@ -450,23 +455,16 @@ void SearchBar::OnEntryActivated()
   activated.emit();
 }
 
-void SearchBar::ForceSearchChanged()
+void SearchBar::ForceLiveSearch()
 {
-  // this method will emit search_changed (and live_search_reached after
-  // returning to mainloop) and starts animating the spinner
-  live_search_timeout_.reset(new glib::Idle(glib::Source::Priority::DEFAULT));
+  live_search_timeout_.reset(new glib::Timeout(LIVE_SEARCH_TIMEOUT));
   live_search_timeout_->Run(sigc::mem_fun(this, &SearchBar::OnLiveSearchTimeout));
 
-  // Don't animate the spinner immediately, the searches are fast and
-  // the spinner would just flicker
-  start_spinner_timeout_.reset(new glib::Timeout(SPINNER_TIMEOUT * 2));
+  start_spinner_timeout_.reset(new glib::Timeout(SPINNER_TIMEOUT));
   start_spinner_timeout_->Run(sigc::mem_fun(this, &SearchBar::OnSpinnerStartCb));
-
-  search_changed.emit(pango_entry_->GetText());
 }
 
-void
-SearchBar::SearchFinished()
+void SearchBar::SetSearchFinished()
 {
   start_spinner_timeout_.reset();
 
@@ -484,7 +482,7 @@ void SearchBar::UpdateBackground(bool force)
               GetAbsoluteX() +
               SEARCH_ENTRY_RIGHT_BORDER;
 
-  LOG_DEBUG(logger) << "height: "
+  LOG_TRACE(logger) << "height: "
   << geo.height << " - "
   << layered_layout_->GetGeometry().height << " - "
   << pango_entry_->GetGeometry().height;

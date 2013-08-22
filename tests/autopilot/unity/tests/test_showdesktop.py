@@ -27,8 +27,8 @@ class ShowDesktopTests(UnityTestCase):
 
     def launch_test_apps(self):
         """Launch character map and calculator apps, and return their windows."""
-        char_win = self.start_app_window('Character Map', locale='C')
-        calc_win = self.start_app_window('Calculator', locale='C')
+        char_win = self.process_manager.start_app_window('Character Map', locale='C')
+        calc_win = self.process_manager.start_app_window('Calculator', locale='C')
         return (char_win, calc_win)
 
     def test_showdesktop_hides_apps(self):
@@ -83,12 +83,6 @@ class ShowDesktopTests(UnityTestCase):
 
         self.assertProperty(charmap, is_hidden=False)
         self.assertProperty(calc, is_hidden=True)
-
-        # hide desktop - now all windows should be visible:
-        self.unity.window_manager.leave_show_desktop()
-
-        for win in (charmap, calc):
-            self.assertProperty(win, is_hidden=False)
 
     @skip("Breaks following tests due to SDM bug")
     def test_showdesktop_switcher(self):

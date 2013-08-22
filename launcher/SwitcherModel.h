@@ -90,10 +90,18 @@ public:
   void NextDetail();
   void PrevDetail();
 
+  void NextDetailRow();
+  void PrevDetailRow();
+  bool HasNextDetailRow() const;
+  bool HasPrevDetailRow() const;
+
+  void SetRowSizes(std::vector<int> const& row_sizes);
+
   void Select(launcher::AbstractLauncherIcon::Ptr const& selection);
   void Select(unsigned int index);
 
   sigc::signal<void, launcher::AbstractLauncherIcon::Ptr const&> selection_changed;
+  sigc::signal<void> request_detail_hide;
 
 protected:
   // Introspectable methods
@@ -101,10 +109,16 @@ protected:
   void AddProperties(GVariantBuilder* builder);
 
 private:
+  void UpdateRowIndex();
+  unsigned int SumNRows(unsigned int n) const;
+  bool DetailIndexInLeftHalfOfRow() const;
+
   Applications                        applications_;
   unsigned int                        index_;
   unsigned int                        last_index_;
+  unsigned int                        row_index_;
   launcher::AbstractLauncherIcon::Ptr last_active_application_;
+  std::vector<int>                    row_sizes_;
 };
 
 }

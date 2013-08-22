@@ -2,7 +2,7 @@
 Name=Ubuntu Software Center
 GenericName=Software Center
 Comment=Lets you choose from thousands of applications available for Ubuntu
-Exec=/usr/bin/software-center %u
+Exec=/bin/true
 Icon=softwarecenter
 Terminal=false
 Type=Application
@@ -11,3 +11,14 @@ MimeType=application/x-deb;application/x-debian-package;x-scheme-handler/apt;
 StartupNotify=true
 X-Ubuntu-Gettext-Domain=software-center
 X-Unity-IconBackgroundColor=#aabbcc
+Actions=TestAction;Quit;
+
+[Desktop Action TestAction]
+Name=Test Action
+Exec=/bin/true
+OnlyShowIn=Unity;
+
+[Desktop Action Quit]
+Name=Quit
+Exec=/bin/true
+OnlyShowIn=Unity;

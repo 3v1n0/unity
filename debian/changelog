@@ -1,3 +1,1068 @@
+unity (7.1.0+13.10.20130822-0ubuntu1) saucy; urgency=low
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Bump the build dependency on compiz to 0.9.10
+  * We now have indicator-keyboard - recommend it along other
+    indicators.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3476
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 22 Aug 2013 06:57:29 +0000
+
+unity (7.1.0+13.10.20130816.3-0ubuntu1) saucy; urgency=low
+
+  [ Michal Hruby ]
+  * Make sure we emit row_added signals for all rows present in a model
+    when changing a model Model::SetModel(). (LP: #1212580)
+
+  [ Andrew McCarthy ]
+  * added photo lens shortcut to the shortcuts hint window (lp:
+    #1069644). (LP: #1069644)
+
+  [ Stephen M. Webb ]
+  * added photo lens shortcut to the shortcuts hint window (lp:
+    #1069644). (LP: #1069644)
+  * removed debug output thatcould cause a potential security problem
+    (lp: #1051921). (LP: #1051921)
+
+  [ Nick Dedekind ]
+  * Don't re-add the rows for filters and categories if the model
+    changes.
+  * Fixed duplicate categories in scope caused by full resync on model
+    change. (LP: #1212945)
+
+  [ Chris Townsend ]
+  * Fix issue where the same app on different workspaces would not allow
+    alt-tab to work properly when trying to switch to the last used app
+    on the same workspace. (LP: #1211261)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3473
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 16 Aug 2013 11:47:59 +0000
+
+unity (7.1.0+13.10.20130813.1-0ubuntu1) saucy; urgency=low
+
+  [ Michal Hruby ]
+  * Fix a leak in scope activation. Pass the original result if the
+    activation fails.
+
+  [ Brandon Schaefer ]
+  * Fix ibus-anthy AP tests, due to a failing commit key Ctrl+J being
+    changed to now turn off/on the ibus-anthy engine. (LP: #1211464)
+  * Attempt to use more canonical words for the ibus AP tests, so we end
+    up with a more used word, vs one the might change. (LP: #1211501)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3466
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 13 Aug 2013 06:18:39 +0000
+
+unity (7.1.0+13.10.20130812.1-0ubuntu1) saucy; urgency=low
+
+  [ Brandon Schaefer ]
+  * Add ibus.py to the tests/autopilot/unity/emulators from
+    lp:autopilot. (LP: #1210661)
+  * Don't make the ScopeView/DashView/ScrollView Visible on start up
+    (bool wise, causing things to think its ok to render). (LP:
+    #1201631)
+  * Adds the ability to use the mouse in the switcher. (LP: #824965)
+
+  [ Andrea Azzarone ]
+  * Add edge barriers to unity::panel::PanelView. (LP: #931384)
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationLauncherIcon: Create a local desktop file when sticking
+    an app that has not Also make icon sticky only if both the icon
+    itself and the inner app is sticky as well. (LP: #1209320, #753305,
+    #765466, #754334, #704046)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3462
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 12 Aug 2013 06:49:01 +0000
+
+unity (7.1.0+13.10.20130809.1-0ubuntu1) saucy; urgency=low
+
+  [ Michal Hruby ]
+  * Send up-to-date form_factor also after waiting for proxy connection.
+
+  [ Chris Townsend ]
+  * Fix yet another regression in revno. 3381 where the Panel shadow is
+    not drawn when in Show Desktop mode by using
+    PluginAdapter::IsWindowOnTop() instead of the new
+    GetTopVisibleWindow(). Remove GetTopVisibleWindow() to get rid of
+    code duplication. (LP: #1203097)
+
+  [ Jeremy Bicha ]
+  * Adjust to rename of ubiquity-gtkui.desktop to ubiquity.desktop.
+
+  [ Marco Trevisan (Treviño) ]
+  * BamfApplicationManager: add support for desktop-file-updated signal
+    and use in AppIcon Now an ApplicationLauncherIcon can have its
+    .desktop file updated and when this happens it reloads the infos it
+    needs and updates the FavoriteStore accordingly.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3456
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 09 Aug 2013 11:50:47 +0000
+
+unity (7.1.0+13.10.20130805-0ubuntu1) saucy; urgency=low
+
+  [ Andrea Azzarone ]
+  * Add tests for unity::panel::Controller. These test are quite similar
+    to the ones for unity::launcher::Controller. (LP: #1207170)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3451
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 05 Aug 2013 04:03:56 +0000
+
+unity (7.1.0+13.10.20130802-0ubuntu1) saucy; urgency=low
+
+  [ Stephen M. Webb ]
+  * Remove incorrect last check in test_unhide_single_app AP test. (LP:
+    #1204188)
+
+  [ Brandon Schaefer ]
+  * Fix AP tests for IBus 1.5 Fix search bar hint when using preedit.
+    (LP: #1203106, #1204215)
+  * Remove setting hotkey for ibus using gconf, as ibus 1.5 no longer
+    uses gconf.
+
+  [ Marco Trevisan (Treviño) ]
+  * SimpleLauncherIcon: remove useless methods and signals, use smarter
+    allocation.
+  * MultiMonitor: remove the ugly max_num_monitors var, put it inside
+    proper namespace.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3449
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 02 Aug 2013 04:04:04 +0000
+
+unity (7.1.0+13.10.20130729-0ubuntu1) saucy; urgency=low
+
+  [ Stephen M. Webb ]
+  * upstream release 7.1.0
+
+  [ Andrew Gaul ]
+  * PanelService: Disconnect signals connected in panel-
+    service.c:on_entry_added. (LP: #1203607)
+
+  [ Chris Townsend ]
+  * Change to using ellipsis instead of three dots for the "Installing"
+    tooltip. (LP: #1203092)
+
+  [ Andrea Azzarone ]
+  * Add show_desktop_key film in unityshell plugin. (LP: #1204664)
+
+  [ Marco Trevisan (Treviño) ]
+  * TestPanelService: verify that the entry's label and icon are
+    disconnected on removal.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3443
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 29 Jul 2013 04:04:13 +0000
+
+unity (7.0.2+13.10.20130723.1-0ubuntu1) saucy; urgency=low
+
+  [ Marco Trevisan (Treviño) ]
+  * debian/control:
+    - build-depend on xserver-xorg-video-dummy and libgl1-mesa-dri
+    - build-depend on libnux-4.0-dev (>= 4.0.2+13.10.20130718.1)
+ 
+  [ Michal Hruby ]
+  * When requesting a channel from scopes, use the DIFF flag, which will
+    cause scopes machinery to do a diff between the old and new model
+    states, so results that didn't change will stay in the model -
+    previously they would be removed and re-added.
+  * Reset the connected property when scope disappears.
+  * Added getter for content-type property to Category class.
+  * Manually merged lp:~mhr3/unity/fix-ap-preview-tests
+  * Preload results after removal, as they might got moved into a
+    visible position.
+  * Fix scope-related tests. (LP: #1199961)
+
+  [ Brandon Schaefer ]
+  * Correctly set back the filter scroll views state when
+    leaving/entering the scope view. (LP: #1175666)
+  * Don't calculate the velocity if dtime is 0. This way we don't get a
+    huge velocity on the initial barrier hit. (LP: #1199050)
+  * Show desktop now only works for individual workspaces. Also if any
+    new windows are opened, or one is restored on that workspace then
+    the next Show desktop will minimize those. The only time windows are
+    restored are when no new windows have been mapped, and no windows
+    have been restored for that workspace only. (LP: #966030)
+
+  [ Marco Trevisan (Treviño) ]
+  * CMake: re-enable DBus Tests, excluding TestScope* This exclusion is
+    due to lp:1199961 to be fixed ASAP. (LP: #1199961, #1199962)
+  * TestGtest: Addedd TestPanelService and new tests to
+    TestStaticCairoText, removed test-unit Improved the u-p-s stability
+    and refactored a little its initialization to allow testing with
+    only mock indicators. (LP: #1200748)
+  * GLibDBusServer: set the proper destroy function when resetting the
+    InterfaceInfo ptr.
+
+  [ Didier Roche ]
+  * Adjust CMake setup to account for new GMock version. . (LP:
+    #1185265)
+
+  [ Chris Townsend ]
+  * Modify the Launcher icon of an installing app to display
+    "Installing..." instead of always saying "Waiting to install". (LP:
+    #966189)
+
+  [ Thomas Voß ]
+  * Adjust CMake setup to account for new GMock version. . (LP:
+    #1185265)
+
+  [ Nick Dedekind ]
+  * Removed the legal link and icon from the dash. .
+  * Reverted r3415 "remove legal link" -
+  * Removed the legal icon, again.
+
+  [ Manuel de la Pena ]
+  * Fix the introspection so that QA can work with autopilot. (LP:
+    #1185486)
+
+  [ Charles Kerr ]
+  * in panel-service.c's load_indicators_from_indicator_files(), plug a
+    GDir leak.
+
+  [ Pawel Stolowski ]
+  * Activate (installed) applications on single left-click in Home and
+    Applications scopes view. (LP: #1189088)
+
+  [ Andrea Azzarone ]
+  * Define/Init UnityWindow::cWindow. (LP: #1203129)
+
+  [ Jeremy Bicha ]
+  * Drop unnecessary python-gconf dependency.
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Disable the TestAnimationOpacity test, as it's failing on powerpc.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3437
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 23 Jul 2013 13:59:34 +0000
+
+unity (7.0.2+13.10.20130705.1-0ubuntu3) saucy; urgency=low
+
+  * Add a Provides: unity-common-7.0, for packages that depend on particular
+    schema interfaces (e.g., unity-lens-applications).
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Sun, 14 Jul 2013 20:32:12 +0000
+
+unity (7.0.2+13.10.20130705.1-0ubuntu2) saucy; urgency=low
+
+  * Drop unity-common, which is not common at all across versions; instead,
+    merge the contents into the shared library package and use
+    Conflicts/Replaces against previous sonames of the package.
+    LP: #1193120.
+  * Cherry pick revision 3419 from trunk: Adjust CMake setup to account for
+    new GMock version. LP: #1185265.
+
+ -- Steve Langasek <steve.langasek@ubuntu.com>  Fri, 12 Jul 2013 07:23:43 +0000
+
+unity (7.0.2+13.10.20130705.1-0ubuntu1) saucy; urgency=low
+
+  [ Timo Jyrinki ]
+  * Bump version number to go with X.org update
+
+  [ Brandon Schaefer ]
+  * When the ScopeView changes visibility make sure we update the filter
+    scroll view as well. This way we don't get random overlay scroll
+    bars appearing when it shouldn't!. (LP: #1175666)
+
+  [ Timo Jyrinki ]
+  * Move unity to the new libxi changes, along with the new 1.14
+    xserver. Manual merge to be able to migrate together with Xorg from
+    -proposed.
+
+  [ Didier Roche ]
+  * Revert rev 3404, makes autopilot tests failing as well as keep weird
+    filters artefacts in the preview
+
+  [ Marco Trevisan (Treviño) ]
+  * ScopeProxy: use glib::SignalManager to manage connections and
+    disconnections.
+  * Use again glib::Cancellable wrapper in scopes code.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3410
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 05 Jul 2013 12:40:50 +0000
+
+unity (7.0.1+13.10.20130703-0ubuntu1) saucy; urgency=low
+
+  [ Sebastien Bacher ]
+  * Depends on the new dconf-cli, we only need the command line tool,
+    not the gtk editor.
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationLauncherIcon: improve the way we override the Quit
+    quicklist item If a quit action is defined in static (desktop file
+    action) or dynamic way we use it to override the default one,
+    placing it to the proper position. Also override more labels by
+    default and if a quicklist item has the
+    QuicklistMenuItem::QUIT_ACTION_PROPERTY (defined as "unity-quit-
+    action") property set to TRUE, then we use this item as the quit
+    quicklist item. Factorized the code we use to generate both static
+    and dynamic ql items. (LP: #876421)
+  * Use connection::Manager to handle the sigc::connection disconnection
+    on parent removal.
+  * ConnectionManager: add connection::Wrapper to wrap a
+    sigc::connection disconnecting it on destruction.
+  * Unity: use connection::Wrapper to hold the connections to signals
+    and disconnect from them.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3402
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 03 Jul 2013 04:03:31 +0000
+
+unity (7.0.1+13.10.20130702-0ubuntu1) saucy; urgency=low
+
+  [ Michal Hruby ]
+  * A few changes to unity-core API/ABI.
+
+  [ Ted Gould ]
+  * Fix upstart job to handle legacy case and not duplicate events.
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationManager: Use nux::ROProperty for Window and Application
+    title and icon So BamfApplicationManager connect to {name,icon}-
+    changed signals, set getters for properties and
+    ApplicationLauncherIcon update icon tooltip_text and icon when App
+    title/icon changes. (LP: #751909)
+  * BamfApplicationManager: always use std::make_shared and use
+    glib::SignalManager::Add Also add some helper constructors.
+  * ApplicationLauncherIcon: only use a simple std::vector to cache the
+    quicklist entries Remove the ugly std::string indexed std::map.
+  * ConnectionManager: add a class container of sigc::connection that
+    takes care of disconnection Connections added will be disconnected
+    on class destruction on on explicit removal or replacement request.
+
+  [ Lars Uebernickel ]
+  * unity-panel-service: call ido_init() and honor indicator's position
+    requests.
+
+  [ Chris Townsend ]
+  * Fixes some panel shadow regressions caused by rev. 3381. - No panel
+    shadow when logging in, ie, no windows are opened. - Indicator drop
+    down menus have the panel shadow painted over them. - Notification
+    bubbles cause the panel shadow to be drawn on top of everything. -
+    Minimizing all windows caused the panel shadow to not be drawn. (LP:
+    #1194865)
+
+  [ Didier Roche ]
+  * now build-depends on the desktop definition for scopes as libunity-
+    common is dead.
+
+  [ Sebastien Bacher ]
+  * use correct ellipses.
+
+  [ Andrea Azzarone ]
+  * Remove not necessary assert. (LP: #1192503)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Revert revision 3380. This caused regression of all autopilot tests
+    as show_desktop was invalidly detected every time there are no
+    visible windows on screen.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3396
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 02 Jul 2013 05:32:40 +0000
+
+unity (7.0.0daily13.06.24-0ubuntu2) saucy; urgency=low
+
+  * services/panel-main.c: manually backport lp:~larsu/unity/call-ido-init
+    to unbreak custom indicators (like indicator-datetime), the order
+    in the panel is still wrong but that fix can wait for next week
+  * debian/control: build-depends on libido3-0.1-dev
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 28 Jun 2013 19:36:49 +0200
+
+unity (7.0.0daily13.06.24-0ubuntu1) saucy; urgency=low
+
+  [ Brandon Schaefer ]
+  * Show desktop now only works for individual workspaces. Also if any
+    new windows are opened, or one is restored on that workspace then
+    the next Show desktop will minimize those. The only time windows are
+    restored are when no new windows have been mapped, and no windows
+    have been restored for that workspace only. (LP: #966030)
+  * When on the bottom row and you press down, the detail index now
+    moves right until it hits the last icon in the row.
+
+  [ Chris Townsend ]
+  * Draw the full panel shadow when there are windows docked on the
+    panel and no focused windows on the screen such as when the desktop
+    has been clicked. (LP: #1036614)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3382
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 24 Jun 2013 05:42:36 +0000
+
+unity (7.0.0daily13.06.19-0ubuntu1) saucy; urgency=low
+
+  [ Michal Hruby ]
+  * Bump libunity-core SONAME and adjust debian.
+
+  [ Ted Gould ]
+  * Make Unity depend on bamfdaemon.
+
+  [ Iain Lane ]
+  * Start unity-panel-service using upstart user session jobs.
+
+  [ Brandon Schaefer ]
+  * Fixes the use of Alt+` and Right arrow when in detail mode. Now it
+    goes to the next window instead of closing detail mode. (LP:
+    #1190798)
+  * When in detail mode, you are now allowed to use UP/DOWN keys to move
+    around. (LP: #1131646)
+
+  [ Chris Townsend ]
+  * Add functionality to wiggle urgent icons at certain time intervals
+    when the Launcher is hidden. (LP: #893196)
+  * Add support to close social previews by clicking anywhere in the
+    preview bubble. (LP: #1190007)
+
+  [ Nick Dedekind ]
+  * Added check for x-unity-no-preview. Do not preview; send direct
+    activation to scope. (LP: #1188705)
+
+  [ Xiao-Long Chen ]
+  * SessionView: Fix build when building without precompiled headers.
+    (LP: #1191097)
+
+  [ Andrea Azzarone ]
+  * Fix failing AP test. (LP: #1191039)
+  * Fix failing test. (LP: #1191059)
+  * Skip tests if not in desktop mode. (LP: #1191053)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3378
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 19 Jun 2013 04:29:36 +0000
+
+unity (7.0.0daily13.06.07-0ubuntu1) saucy; urgency=low
+
+  [ Ted Gould ]
+  * gtk_icon_info_free() is deprecated for g_object_unref().
+  * Upstart event for when the indicators are loaded by the panel
+    service.
+  * Add an upstart job to unity-common.
+  * Manage Unity Panel Service's lifecycle with Upstart.
+
+  [ Didier Roche ]
+  * add dep on autopilot-desktop.
+  * Revert the panel on upstart from ted, it doesn't respawn as expected
+    when another service try to communicate with the panel service and
+    the consequence is a lot of tests failing
+
+  [ Nick Dedekind ]
+  * Uses a gobject weak ref to test for object deletion in the
+    GLibObject tests. Previously was checking with G_IS_OBJECT on an
+    invalid pointer, which was causing a segfault
+
+  [ Manuel de la Pena ]
+  * Adds support for payment previews that will allow users to buy music
+    from within the dash. .
+
+  [ Mathieu Trudel-Lapierre ]
+  * Increase timeouts for hud functional and search tests.
+
+  [ Francis Ginther ]
+  * Handle StateNotFoundError when querying the label of a hud button.
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Now that we're using the new HUD, there have been some changes that
+    typically cause test_hud tests to fail. Fix the tests to fit the new
+    model. The first one is that generally we do not have indicator
+    entries visible in the HUD anymore. Only application menu entries
+    are in it now. The second one - the way the results are displayed is
+    different. Now, instead of "Menu > Entry" we have "Entry (Menu)"
+    etc.
+  * Fix two HUD failures related to HUD slow action activation.
+  * Fix some autopilot test failures, some related to test_shortcut_hint
+    and some to test_scroll in launcher.
+  * Modify all the hud_query_check lambdas to be more smart and error-
+    checking. Same for the selected_hud_button method in the HUD
+    emulator. Also, get rid of the troublesome test_gedit_undo and
+    change it into test_gedit_save, which is easier to test and anyway
+    tests what we want. Besides that we also now try to handle the
+    StateNotFoundError exception in the HUD emulator, another cause of
+    some AP failures.
+  * Add a flag for -Wno-error=unused-local-typedefs, since this causes a
+    FTBFS on ARM
+
+  [ Michal Hruby ]
+  * Don't activate a result twice after pressing Enter. (LP: #1188191)
+
+  [ Sebastien Bacher ]
+  * Use '%s:' string for preview hints, rather than just appending ':'.
+    (LP: #1074038)
+
+  [ Marco Trevisan (Treviño) ]
+  * IconRenderer: preprocess an icon if its emblem has been shown/hidden
+    In that way we can update its transformation. (LP: #1171476,
+    #1171663)
+  * UnityWindow: don't draw the panel shadow above a fullscreen window.
+    (LP: #1171934)
+  * UnityCore: add GtkWrapper to handle GtkIconInfo correctly for
+    different GTK versions Fix a memory leak in LauncherIcon. (LP:
+    #1180790)
+  * SwitcherController: use proper long long types for
+    WindowActiveNumber Otherwise an overflow can cause bad window
+    selection after long uptime.
+  * Unity: "s/unsigned long long/uint64_t/g".
+
+  [ Chris Townsend ]
+  * Fixes issue where minimizing a full screen window would not draw the
+    Launcher and Panel after minimization. (LP: #1064155)
+  * Fixes issue where source files for test-gestures would always be
+    compiled even if the original source files did not change. (LP:
+    #1039367)
+  * Fixes the issue where the filling in of the progress bar over
+    Launcher icons does not scale when using smaller or larger icon
+    sizes than the default size of 48. (LP: #968680)
+
+  [ Sam Spilsbury ]
+  * LauncherDragWindow: defer icon paint until DrawContent rather than
+    doing so immediately (LP: #1180174). (LP: #1180174)
+  * Add a pkg-config dependency on xpathselect>=1.2 Technically we
+    depend on xpathselect>=1.3 in debian/control, however the latest -
+    dev package in the distro claims the version is 1.2 and it builds
+    just fine with that. (LP: #1185226). (LP: #1185226)
+
+  [ Leo Arias ]
+  * Fixed the execute_action_by_id on the dash emulator. (LP: #1181677)
+
+  [ Christopher Lee ]
+  * Attempt to fix sporadic failure of TestGLibSource.Running for arm
+    builds.
+  * Updating Unity autopilot tests to work with the new version of
+    autopilot (1.3).
+  * Update unity autopilot tests depends.
+  * Missed a package depends for unity-autopilot.
+  * Updating the dbus introspection to use the new xpathselect
+    1.3.libxpathselect-dev.
+
+  [ Pawel Stolowski ]
+  * Add ModelIterator-inl.h to the list of installed headers (as it's
+    included by ModelIterator.h).
+  * Fixes for two autopilot tests.
+  * Bumped required version of libunity.
+
+  [ Andrea Azzarone ]
+  * Disable detail view for webapp icons. (LP: #1169340)
+  * Don't build CoverflowResultView.cpp.
+  * Fix crashing tests. (LP: #1182585)
+  * Remove AbstractSeparator.cpp (it does not make sense :).
+  * Allow alt-tabbing during a dnd operation. (LP: #111939)
+  * Reference BamfApplication in GetRunningApplications. (LP: #1181717)
+
+  [ Thomi Richards ]
+  * Updating the dbus introspection to use the new xpathselect
+    1.3.libxpathselect-dev.
+  * Update the unity autopilot test suite to be compatible with the new
+    autopilot API for custom emulators.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3365
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 07 Jun 2013 06:43:22 +0000
+
+unity (7.0.0daily13.06.03ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  [ Chris Townsend ]
+  * Fixes the issue where the filling in of the progress bar over
+    Launcher icons does not scale when using smaller or larger icon
+    sizes than the default size of 48. (LP: #968680)
+
+  [ Andrea Azzarone ]
+  * Reference BamfApplication in GetRunningApplications. (LP: #1181717)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3355 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 03 Jun 2013 04:04:11 +0000
+
+unity (7.0.0daily13.05.31ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  [ Nick Dedekind ]
+  * Keyboard focus lost if trying to navigate while search is ongoing
+    (LP: #1170709)
+  * Occasional loss of focus in the input text field (LP: #1174488)
+
+  [ Andrea Azzarone ]
+  * Search Plugins previews in the apps lens should not display any
+    ‘review stars’ (LP: #1170715)
+  * [alt-tab] Disable detail view for webapp icons. (LP: #1169340)
+  * 'There is no content...' message is missing if there no results when
+    opening some lenses (LP: #1170728)
+
+  [ Nick Dedekind ]
+  * Nautilus incorrectly highlighted as valid target DND target for lots
+    of results (LP: #1170721)
+
+  [ Brandon Schaefer ]
+  * Bump libnux to new version 
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Re-bumped libnux to 4.0.2
+
+  [ Ted Gould ]
+  * gtk_icon_info_free() is deprecated for g_object_unref().
+  * Upstart event for when the indicators are loaded by the panel
+    service.
+
+  [ Marco Trevisan (Treviño) ]
+  * UnityCore: add GtkWrapper to handle GtkIconInfo correctly for
+    different GTK versions Fix a memory leak in LauncherIcon. (LP:
+    #1180790)
+  * SwitcherController: use proper long long types for
+    WindowActiveNumber Otherwise an overflow can cause bad window
+    selection after long uptime.
+  * Unity: "s/unsigned long long/uint64_t/g".
+
+  [ Francis Ginther ]
+  * Handle StateNotFoundError when querying the label of a hud button.
+
+  [ Chris Townsend ]
+  * Fixes issue where minimizing a full screen window would not draw the
+    Launcher and Panel after minimization. (LP: #1064155)
+  * Fixes issue where source files for test-gestures would always be
+    compiled even if the original source files did not change. (LP:
+    #1039367)
+
+  [ Didier Roche ]
+  * add dep on autopilot-desktop.
+
+  [ Leo Arias ]
+  * Fixed the execute_action_by_id on the dash emulator. (LP: #1181677)
+
+  [ Christopher Lee ]
+  * Updating Unity autopilot tests to work with the new version of
+    autopilot (1.3).
+  * Update unity autopilot tests depends.
+  * Missed a package depends for unity-autopilot.
+  * Updating the dbus introspection to use the new xpathselect
+    1.3.libxpathselect-dev.
+
+  [ Thomi Richards ]
+  * Updating the dbus introspection to use the new xpathselect
+    1.3.libxpathselect-dev.
+  * Update the unity autopilot test suite to be compatible with the new
+    autopilot API for custom emulators.
+
+  [ Pawel Stolowski ]
+  * Add ModelIterator-inl.h to the list of installed headers (as it's
+    included by ModelIterator.h).
+  * Fixes for two autopilot tests.
+
+  [ Mathieu Trudel-Lapierre ]
+  * Increase timeouts for hud functional and search tests.
+
+  [ Andrea Azzarone ]
+  * Don't build CoverflowResultView.cpp.
+  * Fix crashing tests. (LP: #1182585)
+  * Remove AbstractSeparator.cpp (it does not make sense :).
+  * Allow alt-tabbing during a dnd operation. (LP: #111939)
+
+  [ Sam Spilsbury ]
+  * LauncherDragWindow: defer icon paint until DrawContent rather than
+    doing so immediately (LP: #1180174). (LP: #1180174)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Fix two HUD failures related to HUD slow action activation.
+  * Fix some autopilot test failures, some related to test_shortcut_hint
+    and some to test_scroll in launcher.
+  * Modify all the hud_query_check lambdas to be more smart and error-
+    checking. Same for the selected_hud_button method in the HUD
+    emulator. Also, get rid of the troublesome test_gedit_undo and
+    change it into test_gedit_save, which is easier to test and anyway
+    tests what we want. Besides that we also now try to handle the
+    StateNotFoundError exception in the HUD emulator, another cause of
+    some AP failures.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3352 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 31 May 2013 04:06:11 +0000
+
+unity (7.0.0daily13.05.08ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  * Automatic snapshot from revision 3317 (ubuntu-unity/next)
+ 
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>   Wed, 08 May 2013 04:57:49 +0000
+
+unity (7.0.0daily13.05.01.1ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  [ Sebastien Bacher ]
+  * Some untranslatable and wrong strings in the previews (LP: #1074038)
+
+  [ Andrea Azzarone ]
+  * [alt-tab] Disable detail view for webapp icons. (LP: #1169340)
+
+  [ Marco Trevisan (Treviño) ]
+  * Launcher - count label pops out in auto-hide mode (LP: #1171476)
+  * Panel shadow is drawn above full-screen windows when notifications
+    are shown (LP: #1171934)
+  * [regression] Icon count is not shown if the icon is not transformed
+    (LP: #1171663)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3315 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 01 May 2013 21:59:17 +0000
+
+unity (7.0.0daily13.04.23ubuntu.unity.experimental.certified-0ubuntu1) raring; urgency=low
+
+  [ Michal Hruby ]
+  * HORIZONTAL_TILE results aren't displaying "comment" (LP: #1158840)
+
+  [ Brandon Schaefer ]
+  * Command lens does not close when pressing Alt+F2 (LP: #1167466)
+
+  [ Nick Dedekind ]
+  * Filters are disappearing and impacting already displayed results
+    (LP: #1159814)
+
+  [ Marco Trevisan (Treviño) ]
+  * Adding Lens results is more expensive than needed (LP: #1168569)
+  * Top Bar, window managment - top bar shadow not falling on restored
+    windows that are partially off the top edge of the screen (LP:
+    #871758)
+  * Opening new-window from quicklist static action does not focus the
+    newly opened window (LP: #1164483)
+  * Unity makes unneeded copies of Nux DrawList (LP: #1167605)
+  * Unityshell uses much of his CPU time only to get tray XIDs from
+    PanelController (LP: #1167894)
+  * Unity wastes some memory by allocating multiple times the same
+    texture (LP: #1166532)
+  * Launcher pre-processes icons also when the icons have not been
+    changed since last draw cycle (LP: #1168556)
+  * Unity is creating multiple instances of DBusIndicators per each
+    monitor (LP: #1166550)
+
+  [ Andrea Azzarone ]
+  * Dash should only close when a icon is dragged outside of the
+    Dash/Launcher area (LP: #1170720)
+  * Launcher icons automatically placed in the launcher by USC (or apps
+    lens) fail to have running 'pips'. (LP: #1165097)
+  * dash preview animation is slow on high resolution screens (also
+    fullscreen mode) (LP: #1055126)
+
+  [ Michi Henning ]
+  * ResultIterator.h defines functions that return const values (LP:
+    #1163705)
+
+  [ Matthieu James ]
+  * [UIFe] BFB icon swirl should run clockwise not anti-clockwise (LP:
+    #1169238)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3121 (ubuntu-unity/experimental-
+    certified)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 23 Apr 2013 07:05:10 +0000
+
+unity (7.0.0daily13.04.18~13.04-0ubuntu1) raring; urgency=low
+
+  [ Manuel de la Pena ]
+  * Purchased songs won't download when not logged to U1 (LP: #1168674)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3309
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 18 Apr 2013 05:43:34 +0000
+
+unity (7.0.0daily13.04.17~13.04-0ubuntu1) raring; urgency=low
+
+  [ Marco Trevisan (Treviño) ]
+  * Top Bar, window managment - top bar shadow not falling on restored
+    windows that are partially off the top edge of the screen (LP:
+    #871758)
+
+  [ Matthieu James ]
+  * [UIFe] BFB icon swirl should run clockwise not anti-clockwise (LP:
+    #1169238)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3305
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 17 Apr 2013 04:07:04 +0000
+
+unity (7.0.0daily13.04.10ubuntu.unity.experimental.certified-0ubuntu1) raring; urgency=low
+
+  [ Didier Roche ]
+  * bump build-dep on libunity-dev
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3113 (ubuntu-unity/experimental-
+    certified)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 10 Apr 2013 07:16:02 +0000
+
+unity (7.0.0daily13.04.15-0ubuntu1) raring; urgency=low
+
+  [ Brandon Schaefer ]
+  * Command lens does not close when pressing Alt+F2 (LP: #1167466)
+
+  [ Andrea Azzarone ]
+  * dash preview animation is slow on high resolution screens (also
+    fullscreen mode) (LP: #1055126)
+
+  [ Marco Trevisan (Treviño) ]
+  * Unity makes unneeded copies of Nux DrawList (LP: #1167605)
+  * Unityshell uses much of his CPU time only to get tray XIDs from
+    PanelController (LP: #1167894)
+  * Adding Lens results is more expensive than needed (LP: #1168569)
+  * Opening new-window from quicklist static action does not focus the
+    newly opened window (LP: #1164483)
+  * Launcher pre-processes icons also when the icons have not been
+    changed since last draw cycle (LP: #1168556)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3300
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 15 Apr 2013 04:17:42 +0000
+
+unity (7.0.0daily13.04.10-0ubuntu1) raring; urgency=low
+
+  [ Andrea Azzarone ]
+  * Launcher icons automatically placed in the launcher by USC (or apps
+    lens) fail to have running 'pips'. (LP: #1165097)
+
+  [ Marco Trevisan (Treviño) ]
+  * Unity wastes some memory by allocating multiple times the same
+    texture (LP: #1166532)
+  * Unity is creating multiple instances of DBusIndicators per each
+    monitor (LP: #1166550)
+
+  [ Michi Henning ]
+  * ResultIterator.h defines functions that return const values (LP:
+    #1163705)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3290
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 10 Apr 2013 04:03:19 +0000
+
+unity (7.0.0daily13.04.08-0ubuntu1) raring; urgency=low
+
+  [ Tigran Gabrielyan ]
+  * [UIFe] Window list in right click context menu should indicate the
+    focused window (LP: #1152477)
+
+  [ Andrea Azzarone ]
+  * Launcher - When a app is automatically placed in the Launcher after
+    being installed from the Software Center, it should be in the 'non-
+    running' state (LP: #987727)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3283
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 08 Apr 2013 04:02:51 +0000
+
+unity (7.0.0daily13.04.05.2-0ubuntu1) raring; urgency=low
+
+  * Revert r3266 "Don't close the dash when switching from the command lens 
+    to the home lens.", it's breaking dash closing for individual lens,
+    which also result in a serie of failing tests (lp: #1164915)
+
+  [ Stephen M. Webb ]
+  * Bumped released version to 7.0.0
+
+
+  [ Brandon Schaefer ]
+  * Invalid Dnd is not being ingored in the launcher. (LP: #1163473)
+  * Dash Overlay scrollbars should allow dragging, until the scrollbars
+    themselfs hit the top/end of the track. (LP: #1163616)
+  * [regession] Multi-monitor: Mousepointer hangs when passing between
+    monitors, although no Launcher is there. (LP: #1161726)
+  * The dash closes when trying to switch from Command lens to home lens
+    (LP: #1108956)
+
+  [ Chris Townsend ]
+  * Need to tweak the icon glow for urgent apps (LP: #1163944)
+
+  [ Andrea Azzarone ]
+  * Window management - grab icons appear when using touchpad (LP:
+    #1026712)
+
+  [ Marco Trevisan (Treviño) ]
+  * compiz crashed with SIGSEGV in
+    sigc::internal::slot_call0<unity::launcher::VolumeImp::Impl::Impl()
+    (LP: #1161916)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3279
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 05 Apr 2013 14:51:53 +0000
+
+unity (6.12.0daily13.04.01-0ubuntu1) raring; urgency=low
+
+  [ Marco Trevisan (Treviño) ]
+  * Launcher starts with default size then jumps to configured one on
+    login (LP: #1099815)
+  * Launcher - Open Trash window prevents Nautilus being launched when a
+    user clicks on the Nautilus Launcher icon (LP: #753938)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3263
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 01 Apr 2013 04:02:55 +0000
+
+unity (6.12.0daily13.03.29.1-0ubuntu1) raring; urgency=low
+
+  [ Brandon Schaefer ]
+  * launcher - drag and drop of gedit text windows leaves launcher in
+    drop state (LP: #1121045)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3260
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 29 Mar 2013 16:26:36 +0000
+
+unity (6.12.0daily13.03.29-0ubuntu1) raring; urgency=low
+
+  [ Marco Trevisan (Treviño) ]
+  * Empty trash dialog sometimes dont have the focus (LP: #807808)
+  * Launcher - Trash and Storage device icons in the Launcher should be
+    illuminated if folder is being viewed in Nautilus (LP: #1063830)
+
+  [ MC Return ]
+  * CompWindow::syncPosition () function is deprecated and was removed
+    in lp:compiz, r3639 (LP: #1161285)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3257
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 29 Mar 2013 07:24:06 +0000
+
+unity (6.12.0daily13.03.25.1-0ubuntu1) raring; urgency=low
+
+  [ Martin Pitt ]
+  * Add logind support (ConsoleKit and UPower suspend/resume are being
+    deprecated) (LP: #1155021)
+
+  [ Chris Townsend ]
+  * Urgent apps need higher glow intensity (LP: #1157866)
+  * Launcher: Icon Backlight Mode "Edge Illumination Toggles" broken
+    (regression) (LP: #1103742)
+
+  [ Paolo Rotolo ]
+  * Shutdown dialog should have correct punctuation (LP: #1157927)
+
+  [ Andrea Azzarone ]
+  * Launcher tooltips keeps hanging on Desktop (LP: #1158378)
+  * Launcher tooltips don't disappear when dash is open (LP: #1158021)
+  * Some tooltip AP tests fail (LP: #1158357)
+
+  [ Didier Roche ]
+  * Unity/Libunity unit tests broken by latest glib (LP: #1159677)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3252
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 25 Mar 2013 13:10:17 +0000
+
+unity (6.12.0daily13.03.20-0ubuntu1) raring; urgency=low
+
+  [ Stephen M. Webb ]
+  * ‘No Image Available’ in previews isn’t translatable (LP: #1106849)
+
+  [ Brandon Schaefer ]
+  * Unity unit tests take too long to finish (LP: #1053163)
+  * Unity FTBFS xgettext unicode TrashLauncherIcon.cpp:91 (LP: #1156931)
+  * HUD's item which is being mouse-hovered is selected, making fast
+    typing and clicking Enter unsafe (LP: #1066442)
+
+  [ Marco Trevisan (Treviño) ]
+  * Icons edges are not visible on the 13.04 unity launcher (LP:
+    #1156698)
+  * Clicking on a device (volume) icon doesn't always bring nautilus to
+    focus (LP: #1154792)
+  * [Regression] No "filter result" label in the dash. (LP: #1155550)
+  * Launcher icon edges become invisible when loading an application
+    (LP: #1157303)
+  * [regression] Tooltip label is not centered (LP: #1155553)
+  * Clicking on trash icon doesn't always bring nautilus to focus (LP:
+    #1154862)
+  * Shutdown dialogue should close the overlays when activated from
+    power button (LP: #1155610)
+  * New shutdown Dialogs, shutdown/restart should change order. (LP:
+    #1154578)
+  * Shut Down dialog spells "Shut Down" incorrectly (LP: #1156641)
+  * New shutdown dialog had no default option selected (LP: #1155562)
+  * alt-tab - the 'pips' the indicate a application has multiple windows
+    open look pixelated  (LP: #863331)
+  * Log Out dialog spells "Log Out" incorrectly (LP: #1156638)
+  * Launching an application from the "Appname" quicklist could not
+    bring it to focus (LP: #1155225)
+
+  [ Mathieu Trudel-Lapierre ]
+  * gcalctool desktop file got renamed (LP: #1156810)
+
+  [ Chris Townsend ]
+  * Launcher - auto-scroll needs to be more progressive (LP: #765732)
+
+  [ Andrea Azzarone ]
+  * Tooltip timeout should not be resetted on each mouse movement. (LP:
+    #1155659)
+  * The sharp white line between dash and launcher is missing (LP:
+    #1125346)
+  * Reduce launcher tooltip timeout. (LP: #1155665)
+  * Launcher tooltips need fade animation on show/hide. (LP: #1155672)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3239
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 20 Mar 2013 04:03:16 +0000
+
+unity (6.12.0daily13.03.13.1-0ubuntu1) raring; urgency=low
+
+  [ Sebastien Bacher ]
+  * Launcher - Update the icons used for the Software Centre, Nautilus,
+    and Software Updater (LP: #1081691)
+
+  [ Andrea Azzarone ]
+  * Nautilus windows don't get the the focus when opened via the dash.
+    (LP: #1152733)
+
+  [ Marco Trevisan (Treviño) ]
+  * New Shutdown view disables panel shadow (LP: #1152760)
+  * Shutdown goodbye text is sometimes partly missing (LP: #1152978)
+  * Shutdown view should be closable by escape-key (LP: #1152712)
+  * Press Alt+F1, panel’s shadow dissapear (LP: #942965)
+  * Long text in previews or dialogs is not properly aligned and/or
+    missing (LP: #1152980)
+  * Panel Shadow is not drawn properly during workspace switching (LP:
+    #1153699)
+  * QuicklistMenuItem's do not export the event timestamp on Activate
+    (LP: #1154082)
+  * [multimonitor] Dash - Opening dash or HUD on one screen removes
+    panel shadow on the other (LP: #892718)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Lenses shortcuts not working in singular cases (e.g. Super+A) (LP:
+    #1152517)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3211
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 13 Mar 2013 09:23:11 +0000
+
 unity (6.12.0daily13.03.11-0ubuntu1) raring; urgency=low
 
   [ Marco Trevisan (Treviño) ]

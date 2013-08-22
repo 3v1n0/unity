@@ -35,6 +35,7 @@ Settings* settings_instance = nullptr;
 
 const std::string SETTINGS_NAME = "com.canonical.Unity";
 const std::string FORM_FACTOR = "form-factor";
+const std::string DOUBLE_CLICK_ACTIVATE = "double-click-activate";
 }
 
 //
@@ -47,13 +48,19 @@ public:
     : parent_(owner)
     , gsettings_(g_settings_new(SETTINGS_NAME.c_str()))
     , cached_form_factor_(FormFactor::DESKTOP)
+    , cached_double_click_activate_(true)
     , lowGfx_(false)
   {
     CacheFormFactor();
+    CacheDoubleClickActivate();
 
     form_factor_changed_.Connect(gsettings_, "changed::" + FORM_FACTOR, [this] (GSettings*, gchar*) {
       CacheFormFactor();
       parent_->form_factor.changed.emit(cached_form_factor_);
+    });
+    double_click_activate_changed_.Connect(gsettings_, "changed::" + DOUBLE_CLICK_ACTIVATE, [this] (GSettings*, gchar*) {
+      CacheDoubleClickActivate();
+      parent_->double_click_activate.changed.emit(cached_double_click_activate_);
     });
   }
 
@@ -75,6 +82,11 @@ public:
     }
   }
 
+  void CacheDoubleClickActivate()
+  {
+    cached_double_click_activate_ = g_settings_get_boolean(gsettings_, DOUBLE_CLICK_ACTIVATE.c_str());
+  }
+
   FormFactor GetFormFactor() const
   {
     return cached_form_factor_;
@@ -86,12 +98,19 @@ public:
     return true;
   }
 
+  bool GetDoubleClickActivate() const
+  {
+    return cached_double_click_activate_;
+  }
+
   Settings* parent_;
   glib::Object<GSettings> gsettings_;
   FormFactor cached_form_factor_;
+  bool cached_double_click_activate_;
   bool lowGfx_;
 
   glib::Signal<void, GSettings*, gchar* > form_factor_changed_;
+  glib::Signal<void, GSettings*, gchar* > double_click_activate_changed_;
 };
 
 //
@@ -106,11 +125,13 @@ Settings::Settings()
   {
     LOG_ERROR(logger) << "More than one unity::Settings created.";
   }
-  
+
   else
-  { 
+  {
     form_factor.SetGetterFunction(sigc::mem_fun(*pimpl, &Impl::GetFormFactor));
     form_factor.SetSetterFunction(sigc::mem_fun(*pimpl, &Impl::SetFormFactor));
+
+    double_click_activate.SetGetterFunction(sigc::mem_fun(*pimpl, &Impl::GetDoubleClickActivate));
 
     settings_instance = this;
   }

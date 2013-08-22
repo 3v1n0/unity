@@ -26,18 +26,11 @@ using namespace testing;
 #include "gmockvolume.h"
 #include "launcher/VolumeImp.h"
 #include "test_utils.h"
+#include "test_mock_filemanager.h"
 using namespace unity;
 
 namespace
 {
-
-class MockFileManagerOpener : public launcher::FileManagerOpener
-{
-public:
-  typedef std::shared_ptr<MockFileManagerOpener> Ptr;
-
-  MOCK_METHOD1(Open, void(std::string const& uri));
-};
 
 class MockDeviceNotificationDisplay : public launcher::DeviceNotificationDisplay
 {
@@ -53,14 +46,14 @@ public:
   void SetUp()
   {
     gvolume_ = g_mock_volume_new();
-    file_manager_opener_.reset(new MockFileManagerOpener);
+    file_manager_.reset(new NiceMock<MockFileManager>);
     device_notification_display_.reset(new MockDeviceNotificationDisplay);
     volume_.reset(new launcher::VolumeImp(glib::Object<GVolume>(G_VOLUME(gvolume_.RawPtr()), glib::AddRef()),
-                                          file_manager_opener_, device_notification_display_));
+                                          file_manager_, device_notification_display_));
   }
 
   glib::Object<GMockVolume> gvolume_;
-  MockFileManagerOpener::Ptr file_manager_opener_;
+  MockFileManager::Ptr file_manager_;
   MockDeviceNotificationDisplay::Ptr device_notification_display_;
   launcher::VolumeImp::Ptr volume_;
 };
@@ -68,6 +61,7 @@ public:
 TEST_F(TestVolumeImp, TestCtor)
 {
   EXPECT_FALSE(volume_->IsMounted());
+  EXPECT_FALSE(volume_->IsOpened());
 }
 
 TEST_F(TestVolumeImp, TestCanBeEjected)
@@ -116,6 +110,44 @@ TEST_F(TestVolumeImp, TestIsMounted)
   EXPECT_TRUE(volume_->IsMounted());
 }
 
+TEST_F(TestVolumeImp, TestIsOpened)
+{
+  volume_->MountAndOpenInFileManager(0);
+
+  EXPECT_CALL(*file_manager_, IsPrefixOpened(ROOT_FILE_URI));
+  ON_CALL(*file_manager_, IsPrefixOpened(_)).WillByDefault(Return(true));
+  file_manager_->locations_changed.emit();
+  EXPECT_TRUE(volume_->IsOpened());
+
+  EXPECT_CALL(*file_manager_, IsPrefixOpened(ROOT_FILE_URI));
+  ON_CALL(*file_manager_, IsPrefixOpened(_)).WillByDefault(Return(false));
+  file_manager_->locations_changed.emit();
+  EXPECT_FALSE(volume_->IsOpened());
+}
+
+TEST_F(TestVolumeImp, TestIsOpenedSignal)
+{
+  ON_CALL(*file_manager_, IsPrefixOpened(_)).WillByDefault(Return(false));
+
+  bool opened = false;
+  volume_->opened.connect([&opened] (bool value) { opened = value; });
+  file_manager_->locations_changed.emit();
+
+  ASSERT_FALSE(opened);
+
+  ON_CALL(*file_manager_, IsPrefixOpened(_)).WillByDefault(Return(true));
+  file_manager_->locations_changed.emit();
+  EXPECT_TRUE(opened);
+}
+
+TEST_F(TestVolumeImp, TestFilemanagerSignalDisconnection)
+{
+  ASSERT_FALSE(file_manager_->locations_changed.empty());
+  volume_.reset();
+
+  EXPECT_TRUE(file_manager_->locations_changed.empty());
+}
+
 TEST_F(TestVolumeImp, TestEjectAndShowNotification)
 {
   g_mock_volume_set_can_eject(gvolume_, TRUE);
@@ -128,17 +160,10 @@ TEST_F(TestVolumeImp, TestEjectAndShowNotification)
 
 TEST_F(TestVolumeImp, TestMountAndOpenInFileManager)
 {
-  EXPECT_CALL(*file_manager_opener_, Open(ROOT_FILE_URI))
-      .Times(1);
+  uint64_t time = g_random_int();
+  EXPECT_CALL(*file_manager_, OpenActiveChild(ROOT_FILE_URI, time));
 
-  volume_->MountAndOpenInFileManager();
-  EXPECT_EQ(g_mock_volume_last_mount_had_mount_operation(gvolume_), TRUE);
-  EXPECT_TRUE(volume_->IsMounted());
-
-  EXPECT_CALL(*file_manager_opener_, Open(ROOT_FILE_URI))
-      .Times(1);
-
-  volume_->MountAndOpenInFileManager();
+  volume_->MountAndOpenInFileManager(time);
   EXPECT_EQ(g_mock_volume_last_mount_had_mount_operation(gvolume_), TRUE);
   EXPECT_TRUE(volume_->IsMounted());
 }

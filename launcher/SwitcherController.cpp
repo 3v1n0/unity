@@ -23,6 +23,7 @@
 
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/WindowManager.h"
+#include "unity-shared/UScreen.h"
 
 #include "SwitcherController.h"
 #include "SwitcherControllerImpl.h"
@@ -41,6 +42,8 @@ const std::string SHOW_TIMEOUT = "show-timeout";
 const std::string DETAIL_TIMEOUT = "detail-timeout";
 const std::string VIEW_CONSTRUCT_IDLE = "view-construct-idle";
 const unsigned FADE_DURATION = 80;
+const int XY_OFFSET = 100;
+const int WH_OFFSET = -200;
 
 /**
  * Helper comparison functor for sorting application icons.
@@ -78,7 +81,6 @@ Controller::Controller(WindowCreator const& create_window)
   , impl_(new Controller::Impl(this, 20, create_window))
 {}
 
-
 Controller::~Controller()
 {}
 
@@ -93,6 +95,9 @@ void Controller::Show(ShowMode show,
                       SortMode sort,
                       std::vector<AbstractLauncherIcon::Ptr> results)
 {
+  auto uscreen = UScreen::GetDefault();
+  monitor_     = uscreen->GetMonitorWithMouse();
+
   impl_->Show(show, sort, results);
 }
 
@@ -100,15 +105,6 @@ void Controller::Select(int index)
 {
   if (Visible())
     impl_->model_->Select(index);
-}
-
-void Controller::SetWorkspace(nux::Geometry geo, int monitor)
-{
-  monitor_ = monitor;
-  impl_->workarea_ = geo;
-
-  if (impl_->view_)
-    impl_->view_->monitor = monitor_;
 }
 
 void Controller::Hide(bool accept_state)
@@ -122,6 +118,54 @@ void Controller::Hide(bool accept_state)
 bool Controller::Visible()
 {
   return visible_;
+}
+
+nux::Geometry Controller::GetInputWindowGeometry() const
+{
+  if (impl_->view_window_)
+    return impl_->view_window_->GetGeometry();
+
+  return {0, 0, 0, 0};
+}
+
+bool Controller::StartDetailMode()
+{
+  if (visible_)
+  {
+    if (IsDetailViewShown() &&
+        impl_->HasNextDetailRow())
+    {
+      impl_->NextDetailRow();
+    }
+    else
+    {
+      SetDetail(true);
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+bool Controller::StopDetailMode()
+{
+  if (visible_)
+  {
+    if (IsDetailViewShown() &&
+        impl_->HasPrevDetailRow())
+    {
+      impl_->PrevDetailRow();
+    }
+    else
+    {
+      SetDetail(false);
+    }
+
+    return true;
+  }
+
+  return false;
 }
 
 void Controller::Next()
@@ -293,6 +337,7 @@ void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLa
   obj_->AddChild(model_.get());
   model_->selection_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnModelSelectionChanged));
   model_->detail_selection.changed.connect([this] (bool) { sources_.Remove(DETAIL_TIMEOUT); });
+  model_->request_detail_hide.connect(sigc::mem_fun(this, &Controller::Impl::DetailHide));
   model_->only_detail_on_viewport = (show == ShowMode::CURRENT_VIEWPORT);
 
   SelectFirstItem();
@@ -310,17 +355,21 @@ void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLa
     ShowView();
   }
 
-  if (obj_->detail_on_timeout)
-  {
-    auto cb_func = sigc::mem_fun(this, &Controller::Impl::OnDetailTimer);
-    sources_.AddTimeout(obj_->initial_detail_timeout_length, cb_func, DETAIL_TIMEOUT);
-  }
+  ResetDetailTimer(obj_->initial_detail_timeout_length);
 
-  ubus_manager_.SendMessage(UBUS_PLACE_VIEW_CLOSE_REQUEST);
+  ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN,
                             g_variant_new("(bi)", true, obj_->monitor_));
 }
 
+void Controller::Impl::ResetDetailTimer(int timeout_length)
+{
+  if (obj_->detail_on_timeout)
+  {
+    auto cb_func = sigc::mem_fun(this, &Controller::Impl::OnDetailTimer);
+    sources_.AddTimeout(timeout_length, cb_func, DETAIL_TIMEOUT);
+  }
+}
 
 bool Controller::Impl::OnDetailTimer()
 {
@@ -335,11 +384,7 @@ bool Controller::Impl::OnDetailTimer()
 
 void Controller::Impl::OnModelSelectionChanged(AbstractLauncherIcon::Ptr const& icon)
 {
-  if (obj_->detail_on_timeout)
-  {
-    auto cb_func = sigc::mem_fun(this, &Controller::Impl::OnDetailTimer);
-    sources_.AddTimeout(obj_->detail_timeout_length, cb_func, DETAIL_TIMEOUT);
-  }
+  ResetDetailTimer(obj_->detail_timeout_length);
 
   if (icon)
   {
@@ -394,8 +439,19 @@ void Controller::Impl::ConstructWindow()
     view_window_->SetOpacity(0.0f);
     view_window_->SetLayout(main_layout_);
     view_window_->SetBackgroundColor(nux::color::Transparent);
-    view_window_->SetGeometry(workarea_);
   }
+}
+
+nux::Geometry GetSwitcherViewsGeometry()
+{
+  auto uscreen     = UScreen::GetDefault();
+  int monitor      = uscreen->GetMonitorWithMouse();
+  auto monitor_geo = uscreen->GetMonitorGeometry(monitor);
+
+  monitor_geo.OffsetPosition(XY_OFFSET, XY_OFFSET);
+  monitor_geo.OffsetSize(WH_OFFSET, WH_OFFSET);
+
+  return monitor_geo;
 }
 
 void Controller::Impl::ConstructView()
@@ -411,10 +467,22 @@ void Controller::Impl::ConstructView()
   view_->background_color = bg_color_;
   view_->monitor = obj_->monitor_;
 
+  view_->hide_request.connect(sigc::mem_fun(this, &Controller::Impl::Hide));
+
+  view_->switcher_mouse_up.connect([this] (int icon_index, int button) {
+      if (button == 3)
+        InitiateDetail(true);
+  });
+
+  view_->switcher_mouse_move.connect([this] (int icon_index) {
+      if (icon_index >= 0)
+        ResetDetailTimer(obj_->detail_timeout_length);
+  });
+
   ConstructWindow();
   main_layout_->AddView(view_.GetPointer(), 1);
   view_window_->SetEnterFocusInputArea(view_.GetPointer());
-  view_window_->SetGeometry(workarea_);
+  view_window_->SetGeometry(GetSwitcherViewsGeometry());
 
   view_built.emit();
 }
@@ -426,8 +494,8 @@ void Controller::Impl::Hide(bool accept_state)
     Selection selection = GetCurrentSelection();
     if (selection.application_)
     {
-      Time timestamp = -1;
-      selection.application_->Activate(ActionArg(ActionArg::SWITCHER, 0,
+      Time timestamp = 0;
+      selection.application_->Activate(ActionArg(ActionArg::Source::SWITCHER, 0,
                                                  timestamp, selection.window_));
     }
   }
@@ -449,6 +517,14 @@ void Controller::Impl::Hide(bool accept_state)
   {
     fade_animator_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
   }
+}
+
+void Controller::Impl::DetailHide()
+{
+  // FIXME We need to refactor SwitcherModel so we can add/remove icons without causing
+  // a crash. If you remove the last application in the list it crashes.
+  model_->detail_selection = false;
+  Hide(false);
 }
 
 void Controller::Impl::HideWindow()
@@ -533,7 +609,7 @@ bool Controller::Impl::IsDetailViewShown()
 
 void Controller::Impl::SetDetail(bool value, unsigned int min_windows)
 {
-  if (value && model_->DetailXids().size() >= min_windows)
+  if (value && model_->Selection()->AllowDetailViewInSwitcher() && model_->DetailXids().size() >= min_windows)
   {
     model_->detail_selection = true;
     obj_->detail_mode_ = DetailMode::TAB_NEXT_WINDOW;
@@ -554,7 +630,6 @@ void Controller::Impl::InitiateDetail(bool animate)
     view_->animate = animate;
 
     SetDetail(true);
-    obj_->detail_mode_ = DetailMode::TAB_NEXT_TILE;
 
     if (!view_->animate())
     {
@@ -585,6 +660,38 @@ void Controller::Impl::PrevDetail()
 
   InitiateDetail(true);
   model_->PrevDetail();
+}
+
+void Controller::Impl::NextDetailRow()
+{
+  if (!model_)
+    return;
+
+  model_->NextDetailRow();
+}
+
+void Controller::Impl::PrevDetailRow()
+{
+  if (!model_)
+    return;
+
+  model_->PrevDetailRow();
+}
+
+bool Controller::Impl::HasNextDetailRow() const
+{
+  if (!model_)
+    return false;
+
+  return model_->HasNextDetailRow();
+}
+
+bool Controller::Impl::HasPrevDetailRow() const
+{
+  if (!model_)
+    return false;
+
+  return model_->HasPrevDetailRow();
 }
 
 LayoutWindow::Vector Controller::Impl::ExternalRenderTargets()
@@ -649,15 +756,19 @@ void Controller::Impl::SelectFirstItem()
     return;
   }
 
-  unsigned int first_highest = 0;
-  unsigned int first_second = 0; // first icons second highest active
-  unsigned int second_first = 0; // second icons first highest active
+  uint64_t first_highest = 0;
+  uint64_t first_second = 0; // first icons second highest active
+  uint64_t second_first = 0; // second icons first highest active
 
   WindowManager& wm = WindowManager::Default();
   for (auto& window : first->Windows())
   {
-    guint32 xid = window->window_id();
-    unsigned int num = wm.GetWindowActiveNumber(xid);
+    Window xid = window->window_id();
+    
+    if (model_->only_detail_on_viewport && !wm.IsWindowOnCurrentDesktop(xid))
+      continue;
+
+    uint64_t num = wm.GetWindowActiveNumber(xid);
 
     if (num > first_highest)
     {
@@ -670,11 +781,7 @@ void Controller::Impl::SelectFirstItem()
     }
   }
 
-  for (auto& window : second->Windows())
-  {
-    guint32 xid = window->window_id();
-    second_first = std::max<unsigned long long>(wm.GetWindowActiveNumber(xid), second_first);
-  }
+  second_first = second->SwitcherPriority();
 
   if (first_second > second_first)
     model_->Select(first);

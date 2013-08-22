@@ -22,7 +22,10 @@
 
 #include <Nux/Nux.h>
 
+#include "Introspectable.h"
 #include "IconTextureSource.h"
+
+#include <UnityCore/Variant.h>
 
 namespace unity
 {
@@ -35,15 +38,12 @@ enum PipRenderStyle
   OVER_TILE,
 };
 
-class RenderArg
+class RenderArg : public debug::Introspectable
 {
 public:
   RenderArg()
     : icon(0)
     , colorify(nux::color::White)
-    , x_rotation(0)
-    , y_rotation(0)
-    , z_rotation(0)
     , alpha(1.0f)
     , saturation(1.0f)
     , backlight_intensity(0.0f)
@@ -71,10 +71,8 @@ public:
   IconTextureSource* icon;
   nux::Point3   render_center;
   nux::Point3   logical_center;
+  nux::Vector3  rotation;
   nux::Color    colorify;
-  float         x_rotation;
-  float         y_rotation;
-  float         z_rotation;
   float         alpha;
   float         saturation;
   float         backlight_intensity;
@@ -96,6 +94,17 @@ public:
   bool          colorify_background;
   int           window_indicators;
   char          shortcut_label;
+
+protected:
+  // Introspectable methods
+  std::string GetName() const { return "RenderArgs"; }
+  void AddProperties(GVariantBuilder* builder)
+  {
+    unity::variant::BuilderWrapper(builder)
+        .add("logical_center_x", logical_center.x)
+        .add("logical_center_y", logical_center.y)
+        .add("logical_center_z", logical_center.z);
+  }
 };
 
 class AbstractIconRenderer
