@@ -45,27 +45,26 @@ const std::string LOCAL_DATA_DIR = BUILDDIR"/tests/data";
 const std::string USC_DESKTOP = LOCAL_DATA_DIR+"/applications/ubuntu-software-center.desktop";
 const std::string USC_APP_INSTALL_DESKTOP = "/usr/share/app-install/desktop/software-center:ubuntu-software-center.desktop";
 
-class MockSoftwareCenterLauncherIcon : public SoftwareCenterLauncherIcon
-{
-public:
-  MockSoftwareCenterLauncherIcon(ApplicationPtr const& app,
-                                std::string const& aptdaemon_trans_id,
-                                std::string const& icon_path)
-    : SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path)
-  {}
-
-  using SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall;
-  using SoftwareCenterLauncherIcon::GetRemoteUri;
-  using SoftwareCenterLauncherIcon::OnFinished;
-  using SoftwareCenterLauncherIcon::OnPropertyChanged;
-};
-
 struct TestSoftwareCenterLauncherIcon : testing::Test
 {
   TestSoftwareCenterLauncherIcon()
      : usc(std::make_shared<MockApplication::Nice>(USC_APP_INSTALL_DESKTOP, "softwarecenter", "Ubuntu Software Center"))
      , icon(usc, "/com/canonical/unity/test/object/path", "")
   {}
+
+  struct MockSoftwareCenterLauncherIcon : SoftwareCenterLauncherIcon
+  {
+    MockSoftwareCenterLauncherIcon(ApplicationPtr const& app,
+                                  std::string const& aptdaemon_trans_id,
+                                  std::string const& icon_path)
+      : SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path)
+    {}
+
+    using SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall;
+    using SoftwareCenterLauncherIcon::GetRemoteUri;
+    using SoftwareCenterLauncherIcon::OnFinished;
+    using SoftwareCenterLauncherIcon::OnPropertyChanged;
+  };
 
   MockApplication::Ptr usc;
   MockSoftwareCenterLauncherIcon icon;

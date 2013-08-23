@@ -47,12 +47,13 @@ public:
   std::string GetName() const;
 
 protected:
-  std::string GetActualDesktopFileAfterInstall();
   void ActivateLauncherIcon(ActionArg arg);
-  void OnFinished(GVariant *params);
-  void OnPropertyChanged(GVariant* params);
 
 private:
+  std::string GetActualDesktopFileAfterInstall();
+  void UpdateProgress(int progress);
+  void OnFinished(GVariant *params);
+  void OnPropertyChanged(GVariant* params);
   void OnDragAnimationFinished();
 
   glib::DBusProxy aptdaemon_trans_;
@@ -63,6 +64,8 @@ private:
   bool finished_;
   bool needs_urgent_;
   std::string aptdaemon_trans_id_;
+
+  friend class TestSoftwareCenterLauncherIcon;
 };
 
 }
