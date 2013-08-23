@@ -45,7 +45,6 @@ const int INSTALL_TIP_DURATION = 1500;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(SoftwareCenterLauncherIcon);
-
 SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(ApplicationPtr const& app,
                                                        std::string const& aptdaemon_trans_id,
                                                        std::string const& icon_path)
@@ -62,6 +61,9 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(ApplicationPtr const& app
   SetQuirk(Quirk::VISIBLE, false);
   aptdaemon_trans_.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
   aptdaemon_trans_.Connect("Finished", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnFinished));
+  aptdaemon_trans_.GetProperty("Progress", [this] (GVariant *value) {
+    UpdateProgress(glib::Variant(value).GetInt32());
+  });
 
   if (!icon_path.empty())
     icon_name = icon_path;
@@ -76,7 +78,7 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launche
 
   launcher_ = launcher;
 
-  // FIXME: this needs testing, if there is no useful coordinates 
+  // FIXME: this needs testing, if there is no useful coordinates
   //        then do not animate
   if (start_x <= 0 && start_y <= 0)
   {
@@ -142,8 +144,8 @@ std::string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
   // app-install-data points to the "wrong" one in /usr/share/app-install
   //
   // So:
-  // - if there is a desktop file already and it startswith 
-  //   /usr/share/app-install/desktop, then transform to 
+  // - if there is a desktop file already and it startswith
+  //   /usr/share/app-install/desktop, then transform to
   //   /usr/share/application
   // - if there is a desktop file with prefix /tmp/software-center-agent:
   //   transform to /usr/share/application
@@ -168,10 +170,10 @@ std::string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
     }
     filename = DesktopUtilities::GetDesktopPathById(filename);
     return filename;
-  } 
+  }
   else if (desktop_file.find("/tmp/software-center-agent:") == 0)
   {
-    // by convention the software-center-agent uses 
+    // by convention the software-center-agent uses
     //   /usr/share/applications/$pkgname.desktop
     // or
     //   /usr/share/applications/extras-$pkgname.desktop
@@ -234,28 +236,26 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
   }
 };
 
+void SoftwareCenterLauncherIcon::UpdateProgress(int progress)
+{
+  if (progress < 100)
+  {
+    SetQuirk(Quirk::PROGRESS, true);
+    finished_ = false;
+    tooltip_text = (progress == 0) ? _("Waiting to install") : _("Installing…");
+  }
+
+  SetProgress(progress/100.0f);
+}
+
 void SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
 {
-  gint32 progress;
-  glib::String property_name;
+  glib::Variant property_name(g_variant_get_child_value(params, 0), glib::StealRef());
 
-  g_variant_get_child(params, 0, "s", &property_name);
-
-  if (property_name.Str() == "Progress")
+  if (property_name.GetString() == "Progress")
   {
-    GVariant* property_value = nullptr;
-    g_variant_get_child(params, 1, "v", &property_value);
-    g_variant_get(property_value, "i", &progress);
-
-    if (progress < 100)
-    {
-      SetQuirk(Quirk::PROGRESS, true);
-      finished_ = false;
-      tooltip_text = _("Installing…"); 
-    }
-
-    SetProgress(progress/100.0f);
-    g_variant_unref(property_value);
+    glib::Variant progress_value(g_variant_get_child_value(params, 1), glib::StealRef());
+    UpdateProgress(progress_value.GetInt32());
   }
 }
 
