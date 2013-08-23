@@ -31,6 +31,7 @@
 #include "LauncherDragWindow.h"
 #include "LauncherModel.h"
 #include "DesktopUtilities.h"
+#include "MultiMonitor.h"
 
 namespace unity
 {
@@ -62,7 +63,9 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(ApplicationPtr const& app
   aptdaemon_trans_.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
   aptdaemon_trans_.Connect("Finished", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnFinished));
   aptdaemon_trans_.GetProperty("Progress", [this] (GVariant *value) {
-    UpdateProgress(glib::Variant(value).GetInt32());
+    int32_t progress = glib::Variant(value).GetInt32();
+    SetProgress(progress/100.0f);
+    SetQuirk(Quirk::PROGRESS, (progress > 0));
   });
 
   if (!icon_path.empty())
@@ -92,31 +95,48 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launche
     1,
     nux::BITFMT_R8G8B8A8);
 
+  auto* floating_icon = new SimpleLauncherIcon(GetIconType());
+  AbstractLauncherIcon::Ptr floating_icon_ptr(floating_icon);
+  floating_icon->icon_name = icon_name();
+  int monitor = launcher->monitor();
+
+  // Transform this in a spacer-icon and make it visible only on launcher's monitor
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+    SetVisibleOnMonitor(i, static_cast<int>(i) == monitor);
+
+  icon_name = "";
+  SetQuirk(Quirk::VISIBLE, true);
+
   drag_window_ = new LauncherDragWindow(icon_texture_,
                                         std::bind (&Launcher::RenderIconToTexture,
                                                    launcher.GetPointer(),
                                                    _1,
-                                                   AbstractLauncherIcon::Ptr(this),
+                                                   floating_icon_ptr,
                                                    icon_texture_));
 
   launcher->ForceReveal(true);
 
-  auto const& icon_center = GetCenter(launcher->monitor());
+  auto const& icon_center = GetCenter(monitor);
   drag_window_->SetBaseXY(start_x, start_y);
-  drag_window_->ShowWindow(true);
   drag_window_->SetAnimationTarget(icon_center.x, icon_center.y + (launcher->GetIconSize() / 2));
-  drag_window_->on_anim_completed_conn_ = drag_window_->anim_completed.connect(sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnDragAnimationFinished));
+  drag_window_->ShowWindow(true);
+
+  auto cb = sigc::bind(sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnDragAnimationFinished), floating_icon->icon_name());
+  drag_window_->on_anim_completed_conn_ = drag_window_->anim_completed.connect(cb);
   drag_window_->StartSlowAnimation();
 }
 
-void SoftwareCenterLauncherIcon::OnDragAnimationFinished()
+void SoftwareCenterLauncherIcon::OnDragAnimationFinished(std::string const& final_icon)
 {
   drag_window_->ShowWindow(false);
   drag_window_ = nullptr;
   launcher_->ForceReveal(false);
   launcher_ = nullptr;
   icon_texture_ = nullptr;
-  SetQuirk(Quirk::VISIBLE, true);
+  icon_name = final_icon;
+
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+    SetVisibleOnMonitor(i, true);
 }
 
 void SoftwareCenterLauncherIcon::ActivateLauncherIcon(ActionArg arg)
@@ -199,10 +219,7 @@ std::string SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall()
 
 void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
 {
-  glib::String exit_state;
-  g_variant_get_child(params, 0, "s", &exit_state);
-
-  if (exit_state.Str() == "exit-success")
+  if (glib::Variant(params).GetString() == "exit-success")
   {
     SetQuirk(Quirk::PROGRESS, false);
     SetQuirk(Quirk::URGENT, true);
@@ -236,26 +253,22 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
   }
 };
 
-void SoftwareCenterLauncherIcon::UpdateProgress(int progress)
-{
-  if (progress < 100)
-  {
-    SetQuirk(Quirk::PROGRESS, true);
-    finished_ = false;
-    tooltip_text = (progress == 0) ? _("Waiting to install") : _("Installing…");
-  }
-
-  SetProgress(progress/100.0f);
-}
-
 void SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
 {
   glib::Variant property_name(g_variant_get_child_value(params, 0), glib::StealRef());
 
   if (property_name.GetString() == "Progress")
   {
-    glib::Variant progress_value(g_variant_get_child_value(params, 1), glib::StealRef());
-    UpdateProgress(progress_value.GetInt32());
+    int32_t progress = glib::Variant(g_variant_get_child_value(params, 1), glib::StealRef()).GetInt32();
+
+    if (progress < 100)
+    {
+      SetQuirk(Quirk::PROGRESS, true);
+      finished_ = false;
+      tooltip_text = _("Installing…");
+    }
+
+    SetProgress(progress/100.0f);
   }
 }
 

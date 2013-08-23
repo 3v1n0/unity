@@ -51,10 +51,9 @@ protected:
 
 private:
   std::string GetActualDesktopFileAfterInstall();
-  void UpdateProgress(int progress);
   void OnFinished(GVariant *params);
   void OnPropertyChanged(GVariant* params);
-  void OnDragAnimationFinished();
+  void OnDragAnimationFinished(std::string const& final_icon);
 
   glib::DBusProxy aptdaemon_trans_;
 
