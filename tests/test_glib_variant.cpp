@@ -203,6 +203,9 @@ TEST(TestGLibVariant, GetString)
 
   Variant v4;
   EXPECT_EQ(v4.GetString(), "");
+
+  Variant v5(g_variant_new_variant(g_variant_new_string("Yeah!!!")));
+  EXPECT_EQ(v5.GetString(), "Yeah!!!");
 }
 
 TEST(TestGLibVariant, GetInt32)
@@ -220,6 +223,10 @@ TEST(TestGLibVariant, GetInt32)
 
   Variant v4;
   EXPECT_EQ(v4.GetInt32(), 0);
+
+  value = g_random_int_range(G_MININT, G_MAXINT);
+  Variant v5(g_variant_new_variant(g_variant_new_int32(value)));
+  EXPECT_EQ(v5.GetInt32(), value);
 }
 
 TEST(TestGLibVariant, GetUInt32)
@@ -237,6 +244,10 @@ TEST(TestGLibVariant, GetUInt32)
 
   Variant v4;
   EXPECT_EQ(v4.GetUInt32(), 0);
+
+  value = g_random_int();
+  Variant v5(g_variant_new_variant(g_variant_new_uint32(value)));
+  EXPECT_EQ(v5.GetUInt32(), value);
 }
 
 TEST(TestGLibVariant, GetBool)
@@ -254,6 +265,10 @@ TEST(TestGLibVariant, GetBool)
 
   Variant v4;
   EXPECT_EQ(v4.GetBool(), false);
+
+  value = (g_random_int() % 2) ? TRUE : FALSE;
+  Variant v5(g_variant_new_variant(g_variant_new_boolean(value)));
+  EXPECT_EQ(v5.GetBool(), value);
 }
 
 TEST(TestGLibVariant, GetVariant)
