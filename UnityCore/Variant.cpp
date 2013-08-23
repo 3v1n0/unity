@@ -63,6 +63,10 @@ std::string Variant::GetString() const
     // g_variant_get_string doesn't duplicate the string
     result = g_variant_get_string(variant_, nullptr);
   }
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_VARIANT))
+  {
+    return Variant(g_variant_get_variant(variant_), StealRef()).GetString();
+  }
   else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(s)")))
   {
     // As we're using the '&' prefix we don't need to free the string!
@@ -88,6 +92,10 @@ int32_t Variant::GetInt32() const
   {
     value = g_variant_get_int32(variant_);
   }
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_VARIANT))
+  {
+    value = Variant(g_variant_get_variant(variant_), StealRef()).GetInt32();
+  }
   else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(i)")))
   {
     g_variant_get(variant_, "(i)", &value);
@@ -112,6 +120,10 @@ uint32_t Variant::GetUInt32() const
   {
     value = g_variant_get_uint32(variant_);
   }
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_VARIANT))
+  {
+    value = Variant(g_variant_get_variant(variant_), StealRef()).GetUInt32();
+  }
   else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(u)")))
   {
     g_variant_get(variant_, "(u)", &value);
@@ -134,6 +146,10 @@ int64_t Variant::GetInt64() const
   if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_INT64))
   {
     value = g_variant_get_int64(variant_);
+  }
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_VARIANT))
+  {
+    value = Variant(g_variant_get_variant(variant_), StealRef()).GetInt64();
   }
   else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(x)")))
   {
@@ -159,6 +175,10 @@ uint64_t Variant::GetUInt64() const
   {
     value = g_variant_get_uint64(variant_);
   }
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_VARIANT))
+  {
+    value = Variant(g_variant_get_variant(variant_), StealRef()).GetUInt64();
+  }
   else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(t)")))
   {
     g_variant_get(variant_, "(t)", &value);
@@ -183,6 +203,10 @@ bool Variant::GetBool() const
   {
     value = g_variant_get_boolean(variant_);
   }
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_VARIANT))
+  {
+    value = Variant(g_variant_get_variant(variant_), StealRef()).GetBool();
+  }
   else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(b)")))
   {
     g_variant_get(variant_, "(b)", &value);
@@ -206,6 +230,10 @@ double Variant::GetDouble() const
   if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_DOUBLE))
   {
     value = g_variant_get_double(variant_);
+  }
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_VARIANT))
+  {
+    value = Variant(g_variant_get_variant(variant_), StealRef()).GetDouble();
   }
   else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(d)")))
   {
