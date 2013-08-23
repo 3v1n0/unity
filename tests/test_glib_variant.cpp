@@ -168,8 +168,8 @@ TEST(TestGLibVariant, HintsMap)
   EXPECT_EQ(hints["guint32-key"].GetUInt32(), (guint32)-2);
   EXPECT_EQ(hints["gint64-key"].GetInt64(), (gint64)-3);
   EXPECT_EQ(hints["guint64-key"].GetUInt64(), (guint64)-4);
-  EXPECT_EQ(hints["float-key"].GetFloat(), (float)1.1);
-  EXPECT_EQ(hints["double-key"].GetDouble(), (double)2.2);
+  EXPECT_FLOAT_EQ(hints["float-key"].GetFloat(), 1.1);
+  EXPECT_DOUBLE_EQ(hints["double-key"].GetDouble(), 2.2);
   EXPECT_EQ(hints["bool-key"].GetBool(), true);
 
   // throw away all references to the original variant
@@ -185,8 +185,8 @@ TEST(TestGLibVariant, HintsMap)
   EXPECT_EQ(hints["guint32-key"].GetUInt32(), (guint32)-2);
   EXPECT_EQ(hints["gint64-key"].GetInt64(), (gint64)-3);
   EXPECT_EQ(hints["guint64-key"].GetUInt64(), (guint64)-4);
-  EXPECT_EQ(hints["float-key"].GetFloat(), (float)1.1);
-  EXPECT_EQ(hints["double-key"].GetDouble(), (double)2.2);
+  EXPECT_FLOAT_EQ(hints["float-key"].GetFloat(), 1.1);
+  EXPECT_DOUBLE_EQ(hints["double-key"].GetDouble(), 2.2);
   EXPECT_EQ(hints["bool-key"].GetBool(), true);
 }
 
@@ -255,6 +255,24 @@ TEST(TestGLibVariant, GetBool)
   Variant v4;
   EXPECT_EQ(v4.GetBool(), false);
 }
+
+TEST(TestGLibVariant, GetVariant)
+{
+  Variant value(g_variant_new_uint32(g_random_int()));
+  Variant v1(g_variant_new_variant(value));
+  EXPECT_TRUE(ValuesEqual(v1.GetVariant(), value));
+
+  value = g_variant_new_boolean((g_random_int() % 2) ? TRUE : FALSE);
+  Variant v2(g_variant_new("(v)", static_cast<GVariant*>(value)));
+  EXPECT_TRUE(ValuesEqual(v2.GetVariant(), value));
+
+  Variant v3(g_variant_new("(vs)", static_cast<GVariant*>(value), "fooostring"));
+  EXPECT_FALSE(v3.GetVariant());
+
+  Variant v4;
+  EXPECT_FALSE(v4.GetVariant());
+}
+
 
 
 } // Namespace
