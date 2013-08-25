@@ -454,6 +454,17 @@ void Application::Quit() const
   }
 }
 
+bool Application::CreateLocalDesktopFile() const
+{
+  if (!desktop_file().empty())
+    return false;
+
+  glib::Object<BamfControl> control(bamf_control_get_default());
+  bamf_control_create_local_desktop_file(control, bamf_app_);
+
+  return true;
+}
+
 bool Application::GetSeen() const
 {
   return g_object_get_qdata(glib::object_cast<GObject>(bamf_app_),

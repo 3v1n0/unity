@@ -87,8 +87,9 @@ UnityStandalone::~UnityStandalone ()
 void UnityStandalone::Init ()
 {
   auto xdnd_manager = std::make_shared<XdndManager>();
-  launcher_controller = std::make_shared<launcher::Controller>(xdnd_manager);
-  panel_controller = std::make_shared<panel::Controller>();
+  auto edge_barriers = std::make_shared<ui::EdgeBarrierController>();
+  launcher_controller = std::make_shared<launcher::Controller>(xdnd_manager, edge_barriers);
+  panel_controller = std::make_shared<panel::Controller>(edge_barriers);
   dash_controller = std::make_shared<dash::Controller>();
 
   dash_controller->launcher_width = launcher_controller->launcher().GetAbsoluteWidth() - 1;
@@ -121,7 +122,8 @@ UnityStandaloneTV::~UnityStandaloneTV() {};
 void UnityStandaloneTV::Init()
 {
   auto xdnd_manager = std::make_shared<XdndManager>();
-  launcher_controller = std::make_shared<launcher::Controller>(xdnd_manager);
+  auto edge_barriers = std::make_shared<ui::EdgeBarrierController>();
+  launcher_controller = std::make_shared<launcher::Controller>(xdnd_manager, edge_barriers);
   dash_controller = std::make_shared<dash::Controller>();
   dash_controller->launcher_width = launcher_controller->launcher().GetAbsoluteWidth() - 1;
 

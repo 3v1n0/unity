@@ -124,6 +124,8 @@ public:
 
   virtual void Quit() const;
 
+  virtual bool CreateLocalDesktopFile() const;
+
   virtual std::string repr() const;
 
 private: // Property getters and setters

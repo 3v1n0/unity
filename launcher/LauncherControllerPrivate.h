@@ -50,7 +50,7 @@ namespace launcher
 class Controller::Impl : public sigc::trackable
 {
 public:
-  Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager);
+  Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager, ui::EdgeBarrierController::Ptr const& edge_barriers);
   ~Impl();
 
   void UpdateNumWorkspaces(int workspaces);
@@ -131,7 +131,7 @@ public:
   AbstractLauncherIcon::Ptr desktop_icon_;
 
 #ifdef USE_X11
-  ui::EdgeBarrierController edge_barriers_;
+  ui::EdgeBarrierController::Ptr edge_barriers_;
 #endif
 
   LauncherList launchers;

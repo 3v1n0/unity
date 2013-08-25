@@ -158,7 +158,7 @@ TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedKeepsStickyStatus)
   bool saved = false;
   usc->sticky = true;
   icon.position_saved.connect([&saved] {saved = true;});
-  ASSERT_TRUE(icon.IsSticky());
+  ASSERT_FALSE(icon.IsSticky());
 
   icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
   ASSERT_TRUE(icon.IsSticky());

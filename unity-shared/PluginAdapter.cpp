@@ -417,6 +417,11 @@ bool PluginAdapter::IsWallActive() const
   return m_Screen->grabExist("wall");
 }
 
+bool PluginAdapter::IsAnyWindowMoving() const
+{
+    return m_Screen->grabExist("move");
+}
+
 void PluginAdapter::InitiateExpo()
 {
   m_ExpoActionList.InitiateAll();

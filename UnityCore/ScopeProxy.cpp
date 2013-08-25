@@ -183,7 +183,7 @@ private:
         return;
       }
       if (data && data->callback)
-        data->callback(LocalResult(), ScopeHandledType::NOT_HANDLED, glib::HintsMap(), error);
+        data->callback(data->result, ScopeHandledType::NOT_HANDLED, glib::HintsMap(), error);
     }
     else if (data && data->callback)
     {
@@ -196,6 +196,7 @@ private:
       data->result.uri = glib::gchar_to_string(result.uri);
       data->callback(data->result, handled, hints, error);
     }
+    unity_protocol_activation_reply_raw_destroy(&result);
   }
   /////////////////////////////////////
 

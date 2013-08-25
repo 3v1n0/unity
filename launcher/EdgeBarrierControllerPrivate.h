@@ -35,6 +35,9 @@ struct EdgeBarrierController::Impl
   Impl(EdgeBarrierController *parent);
   ~Impl();
 
+  void AddSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor, std::vector<EdgeBarrierSubscriber*>& subscribers);
+  void RemoveSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor, std::vector<EdgeBarrierSubscriber*>& subscribers);
+
   void ResizeBarrierList(std::vector<nux::Geometry> const& layout);
   void SetupBarriers(std::vector<nux::Geometry> const& layout);
 
@@ -44,6 +47,7 @@ struct EdgeBarrierController::Impl
   void BarrierReset();
 
   bool EventIsInsideYBreakZone(BarrierEvent::Ptr const& event);
+  bool EventIsInsideXBreakZone(BarrierEvent::Ptr const& event);
 
   void AddEventFilter();
 
@@ -52,8 +56,12 @@ struct EdgeBarrierController::Impl
   static bool HandleEventCB(XEvent event, void* data);
   bool HandleEvent(XEvent event);
 
-  std::vector<PointerBarrierWrapper::Ptr> barriers_;
-  std::vector<EdgeBarrierSubscriber*> subscribers_;
+  std::vector<PointerBarrierWrapper::Ptr> vertical_barriers_;
+  std::vector<PointerBarrierWrapper::Ptr> horizontal_barriers_;
+
+  std::vector<EdgeBarrierSubscriber*> vertical_subscribers_;
+  std::vector<EdgeBarrierSubscriber*> horizontal_subscribers_;
+
   Decaymulator decaymulator_;
   glib::Source::UniquePtr release_timeout_;
   int xi2_opcode_;

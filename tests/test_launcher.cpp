@@ -205,7 +205,7 @@ TEST_F(TestLauncher, TestQuirksDuringDnd)
       .WillRepeatedly(Return(false));
 
   launcher_->DndStarted("");
-  Utils::WaitForTimeout(1);
+  Utils::WaitPendingEvents();
 
   EXPECT_FALSE(first->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT));
   EXPECT_FALSE(second->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT));
@@ -330,7 +330,7 @@ TEST_F(TestLauncher, DragLauncherIconCancelRestoresIconOrder)
   launcher_->HideDragWindow();
 
   // Let's wait the drag icon animation to be completed
-  Utils::WaitForTimeout(1);
+  Utils::WaitPendingEvents();
   EXPECT_EQ(launcher_->GetDraggedIcon(), nullptr);
 }
 
@@ -367,7 +367,7 @@ TEST_F(TestLauncher, DragLauncherIconSavesIconOrderIfPositionHasChanged)
   EXPECT_TRUE(model_saved);
 
   // Let's wait the drag icon animation to be completed
-  Utils::WaitForTimeout(1);
+  Utils::WaitUntilMSec([this] { return launcher_->GetDraggedIcon(); }, false, 2000);
   EXPECT_EQ(launcher_->GetDraggedIcon(), nullptr);
 }
 
@@ -411,7 +411,7 @@ TEST_F(TestLauncher, DragLauncherIconSavesIconOrderIfPositionHasNotChanged)
   EXPECT_FALSE(model_saved);
 
   // Let's wait the drag icon animation to be completed
-  Utils::WaitForTimeout(1);
+  Utils::WaitUntilMSec([this] { return launcher_->GetDraggedIcon(); }, false, 2000);
   EXPECT_EQ(launcher_->GetDraggedIcon(), nullptr);
 }
 

@@ -115,7 +115,7 @@ void LauncherDragWindow::StartAnimation()
 }
 
 bool LauncherDragWindow::OnAnimationTimeout()
-{ 
+{
   nux::Geometry const& geo = GetGeometry();
 
   int half_size = geo.width / 2;

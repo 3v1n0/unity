@@ -163,6 +163,7 @@ struct MockApplication : unity::Application
   MOCK_CONST_METHOD1(OwnsWindow, bool(Window));
   MOCK_CONST_METHOD0(GetSupportedMimeTypes, std::vector<std::string>());
   MOCK_CONST_METHOD0(GetFocusableWindow, unity::ApplicationWindowPtr());
+  MOCK_CONST_METHOD0(CreateLocalDesktopFile, bool());
   MOCK_CONST_METHOD2(Focus, void(bool, int));
   MOCK_CONST_METHOD0(Quit, void());
 

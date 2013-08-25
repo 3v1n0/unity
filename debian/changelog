@@ -1,3 +1,114 @@
+unity (7.1.0+13.10.20130822-0ubuntu1) saucy; urgency=low
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * Bump the build dependency on compiz to 0.9.10
+  * We now have indicator-keyboard - recommend it along other
+    indicators.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3476
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 22 Aug 2013 06:57:29 +0000
+
+unity (7.1.0+13.10.20130816.3-0ubuntu1) saucy; urgency=low
+
+  [ Michal Hruby ]
+  * Make sure we emit row_added signals for all rows present in a model
+    when changing a model Model::SetModel(). (LP: #1212580)
+
+  [ Andrew McCarthy ]
+  * added photo lens shortcut to the shortcuts hint window (lp:
+    #1069644). (LP: #1069644)
+
+  [ Stephen M. Webb ]
+  * added photo lens shortcut to the shortcuts hint window (lp:
+    #1069644). (LP: #1069644)
+  * removed debug output thatcould cause a potential security problem
+    (lp: #1051921). (LP: #1051921)
+
+  [ Nick Dedekind ]
+  * Don't re-add the rows for filters and categories if the model
+    changes.
+  * Fixed duplicate categories in scope caused by full resync on model
+    change. (LP: #1212945)
+
+  [ Chris Townsend ]
+  * Fix issue where the same app on different workspaces would not allow
+    alt-tab to work properly when trying to switch to the last used app
+    on the same workspace. (LP: #1211261)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3473
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 16 Aug 2013 11:47:59 +0000
+
+unity (7.1.0+13.10.20130813.1-0ubuntu1) saucy; urgency=low
+
+  [ Michal Hruby ]
+  * Fix a leak in scope activation. Pass the original result if the
+    activation fails.
+
+  [ Brandon Schaefer ]
+  * Fix ibus-anthy AP tests, due to a failing commit key Ctrl+J being
+    changed to now turn off/on the ibus-anthy engine. (LP: #1211464)
+  * Attempt to use more canonical words for the ibus AP tests, so we end
+    up with a more used word, vs one the might change. (LP: #1211501)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3466
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 13 Aug 2013 06:18:39 +0000
+
+unity (7.1.0+13.10.20130812.1-0ubuntu1) saucy; urgency=low
+
+  [ Brandon Schaefer ]
+  * Add ibus.py to the tests/autopilot/unity/emulators from
+    lp:autopilot. (LP: #1210661)
+  * Don't make the ScopeView/DashView/ScrollView Visible on start up
+    (bool wise, causing things to think its ok to render). (LP:
+    #1201631)
+  * Adds the ability to use the mouse in the switcher. (LP: #824965)
+
+  [ Andrea Azzarone ]
+  * Add edge barriers to unity::panel::PanelView. (LP: #931384)
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationLauncherIcon: Create a local desktop file when sticking
+    an app that has not Also make icon sticky only if both the icon
+    itself and the inner app is sticky as well. (LP: #1209320, #753305,
+    #765466, #754334, #704046)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3462
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 12 Aug 2013 06:49:01 +0000
+
+unity (7.1.0+13.10.20130809.1-0ubuntu1) saucy; urgency=low
+
+  [ Michal Hruby ]
+  * Send up-to-date form_factor also after waiting for proxy connection.
+
+  [ Chris Townsend ]
+  * Fix yet another regression in revno. 3381 where the Panel shadow is
+    not drawn when in Show Desktop mode by using
+    PluginAdapter::IsWindowOnTop() instead of the new
+    GetTopVisibleWindow(). Remove GetTopVisibleWindow() to get rid of
+    code duplication. (LP: #1203097)
+
+  [ Jeremy Bicha ]
+  * Adjust to rename of ubiquity-gtkui.desktop to ubiquity.desktop.
+
+  [ Marco Trevisan (Treviño) ]
+  * BamfApplicationManager: add support for desktop-file-updated signal
+    and use in AppIcon Now an ApplicationLauncherIcon can have its
+    .desktop file updated and when this happens it reloads the infos it
+    needs and updates the FavoriteStore accordingly.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3456
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 09 Aug 2013 11:50:47 +0000
+
 unity (7.1.0+13.10.20130805-0ubuntu1) saucy; urgency=low
 
   [ Andrea Azzarone ]

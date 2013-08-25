@@ -36,6 +36,7 @@ PointerBarrierWrapper::PointerBarrierWrapper()
   , smoothing(75)
   , max_velocity_multiplier(1.0f)
   , direction(BOTH)
+  , orientation(VERTICAL)
   , xi2_opcode_(0)
   , last_event_(0)
   , current_device_(0)
@@ -137,7 +138,7 @@ bool PointerBarrierWrapper::HandleBarrierEvent(XIBarrierEvent* barrier_event)
 {
   int velocity = GetEventVelocity(barrier_event);
   smoothing_accum_ += velocity;
-  smoothing_count_++;
+  ++smoothing_count_;
 
   current_device_ = barrier_event->deviceid;
 

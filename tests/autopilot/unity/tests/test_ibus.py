@@ -10,12 +10,10 @@
 
 from __future__ import absolute_import
 
-from autopilot.ibus import (
+from unity.emulators.ibus import (
     get_active_input_engines,
     set_active_engines,
     get_available_input_engines,
-    get_gconf_option,
-    set_gconf_option,
     get_ibus_bus,
     )
 from autopilot.matchers import Eventually
@@ -218,8 +216,8 @@ class IBusTestsPinyin(IBusWidgetScenariodTests):
         [
             ('photo', {'input': 'zhaopian ', 'result' : u'\u7167\u7247' }),
             ('internet', {'input': 'hulianwang ', 'result' : u'\u4e92\u8054\u7f51'}),
-            ('disk', {'input': 'cipan ', 'result' : u'\u78c1\u76d8' }),
-            ('disk_management', {'input': 'cipan guanli ', 'result' : u'\u78c1\u76d8\u7ba1\u7406' }),
+            ('hello', {'input': 'ninhao ', 'result' : u'\u60a8\u597d' }),
+            ('management', {'input': 'guanli ', 'result' : u'\u7ba1\u7406' }),
         ]
     )
 
@@ -266,7 +264,6 @@ class IBusTestsAnthy(IBusWidgetScenariodTests):
             ('user', {'input': 'yu-za- ', 'result' : u'\u30e6\u30fc\u30b6\u30fc' }),
         ],
         [
-            ('commit_j', {'commit_key': 'Ctrl+j'}),
             ('commit_enter', {'commit_key': 'Enter'}),
         ]
         )
@@ -329,7 +326,7 @@ class IBusTestsAnthyIgnore(IBusTests):
         self.activate_ibus(self.unity.dash.searchbar)
         self.keyboard.type("shisutemu ")
         self.keyboard.press_and_release("Tab")
-        self.keyboard.press_and_release("Ctrl+j")
+        self.keyboard.press_and_release("Enter")
         self.deactivate_ibus(self.unity.dash.searchbar)
         dash_search_string = self.unity.dash.search_string
 
