@@ -590,7 +590,7 @@ panel_service_init (PanelService *self)
       DBusConnection * conn = NULL;
       conn = dbus_connection_open(upstartsession, NULL);
       if (conn != NULL)
-    {
+        {
           priv->upstart = nih_dbus_proxy_new(NULL, conn,
                                              NULL,
                                              DBUS_PATH_UPSTART,
