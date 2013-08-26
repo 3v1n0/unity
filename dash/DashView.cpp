@@ -1262,6 +1262,15 @@ void DashView::OnScopeBarActivated(std::string const& id)
     return;
   }
 
+  if (IsCommandLensOpen() && scope_bar_->IsVisible())
+  {
+    scope_bar_->SetVisible(false);
+  }
+  else if (!scope_bar_->IsVisible())
+  {
+    scope_bar_->SetVisible(true);
+  }
+
   if (active_scope_view_.IsValid())
     active_scope_view_->SetVisible(false);
 
