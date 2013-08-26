@@ -42,7 +42,7 @@ enum ScopeHandledType
   HIDE_DASH,
   GOTO_DASH_URI,
   SHOW_PREVIEW,
-  DO_SEARCH
+  PERFORM_SEARCH
 };
 
 enum ScopeViewType

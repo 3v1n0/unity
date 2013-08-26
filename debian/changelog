@@ -1,3 +1,9 @@
+unity (7.1.0+13.10.20130822-0ubuntu2) UNRELEASED; urgency=low
+
+  * Support PERFORM_SEARCH activation response.
+
+ -- Pawel Stolowski <pawel.stolowski@ubuntu.com>  Mon, 26 Aug 2013 11:10:51 +0200
+
 unity (7.1.0+13.10.20130822-0ubuntu1) saucy; urgency=low
 
   [ Łukasz 'sil2100' Zemczak ]
@@ -41,12 +47,6 @@ unity (7.1.0+13.10.20130816.3-0ubuntu1) saucy; urgency=low
   * Automatic snapshot from revision 3473
 
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 16 Aug 2013 11:47:59 +0000
-
-unity (7.1.0+13.10.20130813.1-0ubuntu2ppa1~saucy) UNRELEASED; urgency=low
-
-  * Support DO_SEARCH activation response.
-
- -- Pawel Stolowski <pawel.stolowski@ubuntu.com>  Fri, 16 Aug 2013 17:00:52 +0200
 
 unity (7.1.0+13.10.20130813.1-0ubuntu1) saucy; urgency=low
 

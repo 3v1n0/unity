@@ -1316,7 +1316,7 @@ void DashView::OnResultActivatedReply(LocalResult const& local_result, ScopeHand
   {
     return;
   }
-  else if (type == DO_SEARCH)
+  else if (type == PERFORM_SEARCH)
   {
     auto it = hints.find("query");
     if (it != hints.end())
