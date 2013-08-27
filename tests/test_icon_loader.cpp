@@ -134,6 +134,19 @@ TEST_F(TestIconLoader, TestGetAnnotatedIcon)
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
 }
 
+TEST_F(TestIconLoader, TestGetColorizedIcon)
+{
+  LoadResult load_result;
+
+  int handle = icon_loader.LoadFromGIconString(". UnityProtocolAnnotatedIcon %7B'base-icon':%20%3C'cmake'%3E,%20'colorize-value':%20%3Cuint32%204278190335%3E%7D", -1, 48, sigc::mem_fun(load_result,
+        &LoadResult::IconLoaded));
+  handles_.push_back(handle);
+
+  Utils::WaitUntilMSec(load_result.got_callback);
+  EXPECT_TRUE(load_result.got_callback);
+  EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
+}
+
 TEST_F(TestIconLoader, TestGetOneIconManyTimes)
 {
   std::vector<LoadResult> results;
