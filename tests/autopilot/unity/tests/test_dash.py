@@ -15,6 +15,7 @@ from testtools.matchers import Equals, NotEquals, GreaterThan
 from time import sleep
 from tempfile import mkstemp
 from os import remove
+from subprocess import call
 
 from unity.tests import UnityTestCase
 
@@ -226,6 +227,9 @@ class DashMultiKeyTests(DashSearchInputTests):
         old_value = self.call_gsettings_cmd('get', 'org.gnome.libgnomekbd.keyboard', 'options')
         self.addCleanup(self.call_gsettings_cmd, 'set', 'org.gnome.libgnomekbd.keyboard', 'options', old_value)
         self.call_gsettings_cmd('set', 'org.gnome.libgnomekbd.keyboard', 'options', "['Compose key\tcompose:caps']")
+
+        # FIXME Setting this to just get past blocking... implmenting a better fix ASAP
+        call(["setxkbmap", "-option", "compose:rwin"])
 
         super(DashMultiKeyTests, self).setUp()
 
@@ -807,7 +811,7 @@ class PreviewInvocationTests(DashTestCase):
         """
         gettext.install("unity-scope-applications", unicode=True)
         scope = self.unity.dash.reveal_application_scope()
-        
+
         self.addCleanup(self.process_manager.close_all_app, "Character Map")
         self.addCleanup(self.unity.dash.ensure_hidden)
 
@@ -835,7 +839,7 @@ class PreviewInvocationTests(DashTestCase):
         gettext.install("unity-scope-applications", unicode=True)
         self.unity.dash.ensure_visible()
         scope = self.unity.dash.view.get_scopeview_by_name("home.scope")
-        
+
         self.addCleanup(self.process_manager.close_all_app, "Character Map")
         self.addCleanup(self.unity.dash.ensure_hidden)
 
@@ -965,7 +969,7 @@ class PreviewInvocationTests(DashTestCase):
 
         # wait for "More suggestions" category
         category = self.wait_for_category(scope, _("More suggestions"))
-        
+
         # wait for results
         self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0), timeout=20))
         results = category.get_results()
@@ -1121,7 +1125,7 @@ class PreviewClickCancelTests(DashTestCase):
 
         # wait for "Installed" category
         category = self.wait_for_category(scope, _("Installed"))
-        
+
         # wait for results
         self.assertThat(lambda: len(category.get_results()), Eventually(GreaterThan(0), timeout=20))
         results = category.get_results()
