@@ -526,17 +526,88 @@ private:
       idles.AddIdle([this] { return LoadIconComplete(this) != FALSE; });
     }
 
+    glib::Object<GdkPixbuf> ColorizeIcon(glib::Object<GdkPixbuf> const& pixbuf,
+                                         double red, double green, double blue,
+                                         double alpha)
+    {
+      int pixbuf_width = gdk_pixbuf_get_width(pixbuf);
+      int pixbuf_height = gdk_pixbuf_get_height(pixbuf);
+
+      nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32,
+                                        pixbuf_width, pixbuf_height);
+      std::shared_ptr<cairo_t> cr(cairo_graphics.GetContext(), cairo_destroy);
+
+      cairo_set_operator(cr.get(), CAIRO_OPERATOR_CLEAR);
+      cairo_paint(cr.get());
+
+      // paint the icon
+      cairo_set_operator(cr.get(), CAIRO_OPERATOR_OVER);
+      gdk_cairo_set_source_pixbuf(cr.get(), pixbuf, 0.0, 0.0);
+      cairo_paint(cr.get());
+
+      // colorize it
+      cairo_set_source_rgba(cr.get(), red, green, blue, 1.0);
+      // ATOP blends the original and source color, original alpha not affected
+      cairo_set_operator(cr.get(), CAIRO_OPERATOR_ATOP);
+      cairo_paint(cr.get());
+
+      if (alpha < 1.0)
+      {
+        cairo_set_operator(cr.get(), CAIRO_OPERATOR_DEST_OUT);
+        cairo_set_source_rgba(cr.get(), 0.0, 0.0, 0.0, 1.0 - alpha);
+        cairo_paint(cr.get());
+      }
+
+      // copy the result surface into pixbuf
+      glib::Object<GdkPixbuf> colorized_pixbuf(
+          gdk_pixbuf_get_from_surface(cairo_graphics.GetSurface(),
+                                      0, 0,
+                                      cairo_graphics.GetWidth(),
+                                      cairo_graphics.GetHeight()));
+
+      return colorized_pixbuf;
+    }
+
     void BaseIconLoaded(std::string const& base_icon_string,
                         int base_max_width, int base_max_height,
-                        glib::Object<GdkPixbuf> const& base_pixbuf,
+                        glib::Object<GdkPixbuf> const& base_icon,
                         glib::Object<UnityProtocolAnnotatedIcon> const& anno_icon)
     {
       helper_handle = 0;
-      if (base_pixbuf)
+      if (base_icon)
       {
+        glib::Object<GdkPixbuf> base_pixbuf = base_icon;
+
         LOG_DEBUG(logger) << "Base icon loaded: '" << base_icon_string << 
           "' size: " << gdk_pixbuf_get_width(base_pixbuf) << 'x' <<
                         gdk_pixbuf_get_height(base_pixbuf);
+
+        UnityProtocolCategoryType category = unity_protocol_annotated_icon_get_category(anno_icon);
+        guint32 colorize_value = unity_protocol_annotated_icon_get_colorize_value(anno_icon);
+        if (colorize_value != 0)
+        {
+          // extract rgba
+          double alpha = (colorize_value & 0xFF) / 255.;
+          colorize_value >>= 8;
+          double blue = (colorize_value & 0xFF) / 255.;
+          colorize_value >>= 8;
+          double green = (colorize_value & 0xFF) / 255.;
+          colorize_value >>= 8;
+          double red = (colorize_value & 0xFF) / 255.;
+
+          base_pixbuf = ColorizeIcon(base_pixbuf, red, green, blue, alpha);
+        }
+
+        // short-circuit if there's no text to overlay
+        if (category == UNITY_PROTOCOL_CATEGORY_TYPE_NONE &&
+            unity_protocol_annotated_icon_get_ribbon(anno_icon) == NULL)
+        {
+          // if the icon was requested to be smaller + colorized, we can cache
+          no_cache = false;
+          result = base_pixbuf;
+          idles.AddIdle([this] { return LoadIconComplete(this) != FALSE; });
+          return;
+        }
 
         int result_width, result_height, dest_x, dest_y;
         if (unity_protocol_annotated_icon_get_use_small_icon(anno_icon))
@@ -565,7 +636,6 @@ private:
                              result,
                              dest_x, dest_y);
         // FIXME: can we composite the pixbuf in helper thread?
-        UnityProtocolCategoryType category = unity_protocol_annotated_icon_get_category(anno_icon);
         auto helper_slot = sigc::bind(sigc::mem_fun(this, &IconLoaderTask::CategoryIconLoaded), anno_icon);
         int max_font_height;
         CalculateTextHeight(nullptr, &max_font_height);
