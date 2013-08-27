@@ -1,6 +1,6 @@
 unity (7.1.0+13.10.20130822-0ubuntu3) UNRELEASED; urgency=low
 
-  * Support PERFORM_SEARCH activation response; require libunity>=7.0.13.
+  * Support PERFORM_SEARCH activation response; require libunity>=7.1.0.
 
  -- Pawel Stolowski <pawel.stolowski@ubuntu.com>  Mon, 26 Aug 2013 11:29:29 +0200
 

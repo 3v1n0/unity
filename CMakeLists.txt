@@ -212,7 +212,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MAINTAINER_CXXFLAGS}")
 #
 # Compiz Plugins
 #
-set(UNITY_PROTOCOL_PRIVATE_DEPS unity-protocol-private>=7.0.13)
+set(UNITY_PROTOCOL_PRIVATE_DEPS unity-protocol-private>=7.1.0)
 set(UNITY_PLUGIN_SHARED_DEPS
     ${UNITY_PROTOCOL_PRIVATE_DEPS}
     atk
