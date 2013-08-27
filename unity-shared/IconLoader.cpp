@@ -325,7 +325,7 @@ private:
 
         nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32,
                                           pixbuf_width, pixbuf_height);
-        std::shared_ptr<cairo_t> cr(cairo_graphics.GetContext(), cairo_destroy);
+        cairo_t* cr = cairo_graphics.GetInternalContext();
 
         glib::Object<PangoLayout> layout;
         PangoContext* pango_context = NULL;
@@ -335,8 +335,8 @@ private:
 
         g_object_get(gtk_settings_get_default(), "gtk-font-name", &font, NULL);
         g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, NULL);
-        cairo_set_font_options(cr.get(), gdk_screen_get_font_options(screen));
-        layout = pango_cairo_create_layout(cr.get());
+        cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
+        layout = pango_cairo_create_layout(cr);
         std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font), pango_font_description_free);
         pango_font_description_set_weight(desc.get(), PANGO_WEIGHT_BOLD);
         int font_size = FONT_SIZE;
@@ -381,10 +381,10 @@ private:
         }
         pango_layout_set_width(layout, static_cast<int>(max_text_width * PANGO_SCALE));
 
-        cairo_set_operator(cr.get(), CAIRO_OPERATOR_CLEAR);
-        cairo_paint(cr.get());
+        cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+        cairo_paint(cr);
 
-        cairo_set_operator(cr.get(), CAIRO_OPERATOR_OVER);
+        cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
         // this should be #dd4814
         const double ORANGE_R = 0.86666;
@@ -392,14 +392,14 @@ private:
         const double ORANGE_B = 0.07843;
 
         // translate to make space for the shadow
-        cairo_save(cr.get());
-        cairo_translate(cr.get(), 1.0, 1.0);
+        cairo_save(cr);
+        cairo_translate(cr, 1.0, 1.0);
 
-        cairo_set_source_rgba(cr.get(), ORANGE_R, ORANGE_G, ORANGE_B, 1.0);
+        cairo_set_source_rgba(cr, ORANGE_R, ORANGE_G, ORANGE_B, 1.0);
 
         // base ribbon
-        cairo_rectangle(cr.get(), 0.0, 0.0, belt_w, belt_h);
-        cairo_fill_preserve(cr.get());
+        cairo_rectangle(cr, 0.0, 0.0, belt_w, belt_h);
+        cairo_fill_preserve(cr);
 
         // hightlight on left edge
         std::shared_ptr<cairo_pattern_t> pattern(
@@ -415,8 +415,8 @@ private:
         }
         cairo_pattern_add_color_stop_rgba(pattern.get(), 1.0, 1.0, 1.0, 1.0, 0.0);
 
-        cairo_set_source(cr.get(), pattern.get());
-        cairo_fill(cr.get());
+        cairo_set_source(cr, pattern.get());
+        cairo_fill(cr);
 
         if (has_emblem)
         {
@@ -441,21 +441,21 @@ private:
           const double CURVE_START_X = belt_w - category_pb_w - CURVE_CP5_X - EMBLEM_PADDING;
           //const double CURVE_END_X = CURVE_START_X + CURVE_X_MULT;
 
-          cairo_set_source_rgba(cr.get(), 1.0, 1.0, 1.0, 1.0);
+          cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
 
           // paint the curved area
-          cairo_move_to(cr.get(), CURVE_START_X, belt_h);
-          cairo_curve_to(cr.get(), CURVE_START_X + CURVE_CP1_X, belt_h,
+          cairo_move_to(cr, CURVE_START_X, belt_h);
+          cairo_curve_to(cr, CURVE_START_X + CURVE_CP1_X, belt_h,
                                    CURVE_START_X + CURVE_CP2_X, CURVE_Y1 * belt_h,
                                    CURVE_START_X + CURVE_CP3_X, CURVE_Y2 * belt_h);
-          cairo_line_to(cr.get(), CURVE_START_X + CURVE_CP4_X, CURVE_Y3 * belt_h);
-          cairo_curve_to(cr.get(), CURVE_START_X + CURVE_CP5_X, 0.0,
+          cairo_line_to(cr, CURVE_START_X + CURVE_CP4_X, CURVE_Y3 * belt_h);
+          cairo_curve_to(cr, CURVE_START_X + CURVE_CP5_X, 0.0,
                                    CURVE_START_X + CURVE_CP6_X, 0.0,
                                    CURVE_START_X + CURVE_CP7_X, 0.0);
-          cairo_line_to(cr.get(), belt_w, 0.0);
-          cairo_line_to(cr.get(), belt_w, belt_h);
-          cairo_close_path(cr.get());
-          cairo_fill(cr.get());
+          cairo_line_to(cr, belt_w, 0.0);
+          cairo_line_to(cr, belt_w, belt_h);
+          cairo_close_path(cr);
+          cairo_fill(cr);
 
           // and the highlight
           pattern.reset(cairo_pattern_create_linear(CURVE_START_X, 0.0, belt_w, 0.0),
@@ -463,45 +463,45 @@ private:
           cairo_pattern_add_color_stop_rgba(pattern.get(), 0.0, 1.0, 1.0, 1.0, 0.0);
           cairo_pattern_add_color_stop_rgba(pattern.get(), 0.95, 1.0, 1.0, 1.0, 0.0);
           cairo_pattern_add_color_stop_rgba(pattern.get(), 1.0, 0.0, 0.0, 0.0, 0.235294);
-          cairo_set_source(cr.get(), pattern.get());
-          cairo_rectangle(cr.get(), CURVE_START_X, 0.0, belt_w - CURVE_START_X, belt_h);
-          cairo_fill(cr.get());
+          cairo_set_source(cr, pattern.get());
+          cairo_rectangle(cr, CURVE_START_X, 0.0, belt_w - CURVE_START_X, belt_h);
+          cairo_fill(cr);
 
           // paint the emblem
           double category_pb_x = belt_w - category_pb_w - EMBLEM_PADDING - 1;
-          gdk_cairo_set_source_pixbuf(cr.get(), category_pixbuf,
+          gdk_cairo_set_source_pixbuf(cr, category_pixbuf,
                                       category_pb_x, (belt_h - category_pb_h) / 2);
-          cairo_paint(cr.get());
+          cairo_paint(cr);
         }
 
         // paint the text
-        cairo_set_source_rgba(cr.get(), 1.0, 1.0, 1.0, 1.0);
-        cairo_move_to(cr.get(), 0.0, belt_h / 2);
+        cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
+        cairo_move_to(cr, 0.0, belt_h / 2);
         pango_layout_get_pixel_size(layout, nullptr, &text_height);
         // current point is now in the middle of the stripe, need to translate
         // it, so that the text is centered
-        cairo_rel_move_to(cr.get(), 0.0, text_height / -2.0);
-        pango_cairo_show_layout(cr.get(), layout);
+        cairo_rel_move_to(cr, 0.0, text_height / -2.0);
+        pango_cairo_show_layout(cr, layout);
 
         // paint the shadow
-        cairo_restore(cr.get());
+        cairo_restore(cr);
 
         pattern.reset(cairo_pattern_create_linear(0.0, belt_h, 0.0, belt_h + SHADOW_BOTTOM_PADDING),
                       cairo_pattern_destroy);
         cairo_pattern_add_color_stop_rgba(pattern.get(), 0.0, 0.0, 0.0, 0.0, 0.235294);
         cairo_pattern_add_color_stop_rgba(pattern.get(), 1.0, 0.0, 0.0, 0.0, 0.0);
 
-        cairo_set_source(cr.get(), pattern.get());
+        cairo_set_source(cr, pattern.get());
 
-        cairo_rectangle(cr.get(), 0.0, belt_h, belt_w, SHADOW_BOTTOM_PADDING);
-        cairo_fill(cr.get());
+        cairo_rectangle(cr, 0.0, belt_h, belt_w, SHADOW_BOTTOM_PADDING);
+        cairo_fill(cr);
 
-        cairo_set_source_rgba(cr.get(), 0.0, 0.0, 0.0, 0.1);
-        cairo_rectangle(cr.get(), 0.0, 1.0, 1.0, belt_h);
-        cairo_fill(cr.get());
+        cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 0.1);
+        cairo_rectangle(cr, 0.0, 1.0, 1.0, belt_h);
+        cairo_fill(cr);
 
-        cairo_rectangle(cr.get(), belt_w, 1.0, 1.0, belt_h);
-        cairo_fill(cr.get());
+        cairo_rectangle(cr, belt_w, 1.0, 1.0, belt_h);
+        cairo_fill(cr);
 
         // FIXME: going from image_surface to pixbuf, and then to texture :(
         glib::Object<GdkPixbuf> detail_pb(
@@ -535,27 +535,27 @@ private:
 
       nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32,
                                         pixbuf_width, pixbuf_height);
-      std::shared_ptr<cairo_t> cr(cairo_graphics.GetContext(), cairo_destroy);
+      cairo_t* cr = cairo_graphics.GetInternalContext();
 
-      cairo_set_operator(cr.get(), CAIRO_OPERATOR_CLEAR);
-      cairo_paint(cr.get());
+      cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+      cairo_paint(cr);
 
       // paint the icon
-      cairo_set_operator(cr.get(), CAIRO_OPERATOR_OVER);
-      gdk_cairo_set_source_pixbuf(cr.get(), pixbuf, 0.0, 0.0);
-      cairo_paint(cr.get());
+      cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+      gdk_cairo_set_source_pixbuf(cr, pixbuf, 0.0, 0.0);
+      cairo_paint(cr);
 
       // colorize it
-      cairo_set_source_rgba(cr.get(), red, green, blue, 1.0);
+      cairo_set_source_rgba(cr, red, green, blue, 1.0);
       // ATOP blends the original and source color, original alpha not affected
-      cairo_set_operator(cr.get(), CAIRO_OPERATOR_ATOP);
-      cairo_paint(cr.get());
+      cairo_set_operator(cr, CAIRO_OPERATOR_ATOP);
+      cairo_paint(cr);
 
       if (alpha < 1.0)
       {
-        cairo_set_operator(cr.get(), CAIRO_OPERATOR_DEST_OUT);
-        cairo_set_source_rgba(cr.get(), 0.0, 0.0, 0.0, 1.0 - alpha);
-        cairo_paint(cr.get());
+        cairo_set_operator(cr, CAIRO_OPERATOR_DEST_OUT);
+        cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0 - alpha);
+        cairo_paint(cr);
       }
 
       // copy the result surface into pixbuf
