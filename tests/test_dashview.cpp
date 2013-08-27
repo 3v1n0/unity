@@ -51,6 +51,7 @@ namespace
 const char* scopes_default[] =  { "testscope1.scope",
                                   "testscope2.scope",
                                   "testscope3.scope",
+                                  "testscope4.scope",
                                   "commands.scope",
                                   NULL };
 
@@ -95,7 +96,7 @@ TEST_F(TestDashView, TestConstruct)
   Scopes::Ptr scopes(new MockGSettingsScopes(scopes_default));
   nux::ObjectPtr<MockDashView> view(new MockDashView(scopes, application_starter_));
 
-  EXPECT_EQ(view->scope_views_.size(), 4) << "Error: Incorrect number of scope views (" << view->scope_views_.size() << " != 4)";
+  EXPECT_EQ(view->scope_views_.size(), 5) << "Error: Incorrect number of scope views (" << view->scope_views_.size() << " != 5)";
 }
 
 
