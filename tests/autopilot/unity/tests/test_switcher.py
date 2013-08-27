@@ -626,6 +626,8 @@ class SwitcherDetailsMouseTests(SwitcherTestCase):
         y = self.unity.switcher.view.detail_icons[0].y + offset
 
         self.mouse.move(x,y)
+
+        self.mouse.click()
         self.mouse.click()
 
         self.assertProperty(char_win1, is_focused=True)
