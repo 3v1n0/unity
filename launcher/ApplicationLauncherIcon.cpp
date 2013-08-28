@@ -113,7 +113,7 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
   signals_conn_.Clear();
   app_ = app;
 
-  if (!app_)
+  if (!app)
     return;
 
   app_->seen = true;
@@ -855,7 +855,7 @@ void ApplicationLauncherIcon::UnStick()
     return;
 
   SimpleLauncherIcon::UnStick();
-  SetQuirk(Quirk::VISIBLE, app_->running());
+  SetQuirk(Quirk::VISIBLE, app_->visible());
   app_->sticky = false;
 
   if (!app_->running())
