@@ -89,12 +89,6 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launche
     return;
   }
 
-  icon_texture_ = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(
-    launcher->GetWidth(),
-    launcher->GetWidth(),
-    1,
-    nux::BITFMT_R8G8B8A8);
-
   auto* floating_icon = new SimpleLauncherIcon(GetIconType());
   AbstractLauncherIcon::Ptr floating_icon_ptr(floating_icon);
   floating_icon->icon_name = icon_name();
@@ -107,33 +101,26 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launche
   icon_name = "";
   SetQuirk(Quirk::VISIBLE, true);
 
-  drag_window_ = new LauncherDragWindow(icon_texture_,
-                                        std::bind (&Launcher::RenderIconToTexture,
-                                                   launcher.GetPointer(),
-                                                   _1,
-                                                   floating_icon_ptr,
-                                                   icon_texture_));
-
-  launcher->ForceReveal(true);
-
   auto const& icon_center = GetCenter(monitor);
+  auto rcb = std::bind(&Launcher::RenderIconToTexture, launcher.GetPointer(), _1, _2, floating_icon_ptr);
+  drag_window_ = new LauncherDragWindow(launcher->GetWidth(), rcb);
   drag_window_->SetBaseXY(start_x, start_y);
   drag_window_->SetAnimationTarget(icon_center.x, icon_center.y + (launcher->GetIconSize() / 2));
+
+  launcher->ForceReveal(true);
   drag_window_->ShowWindow(true);
 
-  auto cb = sigc::bind(sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnDragAnimationFinished), floating_icon->icon_name());
-  drag_window_->on_anim_completed_conn_ = drag_window_->anim_completed.connect(cb);
+  auto cb = sigc::bind(sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnDragAnimationFinished), launcher, floating_icon->icon_name());
+  drag_window_->anim_completed.connect(cb);
   drag_window_->StartSlowAnimation();
 }
 
-void SoftwareCenterLauncherIcon::OnDragAnimationFinished(std::string const& final_icon)
+void SoftwareCenterLauncherIcon::OnDragAnimationFinished(nux::ObjectPtr<Launcher> const& launcher, std::string const& final_icon)
 {
-  drag_window_->ShowWindow(false);
-  drag_window_ = nullptr;
-  launcher_->ForceReveal(false);
-  launcher_ = nullptr;
-  icon_texture_ = nullptr;
   icon_name = final_icon;
+  drag_window_->ShowWindow(false);
+  launcher->ForceReveal(false);
+  drag_window_ = nullptr;
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
     SetVisibleOnMonitor(i, true);

@@ -53,11 +53,10 @@ private:
   std::string GetActualDesktopFileAfterInstall();
   void OnFinished(GVariant *params);
   void OnPropertyChanged(GVariant* params);
-  void OnDragAnimationFinished(std::string const& final_icon);
+  void OnDragAnimationFinished(nux::ObjectPtr<Launcher> const& launcher, std::string const& final_icon);
 
   glib::DBusProxy::Ptr aptdaemon_trans_;
 
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> icon_texture_;
   nux::ObjectPtr<LauncherDragWindow> drag_window_;
   nux::ObjectPtr<Launcher> launcher_;
   bool finished_;

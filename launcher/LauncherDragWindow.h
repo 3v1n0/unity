@@ -38,8 +38,9 @@ class LauncherDragWindow : public nux::BaseWindow
 {
   NUX_DECLARE_OBJECT_TYPE(LauncherDragWindow, nux::BaseWindow);
 public:
-  LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture,
-                     std::function<void(nux::GraphicsEngine &)> const &deferred_icon_render_func);
+  typedef std::function<void(nux::GraphicsEngine&, nux::ObjectPtr<nux::IOpenGLBaseTexture> const&)> DeferredIconRenderer;
+
+  LauncherDragWindow(unsigned size, DeferredIconRenderer const&);
   ~LauncherDragWindow();
 
   void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
@@ -65,9 +66,9 @@ private:
   void StartAnimation();
   bool OnAnimationTimeout();
   void CancelDrag();
-  
+
   bool icon_rendered_;
-  std::function<void(nux::GraphicsEngine &)> deferred_icon_render_func_;
+  DeferredIconRenderer renderer_func_;
 
   float animation_speed_;
   bool cancelled_;
