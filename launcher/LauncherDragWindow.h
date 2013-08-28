@@ -38,6 +38,7 @@ class LauncherDragWindow : public nux::BaseWindow
 {
   NUX_DECLARE_OBJECT_TYPE(LauncherDragWindow, nux::BaseWindow);
 public:
+  typedef nux::ObjectPtr<LauncherDragWindow> Ptr;
   typedef std::function<void(nux::GraphicsEngine&, nux::ObjectPtr<nux::IOpenGLBaseTexture> const&)> DeferredIconRenderer;
 
   LauncherDragWindow(unsigned size, DeferredIconRenderer const&);
