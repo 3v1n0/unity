@@ -1313,7 +1313,7 @@ void DashView::OnScopeBarActivated(std::string const& id)
   QueueDraw();
 }
 
-void DashView::OnResultActivatedReply(LocalResult const& local_result, ScopeHandledType type, glib::HintsMap const&)
+void DashView::OnResultActivatedReply(LocalResult const& local_result, ScopeHandledType type, glib::HintsMap const& hints)
 {
   // We don't want to close the dash if there was another activation pending
   if (type == NOT_HANDLED)
@@ -1324,6 +1324,15 @@ void DashView::OnResultActivatedReply(LocalResult const& local_result, ScopeHand
   else if (type == SHOW_DASH)
   {
     return;
+  }
+  else if (type == PERFORM_SEARCH)
+  {
+    auto it = hints.find("query");
+    if (it != hints.end())
+    {
+      search_bar_->search_string = it->second.GetString();
+      return;
+    }
   }
 
   ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);

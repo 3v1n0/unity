@@ -144,7 +144,7 @@ Depends: ${misc:Depends},
          libglib2.0-dev,
          libsigc++-2.0-dev,
          libnux-4.0-dev (>= 4.0.2),
-         libunity-dev (>= 7.0.2~),
+         libunity-dev (>= 7.1.0~),
          libdee-dev,
 Description: Core library for the Unity interface - development files
  Unity is a desktop experience that sings. Designed by Canonical and the Ayatana
