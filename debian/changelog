@@ -1,8 +1,23 @@
-unity (7.1.0+13.10.20130822-0ubuntu3) UNRELEASED; urgency=low
+unity (7.1.0+13.10.20130828.1-0ubuntu1) saucy; urgency=low
 
+  [ Pawel Stolowski ]
   * Support PERFORM_SEARCH activation response; require libunity>=7.1.0.
 
- -- Pawel Stolowski <pawel.stolowski@ubuntu.com>  Mon, 26 Aug 2013 11:29:29 +0200
+  [ Michal Hruby ]
+  * Added support for colorizing UnityProtocolAnnotatedIcon.
+
+  [ Chris Townsend ]
+  * Do not display the scope bar at the bottom when the Command "Lens"
+    is opened as it's not really not a Lens/Scope. (LP: #1168019)
+
+  [ Brandon Schaefer ]
+  * Quick fix to enable the compose key which is turned off by default.
+    Finding a better fix soon. (LP: #1216979)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3481
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 28 Aug 2013 13:23:28 +0000
 
 unity (7.1.0+13.10.20130822-0ubuntu1) saucy; urgency=low
 
