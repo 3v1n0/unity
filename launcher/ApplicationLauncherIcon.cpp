@@ -545,12 +545,6 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
           break;
       }
     });
-
-    if (app_->sticky() && old_uri != new_uri)
-    {
-      UnStick();
-      Stick();
-    }
   }
   else if (app_->sticky())
   {
@@ -558,7 +552,17 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
   }
 
   if (old_uri != new_uri)
+  {
+    bool update_saved_uri = (!filename.empty() && app_->sticky());
+
+    if (update_saved_uri)
+      SimpleLauncherIcon::UnStick();
+
     uri_changed.emit(new_uri);
+
+    if (update_saved_uri)
+      SimpleLauncherIcon::Stick();
+  }
 }
 
 std::string ApplicationLauncherIcon::DesktopFile() const
