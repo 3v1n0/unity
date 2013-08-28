@@ -175,8 +175,19 @@ struct MockApplication : unity::Application
   }
 
   void SetRunState(bool state) {
+    if (running_ == state)
+      return;
+
     running_ = state;
-    running.changed.emit(state);
+    running.changed.emit(running_);
+  }
+
+  void SetVisibility(bool state) {
+    if (visible_ == state)
+      return;
+
+    visible_ = state;
+    visible.changed.emit(visible_);
   }
 
   bool SetSeen(bool const& param) {
