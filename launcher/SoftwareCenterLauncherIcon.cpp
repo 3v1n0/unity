@@ -79,8 +79,6 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launche
 {
   using namespace std::placeholders;
 
-  launcher_ = launcher;
-
   // FIXME: this needs testing, if there is no useful coordinates
   //        then do not animate
   if (start_x <= 0 && start_y <= 0)

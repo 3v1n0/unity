@@ -42,23 +42,20 @@ public:
                              std::string const& aptdaemon_trans_id,
                              std::string const& icon_path);
 
-  void Animate(nux::ObjectPtr<Launcher> const& launcher, int start_x, int start_y);
-
-  std::string GetName() const;
+  bool Animate(nux::ObjectPtr<Launcher> const& launcher, int start_x, int start_y);
 
 protected:
+  std::string GetName() const;
   void ActivateLauncherIcon(ActionArg arg);
 
 private:
   std::string GetActualDesktopFileAfterInstall();
   void OnFinished(GVariant *params);
   void OnPropertyChanged(GVariant* params);
-  void OnDragAnimationFinished(nux::ObjectPtr<Launcher> const& launcher, std::string const& final_icon);
+  void OnDragAnimationFinished(nux::ObjectPtr<Launcher> const&, std::string const&);
 
   glib::DBusProxy::Ptr aptdaemon_trans_;
-
-  nux::ObjectPtr<LauncherDragWindow> drag_window_;
-  nux::ObjectPtr<Launcher> launcher_;
+  LauncherDragWindow::Ptr drag_window_;
   bool finished_;
   bool needs_urgent_;
   std::string aptdaemon_trans_id_;
