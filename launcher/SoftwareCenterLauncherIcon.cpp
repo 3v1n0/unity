@@ -50,19 +50,19 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(ApplicationPtr const& app
                                                        std::string const& aptdaemon_trans_id,
                                                        std::string const& icon_path)
   : ApplicationLauncherIcon(app)
-  , aptdaemon_trans_("org.debian.apt",
-                     aptdaemon_trans_id,
-                     "org.debian.apt.transaction",
-                     G_BUS_TYPE_SYSTEM,
-                     G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START)
+  , aptdaemon_trans_(std::make_shared<glib::DBusProxy>("org.debian.apt",
+                                                       aptdaemon_trans_id,
+                                                       "org.debian.apt.transaction",
+                                                       G_BUS_TYPE_SYSTEM,
+                                                       G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START))
   , finished_(true)
   , needs_urgent_(false)
   , aptdaemon_trans_id_(aptdaemon_trans_id)
 {
   SetQuirk(Quirk::VISIBLE, false);
-  aptdaemon_trans_.Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
-  aptdaemon_trans_.Connect("Finished", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnFinished));
-  aptdaemon_trans_.GetProperty("Progress", [this] (GVariant *value) {
+  aptdaemon_trans_->Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
+  aptdaemon_trans_->Connect("Finished", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnFinished));
+  aptdaemon_trans_->GetProperty("Progress", [this] (GVariant *value) {
     int32_t progress = glib::Variant(value).GetInt32();
     SetProgress(progress/100.0f);
     SetQuirk(Quirk::PROGRESS, (progress > 0));
@@ -251,6 +251,8 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
     // failure condition, remove icon again
     UnStick();
   }
+
+  aptdaemon_trans_.reset();
 };
 
 void SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)

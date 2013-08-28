@@ -55,7 +55,7 @@ private:
   void OnPropertyChanged(GVariant* params);
   void OnDragAnimationFinished(std::string const& final_icon);
 
-  glib::DBusProxy aptdaemon_trans_;
+  glib::DBusProxy::Ptr aptdaemon_trans_;
 
   nux::ObjectPtr<nux::IOpenGLBaseTexture> icon_texture_;
   nux::ObjectPtr<LauncherDragWindow> drag_window_;
