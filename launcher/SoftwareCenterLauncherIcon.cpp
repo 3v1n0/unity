@@ -55,7 +55,7 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(ApplicationPtr const& app
                                                        "org.debian.apt.transaction",
                                                        G_BUS_TYPE_SYSTEM,
                                                        G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START))
-  , finished_(true)
+  , finished_(false)
   , needs_urgent_(false)
   , aptdaemon_trans_id_(aptdaemon_trans_id)
 {
@@ -75,7 +75,7 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(ApplicationPtr const& app
     tooltip_text = _("Waiting to install");
 }
 
-void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launcher, int start_x, int start_y)
+bool SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launcher, int start_x, int start_y)
 {
   using namespace std::placeholders;
 
@@ -84,13 +84,18 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launche
   if (start_x <= 0 && start_y <= 0)
   {
     SetQuirk(Quirk::VISIBLE, true);
-    return;
+    return true;
   }
+
+  int monitor = launcher->monitor();
+  auto const& icon_center = GetCenter(monitor);
+
+  if (icon_center.x == 0 && icon_center.y == 0)
+    return false;
 
   auto* floating_icon = new SimpleLauncherIcon(GetIconType());
   AbstractLauncherIcon::Ptr floating_icon_ptr(floating_icon);
   floating_icon->icon_name = icon_name();
-  int monitor = launcher->monitor();
 
   // Transform this in a spacer-icon and make it visible only on launcher's monitor
   for (unsigned i = 0; i < monitors::MAX; ++i)
@@ -99,7 +104,6 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launche
   icon_name = "";
   SetQuirk(Quirk::VISIBLE, true);
 
-  auto const& icon_center = GetCenter(monitor);
   auto rcb = std::bind(&Launcher::RenderIconToTexture, launcher.GetPointer(), _1, _2, floating_icon_ptr);
   drag_window_ = new LauncherDragWindow(launcher->GetWidth(), rcb);
   drag_window_->SetBaseXY(start_x, start_y);
@@ -111,6 +115,8 @@ void SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launche
   auto cb = sigc::bind(sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnDragAnimationFinished), launcher, floating_icon->icon_name());
   drag_window_->anim_completed.connect(cb);
   drag_window_->StartSlowAnimation();
+
+  return true;
 }
 
 void SoftwareCenterLauncherIcon::OnDragAnimationFinished(nux::ObjectPtr<Launcher> const& launcher, std::string const& final_icon)
@@ -251,7 +257,6 @@ void SoftwareCenterLauncherIcon::OnPropertyChanged(GVariant* params)
     if (progress < 100)
     {
       SetQuirk(Quirk::PROGRESS, true);
-      finished_ = false;
       tooltip_text = _("Installing…");
     }
 
