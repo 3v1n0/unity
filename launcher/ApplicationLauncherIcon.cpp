@@ -111,11 +111,11 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
   }
 
   signals_conn_.Clear();
+  app_ = app;
 
-  if (!app)
+  if (!app_)
     return;
 
-  app_ = app;
   app_->seen = true;
   SetupApplicationSignalsConnections();
 
@@ -725,7 +725,6 @@ void ApplicationLauncherIcon::UpdateDesktopQuickList()
   // any or they're filtered for the environment we're in
   const gchar** nicks = indicator_desktop_shortcuts_get_nicks(_desktop_shortcuts);
 
-  
   for (int index = 0; nicks[index]; ++index)
   {
     // Build a dbusmenu item for each nick that is the desktop
