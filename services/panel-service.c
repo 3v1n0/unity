@@ -157,11 +157,11 @@ panel_service_class_dispose (GObject *self)
   if (priv->upstart != NULL) 
     {
       int event_sent = 0;
-      event_sent = upstart_emit_event_sync(NULL, priv->upstart, "indicator-services-end", NULL, 0);
+      event_sent = upstart_emit_event_sync (NULL, priv->upstart, "indicator-services-end", NULL, 0);
       if (event_sent != 0)
          g_warning("Unable to signal for indicator services to start");
 
-      nih_unref(priv->upstart, NULL);
+      nih_unref (priv->upstart, NULL);
       priv->upstart = NULL;
     }
 
@@ -486,9 +486,9 @@ ready_signal (PanelService *self)
   if (PANEL_IS_SERVICE (self) && self->priv->upstart != NULL)
     {
       int event_sent = 0;
-      event_sent = upstart_emit_event_sync(NULL, self->priv->upstart, "indicator-services-start", NULL, 0);
+      event_sent = upstart_emit_event_sync (NULL, self->priv->upstart, "indicator-services-start", NULL, 0);
       if (event_sent != 0)
-         g_warning("Unable to signal for indicator services to start");
+         g_warning ("Unable to signal for indicator services to start");
     }
 
   return FALSE;
@@ -580,22 +580,22 @@ panel_service_init (PanelService *self)
 
   priv->gsettings = g_settings_new_with_path (COMPIZ_OPTION_SCHEMA, COMPIZ_OPTION_PATH);
   g_signal_connect (priv->gsettings, "changed::"MENU_TOGGLE_KEYBINDING_KEY,
-                    G_CALLBACK(on_keybinding_changed), self);
+                    G_CALLBACK (on_keybinding_changed), self);
 
   panel_service_update_menu_keybinding (self);
 
-  const gchar * upstartsession = g_getenv("UPSTART_SESSION");
+  const gchar * upstartsession = g_getenv ("UPSTART_SESSION");
   if (upstartsession != NULL)
     {
       DBusConnection * conn = NULL;
-      conn = dbus_connection_open(upstartsession, NULL);
+      conn = dbus_connection_open (upstartsession, NULL);
       if (conn != NULL)
         {
-          priv->upstart = nih_dbus_proxy_new(NULL, conn,
-                                             NULL,
-                                             DBUS_PATH_UPSTART,
-                                             NULL, NULL);
-          dbus_connection_unref(conn);
+          priv->upstart = nih_dbus_proxy_new (NULL, conn,
+                                              NULL,
+                                              DBUS_PATH_UPSTART,
+                                              NULL, NULL);
+          dbus_connection_unref (conn);
         }
     }
 
