@@ -44,8 +44,6 @@ public:
   LauncherDragWindow(unsigned size, DeferredIconRenderer const&);
   ~LauncherDragWindow();
 
-  void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
-
   void SetAnimationTarget(int x, int y);
   void StartQuickAnimation();
   void StartSlowAnimation();
@@ -55,12 +53,11 @@ public:
 
   sigc::signal<void> anim_completed;
   sigc::signal<void> drag_cancel_request;
-  connection::Wrapper on_anim_completed_conn_;
 
 protected:
+  void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
   bool InspectKeyEvent(unsigned int event_type, unsigned int keysym, const char* character);
   bool AcceptKeyNavFocus();
-
   virtual bool DrawContentOnNuxLayer() const;
 
 private:

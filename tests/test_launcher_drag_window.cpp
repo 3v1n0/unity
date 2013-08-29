@@ -36,29 +36,33 @@ namespace unity
 {
 namespace launcher
 {
+namespace
+{
+
 struct StubLauncherDragWindow : public LauncherDragWindow
 {
-  StubLauncherDragWindow(LauncherDragWindow::DeferredIconRenderer const& callback)
-   : LauncherDragWindow(ICON_SIZE, callback)
+  struct DrawCallback
+  {
+    MOCK_METHOD0(callback, void());
+  };
+
+  StubLauncherDragWindow()
+   : LauncherDragWindow(ICON_SIZE, std::bind(&DrawCallback::callback, &cb))
   {}
 
-protected:
   bool DrawContentOnNuxLayer() const { return false; }
+  using LauncherDragWindow::DrawContent;
+
+  DrawCallback cb;
 };
 
 struct TestLauncherDragWindow : public testing::Test
 {
   TestLauncherDragWindow()
-    : drag_window(new LauncherDragWindow(ICON_SIZE,
-                                         [](nux::GraphicsEngine &, nux::ObjectPtr<nux::IOpenGLBaseTexture> const&){}))
+    : drag_window(new StubLauncherDragWindow())
   {}
 
-  LauncherDragWindow::Ptr drag_window;
-};
-
-struct DrawCallback
-{
-  MOCK_METHOD0(callback, void());
+  nux::ObjectPtr<StubLauncherDragWindow> drag_window;
 };
 }
 
@@ -72,29 +76,19 @@ TEST_F(TestLauncherDragWindow, Construction)
 
 TEST_F(TestLauncherDragWindow, NoDrawOnConstruction)
 {
-  DrawCallback cb;
-
-  EXPECT_CALL(cb, callback()).Times(0);
-  drag_window = new StubLauncherDragWindow(std::bind(&DrawCallback::callback, &cb));
+  EXPECT_CALL(drag_window->cb, callback()).Times(0);
+  drag_window = new StubLauncherDragWindow();
 }
 
 TEST_F(TestLauncherDragWindow, DrawOnFirstPaint)
 {
-  DrawCallback cb;
-
-  drag_window = new StubLauncherDragWindow(std::bind(&DrawCallback::callback, &cb));
-  EXPECT_CALL(cb, callback()).Times(1);
-
+  EXPECT_CALL(drag_window->cb, callback()).Times(1);
   drag_window->DrawContent(*(nux::GetGraphicsDisplay()->GetGraphicsEngine()), false);
 }
 
 TEST_F(TestLauncherDragWindow, NoDrawOnSecondPaint)
 {
-  DrawCallback cb;
-
-  drag_window = new StubLauncherDragWindow(std::bind(&DrawCallback::callback, &cb));
-  EXPECT_CALL(cb, callback()).Times(1);
-
+  EXPECT_CALL(drag_window->cb, callback()).Times(1);
   drag_window->DrawContent(*(nux::GetGraphicsDisplay()->GetGraphicsEngine()), false);
   drag_window->DrawContent(*(nux::GetGraphicsDisplay()->GetGraphicsEngine()), false);
 }
@@ -134,4 +128,5 @@ TEST_F(TestLauncherDragWindow, CancelsOnWindowUnmapped)
   EXPECT_TRUE(drag_window->Cancelled());
 }
 
+}
 }
