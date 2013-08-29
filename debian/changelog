@@ -1,3 +1,13 @@
+unity (7.1.0+13.10.20130829.1-0ubuntu1) saucy; urgency=low
+
+  [ Brandon Schaefer ]
+  *  (LP: #1217592)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3483
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 29 Aug 2013 06:44:00 +0000
+
 unity (7.1.0+13.10.20130828.1-0ubuntu1) saucy; urgency=low
 
   [ Pawel Stolowski ]
