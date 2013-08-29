@@ -27,6 +27,7 @@
 
 #include "mock-application.h"
 #include "FavoriteStore.h"
+#include "MultiMonitor.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "Launcher.h"
 #include "PanelStyle.h"
@@ -41,22 +42,28 @@ namespace unity
 {
 namespace launcher
 {
+namespace
+{
+const std::string PRE_INSTALL_ICON = "sw-center-launcher-icon";
+const std::string FINAL_ICON = "softwarecenter";
+const std::string APP_NAME = "Ubuntu Software Center";
 const std::string LOCAL_DATA_DIR = BUILDDIR"/tests/data";
 const std::string USC_DESKTOP = LOCAL_DATA_DIR+"/applications/ubuntu-software-center.desktop";
 const std::string USC_APP_INSTALL_DESKTOP = "/usr/share/app-install/desktop/software-center:ubuntu-software-center.desktop";
+}
 
 struct TestSoftwareCenterLauncherIcon : testing::Test
 {
   TestSoftwareCenterLauncherIcon()
-     : usc(std::make_shared<MockApplication::Nice>(USC_APP_INSTALL_DESKTOP, "softwarecenter", "Ubuntu Software Center"))
-     , icon(usc, "/com/canonical/unity/test/object/path", "")
+     : usc(std::make_shared<MockApplication::Nice>(USC_APP_INSTALL_DESKTOP, FINAL_ICON, APP_NAME))
+     , icon(usc, "/com/canonical/unity/test/object/path", PRE_INSTALL_ICON)
   {}
 
   struct MockSoftwareCenterLauncherIcon : SoftwareCenterLauncherIcon
   {
     MockSoftwareCenterLauncherIcon(ApplicationPtr const& app,
-                                  std::string const& aptdaemon_trans_id,
-                                  std::string const& icon_path)
+                                   std::string const& aptdaemon_trans_id,
+                                   std::string const& icon_path)
       : SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path)
     {}
 
@@ -64,8 +71,21 @@ struct TestSoftwareCenterLauncherIcon : testing::Test
     using SoftwareCenterLauncherIcon::GetRemoteUri;
     using SoftwareCenterLauncherIcon::OnFinished;
     using SoftwareCenterLauncherIcon::OnPropertyChanged;
+    using SoftwareCenterLauncherIcon::drag_window_;
   };
 
+  nux::ObjectPtr<Launcher> CreateLauncher()
+  {
+    launcher_win = new MockableBaseWindow("");
+    nux::ObjectPtr<Launcher> launcher(new Launcher(launcher_win.GetPointer()));
+    launcher->options = Options::Ptr(new Options);
+    launcher->SetModel(LauncherModel::Ptr(new LauncherModel));
+    return launcher;
+  }
+
+  Settings settings;
+  panel::Style panel;
+  nux::ObjectPtr<MockableBaseWindow> launcher_win;
   MockApplication::Ptr usc;
   MockSoftwareCenterLauncherIcon icon;
 };
@@ -73,8 +93,9 @@ struct TestSoftwareCenterLauncherIcon : testing::Test
 TEST_F(TestSoftwareCenterLauncherIcon, Construction)
 {
   EXPECT_FALSE(icon.IsVisible());
-  EXPECT_EQ(icon.position(), AbstractLauncherIcon::Position::FLOATING);
-  EXPECT_EQ(icon.tooltip_text(), "Waiting to install");
+  EXPECT_EQ(AbstractLauncherIcon::Position::FLOATING, icon.position());
+  EXPECT_EQ("Waiting to install", icon.tooltip_text());
+  EXPECT_EQ(PRE_INSTALL_ICON, icon.icon_name());
 }
 
 TEST_F(TestSoftwareCenterLauncherIcon, DesktopFileTransformTrivial)
@@ -168,35 +189,60 @@ TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedUpdatesTooltip)
 {
   icon.tooltip_text = "FooText";
   icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
-  EXPECT_EQ("Ubuntu Software Center", icon.tooltip_text());
+  EXPECT_EQ(icon.tooltip_text(), usc->title());
 }
 
 TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedUpdatesIcon)
 {
   icon.icon_name = "foo-icon";
   icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
-  EXPECT_EQ("softwarecenter", icon.icon_name());
+  EXPECT_EQ(icon.icon_name(), usc->icon());
 }
 
-TEST_F(TestSoftwareCenterLauncherIcon, Animate)
+TEST_F(TestSoftwareCenterLauncherIcon, AnimateToInvalidPosition)
 {
-  ASSERT_FALSE(icon.IsVisible());
-
-  Settings settings;
-  panel::Style panel;
-  nux::ObjectPtr<MockableBaseWindow> win(new MockableBaseWindow(""));
-  nux::ObjectPtr<Launcher> launcher(new Launcher(win.GetPointer()));
-  launcher->options = Options::Ptr(new Options);
-  launcher->SetModel(LauncherModel::Ptr(new LauncherModel));
-
-  icon.Animate(launcher, 1, 2);
-  Utils::WaitForTimeoutMSec(500);
-
-  EXPECT_TRUE(icon.IsVisible());
+  EXPECT_FALSE(icon.Animate(CreateLauncher(), 1, 2));
+  EXPECT_FALSE(icon.IsVisible());
+  EXPECT_EQ(PRE_INSTALL_ICON, icon.icon_name());
 }
 
-struct InstallProgress : TestSoftwareCenterLauncherIcon, testing::WithParamInterface<int> {};
-INSTANTIATE_TEST_CASE_P(TestSoftwareCenterLauncherIcon, InstallProgress, testing::Range<int>(0, 99, 10));
+TEST_F(TestSoftwareCenterLauncherIcon, AnimateFromInvalidPosition)
+{
+  EXPECT_TRUE(icon.Animate(CreateLauncher(), 0, 0));
+  EXPECT_TRUE(icon.IsVisible());
+  EXPECT_EQ(PRE_INSTALL_ICON, icon.icon_name());
+}
+
+struct MultiMonitor : TestSoftwareCenterLauncherIcon, WithParamInterface<unsigned> {};
+INSTANTIATE_TEST_CASE_P(TestSoftwareCenterLauncherIcon, MultiMonitor, Range<unsigned>(0, monitors::MAX, 1));
+
+TEST_P(/*TestSoftwareCenterLauncherIcon*/MultiMonitor, Animate)
+{
+  auto launcher = CreateLauncher();
+  launcher->monitor = GetParam();
+  icon.SetCenter({1, 1, 0}, launcher->monitor(), nux::Geometry());
+  EXPECT_TRUE(icon.Animate(launcher, 2, 2));
+  EXPECT_TRUE(icon.IsVisible());
+  EXPECT_EQ("", icon.icon_name());
+
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+    ASSERT_EQ(static_cast<int>(i) == launcher->monitor(), icon.IsVisibleOnMonitor(i));
+
+  bool animated = false;
+  ASSERT_TRUE(icon.drag_window_);
+  icon.drag_window_->anim_completed.connect([&animated] { animated = true; });
+  Utils::WaitUntilMSec(animated);
+  ASSERT_TRUE(animated);
+
+  EXPECT_EQ(PRE_INSTALL_ICON, icon.icon_name());
+  EXPECT_FALSE(icon.drag_window_);
+
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+    ASSERT_TRUE(icon.IsVisibleOnMonitor(i));
+}
+
+struct InstallProgress : TestSoftwareCenterLauncherIcon, WithParamInterface<int> {};
+INSTANTIATE_TEST_CASE_P(TestSoftwareCenterLauncherIcon, InstallProgress, Range<int>(0, 99, 10));
 
 TEST_P(/*TestSoftwareCenterLauncherIcon*/InstallProgress, InstallEmblems)
 {

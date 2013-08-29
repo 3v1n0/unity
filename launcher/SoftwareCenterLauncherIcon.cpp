@@ -40,8 +40,6 @@ namespace launcher
 
 namespace
 {
-const std::string SOURCE_SHOW_TOOLTIP = "ShowTooltip";
-const std::string SOURCE_HIDE_TOOLTIP = "HideTooltip";
 const int INSTALL_TIP_DURATION = 1500;
 }
 
@@ -79,8 +77,6 @@ bool SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launche
 {
   using namespace std::placeholders;
 
-  // FIXME: this needs testing, if there is no useful coordinates
-  //        then do not animate
   if (start_x <= 0 && start_y <= 0)
   {
     SetQuirk(Quirk::VISIBLE, true);
@@ -123,8 +119,8 @@ void SoftwareCenterLauncherIcon::OnDragAnimationFinished(nux::ObjectPtr<Launcher
 {
   icon_name = final_icon;
   drag_window_->ShowWindow(false);
+  drag_window_.Release();
   launcher->ForceReveal(false);
-  drag_window_ = nullptr;
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
     SetVisibleOnMonitor(i, true);
@@ -233,9 +229,9 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
       _source_manager.AddTimeout(INSTALL_TIP_DURATION, [this] {
         HideTooltip();
         return false;
-      }, SOURCE_HIDE_TOOLTIP);
+      });
       return false;
-    }, SOURCE_SHOW_TOOLTIP);
+    });
   }
   else
   {
