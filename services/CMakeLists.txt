@@ -12,6 +12,10 @@ set(UNITY_PANEL_SERVICE_DEPS
     indicator3-0.4>=12.10.2
     x11
     libido3-0.1>=13.0.0
+    libupstart
+    libnih
+    libnih-dbus
+    dbus-1
 )
 
 pkg_check_modules(SERVICE_DEPS REQUIRED ${UNITY_PANEL_SERVICE_DEPS})

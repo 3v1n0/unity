@@ -32,6 +32,9 @@
 #include <X11/extensions/XInput2.h>
 #include <X11/XKBlib.h>
 
+#include <upstart.h>
+#include <nih/alloc.h>
+
 G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 
 #define GET_PRIVATE(o) \
@@ -75,6 +78,8 @@ struct _PanelServicePrivate
 
   IndicatorObjectEntry *pressed_entry;
   gboolean use_event;
+
+  NihDBusProxy * upstart;
 };
 
 /* Globals */
@@ -148,6 +153,17 @@ panel_service_class_dispose (GObject *self)
 
   g_idle_remove_by_data (self);
   gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, self);
+
+  if (priv->upstart != NULL) 
+    {
+      int event_sent = 0;
+      event_sent = upstart_emit_event_sync(NULL, priv->upstart, "indicator-services-end", NULL, 0);
+      if (event_sent != 0)
+         g_warning("Unable to signal for indicator services to start");
+
+      nih_unref(priv->upstart, NULL);
+      priv->upstart = NULL;
+    }
 
   if (GTK_IS_WIDGET (priv->menubar) &&
       gtk_widget_get_realized (GTK_WIDGET (priv->menubar)))
@@ -467,35 +483,12 @@ initial_resync (PanelService *self)
 static gboolean
 ready_signal (PanelService *self)
 {
-  if (PANEL_IS_SERVICE (self))
+  if (PANEL_IS_SERVICE (self) && self->priv->upstart != NULL)
     {
-      GError * error = NULL;
-      gchar * argv[] = {
-        "initctl",
-        "--session",
-        "--user",
-        "emit",
-        "--no-wait",
-        "indicators-loaded",
-        NULL,
-      };
-
-      g_spawn_async (NULL, /* Working Directory */
-                     argv,
-                     NULL, /* environment */
-                     G_SPAWN_SEARCH_PATH,
-                     NULL, NULL, /* child setup function */
-                     NULL, /* Pid */
-                     &error);
-
-      if (error)
-	      {
-          /* NOTE: When we get to the point where we can start
-             assuming upstart user sessions this can be escillated
-             to a warning or higher */
-          g_debug ("Unable to signal indicators-loaded to upstart: %s", error->message);
-          g_error_free (error);
-        }
+      int event_sent = 0;
+      event_sent = upstart_emit_event_sync(NULL, self->priv->upstart, "indicator-services-start", NULL, 0);
+      if (event_sent != 0)
+         g_warning("Unable to signal for indicator services to start");
     }
 
   return FALSE;
@@ -590,6 +583,25 @@ panel_service_init (PanelService *self)
                     G_CALLBACK(on_keybinding_changed), self);
 
   panel_service_update_menu_keybinding (self);
+
+  const gchar * upstartsession = g_getenv("UPSTART_SESSION");
+  if (upstartsession != NULL)
+    {
+      DBusConnection * conn = NULL;
+      conn = dbus_connection_open(upstartsession, NULL);
+      if (conn != NULL)
+        {
+          priv->upstart = nih_dbus_proxy_new(NULL, conn,
+                                             NULL,
+                                             DBUS_PATH_UPSTART,
+                                             NULL, NULL);
+          dbus_connection_unref(conn);
+        }
+    }
+
+  if (priv->upstart != NULL)
+    priv->upstart->auto_start = FALSE;
+
 }
 
 static gboolean
