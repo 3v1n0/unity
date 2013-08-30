@@ -59,7 +59,7 @@ TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
   glib::Object<GFile> location(g_file_new_for_uri(TRASH_URI.c_str()));
 
   glib::Error err;
-  trash_monitor_ = g_file_monitor_directory(location, G_FILE_MONITOR_NONE, nullptr, &err);
+  trash_monitor_ = g_file_monitor_directory(location, G_FILE_MONITOR_NONE, cancellable_, &err);
   g_file_monitor_set_rate_limit(trash_monitor_, 1000);
 
   if (err)
@@ -159,10 +159,11 @@ void TrashLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
   for (auto const& uri : dnd_data.Uris())
   {
     glib::Object<GFile> file(g_file_new_for_uri(uri.c_str()));
+    glib::Error error;
 
     /* Log ZG event when moving file to trash; this is requred by File Scope.
        See https://bugs.launchpad.net/unity/+bug/870150  */
-    if (g_file_trash(file, NULL, NULL))
+    if (g_file_trash(file, cancellable_, &error))
     {
       // based on nautilus zg event logging code
       glib::String origin(g_path_get_dirname(uri.c_str()));
@@ -188,6 +189,10 @@ void TrashLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
       g_ptr_array_add(events, event);
       zeitgeist_log_insert_events_no_reply(log, events, NULL);
       g_ptr_array_free(events, TRUE);
+    }
+    else
+    {
+      LOG_ERROR(logger) << "Impossible to trash file '" << uri << "': " << error;
     }
   }
 
