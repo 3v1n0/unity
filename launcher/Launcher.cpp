@@ -2099,11 +2099,9 @@ void Launcher::StartIconDrag(AbstractLauncherIcon::Ptr const& icon)
   _drag_icon_position = _model->IconIndex(icon);
 
   HideDragWindow();
-  _offscreen_drag_texture = nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(GetWidth(), GetWidth(), 1, nux::BITFMT_R8G8B8A8);
-  _drag_window = new LauncherDragWindow(_offscreen_drag_texture,
-                                        std::bind(&Launcher::RenderIconToTexture, this,
-                                                  _1,
-                                                  _drag_icon, _offscreen_drag_texture));
+
+  auto cb = std::bind(&Launcher::RenderIconToTexture, this, _1, _2, _drag_icon);
+  _drag_window = new LauncherDragWindow(GetWidth(), cb);
   ShowDragWindow();
 
   ubus_.SendMessage(UBUS_LAUNCHER_ICON_START_DND);
@@ -2135,10 +2133,9 @@ void Launcher::EndIconDrag()
         _model->Save();
       }
 
-      _drag_window->on_anim_completed_conn_ = _drag_window->anim_completed.connect(sigc::mem_fun(this, &Launcher::OnDragWindowAnimCompleted));
-
       auto const& icon_center = _drag_icon->GetCenter(monitor);
-      _drag_window->SetAnimationTarget(icon_center.x, icon_center.y),
+      _drag_window->SetAnimationTarget(icon_center.x, icon_center.y);
+      _drag_window->anim_completed.connect(sigc::mem_fun(this, &Launcher::OnDragWindowAnimCompleted));
       _drag_window->StartQuickAnimation();
     }
   }
@@ -2571,7 +2568,7 @@ AbstractLauncherIcon::Ptr Launcher::MouseIconIntersection(int x, int y) const
   return AbstractLauncherIcon::Ptr();
 }
 
-void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr const& icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture)
+void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, nux::ObjectPtr<nux::IOpenGLBaseTexture> const& texture, AbstractLauncherIcon::Ptr const& icon)
 {
   RenderArg arg;
   struct timespec current;
@@ -2596,11 +2593,8 @@ void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLaun
   GfxContext.GetRenderStates().GetBlend(alpha, src, dest);
   GfxContext.GetRenderStates().SetBlend(false);
 
-  GfxContext.QRP_Color(0,
-                      0,
-                      texture->GetWidth(),
-                      texture->GetHeight(),
-                      nux::Color(0.0f, 0.0f, 0.0f, 0.0f));
+  GfxContext.QRP_Color(0, 0, texture->GetWidth(), texture->GetHeight(),
+                       nux::color::Transparent);
 
   GfxContext.GetRenderStates().SetBlend(alpha, src, dest);
 

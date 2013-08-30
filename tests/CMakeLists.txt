@@ -24,6 +24,8 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope3.scope
                 ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope3.scope)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope4.scope
                 ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope4.scope)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/commands.scope
+                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/commands.scope)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/brownnoise.mp3
                 ${CMAKE_BINARY_DIR}/tests/data/unity/sounds/brownnoise.mp3 COPYONLY)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/pinknoise.mp3
@@ -34,7 +36,7 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/whitenoise.mp3
 #
 # Unit tests
 #
-set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.99.0")
+set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.99.0;libupstart;libnih;libnih-dbus;dbus-1")
 pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS})
 
 string (REPLACE ";" " " TEST_UNIT_DEPS_CFLAGS_OTHER "${TEST_UNIT_CFLAGS_OTHER}")

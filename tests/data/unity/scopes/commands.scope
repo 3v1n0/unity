@@ -1,0 +1,8 @@
+[Scope]
+DBusName=com.canonical.Unity.Test.Scope
+DBusPath=/com/canonical/unity/scope/commands
+Icon=
+Type=commands
+Name=Commands
+Description=This is an Ubuntu search plugin that enables information from local binaries to be searched and displayed in the Dash. If you do not wish to search this content source, you can disable this search plugin.
+SearchHint=Run a command

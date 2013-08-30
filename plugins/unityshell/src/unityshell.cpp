@@ -1207,9 +1207,8 @@ bool UnityWindow::handleEvent(XEvent *event)
           if (close_button_geo_.IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
           {
             window->close(0);
+            handled = true;
           }
-
-          handled = true;
         }
 
         if (middle_clicked_)
@@ -1219,10 +1218,10 @@ bool UnityWindow::handleEvent(XEvent *event)
               GetLayoutWindowGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root)))
           {
             window->close(0);
+            handled = true;
           }
 
           middle_clicked_ = false;
-          handled = true;
         }
       }
       break;

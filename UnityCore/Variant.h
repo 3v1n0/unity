@@ -56,6 +56,7 @@ public:
   bool GetBool() const;
   double GetDouble() const;
   float GetFloat() const;
+  Variant GetVariant() const;
 
   bool ASVToHints(HintsMap& hints) const;
   static Variant FromHints(HintsMap const& hints);

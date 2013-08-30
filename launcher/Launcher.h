@@ -107,7 +107,7 @@ public:
   };
 
   nux::ObjectPtr<nux::View> const& GetActiveTooltip() const;
-  nux::ObjectPtr<LauncherDragWindow> const& GetDraggedIcon() const;
+  LauncherDragWindow::Ptr const& GetDraggedIcon() const;
 
   virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -153,7 +153,7 @@ public:
 
   static const int ANIM_DURATION_SHORT;
 
-  void RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr const& icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
+  void RenderIconToTexture(nux::GraphicsEngine&, nux::ObjectPtr<nux::IOpenGLBaseTexture> const&, AbstractLauncherIcon::Ptr const&);
 
 #ifdef NUX_GESTURES_SUPPORT
   virtual nux::GestureDeliveryRequest GestureEvent(const nux::GestureEvent &event);
@@ -393,8 +393,7 @@ private:
   float _last_reveal_progress;
 
   nux::Point2 _mouse_position;
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
-  nux::ObjectPtr<LauncherDragWindow> _drag_window;
+  LauncherDragWindow::Ptr _drag_window;
   LauncherHideMachine _hide_machine;
   LauncherHoverMachine _hover_machine;
   TooltipManager tooltip_manager_;

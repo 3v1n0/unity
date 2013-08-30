@@ -41,16 +41,16 @@ namespace
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherDragWindow);
 
-LauncherDragWindow::LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture,
-                                       std::function<void(nux::GraphicsEngine &)> const &deferred_icon_render_func)
+LauncherDragWindow::LauncherDragWindow(unsigned size, DeferredIconRenderer const& renderer_func)
   : nux::BaseWindow("")
   , icon_rendered_(false)
-  , deferred_icon_render_func_(deferred_icon_render_func)
+  , renderer_func_(renderer_func)
   , animation_speed_(QUICK_ANIMATION_SPEED)
   , cancelled_(false)
-  , texture_(texture)
+  , texture_(nux::GetGraphicsDisplay()->GetGpuDevice()->CreateSystemCapableDeviceTexture(
+             size, size, 1, nux::BITFMT_R8G8B8A8))
 {
-  SetBaseSize(texture_->GetWidth(), texture_->GetHeight());
+  SetBaseSize(size, size);
 
   key_down.connect([this] (unsigned long, unsigned long keysym, unsigned long, const char*, unsigned short) {
     if (keysym == NUX_VK_ESCAPE)
@@ -158,7 +158,7 @@ LauncherDragWindow::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw
   // Render the icon if we haven't already
   if (!icon_rendered_)
   {
-    deferred_icon_render_func_ (GfxContext);
+    renderer_func_(GfxContext, texture_);
     icon_rendered_ = true;
   }
 
