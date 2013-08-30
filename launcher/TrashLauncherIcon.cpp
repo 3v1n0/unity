@@ -175,11 +175,15 @@ void TrashLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
       ZeitgeistEvent *event = zeitgeist_event_new_full(ZEITGEIST_ZG_DELETE_EVENT,
                                                        ZEITGEIST_ZG_USER_ACTIVITY,
                                                        ZEITGEIST_UNITY_ACTOR.c_str(),
+                                                       NULL,
                                                        subject, NULL);
       ZeitgeistLog *log = zeitgeist_log_get_default();
 
       // zeitgeist takes ownership of subject, event and log
-      zeitgeist_log_insert_events_no_reply(log, event, NULL);
+      GPtrArray *events = g_ptr_array_new();
+      g_ptr_array_add(events, event);
+      zeitgeist_log_insert_events_no_reply(log, events, NULL);
+      g_ptr_array_free(events, TRUE);
     }
   }
 
