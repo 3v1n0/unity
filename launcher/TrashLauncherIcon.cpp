@@ -24,7 +24,11 @@
 #include "config.h"
 #include <glib/gi18n-lib.h>
 #include <NuxCore/Logger.h>
+
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic push
 #include <zeitgeist.h>
+#pragma GCC diagnostic pop
 
 #include "QuicklistMenuItemLabel.h"
 #include "unity-shared/GnomeFileManager.h"
