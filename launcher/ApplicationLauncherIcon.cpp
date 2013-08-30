@@ -111,11 +111,11 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
   }
 
   signals_conn_.Clear();
+  app_ = app;
 
   if (!app)
     return;
 
-  app_ = app;
   app_->seen = true;
   SetupApplicationSignalsConnections();
 
@@ -545,12 +545,6 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
           break;
       }
     });
-
-    if (app_->sticky() && old_uri != new_uri)
-    {
-      UnStick();
-      Stick();
-    }
   }
   else if (app_->sticky())
   {
@@ -558,7 +552,17 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
   }
 
   if (old_uri != new_uri)
+  {
+    bool update_saved_uri = (!filename.empty() && app_->sticky());
+
+    if (update_saved_uri)
+      SimpleLauncherIcon::UnStick();
+
     uri_changed.emit(new_uri);
+
+    if (update_saved_uri)
+      SimpleLauncherIcon::Stick();
+  }
 }
 
 std::string ApplicationLauncherIcon::DesktopFile() const
@@ -725,7 +729,6 @@ void ApplicationLauncherIcon::UpdateDesktopQuickList()
   // any or they're filtered for the environment we're in
   const gchar** nicks = indicator_desktop_shortcuts_get_nicks(_desktop_shortcuts);
 
-  
   for (int index = 0; nicks[index]; ++index)
   {
     // Build a dbusmenu item for each nick that is the desktop
@@ -856,7 +859,7 @@ void ApplicationLauncherIcon::UnStick()
     return;
 
   SimpleLauncherIcon::UnStick();
-  SetQuirk(Quirk::VISIBLE, app_->running());
+  SetQuirk(Quirk::VISIBLE, app_->visible());
   app_->sticky = false;
 
   if (!app_->running())

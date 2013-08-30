@@ -280,9 +280,13 @@ TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopLessApplication)
 
 TEST_F(TestApplicationLauncherIcon, UnstickNotRunning)
 {
+  usc_app->SetRunState(false);
+  usc_app->SetVisibility(true);
+
   bool forgot = false;
-  usc_app->running_ = false;
+  bool removed = false;
   usc_icon->position_forgot.connect([&forgot] {forgot = true;});
+  usc_icon->remove.connect([&removed] (AbstractLauncherIcon::Ptr const&) { removed = true; });
 
   usc_icon->Stick();
   usc_icon->UnStick();
@@ -290,13 +294,18 @@ TEST_F(TestApplicationLauncherIcon, UnstickNotRunning)
   EXPECT_FALSE(usc_icon->IsSticky());
   EXPECT_FALSE(usc_icon->IsVisible());
   EXPECT_TRUE(forgot);
+  EXPECT_TRUE(removed);
 }
 
 TEST_F(TestApplicationLauncherIcon, UnstickRunning)
 {
+  usc_app->SetRunState(true);
+  usc_app->SetVisibility(true);
+
   bool forgot = false;
-  usc_app->running_ = true;
+  bool removed = false;
   usc_icon->position_forgot.connect([&forgot] {forgot = true;});
+  usc_icon->remove.connect([&removed] (AbstractLauncherIcon::Ptr const&) { removed = true; });
 
   usc_icon->Stick();
   usc_icon->UnStick();
@@ -304,6 +313,7 @@ TEST_F(TestApplicationLauncherIcon, UnstickRunning)
   EXPECT_FALSE(usc_icon->IsSticky());
   EXPECT_TRUE(usc_icon->IsVisible());
   EXPECT_TRUE(forgot);
+  EXPECT_FALSE(removed);
 }
 
 TEST_F(TestApplicationLauncherIcon, VisibleChanged)
@@ -390,6 +400,34 @@ TEST_F(TestApplicationLauncherIcon, UpdateDesktopEmptyForgetsIconPosition)
   EXPECT_TRUE(forgot);
 }
 
+TEST_F(TestApplicationLauncherIcon, UpdateDesktopEmptyForgetsIconPositionAndUpdatesUri)
+{
+  usc_icon->Stick(true);
+
+  bool forgot = false;
+  bool uri_updated = false;
+  bool saved = false;
+
+  usc_icon->position_forgot.connect([&forgot, &uri_updated] {
+    ASSERT_FALSE(uri_updated);
+    forgot = true;
+  });
+  usc_icon->uri_changed.connect([&forgot, &uri_updated] (std::string const&) {
+    ASSERT_TRUE(forgot);
+    uri_updated = true;
+  });
+  usc_icon->position_saved.connect([&saved] { saved = false; });
+
+  usc_app->desktop_file_ = "";
+  usc_app->desktop_file.changed.emit(usc_app->desktop_file_);
+
+  EXPECT_FALSE(usc_app->sticky());
+  EXPECT_FALSE(usc_icon->IsSticky());
+  EXPECT_TRUE(forgot);
+  EXPECT_TRUE(uri_updated);
+  EXPECT_FALSE(saved);
+}
+
 TEST_F(TestApplicationLauncherIcon, UpdateDesktopUpdatesIconUri)
 {
   bool updated = false;
@@ -408,14 +446,50 @@ TEST_F(TestApplicationLauncherIcon, UpdateDesktopUpdatesIconUri)
   EXPECT_TRUE(updated);
 }
 
-
 TEST_F(TestApplicationLauncherIcon, UpdateDesktopDoesntUpdatesIconUri)
 {
   bool updated = false;
-  usc_icon->uri_changed.connect([&updated] (std::string const& new_uri) { updated = true; });
+  usc_icon->uri_changed.connect([&updated] (std::string const&) { updated = true; });
   usc_app->desktop_file.changed.emit(usc_app->desktop_file_);
 
   EXPECT_FALSE(updated);
+}
+
+TEST_F(TestApplicationLauncherIcon, UpdateDesktopForgetsOldPositionUpdatesUriAndSavesAgain)
+{
+  usc_icon->Stick(true);
+
+  bool forgot = false;
+  bool uri_updated = false;
+  bool saved = false;
+  bool removed = false;
+
+  usc_icon->position_forgot.connect([&] {
+    ASSERT_FALSE(uri_updated);
+    ASSERT_FALSE(saved);
+    forgot = true;
+  });
+  usc_icon->uri_changed.connect([&] (std::string const&) {
+    ASSERT_FALSE(saved);
+    ASSERT_TRUE(forgot);
+    uri_updated = true;
+  });
+  usc_icon->position_saved.connect([&] {
+    ASSERT_TRUE(forgot);
+    ASSERT_TRUE(uri_updated);
+    saved = true;
+  });
+  usc_icon->remove.connect([&removed] (AbstractLauncherIcon::Ptr const&) { removed = true; });
+
+  usc_app->desktop_file_ = UM_DESKTOP;
+  usc_app->desktop_file.changed.emit(usc_app->desktop_file_);
+
+  ASSERT_FALSE(removed);
+  EXPECT_TRUE(usc_app->sticky());
+  EXPECT_TRUE(usc_icon->IsSticky());
+  EXPECT_TRUE(forgot);
+  EXPECT_TRUE(uri_updated);
+  EXPECT_TRUE(saved);
 }
 
 TEST_F(TestApplicationLauncherIcon, RemoteUri)

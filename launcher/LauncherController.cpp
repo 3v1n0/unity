@@ -528,8 +528,7 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
       // This will ensure that the center of the new icon is set, so that
       // the animation could be done properly.
       sources_.AddIdle([this, icon_x, icon_y, result] {
-        result->Animate(CurrentLauncher(), icon_x, icon_y);
-        return false;
+        return !result->Animate(CurrentLauncher(), icon_x, icon_y);
       });
     }
     else
