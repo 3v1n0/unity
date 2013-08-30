@@ -24,6 +24,10 @@
 #include "config.h"
 #include <glib/gi18n-lib.h>
 #include <NuxCore/Logger.h>
+// -Wunused-function applies to the entire translation unit,
+// #pragma GCC diagnostic push/pop doesn't affect it.  Boo.
+// Problem is the Vala-generated code in <zeitgeist.h> fails -Werror.
+#pragma GCC diagnostic warning "-Wunused-function"
 #include <zeitgeist.h>
 
 #include "QuicklistMenuItemLabel.h"
