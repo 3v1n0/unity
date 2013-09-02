@@ -24,13 +24,9 @@
 #include "config.h"
 #include <glib/gi18n-lib.h>
 #include <NuxCore/Logger.h>
-// -Wunused-function applies to the entire translation unit,
-// #pragma GCC diagnostic push/pop doesn't affect it.  Boo.
-// Problem is the Vala-generated code in <zeitgeist.h> fails -Werror.
-#pragma GCC diagnostic warning "-Wunused-function"
-#include <zeitgeist.h>
 
 #include "QuicklistMenuItemLabel.h"
+#include "unity-shared/ZeitgeistUtils.h"
 #include "unity-shared/GnomeFileManager.h"
 
 namespace unity
@@ -185,7 +181,7 @@ void TrashLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
       ZeitgeistLog *log = zeitgeist_log_get_default();
 
       // zeitgeist takes ownership of subject, event and log
-      GPtrArray *events = g_ptr_array_new();
+      GPtrArray *events = g_ptr_array_sized_new(1);
       g_ptr_array_add(events, event);
       zeitgeist_log_insert_events_no_reply(log, events, NULL);
       g_ptr_array_free(events, TRUE);
