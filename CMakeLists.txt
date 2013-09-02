@@ -233,7 +233,7 @@ set(UNITY_PLUGIN_SHARED_DEPS
     sigc++-2.0
     unity-misc>=0.4.0
     xpathselect>=1.2
-    zeitgeist-1.0>=0.3.18
+    zeitgeist-2.0
 )
 
 set(UNITY_PLUGIN_DEPS ${UNITY_PLUGIN_SHARED_DEPS})
