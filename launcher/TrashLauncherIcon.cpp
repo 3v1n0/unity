@@ -24,11 +24,11 @@
 #include "config.h"
 #include <glib/gi18n-lib.h>
 #include <NuxCore/Logger.h>
-
-#pragma GCC diagnostic ignored "-Wunused-function"
-#pragma GCC diagnostic push
+// -Wunused-function applies to the entire translation unit,
+// #pragma GCC diagnostic push/pop doesn't affect it.  Boo.
+// Problem is the Vala-generated code in <zeitgeist.h> fails -Werror.
+#pragma GCC diagnostic warning "-Wunused-function"
 #include <zeitgeist.h>
-#pragma GCC diagnostic pop
 
 #include "QuicklistMenuItemLabel.h"
 #include "unity-shared/GnomeFileManager.h"
@@ -37,9 +37,9 @@ namespace unity
 {
 namespace launcher
 {
-DECLARE_LOGGER(logger, "unity.launcher.icon.trash");
 namespace
 {
+  DECLARE_LOGGER(logger, "unity.launcher.icon.trash");
   const std::string ZEITGEIST_UNITY_ACTOR = "application://compiz.desktop";
   const std::string TRASH_URI = "trash:";
 }
