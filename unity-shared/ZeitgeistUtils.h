@@ -41,10 +41,13 @@ namespace zeitgeist
 {
 namespace workaround
 {
+namespace
+{
 void ___dummy_function()
 {
   (void) zeitgeist_event_constructv_full;
 }
+} // anonymous namespace
 } // workaround namespace
 } // zeitgeist namespace
 } // unity namespace

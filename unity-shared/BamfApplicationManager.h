@@ -24,7 +24,7 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
 
-#include "unity-shared/ApplicationManager.h"
+#include "unity-shared/DesktopApplicationManager.h"
 
 
 namespace unity
@@ -104,7 +104,7 @@ private:
 };
 
 
-class Application : public ::unity::Application, public View
+class Application : public ::unity::desktop::Application, public View
 {
 public:
   Application(ApplicationManager const& manager,
