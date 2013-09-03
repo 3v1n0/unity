@@ -1,3 +1,25 @@
+unity (7.1.0+13.10.20130903.1-0ubuntu1) saucy; urgency=low
+
+  [ Ted Gould ]
+  * Use libupstart for sending Upstart signals.
+
+  [ Stephen M. Webb ]
+  * moved to zeitgeist-2.0. (LP: #1197569)
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationLauncherIcon: make sure we unstick an icon, update its
+    URI and resave it in order Also improving a lot the
+    SoftwareCenterLauncherIcon code and the install behaviour. (LP:
+    #1218504, #1217849)
+
+  [ Chris Townsend ]
+  * Fix the code formatting introduced in revno. 3485.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3488
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 03 Sep 2013 06:37:05 +0000
+
 unity (7.1.0+13.10.20130829.1-0ubuntu1) saucy; urgency=low
 
   [ Brandon Schaefer ]
