@@ -145,6 +145,7 @@ if (GMOCK_LIB AND
        test_grabhandle.cpp
        test_gsettings_scopes.cpp
        test_desktop_utilities.cpp
+       test_desktop_application_subject.cpp
        test_indicator.cpp
        test_indicator_appmenu.cpp
        test_indicator_entry.cpp

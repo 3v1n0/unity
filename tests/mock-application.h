@@ -56,7 +56,7 @@ struct MockApplicationWindow : unity::ApplicationWindow
     ON_CALL(*this, window_id()).WillByDefault(Invoke([this] { return xid_; }));
     ON_CALL(*this, monitor()).WillByDefault(Invoke([this] { return monitor_; }));
     ON_CALL(*this, Focus()).WillByDefault(Invoke([this] { return LocalFocus(); }));
-    ON_CALL(*this, application()).WillByDefault(Invoke([this] { return unity::ApplicationPtr(); }));
+    ON_CALL(*this, application()).WillByDefault(Invoke([this] { return nullptr; }));
   }
 
   Window xid_;
