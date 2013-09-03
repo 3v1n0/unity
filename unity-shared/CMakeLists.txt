@@ -101,6 +101,7 @@ if (ENABLE_X_SUPPORT)
 
   # bamf application manager
   set (UNITY_SHARED_BAMF_SOURCES
+    DesktopApplicationManager.cpp
     BamfApplicationManager.cpp
     BamfApplicationManagerFactory.cpp
     )

@@ -31,12 +31,21 @@ namespace unity
 {
 namespace desktop
 {
+
 class Application : public ::unity::Application
 {
 public:
   virtual void LogEvent(ApplicationEventType, ApplicationSubjectPtr const&) const;
 };
 
+class ApplicationSubject : public ::unity::ApplicationSubject
+{
+public:
+  ApplicationSubject();
+
+private:
+  glib::Object<ZeitgeistSubject> subject_;
+};
 
 } // namespace desktop
 } // namespace unity
