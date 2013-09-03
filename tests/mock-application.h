@@ -142,7 +142,8 @@ struct MockApplication : unity::Application
       ON_CALL(*this, type()).WillByDefault(Invoke([this] { return type_; }));
       ON_CALL(*this, repr()).WillByDefault(Invoke([this] { return "MockApplication"; }));
       ON_CALL(*this, GetWindows()).WillByDefault(Invoke([this] { return windows_; }));
-      ON_CALL(*this, OwnsWindow(_)).WillByDefault(Invoke([this] (Window xid) { return LocalOwnsWindow(xid); }));
+      ON_CALL(*this, OwnsWindow(_)).WillByDefault(Invoke(this, &MockApplication::LocalOwnsWindow));
+      ON_CALL(*this, LogEvent(_,_)).WillByDefault(Invoke(this, &MockApplication::LocalLogEvent));
     }
 
   std::string desktop_file_;
@@ -156,6 +157,7 @@ struct MockApplication : unity::Application
   bool urgent_;
   unity::WindowList windows_;
   std::string type_;
+  std::vector<std::tuple<unity::ApplicationEventType, unity::ApplicationSubjectPtr>> actions_log_;
 
   MOCK_CONST_METHOD0(type, std::string());
   MOCK_CONST_METHOD0(repr, std::string());
@@ -164,6 +166,7 @@ struct MockApplication : unity::Application
   MOCK_CONST_METHOD0(GetSupportedMimeTypes, std::vector<std::string>());
   MOCK_CONST_METHOD0(GetFocusableWindow, unity::ApplicationWindowPtr());
   MOCK_CONST_METHOD0(CreateLocalDesktopFile, bool());
+  MOCK_CONST_METHOD2(LogEvent, void(unity::ApplicationEventType, unity::ApplicationSubjectPtr const&));
   MOCK_CONST_METHOD2(Focus, void(bool, int));
   MOCK_CONST_METHOD0(Quit, void());
 
@@ -172,6 +175,11 @@ struct MockApplication : unity::Application
     return std::find_if(std::begin(windows_), end, [window_id] (unity::ApplicationWindowPtr window) {
       return window->window_id() == window_id;
     }) != end;
+  }
+
+  void LocalLogEvent(unity::ApplicationEventType type, unity::ApplicationSubjectPtr const& subject)
+  {
+    actions_log_.push_back(std::make_tuple(type, subject));
   }
 
   void SetRunState(bool state) {
