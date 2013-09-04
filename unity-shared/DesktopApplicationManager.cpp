@@ -18,14 +18,57 @@
  */
 
 #include "DesktopApplicationManager.h"
+#include <NuxCore/Logger.h>
+#include <UnityCore/DesktopUtilities.h>
 
 namespace unity
 {
 namespace desktop
 {
+namespace
+{
+DECLARE_LOGGER(logger, "unity.appmanager.desktop");
+}
 
 void Application::LogEvent(ApplicationEventType type, ApplicationSubjectPtr const& subject) const
-{}
+{
+  const gchar* zg_event_interpretation = nullptr;
+
+  switch (type)
+  {
+    case ApplicationEventType::CREATE:
+      zg_event_interpretation = ZEITGEIST_ZG_CREATE_EVENT;
+      break;
+    case ApplicationEventType::DELETE:
+      zg_event_interpretation = ZEITGEIST_ZG_DELETE_EVENT;
+      break;
+    case ApplicationEventType::ACCESS:
+      zg_event_interpretation = ZEITGEIST_ZG_ACCESS_EVENT;
+      break;
+  }
+
+  auto const& desktop_id = DesktopUtilities::GetDesktopID(desktop_file());
+  const gchar* zg_event_actor = desktop_id.empty() ? nullptr : desktop_id.c_str();
+
+  glib::Object<ZeitgeistEvent> event(zeitgeist_event_new());
+  zeitgeist_event_set_interpretation(event, zg_event_interpretation);
+  zeitgeist_event_set_manifestation(event, ZEITGEIST_ZG_USER_ACTIVITY);
+  zeitgeist_event_set_actor(event, zg_event_actor);
+
+  auto dsubject = std::dynamic_pointer_cast<ApplicationSubject>(subject);
+  if (!dsubject) dsubject = std::make_shared<ApplicationSubject>(*subject);
+  zeitgeist_event_add_subject(event, *dsubject);
+
+  glib::Error error;
+  ZeitgeistLog *log = zeitgeist_log_get_default();
+  zeitgeist_log_insert_event_no_reply(log, event, &error);
+
+  if (error)
+  {
+    LOG_WARNING(logger) << "Impossible to log event for application " << title()
+                        << ": " << error;
+  }
+}
 
 ApplicationSubject::ApplicationSubject()
   : subject_(zeitgeist_subject_new())

@@ -24,7 +24,7 @@
 #include <NuxGraphics/XInputWindow.h>
 
 
-DECLARE_LOGGER(logger, "unity.appmanager.bamf");
+DECLARE_LOGGER(logger, "unity.appmanager.desktop.bamf");
 
 namespace unity
 {
