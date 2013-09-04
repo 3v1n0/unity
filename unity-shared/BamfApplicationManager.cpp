@@ -537,7 +537,7 @@ Manager::~Manager()
   LOG_TRACE(logger) << "Manager::~Manager";
 }
 
-ApplicationWindowPtr Manager::GetActiveWindow()
+ApplicationWindowPtr Manager::GetActiveWindow() const
 {
   // No transfer of ownership for bamf_matcher_get_active_window.
   BamfWindow* active_win = bamf_matcher_get_active_window(matcher_);
@@ -585,7 +585,7 @@ ApplicationWindowPtr Manager::GetActiveWindow()
   return nullptr;
 }
 
-ApplicationPtr Manager::GetApplicationForDesktopFile(std::string const& desktop_file)
+ApplicationPtr Manager::GetApplicationForDesktopFile(std::string const& desktop_file) const
 {
   glib::Object<BamfApplication> app(bamf_matcher_get_application_for_desktop_file(
     matcher_, desktop_file.c_str(), TRUE), glib::AddRef());
@@ -596,7 +596,7 @@ ApplicationPtr Manager::GetApplicationForDesktopFile(std::string const& desktop_
   return nullptr;
 }
 
-ApplicationPtr Manager::GetApplicationForWindow(Window xid)
+ApplicationPtr Manager::GetApplicationForWindow(Window xid) const
 {
   glib::Object<BamfApplication> app(bamf_matcher_get_application_for_xid(matcher_, xid),
                                     glib::AddRef());
@@ -606,7 +606,7 @@ ApplicationPtr Manager::GetApplicationForWindow(Window xid)
   return nullptr;
 }
 
-ApplicationList Manager::GetRunningApplications()
+ApplicationList Manager::GetRunningApplications() const
 {
   ApplicationList result;
   std::shared_ptr<GList> apps(bamf_matcher_get_applications(matcher_), g_list_free);

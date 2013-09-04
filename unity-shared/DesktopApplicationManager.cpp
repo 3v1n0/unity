@@ -65,8 +65,8 @@ void Application::LogEvent(ApplicationEventType type, ApplicationSubjectPtr cons
 
   if (error)
   {
-    LOG_WARNING(logger) << "Impossible to log event for application " << title()
-                        << ": " << error;
+    LOG_ERROR(logger) << "Impossible to log event for application " << title()
+                      << ": " << error;
   }
 }
 

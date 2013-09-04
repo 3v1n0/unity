@@ -297,10 +297,10 @@ struct MockApplicationManager : public unity::ApplicationManager
     app_manager.application_started.emit(app);
   }
 
-  MOCK_METHOD0(GetActiveWindow, unity::ApplicationWindowPtr());
-  MOCK_METHOD1(GetApplicationForDesktopFile, unity::ApplicationPtr(std::string const&));
-  MOCK_METHOD0(GetRunningApplications, unity::ApplicationList());
-  MOCK_METHOD1(GetApplicationForWindow, unity::ApplicationPtr(Window));
+  MOCK_CONST_METHOD0(GetActiveWindow, unity::ApplicationWindowPtr());
+  MOCK_CONST_METHOD1(GetApplicationForDesktopFile, unity::ApplicationPtr(std::string const&));
+  MOCK_CONST_METHOD0(GetRunningApplications, unity::ApplicationList());
+  MOCK_CONST_METHOD1(GetApplicationForWindow, unity::ApplicationPtr(Window));
 
   unity::ApplicationPtr LocalGetApplicationForDesktopFile(std::string const& desktop_file)
   {

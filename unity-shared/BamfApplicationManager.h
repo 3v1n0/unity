@@ -151,13 +151,10 @@ public:
   Manager();
   ~Manager();
 
-  ApplicationWindowPtr GetActiveWindow() override;
-
-  ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) override;
-
-  ApplicationList GetRunningApplications() override;
-
-  ApplicationPtr GetApplicationForWindow(Window xid) override;
+  ApplicationWindowPtr GetActiveWindow() const override;
+  ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) const override;
+  ApplicationList GetRunningApplications() const override;
+  ApplicationPtr GetApplicationForWindow(Window xid) const override;
 
 private:
   void OnViewOpened(BamfMatcher* matcher, BamfView* view);

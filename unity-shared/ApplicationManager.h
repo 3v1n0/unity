@@ -140,21 +140,16 @@ public:
 class ApplicationManager
 {
 public:
-  virtual ~ApplicationManager() {}
+  virtual ~ApplicationManager() = default;
 
   static ApplicationManager& Default();
 
-  virtual ApplicationWindowPtr GetActiveWindow() = 0;
-
-  virtual ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) = 0;
-
-  virtual ApplicationList GetRunningApplications() = 0;
-
-  virtual ApplicationPtr GetApplicationForWindow(Window xid) = 0;
-
+  virtual ApplicationWindowPtr GetActiveWindow() const = 0;
+  virtual ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) const = 0;
+  virtual ApplicationList GetRunningApplications() const = 0;
+  virtual ApplicationPtr GetApplicationForWindow(Window xid) const = 0;
 
   sigc::signal<void, ApplicationPtr const&> application_started;
-
   sigc::signal<void, ApplicationPtr const&> active_application_changed;
   sigc::signal<void, ApplicationWindowPtr const&> active_window_changed;
 };
