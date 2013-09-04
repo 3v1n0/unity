@@ -130,6 +130,7 @@ if (GMOCK_LIB AND
 # The actual test executable (xless) - do not put anything that requires X in here
   set (GTEST_XLESS_SOURCES
        test_main_xless.cpp
+       mock-application.cpp
        test_abstract_interface_generator.cpp
        test_connection_manager.cpp
        test_glib_dbus_object.cpp
