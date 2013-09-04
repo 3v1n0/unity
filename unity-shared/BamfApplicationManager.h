@@ -151,6 +151,7 @@ public:
   Manager();
   ~Manager();
 
+  ApplicationPtr GetUnityApplication() const override;
   ApplicationWindowPtr GetActiveWindow() const override;
   ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) const override;
   ApplicationList GetRunningApplications() const override;

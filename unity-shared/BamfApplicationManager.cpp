@@ -537,6 +537,11 @@ Manager::~Manager()
   LOG_TRACE(logger) << "Manager::~Manager";
 }
 
+ApplicationPtr Manager::GetUnityApplication() const
+{
+  return nullptr;
+}
+
 ApplicationWindowPtr Manager::GetActiveWindow() const
 {
   // No transfer of ownership for bamf_matcher_get_active_window.

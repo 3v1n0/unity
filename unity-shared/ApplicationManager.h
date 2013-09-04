@@ -144,6 +144,7 @@ public:
 
   static ApplicationManager& Default();
 
+  virtual ApplicationPtr GetUnityApplication() const = 0;
   virtual ApplicationWindowPtr GetActiveWindow() const = 0;
   virtual ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) const = 0;
   virtual ApplicationList GetRunningApplications() const = 0;

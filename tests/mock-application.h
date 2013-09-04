@@ -282,6 +282,7 @@ struct MockApplicationManager : public unity::ApplicationManager
 
   MockApplicationManager()
   {
+    ON_CALL(*this, GetUnityApplication()).WillByDefault(Invoke(this, &MockApplicationManager::LocalGetUnityApplication));
     ON_CALL(*this, GetApplicationForDesktopFile(_)).WillByDefault(Invoke(this, &MockApplicationManager::LocalGetApplicationForDesktopFile));
     ON_CALL(*this, GetActiveWindow()).WillByDefault(Invoke([this] { return unity::ApplicationWindowPtr(); } ));
     ON_CALL(*this, GetRunningApplications()).WillByDefault(Invoke([this] { return unity::ApplicationList(); } ));
@@ -297,6 +298,7 @@ struct MockApplicationManager : public unity::ApplicationManager
     app_manager.application_started.emit(app);
   }
 
+  MOCK_CONST_METHOD0(GetUnityApplication, unity::ApplicationPtr());
   MOCK_CONST_METHOD0(GetActiveWindow, unity::ApplicationWindowPtr());
   MOCK_CONST_METHOD1(GetApplicationForDesktopFile, unity::ApplicationPtr(std::string const&));
   MOCK_CONST_METHOD0(GetRunningApplications, unity::ApplicationList());
@@ -325,6 +327,17 @@ struct MockApplicationManager : public unity::ApplicationManager
     {
       return iter->second;
     }
+  }
+
+  unity::ApplicationPtr LocalGetUnityApplication() const
+  {
+    static unity::ApplicationPtr unity(new MockApplication);
+    auto unity_mock = std::static_pointer_cast<MockApplication>(unity);
+    unity_mock->desktop_file_ = "compiz.desktop";
+    unity_mock->title_ = "Unity Desktop";
+    unity_mock->running_ = true;
+
+    return unity;
   }
 
 private:
