@@ -241,6 +241,41 @@ struct MockApplication : unity::Application
   }
 };
 
+struct MockApplicationSubject : unity::ApplicationSubject
+{
+  MockApplicationSubject()
+  {
+    uri.SetSetterFunction([this] (std::string const& val) { if (val == uri_) return false; uri_ = val; return true; });
+    uri.SetGetterFunction([this] { return uri_; });
+    origin.SetSetterFunction([this] (std::string const& val) { if (val == origin_) return false; origin_ = val; return true; });
+    origin.SetGetterFunction([this] { return origin_; });
+    text.SetSetterFunction([this] (std::string const& val) { if (val == text_) return false; text_ = val; return true; });
+    text.SetGetterFunction([this] { return text_; });
+    storage.SetSetterFunction([this] (std::string const& val) { if (val == storage_) return false; storage_ = val; return true; });
+    storage.SetGetterFunction([this] { return storage_; });
+    current_uri.SetSetterFunction([this] (std::string const& val) { if (val == current_uri_) return false; current_uri_ = val; return true; });
+    current_uri.SetGetterFunction([this] { return current_uri_; });
+    current_origin.SetSetterFunction([this] (std::string const& val) { if (val == current_origin_) return false; current_origin_ = val; return true; });
+    current_origin.SetGetterFunction([this] { return current_origin_; });
+    mimetype.SetSetterFunction([this] (std::string const& val) { if (val == mimetype_) return false; mimetype_ = val; return true; });
+    mimetype.SetGetterFunction([this] { return mimetype_; });
+    interpretation.SetSetterFunction([this] (std::string const& val) { if (val == interpretation_) return false; interpretation_ = val; return true; });
+    interpretation.SetGetterFunction([this] { return interpretation_; });
+    manifestation.SetSetterFunction([this] (std::string const& val) { if (val == manifestation_) return false; manifestation_ = val; return true; });
+    manifestation.SetGetterFunction([this] { return manifestation_; });
+  }
+
+  std::string uri_;
+  std::string origin_;
+  std::string text_;
+  std::string storage_;
+  std::string current_uri_;
+  std::string current_origin_;
+  std::string mimetype_;
+  std::string interpretation_;
+  std::string manifestation_;
+};
+
 struct MockApplicationManager : public unity::ApplicationManager
 {
   typedef NiceMock<MockApplicationManager> Nice;
