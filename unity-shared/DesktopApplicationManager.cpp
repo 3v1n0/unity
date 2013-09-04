@@ -24,7 +24,7 @@ namespace unity
 namespace desktop
 {
 
-void Application::LogEvent(ApplicationEventType, ApplicationSubjectPtr const&) const
+void Application::LogEvent(ApplicationEventType type, ApplicationSubjectPtr const& subject) const
 {}
 
 ApplicationSubject::ApplicationSubject()
@@ -137,6 +137,29 @@ ApplicationSubject::ApplicationSubject()
     }
     return false;
   });
+}
+
+ApplicationSubject::ApplicationSubject(desktop::ApplicationSubject const& other)
+  : ApplicationSubject(static_cast<::unity::ApplicationSubject const&>(other))
+{}
+
+ApplicationSubject::ApplicationSubject(::unity::ApplicationSubject const& other)
+  : ApplicationSubject()
+{
+  uri = other.uri();
+  origin = other.origin();
+  text = other.text();
+  storage = other.storage();
+  current_uri = other.current_uri();
+  current_origin = other.current_origin();
+  mimetype = other.mimetype();
+  interpretation = other.interpretation();
+  manifestation = other.manifestation();
+}
+
+ApplicationSubject::operator ZeitgeistSubject*() const
+{
+  return subject_;
 }
 
 } // namespace desktop

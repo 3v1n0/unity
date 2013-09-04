@@ -42,6 +42,10 @@ class ApplicationSubject : public ::unity::ApplicationSubject
 {
 public:
   ApplicationSubject();
+  ApplicationSubject(desktop::ApplicationSubject const&);
+  ApplicationSubject(::unity::ApplicationSubject const&);
+
+  operator ZeitgeistSubject*() const;
 
 private:
   glib::Object<ZeitgeistSubject> subject_;
