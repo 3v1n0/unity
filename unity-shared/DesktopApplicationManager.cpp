@@ -79,108 +79,99 @@ ApplicationSubject::ApplicationSubject()
     return glib::gchar_to_string(zeitgeist_subject_get_uri(subject_));
   });
   uri.SetSetterFunction([this] (std::string const& new_val) {
-    if (uri() != new_val)
-    {
-      zeitgeist_subject_set_uri(subject_, new_val.c_str());
-      return true;
-    }
-    return false;
+    if (uri() == new_val)
+      return false;
+
+    zeitgeist_subject_set_uri(subject_, new_val.c_str());
+    return true;
   });
 
   origin.SetGetterFunction([this] {
     return glib::gchar_to_string(zeitgeist_subject_get_origin(subject_));
   });
   origin.SetSetterFunction([this] (std::string const& new_val) {
-    if (origin() != new_val)
-    {
-      zeitgeist_subject_set_origin(subject_, new_val.c_str());
-      return true;
-    }
-    return false;
+    if (origin() == new_val)
+      return false;
+
+    zeitgeist_subject_set_origin(subject_, new_val.c_str());
+    return true;
   });
 
   text.SetGetterFunction([this] {
     return glib::gchar_to_string(zeitgeist_subject_get_text(subject_));
   });
   text.SetSetterFunction([this] (std::string const& new_val) {
-    if (text() != new_val)
-    {
-      zeitgeist_subject_set_text(subject_, new_val.c_str());
-      return true;
-    }
-    return false;
+    if (text() == new_val)
+      return false;
+
+    zeitgeist_subject_set_text(subject_, new_val.c_str());
+    return true;
   });
 
   storage.SetGetterFunction([this] {
     return glib::gchar_to_string(zeitgeist_subject_get_storage(subject_));
   });
   storage.SetSetterFunction([this] (std::string const& new_val) {
-    if (storage() != new_val)
-    {
-      zeitgeist_subject_set_storage(subject_, new_val.c_str());
-      return true;
-    }
-    return false;
+    if (storage() == new_val)
+      return false;
+
+    zeitgeist_subject_set_storage(subject_, new_val.c_str());
+    return true;
   });
 
   current_uri.SetGetterFunction([this] {
     return glib::gchar_to_string(zeitgeist_subject_get_current_uri(subject_));
   });
   current_uri.SetSetterFunction([this] (std::string const& new_val) {
-    if (current_uri() != new_val)
-    {
-      zeitgeist_subject_set_current_uri(subject_, new_val.c_str());
-      return true;
-    }
-    return false;
+    if (current_uri() == new_val)
+      return false;
+
+    zeitgeist_subject_set_current_uri(subject_, new_val.c_str());
+    return true;
   });
 
   current_origin.SetGetterFunction([this] {
     return glib::gchar_to_string(zeitgeist_subject_get_current_origin(subject_));
   });
   current_origin.SetSetterFunction([this] (std::string const& new_val) {
-    if (current_origin() != new_val)
-    {
-      zeitgeist_subject_set_current_origin(subject_, new_val.c_str());
-      return true;
-    }
-    return false;
+    if (current_origin() == new_val)
+      return false;
+
+    zeitgeist_subject_set_current_origin(subject_, new_val.c_str());
+    return true;
   });
 
   mimetype.SetGetterFunction([this] {
     return glib::gchar_to_string(zeitgeist_subject_get_mimetype(subject_));
   });
   mimetype.SetSetterFunction([this] (std::string const& new_val) {
-    if (mimetype() != new_val)
-    {
-      zeitgeist_subject_set_mimetype(subject_, new_val.c_str());
-      return true;
-    }
-    return false;
+    if (mimetype() == new_val)
+      return false;
+
+    zeitgeist_subject_set_mimetype(subject_, new_val.c_str());
+    return true;
   });
 
   interpretation.SetGetterFunction([this] {
     return glib::gchar_to_string(zeitgeist_subject_get_interpretation(subject_));
   });
   interpretation.SetSetterFunction([this] (std::string const& new_val) {
-    if (interpretation() != new_val)
-    {
-      zeitgeist_subject_set_interpretation(subject_, new_val.c_str());
-      return true;
-    }
-    return false;
+    if (interpretation() == new_val)
+      return false;
+
+    zeitgeist_subject_set_interpretation(subject_, new_val.c_str());
+    return true;
   });
 
   manifestation.SetGetterFunction([this] {
     return glib::gchar_to_string(zeitgeist_subject_get_manifestation(subject_));
   });
   manifestation.SetSetterFunction([this] (std::string const& new_val) {
-    if (manifestation() != new_val)
-    {
-      zeitgeist_subject_set_manifestation(subject_, new_val.c_str());
-      return true;
-    }
-    return false;
+    if (manifestation() == new_val)
+      return false;
+
+    zeitgeist_subject_set_manifestation(subject_, new_val.c_str());
+    return true;
   });
 }
 
