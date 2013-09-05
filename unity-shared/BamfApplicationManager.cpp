@@ -539,6 +539,19 @@ Manager::~Manager()
 
 ApplicationPtr Manager::GetUnityApplication() const
 {
+  auto const& our_xids = nux::XInputWindow::NativeHandleList();
+
+  for (auto xid : our_xids)
+  {
+    auto *app_ptr = bamf_matcher_get_application_for_xid(matcher_, xid);
+
+    if (BAMF_IS_APPLICATION(app_ptr))
+    {
+      glib::Object<BamfApplication> app(app_ptr, glib::AddRef());
+      return std::make_shared<Application>(*this, app);
+    }
+  }
+
   return nullptr;
 }
 
