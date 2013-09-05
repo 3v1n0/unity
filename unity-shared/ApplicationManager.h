@@ -100,6 +100,7 @@ public:
 
   virtual void LogEvent(ApplicationEventType, ApplicationSubjectPtr const&) const = 0;
 
+  virtual std::string desktop_id() const = 0;
   nux::ROProperty<std::string> desktop_file;
   nux::ROProperty<std::string> title;
   nux::ROProperty<std::string> icon;

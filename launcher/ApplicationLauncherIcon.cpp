@@ -582,7 +582,7 @@ void ApplicationLauncherIcon::AddProperties(GVariantBuilder* builder)
 
   variant::BuilderWrapper(builder)
     .add("desktop_file", DesktopFile())
-    .add("desktop_id", GetDesktopID())
+    .add("desktop_id", app_->desktop_id())
     .add("xids", g_variant_builder_end(&xids_builder))
     .add("sticky", IsSticky())
     .add("startup_notification_timestamp", (uint64_t)_startup_notification_timestamp);
@@ -1056,16 +1056,9 @@ void ApplicationLauncherIcon::OnCenterStabilized(std::vector<nux::Point3> center
   UpdateIconGeometries(center);
 }
 
-std::string ApplicationLauncherIcon::GetDesktopID()
-{
-  std::string const& desktop_file = DesktopFile();
-
-  return DesktopUtilities::GetDesktopID(desktop_file);
-}
-
 void ApplicationLauncherIcon::UpdateRemoteUri()
 {
-  std::string const& desktop_id = GetDesktopID();
+  std::string const& desktop_id = app_->desktop_id();
 
   if (!desktop_id.empty())
   {

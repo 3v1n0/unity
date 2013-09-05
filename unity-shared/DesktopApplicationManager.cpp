@@ -31,6 +31,11 @@ DECLARE_LOGGER(logger, "unity.appmanager.desktop");
 const std::string APPLICATION_URI_PREFIX = "application://";
 }
 
+std::string Application::desktop_id() const
+{
+  return DesktopUtilities::GetDesktopID(desktop_file());
+}
+
 void Application::LogEvent(ApplicationEventType type, ApplicationSubjectPtr const& subject) const
 {
   const gchar* zg_event_interpretation = nullptr;
@@ -48,8 +53,8 @@ void Application::LogEvent(ApplicationEventType type, ApplicationSubjectPtr cons
       break;
   }
 
-  auto const& desktop_id = DesktopUtilities::GetDesktopID(desktop_file());
-  auto const& app_uri = desktop_id.empty() ? "" : APPLICATION_URI_PREFIX + desktop_id;
+  auto const& id = desktop_id();
+  auto const& app_uri = id.empty() ? "" : APPLICATION_URI_PREFIX + id;
   const gchar* zg_event_actor = app_uri.empty() ? nullptr : app_uri.c_str();
 
   glib::Object<ZeitgeistEvent> event(zeitgeist_event_new());
