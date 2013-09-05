@@ -36,9 +36,9 @@ namespace switcher
 
 namespace
 {
-  const unsigned int VERTICAL_PADDING = 45;
-  const unsigned int SPREAD_OFFSET = 100;
-  const unsigned int EXTRA_ICON_SPACE = 10;
+  unsigned int const VERTICAL_PADDING = 45;
+  unsigned int const SPREAD_OFFSET = 100;
+  unsigned int const EXTRA_ICON_SPACE = 10;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(SwitcherView);
@@ -61,6 +61,7 @@ SwitcherView::SwitcherView()
   , last_icon_selected_(-1)
   , last_detail_icon_selected_(-1)
   , target_sizes_set_(false)
+  , check_mouse_first_time_(true)
 {
   icon_renderer_->pip_style = OVER_TILE;
   icon_renderer_->monitor = monitors::MAX;
@@ -114,6 +115,7 @@ void SwitcherView::AddProperties(GVariantBuilder* builder)
   .add("animation-length", animation_length)
   .add("spread-size", (float)spread_size)
   .add("label", text_view_->GetText())
+  .add("last_icon_selected", last_icon_selected_)
   .add("spread_offset", SPREAD_OFFSET)
   .add("label_visible", text_view_->IsVisible());
 }
@@ -259,6 +261,13 @@ void SwitcherView::HandleDetailMouseMove(int x, int y)
 void SwitcherView::HandleMouseMove(int x, int y)
 {
   int icon_index = IconIndexAt(x, y);
+
+  if (check_mouse_first_time_)
+  {
+    last_icon_selected_ = icon_index;
+    check_mouse_first_time_ = false;
+    return;
+  }
 
   if (icon_index >= 0)
   {

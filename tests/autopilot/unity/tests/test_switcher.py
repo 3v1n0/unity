@@ -576,15 +576,48 @@ class SwitcherDetailsMouseTests(SwitcherTestCase):
         self.addCleanup(self.unity.switcher.terminate)
 
         index = self.unity.switcher.selection_index
-        offset = self.unity.switcher.view.spread_offset
-
-        icon_arg = self.unity.switcher.view.icon_args[index]
-        x = icon_arg.logical_center_x + offset
-        y = icon_arg.logical_center_y + offset
-        self.mouse.move(x, y)
+        self.unity.switcher.view.move_over_icon(index);
         self.mouse.click()
 
         self.assertProperty(char_win1, is_focused=True)
+
+    def test_mouse_doesnt_hightlight_icon_if_over_on_start(self):
+        """
+        First start the launcher and move the mosue over position of Text Editor icon,
+        then close the switcher and open it again while moving the mouse a bit.
+        Asserting that the icon does lose focus from Character Map.
+        """
+
+        char_win1, char_win2 = self.start_applications("Character Map", "Text Editor")
+        self.assertVisibleWindowStack([char_win2, char_win1])
+        self.assertProperty(char_win1, is_focused=False)
+
+        self.unity.switcher.initiate()
+        self.addCleanup(self.unity.switcher.terminate)
+
+        mouse_index = self.unity.switcher.selection_index - 1
+
+        self.unity.switcher.view.move_over_icon(mouse_index);
+        # Assert we are over the icon we want to hover over.
+        self.assertThat(self.unity.switcher.view.last_icon_selected, Eventually(Equals(mouse_index)))
+
+        self.addCleanup(self.keybinding, "switcher/cancel")
+
+        self.unity.switcher.terminate()
+        self.unity.switcher.initiate()
+
+        index = self.unity.switcher.selection_index
+
+        pos = self.mouse.position()
+        self.mouse.move(pos[0] + 5, pos[1] + 5)
+
+        # Assert moving the mouse does not change the selection
+        self.assertThat(self.unity.switcher.selection_index, Eventually(Equals(index)))
+
+        # Also nice to know clicking still works, even without selection
+        self.mouse.click()
+
+        self.assertProperty(char_win2, is_focused=True)
 
     def test_mouse_highlights_switcher_deatil_icons_motion(self):
         """
@@ -597,15 +630,9 @@ class SwitcherDetailsMouseTests(SwitcherTestCase):
         self.unity.switcher.initiate(SwitcherMode.DETAIL)
         self.addCleanup(self.unity.switcher.terminate)
 
-        offset = self.unity.switcher.view.spread_offset
-        cords = []
-
-        for icon in self.unity.switcher.view.detail_icons:
-            cords.append((icon.x + offset, icon.y + offset))
-
         index = 0;
-        for cord in cords:
-          self.mouse.move(cord[0], cord[1])
+        for icon in self.unity.switcher.view.detail_icons:
+          self.unity.switcher.view.move_over_detail_icon(index)
           self.assertThat(index, Equals(self.unity.switcher.detail_selection_index))
           index += 1
 
@@ -621,11 +648,7 @@ class SwitcherDetailsMouseTests(SwitcherTestCase):
         self.unity.switcher.initiate(SwitcherMode.DETAIL)
         self.addCleanup(self.unity.switcher.terminate)
 
-        offset = self.unity.switcher.view.spread_offset
-        x = self.unity.switcher.view.detail_icons[0].x + offset
-        y = self.unity.switcher.view.detail_icons[0].y + offset
-
-        self.mouse.move(x,y)
+        self.unity.switcher.view.move_over_detail_icon(0);
         self.mouse.click()
 
         self.assertProperty(char_win1, is_focused=True)
