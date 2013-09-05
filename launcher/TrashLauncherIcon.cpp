@@ -26,8 +26,9 @@
 #include <NuxCore/Logger.h>
 
 #include "QuicklistMenuItemLabel.h"
-#include "unity-shared/ZeitgeistUtils.h"
+#include "unity-shared/DesktopApplicationManager.h"
 #include "unity-shared/GnomeFileManager.h"
+#include "unity-shared/ZeitgeistUtils.h"
 
 namespace unity
 {
@@ -161,30 +162,13 @@ void TrashLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
        See https://bugs.launchpad.net/unity/+bug/870150  */
     if (g_file_trash(file, cancellable_, &error))
     {
-      // based on nautilus zg event logging code
-      glib::String origin(g_path_get_dirname(uri.c_str()));
+      auto const& unity_app = ApplicationManager::Default().GetUnityApplication();
+      auto subject = std::make_shared<desktop::ApplicationSubject>();
+      subject->uri = uri;
+      subject->origin = glib::String(g_path_get_dirname(uri.c_str())).Str();
       glib::String parse_name(g_file_get_parse_name(file));
-      glib::String display_name(g_path_get_basename(parse_name));
-
-      ZeitgeistSubject *subject = zeitgeist_subject_new_full(uri.c_str(),
-                                                             NULL, // subject interpretation
-                                                             NULL, // suject manifestation
-                                                             NULL, // mime-type
-                                                             origin,
-                                                             display_name,
-                                                             NULL /* storage */);
-      ZeitgeistEvent *event = zeitgeist_event_new_full(ZEITGEIST_ZG_DELETE_EVENT,
-                                                       ZEITGEIST_ZG_USER_ACTIVITY,
-                                                       ZEITGEIST_UNITY_ACTOR.c_str(),
-                                                       NULL,
-                                                       subject, NULL);
-      ZeitgeistLog *log = zeitgeist_log_get_default();
-
-      // zeitgeist takes ownership of subject, event and log
-      GPtrArray *events = g_ptr_array_sized_new(1);
-      g_ptr_array_add(events, event);
-      zeitgeist_log_insert_events_no_reply(log, events, NULL);
-      g_ptr_array_free(events, TRUE);
+      subject->text = glib::String(g_path_get_basename(parse_name)).Str();
+      unity_app->LogEvent(ApplicationEventType::DELETE, subject);
     }
     else
     {
