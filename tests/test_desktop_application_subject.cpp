@@ -170,6 +170,78 @@ TEST_P(/*TestDesktopApplicationSubject*/Property, Manifestation)
   EXPECT_FALSE(changed);
 }
 
+TEST_P(/*TestDesktopApplicationSubject*/Property, EqualityOperator)
+{
+  subject.uri = GetParam() + "uri";
+  subject.origin = GetParam() + "origin";
+  subject.text = GetParam() + "text";
+  subject.storage = GetParam() + "storage";
+  subject.current_uri = GetParam() + "current_uri";
+  subject.current_origin = GetParam() + "current_origin";
+  subject.mimetype = GetParam() + "mimetype";
+  subject.interpretation = GetParam() + "interpretation";
+  subject.manifestation = GetParam() + "manifestation";
+
+  ApplicationSubject copy_subject;
+  copy_subject.uri = subject.uri();
+  copy_subject.origin = subject.origin();
+  copy_subject.text = subject.text();
+  copy_subject.storage = subject.storage();
+  copy_subject.current_uri = subject.current_uri();
+  copy_subject.current_origin = subject.current_origin();
+  copy_subject.mimetype = subject.mimetype();
+  copy_subject.interpretation = subject.interpretation();
+  copy_subject.manifestation = subject.manifestation();
+
+  ASSERT_EQ(subject.uri(), copy_subject.uri());
+  ASSERT_EQ(subject.origin(), copy_subject.origin());
+  ASSERT_EQ(subject.text(), copy_subject.text());
+  ASSERT_EQ(subject.storage(), copy_subject.storage());
+  ASSERT_EQ(subject.current_uri(), copy_subject.current_uri());
+  ASSERT_EQ(subject.current_origin(), copy_subject.current_origin());
+  ASSERT_EQ(subject.mimetype(), copy_subject.mimetype());
+  ASSERT_EQ(subject.interpretation(), copy_subject.interpretation());
+  ASSERT_EQ(subject.manifestation(), copy_subject.manifestation());
+
+  EXPECT_EQ(subject, copy_subject);
+}
+
+TEST_P(/*TestDesktopApplicationSubject*/Property, NotEqualityOperator)
+{
+  subject.uri = GetParam() + "uri";
+  subject.origin = GetParam() + "origin";
+  subject.text = GetParam() + "text";
+  subject.storage = GetParam() + "storage";
+  subject.current_uri = GetParam() + "current_uri";
+  subject.current_origin = GetParam() + "current_origin";
+  subject.mimetype = GetParam() + "mimetype";
+  subject.interpretation = GetParam() + "interpretation";
+  subject.manifestation = GetParam() + "manifestation";
+
+  ApplicationSubject other_subject;
+  other_subject.uri = subject.uri() + "other";
+  other_subject.origin = subject.origin() + "other";
+  other_subject.text = subject.text() + "other";
+  other_subject.storage = subject.storage() + "other";
+  other_subject.current_uri = subject.current_uri() + "other";
+  other_subject.current_origin = subject.current_origin() + "other";
+  other_subject.mimetype = subject.mimetype() + "other";
+  other_subject.interpretation = subject.interpretation() + "other";
+  other_subject.manifestation = subject.manifestation() + "other";
+
+  ASSERT_NE(subject.uri(), other_subject.uri());
+  ASSERT_NE(subject.origin(), other_subject.origin());
+  ASSERT_NE(subject.text(), other_subject.text());
+  ASSERT_NE(subject.storage(), other_subject.storage());
+  ASSERT_NE(subject.current_uri(), other_subject.current_uri());
+  ASSERT_NE(subject.current_origin(), other_subject.current_origin());
+  ASSERT_NE(subject.mimetype(), other_subject.mimetype());
+  ASSERT_NE(subject.interpretation(), other_subject.interpretation());
+  ASSERT_NE(subject.manifestation(), other_subject.manifestation());
+
+  EXPECT_NE(subject, other_subject);
+}
+
 TEST_P(/*TestDesktopApplicationSubject*/Property, CopyConstructor)
 {
   subject.uri = GetParam() + "uri";
@@ -183,15 +255,7 @@ TEST_P(/*TestDesktopApplicationSubject*/Property, CopyConstructor)
   subject.manifestation = GetParam() + "manifestation";
 
   ApplicationSubject copy_subject(subject);
-  EXPECT_EQ(subject.uri(), copy_subject.uri());
-  EXPECT_EQ(subject.origin(), copy_subject.origin());
-  EXPECT_EQ(subject.text(), copy_subject.text());
-  EXPECT_EQ(subject.storage(), copy_subject.storage());
-  EXPECT_EQ(subject.current_uri(), copy_subject.current_uri());
-  EXPECT_EQ(subject.current_origin(), copy_subject.current_origin());
-  EXPECT_EQ(subject.mimetype(), copy_subject.mimetype());
-  EXPECT_EQ(subject.interpretation(), copy_subject.interpretation());
-  EXPECT_EQ(subject.manifestation(), copy_subject.manifestation());
+  EXPECT_EQ(subject, copy_subject);
 }
 
 TEST_P(/*TestDesktopApplicationSubject*/Property, CopyBaseTypeConstructor)
@@ -208,15 +272,7 @@ TEST_P(/*TestDesktopApplicationSubject*/Property, CopyBaseTypeConstructor)
   mock_subject.manifestation = GetParam() + "manifestation";
 
   ApplicationSubject copy_subject(mock_subject);
-  EXPECT_EQ(mock_subject.uri(), copy_subject.uri());
-  EXPECT_EQ(mock_subject.origin(), copy_subject.origin());
-  EXPECT_EQ(mock_subject.text(), copy_subject.text());
-  EXPECT_EQ(mock_subject.storage(), copy_subject.storage());
-  EXPECT_EQ(mock_subject.current_uri(), copy_subject.current_uri());
-  EXPECT_EQ(mock_subject.current_origin(), copy_subject.current_origin());
-  EXPECT_EQ(mock_subject.mimetype(), copy_subject.mimetype());
-  EXPECT_EQ(mock_subject.interpretation(), copy_subject.interpretation());
-  EXPECT_EQ(mock_subject.manifestation(), copy_subject.manifestation());
+  EXPECT_EQ(mock_subject, copy_subject);
 }
 
 } // anonymous namespace
