@@ -23,7 +23,6 @@
 #include <gmock/gmock.h>
 
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/DesktopUtilities.h>
 
 #include "ApplicationLauncherIcon.h"
 #include "FavoriteStore.h"
@@ -352,7 +351,7 @@ TEST_F(TestApplicationLauncherIcon, UpdateDesktopFileRemoteUri)
   usc_app->desktop_file_ = UM_DESKTOP;
   usc_app->desktop_file.changed.emit(usc_app->desktop_file_);
 
-  EXPECT_EQ(FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(UM_DESKTOP), usc_icon->RemoteUri());
+  EXPECT_EQ(FavoriteStore::URI_PREFIX_APP + UM_DESKTOP, usc_icon->RemoteUri());
 }
 
 TEST_F(TestApplicationLauncherIcon, UpdateDesktopStaticQuicklistEmpty)
@@ -494,7 +493,7 @@ TEST_F(TestApplicationLauncherIcon, UpdateDesktopForgetsOldPositionUpdatesUriAnd
 
 TEST_F(TestApplicationLauncherIcon, RemoteUri)
 {
-  EXPECT_EQ(usc_icon->RemoteUri(), FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(USC_DESKTOP));
+  EXPECT_EQ(usc_icon->RemoteUri(), FavoriteStore::URI_PREFIX_APP + USC_DESKTOP);
   EXPECT_TRUE(mock_icon->RemoteUri().empty());
 }
 

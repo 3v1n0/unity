@@ -135,7 +135,7 @@ TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedUpdatesRemoteURI)
   icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
 
   ASSERT_EQ(USC_DESKTOP, icon.DesktopFile());
-  EXPECT_EQ(FavoriteStore::URI_PREFIX_APP + "ubuntu-software-center.desktop", icon.GetRemoteUri());
+  EXPECT_EQ(FavoriteStore::URI_PREFIX_APP + USC_DESKTOP, icon.GetRemoteUri());
 }
 
 TEST_F(TestSoftwareCenterLauncherIcon, DisconnectsOldAppSignals)
