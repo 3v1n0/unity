@@ -189,6 +189,19 @@ void GnomeFileManager::Activate(uint64_t timestamp)
   }
 }
 
+bool GnomeFileManager::TrashFile(std::string const& uri)
+{
+  glib::Cancellable cancellable;
+  glib::Object<GFile> file(g_file_new_for_uri(uri.c_str()));
+  glib::Error error;
+
+  if (g_file_trash(file, cancellable, &error))
+    return true;
+
+  LOG_ERROR(logger) << "Impossible to trash file '" << uri << "': " << error;
+  return false;
+}
+
 void GnomeFileManager::EmptyTrash(uint64_t timestamp)
 {
   Activate(timestamp);
