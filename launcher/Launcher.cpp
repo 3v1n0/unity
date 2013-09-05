@@ -1496,7 +1496,7 @@ void Launcher::SetHover(bool hovered)
 
   _hovered = hovered;
 
-  if (_hovered)
+  if (!IsInKeyNavMode() && _hovered)
   {
     _enter_y = (int) _mouse_position.y;
     TimeUtil::SetTimeStruct(&_times[TIME_ENTER], &_times[TIME_LEAVE], ANIM_DURATION);
