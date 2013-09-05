@@ -28,6 +28,7 @@ namespace desktop
 namespace
 {
 DECLARE_LOGGER(logger, "unity.appmanager.desktop");
+const std::string APPLICATION_URI_PREFIX = "application://";
 }
 
 void Application::LogEvent(ApplicationEventType type, ApplicationSubjectPtr const& subject) const
@@ -48,7 +49,8 @@ void Application::LogEvent(ApplicationEventType type, ApplicationSubjectPtr cons
   }
 
   auto const& desktop_id = DesktopUtilities::GetDesktopID(desktop_file());
-  const gchar* zg_event_actor = desktop_id.empty() ? nullptr : desktop_id.c_str();
+  auto const& app_uri = desktop_id.empty() ? "" : APPLICATION_URI_PREFIX + desktop_id;
+  const gchar* zg_event_actor = app_uri.empty() ? nullptr : app_uri.c_str();
 
   glib::Object<ZeitgeistEvent> event(zeitgeist_event_new());
   zeitgeist_event_set_interpretation(event, zg_event_interpretation);
