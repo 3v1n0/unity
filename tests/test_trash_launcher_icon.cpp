@@ -93,4 +93,16 @@ TEST_F(TestTrashLauncherIcon, FilemanagerSignalDisconnection)
   EXPECT_TRUE(file_manager->locations_changed.empty());
 }
 
+TEST_F(TestTrashLauncherIcon, AcceptDropTrashesFiles)
+{
+  DndData data;
+  std::string data_string = "file1\nfile2\nfile3\nfileN";
+  data.Fill(data_string.c_str());
+
+  for (auto const& uri : data.Uris())
+    EXPECT_CALL(*fm_, TrashFile(uri));
+
+  icon.AcceptDrop(data);
+}
+
 }
