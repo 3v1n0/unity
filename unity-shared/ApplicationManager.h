@@ -134,6 +134,24 @@ public:
   nux::RWProperty<std::string> mimetype;
   nux::RWProperty<std::string> interpretation;
   nux::RWProperty<std::string> manifestation;
+
+  bool operator==(ApplicationSubject const& other) const
+  {
+    return uri() == other.uri() &&
+           origin() == other.origin() &&
+           text() == other.text() &&
+           storage() == other.storage() &&
+           current_uri() == other.current_uri() &&
+           current_origin() == other.current_origin() &&
+           mimetype() == other.mimetype() &&
+           interpretation() == other.interpretation() &&
+           manifestation() == other.manifestation();
+  }
+
+  bool operator!=(ApplicationSubject const& other) const
+  {
+    return !(operator==(other));
+  }
 };
 
 
