@@ -155,24 +155,18 @@ void TrashLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
 {
   for (auto const& uri : dnd_data.Uris())
   {
-    glib::Object<GFile> file(g_file_new_for_uri(uri.c_str()));
-    glib::Error error;
-
-    /* Log ZG event when moving file to trash; this is requred by File Scope.
-       See https://bugs.launchpad.net/unity/+bug/870150  */
-    if (g_file_trash(file, cancellable_, &error))
+    if (file_manager_->TrashFile(uri))
     {
+      /* Log ZG event when moving file to trash; this is requred by File Scope.
+       * See https://bugs.launchpad.net/unity/+bug/870150 */
       auto const& unity_app = ApplicationManager::Default().GetUnityApplication();
       auto subject = std::make_shared<desktop::ApplicationSubject>();
       subject->uri = uri;
       subject->origin = glib::String(g_path_get_dirname(uri.c_str())).Str();
+      glib::Object<GFile> file(g_file_new_for_uri(uri.c_str()));
       glib::String parse_name(g_file_get_parse_name(file));
       subject->text = glib::String(g_path_get_basename(parse_name)).Str();
       unity_app->LogEvent(ApplicationEventType::DELETE, subject);
-    }
-    else
-    {
-      LOG_ERROR(logger) << "Impossible to trash file '" << uri << "': " << error;
     }
   }
 
