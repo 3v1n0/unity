@@ -331,7 +331,7 @@ struct MockApplicationManager : public unity::ApplicationManager
 
   unity::ApplicationPtr LocalGetUnityApplication() const
   {
-    static unity::ApplicationPtr unity(new MockApplication);
+    static unity::ApplicationPtr unity(new MockApplication::Nice);
     auto unity_mock = std::static_pointer_cast<MockApplication>(unity);
     unity_mock->desktop_file_ = "compiz.desktop";
     unity_mock->title_ = "Unity Desktop";
