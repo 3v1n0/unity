@@ -158,7 +158,7 @@ struct MockApplication : unity::Application
   bool urgent_;
   unity::WindowList windows_;
   std::string type_;
-  std::vector<std::tuple<unity::ApplicationEventType, unity::ApplicationSubjectPtr>> actions_log_;
+  std::vector<std::pair<unity::ApplicationEventType, unity::ApplicationSubjectPtr>> actions_log_;
 
   MOCK_CONST_METHOD0(type, std::string());
   MOCK_CONST_METHOD0(repr, std::string());
@@ -181,7 +181,22 @@ struct MockApplication : unity::Application
 
   void LocalLogEvent(unity::ApplicationEventType type, unity::ApplicationSubjectPtr const& subject)
   {
-    actions_log_.push_back(std::make_tuple(type, subject));
+    if (subject)
+      actions_log_.push_back(std::make_pair(type, subject));
+  }
+
+  bool HasLoggedEvent(unity::ApplicationEventType type, unity::ApplicationSubjectPtr const& subject)
+  {
+    if (!subject)
+      return false;
+
+    for (auto const& pair : actions_log_)
+    {
+      if (pair.first == type && *pair.second == *subject)
+        return true;
+    }
+
+    return false;
   }
 
   void SetRunState(bool state) {
