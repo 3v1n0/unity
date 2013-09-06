@@ -25,6 +25,7 @@ set (UNITY_SHARED_SOURCES
      DebugDBusInterface.cpp
      DefaultThumbnailProvider.cpp
      DeltaRestrainment.cpp
+     DesktopApplicationManager.cpp
      GnomeFileManager.cpp
      FontSettings.cpp
      GraphicsUtils.cpp
@@ -100,6 +101,7 @@ if (ENABLE_X_SUPPORT)
 
   # bamf application manager
   set (UNITY_SHARED_BAMF_SOURCES
+    DesktopApplicationManager.cpp
     BamfApplicationManager.cpp
     BamfApplicationManagerFactory.cpp
     )

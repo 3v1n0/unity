@@ -24,22 +24,19 @@
 #include "config.h"
 #include <glib/gi18n-lib.h>
 #include <NuxCore/Logger.h>
-// -Wunused-function applies to the entire translation unit,
-// #pragma GCC diagnostic push/pop doesn't affect it.  Boo.
-// Problem is the Vala-generated code in <zeitgeist.h> fails -Werror.
-#pragma GCC diagnostic warning "-Wunused-function"
-#include <zeitgeist.h>
 
 #include "QuicklistMenuItemLabel.h"
+#include "unity-shared/DesktopApplicationManager.h"
 #include "unity-shared/GnomeFileManager.h"
+#include "unity-shared/ZeitgeistUtils.h"
 
 namespace unity
 {
 namespace launcher
 {
-DECLARE_LOGGER(logger, "unity.launcher.icon.trash");
 namespace
 {
+  DECLARE_LOGGER(logger, "unity.launcher.icon.trash");
   const std::string ZEITGEIST_UNITY_ACTOR = "application://compiz.desktop";
   const std::string TRASH_URI = "trash:";
 }
@@ -59,7 +56,7 @@ TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
   glib::Object<GFile> location(g_file_new_for_uri(TRASH_URI.c_str()));
 
   glib::Error err;
-  trash_monitor_ = g_file_monitor_directory(location, G_FILE_MONITOR_NONE, nullptr, &err);
+  trash_monitor_ = g_file_monitor_directory(location, G_FILE_MONITOR_NONE, cancellable_, &err);
   g_file_monitor_set_rate_limit(trash_monitor_, 1000);
 
   if (err)
@@ -158,36 +155,18 @@ void TrashLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
 {
   for (auto const& uri : dnd_data.Uris())
   {
-    glib::Object<GFile> file(g_file_new_for_uri(uri.c_str()));
-
-    /* Log ZG event when moving file to trash; this is requred by File Scope.
-       See https://bugs.launchpad.net/unity/+bug/870150  */
-    if (g_file_trash(file, NULL, NULL))
+    if (file_manager_->TrashFile(uri))
     {
-      // based on nautilus zg event logging code
-      glib::String origin(g_path_get_dirname(uri.c_str()));
+      /* Log ZG event when moving file to trash; this is requred by File Scope.
+       * See https://bugs.launchpad.net/unity/+bug/870150 */
+      auto const& unity_app = ApplicationManager::Default().GetUnityApplication();
+      auto subject = std::make_shared<desktop::ApplicationSubject>();
+      subject->uri = uri;
+      subject->origin = glib::String(g_path_get_dirname(uri.c_str())).Str();
+      glib::Object<GFile> file(g_file_new_for_uri(uri.c_str()));
       glib::String parse_name(g_file_get_parse_name(file));
-      glib::String display_name(g_path_get_basename(parse_name));
-
-      ZeitgeistSubject *subject = zeitgeist_subject_new_full(uri.c_str(),
-                                                             NULL, // subject interpretation
-                                                             NULL, // suject manifestation
-                                                             NULL, // mime-type
-                                                             origin,
-                                                             display_name,
-                                                             NULL /* storage */);
-      ZeitgeistEvent *event = zeitgeist_event_new_full(ZEITGEIST_ZG_DELETE_EVENT,
-                                                       ZEITGEIST_ZG_USER_ACTIVITY,
-                                                       ZEITGEIST_UNITY_ACTOR.c_str(),
-                                                       NULL,
-                                                       subject, NULL);
-      ZeitgeistLog *log = zeitgeist_log_get_default();
-
-      // zeitgeist takes ownership of subject, event and log
-      GPtrArray *events = g_ptr_array_new();
-      g_ptr_array_add(events, event);
-      zeitgeist_log_insert_events_no_reply(log, events, NULL);
-      g_ptr_array_free(events, TRUE);
+      subject->text = glib::String(g_path_get_basename(parse_name)).Str();
+      unity_app->LogEvent(ApplicationEventType::DELETE, subject);
     }
   }
 

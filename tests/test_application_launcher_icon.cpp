@@ -72,8 +72,8 @@ MATCHER_P(AreArgsEqual, a, "")
   return arg.source == a.source &&
          arg.button == a.button &&
          arg.timestamp == a.timestamp &&
-         arg.target == a.target;
-         arg.monitor = a.monitor;
+         arg.target == a.target &&
+         arg.monitor == a.monitor;
 }
 
 struct TestApplicationLauncherIcon : Test
