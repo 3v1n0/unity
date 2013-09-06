@@ -118,6 +118,7 @@ TEST_F(TestTrashLauncherIcon, AcceptDropTrashedFilesLogsEvents)
 
   auto const& unity_app = ApplicationManager::Default().GetUnityApplication();
   auto const& unity_mock_app = std::static_pointer_cast<testmocks::MockApplication>(unity_app);
+  unity_mock_app->actions_log_.clear();
 
   for (auto const& uri : data.Uris())
   {
@@ -130,6 +131,10 @@ TEST_F(TestTrashLauncherIcon, AcceptDropTrashedFilesLogsEvents)
   }
 
   icon.AcceptDrop(data);
+
+  EXPECT_FALSE(unity_mock_app->actions_log_.empty());
+  for (auto const& subject : subjects)
+    ASSERT_TRUE(unity_mock_app->HasLoggedEvent(ApplicationEventType::DELETE, subject));
 }
 
 TEST_F(TestTrashLauncherIcon, AcceptDropFailsDoesNotLogEvents)
@@ -142,9 +147,14 @@ TEST_F(TestTrashLauncherIcon, AcceptDropFailsDoesNotLogEvents)
 
   auto const& unity_app = ApplicationManager::Default().GetUnityApplication();
   auto const& unity_mock_app = std::static_pointer_cast<testmocks::MockApplication>(unity_app);
+  unity_mock_app->actions_log_.clear();
   EXPECT_CALL(*unity_mock_app, LogEvent(ApplicationEventType::DELETE, _)).Times(0);
 
   icon.AcceptDrop(data);
+
+  EXPECT_TRUE(unity_mock_app->actions_log_.empty());
+  for (auto const& subject : subjects)
+    ASSERT_FALSE(unity_mock_app->HasLoggedEvent(ApplicationEventType::DELETE, subject));
 }
 
 }
