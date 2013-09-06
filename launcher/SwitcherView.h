@@ -150,6 +150,7 @@ private:
   int last_icon_selected_;
   int last_detail_icon_selected_;
   bool target_sizes_set_;
+  bool check_mouse_first_time_;
 
   std::list<ui::RenderArg> last_args_;
   std::list<ui::RenderArg> saved_args_;
