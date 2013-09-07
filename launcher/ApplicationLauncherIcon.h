@@ -128,7 +128,6 @@ private:
 
   WindowList GetWindows(WindowFilterMask filter = 0, int monitor = -1);
   const std::set<std::string> GetSupportedTypes();
-  std::string GetDesktopID();
   WindowList GetWindowsOnCurrentDesktopInStackingOrder();
 
   ApplicationPtr app_;

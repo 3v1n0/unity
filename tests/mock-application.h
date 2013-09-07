@@ -140,6 +140,7 @@ struct MockApplication : unity::Application
       icon.SetGetterFunction([this] { return icon_; });
 
       ON_CALL(*this, type()).WillByDefault(Invoke([this] { return type_; }));
+      ON_CALL(*this, desktop_id()).WillByDefault(Invoke([this] { return desktop_file_; }));
       ON_CALL(*this, repr()).WillByDefault(Invoke([this] { return "MockApplication"; }));
       ON_CALL(*this, GetWindows()).WillByDefault(Invoke([this] { return windows_; }));
       ON_CALL(*this, OwnsWindow(_)).WillByDefault(Invoke(this, &MockApplication::LocalOwnsWindow));
@@ -161,6 +162,7 @@ struct MockApplication : unity::Application
 
   MOCK_CONST_METHOD0(type, std::string());
   MOCK_CONST_METHOD0(repr, std::string());
+  MOCK_CONST_METHOD0(desktop_id, std::string());
   MOCK_CONST_METHOD0(GetWindows, unity::WindowList());
   MOCK_CONST_METHOD1(OwnsWindow, bool(Window));
   MOCK_CONST_METHOD0(GetSupportedMimeTypes, std::vector<std::string>());

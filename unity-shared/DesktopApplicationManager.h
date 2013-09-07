@@ -26,7 +26,6 @@
 #include "unity-shared/ApplicationManager.h"
 #include "unity-shared/ZeitgeistUtils.h"
 
-
 namespace unity
 {
 namespace desktop
@@ -35,7 +34,8 @@ namespace desktop
 class Application : public ::unity::Application
 {
 public:
-  virtual void LogEvent(ApplicationEventType, ApplicationSubjectPtr const&) const;
+  std::string desktop_id() const override;
+  void LogEvent(ApplicationEventType, ApplicationSubjectPtr const&) const override;
 };
 
 class ApplicationSubject : public ::unity::ApplicationSubject
