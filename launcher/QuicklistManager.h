@@ -48,6 +48,7 @@ public:
 
   sigc::signal<void, nux::ObjectPtr<QuicklistView> const&> quicklist_opened;
   sigc::signal<void, nux::ObjectPtr<QuicklistView> const&> quicklist_closed;
+  sigc::signal<void, nux::ObjectPtr<nux::View>> quicklist_visible;
 
 private:
   QuicklistManager();

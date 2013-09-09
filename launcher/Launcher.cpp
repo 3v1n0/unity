@@ -189,6 +189,7 @@ Launcher::Launcher(MockableBaseWindow* parent,
   QuicklistManager& ql_manager = *(QuicklistManager::Default());
   ql_manager.quicklist_opened.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
   ql_manager.quicklist_closed.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
+  ql_manager.quicklist_visible.connect(sigc::mem_fun(this, &Launcher::OnQuicklistVisible));
 
   WindowManager& wm = WindowManager::Default();
   wm.initiate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
@@ -1468,6 +1469,11 @@ nux::ObjectPtr<nux::View> const& Launcher::GetActiveTooltip() const
   return _active_tooltip;
 }
 
+nux::ObjectPtr<nux::View> const& Launcher::GetActiveQuicklist() const
+{
+  return _active_quicklist;
+}
+
 nux::ObjectPtr<LauncherDragWindow> const& Launcher::GetDraggedIcon() const
 {
   return _drag_window;
@@ -1801,6 +1807,11 @@ void Launcher::OnIconNeedsRedraw(AbstractLauncherIcon::Ptr const& icon)
 void Launcher::OnTooltipVisible(nux::ObjectPtr<nux::View> view)
 {
   _active_tooltip = view;
+}
+
+void Launcher::OnQuicklistVisible(nux::ObjectPtr<nux::View> view)
+{
+  _active_quicklist = view;
 }
 
 void Launcher::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)

@@ -1399,6 +1399,17 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
           tooltip->QueueDraw();
       }
 
+      nux::ObjectPtr<nux::View> const& quicklist = launcher->GetActiveQuicklist();
+
+      if (quicklist)
+      {
+        nux::Geometry const& g = quicklist->GetAbsoluteGeometry();
+        CompRegion ql_region(g.x, g.y, g.width, g.height);
+
+        if (damage.intersects(ql_region))
+          quicklist->QueueDraw();
+      }
+
       nux::ObjectPtr<LauncherDragWindow> const& dragged_icon = launcher->GetDraggedIcon();
 
       if (dragged_icon)
