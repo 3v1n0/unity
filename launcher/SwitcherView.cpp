@@ -263,8 +263,7 @@ void SwitcherView::HandleDetailMouseMove(int x, int y)
     model_->detail_selection_index = detail_icon_index;
     last_detail_icon_selected_ = detail_icon_index;
   }
-
-  if (detail_icon_index < 0)
+  else if (detail_icon_index < 0)
   {
     last_detail_icon_selected_ = -1;
   }
@@ -295,8 +294,7 @@ void SwitcherView::HandleMouseMove(int x, int y)
 
     switcher_mouse_move.emit(icon_index);
   }
-
-  if (icon_index < 0)
+  else if (icon_index < 0)
   {
     last_icon_selected_ = -1;
   }
