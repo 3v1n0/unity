@@ -36,9 +36,14 @@ struct TestTrashLauncherIcon : Test
   TestTrashLauncherIcon()
     : fm_(std::make_shared<NiceMock<MockFileManager>>())
     , icon(fm_)
-  {}
+  {
+    auto const& unity_app = ApplicationManager::Default().GetUnityApplication();
+    unity_app_ = std::static_pointer_cast<testmocks::MockApplication>(unity_app);
+    unity_app_->actions_log_.clear();
+  }
 
   MockFileManager::Ptr fm_;
+  testmocks::MockApplication::Ptr unity_app_;
   TrashLauncherIcon icon;
 };
 
@@ -116,10 +121,6 @@ TEST_F(TestTrashLauncherIcon, AcceptDropTrashedFilesLogsEvents)
   EXPECT_CALL(*fm_, TrashFile(_)).WillRepeatedly(Return(true));
   std::vector<ApplicationSubjectPtr> subjects;
 
-  auto const& unity_app = ApplicationManager::Default().GetUnityApplication();
-  auto const& unity_mock_app = std::static_pointer_cast<testmocks::MockApplication>(unity_app);
-  unity_mock_app->actions_log_.clear();
-
   for (auto const& uri : data.Uris())
   {
     auto subject = std::make_shared<testmocks::MockApplicationSubject>();
@@ -127,14 +128,14 @@ TEST_F(TestTrashLauncherIcon, AcceptDropTrashedFilesLogsEvents)
     subject->origin = glib::gchar_to_string(g_path_get_dirname(uri.c_str()));
     subject->text = glib::gchar_to_string(g_path_get_basename(uri.c_str()));
     subjects.push_back(subject);
-    EXPECT_CALL(*unity_mock_app, LogEvent(ApplicationEventType::DELETE, ApplicationSubjectEquals(subject)));
+    EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::DELETE, ApplicationSubjectEquals(subject)));
   }
 
   icon.AcceptDrop(data);
 
-  EXPECT_FALSE(unity_mock_app->actions_log_.empty());
+  EXPECT_FALSE(unity_app_->actions_log_.empty());
   for (auto const& subject : subjects)
-    ASSERT_TRUE(unity_mock_app->HasLoggedEvent(ApplicationEventType::DELETE, subject));
+    ASSERT_TRUE(unity_app_->HasLoggedEvent(ApplicationEventType::DELETE, subject));
 }
 
 TEST_F(TestTrashLauncherIcon, AcceptDropFailsDoesNotLogEvents)
@@ -145,16 +146,13 @@ TEST_F(TestTrashLauncherIcon, AcceptDropFailsDoesNotLogEvents)
   EXPECT_CALL(*fm_, TrashFile(_)).WillRepeatedly(Return(false));
   std::vector<ApplicationSubjectPtr> subjects;
 
-  auto const& unity_app = ApplicationManager::Default().GetUnityApplication();
-  auto const& unity_mock_app = std::static_pointer_cast<testmocks::MockApplication>(unity_app);
-  unity_mock_app->actions_log_.clear();
-  EXPECT_CALL(*unity_mock_app, LogEvent(ApplicationEventType::DELETE, _)).Times(0);
+  EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::DELETE, _)).Times(0);
 
   icon.AcceptDrop(data);
 
-  EXPECT_TRUE(unity_mock_app->actions_log_.empty());
+  EXPECT_TRUE(unity_app_->actions_log_.empty());
   for (auto const& subject : subjects)
-    ASSERT_FALSE(unity_mock_app->HasLoggedEvent(ApplicationEventType::DELETE, subject));
+    ASSERT_FALSE(unity_app_->HasLoggedEvent(ApplicationEventType::DELETE, subject));
 }
 
 }
