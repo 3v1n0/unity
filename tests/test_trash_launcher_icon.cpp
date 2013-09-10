@@ -40,6 +40,7 @@ struct TestTrashLauncherIcon : Test
     auto const& unity_app = ApplicationManager::Default().GetUnityApplication();
     unity_app_ = std::static_pointer_cast<testmocks::MockApplication>(unity_app);
     unity_app_->actions_log_.clear();
+    Mock::VerifyAndClearExpectations(unity_app_.get());
   }
 
   MockFileManager::Ptr fm_;
