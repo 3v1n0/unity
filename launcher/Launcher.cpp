@@ -2129,8 +2129,7 @@ void Launcher::EndIconDrag()
     {
       if (!_drag_window->Cancelled() && _model->IconIndex(_drag_icon) != _drag_icon_position)
       {
-        _drag_icon->Stick(false);
-        _model->Save();
+        _drag_icon->Stick(true);
       }
 
       auto const& icon_center = _drag_icon->GetCenter(monitor);
