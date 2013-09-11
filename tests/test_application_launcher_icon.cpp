@@ -80,6 +80,10 @@ struct TestApplicationLauncherIcon : Test
   virtual void SetUp() override
   {
     WM = dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default());
+    auto const& unity = ApplicationManager::Default().GetUnityApplication();
+    unity_app = std::static_pointer_cast<testmocks::MockApplication>(unity);
+    unity_app->actions_log_.clear();
+
     usc_app = std::make_shared<MockApplication::Nice>(USC_DESKTOP, "softwarecenter");
     usc_icon = new NiceMock<MockApplicationLauncherIcon>(usc_app);
     ASSERT_EQ(usc_icon->DesktopFile(), USC_DESKTOP);
@@ -95,6 +99,8 @@ struct TestApplicationLauncherIcon : Test
 
   virtual void TearDown() override
   {
+    Mock::VerifyAndClearExpectations(unity_app.get());
+
     for (auto const& win : WM->GetStandaloneWindows())
       WM->Close(win->Xid());
   }
@@ -143,9 +149,10 @@ struct TestApplicationLauncherIcon : Test
   }
 
   StandaloneWindowManager* WM;
-  std::shared_ptr<MockApplication> usc_app;
-  std::shared_ptr<MockApplication> empty_app;
-  std::shared_ptr<MockApplication> mock_app;
+  MockApplication::Ptr unity_app;
+  MockApplication::Ptr usc_app;
+  MockApplication::Ptr empty_app;
+  MockApplication::Ptr mock_app;
   MockApplicationLauncherIcon::Ptr usc_icon;
   MockApplicationLauncherIcon::Ptr empty_icon;
   MockApplicationLauncherIcon::Ptr mock_icon;
@@ -188,6 +195,7 @@ TEST_F(TestApplicationLauncherIcon, StickDesktopApp)
 {
   bool saved = false;
   usc_icon->position_saved.connect([&saved] {saved = true;});
+  EXPECT_CALL(*unity_app, LogEvent(_, _)).Times(0);
 
   usc_icon->Stick(false);
   EXPECT_TRUE(usc_app->sticky());
@@ -203,6 +211,7 @@ TEST_F(TestApplicationLauncherIcon, StickDesktopLessApp)
 {
   bool saved = false;
   mock_icon->position_saved.connect([&saved] {saved = true;});
+  EXPECT_CALL(*unity_app, LogEvent(_, _)).Times(0);
 
   mock_icon->Stick(false);
   EXPECT_TRUE(mock_app->sticky());
@@ -218,6 +227,7 @@ TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopApp)
 {
   bool saved = false;
   usc_icon->position_saved.connect([&saved] {saved = true;});
+  EXPECT_CALL(*unity_app, LogEvent(ApplicationEventType::ACCESS, _));
 
   usc_icon->Stick(true);
   EXPECT_TRUE(usc_app->sticky());
@@ -230,6 +240,7 @@ TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopLessApp)
 {
   bool saved = false;
   mock_icon->position_saved.connect([&saved] {saved = true;});
+  EXPECT_CALL(*unity_app, LogEvent(_, _)).Times(0);
 
   mock_icon->Stick(true);
   EXPECT_TRUE(mock_app->sticky());
@@ -257,7 +268,7 @@ TEST_F(TestApplicationLauncherIcon, StickStickedDesktopLessApp)
   EXPECT_FALSE(icon->LauncherIconIsSticky());
 }
 
-TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopApplication)
+TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopAppDontCreateNewDesktop)
 {
   EXPECT_CALL(*usc_app, CreateLocalDesktopFile()).Times(0);
   usc_icon->Stick(true);
@@ -265,7 +276,7 @@ TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopApplication)
   EXPECT_TRUE(usc_icon->IsSticky());
 }
 
-TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopLessApplication)
+TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopLessAppCreatesNewDesktop)
 {
   auto app = std::make_shared<MockApplication::Nice>();
   MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
@@ -313,6 +324,23 @@ TEST_F(TestApplicationLauncherIcon, UnstickRunning)
   EXPECT_TRUE(usc_icon->IsVisible());
   EXPECT_TRUE(forgot);
   EXPECT_FALSE(removed);
+}
+
+TEST_F(TestApplicationLauncherIcon, UnstickDesktopApp)
+{
+  usc_icon->Stick();
+
+  EXPECT_CALL(*unity_app, LogEvent(ApplicationEventType::ACCESS, _));
+  usc_icon->UnStick();
+}
+
+TEST_F(TestApplicationLauncherIcon, UnstickDesktopLessApp)
+{
+  auto app = std::make_shared<MockApplication::Nice>();
+  MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
+
+  EXPECT_CALL(*unity_app, LogEvent(ApplicationEventType::ACCESS, _)).Times(0);
+  icon->UnStick();
 }
 
 TEST_F(TestApplicationLauncherIcon, VisibleChanged)
