@@ -234,6 +234,7 @@ bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk) const
 
 void ApplicationLauncherIcon::Remove()
 {
+  LogUnityEvent(ApplicationEventType::LEAVE);
   /* Removing the unity-seen flag to the wrapped bamf application, on remove
    * request we make sure that if the application is re-opened while the
    * removal process is still ongoing, the application will be shown on the
