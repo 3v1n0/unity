@@ -27,6 +27,7 @@
 #include "ApplicationLauncherIcon.h"
 #include "FavoriteStore.h"
 #include "StandaloneWindowManager.h"
+#include "ZeitgeistUtils.h"
 #include "mock-application.h"
 #include "test_utils.h"
 
@@ -64,6 +65,7 @@ struct MockApplicationLauncherIcon : ApplicationLauncherIcon
   bool LauncherIconIsSticky() const { return LauncherIcon::IsSticky(); }
 
   using ApplicationLauncherIcon::IsFileManager;
+  using ApplicationLauncherIcon::LogUnityEvent;
 };
 
 MATCHER_P(AreArgsEqual, a, "")
@@ -1071,6 +1073,28 @@ TEST_F(TestApplicationLauncherIcon, AllowDetailViewInSwitcher)
 
   mock_app->type_ = "webapp";
   EXPECT_FALSE(mock_icon->AllowDetailViewInSwitcher());
+}
+
+TEST_F(TestApplicationLauncherIcon, LogUnityEventDesktopLess)
+{
+  EXPECT_CALL(*unity_app_, LogEvent(_, _)).Times(0);
+  mock_icon->LogUnityEvent(ApplicationEventType::ACCESS);
+}
+
+MATCHER_P(ApplicationSubjectEquals, other, "") { return *arg == *other; }
+
+TEST_F(TestApplicationLauncherIcon, LogUnityEventDesktop)
+{
+  auto subject = std::make_shared<testmocks::MockApplicationSubject>();
+  subject->uri = usc_icon->RemoteUri();
+  subject->current_uri = subject->uri();
+  subject->text = usc_icon->tooltip_text();
+  subject->interpretation = ZEITGEIST_NFO_SOFTWARE;
+  subject->manifestation = ZEITGEIST_NFO_SOFTWARE_ITEM;
+  subject->mimetype = "application/x-desktop";
+
+  EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::ACCESS, ApplicationSubjectEquals(subject)));
+  usc_icon->LogUnityEvent(ApplicationEventType::ACCESS);
 }
 
 }
