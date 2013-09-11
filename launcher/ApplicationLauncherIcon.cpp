@@ -100,6 +100,11 @@ ApplicationLauncherIcon::~ApplicationLauncherIcon()
   SetApplication(nullptr);
 }
 
+ApplicationPtr ApplicationLauncherIcon::GetApplication() const
+{
+  return app_;
+}
+
 void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
 {
   if (app_ == app)

@@ -74,6 +74,8 @@ public:
 
 protected:
   void SetApplication(ApplicationPtr const& app);
+  ApplicationPtr GetApplication() const;
+
   void Remove();
   void UpdateIconGeometries(std::vector<nux::Point3> center);
   void OnCenterStabilized(std::vector<nux::Point3> center);
