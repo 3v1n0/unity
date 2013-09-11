@@ -88,6 +88,7 @@ const int RIGHT_LINE_WIDTH = 1;
 const int ANIM_DURATION_SHORT_SHORT = 100;
 const int ANIM_DURATION = 200;
 const int ANIM_DURATION_LONG = 350;
+const int ANIM_DURATION_SHOW_DASH = 90;
 const int START_DRAGICON_DURATION = 250;
 
 const int MOUSE_DEADZONE = 15;
@@ -354,7 +355,8 @@ float Launcher::AutohideProgress(struct timespec const& current) const
 {
   // time-based progress (full scale or finish the TRIGGER_AUTOHIDE_MIN -> 0.00f on bfb)
   float animation_progress;
-  animation_progress = CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
+  float duration = _dash_is_open ? ANIM_DURATION_SHOW_DASH : ANIM_DURATION_SHORT;
+  animation_progress = CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_AUTOHIDE])) / duration, 0.0f, 1.0f);
   if (_hidden)
     return animation_progress;
   else
@@ -1054,7 +1056,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   {
 
     float autohide_progress = AutohideProgress(current) * (1.0f - DragOutProgress(current));
-    if (options()->auto_hide_animation() == FADE_ONLY)
+    if (_dash_is_open || options()->auto_hide_animation() == FADE_ONLY)
     {
       *launcher_alpha = 1.0f - autohide_progress;
     }
