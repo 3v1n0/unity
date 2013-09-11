@@ -927,6 +927,8 @@ TEST_F(TestLauncherController, SetupIcons)
   auto const& model = lc.Impl()->model_;
   int icon_index = 0;
 
+  EXPECT_CALL(*unity_app_, LogEvent(_, _)).Times(0);
+
   favorite_store.SetFavorites({ FavoriteStore::URI_PREFIX_APP + app::UBUNTU_ONE,
                                 FavoriteStore::URI_PREFIX_APP + app::SW_CENTER,
                                 places::DEVICES_URI,
@@ -1173,6 +1175,7 @@ TEST_F(TestLauncherController, LauncherAddRequestApplicationAdd)
   std::string desktop = app::BZR_HANDLE_PATCH;
   std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop;
   ASSERT_FALSE(lc.Impl()->GetIconByUri(icon_uri).IsValid());
+  EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::ACCESS, _));
 
   auto app_icons = model->GetSublist<ApplicationLauncherIcon>();
   auto const& second_app = *(std::next(app_icons.begin()));
@@ -1182,6 +1185,7 @@ TEST_F(TestLauncherController, LauncherAddRequestApplicationAdd)
   auto const& new_icon = lc.Impl()->GetIconByUri(icon_uri);
   ASSERT_TRUE(new_icon.IsValid());
   EXPECT_EQ(model->IconIndex(new_icon), model->IconIndex(second_app) + 1);
+  EXPECT_TRUE(favorite_store.IsFavorite(icon_uri));
 }
 
 TEST_F(TestLauncherController, LauncherAddRequestApplicationStick)
@@ -1197,10 +1201,12 @@ TEST_F(TestLauncherController, LauncherAddRequestApplicationStick)
   auto const& first_app = app_icons.front();
   ASSERT_LT(model->IconIndex(first_app), model->IconIndex(bamf_icon));
 
-  EXPECT_CALL(*bamf_icon, Stick(false));
+  EXPECT_CALL(*bamf_icon, Stick(true));
+  EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::ACCESS, _));
   lc.launcher().add_request.emit(icon_file_uri, first_app);
 
   EXPECT_EQ(model->IconIndex(bamf_icon), model->IconIndex(first_app) + 1);
+  EXPECT_TRUE(favorite_store.IsFavorite(bamf_icon->RemoteUri()));
 }
 
 TEST_F(TestLauncherController, LauncherAddRequestDeviceAdd)
@@ -1222,6 +1228,7 @@ TEST_F(TestLauncherController, LauncherAddRequestDeviceAdd)
   ASSERT_TRUE(new_icon.IsValid());
   EXPECT_EQ(new_icon, device_icon);
   EXPECT_EQ(model->IconIndex(new_icon), model->IconIndex(first_app) + 1);
+  EXPECT_TRUE(favorite_store.IsFavorite(icon_uri));
 }
 
 TEST_F(TestLauncherController, LauncherAddRequestDeviceStick)
@@ -1234,10 +1241,11 @@ TEST_F(TestLauncherController, LauncherAddRequestDeviceStick)
   auto const& second_app = *(std::next(app_icons.begin()));
   ASSERT_LT(model->IconIndex(second_app), model->IconIndex(device_icon));
 
-  EXPECT_CALL(*device_icon, Stick(false));
+  EXPECT_CALL(*device_icon, Stick(true));
   lc.launcher().add_request.emit(device_icon->RemoteUri(), second_app);
 
   EXPECT_EQ(model->IconIndex(device_icon), model->IconIndex(second_app) + 1);
+  EXPECT_TRUE(favorite_store.IsFavorite(device_icon->RemoteUri()));
 }
 
 TEST_F(TestLauncherController, LauncherRemoveRequestApplicationUnStickAndQuit)
@@ -1461,6 +1469,7 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedNew)
 {
   std::string icon_uri = FavoriteStore::URI_PREFIX_APP + app::BZR_HANDLE_PATCH;
 
+  EXPECT_CALL(*unity_app_, LogEvent(_, _)).Times(0);
   favorite_store.favorite_added.emit(icon_uri, "", true);
 
   auto const& new_icon = lc.Impl()->GetIconByUri(icon_uri);
@@ -1475,6 +1484,8 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedNewBeforeIcon)
 
   auto app_icons = model->GetSublist<ApplicationLauncherIcon>();
   auto const& first_app = app_icons.front();
+
+  EXPECT_CALL(*unity_app_, LogEvent(_, _)).Times(0);
   favorite_store.favorite_added.emit(icon_uri, first_app->RemoteUri(), true);
 
   auto const& new_icon = lc.Impl()->GetIconByUri(icon_uri);
@@ -1491,6 +1502,8 @@ TEST_F(TestLauncherController, OnFavoriteStoreFavoriteAddedNewAfterIcon)
 
   auto app_icons = model->GetSublist<ApplicationLauncherIcon>();
   auto const& first_app = app_icons.front();
+
+  EXPECT_CALL(*unity_app_, LogEvent(_, _)).Times(0);
   favorite_store.favorite_added.emit(icon_uri, first_app->RemoteUri(), false);
 
   auto const& new_icon = lc.Impl()->GetIconByUri(icon_uri);
@@ -1792,15 +1805,17 @@ TEST_F(TestLauncherController, SetNonExistingLauncherIconAsFavorite)
 {
   std::string desktop = app::BZR_HANDLE_PATCH;
   std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop;
+  auto const& model = lc.Impl()->model_;
+  auto app_icons = model->GetSublist<ApplicationLauncherIcon>();
+  EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::ACCESS, _));
 
   lc.Impl()->OnLauncherUpdateIconStickyState(icon_uri, true);
 
-  // Make sure that the icon now exists and is sticky
-  EXPECT_TRUE(favorite_store.IsFavorite(icon_uri));
-
   auto const& icon = lc.Impl()->GetIconByUri(icon_uri);
   ASSERT_TRUE(icon.IsValid());
-  ASSERT_TRUE(icon->IsSticky());
+  EXPECT_TRUE(icon->IsSticky());
+  EXPECT_EQ(model->IconIndex(icon), model->IconIndex(app_icons.back()) + 1);
+  EXPECT_TRUE(favorite_store.IsFavorite(icon_uri));
 }
 
 }
