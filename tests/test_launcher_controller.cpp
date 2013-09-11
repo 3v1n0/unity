@@ -196,7 +196,7 @@ struct MockVolumeLauncherIcon : public VolumeLauncherIcon
 
 namespace launcher
 {
-struct TestLauncherController : public testing::Test
+struct TestLauncherController : testmocks::TestUnityAppBase
 {
   TestLauncherController()
     : logger_output_(std::make_shared<helper::CaptureLogOutput>())
@@ -574,6 +574,7 @@ TEST_F(TestLauncherController, CreateFavoriteDesktopFileByID)
 {
   std::string desktop_file = app::BZR_HANDLE_PATCH;
   std::string icon_uri = FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(desktop_file);
+  EXPECT_CALL(*unity_app_, LogEvent(_, _)).Times(0);
   auto const& fav = lc.Impl()->CreateFavoriteIcon(icon_uri);
 
   ASSERT_TRUE(fav.IsValid());
@@ -588,6 +589,7 @@ TEST_F(TestLauncherController, CreateFavoriteDesktopFileByPath)
 {
   std::string desktop_file = app::BZR_HANDLE_PATCH;
   std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop_file;
+  EXPECT_CALL(*unity_app_, LogEvent(_, _)).Times(0);
   auto const& fav = lc.Impl()->CreateFavoriteIcon(icon_uri);
 
   ASSERT_TRUE(fav.IsValid());
@@ -1761,6 +1763,7 @@ TEST_F(TestLauncherController, SetExistingLauncherIconAsFavorite)
   lc.Impl()->RegisterIcon(app_icon);
   ASSERT_FALSE(favorite_store.IsFavorite(app_icon->RemoteUri()));
 
+  EXPECT_CALL(*app_icon, Stick(true));
   const std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop_file;
   lc.Impl()->OnLauncherUpdateIconStickyState(icon_uri, true);
 
