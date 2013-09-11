@@ -84,6 +84,7 @@ protected:
   void OnDndLeave();
   void OpenInstanceLauncherIcon(Time timestamp) override;
   void ToggleSticky();
+  void LogUnityEvent(ApplicationEventType);
   bool IsFileManager();
 
   bool OnShouldHighlightOnDrag(DndData const& dnd_data);
@@ -129,6 +130,7 @@ private:
   WindowList GetWindows(WindowFilterMask filter = 0, int monitor = -1);
   const std::set<std::string> GetSupportedTypes();
   WindowList GetWindowsOnCurrentDesktopInStackingOrder();
+  ApplicationSubjectPtr GetSubject();
 
   ApplicationPtr app_;
   std::string _remote_uri;
