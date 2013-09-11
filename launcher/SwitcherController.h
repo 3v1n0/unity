@@ -116,6 +116,10 @@ public:
 
   bool IsShowDesktopDisabled() const;
   void SetShowDesktopDisabled(bool disabled);
+
+  bool IsMouseDisabled() const;
+  void SetMouseDisabled(bool disabled);
+
   int StartIndex() const;
   double Opacity() const;
 
@@ -138,6 +142,7 @@ private:
   bool       visible_;
   int        monitor_;
   bool       show_desktop_disabled_;
+  bool       mouse_disabled_;
   DetailMode detail_mode_;
 
   ImplPtr    impl_;

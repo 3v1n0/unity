@@ -228,6 +228,16 @@ void Controller::SetShowDesktopDisabled(bool disabled)
   show_desktop_disabled_ = disabled;
 }
 
+bool Controller::IsMouseDisabled() const
+{
+  return mouse_disabled_;
+}
+
+void Controller::SetMouseDisabled(bool disabled)
+{
+  mouse_disabled_ = disabled;
+}
+
 int Controller::StartIndex() const
 {
   return (IsShowDesktopDisabled() ? 0 : 1);
