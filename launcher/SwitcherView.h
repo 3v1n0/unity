@@ -20,6 +20,7 @@
 #ifndef SWITCHERVIEW_H
 #define SWITCHERVIEW_H
 
+#include "DeltaTracker.h"
 #include "SwitcherModel.h"
 #include "unity-shared/AbstractIconRenderer.h"
 #include "unity-shared/StaticCairoText.h"
@@ -151,6 +152,8 @@ private:
   int last_detail_icon_selected_;
   bool target_sizes_set_;
   bool check_mouse_first_time_;
+
+  DeltaTracker delta_tracker_;
 
   std::list<ui::RenderArg> last_args_;
   std::list<ui::RenderArg> saved_args_;

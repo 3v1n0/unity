@@ -39,6 +39,7 @@ namespace
   unsigned int const VERTICAL_PADDING = 45;
   unsigned int const SPREAD_OFFSET = 100;
   unsigned int const EXTRA_ICON_SPACE = 10;
+  unsigned int const MAX_DIRECTIONS_CHANGED = 4; 
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(SwitcherView);
@@ -222,6 +223,8 @@ void SwitcherView::OnSelectionChanged(AbstractLauncherIcon::Ptr const& selection
   if (selection)
     text_view_->SetText(selection->tooltip_text());
 
+  delta_tracker_.ResetState();
+
   SaveLast();
   QueueDraw();
 }
@@ -234,8 +237,20 @@ nux::Point CalculateMouseMonitorOffset(int x, int y)
   return {geo.x + x, geo.y + y};
 }
 
-void SwitcherView::RecvMouseMove(int x, int y, int /*dx*/, int /*dy*/, unsigned long /*button_flags*/, unsigned long /*key_flags*/)
+void SwitcherView::RecvMouseMove(int x, int y, int dx, int dy, unsigned long /*button_flags*/, unsigned long /*key_flags*/)
 {
+  // We just started, and want to check if we are a bump or not.
+  // Once we are no longer a bump, skip!!
+  if (check_mouse_first_time_)
+  {
+    delta_tracker_.HandleNewMouseDelta(dx, dy);
+    if (delta_tracker_.AmountOfDirectionsChanged() >= MAX_DIRECTIONS_CHANGED)
+    {
+      check_mouse_first_time_ = false;
+      last_icon_selected_ = -1;
+    }
+  }
+
   if (model_->detail_selection)
   {
     HandleDetailMouseMove(x, y);
@@ -261,11 +276,11 @@ void SwitcherView::HandleDetailMouseMove(int x, int y)
 void SwitcherView::HandleMouseMove(int x, int y)
 {
   int icon_index = IconIndexAt(x, y);
-
+  
   if (check_mouse_first_time_)
   {
     last_icon_selected_ = icon_index;
-    check_mouse_first_time_ = false;
+    //check_mouse_first_time_ = false;
     return;
   }
 
