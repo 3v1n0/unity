@@ -1284,11 +1284,13 @@ TEST_F(TestLauncherController, LauncherAddRequestSpecial)
   std::string desktop = app::BZR_HANDLE_PATCH;
   std::string icon_uri = FavoriteStore::URI_PREFIX_APP + desktop;
   ASSERT_FALSE(lc.Impl()->GetIconByUri(icon_uri).IsValid());
+  EXPECT_CALL(*unity_app_, LogEvent(_, _)).Times(0);
 
   lc.Impl()->OnLauncherAddRequestSpecial(desktop, "", "", 0, 0, 32);
 
   auto const& sw_center_icon = lc.Impl()->GetIconByUri(icon_uri);
   ASSERT_TRUE(sw_center_icon.IsValid());
+  EXPECT_TRUE(sw_center_icon->IsSticky());
   EXPECT_NE(dynamic_cast<SoftwareCenterLauncherIcon*>(sw_center_icon.GetPointer()), nullptr);
 }
 

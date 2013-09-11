@@ -945,11 +945,11 @@ SoftwareCenterLauncherIcon::Ptr Controller::Impl::CreateSCLauncherIcon(std::stri
   if (!app)
     return result;
 
-  app->sticky = true;
   if (app->seen)
     return result;
 
   result = new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path);
+  result->Stick(false);
 
   return result;
 }
