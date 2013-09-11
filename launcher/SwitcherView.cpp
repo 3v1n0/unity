@@ -251,10 +251,21 @@ void SwitcherView::HandleDetailMouseMove(int x, int y)
   nux::Point const& mouse_pos = CalculateMouseMonitorOffset(x, y);
   int detail_icon_index = DetailIconIdexAt(mouse_pos.x, mouse_pos.y);
 
+  if (check_mouse_first_time_)
+  {
+    last_detail_icon_selected_ = detail_icon_index;
+    check_mouse_first_time_ = false;
+    return;
+  }
+
   if (detail_icon_index >= 0 && detail_icon_index != last_detail_icon_selected_)
   {
     model_->detail_selection_index = detail_icon_index;
     last_detail_icon_selected_ = detail_icon_index;
+  }
+  else if (detail_icon_index < 0)
+  {
+    last_detail_icon_selected_ = -1;
   }
 }
 
@@ -282,6 +293,10 @@ void SwitcherView::HandleMouseMove(int x, int y)
     }
 
     switcher_mouse_move.emit(icon_index);
+  }
+  else if (icon_index < 0)
+  {
+    last_icon_selected_ = -1;
   }
 }
 
