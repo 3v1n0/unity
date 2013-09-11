@@ -31,20 +31,14 @@ using namespace testing;
 namespace
 {
 
-struct TestTrashLauncherIcon : Test
+struct TestTrashLauncherIcon : testmocks::TestUnityAppBase
 {
   TestTrashLauncherIcon()
     : fm_(std::make_shared<NiceMock<MockFileManager>>())
     , icon(fm_)
-  {
-    auto const& unity_app = ApplicationManager::Default().GetUnityApplication();
-    unity_app_ = std::static_pointer_cast<testmocks::MockApplication>(unity_app);
-    unity_app_->actions_log_.clear();
-    Mock::VerifyAndClearExpectations(unity_app_.get());
-  }
+  {}
 
   MockFileManager::Ptr fm_;
-  testmocks::MockApplication::Ptr unity_app_;
   TrashLauncherIcon icon;
 };
 
