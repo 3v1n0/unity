@@ -66,6 +66,7 @@ struct MockApplicationLauncherIcon : ApplicationLauncherIcon
 
   using ApplicationLauncherIcon::IsFileManager;
   using ApplicationLauncherIcon::LogUnityEvent;
+  using ApplicationLauncherIcon::Remove;
 };
 
 MATCHER_P(AreArgsEqual, a, "")
@@ -291,10 +292,10 @@ TEST_F(TestApplicationLauncherIcon, UnstickNotRunning)
 
   bool forgot = false;
   bool removed = false;
+  usc_icon->Stick();
   usc_icon->position_forgot.connect([&forgot] {forgot = true;});
   usc_icon->remove.connect([&removed] (AbstractLauncherIcon::Ptr const&) { removed = true; });
 
-  usc_icon->Stick();
   usc_icon->UnStick();
   EXPECT_FALSE(usc_app->sticky());
   EXPECT_FALSE(usc_icon->IsSticky());
@@ -310,10 +311,10 @@ TEST_F(TestApplicationLauncherIcon, UnstickRunning)
 
   bool forgot = false;
   bool removed = false;
+  usc_icon->Stick();
   usc_icon->position_forgot.connect([&forgot] {forgot = true;});
   usc_icon->remove.connect([&removed] (AbstractLauncherIcon::Ptr const&) { removed = true; });
 
-  usc_icon->Stick();
   usc_icon->UnStick();
   EXPECT_FALSE(usc_app->sticky());
   EXPECT_FALSE(usc_icon->IsSticky());
@@ -322,15 +323,20 @@ TEST_F(TestApplicationLauncherIcon, UnstickRunning)
   EXPECT_FALSE(removed);
 }
 
-TEST_F(TestApplicationLauncherIcon, UnstickDesktopApp)
+TEST_F(TestApplicationLauncherIcon, UnstickDesktopAppLogEvents)
 {
   usc_icon->Stick();
 
+  {
+  InSequence order;
   EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::ACCESS, _));
+  EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::LEAVE, _));
+  }
+
   usc_icon->UnStick();
 }
 
-TEST_F(TestApplicationLauncherIcon, UnstickDesktopLessApp)
+TEST_F(TestApplicationLauncherIcon, UnstickDesktopLessAppLogEvent)
 {
   auto app = std::make_shared<MockApplication::Nice>();
   MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
@@ -1095,6 +1101,12 @@ TEST_F(TestApplicationLauncherIcon, LogUnityEventDesktop)
 
   EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::ACCESS, ApplicationSubjectEquals(subject)));
   usc_icon->LogUnityEvent(ApplicationEventType::ACCESS);
+}
+
+TEST_F(TestApplicationLauncherIcon, RemoveLogEvent)
+{
+  EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::LEAVE, _));
+  usc_icon->Remove();
 }
 
 }
