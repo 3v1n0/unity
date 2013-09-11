@@ -107,7 +107,6 @@ public:
   };
 
   nux::ObjectPtr<nux::View> const& GetActiveTooltip() const;
-  nux::ObjectPtr<nux::View> const& GetActiveQuicklist() const;
   LauncherDragWindow::Ptr const& GetDraggedIcon() const;
 
   virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -303,7 +302,6 @@ private:
 
   void OnIconNeedsRedraw(AbstractLauncherIcon::Ptr const& icon);
   void OnTooltipVisible(nux::ObjectPtr<nux::View> view);
-  void OnQuicklistVisible(nux::ObjectPtr<nux::View> view);
 
   void OnOverlayHidden(GVariant* data);
   void OnOverlayShown(GVariant* data);
@@ -343,7 +341,7 @@ private:
   LauncherModel::Ptr _model;
   MockableBaseWindow* _parent;
   nux::ObjectPtr<nux::View> _active_tooltip;
-  nux::ObjectPtr<nux::View> _active_quicklist;
+  QuicklistView* _active_quicklist;
 
   nux::HLayout* m_Layout;
 
