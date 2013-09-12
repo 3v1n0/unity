@@ -1520,6 +1520,11 @@ void UnityScreen::handleEvent(XEvent* event)
       }
       break;
     case ButtonPress:
+      if (shortcut_controller_->Visible())
+      {
+        shortcut_controller_->Hide();
+      }
+
       if (super_keypressed_)
       {
         launcher_controller_->KeyNavTerminate(false);
@@ -1610,6 +1615,11 @@ void UnityScreen::handleEvent(XEvent* event)
       break;
     case KeyPress:
     {
+      if (shortcut_controller_->Visible())
+      {
+        shortcut_controller_->Hide();
+      }
+
       if (super_keypressed_)
       {
         /* We need an idle to postpone this action, after the current event
