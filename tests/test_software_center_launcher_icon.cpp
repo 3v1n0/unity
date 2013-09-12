@@ -52,7 +52,7 @@ const std::string USC_DESKTOP = LOCAL_DATA_DIR+"/applications/ubuntu-software-ce
 const std::string USC_APP_INSTALL_DESKTOP = "/usr/share/app-install/desktop/software-center:ubuntu-software-center.desktop";
 }
 
-struct TestSoftwareCenterLauncherIcon : testing::Test
+struct TestSoftwareCenterLauncherIcon : testmocks::TestUnityAppBase
 {
   TestSoftwareCenterLauncherIcon()
      : usc(std::make_shared<MockApplication::Nice>(USC_APP_INSTALL_DESKTOP, FINAL_ICON, APP_NAME))
@@ -197,6 +197,12 @@ TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedUpdatesIcon)
   icon.icon_name = "foo-icon";
   icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
   EXPECT_EQ(icon.icon_name(), usc->icon());
+}
+
+TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedLogsEvent)
+{
+  EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::ACCESS, _));
+  icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
 }
 
 TEST_F(TestSoftwareCenterLauncherIcon, AnimateToInvalidPosition)

@@ -351,9 +351,7 @@ TEST_F(TestLauncher, DragLauncherIconSavesIconOrderIfPositionHasChanged)
   auto const& center3 = icon3->GetCenter(launcher_->monitor());
   launcher_->UpdateDragWindowPosition(center3.x, center3.y);
 
-  bool model_saved = false;
-  model_->saved.connect([&model_saved] { model_saved = true; });
-  EXPECT_CALL(*icon2, Stick(false));
+  EXPECT_CALL(*icon2, Stick(true));
 
   ASSERT_NE(launcher_->_drag_icon_position, model_->IconIndex(icon2));
   launcher_->EndIconDrag();
@@ -363,8 +361,6 @@ TEST_F(TestLauncher, DragLauncherIconSavesIconOrderIfPositionHasChanged)
   ASSERT_EQ(*it, icon1); it++;
   ASSERT_EQ(*it, icon3); it++;
   ASSERT_EQ(*it, icon2);
-
-  EXPECT_TRUE(model_saved);
 
   // Let's wait the drag icon animation to be completed
   Utils::WaitUntilMSec([this] { return launcher_->GetDraggedIcon(); }, false, 2000);
@@ -430,7 +426,7 @@ TEST_F(TestLauncher, DragLauncherIconSticksApplicationIcon)
   auto const& center = icons[0]->GetCenter(launcher_->monitor());
   launcher_->UpdateDragWindowPosition(center.x, center.y);
 
-  EXPECT_CALL(*app, Stick(false));
+  EXPECT_CALL(*app, Stick(true));
   launcher_->EndIconDrag();
 }
 
@@ -449,7 +445,7 @@ TEST_F(TestLauncher, DragLauncherIconSticksDeviceIcon)
   auto const& center = icons[0]->GetCenter(launcher_->monitor());
   launcher_->UpdateDragWindowPosition(center.x, center.y);
 
-  EXPECT_CALL(*device, Stick(false));
+  EXPECT_CALL(*device, Stick(true));
   launcher_->EndIconDrag();
 }
 

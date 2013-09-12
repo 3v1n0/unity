@@ -220,7 +220,7 @@ void SoftwareCenterLauncherIcon::OnFinished(GVariant *params)
     // exchange the temp Application with the real one
     auto& app_manager = ApplicationManager::Default();
     auto const& new_app = app_manager.GetApplicationForDesktopFile(new_desktop_path);
-    new_app->sticky = IsSticky();
+    if (new_app) new_app->sticky = IsSticky();
     SetApplication(new_app);
     Stick();
 
