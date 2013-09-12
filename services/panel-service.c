@@ -1679,7 +1679,7 @@ activate_next_prev_menu (PanelService         *self,
               if (!panel_service_entry_is_visible (self, new_entry))
                 continue;
 
-              prio = parent_priority + index;
+              prio = parent_priority * 100 + index;
               index++;
 
               gpointer *values = g_new (gpointer, 2);
