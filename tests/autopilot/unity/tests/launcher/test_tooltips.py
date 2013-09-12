@@ -36,7 +36,7 @@ class LauncherTooltipTests(LauncherTestCase):
         # must avoid the accordion effect, as the icons start to pass to quickly
         size = len(self.icons)
         if size > 5:
-          size = 5
+            size = 5
 
         # subsequent tooltips reveal instantly, but hide on exit
         a, b = 0, 1
