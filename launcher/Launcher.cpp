@@ -434,9 +434,6 @@ bool Launcher::AnimationInProgress() const
   // performance here can be improved by caching the longer remaining animation found and short circuiting to that each time
   // this way extra checks may be avoided
 
-  if (_last_reveal_progress != _hide_machine.reveal_progress)
-    return true;
-
   // short circuit to avoid unneeded calculations
   struct timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
