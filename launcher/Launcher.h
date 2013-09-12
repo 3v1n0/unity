@@ -183,21 +183,6 @@ private:
     ACTION_DRAG_EXTERNAL,
   } LauncherActionState;
 
-  typedef enum
-  {
-    TIME_ENTER,
-    TIME_LEAVE,
-    TIME_DRAG_END,
-    TIME_DRAG_THRESHOLD,
-    TIME_AUTOHIDE,
-    TIME_DRAG_EDGE_TOUCH,
-    TIME_DRAG_OUT,
-    TIME_TAP_SUPER,
-    TIME_SUPER_PRESSED,
-
-    TIME_LAST
-  } LauncherActionTimes;
-
   void ConfigureBarrier();
 
   void OnMonitorChanged(int monitor);
@@ -251,13 +236,7 @@ private:
 
   bool MouseOverBottomScrollArea();
 
-  float DnDStartProgress(struct timespec const& current) const;
-  float DnDExitProgress(struct timespec const& current) const;
-  float GetHoverProgress(struct timespec const& current) const;
-  float AutohideProgress(struct timespec const& current) const;
-  float DragThresholdProgress(struct timespec const& current) const;
-  float DragHideProgress(struct timespec const& current) const;
-  float DragOutProgress(struct timespec const& current) const;
+  float DragOutProgress() const;
   float IconDesatValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
   float IconPresentProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
   float IconUnfoldProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
@@ -393,7 +372,7 @@ private:
   bool _drag_gesture_ongoing;
   float _last_reveal_progress;
 
-  nux::Point2 _mouse_position;
+  nux::Point _mouse_position;
   LauncherDragWindow::Ptr _drag_window;
   LauncherHideMachine _hide_machine;
   LauncherHoverMachine _hover_machine;
@@ -402,14 +381,19 @@ private:
   unity::DndData _dnd_data;
   nux::DndAction _drag_action;
   Atom _selection_atom;
-
-  struct timespec  _times[TIME_LAST];
   struct timespec _urgent_finished_time;
 
   BaseTexturePtr launcher_sheen_;
   BaseTexturePtr launcher_pressure_effect_;
 
-  nux::animation::AnimateValue<double> dash_showing_animation_;
+  nux::animation::AnimateValue<float> auto_hide_animation_;
+  nux::animation::AnimateValue<float> hover_animation_;
+  nux::animation::AnimateValue<float> drag_over_animation_;
+  nux::animation::AnimateValue<float> drag_out_animation_;
+  nux::animation::AnimateValue<float> drag_icon_animation_;
+  nux::animation::AnimateValue<float> dnd_hide_animation_;
+  nux::animation::AnimateValue<float> dash_showing_animation_;
+
   ui::AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;
 
