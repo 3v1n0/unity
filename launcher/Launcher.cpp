@@ -2189,20 +2189,20 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
 
   auto const& launcher_geo = GetGeometry();
   auto const& hovered_icon = MouseIconIntersection((launcher_geo.x + launcher_geo.width) / 2.0, y - GetAbsoluteY());
-  float progress = drag_icon_animation_.GetCurrentValue();
+  bool mouse_beyond_drag_threshold = MouseBeyondDragThreshold();
 
   if (hovered_icon && _drag_icon != hovered_icon)
   {
-    if (progress >= 1.0f)
+    if (!mouse_beyond_drag_threshold)
     {
       _model->ReorderSmart(_drag_icon, hovered_icon, true);
     }
-    else if (progress == 0.0f)
+    else
     {
       _model->ReorderBefore(_drag_icon, hovered_icon, false);
     }
   }
-  else if (!hovered_icon && progress == 0.0f)
+  else if (!hovered_icon && mouse_beyond_drag_threshold)
   {
     // If no icon is hovered, then we can add our icon to the bottom
     for (auto it = _model->main_rbegin(); it != _model->main_rend(); ++it)
