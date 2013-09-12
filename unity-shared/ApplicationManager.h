@@ -46,7 +46,8 @@ enum class ApplicationEventType
 {
   CREATE,
   DELETE,
-  ACCESS
+  ACCESS,
+  LEAVE
 };
 
 class ApplicationWindow

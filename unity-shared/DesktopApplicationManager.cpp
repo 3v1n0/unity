@@ -51,6 +51,9 @@ void Application::LogEvent(ApplicationEventType type, ApplicationSubjectPtr cons
     case ApplicationEventType::ACCESS:
       zg_event_interpretation = ZEITGEIST_ZG_ACCESS_EVENT;
       break;
+    case ApplicationEventType::LEAVE:
+      zg_event_interpretation = ZEITGEIST_ZG_LEAVE_EVENT;
+      break;
   }
 
   auto const& id = desktop_id();

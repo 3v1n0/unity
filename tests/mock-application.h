@@ -362,6 +362,23 @@ private:
   AppMap app_map_;
 };
 
+struct TestUnityAppBase : testing::Test
+{
+  TestUnityAppBase()
+  {
+    auto const& unity_app = unity::ApplicationManager::Default().GetUnityApplication();
+    unity_app_ = std::static_pointer_cast<MockApplication>(unity_app);
+  }
+
+  ~TestUnityAppBase()
+  {
+    Mock::VerifyAndClearExpectations(unity_app_.get());
+    unity_app_->actions_log_.clear();
+  }
+
+  MockApplication::Ptr unity_app_;
+};
+
 }
 
 #endif
