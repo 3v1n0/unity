@@ -112,11 +112,6 @@ const int Launcher::Launcher::ANIM_DURATION_SHORT = 125;
 Launcher::Launcher(MockableBaseWindow* parent,
                    NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
-#ifdef USE_X11
-  , display(nux::GetGraphicsDisplay()->GetX11Display())
-#else
-  , display(0)
-#endif
   , monitor(0)
   , _parent(parent)
   , _active_quicklist(nullptr)
@@ -178,8 +173,9 @@ Launcher::Launcher(MockableBaseWindow* parent,
   SetAcceptMouseWheelEvent(true);
   SetDndEnabled(false, true);
 
+  auto const& redraw_cb = sigc::hide(sigc::mem_fun(this, &Launcher::QueueDraw));
   _hide_machine.should_hide_changed.connect(sigc::mem_fun(this, &Launcher::SetHidden));
-  _hide_machine.reveal_progress.changed.connect(sigc::hide(sigc::mem_fun(this, &Launcher::QueueDraw)));
+  _hide_machine.reveal_progress.changed.connect(redraw_cb);
   _hover_machine.should_hover_changed.connect(sigc::mem_fun(this, &Launcher::SetHover));
 
   mouse_down.connect(sigc::mem_fun(this, &Launcher::RecvMouseDown));
@@ -189,7 +185,6 @@ Launcher::Launcher(MockableBaseWindow* parent,
   mouse_leave.connect(sigc::mem_fun(this, &Launcher::RecvMouseLeave));
   mouse_move.connect(sigc::mem_fun(this, &Launcher::RecvMouseMove));
   mouse_wheel.connect(sigc::mem_fun(this, &Launcher::RecvMouseWheel));
-  //OnEndFocus.connect   (sigc::mem_fun (this, &Launcher::exitKeyNavMode));
 
   QuicklistManager& ql_manager = *(QuicklistManager::Default());
   ql_manager.quicklist_opened.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistOpened));
@@ -218,13 +213,13 @@ Launcher::Launcher(MockableBaseWindow* parent,
   options.changed.connect(sigc::mem_fun(this, &Launcher::OnOptionsChanged));
   monitor.changed.connect(sigc::mem_fun(this, &Launcher::OnMonitorChanged));
 
-  auto_hide_animation_.updated.connect(sigc::hide(sigc::mem_fun(this, &Launcher::QueueDraw)));
-  hover_animation_.updated.connect(sigc::hide(sigc::mem_fun(this, &Launcher::QueueDraw)));
-  drag_over_animation_.updated.connect(sigc::hide(sigc::mem_fun(this, &Launcher::QueueDraw)));
-  drag_out_animation_.updated.connect(sigc::hide(sigc::mem_fun(this, &Launcher::QueueDraw)));
-  drag_icon_animation_.updated.connect(sigc::hide(sigc::mem_fun(this, &Launcher::QueueDraw)));
-  dnd_hide_animation_.updated.connect(sigc::hide(sigc::mem_fun(this, &Launcher::QueueDraw)));
-  dash_showing_animation_.updated.connect(sigc::hide(sigc::mem_fun(this, &Launcher::QueueDraw)));
+  auto_hide_animation_.updated.connect(redraw_cb);
+  hover_animation_.updated.connect(redraw_cb);
+  drag_over_animation_.updated.connect(redraw_cb);
+  drag_out_animation_.updated.connect(redraw_cb);
+  drag_icon_animation_.updated.connect(redraw_cb);
+  dnd_hide_animation_.updated.connect(redraw_cb);
+  dash_showing_animation_.updated.connect(redraw_cb);
 
   /* FIXME: the easing curve for this animation should be only
    * std::pow(progress, 2); */

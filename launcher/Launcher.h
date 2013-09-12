@@ -70,7 +70,6 @@ public:
 
   Launcher(MockableBaseWindow* parent, NUX_FILE_LINE_PROTO);
 
-  nux::Property<Display*> display;
   nux::Property<int> monitor;
   nux::Property<Options::Ptr> options;
 
