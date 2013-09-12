@@ -131,6 +131,7 @@ Launcher::Launcher(MockableBaseWindow* parent,
   , _initial_drag_animation(false)
   , _dash_is_open(false)
   , _hud_is_open(false)
+  , _folded(true)
   , _launcher_action_state(ACTION_NONE)
   , _icon_size(DEFAULT_ICON_SIZE + DEFAULT_ICON_SIZE_DELTA)
   , _dnd_delta_y(0)
@@ -964,7 +965,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
 
   nux::Color const& colorify = FullySaturateColor(options()->background_color);
 
-  float hover_progress = hover_animation_.GetCurrentValue();
+  float hover_progress = _folded ? hover_animation_.GetCurrentValue() : 1.0f;
   float folded_z_distance = FOLDED_Z_DISTANCE * (1.0f - hover_progress);
   float animation_neg_rads = NEG_FOLDED_ANGLE * (1.0f - hover_progress);
 
@@ -979,6 +980,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   center.z = 0;
 
   int launcher_height = geo.height;
+  _folded = true;
 
   // compute required height of launcher AND folding threshold
   float sum = 0.0f + center.y;
@@ -996,7 +998,10 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   }
 
   if (sum - SPACE_BETWEEN_ICONS <= launcher_height)
+  {
     folding_threshold = launcher_height;
+    _folded = false;
+  }
 
   float autohide_offset = 0.0f;
   *launcher_alpha = 1.0f;
@@ -1474,20 +1479,21 @@ void Launcher::SetHover(bool hovered)
   {
     _enter_y = (int) _mouse_position.y;
 
-    // XXX: Only do this if we have something to animate...
-    if (hover_animation_.CurrentState() == na::Animation::State::Running)
+    if (_folded)
     {
-      if (hover_animation_.GetFinishValue() != 1.0f)
-        hover_animation_.Reverse();
-    }
-    else
-    {
-      hover_animation_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
+      if (hover_animation_.CurrentState() == na::Animation::State::Running)
+      {
+        if (hover_animation_.GetFinishValue() != 1.0f)
+          hover_animation_.Reverse();
+      }
+      else
+      {
+        hover_animation_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
+      }
     }
   }
-  else
+  else if (_folded)
   {
-    // XXX: Only do this if we have something to animate...
     if (hover_animation_.CurrentState() == na::Animation::State::Running)
     {
       if (hover_animation_.GetFinishValue() != 0.0f)

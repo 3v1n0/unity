@@ -333,6 +333,7 @@ private:
   bool _initial_drag_animation;
   bool _dash_is_open;
   bool _hud_is_open;
+  bool _folded;
 
   LauncherActionState _launcher_action_state;
 
