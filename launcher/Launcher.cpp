@@ -159,6 +159,7 @@ Launcher::Launcher(MockableBaseWindow* parent,
   , _last_reveal_progress(0.0f)
   , _drag_action(nux::DNDACTION_NONE)
   , _selection_atom(0)
+  , dash_showing_animation_(90)
   , icon_renderer(std::make_shared<ui::IconRenderer>())
 {
   m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -1052,9 +1053,12 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   *launcher_alpha = 1.0f;
   if (options()->hide_mode != LAUNCHER_HIDE_NEVER || _hide_machine.GetQuirk(LauncherHideMachine::LOCK_HIDE))
   {
-
     float autohide_progress = AutohideProgress(current) * (1.0f - DragOutProgress(current));
-    if (options()->auto_hide_animation() == FADE_ONLY)
+    if (_dash_is_open)
+    {
+      *launcher_alpha = dash_showing_animation_.GetCurrentValue();
+    }
+    else if (options()->auto_hide_animation() == FADE_ONLY)
     {
       *launcher_alpha = 1.0f - autohide_progress;
     }
@@ -1259,6 +1263,9 @@ void Launcher::OnOverlayShown(GVariant* data)
       _dash_is_open = true;
       _hide_machine.SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
       _hover_machine.SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
+
+      if (options()->hide_mode != LAUNCHER_HIDE_NEVER)
+        dash_showing_animation_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
     }
     if (identity == "hud")
     {
@@ -1299,9 +1306,10 @@ void Launcher::OnOverlayHidden(GVariant* data)
   {
     if (identity == "dash")
     {
+      _dash_is_open = false;
       _hide_machine.SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
       _hover_machine.SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
-      _dash_is_open = false;
+      dash_showing_animation_.Stop();
     }
     else if (identity == "hud")
     {
