@@ -229,11 +229,8 @@ private:
   void SetActionState(LauncherActionState actionstate);
   LauncherActionState GetActionState() const;
 
-  void EnsureAnimation();
   void EnsureScrollTimer();
-
   bool MouseOverTopScrollArea();
-
   bool MouseOverBottomScrollArea();
 
   float DragOutProgress() const;
@@ -278,9 +275,7 @@ private:
 
   void OnIconAdded(AbstractLauncherIcon::Ptr const& icon);
   void OnIconRemoved(AbstractLauncherIcon::Ptr const& icon);
-  void OnOrderChanged();
 
-  void OnIconNeedsRedraw(AbstractLauncherIcon::Ptr const& icon);
   void OnTooltipVisible(nux::ObjectPtr<nux::View> view);
 
   void OnOverlayHidden(GVariant* data);

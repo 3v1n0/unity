@@ -53,7 +53,6 @@
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/GraphicsUtils.h"
 
-
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 
@@ -257,7 +256,7 @@ void Launcher::OnDragUpdate(const nux::GestureEvent &event)
 {
   _drag_out_delta_x =
     CLAMP(_drag_out_delta_x + event.GetDelta().x, 0.0f, DRAG_OUT_PIXELS);
-  EnsureAnimation();
+  QueueDraw();
 }
 
 void Launcher::OnDragFinish(const nux::GestureEvent &event)
@@ -367,11 +366,6 @@ float Launcher::DragOutProgress() const
     return progress * drag_out_animation_.GetCurrentValue();
 }
 
-void Launcher::EnsureAnimation()
-{
-  QueueDraw();
-}
-
 bool Launcher::IconNeedsAnimation(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const
 {
   struct timespec time = icon->GetQuirkTime(AbstractLauncherIcon::Quirk::VISIBLE);
@@ -439,7 +433,7 @@ bool Launcher::AnimationInProgress() const
   clock_gettime(CLOCK_MONOTONIC, &current);
 
   // animations happening on specific icons
-  for (auto const &icon : *_model)
+  for (auto const& icon : *_model)
     if (IconNeedsAnimation(icon, current))
       return true;
 
@@ -1163,7 +1157,7 @@ void Launcher::ShowShortcuts(bool show)
 {
   _shortcuts_shown = show;
   _hide_machine.SetQuirk(LauncherHideMachine::SHORTCUT_KEYS_VISIBLE, show);
-  EnsureAnimation();
+  QueueDraw();
 }
 
 void Launcher::OnLockHideChanged(GVariant *data)
@@ -1245,7 +1239,7 @@ void Launcher::OnOverlayShown(GVariant* data)
     if (_icon_under_mouse)
       _icon_under_mouse->HideTooltip();
   }
-  EnsureAnimation();
+  QueueDraw();
 }
 
 void Launcher::OnOverlayHidden(GVariant* data)
@@ -1287,12 +1281,13 @@ void Launcher::OnOverlayHidden(GVariant* data)
       SaturateIcons();
     }
   }
-  EnsureAnimation();
 
   // as the leave event is no more received when the place is opened
   // FIXME: remove when we change the mouse grab strategy in nux
   nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
   SetStateMouseOverLauncher(GetAbsoluteGeometry().IsInside(pt));
+
+  QueueDraw();
 }
 
 bool Launcher::IsOverlayOpen() const
@@ -1346,8 +1341,6 @@ void Launcher::SetHidden(bool hide_launcher)
 
   if (!hide_launcher && GetActionState() == ACTION_DRAG_EXTERNAL)
     DndReset();
-
-  EnsureAnimation();
 
   hidden_changed.emit();
 }
@@ -1417,7 +1410,7 @@ void Launcher::UpdateOptions(Options::Ptr options)
   SetHideMode(options->hide_mode);
 
   ConfigureBarrier();
-  EnsureAnimation();
+  QueueDraw();
 }
 
 void Launcher::ConfigureBarrier()
@@ -1434,7 +1427,6 @@ void Launcher::SetHideMode(LauncherHideMode hidemode)
   bool fixed_launcher = (hidemode == LAUNCHER_HIDE_NEVER);
   _parent->InputWindowEnableStruts(fixed_launcher);
   _hide_machine.SetMode(static_cast<LauncherHideMachine::HideMode>(hidemode));
-  EnsureAnimation();
 }
 
 BacklightMode Launcher::GetBacklightMode() const
@@ -1572,7 +1564,7 @@ bool Launcher::OnScrollTimeout()
 
   if (continue_animation)
   {
-    EnsureAnimation();
+    QueueDraw();
   }
 
   return continue_animation;
@@ -1730,9 +1722,9 @@ void Launcher::Resize(nux::Point const& offset, int height)
 
 void Launcher::OnIconAdded(AbstractLauncherIcon::Ptr const& icon)
 {
-  EnsureAnimation();
+  QueueDraw();
 
-  icon->needs_redraw.connect(sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
+  icon->needs_redraw.connect(sigc::hide(sigc::mem_fun(this, &Launcher::QueueDraw)));
   icon->tooltip_visible.connect(sigc::mem_fun(this, &Launcher::OnTooltipVisible));
 }
 
@@ -1744,24 +1736,20 @@ void Launcher::OnIconRemoved(AbstractLauncherIcon::Ptr const& icon)
   if (icon == _drag_icon)
     _drag_icon = nullptr;
 
-  EnsureAnimation();
-}
-
-void Launcher::OnOrderChanged()
-{
-  EnsureAnimation();
+  QueueDraw();
 }
 
 void Launcher::SetModel(LauncherModel::Ptr model)
 {
   _model = model;
+  auto const& queue_draw_cb = sigc::hide(sigc::mem_fun(this, &Launcher::QueueDraw));
 
-  for (auto icon : *_model)
-    icon->needs_redraw.connect(sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
+  for (auto const& icon : *_model)
+    icon->needs_redraw.connect(queue_draw_cb);
 
   _model->icon_added.connect(sigc::mem_fun(this, &Launcher::OnIconAdded));
   _model->icon_removed.connect(sigc::mem_fun(this, &Launcher::OnIconRemoved));
-  _model->order_changed.connect(sigc::mem_fun(this, &Launcher::OnOrderChanged));
+  _model->order_changed.connect(sigc::mem_fun(this, &Launcher::QueueDraw));
   _model->selection_changed.connect(sigc::mem_fun(this, &Launcher::OnSelectionChanged));
 }
 
@@ -1797,13 +1785,8 @@ void Launcher::OnSelectionChanged(AbstractLauncherIcon::Ptr const& selection)
   if (IsInKeyNavMode())
   {
     EnsureIconOnScreen(selection);
-    EnsureAnimation();
+    QueueDraw();
   }
-}
-
-void Launcher::OnIconNeedsRedraw(AbstractLauncherIcon::Ptr const& icon)
-{
-  EnsureAnimation();
 }
 
 void Launcher::OnTooltipVisible(nux::ObjectPtr<nux::View> view)
@@ -1829,10 +1812,7 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
   {
     auto idle = std::make_shared<glib::Idle>(glib::Source::Priority::DEFAULT);
     sources_.Add(idle, ANIMATION_IDLE);
-    idle->Run([&]() {
-      EnsureAnimation();
-      return false;
-    });
+    idle->Run([this]() { QueueDraw(); return false; });
   }
 
   nux::ROPConfig ROP;
@@ -2047,7 +2027,7 @@ long Launcher::PostLayoutManagement(long LayoutResult)
 void Launcher::OnDragWindowAnimCompleted()
 {
   HideDragWindow();
-  EnsureAnimation();
+  QueueDraw();
 }
 
 bool Launcher::StartIconDragTimeout(int x, int y)
@@ -2086,7 +2066,7 @@ void Launcher::StartIconDragRequest(int x, int y)
       _drag_window->StartQuickAnimation();
     }
 
-    EnsureAnimation();
+    QueueDraw();
   }
   else
   {
@@ -2131,7 +2111,7 @@ void Launcher::EndIconDrag()
       remove_request.emit(_drag_icon);
 
       HideDragWindow();
-      EnsureAnimation();
+      QueueDraw();
     }
     else
     {
@@ -2258,7 +2238,6 @@ void Launcher::ResetMouseDragState()
   _dnd_delta_x = 0;
   _dnd_delta_y = 0;
   _last_button_press = 0;
-  EnsureAnimation();
 }
 
 void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -2267,7 +2246,6 @@ void Launcher::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned 
   SetMousePosition(x, y);
 
   MouseDownLogic(x, y, button_flags, key_flags);
-  EnsureAnimation();
 }
 
 void Launcher::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags)
@@ -2330,23 +2308,20 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
     UpdateDragWindowPosition(geo.x + x, geo.y + y);
   }
 
-  EnsureAnimation();
+  QueueDraw();
 }
 
 void Launcher::RecvMouseEnter(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   SetMousePosition(x, y);
   SetStateMouseOverLauncher(true);
-
   EventLogic();
-  EnsureAnimation();
 }
 
 void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned long key_flags)
 {
   SetStateMouseOverLauncher(false);
   EventLogic();
-  EnsureAnimation();
 }
 
 void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
@@ -2388,7 +2363,7 @@ void Launcher::ScrollLauncher(int wheel_delta)
     // scroll up
     _launcher_drag_delta += 25;
 
-  EnsureAnimation();
+  QueueDraw();
 }
 
 #ifdef USE_X11
@@ -2472,7 +2447,6 @@ void Launcher::RecvQuicklistOpened(nux::ObjectPtr<QuicklistView> const& quicklis
     _hide_machine.SetQuirk(LauncherHideMachine::QUICKLIST_OPEN, true);
     _hover_machine.SetQuirk(LauncherHoverMachine::QUICKLIST_OPEN, true);
     EventLogic();
-    EnsureAnimation();
   }
 }
 
@@ -2492,7 +2466,6 @@ void Launcher::RecvQuicklistClosed(nux::ObjectPtr<QuicklistView> const& quicklis
   _hover_machine.SetQuirk(LauncherHoverMachine::QUICKLIST_OPEN, false);
 
   EventLogic();
-  EnsureAnimation();
 }
 
 void Launcher::EventLogic()
