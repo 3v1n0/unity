@@ -382,6 +382,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
             self._mouse.move(shift_over, self._mouse.y)
             sleep(0.5)
 
+        self.move_mouse_to_icon(target)
         self._mouse.move(self._mouse.x, target_y)
         sleep(0.5)
         self._mouse.release()
