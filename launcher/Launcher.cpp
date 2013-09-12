@@ -88,7 +88,6 @@ const int RIGHT_LINE_WIDTH = 1;
 const int ANIM_DURATION_SHORT_SHORT = 100;
 const int ANIM_DURATION = 200;
 const int ANIM_DURATION_LONG = 350;
-const int ANIM_DURATION_SHOW_DASH = 90;
 const int START_DRAGICON_DURATION = 250;
 
 const int MOUSE_DEADZONE = 15;
@@ -160,6 +159,7 @@ Launcher::Launcher(MockableBaseWindow* parent,
   , _last_reveal_progress(0.0f)
   , _drag_action(nux::DNDACTION_NONE)
   , _selection_atom(0)
+  , dash_showing_animation_(90)
   , icon_renderer(std::make_shared<ui::IconRenderer>())
 {
   m_Layout = new nux::HLayout(NUX_TRACKER_LOCATION);
@@ -355,8 +355,7 @@ float Launcher::AutohideProgress(struct timespec const& current) const
 {
   // time-based progress (full scale or finish the TRIGGER_AUTOHIDE_MIN -> 0.00f on bfb)
   float animation_progress;
-  float duration = _dash_is_open ? ANIM_DURATION_SHOW_DASH : ANIM_DURATION_SHORT;
-  animation_progress = CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_AUTOHIDE])) / duration, 0.0f, 1.0f);
+  animation_progress = CLAMP((float)(unity::TimeUtil::TimeDelta(&current, &_times[TIME_AUTOHIDE])) / (float) ANIM_DURATION_SHORT, 0.0f, 1.0f);
   if (_hidden)
     return animation_progress;
   else
@@ -1054,9 +1053,12 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   *launcher_alpha = 1.0f;
   if (options()->hide_mode != LAUNCHER_HIDE_NEVER || _hide_machine.GetQuirk(LauncherHideMachine::LOCK_HIDE))
   {
-
     float autohide_progress = AutohideProgress(current) * (1.0f - DragOutProgress(current));
-    if (_dash_is_open || options()->auto_hide_animation() == FADE_ONLY)
+    if (_dash_is_open)
+    {
+      *launcher_alpha = dash_showing_animation_.GetCurrentValue();
+    }
+    else if (options()->auto_hide_animation() == FADE_ONLY)
     {
       *launcher_alpha = 1.0f - autohide_progress;
     }
@@ -1261,6 +1263,9 @@ void Launcher::OnOverlayShown(GVariant* data)
       _dash_is_open = true;
       _hide_machine.SetQuirk(LauncherHideMachine::PLACES_VISIBLE, true);
       _hover_machine.SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
+
+      if (options()->hide_mode != LAUNCHER_HIDE_NEVER)
+        dash_showing_animation_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
     }
     if (identity == "hud")
     {
@@ -1301,9 +1306,10 @@ void Launcher::OnOverlayHidden(GVariant* data)
   {
     if (identity == "dash")
     {
+      _dash_is_open = false;
       _hide_machine.SetQuirk(LauncherHideMachine::PLACES_VISIBLE, false);
       _hover_machine.SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, false);
-      _dash_is_open = false;
+      dash_showing_animation_.Stop();
     }
     else if (identity == "hud")
     {

@@ -24,6 +24,7 @@
 #include <Nux/View.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/TimerProc.h>
+#include <NuxCore/Animation.h>
 #include <NuxGraphics/GestureEvent.h>
 #ifndef USE_GLES
 # include <NuxGraphics/IOpenGLAsmShader.h>
@@ -408,6 +409,7 @@ private:
   BaseTexturePtr launcher_sheen_;
   BaseTexturePtr launcher_pressure_effect_;
 
+  nux::animation::AnimateValue<double> dash_showing_animation_;
   ui::AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;
 
