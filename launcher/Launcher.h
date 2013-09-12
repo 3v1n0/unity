@@ -317,8 +317,6 @@ private:
   nux::ObjectPtr<nux::View> _active_tooltip;
   QuicklistView* _active_quicklist;
 
-  nux::HLayout* m_Layout;
-
   // used by keyboard/a11y-navigation
   AbstractLauncherIcon::Ptr _icon_under_mouse;
   AbstractLauncherIcon::Ptr _icon_mouse_down;
@@ -336,17 +334,8 @@ private:
   bool _dash_is_open;
   bool _hud_is_open;
 
-  float _folded_angle;
-  float _neg_folded_angle;
-  float _folded_z_distance;
-  float _edge_overcome_pressure;
-
   LauncherActionState _launcher_action_state;
 
-  int _space_between_icons;
-  int _icon_image_size;
-  int _icon_image_size_delta;
-  int _icon_glow_size;
   int _icon_size;
   int _dnd_delta_y;
   int _dnd_delta_x;
