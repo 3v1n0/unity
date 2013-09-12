@@ -33,9 +33,14 @@ class LauncherTooltipTests(LauncherTestCase):
         # only reveal tooltips after short wait
         self.assertEqual(self.get_reveal_behavior(self.icons[0]), self.DELAYED)
 
+        # must avoid the accordion effect, as the icons start to pass to quickly
+        size = len(self.icons)
+        if size > 5:
+          size = 5
+
         # subsequent tooltips reveal instantly, but hide on exit
         a, b = 0, 1
-        while b < len(self.icons):
+        while b < size:
             self.mouse.move(self.icons[b].center_x, self.icons[b].center_y)
             self.assertThat(lambda: self.icons[b].get_tooltip(), Eventually(NotEquals(None)))
             self.assertThat(self.icons[b].get_tooltip().active, Eventually(Equals(True)))
