@@ -317,6 +317,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabBiasViewportNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDisableShowDesktopNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetDisableMouseNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
      optionSetAltTabForwardAllInitiate(boost::bind(&UnityScreen::altTabForwardAllInitiate, this, _1, _2, _3));
      optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
@@ -1719,7 +1720,7 @@ void UnityScreen::handleEvent(XEvent* event)
       break;
   }
 
-  if (!skip_other_plugins &&
+  if (!skip_other_plugins && !switcher_controller_->IsMouseDisabled() &&
       screen->otherGrabExist("deco", "move", "switcher", "resize", nullptr))
   {
     wt->ProcessForeignEvent(event, nullptr);
@@ -1924,7 +1925,16 @@ bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
 bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode show_mode)
 {
   if (!grab_index_)
-    grab_index_ = screen->pushGrab (screen->normalCursor(), "unity-switcher");
+  {
+    if (switcher_controller_->IsMouseDisabled())
+    {
+      grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
+    }
+    else
+    {
+      grab_index_ = screen->pushGrab (screen->normalCursor(), "unity-switcher");
+    }
+  }
 
   screen->addAction(&optionGetAltTabRight());
   screen->addAction(&optionGetAltTabDetailStart());
@@ -3140,6 +3150,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::DisableShowDesktop:
       switcher_controller_->SetShowDesktopDisabled(optionGetDisableShowDesktop());
+      break;
+    case UnityshellOptions::DisableMouse:
+      switcher_controller_->SetMouseDisabled(optionGetDisableMouse());
       break;
     case UnityshellOptions::ShowMinimizedWindows:
       compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::setFunctions (optionGetShowMinimizedWindows ());

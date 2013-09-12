@@ -526,6 +526,12 @@
                     <default>false</default>
                 </option>
 
+                <option name="disable_mouse" type="bool">
+                    <_short>Disable the mouse in the Switcher</_short>
+                    <_long>Disables the mouse in the Switcher.</_long>
+                    <default>false</default>
+                </option>
+
             </group>
 
         </options>
