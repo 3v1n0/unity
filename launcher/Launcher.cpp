@@ -2434,7 +2434,7 @@ void Launcher::MouseUpLogic(int x, int y, unsigned long button_flags, unsigned l
 
   if (GetActionState() == ACTION_DRAG_LAUNCHER)
   {
-    animation::StartOrReverse(drag_over_animation_, animation::Direction::FORWARD);
+    animation::StartOrReverse(drag_over_animation_, animation::Direction::BACKWARD);
   }
 
   _icon_mouse_down = nullptr;
