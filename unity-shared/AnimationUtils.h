@@ -28,8 +28,6 @@ namespace unity
 {
 namespace animation
 {
-namespace
-{
 
 enum class Direction
 {
@@ -37,49 +35,8 @@ enum class Direction
   BACKWARD
 };
 
-template <class VALUE_TYPE>
-void StartOrReverse(na::AnimateValue<VALUE_TYPE>& animation, VALUE_TYPE start, VALUE_TYPE finish)
-{
-  if (animation.CurrentState() == na::Animation::State::Running)
-  {
-    if (animation.GetStartValue() == finish && animation.GetFinishValue() == start)
-    {
-      animation.Reverse();
-    }
-    else if (animation.GetStartValue() != start || animation.GetFinishValue() != finish)
-    {
-      animation.Stop();
-      animation.SetStartValue(start).SetFinishValue(finish).Start();
-    }
-  }
-  else
-  {
-    animation.SetStartValue(start).SetFinishValue(finish).Start();
-  }
-}
-
 template <typename VALUE>
-void StartOrReverse(na::AnimateValue<VALUE>& animation, Direction dir)
-{
-  StartOrReverse<VALUE>(animation, (dir == Direction::FORWARD) ? 0.0f : 1.0f,
-                                   (dir == Direction::FORWARD) ? 1.0f : 0.0f);
-}
-
-template <>
-void StartOrReverse(na::AnimateValue<int>& animation, Direction dir)
-{
-  StartOrReverse<int>(animation, (dir == Direction::FORWARD) ? 0 : 100,
-                                 (dir == Direction::FORWARD) ? 100 : 0);
-}
-
-template <typename VALUE>
-void StartOrReverseIf(na::AnimateValue<VALUE>& animation, bool condition)
-{
-  StartOrReverse(animation, condition ? Direction::FORWARD : Direction::BACKWARD);
-}
-
-template <typename VALUE>
-Direction GetDirection(na::AnimateValue<VALUE> const& animation)
+inline Direction GetDirection(na::AnimateValue<VALUE> const& animation)
 {
   if (animation.GetFinishValue() < animation.GetStartValue())
     return Direction::BACKWARD;
@@ -87,9 +44,33 @@ Direction GetDirection(na::AnimateValue<VALUE> const& animation)
   return Direction::FORWARD;
 }
 
-} // anonymous namespace
+template <class VALUE_TYPE>
+void StartOrReverse(na::AnimateValue<VALUE_TYPE>& animation, VALUE_TYPE start, VALUE_TYPE finish);
+
+template <typename VALUE>
+inline void StartOrReverse(na::AnimateValue<VALUE>& animation, Direction dir)
+{
+  StartOrReverse<VALUE>(animation, (dir == Direction::FORWARD) ? 0.0f : 1.0f,
+                                   (dir == Direction::FORWARD) ? 1.0f : 0.0f);
+}
+
+template <>
+inline void StartOrReverse(na::AnimateValue<int>& animation, Direction dir)
+{
+  StartOrReverse<int>(animation, (dir == Direction::FORWARD) ? 0 : 100,
+                                 (dir == Direction::FORWARD) ? 100 : 0);
+}
+
+template <typename VALUE>
+inline void StartOrReverseIf(na::AnimateValue<VALUE>& animation, bool condition)
+{
+  StartOrReverse(animation, condition ? Direction::FORWARD : Direction::BACKWARD);
+}
+
 } // animation namespace
 } // unity namespace
+
+#include "AnimationUtils-inl.h"
 
 #endif // UNITY_ANIMATION_UTILS
 
