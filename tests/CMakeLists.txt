@@ -132,6 +132,7 @@ if (GMOCK_LIB AND
        test_main_xless.cpp
        mock-application.cpp
        test_abstract_interface_generator.cpp
+       test_animation_utils.cpp
        test_connection_manager.cpp
        test_glib_dbus_object.cpp
        test_glib_cancellable.cpp
