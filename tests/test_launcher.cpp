@@ -77,6 +77,11 @@ public:
       return GetActionState() == Launcher::LauncherActionState::ACTION_DRAG_EXTERNAL;
     }
 
+    bool IsActionStateDragCancelled()
+    {
+      return GetActionState() == Launcher::LauncherActionState::ACTION_DRAG_ICON_CANCELLED;
+    }
+
     AbstractLauncherIcon::Ptr MouseIconIntersection(int x, int y) const
     {
       for (auto const& icon : *_model)
@@ -318,6 +323,7 @@ TEST_F(TestLauncher, DragLauncherIconCancelRestoresIconOrder)
 
   // Emitting the drag cancel request
   launcher_->GetDraggedIcon()->drag_cancel_request.emit();
+  EXPECT_TRUE(launcher_->IsActionStateDragCancelled());
 
   // The icon order should be reset
   it = model_->begin();
