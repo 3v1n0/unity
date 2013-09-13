@@ -19,46 +19,31 @@
  */
 
 #include "config.h"
-#include <math.h>
-
-#include <functional>
 
 #include <Nux/Nux.h>
-#include <Nux/VScrollBar.h>
-#include <Nux/HLayout.h>
-#include <Nux/VLayout.h>
 #include <NuxCore/Logger.h>
-
-#include <NuxGraphics/NuxGraphics.h>
-#include <NuxGraphics/GestureEvent.h>
-#include <NuxGraphics/GpuDevice.h>
-#include <NuxGraphics/GLTextureResourceManager.h>
-
-#include <Nux/BaseWindow.h>
-#include <Nux/WindowCompositor.h>
 
 #include "Launcher.h"
 #include "AbstractLauncherIcon.h"
-#include "unity-shared/PanelStyle.h"
 #include "SpacerLauncherIcon.h"
 #include "LauncherModel.h"
 #include "QuicklistManager.h"
 #include "QuicklistView.h"
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/IconRenderer.h"
-#include "unity-shared/TimeUtil.h"
-#include "unity-shared/TextureCache.h"
+#include "unity-shared/GraphicsUtils.h"
 #include "unity-shared/IconLoader.h"
+#include "unity-shared/PanelStyle.h"
+#include "unity-shared/TextureCache.h"
+#include "unity-shared/TimeUtil.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UnitySettings.h"
-#include "unity-shared/GraphicsUtils.h"
 
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 
 #include <boost/algorithm/string.hpp>
-#include <sigc++/sigc++.h>
 
 namespace unity
 {

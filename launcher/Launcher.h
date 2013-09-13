@@ -22,7 +22,6 @@
 #define LAUNCHER_H
 
 #include <Nux/View.h>
-#include <Nux/BaseWindow.h>
 #include <Nux/TimerProc.h>
 #include <NuxCore/Animation.h>
 #include <NuxGraphics/GestureEvent.h>
