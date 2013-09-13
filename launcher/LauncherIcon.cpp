@@ -28,10 +28,10 @@
 #include <NuxCore/Color.h>
 #include <NuxCore/Logger.h>
 
-#include "unity-shared/CairoTexture.h"
-#include "LauncherIcon.h"
 #include "Launcher.h"
+#include "LauncherIcon.h"
 #include "unity-shared/AnimationUtils.h"
+#include "unity-shared/CairoTexture.h"
 #include "unity-shared/TimeUtil.h"
 
 #include "QuicklistManager.h"
