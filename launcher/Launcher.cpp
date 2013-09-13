@@ -2084,8 +2084,6 @@ void Launcher::StartIconDrag(AbstractLauncherIcon::Ptr const& icon)
   auto cb = std::bind(&Launcher::RenderIconToTexture, this, _1, _2, _drag_icon);
   _drag_window = new LauncherDragWindow(GetWidth(), cb);
   ShowDragWindow();
-
-  ubus_.SendMessage(UBUS_LAUNCHER_ICON_START_DND);
 }
 
 void Launcher::EndIconDrag()
@@ -2134,7 +2132,6 @@ void Launcher::EndIconDrag()
   }
 
   _hide_machine.SetQuirk(LauncherHideMachine::INTERNAL_DND_ACTIVE, false);
-  ubus_.SendMessage(UBUS_LAUNCHER_ICON_END_DND);
 }
 
 void Launcher::ShowDragWindow()
@@ -2294,7 +2291,6 @@ void Launcher::RecvMouseDrag(int x, int y, int dx, int dy, unsigned long button_
   else if (GetActionState() == ACTION_DRAG_LAUNCHER)
   {
     _launcher_drag_delta += dy;
-    ubus_.SendMessage(UBUS_LAUNCHER_END_DND);
   }
   else if (GetActionState() == ACTION_DRAG_ICON)
   {
