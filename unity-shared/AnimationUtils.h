@@ -28,6 +28,14 @@ namespace unity
 {
 namespace animation
 {
+namespace
+{
+
+enum class Direction
+{
+  FORWARD,
+  BACKWARD
+};
 
 template <class VALUE_TYPE>
 void StartOrReverse(na::AnimateValue<VALUE_TYPE>& animation, VALUE_TYPE start, VALUE_TYPE finish)
@@ -50,12 +58,6 @@ void StartOrReverse(na::AnimateValue<VALUE_TYPE>& animation, VALUE_TYPE start, V
   }
 }
 
-enum class Direction
-{
-  FORWARD,
-  BACKWARD
-};
-
 template <typename VALUE>
 void StartOrReverse(na::AnimateValue<VALUE>& animation, Direction dir)
 {
@@ -76,6 +78,16 @@ void StartOrReverseIf(na::AnimateValue<VALUE>& animation, bool condition)
   StartOrReverse(animation, condition ? Direction::FORWARD : Direction::BACKWARD);
 }
 
+template <typename VALUE>
+Direction GetDirection(na::AnimateValue<VALUE> const& animation)
+{
+  if (animation.GetFinishValue() < animation.GetStartValue())
+    return Direction::BACKWARD;
+
+  return Direction::FORWARD;
+}
+
+} // anonymous namespace
 } // animation namespace
 } // unity namespace
 
