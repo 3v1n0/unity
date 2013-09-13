@@ -2155,6 +2155,7 @@ void Launcher::ShowDragWindow()
       _model->ReorderBefore(_drag_icon, closer, true);
 
     ResetMouseDragState();
+    SetActionState(ACTION_DRAG_ICON_CANCELLED);
   });
 }
 
