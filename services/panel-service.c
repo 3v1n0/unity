@@ -42,7 +42,7 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 
 #define NOTIFY_TIMEOUT 80
 #define N_TIMEOUT_SLOTS 50
-#define MAX_INDICATOR_ENTRIES 50
+#define MAX_INDICATOR_ENTRIES 100
 
 #define COMPIZ_OPTION_SCHEMA "org.compiz.unityshell"
 #define COMPIZ_OPTION_PATH "/org/compiz/profiles/unity/plugins/"
@@ -1679,7 +1679,7 @@ activate_next_prev_menu (PanelService         *self,
               if (!panel_service_entry_is_visible (self, new_entry))
                 continue;
 
-              prio = parent_priority * 100 + index;
+              prio = parent_priority * MAX_INDICATOR_ENTRIES + index;
               index++;
 
               gpointer *values = g_new (gpointer, 2);
