@@ -238,4 +238,34 @@ TEST(TestAnimationUtils, StartOrReverseIfExchanges)
   }
 }
 
+TEST(TestAnimationUtils, GetDirection)
+{
+  na::AnimateValue<double> animation;
+  EXPECT_EQ(Direction::FORWARD, GetDirection(animation));
+}
+
+TEST(TestAnimationUtils, GetDirectionForward)
+{
+  na::AnimateValue<double> animation;
+  animation.SetStartValue(0).SetFinishValue(10);
+  EXPECT_EQ(Direction::FORWARD, GetDirection(animation));
+}
+
+TEST(TestAnimationUtils, GetDirectionBackward)
+{
+  na::AnimateValue<double> animation;
+  animation.SetStartValue(10).SetFinishValue(0);
+  EXPECT_EQ(Direction::BACKWARD, GetDirection(animation));
+}
+
+TEST(TestAnimationUtils, GetDirectionStartedReversed)
+{
+  na::AnimateValue<double> animation;
+  StartOrReverse(animation, Direction::BACKWARD);
+  EXPECT_EQ(Direction::BACKWARD, GetDirection(animation));
+
+  StartOrReverse(animation, Direction::FORWARD);
+  EXPECT_EQ(Direction::FORWARD, GetDirection(animation));
+}
+
 } // Namespace
