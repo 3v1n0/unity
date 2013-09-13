@@ -44,6 +44,7 @@
 #include "LauncherModel.h"
 #include "QuicklistManager.h"
 #include "QuicklistView.h"
+#include "unity-shared/AnimationUtils.h"
 #include "unity-shared/IconRenderer.h"
 #include "unity-shared/TimeUtil.h"
 #include "unity-shared/TextureCache.h"
@@ -62,7 +63,6 @@
 namespace unity
 {
 using ui::RenderArg;
-namespace na = nux::animation;
 
 namespace launcher
 {
@@ -257,7 +257,7 @@ void Launcher::OnDragFinish(const nux::GestureEvent &event)
   if (_drag_out_delta_x >= DRAG_OUT_PIXELS - 90.0f)
     _hide_machine.SetQuirk(LauncherHideMachine::MT_DRAG_OUT, true);
 
-  drag_out_animation_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
+  animation::StartOrReverse(drag_out_animation_, animation::Direction::BACKWARD);
   _drag_gesture_ongoing = false;
 }
 #endif
@@ -290,32 +290,7 @@ void Launcher::SetMousePosition(int x, int y)
   bool is_beyond_drag_threshold = MouseBeyondDragThreshold();
 
   if (was_beyond_drag_threshold != is_beyond_drag_threshold)
-  {
-    if (!is_beyond_drag_threshold)
-    {
-      if (drag_icon_animation_.CurrentState() == na::Animation::State::Running)
-      {
-        if (drag_icon_animation_.GetFinishValue() != 1.0f)
-          drag_icon_animation_.Reverse();
-      }
-      else
-      {
-        drag_icon_animation_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
-      }
-    }
-    else
-    {
-      if (drag_icon_animation_.CurrentState() == na::Animation::State::Running)
-      {
-        if (drag_icon_animation_.GetFinishValue() != 0.0f)
-          drag_icon_animation_.Reverse();
-      }
-      else
-      {
-        drag_icon_animation_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
-      }
-    }
-  }
+    animation::StartOrReverseIf(drag_icon_animation_, !is_beyond_drag_threshold);
 
   EnsureScrollTimer();
 }
@@ -1218,7 +1193,7 @@ void Launcher::OnOverlayShown(GVariant* data)
       _hover_machine.SetQuirk(LauncherHoverMachine::PLACES_VISIBLE, true);
 
       if (options()->hide_mode != LAUNCHER_HIDE_NEVER)
-        dash_showing_animation_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
+        animation::StartOrReverse(dash_showing_animation_, animation::Direction::FORWARD);
     }
     if (identity == "hud")
     {
@@ -1305,29 +1280,9 @@ void Launcher::SetHidden(bool hide_launcher)
     _hide_machine.SetQuirk(LauncherHideMachine::MOUSE_MOVE_POST_REVEAL, false);
     _hide_machine.SetQuirk(LauncherHideMachine::MT_DRAG_OUT, false);
     SetStateMouseOverLauncher(false);
+  }
 
-    if (auto_hide_animation_.CurrentState() == na::Animation::State::Running)
-    {
-      if (auto_hide_animation_.GetFinishValue() != 1.0f)
-        auto_hide_animation_.Reverse();
-    }
-    else
-    {
-      auto_hide_animation_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
-    }
-  }
-  else
-  {
-    if (auto_hide_animation_.CurrentState() == na::Animation::State::Running)
-    {
-      if (auto_hide_animation_.GetFinishValue() != 0.0f)
-        auto_hide_animation_.Reverse();
-    }
-    else
-    {
-      auto_hide_animation_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
-    }
-  }
+  animation::StartOrReverseIf(auto_hide_animation_, hide_launcher);
 
   _postreveal_mousemove_delta_x = 0;
   _postreveal_mousemove_delta_y = 0;
@@ -1476,34 +1431,10 @@ void Launcher::SetHover(bool hovered)
   _hovered = hovered;
 
   if (!IsInKeyNavMode() && _hovered)
-  {
     _enter_y = (int) _mouse_position.y;
 
-    if (_folded)
-    {
-      if (hover_animation_.CurrentState() == na::Animation::State::Running)
-      {
-        if (hover_animation_.GetFinishValue() != 1.0f)
-          hover_animation_.Reverse();
-      }
-      else
-      {
-        hover_animation_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
-      }
-    }
-  }
-  else if (_folded)
-  {
-    if (hover_animation_.CurrentState() == na::Animation::State::Running)
-    {
-      if (hover_animation_.GetFinishValue() != 0.0f)
-        hover_animation_.Reverse();
-    }
-    else
-    {
-      hover_animation_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
-    }
-  }
+  if (_folded)
+    animation::StartOrReverseIf(hover_animation_, _hovered);
 
   if (IsOverlayOpen() && !_hide_machine.GetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE))
   {
@@ -2121,17 +2052,7 @@ void Launcher::EndIconDrag()
   }
 
   if (MouseBeyondDragThreshold())
-  {
-    if (drag_icon_animation_.CurrentState() == na::Animation::State::Running)
-    {
-      if (drag_icon_animation_.GetFinishValue() != 1.0f)
-        drag_icon_animation_.Reverse();
-    }
-    else
-    {
-      drag_icon_animation_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
-    }
-  }
+    animation::StartOrReverse(drag_icon_animation_, animation::Direction::FORWARD);
 
   _hide_machine.SetQuirk(LauncherHideMachine::INTERNAL_DND_ACTIVE, false);
   ubus_.SendMessage(UBUS_LAUNCHER_ICON_END_DND);
@@ -2516,7 +2437,7 @@ void Launcher::MouseUpLogic(int x, int y, unsigned long button_flags, unsigned l
 
   if (GetActionState() == ACTION_DRAG_LAUNCHER)
   {
-    drag_over_animation_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
+    animation::StartOrReverse(drag_over_animation_, animation::Direction::FORWARD);
   }
 
   _icon_mouse_down = nullptr;
@@ -2737,30 +2658,12 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
       if (_dnd_hovered_icon)
           _dnd_hovered_icon->SendDndLeave();
 
-      if (dnd_hide_animation_.CurrentState() == na::Animation::State::Running)
-      {
-        if (dnd_hide_animation_.GetFinishValue() != 1.0f)
-          dnd_hide_animation_.Reverse();
-      }
-      else
-      {
-        dnd_hide_animation_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
-      }
-
+      animation::StartOrReverse(dnd_hide_animation_, animation::Direction::FORWARD);
       _drag_edge_touching = true;
     }
     else if (_mouse_position.x != 0 && _drag_edge_touching)
     {
-      if (dnd_hide_animation_.CurrentState() == na::Animation::State::Running)
-      {
-        if (dnd_hide_animation_.GetFinishValue() != 0.0f)
-          dnd_hide_animation_.Reverse();
-      }
-      else
-      {
-        dnd_hide_animation_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
-      }
-
+      animation::StartOrReverse(dnd_hide_animation_, animation::Direction::BACKWARD);
       _drag_edge_touching = false;
     }
   }
