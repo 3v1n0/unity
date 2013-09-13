@@ -201,10 +201,6 @@ Launcher::Launcher(MockableBaseWindow* parent,
   drag_icon_animation_.updated.connect(redraw_cb);
   dnd_hide_animation_.updated.connect(redraw_cb);
   dash_showing_animation_.updated.connect(redraw_cb);
-
-  /* FIXME: the easing curve for this animation should be only
-   * std::pow(progress, 2); */
-  drag_over_animation_.SetEasingCurve(na::EasingCurve(na::EasingCurve::Type::ExpoEaseIn));
 }
 
 /* Introspection */
@@ -1032,7 +1028,8 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
 
     if (GetActionState() != ACTION_DRAG_LAUNCHER)
     {
-      float dnd_progress = drag_over_animation_.GetCurrentValue();
+      // XXX: nux::Animation should allow to define new kinds of easing curves
+      float dnd_progress = std::pow(drag_over_animation_.GetCurrentValue(), 2);
 
       if (launcher_drag_delta_ > launcher_drag_delta_max_)
         delta_y = launcher_drag_delta_max_ + (delta_y - launcher_drag_delta_max_) * dnd_progress;
