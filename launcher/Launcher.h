@@ -83,7 +83,7 @@ public:
 
   bool Hidden() const
   {
-    return _hidden;
+    return hidden_;
   }
 
   void ForceReveal(bool force);
@@ -103,7 +103,7 @@ public:
 
   MockableBaseWindow* GetParent() const
   {
-    return _parent;
+    return parent_;
   };
 
   nux::ObjectPtr<nux::View> const& GetActiveTooltip() const;
@@ -313,63 +313,64 @@ private:
   void DndHoveredIconReset();
   bool DndIsSpecialRequest(std::string const& uri) const;
 
-  LauncherModel::Ptr _model;
-  MockableBaseWindow* _parent;
-  nux::ObjectPtr<nux::View> _active_tooltip;
-  QuicklistView* _active_quicklist;
+  LauncherModel::Ptr model_;
+  MockableBaseWindow* parent_;
+  ui::AbstractIconRenderer::Ptr icon_renderer_;
+  nux::ObjectPtr<nux::View> active_tooltip_;
+  QuicklistView* active_quicklist_;
 
   // used by keyboard/a11y-navigation
-  AbstractLauncherIcon::Ptr _icon_under_mouse;
-  AbstractLauncherIcon::Ptr _icon_mouse_down;
-  AbstractLauncherIcon::Ptr _drag_icon;
-  AbstractLauncherIcon::Ptr _dnd_hovered_icon;
+  AbstractLauncherIcon::Ptr icon_under_mouse_;
+  AbstractLauncherIcon::Ptr icon_mouse_down_;
+  AbstractLauncherIcon::Ptr drag_icon_;
+  AbstractLauncherIcon::Ptr dnd_hovered_icon_;
 
-  bool _hovered;
-  bool _hidden;
-  bool _render_drag_window;
-  bool _shortcuts_shown;
-  bool _data_checked;
-  bool _steal_drag;
-  bool _drag_edge_touching;
-  bool _initial_drag_animation;
-  bool _dash_is_open;
-  bool _hud_is_open;
-  bool _folded;
+  bool hovered_;
+  bool hidden_;
+  bool folded_;
+  bool render_drag_window_;
+  bool shortcuts_shown_;
+  bool data_checked_;
+  bool steal_drag_;
+  bool drag_edge_touching_;
+  bool initial_drag_animation_;
+  bool dash_is_open_;
+  bool hud_is_open_;
 
-  LauncherActionState _launcher_action_state;
+  LauncherActionState launcher_action_state_;
 
-  int _icon_size;
-  int _dnd_delta_y;
-  int _dnd_delta_x;
-  int _postreveal_mousemove_delta_x;
-  int _postreveal_mousemove_delta_y;
-  int _launcher_drag_delta;
-  int _launcher_drag_delta_max;
-  int _launcher_drag_delta_min;
-  int _enter_y;
-  int _last_button_press;
-  int _drag_icon_position;
-  int _urgent_wiggle_time;
-  bool _urgent_acked;
-  bool _urgent_timer_running;
-  bool _urgent_ack_needed;
-  float _drag_out_delta_x;
-  bool _drag_gesture_ongoing;
-  float _last_reveal_progress;
+  int icon_size_;
+  int dnd_delta_y_;
+  int dnd_delta_x_;
+  int postreveal_mousemove_delta_x_;
+  int postreveal_mousemove_delta_y_;
+  int launcher_drag_delta_;
+  int launcher_drag_delta_max_;
+  int launcher_drag_delta_min_;
+  int enter_y_;
+  int last_button_press_;
+  int drag_icon_position_;
+  int urgent_wiggle_time_;
+  bool urgent_acked_;
+  bool urgent_timer_running_;
+  bool urgent_ack_needed_;
+  float drag_out_delta_x_;
+  bool drag_gesture_ongoing_;
+  float last_reveal_progress_;
 
-  nux::Point _mouse_position;
-  LauncherDragWindow::Ptr _drag_window;
-  LauncherHideMachine _hide_machine;
-  LauncherHoverMachine _hover_machine;
+  nux::Point mouse_position_;
+  LauncherDragWindow::Ptr drag_window_;
+  LauncherHideMachine hide_machine_;
+  LauncherHoverMachine hover_machine_;
   TooltipManager tooltip_manager_;
 
-  unity::DndData _dnd_data;
-  nux::DndAction _drag_action;
-  Atom _selection_atom;
-  struct timespec _urgent_finished_time;
+  unity::DndData dnd_data_;
+  nux::DndAction drag_action_;
+  struct timespec urgent_finished_time_;
 
   BaseTexturePtr launcher_sheen_;
   BaseTexturePtr launcher_pressure_effect_;
+  BackgroundEffectHelper bg_effect_helper_;
 
   nux::animation::AnimateValue<float> auto_hide_animation_;
   nux::animation::AnimateValue<float> hover_animation_;
@@ -378,9 +379,6 @@ private:
   nux::animation::AnimateValue<float> drag_icon_animation_;
   nux::animation::AnimateValue<float> dnd_hide_animation_;
   nux::animation::AnimateValue<float> dash_showing_animation_;
-
-  ui::AbstractIconRenderer::Ptr icon_renderer;
-  BackgroundEffectHelper bg_effect_helper_;
 
   UBusManager ubus_;
   glib::SourceManager sources_;
