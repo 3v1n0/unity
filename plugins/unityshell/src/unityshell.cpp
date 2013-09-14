@@ -2175,8 +2175,7 @@ bool UnityScreen::maximizeKeyInitate(CompAction* action, CompAction::State state
 {
   auto& WM = WindowManager::Default();
   WM.Maximize(WM.GetActiveWindow());
-
-  return false;
+  return true;
 }
 
 bool UnityScreen::restoreMinimizeKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
@@ -2194,23 +2193,21 @@ bool UnityScreen::restoreMinimizeKeyInitiate(CompAction* action, CompAction::Sta
     WM.Minimize(focused_win);
   }
 
-  return false;
+  return true;
 }
 
 bool UnityScreen::rightMaximizeKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   auto& WM = WindowManager::Default();
   WM.RightMaximize(WM.GetActiveWindow());
-
-  return false;
+  return true;
 }
 
 bool UnityScreen::leftMaximizeKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   auto& WM = WindowManager::Default();
   WM.LeftMaximize(WM.GetActiveWindow());
-
-  return false;
+  return true;
 }
 
 void UnityScreen::OnLauncherStartKeyNav(GVariant* data)
