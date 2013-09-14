@@ -1,3 +1,7 @@
 build
 services/panel-marshal.c
 services/panel-marshal.h
+.AUTHORS.sed
+tests/autopilot/dist
+tests/autopilot/unity.egg-info
+.bzr-repo

@@ -1,8 +1,6 @@
 astyle --options=astyle-formatter \
   ../UnityCore/*.cpp \
   ../UnityCore/*.h \
-  ../plugins/gtkloader/src/*.cpp \
-  ../plugins/gtkloader/src/*.h \
   ../plugins/networkarearegion/src/*.cpp \
   ../plugins/networkarearegion/src/*.h \
   ../plugins/unitydialog/src/*.cpp \

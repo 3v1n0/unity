@@ -281,7 +281,7 @@ unity_launcher_icon_accessible_ref_state_set(AtkObject* obj)
 
   icon = dynamic_cast<LauncherIcon*>(nux_object);
 
-  if (icon->GetQuirk(LauncherIcon::QUIRK_VISIBLE))
+  if (icon->GetQuirk(LauncherIcon::Quirk::VISIBLE))
   {
     atk_state_set_add_state(state_set, ATK_STATE_VISIBLE);
     atk_state_set_add_state(state_set, ATK_STATE_SHOWING);
@@ -465,7 +465,7 @@ unity_launcher_icon_accessible_do_action(AtkAction *action,
 
   icon = dynamic_cast<LauncherIcon*>(nux_object);
 
-  icon->Activate(ActionArg(ActionArg::LAUNCHER, 0));
+  icon->Activate(ActionArg(ActionArg::Source::LAUNCHER, 0));
 
   return TRUE;
 }

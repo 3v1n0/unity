@@ -1,0 +1,121 @@
+Multi-monitor Alt-Tab
+---------------------
+This test only applies for multiple monitor.
+App names here are an example, any apps will do.
+
+Setup:
+#. Start with no apps open (or at least remember what is open where)
+#. Start terminal on workspace 1
+#. Start firefox on workspace 2
+#. Move to workspace 2
+
+Scenario 1: Perform on workspace 1
+Scenario 2: Perform on workspace 2
+
+Actions:
+#. Hold Alt, press tab
+#. Observe
+#. Release Alt
+
+Expected Result:
+Scenario 1:
+  Terminal is shown in the alt-tab switcher, but firefox on workspace 2 is not.
+Scenario 2:
+  Firefox is shown in the alt-tab switcher, but the terminal on workspace 1 is not.
+
+
+Full app title in Chinese
+-------------------------
+This test ensures that the App Switcher (Alt+Tab) displays the full title
+of apps in Chinese.
+
+Setup:
+#. Install gnome-tweak-tool and run it.
+#. Make sure you have the default font scaling factor (1.0).
+
+Actions:
+#. Run:
+   python -c 'from gi.repository import Gtk;win=Gtk.Window(title="显示桌面");win.connect("destroy", Gtk.main_quit);win.show_all();Gtk.main();'
+#. Press Alt+Tab.
+#. Continue to press Tab to select the newly created window.
+
+Expected Result:
+  The title of the newly created window should be "显示桌面" and *not* "显示桌...".
+
+
+Alt+keyabovetab switching
+------------------------------
+This test ensures that alt+keyabovetab switching windows of the application
+works as it should.
+
+Setup:
+#. Have a few windows of one application open (e.g. 3 terminal windows).
+
+Actions:
+#. Focus one of the opened application windows.
+#. Press Alt+keyabovetab (the ~ key on the US and PL keyboard).
+#. Keep the Alt key pressed.
+
+Expected Result:
+  The switcher should appear with the detail view for the given application
+  (e.g. the terminal), with all terminal applications for the workspace
+  visible. The switcher should look normally.
+
+
+Fast alt+keyabovetab switching
+------------------------------
+This test ensures that doing a fast tap does not result in any 'flickering' of
+the switcher window. The switcher should not appear during a quick tap, just
+during longer alt+keyabovetab presses.
+
+Setup:
+#. Have a few windows of one application open (e.g. 3 terminal windows)
+
+Actions:
+#. Focus one of the opened application windows.
+#. Quickly tap Alt+keyabovetab (meaning only tap once, do not hold)
+#. Repeat at least a few times
+
+Expected Result:
+  On every quick tap, the focus should switch to the next same-application
+  type window. During that switch the switcher should not appear, not even
+  for a brief moment (if done fast enough). No 'flickering' of the switcher.
+
+
+Fast mouse-wheel switching
+--------------------------
+This test ensures that there is 'smoothing' when using the mouse-wheel to select
+from the switcher.
+
+Setup:
+#. Have a couple of different applications open (i.e. a Terminal and a
+ Mahjongg).
+
+Actions:
+  * Hold down the 'Alt' and tap 'Tab' key.
+  * While holding down the 'Alt' key, scroll the middle mouse-wheel downward
+    quickly 3-4 clicks.
+  * Assert: The switcher should only select the next icon (and not zoom through the list).
+  * Hold down the 'Alt' and tap 'Tab' key.
+  * While holding down the 'Alt' key, scroll the middle mouse-wheel upward
+    quickly 3-4 clicks.
+  * Assert: The switcher should only select the next icon (and not zoom through the list).
+
+Expected Result:
+  The assertions from above hold.
+
+
+Alt+Tab doesn't lose window focus
+---------------------------------
+This tests ensures that a racing condition is not possible anymore when alt+tabing.
+
+Setup:
+#. Have 2 windows of different types open. (gedit, nautilus)
+
+Actions:
+  #. Press quicky Alt+Tab. (so that the switcher window is not shown)
+  #. Repeat 10 times.
+
+Expected Results:
+  No window loses focuses at all. The panel should alway show the title of the
+  window.

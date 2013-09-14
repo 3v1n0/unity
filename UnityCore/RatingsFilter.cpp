@@ -25,17 +25,15 @@ namespace unity
 {
 namespace dash
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.dash.ratingsfilter");
-}
+DECLARE_LOGGER(logger, "unity.dash.filter.ratings");
 
 RatingsFilter::RatingsFilter(DeeModel* model, DeeModelIter* iter)
-  : Filter(model, iter)
-  , rating(0.0f)
+: Filter(model, iter)
+, rating(0.0f)
+, show_all_button_(true)
 {
   rating.changed.connect(sigc::mem_fun(this, &RatingsFilter::OnRatingChanged));
+  show_all_button.SetGetterFunction(sigc::mem_fun(this, &RatingsFilter::get_show_all_button));
   Refresh();
 }
 
@@ -46,6 +44,15 @@ void RatingsFilter::Clear()
 
 void RatingsFilter::Update(Filter::Hints& hints)
 {
+  GVariant* show_all_button_variant = hints["show-all-button"];
+  if (show_all_button_variant)
+  {
+    bool tmp_show = show_all_button_;
+    g_variant_get(show_all_button_variant, "b", &show_all_button_);
+    if (tmp_show != show_all_button_)
+      show_all_button.EmitChanged(show_all_button_);
+  }
+
   GVariant* rating_variant = hints["rating"];
 
   if (rating_variant)
@@ -85,6 +92,11 @@ void RatingsFilter::UpdateState(float raw_rating)
   IgnoreChanges(false);
 
   filtering.EmitChanged(filtering);
+}
+
+bool RatingsFilter::get_show_all_button() const
+{
+  return show_all_button_;
 }
 
 }

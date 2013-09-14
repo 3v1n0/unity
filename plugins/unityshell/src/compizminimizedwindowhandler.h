@@ -46,7 +46,7 @@ class CompizMinimizedWindowHandler:
 {
 public:
 
-  CompizMinimizedWindowHandler (CompWindow *w);
+  CompizMinimizedWindowHandler (CompWindow *w, compiz::WindowInputRemoverLockAcquireInterface *lock_acquire);
   ~CompizMinimizedWindowHandler ();
 
   void setVisibility (bool visible);
@@ -92,10 +92,10 @@ template <typename Screen, typename Window>
 bool compiz::CompizMinimizedWindowHandler<Screen, Window>::handleEvents = true;
 
 template <typename Screen, typename Window>
-compiz::CompizMinimizedWindowHandler<Screen, Window>::CompizMinimizedWindowHandler(CompWindow *w) :
-  MinimizedWindowHandler (screen->dpy (), w->id ())
+compiz::CompizMinimizedWindowHandler<Screen, Window>::CompizMinimizedWindowHandler(CompWindow *w, compiz::WindowInputRemoverLockAcquireInterface *lock_acquire) :
+  MinimizedWindowHandler (screen->dpy(), w->id(), lock_acquire)
 {
-  priv = new PrivateCompizMinimizedWindowHandler ();
+  priv = new PrivateCompizMinimizedWindowHandler();
 
   priv->mWindow = w;
 
@@ -104,15 +104,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::CompizMinimizedWindowHandl
 template <typename Screen, typename Window>
 compiz::CompizMinimizedWindowHandler<Screen, Window>::~CompizMinimizedWindowHandler ()
 {
-  if (!priv->mWindow->destroyed ())
-  {
-    priv->mWindow->unminimize ();
-    priv->mWindow->focusSetEnabled (Window::get (priv->mWindow), false);
-    priv->mWindow->minimizeSetEnabled (Window::get (priv->mWindow), false);
-    priv->mWindow->unminimizeSetEnabled (Window::get (priv->mWindow), false);
-    priv->mWindow->minimize ();
-  }
-
+  minimizingWindows.remove (priv->mWindow);
   minimizedWindows.remove (this);
 }
 
@@ -122,15 +114,13 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::getTransients ()
 {
   std::vector <unsigned int> transients;
 
-  for (CompWindow *w : screen->windows ())
+  for (CompWindow *w : screen->windows())
   {
-    compiz::CompTransientForReader *reader = new compiz::CompTransientForReader (w);
+    compiz::CompTransientForReader reader (w);
 
-    if (reader->isTransientFor (priv->mWindow->id ()) ||
-        reader->isGroupTransientFor (priv->mWindow->id ()))
-      transients.push_back (w->id ());
-
-    delete reader;
+    if (reader.isTransientFor (priv->mWindow->id()) ||
+        reader.isGroupTransientFor (priv->mWindow->id()))
+      transients.push_back (w->id());
   }
 
   return transients;
@@ -140,23 +130,23 @@ template <typename Screen, typename Window>
 void
 compiz::CompizMinimizedWindowHandler<Screen, Window>::setVisibility (bool visible)
 {
-  MinimizedWindowHandler::setVisibility (visible, priv->mWindow->id ());
+  MinimizedWindowHandler::setVisibility (visible, priv->mWindow->id());
 
-  CompositeWindow::get (priv->mWindow)->addDamage ();
+  CompositeWindow::get (priv->mWindow)->addDamage();
 }
 
 template <typename Screen, typename Window>
 void
 compiz::CompizMinimizedWindowHandler<Screen, Window>::minimize ()
 {
-  Atom          wmState = XInternAtom (screen->dpy (), "WM_STATE", 0);
+  Atom          wmState = XInternAtom (screen->dpy(), "WM_STATE", 0);
   unsigned long data[2];
 
-  std::vector<unsigned int> transients = getTransients ();
+  std::vector<unsigned int> transients = getTransients();
 
   handleEvents = true;
   priv->mWindow->windowNotify (CompWindowNotifyMinimize);
-  priv->mWindow->changeState (priv->mWindow->state () | CompWindowStateHiddenMask);
+  priv->mWindow->changeState (priv->mWindow->state() | CompWindowStateHiddenMask);
 
   minimizedWindows.push_back (this);
 
@@ -164,12 +154,12 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::minimize ()
   {
     CompWindow *win = screen->findWindow (w);
 
-    if (win)
+    if (win && win->isMapped())
     {
       Window *w = Window::get (win);
       if (!w->mMinimizeHandler)
-        w->mMinimizeHandler.reset (new Type (win));
-      w->mMinimizeHandler->minimize ();
+        w->mMinimizeHandler.reset (new Type (win, w));
+      w->mMinimizeHandler->minimize();
     }
   }
 
@@ -179,16 +169,16 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::minimize ()
   data[0] = IconicState;
   data[1] = None;
 
-  XChangeProperty (screen->dpy (), priv->mWindow->id (), wmState, wmState,
+  XChangeProperty (screen->dpy(), priv->mWindow->id(), wmState, wmState,
                    32, PropModeReplace, (unsigned char *) data, 2);
 
-  priv->mWindow->changeState (priv->mWindow->state () | CompWindowStateHiddenMask);
+  priv->mWindow->changeState (priv->mWindow->state() | CompWindowStateHiddenMask);
 
   /* Don't allow other windows to be focused by moveInputFocusToOtherWindow */
   for (auto mh : minimizedWindows)
     mh->priv->mWindow->focusSetEnabled (Window::get (mh->priv->mWindow), false);
 
-  priv->mWindow->moveInputFocusToOtherWindow ();
+  priv->mWindow->moveInputFocusToOtherWindow();
 
   for (auto mh : minimizedWindows)
     mh->priv->mWindow->focusSetEnabled (Window::get (mh->priv->mWindow), true);
@@ -198,12 +188,12 @@ template <typename Screen, typename Window>
 void
 compiz::CompizMinimizedWindowHandler<Screen, Window>::windowNotify (CompWindowNotify n)
 {
-  if (n == CompWindowNotifyFocusChange && priv->mWindow->minimized ())
+  if (n == CompWindowNotifyFocusChange && priv->mWindow->minimized())
   {
     for (auto mh : minimizedWindows)
       mh->priv->mWindow->focusSetEnabled (Window::get (mh->priv->mWindow), false);
 
-    priv->mWindow->moveInputFocusToOtherWindow ();
+    priv->mWindow->moveInputFocusToOtherWindow();
 
     for (auto mh : minimizedWindows)
       mh->priv->mWindow->focusSetEnabled (Window::get (mh->priv->mWindow), true);
@@ -215,10 +205,10 @@ void
 compiz::CompizMinimizedWindowHandler<Screen, Window>::updateFrameRegion (CompRegion &r)
 {
   unsigned int oldUpdateFrameRegionIndex;
-  r = CompRegion ();
+  r = CompRegion();
 
   /* Ensure no other plugins can touch this frame region */
-  oldUpdateFrameRegionIndex = priv->mWindow->updateFrameRegionGetCurrentIndex ();
+  oldUpdateFrameRegionIndex = priv->mWindow->updateFrameRegionGetCurrentIndex();
   priv->mWindow->updateFrameRegionSetCurrentIndex (MAXSHORT);
   priv->mWindow->updateFrameRegion (r);
   priv->mWindow->updateFrameRegionSetCurrentIndex (oldUpdateFrameRegionIndex);
@@ -226,44 +216,44 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::updateFrameRegion (CompReg
 
 template <typename Screen, typename Window>
 void
-compiz::CompizMinimizedWindowHandler<Screen, Window>::unminimize ()
+compiz::CompizMinimizedWindowHandler<Screen, Window>::unminimize()
 {
-  Atom          wmState = XInternAtom (screen->dpy (), "WM_STATE", 0);
+  Atom          wmState = XInternAtom (screen->dpy(), "WM_STATE", 0);
   unsigned long data[2];
 
-  std::vector<unsigned int> transients = getTransients ();
+  std::vector<unsigned int> transients = getTransients();
 
   minimizedWindows.remove (this);
 
   priv->mWindow->focusSetEnabled (Window::get (priv->mWindow), true);
 
   priv->mWindow->windowNotify (CompWindowNotifyUnminimize);
-  priv->mWindow->changeState (priv->mWindow->state () & ~CompWindowStateHiddenMask);
+  priv->mWindow->changeState (priv->mWindow->state() & ~CompWindowStateHiddenMask);
   priv->mWindow->windowNotify (CompWindowNotifyShow);
 
   for (unsigned int &w : transients)
   {
     CompWindow *win = screen->findWindow (w);
 
-    if (win)
+    if (win && win->isMapped())
     {
       Window *w = Window::get (win);
       if (w && w->mMinimizeHandler)
       {
-        w->mMinimizeHandler->unminimize ();
-        w->mMinimizeHandler.reset ();
+	w->mMinimizeHandler->unminimize();
+	w->mMinimizeHandler.reset();
       }
     }
   }
 
   setVisibility (true);
 
-  priv->mWindow->changeState (priv->mWindow->state () & ~CompWindowStateHiddenMask);
+  priv->mWindow->changeState (priv->mWindow->state() & ~CompWindowStateHiddenMask);
 
   data[0] = NormalState;
   data[1] = None;
 
-  XChangeProperty (screen->dpy (), priv->mWindow->id (), wmState, wmState,
+  XChangeProperty (screen->dpy(), priv->mWindow->id(), wmState, wmState,
                    32, PropModeReplace, (unsigned char *) data, 2);
 }
 
@@ -275,7 +265,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::getPaintMask ()
 
   for (CompWindow *w : minimizingWindows)
   {
-    if (w->id () == priv->mWindow->id ())
+    if (w->id() == priv->mWindow->id())
       doMask = false;
     break;
   }
@@ -307,13 +297,18 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::handleCompizEvent (const c
         if (CompOption::getBoolOptionNamed (o, "active", false))
           minimizingWindows.push_back (w);
         else
+        {
+          /* Ugly hack for LP#977189 */
+	  CompositeWindow::get (w)->release();
+	  GLWindow::get (w)->release();
           minimizingWindows.remove (w);
+        }
       }
     }
   }
 
   if (!CompOption::getBoolOptionNamed (o, "active", false) &&
-      minimizingWindows.empty ())
+      minimizingWindows.empty())
   {
     handleEvents = false;
   }
@@ -324,8 +319,8 @@ void
 compiz::CompizMinimizedWindowHandler<Screen, Window>::handleEvent (XEvent *event)
 {
   /* Ignore sent events from the InputRemover */
-  if (screen->XShape () && event->type ==
-      screen->shapeEvent () + ShapeNotify &&
+  if (screen->XShape() && event->type ==
+      screen->shapeEvent() + ShapeNotify &&
       !event->xany.send_event)
   {
     CompWindow *w = screen->findWindow (((XShapeEvent *) event)->window);
@@ -333,7 +328,7 @@ compiz::CompizMinimizedWindowHandler<Screen, Window>::handleEvent (XEvent *event
     if (w)
     {
       Window *pw = Window::get (w);
-      Type *compizMinimizeHandler = pw->mMinimizeHandler.get ();
+      Type *compizMinimizeHandler = pw->mMinimizeHandler.get();
 
       /* Restore and re-save input shape and remove */
       if (compizMinimizeHandler)
@@ -349,18 +344,18 @@ template <typename Screen, typename Window>
 void
 compiz::CompizMinimizedWindowHandler<Screen, Window>::setFunctions (bool keepMinimized)
 {
-  for (CompWindow *w : screen->windows ())
+  for (CompWindow *w : screen->windows())
   {
-    bool m = w->minimized ();
-    bool enable = keepMinimized && w->mapNum () > 0;
+    bool m = w->minimized();
+    bool enable = keepMinimized && w->mapNum() > 0;
 
     if (m)
-      w->unminimize ();
+      w->unminimize();
     w->minimizeSetEnabled (Window::get (w), enable);
     w->unminimizeSetEnabled (Window::get (w), enable);
     w->minimizedSetEnabled (Window::get (w), enable);
     if (m)
-      Window::get (w)->window->minimize ();
+      Window::get (w)->window->minimize();
   }
 }
 

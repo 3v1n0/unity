@@ -24,7 +24,7 @@
 #include <map>
 #include <memory>
 #include <NuxCore/Property.h>
-#include <sigc++/trackable.h>
+#include <sigc++/sigc++.h>
 
 #include "GLibSignal.h"
 #include "Variant.h"
@@ -76,6 +76,8 @@ public:
 
   virtual void Clear() = 0;
   bool IsValid() const;
+
+  glib::Variant VariantValue() const;
 
   nux::ROProperty<std::string> id;
   nux::ROProperty<std::string> name;

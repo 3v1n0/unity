@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Bazaar
+Comment=Apply Bazaar Bundle
+Icon=bzr-icon-64
+Exec=/bin/true
+NoDisplay=true
+Terminal=false
+Type=Application
+Categories=Application;Development;RevisionControl;
+MimeType=text/x-diff;text/x-patch;application/x-bazaar-merge-directive;

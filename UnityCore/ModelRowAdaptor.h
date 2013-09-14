@@ -23,6 +23,7 @@
 #include <string>
 
 #include <dee.h>
+#include "Variant.h"
 
 namespace unity
 {
@@ -50,19 +51,31 @@ class RowAdaptorBase
 public:
   RowAdaptorBase(DeeModel* model=0, DeeModelIter* iter=0, DeeModelTag* tag=0);
   RowAdaptorBase(RowAdaptorBase const& other);
+  virtual ~RowAdaptorBase();
+
   RowAdaptorBase& operator=(RowAdaptorBase const& other);
 
-  std::string GetStringAt(int position);
-  bool GetBoolAt(int position);
-  unsigned int GetUIntAt(int position);
+  virtual std::string GetStringAt(int position) const;
+  virtual bool GetBoolAt(int position) const;
+  virtual int GetIntAt(int position) const;
+  virtual unsigned int GetUIntAt(int position) const;
+  virtual float GetFloatAt(int position) const;
+  virtual glib::Variant GetVariantAt(int position) const;
+
+  void SetTarget(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag);
 
   template<typename T>
   void set_renderer(T renderer);
 
   template<typename T>
-  T renderer();
+  T renderer() const;
+
+  DeeModel* model() { return model_; }
 
 protected:
+  virtual void set_model_tag(gpointer value);
+  virtual gpointer get_model_tag() const;
+
   DeeModel* model_;
   DeeModelIter* iter_;
   DeeModelTag* tag_;

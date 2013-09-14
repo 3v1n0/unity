@@ -8,37 +8,52 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2011-08-23 20:58-0400\n"
+"POT-Creation-Date: 2013-04-17 16:00+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "Keep in launcher"
+msgid "All"
+msgstr ""
+
+msgid "Categories"
+msgstr ""
+
+msgid "Multi-range"
+msgstr ""
+
+msgid "Rating"
+msgstr ""
+
+msgid "See fewer results"
+msgstr ""
+
+msgid "Sorry, there is nothing that matches your search."
+msgstr ""
+
+msgid "Last Updated"
+msgstr ""
+
+msgid "Type your command"
+msgstr ""
+
+msgid "Lock to Launcher"
+msgstr ""
+
+msgid "Unlock from Launcher"
 msgstr ""
 
 msgid "Quit"
 msgstr ""
 
-msgid "Open"
+msgid "Search your computer and online sources"
 msgstr ""
 
-msgid "Eject"
-msgstr ""
-
-msgid "Eject parent drive"
-msgstr ""
-
-msgid "Safely remove"
-msgstr ""
-
-msgid "Safely remove parent drive"
-msgstr ""
-
-msgid "Unmount"
+msgid "Show Desktop"
 msgstr ""
 
 msgid "The drive has been successfully ejected"
@@ -47,46 +62,11 @@ msgstr ""
 msgid "Workspace Switcher"
 msgstr ""
 
-msgid "Search"
+msgid "HUD"
 msgstr ""
 
-msgid "Search across all places"
-msgstr ""
-
-msgid "See fewer results"
-msgstr ""
-
-msgid "Shortcuts"
-msgstr ""
-
-#. Media Apps
-msgid "Media Apps"
-msgstr ""
-
-#. Internet Apps
-msgid "Internet Apps"
-msgstr ""
-
-#. More Apps
-msgid "More Apps"
-msgstr ""
-
-#. Find Files
-msgid "Find Files"
-msgstr ""
-
-msgid "Browse the Web"
-msgstr ""
-
-#. Photos
-#. FIXME: Need to figure out the default
-msgid "View Photos"
-msgstr ""
-
-msgid "Check Email"
-msgstr ""
-
-msgid "Listen to Music"
+#. Application is being installed, or hasn't been installed yet
+msgid "Waiting to install"
 msgstr ""
 
 msgid "Drop To Add Application"
@@ -98,23 +78,252 @@ msgstr ""
 msgid "Empty Trash..."
 msgstr ""
 
-msgid "Empty all items from Trash?"
+msgid "Open"
 msgstr ""
 
-msgid "All items in the Trash will be permanently deleted."
+msgid "Eject parent drive"
 msgstr ""
 
-msgid "Empty Trash"
+msgid "Eject"
 msgstr ""
 
-msgid "Launcher & Menus"
+msgid "Safely remove parent drive"
 msgstr ""
 
-msgid "<b>Show the launcher when the pointer:</b>"
+msgid "Safely remove"
 msgstr ""
 
-msgid "Pushes the left edge of the screen"
+msgid "Unmount"
 msgstr ""
 
-msgid "Touches the top left corner of the screen"
+msgid "Ubuntu Desktop"
+msgstr ""
+
+msgid "Dash"
+msgstr ""
+
+msgid "Launcher"
+msgstr ""
+
+msgid "Quicklist"
+msgstr ""
+
+msgid "Switcher"
+msgstr ""
+
+msgid "Left Mouse"
+msgstr ""
+
+msgid "Middle Mouse"
+msgstr ""
+
+msgid "Right Mouse"
+msgstr ""
+
+msgid "Keyboard Shortcuts"
+msgstr ""
+
+msgid " (Hold)"
+msgstr ""
+
+msgid "Opens the Launcher, displays shortcuts."
+msgstr ""
+
+msgid "Opens Launcher keyboard navigation mode."
+msgstr ""
+
+msgid "Switches applications via the Launcher."
+msgstr ""
+
+msgid " + 1 to 9"
+msgstr ""
+
+msgid "Same as clicking on a Launcher icon."
+msgstr ""
+
+msgid " + Shift + 1 to 9"
+msgstr ""
+
+msgid "Opens a new window in the app."
+msgstr ""
+
+msgid "Opens the Trash."
+msgstr ""
+
+msgid " (Tap)"
+msgstr ""
+
+msgid "Opens the Dash Home."
+msgstr ""
+
+msgid "Opens the Dash App Lens."
+msgstr ""
+
+msgid "Opens the Dash Files Lens."
+msgstr ""
+
+msgid "Opens the Dash Music Lens."
+msgstr ""
+
+msgid "Opens the Dash Video Lens."
+msgstr ""
+
+msgid "Switches between Lenses."
+msgstr ""
+
+msgid "Ctrl + Tab"
+msgstr ""
+
+msgid "Moves the focus."
+msgstr ""
+
+msgid "Arrow Keys"
+msgstr ""
+
+msgid "Opens the currently focused item."
+msgstr ""
+
+msgid "Enter"
+msgstr ""
+
+msgid "HUD & Menu Bar"
+msgstr ""
+
+msgid "Opens the HUD."
+msgstr ""
+
+msgid "Reveals the application menu."
+msgstr ""
+
+msgid "Opens the indicator menu."
+msgstr ""
+
+msgid "Moves focus between indicators."
+msgstr ""
+
+msgid "Cursor Left or Right"
+msgstr ""
+
+msgid "Switching"
+msgstr ""
+
+msgid "Switches between applications."
+msgstr ""
+
+msgid "Switches windows of current applications."
+msgstr ""
+
+msgid "Workspaces"
+msgstr ""
+
+msgid "Switches between workspaces."
+msgstr ""
+
+msgid " + Arrow Keys"
+msgstr ""
+
+msgid "Switches workspaces."
+msgstr ""
+
+msgid "Moves focused window to another workspace."
+msgstr ""
+
+msgid "Windows"
+msgstr ""
+
+msgid "Spreads all windows in the current workspace."
+msgstr ""
+
+msgid "Minimises all windows."
+msgstr ""
+
+msgid "Maximises the current window."
+msgstr ""
+
+msgid "Restores or minimises the current window."
+msgstr ""
+
+msgid " or Right"
+msgstr ""
+
+msgid "Semi-maximise the current window."
+msgstr ""
+
+msgid "Closes the current window."
+msgstr ""
+
+msgid "Opens the window accessibility menu."
+msgstr ""
+
+msgid "Places the window in corresponding position."
+msgstr ""
+
+msgid "Ctrl + Alt + Num"
+msgstr ""
+
+msgid " Drag"
+msgstr ""
+
+msgid "Moves the window."
+msgstr ""
+
+msgid "Resizes the window."
+msgstr ""
+
+msgid "Shut Down"
+msgstr ""
+
+#, c-format
+msgid "Hi %s, you have open files that you might want to save before shutting down. Are you sure you want to continue?"
+msgstr ""
+
+#, c-format
+msgid "Goodbye, %s. Are you sure you want to close all programs and shut down the computer?"
+msgstr ""
+
+msgid "Log Out"
+msgstr ""
+
+#, c-format
+msgid "Hi %s, you have open files that you might want to save before logging out. Are you sure you want to continue?"
+msgstr ""
+
+#, c-format
+msgid "Goodbye, %s. Are you sure you want to close all programs and log out from your account?"
+msgstr ""
+
+#. We have enough buttons to show the message without a new line.
+#, c-format
+msgid "Hi %s, you have open files you might want to save. Would you like to…"
+msgstr ""
+
+#, c-format
+msgid ""
+"Hi %s, you have open files you might want to save.\n"
+"Would you like to…"
+msgstr ""
+
+#, c-format
+msgid "Goodbye, %s. Would you like to…"
+msgstr ""
+
+msgid "Lock"
+msgstr ""
+
+msgid "Suspend"
+msgstr ""
+
+msgid "Hibernate"
+msgstr ""
+
+msgid "Restart"
+msgstr ""
+
+msgid "Activate"
+msgstr ""
+
+msgid "No Image Available"
+msgstr ""
+
+msgid "Filter results"
 msgstr ""

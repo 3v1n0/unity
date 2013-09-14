@@ -7,7 +7,7 @@
 #include <unity-mt-grab-handle-group.h>
 #include <unity-mt-grab-handle-impl-factory.h>
 #include <unity-mt-texture.h>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 
 unsigned int unity::MT::MaximizedHorzMask = (1 << 0);
 unsigned int unity::MT::MaximizedVertMask = (1 << 1);
@@ -95,7 +95,7 @@ public:
 class MockGrabHandleTexture : public unity::MT::Texture
 {
 public:
-  typedef boost::shared_ptr <MockGrabHandleTexture> Ptr;
+  typedef std::shared_ptr <MockGrabHandleTexture> Ptr;
   MockGrabHandleTexture () : unity::MT::Texture () {};
 };
 
@@ -112,13 +112,14 @@ class MockGrabHandleWindow : public unity::MT::GrabHandleWindow
 public:
   MockGrabHandleWindow () : GrabHandleWindow () {};
   MOCK_METHOD4 (requestMovement, void (int, int, unsigned int, unsigned int));
-  MOCK_METHOD1 (raiseGrabHandle, void (const boost::shared_ptr <const unity::MT::GrabHandle> &));
+  MOCK_METHOD1 (raiseGrabHandle, void (const std::shared_ptr <const unity::MT::GrabHandle> &));
 };
 
 Texture::Ptr
 MockGrabHandleTextureFactory::create ()
 {
-  return boost::shared_static_cast <Texture> (MockGrabHandleTexture::Ptr (new MockGrabHandleTexture ()));
+  Texture::Ptr pt(static_cast<unity::MT::Texture*>(new MockGrabHandleTexture()));
+  return pt;
 }
 
 GrabHandle::Impl *
@@ -146,14 +147,11 @@ class UnityMTGrabHandleTest : public ::testing::Test {
 protected:
 
   UnityMTGrabHandleTest() :
-    handlesMask (0),
-    window (new MockGrabHandleWindow)
-  {
-
-  }
+    handlesMask(0)
+  {}
 
   unsigned int handlesMask;
-  MockGrabHandleWindow *window;
+  MockGrabHandleWindow window;
 };
 
 TEST_F(UnityMTGrabHandleTest, TestLayoutMasks) {
@@ -208,7 +206,7 @@ TEST_F(UnityMTGrabHandleTest, TestLayouts)
   for (unsigned int i = 0; i < unity::MT::NUM_HANDLES; i++)
     textures.push_back (TextureSize (MockGrabHandleTextureFactory::Default ()->create (), nux::Geometry (0, 0, 100, 100)));
 
-  GrabHandleGroup::Ptr group = GrabHandleGroup::create (window, textures);
+  GrabHandleGroup::Ptr group = GrabHandleGroup::create (&window, textures);
 
   group->relayout (nux::Geometry (250, 250, 1000, 1000), true);
 
@@ -252,7 +250,7 @@ TEST_F(UnityMTGrabHandleTest, TestShowHide)
   for (unsigned int i = 0; i < unity::MT::NUM_HANDLES; i++)
     textures.push_back (TextureSize (MockGrabHandleTextureFactory::Default ()->create (), nux::Geometry (0, 0, 100, 100)));
 
-  GrabHandleGroup::Ptr group = GrabHandleGroup::create (window, textures);
+  GrabHandleGroup::Ptr group = GrabHandleGroup::create (&window, textures);
 
   group->show (0);
   group->show (TopLeftHandle | TopHandle | TopRightHandle);
@@ -279,7 +277,7 @@ TEST_F(UnityMTGrabHandleTest, TestAnimations)
   for (unsigned int i = 0; i < unity::MT::NUM_HANDLES; i++)
     textures.push_back (TextureSize (MockGrabHandleTextureFactory::Default ()->create (), nux::Geometry (0, 0, 100, 100)));
 
-  GrabHandleGroup::Ptr group = GrabHandleGroup::create (window, textures);
+  GrabHandleGroup::Ptr group = GrabHandleGroup::create (&window, textures);
 
   group->show ();
   for (unsigned int i = 0; i < unity::MT::FADE_MSEC; i++)

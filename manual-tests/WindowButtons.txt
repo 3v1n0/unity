@@ -1,0 +1,11 @@
+Window Close Button should be Disabled if not available
+-------------------------------------------------------
+Setup:
+Actions:  
+ * Start the Update Manager
+ * Press on the "Check" button
+ * On the "Updating Chache" dialog, press the "Details" toggle
+ * Press on the maximize window button that will show on the dialog decoration
+
+Expected Result:
+ * The close window button should be shown as disabled (grayed)

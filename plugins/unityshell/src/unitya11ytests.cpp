@@ -48,7 +48,7 @@ using unity::launcher::SimpleLauncherIcon;
  * This unit test checks if the destroy management is working:
  *
  * - If the state of a accessibility object is properly updated after
- *   the object destruction
+ *   the object's destruction
  *
  */
 static gboolean
@@ -204,12 +204,12 @@ static gboolean
 a11y_unit_test_launcher_connection(void)
 {
   Launcher* launcher = NULL;
-  nux::BaseWindow* window = NULL;
+  unity::MockableBaseWindow* window = NULL;
   AtkObject* launcher_accessible = NULL;
   LauncherIcon* launcher_icon = NULL;
   AtkObject* launcher_icon_accessible = NULL;
 
-  window = new nux::BaseWindow(TEXT(""));
+  window = new unity::MockableBaseWindow(TEXT(""));
   launcher = new Launcher(window, NULL);
   launcher->SinkReference();
   launcher_accessible = unity_a11y_get_accessible(launcher);
@@ -224,7 +224,7 @@ a11y_unit_test_launcher_connection(void)
     g_debug("[a11y] Launcher accessible created correctly");
   }
 
-  launcher_icon = new SimpleLauncherIcon();
+  launcher_icon = new SimpleLauncherIcon(unity::launcher::AbstractLauncherIcon::IconType::NONE);
   launcher_icon->SinkReference();
   launcher_icon_accessible = unity_a11y_get_accessible(launcher_icon);
 

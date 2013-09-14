@@ -1,18 +1,18 @@
-Note, for simplification, one pip is defined as a single filled in arrow to the 
-      left of a launcher.
-
 Test Launcher Icon with Windows in multiple workspaces
 ------------------------------------------------------
 This test shows how the launcher should draw when there are application windows
 in multiple workspaces.
 
+Setup:
+
+Actions:
 #. Start on a fresh login
 #. Run an application
 #. Run another instance (window) of this application and keep it on the initial workspace
 #. Run another instance (window) of this application and move it to another workspace
 #. Go back to the initial workspace
 
-Outcome
+Expected Result:
   The Launcher icon "pips" (indicators) should reflect the number of windows in the
   current workspace, so when showing the "initial" workspace the launcher icon should
   have 2 "pips", when moving to the second workspace (where there's only 1 window)
@@ -26,13 +26,16 @@ Test Launcher Spread with Windows in multiple workspaces
 This test shows how the launcher should spread the windows when they are in
 multiple workspaces.
 
+Setup:
+
+Actions:
 #. Start on a fresh login
 #. Run an application
 #. Run another instance of this application and keep it on the initial workspace
 #. Run another instance of this application and move it no another workspaces
 #. Go back to the initial workspace and focus the application windows
 
-Outcome
+Expected Result:
   When in the current workspace there are multiple windows of the same
   application and one of them is focused, clicking on the launcher should spread
   only the windows that are in the current workspace.
@@ -42,45 +45,677 @@ Outcome
   clicking on its launcher icon should bring to focus the last focused window
   in the last used workspace.
 
-Test Alt+F1 KeyNavMode Mouse Works
--------------------------------
-This test shows that the mouse still works normally while keynav mode is active.
 
-#. Press Alt+F1 to enter keynav mode
-#. Using the mouse perform a normal action (such as dragging a window)
+Test Alt+F1 KeyNavMode Rendering
+--------------------------------
+This test shows that the launcher is redrawing correctly during Alt+F1
+KeyNav mode.
 
-Outcome
-  The keynav mode exits, along with the mouse performing the normal action 
-  the user expects. Such as highlighting text, moving a window, clicking out
-  of keynav mode, or clicking on a launcher icon. All these actions should 
-  also exit the keynav mode.
+Setup:
+
+Actions:
+#. Press Alt+F1 to enter keynav mode.
+#. Keep pressing the down arrow key until the highlighted launcher icon is the
+   bottom one (usually Trash).
+
+Expected Result:
+  For every Down keypress, the next launcher icon down should be highlighted.
+  Verify each icon gets highlighted from top to bottom.
+
 
 Test Alt+F1 KeyNavMode Shortcuts
 -----------------------------
 This test shows that all the shortcuts work and also exits from keynav mode.
 
+Setup:
+
+Actions:
 #. Press Alt+F1 to enter keynav mode
-#. Press Super + a 
+#. Press Super + a
 #. Press Esc
 #. Press Alt+F1
 #. Press Alt + Tab
 #. Press Alt+F1
 #. Press Ctrl + Alt + t
 
-Outcome
+Expected Result:
   The first shortcut opens the dash app lens, which it should open it and quit the
   nav mode. The second shortcut switches between applications. The last one will open
   a new terminal. This is to show all SUPER, ALT, and CTRL shortcuts work; while
   closing the keynav mode.
 
-Test Alt+F1 NavMode Quicklist Click Exit 
-----------------------------------------
-This Test shows that clicking on a quicklist option quits keynav mode.
 
-#. Press Alt+F1 to enter keynav mode
-#. Press Right arrow
-#. Click on any option
+Drag Icons to Trash
+-------------------
 
-Outcome
-  No matter what option you click will exit keynav mode.
+This test verifies that dragging icons to the trash removes them from the
+launcher, and that the animation is smooth.
 
+Setup:
+#. Ensure that you have multiple applications running or pinned to the launcher
+
+Actions:
+#. Move mouse pointer over an application or device icon (not BFB, Workspace switcher or trash)
+#. Hold mouse button down until icon attached to moue pointer (1 Second or so)
+#. With the mouse button held down, drag the icon over the trash icon.
+#. Release the mouse pointer.
+
+Expected Result:
+  * The icon should be removed from the launcher.
+  * The trash can icon should remain stationary during the entire operation.
+  * The operation should NOT LOOK LIKE THIS: https://bugs.launchpad.net/unity/+bug/932365/+attachment/2739868/+files/out-2.ogv
+
+
+Drag file to Trash
+------------------
+
+This test verifies that dragging file icons from File Lens to trash moves
+the file to ~/Trash folder and removes it from File Lens results.
+
+Setup:
+#. Create a file via Nautilus > File > Create New Document.
+
+Actions:
+#. Open the Dash - File Lens
+#. Find the new file in File Lens results and drag it to the Trash icon on the launcher.
+#. Open the Dash - File Lens again.
+
+Expected Result:
+  * The file is no longer listed by File Lens.
+  * The file has been moved to ~/Trash folder.
+
+
+Dragging icons to reorder - initial position
+--------------------------------------------
+This test is all position of the dragged image in relation to the mouse pointer.
+
+Setup:
+#. Ensure that you have multiple applications running or pinned to the launcher
+
+Actions:
+#. Move the mouse so it is over a launcher icon for an application
+#. Press and hold the mouse button
+
+Expected Result:
+  * The icon should "detach" from the launcher and be centered on the mouse
+  * There sould be a blank "space" in the launcher where the icon was
+  * Any "pips" next to the icon aren't visible during the drag, and there are
+  none showing in the blank space
+
+
+Dragging icons to reorder - over launcher
+-----------------------------------------
+This test is all about the smoothness of the animation around the reordering
+of icons in the launcher.
+
+Setup:
+#. Ensure that you have multiple applications running or pinned to the launcher
+
+Actions:
+#. Move the mouse so it is over a launcher icon for an application
+#. Press and hold the mouse button
+#. Drag the icon up and down over the icons in the launcher
+
+Expected Result:
+  * As the center of the dragged icon passes the mid-point of the next item
+    above or below it, the icon being dragged over moves and is replaced by the
+    blank "space".
+  * The animation should be smooth
+  * If the dragged icon is moved rapidly, multiple icons can be moving either
+    upwards or downwards as the space is moved into place under the dragged icon
+  * Dragging the second application icon (the third icon of the launcher) below
+    the BFB or above the trash icon should be possible.
+  * All the icons other than the BFB and trash icons can be reordered
+
+
+Dragging icons to reorder - away from launcher
+----------------------------------------------
+This test is about reordering the icons without the animation showing.
+
+Setup:
+#. Ensure that you have multiple applications running or pinned to the launcher
+
+Actions:
+#. Move the mouse so it is over a launcher icon for an application
+#. Press and hold the mouse button
+#. Drag the icon away from the launcher
+#. Drag the icon up and down where there is no overlap with the launcher.
+#. Release
+
+Expected Result:
+  * As the icon is dragged away from the launcher, the "space" is closed up
+  and replaced with a grey line.
+  * As the icon is dragged up and down, the line moves between other launcher
+  icons of the same type.
+  * When released, the icon "flies" back into the launcher, a spaces opens for
+  it, and the any pips for running apps show again.
+
+
+Dragging fixed icons does not reorder an icon above or below
+------------------------------------------------------------
+This test is about not reordering when dragging fixed icons.
+
+#. Move the mouse so it is over the BFB launcher icon
+#. Press and hold the mouse button
+#. Try to drag the icon to the right of the launcher.
+#. Move the mouse down at least to the height of the second launcher icon
+   keeping the mouse pressed.
+#. Release
+
+Outcome:
+  * No icon should be dragged.
+
+
+Dragged launcher icons out of the launcher are properly drawn
+-------------------------------------------------------------
+This test ensures that the launcher icons out of the launcher are properly drawn
+
+Setup:
+#. Ensure that you have multiple applications running or pinned to the launcher
+
+Actions:
+#. Move the mouse so it is over a launcher icon for an application
+#. Press and hold the mouse button
+#. Drag the icon away from the launcher, in the middle of the display
+#. Don't move the mouse pointer for some (4-5) seconds, keeping the button pressed
+
+Expected Result:
+  * The icon is always drawn, even when the mouse pointer does not move.
+
+
+Dragging icon while program is starting
+---------------------------------------
+This test that when a program is executed from the launcher and the icon is
+getting dragged that the icon doesn't get frozen on the launcher.
+
+Setup:
+
+Actions:
+#. Click on Ubuntu Software Center from the launcher.
+#. While it's starting drag the Ubuntu Software Center icon.
+#. Drag the icon half over the launcher and desktop.
+#. Wait for the program to start.
+
+Expected Result:
+  * The icon should go back to its correct position in the launcher.
+
+Drag USB Device Launcher to Eject
+-------------------
+This test shows that the correct icon is shown in the OSD notification when a
+USB pen drive is ejected using drag and drop into the trash.
+
+Setup:
+#. Plug in a USB pen drive
+#. Wait for device icon to appear in the launcher
+
+Actions:
+#. Drag and drop it into the trash icon
+
+Expected Result:
+  The usb pen drive will be "ejected" and an OSD-notification will appear. The
+  icon in the notification is the same icon used for the launcher icon.
+
+
+
+Drag CD Device Launcher to Eject
+-------------------
+This test shows that the correct icon is shown in the OSD notification when a
+CD is ejected using drag and drop into the trash.
+
+Setup:
+#. Insert a CD
+#. Wait for device icon to appear in the launcher
+
+Actions:
+#. Drag and drop it into the trash icon
+
+Expected Result:
+  The cd will be"ejected and an OSD-notification will appear. The
+  icon in the notification is the same icon used for the launcher icon.
+
+
+Launcher autoscroll wake-ups
+----------------------------
+This test makes sure that the timer controlling autoscroll animations does
+not keep running (at 50Hz) when it's not required to animate anything. This
+is LP: #917210.
+
+Setup:
+#. Ensure the screen is idle, with very little changing.
+#. Open a terminal and start a tool that can measure process wakeups per
+   second. You can choose one of:
+     - gnome-power-statistics (click on Processor)
+     - powertop
+     - eventstat
+
+Actions:
+#. Hover the mouse pointer over the top end of the Launcher. That's just above
+   the Ubuntu icon.
+#. Hover the mouse pointer over the bottom end of the Launcher. That's over
+   the bottom of the trash icon.
+#. Move the mouse pointer back to the centre of the screen and leave it there.
+#. Wait 30-60 seconds, leaving the screen idle before verifying the Outcome.
+
+Expected Result:
+  The number of wakeups per second (events per second) reported for the
+  compiz process should be much lower than 50.
+
+
+Test highlight BFB
+-------------------
+This test shows that the BFB launcher icon highlights during key navigation.
+
+Setup:
+#. Start with a clear screen
+
+Actions:
+#. Press ALT+F1
+
+Expected Result:
+  The launcher key navigation starts and the BFB launcher icon highlights.
+  It looks like `this`__:
+  __https://launchpadlibrarian.net/85700200/bfb85.png
+
+Test launchers with multiple monitors
+-------------------------------------
+This test checks if the launchers are shown in the correct monitor when
+using a multimonitor setup.
+
+Setup:
+
+Actions:
+1. Open CCSM and and set the Experimental -> "Launcher Monitors" unity setting
+   to "All Desktops" (check expected results 1.)
+2. Open CCSM and and set the Experimental -> "Launcher Monitors" unity setting
+   to "Primary Desktop" (check expected results 2.)
+
+Expected Result:
+  1. A launcher should be shown in each monitor.
+  2. Only the primary monitor should show a launcher. Changing the primary 
+     monitor from gnome-control-center -> Monitor should update the launcher 
+     position.
+
+
+Test Multiple Launchers with Windows in Multiple Monitors
+---------------------------------------------------------
+This test shows how the launchers should draw their icons when there are
+application windows in multiple monitors.
+
+Setup:
+ * Run CCSM and ensure that the unity option in "Experimental" ->
+   "Launcher Monitors" is set to "All Desktops"
+
+Actions:
+ * Open 2 Gedit windows on monitor 1, workspace 1.
+ * Open 1 Gedit window on monitor 2, workspace 1.
+ * Focus one of the two gedit windows on monitor 1.
+
+Expected Result:
+ * Gedit launcher icon on monitor 1 must have:
+   * Two pips on the left of the icon.
+   * A filled-in arrow on the right of the icon.
+ * Gedit launcher icon on monitor 2 must have:
+   * One empty arrow on the left of the icon.
+   * Nothing on the right of the icon.
+
+
+Test Multiple Launchers with Windows in Multiple Monitors and Workspaces
+------------------------------------------------------------------------
+This test shows how the launchers should draw their icons when there are
+application windows in multiple monitors spreaded in multiple workspaces.
+
+Setup:
+ * Run CCSM and ensure that the unity option in "Experimental" ->
+   "Launcher Monitors" is set to "All Desktops"
+
+Actions:
+    * Open 1 Gedit window on monitor 1, workspace 1.
+    * Open 2 Gedit windows on monitor 2, workspace 1.
+    * Open 2 Gedit windows on monitor 1, workspace 2.
+    * Open 1 Gedit window on monitor 2, workspace 3.
+    * Move to workspace 1.
+    * Focus the gedit window on monitor 1.
+
+    * Assert the following:
+      * Gedit launcher icon on monitor 1 must have:
+        * A filled-in arrow on the left of the icon.
+        * A filled-in arrow on the right of the icon.
+      * Gedit launcher icon on monitor 2 must have:
+        * Two pips on the left of the icon.
+        * Nothing on the right of the icon.
+
+   * Move to workspace 2.
+   * Focus one of the two gedit windows on monitor 1.
+
+   * Assert the following:
+     * Gedit launcher icon on monitor 1 must have:
+       * Two pips on the left of the icon.
+       * A filled-in arrow on the right of the icon.
+     * Gedit launcher icon on monitor 2 must have:
+       * An empty arrow on the left of the icon.
+       * Nothing on the right of the icon.
+
+   * Move to workspace 3.
+   * Focus the gedit window on monitor 2.
+
+   * Assert the following:
+     * Gedit launcher icon on monitor 1 must have:
+       * An empty arrow on the left of the icon.
+       * Nothing on the right of the icon.
+     * Gedit launcher icon on monitor 2 must have:
+       * A filled-in arrow on the left of the icon.
+       * A filled-in arrow on the right of the icon.
+
+   * Move to workspace 4.
+
+   * Assert the following:
+     * Gedit launcher icon on monitor 1 must have:
+       * An empty arrow on the left of the icon.
+       * Nothing on the right of the icon.
+     * Gedit launcher icon on monitor 2 must have:
+       * An empty arrow on the left of the icon.
+       * Nothing on the right of the icon.
+
+Expected Result:
+  All assertions from above hold.
+
+Test Single Launcher with Windows in Multiple Monitors
+------------------------------------------------------
+This test shows how the launcher should draw its icons when there are
+application windows in multiple monitors.
+
+Setup:
+ * Run CCSM and ensure that the unity option in "Experimental" ->
+   "Launcher Monitors" is set to "Primary Desktop"
+
+Actions:
+ * Open 2 Gedit windows on monitor 1, workspace 1.
+ * Open 1 Gedit window on monitor 2, workspace 1.
+ * Focus one of the two gedit windows on monitor 1.
+
+Expected Result:
+ * The launcher is placed only on primary monitor
+ * Gedit launcher icon must have:
+   * Three pips on the left of the icon.
+   * A filled-in arrow on the right of the icon.
+
+
+Test Single Launcher with Windows in Multiple Monitors and Workspaces
+---------------------------------------------------------------------
+This test shows how the launcher should draw its icons when there are
+application windows in multiple monitors spreaded in multiple workspaces.
+
+Setup:
+ * Run CCSM and ensure that the unity option in "Experimental" ->
+   "Launcher Monitors" is set to "Primary Desktop"
+
+Actions:
+    * Open 1 Gedit window on monitor 1, workspace 1.
+    * Open 2 Gedit windows on monitor 2, workspace 1.
+    * Open 2 Gedit windows on monitor 1, workspace 2.
+    * Open 1 Gedit window on monitor 2, workspace 3.
+    * Move to workspace 1.
+    * Focus the gedit window on monitor 1.
+   
+    * Assert the following:
+        * The launcher is shown only on primary monitor
+        * Gedit launcher icon must have:
+          * Three pips on the left of the icon.
+          * A filled-in arrow on the right of the icon.
+   
+    * Move to workspace 2.
+    * Focus one of the two gedit windows on monitor 1.
+   
+    * Assert the following:
+       * Gedit launcher icon on monitor 1 must have:
+         * Two pips on the left of the icon.
+         * A filled-in arrow on the right of the icon.
+   
+    * Move to workspace 3.
+    * Focus the gedit window on monitor 2.
+   
+    * Assert the following:
+       * Gedit launcher icon on monitor 2 must have:
+         * A filled-in arrow on the left of the icon.
+         * A filled-in arrow on the right of the icon.
+   
+    * Move to workspace 4.
+   
+    * Assert the following:
+      * Gedit launcher icon on monitor 1 must have:
+        * An empty arrow on the left of the icon.
+        * Nothing on the right of the icon.
+
+Expected Result:
+  All assertions from above hold.
+
+
+Panel appearance with overlays
+------------------------------
+Setup:
+  Have a secondary monitor plugged in and working.
+  Have the launchers on each monitor
+  Make sure the launcher setting is to never hide.
+
+Actions:
+#. Press <super> to bring up the dash
+#. Press <super> to close the dash
+
+Expected Result:
+  The launchers on each monitor have saturated icons (normal looking, not the
+  desaturated look that there is while the dash is open).
+
+Test number overlays while shortcut help is active
+------------------------------
+Setup:
+have a launcher with a few icons in it
+
+Actions:
+  * Hold down Super until the "Keyboard Shortcuts" screen appears
+  * Assert: The numbers [1-9] should be displayed overlaid on the icons.
+    "Keyboard Shortcut" menu should appear as well.
+  * Mouse over an icon in the launcher
+  * Hold down Super until the "Keyboard Shortcuts" screen appears
+  * Assert: The numbers [1-9] should be displayed overlaid on the icons.
+    "Keyboard Shortcut" menu should appear as well.
+
+Expected Result:
+ Assertions from above hold.
+
+Drag file to launcher icons
+---------------------------
+Setup:
+#. Add the Firefox icon to the launcher.
+#. Create an html file on the desktop.
+#. Create an empty folder on the desktop.
+
+Actions:
+  * Drag the html file.
+  * Drop it into the Firefox icon.
+  * Assert: The Firefox icon should be highlighted during the drag&drop.
+    Firefox should open the html file.
+  * Drag the new folder.
+  * Drop it into the Firefox icon.
+  * Assert: The Firefox icon should *not* be highlighted during the drag&drop.
+    Firefox should open the folder in a new Firefox window.
+
+Expected Result:
+  Assertions from above hold.
+
+Test Launcher with Chromium Web apps
+------------------------------------
+This tests shows the integration of unity with the Chromium Web Apps
+
+Setup:
+ * Open Chromium and go to a website, say ubuntu.com
+ * Go to the menu "File" -> "Create Application Shortcuts..."
+ * Select the checkbox "Applications Menu" (you can deselect the "Desktop" one)
+ * A new window is opened, and the launcher will continue matching it like a
+   chromium application.
+ * Close the chromium window.
+
+Actions:
+ * Open the dash and search for "chrom"
+ * An application called "Home | Ubuntu" should be shown
+ * Launch it
+ * Assert: The launcher will show an icon for the "Home | Ubuntu" application
+ * Open a standard chromium window
+ * Assert: The new chromium window will be associated to the standard chromium
+   application icon.
+ * Assert: Clicking the "Home | Ubuntu" will activate its window, while clicking
+   in the chromium icon will activate a chromium window.
+
+Expected Result:
+  Assertions from above hold.
+
+
+Test Launcher raises focused non-top windows
+--------------------------------------------
+This tests shows how the focused windows should be raised to the top of the
+stack, when another non-active window is over them.
+
+Setup:
+
+Actions:
+ * Open a terminal Window
+ * Open The GIMP
+ * In GIMP load an image, say /usr/share/backgrounds/warty-final-ubuntu.png
+ * From the terminal window run the command "gimp foo-image.png"
+ * Assert: A gimp dialog will be raised (so the terminal window is below it), but not focused
+ * Assert: Terminal launcher icon must have a filled-in arrow on the right of the icon
+ * Click on the launcher terminal icon
+ * Assert: Terminal window will be raised to the top of the stack (over the GIMP window)
+
+Expected Result:
+  Assertions from above hold.
+
+Test killing bamfdaemon does not duplicate icons in launcher
+------------------------------------------------------------
+This test shows that restarting/killing the BAMF Daemon does not result in
+duplicate icons in the Launcher.
+
+Setup:
+
+Actions:
+ * Open Calculator
+ * Open System Settings
+ * Open xclock (Alt-F2, xclock, enter)
+ * Open a terminal and kill the bamf daemon (command: pkill bamfdaemon)
+ * (wait for bamfdaemon to be killed)
+ * Restart bamfdaemon (Open another Terminal, this will kick bamfdaemon back
+   into life)
+ * (You can ensure that bamfdaemon has been restarted by running in the
+   terminal: ps aux | grep bamfdaemon. You're looking for:
+   /usr/lib/bamf/bamfdaemon)
+
+Expected Result:
+ * There are no icons doubled up in the Launcher
+ * All icons are present in the Launcher
+
+
+Drag and Drop doesn't freeze Unity
+----------------------------------
+Setup:
+
+Actions:
+#. Open Firefox
+#. Go to http://launchpad.net/unity
+#. Drag around the Unity icon image shown in the top-left corner
+   of the browser window.
+#. Drop it wherever you want.
+
+Expected Result:
+Unity must not freeze during the drag and drop.
+
+
+Test launcher unfolds valid drop icons during dnd
+------------------------------------------------------------
+This test makes sure that Unity launcher unfolds valid drop icons during
+drag and drop.
+
+Setup:
+ * Add icons to the laucnher so that some of them in the bottom are folded.
+ * Add Nautilus icon too, making sure it is folded.
+
+Actions:
+ * Show Desktop
+ * Drag a folder icon
+
+Expected Result:
+ * All the valid drop icons should unfold during the drag and drop.
+
+
+Test launcher autoscrolls when holding an icon
+----------------------------------------------
+Setup:
+ * Add icons to the laucnher so that some of them in the bottom are folded.
+
+Actions:
+ * Drag a launcher icon of the top side of the launcher. Don't release the mouse.
+ * Move the mouse at the bottom of the launcher.
+
+Expected Result:
+ * The launcher should autoscroll so you can reach the trash icon.
+
+
+No flashing tooltips when peforming the accordion effect. 
+----------------------------------------------------
+Setup:
+ * Make sure the launcher setting is to never hide.
+ * Add icons to the launcher so that some of them in the bottom are folded.
+
+Actions:  
+ * Quickly move the mouse pointer to the bottom-left corner.
+ * Quickly move the mouse pointer outside the launcher area.
+
+Expected Result:
+ * No icon flickers near the top panel.
+ * See https://bugs.launchpad.net/unity/+bug/980942/+attachment/3059914/+files/launcher-accordion-effect-tooltip-bug.ogv.
+
+
+Stop SD card by dragging it's icon to trash
+---------------------------------------------------
+
+Setup:
+ * Have an SD Card reader and an SD Card
+
+Actions:
+ * Insert the SD card into the SD card reader.
+ * Wait for the SD card to mount.
+ * Drag and drop the SD card icon into the trash.
+
+Expected result:
+ * The SD card launcher icon appears in the launcher after the SD card is mounted
+ * After the icon is dragged into the trash, the SD card is "stopped"
+ * A notification appears, stating that the SD card has been stopped.
+
+
+No flickering when resizing the launcher
+-----------------------------------------
+
+Actions:
+* Open gedit.
+* Maximize it. Make sure it remains maximized during the test.
+* Open Appearance panel in System Settings.
+* Change Launcher Icon Size.
+
+Expected Results:
+* The gedit window must not flicker behind the launcher.
+
+
+Custom background color works
+-----------------------------
+This test ensures that the custom background color (set via ccsm) works correctly.
+
+Setup: 
+#. Ensure that ccsm is installed (package compizconfig-settings-manager)
+
+Actions:  
+#. Open ccsm
+#. Click on Ubuntu Unity Plugin
+#. Choose Experimental tab, click on Background Color, set Color name to #000000 and Opacity to 180
+
+Expected Result:
+ The background color of the Launcher is black, and the icons are still visible.
+ The Launcher must stay black when Dash or HUD are opened, and the color must
+ be persistent between sessions (logout/login).

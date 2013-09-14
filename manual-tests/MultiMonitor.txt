@@ -1,0 +1,58 @@
+Test Barrier Toggle
+-----------
+This test is to ensure the barrier toggle works on multiple-monitor systems
+
+Setup:
+
+Actions:
+#. Get a system with 2 monitors, ensure the left most monitor is set as primary
+#. Disable the "Capture Mouse" setting in CCSM
+#. Move your mouse between the left and right monitor
+
+Expected Result:
+  The mouse should move freely between monitors, without a launcher blocking its movement.
+
+
+Test Number of Launchers
+-----------
+This test is to ensure that the number of launchers created and positioned can be properly configured
+
+Setup:
+
+Actions:
+#. Get a system with 2 monitors, ensure the left most monitor is set as primary
+#. Open CCSM and changed the Number of Launchers option to "Primary Only"
+#. Check for the existence of a launcher on your non-primary monitor
+
+Expected Result:
+  There should only be a launcher on the primary monitor.
+
+
+Test Barrier Unplugging Monitor
+----------------------------------------------------
+Setup: 
+  #. Get a system with 2 (or more) monitors
+  #. Enable the "Capture Mouse" setting in CCSM
+
+Actions:  
+  #. Move mouse slowly over barrier to primary monitor
+  #. Quickly unplug external monitor
+
+Expected Result:
+  No crash.
+
+
+The Windows On A Disconnected Monitor Are Moved Over To A Connected Monitor
+---------------------------------------------------------------------------
+lp: 1002246
+
+Setup:
+  #. Get a system with 2 monitors
+  #. Open 2 instances of gedit
+  #. Move 1 instance of gedit to the 2nd monitor
+
+Actions:
+  #. Unplug the 2nd monitor
+
+Expected Results:
+  The 2nd instance of gedit gets moved over to the 1st monitor.

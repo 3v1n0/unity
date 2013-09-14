@@ -4,6 +4,7 @@
         <_short>Ubuntu Unity Plugin</_short>
         <_long>Plugin to draw the Unity Shell</_long>
         <category>Desktop</category>
+        <feature>fadetodesktop</feature>
         <deps>
             <relation type="after">
                 <plugin>bailer</plugin>
@@ -36,20 +37,171 @@
                 <plugin>compiztoolbox</plugin>
                 <plugin>scale</plugin>
                 <plugin>expo</plugin>
-                <feature>largedesktop</feature>
             </requirement>
         </deps>
+
         <options>
             <group>
-                <_short>Behaviour</_short>
+                <_short>General</_short>
+
                 <option name="show_hud" type="key">
                     <_short>Key to show the HUD</_short>
-                    <_long>Make the HUD appear with this key</_long>
+                    <_long>A tap on this key summons the HUD.</_long>
                     <default>&lt;Alt&gt;</default>
-                  </option>
-	              <option name="launcher_hide_mode" type="int">
+                </option>
+
+                <option name="execute_command" type="key">
+                    <_short>Key to execute a command</_short>
+                    <_long>Opens a folder or executes a command.</_long>
+                    <default>&lt;Alt&gt;F2</default>
+                </option>
+
+                <option name="show_desktop_key" type="key">
+                    <_short>Show Desktop</_short>
+                    <_long>Hide all windows and focus desktop.</_long>
+                    <default>&lt;Control&gt;&lt;Super&gt;d</default>
+                </option>
+
+                <option name="panel_first_menu" type="key">
+                    <_short>Key to open the first panel menu</_short>
+                    <_long>Opens the first indicator menu of the Panel, allowing keyboard navigation thereafter.</_long>
+                    <default>&lt;Alt&gt;F10</default>
+                </option>
+
+                <option name="window_maximize" type="key">
+                    <_short>Key to maximize the focused window</_short>
+                    <_long>Maximize the focused window</_long>
+                    <default>&lt;Super&gt;Up</default>
+                </option>
+
+                <option name="window_restore_minimize" type="key">
+                    <_short>Key to restore or minimize the focused window</_short>
+                    <_long>Restore the maximized window on focus or minimize the focused window</_long>
+                    <default>&lt;Super&gt;Down</default>
+                </option>
+
+                <option name="window_right_maximize" type="key">
+                    <_short>Key to vertically maximize the focused window to the right</_short>
+                    <_long>Semi-maximize vertically the focused window on the half right width of the screen</_long>
+                    <default>&lt;Super&gt;Right</default>
+                </option>
+
+                <option name="window_left_maximize" type="key">
+                    <_short>Key to vertically maximize the focused window to the left</_short>
+                    <_long>Semi-maximize vertically the focused window to the half left width of the screen</_long>
+                    <default>&lt;Super&gt;Left</default>
+                </option>
+
+                <option name="panel_opacity" type="float">
+                    <_short>Panel Opacity</_short>
+                    <_long>The opacity of the Panel background.</_long>
+                    <default>1.0</default>
+                    <min>0.0</min>
+                    <max>1.0</max>
+                    <precision>0.01</precision>
+                </option>
+
+                <option name="panel_opacity_maximized_toggle" type="bool">
+                    <_short>Panel Opacity for Maximized Windows Toggle</_short>
+                    <_long>When a window is maximized and visible in the current viewport, the panel opacity is disabled.</_long>
+                    <default>false</default>
+                </option>
+
+                <option name="background_color" type="color">
+                    <_short>Background Color</_short>
+                    <_long>Background color override for the Dash, Launcher and Switcher.</_long>
+                    <default>
+                        <red>0x00</red>
+                        <green>0x00</green>
+                        <blue>0x00</blue>
+                        <alpha>0x00</alpha>
+                    </default>
+                </option>
+
+                <option name="dash_blur_experimental" type="int">
+                    <_short>Dash Blur</_short>
+                    <_long>Type of blur in the Dash.</_long>
+                    <min>0</min>
+                    <max>2</max>
+                    <default>2</default>
+                    <desc>
+                        <value>0</value>
+                        <_name>No Blur</_name>
+                    </desc>
+                    <desc>
+                        <value>1</value>
+                        <_name>Static Blur</_name>
+                    </desc>
+                    <desc>
+                        <value>2</value>
+                        <_name>Active Blur</_name>
+                    </desc>
+                </option>
+
+                <option name="automaximize_value" type="int">
+                    <_short>Automaximize Value</_short>
+                    <_long>The minimum value to trigger automaximize.</_long>
+                    <min>1</min>
+                    <max>100</max>
+                    <default>75</default>
+                </option>
+
+                <option name="shortcut_overlay" type="bool">
+                  <_short>Enable Shortcut Hints Overlay</_short>
+                  <_long>Enables possibility to display an overlay showing available mouse and keyboard shortcuts.</_long>
+                  <default>true</default>
+                </option>
+
+            </group>
+
+            <group>
+                <_short>Launcher</_short>
+
+                <option name="show_launcher" type="key">
+                    <_short>Key to show the Dash, Launcher and Help Overlay</_short>
+                    <_long>Holding this key makes the Launcher and Help Overlay appear. Tapping it opens the Dash.</_long>
+                    <tap_detection>false</tap_detection>
+                    <default>&lt;Super&gt;</default>
+                </option>
+
+                <option name="keyboard_focus" type="key">
+                    <_short>Key to give keyboard-focus to the Launcher</_short>
+                    <_long>Gives keyboard-focus to the Launcher so it can be navigated with the cursor-keys.</_long>
+                    <default>&lt;Alt&gt;F1</default>
+                </option>
+
+                <option name="launcher_switcher_forward" type="key">
+                    <_short>Key to start the Launcher Application Switcher</_short>
+                    <_long>Cycles through icons present in the Launcher. Activates the highlighted icon on release.</_long>
+                    <default>&lt;Super&gt;Tab</default>
+                </option>
+
+                <option name="launcher_switcher_prev" type="key">
+                    <_short>Key to start the Launcher Application Switcher in reverse</_short>
+                    <_long>Cycles through icons present in the Launcher, in reverse order. Activates the highlighted icon on release.</_long>
+                    <default>&lt;Super&gt;&lt;Shift&gt;Tab</default>
+                </option>
+
+                <option name="dash_tap_duration" type="int">
+                    <_short>Dash tap duration</_short>
+                    <_long>Duration (in millseconds) that will count as a tap for opening the Dash.</_long>
+                    <min>1</min>
+                    <max>1000</max>
+                    <default>250</default>
+                </option>
+
+                <option name="launcher_opacity" type="float">
+                    <_short>Launcher Opacity</_short>
+                    <_long>The opacity of the Launcher background.</_long>
+                    <default>0.6667</default>
+                    <min>0.0</min>
+                    <max>1.0</max>
+                    <precision>0.0001</precision>
+                </option>
+
+                <option name="launcher_hide_mode" type="int">
                     <_short>Hide Launcher</_short>
-                    <_long>Make the launcher hide automatically after some time of inactivity: always or just when the focussed window is not over the launcher</_long>
+                    <_long>Make the Launcher hide automatically after some time of inactivity.</_long>
                     <min>0</min>
                     <max>1</max>
                     <default>0</default>
@@ -62,287 +214,10 @@
                         <_name>Autohide</_name>
                     </desc>
                 </option>
-                <option name="reveal_trigger" type="int">
-                    <_short>Reveal Trigger</_short>
-                    <_long></_long>
-                    <min>0</min>
-                    <max>1</max>
-                    <default>0</default>
-                    <desc>
-                        <value>0</value>
-                        <_name>Left Edge</_name>
-                    </desc>
-                    <desc>
-                        <value>1</value>
-                        <_name>Top Left Corner</_name>
-                    </desc>
-                </option>
-                <option name="show_launcher" type="key">
-                    <_short>Key to show the launcher</_short>
-                    <_long>Make the launcher appear with that key</_long>
-                    <default>&lt;Super&gt;</default>
-                  </option>
-                  <option name="keyboard_focus" type="key">
-                    <_short>Key to put keyboard-focus on launcher</_short>
-                    <_long>Set the keyboard-focus on the launcher so it can be navigated with the cursor-keys</_long>
-                    <default>&lt;Alt&gt;F1</default>
-                  </option>
-                  <option name="execute_command" type="key">
-                        <_short>Key to execute a command</_short>
-                        <_long>Key to open a folder or execute a command</_long>
-                        <default>&lt;Alt&gt;F2</default>
-                  </option>
-                  <option name="panel_first_menu" type="key">
-                        <_short>Key to open the first panel menu</_short>
-                        <_long>Open the first menu on the panel, allowing keyboard navigation thereafter.</_long>
-                        <default>F10</default>
-                  </option> 
-                  <option name="launcher_switcher_forward" type="key">
-                    <_short>Key to start the launcher application switcher</_short>
-                    <_long>Switch the applications using the launcher</_long>
-                    <default>&lt;Super&gt;Tab</default>
-                  </option>
-                  <option name="launcher_switcher_prev" type="key">
-                    <_short>Key to start the launcher application switcher in reverse</_short>
-                    <_long>Switch the applications using the launcher, in reverse order</_long>
-                    <default>&lt;Super&gt;&lt;Shift&gt;Tab</default>
-                  </option>
-                  <option name="window_maximize" type="key">
-                    <_short>Key to maximize the focused window</_short>
-                    <_long>Maximize the focused window</_long>
-                    <default>&lt;Super&gt;Up</default>
-                  </option>
-                  <option name="window_restore_minimize" type="key">
-                    <_short>Key to restore or minimize the focused window</_short>
-                    <_long>Restore the maximized window on focus or minimize the focused window</_long>
-                    <default>&lt;Super&gt;Down</default>
-                  </option>
-                  <option name="window_right_maximize" type="key">
-                    <_short>Key to vertically maximize the focused window to the right</_short>
-                    <_long>Semi-maximize vertically the focused window on the half right width of the screen</_long>
-                    <default>&lt;Super&gt;Right</default>
-                  </option>
-                  <option name="window_left_maximize" type="key">
-                    <_short>Key to vertically maximize the focused window to the left</_short>
-                    <_long>Semi-maximize vertically the focused window to the half left width of the screen</_long>
-                    <default>&lt;Super&gt;Left</default>
-                  </option>
-              </group>
-              <group>
-                <_short>Switcher</_short>
-                <option name="alt_tab_timeout" type="bool">
-                      <_short>Automatically grid windows on timer in switcher</_short>
-                      <_long>fixme</_long>
-                      <default>true</default>
-                </option>
-                <option name="alt_tab_bias_viewport" type="bool">
-                      <_short>Bias alt-tab to prefer windows on the current viewport</_short>
-                      <_long>fixme</_long>
-                      <default>true</default>
-                </option>
-                <option name="alt_tab_forward" type="key">
-                     <_short>Key to start the switcher</_short>
-                     <_long>fixme</_long>
-                     <default>&lt;Alt&gt;Tab</default>
-                </option>
-                <option name="alt_tab_prev" type="key">
-                      <_short>Key to start the switcher in reverse</_short>
-                      <_long>fixme</_long>
-                      <default>&lt;Alt&gt;&lt;Shift&gt;Tab</default>
-                </option>
-    <option name="alt_tab_right" type="key">
-        <_short>Go right in the switcher</_short>
-        <_long>fixme</_long>
-        <default>&lt;Alt&gt;Right</default>
-        <passive_grab>false</passive_grab>
-        <internal/>
-    </option>
-    <option name="alt_tab_left" type="key">
-        <_short>Go left in the switcher</_short>
-        <_long>fixme</_long>
-        <default>&lt;Alt&gt;Left</default>
-        <passive_grab>false</passive_grab>
-        <internal/>
-    </option>
-                <option name="alt_tab_detail_start" type="key">
-        <_short>Key to expose the windows in the switcher</_short>
-        <_long>fixme</_long>
-        <default>&lt;Alt&gt;Down</default>
-        <passive_grab>false</passive_grab>
-        <internal/>
-                </option>
-    <option name="alt_tab_detail_stop" type="key">
-        <_short>Key to collapse windows in the switcher</_short>
-        <_long>fixme</_long>
-        <default>&lt;Alt&gt;Up</default>
-        <passive_grab>false</passive_grab>
-        <internal/>
-    </option>
-        <option name="alt_tab_next_window" type="key">
-        <_short>Key to flip through windows in the switcher</_short>
-        <_long>fixme</_long>
-            <passive_grab>false</passive_grab>
-        </option>
-        <option name="alt_tab_prev_window" type="key">
-            <_short>Key to flip through windows in the switcher backwards</_short>
-            <_long>fixme</_long>
-            <passive_grab>false</passive_grab>
-        </option>
-    <option name="show_minimized_windows" type="bool">
-        <_short>Show minimized windows in switcher</_short>
-        <_long>Hack to enable minimized windows in switcher. Disable and report bugs if problems are caused</_long>
-        <default>true</default>
-    </option>
-              </group>
-              <group>
-                <_short>Experimental</_short>
-                <option name="background_color" type="color">
-                    <_short>Background Color</_short>
-                    <_long>Background color override used for testing purposes</_long>
-                    <default>
-                        <red>0x00</red>
-                        <green>0x00</green>
-                        <blue>0x00</blue>
-                        <alpha>0x00</alpha>
-                    </default>
-                </option>
-                <option name="backlight_mode" type="int">
-                    <_short>Backlight Mode</_short>
-                    <_long>Change how the icons are backlit</_long>
-                    <min>0</min>
-                    <max>4</max>
-                    <default>0</default>
-                    <desc>
-                        <value>0</value>
-                        <_name>Backlight Always On</_name>
-                    </desc>
-                    <desc>
-                        <value>1</value>
-                        <_name>Backlight Toggles</_name>
-                    </desc>
-                    <desc>
-                        <value>2</value>
-                        <_name>Backlight Always Off</_name>
-                    </desc>
-                    <desc>
-                        <value>3</value>
-                        <_name>Edge Illumination Toggles</_name>
-                    </desc>
-                    <desc>
-                        <value>4</value>
-                        <_name>Backlight and Edge Illumination Toggles</_name>
-                    </desc>
-                </option>
-                <option name="launch_animation" type="int">
-                    <_short>Launch Animation</_short>
-                    <_long>Animation played when a launcher icon is in the process of spawning a process</_long>
-                    <min>0</min>
-                    <max>2</max>
-                    <default>1</default>
-                    <desc>
-                        <value>0</value>
-                        <_name>None</_name>
-                    </desc>
-                    <desc>
-                        <value>1</value>
-                        <_name>Pulse Until Running</_name>
-                    </desc>
-                    <desc>
-                        <value>2</value>
-                        <_name>Blink</_name>
-                    </desc>
-                </option>
-                <option name="urgent_animation" type="int">
-                    <_short>Urgent Animation</_short>
-                    <_long>Animation played when a launcher icon is in the urgent state</_long>
-                    <min>0</min>
-                    <max>2</max>
-                    <default>2</default>
-                    <desc>
-                        <value>0</value>
-                        <_name>None</_name>
-                    </desc>
-                    <desc>
-                        <value>1</value>
-                        <_name>Pulse</_name>
-                    </desc>
-                    <desc>
-                        <value>2</value>
-                        <_name>Wiggle</_name>
-                    </desc>
-                </option>
-                <option type="float" name="panel_opacity">
-                    <_short>Panel Opacity</_short>
-                    <_long>The opacity of the Panel background.</_long>
-                    <default>1.0</default>
-                    <min>0.0</min>
-                    <max>1.0</max>
-                    <precision>0.01</precision>
-                </option>
-                <option type="bool" name="panel_opacity_maximized_toggle">
-                  <_short>Panel Opacity for Maximized Windows Toggle.</_short>
-                  <_long>When a window is maximized and visible in the current viewport, the panel opacity is disabled</_long>
-                  <default>false</default>
-                </option>
-                <option type="float" name="launcher_opacity">
-                    <_short>Launcher Opacity</_short>
-                    <_long>The opacity of the Launcher background.</_long>
-                    <default>0.6667</default>
-                    <min>0.0</min>
-                    <max>1.0</max>
-                    <precision>0.0001</precision>
-                </option>
-                <option name="icon_size" type="int">
-                    <_short>Launcher icon size</_short>
-                    <_long>The size of the launcher icons</_long>
-                    <default>48</default>
-                    <min>32</min>
-                    <max>64</max>
-                    <precision>1</precision>
-                </option>
-                <option name="edge_responsiveness" type="float">
-                    <_short>Launcher Reveal Edge Responsiveness</_short>
-                    <_long>A conglomerate setting that modifies the overall responsiveness of the launcher reveal</_long>
-                    <default>2.0</default>
-                    <min>0.2</min>
-                    <max>8.0</max>
-                    <precision>0.1</precision>
-                </option>
-                <option name="reveal_pressure" type="int">
-                    <_short>Launcher Reveal Pressure</_short>
-                    <_long>Amount of mouse pressure required to reveal launcher</_long>
-                    <default>20</default>
-                    <min>1</min>
-                    <max>1000</max>
-                    <precision>1</precision>
-                </option>
-                <option name="overcome_pressure" type="int">
-                    <_short>Launcher Edge Stop Overcome Pressure</_short>
-                    <_long>Amount of mouse pressure required to push into the next monitor</_long>
-                    <default>20</default>
-                    <min>1</min>
-                    <max>1000</max>
-                    <precision>1</precision>
-                </option>
-                <option name="decay_rate" type="int">
-                    <_short>Pressure Decay Rate</_short>
-                    <_long>The rate at which mouse pressure decays</_long>
-                    <default>15</default>
-                    <min>1</min>
-                    <max>1000</max>
-                    <precision>1</precision>
-                </option>
-                <option name="stop_velocity" type="int">
-                    <_short>Edge Stop Velocity</_short>
-                    <_long>The maximum velocity at which the mouse will still be stoped</_long>
-                    <default>65</default>
-                    <min>1</min>
-                    <max>1000</max>
-                    <precision>1</precision>
-                </option>
+
                 <option name="autohide_animation" type="int">
                     <_short>Hide Animation</_short>
-                    <_long>Animation played when the launcher is showing or hiding</_long>
+                    <_long>Animation played when the Launcher is showing or hiding.</_long>
                     <min>0</min>
                     <max>3</max>
                     <default>3</default>
@@ -364,68 +239,182 @@
                     </desc>
                 </option>
 
-                <option name="dash_blur_experimental" type="int">
-                    <_short>Dash Blur</_short>
-                    <_long>Type of blur in the Dash</_long>
+                <option name="reveal_trigger" type="int">
+                    <_short>Reveal Trigger</_short>
+                    <_long></_long>
                     <min>0</min>
-                    <max>2</max>
-                    <default>2</default>
+                    <max>1</max>
+                    <default>0</default>
                     <desc>
                         <value>0</value>
-                        <_name>No Blur</_name>
+                        <_name>Left Edge</_name>
                     </desc>
                     <desc>
                         <value>1</value>
-                        <_name>Static Blur</_name>
+                        <_name>Top Left Corner</_name>
+                    </desc>
+                </option>
+
+                <option name="num_launchers" type="int">
+                    <_short>Launcher Monitors</_short>
+                    <_long>Selects on which display the Launcher will be present.</_long>
+                    <min>0</min>
+                    <max>1</max>
+                    <default>0</default>
+                    <desc>
+                        <value>0</value>
+                        <_name>All Displays</_name>
+                    </desc>
+                    <desc>
+                        <value>1</value>
+                        <_name>Primary Display</_name>
+                    </desc>
+                </option>
+
+                <option name="launcher_capture_mouse" type="bool">
+                    <_short>Launcher Capture Mouse</_short>
+                    <_long>Determines if the Launcher's edges will capture the mousepointer.</_long>
+                    <default>true</default>
+                </option>
+
+                <option name="edge_responsiveness" type="float">
+                    <_short>Launcher Reveal Edge Responsiveness</_short>
+                    <_long>A conglomerate setting that modifies the overall responsiveness of the Launcher reveal.</_long>
+                    <default>2.0</default>
+                    <min>0.2</min>
+                    <max>8.0</max>
+                    <precision>0.1</precision>
+                </option>
+
+                <option name="reveal_pressure" type="int">
+                    <_short>Launcher Reveal Pressure</_short>
+                    <_long>Amount of mouse pressure required to reveal the Launcher.</_long>
+                    <default>20</default>
+                    <min>1</min>
+                    <max>1000</max>
+                    <precision>1</precision>
+                </option>
+
+                <option name="overcome_pressure" type="int">
+                    <_short>Launcher Edge Stop Overcome Pressure</_short>
+                    <_long>Amount of mouse pressure required to push the mousepointer into the next monitor.</_long>
+                    <default>20</default>
+                    <min>1</min>
+                    <max>1000</max>
+                    <precision>1</precision>
+                </option>
+
+                <option name="decay_rate" type="int">
+                    <_short>Pressure Decay Rate</_short>
+                    <_long>The rate at which mouse pressure decays.</_long>
+                    <default>15</default>
+                    <min>1</min>
+                    <max>1000</max>
+                    <precision>1</precision>
+                </option>
+
+                <option name="stop_velocity" type="int">
+                    <_short>Edge Stop Velocity</_short>
+                    <_long>The maximum velocity at which the mouse will still be stopped.</_long>
+                    <default>65</default>
+                    <min>1</min>
+                    <max>1000</max>
+                    <precision>1</precision>
+                </option>
+
+                <option name="edge_passed_disabled_ms" type="int">
+                    <_short>Duration of Sticky Edge Release after Break</_short>
+                    <_long>The number of milliseconds Sticky Edges are deactivated for after the barrier has been broken.</_long>
+                    <default>1000</default>
+                    <min>0</min>
+                    <max>5000</max>
+                    <precision>1</precision>
+                </option>
+
+                <option name="icon_size" type="int">
+                    <_short>Launcher Icon Size</_short>
+                    <_long>The size of the icons in the Launcher.</_long>
+                    <default>48</default>
+                    <min>8</min>
+                    <max>64</max>
+                    <precision>1</precision>
+                </option>
+
+                <option name="backlight_mode" type="int">
+                    <_short>Launcher Icon Backlight Mode</_short>
+                    <_long>Change how the icons in the Launcher are backlit.</_long>
+                    <min>0</min>
+                    <max>4</max>
+                    <default>1</default>
+                    <desc>
+                        <value>0</value>
+                        <_name>Backlight Always On</_name>
+                    </desc>
+                    <desc>
+                        <value>1</value>
+                        <_name>Backlight Toggles</_name>
                     </desc>
                     <desc>
                         <value>2</value>
-                        <_name>Active Blur</_name>
+                        <_name>Backlight Always Off</_name>
+                    </desc>
+                    <desc>
+                        <value>3</value>
+                        <_name>Edge Illumination Toggles</_name>
+                    </desc>
+                    <desc>
+                        <value>4</value>
+                        <_name>Backlight and Edge Illumination Toggles</_name>
                     </desc>
                 </option>
 
-                <option name="automaximize_value" type="int">
-                    <_short>Automaximize value</_short>
-                    <_long>The minimum value to trigger automaximize.</_long>
-                    <min>1</min>
-                    <max>100</max>
-                    <default>75</default>
-                </option>
-
-                <option name="devices_option" type="int">
-                    <_short>Show Devices</_short>
-                    <_long>Show devices in the launcher</_long>
+                <option name="launch_animation" type="int">
+                    <_short>Launcher Icon Launch Animation</_short>
+                    <_long>The icon animation playing during the launch of a process.</_long>
                     <min>0</min>
                     <max>2</max>
                     <default>1</default>
                     <desc>
                         <value>0</value>
-                        <_name>Never</_name>
+                        <_name>None</_name>
                     </desc>
                     <desc>
                         <value>1</value>
-                        <_name>Only Mounted</_name>
+                        <_name>Pulse Until Running</_name>
                     </desc>
                     <desc>
                         <value>2</value>
-                        <_name>Always</_name>
+                        <_name>Blink</_name>
                     </desc>
                 </option>
-                
-                <option name="shortcut_overlay" type="bool">
-                  <_short>Enable Shortcut Hints Overlay</_short>
-                  <_long>Enable Shortcut Hints Overlay</_long>
-                  <default>true</default>
+
+                <option name="urgent_animation" type="int">
+                    <_short>Launcher Icon Urgent Animation</_short>
+                    <_long>The icon animation playing when a Launcher Icon is in the urgent state.</_long>
+                    <min>0</min>
+                    <max>2</max>
+                    <default>2</default>
+                    <desc>
+                        <value>0</value>
+                        <_name>None</_name>
+                    </desc>
+                    <desc>
+                        <value>1</value>
+                        <_name>Pulse</_name>
+                    </desc>
+                    <desc>
+                        <value>2</value>
+                        <_name>Wiggle</_name>
+                    </desc>
                 </option>
 
-                <option name="show_desktop_icon" type="bool">
-                    <_short>Show "Desktop Icon" in the launcher</_short>
-                    <_long>Enable/Disable "Show Dekstop icon" in the launcher.</_long>
-                    <default>false</default>
-                </option>
+            </group>
+
+            <group>
+                <_short>Menus</_short>
 
                 <option name="menus_fadein" type="int">
-                    <_short>Menus Fade-in duration</_short>
+                    <_short>Menus Fade-in Duration</_short>
                     <_long>Duration (in milliseconds) of the menus fade-in animation, used when the mouse goes over the top-panel.</_long>
                     <min>0</min>
                     <max>1000</max>
@@ -433,7 +422,7 @@
                 </option>
 
                 <option name="menus_fadeout" type="int">
-                    <_short>Menus fade-out duration</_short>
+                    <_short>Menus Fade-out Duration</_short>
                     <_long>Duration (in milliseconds) of the menus fade-out animation, used when the mouse goes over the top-panel.</_long>
                     <min>0</min>
                     <max>1000</max>
@@ -441,7 +430,7 @@
                 </option>
 
                 <option name="menus_discovery_duration" type="int">
-                    <_short>Menus discovery duration</_short>
+                    <_short>Menus Discovery Duration</_short>
                     <_long>How many seconds the menus should be shown when a new application has been launched.</_long>
                     <min>0</min>
                     <max>10</max>
@@ -449,7 +438,7 @@
                 </option>
 
                 <option name="menus_discovery_fadein" type="int">
-                    <_short>Menus discovery fade-in duration</_short>
+                    <_short>Menus Discovery Fade-in Duration</_short>
                     <_long>Duration (in milliseconds) of the menus fade-in animation, used when the menus of a new launched application have been shown.</_long>
                     <min>0</min>
                     <max>1000</max>
@@ -457,7 +446,7 @@
                 </option>
 
                 <option name="menus_discovery_fadeout" type="int">
-                    <_short>Menus discovery fade-out duration</_short>
+                    <_short>Menus Discovery Fade-out Duration</_short>
                     <_long>Duration (in milliseconds) of the menus fade-out animation, used when the menus of a new launched application have been shown.</_long>
                     <min>0</min>
                     <max>1000</max>
@@ -465,6 +454,110 @@
                 </option>
 
             </group>
+
+            <group>
+                <_short>Switcher</_short>
+
+                <option name="alt_tab_forward" type="key">
+                    <_short>Key to start the Switcher</_short>
+                    <_long>Switches to the next open window on the actual viewport.</_long>
+                    <default>&lt;Alt&gt;Tab</default>
+                </option>
+
+                <option name="alt_tab_prev" type="key">
+                    <_short>Key to switch to the previous window in the Switcher</_short>
+                    <_long>Switches to the previous open window on the actual viewport, once the Switcher has been revealed.</_long>
+                    <default>&lt;Alt&gt;&lt;Shift&gt;Tab</default>
+                </option>
+
+                <option name="alt_tab_forward_all" type="key">
+                    <_short>Key to start the Switcher for all viewports</_short>
+                    <_long>Switches to the next open window, including windows of all viewports.</_long>
+                    <default>&lt;Control&gt;&lt;Alt&gt;Tab</default>
+                </option>
+
+                <option name="alt_tab_prev_all" type="key">
+                    <_short>Key to switch to the previous window in the Switcher for all viewports</_short>
+                    <_long>Switches to the previous open window, once the Switcher has been revealed, including windows of all viewports.</_long>
+                    <default>&lt;Control&gt;&lt;Alt&gt;&lt;Shift&gt;Tab</default>
+                </option>
+
+                <option name="alt_tab_right" type="key">
+                    <_short>Key to move to the right in the Switcher</_short>
+                    <_long>Navigates one window to the right in the Switcher.</_long>
+                    <default>&lt;Alt&gt;Right</default>
+                    <passive_grab>false</passive_grab>
+                    <internal/>
+                </option>
+
+                <option name="alt_tab_left" type="key">
+                    <_short>Key to move to the left in the Switcher</_short>
+                    <_long>Navigates one window to the left in the Switcher.</_long>
+                    <default>&lt;Alt&gt;Left</default>
+                    <passive_grab>false</passive_grab>
+                    <internal/>
+                </option>
+
+                <option name="alt_tab_detail_start" type="key">
+                    <_short>Key to expose windows in the Switcher</_short>
+                    <_long>Displays a live preview of the selected window; a grid if multiple windows of the selected application are open.</_long>
+                    <default>&lt;Alt&gt;Down</default>
+                    <passive_grab>false</passive_grab>
+                    <internal/>
+                </option>
+
+                <option name="alt_tab_detail_stop" type="key">
+                    <_short>Key to collapse windows in the Switcher</_short>
+                    <_long>Closes the live previews and returns to icons in the Switcher.</_long>
+                    <default>&lt;Alt&gt;Up</default>
+                    <passive_grab>false</passive_grab>
+                    <internal/>
+                </option>
+
+                <option name="alt_tab_next_window" type="key">
+                    <_short>Key to flip through windows in the Switcher</_short>
+                    <_long>Flips through all the windows present in the Switcher.</_long>
+                    <passive_grab>false</passive_grab>
+                </option>
+
+                <option name="alt_tab_prev_window" type="key">
+                    <_short>Key to flip through windows in the Switcher backwards</_short>
+                    <_long>Flips through all the windows present in the Switcher, in reverse order.</_long>
+                    <passive_grab>false</passive_grab>
+                </option>
+
+                <option name="show_minimized_windows" type="bool">
+                    <_short>Show live previews of windows in the Switcher</_short>
+                    <_long>Enables miniature live window previews in the Switcher.</_long>
+                    <default>true</default>
+                </option>
+
+                <option name="alt_tab_timeout" type="bool">
+                    <_short>Timed automatic to show live previews in the Switcher</_short>
+                    <_long>Automatically spreads multiple windows of the same application out into a grid after a short time.</_long>
+                    <default>true</default>
+                </option>
+
+                <option name="alt_tab_bias_viewport" type="bool">
+                    <_short>Bias alt-tab to prefer windows on the current viewport</_short>
+                    <_long>Bias the Switcher to prefer windows which are placed on the current viewport.</_long>
+                    <default>true</default>
+                </option>
+
+                <option name="disable_show_desktop" type="bool">
+                    <_short>Disable Show Desktop in the Switcher</_short>
+                    <_long>Disables the Show Desktop icon in the Switcher.</_long>
+                    <default>false</default>
+                </option>
+
+                <option name="disable_mouse" type="bool">
+                    <_short>Disable the mouse in the Switcher</_short>
+                    <_long>Disables the mouse in the Switcher.</_long>
+                    <default>false</default>
+                </option>
+
+            </group>
+
         </options>
     </plugin>
 </compiz>

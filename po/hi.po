@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
 "Report-Msgid-Bugs-To: ayatana-dev@lists.launchpad.net\n"
-"POT-Creation-Date: 2011-07-29 16:39+0200\n"
+"POT-Creation-Date: 2013-04-17 16:00+0100\n"
 "PO-Revision-Date: 2010-03-02 12:36-0500\n"
 "Last-Translator: Canonical OEM\n"
 "Language-Team: Hindi\n"
@@ -16,16 +16,52 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "<b>Show the launcher when the pointer:</b>"
+msgid " (Hold)"
 msgstr ""
 
-msgid "All items in the Trash will be permanently deleted."
+msgid " (Tap)"
 msgstr ""
 
-msgid "Browse the Web"
+msgid " + 1 to 9"
 msgstr ""
 
-msgid "Check Email"
+msgid " + Arrow Keys"
+msgstr ""
+
+msgid " + Shift + 1 to 9"
+msgstr ""
+
+msgid " Drag"
+msgstr ""
+
+msgid " or Right"
+msgstr ""
+
+msgid "Activate"
+msgstr ""
+
+msgid "All"
+msgstr ""
+
+msgid "Arrow Keys"
+msgstr ""
+
+msgid "Categories"
+msgstr ""
+
+msgid "Closes the current window."
+msgstr ""
+
+msgid "Ctrl + Alt + Num"
+msgstr ""
+
+msgid "Ctrl + Tab"
+msgstr ""
+
+msgid "Cursor Left or Right"
+msgstr ""
+
+msgid "Dash"
 msgstr ""
 
 msgid "Drop To Add Application"
@@ -37,49 +73,180 @@ msgstr ""
 msgid "Eject parent drive"
 msgstr ""
 
-msgid "Empty Trash"
-msgstr ""
-
 msgid "Empty Trash..."
 msgstr ""
 
-msgid "Empty all items from Trash?"
+msgid "Enter"
 msgstr ""
 
-#. Find Files
-msgid "Find Files"
+msgid "Filter results"
 msgstr ""
 
-#. Internet Apps
-msgid "Internet Apps"
+#, c-format
+msgid ""
+"Goodbye, %s. Are you sure you want to close all programs and log out from "
+"your account?"
+msgstr ""
+
+#, c-format
+msgid ""
+"Goodbye, %s. Are you sure you want to close all programs and shut down the "
+"computer?"
+msgstr ""
+
+#, c-format
+msgid "Goodbye, %s. Would you like to…"
+msgstr ""
+
+msgid "HUD"
+msgstr ""
+
+msgid "HUD & Menu Bar"
+msgstr ""
+
+#, c-format
+msgid ""
+"Hi %s, you have open files that you might want to save before logging out. "
+"Are you sure you want to continue?"
+msgstr ""
+
+#, c-format
+msgid ""
+"Hi %s, you have open files that you might want to save before shutting down. "
+"Are you sure you want to continue?"
+msgstr ""
+
+#, c-format
+msgid ""
+"Hi %s, you have open files you might want to save.\n"
+"Would you like to…"
+msgstr ""
+
+#. We have enough buttons to show the message without a new line.
+#, c-format
+msgid "Hi %s, you have open files you might want to save. Would you like to…"
+msgstr ""
+
+msgid "Hibernate"
+msgstr ""
+
+msgid "Keyboard Shortcuts"
+msgstr ""
+
+msgid "Last Updated"
+msgstr ""
+
+msgid "Launcher"
+msgstr ""
+
+msgid "Left Mouse"
+msgstr ""
+
+msgid "Lock"
 msgstr ""
 
 #, fuzzy
-msgid "Keep in launcher"
-msgstr "लॉन्चर में रखें"
+msgid "Lock to Launcher"
+msgstr "लॉन्चर से निकालें"
 
-msgid "Launcher & Menus"
+msgid "Log Out"
 msgstr ""
 
-msgid "Listen to Music"
+msgid "Maximises the current window."
 msgstr ""
 
-#. Media Apps
-msgid "Media Apps"
+msgid "Middle Mouse"
 msgstr ""
 
-#. More Apps
-msgid "More Apps"
+msgid "Minimises all windows."
+msgstr ""
+
+msgid "Moves focus between indicators."
+msgstr ""
+
+msgid "Moves focused window to another workspace."
+msgstr ""
+
+msgid "Moves the focus."
+msgstr ""
+
+msgid "Moves the window."
+msgstr ""
+
+msgid "Multi-range"
+msgstr ""
+
+msgid "No Image Available"
 msgstr ""
 
 msgid "Open"
 msgstr ""
 
-msgid "Pushes the left edge of the screen"
+msgid "Opens Launcher keyboard navigation mode."
+msgstr ""
+
+msgid "Opens a new window in the app."
+msgstr ""
+
+msgid "Opens the Dash App Lens."
+msgstr ""
+
+msgid "Opens the Dash Files Lens."
+msgstr ""
+
+msgid "Opens the Dash Home."
+msgstr ""
+
+msgid "Opens the Dash Music Lens."
+msgstr ""
+
+msgid "Opens the Dash Video Lens."
+msgstr ""
+
+msgid "Opens the HUD."
+msgstr ""
+
+msgid "Opens the Launcher, displays shortcuts."
+msgstr ""
+
+msgid "Opens the Trash."
+msgstr ""
+
+msgid "Opens the currently focused item."
+msgstr ""
+
+msgid "Opens the indicator menu."
+msgstr ""
+
+msgid "Opens the window accessibility menu."
+msgstr ""
+
+msgid "Places the window in corresponding position."
+msgstr ""
+
+msgid "Quicklist"
 msgstr ""
 
 msgid "Quit"
 msgstr "छोड़ें"
+
+msgid "Rating"
+msgstr ""
+
+msgid "Resizes the window."
+msgstr ""
+
+msgid "Restart"
+msgstr ""
+
+msgid "Restores or minimises the current window."
+msgstr ""
+
+msgid "Reveals the application menu."
+msgstr ""
+
+msgid "Right Mouse"
+msgstr ""
 
 msgid "Safely remove"
 msgstr ""
@@ -87,38 +254,97 @@ msgstr ""
 msgid "Safely remove parent drive"
 msgstr ""
 
-msgid "Search"
+msgid "Same as clicking on a Launcher icon."
 msgstr ""
 
-msgid "Search across all places"
+msgid "Search your computer and online sources"
 msgstr ""
 
 msgid "See fewer results"
 msgstr ""
 
-msgid "Shortcuts"
+msgid "Semi-maximise the current window."
+msgstr ""
+
+msgid "Show Desktop"
+msgstr ""
+
+msgid "Shut Down"
+msgstr ""
+
+msgid "Sorry, there is nothing that matches your search."
+msgstr ""
+
+msgid "Spreads all windows in the current workspace."
+msgstr ""
+
+msgid "Suspend"
+msgstr ""
+
+msgid "Switcher"
+msgstr ""
+
+msgid "Switches applications via the Launcher."
+msgstr ""
+
+msgid "Switches between Lenses."
+msgstr ""
+
+msgid "Switches between applications."
+msgstr ""
+
+msgid "Switches between workspaces."
+msgstr ""
+
+msgid "Switches windows of current applications."
+msgstr ""
+
+msgid "Switches workspaces."
+msgstr ""
+
+msgid "Switching"
 msgstr ""
 
 msgid "The drive has been successfully ejected"
 msgstr ""
 
-msgid "Touches the top left corner of the screen"
-msgstr ""
-
 msgid "Trash"
 msgstr ""
+
+msgid "Type your command"
+msgstr ""
+
+msgid "Ubuntu Desktop"
+msgstr ""
+
+#, fuzzy
+msgid "Unlock from Launcher"
+msgstr "लॉन्चर से निकालें"
 
 msgid "Unmount"
 msgstr ""
 
-#. Photos
-#. FIXME: Need to figure out the default
-msgid "View Photos"
+#. Application is being installed, or hasn't been installed yet
+msgid "Waiting to install"
+msgstr ""
+
+msgid "Windows"
 msgstr ""
 
 msgid "Workspace Switcher"
 msgstr ""
 
+msgid "Workspaces"
+msgstr ""
+
 #, fuzzy
-#~ msgid "Remove from launcher"
+#~ msgid "Hide Launcher"
+#~ msgstr "लॉन्चर से निकालें"
+
+#, fuzzy
+#~ msgid "Keep in launcher"
+#~ msgstr "लॉन्चर में रखें"
+
+#, fuzzy
+#~ msgid "Launchers"
 #~ msgstr "लॉन्चर से निकालें"

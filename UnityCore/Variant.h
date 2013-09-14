@@ -33,6 +33,8 @@ namespace glib
 
 class Variant;
 typedef std::map<std::string, Variant> HintsMap;
+GHashTable* hashtable_from_hintsmap(HintsMap const& hints);
+HintsMap const& hintsmap_from_hashtable(GHashTable* hashtable, HintsMap& hints);
 
 struct StealRef {};
 
@@ -47,14 +49,24 @@ public:
   ~Variant();
 
   std::string GetString() const;
-  int GetInt() const;
-  unsigned GetUInt() const;
+  int32_t GetInt32() const;
+  uint32_t GetUInt32() const;
+  int64_t GetInt64() const;
+  uint64_t GetUInt64() const;
   bool GetBool() const;
+  double GetDouble() const;
+  float GetFloat() const;
+  Variant GetVariant() const;
 
   bool ASVToHints(HintsMap& hints) const;
+  static Variant FromHints(HintsMap const& hints);
 
+  void swap(Variant&);
   Variant& operator=(GVariant*);
+  Variant& operator=(Variant);
   operator GVariant*() const;
+  operator bool() const;
+
 private:
   GVariant* variant_;
 };
@@ -72,8 +84,14 @@ public:
   BuilderWrapper& add(char const* name, bool value);
   BuilderWrapper& add(char const* name, char const* value);
   BuilderWrapper& add(char const* name, std::string const& value);
-  BuilderWrapper& add(char const* name, int value);
+  BuilderWrapper& add(char const* name, int16_t value);
+  BuilderWrapper& add(char const* name, int32_t value);
+  BuilderWrapper& add(char const* name, int64_t value);
+  BuilderWrapper& add(char const* name, uint16_t value);
+  BuilderWrapper& add(char const* name, uint32_t value);
+  BuilderWrapper& add(char const* name, uint64_t value);
   BuilderWrapper& add(char const* name, float value);
+  BuilderWrapper& add(char const* name, double value);
   BuilderWrapper& add(char const* name, GVariant* value);
   BuilderWrapper& add(nux::Rect const& value);
 

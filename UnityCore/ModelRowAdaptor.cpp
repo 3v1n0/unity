@@ -36,6 +36,10 @@ RowAdaptorBase::RowAdaptorBase(RowAdaptorBase const& other)
   tag_ = other.tag_;
 }
 
+RowAdaptorBase::~RowAdaptorBase()
+{
+}
+
 RowAdaptorBase& RowAdaptorBase::operator=(RowAdaptorBase const& other)
 {
   model_ = other.model_;
@@ -45,7 +49,14 @@ RowAdaptorBase& RowAdaptorBase::operator=(RowAdaptorBase const& other)
   return *this;
 }
 
-std::string RowAdaptorBase::GetStringAt(int position)
+void RowAdaptorBase::SetTarget(DeeModel* model, DeeModelIter* iter, DeeModelTag* tag)
+{
+  model_ = model;
+  iter_ = iter;
+  tag_ = tag;
+}
+
+std::string RowAdaptorBase::GetStringAt(int position) const
 {
   if (!model_ || !iter_)
     return "";
@@ -56,18 +67,49 @@ std::string RowAdaptorBase::GetStringAt(int position)
     return ""; // std::strings don't like null.
 }
 
-bool RowAdaptorBase::GetBoolAt(int position)
+bool RowAdaptorBase::GetBoolAt(int position) const
 {
   if (!model_ || !iter_)
     return 0;
   return dee_model_get_bool(model_, iter_, position);
 }
 
-unsigned int RowAdaptorBase::GetUIntAt(int position)
+int RowAdaptorBase::GetIntAt(int position) const
+{
+  if (!model_ || !iter_)
+    return 0;
+  return dee_model_get_int32(model_, iter_, position);
+}
+
+unsigned int RowAdaptorBase::GetUIntAt(int position) const
 {
   if (!model_ || !iter_)
     return 0;
   return dee_model_get_uint32(model_, iter_, position);
+}
+
+float RowAdaptorBase::GetFloatAt(int position) const
+{
+  if (!model_ || !iter_)
+    return 0.0;
+  return static_cast<float>(dee_model_get_double(model_, iter_, position));
+}
+
+glib::Variant RowAdaptorBase::GetVariantAt(int position) const
+{
+  if (!model_ || !iter_)
+    return nullptr;
+  return dee_model_get_value(model_, iter_, position);
+}
+
+void RowAdaptorBase::set_model_tag(gpointer value)
+{
+  dee_model_set_tag(model_, iter_, tag_, value);
+}
+
+gpointer RowAdaptorBase::get_model_tag() const
+{
+  return dee_model_get_tag(model_, iter_, tag_);
 }
 
 }

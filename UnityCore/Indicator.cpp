@@ -21,6 +21,7 @@
 #include "Indicator.h"
 
 #include <iostream>
+#include <algorithm>
 
 
 namespace unity
@@ -30,16 +31,12 @@ namespace indicator
 
 Indicator::Indicator(std::string const& name)
   : name_(name)
-{
-}
+{}
 
 Indicator::~Indicator()
 {
-  for (auto entry : entries_) {
-    on_entry_removed(entry->id());
-  }
-
-  entries_.clear();
+  for (auto const& entry : entries_)
+    on_entry_removed.emit(entry->id());
 }
 
 std::string const& Indicator::name() const
@@ -56,35 +53,40 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
 {
   Entries to_rm;
 
-  if (entries_.size() == 0)
+  if (!entries_.empty())
   {
-    to_rm = entries_;
-  }
-  else
-  {
-    for (auto entry : entries_)
+    for (auto const& entry : entries_)
     {
       if (std::find(new_entries.begin(), new_entries.end(), entry) == new_entries.end())
-      {
         to_rm.push_back(entry);
-      }
     }
   }
 
-  for (auto entry : to_rm) {
-    on_entry_removed(entry->id());
+  for (auto const& entry : to_rm)
+  {
+    entries_connections_.erase(entry);
+    on_entry_removed.emit(entry->id());
     entries_.remove(entry);
   }
 
-  for (auto new_entry : new_entries)
+  for (auto const& new_entry : new_entries)
   {
     if (GetEntry(new_entry->id()))
       continue;
 
     // Just add the new entry, and connect it up.
-    new_entry->on_show_menu.connect(sigc::mem_fun(this, &Indicator::OnEntryShowMenu));
-    new_entry->on_secondary_activate.connect(sigc::mem_fun(this, &Indicator::OnEntrySecondaryActivate));
-    new_entry->on_scroll.connect(sigc::mem_fun(this, &Indicator::OnEntryScroll));
+    sigc::connection conn;
+    connection::Manager& new_entry_connections = entries_connections_[new_entry];
+
+    conn = new_entry->on_show_menu.connect(sigc::mem_fun(this, &Indicator::OnEntryShowMenu));
+    new_entry_connections.Add(conn);
+
+    conn = new_entry->on_secondary_activate.connect(sigc::mem_fun(this, &Indicator::OnEntrySecondaryActivate));
+    new_entry_connections.Add(conn);
+
+    conn = new_entry->on_scroll.connect(sigc::mem_fun(this, &Indicator::OnEntryScroll));
+    new_entry_connections.Add(conn);
+
     entries_.push_back(new_entry);
     on_entry_added.emit(new_entry);
   }
@@ -92,24 +94,37 @@ void Indicator::Sync(Indicator::Entries const& new_entries)
 
 Entry::Ptr Indicator::GetEntry(std::string const& entry_id) const
 {
-  for (auto entry : entries_)
+  for (auto const& entry : entries_)
     if (entry->id() == entry_id)
       return entry;
 
   return Entry::Ptr();
 }
 
-void Indicator::OnEntryShowMenu(std::string const& entry_id,
-                                int x, int y,
-                                int timestamp, int button)
+int Indicator::EntryIndex(std::string const& entry_id) const
 {
-  on_show_menu.emit(entry_id, x, y, timestamp, button);
+  int i = 0;
+  for (auto const& entry : entries_)
+  {
+    if (entry->id() == entry_id)
+    {
+      return i;
+    }
+    ++i;
+  }
+
+  return -1;
 }
 
-void Indicator::OnEntrySecondaryActivate(std::string const& entry_id,
-                                         unsigned int timestamp)
+void Indicator::OnEntryShowMenu(std::string const& entry_id, unsigned xid,
+                                int x, int y, unsigned button)
 {
-  on_secondary_activate.emit(entry_id, timestamp);
+  on_show_menu.emit(entry_id, xid, x, y, button);
+}
+
+void Indicator::OnEntrySecondaryActivate(std::string const& entry_id)
+{
+  on_secondary_activate.emit(entry_id);
 }
 
 void Indicator::OnEntryScroll(std::string const& entry_id, int delta)
@@ -120,7 +135,7 @@ void Indicator::OnEntryScroll(std::string const& entry_id, int delta)
 std::ostream& operator<<(std::ostream& out, Indicator const& i)
 {
   out << "<Indicator " << i.name() << std::endl;
-  for (auto entry : i.entries_)
+  for (auto const& entry : i.entries_)
   {
     out << "\t" << entry << std::endl;
   }

@@ -28,19 +28,19 @@ G_BEGIN_DECLS
 #define PANEL_TYPE_SERVICE (panel_service_get_type ())
 
 #define PANEL_SERVICE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj),\
-	PANEL_TYPE_SERVICE, PanelService))
+        PANEL_TYPE_SERVICE, PanelService))
 
 #define PANEL_SERVICE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass),\
-	PANEL_TYPE_SERVICE, PanelServiceClass))
+        PANEL_TYPE_SERVICE, PanelServiceClass))
 
 #define PANEL_IS_SERVICE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj),\
-	PANEL_TYPE_SERVICE))
+        PANEL_TYPE_SERVICE))
 
 #define PANEL_IS_SERVICE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass),\
-	PANEL_TYPE_SERVICE))
+        PANEL_TYPE_SERVICE))
 
 #define PANEL_SERVICE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj),\
-	PANEL_TYPE_SERVICE, PanelServiceClass))
+        PANEL_TYPE_SERVICE, PanelServiceClass))
 
 typedef struct _PanelService        PanelService;
 typedef struct _PanelServiceClass   PanelServiceClass;
@@ -69,13 +69,14 @@ struct _PanelServiceClass
 GType             panel_service_get_type      (void) G_GNUC_CONST;
 
 PanelService    * panel_service_get_default   ();
-
 PanelService    * panel_service_get_default_with_indicators (GList *indicators);
 
 guint             panel_service_get_n_indicators (PanelService *self);
 
 IndicatorObject * panel_service_get_indicator_nth (PanelService *self, guint position);
 IndicatorObject * panel_service_get_indicator (PanelService *self, const gchar *indicator_id);
+
+void              panel_service_add_indicator (PanelService *self, IndicatorObject *indicator);
 
 void              panel_service_remove_indicator (PanelService *self, IndicatorObject *indicator);
 
@@ -84,29 +85,33 @@ void              panel_service_clear_indicators (PanelService *self);
 GVariant        * panel_service_sync          (PanelService *self);
 
 GVariant        * panel_service_sync_one      (PanelService *self,
-					       const gchar  *indicator_id);
+                                               const gchar  *indicator_id);
 void              panel_service_sync_geometry (PanelService *self,
-					       const gchar  *indicator_id,
-					       const gchar  *entry_id,
-					       gint          x,
-					       gint          y,
-					       gint          width,
-					       gint          height);
+                                               const gchar  *indicator_id,
+                                               const gchar  *entry_id,
+                                               gint          x,
+                                               gint          y,
+                                               gint          width,
+                                               gint          height);
 
 void              panel_service_show_entry    (PanelService *self,
-					       const gchar  *entry_id,
-					       guint32       timestamp,
-					       gint32        x,
-					       gint32        y,
-					       gint32        button);
+                                               const gchar  *entry_id,
+                                               guint32       xid,
+                                               gint32        x,
+                                               gint32        y,
+                                               guint32       button);
+
+void              panel_service_show_app_menu (PanelService *self,
+                                               guint32       xid,
+                                               gint32        x,
+                                               gint32        y);
 
 void              panel_service_secondary_activate_entry (PanelService *self,
-					       const gchar  *entry_id,
-					       guint32       timestamp);
+                                               const gchar  *entry_id);
 
 void              panel_service_scroll_entry   (PanelService *self,
-						const gchar  *entry_id,
-						gint32       delta);
+                                                const gchar  *entry_id,
+                                                gint32       delta);
 
 G_END_DECLS
 

@@ -1,0 +1,237 @@
+Preview Open Animation
+note: Should be automated.
+------------
+This tests the dash preview open animation
+
+Setup:
+#. Open dash super
+#. Open a lens which supports previewing (e.g. Application, Music, File)
+#. Enter arbitrary search string and ensure a result is available.
+
+Actions:
+#. Open preview for result.
+
+Expected Result:
+  A preview will open by animating a swipe from left to right using an
+  ease in-out curve progression.
+
+
+Preview Left Navigation Animation
+note: Should be automated.
+------------
+This tests the dash preview navigate left animation
+
+Setup:
+#. Open dash super
+#. Open a lens which supports previewing (e.g. Application, Music, File)
+#. Enter arbitrary search string and ensure at least 2 results are available.
+#. Right-click the mouse on at least the second result.
+#. Wait for the preview window to open and finish animating.
+
+Actions:
+#. Click the 'navigate left' icon.
+
+Expected Result:
+  The current preview will swipe out and the new preview result will swipe from right
+  to left using an ease in-out curve progression.
+
+
+Preview Right Navigation Animation
+note: Should be automated.
+------------
+This tests the dash preview navigate right animation
+
+Setup:
+#. Open dash super
+#. Open a lens which supports previewing (e.g. Application, Music, File)
+#. Enter arbitrary search string and ensure at least 2 results are available.
+#. Right-click the mouse on at most the second last result.
+#. Wait for the preview window to open and finish animating.
+
+Actions:
+#. Click the navigate right icon.
+
+Expected Result:
+  The current preview will swipe out and the new preview result will swipe from right
+  to left using an ease in-out curve progression.
+
+
+Preview Music Tracks
+note: Should be automated.
+------------
+This tests the dash music preview track play
+
+Setup:
+#. Open music lens (Super+M)
+#. Enter arbitrary search string and ensure a result is available.
+
+Actions:
+#. Open a preview for a result.
+
+Expected Result:
+  A music preview will open and tracks for the music result will be populated.
+  The Track information will contain a title and duration.
+
+
+Preview Music Track Play
+note: Should be automated.
+------------
+This tests the dash music preview track play
+
+Setup:
+#. Open music lens (Super+M)
+#. Enter arbitrary search string and ensure a result is available.
+#. Open a preview for a result which contains tracks.
+
+Actions:
+#. Hover over track number for the track you wish to play.
+#. Click play icon.
+
+Expected Result:
+  When hovering on track number, it will change to a play icon.
+  Music Player daemon will start playing track and update status of the track
+  in the preview to playing as well as update it's progress.
+
+
+Preview Music Track Pause
+note: Should be automated.
+------------
+This tests the dash preview preview navigate right animation
+
+Setup:
+#. Open music lens (Super+M)
+#. Enter arbitrary search string and ensure a result is available.
+#. Open a preview for a result which contains tracks.
+#. Play first track. (by hovering+click on track number.)
+
+Actions:
+#. Hover over pause icon for the track which is playing.
+#. Click pause icon.
+
+Expected Result:
+  When hovering on play icon, it will change to a pause icon.
+  Music Player daemon will pause the playing track and update it's status
+  to paused. Progress will stop increasing.
+
+
+Preview Application Launch
+note: Should be automated.
+------------
+This tests the dash application preview launch action
+
+Setup:
+#. Open application lens (Super+F)
+#. Enter 'gedit' search string.
+#. Wait for result.
+#. Open preview for result. (Right-click)
+
+Actions:
+#. Click 'Launch' action button.
+
+Expected Result:
+  Preview should close and launch the gedit application.
+
+
+Preview Open Geometry
+------------
+This tests the dash preview opens with the correct size and
+its geometry is updated when changing between form factor (desktop & netbook)
+
+Setup:
+#. Open dash super
+#. Ensure dash is in windowed mode (not full screen)
+#. Open a lens which supports previewing (e.g. Application, Music, File)
+#. Enter arbitrary search string and ensure a result is available.
+
+Actions:
+#. Open preview for result.
+#. Resize dash to full screen.
+#. Resize dash back to windowed mode.
+
+Expected Result:
+  A preview will open with the correct size initially (no size flicker).
+  When the dash is resized, the preview will center its geometry and stay the correct size.
+
+
+Two highlighted action buttons
+------------------------------
+This tests that it's not possible to have two highlighted preview action buttons.
+
+Setup:
+#. Open dash.
+#. Open Files Lens.
+#. Right-click the mouse on an icon (don't use folder icons because they have just one action button).
+#. Wait for the preview window to open and finish animating.
+#. Make sure that an action button is already highlighted (henceforth referred to as the button A)
+
+Actions:
+#. Move the mouse to another action button (henceforth referred to as the button B)
+
+Expected Result:
+  The button A must not be highlighted.
+  The button B must be highlighted.
+
+
+Preview Open Wait
+------------------------------
+This tests that if a preview takes time to open, the preview will open with a spinner
+while it waits for the preview info to return to unity.
+
+Setup:
+#. Open dash.
+#. Open Application Lens.
+
+Actions:
+#. Right-click an arbitrary result
+
+Expected Result:
+  The preview window will immediately display, and if the preview takes longer 
+  than 300ms to open, it will display a spinner while waiting.
+
+
+Preview Open and the Dash Navbar
+--------------------------------
+This tests that the Dash navigation bar does not show when a preview is
+open (https://bugs.launchpad.net/unity/+bug/1053313).
+
+Setup:
+#. Open dash.
+#. Open Files and Folders Lens (or any lens with 3 rows).
+
+Actions:
+#. Right-click a result on the third (bottommost) row.
+
+Expected result:
+  The Dash navigation bar should not be seen through the preview.
+
+
+Preview Scrolling Drag
+------------------------------
+This tests that a preview with a scrollbar can be scrolled by dragging the scrollbar.
+
+Setup:
+#. Open dash.
+#. Open Music Lens.
+#. Open a preview for an album which has a scrollbar due to more tracks that can fit on screen.
+
+Actions:
+#. Scroll down the tracks by dragging the scrollbar.
+
+Expected Result:
+  The scroll view will scroll down the list of tracks.
+
+
+Preview Scrolling Mouse Wheel
+------------------------------
+This tests that a preview with a scrollbar can be scrolled by using the mouse wheel.
+
+Setup:
+#. Open dash.
+#. Open Music Lens.
+#. Open a preview for an album which has a scrollbar due to more tracks that can fit on screen.
+
+Actions:
+#. Scroll down the tracks by using the mouse wheel.
+
+Expected Result:
+  The scroll view will scroll down the list of tracks.

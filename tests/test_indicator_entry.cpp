@@ -24,7 +24,7 @@ TEST(TestIndicatorEntry, TestConstruction)
   EXPECT_TRUE(entry.image_visible());
   EXPECT_FALSE(entry.active());
   EXPECT_FALSE(entry.show_now());
-  EXPECT_FALSE(entry.IsUnused());
+  EXPECT_TRUE(entry.visible());
   EXPECT_EQ(entry.image_type(), 1);
   EXPECT_EQ(entry.image_data(), "some icon");
   EXPECT_EQ(entry.priority(), -1);
@@ -75,21 +75,6 @@ TEST(TestIndicatorEntry, TestAssignment)
   EXPECT_FALSE(entry.image_visible());
   EXPECT_EQ(counter.count, 1);
   EXPECT_EQ(entry.priority(), 5);
-}
-
-TEST(TestIndicatorEntry, TestUnused)
-{
-
-  indicator::Entry entry("id", "name_hint", "label", true, true,
-                         0, "some icon", false, true, -1);
-
-  Counter counter;
-  entry.updated.connect(sigc::mem_fun(counter, &Counter::increment));
-
-  entry.MarkUnused();
-  EXPECT_TRUE(entry.IsUnused());
-  // Setting unused emits updated.
-  EXPECT_EQ(counter.count, 1);
 }
 
 TEST(TestIndicatorEntry, TestShowNowEvents)
@@ -174,16 +159,17 @@ TEST(TestIndicatorEntry, TestOnScroll)
 
 struct ShowMenuRecorder
 {
-  void OnShowMenu(std::string const& a, int b, int c, int d, int e)
+  void OnShowMenu(std::string const& a, unsigned b, int c, int d, unsigned e)
   {
     name = a;
-    x = b;
-    y = c;
-    timestamp = d;
+    xid = b;
+    x = c;
+    y = d;
     button = e;
   }
   std::string name;
-  int x, y, timestamp, button;
+  unsigned xid, button;
+  int x, y;
 };
 
 TEST(TestIndicatorEntry, TestOnShowMenu)
@@ -195,13 +181,101 @@ TEST(TestIndicatorEntry, TestOnShowMenu)
   ShowMenuRecorder recorder;
   entry.on_show_menu.connect(sigc::mem_fun(recorder, &ShowMenuRecorder::OnShowMenu));
 
-  entry.ShowMenu(10, 20, 12345, 1);
+  entry.ShowMenu(10, 20, 1);
   EXPECT_EQ(recorder.name, "id");
+  EXPECT_EQ(recorder.xid, 0);
   EXPECT_EQ(recorder.x, 10);
   EXPECT_EQ(recorder.y, 20);
-  EXPECT_EQ(recorder.timestamp, 12345);
   EXPECT_EQ(recorder.button, 1);
 }
 
+TEST(TestIndicatorEntry, TestOnShowMenuXid)
+{
+
+  indicator::Entry entry("xid", "name_hint", "label", true, true,
+                         0, "some icon", false, true, -1);
+
+  ShowMenuRecorder recorder;
+  entry.on_show_menu.connect(sigc::mem_fun(recorder, &ShowMenuRecorder::OnShowMenu));
+
+  entry.ShowMenu(88492615, 15, 25, 2);
+  EXPECT_EQ(recorder.name, "xid");
+  EXPECT_EQ(recorder.xid, 88492615);
+  EXPECT_EQ(recorder.x, 15);
+  EXPECT_EQ(recorder.y, 25);
+  EXPECT_EQ(recorder.button, 2);
+}
+
+TEST(TestIndicatorEntry, TestVisibility)
+{
+
+  indicator::Entry entry("id", "name_hint", "label", true, true,
+                         0, "some icon", false, false, -1);
+
+  EXPECT_TRUE(entry.visible());
+
+  entry.setLabel("", true, true);
+  EXPECT_FALSE(entry.visible());
+
+  entry.setLabel("valid-label", true, true);
+  EXPECT_TRUE(entry.visible());
+
+  entry.setLabel("invalid-label", true, false);
+  EXPECT_FALSE(entry.visible());
+
+  entry.setImage(1, "valid-image", true, true);
+  EXPECT_TRUE(entry.visible());
+
+  entry.setImage(1, "", true, true);
+  EXPECT_FALSE(entry.visible());
+
+  entry.setImage(1, "valid-image", true, true);
+  EXPECT_TRUE(entry.visible());
+
+  entry.setImage(0, "invalid-image-type", true, true);
+  EXPECT_FALSE(entry.visible());
+
+  entry.setLabel("valid-label", true, true);
+  EXPECT_TRUE(entry.visible());
+
+  entry.setLabel("invalid-label", true, false);
+  EXPECT_FALSE(entry.visible());
+
+  entry.setImage(1, "invalid-image", true, false);
+  EXPECT_FALSE(entry.visible());
+
+  entry.setLabel("valid-label", true, true);
+  entry.setImage(1, "valid-image", true, true);
+  EXPECT_TRUE(entry.visible());
+}
+
+TEST(TestIndicatorEntry, TestGeometry)
+{
+
+  indicator::Entry entry("id", "name_hint", "label", true, true,
+                         0, "some icon", false, true, -1);
+
+  Counter counter;
+  entry.updated.connect(sigc::mem_fun(counter, &Counter::increment));
+  bool geo_changed = false;
+  nux::Rect new_geo;
+
+  entry.geometry_changed.connect([&] (nux::Rect const& geo) {
+    geo_changed = true;
+    new_geo = geo;
+  });
+
+  // Setting to the same value doesn't emit any events.
+  entry.set_geometry(nux::Rect());
+  EXPECT_EQ(entry.geometry(), nux::Rect());
+  EXPECT_EQ(counter.count, 0);
+
+  // Setting to a different value does emit the events.
+  entry.set_geometry(nux::Rect(1, 2, 3, 4));
+  EXPECT_EQ(entry.geometry(), nux::Rect(1, 2, 3, 4));
+  EXPECT_TRUE(geo_changed);
+  EXPECT_EQ(new_geo, nux::Rect(1, 2, 3, 4));
+  EXPECT_EQ(counter.count, 1);
+}
 
 }

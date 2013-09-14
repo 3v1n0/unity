@@ -25,17 +25,15 @@ namespace unity
 {
 namespace dash
 {
-
-namespace
-{
-nux::logging::Logger logger("unity.dash.radiooptionfilter");
-}
+DECLARE_LOGGER(logger, "unity.dash.filter.radiooption");
 
 RadioOptionFilter::RadioOptionFilter(DeeModel* model, DeeModelIter* iter)
-  : Filter(model, iter)
-  , ignore_changes_(false)
+: Filter(model, iter)
+, show_all_button_(true)
+, ignore_changes_(false)
 {
   options.SetGetterFunction(sigc::mem_fun(this, &RadioOptionFilter::get_options));
+  show_all_button.SetGetterFunction(sigc::mem_fun(this, &RadioOptionFilter::get_show_all_button));
   Refresh();
 }
 
@@ -47,6 +45,15 @@ void RadioOptionFilter::Clear()
 
 void RadioOptionFilter::Update(Filter::Hints& hints)
 {
+  GVariant* show_all_button_variant = hints["show-all-button"];
+  if (show_all_button_variant)
+  {
+    bool tmp_show = show_all_button_;
+    g_variant_get(show_all_button_variant, "b", &show_all_button_);
+    if (tmp_show != show_all_button_)
+      show_all_button.EmitChanged(show_all_button_);
+  }
+
   GVariant* options_variant = hints["options"];
   GVariantIter* options_iter;
 
@@ -98,6 +105,11 @@ void RadioOptionFilter::OptionChanged(bool is_active, std::string const& id)
 RadioOptionFilter::RadioOptions const& RadioOptionFilter::get_options() const
 {
   return options_;
+}
+
+bool RadioOptionFilter::get_show_all_button() const
+{
+  return show_all_button_;
 }
 
 void RadioOptionFilter::UpdateState()

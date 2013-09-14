@@ -27,8 +27,6 @@ namespace unity
 namespace indicator
 {
 
-std::string const Entry::UNUSED_ID("|");
-
 Entry::Entry(std::string const& id,
              std::string const &name_hint,
              std::string const& label,
@@ -104,6 +102,12 @@ int Entry::priority() const
   return priority_;
 }
 
+bool Entry::visible() const
+{
+  return ((label_visible_ && !label_.empty()) ||
+          (image_type_ != 0 && image_visible_ && !image_data_.empty()));
+}
+
 void Entry::set_active(bool active)
 {
   if (active_ == active)
@@ -111,6 +115,16 @@ void Entry::set_active(bool active)
 
   active_ = active;
   active_changed.emit(active);
+  updated.emit();
+}
+
+void Entry::set_geometry(nux::Rect const& geometry)
+{
+  if (geometry_ == geometry)
+    return;
+
+  geometry_ = geometry;
+  geometry_changed.emit(geometry);
   updated.emit();
 }
 
@@ -154,6 +168,11 @@ bool Entry::active() const
   return active_;
 }
 
+nux::Rect const& Entry::geometry() const
+{
+  return geometry_;
+}
+
 Entry& Entry::operator=(Entry const& rhs)
 {
   id_ = rhs.id_;
@@ -186,33 +205,19 @@ void Entry::set_show_now(bool show_now)
   updated.emit();
 }
 
-void Entry::MarkUnused()
+void Entry::ShowMenu(int x, int y, unsigned button)
 {
-  id_ = UNUSED_ID;
-  name_hint_ = "";
-  label_ = "";
-  label_sensitive_ = false;
-  label_visible_ = false;
-  image_type_ = 0;
-  image_data_ = "";
-  image_sensitive_ = false;
-  image_visible_ = false;
-  updated.emit();
+  ShowMenu(0, x, y, button);
 }
 
-bool Entry::IsUnused() const
+void Entry::ShowMenu(unsigned int xid, int x, int y, unsigned button)
 {
-  return id_ == UNUSED_ID;
+  on_show_menu.emit(id_, xid, x, y, button);
 }
 
-void Entry::ShowMenu(int x, int y, int timestamp, int button)
+void Entry::SecondaryActivate()
 {
-  on_show_menu.emit(id_, x, y, timestamp, button);
-}
-
-void Entry::SecondaryActivate(unsigned int timestamp)
-{
-  on_secondary_activate.emit(id_, timestamp);
+  on_secondary_activate.emit(id_);
 }
 
 void Entry::Scroll(int delta)

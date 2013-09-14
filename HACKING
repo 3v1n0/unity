@@ -1,5 +1,5 @@
 If you want to hack on unity you need the following packages
-  - nux
+  - libnux-2.0
   - libbamf
   - libdee
   - gio-2.0
@@ -7,7 +7,7 @@ If you want to hack on unity you need the following packages
   - gthread-2.0
   - indicator
   - atk
-  - libutouch-geis
+  - libatk-adaptor
 
 Or if you are on ubuntu run the command, apt-get build-dep unity
 
@@ -44,7 +44,7 @@ want to watch and the log level for that domain. For example:
 
   UNITY_LOG_SEVERITY="unity.dash.lens=DEBUG" standalone-clients/dash
 
-
+If you want to run the autopilot test suite, refer to the instructions in tests/autopilot/README.
 
 for more information see the README file
 

@@ -24,7 +24,8 @@
 #include <string>
 #include <memory>
 #include <NuxCore/Property.h>
-#include <glib/gvariant.h>
+#include <glib.h>
+#include "Variant.h"
 
 namespace unity
 {
@@ -36,7 +37,7 @@ class Query
 {
 public:
   typedef std::shared_ptr<Query> Ptr;
-  
+
   Query(std::string const& formatted_text_, std::string const& icon_name_,
         std::string const& item_icon_, std::string const& completion_text_,
         std::string const& shortcut_, GVariant* key_)
@@ -46,15 +47,8 @@ public:
   , completion_text(completion_text_)
   , shortcut(shortcut_)
   , key(key_)
-  {
-    g_variant_ref(key);
-  }
-  
-  ~Query()
-  {
-    g_variant_unref(key);
-  }
-  
+  {}
+
   Query(const Query &rhs);
   Query& operator=(Query);
 
@@ -63,7 +57,7 @@ public:
   std::string item_icon;        // Future API
   std::string completion_text;  // Non formatted text f or completion
   std::string shortcut;         // Shortcut key
-  GVariant *key;
+  glib::Variant key;
 };
 
 

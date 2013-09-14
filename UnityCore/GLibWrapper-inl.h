@@ -113,6 +113,12 @@ T* Object<T>::Release()
   return result;
 }
 
+template <typename T>
+bool Object<T>::IsType(GType type) const
+{
+  return G_TYPE_CHECK_INSTANCE_TYPE(object_, type) != FALSE;
+}
+
 
 }
 }

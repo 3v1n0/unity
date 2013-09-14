@@ -40,7 +40,7 @@ namespace unity
       GeometryCollection ();
       bool status ();
 
-      void addGeometryForWindow (CompWindow *, const CompRegion &paintRegion);
+      bool addGeometryForWindow (CompWindow *, const CompRegion &paintRegion);
       void addGeometry (const GLTexture::MatrixList &ml,
 			const CompRegion            &r,
 			int                         min,
@@ -64,13 +64,9 @@ namespace unity
 			int                         max);
       void setTexture (GLTexture *);
 
-#ifdef USE_GLES
       void addGeometriesAndDrawTextureForWindow (CompWindow     *w,
 						 const GLMatrix &transform,
-                                                 unsigned int    mask);
-#else
-      void addGeometriesAndDrawTextureForWindow (CompWindow *, unsigned int pm);
-#endif
+						 unsigned int    mask);
 
     private:
       GLTexture*         mTexture;
@@ -84,13 +80,9 @@ namespace unity
       PaintInfoCollector (CompWindow *w);
 
       void collect ();
-#ifdef USE_GLES
       void drawGeometriesForWindow (CompWindow     *w,
 				    const GLMatrix &transform,
 				    unsigned int    pm);
-#else
-      void drawGeometriesForWindow (CompWindow *w, unsigned int pm);
-#endif
 
       void processGeometry (const GLTexture::MatrixList &ml,
 			    const CompRegion            &r,
@@ -255,11 +247,7 @@ public:
 
   bool
   glDraw(const GLMatrix&,
-#ifdef USE_GLES
          const GLWindowPaintAttrib&,
-#else
-         GLFragment::Attrib&,
-#endif
          const CompRegion&, unsigned int);
 
   bool
@@ -275,12 +263,8 @@ public:
 
   void
   glDrawTexture(GLTexture* texture,
-#ifdef USE_GLES
                 const GLMatrix& transform,
                 const GLWindowPaintAttrib& attrib,
-#else
-                GLFragment::Attrib& attrib,
-#endif
                 unsigned int mask);
 
 
@@ -325,7 +309,7 @@ public:
   void    moveTransientsToRect(CompWindow* skip, CompRect rect, bool);
   void    moveParentToRect(CompWindow* requestor, CompRect rect, bool);
 
-  void      moveToRect(CompRect currentRect, bool sync);
+  void      moveToRect(CompRect currentRect);
 
   void    grabTransients(CompWindow* skip, int x, int y,
                          unsigned int state, unsigned int mask, bool);
@@ -337,7 +321,7 @@ public:
 
   void      setMaxConstrainingAreas();
 
-  CompWindow* transientParent();
+  CompWindow* transientParent() const;
 
   void adjustIPW();
 

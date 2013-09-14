@@ -1,0 +1,32 @@
+Panel Service doesn't crash with a11y
+-------------------------------------
+
+Setup:
+
+Actions:
+#. Start with a clean screen
+#. Save this python script and run it http://paste.ubuntu.com/893441/
+
+Expected Result:
+  The test should open the Software Center, move to the accessories and then
+  close it again, during this process the the panel service shouldn't crash.
+  This means that the menus and indicators must not be removed and readded
+  from the unity panel.
+  For more info see bug #937119
+
+
+Panel Service shows entries with no menus
+-----------------------------------------
+
+Setup:
+
+Actions:
+#. Start with a clean screen
+#. Save this python script and run it http://pastebin.ubuntu.com/1395885/
+#. Make sure the "Simple Menu" window is focused
+#. Move the mouse pointer over the panel
+
+Expected Result:
+  The panel should contains three menu entries: "File", "HiddenExit" and "Other",
+  clicking over "HiddenExit" should bring up a menu with a single entry named
+  "Activate". Clicking on it should close the "Simple Menu" application.

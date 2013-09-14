@@ -1,0 +1,84 @@
+Running Application with both visible and invisible windows
+-----------------------------------------------------------
+This test shows how unity should manage applications with both user visible
+and invisible windows.
+
+Setup:
+
+Actions:
+  * Open gedit
+  * Open the 'open files' dialog
+  * Assert: The launcher icon should count with left icon indicators (pips) only 
+    the visible  window(s); 
+  * Click the gedit launcher icon
+  * Assert: The main gedit window should come into focus
+  * Click the gedit launcher icon again, gedit still focused
+  * Assert: Spread with both visible and invisible windows should be activated.
+
+Expected Result:
+  Assertions from above hold.
+
+Auto-maximize window -- window not maximized
+----------------------
+Thit test make sure that the auto-maximize window feature is disabled for
+resolution above the 1024x600.
+
+Setup:
+#. Open the display panel
+#. Set a resolution greater then 1024x600 (e.g 1366x768)
+
+Actions:
+#. Open nautilus
+
+Expected Result:
+  The window should not be in the maximized state.
+
+
+Auto-maximize window -- window auto-maximized
+----------------------
+Setup:
+#. Open the display panel
+#. Set a resolution lower or equal to 1024x600.
+#. Open the ccsm and change the automaximize-threshold option to 20 (experimental-tab of unity-plugin).
+
+Actions:
+#. Open nautilus, that usually doesn't start maximized
+
+Expected Result:
+  The window should be in the maximized state.
+
+
+Fullscreen windows
+--------------------
+Tests rendering of fullscreen windows.
+
+Setup:
+
+Action:
+#. Set a window to full screen. e.g. F11 in a web browser.
+#. Verify you can scroll the window.
+#. Tap the Super key.
+#. Verify you can still scroll the window.
+
+Expected Result:
+  The fullscreen window should never look corrupt and always be scrollable.
+ 
+Recovery (in case of failure):
+#. Tap the Super key again.
+#. Tap F11 to leave full screen.
+#. Press Super+S twice to force a full screen redraw.
+
+
+Show Desktop fades windows smoothly
+------------------------------------
+Tests visual regressions to the show desktop/restore windows behavior.
+
+Setup:
+
+Action:
+#. Open several windows.
+#. Press Super+D to show the desktop.
+#. Press Super+D again to restore the previous state.
+
+Expected Result:
+  All open windows must fade out and then fade back in smoothly, without any popping or pulsing effect.

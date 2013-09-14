@@ -1,0 +1,104 @@
+
+Ubuntu Software Center Launcher Integration, installing an application from the Ubuntu archives
+-----------------------------------------------------------------------------------------------
+
+Setup: 
+#. Launch Ubuntu Software Center
+
+Actions:  
+#. In Software Center, click on the "Games" category in the left panel to view the display of game genre icons, "Top Rated Games", etc.
+#. Select the "Card Games" icon and then select any uninstalled game in the displayed list.
+#. Click the "More Info" button.
+#. In the details view for the game, click the "Install" button.
+#. Enter the password for the install when prompted.
+
+Expected Result:
+  The game begins to install and the progress bar moves in Software Center.
+  At the very *end* of the installation process (when the progress bar has completed), the icon for the game "flies" into the Unity Launcher.
+  Verify that the icon has been added to the launcher and that:
+   - If the Unity launcher was set to auto-hide, it correctly autohides at the end of the installation and is not "stuck" in a displayed state.
+   - The launcher icon has the correct icon for the game that was installed.
+   - Hovering the mouse cursor over the icon displays the name of the application for its tooltip (and that it does *not* display the text "Waiting to install").
+   - Clicking the icon launches the newly installed game.
+   
+   
+Ubuntu Software Center Launcher Integration, cancelling an installation
+-----------------------------------------------------------------------
+
+Setup: 
+#. Launch Ubuntu Software Center
+
+Actions:  
+#. In Software Center, click on the "Games" category in the left panel to view the display of game genre icons, "Top Rated Games", etc.
+#. Select the "Card Games" icon and then select any uninstalled game in the displayed list.
+#. Click the "More Info" button.
+#. In the details view for the game, click the "Install" button.
+#. In the dialog that prompts you to enter your password for the install, click the "Cancel" button.
+
+Expected Result:
+  The installation is cancelled. Verify that no icon has been added to the Unity launcher integration.
+  
+
+Ubuntu Software Center Launcher Integration, installing a purchased application
+-------------------------------------------------------------------------------
+
+Setup: 
+#. Launch Ubuntu Software Center
+
+Actions:  
+#. In Software Center, click the down arrow in the toolbar next to the "All Software" button, and choose the "For Purchase" item.
+#. In the list of displayed items for purchase, choose an application (not a magazine or book) that is free (that is, marked as $0 -- unless you wish to purchase something).
+#. Click the "More Info" button.
+#. In the details view for the application, click the "Buy" button.
+#. Follow the purchase process. For a $0 item, you will not be prompted for payment information.
+#. Enter the password for the install when prompted.
+
+Expected Result:
+  The the progress bar activates in Software Center. Note that for purchased items, it can take a bit of time before the progress bar transitions from intdeterminate to determinate.
+  At the very *end* of the installation process (when the progress bar has completed), the icon for the purchased item "flies" into the Unity Launcher.
+  Verify that the icon has been added to the launcher and that:
+   - If the Unity launcher was set to auto-hide, it correctly autohides at the end of the installation and is not "stuck" in a displayed state.
+   - The launcher icon has the correct icon for the application that was installed.
+   - Hovering the mouse cursor over the icon displays the name of the application for its tooltip (and that it does *not* display the text "Waiting to install").
+   - Clicking the icon launches the newly installed application.
+   
+   
+Ubuntu Software Center Launcher Integration, installing from the "Independent" archives
+---------------------------------------------------------------------------------------
+
+Setup: 
+#. Launch Ubuntu Software Center
+
+Actions:  
+#. In Software Center, click the down arrow in the toolbar next to the "All Software" button, and choose the "Independent" item.
+#. In the list of displayed items, choose an application that is not yet installed.
+#. Click the "More Info" button.
+#. In the details view for the application, click the "Install" button.
+#. Enter the password for the install when prompted.
+
+xpected Result:
+  The application begins to install and the progress bar moves in Software Center.
+  At the very *end* of the installation process (when the progress bar has completed), the icon for the application "flies" into the Unity Launcher.
+  Verify that the icon has been added to the launcher and that:
+   - If the Unity launcher was set to auto-hide, it correctly autohides at the end of the installation and is not "stuck" in a displayed state.
+   - The launcher icon has the correct icon for the application that was installed.
+   - Hovering the mouse cursor over the icon displays the name of the application for its tooltip (and that it does *not* display the text "Waiting to install").
+   - Clicking the icon launches the newly installed game.
+
+
+Ubuntu Software Center Launcher Integration, uninstalling an application
+------------------------------------------------------------------------
+
+Setup: 
+#. Launch Ubuntu Software Center
+
+Actions:  
+#. In Software Center, click the "Installed" toolbar button to access the list of installed applications.
+#. Choose an installed application to remove (choose one for which there is a corresponding icon in the Unity launcher).
+#. Click the "More Info" button.
+#. In the details view for the application, click the "Remove" button.
+#. Enter the password for the remove when prompted.
+
+Expected Result:
+  The uninstall process begins and the progress bar moves in Software Center.
+  At the very *end* of the installation process, verify that the corresponding icon in the Unity launcher is *removed*.

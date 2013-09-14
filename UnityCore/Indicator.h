@@ -23,8 +23,10 @@
 
 #include <vector>
 #include <boost/utility.hpp>
+#include <sigc++/connection.h>
 
 #include "IndicatorEntry.h"
+#include "ConnectionManager.h"
 
 
 namespace unity
@@ -35,32 +37,36 @@ namespace indicator
 class Indicator : public sigc::trackable, boost::noncopyable
 {
 public:
-  typedef boost::shared_ptr<Indicator> Ptr;
+  typedef std::shared_ptr<Indicator> Ptr;
   typedef std::list<Entry::Ptr> Entries;
 
   Indicator(std::string const& name);
-  ~Indicator();
+  virtual ~Indicator();
 
   std::string const& name() const;
 
+  virtual bool IsAppmenu() const { return false; }
+
   void Sync(Entries const& new_entries);
   Entry::Ptr GetEntry(std::string const& entry_id) const;
+  int EntryIndex(std::string const& entry_id) const;
   Entries GetEntries() const;
-
-  void OnEntryShowMenu(std::string const& entry_id, int x, int y, int timestamp, int button);
-  void OnEntrySecondaryActivate(std::string const& entry_id, unsigned int timestamp);
-  void OnEntryScroll(std::string const& entry_id, int delta);
 
   // Signals
   sigc::signal<void, Entry::Ptr const&> on_entry_added;
   sigc::signal<void, std::string const&> on_entry_removed;
-  sigc::signal<void, std::string const&, int, int, int, int> on_show_menu;
-  sigc::signal<void, std::string const&, unsigned int> on_secondary_activate;
+  sigc::signal<void, std::string const&, unsigned, int, int, unsigned> on_show_menu;
+  sigc::signal<void, std::string const&> on_secondary_activate;
   sigc::signal<void, std::string const&, int> on_scroll;
 
-private:
+protected:
+  void OnEntryShowMenu(std::string const& entry_id, unsigned xid, int x, int y, unsigned button);
+  void OnEntrySecondaryActivate(std::string const& entry_id);
+  void OnEntryScroll(std::string const& entry_id, int delta);
+
   Entries entries_;
   std::string name_;
+  std::map<Entry::Ptr, connection::Manager> entries_connections_;
 
   friend std::ostream& operator<<(std::ostream& out, Indicator const& i);
 };

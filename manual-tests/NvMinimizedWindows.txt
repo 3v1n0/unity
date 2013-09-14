@@ -1,0 +1,14 @@
+Nvidia white windows in spread
+----------
+This test ensures that windows are not white in the spread using nvidia.
+
+Setup:
+
+Actions:
+#. Ensure unity is running on a machine with a nvidia GPU using the nvidia driver
+#. Open two windows of the same app
+#. Minimize one
+#. Click the launcher icon to activate the spread
+
+Expected Result:
+  The contents of both windows should be visible.

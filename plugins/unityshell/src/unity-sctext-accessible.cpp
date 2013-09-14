@@ -29,6 +29,8 @@
  */
 
 #include <glib/gi18n.h>
+#include <pango/pango.h>
+#include <pango/pangocairo.h>
 
 #include "unity-sctext-accessible.h"
 
@@ -85,7 +87,7 @@ unity_sctext_accessible_new(nux::Object* object)
 {
   AtkObject* accessible = NULL;
 
-  g_return_val_if_fail(dynamic_cast<nux::StaticCairoText*>(object), NULL);
+  g_return_val_if_fail(dynamic_cast<unity::StaticCairoText*>(object), NULL);
 
   accessible = ATK_OBJECT(g_object_new(UNITY_TYPE_SCTEXT_ACCESSIBLE, NULL));
 
@@ -96,7 +98,7 @@ unity_sctext_accessible_new(nux::Object* object)
 
 /* AtkObject.h */
 static void
-on_label_text_change_cb(nux::StaticCairoText* label, UnitySctextAccessible* self)
+on_label_text_change_cb(unity::StaticCairoText* label, UnitySctextAccessible* self)
 {
   g_object_notify(G_OBJECT(self), "accessible-name");
 }
@@ -106,14 +108,14 @@ unity_sctext_accessible_initialize(AtkObject* accessible,
                                    gpointer data)
 {
   nux::Object* nux_object = NULL;
-  nux::StaticCairoText* label = NULL;
+  unity::StaticCairoText* label = NULL;
 
   ATK_OBJECT_CLASS(unity_sctext_accessible_parent_class)->initialize(accessible, data);
 
   atk_object_set_role(accessible, ATK_ROLE_LABEL);
 
   nux_object = nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(accessible));
-  label = dynamic_cast<nux::StaticCairoText*>(nux_object);
+  label = dynamic_cast<unity::StaticCairoText*>(nux_object);
 
   if (label == NULL) /* status defunct */
     return;
@@ -134,7 +136,7 @@ unity_sctext_accessible_get_name(AtkObject* obj)
   name = ATK_OBJECT_CLASS(unity_sctext_accessible_parent_class)->get_name(obj);
   if (name == NULL)
   {
-    nux::StaticCairoText* text = NULL;
+    unity::StaticCairoText* text = NULL;
 
     if (self->priv->stripped_name != NULL)
     {
@@ -142,10 +144,10 @@ unity_sctext_accessible_get_name(AtkObject* obj)
       self->priv->stripped_name = NULL;
     }
 
-    text = dynamic_cast<nux::StaticCairoText*>(nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj)));
+    text = dynamic_cast<unity::StaticCairoText*>(nux_object_accessible_get_object(NUX_OBJECT_ACCESSIBLE(obj)));
     if (text != NULL)
     {
-      name = text->GetText().GetTCharPtr();
+      name = text->GetText().c_str();
       pango_parse_markup(name, -1, 0, NULL,
                          &self->priv->stripped_name,
                          NULL, NULL);

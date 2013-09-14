@@ -19,32 +19,129 @@
  * Sam Spilsbury <sam.spilsbury@canonical.com>
  */
 
+#include <cstdlib>
+#include <boost/scoped_array.hpp>
 #include "inputremover.h"
 #include <X11/Xregion.h>
 #include <cstdio>
 #include <cstring>
 
+namespace
+{
+const unsigned int propVersion = 2;
+
+void CheckRectanglesCount(XRectangle *rects,
+                          int        *count,
+                          unsigned int width,
+                          unsigned int height,
+                          unsigned int border)
+{
+  /* check if the returned shape exactly matches the window shape -
+   * if that is true, the window currently has no set input shape */
+  if ((*count == 1) &&
+      (rects[0].x == -((int) border)) &&
+      (rects[0].y == -((int) border)) &&
+      (rects[0].width == (width + border)) &&
+      (rects[0].height == (height + border)))
+  {
+    *count = 0;
+  }
+}
+
+bool CheckWindowExists(Display *dpy, Window shapeWindow,
+                       unsigned int *width,
+                       unsigned int *height,
+                       unsigned int *border)
+{
+  Window       root;
+  int          x, y;
+  unsigned int depth;
+
+
+  /* FIXME: There should be a generic GetGeometry request we can
+     * use here in order to avoid a round-trip */
+  if (!XGetGeometry (dpy, shapeWindow, &root, &x, &y, width, height,
+                     border, &depth))
+  {
+    return false;
+  }
+
+  return true;
+}
+
+XRectangle * QueryRectangles(Display *dpy, Window shapeWindow,
+                             int        *count,
+                             int        *ordering,
+                             int        kind)
+{
+  return XShapeGetRectangles (dpy, shapeWindow, kind,
+                              count, ordering);
+}
+
+}
+
+compiz::WindowInputRemoverInterface::~WindowInputRemoverInterface ()
+{
+}
+
 compiz::WindowInputRemover::WindowInputRemover (Display *dpy,
-                                                Window xid) :
+                                                Window shapeWindow,
+                                                Window propWindow) :
   mDpy (dpy),
-  mShapeWindow (xid),
+  mShapeWindow (shapeWindow),
+  mPropWindow (propWindow),
   mShapeMask (0),
   mInputRects (NULL),
   mNInputRects (0),
   mInputRectOrdering (0),
-  mBoundingRects (NULL),
-  mNBoundingRects (0),
-  mBoundingRectOrdering (0),
   mRemoved (false)
 {
   /* FIXME: roundtrip */
   XShapeQueryExtension (mDpy, &mShapeEvent, &mShapeError);
+
+  /* Check to see if the propWindow has a saved shape,
+   * if so, it means that we are coming from a restart or
+   * a crash where it wasn't properly restored, so we need
+   * to restore the saved input shape before doing anything
+   */
+  XRectangle   *rects;
+  int          count = 0, ordering;
+
+  if (queryProperty(&rects, &count, &ordering))
+  {
+    bool rectangles_restored = false;
+    unsigned int width, height, border;
+
+    if (CheckWindowExists(mDpy, mShapeWindow, &width, &height, &border))
+      if (checkRectangles(rects, &count, ordering,
+                          width, height, border))
+        if (saveRectangles(rects, count, ordering))
+        {
+          /* Tell the shape restore engine that we've got a removed
+           * input shape here */
+          mRemoved = true;
+          if (restoreInput())
+            rectangles_restored = true;
+        }
+
+    /* Something failed and we couldn't restore the
+     * rectangles. Don't leak them */
+    if (!rectangles_restored)
+    {
+      free (rects);
+    }
+  }
+
 }
 
 compiz::WindowInputRemover::~WindowInputRemover ()
 {
   if (mRemoved)
     restore ();
+
+  /* Remove the window property as we have already successfully restored
+   * the window shape */
+  clearProperty();
 }
 
 void
@@ -105,38 +202,6 @@ compiz::WindowInputRemover::sendShapeNotify ()
     XTranslateCoordinates (mDpy, mShapeWindow, parentReturn, 0, 0,
 			   &xOffset, &yOffset, &childReturn);
 
-    xsev.kind = ShapeBounding;
-
-    /* Calculate extents of the bounding shape */
-    if (!mNBoundingRects)
-    {
-      /* No set input shape, we must use the client geometry */
-      xsev.x = x - xOffset;
-      xsev.y = y - yOffset;
-      xsev.width = width; 
-      xsev.height = height;
-      xsev.shaped = false;
-    }
-    else
-    {
-      Region      boundingRegion = XCreateRegion ();
-
-      for (int i = 0; i < mNBoundingRects; i++)
-        XUnionRectWithRegion (&(mBoundingRects[i]), boundingRegion, boundingRegion);
-
-      xsev.x = boundingRegion->extents.x1 - xOffset;
-      xsev.y = boundingRegion->extents.y1 - yOffset;
-      xsev.width = boundingRegion->extents.x2 - boundingRegion->extents.x1;
-      xsev.height = boundingRegion->extents.y2 - boundingRegion->extents.y1;
-      xsev.shaped = true;
-
-      XDestroyRegion (boundingRegion);
-    }
-
-    xsev.time = CurrentTime;
-
-    XSendEvent (mDpy, mShapeWindow, FALSE, NoEventMask, xev);
-    XSendEvent (mDpy, parentReturn, FALSE, NoEventMask, xev);
     xsev.kind = ShapeInput;
 
     /* Calculate extents of the bounding shape */
@@ -177,21 +242,15 @@ compiz::WindowInputRemover::sendShapeNotify ()
   {
     XQueryTree (mDpy, mShapeWindow, &rootReturn, &parentReturn, &children, &nchildren);
 
-    xsev.kind = ShapeBounding;
-
     xsev.x = 0;
     xsev.y = 0;
     xsev.width = 0;
     xsev.height = 0;
     xsev.shaped = true;
 
-    xsev.time = CurrentTime;
-    XSendEvent (mDpy, mShapeWindow, FALSE, NoEventMask, xev);
-    XSendEvent (mDpy, parentReturn, FALSE, NoEventMask, xev);
-
     xsev.kind = ShapeInput;
 
-    /* Both ShapeBounding and ShapeInput are null */
+    /* ShapeInput is null */
 
     xsev.time = CurrentTime;
 
@@ -203,71 +262,276 @@ compiz::WindowInputRemover::sendShapeNotify ()
 }
 
 bool
-compiz::WindowInputRemover::save ()
+compiz::WindowInputRemover::checkRectangles(XRectangle *input,
+                                            int *nInput,
+                                            int inputOrdering,
+                                            unsigned int width,
+                                            unsigned int height,
+                                            unsigned int border)
 {
-  XRectangle   *rects;
-  int          count = 0, ordering;
-  Window       root;
-  int          x, y;
-  unsigned int width, height, border, depth;
+  CheckRectanglesCount(input, nInput, width, height, border);
 
-  /* FIXME: There should be a generic GetGeometry request we can
-     * use here in order to avoid a round-trip */
-  if (!XGetGeometry (mDpy, mShapeWindow, &root, &x, &y, &width, &height,
-                     &border, &depth))
-  {
+  /* There may be other sanity checks in future */
+  return true;
+}
+
+bool
+compiz::WindowInputRemover::queryShapeRectangles(XRectangle **input,
+                                                 int *nInput,
+                                                 int *inputOrdering,
+                                                 unsigned int *width,
+                                                 unsigned int *height,
+                                                 unsigned int *border)
+{
+
+  if (!CheckWindowExists(mDpy, mShapeWindow, width, height, border))
     return false;
-  }
 
-  rects = XShapeGetRectangles (mDpy, mShapeWindow, ShapeInput,
-                               &count, &ordering);
-
-  /* check if the returned shape exactly matches the window shape -
-   * if that is true, the window currently has no set input shape */
-  if ((count == 1) &&
-      (rects[0].x == -((int) border)) &&
-      (rects[0].y == -((int) border)) &&
-      (rects[0].width == (width + border)) &&
-      (rects[0].height == (height + border)))
-  {
-    count = 0;
-  }
-
-  if (mInputRects)
-    XFree (mInputRects);
-
-  mInputRects = rects;
-  mNInputRects = count;
-  mInputRectOrdering = ordering;
-
-  rects = XShapeGetRectangles (mDpy, mShapeWindow, ShapeBounding,
-                               &count, &ordering);
-
-  /* check if the returned shape exactly matches the window shape -
-   * if that is true, the window currently has no set bounding shape */
-  if ((count == 1) &&
-      (rects[0].x == -((int) border)) &&
-      (rects[0].y == -((int) border)) &&
-      (rects[0].width == (width + border)) &&
-      (rects[0].height == (height + border)))
-  {
-    count = 0;
-  }
-
-  if (mBoundingRects)
-    XFree (mBoundingRects);
-
-  mBoundingRects = rects;
-  mNBoundingRects = count;
-  mBoundingRectOrdering = ordering;
-
-  mShapeMask = XShapeInputSelected (mDpy, mShapeWindow);
+  *input = QueryRectangles(mDpy, mShapeWindow,
+                           nInput, inputOrdering, ShapeInput);
 
   return true;
 }
 
 bool
-compiz::WindowInputRemover::remove ()
+compiz::WindowInputRemover::saveRectangles(XRectangle *input,
+                                           int nInput,
+                                           int inputOrdering)
+{
+  if (mInputRects)
+    XFree (mInputRects);
+
+  mInputRects = input;
+  mNInputRects = nInput;
+  mInputRectOrdering = inputOrdering;
+
+  return true;
+}
+
+void
+compiz::WindowInputRemover::clearRectangles ()
+{
+  /* Revert save action to local memory */
+  if (mInputRects)
+    XFree (mInputRects);
+
+  mNInputRects = 0;
+  mInputRectOrdering = 0;
+
+  mShapeMask = 0;
+
+  mRemoved = false;
+}
+
+bool
+compiz::WindowInputRemover::writeProperty (XRectangle *input,
+                                           int nInput,
+                                           int inputOrdering)
+{
+  Atom prop = XInternAtom (mDpy, "_UNITY_SAVED_WINDOW_SHAPE", FALSE);
+  Atom type = XA_CARDINAL;
+  int  fmt  = 32;
+
+  const unsigned int headerSize = 3;
+
+  /*
+   * -> version
+   * -> nInput
+   * -> inputOrdering
+   * -> nBounding
+   * -> boundingOrdering
+   *
+   * +
+   *
+   * nRectangles * 4
+   */
+  const size_t dataSize = headerSize + (nInput * 4);
+
+  boost::scoped_array<unsigned long> data(new unsigned long[dataSize]);
+
+  data[0] = propVersion;
+  data[1] = nInput;
+  data[2] = inputOrdering;
+
+  for (int i = 0; i < nInput; ++i)
+  {
+    const unsigned int position = dataSize + (i * 4);
+
+    data[position + 0] = input[i].x;
+    data[position + 1] = input[i].y;
+    data[position + 2] = input[i].width;
+    data[position + 3] = input[i].height;
+  }
+
+  /* No need to check return code, always returns 0 */
+  XChangeProperty(mDpy,
+                  mPropWindow,
+                  prop,
+                  type,
+                  fmt,
+                  PropModeReplace,
+                  reinterpret_cast<unsigned char*>(data.get()),
+                  dataSize);
+
+  return true;
+}
+
+bool
+compiz::WindowInputRemover::queryProperty(XRectangle **input,
+                                          int *nInput,
+                                          int *inputOrdering)
+
+{
+  Atom prop = XInternAtom (mDpy, "_UNITY_SAVED_WINDOW_SHAPE", FALSE);
+  Atom type = XA_CARDINAL;
+  int  fmt  = 32;
+
+  Atom actualType;
+  int actualFmt;
+
+  unsigned long nItems;
+  unsigned long nLeft;
+
+  unsigned char *propData;
+
+  const unsigned long headerLength = 3L;
+
+  /* First query the first five bytes to figure out how
+   * long the rest of the property is going to be */
+  if (!XGetWindowProperty(mDpy,
+                          mPropWindow,
+                          prop,
+                          0L,
+                          headerLength,
+                          FALSE,
+                          type,
+                          &actualType,
+                          &actualFmt,
+                          &nItems,
+                          &nLeft,
+                          &propData))
+  {
+    return false;
+  }
+
+  /* If type or format is mismatched, return false */
+  if (actualType != type ||
+      actualFmt != fmt ||
+      headerLength != nItems)
+  {
+    XFree (propData);
+    return false;
+  }
+
+  /* XXX: the cast to void * before the reinterpret_cast is a hack to calm down
+   *  gcc on ARM machines and its misalignment cast errors */
+  unsigned long *headerData = reinterpret_cast<unsigned long *>(static_cast<void *>(propData));
+
+  /* If version is mismatched, return false */
+  if (headerData[0] != propVersion)
+    return false;
+
+  /* New length is nInput * 4 + nBounding * 4 + headerSize */
+  unsigned long fullLength = *nInput * 4  + headerLength;
+
+  /* Free data and get the rest */
+  XFree (propData);
+
+  if (!XGetWindowProperty(mDpy,
+                          mPropWindow,
+                          prop,
+                          0L,
+                          fullLength,
+                          FALSE,
+                          type,
+                          &actualType,
+                          &actualFmt,
+                          &nItems,
+                          &nLeft,
+                          &propData))
+  {
+    return false;
+  }
+
+  /* Check to make sure we got everything */
+  if (fullLength != nItems)
+  {
+    printf ("warning, did not get full legnth");
+    return false;
+  }
+
+  unsigned long *data = reinterpret_cast<unsigned long *>(static_cast<void *>(propData));
+
+  /* Read in the header */
+  *nInput = data[1];
+  *inputOrdering = data[2];
+
+  /* Read in the rectangles */
+  *input = reinterpret_cast<XRectangle *>(calloc(1, sizeof(XRectangle) * *nInput));
+
+  for (int i = 0; i < *nInput; ++i)
+  {
+    const unsigned int position = headerLength + i * 4;
+
+    (*input)[i].x = data[position + 0];
+    (*input)[i].y = data[position + 1];
+    (*input[i]).width = data[position + 2];
+    (*input[i]).height = data[position + 3];
+  }
+
+  XFree (propData);
+
+  return true;
+}
+
+void
+compiz::WindowInputRemover::clearProperty()
+{
+  Atom prop = XInternAtom (mDpy, "_UNITY_SAVED_WINDOW_SHAPE", FALSE);
+
+  XDeleteProperty(mDpy, mPropWindow, prop);
+}
+
+bool
+compiz::WindowInputRemover::saveInput ()
+{
+  XRectangle   *rects;
+  int          count = 0, ordering;
+  unsigned int width, height, border;
+
+  /* Never save input for a cleared window */
+  if (mRemoved)
+    return false;
+
+  if (!queryShapeRectangles(&rects, &count, &ordering,
+                            &width, &height, &border))
+  {
+    clearRectangles ();
+    return false;
+  }
+
+  if (!checkRectangles(rects, &count, ordering,
+                       width, height, border))
+  {
+    clearRectangles ();
+    return false;
+  }
+
+  if (!writeProperty(rects, count, ordering))
+  {
+    clearRectangles ();
+    return false;
+  }
+
+  mShapeMask = XShapeInputSelected (mDpy, mShapeWindow);
+
+  saveRectangles(rects, count, ordering);
+
+  return true;
+}
+
+bool
+compiz::WindowInputRemover::removeInput ()
 {
   if (!mNInputRects)
     if (!save ())
@@ -277,20 +541,18 @@ compiz::WindowInputRemover::remove ()
 
   XShapeCombineRectangles (mDpy, mShapeWindow, ShapeInput, 0, 0,
                            NULL, 0, ShapeSet, 0);
-  XShapeCombineRectangles (mDpy, mShapeWindow, ShapeBounding, 0, 0,
-                           NULL, 0, ShapeSet, 0);
 
   XShapeSelectInput (mDpy, mShapeWindow, mShapeMask);
 
-  mRemoved = true;
-
   sendShapeNotify ();
+
+  mRemoved = true;
 
   return true;
 }
 
 bool
-compiz::WindowInputRemover::restore ()
+compiz::WindowInputRemover::restoreInput ()
 {
   XShapeSelectInput (mDpy, mShapeWindow, NoEventMask);
 
@@ -314,25 +576,6 @@ compiz::WindowInputRemover::restore ()
       XFree (mInputRects);
       mInputRects = NULL;
       mNInputRects = 0;
-    }
-
-    if (mNBoundingRects)
-    {
-      XShapeCombineRectangles (mDpy, mShapeWindow, ShapeBounding, 0, 0,
-                         mBoundingRects, mNBoundingRects,
-                         ShapeSet, mBoundingRectOrdering);
-    }
-    else
-    {
-      XShapeCombineMask (mDpy, mShapeWindow, ShapeBounding,
-                   0, 0, None, ShapeSet);
-    }
-
-    if (mBoundingRects)
-    {
-      XFree (mBoundingRects);
-      mBoundingRects = NULL;
-      mNBoundingRects = 0;
     }
   }
 

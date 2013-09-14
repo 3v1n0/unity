@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2011 Canonical Ltd
+ * Copyright (C) 2011-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include "Results.h"
@@ -25,33 +26,25 @@ namespace dash
 {
 
 Results::Results()
-{
-  row_added.connect(sigc::mem_fun(this, &Results::OnRowAdded));
-  row_changed.connect(sigc::mem_fun(this, &Results::OnRowChanged));
-  row_removed.connect(sigc::mem_fun(this, &Results::OnRowRemoved));
-}
+: Results(ModelType::REMOTE_SHARED)
+{}
 
 Results::Results(ModelType model_type)
   : Model<Result>::Model(model_type)
 {
-  row_added.connect(sigc::mem_fun(this, &Results::OnRowAdded));
-  row_changed.connect(sigc::mem_fun(this, &Results::OnRowChanged));
-  row_removed.connect(sigc::mem_fun(this, &Results::OnRowRemoved));
+  row_added.connect(sigc::mem_fun(&result_added, &decltype(result_added)::emit));
+  row_changed.connect(sigc::mem_fun(&result_changed, &decltype(result_changed)::emit));
+  row_removed.connect(sigc::mem_fun(&result_removed, &decltype(result_removed)::emit));
 }
 
-void Results::OnRowAdded(Result& result)
+ResultIterator Results::begin()
 {
-  result_added.emit(result);
+  return ResultIterator(model(), dee_model_get_first_iter(model()), GetTag());
 }
 
-void Results::OnRowChanged(Result& result)
+ResultIterator Results::end()
 {
-  result_changed.emit(result);
-}
-
-void Results::OnRowRemoved(Result& result)
-{
-  result_removed.emit(result);
+  return ResultIterator(model(), dee_model_get_last_iter(model()), GetTag());
 }
 
 }

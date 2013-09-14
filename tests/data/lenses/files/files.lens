@@ -5,5 +5,5 @@ Name=Files
 Icon=/usr/share/unity-lens-files/files.png
 Description=Search for Files & Folders
 SearchHint=Search Files & Folders
-Visible=true
+Visible=false
 Shortcut=f

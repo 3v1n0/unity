@@ -1,0 +1,159 @@
+[org.compiz.unityshell:/org/compiz/profiles/unity/plugins/unityshell/]
+launcher-switcher-prev = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/launcher_switcher_prev
+shortcut-overlay = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/shortcut_overlay
+panel-opacity-maximized-toggle = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/panel_opacity_maximized_toggle
+launcher-switcher-forward = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/launcher_switcher_forward
+overcome-pressure = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/overcome_pressure
+launch-animation = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/launch_animation
+alt-tab-timeout = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/alt_tab_timeout
+panel-opacity = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/panel_opacity
+show-minimized-windows = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/show_minimized_windows
+num-launchers = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/num_launchers
+alt-tab-right = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/alt_tab_right
+show-hud = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/show_hud
+launcher-hide-mode = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/launcher_hide_mode
+alt-tab-forward = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/alt_tab_forward
+alt-tab-left = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/alt_tab_left
+launcher-capture-mouse = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/launcher_capture_mouse
+alt-tab-detail-stop = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/alt_tab_detail_stop
+urgent-animation = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/urgent_animation
+keyboard-focus = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/keyboard_focus
+alt-tab-prev = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/alt_tab_prev
+reveal-pressure = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/reveal_pressure
+decay-rate = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/decay_rate
+stop-velocity = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/stop_velocity
+autohide-animation = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/autohide_animation
+alt-tab-bias-viewport = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/alt_tab_bias_viewport
+edge-responsiveness = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/edge_responsiveness
+automaximize-value = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/automaximize_value
+background-color = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/background_color
+alt-tab-forward-all = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/alt_tab_forward_all
+alt-tab-prev-all = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/alt_tab_prev_all
+menus-discovery-fadein = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/menus_discovery_fadein
+execute-command = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/execute_command
+dash-blur-experimental = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/dash_blur_experimental
+menus-discovery-duration = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/menus_discovery_duration
+alt-tab-prev-window = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/alt_tab_prev_window
+reveal-trigger = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/reveal_trigger
+panel-first-menu = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/panel_first_menu
+icon-size = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/icon_size
+backlight-mode = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/backlight_mode
+menus-fadein = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/menus_fadein
+alt-tab-detail-start = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/alt_tab_detail_start
+show-desktop-icon = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/show_desktop_icon
+alt-tab-next-window = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/alt_tab_next_window
+launcher-opacity = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/launcher_opacity
+show-launcher = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/show_launcher
+menus-discovery-fadeout = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/menus_discovery_fadeout
+menus-fadeout = /apps/compizconfig-1/profiles/unity/plugins/unityshell/screen0/options/menus_fadeout
+
+
+[org.compiz.core:/org/compiz/profiles/unity/plugins/core/]
+active-plugins = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/active_plugins
+vsize = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/vsize
+hsize = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/vsize
+close-window-button = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/close_window_button
+close-window-key = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/close_window_key
+lower-window-button = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/lower_window_button
+lower-window-key = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/lower_window_key
+maximize-window-horizontally-key = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/maximize_window_horizontally_key
+maximize-window-key = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/maximize_window_key
+maximize-window-vertically-key = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/maximize_window_vertically_key
+minimize-window-button = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/minimize_window_button
+minimize-window-key = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/minimize_window_key
+raise-window-button = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/raise_window_button
+raise-window-key = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/raise_window_key
+show-desktop-edge = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/show_desktop_edge
+show-desktop-key = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/show_desktop_key
+toggle-window-maximized-button = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/toggle_window_maximized_button
+toggle-window-maximized-horizontally-key = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/toggle_window_maximized_horizontally_key
+toggle-window-maximized-key = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/toggle_window_maximized_key
+toggle-window-maximized-vertically-key = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/toggle_window_maximized_vertically_key
+toggle-window-shaded-key = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/toggle_window_shaded_key
+unmaximize-window-key = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/unmaximize_window_key
+window-menu-button = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/window_menu_button
+window-menu-key = /apps/compizconfig-1/profiles/unity/plugins/core/screen0/options/window_menu_key
+
+
+[org.compiz.composite:/org/compiz/profiles/unity/plugins/composite/]
+detect-refresh-rate = /apps/compizconfig-1/profiles/unity/plugins/composite/screen0/options/detect_refres_rate
+refresh-rate = /apps/compizconfig-1/profiles/unity/plugins/composite/screen0/options/refres_rate
+
+
+[org.compiz.opengl:/org/compiz/profiles/unity/plugins/opengl/]
+lighting = /apps/compizconfig-1/profiles/unity/plugins/opengl/screen0/options/lighting
+sync-to-vblank = /apps/compizconfig-1/profiles/unity/plugins/opengl/screen0/options/sync_to_vblank
+texture-compression = /apps/compizconfig-1/profiles/unity/plugins/opengl/screen0/options/texture_compression
+texture-filter = /apps/compizconfig-1/profiles/unity/plugins/opengl/screen0/options/texture_filter
+
+
+[org.compiz.wall:/org/compiz/profiles/unity/plugins/wall/]
+down-button = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/down_button
+down-key = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/down_button
+down-window-key = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/down_button
+edgeflip-dnd = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/edgeflip_dnd
+edgeflip-move = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/edgeflip_move
+edgeflip-pointer = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/edgeflip_pointer
+edge-radius = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/edge_radius
+flip-down-edge = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/flip_down_edge
+flip-left-edge = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/flip_left_edge
+flip-right-edge = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/flip_right_edge
+flip-up-edge = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/flip_up_edge
+left-button = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/left_button
+left-key = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/left_key
+left-window-key = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/left_window_key
+next-button = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/next_button
+next-key = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/next_key
+prev-button = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/prev_button
+prev-key =/apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/prev_key
+right-button = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/right_button
+right-key = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/right_key
+right-window-key = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/right_window_key
+up-button = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/up_button
+up-key = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/up_key
+up-window-key = /apps/compizconfig-1/profiles/unity/plugins/wall/screen0/options/up_window_key
+
+
+[org.compiz.expo:/org/compiz/profiles/unity/plugins/expo/]
+exit-button = /apps/compizconfig-1/profiles/unity/plugins/expo/screen0/options/exit_button
+expo-edge = /apps/compizconfig-1/profiles/unity/plugins/expo/screen0/options/expo_edge
+expo-key = /apps/compizconfig-1/profiles/unity/plugins/expo/screen0/options/expo_key
+expo-immediate-move = /apps/compizconfig-1/profiles/unity/plugins/expo/screen0/options/expo_immediate_move
+next-vp-button = /apps/compizconfig-1/profiles/unity/plugins/expo/screen0/options/next_vp_button
+prev-vp-button = /apps/compizconfig-1/profiles/unity/plugins/expo/screen0/options/prev_vp_button
+
+
+[org.compiz.move:/org/compiz/profiles/unity/plugins/move/]
+initiate-button = /apps/compizconfig-1/profiles/unity/plugins/move/screen0/options/initiate_button
+initiate-key = /apps/compizconfig-1/profiles/unity/plugins/move/screen0/options/initiate_key
+
+
+[org.compiz.grid:/org/compiz/profiles/unity/plugins/grid/]
+bottom-edge-action = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/bottom_edge_action
+bottom-edge-threshold = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/bottom_edge_threshold
+bottom-left-corner-action = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/bottom_left_corner_action
+bottom-right-corner-action = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/bottom_right_corner_action
+draw-indicator = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/draw_indicator
+fill-color = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/fill_color
+left-edge-action = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/left_edge_action
+left-edge-threshold = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/left_edge_threshold
+outline-color = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/outline_color
+put-bottom-key = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/put_bottom_key
+put-bottomleft-key = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/put_bottomleft_key
+put-bottomright-key = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/put_bottomright_key
+put-center-key = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/put_center_key
+put-left-key = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/put_left_key
+put-maximize-key = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/put_maximize_key
+put-restore-key = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/put_restore_key
+put-right-key = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/put_right_key
+put-top-key = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/put_top_key
+put-topleft-key = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/put_topleft_key
+put-topright-key = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/put_topright_key
+right-edge-action = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/right_edge_action
+right-edge-threshold = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/right_edge_threshold
+snapback-windows = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/snapback_windows
+snapoff-maximized = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/snapoff_maximized
+top-edge-action = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/top_edge_action
+top-edge-threshold = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/top_edge_threshold
+top-left-corner-action = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/top_left_corner_action
+top-right-corner-action = /apps/compizconfig-1/profiles/unity/plugins/grid/screen0/options/top_right_corner_action

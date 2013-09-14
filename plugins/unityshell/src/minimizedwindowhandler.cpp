@@ -20,6 +20,7 @@
  */
 
 #include "minimizedwindowhandler.h"
+#include "inputremover.h"
 #include <cstring>
 
 namespace compiz
@@ -35,7 +36,8 @@ public:
 
   std::list <MinimizedWindowHandler::Ptr> mTransients;
 
-  WindowInputRemover *mRemover;
+  WindowInputRemoverLock::Ptr mRemover;
+  WindowInputRemoverLockAcquireInterface *mLockAcquire;
 };
 }
 
@@ -56,19 +58,13 @@ compiz::MinimizedWindowHandler::setVisibility (bool visible, Window shapeWin)
 {
   if (!visible && !priv->mRemover)
   {
-    priv->mRemover = new compiz::WindowInputRemover (priv->mDpy, shapeWin);
+    priv->mRemover = priv->mLockAcquire->InputRemover();
     if (!priv->mRemover)
       return;
-
-    if (priv->mRemover->save ())
-      priv->mRemover->remove ();
   }
   else if (visible && priv->mRemover)
   {
-    priv->mRemover->restore ();
-
-    delete priv->mRemover;
-    priv->mRemover = NULL;
+    priv->mRemover.reset();
   }
 }
 
@@ -78,7 +74,7 @@ compiz::MinimizedWindowHandler::getTransients ()
   std::vector<unsigned int> transients;
   compiz::X11TransientForReader *reader = new compiz::X11TransientForReader (priv->mDpy, priv->mXid);
 
-  transients = reader->getTransients ();
+  transients = reader->getTransients();
 
   delete reader;
 
@@ -99,15 +95,15 @@ compiz::MinimizedWindowHandler::minimize ()
   Window        root = DefaultRootWindow (priv->mDpy), parent = priv->mXid, lastParent = priv->mXid;
   Window        *children;
   unsigned int  nchildren;
-  compiz::MinimizedWindowHandler::Ptr holder = compiz::MinimizedWindowHandler::Ptr (new compiz::MinimizedWindowHandler (priv->mDpy, 0));
+  compiz::MinimizedWindowHandler::Ptr holder = compiz::MinimizedWindowHandler::Ptr (new compiz::MinimizedWindowHandler (priv->mDpy, 0, priv->mLockAcquire));
   auto          predicate_this = boost::bind (&compiz::MinimizedWindowHandler::contains, this, _1);
-  auto          predicate_holder = !boost::bind (&compiz::MinimizedWindowHandler::contains, holder.get (), _1);
+  auto          predicate_holder = !boost::bind (&compiz::MinimizedWindowHandler::contains, holder.get(), _1);
 
   std::vector<unsigned int> transients = getTransients ();
 
   for (unsigned int &w : transients)
   {
-    compiz::MinimizedWindowHandler::Ptr p = compiz::MinimizedWindowHandler::Ptr (new compiz::MinimizedWindowHandler (priv->mDpy, w));
+    compiz::MinimizedWindowHandler::Ptr p = compiz::MinimizedWindowHandler::Ptr (new compiz::MinimizedWindowHandler (priv->mDpy, w, priv->mLockAcquire));
     holder->priv->mTransients.push_back (p);
   }
 
@@ -118,7 +114,7 @@ compiz::MinimizedWindowHandler::minimize ()
     priv->mTransients.push_back (mw);
 
   for (MinimizedWindowHandler::Ptr &mw : priv->mTransients)
-    mw->minimize ();
+    mw->minimize();
 
   do
   {
@@ -180,15 +176,15 @@ compiz::MinimizedWindowHandler::unminimize ()
   Window        root = DefaultRootWindow (priv->mDpy), parent = priv->mXid, lastParent = priv->mXid;
   Window        *children;
   unsigned int  nchildren;
-  compiz::MinimizedWindowHandler::Ptr holder = compiz::MinimizedWindowHandler::Ptr (new compiz::MinimizedWindowHandler (priv->mDpy, 0));
+  compiz::MinimizedWindowHandler::Ptr holder = compiz::MinimizedWindowHandler::Ptr (new compiz::MinimizedWindowHandler (priv->mDpy, 0, priv->mLockAcquire));
   auto          predicate_this = boost::bind (&compiz::MinimizedWindowHandler::contains, this, _1);
-  auto          predicate_holder = !boost::bind (&compiz::MinimizedWindowHandler::contains, holder.get (), _1);
+  auto          predicate_holder = !boost::bind (&compiz::MinimizedWindowHandler::contains, holder.get(), _1);
 
-  std::vector<unsigned int> transients = getTransients ();
+  std::vector<unsigned int> transients = getTransients();
 
   for (unsigned int &w : transients)
   {
-    compiz::MinimizedWindowHandler::Ptr p = compiz::MinimizedWindowHandler::Ptr (new compiz::MinimizedWindowHandler (priv->mDpy, w));
+    compiz::MinimizedWindowHandler::Ptr p = compiz::MinimizedWindowHandler::Ptr (new compiz::MinimizedWindowHandler (priv->mDpy, w, priv->mLockAcquire));
     holder->priv->mTransients.push_back (p);
   }
 
@@ -199,7 +195,7 @@ compiz::MinimizedWindowHandler::unminimize ()
     priv->mTransients.push_back (mw);
 
   for (MinimizedWindowHandler::Ptr &mw : priv->mTransients)
-    mw->unminimize ();
+    mw->unminimize();
 
   do
   {
@@ -231,8 +227,8 @@ compiz::MinimizedWindowHandler::unminimize ()
       int  count = 0;
 
       nextStateSize = nItems;
+      nextState = reinterpret_cast<Atom *>(malloc(sizeof(Atom) * nextStateSize));
 
-      pbegin = nextState = (Atom *) malloc (sizeof (Atom) * nextStateSize);
       pbegin = nextState = (Atom *) memcpy (nextState, data, sizeof (Atom) * nextStateSize);
 
       /* Remove _NET_WM_STATE_HIDDEN */
@@ -264,13 +260,13 @@ compiz::MinimizedWindowHandler::unminimize ()
     XDeleteProperty (priv->mDpy, priv->mXid, netWmState);
 }
 
-compiz::MinimizedWindowHandler::MinimizedWindowHandler (Display *dpy, unsigned int xid)
+compiz::MinimizedWindowHandler::MinimizedWindowHandler (Display *dpy, unsigned int xid, compiz::WindowInputRemoverLockAcquireInterface *lock_acquire)
 {
   priv = new PrivateMinimizedWindowHandler;
 
   priv->mDpy = dpy;
   priv->mXid = xid;
-  priv->mRemover = NULL;
+  priv->mLockAcquire = lock_acquire;
 }
 
 compiz::MinimizedWindowHandler::~MinimizedWindowHandler ()

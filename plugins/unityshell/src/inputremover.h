@@ -22,6 +22,7 @@
 #ifndef _COMPIZ_INPUTREMOVER_H
 #define _COMPIZ_INPUTREMOVER_H
 
+#include <memory>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/shape.h>
@@ -29,38 +30,131 @@
 // Will be merged back into compiz
 namespace compiz {
 
-class WindowInputRemover
+class WindowInputRemoverInterface
+{
+  public:
+
+    typedef std::shared_ptr <WindowInputRemoverInterface> Ptr;
+
+    bool save () { return saveInput (); }
+    bool remove () { return removeInput (); }
+    bool restore () { return restoreInput (); }
+
+    virtual ~WindowInputRemoverInterface ();
+
+  protected:
+
+    virtual bool saveInput () = 0;
+    virtual bool removeInput () = 0;
+    virtual bool restoreInput () = 0;
+};
+
+class WindowInputRemover :
+  public WindowInputRemoverInterface
 {
 public:
 
-  WindowInputRemover (Display *, Window xid);
+  WindowInputRemover (Display *,
+                      Window shapeWindow,
+                      Window propWindow);
   ~WindowInputRemover ();
-
-  bool save ();
-  bool remove ();
-  bool restore ();
 
 private:
 
+  bool saveInput ();
+  bool removeInput ();
+  bool restoreInput ();
+
   void sendShapeNotify ();
+
+  bool queryShapeRectangles(XRectangle **input,
+                            int *nInput,
+                            int *inputOrdering,
+                            unsigned int *width,
+                            unsigned int *height,
+                            unsigned int *border);
+
+  bool queryProperty(XRectangle **input,
+                     int *nInput,
+                     int *inputOrdering);
+
+  bool writeProperty(XRectangle *input,
+                     int nInput,
+                     int inputOrdering);
+
+  bool checkRectangles(XRectangle *input,
+                       int *nInput,
+                       int inputOrdering,
+                       unsigned int width,
+                       unsigned int height,
+                       unsigned int border);
+
+  bool saveRectangles(XRectangle *input,
+                      int nInput,
+                      int inputOrdering);
+
+  void clearProperty ();
+  void clearRectangles ();
 
   Display       *mDpy;
   Window        mShapeWindow;
+  Window        mPropWindow;
   unsigned long mShapeMask;
 
   XRectangle    *mInputRects;
   int           mNInputRects;
   int           mInputRectOrdering;
 
-  XRectangle    *mBoundingRects;
-  int           mNBoundingRects;
-  int           mBoundingRectOrdering;
   bool          mRemoved;
 
   int           mShapeEvent;
   int           mShapeError;
 
 };
+
+class WindowInputRemoverLock
+{
+  public:
+
+    typedef std::shared_ptr <WindowInputRemoverLock> Ptr;
+    typedef std::weak_ptr <WindowInputRemoverLock> Weak;
+
+    WindowInputRemoverLock (WindowInputRemoverInterface *remover) :
+        remover_ (remover)
+    {
+      remover->save();
+      remover->remove();
+    }
+
+    ~WindowInputRemoverLock ()
+    {
+      remover_->restore();
+      delete remover_;
+    }
+
+    void refresh ()
+    {
+      remover_->save();
+      remover_->remove();
+    }
+
+  private:
+    WindowInputRemoverInterface *remover_;
+};
+
+class WindowInputRemoverLockAcquireInterface
+{
+public:
+
+  virtual ~WindowInputRemoverLockAcquireInterface () {}
+
+  WindowInputRemoverLock::Ptr InputRemover () { return GetInputRemover (); }
+
+private:
+
+  virtual WindowInputRemoverLock::Ptr GetInputRemover () = 0;
+};
+
 }
 
 #endif

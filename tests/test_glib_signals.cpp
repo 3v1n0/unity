@@ -1,4 +1,5 @@
 #include <UnityCore/GLibSignal.h>
+#include <sigc++/sigc++.h>
 #include <gtest/gtest.h>
 
 #include "test_glib_signals_utils.h"
@@ -33,8 +34,7 @@ public:
 
   virtual ~TestGLibSignals()
   {
-    if (G_IS_OBJECT(test_signals_))
-      g_object_unref(test_signals_);
+    g_object_unref(test_signals_);
   }
 
   void Signal0Callback(TestSignals* signals)
@@ -115,26 +115,22 @@ protected:
   char arg6_;
 };
 
+class MockSignalManager : public SignalManager
+{
+public:
+  std::vector<SignalBase::Ptr> GetConnections() const { return connections_; }
+};
+
 
 TEST_F(TestGLibSignals, TestConstructions)
 {
-  SignalBase base;
-
-  Signal0<void, TestSignals*> signal0;
-  Signal1<void, TestSignals*, string> signal1;
-  Signal2<void, TestSignals*, string, int> signal2;
-  Signal3<void, TestSignals*, string, int, float> signal3;
-  Signal4<void, TestSignals*, string, int, float, double> signal4;
-  Signal5<void, TestSignals*, string, int, float, double, gboolean> signal5;
-  Signal6<gboolean, TestSignals*, string, int, float, double, gboolean, char> signal6;
-
-  Signal<void, TestSignals*> signal00;
-  Signal<void, TestSignals*, string> signal01;
-  Signal<void, TestSignals*, string, int> signal02;
-  Signal<void, TestSignals*, string, int, float> signal03;
-  Signal<void, TestSignals*, string, int, float, double> signal04;
-  Signal<void, TestSignals*, string, int, float, double, gboolean> signal05;
-  Signal<gboolean, TestSignals*, string, int, float, double, gboolean, char> signal06;
+  Signal<void, TestSignals*> signal0;
+  Signal<void, TestSignals*, string> signal1;
+  Signal<void, TestSignals*, string, int> signal2;
+  Signal<void, TestSignals*, string, int, float> signal3;
+  Signal<void, TestSignals*, string, int, float, double> signal4;
+  Signal<void, TestSignals*, string, int, float, double, gboolean> signal5;
+  Signal<gboolean, TestSignals*, string, int, float, double, gboolean, char> signal6;
 }
 
 TEST_F(TestGLibSignals, TestSignal0)
@@ -277,17 +273,34 @@ TEST_F(TestGLibSignals, TestCleanDestruction)
   Signal<void, TestSignals*> signal;
   signal.Connect(test_signals_, "signal0",
                  sigc::mem_fun(this, &TestGLibSignals::Signal0Callback));
-  g_object_unref(test_signals_);
+  g_clear_object(&test_signals_);
+  EXPECT_EQ(signal.object(), nullptr);
+}
+
+TEST_F(TestGLibSignals, TestConnectReplacePreviousConnection)
+{
+  Signal<void, TestSignals*> signal;
+  signal.Connect(test_signals_, "signal0",
+                 sigc::mem_fun(this, &TestGLibSignals::Signal0Callback));
+
+  unsigned signal0_num_cb = 0;
+  signal.Connect(test_signals_, "signal0", [&] (TestSignals*) {++signal0_num_cb;});
+
+  g_signal_emit_by_name(test_signals_, "signal0");
+
+  EXPECT_FALSE(signal0_received_);
+  EXPECT_EQ(signal0_num_cb, 1);
 }
 
 TEST_F(TestGLibSignals, TestManagerConstruction)
 {
-  SignalManager manager;
+  MockSignalManager manager;
+  EXPECT_TRUE(manager.GetConnections().empty());
 }
 
 TEST_F(TestGLibSignals, TestManagerAddition)
 {
-  SignalManager manager;
+  MockSignalManager manager;
 
   manager.Add(new Signal<void, TestSignals*>(test_signals_,
                                              "signal0",
@@ -310,11 +323,34 @@ TEST_F(TestGLibSignals, TestManagerAddition)
   manager.Add(new Signal<gboolean, TestSignals*, const char*, int, float, double, gboolean, char>(test_signals_,
               "signal6",
               sigc::mem_fun(this, &TestGLibSignals::Signal6Callback)));
+
+  EXPECT_EQ(manager.GetConnections().size(), 7);
+}
+
+TEST_F(TestGLibSignals, TestManagerAdditionTemplate)
+{
+  MockSignalManager manager;
+
+  manager.Add<void, TestSignals*>(test_signals_, "signal0",
+                                  sigc::mem_fun(this, &TestGLibSignals::Signal0Callback));
+  manager.Add<void, TestSignals*, const char*>(test_signals_, "signal1",
+                                               sigc::mem_fun(this, &TestGLibSignals::Signal1Callback));
+  manager.Add<void, TestSignals*, const char*, int>(test_signals_, "signal2",
+                                                    sigc::mem_fun(this, &TestGLibSignals::Signal2Callback));
+  manager.Add<void, TestSignals*, const char*, int, float>(test_signals_, "signal3",
+                                                           sigc::mem_fun(this, &TestGLibSignals::Signal3Callback));
+  manager.Add<void, TestSignals*, const char*, int, float, double>(test_signals_, "signal4",
+                                                                   sigc::mem_fun(this, &TestGLibSignals::Signal4Callback));
+  manager.Add<void, TestSignals*, const char*, int, float, double, gboolean>(test_signals_, "signal5",
+                                                                             sigc::mem_fun(this, &TestGLibSignals::Signal5Callback));
+  manager.Add<gboolean, TestSignals*, const char*, int, float, double, gboolean, char>(test_signals_, "signal6", sigc::mem_fun(this, &TestGLibSignals::Signal6Callback));
+
+  EXPECT_EQ(manager.GetConnections().size(), 7);
 }
 
 TEST_F(TestGLibSignals, TestManagerConnection)
 {
-  SignalManager manager;
+  MockSignalManager manager;
 
   manager.Add(new Signal<void, TestSignals*>(test_signals_,
                                              "signal0",
@@ -330,9 +366,8 @@ TEST_F(TestGLibSignals, TestManagerConnection)
   EXPECT_TRUE(signal1_received_);
 
   gboolean ret = FALSE;
-  manager.Add(new Signal<gboolean, TestSignals*, const char*, int, float, double, gboolean, char>(test_signals_,
-              "signal6",
-              sigc::mem_fun(this, &TestGLibSignals::Signal6Callback)));
+  manager.Add<gboolean, TestSignals*, const char*, int, float, double, gboolean, char>(test_signals_, "signal6",
+              sigc::mem_fun(this, &TestGLibSignals::Signal6Callback));
   g_signal_emit_by_name(test_signals_, "signal6", "test", 100, 1.0f, 100.00, FALSE, 'x', &ret);
   EXPECT_TRUE(signal6_received_);
   EXPECT_TRUE(ret);
@@ -362,6 +397,48 @@ TEST_F(TestGLibSignals, TestManagerDisconnection)
 
   g_signal_emit_by_name(test_signals_, "signal0");
   EXPECT_FALSE(signal0_received_);
+}
+
+TEST_F(TestGLibSignals, TestManagerObjectDisconnection)
+{
+  SignalManager manager;
+
+  manager.Add(new Signal<void, TestSignals*>(test_signals_,
+                                             "signal0",
+                                             sigc::mem_fun(this, &TestGLibSignals::Signal0Callback)));
+
+  manager.Add(new Signal<void, TestSignals*, const char*>(test_signals_,
+                                                          "signal1",
+                                                          sigc::mem_fun(this, &TestGLibSignals::Signal1Callback)));
+
+  manager.Disconnect(test_signals_);
+
+  g_signal_emit_by_name(test_signals_, "signal0");
+  EXPECT_FALSE(signal0_received_);
+  g_signal_emit_by_name(test_signals_, "signal1", "test");
+  EXPECT_FALSE(signal1_received_);
+}
+
+TEST_F(TestGLibSignals, TestManagerUnreffingObjectDeletesConnections)
+{
+  MockSignalManager manager;
+
+  manager.Add<void, TestSignals*>(test_signals_, "signal0",
+                                  sigc::mem_fun(this, &TestGLibSignals::Signal0Callback));
+  manager.Add<void, TestSignals*, const char*>(test_signals_, "signal1",
+                                               sigc::mem_fun(this, &TestGLibSignals::Signal1Callback));
+  manager.Add<void, TestSignals*, const char*, int>(test_signals_, "signal2",
+                                                    sigc::mem_fun(this, &TestGLibSignals::Signal2Callback));
+  manager.Add<void, TestSignals*, const char*, int, float>(test_signals_, "signal3",
+                                                           sigc::mem_fun(this, &TestGLibSignals::Signal3Callback));
+  manager.Add<void, TestSignals*, const char*, int, float, double>(test_signals_, "signal4",
+                                                                   sigc::mem_fun(this, &TestGLibSignals::Signal4Callback));
+  manager.Add<void, TestSignals*, const char*, int, float, double, gboolean>(test_signals_, "signal5",
+                                                                             sigc::mem_fun(this, &TestGLibSignals::Signal5Callback));
+  manager.Add<gboolean, TestSignals*, const char*, int, float, double, gboolean, char>(test_signals_, "signal6", sigc::mem_fun(this, &TestGLibSignals::Signal6Callback));
+
+  g_clear_object(&test_signals_);
+  EXPECT_TRUE(manager.GetConnections().empty());
 }
 
 }

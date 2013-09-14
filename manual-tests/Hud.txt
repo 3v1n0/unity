@@ -1,58 +1,14 @@
-For reference, the term Tap means to press the indicated key and release it, within a timeframe of 50ms
+Alt+Enter Crash
+---------------
+Test that Alt+Enter does not cause Compiz/Unity to crash (LP: #960957)
 
-Hud Invocate
------------
-This test makes sure that the hud presents itself, the launcher hides 
-and the panel changes
+Setup:
 
-#. Tap Alt
+Actions:
+#. Press Alt+Enter.
 
-Outcome
-  The hud interface presents itself with no other interface such as the dash present.
-  The Launcher hides, the panel becomes transparent with a colour tint matching the hud
-  The HUD search bar is focused and typing text enters text into it
-
-Hud Search
------------
-This test makes sure that the hud will search and activate items.
-
-#. Ensure the devices indicator is present
-#. Tap Alt
-#. Type "system" to search for the "System settings..." item in the devices indicator
-#. Press return to activate the search query. 
-
-Outcome
-  The system settings interface presents itself, the hud disappears. 
-  If the hud does not disappear, this test failed. If the system settings interface
-  did not present itself, this test did *not* fail. 
-
-
-Hud Key-Navigation
------------
-This test ensures the hud key navigation is intact
-
-#. Ensure the messaging indicator is present
-#. Tap Alt
-#. Type "Message" to search for items from the messaging indicator
-#. Press down twice
-#. Press return
-
-Outcome
-  The item selected will activate and the hud with disappear.
-  If the hud does not disappear, this test failed.
-  If the buttons under the search box do not highlight, this test failed.
-
-
-Hud Dismiss
-----------
-This test ensures that the hud is dismissable
-
-#. Tap Alt
-#. Type "test"
-#. Press escape
-#. Click anywhere on the screen that is not the hud interface
-
-Outcome
-  After pressing escape in step three, the text "test" should be removed from the hud search
-  After step four, the hud should dismiss itself and not be present.
-
+Expected Result:
+  Nothing happens
+ 
+Wrong Result:
+  Unity/Compiz crashes

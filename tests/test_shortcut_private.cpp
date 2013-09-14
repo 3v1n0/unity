@@ -68,7 +68,15 @@ TEST(TestShortcutHintPrivate, TestFixMouseShortcut)
   EXPECT_EQ(FixMouseShortcut("Super<Button1>"), "Super<Left Mouse>");
   EXPECT_EQ(FixMouseShortcut("Super<Button2>"), "Super<Middle Mouse>");
   EXPECT_EQ(FixMouseShortcut("Super<Button3>"), "Super<Right Mouse>");
+}
 
+TEST(TestShortcutHintPrivate, TestGetMetaKey)
+{
+  EXPECT_EQ(GetMetaKey("<Super>"), "<Super>");
+  EXPECT_EQ(GetMetaKey("<Super><Alt>"), "<Super><Alt>");
+  EXPECT_EQ(GetMetaKey("<Super>A"), "<Super>");
+  EXPECT_EQ(GetMetaKey("<Super><Alt>A"), "<Super><Alt>");
+  EXPECT_EQ(GetMetaKey("ABC"), "");
 }
 
 } // anonymouse namespace

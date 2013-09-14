@@ -18,7 +18,7 @@
 # this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-import gconf
+import glib
 import glob
 from optparse import OptionParser
 import os
@@ -38,9 +38,6 @@ well_known_local_path = ("%s/share/locale/*/LC_MESSAGES/*unity*" % supported_pre
                          "%s/bin/*unity*" % supported_prefix,
                          "%s/include/Unity*"  % supported_prefix,
                          "%s/lib/pkgconfig/unity*"  % supported_prefix,
-                         "%s/.compiz-1/*/*gtkloader*" % home_dir,
-                         "%s/.config/compiz-1/gsettings/schemas/*gtkloader*" % home_dir,
-                         "%s/.gconf/schemas/*gtkloader*" % home_dir,
                          "%s/.compiz-1/*/*networkarearegion*" % home_dir,
                          "%s/.config/compiz-1/gsettings/schemas/*networkarearegion*" % home_dir,
                          "%s/.gconf/schemas/*networkarearegion*" % home_dir,
@@ -66,47 +63,6 @@ def set_unity_env ():
         print "WARNING: no DISPLAY variable set, setting it to :0"
         os.environ['DISPLAY'] = ':0'
 
-def reset_unity_compiz_profile ():
-    '''reset the compiz/unity profile to a vanilla one'''
-    
-    client = gconf.client_get_default()
-    
-    if not client:
-		print "WARNING: no gconf client found. No reset will be done"
-		return
-    
-    # get current compiz profile to know if we need to switch or not
-    # as compiz is setting that as a default key schema each time you
-    # change the profile, the key isn't straightforward to get and set
-    # as compiz set a new schema instead of a value..
-    try:
-        current_profile_schema = client.get_schema("/apps/compizconfig-1/current_profile")
-    except (GError, AttributeError), e:
-        print "WARNING: environment is incorrect: %s\nDid you just try to reset in a tty?" % e
-        return
-    
-    # default value to not force reset if current_profile is unset
-    if not current_profile_schema:
-        print "WARNING: no current gconf profile set, assuming unity"
-        current_profile_str = 'unity'
-        current_profile_gconfvalue = None
-    else:
-        current_profile_gconfvalue = current_profile_schema.get_default_value()
-        current_profile_str = current_profile_gconfvalue.get_string()
-
-    if current_profile_str == 'unity':
-        print "WARNING: Unity currently default profile, so switching to metacity while resetting the values"
-        subprocess.Popen(["metacity", "--replace"]) #TODO: check if compiz is indeed running
-        # wait for compiz to stop
-        time.sleep(2)
-        if current_profile_gconfvalue:
-            current_profile_gconfvalue.set_string('fooo')
-            current_profile_schema.set_default_value(current_profile_gconfvalue)
-            client.set_schema("/apps/compizconfig-1/current_profile", current_profile_schema)
-        # the python binding doesn't recursive-unset right
-        subprocess.Popen(["gconftool-2", "--recursive-unset", "/apps/compiz-1"]).communicate()
-    subprocess.Popen(["gconftool-2", "--recursive-unset", "/apps/compizconfig-1/profiles/unity"]).communicate()
-
 def reset_launcher_icons ():
     '''Reset the default launcher icon and restart it.'''
     subprocess.Popen(["gsettings", "reset" ,"com.canonical.Unity.Launcher" , "favorites"]) 
@@ -122,7 +78,7 @@ def process_and_start_unity (verbose, debug_mode, compiz_args, log_file):
             print("ERROR: you don't have gdb in your system. Please install it to run in advanced debug mode.")
             sys.exit(1)
         elif debug_mode == 1:
-            cli.extend(['gdb', '-ex', 'run', '-ex', 'bt', '--batch', '--args'])
+            cli.extend(['gdb', '-ex', 'run', '-ex', '"bt full"', '--batch', '--args'])
         elif 'DESKTOP_SESSION' in os.environ:
             print("ERROR: it seems you are under a graphical environment. That's incompatible with executing advanced-debug option. You should be in a tty.")
             sys.exit(1)
@@ -206,7 +162,7 @@ if __name__ == '__main__':
     parser.add_option("--replace", action="store_true",
                       help="Run unity /!\ This is for compatibility with other desktop interfaces and acts the same as running unity without --replace")
     parser.add_option("--reset", action="store_true",
-                      help="Reset the unity profile in compiz and restart it.")  
+                      help="Reset is not supported anymore. Deprecated option")
     parser.add_option("--reset-icons", action="store_true",
                       help="Reset the default launcher icon.")  
     parser.add_option("-v", "--verbose", action="store_true",
@@ -217,10 +173,11 @@ if __name__ == '__main__':
 
     if options.distro:
 		sys.exit(reset_to_distro())
-    
+
     if options.reset:
-        reset_unity_compiz_profile ()
-    
+        print ("ERROR: the reset option is now deprecated")
+        sys.exit(1)
+ 
     if options.reset_icons:
         reset_launcher_icons ()
 	

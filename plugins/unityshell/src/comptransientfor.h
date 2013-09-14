@@ -38,13 +38,13 @@ class CompTransientForReader :
 public:
 
   CompTransientForReader (CompWindow *w);
-  ~CompTransientForReader ();
+  virtual ~CompTransientForReader ();
 
   bool isTransientFor (unsigned int transient);
   bool isGroupTransientFor (unsigned int transient);
 protected:
 
-  virtual unsigned int getAncestor ();
+  unsigned int getAncestor ();
 
 private:
 

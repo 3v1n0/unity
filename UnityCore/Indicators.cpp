@@ -17,8 +17,9 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  *              Tim Penhey <tim.penhey@canonical.com>
  */
-#include "Indicators.h"
 
+#include "Indicators.h"
+#include "AppmenuIndicator.h"
 
 namespace unity
 {
@@ -35,7 +36,7 @@ public:
     : owner_(owner)
   {}
 
-  void ActivateEntry(std::string const& entry_id);
+  void ActivateEntry(std::string const& entry_id, nux::Rect const& geometry);
   void SetEntryShowNow(std::string const& entry_id, bool show_now);
 
   IndicatorsList GetIndicators() const;
@@ -57,18 +58,14 @@ private:
 
 Indicators::Indicators()
   : pimpl(new Impl(this))
-{
-}
+{}
 
 Indicators::~Indicators()
-{
-  delete pimpl;
-}
+{}
 
-void Indicators::ActivateEntry(std::string const& entry_id)
+void Indicators::ActivateEntry(std::string const& entry_id, nux::Rect const& geometry)
 {
-  pimpl->ActivateEntry(entry_id);
-  on_entry_activated.emit(entry_id);
+  pimpl->ActivateEntry(entry_id, geometry);
 }
 
 void Indicators::SetEntryShowNow(std::string const& entry_id, bool show_now)
@@ -96,14 +93,25 @@ void Indicators::RemoveIndicator(std::string const& name)
   return pimpl->RemoveIndicator(name);
 }
 
-void Indicators::Impl::ActivateEntry(std::string const& entry_id)
+void Indicators::Impl::ActivateEntry(std::string const& entry_id, nux::Rect const& geometry)
 {
   if (active_entry_)
+  {
+    active_entry_->set_geometry(nux::Rect());
     active_entry_->set_active(false);
+  }
+
   active_entry_ = GetEntry(entry_id);
+
   if (active_entry_)
   {
+    active_entry_->set_geometry(geometry);
     active_entry_->set_active(true);
+    owner_->on_entry_activated.emit(entry_id, geometry);
+  }
+  else
+  {
+    owner_->on_entry_activated.emit(std::string(), nux::Rect());
   }
 }
 
@@ -131,12 +139,27 @@ Indicators::IndicatorsList Indicators::Impl::GetIndicators() const
 
 Indicator::Ptr Indicators::Impl::AddIndicator(std::string const& name)
 {
-  Indicator::Ptr indicator(new Indicator(name));
+  Indicator::Ptr indicator(GetIndicator(name));
+
+  if (indicator)
+    return indicator;
+
+  if (name == "libappmenu.so")
+  {
+    auto appmenu = std::make_shared<AppmenuIndicator>(name);
+    appmenu->on_show_appmenu.connect(sigc::mem_fun(owner_, &Indicators::OnShowAppMenu));
+    indicator = appmenu;
+  }
+  else
+  {
+    indicator = std::make_shared<Indicator>(name);
+  }
 
   // The owner Indicators class is interested in the other events.
   indicator->on_show_menu.connect(sigc::mem_fun(owner_, &Indicators::OnEntryShowMenu));
   indicator->on_secondary_activate.connect(sigc::mem_fun(owner_, &Indicators::OnEntrySecondaryActivate));
   indicator->on_scroll.connect(sigc::mem_fun(owner_, &Indicators::OnEntryScroll));
+
   indicators_[name] = indicator;
   owner_->on_object_added.emit(indicator);
 
@@ -165,16 +188,15 @@ void Indicators::Impl::RemoveIndicator(std::string const& name)
 
 Entry::Ptr Indicators::Impl::GetEntry(std::string const& entry_id)
 {
-  // Since we reuse Entry objects but change the value that they are keyed on,
-  // we need to traverse through the Indicators asking them if they have this
-  // entry_id.
-  Entry::Ptr result;
-  for (IndicatorMap::iterator i = indicators_.begin(), end = indicators_.end();
-       i != end && !result; ++i)
+  for (auto it = indicators_.begin(); it != indicators_.end(); ++it)
   {
-    result = i->second->GetEntry(entry_id);
+    Entry::Ptr entry = it->second->GetEntry(entry_id);
+
+    if (entry)
+      return entry;
   }
-  return result;
+
+  return Entry::Ptr();
 }
 
 

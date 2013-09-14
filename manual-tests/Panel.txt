@@ -2,6 +2,9 @@ Panel Opacity Toggle
 --------------------
 This test shows how works the panel_opacity_maximized_toggle unity option
 
+Setup:
+
+Actions:
 #. Open CCSM
 #. Go in the "Experimental" tab
 #. Set the "Panel Opacity" setting to a value less than 1.0 (best is 0.0 for testing)
@@ -11,52 +14,114 @@ This test shows how works the panel_opacity_maximized_toggle unity option
 #. Now open a window and make sure it is restored
 #. Open another Window and make it maximized
 
-Outcome
+Expected Result:
   When there's at least one maximized window on the current screen, the panel
   should become opaque, also if the opacity setting is set to 0.0. 
   Once all the maximized windows are closed, restored or not visible,
   the panel should go back to its defined opacity.
 
+Menu Color
+----------
+This test shows the color of the menus using the Ambiance theme:
 
-Panel Menus Revelation
-----------------------
-This test shows how the menus should be revealed when a new application has been
-launched.
+Setup:
 
-#. Start with a clear screen
-#. Open a new application that has menus (i.e. gnome-terminal)
+Actions:
+#. Start with a clean screen
+#. Open an application window with menus
+#. Go on the top panel and open a menu
 
-Outcome
-  The panel should show the menus in global menu bar for two seconds.
-  If a new gnome-terminal window is opened, the menus are not shown again.
-  If more than one application is open at once, the menus of each application
-  are shown once is focused.
+Expected Result:
+  The menu should have a black background (i.e. #403f3a)
+
+Middle-clicking or Scrolling over active Indicators
+---------------------------------------------------
+This test shows how the indicators icons should react to events when active.
+
+Setup:
+
+Actions:
+#. Start on a clean screen
+#. Open an indicator Menu (i.e. indicator-sound, not a global menu item)
+#. Move the mouse pointer over the indicator-sound and middle-click or scroll
+   over it.
+
+Expected Result:
+  The indicator-sound should mute/unmute on middle-clicks, and change the system
+  volume on scroll.
+  Middle-clicking over global-menu items should work as before (causing the open
+  indicator menu to close).
+
+Panel appearance with overlays
+------------------------------
+Setup:
+Actions:
+  * Press <super> to bring up the dash
+  * Assert: The panel should be translucent matching the dash background
+  * Press <alt> to bring up the hud without closing the dash
+  * Assert: The panel should stay translucent
+
+Expected Result:
+ All assertions from above hold.
 
 
-Panel Double Clicks
--------------------
-This test shows how the double click over the top panel should work.
+Disabled Top-level Menus
+------------------------
+Setup:
+#. Install the 'gnome-dictionary' package.
 
-#. Start with a clear screen
-#. Open a window and maximize it
-#. Double-click on the top-panel grab area (the empty area between the menus and
-   the indicators).
+Actions:
+#. Launch the 'gnome-dictionary' application.
+#. Open the 'View' menu.
+#. Move the mouse over the 'Go' menu.
 
-Outcome
-  The maximized window should restore. If no maximized window is available on
-  the current workspace, nothing should happen.
+Expected Result:
+#. THe Go menu should NOT open.
 
 
-Panel on Alt+Tab
-----------------
-This test shows react on Alt+Tab
+Panel (and Launcher) blinking/flickering
+-----------------------------------------
+Setup:
+#. Optionally install "emacs23"
 
-#. Start with a clear screen
-#. Open some new applications
-#. Press Alt+Tab
+Actions:
+#. Open LibreOffice Impress.
+#. Click on "Click to add title" and "Click to add text" a few times.
+#. Optionally: Run emacs23
+#. Optionally: Open a large file in emacs23.
+#. Optionally: Scroll to the bottom of the file using Page Down.
 
-Outcome
-  When you press Alt+Tab to switch window, the application title in the top left
-  of the panel should change inline with changes in alt-tab focus.
-  Also the menus shouldn't ever show. Even if the mouse has been left over
-  the panel when starting the Alt+Tab.
+Expected Result:
+  At no point during the actions should the panel (or launcher) blink or
+  flicker out of existence.
+
+
+Panel shadow overdraw
+---------------------
+Setup:
+#. Install Google Chrome or Chromium.
+
+Actions:
+#. Maximize a Chrome window.
+#. Open several tabs so that the titles of some tabs are not fully visible
+   and fade out to the right.
+#. Hover the mouse over the very top part of some tabs so tooltips appear.
+
+Expected Result:
+  No part of the panel shadow should ever appear on top of the maximized
+  Chrome window.
+
+
+Panel shadow fullscreen
+-----------------------
+Setup:
+#. Install Google Chrome or Chromium.
+
+Actions:
+#. Open Chrome and go full screen (F11)
+#. Trigger window scale: Shift+Alt+Up or Super+W (in Ubuntu)
+
+Expected Result:
+  The panel shadow should not be visible in scale mode, unless the panel
+  itself is also visible.
+

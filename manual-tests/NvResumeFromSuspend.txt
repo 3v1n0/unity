@@ -1,0 +1,14 @@
+Nvidia resume from suspend corruption
+----------
+This test ensures the screen is not corrupted after resume from suspend on nvidia cards.
+
+Setup:
+
+Actions:
+#. Ensure unity is running on a machine with a nvidia GPU using the proprietary nvidia driver
+#. Put the machine to sleep
+#. Resume the machine from sleep
+#. Observe the area where the launcher would normally show
+
+Expected Result:
+  The screen should not display any visual corruption once X is finished updating after a resume.

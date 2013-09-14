@@ -3,13 +3,14 @@
     <value nick="Automatic" value="0" />
     <value nick="Desktop" value="1" />
     <value nick="Netbook" value="2" />
+    <value nick="TV" value="3" />
   </enum>
   <enum id="home-expanded-enum">
     <value nick="Not Expanded" value="0" />
     <value nick="Expanded" value="1" />
   </enum>
 
-  <schema path="/desktop/unity/" id="com.canonical.Unity" gettext-domain="unity">
+  <schema path="/com/canonical/unity/" id="com.canonical.Unity" gettext-domain="unity">
     <key enum="form-factor-enum" name="form-factor">
       <default>"Automatic"</default>
       <summary>The form factor Unity should target.</summary>
@@ -20,17 +21,37 @@
       <summary>Whether the home screen should be expanded.</summary>
       <description>Whether the home screen should be expanded.</description>
     </key>
-    <key type="s" name="average-bg-color">
-      <default>'#757550507B7BFFFF'</default>
-      <summary>Average background color</summary>
-      <description>The average color derived from the currently set desktop-wallpaper. This is written/updated by the Unity-process and read by NotifyOSD-process for example.</description>
+    <key type="i" name="minimize-count">
+      <default>0</default>
+      <summary>Number of times a normal window has been minimized.</summary>
+      <description>This is used to adjust the animation speed by making it progressively faster the more it is used.</description>
+    </key>
+    <key type="i" name="minimize-fast-duration">
+      <default>300</default>
+      <summary>The duration for the minimize animation when it is at its fastest setting.</summary>
+      <description>This is the duration that the minimize animation will have when it has been used more than an number of times equal minimize-speed-threshold.</description>
+    </key>
+    <key type="i" name="minimize-slow-duration">
+      <default>800</default>
+      <summary>The duration for the minimize animation when it is at its slowest setting.</summary>
+      <description>This is the duration that the minimize animation will have when it has never been used.</description>
+    </key>
+    <key type="i" name="minimize-speed-threshold">
+      <default>100</default>
+      <summary>The number of minimizations required to reach maximum speed.</summary>
+      <description>The speed of the minimize animation will progressively get faster as minimize-count approaches this value.</description>
+    </key>
+    <key type="b" name="double-click-activate">
+      <default>true</default>
+      <summary>Enable/Disable dash result double-click activation.</summary>
+      <description>This is used to enable/disable double-click result activation in the dash. Double-click to activate, single click preview</description>
     </key>
   </schema>
-  <schema path="/desktop/unity/launcher/" id="com.canonical.Unity.Launcher" gettext-domain="unity">
+  <schema path="/com/canonical/unity/launcher/" id="com.canonical.Unity.Launcher" gettext-domain="unity">
     <key type="as" name="favorites">
-      <default>[ 'ubiquity-gtkui.desktop', 'nautilus-home.desktop', 'firefox.desktop', 'libreoffice-writer.desktop', 'libreoffice-calc.desktop', 'libreoffice-impress.desktop', 'ubuntu-software-center.desktop', 'ubuntuone-installer.desktop', 'gnome-control-center.desktop' ]</default>
-      <summary>List of desktop file ids for favorites on the launcher.</summary>
-      <description>These applications are shown in the Launcher by default.</description>
+      <default>[ 'application://ubiquity.desktop', 'application://nautilus.desktop', 'application://firefox.desktop', 'application://libreoffice-writer.desktop', 'application://libreoffice-calc.desktop', 'application://libreoffice-impress.desktop', 'application://ubuntu-software-center.desktop', 'application://ubuntuone-installer.desktop', 'application://ubuntu-amazon-default.desktop', 'application://UbuntuOneMusiconeubuntucom.desktop', 'application://gnome-control-center.desktop', 'unity://running-apps', 'unity://expo-icon', 'unity://devices' ]</default>
+      <summary>List of items that should be shown by default in the launcher</summary>
+      <description>These items can be: application://desktop-id.desktop, device://uiid and unity://special-id (including: unity://running-apps (icons of running applications) unity://devices (icons of attached devices), unity://expo-icon (icon of the workspace switcher) and unity://desktop-icon (the show-desktop icon)); the order of this list determines the launcher item's position.</description>
     </key>
     <key type="s" name="favorite-migration">
       <default>''</default>
@@ -38,25 +59,18 @@
       <description>This is a detection key for the favorite migration script to know whether the needed migration is done or not.</description>
     </key>
   </schema>
-  <schema path="/desktop/unity/panel/" id="com.canonical.Unity.Panel" gettext-domain="unity">
-    <key type="as" name="systray-whitelist">
-      <default>[ 'JavaEmbeddedFrame', 'Wine', 'scp-dbus-service', 'Update-notifier' ]</default>
-      <summary>List of client names, resource classes or wm classes to allow in the Panel's systray implementation.</summary>
-      <description>"" (empty) will not allow any tray icons, "all" will allow all tray icons, otherwise there will be an attempt to match each icon to a value here.</description>
-    </key>
-  </schema>
-  <schema path="/desktop/unity/devices/" id="com.canonical.Unity.Devices" gettext-domain="unity">
-    <key type="as" name="favorites">
+  <schema path="/com/canonical/unity/devices/" id="com.canonical.Unity.Devices" gettext-domain="unity">
+    <key type="as" name="blacklist">
         <default>[]</default>
-        <summary>List of device uuid for favorites on the launcher.</summary>
-        <description>These devices are shown in the Launcher by default.</description>
+        <summary>List of device uuid blacklist from the launcher.</summary>
+        <description>These devices are not shown in the launcher by default.</description>
     </key>
   </schema>
-  <schema path="/desktop/unity/dash/" id="com.canonical.Unity.Dash" gettext-domain="unity">
-    <key type="as" name="home-lens-ordering">
-      <default>[ 'applications.lens', 'files.lens', 'music.lens' ]</default>
-      <summary>List of lens ids specifying how lenses should be ordered in the Dash home screen.</summary>
-      <description>The categories listed on the Dash home screen will be ordered according to this list. Lenses not appearing in this list will not have any particular ordering and will always sort after lenses specified in this list.</description>
+  <schema path="/com/canonical/unity/dash/" id="com.canonical.Unity.Dash" gettext-domain="unity">
+    <key type="as" name="scopes">
+      <default>[ 'home.scope', 'applications.scope', 'files.scope', 'video.scope', 'music.scope', 'photos.scope', 'social.scope' ]</default>
+      <summary>List of scope ids specifying which scopes should be created and the order to display them in.</summary>
+      <description>The scopes listed in the scope bar will be ordered according to this list.</description>
     </key>
   </schema>
 </schemalist>

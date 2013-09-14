@@ -22,9 +22,7 @@
 #include <Nux/Nux.h>
 #include <glib.h>
 #include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/weak_ptr.hpp>
+#include <memory>
 
 #include "unity-mt-grab-handle.h"
 
@@ -38,7 +36,7 @@ class GrabHandle::ImplFactory
 
     virtual ~ImplFactory() {};
 
-    static boost::shared_ptr <ImplFactory>
+    static std::shared_ptr <ImplFactory>
     Default();
 
     static void
@@ -48,7 +46,7 @@ class GrabHandle::ImplFactory
 
   protected:
 
-    static boost::shared_ptr <ImplFactory> mDefault;
+    static std::shared_ptr <ImplFactory> mDefault;
 
     ImplFactory() {};
 };

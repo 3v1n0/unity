@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# This script can be removed from the Unity source tree once people are happy
+# with the new setup.
+
+echo "Autopilot has moved! 
+
+Autopilot used to be part of the unity source tree. It's now it's own launchpad 
+project. Full instructions can be found in the tests/autopilot/README file.
+"
+
+
+
+
+
+	

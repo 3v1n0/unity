@@ -1,81 +1,313 @@
-Dash search
------------
-This test makes sure that the right command is run when you search
-using the dash. (see lp:856205)
+Dash Tests
+=============
 
-#. Press Alt+F2
-#. Press 'g'. Make sure you see some command name (like gcc)
-#. Quickly type 'edit<Enter>' - so you'd run 'gedit'.
+Super Tap Timing on Slow Systems
+Note: Should be automated
+--------------------------------
+This test verifies that tap duration thresholding (unique to Super and Alt)
+works on slow systems where previously it did not work reliably (LP: #953089).
+The problems with Super tap timing have only been observed on slow and/or
+heavily loaded systems, such as Atom-based netbooks.
 
-Outcome
-  The dash disappears, and gedit is run. If nothing happens or the first
-  command is run (in this case gcc), this test failed.
- 
+Setup:
+#. Start with a clean login.
+#. Load the CPU(s) by running one or more instances of this command in
+   a terminal window(s):   while true; do true; done
 
-Mouse down and search bar focus
--------------------------------
-This test makes sure that the search bar doesn't lose the focus clicking into
-am emtpy area (or into a filter button).
- 
-#. Open the app lens
-#. Expand the filter bar
-#. Make sure the dash has the focus
-#. The cursor should blink
-#. Click between a filter expander and the All Button (for example between Type > and All)
-   or into a filter button.
+Actions:
+#. Tap the Super key. Verify the Dash is shown.
+#. Tap the Super key again. Verify the Dash is hidden.
+#. Switch to a clear workspace (e.g. Super+Shift+Right).
+#. Tap the Super key again. Verify the Dash is shown again.
+#. Tap the Super key again. Verify the Dash is hidden again.
 
-Outcome
-The cursor is still blinking.
-  
+Expected Result:
+  The Dash should appear and disappear in response to each tap on the Super
+  key. Note that a tap is anything faster than 1/4 of a second. Any press
+  that lasts longer than that is not considered a tap.
 
-Category headers focus
-----------------------
-This test makes sure that clicking on a category headers doesn't focus it.
 
-#. Open the apps lens.
-#. Click on the dash search bar to make sure that the search bar has the focus.
-#. Click on a category header to expand/collapse a category
-
-Outcome
-  The category should expand/collaspe and the search bar still has the focus.
-  
-  
-Drag and drop dash icons
-----------------------------
-This test makes sure that.
-
-#. Open the apps lens.
-#. Drag a dash icon.
-#. Now drop it inside the dash but on another icon or on a blank space.
-
-Outcome
-  The dropped icon should not have the keyboard focus and should not remain
-  enlightened.
-
-Dash SearchBar middle-click
+Dash correct number of "see more" results with horizontal renderer
 ---------------------------
-This test shows how the middle click over the dash search bar should work
-(see lp:842462)
+This test ensures a correct number of "see more" results in the dash when using a horizontal renderer
+(see lp:934944)
 
-#. Open a text editor, and write some dummy text
-#. Select some text part of the written dummy text with mouse
-#. Press Super or Alt+F2 to open the Dash
-#. Move the mouse over the dash search bar
-#. Press middle click to paste the content of your primary clipboard
+Setup:
 
-Outcome
-  The text previously selected is pasted on the search bar at mouse pointer
-  position, if the operation is repeated the text is inserted where
-  the mouse pointer is.
+Actions:
+#. Open the dash, navigate to a lens that uses a horizontal renderer such as the gwibber lens or music lens
+#. Ensure that a category in the results has a "See X more results" label
+#. Expand category that has "See X more results" label
+#. Count the number of results
 
-Dash SearchBar IBus Focus
-------------------------------
-This test shows that the IBus is getting focus when it gets keyboard focus.
+Expected Result:
+  The number of results counted and the value for X in "See X more results" are the same.
 
+
+Dash Spinner
+------------
+This tests that the spinner is properly shown when searching with the Dash.
+
+Setup:
+
+Actions:
+#. Open the files lens (Super+A)
+#. Type an arbitrary search string
+
+Expected Result:
+  If the search is taking more than ~150ms, a spinner should be animating next
+  to the search bar, once the spinner stops spinning the results shouldn't
+  change.
+
+
+Dash no-results-hint
+--------------------
+This tests that the text displaying "Sorry nothing matches your search" is hidden when results are present (even in hard-to-automatically-test scenarios).
+
+Setup:
+
+Actions:
+#. Start guest session
+#. Open the Dash - there shouldn't be any results displayed, since this user
+   account didn't interact with anything yet
+#. Run an application not present in the launcher (for example gedit)
+#. Close previously opened application
+
+Expected Result:
+  When Dash is opened 'gedit' (or application you launched) should be
+  displayed in the "Recent Apps" category. You shouldn't see
+  "Sorry nothing matches your search" text.
+
+
+Dash category expand test
+--------------------------
+This tests whether the dash expands a certain search results category if it is the only one containing search results.
+https://bugs.launchpad.net/unity/+bug/950710
+
+Setup:
+
+Actions:
+ * Open the dash home view
+ * Search for something on your system that returns multiple results (more than the number that can fit in a row)
+   yet all results are in one category only. This differs per system; try searching for "gnome" in the home lens, or "kde"
+   in the app lens. 
+ * Multiple results should be returned in both the cases, but if searching for "gnome" on the home lens returns folders in addition to apps
+   or "kde" returns results from two categories in the apps lens, then keep experimenting with other search strings.
+ * When you have at least one situation in which results from only one category are returned, and the number of results are enough to overflow one single row,
+   the test is complete.
+
+Expected result:
+ * When a single row of results isn't enough to contain all returned search results, and there are no other category headers, the displayed category
+   header expands automatically
+
+
+Test the Panel does not lose track of when the Dash is opened then closed.
+--------------------------------------------------------------------------
+This tests shows the panel will not think the Dash is opened when it is closed.
+(see lp:1044086)
+
+Actions:
+#. Press Super twice (Quickly)
+
+Expected Result:
+  The screen should look the same as if you had never opened the dash.
+
+
+Test that when an on screen keyboard is used it will not close the Dash.
+------------------------------------------------------------------------
+This tests shows that an on screen keyboards will not close the dash when clicking on it.
+(see lp:1058705)
+
+Setup:
+#. Open the on screen keyboard Onboard.
+#. Move Onboard to the bottom right of the screen.
 #. Open the Dash
-#. Press Ctrl + Space to activate ibus
-#. Type "abc1"
+#. Ensure the Dash is not in fullscreen mode.
+#. Ensure that Onboard is outside of the Dash.
 
-Outcome
-  Typing "abc1" while ibus is focused will produce 阿布从 . If the ibus is not focused
-  then "abc1" will be the outcome (This is incorrect behavior).
+Actions:
+#. Use Onboard to type "Hello" in the Dash.
+
+Expected Results:
+  The Dash should stay open, and allow use of the on screen keyboard.
+
+
+Filter Results Tests
+========================
+These tests show that the dash "All" button works well.
+
+
+Test "All" Button 1
+Note: Should be automated
+-------------------
+
+Setup:
+
+Actions:
+#. Open app lens, and the "Filter results" sidebar
+
+Expected Result:
+  "All" should be selected by default in every filter category.
+
+Test "All" Button 2
+Note: Should be automated
+-------------------
+
+Setup:
+#. Open app lens, and the "Filter results" sidebar
+#. Make sure the "All" button is selected.
+
+Actions:
+#. Try to activate it.
+
+Expected Result:
+  Click on it should do nothing.
+
+
+Test "All" Button 3
+Note: Should be automated
+-------------------
+
+Setup:
+#. Open app lens, and the "Filter results" sidebar
+#. Make sure the "All" button is selected.
+
+Actions:
+#. Select another item in the filter category.
+
+Expected Result:
+  The all button should automatically toggle to the un-selected state.
+
+Test "All" Button 4
+Note: Should be automated
+-------------------
+
+Setup:
+#. Open app lens, and the "Filter results" sidebar
+#. Make sure the one or more items is selected in a filter category.
+
+Actions:
+#. Deselect all selected items.
+
+Expected Result:
+  The all button should automatically toggle to the selected state.
+
+Test Expand/Collapse Filters
+-------------------------------
+This test shows that the expand/collapse arrow of a filter category
+header works well.
+
+Setup:
+#. Open the app lens.
+#. If necessary, show the results filter sidebar.
+#. Make sure that a collapse arrow is shown adjacent to every
+   filter category header.
+
+Actions:
+#. Click on a category header arrow.
+#. Click on the arrow (again).
+
+Expected Result:
+  When clicking for the first time the filter category should collapse.
+  When clicking for the second time the filter category should expand.
+
+
+Drag and drop tests
+====================
+
+Launcher drop target saturation test
+---------------------------------------
+
+Setup:
+# open the files lens
+
+Actions:
+# select and drag a document-file (e.g. text or image) to the launcher
+
+Expected Result:
+  As you drag the document-file watch the drag-targets (drop-recepticals) saturate.
+  this saturation-process should be smooth and without flicker.
+  The tinting of the non-drag-targets should not change.
+
+
+Dash to Launcher document-file drag
+-----------------------------------
+
+Setup:
+#. Open the Dash (Super).
+#. Go to the Music Lens.
+
+Actions:
+#. Drag any music file into the Firefox icon on the launcher.
+
+Expected Result:
+  The Dash should close and the music file should open up in Firefox.
+
+
+DnD stacking
+------------
+
+Setup:
+#. Open the Dash (Super).
+
+Actions:
+#. Drag any icon from the dash and wave it over the dash and launcher area.
+
+Expected Result:
+  The icon being dragged is drawn on top of the dash and launcher. Never
+  below it.
+
+
+Lens Tests
+============
+
+Restarting of crashed lenses
+----------------------------
+This test makes sure that if a lens crashes, searching in the dash
+automatically restarts it.
+
+Setup:
+#. Open a terminal
+#. Make sure there are some results in the apps lens
+
+Actions:
+#. Kill the applications lens daemon in the terminal
+   `killall /usr/lib/unity-lens-applications/unity-applications-daemon`
+#. Open the dash and search for something (for example "gedit")
+
+Expected Result:
+  Applications lens should automatically restart and gedit should be visible
+  in the results.
+
+
+Lazy start lenses test
+Regression testcase for https://bugs.launchpad.net/unity/+bug/929506
+Note: Should be automated
+----------------------------------------------------
+
+Setup:
+#. Restart your computer to get a clean unity instance
+
+Actions:
+1. Login to your Unity-3D shell but don't start or do anything (e.g. don't
+press the super key and/or show the dash)
+2. Verify the lensees are not running using the following command:
+$ ps axf|grep [u]nity-lens
+Output of this command should be empty
+3. invoke dash (e.g. by pressing the Super key)
+4. Verify the lenses were started by using the following command:
+$ ps axf|grep [u]nity-lens
+
+Expected Result:
+  Step #2 should produce an empty output.
+  Step #4 should produce something like this:
+  $ ps axf|grep [u]nity-lens
+    2754 ?        Sl     0:00 /usr/lib/unity-lens-applications/unity-applications-daemon
+    2756 ?        Sl     0:00 /usr/lib/unity-lens-files/unity-files-daemon
+    2758 ?        Sl     0:00 /usr/lib/unity-lens-music/unity-music-daemon
+    2760 ?        Sl     0:00 /usr/bin/python /usr/lib/unity-lens-video/unity-lens-video
+    2816 ?        Sl     0:00 /usr/lib/unity-lens-music/unity-musicstore-daemon
+    
+Wrong Result:
+  #2 and #4 both produce non-empty result which means the lenses were not
+  lazy-loaded but they were running before the first dash use.

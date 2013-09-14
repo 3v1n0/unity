@@ -33,29 +33,26 @@ namespace indicator
 class DBusIndicators : public Indicators
 {
 public:
-  typedef boost::shared_ptr<DBusIndicators> Ptr;
+  typedef std::shared_ptr<DBusIndicators> Ptr;
 
   DBusIndicators();
   ~DBusIndicators();
 
-  void SyncGeometries(std::string const& name,
-                      EntryLocationMap const& locations);
+  void SyncGeometries(std::string const& name, EntryLocationMap const& locations);
 
   virtual void OnEntryScroll(std::string const& entry_id, int delta);
-  virtual void OnEntryShowMenu(std::string const& entry_id,
-                               int x, int y, int timestamp, int button);
-  virtual void OnEntrySecondaryActivate(std::string const& entry_id,
-                                        unsigned int timestamp);
+  virtual void OnEntryShowMenu(std::string const& entry_id, unsigned int xid,
+                               int x, int y, unsigned int button);
+  virtual void OnEntrySecondaryActivate(std::string const& entry_id);
+  virtual void OnShowAppMenu(unsigned int xid, int x, int y);
 
-  std::string name() const;
-  std::string owner_name() const;
-  bool using_local_service() const;
+protected:
+  DBusIndicators(std::string const& dbus_name);
+  bool IsConnected() const;
 
-  // Due to the callback nature, the Impl class must be declared public, but
-  // it is not available to anyone except the internal implementation.
-  class Impl;
 private:
-  Impl* pimpl;
+  class Impl;
+  std::unique_ptr<Impl> pimpl;
 };
 
 }

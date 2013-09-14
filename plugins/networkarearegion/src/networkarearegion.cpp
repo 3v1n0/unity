@@ -64,6 +64,7 @@ void
 UnityNETWorkareaRegionScreen::outputChangeNotify()
 {
   setProperty();
+  screen->outputChangeNotify ();
 }
 
 void
@@ -105,7 +106,7 @@ UnityNETWorkareaRegionWindow::moveNotify(int dx, int dy, bool immediate)
 }
 
 void
-UnityNETWorkareaRegionWindow::resizeNotify(int dx, int dy, unsigned int dwidth, unsigned int dheight)
+UnityNETWorkareaRegionWindow::resizeNotify(int dx, int dy, int dwidth, int dheight)
 {
   UnityNETWorkareaRegionScreen::get(screen)->setProperty();
   window->resizeNotify(dx, dy, dwidth, dheight);
