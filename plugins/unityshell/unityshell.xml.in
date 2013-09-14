@@ -71,25 +71,25 @@
                 <option name="window_maximize" type="key">
                     <_short>Key to maximize the focused window</_short>
                     <_long>Maximize the focused window</_long>
-                    <default>&lt;Super&gt;Up</default>
+                    <default>&lt;Control&gt;&lt;Super&gt;Up</default>
                 </option>
 
                 <option name="window_restore_minimize" type="key">
                     <_short>Key to restore or minimize the focused window</_short>
                     <_long>Restore the maximized window on focus or minimize the focused window</_long>
-                    <default>&lt;Super&gt;Down</default>
+                    <default>&lt;Control&gt;&lt;Super&gt;Down</default>
                 </option>
 
                 <option name="window_right_maximize" type="key">
                     <_short>Key to vertically maximize the focused window to the right</_short>
                     <_long>Semi-maximize vertically the focused window on the half right width of the screen</_long>
-                    <default>&lt;Super&gt;Right</default>
+                    <default>&lt;Control&gt;&lt;Super&gt;Right</default>
                 </option>
 
                 <option name="window_left_maximize" type="key">
                     <_short>Key to vertically maximize the focused window to the left</_short>
                     <_long>Semi-maximize vertically the focused window to the half left width of the screen</_long>
-                    <default>&lt;Super&gt;Left</default>
+                    <default>&lt;Control&gt;&lt;Super&gt;Left</default>
                 </option>
 
                 <option name="panel_opacity" type="float">
