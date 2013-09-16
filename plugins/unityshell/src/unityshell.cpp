@@ -1334,21 +1334,22 @@ void UnityScreen::donePaint()
   if (animation_controller_->HasRunningAnimations())
     nuxDamageCompiz();
 
-  std::list <ShowdesktopHandlerWindowInterface *> remove_windows;
-
-  for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
+  for (auto it = ShowdesktopHandler::animating_windows.begin(); it != ShowdesktopHandler::animating_windows.end();)
   {
-    ShowdesktopHandlerWindowInterface::PostPaintAction action = wi->HandleAnimations (0);
+    auto const& wi = *it;
+    auto action = wi->HandleAnimations(0);
+
     if (action == ShowdesktopHandlerWindowInterface::PostPaintAction::Remove)
-      remove_windows.push_back(wi);
+    {
+      it = ShowdesktopHandler::animating_windows.erase(it);
+      continue;
+    }
     else if (action == ShowdesktopHandlerWindowInterface::PostPaintAction::Damage)
+    {
       wi->AddDamage ();
-  }
+    }
 
-  for (ShowdesktopHandlerWindowInterface *wi : remove_windows)
-  {
-    wi->DeleteHandler ();
-    ShowdesktopHandler::animating_windows.remove (wi);
+    ++it;
   }
 
   cScreen->donePaint ();
