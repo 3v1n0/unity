@@ -54,7 +54,13 @@ class WindowManagerKeybindings(UnityTestCase):
         self.assertThat(self.screen_win.maximized, Eventually(Equals(False)))
         self.assertThat(self.screen_win.minimized, Eventually(Equals(False)))
 
-    def test_minimize_window(self):
+    def test_restore_vertically_maximized_window(self):
+        self.keyboard.press_and_release("Ctrl+Super+Right")
+        self.keybinding("window/restore")
+        self.assertThat(self.screen_win.vertically_maximized, Eventually(Equals(False)))
+        self.assertThat(self.screen_win.minimized, Eventually(Equals(False)))
+
+    def test_minimize_restored_window(self):
         self.keybinding("window/restore")
         self.assertThat(self.screen_win.minimized, Eventually(Equals(True)))
 
@@ -81,4 +87,3 @@ class WindowManagerKeybindings(UnityTestCase):
         self.assertThat(self.screen_win.y, Eventually(Equals(workarea_geo[1])))
         self.assertThat(self.screen_win.width, Eventually(Equals(workarea_geo[2]/2)))
         self.assertThat(self.screen_win.height, Eventually(Equals(workarea_geo[3])))
-
