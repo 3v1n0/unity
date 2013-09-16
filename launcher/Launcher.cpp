@@ -1438,30 +1438,34 @@ bool Launcher::MouseOverBottomScrollArea()
 bool Launcher::OnScrollTimeout()
 {
   bool continue_animation = true;
-  int speed = 0;
 
-  if (IsInKeyNavMode() || !hovered_ ||
-      GetActionState() == ACTION_DRAG_LAUNCHER)
+  if (IsInKeyNavMode() || !hovered_ || GetActionState() == ACTION_DRAG_LAUNCHER)
   {
     continue_animation = false;
   }
   else if (MouseOverTopScrollArea())
   {
     if (launcher_drag_delta_ >= launcher_drag_delta_max_)
+    {
       continue_animation = false;
+    }
     else
     {
-      speed = (SCROLL_AREA_HEIGHT - mouse_position_.y) / SCROLL_AREA_HEIGHT * SCROLL_FPS;
+      int mouse_distance = (SCROLL_AREA_HEIGHT - mouse_position_.y);
+      int speed = static_cast<float>(mouse_distance) / SCROLL_AREA_HEIGHT * SCROLL_FPS;
       launcher_drag_delta_ += speed;
     }
   }
   else if (MouseOverBottomScrollArea())
   {
     if (launcher_drag_delta_ <= launcher_drag_delta_min_)
+    {
       continue_animation = false;
+    }
     else
     {
-      speed = ((mouse_position_.y + 1) - (GetGeometry().height - SCROLL_AREA_HEIGHT)) / SCROLL_AREA_HEIGHT * SCROLL_FPS;
+      int mouse_distance = (mouse_position_.y + 1) - (GetGeometry().height - SCROLL_AREA_HEIGHT);
+      int speed = static_cast<float>(mouse_distance) / SCROLL_AREA_HEIGHT * SCROLL_FPS;
       launcher_drag_delta_ -= speed;
     }
   }
