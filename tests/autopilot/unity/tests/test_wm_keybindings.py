@@ -15,6 +15,9 @@ from unity.tests import UnityTestCase
 class WindowManagerKeybindings(UnityTestCase):
     """Window Manager keybindings tests"""
 
+    scenarios = [('Restored Window', {'start_restored': True}),
+                 ('Maximized Window', {'start_restored': False})]
+
     def setUp(self):
         super(WindowManagerKeybindings, self).setUp()
         self.start_test_window()
@@ -23,16 +26,26 @@ class WindowManagerKeybindings(UnityTestCase):
         if not self.screen_win.minimized:
             self.keybinding(keybinding)
 
+    def keybinding_if_not_restored(self, keybinding):
+        if self.screen_win.vertically_maximized or self.screen_win.horizontally_maximized:
+            self.keybinding(keybinding)
+
     def start_test_window(self, app_name="Character Map"):
-        """Start a restored window of the requested application"""
+        """Start a restored/maximized window of the requested application"""
         self.process_manager.close_all_app(app_name)
         self.bamf_win = self.process_manager.start_app_window(app_name)
         win_fn = lambda: self.unity.screen.window(self.bamf_win.x_id)
         self.assertThat(win_fn, Eventually(NotEquals(None)))
         self.screen_win = win_fn()
-        if self.screen_win.vertically_maximized or self.screen_win.horizontally_maximized:
-            self.addCleanup(self.keybinding_if_not_minimized, "window/maximize")
-            self.keybinding("window/restore")
+
+        if self.start_restored:
+            if self.screen_win.vertically_maximized or self.screen_win.horizontally_maximized:
+                self.addCleanup(self.keybinding_if_not_minimized, "window/maximize")
+                self.keybinding("window/restore")
+        else:
+            if not self.screen_win.vertically_maximized and not self.screen_win.horizontally_maximized:
+                self.addCleanup(self.keybinding_if_not_restored, "window/restore")
+                self.keybinding("window/maximize")
 
     def get_window_workarea(self):
         monitor = self.bamf_win.monitor
@@ -44,28 +57,36 @@ class WindowManagerKeybindings(UnityTestCase):
                 monitor_geo[2] - launcher_w, monitor_geo[3] - panel_h)
 
     def test_maximize_window(self):
-        self.addCleanup(self.keybinding, "window/restore")
+        if self.start_restored:
+            self.addCleanup(self.keybinding, "window/restore")
         self.keybinding("window/maximize")
         self.assertThat(self.screen_win.maximized, Eventually(Equals(True)))
 
     def test_restore_maximized_window(self):
-        self.keybinding("window/maximize")
+        if self.start_restored:
+            self.keybinding("window/maximize")
         self.keybinding("window/restore")
         self.assertThat(self.screen_win.maximized, Eventually(Equals(False)))
         self.assertThat(self.screen_win.minimized, Eventually(Equals(False)))
 
     def test_restore_vertically_maximized_window(self):
+        if not self.start_restored:
+            self.addCleanup(self.keybinding, "window/maximize")
+            self.keybinding("window/restore")
         self.keyboard.press_and_release("Ctrl+Super+Right")
         self.keybinding("window/restore")
         self.assertThat(self.screen_win.vertically_maximized, Eventually(Equals(False)))
         self.assertThat(self.screen_win.minimized, Eventually(Equals(False)))
 
     def test_minimize_restored_window(self):
+        if not self.start_restored:
+            self.addCleanup(self.keybinding_if_not_minimized, "window/maximize")
+            self.keybinding("window/restore")
         self.keybinding("window/restore")
         self.assertThat(self.screen_win.minimized, Eventually(Equals(True)))
 
     def test_left_maximize(self):
-        self.addCleanup(self.keybinding, "window/restore")
+        self.addCleanup(self.keybinding, "window/restore" if self.start_restored else "window/maximize")
         self.keyboard.press_and_release("Ctrl+Super+Left")
         self.assertThat(self.screen_win.vertically_maximized, Eventually(Equals(True)))
         self.assertThat(self.screen_win.horizontally_maximized, Eventually(Equals(False)))
@@ -77,7 +98,7 @@ class WindowManagerKeybindings(UnityTestCase):
         self.assertThat(self.screen_win.height, Eventually(Equals(workarea_geo[3])))
 
     def test_right_maximize(self):
-        self.addCleanup(self.keybinding, "window/restore")
+        self.addCleanup(self.keybinding, "window/restore" if self.start_restored else "window/maximize")
         self.keyboard.press_and_release("Ctrl+Super+Right")
         self.assertThat(self.screen_win.vertically_maximized, Eventually(Equals(True)))
         self.assertThat(self.screen_win.horizontally_maximized, Eventually(Equals(False)))
