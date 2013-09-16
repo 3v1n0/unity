@@ -34,12 +34,22 @@ class WindowManagerKeybindings(UnityTestCase):
             self.addCleanup(self.keybinding_if_not_minimized, "window/maximize")
             self.keybinding("window/restore")
 
+    def get_window_workarea(self):
+        monitor = self.bamf_win.monitor
+        monitor_geo = self.display.get_screen_geometry(monitor)
+        launcher = self.unity.launcher.get_launcher_for_monitor(monitor)
+        launcher_w = 0 if launcher.hidemode else launcher.geometry[2]
+        panel_h = self.unity.panels.get_panel_for_monitor(monitor).geometry[3]
+        return (monitor_geo[0] + launcher_w, monitor_geo[1] + panel_h,
+                monitor_geo[2] - launcher_w, monitor_geo[3] - panel_h)
+
     def test_maximize_window(self):
         self.addCleanup(self.keybinding, "window/restore")
         self.keybinding("window/maximize")
         self.assertThat(self.screen_win.maximized, Eventually(Equals(True)))
 
-    def test_restore_window(self):
+    def test_restore_maximized_window(self):
+        self.keybinding("window/maximize")
         self.keybinding("window/restore")
         self.assertThat(self.screen_win.maximized, Eventually(Equals(False)))
         self.assertThat(self.screen_win.minimized, Eventually(Equals(False)))
@@ -53,4 +63,22 @@ class WindowManagerKeybindings(UnityTestCase):
         self.keyboard.press_and_release("Ctrl+Super+Left")
         self.assertThat(self.screen_win.vertically_maximized, Eventually(Equals(True)))
         self.assertThat(self.screen_win.horizontally_maximized, Eventually(Equals(False)))
+
+        workarea_geo = self.get_window_workarea()
+        self.assertThat(self.screen_win.x, Eventually(Equals(workarea_geo[0])))
+        self.assertThat(self.screen_win.y, Eventually(Equals(workarea_geo[1])))
+        self.assertThat(self.screen_win.width, Eventually(Equals(workarea_geo[2]/2)))
+        self.assertThat(self.screen_win.height, Eventually(Equals(workarea_geo[3])))
+
+    def test_right_maximize(self):
+        self.addCleanup(self.keybinding, "window/restore")
+        self.keyboard.press_and_release("Ctrl+Super+Right")
+        self.assertThat(self.screen_win.vertically_maximized, Eventually(Equals(True)))
+        self.assertThat(self.screen_win.horizontally_maximized, Eventually(Equals(False)))
+
+        workarea_geo = self.get_window_workarea()
+        self.assertThat(self.screen_win.x, Eventually(Equals(workarea_geo[0]+workarea_geo[2]/2)))
+        self.assertThat(self.screen_win.y, Eventually(Equals(workarea_geo[1])))
+        self.assertThat(self.screen_win.width, Eventually(Equals(workarea_geo[2]/2)))
+        self.assertThat(self.screen_win.height, Eventually(Equals(workarea_geo[3])))
 
