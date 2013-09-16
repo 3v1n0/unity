@@ -349,8 +349,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetLauncherSwitcherPrevInitiate(boost::bind(&UnityScreen::launcherSwitcherPrevInitiate, this, _1, _2, _3));
      optionSetLauncherSwitcherForwardTerminate(boost::bind(&UnityScreen::launcherSwitcherTerminate, this, _1, _2, _3));
 
-     optionSetWindowMaximizeInitiate(boost::bind(&UnityScreen::maximizeKeyInitate, this, _1, _2, _3));
-     optionSetWindowRestoreMinimizeInitiate(boost::bind(&UnityScreen::restoreMinimizeKeyInitiate, this, _1, _2, _3));
      optionSetWindowRightMaximizeInitiate(boost::bind(&UnityScreen::rightMaximizeKeyInitiate, this, _1, _2, _3));
      optionSetWindowLeftMaximizeInitiate(boost::bind(&UnityScreen::leftMaximizeKeyInitiate, this, _1, _2, _3));
 
@@ -2168,31 +2166,6 @@ bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::Stat
   screen->removeAction(&up_action);
 
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
-  return true;
-}
-
-bool UnityScreen::maximizeKeyInitate(CompAction* action, CompAction::State state, CompOption::Vector& options)
-{
-  auto& WM = WindowManager::Default();
-  WM.Maximize(WM.GetActiveWindow());
-  return true;
-}
-
-bool UnityScreen::restoreMinimizeKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
-{
-  auto& WM = WindowManager::Default();
-  Window focused_win = WM.GetActiveWindow();
-
-  if (WM.IsWindowVerticallyMaximized(focused_win) ||
-      WM.IsWindowHorizontallyMaximized(focused_win))
-  {
-    WM.Restore(focused_win);
-  }
-  else
-  {
-    WM.Minimize(focused_win);
-  }
-
   return true;
 }
 
