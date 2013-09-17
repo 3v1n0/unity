@@ -22,6 +22,7 @@
 #include <boost/algorithm/string.hpp>
 #include <NuxCore/Logger.h>
 #include <NuxCore/LoggingWriter.h>
+#include <UnityCore/Variant.h>
 #include <xpathselect/xpathselect.h>
 #include <dlfcn.h>
 
@@ -89,12 +90,7 @@ namespace local
     bool MatchProperty(std::string const& name, std::string const& value) const
     {
       bool matches = false;
-      GVariantBuilder child_builder;
-      g_variant_builder_init(&child_builder, G_VARIANT_TYPE("a{sv}"));
-      g_variant_builder_add(&child_builder, "{sv}", "id", g_variant_new_uint64(node_->GetIntrospectionId()));
-      node_->AddProperties(&child_builder);
-      GVariant* prop_dict = g_variant_builder_end(&child_builder);
-      GVariant* prop_value = g_variant_lookup_value(prop_dict, name.c_str(), nullptr);
+      auto const& prop_value = GetPropertyValue(name);
 
       if (prop_value)
       {
@@ -189,9 +185,19 @@ namespace local
           LOG_WARNING(logger) << "Unable to match against property of unknown type.";
         };
       }
-      g_variant_unref(prop_value);
-      g_variant_unref(prop_dict);
+
       return matches;
+    }
+
+    glib::Variant GetPropertyValue(std::string const& name) const
+    {
+      GVariantBuilder child_builder;
+      g_variant_builder_init(&child_builder, G_VARIANT_TYPE("a{sv}"));
+      // This is probably not needed anymore...
+      g_variant_builder_add(&child_builder, "{sv}", "id", g_variant_new_uint64(node_->GetIntrospectionId()));
+      node_->AddProperties(&child_builder);
+      glib::Variant prop_dict(g_variant_builder_end(&child_builder));
+      return glib::Variant(g_variant_lookup_value(prop_dict, name.c_str(), nullptr));
     }
 
     std::vector<xpathselect::Node::Ptr> Children() const
@@ -259,10 +265,8 @@ bool TryLoadXPathImplementation();
 GVariant* GetState(std::string const& query);
 void StartLogToFile(std::string const& file_path);
 void ResetLogging();
-void SetLogSeverity(std::string const& log_component,
-  std::string const& severity);
-void LogMessage(std::string const& severity,
-  std::string const& message);
+void SetLogSeverity(std::string const& log_component, std::string const& severity);
+void LogMessage(std::string const& severity, std::string const& message);
 
 namespace dbus
 {
@@ -371,7 +375,7 @@ GVariant* DebugDBusInterface::HandleDBusMethodCall(std::string const& method, GV
 
 GVariant* GetState(std::string const& query)
 {
-  GVariantBuilder  builder;
+  GVariantBuilder builder;
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a(sv)"));
 
   auto root_node = std::make_shared<local::IntrospectableAdapter>(_parent_introspectable);
