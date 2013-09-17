@@ -72,121 +72,73 @@ namespace local
       return parent_;
     }
 
+    bool MatchStringProperty(std::string const& name, std::string const& value) const
+    {
+      auto const& prop_value = GetPropertyValue(name);
+
+      if (prop_value)
+      {
+        if (!g_variant_is_of_type(prop_value, G_VARIANT_TYPE_STRING))
+        {
+          LOG_WARNING(logger) << "Unable to match '"<< name << "', it's not a string property.";
+          return false;
+        }
+
+        return (prop_value.GetString() == value);
+      }
+
+      return false;
+    }
+
     bool MatchBooleanProperty(std::string const& name, bool value) const
     {
-      return MatchProperty(name, value ? "TRUE" : "FALSE");
+      auto const& prop_value = GetPropertyValue(name);
+
+      if (prop_value)
+      {
+        if (!g_variant_is_of_type(prop_value, G_VARIANT_TYPE_BOOLEAN))
+        {
+          LOG_WARNING(logger) << "Unable to match '"<< name << "', it's not a boolean property.";
+          return false;
+        }
+
+        return (prop_value.GetBool() == value);
+      }
+
+      return false;
     }
 
     bool MatchIntegerProperty(std::string const& name, int32_t value) const
     {
-      return MatchProperty(name, std::to_string(value));
-    }
-
-    bool MatchStringProperty(std::string const& name, std::string const& value) const
-    {
-      return MatchStringProperty(name, value);
-    }
-
-    bool MatchProperty(std::string const& name, std::string const& value) const
-    {
-      bool matches = false;
       auto const& prop_value = GetPropertyValue(name);
 
       if (prop_value)
       {
         GVariantClass prop_val_type = g_variant_classify(prop_value);
-        // it'd be nice to be able to do all this with one method. However, the booleans need
-        // special treatment, and I can't figure out how to group all the integer types together
-        // without resorting to template functions.... and we all know what happens when you
-        // start doing that...
+        // it'd be nice to be able to do all this with one method.
+        // I can't figure out how to group all the integer types together
         switch (prop_val_type)
         {
-          case G_VARIANT_CLASS_STRING:
-          {
-            const gchar* prop_val = g_variant_get_string(prop_value, NULL);
-            if (g_strcmp0(prop_val, value.c_str()) == 0)
-            {
-              matches = true;
-            }
-          }
-          break;
-          case G_VARIANT_CLASS_BOOLEAN:
-          {
-            std::string value = boost::to_upper_copy(value);
-            bool p = value == "TRUE" || value == "ON" || value == "YES" || value == "1";
-            matches = (g_variant_get_boolean(prop_value) == p);
-          }
-          break;
           case G_VARIANT_CLASS_BYTE:
-          {
-            // It would be nice if I could do all the integer types together, but I couldn't see how...
-            std::stringstream stream(value);
-            int val; // changing this to guchar causes problems.
-            stream >> val;
-            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
-                      val == g_variant_get_byte(prop_value);
-          }
-          break;
+            return value == g_variant_get_byte(prop_value);
           case G_VARIANT_CLASS_INT16:
-          {
-            std::stringstream stream(value);
-            gint16 val;
-            stream >> val;
-            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
-                      val == g_variant_get_int16(prop_value);
-          }
-          break;
+            return value == g_variant_get_int16(prop_value);
           case G_VARIANT_CLASS_UINT16:
-          {
-            std::stringstream stream(value);
-            guint16 val;
-            stream >> val;
-            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
-                      val == g_variant_get_uint16(prop_value);
-          }
-          break;
+            return static_cast<uint16_t>(value) == g_variant_get_uint16(prop_value);
           case G_VARIANT_CLASS_INT32:
-          {
-            std::stringstream stream(value);
-            gint32 val;
-            stream >> val;
-            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
-                      val == g_variant_get_int32(prop_value);
-          }
-          break;
+            return value == prop_value.GetInt32();
           case G_VARIANT_CLASS_UINT32:
-          {
-            std::stringstream stream(value);
-            guint32 val;
-            stream >> val;
-            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
-                      val == g_variant_get_uint32(prop_value);
-          }
-          break;
+            return static_cast<uint32_t>(value) == prop_value.GetUInt32();
           case G_VARIANT_CLASS_INT64:
-          {
-            std::stringstream stream(value);
-            gint64 val;
-            stream >> val;
-            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
-                      val == g_variant_get_int64(prop_value);
-          }
-          break;
+            return value == prop_value.GetInt64();
           case G_VARIANT_CLASS_UINT64:
-          {
-            std::stringstream stream(value);
-            guint64 val;
-            stream >> val;
-            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
-                      val == g_variant_get_uint64(prop_value);
-          }
-          break;
+            return static_cast<uint64_t>(value) == prop_value.GetUInt64();
         default:
-          LOG_WARNING(logger) << "Unable to match against property of unknown type.";
+          LOG_WARNING(logger) << "Unable to match '"<< name << "' against property of unknown integer type.";
         };
       }
 
-      return matches;
+      return false;
     }
 
     glib::Variant GetPropertyValue(std::string const& name) const
