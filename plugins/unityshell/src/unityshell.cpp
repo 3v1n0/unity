@@ -2998,10 +2998,10 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
 
   for (auto const& launcher : launchers)
   {
-    nux::Geometry geo = launcher->GetAbsoluteGeometry();
-
     if (launcher->options()->hide_mode == LAUNCHER_HIDE_AUTOHIDE && launcher->Hidden())
       continue;
+
+    auto const& geo = launcher->GetAbsoluteGeometry();
 
     if (geo.IsInside(result))
     {
