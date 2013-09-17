@@ -34,8 +34,8 @@ namespace unity
 namespace debug
 {
 DECLARE_LOGGER(logger, "unity.debug.interface");
-// namespace
-// {
+namespace
+{
 namespace local
 {
   std::ofstream output_file;
@@ -53,7 +53,7 @@ namespace local
 
     int32_t GetId() const
     {
-      return GPOINTER_TO_INT(node_);
+      return node_->GetIntrospectionId();
     }
 
     std::string GetName() const
@@ -71,34 +71,32 @@ namespace local
       return parent_;
     }
 
-    virtual bool MatchBooleanProperty(const std::string& name, bool value) const
+    bool MatchBooleanProperty(std::string const& name, bool value) const
     {
-      return false;
+      return MatchProperty(name, value ? "TRUE" : "FALSE");
     }
 
-    virtual bool MatchIntegerProperty(const std::string& name, int32_t value) const
+    bool MatchIntegerProperty(std::string const& name, int32_t value) const
     {
-      return false;
+      return MatchProperty(name, std::to_string(value));
     }
 
-    virtual bool MatchStringProperty(const std::string& name, const std::string& value) const
+    bool MatchStringProperty(std::string const& name, std::string const& value) const
     {
-      return false;
+      return MatchStringProperty(name, value);
     }
 
-
-    bool MatchProperty(const std::string& name, const std::string& value) const
+    bool MatchProperty(std::string const& name, std::string const& value) const
     {
       bool matches = false;
-
-      GVariantBuilder  child_builder;
+      GVariantBuilder child_builder;
       g_variant_builder_init(&child_builder, G_VARIANT_TYPE("a{sv}"));
       g_variant_builder_add(&child_builder, "{sv}", "id", g_variant_new_uint64(node_->GetIntrospectionId()));
       node_->AddProperties(&child_builder);
       GVariant* prop_dict = g_variant_builder_end(&child_builder);
-      GVariant* prop_value = g_variant_lookup_value(prop_dict, name.c_str(), NULL);
+      GVariant* prop_value = g_variant_lookup_value(prop_dict, name.c_str(), nullptr);
 
-      if (prop_value != NULL)
+      if (prop_value)
       {
         GVariantClass prop_val_type = g_variant_classify(prop_value);
         // it'd be nice to be able to do all this with one method. However, the booleans need
@@ -200,6 +198,7 @@ namespace local
     {
       std::vector<xpathselect::Node::Ptr> children;
       auto const& this_ptr = std::const_pointer_cast<IntrospectableAdapter>(shared_from_this());
+
       for(auto const& child: node_->GetIntrospectableChildren())
         children.push_back(std::make_shared<IntrospectableAdapter>(child, this_ptr));
 
@@ -253,7 +252,7 @@ namespace local
       dlclose(xpathselect_driver_);
   }
 
-// }
+}
 }
 
 bool TryLoadXPathImplementation();
