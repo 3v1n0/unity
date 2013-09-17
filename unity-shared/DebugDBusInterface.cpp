@@ -47,7 +47,7 @@ namespace local
   class IntrospectableAdapter : public std::enable_shared_from_this<IntrospectableAdapter>, public xpathselect::Node
   {
   public:
-    typedef std::shared_ptr<IntrospectableAdapter> Ptr;
+    typedef std::shared_ptr<IntrospectableAdapter const> Ptr;
     IntrospectableAdapter(Introspectable* node, IntrospectableAdapter::Ptr const& parent = nullptr)
       : node_(node)
       , parent_(parent)
@@ -157,7 +157,7 @@ namespace local
     std::vector<xpathselect::Node::Ptr> Children() const
     {
       std::vector<xpathselect::Node::Ptr> children;
-      auto const& this_ptr = std::const_pointer_cast<IntrospectableAdapter>(shared_from_this());
+      auto const& this_ptr = shared_from_this();
 
       for(auto const& child: node_->GetIntrospectableChildren())
         children.push_back(std::make_shared<IntrospectableAdapter>(child, this_ptr));
