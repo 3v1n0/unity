@@ -1337,24 +1337,37 @@ void UnityScreen::donePaint()
   if (animation_controller_->HasRunningAnimations())
     nuxDamageCompiz();
 
-  std::list <ShowdesktopHandlerWindowInterface *> remove_windows;
-
-  for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
+  for (auto it = ShowdesktopHandler::animating_windows.begin(); it != ShowdesktopHandler::animating_windows.end();)
   {
-    ShowdesktopHandlerWindowInterface::PostPaintAction action = wi->HandleAnimations (0);
+    auto const& wi = *it;
+    auto action = wi->HandleAnimations(0);
+
     if (action == ShowdesktopHandlerWindowInterface::PostPaintAction::Remove)
-      remove_windows.push_back(wi);
+    {
+      it = ShowdesktopHandler::animating_windows.erase(it);
+      continue;
+    }
     else if (action == ShowdesktopHandlerWindowInterface::PostPaintAction::Damage)
+    {
       wi->AddDamage ();
-  }
+    }
 
-  for (ShowdesktopHandlerWindowInterface *wi : remove_windows)
-  {
-    wi->DeleteHandler ();
-    ShowdesktopHandler::animating_windows.remove (wi);
+    ++it;
   }
 
   cScreen->donePaint ();
+}
+
+void redraw_view_if_damaged(nux::ObjectPtr<nux::View> const& view, CompRegion const& damage)
+{
+  if (!view || view->IsRedrawNeeded())
+    return;
+
+  auto const& geo = view->GetAbsoluteGeometry();
+  CompRegion region(geo.x, geo.y, geo.width, geo.height);
+
+  if (damage.intersects(region))
+    view->NeedSoftRedraw();
 }
 
 void UnityScreen::compizDamageNux(CompRegion const& damage)
@@ -1381,79 +1394,28 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
     }
   }
 
+  if (dash_controller_->IsVisible())
+    redraw_view_if_damaged(dash_controller_->Dash(), damage);
+
   auto const& launchers = launcher_controller_->launchers();
   for (auto const& launcher : launchers)
   {
     if (!launcher->Hidden())
     {
-      nux::Geometry const& geo = launcher->GetAbsoluteGeometry();
-      CompRegion launcher_region(geo.x, geo.y, geo.width, geo.height);
-
-      if (damage.intersects(launcher_region))
-        launcher->QueueDraw();
-
-      nux::ObjectPtr<nux::View> const& tooltip = launcher->GetActiveTooltip();
-
-      if (tooltip)
-      {
-        nux::Geometry const& g = tooltip->GetAbsoluteGeometry();
-        CompRegion tip_region(g.x, g.y, g.width, g.height);
-
-        if (damage.intersects(tip_region))
-          tooltip->QueueDraw();
-      }
-
-      nux::ObjectPtr<LauncherDragWindow> const& dragged_icon = launcher->GetDraggedIcon();
-
-      if (dragged_icon)
-      {
-        nux::Geometry const& g = dragged_icon->GetAbsoluteGeometry();
-        CompRegion icon_region(g.x, g.y, g.width, g.height);
-
-        if (damage.intersects(icon_region))
-          dragged_icon->QueueDraw();
-      }
+      redraw_view_if_damaged(launcher, damage);
+      redraw_view_if_damaged(launcher->GetActiveTooltip(), damage);
+      redraw_view_if_damaged(launcher->GetDraggedIcon(), damage);
     }
   }
 
   for (auto const& panel : panel_controller_->panels())
-  {
-    nux::Geometry const& geo = panel->GetAbsoluteGeometry();
+    redraw_view_if_damaged(panel, damage);
 
-    CompRegion panel_region(geo.x, geo.y, geo.width, geo.height);
+  if (QuicklistManager* qm = QuicklistManager::Default())
+    redraw_view_if_damaged(qm->Current(), damage);
 
-    if (damage.intersects(panel_region))
-      panel->QueueDraw();
-  }
-
-  QuicklistManager* qm = QuicklistManager::Default();
-  if (qm)
-  {
-    auto const& view = qm->Current();
-
-    if (view)
-    {
-      nux::Geometry const& geo = view->GetAbsoluteGeometry();
-      CompRegion quicklist_region(geo.x, geo.y, geo.width, geo.height);
-
-      if (damage.intersects(quicklist_region))
-        view->QueueDraw();
-    }
-  }
-
-  if (switcher_controller_ && switcher_controller_->Visible())
-  {
-    auto const& view = switcher_controller_->GetView();
-
-    if (G_LIKELY(view))
-    {
-      nux::Geometry const& geo = view->GetAbsoluteGeometry();
-      CompRegion switcher_region(geo.x, geo.y, geo.width, geo.height);
-
-      if (damage.intersects(switcher_region))
-        view->QueueDraw();
-    }
-  }
+  if (switcher_controller_->Visible())
+    redraw_view_if_damaged(switcher_controller_->GetView(), damage);
 }
 
 /* Grab changed nux regions and add damage rects for them */
