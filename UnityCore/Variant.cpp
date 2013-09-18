@@ -401,85 +401,116 @@ BuilderWrapper::BuilderWrapper(GVariantBuilder* builder)
   : builder_(builder)
 {}
 
-BuilderWrapper& BuilderWrapper::add(char const* name, bool value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, bool value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_boolean(value));
+  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_boolean(value));
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, char const* value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, char const* value)
 {
-  if (value)
-    g_variant_builder_add(builder_, "{sv}", name, g_variant_new_string(value));
-  else
-    g_variant_builder_add(builder_, "{sv}", name, g_variant_new_string(""));
-
+  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_string(value ? value : ""));
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, std::string const& value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, std::string const& value)
 {
-  g_variant_builder_add(builder_, "{sv}", name,
-                        g_variant_new_string(value.c_str()));
+  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_string(value.c_str()));
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, int16_t value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, int16_t value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int16(value));
+  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_int16(value));
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, int32_t value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, int32_t value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int32(value));
+  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_int32(value));
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, int64_t value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, int64_t value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int64(value));
+  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_int64(value));
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, uint16_t value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, uint16_t value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint16(value));
+  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_uint16(value));
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, uint32_t value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, uint32_t value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint32(value));
+  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_uint32(value));
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, uint64_t value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, uint64_t value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint64(value));
+  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_uint64(value));
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, float value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, float value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_double(value));
+  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_double(value));
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, double value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, double value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_double(value));
+  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_double(value));
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, GVariant* value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, GVariant* value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, value);
+  g_variant_builder_add(builder_, "{sv}", name.c_str(), value);
+  return *this;
+}
+
+BuilderWrapper& BuilderWrapper::add(std::string const& name, std::vector<int32_t> const& value)
+{
+  GVariantBuilder array;
+  g_variant_builder_init(&array, G_VARIANT_TYPE ("ai"));
+  for (auto val : value) { g_variant_builder_add(&array, "i", val); }
+  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_builder_end(&array));
+  return *this;
+}
+
+BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Rect const& value)
+{
+  add(name, std::vector<int32_t>({value.x, value.y, value.width, value.height}));
+  return *this;
+}
+
+BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Point const& value)
+{
+  add(name, std::vector<int32_t>({value.x, value.y}));
+  return *this;
+}
+
+BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Size const& value)
+{
+  add(name, std::vector<int32_t>({value.width, value.height}));
+  return *this;
+}
+
+BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Color const& value)
+{
+  int32_t r = value.red * 255.0f, g = value.green * 255.0f, b = value.blue * 255.0f, a = value.alpha * 255.0f;
+  add(name, std::vector<int32_t>({r, g, b, a}));
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(nux::Rect const& value)
 {
+  add("globalRect", value);
+  // Legacy support
   add("x", value.x);
   add("y", value.y);
   add("width", value.width);

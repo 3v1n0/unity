@@ -22,9 +22,11 @@
 
 #include <string>
 #include <glib.h>
+#include <vector>
 #include <map>
 
 #include <NuxCore/Rect.h>
+#include <NuxCore/Color.h>
 
 namespace unity
 {
@@ -78,24 +80,31 @@ namespace variant
 
 class BuilderWrapper
 {
+// XXX: Move this to Introspectable
 public:
   BuilderWrapper(GVariantBuilder* builder);
 
-  BuilderWrapper& add(char const* name, bool value);
-  BuilderWrapper& add(char const* name, char const* value);
-  BuilderWrapper& add(char const* name, std::string const& value);
-  BuilderWrapper& add(char const* name, int16_t value);
-  BuilderWrapper& add(char const* name, int32_t value);
-  BuilderWrapper& add(char const* name, int64_t value);
-  BuilderWrapper& add(char const* name, uint16_t value);
-  BuilderWrapper& add(char const* name, uint32_t value);
-  BuilderWrapper& add(char const* name, uint64_t value);
-  BuilderWrapper& add(char const* name, float value);
-  BuilderWrapper& add(char const* name, double value);
-  BuilderWrapper& add(char const* name, GVariant* value);
+  BuilderWrapper& add(std::string const& name, bool value);
+  BuilderWrapper& add(std::string const& name, const char* value);
+  BuilderWrapper& add(std::string const& name, std::string const& value);
+  BuilderWrapper& add(std::string const& name, int16_t value);
+  BuilderWrapper& add(std::string const& name, int32_t value);
+  BuilderWrapper& add(std::string const& name, int64_t value);
+  BuilderWrapper& add(std::string const& name, uint16_t value);
+  BuilderWrapper& add(std::string const& name, uint32_t value);
+  BuilderWrapper& add(std::string const& name, uint64_t value);
+  BuilderWrapper& add(std::string const& name, float value);
+  BuilderWrapper& add(std::string const& name, double value);
+  BuilderWrapper& add(std::string const& name, GVariant* value);
+
+  BuilderWrapper& add(std::string const& name, nux::Rect const& value);
+  BuilderWrapper& add(std::string const& name, nux::Point const& value);
+  BuilderWrapper& add(std::string const& name, nux::Size const& value);
+  BuilderWrapper& add(std::string const& name, nux::Color const& value);
   BuilderWrapper& add(nux::Rect const& value);
 
 private:
+  BuilderWrapper& add(std::string const& name, std::vector<int32_t> const& value);
   GVariantBuilder* builder_;
 };
 
