@@ -317,6 +317,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabBiasViewportNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDisableShowDesktopNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetDisableMouseNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
      optionSetAltTabForwardAllInitiate(boost::bind(&UnityScreen::altTabForwardAllInitiate, this, _1, _2, _3));
      optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
@@ -347,6 +348,9 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetLauncherSwitcherForwardInitiate(boost::bind(&UnityScreen::launcherSwitcherForwardInitiate, this, _1, _2, _3));
      optionSetLauncherSwitcherPrevInitiate(boost::bind(&UnityScreen::launcherSwitcherPrevInitiate, this, _1, _2, _3));
      optionSetLauncherSwitcherForwardTerminate(boost::bind(&UnityScreen::launcherSwitcherTerminate, this, _1, _2, _3));
+
+     optionSetWindowRightMaximizeInitiate(boost::bind(&UnityScreen::rightMaximizeKeyInitiate, this, _1, _2, _3));
+     optionSetWindowLeftMaximizeInitiate(boost::bind(&UnityScreen::leftMaximizeKeyInitiate, this, _1, _2, _3));
 
      optionSetStopVelocityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetRevealPressureNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -1333,24 +1337,37 @@ void UnityScreen::donePaint()
   if (animation_controller_->HasRunningAnimations())
     nuxDamageCompiz();
 
-  std::list <ShowdesktopHandlerWindowInterface *> remove_windows;
-
-  for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
+  for (auto it = ShowdesktopHandler::animating_windows.begin(); it != ShowdesktopHandler::animating_windows.end();)
   {
-    ShowdesktopHandlerWindowInterface::PostPaintAction action = wi->HandleAnimations (0);
+    auto const& wi = *it;
+    auto action = wi->HandleAnimations(0);
+
     if (action == ShowdesktopHandlerWindowInterface::PostPaintAction::Remove)
-      remove_windows.push_back(wi);
+    {
+      it = ShowdesktopHandler::animating_windows.erase(it);
+      continue;
+    }
     else if (action == ShowdesktopHandlerWindowInterface::PostPaintAction::Damage)
+    {
       wi->AddDamage ();
-  }
+    }
 
-  for (ShowdesktopHandlerWindowInterface *wi : remove_windows)
-  {
-    wi->DeleteHandler ();
-    ShowdesktopHandler::animating_windows.remove (wi);
+    ++it;
   }
 
   cScreen->donePaint ();
+}
+
+void redraw_view_if_damaged(nux::ObjectPtr<nux::View> const& view, CompRegion const& damage)
+{
+  if (!view || view->IsRedrawNeeded())
+    return;
+
+  auto const& geo = view->GetAbsoluteGeometry();
+  CompRegion region(geo.x, geo.y, geo.width, geo.height);
+
+  if (damage.intersects(region))
+    view->NeedSoftRedraw();
 }
 
 void UnityScreen::compizDamageNux(CompRegion const& damage)
@@ -1377,79 +1394,28 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
     }
   }
 
+  if (dash_controller_->IsVisible())
+    redraw_view_if_damaged(dash_controller_->Dash(), damage);
+
   auto const& launchers = launcher_controller_->launchers();
   for (auto const& launcher : launchers)
   {
     if (!launcher->Hidden())
     {
-      nux::Geometry const& geo = launcher->GetAbsoluteGeometry();
-      CompRegion launcher_region(geo.x, geo.y, geo.width, geo.height);
-
-      if (damage.intersects(launcher_region))
-        launcher->QueueDraw();
-
-      nux::ObjectPtr<nux::View> const& tooltip = launcher->GetActiveTooltip();
-
-      if (tooltip)
-      {
-        nux::Geometry const& g = tooltip->GetAbsoluteGeometry();
-        CompRegion tip_region(g.x, g.y, g.width, g.height);
-
-        if (damage.intersects(tip_region))
-          tooltip->QueueDraw();
-      }
-
-      nux::ObjectPtr<LauncherDragWindow> const& dragged_icon = launcher->GetDraggedIcon();
-
-      if (dragged_icon)
-      {
-        nux::Geometry const& g = dragged_icon->GetAbsoluteGeometry();
-        CompRegion icon_region(g.x, g.y, g.width, g.height);
-
-        if (damage.intersects(icon_region))
-          dragged_icon->QueueDraw();
-      }
+      redraw_view_if_damaged(launcher, damage);
+      redraw_view_if_damaged(launcher->GetActiveTooltip(), damage);
+      redraw_view_if_damaged(launcher->GetDraggedIcon(), damage);
     }
   }
 
   for (auto const& panel : panel_controller_->panels())
-  {
-    nux::Geometry const& geo = panel->GetAbsoluteGeometry();
+    redraw_view_if_damaged(panel, damage);
 
-    CompRegion panel_region(geo.x, geo.y, geo.width, geo.height);
+  if (QuicklistManager* qm = QuicklistManager::Default())
+    redraw_view_if_damaged(qm->Current(), damage);
 
-    if (damage.intersects(panel_region))
-      panel->QueueDraw();
-  }
-
-  QuicklistManager* qm = QuicklistManager::Default();
-  if (qm)
-  {
-    auto const& view = qm->Current();
-
-    if (view)
-    {
-      nux::Geometry const& geo = view->GetAbsoluteGeometry();
-      CompRegion quicklist_region(geo.x, geo.y, geo.width, geo.height);
-
-      if (damage.intersects(quicklist_region))
-        view->QueueDraw();
-    }
-  }
-
-  if (switcher_controller_ && switcher_controller_->Visible())
-  {
-    auto const& view = switcher_controller_->GetView();
-
-    if (G_LIKELY(view))
-    {
-      nux::Geometry const& geo = view->GetAbsoluteGeometry();
-      CompRegion switcher_region(geo.x, geo.y, geo.width, geo.height);
-
-      if (damage.intersects(switcher_region))
-        view->QueueDraw();
-    }
-  }
+  if (switcher_controller_->Visible())
+    redraw_view_if_damaged(switcher_controller_->GetView(), damage);
 }
 
 /* Grab changed nux regions and add damage rects for them */
@@ -1519,6 +1485,11 @@ void UnityScreen::handleEvent(XEvent* event)
       }
       break;
     case ButtonPress:
+      if (shortcut_controller_->Visible())
+      {
+        shortcut_controller_->Hide();
+      }
+
       if (super_keypressed_)
       {
         launcher_controller_->KeyNavTerminate(false);
@@ -1609,6 +1580,11 @@ void UnityScreen::handleEvent(XEvent* event)
       break;
     case KeyPress:
     {
+      if (shortcut_controller_->Visible())
+      {
+        shortcut_controller_->Hide();
+      }
+
       if (super_keypressed_)
       {
         /* We need an idle to postpone this action, after the current event
@@ -1719,7 +1695,7 @@ void UnityScreen::handleEvent(XEvent* event)
       break;
   }
 
-  if (!skip_other_plugins &&
+  if (!skip_other_plugins && !switcher_controller_->IsMouseDisabled() &&
       screen->otherGrabExist("deco", "move", "switcher", "resize", nullptr))
   {
     wt->ProcessForeignEvent(event, nullptr);
@@ -1924,7 +1900,16 @@ bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
 bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode show_mode)
 {
   if (!grab_index_)
-    grab_index_ = screen->pushGrab (screen->normalCursor(), "unity-switcher");
+  {
+    if (switcher_controller_->IsMouseDisabled())
+    {
+      grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
+    }
+    else
+    {
+      grab_index_ = screen->pushGrab (screen->normalCursor(), "unity-switcher");
+    }
+  }
 
   screen->addAction(&optionGetAltTabRight());
   screen->addAction(&optionGetAltTabDetailStart());
@@ -2116,12 +2101,14 @@ bool UnityScreen::launcherSwitcherForwardInitiate(CompAction* action, CompAction
   action->setState(action->state() | CompAction::StateTermKey);
   return true;
 }
+
 bool UnityScreen::launcherSwitcherPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   launcher_controller_->KeyNavPrevious();
 
   return true;
 }
+
 bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   bool accept_state = (state & CompAction::StateCancel) == 0;
@@ -2141,6 +2128,20 @@ bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::Stat
   screen->removeAction(&up_action);
 
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
+  return true;
+}
+
+bool UnityScreen::rightMaximizeKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  auto& WM = WindowManager::Default();
+  WM.RightMaximize(WM.GetActiveWindow());
+  return true;
+}
+
+bool UnityScreen::leftMaximizeKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  auto& WM = WindowManager::Default();
+  WM.LeftMaximize(WM.GetActiveWindow());
   return true;
 }
 
@@ -2959,10 +2960,10 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
 
   for (auto const& launcher : launchers)
   {
-    nux::Geometry geo = launcher->GetAbsoluteGeometry();
-
     if (launcher->options()->hide_mode == LAUNCHER_HIDE_AUTOHIDE && launcher->Hidden())
       continue;
+
+    auto const& geo = launcher->GetAbsoluteGeometry();
 
     if (geo.IsInside(result))
     {
@@ -3140,6 +3141,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       break;
     case UnityshellOptions::DisableShowDesktop:
       switcher_controller_->SetShowDesktopDisabled(optionGetDisableShowDesktop());
+      break;
+    case UnityshellOptions::DisableMouse:
+      switcher_controller_->SetMouseDisabled(optionGetDisableMouse());
       break;
     case UnityshellOptions::ShowMinimizedWindows:
       compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::setFunctions (optionGetShowMinimizedWindows ());
@@ -3531,6 +3535,10 @@ void UnityWindow::AddProperties(GVariantBuilder* builder)
     .add("xid", (uint64_t)xid)
     .add("title", wm.GetWindowName(xid))
     .add("fake_decorated", uScreen->fake_decorated_windows_.find(this) != uScreen->fake_decorated_windows_.end())
+    .add("maximized", wm.IsWindowVerticallyMaximized(xid))
+    .add("horizontally_maximized", wm.IsWindowHorizontallyMaximized(xid))
+    .add("vertically_maximized", wm.IsWindowVerticallyMaximized(xid))
+    .add("minimized", wm.IsWindowMinimized(xid))
     .add("scaled", scaled)
     .add("scaled_close_x", close_button_geo_.x)
     .add("scaled_close_y", close_button_geo_.y)

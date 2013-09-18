@@ -32,6 +32,7 @@
 #include "FavoriteStore.h"
 #include "Launcher.h"
 #include "MultiMonitor.h"
+#include "unity-shared/DesktopApplicationManager.h"
 #include "unity-shared/GnomeFileManager.h"
 #include "unity-shared/UBusMessages.h"
 
@@ -99,6 +100,11 @@ ApplicationLauncherIcon::~ApplicationLauncherIcon()
   SetApplication(nullptr);
 }
 
+ApplicationPtr ApplicationLauncherIcon::GetApplication() const
+{
+  return app_;
+}
+
 void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
 {
   if (app_ == app)
@@ -120,12 +126,12 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
   SetupApplicationSignalsConnections();
 
   // Let's update the icon properties to match the new application ones
-  app_->desktop_file.changed.emit(app_->desktop_file());
   app_->title.changed.emit(app_->title());
   app_->icon.changed.emit(app_->icon());
   app_->visible.changed.emit(app_->visible());
   app_->active.changed.emit(app_->active());
   app_->running.changed.emit(app_->running());
+  app_->desktop_file.changed.emit(app_->desktop_file());
 
   // Make sure we set the LauncherIcon stick bit too...
   if (app_->sticky())
@@ -228,6 +234,7 @@ bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk) const
 
 void ApplicationLauncherIcon::Remove()
 {
+  LogUnityEvent(ApplicationEventType::LEAVE);
   /* Removing the unity-seen flag to the wrapped bamf application, on remove
    * request we make sure that if the application is re-opened while the
    * removal process is still ongoing, the application will be shown on the
@@ -529,8 +536,11 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
         {
           glib::Object<GFile> file(f, glib::AddRef());
           _source_manager.AddTimeoutSeconds(1, [this, file] {
-            if (!g_file_query_exists (file, nullptr))
+            if (!g_file_query_exists(file, nullptr))
+            {
               UnStick();
+              LogUnityEvent(ApplicationEventType::DELETE);
+            }
             return false;
           });
           break;
@@ -561,7 +571,7 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
     uri_changed.emit(new_uri);
 
     if (update_saved_uri)
-      SimpleLauncherIcon::Stick();
+      Stick();
   }
 }
 
@@ -577,7 +587,7 @@ void ApplicationLauncherIcon::AddProperties(GVariantBuilder* builder)
   GVariantBuilder xids_builder;
   g_variant_builder_init(&xids_builder, G_VARIANT_TYPE ("au"));
 
-  for (auto& window : GetWindows())
+  for (auto const& window : GetWindows())
     g_variant_builder_add(&xids_builder, "u", window->window_id());
 
   variant::BuilderWrapper(builder)
@@ -848,9 +858,17 @@ void ApplicationLauncherIcon::Stick(bool save)
   app_->sticky = true;
 
   if (RemoteUri().empty())
-    app_->CreateLocalDesktopFile();
+  {
+    if (save)
+      app_->CreateLocalDesktopFile();
+  }
   else
+  {
     SimpleLauncherIcon::Stick(save);
+
+    if (save)
+      LogUnityEvent(ApplicationEventType::ACCESS);
+  }
 }
 
 void ApplicationLauncherIcon::UnStick()
@@ -858,6 +876,7 @@ void ApplicationLauncherIcon::UnStick()
   if (!IsSticky())
     return;
 
+  LogUnityEvent(ApplicationEventType::ACCESS);
   SimpleLauncherIcon::UnStick();
   SetQuirk(Quirk::VISIBLE, app_->visible());
   app_->sticky = false;
@@ -876,6 +895,28 @@ void ApplicationLauncherIcon::ToggleSticky()
   {
     Stick();
   }
+}
+
+void ApplicationLauncherIcon::LogUnityEvent(ApplicationEventType type)
+{
+  if (RemoteUri().empty())
+    return;
+
+  auto const& unity_app = ApplicationManager::Default().GetUnityApplication();
+  unity_app->LogEvent(type, GetSubject());
+}
+
+ApplicationSubjectPtr ApplicationLauncherIcon::GetSubject()
+{
+  auto subject = std::make_shared<desktop::ApplicationSubject>();
+  subject->uri = RemoteUri();
+  subject->current_uri = subject->uri();
+  subject->interpretation = ZEITGEIST_NFO_SOFTWARE;
+  subject->manifestation = ZEITGEIST_NFO_SOFTWARE_ITEM;
+  subject->mimetype = "application/x-desktop";
+  subject->text = tooltip_text();
+
+  return subject;
 }
 
 void ApplicationLauncherIcon::EnsureMenuItemsDefaultReady()
