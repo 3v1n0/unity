@@ -349,6 +349,9 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetLauncherSwitcherPrevInitiate(boost::bind(&UnityScreen::launcherSwitcherPrevInitiate, this, _1, _2, _3));
      optionSetLauncherSwitcherForwardTerminate(boost::bind(&UnityScreen::launcherSwitcherTerminate, this, _1, _2, _3));
 
+     optionSetWindowRightMaximizeInitiate(boost::bind(&UnityScreen::rightMaximizeKeyInitiate, this, _1, _2, _3));
+     optionSetWindowLeftMaximizeInitiate(boost::bind(&UnityScreen::leftMaximizeKeyInitiate, this, _1, _2, _3));
+
      optionSetStopVelocityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetRevealPressureNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetEdgeResponsivenessNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -2136,12 +2139,14 @@ bool UnityScreen::launcherSwitcherForwardInitiate(CompAction* action, CompAction
   action->setState(action->state() | CompAction::StateTermKey);
   return true;
 }
+
 bool UnityScreen::launcherSwitcherPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   launcher_controller_->KeyNavPrevious();
 
   return true;
 }
+
 bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   bool accept_state = (state & CompAction::StateCancel) == 0;
@@ -2161,6 +2166,20 @@ bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::Stat
   screen->removeAction(&up_action);
 
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
+  return true;
+}
+
+bool UnityScreen::rightMaximizeKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  auto& WM = WindowManager::Default();
+  WM.RightMaximize(WM.GetActiveWindow());
+  return true;
+}
+
+bool UnityScreen::leftMaximizeKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  auto& WM = WindowManager::Default();
+  WM.LeftMaximize(WM.GetActiveWindow());
   return true;
 }
 
@@ -2979,10 +2998,10 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
 
   for (auto const& launcher : launchers)
   {
-    nux::Geometry geo = launcher->GetAbsoluteGeometry();
-
     if (launcher->options()->hide_mode == LAUNCHER_HIDE_AUTOHIDE && launcher->Hidden())
       continue;
+
+    auto const& geo = launcher->GetAbsoluteGeometry();
 
     if (geo.IsInside(result))
     {
@@ -3554,6 +3573,10 @@ void UnityWindow::AddProperties(GVariantBuilder* builder)
     .add("xid", (uint64_t)xid)
     .add("title", wm.GetWindowName(xid))
     .add("fake_decorated", uScreen->fake_decorated_windows_.find(this) != uScreen->fake_decorated_windows_.end())
+    .add("maximized", wm.IsWindowVerticallyMaximized(xid))
+    .add("horizontally_maximized", wm.IsWindowHorizontallyMaximized(xid))
+    .add("vertically_maximized", wm.IsWindowVerticallyMaximized(xid))
+    .add("minimized", wm.IsWindowMinimized(xid))
     .add("scaled", scaled)
     .add("scaled_close_x", close_button_geo_.x)
     .add("scaled_close_y", close_button_geo_.y)

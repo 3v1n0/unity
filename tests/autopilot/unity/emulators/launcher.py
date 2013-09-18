@@ -121,15 +121,27 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         logger.debug("Moving mouse to center of launcher.")
         self._mouse.move(target_x, target_y)
 
-    def move_mouse_to_icon(self, icon):
-        # The icon may be off the bottom of screen, so we do this in a loop:
-        while 1:
-            target_x = icon.center_x + self.x
-            target_y = icon.center_y
+    def move_mouse_to_icon(self, icon, autoscroll_offset=0):
+        """Move the mouse to a specific icon."""
+        (x, y, w, h) = self.geometry
+        found = False
+
+        # Only try 10 times (5 secs.) before giving up.
+        for i in xrange(0, 10):
+            mouse_x = target_x = icon.center_x + self.x
+            mouse_y = target_y = icon.center_y
+            if target_y > h:
+                mouse_y = h + y - autoscroll_offset
+            elif target_y < 0:
+                mouse_y = y + autoscroll_offset
             if self._mouse.x == target_x and self._mouse.y == target_y:
+                found = True
                 break
-            self._mouse.move(target_x, target_y)
+            self._mouse.move(mouse_x, mouse_y)
             sleep(0.5)
+
+        if not found:
+            raise RuntimeError("Could not move mouse to the icon")
 
     def mouse_reveal_launcher(self):
         """Reveal this launcher with the mouse.
@@ -309,17 +321,11 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
         logger.debug("Clicking launcher icon %r on monitor %d with mouse button %d",
             icon, self.monitor, button)
-        self.mouse_reveal_launcher()
 
-        # The icon may be off the screen, so we do this in a loop:
-        while 1:
-            target_x = icon.center_x + self.x
-            target_y = icon.center_y
-            if self._mouse.x == target_x and self._mouse.y == target_y:
-                break
-            self._mouse.move(target_x, target_y )
-            sleep(1)
+        self.mouse_reveal_launcher()
+        self.move_mouse_to_icon(icon)
         self._mouse.click(button)
+
         if (move_mouse_after):
           self.move_mouse_to_right_of_launcher()
 
@@ -421,27 +427,6 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         quicklist = icon.get_quicklist()
         pin_item = quicklist.get_quicklist_item_by_text('Unlock from Launcher')
         quicklist.click_item(pin_item)
-
-    def autoscroll_to_icon(self, icon, autoscroll_offset=0):
-        """Moves the mouse to the autoscroll zone to scroll the Launcher to the icon
-           in question.
-
-           autoscroll_offet is the offset, in number of pixels, from the end of the
-           autoscroll zone where is the autoscroll zone is currently 24 pixels high.
-        """
-        (x, y, w, h) = self.geometry
-
-        while 1:
-            mouse_x = target_x = icon.center_x + self.x
-            mouse_y = target_y = icon.center_y
-            if target_y > h:
-                mouse_y = h + y - autoscroll_offset
-            elif target_y < 0:
-                mouse_y = y + autoscroll_offset
-            if self._mouse.x == target_x and self._mouse.y == target_y:
-                break
-            self._mouse.move(mouse_x, mouse_y)
-            sleep(0.5)
 
     @property
     def geometry(self):
