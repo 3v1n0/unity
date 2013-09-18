@@ -28,7 +28,7 @@ using namespace unity;
 
 namespace
 {
-const int WAIT_TIMEOUT = 1000;
+const int WAIT_TIMEOUT = 15000; // 15 seconds
 
 bool IsValidPixbuf(GdkPixbuf *pixbuf)
 {
@@ -73,7 +73,7 @@ void CheckResults(std::vector<LoadResult> const& results)
     }
 
     return got_all;
-  });
+  }, WAIT_TIMEOUT);
 
   for (auto const& result : results)
   {
