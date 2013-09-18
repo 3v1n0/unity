@@ -565,11 +565,8 @@ void Tooltip::AddProperties(GVariantBuilder* builder)
 {
   variant::BuilderWrapper(builder)
     .add("text", text)
-    .add("x", GetBaseX())
-    .add("y", GetBaseY())
-    .add("width", GetBaseWidth())
-    .add("height", GetBaseHeight())
-    .add("active", IsVisible());
+    .add("active", IsVisible())
+    .add(GetAbsoluteGeometry());
 }
 
 } // namespace nux

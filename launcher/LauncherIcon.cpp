@@ -204,7 +204,7 @@ LauncherIcon::Activate(ActionArg arg)
   /* Launcher Icons that handle spread will adjust the spread state
    * accordingly, for all other icons we should terminate spread */
   WindowManager& wm = WindowManager::Default();
-  if (wm.IsScaleActive() && !HandlesSpread ())
+  if (wm.IsScaleActive() && !HandlesSpread())
     wm.TerminateScale();
 
   ActivateLauncherIcon(arg);
