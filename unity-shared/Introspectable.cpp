@@ -46,9 +46,9 @@ Introspectable::IntrospectableList Introspectable::GetIntrospectableChildren()
 GVariant*
 Introspectable::Introspect()
 {
-  GVariantBuilder  builder;
-  GVariantBuilder  child_builder;
-  gint             n_children = 0;
+  GVariantBuilder builder;
+  GVariantBuilder child_builder;
+  bool has_valid_children = false;
 
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
   g_variant_builder_add(&builder, "{sv}", "id", g_variant_new_uint64(_id));
@@ -57,20 +57,22 @@ Introspectable::Introspect()
 
   g_variant_builder_init(&child_builder, G_VARIANT_TYPE("as"));
 
-  auto children = GetIntrospectableChildren();
-  for (auto it = children.begin(); it != children.end(); it++)
+  for (auto const& child : GetIntrospectableChildren())
   {
-    if ((*it)->GetName() != "")
+    auto const& child_name = child->GetName();
+
+    if (!child_name.empty())
     {
-      g_variant_builder_add(&child_builder, "s", (*it)->GetName().c_str());
-      n_children++;
+      g_variant_builder_add(&child_builder, "s", child_name.c_str());
+      has_valid_children = true;
     }
   }
 
   GVariant* child_results = g_variant_builder_end(&child_builder);
 
-  if (n_children > 0)
+  if (has_valid_children)
     g_variant_builder_add(&builder, "{sv}", GetChildsName().c_str(), child_results);
+
   return g_variant_builder_end(&builder);
 }
 
