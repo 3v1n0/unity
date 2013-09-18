@@ -71,6 +71,107 @@ TEST(TestGLibVariant, ConstructSteal)
   EXPECT_FALSE(IsFloating(v));
 }
 
+TEST(TestGLibVariant, ConstructNullptr)
+{
+  Variant v(nullptr);
+  EXPECT_FALSE(v);
+}
+
+TEST(TestGLibVariant, ConstructNull)
+{
+  GVariant* value = NULL;
+  Variant v(value);
+  EXPECT_FALSE(v);
+}
+
+TEST(TestGLibVariant, ConstructString)
+{
+  std::string value = "UnityVariant";
+  Variant v(value);
+  EXPECT_EQ(value, g_variant_get_string(v, nullptr));
+}
+
+TEST(TestGLibVariant, ConstructInt16)
+{
+  int16_t value = g_random_int_range(G_MININT16, G_MAXINT16);
+  Variant v(value);
+  EXPECT_EQ(value, g_variant_get_int16(v));
+}
+
+TEST(TestGLibVariant, ConstructUInt16)
+{
+  uint16_t value = g_random_int_range(0, G_MAXUINT16);
+  Variant v(value);
+  EXPECT_EQ(value, g_variant_get_uint16(v));
+}
+
+TEST(TestGLibVariant, ConstructInt32)
+{
+  int32_t value = g_random_int_range(G_MININT32, G_MAXINT32);
+  Variant v(value);
+  EXPECT_EQ(value, g_variant_get_int32(v));
+}
+
+TEST(TestGLibVariant, ConstructUInt32)
+{
+  uint32_t value = g_random_int();
+  Variant v(value);
+  EXPECT_EQ(value, g_variant_get_uint32(v));
+}
+
+TEST(TestGLibVariant, ConstructInt64)
+{
+  int64_t value = g_random_int_range(G_MININT, G_MAXINT);
+  Variant v(value);
+  EXPECT_EQ(value, g_variant_get_int64(v));
+}
+
+TEST(TestGLibVariant, ConstructUInt64)
+{
+  uint64_t value = g_random_int();
+  Variant v(value);
+  EXPECT_EQ(value, g_variant_get_uint64(v));
+}
+
+TEST(TestGLibVariant, ConstructBool)
+{
+  bool value = g_random_int();
+  Variant v(value);
+  EXPECT_EQ(value, g_variant_get_boolean(v));
+}
+
+TEST(TestGLibVariant, ConstructDouble)
+{
+  double value = g_random_int();
+  Variant v(value);
+  EXPECT_DOUBLE_EQ(value, g_variant_get_double(v));
+}
+
+TEST(TestGLibVariant, ConstructFloat)
+{
+  float value = g_random_int();
+  Variant v(value);
+  EXPECT_FLOAT_EQ(value, static_cast<float>(g_variant_get_double(v)));
+}
+
+TEST(TestGLibVariant, ConstructNumericInt)
+{
+  Variant v0(0);
+  EXPECT_EQ(0, v0.GetInt32());
+
+  Variant v1(123456789);
+  EXPECT_EQ(123456789, v1.GetInt32());
+}
+
+TEST(TestGLibVariant, ConstructNumericDouble)
+{
+  Variant v0(0.0f);
+  EXPECT_EQ(0.0f, v0.GetDouble());
+
+  Variant v1(0.987654321);
+  EXPECT_EQ(0.987654321, v1.GetDouble());
+}
+
 TEST(TestGLibVariant, Copy)
 {
   Variant v1 (g_variant_new_string ("bar"));
@@ -208,13 +309,55 @@ TEST(TestGLibVariant, GetString)
   EXPECT_EQ(v5.GetString(), "Yeah!!!");
 }
 
+TEST(TestGLibVariant, GetInt16)
+{
+  gint16 value = g_random_int_range(G_MININT16, G_MAXINT16);
+  Variant v1(g_variant_new_int16(value));
+  EXPECT_EQ(v1.GetInt16(), value);
+
+  value = g_random_int_range(G_MININT16, G_MAXINT16);
+  Variant v2(g_variant_new("(n)", value));
+  EXPECT_EQ(v2.GetInt16(), value);
+
+  Variant v3(g_variant_new("(ns)", value, "fooostring"));
+  EXPECT_EQ(v3.GetInt16(), 0);
+
+  Variant v4;
+  EXPECT_EQ(v4.GetInt16(), 0);
+
+  value = g_random_int_range(G_MININT16, G_MAXINT16);
+  Variant v5(g_variant_new_variant(g_variant_new_int16(value)));
+  EXPECT_EQ(v5.GetInt16(), value);
+}
+
+TEST(TestGLibVariant, GetUInt16)
+{
+  guint16 value = g_random_int();
+  Variant v1(g_variant_new_uint16(value));
+  EXPECT_EQ(v1.GetUInt16(), value);
+
+  value = g_random_int();
+  Variant v2(g_variant_new("(q)", value));
+  EXPECT_EQ(v2.GetUInt16(), value);
+
+  Variant v3(g_variant_new("(qi)", value, G_MAXINT16));
+  EXPECT_EQ(v3.GetUInt16(), 0);
+
+  Variant v4;
+  EXPECT_EQ(v4.GetUInt16(), 0);
+
+  value = g_random_int();
+  Variant v5(g_variant_new_variant(g_variant_new_uint16(value)));
+  EXPECT_EQ(v5.GetUInt16(), value);
+}
+
 TEST(TestGLibVariant, GetInt32)
 {
-  gint32 value = g_random_int_range(G_MININT, G_MAXINT);
+  gint32 value = g_random_int_range(G_MININT32, G_MAXINT32);
   Variant v1(g_variant_new_int32(value));
   EXPECT_EQ(v1.GetInt32(), value);
 
-  value = g_random_int_range(G_MININT, G_MAXINT);
+  value = g_random_int_range(G_MININT32, G_MAXINT32);
   Variant v2(g_variant_new("(i)", value));
   EXPECT_EQ(v2.GetInt32(), value);
 
@@ -224,7 +367,7 @@ TEST(TestGLibVariant, GetInt32)
   Variant v4;
   EXPECT_EQ(v4.GetInt32(), 0);
 
-  value = g_random_int_range(G_MININT, G_MAXINT);
+  value = g_random_int_range(G_MININT32, G_MAXINT32);
   Variant v5(g_variant_new_variant(g_variant_new_int32(value)));
   EXPECT_EQ(v5.GetInt32(), value);
 }
@@ -239,7 +382,7 @@ TEST(TestGLibVariant, GetUInt32)
   Variant v2(g_variant_new("(u)", value));
   EXPECT_EQ(v2.GetUInt32(), value);
 
-  Variant v3(g_variant_new("(ui)", value, G_MAXINT));
+  Variant v3(g_variant_new("(ui)", value, G_MAXUINT32));
   EXPECT_EQ(v3.GetUInt32(), 0);
 
   Variant v4;
@@ -248,6 +391,48 @@ TEST(TestGLibVariant, GetUInt32)
   value = g_random_int();
   Variant v5(g_variant_new_variant(g_variant_new_uint32(value)));
   EXPECT_EQ(v5.GetUInt32(), value);
+}
+
+TEST(TestGLibVariant, GetInt64)
+{
+  gint64 value = g_random_int_range(G_MININT, G_MAXINT);
+  Variant v1(g_variant_new_int64(value));
+  EXPECT_EQ(v1.GetInt64(), value);
+
+  value = g_random_int_range(G_MININT, G_MAXINT);
+  Variant v2(g_variant_new("(x)", value));
+  EXPECT_EQ(v2.GetInt64(), value);
+
+  Variant v3(g_variant_new("(xs)", value, "fooostring"));
+  EXPECT_EQ(v3.GetInt64(), 0);
+
+  Variant v4;
+  EXPECT_EQ(v4.GetInt64(), 0);
+
+  value = g_random_int_range(G_MININT, G_MAXINT);
+  Variant v5(g_variant_new_variant(g_variant_new_int64(value)));
+  EXPECT_EQ(v5.GetInt64(), value);
+}
+
+TEST(TestGLibVariant, GetUInt64)
+{
+  guint64 value = g_random_int();
+  Variant v1(g_variant_new_uint64(value));
+  EXPECT_EQ(v1.GetUInt64(), value);
+
+  value = g_random_int();
+  Variant v2(g_variant_new("(t)", value));
+  EXPECT_EQ(v2.GetUInt64(), value);
+
+  Variant v3(g_variant_new("(ti)", value, G_MAXINT64));
+  EXPECT_EQ(v3.GetUInt64(), 0);
+
+  Variant v4;
+  EXPECT_EQ(v4.GetUInt64(), 0);
+
+  value = g_random_int();
+  Variant v5(g_variant_new_variant(g_variant_new_uint64(value)));
+  EXPECT_EQ(v5.GetUInt64(), value);
 }
 
 TEST(TestGLibVariant, GetBool)
