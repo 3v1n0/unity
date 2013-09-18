@@ -251,7 +251,7 @@ void SwitcherView::RecvMouseMove(int x, int y, int dx, int dy, unsigned long /*b
   // Once we are no longer a bump, skip!!
   if (check_mouse_first_time_)
   {
-    if (IsMouseOverAnyIcon(x, y))
+    if (CheckMouseInsideBackground(x,y))
     {
       delta_tracker_.HandleNewMouseDelta(dx, dy);
       if (delta_tracker_.AmountOfDirectionsChanged() >= MAX_DIRECTIONS_CHANGED)
