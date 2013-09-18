@@ -17,6 +17,7 @@
  * Authored by: Alex Launi <alex.launi@canonical.com>
  */
 
+#include <UnityCore/Variant.h>
 #include "Introspectable.h"
 
 namespace unity
@@ -51,8 +52,7 @@ Introspectable::Introspect()
   bool has_valid_children = false;
 
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(&builder, "{sv}", "id", g_variant_new_uint64(_id));
-
+  variant::BuilderWrapper(&builder).add("id", _id);
   AddProperties(&builder);
 
   g_variant_builder_init(&child_builder, G_VARIANT_TYPE("as"));
@@ -68,10 +68,10 @@ Introspectable::Introspect()
     }
   }
 
-  GVariant* child_results = g_variant_builder_end(&child_builder);
+  glib::Variant child_results(g_variant_builder_end(&child_builder));
 
   if (has_valid_children)
-    g_variant_builder_add(&builder, "{sv}", GetChildsName().c_str(), child_results);
+    g_variant_builder_add(&builder, "{sv}", GetChildsName().c_str(), static_cast<GVariant*>(child_results));
 
   return g_variant_builder_end(&builder);
 }
