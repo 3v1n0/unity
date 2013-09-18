@@ -148,13 +148,14 @@ namespace local
 
     glib::Variant GetPropertyValue(std::string const& name) const
     {
-      GVariantBuilder child_builder;
-      g_variant_builder_init(&child_builder, G_VARIANT_TYPE("a{sv}"));
-      // This is probably not needed anymore...
-      g_variant_builder_add(&child_builder, "{sv}", "id", g_variant_new_uint64(node_->GetIntrospectionId()));
-      node_->AddProperties(&child_builder);
-      glib::Variant prop_dict(g_variant_builder_end(&child_builder));
-      return glib::Variant(g_variant_lookup_value(prop_dict, name.c_str(), nullptr));
+      if (name == "id")
+        return g_variant_new_int32(GetId());
+
+      GVariantBuilder properties_builder;
+      g_variant_builder_init(&properties_builder, G_VARIANT_TYPE("a{sv}"));
+      node_->AddProperties(&properties_builder);
+      glib::Variant props_dict(g_variant_builder_end(&properties_builder));
+      return g_variant_lookup_value(props_dict, name.c_str(), nullptr);
     }
 
     std::vector<xpathselect::Node::Ptr> Children() const
