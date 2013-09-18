@@ -760,9 +760,9 @@ void UnityScreen::paintDisplay()
         unsigned int oldGlAddGeometryIndex = uTrayWindow->gWindow->glAddGeometryGetCurrentIndex ();
         unsigned int oldGlDrawIndex = uTrayWindow->gWindow->glDrawGetCurrentIndex ();
 
-        attrib.opacity = OPAQUE;
-        attrib.brightness = BRIGHT;
-        attrib.saturation = COLOR;
+        attrib.opacity = COMPIZ_COMPOSITE_OPAQUE;
+        attrib.brightness = COMPIZ_COMPOSITE_BRIGHT;
+        attrib.saturation = COMPIZ_COMPOSITE_COLOR;
 
         oTransform.toScreenSpace (output, -DEFAULT_Z_CAMERA);
 
