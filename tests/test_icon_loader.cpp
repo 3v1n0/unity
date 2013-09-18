@@ -110,7 +110,8 @@ TEST_F(TestIconLoader, TestGetDefault)
   EXPECT_EQ(&icon_loader, &IconLoader::GetDefault());
 }
 
-TEST_F(TestIconLoader, TestGetOneIcon)
+// FIXME: Disabled due to issues on Jenkins using GLibDBusProxy (lp:1224643)
+TEST_F(TestIconLoader, DISABLED_TestGetOneIcon)
 {
   LoadResult load_result;
 
@@ -123,7 +124,8 @@ TEST_F(TestIconLoader, TestGetOneIcon)
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
 }
 
-TEST_F(TestIconLoader, TestGetAnnotatedIcon)
+// FIXME: Disabled due to issues on Jenkins using GLibDBusProxy (lp:1224643)
+TEST_F(TestIconLoader, DISABLED_TestGetAnnotatedIcon)
 {
   LoadResult load_result;
 
@@ -136,7 +138,8 @@ TEST_F(TestIconLoader, TestGetAnnotatedIcon)
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
 }
 
-TEST_F(TestIconLoader, TestGetColorizedIcon)
+// FIXME: Disabled due to issues on Jenkins using GLibDBusProxy (lp:1224643)
+TEST_F(TestIconLoader, DISABLED_TestGetColorizedIcon)
 {
   LoadResult load_result;
 
