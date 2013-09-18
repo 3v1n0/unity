@@ -237,12 +237,11 @@ nux::Point CalculateMouseMonitorOffset(int x, int y)
   return {geo.x + x, geo.y + y};
 }
 
-bool SwitcherView::IsMouseOverAnyIcon(int x, int y) const
+void SwitcherView::MouseHandlingBackToNormal()
 {
-  int detail_icon_index = DetailIconIdexAt(x, y);
-  int icon_index = IconIndexAt(x, y);
-
-  return (icon_index >= 0 || detail_icon_index >= 0);
+  check_mouse_first_time_ = false;
+  last_icon_selected_ = -1;
+  last_detail_icon_selected_ = -1;
 }
 
 void SwitcherView::RecvMouseMove(int x, int y, int dx, int dy, unsigned long /*button_flags*/, unsigned long /*key_flags*/)
@@ -256,14 +255,12 @@ void SwitcherView::RecvMouseMove(int x, int y, int dx, int dy, unsigned long /*b
       delta_tracker_.HandleNewMouseDelta(dx, dy);
       if (delta_tracker_.AmountOfDirectionsChanged() >= MAX_DIRECTIONS_CHANGED)
       {
-        check_mouse_first_time_ = false;
-        last_icon_selected_ = -1;
+        MouseHandlingBackToNormal();
       }
     }
     else
     {
-      check_mouse_first_time_ = false;
-      last_icon_selected_ = -1;
+      MouseHandlingBackToNormal();
     }
   }
 
@@ -281,6 +278,12 @@ void SwitcherView::HandleDetailMouseMove(int x, int y)
 {
   nux::Point const& mouse_pos = CalculateMouseMonitorOffset(x, y);
   int detail_icon_index = DetailIconIdexAt(mouse_pos.x, mouse_pos.y);
+
+  if (check_mouse_first_time_)
+  {
+    last_detail_icon_selected_ = detail_icon_index;
+    return;
+  }
 
   if (detail_icon_index >= 0 && detail_icon_index != last_detail_icon_selected_)
   {

@@ -139,7 +139,7 @@ private:
   void SaveLast();
 
   bool CheckMouseInsideBackground(int x, int y) const;
-  bool IsMouseOverAnyIcon(int x, int y) const;
+  void MouseHandlingBackToNormal();
 
   SwitcherModel::Ptr model_;
   ui::LayoutSystem layout_system_;
