@@ -41,6 +41,9 @@ namespace
 {
 namespace local
 {
+  const std::string PROTOCOL_VERSION = "1.4";
+  const std::string XPATH_SELECT_LIB = "libxpathselect.so.1.4";
+
   std::ofstream output_file;
   void* xpathselect_driver_ = nullptr;
 
@@ -179,7 +182,7 @@ namespace local
   xpathselect::NodeVector select_nodes(IntrospectableAdapter::Ptr const& root, std::string const& query)
   {
     if (!xpathselect_driver_)
-      xpathselect_driver_ = dlopen("libxpathselect.so.1.4", RTLD_LAZY);
+      xpathselect_driver_ = dlopen(XPATH_SELECT_LIB.c_str(), RTLD_LAZY);
 
     if (xpathselect_driver_)
     {
@@ -294,7 +297,7 @@ GVariant* DebugDBusInterface::HandleDBusMethodCall(std::string const& method, GV
   }
   else if (method == "GetVersion")
   {
-    return g_variant_new("(s)", "1.3");
+    return g_variant_new("(s)", local::PROTOCOL_VERSION.c_str());
   }
   else if (method == "StartLogToFile")
   {
