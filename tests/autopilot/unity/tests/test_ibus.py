@@ -118,8 +118,30 @@ class IBusTests(UnityTestCase):
         This method adds a cleanUp to reset the old keys once the test is done.
 
         """
-        # FIXME Need to set this using gsettings...removed old gconf code for now
-        self.activate_binding = 'Control+space'
+        bus = get_ibus_bus()
+        config = bus.get_config()
+
+        variant = config.get_value('general/hotkey', 'triggers')
+        shortcuts = []
+
+        # If none, assume default
+        if variant != None:
+          shortcuts = variant.unpack()
+        else:
+          shortcuts = ['<Super>space']
+
+        # IBus uses the format '<mod><mod><mod>key'
+        # Autopilot uses the format 'mod+mod+mod+key'
+        # replace all > with a +, and ignore the < char
+
+        shortcut = ""
+        for c in shortcuts[0]:
+          if c == '>':
+            shortcut += '+'
+          elif c != '<':
+            shortcut += c
+
+        self.activate_binding = shortcut
         activate_release_binding_option = 'Alt+Release+Control_L'
         self.activate_release_binding = 'Alt+Control_L'
 
