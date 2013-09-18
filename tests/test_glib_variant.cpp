@@ -242,17 +242,16 @@ TEST(TestGLibVariant, HintsMap)
   GVariantBuilder b;
 
   g_variant_builder_init (&b, G_VARIANT_TYPE ("a{sv}"));
-  variant::BuilderWrapper bw (&b);
-  bw.add ("charstring-key", "charstring-value");
-  bw.add ("string-key", std::string("string-value"));
-  bw.add ("gint32-key", (gint32)-1);
-  bw.add ("guint32-key", (guint32)-2);
-  bw.add ("gint64-key", (gint64)-3);
-  bw.add ("guint64-key", (guint64)-4);
-  bw.add ("float-key", (float)1.1);
-  bw.add ("double-key", (double)2.2);
-  bw.add ("bool-key", true);
-  bw.add ("variant-key", g_variant_new_int32(123));
+  g_variant_builder_add(&b, "{sv}", "charstring-key", g_variant_new_string("charstring-value"));
+  g_variant_builder_add(&b, "{sv}", "string-key", g_variant_new_string(std::string("string-value").c_str()));
+  g_variant_builder_add(&b, "{sv}", "gint32-key", g_variant_new_int32(-1));
+  g_variant_builder_add(&b, "{sv}", "guint32-key", g_variant_new_uint32(-2));
+  g_variant_builder_add(&b, "{sv}", "gint64-key", g_variant_new_int64(-3));
+  g_variant_builder_add(&b, "{sv}", "guint64-key", g_variant_new_uint64(-4));
+  g_variant_builder_add(&b, "{sv}", "float-key", g_variant_new_double((float)1.1));
+  g_variant_builder_add(&b, "{sv}", "double-key", g_variant_new_double(2.2));
+  g_variant_builder_add(&b, "{sv}", "bool-key", g_variant_new_boolean(true));
+  g_variant_builder_add(&b, "{sv}", "variant-key", g_variant_new_int32(123));
 
   GVariant *dict_variant = g_variant_builder_end (&b);
   Variant dict (g_variant_new_tuple (&dict_variant, 1));

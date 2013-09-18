@@ -44,6 +44,14 @@ Variant::Variant(Variant const& other)
   : Variant(other.variant_)
 {}
 
+Variant::Variant(std::nullptr_t)
+  : Variant()
+{}
+
+Variant::Variant(const char* value)
+  : Variant(g_variant_new_string(value ? value : value))
+{}
+
 Variant::Variant(std::string const& value)
   : Variant(g_variant_new_string(value.c_str()))
 {}
@@ -504,114 +512,120 @@ HintsMap const& hintsmap_from_hashtable(GHashTable* hashtable, HintsMap& hints)
 
 namespace variant
 {
+using namespace glib;
 
 BuilderWrapper::BuilderWrapper(GVariantBuilder* builder)
   : builder_(builder)
 {}
 
+BuilderWrapper& BuilderWrapper::add(std::string const& name, ValueType type, std::vector<Variant> const& values)
+{
+  GVariantBuilder array;
+  g_variant_builder_init(&array, G_VARIANT_TYPE("av"));
+  g_variant_builder_add(&array, "v", g_variant_new_uint32(static_cast<uint32_t>(type)));
+
+  for (auto const& value : values)
+    g_variant_builder_add(&array, "v", static_cast<GVariant*>(value));
+
+  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_builder_end(&array));
+
+  return *this;
+}
+
 BuilderWrapper& BuilderWrapper::add(std::string const& name, bool value)
 {
-  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_boolean(value));
+  add(name, ValueType::SIMPLE, {Variant(value)});
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, char const* value)
 {
-  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_string(value ? value : ""));
+  add(name, ValueType::SIMPLE, {Variant(value)});
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, std::string const& value)
 {
-  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_string(value.c_str()));
+  add(name, ValueType::SIMPLE, {Variant(value)});
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, int16_t value)
 {
-  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_int16(value));
+  add(name, ValueType::SIMPLE, {Variant(value)});
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, int32_t value)
 {
-  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_int32(value));
+  add(name, ValueType::SIMPLE, {Variant(value)});
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, int64_t value)
 {
-  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_int64(value));
+  add(name, ValueType::SIMPLE, {Variant(value)});
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, uint16_t value)
 {
-  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_uint16(value));
+  add(name, ValueType::SIMPLE, {Variant(value)});
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, uint32_t value)
 {
-  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_uint32(value));
+  add(name, ValueType::SIMPLE, {Variant(value)});
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, uint64_t value)
 {
-  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_uint64(value));
+  add(name, ValueType::SIMPLE, {Variant(value)});
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, float value)
 {
-  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_double(value));
+  add(name, ValueType::SIMPLE, {Variant(value)});
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, double value)
 {
-  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_new_double(value));
+  add(name, ValueType::SIMPLE, {Variant(value)});
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, GVariant* value)
 {
-  g_variant_builder_add(builder_, "{sv}", name.c_str(), value);
+  add(name, ValueType::SIMPLE, {Variant(value)});
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(std::string const& name, std::vector<int32_t> const& value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Rect const& r)
 {
-  GVariantBuilder array;
-  g_variant_builder_init(&array, G_VARIANT_TYPE("av"));
-  for (auto val : value) { g_variant_builder_add(&array, "v", g_variant_new_int32(val)); }
-  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_builder_end(&array));
+  add(name, ValueType::RECTANGLE, {Variant(r.x), Variant(r.y), Variant(r.width), Variant(r.height)});
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Rect const& value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Point const& p)
 {
-  add(name, std::vector<int32_t>({value.x, value.y, value.width, value.height}));
+  add(name, ValueType::POINT, {Variant(p.x), Variant(p.y)});
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Point const& value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Size const& s)
 {
-  add(name, std::vector<int32_t>({value.x, value.y}));
+  add(name, ValueType::SIZE, {Variant(s.width), Variant(s.height)});
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Size const& value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Color const& c)
 {
-  add(name, std::vector<int32_t>({value.width, value.height}));
-  return *this;
-}
-
-BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Color const& value)
-{
-  int32_t r = value.red * 255.0f, g = value.green * 255.0f, b = value.blue * 255.0f, a = value.alpha * 255.0f;
-  add(name, std::vector<int32_t>({r, g, b, a}));
+  int32_t r = c.red * 255.0f, g = c.green * 255.0f, b = c.blue * 255.0f, a = c.alpha * 255.0f;
+  add(name, ValueType::COLOR, {Variant(r), Variant(g), Variant(b), Variant(a)});
   return *this;
 }
 
