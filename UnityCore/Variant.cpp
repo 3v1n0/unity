@@ -456,6 +456,19 @@ Variant& Variant::operator=(Variant other)
   return *this;
 }
 
+Variant& Variant::operator=(std::nullptr_t) { return operator=(Variant()); }
+Variant& Variant::operator=(std::string const& value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(const char* value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(int16_t value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(uint16_t value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(int32_t value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(uint32_t value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(int64_t value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(uint64_t value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(bool value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(double value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(float value) { return operator=(Variant(value)); }
+
 Variant::operator GVariant* () const
 {
   return variant_;

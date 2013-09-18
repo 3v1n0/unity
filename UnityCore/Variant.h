@@ -81,6 +81,18 @@ public:
   void swap(Variant&);
   Variant& operator=(GVariant*);
   Variant& operator=(Variant);
+  Variant& operator=(std::nullptr_t);
+  Variant& operator=(std::string const&);
+  Variant& operator=(const char*);
+  Variant& operator=(int16_t);
+  Variant& operator=(uint16_t);
+  Variant& operator=(int32_t);
+  Variant& operator=(uint32_t);
+  Variant& operator=(int64_t);
+  Variant& operator=(uint64_t);
+  Variant& operator=(bool);
+  Variant& operator=(double);
+  Variant& operator=(float);
   operator GVariant*() const;
   operator bool() const;
 
