@@ -41,10 +41,48 @@ Variant::Variant(GVariant* variant, StealRef const& ref)
 {}
 
 Variant::Variant(Variant const& other)
-  : variant_(other.variant_)
-{
-  if (variant_) g_variant_ref_sink(variant_);
-}
+  : Variant(other.variant_)
+{}
+
+Variant::Variant(std::string const& value)
+  : Variant(g_variant_new_string(value.c_str()))
+{}
+
+Variant::Variant(int16_t value)
+  : Variant(g_variant_new_int16(value))
+{}
+
+Variant::Variant(uint16_t value)
+  : Variant(g_variant_new_uint16(value))
+{}
+
+Variant::Variant(int32_t value)
+  : Variant(g_variant_new_int32(value))
+{}
+
+Variant::Variant(uint32_t value)
+  : Variant(g_variant_new_uint32(value))
+{}
+
+Variant::Variant(int64_t value)
+  : Variant(g_variant_new_int64(value))
+{}
+
+Variant::Variant(uint64_t value)
+  : Variant(g_variant_new_uint64(value))
+{}
+
+Variant::Variant(bool value)
+  : Variant(g_variant_new_boolean(value))
+{}
+
+Variant::Variant(double value)
+  : Variant(g_variant_new_double(value))
+{}
+
+Variant::Variant(float value)
+  : Variant(static_cast<double>(value))
+{}
 
 Variant::~Variant()
 {

@@ -47,6 +47,17 @@ public:
   Variant(GVariant*);
   Variant(GVariant*, StealRef const&);
 
+  explicit Variant(std::string const&);
+  explicit Variant(int16_t);
+  explicit Variant(uint16_t);
+  explicit Variant(int32_t);
+  explicit Variant(uint32_t);
+  explicit Variant(int64_t);
+  explicit Variant(uint64_t);
+  explicit Variant(bool);
+  explicit Variant(double);
+  explicit Variant(float);
+
   Variant(Variant const&);
   ~Variant();
 
