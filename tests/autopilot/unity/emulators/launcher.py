@@ -377,7 +377,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         if target_y < icon.center_y:
             target_y += icon_height / 2
         if pos == IconDragType.BEFORE:
-            target_y -= icon_height
+            target_y -= icon_height + (icon_height / 2)
 
         self.move_mouse_to_icon(icon)
         self._mouse.press()
