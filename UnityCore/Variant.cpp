@@ -27,7 +27,7 @@ namespace glib
 DECLARE_LOGGER(logger, "unity.glib.variant");
 
 Variant::Variant()
-  : variant_(NULL)
+  : variant_(nullptr)
 {}
 
 Variant::Variant(GVariant* variant)
@@ -51,6 +51,25 @@ Variant::~Variant()
   if (variant_) g_variant_unref(variant_);
 }
 
+glib::Variant get_variant(GVariant *variant_)
+{
+  Variant value;
+
+  if (!variant_)
+    return value;
+
+  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_VARIANT))
+  {
+    value = Variant(g_variant_get_variant(variant_), StealRef());
+  }
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(v)")))
+  {
+    g_variant_get(variant_, "(v)", &value);
+  }
+
+  return value;
+}
+
 std::string Variant::GetString() const
 {
   const gchar *result = nullptr;
@@ -70,7 +89,7 @@ std::string Variant::GetString() const
   }
   else
   {
-    auto const& variant = GetVariant();
+    auto const& variant = get_variant(variant_);
     if (variant)
       return variant.GetString();
 
@@ -79,6 +98,62 @@ std::string Variant::GetString() const
   }
 
   return result ? result : "";
+}
+
+int16_t Variant::GetInt16() const
+{
+  gint16 value = 0;
+
+  if (!variant_)
+    return static_cast<int>(value);
+
+  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_INT16))
+  {
+    value = g_variant_get_int16(variant_);
+  }
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(n)")))
+  {
+    g_variant_get(variant_, "(n)", &value);
+  }
+  else
+  {
+    auto const& variant = get_variant(variant_);
+    if (variant)
+      return variant.GetInt16();
+
+    LOG_ERROR(logger) << "You're trying to extract an Int16 from a variant which is of type "
+                      << g_variant_type_peek_string(g_variant_get_type(variant_));
+  }
+
+  return static_cast<int16_t>(value);
+}
+
+uint16_t Variant::GetUInt16() const
+{
+  guint16 value = 0;
+
+  if (!variant_)
+    return static_cast<unsigned>(value);
+
+  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_UINT16))
+  {
+    value = g_variant_get_uint16(variant_);
+  }
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(q)")))
+  {
+    g_variant_get(variant_, "(q)", &value);
+  }
+  else
+  {
+    auto const& variant = get_variant(variant_);
+    if (variant)
+      return variant.GetUInt16();
+
+    LOG_ERROR(logger) << "You're trying to extract an UInt16 from a variant which is of type "
+                      << g_variant_type_peek_string(g_variant_get_type(variant_));
+  }
+
+  return static_cast<uint16_t>(value);
 }
 
 int32_t Variant::GetInt32() const
@@ -98,7 +173,7 @@ int32_t Variant::GetInt32() const
   }
   else
   {
-    auto const& variant = GetVariant();
+    auto const& variant = get_variant(variant_);
     if (variant)
       return variant.GetInt32();
 
@@ -126,7 +201,7 @@ uint32_t Variant::GetUInt32() const
   }
   else
   {
-    auto const& variant = GetVariant();
+    auto const& variant = get_variant(variant_);
     if (variant)
       return variant.GetUInt32();
 
@@ -134,7 +209,8 @@ uint32_t Variant::GetUInt32() const
                       << g_variant_type_peek_string(g_variant_get_type(variant_));
   }
 
-  return static_cast<uint32_t>(value);}
+  return static_cast<uint32_t>(value);
+}
 
 int64_t Variant::GetInt64() const
 {
@@ -153,7 +229,7 @@ int64_t Variant::GetInt64() const
   }
   else
   {
-    auto const& variant = GetVariant();
+    auto const& variant = get_variant(variant_);
     if (variant)
       return variant.GetInt64();
 
@@ -181,7 +257,7 @@ uint64_t Variant::GetUInt64() const
   }
   else
   {
-    auto const& variant = GetVariant();
+    auto const& variant = get_variant(variant_);
     if (variant)
       return variant.GetUInt64();
 
@@ -209,7 +285,7 @@ bool Variant::GetBool() const
   }
   else
   {
-    auto const& variant = GetVariant();
+    auto const& variant = get_variant(variant_);
     if (variant)
       return variant.GetBool();
 
@@ -237,7 +313,7 @@ double Variant::GetDouble() const
   }
   else
   {
-    auto const& variant = GetVariant();
+    auto const& variant = get_variant(variant_);
     if (variant)
       return variant.GetDouble();
 
@@ -260,15 +336,9 @@ Variant Variant::GetVariant() const
   if (!variant_)
     return value;
 
-  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_VARIANT))
-  {
-    value = Variant(g_variant_get_variant(variant_), StealRef());
-  }
-  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(v)")))
-  {
-    g_variant_get(variant_, "(v)", &value);
-  }
-  else
+  value = get_variant(variant_);
+
+  if (!value)
   {
     LOG_ERROR(logger) << "You're trying to extract a Variant from a variant which is of type "
                       << g_variant_type_peek_string(g_variant_get_type(variant_));
@@ -476,8 +546,8 @@ BuilderWrapper& BuilderWrapper::add(std::string const& name, GVariant* value)
 BuilderWrapper& BuilderWrapper::add(std::string const& name, std::vector<int32_t> const& value)
 {
   GVariantBuilder array;
-  g_variant_builder_init(&array, G_VARIANT_TYPE ("ai"));
-  for (auto val : value) { g_variant_builder_add(&array, "i", val); }
+  g_variant_builder_init(&array, G_VARIANT_TYPE("av"));
+  for (auto val : value) { g_variant_builder_add(&array, "v", g_variant_new_int32(val)); }
   g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_builder_end(&array));
   return *this;
 }

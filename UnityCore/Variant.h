@@ -51,6 +51,8 @@ public:
   ~Variant();
 
   std::string GetString() const;
+  int16_t GetInt16() const;
+  uint16_t GetUInt16() const;
   int32_t GetInt32() const;
   uint32_t GetUInt32() const;
   int64_t GetInt64() const;
