@@ -292,7 +292,7 @@ void SwitcherView::HandleDetailMouseMove(int x, int y)
 void SwitcherView::HandleMouseMove(int x, int y)
 {
   int icon_index = IconIndexAt(x, y);
-  
+
   if (check_mouse_first_time_)
   {
     last_icon_selected_ = icon_index;
@@ -573,13 +573,13 @@ nux::Size SwitcherView::SpreadSize()
   return result;
 }
 
-void SwitcherView::GetFlatIconPositions (int n_flat_icons,
-                                         int size,
-                                         int selection,
-                                         int &first_flat,
-                                         int &last_flat,
-                                         int &half_fold_left,
-                                         int &half_fold_right)
+void GetFlatIconPositions (int n_flat_icons,
+                           int size,
+                           int selection,
+                           int &first_flat,
+                           int &last_flat,
+                           int &half_fold_left,
+                           int &half_fold_right)
 {
   half_fold_left = -1;
   half_fold_right = -1;
