@@ -46,8 +46,6 @@ namespace local
   const std::string PROTOCOL_VERSION = "1.4";
   const std::string XPATH_SELECT_LIB = "libxpathselect.so.1.4";
 
-  void* xpathselect_driver_ = nullptr;
-
   class IntrospectableAdapter : public std::enable_shared_from_this<IntrospectableAdapter>, public xpathselect::Node
   {
   public:
@@ -179,41 +177,50 @@ namespace local
     std::string full_path_;
   };
 
-  xpathselect::NodeVector select_nodes(IntrospectableAdapter::Ptr const& root, std::string const& query)
+  namespace xpathselect
   {
-    if (!xpathselect_driver_)
-      xpathselect_driver_ = dlopen(XPATH_SELECT_LIB.c_str(), RTLD_LAZY);
 
-    if (xpathselect_driver_)
+  struct NodeSelector
+  {
+    NodeSelector()
+      : driver_(dlopen(XPATH_SELECT_LIB.c_str(), RTLD_LAZY))
+      , node_selector_(driver_ ? reinterpret_cast<select_nodes_t>(dlsym(driver_, "SelectNodes")) : nullptr)
     {
-      typedef decltype(&xpathselect::SelectNodes) select_nodes_t;
-      dlerror();
-      auto SelectNodes = reinterpret_cast<select_nodes_t>(dlsym(xpathselect_driver_, "SelectNodes"));
-      const char* err = dlerror();
-      if (err)
+      if (const char* err = dlerror())
       {
         LOG_ERROR(logger) << "Unable to load entry point in libxpathselect: " << err;
-      }
-      else
-      {
-        return SelectNodes(root, query);
+        Close();
       }
     }
-    else
+
+    ~NodeSelector() { Close(); }
+    bool IsAvailable() const { return driver_; }
+    operator bool() const { return IsAvailable(); }
+
+    ::xpathselect::NodeVector SelectNodes(::xpathselect::Node::Ptr const& root, std::string const& query)
     {
-      LOG_WARNING(logger) << "Cannot complete introspection request because libxpathselect is not installed.";
+      if (!IsAvailable())
+        return ::xpathselect::NodeVector();
+
+      return node_selector_(root, query);
     }
 
-    // Fallen through here as we've hit an error
-    return xpathselect::NodeVector();
-  }
+    private:
+      void Close()
+      {
+        if (driver_)
+        {
+          dlclose(driver_);
+          driver_ = nullptr;
+        }
+      }
 
-  // This needs to be called at destruction to cleanup the dlopen
-  void cleanup_xpathselect()
-  {
-    if (xpathselect_driver_)
-      dlclose(xpathselect_driver_);
-  }
+      void* driver_;
+      typedef decltype(&::xpathselect::SelectNodes) select_nodes_t;
+      select_nodes_t node_selector_;
+  };
+
+  } // xpathselect namespace
 
 } // local namespace
 } // anonymous namespace
@@ -274,6 +281,7 @@ struct DebugDBusInterface::Impl
   void LogMessage(std::string const& severity, std::string const& message);
 
   Introspectable* introspection_root_;
+  local::xpathselect::NodeSelector xns_;
   glib::DBusServer::Ptr server_;
   std::ofstream output_file_;
 };
@@ -287,7 +295,7 @@ DebugDBusInterface::~DebugDBusInterface()
 
 DebugDBusInterface::Impl::Impl(Introspectable* root)
   : introspection_root_(root)
-  , server_(std::make_shared<glib::DBusServer>(dbus::BUS_NAME))
+  , server_((introspection_root_ && xns_) ? std::make_shared<glib::DBusServer>(dbus::BUS_NAME) : nullptr)
 {
   if (server_)
   {
@@ -348,7 +356,7 @@ GVariant* DebugDBusInterface::Impl::GetState(std::string const& query)
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a(sv)"));
 
   auto root_node = std::make_shared<local::IntrospectableAdapter>(introspection_root_);
-  for (auto const& n : local::select_nodes(root_node, query))
+  for (auto const& n : xns_.SelectNodes(root_node, query))
   {
     auto p = std::static_pointer_cast<local::IntrospectableAdapter const>(n);
     if (p)
