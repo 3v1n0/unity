@@ -47,6 +47,7 @@ const unsigned int PRELOAD_TIMEOUT_LENGTH = 40;
 
 namespace dbus
 {
+const std::string BUS_NAME = "com.canonical.Unity";
 const std::string PATH = "/com/canonical/Unity/Dash";
 const std::string INTROSPECTION =\
   "<node>"
@@ -68,6 +69,7 @@ Controller::Controller(Controller::WindowCreator const& create_window)
   , visible_(false)
   , need_show_(false)
   , view_(nullptr)
+  , dbus_server_(dbus::BUS_NAME)
   , ensure_timeout_(PRELOAD_TIMEOUT_LENGTH)
   , timeline_animator_(90)
 {
