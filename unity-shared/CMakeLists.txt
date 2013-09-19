@@ -36,6 +36,7 @@ set (UNITY_SHARED_SOURCES
      IconTextureSource.cpp
      Introspectable.cpp
      IntrospectableWrappers.cpp
+     IntrospectionData.cpp
      JSONParser.cpp
      LayoutSystem.cpp
      LineSeparator.cpp
