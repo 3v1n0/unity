@@ -402,105 +402,88 @@ BuilderWrapper& BuilderWrapper::add(std::string const& name, ValueType type, std
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, bool value)
 {
-  add(name, ValueType::SIMPLE, {Variant(value)});
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, char const* value)
 {
-  add(name, ValueType::SIMPLE, {Variant(value)});
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, std::string const& value)
 {
-  add(name, ValueType::SIMPLE, {Variant(value)});
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, int16_t value)
 {
-  add(name, ValueType::SIMPLE, {Variant(value)});
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, int32_t value)
 {
-  add(name, ValueType::SIMPLE, {Variant(value)});
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, int64_t value)
 {
-  add(name, ValueType::SIMPLE, {Variant(value)});
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, uint16_t value)
 {
-  add(name, ValueType::SIMPLE, {Variant(value)});
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, uint32_t value)
 {
-  add(name, ValueType::SIMPLE, {Variant(value)});
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, uint64_t value)
 {
-  add(name, ValueType::SIMPLE, {Variant(value)});
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, float value)
 {
-  add(name, ValueType::SIMPLE, {Variant(value)});
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, double value)
 {
-  add(name, ValueType::SIMPLE, {Variant(value)});
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, GVariant* value)
 {
-  add(name, ValueType::SIMPLE, {Variant(value)});
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, glib::Variant const& value)
 {
-  add(name, ValueType::SIMPLE, {value});
-  return *this;
+  return add(name, ValueType::SIMPLE, {value});
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Rect const& r)
 {
-  add(name, ValueType::RECTANGLE, {Variant(r.x), Variant(r.y), Variant(r.width), Variant(r.height)});
-  return *this;
+  return add(name, ValueType::RECTANGLE, {Variant(r.x), Variant(r.y), Variant(r.width), Variant(r.height)});
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Point const& p)
 {
-  add(name, ValueType::POINT, {Variant(p.x), Variant(p.y)});
-  return *this;
+  return add(name, ValueType::POINT, {Variant(p.x), Variant(p.y)});
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Size const& s)
 {
-  add(name, ValueType::SIZE, {Variant(s.width), Variant(s.height)});
-  return *this;
+  return add(name, ValueType::SIZE, {Variant(s.width), Variant(s.height)});
 }
 
 BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Color const& c)
 {
   int32_t r = c.red * 255.0f, g = c.green * 255.0f, b = c.blue * 255.0f, a = c.alpha * 255.0f;
-  add(name, ValueType::COLOR, {Variant(r), Variant(g), Variant(b), Variant(a)});
-  return *this;
+  return add(name, ValueType::COLOR, {Variant(r), Variant(g), Variant(b), Variant(a)});
 }
 
 BuilderWrapper& BuilderWrapper::add(nux::Rect const& value)
