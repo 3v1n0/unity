@@ -125,11 +125,11 @@ namespace local
         switch (prop_val_type)
         {
           case G_VARIANT_CLASS_BYTE:
-            return value == g_variant_get_byte(prop_value);
+            return static_cast<unsigned char>(value) == prop_value.GetByte();
           case G_VARIANT_CLASS_INT16:
-            return value == g_variant_get_int16(prop_value);
+            return value == prop_value.GetInt16();
           case G_VARIANT_CLASS_UINT16:
-            return static_cast<uint16_t>(value) == g_variant_get_uint16(prop_value);
+            return static_cast<uint16_t>(value) == prop_value.GetUInt16();
           case G_VARIANT_CLASS_INT32:
             return value == prop_value.GetInt32();
           case G_VARIANT_CLASS_UINT32:
@@ -149,7 +149,7 @@ namespace local
     glib::Variant GetPropertyValue(std::string const& name) const
     {
       if (name == "id")
-        return g_variant_new_int32(GetId());
+        return glib::Variant(GetId());
 
       GVariantBuilder properties_builder;
       g_variant_builder_init(&properties_builder, G_VARIANT_TYPE("a{sv}"));
