@@ -134,6 +134,7 @@ if (GMOCK_LIB AND
        test_abstract_interface_generator.cpp
        test_animation_utils.cpp
        test_connection_manager.cpp
+       test_delta_tracker.cpp
        test_glib_dbus_object.cpp
        test_glib_cancellable.cpp
        test_glib_object.cpp
@@ -178,6 +179,7 @@ if (GMOCK_LIB AND
       unity-shared
       unity-shared-standalone
       launcher-lib
+      switcher-lib
       ${GMOCK_LIB}
       ${GMOCK_MAIN_LIB}
       ${LIBS}
