@@ -59,7 +59,7 @@ protected:
 private:
   std::list<Introspectable*> children_;
   std::list<Introspectable*> parents_;
-  int32_t _id;
+  int32_t id_;
 };
 }
 }
