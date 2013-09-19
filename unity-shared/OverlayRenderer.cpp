@@ -553,7 +553,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
 
   if (Settings::Instance().form_factor() != FormFactor::NETBOOK || force_edges)
   {
-    nux::Geometry geo_border(content_geo.x, content_geo.y, larger_absolute_geo.width - content_geo.x, larger_absolute_geo.height - content_geo.y + excess_border);
+    nux::Geometry geo_border(content_geo.x, content_geo.y, larger_absolute_geo.width - content_geo.x, larger_absolute_geo.height);
     gfx_context.PushClippingRectangle(geo_border);
   
     // Paint the edges
