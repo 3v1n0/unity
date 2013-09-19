@@ -143,263 +143,87 @@ std::string Variant::GetString() const
     if (variant)
       return variant.GetString();
 
-    LOG_ERROR(logger) << "You're trying to extract a String from a variant which is of type "
-                      << g_variant_type_peek_string(g_variant_get_type(variant_));
+    LOG_ERROR(logger) << "You're trying to extract a 's' from a variant which is of type '"
+                      << g_variant_type_peek_string(g_variant_get_type(variant_)) << "'";
   }
 
   return result ? result : "";
 }
 
-unsigned char Variant::GetByte() const
+template <typename TYPE, typename GTYPE>
+TYPE get_numeric_value(GVariant *variant_, const char *type_str, const char *fallback_type_str)
 {
-  guchar value = 0;
+  GTYPE value = 0;
 
   if (!variant_)
-    return static_cast<unsigned char>(value);
+    return static_cast<TYPE>(value);
 
-  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_BYTE))
+  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE(type_str)))
   {
-    value = g_variant_get_byte(variant_);
+    g_variant_get(variant_, type_str, &value);
   }
-  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(y)")))
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE(fallback_type_str)))
   {
-    g_variant_get(variant_, "(y)", &value);
+    g_variant_get(variant_, fallback_type_str, &value);
   }
   else
   {
     auto const& variant = get_variant(variant_);
     if (variant)
-      return variant.GetByte();
+      return get_numeric_value<TYPE, GTYPE>(static_cast<GVariant*>(variant), type_str, fallback_type_str);
 
-    LOG_ERROR(logger) << "You're trying to extract a Byte from a variant which is of type "
-                      << g_variant_type_peek_string(g_variant_get_type(variant_));
+    LOG_ERROR(logger) << "You're trying to extract a '" << type_str << "'"
+                      << " from a variant which is of type '"
+                      << g_variant_type_peek_string(g_variant_get_type(variant_))
+                      << "'";
   }
 
-  return static_cast<unsigned char>(value);
+  return static_cast<TYPE>(value);
+}
+
+unsigned char Variant::GetByte() const
+{
+  return get_numeric_value<unsigned char, guchar>(variant_, "y", "(y)");
 }
 
 int16_t Variant::GetInt16() const
 {
-  gint16 value = 0;
-
-  if (!variant_)
-    return static_cast<int16_t>(value);
-
-  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_INT16))
-  {
-    value = g_variant_get_int16(variant_);
-  }
-  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(n)")))
-  {
-    g_variant_get(variant_, "(n)", &value);
-  }
-  else
-  {
-    auto const& variant = get_variant(variant_);
-    if (variant)
-      return variant.GetInt16();
-
-    LOG_ERROR(logger) << "You're trying to extract an Int16 from a variant which is of type "
-                      << g_variant_type_peek_string(g_variant_get_type(variant_));
-  }
-
-  return static_cast<int16_t>(value);
+  return get_numeric_value<int16_t, gint16>(variant_, "n", "(n)");
 }
 
 uint16_t Variant::GetUInt16() const
 {
-  guint16 value = 0;
-
-  if (!variant_)
-    return static_cast<uint16_t>(value);
-
-  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_UINT16))
-  {
-    value = g_variant_get_uint16(variant_);
-  }
-  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(q)")))
-  {
-    g_variant_get(variant_, "(q)", &value);
-  }
-  else
-  {
-    auto const& variant = get_variant(variant_);
-    if (variant)
-      return variant.GetUInt16();
-
-    LOG_ERROR(logger) << "You're trying to extract an UInt16 from a variant which is of type "
-                      << g_variant_type_peek_string(g_variant_get_type(variant_));
-  }
-
-  return static_cast<uint16_t>(value);
+  return get_numeric_value<uint16_t, guint16>(variant_, "q", "(q)");
 }
 
 int32_t Variant::GetInt32() const
 {
-  gint32 value = 0;
-
-  if (!variant_)
-    return static_cast<int32_t>(value);
-
-  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_INT32))
-  {
-    value = g_variant_get_int32(variant_);
-  }
-  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(i)")))
-  {
-    g_variant_get(variant_, "(i)", &value);
-  }
-  else
-  {
-    auto const& variant = get_variant(variant_);
-    if (variant)
-      return variant.GetInt32();
-
-    LOG_ERROR(logger) << "You're trying to extract an Int32 from a variant which is of type "
-                      << g_variant_type_peek_string(g_variant_get_type(variant_));
-  }
-
-  return static_cast<int32_t>(value);
+  return get_numeric_value<int32_t, gint32>(variant_, "i", "(i)");
 }
 
 uint32_t Variant::GetUInt32() const
 {
-  guint32 value = 0;
-
-  if (!variant_)
-    return static_cast<uint32_t>(value);
-
-  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_UINT32))
-  {
-    value = g_variant_get_uint32(variant_);
-  }
-  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(u)")))
-  {
-    g_variant_get(variant_, "(u)", &value);
-  }
-  else
-  {
-    auto const& variant = get_variant(variant_);
-    if (variant)
-      return variant.GetUInt32();
-
-    LOG_ERROR(logger) << "You're trying to extract an UInt32 from a variant which is of type "
-                      << g_variant_type_peek_string(g_variant_get_type(variant_));
-  }
-
-  return static_cast<uint32_t>(value);
+  return get_numeric_value<uint32_t, guint32>(variant_, "u", "(u)");
 }
 
 int64_t Variant::GetInt64() const
 {
-  gint64 value = 0;
-
-  if (!variant_)
-    return static_cast<int64_t>(value);
-
-  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_INT64))
-  {
-    value = g_variant_get_int64(variant_);
-  }
-  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(x)")))
-  {
-    g_variant_get(variant_, "(x)", &value);
-  }
-  else
-  {
-    auto const& variant = get_variant(variant_);
-    if (variant)
-      return variant.GetInt64();
-
-    LOG_ERROR(logger) << "You're trying to extract an Int64 from a variant which is of type "
-                      << g_variant_type_peek_string(g_variant_get_type(variant_));
-  }
-
-  return static_cast<int64_t>(value);
+  return get_numeric_value<int64_t, gint64>(variant_, "x", "(x)");
 }
 
 uint64_t Variant::GetUInt64() const
 {
-  guint64 value = 0;
-
-  if (!variant_)
-    return static_cast<uint64_t>(value);
-
-  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_UINT64))
-  {
-    value = g_variant_get_uint64(variant_);
-  }
-  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(t)")))
-  {
-    g_variant_get(variant_, "(t)", &value);
-  }
-  else
-  {
-    auto const& variant = get_variant(variant_);
-    if (variant)
-      return variant.GetUInt64();
-
-    LOG_ERROR(logger) << "You're trying to extract an UInt64 from a variant which is of type "
-                      << g_variant_type_peek_string(g_variant_get_type(variant_));
-  }
-
-  return static_cast<uint64_t>(value);
+  return get_numeric_value<uint64_t, guint64>(variant_, "t", "(t)");
 }
 
 bool Variant::GetBool() const
 {
-  gboolean value = FALSE;
-
-  if (!variant_)
-    return (value != FALSE);
-
-  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_BOOLEAN))
-  {
-    value = g_variant_get_boolean(variant_);
-  }
-  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(b)")))
-  {
-    g_variant_get(variant_, "(b)", &value);
-  }
-  else
-  {
-    auto const& variant = get_variant(variant_);
-    if (variant)
-      return variant.GetBool();
-
-    LOG_ERROR(logger) << "You're trying to extract a Boolean from a variant which is of type "
-                      << g_variant_type_peek_string(g_variant_get_type(variant_));
-  }
-
-  return (value != FALSE);
+  return get_numeric_value<bool, gboolean>(variant_, "b", "(b)");
 }
 
 double Variant::GetDouble() const
 {
-  double value = 0.0;
-
-  if (!variant_)
-    return value;
-
-  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_DOUBLE))
-  {
-    value = g_variant_get_double(variant_);
-  }
-  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(d)")))
-  {
-    g_variant_get(variant_, "(d)", &value);
-  }
-  else
-  {
-    auto const& variant = get_variant(variant_);
-    if (variant)
-      return variant.GetDouble();
-
-    LOG_ERROR(logger) << "You're trying to extract a Double from a variant which is of type "
-                      << g_variant_type_peek_string(g_variant_get_type(variant_));
-  }
-
-  return value;
+  return get_numeric_value<double, gdouble>(variant_, "d", "(d)");
 }
 
 float Variant::GetFloat() const
@@ -418,8 +242,8 @@ Variant Variant::GetVariant() const
 
   if (!value)
   {
-    LOG_ERROR(logger) << "You're trying to extract a Variant from a variant which is of type "
-                      << g_variant_type_peek_string(g_variant_get_type(variant_));
+    LOG_ERROR(logger) << "You're trying to extract a 'v' from a variant which is of type '"
+                      << g_variant_type_peek_string(g_variant_get_type(variant_)) << "'";
   }
 
   return value;
