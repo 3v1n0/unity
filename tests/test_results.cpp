@@ -279,8 +279,8 @@ TEST_F(TestResults, LocalResult_FromToVariant)
   local_result_1.comment = "comment";
   local_result_1.dnd_uri = "dnd_uri";
   
-  local_result_1.hints["key1"] = g_variant_new_string("value1");
-  local_result_1.hints["key2"] = g_variant_new_string("value2");
+  local_result_1.hints["key1"] = glib::Variant("value1");
+  local_result_1.hints["key2"] = glib::Variant("value2");
 
   glib::Variant variant_value = local_result_1.Variant();
   LocalResult local_result_2 = LocalResult::FromVariant(variant_value);

@@ -175,8 +175,7 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
 
     if (selected)
     {
-      ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
-                       g_variant_new_string(selected->tooltip_text().c_str()));
+      ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED, glib::Variant(selected->tooltip_text()));
     }
   });
 
@@ -1313,12 +1312,12 @@ void Controller::KeyNavActivate()
   if (pimpl->launcher_grabbed)
   {
     pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV,
-                            g_variant_new_int32(pimpl->keyboard_launcher_->monitor));
+                            glib::Variant(pimpl->keyboard_launcher_->monitor()));
   }
   else
   {
     pimpl->ubus.SendMessage(UBUS_LAUNCHER_START_KEY_SWITCHER,
-                            g_variant_new_int32(pimpl->keyboard_launcher_->monitor));
+                            glib::Variant(pimpl->keyboard_launcher_->monitor()));
   }
 
   AbstractLauncherIcon::Ptr const& selected = pimpl->model_->Selection();
@@ -1326,7 +1325,7 @@ void Controller::KeyNavActivate()
   if (selected)
   {
     pimpl->ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
-                            g_variant_new_string(selected->tooltip_text().c_str()));
+                            glib::Variant(selected->tooltip_text()));
   }
 }
 
@@ -1339,7 +1338,7 @@ void Controller::KeyNavNext()
   if (selected)
   {
     pimpl->ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
-                            g_variant_new_string(selected->tooltip_text().c_str()));
+                            glib::Variant(selected->tooltip_text()));
   }
 }
 
@@ -1352,7 +1351,7 @@ void Controller::KeyNavPrevious()
   if (selected)
   {
     pimpl->ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
-                            g_variant_new_string(selected->tooltip_text().c_str()));
+                            glib::Variant(selected->tooltip_text()));
   }
 }
 
@@ -1377,12 +1376,12 @@ void Controller::KeyNavTerminate(bool activate)
     pimpl->launcher_event_outside_connection_->disconnect();
     pimpl->launcher_grabbed = false;
     pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_NAV,
-                            g_variant_new_boolean(pimpl->keynav_restore_window_));
+                            glib::Variant(pimpl->keynav_restore_window_));
   }
   else
   {
     pimpl->ubus.SendMessage(UBUS_LAUNCHER_END_KEY_SWITCHER,
-                            g_variant_new_boolean(pimpl->keynav_restore_window_));
+                            glib::Variant(pimpl->keynav_restore_window_));
   }
 
   if (activate)

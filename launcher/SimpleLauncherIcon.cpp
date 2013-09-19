@@ -49,7 +49,7 @@ SimpleLauncherIcon::SimpleLauncherIcon(IconType type)
 
 void SimpleLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-  UBusManager::SendMessage(UBUS_OVERLAY_CLOSE_REQUEST, g_variant_new_boolean(FALSE));
+  UBusManager::SendMessage(UBUS_OVERLAY_CLOSE_REQUEST, glib::Variant(false));
 }
 
 nux::BaseTexture* SimpleLauncherIcon::GetTextureForSize(int size)

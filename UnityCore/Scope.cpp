@@ -277,7 +277,7 @@ void Scope::ActivatePreviewAction(Preview::ActionPtr const& action,
   }
 
   glib::HintsMap tmp_hints = hints;
-  tmp_hints["preview-action-id"] = g_variant_new_string(action->id.c_str());
+  tmp_hints["preview-action-id"] = action->id;
   pimpl->Activate(result, UNITY_PROTOCOL_ACTION_TYPE_PREVIEW_ACTION, tmp_hints, callback, cancellable);
 }
 
