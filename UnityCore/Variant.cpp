@@ -56,6 +56,10 @@ Variant::Variant(std::string const& value)
   : Variant(g_variant_new_string(value.c_str()))
 {}
 
+Variant::Variant(unsigned char value)
+  : Variant(g_variant_new_byte(value))
+{}
+
 Variant::Variant(int16_t value)
   : Variant(g_variant_new_int16(value))
 {}
@@ -146,12 +150,40 @@ std::string Variant::GetString() const
   return result ? result : "";
 }
 
+unsigned char Variant::GetByte() const
+{
+  guchar value = 0;
+
+  if (!variant_)
+    return static_cast<unsigned char>(value);
+
+  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_BYTE))
+  {
+    value = g_variant_get_byte(variant_);
+  }
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(y)")))
+  {
+    g_variant_get(variant_, "(y)", &value);
+  }
+  else
+  {
+    auto const& variant = get_variant(variant_);
+    if (variant)
+      return variant.GetByte();
+
+    LOG_ERROR(logger) << "You're trying to extract a Byte from a variant which is of type "
+                      << g_variant_type_peek_string(g_variant_get_type(variant_));
+  }
+
+  return static_cast<unsigned char>(value);
+}
+
 int16_t Variant::GetInt16() const
 {
   gint16 value = 0;
 
   if (!variant_)
-    return static_cast<int>(value);
+    return static_cast<int16_t>(value);
 
   if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_INT16))
   {
@@ -179,7 +211,7 @@ uint16_t Variant::GetUInt16() const
   guint16 value = 0;
 
   if (!variant_)
-    return static_cast<unsigned>(value);
+    return static_cast<uint16_t>(value);
 
   if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_UINT16))
   {
@@ -207,7 +239,7 @@ int32_t Variant::GetInt32() const
   gint32 value = 0;
 
   if (!variant_)
-    return static_cast<int>(value);
+    return static_cast<int32_t>(value);
 
   if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_INT32))
   {
@@ -235,7 +267,7 @@ uint32_t Variant::GetUInt32() const
   guint32 value = 0;
 
   if (!variant_)
-    return static_cast<unsigned>(value);
+    return static_cast<uint32_t>(value);
 
   if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_UINT32))
   {
@@ -459,6 +491,7 @@ Variant& Variant::operator=(Variant other)
 Variant& Variant::operator=(std::nullptr_t) { return operator=(Variant()); }
 Variant& Variant::operator=(std::string const& value) { return operator=(Variant(value)); }
 Variant& Variant::operator=(const char* value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(unsigned char value) { return operator=(Variant(value)); }
 Variant& Variant::operator=(int16_t value) { return operator=(Variant(value)); }
 Variant& Variant::operator=(uint16_t value) { return operator=(Variant(value)); }
 Variant& Variant::operator=(int32_t value) { return operator=(Variant(value)); }

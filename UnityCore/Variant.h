@@ -50,6 +50,7 @@ public:
   explicit Variant(std::nullptr_t);
   explicit Variant(std::string const&);
   explicit Variant(const char*);
+  explicit Variant(unsigned char);
   explicit Variant(int16_t);
   explicit Variant(uint16_t);
   explicit Variant(int32_t);
@@ -64,6 +65,7 @@ public:
   ~Variant();
 
   std::string GetString() const;
+  unsigned char GetByte() const;
   int16_t GetInt16() const;
   uint16_t GetUInt16() const;
   int32_t GetInt32() const;
@@ -84,6 +86,7 @@ public:
   Variant& operator=(std::nullptr_t);
   Variant& operator=(std::string const&);
   Variant& operator=(const char*);
+  Variant& operator=(unsigned char);
   Variant& operator=(int16_t);
   Variant& operator=(uint16_t);
   Variant& operator=(int32_t);

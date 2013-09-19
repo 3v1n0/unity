@@ -91,6 +91,20 @@ TEST(TestGLibVariant, ConstructString)
   EXPECT_EQ(value, g_variant_get_string(v, nullptr));
 }
 
+TEST(TestGLibVariant, ConstructCharString)
+{
+  const char* value = "UnityVariantCharStr";
+  Variant v(value);
+  EXPECT_STREQ(value, g_variant_get_string(v, nullptr));
+}
+
+TEST(TestGLibVariant, ConstructByte)
+{
+  unsigned char value = g_random_int_range(0, 256);
+  Variant v(value);
+  EXPECT_EQ(value, g_variant_get_byte(v));
+}
+
 TEST(TestGLibVariant, ConstructInt16)
 {
   int16_t value = g_random_int_range(G_MININT16, G_MAXINT16);
@@ -215,6 +229,22 @@ TEST(TestGLibVariant, AssignString)
   Variant v;
   v = value;
   EXPECT_EQ(value, g_variant_get_string(v, nullptr));
+}
+
+TEST(TestGLibVariant, AssignCharString)
+{
+  const char* value = "UnityVariantCharStr";
+  Variant v;
+  v = value;
+  EXPECT_STREQ(value, g_variant_get_string(v, nullptr));
+}
+
+TEST(TestGLibVariant, AssignByte)
+{
+  unsigned char value = g_random_int_range(0, 256);
+  Variant v;
+  v = value;
+  EXPECT_EQ(value, g_variant_get_byte(v));
 }
 
 TEST(TestGLibVariant, AssignInt16)
@@ -408,6 +438,27 @@ TEST(TestGLibVariant, GetString)
 
   Variant v5(g_variant_new_variant(g_variant_new_string("Yeah!!!")));
   EXPECT_EQ(v5.GetString(), "Yeah!!!");
+}
+
+TEST(TestGLibVariant, GetByte)
+{
+  guchar value = g_random_int_range(0, 256);
+  Variant v1(g_variant_new_byte(value));
+  EXPECT_EQ(v1.GetByte(), value);
+
+  value = g_random_int_range(0, 256);
+  Variant v2(g_variant_new("(y)", value));
+  EXPECT_EQ(v2.GetByte(), value);
+
+  Variant v3(g_variant_new("(ny)", value, "fooostring"));
+  EXPECT_EQ(v3.GetByte(), 0);
+
+  Variant v4;
+  EXPECT_EQ(v4.GetByte(), 0);
+
+  value = g_random_int_range(0, 256);
+  Variant v5(g_variant_new_variant(g_variant_new_byte(value)));
+  EXPECT_EQ(v5.GetByte(), value);
 }
 
 TEST(TestGLibVariant, GetInt16)
