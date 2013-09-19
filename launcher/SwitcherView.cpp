@@ -282,7 +282,6 @@ void SwitcherView::HandleDetailMouseMove(int x, int y)
   if (check_mouse_first_time_)
   {
     last_detail_icon_selected_ = detail_icon_index;
-    check_mouse_first_time_ = false;
     return;
   }
 
