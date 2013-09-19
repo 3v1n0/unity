@@ -18,6 +18,7 @@
  *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
+#include "config.h"
 #include <boost/algorithm/string.hpp>
 
 #include <Nux/Nux.h>
@@ -30,7 +31,6 @@
 
 #include "ApplicationLauncherIcon.h"
 #include "FavoriteStore.h"
-#include "Launcher.h"
 #include "MultiMonitor.h"
 #include "unity-shared/DesktopApplicationManager.h"
 #include "unity-shared/GnomeFileManager.h"

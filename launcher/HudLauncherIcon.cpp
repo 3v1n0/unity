@@ -18,13 +18,13 @@
  */
 
 #include "HudLauncherIcon.h"
-#include "Launcher.h"
 #include "UnityCore/GLibWrapper.h"
 #include "UnityCore/Variant.h"
 #include <NuxCore/Logger.h>
 
 #include "unity-shared/UBusMessages.h"
 
+#include "config.h"
 #include <glib/gi18n-lib.h>
 
 namespace unity

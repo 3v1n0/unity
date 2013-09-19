@@ -20,18 +20,13 @@
 #include <sys/time.h>
 
 #include <Nux/Nux.h>
-#include <Nux/VScrollBar.h>
-#include <Nux/HLayout.h>
-#include <Nux/VLayout.h>
-#include <Nux/WindowCompositor.h>
-#include <Nux/BaseWindow.h>
 #include <NuxCore/Color.h>
 #include <NuxCore/Logger.h>
 
-#include "unity-shared/CairoTexture.h"
-#include "LauncherIcon.h"
 #include "Launcher.h"
+#include "LauncherIcon.h"
 #include "unity-shared/AnimationUtils.h"
+#include "unity-shared/CairoTexture.h"
 #include "unity-shared/TimeUtil.h"
 
 #include "QuicklistManager.h"
@@ -43,8 +38,6 @@
 
 #include "MultiMonitor.h"
 
-#include "unity-shared/UBusWrapper.h"
-#include "unity-shared/UBusMessages.h"
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GTKWrapper.h>
 #include <UnityCore/Variant.h>
@@ -841,8 +834,6 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
     {
       Present(0.5f, 1500);
     }
-
-    UBusManager::SendMessage(UBUS_LAUNCHER_ICON_URGENT_CHANGED, g_variant_new_boolean(value));
   }
 
   if (quirk == Quirk::VISIBLE)
