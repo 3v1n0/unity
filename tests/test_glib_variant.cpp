@@ -680,6 +680,18 @@ TEST(TestGLibVariant, GetVariant)
   EXPECT_FALSE(v4.GetVariant());
 }
 
+TEST(TestGLibVariant, FromVector)
+{
+  std::vector<int32_t> values(g_random_int_range(1, 10));
 
+  for (unsigned i = 0; i < values.capacity(); ++i)
+    values[i] = g_random_int_range(G_MININT32, G_MAXINT32);
+
+  auto const& variant = Variant::FromVector(values);
+  ASSERT_EQ(values.size(), g_variant_n_children(variant));
+
+  for (unsigned i = 0; i < values.size(); ++i)
+    ASSERT_EQ(values[i], g_variant_get_int32(g_variant_get_child_value(variant, i)));
+}
 
 } // Namespace
