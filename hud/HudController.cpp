@@ -22,6 +22,7 @@
 #include <Nux/HLayout.h>
 #include <UnityCore/Variant.h>
 
+#include "unity-shared/AnimationUtils.h"
 #include "unity-shared/ApplicationManager.h"
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/PanelStyle.h"
@@ -435,18 +436,7 @@ void Controller::HideHud(bool restore)
 void Controller::StartShowHideTimeline()
 {
   EnsureHud();
-
-  if (timeline_animator_.CurrentState() == nux::animation::Animation::State::Running)
-  {
-    timeline_animator_.Reverse();
-  }
-  else
-  {
-    if (visible_)
-      timeline_animator_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
-    else
-      timeline_animator_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
-  }
+  animation::StartOrReverseIf(timeline_animator_, visible_);
 }
 
 void Controller::OnViewShowHideFrame(double opacity)

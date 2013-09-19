@@ -23,7 +23,6 @@
 #include "unity-shared/UBusMessages.h"
 
 #include "BFBLauncherIcon.h"
-#include "Launcher.h"
 
 namespace unity
 {

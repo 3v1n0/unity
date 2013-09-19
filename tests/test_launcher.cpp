@@ -77,9 +77,14 @@ public:
       return GetActionState() == Launcher::LauncherActionState::ACTION_DRAG_EXTERNAL;
     }
 
+    bool IsActionStateDragCancelled()
+    {
+      return GetActionState() == Launcher::LauncherActionState::ACTION_DRAG_ICON_CANCELLED;
+    }
+
     AbstractLauncherIcon::Ptr MouseIconIntersection(int x, int y) const
     {
-      for (auto const& icon : *_model)
+      for (auto const& icon : *model_)
       {
         auto const& center = icon->GetCenter(monitor());
 
@@ -102,35 +107,35 @@ public:
     using Launcher::ProcessDndLeave;
     using Launcher::ProcessDndMove;
     using Launcher::ProcessDndDrop;
-    using Launcher::_drag_icon_position;
-    using Launcher::_icon_under_mouse;
+    using Launcher::drag_icon_position_;
+    using Launcher::icon_under_mouse_;
     using Launcher::IconStartingBlinkValue;
     using Launcher::IconStartingPulseValue;
     using Launcher::HandleBarrierEvent;
     using Launcher::SetHidden;
     using Launcher::HandleUrgentIcon;
     using Launcher::SetUrgentTimer;
-    using Launcher::_urgent_timer_running;
-    using Launcher::_urgent_finished_time;
-    using Launcher::_urgent_wiggle_time;
+    using Launcher::urgent_timer_running_;
+    using Launcher::urgent_finished_time_;
+    using Launcher::urgent_wiggle_time_;
 
     void FakeProcessDndMove(int x, int y, std::list<std::string> uris)
     {
-      _dnd_data.Reset();
+      dnd_data_.Reset();
 
       std::string data_uri;
       for (std::string const& uri : uris)
         data_uri += uri+"\r\n";
 
-      _dnd_data.Fill(data_uri.c_str());
+      dnd_data_.Fill(data_uri.c_str());
 
-      if (std::find_if(_dnd_data.Uris().begin(), _dnd_data.Uris().end(), [this] (std::string const& uri)
-                       {return DndIsSpecialRequest(uri);}) != _dnd_data.Uris().end())
+      if (std::find_if(dnd_data_.Uris().begin(), dnd_data_.Uris().end(), [this] (std::string const& uri)
+                       {return DndIsSpecialRequest(uri);}) != dnd_data_.Uris().end())
       {
-        _steal_drag = true;
+        steal_drag_ = true;
       }
 
-      _dnd_hovered_icon = MouseIconIntersection(x, y);
+      dnd_hovered_icon_ = MouseIconIntersection(x, y);
     }
   };
 
@@ -218,7 +223,7 @@ TEST_F(TestLauncher, TestMouseWheelScroll)
   model_->AddIcon(icon);
 
   launcher_->SetHover(true);
-  launcher_->_icon_under_mouse = icon;
+  launcher_->icon_under_mouse_ = icon;
 
   unsigned long key_flags = 0; 
 
@@ -318,6 +323,7 @@ TEST_F(TestLauncher, DragLauncherIconCancelRestoresIconOrder)
 
   // Emitting the drag cancel request
   launcher_->GetDraggedIcon()->drag_cancel_request.emit();
+  EXPECT_TRUE(launcher_->IsActionStateDragCancelled());
 
   // The icon order should be reset
   it = model_->begin();
@@ -345,7 +351,7 @@ TEST_F(TestLauncher, DragLauncherIconSavesIconOrderIfPositionHasChanged)
   // Start dragging icon2
   launcher_->StartIconDrag(icon2);
   launcher_->ShowDragWindow();
-  ASSERT_EQ(launcher_->_drag_icon_position, model_->IconIndex(icon2));
+  ASSERT_EQ(launcher_->drag_icon_position_, model_->IconIndex(icon2));
 
   // Moving icon2 at the end
   auto const& center3 = icon3->GetCenter(launcher_->monitor());
@@ -353,7 +359,7 @@ TEST_F(TestLauncher, DragLauncherIconSavesIconOrderIfPositionHasChanged)
 
   EXPECT_CALL(*icon2, Stick(true));
 
-  ASSERT_NE(launcher_->_drag_icon_position, model_->IconIndex(icon2));
+  ASSERT_NE(launcher_->drag_icon_position_, model_->IconIndex(icon2));
   launcher_->EndIconDrag();
 
   // The icon order should be reset
@@ -378,7 +384,7 @@ TEST_F(TestLauncher, DragLauncherIconSavesIconOrderIfPositionHasNotChanged)
   // Start dragging icon2
   launcher_->StartIconDrag(icon2);
   launcher_->ShowDragWindow();
-  ASSERT_EQ(launcher_->_drag_icon_position, model_->IconIndex(icon2));
+  ASSERT_EQ(launcher_->drag_icon_position_, model_->IconIndex(icon2));
 
   // Moving icon2 at the end
   auto center3 = icon3->GetCenter(launcher_->monitor());
@@ -395,7 +401,7 @@ TEST_F(TestLauncher, DragLauncherIconSavesIconOrderIfPositionHasNotChanged)
   bool model_saved = false;
   model_->saved.connect([&model_saved] { model_saved = true; });
 
-  ASSERT_EQ(launcher_->_drag_icon_position, model_->IconIndex(icon2));
+  ASSERT_EQ(launcher_->drag_icon_position_, model_->IconIndex(icon2));
   launcher_->EndIconDrag();
 
   // The icon order should be reset
@@ -629,11 +635,11 @@ TEST_F(TestLauncher, UrgentIconWiggleTimerStart)
 
   clock_gettime(CLOCK_MONOTONIC, &current);
 
-  ASSERT_FALSE(launcher_->_urgent_timer_running);
+  ASSERT_FALSE(launcher_->urgent_timer_running_);
 
   launcher_->HandleUrgentIcon(icon, current);
 
-  EXPECT_TRUE(launcher_->_urgent_timer_running);
+  EXPECT_TRUE(launcher_->urgent_timer_running_);
 }
 
 TEST_F(TestLauncher, UrgentIconWiggleTimerTimeout)
@@ -644,18 +650,18 @@ TEST_F(TestLauncher, UrgentIconWiggleTimerTimeout)
   launcher_->SetHidden(true);
   icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
 
-  ASSERT_EQ(launcher_->_urgent_wiggle_time, 0);
-  ASSERT_EQ(launcher_->_urgent_finished_time.tv_sec, 0);
-  ASSERT_EQ(launcher_->_urgent_finished_time.tv_nsec, 0);
+  ASSERT_EQ(launcher_->urgent_wiggle_time_, 0);
+  ASSERT_EQ(launcher_->urgent_finished_time_.tv_sec, 0);
+  ASSERT_EQ(launcher_->urgent_finished_time_.tv_nsec, 0);
   
   launcher_->SetUrgentTimer(1);
 
   // Make sure the Urgent Timer expires before checking
   Utils::WaitForTimeout(2);
   
-  EXPECT_THAT(launcher_->_urgent_wiggle_time, Gt(0));
-  EXPECT_THAT(launcher_->_urgent_finished_time.tv_sec, Gt(0));
-  EXPECT_THAT(launcher_->_urgent_finished_time.tv_nsec, Gt(0));
+  EXPECT_THAT(launcher_->urgent_wiggle_time_, Gt(0));
+  EXPECT_THAT(launcher_->urgent_finished_time_.tv_sec, Gt(0));
+  EXPECT_THAT(launcher_->urgent_finished_time_.tv_nsec, Gt(0));
 }
 
 TEST_F(TestLauncher, WiggleUrgentIconAfterLauncherIsRevealed)
@@ -673,16 +679,16 @@ TEST_F(TestLauncher, WiggleUrgentIconAfterLauncherIsRevealed)
   clock_gettime(CLOCK_MONOTONIC, &current);
   launcher_->HandleUrgentIcon(icon, current);
 
-  ASSERT_EQ(launcher_->_urgent_finished_time.tv_sec, 0);
-  ASSERT_EQ(launcher_->_urgent_finished_time.tv_nsec, 0);
+  ASSERT_EQ(launcher_->urgent_finished_time_.tv_sec, 0);
+  ASSERT_EQ(launcher_->urgent_finished_time_.tv_nsec, 0);
 
   launcher_->SetHidden(false);
 
   clock_gettime(CLOCK_MONOTONIC, &current);
   launcher_->HandleUrgentIcon(icon, current);
 
-  EXPECT_THAT(launcher_->_urgent_finished_time.tv_sec, Gt(0));
-  EXPECT_THAT(launcher_->_urgent_finished_time.tv_nsec, Gt(0));  
+  EXPECT_THAT(launcher_->urgent_finished_time_.tv_sec, Gt(0));
+  EXPECT_THAT(launcher_->urgent_finished_time_.tv_nsec, Gt(0));  
 }  
 
 }

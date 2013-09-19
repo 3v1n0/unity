@@ -30,7 +30,7 @@ namespace ui
 {
 
 // NOTE: This private header is not part of the public interface
-struct EdgeBarrierController::Impl
+struct EdgeBarrierController::Impl : public sigc::trackable
 {
   Impl(EdgeBarrierController *parent);
   ~Impl();
@@ -40,6 +40,8 @@ struct EdgeBarrierController::Impl
 
   void ResizeBarrierList(std::vector<nux::Geometry> const& layout);
   void SetupBarriers(std::vector<nux::Geometry> const& layout);
+
+  void OnUScreenChanged(int primary, std::vector<nux::Geometry>& layout);
 
   void OnPointerBarrierEvent(PointerBarrierWrapper* owner, BarrierEvent::Ptr const& event);
   void BarrierPush(PointerBarrierWrapper* owner, BarrierEvent::Ptr const& event);

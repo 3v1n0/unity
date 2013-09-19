@@ -25,6 +25,7 @@
 #include "UnityCore/GSettingsScopes.h"
 
 #include "ApplicationStarterImp.h"
+#include "unity-shared/AnimationUtils.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusMessages.h"
@@ -68,7 +69,6 @@ Controller::Controller(Controller::WindowCreator const& create_window)
   , monitor_(0)
   , visible_(false)
   , need_show_(false)
-  , view_(nullptr)
   , dbus_server_(dbus::BUS_NAME)
   , ensure_timeout_(PRELOAD_TIMEOUT_LENGTH)
   , timeline_animator_(90)
@@ -144,10 +144,10 @@ void Controller::SetupWindow()
 void Controller::SetupDashView()
 {
   view_ = new DashView(std::make_shared<GSettingsScopes>(), std::make_shared<ApplicationStarterImp>());
-  AddChild(view_);
+  AddChild(view_.GetPointer());
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout->AddView(view_, 1);
+  layout->AddView(view_.GetPointer(), 1);
   layout->SetContentDistribution(nux::MAJOR_POSITION_START);
   layout->SetVerticalExternalMargin(0);
   layout->SetHorizontalExternalMargin(0);
@@ -380,18 +380,7 @@ void Controller::HideDash(bool restore)
 void Controller::StartShowHideTimeline()
 {
   EnsureDash();
-
-  if (timeline_animator_.CurrentState() == nux::animation::Animation::State::Running)
-  {
-    timeline_animator_.Reverse();
-  }
-  else
-  {
-    if (visible_)
-      timeline_animator_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
-    else
-      timeline_animator_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
-  }
+  animation::StartOrReverseIf(timeline_animator_, visible_);
 }
 
 void Controller::OnViewShowHideFrame(double opacity)
@@ -477,6 +466,11 @@ nux::Geometry Controller::GetInputWindowGeometry()
   geo.width += style.GetDashRightTileWidth();
   geo.height += style.GetDashBottomTileHeight();
   return geo;
+}
+
+nux::ObjectPtr<DashView> const& Controller::Dash() const
+{
+  return view_;
 }
 
 

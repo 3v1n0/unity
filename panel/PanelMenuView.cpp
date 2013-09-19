@@ -21,8 +21,9 @@
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
 
-#include "unity-shared/CairoTexture.h"
 #include "PanelMenuView.h"
+#include "unity-shared/AnimationUtils.h"
+#include "unity-shared/CairoTexture.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/UBusMessages.h"
@@ -31,8 +32,6 @@
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
-
-namespace na = nux::animation;
 
 namespace unity
 {
@@ -303,35 +302,19 @@ void PanelMenuView::PreLayoutManagement()
 
 void PanelMenuView::StartFadeIn(int duration)
 {
-  if (opacity_animator_.CurrentState() == na::Animation::State::Running)
-  {
-    if (opacity_animator_.GetFinishValue() != 1.0f)
-      opacity_animator_.Reverse();
-
-    return;
-  }
-
   opacity_animator_.SetDuration(duration >= 0 ? duration : menus_fadein_);
-  opacity_animator_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
+  animation::StartOrReverse(opacity_animator_, animation::Direction::FORWARD);
 }
 
 void PanelMenuView::StartFadeOut(int duration)
 {
-  if (opacity_animator_.CurrentState() == na::Animation::State::Running)
-  {
-    if (opacity_animator_.GetFinishValue() != 0.0f)
-      opacity_animator_.Reverse();
-
-    return;
-  }
-
   opacity_animator_.SetDuration(duration >= 0 ? duration : menus_fadeout_);
-  opacity_animator_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
+  animation::StartOrReverse(opacity_animator_, animation::Direction::BACKWARD);
 }
 
 void PanelMenuView::OnFadeAnimatorUpdated(double progress)
 {
-  if (opacity_animator_.GetFinishValue() == 1.0f) /* Fading in... */
+  if (animation::GetDirection(opacity_animator_) == animation::Direction::FORWARD) /* Fading in... */
   {
     if (ShouldDrawMenus() && opacity() != 1.0f)
       opacity = progress;
@@ -339,7 +322,7 @@ void PanelMenuView::OnFadeAnimatorUpdated(double progress)
     if (ShouldDrawButtons() && window_buttons_->opacity() != 1.0f)
       window_buttons_->opacity = progress;
   }
-  else if (opacity_animator_.GetFinishValue() == 0.0f) /* Fading out... */
+  else if (animation::GetDirection(opacity_animator_) == animation::Direction::BACKWARD) /* Fading out... */
   {
     if (!ShouldDrawMenus() && opacity() != 0.0f)
       opacity = progress;
