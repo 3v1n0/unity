@@ -25,23 +25,25 @@ namespace unity
 namespace debug
 {
 
+const std::string CHILDREN_NAME = "Children";
+
 Introspectable::Introspectable()
 {
-  static guint64 unique_id=0;
-  _id = unique_id++;
+  static int32_t unique_id_ = 0;
+  id_ = unique_id_++;
 }
 
 Introspectable::~Introspectable()
 {
-  for (auto parent : _parents)
-    parent->_children.remove(this);
-  for (auto child : _children)
-    child->_parents.remove(this);
+  for (auto parent : parents_)
+    parent->children_.remove(this);
+  for (auto child : children_)
+    child->parents_.remove(this);
 }
 
 Introspectable::IntrospectableList Introspectable::GetIntrospectableChildren()
 {
-  return _children;
+  return children_;
 }
 
 GVariant*
@@ -53,7 +55,7 @@ Introspectable::Introspect()
 
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
   variant::BuilderWrapper build_wrapper(&builder);
-  build_wrapper.add("id", _id);
+  build_wrapper.add("id", id_);
   AddProperties(&builder);
 
   g_variant_builder_init(&child_builder, G_VARIANT_TYPE("as"));
@@ -72,7 +74,7 @@ Introspectable::Introspect()
   glib::Variant child_results(g_variant_builder_end(&child_builder));
 
   if (has_valid_children)
-    build_wrapper.add(GetChildsName(), child_results);
+    build_wrapper.add(CHILDREN_NAME, child_results);
 
   return g_variant_builder_end(&builder);
 }
@@ -80,35 +82,28 @@ Introspectable::Introspect()
 void
 Introspectable::AddChild(Introspectable* child)
 {
-  _children.push_back(child);
-  child->_parents.push_back(this);
+  children_.push_back(child);
+  child->parents_.push_back(this);
 }
 
 void
 Introspectable::RemoveChild(Introspectable* child)
 {
-  _children.remove(child);
-  child->_parents.remove(this);
+  children_.remove(child);
+  child->parents_.remove(this);
 }
 
-std::string
-Introspectable::GetChildsName() const
+int32_t Introspectable::GetIntrospectionId() const
 {
-  return "Children";
-}
-
-guint64 Introspectable::GetIntrospectionId() const
-{
-  return _id;
+  return id_;
 }
 
 void Introspectable::RemoveAllChildren()
 {
-  for (auto child : _children)
-  {
-    child->_parents.remove(this);
-  }
-  _children.clear();
+  for (auto child : children_)
+    child->parents_.remove(this);
+
+  children_.clear();
 }
 
 }
