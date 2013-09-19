@@ -28,6 +28,8 @@ using namespace unity;
 
 namespace
 {
+const int WAIT_TIMEOUT = 15000; // 15 seconds
+
 bool IsValidPixbuf(GdkPixbuf *pixbuf)
 {
   return GDK_IS_PIXBUF (pixbuf);
@@ -71,7 +73,7 @@ void CheckResults(std::vector<LoadResult> const& results)
     }
 
     return got_all;
-  });
+  }, WAIT_TIMEOUT);
 
   for (auto const& result : results)
   {
@@ -108,7 +110,8 @@ TEST_F(TestIconLoader, TestGetDefault)
   EXPECT_EQ(&icon_loader, &IconLoader::GetDefault());
 }
 
-TEST_F(TestIconLoader, TestGetOneIcon)
+// FIXME: Disabled due to issues on Jenkins using GLibDBusProxy (lp:1224643)
+TEST_F(TestIconLoader, DISABLED_TestGetOneIcon)
 {
   LoadResult load_result;
 
@@ -116,12 +119,13 @@ TEST_F(TestIconLoader, TestGetOneIcon)
         &LoadResult::IconLoaded));
   handles_.push_back(handle);
 
-  Utils::WaitUntilMSec(load_result.got_callback);
+  Utils::WaitUntilMSec(load_result.got_callback, WAIT_TIMEOUT);
   EXPECT_TRUE(load_result.got_callback);
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
 }
 
-TEST_F(TestIconLoader, TestGetAnnotatedIcon)
+// FIXME: Disabled due to issues on Jenkins using GLibDBusProxy (lp:1224643)
+TEST_F(TestIconLoader, DISABLED_TestGetAnnotatedIcon)
 {
   LoadResult load_result;
 
@@ -129,12 +133,13 @@ TEST_F(TestIconLoader, TestGetAnnotatedIcon)
         &LoadResult::IconLoaded));
   handles_.push_back(handle);
 
-  Utils::WaitUntilMSec(load_result.got_callback);
+  Utils::WaitUntilMSec(load_result.got_callback, WAIT_TIMEOUT);
   EXPECT_TRUE(load_result.got_callback);
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
 }
 
-TEST_F(TestIconLoader, TestGetColorizedIcon)
+// FIXME: Disabled due to issues on Jenkins using GLibDBusProxy (lp:1224643)
+TEST_F(TestIconLoader, DISABLED_TestGetColorizedIcon)
 {
   LoadResult load_result;
 
@@ -142,7 +147,7 @@ TEST_F(TestIconLoader, TestGetColorizedIcon)
         &LoadResult::IconLoaded));
   handles_.push_back(handle);
 
-  Utils::WaitUntilMSec(load_result.got_callback);
+  Utils::WaitUntilMSec(load_result.got_callback, WAIT_TIMEOUT);
   EXPECT_TRUE(load_result.got_callback);
   EXPECT_TRUE(IsValidPixbuf(load_result.pixbuf));
 }

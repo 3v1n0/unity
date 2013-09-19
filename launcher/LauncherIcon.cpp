@@ -20,17 +20,13 @@
 #include <sys/time.h>
 
 #include <Nux/Nux.h>
-#include <Nux/VScrollBar.h>
-#include <Nux/HLayout.h>
-#include <Nux/VLayout.h>
-#include <Nux/WindowCompositor.h>
-#include <Nux/BaseWindow.h>
 #include <NuxCore/Color.h>
 #include <NuxCore/Logger.h>
 
-#include "unity-shared/CairoTexture.h"
-#include "LauncherIcon.h"
 #include "Launcher.h"
+#include "LauncherIcon.h"
+#include "unity-shared/AnimationUtils.h"
+#include "unity-shared/CairoTexture.h"
 #include "unity-shared/TimeUtil.h"
 
 #include "QuicklistManager.h"
@@ -42,8 +38,6 @@
 
 #include "MultiMonitor.h"
 
-#include "unity-shared/UBusWrapper.h"
-#include "unity-shared/UBusMessages.h"
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GTKWrapper.h>
 #include <UnityCore/Variant.h>
@@ -117,13 +111,11 @@ LauncherIcon::LauncherIcon(IconType type)
   mouse_click.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseClick));
 
   _tooltip_fade_animator.updated.connect([this] (double opacity) {
-    if (_tooltip)
-    {
-      _tooltip->SetOpacity(opacity);
-
-      if (opacity == 0.0f && _tooltip_fade_animator.GetStartValue() > _tooltip_fade_animator.GetFinishValue())
-        _tooltip->ShowWindow(false);
-    }
+    if (_tooltip) _tooltip->SetOpacity(opacity);
+  });
+  _tooltip_fade_animator.finished.connect([this] {
+    if (_tooltip && animation::GetDirection(_tooltip_fade_animator) == animation::Direction::BACKWARD)
+      _tooltip->ShowWindow(false);
   });
 }
 
@@ -501,10 +493,7 @@ LauncherIcon::ShowTooltip()
   _tooltip->ShowWindow(!tooltip_text().empty());
   tooltip_visible.emit(_tooltip);
 
-  if (_tooltip_fade_animator.CurrentState() == nux::animation::Animation::State::Running)
-    _tooltip_fade_animator.Reverse();
-  else
-    _tooltip_fade_animator.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
+  animation::StartOrReverse(_tooltip_fade_animator, animation::Direction::FORWARD);
 }
 
 void
@@ -652,17 +641,7 @@ void LauncherIcon::RecvMouseClick(int button, int monitor, unsigned long key_fla
 void LauncherIcon::HideTooltip()
 {
   if (_tooltip)
-  {
-    if (_tooltip_fade_animator.CurrentState() == nux::animation::Animation::State::Running &&
-        _tooltip_fade_animator.GetFinishValue() == 1.0)
-    {
-      _tooltip_fade_animator.Reverse();
-    }
-    else
-    {
-      _tooltip_fade_animator.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
-    }
-  }
+    animation::StartOrReverse(_tooltip_fade_animator, animation::Direction::BACKWARD);
 
   tooltip_visible.emit(nux::ObjectPtr<nux::View>(nullptr));
 }
@@ -855,8 +834,6 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
     {
       Present(0.5f, 1500);
     }
-
-    UBusManager::SendMessage(UBUS_LAUNCHER_ICON_URGENT_CHANGED, g_variant_new_boolean(value));
   }
 
   if (quirk == Quirk::VISIBLE)
