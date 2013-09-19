@@ -151,6 +151,7 @@ if (GMOCK_LIB AND
        test_indicator_appmenu.cpp
        test_indicator_entry.cpp
        test_indicators.cpp
+       test_introspection_data.cpp
        test_favorite_store.cpp
        test_favorite_store_gsettings.cpp
        test_favorite_store_private.cpp
