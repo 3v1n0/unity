@@ -56,14 +56,12 @@ GVariant* IntrospectionData::Get() const
 
 void add_(GVariantBuilder* builder_, std::string const& name, ValueType type, std::vector<Variant> const& values)
 {
-  GVariantBuilder array;
-  g_variant_builder_init(&array, G_VARIANT_TYPE("av"));
-  g_variant_builder_add(&array, "v", g_variant_new_uint32(static_cast<uint32_t>(type)));
-
+  std::vector<Variant> new_values = {g_variant_new_variant(Variant(static_cast<uint32_t>(type)))};
+  new_values.reserve(new_values.size() + values.size());
   for (auto const& value : values)
-    g_variant_builder_add(&array, "v", static_cast<GVariant*>(value));
+    new_values.push_back(g_variant_new_variant(value));
 
-  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_builder_end(&array));
+  g_variant_builder_add(builder_, "{sv}", name.c_str(), static_cast<GVariant*>(Variant::FromVector(new_values)));
 }
 
 IntrospectionData& IntrospectionData::add(std::string const& name, bool value)
