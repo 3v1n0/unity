@@ -207,6 +207,7 @@ void SwitcherView::OnDetailSelectionChanged(bool detail)
   text_view_->SetVisible(!detail);
 
   last_detail_icon_selected_ = -1;
+  check_mouse_first_time_ = true;
 
   if (!detail)
   {
