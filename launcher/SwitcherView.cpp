@@ -390,6 +390,10 @@ void SwitcherView::HandleDetailMouseUp(int x, int y, int button)
       model_->detail_selection_index = detail_icon_index;
       hide_request.emit(true);
     }
+    else if (detail_icon_index < 0)
+    {
+      model_->detail_selection = false;
+    }
   }
   else if (button == 3)
   {
