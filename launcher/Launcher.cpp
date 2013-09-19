@@ -1431,7 +1431,7 @@ void Launcher::SetHover(bool hovered)
   _hovered = hovered;
 
   if (!IsInKeyNavMode() && _hovered)
-    _enter_y = _mouse_position.y
+    _enter_y = _mouse_position.y;
 
   if (_folded)
     animation::StartOrReverseIf(hover_animation_, _hovered);
