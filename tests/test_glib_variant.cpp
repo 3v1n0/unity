@@ -223,6 +223,33 @@ TEST(TestGLibVariant, AssignSame)
   EXPECT_TRUE(ValuesEqual(v, raw_variant));
 }
 
+TEST(TestGLibVariant, ConstructHintsMap)
+{
+  Variant v({
+    {"charstring-key", g_variant_new_string("charstring-value")},
+    {"string-key", g_variant_new_string(std::string("string-value").c_str())},
+    {"gint32-key", g_variant_new_int32(-1)},
+    {"guint32-key", g_variant_new_uint32(2)},
+    {"gint64-key", g_variant_new_int64(-3)},
+    {"guint64-key", g_variant_new_uint64(4)},
+    {"float-key", g_variant_new_double((float)1.1)},
+    {"double-key", g_variant_new_double(2.2)},
+    {"bool-key", g_variant_new_boolean(true)},
+    {"variant-key", g_variant_new_int32(123)}
+  });
+
+  EXPECT_EQ("charstring-value", Variant(g_variant_lookup_value(v, "charstring-key", nullptr)).GetString());
+  EXPECT_EQ("string-value", Variant(g_variant_lookup_value(v, "string-key", nullptr)).GetString());
+  EXPECT_EQ(-1, Variant(g_variant_lookup_value(v, "gint32-key", nullptr)).GetInt32());
+  EXPECT_EQ(2, Variant(g_variant_lookup_value(v, "guint32-key", nullptr)).GetUInt32());
+  EXPECT_EQ(-3, Variant(g_variant_lookup_value(v, "gint64-key", nullptr)).GetInt64());
+  EXPECT_EQ(4, Variant(g_variant_lookup_value(v, "guint64-key", nullptr)).GetUInt64());
+  EXPECT_FLOAT_EQ(1.1, Variant(g_variant_lookup_value(v, "float-key", nullptr)).GetFloat());
+  EXPECT_DOUBLE_EQ(2.2, Variant(g_variant_lookup_value(v, "double-key", nullptr)).GetDouble());
+  EXPECT_EQ(true, Variant(g_variant_lookup_value(v, "bool-key", nullptr)).GetBool());
+  EXPECT_EQ(123, Variant(g_variant_lookup_value(v, "variant-key", nullptr)).GetInt32());
+}
+
 TEST(TestGLibVariant, AssignString)
 {
   std::string value = "UnityVariant";
@@ -339,6 +366,34 @@ TEST(TestGLibVariant, AssignNumericDouble)
   Variant v1;
   v1 = 0.987654321;
   EXPECT_EQ(0.987654321, v1.GetDouble());
+}
+
+TEST(TestGLibVariant, AssignHintsMap)
+{
+  Variant v;
+  v = {
+    {"charstring-key", g_variant_new_string("charstring-value")},
+    {"string-key", g_variant_new_string(std::string("string-value").c_str())},
+    {"gint32-key", g_variant_new_int32(-1)},
+    {"guint32-key", g_variant_new_uint32(2)},
+    {"gint64-key", g_variant_new_int64(-3)},
+    {"guint64-key", g_variant_new_uint64(4)},
+    {"float-key", g_variant_new_double((float)1.1)},
+    {"double-key", g_variant_new_double(2.2)},
+    {"bool-key", g_variant_new_boolean(true)},
+    {"variant-key", g_variant_new_int32(123)}
+  };
+
+  EXPECT_EQ("charstring-value", Variant(g_variant_lookup_value(v, "charstring-key", nullptr)).GetString());
+  EXPECT_EQ("string-value", Variant(g_variant_lookup_value(v, "string-key", nullptr)).GetString());
+  EXPECT_EQ(-1, Variant(g_variant_lookup_value(v, "gint32-key", nullptr)).GetInt32());
+  EXPECT_EQ(2, Variant(g_variant_lookup_value(v, "guint32-key", nullptr)).GetUInt32());
+  EXPECT_EQ(-3, Variant(g_variant_lookup_value(v, "gint64-key", nullptr)).GetInt64());
+  EXPECT_EQ(4, Variant(g_variant_lookup_value(v, "guint64-key", nullptr)).GetUInt64());
+  EXPECT_FLOAT_EQ(1.1, Variant(g_variant_lookup_value(v, "float-key", nullptr)).GetFloat());
+  EXPECT_DOUBLE_EQ(2.2, Variant(g_variant_lookup_value(v, "double-key", nullptr)).GetDouble());
+  EXPECT_EQ(true, Variant(g_variant_lookup_value(v, "bool-key", nullptr)).GetBool());
+  EXPECT_EQ(123, Variant(g_variant_lookup_value(v, "variant-key", nullptr)).GetInt32());
 }
 
 TEST(TestGLibVariant, KeepsRef)
