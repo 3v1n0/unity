@@ -68,7 +68,6 @@ Controller::Controller(Controller::WindowCreator const& create_window)
   , monitor_(0)
   , visible_(false)
   , need_show_(false)
-  , view_(nullptr)
   , ensure_timeout_(PRELOAD_TIMEOUT_LENGTH)
   , timeline_animator_(90)
 {
@@ -143,10 +142,10 @@ void Controller::SetupWindow()
 void Controller::SetupDashView()
 {
   view_ = new DashView(std::make_shared<GSettingsScopes>(), std::make_shared<ApplicationStarterImp>());
-  AddChild(view_);
+  AddChild(view_.GetPointer());
 
   nux::HLayout* layout = new nux::HLayout(NUX_TRACKER_LOCATION);
-  layout->AddView(view_, 1);
+  layout->AddView(view_.GetPointer(), 1);
   layout->SetContentDistribution(nux::MAJOR_POSITION_START);
   layout->SetVerticalExternalMargin(0);
   layout->SetHorizontalExternalMargin(0);
@@ -465,6 +464,11 @@ nux::Geometry Controller::GetInputWindowGeometry()
   geo.width += style.GetDashRightTileWidth();
   geo.height += style.GetDashBottomTileHeight();
   return geo;
+}
+
+nux::ObjectPtr<DashView> const& Controller::Dash() const
+{
+  return view_;
 }
 
 

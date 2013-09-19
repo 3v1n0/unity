@@ -68,6 +68,18 @@
                     <default>&lt;Alt&gt;F10</default>
                 </option>
 
+                <option name="window_right_maximize" type="key">
+                    <_short>Key to vertically maximize the focused window to the right</_short>
+                    <_long>Semi-maximize vertically the focused window on the half right width of the screen</_long>
+                    <default>&lt;Control&gt;&lt;Super&gt;Right</default>
+                </option>
+
+                <option name="window_left_maximize" type="key">
+                    <_short>Key to vertically maximize the focused window to the left</_short>
+                    <_long>Semi-maximize vertically the focused window to the half left width of the screen</_long>
+                    <default>&lt;Control&gt;&lt;Super&gt;Left</default>
+                </option>
+
                 <option name="panel_opacity" type="float">
                     <_short>Panel Opacity</_short>
                     <_long>The opacity of the Panel background.</_long>
