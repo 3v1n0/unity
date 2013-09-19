@@ -22,6 +22,7 @@
 
 #include "TrashLauncherIcon.h"
 #include "test_mock_filemanager.h"
+#include "mock-application.h"
 
 using namespace unity;
 using namespace unity::launcher;
@@ -30,7 +31,7 @@ using namespace testing;
 namespace
 {
 
-struct TestTrashLauncherIcon : Test
+struct TestTrashLauncherIcon : testmocks::TestUnityAppBase
 {
   TestTrashLauncherIcon()
     : fm_(std::make_shared<NiceMock<MockFileManager>>())
@@ -91,6 +92,62 @@ TEST_F(TestTrashLauncherIcon, FilemanagerSignalDisconnection)
   }
 
   EXPECT_TRUE(file_manager->locations_changed.empty());
+}
+
+TEST_F(TestTrashLauncherIcon, AcceptDropTrashesFiles)
+{
+  DndData data;
+  std::string data_string = "file1\nfile2\ndir3/file3\nfileN";
+  data.Fill(data_string.c_str());
+
+  for (auto const& uri : data.Uris())
+    EXPECT_CALL(*fm_, TrashFile(uri));
+
+  icon.AcceptDrop(data);
+}
+
+MATCHER_P(ApplicationSubjectEquals, other, "") { return *arg == *other; }
+
+TEST_F(TestTrashLauncherIcon, AcceptDropTrashedFilesLogsEvents)
+{
+  DndData data;
+  std::string data_string = "file1\ndir2/file2\nfile3\ndirN/fileN";
+  data.Fill(data_string.c_str());
+  EXPECT_CALL(*fm_, TrashFile(_)).WillRepeatedly(Return(true));
+  std::vector<ApplicationSubjectPtr> subjects;
+
+  for (auto const& uri : data.Uris())
+  {
+    auto subject = std::make_shared<testmocks::MockApplicationSubject>();
+    subject->uri = uri;
+    subject->origin = glib::gchar_to_string(g_path_get_dirname(uri.c_str()));
+    subject->text = glib::gchar_to_string(g_path_get_basename(uri.c_str()));
+    subjects.push_back(subject);
+    EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::DELETE, ApplicationSubjectEquals(subject)));
+  }
+
+  icon.AcceptDrop(data);
+
+  EXPECT_FALSE(unity_app_->actions_log_.empty());
+  for (auto const& subject : subjects)
+    ASSERT_TRUE(unity_app_->HasLoggedEvent(ApplicationEventType::DELETE, subject));
+}
+
+TEST_F(TestTrashLauncherIcon, AcceptDropFailsDoesNotLogEvents)
+{
+  DndData data;
+  std::string data_string = "file1\ndir2/file2\nfile3\ndirN/fileN";
+  data.Fill(data_string.c_str());
+  EXPECT_CALL(*fm_, TrashFile(_)).WillRepeatedly(Return(false));
+  std::vector<ApplicationSubjectPtr> subjects;
+
+  EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::DELETE, _)).Times(0);
+
+  icon.AcceptDrop(data);
+
+  EXPECT_TRUE(unity_app_->actions_log_.empty());
+  for (auto const& subject : subjects)
+    ASSERT_FALSE(unity_app_->HasLoggedEvent(ApplicationEventType::DELETE, subject));
 }
 
 }

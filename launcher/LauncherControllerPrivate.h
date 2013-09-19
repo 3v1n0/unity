@@ -88,7 +88,7 @@ public:
 
   void RegisterIcon(AbstractLauncherIcon::Ptr const& icon, int priority = std::numeric_limits<int>::min());
 
-  AbstractLauncherIcon::Ptr CreateFavoriteIcon(std::string const& icon_uri);
+  AbstractLauncherIcon::Ptr CreateFavoriteIcon(std::string const& icon_uri, bool emit_signal = false);
   AbstractLauncherIcon::Ptr GetIconByUri(std::string const& icon_uri);
   SoftwareCenterLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path);
 

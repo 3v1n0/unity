@@ -363,18 +363,18 @@ void Controller::Impl::OnLauncherAddRequest(std::string const& icon_uri, Abstrac
 
   if (icon)
   {
-    icon->Stick(false);
     model_->ReorderAfter(icon, icon_before);
+    icon->Stick(true);
   }
   else
   {
     if (icon_before)
-      RegisterIcon(CreateFavoriteIcon(icon_uri), icon_before->SortPriority());
+      RegisterIcon(CreateFavoriteIcon(icon_uri, true), icon_before->SortPriority());
     else
-      RegisterIcon(CreateFavoriteIcon(icon_uri));
-  }
+      RegisterIcon(CreateFavoriteIcon(icon_uri, true));
 
-  SaveIconsOrder();
+    SaveIconsOrder();
+  }
 }
 
 void Controller::Impl::AddFavoriteKeepingOldPosition(FavoriteList& icons, std::string const& icon_uri) const
@@ -472,8 +472,6 @@ Controller::Impl::OnLauncherUpdateIconStickyState(std::string const& icon_uri, b
           {
             existing_icon_entry->UnStick();
           }
-
-          SortAndUpdate();
         }
     }
     else
@@ -485,8 +483,9 @@ Controller::Impl::OnLauncherUpdateIconStickyState(std::string const& icon_uri, b
         {
           if (sticky)
             {
-              favorite_store.AddFavorite(target_uri, -1);
-              RegisterIcon(CreateFavoriteIcon(target_uri));
+              auto prio = GetLastIconPriority<ApplicationLauncherIcon>("", true);
+              RegisterIcon(CreateFavoriteIcon(target_uri, true), prio);
+              SaveIconsOrder();
             }
           else
             {
@@ -528,8 +527,7 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
       // This will ensure that the center of the new icon is set, so that
       // the animation could be done properly.
       sources_.AddIdle([this, icon_x, icon_y, result] {
-        result->Animate(CurrentLauncher(), icon_x, icon_y);
-        return false;
+        return !result->Animate(CurrentLauncher(), icon_x, icon_y);
       });
     }
     else
@@ -856,7 +854,7 @@ void Controller::Impl::OnDeviceIconAdded(AbstractLauncherIcon::Ptr const& icon)
   RegisterIcon(icon, GetLastIconPriority<VolumeLauncherIcon>(local::DEVICES_URI));
 }
 
-AbstractLauncherIcon::Ptr Controller::Impl::CreateFavoriteIcon(std::string const& icon_uri)
+AbstractLauncherIcon::Ptr Controller::Impl::CreateFavoriteIcon(std::string const& icon_uri, bool emit_signal)
 {
   AbstractLauncherIcon::Ptr result;
 
@@ -915,7 +913,7 @@ AbstractLauncherIcon::Ptr Controller::Impl::CreateFavoriteIcon(std::string const
   }
 
   if (result)
-    result->Stick(false);
+    result->Stick(emit_signal);
 
   return result;
 }
@@ -946,11 +944,11 @@ SoftwareCenterLauncherIcon::Ptr Controller::Impl::CreateSCLauncherIcon(std::stri
   if (!app)
     return result;
 
-  app->sticky = true;
   if (app->seen)
     return result;
 
   result = new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path);
+  result->Stick(false);
 
   return result;
 }

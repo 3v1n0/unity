@@ -1,3 +1,56 @@
+unity (7.1.0+13.10.20130903.1-0ubuntu1) saucy; urgency=low
+
+  [ Ted Gould ]
+  * Use libupstart for sending Upstart signals.
+
+  [ Stephen M. Webb ]
+  * moved to zeitgeist-2.0. (LP: #1197569)
+
+  [ Marco Trevisan (Treviño) ]
+  * ApplicationLauncherIcon: make sure we unstick an icon, update its
+    URI and resave it in order Also improving a lot the
+    SoftwareCenterLauncherIcon code and the install behaviour. (LP:
+    #1218504, #1217849)
+
+  [ Chris Townsend ]
+  * Fix the code formatting introduced in revno. 3485.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3488
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 03 Sep 2013 06:37:05 +0000
+
+unity (7.1.0+13.10.20130829.1-0ubuntu1) saucy; urgency=low
+
+  [ Brandon Schaefer ]
+  *  (LP: #1217592)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3483
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 29 Aug 2013 06:44:00 +0000
+
+unity (7.1.0+13.10.20130828.1-0ubuntu1) saucy; urgency=low
+
+  [ Pawel Stolowski ]
+  * Support PERFORM_SEARCH activation response; require libunity>=7.1.0.
+
+  [ Michal Hruby ]
+  * Added support for colorizing UnityProtocolAnnotatedIcon.
+
+  [ Chris Townsend ]
+  * Do not display the scope bar at the bottom when the Command "Lens"
+    is opened as it's not really not a Lens/Scope. (LP: #1168019)
+
+  [ Brandon Schaefer ]
+  * Quick fix to enable the compose key which is turned off by default.
+    Finding a better fix soon. (LP: #1216979)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3481
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 28 Aug 2013 13:23:28 +0000
+
 unity (7.1.0+13.10.20130822-0ubuntu1) saucy; urgency=low
 
   [ Łukasz 'sil2100' Zemczak ]
@@ -702,7 +755,7 @@ unity (7.0.0daily13.05.31ubuntu.unity.next-0ubuntu1) raring; urgency=low
 unity (7.0.0daily13.05.08ubuntu.unity.next-0ubuntu1) raring; urgency=low
 
   * Automatic snapshot from revision 3317 (ubuntu-unity/next)
- 
+
  -- Ubuntu daily release <ps-jenkins@lists.canonical.com>   Wed, 08 May 2013 04:57:49 +0000
 
 unity (7.0.0daily13.05.01.1ubuntu.unity.next-0ubuntu1) raring; urgency=low

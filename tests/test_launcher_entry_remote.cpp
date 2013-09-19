@@ -55,9 +55,9 @@ GVariant* BuildVariantParameters(std::string const& app_uri = "app_uri",
 
 TEST(TestLauncherEntryRemote, DummyConstruction)
 {
-  LauncherEntryRemote entry("TestName", nullptr);
+  LauncherEntryRemote entry("com.canonical.unity.TestName", nullptr);
 
-  EXPECT_EQ(entry.DBusName(), "TestName");
+  EXPECT_EQ(entry.DBusName(), "com.canonical.unity.TestName");
   EXPECT_TRUE(entry.AppUri().empty());
   EXPECT_TRUE(entry.Emblem().empty());
   EXPECT_EQ(entry.Count(), 0);
@@ -71,9 +71,9 @@ TEST(TestLauncherEntryRemote, DummyConstruction)
 
 TEST(TestLauncherEntryRemote, Construction)
 {
-  LauncherEntryRemote entry("TestName", BuildVariantParameters());
+  LauncherEntryRemote entry("com.canonical.unity.TestName", BuildVariantParameters());
 
-  EXPECT_EQ(entry.DBusName(), "TestName");
+  EXPECT_EQ(entry.DBusName(), "com.canonical.unity.TestName");
   EXPECT_EQ(entry.AppUri(), "app_uri");
   EXPECT_EQ(entry.Emblem(), "emblem");
   EXPECT_EQ(entry.Count(), 0);
@@ -90,9 +90,9 @@ TEST(TestLauncherEntryRemote, CustomConstruction)
   GVariant* parameters;
   parameters = BuildVariantParameters("Uri", "TestEmblem", true, 55, true, 31.12f,
                                       true, true, "/My/DBus/Menu/For/QL");
-  LauncherEntryRemote entry("CustomName", parameters);
+  LauncherEntryRemote entry("com.canonical.unity.CustomName", parameters);
 
-  EXPECT_EQ(entry.DBusName(), "CustomName");
+  EXPECT_EQ(entry.DBusName(), "com.canonical.unity.CustomName");
   EXPECT_EQ(entry.AppUri(), "Uri");
   EXPECT_EQ(entry.Emblem(), "TestEmblem");
   EXPECT_EQ(entry.Count(), 55);
@@ -106,9 +106,9 @@ TEST(TestLauncherEntryRemote, CustomConstruction)
 
 TEST(TestLauncherEntryRemote, UpdateFromOther)
 {
-  LauncherEntryRemote entry1("Entry1", BuildVariantParameters("AppURI1"));
+  LauncherEntryRemote entry1("com.canonical.unity.Entry1", BuildVariantParameters("AppURI1"));
 
-  ASSERT_EQ(entry1.DBusName(), "Entry1");
+  ASSERT_EQ(entry1.DBusName(), "com.canonical.unity.Entry1");
   ASSERT_EQ(entry1.AppUri(), "AppURI1");
   auto old_ql1 = entry1.Quicklist();
   ASSERT_THAT(old_ql1.RawPtr(), NotNull());
@@ -117,12 +117,12 @@ TEST(TestLauncherEntryRemote, UpdateFromOther)
   parameters = BuildVariantParameters("Uri2", "TestEmblem", false, 5, true, 0.12f,
                                       true, false, "/My/DBus/Menu/For/QL");
 
-  LauncherEntryRemote::Ptr entry2(new LauncherEntryRemote("Entry2", parameters));
+  LauncherEntryRemote::Ptr entry2(new LauncherEntryRemote("com.canonical.unity.Entry2", parameters));
   ASSERT_EQ(entry2->AppUri(), "Uri2");
 
   entry1.Update(entry2);
 
-  EXPECT_EQ(entry1.DBusName(), "Entry2");
+  EXPECT_EQ(entry1.DBusName(), "com.canonical.unity.Entry2");
   EXPECT_EQ(entry1.AppUri(), "AppURI1");
   EXPECT_EQ(entry1.Emblem(), "TestEmblem");
   EXPECT_EQ(entry1.Count(), 5);
@@ -137,9 +137,9 @@ TEST(TestLauncherEntryRemote, UpdateFromOther)
 
 TEST(TestLauncherEntryRemote, UpdateFromVariantIter)
 {
-  LauncherEntryRemote entry1("Entry1", BuildVariantParameters("AppURI1"));
+  LauncherEntryRemote entry1("com.canonical.unity.Entry1", BuildVariantParameters("AppURI1"));
 
-  ASSERT_EQ(entry1.DBusName(), "Entry1");
+  ASSERT_EQ(entry1.DBusName(), "com.canonical.unity.Entry1");
   ASSERT_EQ(entry1.AppUri(), "AppURI1");
   auto old_ql1 = entry1.Quicklist();
   ASSERT_THAT(old_ql1.RawPtr(), NotNull());
@@ -155,7 +155,7 @@ TEST(TestLauncherEntryRemote, UpdateFromVariantIter)
   g_variant_iter_free(prop_iter);
   g_variant_unref(parameters);
 
-  EXPECT_EQ(entry1.DBusName(), "Entry1");
+  EXPECT_EQ(entry1.DBusName(), "com.canonical.unity.Entry1");
   EXPECT_EQ(entry1.AppUri(), "AppURI1");
   EXPECT_EQ(entry1.Emblem(), "TestEmblem");
   EXPECT_EQ(entry1.Count(), 5);
@@ -170,7 +170,7 @@ TEST(TestLauncherEntryRemote, UpdateFromVariantIter)
 
 TEST(TestLauncherEntryRemote, ChangeDBusName)
 {
-  LauncherEntryRemote entry("Entry", BuildVariantParameters("AppURI"));
+  LauncherEntryRemote entry("com.canonical.unity.Entry", BuildVariantParameters("AppURI"));
 
   bool name_changed = false;
   std::string old_name;
@@ -181,16 +181,16 @@ TEST(TestLauncherEntryRemote, ChangeDBusName)
 
   auto old_ql = entry.Quicklist();
   ASSERT_THAT(old_ql.RawPtr(), NotNull());
-  ASSERT_EQ(entry.DBusName(), "Entry");
+  ASSERT_EQ(entry.DBusName(), "com.canonical.unity.Entry");
 
-  entry.SetDBusName("NewEntryName");
-  ASSERT_EQ(entry.DBusName(), "NewEntryName");
+  entry.SetDBusName("com.canonical.unity.NewEntryName");
+  ASSERT_EQ(entry.DBusName(), "com.canonical.unity.NewEntryName");
 
   EXPECT_THAT(entry.Quicklist().RawPtr(), IsNull());
   EXPECT_NE(old_ql, entry.Quicklist());
 
   EXPECT_TRUE(name_changed);
-  EXPECT_EQ(old_name, "Entry");
+  EXPECT_EQ(old_name, "com.canonical.unity.Entry");
 }
 
 TEST(TestLauncherEntryRemote, EmblemChangedSignal)
@@ -199,7 +199,7 @@ TEST(TestLauncherEntryRemote, EmblemChangedSignal)
   parameters = BuildVariantParameters("Uri", "TestEmblem1", true, 55, true, 31.12f,
                                       true, true, "/My/DBus/Menu/For/QL");
 
-  LauncherEntryRemote entry1("Entry1", parameters);
+  LauncherEntryRemote entry1("com.canonical.unity.Entry1", parameters);
 
   bool value_changed = false;
   entry1.emblem_changed.connect([&] (LauncherEntryRemote*) { value_changed = true; });
@@ -207,7 +207,7 @@ TEST(TestLauncherEntryRemote, EmblemChangedSignal)
   parameters = BuildVariantParameters("Uri", "TestEmblem2", true, 55, true, 31.12f,
                                       true, true, "/My/DBus/Menu/For/QL");
 
-  LauncherEntryRemote::Ptr entry2(new LauncherEntryRemote("Entry2", parameters));
+  LauncherEntryRemote::Ptr entry2(new LauncherEntryRemote("com.canonical.unity.Entry2", parameters));
 
   ASSERT_EQ(entry1.Emblem(), "TestEmblem1");
 
@@ -223,7 +223,7 @@ TEST(TestLauncherEntryRemote, CountChangedSignal)
   parameters = BuildVariantParameters("Uri", "TestEmblem", true, 55, true, 31.12f,
                                       true, true, "/My/DBus/Menu/For/QL");
 
-  LauncherEntryRemote entry1("Entry1", parameters);
+  LauncherEntryRemote entry1("com.canonical.unity.Entry1", parameters);
 
   bool value_changed = false;
   entry1.count_changed.connect([&] (LauncherEntryRemote*) { value_changed = true; });
@@ -231,7 +231,7 @@ TEST(TestLauncherEntryRemote, CountChangedSignal)
   parameters = BuildVariantParameters("Uri", "TestEmblem", true, 155, true, 31.12f,
                                       true, true, "/My/DBus/Menu/For/QL");
 
-  LauncherEntryRemote::Ptr entry2(new LauncherEntryRemote("Entry2", parameters));
+  LauncherEntryRemote::Ptr entry2(new LauncherEntryRemote("com.canonical.unity.Entry2", parameters));
 
   ASSERT_EQ(entry1.Count(), 55);
 
@@ -247,7 +247,7 @@ TEST(TestLauncherEntryRemote, ProgressChangedSignal)
   parameters = BuildVariantParameters("Uri", "TestEmblem", true, 55, true, 0.12f,
                                       true, true, "/My/DBus/Menu/For/QL");
 
-  LauncherEntryRemote entry1("Entry1", parameters);
+  LauncherEntryRemote entry1("com.canonical.unity.Entry1", parameters);
 
   bool value_changed = false;
   entry1.progress_changed.connect([&] (LauncherEntryRemote*) { value_changed = true; });
@@ -255,7 +255,7 @@ TEST(TestLauncherEntryRemote, ProgressChangedSignal)
   parameters = BuildVariantParameters("Uri", "TestEmblem", true, 55, true, 31.12f,
                                       true, true, "/My/DBus/Menu/For/QL");
 
-  LauncherEntryRemote::Ptr entry2(new LauncherEntryRemote("Entry2", parameters));
+  LauncherEntryRemote::Ptr entry2(new LauncherEntryRemote("com.canonical.unity.Entry2", parameters));
 
   ASSERT_EQ(entry1.Progress(), 0.12f);
 
@@ -271,7 +271,7 @@ TEST(TestLauncherEntryRemote, QuicklistChangedSignal)
   parameters = BuildVariantParameters("Uri", "TestEmblem", true, 55, true, 31.12f,
                                       true, true, "/My/DBus/Menu/For/QL1");
 
-  LauncherEntryRemote entry1("Entry1", parameters);
+  LauncherEntryRemote entry1("com.canonical.unity.Entry1", parameters);
 
   bool value_changed = false;
   entry1.quicklist_changed.connect([&] (LauncherEntryRemote*) { value_changed = true; });
@@ -279,7 +279,7 @@ TEST(TestLauncherEntryRemote, QuicklistChangedSignal)
   parameters = BuildVariantParameters("Uri", "TestEmblem", true, 55, true, 31.12f,
                                       true, true, "/My/DBus/Menu/For/QL2");
 
-  LauncherEntryRemote::Ptr entry2(new LauncherEntryRemote("Entry2", parameters));
+  LauncherEntryRemote::Ptr entry2(new LauncherEntryRemote("com.canonical.unity.Entry2", parameters));
 
   auto old_ql1 = entry1.Quicklist();
   ASSERT_THAT(old_ql1.RawPtr(), NotNull());
@@ -297,7 +297,7 @@ TEST(TestLauncherEntryRemote, EmblemVisibilityChanged)
   parameters = BuildVariantParameters("Uri", "TestEmblem", false, 55, true, 31.12f,
                                       true, true, "/My/DBus/Menu/For/QL");
 
-  LauncherEntryRemote entry1("Entry1", parameters);
+  LauncherEntryRemote entry1("com.canonical.unity.Entry1", parameters);
 
   bool value_changed = false;
   entry1.emblem_visible_changed.connect([&] (LauncherEntryRemote*) { value_changed = true; });
@@ -305,7 +305,7 @@ TEST(TestLauncherEntryRemote, EmblemVisibilityChanged)
   parameters = BuildVariantParameters("Uri", "TestEmblem", true, 55, true, 31.12f,
                                       true, true, "/My/DBus/Menu/For/QL");
 
-  LauncherEntryRemote::Ptr entry2(new LauncherEntryRemote("Entry2", parameters));
+  LauncherEntryRemote::Ptr entry2(new LauncherEntryRemote("com.canonical.unity.Entry2", parameters));
 
   ASSERT_FALSE(entry1.EmblemVisible());
 
@@ -321,7 +321,7 @@ TEST(TestLauncherEntryRemote, CountVisibilityChanged)
   parameters = BuildVariantParameters("Uri", "TestEmblem", false, 55, false, 31.12f,
                                       true, true, "/My/DBus/Menu/For/QL");
 
-  LauncherEntryRemote entry1("Entry1", parameters);
+  LauncherEntryRemote entry1("com.canonical.unity.Entry1", parameters);
 
   bool value_changed = false;
   entry1.count_visible_changed.connect([&] (LauncherEntryRemote*) { value_changed = true; });
@@ -329,7 +329,7 @@ TEST(TestLauncherEntryRemote, CountVisibilityChanged)
   parameters = BuildVariantParameters("Uri", "TestEmblem", false, 55, true, 31.12f,
                                       true, true, "/My/DBus/Menu/For/QL");
 
-  LauncherEntryRemote::Ptr entry2(new LauncherEntryRemote("Entry2", parameters));
+  LauncherEntryRemote::Ptr entry2(new LauncherEntryRemote("com.canonical.unity.Entry2", parameters));
 
   ASSERT_FALSE(entry1.CountVisible());
 
@@ -345,7 +345,7 @@ TEST(TestLauncherEntryRemote, ProgressVisibilityChanged)
   parameters = BuildVariantParameters("Uri", "TestEmblem", false, 55, false, 31.12f,
                                       false, true, "/My/DBus/Menu/For/QL");
 
-  LauncherEntryRemote entry1("Entry1", parameters);
+  LauncherEntryRemote entry1("com.canonical.unity.Entry1", parameters);
 
   bool value_changed = false;
   entry1.progress_visible_changed.connect([&] (LauncherEntryRemote*) { value_changed = true; });
@@ -353,7 +353,7 @@ TEST(TestLauncherEntryRemote, ProgressVisibilityChanged)
   parameters = BuildVariantParameters("Uri", "TestEmblem", false, 55, false, 31.12f,
                                       true, true, "/My/DBus/Menu/For/QL");
 
-  LauncherEntryRemote::Ptr entry2(new LauncherEntryRemote("Entry2", parameters));
+  LauncherEntryRemote::Ptr entry2(new LauncherEntryRemote("com.canonical.unity.Entry2", parameters));
 
   ASSERT_FALSE(entry1.ProgressVisible());
 
@@ -369,7 +369,7 @@ TEST(TestLauncherEntryRemote, UrgentChanged)
   parameters = BuildVariantParameters("Uri", "TestEmblem", false, 55, false, 31.12f,
                                       false, false, "/My/DBus/Menu/For/QL");
 
-  LauncherEntryRemote entry1("Entry1", parameters);
+  LauncherEntryRemote entry1("com.canonical.unity.Entry1", parameters);
 
   bool value_changed = false;
   entry1.urgent_changed.connect([&] (LauncherEntryRemote*) { value_changed = true; });
@@ -377,7 +377,7 @@ TEST(TestLauncherEntryRemote, UrgentChanged)
   parameters = BuildVariantParameters("Uri", "TestEmblem", false, 55, false, 31.12f,
                                       false, true, "/My/DBus/Menu/For/QL");
 
-  LauncherEntryRemote::Ptr entry2(new LauncherEntryRemote("Entry2", parameters));
+  LauncherEntryRemote::Ptr entry2(new LauncherEntryRemote("com.canonical.unity.Entry2", parameters));
 
   ASSERT_FALSE(entry1.Urgent());
 

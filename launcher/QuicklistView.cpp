@@ -51,6 +51,7 @@ namespace unity
 namespace
 {
   const int ANCHOR_WIDTH = 10.0f;
+  const int TOP_SIZE = 4;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(QuicklistView);
@@ -59,7 +60,7 @@ QuicklistView::QuicklistView()
   : _anchorX(0)
   , _anchorY(0)
   , _labelText("QuicklistView 1234567890")
-  , _top_size(4)
+  , _top_size(TOP_SIZE)
   , _mouse_down(false)
   , _enable_quicklist_for_testing(false)
   , _anchor_width(10)
@@ -337,9 +338,9 @@ void QuicklistView::ShowQuicklistWithTipAt(int anchor_tip_x, int anchor_tip_y)
                            nux::GetWindowThread()->GetGraphicsDisplay().GetWindowHeight();
 
       if (offscreen_size > 0)
-        _top_size = offscreen_size;
+        _top_size = offscreen_size + TOP_SIZE;
       else
-        _top_size = 4;
+        _top_size = TOP_SIZE;
 
       int x = _anchorX - _padding;
       int y = _anchorY - _anchor_height / 2 - _top_size - _corner_radius - _padding;
@@ -378,7 +379,6 @@ void QuicklistView::Show()
     GrabPointer();
     GrabKeyboard();
     QueueDraw();
-    _compute_blur_bkg = true;
   }
 }
 
@@ -410,6 +410,7 @@ void QuicklistView::HideAndEndQuicklistNav()
 
 void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
+  _compute_blur_bkg = true;
   CairoBaseWindow::Draw(gfxContext, forceDraw);
 
   nux::Geometry base(GetGeometry());
@@ -1182,9 +1183,9 @@ void QuicklistView::UpdateTexture()
                            nux::GetWindowThread()->GetGraphicsDisplay().GetWindowHeight();
 
       if (offscreen_size > 0)
-        _top_size = offscreen_size;
+        _top_size = offscreen_size + TOP_SIZE;
       else
-        _top_size = 4;
+        _top_size = TOP_SIZE;
 
       size_above_anchor = _top_size;
       int x = _anchorX - _padding;

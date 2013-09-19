@@ -110,8 +110,6 @@ void Tooltip::ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y)
   int x = _anchorX - PADDING;
   int y = anchor_tip_y - ANCHOR_HEIGHT / 2 - TOP_SIZE - CORNER_RADIUS - PADDING;
 
-  _compute_blur_bkg = true;
-
   SetBaseX(x);
   SetBaseY(y);
 
@@ -123,6 +121,7 @@ void Tooltip::ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y)
 
 void Tooltip::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
+  _compute_blur_bkg = true;
   CairoBaseWindow::Draw(gfxContext, forceDraw);
   _tooltip_text->ProcessDraw(gfxContext, forceDraw);
 }

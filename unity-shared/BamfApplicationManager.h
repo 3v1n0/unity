@@ -24,7 +24,7 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
 
-#include "unity-shared/ApplicationManager.h"
+#include "unity-shared/DesktopApplicationManager.h"
 
 
 namespace unity
@@ -104,7 +104,7 @@ private:
 };
 
 
-class Application : public ::unity::Application, public View
+class Application : public ::unity::desktop::Application, public View
 {
 public:
   Application(ApplicationManager const& manager,
@@ -151,13 +151,11 @@ public:
   Manager();
   ~Manager();
 
-  ApplicationWindowPtr GetActiveWindow() override;
-
-  ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) override;
-
-  ApplicationList GetRunningApplications() override;
-
-  ApplicationPtr GetApplicationForWindow(Window xid) override;
+  ApplicationPtr GetUnityApplication() const override;
+  ApplicationWindowPtr GetActiveWindow() const override;
+  ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) const override;
+  ApplicationList GetRunningApplications() const override;
+  ApplicationPtr GetApplicationForWindow(Window xid) const override;
 
 private:
   void OnViewOpened(BamfMatcher* matcher, BamfView* view);

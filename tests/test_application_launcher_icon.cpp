@@ -23,11 +23,11 @@
 #include <gmock/gmock.h>
 
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/DesktopUtilities.h>
 
 #include "ApplicationLauncherIcon.h"
 #include "FavoriteStore.h"
 #include "StandaloneWindowManager.h"
+#include "ZeitgeistUtils.h"
 #include "mock-application.h"
 #include "test_utils.h"
 
@@ -65,6 +65,8 @@ struct MockApplicationLauncherIcon : ApplicationLauncherIcon
   bool LauncherIconIsSticky() const { return LauncherIcon::IsSticky(); }
 
   using ApplicationLauncherIcon::IsFileManager;
+  using ApplicationLauncherIcon::LogUnityEvent;
+  using ApplicationLauncherIcon::Remove;
 };
 
 MATCHER_P(AreArgsEqual, a, "")
@@ -72,15 +74,16 @@ MATCHER_P(AreArgsEqual, a, "")
   return arg.source == a.source &&
          arg.button == a.button &&
          arg.timestamp == a.timestamp &&
-         arg.target == a.target;
-         arg.monitor = a.monitor;
+         arg.target == a.target &&
+         arg.monitor == a.monitor;
 }
 
-struct TestApplicationLauncherIcon : Test
+struct TestApplicationLauncherIcon : testmocks::TestUnityAppBase
 {
   virtual void SetUp() override
   {
     WM = dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default());
+
     usc_app = std::make_shared<MockApplication::Nice>(USC_DESKTOP, "softwarecenter");
     usc_icon = new NiceMock<MockApplicationLauncherIcon>(usc_app);
     ASSERT_EQ(usc_icon->DesktopFile(), USC_DESKTOP);
@@ -144,9 +147,9 @@ struct TestApplicationLauncherIcon : Test
   }
 
   StandaloneWindowManager* WM;
-  std::shared_ptr<MockApplication> usc_app;
-  std::shared_ptr<MockApplication> empty_app;
-  std::shared_ptr<MockApplication> mock_app;
+  MockApplication::Ptr usc_app;
+  MockApplication::Ptr empty_app;
+  MockApplication::Ptr mock_app;
   MockApplicationLauncherIcon::Ptr usc_icon;
   MockApplicationLauncherIcon::Ptr empty_icon;
   MockApplicationLauncherIcon::Ptr mock_icon;
@@ -189,6 +192,7 @@ TEST_F(TestApplicationLauncherIcon, StickDesktopApp)
 {
   bool saved = false;
   usc_icon->position_saved.connect([&saved] {saved = true;});
+  EXPECT_CALL(*unity_app_, LogEvent(_, _)).Times(0);
 
   usc_icon->Stick(false);
   EXPECT_TRUE(usc_app->sticky());
@@ -204,6 +208,7 @@ TEST_F(TestApplicationLauncherIcon, StickDesktopLessApp)
 {
   bool saved = false;
   mock_icon->position_saved.connect([&saved] {saved = true;});
+  EXPECT_CALL(*unity_app_, LogEvent(_, _)).Times(0);
 
   mock_icon->Stick(false);
   EXPECT_TRUE(mock_app->sticky());
@@ -219,6 +224,7 @@ TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopApp)
 {
   bool saved = false;
   usc_icon->position_saved.connect([&saved] {saved = true;});
+  EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::ACCESS, _));
 
   usc_icon->Stick(true);
   EXPECT_TRUE(usc_app->sticky());
@@ -231,6 +237,7 @@ TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopLessApp)
 {
   bool saved = false;
   mock_icon->position_saved.connect([&saved] {saved = true;});
+  EXPECT_CALL(*unity_app_, LogEvent(_, _)).Times(0);
 
   mock_icon->Stick(true);
   EXPECT_TRUE(mock_app->sticky());
@@ -258,7 +265,7 @@ TEST_F(TestApplicationLauncherIcon, StickStickedDesktopLessApp)
   EXPECT_FALSE(icon->LauncherIconIsSticky());
 }
 
-TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopApplication)
+TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopAppDontCreateNewDesktop)
 {
   EXPECT_CALL(*usc_app, CreateLocalDesktopFile()).Times(0);
   usc_icon->Stick(true);
@@ -266,7 +273,7 @@ TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopApplication)
   EXPECT_TRUE(usc_icon->IsSticky());
 }
 
-TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopLessApplication)
+TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopLessAppCreatesNewDesktop)
 {
   auto app = std::make_shared<MockApplication::Nice>();
   MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
@@ -280,30 +287,62 @@ TEST_F(TestApplicationLauncherIcon, StickAndSaveDesktopLessApplication)
 
 TEST_F(TestApplicationLauncherIcon, UnstickNotRunning)
 {
-  bool forgot = false;
-  usc_app->running_ = false;
-  usc_icon->position_forgot.connect([&forgot] {forgot = true;});
+  usc_app->SetRunState(false);
+  usc_app->SetVisibility(true);
 
+  bool forgot = false;
+  bool removed = false;
   usc_icon->Stick();
+  usc_icon->position_forgot.connect([&forgot] {forgot = true;});
+  usc_icon->remove.connect([&removed] (AbstractLauncherIcon::Ptr const&) { removed = true; });
+
   usc_icon->UnStick();
   EXPECT_FALSE(usc_app->sticky());
   EXPECT_FALSE(usc_icon->IsSticky());
   EXPECT_FALSE(usc_icon->IsVisible());
   EXPECT_TRUE(forgot);
+  EXPECT_TRUE(removed);
 }
 
 TEST_F(TestApplicationLauncherIcon, UnstickRunning)
 {
-  bool forgot = false;
-  usc_app->running_ = true;
-  usc_icon->position_forgot.connect([&forgot] {forgot = true;});
+  usc_app->SetRunState(true);
+  usc_app->SetVisibility(true);
 
+  bool forgot = false;
+  bool removed = false;
   usc_icon->Stick();
+  usc_icon->position_forgot.connect([&forgot] {forgot = true;});
+  usc_icon->remove.connect([&removed] (AbstractLauncherIcon::Ptr const&) { removed = true; });
+
   usc_icon->UnStick();
   EXPECT_FALSE(usc_app->sticky());
   EXPECT_FALSE(usc_icon->IsSticky());
   EXPECT_TRUE(usc_icon->IsVisible());
   EXPECT_TRUE(forgot);
+  EXPECT_FALSE(removed);
+}
+
+TEST_F(TestApplicationLauncherIcon, UnstickDesktopAppLogEvents)
+{
+  usc_icon->Stick();
+
+  {
+  InSequence order;
+  EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::ACCESS, _));
+  EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::LEAVE, _));
+  }
+
+  usc_icon->UnStick();
+}
+
+TEST_F(TestApplicationLauncherIcon, UnstickDesktopLessAppLogEvent)
+{
+  auto app = std::make_shared<MockApplication::Nice>();
+  MockApplicationLauncherIcon::Ptr icon(new NiceMock<MockApplicationLauncherIcon>(app));
+
+  EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::ACCESS, _)).Times(0);
+  icon->UnStick();
 }
 
 TEST_F(TestApplicationLauncherIcon, VisibleChanged)
@@ -342,7 +381,7 @@ TEST_F(TestApplicationLauncherIcon, UpdateDesktopFileRemoteUri)
   usc_app->desktop_file_ = UM_DESKTOP;
   usc_app->desktop_file.changed.emit(usc_app->desktop_file_);
 
-  EXPECT_EQ(FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(UM_DESKTOP), usc_icon->RemoteUri());
+  EXPECT_EQ(FavoriteStore::URI_PREFIX_APP + UM_DESKTOP, usc_icon->RemoteUri());
 }
 
 TEST_F(TestApplicationLauncherIcon, UpdateDesktopStaticQuicklistEmpty)
@@ -390,6 +429,34 @@ TEST_F(TestApplicationLauncherIcon, UpdateDesktopEmptyForgetsIconPosition)
   EXPECT_TRUE(forgot);
 }
 
+TEST_F(TestApplicationLauncherIcon, UpdateDesktopEmptyForgetsIconPositionAndUpdatesUri)
+{
+  usc_icon->Stick(true);
+
+  bool forgot = false;
+  bool uri_updated = false;
+  bool saved = false;
+
+  usc_icon->position_forgot.connect([&forgot, &uri_updated] {
+    ASSERT_FALSE(uri_updated);
+    forgot = true;
+  });
+  usc_icon->uri_changed.connect([&forgot, &uri_updated] (std::string const&) {
+    ASSERT_TRUE(forgot);
+    uri_updated = true;
+  });
+  usc_icon->position_saved.connect([&saved] { saved = false; });
+
+  usc_app->desktop_file_ = "";
+  usc_app->desktop_file.changed.emit(usc_app->desktop_file_);
+
+  EXPECT_FALSE(usc_app->sticky());
+  EXPECT_FALSE(usc_icon->IsSticky());
+  EXPECT_TRUE(forgot);
+  EXPECT_TRUE(uri_updated);
+  EXPECT_FALSE(saved);
+}
+
 TEST_F(TestApplicationLauncherIcon, UpdateDesktopUpdatesIconUri)
 {
   bool updated = false;
@@ -408,19 +475,55 @@ TEST_F(TestApplicationLauncherIcon, UpdateDesktopUpdatesIconUri)
   EXPECT_TRUE(updated);
 }
 
-
 TEST_F(TestApplicationLauncherIcon, UpdateDesktopDoesntUpdatesIconUri)
 {
   bool updated = false;
-  usc_icon->uri_changed.connect([&updated] (std::string const& new_uri) { updated = true; });
+  usc_icon->uri_changed.connect([&updated] (std::string const&) { updated = true; });
   usc_app->desktop_file.changed.emit(usc_app->desktop_file_);
 
   EXPECT_FALSE(updated);
 }
 
+TEST_F(TestApplicationLauncherIcon, UpdateDesktopForgetsOldPositionUpdatesUriAndSavesAgain)
+{
+  usc_icon->Stick(true);
+
+  bool forgot = false;
+  bool uri_updated = false;
+  bool saved = false;
+  bool removed = false;
+
+  usc_icon->position_forgot.connect([&] {
+    ASSERT_FALSE(uri_updated);
+    ASSERT_FALSE(saved);
+    forgot = true;
+  });
+  usc_icon->uri_changed.connect([&] (std::string const&) {
+    ASSERT_FALSE(saved);
+    ASSERT_TRUE(forgot);
+    uri_updated = true;
+  });
+  usc_icon->position_saved.connect([&] {
+    ASSERT_TRUE(forgot);
+    ASSERT_TRUE(uri_updated);
+    saved = true;
+  });
+  usc_icon->remove.connect([&removed] (AbstractLauncherIcon::Ptr const&) { removed = true; });
+
+  usc_app->desktop_file_ = UM_DESKTOP;
+  usc_app->desktop_file.changed.emit(usc_app->desktop_file_);
+
+  ASSERT_FALSE(removed);
+  EXPECT_TRUE(usc_app->sticky());
+  EXPECT_TRUE(usc_icon->IsSticky());
+  EXPECT_TRUE(forgot);
+  EXPECT_TRUE(uri_updated);
+  EXPECT_TRUE(saved);
+}
+
 TEST_F(TestApplicationLauncherIcon, RemoteUri)
 {
-  EXPECT_EQ(usc_icon->RemoteUri(), FavoriteStore::URI_PREFIX_APP + DesktopUtilities::GetDesktopID(USC_DESKTOP));
+  EXPECT_EQ(usc_icon->RemoteUri(), FavoriteStore::URI_PREFIX_APP + USC_DESKTOP);
   EXPECT_TRUE(mock_icon->RemoteUri().empty());
 }
 
@@ -976,6 +1079,34 @@ TEST_F(TestApplicationLauncherIcon, AllowDetailViewInSwitcher)
 
   mock_app->type_ = "webapp";
   EXPECT_FALSE(mock_icon->AllowDetailViewInSwitcher());
+}
+
+TEST_F(TestApplicationLauncherIcon, LogUnityEventDesktopLess)
+{
+  EXPECT_CALL(*unity_app_, LogEvent(_, _)).Times(0);
+  mock_icon->LogUnityEvent(ApplicationEventType::ACCESS);
+}
+
+MATCHER_P(ApplicationSubjectEquals, other, "") { return *arg == *other; }
+
+TEST_F(TestApplicationLauncherIcon, LogUnityEventDesktop)
+{
+  auto subject = std::make_shared<testmocks::MockApplicationSubject>();
+  subject->uri = usc_icon->RemoteUri();
+  subject->current_uri = subject->uri();
+  subject->text = usc_icon->tooltip_text();
+  subject->interpretation = ZEITGEIST_NFO_SOFTWARE;
+  subject->manifestation = ZEITGEIST_NFO_SOFTWARE_ITEM;
+  subject->mimetype = "application/x-desktop";
+
+  EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::ACCESS, ApplicationSubjectEquals(subject)));
+  usc_icon->LogUnityEvent(ApplicationEventType::ACCESS);
+}
+
+TEST_F(TestApplicationLauncherIcon, RemoveLogEvent)
+{
+  EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::LEAVE, _));
+  usc_icon->Remove();
 }
 
 }

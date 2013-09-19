@@ -35,7 +35,9 @@ public:
   void Open(std::string const& uri, uint64_t timestamp);
   void OpenActiveChild(std::string const& uri, uint64_t timestamp);
   void OpenTrash(uint64_t timestamp);
+  bool TrashFile(std::string const& uri);
   void EmptyTrash(uint64_t timestamp);
+
   std::vector<std::string> OpenedLocations() const;
   bool IsPrefixOpened(std::string const& uri) const;
   bool IsTrashOpened() const;

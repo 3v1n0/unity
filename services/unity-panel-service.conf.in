@@ -11,7 +11,8 @@ author "Ted Gould <ted@ubuntu.com>"
 start on desktop-start DESKTOP_SESSION=ubuntu
 stop on desktop-end
 
-emits indicators-loaded
+emits indicator-services-start
+emits indicator-services-end
 
 respawn
 exec ${CMAKE_INSTALL_PREFIX}/lib/unity/unity-panel-service

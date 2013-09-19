@@ -74,6 +74,8 @@ public:
 
 protected:
   void SetApplication(ApplicationPtr const& app);
+  ApplicationPtr GetApplication() const;
+
   void Remove();
   void UpdateIconGeometries(std::vector<nux::Point3> center);
   void OnCenterStabilized(std::vector<nux::Point3> center);
@@ -84,6 +86,7 @@ protected:
   void OnDndLeave();
   void OpenInstanceLauncherIcon(Time timestamp) override;
   void ToggleSticky();
+  void LogUnityEvent(ApplicationEventType);
   bool IsFileManager();
 
   bool OnShouldHighlightOnDrag(DndData const& dnd_data);
@@ -128,8 +131,8 @@ private:
 
   WindowList GetWindows(WindowFilterMask filter = 0, int monitor = -1);
   const std::set<std::string> GetSupportedTypes();
-  std::string GetDesktopID();
   WindowList GetWindowsOnCurrentDesktopInStackingOrder();
+  ApplicationSubjectPtr GetSubject();
 
   ApplicationPtr app_;
   std::string _remote_uri;
