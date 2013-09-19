@@ -617,6 +617,12 @@ BuilderWrapper& BuilderWrapper::add(std::string const& name, GVariant* value)
   return *this;
 }
 
+BuilderWrapper& BuilderWrapper::add(std::string const& name, glib::Variant const& value)
+{
+  add(name, ValueType::SIMPLE, {value});
+  return *this;
+}
+
 BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Rect const& r)
 {
   add(name, ValueType::RECTANGLE, {Variant(r.x), Variant(r.y), Variant(r.width), Variant(r.height)});

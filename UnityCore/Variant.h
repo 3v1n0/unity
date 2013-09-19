@@ -134,6 +134,7 @@ public:
   BuilderWrapper& add(std::string const& name, uint64_t);
   BuilderWrapper& add(std::string const& name, float);
   BuilderWrapper& add(std::string const& name, double);
+  BuilderWrapper& add(std::string const& name, glib::Variant const&);
   BuilderWrapper& add(std::string const& name, GVariant*);
 
   BuilderWrapper& add(std::string const& name, nux::Rect const&);

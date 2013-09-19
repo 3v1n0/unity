@@ -72,7 +72,7 @@ Introspectable::Introspect()
   glib::Variant child_results(g_variant_builder_end(&child_builder));
 
   if (has_valid_children)
-    build_wrapper.add(GetChildsName(), static_cast<GVariant*>(child_results));
+    build_wrapper.add(GetChildsName(), child_results);
 
   return g_variant_builder_end(&builder);
 }
