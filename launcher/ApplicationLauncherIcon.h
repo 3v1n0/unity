@@ -79,7 +79,7 @@ protected:
   void Remove();
   void UpdateIconGeometries(std::vector<nux::Point3> center);
   void OnCenterStabilized(std::vector<nux::Point3> center);
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
   void OnAcceptDrop(DndData const& dnd_data);
   void OnDndEnter();
   void OnDndHovered();

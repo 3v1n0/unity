@@ -20,7 +20,6 @@
 #include "HudLauncherIcon.h"
 #include "Launcher.h"
 #include "UnityCore/GLibWrapper.h"
-#include "UnityCore/Variant.h"
 #include <NuxCore/Logger.h>
 
 #include "unity-shared/UBusMessages.h"

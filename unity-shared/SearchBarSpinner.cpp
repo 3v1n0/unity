@@ -20,7 +20,6 @@
 #include "SearchBarSpinner.h"
 
 #include <Nux/VLayout.h>
-#include <UnityCore/Variant.h>
 
 #include "unity-shared/DashStyle.h"
 
@@ -197,15 +196,9 @@ SearchBarSpinner::GetName() const
   return "SearchBarSpinner";
 }
 
-void SearchBarSpinner::AddProperties(GVariantBuilder* builder)
+void SearchBarSpinner::AddProperties(debug::IntrospectionData& introspection)
 {
-  nux::Geometry geo = GetGeometry();
-
-  variant::BuilderWrapper(builder)
-    .add("x", geo.x)
-    .add("y", geo.y)
-    .add("width", geo.width)
-    .add("height", geo.height);
+  introspection.add(GetAbsoluteGeometry());
 }
 
 //

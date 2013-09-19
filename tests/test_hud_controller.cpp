@@ -53,7 +53,7 @@ public:
   MOCK_METHOD1(ShowEmbeddedIcon, void(bool show));
   MOCK_CONST_METHOD0(default_focus, nux::View*());
   MOCK_CONST_METHOD0(GetName, std::string());
-  MOCK_METHOD1(AddProperties, void(GVariantBuilder*));
+  MOCK_METHOD1(AddProperties, void(debug::IntrospectionData&));
   MOCK_METHOD2(Draw, void(nux::GraphicsEngine&, bool));
   nux::Geometry GetContentGeometry()
   {

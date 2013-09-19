@@ -198,7 +198,7 @@ public:
 
 protected:
   PluginAdapter(CompScreen* screen);
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
 private:
   std::string MatchStringForXids(std::vector<Window> const& windows);

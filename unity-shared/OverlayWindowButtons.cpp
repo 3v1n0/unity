@@ -98,7 +98,9 @@ std::string OverlayWindowButtons::GetName() const
   return "OverlayWindowButtons";
 }
 
-void OverlayWindowButtons::AddProperties(GVariantBuilder* builder)
-{}
+void OverlayWindowButtons::AddProperties(debug::IntrospectionData& introspection)
+{
+  introspection.add(GetAbsoluteGeometry());
+}
 
 } // namespace unity

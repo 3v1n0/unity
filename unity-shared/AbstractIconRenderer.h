@@ -25,14 +25,12 @@
 #include "Introspectable.h"
 #include "IconTextureSource.h"
 
-#include <UnityCore/Variant.h>
-
 namespace unity
 {
 namespace ui
 {
 
-enum PipRenderStyle 
+enum PipRenderStyle
 {
   OUTSIDE_TILE,
   OVER_TILE,
@@ -98,12 +96,11 @@ public:
 protected:
   // Introspectable methods
   std::string GetName() const { return "RenderArgs"; }
-  void AddProperties(GVariantBuilder* builder)
+  void AddProperties(debug::IntrospectionData& introspection)
   {
-    unity::variant::BuilderWrapper(builder)
-        .add("logical_center_x", logical_center.x)
-        .add("logical_center_y", logical_center.y)
-        .add("logical_center_z", logical_center.z);
+    introspection.add("logical_center_x", logical_center.x)
+                 .add("logical_center_y", logical_center.y)
+                 .add("logical_center_z", logical_center.z);
   }
 };
 

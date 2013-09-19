@@ -162,7 +162,7 @@ public:
   void SetWorkareaGeometry(nux::Geometry const& geo);
 
 protected:
-  virtual void AddProperties(GVariantBuilder* builder);
+  virtual void AddProperties(debug::IntrospectionData&);
 
 private:
   bool expo_state_;

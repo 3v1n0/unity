@@ -255,11 +255,11 @@ std::string Controller::GetName() const
   return "ShortcutController";
 }
 
-void Controller::AddProperties(GVariantBuilder* builder)
+void Controller::AddProperties(debug::IntrospectionData& introspection)
 {
   bool animating = (fade_animator_.CurrentState() == na::Animation::State::Running);
 
-  unity::variant::BuilderWrapper(builder)
+  introspection
   .add("timeout_duration", SUPER_TAP_DURATION + FADE_DURATION)
   .add("enabled", IsEnabled())
   .add("about_to_show", (Visible() && animating && fade_animator_.GetFinishValue() == 1.0f))

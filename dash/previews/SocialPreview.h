@@ -48,7 +48,7 @@ public:
 
   // From debug::Introspectable
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
 protected:
   virtual void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);

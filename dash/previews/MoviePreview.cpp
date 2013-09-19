@@ -71,9 +71,9 @@ std::string MoviePreview::GetName() const
   return "MoviePreview";
 }
 
-void MoviePreview::AddProperties(GVariantBuilder* builder)
+void MoviePreview::AddProperties(debug::IntrospectionData& introspection)
 {
-  Preview::AddProperties(builder);
+  Preview::AddProperties(introspection);
 }
 
 void MoviePreview::Draw(nux::GraphicsEngine& gfx_engine, bool force_draw)

@@ -16,8 +16,6 @@
  * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
  */
 
-#include <UnityCore/Variant.h>
-
 #include "unity-shared/DashStyle.h"
 #include "ScopeBarIcon.h"
 
@@ -120,10 +118,8 @@ std::string ScopeBarIcon::GetName() const
   return "ScopeBarIcon";
 }
 
-void ScopeBarIcon::AddProperties(GVariantBuilder* builder)
+void ScopeBarIcon::AddProperties(debug::IntrospectionData& wrapper)
 {
-  unity::variant::BuilderWrapper wrapper(builder);
-
   wrapper.add(GetAbsoluteGeometry());
   wrapper.add("name", id);
 }

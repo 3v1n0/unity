@@ -34,7 +34,6 @@
 #include <pango/pangocairo.h>
 
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/Variant.h>
 
 #include "CairoTexture.h"
 
@@ -509,11 +508,10 @@ std::string StaticCairoText::GetName() const
   return "StaticCairoText";
 }
 
-void StaticCairoText::AddProperties(GVariantBuilder* builder)
+void StaticCairoText::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
-  .add(GetGeometry())
-  .add("text", pimpl->text_);
+  introspection.add(GetAbsoluteGeometry())
+               .add("text", pimpl->text_);
 }
 
 std::string StaticCairoText::Impl::GetEffectiveFont() const

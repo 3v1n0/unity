@@ -438,11 +438,11 @@ std::string Controller::GetName() const
   return "DashController";
 }
 
-void Controller::AddProperties(GVariantBuilder* builder)
+void Controller::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder).add("visible", visible_)
-                                  .add("ideal_monitor", GetIdealMonitor())
-                                  .add("monitor", monitor_);
+  introspection.add("visible", visible_)
+               .add("ideal_monitor", GetIdealMonitor())
+               .add("monitor", monitor_);
 }
 
 void Controller::ReFocusKeyInput()

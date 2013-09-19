@@ -25,7 +25,6 @@
 #include <NuxGraphics/GLThread.h>
 #include <Nux/BaseWindow.h>
 #include <Nux/WindowCompositor.h>
-#include <UnityCore/Variant.h>
 #include <UnityCore/GTKWrapper.h>
 
 #include <glib.h>
@@ -630,7 +629,7 @@ std::string PanelIndicatorEntryView::GetName() const
   return "IndicatorEntry";
 }
 
-void PanelIndicatorEntryView::AddProperties(GVariantBuilder* builder)
+void PanelIndicatorEntryView::AddProperties(debug::IntrospectionData& introspection)
 {
   std::string type_name;
 
@@ -646,7 +645,7 @@ void PanelIndicatorEntryView::AddProperties(GVariantBuilder* builder)
       type_name = "other";
   }
 
-  variant::BuilderWrapper(builder)
+  introspection
   .add(GetAbsoluteGeometry())
   .add("entry_id", GetEntryID())
   .add("name_hint", proxy_->name_hint())

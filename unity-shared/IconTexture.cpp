@@ -27,7 +27,6 @@
 #include <NuxCore/Logger.h>
 #include <NuxGraphics/GLThread.h>
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/Variant.h>
 
 #include "IconLoader.h"
 #include "IconTexture.h"
@@ -322,11 +321,10 @@ std::string IconTexture::GetName() const
 }
 
 
-void IconTexture::AddProperties(GVariantBuilder* builder)
+void IconTexture::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
-  .add(GetGeometry())
-  .add("icon_name", _icon_name);
+  introspection.add(GetAbsoluteGeometry())
+               .add("icon_name", _icon_name);
 }
 
 //

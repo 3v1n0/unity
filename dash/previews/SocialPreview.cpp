@@ -34,7 +34,7 @@
 
 #include "config.h"
 #include <glib/gi18n-lib.h>
- 
+
 #include "SocialPreview.h"
 #include "SocialPreviewContent.h"
 #include "SocialPreviewComments.h"
@@ -104,9 +104,9 @@ std::string SocialPreview::GetName() const
   return "SocialPreview";
 }
 
-void SocialPreview::AddProperties(GVariantBuilder* builder)
+void SocialPreview::AddProperties(debug::IntrospectionData& introspection)
 {
-  Preview::AddProperties(builder);
+  Preview::AddProperties(introspection);
 }
 
 void SocialPreview::SetupViews()

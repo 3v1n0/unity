@@ -142,9 +142,9 @@ std::string FilterBar::GetName() const
   return "FilterBar";
 }
 
-void FilterBar::AddProperties(GVariantBuilder* builder)
+void FilterBar::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder).add(GetAbsoluteGeometry());
+  introspection.add(GetAbsoluteGeometry());
 }
 
 } // namespace dash

@@ -77,7 +77,7 @@ protected:
   void StopWaiting();
 
   virtual std::string GetName() const;
-  virtual void AddProperties(GVariantBuilder* builder);
+  virtual void AddProperties(debug::IntrospectionData&);
 
 private:
   nux::ObjectPtr<nux::BaseTexture> texture_screenshot_;

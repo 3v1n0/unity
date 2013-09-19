@@ -24,8 +24,6 @@
 #include <Nux/VLayout.h>
 #include <NuxCore/Logger.h>
 
-#include <UnityCore/Variant.h>
-
 #include <glib/gi18n-lib.h>
 
 #include "SearchBar.h"
@@ -605,9 +603,9 @@ std::string SearchBar::GetName() const
   return "SearchBar";
 }
 
-void SearchBar::AddProperties(GVariantBuilder* builder)
+void SearchBar::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
+  introspection
   .add(GetAbsoluteGeometry())
   .add("has_focus", pango_entry_->HasKeyFocus())
   .add("search_string", pango_entry_->GetText())

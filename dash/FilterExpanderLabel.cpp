@@ -309,7 +309,7 @@ std::string FilterExpanderLabel::GetName() const
   return "FilterExpanderLabel";
 }
 
-void FilterExpanderLabel::AddProperties(GVariantBuilder* builder)
+void FilterExpanderLabel::AddProperties(debug::IntrospectionData& introspection)
 {
   bool content_has_focus = false;
   auto focus_area = nux::GetWindowCompositor().GetKeyFocusArea();
@@ -317,12 +317,10 @@ void FilterExpanderLabel::AddProperties(GVariantBuilder* builder)
   if (focus_area && contents_)
     content_has_focus = focus_area->IsChildOf(contents_.GetPointer());
 
-  unity::variant::BuilderWrapper wrapper(builder);
-
-  wrapper.add("expander-has-focus", (expander_view_ && expander_view_->HasKeyFocus()))
-         .add("expanded", expanded())
-         .add(GetAbsoluteGeometry())
-         .add("content-has-focus", content_has_focus);
+  introspection.add("expander-has-focus", (expander_view_ && expander_view_->HasKeyFocus()))
+               .add("expanded", expanded())
+               .add(GetAbsoluteGeometry())
+               .add("content-has-focus", content_has_focus);
 }
 
 } // namespace dash

@@ -21,7 +21,6 @@
  */
 
 #include <Nux/Nux.h>
-#include <UnityCore/Variant.h>
 
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/UBusWrapper.h"
@@ -561,9 +560,9 @@ std::string Tooltip::GetName() const
   return "ToolTip";
 }
 
-void Tooltip::AddProperties(GVariantBuilder* builder)
+void Tooltip::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add("text", text)
     .add("active", IsVisible())
     .add(GetAbsoluteGeometry());

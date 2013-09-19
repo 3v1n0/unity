@@ -23,7 +23,6 @@
 #include "SimpleLauncherIcon.h"
 
 #include <NuxCore/Logger.h>
-#include <UnityCore/Variant.h>
 
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
@@ -99,10 +98,10 @@ std::string SimpleLauncherIcon::GetName() const
   return "SimpleLauncherIcon";
 }
 
-void SimpleLauncherIcon::AddProperties(GVariantBuilder* builder)
+void SimpleLauncherIcon::AddProperties(debug::IntrospectionData& introspection)
 {
-  LauncherIcon::AddProperties(builder);
-  variant::BuilderWrapper(builder).add("icon_name", icon_name);
+  LauncherIcon::AddProperties(introspection);
+  introspection.add("icon_name", icon_name);
 }
 
 } // namespace launcher

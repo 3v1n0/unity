@@ -210,7 +210,7 @@ public:
 
 protected:
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
 private:
   enum CancelActionTarget
@@ -424,7 +424,7 @@ public:
 
 protected:
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
 private:
   typedef compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>

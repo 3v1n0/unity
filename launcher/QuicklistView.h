@@ -73,7 +73,7 @@ public:
 
   // Introspection
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
   IntrospectableList GetIntrospectableChildren();
 
   void EnableQuicklistForTesting(bool enable_testing);

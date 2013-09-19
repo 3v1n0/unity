@@ -133,7 +133,7 @@ private:
   
   virtual bool AcceptKeyNavFocus();
   virtual std::string GetName() const;
-  virtual void AddProperties(GVariantBuilder* builder);
+  virtual void AddProperties(debug::IntrospectionData&);
 
   void OnCompositorKeyNavFocusChanged(nux::Area*, bool, nux::KeyNavDirection);
 

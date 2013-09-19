@@ -1142,9 +1142,9 @@ std::string ScopeView::GetName() const
   return "ScopeView";
 }
 
-void ScopeView::AddProperties(GVariantBuilder* builder)
+void ScopeView::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
+  introspection
     .add("name", scope_->id)
     .add("scope-name", scope_->name)
     .add("visible", IsVisible())

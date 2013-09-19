@@ -77,7 +77,7 @@ private:
 
   bool AcceptKeyNavFocus();
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
   typedef std::unique_ptr<nux::AbstractPaintLayer> LayerPtr;
 

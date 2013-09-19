@@ -171,7 +171,7 @@ LauncherIcon::GetName() const
 }
 
 void
-LauncherIcon::AddProperties(GVariantBuilder* builder)
+LauncherIcon::AddProperties(debug::IntrospectionData& introspection)
 {
   GVariantBuilder monitors_builder;
   g_variant_builder_init(&monitors_builder, G_VARIANT_TYPE ("ab"));
@@ -179,7 +179,7 @@ LauncherIcon::AddProperties(GVariantBuilder* builder)
   for (unsigned i = 0; i < monitors::MAX; ++i)
     g_variant_builder_add(&monitors_builder, "b", IsVisibleOnMonitor(i));
 
-  unity::variant::BuilderWrapper(builder)
+  introspection
   .add("center_x", _center[0].x)
   .add("center_y", _center[0].y)
   .add("center_z", _center[0].z)
@@ -856,7 +856,7 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
       Present(0.5f, 1500);
     }
 
-    UBusManager::SendMessage(UBUS_LAUNCHER_ICON_URGENT_CHANGED, g_variant_new_boolean(value));
+    UBusManager::SendMessage(UBUS_LAUNCHER_ICON_URGENT_CHANGED, glib::Variant(value));
   }
 
   if (quirk == Quirk::VISIBLE)

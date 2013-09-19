@@ -20,7 +20,6 @@
  */
 
 #include <gtk/gtk.h>
-#include <UnityCore/Variant.h>
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
 
@@ -427,9 +426,9 @@ std::string QuicklistMenuItem::GetName() const
   return "QuicklistMenuItem";
 }
 
-void QuicklistMenuItem::AddProperties(GVariantBuilder* builder)
+void QuicklistMenuItem::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
+  introspection
   .add(GetAbsoluteGeometry())
   .add("text", _text)
   .add("enabled", GetEnabled())

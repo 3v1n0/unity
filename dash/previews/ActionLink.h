@@ -71,7 +71,7 @@ protected:
 
   // From debug::Introspectable
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
   // this methods/vars could be private but are protected to make testing
   //  easier

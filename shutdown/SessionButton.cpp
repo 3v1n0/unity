@@ -21,7 +21,6 @@
 #include "SessionButton.h"
 
 #include <Nux/VLayout.h>
-#include <UnityCore/Variant.h>
 #include <glib/gi18n-lib.h>
 
 namespace unity
@@ -125,9 +124,9 @@ std::string Button::GetName() const
   return "SessionButton";
 }
 
-void Button::AddProperties(GVariantBuilder* builder)
+void Button::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
+  introspection
     .add("highlighted", highlighted())
     .add("label", label())
     .add("label_color", label_view_->GetTextColor())

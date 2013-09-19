@@ -29,7 +29,6 @@
 #include "unity-shared/RatingsButton.h"
 #include "unity-shared/StaticCairoText.h"
 #include "unity-shared/PreviewStyle.h"
-#include <UnityCore/Variant.h>
 #include "PreviewRatingsWidget.h"
 
 namespace unity
@@ -109,9 +108,9 @@ std::string PreviewRatingsWidget::GetName() const
   return "PreviewRatingsWidget";
 }
 
-void PreviewRatingsWidget::AddProperties(GVariantBuilder* builder)
+void PreviewRatingsWidget::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add(GetAbsoluteGeometry());
 }
 

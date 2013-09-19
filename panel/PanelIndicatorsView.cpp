@@ -26,9 +26,6 @@
 
 #include "PanelIndicatorsView.h"
 
-#include <UnityCore/Variant.h>
-#include <glib.h>
-
 DECLARE_LOGGER(logger, "unity.indicators");
 
 namespace unity
@@ -344,9 +341,9 @@ std::string PanelIndicatorsView::GetName() const
   return "Indicators";
 }
 
-void PanelIndicatorsView::AddProperties(GVariantBuilder* builder)
+void PanelIndicatorsView::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
   .add(GetAbsoluteGeometry())
   .add("entries", entries_.size())
   .add("opacity", opacity);

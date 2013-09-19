@@ -120,9 +120,9 @@ std::string Preview::GetName() const
   return "Preview";
 }
 
-void Preview::AddProperties(GVariantBuilder* builder)
+void Preview::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add(GetAbsoluteGeometry())
     .add("uri", preview_model_->preview_result.uri);
 }

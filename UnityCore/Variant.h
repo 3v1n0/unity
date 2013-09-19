@@ -26,9 +26,6 @@
 #include <vector>
 #include <map>
 
-#include <NuxCore/Rect.h>
-#include <NuxCore/Color.h>
-
 namespace unity
 {
 namespace glib
@@ -107,53 +104,6 @@ private:
 
 }
 
-namespace variant
-{
-
-class BuilderWrapper
-{
-// XXX: Move this to Introspectable
-public:
-  enum class ValueType : uint32_t
-  {
-    // This should match the Autopilot Type IDs
-    SIMPLE = 0,
-    RECTANGLE = 1,
-    POINT = 2,
-    SIZE = 3,
-    COLOR = 4,
-    DATE = 5,
-    TIME = 6,
-  };
-
-  BuilderWrapper(GVariantBuilder* builder);
-
-  BuilderWrapper& add(std::string const& name, bool);
-  BuilderWrapper& add(std::string const& name, const char*);
-  BuilderWrapper& add(std::string const& name, std::string const&);
-  BuilderWrapper& add(std::string const& name, int16_t);
-  BuilderWrapper& add(std::string const& name, int32_t);
-  BuilderWrapper& add(std::string const& name, int64_t);
-  BuilderWrapper& add(std::string const& name, uint16_t);
-  BuilderWrapper& add(std::string const& name, uint32_t);
-  BuilderWrapper& add(std::string const& name, uint64_t);
-  BuilderWrapper& add(std::string const& name, float);
-  BuilderWrapper& add(std::string const& name, double);
-  BuilderWrapper& add(std::string const& name, glib::Variant const&);
-  BuilderWrapper& add(std::string const& name, GVariant*);
-
-  BuilderWrapper& add(std::string const& name, nux::Rect const&);
-  BuilderWrapper& add(std::string const& name, nux::Point const&);
-  BuilderWrapper& add(std::string const& name, nux::Size const&);
-  BuilderWrapper& add(std::string const& name, nux::Color const&);
-  BuilderWrapper& add(nux::Rect const&);
-
-private:
-  BuilderWrapper& add(std::string const& name, ValueType, std::vector<glib::Variant> const&);
-  GVariantBuilder* builder_;
-};
-
-}
 }
 
 #endif

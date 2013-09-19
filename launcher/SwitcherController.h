@@ -130,7 +130,7 @@ public:
 
   // Introspectable methods
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
   nux::ROProperty<DetailMode> detail_mode;
   nux::Property<int>  timeout_length;

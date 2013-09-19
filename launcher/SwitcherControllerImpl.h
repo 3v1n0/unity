@@ -20,7 +20,6 @@
 #include <memory>
 
 #include "AbstractLauncherIcon.h"
-#include <UnityCore/Variant.h>
 #include <UnityCore/GLibSource.h>
 
 #include "unity-shared/Introspectable.h"

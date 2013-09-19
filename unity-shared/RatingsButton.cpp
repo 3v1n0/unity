@@ -23,7 +23,6 @@
 
 #include <Nux/Nux.h>
 #include <NuxCore/Logger.h>
-#include <UnityCore/Variant.h>
 
 #include "RatingsButton.h"
 #include "DashStyle.h"
@@ -280,9 +279,9 @@ std::string RatingsButton::GetName() const
   return "RatingsButton";
 }
 
-void RatingsButton::AddProperties(GVariantBuilder* builder)
+void RatingsButton::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add(GetAbsoluteGeometry())
     .add("rating", rating_)
     .add("focused-star", focused_star_)

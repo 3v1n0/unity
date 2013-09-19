@@ -301,9 +301,9 @@ std::string TextInput::GetName() const
   return "TextInput";
 }
 
-void TextInput::AddProperties(GVariantBuilder* builder)
+void TextInput::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
+  introspection
   .add(GetAbsoluteGeometry())
   .add("has_focus", pango_entry_->HasKeyFocus())
   .add("input_string", pango_entry_->GetText())

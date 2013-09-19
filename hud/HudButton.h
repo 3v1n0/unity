@@ -61,8 +61,8 @@ protected:
   virtual void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
 
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
- 
+  void AddProperties(debug::IntrospectionData&);
+
   void InitTheme();
   void RedrawTheme(nux::Geometry const& geom, cairo_t* cr, nux::ButtonVisualState faked_state);
 

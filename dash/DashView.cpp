@@ -1438,7 +1438,7 @@ std::string DashView::GetName() const
   return "DashView";
 }
 
-void DashView::AddProperties(GVariantBuilder* builder)
+void DashView::AddProperties(debug::IntrospectionData& introspection)
 {
   dash::Style& style = dash::Style::Instance();
   int num_rows = 1; // The search bar
@@ -1455,16 +1455,15 @@ void DashView::AddProperties(GVariantBuilder* builder)
   else if (Settings::Instance().form_factor() == FormFactor::TV)
     form_factor = "tv";
 
-  unity::variant::BuilderWrapper wrapper(builder);
-  wrapper.add(nux::Geometry(GetAbsoluteX(), GetAbsoluteY(), content_geo_.width, content_geo_.height));
-  wrapper.add("num_rows", num_rows);
-  wrapper.add("form_factor", form_factor);
-  wrapper.add("right-border-width", style.GetDashRightTileWidth());
-  wrapper.add("bottom-border-height", style.GetDashBottomTileHeight());
-  wrapper.add("preview_displaying", preview_displaying_);
-  wrapper.add("preview_animation", animate_split_value_ * animate_preview_container_value_ * animate_preview_value_);
-  wrapper.add("dash_maximized", style.always_maximised());
-  wrapper.add("overlay_window_buttons_shown", overlay_window_buttons_->IsVisible());
+  introspection.add(nux::Geometry(GetAbsoluteX(), GetAbsoluteY(), content_geo_.width, content_geo_.height))
+               .add("num_rows", num_rows)
+               .add("form_factor", form_factor)
+               .add("right-border-width", style.GetDashRightTileWidth())
+               .add("bottom-border-height", style.GetDashBottomTileHeight())
+               .add("preview_displaying", preview_displaying_)
+               .add("preview_animation", animate_split_value_ * animate_preview_container_value_ * animate_preview_value_)
+               .add("dash_maximized", style.always_maximised())
+               .add("overlay_window_buttons_shown", overlay_window_buttons_->IsVisible());
 }
 
 nux::Area* DashView::KeyNavIteration(nux::KeyNavDirection direction)

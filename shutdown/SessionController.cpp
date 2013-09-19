@@ -226,9 +226,9 @@ std::string Controller::GetName() const
   return "SessionController";
 }
 
-void Controller::AddProperties(GVariantBuilder* builder)
+void Controller::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add("visible", Visible());
 }
 

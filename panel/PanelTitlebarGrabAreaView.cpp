@@ -24,7 +24,6 @@
 
 #include "PanelTitlebarGrabAreaView.h"
 
-#include <UnityCore/Variant.h>
 #include <X11/cursorfont.h>
 
 namespace unity
@@ -175,9 +174,9 @@ PanelTitlebarGrabArea::GetName() const
 }
 
 void
-PanelTitlebarGrabArea::AddProperties(GVariantBuilder* builder)
+PanelTitlebarGrabArea::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
+  introspection
   .add(GetAbsoluteGeometry())
   .add("grabbed", IsGrabbed());
 }

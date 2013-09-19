@@ -28,7 +28,6 @@
 #include <NuxGraphics/GraphicsEngine.h>
 #include <Nux/TextureArea.h>
 #include <NuxGraphics/CairoGraphics.h>
-#include <UnityCore/Variant.h>
 
 #include "unity-shared/CairoTexture.h"
 
@@ -1319,9 +1318,9 @@ std::string QuicklistView::GetName() const
   return "Quicklist";
 }
 
-void QuicklistView::AddProperties(GVariantBuilder* builder)
+void QuicklistView::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add(GetAbsoluteGeometry())
     .add("base_x", GetBaseX())
     .add("base_y", GetBaseY())

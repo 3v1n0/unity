@@ -34,7 +34,6 @@
 #include <NuxCore/Property.h>
 #include <UnityCore/GLibSignal.h>
 #include <UnityCore/GLibSource.h>
-#include <UnityCore/Variant.h>
 
 #include "CairoTexture.h"
 #include "unity-shared/IconTexture.h"
@@ -75,7 +74,7 @@ private:
 
   std::string GetName() const;
 
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
   bool AcceptKeyNavFocus();
 
 protected:

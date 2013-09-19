@@ -18,8 +18,6 @@
  *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#include <UnityCore/Variant.h>
-
 #include "UnityWindowView.h"
 #include <Nux/VLayout.h>
 #include "unity-shared/WindowManager.h"
@@ -410,10 +408,12 @@ std::string UnityWindowView::GetName() const
   return "UnityWindowView";
 }
 
-void UnityWindowView::AddProperties(GVariantBuilder* builder)
+void UnityWindowView::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
-    .add("bg-texture-is-valid", bg_texture_.IsValid());
+  introspection
+    .add("bg-texture-is-valid", bg_texture_.IsValid())
+    .add("closable", closable())
+    .add("close_geo", close_button_ ? close_button_->GetGeometry() : nux::Geometry());
 }
 
 

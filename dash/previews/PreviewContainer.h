@@ -66,7 +66,7 @@ public:
 
   // From debug::Introspectable
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
 
   // For the nav buttons to the left/right of the previews, call when they are activated

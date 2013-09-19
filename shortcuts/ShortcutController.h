@@ -26,7 +26,6 @@
 #include <Nux/HLayout.h>
 #include <NuxCore/Color.h>
 #include <NuxCore/Animation.h>
-#include <UnityCore/Variant.h>
 #include <UnityCore/GLibSource.h>
 
 #include "BaseWindowRaiser.h"
@@ -61,7 +60,7 @@ public:
 protected:
   // Introspectable
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
   virtual nux::Point GetOffsetPerMonitor(int monitor);
 
 private:

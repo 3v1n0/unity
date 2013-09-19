@@ -80,9 +80,9 @@ std::string CoverArt::GetName() const
   return "CoverArt";
 }
 
-void CoverArt::AddProperties(GVariantBuilder* builder)
+void CoverArt::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder)
+  introspection
     .add(GetAbsoluteGeometry())
     .add("image-hint", image_hint_)
     .add("waiting", waiting_)
@@ -90,7 +90,7 @@ void CoverArt::AddProperties(GVariantBuilder* builder)
 }
 
 void CoverArt::SetImage(std::string const& image_hint)
-{ 
+{
   StopWaiting();
 
   if (slot_handle_ > 0)

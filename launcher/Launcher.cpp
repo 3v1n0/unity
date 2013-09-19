@@ -53,9 +53,7 @@
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/GraphicsUtils.h"
 
-
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/Variant.h>
 
 #include <boost/algorithm/string.hpp>
 #include <sigc++/sigc++.h>
@@ -262,12 +260,12 @@ void Launcher::OnDragFinish(const nux::GestureEvent &event)
 }
 #endif
 
-void Launcher::AddProperties(GVariantBuilder* builder)
+void Launcher::AddProperties(debug::IntrospectionData& introspection)
 {
   timespec current;
   clock_gettime(CLOCK_MONOTONIC, &current);
 
-  unity::variant::BuilderWrapper(builder)
+  introspection
   .add(GetAbsoluteGeometry())
   .add("hover-progress", GetHoverProgress(current))
   .add("dnd-exit-progress", DnDExitProgress(current))
@@ -1088,7 +1086,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   if (options()->hide_mode != LAUNCHER_HIDE_NEVER || _hide_machine.GetQuirk(LauncherHideMachine::LOCK_HIDE))
     box_geo.x += autohide_offset;
 
-  /* Why we need last_geo? It stores the last box_geo (note: as it is a static variable,
+  /* Why we need last_geo? It stores the last box_geo (note: as it is a static aable,
    * it is initialized only first time). Infact we call SetDndDelta that calls MouseIconIntersection
    * that uses values (HitArea) that are computed in UpdateIconXForm.
    * The problem is that in DrawContent we calls first RenderArgs, then UpdateIconXForm. Just

@@ -205,7 +205,7 @@ protected:
 
   std::string GetName() const;
 
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
   void UpdateQuirkTimeDelayed(guint ms, Quirk quirk);
 

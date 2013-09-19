@@ -21,8 +21,6 @@
 #include "SwitcherModel.h"
 #include "unity-shared/WindowManager.h"
 
-#include <UnityCore/Variant.h>
-
 namespace unity
 {
 using launcher::AbstractLauncherIcon;
@@ -68,9 +66,9 @@ std::string SwitcherModel::GetName() const
   return "SwitcherModel";
 }
 
-void SwitcherModel::AddProperties(GVariantBuilder* builder)
+void SwitcherModel::AddProperties(debug::IntrospectionData& introspection)
 {
-  unity::variant::BuilderWrapper(builder)
+  introspection
   .add("detail-selection", detail_selection)
   .add("detail-selection-index", (int)detail_selection_index)
   .add("detail-current-count", DetailXids().size())

@@ -53,7 +53,7 @@ public:
 protected:
   // Introspectable methods
   std::string GetName() const;
-  void AddProperties(GVariantBuilder* builder);
+  void AddProperties(debug::IntrospectionData&);
 
   // Key navigation
   virtual bool AcceptKeyNavFocus();
@@ -168,9 +168,9 @@ std::string OverlaySpinner::GetName() const
   return "OverlaySpinner";
 }
 
-void OverlaySpinner::AddProperties(GVariantBuilder* builder)
+void OverlaySpinner::AddProperties(debug::IntrospectionData& introspection)
 {
-  variant::BuilderWrapper(builder).add(GetAbsoluteGeometry());
+  introspection.add(GetAbsoluteGeometry());
 }
 
 
@@ -191,9 +191,9 @@ std::string PaymentPreview::GetName() const
   return "PaymentPreview";
 }
 
-void PaymentPreview::AddProperties(GVariantBuilder* builder)
+void PaymentPreview::AddProperties(debug::IntrospectionData& introspection)
 {
-  Preview::AddProperties(builder);
+  Preview::AddProperties(introspection);
 }
 
 nux::Layout* PaymentPreview::GetHeader()

@@ -24,7 +24,6 @@
 #include <glib/gi18n-lib.h>
 #include <NuxCore/Logger.h>
 #include <UnityCore/GLibWrapper.h>
-#include <UnityCore/Variant.h>
 #include <Nux/HLayout.h>
 #include <Nux/VLayout.h>
 
@@ -555,14 +554,13 @@ std::string View::GetName() const
   return "HudView";
 }
 
-void View::AddProperties(GVariantBuilder* builder)
+void View::AddProperties(debug::IntrospectionData& introspection)
 {
-  unsigned num_buttons = buttons_.size();
-  variant::BuilderWrapper(builder)
-    .add(GetGeometry())
+  introspection
+    .add(GetAbsoluteGeometry())
     .add("selected_button", selected_button_)
     .add("overlay_window_buttons_shown", overlay_window_buttons_->IsVisible())
-    .add("num_buttons", num_buttons);
+    .add("num_buttons", buttons_.size());
 }
 
 debug::Introspectable::IntrospectableList View::GetIntrospectableChildren()
