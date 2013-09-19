@@ -96,6 +96,18 @@ Variant::Variant(float value)
   : Variant(static_cast<double>(value))
 {}
 
+Variant::Variant(HintsMap const& hints)
+{
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
+
+  for (auto const& hint : hints)
+    g_variant_builder_add(&b, "{sv}", hint.first.c_str(), static_cast<GVariant*>(hint.second));
+
+  variant_ = g_variant_builder_end(&b);
+  g_variant_ref_sink(variant_);
+}
+
 Variant::~Variant()
 {
   if (variant_) g_variant_unref(variant_);
@@ -276,22 +288,6 @@ bool Variant::ASVToHints(HintsMap& hints) const
   return true;
 }
 
-Variant Variant::FromHints(HintsMap const& hints)
-{
-  GVariantBuilder b;
-  g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
-
-  for (glib::HintsMap::const_iterator it = hints.begin(); it != hints.end(); ++it)
-  {
-    const gchar* key = it->first.c_str();
-    GVariant* ptr = it->second;
-
-    g_variant_builder_add(&b, "{sv}", key, ptr);
-  }
-
-  return g_variant_builder_end(&b);
-}
-
 void Variant::swap(Variant& other)
 {
   std::swap(this->variant_, other.variant_);
@@ -313,6 +309,7 @@ Variant& Variant::operator=(Variant other)
 }
 
 Variant& Variant::operator=(std::nullptr_t) { return operator=(Variant()); }
+Variant& Variant::operator=(HintsMap const& map) { return operator=(Variant(map)); }
 Variant& Variant::operator=(std::string const& value) { return operator=(Variant(value)); }
 Variant& Variant::operator=(const char* value) { return operator=(Variant(value)); }
 Variant& Variant::operator=(unsigned char value) { return operator=(Variant(value)); }

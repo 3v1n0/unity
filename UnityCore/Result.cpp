@@ -159,7 +159,7 @@ std::vector<glib::Variant> LocalResult::Variants() const
   vars.push_back(glib::Variant(name));
   vars.push_back(glib::Variant(comment));
   vars.push_back(glib::Variant(dnd_uri));
-  vars.push_back(glib::Variant::FromHints(hints));
+  vars.push_back(glib::Variant(hints));
 
   return vars;
 }

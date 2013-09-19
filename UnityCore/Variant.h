@@ -47,6 +47,7 @@ public:
   Variant(GVariant*);
   Variant(GVariant*, StealRef const&);
 
+  Variant(HintsMap const& hints);
   explicit Variant(std::nullptr_t);
   explicit Variant(std::string const&);
   explicit Variant(const char*);
@@ -78,11 +79,11 @@ public:
   Variant GetVariant() const;
 
   bool ASVToHints(HintsMap& hints) const;
-  static Variant FromHints(HintsMap const& hints);
 
   void swap(Variant&);
   Variant& operator=(GVariant*);
   Variant& operator=(Variant);
+  Variant& operator=(HintsMap const&);
   Variant& operator=(std::nullptr_t);
   Variant& operator=(std::string const&);
   Variant& operator=(const char*);
