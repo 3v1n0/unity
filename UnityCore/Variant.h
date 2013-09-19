@@ -78,6 +78,17 @@ public:
 
   bool ASVToHints(HintsMap& hints) const;
 
+  template <typename T>
+  static Variant FromVector(std::vector<T> const& values)
+  {
+    GVariantBuilder builder;
+    g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
+    for (auto const& value : values)
+      g_variant_builder_add_value(&builder, Variant(value));
+
+    return g_variant_builder_end(&builder);
+  }
+
   void swap(Variant&);
   Variant& operator=(GVariant*);
   Variant& operator=(Variant);
