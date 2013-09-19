@@ -209,6 +209,108 @@ TEST(TestGLibVariant, AssignSame)
   EXPECT_TRUE(ValuesEqual(v, raw_variant));
 }
 
+TEST(TestGLibVariant, AssignString)
+{
+  std::string value = "UnityVariant";
+  Variant v;
+  v = value;
+  EXPECT_EQ(value, g_variant_get_string(v, nullptr));
+}
+
+TEST(TestGLibVariant, AssignInt16)
+{
+  int16_t value = g_random_int_range(G_MININT16, G_MAXINT16);
+  Variant v;
+  v = value;
+  EXPECT_EQ(value, g_variant_get_int16(v));
+}
+
+TEST(TestGLibVariant, AssignUInt16)
+{
+  uint16_t value = g_random_int_range(0, G_MAXUINT16);
+  Variant v;
+  v = value;
+  EXPECT_EQ(value, g_variant_get_uint16(v));
+}
+
+TEST(TestGLibVariant, AssignInt32)
+{
+  int32_t value = g_random_int_range(G_MININT32, G_MAXINT32);
+  Variant v;
+  v = value;
+  EXPECT_EQ(value, g_variant_get_int32(v));
+}
+
+TEST(TestGLibVariant, AssignUInt32)
+{
+  uint32_t value = g_random_int();
+  Variant v;
+  v = value;
+  EXPECT_EQ(value, g_variant_get_uint32(v));
+}
+
+TEST(TestGLibVariant, AssignInt64)
+{
+  int64_t value = g_random_int_range(G_MININT, G_MAXINT);
+  Variant v;
+  v = value;
+  EXPECT_EQ(value, g_variant_get_int64(v));
+}
+
+TEST(TestGLibVariant, AssignUInt64)
+{
+  uint64_t value = g_random_int();
+  Variant v;
+  v = value;
+  EXPECT_EQ(value, g_variant_get_uint64(v));
+}
+
+TEST(TestGLibVariant, AssignBool)
+{
+  bool value = g_random_int();
+  Variant v;
+  v = value;
+  EXPECT_EQ(value, g_variant_get_boolean(v));
+}
+
+TEST(TestGLibVariant, AssignDouble)
+{
+  double value = g_random_int();
+  Variant v;
+  v = value;
+  EXPECT_DOUBLE_EQ(value, g_variant_get_double(v));
+}
+
+TEST(TestGLibVariant, AssignFloat)
+{
+  float value = g_random_int();
+  Variant v;
+  v = value;
+  EXPECT_FLOAT_EQ(value, static_cast<float>(g_variant_get_double(v)));
+}
+
+TEST(TestGLibVariant, AssignNumericInt)
+{
+  Variant v0;
+  v0 = 0;
+  EXPECT_EQ(0, v0.GetInt32());
+
+  Variant v1;
+  v1 = 123456789;
+  EXPECT_EQ(123456789, v1.GetInt32());
+}
+
+TEST(TestGLibVariant, AssignNumericDouble)
+{
+  Variant v0;
+  v0 = 0.0f;
+  EXPECT_EQ(0.0f, v0.GetDouble());
+
+  Variant v1;
+  v1 = 0.987654321;
+  EXPECT_EQ(0.987654321, v1.GetDouble());
+}
+
 TEST(TestGLibVariant, KeepsRef)
 {
   GVariant *gv = g_variant_new_int32 (456);
