@@ -52,7 +52,8 @@ Introspectable::Introspect()
   bool has_valid_children = false;
 
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
-  variant::BuilderWrapper(&builder).add("id", _id);
+  variant::BuilderWrapper build_wrapper(&builder);
+  build_wrapper.add("id", _id);
   AddProperties(&builder);
 
   g_variant_builder_init(&child_builder, G_VARIANT_TYPE("as"));
@@ -71,7 +72,7 @@ Introspectable::Introspect()
   glib::Variant child_results(g_variant_builder_end(&child_builder));
 
   if (has_valid_children)
-    g_variant_builder_add(&builder, "{sv}", GetChildsName().c_str(), static_cast<GVariant*>(child_results));
+    build_wrapper.add(GetChildsName(), static_cast<GVariant*>(child_results));
 
   return g_variant_builder_end(&builder);
 }
