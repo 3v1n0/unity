@@ -20,10 +20,9 @@
 #include "ShortcutController.h"
 #include "ShortcutModel.h"
 
+#include "unity-shared/AnimationUtils.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
-
-namespace na = nux::animation;
 
 namespace unity
 {
@@ -129,16 +128,7 @@ bool Controller::OnShowTimer()
   if (visible_)
   {
     view_->live_background = true;
-
-    if (fade_animator_.CurrentState() == na::Animation::State::Running)
-    {
-      if (fade_animator_.GetFinishValue() == 0.0f)
-        fade_animator_.Reverse();
-    }
-    else
-    {
-      fade_animator_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
-    }
+    animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
   }
 
   return false;
@@ -214,16 +204,7 @@ void Controller::Hide()
   if (view_window_ && view_window_->GetOpacity() > 0.0f)
   {
     view_->live_background = false;
-
-    if (fade_animator_.CurrentState() == na::Animation::State::Running)
-    {
-      if (fade_animator_.GetFinishValue() == 1.0f)
-        fade_animator_.Reverse();
-    }
-    else
-    {
-      fade_animator_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
-    }
+    animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
   }
 }
 
@@ -258,12 +239,13 @@ std::string Controller::GetName() const
 void Controller::AddProperties(GVariantBuilder* builder)
 {
   bool animating = (fade_animator_.CurrentState() == na::Animation::State::Running);
+  auto direction = animation::GetDirection(fade_animator_);
 
   unity::variant::BuilderWrapper(builder)
   .add("timeout_duration", SUPER_TAP_DURATION + FADE_DURATION)
   .add("enabled", IsEnabled())
-  .add("about_to_show", (Visible() && animating && fade_animator_.GetFinishValue() == 1.0f))
-  .add("about_to_hide", (Visible() && animating && fade_animator_.GetFinishValue() == 0.0f))
+  .add("about_to_show", (Visible() && animating && direction == animation::Direction::FORWARD))
+  .add("about_to_hide", (Visible() && animating && direction == animation::Direction::FORWARD))
   .add("visible", (Visible() && view_window_ && view_window_->GetOpacity() == 1.0f));
 }
 

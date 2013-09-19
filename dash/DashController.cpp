@@ -25,6 +25,7 @@
 #include "UnityCore/GSettingsScopes.h"
 
 #include "ApplicationStarterImp.h"
+#include "unity-shared/AnimationUtils.h"
 #include "unity-shared/DashStyle.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusMessages.h"
@@ -377,18 +378,7 @@ void Controller::HideDash(bool restore)
 void Controller::StartShowHideTimeline()
 {
   EnsureDash();
-
-  if (timeline_animator_.CurrentState() == nux::animation::Animation::State::Running)
-  {
-    timeline_animator_.Reverse();
-  }
-  else
-  {
-    if (visible_)
-      timeline_animator_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
-    else
-      timeline_animator_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
-  }
+  animation::StartOrReverseIf(timeline_animator_, visible_);
 }
 
 void Controller::OnViewShowHideFrame(double opacity)
