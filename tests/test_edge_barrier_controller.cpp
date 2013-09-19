@@ -126,6 +126,30 @@ TEST_F(TestEdgeBarrierController, Construction)
   }
 }
 
+TEST_F(TestEdgeBarrierController, UscreenChangedSignalDisconnection)
+{
+  {
+    EdgeBarrierController bc;
+    bc.options = std::make_shared<launcher::Options>();
+  }
+
+  // Make sure it does not crash.
+  uscreen.changed.emit(uscreen.GetPrimaryMonitor(), uscreen.GetMonitors());
+}
+
+TEST_F(TestEdgeBarrierController, LauncherOptionChangedSignalDisconnection)
+{
+  auto options = std::make_shared<launcher::Options>();
+
+  {
+    EdgeBarrierController bc;
+    bc.options = options;
+  }
+
+  // Make sure it does not crash.
+  options->option_changed.emit();
+}
+
 TEST_F(TestEdgeBarrierController, RemoveVerticalSubscriber)
 {
   for (unsigned i = 0; i < monitors::MAX; ++i)

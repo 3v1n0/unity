@@ -58,7 +58,7 @@ class LauncherScrollTests(LauncherTestCase):
         self.assertThat(last_icon.center_y, Eventually(GreaterThan(h)))
 
         # Autoscroll to the last icon
-        launcher_instance.autoscroll_to_icon(last_icon, autoscroll_offset)
+        launcher_instance.move_mouse_to_icon(last_icon, autoscroll_offset)
         
         (x_fin, y_fin) = self.mouse.position()
 
@@ -90,7 +90,7 @@ class LauncherScrollTests(LauncherTestCase):
         self.assertThat(first_icon.center_y, Eventually(LessThan(y)))
         
         # Autoscroll to the first icon
-        launcher_instance.autoscroll_to_icon(first_icon, autoscroll_offset)
+        launcher_instance.move_mouse_to_icon(first_icon, autoscroll_offset)
 
         (x_fin, y_fin) = self.mouse.position()
 

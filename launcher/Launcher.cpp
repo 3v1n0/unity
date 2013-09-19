@@ -1431,7 +1431,7 @@ void Launcher::SetHover(bool hovered)
   _hovered = hovered;
 
   if (!IsInKeyNavMode() && _hovered)
-    _enter_y = (int) _mouse_position.y;
+    _enter_y = _mouse_position.y
 
   if (_folded)
     animation::StartOrReverseIf(hover_animation_, _hovered);
@@ -1458,7 +1458,6 @@ bool Launcher::MouseOverBottomScrollArea()
 bool Launcher::OnScrollTimeout()
 {
   bool continue_animation = true;
-  int speed = 0;
 
   if (IsInKeyNavMode() || !_hovered ||
       GetActionState() == ACTION_DRAG_LAUNCHER)
@@ -1468,20 +1467,26 @@ bool Launcher::OnScrollTimeout()
   else if (MouseOverTopScrollArea())
   {
     if (_launcher_drag_delta >= _launcher_drag_delta_max)
+    {
       continue_animation = false;
+    }
     else
     {
-      speed = (SCROLL_AREA_HEIGHT - _mouse_position.y) / SCROLL_AREA_HEIGHT * SCROLL_FPS;
+      int mouse_distance = (SCROLL_AREA_HEIGHT - _mouse_position.y);
+      int speed = static_cast<float>(mouse_distance) / SCROLL_AREA_HEIGHT * SCROLL_FPS;
       _launcher_drag_delta += speed;
     }
   }
   else if (MouseOverBottomScrollArea())
   {
     if (_launcher_drag_delta <= _launcher_drag_delta_min)
+    {
       continue_animation = false;
+    }
     else
     {
-      speed = ((_mouse_position.y + 1) - (GetGeometry().height - SCROLL_AREA_HEIGHT)) / SCROLL_AREA_HEIGHT * SCROLL_FPS;
+      int mouse_distance = (_mouse_position.y + 1) - (GetGeometry().height - SCROLL_AREA_HEIGHT);
+      int speed = static_cast<float>(mouse_distance) / SCROLL_AREA_HEIGHT * SCROLL_FPS;
       _launcher_drag_delta -= speed;
     }
   }

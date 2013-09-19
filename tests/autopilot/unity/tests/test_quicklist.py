@@ -191,20 +191,14 @@ class QuicklistActionTests(UnityTestCase):
         lp:890991
         """
 
-        calc_win = self.process_manager.start_app_window("Calculator")
-        mahj_win = self.process_manager.start_app_window("Mahjongg")
+        icons = self.unity.launcher.model.get_launcher_icons()
 
-        calc_icon = self.unity.launcher.model.get_icon(
-            desktop_id=calc_win.application.desktop_file)
-        mahj_icon = self.unity.launcher.model.get_icon(
-            desktop_id=mahj_win.application.desktop_file)
+        icon0_ql = self.open_quicklist_for_icon(icons[0])
+        self.assertThat(icon0_ql.active, Eventually(Equals(True)))
 
-        calc_ql = self.open_quicklist_for_icon(calc_icon)
-        self.assertThat(calc_ql.active, Eventually(Equals(True)))
-
-        mahj_ql = self.open_quicklist_for_icon(mahj_icon)
-        self.assertThat(mahj_ql.active, Eventually(Equals(True)))
-        self.assertThat(calc_ql.active, Eventually(Equals(False)))
+        icon1_ql = self.open_quicklist_for_icon(icons[1])
+        self.assertThat(icon1_ql.active, Eventually(Equals(True)))
+        self.assertThat(icon0_ql.active, Eventually(Equals(False)))
 
     def test_right_clicking_same_icon_doesnt_reopen_ql(self):
         """A right click to the same icon in the launcher must
