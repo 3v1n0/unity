@@ -19,6 +19,7 @@
 
 #include "SessionController.h"
 
+#include "unity-shared/AnimationUtils.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
 #include "unity-shared/WindowManager.h"
@@ -58,13 +59,9 @@ Controller::Controller(session::Manager::Ptr const& manager)
 
   ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
-  fade_animator_.updated.connect([this] (double opacity) {
-    if (!view_window_)
-      return;
-
-    view_window_->SetOpacity(opacity);
-
-    if (opacity == 0.0f && fade_animator_.GetFinishValue() == 0.0f)
+  fade_animator_.updated.connect([this] (double opacity) { view_window_->SetOpacity(opacity); });
+  fade_animator_.finished.connect([this] {
+    if (animation::GetDirection(fade_animator_) == animation::Direction::BACKWARD)
       CloseWindow();
   });
 }
@@ -109,16 +106,7 @@ void Controller::Show(View::Mode mode, bool inhibitors)
   view_window_->PushToFront();
   view_window_->SetInputFocus();
   nux::GetWindowCompositor().SetKeyFocusArea(view_->key_focus_area());
-
-  if (fade_animator_.CurrentState() == na::Animation::State::Running)
-  {
-    if (fade_animator_.GetFinishValue() == 0.0f)
-      fade_animator_.Reverse();
-  }
-  else
-  {
-    fade_animator_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
-  }
+  animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
 }
 
 nux::Point Controller::GetOffsetPerMonitor(int monitor)
@@ -189,15 +177,7 @@ void Controller::CancelAndHide()
 
 void Controller::Hide()
 {
-  if (fade_animator_.CurrentState() == na::Animation::State::Running)
-  {
-    if (fade_animator_.GetFinishValue() == 1.0f)
-      fade_animator_.Reverse();
-  }
-  else
-  {
-    fade_animator_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
-  }
+  animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
 }
 
 void Controller::CloseWindow()

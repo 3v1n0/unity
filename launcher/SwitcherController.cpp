@@ -21,6 +21,7 @@
 #include <Nux/Nux.h>
 #include <Nux/HLayout.h>
 
+#include "unity-shared/AnimationUtils.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/UScreen.h"
@@ -423,15 +424,7 @@ void Controller::Impl::ShowView()
     view_->live_background = true;
     view_window_->ShowWindow(true);
     view_window_->PushToFront();
-
-    if (fade_animator_.CurrentState() == nux::animation::Animation::State::Running)
-    {
-      fade_animator_.Reverse();
-    }
-    else
-    {
-      fade_animator_.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
-    }
+    animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
   }
 }
 
@@ -519,14 +512,7 @@ void Controller::Impl::Hide(bool accept_state)
 
   obj_->visible_ = false;
 
-  if (fade_animator_.CurrentState() == nux::animation::Animation::State::Running)
-  {
-    fade_animator_.Reverse();
-  }
-  else
-  {
-    fade_animator_.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
-  }
+  animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
 }
 
 void Controller::Impl::DetailHide()

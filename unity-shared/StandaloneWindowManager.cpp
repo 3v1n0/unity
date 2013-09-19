@@ -42,7 +42,8 @@ StandaloneWindow::StandaloneWindow(Window xid)
   , active(false)
   , mapped(true)
   , visible(true)
-  , maximized(false)
+  , v_maximized(false)
+  , h_maximized(false)
   , minimized(false)
   , decorated(true)
   , has_decorations(true)
@@ -66,6 +67,20 @@ StandaloneWindow::StandaloneWindow(Window xid)
 
     return false;
   });
+
+  maximized.SetGetterFunction([this] { return v_maximized && h_maximized; });
+  maximized.SetSetterFunction([this] (bool value) {
+    if (maximized() == value)
+      return false;
+
+    v_maximized = value;
+    h_maximized = value;
+    decorated = !value;
+    return true;
+  });
+
+  v_maximized.changed.connect([this] (bool value) { maximized.changed.emit(maximized()); });
+  h_maximized.changed.connect([this] (bool value) { maximized.changed.emit(maximized()); });
 }
 
 WindowManagerPtr create_window_manager()
@@ -120,6 +135,24 @@ bool StandaloneWindowManager::IsWindowMaximized(Window window_id) const
   auto window = GetWindowByXid(window_id);
   if (window)
     return window->maximized;
+
+  return false;
+}
+
+bool StandaloneWindowManager::IsWindowVerticallyMaximized(Window window_id) const
+{
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->v_maximized;
+
+  return false;
+}
+
+bool StandaloneWindowManager::IsWindowHorizontallyMaximized(Window window_id) const
+{
+  auto window = GetWindowByXid(window_id);
+  if (window)
+    return window->h_maximized;
 
   return false;
 }
@@ -248,20 +281,51 @@ void StandaloneWindowManager::Maximize(Window window_id)
 {
   auto window = GetWindowByXid(window_id);
   if (window)
-  {
     window->maximized = true;
-    Undecorate(window_id);
-  }
+}
+
+void StandaloneWindowManager::LeftMaximize(Window window_id)
+{
+  auto window = GetWindowByXid(window_id);
+
+  if (!window)
+    return;
+
+  /* Let's compute the area where the window should be put */
+  auto workarea = GetWorkAreaGeometry(window_id);
+  workarea.width /= 2;
+
+  if (window->maximized)
+    window->maximized = false;
+
+  window->v_maximized = true;
+  MoveResizeWindow(window_id, workarea);
+}
+
+void StandaloneWindowManager::RightMaximize(Window window_id)
+{
+  auto window = GetWindowByXid(window_id);
+
+  if (!window)
+    return;
+
+  /* Let's compute the area where the window should be put */
+  auto workarea = GetWorkAreaGeometry(window_id);
+  workarea.width /= 2;
+  workarea.x += workarea.width;
+
+  if (window->maximized)
+    window->maximized = false;
+
+  window->v_maximized = true;
+  MoveResizeWindow(window_id, workarea);
 }
 
 void StandaloneWindowManager::Restore(Window window_id)
 {
   auto window = GetWindowByXid(window_id);
   if (window)
-  {
     window->maximized = false;
-    Decorate(window_id);
-  }
 }
 
 void StandaloneWindowManager::RestoreAt(Window window_id, int x, int y)

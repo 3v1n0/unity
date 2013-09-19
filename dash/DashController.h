@@ -68,6 +68,7 @@ public:
   bool IsVisible() const;
   bool IsCommandLensOpen() const;
   nux::Geometry GetInputWindowGeometry();
+  nux::ObjectPtr<DashView> const& Dash() const;
 
 protected:
   std::string GetName() const;
@@ -99,11 +100,11 @@ private:
 private:
   WindowCreator create_window_;
   nux::ObjectPtr<ResizingBaseWindow> window_;
+  nux::ObjectPtr<DashView> view_;
   int monitor_;
 
   bool visible_;
   bool need_show_;
-  DashView* view_;
 
   connection::Wrapper screen_ungrabbed_slot_;
   glib::DBusServer dbus_server_;
