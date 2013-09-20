@@ -1367,7 +1367,12 @@ void redraw_view_if_damaged(nux::ObjectPtr<nux::View> const& view, CompRegion co
   CompRegion region(geo.x, geo.y, geo.width, geo.height);
 
   if (damage.intersects(region))
-    view->NeedSoftRedraw();
+  {
+    if (view->IsViewWindow())
+      view->QueueDraw();
+    else
+      view->NeedSoftRedraw();
+  }
 }
 
 void UnityScreen::compizDamageNux(CompRegion const& damage)
