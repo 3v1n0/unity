@@ -245,7 +245,7 @@ void Controller::AddProperties(GVariantBuilder* builder)
   .add("timeout_duration", SUPER_TAP_DURATION + FADE_DURATION)
   .add("enabled", IsEnabled())
   .add("about_to_show", (Visible() && animating && direction == animation::Direction::FORWARD))
-  .add("about_to_hide", (Visible() && animating && direction == animation::Direction::FORWARD))
+  .add("about_to_hide", (Visible() && animating && direction == animation::Direction::BACKWARD))
   .add("visible", (Visible() && view_window_ && view_window_->GetOpacity() == 1.0f));
 }
 
