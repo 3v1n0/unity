@@ -1,3 +1,117 @@
+unity (7.1.0+13.10.20130920-0ubuntu1) saucy; urgency=low
+
+  [ Stephen M. Webb ]
+  * render the Dash frame all the way to the bottom of the screen (lp:
+    #1100120). (LP: #1100120)
+
+  [ Brandon Schaefer ]
+  * Ignore mouse movements if the mouse starts over a switcher icon.
+    Clicking still works fine, we just wont steal focus from the alt+tab
+    work. (LP: #1215630)
+  * Make sure we ignore mouse movement over detail icons if the mouse
+    starts over it at start. Let the mouse take selection control once
+    it moves outside of any icon, vs having to enter a different icon.
+    (LP: #1223037, #1223039)
+  * Add an option to disable the mouse in the switcher. (LP: #1224048)
+  * When the shortcut is open, and we receive a ButtonPress or KeyPress
+    hide it. As this causes problems else where, and it really should
+    close if the user attempts to do anything (even while holding
+    super!). (LP: #932718)
+  * Set an upper bound on the amount of icons we go through to check
+    tooltips. As the accordion effect was causing the mouse to go
+    through the icons to fast, making the test fail.
+  * Make sure we move the mouse over the target icon while we are
+    dragging the source icon.
+  * Get the real shortcut to activate ibus. (LP: #1227056)
+  * Only accept focus if the mouse moves in 3 directions on switcher
+    start up if the mouse starts over the switcher window. This is an
+    attempt to tell the difference between a bump and intentional
+    movement. (LP: #1223630)
+
+  [ Marco Trevisan (Treviño) ]
+  * DesktopApplicationManager: added new app manager layer so that we
+    can emit app events.
+  * Application: add desktop_id method, and implement in
+    desktop::Application.
+  * Launcher: only fade the launcher when in auto-hide and dash is
+    opened. (LP: #1223979, #1044926)
+  * ApplicationLauncherIcon: log unity zeitgeist events on stick,
+    unstick, removal and delete. (LP: #779449)
+  * UnityScreen: add support for Super+Arrows shortcuts to manage the
+    focused window Super+Arrows shortcut allows to move and maximize /
+    restore / minimize the focused window on the screen. (LP: #992697,
+    #751050)
+  * Launcher: use nux::Animation for all the launcher animations This
+    allows to do these when compiz requests to prepare painting, instead
+    of using only an idle to perform this. (LP: #1226114, #1224766)
+  * ShortcutView: use StaticCairoText instead of StaticText for
+    rendering the View Improves the text alignment and visual quality.
+  * UnityShell: redraw the dash also if a non-blurred area is damaged If
+    the dash is damaged, but not the blurred area, it won't redraw. We
+    need to draw it, in order to avoid flickering of its border. Also,
+    add the redraw_view_if_damaged utility function to redraw a view if
+    really needed. (LP: #1224340)
+  * AnimationUtils: add utility functions to handle nux::Animation's
+    start and reversion Update the whole code using nux::animation to
+    use these facility functions.
+  * Launcher: fix style to use postfixed-underscore for private members
+    Also remove some tabs and useless members.
+  * ShortcutController: fix typo on introspection data.
+
+  [ Lars Uebernickel ]
+  * panel-service: fix order when paging through menus with left/right
+    keys. (LP: #1183994)
+
+  [ Chris Townsend ]
+  * Fixes issue where entering keynav mode may make the BFB icon scroll
+    off the top of the Launcher. (LP: #1219636, #1068166)
+  * The logic to detect when a Quicklist may be off the screen did not
+    take into account the default top size of 4, so any Quicklists near
+    the bottom would have blur that was shifted down 4 pixels. (LP:
+    #819663)
+  * Due to a change libdbusmenu, need to use a fully qualified name for
+    the Dbus object name. (LP: #1223561)
+  * Move the _compute_blur_bkg bool to the Tooltip::Draw() method since
+    the CairoBaseWindow::Draw() method sets this to false causing
+    subsequent draws to never update the background texture. (LP:
+    #1052782)
+  * Move the _compute_blur_bkg bool into the QuicklistView::Draw()
+    method to actually get active blur to work. (LP: #873387)
+  * Use the first two icons in the Launcher to assure the icons are
+    always on the screen for this particular Autopilot test. (LP:
+    #1219636)
+  * Set the wait timeout to a longer period (1000ms) since many Jenkins
+    CI tests are failing in the TestIconLoader tests. (LP: #1224643)
+  * Make the mouse movement infinite while loop into a for loop and only
+    iterate 10 times w/ a 0.5 second delay between movements. Raise an
+    error if the correct icon is not found when the loop terminates.
+    Consolidate the autoscroll_to_icon() function into the
+    move_mouse_to_icon() function and change move_mouse_to_icon() to
+    handle autoscrolling offsets. (LP: #1226639)
+  * Increase the wait timeout to 15 seconds since 1 second didn't seem
+    to make the unit test failure any better. Also add a timeout to the
+    CheckResults method. (LP: #1224643)
+  * When dragging and dropping an icon before another icon, the
+    calculation to position the drop was off by half an icon which would
+    cause some AP tests to fail. (LP: #1227056)
+  * It appears that it's not a timeout causing these tests to really
+    fail. It seems that Jenkins is unable to connect to GlibDBusProxy
+    which leads to the timeout. For now, let's just remove the most
+    troublesome tests so we can get automerging to work and then revisit
+    the real reason why this is happening. (LP: #1224643)
+
+  [ Andrea Azzarone ]
+  * Fix randomly failing AP test. (LP: #1226116)
+  * Return a copy of memeber variables of DndData class. Should fix
+    lp:1224569. (LP: #1224569)
+  * Derive EdgeBarrierController::Impl from sigc::trackable and remove
+    the use of c++11 lambdas for callbacks. (LP: #1217560)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3524
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 20 Sep 2013 11:19:05 +0000
+
 unity (7.1.0+13.10.20130903.1-0ubuntu1) saucy; urgency=low
 
   [ Ted Gould ]
