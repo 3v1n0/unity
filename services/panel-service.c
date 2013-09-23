@@ -1240,7 +1240,12 @@ sort_indicators (PanelService *self)
        * higher position though, so that they appear to the right of the
        * indicators that return a proper position */
       if (pos < 0)
-        pos = 1000 - name2order (g_object_get_data (G_OBJECT (io), "id"), NULL);
+        {
+          gint order = name2order (g_object_get_data (G_OBJECT (io), "id"), NULL);
+
+          if (order > -1)
+            pos = 1000 - order;
+        }
 
       /* unity's concept of priorities is inverse to ours right now */
       g_object_set_data (G_OBJECT (i->data), "priority", GINT_TO_POINTER (1000 - pos));
