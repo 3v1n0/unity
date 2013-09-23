@@ -1344,6 +1344,7 @@ void UnityScreen::donePaint()
 
     if (action == ShowdesktopHandlerWindowInterface::PostPaintAction::Remove)
     {
+      wi->DeleteHandler ();
       it = ShowdesktopHandler::animating_windows.erase(it);
       continue;
     }
