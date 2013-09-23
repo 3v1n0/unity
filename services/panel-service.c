@@ -154,10 +154,11 @@ panel_service_class_dispose (GObject *self)
   g_idle_remove_by_data (self);
   gdk_window_remove_filter (NULL, (GdkFilterFunc)event_filter, self);
 
-  if (priv->upstart != NULL) 
+  if (priv->upstart != NULL)
     {
       int event_sent = 0;
-      event_sent = upstart_emit_event_sync (NULL, priv->upstart, "indicator-services-end", NULL, 0);
+      event_sent = upstart_emit_event_sync (NULL, priv->upstart,
+                                            "indicator-services-end", NULL, 0);
       if (event_sent != 0)
          g_warning("Unable to signal for indicator services to start");
 
@@ -532,7 +533,7 @@ panel_service_update_menu_keybinding (PanelService *self)
         {
           modifiers |= GDK_SHIFT_MASK;
         }
-      if (g_strrstr (binding, "<Control>"))
+      if (g_strrstr (binding, "<Control>") || g_strrstr (binding, "<Primary>"))
         {
           modifiers |= GDK_CONTROL_MASK;
         }
@@ -1211,6 +1212,16 @@ name2order (const gchar * name, const gchar * hint)
   return -1;
 }
 
+static gint
+name2priority (const gchar * name, const gchar * hint)
+{
+  gint order = name2order (name, hint);
+  if (order > -1)
+    return order * MAX_INDICATOR_ENTRIES;
+
+  return order;
+}
+
 static void
 sort_indicators (PanelService *self)
 {
@@ -1356,8 +1367,16 @@ indicator_object_full_to_variant (IndicatorObject *object, const gchar *indicato
           IndicatorObjectEntry *entry = e->data;
           gchar *id = get_indicator_entry_id_by_entry (entry);
 
-          prio = parent_prio + index;
-          index++;
+          if (entry->name_hint)
+            {
+              prio = name2priority(indicator_id, entry->name_hint);
+            }
+
+          if (prio == -1)
+            {
+              prio = parent_prio * MAX_INDICATOR_ENTRIES + index;
+              index++;
+            }
 
           indicator_entry_to_variant (entry, id, indicator_id, b, prio);
           g_free (id);
@@ -1667,6 +1686,7 @@ activate_next_prev_menu (PanelService         *self,
     {
       gint parent_priority = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (l->data), "priority"));
       entries = indicator_object_get_entries (l->data);
+      const gchar *indicator_id = g_object_get_data (G_OBJECT (l->data), "id");
       if (entries)
         {
           int index = 0;
@@ -1679,8 +1699,16 @@ activate_next_prev_menu (PanelService         *self,
               if (!panel_service_entry_is_visible (self, new_entry))
                 continue;
 
-              prio = parent_priority * MAX_INDICATOR_ENTRIES + index;
-              index++;
+              if (new_entry->name_hint)
+                {
+                  prio = name2priority(indicator_id, new_entry->name_hint);
+                }
+
+              if (prio == -1)
+                {
+                  prio = parent_priority * MAX_INDICATOR_ENTRIES + index;
+                  index++;
+                }
 
               gpointer *values = g_new (gpointer, 2);
               values[0] = new_entry;
