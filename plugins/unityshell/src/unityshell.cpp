@@ -1344,18 +1344,19 @@ void UnityScreen::donePaint()
 
     if (action == ShowdesktopHandlerWindowInterface::PostPaintAction::Remove)
     {
+      wi->DeleteHandler();
       it = ShowdesktopHandler::animating_windows.erase(it);
       continue;
     }
     else if (action == ShowdesktopHandlerWindowInterface::PostPaintAction::Damage)
     {
-      wi->AddDamage ();
+      wi->AddDamage();
     }
 
     ++it;
   }
 
-  cScreen->donePaint ();
+  cScreen->donePaint();
 }
 
 void redraw_view_if_damaged(nux::ObjectPtr<nux::View> const& view, CompRegion const& damage)
