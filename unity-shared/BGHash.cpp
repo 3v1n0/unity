@@ -20,7 +20,6 @@
 #include "BGHash.h"
 #include <gdk/gdkx.h>
 #include <NuxCore/Logger.h>
-#include "unity-shared/AnimationUtils.h"
 #include "unity-shared/WindowManager.h"
 
 #ifndef XA_STRING
@@ -111,7 +110,8 @@ void BGHash::TransitionToNewColor(nux::color::Color const& new_color)
   auto const& current_color = WindowManager::Default().average_color();
   LOG_DEBUG(logger) << "transitioning from: " << current_color.red << " to " << new_color.red;
 
-  animation::StartOrReverse(transition_animator_, current_color, new_color);
+  transition_animator_.Stop();
+  transition_animator_.SetStartValue(current_color).SetFinishValue(new_color).Start();
 }
 
 void BGHash::OnTransitionUpdated(nux::Color const& new_color)
