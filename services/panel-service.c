@@ -107,6 +107,7 @@ static guint32 _service_signals[LAST_SIGNAL] = { 0 };
 
 static const gchar * indicator_order[][2] = {
   {"libappmenu.so", NULL},                    /* indicator-appmenu" */
+  {"floating-indicators", NULL},              /* position-less NG indicators */
   {"libapplication.so", NULL},                /* indicator-application" */
   {"libprintersmenu.so", NULL},               /* indicator-printers */
   {"libsyncindicator.so", NULL},              /* indicator-sync */
@@ -1182,7 +1183,7 @@ load_indicators_from_indicator_files (PanelService *self)
       indicator = indicator_ng_new_for_profile (filename, "desktop", &error);
       if (indicator)
         {
-          load_indicator (self, INDICATOR_OBJECT (indicator), NULL);
+          load_indicator (self, INDICATOR_OBJECT (indicator), name);
         }
       else
         {
@@ -1227,6 +1228,8 @@ sort_indicators (PanelService *self)
 {
   GSList *i;
   int     k = 0;
+  int     floating_indicators = 0;
+  int     max_priority = G_N_ELEMENTS(indicator_order) * MAX_INDICATOR_ENTRIES;
 
   for (i = self->priv->indicators; i; i = i->next)
     {
@@ -1241,14 +1244,19 @@ sort_indicators (PanelService *self)
        * indicators that return a proper position */
       if (pos < 0)
         {
-          gint order = name2order (g_object_get_data (G_OBJECT (io), "id"), NULL);
+          gint prio = name2priority (g_object_get_data (G_OBJECT (io), "id"), NULL);
 
-          if (order > -1)
-            pos = 1000 - order;
+          if (prio < 0)
+            {
+              prio = name2priority ("floating-indicators", NULL) + floating_indicators;
+              floating_indicators++;
+            }
+
+          pos = max_priority - prio;
         }
 
       /* unity's concept of priorities is inverse to ours right now */
-      g_object_set_data (G_OBJECT (i->data), "priority", GINT_TO_POINTER (1000 - pos));
+      g_object_set_data (G_OBJECT (i->data), "priority", GINT_TO_POINTER (max_priority - pos));
 
       g_object_set_data (G_OBJECT (i->data), "position", GINT_TO_POINTER (k));
       self->priv->timeouts[k] = SYNC_NEUTRAL;
@@ -1377,9 +1385,9 @@ indicator_object_full_to_variant (IndicatorObject *object, const gchar *indicato
               prio = name2priority(indicator_id, entry->name_hint);
             }
 
-          if (prio == -1)
+          if (prio < 0)
             {
-              prio = parent_prio * MAX_INDICATOR_ENTRIES + index;
+              prio = parent_prio + index;
               index++;
             }
 
@@ -1709,9 +1717,9 @@ activate_next_prev_menu (PanelService         *self,
                   prio = name2priority(indicator_id, new_entry->name_hint);
                 }
 
-              if (prio == -1)
+              if (prio < 0)
                 {
-                  prio = parent_priority * MAX_INDICATOR_ENTRIES + index;
+                  prio = parent_priority + index;
                   index++;
                 }
 
@@ -1738,7 +1746,7 @@ activate_next_prev_menu (PanelService         *self,
             }
           else
             {
-              values = ll->prev ? ll->prev->data : g_list_last(ordered_entries)->data;
+              values = ll->prev ? ll->prev->data : g_list_last (ordered_entries)->data;
             }
 
           new_entry = values[0];
