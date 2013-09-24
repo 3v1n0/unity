@@ -116,7 +116,6 @@ void Tooltip::ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y)
   PushToFront();
 
   ShowWindow(true);
-  UBusManager::SendMessage(UBUS_TOOLTIP_SHOWN);
 }
 
 void Tooltip::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)

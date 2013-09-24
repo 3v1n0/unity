@@ -108,7 +108,6 @@ void QuicklistManager::RecvShowQuicklist(nux::BaseWindow* window)
   _current_quicklist = quicklist;
 
   quicklist_opened.emit(nux::ObjectPtr<QuicklistView>(quicklist));
-  UBusManager::SendMessage(UBUS_QUICKLIST_SHOWN);
 }
 
 void QuicklistManager::RecvHideQuicklist(nux::BaseWindow* window)
