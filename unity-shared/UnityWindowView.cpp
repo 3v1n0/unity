@@ -50,6 +50,7 @@ UnityWindowView::UnityWindowView(NUX_FILE_LINE_DECL)
   live_background = false;
 
   closable.changed.connect(sigc::mem_fun(this, &UnityWindowView::OnClosableChanged));
+  background_color.changed.connect(sigc::hide(sigc::mem_fun(this, &View::QueueDraw)));
 }
 
 UnityWindowView::~UnityWindowView()
