@@ -107,8 +107,8 @@ static guint32 _service_signals[LAST_SIGNAL] = { 0 };
 
 static const gchar * indicator_order[][2] = {
   {"libappmenu.so", NULL},                    /* indicator-appmenu" */
-  {"floating-indicators", NULL},              /* position-less NG indicators */
   {"libapplication.so", NULL},                /* indicator-application" */
+  {"floating-indicators", NULL},              /* position-less NG indicators */
   {"libprintersmenu.so", NULL},               /* indicator-printers */
   {"libsyncindicator.so", NULL},              /* indicator-sync */
   {"libapplication.so", "gsd-keyboard-xkb"},  /* keyboard layout selector */
