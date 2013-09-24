@@ -1382,7 +1382,7 @@ indicator_object_full_to_variant (IndicatorObject *object, const gchar *indicato
 
           if (entry->name_hint)
             {
-              prio = name2priority(indicator_id, entry->name_hint);
+              prio = name2priority (indicator_id, entry->name_hint);
             }
 
           if (prio < 0)
@@ -1714,7 +1714,7 @@ activate_next_prev_menu (PanelService         *self,
 
               if (new_entry->name_hint)
                 {
-                  prio = name2priority(indicator_id, new_entry->name_hint);
+                  prio = name2priority (indicator_id, new_entry->name_hint);
                 }
 
               if (prio < 0)
