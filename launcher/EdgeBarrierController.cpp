@@ -112,6 +112,7 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
       SetupBarriers(UScreen::GetDefault()->GetMonitors());
     });*/
     options->option_changed.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnOptionsChanged));
+    SetupBarriers(UScreen::GetDefault()->GetMonitors());
   });
 
   xi2_opcode_ = GetXI2OpCode();
