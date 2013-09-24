@@ -24,9 +24,6 @@
 #include "QuicklistView.h"
 #include "QuicklistManager.h"
 
-#include "unity-shared/UBusWrapper.h"
-#include "unity-shared/UBusMessages.h"
-
 namespace unity
 {
 

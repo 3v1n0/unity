@@ -24,8 +24,6 @@
 #include <UnityCore/Variant.h>
 
 #include "unity-shared/CairoTexture.h"
-#include "unity-shared/UBusWrapper.h"
-#include "unity-shared/UBusMessages.h"
 #include <unity-shared/UnitySettings.h>
 
 #include "Tooltip.h"
