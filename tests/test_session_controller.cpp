@@ -23,6 +23,7 @@
 #include "test_mock_session_manager.h"
 #include "SessionController.h"
 #include "UBusMessages.h"
+#include "UBusWrapper.h"
 #include "UnitySettings.h"
 #include "test_utils.h"
 

@@ -95,7 +95,7 @@ protected:
   void OnEntryShowMenu(std::string const& entry_id, unsigned xid, int x, int y, unsigned button);
 
 private:
-  void OnBackgroundUpdate(GVariant *data);
+  void OnBackgroundUpdate(nux::Color const&);
   void OnOverlayShown(GVariant *data);
   void OnOverlayHidden(GVariant *data);
 
@@ -127,7 +127,6 @@ private:
   BaseTexturePtr bg_refine_single_column_tex_;
   std::unique_ptr<nux::AbstractPaintLayer> bg_refine_single_column_layer_;
 
-  nux::Color bg_color_;
   std::string active_overlay_;
   nux::Point  tracked_pointer_pos_;
 

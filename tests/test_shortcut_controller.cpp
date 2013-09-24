@@ -67,7 +67,6 @@ class TestShortcutController : public Test
     MOCK_METHOD1(SetOpacity, void(double));
     using Controller::GetOffsetPerMonitor;
     using Controller::ConstructView;
-    using Controller::bg_color_;
     using Controller::view_;
 
     void RealSetOpacity(double value)
@@ -151,14 +150,6 @@ TEST_F(TestShortcutController, ModelIsChangedOnModellerChange)
 
   ASSERT_NE(controller_.view_->GetModel(), old_model);
   EXPECT_EQ(controller_.view_->GetModel(), model);
-}
-
-TEST_F(TestShortcutController, UpdateackgroundColor)
-{
-  UBusManager().SendMessage(UBUS_BACKGROUND_COLOR_CHANGED,
-                            g_variant_new("(dddd)", 11/255.0f, 22/255.0f, 33/255.0f, 1.0f));
-
-  Utils::WaitUntilMSec([this] { return controller_.bg_color_ == nux::Color(11, 22, 33); });
 }
 
 TEST_F(TestShortcutController, DisabledOnLauncherKeySwitcherStart)

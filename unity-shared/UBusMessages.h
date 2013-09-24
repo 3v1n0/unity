@@ -50,10 +50,6 @@
 // Signal to force the launcher into locked mode, (b)
 #define UBUS_LAUNCHER_LOCK_HIDE "LAUNCHER_LOCK_HIDE"
 
-// Signal sent when the background changes, contains average colour in float RGB format
-#define UBUS_BACKGROUND_COLOR_CHANGED "BACKGROUND_COLOR_CHANGED"
-#define UBUS_BACKGROUND_REQUEST_COLOUR_EMIT "REQUEST_BACKGROUND_COLOUR_EMIT"
-
 #define UBUS_DASH_SIZE_CHANGED "DASH_SIZE_CHANGED"
 // FIXME - fix the nux focus api so we don't need this
 #define UBUS_RESULT_VIEW_KEYNAV_CHANGED "RESULT_VIEW_KEYNAV_CHANGED"

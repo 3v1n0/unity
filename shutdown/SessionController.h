@@ -30,7 +30,6 @@
 #include <UnityCore/SessionManager.h>
 
 #include "SessionView.h"
-#include "unity-shared/UBusWrapper.h"
 
 namespace unity
 {
@@ -63,7 +62,7 @@ private:
   void ConstructView();
   void EnsureView();
   void CloseWindow();
-  void OnBackgroundUpdate(GVariant* data);
+  void OnBackgroundUpdate(nux::Color const&);
   nux::Point GetOffsetPerMonitor(int monitor);
 
   View::Ptr view_;
@@ -71,10 +70,7 @@ private:
   nux::Point adjustment_;
   session::Manager::Ptr manager_;
 
-  nux::Color bg_color_;
-
   nux::animation::AnimateValue<double> fade_animator_;
-  UBusManager ubus_manager_;
 };
 
 }

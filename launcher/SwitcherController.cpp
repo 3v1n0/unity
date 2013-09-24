@@ -299,10 +299,9 @@ Controller::Impl::Impl(Controller* obj,
   ,  obj_(obj)
   ,  create_window_(create_window)
   ,  main_layout_(nullptr)
-  ,  bg_color_(0, 0, 0, 0.5)
   ,  fade_animator_(FADE_DURATION)
 {
-  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::Impl::OnBackgroundUpdate));
+  WindowManager::Default().average_color.changed.connect(sigc::mem_fun(this, &Impl::OnBackgroundUpdate));
 
   if (create_window_ == nullptr)
     create_window_ = []() {
@@ -323,14 +322,10 @@ Controller::Impl::Impl(Controller* obj,
   });
 }
 
-void Controller::Impl::OnBackgroundUpdate(GVariant* data)
+void Controller::Impl::OnBackgroundUpdate(nux::Color const& new_color)
 {
-  gdouble red, green, blue, alpha;
-  g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-  bg_color_ = nux::Color(red, green, blue, alpha);
-
   if (view_)
-    view_->background_color = bg_color_;
+    view_->background_color = new_color;
 }
 
 
@@ -467,7 +462,7 @@ void Controller::Impl::ConstructView()
   view_ = SwitcherView::Ptr(new SwitcherView());
   obj_->AddChild(view_.GetPointer());
   view_->SetModel(model_);
-  view_->background_color = bg_color_;
+  view_->background_color = WindowManager::Default().average_color();
   view_->monitor = obj_->monitor_;
 
   view_->hide_request.connect(sigc::mem_fun(this, &Controller::Impl::Hide));

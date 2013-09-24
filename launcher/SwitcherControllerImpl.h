@@ -86,7 +86,7 @@ struct Controller::Impl
   void ResetDetailTimer(int timeout_length);
   bool OnDetailTimer();
   void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr const& icon);
-  void OnBackgroundUpdate(GVariant* data);
+  void OnBackgroundUpdate(nux::Color const&);
 
   unsigned int construct_timeout_;
 
@@ -99,7 +99,6 @@ struct Controller::Impl
   Controller::WindowCreator create_window_;
   MockableBaseWindow::Ptr view_window_;
   nux::HLayout* main_layout_;
-  nux::Color bg_color_;
   nux::animation::AnimateValue<double> fade_animator_;
 
   UBusManager ubus_manager_;

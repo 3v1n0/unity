@@ -144,12 +144,6 @@ DashView::DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& app
   preview_state_machine_.PreviewActivated.connect(sigc::mem_fun(this, &DashView::BuildPreview));
   Relayout();
 
-  // We are interested in the color of the desktop background.
-  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &DashView::OnBGColorChanged));
-
-  // request the latest colour from bghash
-  ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
-
   if (scopes_)
   {
     scopes_->scope_added.connect(sigc::mem_fun(this, &DashView::OnScopeAdded));
@@ -168,15 +162,6 @@ DashView::~DashView()
   // Do this explicitely, otherwise dee will complain about invalid access
   // to the scope models
   RemoveLayout();
-}
-
-void DashView::OnBGColorChanged(GVariant *data)
-{
-  double red = 0.0f, green = 0.0f, blue = 0.0f, alpha = 0.0f;
-
-  g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-  background_color_ = nux::Color(red, green, blue, alpha);
-  QueueDraw();
 }
 
 void DashView::SetMonitorOffset(int x, int y)
@@ -469,7 +454,6 @@ void DashView::OnPreviewAnimationFinished()
 
 void DashView::AboutToShow()
 {
-  ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
   visible_ = true;
   search_bar_->text_entry()->SelectAll();
 
