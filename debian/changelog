@@ -1,3 +1,11 @@
+unity (7.1.1-0ubuntu1) UNRELEASED; urgency=low
+
+  * Add a property to the Scope class
+  * Add parameters to Preview::PerformAction
+  * Bump ABI version
+
+ -- Michal Hruby <michal.hruby@canonical.com>  Wed, 25 Sep 2013 13:13:21 +0100
+
 unity (7.1.0+13.10.20130920-0ubuntu1) saucy; urgency=low
 
   [ Stephen M. Webb ]

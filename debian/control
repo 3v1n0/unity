@@ -67,7 +67,7 @@ Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          ${python:Depends},
-         libunity-core-6.0-7 (= ${binary:Version}),
+         libunity-core-6.0-8 (= ${binary:Version}),
          compiz,
          compiz-core, compiz-core-abiversion-${coreabiversion},
          libnux-abiversion-${nuxabiversion},
@@ -121,7 +121,7 @@ Description: Services for the Unity interface
  .
  This package contains the dbus service used for unity.
 
-Package: libunity-core-6.0-7
+Package: libunity-core-6.0-8
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends},
@@ -144,7 +144,7 @@ Package: libunity-core-6.0-dev
 Section: libdevel
 Architecture: any
 Depends: ${misc:Depends},
-         libunity-core-6.0-7 (= ${binary:Version}),
+         libunity-core-6.0-8 (= ${binary:Version}),
          libglib2.0-dev,
          libsigc++-2.0-dev,
          libnux-4.0-dev (>= 4.0.2),
