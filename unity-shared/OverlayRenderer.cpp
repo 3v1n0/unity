@@ -40,7 +40,7 @@ const int EXCESS_BORDER = 10;
 }
 
 // Impl class
-class OverlayRendererImpl
+class OverlayRendererImpl : public sigc::trackable
 {
 public:
   OverlayRendererImpl(OverlayRenderer *parent_);
