@@ -35,6 +35,7 @@
 #include "GLibDBusProxy.h"
 #include "Variant.h"
 #include "Result.h"
+#include "ScopeProxyInterface.h"
 
 namespace unity
 {
@@ -136,8 +137,9 @@ public:
   InfoHintPtrList const& GetInfoHints() const;
 
   void PerformAction(std::string const& id,
-                     glib::HintsMap const& hints =
-                     glib::HintsMap()) const;
+                     glib::HintsMap const& hints = glib::HintsMap(),
+                     std::function<void(LocalResult const&, ScopeHandledType, glib::Error const&)> const& callback = nullptr,
+                     GCancellable* cancellable = nullptr) const;
 
 protected:
   // this should be UnityProtocolPreview, but we want to keep the usage
