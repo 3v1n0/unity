@@ -36,7 +36,7 @@ namespace unity
 namespace session
 {
 
-class Controller : public debug::Introspectable
+class Controller : public debug::Introspectable, public sigc::trackable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;

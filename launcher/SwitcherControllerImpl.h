@@ -40,7 +40,7 @@ namespace unity
 namespace switcher
 {
 
-struct Controller::Impl
+struct Controller::Impl : public sigc::trackable
 {
   Impl(Controller* obj,
        unsigned int load_timeout,
