@@ -87,6 +87,7 @@ void Scope::Impl::Init()
   signals_conn_.Add(utils::ConnectProperties(owner_->query_pattern, proxy_->query_pattern));
   signals_conn_.Add(utils::ConnectProperties(owner_->shortcut, proxy_->shortcut));
   signals_conn_.Add(utils::ConnectProperties(owner_->visible, proxy_->visible));
+  signals_conn_.Add(utils::ConnectProperties(owner_->results_dirty, proxy_->results_dirty));
 }
 
 void Scope::Impl::Activate(LocalResult const& result, guint action_type, glib::HintsMap const& hints, ActivateCallback const& callback, GCancellable* cancellable)

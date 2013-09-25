@@ -64,6 +64,7 @@ public:
   nux::ROProperty<bool> connected;
 
   nux::ROProperty<bool> visible;
+  nux::ROProperty<bool> results_dirty;
   nux::ROProperty<bool> is_master;
   nux::ROProperty<std::string> search_hint;
   nux::RWProperty<ScopeViewType> view_type;

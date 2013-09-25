@@ -66,6 +66,7 @@ public:
 
   nux::ROProperty<bool> visible;
   nux::ROProperty<bool> is_master;
+  nux::ROProperty<bool> results_dirty;
   nux::ROProperty<std::string> search_hint;
   nux::RWProperty<ScopeViewType> view_type;
   nux::Property<std::string> form_factor;
