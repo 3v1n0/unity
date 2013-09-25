@@ -1720,6 +1720,15 @@ TEST_F(TestLauncherController, UpdateLaunchersBackgroundColor)
   Utils::WaitUntilMSec([this, color] { return lc.options()->background_color == color; });
 }
 
+TEST_F(TestLauncherController, DisconnectWMSignalsOnDestruction)
+{
+  auto& color_property = WindowManager::Default().average_color;
+  size_t before = color_property.changed.size();
+  { MockLauncherController dummy(xdnd_manager_, edge_barriers_); }
+  ASSERT_EQ(before, color_property.changed.size());
+  color_property.changed.emit(nux::color::RandomColor());
+}
+
 // thumper: 2012-11-28 disabling the drag and drop tests as they are taking over 20s
 // each, and that is not acceptable for unit tests.  These sound more like functional
 // tests.

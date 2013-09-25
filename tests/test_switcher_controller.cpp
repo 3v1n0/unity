@@ -63,6 +63,15 @@ TEST_F(TestSwitcherController, InitiateDetail)
   EXPECT_LT(model->detail_selection.changed.size(), prev_size);
 }
 
+TEST_F(TestSwitcherController, DisconnectWMSignalsOnDestruction)
+{
+  auto& color_property = WindowManager::Default().average_color;
+  size_t before = color_property.changed.size();
+  { Controller dummy; }
+  ASSERT_EQ(before, color_property.changed.size());
+  color_property.changed.emit(nux::color::RandomColor());
+}
+
 TEST_F(TestSwitcherController, InitiateDetailWebapps)
 {
   controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
