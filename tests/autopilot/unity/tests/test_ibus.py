@@ -124,7 +124,7 @@ class IBusTests(UnityTestCase):
         # which doesn't allow ibus to work! Replace it with a useable one for now...
         os.spawnlp(os.P_NOWAIT, "ibus-daemon", "ibus-daemon", "--replace", "--xim")
 
-        sleep(5)
+        sleep(10)
 
         bus = get_ibus_bus()
         config = bus.get_config()
