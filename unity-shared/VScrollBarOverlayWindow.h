@@ -23,6 +23,7 @@
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
+#include <NuxCore/Animation.h>
 
 namespace unity
 {
@@ -102,6 +103,7 @@ private:
   
   unsigned int current_state_;
   ThumbAction current_action_;
+  nux::animation::AnimateValue<double> show_animator_;
 };
 
 } // namespace unity
