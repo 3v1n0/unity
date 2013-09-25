@@ -242,17 +242,21 @@ Preview::InfoHintPtrList const& Preview::GetInfoHints() const
   return pimpl->get_info_hints();
 }
 
-void Preview::PerformAction(std::string const& id, glib::HintsMap const& hints, GCancellable* cancellable) const
+void Preview::PerformAction(std::string const& id, glib::HintsMap const& hints, std::function<void(LocalResult const&, ScopeHandledType, glib::Error const&)>
+        const& callback, GCancellable* cancellable) const
 {
   ActionPtr action = GetActionById(id);
 
   if (action && pimpl->parent_scope_)
   {
-    auto reply_func = [id] (LocalResult const&, ScopeHandledType, glib::Error const& error) 
+    auto reply_func = [id, &callback] (LocalResult const& result, ScopeHandledType handled_type, glib::Error const& error) 
     {
       if (error)
       {
         LOG_WARN(logger) << "Preview action '" << id << "' failed => '" << error;
+      }
+      if (callback != nullptr) {
+        callback(result, handled_type, error);
       }
     };
 

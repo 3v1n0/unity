@@ -35,6 +35,7 @@
 #include "GLibDBusProxy.h"
 #include "Variant.h"
 #include "Result.h"
+#include "ScopeProxyInterface.h"
 
 namespace unity
 {
@@ -137,6 +138,7 @@ public:
 
   void PerformAction(std::string const& id,
                      glib::HintsMap const& hints = glib::HintsMap(),
+                     std::function<void(LocalResult const&, ScopeHandledType, glib::Error const&)> const& callback = nullptr,
                      GCancellable* cancellable = nullptr) const;
 
 protected:
