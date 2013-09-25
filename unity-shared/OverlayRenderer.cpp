@@ -24,12 +24,11 @@
 #include <Nux/PaintLayer.h>
 #include <NuxCore/Logger.h>
 
-#include "unity-shared/BackgroundEffectHelper.h"
 #include "DashStyle.h"
+#include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/UnitySettings.h"
+#include "unity-shared/WindowManager.h"
 
-#include "unity-shared/UBusMessages.h"
-#include "unity-shared/UBusWrapper.h"
 
 namespace unity
 {
@@ -41,25 +40,22 @@ const int EXCESS_BORDER = 10;
 }
 
 // Impl class
-class OverlayRendererImpl
+class OverlayRendererImpl : public sigc::trackable
 {
 public:
   OverlayRendererImpl(OverlayRenderer *parent_);
-  ~OverlayRendererImpl();
 
-  void Init();
   void UpdateTextures();
 
-  void OnBackgroundColorChanged(GVariant* args);
+  void OnBgColorChanged(nux::Color const& new_color);
 
   void Draw(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geometry, bool force_draw);
   void DrawContent(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geometry);
   void DrawContentCleanup(nux::GraphicsEngine& gfx_context, nux::Geometry const& content_geo, nux::Geometry const& absolute_geo, nux::Geometry const& geometry);
 
   BackgroundEffectHelper bg_effect_helper_;
-  nux::ColorLayer* bg_layer_;
-  nux::ColorLayer* bg_darken_layer_;
-  nux::Color bg_color_;
+  std::shared_ptr<nux::ColorLayer> bg_layer_;
+  std::shared_ptr<nux::ColorLayer> bg_darken_layer_;
 
   nux::Geometry content_geo;
   nux::ObjectPtr <nux::IOpenGLBaseTexture> bg_blur_texture_;
@@ -70,9 +66,6 @@ public:
   // temporary variable that stores the number of backgrounds we have rendered
   int bgs;
   bool visible;
-
-
-  UBusManager ubus_manager_;
 
   OverlayRenderer *parent;
 
@@ -95,67 +88,46 @@ OverlayRendererImpl::OverlayRendererImpl(OverlayRenderer *parent_)
   : visible(false)
   , parent(parent_)
 {
-  bg_effect_helper_.enabled = false;
-  Init();
-}
-
-OverlayRendererImpl::~OverlayRendererImpl()
-{
-  delete bg_layer_;
-  delete bg_darken_layer_;
-}
-
-void OverlayRendererImpl::Init()
-{  
   UpdateTextures();
-
-  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
-                                 sigc::mem_fun(this, &OverlayRendererImpl::OnBackgroundColorChanged));
-
-  ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
+  WindowManager::Default().average_color.changed.connect(sigc::mem_fun(this, &OverlayRendererImpl::OnBgColorChanged));
 }
 
-void OverlayRendererImpl::OnBackgroundColorChanged(GVariant* args)
+void OverlayRendererImpl::OnBgColorChanged(nux::Color const& new_color)
 {
-  gdouble red, green, blue, alpha;
-  g_variant_get (args, "(dddd)", &red, &green, &blue, &alpha);
-
-  nux::Color color = nux::Color(red, green, blue, alpha);
-  bg_layer_->SetColor(color);
-  bg_color_ = color;
+  bg_layer_->SetColor(new_color);
 
   //When we are in low gfx mode then our darken layer will act as a background.
   if (Settings::Instance().GetLowGfxMode())
   {
-    bg_darken_layer_->SetColor(bg_color_);
+    bg_darken_layer_->SetColor(new_color);
   }
 
   parent->need_redraw.emit();
 }
 
 void OverlayRendererImpl::UpdateTextures()
-{  
+{
   nux::ROPConfig rop;
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  bg_layer_ = new nux::ColorLayer(nux::Color(0.0f, 0.0f, 0.0f, 0.9), true, rop);
+  bg_layer_ = std::make_shared<nux::ColorLayer>(nux::Color(0.0f, 0.0f, 0.0f, 0.9), true, rop);
 
   rop.Blend = true;
   rop.SrcBlend = GL_ZERO;
   rop.DstBlend = GL_SRC_COLOR;
   nux::Color darken_colour = nux::Color(0.9f, 0.9f, 0.9f, 1.0f);
-  
+
   //When we are in low gfx mode then our darken layer will act as a background.
   if (Settings::Instance().GetLowGfxMode())
   {
     rop.Blend = false;
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_SRC_COLOR;
-    darken_colour = bg_color_;
+    darken_colour = WindowManager::Default().average_color();
   }
-  
-  bg_darken_layer_ = new nux::ColorLayer(darken_colour, false, rop);
+
+  bg_darken_layer_ = std::make_shared<nux::ColorLayer>(darken_colour, false, rop);
   bg_shine_texture_ = unity::dash::Style::Instance().GetDashShine()->GetDeviceTexture();
 
   nux::BaseTexture* bg_refine_tex = unity::dash::Style::Instance().GetRefineTextureDash();
@@ -165,9 +137,9 @@ void OverlayRendererImpl::UpdateTextures()
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
     nux::TexCoordXForm texxform;
-    
-    bg_refine_gradient_.reset(new nux::TextureLayer(bg_refine_tex->GetDeviceTexture(), 
-                              texxform, 
+
+    bg_refine_gradient_.reset(new nux::TextureLayer(bg_refine_tex->GetDeviceTexture(),
+                              texxform,
                               nux::color::White,
                               false,
                               rop));
@@ -455,7 +427,8 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
       gfx_context.QRP_GLSL_ColorLayerOverTexture(larger_content_geo.x, larger_content_geo.y,
                                            larger_content_geo.width, larger_content_geo.height,
                                            bg_blur_texture_, texxform_absolute_bg, nux::color::White,
-                                           bg_color_, nux::LAYER_BLEND_MODE_OVERLAY);
+                                           WindowManager::Default().average_color(),
+                                           nux::LAYER_BLEND_MODE_OVERLAY);
 
     else
       gfx_context.QRP_1Tex (larger_content_geo.x, larger_content_geo.y,
@@ -465,7 +438,8 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
       gfx_context.QRP_GLSL_ColorLayerOverTexture(larger_content_geo.x, larger_content_geo.y,
                                       larger_content_geo.width, larger_content_geo.height,
                                       bg_blur_texture_, texxform_absolute_bg, nux::color::White,
-                                      bg_color_, nux::LAYER_BLEND_MODE_OVERLAY);
+                                      WindowManager::Default().average_color(),
+                                      nux::LAYER_BLEND_MODE_OVERLAY);
 
 #endif
   }
@@ -506,7 +480,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
 
   //Draw the background
   bg_darken_layer_->SetGeometry(larger_content_geo);
-  nux::GetPainter().RenderSinglePaintLayer(gfx_context, larger_content_geo, bg_darken_layer_);
+  nux::GetPainter().RenderSinglePaintLayer(gfx_context, larger_content_geo, bg_darken_layer_.get());
 
   if (Settings::Instance().GetLowGfxMode() == false)
   {
@@ -514,7 +488,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
     if (gfx_context.UsingGLSLCodePath() == false)
     {
       bg_layer_->SetGeometry(larger_content_geo);
-      nux::GetPainter().RenderSinglePaintLayer(gfx_context, larger_content_geo, bg_layer_);
+      nux::GetPainter().RenderSinglePaintLayer(gfx_context, larger_content_geo, bg_layer_.get());
     }
 #endif
 
@@ -852,7 +826,8 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
                                     bg_blur_texture_,
                                     texxform_absolute_bg,
                                     nux::color::White,
-                                    bg_color_, nux::LAYER_BLEND_MODE_OVERLAY,
+                                    WindowManager::Default().average_color(),
+                                    nux::LAYER_BLEND_MODE_OVERLAY,
                                     true, rop);
     else
       gPainter.PushTextureLayer(gfx_context, larger_content_geo,
@@ -866,14 +841,15 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
                                     bg_blur_texture_,
                                     texxform_absolute_bg,
                                     nux::color::White,
-                                    bg_color_, nux::LAYER_BLEND_MODE_OVERLAY,
+                                    WindowManager::Default().average_color(),
+                                    nux::LAYER_BLEND_MODE_OVERLAY,
                                     true, rop);
 #endif
     bgs++;
   }
 
   // draw the darkening behind our paint
-  nux::GetPainter().PushLayer(gfx_context, bg_darken_layer_->GetGeometry(), bg_darken_layer_);
+  nux::GetPainter().PushLayer(gfx_context, bg_darken_layer_->GetGeometry(), bg_darken_layer_.get());
   bgs++;
 
   //Only apply shine if we aren't in low gfx mode.
@@ -882,7 +858,7 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
 #ifndef NUX_OPENGLES_20
     if (gfx_context.UsingGLSLCodePath() == false)
     {
-      nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_);
+      nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_.get());
       bgs++;
     }
 #endif
@@ -946,7 +922,6 @@ void OverlayRenderer::AboutToHide()
 
 void OverlayRenderer::AboutToShow()
 {
-  pimpl_->ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
   pimpl_->visible = true;
   pimpl_->bg_effect_helper_.enabled = true;
   need_redraw.emit();

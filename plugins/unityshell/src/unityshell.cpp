@@ -270,11 +270,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      wt->RedrawRequested.connect(sigc::mem_fun(this, &UnityScreen::onRedrawRequested));
 
-    // _bghash is a pointer. We don't want it to be created before Nux system has had a chance
-    // to start. BGHash relies on animations. Nux animation system starts after the WindowThread
-    // has been created.
-    _bghash.reset(new BGHash());
-
      unity_a11y_init(wt.get());
 
      /* i18n init */
@@ -1659,11 +1654,10 @@ void UnityScreen::handleEvent(XEvent* event)
       ShowdesktopHandler::InhibitLeaveShowdesktopMode (event->xmaprequest.window);
       break;
     case PropertyNotify:
-      if (event->xproperty.window == GDK_ROOT_WINDOW() &&
-          event->xproperty.atom == gdk_x11_get_xatom_by_name("_GNOME_BACKGROUND_REPRESENTATIVE_COLORS"))
+      if (bghash_ && event->xproperty.window == GDK_ROOT_WINDOW() &&
+          event->xproperty.atom == bghash_->ColorAtomId())
       {
-        if (_bghash)
-          _bghash->RefreshColor();
+        bghash_->RefreshColor();
       }
       break;
     default:
@@ -3058,8 +3052,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       override_color.red = override_color.red / override_color.alpha;
       override_color.green = override_color.green / override_color.alpha;
       override_color.blue = override_color.blue / override_color.alpha;
-      if (_bghash)
-        _bghash->OverrideColor(override_color);
+      bghash_->OverrideColor(override_color);
       break;
     }
     case UnityshellOptions::LauncherHideMode:
@@ -3211,16 +3204,14 @@ void UnityScreen::Relayout()
 
   UScreen *uscreen = UScreen::GetDefault();
   int primary_monitor = uscreen->GetPrimaryMonitor();
-  auto geo = uscreen->GetMonitorGeometry(primary_monitor);
-
-  primary_monitor_ = nux::Geometry(geo.x, geo.y, geo.width, geo.height);
+  auto const& geo = uscreen->GetMonitorGeometry(primary_monitor);
   wt->SetWindowSize(geo.width, geo.height);
 
   LOG_DEBUG(logger) << "Setting to primary screen rect:"
-                    << " x=" << primary_monitor_().x
-                    << " y=" << primary_monitor_().y
-                    << " w=" << primary_monitor_().width
-                    << " h=" << primary_monitor_().height;
+                    << " x=" << geo.x
+                    << " y=" << geo.y
+                    << " w=" << geo.width
+                    << " h=" << geo.height;
 
   needsRelayout = false;
 }
@@ -3275,6 +3266,8 @@ void UnityScreen::OnDashRealized ()
 void UnityScreen::initLauncher()
 {
   Timer timer;
+
+  bghash_.reset(new BGHash());
 
   auto xdnd_collection_window = std::make_shared<XdndCollectionWindowImp>();
   auto xdnd_start_stop_notifier = std::make_shared<XdndStartStopNotifierImp>();

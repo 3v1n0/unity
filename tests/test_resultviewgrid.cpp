@@ -25,6 +25,7 @@
 using namespace testing;
 
 #include "ResultViewGrid.h"
+#include "WindowManager.h"
 using namespace unity;
 
 namespace
@@ -33,7 +34,7 @@ namespace
 class MockResultViewGrid : public dash::ResultViewGrid
 {
 public:
-  MockResultViewGrid(NUX_FILE_LINE_DECL) : dash::ResultViewGrid(NUX_FILE_LINE_PARAM) {}
+  MockResultViewGrid() : dash::ResultViewGrid(NUX_TRACKER_LOCATION) {}
 
   MOCK_METHOD0(QueueDraw, void());
   MOCK_METHOD2(GetIndexAtPosition, uint(int x, int y));
@@ -49,8 +50,8 @@ class TestResultViewGrid : public Test
 public:
   virtual void SetUp()
   {
-    view.Adopt(new NiceMock<MockResultViewGrid>(NUX_TRACKER_LOCATION));
-    renderer.Adopt(new dash::ResultRenderer(NUX_TRACKER_LOCATION));
+    view = new NiceMock<MockResultViewGrid>();
+    renderer = new dash::ResultRenderer();
 
     view->SetModelRenderer(renderer.GetPointer());
     nux::GetWindowCompositor().SetKeyFocusArea(view.GetPointer());
@@ -98,6 +99,18 @@ TEST_F(TestResultViewGrid, TestQueueDrawMouseMoveOutside)
     .Times(0);
 
   view->FakeMouseMoveSignal();
+}
+
+TEST_F(TestResultViewGrid, DisconnectWMSignalsOnDestruction)
+{
+  auto& color_property = WindowManager::Default().average_color;
+  size_t before = color_property.changed.size();
+  {
+    nux::ObjectPtr<MockResultViewGrid> dummy(new NiceMock<MockResultViewGrid>());
+    dummy->SetModelRenderer(renderer.GetPointer());
+  }
+  ASSERT_EQ(before, color_property.changed.size());
+  color_property.changed.emit(nux::color::RandomColor());
 }
 
 }

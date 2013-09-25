@@ -20,8 +20,9 @@
 #include "SessionController.h"
 
 #include "unity-shared/AnimationUtils.h"
-#include "unity-shared/UBusMessages.h"
 #include "unity-shared/UScreen.h"
+#include "unity-shared/UBusMessages.h"
+#include "unity-shared/UBusWrapper.h"
 #include "unity-shared/WindowManager.h"
 
 namespace na = nux::animation;
@@ -37,7 +38,6 @@ const unsigned int FADE_DURATION = 100;
 
 Controller::Controller(session::Manager::Ptr const& manager)
   : manager_(manager)
-  , bg_color_(0.0, 0.0, 0.0, 0.5)
   , fade_animator_(FADE_DURATION)
 {
   manager_->reboot_requested.connect([this] (bool inhibitors) {
@@ -54,10 +54,7 @@ Controller::Controller(session::Manager::Ptr const& manager)
 
   manager_->cancel_requested.connect(sigc::mem_fun(this, &Controller::Hide));
 
-  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED,
-                                 sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
-
-  ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
+  WindowManager::Default().average_color.changed.connect(sigc::mem_fun(this, &Controller::OnBackgroundUpdate));
 
   fade_animator_.updated.connect([this] (double opacity) { view_window_->SetOpacity(opacity); });
   fade_animator_.finished.connect([this] {
@@ -66,14 +63,10 @@ Controller::Controller(session::Manager::Ptr const& manager)
   });
 }
 
-void Controller::OnBackgroundUpdate(GVariant* data)
+void Controller::OnBackgroundUpdate(nux::Color const& new_color)
 {
-  gdouble red, green, blue, alpha;
-  g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-  bg_color_ = nux::Color(red, green, blue, alpha);
-
   if (view_)
-    view_->background_color = bg_color_;
+    view_->background_color = new_color;
 }
 
 void Controller::Show(View::Mode mode)
@@ -88,7 +81,7 @@ void Controller::Show(View::Mode mode, bool inhibitors)
   if (Visible() && mode == view_->mode())
     return;
 
-  ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
+  UBusManager().SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
   WindowManager::Default().SaveInputFocus();
 
   if (nux::GetWindowThread()->IsEmbeddedWindow())
@@ -126,7 +119,7 @@ nux::Point Controller::GetOffsetPerMonitor(int monitor)
 void Controller::ConstructView()
 {
   view_ = View::Ptr(new View(manager_));
-  view_->background_color = bg_color_;
+  view_->background_color = WindowManager::Default().average_color();
   debug::Introspectable::AddChild(view_.GetPointer());
 
   auto layout = new nux::HLayout(NUX_TRACKER_LOCATION);

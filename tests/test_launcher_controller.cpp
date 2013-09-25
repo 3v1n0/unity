@@ -1715,10 +1715,18 @@ TEST_F(TestLauncherController, UpdateSelectionChanged)
 
 TEST_F(TestLauncherController, UpdateLaunchersBackgroundColor)
 {
-  UBusManager().SendMessage(UBUS_BACKGROUND_COLOR_CHANGED,
-                            g_variant_new("(dddd)", 11/255.0f, 22/255.0f, 33/255.0f, 1.0f));
+  auto const& color = nux::color::RandomColor();
+  WindowManager::Default().average_color = color;
+  Utils::WaitUntilMSec([this, color] { return lc.options()->background_color == color; });
+}
 
-  Utils::WaitUntilMSec([this] { return lc.options()->background_color == nux::Color(11, 22, 33); });
+TEST_F(TestLauncherController, DisconnectWMSignalsOnDestruction)
+{
+  auto& color_property = WindowManager::Default().average_color;
+  size_t before = color_property.changed.size();
+  { MockLauncherController dummy(xdnd_manager_, edge_barriers_); }
+  ASSERT_EQ(before, color_property.changed.size());
+  color_property.changed.emit(nux::color::RandomColor());
 }
 
 // thumper: 2012-11-28 disabling the drag and drop tests as they are taking over 20s

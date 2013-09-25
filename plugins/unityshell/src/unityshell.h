@@ -278,6 +278,7 @@ private:
   shortcut::Controller::Ptr shortcut_controller_;
   session::Controller::Ptr  session_controller_;
   debug::DebugDBusInterface debugger_;
+  std::unique_ptr<BGHash>   bghash_;
 
   /* Subscription for gestures that manipulate Unity launcher */
   std::unique_ptr<nux::GesturesSubscription> gestures_sub_launcher_;
@@ -313,10 +314,6 @@ private:
   CompRegion nuxRegion;
   CompRegion fullscreenRegion;
   CompWindow* firstWindowAboveShell;
-
-  nux::Property<nux::Geometry> primary_monitor_;
-
-  std::unique_ptr<BGHash> _bghash;
 
   ::GLFramebufferObject *oldFbo;
 

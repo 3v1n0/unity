@@ -126,17 +126,6 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
   edge_barriers_->options = parent_->options();
 #endif
 
-  ubus.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, [this](GVariant * data) {
-    ui::IconRenderer::DestroyShortcutTextures();
-
-    double red = 0.0f, green = 0.0f, blue = 0.0f, alpha = 0.0f;
-    g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-    parent_->options()->background_color = nux::Color(red, green, blue, alpha);
-  });
-
-  // request the latest color from bghash
-  ubus.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
-
   UScreen* uscreen = UScreen::GetDefault();
   EnsureLaunchers(uscreen->GetPrimaryMonitor(), uscreen->GetMonitors());
 
@@ -165,6 +154,9 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
   WindowManager& wm = WindowManager::Default();
   wm.window_focus_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnWindowFocusChanged));
   wm.viewport_layout_changed.connect(sigc::group(sigc::mem_fun(this, &Controller::Impl::UpdateNumWorkspaces), sigc::_1 * sigc::_2));
+  average_color_connection_ = wm.average_color.changed.connect([this] (nux::Color const& color) {
+    parent_->options()->background_color = color;
+  });
 
   ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [this](GVariant * args) {
     if (reactivate_keynav)

@@ -152,6 +152,7 @@ public:
 
   connection::Wrapper launcher_key_press_connection_;
   connection::Wrapper launcher_event_outside_connection_;
+  connection::Wrapper average_color_connection_;
 };
 
 } // launcher namespace
