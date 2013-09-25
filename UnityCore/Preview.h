@@ -136,8 +136,8 @@ public:
   InfoHintPtrList const& GetInfoHints() const;
 
   void PerformAction(std::string const& id,
-                     glib::HintsMap const& hints =
-                     glib::HintsMap()) const;
+                     glib::HintsMap const& hints = glib::HintsMap(),
+                     GCancellable* cancellable = nullptr) const;
 
 protected:
   // this should be UnityProtocolPreview, but we want to keep the usage

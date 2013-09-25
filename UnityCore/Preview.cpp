@@ -242,7 +242,7 @@ Preview::InfoHintPtrList const& Preview::GetInfoHints() const
   return pimpl->get_info_hints();
 }
 
-void Preview::PerformAction(std::string const& id, glib::HintsMap const& hints) const
+void Preview::PerformAction(std::string const& id, glib::HintsMap const& hints, GCancellable* cancellable) const
 {
   ActionPtr action = GetActionById(id);
 
@@ -256,7 +256,7 @@ void Preview::PerformAction(std::string const& id, glib::HintsMap const& hints) 
       }
     };
 
-    pimpl->parent_scope_->ActivatePreviewAction(action, preview_result, hints, reply_func);
+    pimpl->parent_scope_->ActivatePreviewAction(action, preview_result, hints, reply_func, cancellable);
   }
   else
   {
