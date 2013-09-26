@@ -21,76 +21,69 @@
 
 #include "test_im_text_entry.h"
 
-using namespace testing;
-using namespace unity;
+namespace
+{
 using namespace nux;
 
-TEST(TestIMTextEntry, CopyCtrlC)
+struct TestIMTextEntry : testing::Test
 {
-  MockTextEntry text_entry;
+  bool EventNativelyHandled() { return !text_entry.im_running(); }
 
+  MockTextEntry text_entry;
+};
+
+TEST_F(TestIMTextEntry, CopyCtrlC)
+{
   TestEvent event(KEY_MODIFIER_CTRL, NUX_VK_c);
 
   EXPECT_CALL(text_entry, CopyClipboard());
-  EXPECT_TRUE(text_entry.InspectKeyEvent(event));
+  EXPECT_EQ(EventNativelyHandled(), text_entry.InspectKeyEvent(event));
 }
 
-TEST(TestIMTextEntry, CopyCtrlIns)
+TEST_F(TestIMTextEntry, CopyCtrlIns)
 {
-  MockTextEntry text_entry;
-
   TestEvent event(KEY_MODIFIER_CTRL, NUX_VK_INSERT);
 
   EXPECT_CALL(text_entry, CopyClipboard());
-  EXPECT_TRUE(text_entry.InspectKeyEvent(event));
+  EXPECT_EQ(EventNativelyHandled(), text_entry.InspectKeyEvent(event));
 }
 
-TEST(TestIMTextEntry, PasteCtrlV)
+TEST_F(TestIMTextEntry, PasteCtrlV)
 {
-  MockTextEntry text_entry;
-
   TestEvent event(KEY_MODIFIER_CTRL, NUX_VK_v);
 
   EXPECT_CALL(text_entry, PasteClipboard());
-  EXPECT_TRUE(text_entry.InspectKeyEvent(event));
+  EXPECT_EQ(EventNativelyHandled(), text_entry.InspectKeyEvent(event));
 }
 
-TEST(TestIMTextEntry, PasteShiftIns)
+TEST_F(TestIMTextEntry, PasteShiftIns)
 {
-  MockTextEntry text_entry;
-
   TestEvent event(KEY_MODIFIER_SHIFT, NUX_VK_INSERT);
 
   EXPECT_CALL(text_entry, PasteClipboard());
-  EXPECT_TRUE(text_entry.InspectKeyEvent(event));
+  EXPECT_EQ(EventNativelyHandled(), text_entry.InspectKeyEvent(event));
 }
 
-TEST(TestIMTextEntry, CutCtrlX)
+TEST_F(TestIMTextEntry, CutCtrlX)
 {
-  MockTextEntry text_entry;
-
   TestEvent event(KEY_MODIFIER_CTRL, NUX_VK_x);
 
   EXPECT_CALL(text_entry, CutClipboard());
-  EXPECT_TRUE(text_entry.InspectKeyEvent(event));
+  EXPECT_EQ(EventNativelyHandled(), text_entry.InspectKeyEvent(event));
 }
 
-TEST(TestIMTextEntry, CutShiftDel)
+TEST_F(TestIMTextEntry, CutShiftDel)
 {
-  MockTextEntry text_entry;
-
   TestEvent event(KEY_MODIFIER_SHIFT, NUX_VK_DELETE);
 
   EXPECT_CALL(text_entry, CutClipboard());
-  EXPECT_TRUE(text_entry.InspectKeyEvent(event));
+  EXPECT_EQ(EventNativelyHandled(), text_entry.InspectKeyEvent(event));
 }
 
-TEST(TestIMTextEntry, CtrlMoveKeys)
+TEST_F(TestIMTextEntry, CtrlMoveKeys)
 {
-  MockTextEntry text_entry;
-
   TestEvent left(KEY_MODIFIER_CTRL, NUX_VK_LEFT);
-  EXPECT_TRUE(text_entry.InspectKeyEvent(left));
+  EXPECT_EQ(EventNativelyHandled(), text_entry.InspectKeyEvent(left));
 
   TestEvent right(KEY_MODIFIER_CTRL, NUX_VK_RIGHT);
   EXPECT_TRUE(text_entry.InspectKeyEvent(right));
@@ -102,37 +95,31 @@ TEST(TestIMTextEntry, CtrlMoveKeys)
   EXPECT_TRUE(text_entry.InspectKeyEvent(end));
 }
 
-TEST(TestIMTextEntry, CtrlDeleteKeys)
+TEST_F(TestIMTextEntry, CtrlDeleteKeys)
 {
-  MockTextEntry text_entry;
-
   TestEvent del(KEY_MODIFIER_CTRL, NUX_VK_DELETE);
-  EXPECT_TRUE(text_entry.InspectKeyEvent(del));
+  EXPECT_EQ(EventNativelyHandled(), text_entry.InspectKeyEvent(del));
 
   TestEvent backspace(KEY_MODIFIER_CTRL, NUX_VK_BACKSPACE);
   EXPECT_TRUE(text_entry.InspectKeyEvent(backspace));
 }
 
-TEST(TestIMTextEntry, CtrlA)
+TEST_F(TestIMTextEntry, CtrlA)
 {
-  MockTextEntry text_entry;
-
   TestEvent selectall(KEY_MODIFIER_CTRL, NUX_VK_a);
-  EXPECT_TRUE(text_entry.InspectKeyEvent(selectall));
+  EXPECT_EQ(EventNativelyHandled(), text_entry.InspectKeyEvent(selectall));
 }
 
-TEST(TestIMTextEntry, CtrlKeybindings)
+struct CtrlKeybindings : TestIMTextEntry, testing::WithParamInterface<unsigned long> {};
+INSTANTIATE_TEST_CASE_P(TestIMTextEntry, CtrlKeybindings, testing::Values(NUX_VK_a, NUX_VK_BACKSPACE,
+                                                                          NUX_VK_LEFT, NUX_VK_RIGHT,
+                                                                          NUX_VK_HOME, NUX_VK_END,
+                                                                          NUX_VK_BACKSPACE, NUX_VK_DELETE));
+
+TEST_P(/*TestIMTextEntry*/CtrlKeybindings, Handling)
 {
-  MockTextEntry text_entry;
-
-  std::vector<unsigned long> allowed_keys { NUX_VK_a, NUX_VK_BACKSPACE,
-                                            NUX_VK_LEFT, NUX_VK_RIGHT,
-                                            NUX_VK_HOME, NUX_VK_END,
-                                            NUX_VK_BACKSPACE, NUX_VK_DELETE };
-
-  for (auto keysym : allowed_keys)
-  {
-    TestEvent event(KEY_MODIFIER_CTRL, keysym);
-    EXPECT_TRUE(text_entry.InspectKeyEvent(event));
-  }
+  TestEvent event(KEY_MODIFIER_CTRL, GetParam());
+  EXPECT_EQ(EventNativelyHandled(), text_entry.InspectKeyEvent(event));
 }
+
+} // anonymous namespace

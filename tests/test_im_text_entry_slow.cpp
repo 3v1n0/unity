@@ -30,7 +30,7 @@ TEST(TestIMTextEntry, AltKeybindings)
   for (unsigned long keysym = 0; keysym < XK_VoidSymbol; ++keysym)
   {
     TestEvent event(KEY_MODIFIER_ALT, keysym);
-    EXPECT_FALSE(text_entry.InspectKeyEvent(event));
+    ASSERT_FALSE(text_entry.InspectKeyEvent(event));
   }
 }
 
@@ -41,6 +41,6 @@ TEST(TestIMTextEntry, SuperKeybindings)
   for (unsigned long keysym = 0; keysym < XK_VoidSymbol; ++keysym)
   {
     TestEvent event(KEY_MODIFIER_SUPER, keysym);
-    EXPECT_FALSE(text_entry.InspectKeyEvent(event));
+    ASSERT_FALSE(text_entry.InspectKeyEvent(event));
   }
 }

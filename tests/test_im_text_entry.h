@@ -25,11 +25,9 @@
 #include <gmock/gmock.h>
 #include "unity-shared/IMTextEntry.h"
 
-class TestEvent : public nux::Event
+struct TestEvent : nux::Event
 {
-public:
   TestEvent(nux::KeyModifier keymod, unsigned long keysym);
-
   TestEvent(unsigned long keysym);
 };
 
