@@ -1695,7 +1695,8 @@ void UnityScreen::handleEvent(XEvent* event)
       break;
   }
 
-  if (!skip_other_plugins && !switcher_controller_->IsMouseDisabled() &&
+  if (!skip_other_plugins &&
+     (!switcher_controller_->IsMouseDisabled() || wm.IsViewPortSwitchStarted()) &&
       screen->otherGrabExist("deco", "move", "switcher", "resize", nullptr))
   {
     wt->ProcessForeignEvent(event, nullptr);
