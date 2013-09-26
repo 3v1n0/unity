@@ -20,6 +20,7 @@
  */
 
 #include "test_im_text_entry.h"
+#include "test_utils.h"
 
 TestEvent::TestEvent(nux::KeyModifier keymod, unsigned long keysym)
 {
@@ -36,6 +37,12 @@ TestEvent::TestEvent(unsigned long keysym)
 
 bool MockTextEntry::InspectKeyEvent(nux::Event const& event)
 {
+  bool ret;
   key_down.emit(event.type, event.GetKeySym(), event.GetKeyState(), nullptr, 0);
-  return IMTextEntry::InspectKeyEvent(event);
+  ret = IMTextEntry::InspectKeyEvent(event);
+
+  if (im_running())
+    Utils::WaitForTimeoutMSec(100);
+
+  return ret;
 }
