@@ -19,11 +19,55 @@
  *
  */
 
-#include "test_im_text_entry.h"
+#include <gmock/gmock.h>
+#include "unity-shared/IMTextEntry.h"
+#include "test_utils.h"
 
 namespace
 {
 using namespace nux;
+
+struct TestEvent : nux::Event
+{
+  TestEvent(KeyModifier keymod, unsigned long keysym)
+  {
+    type = NUX_KEYDOWN;
+    key_modifiers = keymod;
+    x11_keysym = keysym;
+  }
+
+  TestEvent(unsigned long keysym)
+  {
+    type = NUX_KEYDOWN;
+    x11_keysym = keysym;
+  }
+};
+
+struct MockTextEntry : public unity::IMTextEntry
+{
+  MOCK_METHOD0(CutClipboard, void());
+  MOCK_METHOD0(CopyClipboard, void());
+  MOCK_METHOD0(PasteClipboard, void());
+  MOCK_METHOD0(PastePrimaryClipboard, void());
+
+  struct IgnoreIBus {};
+
+  bool InspectKeyEvent(nux::Event const& event, IgnoreIBus const&)
+  {
+    key_down.emit(event.type, event.GetKeySym(), event.GetKeyState(), nullptr, 0);
+    return IMTextEntry::InspectKeyEvent(event);
+  }
+
+  bool InspectKeyEvent(nux::Event const& event)
+  {
+    bool ret = InspectKeyEvent(event, IgnoreIBus());
+
+    if (im_running())
+      Utils::WaitForTimeoutMSec(15);
+
+    return ret;
+  }
+};
 
 struct TestIMTextEntry : testing::Test
 {
@@ -120,6 +164,24 @@ TEST_P(/*TestIMTextEntry*/CtrlKeybindings, Handling)
 {
   TestEvent event(KEY_MODIFIER_CTRL, GetParam());
   EXPECT_EQ(EventNativelyHandled(), text_entry.InspectKeyEvent(event));
+}
+
+TEST_F(TestIMTextEntry, AltKeybindings)
+{
+  for (unsigned long keysym = 0; keysym < XK_umacron; ++keysym)
+  {
+    TestEvent event(KEY_MODIFIER_ALT, keysym);
+    ASSERT_FALSE(text_entry.InspectKeyEvent(event, MockTextEntry::IgnoreIBus()));
+  }
+}
+
+TEST_F(TestIMTextEntry, SuperKeybindings)
+{
+  for (unsigned long keysym = 0; keysym < XK_umacron; ++keysym)
+  {
+    TestEvent event(KEY_MODIFIER_SUPER, keysym);
+    ASSERT_FALSE(text_entry.InspectKeyEvent(event, MockTextEntry::IgnoreIBus()));
+  }
 }
 
 } // anonymous namespace
