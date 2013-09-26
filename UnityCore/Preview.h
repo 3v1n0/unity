@@ -138,7 +138,7 @@ public:
 
   void PerformAction(std::string const& id,
                      glib::HintsMap const& hints = glib::HintsMap(),
-                     std::function<void(LocalResult const&, ScopeHandledType, glib::Error const&)> const& callback = nullptr,
+                     ActivateCallback const& callback = nullptr,
                      GCancellable* cancellable = nullptr) const;
 
 protected:

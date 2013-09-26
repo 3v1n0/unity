@@ -242,8 +242,7 @@ Preview::InfoHintPtrList const& Preview::GetInfoHints() const
   return pimpl->get_info_hints();
 }
 
-void Preview::PerformAction(std::string const& id, glib::HintsMap const& hints, std::function<void(LocalResult const&, ScopeHandledType, glib::Error const&)>
-        const& callback, GCancellable* cancellable) const
+void Preview::PerformAction(std::string const& id, glib::HintsMap const& hints, ActivateCallback const& callback, GCancellable* cancellable) const
 {
   ActionPtr action = GetActionById(id);
 

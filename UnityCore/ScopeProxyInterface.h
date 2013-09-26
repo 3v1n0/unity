@@ -52,6 +52,9 @@ enum ScopeViewType
   SCOPE_VIEW
 };
 
+typedef std::function<void(std::string const&, glib::HintsMap const&, glib::Error const&)> SearchCallback;
+typedef std::function<void(LocalResult const&, ScopeHandledType, glib::Error const&)> ActivateCallback;
+
 class ScopeProxyInterface : public sigc::trackable, boost::noncopyable
 {
 public:
