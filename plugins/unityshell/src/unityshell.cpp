@@ -1696,14 +1696,12 @@ void UnityScreen::handleEvent(XEvent* event)
   }
 
   if (switcher_controller_->IsMouseDisabled() && switcher_controller_->Visible())
-  {
-    return;
-  }
+    skip_other_plugins = true;
 
   if (!skip_other_plugins &&
       screen->otherGrabExist("deco", "move", "switcher", "resize", nullptr))
   {
-     wt->ProcessForeignEvent(event, nullptr);
+    wt->ProcessForeignEvent(event, nullptr);
   }
 }
 
