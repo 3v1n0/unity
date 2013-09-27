@@ -274,7 +274,7 @@ class SwitcherView(UnityIntrospectionObject):
 
         x = self._mouse.x
         y = self._mouse.y
-        self._mouse.move(x, y + 5)
+        self._mouse.move(x + 5, y + 5)
 
         self._mouse.move(old_x, old_y)
 
