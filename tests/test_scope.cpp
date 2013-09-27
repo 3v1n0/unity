@@ -142,10 +142,45 @@ TEST_F(TestScope, PreviewPerformAction)
   if (preview)
   {
     Preview::ActionPtrList actions = preview->GetActions();
-    // EXPECT_TRUE(actions.size() > 0);
+    EXPECT_TRUE(actions.size() > 0);
     for (auto action : actions)
-      preview->PerformAction(action->id);    
+      preview->PerformAction(action->id);
   }
+}
+
+TEST_F(TestScope, PreviewPerformActionWithCallback)
+{
+  Preview::Ptr preview;
+  // Auto-connect on preview
+  bool preview_ok = false;
+  auto preview_callback = [&preview_ok, &preview] (LocalResult const&, Preview::Ptr const& _preview, glib::Error const&) {
+    preview_ok = true;
+    preview = _preview;
+  };
+
+  LocalResult result; result.uri = "file:://test";
+  scope_->Preview(result,
+                  preview_callback);
+
+  Utils::WaitUntil(preview_ok, 2, "Failed to preview");
+  EXPECT_TRUE(preview ? true : false);
+  Preview::ActionPtrList actions = preview->GetActions();
+  EXPECT_TRUE(actions.size() > 0);
+
+  LocalResult activated_result;
+  ScopeHandledType handled_type;
+  bool activation_done = false;
+  
+  preview->PerformAction(actions[0]->id, glib::HintsMap(), [&activation_done, &activated_result, &handled_type] (LocalResult const& local_result, ScopeHandledType handled, glib::Error const& err) {
+    activation_done = true;
+    handled_type = handled;
+    activated_result = local_result;
+    EXPECT_FALSE(err);
+  });
+  Utils::WaitUntil(activation_done, 2, "Failed to activate result");
+
+  EXPECT_EQ(handled_type, ScopeHandledType::HIDE_DASH);
+  EXPECT_EQ(activated_result.uri, result.uri);
 }
 
 TEST_F(TestScope, ActivatePreviewAction)
