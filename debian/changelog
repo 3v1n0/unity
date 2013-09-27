@@ -1,10 +1,58 @@
-unity (7.1.1-0ubuntu1) UNRELEASED; urgency=low
+unity (7.1.1+13.10.20130927.1-0ubuntu1) saucy; urgency=low
 
+  [ Michal Hruby ]
   * Add a property to the Scope class
   * Add parameters to Preview::PerformAction
   * Bump ABI version
 
- -- Michal Hruby <michal.hruby@canonical.com>  Wed, 25 Sep 2013 13:13:21 +0100
+  [ Brandon Schaefer ]
+  * restart the ibus daemon wit hthe right args for tests.
+  * Change sleep from 5 to 10, in hopes of appeasing jenkins.
+  * If we are switching view ports tell nux to process the events. Even
+    though the viewport switcher does grab the mouse, we will still feed
+    nux the events so we can correctly update where the mouse is for the
+    launcher. (LP: #1231679)
+
+  [ chris.gagnon ]
+  * BlackListDriverError moved to Display. (LP: #1227882)
+
+  [ Marco Trevisan (Treviño) ]
+  * UBusMessages: remove useless messages (and relative emission).
+  * PanelService: set proper priority for floating position-less NG
+    indicators. (LP: #1229460)
+  * Unity: Use WindowManager average_color property for getting the
+    desktop color Having to deal with UBus here was a mess and caused us
+    to re-store the same value too many times. Using a nux property
+    gives us all the features we need easily while WindowManager is
+    already enough shared to be used for this task.
+  * VScrollBarOverlayWindow: add quick fade animation on show/hide.
+
+  [ Chris Townsend ]
+  * A regression caused by revno. 3515 breaks the recently fixed
+    Quicklist and Tooltip active blur. This fixes it by checking if the
+    View is a ViewWindow and if so, use QueueDraw() instead of
+    NeedSoftRedraw(). (LP: #1228308)
+  * The ShowDesktopHandleWindowInterface teardown was missing it's call
+    to DeleteHandler() in a recent commit that refactored the handling
+    of some Show Desktop code. (LP: #1228915)
+
+  [ Andrea Azzarone ]
+  * Don't use sigc::bind with a static value that should be dynamic.
+    (LP: #1228965)
+
+  [ Jeremy Bicha ]
+  * recommend telepathy-indicator.
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * No new recommends/depends now, since at this point of the cycle it's
+    not allowed for this project
+  * Re-add the telepathy-indicator recommends as it got dropped from
+    Main without any valid reasons
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3540
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 27 Sep 2013 12:53:11 +0000
 
 unity (7.1.0+13.10.20130920-0ubuntu1) saucy; urgency=low
 
