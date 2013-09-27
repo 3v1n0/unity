@@ -107,8 +107,6 @@ if (GMOCK_LIB AND
   set (GTEST_SLOW_SOURCES
        test_main.cpp
        logger_helper.cpp
-       test_im_text_entry_slow.cpp
-       test_im_text_entry_class.cpp
        test_switcher_controller_slow.cpp
        test_switcher_controller_class.cpp
        test_tooltip_manager.cpp
@@ -256,7 +254,6 @@ if (ENABLE_X_SUPPORT)
                  test_icon_loader.cpp
                  test_im_text_entry.cpp
                  test_keyboard_util.cpp
-                 test_im_text_entry_class.cpp
                  test_launcher.cpp
                  test_launcher_controller.cpp
                  test_launcher_drag_window.cpp
