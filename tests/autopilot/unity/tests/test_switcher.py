@@ -556,6 +556,10 @@ class SwitcherDetailsMouseTests(SwitcherTestCase):
             y = args.logical_center_y + offset
             icon_cords.append((x,y))
 
+        # Break the bump detection
+        self.mouse.move(icon_cords[0][0], icon_cords[0][1])
+        self.mouse.move(icon_cords[0][0], icon_cords[0][1] + 5)
+
         index = 0;
         for cords in icon_cords:
             self.mouse.move(cords[0], cords[1])
