@@ -262,6 +262,24 @@ class SwitcherView(UnityIntrospectionObject):
 
         self._mouse.move(x,y)
 
+    def break_mouse_bump_detection(self):
+        """ Only break mouse detection if the switcher is open.
+            Move the mouse back to the orginal position
+        """
+
+        old_x = self._mouse.x
+        old_y = self._mouse.y
+
+        self.move_over_icon(0)
+
+        x = self._mouse.x
+        y = self._mouse.y
+        self._mouse.move(x + 5, y + 5)
+        self._mouse.move(x - 5, y - 5)
+
+        self._mouse.move(old_x, old_y)
+
+
 class RenderArgs(UnityIntrospectionObject):
   """An emulator class for interacting with the RenderArgs class."""
 
