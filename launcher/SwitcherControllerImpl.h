@@ -50,6 +50,9 @@ struct Controller::Impl : public sigc::trackable
   void Hide(bool accept_state);
   void DetailHide();
 
+  void StartDetailMode();
+  void StopDetailMode();
+
   void Next();
   void Prev();
 

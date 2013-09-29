@@ -454,6 +454,58 @@ void SwitcherView::HandleMouseWheel(int wheel_delta)
   }
 }
 
+void SwitcherView::HandleRightArrow()
+{
+  switcher_next.emit();
+}
+
+void SwitcherView::HandleLeftArrow()
+{
+  switcher_prev.emit();
+}
+
+void SwitcherView::HandleDownArrow()
+{
+  switcher_start_detail.emit();
+}
+
+void SwitcherView::HandleUpArrow()
+{
+  switcher_stop_detail.emit();
+}
+
+bool SwitcherView::InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character)
+{
+  if (eventType == nux::NUX_KEYUP)
+  {
+    switch(keysym)
+    {
+      case NUX_VK_UP:
+        HandleUpArrow();
+        break;
+      case NUX_VK_RIGHT:
+        HandleRightArrow();
+        break;
+      case NUX_VK_LEFT:
+        HandleLeftArrow();
+        break;
+      case NUX_VK_DOWN:
+        HandleDownArrow();
+        break;
+      default:
+        return false;
+        break;
+    }
+  }
+
+  return true;
+}
+
+nux::Area* SwitcherView::FindKeyFocusArea(unsigned int key_symbol, unsigned long x11_key_code, unsigned long special_keys_state)
+{
+  return this;
+}
+
 SwitcherModel::Ptr SwitcherView::GetModel()
 {
   return model_;

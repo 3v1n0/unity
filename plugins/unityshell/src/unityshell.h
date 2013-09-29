@@ -153,8 +153,6 @@ public:
   bool altTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabForwardAllInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevAllInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabDetailStart(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabDetailStop(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 

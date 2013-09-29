@@ -129,44 +129,36 @@ nux::Geometry Controller::GetInputWindowGeometry() const
   return {0, 0, 0, 0};
 }
 
-bool Controller::StartDetailMode()
+void Controller::Impl::StartDetailMode()
 {
-  if (visible_)
+  if (obj_->visible_)
   {
     if (IsDetailViewShown() &&
-        impl_->HasNextDetailRow())
+        HasNextDetailRow())
     {
-      impl_->NextDetailRow();
+      NextDetailRow();
     }
     else
     {
       SetDetail(true);
     }
-
-    return true;
   }
-
-  return false;
 }
 
-bool Controller::StopDetailMode()
+void Controller::Impl::StopDetailMode()
 {
-  if (visible_)
+  if (obj_->visible_)
   {
     if (IsDetailViewShown() &&
-        impl_->HasPrevDetailRow())
+        HasPrevDetailRow())
     {
-      impl_->PrevDetailRow();
+      PrevDetailRow();
     }
     else
     {
       SetDetail(false);
     }
-
-    return true;
   }
-
-  return false;
 }
 
 void Controller::Next()
@@ -361,6 +353,8 @@ void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLa
     ShowView();
   }
 
+  nux::GetWindowCompositor().SetKeyFocusArea(view_.GetPointer());
+
   ResetDetailTimer(obj_->initial_detail_timeout_length);
 
   ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
@@ -475,6 +469,22 @@ void Controller::Impl::ConstructView()
   view_->switcher_mouse_move.connect([this] (int icon_index) {
       if (icon_index >= 0)
         ResetDetailTimer(obj_->detail_timeout_length);
+  });
+
+  view_->switcher_next.connect([this] () {
+    Next();
+  });
+
+  view_->switcher_prev.connect([this] () {
+    Prev();
+  });
+
+  view_->switcher_start_detail.connect([this] () {
+    StartDetailMode();
+  });
+
+  view_->switcher_stop_detail.connect([this] () {
+    StopDetailMode();
   });
 
   ConstructWindow();

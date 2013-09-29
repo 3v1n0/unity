@@ -321,24 +321,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAltTabPrevAllInitiate(boost::bind(&UnityScreen::altTabPrevAllInitiate, this, _1, _2, _3));
      optionSetAltTabPrevInitiate(boost::bind(&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
 
-     optionSetAltTabDetailStartInitiate(boost::bind(&UnityScreen::altTabDetailStart, this, _1, _2, _3));
-     optionSetAltTabDetailStopInitiate(boost::bind(&UnityScreen::altTabDetailStop, this, _1, _2, _3));
-
      optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
      optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
 
      optionSetAltTabPrevWindowInitiate(boost::bind(&UnityScreen::altTabPrevWindowInitiate, this, _1, _2, _3));
-
-     optionSetAltTabLeftInitiate(boost::bind (&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
-     optionSetAltTabRightInitiate([&](CompAction* action, CompAction::State state, CompOption::Vector& options) -> bool
-     {
-      if (switcher_controller_->Visible())
-      {
-        switcher_controller_->Next();
-        return true;
-      }
-      return false;
-     });
 
      optionSetLauncherSwitcherForwardInitiate(boost::bind(&UnityScreen::launcherSwitcherForwardInitiate, this, _1, _2, _3));
      optionSetLauncherSwitcherPrevInitiate(boost::bind(&UnityScreen::launcherSwitcherPrevInitiate, this, _1, _2, _3));
@@ -1911,11 +1897,6 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
     }
   }
 
-  screen->addAction(&optionGetAltTabRight());
-  screen->addAction(&optionGetAltTabDetailStart());
-  screen->addAction(&optionGetAltTabDetailStop());
-  screen->addAction(&optionGetAltTabLeft());
-
   /* Create a new keybinding for scroll buttons and current modifiers */
   CompAction scroll_up;
   CompAction scroll_down;
@@ -1959,11 +1940,6 @@ bool UnityScreen::altTabTerminateCommon(CompAction* action,
     screen->removeGrab(grab_index_, NULL);
     grab_index_ = 0;
   }
-
-  screen->removeAction(&optionGetAltTabRight ());
-  screen->removeAction(&optionGetAltTabDetailStart ());
-  screen->removeAction(&optionGetAltTabDetailStop ());
-  screen->removeAction(&optionGetAltTabLeft ());
 
   /* Removing the scroll actions */
   CompAction scroll_up;
@@ -2028,16 +2004,6 @@ bool UnityScreen::altTabPrevInitiate(CompAction* action, CompAction::State state
   }
 
   return false;
-}
-
-bool UnityScreen::altTabDetailStart(CompAction* action, CompAction::State state, CompOption::Vector& options)
-{
-  return switcher_controller_->StartDetailMode();
-}
-
-bool UnityScreen::altTabDetailStop(CompAction* action, CompAction::State state, CompOption::Vector& options)
-{
-  return switcher_controller_->StopDetailMode();
 }
 
 bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
