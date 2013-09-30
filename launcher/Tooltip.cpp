@@ -108,11 +108,8 @@ void Tooltip::ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y)
   int x = _anchorX - PADDING;
   int y = anchor_tip_y - ANCHOR_HEIGHT / 2 - TOP_SIZE - CORNER_RADIUS - PADDING;
 
-  SetBaseX(x);
-  SetBaseY(y);
-
-  PushToFront();
-  ShowWindow(true);
+  SetBaseXY(x, y);
+  Show();
 }
 
 void Tooltip::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)

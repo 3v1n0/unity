@@ -22,6 +22,7 @@
 
 #include <Nux/Nux.h>
 #include <Nux/BaseWindow.h>
+#include <NuxCore/Animation.h>
 
 namespace unity
 {
@@ -31,6 +32,9 @@ class CairoBaseWindow : public nux::BaseWindow
 public:
   CairoBaseWindow();
   virtual ~CairoBaseWindow() = default;
+
+  virtual void Show();
+  virtual void Hide();
 
   void NeedSoftRedraw() override;
   bool HasBlurredBackground() const;
@@ -46,6 +50,7 @@ private:
   bool use_blurred_background_;
   bool compute_blur_bkg_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> bg_blur_texture_;
+  nux::animation::AnimateValue<double> fade_animator_;
 };
 }
 

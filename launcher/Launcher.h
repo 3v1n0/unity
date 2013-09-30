@@ -316,7 +316,6 @@ private:
   MockableBaseWindow* parent_;
   ui::AbstractIconRenderer::Ptr icon_renderer_;
   nux::ObjectPtr<nux::View> active_tooltip_;
-  QuicklistView* active_quicklist_;
 
   // used by keyboard/a11y-navigation
   AbstractLauncherIcon::Ptr icon_under_mouse_;
