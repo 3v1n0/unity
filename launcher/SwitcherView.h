@@ -82,6 +82,12 @@ public:
   /* void; int icon_index */
   sigc::signal<void, int>  switcher_mouse_move;
 
+  /* void; */
+  sigc::signal<void>  switcher_next;
+  sigc::signal<void>  switcher_prev;
+  sigc::signal<void>  switcher_start_detail;
+  sigc::signal<void>  switcher_stop_detail;
+
   /* void; bool visible */
   sigc::signal<void, bool> hide_request;
 
@@ -101,6 +107,9 @@ protected:
   std::list<ui::RenderArg> RenderArgsFlat(nux::Geometry& background_geo, int selection, float progress);
 
   ui::RenderArg CreateBaseArgForIcon(launcher::AbstractLauncherIcon::Ptr const& icon);
+
+  virtual bool InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character);
+  virtual nux::Area* FindKeyFocusArea(unsigned int key_symbol, unsigned long x11_key_code, unsigned long special_keys_state);
 
 private:
   void RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags);
