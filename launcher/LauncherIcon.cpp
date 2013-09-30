@@ -92,9 +92,7 @@ LauncherIcon::LauncherIcon(IconType type)
 
   tooltip_enabled = true;
   tooltip_enabled.changed.connect(sigc::mem_fun(this, &LauncherIcon::OnTooltipEnabledChanged));
-
   tooltip_text.SetSetterFunction(sigc::mem_fun(this, &LauncherIcon::SetTooltipText));
-  tooltip_text = "";
 
   position = Position::FLOATING;
   removed = false;
@@ -427,7 +425,6 @@ bool LauncherIcon::SetTooltipText(std::string& target, std::string const& value)
   if (escaped != target)
   {
     target = escaped;
-    tooltip_enabled = !escaped.empty();
 
     if (_tooltip)
       _tooltip->text = target;
@@ -462,7 +459,7 @@ LauncherIcon::GetShortcut()
 void
 LauncherIcon::ShowTooltip()
 {
-  if (!tooltip_enabled || (_quicklist && _quicklist->IsVisible()))
+  if (!tooltip_enabled || tooltip_text().empty() || (_quicklist && _quicklist->IsVisible()))
     return;
 
   int tip_x = 100;
