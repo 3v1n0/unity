@@ -472,14 +472,11 @@ void Tooltip::UpdateTexture()
   if (!HasBlurredBackground())
   {
     //If low gfx is detected then disable transparency because we're not bluring using our blur anymore.
-    float alpha_value = 1.0f;
+    const float alpha_value = 1.0f;
 
     tint_color[3] = alpha_value;
     hl_color[3] = alpha_value;
     dot_color[3] = alpha_value;
-    shadow_color[3] = alpha_value;
-    outline_color[3] = alpha_value;
-    mask_color[3] = alpha_value;
   }
 
   tint_dot_hl(cr_bg,
