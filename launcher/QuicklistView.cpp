@@ -410,7 +410,6 @@ void QuicklistView::HideAndEndQuicklistNav()
 
 void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
-  _compute_blur_bkg = true;
   CairoBaseWindow::Draw(gfxContext, forceDraw);
 
   nux::Geometry base(GetGeometry());

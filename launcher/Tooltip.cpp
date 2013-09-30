@@ -112,13 +112,11 @@ void Tooltip::ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y)
   SetBaseY(y);
 
   PushToFront();
-
   ShowWindow(true);
 }
 
 void Tooltip::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
-  _compute_blur_bkg = true;
   CairoBaseWindow::Draw(gfxContext, forceDraw);
   _tooltip_text->ProcessDraw(gfxContext, forceDraw);
 }
@@ -470,12 +468,12 @@ void Tooltip::UpdateTexture()
   float   shadow_color[4]  = {0.0f, 0.0f, 0.0f, 1.00f};
   float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.15f};
   float   mask_color[4]    = {1.0f, 1.0f, 1.0f, 1.00f};
-  
-  if (use_blur_ == false)
+
+  if (!HasBlurredBackground())
   {
     //If low gfx is detected then disable transparency because we're not bluring using our blur anymore.
     float alpha_value = 1.0f;
-  
+
     tint_color[3] = alpha_value;
     hl_color[3] = alpha_value;
     dot_color[3] = alpha_value;

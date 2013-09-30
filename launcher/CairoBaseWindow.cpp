@@ -41,16 +41,22 @@ namespace
 NUX_IMPLEMENT_OBJECT_TYPE(CairoBaseWindow);
 
 CairoBaseWindow::CairoBaseWindow() :
-  use_blur_(!Settings::Instance().GetLowGfxMode()),
-  _use_blurred_background(use_blur_),
-  _compute_blur_bkg(use_blur_)
+  use_blurred_background_(!Settings::Instance().GetLowGfxMode()),
+  compute_blur_bkg_(use_blurred_background_)
 {
   SetWindowSizeMatchLayout(true);
+  sigVisible.connect([this] (BaseWindow*) { compute_blur_bkg_ = true; });
 }
 
-CairoBaseWindow::~CairoBaseWindow()
+bool CairoBaseWindow::HasBlurredBackground() const
 {
-  // nothing to do
+  return use_blurred_background_;
+}
+
+void CairoBaseWindow::NeedSoftRedraw()
+{
+  compute_blur_bkg_ = true;
+  QueueDraw();
 }
 
 void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
@@ -58,7 +64,7 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
   nux::Geometry base(GetGeometry());
 
   // Get the background and apply some blur
-  if (_use_blurred_background && _compute_blur_bkg)
+  if (use_blurred_background_ && compute_blur_bkg_)
   {
     auto current_fbo = nux::GetGraphicsDisplay()->GetGpuDevice()->GetCurrentFrameBufferObject();
     nux::GetWindowCompositor ().RestoreMainFramebuffer();
@@ -83,7 +89,7 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
       gfxContext.Push2DWindow(gfxContext.GetWindowWidth(), gfxContext.GetWindowHeight());
       gfxContext.ApplyClippingRectangle();
     }
-    _compute_blur_bkg = false;
+    compute_blur_bkg_ = false;
   }
 
   // the elements position inside the window are referenced to top-left window
@@ -96,11 +102,11 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
   /*"Clear" out the background. Blending is disabled if blur is disabled. This might need to change, but for the moment both classes
    * which are children of CairoBaseWindow don't have any alpha blending when not using the blurred texture.*/
   nux::ROPConfig rop;
-  rop.Blend = use_blur_;
+  rop.Blend = use_blurred_background_;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
 
-  nux::ColorLayer layer(nux::Color(0x00000000), use_blur_, rop);
+  nux::ColorLayer layer(nux::Color(0x00000000), use_blurred_background_, rop);
   nux::GetPainter().PushDrawLayer(gfxContext, base, &layer);
 
   nux::TexCoordXForm texxform_bg;
@@ -110,7 +116,7 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
   nux::TexCoordXForm texxform_mask;
   texxform_mask.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
   texxform_mask.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-  
+
   nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetBlend(true);
   nux::GetWindowThread()->GetGraphicsEngine().GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
 
@@ -150,7 +156,7 @@ void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
     nux::TexCoordXForm texxform;
     texxform.SetWrap(nux::TEXWRAP_CLAMP, nux::TEXWRAP_CLAMP);
     texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
-    
+
     gfxContext.QRP_1Tex(base.x,
                         base.y,
                         base.width,
