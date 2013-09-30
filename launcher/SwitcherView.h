@@ -132,11 +132,6 @@ private:
   void OnDetailSelectionChanged (bool detail);
   void OnDetailSelectionIndexChanged (unsigned int index);
 
-  void HandleRightArrow();
-  void HandleLeftArrow();
-  void HandleDownArrow();
-  void HandleUpArrow();
-
   void OnIconSizeChanged (int size);
   void OnTileSizeChanged (int size);
 

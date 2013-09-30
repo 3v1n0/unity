@@ -454,43 +454,23 @@ void SwitcherView::HandleMouseWheel(int wheel_delta)
   }
 }
 
-void SwitcherView::HandleRightArrow()
-{
-  switcher_next.emit();
-}
-
-void SwitcherView::HandleLeftArrow()
-{
-  switcher_prev.emit();
-}
-
-void SwitcherView::HandleDownArrow()
-{
-  switcher_start_detail.emit();
-}
-
-void SwitcherView::HandleUpArrow()
-{
-  switcher_stop_detail.emit();
-}
-
 bool SwitcherView::InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character)
 {
-  if (eventType == nux::NUX_KEYUP)
+  if (eventType == nux::NUX_KEYDOWN)
   {
     switch(keysym)
     {
       case NUX_VK_UP:
-        HandleUpArrow();
+        switcher_stop_detail.emit();
         break;
       case NUX_VK_RIGHT:
-        HandleRightArrow();
+        switcher_next.emit();
         break;
       case NUX_VK_LEFT:
-        HandleLeftArrow();
+        switcher_prev.emit();
         break;
       case NUX_VK_DOWN:
-        HandleDownArrow();
+        switcher_start_detail.emit();
         break;
       default:
         return false;
