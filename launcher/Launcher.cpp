@@ -2226,13 +2226,14 @@ void Launcher::RecvMouseLeave(int x, int y, unsigned long button_flags, unsigned
 void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_flags, unsigned long key_flags)
 {
   SetMousePosition(x, y);
-  tooltip_manager_.MouseMoved(icon_under_mouse_);
 
   if (!hidden_)
     UpdateChangeInMousePosition(dx, dy);
 
   // Every time the mouse moves, we check if it is inside an icon...
   EventLogic();
+
+  tooltip_manager_.MouseMoved(icon_under_mouse_);
 }
 
 void Launcher::RecvMouseWheel(int /*x*/, int /*y*/, int wheel_delta, unsigned long /*button_flags*/, unsigned long key_flags)
