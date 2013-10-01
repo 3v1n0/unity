@@ -410,7 +410,6 @@ void QuicklistView::HideAndEndQuicklistNav()
 
 void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
-  _compute_blur_bkg = true;
   CairoBaseWindow::Draw(gfxContext, forceDraw);
 
   nux::Geometry base(GetGeometry());
@@ -1216,24 +1215,12 @@ void QuicklistView::UpdateTexture()
   cairo_t* cr_mask    = cairo_mask.GetContext();
   cairo_t* cr_outline = cairo_outline.GetContext();
 
-  float   tint_color[4]    = {0.0f, 0.0f, 0.0f, 0.60f};
+  float   tint_color[4]    = {0.0f, 0.0f, 0.0f, HasBlurredBackground() ? 0.60f : 1.0f};
   float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.35f};
   float   dot_color[4]     = {1.0f, 1.0f, 1.0f, 0.03f};
   float   shadow_color[4]  = {0.0f, 0.0f, 0.0f, 1.00f};
   float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.40f};
   float   mask_color[4]    = {1.0f, 1.0f, 1.0f, 1.00f};
-  
-  if (Settings::Instance().GetLowGfxMode())
-  {
-    float alpha_value = 1.0f;
-    
-    tint_color[3] = alpha_value;
-    hl_color[3] = 0.2f;
-    dot_color[3] = 0.0f;
-    shadow_color[3] = alpha_value;
-    outline_color[3] = alpha_value;
-    mask_color[3] = alpha_value;
-  }
 
   ql_tint_dot_hl(cr_bg,
                  width,
