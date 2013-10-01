@@ -22,8 +22,6 @@
 #define LAUNCHERICON_H
 
 #include <Nux/Nux.h>
-#include <Nux/BaseWindow.h>
-#include <NuxCore/Animation.h>
 
 #include <gtk/gtk.h>
 #include <libdbusmenu-glib/client.h>
@@ -33,7 +31,6 @@
 #include "AbstractLauncherIcon.h"
 #include "Tooltip.h"
 #include "QuicklistView.h"
-#include "unity-shared/Introspectable.h"
 #include "LauncherEntryRemote.h"
 
 
@@ -41,7 +38,6 @@ namespace unity
 {
 namespace launcher
 {
-
 class Launcher;
 
 class LauncherIcon : public AbstractLauncherIcon
@@ -338,8 +334,6 @@ private:
 
   std::list<LauncherEntryRemote::Ptr> _entry_list;
   glib::Object<DbusmenuClient> _remote_menus;
-
-  nux::animation::AnimateValue<double> _tooltip_fade_animator;
 
 protected:
   glib::SourceManager _source_manager;

@@ -21,6 +21,7 @@
 #include <Nux/Nux.h>
 #include <Nux/WindowCompositor.h>
 
+#include "unity-shared/AnimationUtils.h"
 #include "unity-shared/CairoTexture.h"
 #include "unity-shared/UnitySettings.h"
 #include "CairoBaseWindow.h"
@@ -36,16 +37,36 @@ namespace
   const int TEXT_PADDING = 8;
   const int MINIMUM_TEXT_WIDTH = 100;
   const int TOP_SIZE = 0;
+  const int FADE_DURATION = 80;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(CairoBaseWindow);
 
-CairoBaseWindow::CairoBaseWindow() :
-  use_blurred_background_(!Settings::Instance().GetLowGfxMode()),
-  compute_blur_bkg_(use_blurred_background_)
+CairoBaseWindow::CairoBaseWindow()
+  : use_blurred_background_(!Settings::Instance().GetLowGfxMode())
+  , compute_blur_bkg_(use_blurred_background_)
+  , fade_animator_(FADE_DURATION)
 {
   SetWindowSizeMatchLayout(true);
   sigVisible.connect([this] (BaseWindow*) { compute_blur_bkg_ = true; });
+
+  fade_animator_.updated.connect(sigc::mem_fun(this, &BaseWindow::SetOpacity));
+  fade_animator_.finished.connect([this] {
+    if (animation::GetDirection(fade_animator_) == animation::Direction::BACKWARD)
+      ShowWindow(false);
+  });
+}
+
+void CairoBaseWindow::Show()
+{
+  animation::StartOrReverse(fade_animator_, animation::Direction::FORWARD);
+  ShowWindow(true);
+  PushToFront();
+}
+
+void CairoBaseWindow::Hide()
+{
+  animation::StartOrReverse(fade_animator_, animation::Direction::BACKWARD);
 }
 
 bool CairoBaseWindow::HasBlurredBackground() const

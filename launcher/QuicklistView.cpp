@@ -345,8 +345,7 @@ void QuicklistView::ShowQuicklistWithTipAt(int anchor_tip_x, int anchor_tip_y)
       int x = _anchorX - _padding;
       int y = _anchorY - _anchor_height / 2 - _top_size - _corner_radius - _padding;
 
-      SetBaseX(x);
-      SetBaseY(y);
+      SetBaseXY(x, y);
     }
     else
     {
@@ -354,11 +353,9 @@ void QuicklistView::ShowQuicklistWithTipAt(int anchor_tip_x, int anchor_tip_y)
       int x = _anchorX - _padding;
       int y = _anchorY - _anchor_height / 2 - _top_size - _corner_radius - _padding;
 
-      SetBaseX(x);
-      SetBaseY(y);
+      SetBaseXY(x, y);
     }
   }
-
   Show();
 }
 
@@ -371,14 +368,9 @@ void QuicklistView::Show()
 {
   if (!IsVisible())
   {
-    // FIXME: ShowWindow shouldn't need to be called first
-    ShowWindow(true);
-    PushToFront();
-    //EnableInputWindow (true, "quicklist", false, true);
-    //SetInputFocus ();
+    CairoBaseWindow::Show();
     GrabPointer();
     GrabKeyboard();
-    QueueDraw();
   }
 }
 
@@ -390,8 +382,7 @@ void QuicklistView::Hide()
     CaptureMouseDownAnyWhereElse(false);
     UnGrabPointer();
     UnGrabKeyboard();
-    //EnableInputWindow (false);
-    ShowWindow(false);
+    CairoBaseWindow::Hide();
 
     if (_current_item_index != -1)
     {

@@ -20,8 +20,6 @@
 
 #include "JSONParser.h"
 
-#include <pango/pango.h>
-
 #include <NuxCore/Logger.h>
 
 namespace unity
@@ -29,24 +27,10 @@ namespace unity
 namespace json
 {
 DECLARE_LOGGER(logger, "unity.json");
-namespace
-{
-nux::Color ColorFromPango(const gchar* color_string)
-{
-  static const float PANGO_MAX = 0xffff;
-  PangoColor color = {0, 0, 0};
-  ::pango_color_parse(&color, color_string);
-  return nux::Color(color.red / PANGO_MAX,
-                    color.green / PANGO_MAX,
-                    color.blue  / PANGO_MAX);
-}
-
-}
 
 Parser::Parser()
   : root_(nullptr)
-{
-}
+{}
 
 bool Parser::Open(std::string const& filename)
 {
@@ -154,7 +138,7 @@ void Parser::ReadColor(std::string const& node_name,
   if (!object)
     return;
 
-  color = ColorFromPango(json_object_get_string_member(object, member_name.c_str()));
+  color = nux::Color(glib::gchar_to_string(json_object_get_string_member(object, member_name.c_str())));
   color.alpha = json_object_get_double_member(object, opacity_name.c_str());
 }
 
@@ -171,7 +155,7 @@ void Parser::ReadColors(std::string const& node_name,
                                       colors.size());
   for (std::size_t i = 0; i < size; ++i)
   {
-    colors[i] = ColorFromPango(json_array_get_string_element(array, i));
+    colors[i] = nux::Color(glib::gchar_to_string(json_array_get_string_element(array, i)));
   }
 
   array = GetArray(node_name, opacity_name);

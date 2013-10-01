@@ -107,7 +107,6 @@ Launcher::Launcher(MockableBaseWindow* parent,
   , monitor(0)
   , parent_(parent)
   , icon_renderer_(std::make_shared<ui::IconRenderer>())
-  , active_quicklist_(nullptr)
   , hovered_(false)
   , hidden_(false)
   , folded_(true)

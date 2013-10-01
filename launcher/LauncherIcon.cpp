@@ -57,8 +57,6 @@ const std::string UNITY_THEME_NAME = "unity-icon-theme";
 const std::string CENTER_STABILIZE_TIMEOUT = "center-stabilize-timeout";
 const std::string PRESENT_TIMEOUT = "present-timeout";
 const std::string QUIRK_DELAY_TIMEOUT = "quirk-delay-timeout";
-
-const unsigned TOOLTIP_FADE_DURATION = 80;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherIcon);
@@ -84,7 +82,6 @@ LauncherIcon::LauncherIcon(IconType type)
   , _parent_geo(monitors::MAX)
   , _saved_center(monitors::MAX)
   , _allow_quicklist_to_show(true)
-  , _tooltip_fade_animator(TOOLTIP_FADE_DURATION)
 {
   for (unsigned i = 0; i < unsigned(Quirk::LAST); ++i)
   {
@@ -95,9 +92,7 @@ LauncherIcon::LauncherIcon(IconType type)
 
   tooltip_enabled = true;
   tooltip_enabled.changed.connect(sigc::mem_fun(this, &LauncherIcon::OnTooltipEnabledChanged));
-
   tooltip_text.SetSetterFunction(sigc::mem_fun(this, &LauncherIcon::SetTooltipText));
-  tooltip_text = "blank";
 
   position = Position::FLOATING;
   removed = false;
@@ -109,14 +104,6 @@ LauncherIcon::LauncherIcon(IconType type)
   mouse_down.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseDown));
   mouse_up.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseClick));
-
-  _tooltip_fade_animator.updated.connect([this] (double opacity) {
-    if (_tooltip) _tooltip->SetOpacity(opacity);
-  });
-  _tooltip_fade_animator.finished.connect([this] {
-    if (_tooltip && animation::GetDirection(_tooltip_fade_animator) == animation::Direction::BACKWARD)
-      _tooltip->ShowWindow(false);
-  });
 }
 
 void LauncherIcon::LoadTooltip()
@@ -433,21 +420,19 @@ BaseTexturePtr LauncherIcon::TextureFromPath(std::string const& icon_name, int s
 
 bool LauncherIcon::SetTooltipText(std::string& target, std::string const& value)
 {
-  bool result = false;
-
-  gchar* esc = g_markup_escape_text(value.c_str(), -1);
-  std::string escaped = esc;
-  g_free(esc);
+  auto const& escaped = glib::String(g_markup_escape_text(value.c_str(), -1)).Str();
 
   if (escaped != target)
   {
     target = escaped;
+
     if (_tooltip)
       _tooltip->text = target;
-    result = true;
+
+    return true;
   }
 
-  return result;
+  return false;
 }
 
 void LauncherIcon::OnTooltipEnabledChanged(bool value)
@@ -474,7 +459,7 @@ LauncherIcon::GetShortcut()
 void
 LauncherIcon::ShowTooltip()
 {
-  if (!tooltip_enabled || (_quicklist && _quicklist->IsVisible()))
+  if (!tooltip_enabled || tooltip_text().empty() || (_quicklist && _quicklist->IsVisible()))
     return;
 
   int tip_x = 100;
@@ -488,12 +473,10 @@ LauncherIcon::ShowTooltip()
 
   if (!_tooltip)
     LoadTooltip();
+
   _tooltip->text = tooltip_text();
   _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
-  _tooltip->ShowWindow(!tooltip_text().empty());
   tooltip_visible.emit(_tooltip);
-
-  animation::StartOrReverse(_tooltip_fade_animator, animation::Direction::FORWARD);
 }
 
 void
@@ -519,7 +502,10 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
     return false;
 
   if (_tooltip)
+  {
+    // Hide the tooltip without fade animation
     _tooltip->ShowWindow(false);
+  }
 
   _quicklist->RemoveAllMenuItem();
 
@@ -641,9 +627,9 @@ void LauncherIcon::RecvMouseClick(int button, int monitor, unsigned long key_fla
 void LauncherIcon::HideTooltip()
 {
   if (_tooltip)
-    animation::StartOrReverse(_tooltip_fade_animator, animation::Direction::BACKWARD);
+    _tooltip->Hide();
 
-  tooltip_visible.emit(nux::ObjectPtr<nux::View>(nullptr));
+  tooltip_visible.emit(nux::ObjectPtr<nux::View>());
 }
 
 bool

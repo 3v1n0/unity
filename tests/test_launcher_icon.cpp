@@ -21,6 +21,7 @@
 
 #include "LauncherIcon.h"
 #include "MultiMonitor.h"
+#include "UnitySettings.h"
 
 using namespace unity;
 using namespace unity::launcher;
@@ -42,6 +43,7 @@ struct TestLauncherIcon : testing::Test
   	: icon(AbstractLauncherIcon::IconType::APPLICATION)
   {}
 
+  unity::Settings settings;
   MockLauncherIcon icon;
 };
 
@@ -112,6 +114,40 @@ TEST_F(TestLauncherIcon, Unstick)
   EXPECT_FALSE(icon.IsSticky());
   EXPECT_FALSE(icon.IsVisible());
   EXPECT_TRUE(forgot);
+}
+
+TEST_F(TestLauncherIcon, TooltipVisibilityConstruction)
+{
+  EXPECT_TRUE(icon.tooltip_text().empty());
+  EXPECT_TRUE(icon.tooltip_enabled());
+}
+
+TEST_F(TestLauncherIcon, TooltipVisibilityValid)
+{
+  bool tooltip_shown = false;
+  icon.tooltip_text = "Unity";
+  icon.tooltip_visible.connect([&tooltip_shown] (nux::ObjectPtr<nux::View>) {tooltip_shown = true;});
+  icon.ShowTooltip();
+  EXPECT_TRUE(tooltip_shown);
+}
+
+TEST_F(TestLauncherIcon, TooltipVisibilityEmpty)
+{
+  bool tooltip_shown = false;
+  icon.tooltip_text = "";
+  icon.tooltip_visible.connect([&tooltip_shown] (nux::ObjectPtr<nux::View>) {tooltip_shown = true;});
+  icon.ShowTooltip();
+  EXPECT_FALSE(tooltip_shown);
+}
+
+TEST_F(TestLauncherIcon, TooltipVisibilityDisabled)
+{
+  bool tooltip_shown = false;
+  icon.tooltip_text = "Unity";
+  icon.tooltip_enabled = false;
+  icon.tooltip_visible.connect([&tooltip_shown] (nux::ObjectPtr<nux::View>) {tooltip_shown = true;});
+  icon.ShowTooltip();
+  EXPECT_FALSE(tooltip_shown);
 }
 
 }
