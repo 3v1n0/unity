@@ -54,8 +54,8 @@ static PanelService *static_service = NULL;
 
 typedef struct _KeyBinding
 {
-  KeyCode key;
-  KeyCode fallback;
+  KeySym key;
+  KeySym fallback;
   guint32 modifiers;
 } KeyBinding;
 
@@ -219,7 +219,7 @@ panel_service_class_finalize (GObject *object)
 
   static_service = NULL;
 
-  G_OBJECT_CLASS (panel_service_parent_class)->finalize (self);
+  G_OBJECT_CLASS (panel_service_parent_class)->finalize (object);
 }
 
 static void
@@ -384,11 +384,11 @@ reinject_key_event_to_root_window (XIDeviceEvent *ev)
 }
 
 static gboolean
-event_matches_keybinding (XIDeviceEvent *event, KeyBinding *kb)
+event_matches_keybinding (guint32 modifiers, KeySym key, KeyBinding *kb)
 {
-  if (event && kb && event->mods.base == kb->modifiers && event->detail > 0)
+  if (modifiers == kb->modifiers && key != NoSymbol)
     {
-      if (event->detail == kb->key || event->detail == kb->fallback)
+      if (key == kb->key || key == kb->fallback)
         {
           return TRUE;
         }
@@ -426,9 +426,11 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
     {
       case XI_KeyPress:
         {
-          if (event_matches_keybinding (event, &priv->menu_toggle) ||
-              event_matches_keybinding (event, &priv->show_dash) ||
-              event_matches_keybinding (event, &priv->show_hud))
+          KeySym keysym = XkbKeycodeToKeysym (event->display, event->detail, 0, 0);
+
+          if (event_matches_keybinding (event->mods.base, keysym, &priv->menu_toggle) ||
+              event_matches_keybinding (event->mods.base, keysym, &priv->show_dash) ||
+              event_matches_keybinding (event->mods.base, keysym, &priv->show_hud))
             {
               if (GTK_IS_MENU (priv->last_menu))
                 gtk_menu_popdown (GTK_MENU (priv->last_menu));
@@ -437,8 +439,6 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
             }
           else if (event->mods.base != GDK_CONTROL_MASK)
             {
-              KeySym keysym = XkbKeycodeToKeysym (event->display, event->detail, 0, 0);
-
               if (!IsModifierKey (keysym) && event->mods.base != 0)
                 {
                   if (GTK_IS_MENU (priv->last_menu))
@@ -567,11 +567,9 @@ update_keybinding (GSettings *settings, const gchar *key, gpointer data)
 {
   gchar *binding = g_settings_get_string (settings, key);
 
-  KeySym keysym = NoSymbol;
-  KeySym keysym_fallback = NoSymbol;
   KeyBinding *kb = data;
-  kb->key = 0;
-  kb->fallback = 0;
+  kb->key = NoSymbol;
+  kb->fallback = NoSymbol;
   kb->modifiers = 0;
 
   gchar *keystart = (binding) ? strrchr (binding, '>') : NULL;
@@ -590,7 +588,7 @@ update_keybinding (GSettings *settings, const gchar *key, gpointer data)
   if (keystart != keyend)
     {
       gchar *keystr = g_strndup (keystart, keyend-keystart);
-      keysym = XStringToKeysym (keystr);
+      kb->key = XStringToKeysym (keystr);
       g_free (keystr);
     }
   else
@@ -607,10 +605,10 @@ update_keybinding (GSettings *settings, const gchar *key, gpointer data)
         {
           gchar *keystr = g_strndup (keystart+1, keyend-keystart);
           gchar *left = g_strconcat (keystr, "_L", NULL);
-          keysym = XStringToKeysym (left);
+          kb->key = XStringToKeysym (left);
 
           gchar *right = g_strconcat (keystr, "_R", NULL);
-          keysym_fallback = XStringToKeysym (right);
+          kb->fallback = XStringToKeysym (right);
           g_free (left);
           g_free (right);
           g_free (keystr);
@@ -621,14 +619,8 @@ update_keybinding (GSettings *settings, const gchar *key, gpointer data)
         }
     }
 
-  if (keysym != NoSymbol)
+  if (kb->key != NoSymbol)
     {
-      Display *dpy = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
-      kb->key = XKeysymToKeycode (dpy, keysym);
-
-      if (keysym_fallback != NoSymbol)
-        kb->fallback = XKeysymToKeycode (dpy, keysym_fallback);
-
       if (g_strrstr (binding, "<Shift>"))
         {
           kb->modifiers |= ShiftMask;
