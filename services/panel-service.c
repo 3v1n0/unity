@@ -47,8 +47,16 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 #define COMPIZ_OPTION_SCHEMA "org.compiz.unityshell"
 #define COMPIZ_OPTION_PATH "/org/compiz/profiles/unity/plugins/"
 #define MENU_TOGGLE_KEYBINDING_KEY "panel-first-menu"
+#define SHOW_DASH_KEY "show_launcher"
+#define SHOW_HUD_KEY "show_hud"
 
 static PanelService *static_service = NULL;
+
+typedef struct _KeyBinding
+{
+  KeyCode key;
+  guint32 modifiers;
+} KeyBinding;
 
 struct _PanelServicePrivate
 {
@@ -72,8 +80,7 @@ struct _PanelServicePrivate
   gint     last_bottom;
   guint32  last_menu_button;
 
-  KeyCode toggle_key;
-  guint32 toggle_modifiers;
+  KeyBinding menu_toggle;
   GSettings *gsettings;
 
   IndicatorObjectEntry *pressed_entry;
@@ -138,10 +145,6 @@ static GdkFilterReturn event_filter (GdkXEvent    *ev,
                                      GdkEvent     *gev,
                                      PanelService *self);
 
-static void on_keybinding_changed (GSettings *settings,
-                                   gchar     *key,
-                                   gpointer   data);
-
 /*
  * GObject stuff
  */
@@ -199,7 +202,7 @@ panel_service_class_dispose (GObject *self)
 
   if (G_IS_OBJECT (priv->gsettings))
     {
-      g_signal_handlers_disconnect_by_func (priv->gsettings, on_keybinding_changed, self);
+      g_signal_handlers_disconnect_by_data (priv->gsettings, self);
       g_object_unref (priv->gsettings);
       priv->gsettings = NULL;
     }
@@ -383,7 +386,8 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 
       if (event->evtype == XI_KeyPress)
         {
-          if (event->mods.base == priv->toggle_modifiers && event->detail == priv->toggle_key)
+          if (event->mods.base == priv->menu_toggle.modifiers &&
+              event->detail == priv->menu_toggle.key)
           {
             if (GTK_IS_MENU (priv->last_menu))
               gtk_menu_popdown (GTK_MENU (priv->last_menu));
@@ -497,13 +501,14 @@ ready_signal (PanelService *self)
 }
 
 static void
-panel_service_update_menu_keybinding (PanelService *self)
+update_keybinding (GSettings *settings, const gchar *key, gpointer data)
 {
-  gchar *binding = g_settings_get_string (self->priv->gsettings, MENU_TOGGLE_KEYBINDING_KEY);
+  gchar *binding = g_settings_get_string (settings, key);
 
-  KeyCode keycode = 0;
   KeySym keysym = NoSymbol;
-  guint32 modifiers = 0;
+  KeyBinding *kb = data;
+  kb->key = 0;
+  kb->modifiers = 0;
 
   gchar *keystart = (binding) ? strrchr (binding, '>') : NULL;
 
@@ -528,39 +533,27 @@ panel_service_update_menu_keybinding (PanelService *self)
   if (keysym != NoSymbol)
     {
       Display *dpy = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
-      keycode = XKeysymToKeycode(dpy, keysym);
+      kb->key = XKeysymToKeycode (dpy, keysym);
 
       if (g_strrstr (binding, "<Shift>"))
         {
-          modifiers |= GDK_SHIFT_MASK;
+          kb->modifiers |= GDK_SHIFT_MASK;
         }
       if (g_strrstr (binding, "<Control>") || g_strrstr (binding, "<Primary>"))
         {
-          modifiers |= GDK_CONTROL_MASK;
+          kb->modifiers |= GDK_CONTROL_MASK;
         }
       if (g_strrstr (binding, "<Alt>") || g_strrstr (binding, "<Mod1>"))
         {
-          modifiers |= GDK_MOD1_MASK;
+          kb->modifiers |= GDK_MOD1_MASK;
         }
       if (g_strrstr (binding, "<Super>"))
         {
-          modifiers |= GDK_SUPER_MASK;
+          kb->modifiers |= GDK_SUPER_MASK;
         }
     }
 
-  self->priv->toggle_key = keycode;
-  self->priv->toggle_modifiers = modifiers;
-
   g_free (binding);
-}
-
-static void
-on_keybinding_changed (GSettings *settings, gchar *key, gpointer data)
-{
-  g_return_if_fail (PANEL_IS_SERVICE (data));
-  PanelService *self = data;
-
-  panel_service_update_menu_keybinding (self);
 }
 
 static void
@@ -582,11 +575,11 @@ panel_service_init (PanelService *self)
 
   priv->gsettings = g_settings_new_with_path (COMPIZ_OPTION_SCHEMA, COMPIZ_OPTION_PATH);
   g_signal_connect (priv->gsettings, "changed::"MENU_TOGGLE_KEYBINDING_KEY,
-                    G_CALLBACK (on_keybinding_changed), self);
+                    G_CALLBACK (update_keybinding), self);
 
-  panel_service_update_menu_keybinding (self);
+  update_keybinding (priv->gsettings, MENU_TOGGLE_KEYBINDING_KEY, &priv->menu_toggle);
 
-  const gchar * upstartsession = g_getenv ("UPSTART_SESSION");
+  const gchar *upstartsession = g_getenv ("UPSTART_SESSION");
   if (upstartsession != NULL)
     {
       DBusConnection * conn = NULL;
