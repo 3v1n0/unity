@@ -47,14 +47,15 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 #define COMPIZ_OPTION_SCHEMA "org.compiz.unityshell"
 #define COMPIZ_OPTION_PATH "/org/compiz/profiles/unity/plugins/"
 #define MENU_TOGGLE_KEYBINDING_KEY "panel-first-menu"
-#define SHOW_DASH_KEY "show_launcher"
-#define SHOW_HUD_KEY "show_hud"
+#define SHOW_DASH_KEY "show-launcher"
+#define SHOW_HUD_KEY "show-hud"
 
 static PanelService *static_service = NULL;
 
 typedef struct _KeyBinding
 {
   KeyCode key;
+  KeyCode fallback;
   guint32 modifiers;
 } KeyBinding;
 
@@ -80,8 +81,10 @@ struct _PanelServicePrivate
   gint     last_bottom;
   guint32  last_menu_button;
 
-  KeyBinding menu_toggle;
   GSettings *gsettings;
+  KeyBinding menu_toggle;
+  KeyBinding show_dash;
+  KeyBinding show_hud;
 
   IndicatorObjectEntry *pressed_entry;
   gboolean use_event;
@@ -202,7 +205,9 @@ panel_service_class_dispose (GObject *self)
 
   if (G_IS_OBJECT (priv->gsettings))
     {
-      g_signal_handlers_disconnect_by_data (priv->gsettings, self);
+      g_signal_handlers_disconnect_by_data (priv->gsettings, &priv->menu_toggle);
+      g_signal_handlers_disconnect_by_data (priv->gsettings, &priv->show_dash);
+      g_signal_handlers_disconnect_by_data (priv->gsettings, &priv->show_hud);
       g_object_unref (priv->gsettings);
       priv->gsettings = NULL;
     }
@@ -360,6 +365,42 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
   return entry;
 }
 
+static void
+reinject_key_event_to_root_window (XIDeviceEvent *ev)
+{
+  XKeyEvent kev;
+  kev.display = ev->display;
+  kev.window = ev->root;
+  kev.root = ev->root;
+  kev.subwindow = None;
+  kev.time = ev->time;
+  kev.x = ev->event_x;
+  kev.y = ev->event_x;
+  kev.x_root = ev->root_x;
+  kev.y_root = ev->root_y;
+  kev.same_screen = True;
+  kev.keycode = ev->detail;
+  kev.state = ev->mods.base;
+  kev.type = ev->evtype;
+
+  XSendEvent (kev.display, kev.root, True, KeyPressMask, (XEvent*) &kev);
+  XFlush (kev.display);
+}
+
+static gboolean
+event_matches_keybinding (XIDeviceEvent *event, KeyBinding *kb)
+{
+  if (event && kb && event->mods.base == kb->modifiers && event->detail > 0)
+    {
+      if (event->detail == kb->key || event->detail == kb->fallback)
+        {
+          return TRUE;
+        }
+    }
+
+  return FALSE;
+}
+
 static GdkFilterReturn
 event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 {
@@ -386,12 +427,30 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 
       if (event->evtype == XI_KeyPress)
         {
-          if (event->mods.base == priv->menu_toggle.modifiers &&
-              event->detail == priv->menu_toggle.key)
-          {
-            if (GTK_IS_MENU (priv->last_menu))
-              gtk_menu_popdown (GTK_MENU (priv->last_menu));
-          }
+          if (event_matches_keybinding (event, &priv->menu_toggle) ||
+              event_matches_keybinding (event, &priv->show_dash) ||
+              event_matches_keybinding (event, &priv->show_hud))
+            {
+              if (GTK_IS_MENU (priv->last_menu))
+                gtk_menu_popdown (GTK_MENU (priv->last_menu));
+
+              ret = GDK_FILTER_REMOVE;
+            }
+          else if (event->mods.base != GDK_CONTROL_MASK)
+            {
+              KeySym keysym = XkbKeycodeToKeysym (event->display, event->detail, 0, 0);
+
+              if (!IsModifierKey (keysym) && event->mods.base != 0)
+                {
+                  if (GTK_IS_MENU (priv->last_menu))
+                    gtk_menu_popdown (GTK_MENU (priv->last_menu));
+
+                  reinject_key_event_to_root_window (event);
+                  ret = GDK_FILTER_REMOVE;
+                }
+            }
+
+          return ret;
         }
 
       if (event->evtype == XI_ButtonPress)
@@ -506,8 +565,10 @@ update_keybinding (GSettings *settings, const gchar *key, gpointer data)
   gchar *binding = g_settings_get_string (settings, key);
 
   KeySym keysym = NoSymbol;
+  KeySym keysym_fallback = NoSymbol;
   KeyBinding *kb = data;
   kb->key = 0;
+  kb->fallback = 0;
   kb->modifiers = 0;
 
   gchar *keystart = (binding) ? strrchr (binding, '>') : NULL;
@@ -515,7 +576,7 @@ update_keybinding (GSettings *settings, const gchar *key, gpointer data)
   if (!keystart)
     keystart = binding;
 
-  while (keystart && !g_ascii_isalnum (*keystart))
+  while (keystart && *keystart != '\0' && !g_ascii_isalnum (*keystart))
     keystart++;
 
   gchar *keyend = keystart;
@@ -524,32 +585,62 @@ update_keybinding (GSettings *settings, const gchar *key, gpointer data)
     keyend++;
 
   if (keystart != keyend)
-  {
-    gchar *keystr = g_strndup (keystart, keyend-keystart);
-    keysym = XStringToKeysym (keystr);
-    g_free (keystr);
-  }
+    {
+      gchar *keystr = g_strndup (keystart, keyend-keystart);
+      keysym = XStringToKeysym (keystr);
+      g_free (keystr);
+    }
+  else
+    {
+      /* Parsing the case where we only have meta-keys */
+      keyend = (binding) ? strrchr (binding, '>') : NULL;
+      keyend = keyend ? keyend - 1 : NULL;
+      keystart = keyend;
+
+      while (keystart && keystart > binding && g_ascii_isalnum (*keystart))
+        keystart--;
+
+      if (keystart != keyend)
+        {
+          gchar *keystr = g_strndup (keystart+1, keyend-keystart);
+          gchar *left = g_strconcat (keystr, "_L", NULL);
+          keysym = XStringToKeysym (left);
+
+          gchar *right = g_strconcat (keystr, "_R", NULL);
+          keysym_fallback = XStringToKeysym (right);
+          g_free (left);
+          g_free (right);
+          g_free (keystr);
+
+          keystr = g_strndup (binding, keystart-binding);
+          g_free (binding);
+          binding = keystr;
+        }
+    }
 
   if (keysym != NoSymbol)
     {
       Display *dpy = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
       kb->key = XKeysymToKeycode (dpy, keysym);
 
+      if (keysym_fallback != NoSymbol)
+        kb->fallback = XKeysymToKeycode (dpy, keysym_fallback);
+
       if (g_strrstr (binding, "<Shift>"))
         {
-          kb->modifiers |= GDK_SHIFT_MASK;
+          kb->modifiers |= ShiftMask;
         }
       if (g_strrstr (binding, "<Control>") || g_strrstr (binding, "<Primary>"))
         {
-          kb->modifiers |= GDK_CONTROL_MASK;
+          kb->modifiers |= ControlMask;
         }
       if (g_strrstr (binding, "<Alt>") || g_strrstr (binding, "<Mod1>"))
         {
-          kb->modifiers |= GDK_MOD1_MASK;
+          kb->modifiers |= Mod1Mask;
         }
       if (g_strrstr (binding, "<Super>"))
         {
-          kb->modifiers |= GDK_SUPER_MASK;
+          kb->modifiers |= Mod4Mask;
         }
     }
 
@@ -575,15 +666,20 @@ panel_service_init (PanelService *self)
 
   priv->gsettings = g_settings_new_with_path (COMPIZ_OPTION_SCHEMA, COMPIZ_OPTION_PATH);
   g_signal_connect (priv->gsettings, "changed::"MENU_TOGGLE_KEYBINDING_KEY,
-                    G_CALLBACK (update_keybinding), self);
+                    G_CALLBACK (update_keybinding), &priv->menu_toggle);
+  g_signal_connect (priv->gsettings, "changed::"SHOW_DASH_KEY,
+                    G_CALLBACK (update_keybinding), &priv->show_dash);
+  g_signal_connect (priv->gsettings, "changed::"SHOW_HUD_KEY,
+                    G_CALLBACK (update_keybinding), &priv->show_hud);
 
   update_keybinding (priv->gsettings, MENU_TOGGLE_KEYBINDING_KEY, &priv->menu_toggle);
+  update_keybinding (priv->gsettings, SHOW_DASH_KEY, &priv->show_dash);
+  update_keybinding (priv->gsettings, SHOW_HUD_KEY, &priv->show_hud);
 
   const gchar *upstartsession = g_getenv ("UPSTART_SESSION");
   if (upstartsession != NULL)
     {
-      DBusConnection * conn = NULL;
-      conn = dbus_connection_open (upstartsession, NULL);
+      DBusConnection *conn = dbus_connection_open (upstartsession, NULL);
       if (conn != NULL)
         {
           priv->upstart = nih_dbus_proxy_new (NULL, conn,
@@ -596,7 +692,6 @@ panel_service_init (PanelService *self)
 
   if (priv->upstart != NULL)
     priv->upstart->auto_start = FALSE;
-
 }
 
 static gboolean
