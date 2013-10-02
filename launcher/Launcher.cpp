@@ -1188,8 +1188,9 @@ void Launcher::OnOverlayShown(GVariant* data)
 
     if (icon_under_mouse_)
       icon_under_mouse_->HideTooltip();
+
+    QueueDraw();
   }
-  QueueDraw();
 }
 
 void Launcher::OnOverlayHidden(GVariant* data)
