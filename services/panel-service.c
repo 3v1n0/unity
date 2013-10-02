@@ -135,18 +135,13 @@ static const gchar * indicator_order[][2] = {
 };
 
 /* Forwards */
-static void load_indicator  (PanelService    *self,
-                             IndicatorObject *object,
-                             const gchar     *_name);
-static void load_indicators (PanelService    *self);
-static void load_indicators_from_indicator_files (PanelService *self);
-static void sort_indicators (PanelService    *self);
-
+static void load_indicator  (PanelService *, IndicatorObject *, const gchar *);
+static void load_indicators (PanelService *);
+static void load_indicators_from_indicator_files (PanelService *);
+static void sort_indicators (PanelService *);
 static void notify_object (IndicatorObject *object);
-
-static GdkFilterReturn event_filter (GdkXEvent    *ev,
-                                     GdkEvent     *gev,
-                                     PanelService *self);
+static void update_keybinding (GSettings *, const gchar *, gpointer);
+static GdkFilterReturn event_filter (GdkXEvent *, GdkEvent *, PanelService *);
 
 /*
  * GObject stuff
@@ -205,9 +200,8 @@ panel_service_class_dispose (GObject *self)
 
   if (G_IS_OBJECT (priv->gsettings))
     {
-      g_signal_handlers_disconnect_by_data (priv->gsettings, &priv->menu_toggle);
-      g_signal_handlers_disconnect_by_data (priv->gsettings, &priv->show_dash);
-      g_signal_handlers_disconnect_by_data (priv->gsettings, &priv->show_hud);
+      g_signal_handlers_disconnect_matched (priv->gsettings, G_SIGNAL_MATCH_FUNC,
+                                            0, 0, NULL, update_keybinding, NULL);
       g_object_unref (priv->gsettings);
       priv->gsettings = NULL;
     }
