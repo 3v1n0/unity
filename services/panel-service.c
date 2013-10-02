@@ -71,8 +71,6 @@ struct _PanelServicePrivate
   GtkWidget *menubar;
   GtkWidget *offscreen_window;
   GtkMenu *last_menu;
-  guint32  last_menu_id;
-  guint32  last_menu_move_id;
   gint32   last_x;
   gint32   last_y;
   gint     last_left;
@@ -185,7 +183,8 @@ panel_service_class_dispose (GObject *self)
   if (GTK_IS_WIDGET (priv->last_menu) &&
       gtk_widget_get_realized (GTK_WIDGET (priv->last_menu)))
     {
-      g_object_unref (priv->last_menu);
+      gtk_menu_popdown (GTK_MENU (priv->last_menu));
+      g_signal_handlers_disconnect_by_data (priv->last_menu, self);
       priv->last_menu = NULL;
     }
 
@@ -1526,12 +1525,7 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
   priv->last_y = 0;
   priv->last_menu_button = 0;
 
-  g_signal_handler_disconnect (priv->last_menu, priv->last_menu_id);
-  g_signal_handler_disconnect (priv->last_menu, priv->last_menu_move_id);
-
   priv->last_menu = NULL;
-  priv->last_menu_id = 0;
-  priv->last_menu_move_id = 0;
   priv->last_entry = NULL;
   priv->last_left = 0;
   priv->last_right = 0;
@@ -1940,13 +1934,10 @@ panel_service_show_entry_common (PanelService *self,
       priv->last_x = 0;
       priv->last_y = 0;
 
-      g_signal_handler_disconnect (priv->last_menu, priv->last_menu_id);
-      g_signal_handler_disconnect (priv->last_menu, priv->last_menu_move_id);
+      g_signal_handlers_disconnect_by_data (priv->last_menu, self);
 
       priv->last_entry = NULL;
       priv->last_menu = NULL;
-      priv->last_menu_id = 0;
-      priv->last_menu_move_id = 0;
       priv->last_menu_button = 0;
     }
 
@@ -1988,10 +1979,9 @@ panel_service_show_entry_common (PanelService *self,
       priv->last_x = x;
       priv->last_y = y;
       priv->last_menu_button = button;
-      priv->last_menu_id = g_signal_connect (priv->last_menu, "hide",
-                                             G_CALLBACK (on_active_menu_hidden), self);
-      priv->last_menu_move_id = g_signal_connect_after (priv->last_menu, "move-current",
-                                                        G_CALLBACK (on_active_menu_move_current), self);
+      g_signal_connect (priv->last_menu, "hide", G_CALLBACK (on_active_menu_hidden), self);
+      g_signal_connect_after (priv->last_menu, "move-current",
+                              G_CALLBACK (on_active_menu_move_current), self);
 
       gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, 0, CurrentTime);
       gtk_menu_reposition (priv->last_menu);
