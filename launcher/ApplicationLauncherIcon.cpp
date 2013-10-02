@@ -198,6 +198,7 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
     if (!IsSticky())
     {
       SetQuirk(Quirk::VISIBLE, false);
+      HideTooltip();
 
       /* Use a timeout to remove the icon, this avoids
        * that we remove an application that is going
