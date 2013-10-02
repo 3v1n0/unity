@@ -439,7 +439,7 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
             }
           else if (event->mods.base != GDK_CONTROL_MASK)
             {
-              if (!IsModifierKey (keysym) && event->mods.base != 0)
+              if (!IsModifierKey (keysym) && (event->mods.base != 0 || keysym == XK_Print))
                 {
                   if (GTK_IS_MENU (priv->last_menu))
                     gtk_menu_popdown (GTK_MENU (priv->last_menu));
