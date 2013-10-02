@@ -218,6 +218,8 @@ panel_service_class_finalize (GObject *object)
   g_hash_table_destroy (priv->panel2entries_hash);
 
   static_service = NULL;
+
+  G_OBJECT_CLASS (panel_service_parent_class)->finalize (self);
 }
 
 static void
@@ -403,10 +405,10 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
   GdkFilterReturn ret = GDK_FILTER_CONTINUE;
 
   if (!PANEL_IS_SERVICE (self))
-  {
-    g_warning ("%s: Invalid PanelService instance", G_STRLOC);
-    return ret;
-  }
+    {
+      g_warning ("%s: Invalid PanelService instance", G_STRLOC);
+      return ret;
+    }
 
   if (!GTK_IS_WIDGET (self->priv->last_menu))
     return ret;
