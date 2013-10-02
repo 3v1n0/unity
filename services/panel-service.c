@@ -419,13 +419,16 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 
   /* Use XI2 to read the event data */
   XGenericEventCookie *cookie = &e->xcookie;
-  if (cookie->type == GenericEvent)
-    {
-      XIDeviceEvent *event = cookie->data;
-      if (!event)
-        return ret;
+  if (cookie->type != GenericEvent)
+    return ret;
 
-      if (event->evtype == XI_KeyPress)
+  XIDeviceEvent *event = cookie->data;
+  if (!event)
+    return ret;
+
+  switch (event->evtype)
+    {
+      case XI_KeyPress:
         {
           if (event_matches_keybinding (event, &priv->menu_toggle) ||
               event_matches_keybinding (event, &priv->show_dash) ||
@@ -450,19 +453,21 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
                 }
             }
 
-          return ret;
+          break;
         }
 
-      if (event->evtype == XI_ButtonPress)
+      case XI_ButtonPress:
         {
           priv->pressed_entry = get_entry_at (self, event->root_x, event->root_y);
           priv->use_event = (priv->pressed_entry == NULL);
 
           if (priv->pressed_entry)
             ret = GDK_FILTER_REMOVE;
+
+          break;
         }
 
-      if (event->evtype == XI_ButtonRelease)
+      case XI_ButtonRelease:
         {
           IndicatorObjectEntry *entry;
           gboolean event_is_a_click = FALSE;
@@ -532,6 +537,8 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
               ret = GDK_FILTER_REMOVE;
               g_free (entry_id);
             }
+
+          break;
         }
     }
 
