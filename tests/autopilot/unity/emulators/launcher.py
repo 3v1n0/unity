@@ -97,7 +97,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
     def _get_controller(self):
         """Get the launcher controller."""
-        [controller] = LauncherController.get_all_instances()
+        controller = self.get_root_instance().select_single(LauncherController)
         return controller
 
     def move_mouse_to_right_of_launcher(self):
@@ -199,7 +199,7 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
         if not self.in_keynav_mode and not self.in_switcher_mode:
             raise RuntimeError("Launcher must be in keynav or switcher mode")
 
-        [launcher_model] = LauncherModel.get_all_instances()
+        launcher_model = self.get_root_instance().select_single(LauncherModel)
         all_icons = launcher_model.get_launcher_icons()
         logger.debug("all_icons = %r", [i.tooltip_text for i in all_icons])
         for icon in all_icons:
@@ -438,7 +438,7 @@ class LauncherModel(UnityIntrospectionObject):
     """The launcher model. Contains all launcher icons as children."""
 
     def get_bfb_icon(self):
-        icons = BFBLauncherIcon.get_all_instances()
+        icons = self.get_root_instance().select_many(BFBLauncherIcon)
         assert(len(icons) == 1)
         return icons[0]
 

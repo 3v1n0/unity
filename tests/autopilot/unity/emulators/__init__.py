@@ -11,6 +11,10 @@
 
 from time import sleep
 
+from autopilot.introspection import (
+    get_proxy_object_for_existing_process,
+    ProcessSearchError
+    )
 from autopilot.introspection.dbus import CustomEmulatorBase
 from autopilot.introspection.backends import DBusAddress
 
@@ -39,8 +43,11 @@ def ensure_unity_is_running(timeout=300):
     sleep_period=10
     for i in range(0, timeout, sleep_period):
         try:
-            UnityIntrospectionObject.get_state_by_path("/")
+            get_proxy_object_for_existing_process(
+                connection_name=UnityIntrospectionObject.DBUS_SERVICE,
+                object_path=UnityIntrospectionObject.DBUS_OBJECT
+            )
             return True
-        except DBusException:
+        except ProcessSearchError:
             sleep(sleep_period)
     raise RuntimeError("Unity debug interface is down after %d seconds of polling." % (timeout))
