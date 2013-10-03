@@ -105,8 +105,7 @@ Controller::Controller(Controller::WindowCreator const& create_window)
     }
   });
 
-  auto spread_cb = sigc::bind(sigc::mem_fun(this, &Controller::HideDash), true);
-  WindowManager::Default().initiate_spread.connect(spread_cb);
+  WindowManager::Default().initiate_spread.connect(sigc::mem_fun(this, &Controller::HideDash));
 
   dbus_server_.AddObjects(dbus::INTROSPECTION, dbus::PATH);
   dbus_server_.GetObjects().front()->SetMethodsCallsHandler([this] (std::string const& method, GVariant*) {
@@ -174,7 +173,7 @@ void Controller::RegisterUBusInterests()
     // hide if something else is coming up
     if (overlay_identity.Str() != "dash")
     {
-      HideDash(true);
+      HideDash();
     }
   });
 
@@ -276,16 +275,7 @@ void Controller::OnExternalShowDash(GVariant* variant)
 
 void Controller::OnExternalHideDash(GVariant* variant)
 {
-  EnsureDash();
-
-  if (variant)
-  {
-    HideDash(g_variant_get_boolean(variant));
-  }
-  else
-  {
-    HideDash();
-  }
+  HideDash();
 }
 
 void Controller::ShowDash()
@@ -340,14 +330,14 @@ void Controller::FocusWindow()
   nux::GetWindowCompositor().SetKeyFocusArea(view_->default_focus());
 }
 
-void Controller::QuicklyHideDash(bool restore)
+void Controller::QuicklyHideDash()
 {
-  HideDash(restore);
+  HideDash();
   timeline_animator_.Stop();
   window_->ShowWindow(false);
 }
 
-void Controller::HideDash(bool restore)
+void Controller::HideDash()
 {
   if (!visible_)
    return;
@@ -362,10 +352,8 @@ void Controller::HideDash(bool restore)
   window_->EnableInputWindow(false, dash::window_title, true, false);
   visible_ = false;
 
-  nux::GetWindowCompositor().SetKeyFocusArea(NULL,nux::KEY_NAV_NONE);
-
-  if (restore)
-    WindowManager::Default().RestoreInputFocus();
+  nux::GetWindowCompositor().SetKeyFocusArea(NULL, nux::KEY_NAV_NONE);
+  WindowManager::Default().RestoreInputFocus();
 
   StartShowHideTimeline();
 
