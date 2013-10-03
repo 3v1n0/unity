@@ -59,8 +59,8 @@ public:
 
   sigc::signal<void> on_realize;
 
-  void HideDash(bool restore_focus = true);
-  void QuicklyHideDash(bool restore_focus = true);
+  void HideDash();
+  void QuicklyHideDash();
   void ShowDash();
 
   void ReFocusKeyInput();

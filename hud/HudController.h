@@ -60,7 +60,7 @@ public:
 
   void ShowHideHud();
   void ShowHud();
-  void HideHud(bool restore_focus = true);
+  void HideHud();
   void ReFocusKeyInput();
   bool IsVisible();
 

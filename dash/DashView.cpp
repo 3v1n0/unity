@@ -1401,7 +1401,7 @@ bool DashView::InspectKeyEvent(unsigned int eventType,
   {
     if (preview_displaying_)
       ClosePreview();
-    else if (search_bar_->search_string != "")
+    else if (!search_bar_->search_string().empty())
       search_bar_->search_string = "";
     else
       ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
