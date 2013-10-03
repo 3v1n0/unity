@@ -1607,6 +1607,7 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
 
   icon_size_ = tile_size;
   icon_renderer_->SetTargetSize(icon_size_, icon_size, SPACE_BETWEEN_ICONS);
+  AbstractLauncherIcon::icon_size = icon_size_;
 
   nux::Geometry const& parent_geo = parent_->GetGeometry();
   Resize(nux::Point(parent_geo.x, parent_geo.y), parent_geo.height);
