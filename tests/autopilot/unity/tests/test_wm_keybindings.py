@@ -9,7 +9,7 @@
 from __future__ import absolute_import
 
 from autopilot.matchers import Eventually
-from testtools.matchers import Equals, NotEquals
+from testtools.matchers import Equals, NotEquals, GreaterThan
 from unity.tests import UnityTestCase
 from unity.emulators import switcher
 
@@ -20,6 +20,8 @@ class WindowManagerKeybindings(UnityTestCase):
         super(WindowManagerKeybindings, self).setUp()
 
     def open_panel_menu(self):
+        panel = self.unity.panels.get_panel_for_monitor(0)
+        self.assertThat(lambda: len(panel.menus.get_entries()), Eventually(GreaterThan(0)))
         self.addCleanup(self.keyboard.press_and_release, "Escape")
         self.keybinding("panel/open_first_menu")
         self.assertThat(self.unity.panels.get_active_indicator, Eventually(NotEquals(None)))
