@@ -650,9 +650,13 @@ LauncherIcon::SetCenter(nux::Point3 const& center, int monitor, nux::Geometry co
   _parent_geo[monitor] = geo;
 
   nux::Point3& new_center = _center[monitor];
+  nux::Point3 old_center = new_center;
   new_center.x = center.x + geo.x;
   new_center.y = center.y + geo.y;
   new_center.z = center.z;
+
+  if (old_center == new_center)
+    return;
 
   if (monitor == _last_monitor)
   {
