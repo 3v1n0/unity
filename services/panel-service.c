@@ -21,6 +21,7 @@
 
 #include "config.h"
 #include "panel-service.h"
+#include "panel-service-private.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -29,8 +30,8 @@
 #include <glib/gi18n-lib.h>
 #include <libindicator/indicator-ng.h>
 
-#include <X11/extensions/XInput2.h>
 #include <X11/XKBlib.h>
+#include <X11/extensions/XInput2.h>
 
 #include <upstart.h>
 #include <nih/alloc.h>
@@ -51,13 +52,6 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 #define SHOW_HUD_KEY "show-hud"
 
 static PanelService *static_service = NULL;
-
-typedef struct _KeyBinding
-{
-  KeySym key;
-  KeySym fallback;
-  guint32 modifiers;
-} KeyBinding;
 
 struct _PanelServicePrivate
 {
@@ -564,13 +558,20 @@ ready_signal (PanelService *self)
 static void
 update_keybinding (GSettings *settings, const gchar *key, gpointer data)
 {
-  gchar *binding = g_settings_get_string (settings, key);
-
   KeyBinding *kb = data;
+  gchar *binding = g_settings_get_string (settings, key);
+  parse_string_keybinding (binding, kb);
+  g_free (binding);
+}
+
+void
+parse_string_keybinding (const char *str, KeyBinding *kb)
+{
   kb->key = NoSymbol;
   kb->fallback = NoSymbol;
   kb->modifiers = 0;
 
+  gchar *binding = g_strdup (str);
   gchar *keystart = (binding) ? strrchr (binding, '>') : NULL;
 
   if (!keystart)
@@ -630,11 +631,11 @@ update_keybinding (GSettings *settings, const gchar *key, gpointer data)
         }
       if (g_strrstr (binding, "<Alt>") || g_strrstr (binding, "<Mod1>"))
         {
-          kb->modifiers |= Mod1Mask;
+          kb->modifiers |= AltMask;
         }
       if (g_strrstr (binding, "<Super>"))
         {
-          kb->modifiers |= Mod4Mask;
+          kb->modifiers |= SuperMask;
         }
     }
 
