@@ -289,7 +289,6 @@ void Controller::OnExternalShowHud(GVariant* variant)
 void Controller::OnExternalHideHud(GVariant* variant)
 {
   LOG_DEBUG(logger) << "External Hiding the hud";
-  EnsureHud();
   HideHud();
 }
 
@@ -395,7 +394,7 @@ void Controller::FocusWindow()
 void Controller::HideHud()
 {
   LOG_DEBUG (logger) << "hiding the hud";
-  if (visible_ == false)
+  if (!visible_)
     return;
 
   need_show_ = false;
