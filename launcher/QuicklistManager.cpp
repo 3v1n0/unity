@@ -78,11 +78,7 @@ void QuicklistManager::ShowQuicklist(nux::ObjectPtr<QuicklistView> const& quickl
                                      int tip_y, bool hide_existing_if_open)
 {
   if (_current_quicklist == quicklist)
-  {
-    // this quicklist is already active
-    // do we want to still redraw in case the position has changed?
     return;
-  }
 
   if (hide_existing_if_open && _current_quicklist)
   {
@@ -91,6 +87,11 @@ void QuicklistManager::ShowQuicklist(nux::ObjectPtr<QuicklistView> const& quickl
 
   quicklist->ShowQuicklistWithTipAt(tip_x, tip_y);
   nux::GetWindowCompositor().SetKeyFocusArea(quicklist.GetPointer());
+}
+
+void QuicklistManager::MoveQuicklist(nux::ObjectPtr<QuicklistView> const& quicklist, int x, int y)
+{
+  quicklist->SetQuicklistPosition(x, y);
 }
 
 void QuicklistManager::HideQuicklist(nux::ObjectPtr<QuicklistView> const& quicklist)
