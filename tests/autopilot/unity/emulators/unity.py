@@ -73,17 +73,6 @@ def log_unity_message(severity, message):
 
 class Unity(UnityIntrospectionObject):
 
-    #  A recent change in autopilot removed the class method
-    #  get_root_instance. For convenience sake it is reproduced here for use in
-    #  the Unity test cases.
-    @classmethod
-    def get_root_instance(cls):
-        instances = Unity._known_unity_dbus.introspection_iface.GetState("/")
-        if len(instances) != 1:
-            raise RuntimeError("no instances")
-        path, state = instances[0]
-        return Unity(state, path, Unity._known_unity_dbus)
-
     @property
     def screen(self):
         return self.get_children_by_type(Screen)[0]
