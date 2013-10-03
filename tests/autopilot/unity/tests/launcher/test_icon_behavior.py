@@ -90,11 +90,10 @@ class LauncherIconsTests(LauncherTestCase):
         """Shift+Clicking MUST open a new instance of an already-running application."""
         app = self.process_manager.start_app("Calculator")
         icon = self.unity.launcher.model.get_icon(desktop_id=app.desktop_file)
-        launcher_instance = self.unity.launcher.get_launcher_for_monitor(0)
 
         self.keyboard.press("Shift")
         self.addCleanup(self.keyboard.release, "Shift")
-        launcher_instance.click_launcher_icon(icon)
+        self.launcher_instance.click_launcher_icon(icon)
 
         self.assertNumberWinsIsEventually(app, 2)
 
@@ -325,6 +324,37 @@ class LauncherIconsTests(LauncherTestCase):
 
         self.launcher_instance.click_launcher_icon(icon)
         self.assertThat(lambda: window.x_win.get_wm_state()['state'], Eventually(Equals(Xutil.NormalState)))
+
+    def test_icon_focuses_application_window_when_dash_is_open(self):
+        """Clicking on an icon when dash is shown must focus it."""
+        win = self.process_manager.start_app_window("Calculator")
+        self.assertThat(lambda: win.is_focused, Eventually(Equals(True)))
+
+        self.addCleanup(self.unity.dash.ensure_hidden)
+        self.unity.dash.ensure_visible()
+        self.assertThat(lambda: win.is_focused, Eventually(Equals(False)))
+
+        icon = self.unity.launcher.model.get_icon(desktop_id=win.application.desktop_file)
+        self.launcher_instance.click_launcher_icon(icon)
+
+        self.assertThat(self.unity.dash.visible, Eventually(Equals(False)))
+        self.assertThat(lambda: win.is_focused, Eventually(Equals(True)))
+
+    def test_icon_focuses_application_window_when_hud_is_open(self):
+        """Clicking on an icon when hud is shown must focus it."""
+        win = self.process_manager.start_app_window("Calculator")
+        self.assertThat(lambda: win.is_focused, Eventually(Equals(True)))
+
+        self.addCleanup(self.unity.hud.ensure_hidden)
+        self.unity.hud.ensure_visible()
+        self.assertThat(lambda: win.is_focused, Eventually(Equals(False)))
+
+        icon = self.unity.launcher.model.get_icon(desktop_id=win.application.desktop_file)
+        self.launcher_instance.click_launcher_icon(icon)
+
+        self.assertThat(self.unity.hud.visible, Eventually(Equals(False)))
+        self.assertThat(lambda: win.is_focused, Eventually(Equals(True)))
+
 
 class LauncherDragIconsBehavior(LauncherTestCase):
     """Tests dragging icons around the Launcher."""
