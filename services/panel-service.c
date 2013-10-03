@@ -1122,11 +1122,13 @@ on_indicator_menu_show (IndicatorObject      *object,
                         PanelService         *self)
 {
   gchar *entry_id;
-
   g_return_if_fail (PANEL_IS_SERVICE (self));
-  if (entry == NULL)
+
+  if (!entry)
     {
-      g_warning ("on_indicator_menu_show() called with a NULL entry");
+      if (GTK_IS_MENU (self->priv->last_menu))
+        gtk_menu_popdown (GTK_MENU (self->priv->last_menu));
+
       return;
     }
 
@@ -1142,11 +1144,11 @@ on_indicator_menu_show_now_changed (IndicatorObject      *object,
                                     PanelService         *self)
 {
   gchar *entry_id;
-
   g_return_if_fail (PANEL_IS_SERVICE (self));
-  if (entry == NULL)
+
+  if (!entry)
     {
-      g_warning ("on_indicator_menu_show_now_changed() called with a NULL entry");
+      g_warning ("%s called with a NULL entry", G_STRFUNC);
       return;
     }
 
