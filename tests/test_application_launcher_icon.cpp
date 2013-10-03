@@ -27,6 +27,8 @@
 #include "ApplicationLauncherIcon.h"
 #include "FavoriteStore.h"
 #include "StandaloneWindowManager.h"
+#include "UBusWrapper.h"
+#include "UBusMessages.h"
 #include "ZeitgeistUtils.h"
 #include "mock-application.h"
 #include "test_utils.h"
@@ -63,6 +65,7 @@ struct MockApplicationLauncherIcon : ApplicationLauncherIcon
   MOCK_CONST_METHOD0(GetRemoteMenus, glib::Object<DbusmenuMenuitem>());
 
   bool LauncherIconIsSticky() const { return LauncherIcon::IsSticky(); }
+  void LocalActivate(ActionArg a) { ApplicationLauncherIcon::ActivateLauncherIcon(a); }
 
   using ApplicationLauncherIcon::IsFileManager;
   using ApplicationLauncherIcon::LogUnityEvent;
@@ -1109,4 +1112,21 @@ TEST_F(TestApplicationLauncherIcon, RemoveLogEvent)
   usc_icon->Remove();
 }
 
+TEST_F(TestApplicationLauncherIcon, ClosesOverlayOnActivation)
+{
+  bool closes_overlay = false;
+  UBusManager manager;
+  manager.RegisterInterest(UBUS_OVERLAY_CLOSE_REQUEST, [&closes_overlay] (GVariant* v) {
+    ASSERT_THAT(v, IsNull());
+    closes_overlay = true;
+  });
+
+  // XXX: we should abstract the application activation into application::Manager
+  ON_CALL(*mock_icon, ActivateLauncherIcon(_)).WillByDefault(Invoke([this] (ActionArg a) { mock_icon->LocalActivate(a); }));
+  mock_icon->Activate(ActionArg());
+  Utils::WaitUntil(closes_overlay);
+
+  EXPECT_TRUE(closes_overlay);
 }
+
+} // anonymous namespace
