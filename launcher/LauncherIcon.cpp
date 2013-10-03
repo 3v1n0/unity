@@ -441,8 +441,7 @@ void LauncherIcon::OnTooltipEnabledChanged(bool value)
     HideTooltip();
 }
 
-void
-LauncherIcon::SetShortcut(guint64 shortcut)
+void LauncherIcon::SetShortcut(guint64 shortcut)
 {
   // only relocate a digit with a digit (don't overwrite other shortcuts)
   if ((!_shortcut || (g_ascii_isdigit((gchar)_shortcut)))
@@ -450,37 +449,32 @@ LauncherIcon::SetShortcut(guint64 shortcut)
     _shortcut = shortcut;
 }
 
-guint64
-LauncherIcon::GetShortcut()
+guint64 LauncherIcon::GetShortcut()
 {
   return _shortcut;
 }
 
-void
-LauncherIcon::ShowTooltip()
+nux::Point LauncherIcon::GetTipPosition() const
+{
+  nux::Geometry const& geo = _parent_geo[_last_monitor];
+  return nux::Point(geo.x + geo.width - 4 * geo.width / 48, _center[_last_monitor].y);
+}
+
+void LauncherIcon::ShowTooltip()
 {
   if (!tooltip_enabled || tooltip_text().empty() || (_quicklist && _quicklist->IsVisible()))
     return;
 
-  int tip_x = 100;
-  int tip_y = 100;
-  if (_last_monitor >= 0)
-  {
-    nux::Geometry geo = _parent_geo[_last_monitor];
-    tip_x = geo.x + geo.width - 4 * geo.width / 48;
-    tip_y = _center[_last_monitor].y;
-  }
-
   if (!_tooltip)
     LoadTooltip();
 
+  auto const& pos = GetTipPosition();
   _tooltip->text = tooltip_text();
-  _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
+  _tooltip->ShowTooltipWithTipAt(pos.x, pos.y);
   tooltip_visible.emit(_tooltip);
 }
 
-void
-LauncherIcon::RecvMouseEnter(int monitor)
+void LauncherIcon::RecvMouseEnter(int monitor)
 {
   _last_monitor = monitor;
 }
@@ -552,28 +546,26 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
       monitor = 0;
   }
 
-  nux::Geometry const& geo = _parent_geo[monitor];
-  int tip_x = geo.x + geo.width - 4 * geo.width / 48;
-  int tip_y = _center[monitor].y;
-
   WindowManager& win_manager = WindowManager::Default();
 
   if (win_manager.IsScaleActive())
     win_manager.TerminateScale();
+
+  auto const& pos = GetTipPosition();
 
   /* If the expo plugin is active, we need to wait it to be terminated, before
    * showing the icon quicklist. */
   if (win_manager.IsExpoActive())
   {
     auto conn = std::make_shared<sigc::connection>();
-    *conn = win_manager.terminate_expo.connect([this, conn, tip_x, tip_y] {
-      QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
+    *conn = win_manager.terminate_expo.connect([this, conn, pos] {
+      QuicklistManager::Default()->ShowQuicklist(_quicklist, pos.x, pos.y);
       conn->disconnect();
     });
   }
   else
   {
-    QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
+    QuicklistManager::Default()->ShowQuicklist(_quicklist, pos.x, pos.y);
   }
 
   return true;
@@ -632,20 +624,7 @@ void LauncherIcon::HideTooltip()
   tooltip_visible.emit(nux::ObjectPtr<nux::View>());
 }
 
-bool
-LauncherIcon::OnCenterStabilizeTimeout()
-{
-  if (!std::equal(_center.begin(), _center.end(), _last_stable.begin()))
-  {
-    OnCenterStabilized(_center);
-    _last_stable = _center;
-  }
-
-  return false;
-}
-
-void
-LauncherIcon::SetCenter(nux::Point3 const& center, int monitor, nux::Geometry const& geo)
+void LauncherIcon::SetCenter(nux::Point3 const& center, int monitor, nux::Geometry const& geo)
 {
   _parent_geo[monitor] = geo;
 
@@ -660,18 +639,27 @@ LauncherIcon::SetCenter(nux::Point3 const& center, int monitor, nux::Geometry co
 
   if (monitor == _last_monitor)
   {
-    int tip_x, tip_y;
-    tip_x = geo.x + geo.width - 4 * geo.width / 48;
-    tip_y = new_center.y;
-
     if (_quicklist && _quicklist->IsVisible())
-      QuicklistManager::Default()->MoveQuicklist(_quicklist, tip_x, tip_y);
+    {
+      auto const& pos = GetTipPosition();
+      QuicklistManager::Default()->MoveQuicklist(_quicklist, pos.x, pos.y);
+    }
     else if (_tooltip && _tooltip->IsVisible())
-      _tooltip->SetTooltipPosition(tip_x, tip_y);
+    {
+      auto const& pos = GetTipPosition();
+      _tooltip->SetTooltipPosition(pos.x, pos.y);
+    }
   }
 
-  auto const& cb_func = sigc::mem_fun(this, &LauncherIcon::OnCenterStabilizeTimeout);
-  _source_manager.AddTimeout(500, cb_func, CENTER_STABILIZE_TIMEOUT);
+  _source_manager.AddTimeout(500, [this] {
+    if (!std::equal(_center.begin(), _center.end(), _last_stable.begin()))
+    {
+      OnCenterStabilized(_center);
+      _last_stable = _center;
+    }
+
+    return false;
+  }, CENTER_STABILIZE_TIMEOUT);
 }
 
 nux::Point3
@@ -724,17 +712,6 @@ LauncherIcon::IsVisibleOnMonitor(int monitor) const
   return _is_visible_on_monitor[monitor];
 }
 
-bool
-LauncherIcon::OnPresentTimeout()
-{
-  if (!GetQuirk(Quirk::PRESENTED))
-    return false;
-
-  Unpresent();
-
-  return false;
-}
-
 float LauncherIcon::PresentUrgency()
 {
   return _present_urgency;
@@ -748,8 +725,13 @@ LauncherIcon::Present(float present_urgency, int length)
 
   if (length >= 0)
   {
-    auto cb_func = sigc::mem_fun(this, &LauncherIcon::OnPresentTimeout);
-    _source_manager.AddTimeout(length, cb_func, PRESENT_TIMEOUT);
+    _source_manager.AddTimeout(length, [this] {
+      if (!GetQuirk(Quirk::PRESENTED))
+        return false;
+
+      Unpresent();
+      return false;
+    }, PRESENT_TIMEOUT);
   }
 
   _present_urgency = CLAMP(present_urgency, 0.0f, 1.0f);
