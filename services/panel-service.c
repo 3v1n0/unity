@@ -21,6 +21,7 @@
 
 #include "config.h"
 #include "panel-service.h"
+#include "panel-service-private.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -29,8 +30,8 @@
 #include <glib/gi18n-lib.h>
 #include <libindicator/indicator-ng.h>
 
-#include <X11/extensions/XInput2.h>
 #include <X11/XKBlib.h>
+#include <X11/extensions/XInput2.h>
 
 #include <upstart.h>
 #include <nih/alloc.h>
@@ -47,6 +48,8 @@ G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 #define COMPIZ_OPTION_SCHEMA "org.compiz.unityshell"
 #define COMPIZ_OPTION_PATH "/org/compiz/profiles/unity/plugins/"
 #define MENU_TOGGLE_KEYBINDING_KEY "panel-first-menu"
+#define SHOW_DASH_KEY "show-launcher"
+#define SHOW_HUD_KEY "show-hud"
 
 static PanelService *static_service = NULL;
 
@@ -62,8 +65,6 @@ struct _PanelServicePrivate
   GtkWidget *menubar;
   GtkWidget *offscreen_window;
   GtkMenu *last_menu;
-  guint32  last_menu_id;
-  guint32  last_menu_move_id;
   gint32   last_x;
   gint32   last_y;
   gint     last_left;
@@ -72,9 +73,10 @@ struct _PanelServicePrivate
   gint     last_bottom;
   guint32  last_menu_button;
 
-  KeyCode toggle_key;
-  guint32 toggle_modifiers;
   GSettings *gsettings;
+  KeyBinding menu_toggle;
+  KeyBinding show_dash;
+  KeyBinding show_hud;
 
   IndicatorObjectEntry *pressed_entry;
   gboolean use_event;
@@ -125,22 +127,13 @@ static const gchar * indicator_order[][2] = {
 };
 
 /* Forwards */
-static void load_indicator  (PanelService    *self,
-                             IndicatorObject *object,
-                             const gchar     *_name);
-static void load_indicators (PanelService    *self);
-static void load_indicators_from_indicator_files (PanelService *self);
-static void sort_indicators (PanelService    *self);
-
+static void load_indicator  (PanelService *, IndicatorObject *, const gchar *);
+static void load_indicators (PanelService *);
+static void load_indicators_from_indicator_files (PanelService *);
+static void sort_indicators (PanelService *);
 static void notify_object (IndicatorObject *object);
-
-static GdkFilterReturn event_filter (GdkXEvent    *ev,
-                                     GdkEvent     *gev,
-                                     PanelService *self);
-
-static void on_keybinding_changed (GSettings *settings,
-                                   gchar     *key,
-                                   gpointer   data);
+static void update_keybinding (GSettings *, const gchar *, gpointer);
+static GdkFilterReturn event_filter (GdkXEvent *, GdkEvent *, PanelService *);
 
 /*
  * GObject stuff
@@ -184,7 +177,8 @@ panel_service_class_dispose (GObject *self)
   if (GTK_IS_WIDGET (priv->last_menu) &&
       gtk_widget_get_realized (GTK_WIDGET (priv->last_menu)))
     {
-      g_object_unref (priv->last_menu);
+      gtk_menu_popdown (GTK_MENU (priv->last_menu));
+      g_signal_handlers_disconnect_by_data (priv->last_menu, self);
       priv->last_menu = NULL;
     }
 
@@ -199,7 +193,8 @@ panel_service_class_dispose (GObject *self)
 
   if (G_IS_OBJECT (priv->gsettings))
     {
-      g_signal_handlers_disconnect_by_func (priv->gsettings, on_keybinding_changed, self);
+      g_signal_handlers_disconnect_matched (priv->gsettings, G_SIGNAL_MATCH_FUNC,
+                                            0, 0, NULL, update_keybinding, NULL);
       g_object_unref (priv->gsettings);
       priv->gsettings = NULL;
     }
@@ -216,6 +211,8 @@ panel_service_class_finalize (GObject *object)
   g_hash_table_destroy (priv->panel2entries_hash);
 
   static_service = NULL;
+
+  G_OBJECT_CLASS (panel_service_parent_class)->finalize (object);
 }
 
 static void
@@ -357,6 +354,42 @@ get_indicator_entry_by_id (PanelService *self, const gchar *entry_id)
   return entry;
 }
 
+static void
+reinject_key_event_to_root_window (XIDeviceEvent *ev)
+{
+  XKeyEvent kev;
+  kev.display = ev->display;
+  kev.window = ev->root;
+  kev.root = ev->root;
+  kev.subwindow = None;
+  kev.time = ev->time;
+  kev.x = ev->event_x;
+  kev.y = ev->event_x;
+  kev.x_root = ev->root_x;
+  kev.y_root = ev->root_y;
+  kev.same_screen = True;
+  kev.keycode = ev->detail;
+  kev.state = ev->mods.base;
+  kev.type = ev->evtype;
+
+  XSendEvent (kev.display, kev.root, True, KeyPressMask, (XEvent*) &kev);
+  XFlush (kev.display);
+}
+
+static gboolean
+event_matches_keybinding (guint32 modifiers, KeySym key, KeyBinding *kb)
+{
+  if (modifiers == kb->modifiers && key != NoSymbol)
+    {
+      if (key == kb->key || key == kb->fallback)
+        {
+          return TRUE;
+        }
+    }
+
+  return FALSE;
+}
+
 static GdkFilterReturn
 event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
 {
@@ -365,41 +398,65 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
   GdkFilterReturn ret = GDK_FILTER_CONTINUE;
 
   if (!PANEL_IS_SERVICE (self))
-  {
-    g_warning ("%s: Invalid PanelService instance", G_STRLOC);
-    return ret;
-  }
+    {
+      g_warning ("%s: Invalid PanelService instance", G_STRLOC);
+      return ret;
+    }
 
   if (!GTK_IS_WIDGET (self->priv->last_menu))
     return ret;
 
   /* Use XI2 to read the event data */
   XGenericEventCookie *cookie = &e->xcookie;
-  if (cookie->type == GenericEvent)
-    {
-      XIDeviceEvent *event = cookie->data;
-      if (!event)
-        return ret;
+  if (cookie->type != GenericEvent)
+    return ret;
 
-      if (event->evtype == XI_KeyPress)
+  XIDeviceEvent *event = cookie->data;
+  if (!event)
+    return ret;
+
+  switch (event->evtype)
+    {
+      case XI_KeyPress:
         {
-          if (event->mods.base == priv->toggle_modifiers && event->detail == priv->toggle_key)
-          {
-            if (GTK_IS_MENU (priv->last_menu))
-              gtk_menu_popdown (GTK_MENU (priv->last_menu));
-          }
+          KeySym keysym = XkbKeycodeToKeysym (event->display, event->detail, 0, 0);
+
+          if (event_matches_keybinding (event->mods.base, keysym, &priv->menu_toggle) ||
+              event_matches_keybinding (event->mods.base, keysym, &priv->show_dash) ||
+              event_matches_keybinding (event->mods.base, keysym, &priv->show_hud))
+            {
+              if (GTK_IS_MENU (priv->last_menu))
+                gtk_menu_popdown (GTK_MENU (priv->last_menu));
+
+              ret = GDK_FILTER_REMOVE;
+            }
+          else if (event->mods.base != GDK_CONTROL_MASK)
+            {
+              if (!IsModifierKey (keysym) && (event->mods.base != 0 || keysym == XK_Print))
+                {
+                  if (GTK_IS_MENU (priv->last_menu))
+                    gtk_menu_popdown (GTK_MENU (priv->last_menu));
+
+                  reinject_key_event_to_root_window (event);
+                  ret = GDK_FILTER_REMOVE;
+                }
+            }
+
+          break;
         }
 
-      if (event->evtype == XI_ButtonPress)
+      case XI_ButtonPress:
         {
           priv->pressed_entry = get_entry_at (self, event->root_x, event->root_y);
           priv->use_event = (priv->pressed_entry == NULL);
 
           if (priv->pressed_entry)
             ret = GDK_FILTER_REMOVE;
+
+          break;
         }
 
-      if (event->evtype == XI_ButtonRelease)
+      case XI_ButtonRelease:
         {
           IndicatorObjectEntry *entry;
           gboolean event_is_a_click = FALSE;
@@ -469,6 +526,8 @@ event_filter (GdkXEvent *ev, GdkEvent *gev, PanelService *self)
               ret = GDK_FILTER_REMOVE;
               g_free (entry_id);
             }
+
+          break;
         }
     }
 
@@ -497,20 +556,28 @@ ready_signal (PanelService *self)
 }
 
 static void
-panel_service_update_menu_keybinding (PanelService *self)
+update_keybinding (GSettings *settings, const gchar *key, gpointer data)
 {
-  gchar *binding = g_settings_get_string (self->priv->gsettings, MENU_TOGGLE_KEYBINDING_KEY);
+  KeyBinding *kb = data;
+  gchar *binding = g_settings_get_string (settings, key);
+  parse_string_keybinding (binding, kb);
+  g_free (binding);
+}
 
-  KeyCode keycode = 0;
-  KeySym keysym = NoSymbol;
-  guint32 modifiers = 0;
+void
+parse_string_keybinding (const char *str, KeyBinding *kb)
+{
+  kb->key = NoSymbol;
+  kb->fallback = NoSymbol;
+  kb->modifiers = 0;
 
+  gchar *binding = g_strdup (str);
   gchar *keystart = (binding) ? strrchr (binding, '>') : NULL;
 
   if (!keystart)
     keystart = binding;
 
-  while (keystart && !g_ascii_isalnum (*keystart))
+  while (keystart && *keystart != '\0' && !g_ascii_isalnum (*keystart))
     keystart++;
 
   gchar *keyend = keystart;
@@ -519,48 +586,60 @@ panel_service_update_menu_keybinding (PanelService *self)
     keyend++;
 
   if (keystart != keyend)
-  {
-    gchar *keystr = g_strndup (keystart, keyend-keystart);
-    keysym = XStringToKeysym (keystr);
-    g_free (keystr);
-  }
-
-  if (keysym != NoSymbol)
     {
-      Display *dpy = GDK_DISPLAY_XDISPLAY (gdk_display_get_default ());
-      keycode = XKeysymToKeycode(dpy, keysym);
+      gchar *keystr = g_strndup (keystart, keyend-keystart);
+      kb->key = XStringToKeysym (keystr);
+      g_free (keystr);
+    }
+  else
+    {
+      /* Parsing the case where we only have meta-keys */
+      keyend = (binding) ? strrchr (binding, '>') : NULL;
+      keyend = keyend ? keyend - 1 : NULL;
+      keystart = keyend;
 
-      if (g_strrstr (binding, "<Shift>"))
+      while (keystart && keystart > binding && g_ascii_isalnum (*keystart))
+        keystart--;
+
+      if (keystart != keyend)
         {
-          modifiers |= GDK_SHIFT_MASK;
-        }
-      if (g_strrstr (binding, "<Control>") || g_strrstr (binding, "<Primary>"))
-        {
-          modifiers |= GDK_CONTROL_MASK;
-        }
-      if (g_strrstr (binding, "<Alt>") || g_strrstr (binding, "<Mod1>"))
-        {
-          modifiers |= GDK_MOD1_MASK;
-        }
-      if (g_strrstr (binding, "<Super>"))
-        {
-          modifiers |= GDK_SUPER_MASK;
+          gchar *keystr = g_strndup (keystart+1, keyend-keystart);
+          gchar *left = g_strconcat (keystr, "_L", NULL);
+          kb->key = XStringToKeysym (left);
+
+          gchar *right = g_strconcat (keystr, "_R", NULL);
+          kb->fallback = XStringToKeysym (right);
+          g_free (left);
+          g_free (right);
+          g_free (keystr);
+
+          keystr = g_strndup (binding, keystart-binding);
+          g_free (binding);
+          binding = keystr;
         }
     }
 
-  self->priv->toggle_key = keycode;
-  self->priv->toggle_modifiers = modifiers;
+  if (kb->key != NoSymbol)
+    {
+      if (g_strrstr (binding, "<Shift>"))
+        {
+          kb->modifiers |= ShiftMask;
+        }
+      if (g_strrstr (binding, "<Control>") || g_strrstr (binding, "<Primary>"))
+        {
+          kb->modifiers |= ControlMask;
+        }
+      if (g_strrstr (binding, "<Alt>") || g_strrstr (binding, "<Mod1>"))
+        {
+          kb->modifiers |= AltMask;
+        }
+      if (g_strrstr (binding, "<Super>"))
+        {
+          kb->modifiers |= SuperMask;
+        }
+    }
 
   g_free (binding);
-}
-
-static void
-on_keybinding_changed (GSettings *settings, gchar *key, gpointer data)
-{
-  g_return_if_fail (PANEL_IS_SERVICE (data));
-  PanelService *self = data;
-
-  panel_service_update_menu_keybinding (self);
 }
 
 static void
@@ -582,15 +661,20 @@ panel_service_init (PanelService *self)
 
   priv->gsettings = g_settings_new_with_path (COMPIZ_OPTION_SCHEMA, COMPIZ_OPTION_PATH);
   g_signal_connect (priv->gsettings, "changed::"MENU_TOGGLE_KEYBINDING_KEY,
-                    G_CALLBACK (on_keybinding_changed), self);
+                    G_CALLBACK (update_keybinding), &priv->menu_toggle);
+  g_signal_connect (priv->gsettings, "changed::"SHOW_DASH_KEY,
+                    G_CALLBACK (update_keybinding), &priv->show_dash);
+  g_signal_connect (priv->gsettings, "changed::"SHOW_HUD_KEY,
+                    G_CALLBACK (update_keybinding), &priv->show_hud);
 
-  panel_service_update_menu_keybinding (self);
+  update_keybinding (priv->gsettings, MENU_TOGGLE_KEYBINDING_KEY, &priv->menu_toggle);
+  update_keybinding (priv->gsettings, SHOW_DASH_KEY, &priv->show_dash);
+  update_keybinding (priv->gsettings, SHOW_HUD_KEY, &priv->show_hud);
 
-  const gchar * upstartsession = g_getenv ("UPSTART_SESSION");
+  const gchar *upstartsession = g_getenv ("UPSTART_SESSION");
   if (upstartsession != NULL)
     {
-      DBusConnection * conn = NULL;
-      conn = dbus_connection_open (upstartsession, NULL);
+      DBusConnection *conn = dbus_connection_open (upstartsession, NULL);
       if (conn != NULL)
         {
           priv->upstart = nih_dbus_proxy_new (NULL, conn,
@@ -603,7 +687,6 @@ panel_service_init (PanelService *self)
 
   if (priv->upstart != NULL)
     priv->upstart->auto_start = FALSE;
-
 }
 
 static gboolean
@@ -1040,11 +1123,13 @@ on_indicator_menu_show (IndicatorObject      *object,
                         PanelService         *self)
 {
   gchar *entry_id;
-
   g_return_if_fail (PANEL_IS_SERVICE (self));
-  if (entry == NULL)
+
+  if (!entry)
     {
-      g_warning ("on_indicator_menu_show() called with a NULL entry");
+      if (GTK_IS_MENU (self->priv->last_menu))
+        gtk_menu_popdown (GTK_MENU (self->priv->last_menu));
+
       return;
     }
 
@@ -1060,11 +1145,11 @@ on_indicator_menu_show_now_changed (IndicatorObject      *object,
                                     PanelService         *self)
 {
   gchar *entry_id;
-
   g_return_if_fail (PANEL_IS_SERVICE (self));
-  if (entry == NULL)
+
+  if (!entry)
     {
-      g_warning ("on_indicator_menu_show_now_changed() called with a NULL entry");
+      g_warning ("%s called with a NULL entry", G_STRFUNC);
       return;
     }
 
@@ -1443,12 +1528,7 @@ on_active_menu_hidden (GtkMenu *menu, PanelService *self)
   priv->last_y = 0;
   priv->last_menu_button = 0;
 
-  g_signal_handler_disconnect (priv->last_menu, priv->last_menu_id);
-  g_signal_handler_disconnect (priv->last_menu, priv->last_menu_move_id);
-
   priv->last_menu = NULL;
-  priv->last_menu_id = 0;
-  priv->last_menu_move_id = 0;
   priv->last_entry = NULL;
   priv->last_left = 0;
   priv->last_right = 0;
@@ -1857,13 +1937,10 @@ panel_service_show_entry_common (PanelService *self,
       priv->last_x = 0;
       priv->last_y = 0;
 
-      g_signal_handler_disconnect (priv->last_menu, priv->last_menu_id);
-      g_signal_handler_disconnect (priv->last_menu, priv->last_menu_move_id);
+      g_signal_handlers_disconnect_by_data (priv->last_menu, self);
 
       priv->last_entry = NULL;
       priv->last_menu = NULL;
-      priv->last_menu_id = 0;
-      priv->last_menu_move_id = 0;
       priv->last_menu_button = 0;
     }
 
@@ -1905,10 +1982,9 @@ panel_service_show_entry_common (PanelService *self,
       priv->last_x = x;
       priv->last_y = y;
       priv->last_menu_button = button;
-      priv->last_menu_id = g_signal_connect (priv->last_menu, "hide",
-                                             G_CALLBACK (on_active_menu_hidden), self);
-      priv->last_menu_move_id = g_signal_connect_after (priv->last_menu, "move-current",
-                                                        G_CALLBACK (on_active_menu_move_current), self);
+      g_signal_connect (priv->last_menu, "hide", G_CALLBACK (on_active_menu_hidden), self);
+      g_signal_connect_after (priv->last_menu, "move-current",
+                              G_CALLBACK (on_active_menu_move_current), self);
 
       gtk_menu_popup (priv->last_menu, NULL, NULL, positon_menu, self, 0, CurrentTime);
       gtk_menu_reposition (priv->last_menu);

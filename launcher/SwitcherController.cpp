@@ -471,10 +471,10 @@ void Controller::Impl::ConstructView()
         ResetDetailTimer(obj_->detail_timeout_length);
   });
 
-  view_->switcher_next.connect(sigc::mem_fun(this, &Controller::Impl::Next));
-  view_->switcher_prev.connect(sigc::mem_fun(this, &Controller::Impl::Prev));
-  view_->switcher_start_detail.connect(sigc::mem_fun(this, &Controller::Impl::StartDetailMode));
-  view_->switcher_stop_detail.connect(sigc::mem_fun(this, &Controller::Impl::StopDetailMode));
+  view_->switcher_next.connect(sigc::mem_fun(this, &Impl::Next));
+  view_->switcher_prev.connect(sigc::mem_fun(this, &Impl::Prev));
+  view_->switcher_start_detail.connect(sigc::mem_fun(this, &Impl::StartDetailMode));
+  view_->switcher_stop_detail.connect(sigc::mem_fun(this, &Impl::StopDetailMode));
 
   ConstructWindow();
   main_layout_->AddView(view_.GetPointer(), 1);

@@ -36,8 +36,8 @@ class SpreadTests(UnityTestCase):
 
     def initiate_spread_for_screen(self):
         """Initiate the Spread for all windows"""
-        self.addCleanup(self.keybinding, "spread/cancel")
-        self.keybinding("spread/start")
+        self.addCleanup(self.unity.window_manager.terminate_spread)
+        self.unity.window_manager.initiate_spread()
         self.assertThat(self.unity.window_manager.scale_active, Eventually(Equals(True)))
 
     def initiate_spread_for_application(self, desktop_id):
@@ -46,7 +46,7 @@ class SpreadTests(UnityTestCase):
         self.assertThat(icon, NotEquals(None))
         launcher = self.unity.launcher.get_launcher_for_monitor(self.display.get_primary_screen())
 
-        self.addCleanup(self.keybinding, "spread/cancel")
+        self.addCleanup(self.unity.window_manager.terminate_spread)
         launcher.click_launcher_icon(icon)
         self.assertThat(self.unity.window_manager.scale_active_for_group, Eventually(Equals(True)))
 

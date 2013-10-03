@@ -76,17 +76,17 @@ public:
   int DetailIconIdexAt(int x, int y) const;
 
   /* void; int icon_index, int button*/
-  sigc::signal<void, int, int>  switcher_mouse_down;
-  sigc::signal<void, int, int>  switcher_mouse_up;
+  sigc::signal<void, int, int> switcher_mouse_down;
+  sigc::signal<void, int, int> switcher_mouse_up;
 
   /* void; int icon_index */
-  sigc::signal<void, int>  switcher_mouse_move;
+  sigc::signal<void, int> switcher_mouse_move;
 
   /* void; */
-  sigc::signal<void>  switcher_next;
-  sigc::signal<void>  switcher_prev;
-  sigc::signal<void>  switcher_start_detail;
-  sigc::signal<void>  switcher_stop_detail;
+  sigc::signal<void> switcher_next;
+  sigc::signal<void> switcher_prev;
+  sigc::signal<void> switcher_start_detail;
+  sigc::signal<void> switcher_stop_detail;
 
   /* void; bool visible */
   sigc::signal<void, bool> hide_request;
