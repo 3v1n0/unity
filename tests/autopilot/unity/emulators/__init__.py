@@ -22,7 +22,7 @@ class UnityIntrospectionObject(CustomEmulatorBase):
     DBUS_SERVICE = "com.canonical.Unity"
     DBUS_OBJECT = "/com/canonical/Unity/Debug"
 
-    _Backend = DBusAddress.SessionBus(DBUS_SERVICE, DBUS_OBJECT)
+    _known_unity_dbus = DBusAddress.SessionBus(DBUS_SERVICE, DBUS_OBJECT)
 
 
 def ensure_unity_is_running(timeout=300):
@@ -39,7 +39,7 @@ def ensure_unity_is_running(timeout=300):
     sleep_period=10
     for i in range(0, timeout, sleep_period):
         try:
-            UnityIntrospectionObject.get_state_by_path("/")
+            UnityIntrospectionObject._known_unity_dbus.introspection_iface.GetState("/")
             return True
         except DBusException:
             sleep(sleep_period)
