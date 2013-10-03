@@ -324,10 +324,10 @@ QuicklistView::EnableQuicklistForTesting(bool enable_testing)
   _enable_quicklist_for_testing = enable_testing;
 }
 
-void QuicklistView::ShowQuicklistWithTipAt(int anchor_tip_x, int anchor_tip_y)
+void QuicklistView::SetQuicklistPosition(int tip_x, int tip_y)
 {
-  _anchorX = anchor_tip_x;
-  _anchorY = anchor_tip_y;
+  _anchorX = tip_x;
+  _anchorY = tip_y;
 
   if (!_enable_quicklist_for_testing)
   {
@@ -356,12 +356,12 @@ void QuicklistView::ShowQuicklistWithTipAt(int anchor_tip_x, int anchor_tip_y)
       SetBaseXY(x, y);
     }
   }
-  Show();
 }
 
-void QuicklistView::ShowWindow(bool b, bool start_modal)
+void QuicklistView::ShowQuicklistWithTipAt(int x, int y)
 {
-  unity::CairoBaseWindow::ShowWindow(b, start_modal);
+  SetQuicklistPosition(x, y);
+  Show();
 }
 
 void QuicklistView::Show()
