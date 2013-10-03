@@ -274,18 +274,15 @@ void LauncherIcon::ColorForIcon(GdkPixbuf* pixbuf, nux::Color& background, nux::
 /* static */
 bool LauncherIcon::IsMonoDefaultTheme()
 {
-
   if (_current_theme_is_mono != -1)
     return (bool)_current_theme_is_mono;
 
   GtkIconTheme* default_theme;
   gtk::IconInfo info;
-  int size = 48;
-
   default_theme = gtk_icon_theme_get_default();
 
   _current_theme_is_mono = (int)false;
-  info = gtk_icon_theme_lookup_icon(default_theme, MONO_TEST_ICON.c_str(), size, (GtkIconLookupFlags)0);
+  info = gtk_icon_theme_lookup_icon(default_theme, MONO_TEST_ICON.c_str(), icon_size(), (GtkIconLookupFlags)0);
 
   if (!info)
     return (bool)_current_theme_is_mono;
@@ -456,8 +453,7 @@ guint64 LauncherIcon::GetShortcut()
 
 nux::Point LauncherIcon::GetTipPosition() const
 {
-  nux::Geometry const& geo = _parent_geo[_last_monitor];
-  return nux::Point(geo.x + geo.width - 4 * geo.width / 48, _center[_last_monitor].y);
+  return nux::Point(_center[_last_monitor].x + icon_size()/2 + 1, _center[_last_monitor].y);
 }
 
 void LauncherIcon::ShowTooltip()
