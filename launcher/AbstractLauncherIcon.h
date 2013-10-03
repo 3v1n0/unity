@@ -135,6 +135,7 @@ public:
 
   virtual ~AbstractLauncherIcon() = default;
 
+  static nux::Property<unsigned> icon_size;
   nux::Property<std::string> tooltip_text;
   nux::Property<bool> tooltip_enabled;
   nux::Property<Position> position;
