@@ -65,7 +65,7 @@ Controller::Controller(Controller::ViewCreator const& create_view,
   // As a default. the create_window_ function should just create a base window.
   if (create_window_ == nullptr)
   {
-    create_window_ = [&]() {
+    create_window_ = [this]() {
       return new ResizingBaseWindow("Hud",
                                     [this](nux::Geometry const& geo) {
                                       if (view_)
@@ -76,14 +76,14 @@ Controller::Controller(Controller::ViewCreator const& create_view,
   }
 
   SetupWindow();
-  UScreen::GetDefault()->changed.connect([&] (int, std::vector<nux::Geometry>&) { Relayout(true); });
+  UScreen::GetDefault()->changed.connect([this] (int, std::vector<nux::Geometry>&) { Relayout(true); });
 
   ubus.RegisterInterest(UBUS_HUD_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
 
   //!!FIXME!! - just hijacks the dash close request so we get some more requests than normal,
   ubus.RegisterInterest(UBUS_OVERLAY_CLOSE_REQUEST, sigc::mem_fun(this, &Controller::OnExternalHideHud));
 
-  ubus.RegisterInterest(UBUS_OVERLAY_SHOWN, [&] (GVariant *data) {
+  ubus.RegisterInterest(UBUS_OVERLAY_SHOWN, [this] (GVariant *data) {
     unity::glib::String overlay_identity;
     gboolean can_maximise = FALSE;
     gint32 overlay_monitor = 0;
@@ -92,15 +92,15 @@ Controller::Controller(Controller::ViewCreator const& create_view,
 
     if (overlay_identity.Str() != "hud")
     {
-      HideHud(true);
+      HideHud();
     }
   });
 
-  launcher_width.changed.connect([&] (int new_width) { Relayout(); });
+  launcher_width.changed.connect([this] (int) { Relayout(); });
 
   WindowManager& wm = WindowManager::Default();
   wm.screen_ungrabbed.connect(sigc::mem_fun(this, &Controller::OnScreenUngrabbed));
-  wm.initiate_spread.connect(sigc::bind(sigc::mem_fun(this, &Controller::HideHud), true));
+  wm.initiate_spread.connect(sigc::mem_fun(this, &Controller::HideHud));
 
   hud_service_.queries_updated.connect(sigc::mem_fun(this, &Controller::OnQueriesFinished));
   timeline_animator_.updated.connect(sigc::mem_fun(this, &Controller::OnViewShowHideFrame));
@@ -290,21 +290,13 @@ void Controller::OnExternalHideHud(GVariant* variant)
 {
   LOG_DEBUG(logger) << "External Hiding the hud";
   EnsureHud();
-
-  if (variant)
-  {
-    HideHud(g_variant_get_boolean(variant));
-  }
-  else
-  {
-    HideHud();
-  }
+  HideHud();
 }
 
 void Controller::ShowHideHud()
 {
   EnsureHud();
-  visible_ ? HideHud(true) : ShowHud();
+  visible_ ? HideHud() : ShowHud();
 }
 
 void Controller::ReFocusKeyInput()
@@ -400,7 +392,7 @@ void Controller::FocusWindow()
   window_->QueueDraw();
 }
 
-void Controller::HideHud(bool restore)
+void Controller::HideHud()
 {
   LOG_DEBUG (logger) << "hiding the hud";
   if (visible_ == false)
@@ -413,14 +405,9 @@ void Controller::HideHud(bool restore)
   window_->EnableInputWindow(false, "Hud", true, false);
   visible_ = false;
 
-  nux::GetWindowCompositor().SetKeyFocusArea(NULL,nux::KEY_NAV_NONE);
-
+  WindowManager::Default().RestoreInputFocus();
+  nux::GetWindowCompositor().SetKeyFocusArea(NULL, nux::KEY_NAV_NONE);
   StartShowHideTimeline();
-
-  restore = true;
-  if (restore)
-    WindowManager::Default().RestoreInputFocus();
-
   hud_service_.CloseQuery();
 
   //unhide the launcher

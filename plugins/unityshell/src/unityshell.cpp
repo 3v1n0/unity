@@ -1514,7 +1514,7 @@ void UnityScreen::handleEvent(XEvent* event)
           }
           else
           {
-            dash_controller_->HideDash(false);
+            dash_controller_->HideDash();
           }
         }
       }
@@ -1529,7 +1529,7 @@ void UnityScreen::handleEvent(XEvent* event)
 
         if (!hud_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt) && !on_top_geo.IsInside(pt))
         {
-          hud_controller_->HideHud(false);
+          hud_controller_->HideHud();
         }
       }
       else if (switcher_controller_->Visible())
