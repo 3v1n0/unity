@@ -74,7 +74,7 @@ public:
   bool OpenQuicklist(bool select_first_item = false, int monitor = -1);
   void CloseQuicklist();
 
-  void SetCenter(nux::Point3 const& center, int parent_monitor, nux::Geometry const& parent_geo);
+  void SetCenter(nux::Point3 const& center, int parent_monitor);
 
   nux::Point3 GetCenter(int monitor);
 
@@ -318,7 +318,6 @@ private:
   std::vector<bool> _has_visible_window;
   std::vector<bool> _is_visible_on_monitor;
   std::vector<nux::Point3> _last_stable;
-  std::vector<nux::Geometry> _parent_geo;
   std::vector<nux::Point3> _saved_center;
 
   static glib::Object<GtkIconTheme> _unity_theme;

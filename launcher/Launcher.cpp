@@ -876,12 +876,12 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr const& icon,
   arg.render_center = nux::Point3(roundf(center.x + icon_hide_offset), roundf(center.y + centerOffset.y), roundf(center.z));
   arg.logical_center = nux::Point3(roundf(center.x + icon_hide_offset), roundf(center.y), roundf(center.z));
 
-  icon->SetCenter(nux::Point3(roundf(center.x), roundf(center.y), roundf(center.z)), monitor, parent_abs_geo);
+  nux::Point3 icon_center(parent_abs_geo.x + roundf(center.x), parent_abs_geo.y + roundf(center.y), roundf(center.z));
+  icon->SetCenter(icon_center, monitor);
 
   // FIXME: this is a hack, to avoid that we set the target to the end of the icon
   if (!initial_drag_animation_ && icon == drag_icon_ && drag_window_ && drag_window_->Animating())
   {
-    auto const& icon_center = drag_icon_->GetCenter(monitor);
     drag_window_->SetAnimationTarget(icon_center.x, icon_center.y);
   }
 

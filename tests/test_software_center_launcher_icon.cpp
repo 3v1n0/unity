@@ -226,7 +226,7 @@ TEST_P(/*TestSoftwareCenterLauncherIcon*/MultiMonitor, Animate)
 {
   auto launcher = CreateLauncher();
   launcher->monitor = GetParam();
-  icon.SetCenter({1, 1, 0}, launcher->monitor(), nux::Geometry());
+  icon.SetCenter({1, 1, 0}, launcher->monitor());
   EXPECT_TRUE(icon.Animate(launcher, 2, 2));
   EXPECT_TRUE(icon.IsVisible());
   EXPECT_EQ("", icon.icon_name());
