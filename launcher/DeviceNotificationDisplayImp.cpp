@@ -32,6 +32,11 @@ namespace unity
 namespace launcher
 {
 
+namespace
+{
+const unsigned icon_size = 48;
+}
+
 //
 // Start private implementation
 //
@@ -40,7 +45,6 @@ class DeviceNotificationDisplayImp::Impl
 public:
   void Show(std::string const& icon_name, std::string const& volume_name)
   {
-    int icon_size = 48;
     IconLoader::GetDefault().LoadFromGIconString(icon_name, -1, icon_size,
                                                  sigc::bind(sigc::mem_fun(this, &Impl::ShowNotificationWhenIconIsReady), volume_name));
   }

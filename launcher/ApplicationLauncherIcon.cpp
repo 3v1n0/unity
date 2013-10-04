@@ -1074,11 +1074,7 @@ void ApplicationLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> cent
   if (app_->type() == "webapp")
     return;
 
-  nux::Geometry geo;
-
-  // TODO: replace 48 with icon_size;
-  geo.width = 48;
-  geo.height = 48;
+  nux::Geometry geo(0, 0, icon_size, icon_size);
 
   for (auto& window : app_->GetWindows())
   {
@@ -1086,9 +1082,8 @@ void ApplicationLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> cent
     int monitor = window->monitor();
     monitor = std::max<int>(0, std::min<int>(center.size() - 1, monitor));
 
-    // TODO: replace 24 with icon_size / 2;
-    geo.x = center[monitor].x - 24;
-    geo.y = center[monitor].y - 24;
+    geo.x = center[monitor].x - icon_size / 2;
+    geo.y = center[monitor].y - icon_size / 2;
     WindowManager::Default().SetWindowIconGeometry(xid, geo);
   }
 }

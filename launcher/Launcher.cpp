@@ -876,12 +876,12 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr const& icon,
   arg.render_center = nux::Point3(roundf(center.x + icon_hide_offset), roundf(center.y + centerOffset.y), roundf(center.z));
   arg.logical_center = nux::Point3(roundf(center.x + icon_hide_offset), roundf(center.y), roundf(center.z));
 
-  icon->SetCenter(nux::Point3(roundf(center.x), roundf(center.y), roundf(center.z)), monitor, parent_abs_geo);
+  nux::Point3 icon_center(parent_abs_geo.x + roundf(center.x), parent_abs_geo.y + roundf(center.y), roundf(center.z));
+  icon->SetCenter(icon_center, monitor);
 
   // FIXME: this is a hack, to avoid that we set the target to the end of the icon
   if (!initial_drag_animation_ && icon == drag_icon_ && drag_window_ && drag_window_->Animating())
   {
-    auto const& icon_center = drag_icon_->GetCenter(monitor);
     drag_window_->SetAnimationTarget(icon_center.x, icon_center.y);
   }
 
@@ -897,9 +897,9 @@ float Launcher::DragLimiter(float x)
   return -result;
 }
 
-nux::Color FullySaturateColor (nux::Color color)
+nux::Color FullySaturateColor(nux::Color color)
 {
-  float max = std::max<float>(color.red, std::max<float>(color.green, color.blue));
+  float max = std::max<float>({color.red, color.green, color.blue});
 
   if (max > 0.0f)
     color = color * (1.0f / max);
@@ -1608,6 +1608,7 @@ void Launcher::SetIconSize(int tile_size, int icon_size)
 
   icon_size_ = tile_size;
   icon_renderer_->SetTargetSize(icon_size_, icon_size, SPACE_BETWEEN_ICONS);
+  AbstractLauncherIcon::icon_size = icon_size_;
 
   nux::Geometry const& parent_geo = parent_->GetGeometry();
   Resize(nux::Point(parent_geo.x, parent_geo.y), parent_geo.height);

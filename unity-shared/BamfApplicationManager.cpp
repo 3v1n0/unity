@@ -22,6 +22,7 @@
 
 #include <NuxCore/Logger.h>
 #include <NuxGraphics/XInputWindow.h>
+#include <UnityCore/DesktopUtilities.h>
 
 
 DECLARE_LOGGER(logger, "unity.appmanager.desktop.bamf");
@@ -552,7 +553,7 @@ ApplicationPtr Manager::GetUnityApplication() const
     }
   }
 
-  return nullptr;
+  return GetApplicationForDesktopFile(DesktopUtilities::GetDesktopPathById("compiz.desktop"));
 }
 
 ApplicationWindowPtr Manager::GetActiveWindow() const

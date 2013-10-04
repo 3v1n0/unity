@@ -160,7 +160,7 @@ public:
     for (unsigned i = 0; i < number; ++i)
     {
       MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon);
-      icon->SetCenter(nux::Point3(icon_size/2.0f, icon_size/2.0f * (i+1) + 1, 0), monitor, launcher_geo);
+      icon->SetCenter(nux::Point3(launcher_geo.x + icon_size/2.0f, launcher_geo.y + icon_size/2.0f * (i+1) + 1, 0), monitor);
 
       icons.push_back(icon);
       model_->AddIcon(icon);
@@ -391,8 +391,8 @@ TEST_F(TestLauncher, DragLauncherIconSavesIconOrderIfPositionHasNotChanged)
   launcher_->UpdateDragWindowPosition(center3.x, center3.y);
 
   // Swapping the centers
-  icon3->SetCenter(icon2->GetCenter(launcher_->monitor()), launcher_->monitor(), launcher_->GetGeometry());
-  icon2->SetCenter(center3, launcher_->monitor(), launcher_->GetGeometry());
+  icon3->SetCenter(icon2->GetCenter(launcher_->monitor()), launcher_->monitor());
+  icon2->SetCenter(center3, launcher_->monitor());
 
   // Moving icon2 back to the middle
   center3 = icon3->GetCenter(launcher_->monitor());
