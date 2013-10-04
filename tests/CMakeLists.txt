@@ -129,6 +129,7 @@ if (GMOCK_LIB AND
   set (GTEST_XLESS_SOURCES
        test_main_xless.cpp
        mock-application.cpp
+       test_action_handle.cpp
        test_abstract_interface_generator.cpp
        test_animation_utils.cpp
        test_connection_manager.cpp
