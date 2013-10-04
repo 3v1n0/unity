@@ -24,8 +24,6 @@ from unity.tests import UnityTestCase
 
 from gi.repository import GLib
 from gi.repository import IBus
-import os
-from time import sleep
 import time
 import dbus
 import threading
