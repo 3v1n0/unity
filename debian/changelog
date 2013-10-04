@@ -1,3 +1,47 @@
+unity (7.1.1+13.10.20131004-0ubuntu1) saucy; urgency=low
+
+  [ Brandon Schaefer ]
+  * Break the bump detection by moving to the first icon, then down 5
+    pixels. Since bump detection needs to move in 3 different
+    directions.
+  * Move the switcher Alt+<ArrowKey> shortcut handling into nux, from
+    compiz. Now nux handles these events instead of compiz. This way its
+    makes much more sense code wise and we no longer ungrab the arrow
+    gets from X... so Alt+LeftArrow will no longer open the hud. (LP:
+    #969039)
+
+  [ Andrea Azzarone ]
+  * Fix bad redrawing of dash overlay scrollbar connector. (LP:
+    #1233195)
+  * Update icon_under_mouse before process mouse movemnt in the tooltip
+    manager. (LP: #1172769, #1233666)
+  * Hide the tooltip when an app is closed. (LP: #1172769)
+
+  [ Marco Trevisan (Treviño) ]
+  * TestIMTextEntry: fix failing tests with IBus, use TEST_F and TEST_P.
+  * CairoBaseWindow: only regenerate blur texture when visible and
+    damaged. (LP: #1233109)
+  * CairoBaseWindow: add fade animator to control both QL and Tooltip
+    Removing the animator from LauncherIcon, and handling the tooltip
+    animation inside the QL and Tooltip base class.
+  * PanelService: close a menu and re-send the keyevent when handling a
+    combination Or when we try to open HUD/Dash. Also, close the active
+    menu if a new application is opened and focused. (LP: #10905,
+    #1234457, #1197071)
+  * SimpleLauncherIcon: we need to restore the focus when closing the
+    Overlay for activation. (LP: #909870)
+  * LauncherIcon: don't try to show again quicklists or tooltip if
+    center changed, just move them. (LP: #1234778)
+  * AbstractLauncherIcon: add static icon_size property. (LP: #1073103)
+
+  [ Christopher Lee ]
+  * Preparing autopilot tests for an upcoming update in autopilot 1.3.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3554
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 04 Oct 2013 05:23:43 +0000
+
 unity (7.1.1+13.10.20130927.1-0ubuntu1) saucy; urgency=low
 
   [ Michal Hruby ]
