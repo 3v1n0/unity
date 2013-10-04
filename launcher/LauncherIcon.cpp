@@ -661,9 +661,9 @@ LauncherIcon::SetCenter(nux::Point3 const& center, int monitor, nux::Geometry co
     tip_y = new_center.y;
 
     if (_quicklist && _quicklist->IsVisible())
-      QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
+      QuicklistManager::Default()->MoveQuicklist(_quicklist, tip_x, tip_y);
     else if (_tooltip && _tooltip->IsVisible())
-      _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
+      _tooltip->SetTooltipPosition(tip_x, tip_y);
   }
 
   auto const& cb_func = sigc::mem_fun(this, &LauncherIcon::OnCenterStabilizeTimeout);

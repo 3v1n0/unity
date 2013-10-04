@@ -100,15 +100,20 @@ nux::Area* Tooltip::FindAreaUnderMouse(const nux::Point& mouse_position, nux::Nu
   return nullptr;
 }
 
-void Tooltip::ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y)
+void Tooltip::SetTooltipPosition(int tip_x, int tip_y)
 {
-  _anchorX = anchor_tip_x;
-  _anchorY = anchor_tip_y;
+  _anchorX = tip_x;
+  _anchorY = tip_y;
 
   int x = _anchorX - PADDING;
-  int y = anchor_tip_y - ANCHOR_HEIGHT / 2 - TOP_SIZE - CORNER_RADIUS - PADDING;
+  int y = _anchorY - ANCHOR_HEIGHT / 2 - TOP_SIZE - CORNER_RADIUS - PADDING;
 
   SetBaseXY(x, y);
+}
+
+void Tooltip::ShowTooltipWithTipAt(int x, int y)
+{
+  SetTooltipPosition(x, y);
   Show();
 }
 

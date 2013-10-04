@@ -44,7 +44,8 @@ public:
   void Draw(nux::GraphicsEngine& gfxContext, bool forceDraw);
   void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
 
-  void ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y);
+  void SetTooltipPosition(int x, int y);
+  void ShowTooltipWithTipAt(int x, int y);
 
   // Introspection
   std::string GetName() const;
