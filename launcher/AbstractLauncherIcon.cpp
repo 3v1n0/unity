@@ -21,7 +21,7 @@
 
 namespace unity {
 namespace launcher {
-  nux::Property<unsigned> AbstractLauncherIcon::icon_size(0);
+  nux::Property<unsigned> AbstractLauncherIcon::icon_size(48);
 
   // needed for ungodly stupid reasons
   NUX_IMPLEMENT_OBJECT_TYPE(AbstractLauncherIcon);
