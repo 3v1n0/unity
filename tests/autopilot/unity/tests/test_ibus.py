@@ -24,8 +24,6 @@ from unity.tests import UnityTestCase
 
 from gi.repository import GLib
 from gi.repository import IBus
-import os
-from time import sleep
 import time
 import dbus
 import threading
@@ -120,12 +118,6 @@ class IBusTests(UnityTestCase):
         This method adds a cleanUp to reset the old keys once the test is done.
 
         """
-        # FIXME, if im-config is not set to ibus by default, a baad ibus-daemon is start
-        # which doesn't allow ibus to work! Replace it with a useable one for now...
-        os.spawnlp(os.P_NOWAIT, "ibus-daemon", "ibus-daemon", "--replace", "--xim")
-
-        sleep(10)
-
         bus = get_ibus_bus()
         config = bus.get_config()
 
