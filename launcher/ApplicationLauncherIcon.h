@@ -93,7 +93,6 @@ protected:
   nux::DndAction OnQueryAcceptDrop(DndData const& dnd_data);
 
   MenuItemsVector GetMenus();
-  std::set<std::string> ValidateUrisForLaunch(DndData const& dnd_data);
 
   std::string GetRemoteUri() const;
 
