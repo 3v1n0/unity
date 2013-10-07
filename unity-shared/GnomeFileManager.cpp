@@ -222,6 +222,9 @@ void GnomeFileManager::EmptyTrash(uint64_t timestamp)
 
 void GnomeFileManager::CopyFiles(std::set<std::string> const& uris, std::string const& dest, uint64_t timestamp)
 {
+  if (uris.empty() || dest.empty())
+    return;
+
   bool found_valid = false;
   GVariantBuilder b;
   g_variant_builder_init(&b, G_VARIANT_TYPE("(ass)"));
