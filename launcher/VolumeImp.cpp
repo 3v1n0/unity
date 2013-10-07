@@ -35,16 +35,9 @@ namespace launcher
 class VolumeImp::Impl : public sigc::trackable
 {
 public:
-  Impl(glib::Object<GVolume> const& volume,
-       FileManager::Ptr const& file_manager,
-       DeviceNotificationDisplay::Ptr const& device_notification_display,
-       VolumeImp* parent)
+  Impl(glib::Object<GVolume> const& volume, VolumeImp* parent)
     : parent_(parent)
-    , opened_(false)
-    , open_timestamp_(0)
     , volume_(volume)
-    , file_manager_(file_manager)
-    , device_notification_display_(device_notification_display)
   {
     signal_volume_changed_.Connect(volume_, "changed", [this] (GVolume*) {
       parent_->changed.emit();
@@ -53,19 +46,6 @@ public:
     signal_volume_removed_.Connect(volume_, "removed", [this] (GVolume*) {
       parent_->removed.emit();
     });
-
-    file_manager_->locations_changed.connect(sigc::mem_fun(this, &Impl::OnLocationChanged));
-  }
-
-  void OnLocationChanged()
-  {
-    bool opened = file_manager_->IsPrefixOpened(GetUri());
-
-    if (opened_ != opened)
-    {
-      opened_ = opened;
-      parent_->opened.emit(opened_);
-    }
   }
 
   bool CanBeEjected() const
@@ -126,67 +106,29 @@ public:
     return static_cast<bool>(mount);
   }
 
-  bool IsOpened() const
-  {
-    return opened_;
-  }
-
-  void EjectAndShowNotification()
+  void Eject()
   {
     if (!CanBeEjected())
       return;
 
     glib::Object<GMountOperation> mount_op(gtk_mount_operation_new(nullptr));
 
-    g_volume_eject_with_operation(volume_,
-                                  (GMountUnmountFlags)0,
-                                  mount_op,
-                                  cancellable_,
-                                  (GAsyncReadyCallback)OnEjectReady,
-                                  this);
+    g_volume_eject_with_operation(volume_, G_MOUNT_UNMOUNT_NONE, mount_op, cancellable_,
+    [] (GObject* object, GAsyncResult* res, gpointer data) {
+      if (g_volume_eject_with_operation_finish(G_VOLUME(object), res, nullptr))
+        static_cast<Impl*>(data)->parent_->ejected.emit();
+    }, this);
   }
 
-  static void OnEjectReady(GObject* object, GAsyncResult* result, Impl* self)
-  {
-    if (g_volume_eject_with_operation_finish(self->volume_, result, nullptr))
-    {
-      self->device_notification_display_->Display(self->GetIconName(), self->GetName());
-    }
-  }
-
-  void MountAndOpenInFileManager(uint64_t timestamp)
-  {
-    open_timestamp_ = timestamp;
-
-    if (!IsMounted())
-      MountAndOnFinishOpenInFileManager();
-    else
-      OpenInFileManager();
-  }
-
-  void MountAndOnFinishOpenInFileManager()
+  void Mount()
   {
     glib::Object<GMountOperation> mount_op(gtk_mount_operation_new(nullptr));
 
-    g_volume_mount(volume_,
-                   (GMountMountFlags) 0,
-                   mount_op,
-                   cancellable_,
-                   (GAsyncReadyCallback) &Impl::OnMountFinish,
-                   this);
-  }
-
-  static void OnMountFinish(GObject* object,
-                            GAsyncResult* result,
-                            Impl* self)
-  {
-    if (g_volume_mount_finish(self->volume_, result, nullptr))
-      self->OpenInFileManager();
-  }
-
-  void OpenInFileManager()
-  {
-    file_manager_->OpenActiveChild(GetUri(), open_timestamp_);
+    g_volume_mount(volume_, G_MOUNT_MOUNT_NONE, mount_op, cancellable_,
+    [] (GObject* object, GAsyncResult* res, gpointer data) {
+      if (g_volume_mount_finish(G_VOLUME(object), res, nullptr))
+        static_cast<Impl*>(data)->parent_->mounted.emit();
+    }, this);
   }
 
   std::string GetUri() const
@@ -212,10 +154,11 @@ public:
     glib::Object<GDrive> drive(g_volume_get_drive(volume_));
     glib::Object<GMountOperation> mount_op(gtk_mount_operation_new(NULL));
 
-    g_drive_stop(drive,
-                 (GMountUnmountFlags)0,
-                 mount_op,
-                 cancellable_, nullptr, nullptr);
+    g_drive_stop(drive, G_MOUNT_UNMOUNT_NONE, mount_op, cancellable_,
+    [] (GObject* object, GAsyncResult* res, gpointer data) {
+      if (g_drive_stop_finish(G_DRIVE(object), res, nullptr))
+        static_cast<Impl*>(data)->parent_->stopped.emit();
+    }, this);
   }
 
   void Unmount()
@@ -226,22 +169,16 @@ public:
     glib::Object<GMount> mount(g_volume_get_mount(volume_));
     glib::Object<GMountOperation> op(gtk_mount_operation_new(nullptr));
 
-    g_mount_unmount_with_operation(mount, (GMountUnmountFlags) 0, op, cancellable_,
-                                   &VolumeImp::Impl::FinishUmount, nullptr);
-  }
-
-  static void FinishUmount(GObject* object, GAsyncResult* res, gpointer)
-  {
-    g_mount_unmount_with_operation_finish(G_MOUNT(object), res, nullptr);
+    g_mount_unmount_with_operation(mount, G_MOUNT_UNMOUNT_NONE, op, cancellable_,
+    [] (GObject* object, GAsyncResult* res, gpointer data) {
+      if (g_mount_unmount_with_operation_finish(G_MOUNT(object), res, nullptr))
+        static_cast<Impl*>(data)->parent_->unmounted.emit();
+    }, this);
   }
 
   VolumeImp* parent_;
-  bool opened_;
-  uint64_t open_timestamp_;
   glib::Cancellable cancellable_;
   glib::Object<GVolume> volume_;
-  FileManager::Ptr file_manager_;
-  DeviceNotificationDisplay::Ptr device_notification_display_;
 
   glib::Signal<void, GVolume*> signal_volume_changed_;
   glib::Signal<void, GVolume*> signal_volume_removed_;
@@ -251,10 +188,8 @@ public:
 // End private implementation
 //
 
-VolumeImp::VolumeImp(glib::Object<GVolume> const& volume,
-                     FileManager::Ptr const& file_manager,
-                     DeviceNotificationDisplay::Ptr const& device_notification_display)
-  : pimpl(new Impl(volume, file_manager, device_notification_display, this))
+VolumeImp::VolumeImp(glib::Object<GVolume> const& volume)
+  : pimpl(new Impl(volume, this))
 {}
 
 VolumeImp::~VolumeImp()
@@ -290,6 +225,11 @@ std::string VolumeImp::GetIdentifier() const
   return pimpl->GetIdentifier();
 }
 
+std::string VolumeImp::GetUri() const
+{
+  return pimpl->GetUri();
+}
+
 bool VolumeImp::HasSiblings() const
 {
   return pimpl->HasSiblings();
@@ -300,19 +240,14 @@ bool VolumeImp::IsMounted() const
   return pimpl->IsMounted();
 }
 
-bool VolumeImp::IsOpened() const
+void VolumeImp::Mount()
 {
-  return pimpl->IsOpened();
+  pimpl->Mount();
 }
 
-void VolumeImp::MountAndOpenInFileManager(uint64_t timestamp)
+void VolumeImp::Eject()
 {
-  pimpl->MountAndOpenInFileManager(timestamp);
-}
-
-void VolumeImp::EjectAndShowNotification()
-{
-  pimpl->EjectAndShowNotification();
+  pimpl->Eject();
 }
 
 void VolumeImp::StopDrive()

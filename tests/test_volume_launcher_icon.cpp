@@ -25,6 +25,7 @@ using namespace testing;
 #include "FavoriteStore.h"
 #include "test_utils.h"
 #include "test_mock_devices.h"
+#include "test_mock_filemanager.h"
 using namespace unity;
 using namespace unity::launcher;
 
@@ -33,18 +34,19 @@ namespace
 
 struct TestVolumeLauncherIcon : public Test
 {
-  virtual void SetUp()
+  TestVolumeLauncherIcon()
+    : volume_(std::make_shared<MockVolume::Nice>())
+    , settings_(std::make_shared<MockDevicesSettings::Nice>())
+    , notifications_(std::make_shared<MockDeviceNotificationDisplay::Nice>())
+    , file_manager_(std::make_shared<MockFileManager::Nice>())
   {
-    volume_.reset(new NiceMock<MockVolume>);
-    settings_.reset(new NiceMock<MockDevicesSettings>);
-
     SetupVolumeDefaultBehavior();
     SetupSettingsDefaultBehavior();
   }
 
   void CreateIcon()
   {
-    icon_ = new NiceMock<VolumeLauncherIcon>(volume_, settings_);
+    icon_ = new NiceMock<VolumeLauncherIcon>(volume_, settings_, notifications_, file_manager_);
   }
 
   void SetupSettingsDefaultBehavior()
@@ -59,10 +61,14 @@ struct TestVolumeLauncherIcon : public Test
     ON_CALL(*volume_, GetName()).WillByDefault(Return("Test Name"));
     ON_CALL(*volume_, GetIconName()).WillByDefault(Return("Test Icon Name"));
     ON_CALL(*volume_, GetIdentifier()).WillByDefault(Return("Test Identifier"));
+    ON_CALL(*volume_, GetUri()).WillByDefault(Return("file:///media/user/device_uri"));
     ON_CALL(*volume_, HasSiblings()).WillByDefault(Return(false));
     ON_CALL(*volume_, CanBeEjected()).WillByDefault(Return(false));
     ON_CALL(*volume_, IsMounted()).WillByDefault(Return(true));
-    ON_CALL(*volume_, IsOpened()) .WillByDefault(Return(true));
+    ON_CALL(*volume_, Mount()).WillByDefault(Invoke([this] { volume_->mounted.emit(); }));
+    ON_CALL(*volume_, Unmount()).WillByDefault(Invoke([this] { volume_->unmounted.emit(); }));
+    ON_CALL(*volume_, Eject()).WillByDefault(Invoke([this] { volume_->ejected.emit(); }));
+    ON_CALL(*volume_, StopDrive()).WillByDefault(Invoke([this] { volume_->stopped.emit(); }));
   }
 
   glib::Object<DbusmenuMenuitem> GetMenuItemAtIndex(int index)
@@ -76,6 +82,8 @@ struct TestVolumeLauncherIcon : public Test
 
   MockVolume::Ptr volume_;
   MockDevicesSettings::Ptr settings_;
+  MockDeviceNotificationDisplay::Ptr notifications_;
+  MockFileManager::Ptr file_manager_;
   VolumeLauncherIcon::Ptr icon_;
   std::string old_lang_;
 };
@@ -86,26 +94,47 @@ TEST_F(TestVolumeLauncherIcon, TestIconType)
   EXPECT_EQ(icon_->GetIconType(), AbstractLauncherIcon::IconType::DEVICE);
 }
 
-TEST_F(TestVolumeLauncherIcon, TestQuirks)
+TEST_F(TestVolumeLauncherIcon, TestRunningOnClosed)
 {
+  ON_CALL(*file_manager_, IsPrefixOpened(volume_->GetUri())).WillByDefault(Return(false));
   CreateIcon();
 
-  EXPECT_EQ(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING), volume_->IsOpened());
+  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
 }
 
-TEST_F(TestVolumeLauncherIcon, TestRunningStateUpdatesOnOpenedState)
+TEST_F(TestVolumeLauncherIcon, TestRunningOnOpened)
 {
+  ON_CALL(*file_manager_, IsPrefixOpened(volume_->GetUri())).WillByDefault(Return(true));
   CreateIcon();
 
-  ON_CALL(*volume_, IsOpened()).WillByDefault(Return(false));
-  volume_->opened.emit(volume_->IsOpened());
-  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
-
-  ON_CALL(*volume_, IsOpened()).WillByDefault(Return(true));
-  volume_->opened.emit(volume_->IsOpened());
   EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
 }
 
+TEST_F(TestVolumeLauncherIcon, FilemanagerSignalDisconnection)
+{
+  CreateIcon();
+  ASSERT_FALSE(file_manager_->locations_changed.empty());
+  icon_ = nullptr;
+  EXPECT_TRUE(file_manager_->locations_changed.empty());
+}
+
+TEST_F(TestVolumeLauncherIcon, TestRunningStateOnLocationChangedClosed)
+{
+  CreateIcon();
+
+  ON_CALL(*file_manager_, IsPrefixOpened(volume_->GetUri())).WillByDefault(Return(false));
+  file_manager_->locations_changed.emit();
+  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+}
+
+TEST_F(TestVolumeLauncherIcon, TestRunningStateOnLocationChangedOpened)
+{
+  CreateIcon();
+
+  ON_CALL(*file_manager_, IsPrefixOpened(volume_->GetUri())).WillByDefault(Return(true));
+  file_manager_->locations_changed.emit();
+  EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+}
 
 TEST_F(TestVolumeLauncherIcon, TestPosition)
 {
@@ -281,8 +310,10 @@ TEST_F(TestVolumeLauncherIcon, TestOpenMenuItem)
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
 
+  ON_CALL(*volume_, IsMounted()).WillByDefault(Return(false));
   uint64_t time = g_random_int();
-  EXPECT_CALL(*volume_, MountAndOpenInFileManager(time));
+  EXPECT_CALL(*volume_, Mount());
+  EXPECT_CALL(*file_manager_, OpenActiveChild(volume_->GetUri(), time));
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, time);
 }
@@ -299,7 +330,9 @@ TEST_F(TestVolumeLauncherIcon, TestNameMenuItem)
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY));
 
   uint64_t time = g_random_int();
-  EXPECT_CALL(*volume_, MountAndOpenInFileManager(time));
+  ON_CALL(*volume_, IsMounted()).WillByDefault(Return(false));
+  EXPECT_CALL(*volume_, Mount());
+  EXPECT_CALL(*file_manager_, OpenActiveChild(volume_->GetUri(), time));
 
   dbusmenu_menuitem_handle_event(menuitem, DBUSMENU_MENUITEM_EVENT_ACTIVATED, nullptr, time);
 }
@@ -321,8 +354,8 @@ TEST_F(TestVolumeLauncherIcon, TestEjectMenuItem)
 
   auto menuitem = GetMenuItemAtIndex(5);
 
-  EXPECT_CALL(*volume_, EjectAndShowNotification())
-    .Times(1);
+  EXPECT_CALL(*volume_, Eject());
+  EXPECT_CALL(*notifications_, Display(volume_->GetIconName(), volume_->GetName()));
 
   ASSERT_STREQ(dbusmenu_menuitem_property_get(menuitem, DBUSMENU_MENUITEM_PROP_LABEL), "Eject");
   EXPECT_TRUE(dbusmenu_menuitem_property_get_bool(menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE));
@@ -438,9 +471,8 @@ TEST_F(TestVolumeLauncherIcon, TestEject)
 
   CreateIcon();
 
-  EXPECT_CALL(*volume_, EjectAndShowNotification())
-    .Times(1);
-
+  EXPECT_CALL(*volume_, Eject());
+  EXPECT_CALL(*notifications_, Display(volume_->GetIconName(), volume_->GetName()));
   icon_->EjectAndShowNotification();
 }
 
@@ -532,12 +564,24 @@ TEST_F(TestVolumeLauncherIcon, Unstick)
   EXPECT_TRUE(forgot);
 }
 
-TEST_F(TestVolumeLauncherIcon, Activate)
+TEST_F(TestVolumeLauncherIcon, ActivateMounted)
 {
   CreateIcon();
 
   uint64_t time = g_random_int();
-  EXPECT_CALL(*volume_, MountAndOpenInFileManager(time));
+  EXPECT_CALL(*volume_, Mount()).Times(0);
+  EXPECT_CALL(*file_manager_, OpenActiveChild(volume_->GetUri(), time));
+  icon_->Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
+}
+
+TEST_F(TestVolumeLauncherIcon, ActivateUnmounted)
+{
+  CreateIcon();
+
+  uint64_t time = g_random_int();
+  ON_CALL(*volume_, IsMounted()).WillByDefault(Return(false));
+  EXPECT_CALL(*volume_, Mount());
+  EXPECT_CALL(*file_manager_, OpenActiveChild(volume_->GetUri(), time));
   icon_->Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
 }
 

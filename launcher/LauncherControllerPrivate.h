@@ -28,7 +28,6 @@
 
 #include "AbstractLauncherIcon.h"
 #include "DeviceLauncherSection.h"
-#include "DevicesSettingsImp.h"
 #ifdef USE_X11
 #include "EdgeBarrierController.h"
 #endif
@@ -39,7 +38,6 @@
 #include "LauncherModel.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "unity-shared/UBusWrapper.h"
-#include "VolumeMonitorWrapper.h"
 #include "XdndManager.h"
 
 namespace unity

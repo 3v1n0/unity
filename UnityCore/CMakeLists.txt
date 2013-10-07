@@ -13,6 +13,7 @@ pkg_check_modules (PRIVATE_CORE_DEPS REQUIRED unity-protocol-private)
 # Headers & Sources
 #
 set (CORE_HEADERS
+     ActionHandle.h
      ApplicationPreview.h
      AppmenuIndicator.h
      Categories.h

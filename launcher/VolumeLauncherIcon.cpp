@@ -25,8 +25,6 @@
 #include <UnityCore/ConnectionManager.h>
 #include <UnityCore/GLibSignal.h>
 
-#include "DevicesSettings.h"
-#include "Volume.h"
 #include "VolumeLauncherIcon.h"
 #include "FavoriteStore.h"
 
@@ -34,12 +32,7 @@ namespace unity
 {
 namespace launcher
 {
-DECLARE_LOGGER(logger, "unity.launcher.icon");
-namespace
-{
-const unsigned int volume_changed_timeout = 500;
-
-}
+DECLARE_LOGGER(logger, "unity.launcher.icon.volume");
 
 //
 // Start private implementation
@@ -51,10 +44,14 @@ public:
 
   Impl(Volume::Ptr const& volume,
        DevicesSettings::Ptr const& devices_settings,
+       DeviceNotificationDisplay::Ptr const& notification,
+       FileManager::Ptr const& fm,
        VolumeLauncherIcon* parent)
     : parent_(parent)
     , volume_(volume)
     , devices_settings_(devices_settings)
+    , notification_(notification)
+    , file_manager_(fm)
   {
     UpdateIcon();
     UpdateVisibility();
@@ -65,7 +62,7 @@ public:
   {
     parent_->tooltip_text = volume_->GetName();
     parent_->icon_name = volume_->GetIconName();
-    parent_->SetQuirk(Quirk::RUNNING, volume_->IsOpened());
+    parent_->SetQuirk(Quirk::RUNNING, file_manager_->IsPrefixOpened(volume_->GetUri()));
   }
 
   void UpdateVisibility()
@@ -85,7 +82,7 @@ public:
     connections_.Add(volume_->changed.connect(sigc::mem_fun(this, &Impl::OnVolumeChanged)));
     connections_.Add(volume_->removed.connect(sigc::mem_fun(this, &Impl::OnVolumeRemoved)));
     connections_.Add(devices_settings_->changed.connect(sigc::mem_fun(this, &Impl::OnSettingsChanged)));
-    connections_.Add(volume_->opened.connect(sigc::hide(sigc::mem_fun(this, &Impl::UpdateIcon))));
+    connections_.Add(file_manager_->locations_changed.connect(sigc::mem_fun(this, &Impl::UpdateIcon)));
   }
 
   void OnVolumeChanged()
@@ -114,7 +111,16 @@ public:
 
   void EjectAndShowNotification()
   {
-    return volume_->EjectAndShowNotification();
+    if (!CanEject())
+      return;
+
+    auto conn = std::make_shared<sigc::connection>();
+    *conn = volume_->ejected.connect([this, conn] {
+      notification_->Display(volume_->GetIconName(), volume_->GetName());
+      conn->disconnect();
+    });
+    connections_.Add(*conn);
+    volume_->Eject();
   }
 
   bool CanStop() const
@@ -127,10 +133,22 @@ public:
     volume_->StopDrive();
   }
 
-  void ActivateLauncherIcon(ActionArg arg)
+  void OpenInFileManager(uint64_t timestamp)
   {
-    parent_->SimpleLauncherIcon::ActivateLauncherIcon(arg);
-    volume_->MountAndOpenInFileManager(arg.timestamp);
+    if (!volume_->IsMounted())
+    {
+      auto conn = std::make_shared<sigc::connection>();
+      *conn = volume_->mounted.connect([this, conn, timestamp] {
+        file_manager_->OpenActiveChild(volume_->GetUri(), timestamp);
+        conn->disconnect();
+      });
+      connections_.Add(*conn);
+      volume_->Mount();
+    }
+    else
+    {
+      file_manager_->OpenActiveChild(volume_->GetUri(), timestamp);
+    }
   }
 
   MenuItemsVector GetMenus()
@@ -161,9 +179,9 @@ public:
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
     gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
-        auto const& identifier = volume_->GetIdentifier();
-        parent_->UnStick();
-        devices_settings_->TryToBlacklist(identifier);
+      auto const& identifier = volume_->GetIdentifier();
+      parent_->UnStick();
+      devices_settings_->TryToBlacklist(identifier);
     }));
 
     menu.push_back(menu_item);
@@ -189,7 +207,7 @@ public:
     dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::MARKUP_ENABLED_PROPERTY, true);
 
     gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, unsigned timestamp) {
-        volume_->MountAndOpenInFileManager(timestamp);
+      OpenInFileManager(timestamp);
     }));
 
     menu.push_back(menu_item);
@@ -204,7 +222,7 @@ public:
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
     gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, unsigned timestamp) {
-        volume_->MountAndOpenInFileManager(timestamp);
+      OpenInFileManager(timestamp);
     }));
 
     menu.push_back(menu_item);
@@ -222,7 +240,7 @@ public:
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
 
     gsignals_.Add(new ItemSignal(menu_item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED, [this] (DbusmenuMenuitem*, int) {
-        volume_->EjectAndShowNotification();
+      EjectAndShowNotification();
     }));
 
     menu.push_back(menu_item);
@@ -278,6 +296,8 @@ public:
   bool keep_in_launcher_;
   Volume::Ptr volume_;
   DevicesSettings::Ptr devices_settings_;
+  DeviceNotificationDisplay::Ptr notification_;
+  FileManager::Ptr file_manager_;
 
   glib::SignalManager gsignals_;
   connection::Manager connections_;
@@ -288,9 +308,11 @@ public:
 //
 
 VolumeLauncherIcon::VolumeLauncherIcon(Volume::Ptr const& volume,
-                                       DevicesSettings::Ptr const& devices_settings)
+                                       DevicesSettings::Ptr const& devices_settings,
+                                       DeviceNotificationDisplay::Ptr const& notification,
+                                       FileManager::Ptr const& fm)
   : SimpleLauncherIcon(IconType::DEVICE)
-  , pimpl_(new Impl(volume, devices_settings, this))
+  , pimpl_(new Impl(volume, devices_settings, notification, fm, this))
 {}
 
 VolumeLauncherIcon::~VolumeLauncherIcon()
@@ -326,7 +348,8 @@ void VolumeLauncherIcon::StopDrive()
 
 void VolumeLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-  pimpl_->ActivateLauncherIcon(arg);
+  SimpleLauncherIcon::ActivateLauncherIcon(arg);
+  pimpl_->OpenInFileManager(arg.timestamp);
 }
 
 AbstractLauncherIcon::MenuItemsVector VolumeLauncherIcon::GetMenus()

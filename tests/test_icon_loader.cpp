@@ -97,12 +97,12 @@ struct TestIconLoader : testing::Test
 
   void TearDown() override
   {
-    for (int handle : handles_)
+    for (auto handle : handles_)
       icon_loader.DisconnectHandle(handle);
   }
 
   IconLoader& icon_loader;
-  std::vector<int> handles_;
+  std::vector<IconLoader::Handle> handles_;
 };
 
 TEST_F(TestIconLoader, TestGetDefault)
@@ -115,7 +115,7 @@ TEST_F(TestIconLoader, DISABLED_TestGetOneIcon)
 {
   LoadResult load_result;
 
-  int handle = icon_loader.LoadFromIconName("python", -1, 48, sigc::mem_fun(load_result,
+  auto handle = icon_loader.LoadFromIconName("python", -1, 48, sigc::mem_fun(load_result,
         &LoadResult::IconLoaded));
   handles_.push_back(handle);
 
@@ -129,7 +129,7 @@ TEST_F(TestIconLoader, DISABLED_TestGetAnnotatedIcon)
 {
   LoadResult load_result;
 
-  int handle = icon_loader.LoadFromGIconString(". UnityProtocolAnnotatedIcon %7B'base-icon':%20%3C'cmake'%3E,%20'ribbon':%20%3C'foo'%3E%7D", -1, 48, sigc::mem_fun(load_result,
+  auto handle = icon_loader.LoadFromGIconString(". UnityProtocolAnnotatedIcon %7B'base-icon':%20%3C'cmake'%3E,%20'ribbon':%20%3C'foo'%3E%7D", -1, 48, sigc::mem_fun(load_result,
         &LoadResult::IconLoaded));
   handles_.push_back(handle);
 
@@ -143,7 +143,7 @@ TEST_F(TestIconLoader, DISABLED_TestGetColorizedIcon)
 {
   LoadResult load_result;
 
-  int handle = icon_loader.LoadFromGIconString(". UnityProtocolAnnotatedIcon %7B'base-icon':%20%3C'cmake'%3E,%20'colorize-value':%20%3Cuint32%204278190335%3E%7D", -1, 48, sigc::mem_fun(load_result,
+  auto handle = icon_loader.LoadFromGIconString(". UnityProtocolAnnotatedIcon %7B'base-icon':%20%3C'cmake'%3E,%20'colorize-value':%20%3Cuint32%204278190335%3E%7D", -1, 48, sigc::mem_fun(load_result,
         &LoadResult::IconLoaded));
   handles_.push_back(handle);
 
@@ -155,7 +155,7 @@ TEST_F(TestIconLoader, DISABLED_TestGetColorizedIcon)
 TEST_F(TestIconLoader, TestGetOneIconManyTimes)
 {
   std::vector<LoadResult> results;
-  std::vector<int> handles;
+  std::vector<IconLoader::Handle> handles;
   int i, load_count;
 
   // 100 times should be good
@@ -208,7 +208,7 @@ TEST_F(TestIconLoader, DISABLED_TestGetManyIcons)
 TEST_F(TestIconLoader, TestCancelSome)
 {
   std::vector<LoadResult> results;
-  std::vector<int> handles;
+  std::vector<IconLoader::Handle> handles;
   int i = 0;
   int icon_count;
 

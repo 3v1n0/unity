@@ -129,6 +129,7 @@ if (GMOCK_LIB AND
   set (GTEST_XLESS_SOURCES
        test_main_xless.cpp
        mock-application.cpp
+       test_action_handle.cpp
        test_abstract_interface_generator.cpp
        test_animation_utils.cpp
        test_connection_manager.cpp
@@ -164,6 +165,7 @@ if (GMOCK_LIB AND
        test_time_util.cpp
        test_ubus.cpp
        test_unityshell_private.cpp
+       test_volume_imp.cpp
        ${UNITY_SRC}/UnityshellPrivate.cpp
        ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
        ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
@@ -174,6 +176,7 @@ if (GMOCK_LIB AND
 
   set (GTEST_XLESS_LIBS
       gtest
+      test-libs-c
       unity-shared
       unity-shared-standalone
       launcher-lib
@@ -309,7 +312,6 @@ if (ENABLE_X_SUPPORT)
                  test_unity_settings.cpp
                  test_unity_window_style.cpp
                  test_unity_window_view.cpp
-                 test_volume_imp.cpp
                  test_volume_launcher_icon.cpp
                  test_window_buttons.cpp
                  test_xdnd_manager_imp.cpp
@@ -321,14 +323,14 @@ if (ENABLE_X_SUPPORT)
 
   # Build plain C files separately so they don't try to include the
   # C++ pch.
-  add_library(test-gtest-plainc STATIC
+  add_library(test-libs-c STATIC
               bamf-mock-application.c
               bamf-mock-window.c
               gmockmount.c
               gmockvolume.c
               )
   target_link_libraries(test-gtest
-                        test-gtest-plainc
+                        test-libs-c
                         gtest
                         gmock
                         unity-shared
