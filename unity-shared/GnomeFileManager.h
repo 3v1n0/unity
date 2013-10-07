@@ -35,6 +35,8 @@ public:
   void Open(std::string const& uri, uint64_t timestamp);
   void OpenActiveChild(std::string const& uri, uint64_t timestamp);
   void OpenTrash(uint64_t timestamp);
+
+  void CopyFiles(std::set<std::string> const& uris, std::string const& dest, uint64_t timestamp);
   bool TrashFile(std::string const& uri);
   void EmptyTrash(uint64_t timestamp);
 

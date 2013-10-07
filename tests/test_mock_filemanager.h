@@ -36,6 +36,7 @@ struct MockFileManager : FileManager
   MOCK_METHOD1(OpenTrash, void(uint64_t time));
   MOCK_METHOD1(TrashFile, bool(std::string const& uri));
   MOCK_METHOD1(EmptyTrash, void(uint64_t time));
+  MOCK_METHOD3(CopyFiles, void(std::set<std::string> const& files, std::string const& dest, uint64_t time));
   MOCK_CONST_METHOD0(OpenedLocations, std::vector<std::string>());
   MOCK_CONST_METHOD1(IsPrefixOpened, bool(std::string const& uri));
   MOCK_CONST_METHOD0(IsTrashOpened, bool());

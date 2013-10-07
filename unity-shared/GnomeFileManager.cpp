@@ -220,6 +220,35 @@ void GnomeFileManager::EmptyTrash(uint64_t timestamp)
   proxy->CallBegin("EmptyTrash", nullptr, [proxy] (GVariant*, glib::Error const&) {});
 }
 
+void GnomeFileManager::CopyFiles(std::set<std::string> const& uris, std::string const& dest, uint64_t timestamp)
+{
+  bool found_valid = false;
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("(ass)"));
+  g_variant_builder_open(&b, G_VARIANT_TYPE("as"));
+
+  for (auto const& uri : uris)
+  {
+    if (uri.find(FILE_SCHEMA) == 0)
+    {
+      found_valid = true;
+      g_variant_builder_add(&b, "s", uri.c_str());
+    }
+  }
+
+  g_variant_builder_close(&b);
+  g_variant_builder_add(&b, "s", dest.c_str());
+  glib::Variant parameters(g_variant_builder_end(&b));
+
+  if (found_valid)
+  {
+    // Passing the proxy to the lambda we ensure that it will be destroyed when needed
+    auto const& proxy = impl_->NautilusOperationsProxy();
+    proxy->CallBegin("CopyURIs", parameters, [proxy] (GVariant*, glib::Error const&) {});
+    Activate(timestamp);
+  }
+}
+
 std::vector<std::string> GnomeFileManager::OpenedLocations() const
 {
   return impl_->opened_locations_;
