@@ -34,6 +34,12 @@ namespace unity
 namespace
 {
 
+struct MockDeviceNotificationDisplay : DeviceNotificationDisplay
+{
+  typedef NiceMock<MockDeviceNotificationDisplay> Nice;
+  MOCK_METHOD2(Display, void(std::string const& icon_name, std::string const& volume_name));
+};
+
 class EventListener
 {
 public:
@@ -52,13 +58,15 @@ public:
 struct TestDeviceLauncherSection : Test
 {
   TestDeviceLauncherSection()
-    : monitor_(new MockVolumeMonitorWrapper)
-    , devices_settings_(new NiceMock<MockDevicesSettings>())
-    , section_(monitor_, devices_settings_)
+    : monitor_(std::make_shared<MockVolumeMonitorWrapper>())
+    , devices_settings_(std::make_shared<NiceMock<MockDevicesSettings>>())
+    , notifications_(std::make_shared<MockDeviceNotificationDisplay::Nice>())
+    , section_(monitor_, devices_settings_, notifications_)
   {}
 
   MockVolumeMonitorWrapper::Ptr monitor_;
   DevicesSettings::Ptr devices_settings_;
+  DeviceNotificationDisplay::Ptr notifications_;
   DeviceLauncherSection section_;
 };
 
