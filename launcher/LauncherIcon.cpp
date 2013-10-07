@@ -450,9 +450,9 @@ guint64 LauncherIcon::GetShortcut()
   return _shortcut;
 }
 
-nux::Point LauncherIcon::GetTipPosition() const
+nux::Point LauncherIcon::GetTipPosition(int monitor) const
 {
-  return nux::Point(_center[_last_monitor].x + icon_size()/2 + 1, _center[_last_monitor].y);
+  return nux::Point(_center[monitor].x + icon_size()/2 + 1, _center[monitor].y);
 }
 
 void LauncherIcon::ShowTooltip()
@@ -463,7 +463,7 @@ void LauncherIcon::ShowTooltip()
   if (!_tooltip)
     LoadTooltip();
 
-  auto const& pos = GetTipPosition();
+  auto const& pos = GetTipPosition(_last_monitor);
   _tooltip->text = tooltip_text();
   _tooltip->ShowTooltipWithTipAt(pos.x, pos.y);
   tooltip_visible.emit(_tooltip);
@@ -546,7 +546,7 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
   if (win_manager.IsScaleActive())
     win_manager.TerminateScale();
 
-  auto const& pos = GetTipPosition();
+  auto const& pos = GetTipPosition(monitor);
 
   /* If the expo plugin is active, we need to wait it to be terminated, before
    * showing the icon quicklist. */
@@ -632,12 +632,12 @@ void LauncherIcon::SetCenter(nux::Point3 const& new_center, int monitor)
   {
     if (_quicklist && _quicklist->IsVisible())
     {
-      auto const& pos = GetTipPosition();
+      auto const& pos = GetTipPosition(monitor);
       QuicklistManager::Default()->MoveQuicklist(_quicklist, pos.x, pos.y);
     }
     else if (_tooltip && _tooltip->IsVisible())
     {
-      auto const& pos = GetTipPosition();
+      auto const& pos = GetTipPosition(monitor);
       _tooltip->SetTooltipPosition(pos.x, pos.y);
     }
   }
