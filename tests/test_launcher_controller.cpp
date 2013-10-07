@@ -39,6 +39,7 @@
 #include "test_utils.h"
 #include "test_uscreen_mock.h"
 #include "test_mock_devices.h"
+#include "test_mock_filemanager.h"
 #include "mock-application.h"
 
 
@@ -178,7 +179,9 @@ struct MockVolumeLauncherIcon : public VolumeLauncherIcon
 
   MockVolumeLauncherIcon()
     : VolumeLauncherIcon(Volume::Ptr(volume_ = new NiceMock<MockVolume>()),
-                         std::make_shared<NiceMock<MockDevicesSettings>>())
+                         std::make_shared<MockDevicesSettings::Nice>(),
+                         std::make_shared<MockDeviceNotificationDisplay::Nice>(),
+                         std::make_shared<MockFileManager::Nice>())
     , uuid_(std::to_string(g_random_int()))
   {
     ON_CALL(*volume_, GetIdentifier()).WillByDefault(Return(uuid_));
@@ -1266,7 +1269,7 @@ TEST_F(TestLauncherController, LauncherRemoveRequestDeviceEjects)
   EXPECT_CALL(*(device_icon->volume_), CanBeStopped())
       .WillRepeatedly(Return(true));
 
-  EXPECT_CALL(*(device_icon->volume_), EjectAndShowNotification());
+  EXPECT_CALL(*(device_icon->volume_), Eject());
   EXPECT_CALL(*(device_icon->volume_), StopDrive()).Times(0);
 
   lc.launcher().remove_request.emit(device_icon);
@@ -1282,7 +1285,7 @@ TEST_F(TestLauncherController, LauncherRemoveRequestDeviceStops)
       .WillRepeatedly(Return(true));
 
   EXPECT_CALL(*(device_icon->volume_), StopDrive());
-  EXPECT_CALL(*(device_icon->volume_), EjectAndShowNotification()).Times(0);
+  EXPECT_CALL(*(device_icon->volume_), Eject()).Times(0);
 
   lc.launcher().remove_request.emit(device_icon);
 }

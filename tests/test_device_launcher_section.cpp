@@ -34,12 +34,6 @@ namespace unity
 namespace
 {
 
-struct MockDeviceNotificationDisplay : DeviceNotificationDisplay
-{
-  typedef NiceMock<MockDeviceNotificationDisplay> Nice;
-  MOCK_METHOD2(Display, void(std::string const& icon_name, std::string const& volume_name));
-};
-
 class EventListener
 {
 public:

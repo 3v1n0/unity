@@ -59,8 +59,8 @@ void DeviceLauncherSection::TryToCreateAndAddIcon(glib::Object<GVolume> volume)
   if (map_.find(volume) != map_.end())
     return;
 
-  auto vol = std::make_shared<VolumeImp>(volume, file_manager_, device_notification_display_);
-  VolumeLauncherIcon::Ptr icon(new VolumeLauncherIcon(vol, devices_settings_));
+  auto vol = std::make_shared<VolumeImp>(volume, file_manager_);
+  VolumeLauncherIcon::Ptr icon(new VolumeLauncherIcon(vol, devices_settings_, device_notification_display_, file_manager_));
 
   map_[volume] = icon;
   icon_added.emit(icon);

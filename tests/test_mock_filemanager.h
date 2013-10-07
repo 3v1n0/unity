@@ -20,6 +20,7 @@
 #ifndef TEST_MOCK_FILEMANAGER_H
 #define TEST_MOCK_FILEMANAGER_H
 
+#include <gmock/gmock.h>
 #include "FileManager.h"
 
 namespace unity
@@ -28,6 +29,7 @@ namespace unity
 struct MockFileManager : FileManager
 {
   typedef std::shared_ptr<MockFileManager> Ptr;
+  typedef testing::NiceMock<MockFileManager> Nice;
 
   MOCK_METHOD2(Open, void(std::string const& uri, uint64_t time));
   MOCK_METHOD2(OpenActiveChild, void(std::string const& uri, uint64_t time));

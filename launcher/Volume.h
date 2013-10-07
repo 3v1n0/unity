@@ -44,12 +44,13 @@ public:
   virtual std::string GetName() const = 0;
   virtual std::string GetIconName() const = 0;
   virtual std::string GetIdentifier() const = 0;
+  virtual std::string GetUri() const = 0;
   virtual bool HasSiblings() const = 0;
   virtual bool IsMounted() const = 0;
   virtual bool IsOpened() const = 0;
 
-  virtual void EjectAndShowNotification() = 0;
-  virtual void MountAndOpenInFileManager(uint64_t timestamp = 0) = 0;
+  virtual void Eject() = 0;
+  virtual void Mount() = 0;
   virtual void StopDrive() = 0;
   virtual void Unmount() = 0;
 
@@ -58,6 +59,7 @@ public:
   sigc::signal<void> mounted;
   sigc::signal<void> unmounted;
   sigc::signal<void> ejected;
+  sigc::signal<void> stopped;
   sigc::signal<void, bool> opened;
 
 private:
