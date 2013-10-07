@@ -148,8 +148,9 @@ public:
 
   static void OnEjectReady(GObject* object, GAsyncResult* result, Impl* self)
   {
-    if (g_volume_eject_with_operation_finish(self->volume_, result, nullptr))
+    if (g_volume_eject_with_operation_finish(G_VOLUME(object), result, nullptr))
     {
+      self->parent_->ejected.emit();
       self->device_notification_display_->Display(self->GetIconName(), self->GetName());
     }
   }
@@ -180,8 +181,11 @@ public:
                             GAsyncResult* result,
                             Impl* self)
   {
-    if (g_volume_mount_finish(self->volume_, result, nullptr))
+    if (g_volume_mount_finish(G_VOLUME(object), result, nullptr))
+    {
+      self->parent_->mounted.emit();
       self->OpenInFileManager();
+    }
   }
 
   void OpenInFileManager()
@@ -227,12 +231,13 @@ public:
     glib::Object<GMountOperation> op(gtk_mount_operation_new(nullptr));
 
     g_mount_unmount_with_operation(mount, (GMountUnmountFlags) 0, op, cancellable_,
-                                   &VolumeImp::Impl::FinishUmount, nullptr);
+                                   FinishUmount, this);
   }
 
-  static void FinishUmount(GObject* object, GAsyncResult* res, gpointer)
+  static void FinishUmount(GObject* object, GAsyncResult* res, gpointer data)
   {
-    g_mount_unmount_with_operation_finish(G_MOUNT(object), res, nullptr);
+    if (g_mount_unmount_with_operation_finish(G_MOUNT(object), res, nullptr))
+      static_cast<Impl*>(data)->parent_->unmounted.emit();
   }
 
   VolumeImp* parent_;

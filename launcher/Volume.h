@@ -55,6 +55,9 @@ public:
 
   sigc::signal<void> changed;
   sigc::signal<void> removed;
+  sigc::signal<void> mounted;
+  sigc::signal<void> unmounted;
+  sigc::signal<void> ejected;
   sigc::signal<void, bool> opened;
 
 private:
