@@ -35,11 +35,9 @@ namespace launcher
 class VolumeImp::Impl : public sigc::trackable
 {
 public:
-  Impl(glib::Object<GVolume> const& volume, FileManager::Ptr const& fm, VolumeImp* parent)
+  Impl(glib::Object<GVolume> const& volume, VolumeImp* parent)
     : parent_(parent)
-    , opened_(false)
     , volume_(volume)
-    , file_manager_(fm)
   {
     signal_volume_changed_.Connect(volume_, "changed", [this] (GVolume*) {
       parent_->changed.emit();
@@ -48,19 +46,6 @@ public:
     signal_volume_removed_.Connect(volume_, "removed", [this] (GVolume*) {
       parent_->removed.emit();
     });
-
-    file_manager_->locations_changed.connect(sigc::mem_fun(this, &Impl::OnLocationChanged));
-  }
-
-  void OnLocationChanged()
-  {
-    bool opened = file_manager_->IsPrefixOpened(GetUri());
-
-    if (opened_ != opened)
-    {
-      opened_ = opened;
-      parent_->opened.emit(opened_);
-    }
   }
 
   bool CanBeEjected() const
@@ -119,11 +104,6 @@ public:
   {
     glib::Object<GMount> mount(g_volume_get_mount(volume_));
     return static_cast<bool>(mount);
-  }
-
-  bool IsOpened() const
-  {
-    return opened_;
   }
 
   void Eject()
@@ -197,10 +177,8 @@ public:
   }
 
   VolumeImp* parent_;
-  bool opened_;
   glib::Cancellable cancellable_;
   glib::Object<GVolume> volume_;
-  FileManager::Ptr file_manager_;
 
   glib::Signal<void, GVolume*> signal_volume_changed_;
   glib::Signal<void, GVolume*> signal_volume_removed_;
@@ -210,8 +188,8 @@ public:
 // End private implementation
 //
 
-VolumeImp::VolumeImp(glib::Object<GVolume> const& volume, FileManager::Ptr const& fm)
-  : pimpl(new Impl(volume, fm, this))
+VolumeImp::VolumeImp(glib::Object<GVolume> const& volume)
+  : pimpl(new Impl(volume, this))
 {}
 
 VolumeImp::~VolumeImp()
@@ -260,11 +238,6 @@ bool VolumeImp::HasSiblings() const
 bool VolumeImp::IsMounted() const
 {
   return pimpl->IsMounted();
-}
-
-bool VolumeImp::IsOpened() const
-{
-  return pimpl->IsOpened();
 }
 
 void VolumeImp::Mount()

@@ -26,7 +26,6 @@
 
 #include "DeviceNotificationDisplay.h"
 #include "Volume.h"
-#include "unity-shared/FileManager.h"
 
 namespace unity
 {
@@ -38,7 +37,7 @@ class VolumeImp : public Volume
 public:
   typedef std::shared_ptr<VolumeImp> Ptr;
 
-  VolumeImp(glib::Object<GVolume> const&, FileManager::Ptr const&);
+  VolumeImp(glib::Object<GVolume> const&);
   virtual ~VolumeImp();
 
   virtual bool CanBeEjected() const;
@@ -50,7 +49,6 @@ public:
   virtual std::string GetUri() const;
   virtual bool HasSiblings() const;
   virtual bool IsMounted() const;
-  virtual bool IsOpened() const;
 
   virtual void Eject();
   virtual void Mount();

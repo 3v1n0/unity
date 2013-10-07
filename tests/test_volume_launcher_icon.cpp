@@ -65,7 +65,6 @@ struct TestVolumeLauncherIcon : public Test
     ON_CALL(*volume_, HasSiblings()).WillByDefault(Return(false));
     ON_CALL(*volume_, CanBeEjected()).WillByDefault(Return(false));
     ON_CALL(*volume_, IsMounted()).WillByDefault(Return(true));
-    ON_CALL(*volume_, IsOpened()).WillByDefault(Return(true));
     ON_CALL(*volume_, Mount()).WillByDefault(Invoke([this] { volume_->mounted.emit(); }));
     ON_CALL(*volume_, Unmount()).WillByDefault(Invoke([this] { volume_->unmounted.emit(); }));
     ON_CALL(*volume_, Eject()).WillByDefault(Invoke([this] { volume_->ejected.emit(); }));
@@ -95,26 +94,47 @@ TEST_F(TestVolumeLauncherIcon, TestIconType)
   EXPECT_EQ(icon_->GetIconType(), AbstractLauncherIcon::IconType::DEVICE);
 }
 
-TEST_F(TestVolumeLauncherIcon, TestQuirks)
+TEST_F(TestVolumeLauncherIcon, TestRunningOnClosed)
 {
+  ON_CALL(*file_manager_, IsPrefixOpened(volume_->GetUri())).WillByDefault(Return(false));
   CreateIcon();
 
-  EXPECT_EQ(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING), volume_->IsOpened());
+  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
 }
 
-TEST_F(TestVolumeLauncherIcon, TestRunningStateUpdatesOnOpenedState)
+TEST_F(TestVolumeLauncherIcon, TestRunningOnOpened)
 {
+  ON_CALL(*file_manager_, IsPrefixOpened(volume_->GetUri())).WillByDefault(Return(true));
   CreateIcon();
 
-  ON_CALL(*volume_, IsOpened()).WillByDefault(Return(false));
-  volume_->opened.emit(volume_->IsOpened());
-  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
-
-  ON_CALL(*volume_, IsOpened()).WillByDefault(Return(true));
-  volume_->opened.emit(volume_->IsOpened());
   EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
 }
 
+TEST_F(TestVolumeLauncherIcon, FilemanagerSignalDisconnection)
+{
+  CreateIcon();
+  ASSERT_FALSE(file_manager_->locations_changed.empty());
+  icon_ = nullptr;
+  EXPECT_TRUE(file_manager_->locations_changed.empty());
+}
+
+TEST_F(TestVolumeLauncherIcon, TestRunningStateOnLocationChangedClosed)
+{
+  CreateIcon();
+
+  ON_CALL(*file_manager_, IsPrefixOpened(volume_->GetUri())).WillByDefault(Return(false));
+  file_manager_->locations_changed.emit();
+  EXPECT_FALSE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+}
+
+TEST_F(TestVolumeLauncherIcon, TestRunningStateOnLocationChangedOpened)
+{
+  CreateIcon();
+
+  ON_CALL(*file_manager_, IsPrefixOpened(volume_->GetUri())).WillByDefault(Return(true));
+  file_manager_->locations_changed.emit();
+  EXPECT_TRUE(icon_->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING));
+}
 
 TEST_F(TestVolumeLauncherIcon, TestPosition)
 {

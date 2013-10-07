@@ -62,7 +62,7 @@ public:
   {
     parent_->tooltip_text = volume_->GetName();
     parent_->icon_name = volume_->GetIconName();
-    parent_->SetQuirk(Quirk::RUNNING, volume_->IsOpened());
+    parent_->SetQuirk(Quirk::RUNNING, file_manager_->IsPrefixOpened(volume_->GetUri()));
   }
 
   void UpdateVisibility()
@@ -82,7 +82,7 @@ public:
     connections_.Add(volume_->changed.connect(sigc::mem_fun(this, &Impl::OnVolumeChanged)));
     connections_.Add(volume_->removed.connect(sigc::mem_fun(this, &Impl::OnVolumeRemoved)));
     connections_.Add(devices_settings_->changed.connect(sigc::mem_fun(this, &Impl::OnSettingsChanged)));
-    connections_.Add(volume_->opened.connect(sigc::hide(sigc::mem_fun(this, &Impl::UpdateIcon))));
+    connections_.Add(file_manager_->locations_changed.connect(sigc::mem_fun(this, &Impl::UpdateIcon)));
   }
 
   void OnVolumeChanged()

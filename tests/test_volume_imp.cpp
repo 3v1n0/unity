@@ -25,33 +25,24 @@ using namespace testing;
 #include "gmockmount.h"
 #include "gmockvolume.h"
 #include "launcher/VolumeImp.h"
-#include "test_utils.h"
-#include "test_mock_filemanager.h"
 using namespace unity;
 
 namespace
 {
-
-class TestVolumeImp : public Test
+struct TestVolumeImp : Test
 {
-public:
-  void SetUp()
-  {
-    gvolume_ = g_mock_volume_new();
-    file_manager_.reset(new NiceMock<MockFileManager>);
-    volume_.reset(new launcher::VolumeImp(glib::Object<GVolume>(G_VOLUME(gvolume_.RawPtr()), glib::AddRef()),
-                                          file_manager_));
-  }
+  TestVolumeImp()
+    : gvolume_(g_mock_volume_new())
+    , volume_(std::make_shared<launcher::VolumeImp>(glib::object_cast<GVolume>(gvolume_)))
+  {}
 
   glib::Object<GMockVolume> gvolume_;
-  MockFileManager::Ptr file_manager_;
   launcher::VolumeImp::Ptr volume_;
 };
 
 TEST_F(TestVolumeImp, Ctor)
 {
   EXPECT_FALSE(volume_->IsMounted());
-  EXPECT_FALSE(volume_->IsOpened());
 }
 
 TEST_F(TestVolumeImp, CanBeEjected)
@@ -105,44 +96,6 @@ TEST_F(TestVolumeImp, IsMounted)
   EXPECT_TRUE(volume_->IsMounted());
 }
 
-TEST_F(TestVolumeImp, IsOpened)
-{
-  volume_->Mount();
-
-  EXPECT_CALL(*file_manager_, IsPrefixOpened(ROOT_FILE_URI));
-  ON_CALL(*file_manager_, IsPrefixOpened(_)).WillByDefault(Return(true));
-  file_manager_->locations_changed.emit();
-  EXPECT_TRUE(volume_->IsOpened());
-
-  EXPECT_CALL(*file_manager_, IsPrefixOpened(ROOT_FILE_URI));
-  ON_CALL(*file_manager_, IsPrefixOpened(_)).WillByDefault(Return(false));
-  file_manager_->locations_changed.emit();
-  EXPECT_FALSE(volume_->IsOpened());
-}
-
-TEST_F(TestVolumeImp, IsOpenedSignal)
-{
-  ON_CALL(*file_manager_, IsPrefixOpened(_)).WillByDefault(Return(false));
-
-  bool opened = false;
-  volume_->opened.connect([&opened] (bool value) { opened = value; });
-  file_manager_->locations_changed.emit();
-
-  ASSERT_FALSE(opened);
-
-  ON_CALL(*file_manager_, IsPrefixOpened(_)).WillByDefault(Return(true));
-  file_manager_->locations_changed.emit();
-  EXPECT_TRUE(opened);
-}
-
-TEST_F(TestVolumeImp, FilemanagerSignalDisconnection)
-{
-  ASSERT_FALSE(file_manager_->locations_changed.empty());
-  volume_.reset();
-
-  EXPECT_TRUE(file_manager_->locations_changed.empty());
-}
-
 TEST_F(TestVolumeImp, Eject)
 {
   bool ejected = false;
@@ -170,7 +123,7 @@ TEST_F(TestVolumeImp, ChangedSignal)
   });
 
   g_signal_emit_by_name(gvolume_, "changed", nullptr);
-  Utils::WaitUntil(callback_called);
+  EXPECT_TRUE(callback_called);
 }
 
 TEST_F(TestVolumeImp, RemovedSignal)
@@ -181,7 +134,7 @@ TEST_F(TestVolumeImp, RemovedSignal)
   });
 
   g_signal_emit_by_name(gvolume_, "removed", nullptr);
-  Utils::WaitUntil(callback_called);
+  EXPECT_TRUE(callback_called);
 }
 
 }

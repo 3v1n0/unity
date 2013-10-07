@@ -47,7 +47,6 @@ public:
   virtual std::string GetUri() const = 0;
   virtual bool HasSiblings() const = 0;
   virtual bool IsMounted() const = 0;
-  virtual bool IsOpened() const = 0;
 
   virtual void Eject() = 0;
   virtual void Mount() = 0;
@@ -60,7 +59,6 @@ public:
   sigc::signal<void> unmounted;
   sigc::signal<void> ejected;
   sigc::signal<void> stopped;
-  sigc::signal<void, bool> opened;
 
 private:
   Volume(Volume const&) = delete;
