@@ -19,8 +19,9 @@
 
 #include "DeviceLauncherSection.h"
 #include "DeviceNotificationDisplayImp.h"
-#include "DevicesSettings.h"
+#include "DevicesSettingsImp.h"
 #include "VolumeImp.h"
+#include "VolumeMonitorWrapper.h"
 #include "unity-shared/GnomeFileManager.h"
 
 namespace unity
@@ -28,12 +29,13 @@ namespace unity
 namespace launcher
 {
 
-DeviceLauncherSection::DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr volume_monitor,
-                                             DevicesSettings::Ptr devices_settings)
-  : monitor_(volume_monitor)
-  , devices_settings_(devices_settings)
+DeviceLauncherSection::DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr const& vm,
+                                             DevicesSettings::Ptr const& ds,
+                                             DeviceNotificationDisplay::Ptr const& notify)
+  : monitor_(vm ? vm : std::make_shared<VolumeMonitorWrapper>())
+  , devices_settings_(ds ? ds : std::make_shared<DevicesSettingsImp>())
   , file_manager_(GnomeFileManager::Get())
-  , device_notification_display_(std::make_shared<DeviceNotificationDisplayImp>())
+  , device_notification_display_(notify ? notify : std::make_shared<DeviceNotificationDisplayImp>())
 {
   monitor_->volume_added.connect(sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeAdded));
   monitor_->volume_removed.connect(sigc::mem_fun(this, &DeviceLauncherSection::OnVolumeRemoved));
@@ -43,7 +45,7 @@ DeviceLauncherSection::DeviceLauncherSection(AbstractVolumeMonitorWrapper::Ptr v
 
 void DeviceLauncherSection::PopulateEntries()
 {
-  for (auto volume : monitor_->GetVolumes())
+  for (auto const& volume : monitor_->GetVolumes())
     TryToCreateAndAddIcon(volume);
 }
 

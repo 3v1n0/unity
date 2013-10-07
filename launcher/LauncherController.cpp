@@ -108,7 +108,6 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
   : parent_(parent)
   , model_(std::make_shared<LauncherModel>())
   , xdnd_manager_(xdnd_manager)
-  , device_section_(std::make_shared<VolumeMonitorWrapper>(), std::make_shared<DevicesSettingsImp>())
   , expo_icon_(new ExpoLauncherIcon())
   , desktop_icon_(new DesktopLauncherIcon())
   , edge_barriers_(edge_barriers)
