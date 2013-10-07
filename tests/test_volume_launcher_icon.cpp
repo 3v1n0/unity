@@ -312,6 +312,8 @@ TEST_F(TestVolumeLauncherIcon, TestOpenMenuItem)
 
   ON_CALL(*volume_, IsMounted()).WillByDefault(Return(false));
   uint64_t time = g_random_int();
+
+  InSequence seq;
   EXPECT_CALL(*volume_, Mount());
   EXPECT_CALL(*file_manager_, OpenActiveChild(volume_->GetUri(), time));
 
@@ -331,6 +333,8 @@ TEST_F(TestVolumeLauncherIcon, TestNameMenuItem)
 
   uint64_t time = g_random_int();
   ON_CALL(*volume_, IsMounted()).WillByDefault(Return(false));
+
+  InSequence seq;
   EXPECT_CALL(*volume_, Mount());
   EXPECT_CALL(*file_manager_, OpenActiveChild(volume_->GetUri(), time));
 
@@ -569,6 +573,7 @@ TEST_F(TestVolumeLauncherIcon, ActivateMounted)
   CreateIcon();
 
   uint64_t time = g_random_int();
+  InSequence seq;
   EXPECT_CALL(*volume_, Mount()).Times(0);
   EXPECT_CALL(*file_manager_, OpenActiveChild(volume_->GetUri(), time));
   icon_->Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
@@ -580,9 +585,74 @@ TEST_F(TestVolumeLauncherIcon, ActivateUnmounted)
 
   uint64_t time = g_random_int();
   ON_CALL(*volume_, IsMounted()).WillByDefault(Return(false));
+  InSequence seq;
   EXPECT_CALL(*volume_, Mount());
   EXPECT_CALL(*file_manager_, OpenActiveChild(volume_->GetUri(), time));
   icon_->Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, time));
+}
+
+TEST_F(TestVolumeLauncherIcon, ShouldHighlightOnDragFilesValid)
+{
+  CreateIcon();
+
+  DndData data;
+  std::string data_string = "file://file1\ndir2/file2\nfile://file3\nfile://dirN/fileN";
+  data.Fill(data_string.c_str());
+  EXPECT_TRUE(icon_->ShouldHighlightOnDrag(data));
+}
+
+TEST_F(TestVolumeLauncherIcon, ShouldHighlightOnDragFilesInvalid)
+{
+  CreateIcon();
+
+  DndData data;
+  std::string data_string = "file1\ndir2/file2\napplication://file3\nunity://lens";
+  data.Fill(data_string.c_str());
+  EXPECT_FALSE(icon_->ShouldHighlightOnDrag(data));
+}
+
+TEST_F(TestVolumeLauncherIcon, QueryAcceptDrop)
+{
+  CreateIcon();
+  DndData data;
+  EXPECT_EQ(nux::DNDACTION_NONE, icon_->QueryAcceptDrop(data));
+
+  std::string data_string = "file://foo/file";
+  data.Fill(data_string.c_str());
+  EXPECT_EQ(nux::DNDACTION_COPY, icon_->QueryAcceptDrop(data));
+}
+
+TEST_F(TestVolumeLauncherIcon, AcceptDropUnmounted)
+{
+  CreateIcon();
+
+  DndData data;
+  std::string data_string = "file://file1\ndir2/file2\nfile://file3\nfile://dirN/fileN";
+  data.Fill(data_string.c_str());
+  auto time = g_random_int();
+  nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp = time;
+
+  InSequence seq;
+  ON_CALL(*volume_, IsMounted()).WillByDefault(Return(false));
+  EXPECT_CALL(*volume_, Mount());
+  EXPECT_CALL(*file_manager_, CopyFiles(data.Uris(), volume_->GetUri(), time));
+  icon_->AcceptDrop(data);
+}
+
+TEST_F(TestVolumeLauncherIcon, AcceptDropMounted)
+{
+  CreateIcon();
+
+  DndData data;
+  std::string data_string = "file://file1\ndir2/file2\nfile://file3\nfile://dirN/fileN";
+  data.Fill(data_string.c_str());
+  auto time = g_random_int();
+  nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp = time;
+
+  InSequence seq;
+  EXPECT_CALL(*volume_, Mount()).Times(0);
+  EXPECT_CALL(*file_manager_, CopyFiles(data.Uris(), volume_->GetUri(), time));
+  icon_->AcceptDrop(data);
 }
 
 }
