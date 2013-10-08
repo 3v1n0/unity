@@ -296,7 +296,7 @@ private:
   static void ChildRealized(DbusmenuMenuitem* newitem, QuicklistView* quicklist);
   static void RootChanged(DbusmenuClient* client, DbusmenuMenuitem* newroot, QuicklistView* quicklist);
   void ColorForIcon(GdkPixbuf* pixbuf, nux::Color& background, nux::Color& glow);
-  nux::Point GetTipPosition() const;
+  nux::Point GetTipPosition(int monitor) const;
 
   void LoadTooltip();
   void LoadQuicklist();

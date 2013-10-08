@@ -111,6 +111,7 @@ class LauncherKeyNavTests(LauncherTestCase):
         """Tests that we can open and close a quicklist from keynav mode."""
         self.start_keynav_with_cleanup_cancel()
         self.launcher_instance.key_nav_next()
+        self.addCleanup(self.keyboard.press_and_release, "Escape")
         self.launcher_instance.key_nav_enter_quicklist()
         self.assertThat(self.launcher_instance.quicklist_open, Eventually(Equals(True)))
         self.launcher_instance.key_nav_exit_quicklist()
