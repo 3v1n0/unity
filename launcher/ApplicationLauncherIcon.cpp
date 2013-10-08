@@ -1112,16 +1112,6 @@ std::string ApplicationLauncherIcon::GetRemoteUri() const
   return _remote_uri;
 }
 
-std::set<std::string> ApplicationLauncherIcon::ValidateUrisForLaunch(DndData const& uris)
-{
-  std::set<std::string> result;
-
-  for (auto uri : uris.Uris())
-    result.insert(uri);
-
-  return result;
-}
-
 void ApplicationLauncherIcon::OnDndHovered()
 {
   // for now, let's not do this, it turns out to be quite buggy
@@ -1159,7 +1149,7 @@ bool ApplicationLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
 {
   if (IsFileManager())
   {
-    for (auto uri : dnd_data.Uris())
+    for (auto const& uri : dnd_data.Uris())
     {
       if (boost::algorithm::starts_with(uri, "file://"))
         return true;
@@ -1185,7 +1175,7 @@ bool ApplicationLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
 nux::DndAction ApplicationLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_data)
 {
 #ifdef USE_X11
-  return ValidateUrisForLaunch(dnd_data).empty() ? nux::DNDACTION_NONE : nux::DNDACTION_COPY;
+  return dnd_data.Uris().empty() ? nux::DNDACTION_NONE : nux::DNDACTION_COPY;
 #else
   return nux::DNDACTION_NONE;
 #endif
@@ -1194,7 +1184,7 @@ nux::DndAction ApplicationLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_dat
 void ApplicationLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
 {
   auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
-  OpenInstanceWithUris(ValidateUrisForLaunch(dnd_data), timestamp);
+  OpenInstanceWithUris(dnd_data.Uris(), timestamp);
 }
 
 bool ApplicationLauncherIcon::ShowInSwitcher(bool current)

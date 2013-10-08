@@ -133,13 +133,13 @@ public:
     volume_->StopDrive();
   }
 
-  void OpenInFileManager(uint64_t timestamp)
+  void DoActionWhenMounted(std::function<void()> const& callback)
   {
     if (!volume_->IsMounted())
     {
       auto conn = std::make_shared<sigc::connection>();
-      *conn = volume_->mounted.connect([this, conn, timestamp] {
-        file_manager_->OpenActiveChild(volume_->GetUri(), timestamp);
+      *conn = volume_->mounted.connect([this, conn, callback] {
+        callback();
         conn->disconnect();
       });
       connections_.Add(*conn);
@@ -147,8 +147,22 @@ public:
     }
     else
     {
-      file_manager_->OpenActiveChild(volume_->GetUri(), timestamp);
+      callback();
     }
+  }
+
+  void OpenInFileManager(uint64_t timestamp)
+  {
+    DoActionWhenMounted([this, timestamp] {
+      file_manager_->OpenActiveChild(volume_->GetUri(), timestamp);
+    });
+  }
+
+  void CopyFilesToVolume(std::set<std::string> const& files, uint64_t timestamp)
+  {
+    DoActionWhenMounted([this, files, timestamp] {
+      file_manager_->CopyFiles(files, volume_->GetUri(), timestamp);
+    });
   }
 
   MenuItemsVector GetMenus()
@@ -372,6 +386,28 @@ void VolumeLauncherIcon::UnStick()
 {
   SimpleLauncherIcon::UnStick();
   SetQuirk(Quirk::VISIBLE, true);
+}
+
+bool VolumeLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
+{
+  for (auto const& uri : dnd_data.Uris())
+  {
+    if (uri.find("file://") == 0)
+      return true;
+  }
+
+  return false;
+}
+
+nux::DndAction VolumeLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_data)
+{
+  return dnd_data.Uris().empty() ? nux::DNDACTION_NONE : nux::DNDACTION_COPY;
+}
+
+void VolumeLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
+{
+  auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
+  pimpl_->CopyFilesToVolume(dnd_data.Uris(), timestamp);
 }
 
 //

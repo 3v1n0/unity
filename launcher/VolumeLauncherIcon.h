@@ -53,7 +53,10 @@ public:
   std::string GetRemoteUri() const;
 
 protected:
-  virtual void ActivateLauncherIcon(ActionArg arg);
+  void ActivateLauncherIcon(ActionArg arg);
+  bool OnShouldHighlightOnDrag(DndData const&);
+  void OnAcceptDrop(DndData const&);
+  nux::DndAction OnQueryAcceptDrop(DndData const&);
 
   // Introspection
   virtual std::string GetName() const;
