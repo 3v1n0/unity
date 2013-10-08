@@ -579,7 +579,18 @@ Size StaticCairoText::Impl::GetTextExtents() const
                                        (float) dpi / (float) PANGO_SCALE);
   }
   pango_layout_context_changed(layout);
-  pango_layout_get_pixel_size(layout, &result.width, &result.height);
+
+  PangoRectangle ink_rect, logic_rect;
+  pango_layout_get_pixel_extents(layout, &ink_rect, &logic_rect);
+
+  result.height = logic_rect.height;
+
+  // See bug https://bugs.launchpad.net/unity/+bug/1190275
+  // "Text in search bar is cut at the end of the last letter"
+  if (ink_rect.width > logic_rect.width)
+    result.width = ink_rect.width;
+  else
+    result.width = logic_rect.width;
 
   if (result.width > parent_->GetMaximumWidth())
   {
