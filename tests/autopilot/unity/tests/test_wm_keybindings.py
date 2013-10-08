@@ -65,7 +65,7 @@ class WindowManagerKeybindings(UnityTestCase):
         self.assertThat(self.unity.panels.get_active_indicator, Eventually(Equals(None)))
 
 
-class WindowManagerKeybindingsForWindowHandling(WindowManagerKeybindings):
+class WindowManagerKeybindingsForWindowHandling(UnityTestCase):
     """Window Manager keybindings tests for handling a window"""
 
     scenarios = [('Restored Window', {'start_restored': True}),

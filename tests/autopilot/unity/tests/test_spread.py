@@ -50,9 +50,9 @@ class SpreadTests(UnityTestCase):
         launcher.click_launcher_icon(icon)
         self.assertThat(self.unity.window_manager.scale_active_for_group, Eventually(Equals(True)))
 
-    def assertWindowIsNotScaled(self, xid):
+    def assertWindowIsNotScaled(self, window):
         """Assert that a window is not scaled"""
-        refresh_fn = lambda: xid in [w.xid for w in self.unity.screen.scaled_windows]
+        refresh_fn = lambda: window.id in [w.id for w in self.unity.screen.scaled_windows]
         self.assertThat(refresh_fn, Eventually(Equals(False)))
 
     def assertWindowIsClosed(self, xid):
@@ -102,7 +102,7 @@ class SpreadTests(UnityTestCase):
         sleep(.5)
         self.mouse.click(button=2)
 
-        self.assertWindowIsNotScaled(target_xid)
+        self.assertWindowIsNotScaled(target_win)
         self.assertWindowIsClosed(target_xid)
 
     def test_scaled_window_closes_on_close_button_click(self):
@@ -118,5 +118,5 @@ class SpreadTests(UnityTestCase):
         sleep(.5)
         self.mouse.click()
 
-        self.assertWindowIsNotScaled(target_xid)
+        self.assertWindowIsNotScaled(target_win)
         self.assertWindowIsClosed(target_xid)
