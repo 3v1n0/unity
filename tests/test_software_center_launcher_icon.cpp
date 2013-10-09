@@ -159,14 +159,19 @@ TEST_F(TestSoftwareCenterLauncherIcon, DisconnectsOldAppSignals)
 
 TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedRemoveInvalidNewAppIcon)
 {
-  bool removed = false;
+  // Using an icon ptr, to get the removed signal to be properly emitted
   nux::ObjectPtr<MockSoftwareCenterLauncherIcon> icon_ptr(
     new MockSoftwareCenterLauncherIcon(usc, "/com/canonical/unity/test/object/path", PRE_INSTALL_ICON));
+
+  bool removed = false;
   auto& app_manager = unity::ApplicationManager::Default();
   auto mock_app_managed = dynamic_cast<MockApplicationManager*>(&app_manager);
+
   EXPECT_CALL(*mock_app_managed, GetApplicationForDesktopFile(_)).WillOnce(Return(nullptr));
   icon_ptr->remove.connect([&removed] (AbstractLauncherIcon::Ptr const&) { removed = true; });
+
   icon_ptr->OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
+
   Mock::VerifyAndClearExpectations(mock_app_managed);
   EXPECT_TRUE(removed);
 }
