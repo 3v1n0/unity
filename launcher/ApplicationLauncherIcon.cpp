@@ -97,7 +97,11 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
 
 ApplicationLauncherIcon::~ApplicationLauncherIcon()
 {
-  SetApplication(nullptr);
+  if (app_)
+  {
+    app_->sticky = false;
+    app_->seen = false;
+  }
 }
 
 ApplicationPtr ApplicationLauncherIcon::GetApplication() const
@@ -110,18 +114,20 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
   if (app_ == app)
     return;
 
+  if (!app)
+  {
+    Remove();
+    return;
+  }
+
   if (app_)
   {
     app_->sticky = false;
     app_->seen = false;
+    signals_conn_.Clear();
   }
 
-  signals_conn_.Clear();
   app_ = app;
-
-  if (!app)
-    return;
-
   app_->seen = true;
   SetupApplicationSignalsConnections();
 
@@ -242,8 +248,10 @@ void ApplicationLauncherIcon::Remove()
    * launcher. Disconnecting from signals we make sure that this icon won't be
    * reused (no duplicated icon). */
   app_->seen = false;
+  app_->sticky = false;
   // Disconnect all our callbacks.
   notify_callbacks(); // This is from sigc++::trackable
+  signals_conn_.Clear();
   SimpleLauncherIcon::Remove();
 }
 
