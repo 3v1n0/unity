@@ -183,7 +183,7 @@ TEST_F(TestApplicationLauncherIcon, ApplicationSignalDisconnection)
     EXPECT_FALSE(app->closed.empty());
   }
 
-  EXPECT_TRUE(app->closed.empty());
+  VerifySignalsDisconnection(app);
 }
 
 TEST_F(TestApplicationLauncherIcon, Position)
@@ -1151,6 +1151,24 @@ TEST_F(TestApplicationLauncherIcon, RemovedPropertyOnRemove)
   ASSERT_FALSE(mock_icon->removed);
   mock_icon->Remove();
   EXPECT_TRUE(mock_icon->removed);
+}
+
+TEST_F(TestApplicationLauncherIcon, RemoveDisconnectsSignals)
+{
+  ASSERT_FALSE(mock_app->closed.empty());
+  mock_icon->Remove();
+  VerifySignalsDisconnection(mock_app);
+}
+
+TEST_F(TestApplicationLauncherIcon, RemoveUnsetsAppParameters)
+{
+  usc_icon->Stick();
+  ASSERT_TRUE(usc_app->seen);
+  ASSERT_TRUE(usc_app->sticky);
+
+  usc_icon->Remove();
+  EXPECT_FALSE(usc_app->seen);
+  EXPECT_FALSE(usc_app->sticky);
 }
 
 TEST_F(TestApplicationLauncherIcon, SetApplicationEqual)
