@@ -705,6 +705,23 @@ TEST(TestGLibSourceManager, DisconnectsOnRemoval)
   EXPECT_FALSE(idle->IsRunning());
 }
 
+TEST(TestGLibSourceManager, DisconnectsOnRemoveAll)
+{
+  Source::Ptr timeout(new Timeout(1, &OnSourceCallbackContinue));
+  Source::Ptr idle(new Idle(&OnSourceCallbackContinue));
+
+  MockSourceManager manager;
+  manager.Add(timeout);
+  manager.Add(idle, "test-idle");
+  ASSERT_TRUE(timeout->IsRunning());
+  ASSERT_TRUE(idle->IsRunning());
+
+  manager.RemoveAll();
+  ASSERT_TRUE(manager.GetSources().empty());
+  EXPECT_FALSE(timeout->IsRunning());
+  EXPECT_FALSE(idle->IsRunning());
+}
+
 TEST(TestGLibSourceManager, RemoveSourceOnCallback)
 {
   SourceManager manager;
@@ -723,9 +740,9 @@ TEST(TestGLibSourceManager, RemoveSourceOnCallback)
 
   Utils::WaitForTimeoutMSec(100);
 
-  ASSERT_EQ(idle->IsRunning(), false);
-  EXPECT_EQ(local_callback_called, true);
-  EXPECT_EQ(local_callback_call_count, 1);
+  ASSERT_FALSE(idle->IsRunning());
+  EXPECT_TRUE(local_callback_called);
+  EXPECT_EQ(1, local_callback_call_count);
 }
 
 }
