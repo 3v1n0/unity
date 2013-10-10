@@ -645,7 +645,9 @@ void LauncherIcon::SetCenter(nux::Point3 const& new_center, int monitor)
   _source_manager.AddTimeout(500, [this] {
     if (!std::equal(_center.begin(), _center.end(), _last_stable.begin()))
     {
-      OnCenterStabilized(_center);
+      if (!removed())
+        OnCenterStabilized(_center);
+
       _last_stable = _center;
     }
 
@@ -747,8 +749,17 @@ LauncherIcon::Remove()
   if (_quicklist && _quicklist->IsVisible())
       _quicklist->Hide();
 
+  if (_tooltip && _tooltip->IsVisible())
+    _tooltip->Hide();
+
   SetQuirk(Quirk::VISIBLE, false);
   EmitRemove();
+
+  // Disconnect all the callbacks that may interact with the icon data
+  _source_manager.RemoveAll();
+  sigc::trackable::notify_callbacks();
+
+  removed = true;
 }
 
 void
