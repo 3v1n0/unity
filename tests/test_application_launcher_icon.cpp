@@ -1182,6 +1182,32 @@ TEST_F(TestApplicationLauncherIcon, DestructionUnsetsAppParameters)
   EXPECT_FALSE(usc_app->sticky);
 }
 
+TEST_F(TestApplicationLauncherIcon, DestructionDontUnsetsAppSeenIfRemoved)
+{
+  ASSERT_TRUE(mock_app->seen);
+
+  mock_icon->Remove();
+  ASSERT_FALSE(mock_app->seen);
+
+  mock_app->seen = true;
+  mock_icon = nullptr;
+
+  EXPECT_TRUE(mock_app->seen);
+}
+
+TEST_F(TestApplicationLauncherIcon, DestructionDontUnsetsAppSeenIfReplaced)
+{
+  ASSERT_TRUE(mock_app->seen);
+
+  mock_icon->Remove();
+  ASSERT_FALSE(mock_app->seen);
+
+  MockApplicationLauncherIcon::Ptr new_icon(new NiceMock<MockApplicationLauncherIcon>(mock_app));
+  mock_icon = nullptr;
+
+  EXPECT_TRUE(mock_app->seen);
+}
+
 TEST_F(TestApplicationLauncherIcon, SetApplicationEqual)
 {
   ASSERT_TRUE(usc_app->seen);
