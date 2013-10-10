@@ -1171,6 +1171,17 @@ TEST_F(TestApplicationLauncherIcon, RemoveUnsetsAppParameters)
   EXPECT_FALSE(usc_app->sticky);
 }
 
+TEST_F(TestApplicationLauncherIcon, DestructionUnsetsAppParameters)
+{
+  usc_icon->Stick();
+  ASSERT_TRUE(usc_app->seen);
+  ASSERT_TRUE(usc_app->sticky);
+
+  usc_icon = nullptr;
+  EXPECT_FALSE(usc_app->seen);
+  EXPECT_FALSE(usc_app->sticky);
+}
+
 TEST_F(TestApplicationLauncherIcon, SetApplicationEqual)
 {
   ASSERT_TRUE(usc_app->seen);
