@@ -113,6 +113,7 @@ private:
     ON_ALL_MONITORS = (1 << 3),
   };
 
+  void UnsetApplication();
   void SetupApplicationSignalsConnections();
   void EnsureWindowState();
   void EnsureMenuItemsWindowsReady();

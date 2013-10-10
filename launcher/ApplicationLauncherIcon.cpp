@@ -39,8 +39,6 @@
 #include <glib/gi18n-lib.h>
 #include <gio/gdesktopappinfo.h>
 
-#include <libbamf/bamf-tab.h>
-
 namespace unity
 {
 namespace launcher
@@ -97,11 +95,7 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
 
 ApplicationLauncherIcon::~ApplicationLauncherIcon()
 {
-  if (app_)
-  {
-    app_->sticky = false;
-    app_->seen = false;
-  }
+  UnsetApplication();
 }
 
 ApplicationPtr ApplicationLauncherIcon::GetApplication() const
@@ -120,12 +114,7 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
     return;
   }
 
-  if (app_)
-  {
-    app_->sticky = false;
-    app_->seen = false;
-    signals_conn_.Clear();
-  }
+  UnsetApplication();
 
   app_ = app;
   app_->seen = true;
@@ -142,6 +131,22 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
   // Make sure we set the LauncherIcon stick bit too...
   if (app_->sticky())
     Stick(false); // don't emit the signal
+}
+
+void ApplicationLauncherIcon::UnsetApplication()
+{
+  if (!app_)
+    return;
+
+  /* Removing the unity-seen flag to the wrapped bamf application, on remove
+   * request we make sure that if the application is re-opened while the
+   * removal process is still ongoing, the application will be shown on the
+   * launcher. Disconnecting from signals we make sure that this icon won't be
+   * updated or will change visibility (no duplicated icon). */
+
+  signals_conn_.Clear();
+  app_->sticky = false;
+  app_->seen = false;
 }
 
 void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
@@ -242,16 +247,7 @@ bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk) const
 void ApplicationLauncherIcon::Remove()
 {
   LogUnityEvent(ApplicationEventType::LEAVE);
-  /* Removing the unity-seen flag to the wrapped bamf application, on remove
-   * request we make sure that if the application is re-opened while the
-   * removal process is still ongoing, the application will be shown on the
-   * launcher. Disconnecting from signals we make sure that this icon won't be
-   * reused (no duplicated icon). */
-  app_->seen = false;
-  app_->sticky = false;
-  // Disconnect all our callbacks.
-  notify_callbacks(); // This is from sigc++::trackable
-  signals_conn_.Clear();
+  UnsetApplication();
   SimpleLauncherIcon::Remove();
 }
 
