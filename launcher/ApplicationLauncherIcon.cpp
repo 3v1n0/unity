@@ -114,6 +114,7 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
     return;
   }
 
+  bool was_sticky = IsSticky();
   UnsetApplication();
 
   app_ = app;
@@ -129,7 +130,7 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
   app_->desktop_file.changed.emit(app_->desktop_file());
 
   // Make sure we set the LauncherIcon stick bit too...
-  if (app_->sticky())
+  if (app_->sticky() || was_sticky)
     Stick(false); // don't emit the signal
 }
 
