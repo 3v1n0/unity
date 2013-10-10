@@ -136,7 +136,7 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
 
 void ApplicationLauncherIcon::UnsetApplication()
 {
-  if (!app_)
+  if (!app_ || removed())
     return;
 
   /* Removing the unity-seen flag to the wrapped bamf application, on remove
