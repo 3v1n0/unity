@@ -972,9 +972,9 @@ bool PluginAdapter::ScaleWindowGroup(std::vector<Window> const& windows, int sta
   std::size_t num_windows = windows.size();
   if (num_windows > 1 || (force && num_windows))
   {
+    _spread_windows_state = true;
     std::string const& match = MatchStringForXids(windows);
     InitiateScale(match, state);
-    _spread_windows_state = true;
     return true;
   }
   return false;
