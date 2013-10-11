@@ -962,7 +962,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   if (options()->hide_mode != LAUNCHER_HIDE_NEVER || hide_machine_.GetQuirk(LauncherHideMachine::LOCK_HIDE))
   {
     float autohide_progress = auto_hide_animation_.GetCurrentValue() * (1.0f - DragOutProgress());
-    if (dash_is_open_ || WindowManager::Default().IsScaleActive())
+    if (dash_is_open_)
     {
       *launcher_alpha = dash_showing_animation_.GetCurrentValue();
     }
