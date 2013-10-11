@@ -1126,6 +1126,7 @@ void Launcher::OnLockHideChanged(GVariant *data)
   }
 }
 
+// FIXME: add monitor-aware quirks!
 void Launcher::DesaturateIcons()
 {
   bool inactive_only = WindowManager::Default().IsScaleActiveForGroup();
@@ -1320,6 +1321,9 @@ void Launcher::OnSpreadChanged()
   hide_machine_.SetQuirk(LauncherHideMachine::SCALE_ACTIVE, active);
 
   bg_effect_helper_.enabled = active;
+
+  if (active && icon_under_mouse_)
+    icon_under_mouse_->HideTooltip();
 
   if (active && (!hovered_ || wm.IsScaleActiveForGroup()))
   {
