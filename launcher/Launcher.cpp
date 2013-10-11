@@ -2257,6 +2257,13 @@ void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_
   if (!hidden_)
     UpdateChangeInMousePosition(dx, dy);
 
+  if (WindowManager::Default().IsScaleActiveForGroup())
+  {
+    auto icon = MouseIconIntersection(x, y);
+    if (icon && !icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
+      SaturateIcons();
+  }
+
   // Every time the mouse moves, we check if it is inside an icon...
   EventLogic();
 
