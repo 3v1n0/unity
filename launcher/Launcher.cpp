@@ -174,10 +174,10 @@ Launcher::Launcher(MockableBaseWindow* parent,
   ql_manager.quicklist_closed.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
 
   WindowManager& wm = WindowManager::Default();
-  wm.initiate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
-  wm.initiate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
+  wm.initiate_spread.connect(sigc::mem_fun(this, &Launcher::OnSpreadChanged));
   wm.terminate_spread.connect(sigc::mem_fun(this, &Launcher::OnSpreadChanged));
-  wm.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnSpreadChanged));
+  wm.initiate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
+  wm.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &Launcher::QueueDraw));
 
   urgent_finished_time_.tv_sec = 0;
