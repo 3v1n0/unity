@@ -31,6 +31,7 @@ using namespace testing;
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/IconRenderer.h"
+#include "StandaloneWindowManager.h"
 #include "test_utils.h"
 
 namespace unity
@@ -46,6 +47,7 @@ class MockMockLauncherIcon : public launcher::MockLauncherIcon
 {
 public:
   typedef nux::ObjectPtr<MockMockLauncherIcon> Ptr;
+  typedef testing::NiceMock<MockMockLauncherIcon> Nice;
   MockMockLauncherIcon(IconType type = IconType::APPLICATION)
     : MockLauncherIcon(type)
   {}
@@ -53,6 +55,7 @@ public:
   MOCK_METHOD1(ShouldHighlightOnDrag, bool(DndData const&));
   MOCK_METHOD1(Stick, void(bool));
   MOCK_METHOD2(PerformScroll, void(ScrollDirection, Time));
+  MOCK_METHOD0(HideTooltip, void());
 };
 
 }
@@ -115,6 +118,7 @@ public:
     using Launcher::SetHidden;
     using Launcher::HandleUrgentIcon;
     using Launcher::SetUrgentTimer;
+    using Launcher::SetIconUnderMouse;
     using Launcher::urgent_timer_running_;
     using Launcher::urgent_finished_time_;
     using Launcher::urgent_wiggle_time_;
@@ -140,7 +144,8 @@ public:
   };
 
   TestLauncher()
-    : parent_window_(new MockableBaseWindow("TestLauncherWindow"))
+    : WM(dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default()))
+    , parent_window_(new MockableBaseWindow("TestLauncherWindow"))
     , model_(new LauncherModel)
     , options_(new Options)
     , launcher_(new MockLauncher(parent_window_.GetPointer()))
@@ -159,7 +164,7 @@ public:
 
     for (unsigned i = 0; i < number; ++i)
     {
-      MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon);
+      MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon::Nice);
       icon->SetCenter(nux::Point3(launcher_geo.x + icon_size/2.0f, launcher_geo.y + icon_size/2.0f * (i+1) + 1, 0), monitor);
 
       icons.push_back(icon);
@@ -173,6 +178,7 @@ public:
   }
 
   MockUScreen uscreen;
+  StandaloneWindowManager* WM;
   nux::ObjectPtr<MockableBaseWindow> parent_window_;
   Settings settings;
   panel::Style panel_style;
@@ -688,9 +694,180 @@ TEST_F(TestLauncher, WiggleUrgentIconAfterLauncherIsRevealed)
   launcher_->HandleUrgentIcon(icon, current);
 
   EXPECT_THAT(launcher_->urgent_finished_time_.tv_sec, Gt(0));
-  EXPECT_THAT(launcher_->urgent_finished_time_.tv_nsec, Gt(0));  
-}  
-
-}
+  EXPECT_THAT(launcher_->urgent_finished_time_.tv_nsec, Gt(0));
 }
 
+TEST_F(TestLauncher, DesaturateAllIconsOnSpread)
+{
+  auto const& icons = AddMockIcons(5);
+  icons[g_random_int()%icons.size()]->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
+
+  WM->SetScaleActiveForGroup(false);
+  WM->SetScaleActive(true);
+  WM->initiate_spread.emit();
+
+  Utils::WaitUntilMSec([&icons] {
+    for (auto const& icon : icons)
+    {
+      if (!icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT))
+        return false;
+    }
+    return true;
+  });
+
+  for (auto const& icon : icons)
+    ASSERT_TRUE(icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+}
+
+TEST_F(TestLauncher, SaturateAllIconsOnSpreadTerminated)
+{
+  auto const& icons = AddMockIcons(5);
+  icons[g_random_int()%icons.size()]->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
+
+  for (auto const& icon : icons)
+    icon->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, true);
+
+  WM->SetScaleActiveForGroup(false);
+  WM->SetScaleActive(false);
+  WM->terminate_spread.emit();
+
+  for (auto const& icon : icons)
+    ASSERT_FALSE(icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+}
+
+TEST_F(TestLauncher, SaturatesAllIconsOnSpreadWithMouseOver)
+{
+  auto const& icons = AddMockIcons(5);
+  icons[g_random_int()%icons.size()]->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
+
+  for (auto const& icon : icons)
+    icon->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, true);
+
+  launcher_->SetHover(true);
+  WM->SetScaleActiveForGroup(false);
+  WM->SetScaleActive(true);
+  WM->initiate_spread.emit();
+
+  Utils::WaitPendingEvents();
+
+  for (auto const& icon : icons)
+    ASSERT_FALSE(icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+}
+
+TEST_F(TestLauncher, DesaturateInactiveIconsOnAppSpread)
+{
+  auto const& icons = AddMockIcons(5);
+  icons[g_random_int()%icons.size()]->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
+
+  WM->SetScaleActiveForGroup(true);
+  WM->SetScaleActive(true);
+  WM->initiate_spread.emit();
+
+  Utils::WaitUntilMSec([&icons] {
+    for (auto const& icon : icons)
+    {
+      if (icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE) == icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT))
+        return false;
+    }
+    return true;
+  });
+
+  for (auto const& icon : icons)
+    ASSERT_NE(icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE), icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+}
+
+TEST_F(TestLauncher, SaturatesAllIconsOnAppSpreadMouseMove)
+{
+  auto const& icons = AddMockIcons(5);
+  unsigned active_idx = g_random_int()%icons.size();
+  icons[active_idx]->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
+
+  launcher_->SetHover(true);
+  WM->SetScaleActiveForGroup(true);
+  WM->SetScaleActive(true);
+  WM->initiate_spread.emit();
+
+  Utils::WaitUntilMSec([&icons] {
+    for (auto const& icon : icons)
+    {
+      if (icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE) == icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT))
+        return false;
+    }
+    return true;
+  });
+
+  for (auto const& icon : icons)
+    ASSERT_NE(icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE), icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+
+  auto const& active_center = icons[active_idx]->GetCenter(launcher_->monitor());
+  launcher_->mouse_move.emit(active_center.x, active_center.y, 0, 0, 0, 0);
+
+  for (auto const& icon : icons)
+    ASSERT_NE(icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE), icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+
+  auto const& other_center = icons[(active_idx+1)%icons.size()]->GetCenter(launcher_->monitor());
+  launcher_->mouse_move.emit(other_center.x, other_center.y, 0, 0, 0, 0);
+
+  for (auto const& icon : icons)
+    ASSERT_FALSE(icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+
+  launcher_->SetHover(false);
+  for (auto const& icon : icons)
+    ASSERT_NE(icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE), icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+
+  launcher_->SetHover(true);
+  for (auto const& icon : icons)
+    ASSERT_FALSE(icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+}
+
+TEST_F(TestLauncher, DesaturateActiveIconOnAppSpreadIconUpdate)
+{
+  auto const& icons = AddMockIcons(5);
+  unsigned active_idx = g_random_int()%icons.size();
+  icons[active_idx]->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
+
+  launcher_->SetHover(true);
+  WM->SetScaleActiveForGroup(true);
+  WM->SetScaleActive(true);
+  WM->initiate_spread.emit();
+
+  Utils::WaitPendingEvents();
+  for (auto const& icon : icons)
+    ASSERT_NE(icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE), icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+
+  unsigned new_active_idx = (active_idx+1)%icons.size();
+  icons[active_idx]->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, false);
+  icons[new_active_idx]->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
+
+  WM->terminate_spread.emit();
+  WM->initiate_spread.emit();
+
+  Utils::WaitPendingEvents();
+  for (auto const& icon : icons)
+    ASSERT_NE(icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE), icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+}
+
+TEST_F(TestLauncher, HideTooltipOnSpread)
+{
+  auto icon = AddMockIcons(1).front();
+  EXPECT_CALL(*icon, HideTooltip());
+
+  launcher_->SetIconUnderMouse(icon);
+  WM->SetScaleActive(true);
+  WM->initiate_spread.emit();
+}
+
+TEST_F(TestLauncher, HideTooltipOnExpo)
+{
+  auto icon = AddMockIcons(1).front();
+  EXPECT_CALL(*icon, HideTooltip());
+
+  if (!WM->IsExpoActive())
+    WM->InitiateExpo();
+
+  launcher_->SetIconUnderMouse(icon);
+  WM->initiate_expo.emit();
+}
+
+} // namespace launcher
+} // namespace unity
