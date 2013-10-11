@@ -1311,7 +1311,11 @@ int Launcher::GetMouseY() const
 void Launcher::OnPluginStateChanged()
 {
   WindowManager& wm = WindowManager::Default();
-  hide_machine_.SetQuirk(LauncherHideMachine::EXPO_ACTIVE, wm.IsExpoActive());
+  bool expo_active = wm.IsExpoActive();
+  hide_machine_.SetQuirk(LauncherHideMachine::EXPO_ACTIVE, expo_active);
+
+  if (expo_active && icon_under_mouse_)
+    icon_under_mouse_->HideTooltip();
 }
 
 void Launcher::OnSpreadChanged()
