@@ -178,3 +178,15 @@ class SpreadTests(UnityTestCase):
         self.initiate_spread_for_application(char_win.application.desktop_file)
         self.initiate_spread_for_application(cal_win.application.desktop_file)
         self.assertLauncherIconsDesaturated(also_active=False)
+
+    def test_spread_hides_icon_tooltip(self):
+        """Tests that the screen spread hides the active tooltip."""
+        [win] = self.start_test_application_windows("Calculator", 1)
+        icon = self.unity.launcher.model.get_icon(desktop_id=win.application.desktop_file)
+        self.mouse.move(icon.center_x, icon.center_y)
+
+        self.assertThat(lambda: icon.get_tooltip(), Eventually(NotEquals(None)))
+        self.assertThat(icon.get_tooltip().active, Eventually(Equals(True)))
+
+        self.initiate_spread_for_screen()
+        self.assertThat(icon.get_tooltip().active, Eventually(Equals(False)))
