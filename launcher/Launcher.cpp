@@ -1321,7 +1321,7 @@ void Launcher::OnSpreadChanged()
 
   bg_effect_helper_.enabled = active;
 
-  if (active)
+  if (active && (!hovered_ || wm.IsScaleActiveForGroup()))
   {
     // The icons can take some ms to update their active state, this can protect us.
     sources_.AddIdle([this] { DesaturateIcons(); return false; }, SCALE_DESATURATE_IDLE);
