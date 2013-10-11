@@ -1,8 +1,40 @@
-unity (7.1.2-0ubuntu1) UNRELEASED; urgency=low
+unity (7.1.2+13.10.20131011-0ubuntu1) saucy; urgency=low
 
+  [ Stephen M. Webb ]
   * bump upstream version to 7.1.2
 
- -- Stephen M. Webb <stephen.webb@canonical.com>  Thu, 10 Oct 2013 09:41:09 -0400
+  [ Brandon Schaefer ]
+  * Remove the ibus workaround, as im-config has been updated to use
+    'auto' as its default choice. This means ibus-daemon will start up
+    correctly now.
+
+  [ Andrea Azzarone ]
+  * Fix rendering of italic text in StaticCairoText. (LP: #1190275)
+
+  [ Marco Trevisan (Treviño) ]
+  * Volume: remove FileManager instance, handle opened status in
+    VolumeLauncherIcon. (LP: #1236468)
+  * VolumeLauncherIcon: copy files to device on DnD Use filemanager to
+    perform the copy action. If needed, delay the procedure until we
+    don't have the volume mounted (using a magic utility function to
+    share the code). (LP: #838731)
+  * LauncherIcon: Add monitor parameter to GetTipPosition. (LP:
+    #1236631)
+  * AP, TestSpread: assertWindowIsNotScaled may fail when getting the
+    Xid. (LP: #1236872)
+  * ApplicationLauncherIcon: remove the icon when setting a null
+    application. (LP: #1237161)
+  * SourceManager: add RemoveAll public method.
+  * ApplicationLauncherIcon: don't unset the app if the icon has been
+    already removed In this case the app is unset when removed, doing it
+    twice causes the app->seen flag to be reset and this breaks the
+    assumtions of the LauncherController, making it to recreate a new
+    app for the same BamfApplication. (LP: #1237182)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3565
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 11 Oct 2013 06:17:18 +0000
 
 unity (7.1.1+13.10.20131004-0ubuntu1) saucy; urgency=low
 
