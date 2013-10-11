@@ -65,6 +65,17 @@ class SpreadTests(UnityTestCase):
         refresh_fn = lambda: xid in [w.x_id for w in self.process_manager.get_open_windows()]
         self.assertThat(refresh_fn, Eventually(Equals(False)))
 
+    def assertLauncherIconsSaturated(self):
+        for icon in self.unity.launcher.model.get_launcher_icons():
+            self.assertThat(icon.desaturated, Eventually(Equals(False)))
+
+    def assertLauncherIconsDesaturated(self, also_active=True):
+        for icon in self.unity.launcher.model.get_launcher_icons():
+            if isinstance(icon, BFBLauncherIcon) or (not also_active and icon.active):
+                self.assertThat(icon.desaturated, Eventually(Equals(False)))
+            else:
+                self.assertThat(icon.desaturated, Eventually(Equals(True)))
+
     def test_scale_application_windows(self):
         """All the windows of an application must be scaled when application
         spread is initiated
@@ -131,47 +142,39 @@ class SpreadTests(UnityTestCase):
         self.start_test_application_windows("Calculator", 1)
         self.initiate_spread_for_screen()
         self.launcher.move_mouse_to_right_of_launcher()
-
-        for icon in self.unity.launcher.model.get_launcher_icons():
-            if isinstance(icon, BFBLauncherIcon):
-                self.assertThat(icon.desaturated, Eventually(Equals(False)))
-            else:
-                self.assertThat(icon.desaturated, Eventually(Equals(True)))
+        self.assertLauncherIconsDesaturated()
 
     def test_spread_saturate_launcher_icons_on_mouse_over(self):
         """Test that the screen spread re-saturates the launcher icons on mouse over"""
         win = self.start_test_application_windows("Calculator", 2)[0]
         self.initiate_spread_for_application(win.application.desktop_file)
         self.launcher.move_mouse_over_launcher()
-
-        for icon in self.unity.launcher.model.get_launcher_icons():
-            self.assertThat(icon.desaturated, Eventually(Equals(False)))
+        self.assertLauncherIconsSaturated()
 
     def test_app_spread_desaturate_inactive_launcher_icons(self):
         """Test that the app spread desaturates the inactive launcher icons"""
         win = self.start_test_application_windows("Calculator", 2)[0]
         self.initiate_spread_for_application(win.application.desktop_file)
-
-        for icon in self.unity.launcher.model.get_launcher_icons():
-            if isinstance(icon, BFBLauncherIcon) or icon.active:
-                self.assertThat(icon.desaturated, Eventually(Equals(False)))
-            else:
-                self.assertThat(icon.desaturated, Eventually(Equals(True)))
+        self.assertLauncherIconsDesaturated(also_active=False)
 
     def test_app_spread_saturate_launcher_icons_on_mouse_move(self):
         """Test that the app spread re-saturates the launcher icons on mouse move"""
         win = self.start_test_application_windows("Calculator", 2)[0]
         self.initiate_spread_for_application(win.application.desktop_file)
         self.launcher.move_mouse_to_icon(self.unity.launcher.model.get_bfb_icon())
-
-        for icon in self.unity.launcher.model.get_launcher_icons():
-            self.assertThat(icon.desaturated, Eventually(Equals(False)))
+        self.assertLauncherIconsSaturated()
 
     def test_app_spread_saturate_launcher_icons_on_mouse_over(self):
         """Test that the app spread re-saturates the launcher icons on mouse over"""
         win = self.start_test_application_windows("Calculator", 2)[0]
         self.initiate_spread_for_application(win.application.desktop_file)
         self.launcher.move_mouse_over_launcher()
+        self.assertLauncherIconsSaturated()
 
-        for icon in self.unity.launcher.model.get_launcher_icons():
-            self.assertThat(icon.desaturated, Eventually(Equals(False)))
+    def test_app_spread_desaturate_launcher_icons_switching_application(self):
+        """Test that the app spread desaturates the launcher icons on mouse over"""
+        cal_win = self.start_test_application_windows("Calculator", 2)[0]
+        char_win = self.start_test_application_windows("Character Map", 2)[0]
+        self.initiate_spread_for_application(char_win.application.desktop_file)
+        self.initiate_spread_for_application(cal_win.application.desktop_file)
+        self.assertLauncherIconsDesaturated(also_active=False)
