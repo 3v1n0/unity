@@ -853,7 +853,7 @@ void ApplicationLauncherIcon::AboutToRemove()
 
 void ApplicationLauncherIcon::Stick(bool save)
 {
-  if (IsSticky())
+  if (IsSticky() && !save)
     return;
 
   app_->sticky = true;
