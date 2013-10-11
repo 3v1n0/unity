@@ -220,8 +220,9 @@ TEST_F(TestApplicationLauncherIcon, StickDesktopApp)
   EXPECT_TRUE(usc_icon->IsVisible());
   EXPECT_FALSE(saved);
 
+  EXPECT_CALL(*unity_app_, LogEvent(ApplicationEventType::ACCESS, _)).Times(1);
   usc_icon->Stick(true);
-  EXPECT_FALSE(saved);
+  EXPECT_TRUE(saved);
 }
 
 TEST_F(TestApplicationLauncherIcon, StickDesktopLessApp)
