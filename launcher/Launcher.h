@@ -200,6 +200,7 @@ private:
 #endif
 
   void OnPluginStateChanged();
+  void OnSpreadChanged();
 
   void OnSelectionChanged(AbstractLauncherIcon::Ptr const& selection);
 

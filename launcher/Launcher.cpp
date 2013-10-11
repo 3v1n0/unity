@@ -94,6 +94,7 @@ const int DOUBLE_TIME = 2;
 const std::string START_DRAGICON_TIMEOUT = "start-dragicon-timeout";
 const std::string SCROLL_TIMEOUT = "scroll-timeout";
 const std::string ANIMATION_IDLE = "animation-idle";
+const std::string SCALE_DESATURATE_IDLE = "scale-desaturate-idle";
 const std::string URGENT_TIMEOUT = "urgent-timeout";
 }
 
@@ -175,8 +176,8 @@ Launcher::Launcher(MockableBaseWindow* parent,
   WindowManager& wm = WindowManager::Default();
   wm.initiate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   wm.initiate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
-  wm.terminate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
-  wm.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
+  wm.terminate_spread.connect(sigc::mem_fun(this, &Launcher::OnSpreadChanged));
+  wm.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnSpreadChanged));
   wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &Launcher::QueueDraw));
 
   urgent_finished_time_.tv_sec = 0;
@@ -961,7 +962,7 @@ void Launcher::RenderArgs(std::list<RenderArg> &launcher_args,
   if (options()->hide_mode != LAUNCHER_HIDE_NEVER || hide_machine_.GetQuirk(LauncherHideMachine::LOCK_HIDE))
   {
     float autohide_progress = auto_hide_animation_.GetCurrentValue() * (1.0f - DragOutProgress());
-    if (dash_is_open_)
+    if (dash_is_open_ || WindowManager::Default().IsScaleActive())
     {
       *launcher_alpha = dash_showing_animation_.GetCurrentValue();
     }
@@ -1127,21 +1128,27 @@ void Launcher::OnLockHideChanged(GVariant *data)
 
 void Launcher::DesaturateIcons()
 {
-  for (auto icon : *model_)
+  bool inactive_only = WindowManager::Default().IsScaleActiveForGroup();
+
+  for (auto const& icon : *model_)
   {
+    bool desaturate = false;
+
     if (icon->GetIconType () != AbstractLauncherIcon::IconType::HOME &&
-        icon->GetIconType () != AbstractLauncherIcon::IconType::HUD)
+        icon->GetIconType () != AbstractLauncherIcon::IconType::HUD &&
+        (!inactive_only || !icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE)))
     {
-      icon->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, true);
+      desaturate = true;
     }
 
+    icon->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, desaturate);
     icon->HideTooltip();
   }
 }
 
 void Launcher::SaturateIcons()
 {
-  for (auto icon : *model_)
+  for (auto const& icon : *model_)
   {
     icon->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, false);
   }
@@ -1243,7 +1250,7 @@ void Launcher::OnOverlayHidden(GVariant* data)
 
 bool Launcher::IsOverlayOpen() const
 {
-  return dash_is_open_ || hud_is_open_;
+  return dash_is_open_ || hud_is_open_ || WindowManager::Default().IsScaleActive();
 }
 
 void Launcher::SetHidden(bool hide_launcher)
@@ -1304,7 +1311,26 @@ void Launcher::OnPluginStateChanged()
 {
   WindowManager& wm = WindowManager::Default();
   hide_machine_.SetQuirk(LauncherHideMachine::EXPO_ACTIVE, wm.IsExpoActive());
-  hide_machine_.SetQuirk(LauncherHideMachine::SCALE_ACTIVE, wm.IsScaleActive());
+}
+
+void Launcher::OnSpreadChanged()
+{
+  WindowManager& wm = WindowManager::Default();
+  bool active = wm.IsScaleActive();
+  hide_machine_.SetQuirk(LauncherHideMachine::SCALE_ACTIVE, active);
+
+  bg_effect_helper_.enabled = active;
+
+  if (active)
+  {
+    // The icons can take some ms to update their active state, this can protect us.
+    sources_.AddIdle([this] { DesaturateIcons(); return false; }, SCALE_DESATURATE_IDLE);
+  }
+  else
+  {
+    sources_.Remove(SCALE_DESATURATE_IDLE);
+    SaturateIcons();
+  }
 }
 
 LauncherHideMode Launcher::GetHideMode() const
