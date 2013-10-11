@@ -8,15 +8,21 @@
 
 from __future__ import absolute_import
 
+from autopilot.display import Display
 from autopilot.matchers import Eventually
 from testtools.matchers import Equals, NotEquals
 from time import sleep
+from unity.emulators.icons import BFBLauncherIcon
 
 from unity.tests import UnityTestCase
 
 
 class SpreadTests(UnityTestCase):
     """Spread tests"""
+
+    def setUp(self):
+        super(SpreadTests, self).setUp()
+        self.launcher = self.unity.launcher.get_launcher_for_monitor(self.display.get_primary_screen())
 
     def start_test_application_windows(self, app_name, num_windows=2):
         """Start a given number of windows of the requested application"""
@@ -44,10 +50,9 @@ class SpreadTests(UnityTestCase):
         """Initiate the Spread for windows of the given app"""
         icon = self.unity.launcher.model.get_icon(desktop_id=desktop_id)
         self.assertThat(icon, NotEquals(None))
-        launcher = self.unity.launcher.get_launcher_for_monitor(self.display.get_primary_screen())
 
         self.addCleanup(self.unity.window_manager.terminate_spread)
-        launcher.click_launcher_icon(icon)
+        self.launcher.click_launcher_icon(icon, move_mouse_after=False)
         self.assertThat(self.unity.window_manager.scale_active_for_group, Eventually(Equals(True)))
 
     def assertWindowIsNotScaled(self, window):
@@ -120,3 +125,53 @@ class SpreadTests(UnityTestCase):
 
         self.assertWindowIsNotScaled(target_win)
         self.assertWindowIsClosed(target_xid)
+
+    def test_spread_desaturate_launcher_icons(self):
+        """Test that the screen spread desaturates the launcher icons"""
+        self.start_test_application_windows("Calculator", 1)
+        self.initiate_spread_for_screen()
+        self.launcher.move_mouse_to_right_of_launcher()
+
+        for icon in self.unity.launcher.model.get_launcher_icons():
+            if isinstance(icon, BFBLauncherIcon):
+                self.assertThat(icon.desaturated, Eventually(Equals(False)))
+            else:
+                self.assertThat(icon.desaturated, Eventually(Equals(True)))
+
+    def test_spread_saturate_launcher_icons_on_mouse_over(self):
+        """Test that the screen spread re-saturates the launcher icons on mouse over"""
+        win = self.start_test_application_windows("Calculator", 2)[0]
+        self.initiate_spread_for_application(win.application.desktop_file)
+        self.launcher.move_mouse_over_launcher()
+
+        for icon in self.unity.launcher.model.get_launcher_icons():
+            self.assertThat(icon.desaturated, Eventually(Equals(False)))
+
+    def test_app_spread_desaturate_inactive_launcher_icons(self):
+        """Test that the app spread desaturates the inactive launcher icons"""
+        win = self.start_test_application_windows("Calculator", 2)[0]
+        self.initiate_spread_for_application(win.application.desktop_file)
+
+        for icon in self.unity.launcher.model.get_launcher_icons():
+            if isinstance(icon, BFBLauncherIcon) or icon.active:
+                self.assertThat(icon.desaturated, Eventually(Equals(False)))
+            else:
+                self.assertThat(icon.desaturated, Eventually(Equals(True)))
+
+    def test_app_spread_saturate_launcher_icons_on_mouse_move(self):
+        """Test that the app spread re-saturates the launcher icons on mouse move"""
+        win = self.start_test_application_windows("Calculator", 2)[0]
+        self.initiate_spread_for_application(win.application.desktop_file)
+        self.launcher.move_mouse_to_icon(self.unity.launcher.model.get_bfb_icon())
+
+        for icon in self.unity.launcher.model.get_launcher_icons():
+            self.assertThat(icon.desaturated, Eventually(Equals(False)))
+
+    def test_app_spread_saturate_launcher_icons_on_mouse_over(self):
+        """Test that the app spread re-saturates the launcher icons on mouse over"""
+        win = self.start_test_application_windows("Calculator", 2)[0]
+        self.initiate_spread_for_application(win.application.desktop_file)
+        self.launcher.move_mouse_over_launcher()
+
+        for icon in self.unity.launcher.model.get_launcher_icons():
+            self.assertThat(icon.desaturated, Eventually(Equals(False)))
