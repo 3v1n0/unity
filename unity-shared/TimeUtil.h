@@ -18,13 +18,16 @@
  * Authored by: Alex Launi <alex.launi@gmail.com>
  */
 
+#ifndef TIME_UTIL_H
+#define TIME_UTIL_H
+
 #include <time.h>
 #include <cstdint>
 
 typedef int64_t DeltaTime;
 
-namespace unity {
-
+namespace unity
+{
 class TimeUtil
 {
 public:
@@ -69,5 +72,40 @@ public:
   }
 };
 
+namespace time
+{
+  struct Spec
+  {
+    Spec()
+      : ts({0, 0})
+    {}
+
+    void Reset()
+    {
+      ts.tv_sec = 0;
+      ts.tv_nsec = 0;
+    }
+
+    void SetToNow()
+    {
+      clock_gettime(CLOCK_MONOTONIC, &ts);
+    }
+
+    DeltaTime TimeDelta(Spec const& other)
+    {
+      return TimeUtil::TimeDelta(&ts, &other.ts);
+    }
+
+    operator struct timespec() const
+    {
+      return ts;
+    }
+
+  private:
+    struct timespec ts;
+  };
+}
 
 }
+
+#endif // TIME_UTIL_H
