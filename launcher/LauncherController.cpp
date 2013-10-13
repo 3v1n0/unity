@@ -939,7 +939,6 @@ SoftwareCenterLauncherIcon::Ptr Controller::Impl::CreateSCLauncherIcon(std::stri
     return result;
 
   result = new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path);
-  result->Stick(false);
 
   return result;
 }
