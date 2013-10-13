@@ -32,9 +32,11 @@
 
 #include <libdbusmenu-glib/menuitem.h>
 #include "unity-shared/ApplicationManager.h"
+#include "unity-shared/TimeUtil.h"
 #include <UnityCore/GTKWrapper.h>
 
 #include "AbstractLauncherIcon.h"
+#include "MultiMonitor.h"
 
 namespace unity
 {
@@ -69,14 +71,13 @@ public:
     : icon_(0)
     , type_(type)
     , sort_priority_(DefaultPriority(type))
+    , quirks_(monitors::MAX, decltype(quirks_)::value_type(unsigned(Quirk::LAST), false))
+    , quirk_times_(monitors::MAX, decltype(quirk_times_)::value_type(unsigned(Quirk::LAST)))
     , remote_uri_("fake")
     , is_tooltip_visible_(false)
   {
     tooltip_text = "Mock Icon";
     position = Position::FLOATING;
-
-    for (unsigned i = 0; i < unsigned(Quirk::LAST); ++i)
-      quirks_[i] = false;
   }
 
   std::string GetName() const { return "MockLauncherIcon"; }
@@ -230,22 +231,55 @@ public:
     return 0;
   }
 
-  bool GetQuirk(Quirk quirk) const
+  bool GetQuirk(Quirk quirk, int monitor = -1) const
   {
-    return quirks_[unsigned(quirk)];
+    if (monitor < 0)
+    {
+      for (unsigned i = 0; i < monitors::MAX; ++i)
+      {
+        if (!quirks_[i][unsigned(quirk)])
+          return false;
+      }
+
+      return true;
+    }
+
+    return quirks_[monitor][unsigned(quirk)];
   }
 
-  void SetQuirk(Quirk quirk, bool value)
+  void SetQuirk(Quirk quirk, bool value, int monitor = -1)
   {
-    quirks_[unsigned(quirk)] = value;
-    clock_gettime(CLOCK_MONOTONIC, &(quirk_times_[unsigned(quirk)]));
+    if (monitor < 0)
+    {
+      for (unsigned i = 0; i < monitors::MAX; ++i)
+      {
+        quirks_[i][unsigned(quirk)] = value;
+        quirk_times_[i][unsigned(quirk)].SetToNow();
+      }
+    }
+    else
+    {
+      quirks_[monitor][unsigned(quirk)] = value;
+      quirk_times_[monitor][unsigned(quirk)].SetToNow();
+    }
   }
 
-  void ResetQuirkTime(Quirk quirk) {};
-
-  struct timespec GetQuirkTime(Quirk quirk)
+  void ResetQuirkTime(Quirk quirk, int monitor)
   {
-    return quirk_times_[unsigned(quirk)];
+    if (monitor < 0)
+    {
+      for (unsigned i = 0; i < monitors::MAX; ++i)
+        quirk_times_[i][unsigned(quirk)].Reset();
+    }
+    else
+    {
+      quirk_times_[monitor][unsigned(quirk)].Reset();
+    }
+  };
+
+  struct timespec GetQuirkTime(Quirk quirk, int monitor)
+  {
+    return quirk_times_[monitor][unsigned(quirk)];
   }
 
   IconType GetIconType() const
@@ -371,8 +405,8 @@ private:
   nux::BaseTexture* icon_;
   IconType type_;
   int sort_priority_;
-  bool quirks_[unsigned(Quirk::LAST)];
-  timespec quirk_times_[unsigned(Quirk::LAST)];
+  std::vector<std::vector<bool>> quirks_;
+  std::vector<std::vector<time::Spec>> quirk_times_;
   std::map<int, nux::Point3> center_;
   std::string remote_uri_;
   bool is_tooltip_visible_;
