@@ -298,13 +298,13 @@ void Controller::Impl::OnDndFinished()
   }
 }
 
-void Controller::Impl::OnDndMonitorChanged(int monitor)
+void Controller::Impl::OnDndMonitorChanged(std::string const& data, int monitor)
 {
   if (parent_->multiple_launchers)
   {
     launchers[last_dnd_monitor_]->UnsetDndQuirk();
     last_dnd_monitor_ = monitor;
-    launchers[last_dnd_monitor_]->SetDndQuirk();
+    launchers[last_dnd_monitor_]->DndStarted(data);
  }
 }
 

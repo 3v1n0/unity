@@ -115,7 +115,7 @@ public:
 
   void OnDndStarted(std::string const& data, int monitor);
   void OnDndFinished();
-  void OnDndMonitorChanged(int monitor);
+  void OnDndMonitorChanged(std::string const& data, int monitor);
   GVariant* OnDBusMethodCall(std::string const& method, GVariant *parameters);
 
   Controller* parent_;
