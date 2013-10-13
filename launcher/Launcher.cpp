@@ -1699,7 +1699,7 @@ void Launcher::EnsureIconOnScreen(AbstractLauncherIcon::Ptr const& selection)
   int natural_y = 0;
   for (auto icon : *model_)
   {
-    if (!icon->IsVisible() || !icon->IsVisibleOnMonitor(monitor))
+    if (!icon->IsVisibleOnMonitor(monitor))
       continue;
 
     if (icon == selection)
@@ -2140,7 +2140,7 @@ void Launcher::UpdateDragWindowPosition(int x, int y)
     {
       auto const& icon = *it;
 
-      if (!icon->IsVisible() || !icon->IsVisibleOnMonitor(monitor))
+      if (!icon->IsVisibleOnMonitor(monitor))
         continue;
 
       if (y >= icon->GetCenter(monitor).y)
@@ -2471,7 +2471,7 @@ AbstractLauncherIcon::Ptr Launcher::MouseIconIntersection(int x, int y) const
 
   for (it = model_->begin(); it != model_->end(); ++it)
   {
-    if (!(*it)->IsVisible() || !(*it)->IsVisibleOnMonitor(monitor))
+    if (!(*it)->IsVisibleOnMonitor(monitor))
       continue;
 
     nux::Point2 screen_coord [4];
