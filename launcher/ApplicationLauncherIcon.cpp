@@ -226,11 +226,11 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
   }));
 }
 
-bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk) const
+bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk, int monitor) const
 {
   if (quirk == Quirk::ACTIVE)
   {
-    if (!SimpleLauncherIcon::GetQuirk(Quirk::ACTIVE))
+    if (!SimpleLauncherIcon::GetQuirk(Quirk::ACTIVE, monitor))
       return false;
 
     if (app_->type() == "webapp")
@@ -242,7 +242,7 @@ bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk) const
     return app_->OwnsWindow(WindowManager::Default().GetActiveWindow());
   }
 
-  return SimpleLauncherIcon::GetQuirk(quirk);
+  return SimpleLauncherIcon::GetQuirk(quirk, monitor);
 }
 
 void ApplicationLauncherIcon::Remove()

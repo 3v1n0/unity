@@ -38,8 +38,6 @@ void SingleMonitorLauncherIcon::UpdateMonitor()
 {
   for (unsigned i = 0; i < monitors::MAX; ++i)
     SetVisibleOnMonitor(i, i == monitor_);
-
-  EmitNeedsRedraw();
 }
 
 void SingleMonitorLauncherIcon::SetMonitor(unsigned monitor)

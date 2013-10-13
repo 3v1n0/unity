@@ -761,7 +761,7 @@ void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr const& icon, int p
 
   if (icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION)
   {
-    icon->visibility_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));
+    icon->visibility_changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::SortAndUpdate)));
     SortAndUpdate();
   }
 
@@ -1250,7 +1250,7 @@ bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, 
     if ((XKeysymToKeycode(display, (*it)->GetShortcut()) == key_code) ||
         ((gchar)((*it)->GetShortcut()) == key_string[0]))
     {
-      struct timespec last_action_time = (*it)->GetQuirkTime(AbstractLauncherIcon::Quirk::LAST_ACTION);
+      struct timespec last_action_time = (*it)->GetQuirkTime(AbstractLauncherIcon::Quirk::LAST_ACTION, 0);
       struct timespec current;
       TimeUtil::SetTimeStruct(&current);
       if (TimeUtil::TimeDelta(&current, &last_action_time) > local::ignore_repeat_shortcut_duration)

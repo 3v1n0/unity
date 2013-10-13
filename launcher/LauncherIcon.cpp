@@ -23,11 +23,9 @@
 #include <NuxCore/Color.h>
 #include <NuxCore/Logger.h>
 
-#include "Launcher.h"
 #include "LauncherIcon.h"
 #include "unity-shared/AnimationUtils.h"
 #include "unity-shared/CairoTexture.h"
-#include "unity-shared/TimeUtil.h"
 
 #include "QuicklistManager.h"
 #include "QuicklistMenuItem.h"
@@ -75,20 +73,14 @@ LauncherIcon::LauncherIcon(IconType type)
   , _background_color(nux::color::White)
   , _glow_color(nux::color::White)
   , _shortcut(0)
+  , _allow_quicklist_to_show(true)
   , _center(monitors::MAX)
   , _has_visible_window(monitors::MAX, false)
-  , _is_visible_on_monitor(monitors::MAX, true)
+  , _quirks(monitors::MAX, decltype(_quirks)::value_type(unsigned(Quirk::LAST), false))
+  , _quirk_times(monitors::MAX, decltype(_quirk_times)::value_type(unsigned(Quirk::LAST)))
   , _last_stable(monitors::MAX)
   , _saved_center(monitors::MAX)
-  , _allow_quicklist_to_show(true)
 {
-  for (unsigned i = 0; i < unsigned(Quirk::LAST); ++i)
-  {
-    _quirks[i] = false;
-    _quirk_times[i].tv_sec = 0;
-    _quirk_times[i].tv_nsec = 0;
-  }
-
   tooltip_enabled = true;
   tooltip_enabled.changed.connect(sigc::mem_fun(this, &LauncherIcon::OnTooltipEnabledChanged));
   tooltip_text.SetSetterFunction(sigc::mem_fun(this, &LauncherIcon::SetTooltipText));
@@ -692,17 +684,13 @@ LauncherIcon::SetWindowVisibleOnMonitor(bool val, int monitor)
 void
 LauncherIcon::SetVisibleOnMonitor(int monitor, bool visible)
 {
-  if (_is_visible_on_monitor[monitor] == visible)
-    return;
-
-  _is_visible_on_monitor[monitor] = visible;
-  EmitNeedsRedraw();
+  SetQuirk(Quirk::VISIBLE, visible, monitor);
 }
 
 bool
 LauncherIcon::IsVisibleOnMonitor(int monitor) const
 {
-  return _is_visible_on_monitor[monitor];
+  return GetQuirk(Quirk::VISIBLE, monitor);
 }
 
 float LauncherIcon::PresentUrgency()
@@ -711,36 +699,36 @@ float LauncherIcon::PresentUrgency()
 }
 
 void
-LauncherIcon::Present(float present_urgency, int length)
+LauncherIcon::Present(float present_urgency, int length, int monitor)
 {
-  if (GetQuirk(Quirk::PRESENTED))
+  if (GetQuirk(Quirk::PRESENTED, monitor))
     return;
 
   if (length >= 0)
   {
-    _source_manager.AddTimeout(length, [this] {
-      if (!GetQuirk(Quirk::PRESENTED))
+    _source_manager.AddTimeout(length, [this, monitor] {
+      if (!GetQuirk(Quirk::PRESENTED, monitor))
         return false;
 
-      Unpresent();
+      Unpresent(monitor);
       return false;
     }, PRESENT_TIMEOUT);
   }
 
   _present_urgency = CLAMP(present_urgency, 0.0f, 1.0f);
-  SetQuirk(Quirk::PRESENTED, true);
-  SetQuirk(Quirk::UNFOLDED, true);
+  SetQuirk(Quirk::PRESENTED, true, monitor);
+  SetQuirk(Quirk::UNFOLDED, true, monitor);
 }
 
 void
-LauncherIcon::Unpresent()
+LauncherIcon::Unpresent(int monitor)
 {
-  if (!GetQuirk(Quirk::PRESENTED))
+  if (!GetQuirk(Quirk::PRESENTED, monitor))
     return;
 
   _source_manager.Remove(PRESENT_TIMEOUT);
-  SetQuirk(Quirk::PRESENTED, false);
-  SetQuirk(Quirk::UNFOLDED, false);
+  SetQuirk(Quirk::PRESENTED, false, monitor);
+  SetQuirk(Quirk::UNFOLDED, false, monitor);
 }
 
 void
@@ -781,27 +769,58 @@ LauncherIcon::GetIconType() const
 }
 
 bool
-LauncherIcon::GetQuirk(LauncherIcon::Quirk quirk) const
+LauncherIcon::GetQuirk(LauncherIcon::Quirk quirk, int monitor) const
 {
-  return _quirks[unsigned(quirk)];
+  if (monitor < 0)
+  {
+    for (unsigned i = 0; i < monitors::MAX; ++i)
+    {
+      if (!_quirks[i][unsigned(quirk)])
+        return false;
+    }
+
+    return true;
+  }
+
+  return _quirks[monitor][unsigned(quirk)];
 }
 
 void
-LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
+LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value, int monitor)
 {
-  if (_quirks[unsigned(quirk)] == value)
+  bool changed = false;
+
+  if (monitor < 0)
+  {
+    for (unsigned i = 0; i < monitors::MAX; ++i)
+    {
+      if (_quirks[i][unsigned(quirk)] != value)
+      {
+        _quirks[i][unsigned(quirk)] = value;
+        _quirk_times[i][unsigned(quirk)].SetToNow();
+        changed = true;
+      }
+    }
+  }
+  else
+  {
+    if (_quirks[monitor][unsigned(quirk)] != value)
+    {
+      _quirks[monitor][unsigned(quirk)] = value;
+      _quirk_times[monitor][unsigned(quirk)].SetToNow();
+      changed = true;
+    }
+  }
+
+  if (!changed)
     return;
 
-  _quirks[unsigned(quirk)] = value;
-  if (quirk == Quirk::VISIBLE)
-    TimeUtil::SetTimeStruct(&(_quirk_times[unsigned(quirk)]), &(_quirk_times[unsigned(quirk)]), Launcher::ANIM_DURATION_SHORT);
-  else
-    clock_gettime(CLOCK_MONOTONIC, &(_quirk_times[unsigned(quirk)]));
   EmitNeedsRedraw();
 
   // Present on urgent as a general policy
   if (quirk == Quirk::VISIBLE && value)
     Present(0.5f, 1500);
+
   if (quirk == Quirk::URGENT)
   {
     if (value)
@@ -811,38 +830,52 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
   }
 
   if (quirk == Quirk::VISIBLE)
-  {
-     visibility_changed.emit();
-  }
+    visibility_changed.emit(monitor);
 }
 
 void
-LauncherIcon::UpdateQuirkTimeDelayed(guint ms, LauncherIcon::Quirk quirk)
+LauncherIcon::UpdateQuirkTimeDelayed(guint ms, LauncherIcon::Quirk quirk, int monitor)
 {
-  _source_manager.AddTimeout(ms, [&, quirk] {
-    UpdateQuirkTime(quirk);
+  _source_manager.AddTimeout(ms, [this, quirk, monitor] {
+    UpdateQuirkTime(quirk, monitor);
     return false;
   }, QUIRK_DELAY_TIMEOUT);
 }
 
 void
-LauncherIcon::UpdateQuirkTime(LauncherIcon::Quirk quirk)
+LauncherIcon::UpdateQuirkTime(LauncherIcon::Quirk quirk, int monitor)
 {
-  clock_gettime(CLOCK_MONOTONIC, &(_quirk_times[unsigned(quirk)]));
+  if (monitor < 0)
+  {
+    for (unsigned i = 0; i < monitors::MAX; ++i)
+      _quirk_times[i][unsigned(quirk)].SetToNow();
+  }
+  else
+  {
+    _quirk_times[monitor][unsigned(quirk)].SetToNow();
+  }
+
   EmitNeedsRedraw();
 }
 
 void
-LauncherIcon::ResetQuirkTime(LauncherIcon::Quirk quirk)
+LauncherIcon::ResetQuirkTime(LauncherIcon::Quirk quirk, int monitor)
 {
-  _quirk_times[unsigned(quirk)].tv_sec = 0;
-  _quirk_times[unsigned(quirk)].tv_nsec = 0;
+  if (monitor < 0)
+  {
+    for (unsigned i = 0; i < monitors::MAX; ++i)
+      _quirk_times[i][unsigned(quirk)].Reset();
+  }
+  else
+  {
+    _quirk_times[monitor][unsigned(quirk)].Reset();
+  }
 }
 
 struct timespec
-LauncherIcon::GetQuirkTime(LauncherIcon::Quirk quirk)
+LauncherIcon::GetQuirkTime(LauncherIcon::Quirk quirk, int monitor)
 {
-  return _quirk_times[unsigned(quirk)];
+  return _quirk_times[monitor][unsigned(quirk)];
 }
 
 void

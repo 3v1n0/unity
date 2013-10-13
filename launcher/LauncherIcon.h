@@ -32,6 +32,7 @@
 #include "Tooltip.h"
 #include "QuicklistView.h"
 #include "LauncherEntryRemote.h"
+#include "unity-shared/TimeUtil.h"
 
 
 namespace unity
@@ -123,11 +124,11 @@ public:
     return 0;
   }
 
-  bool GetQuirk(Quirk quirk) const;
+  bool GetQuirk(Quirk quirk, int monitor = -1) const;
 
-  void SetQuirk(Quirk quirk, bool value);
+  void SetQuirk(Quirk quirk, bool value, int monitor = -1);
 
-  struct timespec GetQuirkTime(Quirk quirk);
+  struct timespec GetQuirkTime(Quirk quirk, int monitor);
 
   IconType GetIconType() const;
 
@@ -203,11 +204,11 @@ protected:
 
   void AddProperties(GVariantBuilder* builder);
 
-  void UpdateQuirkTimeDelayed(guint ms, Quirk quirk);
+  void UpdateQuirkTimeDelayed(guint ms, Quirk quirk, int monitor = -1);
 
-  void UpdateQuirkTime(Quirk quirk);
+  void UpdateQuirkTime(Quirk quirk, int monitor = -1);
 
-  void ResetQuirkTime(Quirk quirk);
+  void ResetQuirkTime(Quirk quirk, int monitor = -1);
 
   void Remove();
 
@@ -215,9 +216,9 @@ protected:
 
   void SetWindowVisibleOnMonitor(bool val, int monitor);
 
-  void Present(float urgency, int length);
+  void Present(float urgency, int length, int monitor = -1);
 
-  void Unpresent();
+  void Unpresent(int monitor = -1);
 
   void SetEmblem(BaseTexturePtr const& emblem);
 
@@ -303,34 +304,30 @@ private:
 
   void OnTooltipEnabledChanged(bool value);
 
-  bool              _sticky;
-  bool              _remote_urgent;
-  float             _present_urgency;
-  float             _progress;
-  int               _sort_priority;
-  int               _last_monitor;
-  nux::Color        _background_color;
-  nux::Color        _glow_color;
-
-  gint64            _shortcut;
+  bool _sticky;
+  bool _remote_urgent;
+  float _present_urgency;
+  float _progress;
+  int _sort_priority;
+  int _last_monitor;
+  nux::Color _background_color;
+  nux::Color _glow_color;
+  gint64 _shortcut;
+  bool _allow_quicklist_to_show;
 
   std::vector<nux::Point3> _center;
   std::vector<bool> _has_visible_window;
-  std::vector<bool> _is_visible_on_monitor;
+  std::vector<std::vector<bool>> _quirks;
+  std::vector<std::vector<time::Spec>> _quirk_times;
   std::vector<nux::Point3> _last_stable;
   std::vector<nux::Point3> _saved_center;
 
-  static glib::Object<GtkIconTheme> _unity_theme;
-
   BaseTexturePtr _emblem;
-
-  bool             _quirks[unsigned(Quirk::LAST)];
-  struct timespec  _quirk_times[unsigned(Quirk::LAST)];
-
-  bool             _allow_quicklist_to_show;
 
   std::list<LauncherEntryRemote::Ptr> _entry_list;
   glib::Object<DbusmenuClient> _remote_menus;
+
+  static glib::Object<GtkIconTheme> _unity_theme;
 
 protected:
   glib::SourceManager _source_manager;
