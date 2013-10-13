@@ -22,13 +22,16 @@
 #include "unity-shared/UScreen.h"
 
 namespace unity {
+namespace
+{
+  const std::string URI_TYPE = "text/uri-list";
+}
 
-XdndManagerImp::XdndManagerImp(XdndStartStopNotifier::Ptr const& xdnd_start_stop_notifier, 
+XdndManagerImp::XdndManagerImp(XdndStartStopNotifier::Ptr const& xdnd_start_stop_notifier,
                                XdndCollectionWindow::Ptr const& xdnd_collection_window)
   : xdnd_start_stop_notifier_(xdnd_start_stop_notifier)
   , xdnd_collection_window_(xdnd_collection_window)
   , last_monitor_(-1)
-  , valid_dnd_in_progress_(false)
 {
   xdnd_start_stop_notifier_->started.connect(sigc::mem_fun(this, &XdndManagerImp::OnDndStarted));
   xdnd_start_stop_notifier_->finished.connect(sigc::mem_fun(this, &XdndManagerImp::OnDndFinished));
@@ -46,9 +49,9 @@ void XdndManagerImp::OnDndFinished()
   xdnd_collection_window_->Deactivate();
   mouse_poller_timeout_.reset();
 
-  if (valid_dnd_in_progress_)
+  if (!dnd_data_.empty())
   {
-    valid_dnd_in_progress_ = false;
+    dnd_data_.clear();
     dnd_finished.emit();
   }
 }
@@ -58,24 +61,25 @@ void XdndManagerImp::OnDndDataCollected(std::vector<std::string> const& mimes)
   if (!IsAValidDnd(mimes))
     return;
 
-  valid_dnd_in_progress_ = true;
-
   auto& gp_display = nux::GetWindowThread()->GetGraphicsDisplay();
-  char target[] = "text/uri-list";
-  glib::String data(gp_display.GetDndData(target));
+  glib::String data(gp_display.GetDndData(const_cast<char*>(URI_TYPE.c_str())));
+  dnd_data_ = data.Str();
+
+  if (dnd_data_.empty())
+    return;
 
   auto uscreen = UScreen::GetDefault();
   last_monitor_ = uscreen->GetMonitorWithMouse();
 
   mouse_poller_timeout_.reset(new glib::Timeout(20, sigc::mem_fun(this, &XdndManagerImp::CheckMousePosition)));
 
-  dnd_started.emit(data.Str(), last_monitor_);
+  dnd_started.emit(dnd_data_, last_monitor_);
 }
 
 bool XdndManagerImp::IsAValidDnd(std::vector<std::string> const& mimes)
 {
   auto end = std::end(mimes);
-  auto it = std::find(std::begin(mimes), end, "text/uri-list");
+  auto it = std::find(std::begin(mimes), end, URI_TYPE);
 
   return it != end;
 }
@@ -85,10 +89,10 @@ bool XdndManagerImp::CheckMousePosition()
   auto uscreen = UScreen::GetDefault();
   auto monitor = uscreen->GetMonitorWithMouse();
 
-  if (valid_dnd_in_progress_ && monitor != last_monitor_)
+  if (!dnd_data_.empty() && monitor != last_monitor_)
   {
     last_monitor_ = monitor;
-    monitor_changed.emit(last_monitor_);
+    monitor_changed.emit(dnd_data_, last_monitor_);
   }
 
   return true;
