@@ -2575,18 +2575,16 @@ void Launcher::DndReset()
   for (auto it : *model_)
   {
     auto icon_type = it->GetIconType();
+    bool desaturate = false;
 
-    if (icon_type == AbstractLauncherIcon::IconType::HOME ||
-        icon_type == AbstractLauncherIcon::IconType::HUD)
+    if (icon_type != AbstractLauncherIcon::IconType::HOME &&
+        icon_type != AbstractLauncherIcon::IconType::HUD)
     {
-      it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, false);
-    }
-    else
-    {
-      it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, is_overlay_open && !hovered_);
+      desaturate = is_overlay_open && !hovered_;
     }
 
-    it->SetQuirk(AbstractLauncherIcon::Quirk::UNFOLDED, false);
+    it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, desaturate, monitor());
+    it->SetQuirk(AbstractLauncherIcon::Quirk::UNFOLDED, false, monitor());
   }
 
   DndHoveredIconReset();
@@ -2657,7 +2655,7 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     if (!steal_drag_ && !dnd_data_.Uris().empty())
     {
       for (auto const& it : *model_)
-        it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, !it->ShouldHighlightOnDrag(dnd_data_));
+        it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, !it->ShouldHighlightOnDrag(dnd_data_), monitor());
     }
   }
 
@@ -2808,7 +2806,6 @@ int Launcher::GetDragDelta() const
   return launcher_drag_delta_;
 }
 
-// XXX: Set monitor aware desaturation
 void Launcher::DndStarted(std::string const& data)
 {
 #ifdef USE_X11
@@ -2831,13 +2828,13 @@ void Launcher::DndStarted(std::string const& data)
     {
       if (it->ShouldHighlightOnDrag(dnd_data_))
       {
-        it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, false);
-        it->SetQuirk(AbstractLauncherIcon::Quirk::UNFOLDED, true);
+        it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, false, monitor());
+        it->SetQuirk(AbstractLauncherIcon::Quirk::UNFOLDED, true, monitor());
       }
       else
       {
-        it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, true);
-        it->SetQuirk(AbstractLauncherIcon::Quirk::UNFOLDED, false);
+        it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, true, monitor());
+        it->SetQuirk(AbstractLauncherIcon::Quirk::UNFOLDED, false, monitor());
       }
     }
   }
@@ -2850,15 +2847,6 @@ void Launcher::DndFinished()
   UnsetDndQuirk();
 
   data_checked_ = false;
-
-  if (IsOverlayOpen() && !hovered_)
-    DesaturateIcons();
-
-  if (!IsOverlayOpen())
-  {
-    for (auto const& icon : *model_)
-      icon->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, false);
-  }
 
   DndReset();
 #endif
@@ -2874,6 +2862,20 @@ void Launcher::SetDndQuirk()
 void Launcher::UnsetDndQuirk()
 {
 #ifdef USE_X11
+
+  if (IsOverlayOpen() && !hovered_)
+  {
+    DesaturateIcons();
+  }
+  else
+  {
+    for (auto const& it : *model_)
+    {
+      it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, false, monitor());
+      it->SetQuirk(AbstractLauncherIcon::Quirk::UNFOLDED, false, monitor());
+    }
+  }
+
   hide_machine_.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
   hide_machine_.SetQuirk(LauncherHideMachine::EXTERNAL_DND_ACTIVE, false);
 #endif
