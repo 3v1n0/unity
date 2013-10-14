@@ -43,6 +43,11 @@ const nux::Size win_size(1024, 768);
 const nux::Color bg_color(95/255.0f, 18/255.0f, 45/255.0f, 1.0f);
 }
 
+struct StandaloneDndManager : XdndManager
+{
+  int Monitor() const { return 0; }
+};
+
 struct LauncherWindow
 {
   LauncherWindow()
@@ -68,7 +73,7 @@ private:
   void Init()
   {
     SetupBackground();
-    controller.reset(new launcher::Controller(std::make_shared<XdndManager>(), std::make_shared<ui::EdgeBarrierController>()));
+    controller.reset(new launcher::Controller(std::make_shared<StandaloneDndManager>(), std::make_shared<ui::EdgeBarrierController>()));
 
     UScreen* uscreen = UScreen::GetDefault();
     std::vector<nux::Geometry> fake_monitor({nux::Geometry(0, 0, win_size.width, win_size.height)});
