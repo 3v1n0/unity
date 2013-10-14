@@ -701,7 +701,6 @@ TEST_F(TestLauncher, DesaturateAllIconsOnSpread)
   auto const& icons = AddMockIcons(5);
   icons[g_random_int()%icons.size()]->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, true);
 
-  WM->SetScaleActiveForGroup(false);
   WM->SetScaleActive(true);
   WM->initiate_spread.emit();
 
@@ -729,8 +728,6 @@ TEST_F(TestLauncher, SaturateAllIconsOnSpreadTerminated)
   for (auto const& icon : icons)
     icon->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, true);
 
-  WM->SetScaleActiveForGroup(false);
-  WM->SetScaleActive(false);
   WM->terminate_spread.emit();
 
   for (auto const& icon : icons)
@@ -746,7 +743,6 @@ TEST_F(TestLauncher, SaturatesAllIconsOnSpreadWithMouseOver)
     icon->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, true);
 
   launcher_->SetHover(true);
-  WM->SetScaleActiveForGroup(false);
   WM->SetScaleActive(true);
   WM->initiate_spread.emit();
 
@@ -868,6 +864,7 @@ TEST_F(TestLauncher, HideTooltipOnExpo)
     WM->InitiateExpo();
 
   launcher_->SetIconUnderMouse(icon);
+  WM->SetExpoActive(true);
   WM->initiate_expo.emit();
 }
 
