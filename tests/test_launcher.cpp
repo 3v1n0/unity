@@ -218,9 +218,9 @@ TEST_F(TestLauncher, TestQuirksDuringDnd)
   launcher_->DndStarted("");
   Utils::WaitPendingEvents();
 
-  EXPECT_FALSE(first->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT));
-  EXPECT_FALSE(second->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT));
-  EXPECT_TRUE(third->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT));
+  EXPECT_FALSE(first->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
+  EXPECT_FALSE(second->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
+  EXPECT_TRUE(third->GetQuirk(launcher::AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
 }
 
 TEST_F(TestLauncher, TestMouseWheelScroll)
@@ -231,7 +231,7 @@ TEST_F(TestLauncher, TestMouseWheelScroll)
   launcher_->SetHover(true);
   launcher_->icon_under_mouse_ = icon;
 
-  unsigned long key_flags = 0; 
+  unsigned long key_flags = 0;
 
   EXPECT_CALL(*icon, PerformScroll(AbstractLauncherIcon::ScrollDirection::UP, _));
   launcher_->RecvMouseWheel(0, 0, 20, 0, key_flags);
@@ -249,14 +249,14 @@ TEST_F(TestLauncher, TestMouseWheelScrollAltPressed)
   launcher_->SetHover(true);
   initial_scroll_delta = launcher_->GetDragDelta();
 
-  unsigned long key_flags = 0; 
+  unsigned long key_flags = 0;
 
   launcher_->RecvMouseWheel(0, 0, 20, 0, key_flags);
   EXPECT_EQ((launcher_->GetDragDelta()), initial_scroll_delta);
 
   key_flags |= nux::NUX_STATE_ALT;
 
-  // scroll down 
+  // scroll down
   launcher_->RecvMouseWheel(0, 0, 20, 0, key_flags);
   EXPECT_EQ((launcher_->GetDragDelta() - initial_scroll_delta), 25);
 
@@ -706,17 +706,20 @@ TEST_F(TestLauncher, DesaturateAllIconsOnSpread)
   WM->SetScaleActive(true);
   WM->initiate_spread.emit();
 
-  Utils::WaitUntilMSec([&icons] {
+  Utils::WaitUntilMSec([this, &icons] {
     for (auto const& icon : icons)
     {
-      if (!icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT))
+      if (!icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()))
         return false;
     }
     return true;
   });
 
   for (auto const& icon : icons)
-    ASSERT_TRUE(icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+  {
+    for (int i = 0; i < static_cast<int>(monitors::MAX); ++i)
+      ASSERT_EQ(launcher_->monitor() == i, icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, i));
+  }
 }
 
 TEST_F(TestLauncher, SaturateAllIconsOnSpreadTerminated)
@@ -732,7 +735,7 @@ TEST_F(TestLauncher, SaturateAllIconsOnSpreadTerminated)
   WM->terminate_spread.emit();
 
   for (auto const& icon : icons)
-    ASSERT_FALSE(icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+    ASSERT_FALSE(icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
 }
 
 TEST_F(TestLauncher, SaturatesAllIconsOnSpreadWithMouseOver)
@@ -751,7 +754,7 @@ TEST_F(TestLauncher, SaturatesAllIconsOnSpreadWithMouseOver)
   Utils::WaitPendingEvents();
 
   for (auto const& icon : icons)
-    ASSERT_FALSE(icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+    ASSERT_FALSE(icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
 }
 
 TEST_F(TestLauncher, DesaturateInactiveIconsOnAppSpread)
@@ -763,17 +766,17 @@ TEST_F(TestLauncher, DesaturateInactiveIconsOnAppSpread)
   WM->SetScaleActive(true);
   WM->initiate_spread.emit();
 
-  Utils::WaitUntilMSec([&icons] {
+  Utils::WaitUntilMSec([this, &icons] {
     for (auto const& icon : icons)
     {
-      if (icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE) == icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT))
+      if (icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, launcher_->monitor()) == icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()))
         return false;
     }
     return true;
   });
 
   for (auto const& icon : icons)
-    ASSERT_NE(icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE), icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+    ASSERT_NE(icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, launcher_->monitor()), icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
 }
 
 TEST_F(TestLauncher, SaturatesAllIconsOnAppSpreadMouseMove)
@@ -787,37 +790,37 @@ TEST_F(TestLauncher, SaturatesAllIconsOnAppSpreadMouseMove)
   WM->SetScaleActive(true);
   WM->initiate_spread.emit();
 
-  Utils::WaitUntilMSec([&icons] {
+  Utils::WaitUntilMSec([this, &icons] {
     for (auto const& icon : icons)
     {
-      if (icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE) == icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT))
+      if (icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, launcher_->monitor()) == icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()))
         return false;
     }
     return true;
   });
 
   for (auto const& icon : icons)
-    ASSERT_NE(icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE), icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+    ASSERT_NE(icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, launcher_->monitor()), icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
 
   auto const& active_center = icons[active_idx]->GetCenter(launcher_->monitor());
   launcher_->mouse_move.emit(active_center.x, active_center.y, 0, 0, 0, 0);
 
   for (auto const& icon : icons)
-    ASSERT_NE(icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE), icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+    ASSERT_NE(icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, launcher_->monitor()), icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
 
   auto const& other_center = icons[(active_idx+1)%icons.size()]->GetCenter(launcher_->monitor());
   launcher_->mouse_move.emit(other_center.x, other_center.y, 0, 0, 0, 0);
 
   for (auto const& icon : icons)
-    ASSERT_FALSE(icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+    ASSERT_FALSE(icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
 
   launcher_->SetHover(false);
   for (auto const& icon : icons)
-    ASSERT_NE(icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE), icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+    ASSERT_NE(icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, launcher_->monitor()), icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
 
   launcher_->SetHover(true);
   for (auto const& icon : icons)
-    ASSERT_FALSE(icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+    ASSERT_FALSE(icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
 }
 
 TEST_F(TestLauncher, DesaturateActiveIconOnAppSpreadIconUpdate)
@@ -833,7 +836,7 @@ TEST_F(TestLauncher, DesaturateActiveIconOnAppSpreadIconUpdate)
 
   Utils::WaitPendingEvents();
   for (auto const& icon : icons)
-    ASSERT_NE(icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE), icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+    ASSERT_NE(icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, launcher_->monitor()), icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
 
   unsigned new_active_idx = (active_idx+1)%icons.size();
   icons[active_idx]->SetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, false);
@@ -844,7 +847,7 @@ TEST_F(TestLauncher, DesaturateActiveIconOnAppSpreadIconUpdate)
 
   Utils::WaitPendingEvents();
   for (auto const& icon : icons)
-    ASSERT_NE(icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE), icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT));
+    ASSERT_NE(icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, launcher_->monitor()), icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
 }
 
 TEST_F(TestLauncher, HideTooltipOnSpread)
