@@ -154,6 +154,15 @@ public:
     launcher_->SetModel(model_);
   }
 
+  ~TestLauncher()
+  {
+    WM->SetScaleActiveForGroup(false);
+    WM->SetScaleActive(false);
+
+    if (WM->IsExpoActive())
+      WM->TerminateExpo();
+  }
+
   std::vector<MockMockLauncherIcon::Ptr> AddMockIcons(unsigned number)
   {
     std::vector<MockMockLauncherIcon::Ptr> icons;
