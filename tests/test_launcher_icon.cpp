@@ -56,10 +56,10 @@ TEST_F(TestLauncherIcon, Construction)
   EXPECT_FALSE(icon.IsVisible());
 
   for (unsigned i = 0; i < unsigned(AbstractLauncherIcon::Quirk::LAST); ++i)
-    ASSERT_FALSE(icon.GetQuirk(static_cast<AbstractLauncherIcon::Quirk>(i)));
-
-  for (unsigned i = 0; i < monitors::MAX; ++i)
-    ASSERT_TRUE(icon.IsVisibleOnMonitor(i));
+  {
+    for (unsigned j = 0; j < monitors::MAX; ++j)
+      ASSERT_FALSE(icon.GetQuirk(static_cast<AbstractLauncherIcon::Quirk>(i), j));
+  }
 }
 
 TEST_F(TestLauncherIcon, Visibility)
