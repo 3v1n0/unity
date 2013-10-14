@@ -28,10 +28,9 @@ using namespace std::chrono;
 FakeApplicationWindow::FakeApplicationWindow(Window xid, uint64_t active_number)
   : xid_(xid)
 {
-  auto WM = dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default());
   auto standalone_window = std::make_shared<StandaloneWindow>(xid_);
   standalone_window->active_number = active_number;
-  WM->AddStandaloneWindow(standalone_window);
+  testwrapper::StandaloneWM::Get()->AddStandaloneWindow(standalone_window);
 
   title.SetGetterFunction([this] { return "FakeApplicationWindow"; });
   icon.SetGetterFunction([this] { return ""; });
@@ -39,8 +38,7 @@ FakeApplicationWindow::FakeApplicationWindow(Window xid, uint64_t active_number)
 
 FakeApplicationWindow::~FakeApplicationWindow()
 {
-  auto WM = dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default());
-  WM->Close(xid_);
+  testwrapper::StandaloneWM::Get()->Close(xid_);
 }
 
 std::string FakeApplicationWindow::type() const { return "mock"; }
@@ -81,8 +79,7 @@ uint64_t FakeLauncherIcon::SwitcherPriority()
  */
 //class TestSwitcherController : public testing::Test
 TestSwitcherController::TestSwitcherController()
-  : WM(dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default()))
-  , animation_controller_(tick_source_)
+  : animation_controller_(tick_source_)
   , mock_window_(new NiceMock<testmocks::MockBaseWindow>())
   , controller_(std::make_shared<Controller>([this] { return mock_window_; }))
 {
@@ -96,9 +93,4 @@ TestSwitcherController::TestSwitcherController()
   icons_.push_back(launcher::AbstractLauncherIcon::Ptr(second_app));
   FakeLauncherIcon* third_app = new FakeLauncherIcon("Third", false, 0x0300);
   icons_.push_back(launcher::AbstractLauncherIcon::Ptr(third_app));
-}
-
-TestSwitcherController::~TestSwitcherController()
-{
-  WM->ResetStatus();
 }

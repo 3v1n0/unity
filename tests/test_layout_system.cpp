@@ -19,7 +19,7 @@
 
 #include <gmock/gmock.h>
 #include "LayoutSystem.h"
-#include "StandaloneWindowManager.h"
+#include "test_standalone_wm.h"
 
 #include <vector>
 
@@ -29,7 +29,6 @@ namespace ui
 {
 namespace
 {
-StandaloneWindowManager* wm = nullptr;
 
 StandaloneWindow::Ptr AddFakeWindowToWM(Window xid, nux::Geometry const& geo = nux::Geometry(1, 2, 30, 40))
 {
@@ -38,15 +37,17 @@ StandaloneWindow::Ptr AddFakeWindowToWM(Window xid, nux::Geometry const& geo = n
   fake_window->geo = geo;
   fake_window->deco_sizes[unsigned(WindowManager::Edge::TOP)] = nux::Size(geo.width, top_deco);
 
-  if (!wm)
-    wm = dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default());
-
-  wm->AddStandaloneWindow(fake_window);
+  testwrapper::StandaloneWM::Get()->AddStandaloneWindow(fake_window);
 
   return fake_window;
 }
 
-TEST(TestLayoutWindow, InitializationNormalWindow)
+struct TestLayoutWindow : testing::Test
+{
+  testwrapper::StandaloneWM wm;
+};
+
+TEST_F(TestLayoutWindow, InitializationNormalWindow)
 {
   const Window xid = g_random_int();
   auto fake_window = AddFakeWindowToWM(xid);
@@ -57,11 +58,9 @@ TEST(TestLayoutWindow, InitializationNormalWindow)
   EXPECT_EQ(lwin.decoration_height, 0);
   EXPECT_EQ(lwin.selected, false);
   EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
-
-  wm->ResetStatus();
 }
 
-TEST(TestLayoutWindow, InitializationMinimizedNormalWindow)
+TEST_F(TestLayoutWindow, InitializationMinimizedNormalWindow)
 {
   const Window xid = g_random_int();
   auto fake_window = AddFakeWindowToWM(xid);
@@ -73,11 +72,9 @@ TEST(TestLayoutWindow, InitializationMinimizedNormalWindow)
   EXPECT_EQ(lwin.decoration_height, 0);
   EXPECT_EQ(lwin.selected, false);
   EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
-
-  wm->ResetStatus();
 }
 
-TEST(TestLayoutWindow, InitializationMaximizedWindow)
+TEST_F(TestLayoutWindow, InitializationMaximizedWindow)
 {
   const Window xid = g_random_int();
   auto fake_window = AddFakeWindowToWM(xid);
@@ -93,11 +90,9 @@ TEST(TestLayoutWindow, InitializationMaximizedWindow)
   EXPECT_EQ(lwin.decoration_height, top_deco);
   EXPECT_EQ(lwin.selected, false);
   EXPECT_EQ(lwin.aspect_ratio, expected_geo.width / static_cast<float>(expected_geo.height));
-
-  wm->ResetStatus();
 }
 
-TEST(TestLayoutWindow, InitializationMinimizedMaximizedWindow)
+TEST_F(TestLayoutWindow, InitializationMinimizedMaximizedWindow)
 {
   const Window xid = g_random_int();
   auto fake_window = AddFakeWindowToWM(xid);
@@ -110,8 +105,6 @@ TEST(TestLayoutWindow, InitializationMinimizedMaximizedWindow)
   EXPECT_EQ(lwin.decoration_height, 0);
   EXPECT_EQ(lwin.selected, false);
   EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
-
-  wm->ResetStatus();
 }
 
 struct TestLayoutSystem : testing::Test
@@ -127,11 +120,7 @@ struct TestLayoutSystem : testing::Test
     lwindows.push_back(std::make_shared<LayoutWindow>(xid));
   }
 
-  ~TestLayoutSystem()
-  {
-    wm->ResetStatus();
-  }
-
+  testwrapper::StandaloneWM wm;
   LayoutSystem ls;
   LayoutWindow::Vector lwindows;
 };

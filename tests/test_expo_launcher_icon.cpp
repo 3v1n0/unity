@@ -21,7 +21,7 @@
 #include <gmock/gmock.h>
 
 #include "launcher/ExpoLauncherIcon.h"
-#include "unity-shared/StandaloneWindowManager.h"
+#include "test_standalone_wm.h"
 
 using namespace unity;
 using namespace unity::launcher;
@@ -31,17 +31,8 @@ namespace
 
 struct TestExpoLauncherIcon : testing::Test
 {
-  TestExpoLauncherIcon()
-    : wm(dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default()))
-  {}
-
-  void TearDown()
-  {
-    wm->ResetStatus();
-  }
-
   ExpoLauncherIcon icon;
-  StandaloneWindowManager* wm;
+  testwrapper::StandaloneWM wm;
 };
 
 TEST_F(TestExpoLauncherIcon, ActivateToggleExpo)

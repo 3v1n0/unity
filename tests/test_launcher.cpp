@@ -31,7 +31,7 @@ using namespace testing;
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/IconRenderer.h"
-#include "StandaloneWindowManager.h"
+#include "test_standalone_wm.h"
 #include "test_utils.h"
 
 namespace unity
@@ -144,19 +144,13 @@ public:
   };
 
   TestLauncher()
-    : WM(dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default()))
-    , parent_window_(new MockableBaseWindow("TestLauncherWindow"))
+    : parent_window_(new MockableBaseWindow("TestLauncherWindow"))
     , model_(new LauncherModel)
     , options_(new Options)
     , launcher_(new MockLauncher(parent_window_.GetPointer()))
   {
     launcher_->options = options_;
     launcher_->SetModel(model_);
-  }
-
-  ~TestLauncher()
-  {
-    WM->ResetStatus();
   }
 
   std::vector<MockMockLauncherIcon::Ptr> AddMockIcons(unsigned number)
@@ -183,7 +177,7 @@ public:
   }
 
   MockUScreen uscreen;
-  StandaloneWindowManager* WM;
+  testwrapper::StandaloneWM WM;
   nux::ObjectPtr<MockableBaseWindow> parent_window_;
   Settings settings;
   panel::Style panel_style;

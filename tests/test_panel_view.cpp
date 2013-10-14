@@ -23,11 +23,11 @@
 #include "PanelView.h"
 #include "unity-shared/MockableBaseWindow.h"
 #include "unity-shared/PanelStyle.h"
-#include "unity-shared/StandaloneWindowManager.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UnitySettings.h"
 
+#include "test_standalone_wm.h"
 #include "test_utils.h"
 
 namespace
@@ -41,19 +41,12 @@ public:
   unity::UBusManager ubus_manager_;
   nux::ObjectPtr<unity::MockableBaseWindow> window_;
   nux::ObjectPtr<unity::PanelView> panel_view_;
-  unity::StandaloneWindowManager* WM;
+  unity::testwrapper::StandaloneWM WM;
 
   TestPanelView()
     : window_(new unity::MockableBaseWindow())
     , panel_view_(new unity::PanelView(window_.GetPointer(), std::make_shared<unity::indicator::DBusIndicators>()))
-    , WM (dynamic_cast<unity::StandaloneWindowManager*>(&unity::WindowManager::Default()))
   {}
-
-  ~TestPanelView()
-  {
-    WM->ResetStatus();
-  }
-
 };
 
 TEST_F(TestPanelView, StoredDashWidth)
