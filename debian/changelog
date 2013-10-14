@@ -1,3 +1,23 @@
+unity (7.1.2+13.10.20131014.1-0ubuntu1) saucy; urgency=low
+
+  [ William Grant ]
+  * Build with -fPIC on arm64 to fix link failure.
+
+  [ Andrea Azzarone ]
+  * Don't ignore Stick command is the icon is already sticky but
+    save==true. (LP: #1237359)
+
+  [ Marco Trevisan (Treviño) ]
+  * PluginAdapter: set the spread window state before spreading or the
+    callback will get a wrong state. (LP: #1238622)
+  * PluginAdapter: set the spread window state before spreading or the
+    callback will get a wrong state. (LP: #1238622)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3570
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 14 Oct 2013 11:24:03 +0000
+
 unity (7.1.2+13.10.20131011-0ubuntu1) saucy; urgency=low
 
   [ Stephen M. Webb ]

@@ -87,7 +87,7 @@ TEST_F(TestLauncherIcon, Stick)
   EXPECT_FALSE(saved);
 
   icon.Stick(true);
-  EXPECT_FALSE(saved);
+  EXPECT_TRUE(saved);
 }
 
 TEST_F(TestLauncherIcon, StickAndSave)

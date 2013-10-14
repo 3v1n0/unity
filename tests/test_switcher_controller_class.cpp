@@ -78,13 +78,8 @@ TestSwitcherController::TestSwitcherController()
   : WM(dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default()))
   , animation_controller_(tick_source_)
   , mock_window_(new NiceMock<testmocks::MockBaseWindow>())
+  , controller_(std::make_shared<Controller>([this] { return mock_window_; }))
 {
-  ON_CALL(*mock_window_, SetOpacity(_))
-    .WillByDefault(Invoke(mock_window_.GetPointer(),
-                   &testmocks::MockBaseWindow::RealSetOpacity));
-
-  auto create_window = [this] { return mock_window_; };
-  controller_.reset(new Controller(create_window));
   controller_->timeout_length = 0;
 
   icons_.push_back(launcher::AbstractLauncherIcon::Ptr(new launcher::DesktopLauncherIcon()));

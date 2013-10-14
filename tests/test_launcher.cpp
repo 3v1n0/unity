@@ -156,11 +156,7 @@ public:
 
   ~TestLauncher()
   {
-    WM->SetScaleActiveForGroup(false);
-    WM->SetScaleActive(false);
-
-    if (WM->IsExpoActive())
-      WM->TerminateExpo();
+    WM->ResetStatus();
   }
 
   std::vector<MockMockLauncherIcon::Ptr> AddMockIcons(unsigned number)

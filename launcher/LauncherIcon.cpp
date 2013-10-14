@@ -1178,7 +1178,7 @@ void LauncherIcon::EmitRemove()
 
 void LauncherIcon::Stick(bool save)
 {
-  if (_sticky)
+  if (_sticky && !save)
     return;
 
   _sticky = true;

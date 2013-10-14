@@ -40,7 +40,7 @@ namespace unity
 namespace hud
 {
 
-class Controller : public unity::debug::Introspectable
+class Controller : public unity::debug::Introspectable, public sigc::trackable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;
