@@ -49,6 +49,11 @@ public:
     , WM (dynamic_cast<unity::StandaloneWindowManager*>(&unity::WindowManager::Default()))
   {}
 
+  ~TestPanelView()
+  {
+    WM->ResetStatus();
+  }
+
 };
 
 TEST_F(TestPanelView, StoredDashWidth)

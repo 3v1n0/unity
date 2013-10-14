@@ -37,7 +37,7 @@ struct TestExpoLauncherIcon : testing::Test
 
   void TearDown()
   {
-    wm->SetViewportSize(2, 2);
+    wm->ResetStatus();
   }
 
   ExpoLauncherIcon icon;

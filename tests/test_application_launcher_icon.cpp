@@ -104,8 +104,7 @@ struct TestApplicationLauncherIcon : testmocks::TestUnityAppBase
 
   virtual void TearDown() override
   {
-    for (auto const& win : WM->GetStandaloneWindows())
-      WM->Close(win->Xid());
+    WM->ResetStatus();
   }
 
   void AddMockWindow(Window xid, int monitor, int desktop)

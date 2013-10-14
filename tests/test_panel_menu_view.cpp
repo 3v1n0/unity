@@ -38,6 +38,11 @@ struct TestPanelMenuView : public testing::Test
     : WM(dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default()))
   {}
 
+  ~TestPanelMenuView()
+  {
+    WM->ResetStatus();
+  }
+
   struct MockPanelMenuView : public PanelMenuView
   {
     MOCK_METHOD0(QueueDraw, void());

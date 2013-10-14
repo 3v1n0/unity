@@ -38,6 +38,11 @@ struct TestWindowButtons : public testing::Test
     : wm(dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default()))
   {}
 
+  ~TestWindowButtons()
+  {
+    wm->ResetStatus();
+  }
+
   StandaloneWindow::Ptr AddFakeWindowToWM(Window xid)
   {
     auto fake_window = std::make_shared<StandaloneWindow>(xid);

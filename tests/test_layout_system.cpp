@@ -57,6 +57,8 @@ TEST(TestLayoutWindow, InitializationNormalWindow)
   EXPECT_EQ(lwin.decoration_height, 0);
   EXPECT_EQ(lwin.selected, false);
   EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
+
+  wm->ResetStatus();
 }
 
 TEST(TestLayoutWindow, InitializationMinimizedNormalWindow)
@@ -71,6 +73,8 @@ TEST(TestLayoutWindow, InitializationMinimizedNormalWindow)
   EXPECT_EQ(lwin.decoration_height, 0);
   EXPECT_EQ(lwin.selected, false);
   EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
+
+  wm->ResetStatus();
 }
 
 TEST(TestLayoutWindow, InitializationMaximizedWindow)
@@ -89,6 +93,8 @@ TEST(TestLayoutWindow, InitializationMaximizedWindow)
   EXPECT_EQ(lwin.decoration_height, top_deco);
   EXPECT_EQ(lwin.selected, false);
   EXPECT_EQ(lwin.aspect_ratio, expected_geo.width / static_cast<float>(expected_geo.height));
+
+  wm->ResetStatus();
 }
 
 TEST(TestLayoutWindow, InitializationMinimizedMaximizedWindow)
@@ -104,6 +110,8 @@ TEST(TestLayoutWindow, InitializationMinimizedMaximizedWindow)
   EXPECT_EQ(lwin.decoration_height, 0);
   EXPECT_EQ(lwin.selected, false);
   EXPECT_EQ(lwin.aspect_ratio, fake_window->geo().width / static_cast<float>(fake_window->geo().height));
+
+  wm->ResetStatus();
 }
 
 struct TestLayoutSystem : testing::Test
@@ -117,6 +125,11 @@ struct TestLayoutSystem : testing::Test
     xid = 2;
     AddFakeWindowToWM(xid, nux::Geometry(10, 20, 800, 300));
     lwindows.push_back(std::make_shared<LayoutWindow>(xid));
+  }
+
+  ~TestLayoutSystem()
+  {
+    wm->ResetStatus();
   }
 
   LayoutSystem ls;

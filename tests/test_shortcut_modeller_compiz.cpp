@@ -37,6 +37,11 @@ struct TestShortcutCompizModeller : Test
     WM->SetViewportSize(2, 2);
   }
 
+  ~TestShortcutCompizModeller()
+  {
+    WM->ResetStatus();
+  }
+
   void AssertHasWorkspaces()
   {
     auto const& cats = modeller->GetCurrentModel()->categories();

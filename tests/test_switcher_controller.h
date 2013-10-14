@@ -53,6 +53,7 @@ class FakeApplicationWindow : public unity::ApplicationWindow
 {
 public:
   FakeApplicationWindow(Window xid, uint64_t active_number = 0);
+  ~FakeApplicationWindow();
 
   virtual std::string type() const;
 
@@ -90,6 +91,7 @@ class TestSwitcherController : public testing::Test
 {
 protected:
   TestSwitcherController();
+  ~TestSwitcherController();
 
   // required to create hidden secret global variables before test objects
   unity::Settings unity_settings_;

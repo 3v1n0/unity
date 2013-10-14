@@ -37,6 +37,12 @@ FakeApplicationWindow::FakeApplicationWindow(Window xid, uint64_t active_number)
   icon.SetGetterFunction([this] { return ""; });
 }
 
+FakeApplicationWindow::~FakeApplicationWindow()
+{
+  auto WM = dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default());
+  WM->Close(xid_);
+}
+
 std::string FakeApplicationWindow::type() const { return "mock"; }
 
 Window FakeApplicationWindow::window_id() const { return xid_; }
@@ -90,4 +96,9 @@ TestSwitcherController::TestSwitcherController()
   icons_.push_back(launcher::AbstractLauncherIcon::Ptr(second_app));
   FakeLauncherIcon* third_app = new FakeLauncherIcon("Third", false, 0x0300);
   icons_.push_back(launcher::AbstractLauncherIcon::Ptr(third_app));
+}
+
+TestSwitcherController::~TestSwitcherController()
+{
+  WM->ResetStatus();
 }
