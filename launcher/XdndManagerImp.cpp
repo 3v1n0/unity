@@ -66,9 +66,7 @@ void XdndManagerImp::OnDndDataCollected(std::vector<std::string> const& mimes)
   if (!IsAValidDnd(mimes))
     return;
 
-  auto& gp_display = nux::GetWindowThread()->GetGraphicsDisplay();
-  glib::String data(gp_display.GetDndData(const_cast<char*>(URI_TYPE.c_str())));
-  dnd_data_ = data.Str();
+  dnd_data_ = xdnd_collection_window_->GetData(URI_TYPE);
 
   if (dnd_data_.empty())
     return;
