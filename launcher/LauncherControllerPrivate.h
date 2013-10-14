@@ -115,7 +115,7 @@ public:
 
   void OnDndStarted(std::string const& data, int monitor);
   void OnDndFinished();
-  void OnDndMonitorChanged(std::string const& data, int monitor);
+  void OnDndMonitorChanged(std::string const& data, int old_monitor, int new_monitor);
   GVariant* OnDBusMethodCall(std::string const& method, GVariant *parameters);
 
   Controller* parent_;
@@ -142,7 +142,6 @@ public:
   int reactivate_index;
   bool keynav_restore_window_;
   int launcher_key_press_time_;
-  int last_dnd_monitor_;
 
   glib::DBusServer dbus_server_;
   glib::SourceManager sources_;

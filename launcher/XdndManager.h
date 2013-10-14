@@ -33,8 +33,10 @@ public:
 
   virtual ~XdndManager() {}
 
+  virtual int Monitor() const = 0;
+
   sigc::signal<void, std::string const&, int> dnd_started;
-  sigc::signal<void, std::string const&, int> monitor_changed;
+  sigc::signal<void, std::string const&, int, int> monitor_changed;
   sigc::signal<void> dnd_finished;
 };
 

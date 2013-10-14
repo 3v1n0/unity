@@ -39,6 +39,11 @@ XdndManagerImp::XdndManagerImp(XdndStartStopNotifier::Ptr const& xdnd_start_stop
   xdnd_collection_window_->collected.connect(sigc::mem_fun(this, &XdndManagerImp::OnDndDataCollected));
 }
 
+int XdndManagerImp::Monitor() const
+{
+  return last_monitor_;
+}
+
 void XdndManagerImp::OnDndStarted()
 {
   xdnd_collection_window_->Collect();
@@ -91,8 +96,9 @@ bool XdndManagerImp::CheckMousePosition()
 
   if (!dnd_data_.empty() && monitor != last_monitor_)
   {
+    int old_monitor = last_monitor_;
     last_monitor_ = monitor;
-    monitor_changed.emit(dnd_data_, last_monitor_);
+    monitor_changed.emit(dnd_data_, old_monitor, last_monitor_);
   }
 
   return true;

@@ -34,6 +34,8 @@ class XdndManagerImp : public XdndManager, public sigc::trackable {
 public:
   XdndManagerImp(XdndStartStopNotifier::Ptr const&, XdndCollectionWindow::Ptr const&);
 
+  virtual int Monitor() const;
+
 private:
   void OnDndStarted();
   void OnDndFinished();
