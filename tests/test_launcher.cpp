@@ -156,7 +156,6 @@ public:
 
   ~TestLauncher()
   {
-    WM->ResetStatus();
     WM->SetScaleActiveForGroup(false);
     WM->SetScaleActive(false);
 
