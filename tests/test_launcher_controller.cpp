@@ -197,13 +197,21 @@ struct MockVolumeLauncherIcon : public VolumeLauncherIcon
   std::string uuid_;
 };
 
+struct MockXdndManager : XdndManager
+{
+  typedef std::shared_ptr<MockXdndManager> Ptr;
+  typedef testing::NiceMock<MockXdndManager> Nice;
+
+  MOCK_CONST_METHOD0(Monitor, int());
+};
+
 namespace launcher
 {
 struct TestLauncherController : testmocks::TestUnityAppBase
 {
   TestLauncherController()
     : logger_output_(std::make_shared<helper::CaptureLogOutput>())
-    , xdnd_manager_(std::make_shared<XdndManager>())
+    , xdnd_manager_(std::make_shared<MockXdndManager::Nice>())
     , edge_barriers_(std::make_shared<ui::EdgeBarrierController>())
     , lc(xdnd_manager_, edge_barriers_)
   {}
@@ -272,7 +280,7 @@ protected:
   Settings settings;
   panel::Style panel_style;
   MockFavoriteStore favorite_store;
-  XdndManager::Ptr xdnd_manager_;
+  MockXdndManager::Ptr xdnd_manager_;
   ui::EdgeBarrierController::Ptr edge_barriers_;
   MockLauncherController lc;
 };
@@ -1750,7 +1758,7 @@ TEST_F(TestLauncherController, DISABLED_DragAndDrop_MultipleLaunchers)
   for (unsigned i = 0; i < monitors::MAX; ++i)
     Utils::WaitUntilMSec(std::bind(check_fn, i), i != 0);
 
-  xdnd_manager_->monitor_changed.emit(3);
+  xdnd_manager_->monitor_changed.emit("another_file", 0, 3);
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
     Utils::WaitUntilMSec(std::bind(check_fn, i), i != 3);
@@ -1774,11 +1782,92 @@ TEST_F(TestLauncherController, DISABLED_DragAndDrop_SingleLauncher)
   xdnd_manager_->dnd_started.emit("my_awesome_file", 0);
   Utils::WaitUntilMSec(check_fn, false);
 
-  xdnd_manager_->monitor_changed.emit(2);
+  xdnd_manager_->monitor_changed.emit("another_file", 0, 2);
   Utils::WaitUntilMSec(check_fn, false);
 
   xdnd_manager_->dnd_finished.emit();
   Utils::WaitUntilMSec(check_fn, true);
+}
+
+TEST_F(TestLauncherController, DragAndDrop_MultipleLaunchers_DesaturateIcons)
+{
+  lc.multiple_launchers = true;
+  uscreen.SetupFakeMultiMonitor();
+  unsigned monitor = 0;
+  unsigned old_monitor = -1;
+  auto const& model = lc.Impl()->model_;
+
+  ON_CALL(*xdnd_manager_, Monitor()).WillByDefault(ReturnPointee(&monitor));
+  xdnd_manager_->dnd_started.emit("my_awesome_file", monitor);
+
+  for (auto const& icon : *model)
+  {
+    bool is_trash = icon->GetIconType() == AbstractLauncherIcon::IconType::TRASH;
+
+    for (unsigned i = 0; i < monitors::MAX; ++i)
+      ASSERT_EQ(monitor == i && !is_trash, icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, i));
+  }
+
+  old_monitor = monitor;
+  monitor = 3;
+  xdnd_manager_->monitor_changed.emit("another_file", old_monitor, monitor);
+
+  for (auto const& icon : *model)
+  {
+    bool is_trash = icon->GetIconType() == AbstractLauncherIcon::IconType::TRASH;
+
+    for (unsigned i = 0; i < monitors::MAX; ++i)
+      ASSERT_EQ(monitor == i && !is_trash, icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, i));
+  }
+
+  xdnd_manager_->dnd_finished.emit();
+
+  for (auto const& icon : *model)
+  {
+    for (unsigned i = 0; i < monitors::MAX; ++i)
+      ASSERT_FALSE(icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, i));
+  }
+}
+
+TEST_F(TestLauncherController, DragAndDrop_SingleLauncher_DesaturateIcons)
+{
+  lc.multiple_launchers = false;
+  unsigned monitor = 2;
+  unsigned old_monitor = -1;
+  uscreen.SetupFakeMultiMonitor(monitor);
+  lc.options()->hide_mode = LAUNCHER_HIDE_AUTOHIDE;
+  auto const& model = lc.Impl()->model_;
+
+  ON_CALL(*xdnd_manager_, Monitor()).WillByDefault(ReturnPointee(&monitor));
+  xdnd_manager_->dnd_started.emit("my_awesome_file", monitor);
+
+  for (auto const& icon : *model)
+  {
+    bool is_trash = icon->GetIconType() == AbstractLauncherIcon::IconType::TRASH;
+
+    for (unsigned i = 0; i < monitors::MAX; ++i)
+      ASSERT_EQ(monitor == i && !is_trash, icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, i));
+  }
+
+  old_monitor = monitor;
+  monitor = 0;
+  xdnd_manager_->monitor_changed.emit("another_file", old_monitor, monitor);
+
+  for (auto const& icon : *model)
+  {
+    bool is_trash = icon->GetIconType() == AbstractLauncherIcon::IconType::TRASH;
+
+    for (unsigned i = 0; i < monitors::MAX; ++i)
+      ASSERT_EQ(old_monitor == i && !is_trash, icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, i));
+  }
+
+  xdnd_manager_->dnd_finished.emit();
+
+  for (auto const& icon : *model)
+  {
+    for (unsigned i = 0; i < monitors::MAX; ++i)
+      ASSERT_FALSE(icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, i));
+  }
 }
 
 TEST_F(TestLauncherController, SetExistingLauncherIconAsFavorite)
