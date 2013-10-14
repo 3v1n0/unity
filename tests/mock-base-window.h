@@ -16,6 +16,7 @@
 #ifndef TESTS_MOCK_BASEWINDOW_H
 #define TESTS_MOCK_BASEWINDOW_H
 
+#include <gmock/gmock.h>
 #include "ResizingBaseWindow.h"
 
 namespace unity
@@ -23,25 +24,26 @@ namespace unity
 namespace testmocks
 {
 
+using namespace testing;
+
 class MockBaseWindow : public ResizingBaseWindow
 {
 public:
   typedef nux::ObjectPtr<MockBaseWindow> Ptr;
+  typedef NiceMock<MockBaseWindow> Nice;
 
   MockBaseWindow(ResizingBaseWindow::GeometryAdjuster const& input_adjustment, const char *name = "Mock")
   	: ResizingBaseWindow(name, input_adjustment)
-  {}
+  {
+    ON_CALL(*this, SetOpacity(_)).WillByDefault(Invoke([this] (float o) { ResizingBaseWindow::SetOpacity(o); }));
+  }
 
   MockBaseWindow(const char *name = "Mock")
-  	: ResizingBaseWindow(name, [](nux::Geometry const& geo) { return geo; })
+  	: MockBaseWindow([](nux::Geometry const& geo) { return geo; }, name)
   {}
 
   MOCK_METHOD2(ShowWindow, void(bool, bool));
   MOCK_METHOD1(SetOpacity, void(float));
-
-  // Really invoke the SetOpacity member function, a callthrough for use with
-  // ::testing::Invoke().
-  void RealSetOpacity(float opacity) { ResizingBaseWindow::SetOpacity(opacity); }
 };
 
 } // namespace testmocks
