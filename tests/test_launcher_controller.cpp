@@ -1740,49 +1740,66 @@ TEST_F(TestLauncherController, DisconnectWMSignalsOnDestruction)
   color_property.changed.emit(nux::color::RandomColor());
 }
 
-// thumper: 2012-11-28 disabling the drag and drop tests as they are taking over 20s
-// each, and that is not acceptable for unit tests.  These sound more like functional
-// tests.
-TEST_F(TestLauncherController, DISABLED_DragAndDrop_MultipleLaunchers)
+TEST_F(TestLauncherController, DragAndDrop_MultipleLaunchers)
 {
   lc.multiple_launchers = true;
   uscreen.SetupFakeMultiMonitor();
   lc.options()->hide_mode = LAUNCHER_HIDE_AUTOHIDE;
+  unsigned monitor = 0;
+  unsigned old_monitor = -1;
 
   auto check_fn = [this](int index) {
     return lc.launchers()[index]->Hidden();
   };
 
-  xdnd_manager_->dnd_started.emit("my_awesome_file", 0);
+  ON_CALL(*xdnd_manager_, Monitor()).WillByDefault(ReturnPointee(&monitor));
+  xdnd_manager_->dnd_started.emit("my_awesome_file", monitor);
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
-    Utils::WaitUntilMSec(std::bind(check_fn, i), i != 0);
+  {
+    Utils::WaitUntilMSec(std::bind(check_fn, i), i != monitor);
+    ASSERT_EQ(i != monitor, check_fn(i));
+  }
 
-  xdnd_manager_->monitor_changed.emit("another_file", 0, 3);
+  old_monitor = monitor;
+  monitor = 3;
+  xdnd_manager_->monitor_changed.emit("another_file", old_monitor, monitor);
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
-    Utils::WaitUntilMSec(std::bind(check_fn, i), i != 3);
+  {
+    Utils::WaitUntilMSec(std::bind(check_fn, i), i != monitor);
+    ASSERT_EQ(i != monitor, check_fn(i));
+  }
 
   xdnd_manager_->dnd_finished.emit();
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
+  {
     Utils::WaitUntilMSec(std::bind(check_fn, i), true);
+    ASSERT_TRUE(check_fn(i));
+  }
 }
 
-TEST_F(TestLauncherController, DISABLED_DragAndDrop_SingleLauncher)
+TEST_F(TestLauncherController, DragAndDrop_SingleLauncher)
 {
   lc.multiple_launchers = false;
-  uscreen.SetupFakeMultiMonitor(2);
+  unsigned monitor = 2;
+  unsigned old_monitor = -1;
+  uscreen.SetupFakeMultiMonitor(monitor);
   lc.options()->hide_mode = LAUNCHER_HIDE_AUTOHIDE;
 
   auto check_fn = [this]() {
     return lc.launcher().Hidden();
   };
 
-  xdnd_manager_->dnd_started.emit("my_awesome_file", 0);
+  ON_CALL(*xdnd_manager_, Monitor()).WillByDefault(ReturnPointee(&monitor));
+
+  xdnd_manager_->dnd_started.emit("my_awesome_file", monitor);
   Utils::WaitUntilMSec(check_fn, false);
 
-  xdnd_manager_->monitor_changed.emit("another_file", 0, 2);
+  old_monitor = monitor;
+  monitor = 1;
+  xdnd_manager_->monitor_changed.emit("another_file", old_monitor, monitor);
   Utils::WaitUntilMSec(check_fn, false);
 
   xdnd_manager_->dnd_finished.emit();
