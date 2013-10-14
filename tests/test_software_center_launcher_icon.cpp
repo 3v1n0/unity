@@ -67,6 +67,8 @@ struct TestSoftwareCenterLauncherIcon : testmocks::TestUnityAppBase
       : SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path)
     {}
 
+    void LauncherIconUnstick() { LauncherIcon::UnStick(); }
+
     using SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall;
     using SoftwareCenterLauncherIcon::GetRemoteUri;
     using SoftwareCenterLauncherIcon::OnFinished;
@@ -93,6 +95,7 @@ struct TestSoftwareCenterLauncherIcon : testmocks::TestUnityAppBase
 TEST_F(TestSoftwareCenterLauncherIcon, Construction)
 {
   EXPECT_FALSE(icon.IsVisible());
+  EXPECT_TRUE(icon.IsSticky());
   EXPECT_EQ(AbstractLauncherIcon::Position::FLOATING, icon.position());
   EXPECT_EQ("Waiting to install", icon.tooltip_text());
   EXPECT_EQ(PRE_INSTALL_ICON, icon.icon_name());
@@ -178,13 +181,16 @@ TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedRemoveInvalidNewAppIcon)
 
 TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedSticksIcon)
 {
-  ASSERT_FALSE(icon.IsSticky());
+  icon.LauncherIconUnstick();
+
   icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
   EXPECT_TRUE(icon.IsSticky());
 }
 
 TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedSavesIconPosition)
 {
+  icon.LauncherIconUnstick();
+
   bool saved = false;
   icon.position_saved.connect([&saved] {saved = true;});
   icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
@@ -194,6 +200,8 @@ TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedSavesIconPosition)
 
 TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedKeepsStickyStatus)
 {
+  icon.LauncherIconUnstick();
+
   bool saved = false;
   usc->sticky = true;
   icon.position_saved.connect([&saved] {saved = true;});
@@ -246,9 +254,9 @@ TEST_P(/*TestSoftwareCenterLauncherIcon*/MultiMonitor, Animate)
   auto launcher = CreateLauncher();
   launcher->monitor = GetParam();
   icon.SetCenter({1, 1, 0}, launcher->monitor());
-  EXPECT_TRUE(icon.Animate(launcher, 2, 2));
-  EXPECT_TRUE(icon.IsVisible());
-  EXPECT_EQ("", icon.icon_name());
+  ASSERT_TRUE(icon.Animate(launcher, 2, 2));
+  EXPECT_FALSE(icon.IsVisible());
+  EXPECT_TRUE(icon.icon_name().empty());
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
     ASSERT_EQ(static_cast<int>(i) == launcher->monitor(), icon.IsVisibleOnMonitor(i));
@@ -264,6 +272,8 @@ TEST_P(/*TestSoftwareCenterLauncherIcon*/MultiMonitor, Animate)
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
     ASSERT_TRUE(icon.IsVisibleOnMonitor(i));
+
+  EXPECT_TRUE(icon.IsVisible());
 }
 
 struct InstallProgress : TestSoftwareCenterLauncherIcon, WithParamInterface<int> {};
