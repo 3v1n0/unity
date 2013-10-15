@@ -272,6 +272,7 @@ private:
 
   void OnIconAdded(AbstractLauncherIcon::Ptr const& icon);
   void OnIconRemoved(AbstractLauncherIcon::Ptr const& icon);
+  void OnIconNeedsRedraw(AbstractLauncherIcon::Ptr const& icon, int monitor);
 
   void OnTooltipVisible(nux::ObjectPtr<nux::View> view);
 

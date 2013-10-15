@@ -281,7 +281,7 @@ protected:
 
   void OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote);
 
-  void EmitNeedsRedraw();
+  void EmitNeedsRedraw(int monitor = -1);
 
   void EmitRemove();
 

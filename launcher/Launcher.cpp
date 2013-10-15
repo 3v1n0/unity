@@ -1176,7 +1176,9 @@ void Launcher::OnOverlayShown(GVariant* data)
     {
       hud_is_open_ = true;
     }
+
     bg_effect_helper_.enabled = true;
+
     // Don't desaturate icons if the mouse is over the launcher:
     if (!hovered_)
     {
@@ -1186,8 +1188,6 @@ void Launcher::OnOverlayShown(GVariant* data)
 
     if (icon_under_mouse_)
       icon_under_mouse_->HideTooltip();
-
-    QueueDraw();
   }
 }
 
@@ -1228,6 +1228,7 @@ void Launcher::OnOverlayHidden(GVariant* data)
       bg_effect_helper_.enabled = false;
       LOG_DEBUG(logger) << "Saturate on monitor " << monitor();
       SaturateIcons();
+      QueueDraw();
     }
   }
 
@@ -1235,8 +1236,6 @@ void Launcher::OnOverlayHidden(GVariant* data)
   // FIXME: remove when we change the mouse grab strategy in nux
   nux::Point pt = nux::GetWindowCompositor().GetMousePosition();
   SetStateMouseOverLauncher(GetAbsoluteGeometry().IsInside(pt));
-
-  QueueDraw();
 }
 
 bool Launcher::IsOverlayOpen() const
@@ -1653,11 +1652,17 @@ void Launcher::Resize(nux::Point const& offset, int height)
   ConfigureBarrier();
 }
 
+void Launcher::OnIconNeedsRedraw(AbstractLauncherIcon::Ptr const& icon, int icon_monitor)
+{
+  if (icon_monitor < 0 || icon_monitor == monitor())
+    QueueDraw();
+}
+
 void Launcher::OnIconAdded(AbstractLauncherIcon::Ptr const& icon)
 {
   QueueDraw();
 
-  icon->needs_redraw.connect(sigc::hide(sigc::mem_fun(this, &Launcher::QueueDraw)));
+  icon->needs_redraw.connect(sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
   icon->tooltip_visible.connect(sigc::mem_fun(this, &Launcher::OnTooltipVisible));
 }
 
@@ -1675,7 +1680,7 @@ void Launcher::OnIconRemoved(AbstractLauncherIcon::Ptr const& icon)
 void Launcher::SetModel(LauncherModel::Ptr model)
 {
   model_ = model;
-  auto const& queue_draw_cb = sigc::hide(sigc::mem_fun(this, &Launcher::QueueDraw));
+  auto const& queue_draw_cb = sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw);
 
   for (auto const& icon : *model_)
     icon->needs_redraw.connect(queue_draw_cb);

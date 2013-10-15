@@ -678,7 +678,7 @@ LauncherIcon::SetWindowVisibleOnMonitor(bool val, int monitor)
     return;
 
   _has_visible_window[monitor] = val;
-  EmitNeedsRedraw();
+  EmitNeedsRedraw(monitor);
 }
 
 void
@@ -815,18 +815,12 @@ LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value, int monitor)
   if (!changed)
     return;
 
-  EmitNeedsRedraw();
+  EmitNeedsRedraw(monitor);
 
-  // Present on urgent as a general policy
-  if (quirk == Quirk::VISIBLE && value)
-    Present(0.5f, 1500);
-
-  if (quirk == Quirk::URGENT)
+  // Present on urgent and visible as a general policy
+  if (value && (quirk == Quirk::URGENT || quirk == Quirk::VISIBLE))
   {
-    if (value)
-    {
-      Present(0.5f, 1500);
-    }
+    Present(0.5f, 1500, monitor);
   }
 
   if (quirk == Quirk::VISIBLE)
@@ -855,7 +849,7 @@ LauncherIcon::UpdateQuirkTime(LauncherIcon::Quirk quirk, int monitor)
     _quirk_times[monitor][unsigned(quirk)].SetToNow();
   }
 
-  EmitNeedsRedraw();
+  EmitNeedsRedraw(monitor);
 }
 
 void
@@ -1164,10 +1158,10 @@ glib::Object<DbusmenuMenuitem> LauncherIcon::GetRemoteMenus() const
   return root;
 }
 
-void LauncherIcon::EmitNeedsRedraw()
+void LauncherIcon::EmitNeedsRedraw(int monitor)
 {
   if (OwnsTheReference() && GetReferenceCount() > 0)
-    needs_redraw.emit(AbstractLauncherIcon::Ptr(this));
+    needs_redraw.emit(AbstractLauncherIcon::Ptr(this), monitor);
 }
 
 void LauncherIcon::EmitRemove()
