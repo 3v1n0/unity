@@ -101,6 +101,11 @@ namespace time
       return ts;
     }
 
+    const struct timespec* operator->() const
+    {
+      return &ts;
+    }
+
   private:
     struct timespec ts;
   };
