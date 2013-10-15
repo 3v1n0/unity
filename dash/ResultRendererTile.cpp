@@ -45,6 +45,7 @@ DECLARE_LOGGER(logger, "unity.dash.results");
 namespace
 {
 const int FONT_SIZE = 10;
+const char REPLACEMENT_CHAR = '?';
 
 const float CORNER_HIGHTLIGHT_RADIUS = 2.0f;
 
@@ -393,6 +394,70 @@ void ResultRendererTile::IconLoaded(std::string const& texid,
   }
 }
 
+// Burmese range:  U+1000 -> U+109F
+// Extended range: U+AA60 -> U+AA7B
+bool IsBurmeseChar(gunichar uni_c)
+{
+  if ((uni_c >= 0x1000 && uni_c <= 0x109F) ||
+      (uni_c >= 0xAA60 && uni_c >= 0xAA7B))
+  {
+    return true;
+  }
+
+  return false;
+}
+
+// FIXME Bug (lp.1239381) in the backend of pango that crashes on
+// burmese when using ellipsize with/height setting in pango
+bool HasBurmeseInString(std::string const& str)
+{
+  if (!g_utf8_validate(str.c_str(), str.size(), NULL))
+    return false;
+
+  gchar const* uni_s = str.c_str();
+  gunichar uni_c;
+
+  while (g_utf8_validate(uni_s, -1, NULL))
+  {
+    uni_c = g_utf8_get_char(uni_s);
+
+    if (IsBurmeseChar(uni_c))
+      return true;
+
+    uni_s = g_utf8_next_char(uni_s);
+  }
+
+  return false;
+}
+
+std::string ReplaceBurmeseChars(std::string const& str)
+{
+  std::string new_string("");
+
+  if (!g_utf8_validate(str.c_str(), str.size(), NULL))
+    return new_string;
+
+  gchar const* uni_s = str.c_str();
+  gunichar uni_c;
+
+  while (g_utf8_validate(uni_s, -1, NULL))
+  {
+    uni_c = g_utf8_get_char(uni_s);
+
+    if (IsBurmeseChar(uni_c))
+    {
+      new_string += REPLACEMENT_CHAR;
+    }
+    else
+    {
+      new_string += uni_c;
+    }
+
+    uni_s = g_utf8_next_char(uni_s);
+  }
+
+  return new_string;
+}
 
 void ResultRendererTile::LoadText(Result const& row)
 {
@@ -426,7 +491,13 @@ void ResultRendererTile::LoadText(Result const& row)
   pango_layout_set_width(layout, (style.GetTileWidth() - (padding * 2))* PANGO_SCALE);
   pango_layout_set_height(layout, -2);
 
-  char *escaped_text = g_markup_escape_text(row.name().c_str()  , -1);
+  std::string name = row.name();
+
+  // FIXME bug #1239381, crash on burmeses need to replace
+  if (HasBurmeseInString(name))
+    name = ReplaceBurmeseChars(name);
+
+  char *escaped_text = g_markup_escape_text(name.c_str(), -1);
 
   pango_layout_set_markup(layout, escaped_text, -1);
 
