@@ -713,8 +713,6 @@ void ApplicationLauncherIcon::EnsureWindowState()
 
   for (unsigned i = 0; i < monitors::MAX; i++)
     SetWindowVisibleOnMonitor(monitors[i], i);
-
-  EmitNeedsRedraw();
 }
 
 void ApplicationLauncherIcon::UpdateDesktopQuickList()

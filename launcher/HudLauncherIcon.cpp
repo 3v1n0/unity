@@ -67,8 +67,6 @@ void HudLauncherIcon::OnHudIconChanged(GVariant *data)
       icon_name = PKGDATADIR"/launcher_bfb.png";
     else
       icon_name = hud_icon_name;
-
-    EmitNeedsRedraw();
   }
 }
 
