@@ -1664,6 +1664,12 @@ void Launcher::OnIconAdded(AbstractLauncherIcon::Ptr const& icon)
 
   icon->needs_redraw.connect(sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
   icon->tooltip_visible.connect(sigc::mem_fun(this, &Launcher::OnTooltipVisible));
+
+  if (IsOverlayOpen() && !hovered_)
+  {
+    icon->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, true, monitor());
+    icon->ResetQuirkTime(AbstractLauncherIcon::Quirk::DESAT, monitor());
+  }
 }
 
 void Launcher::OnIconRemoved(AbstractLauncherIcon::Ptr const& icon)
