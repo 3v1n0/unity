@@ -415,15 +415,16 @@ std::string ReplaceBlacklistedChars(std::string const& str)
 {
   std::string new_string("");
 
-  if (!g_utf8_validate(str.c_str(), str.size(), NULL))
+  if (!g_utf8_validate(str.c_str(), -1, NULL))
     return new_string;
 
   gchar const* uni_s = str.c_str();
   gunichar uni_c;
 
-  while (g_utf8_validate(uni_s, -1, NULL))
+  for (int i = 0; i < g_utf8_strlen(uni_s, -1); ++i)
   {
-    uni_c = g_utf8_get_char(uni_s);
+    gchar* s = g_utf8_substring(uni_s, i, i+1);
+    uni_c = g_utf8_get_char(s);
 
     if (IsBlacklistedChar(uni_c))
     {
@@ -431,10 +432,10 @@ std::string ReplaceBlacklistedChars(std::string const& str)
     }
     else
     {
-      new_string += uni_c;
+      new_string += s;
     }
 
-    uni_s = g_utf8_next_char(uni_s);
+    g_free(s);
   }
 
   return new_string;
