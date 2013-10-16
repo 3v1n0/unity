@@ -472,10 +472,8 @@ void ResultRendererTile::LoadText(Result const& row)
   pango_layout_set_width(layout, (style.GetTileWidth() - (padding * 2))* PANGO_SCALE);
   pango_layout_set_height(layout, -2);
 
-  std::string name = row.name();
-
   // FIXME bug #1239381
-  name = ReplaceBlacklistedChars(name);
+  std::string name = ReplaceBlacklistedChars(row.name());
 
   char *escaped_text = g_markup_escape_text(name.c_str(), -1);
 
