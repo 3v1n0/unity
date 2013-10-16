@@ -35,6 +35,7 @@
 
 #include <upstart.h>
 #include <nih/alloc.h>
+#include <nih/error.h>
 
 G_DEFINE_TYPE (PanelService, panel_service, G_TYPE_OBJECT);
 
