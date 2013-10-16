@@ -583,7 +583,7 @@ float Launcher::IconStartingPulseValue(AbstractLauncherIcon::Ptr const& icon, st
   if (starting_progress == 1.0f && !icon->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING, monitor()))
   {
     icon->SetQuirk(AbstractLauncherIcon::Quirk::STARTING, false, monitor());
-    icon->ResetQuirkTime(AbstractLauncherIcon::Quirk::STARTING);
+    icon->ResetQuirkTime(AbstractLauncherIcon::Quirk::STARTING, monitor());
   }
 
   return 1.0f-(0.5f + (float)(std::cos(M_PI * (float)(MAX_STARTING_BLINKS * 2) * starting_progress)) * 0.5f);
@@ -627,7 +627,7 @@ float Launcher::IconBackgroundIntensity(AbstractLauncherIcon::Ptr const& icon, s
       break;
     case LAUNCH_ANIMATION_PULSE:
       if (running_progress == 1.0f && icon->GetQuirk(AbstractLauncherIcon::Quirk::RUNNING, monitor()))
-        icon->ResetQuirkTime(AbstractLauncherIcon::Quirk::STARTING);
+        icon->ResetQuirkTime(AbstractLauncherIcon::Quirk::STARTING, monitor());
 
       result = backlight_strength;
       if (options()->backlight_mode() == BACKLIGHT_ALWAYS_ON)
