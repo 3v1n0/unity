@@ -2656,12 +2656,6 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     // only set hover once we know our first x/y
     SetActionState(ACTION_DRAG_EXTERNAL);
     SetStateMouseOverLauncher(true);
-
-    if (!steal_drag_ && !dnd_data_.Uris().empty())
-    {
-      for (auto const& it : *model_)
-        it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, !it->ShouldHighlightOnDrag(dnd_data_), monitor());
-    }
   }
 
   SetMousePosition(x - parent_->GetGeometry().x, y - parent_->GetGeometry().y);
