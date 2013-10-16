@@ -154,7 +154,11 @@ panel_service_class_dispose (GObject *self)
       event_sent = upstart_emit_event_sync (NULL, priv->upstart,
                                             "indicator-services-end", NULL, 0);
       if (event_sent != 0)
-         g_warning("Unable to signal for indicator services to start");
+        {
+          NihError * err = nih_error_get();
+          g_warning("Unable to signal for indicator services to stop: %s", err->message);
+          nih_free(err);
+        }
 
       nih_unref (priv->upstart, NULL);
       priv->upstart = NULL;
@@ -549,7 +553,11 @@ ready_signal (PanelService *self)
       int event_sent = 0;
       event_sent = upstart_emit_event_sync (NULL, self->priv->upstart, "indicator-services-start", NULL, 0);
       if (event_sent != 0)
-         g_warning ("Unable to signal for indicator services to start");
+        {
+          NihError * err = nih_error_get();
+          g_warning("Unable to signal for indicator services to start: %s", err->message);
+          nih_free(err);
+        }
     }
 
   return FALSE;
