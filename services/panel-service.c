@@ -681,6 +681,12 @@ panel_service_init (PanelService *self)
                                               NULL,
                                               DBUS_PATH_UPSTART,
                                               NULL, NULL);
+          if (priv->upstart == NULL)
+            {
+              NihError * err = nih_error_get();
+              g_warning("Unable to get Upstart proxy: %s", err->message);
+              nih_free(err);
+            }
           dbus_connection_unref (conn);
         }
     }
