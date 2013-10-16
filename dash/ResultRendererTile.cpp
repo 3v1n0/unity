@@ -411,27 +411,6 @@ bool IsBlacklistedChar(gunichar uni_c)
 
 // FIXME Bug (lp.1239381) in the backend of pango that crashes
 // when using ellipsize with/height setting in pango
-bool HasBlacklistedCharInString(std::string const& str)
-{
-  if (!g_utf8_validate(str.c_str(), str.size(), NULL))
-    return false;
-
-  gchar const* uni_s = str.c_str();
-  gunichar uni_c;
-
-  while (g_utf8_validate(uni_s, -1, NULL))
-  {
-    uni_c = g_utf8_get_char(uni_s);
-
-    if (IsBlacklistedChar(uni_c))
-      return true;
-
-    uni_s = g_utf8_next_char(uni_s);
-  }
-
-  return false;
-}
-
 std::string ReplaceBlacklistedChars(std::string const& str)
 {
   std::string new_string("");
@@ -496,8 +475,7 @@ void ResultRendererTile::LoadText(Result const& row)
   std::string name = row.name();
 
   // FIXME bug #1239381
-  if (HasBlacklistedCharInString(name))
-    name = ReplaceBlacklistedChars(name);
+  name = ReplaceBlacklistedChars(name);
 
   char *escaped_text = g_markup_escape_text(name.c_str(), -1);
 
