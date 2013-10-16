@@ -394,9 +394,11 @@ void ResultRendererTile::IconLoaded(std::string const& texid,
   }
 }
 
-// Burmese range:  U+1000 -> U+109F
-// Extended range: U+AA60 -> U+AA7B
-bool IsBurmeseChar(gunichar uni_c)
+/* Blacklisted unicode ranges:
+ * Burmese:  U+1000 -> U+109F
+ * Extended: U+AA60 -> U+AA7B
+*/
+bool IsBlacklistedChar(gunichar uni_c)
 {
   if ((uni_c >= 0x1000 && uni_c <= 0x109F) ||
       (uni_c >= 0xAA60 && uni_c >= 0xAA7B))
@@ -407,9 +409,9 @@ bool IsBurmeseChar(gunichar uni_c)
   return false;
 }
 
-// FIXME Bug (lp.1239381) in the backend of pango that crashes on
-// burmese when using ellipsize with/height setting in pango
-bool HasBurmeseInString(std::string const& str)
+// FIXME Bug (lp.1239381) in the backend of pango that crashes
+// when using ellipsize with/height setting in pango
+bool HasBlacklistedCharInString(std::string const& str)
 {
   if (!g_utf8_validate(str.c_str(), str.size(), NULL))
     return false;
@@ -421,7 +423,7 @@ bool HasBurmeseInString(std::string const& str)
   {
     uni_c = g_utf8_get_char(uni_s);
 
-    if (IsBurmeseChar(uni_c))
+    if (IsBlacklistedChar(uni_c))
       return true;
 
     uni_s = g_utf8_next_char(uni_s);
@@ -430,7 +432,7 @@ bool HasBurmeseInString(std::string const& str)
   return false;
 }
 
-std::string ReplaceBurmeseChars(std::string const& str)
+std::string ReplaceBlacklistedChars(std::string const& str)
 {
   std::string new_string("");
 
@@ -444,7 +446,7 @@ std::string ReplaceBurmeseChars(std::string const& str)
   {
     uni_c = g_utf8_get_char(uni_s);
 
-    if (IsBurmeseChar(uni_c))
+    if (IsBlacklistedChar(uni_c))
     {
       new_string += REPLACEMENT_CHAR;
     }
@@ -493,9 +495,9 @@ void ResultRendererTile::LoadText(Result const& row)
 
   std::string name = row.name();
 
-  // FIXME bug #1239381, crash on burmeses need to replace
-  if (HasBurmeseInString(name))
-    name = ReplaceBurmeseChars(name);
+  // FIXME bug #1239381
+  if (HasBlacklistedCharInString(name))
+    name = ReplaceBlacklistedChars(name);
 
   char *escaped_text = g_markup_escape_text(name.c_str(), -1);
 
