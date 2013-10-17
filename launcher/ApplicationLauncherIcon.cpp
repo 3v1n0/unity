@@ -491,11 +491,15 @@ std::vector<Window> ApplicationLauncherIcon::WindowsForMonitor(int monitor)
 
 void ApplicationLauncherIcon::OnWindowMinimized(guint32 xid)
 {
-  if (!app_->OwnsWindow(xid))
-    return;
-
-  Present(0.5f, 600);
-  UpdateQuirkTimeDelayed(300, Quirk::SHIMMER);
+  for (auto const& window: app_->GetWindows())
+  {
+    if (xid == window->window_id())
+    {
+      Present(0.5f, 600, window->monitor());
+      UpdateQuirkTimeDelayed(300, Quirk::SHIMMER, window->monitor());
+      break;
+    }
+  }
 }
 
 void ApplicationLauncherIcon::OnWindowMoved(guint32 moved_win)
