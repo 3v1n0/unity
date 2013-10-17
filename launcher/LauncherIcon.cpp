@@ -644,7 +644,7 @@ void LauncherIcon::SetCenter(nux::Point3 const& new_center, int monitor)
     }
 
     return false;
-  }, CENTER_STABILIZE_TIMEOUT);
+  }, CENTER_STABILIZE_TIMEOUT + std::to_string(monitor));
 }
 
 nux::Point3
@@ -712,7 +712,7 @@ LauncherIcon::Present(float present_urgency, int length, int monitor)
 
       Unpresent(monitor);
       return false;
-    }, PRESENT_TIMEOUT);
+    }, PRESENT_TIMEOUT + std::to_string(monitor));
   }
 
   _present_urgency = CLAMP(present_urgency, 0.0f, 1.0f);
@@ -726,7 +726,7 @@ LauncherIcon::Unpresent(int monitor)
   if (!GetQuirk(Quirk::PRESENTED, monitor))
     return;
 
-  _source_manager.Remove(PRESENT_TIMEOUT);
+  _source_manager.Remove(PRESENT_TIMEOUT + std::to_string(monitor));
   SetQuirk(Quirk::PRESENTED, false, monitor);
   SetQuirk(Quirk::UNFOLDED, false, monitor);
 }
@@ -833,7 +833,7 @@ LauncherIcon::UpdateQuirkTimeDelayed(guint ms, LauncherIcon::Quirk quirk, int mo
   _source_manager.AddTimeout(ms, [this, quirk, monitor] {
     UpdateQuirkTime(quirk, monitor);
     return false;
-  }, QUIRK_DELAY_TIMEOUT);
+  }, QUIRK_DELAY_TIMEOUT + std::to_string(monitor));
 }
 
 void
