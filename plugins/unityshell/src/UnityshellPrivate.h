@@ -30,12 +30,13 @@ namespace impl
 enum class ActionModifiers
 {
   NONE = 0,
-  
+
   USE_NUMPAD,
-  USE_SHIFT
+  USE_SHIFT,
+  USE_SHIFT_NUMPAD
 };
 
-std::string CreateActionString(std::string const& modifiers, 
+std::string CreateActionString(std::string const& modifiers,
                                char shortcut,
                                ActionModifiers flag = ActionModifiers::NONE);
 
