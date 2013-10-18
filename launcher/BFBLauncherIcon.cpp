@@ -38,6 +38,7 @@ BFBLauncherIcon::BFBLauncherIcon(LauncherHideMode hide_mode)
   icon_name = PKGDATADIR"/launcher_bfb.png";
   position = Position::BEGIN;
   SetQuirk(Quirk::VISIBLE, true);
+  SkipQuirkAnimation(Quirk::VISIBLE);
 
   background_color_ = nux::color::White;
 
@@ -71,7 +72,7 @@ void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
     if (launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
     {
       SetVisibleOnMonitor(overlay_monitor, !visible);
-      ResetQuirkTime(Quirk::VISIBLE, overlay_monitor);
+      SkipQuirkAnimation(Quirk::VISIBLE, overlay_monitor);
     }
   }
 }

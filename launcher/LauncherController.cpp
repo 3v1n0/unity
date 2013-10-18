@@ -82,7 +82,6 @@ namespace
 {
   const int launcher_minimum_show_duration = 1250;
   const int shortcuts_show_delay = 750;
-  const int ignore_repeat_shortcut_duration = 250;
 
   const std::string KEYPRESS_TIMEOUT = "keypress-timeout";
   const std::string LABELS_TIMEOUT = "label-show-timeout";
@@ -1240,24 +1239,16 @@ void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
 
 bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string, Time timestamp)
 {
-  LauncherModel::iterator it;
-
   // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
-  for (it = pimpl->model_->begin(); it != pimpl->model_->end(); ++it)
+  for (auto const& icon : *pimpl->model_)
   {
-    if ((XKeysymToKeycode(display, (*it)->GetShortcut()) == key_code) ||
-        ((gchar)((*it)->GetShortcut()) == key_string[0]))
+    if ((XKeysymToKeycode(display, icon->GetShortcut()) == key_code) ||
+        (static_cast<gchar>(icon->GetShortcut()) == key_string[0]))
     {
-      struct timespec last_action_time = (*it)->GetQuirkTime(AbstractLauncherIcon::Quirk::LAST_ACTION, 0);
-      struct timespec current;
-      TimeUtil::SetTimeStruct(&current);
-      if (TimeUtil::TimeDelta(&current, &last_action_time) > local::ignore_repeat_shortcut_duration)
-      {
-        if (g_ascii_isdigit((gchar)(*it)->GetShortcut()) && (key_state & ShiftMask))
-          (*it)->OpenInstance(ActionArg(ActionArg::Source::LAUNCHER, 0, timestamp));
-        else
-          (*it)->Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, timestamp));
-      }
+      if (g_ascii_isdigit(static_cast<gchar>(icon->GetShortcut())) && (key_state & ShiftMask))
+        icon->OpenInstance(ActionArg(ActionArg::Source::LAUNCHER_KEYBINDING, 0, timestamp));
+      else
+        icon->Activate(ActionArg(ActionArg::Source::LAUNCHER_KEYBINDING, 0, timestamp));
 
       // disable the "tap on super" check
       pimpl->launcher_key_press_time_ = 0;

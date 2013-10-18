@@ -495,7 +495,7 @@ void ApplicationLauncherIcon::OnWindowMinimized(guint32 xid)
     return;
 
   Present(0.5f, 600);
-  UpdateQuirkTimeDelayed(300, Quirk::SHIMMER);
+  FullyAnimateQuirkDelayed(300, Quirk::SHIMMER);
 }
 
 void ApplicationLauncherIcon::OnWindowMoved(guint32 moved_win)
@@ -650,7 +650,7 @@ void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& 
     LOG_WARN(logger) << error;
   }
 
-  UpdateQuirkTime(Quirk::STARTING);
+  FullyAnimateQuirk(Quirk::STARTING);
 }
 
 void ApplicationLauncherIcon::OpenInstanceLauncherIcon(Time timestamp)

@@ -213,6 +213,11 @@ nux::BaseWindow* Controller::window() const
   return window_.GetPointer();
 }
 
+nux::ObjectPtr<AbstractView> Controller::HudView() const
+{
+  return nux::ObjectPtr<AbstractView>(view_);
+}
+
 // We update the @geo that's sent in with our desired width and height
 void Controller::OnWindowConfigure(int window_width, int window_height,
                                        nux::Geometry& geo, void* data)

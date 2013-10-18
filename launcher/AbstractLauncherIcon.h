@@ -47,6 +47,7 @@ struct ActionArg
   enum class Source
   {
     LAUNCHER,
+    LAUNCHER_KEYBINDING,
     SWITCHER,
     OTHER,
   };
@@ -111,11 +112,9 @@ public:
     SHIMMER,
     CENTER_SAVED,
     PROGRESS,
-    DROP_PRELIGHT,
     DROP_DIM,
     DESAT,
     PULSE_ONCE,
-    LAST_ACTION,
 
     LAST
   };
@@ -190,9 +189,11 @@ public:
 
   virtual void SetQuirk(Quirk quirk, bool value, int monitor = -1) = 0;
 
-  virtual struct timespec GetQuirkTime(Quirk quirk, int monitor) = 0;
+  virtual float GetQuirkProgress(Quirk quirk, int monitor) const = 0;
 
-  virtual void ResetQuirkTime(Quirk quirk, int monitor = -1) = 0;
+  virtual void SetQuirkDuration(Quirk quirk, unsigned duration, int monitor = -1) = 0;
+
+  virtual void SkipQuirkAnimation(Quirk quirk, int monitor = -1) = 0;
 
   virtual IconType GetIconType() const = 0;
 

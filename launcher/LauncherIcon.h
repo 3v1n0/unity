@@ -22,6 +22,7 @@
 #define LAUNCHERICON_H
 
 #include <Nux/Nux.h>
+#include <NuxCore/Animation.h>
 
 #include <gtk/gtk.h>
 #include <libdbusmenu-glib/client.h>
@@ -128,7 +129,11 @@ public:
 
   void SetQuirk(Quirk quirk, bool value, int monitor = -1);
 
-  struct timespec GetQuirkTime(Quirk quirk, int monitor);
+  float GetQuirkProgress(Quirk quirk, int monitor) const;
+
+  void SetQuirkDuration(Quirk quirk, unsigned duration, int monitor = -1);
+
+  void SkipQuirkAnimation(Quirk quirk, int monitor = -1);
 
   IconType GetIconType() const;
 
@@ -204,11 +209,9 @@ protected:
 
   void AddProperties(GVariantBuilder* builder);
 
-  void UpdateQuirkTimeDelayed(guint ms, Quirk quirk, int monitor = -1);
+  void FullyAnimateQuirkDelayed(guint ms, Quirk quirk, int monitor = -1);
 
-  void UpdateQuirkTime(Quirk quirk, int monitor = -1);
-
-  void ResetQuirkTime(Quirk quirk, int monitor = -1);
+  void FullyAnimateQuirk(Quirk quirk, int monitor = -1);
 
   void Remove();
 
@@ -226,7 +229,7 @@ protected:
 
   virtual nux::BaseTexture* GetTextureForSize(int size) = 0;
 
-  virtual void OnCenterStabilized(std::vector<nux::Point3> center) {}
+  virtual void OnCenterStabilized(std::vector<nux::Point3> const& centers) {}
 
   virtual std::string GetRemoteUri() const
   {
@@ -285,10 +288,19 @@ protected:
 
   void EmitRemove();
 
+  bool IsActionArgValid(ActionArg const&);
+
+  inline nux::animation::AnimateValue<float>& GetQuirkAnimation(Quirk quirk, int monitor) const
+  {
+    return *_quirk_animations[monitor][unsigned(quirk)];
+  }
+
   // This looks like a case for boost::logical::tribool
   static int _current_theme_is_mono;
 
 private:
+  typedef nux::animation::AnimateValue<float> Animation;
+
   IconType _icon_type;
 
   nux::ObjectPtr<Tooltip> _tooltip;
@@ -318,9 +330,10 @@ private:
   std::vector<nux::Point3> _center;
   std::vector<bool> _has_visible_window;
   std::vector<std::vector<bool>> _quirks;
-  std::vector<std::vector<time::Spec>> _quirk_times;
+  std::vector<std::vector<std::shared_ptr<Animation>>> _quirk_animations;
   std::vector<nux::Point3> _last_stable;
   std::vector<nux::Point3> _saved_center;
+  time::Spec _last_action;
 
   BaseTexturePtr _emblem;
 

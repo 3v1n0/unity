@@ -48,14 +48,22 @@ class MockMockLauncherIcon : public launcher::MockLauncherIcon
 public:
   typedef nux::ObjectPtr<MockMockLauncherIcon> Ptr;
   typedef testing::NiceMock<MockMockLauncherIcon> Nice;
+
   MockMockLauncherIcon(IconType type = IconType::APPLICATION)
     : MockLauncherIcon(type)
-  {}
+  {
+    ON_CALL(*this, SetQuirk(_, _, _)).WillByDefault(Invoke([this] (ApplicationLauncherIcon::Quirk q, bool v, int m) { MockLauncherIcon::SetQuirk(q, v, m); }));
+    ON_CALL(*this, SetQuirk(_, _)).WillByDefault(Invoke([this] (ApplicationLauncherIcon::Quirk q, bool v) { MockLauncherIcon::SetQuirk(q, v); }));
+    ON_CALL(*this, SkipQuirkAnimation(_, _)).WillByDefault(Invoke([this] (ApplicationLauncherIcon::Quirk q, int m) { MockLauncherIcon::SkipQuirkAnimation(q, m); }));
+  }
 
   MOCK_METHOD1(ShouldHighlightOnDrag, bool(DndData const&));
   MOCK_METHOD1(Stick, void(bool));
   MOCK_METHOD2(PerformScroll, void(ScrollDirection, Time));
   MOCK_METHOD0(HideTooltip, void());
+  MOCK_METHOD3(SetQuirk, void(ApplicationLauncherIcon::Quirk, bool, int));
+  MOCK_METHOD2(SetQuirk, void(ApplicationLauncherIcon::Quirk, bool));
+  MOCK_METHOD2(SkipQuirkAnimation, void(ApplicationLauncherIcon::Quirk, int));
 };
 
 }
@@ -119,9 +127,10 @@ public:
     using Launcher::HandleUrgentIcon;
     using Launcher::SetUrgentTimer;
     using Launcher::SetIconUnderMouse;
-    using Launcher::urgent_timer_running_;
-    using Launcher::urgent_finished_time_;
-    using Launcher::urgent_wiggle_time_;
+    using Launcher::OnUrgentTimeout;
+    using Launcher::sources_;
+    using Launcher::animating_urgent_icons_;
+    using Launcher::urgent_animation_period_;
 
     void FakeProcessDndMove(int x, int y, std::list<std::string> uris)
     {
@@ -196,13 +205,13 @@ struct TestWindowCompositor
 
 TEST_F(TestLauncher, TestQuirksDuringDnd)
 {
-  MockMockLauncherIcon::Ptr first(new MockMockLauncherIcon);
+  MockMockLauncherIcon::Ptr first(new MockMockLauncherIcon::Nice);
   model_->AddIcon(first);
 
-  MockMockLauncherIcon::Ptr second(new MockMockLauncherIcon);
+  MockMockLauncherIcon::Ptr second(new MockMockLauncherIcon::Nice);
   model_->AddIcon(second);
 
-  MockMockLauncherIcon::Ptr third(new MockMockLauncherIcon);
+  MockMockLauncherIcon::Ptr third(new MockMockLauncherIcon::Nice);
   model_->AddIcon(third);
 
   EXPECT_CALL(*first, ShouldHighlightOnDrag(_))
@@ -224,7 +233,7 @@ TEST_F(TestLauncher, TestQuirksDuringDnd)
 
 TEST_F(TestLauncher, TestMouseWheelScroll)
 {
-  MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon);
+  MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon::Nice);
   model_->AddIcon(icon);
 
   launcher_->SetHover(true);
@@ -268,13 +277,13 @@ TEST_F(TestLauncher, TestMouseWheelScrollAltPressed)
 
 TEST_F(TestLauncher, TestIconBackgroundIntensity)
 {
-  MockMockLauncherIcon::Ptr first(new MockMockLauncherIcon);
+  MockMockLauncherIcon::Ptr first(new MockMockLauncherIcon::Nice);
   model_->AddIcon(first);
 
-  MockMockLauncherIcon::Ptr second(new MockMockLauncherIcon);
+  MockMockLauncherIcon::Ptr second(new MockMockLauncherIcon::Nice);
   model_->AddIcon(second);
 
-  MockMockLauncherIcon::Ptr third(new MockMockLauncherIcon);
+  MockMockLauncherIcon::Ptr third(new MockMockLauncherIcon::Nice);
   model_->AddIcon(third);
 
   options_->backlight_mode = BACKLIGHT_NORMAL;
@@ -285,12 +294,10 @@ TEST_F(TestLauncher, TestIconBackgroundIntensity)
   third->SetQuirk(AbstractLauncherIcon::Quirk::RUNNING, false);
 
   Utils::WaitForTimeoutMSec(STARTING_ANIMATION_DURATION);
-  timespec current;
-  clock_gettime(CLOCK_MONOTONIC, &current);
 
-  EXPECT_THAT(launcher_->IconBackgroundIntensity(first, current), Gt(0.0f));
-  EXPECT_THAT(launcher_->IconBackgroundIntensity(second, current), Gt(0.0f));
-  EXPECT_EQ(launcher_->IconBackgroundIntensity(third, current), 0.0f);
+  EXPECT_THAT(launcher_->IconBackgroundIntensity(first), Gt(0.0f));
+  EXPECT_THAT(launcher_->IconBackgroundIntensity(second), Gt(0.0f));
+  EXPECT_EQ(launcher_->IconBackgroundIntensity(third), 0.0f);
 }
 
 TEST_F(TestLauncher, DragLauncherIconCancelRestoresIconOrder)
@@ -598,102 +605,122 @@ TEST_F(TestLauncher, AddRequestSignal)
 }
 
 TEST_F(TestLauncher, IconStartingPulseValue)
-{  
-  struct timespec current;
-  clock_gettime(CLOCK_MONOTONIC, &current);
-  MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon);
+{
+  MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon::Nice);
 
   icon->SetQuirk(AbstractLauncherIcon::Quirk::STARTING, true);
 
-  // Pulse value should start at 0.
-  EXPECT_EQ(launcher_->IconStartingPulseValue(icon, current), 0.0);
+  // Pulse value should start at 1.
+  EXPECT_FLOAT_EQ(launcher_->IconStartingPulseValue(icon), 1.0);
 }
 
 TEST_F(TestLauncher, IconStartingBlinkValue)
-{  
-  struct timespec current;
-  clock_gettime(CLOCK_MONOTONIC, &current);
-  MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon);
+{
+  MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon::Nice);
 
   icon->SetQuirk(AbstractLauncherIcon::Quirk::STARTING, true);
 
   // Pulse value should start at 0.
-  EXPECT_EQ(launcher_->IconStartingBlinkValue(icon, current), 0.0);
+  EXPECT_FLOAT_EQ(launcher_->IconStartingBlinkValue(icon), 1.0);
 }
 
 TEST_F(TestLauncher, HighlightingEmptyUrisOnDragMoveIsIgnored)
 {
-  MockMockLauncherIcon::Ptr first(new MockMockLauncherIcon);
+  MockMockLauncherIcon::Ptr first(new MockMockLauncherIcon::Nice);
   model_->AddIcon(first);
 
   EXPECT_CALL(*first, ShouldHighlightOnDrag(_)).Times(0);
   launcher_->ProcessDndMove(0,0,{});
 }
 
-TEST_F(TestLauncher, UrgentIconWiggleTimerStart)
+TEST_F(TestLauncher, UrgentIconTimerStart)
 {
-  MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon);
-  timespec current;
-
+  auto icon = AddMockIcons(1).front();
   launcher_->SetHidden(true);
   icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
+  ASSERT_THAT(launcher_->sources_.GetSource("urgent-timeout"), IsNull());
+  ASSERT_TRUE(launcher_->animating_urgent_icons_.empty());
 
-  clock_gettime(CLOCK_MONOTONIC, &current);
-
-  ASSERT_FALSE(launcher_->urgent_timer_running_);
-
-  launcher_->HandleUrgentIcon(icon, current);
-
-  EXPECT_TRUE(launcher_->urgent_timer_running_);
+  launcher_->HandleUrgentIcon(icon);
+  EXPECT_THAT(launcher_->sources_.GetSource("urgent-timeout"), NotNull());
+  ASSERT_EQ(std::set<AbstractLauncherIcon::Ptr>({icon}), launcher_->animating_urgent_icons_);
 }
 
-TEST_F(TestLauncher, UrgentIconWiggleTimerTimeout)
+TEST_F(TestLauncher, UrgentIconSaved)
 {
-  MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon);
-
-  model_->AddIcon(icon);
+  auto icon = AddMockIcons(1).front();
   launcher_->SetHidden(true);
   icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
+  ASSERT_TRUE(launcher_->animating_urgent_icons_.empty());
 
-  ASSERT_EQ(launcher_->urgent_wiggle_time_, 0);
-  ASSERT_EQ(launcher_->urgent_finished_time_.tv_sec, 0);
-  ASSERT_EQ(launcher_->urgent_finished_time_.tv_nsec, 0);
-  
-  launcher_->SetUrgentTimer(1);
-
-  // Make sure the Urgent Timer expires before checking
-  Utils::WaitForTimeout(2);
-  
-  EXPECT_THAT(launcher_->urgent_wiggle_time_, Gt(0));
-  EXPECT_THAT(launcher_->urgent_finished_time_.tv_sec, Gt(0));
-  EXPECT_THAT(launcher_->urgent_finished_time_.tv_nsec, Gt(0));
+  launcher_->HandleUrgentIcon(icon);
+  ASSERT_EQ(std::set<AbstractLauncherIcon::Ptr>({icon}), launcher_->animating_urgent_icons_);
 }
 
-TEST_F(TestLauncher, WiggleUrgentIconAfterLauncherIsRevealed)
+TEST_F(TestLauncher, UrgentIconIsHandled)
 {
-  MockMockLauncherIcon::Ptr icon(new MockMockLauncherIcon);
-  timespec current;
-
-  model_->AddIcon(icon);
+  auto icon = AddMockIcons(1).front();
   launcher_->SetHidden(true);
   icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
+  ASSERT_TRUE(launcher_->animating_urgent_icons_.empty());
 
-  // Wait a bit to simulate the icon's initial wiggle
-  Utils::WaitForTimeout(1);
+  launcher_->HandleUrgentIcon(icon);
+  ASSERT_EQ(std::set<AbstractLauncherIcon::Ptr>({icon}), launcher_->animating_urgent_icons_);
+}
 
-  clock_gettime(CLOCK_MONOTONIC, &current);
-  launcher_->HandleUrgentIcon(icon, current);
+TEST_F(TestLauncher, UrgentIconTimerTimeout)
+{
+  auto icons = AddMockIcons(5);
+  launcher_->SetHidden(true);
 
-  ASSERT_EQ(launcher_->urgent_finished_time_.tv_sec, 0);
-  ASSERT_EQ(launcher_->urgent_finished_time_.tv_nsec, 0);
+  for (unsigned i = 0; i < icons.size(); ++i)
+  {
+    bool urgent = ((i % 2) == 0);
+    icons[i]->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, urgent);
+
+    InSequence seq;
+    EXPECT_CALL(*icons[i], SetQuirk(AbstractLauncherIcon::Quirk::URGENT, false, launcher_->monitor())).Times(urgent ? 1 : 0);
+    EXPECT_CALL(*icons[i], SkipQuirkAnimation(AbstractLauncherIcon::Quirk::URGENT, launcher_->monitor())).Times(urgent ? 1 : 0);
+    EXPECT_CALL(*icons[i], SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true, launcher_->monitor())).Times(urgent ? 1 : 0);
+  }
+
+  ASSERT_EQ(launcher_->urgent_animation_period_, 0);
+
+  // Simulate timer call
+  ASSERT_FALSE(launcher_->OnUrgentTimeout());
+
+  EXPECT_THAT(launcher_->urgent_animation_period_, Gt(0));
+  EXPECT_THAT(launcher_->sources_.GetSource("urgent-timeout"), NotNull());
+}
+
+TEST_F(TestLauncher, UrgentIconsAnimateAfterLauncherIsRevealed)
+{
+  auto icons = AddMockIcons(5);
+  launcher_->SetHidden(true);
+
+  for (unsigned i = 0; i < icons.size(); ++i)
+  {
+    icons[i]->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, (i % 2) == 0);
+    EXPECT_CALL(*icons[i], SetQuirk(AbstractLauncherIcon::Quirk::URGENT, _, _)).Times(0);
+    launcher_->HandleUrgentIcon(icons[i]);
+  }
 
   launcher_->SetHidden(false);
 
-  clock_gettime(CLOCK_MONOTONIC, &current);
-  launcher_->HandleUrgentIcon(icon, current);
+  for (auto const& icon : icons)
+  {
+    Mock::VerifyAndClearExpectations(icon.GetPointer());
+    bool urgent = icon->GetQuirk(AbstractLauncherIcon::Quirk::URGENT, launcher_->monitor());
 
-  EXPECT_THAT(launcher_->urgent_finished_time_.tv_sec, Gt(0));
-  EXPECT_THAT(launcher_->urgent_finished_time_.tv_nsec, Gt(0));
+    InSequence seq;
+    EXPECT_CALL(*icon, SetQuirk(AbstractLauncherIcon::Quirk::URGENT, false, launcher_->monitor())).Times(urgent ? 1 : 0);
+    EXPECT_CALL(*icon, SkipQuirkAnimation(AbstractLauncherIcon::Quirk::URGENT, launcher_->monitor())).Times(urgent ? 1 : 0);
+    EXPECT_CALL(*icon, SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true, launcher_->monitor())).Times(urgent ? 1 : 0);
+
+    launcher_->HandleUrgentIcon(icon);
+  }
+
+  Utils::WaitPendingEvents();
 }
 
 TEST_F(TestLauncher, DesaturateAllIconsOnSpread)
@@ -859,9 +886,6 @@ TEST_F(TestLauncher, HideTooltipOnExpo)
 {
   auto icon = AddMockIcons(1).front();
   EXPECT_CALL(*icon, HideTooltip());
-
-  if (!WM->IsExpoActive())
-    WM->InitiateExpo();
 
   launcher_->SetIconUnderMouse(icon);
   WM->SetExpoActive(true);

@@ -50,6 +50,7 @@ public:
   Controller(ViewCreator const& create_view = nullptr,
              WindowCreator const& create_window = nullptr);
 
+  nux::ObjectPtr<AbstractView> HudView() const;
   nux::BaseWindow* window() const;
 
   nux::Property<int> launcher_width;

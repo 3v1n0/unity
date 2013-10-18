@@ -44,7 +44,7 @@ private:
 
 namespace std
 {
-// Template specialization, needed for unordered_map
+// Template specialization, needed for unordered_{map,set}
 template<> struct hash<unity::action::handle>
 {
   std::size_t operator()(unity::action::handle const& h) const

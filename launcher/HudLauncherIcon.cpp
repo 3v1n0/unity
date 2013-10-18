@@ -95,7 +95,7 @@ void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
       launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
   {
     SetMonitor(visible ? overlay_monitor : -1);
-    ResetQuirkTime(Quirk::VISIBLE, overlay_monitor);
+    SkipQuirkAnimation(Quirk::VISIBLE, overlay_monitor);
   }
 }
 
