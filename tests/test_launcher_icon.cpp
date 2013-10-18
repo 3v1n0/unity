@@ -132,7 +132,7 @@ TEST_P(/*TestLauncherIcon*/Quirks, SetQuirkNewSingleMonitor)
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
     SigReceiver::Nice receiver(icon_ptr);
-    EXPECT_CALL(receiver, Redraw(_, i)).Times(AtLeast(1));
+    EXPECT_CALL(receiver, Redraw(_, i)).Times((GetParam() == AbstractLauncherIcon::Quirk::VISIBLE) ? AtLeast(1) : Exactly(0));
     EXPECT_CALL(receiver, Visible(i)).Times((GetParam() == AbstractLauncherIcon::Quirk::VISIBLE) ? 1 : 0);
 
     icon_ptr->SetQuirk(GetParam(), true, i);
@@ -150,7 +150,7 @@ TEST_P(/*TestLauncherIcon*/Quirks, SetQuirkNewAllMonitors)
   SigReceiver::Nice receiver(icon_ptr);
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
-    EXPECT_CALL(receiver, Redraw(_, i)).Times(AtLeast(1));
+    EXPECT_CALL(receiver, Redraw(_, i)).Times((GetParam() == AbstractLauncherIcon::Quirk::VISIBLE) ? AtLeast(1) : Exactly(0));
 
   EXPECT_CALL(receiver, Visible(-1)).Times((GetParam() == AbstractLauncherIcon::Quirk::VISIBLE) ? 1 : 0);
 
