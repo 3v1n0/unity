@@ -668,6 +668,32 @@ TEST_F(TestLauncher, UrgentIconIsHandled)
   ASSERT_EQ(std::set<AbstractLauncherIcon::Ptr>({icon}), launcher_->animating_urgent_icons_);
 }
 
+TEST_F(TestLauncher, UrgentIconsUnhandling)
+{
+  auto icons = AddMockIcons(2);
+  launcher_->SetHidden(true);
+
+  for (auto const& icon : icons)
+  {
+    icon->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, true);
+    launcher_->HandleUrgentIcon(icon);
+  }
+
+  ASSERT_FALSE(launcher_->animating_urgent_icons_.empty());
+  ASSERT_THAT(launcher_->sources_.GetSource("urgent-timeout"), NotNull());
+
+  icons[0]->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, false);
+  launcher_->HandleUrgentIcon(icons[0]);
+
+  ASSERT_EQ(std::set<AbstractLauncherIcon::Ptr>({icons[1]}), launcher_->animating_urgent_icons_);
+  EXPECT_THAT(launcher_->sources_.GetSource("urgent-timeout"), NotNull());
+
+  icons[1]->SetQuirk(AbstractLauncherIcon::Quirk::URGENT, false);
+  launcher_->HandleUrgentIcon(icons[1]);
+  EXPECT_TRUE(launcher_->animating_urgent_icons_.empty());
+  EXPECT_THAT(launcher_->sources_.GetSource("urgent-timeout"), IsNull());
+}
+
 TEST_F(TestLauncher, UrgentIconTimerTimeout)
 {
   auto icons = AddMockIcons(5);
