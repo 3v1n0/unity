@@ -325,4 +325,18 @@ TYPED_TEST(TestAnimationUtils, SetValueBackward)
   EXPECT_EQ(na::Animation::State::Stopped, animation.CurrentState());
 }
 
+TYPED_TEST(TestAnimationUtils, Skip)
+{
+  na::AnimateValue<TypeParam> animation;
+  TypeParam start = GetRandomValue<TypeParam>(std::numeric_limits<TypeParam>::min(), 2);
+  TypeParam finish = GetRandomValue<TypeParam>(3, std::numeric_limits<TypeParam>::max());
+  animation.SetStartValue(start).SetFinishValue(finish);
+  Skip(animation);
+
+  EXPECT_DOUBLE_EQ(finish, animation.GetCurrentValue());
+  EXPECT_DOUBLE_EQ(start, animation.GetStartValue());
+  EXPECT_DOUBLE_EQ(finish, animation.GetFinishValue());
+  EXPECT_EQ(na::Animation::State::Stopped, animation.CurrentState());
+}
+
 } // Namespace
