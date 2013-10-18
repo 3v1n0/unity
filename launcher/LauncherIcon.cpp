@@ -833,7 +833,7 @@ LauncherIcon::UpdateQuirkTimeDelayed(guint ms, LauncherIcon::Quirk quirk, int mo
   _source_manager.AddTimeout(ms, [this, quirk, monitor] {
     UpdateQuirkTime(quirk, monitor);
     return false;
-  }, QUIRK_DELAY_TIMEOUT + std::to_string(monitor));
+  }, QUIRK_DELAY_TIMEOUT + std::to_string(unsigned(quirk)) + std::to_string(monitor));
 }
 
 void
