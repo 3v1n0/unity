@@ -261,6 +261,31 @@ TEST_P(/*TestLauncherIcon*/Quirks, SkipQuirkAnimationAllMonitors)
     ASSERT_FLOAT_EQ(1.0f, mock_icon->GetQuirkProgress(GetParam(), i));
 }
 
+TEST_P(/*TestLauncherIcon*/Quirks, SetQuirkDurationSingleMonitor)
+{
+  AbstractLauncherIcon::Ptr icon_ptr(new NiceMock<MockLauncherIcon>());
+  auto* mock_icon = static_cast<MockLauncherIcon*>(icon_ptr.GetPointer());
+
+  int duration = g_random_int();
+  icon_ptr->SetQuirkDuration(GetParam(), duration);
+
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+    ASSERT_EQ(duration, mock_icon->GetQuirkAnimation(GetParam(), i).Duration());
+}
+
+TEST_P(/*TestLauncherIcon*/Quirks, SetQuirkDurationAllMonitors)
+{
+  AbstractLauncherIcon::Ptr icon_ptr(new NiceMock<MockLauncherIcon>());
+  auto* mock_icon = static_cast<MockLauncherIcon*>(icon_ptr.GetPointer());
+
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+  {
+    int duration = g_random_int();
+    icon_ptr->SetQuirkDuration(GetParam(), duration, i);
+    ASSERT_EQ(duration, mock_icon->GetQuirkAnimation(GetParam(), i).Duration());
+  }
+}
+
 TEST_F(TestLauncherIcon, Visibility)
 {
   ASSERT_FALSE(icon.GetQuirk(AbstractLauncherIcon::Quirk::VISIBLE));
