@@ -76,6 +76,36 @@ TYPED_TEST(TestAnimationUtilsIntegers, FinishValueForDirection)
   EXPECT_EQ(0, FinishValueForDirection<TypeParam>(Direction::BACKWARD));
 }
 
+TYPED_TEST(TestAnimationUtils, StartNotRunning)
+{
+  na::AnimateValue<TypeParam> animation;
+  TypeParam start = GetRandomValue<TypeParam>(std::numeric_limits<TypeParam>::min(), 2);
+  TypeParam finish = GetRandomValue<TypeParam>(3, std::numeric_limits<TypeParam>::max());
+
+  Start<TypeParam>(animation, start, finish);
+  EXPECT_DOUBLE_EQ(start, animation.GetStartValue());
+  EXPECT_DOUBLE_EQ(finish, animation.GetFinishValue());
+  EXPECT_EQ(na::Animation::State::Running, animation.CurrentState());
+}
+
+TYPED_TEST(TestAnimationUtils, StartRunning)
+{
+  na::AnimateValue<TypeParam> animation(3);
+  TypeParam start = GetRandomValue<TypeParam>(std::numeric_limits<TypeParam>::min(), 2);
+  TypeParam finish = GetRandomValue<TypeParam>(3, std::numeric_limits<TypeParam>::max());
+
+  animation.SetStartValue(start+1).SetFinishValue(finish-1).Start();
+  ASSERT_EQ(na::Animation::State::Running, animation.CurrentState());
+  animation.Advance(1);
+  ASSERT_EQ(1, animation.CurrentTimePosition());
+
+  Start<TypeParam>(animation, finish, start);
+  EXPECT_DOUBLE_EQ(finish, animation.GetStartValue());
+  EXPECT_DOUBLE_EQ(start, animation.GetFinishValue());
+  EXPECT_EQ(na::Animation::State::Running, animation.CurrentState());
+  EXPECT_EQ(0, animation.CurrentTimePosition());
+}
+
 TYPED_TEST(TestAnimationUtils, StartOrReverseNotRunning)
 {
   na::AnimateValue<TypeParam> animation;
@@ -140,6 +170,26 @@ TYPED_TEST(TestAnimationUtils, StartOrReverseInValidRunning)
   EXPECT_DOUBLE_EQ(start, animation.GetFinishValue());
   EXPECT_EQ(na::Animation::State::Running, animation.CurrentState());
   EXPECT_EQ(0, animation.CurrentTimePosition());
+}
+
+TYPED_TEST(TestAnimationUtils, StartForward)
+{
+  na::AnimateValue<TypeParam> animation;
+  Start(animation, Direction::FORWARD);
+
+  EXPECT_DOUBLE_EQ(StartValueForDirection<TypeParam>(Direction::FORWARD), animation.GetStartValue());
+  EXPECT_DOUBLE_EQ(FinishValueForDirection<TypeParam>(Direction::FORWARD), animation.GetFinishValue());
+  EXPECT_EQ(na::Animation::State::Running, animation.CurrentState());
+}
+
+TYPED_TEST(TestAnimationUtils, StartBackward)
+{
+  na::AnimateValue<TypeParam> animation;
+  Start(animation, Direction::BACKWARD);
+
+  EXPECT_DOUBLE_EQ(StartValueForDirection<TypeParam>(Direction::BACKWARD), animation.GetStartValue());
+  EXPECT_DOUBLE_EQ(FinishValueForDirection<TypeParam>(Direction::BACKWARD), animation.GetFinishValue());
+  EXPECT_EQ(na::Animation::State::Running, animation.CurrentState());
 }
 
 TYPED_TEST(TestAnimationUtils, StartOrReverseForward)
@@ -239,6 +289,40 @@ TYPED_TEST(TestAnimationUtils, GetDirectionStartedReversed)
 
   StartOrReverse(animation, Direction::FORWARD);
   EXPECT_EQ(Direction::FORWARD, GetDirection(animation));
+}
+
+TYPED_TEST(TestAnimationUtils, SetValue)
+{
+  na::AnimateValue<TypeParam> animation;
+  TypeParam value = GetRandomValue(std::numeric_limits<TypeParam>::min(), std::numeric_limits<TypeParam>::max());
+  SetValue(animation, value);
+
+  EXPECT_DOUBLE_EQ(value, animation.GetStartValue());
+  EXPECT_DOUBLE_EQ(value, animation.GetFinishValue());
+  EXPECT_DOUBLE_EQ(value, animation.GetCurrentValue());
+  EXPECT_EQ(na::Animation::State::Stopped, animation.CurrentState());
+}
+
+TYPED_TEST(TestAnimationUtils, SetValueForward)
+{
+  na::AnimateValue<TypeParam> animation;
+  SetValue(animation, Direction::FORWARD);
+
+  EXPECT_DOUBLE_EQ(FinishValueForDirection<TypeParam>(Direction::FORWARD), animation.GetStartValue());
+  EXPECT_DOUBLE_EQ(FinishValueForDirection<TypeParam>(Direction::FORWARD), animation.GetFinishValue());
+  EXPECT_DOUBLE_EQ(FinishValueForDirection<TypeParam>(Direction::FORWARD), animation.GetCurrentValue());
+  EXPECT_EQ(na::Animation::State::Stopped, animation.CurrentState());
+}
+
+TYPED_TEST(TestAnimationUtils, SetValueBackward)
+{
+  na::AnimateValue<TypeParam> animation;
+  SetValue(animation, Direction::BACKWARD);
+
+  EXPECT_DOUBLE_EQ(FinishValueForDirection<TypeParam>(Direction::BACKWARD), animation.GetStartValue());
+  EXPECT_DOUBLE_EQ(FinishValueForDirection<TypeParam>(Direction::BACKWARD), animation.GetFinishValue());
+  EXPECT_DOUBLE_EQ(FinishValueForDirection<TypeParam>(Direction::BACKWARD), animation.GetCurrentValue());
+  EXPECT_EQ(na::Animation::State::Stopped, animation.CurrentState());
 }
 
 } // Namespace
