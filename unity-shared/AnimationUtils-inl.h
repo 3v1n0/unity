@@ -26,6 +26,27 @@ namespace animation
 {
 
 template <class VALUE_TYPE>
+void Start(na::AnimateValue<VALUE_TYPE>& animation, VALUE_TYPE start, VALUE_TYPE finish)
+{
+  animation.Stop();
+  animation.SetStartValue(start).SetFinishValue(finish);
+
+  if (start == finish)
+  {
+    if (animation.GetCurrentValue() != finish)
+    {
+      // Don't animate, just make the animation update the current value
+      animation.Start();
+      animation.Stop();
+    }
+  }
+  else
+  {
+    animation.Start();
+  }
+}
+
+template <class VALUE_TYPE>
 void StartOrReverse(na::AnimateValue<VALUE_TYPE>& animation, VALUE_TYPE start, VALUE_TYPE finish)
 {
   if (animation.CurrentState() == na::Animation::State::Running)
@@ -36,13 +57,12 @@ void StartOrReverse(na::AnimateValue<VALUE_TYPE>& animation, VALUE_TYPE start, V
     }
     else if (animation.GetStartValue() != start || animation.GetFinishValue() != finish)
     {
-      animation.Stop();
-      animation.SetStartValue(start).SetFinishValue(finish).Start();
+      Start(animation, start, finish);
     }
   }
   else
   {
-    animation.SetStartValue(start).SetFinishValue(finish).Start();
+    Start(animation, start, finish);
   }
 }
 
