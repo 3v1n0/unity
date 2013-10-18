@@ -425,8 +425,8 @@ std::string ReplaceBlacklistedChars(std::string const& str)
   int size = g_utf8_strlen(uni_s, -1);
   for (int i = 0; i < size; ++i)
   {
-    uni_s = g_utf8_next_char(uni_s);
     uni_c = g_utf8_get_char(uni_s);
+    uni_s = g_utf8_next_char(uni_s);
 
     if (IsBlacklistedChar(uni_c))
     {
