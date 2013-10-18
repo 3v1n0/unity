@@ -107,7 +107,9 @@ inline void SetValue(na::AnimateValue<VALUE>& animation, Direction dir)
 template <typename VALUE>
 inline void Skip(na::AnimateValue<VALUE>& animation)
 {
+  VALUE old_start = animation.GetStartValue();
   SetValue(animation, animation.GetFinishValue());
+  animation.SetStartValue(old_start);
 }
 
 } // animation namespace
