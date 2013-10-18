@@ -1193,7 +1193,19 @@ glib::Object<DbusmenuMenuitem> LauncherIcon::GetRemoteMenus() const
 void LauncherIcon::EmitNeedsRedraw(int monitor)
 {
   if (OwnsTheReference() && GetReferenceCount() > 0)
-    needs_redraw.emit(AbstractLauncherIcon::Ptr(this), monitor);
+  {
+    if (monitor < 0)
+    {
+      needs_redraw.emit(AbstractLauncherIcon::Ptr(this), monitor);
+    }
+    else
+    {
+      auto const& visibilty = GetQuirkAnimation(Quirk::VISIBLE, monitor);
+
+      if (visibilty.GetCurrentValue() > 0.0f || visibilty.CurrentState() == na::Animation::State::Running)
+        needs_redraw.emit(AbstractLauncherIcon::Ptr(this), monitor);
+    }
+  }
 }
 
 void LauncherIcon::EmitRemove()
