@@ -26,6 +26,38 @@ namespace
 
 using namespace unity::animation;
 
+template <typename T> struct TestAnimationUtilsFloating : testing::Test {};
+typedef testing::Types<float, double> FloatingTypes;
+TYPED_TEST_CASE(TestAnimationUtilsFloating, FloatingTypes);
+
+template <typename T> struct TestAnimationUtilsIntegers : testing::Test {};
+typedef testing::Types<int, unsigned> IntegerTypes;
+TYPED_TEST_CASE(TestAnimationUtilsIntegers, IntegerTypes);
+
+TYPED_TEST(TestAnimationUtilsFloating, StartValueForDirection)
+{
+  EXPECT_DOUBLE_EQ(0.0f, StartValueForDirection<TypeParam>(Direction::FORWARD));
+  EXPECT_DOUBLE_EQ(1.0f, StartValueForDirection<TypeParam>(Direction::BACKWARD));
+}
+
+TYPED_TEST(TestAnimationUtilsIntegers, StartValueForDirection)
+{
+  EXPECT_EQ(0, StartValueForDirection<TypeParam>(Direction::FORWARD));
+  EXPECT_EQ(100, StartValueForDirection<TypeParam>(Direction::BACKWARD));
+}
+
+TYPED_TEST(TestAnimationUtilsFloating, FinishValueForDirection)
+{
+  EXPECT_DOUBLE_EQ(1.0f, FinishValueForDirection<TypeParam>(Direction::FORWARD));
+  EXPECT_DOUBLE_EQ(0.0f, FinishValueForDirection<TypeParam>(Direction::BACKWARD));
+}
+
+TYPED_TEST(TestAnimationUtilsIntegers, FinishValueForDirection)
+{
+  EXPECT_EQ(100, FinishValueForDirection<TypeParam>(Direction::FORWARD));
+  EXPECT_EQ(0, FinishValueForDirection<TypeParam>(Direction::BACKWARD));
+}
+
 TEST(TestAnimationUtils, StartOrReverseNotRunning)
 {
   na::AnimateValue<double> animation;
