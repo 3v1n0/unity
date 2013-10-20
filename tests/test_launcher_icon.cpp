@@ -43,6 +43,7 @@ struct MockLauncherIcon : LauncherIcon
   using LauncherIcon::FullyAnimateQuirk;
   using LauncherIcon::SkipQuirkAnimation;
   using LauncherIcon::GetQuirkAnimation;
+  using LauncherIcon::EmitNeedsRedraw;
 };
 
 struct TestLauncherIcon : Test
@@ -283,6 +284,56 @@ TEST_P(/*TestLauncherIcon*/Quirks, SetQuirkDurationAllMonitors)
     int duration = g_random_int();
     icon_ptr->SetQuirkDuration(GetParam(), duration, i);
     ASSERT_EQ(duration, mock_icon->GetQuirkAnimation(GetParam(), i).Duration());
+  }
+}
+
+TEST_F(TestLauncherIcon, NeedRedrawInvisibleAllMonitors)
+{
+  AbstractLauncherIcon::Ptr icon_ptr(new NiceMock<MockLauncherIcon>());
+  auto* mock_icon = static_cast<MockLauncherIcon*>(icon_ptr.GetPointer());
+
+  SigReceiver::Nice receiver(icon_ptr);
+  EXPECT_CALL(receiver, Redraw(icon_ptr, -1));
+
+  mock_icon->EmitNeedsRedraw();
+}
+
+TEST_F(TestLauncherIcon, NeedRedrawVisibleAllMonitors)
+{
+  AbstractLauncherIcon::Ptr icon_ptr(new NiceMock<MockLauncherIcon>());
+  auto* mock_icon = static_cast<MockLauncherIcon*>(icon_ptr.GetPointer());
+  icon_ptr->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true);
+
+  SigReceiver::Nice receiver(icon_ptr);
+  EXPECT_CALL(receiver, Redraw(icon_ptr, -1));
+
+  mock_icon->EmitNeedsRedraw();
+}
+
+TEST_F(TestLauncherIcon, NeedRedrawInvisibleSingleMonitor)
+{
+  AbstractLauncherIcon::Ptr icon_ptr(new NiceMock<MockLauncherIcon>());
+  auto* mock_icon = static_cast<MockLauncherIcon*>(icon_ptr.GetPointer());
+
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+  {
+    SigReceiver::Nice receiver(icon_ptr);
+    EXPECT_CALL(receiver, Redraw(icon_ptr, i)).Times(0);
+    mock_icon->EmitNeedsRedraw(i);
+  }
+}
+
+TEST_F(TestLauncherIcon, NeedRedrawVisibleSingleMonitor)
+{
+  AbstractLauncherIcon::Ptr icon_ptr(new NiceMock<MockLauncherIcon>());
+  auto* mock_icon = static_cast<MockLauncherIcon*>(icon_ptr.GetPointer());
+  icon_ptr->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true);
+
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+  {
+    SigReceiver::Nice receiver(icon_ptr);
+    EXPECT_CALL(receiver, Redraw(icon_ptr, i));
+    mock_icon->EmitNeedsRedraw(i);
   }
 }
 
