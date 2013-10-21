@@ -951,6 +951,7 @@ void Controller::Impl::AddRunningApps()
     if (!app->seen())
     {
       AbstractLauncherIcon::Ptr icon(new ApplicationLauncherIcon(app));
+      icon->SkipQuirkAnimation(AbstractLauncherIcon::Quirk::VISIBLE);
       RegisterIcon(icon, ++sort_priority_);
     }
   }
@@ -962,7 +963,10 @@ void Controller::Impl::AddDevices()
   for (auto const& icon : device_section_.GetIcons())
   {
     if (!icon->IsSticky() && !fav_store.IsFavorite(icon->RemoteUri()))
+    {
+      icon->SkipQuirkAnimation(AbstractLauncherIcon::Quirk::VISIBLE);
       RegisterIcon(icon, ++sort_priority_);
+    }
   }
 }
 
@@ -1011,7 +1015,14 @@ void Controller::Impl::SetupIcons()
     }
 
     LOG_INFO(logger) << "Adding favourite: " << fav_uri;
-    RegisterIcon(CreateFavoriteIcon(fav_uri), ++sort_priority_);
+
+    auto const& icon = CreateFavoriteIcon(fav_uri);
+
+    if (icon)
+    {
+      icon->SkipQuirkAnimation(AbstractLauncherIcon::Quirk::VISIBLE);
+      RegisterIcon(icon, ++sort_priority_);
+    }
   }
 
   if (!running_apps_added)
