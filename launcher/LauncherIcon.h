@@ -21,6 +21,7 @@
 #ifndef LAUNCHERICON_H
 #define LAUNCHERICON_H
 
+#include <bitset>
 #include <Nux/Nux.h>
 #include <NuxCore/Animation.h>
 
@@ -30,6 +31,7 @@
 
 #include <UnityCore/GLibSource.h>
 #include "AbstractLauncherIcon.h"
+#include "MultiMonitor.h"
 #include "Tooltip.h"
 #include "QuicklistView.h"
 #include "LauncherEntryRemote.h"
@@ -328,8 +330,8 @@ private:
   bool _allow_quicklist_to_show;
 
   std::vector<nux::Point3> _center;
-  std::vector<bool> _has_visible_window;
-  std::vector<std::vector<bool>> _quirks;
+  std::bitset<std::size_t(monitors::MAX)> _has_visible_window;
+  std::vector<std::bitset<std::size_t(Quirk::LAST)>> _quirks;
   std::vector<std::vector<std::shared_ptr<Animation>>> _quirk_animations;
   std::vector<nux::Point3> _last_stable;
   std::vector<nux::Point3> _saved_center;

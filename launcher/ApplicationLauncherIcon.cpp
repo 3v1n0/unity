@@ -695,7 +695,7 @@ bool ApplicationLauncherIcon::Spread(bool current_desktop, int state, bool force
 
 void ApplicationLauncherIcon::EnsureWindowState()
 {
-  std::vector<bool> monitors(monitors::MAX);
+  std::bitset<monitors::MAX> monitors;
 
   for (auto& window: app_->GetWindows())
   {
@@ -707,11 +707,13 @@ void ApplicationLauncherIcon::EnsureWindowState()
       // If monitor is -1 (or negative), show on all monitors.
       if (monitor < 0)
       {
-        for (unsigned j = 0; j < monitors::MAX; j++)
-          monitors[j] = true;
+        monitors.set();
+        break;
       }
       else
+      {
         monitors[monitor] = true;
+      }
     }
   }
 

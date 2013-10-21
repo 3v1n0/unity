@@ -27,7 +27,6 @@
 
 #include "mock-application.h"
 #include "FavoriteStore.h"
-#include "MultiMonitor.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "Launcher.h"
 #include "PanelStyle.h"

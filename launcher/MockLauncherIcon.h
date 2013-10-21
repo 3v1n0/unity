@@ -21,6 +21,7 @@
 #ifndef MOCKLAUNCHERICON_H
 #define MOCKLAUNCHERICON_H
 
+#include <bitset>
 #include <Nux/Nux.h>
 
 #include <Nux/BaseWindow.h>
@@ -71,7 +72,7 @@ public:
     : icon_(0)
     , type_(type)
     , sort_priority_(DefaultPriority(type))
-    , quirks_(monitors::MAX, decltype(quirks_)::value_type(unsigned(Quirk::LAST), false))
+    , quirks_(monitors::MAX)
     , quirk_progress_(monitors::MAX, decltype(quirk_progress_)::value_type(unsigned(Quirk::LAST), 0.0f))
     , remote_uri_("fake")
     , is_tooltip_visible_(false)
@@ -410,7 +411,7 @@ private:
   nux::BaseTexture* icon_;
   IconType type_;
   int sort_priority_;
-  std::vector<std::vector<bool>> quirks_;
+  std::vector<std::bitset<std::size_t(Quirk::LAST)>> quirks_;
   std::vector<std::vector<float>> quirk_progress_;
   std::map<int, nux::Point3> center_;
   std::string remote_uri_;

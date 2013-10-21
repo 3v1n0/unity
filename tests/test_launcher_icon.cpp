@@ -21,7 +21,6 @@
 #include <Nux/NuxTimerTickSource.h>
 
 #include "LauncherIcon.h"
-#include "MultiMonitor.h"
 #include "UnitySettings.h"
 
 using namespace unity;

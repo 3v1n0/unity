@@ -31,7 +31,6 @@
 #include "LauncherDragWindow.h"
 #include "LauncherModel.h"
 #include "DesktopUtilities.h"
-#include "MultiMonitor.h"
 
 namespace unity
 {

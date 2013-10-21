@@ -77,8 +77,7 @@ LauncherIcon::LauncherIcon(IconType type)
   , _shortcut(0)
   , _allow_quicklist_to_show(true)
   , _center(monitors::MAX)
-  , _has_visible_window(monitors::MAX, false)
-  , _quirks(monitors::MAX, decltype(_quirks)::value_type(unsigned(Quirk::LAST), false))
+  , _quirks(monitors::MAX)
   , _quirk_animations(monitors::MAX, decltype(_quirk_animations)::value_type(unsigned(Quirk::LAST)))
   , _last_stable(monitors::MAX)
   , _saved_center(monitors::MAX)
@@ -133,19 +132,14 @@ void LauncherIcon::LoadQuicklist()
   QuicklistManager::Default()->RegisterQuicklist(_quicklist);
 }
 
-const bool
-LauncherIcon::WindowVisibleOnMonitor(int monitor)
+const bool LauncherIcon::WindowVisibleOnMonitor(int monitor)
 {
   return _has_visible_window[monitor];
 }
 
 const bool LauncherIcon::WindowVisibleOnViewport()
 {
-  for (unsigned i = 0; i < monitors::MAX; ++i)
-    if (_has_visible_window[i])
-      return true;
-
-  return false;
+  return _has_visible_window.any();
 }
 
 std::string
