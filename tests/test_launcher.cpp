@@ -31,6 +31,7 @@ using namespace testing;
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UnitySettings.h"
 #include "unity-shared/IconRenderer.h"
+#include "unity-shared/UBusMessages.h"
 #include "test_standalone_wm.h"
 #include "test_utils.h"
 
@@ -748,6 +749,33 @@ TEST_F(TestLauncher, UrgentIconsAnimateAfterLauncherIsRevealed)
   }
 
   Utils::WaitPendingEvents();
+}
+
+TEST_F(TestLauncher, IsOverlayOpen)
+{
+  EXPECT_FALSE(launcher_->IsOverlayOpen());
+}
+
+TEST_F(TestLauncher, IsOverlayOpenDash)
+{
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "dash", TRUE, launcher_->monitor(), 0, 0);
+  UBusManager().SendMessage(UBUS_OVERLAY_SHOWN, info);
+  Utils::WaitUntilMSec([this] { return launcher_->IsOverlayOpen(); });
+  EXPECT_TRUE(launcher_->IsOverlayOpen());
+}
+
+TEST_F(TestLauncher, IsOverlayOpenHud)
+{
+  GVariant* info = g_variant_new(UBUS_OVERLAY_FORMAT_STRING, "hud", TRUE, launcher_->monitor(), 0, 0);
+  UBusManager().SendMessage(UBUS_OVERLAY_SHOWN, info);
+  Utils::WaitUntilMSec([this] { return launcher_->IsOverlayOpen(); });
+  EXPECT_TRUE(launcher_->IsOverlayOpen());
+}
+
+TEST_F(TestLauncher, IsOverlayOpenSpread)
+{
+  WM->SetScaleActive(true);
+  EXPECT_TRUE(launcher_->IsOverlayOpen());
 }
 
 TEST_F(TestLauncher, DesaturateAllIconsOnSpread)
