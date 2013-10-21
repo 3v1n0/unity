@@ -778,6 +778,12 @@ TEST_F(TestLauncher, IsOverlayOpenSpread)
   EXPECT_TRUE(launcher_->IsOverlayOpen());
 }
 
+TEST_F(TestLauncher, IsOverlayOpenExpo)
+{
+  WM->SetExpoActive(true);
+  EXPECT_TRUE(launcher_->IsOverlayOpen());
+}
+
 TEST_F(TestLauncher, DesaturateAllIconsOnSpread)
 {
   auto const& icons = AddMockIcons(5);

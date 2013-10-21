@@ -951,7 +951,6 @@ void Launcher::DesaturateIcons()
     }
 
     icon->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, desaturate, monitor());
-    icon->HideTooltip();
   }
 }
 
@@ -1057,7 +1056,8 @@ void Launcher::OnOverlayHidden(GVariant* data)
 
 bool Launcher::IsOverlayOpen() const
 {
-  return dash_is_open_ || hud_is_open_ || WindowManager::Default().IsScaleActive();
+  auto& wm = WindowManager::Default();
+  return dash_is_open_ || hud_is_open_ || wm.IsScaleActive() || wm.IsExpoActive();
 }
 
 void Launcher::SetHidden(bool hide_launcher)
@@ -1119,9 +1119,21 @@ void Launcher::OnPluginStateChanged()
   WindowManager& wm = WindowManager::Default();
   bool expo_active = wm.IsExpoActive();
   hide_machine_.SetQuirk(LauncherHideMachine::EXPO_ACTIVE, expo_active);
+  // We must make sure that we regenerate the blur when expo is fully active
+  // bg_effect_helper_.enabled = expo_active;
 
-  if (expo_active && icon_under_mouse_)
-    icon_under_mouse_->HideTooltip();
+  if (expo_active)
+  {
+    if (!hovered_)
+      DesaturateIcons();
+
+    if (icon_under_mouse_)
+      icon_under_mouse_->HideTooltip();
+  }
+  else
+  {
+    SaturateIcons();
+  }
 }
 
 void Launcher::OnSpreadChanged()
@@ -2117,15 +2129,14 @@ void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_
   if (!hidden_)
     UpdateChangeInMousePosition(dx, dy);
 
-  if (WindowManager::Default().IsScaleActiveForGroup())
-  {
-    auto icon = MouseIconIntersection(x, y);
-    if (icon && !icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, monitor()))
-      SaturateIcons();
-  }
-
   // Every time the mouse moves, we check if it is inside an icon...
   EventLogic();
+
+  if (icon_under_mouse_ && WindowManager::Default().IsScaleActiveForGroup())
+  {
+    if (!icon_under_mouse_->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE, monitor()))
+      SaturateIcons();
+  }
 
   tooltip_manager_.MouseMoved(icon_under_mouse_);
 }
