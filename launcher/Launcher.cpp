@@ -619,7 +619,7 @@ void Launcher::FillRenderArg(AbstractLauncherIcon::Ptr const& icon,
     center.z = 300.0f * (1.0f - size_modifier);
   }
 
-  float icon_dim = icon->GetQuirkProgress(AbstractLauncherIcon::Quirk::DROP_DIM, monitor());
+  const float icon_dim = 0.0f; // icon->GetQuirkProgress(AbstractLauncherIcon::Quirk::DROP_DIM, monitor());
   float drop_dim_value = 0.2f + 0.8f * (1.0f - icon_dim);
 
   if (drop_dim_value < 1.0f)
@@ -1543,7 +1543,6 @@ void Launcher::SetupIconAnimations(AbstractLauncherIcon::Ptr const& icon)
   icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::SHIMMER, ANIM_DURATION_LONG, monitor());
   icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::CENTER_SAVED, ANIM_DURATION, monitor());
   icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::PROGRESS, ANIM_DURATION, monitor());
-  icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::DROP_DIM, ANIM_DURATION, monitor());
   icon->SetQuirkDuration(AbstractLauncherIcon::Quirk::DESAT, ANIM_DURATION_SHORT_SHORT, monitor());
 
   if (options()->urgent_animation() == URGENT_ANIMATION_WIGGLE)

@@ -112,7 +112,6 @@ public:
     SHIMMER,
     CENTER_SAVED,
     PROGRESS,
-    DROP_DIM,
     DESAT,
     PULSE_ONCE,
 
