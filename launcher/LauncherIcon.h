@@ -92,8 +92,6 @@ public:
 
   nux::Point3 GetSavedCenter(int monitor);
 
-  std::pair<int, nux::Point3> GetCenterForMonitor(int monitor) const;
-
   int SortPriority();
 
   virtual WindowList Windows() { return WindowList(); }
@@ -211,6 +209,8 @@ public:
 protected:
   std::vector<nux::Point3> GetCenters();
 
+  std::pair<int, nux::Point3> GetCenterForMonitor(int monitor) const;
+
   std::string GetName() const;
 
   void AddProperties(GVariantBuilder* builder);
@@ -296,7 +296,8 @@ protected:
 
   bool IsActionArgValid(ActionArg const&);
 
-  inline nux::animation::AnimateValue<float>& GetQuirkAnimation(Quirk quirk, int monitor) const
+  typedef nux::animation::AnimateValue<float> Animation;
+  inline Animation& GetQuirkAnimation(Quirk quirk, int monitor) const
   {
     return *_quirk_animations[monitor][unsigned(quirk)];
   }
@@ -305,8 +306,6 @@ protected:
   static int _current_theme_is_mono;
 
 private:
-  typedef nux::animation::AnimateValue<float> Animation;
-
   IconType _icon_type;
 
   nux::ObjectPtr<Tooltip> _tooltip;
@@ -334,7 +333,7 @@ private:
   bool _allow_quicklist_to_show;
 
   std::vector<nux::Point3> _center;
-  std::bitset<std::size_t(monitors::MAX)> _has_visible_window;
+  std::bitset<monitors::MAX> _has_visible_window;
   std::vector<std::bitset<std::size_t(Quirk::LAST)>> _quirks;
   std::vector<std::vector<std::shared_ptr<Animation>>> _quirk_animations;
   std::vector<nux::Point3> _last_stable;
