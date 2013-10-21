@@ -486,6 +486,25 @@ TEST_F(TestLauncherController, MonitorResizesLauncher)
   ASSERT_EQ(launcher_geo.height, monitor_geo.height - panel_style.panel_height);
 }
 
+TEST_F(TestLauncherController, IconCentersResetsOnMonitorsUpdated)
+{
+  uscreen.SetupFakeMultiMonitor();
+
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+  {
+    for (auto const& icon : *(lc.Impl()->model_))
+      icon->SetCenter(nux::Point3(g_random_double(), g_random_double(), g_random_double()), i);
+  }
+
+  uscreen.Reset();
+
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+  {
+    for (auto const& icon : *(lc.Impl()->model_))
+      ASSERT_EQ(nux::Point3(), icon->GetCenter(i));
+  }
+}
+
 TEST_F(TestLauncherController, OnlyUnstickIconOnFavoriteRemoval)
 {
   const std::string desktop = app::BZR_HANDLE_PATCH;
