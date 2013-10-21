@@ -480,4 +480,30 @@ TEST_F(TestLauncherIcon, ResetCentersSingleMonitor)
     ASSERT_EQ(nux::Point3(), icon.GetCenter(i));
 }
 
+TEST_F(TestLauncherIcon, GetCenterForMonitorInvalid)
+{
+  for (int i = -1; i < static_cast<int>(monitors::MAX+1); ++i)
+    ASSERT_EQ(std::make_pair(-1, nux::Point3()), icon.GetCenterForMonitor(i));
+}
+
+TEST_F(TestLauncherIcon, GetCenterForMonitorEveryMonitor)
+{
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+  {
+    nux::Point3 center(g_random_double(), g_random_double(), g_random_double());
+    icon.SetCenter(center, i);
+    ASSERT_EQ(std::make_pair(int(i), center), icon.GetCenterForMonitor(i));
+  }
+}
+
+TEST_F(TestLauncherIcon, GetCenterForMonitorSingleMonitor)
+{
+  int monitor = g_random_int() % monitors::MAX;
+  nux::Point3 center(g_random_double(), g_random_double(), g_random_double());
+  icon.SetCenter(center, monitor);
+
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+    ASSERT_EQ(std::make_pair(monitor, center), icon.GetCenterForMonitor(i));
+}
+
 }
