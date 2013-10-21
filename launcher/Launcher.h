@@ -196,7 +196,7 @@ private:
   ui::EdgeBarrierSubscriber::Result HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
 #endif
 
-  void OnPluginStateChanged();
+  void OnExpoChanged();
   void OnSpreadChanged();
 
   void OnSelectionChanged(AbstractLauncherIcon::Ptr const& selection);

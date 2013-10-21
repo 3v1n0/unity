@@ -173,8 +173,8 @@ Launcher::Launcher(MockableBaseWindow* parent,
   WindowManager& wm = WindowManager::Default();
   wm.initiate_spread.connect(sigc::mem_fun(this, &Launcher::OnSpreadChanged));
   wm.terminate_spread.connect(sigc::mem_fun(this, &Launcher::OnSpreadChanged));
-  wm.initiate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
-  wm.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
+  wm.initiate_expo.connect(sigc::mem_fun(this, &Launcher::OnExpoChanged));
+  wm.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnExpoChanged));
   wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &Launcher::QueueDraw));
 
   ubus_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &Launcher::OnOverlayShown));
@@ -1114,7 +1114,7 @@ int Launcher::GetMouseY() const
   return mouse_position_.y;
 }
 
-void Launcher::OnPluginStateChanged()
+void Launcher::OnExpoChanged()
 {
   WindowManager& wm = WindowManager::Default();
   bool expo_active = wm.IsExpoActive();
@@ -1130,7 +1130,7 @@ void Launcher::OnPluginStateChanged()
     if (icon_under_mouse_)
       icon_under_mouse_->HideTooltip();
   }
-  else
+  else if (!IsOverlayOpen())
   {
     SaturateIcons();
   }
@@ -1155,7 +1155,9 @@ void Launcher::OnSpreadChanged()
   else
   {
     sources_.Remove(SCALE_DESATURATE_IDLE);
-    SaturateIcons();
+
+    if (!IsOverlayOpen())
+      SaturateIcons();
   }
 }
 
