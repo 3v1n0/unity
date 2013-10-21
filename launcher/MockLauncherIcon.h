@@ -266,14 +266,16 @@ public:
 
   void SkipQuirkAnimation(Quirk quirk, int monitor)
   {
+    float value = GetQuirk(quirk, monitor) ? 1.0f : 0.0f;
+
     if (monitor < 0)
     {
       for (unsigned i = 0; i < monitors::MAX; ++i)
-        quirk_progress_[i][unsigned(quirk)] = 0;
+        quirk_progress_[i][unsigned(quirk)] = value;
     }
     else
     {
-      quirk_progress_[monitor][unsigned(quirk)] = 0;
+      quirk_progress_[monitor][unsigned(quirk)] = value;
     }
   }
 

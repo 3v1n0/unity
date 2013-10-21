@@ -128,6 +128,7 @@ public:
     using Launcher::SetUrgentTimer;
     using Launcher::SetIconUnderMouse;
     using Launcher::OnUrgentTimeout;
+    using Launcher::IsOverlayOpen;
     using Launcher::sources_;
     using Launcher::animating_urgent_icons_;
     using Launcher::urgent_animation_period_;
@@ -916,6 +917,43 @@ TEST_F(TestLauncher, HideTooltipOnExpo)
   launcher_->SetIconUnderMouse(icon);
   WM->SetExpoActive(true);
   WM->initiate_expo.emit();
+}
+
+TEST_F(TestLauncher, IconIsDesaturatedWhenAddedInOverlayMode)
+{
+  WM->SetScaleActive(true);
+  WM->initiate_spread.emit();
+  launcher_->SetHover(false);
+  ASSERT_TRUE(launcher_->IsOverlayOpen());
+
+  auto icon = AddMockIcons(1).front();
+
+  EXPECT_TRUE(icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
+  EXPECT_FLOAT_EQ(1.0f, icon->GetQuirkProgress(AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
+}
+
+TEST_F(TestLauncher, IconIsNotDesaturatedWhenAddedInOverlayModeWithMouseOver)
+{
+  WM->SetScaleActive(true);
+  WM->initiate_spread.emit();
+  launcher_->SetHover(true);
+  ASSERT_TRUE(launcher_->IsOverlayOpen());
+
+  auto icon = AddMockIcons(1).front();
+
+  EXPECT_FALSE(icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
+  EXPECT_FLOAT_EQ(0.0f, icon->GetQuirkProgress(AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
+}
+
+TEST_F(TestLauncher, IconIsNotDesaturatedWhenAddedInNormalMode)
+{
+  launcher_->SetHover(false);
+  ASSERT_FALSE(launcher_->IsOverlayOpen());
+
+  auto icon = AddMockIcons(1).front();
+
+  EXPECT_FALSE(icon->GetQuirk(AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
+  EXPECT_FLOAT_EQ(0.0f, icon->GetQuirkProgress(AbstractLauncherIcon::Quirk::DESAT, launcher_->monitor()));
 }
 
 } // namespace launcher
