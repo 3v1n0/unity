@@ -387,9 +387,12 @@ void Controller::OnActivateRequest(GVariant* variant)
 
 gboolean Controller::CheckShortcutActivation(const char* key_string)
 {
+  if (!key_string)
+    return false;
+
   EnsureDash();
-  std::string scope_id = view_->GetIdForShortcutActivation(std::string(key_string));
-  if (scope_id != "")
+  std::string scope_id = view_->GetIdForShortcutActivation(key_string);
+  if (!scope_id.empty())
   {
     WindowManager& wm = WindowManager::Default();
     if (wm.IsScaleActive())

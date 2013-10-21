@@ -1622,7 +1622,7 @@ void UnityScreen::handleEvent(XEvent* event)
 
         skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(XModifiersToNux(event->xkey.state), key_sym, event->xkey.time);
         if (!skip_other_plugins)
-          skip_other_plugins = dash_controller_->CheckShortcutActivation(glib:gchar_to_string(XKeysymToString(key_sym)));
+          skip_other_plugins = dash_controller_->CheckShortcutActivation(XKeysymToString(key_sym));
 
         if (skip_other_plugins && launcher_controller_->KeyNavIsActive())
         {
