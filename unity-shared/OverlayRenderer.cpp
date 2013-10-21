@@ -89,7 +89,6 @@ OverlayRendererImpl::OverlayRendererImpl(OverlayRenderer *parent_)
   , parent(parent_)
 {
   UpdateTextures();
-  WindowManager::Default().average_color.changed.connect(sigc::mem_fun(this, &OverlayRendererImpl::OnBgColorChanged));
 }
 
 void OverlayRendererImpl::OnBgColorChanged(nux::Color const& new_color)
@@ -111,7 +110,13 @@ void OverlayRendererImpl::UpdateTextures()
   rop.Blend = true;
   rop.SrcBlend = GL_ONE;
   rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-  bg_layer_ = std::make_shared<nux::ColorLayer>(nux::Color(0.0f, 0.0f, 0.0f, 0.9), true, rop);
+
+  if (Settings::Instance().GetLowGfxMode() || !nux::GetWindowThread()->GetGraphicsEngine().UsingGLSLCodePath())
+  {
+    auto& avg_color = WindowManager::Default().average_color;
+    bg_layer_ = std::make_shared<nux::ColorLayer>(avg_color(), true, rop);
+    avg_color.changed.connect(sigc::mem_fun(this, &OverlayRendererImpl::OnBgColorChanged));
+  }
 
   rop.Blend = true;
   rop.SrcBlend = GL_ZERO;
@@ -148,7 +153,7 @@ void OverlayRendererImpl::UpdateTextures()
 
 void OverlayRendererImpl::InitASMInverseTextureMaskShader()
 {
-  std::string AsmVtx = 
+  std::string AsmVtx =
       "!!ARBvp1.0                                 \n\
       ATTRIB iPos         = vertex.position;      \n\
       ATTRIB iColor       = vertex.attrib[3];     \n\
@@ -165,7 +170,7 @@ void OverlayRendererImpl::InitASMInverseTextureMaskShader()
       MOV   oTexCoord0, vertex.attrib[8];             \n\
       END";
 
-  std::string AsmFrg = 
+  std::string AsmFrg =
       "!!ARBfp1.0                                       \n\
       TEMP tex0;                                        \n\
       TEMP temp0;                                       \n\
@@ -174,7 +179,7 @@ void OverlayRendererImpl::InitASMInverseTextureMaskShader()
       SUB result.color, {1.0, 1.0, 1.0, 1.0}, temp0.aaaa;\n\
       END";
 
-  std::string AsmFrgRect = 
+  std::string AsmFrgRect =
     "!!ARBfp1.0                                         \n\
     TEMP tex0;                                          \n\
     TEMP temp0;                                         \n\
@@ -216,7 +221,7 @@ void OverlayRendererImpl::RenderInverseMask_ASM(nux::GraphicsEngine& gfx_context
 
   CHECKGL(glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0));
   CHECKGL(glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0));
-  
+
   nux::ObjectPtr<nux::IOpenGLAsmShaderProgram> shader_program = inverse_texture_mask_asm_prog_;
   if (device_texture->Type().IsDerivedFromType(nux::IOpenGLRectangleTexture::StaticObjectType))
   {
@@ -274,7 +279,7 @@ void OverlayRendererImpl::InitSlInverseTextureMaskShader()
   std::string VSString;
   std::string PSString;
 
-  VSString =  
+  VSString =
              NUX_VERTEX_SHADER_HEADER
              "attribute vec4 AVertex;                                \n\
              attribute vec4 MyTextureCoord0;                         \n\
@@ -289,7 +294,7 @@ void OverlayRendererImpl::InitSlInverseTextureMaskShader()
                varyVertexColor = VertexColor;                        \n\
              }";
 
-  PSString =  
+  PSString =
             NUX_FRAGMENT_SHADER_HEADER
              "varying vec4 varyTexCoord0;                               \n\
              varying vec4 varyVertexColor;                              \n\
@@ -443,14 +448,14 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
 
 #endif
   }
-  
+
   //Draw the left and top lines.
   dash::Style& style = dash::Style::Instance();
-    
+
   gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
   gfx_context.GetRenderStates().SetBlend(true);
   gfx_context.GetRenderStates().SetPremultipliedBlend(nux::SRC_OVER);
-  
+
   const double line_opacity = 0.1f;
   const int gradient_height = 50;
   const int vertical_padding = 20;
@@ -482,10 +487,10 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   bg_darken_layer_->SetGeometry(larger_content_geo);
   nux::GetPainter().RenderSinglePaintLayer(gfx_context, larger_content_geo, bg_darken_layer_.get());
 
-  if (Settings::Instance().GetLowGfxMode() == false)
+  if (!Settings::Instance().GetLowGfxMode())
   {
 #ifndef NUX_OPENGLES_20
-    if (gfx_context.UsingGLSLCodePath() == false)
+    if (!gfx_context.UsingGLSLCodePath())
     {
       bg_layer_->SetGeometry(larger_content_geo);
       nux::GetPainter().RenderSinglePaintLayer(gfx_context, larger_content_geo, bg_layer_.get());
@@ -529,7 +534,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
   {
     nux::Geometry geo_border(content_geo.x, content_geo.y, larger_absolute_geo.width - content_geo.x, larger_absolute_geo.height);
     gfx_context.PushClippingRectangle(geo_border);
-  
+
     // Paint the edges
     {
       gfx_context.GetRenderStates().SetColorMask(true, true, true, true);
@@ -556,7 +561,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
 
       geo.width += corner->GetWidth() - 10;
       geo.height += corner->GetHeight() - 10;
-      { 
+      {
         // Corner
         texxform.SetTexCoordType(nux::TexCoordXForm::OFFSET_COORD);
         texxform.SetWrap(nux::TEXWRAP_CLAMP_TO_BORDER, nux::TEXWRAP_CLAMP_TO_BORDER);
@@ -565,7 +570,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         gfx_context.QRP_ColorModTexAlpha(geo.x + (geo.width - corner->GetWidth()),
                                          geo.y + (geo.height - corner->GetHeight()),
                                          corner->GetWidth(),
-                                         corner->GetHeight(),                                         
+                                         corner->GetHeight(),
                                          corner_mask->GetDeviceTexture(),
                                          texxform,
                                          nux::color::Black);
@@ -605,7 +610,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         gfx_context.QRP_ColorModTexAlpha(left_corner->GetWidth() - left_corner_offset - offset,
                                          geo.y + (geo.height - bottom->GetHeight()),
                                          real_width + offset,
-                                         bottom->GetHeight(),                                         
+                                         bottom->GetHeight(),
                                          bottom_mask->GetDeviceTexture(),
                                          texxform,
                                          nux::color::Black);
@@ -642,7 +647,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         gfx_context.QRP_ColorModTexAlpha(geo.x - left_corner_offset,
                                          geo.y + (geo.height - left_corner->GetHeight()),
                                          left_corner->GetWidth(),
-                                         left_corner->GetHeight(),                                         
+                                         left_corner->GetHeight(),
                                          left_corner_mask->GetDeviceTexture(),
                                          texxform,
                                          nux::color::Black);
@@ -696,7 +701,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
         gfx_context.QRP_ColorModTexAlpha(geo.x + geo.width - right->GetWidth(),
                                          geo.y + top_corner->GetHeight() - top_corner_offset,
                                          right->GetWidth(),
-                                         geo.height - corner->GetHeight() - (top_corner->GetHeight() - top_corner_offset),                                       
+                                         geo.height - corner->GetHeight() - (top_corner->GetHeight() - top_corner_offset),
                                          right_mask->GetDeviceTexture(),
                                          texxform,
                                          nux::color::Black);
@@ -775,7 +780,7 @@ void OverlayRendererImpl::Draw(nux::GraphicsEngine& gfx_context, nux::Geometry c
                              nux::color::White);
       }
     }
-    
+
     gfx_context.PopClippingRectangle();
   }
 
@@ -798,7 +803,7 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
 
   nux::Geometry larger_absolute_geo = absolute_geo;
   larger_absolute_geo.OffsetSize(excess_border, excess_border);
-  
+
   gfx_context.PushClippingRectangle(larger_geo);
 
   unsigned int blend_alpha, blend_src, blend_dest = 0;
@@ -853,10 +858,10 @@ void OverlayRendererImpl::DrawContent(nux::GraphicsEngine& gfx_context, nux::Geo
   bgs++;
 
   //Only apply shine if we aren't in low gfx mode.
-  if (Settings::Instance().GetLowGfxMode() == false)
+  if (!Settings::Instance().GetLowGfxMode())
   {
 #ifndef NUX_OPENGLES_20
-    if (gfx_context.UsingGLSLCodePath() == false)
+    if (!gfx_context.UsingGLSLCodePath())
     {
       nux::GetPainter().PushLayer(gfx_context, bg_layer_->GetGeometry(), bg_layer_.get());
       bgs++;
