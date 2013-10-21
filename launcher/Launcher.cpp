@@ -1494,6 +1494,12 @@ void Launcher::OnIconAdded(AbstractLauncherIcon::Ptr const& icon)
   icon->needs_redraw.connect(sigc::mem_fun(this, &Launcher::OnIconNeedsRedraw));
   icon->tooltip_visible.connect(sigc::mem_fun(this, &Launcher::OnTooltipVisible));
 
+  if (IsOverlayOpen() && !hovered_)
+  {
+    icon->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, true, monitor());
+    icon->ResetQuirkTime(AbstractLauncherIcon::Quirk::DESAT, monitor());
+  }
+
   if (icon->IsVisibleOnMonitor(monitor()))
     QueueDraw();
 }
@@ -2504,12 +2510,6 @@ void Launcher::ProcessDndMove(int x, int y, std::list<char*> mimes)
     // only set hover once we know our first x/y
     SetActionState(ACTION_DRAG_EXTERNAL);
     SetStateMouseOverLauncher(true);
-
-    if (!steal_drag_ && !dnd_data_.Uris().empty())
-    {
-      for (auto const& it : *model_)
-        it->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, !it->ShouldHighlightOnDrag(dnd_data_), monitor());
-    }
   }
 
   SetMousePosition(x - parent_->GetGeometry().x, y - parent_->GetGeometry().y);
