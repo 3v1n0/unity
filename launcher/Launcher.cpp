@@ -88,7 +88,7 @@ const float NEG_FOLDED_ANGLE = -1.0f;
 const int SCROLL_AREA_HEIGHT = 24;
 const int SCROLL_FPS = 30;
 
-const int BASE_URGENT_ANIMATION_PERIOD = 6; // In seconds
+const int BASE_URGENT_ANIMATION_PERIOD = 60; // In seconds
 const int MAX_URGENT_ANIMATION_DELTA = 960;  // In seconds
 const int DOUBLE_TIME = 2;
 
