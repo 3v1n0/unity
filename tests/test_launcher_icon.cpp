@@ -43,6 +43,7 @@ struct MockLauncherIcon : LauncherIcon
   using LauncherIcon::SkipQuirkAnimation;
   using LauncherIcon::GetQuirkAnimation;
   using LauncherIcon::EmitNeedsRedraw;
+  using LauncherIcon::GetCenterForMonitor;
 };
 
 struct TestLauncherIcon : Test
@@ -454,6 +455,29 @@ TEST_F(TestLauncherIcon, TooltipVisibilityDisabled)
   icon.tooltip_visible.connect([&tooltip_shown] (nux::ObjectPtr<nux::View>) {tooltip_shown = true;});
   icon.ShowTooltip();
   EXPECT_FALSE(tooltip_shown);
+}
+
+TEST_F(TestLauncherIcon, ResetCentersAllMonitors)
+{
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+    icon.SetCenter(nux::Point3(g_random_double(), g_random_double(), g_random_double()), i);
+
+  icon.ResetCenters();
+
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+    ASSERT_EQ(nux::Point3(), icon.GetCenter(i));
+}
+
+TEST_F(TestLauncherIcon, ResetCentersSingleMonitor)
+{
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+  {
+    icon.SetCenter(nux::Point3(g_random_double(), g_random_double(), g_random_double()), i);
+    icon.ResetCenters(i);
+  }
+
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+    ASSERT_EQ(nux::Point3(), icon.GetCenter(i));
 }
 
 }
