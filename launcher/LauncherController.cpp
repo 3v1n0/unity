@@ -199,6 +199,10 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
   unsigned int launchers_size = launchers.size();
   unsigned int last_launcher = 0;
 
+  // Reset the icon centers: only the used icon centers must contain valid values
+  for (auto const& icon : *model_)
+    icon->ResetCenters();
+
   for (unsigned int i = 0; i < num_launchers; ++i, ++last_launcher)
   {
     if (i >= launchers_size)
