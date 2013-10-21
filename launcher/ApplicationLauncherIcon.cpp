@@ -495,9 +495,14 @@ void ApplicationLauncherIcon::OnWindowMinimized(guint32 xid)
   {
     if (xid == window->window_id())
     {
-      Present(0.5f, 600, window->monitor());
-      FullyAnimateQuirkDelayed(300, Quirk::SHIMMER, window->monitor());
-      break;
+      int monitor = GetCenterForMonitor(window->monitor()).first;
+
+      if (monitor >= 0)
+      {
+        Present(0.5f, 600, monitor);
+        FullyAnimateQuirkDelayed(300, Quirk::SHIMMER, monitor);
+        break;
+      }
     }
   }
 }
@@ -1078,7 +1083,7 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
   return result;
 }
 
-void ApplicationLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> center)
+void ApplicationLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> const& centers)
 {
   if (app_->type() == "webapp")
     return;
@@ -1088,18 +1093,23 @@ void ApplicationLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> cent
   for (auto& window : app_->GetWindows())
   {
     Window xid = window->window_id();
-    int monitor = window->monitor();
-    monitor = std::max<int>(0, std::min<int>(center.size() - 1, monitor));
+    int monitor = GetCenterForMonitor(window->monitor()).first;
 
-    geo.x = center[monitor].x - icon_size / 2;
-    geo.y = center[monitor].y - icon_size / 2;
+    if (monitor < 0)
+    {
+      WindowManager::Default().SetWindowIconGeometry(xid, nux::Geometry());
+      continue;
+    }
+
+    geo.x = centers[monitor].x - icon_size / 2;
+    geo.y = centers[monitor].y - icon_size / 2;
     WindowManager::Default().SetWindowIconGeometry(xid, geo);
   }
 }
 
-void ApplicationLauncherIcon::OnCenterStabilized(std::vector<nux::Point3> center)
+void ApplicationLauncherIcon::OnCenterStabilized(std::vector<nux::Point3> const& centers)
 {
-  UpdateIconGeometries(center);
+  UpdateIconGeometries(centers);
 }
 
 void ApplicationLauncherIcon::UpdateRemoteUri()
