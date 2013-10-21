@@ -254,6 +254,8 @@ private:
 
   void UpdateCloseWindowKey(CompAction::KeyBinding const&);
 
+  bool getMipmap () override { return true; }
+
   std::unique_ptr<na::TickSource> tick_source_;
   std::unique_ptr<na::AnimationController> animation_controller_;
 

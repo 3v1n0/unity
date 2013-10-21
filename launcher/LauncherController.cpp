@@ -1248,18 +1248,22 @@ void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
   }
 }
 
-bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string, Time timestamp)
+bool Controller::HandleLauncherKeyEvent(unsigned long key_state, unsigned int key_sym, Time timestamp)
 {
   // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
   for (auto const& icon : *pimpl->model_)
   {
-    if ((XKeysymToKeycode(display, icon->GetShortcut()) == key_code) ||
-        (static_cast<gchar>(icon->GetShortcut()) == key_string[0]))
+    if (icon->GetShortcut() == key_sym)
     {
-      if (g_ascii_isdigit(static_cast<gchar>(icon->GetShortcut())) && (key_state & ShiftMask))
+      if ((key_state & nux::KEY_MODIFIER_SHIFT) &&
+          icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION)
+      {
         icon->OpenInstance(ActionArg(ActionArg::Source::LAUNCHER_KEYBINDING, 0, timestamp));
+      }
       else
+      {
         icon->Activate(ActionArg(ActionArg::Source::LAUNCHER_KEYBINDING, 0, timestamp));
+      }
 
       // disable the "tap on super" check
       pimpl->launcher_key_press_time_ = 0;
