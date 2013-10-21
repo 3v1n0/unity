@@ -1380,6 +1380,9 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
   if (dash_controller_->IsVisible())
     redraw_view_if_damaged(dash_controller_->Dash(), damage);
 
+  if (hud_controller_->IsVisible())
+    redraw_view_if_damaged(hud_controller_->HudView(), damage);
+
   auto const& launchers = launcher_controller_->launchers();
   for (auto const& launcher : launchers)
   {
