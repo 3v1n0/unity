@@ -80,6 +80,8 @@ public:
 
   void SetCenter(nux::Point3 const& center, int parent_monitor);
 
+  void ResetCenters(int monitor = -1);
+
   nux::Point3 GetCenter(int monitor);
 
   virtual void Activate(ActionArg arg);
@@ -89,6 +91,8 @@ public:
   void SaveCenter();
 
   nux::Point3 GetSavedCenter(int monitor);
+
+  std::pair<int, nux::Point3> GetCenterForMonitor(int monitor) const;
 
   int SortPriority();
 
