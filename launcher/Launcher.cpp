@@ -1497,7 +1497,7 @@ void Launcher::OnIconAdded(AbstractLauncherIcon::Ptr const& icon)
   if (IsOverlayOpen() && !hovered_)
   {
     icon->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, true, monitor());
-    icon->ResetQuirkTime(AbstractLauncherIcon::Quirk::DESAT, monitor());
+    icon->SkipQuirkAnimation(AbstractLauncherIcon::Quirk::DESAT, monitor());
   }
 
   if (icon->IsVisibleOnMonitor(monitor()))
