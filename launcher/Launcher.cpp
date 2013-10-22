@@ -94,6 +94,7 @@ const int DOUBLE_TIME = 2;
 const std::string START_DRAGICON_TIMEOUT = "start-dragicon-timeout";
 const std::string SCROLL_TIMEOUT = "scroll-timeout";
 const std::string ANIMATION_IDLE = "animation-idle";
+const std::string SCALE_DESATURATE_IDLE = "scale-desaturate-idle";
 const std::string URGENT_TIMEOUT = "urgent-timeout";
 }
 
@@ -173,9 +174,9 @@ Launcher::Launcher(MockableBaseWindow* parent,
   ql_manager.quicklist_closed.connect(sigc::mem_fun(this, &Launcher::RecvQuicklistClosed));
 
   WindowManager& wm = WindowManager::Default();
-  wm.initiate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
+  wm.initiate_spread.connect(sigc::mem_fun(this, &Launcher::OnSpreadChanged));
+  wm.terminate_spread.connect(sigc::mem_fun(this, &Launcher::OnSpreadChanged));
   wm.initiate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
-  wm.terminate_spread.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   wm.terminate_expo.connect(sigc::mem_fun(this, &Launcher::OnPluginStateChanged));
   wm.screen_viewport_switch_ended.connect(sigc::mem_fun(this, &Launcher::QueueDraw));
 
@@ -1125,23 +1126,30 @@ void Launcher::OnLockHideChanged(GVariant *data)
   }
 }
 
+// FIXME: add monitor-aware quirks!
 void Launcher::DesaturateIcons()
 {
-  for (auto icon : *model_)
+  bool inactive_only = WindowManager::Default().IsScaleActiveForGroup();
+
+  for (auto const& icon : *model_)
   {
+    bool desaturate = false;
+
     if (icon->GetIconType () != AbstractLauncherIcon::IconType::HOME &&
-        icon->GetIconType () != AbstractLauncherIcon::IconType::HUD)
+        icon->GetIconType () != AbstractLauncherIcon::IconType::HUD &&
+        (!inactive_only || !icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE)))
     {
-      icon->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, true);
+      desaturate = true;
     }
 
+    icon->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, desaturate);
     icon->HideTooltip();
   }
 }
 
 void Launcher::SaturateIcons()
 {
-  for (auto icon : *model_)
+  for (auto const& icon : *model_)
   {
     icon->SetQuirk(AbstractLauncherIcon::Quirk::DESAT, false);
   }
@@ -1243,7 +1251,7 @@ void Launcher::OnOverlayHidden(GVariant* data)
 
 bool Launcher::IsOverlayOpen() const
 {
-  return dash_is_open_ || hud_is_open_;
+  return dash_is_open_ || hud_is_open_ || WindowManager::Default().IsScaleActive();
 }
 
 void Launcher::SetHidden(bool hide_launcher)
@@ -1303,8 +1311,34 @@ int Launcher::GetMouseY() const
 void Launcher::OnPluginStateChanged()
 {
   WindowManager& wm = WindowManager::Default();
-  hide_machine_.SetQuirk(LauncherHideMachine::EXPO_ACTIVE, wm.IsExpoActive());
-  hide_machine_.SetQuirk(LauncherHideMachine::SCALE_ACTIVE, wm.IsScaleActive());
+  bool expo_active = wm.IsExpoActive();
+  hide_machine_.SetQuirk(LauncherHideMachine::EXPO_ACTIVE, expo_active);
+
+  if (expo_active && icon_under_mouse_)
+    icon_under_mouse_->HideTooltip();
+}
+
+void Launcher::OnSpreadChanged()
+{
+  WindowManager& wm = WindowManager::Default();
+  bool active = wm.IsScaleActive();
+  hide_machine_.SetQuirk(LauncherHideMachine::SCALE_ACTIVE, active);
+
+  bg_effect_helper_.enabled = active;
+
+  if (active && icon_under_mouse_)
+    icon_under_mouse_->HideTooltip();
+
+  if (active && (!hovered_ || wm.IsScaleActiveForGroup()))
+  {
+    // The icons can take some ms to update their active state, this can protect us.
+    sources_.AddIdle([this] { DesaturateIcons(); return false; }, SCALE_DESATURATE_IDLE);
+  }
+  else
+  {
+    sources_.Remove(SCALE_DESATURATE_IDLE);
+    SaturateIcons();
+  }
 }
 
 LauncherHideMode Launcher::GetHideMode() const
@@ -2230,6 +2264,13 @@ void Launcher::RecvMouseMove(int x, int y, int dx, int dy, unsigned long button_
 
   if (!hidden_)
     UpdateChangeInMousePosition(dx, dy);
+
+  if (WindowManager::Default().IsScaleActiveForGroup())
+  {
+    auto icon = MouseIconIntersection(x, y);
+    if (icon && !icon->GetQuirk(AbstractLauncherIcon::Quirk::ACTIVE))
+      SaturateIcons();
+  }
 
   // Every time the mouse moves, we check if it is inside an icon...
   EventLogic();
