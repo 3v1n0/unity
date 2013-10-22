@@ -21,9 +21,14 @@
 #define UNITY_DECORATION_MANAGER
 
 #include <memory>
+#include <X11/Xlib.h>
 
 namespace unity
 {
+
+class UnityWindow;
+class UnityScreen;
+
 namespace decoration
 {
 class Manager
@@ -31,8 +36,11 @@ class Manager
 public:
   typedef std::shared_ptr<Manager> Ptr;
 
-  Manager();
+  Manager(UnityScreen*);
   ~Manager();
+
+  void AddSupportedAtoms(std::vector<Atom>& atoms) const;
+  bool HandleEvent(XEvent*);
 
 private:
   struct Impl;

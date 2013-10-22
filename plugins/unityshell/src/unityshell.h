@@ -72,6 +72,12 @@ namespace unity
 {
 class UnityWindow;
 
+namespace decoration
+{
+class Manager;
+typedef std::shared_ptr<Manager> ManagerPtr;
+}
+
 /* base screen class */
 class UnityScreen :
   public debug::Introspectable,
@@ -132,6 +138,7 @@ public:
 
   /* handle X11 events */
   void handleEvent(XEvent*);
+  void addSupportedAtoms(std::vector<Atom>&);
 
   /* handle showdesktop */
   void enterShowDesktopMode ();
@@ -270,6 +277,8 @@ private:
   /* The window thread should be the last thing removed, as c++ does it in reverse order */
   std::unique_ptr<nux::WindowThread> wt;
 
+  decoration::ManagerPtr deco_manager_;
+
   /* These must stay below the window thread, please keep the order */
   launcher::Controller::Ptr launcher_controller_;
   dash::Controller::Ptr     dash_controller_;
@@ -344,11 +353,11 @@ private:
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
-  decoration::Manager deco_manager_;
 
   bool is_desktop_active_;
 
   friend class UnityWindow;
+  friend class decoration::Manager;
 };
 
 class UnityWindow :

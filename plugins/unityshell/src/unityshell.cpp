@@ -52,6 +52,8 @@
 #include "launcher/XdndStartStopNotifierImp.h"
 #include "CompizShortcutModeller.h"
 
+#include "DecorationsManager.h"
+
 #include <glib/gi18n-lib.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -133,6 +135,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
   , screen(screen)
   , cScreen(CompositeScreen::get(screen))
   , gScreen(GLScreen::get(screen))
+  , deco_manager_(std::make_shared<decoration::Manager>(this))
   , debugger_(this)
   , needsRelayout(false)
   , super_keypressed_(false)
@@ -1427,11 +1430,20 @@ void UnityScreen::nuxDamageCompiz()
   }
 }
 
+void UnityScreen::addSupportedAtoms(std::vector<Atom>& atoms)
+{
+  screen->addSupportedAtoms(atoms);
+  deco_manager_->AddSupportedAtoms(atoms);
+}
+
 /* handle X Events */
 void UnityScreen::handleEvent(XEvent* event)
 {
   bool skip_other_plugins = false;
   PluginAdapter& wm = PluginAdapter::Default();
+
+  if (deco_manager_->HandleEvent(event))
+    return;
 
   switch (event->type)
   {
@@ -3431,7 +3443,7 @@ UnityWindow::UnityWindow(CompWindow* window)
 {
   WindowInterface::setHandler(window);
   GLWindowInterface::setHandler(gWindow);
-  ScaleWindowInterface::setHandler (ScaleWindow::get (window));
+  ScaleWindowInterface::setHandler(ScaleWindow::get(window));
 
   PluginAdapter::Default().OnLeaveDesktop();
 

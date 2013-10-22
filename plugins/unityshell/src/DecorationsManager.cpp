@@ -17,18 +17,65 @@
 * Authored by: Marco Trevisan <marco.trevisan@canonical.com>
 */
 
+#include <Nux/Nux.h>
+#include <NuxCore/Logger.h>
+
 #include "DecorationsManager.h"
+#include "unityshell.h"
+
+namespace
+{
+DECLARE_LOGGER(logger, "unity.decoration.manager");
+
+namespace atom
+{
+Atom _NET_REQUEST_FRAME_EXTENTS = 0;
+Atom _NET_FRAME_EXTENTS = 0;
+}
+}
 
 namespace unity
 {
 namespace decoration
 {
 
-struct Manager::Impl {};
+struct Manager::Impl
+{
+  Impl(UnityScreen *uscreen)
+    : uscreen_(uscreen)
+    , cscreen_(uscreen_->screen)
+  {
+    atom::_NET_REQUEST_FRAME_EXTENTS = XInternAtom(cscreen_->dpy(), "_NET_REQUEST_FRAME_EXTENTS", False);
+    atom::_NET_FRAME_EXTENTS = XInternAtom(cscreen_->dpy(), "_NET_FRAME_EXTENTS", False);
+    cscreen_->updateSupportedWmHints();
+  }
 
-Manager::Manager()
-  : impl_(new Manager::Impl)
+  ~Impl()
+  {
+    cscreen_->addSupportedAtomsSetEnabled(uscreen_, false);
+    cscreen_->updateSupportedWmHints();
+  }
+
+  UnityScreen *uscreen_;
+  CompScreen *cscreen_;
+};
+
+Manager::Manager(UnityScreen *screen)
+  : impl_(new Manager::Impl(screen))
 {}
+
+Manager::~Manager()
+{}
+
+void Manager::AddSupportedAtoms(std::vector<Atom>& atoms) const
+{
+  atoms.push_back(atom::_NET_REQUEST_FRAME_EXTENTS);
+}
+
+bool Manager::HandleEvent(XEvent* xevent)
+{
+  return false;
+}
 
 } // decoration namespace
 } // unity namespace
