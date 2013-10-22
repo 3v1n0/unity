@@ -45,6 +45,7 @@ DECLARE_LOGGER(logger, "unity.dash.results");
 namespace
 {
 const int FONT_SIZE = 10;
+const char REPLACEMENT_CHAR = '?';
 
 const float CORNER_HIGHTLIGHT_RADIUS = 2.0f;
 
@@ -393,6 +394,55 @@ void ResultRendererTile::IconLoaded(std::string const& texid,
   }
 }
 
+/* Blacklisted unicode ranges:
+ * Burmese:  U+1000 -> U+109F
+ * Extended: U+AA60 -> U+AA7B
+*/
+bool IsBlacklistedChar(gunichar uni_c)
+{
+  if ((uni_c >= 0x1000 && uni_c <= 0x109F) ||
+      (uni_c >= 0xAA60 && uni_c >= 0xAA7B))
+  {
+    return true;
+  }
+
+  return false;
+}
+
+// FIXME Bug (lp.1239381) in the backend of pango that crashes
+// when using ellipsize with/height setting in pango
+std::string ReplaceBlacklistedChars(std::string const& str)
+{
+  std::string new_string("");
+
+  if (!g_utf8_validate(str.c_str(), -1, NULL))
+    return new_string;
+
+  gchar const* uni_s = str.c_str();
+  gunichar uni_c;
+  gchar utf8_buff[6];
+
+  int size = g_utf8_strlen(uni_s, -1);
+  for (int i = 0; i < size; ++i)
+  {
+    uni_c = g_utf8_get_char(uni_s);
+    uni_s = g_utf8_next_char(uni_s);
+
+    if (IsBlacklistedChar(uni_c))
+    {
+      new_string += REPLACEMENT_CHAR;
+    }
+    else
+    {
+      int end = g_unichar_to_utf8(uni_c, utf8_buff);
+      utf8_buff[end] = '\0';
+
+      new_string += utf8_buff;
+    }
+  }
+
+  return new_string;
+}
 
 void ResultRendererTile::LoadText(Result const& row)
 {
@@ -426,7 +476,10 @@ void ResultRendererTile::LoadText(Result const& row)
   pango_layout_set_width(layout, (style.GetTileWidth() - (padding * 2))* PANGO_SCALE);
   pango_layout_set_height(layout, -2);
 
-  char *escaped_text = g_markup_escape_text(row.name().c_str()  , -1);
+  // FIXME bug #1239381
+  std::string name = ReplaceBlacklistedChars(row.name());
+
+  char *escaped_text = g_markup_escape_text(name.c_str(), -1);
 
   pango_layout_set_markup(layout, escaped_text, -1);
 
