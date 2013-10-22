@@ -1046,6 +1046,12 @@ void Launcher::OnOverlayHidden(GVariant* data)
       LOG_DEBUG(logger) << "Saturate on monitor " << monitor();
       SaturateIcons();
     }
+    else if (WindowManager::Default().IsExpoActive())
+    {
+      // XXX: This is a workaround, we need to disable blur effect on expo to avoid
+      // a wrong blurred background. Expo should damage the Launcher.
+      bg_effect_helper_.enabled = false;
+    }
   }
 
   // as the leave event is no more received when the place is opened
@@ -1119,7 +1125,7 @@ void Launcher::OnExpoChanged()
   WindowManager& wm = WindowManager::Default();
   bool expo_active = wm.IsExpoActive();
   hide_machine_.SetQuirk(LauncherHideMachine::EXPO_ACTIVE, expo_active);
-  // We must make sure that we regenerate the blur when expo is fully active
+  // XXX: We must make sure that we regenerate the blur when expo is fully active
   // bg_effect_helper_.enabled = expo_active;
 
   if (expo_active)
@@ -1677,9 +1683,9 @@ void Launcher::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                         pressure_color);
   }
 
-  if (Settings::Instance().GetLowGfxMode() == false)
+  if (!Settings::Instance().GetLowGfxMode())
   {
-    if (IsOverlayOpen())
+    if (IsOverlayOpen() && bg_effect_helper_.enabled)
     {
       nux::Geometry blur_geo(geo_absolute.x, geo_absolute.y, base.width, base.height);
       nux::ObjectPtr<nux::IOpenGLBaseTexture> blur_texture;
