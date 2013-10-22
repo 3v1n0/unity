@@ -501,8 +501,9 @@ void ApplicationLauncherIcon::OnWindowMinimized(guint32 xid)
       {
         Present(0.5f, 600, monitor);
         FullyAnimateQuirkDelayed(300, Quirk::SHIMMER, monitor);
-        break;
       }
+
+      break;
     }
   }
 }
