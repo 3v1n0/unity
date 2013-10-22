@@ -38,6 +38,7 @@
 #include "unityshell_options.h"
 
 #include "Introspectable.h"
+#include "DecorationsManager.h"
 #include "DashController.h"
 #include "UnitySettings.h"
 #include "DashStyle.h"
@@ -254,6 +255,8 @@ private:
 
   void UpdateCloseWindowKey(CompAction::KeyBinding const&);
 
+  bool getMipmap () override { return false; }
+
   std::unique_ptr<na::TickSource> tick_source_;
   std::unique_ptr<na::AnimationController> animation_controller_;
 
@@ -341,6 +344,7 @@ private:
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
+  decoration::Manager deco_manager_;
 
   bool is_desktop_active_;
 
