@@ -34,14 +34,13 @@ namespace launcher
 DECLARE_LOGGER(logger, "unity.launcher.icon.hud");
 
 HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
- : SingleMonitorLauncherIcon(IconType::HUD, 0)
+ : SingleMonitorLauncherIcon(IconType::HUD)
  , launcher_hide_mode_(hide_mode)
 {
   tooltip_text = _("HUD");
+  tooltip_enabled = false;
   icon_name = PKGDATADIR"/launcher_bfb.png";
   position = Position::BEGIN;
-  SetQuirk(Quirk::VISIBLE, false);
-  SetQuirk(Quirk::RUNNING, false);
   SetQuirk(Quirk::ACTIVE, true);
 
   background_color_ = nux::color::White;
@@ -55,7 +54,7 @@ HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
                                  sigc::bind(sigc::mem_fun(this, &HudLauncherIcon::OnOverlayShown),
                                             false));
 
-  mouse_enter.connect([&](int m) { ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW); });
+  mouse_enter.connect([this](int m) { ubus_manager_.SendMessage(UBUS_DASH_ABOUT_TO_SHOW); });
 }
 
 void HudLauncherIcon::OnHudIconChanged(GVariant *data)
@@ -68,8 +67,6 @@ void HudLauncherIcon::OnHudIconChanged(GVariant *data)
       icon_name = PKGDATADIR"/launcher_bfb.png";
     else
       icon_name = hud_icon_name;
-
-    EmitNeedsRedraw();
   }
 }
 
@@ -97,11 +94,8 @@ void HudLauncherIcon::OnOverlayShown(GVariant* data, bool visible)
   if (overlay_identity.Str() == "hud" &&
       launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
   {
-    SetMonitor(overlay_monitor);
-    SetQuirk(Quirk::VISIBLE, visible);
-    SetQuirk(Quirk::ACTIVE, visible);
-    tooltip_enabled = !visible;
-    EmitNeedsRedraw();
+    SetMonitor(visible ? overlay_monitor : -1);
+    ResetQuirkTime(Quirk::VISIBLE, overlay_monitor);
   }
 }
 

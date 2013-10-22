@@ -27,7 +27,7 @@ namespace unity
 namespace launcher
 {
 
-SingleMonitorLauncherIcon::SingleMonitorLauncherIcon(IconType type, unsigned monitor)
+SingleMonitorLauncherIcon::SingleMonitorLauncherIcon(IconType type, int monitor)
  : SimpleLauncherIcon(type)
  , monitor_(monitor)
 {
@@ -37,12 +37,10 @@ SingleMonitorLauncherIcon::SingleMonitorLauncherIcon(IconType type, unsigned mon
 void SingleMonitorLauncherIcon::UpdateMonitor()
 {
   for (unsigned i = 0; i < monitors::MAX; ++i)
-    SetVisibleOnMonitor(i, i == monitor_);
-
-  EmitNeedsRedraw();
+    SetVisibleOnMonitor(i, static_cast<int>(i) == monitor_);
 }
 
-void SingleMonitorLauncherIcon::SetMonitor(unsigned monitor)
+void SingleMonitorLauncherIcon::SetMonitor(int monitor)
 {
   if (monitor != monitor_)
   {
@@ -51,7 +49,7 @@ void SingleMonitorLauncherIcon::SetMonitor(unsigned monitor)
   }
 }
 
-unsigned SingleMonitorLauncherIcon::GetMonitor() const
+int SingleMonitorLauncherIcon::GetMonitor() const
 {
   return monitor_;
 }

@@ -26,12 +26,12 @@
 
 #include "ApplicationLauncherIcon.h"
 #include "FavoriteStore.h"
-#include "StandaloneWindowManager.h"
 #include "UBusWrapper.h"
 #include "UBusMessages.h"
 #include "ZeitgeistUtils.h"
 #include "mock-application.h"
 #include "test_utils.h"
+#include "test_standalone_wm.h"
 
 using namespace testing;
 using namespace testmocks;
@@ -87,8 +87,6 @@ struct TestApplicationLauncherIcon : testmocks::TestUnityAppBase
 {
   virtual void SetUp() override
   {
-    WM = dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default());
-
     usc_app = std::make_shared<MockApplication::Nice>(USC_DESKTOP, "softwarecenter");
     usc_icon = new NiceMock<MockApplicationLauncherIcon>(usc_app);
     ASSERT_EQ(usc_icon->DesktopFile(), USC_DESKTOP);
@@ -100,12 +98,6 @@ struct TestApplicationLauncherIcon : testmocks::TestUnityAppBase
     mock_app = std::make_shared<MockApplication::Nice>();
     mock_icon = new NiceMock<MockApplicationLauncherIcon>(mock_app);
     ASSERT_TRUE(mock_icon->DesktopFile().empty());
-  }
-
-  virtual void TearDown() override
-  {
-    for (auto const& win : WM->GetStandaloneWindows())
-      WM->Close(win->Xid());
   }
 
   void AddMockWindow(Window xid, int monitor, int desktop)
@@ -166,7 +158,7 @@ struct TestApplicationLauncherIcon : testmocks::TestUnityAppBase
     EXPECT_TRUE(app->icon.changed.empty());
   }
 
-  StandaloneWindowManager* WM;
+  testwrapper::StandaloneWM WM;
   MockApplication::Ptr usc_app;
   MockApplication::Ptr empty_app;
   MockApplication::Ptr mock_app;

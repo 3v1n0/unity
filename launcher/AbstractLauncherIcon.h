@@ -186,13 +186,13 @@ public:
 
   virtual uint64_t SwitcherPriority() = 0;
 
-  virtual bool GetQuirk(Quirk quirk) const = 0;
+  virtual bool GetQuirk(Quirk quirk, int monitor = -1) const = 0;
 
-  virtual void SetQuirk(Quirk quirk, bool value) = 0;
+  virtual void SetQuirk(Quirk quirk, bool value, int monitor = -1) = 0;
 
-  virtual struct timespec GetQuirkTime(Quirk quirk) = 0;
+  virtual struct timespec GetQuirkTime(Quirk quirk, int monitor) = 0;
 
-  virtual void ResetQuirkTime(Quirk quirk) = 0;
+  virtual void ResetQuirkTime(Quirk quirk, int monitor = -1) = 0;
 
   virtual IconType GetIconType() const = 0;
 
@@ -242,10 +242,10 @@ public:
   sigc::signal<void, int>      mouse_enter;
   sigc::signal<void, int>      mouse_leave;
 
-  sigc::signal<void, AbstractLauncherIcon::Ptr const&> needs_redraw;
+  sigc::signal<void, AbstractLauncherIcon::Ptr const&, int> needs_redraw;
   sigc::signal<void, AbstractLauncherIcon::Ptr const&> remove;
   sigc::signal<void, nux::ObjectPtr<nux::View>> tooltip_visible;
-  sigc::signal<void> visibility_changed;
+  sigc::signal<void, int> visibility_changed;
   sigc::signal<void> position_saved;
   sigc::signal<void> position_forgot;
   sigc::signal<void, std::string const&> uri_changed;

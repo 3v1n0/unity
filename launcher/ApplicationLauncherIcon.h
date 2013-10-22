@@ -52,7 +52,7 @@ public:
   bool IsRunning() const;
   bool IsUrgent() const;
 
-  virtual bool GetQuirk(Quirk quirk) const;
+  virtual bool GetQuirk(Quirk quirk, int monitor = 0) const override;
 
   virtual void Quit();
   virtual void AboutToRemove();

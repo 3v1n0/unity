@@ -118,7 +118,6 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager,
   , reactivate_keynav(false)
   , keynav_restore_window_(true)
   , launcher_key_press_time_(0)
-  , last_dnd_monitor_(-1)
   , dbus_server_(DBUS_NAME)
 {
 #ifdef USE_X11
@@ -276,8 +275,7 @@ void Controller::Impl::OnDndStarted(std::string const& data, int monitor)
 {
   if (parent_->multiple_launchers)
   {
-    last_dnd_monitor_ = monitor;
-    launchers[last_dnd_monitor_]->DndStarted(data);
+    launchers[monitor]->DndStarted(data);
   }
   else
   {
@@ -289,8 +287,8 @@ void Controller::Impl::OnDndFinished()
 {
   if (parent_->multiple_launchers)
   {
-    launchers[last_dnd_monitor_]->DndFinished();
-    last_dnd_monitor_ = -1;
+    if (xdnd_manager_->Monitor() >= 0)
+      launchers[xdnd_manager_->Monitor()]->DndFinished();
   }
   else
   {
@@ -298,14 +296,15 @@ void Controller::Impl::OnDndFinished()
   }
 }
 
-void Controller::Impl::OnDndMonitorChanged(int monitor)
+void Controller::Impl::OnDndMonitorChanged(std::string const& data, int old_monitor, int new_monitor)
 {
   if (parent_->multiple_launchers)
   {
-    launchers[last_dnd_monitor_]->UnsetDndQuirk();
-    last_dnd_monitor_ = monitor;
-    launchers[last_dnd_monitor_]->SetDndQuirk();
- }
+    if (old_monitor >= 0)
+      launchers[old_monitor]->UnsetDndQuirk();
+
+    launchers[new_monitor]->DndStarted(data);
+  }
 }
 
 Launcher* Controller::Impl::CreateLauncher()
@@ -761,7 +760,7 @@ void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr const& icon, int p
 
   if (icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION)
   {
-    icon->visibility_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));
+    icon->visibility_changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::SortAndUpdate)));
     SortAndUpdate();
   }
 
@@ -939,7 +938,6 @@ SoftwareCenterLauncherIcon::Ptr Controller::Impl::CreateSCLauncherIcon(std::stri
     return result;
 
   result = new SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path);
-  result->Stick(false);
 
   return result;
 }
@@ -1250,7 +1248,7 @@ bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, 
     if ((XKeysymToKeycode(display, (*it)->GetShortcut()) == key_code) ||
         ((gchar)((*it)->GetShortcut()) == key_string[0]))
     {
-      struct timespec last_action_time = (*it)->GetQuirkTime(AbstractLauncherIcon::Quirk::LAST_ACTION);
+      struct timespec last_action_time = (*it)->GetQuirkTime(AbstractLauncherIcon::Quirk::LAST_ACTION, 0);
       struct timespec current;
       TimeUtil::SetTimeStruct(&current);
       if (TimeUtil::TimeDelta(&current, &last_action_time) > local::ignore_repeat_shortcut_duration)

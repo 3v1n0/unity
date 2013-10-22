@@ -57,7 +57,10 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(ApplicationPtr const& app
   , needs_urgent_(false)
   , aptdaemon_trans_id_(aptdaemon_trans_id)
 {
+  Stick(false);
   SetQuirk(Quirk::VISIBLE, false);
+  ResetQuirkTime(Quirk::VISIBLE);
+
   aptdaemon_trans_->Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
   aptdaemon_trans_->Connect("Finished", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnFinished));
   aptdaemon_trans_->GetProperty("Progress", [this] (GVariant *value) {
@@ -94,11 +97,8 @@ bool SoftwareCenterLauncherIcon::Animate(nux::ObjectPtr<Launcher> const& launche
   floating_icon->icon_name = icon_name();
 
   // Transform this in a spacer-icon and make it visible only on launcher's monitor
-  for (unsigned i = 0; i < monitors::MAX; ++i)
-    SetVisibleOnMonitor(i, static_cast<int>(i) == monitor);
-
   icon_name = "";
-  SetQuirk(Quirk::VISIBLE, true);
+  SetQuirk(Quirk::VISIBLE, true, monitor);
 
   auto rcb = std::bind(&Launcher::RenderIconToTexture, launcher.GetPointer(), _1, _2, floating_icon_ptr);
   drag_window_ = new LauncherDragWindow(launcher->GetWidth(), rcb);
@@ -121,9 +121,7 @@ void SoftwareCenterLauncherIcon::OnDragAnimationFinished(nux::ObjectPtr<Launcher
   drag_window_->ShowWindow(false);
   drag_window_.Release();
   launcher->ForceReveal(false);
-
-  for (unsigned i = 0; i < monitors::MAX; ++i)
-    SetVisibleOnMonitor(i, true);
+  SetQuirk(Quirk::VISIBLE, true);
 }
 
 void SoftwareCenterLauncherIcon::ActivateLauncherIcon(ActionArg arg)

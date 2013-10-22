@@ -27,6 +27,7 @@
 #include <Nux/WindowThread.h>
 #include <NuxCore/Property.h>
 #include <sigc++/sigc++.h>
+#include <unordered_set>
 
 #include <scale/scale.h>
 #include <core/core.h>
@@ -329,7 +330,7 @@ private:
   GLMatrix panel_shadow_matrix_;
 
   bool paint_panel_under_dash_;
-  std::set<UnityWindow*> fake_decorated_windows_;
+  std::unordered_set<UnityWindow*> fake_decorated_windows_;
 
   bool scale_just_activated_;
   WindowMinimizeSpeedController minimize_speed_controller_;

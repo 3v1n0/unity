@@ -3424,7 +3424,7 @@ bool WindowHasInconsistentShapeRects (Display *d,
 }
 
 UnityWindow::UnityWindow(CompWindow* window)
-  : BaseSwitchWindow (dynamic_cast<BaseSwitchScreen *> (UnityScreen::get (screen)), window)
+  : BaseSwitchWindow(static_cast<BaseSwitchScreen*>(UnityScreen::get(screen)), window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
   , window(window)
   , cWindow(CompositeWindow::get(window))

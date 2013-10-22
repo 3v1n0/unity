@@ -226,11 +226,11 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
   }));
 }
 
-bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk) const
+bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk, int monitor) const
 {
   if (quirk == Quirk::ACTIVE)
   {
-    if (!SimpleLauncherIcon::GetQuirk(Quirk::ACTIVE))
+    if (!SimpleLauncherIcon::GetQuirk(Quirk::ACTIVE, monitor))
       return false;
 
     if (app_->type() == "webapp")
@@ -242,7 +242,7 @@ bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk) const
     return app_->OwnsWindow(WindowManager::Default().GetActiveWindow());
   }
 
-  return SimpleLauncherIcon::GetQuirk(quirk);
+  return SimpleLauncherIcon::GetQuirk(quirk, monitor);
 }
 
 void ApplicationLauncherIcon::Remove()
@@ -491,11 +491,15 @@ std::vector<Window> ApplicationLauncherIcon::WindowsForMonitor(int monitor)
 
 void ApplicationLauncherIcon::OnWindowMinimized(guint32 xid)
 {
-  if (!app_->OwnsWindow(xid))
-    return;
-
-  Present(0.5f, 600);
-  UpdateQuirkTimeDelayed(300, Quirk::SHIMMER);
+  for (auto const& window: app_->GetWindows())
+  {
+    if (xid == window->window_id())
+    {
+      Present(0.5f, 600, window->monitor());
+      UpdateQuirkTimeDelayed(300, Quirk::SHIMMER, window->monitor());
+      break;
+    }
+  }
 }
 
 void ApplicationLauncherIcon::OnWindowMoved(guint32 moved_win)
@@ -713,8 +717,6 @@ void ApplicationLauncherIcon::EnsureWindowState()
 
   for (unsigned i = 0; i < monitors::MAX; i++)
     SetWindowVisibleOnMonitor(monitors[i], i);
-
-  EmitNeedsRedraw();
 }
 
 void ApplicationLauncherIcon::UpdateDesktopQuickList()

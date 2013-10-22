@@ -147,10 +147,7 @@ public:
   void EnterKeyNavMode();
   void ExitKeyNavMode();
   bool IsInKeyNavMode() const;
-
   bool IsOverlayOpen() const;
-
-  static const int ANIM_DURATION_SHORT;
 
   void RenderIconToTexture(nux::GraphicsEngine&, nux::ObjectPtr<nux::IOpenGLBaseTexture> const&, AbstractLauncherIcon::Ptr const&);
 
@@ -275,6 +272,7 @@ private:
 
   void OnIconAdded(AbstractLauncherIcon::Ptr const& icon);
   void OnIconRemoved(AbstractLauncherIcon::Ptr const& icon);
+  void OnIconNeedsRedraw(AbstractLauncherIcon::Ptr const& icon, int monitor);
 
   void OnTooltipVisible(nux::ObjectPtr<nux::View> view);
 

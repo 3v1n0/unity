@@ -38,7 +38,6 @@ BFBLauncherIcon::BFBLauncherIcon(LauncherHideMode hide_mode)
   icon_name = PKGDATADIR"/launcher_bfb.png";
   position = Position::BEGIN;
   SetQuirk(Quirk::VISIBLE, true);
-  SetQuirk(Quirk::RUNNING, false);
 
   background_color_ = nux::color::White;
 
@@ -64,8 +63,7 @@ void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
   if (overlay_identity.Str() == "dash" && IsVisibleOnMonitor(overlay_monitor))
   {
     tooltip_enabled = !visible;
-    SetQuirk(Quirk::ACTIVE, visible);
-    EmitNeedsRedraw();
+    SetQuirk(Quirk::ACTIVE, visible, overlay_monitor);
   }
   // If the hud is open, we hide the BFB if we have a locked launcher
   else if (overlay_identity.Str() == "hud")
@@ -73,7 +71,7 @@ void BFBLauncherIcon::OnOverlayShown(GVariant *data, bool visible)
     if (launcher_hide_mode_ == LAUNCHER_HIDE_NEVER)
     {
       SetVisibleOnMonitor(overlay_monitor, !visible);
-      EmitNeedsRedraw();
+      ResetQuirkTime(Quirk::VISIBLE, overlay_monitor);
     }
   }
 }
