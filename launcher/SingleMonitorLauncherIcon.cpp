@@ -36,7 +36,7 @@ SingleMonitorLauncherIcon::SingleMonitorLauncherIcon(IconType type, int monitor)
 void SingleMonitorLauncherIcon::UpdateMonitor()
 {
   for (unsigned i = 0; i < monitors::MAX; ++i)
-    SetVisibleOnMonitor(i, i == monitor_);
+    SetVisibleOnMonitor(i, static_cast<int>(i) == monitor_);
 }
 
 void SingleMonitorLauncherIcon::SetMonitor(int monitor)
