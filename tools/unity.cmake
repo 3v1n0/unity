@@ -153,7 +153,7 @@ def reset_to_distro():
 
 if __name__ == '__main__':
     usage = "usage: %prog [options]"
-    parser = OptionParser(version= "%prog 7.1.2", usage=usage)
+    parser = OptionParser(version= "%prog @UNITY_VERSION@", usage=usage)
 
     parser.add_option("--advanced-debug", action="store_true",
                       help="Run unity under debugging to help debugging an issue. /!\ Only if devs ask for it.")
