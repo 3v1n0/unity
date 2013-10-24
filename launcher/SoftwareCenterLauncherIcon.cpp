@@ -31,7 +31,6 @@
 #include "LauncherDragWindow.h"
 #include "LauncherModel.h"
 #include "DesktopUtilities.h"
-#include "MultiMonitor.h"
 
 namespace unity
 {
@@ -59,7 +58,7 @@ SoftwareCenterLauncherIcon::SoftwareCenterLauncherIcon(ApplicationPtr const& app
 {
   Stick(false);
   SetQuirk(Quirk::VISIBLE, false);
-  ResetQuirkTime(Quirk::VISIBLE);
+  SkipQuirkAnimation(Quirk::VISIBLE);
 
   aptdaemon_trans_->Connect("PropertyChanged", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnPropertyChanged));
   aptdaemon_trans_->Connect("Finished", sigc::mem_fun(this, &SoftwareCenterLauncherIcon::OnFinished));

@@ -1575,7 +1575,7 @@ void UnityScreen::handleEvent(XEvent* event)
       {
         /* We need an idle to postpone this action, after the current event
          * has been processed */
-        sources_.AddIdle([&] {
+        sources_.AddIdle([this] {
           shortcut_controller_->SetEnabled(false);
           shortcut_controller_->Hide();
           LOG_DEBUG(logger) << "Hiding shortcut controller due to keypress event.";
@@ -1585,9 +1585,7 @@ void UnityScreen::handleEvent(XEvent* event)
         });
       }
 
-      KeySym key_sym;
-      char key_string[2];
-      int result = XLookupString(&(event->xkey), key_string, 2, &key_sym, 0);
+      KeySym key_sym = XkbKeycodeToKeysym(event->xany.display, event->xkey.keycode, 0, 0);
 
       if (launcher_controller_->KeyNavIsActive())
       {
@@ -1610,27 +1608,26 @@ void UnityScreen::handleEvent(XEvent* event)
         {
           switcher_controller_->Hide(false);
           skip_other_plugins = true;
+          break;
         }
       }
 
-      if (result > 0)
+      if (super_keypressed_)
       {
-        // NOTE: does this have the potential to do an invalid write?  Perhaps
-        // we should just say "key_string[1] = 0" because that is the only
-        // thing that could possibly make sense here.
-        key_string[result] = 0;
-
-        if (super_keypressed_)
+        if (IsKeypadKey(key_sym))
         {
-          skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string, event->xkey.time);
-          if (!skip_other_plugins)
-            skip_other_plugins = dash_controller_->CheckShortcutActivation(key_string);
+          key_sym = XkbKeycodeToKeysym(event->xany.display, event->xkey.keycode, 0, 1);
+          key_sym = key_sym - XK_KP_0 + XK_0;
+        }
 
-          if (skip_other_plugins && launcher_controller_->KeyNavIsActive())
-          {
-            launcher_controller_->KeyNavTerminate(false);
-            EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
-          }
+        skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(XModifiersToNux(event->xkey.state), key_sym, event->xkey.time);
+        if (!skip_other_plugins)
+          skip_other_plugins = dash_controller_->CheckShortcutActivation(XKeysymToString(key_sym));
+
+        if (skip_other_plugins && launcher_controller_->KeyNavIsActive())
+        {
+          launcher_controller_->KeyNavTerminate(false);
+          EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
         }
       }
       break;

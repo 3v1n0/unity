@@ -18,9 +18,9 @@
  */
 
 #include <gmock/gmock.h>
+#include <Nux/NuxTimerTickSource.h>
 
 #include "LauncherIcon.h"
-#include "MultiMonitor.h"
 #include "UnitySettings.h"
 
 using namespace unity;
@@ -29,6 +29,7 @@ using namespace testing;
 
 namespace
 {
+typedef nux::animation::Animation::State AnimationState;
 
 struct MockLauncherIcon : LauncherIcon
 {
@@ -38,12 +39,37 @@ struct MockLauncherIcon : LauncherIcon
 
   virtual nux::BaseTexture* GetTextureForSize(int size) { return nullptr; }
 
-  using LauncherIcon::UpdateQuirkTime;
-  using LauncherIcon::ResetQuirkTime;
+  using LauncherIcon::FullyAnimateQuirk;
+  using LauncherIcon::SkipQuirkAnimation;
+  using LauncherIcon::GetQuirkAnimation;
+  using LauncherIcon::EmitNeedsRedraw;
 };
 
 struct TestLauncherIcon : Test
 {
+  TestLauncherIcon()
+    : animation_controller(tick_source_)
+    , animations_tick_(0)
+  {}
+
+  void AnimateIconQuirk(AbstractLauncherIcon* icon, AbstractLauncherIcon::Quirk quirk)
+  {
+    const int duration = 1;
+    icon->SetQuirkDuration(quirk, 1);
+    animations_tick_ += duration * 1000;
+    tick_source_.tick(animations_tick_);
+  }
+
+  void SetIconFullyVisible(AbstractLauncherIcon* icon)
+  {
+    icon->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true);
+    AnimateIconQuirk(icon, AbstractLauncherIcon::Quirk::VISIBLE);
+    ASSERT_TRUE(icon->IsVisible());
+  }
+
+  nux::NuxTimerTickSource tick_source_;
+  nux::animation::AnimationController animation_controller;
+  unsigned animations_tick_;
   unity::Settings settings;
   MockLauncherIcon icon;
 };
@@ -89,8 +115,11 @@ TEST_F(TestLauncherIcon, Construction)
     for (unsigned i = 0; i < monitors::MAX; ++i)
     {
       ASSERT_FALSE(icon.GetQuirk(quirk, i));
-      ASSERT_EQ(0, icon.GetQuirkTime(quirk, i).tv_sec);
-      ASSERT_EQ(0, icon.GetQuirkTime(quirk, i).tv_nsec);
+
+      float expected_progress = (quirk == AbstractLauncherIcon::Quirk::CENTER_SAVED) ? 1.0f : 0.0f;
+
+      ASSERT_FLOAT_EQ(expected_progress, icon.GetQuirkProgress(quirk, i));
+      ASSERT_EQ(AnimationState::Stopped, icon.GetQuirkAnimation(quirk, i).CurrentState());
     }
   }
 }
@@ -98,48 +127,47 @@ TEST_F(TestLauncherIcon, Construction)
 TEST_P(/*TestLauncherIcon*/Quirks, SetQuirkNewSingleMonitor)
 {
   AbstractLauncherIcon::Ptr icon_ptr(new NiceMock<MockLauncherIcon>());
+  auto* mock_icon = static_cast<MockLauncherIcon*>(icon_ptr.GetPointer());
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
     SigReceiver::Nice receiver(icon_ptr);
-    EXPECT_CALL(receiver, Redraw(_, i)).Times(AtLeast(1));
+    EXPECT_CALL(receiver, Redraw(_, i)).Times((GetParam() == AbstractLauncherIcon::Quirk::VISIBLE) ? AtLeast(1) : Exactly(0));
     EXPECT_CALL(receiver, Visible(i)).Times((GetParam() == AbstractLauncherIcon::Quirk::VISIBLE) ? 1 : 0);
 
     icon_ptr->SetQuirk(GetParam(), true, i);
-    time::Spec now;
-    now.SetToNow();
-
     ASSERT_TRUE(icon_ptr->GetQuirk(GetParam(), i));
-    ASSERT_GE(now->tv_sec, icon_ptr->GetQuirkTime(GetParam(), i).tv_sec);
-    ASSERT_GE(now->tv_nsec, icon_ptr->GetQuirkTime(GetParam(), i).tv_nsec);
+    ASSERT_FLOAT_EQ(1.0f, mock_icon->GetQuirkAnimation(GetParam(), i).GetFinishValue());
+    ASSERT_EQ(AnimationState::Running, mock_icon->GetQuirkAnimation(GetParam(), i).CurrentState());
   }
 }
 
 TEST_P(/*TestLauncherIcon*/Quirks, SetQuirkNewAllMonitors)
 {
   AbstractLauncherIcon::Ptr icon_ptr(new NiceMock<MockLauncherIcon>());
+  auto* mock_icon = static_cast<MockLauncherIcon*>(icon_ptr.GetPointer());
 
   SigReceiver::Nice receiver(icon_ptr);
-  EXPECT_CALL(receiver, Redraw(_, -1)).Times(AtLeast(1));
+
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+    EXPECT_CALL(receiver, Redraw(_, i)).Times((GetParam() == AbstractLauncherIcon::Quirk::VISIBLE) ? AtLeast(1) : Exactly(0));
+
   EXPECT_CALL(receiver, Visible(-1)).Times((GetParam() == AbstractLauncherIcon::Quirk::VISIBLE) ? 1 : 0);
 
   icon_ptr->SetQuirk(GetParam(), true);
-  time::Spec now;
-  now.SetToNow();
-
   ASSERT_TRUE(icon_ptr->GetQuirk(GetParam()));
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
     ASSERT_TRUE(icon_ptr->GetQuirk(GetParam(), i));
-    ASSERT_GE(now->tv_sec, icon_ptr->GetQuirkTime(GetParam(), i).tv_sec);
-    ASSERT_GE(now->tv_nsec, icon_ptr->GetQuirkTime(GetParam(), i).tv_nsec);
+    ASSERT_EQ(AnimationState::Running, mock_icon->GetQuirkAnimation(GetParam(), i).CurrentState());
   }
 }
 
 TEST_P(/*TestLauncherIcon*/Quirks, SetQuirkOldSingleMonitor)
 {
   AbstractLauncherIcon::Ptr icon_ptr(new NiceMock<MockLauncherIcon>());
+  auto* mock_icon = static_cast<MockLauncherIcon*>(icon_ptr.GetPointer());
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
@@ -150,14 +178,14 @@ TEST_P(/*TestLauncherIcon*/Quirks, SetQuirkOldSingleMonitor)
     icon_ptr->SetQuirk(GetParam(), false, i);
 
     ASSERT_FALSE(icon_ptr->GetQuirk(GetParam(), i));
-    ASSERT_EQ(0, icon_ptr->GetQuirkTime(GetParam(), i).tv_sec);
-    ASSERT_EQ(0, icon_ptr->GetQuirkTime(GetParam(), i).tv_nsec);
+    ASSERT_EQ(AnimationState::Stopped, mock_icon->GetQuirkAnimation(GetParam(), i).CurrentState());
   }
 }
 
 TEST_P(/*TestLauncherIcon*/Quirks, SetQuirkOldAllMonitors)
 {
   AbstractLauncherIcon::Ptr icon_ptr(new NiceMock<MockLauncherIcon>());
+  auto* mock_icon = static_cast<MockLauncherIcon*>(icon_ptr.GetPointer());
 
   SigReceiver::Nice receiver(icon_ptr);
   EXPECT_CALL(receiver, Redraw(_, _)).Times(0);
@@ -169,77 +197,142 @@ TEST_P(/*TestLauncherIcon*/Quirks, SetQuirkOldAllMonitors)
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
     ASSERT_FALSE(icon_ptr->GetQuirk(GetParam(), i));
-    ASSERT_EQ(0, icon_ptr->GetQuirkTime(GetParam(), i).tv_sec);
-    ASSERT_EQ(0, icon_ptr->GetQuirkTime(GetParam(), i).tv_nsec);
+    ASSERT_EQ(AnimationState::Stopped, mock_icon->GetQuirkAnimation(GetParam(), i).CurrentState());
   }
 }
 
-TEST_P(/*TestLauncherIcon*/Quirks, UpdateQuirkTimeSingleMonitor)
+TEST_P(/*TestLauncherIcon*/Quirks, FullyAnimateQuirkSingleMonitor)
 {
   AbstractLauncherIcon::Ptr icon_ptr(new NiceMock<MockLauncherIcon>());
+  auto* mock_icon = static_cast<MockLauncherIcon*>(icon_ptr.GetPointer());
+  SetIconFullyVisible(mock_icon);
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
     SigReceiver::Nice receiver(icon_ptr);
-    EXPECT_CALL(receiver, Redraw(_, i));
+    EXPECT_CALL(receiver, Redraw(_, i)).Times(AtLeast(1));
+    mock_icon->FullyAnimateQuirk(GetParam(), i);
 
-    static_cast<MockLauncherIcon*>(icon_ptr.GetPointer())->UpdateQuirkTime(GetParam(), i);
-    time::Spec now;
-    now.SetToNow();
-
-    ASSERT_GE(now->tv_sec, icon_ptr->GetQuirkTime(GetParam(), i).tv_sec);
-    ASSERT_GE(now->tv_nsec, icon_ptr->GetQuirkTime(GetParam(), i).tv_nsec);
+    AnimateIconQuirk(mock_icon, GetParam());
+    ASSERT_FLOAT_EQ(1.0f, mock_icon->GetQuirkProgress(GetParam(), i));
   }
 }
 
-TEST_P(/*TestLauncherIcon*/Quirks, UpdateQuirkTimeAllMonitors)
+TEST_P(/*TestLauncherIcon*/Quirks, FullyAnimateQuirkAllMonitors)
 {
   AbstractLauncherIcon::Ptr icon_ptr(new NiceMock<MockLauncherIcon>());
+  auto* mock_icon = static_cast<MockLauncherIcon*>(icon_ptr.GetPointer());
+  SetIconFullyVisible(mock_icon);
 
   SigReceiver::Nice receiver(icon_ptr);
-  EXPECT_CALL(receiver, Redraw(_, -1));
 
-  static_cast<MockLauncherIcon*>(icon_ptr.GetPointer())->UpdateQuirkTime(GetParam());
-  time::Spec now;
-  now.SetToNow();
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+    EXPECT_CALL(receiver, Redraw(_, i)).Times(AtLeast(1));
+
+  mock_icon->FullyAnimateQuirk(GetParam());
+  AnimateIconQuirk(mock_icon, GetParam());
+
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+    ASSERT_FLOAT_EQ(1.0f, mock_icon->GetQuirkProgress(GetParam(), i));
+}
+
+TEST_P(/*TestLauncherIcon*/Quirks, SkipQuirkAnimationSingleMonitor)
+{
+  AbstractLauncherIcon::Ptr icon_ptr(new NiceMock<MockLauncherIcon>());
+  auto* mock_icon = static_cast<MockLauncherIcon*>(icon_ptr.GetPointer());
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
-    ASSERT_GE(now->tv_sec, icon_ptr->GetQuirkTime(GetParam(), i).tv_sec);
-    ASSERT_GE(now->tv_nsec, icon_ptr->GetQuirkTime(GetParam(), i).tv_nsec);
+    mock_icon->SetQuirk(GetParam(), true, i);
+    mock_icon->SkipQuirkAnimation(GetParam(), i);
+    ASSERT_FLOAT_EQ(1.0f, mock_icon->GetQuirkProgress(GetParam(), i));
   }
 }
 
-TEST_P(/*TestLauncherIcon*/Quirks, ResetQuirkTimeSingleMonitor)
+TEST_P(/*TestLauncherIcon*/Quirks, SkipQuirkAnimationAllMonitors)
 {
   AbstractLauncherIcon::Ptr icon_ptr(new NiceMock<MockLauncherIcon>());
+  auto* mock_icon = static_cast<MockLauncherIcon*>(icon_ptr.GetPointer());
+
+  mock_icon->SetQuirk(GetParam(), true);
+  mock_icon->SkipQuirkAnimation(GetParam());
+
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+    ASSERT_FLOAT_EQ(1.0f, mock_icon->GetQuirkProgress(GetParam(), i));
+}
+
+TEST_P(/*TestLauncherIcon*/Quirks, SetQuirkDurationSingleMonitor)
+{
+  AbstractLauncherIcon::Ptr icon_ptr(new NiceMock<MockLauncherIcon>());
+  auto* mock_icon = static_cast<MockLauncherIcon*>(icon_ptr.GetPointer());
+
+  int duration = g_random_int();
+  icon_ptr->SetQuirkDuration(GetParam(), duration);
+
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+    ASSERT_EQ(duration, mock_icon->GetQuirkAnimation(GetParam(), i).Duration());
+}
+
+TEST_P(/*TestLauncherIcon*/Quirks, SetQuirkDurationAllMonitors)
+{
+  AbstractLauncherIcon::Ptr icon_ptr(new NiceMock<MockLauncherIcon>());
+  auto* mock_icon = static_cast<MockLauncherIcon*>(icon_ptr.GetPointer());
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
-    static_cast<MockLauncherIcon*>(icon_ptr.GetPointer())->UpdateQuirkTime(GetParam(), i);
+    int duration = g_random_int();
+    icon_ptr->SetQuirkDuration(GetParam(), duration, i);
+    ASSERT_EQ(duration, mock_icon->GetQuirkAnimation(GetParam(), i).Duration());
+  }
+}
 
+TEST_F(TestLauncherIcon, NeedRedrawInvisibleAllMonitors)
+{
+  AbstractLauncherIcon::Ptr icon_ptr(new NiceMock<MockLauncherIcon>());
+  auto* mock_icon = static_cast<MockLauncherIcon*>(icon_ptr.GetPointer());
+
+  SigReceiver::Nice receiver(icon_ptr);
+  EXPECT_CALL(receiver, Redraw(icon_ptr, -1));
+
+  mock_icon->EmitNeedsRedraw();
+}
+
+TEST_F(TestLauncherIcon, NeedRedrawVisibleAllMonitors)
+{
+  AbstractLauncherIcon::Ptr icon_ptr(new NiceMock<MockLauncherIcon>());
+  auto* mock_icon = static_cast<MockLauncherIcon*>(icon_ptr.GetPointer());
+  icon_ptr->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true);
+
+  SigReceiver::Nice receiver(icon_ptr);
+  EXPECT_CALL(receiver, Redraw(icon_ptr, -1));
+
+  mock_icon->EmitNeedsRedraw();
+}
+
+TEST_F(TestLauncherIcon, NeedRedrawInvisibleSingleMonitor)
+{
+  AbstractLauncherIcon::Ptr icon_ptr(new NiceMock<MockLauncherIcon>());
+  auto* mock_icon = static_cast<MockLauncherIcon*>(icon_ptr.GetPointer());
+
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+  {
     SigReceiver::Nice receiver(icon_ptr);
-    EXPECT_CALL(receiver, Redraw(_, _)).Times(0);
-    static_cast<MockLauncherIcon*>(icon_ptr.GetPointer())->ResetQuirkTime(GetParam(), i);
-
-    ASSERT_EQ(0, icon_ptr->GetQuirkTime(GetParam(), i).tv_sec);
-    ASSERT_EQ(0, icon_ptr->GetQuirkTime(GetParam(), i).tv_nsec);
+    EXPECT_CALL(receiver, Redraw(icon_ptr, i)).Times(0);
+    mock_icon->EmitNeedsRedraw(i);
   }
 }
 
-TEST_P(/*TestLauncherIcon*/Quirks, ResetQuirkTimeAllMonitors)
+TEST_F(TestLauncherIcon, NeedRedrawVisibleSingleMonitor)
 {
   AbstractLauncherIcon::Ptr icon_ptr(new NiceMock<MockLauncherIcon>());
-  static_cast<MockLauncherIcon*>(icon_ptr.GetPointer())->UpdateQuirkTime(GetParam());
-
-  SigReceiver::Nice receiver(icon_ptr);
-  EXPECT_CALL(receiver, Redraw(_, _)).Times(0);
-  static_cast<MockLauncherIcon*>(icon_ptr.GetPointer())->ResetQuirkTime(GetParam());
+  auto* mock_icon = static_cast<MockLauncherIcon*>(icon_ptr.GetPointer());
+  icon_ptr->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true);
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
   {
-    ASSERT_EQ(0, icon_ptr->GetQuirkTime(GetParam(), i).tv_sec);
-    ASSERT_EQ(0, icon_ptr->GetQuirkTime(GetParam(), i).tv_nsec);
+    SigReceiver::Nice receiver(icon_ptr);
+    EXPECT_CALL(receiver, Redraw(icon_ptr, i));
+    mock_icon->EmitNeedsRedraw(i);
   }
 }
 

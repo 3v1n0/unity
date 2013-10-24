@@ -496,7 +496,7 @@ void ApplicationLauncherIcon::OnWindowMinimized(guint32 xid)
     if (xid == window->window_id())
     {
       Present(0.5f, 600, window->monitor());
-      UpdateQuirkTimeDelayed(300, Quirk::SHIMMER, window->monitor());
+      FullyAnimateQuirkDelayed(300, Quirk::SHIMMER, window->monitor());
       break;
     }
   }
@@ -654,7 +654,7 @@ void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& 
     LOG_WARN(logger) << error;
   }
 
-  UpdateQuirkTime(Quirk::STARTING);
+  FullyAnimateQuirk(Quirk::STARTING);
 }
 
 void ApplicationLauncherIcon::OpenInstanceLauncherIcon(Time timestamp)
@@ -695,7 +695,7 @@ bool ApplicationLauncherIcon::Spread(bool current_desktop, int state, bool force
 
 void ApplicationLauncherIcon::EnsureWindowState()
 {
-  std::vector<bool> monitors(monitors::MAX);
+  std::bitset<monitors::MAX> monitors;
 
   for (auto& window: app_->GetWindows())
   {
@@ -707,11 +707,13 @@ void ApplicationLauncherIcon::EnsureWindowState()
       // If monitor is -1 (or negative), show on all monitors.
       if (monitor < 0)
       {
-        for (unsigned j = 0; j < monitors::MAX; j++)
-          monitors[j] = true;
+        monitors.set();
+        break;
       }
       else
+      {
         monitors[monitor] = true;
+      }
     }
   }
 

@@ -50,6 +50,8 @@ TrashLauncherIcon::TrashLauncherIcon(FileManager::Ptr const& fmo)
   icon_name = "user-trash";
   position = Position::END;
   SetQuirk(Quirk::VISIBLE, true);
+  SkipQuirkAnimation(Quirk::VISIBLE);
+
   SetQuirk(Quirk::RUNNING, file_manager_->IsTrashOpened());
   SetShortcut('t');
 

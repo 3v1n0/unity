@@ -21,6 +21,7 @@
 #ifndef MOCKLAUNCHERICON_H
 #define MOCKLAUNCHERICON_H
 
+#include <bitset>
 #include <Nux/Nux.h>
 
 #include <Nux/BaseWindow.h>
@@ -71,8 +72,8 @@ public:
     : icon_(0)
     , type_(type)
     , sort_priority_(DefaultPriority(type))
-    , quirks_(monitors::MAX, decltype(quirks_)::value_type(unsigned(Quirk::LAST), false))
-    , quirk_times_(monitors::MAX, decltype(quirk_times_)::value_type(unsigned(Quirk::LAST)))
+    , quirks_(monitors::MAX)
+    , quirk_progress_(monitors::MAX, decltype(quirk_progress_)::value_type(unsigned(Quirk::LAST), 0.0f))
     , remote_uri_("fake")
     , is_tooltip_visible_(false)
   {
@@ -254,33 +255,38 @@ public:
       for (unsigned i = 0; i < monitors::MAX; ++i)
       {
         quirks_[i][unsigned(quirk)] = value;
-        quirk_times_[i][unsigned(quirk)].SetToNow();
+        quirk_progress_[i][unsigned(quirk)] = value ? 1.0f : 0.0f;
       }
     }
     else
     {
       quirks_[monitor][unsigned(quirk)] = value;
-      quirk_times_[monitor][unsigned(quirk)].SetToNow();
+      quirk_progress_[monitor][unsigned(quirk)] = value ? 1.0f : 0.0f;
     }
   }
 
-  void ResetQuirkTime(Quirk quirk, int monitor)
+  void SkipQuirkAnimation(Quirk quirk, int monitor)
   {
+    float value = GetQuirk(quirk, monitor) ? 1.0f : 0.0f;
+
     if (monitor < 0)
     {
       for (unsigned i = 0; i < monitors::MAX; ++i)
-        quirk_times_[i][unsigned(quirk)].Reset();
+        quirk_progress_[i][unsigned(quirk)] = value;
     }
     else
     {
-      quirk_times_[monitor][unsigned(quirk)].Reset();
+      quirk_progress_[monitor][unsigned(quirk)] = value;
     }
-  };
-
-  struct timespec GetQuirkTime(Quirk quirk, int monitor)
-  {
-    return quirk_times_[monitor][unsigned(quirk)];
   }
+
+  float GetQuirkProgress(Quirk quirk, int monitor) const
+  {
+    return quirk_progress_[monitor][unsigned(quirk)];
+  }
+
+  void SetQuirkDuration(Quirk quirk, unsigned duration, int monitor = -1)
+  {}
 
   IconType GetIconType() const
   {
@@ -405,8 +411,8 @@ private:
   nux::BaseTexture* icon_;
   IconType type_;
   int sort_priority_;
-  std::vector<std::vector<bool>> quirks_;
-  std::vector<std::vector<time::Spec>> quirk_times_;
+  std::vector<std::bitset<std::size_t(Quirk::LAST)>> quirks_;
+  std::vector<std::vector<float>> quirk_progress_;
   std::map<int, nux::Point3> center_;
   std::string remote_uri_;
   bool is_tooltip_visible_;

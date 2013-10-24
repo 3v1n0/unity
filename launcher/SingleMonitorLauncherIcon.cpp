@@ -20,7 +20,6 @@
 #include <UnityCore/Variant.h>
 
 #include "SingleMonitorLauncherIcon.h"
-#include "MultiMonitor.h"
 
 namespace unity
 {
