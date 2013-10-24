@@ -153,6 +153,8 @@ public:
 
   virtual void SetCenter(nux::Point3 const& center, int monitor) = 0;
 
+  virtual void ResetCenters(int monitor = -1) = 0;
+
   virtual nux::Point3 GetCenter(int monitor) = 0;
 
   virtual nux::Point3 GetSavedCenter(int monitor) = 0;

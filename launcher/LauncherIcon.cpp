@@ -670,14 +670,25 @@ void LauncherIcon::SetCenter(nux::Point3 const& new_center, int monitor)
   }, CENTER_STABILIZE_TIMEOUT + std::to_string(monitor));
 }
 
-nux::Point3
-LauncherIcon::GetCenter(int monitor)
+void LauncherIcon::ResetCenters(int monitor)
+{
+  if (monitor < 0)
+  {
+    for (unsigned i = 0; i < monitors::MAX; ++i)
+      _center[i].Set(0, 0, 0);
+  }
+  else
+  {
+    _center[monitor].Set(0, 0, 0);
+  }
+}
+
+nux::Point3 LauncherIcon::GetCenter(int monitor)
 {
   return _center[monitor];
 }
 
-nux::Point3
-LauncherIcon::GetSavedCenter(int monitor)
+nux::Point3 LauncherIcon::GetSavedCenter(int monitor)
 {
   return _saved_center[monitor];
 }
@@ -687,15 +698,29 @@ std::vector<nux::Point3> LauncherIcon::GetCenters()
   return _center;
 }
 
-void
-LauncherIcon::SaveCenter()
+void LauncherIcon::SaveCenter()
 {
   _saved_center = _center;
   FullyAnimateQuirk(Quirk::CENTER_SAVED, 0);
 }
 
-void
-LauncherIcon::SetWindowVisibleOnMonitor(bool val, int monitor)
+std::pair<int, nux::Point3> LauncherIcon::GetCenterForMonitor(int monitor) const
+{
+  monitor = CLAMP(monitor, 0, static_cast<int>(_center.size() - 1));
+
+  if (_center[monitor].x && _center[monitor].y)
+    return {monitor, _center[monitor]};
+
+  for (unsigned i = 0; i < _center.size(); ++i)
+  {
+    if (_center[i].x && _center[i].y)
+      return {i, _center[i]};
+  }
+
+  return {-1, nux::Point3()};
+}
+
+void LauncherIcon::SetWindowVisibleOnMonitor(bool val, int monitor)
 {
   if (_has_visible_window[monitor] == val)
     return;
@@ -704,14 +729,12 @@ LauncherIcon::SetWindowVisibleOnMonitor(bool val, int monitor)
   EmitNeedsRedraw(monitor);
 }
 
-void
-LauncherIcon::SetVisibleOnMonitor(int monitor, bool visible)
+void LauncherIcon::SetVisibleOnMonitor(int monitor, bool visible)
 {
   SetQuirk(Quirk::VISIBLE, visible, monitor);
 }
 
-bool
-LauncherIcon::IsVisibleOnMonitor(int monitor) const
+bool LauncherIcon::IsVisibleOnMonitor(int monitor) const
 {
   return GetQuirk(Quirk::VISIBLE, monitor);
 }
@@ -721,8 +744,7 @@ float LauncherIcon::PresentUrgency()
   return _present_urgency;
 }
 
-void
-LauncherIcon::Present(float present_urgency, int length, int monitor)
+void LauncherIcon::Present(float present_urgency, int length, int monitor)
 {
   if (GetQuirk(Quirk::PRESENTED, monitor))
     return;
@@ -743,8 +765,7 @@ LauncherIcon::Present(float present_urgency, int length, int monitor)
   SetQuirk(Quirk::UNFOLDED, true, monitor);
 }
 
-void
-LauncherIcon::Unpresent(int monitor)
+void LauncherIcon::Unpresent(int monitor)
 {
   if (!GetQuirk(Quirk::PRESENTED, monitor))
     return;
@@ -754,8 +775,7 @@ LauncherIcon::Unpresent(int monitor)
   SetQuirk(Quirk::UNFOLDED, false, monitor);
 }
 
-void
-LauncherIcon::Remove()
+void LauncherIcon::Remove()
 {
   if (_quicklist && _quicklist->IsVisible())
       _quicklist->Hide();
@@ -773,14 +793,12 @@ LauncherIcon::Remove()
   removed = true;
 }
 
-void
-LauncherIcon::SetSortPriority(int priority)
+void LauncherIcon::SetSortPriority(int priority)
 {
   _sort_priority = priority;
 }
 
-int
-LauncherIcon::SortPriority()
+int LauncherIcon::SortPriority()
 {
   return _sort_priority;
 }

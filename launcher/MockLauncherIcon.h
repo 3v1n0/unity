@@ -160,6 +160,12 @@ public:
     center_[monitor] = center;
   }
 
+  void ResetCenters(int monitor = -1)
+  {
+    for (auto& pair : center_)
+      pair.second.Set(0, 0, 0);
+  }
+
   nux::Point3 GetCenter(int monitor)
   {
     return center_[monitor];

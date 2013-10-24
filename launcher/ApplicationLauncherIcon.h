@@ -77,8 +77,8 @@ protected:
   ApplicationPtr GetApplication() const;
 
   void Remove();
-  void UpdateIconGeometries(std::vector<nux::Point3> center);
-  void OnCenterStabilized(std::vector<nux::Point3> center);
+  void UpdateIconGeometries(std::vector<nux::Point3> const& centers);
+  void OnCenterStabilized(std::vector<nux::Point3> const& centers);
   void AddProperties(GVariantBuilder* builder);
   void OnAcceptDrop(DndData const& dnd_data);
   void OnDndEnter();
