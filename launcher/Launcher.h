@@ -151,6 +151,8 @@ public:
 
   void RenderIconToTexture(nux::GraphicsEngine&, nux::ObjectPtr<nux::IOpenGLBaseTexture> const&, AbstractLauncherIcon::Ptr const&);
 
+  void NeedSoftRedraw() override;
+
 #ifdef NUX_GESTURES_SUPPORT
   virtual nux::GestureDeliveryRequest GestureEvent(const nux::GestureEvent &event);
 #endif

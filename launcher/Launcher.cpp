@@ -2402,6 +2402,11 @@ void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, nux::ObjectP
   unity::graphics::PopOffscreenRenderTarget();
 }
 
+void Launcher::NeedSoftRedraw()
+{
+  QueueDraw();
+}
+
 #ifdef NUX_GESTURES_SUPPORT
 nux::GestureDeliveryRequest Launcher::GestureEvent(const nux::GestureEvent &event)
 {

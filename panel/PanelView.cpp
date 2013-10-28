@@ -787,4 +787,9 @@ ui::EdgeBarrierSubscriber::Result PanelView::HandleBarrierEvent(ui::PointerBarri
   return ui::EdgeBarrierSubscriber::Result::NEEDS_RELEASE;
 }
 
+void PanelView::NeedSoftRedraw()
+{
+  QueueDraw();
+}
+
 } // namespace unity
