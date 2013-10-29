@@ -48,35 +48,17 @@ const int RIBBON_PADDING = 2;
 class IconLoader::Impl
 {
 public:
-  // The Handle typedef is used to explicitly indicate which integers are
-  // infact our opaque handles.
-  typedef int Handle;
   static const int FONT_SIZE = 8;
   static const int MIN_FONT_SIZE = 5;
 
   Impl();
 
-  Handle LoadFromIconName(std::string const& icon_name,
-                          int max_width,
-                          int max_height,
-                          IconLoaderCallback slot);
+  Handle LoadFromIconName(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
+  Handle LoadFromGIconString(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
+  Handle LoadFromFilename(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
+  Handle LoadFromURI(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
 
-  Handle LoadFromGIconString(std::string const& gicon_string,
-                             int max_width,
-                             int max_height,
-                             IconLoaderCallback slot);
-
-  Handle LoadFromFilename(std::string const& filename,
-                          int max_width,
-                          int max_height,
-                          IconLoaderCallback slot);
-
-  Handle LoadFromURI(std::string const& uri,
-                     int max_width,
-                     int max_height,
-                     IconLoaderCallback slot);
-
-  void DisconnectHandle(Handle handle);
+  void DisconnectHandle(Handle);
 
   static void CalculateTextHeight(int* width, int* height);
 
@@ -103,7 +85,7 @@ private:
     Impl* impl;
     gtk::IconInfo icon_info;
     bool no_cache;
-    int helper_handle;
+    Handle helper_handle;
     std::list<IconLoaderTask::Ptr> shadow_tasks;
     glib::Object<GdkPixbuf> result;
     glib::Error error;
@@ -114,7 +96,7 @@ private:
                    int max_width_,
                    int max_height_,
                    std::string const& key_,
-                   IconLoaderCallback slot_,
+                   IconLoaderCallback const& slot_,
                    Handle handle_,
                    Impl* self_)
       : type(type_), data(data_), max_width(max_width_)
@@ -325,7 +307,7 @@ private:
 
         nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32,
                                           pixbuf_width, pixbuf_height);
-        std::shared_ptr<cairo_t> cr(cairo_graphics.GetContext(), cairo_destroy);
+        cairo_t* cr = cairo_graphics.GetInternalContext();
 
         glib::Object<PangoLayout> layout;
         PangoContext* pango_context = NULL;
@@ -335,8 +317,8 @@ private:
 
         g_object_get(gtk_settings_get_default(), "gtk-font-name", &font, NULL);
         g_object_get(gtk_settings_get_default(), "gtk-xft-dpi", &dpi, NULL);
-        cairo_set_font_options(cr.get(), gdk_screen_get_font_options(screen));
-        layout = pango_cairo_create_layout(cr.get());
+        cairo_set_font_options(cr, gdk_screen_get_font_options(screen));
+        layout = pango_cairo_create_layout(cr);
         std::shared_ptr<PangoFontDescription> desc(pango_font_description_from_string(font), pango_font_description_free);
         pango_font_description_set_weight(desc.get(), PANGO_WEIGHT_BOLD);
         int font_size = FONT_SIZE;
@@ -381,10 +363,10 @@ private:
         }
         pango_layout_set_width(layout, static_cast<int>(max_text_width * PANGO_SCALE));
 
-        cairo_set_operator(cr.get(), CAIRO_OPERATOR_CLEAR);
-        cairo_paint(cr.get());
+        cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+        cairo_paint(cr);
 
-        cairo_set_operator(cr.get(), CAIRO_OPERATOR_OVER);
+        cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
         // this should be #dd4814
         const double ORANGE_R = 0.86666;
@@ -392,14 +374,14 @@ private:
         const double ORANGE_B = 0.07843;
 
         // translate to make space for the shadow
-        cairo_save(cr.get());
-        cairo_translate(cr.get(), 1.0, 1.0);
+        cairo_save(cr);
+        cairo_translate(cr, 1.0, 1.0);
 
-        cairo_set_source_rgba(cr.get(), ORANGE_R, ORANGE_G, ORANGE_B, 1.0);
+        cairo_set_source_rgba(cr, ORANGE_R, ORANGE_G, ORANGE_B, 1.0);
 
         // base ribbon
-        cairo_rectangle(cr.get(), 0.0, 0.0, belt_w, belt_h);
-        cairo_fill_preserve(cr.get());
+        cairo_rectangle(cr, 0.0, 0.0, belt_w, belt_h);
+        cairo_fill_preserve(cr);
 
         // hightlight on left edge
         std::shared_ptr<cairo_pattern_t> pattern(
@@ -415,8 +397,8 @@ private:
         }
         cairo_pattern_add_color_stop_rgba(pattern.get(), 1.0, 1.0, 1.0, 1.0, 0.0);
 
-        cairo_set_source(cr.get(), pattern.get());
-        cairo_fill(cr.get());
+        cairo_set_source(cr, pattern.get());
+        cairo_fill(cr);
 
         if (has_emblem)
         {
@@ -441,21 +423,21 @@ private:
           const double CURVE_START_X = belt_w - category_pb_w - CURVE_CP5_X - EMBLEM_PADDING;
           //const double CURVE_END_X = CURVE_START_X + CURVE_X_MULT;
 
-          cairo_set_source_rgba(cr.get(), 1.0, 1.0, 1.0, 1.0);
+          cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
 
           // paint the curved area
-          cairo_move_to(cr.get(), CURVE_START_X, belt_h);
-          cairo_curve_to(cr.get(), CURVE_START_X + CURVE_CP1_X, belt_h,
+          cairo_move_to(cr, CURVE_START_X, belt_h);
+          cairo_curve_to(cr, CURVE_START_X + CURVE_CP1_X, belt_h,
                                    CURVE_START_X + CURVE_CP2_X, CURVE_Y1 * belt_h,
                                    CURVE_START_X + CURVE_CP3_X, CURVE_Y2 * belt_h);
-          cairo_line_to(cr.get(), CURVE_START_X + CURVE_CP4_X, CURVE_Y3 * belt_h);
-          cairo_curve_to(cr.get(), CURVE_START_X + CURVE_CP5_X, 0.0,
+          cairo_line_to(cr, CURVE_START_X + CURVE_CP4_X, CURVE_Y3 * belt_h);
+          cairo_curve_to(cr, CURVE_START_X + CURVE_CP5_X, 0.0,
                                    CURVE_START_X + CURVE_CP6_X, 0.0,
                                    CURVE_START_X + CURVE_CP7_X, 0.0);
-          cairo_line_to(cr.get(), belt_w, 0.0);
-          cairo_line_to(cr.get(), belt_w, belt_h);
-          cairo_close_path(cr.get());
-          cairo_fill(cr.get());
+          cairo_line_to(cr, belt_w, 0.0);
+          cairo_line_to(cr, belt_w, belt_h);
+          cairo_close_path(cr);
+          cairo_fill(cr);
 
           // and the highlight
           pattern.reset(cairo_pattern_create_linear(CURVE_START_X, 0.0, belt_w, 0.0),
@@ -463,45 +445,45 @@ private:
           cairo_pattern_add_color_stop_rgba(pattern.get(), 0.0, 1.0, 1.0, 1.0, 0.0);
           cairo_pattern_add_color_stop_rgba(pattern.get(), 0.95, 1.0, 1.0, 1.0, 0.0);
           cairo_pattern_add_color_stop_rgba(pattern.get(), 1.0, 0.0, 0.0, 0.0, 0.235294);
-          cairo_set_source(cr.get(), pattern.get());
-          cairo_rectangle(cr.get(), CURVE_START_X, 0.0, belt_w - CURVE_START_X, belt_h);
-          cairo_fill(cr.get());
+          cairo_set_source(cr, pattern.get());
+          cairo_rectangle(cr, CURVE_START_X, 0.0, belt_w - CURVE_START_X, belt_h);
+          cairo_fill(cr);
 
           // paint the emblem
           double category_pb_x = belt_w - category_pb_w - EMBLEM_PADDING - 1;
-          gdk_cairo_set_source_pixbuf(cr.get(), category_pixbuf,
+          gdk_cairo_set_source_pixbuf(cr, category_pixbuf,
                                       category_pb_x, (belt_h - category_pb_h) / 2);
-          cairo_paint(cr.get());
+          cairo_paint(cr);
         }
 
         // paint the text
-        cairo_set_source_rgba(cr.get(), 1.0, 1.0, 1.0, 1.0);
-        cairo_move_to(cr.get(), 0.0, belt_h / 2);
+        cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
+        cairo_move_to(cr, 0.0, belt_h / 2);
         pango_layout_get_pixel_size(layout, nullptr, &text_height);
         // current point is now in the middle of the stripe, need to translate
         // it, so that the text is centered
-        cairo_rel_move_to(cr.get(), 0.0, text_height / -2.0);
-        pango_cairo_show_layout(cr.get(), layout);
+        cairo_rel_move_to(cr, 0.0, text_height / -2.0);
+        pango_cairo_show_layout(cr, layout);
 
         // paint the shadow
-        cairo_restore(cr.get());
+        cairo_restore(cr);
 
         pattern.reset(cairo_pattern_create_linear(0.0, belt_h, 0.0, belt_h + SHADOW_BOTTOM_PADDING),
                       cairo_pattern_destroy);
         cairo_pattern_add_color_stop_rgba(pattern.get(), 0.0, 0.0, 0.0, 0.0, 0.235294);
         cairo_pattern_add_color_stop_rgba(pattern.get(), 1.0, 0.0, 0.0, 0.0, 0.0);
 
-        cairo_set_source(cr.get(), pattern.get());
+        cairo_set_source(cr, pattern.get());
 
-        cairo_rectangle(cr.get(), 0.0, belt_h, belt_w, SHADOW_BOTTOM_PADDING);
-        cairo_fill(cr.get());
+        cairo_rectangle(cr, 0.0, belt_h, belt_w, SHADOW_BOTTOM_PADDING);
+        cairo_fill(cr);
 
-        cairo_set_source_rgba(cr.get(), 0.0, 0.0, 0.0, 0.1);
-        cairo_rectangle(cr.get(), 0.0, 1.0, 1.0, belt_h);
-        cairo_fill(cr.get());
+        cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 0.1);
+        cairo_rectangle(cr, 0.0, 1.0, 1.0, belt_h);
+        cairo_fill(cr);
 
-        cairo_rectangle(cr.get(), belt_w, 1.0, 1.0, belt_h);
-        cairo_fill(cr.get());
+        cairo_rectangle(cr, belt_w, 1.0, 1.0, belt_h);
+        cairo_fill(cr);
 
         // FIXME: going from image_surface to pixbuf, and then to texture :(
         glib::Object<GdkPixbuf> detail_pb(
@@ -526,17 +508,88 @@ private:
       idles.AddIdle([this] { return LoadIconComplete(this) != FALSE; });
     }
 
+    glib::Object<GdkPixbuf> ColorizeIcon(glib::Object<GdkPixbuf> const& pixbuf,
+                                         double red, double green, double blue,
+                                         double alpha)
+    {
+      int pixbuf_width = gdk_pixbuf_get_width(pixbuf);
+      int pixbuf_height = gdk_pixbuf_get_height(pixbuf);
+
+      nux::CairoGraphics cairo_graphics(CAIRO_FORMAT_ARGB32,
+                                        pixbuf_width, pixbuf_height);
+      cairo_t* cr = cairo_graphics.GetInternalContext();
+
+      cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+      cairo_paint(cr);
+
+      // paint the icon
+      cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+      gdk_cairo_set_source_pixbuf(cr, pixbuf, 0.0, 0.0);
+      cairo_paint(cr);
+
+      // colorize it
+      cairo_set_source_rgba(cr, red, green, blue, 1.0);
+      // ATOP blends the original and source color, original alpha not affected
+      cairo_set_operator(cr, CAIRO_OPERATOR_ATOP);
+      cairo_paint(cr);
+
+      if (alpha < 1.0)
+      {
+        cairo_set_operator(cr, CAIRO_OPERATOR_DEST_OUT);
+        cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0 - alpha);
+        cairo_paint(cr);
+      }
+
+      // copy the result surface into pixbuf
+      glib::Object<GdkPixbuf> colorized_pixbuf(
+          gdk_pixbuf_get_from_surface(cairo_graphics.GetSurface(),
+                                      0, 0,
+                                      cairo_graphics.GetWidth(),
+                                      cairo_graphics.GetHeight()));
+
+      return colorized_pixbuf;
+    }
+
     void BaseIconLoaded(std::string const& base_icon_string,
                         int base_max_width, int base_max_height,
-                        glib::Object<GdkPixbuf> const& base_pixbuf,
+                        glib::Object<GdkPixbuf> const& base_icon,
                         glib::Object<UnityProtocolAnnotatedIcon> const& anno_icon)
     {
       helper_handle = 0;
-      if (base_pixbuf)
+      if (base_icon)
       {
+        glib::Object<GdkPixbuf> base_pixbuf = base_icon;
+
         LOG_DEBUG(logger) << "Base icon loaded: '" << base_icon_string << 
           "' size: " << gdk_pixbuf_get_width(base_pixbuf) << 'x' <<
                         gdk_pixbuf_get_height(base_pixbuf);
+
+        UnityProtocolCategoryType category = unity_protocol_annotated_icon_get_category(anno_icon);
+        guint32 colorize_value = unity_protocol_annotated_icon_get_colorize_value(anno_icon);
+        if (colorize_value != 0)
+        {
+          // extract rgba
+          double alpha = (colorize_value & 0xFF) / 255.;
+          colorize_value >>= 8;
+          double blue = (colorize_value & 0xFF) / 255.;
+          colorize_value >>= 8;
+          double green = (colorize_value & 0xFF) / 255.;
+          colorize_value >>= 8;
+          double red = (colorize_value & 0xFF) / 255.;
+
+          base_pixbuf = ColorizeIcon(base_pixbuf, red, green, blue, alpha);
+        }
+
+        // short-circuit if there's no text to overlay
+        if (category == UNITY_PROTOCOL_CATEGORY_TYPE_NONE &&
+            unity_protocol_annotated_icon_get_ribbon(anno_icon) == NULL)
+        {
+          // if the icon was requested to be smaller + colorized, we can cache
+          no_cache = false;
+          result = base_pixbuf;
+          idles.AddIdle([this] { return LoadIconComplete(this) != FALSE; });
+          return;
+        }
 
         int result_width, result_height, dest_x, dest_y;
         if (unity_protocol_annotated_icon_get_use_small_icon(anno_icon))
@@ -565,7 +618,6 @@ private:
                              result,
                              dest_x, dest_y);
         // FIXME: can we composite the pixbuf in helper thread?
-        UnityProtocolCategoryType category = unity_protocol_annotated_icon_get_category(anno_icon);
         auto helper_slot = sigc::bind(sigc::mem_fun(this, &IconLoaderTask::CategoryIconLoaded), anno_icon);
         int max_font_height;
         CalculateTextHeight(nullptr, &max_font_height);
@@ -727,14 +779,14 @@ private:
   Handle ReturnCachedOrQueue(std::string const& data,
                              int max_width,
                              int max_height,
-                             IconLoaderCallback slot,
+                             IconLoaderCallback const& slot,
                              IconLoaderRequestType type);
 
   Handle QueueTask(std::string const& key,
                    std::string const& data,
                    int max_width,
                    int max_height,
-                   IconLoaderCallback slot,
+                   IconLoaderCallback const& slot,
                    IconLoaderRequestType type);
 
   std::string Hash(std::string const& data, int max_width, int max_height);
@@ -743,7 +795,7 @@ private:
                    std::string const& data,
                    int max_width,
                    int max_height,
-                   IconLoaderCallback slot);
+                   IconLoaderCallback const& slot);
 
   // Looping idle callback function
   bool Iteration();
@@ -760,7 +812,7 @@ private:
    * in the future... You've been warned! */
   std::map<std::string, IconLoaderTask::Ptr> queued_tasks_;
   std::queue<IconLoaderTask::Ptr> tasks_;
-  std::map<Handle, IconLoaderTask::Ptr> task_map_;
+  std::unordered_map<Handle, IconLoaderTask::Ptr> task_map_;
   std::vector<IconLoaderTask*> finished_tasks_;
 
   bool no_load_;
@@ -799,15 +851,12 @@ IconLoader::Impl::Impl()
 #endif
 }
 
-int IconLoader::Impl::LoadFromIconName(std::string const& icon_name,
-                                       int max_width,
-                                       int max_height,
-                                       IconLoaderCallback slot)
+IconLoader::Handle IconLoader::Impl::LoadFromIconName(std::string const& icon_name, int max_width, int max_height, IconLoaderCallback const& slot)
 {
   if (no_load_ || icon_name.empty() || !slot ||
       ((max_width >= 0 && max_width < MIN_ICON_SIZE) ||
        (max_height >= 0 && max_height < MIN_ICON_SIZE)))
-    return 0;
+    return Handle();
 
   // We need to check this because of legacy desktop files
   if (icon_name[0] == '/')
@@ -819,29 +868,23 @@ int IconLoader::Impl::LoadFromIconName(std::string const& icon_name,
                              REQUEST_TYPE_ICON_NAME);
 }
 
-int IconLoader::Impl::LoadFromGIconString(std::string const& gicon_string,
-                                          int max_width,
-                                          int max_height,
-                                          IconLoaderCallback slot)
+IconLoader::Handle IconLoader::Impl::LoadFromGIconString(std::string const& gicon_string, int max_width, int max_height, IconLoaderCallback const& slot)
 {
   if (no_load_ || gicon_string.empty() || !slot ||
       ((max_width >= 0 && max_width < MIN_ICON_SIZE) ||
        (max_height >= 0 && max_height < MIN_ICON_SIZE)))
-    return 0;
+    return Handle();
 
   return ReturnCachedOrQueue(gicon_string, max_width, max_height, slot,
                              REQUEST_TYPE_GICON_STRING);
 }
 
-int IconLoader::Impl::LoadFromFilename(std::string const& filename,
-                                       int max_width,
-                                       int max_height,
-                                       IconLoaderCallback slot)
+IconLoader::Handle IconLoader::Impl::LoadFromFilename(std::string const& filename, int max_width, int max_height, IconLoaderCallback const& slot)
 {
   if (no_load_ || filename.empty() || !slot ||
       ((max_width >= 0 && max_width < MIN_ICON_SIZE) ||
        (max_height >= 0 && max_height < MIN_ICON_SIZE)))
-    return 0;
+    return Handle();
 
   glib::Object<GFile> file(::g_file_new_for_path(filename.c_str()));
   glib::String uri(::g_file_get_uri(file));
@@ -849,15 +892,12 @@ int IconLoader::Impl::LoadFromFilename(std::string const& filename,
   return LoadFromURI(uri.Str(), max_width, max_height, slot);
 }
 
-int IconLoader::Impl::LoadFromURI(std::string const& uri,
-                                  int max_width,
-                                  int max_height,
-                                  IconLoaderCallback slot)
+IconLoader::Handle IconLoader::Impl::LoadFromURI(std::string const& uri, int max_width, int max_height, IconLoaderCallback const& slot)
 {
   if (no_load_ || uri.empty() || !slot ||
       ((max_width >= 0 && max_width < MIN_ICON_SIZE) ||
        (max_height >= 0 && max_height < MIN_ICON_SIZE)))
-    return 0;
+    return Handle();
 
   return ReturnCachedOrQueue(uri, max_width, max_height, slot,
                              REQUEST_TYPE_URI);
@@ -913,29 +953,19 @@ void IconLoader::Impl::CalculateTextHeight(int* width, int* height)
 // Private Methods
 //
 
-int IconLoader::Impl::ReturnCachedOrQueue(std::string const& data,
-                                          int max_width,
-                                          int max_height,
-                                          IconLoaderCallback slot,
-                                          IconLoaderRequestType type)
+IconLoader::Handle IconLoader::Impl::ReturnCachedOrQueue(std::string const& data, int max_width, int max_height, IconLoaderCallback const& slot, IconLoaderRequestType type)
 {
-  Handle result = 0;
   std::string key(Hash(data, max_width, max_height));
 
   if (!CacheLookup(key, data, max_width, max_height, slot))
   {
-    result = QueueTask(key, data, max_width, max_height, slot, type);
+    return QueueTask(key, data, max_width, max_height, slot, type);
   }
-  return result;
+  return Handle();
 }
 
 
-int IconLoader::Impl::QueueTask(std::string const& key,
-                                std::string const& data,
-                                int max_width,
-                                int max_height,
-                                IconLoaderCallback slot,
-                                IconLoaderRequestType type)
+IconLoader::Handle IconLoader::Impl::QueueTask(std::string const& key, std::string const& data, int max_width, int max_height, IconLoaderCallback const& slot, IconLoaderRequestType type)
 {
   auto task = std::make_shared<IconLoaderTask>(type, data,
                                                max_width, max_height,
@@ -986,7 +1016,7 @@ bool IconLoader::Impl::CacheLookup(std::string const& key,
                                    std::string const& data,
                                    int max_width,
                                    int max_height,
-                                   IconLoaderCallback slot)
+                                   IconLoaderCallback const& slot)
 {
   auto iter = cache_.find(key);
   bool found = iter != cache_.end();
@@ -1069,39 +1099,27 @@ IconLoader& IconLoader::GetDefault()
   return default_loader;
 }
 
-int IconLoader::LoadFromIconName(std::string const& icon_name,
-                                 int max_width,
-                                 int max_height,
-                                 IconLoaderCallback slot)
+IconLoader::Handle IconLoader::LoadFromIconName(std::string const& icon_name, int max_width, int max_height, IconLoaderCallback const& slot)
 {
   return pimpl->LoadFromIconName(icon_name, max_width, max_height, slot);
 }
 
-int IconLoader::LoadFromGIconString(std::string const& gicon_string,
-                                    int max_width,
-                                    int max_height,
-                                    IconLoaderCallback slot)
+IconLoader::Handle IconLoader::LoadFromGIconString(std::string const& gicon_string, int max_width, int max_height, IconLoaderCallback const& slot)
 {
   return pimpl->LoadFromGIconString(gicon_string, max_width, max_height, slot);
 }
 
-int IconLoader::LoadFromFilename(std::string const& filename,
-                                 int max_width,
-                                 int max_height,
-                                 IconLoaderCallback slot)
+IconLoader::Handle IconLoader::LoadFromFilename(std::string const& filename, int max_width, int max_height, IconLoaderCallback const& slot)
 {
   return pimpl->LoadFromFilename(filename, max_width, max_height, slot);
 }
 
-int IconLoader::LoadFromURI(std::string const& uri,
-                            int max_width,
-                            int max_height,
-                            IconLoaderCallback slot)
+IconLoader::Handle IconLoader::LoadFromURI(std::string const& uri, int max_width, int max_height, IconLoaderCallback const& slot)
 {
   return pimpl->LoadFromURI(uri, max_width, max_height, slot);
 }
 
-void IconLoader::DisconnectHandle(int handle)
+void IconLoader::DisconnectHandle(Handle handle)
 {
   pimpl->DisconnectHandle(handle);
 }

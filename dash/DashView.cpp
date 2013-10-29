@@ -144,12 +144,6 @@ DashView::DashView(Scopes::Ptr const& scopes, ApplicationStarter::Ptr const& app
   preview_state_machine_.PreviewActivated.connect(sigc::mem_fun(this, &DashView::BuildPreview));
   Relayout();
 
-  // We are interested in the color of the desktop background.
-  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &DashView::OnBGColorChanged));
-
-  // request the latest colour from bghash
-  ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
-
   if (scopes_)
   {
     scopes_->scope_added.connect(sigc::mem_fun(this, &DashView::OnScopeAdded));
@@ -168,15 +162,6 @@ DashView::~DashView()
   // Do this explicitely, otherwise dee will complain about invalid access
   // to the scope models
   RemoveLayout();
-}
-
-void DashView::OnBGColorChanged(GVariant *data)
-{
-  double red = 0.0f, green = 0.0f, blue = 0.0f, alpha = 0.0f;
-
-  g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-  background_color_ = nux::Color(red, green, blue, alpha);
-  QueueDraw();
 }
 
 void DashView::SetMonitorOffset(int x, int y)
@@ -469,7 +454,6 @@ void DashView::OnPreviewAnimationFinished()
 
 void DashView::AboutToShow()
 {
-  ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
   visible_ = true;
   search_bar_->text_entry()->SelectAll();
 
@@ -1252,9 +1236,6 @@ void DashView::OnScopeAdded(Scope::Ptr const& scope, int position)
     }
     preview_state_machine_.ActivatePreview(model); // this does not immediately display a preview - we now wait.
   });
-
-  if (!active_scope_view_)
-    scope_bar_->Activate(scope->id);
 }
 
 void DashView::OnScopeBarActivated(std::string const& id)
@@ -1263,6 +1244,15 @@ void DashView::OnScopeBarActivated(std::string const& id)
   {
     LOG_WARN(logger) << "Unable to find Scope " << id;
     return;
+  }
+
+  if (IsCommandLensOpen() && scope_bar_->IsVisible())
+  {
+    scope_bar_->SetVisible(false);
+  }
+  else if (!scope_bar_->IsVisible())
+  {
+    scope_bar_->SetVisible(true);
   }
 
   if (active_scope_view_.IsValid())
@@ -1307,7 +1297,7 @@ void DashView::OnScopeBarActivated(std::string const& id)
   QueueDraw();
 }
 
-void DashView::OnResultActivatedReply(LocalResult const& local_result, ScopeHandledType type, glib::HintsMap const&)
+void DashView::OnResultActivatedReply(LocalResult const& local_result, ScopeHandledType type, glib::HintsMap const& hints)
 {
   // We don't want to close the dash if there was another activation pending
   if (type == NOT_HANDLED)
@@ -1318,6 +1308,15 @@ void DashView::OnResultActivatedReply(LocalResult const& local_result, ScopeHand
   else if (type == SHOW_DASH)
   {
     return;
+  }
+  else if (type == PERFORM_SEARCH)
+  {
+    auto it = hints.find("query");
+    if (it != hints.end())
+    {
+      search_bar_->search_string = it->second.GetString();
+      return;
+    }
   }
 
   ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
@@ -1402,7 +1401,7 @@ bool DashView::InspectKeyEvent(unsigned int eventType,
   {
     if (preview_displaying_)
       ClosePreview();
-    else if (search_bar_->search_string != "")
+    else if (!search_bar_->search_string().empty())
       search_bar_->search_string = "";
     else
       ubus_manager_.SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);

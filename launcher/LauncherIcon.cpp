@@ -20,18 +20,12 @@
 #include <sys/time.h>
 
 #include <Nux/Nux.h>
-#include <Nux/VScrollBar.h>
-#include <Nux/HLayout.h>
-#include <Nux/VLayout.h>
-#include <Nux/WindowCompositor.h>
-#include <Nux/BaseWindow.h>
 #include <NuxCore/Color.h>
 #include <NuxCore/Logger.h>
 
-#include "unity-shared/CairoTexture.h"
 #include "LauncherIcon.h"
-#include "Launcher.h"
-#include "unity-shared/TimeUtil.h"
+#include "unity-shared/AnimationUtils.h"
+#include "unity-shared/CairoTexture.h"
 
 #include "QuicklistManager.h"
 #include "QuicklistMenuItem.h"
@@ -42,8 +36,6 @@
 
 #include "MultiMonitor.h"
 
-#include "unity-shared/UBusWrapper.h"
-#include "unity-shared/UBusMessages.h"
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GTKWrapper.h>
 #include <UnityCore/Variant.h>
@@ -56,6 +48,8 @@ DECLARE_LOGGER(logger, "unity.launcher.icon");
 
 namespace
 {
+const int IGNORE_REPEAT_SHORTCUT_DURATION = 250;
+
 const std::string DEFAULT_ICON = "application-default-icon";
 const std::string MONO_TEST_ICON = "gnome-home";
 const std::string UNITY_THEME_NAME = "unity-icon-theme";
@@ -63,8 +57,6 @@ const std::string UNITY_THEME_NAME = "unity-icon-theme";
 const std::string CENTER_STABILIZE_TIMEOUT = "center-stabilize-timeout";
 const std::string PRESENT_TIMEOUT = "present-timeout";
 const std::string QUIRK_DELAY_TIMEOUT = "quirk-delay-timeout";
-
-const unsigned TOOLTIP_FADE_DURATION = 80;
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(LauncherIcon);
@@ -77,37 +69,22 @@ LauncherIcon::LauncherIcon(IconType type)
   , _sticky(false)
   , _remote_urgent(false)
   , _present_urgency(0)
-  , _progress(0)
+  , _progress(0.0f)
   , _sort_priority(DefaultPriority(type))
   , _last_monitor(0)
   , _background_color(nux::color::White)
   , _glow_color(nux::color::White)
   , _shortcut(0)
-  , _center(max_num_monitors)
-  , _has_visible_window(max_num_monitors)
-  , _last_stable(max_num_monitors)
-  , _parent_geo(max_num_monitors)
-  , _saved_center(max_num_monitors)
   , _allow_quicklist_to_show(true)
-  , _tooltip_fade_animator(TOOLTIP_FADE_DURATION)
+  , _center(monitors::MAX)
+  , _quirks(monitors::MAX)
+  , _quirk_animations(monitors::MAX, decltype(_quirk_animations)::value_type(unsigned(Quirk::LAST)))
+  , _last_stable(monitors::MAX)
+  , _saved_center(monitors::MAX)
 {
-  for (unsigned i = 0; i < unsigned(Quirk::LAST); ++i)
-  {
-    _quirks[i] = false;
-    _quirk_times[i].tv_sec = 0;
-    _quirk_times[i].tv_nsec = 0;
-  }
-
-  _is_visible_on_monitor.resize(max_num_monitors);
-
-  for (int i = 0; i < max_num_monitors; ++i)
-    _is_visible_on_monitor[i] = true;
-
   tooltip_enabled = true;
   tooltip_enabled.changed.connect(sigc::mem_fun(this, &LauncherIcon::OnTooltipEnabledChanged));
-
   tooltip_text.SetSetterFunction(sigc::mem_fun(this, &LauncherIcon::SetTooltipText));
-  tooltip_text = "blank";
 
   position = Position::FLOATING;
   removed = false;
@@ -120,20 +97,17 @@ LauncherIcon::LauncherIcon(IconType type)
   mouse_up.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseUp));
   mouse_click.connect(sigc::mem_fun(this, &LauncherIcon::RecvMouseClick));
 
-  _tooltip_fade_animator.updated.connect([this] (double opacity) {
-    if (_tooltip)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+  {
+    for (unsigned j = 0; j < static_cast<unsigned>(Quirk::LAST); ++j)
     {
-      _tooltip->SetOpacity(opacity);
-
-      if (opacity == 0.0f && _tooltip_fade_animator.GetStartValue() > _tooltip_fade_animator.GetFinishValue())
-        _tooltip->ShowWindow(false);
+      _quirk_animations[i][j] = std::make_shared<Animation>();
+      _quirk_animations[i][j]->updated.connect([this, i, j] (float value) { EmitNeedsRedraw(i); });
     }
-  });
-}
 
-LauncherIcon::~LauncherIcon()
-{
-  SetQuirk(Quirk::URGENT, false);
+    // Center must have set a default value
+    animation::SetValue(GetQuirkAnimation(Quirk::CENTER_SAVED, i), animation::Direction::FORWARD);
+  }
 }
 
 void LauncherIcon::LoadTooltip()
@@ -158,19 +132,14 @@ void LauncherIcon::LoadQuicklist()
   QuicklistManager::Default()->RegisterQuicklist(_quicklist);
 }
 
-const bool
-LauncherIcon::WindowVisibleOnMonitor(int monitor)
+const bool LauncherIcon::WindowVisibleOnMonitor(int monitor)
 {
   return _has_visible_window[monitor];
 }
 
 const bool LauncherIcon::WindowVisibleOnViewport()
 {
-  for (int i = 0; i < max_num_monitors; ++i)
-    if (_has_visible_window[i])
-      return true;
-
-  return false;
+  return _has_visible_window.any();
 }
 
 std::string
@@ -185,7 +154,7 @@ LauncherIcon::AddProperties(GVariantBuilder* builder)
   GVariantBuilder monitors_builder;
   g_variant_builder_init(&monitors_builder, G_VARIANT_TYPE ("ab"));
 
-  for (int i = 0; i < max_num_monitors; ++i)
+  for (unsigned i = 0; i < monitors::MAX; ++i)
     g_variant_builder_add(&monitors_builder, "b", IsVisibleOnMonitor(i));
 
   unity::variant::BuilderWrapper(builder)
@@ -207,30 +176,45 @@ LauncherIcon::AddProperties(GVariantBuilder* builder)
   .add("presented", GetQuirk(Quirk::PRESENTED));
 }
 
-void
-LauncherIcon::Activate(ActionArg arg)
+bool LauncherIcon::IsActionArgValid(ActionArg const& arg)
 {
+  if (arg.source != ActionArg::Source::LAUNCHER_KEYBINDING)
+    return true;
+
+  time::Spec now;
+  now.SetToNow();
+
+  return (now.TimeDelta(_last_action) > IGNORE_REPEAT_SHORTCUT_DURATION);
+}
+
+void LauncherIcon::Activate(ActionArg arg)
+{
+  if (!IsActionArgValid(arg))
+    return;
+
   /* Launcher Icons that handle spread will adjust the spread state
    * accordingly, for all other icons we should terminate spread */
   WindowManager& wm = WindowManager::Default();
-  if (wm.IsScaleActive() && !HandlesSpread ())
+  if (wm.IsScaleActive() && !HandlesSpread())
     wm.TerminateScale();
 
   ActivateLauncherIcon(arg);
 
-  UpdateQuirkTime(Quirk::LAST_ACTION);
+  _last_action.SetToNow();
 }
 
-void
-LauncherIcon::OpenInstance(ActionArg arg)
+void LauncherIcon::OpenInstance(ActionArg arg)
 {
+  if (!IsActionArgValid(arg))
+    return;
+
   WindowManager& wm = WindowManager::Default();
   if (wm.IsScaleActive())
     wm.TerminateScale();
 
   OpenInstanceLauncherIcon(arg.timestamp);
 
-  UpdateQuirkTime(Quirk::LAST_ACTION);
+  _last_action.SetToNow();
 }
 
 nux::Color LauncherIcon::BackgroundColor() const
@@ -304,18 +288,15 @@ void LauncherIcon::ColorForIcon(GdkPixbuf* pixbuf, nux::Color& background, nux::
 /* static */
 bool LauncherIcon::IsMonoDefaultTheme()
 {
-
   if (_current_theme_is_mono != -1)
     return (bool)_current_theme_is_mono;
 
   GtkIconTheme* default_theme;
   gtk::IconInfo info;
-  int size = 48;
-
   default_theme = gtk_icon_theme_get_default();
 
   _current_theme_is_mono = (int)false;
-  info = gtk_icon_theme_lookup_icon(default_theme, MONO_TEST_ICON.c_str(), size, (GtkIconLookupFlags)0);
+  info = gtk_icon_theme_lookup_icon(default_theme, MONO_TEST_ICON.c_str(), icon_size(), (GtkIconLookupFlags)0);
 
   if (!info)
     return (bool)_current_theme_is_mono;
@@ -339,15 +320,13 @@ GtkIconTheme* LauncherIcon::GetUnityTheme()
   return _unity_theme;
 }
 
-nux::BaseTexture* LauncherIcon::TextureFromGtkTheme(std::string icon_name, int size, bool update_glow_colors)
+BaseTexturePtr LauncherIcon::TextureFromGtkTheme(std::string icon_name, int size, bool update_glow_colors)
 {
   GtkIconTheme* default_theme;
-  nux::BaseTexture* result = NULL;
+  BaseTexturePtr result;
 
   if (icon_name.empty())
-  {
     icon_name = DEFAULT_ICON;
-  }
 
   default_theme = gtk_icon_theme_get_default();
 
@@ -361,23 +340,19 @@ nux::BaseTexture* LauncherIcon::TextureFromGtkTheme(std::string icon_name, int s
 
   if (!result)
   {
-    if (icon_name == "folder")
-      result = NULL;
-    else
+    if (icon_name != "folder")
       result = TextureFromSpecificGtkTheme(default_theme, "folder", size, update_glow_colors);
   }
 
   return result;
-
 }
 
-nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
-                                                            std::string const& icon_name,
-                                                            int size,
-                                                            bool update_glow_colors,
-                                                            bool is_default_theme)
+BaseTexturePtr LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
+                                                         std::string const& icon_name,
+                                                         int size,
+                                                         bool update_glow_colors,
+                                                         bool is_default_theme)
 {
-  nux::BaseTexture* result = nullptr;
   glib::Object<GIcon> icon(g_icon_new_for_string(icon_name.c_str(), nullptr));
   gtk::IconInfo info;
   auto flags = static_cast<GtkIconLookupFlags>(0);
@@ -392,7 +367,7 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
   }
 
   if (!info && !is_default_theme)
-    return nullptr;
+    return BaseTexturePtr();
 
   if (!info)
   {
@@ -409,10 +384,13 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
 
   if (pbuf.IsType(GDK_TYPE_PIXBUF))
   {
-    result = nux::CreateTexture2DFromPixbuf(pbuf, true);
-
     if (update_glow_colors)
       ColorForIcon(pbuf, _background_color, _glow_color);
+
+    BaseTexturePtr result;
+    result.Adopt(nux::CreateTexture2DFromPixbuf(pbuf, true));
+
+    return result;
   }
   else
   {
@@ -420,13 +398,11 @@ nux::BaseTexture* LauncherIcon::TextureFromSpecificGtkTheme(GtkIconTheme* theme,
                      <<  "' from icon theme: " << error;
   }
 
-  return result;
+  return BaseTexturePtr();
 }
 
-nux::BaseTexture* LauncherIcon::TextureFromPath(std::string const& icon_name, int size, bool update_glow_colors)
+BaseTexturePtr LauncherIcon::TextureFromPath(std::string const& icon_name, int size, bool update_glow_colors)
 {
-  nux::BaseTexture* result;
-
   if (icon_name.empty())
     return TextureFromGtkTheme(DEFAULT_ICON, size, update_glow_colors);
 
@@ -435,39 +411,39 @@ nux::BaseTexture* LauncherIcon::TextureFromPath(std::string const& icon_name, in
 
   if (GDK_IS_PIXBUF(pbuf.RawPtr()))
   {
-    result = nux::CreateTexture2DFromPixbuf(pbuf, true);
-
     if (update_glow_colors)
       ColorForIcon(pbuf, _background_color, _glow_color);
+
+    BaseTexturePtr result;
+    result.Adopt(nux::CreateTexture2DFromPixbuf(pbuf, true));
+    return result;
   }
   else
   {
     LOG_WARN(logger) << "Unable to load '" << icon_name
                      <<  "' icon: " << error;
 
-    result = TextureFromGtkTheme(DEFAULT_ICON, size, update_glow_colors);
+    return TextureFromGtkTheme(DEFAULT_ICON, size, update_glow_colors);
   }
 
-  return result;
+  return BaseTexturePtr();
 }
 
 bool LauncherIcon::SetTooltipText(std::string& target, std::string const& value)
 {
-  bool result = false;
-
-  gchar* esc = g_markup_escape_text(value.c_str(), -1);
-  std::string escaped = esc;
-  g_free(esc);
+  auto const& escaped = glib::String(g_markup_escape_text(value.c_str(), -1)).Str();
 
   if (escaped != target)
   {
     target = escaped;
+
     if (_tooltip)
       _tooltip->text = target;
-    result = true;
+
+    return true;
   }
 
-  return result;
+  return false;
 }
 
 void LauncherIcon::OnTooltipEnabledChanged(bool value)
@@ -476,8 +452,7 @@ void LauncherIcon::OnTooltipEnabledChanged(bool value)
     HideTooltip();
 }
 
-void
-LauncherIcon::SetShortcut(guint64 shortcut)
+void LauncherIcon::SetShortcut(guint64 shortcut)
 {
   // only relocate a digit with a digit (don't overwrite other shortcuts)
   if ((!_shortcut || (g_ascii_isdigit((gchar)_shortcut)))
@@ -485,42 +460,31 @@ LauncherIcon::SetShortcut(guint64 shortcut)
     _shortcut = shortcut;
 }
 
-guint64
-LauncherIcon::GetShortcut()
+guint64 LauncherIcon::GetShortcut()
 {
   return _shortcut;
 }
 
-void
-LauncherIcon::ShowTooltip()
+nux::Point LauncherIcon::GetTipPosition(int monitor) const
 {
-  if (!tooltip_enabled || (_quicklist && _quicklist->IsVisible()))
-    return;
+  return nux::Point(_center[monitor].x + icon_size()/2 + 1, _center[monitor].y);
+}
 
-  int tip_x = 100;
-  int tip_y = 100;
-  if (_last_monitor >= 0)
-  {
-    nux::Geometry geo = _parent_geo[_last_monitor];
-    tip_x = geo.x + geo.width - 4 * geo.width / 48;
-    tip_y = _center[_last_monitor].y;
-  }
+void LauncherIcon::ShowTooltip()
+{
+  if (!tooltip_enabled || tooltip_text().empty() || (_quicklist && _quicklist->IsVisible()))
+    return;
 
   if (!_tooltip)
     LoadTooltip();
-  _tooltip->text = tooltip_text();
-  _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
-  _tooltip->ShowWindow(!tooltip_text().empty());
-  tooltip_visible.emit(_tooltip);
 
-  if (_tooltip_fade_animator.CurrentState() == nux::animation::Animation::State::Running)
-    _tooltip_fade_animator.Reverse();
-  else
-    _tooltip_fade_animator.SetStartValue(0.0f).SetFinishValue(1.0f).Start();
+  auto const& pos = GetTipPosition(_last_monitor);
+  _tooltip->text = tooltip_text();
+  _tooltip->ShowTooltipWithTipAt(pos.x, pos.y);
+  tooltip_visible.emit(_tooltip);
 }
 
-void
-LauncherIcon::RecvMouseEnter(int monitor)
+void LauncherIcon::RecvMouseEnter(int monitor)
 {
   _last_monitor = monitor;
 }
@@ -542,7 +506,10 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
     return false;
 
   if (_tooltip)
+  {
+    // Hide the tooltip without fade animation
     _tooltip->ShowWindow(false);
+  }
 
   _quicklist->RemoveAllMenuItem();
 
@@ -589,28 +556,26 @@ bool LauncherIcon::OpenQuicklist(bool select_first_item, int monitor)
       monitor = 0;
   }
 
-  nux::Geometry const& geo = _parent_geo[monitor];
-  int tip_x = geo.x + geo.width - 4 * geo.width / 48;
-  int tip_y = _center[monitor].y;
-
   WindowManager& win_manager = WindowManager::Default();
 
   if (win_manager.IsScaleActive())
     win_manager.TerminateScale();
+
+  auto const& pos = GetTipPosition(monitor);
 
   /* If the expo plugin is active, we need to wait it to be terminated, before
    * showing the icon quicklist. */
   if (win_manager.IsExpoActive())
   {
     auto conn = std::make_shared<sigc::connection>();
-    *conn = win_manager.terminate_expo.connect([this, conn, tip_x, tip_y] {
-      QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
+    *conn = win_manager.terminate_expo.connect([this, conn, pos] {
+      QuicklistManager::Default()->ShowQuicklist(_quicklist, pos.x, pos.y);
       conn->disconnect();
     });
   }
   else
   {
-    QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
+    QuicklistManager::Default()->ShowQuicklist(_quicklist, pos.x, pos.y);
   }
 
   return true;
@@ -664,67 +629,66 @@ void LauncherIcon::RecvMouseClick(int button, int monitor, unsigned long key_fla
 void LauncherIcon::HideTooltip()
 {
   if (_tooltip)
-  {
-    if (_tooltip_fade_animator.CurrentState() == nux::animation::Animation::State::Running &&
-        _tooltip_fade_animator.GetFinishValue() == 1.0)
-    {
-      _tooltip_fade_animator.Reverse();
-    }
-    else
-    {
-      _tooltip_fade_animator.SetStartValue(1.0f).SetFinishValue(0.0f).Start();
-    }
-  }
+    _tooltip->Hide();
 
-  tooltip_visible.emit(nux::ObjectPtr<nux::View>(nullptr));
+  tooltip_visible.emit(nux::ObjectPtr<nux::View>());
 }
 
-bool
-LauncherIcon::OnCenterStabilizeTimeout()
+void LauncherIcon::SetCenter(nux::Point3 const& new_center, int monitor)
 {
-  if (!std::equal(_center.begin(), _center.end(), _last_stable.begin()))
-  {
-    OnCenterStabilized(_center);
-    _last_stable = _center;
-  }
+  nux::Point3& center = _center[monitor];
 
-  return false;
-}
+  if (center == new_center)
+    return;
 
-void
-LauncherIcon::SetCenter(nux::Point3 const& center, int monitor, nux::Geometry const& geo)
-{
-  _parent_geo[monitor] = geo;
-
-  nux::Point3& new_center = _center[monitor];
-  new_center.x = center.x + geo.x;
-  new_center.y = center.y + geo.y;
-  new_center.z = center.z;
+  center = new_center;
 
   if (monitor == _last_monitor)
   {
-    int tip_x, tip_y;
-    tip_x = geo.x + geo.width - 4 * geo.width / 48;
-    tip_y = new_center.y;
-
     if (_quicklist && _quicklist->IsVisible())
-      QuicklistManager::Default()->ShowQuicklist(_quicklist, tip_x, tip_y);
+    {
+      auto const& pos = GetTipPosition(monitor);
+      QuicklistManager::Default()->MoveQuicklist(_quicklist, pos.x, pos.y);
+    }
     else if (_tooltip && _tooltip->IsVisible())
-      _tooltip->ShowTooltipWithTipAt(tip_x, tip_y);
+    {
+      auto const& pos = GetTipPosition(monitor);
+      _tooltip->SetTooltipPosition(pos.x, pos.y);
+    }
   }
 
-  auto const& cb_func = sigc::mem_fun(this, &LauncherIcon::OnCenterStabilizeTimeout);
-  _source_manager.AddTimeout(500, cb_func, CENTER_STABILIZE_TIMEOUT);
+  _source_manager.AddTimeout(500, [this] {
+    if (!std::equal(_center.begin(), _center.end(), _last_stable.begin()))
+    {
+      if (!removed())
+        OnCenterStabilized(_center);
+
+      _last_stable = _center;
+    }
+
+    return false;
+  }, CENTER_STABILIZE_TIMEOUT + std::to_string(monitor));
 }
 
-nux::Point3
-LauncherIcon::GetCenter(int monitor)
+void LauncherIcon::ResetCenters(int monitor)
+{
+  if (monitor < 0)
+  {
+    for (unsigned i = 0; i < monitors::MAX; ++i)
+      _center[i].Set(0, 0, 0);
+  }
+  else
+  {
+    _center[monitor].Set(0, 0, 0);
+  }
+}
+
+nux::Point3 LauncherIcon::GetCenter(int monitor)
 {
   return _center[monitor];
 }
 
-nux::Point3
-LauncherIcon::GetSavedCenter(int monitor)
+nux::Point3 LauncherIcon::GetSavedCenter(int monitor)
 {
   return _saved_center[monitor];
 }
@@ -734,48 +698,45 @@ std::vector<nux::Point3> LauncherIcon::GetCenters()
   return _center;
 }
 
-void
-LauncherIcon::SaveCenter()
+void LauncherIcon::SaveCenter()
 {
   _saved_center = _center;
-  UpdateQuirkTime(Quirk::CENTER_SAVED);
+  FullyAnimateQuirk(Quirk::CENTER_SAVED, 0);
 }
 
-void
-LauncherIcon::SetWindowVisibleOnMonitor(bool val, int monitor)
+std::pair<int, nux::Point3> LauncherIcon::GetCenterForMonitor(int monitor) const
+{
+  monitor = CLAMP(monitor, 0, static_cast<int>(_center.size() - 1));
+
+  if (_center[monitor].x && _center[monitor].y)
+    return {monitor, _center[monitor]};
+
+  for (unsigned i = 0; i < _center.size(); ++i)
+  {
+    if (_center[i].x && _center[i].y)
+      return {i, _center[i]};
+  }
+
+  return {-1, nux::Point3()};
+}
+
+void LauncherIcon::SetWindowVisibleOnMonitor(bool val, int monitor)
 {
   if (_has_visible_window[monitor] == val)
     return;
 
   _has_visible_window[monitor] = val;
-  EmitNeedsRedraw();
+  EmitNeedsRedraw(monitor);
 }
 
-void
-LauncherIcon::SetVisibleOnMonitor(int monitor, bool visible)
+void LauncherIcon::SetVisibleOnMonitor(int monitor, bool visible)
 {
-  if (_is_visible_on_monitor[monitor] == visible)
-    return;
-
-  _is_visible_on_monitor[monitor] = visible;
-  EmitNeedsRedraw();
+  SetQuirk(Quirk::VISIBLE, visible, monitor);
 }
 
-bool
-LauncherIcon::IsVisibleOnMonitor(int monitor) const
+bool LauncherIcon::IsVisibleOnMonitor(int monitor) const
 {
-  return _is_visible_on_monitor[monitor];
-}
-
-bool
-LauncherIcon::OnPresentTimeout()
-{
-  if (!GetQuirk(Quirk::PRESENTED))
-    return false;
-
-  Unpresent();
-
-  return false;
+  return GetQuirk(Quirk::VISIBLE, monitor);
 }
 
 float LauncherIcon::PresentUrgency()
@@ -783,52 +744,61 @@ float LauncherIcon::PresentUrgency()
   return _present_urgency;
 }
 
-void
-LauncherIcon::Present(float present_urgency, int length)
+void LauncherIcon::Present(float present_urgency, int length, int monitor)
 {
-  if (GetQuirk(Quirk::PRESENTED))
+  if (GetQuirk(Quirk::PRESENTED, monitor))
     return;
 
   if (length >= 0)
   {
-    auto cb_func = sigc::mem_fun(this, &LauncherIcon::OnPresentTimeout);
-    _source_manager.AddTimeout(length, cb_func, PRESENT_TIMEOUT);
+    _source_manager.AddTimeout(length, [this, monitor] {
+      if (!GetQuirk(Quirk::PRESENTED, monitor))
+        return false;
+
+      Unpresent(monitor);
+      return false;
+    }, PRESENT_TIMEOUT + std::to_string(monitor));
   }
 
   _present_urgency = CLAMP(present_urgency, 0.0f, 1.0f);
-  SetQuirk(Quirk::PRESENTED, true);
-  SetQuirk(Quirk::UNFOLDED, true);
+  SetQuirk(Quirk::PRESENTED, true, monitor);
+  SetQuirk(Quirk::UNFOLDED, true, monitor);
 }
 
-void
-LauncherIcon::Unpresent()
+void LauncherIcon::Unpresent(int monitor)
 {
-  if (!GetQuirk(Quirk::PRESENTED))
+  if (!GetQuirk(Quirk::PRESENTED, monitor))
     return;
 
-  _source_manager.Remove(PRESENT_TIMEOUT);
-  SetQuirk(Quirk::PRESENTED, false);
-  SetQuirk(Quirk::UNFOLDED, false);
+  _source_manager.Remove(PRESENT_TIMEOUT + std::to_string(monitor));
+  SetQuirk(Quirk::PRESENTED, false, monitor);
+  SetQuirk(Quirk::UNFOLDED, false, monitor);
 }
 
-void
-LauncherIcon::Remove()
+void LauncherIcon::Remove()
 {
   if (_quicklist && _quicklist->IsVisible())
       _quicklist->Hide();
 
+  if (_tooltip && _tooltip->IsVisible())
+    _tooltip->Hide();
+
   SetQuirk(Quirk::VISIBLE, false);
   EmitRemove();
+
+  // Disconnect all the callbacks that may interact with the icon data
+  _source_manager.RemoveAll();
+  sigc::trackable::notify_callbacks();
+
+  removed = true;
 }
 
-void
-LauncherIcon::SetSortPriority(int priority)
+void LauncherIcon::SetSortPriority(int priority)
 {
   _sort_priority = priority;
 }
 
-int
-LauncherIcon::SortPriority()
+int LauncherIcon::SortPriority()
 {
   return _sort_priority;
 }
@@ -839,75 +809,116 @@ LauncherIcon::GetIconType() const
   return _icon_type;
 }
 
-bool
-LauncherIcon::GetQuirk(LauncherIcon::Quirk quirk) const
+bool LauncherIcon::GetQuirk(LauncherIcon::Quirk quirk, int monitor) const
 {
-  return _quirks[unsigned(quirk)];
-}
-
-void
-LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value)
-{
-  if (_quirks[unsigned(quirk)] == value)
-    return;
-
-  _quirks[unsigned(quirk)] = value;
-  if (quirk == Quirk::VISIBLE)
-    TimeUtil::SetTimeStruct(&(_quirk_times[unsigned(quirk)]), &(_quirk_times[unsigned(quirk)]), Launcher::ANIM_DURATION_SHORT);
-  else
-    clock_gettime(CLOCK_MONOTONIC, &(_quirk_times[unsigned(quirk)]));
-  EmitNeedsRedraw();
-
-  // Present on urgent as a general policy
-  if (quirk == Quirk::VISIBLE && value)
-    Present(0.5f, 1500);
-  if (quirk == Quirk::URGENT)
+  if (monitor < 0)
   {
-    if (value)
+    for (unsigned i = 0; i < monitors::MAX; ++i)
     {
-      Present(0.5f, 1500);
+      if (!_quirks[i][unsigned(quirk)])
+        return false;
     }
 
-    UBusManager::SendMessage(UBUS_LAUNCHER_ICON_URGENT_CHANGED, g_variant_new_boolean(value));
+    return true;
+  }
+
+  return _quirks[monitor][unsigned(quirk)];
+}
+
+void LauncherIcon::SetQuirk(LauncherIcon::Quirk quirk, bool value, int monitor)
+{
+  bool changed = false;
+
+  if (monitor < 0)
+  {
+    for (unsigned i = 0; i < monitors::MAX; ++i)
+    {
+      if (_quirks[i][unsigned(quirk)] != value)
+      {
+        _quirks[i][unsigned(quirk)] = value;
+        animation::StartOrReverseIf(GetQuirkAnimation(quirk, i), value);
+        changed = true;
+      }
+    }
+  }
+  else
+  {
+    if (_quirks[monitor][unsigned(quirk)] != value)
+    {
+      _quirks[monitor][unsigned(quirk)] = value;
+      animation::StartOrReverseIf(GetQuirkAnimation(quirk, monitor), value);
+      changed = true;
+    }
+  }
+
+  if (!changed)
+    return;
+
+  // Present on urgent and visible as a general policy
+  if (value && (quirk == Quirk::URGENT || quirk == Quirk::VISIBLE))
+  {
+    Present(0.5f, 1500, monitor);
   }
 
   if (quirk == Quirk::VISIBLE)
+    visibility_changed.emit(monitor);
+}
+
+void LauncherIcon::FullyAnimateQuirkDelayed(guint ms, LauncherIcon::Quirk quirk, int monitor)
+{
+  _source_manager.AddTimeout(ms, [this, quirk, monitor] {
+    FullyAnimateQuirk(quirk, monitor);
+    return false;
+  }, QUIRK_DELAY_TIMEOUT + std::to_string(unsigned(quirk)) + std::to_string(monitor));
+}
+
+void LauncherIcon::FullyAnimateQuirk(LauncherIcon::Quirk quirk, int monitor)
+{
+  if (monitor < 0)
   {
-     visibility_changed.emit();
+    for (unsigned i = 0; i < monitors::MAX; ++i)
+      animation::Start(GetQuirkAnimation(quirk, i), animation::Direction::FORWARD);
+  }
+  else
+  {
+    animation::Start(GetQuirkAnimation(quirk, monitor), animation::Direction::FORWARD);
   }
 }
 
-void
-LauncherIcon::UpdateQuirkTimeDelayed(guint ms, LauncherIcon::Quirk quirk)
+void LauncherIcon::SkipQuirkAnimation(LauncherIcon::Quirk quirk, int monitor)
 {
-  _source_manager.AddTimeout(ms, [&, quirk] {
-    UpdateQuirkTime(quirk);
-    return false;
-  }, QUIRK_DELAY_TIMEOUT);
+  if (monitor < 0)
+  {
+    for (unsigned i = 0; i < monitors::MAX; ++i)
+    {
+      animation::Skip(GetQuirkAnimation(quirk, i));
+    }
+  }
+  else
+  {
+    animation::Skip(GetQuirkAnimation(quirk, monitor));
+  }
 }
 
-void
-LauncherIcon::UpdateQuirkTime(LauncherIcon::Quirk quirk)
+float LauncherIcon::GetQuirkProgress(Quirk quirk, int monitor) const
 {
-  clock_gettime(CLOCK_MONOTONIC, &(_quirk_times[unsigned(quirk)]));
-  EmitNeedsRedraw();
+  return GetQuirkAnimation(quirk, monitor).GetCurrentValue();
 }
 
-void
-LauncherIcon::ResetQuirkTime(LauncherIcon::Quirk quirk)
+void LauncherIcon::SetQuirkDuration(Quirk quirk, unsigned duration, int monitor)
 {
-  _quirk_times[unsigned(quirk)].tv_sec = 0;
-  _quirk_times[unsigned(quirk)].tv_nsec = 0;
+  if (monitor < 0)
+  {
+    for (unsigned i = 0; i < monitors::MAX; ++i)
+      GetQuirkAnimation(quirk, i).SetDuration(duration);
+  }
+  else
+  {
+    GetQuirkAnimation(quirk, monitor).SetDuration(duration);
+  }
 }
 
-struct timespec
-LauncherIcon::GetQuirkTime(LauncherIcon::Quirk quirk)
-{
-  return _quirk_times[unsigned(quirk)];
-}
-
-void
-LauncherIcon::SetProgress(float progress)
+void LauncherIcon::SetProgress(float progress)
 {
   if (progress == _progress)
     return;
@@ -916,8 +927,7 @@ LauncherIcon::SetProgress(float progress)
   EmitNeedsRedraw();
 }
 
-float
-LauncherIcon::GetProgress()
+float LauncherIcon::GetProgress()
 {
   return _progress;
 }
@@ -1192,10 +1202,22 @@ glib::Object<DbusmenuMenuitem> LauncherIcon::GetRemoteMenus() const
   return root;
 }
 
-void LauncherIcon::EmitNeedsRedraw()
+void LauncherIcon::EmitNeedsRedraw(int monitor)
 {
   if (OwnsTheReference() && GetReferenceCount() > 0)
-    needs_redraw.emit(AbstractLauncherIcon::Ptr(this));
+  {
+    if (monitor < 0)
+    {
+      needs_redraw.emit(AbstractLauncherIcon::Ptr(this), monitor);
+    }
+    else
+    {
+      auto const& visibilty = GetQuirkAnimation(Quirk::VISIBLE, monitor);
+
+      if (visibilty.GetCurrentValue() > 0.0f || visibilty.CurrentState() == na::Animation::State::Running)
+        needs_redraw.emit(AbstractLauncherIcon::Ptr(this), monitor);
+    }
+  }
 }
 
 void LauncherIcon::EmitRemove()
@@ -1206,7 +1228,7 @@ void LauncherIcon::EmitRemove()
 
 void LauncherIcon::Stick(bool save)
 {
-  if (_sticky)
+  if (_sticky && !save)
     return;
 
   _sticky = true;

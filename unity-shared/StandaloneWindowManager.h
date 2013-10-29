@@ -48,7 +48,9 @@ public:
   nux::Property<bool> active;
   nux::Property<bool> mapped;
   nux::Property<bool> visible;
-  nux::Property<bool> maximized;
+  nux::RWProperty<bool> maximized;
+  nux::Property<bool> v_maximized;
+  nux::Property<bool> h_maximized;
   nux::Property<bool> minimized;
   nux::Property<bool> decorated;
   nux::Property<bool> has_decorations;
@@ -70,6 +72,8 @@ public:
   std::vector<Window> GetWindowsInStackingOrder() const override;
 
   virtual bool IsWindowMaximized(Window window_id) const;
+  virtual bool IsWindowVerticallyMaximized(Window window_id) const;
+  virtual bool IsWindowHorizontallyMaximized(Window window_id) const;
   virtual bool IsWindowDecorated(Window window_id) const;
   virtual bool IsWindowOnCurrentDesktop(Window window_id) const;
   virtual bool IsWindowObscured(Window window_id) const;
@@ -86,6 +90,8 @@ public:
   virtual bool InShowDesktop() const;
 
   virtual void Maximize(Window window_id);
+  virtual void LeftMaximize(Window window_id);
+  virtual void RightMaximize(Window window_id);
   virtual void Restore(Window window_id);
   virtual void RestoreAt(Window window_id, int x, int y);
   virtual void Minimize(Window window_id);
@@ -109,6 +115,9 @@ public:
   virtual bool IsExpoActive() const;
 
   virtual bool IsWallActive() const;
+
+  void SetIsAnyWindowMoving(bool is_any_window_moving);
+  virtual bool IsAnyWindowMoving() const override;
 
   virtual void FocusWindowGroup(std::vector<Window> const& windows,
                                 FocusVisibility, int monitor = -1, bool only_top_win = true);
@@ -153,10 +162,13 @@ public:
 
   void SetScaleActive(bool scale_active);
   void SetScaleActiveForGroup(bool scale_active_for_group);
+  void SetExpoActive(bool expo_active);
   void SetCurrentDesktop(unsigned desktop_id);
 
   void SetCurrentViewport(nux::Point const& vp);
   void SetWorkareaGeometry(nux::Geometry const& geo);
+
+  void ResetStatus();
 
 protected:
   virtual void AddProperties(GVariantBuilder* builder);
@@ -166,6 +178,7 @@ private:
   bool in_show_desktop_;
   bool scale_active_;
   bool scale_active_for_group_;
+  bool is_any_window_moving_;
   unsigned current_desktop_;
   nux::Size viewport_size_;
   nux::Point current_vp_;

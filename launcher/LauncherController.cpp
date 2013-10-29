@@ -82,7 +82,6 @@ namespace
 {
   const int launcher_minimum_show_duration = 1250;
   const int shortcuts_show_delay = 750;
-  const int ignore_repeat_shortcut_duration = 250;
 
   const std::string KEYPRESS_TIMEOUT = "keypress-timeout";
   const std::string LABELS_TIMEOUT = "label-show-timeout";
@@ -104,13 +103,13 @@ std::string CreateAppUriNameFromDesktopPath(const std::string &desktop_path)
 
 }
 
-Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager)
+Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager, ui::EdgeBarrierController::Ptr const& edge_barriers)
   : parent_(parent)
   , model_(std::make_shared<LauncherModel>())
   , xdnd_manager_(xdnd_manager)
-  , device_section_(std::make_shared<VolumeMonitorWrapper>(), std::make_shared<DevicesSettingsImp>())
   , expo_icon_(new ExpoLauncherIcon())
   , desktop_icon_(new DesktopLauncherIcon())
+  , edge_barriers_(edge_barriers)
   , sort_priority_(AbstractLauncherIcon::DefaultPriority(AbstractLauncherIcon::IconType::APPLICATION))
   , launcher_open(false)
   , launcher_keynav(false)
@@ -118,23 +117,11 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager)
   , reactivate_keynav(false)
   , keynav_restore_window_(true)
   , launcher_key_press_time_(0)
-  , last_dnd_monitor_(-1)
   , dbus_server_(DBUS_NAME)
 {
 #ifdef USE_X11
-  edge_barriers_.options = parent_->options();
+  edge_barriers_->options = parent_->options();
 #endif
-
-  ubus.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, [this](GVariant * data) {
-    ui::IconRenderer::DestroyShortcutTextures();
-
-    double red = 0.0f, green = 0.0f, blue = 0.0f, alpha = 0.0f;
-    g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-    parent_->options()->background_color = nux::Color(red, green, blue, alpha);
-  });
-
-  // request the latest color from bghash
-  ubus.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
   UScreen* uscreen = UScreen::GetDefault();
   EnsureLaunchers(uscreen->GetPrimaryMonitor(), uscreen->GetMonitors());
@@ -164,6 +151,9 @@ Controller::Impl::Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager)
   WindowManager& wm = WindowManager::Default();
   wm.window_focus_changed.connect(sigc::mem_fun(this, &Controller::Impl::OnWindowFocusChanged));
   wm.viewport_layout_changed.connect(sigc::group(sigc::mem_fun(this, &Controller::Impl::UpdateNumWorkspaces), sigc::_1 * sigc::_2));
+  average_color_connection_ = wm.average_color.changed.connect([this] (nux::Color const& color) {
+    parent_->options()->background_color = color;
+  });
 
   ubus.RegisterInterest(UBUS_QUICKLIST_END_KEY_NAV, [this](GVariant * args) {
     if (reactivate_keynav)
@@ -209,6 +199,10 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
   unsigned int launchers_size = launchers.size();
   unsigned int last_launcher = 0;
 
+  // Reset the icon centers: only the used icon centers must contain valid values
+  for (auto const& icon : *model_)
+    icon->ResetCenters();
+
   for (unsigned int i = 0; i < num_launchers; ++i, ++last_launcher)
   {
     if (i >= launchers_size)
@@ -225,7 +219,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
     if (launchers[i]->monitor() != monitor)
     {
 #ifdef USE_X11
-      edge_barriers_.Unsubscribe(launchers[i].GetPointer(), launchers[i]->monitor);
+      edge_barriers_->RemoveVerticalSubscriber(launchers[i].GetPointer(), launchers[i]->monitor);
 #endif
       launchers[i]->monitor = monitor;
     }
@@ -235,7 +229,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
     }
 
 #ifdef USE_X11
-    edge_barriers_.Subscribe(launchers[i].GetPointer(), launchers[i]->monitor);
+    edge_barriers_->AddVerticalSubscriber(launchers[i].GetPointer(), launchers[i]->monitor);
 #endif
   }
 
@@ -247,7 +241,7 @@ void Controller::Impl::EnsureLaunchers(int primary, std::vector<nux::Geometry> c
       parent_->RemoveChild(launcher.GetPointer());
       launcher->GetParent()->UnReference();
 #ifdef USE_X11
-      edge_barriers_.Unsubscribe(launcher.GetPointer(), launcher->monitor);
+      edge_barriers_->RemoveVerticalSubscriber(launcher.GetPointer(), launcher->monitor);
 #endif
     }
   }
@@ -284,8 +278,7 @@ void Controller::Impl::OnDndStarted(std::string const& data, int monitor)
 {
   if (parent_->multiple_launchers)
   {
-    last_dnd_monitor_ = monitor;
-    launchers[last_dnd_monitor_]->DndStarted(data);
+    launchers[monitor]->DndStarted(data);
   }
   else
   {
@@ -297,8 +290,8 @@ void Controller::Impl::OnDndFinished()
 {
   if (parent_->multiple_launchers)
   {
-    launchers[last_dnd_monitor_]->DndFinished();
-    last_dnd_monitor_ = -1;
+    if (xdnd_manager_->Monitor() >= 0)
+      launchers[xdnd_manager_->Monitor()]->DndFinished();
   }
   else
   {
@@ -306,14 +299,15 @@ void Controller::Impl::OnDndFinished()
   }
 }
 
-void Controller::Impl::OnDndMonitorChanged(int monitor)
+void Controller::Impl::OnDndMonitorChanged(std::string const& data, int old_monitor, int new_monitor)
 {
   if (parent_->multiple_launchers)
   {
-    launchers[last_dnd_monitor_]->UnsetDndQuirk();
-    last_dnd_monitor_ = monitor;
-    launchers[last_dnd_monitor_]->SetDndQuirk();
- }
+    if (old_monitor >= 0)
+      launchers[old_monitor]->UnsetDndQuirk();
+
+    launchers[new_monitor]->DndStarted(data);
+  }
 }
 
 Launcher* Controller::Impl::CreateLauncher()
@@ -362,18 +356,18 @@ void Controller::Impl::OnLauncherAddRequest(std::string const& icon_uri, Abstrac
 
   if (icon)
   {
-    icon->Stick(false);
     model_->ReorderAfter(icon, icon_before);
+    icon->Stick(true);
   }
   else
   {
     if (icon_before)
-      RegisterIcon(CreateFavoriteIcon(icon_uri), icon_before->SortPriority());
+      RegisterIcon(CreateFavoriteIcon(icon_uri, true), icon_before->SortPriority());
     else
-      RegisterIcon(CreateFavoriteIcon(icon_uri));
-  }
+      RegisterIcon(CreateFavoriteIcon(icon_uri, true));
 
-  SaveIconsOrder();
+    SaveIconsOrder();
+  }
 }
 
 void Controller::Impl::AddFavoriteKeepingOldPosition(FavoriteList& icons, std::string const& icon_uri) const
@@ -471,8 +465,6 @@ Controller::Impl::OnLauncherUpdateIconStickyState(std::string const& icon_uri, b
           {
             existing_icon_entry->UnStick();
           }
-
-          SortAndUpdate();
         }
     }
     else
@@ -484,8 +476,9 @@ Controller::Impl::OnLauncherUpdateIconStickyState(std::string const& icon_uri, b
         {
           if (sticky)
             {
-              favorite_store.AddFavorite(target_uri, -1);
-              RegisterIcon(CreateFavoriteIcon(target_uri));
+              auto prio = GetLastIconPriority<ApplicationLauncherIcon>("", true);
+              RegisterIcon(CreateFavoriteIcon(target_uri, true), prio);
+              SaveIconsOrder();
             }
           else
             {
@@ -527,13 +520,12 @@ Controller::Impl::OnLauncherAddRequestSpecial(std::string const& path,
       // This will ensure that the center of the new icon is set, so that
       // the animation could be done properly.
       sources_.AddIdle([this, icon_x, icon_y, result] {
-        result->Animate(CurrentLauncher(), icon_x, icon_y);
-        return false;
+        return !result->Animate(CurrentLauncher(), icon_x, icon_y);
       });
     }
     else
     {
-      result->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true); 
+      result->SetQuirk(AbstractLauncherIcon::Quirk::VISIBLE, true);
     }
   }
 }
@@ -760,13 +752,18 @@ void Controller::Impl::RegisterIcon(AbstractLauncherIcon::Ptr const& icon, int p
     ResetIconPriorities();
   });
 
-  icon->position_forgot.connect([this, icon_uri] {
-    FavoriteStore::Instance().RemoveFavorite(icon_uri);
+  auto uri_ptr = std::make_shared<std::string>(icon_uri);
+  icon->position_forgot.connect([this, uri_ptr] {
+    FavoriteStore::Instance().RemoveFavorite(*uri_ptr);
+  });
+
+  icon->uri_changed.connect([this, uri_ptr] (std::string const& new_uri) {
+    *uri_ptr = new_uri;
   });
 
   if (icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION)
   {
-    icon->visibility_changed.connect(sigc::mem_fun(this, &Impl::SortAndUpdate));
+    icon->visibility_changed.connect(sigc::hide(sigc::mem_fun(this, &Impl::SortAndUpdate)));
     SortAndUpdate();
   }
 
@@ -850,7 +847,7 @@ void Controller::Impl::OnDeviceIconAdded(AbstractLauncherIcon::Ptr const& icon)
   RegisterIcon(icon, GetLastIconPriority<VolumeLauncherIcon>(local::DEVICES_URI));
 }
 
-AbstractLauncherIcon::Ptr Controller::Impl::CreateFavoriteIcon(std::string const& icon_uri)
+AbstractLauncherIcon::Ptr Controller::Impl::CreateFavoriteIcon(std::string const& icon_uri, bool emit_signal)
 {
   AbstractLauncherIcon::Ptr result;
 
@@ -909,7 +906,7 @@ AbstractLauncherIcon::Ptr Controller::Impl::CreateFavoriteIcon(std::string const
   }
 
   if (result)
-    result->Stick(false);
+    result->Stick(emit_signal);
 
   return result;
 }
@@ -940,7 +937,6 @@ SoftwareCenterLauncherIcon::Ptr Controller::Impl::CreateSCLauncherIcon(std::stri
   if (!app)
     return result;
 
-  app->sticky = true;
   if (app->seen)
     return result;
 
@@ -959,6 +955,7 @@ void Controller::Impl::AddRunningApps()
     if (!app->seen())
     {
       AbstractLauncherIcon::Ptr icon(new ApplicationLauncherIcon(app));
+      icon->SkipQuirkAnimation(AbstractLauncherIcon::Quirk::VISIBLE);
       RegisterIcon(icon, ++sort_priority_);
     }
   }
@@ -970,7 +967,10 @@ void Controller::Impl::AddDevices()
   for (auto const& icon : device_section_.GetIcons())
   {
     if (!icon->IsSticky() && !fav_store.IsFavorite(icon->RemoteUri()))
+    {
+      icon->SkipQuirkAnimation(AbstractLauncherIcon::Quirk::VISIBLE);
       RegisterIcon(icon, ++sort_priority_);
+    }
   }
 }
 
@@ -1019,7 +1019,14 @@ void Controller::Impl::SetupIcons()
     }
 
     LOG_INFO(logger) << "Adding favourite: " << fav_uri;
-    RegisterIcon(CreateFavoriteIcon(fav_uri), ++sort_priority_);
+
+    auto const& icon = CreateFavoriteIcon(fav_uri);
+
+    if (icon)
+    {
+      icon->SkipQuirkAnimation(AbstractLauncherIcon::Quirk::VISIBLE);
+      RegisterIcon(icon, ++sort_priority_);
+    }
   }
 
   if (!running_apps_added)
@@ -1053,10 +1060,10 @@ void Controller::Impl::SendHomeActivationRequest()
                    g_variant_new("(sus)", "home.scope", dash::NOT_HANDLED, ""));
 }
 
-Controller::Controller(XdndManager::Ptr const& xdnd_manager)
+Controller::Controller(XdndManager::Ptr const& xdnd_manager, ui::EdgeBarrierController::Ptr const& edge_barriers)
  : options(std::make_shared<Options>())
  , multiple_launchers(true)
- , pimpl(new Impl(this, xdnd_manager))
+ , pimpl(new Impl(this, xdnd_manager, edge_barriers))
 {
   multiple_launchers.changed.connect([&](bool value) -> void {
     UScreen* uscreen = UScreen::GetDefault();
@@ -1245,25 +1252,21 @@ void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
   }
 }
 
-bool Controller::HandleLauncherKeyEvent(Display *display, unsigned int key_sym, unsigned long key_code, unsigned long key_state, char* key_string, Time timestamp)
+bool Controller::HandleLauncherKeyEvent(unsigned long key_state, unsigned int key_sym, Time timestamp)
 {
-  LauncherModel::iterator it;
-
   // Shortcut to start launcher icons. Only relies on Keycode, ignore modifier
-  for (it = pimpl->model_->begin(); it != pimpl->model_->end(); ++it)
+  for (auto const& icon : *pimpl->model_)
   {
-    if ((XKeysymToKeycode(display, (*it)->GetShortcut()) == key_code) ||
-        ((gchar)((*it)->GetShortcut()) == key_string[0]))
+    if (icon->GetShortcut() == key_sym)
     {
-      struct timespec last_action_time = (*it)->GetQuirkTime(AbstractLauncherIcon::Quirk::LAST_ACTION);
-      struct timespec current;
-      TimeUtil::SetTimeStruct(&current);
-      if (TimeUtil::TimeDelta(&current, &last_action_time) > local::ignore_repeat_shortcut_duration)
+      if ((key_state & nux::KEY_MODIFIER_SHIFT) &&
+          icon->GetIconType() == AbstractLauncherIcon::IconType::APPLICATION)
       {
-        if (g_ascii_isdigit((gchar)(*it)->GetShortcut()) && (key_state & ShiftMask))
-          (*it)->OpenInstance(ActionArg(ActionArg::Source::LAUNCHER, 0, timestamp));
-        else
-          (*it)->Activate(ActionArg(ActionArg::Source::LAUNCHER, 0, timestamp));
+        icon->OpenInstance(ActionArg(ActionArg::Source::LAUNCHER_KEYBINDING, 0, timestamp));
+      }
+      else
+      {
+        icon->Activate(ActionArg(ActionArg::Source::LAUNCHER_KEYBINDING, 0, timestamp));
       }
 
       // disable the "tap on super" check

@@ -144,6 +144,15 @@ void Model<RowAdaptor>::SetModel(glib::Object<DeeModel> const& new_model, GetDee
                                      sigc::mem_fun(this, &Model<RowAdaptor>::OnRowRemoved)));
 
   model.EmitChanged(model_);
+
+  // if the model wasn't empty emit row-added signals for all the rows
+  DeeModelIter* iter = dee_model_get_first_iter(model_);
+  DeeModelIter* end_iter = dee_model_get_last_iter(model_);
+  while (iter != end_iter)
+  {
+    OnRowAdded(model_, iter);
+    iter = dee_model_next(model_, iter);
+  }
 }
 
 template<class RowAdaptor>

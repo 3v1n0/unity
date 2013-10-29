@@ -18,6 +18,7 @@
  *              Marco Trevisan (Treviño) <3v1n0@ubuntu.com>
  */
 
+#include "config.h"
 #include <boost/algorithm/string.hpp>
 
 #include <Nux/Nux.h>
@@ -30,15 +31,13 @@
 
 #include "ApplicationLauncherIcon.h"
 #include "FavoriteStore.h"
-#include "Launcher.h"
 #include "MultiMonitor.h"
+#include "unity-shared/DesktopApplicationManager.h"
 #include "unity-shared/GnomeFileManager.h"
 #include "unity-shared/UBusMessages.h"
 
 #include <glib/gi18n-lib.h>
 #include <gio/gdesktopappinfo.h>
-
-#include <libbamf/bamf-tab.h>
 
 namespace unity
 {
@@ -75,19 +74,6 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   , use_custom_bg_color_(false)
   , bg_color_(nux::color::White)
 {
-  app->seen = true;
-
-  tooltip_text = app->title();
-  std::string const& icon = app->icon();
-  icon_name = (icon.empty() ? DEFAULT_ICON : icon);
-
-  SetQuirk(Quirk::VISIBLE, app->visible());
-  SetQuirk(Quirk::ACTIVE, app->active());
-  SetQuirk(Quirk::RUNNING, app->running());
-  // Make sure we set the LauncherIcon stick bit too...
-  if (app->sticky())
-    SimpleLauncherIcon::Stick(false); // don't emit the signal
-
   LOG_INFO(logger) << "Created ApplicationLauncherIcon: "
     << tooltip_text()
     << ", icon: " << icon_name()
@@ -105,21 +91,16 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
   wm.terminate_expo.connect(sigc::mem_fun(this, &ApplicationLauncherIcon::EnsureWindowState));
 
   EnsureWindowState();
-  UpdateMenus();
-  UpdateDesktopFile();
-  UpdateBackgroundColor();
-
-  // hack
-  SetProgress(0.0f);
 }
 
 ApplicationLauncherIcon::~ApplicationLauncherIcon()
 {
-  if (app_)
-  {
-    app_->sticky = false;
-    app_->seen = false;
-  }
+  UnsetApplication();
+}
+
+ApplicationPtr ApplicationLauncherIcon::GetApplication() const
+{
+  return app_;
 }
 
 void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
@@ -127,9 +108,46 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
   if (app_ == app)
     return;
 
+  if (!app)
+  {
+    Remove();
+    return;
+  }
+
+  bool was_sticky = IsSticky();
+  UnsetApplication();
+
   app_ = app;
-  signals_conn_.Clear();
+  app_->seen = true;
   SetupApplicationSignalsConnections();
+
+  // Let's update the icon properties to match the new application ones
+  app_->title.changed.emit(app_->title());
+  app_->icon.changed.emit(app_->icon());
+  app_->visible.changed.emit(app_->visible());
+  app_->active.changed.emit(app_->active());
+  app_->running.changed.emit(app_->running());
+  app_->desktop_file.changed.emit(app_->desktop_file());
+
+  // Make sure we set the LauncherIcon stick bit too...
+  if (app_->sticky() || was_sticky)
+    Stick(false); // don't emit the signal
+}
+
+void ApplicationLauncherIcon::UnsetApplication()
+{
+  if (!app_ || removed())
+    return;
+
+  /* Removing the unity-seen flag to the wrapped bamf application, on remove
+   * request we make sure that if the application is re-opened while the
+   * removal process is still ongoing, the application will be shown on the
+   * launcher. Disconnecting from signals we make sure that this icon won't be
+   * updated or will change visibility (no duplicated icon). */
+
+  signals_conn_.Clear();
+  app_->sticky = false;
+  app_->seen = false;
 }
 
 void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
@@ -138,7 +156,6 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
   // is only ever removed when the application is closed.
   signals_conn_.Add(app_->window_opened.connect([this](ApplicationWindow const&) {
     EnsureWindowState();
-    UpdateMenus();
     UpdateIconGeometries(GetCenters());
   }));
 
@@ -153,6 +170,11 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
   signals_conn_.Add(app_->active.changed.connect([this](bool const& active) {
     LOG_DEBUG(logger) << tooltip_text() << " active now " << (active ? "true" : "false");
     SetQuirk(Quirk::ACTIVE, active);
+  }));
+
+  signals_conn_.Add(app_->desktop_file.changed.connect([this](std::string const& desktop_file) {
+    LOG_DEBUG(logger) << tooltip_text() << " desktop_file now " << desktop_file;
+    UpdateDesktopFile();
   }));
 
   signals_conn_.Add(app_->title.changed.connect([this](std::string const& name) {
@@ -181,14 +203,14 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
   }));
 
   signals_conn_.Add(app_->visible.changed.connect([this](bool const& visible) {
-    if (!IsSticky())
-      SetQuirk(Quirk::VISIBLE, visible);
+    SetQuirk(Quirk::VISIBLE, IsSticky() ? true : visible);
   }));
 
   signals_conn_.Add(app_->closed.connect([this]() {
     if (!IsSticky())
     {
       SetQuirk(Quirk::VISIBLE, false);
+      HideTooltip();
 
       /* Use a timeout to remove the icon, this avoids
        * that we remove an application that is going
@@ -204,11 +226,11 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
   }));
 }
 
-bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk) const
+bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk, int monitor) const
 {
   if (quirk == Quirk::ACTIVE)
   {
-    if (!SimpleLauncherIcon::GetQuirk(Quirk::ACTIVE))
+    if (!SimpleLauncherIcon::GetQuirk(Quirk::ACTIVE, monitor))
       return false;
 
     if (app_->type() == "webapp")
@@ -217,35 +239,24 @@ bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk) const
     // Sometimes BAMF is not fast enough to update the active application
     // while quickly switching between apps, so we double check that the
     // real active window is part of the selection (see bug #1111620)
-    Window active = WindowManager::Default().GetActiveWindow();
-
-    for (auto& window : app_->GetWindows())
-      if (window->window_id() == active)
-        return true;
-
-    return false;
+    return app_->OwnsWindow(WindowManager::Default().GetActiveWindow());
   }
 
-  return SimpleLauncherIcon::GetQuirk(quirk);
+  return SimpleLauncherIcon::GetQuirk(quirk, monitor);
 }
 
 void ApplicationLauncherIcon::Remove()
 {
-  /* Removing the unity-seen flag to the wrapped bamf application, on remove
-   * request we make sure that if the application is re-opened while the
-   * removal process is still ongoing, the application will be shown on the
-   * launcher. Disconnecting from signals we make sure that this icon won't be
-   * reused (no duplicated icon). */
-  app_->seen = false;
-  // Disconnect all our callbacks.
-  notify_callbacks(); // This is from sigc++::trackable
+  LogUnityEvent(ApplicationEventType::LEAVE);
+  UnsetApplication();
   SimpleLauncherIcon::Remove();
 }
 
 bool ApplicationLauncherIcon::IsSticky() const
 {
   if (app_)
-    return app_->sticky();
+    return app_->sticky() && SimpleLauncherIcon::IsSticky();
+
   return false;
 }
 
@@ -301,7 +312,7 @@ void ApplicationLauncherIcon::ActivateLauncherIcon(ActionArg arg)
       bool any_on_monitor = (arg.monitor < 0);
       int active_monitor = arg.monitor;
 
-      for (auto& window : app_->GetWindows())
+      for (auto const& window : app_->GetWindows())
       {
         Window xid = window->window_id();
 
@@ -480,11 +491,21 @@ std::vector<Window> ApplicationLauncherIcon::WindowsForMonitor(int monitor)
 
 void ApplicationLauncherIcon::OnWindowMinimized(guint32 xid)
 {
-  if (!app_->OwnsWindow(xid))
-    return;
+  for (auto const& window: app_->GetWindows())
+  {
+    if (xid == window->window_id())
+    {
+      int monitor = GetCenterForMonitor(window->monitor()).first;
 
-  Present(0.5f, 600);
-  UpdateQuirkTimeDelayed(300, Quirk::SHIMMER);
+      if (monitor >= 0)
+      {
+        Present(0.5f, 600, monitor);
+        FullyAnimateQuirkDelayed(300, Quirk::SHIMMER, monitor);
+      }
+
+      break;
+    }
+  }
 }
 
 void ApplicationLauncherIcon::OnWindowMoved(guint32 moved_win)
@@ -504,17 +525,21 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
 {
   std::string const& filename = app_->desktop_file();
 
-  if (!filename.empty() && _desktop_file != filename)
-  {
-    _desktop_file = filename;
+  if (_desktop_file_monitor)
+    _gsignals.Disconnect(_desktop_file_monitor, "changed");
 
+  auto old_uri = RemoteUri();
+  UpdateRemoteUri();
+  UpdateDesktopQuickList();
+  UpdateBackgroundColor();
+  auto const& new_uri = RemoteUri();
+
+  if (!filename.empty())
+  {
     // add a file watch to the desktop file so that if/when the app is removed
     // we can remove ourself from the launcher and when it's changed
     // we can update the quicklist.
-    if (_desktop_file_monitor)
-      _gsignals.Disconnect(_desktop_file_monitor, "changed");
-
-    glib::Object<GFile> desktop_file(g_file_new_for_path(_desktop_file.c_str()));
+    glib::Object<GFile> desktop_file(g_file_new_for_path(filename.c_str()));
     _desktop_file_monitor = g_file_monitor_file(desktop_file, G_FILE_MONITOR_NONE,
                                                 nullptr, nullptr);
     g_file_monitor_set_rate_limit(_desktop_file_monitor, 2000);
@@ -527,8 +552,11 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
         {
           glib::Object<GFile> file(f, glib::AddRef());
           _source_manager.AddTimeoutSeconds(1, [this, file] {
-            if (!g_file_query_exists (file, nullptr))
+            if (!g_file_query_exists(file, nullptr))
+            {
               UnStick();
+              LogUnityEvent(ApplicationEventType::DELETE);
+            }
             return false;
           });
           break;
@@ -544,12 +572,28 @@ void ApplicationLauncherIcon::UpdateDesktopFile()
       }
     });
   }
+  else if (app_->sticky())
+  {
+    UnStick();
+  }
+
+  if (old_uri != new_uri)
+  {
+    bool update_saved_uri = (!filename.empty() && app_->sticky());
+
+    if (update_saved_uri)
+      SimpleLauncherIcon::UnStick();
+
+    uri_changed.emit(new_uri);
+
+    if (update_saved_uri)
+      Stick();
+  }
 }
 
-std::string ApplicationLauncherIcon::DesktopFile()
+std::string ApplicationLauncherIcon::DesktopFile() const
 {
-  UpdateDesktopFile();
-  return _desktop_file;
+  return app_->desktop_file();
 }
 
 void ApplicationLauncherIcon::AddProperties(GVariantBuilder* builder)
@@ -559,12 +603,12 @@ void ApplicationLauncherIcon::AddProperties(GVariantBuilder* builder)
   GVariantBuilder xids_builder;
   g_variant_builder_init(&xids_builder, G_VARIANT_TYPE ("au"));
 
-  for (auto& window : GetWindows())
+  for (auto const& window : GetWindows())
     g_variant_builder_add(&xids_builder, "u", window->window_id());
 
   variant::BuilderWrapper(builder)
     .add("desktop_file", DesktopFile())
-    .add("desktop_id", GetDesktopID())
+    .add("desktop_id", app_->desktop_id())
     .add("xids", g_variant_builder_end(&xids_builder))
     .add("sticky", IsSticky())
     .add("startup_notification_timestamp", (uint64_t)_startup_notification_timestamp);
@@ -616,7 +660,7 @@ void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& 
     LOG_WARN(logger) << error;
   }
 
-  UpdateQuirkTime(Quirk::STARTING);
+  FullyAnimateQuirk(Quirk::STARTING);
 }
 
 void ApplicationLauncherIcon::OpenInstanceLauncherIcon(Time timestamp)
@@ -657,8 +701,7 @@ bool ApplicationLauncherIcon::Spread(bool current_desktop, int state, bool force
 
 void ApplicationLauncherIcon::EnsureWindowState()
 {
-  std::vector<bool> monitors;
-  monitors.resize(max_num_monitors);
+  std::bitset<monitors::MAX> monitors;
 
   for (auto& window: app_->GetWindows())
   {
@@ -670,26 +713,23 @@ void ApplicationLauncherIcon::EnsureWindowState()
       // If monitor is -1 (or negative), show on all monitors.
       if (monitor < 0)
       {
-        for (int j = 0; j < max_num_monitors; j++)
-          monitors[j] = true;
+        monitors.set();
+        break;
       }
       else
+      {
         monitors[monitor] = true;
+      }
     }
   }
 
-  for (int i = 0; i < max_num_monitors; i++)
+  for (unsigned i = 0; i < monitors::MAX; i++)
     SetWindowVisibleOnMonitor(monitors[i], i);
-
-  EmitNeedsRedraw();
 }
 
 void ApplicationLauncherIcon::UpdateDesktopQuickList()
 {
   std::string const& desktop_file = DesktopFile();
-
-  if (desktop_file.empty())
-    return;
 
   if (_menu_desktop_shortcuts)
   {
@@ -697,7 +737,12 @@ void ApplicationLauncherIcon::UpdateDesktopQuickList()
     {
       _gsignals.Disconnect(l->data, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED);
     }
+
+    _menu_desktop_shortcuts = nullptr;
   }
+
+  if (desktop_file.empty())
+    return;
 
   _menu_desktop_shortcuts = dbusmenu_menuitem_new();
   dbusmenu_menuitem_set_root(_menu_desktop_shortcuts, TRUE);
@@ -710,8 +755,7 @@ void ApplicationLauncherIcon::UpdateDesktopQuickList()
   // any or they're filtered for the environment we're in
   const gchar** nicks = indicator_desktop_shortcuts_get_nicks(_desktop_shortcuts);
 
-  int index = 0;
-  while (nicks[index])
+  for (int index = 0; nicks[index]; ++index)
   {
     // Build a dbusmenu item for each nick that is the desktop
     // file that is built from it's name and includes a callback
@@ -722,7 +766,7 @@ void ApplicationLauncherIcon::UpdateDesktopQuickList()
     dbusmenu_menuitem_property_set(item, DBUSMENU_MENUITEM_PROP_LABEL, name);
     dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
     dbusmenu_menuitem_property_set_bool(item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
-    std::string nick(nicks[index]);
+    auto nick = glib::gchar_to_string(nicks[index]);
 
     _gsignals.Add<void, DbusmenuMenuitem*, gint>(item, DBUSMENU_MENUITEM_SIGNAL_ITEM_ACTIVATED,
     [this, nick] (DbusmenuMenuitem* item, unsigned timestamp) {
@@ -734,7 +778,6 @@ void ApplicationLauncherIcon::UpdateDesktopQuickList()
     });
 
     dbusmenu_menuitem_child_append(_menu_desktop_shortcuts, item);
-    index++;
   }
 }
 
@@ -752,7 +795,9 @@ void ApplicationLauncherIcon::UpdateBackgroundColor()
 
   if (last_use_custom_bg_color != use_custom_bg_color_ ||
       last_bg_color != bg_color_)
+  {
     EmitNeedsRedraw();
+  }
 }
 
 void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
@@ -765,17 +810,19 @@ void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
   // We only add quicklist menu-items for windows if we have more than one window
   if (windows.size() < 2)
     return;
-   
+
   Window active = WindowManager::Default().GetActiveWindow();
 
   // add menu items for all open windows
   for (auto const& w : windows)
   {
-    if (w->title().empty())
+    auto const& title = w->title();
+
+    if (title.empty())
       continue;
 
     glib::Object<DbusmenuMenuitem> menu_item(dbusmenu_menuitem_new());
-    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, w->title().c_str());
+    dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_LABEL, title.c_str());
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_ENABLED, true);
     dbusmenu_menuitem_property_set_bool(menu_item, DBUSMENU_MENUITEM_PROP_VISIBLE, true);
     dbusmenu_menuitem_property_set_bool(menu_item, QuicklistMenuItem::MARKUP_ACCEL_DISABLED_PROPERTY, true);
@@ -788,7 +835,7 @@ void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
         wm.Activate(xid);
         wm.Raise(xid);
     });
-    
+
     if (xid == active)
     {
       dbusmenu_menuitem_property_set(menu_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_RADIO);
@@ -799,7 +846,7 @@ void ApplicationLauncherIcon::EnsureMenuItemsWindowsReady()
   }
 }
 
-void ApplicationLauncherIcon::UpdateMenus()
+void ApplicationLauncherIcon::EnsureMenuItemsStaticQuicklist()
 {
   // make a client for desktop file actions
   if (!_menu_desktop_shortcuts.IsType(DBUSMENU_TYPE_MENUITEM))
@@ -821,22 +868,33 @@ void ApplicationLauncherIcon::AboutToRemove()
 
 void ApplicationLauncherIcon::Stick(bool save)
 {
-  if (IsSticky())
+  if (IsSticky() && !save)
     return;
 
   app_->sticky = true;
-  SimpleLauncherIcon::Stick(save);
+
+  if (RemoteUri().empty())
+  {
+    if (save)
+      app_->CreateLocalDesktopFile();
+  }
+  else
+  {
+    SimpleLauncherIcon::Stick(save);
+
+    if (save)
+      LogUnityEvent(ApplicationEventType::ACCESS);
+  }
 }
 
 void ApplicationLauncherIcon::UnStick()
 {
-  SimpleLauncherIcon::UnStick();
-
   if (!IsSticky())
     return;
 
-  SetQuirk(Quirk::VISIBLE, app_->running());
-
+  LogUnityEvent(ApplicationEventType::ACCESS);
+  SimpleLauncherIcon::UnStick();
+  SetQuirk(Quirk::VISIBLE, app_->visible());
   app_->sticky = false;
 
   if (!app_->running())
@@ -853,6 +911,28 @@ void ApplicationLauncherIcon::ToggleSticky()
   {
     Stick();
   }
+}
+
+void ApplicationLauncherIcon::LogUnityEvent(ApplicationEventType type)
+{
+  if (RemoteUri().empty())
+    return;
+
+  auto const& unity_app = ApplicationManager::Default().GetUnityApplication();
+  unity_app->LogEvent(type, GetSubject());
+}
+
+ApplicationSubjectPtr ApplicationLauncherIcon::GetSubject()
+{
+  auto subject = std::make_shared<desktop::ApplicationSubject>();
+  subject->uri = RemoteUri();
+  subject->current_uri = subject->uri();
+  subject->interpretation = ZEITGEIST_NFO_SOFTWARE;
+  subject->manifestation = ZEITGEIST_NFO_SOFTWARE_ITEM;
+  subject->mimetype = "application/x-desktop";
+  subject->text = tooltip_text();
+
+  return subject;
 }
 
 void ApplicationLauncherIcon::EnsureMenuItemsDefaultReady()
@@ -902,7 +982,7 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
   bool separator_needed = false;
 
   EnsureMenuItemsDefaultReady();
-  UpdateMenus();
+  EnsureMenuItemsStaticQuicklist();
 
   for (auto const& menus : {GetRemoteMenus(), _menu_desktop_shortcuts})
   {
@@ -1004,70 +1084,52 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
   return result;
 }
 
-void ApplicationLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> center)
+void ApplicationLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> const& centers)
 {
   if (app_->type() == "webapp")
     return;
 
-  nux::Geometry geo;
-
-  // TODO: replace 48 with icon_size;
-  geo.width = 48;
-  geo.height = 48;
+  nux::Geometry geo(0, 0, icon_size, icon_size);
 
   for (auto& window : app_->GetWindows())
   {
     Window xid = window->window_id();
-    int monitor = window->monitor();
-    monitor = std::max<int>(0, std::min<int>(center.size() - 1, monitor));
+    int monitor = GetCenterForMonitor(window->monitor()).first;
 
-    // TODO: replace 24 with icon_size / 2;
-    geo.x = center[monitor].x - 24;
-    geo.y = center[monitor].y - 24;
+    if (monitor < 0)
+    {
+      WindowManager::Default().SetWindowIconGeometry(xid, nux::Geometry());
+      continue;
+    }
+
+    geo.x = centers[monitor].x - icon_size / 2;
+    geo.y = centers[monitor].y - icon_size / 2;
     WindowManager::Default().SetWindowIconGeometry(xid, geo);
   }
 }
 
-void ApplicationLauncherIcon::OnCenterStabilized(std::vector<nux::Point3> center)
+void ApplicationLauncherIcon::OnCenterStabilized(std::vector<nux::Point3> const& centers)
 {
-  UpdateIconGeometries(center);
-}
-
-std::string ApplicationLauncherIcon::GetDesktopID()
-{
-  std::string const& desktop_file = DesktopFile();
-
-  return DesktopUtilities::GetDesktopID(desktop_file);
+  UpdateIconGeometries(centers);
 }
 
 void ApplicationLauncherIcon::UpdateRemoteUri()
 {
-    std::string const& desktop_id = GetDesktopID();
+  std::string const& desktop_id = app_->desktop_id();
 
-    if (!desktop_id.empty())
-    {
-      _remote_uri = FavoriteStore::URI_PREFIX_APP + desktop_id;
-    }
-}
-
-std::string ApplicationLauncherIcon::GetRemoteUri()
-{
-  if (_remote_uri.empty())
+  if (!desktop_id.empty())
   {
-     UpdateRemoteUri();
+    _remote_uri = FavoriteStore::URI_PREFIX_APP + desktop_id;
   }
-
-  return _remote_uri;
+  else
+  {
+    _remote_uri.clear();
+  }
 }
 
-std::set<std::string> ApplicationLauncherIcon::ValidateUrisForLaunch(DndData const& uris)
+std::string ApplicationLauncherIcon::GetRemoteUri() const
 {
-  std::set<std::string> result;
-
-  for (auto uri : uris.Uris())
-    result.insert(uri);
-
-  return result;
+  return _remote_uri;
 }
 
 void ApplicationLauncherIcon::OnDndHovered()
@@ -1107,7 +1169,7 @@ bool ApplicationLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
 {
   if (IsFileManager())
   {
-    for (auto uri : dnd_data.Uris())
+    for (auto const& uri : dnd_data.Uris())
     {
       if (boost::algorithm::starts_with(uri, "file://"))
         return true;
@@ -1133,7 +1195,7 @@ bool ApplicationLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
 nux::DndAction ApplicationLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_data)
 {
 #ifdef USE_X11
-  return ValidateUrisForLaunch(dnd_data).empty() ? nux::DNDACTION_NONE : nux::DNDACTION_COPY;
+  return dnd_data.Uris().empty() ? nux::DNDACTION_NONE : nux::DNDACTION_COPY;
 #else
   return nux::DNDACTION_NONE;
 #endif
@@ -1142,7 +1204,7 @@ nux::DndAction ApplicationLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_dat
 void ApplicationLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
 {
   auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
-  OpenInstanceWithUris(ValidateUrisForLaunch(dnd_data), timestamp);
+  OpenInstanceWithUris(dnd_data.Uris(), timestamp);
 }
 
 bool ApplicationLauncherIcon::ShowInSwitcher(bool current)
@@ -1158,7 +1220,7 @@ bool ApplicationLauncherIcon::ShowInSwitcher(bool current)
     }
     else
     {
-      for (int i = 0; i < max_num_monitors; ++i)
+      for (unsigned i = 0; i < monitors::MAX; ++i)
       {
         if (WindowVisibleOnMonitor(i))
         {
@@ -1265,7 +1327,7 @@ void ApplicationLauncherIcon::PerformScroll(ScrollDirection direction, Time time
   }
 
   if (windows.size() <= 1)
-    return; 
+    return;
 
   ++_progressive_scroll;
   _progressive_scroll %= windows.size();

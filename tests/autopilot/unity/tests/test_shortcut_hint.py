@@ -125,11 +125,11 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
         self.addCleanup(self.keyboard.press_and_release, "Escape")
         self.keybinding("launcher/switcher/next")
         self.keybinding("launcher/switcher/next")
-            
+
         sleep(switcher_timeout * 2)
 
         self.assertThat(self.unity.shortcut_hint.visible, Equals(False))
-        
+
         self.keybinding("launcher/switcher/prev")
 
     def test_launcher_switcher_prev_doesnt_show_shortcut_hint(self):
@@ -172,3 +172,14 @@ class ShortcutHintInteractionsTests(BaseShortcutHintTests):
 
         self.assertThat(launcher.shortcuts_shown, Eventually(Equals(True)))
         self.assertThat(self.unity.shortcut_hint.visible, Eventually(Equals(True)))
+
+    def test_shortcut_hint_closes_after_key_event(self):
+        """ The shortcut hint must close when a key event comes through."""
+
+        self.unity.shortcut_hint.show()
+        self.assertThat(self.unity.shortcut_hint.visible, Eventually(Equals(True)))
+
+        self.addCleanup(self.unity.shortcut_hint.ensure_hidden)
+
+        self.keyboard.press_and_release("Ctrl")
+        self.assertThat(self.unity.shortcut_hint.visible, Eventually(Equals(False)))

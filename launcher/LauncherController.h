@@ -25,6 +25,7 @@
 #include <vector>
 #include <sigc++/sigc++.h>
 
+#include "EdgeBarrierController.h"
 #include "LauncherOptions.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "XdndManager.h"
@@ -48,7 +49,7 @@ public:
   nux::Property<Options::Ptr> options;
   nux::Property<bool> multiple_launchers;
 
-  Controller(XdndManager::Ptr const& xdnd_manager);
+  Controller(XdndManager::Ptr const& xdnd_manager, ui::EdgeBarrierController::Ptr const& edge_barriers);
   ~Controller();
 
   Launcher& launcher() const;
@@ -66,12 +67,7 @@ public:
 
   void HandleLauncherKeyPress(int when);
   void HandleLauncherKeyRelease(bool was_tap, int when);
-  bool HandleLauncherKeyEvent(Display *display,
-                              unsigned int key_sym,
-                              unsigned long key_code,
-                              unsigned long key_state,
-                              char* key_string,
-                              Time timestamp);
+  bool HandleLauncherKeyEvent(unsigned long key_state, unsigned int key_sym, Time timestamp);
 
   void KeyNavActivate();
   void KeyNavGrab();

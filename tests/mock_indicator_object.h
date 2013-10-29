@@ -120,7 +120,7 @@ mock_indicator_object_new()
 }
 
 IndicatorObjectEntry*
-mock_indicator_object_add_entry(MockIndicatorObject*  self, const gchar* label, const gchar* icon_name)
+mock_indicator_object_add_entry(MockIndicatorObject* self, const gchar* label, const gchar* icon_name)
 {
   IndicatorObjectEntry* entry;
   g_return_val_if_fail(MOCK_IS_INDICATOR_OBJECT(self), NULL);
@@ -135,6 +135,20 @@ mock_indicator_object_add_entry(MockIndicatorObject*  self, const gchar* label, 
   g_signal_emit(self, INDICATOR_OBJECT_SIGNAL_ENTRY_ADDED_ID, 0, entry, TRUE);
 
   return entry;
+}
+
+void
+mock_indicator_object_remove_entry(MockIndicatorObject* self, IndicatorObjectEntry *entry)
+{
+  g_return_if_fail(MOCK_IS_INDICATOR_OBJECT(self));
+  g_return_if_fail(entry);
+
+  self->entries = g_list_remove(self->entries, entry);
+  g_signal_emit(self, INDICATOR_OBJECT_SIGNAL_ENTRY_REMOVED_ID, 0, entry, TRUE);
+
+  g_object_unref(entry->label);
+  g_object_unref(entry->image);
+  g_free(entry);
 }
 
 void

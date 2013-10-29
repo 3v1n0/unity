@@ -30,9 +30,12 @@
 
 namespace unity {
 
-class XdndManagerImp : public XdndManager, public sigc::trackable {
+class XdndManagerImp : public XdndManager, public sigc::trackable
+{
 public:
   XdndManagerImp(XdndStartStopNotifier::Ptr const&, XdndCollectionWindow::Ptr const&);
+
+  virtual int Monitor() const;
 
 private:
   void OnDndStarted();
@@ -44,7 +47,7 @@ private:
   XdndStartStopNotifier::Ptr xdnd_start_stop_notifier_;
   XdndCollectionWindow::Ptr xdnd_collection_window_;
   int last_monitor_;
-  bool valid_dnd_in_progress_;
+  std::string dnd_data_;
 
   glib::Source::UniquePtr mouse_poller_timeout_;
 };

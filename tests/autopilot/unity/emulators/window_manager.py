@@ -25,6 +25,14 @@ class WindowManager(UnityIntrospectionObject, KeybindingsHelper):
         """Returns a tuple of (x,y,w,h) for the screen."""
         return (self.x, self.y, self.width, self.height)
 
+    def initiate_spread(self):
+        self.keybinding("spread/start")
+        self.scale_active.wait_for(True)
+
+    def terminate_spread(self):
+        self.keybinding("spread/cancel")
+        self.scale_active.wait_for(False)
+
     def enter_show_desktop(self):
         if not self.showdesktop_active:
             logger.info("Entering show desktop mode.")

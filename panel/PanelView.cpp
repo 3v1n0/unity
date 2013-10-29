@@ -37,6 +37,7 @@
 #include "unity-shared/TextureCache.h"
 #include "unity-shared/WindowManager.h"
 #include "unity-shared/UBusMessages.h"
+#include "unity-shared/UScreen.h"
 #include <UnityCore/Variant.h>
 
 #include "PanelIndicatorsView.h"
@@ -55,13 +56,13 @@ namespace unity
 
 NUX_IMPLEMENT_OBJECT_TYPE(PanelView);
 
-PanelView::PanelView(indicator::DBusIndicators::Ptr const& remote, NUX_FILE_LINE_DECL)
+PanelView::PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr const& remote, NUX_FILE_LINE_DECL)
   : View(NUX_FILE_LINE_PARAM)
+  , parent_(parent)
   , remote_(remote)
   , is_dirty_(true)
   , opacity_maximized_toggle_(false)
   , needs_geo_sync_(false)
-  , is_primary_(false)
   , overlay_is_open_(false)
   , opacity_(1.0f)
   , monitor_(0)
@@ -69,6 +70,7 @@ PanelView::PanelView(indicator::DBusIndicators::Ptr const& remote, NUX_FILE_LINE
   , launcher_width_(64)
 {
   panel::Style::Instance().changed.connect(sigc::mem_fun(this, &PanelView::ForceUpdateBackground));
+  WindowManager::Default().average_color.changed.connect(sigc::mem_fun(this, &PanelView::OnBackgroundUpdate));
 
   bg_layer_.reset(new nux::ColorLayer(nux::Color(0xff595853), true));
 
@@ -86,7 +88,7 @@ PanelView::PanelView(indicator::DBusIndicators::Ptr const& remote, NUX_FILE_LINE
   {
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-    darken_colour = bg_color_;
+    darken_colour = WindowManager::Default().average_color();
   }
 
   bg_darken_layer_.reset(new nux::ColorLayer(darken_colour, false, rop));
@@ -115,7 +117,6 @@ PanelView::PanelView(indicator::DBusIndicators::Ptr const& remote, NUX_FILE_LINE
   remote_->on_entry_activated.connect(sigc::mem_fun(this, &PanelView::OnEntryActivated));
   remote_->on_entry_show_menu.connect(sigc::mem_fun(this, &PanelView::OnEntryShowMenu));
 
-  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &PanelView::OnBackgroundUpdate));
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_HIDDEN, sigc::mem_fun(this, &PanelView::OnOverlayHidden));
   ubus_manager_.RegisterInterest(UBUS_OVERLAY_SHOWN, sigc::mem_fun(this, &PanelView::OnOverlayShown));
   ubus_manager_.RegisterInterest(UBUS_DASH_SIZE_CHANGED, [&] (GVariant *data) {
@@ -124,9 +125,6 @@ PanelView::PanelView(indicator::DBusIndicators::Ptr const& remote, NUX_FILE_LINE
     stored_dash_width_ = width;
     QueueDraw();
   });
-
-  // request the latest colour from bghash
-  ubus_manager_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
   bg_effect_helper_.owner = this;
 
@@ -176,16 +174,8 @@ bool PanelView::IsMouseInsideIndicator(nux::Point const& mouse_position) const
   return indicators_->GetAbsoluteGeometry().IsInside(mouse_position);
 }
 
-void PanelView::OnBackgroundUpdate(GVariant *data)
+void PanelView::OnBackgroundUpdate(nux::Color const&)
 {
-  gdouble red, green, blue, alpha;
-  g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-
-  bg_color_.red = red;
-  bg_color_.green = green;
-  bg_color_.blue = blue;
-  bg_color_.alpha = alpha;
-
   if (overlay_is_open_)
     ForceUpdateBackground();
 }
@@ -301,7 +291,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                                           bg_blur_texture_,
                                           texxform_blur_bg,
                                           nux::color::White,
-                                          bg_color_,
+                                          WindowManager::Default().average_color(),
                                           nux::LAYER_BLEND_MODE_OVERLAY,
                                           true, rop);
       else
@@ -316,7 +306,7 @@ PanelView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                                           bg_blur_texture_,
                                           texxform_blur_bg,
                                           nux::color::White,
-                                          bg_color_,
+                                          WindowManager::Default().average_color(),
                                           nux::LAYER_BLEND_MODE_OVERLAY,
                                           true, rop);
 #endif
@@ -390,7 +380,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                     bg_blur_texture_,
                                     texxform_blur_bg,
                                     nux::color::White,
-                                    bg_color_,
+                                    WindowManager::Default().average_color(),
                                     nux::LAYER_BLEND_MODE_OVERLAY,
                                     true,
                                     rop);
@@ -407,7 +397,7 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
                                     bg_blur_texture_,
                                     texxform_blur_bg,
                                     nux::color::White,
-                                    bg_color_,
+                                    WindowManager::Default().average_color(),
                                     nux::LAYER_BLEND_MODE_OVERLAY,
                                     true,
                                     rop);
@@ -419,7 +409,8 @@ PanelView::DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw)
       if (Settings::Instance().GetLowGfxMode())
       {
         rop.Blend = false;
-        bg_darken_layer_.reset(new nux::ColorLayer(bg_color_, false, rop));
+        auto const& bg_color = WindowManager::Default().average_color();
+        bg_darken_layer_.reset(new nux::ColorLayer(bg_color, false, rop));
       }
 
       nux::GetPainter().PushLayer(GfxContext, geo, bg_darken_layer_.get());
@@ -492,7 +483,8 @@ PanelView::UpdateBackground()
 
   if (overlay_is_open_)
   {
-    bg_layer_.reset(new nux::ColorLayer(bg_color_, true, rop));
+    auto const& bg_color = WindowManager::Default().average_color();
+    bg_layer_.reset(new nux::ColorLayer(bg_color, true, rop));
   }
   else
   {
@@ -742,16 +734,6 @@ void PanelView::SetOpacityMaximizedToggle(bool enabled)
   }
 }
 
-bool PanelView::GetPrimary() const
-{
-  return is_primary_;
-}
-
-void PanelView::SetPrimary(bool primary)
-{
-  is_primary_ = primary;
-}
-
 void PanelView::SyncGeometries()
 {
   indicator::EntryLocationMap locations;
@@ -768,6 +750,18 @@ void PanelView::SetMonitor(int monitor)
 {
   monitor_ = monitor;
   menu_view_->SetMonitor(monitor);
+
+  UScreen* uscreen = UScreen::GetDefault();
+  auto monitor_geo = uscreen->GetMonitorGeometry(monitor);
+  Resize(nux::Point(monitor_geo.x, monitor_geo.y), monitor_geo.width);
+}
+
+void PanelView::Resize(nux::Point const& offset, int width)
+{
+  unity::panel::Style &panel_style = panel::Style::Instance();
+  SetMaximumWidth(width);
+  SetGeometry(nux::Geometry(0, 0, width, panel_style.panel_height));
+  parent_->SetGeometry(nux::Geometry(offset.x, offset.y, width, panel_style.panel_height));
 }
 
 int PanelView::GetMonitor() const
@@ -783,6 +777,20 @@ bool PanelView::IsActive() const
 int PanelView::GetStoredDashWidth() const
 {
   return stored_dash_width_;
+}
+
+ui::EdgeBarrierSubscriber::Result PanelView::HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event)
+{
+  if (WindowManager::Default().IsAnyWindowMoving())
+    return ui::EdgeBarrierSubscriber::Result::IGNORED;
+
+  return ui::EdgeBarrierSubscriber::Result::NEEDS_RELEASE;
+}
+
+// FIXME: This will need to be removed when the Unity performance branch is merged.
+void PanelView::NeedSoftRedraw()
+{
+  QueueDraw();
 }
 
 } // namespace unity

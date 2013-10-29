@@ -20,12 +20,10 @@
 #ifndef UNITY_SIMPLELAUNCHERICON_H
 #define UNITY_SIMPLELAUNCHERICON_H
 
-#include <NuxCore/Logger.h>
-#include <Nux/Nux.h>
-#include <Nux/BaseWindow.h>
-#include <UnityCore/Variant.h>
-
 #include "SimpleLauncherIcon.h"
+
+#include <NuxCore/Logger.h>
+#include <UnityCore/Variant.h>
 
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UBusMessages.h"
@@ -41,72 +39,42 @@ NUX_IMPLEMENT_OBJECT_TYPE(SimpleLauncherIcon);
 SimpleLauncherIcon::SimpleLauncherIcon(IconType type)
   : LauncherIcon(type)
   , icon_name("", sigc::mem_fun(this, &SimpleLauncherIcon::SetIconName))
-  , theme_changed_id_(0)
 {
-  LauncherIcon::mouse_down.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseDown));
-  LauncherIcon::mouse_up.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseUp));
-  LauncherIcon::mouse_click.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseClick));
-  LauncherIcon::mouse_enter.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseEnter));
-  LauncherIcon::mouse_leave.connect(sigc::mem_fun(this, &SimpleLauncherIcon::OnMouseLeave));
-
-  theme_changed_id_ = g_signal_connect(gtk_icon_theme_get_default(), "changed",
-                                       G_CALLBACK(SimpleLauncherIcon::OnIconThemeChanged), this);
-}
-
-SimpleLauncherIcon::~SimpleLauncherIcon()
-{
-  for (auto element : texture_map)
-    if (element.second)
-      element.second->UnReference();
-
-  texture_map.clear ();
-
-  if (theme_changed_id_)
-    g_signal_handler_disconnect(gtk_icon_theme_get_default(), theme_changed_id_);
-}
-
-void SimpleLauncherIcon::OnMouseDown(int button, int monitor, unsigned long key_flags)
-{
-}
-
-void SimpleLauncherIcon::OnMouseUp(int button, int monitor, unsigned long key_flags)
-{
-}
-
-void SimpleLauncherIcon::OnMouseClick(int button, int monitor, unsigned long key_flags)
-{
-}
-
-void SimpleLauncherIcon::OnMouseEnter(int monitor)
-{
-}
-
-void SimpleLauncherIcon::OnMouseLeave(int monitor)
-{
+  auto* theme = gtk_icon_theme_get_default();
+  theme_changed_signal_.Connect(theme, "changed", [this] (GtkIconTheme *) {
+    _current_theme_is_mono = -1;
+    ReloadIcon();
+  });
 }
 
 void SimpleLauncherIcon::ActivateLauncherIcon(ActionArg arg)
 {
-  activate.emit();
-  UBusManager::SendMessage(UBUS_OVERLAY_CLOSE_REQUEST,
-                           g_variant_new_boolean(FALSE));
+  UBusManager::SendMessage(UBUS_OVERLAY_CLOSE_REQUEST);
 }
 
 nux::BaseTexture* SimpleLauncherIcon::GetTextureForSize(int size)
 {
-  if (texture_map[size] != 0)
-    return texture_map[size];
+  auto it = texture_map_.find(size);
+  if (it != texture_map_.end())
+    return it->second.GetPointer();
 
-  std::string icon_string(icon_name());
+  std::string const& icon_string = icon_name();
 
   if (icon_string.empty())
-    return 0;
+    return nullptr;
+
+  BaseTexturePtr texture;
 
   if (icon_string[0] == '/')
-    texture_map[size] = TextureFromPath(icon_string, size);
+    texture = TextureFromPath(icon_string, size);
   else
-    texture_map[size] = TextureFromGtkTheme(icon_string, size);
-  return texture_map[size];
+    texture = TextureFromGtkTheme(icon_string, size);
+
+  if (!texture)
+    return nullptr;
+
+  texture_map_.insert({size, texture});
+  return texture.GetPointer();
 }
 
 bool SimpleLauncherIcon::SetIconName(std::string& target, std::string const& value)
@@ -122,21 +90,8 @@ bool SimpleLauncherIcon::SetIconName(std::string& target, std::string const& val
 
 void SimpleLauncherIcon::ReloadIcon()
 {
-  for (auto element : texture_map)
-    if (element.second)
-      element.second->UnReference();
-
-  texture_map.clear ();
+  texture_map_.clear();
   EmitNeedsRedraw();
-}
-
-void SimpleLauncherIcon::OnIconThemeChanged(GtkIconTheme* icon_theme, gpointer data)
-{
-  SimpleLauncherIcon* self = static_cast<SimpleLauncherIcon*>(data);
-
-  // invalidate the current cache
-  self->_current_theme_is_mono = -1;
-  self->ReloadIcon();
 }
 
 std::string SimpleLauncherIcon::GetName() const

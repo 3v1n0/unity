@@ -919,7 +919,6 @@ class PanelMenuTests(PanelTestsBase):
 
         self.assertThat(self.panel.menus_shown, Eventually(Equals(False)))
 
-
     def test_menus_dont_show_with_hud(self):
         """Tests that menus are not showing when opening the HUD."""
         self.open_new_application_window("Text Editor", maximized=True)
@@ -982,6 +981,17 @@ class PanelIndicatorEntryTests(PanelTestsBase):
         self.assertThat(menu_entry.menu_x, Eventually(Equals(0)))
         self.assertThat(menu_entry.menu_y, Eventually(Equals(0)))
 
+    def test_menu_closes_on_new_focused_application(self):
+        """Clicking outside an open menu must close it."""
+        menu_entry = self.open_app_and_get_menu_entry()
+        self.mouse_open_indicator(menu_entry)
+
+        # This assert is for timing purposes only:
+        self.assertThat(menu_entry.active, Eventually(Equals(True)))
+
+        self.open_new_application_window("Text Editor")
+        self.assertThat(self.unity.panels.get_active_indicator, Eventually(Equals(None)))
+
     def test_indicator_opens_when_dash_is_open(self):
         """When the dash is open and a click is on an indicator the dash
         must close and the indicator must open.
@@ -1011,9 +1021,10 @@ class PanelKeyNavigationTests(PanelTestsBase):
     def test_panel_first_menu_show_works(self):
         """Pressing the open-menus keybinding must open the first indicator."""
         self.open_new_application_window("Calculator")
-        sleep(1)
-        self.keybinding("panel/open_first_menu")
+        refresh_fn = lambda: len(self.panel.menus.get_entries())
+        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
         self.addCleanup(self.keyboard.press_and_release, "Escape")
+        self.keybinding("panel/open_first_menu")
 
         open_indicator = self.get_active_indicator()
         expected_indicator = self.panel.get_indicator_entries(include_hidden_menus=True)[0]
@@ -1025,9 +1036,10 @@ class PanelKeyNavigationTests(PanelTestsBase):
     def test_panel_menu_accelerators_work(self):
         """Pressing a valid menu accelerator must open the correct menu item."""
         self.open_new_application_window("Text Editor")
-        sleep(1)
-        self.keyboard.press_and_release("Alt+f")
+        refresh_fn = lambda: len(self.panel.menus.get_entries())
+        self.assertThat(refresh_fn, Eventually(GreaterThan(0)))
         self.addCleanup(self.keyboard.press_and_release, "Escape")
+        self.keyboard.press_and_release("Alt+f")
 
         open_indicator = self.get_active_indicator()
         self.assertThat(open_indicator.label, Eventually(Equals("_File")))

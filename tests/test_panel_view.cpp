@@ -21,10 +21,13 @@
 #include <gtest/gtest.h>
 
 #include "PanelView.h"
+#include "unity-shared/MockableBaseWindow.h"
 #include "unity-shared/PanelStyle.h"
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/UBusWrapper.h"
 #include "unity-shared/UnitySettings.h"
+
+#include "test_standalone_wm.h"
 #include "test_utils.h"
 
 namespace
@@ -36,12 +39,14 @@ public:
   unity::Settings unity_settings_;
   unity::panel::Style panel_style_;
   unity::UBusManager ubus_manager_;
+  nux::ObjectPtr<unity::MockableBaseWindow> window_;
   nux::ObjectPtr<unity::PanelView> panel_view_;
+  unity::testwrapper::StandaloneWM WM;
 
   TestPanelView()
-    : panel_view_(new unity::PanelView(std::make_shared<unity::indicator::DBusIndicators>()))
+    : window_(new unity::MockableBaseWindow())
+    , panel_view_(new unity::PanelView(window_.GetPointer(), std::make_shared<unity::indicator::DBusIndicators>()))
   {}
-
 };
 
 TEST_F(TestPanelView, StoredDashWidth)
@@ -61,6 +66,20 @@ TEST_F(TestPanelView, StoredDashWidth)
 
   ubus_manager_.SendMessage(UBUS_DASH_SIZE_CHANGED, g_variant_new("(ii)", width, height));
   Utils::WaitUntil(std::bind(check_function, width));
+}
+
+TEST_F(TestPanelView, HandleBarrierEvent)
+{
+  auto barrier = std::make_shared<unity::ui::PointerBarrierWrapper>();
+  auto event = std::make_shared<ui::BarrierEvent>(0, 0, 0, 100);
+ 
+  WM->SetIsAnyWindowMoving(false);
+  EXPECT_EQ(panel_view_->HandleBarrierEvent(barrier.get(), event),
+            ui::EdgeBarrierSubscriber::Result::NEEDS_RELEASE);
+
+  WM->SetIsAnyWindowMoving(true);
+  EXPECT_EQ(panel_view_->HandleBarrierEvent(barrier.get(), event),
+            ui::EdgeBarrierSubscriber::Result::IGNORED);
 }
 
 }

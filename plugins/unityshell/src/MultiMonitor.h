@@ -20,6 +20,12 @@
 #ifndef MULTIMONITOR_H
 #define MULTIMONITOR_H
 
-const int max_num_monitors = 6;
+namespace unity
+{
+namespace monitors
+{
+const unsigned MAX = 6;
+}
+}
 
 #endif

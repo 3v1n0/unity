@@ -34,6 +34,7 @@ public:
 
   void Collect();
   void Deactivate();
+  std::string GetData(std::string const& type);
 
 private:
   nux::ObjectPtr<nux::BaseWindow> window_;

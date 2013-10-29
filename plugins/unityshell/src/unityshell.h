@@ -27,6 +27,7 @@
 #include <Nux/WindowThread.h>
 #include <NuxCore/Property.h>
 #include <sigc++/sigc++.h>
+#include <unordered_set>
 
 #include <scale/scale.h>
 #include <core/core.h>
@@ -143,6 +144,7 @@ public:
   bool showPanelFirstMenuKeyTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   bool executeCommand(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool showDesktopKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool setKeyboardFocusKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   bool altTabInitiateCommon(CompAction* action, switcher::ShowMode mode);
@@ -154,8 +156,6 @@ public:
   bool altTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabForwardAllInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevAllInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabDetailStart(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabDetailStop(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
@@ -166,6 +166,8 @@ public:
   bool launcherSwitcherForwardInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool launcherSwitcherPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool launcherSwitcherTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool rightMaximizeKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
+  bool leftMaximizeKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
   /* handle option changes and change settings inside of the
    * panel and dock views */
@@ -193,6 +195,8 @@ public:
   launcher::Controller::Ptr launcher_controller();
 
   bool DoesPointIntersectUnityGeos(nux::Point const& pt);
+
+  ui::LayoutWindow::Ptr GetSwitcherDetailLayoutWindow(Window window) const;
 
 protected:
   std::string GetName() const;
@@ -260,8 +264,6 @@ private:
 
   void UpdateCloseWindowKey(CompAction::KeyBinding const&);
 
-  CompWindow * GetTopVisibleWindow();
-
   std::unique_ptr<na::TickSource> tick_source_;
   std::unique_ptr<na::AnimationController> animation_controller_;
 
@@ -285,6 +287,7 @@ private:
   shortcut::Controller::Ptr shortcut_controller_;
   session::Controller::Ptr  session_controller_;
   debug::DebugDBusInterface debugger_;
+  std::unique_ptr<BGHash>   bghash_;
 
   /* Subscription for gestures that manipulate Unity launcher */
   std::unique_ptr<nux::GesturesSubscription> gestures_sub_launcher_;
@@ -327,10 +330,6 @@ private:
   CompRegion fullscreenRegion;
   CompWindow* firstWindowAboveShell;
 
-  nux::Property<nux::Geometry> primary_monitor_;
-
-  std::unique_ptr<BGHash> _bghash;
-
   ::GLFramebufferObject *oldFbo;
 
   bool   queryForShader ();
@@ -347,7 +346,7 @@ private:
   GLMatrix panel_shadow_matrix_;
 
   bool paint_panel_under_dash_;
-  std::set<UnityWindow*> fake_decorated_windows_;
+  std::unordered_set<UnityWindow*> fake_decorated_windows_;
 
   bool scale_just_activated_;
   WindowMinimizeSpeedController minimize_speed_controller_;
@@ -416,6 +415,7 @@ public:
   bool place(CompPoint& pos);
   CompPoint tryNotIntersectUI(CompPoint& pos);
   nux::Geometry GetScaledGeometry();
+  nux::Geometry GetLayoutWindowGeometry();
 
   void paintThumbnail(nux::Geometry const& bounding, float parent_alpha, float alpha, float scale_ratio, unsigned deco_height, bool selected);
 

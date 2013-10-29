@@ -34,8 +34,12 @@ namespace
 DECLARE_LOGGER(logger, "unity.filemanager.gnome");
 
 const std::string TRASH_URI = "trash:";
-const std::string TRASH_PATH = "file://" + DesktopUtilities::GetUserDataDirectory() + "/Trash/files";
-const std::string DEVICES_PREFIX = "file:///media/" + std::string(g_get_user_name());
+const std::string FILE_SCHEMA = "file://";
+const std::string TRASH_PATH = FILE_SCHEMA + DesktopUtilities::GetUserDataDirectory() + "/Trash/files";
+const std::string DEVICES_PREFIX = FILE_SCHEMA + "/media/" + std::string(g_get_user_name());
+
+const std::string NAUTILUS_NAME = "org.gnome.Nautilus";
+const std::string NAUTILUS_PATH = "/org/gnome/Nautilus";
 }
 
 struct GnomeFileManager::Impl
@@ -91,6 +95,12 @@ struct GnomeFileManager::Impl
     }
 
     return "";
+  }
+
+  glib::DBusProxy::Ptr NautilusOperationsProxy() const
+  {
+    return std::make_shared<glib::DBusProxy>(NAUTILUS_NAME, NAUTILUS_PATH,
+                                             "org.gnome.Nautilus.FileOperations");
   }
 
   GnomeFileManager* parent_;
@@ -170,9 +180,8 @@ void GnomeFileManager::Activate(uint64_t timestamp)
       gdk_app_launch_context_set_timestamp(context, timestamp);
 
     auto const& gcontext = glib::object_cast<GAppLaunchContext>(context);
-    auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.NautilusApplication",
-                                                   "/org/gnome/NautilusApplication",
-                                                   "org.gtk.Application");
+    auto proxy = std::make_shared<glib::DBusProxy>(NAUTILUS_NAME, NAUTILUS_PATH,
+                                                   "org.freedesktop.Application");
 
     glib::String context_string(g_app_launch_context_get_startup_notify_id(gcontext, app_info, nullptr));
 
@@ -189,15 +198,58 @@ void GnomeFileManager::Activate(uint64_t timestamp)
   }
 }
 
+bool GnomeFileManager::TrashFile(std::string const& uri)
+{
+  glib::Cancellable cancellable;
+  glib::Object<GFile> file(g_file_new_for_uri(uri.c_str()));
+  glib::Error error;
+
+  if (g_file_trash(file, cancellable, &error))
+    return true;
+
+  LOG_ERROR(logger) << "Impossible to trash file '" << uri << "': " << error;
+  return false;
+}
+
 void GnomeFileManager::EmptyTrash(uint64_t timestamp)
 {
   Activate(timestamp);
-
-  auto proxy = std::make_shared<glib::DBusProxy>("org.gnome.Nautilus", "/org/gnome/Nautilus",
-                                                 "org.gnome.Nautilus.FileOperations");
+  auto const& proxy = impl_->NautilusOperationsProxy();
 
   // Passing the proxy to the lambda we ensure that it will be destroyed when needed
   proxy->CallBegin("EmptyTrash", nullptr, [proxy] (GVariant*, glib::Error const&) {});
+}
+
+void GnomeFileManager::CopyFiles(std::set<std::string> const& uris, std::string const& dest, uint64_t timestamp)
+{
+  if (uris.empty() || dest.empty())
+    return;
+
+  bool found_valid = false;
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("(ass)"));
+  g_variant_builder_open(&b, G_VARIANT_TYPE("as"));
+
+  for (auto const& uri : uris)
+  {
+    if (uri.find(FILE_SCHEMA) == 0)
+    {
+      found_valid = true;
+      g_variant_builder_add(&b, "s", uri.c_str());
+    }
+  }
+
+  g_variant_builder_close(&b);
+  g_variant_builder_add(&b, "s", dest.c_str());
+  glib::Variant parameters(g_variant_builder_end(&b));
+
+  if (found_valid)
+  {
+    // Passing the proxy to the lambda we ensure that it will be destroyed when needed
+    auto const& proxy = impl_->NautilusOperationsProxy();
+    proxy->CallBegin("CopyURIs", parameters, [proxy] (GVariant*, glib::Error const&) {});
+    Activate(timestamp);
+  }
 }
 
 std::vector<std::string> GnomeFileManager::OpenedLocations() const

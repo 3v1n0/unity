@@ -55,8 +55,8 @@ public:
 
   void RenderQuicklistView();
 
-  void ShowQuicklistWithTipAt(int anchor_tip_x, int anchor_tip_y);
-  virtual void ShowWindow(bool b, bool StartModal = false);
+  void SetQuicklistPosition(int x, int y);
+  void ShowQuicklistWithTipAt(int x, int y);
 
   void Show();
   void Hide();

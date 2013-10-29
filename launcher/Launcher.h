@@ -22,8 +22,8 @@
 #define LAUNCHER_H
 
 #include <Nux/View.h>
-#include <Nux/BaseWindow.h>
 #include <Nux/TimerProc.h>
+#include <NuxCore/Animation.h>
 #include <NuxGraphics/GestureEvent.h>
 #ifndef USE_GLES
 # include <NuxGraphics/IOpenGLAsmShader.h>
@@ -69,7 +69,6 @@ public:
 
   Launcher(MockableBaseWindow* parent, NUX_FILE_LINE_PROTO);
 
-  nux::Property<Display*> display;
   nux::Property<int> monitor;
   nux::Property<Options::Ptr> options;
 
@@ -83,7 +82,7 @@ public:
 
   bool Hidden() const
   {
-    return _hidden;
+    return hidden_;
   }
 
   void ForceReveal(bool force);
@@ -103,11 +102,11 @@ public:
 
   MockableBaseWindow* GetParent() const
   {
-    return _parent;
+    return parent_;
   };
 
   nux::ObjectPtr<nux::View> const& GetActiveTooltip() const;
-  nux::ObjectPtr<LauncherDragWindow> const& GetDraggedIcon() const;
+  LauncherDragWindow::Ptr const& GetDraggedIcon() const;
 
   virtual void RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long key_flags);
   virtual void RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long key_flags);
@@ -148,12 +147,12 @@ public:
   void EnterKeyNavMode();
   void ExitKeyNavMode();
   bool IsInKeyNavMode() const;
-
   bool IsOverlayOpen() const;
 
-  static const int ANIM_DURATION_SHORT;
+  void RenderIconToTexture(nux::GraphicsEngine&, nux::ObjectPtr<nux::IOpenGLBaseTexture> const&, AbstractLauncherIcon::Ptr const&);
 
-  void RenderIconToTexture(nux::GraphicsEngine& GfxContext, AbstractLauncherIcon::Ptr const& icon, nux::ObjectPtr<nux::IOpenGLBaseTexture> texture);
+  // FIXME: This will need to be removed when the Unity performance branch is merged.
+  void NeedSoftRedraw() override;
 
 #ifdef NUX_GESTURES_SUPPORT
   virtual nux::GestureDeliveryRequest GestureEvent(const nux::GestureEvent &event);
@@ -179,23 +178,9 @@ private:
     ACTION_NONE,
     ACTION_DRAG_LAUNCHER,
     ACTION_DRAG_ICON,
+    ACTION_DRAG_ICON_CANCELLED,
     ACTION_DRAG_EXTERNAL,
   } LauncherActionState;
-
-  typedef enum
-  {
-    TIME_ENTER,
-    TIME_LEAVE,
-    TIME_DRAG_END,
-    TIME_DRAG_THRESHOLD,
-    TIME_AUTOHIDE,
-    TIME_DRAG_EDGE_TOUCH,
-    TIME_DRAG_OUT,
-    TIME_TAP_SUPER,
-    TIME_SUPER_PRESSED,
-
-    TIME_LAST
-  } LauncherActionTimes;
 
   void ConfigureBarrier();
 
@@ -214,7 +199,8 @@ private:
   ui::EdgeBarrierSubscriber::Result HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event);
 #endif
 
-  void OnPluginStateChanged();
+  void OnExpoChanged();
+  void OnSpreadChanged();
 
   void OnSelectionChanged(AbstractLauncherIcon::Ptr const& selection);
 
@@ -223,8 +209,8 @@ private:
   bool OnScrollTimeout();
 
   void SetUrgentTimer(int urgent_wiggle_period);
-  void WiggleUrgentIcon(AbstractLauncherIcon::Ptr const& icon);
-  void HandleUrgentIcon(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current);
+  void AnimateUrgentIcon(AbstractLauncherIcon::Ptr const& icon);
+  void HandleUrgentIcon(AbstractLauncherIcon::Ptr const& icon);
   bool OnUrgentTimeout();
 
   void SetMousePosition(int x, int y);
@@ -236,51 +222,32 @@ private:
 
   void OnDragWindowAnimCompleted();
 
-  bool IconNeedsAnimation(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
   bool IconDrawEdgeOnly(AbstractLauncherIcon::Ptr const& icon) const;
-  bool AnimationInProgress() const;
 
   void SetActionState(LauncherActionState actionstate);
   LauncherActionState GetActionState() const;
 
-  void EnsureAnimation();
   void EnsureScrollTimer();
-
   bool MouseOverTopScrollArea();
-
   bool MouseOverBottomScrollArea();
 
-  float DnDStartProgress(struct timespec const& current) const;
-  float DnDExitProgress(struct timespec const& current) const;
-  float GetHoverProgress(struct timespec const& current) const;
-  float AutohideProgress(struct timespec const& current) const;
-  float DragThresholdProgress(struct timespec const& current) const;
-  float DragHideProgress(struct timespec const& current) const;
-  float DragOutProgress(struct timespec const& current) const;
-  float IconDesatValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
-  float IconPresentProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
-  float IconUnfoldProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
-  float IconUrgentProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
-  float IconShimmerProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
-  float IconUrgentPulseValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
-  float IconPulseOnceValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const &current) const;
-  float IconUrgentWiggleValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
-  float IconStartingBlinkValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
-  float IconStartingPulseValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
-  float IconBackgroundIntensity(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
-  float IconProgressBias(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
-  float IconDropDimValue(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
-  float IconCenterTransitionProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
-  float IconVisibleProgress(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current) const;
+  float DragOutProgress() const;
+  float IconUrgentPulseValue(AbstractLauncherIcon::Ptr const& icon) const;
+  float IconPulseOnceValue(AbstractLauncherIcon::Ptr const& icon) const;
+  float IconUrgentWiggleValue(AbstractLauncherIcon::Ptr const& icon) const;
+  float IconStartingBlinkValue(AbstractLauncherIcon::Ptr const& icon) const;
+  float IconStartingPulseValue(AbstractLauncherIcon::Ptr const& icon) const;
+  float IconBackgroundIntensity(AbstractLauncherIcon::Ptr const& icon) const;
+  float IconProgressBias(AbstractLauncherIcon::Ptr const& icon) const;
 
   void SetHidden(bool hidden);
 
   void UpdateChangeInMousePosition(int delta_x, int delta_y);
 
-  void  SetDndDelta(float x, float y, nux::Geometry const& geo, timespec const& current);
+  void  SetDndDelta(float x, float y, nux::Geometry const& geo);
   float DragLimiter(float x);
 
-  void SetupRenderArg(AbstractLauncherIcon::Ptr const& icon, struct timespec const& current, ui::RenderArg& arg);
+  void SetupRenderArg(AbstractLauncherIcon::Ptr const& icon, ui::RenderArg& arg);
   void FillRenderArg(AbstractLauncherIcon::Ptr const& icon,
                      ui::RenderArg& arg,
                      nux::Point3& center,
@@ -290,17 +257,16 @@ private:
                      float folded_spacing,
                      float autohide_offset,
                      float folded_z_distance,
-                     float animation_neg_rads,
-                     struct timespec const& current);
+                     float animation_neg_rads);
 
   void RenderArgs(std::list<ui::RenderArg> &launcher_args,
                   nux::Geometry& box_geo, float* launcher_alpha, nux::Geometry const& parent_abs_geo);
 
   void OnIconAdded(AbstractLauncherIcon::Ptr const& icon);
   void OnIconRemoved(AbstractLauncherIcon::Ptr const& icon);
-  void OnOrderChanged();
+  void OnIconNeedsRedraw(AbstractLauncherIcon::Ptr const& icon, int monitor);
+  void SetupIconAnimations(AbstractLauncherIcon::Ptr const& icon);
 
-  void OnIconNeedsRedraw(AbstractLauncherIcon::Ptr const& icon);
   void OnTooltipVisible(nux::ObjectPtr<nux::View> view);
 
   void OnOverlayHidden(GVariant* data);
@@ -338,79 +304,69 @@ private:
   void DndHoveredIconReset();
   bool DndIsSpecialRequest(std::string const& uri) const;
 
-  LauncherModel::Ptr _model;
-  MockableBaseWindow* _parent;
-  nux::ObjectPtr<nux::View> _active_tooltip;
-  QuicklistView* _active_quicklist;
-
-  nux::HLayout* m_Layout;
+  LauncherModel::Ptr model_;
+  MockableBaseWindow* parent_;
+  ui::AbstractIconRenderer::Ptr icon_renderer_;
+  nux::ObjectPtr<nux::View> active_tooltip_;
+  std::set<AbstractLauncherIcon::Ptr> animating_urgent_icons_;
 
   // used by keyboard/a11y-navigation
-  AbstractLauncherIcon::Ptr _icon_under_mouse;
-  AbstractLauncherIcon::Ptr _icon_mouse_down;
-  AbstractLauncherIcon::Ptr _drag_icon;
-  AbstractLauncherIcon::Ptr _dnd_hovered_icon;
+  AbstractLauncherIcon::Ptr icon_under_mouse_;
+  AbstractLauncherIcon::Ptr icon_mouse_down_;
+  AbstractLauncherIcon::Ptr drag_icon_;
+  AbstractLauncherIcon::Ptr dnd_hovered_icon_;
 
-  bool _hovered;
-  bool _hidden;
-  bool _render_drag_window;
-  bool _shortcuts_shown;
-  bool _data_checked;
-  bool _steal_drag;
-  bool _drag_edge_touching;
-  bool _initial_drag_animation;
-  bool _dash_is_open;
-  bool _hud_is_open;
+  bool hovered_;
+  bool hidden_;
+  bool folded_;
+  bool render_drag_window_;
+  bool shortcuts_shown_;
+  bool data_checked_;
+  bool steal_drag_;
+  bool drag_edge_touching_;
+  bool initial_drag_animation_;
+  bool dash_is_open_;
+  bool hud_is_open_;
 
-  float _folded_angle;
-  float _neg_folded_angle;
-  float _folded_z_distance;
-  float _edge_overcome_pressure;
+  LauncherActionState launcher_action_state_;
 
-  LauncherActionState _launcher_action_state;
+  int icon_size_;
+  int dnd_delta_y_;
+  int dnd_delta_x_;
+  int postreveal_mousemove_delta_x_;
+  int postreveal_mousemove_delta_y_;
+  int launcher_drag_delta_;
+  int launcher_drag_delta_max_;
+  int launcher_drag_delta_min_;
+  int enter_y_;
+  int last_button_press_;
+  int drag_icon_position_;
+  int urgent_animation_period_;
+  bool urgent_ack_needed_;
+  float drag_out_delta_x_;
+  bool drag_gesture_ongoing_;
+  float last_reveal_progress_;
 
-  int _space_between_icons;
-  int _icon_image_size;
-  int _icon_image_size_delta;
-  int _icon_glow_size;
-  int _icon_size;
-  int _dnd_delta_y;
-  int _dnd_delta_x;
-  int _postreveal_mousemove_delta_x;
-  int _postreveal_mousemove_delta_y;
-  int _launcher_drag_delta;
-  int _launcher_drag_delta_max;
-  int _launcher_drag_delta_min;
-  int _enter_y;
-  int _last_button_press;
-  int _drag_icon_position;
-  int _urgent_wiggle_time;
-  bool _urgent_acked;
-  bool _urgent_timer_running;
-  bool _urgent_ack_needed;
-  float _drag_out_delta_x;
-  bool _drag_gesture_ongoing;
-  float _last_reveal_progress;
-
-  nux::Point2 _mouse_position;
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> _offscreen_drag_texture;
-  nux::ObjectPtr<LauncherDragWindow> _drag_window;
-  LauncherHideMachine _hide_machine;
-  LauncherHoverMachine _hover_machine;
+  nux::Point mouse_position_;
+  LauncherDragWindow::Ptr drag_window_;
+  LauncherHideMachine hide_machine_;
+  LauncherHoverMachine hover_machine_;
   TooltipManager tooltip_manager_;
 
-  unity::DndData _dnd_data;
-  nux::DndAction _drag_action;
-  Atom _selection_atom;
-
-  struct timespec  _times[TIME_LAST];
-  struct timespec _urgent_finished_time;
+  unity::DndData dnd_data_;
+  nux::DndAction drag_action_;
 
   BaseTexturePtr launcher_sheen_;
   BaseTexturePtr launcher_pressure_effect_;
-
-  ui::AbstractIconRenderer::Ptr icon_renderer;
   BackgroundEffectHelper bg_effect_helper_;
+
+  nux::animation::AnimateValue<float> auto_hide_animation_;
+  nux::animation::AnimateValue<float> hover_animation_;
+  nux::animation::AnimateValue<float> drag_over_animation_;
+  nux::animation::AnimateValue<float> drag_out_animation_;
+  nux::animation::AnimateValue<float> drag_icon_animation_;
+  nux::animation::AnimateValue<float> dnd_hide_animation_;
+  nux::animation::AnimateValue<float> dash_showing_animation_;
 
   UBusManager ubus_;
   glib::SourceManager sources_;

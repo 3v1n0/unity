@@ -23,9 +23,13 @@
 #include <memory>
 #include <Nux/Nux.h>
 
+#include "launcher/EdgeBarrierController.h"
 #include "unity-shared/Introspectable.h"
 namespace unity
 {
+
+class PanelView;
+
 namespace panel
 {
 
@@ -33,15 +37,16 @@ class Controller : public sigc::trackable, public unity::debug::Introspectable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;
+  typedef std::vector<nux::ObjectPtr<PanelView>> PanelVector;
 
-  Controller();
+  Controller(ui::EdgeBarrierController::Ptr const& barrier_controller);
   ~Controller();
 
   void FirstMenuShow();
   void QueueRedraw();
 
   std::vector<Window> const& GetTrayXids() const;
-  std::vector<nux::View*> GetPanelViews() const;
+  PanelVector& panels() const;
   std::vector<nux::Geometry> GetGeometries() const;
 
   nux::Property<int> launcher_width;
@@ -59,6 +64,7 @@ public:
   void AddProperties(GVariantBuilder* builder);
 private:
   void OnScreenChanged(int primary_monitor, std::vector<nux::Geometry>& monitors);
+
   class Impl;
   Impl* pimpl;
 };

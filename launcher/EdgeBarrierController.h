@@ -42,15 +42,22 @@ struct EdgeBarrierSubscriber
 class EdgeBarrierController : public sigc::trackable
 {
 public:
+  typedef std::shared_ptr<EdgeBarrierController> Ptr;
+
   EdgeBarrierController();
   ~EdgeBarrierController();
 
   nux::RWProperty<bool> sticky_edges;
   nux::Property<launcher::Options::Ptr> options;
 
-  void Subscribe(EdgeBarrierSubscriber* subscriber, unsigned int monitor);
-  void Unsubscribe(EdgeBarrierSubscriber* subscriber, unsigned int monitor);
-  EdgeBarrierSubscriber* GetSubscriber(unsigned int monitor);
+  void AddHorizontalSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor);
+  void RemoveHorizontalSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor);
+
+  void AddVerticalSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor);
+  void RemoveVerticalSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor);
+
+  EdgeBarrierSubscriber* GetHorizontalSubscriber(unsigned int monitor);
+  EdgeBarrierSubscriber* GetVerticalSubscriber(unsigned int monitor);
 
 private:
   struct Impl;

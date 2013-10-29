@@ -20,7 +20,6 @@
 #include <UnityCore/Variant.h>
 
 #include "SingleMonitorLauncherIcon.h"
-#include "MultiMonitor.h"
 
 namespace unity
 {
@@ -36,12 +35,8 @@ SingleMonitorLauncherIcon::SingleMonitorLauncherIcon(IconType type, int monitor)
 
 void SingleMonitorLauncherIcon::UpdateMonitor()
 {
-  for (int i = 0; i < max_num_monitors; ++i)
-  {
-    SetVisibleOnMonitor(i, i == monitor_);
-  }
-
-  EmitNeedsRedraw();
+  for (unsigned i = 0; i < monitors::MAX; ++i)
+    SetVisibleOnMonitor(i, static_cast<int>(i) == monitor_);
 }
 
 void SingleMonitorLauncherIcon::SetMonitor(int monitor)
@@ -53,7 +48,7 @@ void SingleMonitorLauncherIcon::SetMonitor(int monitor)
   }
 }
 
-int SingleMonitorLauncherIcon::GetMonitor()
+int SingleMonitorLauncherIcon::GetMonitor() const
 {
   return monitor_;
 }

@@ -44,7 +44,7 @@ ul::LauncherHideMachine::HideQuirk QUIRKS [] {
     ul::LauncherHideMachine::LOCK_HIDE,
     ul::LauncherHideMachine::SHORTCUT_KEYS_VISIBLE };
 
-struct HideModeNever : public TestWithParam<std::tr1::tuple<ul::LauncherHideMachine::HideQuirk, bool, bool>> {
+struct HideModeNever : public TestWithParam<std::tuple<ul::LauncherHideMachine::HideQuirk, bool, bool>> {
   ul::LauncherHideMachine machine;
 };
 

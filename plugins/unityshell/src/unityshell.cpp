@@ -36,6 +36,7 @@
 #include "LauncherController.h"
 #include "SwitcherController.h"
 #include "SwitcherView.h"
+#include "PanelView.h"
 #include "PluginAdapter.h"
 #include "QuicklistManager.h"
 #include "StartupNotifyService.h"
@@ -45,6 +46,7 @@
 #include "unityshell.h"
 #include "BackgroundEffectHelper.h"
 #include "UnityGestureBroker.h"
+#include "launcher/EdgeBarrierController.h"
 #include "launcher/XdndCollectionWindowImp.h"
 #include "launcher/XdndManagerImp.h"
 #include "launcher/XdndStartStopNotifierImp.h"
@@ -274,11 +276,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      wt->RedrawRequested.connect(sigc::mem_fun(this, &UnityScreen::onRedrawRequested));
 
-    // _bghash is a pointer. We don't want it to be created before Nux system has had a chance
-    // to start. BGHash relies on animations. Nux animation system starts after the WindowThread
-    // has been created.
-    _bghash.reset(new BGHash());
-
      unity_a11y_init(wt.get());
 
      /* i18n init */
@@ -313,6 +310,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetKeyboardFocusInitiate(boost::bind(&UnityScreen::setKeyboardFocusKeyInitiate, this, _1, _2, _3));
      //optionSetKeyboardFocusTerminate (boost::bind (&UnityScreen::setKeyboardFocusKeyTerminate, this, _1, _2, _3));
      optionSetExecuteCommandInitiate(boost::bind(&UnityScreen::executeCommand, this, _1, _2, _3));
+     optionSetShowDesktopKeyInitiate(boost::bind(&UnityScreen::showDesktopKeyInitiate, this, _1, _2, _3));
      optionSetPanelFirstMenuInitiate(boost::bind(&UnityScreen::showPanelFirstMenuKeyInitiate, this, _1, _2, _3));
      optionSetPanelFirstMenuTerminate(boost::bind(&UnityScreen::showPanelFirstMenuKeyTerminate, this, _1, _2, _3));
      optionSetAutomaximizeValueNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -320,6 +318,7 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAltTabTimeoutNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetAltTabBiasViewportNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetDisableShowDesktopNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
+     optionSetDisableMouseNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
 
      optionSetAltTabForwardAllInitiate(boost::bind(&UnityScreen::altTabForwardAllInitiate, this, _1, _2, _3));
      optionSetAltTabForwardInitiate(boost::bind(&UnityScreen::altTabForwardInitiate, this, _1, _2, _3));
@@ -328,28 +327,17 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAltTabPrevAllInitiate(boost::bind(&UnityScreen::altTabPrevAllInitiate, this, _1, _2, _3));
      optionSetAltTabPrevInitiate(boost::bind(&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
 
-     optionSetAltTabDetailStartInitiate(boost::bind(&UnityScreen::altTabDetailStart, this, _1, _2, _3));
-     optionSetAltTabDetailStopInitiate(boost::bind(&UnityScreen::altTabDetailStop, this, _1, _2, _3));
-
      optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
      optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
 
      optionSetAltTabPrevWindowInitiate(boost::bind(&UnityScreen::altTabPrevWindowInitiate, this, _1, _2, _3));
 
-     optionSetAltTabLeftInitiate(boost::bind (&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
-     optionSetAltTabRightInitiate([&](CompAction* action, CompAction::State state, CompOption::Vector& options) -> bool
-     {
-      if (switcher_controller_->Visible())
-      {
-        switcher_controller_->Next();
-        return true;
-      }
-      return false;
-     });
-
      optionSetLauncherSwitcherForwardInitiate(boost::bind(&UnityScreen::launcherSwitcherForwardInitiate, this, _1, _2, _3));
      optionSetLauncherSwitcherPrevInitiate(boost::bind(&UnityScreen::launcherSwitcherPrevInitiate, this, _1, _2, _3));
      optionSetLauncherSwitcherForwardTerminate(boost::bind(&UnityScreen::launcherSwitcherTerminate, this, _1, _2, _3));
+
+     optionSetWindowRightMaximizeInitiate(boost::bind(&UnityScreen::rightMaximizeKeyInitiate, this, _1, _2, _3));
+     optionSetWindowLeftMaximizeInitiate(boost::bind(&UnityScreen::leftMaximizeKeyInitiate, this, _1, _2, _3));
 
      optionSetStopVelocityNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
      optionSetRevealPressureNotify(boost::bind(&UnityScreen::optionChanged, this, _1, _2));
@@ -538,6 +526,7 @@ void UnityScreen::EnsureSuperKeybindings()
     CreateSuperNewAction(shortcut, impl::ActionModifiers::NONE);
     CreateSuperNewAction(shortcut, impl::ActionModifiers::USE_NUMPAD);
     CreateSuperNewAction(shortcut, impl::ActionModifiers::USE_SHIFT);
+    CreateSuperNewAction(shortcut, impl::ActionModifiers::USE_SHIFT_NUMPAD);
   }
 
   for (auto shortcut : dash_controller_->GetAllShortcuts())
@@ -1029,25 +1018,19 @@ bool UnityScreen::DoesPointIntersectUnityGeos(nux::Point const& pt)
   return false;
 }
 
-CompWindow * GetTopVisibleWindow()
+LayoutWindow::Ptr UnityScreen::GetSwitcherDetailLayoutWindow(Window window) const
 {
-  CompWindow *top_visible_window = NULL;
+  LayoutWindow::Vector const& targets = switcher_controller_->ExternalRenderTargets();
 
-  for (CompWindow *w : screen->windows ())
+  for (LayoutWindow::Ptr const& target : targets)
   {
-    if (w->isViewable() && 
-        !w->minimized() && 
-        !w->resName().empty() && 
-        (w->resName() != "unity-panel-service") &&
-        (w->resName() != "notify-osd"))
-    {
-      top_visible_window = w;
-    }
+    if (target->xid == window)
+      return target;
   }
 
-  return top_visible_window;
+  return nullptr;
 }
-  
+
 void UnityWindow::enterShowDesktop ()
 {
   if (!mShowdesktopHandler)
@@ -1246,7 +1229,8 @@ bool UnityWindow::handleEvent(XEvent *event)
         handled = true;
       }
       else if (event->xbutton.button == Button2 &&
-               GetScaledGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
+              (GetScaledGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root) ||
+               GetLayoutWindowGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root)))
       {
         middle_clicked_ = true;
         handled = true;
@@ -1267,21 +1251,23 @@ bool UnityWindow::handleEvent(XEvent *event)
         if (was_pressed)
         {
           if (close_button_geo_.IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
+          {
             window->close(0);
-
-          handled = true;
+            handled = true;
+          }
         }
 
         if (middle_clicked_)
         {
           if (event->xbutton.button == Button2 &&
-              GetScaledGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
+             (GetScaledGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root) ||
+              GetLayoutWindowGeometry().IsPointInside(event->xbutton.x_root, event->xbutton.y_root)))
           {
             window->close(0);
+            handled = true;
           }
 
           middle_clicked_ = false;
-          handled = true;
         }
       }
       break;
@@ -1536,24 +1522,38 @@ void UnityScreen::donePaint()
   if (animation_controller_->HasRunningAnimations())
     onRedrawRequested();
 
-  std::list <ShowdesktopHandlerWindowInterface *> remove_windows;
-
-  for (ShowdesktopHandlerWindowInterface *wi : ShowdesktopHandler::animating_windows)
+  for (auto it = ShowdesktopHandler::animating_windows.begin(); it != ShowdesktopHandler::animating_windows.end();)
   {
-    ShowdesktopHandlerWindowInterface::PostPaintAction action = wi->HandleAnimations (0);
+    auto const& wi = *it;
+    auto action = wi->HandleAnimations(0);
+
     if (action == ShowdesktopHandlerWindowInterface::PostPaintAction::Remove)
-      remove_windows.push_back(wi);
+    {
+      wi->DeleteHandler();
+      it = ShowdesktopHandler::animating_windows.erase(it);
+      continue;
+    }
     else if (action == ShowdesktopHandlerWindowInterface::PostPaintAction::Damage)
-      wi->AddDamage ();
+    {
+      wi->AddDamage();
+    }
+
+    ++it;
   }
 
-  for (ShowdesktopHandlerWindowInterface *wi : remove_windows)
-  {
-    wi->DeleteHandler ();
-    ShowdesktopHandler::animating_windows.remove (wi);
-  }
+  cScreen->donePaint();
+}
 
-  cScreen->donePaint ();
+void redraw_view_if_damaged(nux::ObjectPtr<nux::View> const& view, CompRegion const& damage)
+{
+  if (!view || view->IsRedrawNeeded())
+    return;
+
+  auto const& geo = view->GetAbsoluteGeometry();
+  CompRegion region(geo.x, geo.y, geo.width, geo.height);
+
+  if (damage.intersects(region))
+    view->NeedSoftRedraw();
 }
 
 void UnityScreen::compizDamageNux(CompRegion const& damage)
@@ -1639,8 +1639,21 @@ void UnityScreen::handleEvent(XEvent* event)
         if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
+      else if (switcher_controller_->IsDetailViewShown())
+      {
+        Window win = switcher_controller_->GetCurrentSelection().window_;
+        CompWindow* w = screen->findWindow(win);
+
+        if (w)
+          skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
+      }
       break;
     case ButtonPress:
+      if (shortcut_controller_->Visible())
+      {
+        shortcut_controller_->Hide();
+      }
+
       if (super_keypressed_)
       {
         launcher_controller_->KeyNavTerminate(false);
@@ -1650,6 +1663,14 @@ void UnityScreen::handleEvent(XEvent* event)
       {
         ScaleScreen* ss = ScaleScreen::get(screen);
         if (CompWindow *w = screen->findWindow(ss->getSelectedWindow()))
+          skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
+      }
+      else if (switcher_controller_->IsDetailViewShown())
+      {
+        Window win = switcher_controller_->GetCurrentSelection().window_;
+        CompWindow* w = screen->findWindow(win);
+
+        if (w)
           skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
 
@@ -1675,12 +1696,11 @@ void UnityScreen::handleEvent(XEvent* event)
           }
           else
           {
-            dash_controller_->HideDash(false);
+            dash_controller_->HideDash();
           }
         }
       }
-
-      if (hud_controller_->IsVisible())
+      else if (hud_controller_->IsVisible())
       {
         nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
         nux::Geometry const& hud_geo = hud_controller_->GetInputWindowGeometry();
@@ -1691,27 +1711,29 @@ void UnityScreen::handleEvent(XEvent* event)
 
         if (!hud_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt) && !on_top_geo.IsInside(pt))
         {
-          hud_controller_->HideHud(false);
+          hud_controller_->HideHud();
+        }
+      }
+      else if (switcher_controller_->Visible())
+      {
+        nux::Point pt(event->xbutton.x_root, event->xbutton.y_root);
+        nux::Geometry const& switcher_geo = switcher_controller_->GetInputWindowGeometry();
+
+        if (!switcher_geo.IsInside(pt))
+        {
+          switcher_controller_->Hide(false);
         }
       }
       break;
     case ButtonRelease:
-      if (switcher_controller_ && switcher_controller_->Visible())
+
+      if (switcher_controller_->IsDetailViewShown())
       {
-        XButtonEvent *bev = reinterpret_cast<XButtonEvent*>(event);
-        if (bev->time - last_scroll_event_ > 150)
-        {
-          if (bev->button == Button4 || bev->button == local::SCROLL_UP_BUTTON)
-          {
-            switcher_controller_->Prev();
-            last_scroll_event_ = bev->time;
-          }
-          else if (bev->button == Button5 || bev->button == local::SCROLL_DOWN_BUTTON)
-          {
-            switcher_controller_->Next();
-            last_scroll_event_ = bev->time;
-          }
-        }
+        Window win = switcher_controller_->GetCurrentSelection().window_;
+        CompWindow* w = screen->findWindow(win);
+
+        if (w)
+          skip_other_plugins = UnityWindow::get(w)->handleEvent(event);
       }
       else if (wm.IsScaleActive())
       {
@@ -1722,11 +1744,16 @@ void UnityScreen::handleEvent(XEvent* event)
       break;
     case KeyPress:
     {
+      if (shortcut_controller_->Visible())
+      {
+        shortcut_controller_->Hide();
+      }
+
       if (super_keypressed_)
       {
         /* We need an idle to postpone this action, after the current event
          * has been processed */
-        sources_.AddIdle([&] {
+        sources_.AddIdle([this] {
           shortcut_controller_->SetEnabled(false);
           shortcut_controller_->Hide();
           LOG_DEBUG(logger) << "Hiding shortcut controller due to keypress event.";
@@ -1736,9 +1763,7 @@ void UnityScreen::handleEvent(XEvent* event)
         });
       }
 
-      KeySym key_sym;
-      char key_string[2];
-      int result = XLookupString(&(event->xkey), key_string, 2, &key_sym, 0);
+      KeySym key_sym = XkbKeycodeToKeysym(event->xany.display, event->xkey.keycode, 0, 0);
 
       if (launcher_controller_->KeyNavIsActive())
       {
@@ -1761,27 +1786,26 @@ void UnityScreen::handleEvent(XEvent* event)
         {
           switcher_controller_->Hide(false);
           skip_other_plugins = true;
+          break;
         }
       }
 
-      if (result > 0)
+      if (super_keypressed_)
       {
-        // NOTE: does this have the potential to do an invalid write?  Perhaps
-        // we should just say "key_string[1] = 0" because that is the only
-        // thing that could possibly make sense here.
-        key_string[result] = 0;
-
-        if (super_keypressed_)
+        if (IsKeypadKey(key_sym))
         {
-          skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string, event->xkey.time);
-          if (!skip_other_plugins)
-            skip_other_plugins = dash_controller_->CheckShortcutActivation(key_string);
+          key_sym = XkbKeycodeToKeysym(event->xany.display, event->xkey.keycode, 0, 1);
+          key_sym = key_sym - XK_KP_0 + XK_0;
+        }
 
-          if (skip_other_plugins && launcher_controller_->KeyNavIsActive())
-          {
-            launcher_controller_->KeyNavTerminate(false);
-            EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
-          }
+        skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(XModifiersToNux(event->xkey.state), key_sym, event->xkey.time);
+        if (!skip_other_plugins)
+          skip_other_plugins = dash_controller_->CheckShortcutActivation(XKeysymToString(key_sym));
+
+        if (skip_other_plugins && launcher_controller_->KeyNavIsActive())
+        {
+          launcher_controller_->KeyNavTerminate(false);
+          EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
         }
       }
       break;
@@ -1790,11 +1814,10 @@ void UnityScreen::handleEvent(XEvent* event)
       ShowdesktopHandler::InhibitLeaveShowdesktopMode (event->xmaprequest.window);
       break;
     case PropertyNotify:
-      if (event->xproperty.window == GDK_ROOT_WINDOW() &&
-          event->xproperty.atom == gdk_x11_get_xatom_by_name("_GNOME_BACKGROUND_REPRESENTATIVE_COLORS"))
+      if (bghash_ && event->xproperty.window == GDK_ROOT_WINDOW() &&
+          event->xproperty.atom == bghash_->ColorAtomId())
       {
-        if (_bghash)
-          _bghash->RefreshColor();
+        bghash_->RefreshColor();
       }
       break;
     default:
@@ -1832,8 +1855,11 @@ void UnityScreen::handleEvent(XEvent* event)
       break;
   }
 
+  if (switcher_controller_->IsMouseDisabled() && switcher_controller_->Visible())
+    skip_other_plugins = true;
+
   if (!skip_other_plugins &&
-      screen->otherGrabExist("deco", "move", "switcher", "resize", "unity-switcher", nullptr))
+      screen->otherGrabExist("deco", "move", "switcher", "resize", nullptr))
   {
     wt->ProcessForeignEvent(event, nullptr);
   }
@@ -2018,6 +2044,13 @@ bool UnityScreen::executeCommand(CompAction* action,
   return true;
 }
 
+bool UnityScreen::showDesktopKeyInitiate(CompAction* action,
+                                         CompAction::State state,
+                                         CompOption::Vector& options)
+{
+  WindowManager::Default().ShowDesktop();
+  return true;
+}
 
 bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
                                               CompAction::State state,
@@ -2030,12 +2063,16 @@ bool UnityScreen::setKeyboardFocusKeyInitiate(CompAction* action,
 bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode show_mode)
 {
   if (!grab_index_)
-    grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
-
-  screen->addAction(&optionGetAltTabRight());
-  screen->addAction(&optionGetAltTabDetailStart());
-  screen->addAction(&optionGetAltTabDetailStop());
-  screen->addAction(&optionGetAltTabLeft());
+  {
+    if (switcher_controller_->IsMouseDisabled())
+    {
+      grab_index_ = screen->pushGrab (screen->invisibleCursor(), "unity-switcher");
+    }
+    else
+    {
+      grab_index_ = screen->pushGrab (screen->normalCursor(), "unity-switcher");
+    }
+  }
 
   /* Create a new keybinding for scroll buttons and current modifiers */
   CompAction scroll_up;
@@ -2061,18 +2098,6 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
 
 void UnityScreen::SetUpAndShowSwitcher(switcher::ShowMode show_mode)
 {
-  // maybe check launcher position/hide state?
-
-  auto uscreen = UScreen::GetDefault();
-  int monitor = uscreen->GetMonitorWithMouse();
-  auto monitor_geo = uscreen->GetMonitorGeometry(monitor);
-
-  monitor_geo.x += 100;
-  monitor_geo.y += 100;
-  monitor_geo.width -= 200;
-  monitor_geo.height -= 200;
-  switcher_controller_->SetWorkspace(monitor_geo, monitor);
-
   RaiseInputWindows();
 
   auto results = launcher_controller_->GetAltTabIcons(show_mode == switcher::ShowMode::CURRENT_VIEWPORT,
@@ -2092,11 +2117,6 @@ bool UnityScreen::altTabTerminateCommon(CompAction* action,
     screen->removeGrab(grab_index_, NULL);
     grab_index_ = 0;
   }
-
-  screen->removeAction(&optionGetAltTabRight ());
-  screen->removeAction(&optionGetAltTabDetailStart ());
-  screen->removeAction(&optionGetAltTabDetailStop ());
-  screen->removeAction(&optionGetAltTabLeft ());
 
   /* Removing the scroll actions */
   CompAction scroll_up;
@@ -2163,16 +2183,6 @@ bool UnityScreen::altTabPrevInitiate(CompAction* action, CompAction::State state
   return false;
 }
 
-bool UnityScreen::altTabDetailStart(CompAction* action, CompAction::State state, CompOption::Vector& options)
-{
-  return switcher_controller_->StartDetailMode();
-}
-
-bool UnityScreen::altTabDetailStop(CompAction* action, CompAction::State state, CompOption::Vector& options)
-{
-  return switcher_controller_->StopDetailMode();
-}
-
 bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   if (!switcher_controller_->Visible())
@@ -2234,12 +2244,14 @@ bool UnityScreen::launcherSwitcherForwardInitiate(CompAction* action, CompAction
   action->setState(action->state() | CompAction::StateTermKey);
   return true;
 }
+
 bool UnityScreen::launcherSwitcherPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   launcher_controller_->KeyNavPrevious();
 
   return true;
 }
+
 bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::State state, CompOption::Vector& options)
 {
   bool accept_state = (state & CompAction::StateCancel) == 0;
@@ -2259,6 +2271,20 @@ bool UnityScreen::launcherSwitcherTerminate(CompAction* action, CompAction::Stat
   screen->removeAction(&up_action);
 
   action->setState (action->state() & (unsigned)~(CompAction::StateTermKey));
+  return true;
+}
+
+bool UnityScreen::rightMaximizeKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  auto& WM = WindowManager::Default();
+  WM.RightMaximize(WM.GetActiveWindow());
+  return true;
+}
+
+bool UnityScreen::leftMaximizeKeyInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
+{
+  auto& WM = WindowManager::Default();
+  WM.LeftMaximize(WM.GetActiveWindow());
   return true;
 }
 
@@ -2761,17 +2787,13 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
   {
     Window active_window = screen->activeWindow();
 
-    CompWindow *top_visible_window;
-
     if (G_UNLIKELY(window->type() == CompWindowTypeDesktopMask))
     {
       uScreen->setPanelShadowMatrix(matrix);
 
       if (active_window == 0 || active_window == window->id())
       {
-        top_visible_window = GetTopVisibleWindow();
-
-        if (top_visible_window && (window->id() == top_visible_window->id()))
+        if (PluginAdapter::Default().IsWindowOnTop(window->id()))
         {
           draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
         }
@@ -2801,9 +2823,7 @@ bool UnityWindow::glDraw(const GLMatrix& matrix,
       {
         if (uScreen->is_desktop_active_)
         {
-          top_visible_window = GetTopVisibleWindow();
-
-          if (top_visible_window && (window->id() == top_visible_window->id()))
+          if (PluginAdapter::Default().IsWindowOnTop(window->id()))
           {
             draw_panel_shadow = DrawPanelShadow::OVER_WINDOW;
             uScreen->panelShadowPainted = CompRegion();
@@ -3083,10 +3103,10 @@ CompPoint UnityWindow::tryNotIntersectUI(CompPoint& pos)
 
   for (auto const& launcher : launchers)
   {
-    nux::Geometry geo = launcher->GetAbsoluteGeometry();
-
     if (launcher->options()->hide_mode == LAUNCHER_HIDE_AUTOHIDE && launcher->Hidden())
       continue;
+
+    auto const& geo = launcher->GetAbsoluteGeometry();
 
     if (geo.IsInside(result))
     {
@@ -3180,8 +3200,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       override_color.red = override_color.red / override_color.alpha;
       override_color.green = override_color.green / override_color.alpha;
       override_color.blue = override_color.blue / override_color.alpha;
-      if (_bghash)
-        _bghash->OverrideColor(override_color);
+      bghash_->OverrideColor(override_color);
       break;
     }
     case UnityshellOptions::LauncherHideMode:
@@ -3270,6 +3289,9 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
     case UnityshellOptions::DisableShowDesktop:
       switcher_controller_->SetShowDesktopDisabled(optionGetDisableShowDesktop());
       break;
+    case UnityshellOptions::DisableMouse:
+      switcher_controller_->SetMouseDisabled(optionGetDisableMouse());
+      break;
     case UnityshellOptions::ShowMinimizedWindows:
       compiz::CompizMinimizedWindowHandler<UnityScreen, UnityWindow>::setFunctions (optionGetShowMinimizedWindows ());
       screen->enterShowDesktopModeSetEnabled (this, optionGetShowMinimizedWindows ());
@@ -3330,16 +3352,14 @@ void UnityScreen::Relayout()
 
   UScreen *uscreen = UScreen::GetDefault();
   int primary_monitor = uscreen->GetPrimaryMonitor();
-  auto geo = uscreen->GetMonitorGeometry(primary_monitor);
-
-  primary_monitor_ = nux::Geometry(geo.x, geo.y, geo.width, geo.height);
+  auto const& geo = uscreen->GetMonitorGeometry(primary_monitor);
   wt->SetWindowSize(geo.width, geo.height);
 
   LOG_DEBUG(logger) << "Setting to primary screen rect:"
-                    << " x=" << primary_monitor_().x
-                    << " y=" << primary_monitor_().y
-                    << " w=" << primary_monitor_().width
-                    << " h=" << primary_monitor_().height;
+                    << " x=" << geo.x
+                    << " y=" << geo.y
+                    << " w=" << geo.width
+                    << " h=" << geo.height;
 
   needsRelayout = false;
 
@@ -3397,11 +3417,14 @@ void UnityScreen::initLauncher()
 {
   Timer timer;
 
+  bghash_.reset(new BGHash());
+
   auto xdnd_collection_window = std::make_shared<XdndCollectionWindowImp>();
   auto xdnd_start_stop_notifier = std::make_shared<XdndStartStopNotifierImp>();
   auto xdnd_manager = std::make_shared<XdndManagerImp>(xdnd_start_stop_notifier, xdnd_collection_window);
+  auto edge_barriers = std::make_shared<ui::EdgeBarrierController>();
 
-  launcher_controller_ = std::make_shared<launcher::Controller>(xdnd_manager);
+  launcher_controller_ = std::make_shared<launcher::Controller>(xdnd_manager, edge_barriers);
   AddChild(launcher_controller_.get());
 
   switcher_controller_ = std::make_shared<switcher::Controller>();
@@ -3411,7 +3434,7 @@ void UnityScreen::initLauncher()
 
   /* Setup panel */
   timer.Reset();
-  panel_controller_ = std::make_shared<panel::Controller>();
+  panel_controller_ = std::make_shared<panel::Controller>(edge_barriers);
   AddChild(panel_controller_.get());
   panel_controller_->SetMenuShowTimings(optionGetMenusFadein(),
                                         optionGetMenusFadeout(),
@@ -3584,7 +3607,7 @@ bool WindowHasInconsistentShapeRects (Display *d,
 }
 
 UnityWindow::UnityWindow(CompWindow* window)
-  : BaseSwitchWindow (dynamic_cast<BaseSwitchScreen *> (UnityScreen::get (screen)), window)
+  : BaseSwitchWindow(static_cast<BaseSwitchScreen*>(UnityScreen::get(screen)), window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
   , window(window)
   , cWindow(CompositeWindow::get(window))
@@ -3661,6 +3684,10 @@ void UnityWindow::AddProperties(GVariantBuilder* builder)
     .add("xid", (uint64_t)xid)
     .add("title", wm.GetWindowName(xid))
     .add("fake_decorated", uScreen->fake_decorated_windows_.find(this) != uScreen->fake_decorated_windows_.end())
+    .add("maximized", wm.IsWindowVerticallyMaximized(xid))
+    .add("horizontally_maximized", wm.IsWindowHorizontallyMaximized(xid))
+    .add("vertically_maximized", wm.IsWindowVerticallyMaximized(xid))
+    .add("minimized", wm.IsWindowMinimized(xid))
     .add("scaled", scaled)
     .add("scaled_close_x", close_button_geo_.x)
     .add("scaled_close_y", close_button_geo_.y)
@@ -3972,15 +3999,31 @@ void UnityWindow::scalePaintDecoration(GLWindowPaintAttrib const& attrib,
   if (state != ScaleScreen::Wait && state != ScaleScreen::Out)
     return;
 
-  auto const& scaled_geo = GetScaledGeometry();
+  nux::Geometry const& scale_geo = GetScaledGeometry();
+
   auto const& pos = scale_win->getCurrentPosition();
 
   bool highlighted = (ss->getSelectedWindow() == window->id());
-  paintFakeDecoration(scaled_geo, attrib, transform, mask, highlighted, pos.scale);
+  paintFakeDecoration(scale_geo, attrib, transform, mask, highlighted, pos.scale);
+}
+
+nux::Geometry UnityWindow::GetLayoutWindowGeometry()
+{
+  auto const& layout_window = UnityScreen::get(screen)->GetSwitcherDetailLayoutWindow(window->id());
+
+  if (layout_window)
+    return layout_window->result;
+
+  return nux::Geometry();
 }
 
 nux::Geometry UnityWindow::GetScaledGeometry()
 {
+  WindowManager& wm = WindowManager::Default();
+
+  if (!wm.IsScaleActive())
+    return nux::Geometry();
+
   ScaleWindow* scale_win = ScaleWindow::get(window);
 
   ScalePosition const& pos = scale_win->getCurrentPosition();

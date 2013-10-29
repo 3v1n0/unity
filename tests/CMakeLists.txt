@@ -24,6 +24,8 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope3.scope
                 ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope3.scope)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/testscope4.scope
                 ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/testscope4.scope)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/scopes/commands.scope
+                ${CMAKE_BINARY_DIR}/tests/data/unity/scopes/commands.scope)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/brownnoise.mp3
                 ${CMAKE_BINARY_DIR}/tests/data/unity/sounds/brownnoise.mp3 COPYONLY)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/pinknoise.mp3
@@ -34,7 +36,7 @@ configure_file (${CMAKE_CURRENT_SOURCE_DIR}/data/unity/sounds/whitenoise.mp3
 #
 # Unit tests
 #
-set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.99.0")
+set (TEST_DEPS "${UNITY_PLUGIN_DEPS};unity>=4.99.0;libupstart;libnih;libnih-dbus;dbus-1")
 pkg_check_modules (TEST_UNIT_DEPS REQUIRED ${TEST_DEPS})
 
 string (REPLACE ";" " " TEST_UNIT_DEPS_CFLAGS_OTHER "${TEST_UNIT_CFLAGS_OTHER}")
@@ -105,8 +107,6 @@ if (GMOCK_LIB AND
   set (GTEST_SLOW_SOURCES
        test_main.cpp
        logger_helper.cpp
-       test_im_text_entry_slow.cpp
-       test_im_text_entry_class.cpp
        test_switcher_controller_slow.cpp
        test_switcher_controller_class.cpp
        test_tooltip_manager.cpp
@@ -128,8 +128,12 @@ if (GMOCK_LIB AND
 # The actual test executable (xless) - do not put anything that requires X in here
   set (GTEST_XLESS_SOURCES
        test_main_xless.cpp
+       mock-application.cpp
+       test_action_handle.cpp
        test_abstract_interface_generator.cpp
+       test_animation_utils.cpp
        test_connection_manager.cpp
+       test_delta_tracker.cpp
        test_glib_dbus_object.cpp
        test_glib_cancellable.cpp
        test_glib_object.cpp
@@ -143,6 +147,7 @@ if (GMOCK_LIB AND
        test_grabhandle.cpp
        test_gsettings_scopes.cpp
        test_desktop_utilities.cpp
+       test_desktop_application_subject.cpp
        test_indicator.cpp
        test_indicator_appmenu.cpp
        test_indicator_entry.cpp
@@ -160,6 +165,7 @@ if (GMOCK_LIB AND
        test_time_util.cpp
        test_ubus.cpp
        test_unityshell_private.cpp
+       test_volume_imp.cpp
        ${UNITY_SRC}/UnityshellPrivate.cpp
        ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle.cpp
        ${CMAKE_SOURCE_DIR}/plugins/unity-mt-grab-handles/src/unity-mt-grab-handle-group.cpp
@@ -170,9 +176,11 @@ if (GMOCK_LIB AND
 
   set (GTEST_XLESS_LIBS
       gtest
+      test-libs-c
       unity-shared
       unity-shared-standalone
       launcher-lib
+      switcher-lib
       ${GMOCK_LIB}
       ${GMOCK_MAIN_LIB}
       ${LIBS}
@@ -249,7 +257,6 @@ if (ENABLE_X_SUPPORT)
                  test_icon_loader.cpp
                  test_im_text_entry.cpp
                  test_keyboard_util.cpp
-                 test_im_text_entry_class.cpp
                  test_launcher.cpp
                  test_launcher_controller.cpp
                  test_launcher_drag_window.cpp
@@ -258,6 +265,7 @@ if (ENABLE_X_SUPPORT)
                  test_launcher_icon.cpp
                  test_launcher_minimize_speed.cpp
                  test_launcher_tooltip.cpp
+                 test_panel_controller.cpp
                  test_panel_indicators_view.cpp
                  test_panel_menu_view.cpp
                  test_panel_service.cpp
@@ -304,7 +312,6 @@ if (ENABLE_X_SUPPORT)
                  test_unity_settings.cpp
                  test_unity_window_style.cpp
                  test_unity_window_view.cpp
-                 test_volume_imp.cpp
                  test_volume_launcher_icon.cpp
                  test_window_buttons.cpp
                  test_xdnd_manager_imp.cpp
@@ -316,14 +323,14 @@ if (ENABLE_X_SUPPORT)
 
   # Build plain C files separately so they don't try to include the
   # C++ pch.
-  add_library(test-gtest-plainc STATIC
+  add_library(test-libs-c STATIC
               bamf-mock-application.c
               bamf-mock-window.c
               gmockmount.c
               gmockvolume.c
               )
   target_link_libraries(test-gtest
-                        test-gtest-plainc
+                        test-libs-c
                         gtest
                         gmock
                         unity-shared

@@ -36,7 +36,6 @@ DesktopLauncherIcon::DesktopLauncherIcon()
   tooltip_text = _("Show Desktop");
   icon_name = "desktop";
   SetQuirk(Quirk::VISIBLE, true);
-  SetQuirk(Quirk::RUNNING, false);
   SetShortcut('d');
 }
 
@@ -51,7 +50,7 @@ std::string DesktopLauncherIcon::GetName() const
   return "DesktopLauncherIcon";
 }
 
-std::string DesktopLauncherIcon::GetRemoteUri()
+std::string DesktopLauncherIcon::GetRemoteUri() const
 {
   return FavoriteStore::URI_PREFIX_UNITY + "desktop-icon";
 }

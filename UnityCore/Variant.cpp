@@ -70,6 +70,10 @@ std::string Variant::GetString() const
   }
   else
   {
+    auto const& variant = GetVariant();
+    if (variant)
+      return variant.GetString();
+
     LOG_ERROR(logger) << "You're trying to extract a String from a variant which is of type "
                       << g_variant_type_peek_string(g_variant_get_type(variant_));
   }
@@ -94,6 +98,10 @@ int32_t Variant::GetInt32() const
   }
   else
   {
+    auto const& variant = GetVariant();
+    if (variant)
+      return variant.GetInt32();
+
     LOG_ERROR(logger) << "You're trying to extract an Int32 from a variant which is of type "
                       << g_variant_type_peek_string(g_variant_get_type(variant_));
   }
@@ -118,6 +126,10 @@ uint32_t Variant::GetUInt32() const
   }
   else
   {
+    auto const& variant = GetVariant();
+    if (variant)
+      return variant.GetUInt32();
+
     LOG_ERROR(logger) << "You're trying to extract an UInt32 from a variant which is of type "
                       << g_variant_type_peek_string(g_variant_get_type(variant_));
   }
@@ -141,6 +153,10 @@ int64_t Variant::GetInt64() const
   }
   else
   {
+    auto const& variant = GetVariant();
+    if (variant)
+      return variant.GetInt64();
+
     LOG_ERROR(logger) << "You're trying to extract an Int64 from a variant which is of type "
                       << g_variant_type_peek_string(g_variant_get_type(variant_));
   }
@@ -165,6 +181,10 @@ uint64_t Variant::GetUInt64() const
   }
   else
   {
+    auto const& variant = GetVariant();
+    if (variant)
+      return variant.GetUInt64();
+
     LOG_ERROR(logger) << "You're trying to extract an UInt64 from a variant which is of type "
                       << g_variant_type_peek_string(g_variant_get_type(variant_));
   }
@@ -189,6 +209,10 @@ bool Variant::GetBool() const
   }
   else
   {
+    auto const& variant = GetVariant();
+    if (variant)
+      return variant.GetBool();
+
     LOG_ERROR(logger) << "You're trying to extract a Boolean from a variant which is of type "
                       << g_variant_type_peek_string(g_variant_get_type(variant_));
   }
@@ -213,6 +237,10 @@ double Variant::GetDouble() const
   }
   else
   {
+    auto const& variant = GetVariant();
+    if (variant)
+      return variant.GetDouble();
+
     LOG_ERROR(logger) << "You're trying to extract a Double from a variant which is of type "
                       << g_variant_type_peek_string(g_variant_get_type(variant_));
   }
@@ -223,6 +251,30 @@ double Variant::GetDouble() const
 float Variant::GetFloat() const
 {
   return static_cast<float>(GetDouble());
+}
+
+Variant Variant::GetVariant() const
+{
+  Variant value;
+
+  if (!variant_)
+    return value;
+
+  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_VARIANT))
+  {
+    value = Variant(g_variant_get_variant(variant_), StealRef());
+  }
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(v)")))
+  {
+    g_variant_get(variant_, "(v)", &value);
+  }
+  else
+  {
+    LOG_ERROR(logger) << "You're trying to extract a Variant from a variant which is of type "
+                      << g_variant_type_peek_string(g_variant_get_type(variant_));
+  }
+
+  return value;
 }
 
 bool Variant::ASVToHints(HintsMap& hints) const

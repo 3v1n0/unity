@@ -23,43 +23,13 @@
 #include <memory>
 #include <unordered_map>
 #include <sigc++/sigc++.h>
+#include "ActionHandle.h"
 
 namespace unity
 {
 namespace connection
 {
-struct handle
-{
-  handle() : handle_(0) {}
-  handle(uint64_t val) : handle_(val) {}
-  operator uint64_t() const { return handle_; }
-  handle& operator++() { ++handle_; return *this; }
-  handle operator++(int) { auto tmp = *this; ++handle_; return tmp; }
-  handle& operator--() { --handle_; return *this; }
-  handle operator--(int) { auto tmp = *this; --handle_; return tmp; }
-
-private:
-  uint64_t handle_;
-};
-} // connection namespace
-} // unity namespace
-
-namespace std
-{
-// Template specialization, needed for unordered_map
-template<> struct hash<unity::connection::handle>
-{
-  std::size_t operator()(unity::connection::handle const& h) const
-  {
-    return std::hash<uint64_t>()(h);
-  }
-};
-}
-
-namespace unity
-{
-namespace connection
-{
+typedef unity::action::handle handle;
 
 class Wrapper
 {

@@ -28,7 +28,6 @@
 
 #include "AbstractLauncherIcon.h"
 #include "DeviceLauncherSection.h"
-#include "DevicesSettingsImp.h"
 #ifdef USE_X11
 #include "EdgeBarrierController.h"
 #endif
@@ -39,7 +38,6 @@
 #include "LauncherModel.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "unity-shared/UBusWrapper.h"
-#include "VolumeMonitorWrapper.h"
 #include "XdndManager.h"
 
 namespace unity
@@ -50,7 +48,7 @@ namespace launcher
 class Controller::Impl : public sigc::trackable
 {
 public:
-  Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager);
+  Impl(Controller* parent, XdndManager::Ptr const& xdnd_manager, ui::EdgeBarrierController::Ptr const& edge_barriers);
   ~Impl();
 
   void UpdateNumWorkspaces(int workspaces);
@@ -88,7 +86,7 @@ public:
 
   void RegisterIcon(AbstractLauncherIcon::Ptr const& icon, int priority = std::numeric_limits<int>::min());
 
-  AbstractLauncherIcon::Ptr CreateFavoriteIcon(std::string const& icon_uri);
+  AbstractLauncherIcon::Ptr CreateFavoriteIcon(std::string const& icon_uri, bool emit_signal = false);
   AbstractLauncherIcon::Ptr GetIconByUri(std::string const& icon_uri);
   SoftwareCenterLauncherIcon::Ptr CreateSCLauncherIcon(std::string const& file_path, std::string const& aptdaemon_trans_id, std::string const& icon_path);
 
@@ -117,7 +115,7 @@ public:
 
   void OnDndStarted(std::string const& data, int monitor);
   void OnDndFinished();
-  void OnDndMonitorChanged(int monitor);
+  void OnDndMonitorChanged(std::string const& data, int old_monitor, int new_monitor);
   GVariant* OnDBusMethodCall(std::string const& method, GVariant *parameters);
 
   Controller* parent_;
@@ -131,7 +129,7 @@ public:
   AbstractLauncherIcon::Ptr desktop_icon_;
 
 #ifdef USE_X11
-  ui::EdgeBarrierController edge_barriers_;
+  ui::EdgeBarrierController::Ptr edge_barriers_;
 #endif
 
   LauncherList launchers;
@@ -144,7 +142,6 @@ public:
   int reactivate_index;
   bool keynav_restore_window_;
   int launcher_key_press_time_;
-  int last_dnd_monitor_;
 
   glib::DBusServer dbus_server_;
   glib::SourceManager sources_;
@@ -152,6 +149,7 @@ public:
 
   connection::Wrapper launcher_key_press_connection_;
   connection::Wrapper launcher_event_outside_connection_;
+  connection::Wrapper average_color_connection_;
 };
 
 } // launcher namespace

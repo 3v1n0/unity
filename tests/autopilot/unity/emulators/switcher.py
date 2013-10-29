@@ -234,6 +234,57 @@ class SwitcherController(UnityIntrospectionObject, KeybindingsHelper):
 class SwitcherView(UnityIntrospectionObject):
     """An emulator class for interacting with with SwitcherView."""
 
+    def __init__(self, *args, **kwargs):
+        super(SwitcherView, self).__init__(*args, **kwargs)
+        self._mouse = Mouse.create()
+
+    @property
+    def icon_args(self):
+        return self.get_children_by_type(RenderArgs);
+
+    @property
+    def detail_icons(self):
+        return self.get_children_by_type(LayoutWindow);
+
+    def move_over_icon(self, index):
+        offset = self.spread_offset
+        icon_arg = self.icon_args[index]
+
+        x = icon_arg.logical_center_x + offset
+        y = icon_arg.logical_center_y + offset
+
+        self._mouse.move(x,y)
+
+    def move_over_detail_icon(self, index):
+        offset = self.spread_offset
+        x = self.detail_icons[index].x + offset
+        y = self.detail_icons[index].y + offset
+
+        self._mouse.move(x,y)
+
+    def break_mouse_bump_detection(self):
+        """ Only break mouse detection if the switcher is open.
+            Move the mouse back to the orginal position
+        """
+
+        old_x = self._mouse.x
+        old_y = self._mouse.y
+
+        self.move_over_icon(0)
+
+        x = self._mouse.x
+        y = self._mouse.y
+        self._mouse.move(x + 5, y + 5)
+        self._mouse.move(x - 5, y - 5)
+
+        self._mouse.move(old_x, old_y)
+
+
+class RenderArgs(UnityIntrospectionObject):
+  """An emulator class for interacting with the RenderArgs class."""
+
+class LayoutWindow(UnityIntrospectionObject):
+  """An emulator class for interacting with the LayoutWindows class."""
 
 class SwitcherModel(UnityIntrospectionObject):
     """An emulator class for interacting with the SwitcherModel."""

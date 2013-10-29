@@ -24,7 +24,7 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/GLibSignal.h>
 
-#include "unity-shared/ApplicationManager.h"
+#include "unity-shared/DesktopApplicationManager.h"
 
 
 namespace unity
@@ -104,7 +104,7 @@ private:
 };
 
 
-class Application : public ::unity::Application, public View
+class Application : public ::unity::desktop::Application, public View
 {
 public:
   Application(ApplicationManager const& manager,
@@ -112,7 +112,6 @@ public:
   Application(ApplicationManager const& manager,
               glib::Object<BamfView> const& app);
 
-  virtual std::string desktop_file() const;
   virtual std::string type() const;
 
   virtual WindowList GetWindows() const;
@@ -125,10 +124,14 @@ public:
 
   virtual void Quit() const;
 
+  virtual bool CreateLocalDesktopFile() const;
+
   virtual std::string repr() const;
 
 private: // Property getters and setters
   void HookUpEvents();
+
+  std::string GetDesktopFile() const;
 
   bool GetSeen() const;
   bool SetSeen(bool const& param);
@@ -137,7 +140,7 @@ private: // Property getters and setters
   bool SetSticky(bool const& param);
 
 private:
-  glib::Object< ::BamfApplication> bamf_app_;
+  glib::Object<::BamfApplication> bamf_app_;
   glib::SignalManager signals_;
   std::string type_;
 };
@@ -148,13 +151,11 @@ public:
   Manager();
   ~Manager();
 
-  ApplicationWindowPtr GetActiveWindow() override;
-
-  ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) override;
-
-  ApplicationList GetRunningApplications() override;
-
-  ApplicationPtr GetApplicationForWindow(Window xid) override;
+  ApplicationPtr GetUnityApplication() const override;
+  ApplicationWindowPtr GetActiveWindow() const override;
+  ApplicationPtr GetApplicationForDesktopFile(std::string const& desktop_file) const override;
+  ApplicationList GetRunningApplications() const override;
+  ApplicationPtr GetApplicationForWindow(Window xid) const override;
 
 private:
   void OnViewOpened(BamfMatcher* matcher, BamfView* view);

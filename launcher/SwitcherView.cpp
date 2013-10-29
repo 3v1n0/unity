@@ -21,6 +21,7 @@
 #include "SwitcherView.h"
 #include "unity-shared/IconRenderer.h"
 #include "unity-shared/TimeUtil.h"
+#include "unity-shared/UScreen.h"
 
 #include <Nux/Nux.h>
 #include <UnityCore/Variant.h>
@@ -35,7 +36,10 @@ namespace switcher
 
 namespace
 {
-  const unsigned int VERTICAL_PADDING = 45;
+  unsigned int const VERTICAL_PADDING = 45;
+  unsigned int const SPREAD_OFFSET = 100;
+  unsigned int const EXTRA_ICON_SPACE = 10;
+  unsigned int const MAX_DIRECTIONS_CHANGED = 3; 
 }
 
 NUX_IMPLEMENT_OBJECT_TYPE(SwitcherView);
@@ -55,10 +59,13 @@ SwitcherView::SwitcherView()
   , spread_size(3.5f)
   , icon_renderer_(std::make_shared<IconRenderer>())
   , text_view_(new StaticCairoText(""))
+  , last_icon_selected_(-1)
+  , last_detail_icon_selected_(-1)
   , target_sizes_set_(false)
+  , check_mouse_first_time_(true)
 {
   icon_renderer_->pip_style = OVER_TILE;
-  icon_renderer_->monitor = max_num_monitors;
+  icon_renderer_->monitor = monitors::MAX;
 
   text_view_->SetMaximumWidth(tile_size * spread_size);
   text_view_->SetLines(1);
@@ -68,7 +75,13 @@ SwitcherView::SwitcherView()
   icon_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnIconSizeChanged));
   tile_size.changed.connect (sigc::mem_fun (this, &SwitcherView::OnTileSizeChanged));
 
+  mouse_move.connect (sigc::mem_fun(this, &SwitcherView::RecvMouseMove));
+  mouse_down.connect (sigc::mem_fun(this, &SwitcherView::RecvMouseDown));
+  mouse_up.connect   (sigc::mem_fun(this, &SwitcherView::RecvMouseUp));
+  mouse_wheel.connect(sigc::mem_fun(this, &SwitcherView::RecvMouseWheel));
+
   CaptureMouseDownAnyWhereElse(true);
+  SetAcceptMouseWheelEvent(true);
   ResetTimer();
 
   animate.changed.connect([this] (bool enabled) {
@@ -103,7 +116,31 @@ void SwitcherView::AddProperties(GVariantBuilder* builder)
   .add("animation-length", animation_length)
   .add("spread-size", (float)spread_size)
   .add("label", text_view_->GetText())
+  .add("last_icon_selected", last_icon_selected_)
+  .add("spread_offset", SPREAD_OFFSET)
   .add("label_visible", text_view_->IsVisible());
+}
+
+debug::Introspectable::IntrospectableList SwitcherView::GetIntrospectableChildren()
+{
+  std::list<unity::debug::Introspectable*> introspection_results;
+
+  if (model_->detail_selection)
+  {
+    for (auto const& target : render_targets_)
+    {
+      introspection_results.push_back(target.get());
+    }
+  }
+  else if (!last_args_.empty())
+  {
+    for (auto& args : last_args_)
+    {
+      introspection_results.push_back(&args);
+    }
+  }
+
+  return introspection_results;
 }
 
 LayoutWindow::Vector SwitcherView::ExternalTargets ()
@@ -118,6 +155,8 @@ void SwitcherView::SetModel(SwitcherModel::Ptr model)
   model->detail_selection.changed.connect (sigc::mem_fun (this, &SwitcherView::OnDetailSelectionChanged));
   model->detail_selection_index.changed.connect (sigc::mem_fun (this, &SwitcherView::OnDetailSelectionIndexChanged));
 
+  last_icon_selected_ = -1;
+
   if (!model->Selection())
     return;
 
@@ -129,12 +168,12 @@ void SwitcherView::SetModel(SwitcherModel::Ptr model)
 
 void SwitcherView::OnIconSizeChanged (int size)
 {
-  icon_renderer_->SetTargetSize(tile_size, icon_size, 10);
+  icon_renderer_->SetTargetSize(tile_size, icon_size, minimum_spacing);
 }
 
 void SwitcherView::OnTileSizeChanged (int size)
 {
-  icon_renderer_->SetTargetSize(tile_size, icon_size, 10);
+  icon_renderer_->SetTargetSize(tile_size, icon_size, minimum_spacing);
   vertical_size = tile_size + VERTICAL_PADDING * 2;
 }
 
@@ -167,6 +206,9 @@ void SwitcherView::OnDetailSelectionChanged(bool detail)
 {
   text_view_->SetVisible(!detail);
 
+  last_detail_icon_selected_ = -1;
+  check_mouse_first_time_ = true;
+
   if (!detail)
   {
     text_view_->SetText(model_->Selection()->tooltip_text());
@@ -182,8 +224,266 @@ void SwitcherView::OnSelectionChanged(AbstractLauncherIcon::Ptr const& selection
   if (selection)
     text_view_->SetText(selection->tooltip_text());
 
+  delta_tracker_.ResetState();
+
   SaveLast();
   QueueDraw();
+}
+
+nux::Point CalculateMouseMonitorOffset(int x, int y)
+{
+  int monitor = unity::UScreen::GetDefault()->GetMonitorWithMouse();
+  nux::Geometry const& geo = unity::UScreen::GetDefault()->GetMonitorGeometry(monitor);
+
+  return {geo.x + x, geo.y + y};
+}
+
+void SwitcherView::MouseHandlingBackToNormal()
+{
+  check_mouse_first_time_ = false;
+  last_icon_selected_ = -1;
+  last_detail_icon_selected_ = -1;
+}
+
+void SwitcherView::RecvMouseMove(int x, int y, int dx, int dy, unsigned long /*button_flags*/, unsigned long /*key_flags*/)
+{
+  // We just started, and want to check if we are a bump or not.
+  // Once we are no longer a bump, skip!!
+  if (check_mouse_first_time_)
+  {
+    if (CheckMouseInsideBackground(x,y))
+    {
+      delta_tracker_.HandleNewMouseDelta(dx, dy);
+      if (delta_tracker_.AmountOfDirectionsChanged() >= MAX_DIRECTIONS_CHANGED)
+      {
+        MouseHandlingBackToNormal();
+      }
+    }
+    else
+    {
+      MouseHandlingBackToNormal();
+    }
+  }
+
+  if (model_->detail_selection)
+  {
+    HandleDetailMouseMove(x, y);
+  }
+  else
+  {
+    HandleMouseMove(x, y);
+  }
+}
+
+void SwitcherView::HandleDetailMouseMove(int x, int y)
+{
+  nux::Point const& mouse_pos = CalculateMouseMonitorOffset(x, y);
+  int detail_icon_index = DetailIconIdexAt(mouse_pos.x, mouse_pos.y);
+
+  if (check_mouse_first_time_)
+  {
+    last_detail_icon_selected_ = detail_icon_index;
+    return;
+  }
+
+  if (detail_icon_index >= 0 && detail_icon_index != last_detail_icon_selected_)
+  {
+    model_->detail_selection_index = detail_icon_index;
+    last_detail_icon_selected_ = detail_icon_index;
+  }
+  else if (detail_icon_index < 0)
+  {
+    last_detail_icon_selected_ = -1;
+  }
+}
+
+void SwitcherView::HandleMouseMove(int x, int y)
+{
+  int icon_index = IconIndexAt(x, y);
+
+  if (check_mouse_first_time_)
+  {
+    last_icon_selected_ = icon_index;
+    return;
+  }
+
+  if (icon_index >= 0)
+  {
+    if (icon_index != last_icon_selected_)
+    {
+      if (icon_index != model_->SelectionIndex())
+      {
+        model_->Select(icon_index);
+      }
+
+      last_icon_selected_ = icon_index;
+    }
+
+    switcher_mouse_move.emit(icon_index);
+  }
+  else if (icon_index < 0)
+  {
+    last_icon_selected_ = -1;
+  }
+}
+
+void SwitcherView::RecvMouseDown(int x, int y, unsigned long button_flags, unsigned long /*key_flags*/)
+{
+  int button = nux::GetEventButton(button_flags);
+
+  if (!CheckMouseInsideBackground(x, y))
+    hide_request.emit(false);
+
+  if (model_->detail_selection)
+  {
+    HandleDetailMouseDown(x, y, button);
+  }
+  else
+  {
+    HandleMouseDown(x, y, button);
+  }
+}
+
+void SwitcherView::HandleDetailMouseDown(int x, int y, int button)
+{
+  nux::Point const& mouse_pos = CalculateMouseMonitorOffset(x, y);
+  int detail_icon_index = DetailIconIdexAt(mouse_pos.x, mouse_pos.y);
+
+  last_detail_icon_selected_ = detail_icon_index;
+
+  switcher_mouse_down.emit(detail_icon_index, button);
+}
+
+void SwitcherView::HandleMouseDown(int x, int y, int button)
+{
+  int icon_index = IconIndexAt(x,y);
+
+  last_icon_selected_ = icon_index;
+
+  switcher_mouse_down.emit(icon_index, button);
+}
+
+void SwitcherView::RecvMouseUp(int x, int y, unsigned long button_flags, unsigned long /*key_flags*/)
+{
+  int button = nux::GetEventButton(button_flags);
+
+  if (model_->detail_selection)
+  {
+    HandleDetailMouseUp(x, y, button);
+  }
+  else
+  {
+    HandleMouseUp(x, y, button);
+  }
+}
+
+void SwitcherView::HandleDetailMouseUp(int x, int y, int button)
+{
+  nux::Point const& mouse_pos = CalculateMouseMonitorOffset(x, y);
+  int detail_icon_index = DetailIconIdexAt(mouse_pos.x, mouse_pos.y);
+
+  switcher_mouse_up.emit(detail_icon_index, button);
+
+  if (button == 1)
+  {
+    if (detail_icon_index >= 0 && detail_icon_index == last_detail_icon_selected_)
+    {
+      model_->detail_selection_index = detail_icon_index;
+      hide_request.emit(true);
+    }
+    else if (detail_icon_index < 0)
+    {
+      model_->detail_selection = false;
+    }
+  }
+  else if (button == 3)
+  {
+    model_->detail_selection = false;
+  }
+}
+
+void SwitcherView::HandleMouseUp(int x, int y, int button)
+{
+  int icon_index = IconIndexAt(x,y);
+
+  switcher_mouse_up.emit(icon_index, button);
+
+  if (button == 1)
+  {
+    if (icon_index >= 0 && icon_index == last_icon_selected_)
+    {
+      model_->Select(icon_index);
+      hide_request.emit(true);
+    }
+  }
+}
+
+void SwitcherView::RecvMouseWheel(int /*x*/, int /*y*/, int wheel_delta, unsigned long /*button_flags*/, unsigned long /*key_flags*/)
+{
+  if (model_->detail_selection)
+  {
+    HandleDetailMouseWheel(wheel_delta);
+  }
+  else
+  {
+    HandleMouseWheel(wheel_delta);
+  }
+}
+
+void SwitcherView::HandleDetailMouseWheel(int wheel_delta)
+{
+  if (wheel_delta > 0)
+  {
+    model_->NextDetail();
+  }
+  else
+  {
+    model_->PrevDetail();
+  }
+}
+
+void SwitcherView::HandleMouseWheel(int wheel_delta)
+{
+  if (wheel_delta > 0)
+  {
+    model_->Next();
+  }
+  else
+  {
+    model_->Prev();
+  }
+}
+
+bool SwitcherView::InspectKeyEvent(unsigned int eventType, unsigned int keysym, const char* character)
+{
+  if (eventType == nux::NUX_KEYDOWN)
+  {
+    switch(keysym)
+    {
+      case NUX_VK_UP:
+        switcher_stop_detail.emit();
+        break;
+      case NUX_VK_RIGHT:
+        switcher_next.emit();
+        break;
+      case NUX_VK_LEFT:
+        switcher_prev.emit();
+        break;
+      case NUX_VK_DOWN:
+        switcher_start_detail.emit();
+        break;
+      default:
+        return false;
+        break;
+    }
+  }
+
+  return true;
+}
+
+nux::Area* SwitcherView::FindKeyFocusArea(unsigned int key_symbol, unsigned long x11_key_code, unsigned long special_keys_state)
+{
+  return this;
 }
 
 SwitcherModel::Ptr SwitcherView::GetModel()
@@ -321,13 +621,13 @@ nux::Size SwitcherView::SpreadSize()
   return result;
 }
 
-void SwitcherView::GetFlatIconPositions (int n_flat_icons,
-                                         int size,
-                                         int selection,
-                                         int &first_flat,
-                                         int &last_flat,
-                                         int &half_fold_left,
-                                         int &half_fold_right)
+void GetFlatIconPositions (int n_flat_icons,
+                           int size,
+                           int selection,
+                           int &first_flat,
+                           int &last_flat,
+                           int &half_fold_left,
+                           int &half_fold_right)
 {
   half_fold_left = -1;
   half_fold_right = -1;
@@ -420,7 +720,7 @@ std::list<RenderArg> SwitcherView::RenderArgsFlat(nux::Geometry& background_geo,
       nux::Geometry const& spread_bounds = UpdateRenderTargets(progress);
       ResizeRenderTargets(spread_bounds, progress);
       // remove extra space consumed by spread
-      spread_padded_width = spread_bounds.width + 100;
+      spread_padded_width = spread_bounds.width + SPREAD_OFFSET;
       max_width -= spread_padded_width - tile_size;
 
       int expansion = std::max(0, spread_bounds.height - icon_size);
@@ -551,7 +851,7 @@ void SwitcherView::PreDraw(nux::GraphicsEngine& GfxContext, bool force_draw)
 
   if (!target_sizes_set_)
   {
-    icon_renderer_->SetTargetSize(tile_size, icon_size, 10);
+    icon_renderer_->SetTargetSize(tile_size, icon_size, minimum_spacing);
     target_sizes_set_ = true;
   }
 
@@ -640,9 +940,9 @@ void SwitcherView::DrawOverlay(nux::GraphicsEngine& GfxContext, bool force_draw,
   }
 }
 
-int SwitcherView::IconIndexAt(int x, int y)
+int SwitcherView::IconIndexAt(int x, int y) const
 {
-  int half_size = icon_size.Get() / 2;
+  int half_size = icon_size.Get() / 2 + EXTRA_ICON_SPACE;
   int icon_index = -1;
 
   // Taking icon rotation into consideration will make selection more
@@ -671,6 +971,28 @@ int SwitcherView::IconIndexAt(int x, int y)
   }
 
   return icon_index;
+}
+
+int SwitcherView::DetailIconIdexAt(int x, int y) const
+{
+  int index = -1;
+
+  for (unsigned int i = 0; i < render_targets_.size(); ++i)
+  {
+    if (render_targets_[i]->result.IsPointInside(x + SPREAD_OFFSET, y + SPREAD_OFFSET))
+      return i;
+  }
+
+  return index;
+}
+
+bool SwitcherView::CheckMouseInsideBackground(int x, int y) const
+{
+  nux::Point p(x,y);
+  if (last_background_.IsInside(p))
+    return true;
+
+  return false;
 }
 
 }

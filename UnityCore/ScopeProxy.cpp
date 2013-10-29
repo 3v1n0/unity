@@ -83,6 +83,7 @@ public:
   // scope proxy properties
   nux::Property<ScopeViewType> view_type;
 
+  nux::Property<bool> results_dirty;
   nux::Property<bool> connected;
   nux::Property<std::string> channel;
   nux::Property<std::vector<unsigned int>> category_order;
@@ -118,6 +119,7 @@ private:
   void OnScopeOptionalMetadataChanged(UnityProtocolScopeProxy* proxy, GParamSpec* param);
   void OnScopeCategoryOrderChanged(UnityProtocolScopeProxy* sender, const gchar* channel_id, guint32* new_order, int new_order_length1);
   void OnScopeFilterSettingsChanged(UnityProtocolScopeProxy* sender, const gchar* channel_id, GVariant* filter_rows);
+  void OnScopeResultsInvalidated(UnityProtocolScopeProxy* sender, UnityProtocolChannelType channel_type);
   /////////////////////////////////////////////////
 
   void WaitForProxyConnection(GCancellable* cancellable,
@@ -183,7 +185,7 @@ private:
         return;
       }
       if (data && data->callback)
-        data->callback(LocalResult(), ScopeHandledType::NOT_HANDLED, glib::HintsMap(), error);
+        data->callback(data->result, ScopeHandledType::NOT_HANDLED, glib::HintsMap(), error);
     }
     else if (data && data->callback)
     {
@@ -196,6 +198,7 @@ private:
       data->result.uri = glib::gchar_to_string(result.uri);
       data->callback(data->result, handled, hints, error);
     }
+    unity_protocol_activation_reply_raw_destroy(&result);
   }
   /////////////////////////////////////
 
@@ -261,6 +264,7 @@ ScopeProxy::Impl::Impl(ScopeProxy*const owner, ScopeData::Ptr const& scope_data)
   signals_conn_.Add(utils::ConnectProperties(owner_->connected, connected));
   signals_conn_.Add(utils::ConnectProperties(owner_->channel, channel));
   signals_conn_.Add(utils::ConnectProperties(owner_->category_order, category_order));
+  signals_conn_.Add(utils::ConnectProperties(owner_->results_dirty, results_dirty));
 
   // shared properties
   signals_conn_.Add(utils::ConnectProperties(owner_->is_master, scope_data_->is_master));
@@ -359,6 +363,7 @@ void ScopeProxy::Impl::OnNewScope(glib::Object<UnityProtocolScopeProxy> const& s
 
   gsignals_.Add<void, UnityProtocolScopeProxy*, const gchar*, guint32*, int>(scope_proxy_, "category-order-changed", sigc::mem_fun(this, &Impl::OnScopeCategoryOrderChanged));
   gsignals_.Add<void, UnityProtocolScopeProxy*, const gchar*, GVariant*>(scope_proxy_, "filter-settings-changed", sigc::mem_fun(this, &Impl::OnScopeFilterSettingsChanged));
+  gsignals_.Add<void, UnityProtocolScopeProxy*, UnityProtocolChannelType>(scope_proxy_, "results-invalidated", sigc::mem_fun(this, &Impl::OnScopeResultsInvalidated));
 
   scope_proxy_connected_ = unity_protocol_scope_proxy_get_connected(scope_proxy_);
 
@@ -513,7 +518,12 @@ void ScopeProxy::Impl::Search(std::string const& search_string, glib::HintsMap c
       }
       else
       {
-        Search(search_string, hints, callback, canc);
+        glib::HintsMap updated_hints(hints);
+        if (!owner_->form_factor().empty())
+        {
+          updated_hints["form-factor"] = g_variant_new_string(owner_->form_factor().c_str());
+        }
+        Search(search_string, updated_hints, callback, canc);
       }
     });
     return;
@@ -521,7 +531,12 @@ void ScopeProxy::Impl::Search(std::string const& search_string, glib::HintsMap c
 
   SearchData* data = new SearchData();
   data->search_string = search_string;
-  data->callback = callback;
+  data->callback = [this, callback] (std::string const& search_string, glib::HintsMap const& hints, glib::Error const& error)
+  {
+    results_dirty = false;
+    if (callback)
+      callback (search_string, hints, error);
+  };
 
   GHashTable* hints_table = glib::hashtable_from_hintsmap(hints);
 
@@ -695,6 +710,15 @@ void ScopeProxy::Impl::OnScopeFilterSettingsChanged(UnityProtocolScopeProxy* sen
   filters_->ApplyStateChanges(filter_rows);
 
   filters_change_connection.block(blocked);
+}
+
+void ScopeProxy::Impl::OnScopeResultsInvalidated(UnityProtocolScopeProxy* sender, UnityProtocolChannelType channel_type)
+{
+  if (channel_type != UNITY_PROTOCOL_CHANNEL_TYPE_DEFAULT) return;
+
+  LOG_DEBUG(logger) << scope_data_->id() << " - received results invalidated signal";
+
+  results_dirty = true;
 }
 
 static void category_filter_map_func (DeeModel* orig_model,

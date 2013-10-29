@@ -34,6 +34,8 @@ using namespace unity::launcher;
 
 namespace unity
 {
+namespace
+{
 
 struct MockVolumeMonitorWrapper : public AbstractVolumeMonitorWrapper
 {
@@ -56,6 +58,7 @@ struct MockVolumeMonitorWrapper : public AbstractVolumeMonitorWrapper
 struct MockDevicesSettings : DevicesSettings
 {
   typedef std::shared_ptr<MockDevicesSettings> Ptr;
+  typedef testing::NiceMock<MockDevicesSettings> Nice;
 
   MOCK_CONST_METHOD1(IsABlacklistedDevice, bool(std::string const& uuid));
   MOCK_METHOD1(TryToBlacklist, void(std::string const& uuid));
@@ -70,27 +73,36 @@ struct MockDeviceLauncherSection : DeviceLauncherSection
   {}
 };
 
-class MockVolume : public Volume
+struct MockVolume : Volume
 {
-public:
   typedef std::shared_ptr<MockVolume> Ptr;
+  typedef testing::NiceMock<MockVolume> Nice;
 
   MOCK_CONST_METHOD0(CanBeRemoved, bool(void));
   MOCK_CONST_METHOD0(CanBeStopped, bool(void));
   MOCK_CONST_METHOD0(GetName, std::string(void));
   MOCK_CONST_METHOD0(GetIconName, std::string(void));
   MOCK_CONST_METHOD0(GetIdentifier, std::string(void));
+  MOCK_CONST_METHOD0(GetUri, std::string(void));
   MOCK_CONST_METHOD0(HasSiblings, bool(void));
   MOCK_CONST_METHOD0(CanBeEjected, bool(void));
   MOCK_CONST_METHOD0(IsMounted, bool(void));
-  MOCK_CONST_METHOD0(IsOpened, bool(void));
 
-  MOCK_METHOD0(EjectAndShowNotification, void(void));
-  MOCK_METHOD1(MountAndOpenInFileManager, void(uint64_t));
+  MOCK_METHOD0(Eject, void());
+  MOCK_METHOD0(Mount, void());
   MOCK_METHOD0(StopDrive, void(void));
   MOCK_METHOD0(Unmount, void(void));
 };
 
-}
+struct MockDeviceNotificationDisplay : DeviceNotificationDisplay
+{
+  typedef std::shared_ptr<MockDeviceNotificationDisplay> Ptr;
+  typedef testing::NiceMock<MockDeviceNotificationDisplay> Nice;
+
+  MOCK_METHOD2(Display, void(std::string const& icon_name, std::string const& volume_name));
+};
+
+} // anonymous namespace
+} // unity namespace
 
 #endif

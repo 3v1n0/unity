@@ -293,15 +293,11 @@ void ScopeView::SetupCategories(Categories::Ptr const& categories)
   conn = categories->category_removed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryRemoved));
   category_removed_connection_ = conn_manager_.Add(conn);
 
-  auto resync_categories = [this, categories] ()
-  {
-    ClearCategories();
-    for (unsigned int i = 0; i < categories->count(); ++i)
-      OnCategoryAdded(categories->RowAtIndex(i));
-  };
+  categories->model.changed.connect(sigc::hide([this]() { ClearCategories(); }));
 
-  categories->model.changed.connect(sigc::hide(resync_categories));
-  resync_categories();
+  ClearCategories();
+  for (unsigned int i = 0; i < categories->count(); ++i)
+    OnCategoryAdded(categories->RowAtIndex(i));
 
   scope_->category_order.changed.connect(sigc::mem_fun(this, &ScopeView::OnCategoryOrderChanged));
 }
@@ -390,20 +386,21 @@ void ScopeView::SetupFilters(Filters::Ptr const& filters)
   conn = filters->filter_removed.connect(sigc::mem_fun(this, &ScopeView::OnFilterRemoved));
   filter_removed_connection_ = conn_manager_.Add(conn);
 
-  auto resync_filters = [this, filters] ()
+  auto clear_filters = [this] ()
   {
     auto conn = conn_manager_.Get(filter_removed_connection_);
     bool blocked = conn.block(true);
 
     filter_bar_->ClearFilters();
-    for (unsigned int i = 0; i < filters->count(); ++i)
-      OnFilterAdded(filters->FilterAtIndex(i));
 
     conn.block(blocked);
   };
 
-  filters->model.changed.connect(sigc::hide(resync_filters));
-  resync_filters();
+  filters->model.changed.connect(sigc::hide(clear_filters));
+
+  clear_filters();
+  for (unsigned int i = 0; i < filters->count(); ++i)
+    OnFilterAdded(filters->FilterAtIndex(i));
 }
 
 void ScopeView::OnCategoryAdded(Category const& category)
@@ -419,6 +416,7 @@ void ScopeView::OnCategoryAdded(Category const& category)
 
   LOG_DEBUG(logger) << "Category added '" << (scope_ ? scope_->name() : "unknown") << "': "
                     << name
+                    << "[" << category.id() << "] "
                     << "(" << icon_hint
                     << ", " << renderer_name
                     << ", " << index << ")";
@@ -488,7 +486,7 @@ void ScopeView::OnCategoryAdded(Category const& category)
 
       if (is_app_scope_result && type == ResultView::ActivateType::PREVIEW_LEFT_BUTTON)
         type = ResultView::ActivateType::DIRECT;
-      
+
       result_activated.emit(type, local_result, data, unique_id);
       switch (type)
       {

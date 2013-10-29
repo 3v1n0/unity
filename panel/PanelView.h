@@ -32,8 +32,10 @@
 
 #include <UnityCore/DBusIndicators.h>
 
+#include "launcher/EdgeBarrierController.h"
 #include "unity-shared/BackgroundEffectHelper.h"
 #include "unity-shared/Introspectable.h"
+#include "unity-shared/MockableBaseWindow.h"
 #include "PanelMenuView.h"
 #include "PanelTray.h"
 #include "PanelIndicatorsView.h"
@@ -42,15 +44,19 @@
 namespace unity
 {
 
-class PanelView : public unity::debug::Introspectable, public nux::View
+class PanelView : public unity::debug::Introspectable, 
+                  public ui::EdgeBarrierSubscriber,
+                  public nux::View
 {
   NUX_DECLARE_OBJECT_TYPE(PanelView, nux::View);
 public:
-  PanelView(indicator::DBusIndicators::Ptr const&, NUX_FILE_LINE_PROTO);
+  PanelView(MockableBaseWindow* parent, indicator::DBusIndicators::Ptr const&, NUX_FILE_LINE_PROTO);
   ~PanelView();
 
-  void SetPrimary(bool primary);
-  bool GetPrimary() const;
+  MockableBaseWindow* GetParent() const
+  {
+    return parent_;
+  };
 
   void SetMonitor(int monitor);
   int GetMonitor() const;
@@ -70,6 +76,11 @@ public:
 
   bool IsMouseInsideIndicator(nux::Point const& mouse_position) const;
 
+  ui::EdgeBarrierSubscriber::Result HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event) override;
+
+  // FIXME: This will need to be removed when the Unity performance branch is merged.
+  void NeedSoftRedraw() override;
+
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -87,10 +98,11 @@ protected:
   void OnEntryShowMenu(std::string const& entry_id, unsigned xid, int x, int y, unsigned button);
 
 private:
-  void OnBackgroundUpdate(GVariant *data);
+  void OnBackgroundUpdate(nux::Color const&);
   void OnOverlayShown(GVariant *data);
   void OnOverlayHidden(GVariant *data);
 
+  void Resize(nux::Point const& offset, int width);
   bool IsTransparent();
   void UpdateBackground();
   void ForceUpdateBackground();
@@ -98,6 +110,7 @@ private:
   void SyncGeometries();
   void AddPanelView(PanelIndicatorsView* child, unsigned int stretchFactor);
 
+  MockableBaseWindow* parent_;
   indicator::DBusIndicators::Ptr remote_;
 
   // No ownership is taken for these views, that is done by the AddChild method.
@@ -117,14 +130,12 @@ private:
   BaseTexturePtr bg_refine_single_column_tex_;
   std::unique_ptr<nux::AbstractPaintLayer> bg_refine_single_column_layer_;
 
-  nux::Color bg_color_;
   std::string active_overlay_;
   nux::Point  tracked_pointer_pos_;
 
   bool is_dirty_;
   bool opacity_maximized_toggle_;
   bool needs_geo_sync_;
-  bool is_primary_;
   bool overlay_is_open_;
   float opacity_;
   int monitor_;

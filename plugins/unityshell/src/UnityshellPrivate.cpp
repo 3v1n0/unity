@@ -30,9 +30,9 @@ std::string CreateActionString(std::string const& modifiers,
 {
   std::string ret(modifiers);
 
-  if (flag == ActionModifiers::USE_SHIFT)
+  if (flag == ActionModifiers::USE_SHIFT || flag == ActionModifiers::USE_SHIFT_NUMPAD)
     ret += "<Shift>";
-  else if (flag == ActionModifiers::USE_NUMPAD)
+  if (flag == ActionModifiers::USE_NUMPAD || flag == ActionModifiers::USE_SHIFT_NUMPAD)
     ret += "KP_";
 
   ret += shortcut;

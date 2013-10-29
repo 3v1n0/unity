@@ -45,14 +45,14 @@ public:
 
   virtual void ActivateLauncherIcon(ActionArg arg);
 
-  std::string DesktopFile();
+  std::string DesktopFile() const;
 
   bool IsSticky() const;
   bool IsActive() const;
   bool IsRunning() const;
   bool IsUrgent() const;
 
-  virtual bool GetQuirk(Quirk quirk) const;
+  virtual bool GetQuirk(Quirk quirk, int monitor = 0) const override;
 
   virtual void Quit();
   virtual void AboutToRemove();
@@ -74,9 +74,11 @@ public:
 
 protected:
   void SetApplication(ApplicationPtr const& app);
+  ApplicationPtr GetApplication() const;
+
   void Remove();
-  void UpdateIconGeometries(std::vector<nux::Point3> center);
-  void OnCenterStabilized(std::vector<nux::Point3> center);
+  void UpdateIconGeometries(std::vector<nux::Point3> const& centers);
+  void OnCenterStabilized(std::vector<nux::Point3> const& centers);
   void AddProperties(GVariantBuilder* builder);
   void OnAcceptDrop(DndData const& dnd_data);
   void OnDndEnter();
@@ -84,15 +86,15 @@ protected:
   void OnDndLeave();
   void OpenInstanceLauncherIcon(Time timestamp) override;
   void ToggleSticky();
+  void LogUnityEvent(ApplicationEventType);
   bool IsFileManager();
 
   bool OnShouldHighlightOnDrag(DndData const& dnd_data);
   nux::DndAction OnQueryAcceptDrop(DndData const& dnd_data);
 
   MenuItemsVector GetMenus();
-  std::set<std::string> ValidateUrisForLaunch(DndData const& dnd_data);
 
-  std::string GetRemoteUri();
+  std::string GetRemoteUri() const;
 
   bool HandlesSpread() { return true; }
   std::string GetName() const;
@@ -111,12 +113,13 @@ private:
     ON_ALL_MONITORS = (1 << 3),
   };
 
+  void UnsetApplication();
   void SetupApplicationSignalsConnections();
   void EnsureWindowState();
   void EnsureMenuItemsWindowsReady();
   void EnsureMenuItemsDefaultReady();
+  void EnsureMenuItemsStaticQuicklist();
   void UpdateBackgroundColor();
-  void UpdateMenus();
   void UpdateDesktopQuickList();
 
   void OpenInstanceWithUris(std::set<std::string> const& uris, Time timestamp);
@@ -128,8 +131,8 @@ private:
 
   WindowList GetWindows(WindowFilterMask filter = 0, int monitor = -1);
   const std::set<std::string> GetSupportedTypes();
-  std::string GetDesktopID();
   WindowList GetWindowsOnCurrentDesktopInStackingOrder();
+  ApplicationSubjectPtr GetSubject();
 
   ApplicationPtr app_;
   std::string _remote_uri;

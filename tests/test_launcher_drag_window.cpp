@@ -29,91 +29,66 @@ using namespace testing;
 
 namespace
 {
-const int ICON_WIDTH = 10;
-const int ICON_HEIGHT = 15;
+const int ICON_SIZE = 15;
 }
 
 namespace unity
 {
 namespace launcher
 {
-class StubLauncherDragWindow : public LauncherDragWindow
+namespace
 {
-  public:
 
-    StubLauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> const &texture,
-                           std::function<void(nux::GraphicsEngine&)> const &callback)
-     : LauncherDragWindow(texture, callback)
-    {}
+struct StubLauncherDragWindow : public LauncherDragWindow
+{
+  struct DrawCallback
+  {
+    MOCK_METHOD0(callback, void());
+  };
 
-  protected:
+  StubLauncherDragWindow()
+   : LauncherDragWindow(ICON_SIZE, std::bind(&DrawCallback::callback, &cb))
+  {}
 
-    bool DrawContentOnNuxLayer() const { return false; }
+  bool DrawContentOnNuxLayer() const { return false; }
+  using LauncherDragWindow::DrawContent;
+
+  DrawCallback cb;
 };
 
 struct TestLauncherDragWindow : public testing::Test
 {
   TestLauncherDragWindow()
-    : texture(new nux::IOpenGLBaseTexture(nux::RTTEXTURE, ICON_WIDTH, ICON_HEIGHT, 24, 1, nux::BITFMT_R8G8B8A8))
-    , drag_window(new LauncherDragWindow(texture,
-                                         [](nux::GraphicsEngine &){
-                                         }))
+    : drag_window(new StubLauncherDragWindow())
   {}
 
-  nux::ObjectPtr<nux::IOpenGLBaseTexture> texture;
-  nux::ObjectPtr<LauncherDragWindow> drag_window;
-};
-
-class DrawCallback
-{
-  public:
-
-    MOCK_METHOD0(callback, void());
+  nux::ObjectPtr<StubLauncherDragWindow> drag_window;
 };
 }
 
 TEST_F(TestLauncherDragWindow, Construction)
 {
-  EXPECT_EQ(drag_window->GetBaseWidth(), ICON_WIDTH);
-  EXPECT_EQ(drag_window->GetBaseHeight(), ICON_HEIGHT);
+  EXPECT_EQ(drag_window->GetBaseWidth(), ICON_SIZE);
+  EXPECT_EQ(drag_window->GetBaseHeight(), ICON_SIZE);
   EXPECT_FALSE(drag_window->Animating());
   EXPECT_FALSE(drag_window->Cancelled());
 }
 
 TEST_F(TestLauncherDragWindow, NoDrawOnConstruction)
 {
-  DrawCallback cb;
-
-  EXPECT_CALL(cb, callback()).Times(0);
-
-  drag_window.Adopt(new StubLauncherDragWindow (texture,
-                                                std::bind(&DrawCallback::callback,
-                                                          &cb)));
+  EXPECT_CALL(drag_window->cb, callback()).Times(0);
+  drag_window = new StubLauncherDragWindow();
 }
 
 TEST_F(TestLauncherDragWindow, DrawOnFirstPaint)
 {
-  DrawCallback cb;
-
-  drag_window.Adopt(new StubLauncherDragWindow (texture,
-                                                std::bind(&DrawCallback::callback,
-                                                          &cb)));
-
-  EXPECT_CALL(cb, callback()).Times(1);
-
+  EXPECT_CALL(drag_window->cb, callback()).Times(1);
   drag_window->DrawContent(*(nux::GetGraphicsDisplay()->GetGraphicsEngine()), false);
 }
 
 TEST_F(TestLauncherDragWindow, NoDrawOnSecondPaint)
 {
-  DrawCallback cb;
-
-  drag_window.Adopt(new StubLauncherDragWindow (texture,
-                                                std::bind(&DrawCallback::callback,
-                                                          &cb)));
-
-  EXPECT_CALL(cb, callback()).Times(1);
-
+  EXPECT_CALL(drag_window->cb, callback()).Times(1);
   drag_window->DrawContent(*(nux::GetGraphicsDisplay()->GetGraphicsEngine()), false);
   drag_window->DrawContent(*(nux::GetGraphicsDisplay()->GetGraphicsEngine()), false);
 }
@@ -153,4 +128,5 @@ TEST_F(TestLauncherDragWindow, CancelsOnWindowUnmapped)
   EXPECT_TRUE(drag_window->Cancelled());
 }
 
+}
 }

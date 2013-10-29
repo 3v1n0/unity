@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <gtk/gtk.h>
+#include <UnityCore/ActionHandle.h>
 #include <UnityCore/GLibWrapper.h>
 
 namespace unity
@@ -32,6 +33,7 @@ namespace unity
 class IconLoader : public boost::noncopyable
 {
 public:
+  typedef action::handle Handle;
   typedef std::function<void(std::string const&, int, int, glib::Object<GdkPixbuf> const&)> IconLoaderCallback;
 
   IconLoader();
@@ -44,27 +46,12 @@ public:
    * this is to disconnect the callback slot.
    */
 
-  int LoadFromIconName(std::string const& icon_name,
-                       int max_width,
-                       int max_height,
-                       IconLoaderCallback slot);
+  Handle LoadFromIconName(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
+  Handle LoadFromGIconString(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
+  Handle LoadFromFilename(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
+  Handle LoadFromURI(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
 
-  int LoadFromGIconString(std::string const& gicon_string,
-                          int max_width,
-                          int max_height,
-                          IconLoaderCallback slot);
-
-  int LoadFromFilename(std::string const& filename,
-                       int max_width,
-                       int max_height,
-                       IconLoaderCallback slot);
-
-  int LoadFromURI(std::string const& uri,
-                  int max_width,
-                  int max_height,
-                  IconLoaderCallback slot);
-
-  void DisconnectHandle(int handle);
+  void DisconnectHandle(Handle handle);
 
 private:
   class Impl;

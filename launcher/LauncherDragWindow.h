@@ -38,11 +38,11 @@ class LauncherDragWindow : public nux::BaseWindow
 {
   NUX_DECLARE_OBJECT_TYPE(LauncherDragWindow, nux::BaseWindow);
 public:
-  LauncherDragWindow(nux::ObjectPtr<nux::IOpenGLBaseTexture> texture,
-                     std::function<void(nux::GraphicsEngine &)> const &deferred_icon_render_func);
-  ~LauncherDragWindow();
+  typedef nux::ObjectPtr<LauncherDragWindow> Ptr;
+  typedef std::function<void(nux::GraphicsEngine&, nux::ObjectPtr<nux::IOpenGLBaseTexture> const&)> DeferredIconRenderer;
 
-  void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
+  LauncherDragWindow(unsigned size, DeferredIconRenderer const&);
+  ~LauncherDragWindow();
 
   void SetAnimationTarget(int x, int y);
   void StartQuickAnimation();
@@ -53,21 +53,20 @@ public:
 
   sigc::signal<void> anim_completed;
   sigc::signal<void> drag_cancel_request;
-  connection::Wrapper on_anim_completed_conn_;
 
 protected:
+  void DrawContent(nux::GraphicsEngine& gfxContext, bool forceDraw);
   bool InspectKeyEvent(unsigned int event_type, unsigned int keysym, const char* character);
   bool AcceptKeyNavFocus();
-
   virtual bool DrawContentOnNuxLayer() const;
 
 private:
   void StartAnimation();
   bool OnAnimationTimeout();
   void CancelDrag();
-  
+
   bool icon_rendered_;
-  std::function<void(nux::GraphicsEngine &)> deferred_icon_render_func_;
+  DeferredIconRenderer renderer_func_;
 
   float animation_speed_;
   bool cancelled_;

@@ -34,8 +34,6 @@ ExpoLauncherIcon::ExpoLauncherIcon()
 {
   tooltip_text = _("Workspace Switcher");
   icon_name = "workspace-switcher-top-left";
-  SetQuirk(Quirk::VISIBLE, false);
-  SetQuirk(Quirk::RUNNING, false);
   SetShortcut('s');
 
   auto& wm = WindowManager::Default();
@@ -106,7 +104,7 @@ std::string ExpoLauncherIcon::GetName() const
   return "ExpoLauncherIcon";
 }
 
-std::string ExpoLauncherIcon::GetRemoteUri()
+std::string ExpoLauncherIcon::GetRemoteUri() const
 {
   return FavoriteStore::URI_PREFIX_UNITY + "expo-icon";
 }

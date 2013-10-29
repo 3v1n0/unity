@@ -453,6 +453,24 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         self.assertThat(get_icon_names, Eventually(Contains(char_map.name)))
         self.assertThat(get_icon_names, Eventually(Not(Contains(calc.name))))
 
+    def test_switcher_switch_current_workspace_same_apps_diff_workspace(self):
+        initial_workspace = self.workspace.current_workspace
+        self.addCleanup(self.workspace.switch_to, initial_workspace)
+
+        char_map = self.process_manager.start_app_window("Character Map")
+        calc1 = self.process_manager.start_app_window("Calculator")
+
+        self.workspace.switch_to((initial_workspace + 1) % self.workspace.num_workspaces)
+
+        calc2 = self.process_manager.start_app_window("Calculator")
+
+        self.workspace.switch_to(initial_workspace);
+
+        self.unity.switcher.initiate()
+        self.unity.switcher.select()
+
+        self.assertProperty(char_map, is_focused=True)
+
     def test_switcher_all_mode_shows_all_apps(self):
         """Test switcher 'show_all' mode shows apps from all workspaces."""
         initial_workspace = self.workspace.current_workspace
@@ -512,3 +530,127 @@ class SwitcherWorkspaceTests(SwitcherTestCase):
         self.addCleanup(self.unity.switcher.terminate)
 
         self.assertThat(self.unity.switcher.visible, Eventually(Equals(False)))
+
+class SwitcherDetailsMouseTests(SwitcherTestCase):
+    """ Test the interactions with the mouse and the switcher. """
+
+    def setUp(self):
+        super(SwitcherDetailsMouseTests, self).setUp()
+        self.set_timeout_setting(False)
+
+    def test_mouse_highlights_switcher_icons(self):
+        """ Tests that the mouse can hightlight all the switcher icons. """
+
+        self.process_manager.start_app("Character Map")
+
+        self.unity.switcher.initiate()
+        self.addCleanup(self.unity.switcher.terminate)
+
+        icon_args = self.unity.switcher.view.icon_args
+        offset = self.unity.switcher.view.spread_offset
+        icon_cords = []
+
+        # Must collect the cords before moving mouse
+        for args in icon_args:
+            x = args.logical_center_x + offset
+            y = args.logical_center_y + offset
+            icon_cords.append((x,y))
+
+        self.unity.switcher.view.break_mouse_bump_detection()
+
+        index = 0;
+        for cords in icon_cords:
+            self.mouse.move(cords[0], cords[1])
+            self.assertThat(index, Equals(self.unity.switcher.selection_index))
+            index += 1
+
+    def test_mouse_clicks_activate_icon(self):
+        """
+        Opens 2 different applications, CharMap being opened before TextEditor.
+        Then we get the index of the CharMap, and click on it, asserting CharMap is focused.
+        """
+
+        char_win1, char_win2 = self.start_applications("Character Map", "Text Editor")
+        self.assertVisibleWindowStack([char_win2, char_win1])
+        self.assertProperty(char_win1, is_focused=False)
+
+        self.unity.switcher.initiate()
+        self.addCleanup(self.unity.switcher.terminate)
+
+        index = self.unity.switcher.selection_index
+        self.unity.switcher.view.move_over_icon(index);
+        self.mouse.click()
+
+        self.assertProperty(char_win1, is_focused=True)
+
+    def test_mouse_doesnt_hightlight_icon_if_over_on_start(self):
+        """
+        First start the launcher and move the mosue over position of Text Editor icon,
+        then close the switcher and open it again while moving the mouse a bit.
+        Asserting that the icon does lose focus from Character Map.
+        """
+
+        char_win1, char_win2 = self.start_applications("Character Map", "Text Editor")
+        self.assertVisibleWindowStack([char_win2, char_win1])
+        self.assertProperty(char_win1, is_focused=False)
+
+        self.unity.switcher.initiate()
+        self.addCleanup(self.unity.switcher.terminate)
+
+        mouse_index = self.unity.switcher.selection_index - 1
+
+        self.unity.switcher.view.move_over_icon(mouse_index);
+        # Assert we are over the icon we want to hover over.
+        self.assertThat(self.unity.switcher.view.last_icon_selected, Eventually(Equals(mouse_index)))
+
+        self.addCleanup(self.keybinding, "switcher/cancel")
+
+        self.unity.switcher.terminate()
+        self.unity.switcher.initiate()
+
+        index = self.unity.switcher.selection_index
+
+        pos = self.mouse.position()
+        self.mouse.move(pos[0] + 5, pos[1] + 5)
+
+        # Assert moving the mouse does not change the selection
+        self.assertThat(self.unity.switcher.selection_index, Eventually(Equals(index)))
+
+        # Also nice to know clicking still works, even without selection
+        self.mouse.click()
+
+        self.assertProperty(char_win2, is_focused=True)
+
+    def test_mouse_highlights_switcher_deatil_icons_motion(self):
+        """
+        Gather the cords of all the detail icons, move the mouse through each
+        asserting the index of each icon we move through.
+        """
+
+        self.start_applications("Character Map", "Character Map", "Character Map")
+
+        self.unity.switcher.initiate(SwitcherMode.DETAIL)
+        self.addCleanup(self.unity.switcher.terminate)
+
+        index = 0;
+        for icon in self.unity.switcher.view.detail_icons:
+          self.unity.switcher.view.move_over_detail_icon(index)
+          self.assertThat(index, Equals(self.unity.switcher.detail_selection_index))
+          index += 1
+
+    def test_mouse_click_will_activate_detail_icon(self):
+        """
+        Start 2 application of the same type, then click on index 0 in detail mode. This
+        will cause the focus from char_win2 to move to char_win1, showing clicking wokrs.
+        """
+
+        char_win1, char_win2 = self.start_applications("Character Map", "Character Map")
+        self.assertVisibleWindowStack([char_win2, char_win1])
+
+        self.unity.switcher.initiate(SwitcherMode.DETAIL)
+        self.addCleanup(self.unity.switcher.terminate)
+
+        self.unity.switcher.view.move_over_detail_icon(0);
+        self.mouse.click()
+
+        self.assertProperty(char_win1, is_focused=True)

@@ -23,7 +23,9 @@
 #include "test_mock_session_manager.h"
 #include "SessionController.h"
 #include "UBusMessages.h"
+#include "UBusWrapper.h"
 #include "UnitySettings.h"
+#include "WindowManager.h"
 #include "test_utils.h"
 
 namespace unity
@@ -61,6 +63,15 @@ struct TestSessionController : testing::Test
 TEST_F(TestSessionController, Construct)
 {
   EXPECT_FALSE(controller.Visible());
+}
+
+TEST_F(TestSessionController, DisconnectWMSignalsOnDestruction)
+{
+  auto& color_property = WindowManager::Default().average_color;
+  size_t before = color_property.changed.size();
+  { Controller dummy(manager); }
+  ASSERT_EQ(before, color_property.changed.size());
+  color_property.changed.emit(nux::color::RandomColor());
 }
 
 struct ShowMode : TestSessionController, testing::WithParamInterface<View::Mode> {};

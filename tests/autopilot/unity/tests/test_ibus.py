@@ -10,12 +10,10 @@
 
 from __future__ import absolute_import
 
-from autopilot.ibus import (
+from unity.emulators.ibus import (
     get_active_input_engines,
     set_active_engines,
     get_available_input_engines,
-    get_gconf_option,
-    set_gconf_option,
     get_ibus_bus,
     )
 from autopilot.matchers import Eventually
@@ -120,17 +118,31 @@ class IBusTests(UnityTestCase):
         This method adds a cleanUp to reset the old keys once the test is done.
 
         """
-        # get the existing keys:
-        trigger_hotkey_path = '/desktop/ibus/general/hotkey/trigger'
-        old_keys = get_gconf_option(trigger_hotkey_path)
+        bus = get_ibus_bus()
+        config = bus.get_config()
 
-        self.activate_binding = 'Control+space'
+        variant = config.get_value('general/hotkey', 'triggers')
+        shortcuts = []
+
+        # If none, assume default
+        if variant != None:
+          shortcuts = variant.unpack()
+        else:
+          shortcuts = ['<Super>space']
+
+        # IBus uses the format '<mod><mod><mod>key'
+        # Autopilot uses the format 'mod+mod+mod+key'
+        # replace all > with a +, and ignore the < char
+
+        shortcut = ""
+        for c in shortcuts[0]:
+          if c == '>':
+            shortcut += '+'
+          elif c != '<':
+            shortcut += c
+
+        self.activate_binding = shortcut
         activate_release_binding_option = 'Alt+Release+Control_L'
-        new_keys = [self.activate_binding, activate_release_binding_option]
-
-        if new_keys != old_keys:
-            set_gconf_option(trigger_hotkey_path, new_keys)
-            self.addCleanup(set_gconf_option, trigger_hotkey_path, old_keys)
         self.activate_release_binding = 'Alt+Control_L'
 
     @classmethod
@@ -141,6 +153,8 @@ class IBusTests(UnityTestCase):
     def tearDownClass(cls):
         if cls._old_engines is not None:
             set_active_engines(cls._old_engines)
+        bus = get_ibus_bus()
+        bus.exit(restart=True)
 
     def activate_input_engine_or_skip(self, engine_name):
         """Activate the input engine 'engine_name', or skip the test if the
@@ -155,16 +169,12 @@ class IBusTests(UnityTestCase):
             self.skip("This test requires the '%s' engine to be installed." % (engine_name))
 
     def activate_ibus(self, widget):
-        """Activate IBus, and wait till it's actived on 'widget'."""
-        self.assertThat(widget.im_active, Equals(False))
+        """Activate IBus. """
         self.keyboard.press_and_release(self.activate_binding)
-        self.assertThat(widget.im_active, Eventually(Equals(True)))
 
     def deactivate_ibus(self, widget):
-        """Deactivate ibus, and wait till it's inactive on 'widget'."""
-        self.assertThat(widget.im_active, Equals(True))
+        """Deactivate IBus. """
         self.keyboard.press_and_release(self.activate_binding)
-        self.assertThat(widget.im_active, Eventually(Equals(False)))
 
 
 class IBusWidgetScenariodTests(IBusTests):
@@ -226,11 +236,10 @@ class IBusTestsPinyin(IBusWidgetScenariodTests):
     scenarios = multiply_scenarios(
         IBusWidgetScenariodTests.scenarios,
         [
-            ('basic', {'input': 'abc1'}),
-            ('photo', {'input': 'zhaopian '}),
-            ('internet', {'input': 'hulianwang '}),
-            ('disk', {'input': 'cipan '}),
-            ('disk_management', {'input': 'cipan guanli '}),
+            ('photo', {'input': 'zhaopian ', 'result' : u'\u7167\u7247' }),
+            ('internet', {'input': 'hulianwang ', 'result' : u'\u4e92\u8054\u7f51'}),
+            ('hello', {'input': 'ninhao ', 'result' : u'\u60a8\u597d' }),
+            ('management', {'input': 'guanli ', 'result' : u'\u7ba1\u7406' }),
         ]
     )
 
@@ -272,12 +281,11 @@ class IBusTestsAnthy(IBusWidgetScenariodTests):
     scenarios = multiply_scenarios(
         IBusWidgetScenariodTests.scenarios,
         [
-            ('system', {'input': 'shisutemu '}),
-            ('game', {'input': 'ge-mu '}),
-            ('user', {'input': 'yu-za- '}),
+            ('system', {'input': 'shisutemu ', 'result' : u'\u30b7\u30b9\u30c6\u30e0' }),
+            ('game', {'input': 'ge-mu ', 'result' : u'\u30b2\u30fc\u30e0' }),
+            ('user', {'input': 'yu-za- ', 'result' : u'\u30e6\u30fc\u30b6\u30fc' }),
         ],
         [
-            ('commit_j', {'commit_key': 'Ctrl+j'}),
             ('commit_enter', {'commit_key': 'Enter'}),
         ]
         )
@@ -340,7 +348,7 @@ class IBusTestsAnthyIgnore(IBusTests):
         self.activate_ibus(self.unity.dash.searchbar)
         self.keyboard.type("shisutemu ")
         self.keyboard.press_and_release("Tab")
-        self.keyboard.press_and_release("Ctrl+j")
+        self.keyboard.press_and_release("Enter")
         self.deactivate_ibus(self.unity.dash.searchbar)
         dash_search_string = self.unity.dash.search_string
 

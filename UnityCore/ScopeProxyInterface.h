@@ -41,7 +41,8 @@ enum ScopeHandledType
   SHOW_DASH,
   HIDE_DASH,
   GOTO_DASH_URI,
-  SHOW_PREVIEW
+  SHOW_PREVIEW,
+  PERFORM_SEARCH
 };
 
 enum ScopeViewType
@@ -50,6 +51,9 @@ enum ScopeViewType
   HOME_VIEW,
   SCOPE_VIEW
 };
+
+typedef std::function<void(std::string const&, glib::HintsMap const&, glib::Error const&)> SearchCallback;
+typedef std::function<void(LocalResult const&, ScopeHandledType, glib::Error const&)> ActivateCallback;
 
 class ScopeProxyInterface : public sigc::trackable, boost::noncopyable
 {
@@ -65,6 +69,7 @@ public:
 
   nux::ROProperty<bool> visible;
   nux::ROProperty<bool> is_master;
+  nux::ROProperty<bool> results_dirty;
   nux::ROProperty<std::string> search_hint;
   nux::RWProperty<ScopeViewType> view_type;
   nux::Property<std::string> form_factor;
