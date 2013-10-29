@@ -1544,18 +1544,6 @@ void UnityScreen::donePaint()
   cScreen->donePaint();
 }
 
-void redraw_view_if_damaged(nux::ObjectPtr<nux::View> const& view, CompRegion const& damage)
-{
-  if (!view || view->IsRedrawNeeded())
-    return;
-
-  auto const& geo = view->GetAbsoluteGeometry();
-  CompRegion region(geo.x, geo.y, geo.width, geo.height);
-
-  if (damage.intersects(region))
-    view->NeedSoftRedraw();
-}
-
 void UnityScreen::compizDamageNux(CompRegion const& damage)
 {
   /* Ask nux to present anything in our damage region
