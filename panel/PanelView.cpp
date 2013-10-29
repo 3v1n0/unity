@@ -787,6 +787,7 @@ ui::EdgeBarrierSubscriber::Result PanelView::HandleBarrierEvent(ui::PointerBarri
   return ui::EdgeBarrierSubscriber::Result::NEEDS_RELEASE;
 }
 
+// FIXME: This will need to be removed when the Unity performance branch is merged.
 void PanelView::NeedSoftRedraw()
 {
   QueueDraw();

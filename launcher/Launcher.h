@@ -151,6 +151,7 @@ public:
 
   void RenderIconToTexture(nux::GraphicsEngine&, nux::ObjectPtr<nux::IOpenGLBaseTexture> const&, AbstractLauncherIcon::Ptr const&);
 
+  // FIXME: This will need to be removed when the Unity performance branch is merged.
   void NeedSoftRedraw() override;
 
 #ifdef NUX_GESTURES_SUPPORT
