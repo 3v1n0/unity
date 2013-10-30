@@ -17,11 +17,18 @@
  * Authored by: Alex Launi <alex.launi@canonical.com>
  */
 
+#include <queue>
+#include <iostream>
 #include <fstream>
 #include <sstream>
+#include <iostream>
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/bind.hpp>
 #include <NuxCore/Logger.h>
 #include <NuxCore/LoggingWriter.h>
+#include <xpathselect/node.h>
 #include <xpathselect/xpathselect.h>
 #include <dlfcn.h>
 
@@ -39,21 +46,16 @@ namespace
 namespace local
 {
   std::ofstream output_file;
-  void* xpathselect_driver_ = nullptr;
+  void* xpathselect_driver_ = NULL;
 
-  class IntrospectableAdapter : public std::enable_shared_from_this<IntrospectableAdapter>, public xpathselect::Node
+  class IntrospectableAdapter: public xpathselect::Node
   {
   public:
     typedef std::shared_ptr<IntrospectableAdapter> Ptr;
-    IntrospectableAdapter(Introspectable* node, IntrospectableAdapter::Ptr const& parent = nullptr)
-      : node_(node)
-      , parent_(parent)
-      , full_path_((parent_ ? parent_->GetPath() : "") + "/" + GetName())
-    {}
-
-    int32_t GetId() const
+    IntrospectableAdapter(Introspectable* node, std::string const& parent_path)
+    : node_(node)
     {
-      return GPOINTER_TO_INT(node_);
+      full_path_ = parent_path + "/" + GetName();
     }
 
     std::string GetName() const
@@ -66,27 +68,6 @@ namespace local
       return full_path_;
     }
 
-    Node::Ptr GetParent() const
-    {
-      return parent_;
-    }
-
-    virtual bool MatchBooleanProperty(const std::string& name, bool value) const
-    {
-      return false;
-    }
-
-    virtual bool MatchIntegerProperty(const std::string& name, int32_t value) const
-    {
-      return false;
-    }
-
-    virtual bool MatchStringProperty(const std::string& name, const std::string& value) const
-    {
-      return false;
-    }
-
-
     bool MatchProperty(const std::string& name, const std::string& value) const
     {
       bool matches = false;
@@ -96,7 +77,7 @@ namespace local
       g_variant_builder_add(&child_builder, "{sv}", "id", g_variant_new_uint64(node_->GetIntrospectionId()));
       node_->AddProperties(&child_builder);
       GVariant* prop_dict = g_variant_builder_end(&child_builder);
-      GVariant* prop_value = g_variant_lookup_value(prop_dict, name.c_str(), NULL);
+      GVariant *prop_value = g_variant_lookup_value(prop_dict, name.c_str(), NULL);
 
       if (prop_value != NULL)
       {
@@ -119,7 +100,10 @@ namespace local
           case G_VARIANT_CLASS_BOOLEAN:
           {
             std::string value = boost::to_upper_copy(value);
-            bool p = value == "TRUE" || value == "ON" || value == "YES" || value == "1";
+            bool p = value == "TRUE" ||
+                      value == "ON" ||
+                      value == "YES" ||
+                      value == "1";
             matches = (g_variant_get_boolean(prop_value) == p);
           }
           break;
@@ -199,34 +183,30 @@ namespace local
     std::vector<xpathselect::Node::Ptr> Children() const
     {
       std::vector<xpathselect::Node::Ptr> children;
-      auto const& this_ptr = std::const_pointer_cast<IntrospectableAdapter>(shared_from_this());
-      for(auto const& child: node_->GetIntrospectableChildren())
-        children.push_back(std::make_shared<IntrospectableAdapter>(child, this_ptr));
-
+      for(auto child: node_->GetIntrospectableChildren())
+      {
+        children.push_back(std::make_shared<IntrospectableAdapter>(child, GetPath() ));
+      }
       return children;
+
     }
 
-    Introspectable* Node() const
-    {
-      return node_;
-    }
-
-  private:
     Introspectable* node_;
-    IntrospectableAdapter::Ptr parent_;
+  private:
     std::string full_path_;
   };
 
-  xpathselect::NodeVector select_nodes(IntrospectableAdapter::Ptr const& root, std::string const& query)
+  xpathselect::NodeList select_nodes(local::IntrospectableAdapter::Ptr root,
+                                     std::string const& query)
   {
-    if (!xpathselect_driver_)
-      xpathselect_driver_ = dlopen("libxpathselect.so.1.4", RTLD_LAZY);
+    if (xpathselect_driver_ == NULL)
+      xpathselect_driver_ = dlopen("libxpathselect.so.1.3", RTLD_LAZY);
 
     if (xpathselect_driver_)
     {
-      typedef decltype(&xpathselect::SelectNodes) select_nodes_t;
+      typedef decltype(&xpathselect::SelectNodes) entry_t;
       dlerror();
-      auto SelectNodes = reinterpret_cast<select_nodes_t>(dlsym(xpathselect_driver_, "SelectNodes"));
+      entry_t entry_point = (entry_t) dlsym(xpathselect_driver_, "SelectNodes");
       const char* err = dlerror();
       if (err)
       {
@@ -234,7 +214,7 @@ namespace local
       }
       else
       {
-        return SelectNodes(root, query);
+        return entry_point(root, query);
       }
     }
     else
@@ -243,7 +223,7 @@ namespace local
     }
 
     // Fallen through here as we've hit an error
-    return xpathselect::NodeVector();
+    return xpathselect::NodeList();
   }
 
   // This needs to be called at destruction to cleanup the dlopen
@@ -375,12 +355,13 @@ GVariant* GetState(std::string const& query)
   GVariantBuilder  builder;
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a(sv)"));
 
-  auto root_node = std::make_shared<local::IntrospectableAdapter>(_parent_introspectable);
-  for (auto const& n : local::select_nodes(root_node, query))
+  local::IntrospectableAdapter::Ptr root_node = std::make_shared<local::IntrospectableAdapter>(_parent_introspectable, std::string());
+  auto nodes = local::select_nodes(root_node, query);
+  for (auto n : nodes)
   {
-    auto p = std::static_pointer_cast<local::IntrospectableAdapter const>(n);
+    auto p = std::static_pointer_cast<local::IntrospectableAdapter>(n);
     if (p)
-      g_variant_builder_add(&builder, "(sv)", p->GetPath().c_str(), p->Node()->Introspect());
+      g_variant_builder_add(&builder, "(sv)", p->GetPath().c_str(), p->node_->Introspect());
   }
 
   return g_variant_new("(a(sv))", &builder);
