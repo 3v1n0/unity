@@ -788,7 +788,7 @@ void UnityScreen::paintDisplay()
                                                     outputGeo);
 
   nuxPrologue();
-  wt->RenderInterfaceFromForeignCmd (&outputGeo);
+  wt->RenderInterfaceFromForeignCmd (outputGeo);
   nuxEpilogue();
 
   for (Window tray_xid : panel_controller_->GetTrayXids())
