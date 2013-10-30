@@ -1426,8 +1426,7 @@ void UnityScreen::damageCutoff()
     /* We have to force-redraw the whole scene because
      * of a bug in the nvidia driver that causes framebuffers
      * to be trashed on resume for a few swaps */
-    wt->GetWindowCompositor()
-        .OnAllBaseWindows([](WeakBaseWindowPtr const &w) {
+    wt->GetWindowCompositor().ForEachBaseWindow([](WeakBaseWindowPtr const &w) {
       w->QueueDraw();
     });
 
