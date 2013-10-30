@@ -1410,6 +1410,10 @@ gtk_image_to_data (GtkImage *image)
           ret = g_icon_to_string (icon);
         }
     }
+  else if (type == GTK_IMAGE_EMPTY)
+    {
+      ret = g_strdup ("");
+    }
   else
     {
       ret = g_strdup ("");
