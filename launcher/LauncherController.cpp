@@ -1065,7 +1065,7 @@ Controller::Controller(XdndManager::Ptr const& xdnd_manager, ui::EdgeBarrierCont
  , multiple_launchers(true)
  , pimpl(new Impl(this, xdnd_manager, edge_barriers))
 {
-  multiple_launchers.changed.connect([&](bool value) -> void {
+  multiple_launchers.changed.connect([this] (bool value) {
     UScreen* uscreen = UScreen::GetDefault();
     auto monitors = uscreen->GetMonitors();
     int primary = uscreen->GetPrimaryMonitor();
@@ -1164,7 +1164,7 @@ void Controller::HandleLauncherKeyPress(int when)
 {
   pimpl->launcher_key_press_time_ = when;
 
-  auto show_launcher = [&]()
+  auto show_launcher = [this]
   {
     if (pimpl->keyboard_launcher_.IsNull())
       pimpl->keyboard_launcher_ = pimpl->CurrentLauncher();
@@ -1177,7 +1177,7 @@ void Controller::HandleLauncherKeyPress(int when)
   };
   pimpl->sources_.AddTimeout(options()->super_tap_duration, show_launcher, local::KEYPRESS_TIMEOUT);
 
-  auto show_shortcuts = [&]()
+  auto show_shortcuts = [this]
   {
     if (!pimpl->launcher_keynav)
     {
@@ -1233,7 +1233,7 @@ void Controller::HandleLauncherKeyRelease(bool was_tap, int when)
     {
       int time_left = local::launcher_minimum_show_duration - ms_since_show;
 
-      auto hide_launcher = [&]()
+      auto hide_launcher = [this]
       {
         if (pimpl->keyboard_launcher_.IsValid())
         {
