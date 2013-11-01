@@ -1572,16 +1572,16 @@ void UnityScreen::determineNuxDamage(CompRegion &nux_damage)
   /* Fetch all the dirty geometry from nux and aggregate it */
   std::vector<nux::Geometry> dirty = wt->GetPresentationListGeometries();
 
-  for (auto const& geo : dirty)
-    nux_damage += CompRegionFromNuxGeo(geo);
-
-  /* Special case, we need to redraw the panel shadow on panel updates */
-  for (auto const& panel_geo : panel_controller_->GetGeometries())
+  for (auto const& dirty_geo : dirty)
   {
-    auto const& panel_rect = CompRectFromNuxGeo(panel_geo);
+    nux_damage += CompRegionFromNuxGeo(dirty_geo);
 
-    if (nux_damage.intersects(panel_rect))
+    /* Special case, we need to redraw the panel shadow on panel updates */
+    for (auto const& panel_geo : panel_controller_->GetGeometries())
     {
+      if (!dirty_geo.IsIntersecting(panel_geo))
+        continue;
+
       for (CompOutput const& o : screen->outputDevs())
       {
         CompRect shadowRect;
