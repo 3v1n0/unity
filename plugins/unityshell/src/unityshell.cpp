@@ -110,6 +110,11 @@ inline CompRegion CompRegionFromNuxGeo(nux::Geometry const& geo)
   return CompRegion(geo.x, geo.y, geo.width, geo.height);
 }
 
+inline CompRect CompRectFromNuxGeo(nux::Geometry const& geo)
+{
+  return CompRect(geo.x, geo.y, geo.width, geo.height);
+}
+
 inline nux::Geometry NuxGeometryFromCompRect(CompRect const& rect)
 {
   return nux::Geometry(rect.x(), rect.y(), rect.width(), rect.height());
@@ -1214,8 +1219,7 @@ bool UnityWindow::handleEvent(XEvent *event)
 
         if (old_state != close_icon_state_)
         {
-          auto const& g = close_button_geo_;
-          cWindow->addDamageRect(CompRect(g.x, g.y, g.width, g.height));
+          cWindow->addDamageRect(CompRectFromNuxGeo(close_button_geo_));
         }
       }
       break;
@@ -1225,8 +1229,7 @@ bool UnityWindow::handleEvent(XEvent *event)
           close_button_geo_.IsPointInside(event->xbutton.x_root, event->xbutton.y_root))
       {
         close_icon_state_ = panel::WindowState::PRESSED;
-        auto const& g = close_button_geo_;
-        cWindow->addDamageRect(CompRect(g.x, g.y, g.width, g.height));
+        cWindow->addDamageRect(CompRectFromNuxGeo(close_button_geo_));
         handled = true;
       }
       else if (event->xbutton.button == Button2 &&
@@ -1245,8 +1248,7 @@ bool UnityWindow::handleEvent(XEvent *event)
         if (close_icon_state_ != panel::WindowState::NORMAL)
         {
           close_icon_state_ = panel::WindowState::NORMAL;
-          auto const& g = close_button_geo_;
-          cWindow->addDamageRect(CompRect(g.x, g.y, g.width, g.height));
+          cWindow->addDamageRect(CompRectFromNuxGeo(close_button_geo_));
         }
 
         if (was_pressed)
@@ -1558,7 +1560,10 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
   auto const& rects = damage.rects();
 
   for (CompRect const& r : rects)
-    wt->PresentWindowsIntersectingGeometryOnThisFrame(NuxGeometryFromCompRect(r));
+  {
+    auto const& geo = NuxGeometryFromCompRect(r);
+    wt->PresentWindowsIntersectingGeometryOnThisFrame(geo);
+  }
 }
 
 /* Grab changed nux regions and add damage rects for them */
@@ -1573,11 +1578,11 @@ void UnityScreen::determineNuxDamage(CompRegion &nux_damage)
   /* Special case, we need to redraw the panel shadow on panel updates */
   for (auto const& panel_geo : panel_controller_->GetGeometries())
   {
-    CompRect panel_rect(panel_geo.x, panel_geo.y, panel_geo.width, panel_geo.height);
+    auto const& panel_rect = CompRectFromNuxGeo(panel_geo);
 
     if (nux_damage.intersects(panel_rect))
     {
-      foreach (CompOutput const& o, screen->outputDevs())
+      for (CompOutput const& o : screen->outputDevs())
       {
         CompRect shadowRect;
         FillShadowRectForOutput(shadowRect, o);
