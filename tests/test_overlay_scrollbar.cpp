@@ -38,19 +38,36 @@ using namespace testing;
 namespace unity
 {
 
+namespace
+{
+  const unsigned SCROLL_TICK = 1000 * 401;
+  const unsigned SHOW_TICK = 1000 * 91;
+}
+
 class TestOverlayWindow : public Test
 {
 public:
   TestOverlayWindow()
-  {
-    overlay_window_ = new VScrollBarOverlayWindow(nux::Geometry(0,0,100,100));
-  }
+    : show_tick_(0)
+    , animation_controller_(tick_source_)
+    , overlay_window_(new VScrollBarOverlayWindow(nux::Geometry(0,0,100,100)))
+  {}
 
   int GetProxListSize() const
   {
     return nux::GetWindowThread()->GetWindowCompositor().GetProximityListSize();
   }
 
+  void ShowAnimation()
+  {
+    // (tick_source_);
+    show_tick_ += SHOW_TICK;
+    tick_source_.tick(show_tick_);
+  }
+
+  unsigned show_tick_;
+  nux::NuxTimerTickSource tick_source_;
+  nux::animation::AnimationController animation_controller_;
   nux::ObjectPtr<VScrollBarOverlayWindow> overlay_window_;
 };
 
@@ -62,7 +79,8 @@ class MockScrollBar : public unity::dash::PlacesOverlayVScrollBar
   public:
     MockScrollBar(NUX_FILE_LINE_DECL)
     : PlacesOverlayVScrollBar(NUX_FILE_LINE_PARAM)
-    , scroll_tick_(1000 * 401)
+    , animation_controller(tick_source_)
+    , scroll_tick_(0)
     , scroll_dy_(0)
     , thumbs_height_(overlay_window_->GetThumbGeometry().height)
     , scroll_up_signal_(false)
@@ -146,23 +164,21 @@ class MockScrollBar : public unity::dash::PlacesOverlayVScrollBar
 
     void ScrollUpAnimation(int scroll_dy)
     {
-      nux::animation::AnimationController animation_controller(tick_source_);
-
       MoveMouseNear();
       UpdateStepY();
 
       StartScrollAnimation(ScrollDir::UP, scroll_dy);
+      scroll_tick_ += SCROLL_TICK;
       tick_source_.tick(scroll_tick_);
     }
 
     void ScrollDownAnimation(int scroll_dy)
     {
-      nux::animation::AnimationController animation_controller(tick_source_);
-
       MoveMouseNear();
       UpdateStepY();
 
       StartScrollAnimation(ScrollDir::DOWN, scroll_dy);
+      scroll_tick_ += SCROLL_TICK;
       tick_source_.tick(scroll_tick_);
     }
 
@@ -174,12 +190,11 @@ class MockScrollBar : public unity::dash::PlacesOverlayVScrollBar
 
     void StartScrollThenConnectorAnimation()
     {
-      nux::animation::AnimationController animation_controller(tick_source_);
-
       StartScrollAnimation(ScrollDir::DOWN, 20);
       MoveMouse(0,0);
       StartConnectorAnimation();
 
+      scroll_tick_ += SCROLL_TICK;
       tick_source_.tick(scroll_tick_);
     }
 
@@ -189,11 +204,12 @@ class MockScrollBar : public unity::dash::PlacesOverlayVScrollBar
     }
 
     nux::NuxTimerTickSource tick_source_;
+    nux::animation::AnimationController animation_controller;
 
     using PlacesOverlayVScrollBar::connector_height_;
     using VScrollBar::_slider;
 
-    int scroll_tick_;
+    unsigned scroll_tick_;
     int scroll_dy_;
     int thumbs_height_;
     bool scroll_up_signal_;
@@ -238,27 +254,45 @@ public:
 
 TEST_F(TestOverlayWindow, TestOverlayShows)
 {
+  ASSERT_FALSE(overlay_window_->IsVisible());
   overlay_window_->MouseNear();
   EXPECT_TRUE(overlay_window_->IsVisible());
+  EXPECT_DOUBLE_EQ(0.0f, overlay_window_->GetOpacity());
+
+  ShowAnimation();
+  EXPECT_DOUBLE_EQ(1.0f, overlay_window_->GetOpacity());
 }
 
 TEST_F(TestOverlayWindow, TestOverlayHides)
 {
   overlay_window_->MouseNear();
+  ShowAnimation();
   EXPECT_TRUE(overlay_window_->IsVisible());
 
   overlay_window_->MouseBeyond();
+  ShowAnimation();
+
   overlay_window_->MouseLeave();
+  ShowAnimation();
+
   EXPECT_FALSE(overlay_window_->IsVisible());
+  EXPECT_DOUBLE_EQ(0.0f, overlay_window_->GetOpacity());
 }
 
 TEST_F(TestOverlayWindow, TestOverlayStaysOpenWhenMouseDown)
 {
   overlay_window_->MouseNear();
+  ShowAnimation();
+
   overlay_window_->MouseDown();
+  ShowAnimation();
 
   overlay_window_->MouseBeyond();
+  ShowAnimation();
+
   overlay_window_->MouseLeave();
+  ShowAnimation();
+
   EXPECT_TRUE(overlay_window_->IsVisible());
 }
 

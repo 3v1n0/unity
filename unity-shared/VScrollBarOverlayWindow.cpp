@@ -24,6 +24,7 @@
 #include "UScreen.h"
 #include "DashStyle.h"
 #include "CairoTexture.h"
+#include "unity-shared/AnimationUtils.h"
 
 namespace unity
 {
@@ -33,6 +34,7 @@ namespace
   int const THUMB_WIDTH = 21;
   int const THUMB_HEIGHT = 68;
   int const THUMB_RADIUS = 3;
+  int const ANIMATION_DURATION = 90;
 }
 
 
@@ -43,10 +45,18 @@ VScrollBarOverlayWindow::VScrollBarOverlayWindow(nux::Geometry const& geo)
   , mouse_offset_y_(0)
   , current_state_(ThumbState::NONE)
   , current_action_(ThumbAction::NONE)
+  , show_animator_(ANIMATION_DURATION)
 {
   Area::SetGeometry(content_size_.x, content_size_.y, THUMB_WIDTH, content_size_.height);
   SetBackgroundColor(nux::color::Transparent);
 
+  show_animator_.updated.connect(sigc::mem_fun(this, &BaseWindow::SetOpacity));
+  show_animator_.finished.connect([this] {
+    if (animation::GetDirection(show_animator_) == animation::Direction::BACKWARD)
+      ShowWindow(false);
+  });
+
+  SetOpacity(0.0f);
   UpdateTexture();
 }
 
@@ -212,7 +222,7 @@ void VScrollBarOverlayWindow::ShouldShow()
     {
       ShowWindow(true);
       PushToFront();
-      QueueDraw();
+      animation::StartOrReverse(show_animator_, animation::Direction::FORWARD);
     }
   }
 }
@@ -225,8 +235,7 @@ void VScrollBarOverlayWindow::ShouldHide()
         !(HasState(ThumbState::MOUSE_NEAR)) &&
         !(HasState(ThumbState::MOUSE_INSIDE)))
     {
-      ShowWindow(false);
-      QueueDraw();
+      animation::StartOrReverse(show_animator_, animation::Direction::BACKWARD);
     }
   }
 }

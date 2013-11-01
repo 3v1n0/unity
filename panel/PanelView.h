@@ -78,6 +78,9 @@ public:
 
   ui::EdgeBarrierSubscriber::Result HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event) override;
 
+  // FIXME: This will need to be removed when the Unity performance branch is merged.
+  void NeedSoftRedraw() override;
+
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);
@@ -95,7 +98,7 @@ protected:
   void OnEntryShowMenu(std::string const& entry_id, unsigned xid, int x, int y, unsigned button);
 
 private:
-  void OnBackgroundUpdate(GVariant *data);
+  void OnBackgroundUpdate(nux::Color const&);
   void OnOverlayShown(GVariant *data);
   void OnOverlayHidden(GVariant *data);
 
@@ -127,7 +130,6 @@ private:
   BaseTexturePtr bg_refine_single_column_tex_;
   std::unique_ptr<nux::AbstractPaintLayer> bg_refine_single_column_layer_;
 
-  nux::Color bg_color_;
   std::string active_overlay_;
   nux::Point  tracked_pointer_pos_;
 

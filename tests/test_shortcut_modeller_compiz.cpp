@@ -21,7 +21,7 @@
 using namespace testing;
 
 #include "CompizShortcutModeller.h"
-#include "StandaloneWindowManager.h"
+#include "test_standalone_wm.h"
 using namespace unity;
 using namespace unity::shortcut;
 
@@ -31,8 +31,7 @@ namespace
 struct TestShortcutCompizModeller : Test
 {
   TestShortcutCompizModeller()
-    : WM(dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default()))
-    , modeller(std::make_shared<CompizModeller>())
+    : modeller(std::make_shared<CompizModeller>())
   {
     WM->SetViewportSize(2, 2);
   }
@@ -63,7 +62,7 @@ struct TestShortcutCompizModeller : Test
     ASSERT_EQ(std::find(cats.begin(), cats.end(), "Workspaces"), cats.end());
   }
 
-  StandaloneWindowManager* WM;
+  testwrapper::StandaloneWM WM;
   AbstractModeller::Ptr modeller;
 };
 

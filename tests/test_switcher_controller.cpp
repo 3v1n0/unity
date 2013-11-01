@@ -63,6 +63,15 @@ TEST_F(TestSwitcherController, InitiateDetail)
   EXPECT_LT(model->detail_selection.changed.size(), prev_size);
 }
 
+TEST_F(TestSwitcherController, DisconnectWMSignalsOnDestruction)
+{
+  auto& color_property = WindowManager::Default().average_color;
+  size_t before = color_property.changed.size();
+  { Controller dummy; }
+  ASSERT_EQ(before, color_property.changed.size());
+  color_property.changed.emit(nux::color::RandomColor());
+}
+
 TEST_F(TestSwitcherController, InitiateDetailWebapps)
 {
   controller_->Show(ShowMode::ALL, SortMode::LAUNCHER_ORDER, icons_);
@@ -83,10 +92,12 @@ TEST_F(TestSwitcherController, StartDetailMode)
   controller_->InitiateDetail();
   EXPECT_TRUE(controller_->IsDetailViewShown());
 
-  controller_->StopDetailMode();
+  auto const& view = controller_->GetView();
+
+  view->switcher_stop_detail.emit();
   EXPECT_FALSE(controller_->IsDetailViewShown());
 
-  controller_->StartDetailMode();
+  view->switcher_start_detail.emit();
   EXPECT_TRUE(controller_->IsDetailViewShown());
 }
 
@@ -96,7 +107,9 @@ TEST_F(TestSwitcherController, StopDetailMode)
   controller_->InitiateDetail();
   EXPECT_TRUE(controller_->IsDetailViewShown());
 
-  controller_->StopDetailMode();
+  auto const& view = controller_->GetView();
+
+  view->switcher_stop_detail.emit();
   EXPECT_FALSE(controller_->IsDetailViewShown());
 }
 
@@ -110,10 +123,10 @@ TEST_F(TestSwitcherController, StartDetailModeMovesNextRows)
   auto model = view->GetModel();
   model->SetRowSizes({2,2});
 
-  controller_->StartDetailMode();
+  view->switcher_start_detail.emit();
   EXPECT_TRUE(controller_->IsDetailViewShown());
 
-  controller_->StartDetailMode();
+  view->switcher_start_detail.emit();
 
   // Grid: Assert we have gone down a row from index 0 -> 2
   //  0, 1,
@@ -128,15 +141,16 @@ TEST_F(TestSwitcherController, StopDetailModeMovesPrevRows)
   controller_->Select(2);
   controller_->InitiateDetail();
 
-  controller_->StartDetailMode();
+  auto const& view = controller_->GetView();
+
+  view->switcher_start_detail.emit();
   EXPECT_TRUE(controller_->IsDetailViewShown());
 
-  auto view = controller_->GetView();
   auto model = view->GetModel();
   model->SetRowSizes({2,2});
 
-  controller_->StartDetailMode();
-  controller_->StopDetailMode();
+  view->switcher_start_detail.emit();
+  view->switcher_stop_detail.emit();
 
   // Assert we have gone up a row from index 2 -> 0
   //  0, 1,
@@ -145,7 +159,7 @@ TEST_F(TestSwitcherController, StopDetailModeMovesPrevRows)
   EXPECT_EQ(static_cast<unsigned int>(model->detail_selection_index), 0);
 
   // Now we are in index 0, stoping detail mode must exit detail mode
-  controller_->StopDetailMode();
+  view->switcher_stop_detail.emit();
   EXPECT_FALSE(controller_->IsDetailViewShown());
 }
 

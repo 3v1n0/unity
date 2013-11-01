@@ -36,7 +36,6 @@ DesktopLauncherIcon::DesktopLauncherIcon()
   tooltip_text = _("Show Desktop");
   icon_name = "desktop";
   SetQuirk(Quirk::VISIBLE, true);
-  SetQuirk(Quirk::RUNNING, false);
   SetShortcut('d');
 }
 

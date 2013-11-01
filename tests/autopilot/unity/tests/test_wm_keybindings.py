@@ -9,17 +9,70 @@
 from __future__ import absolute_import
 
 from autopilot.matchers import Eventually
-from testtools.matchers import Equals, NotEquals
+from testtools.matchers import Equals, NotEquals, GreaterThan
 from unity.tests import UnityTestCase
+from unity.emulators import switcher
 
 class WindowManagerKeybindings(UnityTestCase):
     """Window Manager keybindings tests"""
+
+    def setUp(self):
+        super(WindowManagerKeybindings, self).setUp()
+
+    def open_panel_menu(self):
+        panel = self.unity.panels.get_panel_for_monitor(0)
+        self.assertThat(lambda: len(panel.menus.get_entries()), Eventually(GreaterThan(0)))
+        self.addCleanup(self.keyboard.press_and_release, "Escape")
+        self.keybinding("panel/open_first_menu")
+        self.assertThat(self.unity.panels.get_active_indicator, Eventually(NotEquals(None)))
+
+    def test_dash_shows_on_menus_opened(self):
+        self.process_manager.start_app_window("Calculator")
+        self.open_panel_menu()
+        self.addCleanup(self.unity.dash.ensure_hidden)
+        self.unity.dash.ensure_visible()
+        self.assertThat(self.unity.panels.get_active_indicator, Eventually(Equals(None)))
+
+    def test_hud_shows_on_menus_opened(self):
+        self.process_manager.start_app_window("Calculator")
+        self.open_panel_menu()
+        self.addCleanup(self.unity.hud.ensure_hidden)
+        self.unity.hud.ensure_visible()
+        self.assertThat(self.unity.panels.get_active_indicator, Eventually(Equals(None)))
+
+    def test_switcher_shows_on_menus_opened(self):
+        self.process_manager.start_app_window("Calculator")
+        self.open_panel_menu()
+        self.addCleanup(self.unity.switcher.terminate)
+        self.unity.switcher.initiate()
+        self.assertProperty(self.unity.switcher, mode=switcher.SwitcherMode.NORMAL)
+        self.assertThat(self.unity.panels.get_active_indicator, Eventually(Equals(None)))
+
+    def test_shortcut_hints_shows_on_menus_opened(self):
+        self.process_manager.start_app_window("Calculator")
+        self.open_panel_menu()
+        self.addCleanup(self.unity.shortcut_hint.ensure_hidden)
+        self.unity.shortcut_hint.show()
+        self.assertThat(self.unity.shortcut_hint.visible, Eventually(Equals(True)))
+        self.assertThat(self.unity.panels.get_active_indicator, Eventually(Equals(None)))
+
+    def test_spread_shows_on_menus_opened(self):
+        self.process_manager.start_app_window("Calculator")
+        self.open_panel_menu()
+        self.addCleanup(self.unity.window_manager.terminate_spread)
+        self.unity.window_manager.initiate_spread()
+        self.assertThat(self.unity.window_manager.scale_active, Eventually(Equals(True)))
+        self.assertThat(self.unity.panels.get_active_indicator, Eventually(Equals(None)))
+
+
+class WindowManagerKeybindingsForWindowHandling(UnityTestCase):
+    """Window Manager keybindings tests for handling a window"""
 
     scenarios = [('Restored Window', {'start_restored': True}),
                  ('Maximized Window', {'start_restored': False})]
 
     def setUp(self):
-        super(WindowManagerKeybindings, self).setUp()
+        super(WindowManagerKeybindingsForWindowHandling, self).setUp()
         self.start_test_window()
 
     def keybinding_if_not_minimized(self, keybinding):

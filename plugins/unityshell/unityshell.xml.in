@@ -470,38 +470,6 @@
                     <default>&lt;Control&gt;&lt;Alt&gt;&lt;Shift&gt;Tab</default>
                 </option>
 
-                <option name="alt_tab_right" type="key">
-                    <_short>Key to move to the right in the Switcher</_short>
-                    <_long>Navigates one window to the right in the Switcher.</_long>
-                    <default>&lt;Alt&gt;Right</default>
-                    <passive_grab>false</passive_grab>
-                    <internal/>
-                </option>
-
-                <option name="alt_tab_left" type="key">
-                    <_short>Key to move to the left in the Switcher</_short>
-                    <_long>Navigates one window to the left in the Switcher.</_long>
-                    <default>&lt;Alt&gt;Left</default>
-                    <passive_grab>false</passive_grab>
-                    <internal/>
-                </option>
-
-                <option name="alt_tab_detail_start" type="key">
-                    <_short>Key to expose windows in the Switcher</_short>
-                    <_long>Displays a live preview of the selected window; a grid if multiple windows of the selected application are open.</_long>
-                    <default>&lt;Alt&gt;Down</default>
-                    <passive_grab>false</passive_grab>
-                    <internal/>
-                </option>
-
-                <option name="alt_tab_detail_stop" type="key">
-                    <_short>Key to collapse windows in the Switcher</_short>
-                    <_long>Closes the live previews and returns to icons in the Switcher.</_long>
-                    <default>&lt;Alt&gt;Up</default>
-                    <passive_grab>false</passive_grab>
-                    <internal/>
-                </option>
-
                 <option name="alt_tab_next_window" type="key">
                     <_short>Key to flip through windows in the Switcher</_short>
                     <_long>Flips through all the windows present in the Switcher.</_long>

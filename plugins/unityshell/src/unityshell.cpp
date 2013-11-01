@@ -270,11 +270,6 @@ UnityScreen::UnityScreen(CompScreen* screen)
 
      wt->RedrawRequested.connect(sigc::mem_fun(this, &UnityScreen::onRedrawRequested));
 
-    // _bghash is a pointer. We don't want it to be created before Nux system has had a chance
-    // to start. BGHash relies on animations. Nux animation system starts after the WindowThread
-    // has been created.
-    _bghash.reset(new BGHash());
-
      unity_a11y_init(wt.get());
 
      /* i18n init */
@@ -326,24 +321,10 @@ UnityScreen::UnityScreen(CompScreen* screen)
      optionSetAltTabPrevAllInitiate(boost::bind(&UnityScreen::altTabPrevAllInitiate, this, _1, _2, _3));
      optionSetAltTabPrevInitiate(boost::bind(&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
 
-     optionSetAltTabDetailStartInitiate(boost::bind(&UnityScreen::altTabDetailStart, this, _1, _2, _3));
-     optionSetAltTabDetailStopInitiate(boost::bind(&UnityScreen::altTabDetailStop, this, _1, _2, _3));
-
      optionSetAltTabNextWindowInitiate(boost::bind(&UnityScreen::altTabNextWindowInitiate, this, _1, _2, _3));
      optionSetAltTabNextWindowTerminate(boost::bind(&UnityScreen::altTabTerminateCommon, this, _1, _2, _3));
 
      optionSetAltTabPrevWindowInitiate(boost::bind(&UnityScreen::altTabPrevWindowInitiate, this, _1, _2, _3));
-
-     optionSetAltTabLeftInitiate(boost::bind (&UnityScreen::altTabPrevInitiate, this, _1, _2, _3));
-     optionSetAltTabRightInitiate([&](CompAction* action, CompAction::State state, CompOption::Vector& options) -> bool
-     {
-      if (switcher_controller_->Visible())
-      {
-        switcher_controller_->Next();
-        return true;
-      }
-      return false;
-     });
 
      optionSetLauncherSwitcherForwardInitiate(boost::bind(&UnityScreen::launcherSwitcherForwardInitiate, this, _1, _2, _3));
      optionSetLauncherSwitcherPrevInitiate(boost::bind(&UnityScreen::launcherSwitcherPrevInitiate, this, _1, _2, _3));
@@ -508,6 +489,7 @@ void UnityScreen::EnsureSuperKeybindings()
     CreateSuperNewAction(shortcut, impl::ActionModifiers::NONE);
     CreateSuperNewAction(shortcut, impl::ActionModifiers::USE_NUMPAD);
     CreateSuperNewAction(shortcut, impl::ActionModifiers::USE_SHIFT);
+    CreateSuperNewAction(shortcut, impl::ActionModifiers::USE_SHIFT_NUMPAD);
   }
 
   for (auto shortcut : dash_controller_->GetAllShortcuts())
@@ -1344,18 +1326,31 @@ void UnityScreen::donePaint()
 
     if (action == ShowdesktopHandlerWindowInterface::PostPaintAction::Remove)
     {
+      wi->DeleteHandler();
       it = ShowdesktopHandler::animating_windows.erase(it);
       continue;
     }
     else if (action == ShowdesktopHandlerWindowInterface::PostPaintAction::Damage)
     {
-      wi->AddDamage ();
+      wi->AddDamage();
     }
 
     ++it;
   }
 
-  cScreen->donePaint ();
+  cScreen->donePaint();
+}
+
+void redraw_view_if_damaged(nux::ObjectPtr<nux::View> const& view, CompRegion const& damage)
+{
+  if (!view || view->IsRedrawNeeded())
+    return;
+
+  auto const& geo = view->GetAbsoluteGeometry();
+  CompRegion region(geo.x, geo.y, geo.width, geo.height);
+
+  if (damage.intersects(region))
+    view->NeedSoftRedraw();
 }
 
 void redraw_view_if_damaged(nux::ObjectPtr<nux::View> const& view, CompRegion const& damage)
@@ -1396,6 +1391,9 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
 
   if (dash_controller_->IsVisible())
     redraw_view_if_damaged(dash_controller_->Dash(), damage);
+
+  if (hud_controller_->IsVisible())
+    redraw_view_if_damaged(hud_controller_->HudView(), damage);
 
   auto const& launchers = launcher_controller_->launchers();
   for (auto const& launcher : launchers)
@@ -1532,7 +1530,7 @@ void UnityScreen::handleEvent(XEvent* event)
           }
           else
           {
-            dash_controller_->HideDash(false);
+            dash_controller_->HideDash();
           }
         }
       }
@@ -1547,7 +1545,7 @@ void UnityScreen::handleEvent(XEvent* event)
 
         if (!hud_geo.IsInside(pt) && !DoesPointIntersectUnityGeos(pt) && !on_top_geo.IsInside(pt))
         {
-          hud_controller_->HideHud(false);
+          hud_controller_->HideHud();
         }
       }
       else if (switcher_controller_->Visible())
@@ -1589,7 +1587,7 @@ void UnityScreen::handleEvent(XEvent* event)
       {
         /* We need an idle to postpone this action, after the current event
          * has been processed */
-        sources_.AddIdle([&] {
+        sources_.AddIdle([this] {
           shortcut_controller_->SetEnabled(false);
           shortcut_controller_->Hide();
           LOG_DEBUG(logger) << "Hiding shortcut controller due to keypress event.";
@@ -1599,9 +1597,7 @@ void UnityScreen::handleEvent(XEvent* event)
         });
       }
 
-      KeySym key_sym;
-      char key_string[2];
-      int result = XLookupString(&(event->xkey), key_string, 2, &key_sym, 0);
+      KeySym key_sym = XkbKeycodeToKeysym(event->xany.display, event->xkey.keycode, 0, 0);
 
       if (launcher_controller_->KeyNavIsActive())
       {
@@ -1624,27 +1620,26 @@ void UnityScreen::handleEvent(XEvent* event)
         {
           switcher_controller_->Hide(false);
           skip_other_plugins = true;
+          break;
         }
       }
 
-      if (result > 0)
+      if (super_keypressed_)
       {
-        // NOTE: does this have the potential to do an invalid write?  Perhaps
-        // we should just say "key_string[1] = 0" because that is the only
-        // thing that could possibly make sense here.
-        key_string[result] = 0;
-
-        if (super_keypressed_)
+        if (IsKeypadKey(key_sym))
         {
-          skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(screen->dpy(), key_sym, event->xkey.keycode, event->xkey.state, key_string, event->xkey.time);
-          if (!skip_other_plugins)
-            skip_other_plugins = dash_controller_->CheckShortcutActivation(key_string);
+          key_sym = XkbKeycodeToKeysym(event->xany.display, event->xkey.keycode, 0, 1);
+          key_sym = key_sym - XK_KP_0 + XK_0;
+        }
 
-          if (skip_other_plugins && launcher_controller_->KeyNavIsActive())
-          {
-            launcher_controller_->KeyNavTerminate(false);
-            EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
-          }
+        skip_other_plugins = launcher_controller_->HandleLauncherKeyEvent(XModifiersToNux(event->xkey.state), key_sym, event->xkey.time);
+        if (!skip_other_plugins)
+          skip_other_plugins = dash_controller_->CheckShortcutActivation(XKeysymToString(key_sym));
+
+        if (skip_other_plugins && launcher_controller_->KeyNavIsActive())
+        {
+          launcher_controller_->KeyNavTerminate(false);
+          EnableCancelAction(CancelActionTarget::LAUNCHER_SWITCHER, false);
         }
       }
       break;
@@ -1653,11 +1648,10 @@ void UnityScreen::handleEvent(XEvent* event)
       ShowdesktopHandler::InhibitLeaveShowdesktopMode (event->xmaprequest.window);
       break;
     case PropertyNotify:
-      if (event->xproperty.window == GDK_ROOT_WINDOW() &&
-          event->xproperty.atom == gdk_x11_get_xatom_by_name("_GNOME_BACKGROUND_REPRESENTATIVE_COLORS"))
+      if (bghash_ && event->xproperty.window == GDK_ROOT_WINDOW() &&
+          event->xproperty.atom == bghash_->ColorAtomId())
       {
-        if (_bghash)
-          _bghash->RefreshColor();
+        bghash_->RefreshColor();
       }
       break;
     default:
@@ -1695,7 +1689,10 @@ void UnityScreen::handleEvent(XEvent* event)
       break;
   }
 
-  if (!skip_other_plugins && !switcher_controller_->IsMouseDisabled() &&
+  if (switcher_controller_->IsMouseDisabled() && switcher_controller_->Visible())
+    skip_other_plugins = true;
+
+  if (!skip_other_plugins &&
       screen->otherGrabExist("deco", "move", "switcher", "resize", nullptr))
   {
     wt->ProcessForeignEvent(event, nullptr);
@@ -1911,11 +1908,6 @@ bool UnityScreen::altTabInitiateCommon(CompAction* action, switcher::ShowMode sh
     }
   }
 
-  screen->addAction(&optionGetAltTabRight());
-  screen->addAction(&optionGetAltTabDetailStart());
-  screen->addAction(&optionGetAltTabDetailStop());
-  screen->addAction(&optionGetAltTabLeft());
-
   /* Create a new keybinding for scroll buttons and current modifiers */
   CompAction scroll_up;
   CompAction scroll_down;
@@ -1959,11 +1951,6 @@ bool UnityScreen::altTabTerminateCommon(CompAction* action,
     screen->removeGrab(grab_index_, NULL);
     grab_index_ = 0;
   }
-
-  screen->removeAction(&optionGetAltTabRight ());
-  screen->removeAction(&optionGetAltTabDetailStart ());
-  screen->removeAction(&optionGetAltTabDetailStop ());
-  screen->removeAction(&optionGetAltTabLeft ());
 
   /* Removing the scroll actions */
   CompAction scroll_up;
@@ -2028,16 +2015,6 @@ bool UnityScreen::altTabPrevInitiate(CompAction* action, CompAction::State state
   }
 
   return false;
-}
-
-bool UnityScreen::altTabDetailStart(CompAction* action, CompAction::State state, CompOption::Vector& options)
-{
-  return switcher_controller_->StartDetailMode();
-}
-
-bool UnityScreen::altTabDetailStop(CompAction* action, CompAction::State state, CompOption::Vector& options)
-{
-  return switcher_controller_->StopDetailMode();
 }
 
 bool UnityScreen::altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options)
@@ -3052,8 +3029,7 @@ void UnityScreen::optionChanged(CompOption* opt, UnityshellOptions::Options num)
       override_color.red = override_color.red / override_color.alpha;
       override_color.green = override_color.green / override_color.alpha;
       override_color.blue = override_color.blue / override_color.alpha;
-      if (_bghash)
-        _bghash->OverrideColor(override_color);
+      bghash_->OverrideColor(override_color);
       break;
     }
     case UnityshellOptions::LauncherHideMode:
@@ -3205,16 +3181,14 @@ void UnityScreen::Relayout()
 
   UScreen *uscreen = UScreen::GetDefault();
   int primary_monitor = uscreen->GetPrimaryMonitor();
-  auto geo = uscreen->GetMonitorGeometry(primary_monitor);
-
-  primary_monitor_ = nux::Geometry(geo.x, geo.y, geo.width, geo.height);
+  auto const& geo = uscreen->GetMonitorGeometry(primary_monitor);
   wt->SetWindowSize(geo.width, geo.height);
 
   LOG_DEBUG(logger) << "Setting to primary screen rect:"
-                    << " x=" << primary_monitor_().x
-                    << " y=" << primary_monitor_().y
-                    << " w=" << primary_monitor_().width
-                    << " h=" << primary_monitor_().height;
+                    << " x=" << geo.x
+                    << " y=" << geo.y
+                    << " w=" << geo.width
+                    << " h=" << geo.height;
 
   needsRelayout = false;
 }
@@ -3269,6 +3243,8 @@ void UnityScreen::OnDashRealized ()
 void UnityScreen::initLauncher()
 {
   Timer timer;
+
+  bghash_.reset(new BGHash());
 
   auto xdnd_collection_window = std::make_shared<XdndCollectionWindowImp>();
   auto xdnd_start_stop_notifier = std::make_shared<XdndStartStopNotifierImp>();
@@ -3458,7 +3434,7 @@ bool WindowHasInconsistentShapeRects (Display *d,
 }
 
 UnityWindow::UnityWindow(CompWindow* window)
-  : BaseSwitchWindow (dynamic_cast<BaseSwitchScreen *> (UnityScreen::get (screen)), window)
+  : BaseSwitchWindow(static_cast<BaseSwitchScreen*>(UnityScreen::get(screen)), window)
   , PluginClassHandler<UnityWindow, CompWindow>(window)
   , window(window)
   , cWindow(CompositeWindow::get(window))

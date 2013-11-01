@@ -41,7 +41,7 @@ namespace unity
 namespace dash
 {
 
-class Controller : public unity::debug::Introspectable
+class Controller : public unity::debug::Introspectable, public sigc::trackable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;
@@ -59,8 +59,8 @@ public:
 
   sigc::signal<void> on_realize;
 
-  void HideDash(bool restore_focus = true);
-  void QuicklyHideDash(bool restore_focus = true);
+  void HideDash();
+  void QuicklyHideDash();
   void ShowDash();
 
   void ReFocusKeyInput();

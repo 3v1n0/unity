@@ -40,7 +40,7 @@ namespace unity
 namespace hud
 {
 
-class Controller : public unity::debug::Introspectable
+class Controller : public unity::debug::Introspectable, public sigc::trackable
 {
 public:
   typedef std::shared_ptr<Controller> Ptr;
@@ -50,6 +50,7 @@ public:
   Controller(ViewCreator const& create_view = nullptr,
              WindowCreator const& create_window = nullptr);
 
+  nux::ObjectPtr<AbstractView> HudView() const;
   nux::BaseWindow* window() const;
 
   nux::Property<int> launcher_width;
@@ -60,7 +61,7 @@ public:
 
   void ShowHideHud();
   void ShowHud();
-  void HideHud(bool restore_focus = true);
+  void HideHud();
   void ReFocusKeyInput();
   bool IsVisible();
 

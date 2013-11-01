@@ -10,7 +10,7 @@ include (cmake/pch.cmake)
 set (PROJECT_NAME "unity")
 set (UNITY_MAJOR 7)
 set (UNITY_MINOR 1)
-set (UNITY_MICRO 0)
+set (UNITY_MICRO 2)
 set (UNITY_VERSION "${UNITY_MAJOR}.${UNITY_MINOR}.${UNITY_MICRO}")
 set (UNITY_API_VERSION "6.0")
 set (UNITY_COMPONENTS_VERSION "6")
@@ -32,7 +32,7 @@ option(
   ON
 )
 
-if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l")
+if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv7l" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
   set (PIC_FLAGS "-fPIC")
 endif()
 
@@ -155,12 +155,13 @@ set (LOCALE_DIR "${DATADIR}/locale")
 set (VERSION "${UNITY_VERSION}")
 set (BUILDDIR "${CMAKE_BINARY_DIR}")
 set (TESTDATADIR "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
-set (INDICATOR_SERVICE_DIR "${CMAKE_INSTALL_PREFIX}/share/unity/indicators")
 
 find_package (PkgConfig)
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} unity --variable lensesdir OUTPUT_VARIABLE LENSES_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator3-0.4 --variable indicatordir OUTPUT_VARIABLE INDICATORDIR OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator3-0.4 --variable iconsdir OUTPUT_VARIABLE INDICATORICONDIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process (COMMAND ${PKG_CONFIG_EXECUTABLE} indicator3-0.4 --variable prefix OUTPUT_VARIABLE INDICATORPREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+set (INDICATOR_SERVICE_DIR "${INDICATORPREFIX}/share/unity/indicators")
 
 configure_file (${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 
@@ -232,7 +233,7 @@ set(UNITY_PLUGIN_SHARED_DEPS
     nux-4.0>=4.0.1
     sigc++-2.0
     unity-misc>=0.4.0
-    xpathselect=1.4
+    xpathselect>=1.2
     zeitgeist-2.0
 )
 

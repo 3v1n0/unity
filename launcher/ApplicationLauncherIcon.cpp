@@ -39,8 +39,6 @@
 #include <glib/gi18n-lib.h>
 #include <gio/gdesktopappinfo.h>
 
-#include <libbamf/bamf-tab.h>
-
 namespace unity
 {
 namespace launcher
@@ -97,7 +95,7 @@ ApplicationLauncherIcon::ApplicationLauncherIcon(ApplicationPtr const& app)
 
 ApplicationLauncherIcon::~ApplicationLauncherIcon()
 {
-  SetApplication(nullptr);
+  UnsetApplication();
 }
 
 ApplicationPtr ApplicationLauncherIcon::GetApplication() const
@@ -110,18 +108,16 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
   if (app_ == app)
     return;
 
-  if (app_)
+  if (!app)
   {
-    app_->sticky = false;
-    app_->seen = false;
+    Remove();
+    return;
   }
 
-  signals_conn_.Clear();
+  bool was_sticky = IsSticky();
+  UnsetApplication();
+
   app_ = app;
-
-  if (!app)
-    return;
-
   app_->seen = true;
   SetupApplicationSignalsConnections();
 
@@ -134,8 +130,24 @@ void ApplicationLauncherIcon::SetApplication(ApplicationPtr const& app)
   app_->desktop_file.changed.emit(app_->desktop_file());
 
   // Make sure we set the LauncherIcon stick bit too...
-  if (app_->sticky())
+  if (app_->sticky() || was_sticky)
     Stick(false); // don't emit the signal
+}
+
+void ApplicationLauncherIcon::UnsetApplication()
+{
+  if (!app_ || removed())
+    return;
+
+  /* Removing the unity-seen flag to the wrapped bamf application, on remove
+   * request we make sure that if the application is re-opened while the
+   * removal process is still ongoing, the application will be shown on the
+   * launcher. Disconnecting from signals we make sure that this icon won't be
+   * updated or will change visibility (no duplicated icon). */
+
+  signals_conn_.Clear();
+  app_->sticky = false;
+  app_->seen = false;
 }
 
 void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
@@ -198,6 +210,7 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
     if (!IsSticky())
     {
       SetQuirk(Quirk::VISIBLE, false);
+      HideTooltip();
 
       /* Use a timeout to remove the icon, this avoids
        * that we remove an application that is going
@@ -213,11 +226,11 @@ void ApplicationLauncherIcon::SetupApplicationSignalsConnections()
   }));
 }
 
-bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk) const
+bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk, int monitor) const
 {
   if (quirk == Quirk::ACTIVE)
   {
-    if (!SimpleLauncherIcon::GetQuirk(Quirk::ACTIVE))
+    if (!SimpleLauncherIcon::GetQuirk(Quirk::ACTIVE, monitor))
       return false;
 
     if (app_->type() == "webapp")
@@ -229,20 +242,13 @@ bool ApplicationLauncherIcon::GetQuirk(AbstractLauncherIcon::Quirk quirk) const
     return app_->OwnsWindow(WindowManager::Default().GetActiveWindow());
   }
 
-  return SimpleLauncherIcon::GetQuirk(quirk);
+  return SimpleLauncherIcon::GetQuirk(quirk, monitor);
 }
 
 void ApplicationLauncherIcon::Remove()
 {
   LogUnityEvent(ApplicationEventType::LEAVE);
-  /* Removing the unity-seen flag to the wrapped bamf application, on remove
-   * request we make sure that if the application is re-opened while the
-   * removal process is still ongoing, the application will be shown on the
-   * launcher. Disconnecting from signals we make sure that this icon won't be
-   * reused (no duplicated icon). */
-  app_->seen = false;
-  // Disconnect all our callbacks.
-  notify_callbacks(); // This is from sigc++::trackable
+  UnsetApplication();
   SimpleLauncherIcon::Remove();
 }
 
@@ -485,11 +491,21 @@ std::vector<Window> ApplicationLauncherIcon::WindowsForMonitor(int monitor)
 
 void ApplicationLauncherIcon::OnWindowMinimized(guint32 xid)
 {
-  if (!app_->OwnsWindow(xid))
-    return;
+  for (auto const& window: app_->GetWindows())
+  {
+    if (xid == window->window_id())
+    {
+      int monitor = GetCenterForMonitor(window->monitor()).first;
 
-  Present(0.5f, 600);
-  UpdateQuirkTimeDelayed(300, Quirk::SHIMMER);
+      if (monitor >= 0)
+      {
+        Present(0.5f, 600, monitor);
+        FullyAnimateQuirkDelayed(300, Quirk::SHIMMER, monitor);
+      }
+
+      break;
+    }
+  }
 }
 
 void ApplicationLauncherIcon::OnWindowMoved(guint32 moved_win)
@@ -644,7 +660,7 @@ void ApplicationLauncherIcon::OpenInstanceWithUris(std::set<std::string> const& 
     LOG_WARN(logger) << error;
   }
 
-  UpdateQuirkTime(Quirk::STARTING);
+  FullyAnimateQuirk(Quirk::STARTING);
 }
 
 void ApplicationLauncherIcon::OpenInstanceLauncherIcon(Time timestamp)
@@ -685,7 +701,7 @@ bool ApplicationLauncherIcon::Spread(bool current_desktop, int state, bool force
 
 void ApplicationLauncherIcon::EnsureWindowState()
 {
-  std::vector<bool> monitors(monitors::MAX);
+  std::bitset<monitors::MAX> monitors;
 
   for (auto& window: app_->GetWindows())
   {
@@ -697,18 +713,18 @@ void ApplicationLauncherIcon::EnsureWindowState()
       // If monitor is -1 (or negative), show on all monitors.
       if (monitor < 0)
       {
-        for (unsigned j = 0; j < monitors::MAX; j++)
-          monitors[j] = true;
+        monitors.set();
+        break;
       }
       else
+      {
         monitors[monitor] = true;
+      }
     }
   }
 
   for (unsigned i = 0; i < monitors::MAX; i++)
     SetWindowVisibleOnMonitor(monitors[i], i);
-
-  EmitNeedsRedraw();
 }
 
 void ApplicationLauncherIcon::UpdateDesktopQuickList()
@@ -852,7 +868,7 @@ void ApplicationLauncherIcon::AboutToRemove()
 
 void ApplicationLauncherIcon::Stick(bool save)
 {
-  if (IsSticky())
+  if (IsSticky() && !save)
     return;
 
   app_->sticky = true;
@@ -1068,33 +1084,33 @@ AbstractLauncherIcon::MenuItemsVector ApplicationLauncherIcon::GetMenus()
   return result;
 }
 
-void ApplicationLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> center)
+void ApplicationLauncherIcon::UpdateIconGeometries(std::vector<nux::Point3> const& centers)
 {
   if (app_->type() == "webapp")
     return;
 
-  nux::Geometry geo;
-
-  // TODO: replace 48 with icon_size;
-  geo.width = 48;
-  geo.height = 48;
+  nux::Geometry geo(0, 0, icon_size, icon_size);
 
   for (auto& window : app_->GetWindows())
   {
     Window xid = window->window_id();
-    int monitor = window->monitor();
-    monitor = std::max<int>(0, std::min<int>(center.size() - 1, monitor));
+    int monitor = GetCenterForMonitor(window->monitor()).first;
 
-    // TODO: replace 24 with icon_size / 2;
-    geo.x = center[monitor].x - 24;
-    geo.y = center[monitor].y - 24;
+    if (monitor < 0)
+    {
+      WindowManager::Default().SetWindowIconGeometry(xid, nux::Geometry());
+      continue;
+    }
+
+    geo.x = centers[monitor].x - icon_size / 2;
+    geo.y = centers[monitor].y - icon_size / 2;
     WindowManager::Default().SetWindowIconGeometry(xid, geo);
   }
 }
 
-void ApplicationLauncherIcon::OnCenterStabilized(std::vector<nux::Point3> center)
+void ApplicationLauncherIcon::OnCenterStabilized(std::vector<nux::Point3> const& centers)
 {
-  UpdateIconGeometries(center);
+  UpdateIconGeometries(centers);
 }
 
 void ApplicationLauncherIcon::UpdateRemoteUri()
@@ -1114,16 +1130,6 @@ void ApplicationLauncherIcon::UpdateRemoteUri()
 std::string ApplicationLauncherIcon::GetRemoteUri() const
 {
   return _remote_uri;
-}
-
-std::set<std::string> ApplicationLauncherIcon::ValidateUrisForLaunch(DndData const& uris)
-{
-  std::set<std::string> result;
-
-  for (auto uri : uris.Uris())
-    result.insert(uri);
-
-  return result;
 }
 
 void ApplicationLauncherIcon::OnDndHovered()
@@ -1163,7 +1169,7 @@ bool ApplicationLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
 {
   if (IsFileManager())
   {
-    for (auto uri : dnd_data.Uris())
+    for (auto const& uri : dnd_data.Uris())
     {
       if (boost::algorithm::starts_with(uri, "file://"))
         return true;
@@ -1189,7 +1195,7 @@ bool ApplicationLauncherIcon::OnShouldHighlightOnDrag(DndData const& dnd_data)
 nux::DndAction ApplicationLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_data)
 {
 #ifdef USE_X11
-  return ValidateUrisForLaunch(dnd_data).empty() ? nux::DNDACTION_NONE : nux::DNDACTION_COPY;
+  return dnd_data.Uris().empty() ? nux::DNDACTION_NONE : nux::DNDACTION_COPY;
 #else
   return nux::DNDACTION_NONE;
 #endif
@@ -1198,7 +1204,7 @@ nux::DndAction ApplicationLauncherIcon::OnQueryAcceptDrop(DndData const& dnd_dat
 void ApplicationLauncherIcon::OnAcceptDrop(DndData const& dnd_data)
 {
   auto timestamp = nux::GetGraphicsDisplay()->GetCurrentEvent().x11_timestamp;
-  OpenInstanceWithUris(ValidateUrisForLaunch(dnd_data), timestamp);
+  OpenInstanceWithUris(dnd_data.Uris(), timestamp);
 }
 
 bool ApplicationLauncherIcon::ShowInSwitcher(bool current)

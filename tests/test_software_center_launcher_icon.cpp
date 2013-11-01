@@ -27,7 +27,6 @@
 
 #include "mock-application.h"
 #include "FavoriteStore.h"
-#include "MultiMonitor.h"
 #include "SoftwareCenterLauncherIcon.h"
 #include "Launcher.h"
 #include "PanelStyle.h"
@@ -67,6 +66,8 @@ struct TestSoftwareCenterLauncherIcon : testmocks::TestUnityAppBase
       : SoftwareCenterLauncherIcon(app, aptdaemon_trans_id, icon_path)
     {}
 
+    void LauncherIconUnstick() { LauncherIcon::UnStick(); }
+
     using SoftwareCenterLauncherIcon::GetActualDesktopFileAfterInstall;
     using SoftwareCenterLauncherIcon::GetRemoteUri;
     using SoftwareCenterLauncherIcon::OnFinished;
@@ -93,6 +94,7 @@ struct TestSoftwareCenterLauncherIcon : testmocks::TestUnityAppBase
 TEST_F(TestSoftwareCenterLauncherIcon, Construction)
 {
   EXPECT_FALSE(icon.IsVisible());
+  EXPECT_TRUE(icon.IsSticky());
   EXPECT_EQ(AbstractLauncherIcon::Position::FLOATING, icon.position());
   EXPECT_EQ("Waiting to install", icon.tooltip_text());
   EXPECT_EQ(PRE_INSTALL_ICON, icon.icon_name());
@@ -157,15 +159,37 @@ TEST_F(TestSoftwareCenterLauncherIcon, DisconnectsOldAppSignals)
   EXPECT_TRUE(usc->icon.changed.empty());
 }
 
+TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedRemoveInvalidNewAppIcon)
+{
+  // Using an icon ptr, to get the removed signal to be properly emitted
+  nux::ObjectPtr<MockSoftwareCenterLauncherIcon> icon_ptr(
+    new MockSoftwareCenterLauncherIcon(usc, "/com/canonical/unity/test/object/path", PRE_INSTALL_ICON));
+
+  bool removed = false;
+  auto& app_manager = unity::ApplicationManager::Default();
+  auto mock_app_managed = dynamic_cast<MockApplicationManager*>(&app_manager);
+
+  EXPECT_CALL(*mock_app_managed, GetApplicationForDesktopFile(_)).WillOnce(Return(nullptr));
+  icon_ptr->remove.connect([&removed] (AbstractLauncherIcon::Ptr const&) { removed = true; });
+
+  icon_ptr->OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
+
+  Mock::VerifyAndClearExpectations(mock_app_managed);
+  EXPECT_TRUE(removed);
+}
+
 TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedSticksIcon)
 {
-  ASSERT_FALSE(icon.IsSticky());
+  icon.LauncherIconUnstick();
+
   icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
   EXPECT_TRUE(icon.IsSticky());
 }
 
 TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedSavesIconPosition)
 {
+  icon.LauncherIconUnstick();
+
   bool saved = false;
   icon.position_saved.connect([&saved] {saved = true;});
   icon.OnFinished(glib::Variant(g_variant_new("(s)", "exit-success")));
@@ -175,6 +199,8 @@ TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedSavesIconPosition)
 
 TEST_F(TestSoftwareCenterLauncherIcon, OnFinishedKeepsStickyStatus)
 {
+  icon.LauncherIconUnstick();
+
   bool saved = false;
   usc->sticky = true;
   icon.position_saved.connect([&saved] {saved = true;});
@@ -226,10 +252,10 @@ TEST_P(/*TestSoftwareCenterLauncherIcon*/MultiMonitor, Animate)
 {
   auto launcher = CreateLauncher();
   launcher->monitor = GetParam();
-  icon.SetCenter({1, 1, 0}, launcher->monitor(), nux::Geometry());
-  EXPECT_TRUE(icon.Animate(launcher, 2, 2));
-  EXPECT_TRUE(icon.IsVisible());
-  EXPECT_EQ("", icon.icon_name());
+  icon.SetCenter({1, 1, 0}, launcher->monitor());
+  ASSERT_TRUE(icon.Animate(launcher, 2, 2));
+  EXPECT_FALSE(icon.IsVisible());
+  EXPECT_TRUE(icon.icon_name().empty());
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
     ASSERT_EQ(static_cast<int>(i) == launcher->monitor(), icon.IsVisibleOnMonitor(i));
@@ -245,6 +271,8 @@ TEST_P(/*TestSoftwareCenterLauncherIcon*/MultiMonitor, Animate)
 
   for (unsigned i = 0; i < monitors::MAX; ++i)
     ASSERT_TRUE(icon.IsVisibleOnMonitor(i));
+
+  EXPECT_TRUE(icon.IsVisible());
 }
 
 struct InstallProgress : TestSoftwareCenterLauncherIcon, WithParamInterface<int> {};

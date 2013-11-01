@@ -24,8 +24,6 @@
 #include <UnityCore/Variant.h>
 
 #include "unity-shared/CairoTexture.h"
-#include "unity-shared/UBusWrapper.h"
-#include "unity-shared/UBusMessages.h"
 #include <unity-shared/UnitySettings.h>
 
 #include "Tooltip.h"
@@ -102,26 +100,25 @@ nux::Area* Tooltip::FindAreaUnderMouse(const nux::Point& mouse_position, nux::Nu
   return nullptr;
 }
 
-void Tooltip::ShowTooltipWithTipAt(int anchor_tip_x, int anchor_tip_y)
+void Tooltip::SetTooltipPosition(int tip_x, int tip_y)
 {
-  _anchorX = anchor_tip_x;
-  _anchorY = anchor_tip_y;
+  _anchorX = tip_x;
+  _anchorY = tip_y;
 
   int x = _anchorX - PADDING;
-  int y = anchor_tip_y - ANCHOR_HEIGHT / 2 - TOP_SIZE - CORNER_RADIUS - PADDING;
+  int y = _anchorY - ANCHOR_HEIGHT / 2 - TOP_SIZE - CORNER_RADIUS - PADDING;
 
-  SetBaseX(x);
-  SetBaseY(y);
+  SetBaseXY(x, y);
+}
 
-  PushToFront();
-
-  ShowWindow(true);
-  UBusManager::SendMessage(UBUS_TOOLTIP_SHOWN);
+void Tooltip::ShowTooltipWithTipAt(int x, int y)
+{
+  SetTooltipPosition(x, y);
+  Show();
 }
 
 void Tooltip::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
-  _compute_blur_bkg = true;
   CairoBaseWindow::Draw(gfxContext, forceDraw);
   _tooltip_text->ProcessDraw(gfxContext, forceDraw);
 }
@@ -473,18 +470,15 @@ void Tooltip::UpdateTexture()
   float   shadow_color[4]  = {0.0f, 0.0f, 0.0f, 1.00f};
   float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.15f};
   float   mask_color[4]    = {1.0f, 1.0f, 1.0f, 1.00f};
-  
-  if (use_blur_ == false)
+
+  if (!HasBlurredBackground())
   {
     //If low gfx is detected then disable transparency because we're not bluring using our blur anymore.
-    float alpha_value = 1.0f;
-  
+    const float alpha_value = 1.0f;
+
     tint_color[3] = alpha_value;
     hl_color[3] = alpha_value;
     dot_color[3] = alpha_value;
-    shadow_color[3] = alpha_value;
-    outline_color[3] = alpha_value;
-    mask_color[3] = alpha_value;
   }
 
   tint_dot_hl(cr_bg,

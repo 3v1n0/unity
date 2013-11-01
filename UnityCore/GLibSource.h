@@ -217,6 +217,7 @@ public:
 
   bool Remove(std::string const& nick);
   bool Remove(unsigned int id);
+  void RemoveAll();
 
   Source::Ptr GetSource(std::string const& nick) const;
   Source::Ptr GetSource(unsigned int id) const;

@@ -34,8 +34,6 @@ ExpoLauncherIcon::ExpoLauncherIcon()
 {
   tooltip_text = _("Workspace Switcher");
   icon_name = "workspace-switcher-top-left";
-  SetQuirk(Quirk::VISIBLE, false);
-  SetQuirk(Quirk::RUNNING, false);
   SetShortcut('s');
 
   auto& wm = WindowManager::Default();

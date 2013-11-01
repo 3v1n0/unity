@@ -23,7 +23,9 @@
 
 #include "Volume.h"
 #include "DevicesSettings.h"
+#include "DeviceNotificationDisplay.h"
 #include "SimpleLauncherIcon.h"
+#include "unity-shared/FileManager.h"
 
 namespace unity
 {
@@ -35,8 +37,8 @@ class VolumeLauncherIcon : public SimpleLauncherIcon
 public:
   typedef nux::ObjectPtr<VolumeLauncherIcon> Ptr;
 
-  VolumeLauncherIcon(Volume::Ptr const& volume,
-                     DevicesSettings::Ptr const& devices_settings);
+  VolumeLauncherIcon(Volume::Ptr const&, DevicesSettings::Ptr const&,
+                     DeviceNotificationDisplay::Ptr const&, FileManager::Ptr const&);
   virtual ~VolumeLauncherIcon();
 
   virtual void AboutToRemove();
@@ -51,14 +53,17 @@ public:
   std::string GetRemoteUri() const;
 
 protected:
-  virtual void ActivateLauncherIcon(ActionArg arg);
+  void ActivateLauncherIcon(ActionArg arg);
+  bool OnShouldHighlightOnDrag(DndData const&);
+  void OnAcceptDrop(DndData const&);
+  nux::DndAction OnQueryAcceptDrop(DndData const&);
 
   // Introspection
   virtual std::string GetName() const;
 
 private:
   class Impl;
-  std::shared_ptr<Impl> pimpl_;
+  std::unique_ptr<Impl> pimpl_;
 };
 
 }

@@ -40,7 +40,7 @@ namespace unity
 namespace switcher
 {
 
-struct Controller::Impl
+struct Controller::Impl : public sigc::trackable
 {
   Impl(Controller* obj,
        unsigned int load_timeout,
@@ -49,6 +49,9 @@ struct Controller::Impl
   void Show(ShowMode show, SortMode sort, std::vector<launcher::AbstractLauncherIcon::Ptr> results);
   void Hide(bool accept_state);
   void DetailHide();
+
+  void StartDetailMode();
+  void StopDetailMode();
 
   void Next();
   void Prev();
@@ -86,7 +89,7 @@ struct Controller::Impl
   void ResetDetailTimer(int timeout_length);
   bool OnDetailTimer();
   void OnModelSelectionChanged(launcher::AbstractLauncherIcon::Ptr const& icon);
-  void OnBackgroundUpdate(GVariant* data);
+  void OnBackgroundUpdate(nux::Color const&);
 
   unsigned int construct_timeout_;
 
@@ -99,7 +102,6 @@ struct Controller::Impl
   Controller::WindowCreator create_window_;
   MockableBaseWindow::Ptr view_window_;
   nux::HLayout* main_layout_;
-  nux::Color bg_color_;
   nux::animation::AnimateValue<double> fade_animator_;
 
   UBusManager ubus_manager_;

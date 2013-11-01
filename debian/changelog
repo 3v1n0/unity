@@ -1,3 +1,275 @@
+unity (7.1.2+13.10.20131014.1-0ubuntu1) saucy; urgency=low
+
+  [ William Grant ]
+  * Build with -fPIC on arm64 to fix link failure.
+
+  [ Andrea Azzarone ]
+  * Don't ignore Stick command is the icon is already sticky but
+    save==true. (LP: #1237359)
+
+  [ Marco Trevisan (Treviño) ]
+  * PluginAdapter: set the spread window state before spreading or the
+    callback will get a wrong state. (LP: #1238622)
+  * PluginAdapter: set the spread window state before spreading or the
+    callback will get a wrong state. (LP: #1238622)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3570
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 14 Oct 2013 11:24:03 +0000
+
+unity (7.1.2+13.10.20131011-0ubuntu1) saucy; urgency=low
+
+  [ Stephen M. Webb ]
+  * bump upstream version to 7.1.2
+
+  [ Brandon Schaefer ]
+  * Remove the ibus workaround, as im-config has been updated to use
+    'auto' as its default choice. This means ibus-daemon will start up
+    correctly now.
+
+  [ Andrea Azzarone ]
+  * Fix rendering of italic text in StaticCairoText. (LP: #1190275)
+
+  [ Marco Trevisan (Treviño) ]
+  * Volume: remove FileManager instance, handle opened status in
+    VolumeLauncherIcon. (LP: #1236468)
+  * VolumeLauncherIcon: copy files to device on DnD Use filemanager to
+    perform the copy action. If needed, delay the procedure until we
+    don't have the volume mounted (using a magic utility function to
+    share the code). (LP: #838731)
+  * LauncherIcon: Add monitor parameter to GetTipPosition. (LP:
+    #1236631)
+  * AP, TestSpread: assertWindowIsNotScaled may fail when getting the
+    Xid. (LP: #1236872)
+  * ApplicationLauncherIcon: remove the icon when setting a null
+    application. (LP: #1237161)
+  * SourceManager: add RemoveAll public method.
+  * ApplicationLauncherIcon: don't unset the app if the icon has been
+    already removed In this case the app is unset when removed, doing it
+    twice causes the app->seen flag to be reset and this breaks the
+    assumtions of the LauncherController, making it to recreate a new
+    app for the same BamfApplication. (LP: #1237182)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3565
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 11 Oct 2013 06:17:18 +0000
+
+unity (7.1.1+13.10.20131004-0ubuntu1) saucy; urgency=low
+
+  [ Brandon Schaefer ]
+  * Break the bump detection by moving to the first icon, then down 5
+    pixels. Since bump detection needs to move in 3 different
+    directions.
+  * Move the switcher Alt+<ArrowKey> shortcut handling into nux, from
+    compiz. Now nux handles these events instead of compiz. This way its
+    makes much more sense code wise and we no longer ungrab the arrow
+    gets from X... so Alt+LeftArrow will no longer open the hud. (LP:
+    #969039)
+
+  [ Andrea Azzarone ]
+  * Fix bad redrawing of dash overlay scrollbar connector. (LP:
+    #1233195)
+  * Update icon_under_mouse before process mouse movemnt in the tooltip
+    manager. (LP: #1172769, #1233666)
+  * Hide the tooltip when an app is closed. (LP: #1172769)
+
+  [ Marco Trevisan (Treviño) ]
+  * TestIMTextEntry: fix failing tests with IBus, use TEST_F and TEST_P.
+  * CairoBaseWindow: only regenerate blur texture when visible and
+    damaged. (LP: #1233109)
+  * CairoBaseWindow: add fade animator to control both QL and Tooltip
+    Removing the animator from LauncherIcon, and handling the tooltip
+    animation inside the QL and Tooltip base class.
+  * PanelService: close a menu and re-send the keyevent when handling a
+    combination Or when we try to open HUD/Dash. Also, close the active
+    menu if a new application is opened and focused. (LP: #10905,
+    #1234457, #1197071)
+  * SimpleLauncherIcon: we need to restore the focus when closing the
+    Overlay for activation. (LP: #909870)
+  * LauncherIcon: don't try to show again quicklists or tooltip if
+    center changed, just move them. (LP: #1234778)
+  * AbstractLauncherIcon: add static icon_size property. (LP: #1073103)
+
+  [ Christopher Lee ]
+  * Preparing autopilot tests for an upcoming update in autopilot 1.3.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3554
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 04 Oct 2013 05:23:43 +0000
+
+unity (7.1.1+13.10.20130927.1-0ubuntu1) saucy; urgency=low
+
+  [ Michal Hruby ]
+  * Add a property to the Scope class
+  * Add parameters to Preview::PerformAction
+  * Bump ABI version
+
+  [ Brandon Schaefer ]
+  * restart the ibus daemon wit hthe right args for tests.
+  * Change sleep from 5 to 10, in hopes of appeasing jenkins.
+  * If we are switching view ports tell nux to process the events. Even
+    though the viewport switcher does grab the mouse, we will still feed
+    nux the events so we can correctly update where the mouse is for the
+    launcher. (LP: #1231679)
+
+  [ chris.gagnon ]
+  * BlackListDriverError moved to Display. (LP: #1227882)
+
+  [ Marco Trevisan (Treviño) ]
+  * UBusMessages: remove useless messages (and relative emission).
+  * PanelService: set proper priority for floating position-less NG
+    indicators. (LP: #1229460)
+  * Unity: Use WindowManager average_color property for getting the
+    desktop color Having to deal with UBus here was a mess and caused us
+    to re-store the same value too many times. Using a nux property
+    gives us all the features we need easily while WindowManager is
+    already enough shared to be used for this task.
+  * VScrollBarOverlayWindow: add quick fade animation on show/hide.
+
+  [ Chris Townsend ]
+  * A regression caused by revno. 3515 breaks the recently fixed
+    Quicklist and Tooltip active blur. This fixes it by checking if the
+    View is a ViewWindow and if so, use QueueDraw() instead of
+    NeedSoftRedraw(). (LP: #1228308)
+  * The ShowDesktopHandleWindowInterface teardown was missing it's call
+    to DeleteHandler() in a recent commit that refactored the handling
+    of some Show Desktop code. (LP: #1228915)
+
+  [ Andrea Azzarone ]
+  * Don't use sigc::bind with a static value that should be dynamic.
+    (LP: #1228965)
+
+  [ Jeremy Bicha ]
+  * recommend telepathy-indicator.
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * No new recommends/depends now, since at this point of the cycle it's
+    not allowed for this project
+  * Re-add the telepathy-indicator recommends as it got dropped from
+    Main without any valid reasons
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3540
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 27 Sep 2013 12:53:11 +0000
+
+unity (7.1.0+13.10.20130920-0ubuntu1) saucy; urgency=low
+
+  [ Stephen M. Webb ]
+  * render the Dash frame all the way to the bottom of the screen (lp:
+    #1100120). (LP: #1100120)
+
+  [ Brandon Schaefer ]
+  * Ignore mouse movements if the mouse starts over a switcher icon.
+    Clicking still works fine, we just wont steal focus from the alt+tab
+    work. (LP: #1215630)
+  * Make sure we ignore mouse movement over detail icons if the mouse
+    starts over it at start. Let the mouse take selection control once
+    it moves outside of any icon, vs having to enter a different icon.
+    (LP: #1223037, #1223039)
+  * Add an option to disable the mouse in the switcher. (LP: #1224048)
+  * When the shortcut is open, and we receive a ButtonPress or KeyPress
+    hide it. As this causes problems else where, and it really should
+    close if the user attempts to do anything (even while holding
+    super!). (LP: #932718)
+  * Set an upper bound on the amount of icons we go through to check
+    tooltips. As the accordion effect was causing the mouse to go
+    through the icons to fast, making the test fail.
+  * Make sure we move the mouse over the target icon while we are
+    dragging the source icon.
+  * Get the real shortcut to activate ibus. (LP: #1227056)
+  * Only accept focus if the mouse moves in 3 directions on switcher
+    start up if the mouse starts over the switcher window. This is an
+    attempt to tell the difference between a bump and intentional
+    movement. (LP: #1223630)
+
+  [ Marco Trevisan (Treviño) ]
+  * DesktopApplicationManager: added new app manager layer so that we
+    can emit app events.
+  * Application: add desktop_id method, and implement in
+    desktop::Application.
+  * Launcher: only fade the launcher when in auto-hide and dash is
+    opened. (LP: #1223979, #1044926)
+  * ApplicationLauncherIcon: log unity zeitgeist events on stick,
+    unstick, removal and delete. (LP: #779449)
+  * UnityScreen: add support for Super+Arrows shortcuts to manage the
+    focused window Super+Arrows shortcut allows to move and maximize /
+    restore / minimize the focused window on the screen. (LP: #992697,
+    #751050)
+  * Launcher: use nux::Animation for all the launcher animations This
+    allows to do these when compiz requests to prepare painting, instead
+    of using only an idle to perform this. (LP: #1226114, #1224766)
+  * ShortcutView: use StaticCairoText instead of StaticText for
+    rendering the View Improves the text alignment and visual quality.
+  * UnityShell: redraw the dash also if a non-blurred area is damaged If
+    the dash is damaged, but not the blurred area, it won't redraw. We
+    need to draw it, in order to avoid flickering of its border. Also,
+    add the redraw_view_if_damaged utility function to redraw a view if
+    really needed. (LP: #1224340)
+  * AnimationUtils: add utility functions to handle nux::Animation's
+    start and reversion Update the whole code using nux::animation to
+    use these facility functions.
+  * Launcher: fix style to use postfixed-underscore for private members
+    Also remove some tabs and useless members.
+  * ShortcutController: fix typo on introspection data.
+
+  [ Lars Uebernickel ]
+  * panel-service: fix order when paging through menus with left/right
+    keys. (LP: #1183994)
+
+  [ Chris Townsend ]
+  * Fixes issue where entering keynav mode may make the BFB icon scroll
+    off the top of the Launcher. (LP: #1219636, #1068166)
+  * The logic to detect when a Quicklist may be off the screen did not
+    take into account the default top size of 4, so any Quicklists near
+    the bottom would have blur that was shifted down 4 pixels. (LP:
+    #819663)
+  * Due to a change libdbusmenu, need to use a fully qualified name for
+    the Dbus object name. (LP: #1223561)
+  * Move the _compute_blur_bkg bool to the Tooltip::Draw() method since
+    the CairoBaseWindow::Draw() method sets this to false causing
+    subsequent draws to never update the background texture. (LP:
+    #1052782)
+  * Move the _compute_blur_bkg bool into the QuicklistView::Draw()
+    method to actually get active blur to work. (LP: #873387)
+  * Use the first two icons in the Launcher to assure the icons are
+    always on the screen for this particular Autopilot test. (LP:
+    #1219636)
+  * Set the wait timeout to a longer period (1000ms) since many Jenkins
+    CI tests are failing in the TestIconLoader tests. (LP: #1224643)
+  * Make the mouse movement infinite while loop into a for loop and only
+    iterate 10 times w/ a 0.5 second delay between movements. Raise an
+    error if the correct icon is not found when the loop terminates.
+    Consolidate the autoscroll_to_icon() function into the
+    move_mouse_to_icon() function and change move_mouse_to_icon() to
+    handle autoscrolling offsets. (LP: #1226639)
+  * Increase the wait timeout to 15 seconds since 1 second didn't seem
+    to make the unit test failure any better. Also add a timeout to the
+    CheckResults method. (LP: #1224643)
+  * When dragging and dropping an icon before another icon, the
+    calculation to position the drop was off by half an icon which would
+    cause some AP tests to fail. (LP: #1227056)
+  * It appears that it's not a timeout causing these tests to really
+    fail. It seems that Jenkins is unable to connect to GlibDBusProxy
+    which leads to the timeout. For now, let's just remove the most
+    troublesome tests so we can get automerging to work and then revisit
+    the real reason why this is happening. (LP: #1224643)
+
+  [ Andrea Azzarone ]
+  * Fix randomly failing AP test. (LP: #1226116)
+  * Return a copy of memeber variables of DndData class. Should fix
+    lp:1224569. (LP: #1224569)
+  * Derive EdgeBarrierController::Impl from sigc::trackable and remove
+    the use of c++11 lambdas for callbacks. (LP: #1217560)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3524
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 20 Sep 2013 11:19:05 +0000
+
 unity (7.1.0+13.10.20130903.1-0ubuntu1) saucy; urgency=low
 
   [ Ted Gould ]

@@ -48,35 +48,17 @@ const int RIBBON_PADDING = 2;
 class IconLoader::Impl
 {
 public:
-  // The Handle typedef is used to explicitly indicate which integers are
-  // infact our opaque handles.
-  typedef int Handle;
   static const int FONT_SIZE = 8;
   static const int MIN_FONT_SIZE = 5;
 
   Impl();
 
-  Handle LoadFromIconName(std::string const& icon_name,
-                          int max_width,
-                          int max_height,
-                          IconLoaderCallback slot);
+  Handle LoadFromIconName(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
+  Handle LoadFromGIconString(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
+  Handle LoadFromFilename(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
+  Handle LoadFromURI(std::string const&, int max_width, int max_height, IconLoaderCallback const& slot);
 
-  Handle LoadFromGIconString(std::string const& gicon_string,
-                             int max_width,
-                             int max_height,
-                             IconLoaderCallback slot);
-
-  Handle LoadFromFilename(std::string const& filename,
-                          int max_width,
-                          int max_height,
-                          IconLoaderCallback slot);
-
-  Handle LoadFromURI(std::string const& uri,
-                     int max_width,
-                     int max_height,
-                     IconLoaderCallback slot);
-
-  void DisconnectHandle(Handle handle);
+  void DisconnectHandle(Handle);
 
   static void CalculateTextHeight(int* width, int* height);
 
@@ -103,7 +85,7 @@ private:
     Impl* impl;
     gtk::IconInfo icon_info;
     bool no_cache;
-    int helper_handle;
+    Handle helper_handle;
     std::list<IconLoaderTask::Ptr> shadow_tasks;
     glib::Object<GdkPixbuf> result;
     glib::Error error;
@@ -114,7 +96,7 @@ private:
                    int max_width_,
                    int max_height_,
                    std::string const& key_,
-                   IconLoaderCallback slot_,
+                   IconLoaderCallback const& slot_,
                    Handle handle_,
                    Impl* self_)
       : type(type_), data(data_), max_width(max_width_)
@@ -797,14 +779,14 @@ private:
   Handle ReturnCachedOrQueue(std::string const& data,
                              int max_width,
                              int max_height,
-                             IconLoaderCallback slot,
+                             IconLoaderCallback const& slot,
                              IconLoaderRequestType type);
 
   Handle QueueTask(std::string const& key,
                    std::string const& data,
                    int max_width,
                    int max_height,
-                   IconLoaderCallback slot,
+                   IconLoaderCallback const& slot,
                    IconLoaderRequestType type);
 
   std::string Hash(std::string const& data, int max_width, int max_height);
@@ -813,7 +795,7 @@ private:
                    std::string const& data,
                    int max_width,
                    int max_height,
-                   IconLoaderCallback slot);
+                   IconLoaderCallback const& slot);
 
   // Looping idle callback function
   bool Iteration();
@@ -830,7 +812,7 @@ private:
    * in the future... You've been warned! */
   std::map<std::string, IconLoaderTask::Ptr> queued_tasks_;
   std::queue<IconLoaderTask::Ptr> tasks_;
-  std::map<Handle, IconLoaderTask::Ptr> task_map_;
+  std::unordered_map<Handle, IconLoaderTask::Ptr> task_map_;
   std::vector<IconLoaderTask*> finished_tasks_;
 
   bool no_load_;
@@ -869,15 +851,12 @@ IconLoader::Impl::Impl()
 #endif
 }
 
-int IconLoader::Impl::LoadFromIconName(std::string const& icon_name,
-                                       int max_width,
-                                       int max_height,
-                                       IconLoaderCallback slot)
+IconLoader::Handle IconLoader::Impl::LoadFromIconName(std::string const& icon_name, int max_width, int max_height, IconLoaderCallback const& slot)
 {
   if (no_load_ || icon_name.empty() || !slot ||
       ((max_width >= 0 && max_width < MIN_ICON_SIZE) ||
        (max_height >= 0 && max_height < MIN_ICON_SIZE)))
-    return 0;
+    return Handle();
 
   // We need to check this because of legacy desktop files
   if (icon_name[0] == '/')
@@ -889,29 +868,23 @@ int IconLoader::Impl::LoadFromIconName(std::string const& icon_name,
                              REQUEST_TYPE_ICON_NAME);
 }
 
-int IconLoader::Impl::LoadFromGIconString(std::string const& gicon_string,
-                                          int max_width,
-                                          int max_height,
-                                          IconLoaderCallback slot)
+IconLoader::Handle IconLoader::Impl::LoadFromGIconString(std::string const& gicon_string, int max_width, int max_height, IconLoaderCallback const& slot)
 {
   if (no_load_ || gicon_string.empty() || !slot ||
       ((max_width >= 0 && max_width < MIN_ICON_SIZE) ||
        (max_height >= 0 && max_height < MIN_ICON_SIZE)))
-    return 0;
+    return Handle();
 
   return ReturnCachedOrQueue(gicon_string, max_width, max_height, slot,
                              REQUEST_TYPE_GICON_STRING);
 }
 
-int IconLoader::Impl::LoadFromFilename(std::string const& filename,
-                                       int max_width,
-                                       int max_height,
-                                       IconLoaderCallback slot)
+IconLoader::Handle IconLoader::Impl::LoadFromFilename(std::string const& filename, int max_width, int max_height, IconLoaderCallback const& slot)
 {
   if (no_load_ || filename.empty() || !slot ||
       ((max_width >= 0 && max_width < MIN_ICON_SIZE) ||
        (max_height >= 0 && max_height < MIN_ICON_SIZE)))
-    return 0;
+    return Handle();
 
   glib::Object<GFile> file(::g_file_new_for_path(filename.c_str()));
   glib::String uri(::g_file_get_uri(file));
@@ -919,15 +892,12 @@ int IconLoader::Impl::LoadFromFilename(std::string const& filename,
   return LoadFromURI(uri.Str(), max_width, max_height, slot);
 }
 
-int IconLoader::Impl::LoadFromURI(std::string const& uri,
-                                  int max_width,
-                                  int max_height,
-                                  IconLoaderCallback slot)
+IconLoader::Handle IconLoader::Impl::LoadFromURI(std::string const& uri, int max_width, int max_height, IconLoaderCallback const& slot)
 {
   if (no_load_ || uri.empty() || !slot ||
       ((max_width >= 0 && max_width < MIN_ICON_SIZE) ||
        (max_height >= 0 && max_height < MIN_ICON_SIZE)))
-    return 0;
+    return Handle();
 
   return ReturnCachedOrQueue(uri, max_width, max_height, slot,
                              REQUEST_TYPE_URI);
@@ -983,29 +953,19 @@ void IconLoader::Impl::CalculateTextHeight(int* width, int* height)
 // Private Methods
 //
 
-int IconLoader::Impl::ReturnCachedOrQueue(std::string const& data,
-                                          int max_width,
-                                          int max_height,
-                                          IconLoaderCallback slot,
-                                          IconLoaderRequestType type)
+IconLoader::Handle IconLoader::Impl::ReturnCachedOrQueue(std::string const& data, int max_width, int max_height, IconLoaderCallback const& slot, IconLoaderRequestType type)
 {
-  Handle result = 0;
   std::string key(Hash(data, max_width, max_height));
 
   if (!CacheLookup(key, data, max_width, max_height, slot))
   {
-    result = QueueTask(key, data, max_width, max_height, slot, type);
+    return QueueTask(key, data, max_width, max_height, slot, type);
   }
-  return result;
+  return Handle();
 }
 
 
-int IconLoader::Impl::QueueTask(std::string const& key,
-                                std::string const& data,
-                                int max_width,
-                                int max_height,
-                                IconLoaderCallback slot,
-                                IconLoaderRequestType type)
+IconLoader::Handle IconLoader::Impl::QueueTask(std::string const& key, std::string const& data, int max_width, int max_height, IconLoaderCallback const& slot, IconLoaderRequestType type)
 {
   auto task = std::make_shared<IconLoaderTask>(type, data,
                                                max_width, max_height,
@@ -1056,7 +1016,7 @@ bool IconLoader::Impl::CacheLookup(std::string const& key,
                                    std::string const& data,
                                    int max_width,
                                    int max_height,
-                                   IconLoaderCallback slot)
+                                   IconLoaderCallback const& slot)
 {
   auto iter = cache_.find(key);
   bool found = iter != cache_.end();
@@ -1139,39 +1099,27 @@ IconLoader& IconLoader::GetDefault()
   return default_loader;
 }
 
-int IconLoader::LoadFromIconName(std::string const& icon_name,
-                                 int max_width,
-                                 int max_height,
-                                 IconLoaderCallback slot)
+IconLoader::Handle IconLoader::LoadFromIconName(std::string const& icon_name, int max_width, int max_height, IconLoaderCallback const& slot)
 {
   return pimpl->LoadFromIconName(icon_name, max_width, max_height, slot);
 }
 
-int IconLoader::LoadFromGIconString(std::string const& gicon_string,
-                                    int max_width,
-                                    int max_height,
-                                    IconLoaderCallback slot)
+IconLoader::Handle IconLoader::LoadFromGIconString(std::string const& gicon_string, int max_width, int max_height, IconLoaderCallback const& slot)
 {
   return pimpl->LoadFromGIconString(gicon_string, max_width, max_height, slot);
 }
 
-int IconLoader::LoadFromFilename(std::string const& filename,
-                                 int max_width,
-                                 int max_height,
-                                 IconLoaderCallback slot)
+IconLoader::Handle IconLoader::LoadFromFilename(std::string const& filename, int max_width, int max_height, IconLoaderCallback const& slot)
 {
   return pimpl->LoadFromFilename(filename, max_width, max_height, slot);
 }
 
-int IconLoader::LoadFromURI(std::string const& uri,
-                            int max_width,
-                            int max_height,
-                            IconLoaderCallback slot)
+IconLoader::Handle IconLoader::LoadFromURI(std::string const& uri, int max_width, int max_height, IconLoaderCallback const& slot)
 {
   return pimpl->LoadFromURI(uri, max_width, max_height, slot);
 }
 
-void IconLoader::DisconnectHandle(int handle)
+void IconLoader::DisconnectHandle(Handle handle)
 {
   pimpl->DisconnectHandle(handle);
 }

@@ -129,44 +129,36 @@ nux::Geometry Controller::GetInputWindowGeometry() const
   return {0, 0, 0, 0};
 }
 
-bool Controller::StartDetailMode()
+void Controller::Impl::StartDetailMode()
 {
-  if (visible_)
+  if (obj_->visible_)
   {
     if (IsDetailViewShown() &&
-        impl_->HasNextDetailRow())
+        HasNextDetailRow())
     {
-      impl_->NextDetailRow();
+      NextDetailRow();
     }
     else
     {
       SetDetail(true);
     }
-
-    return true;
   }
-
-  return false;
 }
 
-bool Controller::StopDetailMode()
+void Controller::Impl::StopDetailMode()
 {
-  if (visible_)
+  if (obj_->visible_)
   {
     if (IsDetailViewShown() &&
-        impl_->HasPrevDetailRow())
+        HasPrevDetailRow())
     {
-      impl_->PrevDetailRow();
+      PrevDetailRow();
     }
     else
     {
       SetDetail(false);
     }
-
-    return true;
   }
-
-  return false;
 }
 
 void Controller::Next()
@@ -299,10 +291,9 @@ Controller::Impl::Impl(Controller* obj,
   ,  obj_(obj)
   ,  create_window_(create_window)
   ,  main_layout_(nullptr)
-  ,  bg_color_(0, 0, 0, 0.5)
   ,  fade_animator_(FADE_DURATION)
 {
-  ubus_manager_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, sigc::mem_fun(this, &Controller::Impl::OnBackgroundUpdate));
+  WindowManager::Default().average_color.changed.connect(sigc::mem_fun(this, &Impl::OnBackgroundUpdate));
 
   if (create_window_ == nullptr)
     create_window_ = []() {
@@ -323,14 +314,10 @@ Controller::Impl::Impl(Controller* obj,
   });
 }
 
-void Controller::Impl::OnBackgroundUpdate(GVariant* data)
+void Controller::Impl::OnBackgroundUpdate(nux::Color const& new_color)
 {
-  gdouble red, green, blue, alpha;
-  g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-  bg_color_ = nux::Color(red, green, blue, alpha);
-
   if (view_)
-    view_->background_color = bg_color_;
+    view_->background_color = new_color;
 }
 
 
@@ -365,6 +352,8 @@ void Controller::Impl::Show(ShowMode show, SortMode sort, std::vector<AbstractLa
   {
     ShowView();
   }
+
+  nux::GetWindowCompositor().SetKeyFocusArea(view_.GetPointer());
 
   ResetDetailTimer(obj_->initial_detail_timeout_length);
 
@@ -467,7 +456,7 @@ void Controller::Impl::ConstructView()
   view_ = SwitcherView::Ptr(new SwitcherView());
   obj_->AddChild(view_.GetPointer());
   view_->SetModel(model_);
-  view_->background_color = bg_color_;
+  view_->background_color = WindowManager::Default().average_color();
   view_->monitor = obj_->monitor_;
 
   view_->hide_request.connect(sigc::mem_fun(this, &Controller::Impl::Hide));
@@ -481,6 +470,11 @@ void Controller::Impl::ConstructView()
       if (icon_index >= 0)
         ResetDetailTimer(obj_->detail_timeout_length);
   });
+
+  view_->switcher_next.connect(sigc::mem_fun(this, &Impl::Next));
+  view_->switcher_prev.connect(sigc::mem_fun(this, &Impl::Prev));
+  view_->switcher_start_detail.connect(sigc::mem_fun(this, &Impl::StartDetailMode));
+  view_->switcher_stop_detail.connect(sigc::mem_fun(this, &Impl::StopDetailMode));
 
   ConstructWindow();
   main_layout_->AddView(view_.GetPointer(), 1);

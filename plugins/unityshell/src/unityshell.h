@@ -27,6 +27,7 @@
 #include <Nux/WindowThread.h>
 #include <NuxCore/Property.h>
 #include <sigc++/sigc++.h>
+#include <unordered_set>
 
 #include <scale/scale.h>
 #include <core/core.h>
@@ -166,8 +167,6 @@ public:
   bool altTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabForwardAllInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevAllInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabDetailStart(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabDetailStop(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
@@ -291,6 +290,7 @@ private:
   shortcut::Controller::Ptr shortcut_controller_;
   session::Controller::Ptr  session_controller_;
   debug::DebugDBusInterface debugger_;
+  std::unique_ptr<BGHash>   bghash_;
 
   /* Subscription for gestures that manipulate Unity launcher */
   std::unique_ptr<nux::GesturesSubscription> gestures_sub_launcher_;
@@ -327,10 +327,6 @@ private:
   CompRegion fullscreenRegion;
   CompWindow* firstWindowAboveShell;
 
-  nux::Property<nux::Geometry> primary_monitor_;
-
-  std::unique_ptr<BGHash> _bghash;
-
   ::GLFramebufferObject *oldFbo;
 
   bool   queryForShader ();
@@ -347,7 +343,7 @@ private:
   GLMatrix panel_shadow_matrix_;
 
   bool paint_panel_under_dash_;
-  std::set<UnityWindow*> fake_decorated_windows_;
+  std::unordered_set<UnityWindow*> fake_decorated_windows_;
 
   bool scale_just_activated_;
   WindowMinimizeSpeedController minimize_speed_controller_;
