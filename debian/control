@@ -3,7 +3,7 @@ Section: gnome
 Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: cmake,
-               compiz-dev (>= 1:0.9.10),
+               compiz-dev (>= 1:0.9.11),
                debhelper (>= 9.0.0~),
                dbus-test-runner,
                dh-migrations,
@@ -18,7 +18,7 @@ Build-Depends: cmake,
                libboost-serialization-dev,
                libcairo2-dev,
                libdbus-1-dev,
-               libcompizconfig0-dev (>= 1:0.9.10),
+               libcompizconfig0-dev (>= 1:0.9.11),
                libdbusmenu-glib-dev (>= 0.3.91),
                libdee-dev (>= 1.2.6),
                libgee-dev (>= 0.5.0),
