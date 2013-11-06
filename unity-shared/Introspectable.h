@@ -41,13 +41,9 @@ public:
   void RemoveChild(Introspectable* child);
   virtual void AddProperties(GVariantBuilder* builder) = 0;
   virtual IntrospectableList GetIntrospectableChildren();
-  guint64 GetIntrospectionId() const;
+  int32_t GetIntrospectionId() const;
 
 protected:
-  /// Please don't override this unless you really need to. The only valid reason
-  /// is if you have a property that simply *must* be called 'Children'.
-  virtual std::string GetChildsName() const;
-
   void RemoveAllChildren();
 
   /*
@@ -61,9 +57,9 @@ protected:
    */
 
 private:
-  std::list<Introspectable*> _children;
-  std::list<Introspectable*> _parents;
-  guint64 _id;
+  std::list<Introspectable*> children_;
+  std::list<Introspectable*> parents_;
+  int32_t id_;
 };
 }
 }

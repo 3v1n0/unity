@@ -745,9 +745,9 @@ void UnityScreen::paintDisplay()
         unsigned int oldGlAddGeometryIndex = uTrayWindow->gWindow->glAddGeometryGetCurrentIndex ();
         unsigned int oldGlDrawIndex = uTrayWindow->gWindow->glDrawGetCurrentIndex ();
 
-        attrib.opacity = OPAQUE;
-        attrib.brightness = BRIGHT;
-        attrib.saturation = COLOR;
+        attrib.opacity = COMPIZ_COMPOSITE_OPAQUE;
+        attrib.brightness = COMPIZ_COMPOSITE_BRIGHT;
+        attrib.saturation = COMPIZ_COMPOSITE_COLOR;
 
         oTransform.toScreenSpace (output, -DEFAULT_Z_CAMERA);
 
@@ -1339,6 +1339,18 @@ void UnityScreen::donePaint()
   }
 
   cScreen->donePaint();
+}
+
+void redraw_view_if_damaged(nux::ObjectPtr<nux::View> const& view, CompRegion const& damage)
+{
+  if (!view || view->IsRedrawNeeded())
+    return;
+
+  auto const& geo = view->GetAbsoluteGeometry();
+  CompRegion region(geo.x, geo.y, geo.width, geo.height);
+
+  if (damage.intersects(region))
+    view->NeedSoftRedraw();
 }
 
 void redraw_view_if_damaged(nux::ObjectPtr<nux::View> const& view, CompRegion const& damage)
@@ -3504,6 +3516,7 @@ void UnityWindow::AddProperties(GVariantBuilder* builder)
     .add("vertically_maximized", wm.IsWindowVerticallyMaximized(xid))
     .add("minimized", wm.IsWindowMinimized(xid))
     .add("scaled", scaled)
+    .add("scaled_close_geo", close_button_geo_)
     .add("scaled_close_x", close_button_geo_.x)
     .add("scaled_close_y", close_button_geo_.y)
     .add("scaled_close_width", close_button_geo_.width)

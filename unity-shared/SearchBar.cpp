@@ -617,6 +617,7 @@ void SearchBar::AddProperties(GVariantBuilder* builder)
   .add("filter-label-y", show_filters_->GetAbsoluteY())
   .add("filter-label-width", show_filters_->GetAbsoluteWidth())
   .add("filter-label-height", show_filters_->GetAbsoluteHeight())
+  .add("filter-label-geo", show_filters_->GetAbsoluteGeometry())
   .add("im_active", pango_entry_->im_active());
 }
 
