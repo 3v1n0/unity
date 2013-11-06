@@ -17,6 +17,7 @@
  * Authored by: Alex Launi <alex.launi@canonical.com>
  */
 
+#include <UnityCore/Variant.h>
 #include "Introspectable.h"
 
 namespace unity
@@ -24,88 +25,85 @@ namespace unity
 namespace debug
 {
 
+const std::string CHILDREN_NAME = "Children";
+
 Introspectable::Introspectable()
 {
-  static guint64 unique_id=0;
-  _id = unique_id++;
+  static int32_t unique_id_ = 0;
+  id_ = unique_id_++;
 }
 
 Introspectable::~Introspectable()
 {
-  for (auto parent : _parents)
-    parent->_children.remove(this);
-  for (auto child : _children)
-    child->_parents.remove(this);
+  for (auto parent : parents_)
+    parent->children_.remove(this);
+  for (auto child : children_)
+    child->parents_.remove(this);
 }
 
 Introspectable::IntrospectableList Introspectable::GetIntrospectableChildren()
 {
-  return _children;
+  return children_;
 }
 
 GVariant*
 Introspectable::Introspect()
 {
-  GVariantBuilder  builder;
-  GVariantBuilder  child_builder;
-  gint             n_children = 0;
+  GVariantBuilder builder;
+  GVariantBuilder child_builder;
+  bool has_valid_children = false;
 
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
-  g_variant_builder_add(&builder, "{sv}", "id", g_variant_new_uint64(_id));
-
+  variant::BuilderWrapper build_wrapper(&builder);
+  build_wrapper.add("id", id_);
   AddProperties(&builder);
 
   g_variant_builder_init(&child_builder, G_VARIANT_TYPE("as"));
 
-  auto children = GetIntrospectableChildren();
-  for (auto it = children.begin(); it != children.end(); it++)
+  for (auto const& child : GetIntrospectableChildren())
   {
-    if ((*it)->GetName() != "")
+    auto const& child_name = child->GetName();
+
+    if (!child_name.empty())
     {
-      g_variant_builder_add(&child_builder, "s", (*it)->GetName().c_str());
-      n_children++;
+      g_variant_builder_add(&child_builder, "s", child_name.c_str());
+      has_valid_children = true;
     }
   }
 
-  GVariant* child_results = g_variant_builder_end(&child_builder);
+  glib::Variant child_results(g_variant_builder_end(&child_builder));
 
-  if (n_children > 0)
-    g_variant_builder_add(&builder, "{sv}", GetChildsName().c_str(), child_results);
+  if (has_valid_children)
+    build_wrapper.add(CHILDREN_NAME, child_results);
+
   return g_variant_builder_end(&builder);
 }
 
 void
 Introspectable::AddChild(Introspectable* child)
 {
-  _children.push_back(child);
-  child->_parents.push_back(this);
+  children_.push_back(child);
+  child->parents_.push_back(this);
 }
 
 void
 Introspectable::RemoveChild(Introspectable* child)
 {
-  _children.remove(child);
-  child->_parents.remove(this);
+  children_.remove(child);
+  child->parents_.remove(this);
 }
 
-std::string
-Introspectable::GetChildsName() const
+int32_t Introspectable::GetIntrospectionId() const
 {
-  return "Children";
-}
-
-guint64 Introspectable::GetIntrospectionId() const
-{
-  return _id;
+  return id_;
 }
 
 void Introspectable::RemoveAllChildren()
 {
-  for (auto child : _children)
-  {
-    child->_parents.remove(this);
-  }
-  _children.clear();
+  for (auto child : children_)
+    child->parents_.remove(this);
+
+  children_.clear();
 }
 
 }

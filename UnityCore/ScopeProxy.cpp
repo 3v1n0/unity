@@ -401,7 +401,7 @@ void ScopeProxy::Impl::OnChannelOpened(glib::String const& opened_channel, glib:
     glib::HintsMap hints;
     if (!owner_->form_factor().empty())
     {
-      hints["form-factor"] = g_variant_new_string(owner_->form_factor().c_str());
+      hints["form-factor"] = owner_->form_factor();
     }
     hints["changed-filter-row"] = filter->VariantValue();
     Search(last_search_, hints, nullptr, cancel_scope_);
@@ -521,7 +521,7 @@ void ScopeProxy::Impl::Search(std::string const& search_string, glib::HintsMap c
         glib::HintsMap updated_hints(hints);
         if (!owner_->form_factor().empty())
         {
-          updated_hints["form-factor"] = g_variant_new_string(owner_->form_factor().c_str());
+          updated_hints["form-factor"] = owner_->form_factor();
         }
         Search(search_string, updated_hints, callback, canc);
       }
@@ -791,9 +791,9 @@ void ScopeProxy::DisconnectProxy()
 void ScopeProxy::Search(std::string const& search_string, glib::HintsMap const& user_hints, SearchCallback const& callback, GCancellable* cancellable)
 {
   glib::HintsMap hints = user_hints;
-  if (!form_factor.Get().empty() && hints.find("form-factor") == hints.end())
+  if (!form_factor().empty() && hints.find("form-factor") == hints.end())
   {
-    hints["form-factor"] = g_variant_new_string(form_factor().c_str());
+    hints["form-factor"] = form_factor();
   }
   pimpl->Search(search_string, hints, callback, cancellable);
 }

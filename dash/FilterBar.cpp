@@ -144,11 +144,7 @@ std::string FilterBar::GetName() const
 
 void FilterBar::AddProperties(GVariantBuilder* builder)
 {
-  variant::BuilderWrapper(builder)
-    .add("x", GetAbsoluteX())
-    .add("y", GetAbsoluteY())
-    .add("width", GetAbsoluteWidth())
-    .add("height", GetAbsoluteHeight());
+  variant::BuilderWrapper(builder).add(GetAbsoluteGeometry());
 }
 
 } // namespace dash

@@ -130,6 +130,7 @@ void Button::AddProperties(GVariantBuilder* builder)
   unity::variant::BuilderWrapper(builder)
     .add("highlighted", highlighted())
     .add("label", label())
+    .add("label_color", label_view_->GetTextColor())
     .add("label_visible", label_view_->GetTextColor() != nux::color::Transparent);
 }
 

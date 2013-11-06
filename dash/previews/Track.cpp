@@ -147,7 +147,8 @@ void Track::AddProperties(GVariantBuilder* builder)
     .add("playpause-x", track_status_layout_->GetAbsoluteX())
     .add("playpause-y", track_status_layout_->GetAbsoluteX())
     .add("playpause-width", track_status_layout_->GetGeometry().width)
-    .add("playpause-height", track_status_layout_->GetGeometry().height);
+    .add("playpause-height", track_status_layout_->GetGeometry().height)
+    .add("playpause-geo", track_status_layout_->GetAbsoluteGeometry());
 }
 
 void Track::Update(dash::Track const& track)

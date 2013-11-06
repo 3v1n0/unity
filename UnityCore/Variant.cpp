@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Tim Penhey <tim.penhey@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
 #include "Variant.h"
@@ -27,7 +28,7 @@ namespace glib
 DECLARE_LOGGER(logger, "unity.glib.variant");
 
 Variant::Variant()
-  : variant_(NULL)
+  : variant_(nullptr)
 {}
 
 Variant::Variant(GVariant* variant)
@@ -41,14 +42,95 @@ Variant::Variant(GVariant* variant, StealRef const& ref)
 {}
 
 Variant::Variant(Variant const& other)
-  : variant_(other.variant_)
+  : Variant(other.variant_)
+{}
+
+Variant::Variant(std::nullptr_t)
+  : Variant()
+{}
+
+Variant::Variant(const char* value)
+  : Variant(g_variant_new_string(value ? value : value))
+{}
+
+Variant::Variant(std::string const& value)
+  : Variant(g_variant_new_string(value.c_str()))
+{}
+
+Variant::Variant(unsigned char value)
+  : Variant(g_variant_new_byte(value))
+{}
+
+Variant::Variant(int16_t value)
+  : Variant(g_variant_new_int16(value))
+{}
+
+Variant::Variant(uint16_t value)
+  : Variant(g_variant_new_uint16(value))
+{}
+
+Variant::Variant(int32_t value)
+  : Variant(g_variant_new_int32(value))
+{}
+
+Variant::Variant(uint32_t value)
+  : Variant(g_variant_new_uint32(value))
+{}
+
+Variant::Variant(int64_t value)
+  : Variant(g_variant_new_int64(value))
+{}
+
+Variant::Variant(uint64_t value)
+  : Variant(g_variant_new_uint64(value))
+{}
+
+Variant::Variant(bool value)
+  : Variant(g_variant_new_boolean(value))
+{}
+
+Variant::Variant(double value)
+  : Variant(g_variant_new_double(value))
+{}
+
+Variant::Variant(float value)
+  : Variant(static_cast<double>(value))
+{}
+
+Variant::Variant(HintsMap const& hints)
 {
-  if (variant_) g_variant_ref_sink(variant_);
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
+
+  for (auto const& hint : hints)
+    g_variant_builder_add(&b, "{sv}", hint.first.c_str(), static_cast<GVariant*>(hint.second));
+
+  variant_ = g_variant_builder_end(&b);
+  g_variant_ref_sink(variant_);
 }
 
 Variant::~Variant()
 {
   if (variant_) g_variant_unref(variant_);
+}
+
+glib::Variant get_variant(GVariant *variant_)
+{
+  Variant value;
+
+  if (!variant_)
+    return value;
+
+  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_VARIANT))
+  {
+    value = Variant(g_variant_get_variant(variant_), StealRef());
+  }
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(v)")))
+  {
+    g_variant_get(variant_, "(v)", &value);
+  }
+
+  return value;
 }
 
 std::string Variant::GetString() const
@@ -70,182 +152,91 @@ std::string Variant::GetString() const
   }
   else
   {
-    auto const& variant = GetVariant();
+    auto const& variant = get_variant(variant_);
     if (variant)
       return variant.GetString();
 
-    LOG_ERROR(logger) << "You're trying to extract a String from a variant which is of type "
-                      << g_variant_type_peek_string(g_variant_get_type(variant_));
+    LOG_ERROR(logger) << "You're trying to extract a 's' from a variant which is of type '"
+                      << g_variant_type_peek_string(g_variant_get_type(variant_)) << "'";
   }
 
   return result ? result : "";
 }
 
-int32_t Variant::GetInt32() const
+template <typename TYPE, typename GTYPE>
+TYPE get_numeric_value(GVariant *variant_, const char *type_str, const char *fallback_type_str)
 {
-  gint32 value = 0;
+  GTYPE value = 0;
 
   if (!variant_)
-    return static_cast<int>(value);
+    return static_cast<TYPE>(value);
 
-  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_INT32))
+  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE(type_str)))
   {
-    value = g_variant_get_int32(variant_);
+    g_variant_get(variant_, type_str, &value);
   }
-  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(i)")))
+  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE(fallback_type_str)))
   {
-    g_variant_get(variant_, "(i)", &value);
+    g_variant_get(variant_, fallback_type_str, &value);
   }
   else
   {
-    auto const& variant = GetVariant();
+    auto const& variant = get_variant(variant_);
     if (variant)
-      return variant.GetInt32();
+      return get_numeric_value<TYPE, GTYPE>(static_cast<GVariant*>(variant), type_str, fallback_type_str);
 
-    LOG_ERROR(logger) << "You're trying to extract an Int32 from a variant which is of type "
-                      << g_variant_type_peek_string(g_variant_get_type(variant_));
+    LOG_ERROR(logger) << "You're trying to extract a '" << type_str << "'"
+                      << " from a variant which is of type '"
+                      << g_variant_type_peek_string(g_variant_get_type(variant_))
+                      << "'";
   }
 
-  return static_cast<int32_t>(value);
+  return static_cast<TYPE>(value);
+}
+
+unsigned char Variant::GetByte() const
+{
+  return get_numeric_value<unsigned char, guchar>(variant_, "y", "(y)");
+}
+
+int16_t Variant::GetInt16() const
+{
+  return get_numeric_value<int16_t, gint16>(variant_, "n", "(n)");
+}
+
+uint16_t Variant::GetUInt16() const
+{
+  return get_numeric_value<uint16_t, guint16>(variant_, "q", "(q)");
+}
+
+int32_t Variant::GetInt32() const
+{
+  return get_numeric_value<int32_t, gint32>(variant_, "i", "(i)");
 }
 
 uint32_t Variant::GetUInt32() const
 {
-  guint32 value = 0;
-
-  if (!variant_)
-    return static_cast<unsigned>(value);
-
-  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_UINT32))
-  {
-    value = g_variant_get_uint32(variant_);
-  }
-  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(u)")))
-  {
-    g_variant_get(variant_, "(u)", &value);
-  }
-  else
-  {
-    auto const& variant = GetVariant();
-    if (variant)
-      return variant.GetUInt32();
-
-    LOG_ERROR(logger) << "You're trying to extract an UInt32 from a variant which is of type "
-                      << g_variant_type_peek_string(g_variant_get_type(variant_));
-  }
-
-  return static_cast<uint32_t>(value);}
+  return get_numeric_value<uint32_t, guint32>(variant_, "u", "(u)");
+}
 
 int64_t Variant::GetInt64() const
 {
-  gint64 value = 0;
-
-  if (!variant_)
-    return static_cast<int64_t>(value);
-
-  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_INT64))
-  {
-    value = g_variant_get_int64(variant_);
-  }
-  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(x)")))
-  {
-    g_variant_get(variant_, "(x)", &value);
-  }
-  else
-  {
-    auto const& variant = GetVariant();
-    if (variant)
-      return variant.GetInt64();
-
-    LOG_ERROR(logger) << "You're trying to extract an Int64 from a variant which is of type "
-                      << g_variant_type_peek_string(g_variant_get_type(variant_));
-  }
-
-  return static_cast<int64_t>(value);
+  return get_numeric_value<int64_t, gint64>(variant_, "x", "(x)");
 }
 
 uint64_t Variant::GetUInt64() const
 {
-  guint64 value = 0;
-
-  if (!variant_)
-    return static_cast<uint64_t>(value);
-
-  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_UINT64))
-  {
-    value = g_variant_get_uint64(variant_);
-  }
-  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(t)")))
-  {
-    g_variant_get(variant_, "(t)", &value);
-  }
-  else
-  {
-    auto const& variant = GetVariant();
-    if (variant)
-      return variant.GetUInt64();
-
-    LOG_ERROR(logger) << "You're trying to extract an UInt64 from a variant which is of type "
-                      << g_variant_type_peek_string(g_variant_get_type(variant_));
-  }
-
-  return static_cast<uint64_t>(value);
+  return get_numeric_value<uint64_t, guint64>(variant_, "t", "(t)");
 }
 
 bool Variant::GetBool() const
 {
-  gboolean value = FALSE;
-
-  if (!variant_)
-    return (value != FALSE);
-
-  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_BOOLEAN))
-  {
-    value = g_variant_get_boolean(variant_);
-  }
-  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(b)")))
-  {
-    g_variant_get(variant_, "(b)", &value);
-  }
-  else
-  {
-    auto const& variant = GetVariant();
-    if (variant)
-      return variant.GetBool();
-
-    LOG_ERROR(logger) << "You're trying to extract a Boolean from a variant which is of type "
-                      << g_variant_type_peek_string(g_variant_get_type(variant_));
-  }
-
-  return (value != FALSE);
+  return get_numeric_value<bool, gboolean>(variant_, "b", "(b)");
 }
 
 double Variant::GetDouble() const
 {
-  double value = 0.0;
-
-  if (!variant_)
-    return value;
-
-  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_DOUBLE))
-  {
-    value = g_variant_get_double(variant_);
-  }
-  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(d)")))
-  {
-    g_variant_get(variant_, "(d)", &value);
-  }
-  else
-  {
-    auto const& variant = GetVariant();
-    if (variant)
-      return variant.GetDouble();
-
-    LOG_ERROR(logger) << "You're trying to extract a Double from a variant which is of type "
-                      << g_variant_type_peek_string(g_variant_get_type(variant_));
-  }
-
-  return value;
+  return get_numeric_value<double, gdouble>(variant_, "d", "(d)");
 }
 
 float Variant::GetFloat() const
@@ -260,18 +251,12 @@ Variant Variant::GetVariant() const
   if (!variant_)
     return value;
 
-  if (g_variant_is_of_type(variant_, G_VARIANT_TYPE_VARIANT))
+  value = get_variant(variant_);
+
+  if (!value)
   {
-    value = Variant(g_variant_get_variant(variant_), StealRef());
-  }
-  else if (g_variant_is_of_type(variant_, G_VARIANT_TYPE("(v)")))
-  {
-    g_variant_get(variant_, "(v)", &value);
-  }
-  else
-  {
-    LOG_ERROR(logger) << "You're trying to extract a Variant from a variant which is of type "
-                      << g_variant_type_peek_string(g_variant_get_type(variant_));
+    LOG_ERROR(logger) << "You're trying to extract a 'v' from a variant which is of type '"
+                      << g_variant_type_peek_string(g_variant_get_type(variant_)) << "'";
   }
 
   return value;
@@ -304,22 +289,6 @@ bool Variant::ASVToHints(HintsMap& hints) const
   return true;
 }
 
-Variant Variant::FromHints(HintsMap const& hints)
-{
-  GVariantBuilder b;
-  g_variant_builder_init(&b, G_VARIANT_TYPE("a{sv}"));
-
-  for (glib::HintsMap::const_iterator it = hints.begin(); it != hints.end(); ++it)
-  {
-    const gchar* key = it->first.c_str();
-    GVariant* ptr = it->second;
-
-    g_variant_builder_add(&b, "{sv}", key, ptr);
-  }
-
-  return g_variant_builder_end(&b);
-}
-
 void Variant::swap(Variant& other)
 {
   std::swap(this->variant_, other.variant_);
@@ -339,6 +308,21 @@ Variant& Variant::operator=(Variant other)
 
   return *this;
 }
+
+Variant& Variant::operator=(std::nullptr_t) { return operator=(Variant()); }
+Variant& Variant::operator=(HintsMap const& map) { return operator=(Variant(map)); }
+Variant& Variant::operator=(std::string const& value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(const char* value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(unsigned char value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(int16_t value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(uint16_t value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(int32_t value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(uint32_t value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(int64_t value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(uint64_t value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(bool value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(double value) { return operator=(Variant(value)); }
+Variant& Variant::operator=(float value) { return operator=(Variant(value)); }
 
 Variant::operator GVariant* () const
 {
@@ -396,90 +380,116 @@ HintsMap const& hintsmap_from_hashtable(GHashTable* hashtable, HintsMap& hints)
 
 namespace variant
 {
+using namespace glib;
 
 BuilderWrapper::BuilderWrapper(GVariantBuilder* builder)
   : builder_(builder)
 {}
 
-BuilderWrapper& BuilderWrapper::add(char const* name, bool value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, ValueType type, std::vector<Variant> const& values)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_boolean(value));
-  return *this;
-}
+  GVariantBuilder array;
+  g_variant_builder_init(&array, G_VARIANT_TYPE("av"));
+  g_variant_builder_add(&array, "v", g_variant_new_uint32(static_cast<uint32_t>(type)));
 
-BuilderWrapper& BuilderWrapper::add(char const* name, char const* value)
-{
-  if (value)
-    g_variant_builder_add(builder_, "{sv}", name, g_variant_new_string(value));
-  else
-    g_variant_builder_add(builder_, "{sv}", name, g_variant_new_string(""));
+  for (auto const& value : values)
+    g_variant_builder_add(&array, "v", static_cast<GVariant*>(value));
+
+  g_variant_builder_add(builder_, "{sv}", name.c_str(), g_variant_builder_end(&array));
 
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, std::string const& value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, bool value)
 {
-  g_variant_builder_add(builder_, "{sv}", name,
-                        g_variant_new_string(value.c_str()));
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, int16_t value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, char const* value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int16(value));
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, int32_t value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, std::string const& value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int32(value));
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, int64_t value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, int16_t value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int64(value));
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, uint16_t value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, int32_t value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint16(value));
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, uint32_t value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, int64_t value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint32(value));
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, uint64_t value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, uint16_t value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint64(value));
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, float value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, uint32_t value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_double(value));
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, double value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, uint64_t value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_double(value));
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, GVariant* value)
+BuilderWrapper& BuilderWrapper::add(std::string const& name, float value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, value);
-  return *this;
+  return add(name, ValueType::SIMPLE, {Variant(value)});
+}
+
+BuilderWrapper& BuilderWrapper::add(std::string const& name, double value)
+{
+  return add(name, ValueType::SIMPLE, {Variant(value)});
+}
+
+BuilderWrapper& BuilderWrapper::add(std::string const& name, GVariant* value)
+{
+  return add(name, ValueType::SIMPLE, {Variant(value)});
+}
+
+BuilderWrapper& BuilderWrapper::add(std::string const& name, glib::Variant const& value)
+{
+  return add(name, ValueType::SIMPLE, {value});
+}
+
+BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Rect const& r)
+{
+  return add(name, ValueType::RECTANGLE, {Variant(r.x), Variant(r.y), Variant(r.width), Variant(r.height)});
+}
+
+BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Point const& p)
+{
+  return add(name, ValueType::POINT, {Variant(p.x), Variant(p.y)});
+}
+
+BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Size const& s)
+{
+  return add(name, ValueType::SIZE, {Variant(s.width), Variant(s.height)});
+}
+
+BuilderWrapper& BuilderWrapper::add(std::string const& name, nux::Color const& c)
+{
+  int32_t r = c.red * 255.0f, g = c.green * 255.0f, b = c.blue * 255.0f, a = c.alpha * 255.0f;
+  return add(name, ValueType::COLOR, {Variant(r), Variant(g), Variant(b), Variant(a)});
 }
 
 BuilderWrapper& BuilderWrapper::add(nux::Rect const& value)
 {
+  add("globalRect", value);
+  // Legacy support
   add("x", value.x);
   add("y", value.y);
   add("width", value.width);
