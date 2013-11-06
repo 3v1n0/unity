@@ -30,6 +30,7 @@ using namespace unity;
 class GesturalWindowSwitcherTest: public ::testing::Test
 {
  public:
+  virtual ~GesturalWindowSwitcherTest() {}
   virtual void SetUp()
   {
     unity_screen = unity::UnityScreenMock::get(screen_mock);

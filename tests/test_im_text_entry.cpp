@@ -45,6 +45,8 @@ struct TestEvent : nux::Event
 
 struct MockTextEntry : public unity::IMTextEntry
 {
+  virtual ~MockTextEntry() {}
+
   MOCK_METHOD0(CutClipboard, void());
   MOCK_METHOD0(CopyClipboard, void());
   MOCK_METHOD0(PasteClipboard, void());

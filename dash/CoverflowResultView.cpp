@@ -44,7 +44,7 @@ class CoverflowResultItem : public nux::CoverflowItem
 {
 public:
   CoverflowResultItem(Result& result, CoverflowResultView *parent, nux::CoverflowModel::Ptr model);
-  ~CoverflowResultItem();
+  virtual ~CoverflowResultItem();
 
   nux::ObjectPtr<nux::BaseTexture> GetTexture() const;
   virtual void Activate(int button);

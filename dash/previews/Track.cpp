@@ -42,6 +42,7 @@ class TmpView : public nux::View
 {
 public:
   TmpView(NUX_FILE_LINE_PROTO): View(NUX_FILE_LINE_PARAM) {}
+  virtual ~TmpView() {}
 
   virtual void Draw(nux::GraphicsEngine& gfx_engine, bool force_draw) {}
   virtual void DrawContent(nux::GraphicsEngine& gfx_engine, bool force_draw)
@@ -73,6 +74,7 @@ public:
   , write_alpha_(write_alpha)
   , rop_(ROP)
   {}
+  virtual ~TrackProgressLayer() {}
 
   virtual void Renderlayer(nux::GraphicsEngine& graphics_engine)
   {

@@ -33,6 +33,7 @@ class AbstractObject
 {
   public:
 
+    virtual ~AbstractObject() {}
     virtual void check() const = 0;
 };
 

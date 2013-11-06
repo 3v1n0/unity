@@ -33,7 +33,7 @@ class AggregateMonitor : public Monitor
 {
 public:
   AggregateMonitor();
-  ~AggregateMonitor();
+  virtual ~AggregateMonitor();
   std::string GetName() const;
 
 protected:
