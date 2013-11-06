@@ -233,7 +233,7 @@ set(UNITY_PLUGIN_SHARED_DEPS
     nux-4.0>=4.0.1
     sigc++-2.0
     unity-misc>=0.4.0
-    xpathselect>=1.2
+    xpathselect=1.4
     zeitgeist-2.0
 )
 
