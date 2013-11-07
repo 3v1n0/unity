@@ -725,10 +725,10 @@ void UnityScreen::paintDisplay()
   GLint fboID;
   // Nux renders to the referenceFramebuffer when it's embedded.
   glGetIntegerv(GL_FRAMEBUFFER_BINDING, &fboID);
-  wt->GetWindowCompositor().SetReferenceFramebuffer(fboID, outputGeo);
+  wt->GetWindowCompositor().SetReferenceFramebuffer(fboID, fboID, outputGeo);
 
   nuxPrologue();
-  wt->RenderInterfaceFromForeignCmd (&outputGeo);
+  wt->RenderInterfaceFromForeignCmd (outputGeo);
   nuxEpilogue();
 
   for (Window tray_xid : panel_controller_->GetTrayXids())
