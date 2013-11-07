@@ -764,6 +764,9 @@ void UnityScreen::paintDisplay()
   glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING_EXT, &current_draw_binding);
   if (old_read_binding != current_draw_binding)
     (*GL::bindFramebuffer) (GL_READ_FRAMEBUFFER_BINDING_EXT, current_draw_binding);
+#else
+  glGetIntegerv(GL_FRAMEBUFFER_BINDING, &current_draw_binding);
+  glGetIntegerv(GL_FRAMEBUFFER_BINDING, &old_read_binding);
 #endif
 
   /* If we have dirty helpers re-copy the backbuffer
