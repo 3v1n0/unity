@@ -1,6 +1,6 @@
 // -*- Mode: C++; indent-tabs-mode: nil; tab-width: 2 -*-
 /*
- * Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010-2013 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -15,20 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alex Launi <alex.launi@canonical.com>
+ *              Thomi Richards <thomi.richards@canonical.com>
+ *              Marco Trevisan <marco.trevisan@canonical.com>
  */
 
-#include <queue>
-#include <iostream>
 #include <fstream>
 #include <sstream>
-#include <iostream>
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/bind.hpp>
 #include <NuxCore/Logger.h>
 #include <NuxCore/LoggingWriter.h>
-#include <xpathselect/node.h>
+#include <UnityCore/Variant.h>
 #include <xpathselect/xpathselect.h>
 #include <dlfcn.h>
 
@@ -45,17 +41,25 @@ namespace
 {
 namespace local
 {
-  std::ofstream output_file;
-  void* xpathselect_driver_ = NULL;
+  const std::string PROTOCOL_VERSION = "1.4";
+  const std::string XPATH_SELECT_LIB = "libxpathselect.so.1.4";
 
-  class IntrospectableAdapter: public xpathselect::Node
+  std::ofstream output_file;
+  void* xpathselect_driver_ = nullptr;
+
+  class IntrospectableAdapter : public std::enable_shared_from_this<IntrospectableAdapter>, public xpathselect::Node
   {
   public:
-    typedef std::shared_ptr<IntrospectableAdapter> Ptr;
-    IntrospectableAdapter(Introspectable* node, std::string const& parent_path)
-    : node_(node)
+    typedef std::shared_ptr<IntrospectableAdapter const> Ptr;
+    IntrospectableAdapter(Introspectable* node, IntrospectableAdapter::Ptr const& parent = nullptr)
+      : node_(node)
+      , parent_(parent)
+      , full_path_((parent_ ? parent_->GetPath() : "") + "/" + GetName())
+    {}
+
+    int32_t GetId() const
     {
-      full_path_ = parent_path + "/" + GetName();
+      return node_->GetIntrospectionId();
     }
 
     std::string GetName() const
@@ -68,145 +72,124 @@ namespace local
       return full_path_;
     }
 
-    bool MatchProperty(const std::string& name, const std::string& value) const
+    Node::Ptr GetParent() const
     {
-      bool matches = false;
+      return parent_;
+    }
 
-      GVariantBuilder  child_builder;
-      g_variant_builder_init(&child_builder, G_VARIANT_TYPE("a{sv}"));
-      g_variant_builder_add(&child_builder, "{sv}", "id", g_variant_new_uint64(node_->GetIntrospectionId()));
-      node_->AddProperties(&child_builder);
-      GVariant* prop_dict = g_variant_builder_end(&child_builder);
-      GVariant *prop_value = g_variant_lookup_value(prop_dict, name.c_str(), NULL);
+    bool MatchStringProperty(std::string const& name, std::string const& value) const
+    {
+      auto const& prop_value = GetPropertyValue(name);
 
-      if (prop_value != NULL)
+      if (prop_value)
+      {
+        if (!g_variant_is_of_type(prop_value, G_VARIANT_TYPE_STRING))
+        {
+          LOG_WARNING(logger) << "Unable to match '"<< name << "', it's not a string property.";
+          return false;
+        }
+
+        return (prop_value.GetString() == value);
+      }
+
+      return false;
+    }
+
+    bool MatchBooleanProperty(std::string const& name, bool value) const
+    {
+      auto const& prop_value = GetPropertyValue(name);
+
+      if (prop_value)
+      {
+        if (!g_variant_is_of_type(prop_value, G_VARIANT_TYPE_BOOLEAN))
+        {
+          LOG_WARNING(logger) << "Unable to match '"<< name << "', it's not a boolean property.";
+          return false;
+        }
+
+        return (prop_value.GetBool() == value);
+      }
+
+      return false;
+    }
+
+    bool MatchIntegerProperty(std::string const& name, int32_t value) const
+    {
+      auto const& prop_value = GetPropertyValue(name);
+
+      if (prop_value)
       {
         GVariantClass prop_val_type = g_variant_classify(prop_value);
-        // it'd be nice to be able to do all this with one method. However, the booleans need
-        // special treatment, and I can't figure out how to group all the integer types together
-        // without resorting to template functions.... and we all know what happens when you
-        // start doing that...
+        // it'd be nice to be able to do all this with one method.
+        // I can't figure out how to group all the integer types together
         switch (prop_val_type)
         {
-          case G_VARIANT_CLASS_STRING:
-          {
-            const gchar* prop_val = g_variant_get_string(prop_value, NULL);
-            if (g_strcmp0(prop_val, value.c_str()) == 0)
-            {
-              matches = true;
-            }
-          }
-          break;
-          case G_VARIANT_CLASS_BOOLEAN:
-          {
-            std::string value = boost::to_upper_copy(value);
-            bool p = value == "TRUE" ||
-                      value == "ON" ||
-                      value == "YES" ||
-                      value == "1";
-            matches = (g_variant_get_boolean(prop_value) == p);
-          }
-          break;
           case G_VARIANT_CLASS_BYTE:
-          {
-            // It would be nice if I could do all the integer types together, but I couldn't see how...
-            std::stringstream stream(value);
-            int val; // changing this to guchar causes problems.
-            stream >> val;
-            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
-                      val == g_variant_get_byte(prop_value);
-          }
-          break;
+            return static_cast<unsigned char>(value) == prop_value.GetByte();
           case G_VARIANT_CLASS_INT16:
-          {
-            std::stringstream stream(value);
-            gint16 val;
-            stream >> val;
-            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
-                      val == g_variant_get_int16(prop_value);
-          }
-          break;
+            return value == prop_value.GetInt16();
           case G_VARIANT_CLASS_UINT16:
-          {
-            std::stringstream stream(value);
-            guint16 val;
-            stream >> val;
-            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
-                      val == g_variant_get_uint16(prop_value);
-          }
-          break;
+            return static_cast<uint16_t>(value) == prop_value.GetUInt16();
           case G_VARIANT_CLASS_INT32:
-          {
-            std::stringstream stream(value);
-            gint32 val;
-            stream >> val;
-            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
-                      val == g_variant_get_int32(prop_value);
-          }
-          break;
+            return value == prop_value.GetInt32();
           case G_VARIANT_CLASS_UINT32:
-          {
-            std::stringstream stream(value);
-            guint32 val;
-            stream >> val;
-            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
-                      val == g_variant_get_uint32(prop_value);
-          }
-          break;
+            return static_cast<uint32_t>(value) == prop_value.GetUInt32();
           case G_VARIANT_CLASS_INT64:
-          {
-            std::stringstream stream(value);
-            gint64 val;
-            stream >> val;
-            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
-                      val == g_variant_get_int64(prop_value);
-          }
-          break;
+            return value == prop_value.GetInt64();
           case G_VARIANT_CLASS_UINT64:
-          {
-            std::stringstream stream(value);
-            guint64 val;
-            stream >> val;
-            matches = (stream.rdstate() & (stream.badbit|stream.failbit)) == 0 &&
-                      val == g_variant_get_uint64(prop_value);
-          }
-          break;
+            return static_cast<uint64_t>(value) == prop_value.GetUInt64();
         default:
-          LOG_WARNING(logger) << "Unable to match against property of unknown type.";
+          LOG_WARNING(logger) << "Unable to match '"<< name << "' against property of unknown integer type.";
         };
       }
-      g_variant_unref(prop_value);
-      g_variant_unref(prop_dict);
-      return matches;
+
+      return false;
+    }
+
+    glib::Variant GetPropertyValue(std::string const& name) const
+    {
+      if (name == "id")
+        return glib::Variant(GetId());
+
+      GVariantBuilder properties_builder;
+      g_variant_builder_init(&properties_builder, G_VARIANT_TYPE("a{sv}"));
+      node_->AddProperties(&properties_builder);
+      glib::Variant props_dict(g_variant_builder_end(&properties_builder));
+      return g_variant_lookup_value(props_dict, name.c_str(), nullptr);
     }
 
     std::vector<xpathselect::Node::Ptr> Children() const
     {
       std::vector<xpathselect::Node::Ptr> children;
-      for(auto child: node_->GetIntrospectableChildren())
-      {
-        children.push_back(std::make_shared<IntrospectableAdapter>(child, GetPath() ));
-      }
-      return children;
+      auto const& this_ptr = shared_from_this();
 
+      for(auto const& child: node_->GetIntrospectableChildren())
+        children.push_back(std::make_shared<IntrospectableAdapter>(child, this_ptr));
+
+      return children;
     }
 
-    Introspectable* node_;
+    Introspectable* Node() const
+    {
+      return node_;
+    }
+
   private:
+    Introspectable* node_;
+    IntrospectableAdapter::Ptr parent_;
     std::string full_path_;
   };
 
-  xpathselect::NodeList select_nodes(local::IntrospectableAdapter::Ptr root,
-                                     std::string const& query)
+  xpathselect::NodeVector select_nodes(IntrospectableAdapter::Ptr const& root, std::string const& query)
   {
-    if (xpathselect_driver_ == NULL)
-      xpathselect_driver_ = dlopen("libxpathselect.so.1.3", RTLD_LAZY);
+    if (!xpathselect_driver_)
+      xpathselect_driver_ = dlopen(XPATH_SELECT_LIB.c_str(), RTLD_LAZY);
 
     if (xpathselect_driver_)
     {
-      typedef decltype(&xpathselect::SelectNodes) entry_t;
+      typedef decltype(&xpathselect::SelectNodes) select_nodes_t;
       dlerror();
-      entry_t entry_point = (entry_t) dlsym(xpathselect_driver_, "SelectNodes");
+      auto SelectNodes = reinterpret_cast<select_nodes_t>(dlsym(xpathselect_driver_, "SelectNodes"));
       const char* err = dlerror();
       if (err)
       {
@@ -214,7 +197,7 @@ namespace local
       }
       else
       {
-        return entry_point(root, query);
+        return SelectNodes(root, query);
       }
     }
     else
@@ -223,7 +206,7 @@ namespace local
     }
 
     // Fallen through here as we've hit an error
-    return xpathselect::NodeList();
+    return xpathselect::NodeVector();
   }
 
   // This needs to be called at destruction to cleanup the dlopen
@@ -240,10 +223,8 @@ bool TryLoadXPathImplementation();
 GVariant* GetState(std::string const& query);
 void StartLogToFile(std::string const& file_path);
 void ResetLogging();
-void SetLogSeverity(std::string const& log_component,
-  std::string const& severity);
-void LogMessage(std::string const& severity,
-  std::string const& message);
+void SetLogSeverity(std::string const& log_component, std::string const& severity);
+void LogMessage(std::string const& severity, std::string const& message);
 
 namespace dbus
 {
@@ -317,7 +298,7 @@ GVariant* DebugDBusInterface::HandleDBusMethodCall(std::string const& method, GV
   }
   else if (method == "GetVersion")
   {
-    return g_variant_new("(s)", "1.3");
+    return g_variant_new("(s)", local::PROTOCOL_VERSION.c_str());
   }
   else if (method == "StartLogToFile")
   {
@@ -352,16 +333,15 @@ GVariant* DebugDBusInterface::HandleDBusMethodCall(std::string const& method, GV
 
 GVariant* GetState(std::string const& query)
 {
-  GVariantBuilder  builder;
+  GVariantBuilder builder;
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a(sv)"));
 
-  local::IntrospectableAdapter::Ptr root_node = std::make_shared<local::IntrospectableAdapter>(_parent_introspectable, std::string());
-  auto nodes = local::select_nodes(root_node, query);
-  for (auto n : nodes)
+  auto root_node = std::make_shared<local::IntrospectableAdapter>(_parent_introspectable);
+  for (auto const& n : local::select_nodes(root_node, query))
   {
-    auto p = std::static_pointer_cast<local::IntrospectableAdapter>(n);
+    auto p = std::static_pointer_cast<local::IntrospectableAdapter const>(n);
     if (p)
-      g_variant_builder_add(&builder, "(sv)", p->GetPath().c_str(), p->node_->Introspect());
+      g_variant_builder_add(&builder, "(sv)", p->GetPath().c_str(), p->Node()->Introspect());
   }
 
   return g_variant_new("(a(sv))", &builder);

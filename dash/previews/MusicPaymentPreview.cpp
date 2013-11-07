@@ -98,9 +98,8 @@ void MusicPaymentPreview::OnActionActivated(ActionButton* button, std::string co
   {
     // HACK: We need to think a better way to do this
     auto const& password = password_entry_->text_entry()->GetText();
-    glib::Variant variant_pw(g_variant_new_string(password.c_str()));
     glib::HintsMap hints {
-      std::make_pair(MusicPaymentPreview::DATA_PASSWORD_KEY, variant_pw)
+      {MusicPaymentPreview::DATA_PASSWORD_KEY, glib::Variant(password)}
     };
     preview_model_->PerformAction(id, hints);
 
