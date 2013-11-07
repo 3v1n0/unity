@@ -48,7 +48,7 @@ Build-Depends: cmake,
                libxcb-icccm4-dev,
                libxfixes-dev (>= 1:5.0.1-1),
                libxi-dev (>= 2:1.7.1.901),
-               libxpathselect-dev (>=1.3),
+               libxpathselect-dev (>=1.4),
                libzeitgeist-2.0-dev,
                pkg-config,
                python (>= 2.7),
@@ -178,7 +178,7 @@ Depends: ${misc:Depends},
          python-testtools,
          python-xdg,
          python-xlib,
-         libxpathselect1.3 (>= 1.3),
+         libxpathselect1.4 (>= 1.4),
 Description: Autopiloted tests for Unity
  We test Unity automatically through autopilot, a framework which enables us
  to trigger keyboard and mouse events on the fly as well as introspecting

@@ -81,7 +81,7 @@ TEST_F(TestPanelMenuView, Escaping)
   UBusManager ubus;
   ubus.SendMessage(UBUS_LAUNCHER_START_KEY_NAV);
   ubus.SendMessage(UBUS_LAUNCHER_SELECTION_CHANGED,
-                   g_variant_new_string(escapedText));
+                   glib::Variant(escapedText));
   Utils::WaitUntilMSec([this] {return menu_view.GetCurrentTitle() == escapedText;});
 
 

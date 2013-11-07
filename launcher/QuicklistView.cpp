@@ -1303,6 +1303,7 @@ void QuicklistView::AddProperties(GVariantBuilder* builder)
     .add(GetAbsoluteGeometry())
     .add("base_x", GetBaseX())
     .add("base_y", GetBaseY())
+    .add("base", nux::Point(GetBaseX(), GetBaseY()))
     .add("active", IsVisible());
 }
 

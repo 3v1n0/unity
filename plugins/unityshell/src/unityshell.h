@@ -32,8 +32,21 @@
 #include <scale/scale.h>
 #include <core/core.h>
 #include <core/pluginclasshandler.h>
-#include <composite/composite.h>
 #include <opengl/opengl.h>
+
+// These fixes some definitions from the composite header
+#ifdef COLOR
+#define COMPIZ_COMPOSITE_COLOR 0xffff
+#undef COLOR
+#endif
+#ifdef OPAQUE
+#define COMPIZ_COMPOSITE_OPAQUE 0xffff
+#undef OPAQUE
+#endif
+#ifdef BRIGHT
+#define COMPIZ_COMPOSITE_BRIGHT 0xffff
+#undef BRIGHT
+#endif
 
 #include "unityshell_options.h"
 

@@ -664,6 +664,7 @@ void PanelIndicatorEntryView::AddProperties(GVariantBuilder* builder)
   .add("menu_y", proxy_->geometry().y)
   .add("menu_width", proxy_->geometry().width)
   .add("menu_height", proxy_->geometry().height)
+  .add("menu_geo", proxy_->geometry())
   .add("focused", IsFocused());
 }
 
