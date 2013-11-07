@@ -78,9 +78,6 @@ public:
 
   ui::EdgeBarrierSubscriber::Result HandleBarrierEvent(ui::PointerBarrierWrapper* owner, ui::BarrierEvent::Ptr event) override;
 
-  // FIXME: This will need to be removed when the Unity performance branch is merged.
-  void NeedSoftRedraw() override;
-
 protected:
   void Draw(nux::GraphicsEngine& GfxContext, bool force_draw);
   void DrawContent(nux::GraphicsEngine& GfxContext, bool force_draw);

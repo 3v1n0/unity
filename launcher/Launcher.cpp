@@ -2402,12 +2402,6 @@ void Launcher::RenderIconToTexture(nux::GraphicsEngine& GfxContext, nux::ObjectP
   unity::graphics::PopOffscreenRenderTarget();
 }
 
-// FIXME: This will need to be removed when the Unity performance branch is merged.
-void Launcher::NeedSoftRedraw()
-{
-  QueueDraw();
-}
-
 #ifdef NUX_GESTURES_SUPPORT
 nux::GestureDeliveryRequest Launcher::GestureEvent(const nux::GestureEvent &event)
 {
