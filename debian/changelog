@@ -1,3 +1,76 @@
+unity (7.1.2+14.04.20131106.1-0ubuntu1) trusty; urgency=low
+
+  [ Ted Gould ]
+  * Clean up NIH Errors so they don't get reported on exit. (LP:
+    #1236720)
+
+  [ Brandon Schaefer ]
+  * Workaround for now, replace all blacklisted chars in the results
+    name with a '?'. So we can still render all the results with out a
+    crash. This needs to be fixed in pango/harfbuzz. (LP: #1239381)
+  * Get the current char before moving on to the next char!.
+
+  [ Marco Trevisan (Treviño) ]
+  * UnityScreen: also redraw the HudView if it has not been fully
+    damaged. (LP: #1240322)
+  * OverlayRenderer: only and correctly initialize the BGLayer when not
+    on GLSL codepath Make sure we set the initial bg_layer_ value to the
+    average color, and do this only if really needed. (LP: #1232726)
+  * Launcher: desaturate the inactive icons when in Spread mode. (LP:
+    #1238892, #1238638)
+  * LauncherIcon: add MultiMonitor quirks support A quirk can be now set
+    for all monitors or for just one. (LP: #1051913, #1215738, #1240750,
+    #1240737)
+  * UnityScreen: CreateSuperNewAction with Shift and Numpad for launcher
+    This fixes the bug that caused Super+Shift+KP_x not to work as it
+    should. (LP: #1240806)
+  * AnimationUtils: add Start, Skip and SetValue methods These allows to
+    start an animation, to skip it or to just set its value. The
+    templates now are more intelligent and we define the values that can
+    assume just once, by specializing a StartValueForDirection function.
+  * Support libxpathselect1.4. (LP: #1243529)
+  * LauncherIcon: use nux::Animation for each Quirk property Update
+    Launcher and Icons code accordingly, get rid of the timespec. Remove
+    unneded Quirks, reduce redraws and update tests.
+  * Invalidate the Icon Centers when the monitor layout changes, so we
+    make sure that if an icon center is set, then the icon is available
+    on that monitor. Added GetCenterForMonitor that allows to retrieve
+    the nearest valid icon center for a given monitor, and in this way
+    we can get the best icon that can handle a window minimization. (LP:
+    #767752)
+
+  [ Lars Uebernickel ]
+  * panel-service.c: don't warn about unknown image type unnecessarily
+    Don't warn about indicators that explicitely don't have an image
+    set. However, continue warning when the set image is of an unknown
+    type.
+
+  [ Chris Townsend ]
+  * Instead of using NeedSoftRedraw(), use QueueDraw() for the Launcher
+    and Panel to force a redraw to fix issue where leaving a full screen
+    unredirected window would not redraw the Launcher and Panel. (LP:
+    #1240595)
+
+  [ Eleni Maria Stea ]
+  * Added --compiz-path parameter to the unity startup script. It allows
+    us to start unity with custom builds of compiz (not only
+    /usr/bin/compiz) like that: ./unity --compiz-path
+    custom_compiz_build_directory/bin/compiz --replace ccp.
+
+  [ Francis Ginther ]
+  * Reverting support for libxpathselect1.4. (LP: #1245988)
+
+  [ Łukasz 'sil2100' Zemczak ]
+  * DebugDBusInterface: add support to libxpathselect-1.4 Some cleanups
+    and reworking of glib::Variant and debug::DBusInterface Same as
+    lp:~3v1n0/unity/xpathselect-1.4 but with double function removed and
+    packaging dependencies added.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 3588
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 06 Nov 2013 18:29:25 +0000
+
 unity (7.1.2+13.10.20131014.1-0ubuntu1) saucy; urgency=low
 
   [ William Grant ]
