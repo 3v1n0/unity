@@ -758,7 +758,8 @@ void UnityScreen::paintDisplay()
   /* Bind the currently bound draw framebuffer to the read framebuffer binding.
    * The reason being that we want to use the results of nux images being
    * drawn to this framebuffer in glCopyTexSubImage2D operations */
-  GLint current_draw_binding, old_read_binding;
+  GLint current_draw_binding = 0,
+        old_read_binding = 0;
 #ifndef USE_GLES
   glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING_EXT, &old_read_binding);
   glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING_EXT, &current_draw_binding);
