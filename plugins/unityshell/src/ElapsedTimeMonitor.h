@@ -31,7 +31,6 @@ namespace performance {
 class ElapsedTimeMonitor : public Monitor
 {
 public:
-  virtual ~ElapsedTimeMonitor() {}
   std::string GetName() const;
 
 protected:
