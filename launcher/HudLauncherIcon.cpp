@@ -34,7 +34,7 @@ namespace launcher
 DECLARE_LOGGER(logger, "unity.launcher.icon.hud");
 
 HudLauncherIcon::HudLauncherIcon(LauncherHideMode hide_mode)
- : SingleMonitorLauncherIcon(IconType::HUD, -1)
+ : SingleMonitorLauncherIcon(IconType::HUD)
  , launcher_hide_mode_(hide_mode)
 {
   tooltip_text = _("HUD");

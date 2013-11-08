@@ -649,6 +649,7 @@ void PlacesGroup::AddProperties(GVariantBuilder* builder)
   wrapper.add("header-y", _header_view->GetAbsoluteY());
   wrapper.add("header-width", _header_view->GetAbsoluteWidth());
   wrapper.add("header-height", _header_view->GetAbsoluteHeight());
+  wrapper.add("header-geo", _header_view->GetAbsoluteGeometry());
   wrapper.add("header-has-keyfocus", HeaderHasKeyFocus());
   wrapper.add("header-is-highlighted", ShouldBeHighlighted());
   wrapper.add("name", _name->GetText());
@@ -656,22 +657,24 @@ void PlacesGroup::AddProperties(GVariantBuilder* builder)
   wrapper.add("is-expanded", GetExpanded());
   wrapper.add("expand-label-is-visible", _expand_label->IsVisible());
   wrapper.add("expand-label-y", _expand_label->GetAbsoluteY());
+  wrapper.add("expand-label-geo", _expand_label->GetAbsoluteGeometry());
   wrapper.add("expand-label-baseline", _expand_label->GetBaseline());
   wrapper.add("name-label-y", _name->GetAbsoluteY());
   wrapper.add("name-label-baseline", _name->GetBaseline());
+  wrapper.add("name-label-geo", _name->GetAbsoluteGeometry());
 }
 
 glib::Variant PlacesGroup::GetCurrentFocus() const
 {
   if (_header_view && _header_view->HasKeyFocus())
   {
-    return g_variant_new_string("HeaderView");
+    return glib::Variant("HeaderView");
   }
   else if (_child_view && _child_view->HasKeyFocus())
   {
     return g_variant_new("(si)", "ResultView", _child_view->GetSelectedIndex());
   }
-  return glib::Variant();
+  return nullptr;
 }
 
 void PlacesGroup::SetCurrentFocus(glib::Variant const& variant)

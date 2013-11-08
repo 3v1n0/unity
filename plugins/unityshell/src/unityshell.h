@@ -32,8 +32,21 @@
 #include <scale/scale.h>
 #include <core/core.h>
 #include <core/pluginclasshandler.h>
-#include <composite/composite.h>
 #include <opengl/opengl.h>
+
+// These fixes some definitions from the composite header
+#ifdef COLOR
+#define COMPIZ_COMPOSITE_COLOR 0xffff
+#undef COLOR
+#endif
+#ifdef OPAQUE
+#define COMPIZ_COMPOSITE_OPAQUE 0xffff
+#undef OPAQUE
+#endif
+#ifdef BRIGHT
+#define COMPIZ_COMPOSITE_BRIGHT 0xffff
+#undef BRIGHT
+#endif
 
 #include "unityshell_options.h"
 
@@ -105,9 +118,11 @@ public:
 
   /* nux draw wrapper */
   void paintDisplay();
-  void paintPanelShadow(const CompRegion& clip);
+  void paintPanelShadow(CompRegion const& clip);
   void setPanelShadowMatrix(const GLMatrix& matrix);
 
+  void updateBlurDamage();
+  void damageCutoff();
   void preparePaint (int ms);
   void paintFboForOutput (CompOutput *output);
   void donePaint ();
@@ -227,7 +242,7 @@ private:
   void initLauncher();
 
   void compizDamageNux(CompRegion const& region);
-  void nuxDamageCompiz();
+  void determineNuxDamage(CompRegion &nux_damage);
 
   void onRedrawRequested();
   void Relayout();
@@ -249,6 +264,12 @@ private:
   void OnInitiateSpread();
   void OnTerminateSpread();
 
+  void DamagePanelShadow();
+
+  void OnViewHidden(nux::BaseWindow *bw);
+
+  void RestoreWindow(GVariant* data);
+
   bool SaveInputThenFocus(const guint xid);
 
   void OnPanelStyleChanged();
@@ -257,6 +278,8 @@ private:
 
   void DrawPanelUnderDash();
 
+  void FillShadowRectForOutput(CompRect &shadowRect,
+                               CompOutput const &output);
   unsigned CompizModifiersToNux(unsigned input) const;
   unsigned XModifiersToNux(unsigned input) const;
 
@@ -321,6 +344,12 @@ private:
   bool    _key_nav_mode_requested;
   CompOutput* _last_output;
 
+  /* a small count-down work-a-around
+   * to force full redraws of the shell
+   * a certain number of frames after a
+   * suspend / resume cycle */
+  unsigned int force_draw_countdown_;
+
   CompRegion panelShadowPainted;
   CompRegion nuxRegion;
   CompRegion fullscreenRegion;
@@ -353,6 +382,13 @@ private:
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
+
+  CompRegion buffered_compiz_damage_this_frame_;
+  CompRegion buffered_compiz_damage_last_frame_;
+  bool       ignore_redraw_request_;
+  bool       dirty_helpers_on_this_frame_;
+
+  unsigned int back_buffer_age_;
 
   bool is_desktop_active_;
 
