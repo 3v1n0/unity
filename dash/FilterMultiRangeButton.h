@@ -55,7 +55,7 @@ class FilterMultiRangeButton : public nux::ToggleButton
   NUX_DECLARE_OBJECT_TYPE(FilterMultiRangeButton, nux::ToggleButton);
 public:
   FilterMultiRangeButton (NUX_FILE_LINE_PROTO);
-  virtual ~FilterMultiRangeButton() {}
+  virtual ~FilterMultiRangeButton();
 
   void SetFilter(FilterOption::Ptr const& filter);
   FilterOption::Ptr GetFilter();
