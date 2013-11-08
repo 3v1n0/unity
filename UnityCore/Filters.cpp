@@ -103,7 +103,7 @@ void FilterAdaptor::MergeState(glib::HintsMap const& hints)
     current_hints[iter->first] = iter->second;
   }
 
-  dee_model_set_value(model_, iter_, FilterColumn::RENDERER_STATE, glib::Variant::FromHints(current_hints));
+  dee_model_set_value(model_, iter_, FilterColumn::RENDERER_STATE, glib::Variant(current_hints));
 }
 
 

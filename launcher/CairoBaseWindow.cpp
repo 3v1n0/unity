@@ -74,12 +74,6 @@ bool CairoBaseWindow::HasBlurredBackground() const
   return use_blurred_background_;
 }
 
-void CairoBaseWindow::NeedSoftRedraw()
-{
-  compute_blur_bkg_ = true;
-  QueueDraw();
-}
-
 void CairoBaseWindow::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
   nux::Geometry base(GetGeometry());

@@ -170,13 +170,7 @@ std::string OverlaySpinner::GetName() const
 
 void OverlaySpinner::AddProperties(GVariantBuilder* builder)
 {
-  nux::Geometry geo = GetGeometry();
-
-  variant::BuilderWrapper(builder)
-    .add("x", geo.x)
-    .add("y", geo.y)
-    .add("width", geo.width)
-    .add("height", geo.height);
+  variant::BuilderWrapper(builder).add(GetAbsoluteGeometry());
 }
 
 

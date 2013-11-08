@@ -209,9 +209,8 @@ void PlacesOverlayVScrollBar::CheckIfThumbIsInsideSlider()
 {
   nux::Geometry const& slider_geo = _slider->GetAbsoluteGeometry();
   nux::Geometry const& thumb_geo = overlay_window_->GetThumbGeometry();
-  nux::Geometry const& intersection = (thumb_geo.Intersect(slider_geo));
 
-  if (!intersection.IsNull())
+  if (thumb_geo.IsIntersecting(slider_geo))
   {
     ResetConnector();
     overlay_window_->ThumbInsideSlider();

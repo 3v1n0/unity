@@ -573,7 +573,7 @@ bool PluginAdapter::IsWindowObscured(Window window_id) const
           && sibling->isMapped()
           && sibling->isViewable()
           && (sibling->state() & MAXIMIZE_STATE) == MAXIMIZE_STATE
-          && !GetWindowGeometry(sibling->id()).Intersect(win_geo).IsNull())
+          && GetWindowGeometry(sibling->id()).IsIntersecting(win_geo))
       {
         return true;
       }

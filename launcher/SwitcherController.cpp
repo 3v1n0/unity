@@ -395,7 +395,7 @@ void Controller::Impl::OnModelSelectionChanged(AbstractLauncherIcon::Ptr const& 
     }
 
     ubus_manager_.SendMessage(UBUS_SWITCHER_SELECTION_CHANGED,
-                              g_variant_new_string(icon->tooltip_text().c_str()));
+                              glib::Variant(icon->tooltip_text()));
   }
 }
 
@@ -497,7 +497,7 @@ void Controller::Impl::Hide(bool accept_state)
     }
   }
 
-  ubus_manager_.SendMessage(UBUS_SWITCHER_END, g_variant_new_boolean(!accept_state));
+  ubus_manager_.SendMessage(UBUS_SWITCHER_END, glib::Variant(!accept_state));
   ubus_manager_.SendMessage(UBUS_SWITCHER_SHOWN, g_variant_new("(bi)", false, obj_->monitor_));
 
   sources_.Remove(VIEW_CONSTRUCT_IDLE);
