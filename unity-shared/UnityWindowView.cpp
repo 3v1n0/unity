@@ -234,7 +234,6 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     rop.Blend = false;
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
-    
 
 #ifndef NUX_OPENGLES_20
     if (GfxContext.UsingGLSLCodePath())
