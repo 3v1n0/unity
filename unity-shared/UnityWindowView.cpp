@@ -235,13 +235,15 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
     rop.SrcBlend = GL_ONE;
     rop.DstBlend = GL_ONE_MINUS_SRC_ALPHA;
     
-    auto temp_background_color = background_color();
-
-    if (Settings::Instance().GetLowGfxMode())
-      temp_background_color.alpha = 1.0f;
 
 #ifndef NUX_OPENGLES_20
     if (GfxContext.UsingGLSLCodePath())
+    {
+          auto temp_background_color = background_color();
+
+          if (Settings::Instance().GetLowGfxMode())
+            temp_background_color.alpha = 1.0f;
+
       gPainter.PushDrawCompositionLayer(GfxContext, base,
                                         bg_texture_,
                                         texxform_blur_bg,
@@ -249,6 +251,7 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
                                         temp_background_color,
                                         Settings::Instance().GetLowGfxMode() ? nux::LAYER_BLEND_MODE_NORMAL : nux::LAYER_BLEND_MODE_OVERLAY,
                                         true, rop);
+    }
     else
       gPainter.PushDrawTextureLayer(GfxContext, base,
                                     bg_texture_,
