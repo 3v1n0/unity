@@ -238,10 +238,10 @@ void UnityWindowView::Draw(nux::GraphicsEngine& GfxContext, bool force_draw)
 #ifndef NUX_OPENGLES_20
     if (GfxContext.UsingGLSLCodePath())
     {
-          auto temp_background_color = background_color();
+      auto temp_background_color = background_color();
 
-          if (Settings::Instance().GetLowGfxMode())
-            temp_background_color.alpha = 1.0f;
+      if (Settings::Instance().GetLowGfxMode())
+        temp_background_color.alpha = 1.0f;
 
       gPainter.PushDrawCompositionLayer(GfxContext, base,
                                         bg_texture_,
