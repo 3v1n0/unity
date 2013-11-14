@@ -995,7 +995,7 @@ bool UnityScreen::DoesPointIntersectUnityGeos(nux::Point const& pt)
     }
   }
 
-  for (nux::Geometry &panel_geo : panel_controller_->GetGeometries ())
+  for (nux::Geometry const& panel_geo : panel_controller_->GetGeometries ())
   {
     if (panel_geo.IsInside(pt))
     {
@@ -1549,17 +1549,18 @@ void UnityScreen::compizDamageNux(CompRegion const& damage)
 }
 
 /* Grab changed nux regions and add damage rects for them */
-void UnityScreen::determineNuxDamage(CompRegion &nux_damage)
+void UnityScreen::determineNuxDamage(CompRegion& nux_damage)
 {
   /* Fetch all the dirty geometry from nux and aggregate it */
-  std::vector<nux::Geometry> dirty = wt->GetPresentationListGeometries();
+  auto const& dirty = wt->GetPresentationListGeometries();
+  auto const& panels_geometries = panel_controller_->GetGeometries();
 
   for (auto const& dirty_geo : dirty)
   {
     nux_damage += CompRegionFromNuxGeo(dirty_geo);
 
     /* Special case, we need to redraw the panel shadow on panel updates */
-    for (auto const& panel_geo : panel_controller_->GetGeometries())
+    for (auto const& panel_geo : panels_geometries)
     {
       if (!dirty_geo.IsIntersecting(panel_geo))
         continue;
