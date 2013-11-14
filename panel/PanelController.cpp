@@ -46,8 +46,6 @@ public:
   void FirstMenuShow();
   void QueueRedraw();
 
-  std::vector<nux::Geometry> GetGeometries() const;
-
   // NOTE: nux::Property maybe?
   void SetLauncherWidth(int width);
   void SetOpacity(float opacity);
@@ -60,6 +58,7 @@ public:
 
   nux::ObjectPtr<PanelView> CreatePanel(Introspectable *iobj);
   void OnScreenChanged(unsigned int primary_monitor, std::vector<nux::Geometry>& monitors, Introspectable *iobj);
+  void UpdatePanelGeometries();
 
   typedef nux::ObjectPtr<nux::BaseWindow> BaseWindowPtr;
 
@@ -67,6 +66,7 @@ public:
 
   ui::EdgeBarrierController::Ptr edge_barriers_;
   PanelVector panels_;
+  std::vector<nux::Geometry> panel_geometries_;
   std::vector<Window> tray_xids_;
   float opacity_;
   bool opacity_maximized_toggle_;
@@ -103,16 +103,14 @@ Controller::Impl::~Impl()
   }
 }
 
-std::vector<nux::Geometry> Controller::Impl::GetGeometries() const
+void Controller::Impl::UpdatePanelGeometries()
 {
-  std::vector<nux::Geometry> geometries;
+  panel_geometries_.reserve(panels_.size());
 
   for (auto const& panel : panels_)
   {
-    geometries.push_back(panel->GetAbsoluteGeometry());
+    panel_geometries_.push_back(panel->GetAbsoluteGeometry());
   }
-
-  return geometries;
 }
 
 void Controller::Impl::FirstMenuShow()
@@ -213,11 +211,12 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
     }
 
     panels_[i]->SetMonitor(i);
+    panels_[i]->geometry_changed.connect([this] (nux::Area*, nux::Geometry&) { UpdatePanelGeometries(); });
     tray_xids_[i] = panels_[i]->GetTrayXid();
 
     edge_barriers_->AddHorizontalSubscriber(panels_[i].GetPointer(), panels_[i]->GetMonitor());
   }
-    
+
   for (unsigned int i = last_panel; i < panels_size; ++i)
   {
     auto const& panel = panels_[i];
@@ -230,6 +229,7 @@ void Controller::Impl::OnScreenChanged(unsigned int primary_monitor,
   }
 
   panels_.resize(num_panels);
+  UpdatePanelGeometries();
 }
 
 
@@ -335,9 +335,9 @@ Controller::PanelVector& Controller::panels() const
   return pimpl->panels_;
 }
 
-std::vector<nux::Geometry> Controller::GetGeometries() const
+std::vector<nux::Geometry> const& Controller::GetGeometries() const
 {
-  return pimpl->GetGeometries();
+  return pimpl->panel_geometries_;
 }
 
 float Controller::opacity() const
