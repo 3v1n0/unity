@@ -21,8 +21,8 @@
 #ifndef LAUNCHERICON_H
 #define LAUNCHERICON_H
 
+#include <bitset>
 #include <Nux/Nux.h>
-#include <Nux/BaseWindow.h>
 #include <NuxCore/Animation.h>
 
 #include <gtk/gtk.h>
@@ -31,17 +31,17 @@
 
 #include <UnityCore/GLibSource.h>
 #include "AbstractLauncherIcon.h"
+#include "MultiMonitor.h"
 #include "Tooltip.h"
 #include "QuicklistView.h"
-#include "unity-shared/Introspectable.h"
 #include "LauncherEntryRemote.h"
+#include "unity-shared/TimeUtil.h"
 
 
 namespace unity
 {
 namespace launcher
 {
-
 class Launcher;
 
 class LauncherIcon : public AbstractLauncherIcon
@@ -78,7 +78,9 @@ public:
   bool OpenQuicklist(bool select_first_item = false, int monitor = -1);
   void CloseQuicklist();
 
-  void SetCenter(nux::Point3 const& center, int parent_monitor, nux::Geometry const& parent_geo);
+  void SetCenter(nux::Point3 const& center, int parent_monitor);
+
+  void ResetCenters(int monitor = -1);
 
   nux::Point3 GetCenter(int monitor);
 
@@ -127,11 +129,15 @@ public:
     return 0;
   }
 
-  bool GetQuirk(Quirk quirk) const;
+  bool GetQuirk(Quirk quirk, int monitor = -1) const;
 
-  void SetQuirk(Quirk quirk, bool value);
+  void SetQuirk(Quirk quirk, bool value, int monitor = -1);
 
-  struct timespec GetQuirkTime(Quirk quirk);
+  float GetQuirkProgress(Quirk quirk, int monitor) const;
+
+  void SetQuirkDuration(Quirk quirk, unsigned duration, int monitor = -1);
+
+  void SkipQuirkAnimation(Quirk quirk, int monitor = -1);
 
   IconType GetIconType() const;
 
@@ -203,15 +209,15 @@ public:
 protected:
   std::vector<nux::Point3> GetCenters();
 
+  std::pair<int, nux::Point3> GetCenterForMonitor(int monitor) const;
+
   std::string GetName() const;
 
   void AddProperties(debug::IntrospectionData&);
 
-  void UpdateQuirkTimeDelayed(guint ms, Quirk quirk);
+  void FullyAnimateQuirkDelayed(guint ms, Quirk quirk, int monitor = -1);
 
-  void UpdateQuirkTime(Quirk quirk);
-
-  void ResetQuirkTime(Quirk quirk);
+  void FullyAnimateQuirk(Quirk quirk, int monitor = -1);
 
   void Remove();
 
@@ -219,9 +225,9 @@ protected:
 
   void SetWindowVisibleOnMonitor(bool val, int monitor);
 
-  void Present(float urgency, int length);
+  void Present(float urgency, int length, int monitor = -1);
 
-  void Unpresent();
+  void Unpresent(int monitor = -1);
 
   void SetEmblem(BaseTexturePtr const& emblem);
 
@@ -229,7 +235,7 @@ protected:
 
   virtual nux::BaseTexture* GetTextureForSize(int size) = 0;
 
-  virtual void OnCenterStabilized(std::vector<nux::Point3> center) {}
+  virtual void OnCenterStabilized(std::vector<nux::Point3> const& centers) {}
 
   virtual std::string GetRemoteUri() const
   {
@@ -284,9 +290,17 @@ protected:
 
   void OnRemoteProgressVisibleChanged(LauncherEntryRemote* remote);
 
-  void EmitNeedsRedraw();
+  void EmitNeedsRedraw(int monitor = -1);
 
   void EmitRemove();
+
+  bool IsActionArgValid(ActionArg const&);
+
+  typedef nux::animation::AnimateValue<float> Animation;
+  inline Animation& GetQuirkAnimation(Quirk quirk, int monitor) const
+  {
+    return *_quirk_animations[monitor][unsigned(quirk)];
+  }
 
   // This looks like a case for boost::logical::tribool
   static int _current_theme_is_mono;
@@ -299,47 +313,39 @@ private:
 
   static void ChildRealized(DbusmenuMenuitem* newitem, QuicklistView* quicklist);
   static void RootChanged(DbusmenuClient* client, DbusmenuMenuitem* newroot, QuicklistView* quicklist);
-  bool OnPresentTimeout();
-  bool OnCenterStabilizeTimeout();
-
   void ColorForIcon(GdkPixbuf* pixbuf, nux::Color& background, nux::Color& glow);
+  nux::Point GetTipPosition(int monitor) const;
 
   void LoadTooltip();
   void LoadQuicklist();
 
   void OnTooltipEnabledChanged(bool value);
 
-  bool              _sticky;
-  bool              _remote_urgent;
-  float             _present_urgency;
-  float             _progress;
-  int               _sort_priority;
-  int               _last_monitor;
-  nux::Color        _background_color;
-  nux::Color        _glow_color;
-
-  gint64            _shortcut;
+  bool _sticky;
+  bool _remote_urgent;
+  float _present_urgency;
+  float _progress;
+  int _sort_priority;
+  int _last_monitor;
+  nux::Color _background_color;
+  nux::Color _glow_color;
+  gint64 _shortcut;
+  bool _allow_quicklist_to_show;
 
   std::vector<nux::Point3> _center;
-  std::vector<bool> _has_visible_window;
-  std::vector<bool> _is_visible_on_monitor;
+  std::bitset<monitors::MAX> _has_visible_window;
+  std::vector<std::bitset<std::size_t(Quirk::LAST)>> _quirks;
+  std::vector<std::vector<std::shared_ptr<Animation>>> _quirk_animations;
   std::vector<nux::Point3> _last_stable;
-  std::vector<nux::Geometry> _parent_geo;
   std::vector<nux::Point3> _saved_center;
-
-  static glib::Object<GtkIconTheme> _unity_theme;
+  time::Spec _last_action;
 
   BaseTexturePtr _emblem;
-
-  bool             _quirks[unsigned(Quirk::LAST)];
-  struct timespec  _quirk_times[unsigned(Quirk::LAST)];
-
-  bool             _allow_quicklist_to_show;
 
   std::list<LauncherEntryRemote::Ptr> _entry_list;
   glib::Object<DbusmenuClient> _remote_menus;
 
-  nux::animation::AnimateValue<double> _tooltip_fade_animator;
+  static glib::Object<GtkIconTheme> _unity_theme;
 
 protected:
   glib::SourceManager _source_manager;

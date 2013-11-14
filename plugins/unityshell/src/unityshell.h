@@ -27,6 +27,7 @@
 #include <Nux/WindowThread.h>
 #include <NuxCore/Property.h>
 #include <sigc++/sigc++.h>
+#include <unordered_set>
 
 #include <scale/scale.h>
 #include <core/core.h>
@@ -110,9 +111,11 @@ public:
 
   /* nux draw wrapper */
   void paintDisplay();
-  void paintPanelShadow(const CompRegion& clip);
+  void paintPanelShadow(CompRegion const& clip);
   void setPanelShadowMatrix(const GLMatrix& matrix);
 
+  void updateBlurDamage();
+  void damageCutoff();
   void preparePaint (int ms);
   void paintFboForOutput (CompOutput *output);
   void donePaint ();
@@ -166,8 +169,6 @@ public:
   bool altTabPrevInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabForwardAllInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevAllInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabDetailStart(CompAction* action, CompAction::State state, CompOption::Vector& options);
-  bool altTabDetailStop(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabNextWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
   bool altTabPrevWindowInitiate(CompAction* action, CompAction::State state, CompOption::Vector& options);
 
@@ -233,7 +234,7 @@ private:
   void initLauncher();
 
   void compizDamageNux(CompRegion const& region);
-  void nuxDamageCompiz();
+  void determineNuxDamage(CompRegion &nux_damage);
 
   void onRedrawRequested();
   void Relayout();
@@ -255,6 +256,12 @@ private:
   void OnInitiateSpread();
   void OnTerminateSpread();
 
+  void DamagePanelShadow();
+
+  void OnViewHidden(nux::BaseWindow *bw);
+
+  void RestoreWindow(GVariant* data);
+
   bool SaveInputThenFocus(const guint xid);
 
   void OnPanelStyleChanged();
@@ -263,6 +270,8 @@ private:
 
   void DrawPanelUnderDash();
 
+  void FillShadowRectForOutput(CompRect &shadowRect,
+                               CompOutput const &output);
   unsigned CompizModifiersToNux(unsigned input) const;
   unsigned XModifiersToNux(unsigned input) const;
 
@@ -291,6 +300,7 @@ private:
   shortcut::Controller::Ptr shortcut_controller_;
   session::Controller::Ptr  session_controller_;
   debug::DebugDBusInterface debugger_;
+  std::unique_ptr<BGHash>   bghash_;
 
   /* Subscription for gestures that manipulate Unity launcher */
   std::unique_ptr<nux::GesturesSubscription> gestures_sub_launcher_;
@@ -322,14 +332,16 @@ private:
   bool    _key_nav_mode_requested;
   CompOutput* _last_output;
 
+  /* a small count-down work-a-around
+   * to force full redraws of the shell
+   * a certain number of frames after a
+   * suspend / resume cycle */
+  unsigned int force_draw_countdown_;
+
   CompRegion panelShadowPainted;
   CompRegion nuxRegion;
   CompRegion fullscreenRegion;
   CompWindow* firstWindowAboveShell;
-
-  nux::Property<nux::Geometry> primary_monitor_;
-
-  std::unique_ptr<BGHash> _bghash;
 
   ::GLFramebufferObject *oldFbo;
 
@@ -347,7 +359,7 @@ private:
   GLMatrix panel_shadow_matrix_;
 
   bool paint_panel_under_dash_;
-  std::set<UnityWindow*> fake_decorated_windows_;
+  std::unordered_set<UnityWindow*> fake_decorated_windows_;
 
   bool scale_just_activated_;
   WindowMinimizeSpeedController minimize_speed_controller_;
@@ -358,6 +370,13 @@ private:
 
   UBusManager ubus_manager_;
   glib::SourceManager sources_;
+
+  CompRegion buffered_compiz_damage_this_frame_;
+  CompRegion buffered_compiz_damage_last_frame_;
+  bool       ignore_redraw_request_;
+  bool       dirty_helpers_on_this_frame_;
+
+  unsigned int back_buffer_age_;
 
   bool is_desktop_active_;
 

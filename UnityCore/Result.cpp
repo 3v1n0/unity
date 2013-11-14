@@ -150,18 +150,11 @@ bool LocalResult::operator!=(LocalResult const& rhs) const
 
 std::vector<glib::Variant> LocalResult::Variants() const
 {
-  std::vector<glib::Variant> vars;
-  vars.push_back(glib::Variant(uri));
-  vars.push_back(glib::Variant(icon_hint));
-  vars.push_back(glib::Variant(category_index));
-  vars.push_back(glib::Variant(result_type));
-  vars.push_back(glib::Variant(mimetype));
-  vars.push_back(glib::Variant(name));
-  vars.push_back(glib::Variant(comment));
-  vars.push_back(glib::Variant(dnd_uri));
-  vars.push_back(glib::Variant(hints));
-
-  return vars;
+  return {
+    glib::Variant(uri), glib::Variant(icon_hint), glib::Variant(category_index),
+    glib::Variant(result_type), glib::Variant(mimetype), glib::Variant(name),
+    glib::Variant(comment), glib::Variant(dnd_uri), glib::Variant(hints)
+  };
 }
 
 glib::Variant LocalResult::Variant() const

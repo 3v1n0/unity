@@ -68,7 +68,8 @@ class HudController(UnityIntrospectionObject, KeybindingsHelper):
 
     def get_launcher_icon(self):
         """Returns the HUD launcher icon"""
-        icons = HudLauncherIcon.get_all_instances()
+        unity = self.get_root_instance()
+        icons = unity.select_many(HudLauncherIcon)
         assert(len(icons) == 1)
         return icons[0]
 

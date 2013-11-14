@@ -34,6 +34,7 @@
 #include "unity-shared/UBusMessages.h"
 #include "unity-shared/GraphicsUtils.h"
 #include "unity-shared/UnitySettings.h"
+#include "unity-shared/WindowManager.h"
 #include "ResultViewGrid.h"
 #include "math.h"
 
@@ -113,21 +114,13 @@ ResultViewGrid::ResultViewGrid(NUX_FILE_LINE_DECL)
     NeedRedraw();
   });
 
+  WindowManager::Default().average_color.changed.connect(sigc::hide(sigc::mem_fun(this, &View::QueueDraw)));
+
   ubus_.RegisterInterest(UBUS_DASH_SIZE_CHANGED, [this] (GVariant* data) {
     // on dash size changed, we update our stored values, this sucks
     //FIXME in P - make dash size the size of our dash not the entire screen
     g_variant_get (data, "(ii)", &recorded_dash_width_, &recorded_dash_height_);
   });
-
-  // We are interested in the color of the desktop background.
-  ubus_.RegisterInterest(UBUS_BACKGROUND_COLOR_CHANGED, [this] (GVariant* data) {
-    double red = 0.0f, green = 0.0f, blue = 0.0f, alpha = 0.0f;
-
-    g_variant_get(data, "(dddd)", &red, &green, &blue, &alpha);
-    background_color_ = nux::Color(red, green, blue, alpha);
-    QueueDraw();
-  });
-  ubus_.SendMessage(UBUS_BACKGROUND_REQUEST_COLOUR_EMIT);
 
   ubus_.RegisterInterest(UBUS_DASH_PREVIEW_NAVIGATION_REQUEST, [&] (GVariant* data) {
     int nav_mode = 0;
@@ -740,9 +733,10 @@ void ResultViewGrid::DrawRow(nux::GraphicsEngine& GfxContext, ResultListBounds c
         saturation = saturation_progress + (1.0-saturation_progress) * UNFOCUSED_ICON_SATURATION_REF;
         opacity = saturation_progress + (1.0-saturation_progress) * UNFOCUSED_GHOST_ICON_OPACITY_REF;
       }
-      nux::Color tint(opacity + (1.0f-opacity) * background_color_.red,
-                     opacity + (1.0f-opacity) * background_color_.green,
-                     opacity + (1.0f-opacity) * background_color_.blue,
+      auto const& bg_color = WindowManager::Default().average_color();
+      nux::Color tint(opacity + (1.0f-opacity) * bg_color.red,
+                     opacity + (1.0f-opacity) * bg_color.green,
+                     opacity + (1.0f-opacity) * bg_color.blue,
                      opacity);
 
       nux::Geometry render_geo(x_position, y_position, renderer_->width, renderer_->height);

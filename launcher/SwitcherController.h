@@ -90,9 +90,6 @@ public:
   bool Visible();
   nux::Geometry GetInputWindowGeometry() const;
 
-  bool StartDetailMode();
-  bool StopDetailMode();
-
   void Next();
   void Prev();
 

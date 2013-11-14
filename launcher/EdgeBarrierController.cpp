@@ -111,8 +111,7 @@ EdgeBarrierController::Impl::Impl(EdgeBarrierController *parent)
     options->option_changed.connect([&]() {
       SetupBarriers(UScreen::GetDefault()->GetMonitors());
     });*/
-    options->option_changed.connect(sigc::bind<1>(sigc::mem_fun(this, &EdgeBarrierController::Impl::SetupBarriers), 
-                                                  UScreen::GetDefault()->GetMonitors()));
+    options->option_changed.connect(sigc::mem_fun(this, &EdgeBarrierController::Impl::OnOptionsChanged));
     SetupBarriers(UScreen::GetDefault()->GetMonitors());
   });
 
@@ -128,6 +127,11 @@ void EdgeBarrierController::Impl::OnUScreenChanged(int primary, std::vector<nux:
 {
   ResizeBarrierList(layout);
   SetupBarriers(layout);
+}
+
+void EdgeBarrierController::Impl::OnOptionsChanged()
+{
+  SetupBarriers(UScreen::GetDefault()->GetMonitors());
 }
 
 void EdgeBarrierController::Impl::AddSubscriber(EdgeBarrierSubscriber* subscriber, unsigned int monitor, std::vector<EdgeBarrierSubscriber*>& subscribers)

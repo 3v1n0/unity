@@ -323,10 +323,10 @@ QuicklistView::EnableQuicklistForTesting(bool enable_testing)
   _enable_quicklist_for_testing = enable_testing;
 }
 
-void QuicklistView::ShowQuicklistWithTipAt(int anchor_tip_x, int anchor_tip_y)
+void QuicklistView::SetQuicklistPosition(int tip_x, int tip_y)
 {
-  _anchorX = anchor_tip_x;
-  _anchorY = anchor_tip_y;
+  _anchorX = tip_x;
+  _anchorY = tip_y;
 
   if (!_enable_quicklist_for_testing)
   {
@@ -344,8 +344,7 @@ void QuicklistView::ShowQuicklistWithTipAt(int anchor_tip_x, int anchor_tip_y)
       int x = _anchorX - _padding;
       int y = _anchorY - _anchor_height / 2 - _top_size - _corner_radius - _padding;
 
-      SetBaseX(x);
-      SetBaseY(y);
+      SetBaseXY(x, y);
     }
     else
     {
@@ -353,31 +352,24 @@ void QuicklistView::ShowQuicklistWithTipAt(int anchor_tip_x, int anchor_tip_y)
       int x = _anchorX - _padding;
       int y = _anchorY - _anchor_height / 2 - _top_size - _corner_radius - _padding;
 
-      SetBaseX(x);
-      SetBaseY(y);
+      SetBaseXY(x, y);
     }
   }
-
-  Show();
 }
 
-void QuicklistView::ShowWindow(bool b, bool start_modal)
+void QuicklistView::ShowQuicklistWithTipAt(int x, int y)
 {
-  unity::CairoBaseWindow::ShowWindow(b, start_modal);
+  SetQuicklistPosition(x, y);
+  Show();
 }
 
 void QuicklistView::Show()
 {
   if (!IsVisible())
   {
-    // FIXME: ShowWindow shouldn't need to be called first
-    ShowWindow(true);
-    PushToFront();
-    //EnableInputWindow (true, "quicklist", false, true);
-    //SetInputFocus ();
+    CairoBaseWindow::Show();
     GrabPointer();
     GrabKeyboard();
-    QueueDraw();
   }
 }
 
@@ -389,8 +381,7 @@ void QuicklistView::Hide()
     CaptureMouseDownAnyWhereElse(false);
     UnGrabPointer();
     UnGrabKeyboard();
-    //EnableInputWindow (false);
-    ShowWindow(false);
+    CairoBaseWindow::Hide();
 
     if (_current_item_index != -1)
     {
@@ -409,7 +400,6 @@ void QuicklistView::HideAndEndQuicklistNav()
 
 void QuicklistView::Draw(nux::GraphicsEngine& gfxContext, bool forceDraw)
 {
-  _compute_blur_bkg = true;
   CairoBaseWindow::Draw(gfxContext, forceDraw);
 
   nux::Geometry base(GetGeometry());
@@ -1215,24 +1205,12 @@ void QuicklistView::UpdateTexture()
   cairo_t* cr_mask    = cairo_mask.GetContext();
   cairo_t* cr_outline = cairo_outline.GetContext();
 
-  float   tint_color[4]    = {0.0f, 0.0f, 0.0f, 0.60f};
+  float   tint_color[4]    = {0.0f, 0.0f, 0.0f, HasBlurredBackground() ? 0.60f : 1.0f};
   float   hl_color[4]      = {1.0f, 1.0f, 1.0f, 0.35f};
   float   dot_color[4]     = {1.0f, 1.0f, 1.0f, 0.03f};
   float   shadow_color[4]  = {0.0f, 0.0f, 0.0f, 1.00f};
   float   outline_color[4] = {1.0f, 1.0f, 1.0f, 0.40f};
   float   mask_color[4]    = {1.0f, 1.0f, 1.0f, 1.00f};
-  
-  if (Settings::Instance().GetLowGfxMode())
-  {
-    float alpha_value = 1.0f;
-    
-    tint_color[3] = alpha_value;
-    hl_color[3] = 0.2f;
-    dot_color[3] = 0.0f;
-    shadow_color[3] = alpha_value;
-    outline_color[3] = alpha_value;
-    mask_color[3] = alpha_value;
-  }
 
   ql_tint_dot_hl(cr_bg,
                  width,

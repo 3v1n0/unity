@@ -11,6 +11,7 @@ from __future__ import absolute_import
 
 import logging
 from unity.emulators import UnityIntrospectionObject
+from testtools.matchers import GreaterThan
 logger = logging.getLogger(__name__)
 
 
@@ -47,4 +48,6 @@ class Window(UnityIntrospectionObject):
     @property
     def scale_close_geometry(self):
         """Returns a tuple of (x,y,w,h) for the scale close button."""
+        self.scaled_close_width.wait_for(GreaterThan(0))
+        self.scaled_close_height.wait_for(GreaterThan(0))
         return (self.scaled_close_x, self.scaled_close_y, self.scaled_close_width, self.scaled_close_height)

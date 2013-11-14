@@ -53,6 +53,7 @@ PlacesOverlayVScrollBar::PlacesOverlayVScrollBar(NUX_FILE_LINE_DECL)
   overlay_window_->mouse_click.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseClick));
   overlay_window_->mouse_move.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseMove));
   overlay_window_->mouse_drag.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnMouseDrag));
+  overlay_window_->sigHidden.connect(sigc::hide(sigc::mem_fun(this, &PlacesOverlayVScrollBar::ResetConnector)));
 
   _track->geometry_changed.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnTrackGeometryChanged));
   OnVisibleChanged.connect(sigc::mem_fun(this, &PlacesOverlayVScrollBar::OnVisibilityChanged));
@@ -208,9 +209,8 @@ void PlacesOverlayVScrollBar::CheckIfThumbIsInsideSlider()
 {
   nux::Geometry const& slider_geo = _slider->GetAbsoluteGeometry();
   nux::Geometry const& thumb_geo = overlay_window_->GetThumbGeometry();
-  nux::Geometry const& intersection = (thumb_geo.Intersect(slider_geo));
 
-  if (!intersection.IsNull())
+  if (thumb_geo.IsIntersecting(slider_geo))
   {
     ResetConnector();
     overlay_window_->ThumbInsideSlider();

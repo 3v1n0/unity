@@ -38,6 +38,10 @@ public:
     auto uscreen = UScreen::GetDefault();
     SetGeometry(uscreen->GetScreenGeometry());
 
+    // We are not calling ShowWindow () as this window
+    // isn't really visible
+    PushToBack();
+
     if (nux::GetWindowThread()->IsEmbeddedWindow())
     {
       // Hack to create the X Window as soon as possible.
@@ -83,7 +87,7 @@ public:
     std::vector<std::string> data;
     for (auto mime : mimes)
       if (mime) data.push_back(mime);
-  
+
     parent_->collected.emit(data);
   }
 
@@ -116,5 +120,11 @@ void XdndCollectionWindowImp::Deactivate()
   if (nux::GetWindowThread()->IsEmbeddedWindow())
     window_->EnableInputWindow(false, "XdndCollectionWindowImp");
 }
-  
+
+std::string XdndCollectionWindowImp::GetData(std::string const& type)
+{
+  auto& gp_display = nux::GetWindowThread()->GetGraphicsDisplay();
+  return glib::String(gp_display.GetDndData(const_cast<char*>(type.c_str()))).Str();
+}
+
 }

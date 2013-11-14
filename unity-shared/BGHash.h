@@ -21,7 +21,6 @@
 
 #include <NuxCore/Animation.h>
 #include <Nux/Nux.h>
-#include "UBusWrapper.h"
 
 namespace unity {
 namespace colors {
@@ -36,23 +35,19 @@ namespace unity
   public:
     BGHash();
 
-    nux::Color const& CurrentColor() const;
+    nux::Color CurrentColor() const;
+    uint64_t ColorAtomId() const;
     void RefreshColor();
     void OverrideColor(nux::Color const& color);
 
   private:
     void OnTransitionUpdated(nux::Color const& new_color);
-    void DoUbusColorEmit();
     void TransitionToNewColor(nux::Color const& new_color);
     nux::Color MatchColor(nux::Color const& base_color) const;
 
   private:
     nux::animation::AnimateValue<nux::Color> transition_animator_;
-
-    nux::Color current_color_; // the current colour, including steps in transitions
     nux::Color override_color_;
-
-    UBusManager ubus_manager_;
   };
 };
 

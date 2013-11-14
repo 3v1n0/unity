@@ -162,6 +162,7 @@ public:
 
   // Nux Modifiers, Nux Keycode (= X11 KeySym)
   nux::Property<std::pair<unsigned, unsigned>> close_window_key;
+  nux::Property<nux::Color> average_color;
 
   // Signals
   sigc::signal<void, Window> window_mapped;

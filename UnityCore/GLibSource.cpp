@@ -189,10 +189,7 @@ SourceManager::SourceManager()
 
 SourceManager::~SourceManager()
 {
-  for (auto it = sources_.begin(); it != sources_.end();)
-  {
-    RemoveItem(it++);
-  }
+  RemoveAll();
 }
 
 bool SourceManager::Add(Source* source, std::string const& nick)
@@ -356,6 +353,12 @@ bool SourceManager::Remove(unsigned int id)
   }
 
   return false;
+}
+
+void SourceManager::RemoveAll()
+{
+  for (auto it = sources_.begin(); it != sources_.end();)
+    RemoveItem(it++);
 }
 
 void SourceManager::RemoveItem(SourcesMap::iterator it)

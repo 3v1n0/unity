@@ -12,6 +12,7 @@ from __future__ import absolute_import
 
 
 from codecs import open
+from autopilot.introspection import get_proxy_object_for_existing_process
 from autopilot.matchers import Eventually
 from autopilot.testcase import AutopilotTestCase
 from dbus import DBusException
@@ -62,6 +63,12 @@ class UnityTestCase(AutopilotTestCase):
         except RuntimeError:
             log.error("Unity doesn't appear to be running, exiting.")
             sys.exit(1)
+
+        self._unity = get_proxy_object_for_existing_process(
+            connection_name=Unity.DBUS_SERVICE,
+            object_path=Unity.DBUS_OBJECT,
+            emulator_base=Unity
+        )
 
         self._setUpUnityLogging()
         self._initial_workspace_num = self.workspace.current_workspace
@@ -160,7 +167,7 @@ class UnityTestCase(AutopilotTestCase):
 
     @property
     def unity(self):
-        return Unity.get_root_instance()
+        return self._unity
 
     @property
     def workspace(self):

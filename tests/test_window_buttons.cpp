@@ -22,7 +22,7 @@
 
 #include <Nux/Nux.h>
 #include "PanelStyle.h"
-#include "StandaloneWindowManager.h"
+#include "test_standalone_wm.h"
 #include "UnitySettings.h"
 #include "unity-shared/WindowButtons.h"
 #include "unity-shared/WindowButtonPriv.h"
@@ -34,10 +34,6 @@ namespace
 
 struct TestWindowButtons : public testing::Test
 {
-  TestWindowButtons()
-    : wm(dynamic_cast<StandaloneWindowManager*>(&WindowManager::Default()))
-  {}
-
   StandaloneWindow::Ptr AddFakeWindowToWM(Window xid)
   {
     auto fake_window = std::make_shared<StandaloneWindow>(xid);
@@ -67,7 +63,7 @@ struct TestWindowButtons : public testing::Test
   Settings settings;
   panel::Style panel_style;
   testing::NiceMock<MockWindowButtons> wbuttons;
-  StandaloneWindowManager* wm = nullptr;
+  testwrapper::StandaloneWM wm;
 };
 
 TEST_F(TestWindowButtons, Construction)

@@ -52,6 +52,9 @@ enum ScopeViewType
   SCOPE_VIEW
 };
 
+typedef std::function<void(std::string const&, glib::HintsMap const&, glib::Error const&)> SearchCallback;
+typedef std::function<void(LocalResult const&, ScopeHandledType, glib::Error const&)> ActivateCallback;
+
 class ScopeProxyInterface : public sigc::trackable, boost::noncopyable
 {
 public:
@@ -66,6 +69,7 @@ public:
 
   nux::ROProperty<bool> visible;
   nux::ROProperty<bool> is_master;
+  nux::ROProperty<bool> results_dirty;
   nux::ROProperty<std::string> search_hint;
   nux::RWProperty<ScopeViewType> view_type;
   nux::Property<std::string> form_factor;

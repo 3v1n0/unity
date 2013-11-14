@@ -22,6 +22,7 @@
 #include <UnityCore/GLibWrapper.h>
 #include <UnityCore/Variant.h>
 #include "panel-service.h"
+#include "panel-service-private.h"
 #include "mock_indicator_object.h"
 
 using namespace testing;
@@ -416,6 +417,136 @@ TEST_F(TestPanelService, ActivateRequest)
 
   mock_indicator_object_show_entry(mock_object, entry, 1234);
   EXPECT_TRUE(called);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, Null)
+{
+  KeyBinding kb;
+  parse_string_keybinding(NULL, &kb);
+
+  EXPECT_EQ(NoSymbol, kb.key);
+  EXPECT_EQ(NoSymbol, kb.fallback);
+  EXPECT_EQ(0, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, Empty)
+{
+  KeyBinding kb;
+  parse_string_keybinding("", &kb);
+
+  EXPECT_EQ(NoSymbol, kb.key);
+  EXPECT_EQ(NoSymbol, kb.fallback);
+  EXPECT_EQ(0, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, SimpleKey)
+{
+  KeyBinding kb;
+  parse_string_keybinding("U", &kb);
+
+  EXPECT_EQ(XK_U, kb.key);
+  EXPECT_EQ(NoSymbol, kb.fallback);
+  EXPECT_EQ(0, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, ControlCombo)
+{
+  KeyBinding kb;
+  parse_string_keybinding("<Control>F1", &kb);
+
+  EXPECT_EQ(XK_F1, kb.key);
+  EXPECT_EQ(NoSymbol, kb.fallback);
+  EXPECT_EQ(ControlMask, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, AltCombo)
+{
+  KeyBinding kb;
+  parse_string_keybinding("<Alt>F2", &kb);
+
+  EXPECT_EQ(XK_F2, kb.key);
+  EXPECT_EQ(NoSymbol, kb.fallback);
+  EXPECT_EQ(AltMask, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, ShiftCombo)
+{
+  KeyBinding kb;
+  parse_string_keybinding("<Shift>F3", &kb);
+
+  EXPECT_EQ(XK_F3, kb.key);
+  EXPECT_EQ(NoSymbol, kb.fallback);
+  EXPECT_EQ(ShiftMask, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, SuperCombo)
+{
+  KeyBinding kb;
+  parse_string_keybinding("<Super>F4", &kb);
+
+  EXPECT_EQ(XK_F4, kb.key);
+  EXPECT_EQ(NoSymbol, kb.fallback);
+  EXPECT_EQ(SuperMask, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, FullCombo)
+{
+  KeyBinding kb;
+  parse_string_keybinding("<Control><Alt><Shift><Super>Escape", &kb);
+
+  EXPECT_EQ(XK_Escape, kb.key);
+  EXPECT_EQ(NoSymbol, kb.fallback);
+  EXPECT_EQ(ControlMask|AltMask|ShiftMask|SuperMask, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, MetaKeyControl)
+{
+  KeyBinding kb;
+  parse_string_keybinding("<Control>", &kb);
+
+  EXPECT_EQ(XK_Control_L, kb.key);
+  EXPECT_EQ(XK_Control_R, kb.fallback);
+  EXPECT_EQ(0, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, MetaKeyAlt)
+{
+  KeyBinding kb;
+  parse_string_keybinding("<Alt>", &kb);
+
+  EXPECT_EQ(XK_Alt_L, kb.key);
+  EXPECT_EQ(XK_Alt_R, kb.fallback);
+  EXPECT_EQ(0, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, MetaKeyShift)
+{
+  KeyBinding kb;
+  parse_string_keybinding("<Shift>", &kb);
+
+  EXPECT_EQ(XK_Shift_L, kb.key);
+  EXPECT_EQ(XK_Shift_R, kb.fallback);
+  EXPECT_EQ(0, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, MetaKeySuper)
+{
+  KeyBinding kb;
+  parse_string_keybinding("<Super>", &kb);
+
+  EXPECT_EQ(XK_Super_L, kb.key);
+  EXPECT_EQ(XK_Super_R, kb.fallback);
+  EXPECT_EQ(0, kb.modifiers);
+}
+
+TEST(TestPanelServiceCompizShortcutParsing, MetaKeyMix)
+{
+  KeyBinding kb;
+  parse_string_keybinding("<Control><Alt><Super>", &kb);
+
+  EXPECT_EQ(XK_Super_L, kb.key);
+  EXPECT_EQ(XK_Super_R, kb.fallback);
+  EXPECT_EQ(ControlMask|AltMask, kb.modifiers);
 }
 
 } // anonymous namespace
