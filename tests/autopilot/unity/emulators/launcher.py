@@ -128,8 +128,8 @@ class Launcher(UnityIntrospectionObject, KeybindingsHelper):
 
         # Only try 10 times (5 secs.) before giving up.
         for i in xrange(0, 10):
-            mouse_x = target_x = icon.center_x + self.x
-            mouse_y = target_y = icon.center_y
+            mouse_x = target_x = icon.center.x + self.x
+            mouse_y = target_y = icon.center.y
             if target_y > h:
                 mouse_y = h + y - autoscroll_offset
             elif target_y < 0:

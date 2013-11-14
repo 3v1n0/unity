@@ -98,9 +98,7 @@ protected:
   std::string GetName() const { return "RenderArgs"; }
   void AddProperties(debug::IntrospectionData& introspection)
   {
-    introspection.add("logical_center_x", logical_center.x)
-                 .add("logical_center_y", logical_center.y)
-                 .add("logical_center_z", logical_center.z);
+    introspection.add("logical_center", logical_center);
   }
 };
 

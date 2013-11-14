@@ -155,9 +155,7 @@ void LauncherIcon::AddProperties(debug::IntrospectionData& introspection)
     monitors.push_back(IsVisibleOnMonitor(i));
 
   introspection
-  .add("center_x", _center[0].x)
-  .add("center_y", _center[0].y)
-  .add("center_z", _center[0].z)
+  .add("center", _center[0])
   .add("related_windows", Windows().size())
   .add("icon_type", unsigned(_icon_type))
   .add("tooltip_text", tooltip_text())
