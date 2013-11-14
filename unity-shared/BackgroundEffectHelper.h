@@ -59,7 +59,7 @@ public:
   static bool HasDirtyHelpers();
   static bool HasEnabledHelpers();
   static bool HasDamageableHelpers();
-  static std::vector <nux::Geometry> GetBlurGeometries();
+  static std::vector<nux::Geometry> GetBlurGeometries();
 
   static nux::Property<unity::BlurType> blur_type;
   static nux::Property<float> sigma_high;
@@ -71,17 +71,19 @@ public:
   static nux::Geometry monitor_rect_;
 
   static sigc::signal<void, nux::Geometry const&> blur_region_needs_update_;
-  
+
   nux::FxStructure blur_fx_struct_;
   nux::FxStructure noise_fx_struct_;
-  
+
 protected:
   static void Register   (BackgroundEffectHelper* self);
   static void Unregister (BackgroundEffectHelper* self);
 
 private:
-  void OnEnabledChanged (bool value);
-  static void ExpandByRadius(nux::Geometry &geometry);
+  static float GetBlurSigma();
+  static int GetBlurRadius();
+
+  void OnEnabledChanged(bool value);
 
   nux::ObjectPtr<nux::BaseTexture> noise_texture_;
   nux::ObjectPtr<nux::IOpenGLBaseTexture> blur_texture_;

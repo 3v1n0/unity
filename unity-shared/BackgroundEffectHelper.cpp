@@ -108,32 +108,30 @@ bool BackgroundEffectHelper::HasEnabledHelpers()
   return false;
 }
 
-void BackgroundEffectHelper::ExpandByRadius(nux::Geometry &geo)
+float BackgroundEffectHelper::GetBlurSigma()
 {
   nux::GpuDevice* gpu_device = nux::GetGraphicsDisplay()->GetGpuDevice();
   int opengl_version = gpu_device->GetOpenGLMajorVersion();
-  int sigma = opengl_version >= 3 ? sigma_high : sigma_med;
-  int radius = 3 * sigma;
+  return (opengl_version >= 3) ? sigma_high : sigma_med;
+}
 
-  geo.x -= radius;
-  geo.y -= radius;
-  geo.width += 2 * radius;
-  geo.height += 2 * radius;
+int BackgroundEffectHelper::GetBlurRadius()
+{
+  return GetBlurSigma() * 3;
 }
 
 std::vector <nux::Geometry> BackgroundEffectHelper::GetBlurGeometries()
 {
   std::vector <nux::Geometry> geometries;
+  int radius = GetBlurRadius();
+
   for (BackgroundEffectHelper * bg_effect_helper : registered_list_)
   {
     if (bg_effect_helper->enabled)
     {
       /* Use the last requested region. The real region is clipped to the
        * monitor geometry, but that is done at paint time */
-      nux::Geometry geo(bg_effect_helper->requested_blur_geometry_);
-
-      ExpandByRadius(geo);
-      geometries.push_back(geo);
+      geometries.push_back(bg_effect_helper->requested_blur_geometry_.GetExpand(radius, radius));
     }
   }
 
@@ -198,9 +196,7 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(bo
     return nux::ObjectPtr<nux::IOpenGLBaseTexture>();
   }
 
-  int opengl_version = gpu_device->GetOpenGLMajorVersion();
-  int sigma = opengl_version >= 3 ? sigma_high : sigma_med;
-  int radius = 3 * sigma;
+  const int radius = GetBlurRadius();
 
   // Define a larger region of that account for the blur radius
   nux::Geometry larger_blur_geometry;
@@ -241,10 +237,10 @@ nux::ObjectPtr<nux::IOpenGLBaseTexture> BackgroundEffectHelper::GetBlurRegion(bo
   bool support_frag = gpu_device->GetGpuInfo().Support_ARB_Fragment_Shader();
   bool support_vert = gpu_device->GetGpuInfo().Support_ARB_Vertex_Shader();
 
-  if (support_vert && support_frag && opengl_version >= 2)
+  if (support_vert && support_frag && gpu_device->GetOpenGLMajorVersion() >= 2)
   {
     float noise_factor = 1.1f;
-    float gaussian_sigma = opengl_version >= 3 ? sigma_high : sigma_med;
+    float gaussian_sigma = GetBlurSigma();
 
     nux::ObjectPtr<nux::IOpenGLBaseTexture> device_texture = gpu_device->backup_texture0_;
     nux::ObjectPtr<nux::CachedBaseTexture> noise_device_texture = graphics_engine->CacheResource(noise_texture_.GetPointer());
@@ -460,8 +456,8 @@ void BackgroundEffectHelper::SetBackbufferRegion(const nux::Geometry &geo)
     requested_blur_geometry_ = geo;
     DirtyCache();
 
-    nux::Geometry emit_geometry(geo);
-    ExpandByRadius(emit_geometry);
+    int radius = GetBlurRadius();
+    auto const& emit_geometry = geo.GetExpand(radius, radius);
     blur_region_needs_update_.emit(emit_geometry);
   }
 }
