@@ -24,6 +24,7 @@
 #include <glib.h>
 #include <NuxCore/Rect.h>
 #include <NuxCore/Color.h>
+#include <NuxCore/Math/Point3D.h>
 
 namespace unity
 {
@@ -50,6 +51,7 @@ public:
   IntrospectionData& add(std::string const& name, GVariant*);
   IntrospectionData& add(std::string const& name, nux::Rect const&);
   IntrospectionData& add(std::string const& name, nux::Point const&);
+  IntrospectionData& add(std::string const& name, nux::Point3 const&);
   IntrospectionData& add(std::string const& name, nux::Size const&);
   IntrospectionData& add(std::string const& name, nux::Color const&);
   IntrospectionData& add(nux::Rect const&);
